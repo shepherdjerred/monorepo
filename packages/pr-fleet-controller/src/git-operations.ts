@@ -1,4 +1,4 @@
-import { realpath } from "node:fs/promises";
+import { realpath, stat } from "node:fs/promises";
 import path from "node:path";
 import type { ReviewProvider } from "@shepherdjerred/code-review";
 import { parseHeadSha, splitRepo } from "./evidence-parsers.ts";
@@ -45,6 +45,28 @@ export class GitOperations {
       const relativeParent = path.relative(canonicalRoot, canonicalParent);
       if (relativeParent.startsWith("..") || path.isAbsolute(relativeParent)) {
         throw new Error(`Publication path escapes worktree: ${requestedPath}`);
+      }
+      // Reject directory pathspecs. `git add -- .` or a package directory would
+      // recursively stage unrelated validation outputs or prior edits despite
+      // the explicit-path publication boundary. Each entry must name one
+      // specific file: an existing regular file, or a path that no longer exists
+      // (an explicit deletion). A path resolving to an existing directory — or
+      // any other non-regular-file — is rejected.
+      const stats = await stat(absolute).catch((error: unknown) => {
+        if (
+          error instanceof Error &&
+          "code" in error &&
+          error.code === "ENOENT"
+        ) {
+          // Missing path: an explicit file deletion is a valid publication entry.
+          return null;
+        }
+        throw error;
+      });
+      if (stats !== null && !stats.isFile()) {
+        throw new Error(
+          `Publication path is not a specific file: ${requestedPath}`,
+        );
       }
       validated.push(requestedPath);
     }

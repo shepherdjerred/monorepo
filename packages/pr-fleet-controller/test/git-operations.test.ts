@@ -1,4 +1,7 @@
-import { describe, expect, test } from "bun:test";
+import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { codexProvider } from "@shepherdjerred/code-review";
 import { buildPrState } from "@shepherdjerred/pr-fleet-controller/src/fleet-logic.ts";
 import { GitOperations } from "@shepherdjerred/pr-fleet-controller/src/git-operations.ts";
@@ -38,6 +41,10 @@ function fakeGit(trackedExit: number) {
     return Promise.resolve("");
   };
   return { run, mustRun, mustCalls };
+}
+
+function prAt(dir: string): PrState {
+  return { ...makePr(), worktree: dir };
 }
 
 function operations(fake: ReturnType<typeof fakeGit>): GitOperations {
@@ -104,5 +111,58 @@ describe("stack ownership routing", () => {
     const fake = fakeGit(0);
     const result = await operations(fake).startRestack(makePr());
     expect(result.exitCode).toBe(0);
+  });
+});
+
+describe("validatePaths rejects directory pathspecs", () => {
+  let worktree: string;
+
+  beforeAll(async () => {
+    worktree = await mkdtemp(path.join(tmpdir(), "pr-fleet-validate-"));
+    await writeFile(path.join(worktree, "file.ts"), "export const x = 1;\n");
+    await mkdir(path.join(worktree, "pkgdir"));
+  });
+
+  afterAll(async () => {
+    await rm(worktree, { recursive: true, force: true });
+  });
+
+  test("accepts a specific existing file", async () => {
+    const fake = fakeGit(0);
+    const result = await operations(fake).continueRestack(prAt(worktree), [
+      "file.ts",
+    ]);
+    expect(result.exitCode).toBe(0);
+    expect(
+      fake.mustCalls.some(
+        (call) =>
+          call[0] === "git" && call[1] === "add" && call.includes("file.ts"),
+      ),
+    ).toBe(true);
+  });
+
+  test("accepts a deleted (missing) file as an explicit deletion", async () => {
+    const fake = fakeGit(0);
+    const result = await operations(fake).continueRestack(prAt(worktree), [
+      "gone.ts",
+    ]);
+    expect(result.exitCode).toBe(0);
+  });
+
+  test("rejects a directory pathspec and never stages it", async () => {
+    const fake = fakeGit(0);
+    await expect(
+      operations(fake).continueRestack(prAt(worktree), ["pkgdir"]),
+    ).rejects.toThrow(/not a specific file/);
+    expect(
+      fake.mustCalls.some((call) => call[0] === "git" && call[1] === "add"),
+    ).toBe(false);
+  });
+
+  test("rejects the '.' whole-worktree pathspec", async () => {
+    const fake = fakeGit(0);
+    await expect(
+      operations(fake).continueRestack(prAt(worktree), ["."]),
+    ).rejects.toThrow();
   });
 });
