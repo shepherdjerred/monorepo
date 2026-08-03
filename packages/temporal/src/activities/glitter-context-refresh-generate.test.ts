@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, mock, test } from "bun:test";
 import { zodResponseFormat } from "openai/helpers/zod";
 import {
   PersonSchema,
@@ -11,6 +11,9 @@ import {
   StyleChunkSummarySchema,
   StyleSynthesisSchema,
 } from "./glitter-context-refresh-style-schemas.ts";
+import * as glitterOpenai from "./glitter-context-refresh-openai.ts";
+import { GenerationBudget } from "./glitter-context-refresh-budget.ts";
+import type { GenerationArtifactStore } from "./glitter-context-refresh-cache.ts";
 
 const person = PersonSchema.parse({
   id: "ryan",
@@ -242,5 +245,121 @@ describe("Glitter generated style-card schemas", () => {
     ).toThrow(
       "style synthesis did not decide every prior summary observation exactly once",
     );
+  });
+});
+
+// The extraction/synthesis repair loop: gpt-5.6 occasionally cites a message ID
+// outside its supplied evidence set, and because completions are cached before
+// validation a fixed-seed retry would re-read the same poisoned artifact and
+// fail forever. Each repair attempt must use a distinct seed so it is a fresh,
+// cache-distinct call — a re-run then reuses the first attempt that passed.
+const firstMessage = CurrentMessageSchema.parse(messages[0]);
+
+const goodChunkSummary = {
+  observations: [
+    {
+      field: "voice" as const,
+      claim: "Writes concise, direct sentences.",
+      confidence: 0.9,
+      evidenceMessageIds: [firstMessage.messageId],
+    },
+  ],
+  representativeMessages: [
+    { messageId: firstMessage.messageId, content: firstMessage.content },
+  ],
+};
+
+const badChunkSummary = {
+  observations: [
+    {
+      field: "voice" as const,
+      claim: "Cites a message from outside the supplied chunk.",
+      confidence: 0.9,
+      evidenceMessageIds: ["99999999999999999"],
+    },
+  ],
+  representativeMessages: [],
+};
+
+const mockUsage = { prompt_tokens: 100, completion_tokens: 50 };
+
+let chunkResponder: (call: number) => unknown = () => goodChunkSummary;
+let chunkCallCount = 0;
+let recordedSeeds: number[] = [];
+
+await mock.module("./glitter-context-refresh-openai.ts", () => ({
+  ...glitterOpenai,
+  parseGlitterCompletion: (callSite: string, params: { seed: number }) => {
+    if (callSite.startsWith("glitter-style-chunk")) {
+      recordedSeeds.push(params.seed);
+      const parsed = chunkResponder(chunkCallCount);
+      chunkCallCount += 1;
+      return Promise.resolve({
+        choices: [{ message: { parsed, content: null } }],
+        usage: mockUsage,
+      });
+    }
+    return Promise.resolve({
+      choices: [{ message: { parsed: synthesis, content: null } }],
+      usage: mockUsage,
+    });
+  },
+}));
+
+const { generateStyleCard } =
+  await import("./glitter-context-refresh-style-generation.ts");
+
+function memoryStore(): GenerationArtifactStore {
+  const values = new Map<string, unknown>();
+  return {
+    ownerRunId: "11111111-1111-4111-8111-111111111111",
+    read: (key) => Promise.resolve(values.get(key)),
+    create: (key, value) => {
+      values.set(key, value);
+      return Promise.resolve();
+    },
+  };
+}
+
+describe("Glitter extraction repair loop", () => {
+  test("retries a poisoned chunk with a fresh seed and succeeds", async () => {
+    chunkCallCount = 0;
+    recordedSeeds = [];
+    // Attempt 0 (seed 0) cites an unknown ID; the repair (seed 1) is clean.
+    chunkResponder = (call) =>
+      call === 0 ? badChunkSummary : goodChunkSummary;
+
+    const result = await generateStyleCard({
+      candidate,
+      existingCard,
+      sourceSnapshotSha256: "a".repeat(64),
+      artifactStore: memoryStore(),
+      budget: new GenerationBudget(100),
+    });
+
+    expect(result.schemaVersion).toBe(2);
+    // Initial attempt seed 0, one repair at seed 1 — distinct seeds, so the
+    // repair is a genuinely fresh (cache-distinct) model call.
+    expect(recordedSeeds).toEqual([0, 1]);
+  });
+
+  test("throws after exhausting the bounded repair attempts", async () => {
+    chunkCallCount = 0;
+    recordedSeeds = [];
+    chunkResponder = () => badChunkSummary;
+
+    await expect(
+      generateStyleCard({
+        candidate,
+        existingCard,
+        sourceSnapshotSha256: "a".repeat(64),
+        artifactStore: memoryStore(),
+        budget: new GenerationBudget(100),
+      }),
+    ).rejects.toThrow("cites unknown message IDs");
+
+    // Initial attempt (seed 0) plus MAX_EXTRACTION_REPAIR_ATTEMPTS repairs,
+    // each with a distinct escalating seed.
+    expect(recordedSeeds).toEqual([0, 1, 2, 3, 4]);
   });
 });

@@ -45,6 +45,18 @@ const EXTRACTION_MAX_OUTPUT_TOKENS = 2000;
 const SYNTHESIS_MAX_OUTPUT_TOKENS = 15_000;
 const DETERMINISTIC_SEED = 0;
 
+// A single repair attempt is not enough: gpt-5.6 occasionally emits an
+// observation/quote/sample citing a message ID outside its supplied evidence
+// set, and because every completion is cached (immutably, keyed by request
+// hash) *before* validation, a fixed-seed retry re-reads the same poisoned
+// artifact and fails identically forever. Each repair attempt therefore uses a
+// distinct seed (`DETERMINISTIC_SEED + attempt`) so it is a genuinely fresh,
+// cache-distinct model call while staying deterministic by attempt index — a
+// re-run reuses the first attempt that passed. Attempt 0 is the initial call
+// (unchanged seed 0, so its cache key is stable); attempts 1..N are repairs.
+const MAX_EXTRACTION_REPAIR_ATTEMPTS = 4;
+const MAX_SYNTHESIS_REPAIR_ATTEMPTS = 3;
+
 type SummarizedChunk = {
   key: string;
   month: string;
@@ -128,6 +140,7 @@ async function runChunkExtraction(input: {
   chunk: StyleEvidenceChunk;
   artifactStore: GenerationArtifactStore;
   budget: GenerationBudget;
+  attempt: number;
   repair: {
     previous: StyleChunkSummary;
     error: string;
@@ -156,7 +169,7 @@ async function runChunkExtraction(input: {
     messages,
     max_completion_tokens: EXTRACTION_MAX_OUTPUT_TOKENS,
     reasoning_effort: "none" as const,
-    seed: DETERMINISTIC_SEED,
+    seed: DETERMINISTIC_SEED + input.attempt,
     response_format: zodResponseFormat(
       StyleChunkSummarySchema,
       "style_chunk_summary",
@@ -210,19 +223,33 @@ async function summarizeChunk(input: {
   artifactStore: GenerationArtifactStore;
   budget: GenerationBudget;
 }): Promise<StyleChunkSummary> {
-  const initial = await runChunkExtraction({ ...input, repair: null });
+  let previous = await runChunkExtraction({
+    ...input,
+    attempt: 0,
+    repair: null,
+  });
+  let lastError: Error;
   try {
-    validateChunkSummary(input.chunk, initial);
-    return initial;
+    validateChunkSummary(input.chunk, previous);
+    return previous;
   } catch (error: unknown) {
-    const parsedError = z.instanceof(Error).parse(error);
+    lastError = z.instanceof(Error).parse(error);
+  }
+  for (let attempt = 1; attempt <= MAX_EXTRACTION_REPAIR_ATTEMPTS; attempt++) {
     const repaired = await runChunkExtraction({
       ...input,
-      repair: { previous: initial, error: parsedError.message },
+      attempt,
+      repair: { previous, error: lastError.message },
     });
-    validateChunkSummary(input.chunk, repaired);
-    return repaired;
+    try {
+      validateChunkSummary(input.chunk, repaired);
+      return repaired;
+    } catch (error: unknown) {
+      lastError = z.instanceof(Error).parse(error);
+      previous = repaired;
+    }
   }
+  throw lastError;
 }
 
 function synthesisPrompt(input: {
@@ -295,6 +322,7 @@ async function runSynthesis(input: {
   chunks: readonly SummarizedChunk[];
   artifactStore: GenerationArtifactStore;
   budget: GenerationBudget;
+  attempt: number;
   repair: {
     previous: StyleSynthesis;
     error: string;
@@ -314,7 +342,7 @@ async function runSynthesis(input: {
     messages,
     max_completion_tokens: SYNTHESIS_MAX_OUTPUT_TOKENS,
     reasoning_effort: "medium" as const,
-    seed: DETERMINISTIC_SEED,
+    seed: DETERMINISTIC_SEED + input.attempt,
     response_format: zodResponseFormat(
       StyleSynthesisSchema,
       "style_card_synthesis",
@@ -368,12 +396,21 @@ export function estimateStyleGenerationCost(input: {
   const chunks = buildStyleEvidenceChunks(input.candidate.safeMessages);
   const extractionCost = chunks.reduce((total, chunk) => {
     const prompt = chunkPrompt({ candidate: input.candidate, chunk });
-    const oneAttempt = estimatedCallCostUsd({
+    const initialInputTokens = inputTokenUpperBound(prompt);
+    const initialCall = estimatedCallCostUsd({
       model: EXTRACTION_MODEL,
-      inputTokenUpperBound: inputTokenUpperBound(prompt),
+      inputTokenUpperBound: initialInputTokens,
       outputTokenUpperBound: EXTRACTION_MAX_OUTPUT_TOKENS,
     });
-    return total + oneAttempt * 2;
+    // Every repair attempt also serializes the prior summary (bounded by the
+    // output cap) and the validation error back into its request, so its input
+    // is larger than the initial call's.
+    const repairCall = estimatedCallCostUsd({
+      model: EXTRACTION_MODEL,
+      inputTokenUpperBound: initialInputTokens + EXTRACTION_MAX_OUTPUT_TOKENS,
+      outputTokenUpperBound: EXTRACTION_MAX_OUTPUT_TOKENS,
+    });
+    return total + initialCall + repairCall * MAX_EXTRACTION_REPAIR_ATTEMPTS;
   }, 0);
   const synthesisBase = synthesisPrompt({
     candidate: input.candidate,
@@ -384,12 +421,24 @@ export function estimateStyleGenerationCost(input: {
   const synthesisInputUpperBound =
     inputTokenUpperBound(synthesisBase) +
     chunks.length * EXTRACTION_MAX_OUTPUT_TOKENS;
-  const synthesisCost = estimatedCallCostUsd({
+  const synthesisInitialCall = estimatedCallCostUsd({
     model: SYNTHESIS_MODEL,
     inputTokenUpperBound: synthesisInputUpperBound,
     outputTokenUpperBound: SYNTHESIS_MAX_OUTPUT_TOKENS,
   });
-  return extractionCost + synthesisCost * 2;
+  // A synthesis repair likewise serializes the prior synthesis (bounded by the
+  // output cap) plus the error into its request.
+  const synthesisRepairCall = estimatedCallCostUsd({
+    model: SYNTHESIS_MODEL,
+    inputTokenUpperBound:
+      synthesisInputUpperBound + SYNTHESIS_MAX_OUTPUT_TOKENS,
+    outputTokenUpperBound: SYNTHESIS_MAX_OUTPUT_TOKENS,
+  });
+  return (
+    extractionCost +
+    synthesisInitialCall +
+    synthesisRepairCall * MAX_SYNTHESIS_REPAIR_ATTEMPTS
+  );
 }
 
 export async function generateStyleCard(input: {
@@ -413,28 +462,39 @@ export async function generateStyleCard(input: {
       }),
     });
   }
-  const initial = await runSynthesis({
+  let previous = await runSynthesis({
     ...input,
     chunks: summarizedChunks,
+    attempt: 0,
     repair: null,
   });
+  let lastError: Error;
   try {
     return finalizeStyleSynthesis({
       ...input,
       chunkCount: chunks.length,
-      synthesis: initial,
+      synthesis: previous,
     });
   } catch (error: unknown) {
-    const parsedError = z.instanceof(Error).parse(error);
+    lastError = z.instanceof(Error).parse(error);
+  }
+  for (let attempt = 1; attempt <= MAX_SYNTHESIS_REPAIR_ATTEMPTS; attempt++) {
     const repaired = await runSynthesis({
       ...input,
       chunks: summarizedChunks,
-      repair: { previous: initial, error: parsedError.message },
+      attempt,
+      repair: { previous, error: lastError.message },
     });
-    return finalizeStyleSynthesis({
-      ...input,
-      chunkCount: chunks.length,
-      synthesis: repaired,
-    });
+    try {
+      return finalizeStyleSynthesis({
+        ...input,
+        chunkCount: chunks.length,
+        synthesis: repaired,
+      });
+    } catch (error: unknown) {
+      lastError = z.instanceof(Error).parse(error);
+      previous = repaired;
+    }
   }
+  throw lastError;
 }
