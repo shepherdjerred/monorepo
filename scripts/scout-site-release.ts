@@ -91,6 +91,41 @@ export async function hashReleaseInputFiles(
   return `sha256:${hasher.digest("hex")}`;
 }
 
+/**
+ * Content-address a Scout release by its build inputs. `sourceCommit` is part
+ * of the identity on purpose: the site build bakes the commit into the
+ * deployable bytes (`VITE_GIT_SHA` / `PUBLIC_GIT_SHA` in `buildSite`), so the
+ * bytes are commit-dependent. Leaving the commit out let two commits with
+ * otherwise-identical inputs share an archive identity yet produce different
+ * bytes, tripping the immutable-archive guard — and, once a build was canceled
+ * mid-archive, the orphaned record wedged every later release. Binding the
+ * identity to the commit keeps content-addressing honest: same identity ⇒ same
+ * bytes.
+ */
+export function computeReleaseInputDigest(inputs: {
+  sourceCommit: string;
+  backendImageDigest: string;
+  sourceInputsDigest: string;
+  contractHash: string;
+  pinterestTagId: string;
+  redditPixelId: string;
+}): string {
+  const hasher = new Bun.CryptoHasher("sha256");
+  hasher.update(
+    JSON.stringify({
+      schema: "scout-release-input/v2",
+      sourceCommit: inputs.sourceCommit,
+      backendImageDigest: inputs.backendImageDigest,
+      sourceInputsDigest: inputs.sourceInputsDigest,
+      contractHash: inputs.contractHash,
+      plausibleDomains: PLAUSIBLE_DOMAIN_BY_FLAVOR,
+      pinterestTagId: inputs.pinterestTagId,
+      redditPixelId: inputs.redditPixelId,
+    }),
+  );
+  return `sha256:${hasher.digest("hex")}`;
+}
+
 export async function writeScoutReleaseState(
   output: string,
   state: ScoutReleaseState,
@@ -178,18 +213,14 @@ async function prepareState(args: string[], dryRun: boolean): Promise<void> {
   if (!/^[0-9a-f]{40}$/.test(sourceCommit)) {
     throw new Error(`source commit is not canonical: ${sourceCommit}`);
   }
-  const inputHasher = new Bun.CryptoHasher("sha256");
-  inputHasher.update(
-    JSON.stringify({
-      schema: "scout-release-input/v1",
-      backendImageDigest,
-      sourceInputsDigest: await releaseSourceDigest(),
-      contractHash: await contractHash(),
-      plausibleDomains: PLAUSIBLE_DOMAIN_BY_FLAVOR,
-      pinterestTagId: requireEnv("PUBLIC_PINTEREST_TAG_ID"),
-      redditPixelId: requireEnv("PUBLIC_REDDIT_PIXEL_ID"),
-    }),
-  );
+  const releaseInputDigest = computeReleaseInputDigest({
+    sourceCommit,
+    backendImageDigest,
+    sourceInputsDigest: await releaseSourceDigest(),
+    contractHash: await contractHash(),
+    pinterestTagId: requireEnv("PUBLIC_PINTEREST_TAG_ID"),
+    redditPixelId: requireEnv("PUBLIC_REDDIT_PIXEL_ID"),
+  });
   const provisional = ScoutReleaseStateSchema.parse({
     schema: "scout-release-state/v1",
     buildNumber,
@@ -198,7 +229,7 @@ async function prepareState(args: string[], dryRun: boolean): Promise<void> {
     backendImageDigest,
     siteArchiveDigest: PLACEHOLDER_DIGEST,
     betaSiteArchiveDigest: PLACEHOLDER_DIGEST,
-    releaseInputDigest: `sha256:${inputHasher.digest("hex")}`,
+    releaseInputDigest,
   });
   if (!dryRun) {
     const existing = await readScoutStateByInput(
