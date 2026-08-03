@@ -27,6 +27,46 @@ Every `op` CLI invocation requires the human operator to authenticate (biometric
 - Combine lookups when possible (e.g. get the full item once, then extract fields from the JSON)
 - Never loop over items with individual `op` calls when a single `op item list --format json` can get everything
 
+## IMPORTANT: Do NOT gate work on `op whoami` or `op signin`
+
+On a local machine, `op` typically uses the **1Password desktop-app integration
+with biometric unlock**. Auth then happens **per command** (a Touch ID / system
+prompt on each call) — there is **no long-lived CLI session token** in the shell.
+Two behaviors routinely mislead agents into wrongly concluding 1Password is
+unavailable:
+
+- **`op whoami` reports a false negative.** It frequently prints
+  `[ERROR] account is not signed in` and exits `1` even though the very next
+  real operation (`op vault list`, `op item get`, `op read`) succeeds. `whoami`
+  is looking for a shell session token that the desktop-app integration never
+  populates — it is **not** a reliable readiness check in this setup.
+- **`op signin` is effectively a no-op here.** Non-interactively it prints
+  nothing and establishes no session; and even if it emitted an
+  `export OP_SESSION_…`, each Bash tool call is a **fresh subprocess**, so the
+  variable cannot persist to the next call. Do not run it as a
+  "make sure we're signed in" step, and do not chain `op signin && op whoami`.
+
+**Do this instead — probe with the real command you need:**
+
+```bash
+# Readiness == a real read succeeds (triggers the biometric prompt if needed).
+op vault list          # auto-approved; returns vaults when op is usable
+# ...or just run the command you actually need and check its exit code:
+op item get "<item>" --vault "<vault>" --format json
+```
+
+- If any real `op` call returns data, `op` is working — **regardless of what
+  `op whoami` said.** Proceed.
+- Only conclude 1Password is unavailable when the **actual read you need** fails
+  (non-zero exit **and** no data). Never ask the user to sign in based on
+  `op whoami` / `op signin` output alone.
+- `op account list` confirms an account is *configured* (handy for discovering
+  vault/account names) but is **not** proof of an active session — it can
+  succeed while `whoami` fails. Use it for discovery, not gating.
+- **Exception — service accounts** (`OP_SERVICE_ACCOUNT_TOKEN`, e.g. CI): there
+  *is* a real token, so `op whoami` is meaningful there. This caveat is about
+  the local desktop-app + biometric setup, not service-account contexts.
+
 ## CLI Commands
 
 ### Auto-Approved Commands
@@ -35,8 +75,8 @@ The following `op` commands are auto-approved and can be used safely:
 
 - `op item list` - List items in vaults
 - `op item get` - Retrieve item details
-- `op vault list` - List available vaults
-- `op whoami` - Show current user information
+- `op vault list` - List available vaults (best readiness probe — see caveat above)
+- `op whoami` - Show current user information (⚠️ unreliable as a sign-in check under the desktop-app + biometric setup — see "Do NOT gate work on `op whoami`" above)
 
 ### Common Operations
 
@@ -301,3 +341,5 @@ Ask the user for clarification when:
 - Multiple fields exist and it's unclear which one to use
 - Service account permissions might be insufficient
 - The secret retrieval pattern doesn't match standard 1Password practices
+- The **actual read you need** fails with no data (not merely `op whoami` failing —
+  see "Do NOT gate work on `op whoami`"); only then surface a sign-in problem to the user
