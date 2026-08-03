@@ -17,7 +17,8 @@
     "test": "bun test test/",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "lint": "eslint .",
-    "test:ci": "bun ../../scripts/run-ci-test.ts"
+    "test:ci": "bun ../../scripts/run-ci-test.ts",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/run-ci-test.ts"
   },
   "dependencies": {
     "@opentelemetry/api": "^1.9.1",

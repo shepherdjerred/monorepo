@@ -3,6 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 UPLOADER="${SCRIPT_DIR}/upload-pipeline.sh"
+REPORTING_UPLOADER="${SCRIPT_DIR}/upload-reporting-pipeline.sh"
 FIXTURE=$(mktemp -d)
 trap 'rm -rf "$FIXTURE"' EXIT
 
@@ -24,11 +25,18 @@ git -C "$FIXTURE" commit -qm rename
 
 cat > "$FIXTURE/fake-bin/buildkite-agent" <<'EOF'
 #!/bin/sh
-if [ "$1" != pipeline ] || [ "$2" != upload ] || [ "$3" != --changed-files-path ]; then
+if [ "$1" != pipeline ] || [ "$2" != upload ]; then
   echo "unexpected buildkite-agent invocation: $*" >&2
   exit 2
 fi
-cp "$4" "$CAPTURE_PATH"
+if [ "$3" = "--changed-files-path" ]; then
+  cp "$4" "$CAPTURE_PATH"
+elif [ "$3" = ".buildkite/reporting-pipeline.yml" ]; then
+  printf '%s\n' "$3" > "$CAPTURE_PATH"
+else
+  echo "unexpected buildkite-agent pipeline upload arguments: $*" >&2
+  exit 2
+fi
 printf '%s\n' "$CI_BASE_IMAGE" > "$CI_BASE_IMAGE_CAPTURE"
 printf '%s\n' "$CI_PLAYWRIGHT_IMAGE" > "$CI_PLAYWRIGHT_IMAGE_CAPTURE"
 EOF
@@ -54,6 +62,24 @@ if [ "$(cat "$FIXTURE/ci-base-image")" != "ghcr.io/shepherdjerred/ci-base@sha256
 fi
 if [ "$(cat "$FIXTURE/ci-playwright-image")" != "ghcr.io/shepherdjerred/ci-playwright@sha256:0000000000000000000000000000000000000000000000000000000000000001" ]; then
   echo "ci-playwright digest pin was not exported" >&2
+  exit 1
+fi
+
+CAPTURE_PATH="$FIXTURE/reporting-pipeline" \
+  CI_BASE_IMAGE_CAPTURE="$FIXTURE/reporting-ci-base-image" \
+  CI_PLAYWRIGHT_IMAGE_CAPTURE="$FIXTURE/reporting-ci-playwright-image" \
+  PATH="$FIXTURE/fake-bin:$PATH" \
+  sh -c "cd '$FIXTURE' && sh '$REPORTING_UPLOADER'"
+if [ "$(cat "$FIXTURE/reporting-pipeline")" != ".buildkite/reporting-pipeline.yml" ]; then
+  echo "reporting uploader did not upload the reporting pipeline" >&2
+  exit 1
+fi
+if [ "$(cat "$FIXTURE/reporting-ci-base-image")" != "ghcr.io/shepherdjerred/ci-base@sha256:0000000000000000000000000000000000000000000000000000000000000000" ]; then
+  echo "reporting uploader did not export the ci-base digest pin" >&2
+  exit 1
+fi
+if [ "$(cat "$FIXTURE/reporting-ci-playwright-image")" != "ghcr.io/shepherdjerred/ci-playwright@sha256:0000000000000000000000000000000000000000000000000000000000000001" ]; then
+  echo "reporting uploader did not export the ci-playwright digest pin" >&2
   exit 1
 fi
 

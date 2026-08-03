@@ -17,7 +17,8 @@
     "format": "bunx prettier --check src",
     "format:write": "bunx prettier --write src",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
-    "update-data-dragon": "bun run scripts/update-data-dragon.ts"
+    "update-data-dragon": "bun run scripts/update-data-dragon.ts",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../../../scripts/run-ci-test.ts"
   },
   "dependencies": {
     "@shepherdjerred/llm-models": "workspace:*",

@@ -23,9 +23,27 @@
         "properties": {
           "package": { "type": "string", "minLength": 1 },
           "directory": { "type": "string", "minLength": 1 },
+          "coverageSourceDirectories": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          },
           "defaultEnv": {
             "type": "object",
             "additionalProperties": { "type": "string" }
+          },
+          "excludedSuites": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["path", "reason"],
+              "properties": {
+                "path": { "type": "string", "minLength": 1 },
+                "reason": { "type": "string", "minLength": 1 }
+              }
+            }
           },
           "steps": {
             "type": "array",
@@ -46,6 +64,10 @@
                     "args": {
                       "type": "array",
                       "items": { "type": "string" }
+                    },
+                    "coverageConfig": {
+                      "type": "string",
+                      "minLength": 1
                     }
                   }
                 },

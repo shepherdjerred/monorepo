@@ -187,6 +187,9 @@ async function validateSelectorAndUpload({
   const uploadPipeline = await Bun.file(
     ".buildkite/scripts/upload-pipeline.sh",
   ).text();
+  const ciImageRefs = await Bun.file(
+    ".buildkite/scripts/ci-image-refs.sh",
+  ).text();
   const tofuPipeline = await Bun.file(
     "packages/homelab/src/tofu/buildkite/pipeline.tf",
   ).text();
@@ -202,7 +205,7 @@ async function validateSelectorAndUpload({
     ".buildkite/ci-playwright/DIGEST",
     "export CI_BASE_IMAGE CI_PLAYWRIGHT_IMAGE",
   ]) {
-    if (!uploadPipeline.includes(required)) {
+    if (!ciImageRefs.includes(required)) {
       fail(`pipeline upload is missing immutable CI image input ${required}`);
     }
   }

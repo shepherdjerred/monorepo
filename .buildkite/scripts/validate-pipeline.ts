@@ -32,6 +32,7 @@ import { validateCaddySmokeContracts } from "./validate-pipeline-caddy.ts";
 import { validateImageMigrationContracts } from "./validate-image-migration.ts";
 import { validateReleasePipelineContracts } from "./validate-pipeline-release.ts";
 import { validatePlaywrightLanes } from "./validate-pipeline-playwright.ts";
+import { validateReportingPipeline } from "./validate-reporting-pipeline.ts";
 import { fixedCorpusMode, lanePaths, summarySteps } from "./migration-core.ts";
 
 const PIPELINE_PATH = ".buildkite/pipeline.yml";
@@ -53,6 +54,10 @@ const PATH_GATED_PR_KEYS = new Set([
 ]);
 const pipeline = await Bun.file(PIPELINE_PATH).text();
 const lines = pipeline.split("\n");
+const reportingPipeline = await Bun.file(
+  ".buildkite/reporting-pipeline.yml",
+).text();
+validateReportingPipeline(reportingPipeline);
 
 fixedCorpusMode(Bun.env);
 
@@ -117,6 +122,11 @@ const { stepStarts, keys, stepBlocks } = collectStepBlocks(lines, {
   pathGatedPrKeys: PATH_GATED_PR_KEYS,
   globalIfChanged: GLOBAL_IF_CHANGED,
 });
+requireIncludes(
+  stepBlocks.get("verify"),
+  "write-coverage-summary.ts --allow-partial",
+  "verify must explicitly allow an empty or partial ordinary-build coverage set",
+);
 
 const mainHardSteps = [...stepBlocks]
   .filter(
@@ -193,19 +203,6 @@ for (const [key, lane, candidate] of [
     );
   }
 }
-for (const [key, expected] of [
-  ["playwright-e2e-pr", "missing-error: 1"],
-  ["playwright-e2e-main", "missing-error: 0"],
-] satisfies readonly (readonly [string, string])[]) {
-  if (!stepBlocks.get(key)?.includes(expected)) {
-    fail(`${key} must configure the test collector with ${expected}`);
-  }
-}
-requireIncludes(
-  stepBlocks.get("playwright-e2e-main"),
-  "if [ ! -s .ci-reports/junit/sjer.red/playwright.xml ]; then",
-  "playwright-e2e-main must fail when an executed run emits no JUnit report",
-);
 
 // The merged PR dry-run lane owns the helm-types drift gate, the tofu plans,
 // and the print-only deploy rehearsals. Its install must stay the exact

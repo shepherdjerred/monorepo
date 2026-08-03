@@ -89,16 +89,29 @@ stored in Turbo, BuildKit, registries, or deployment storage.
 - Audited the current Buildkite artifact set, Turbo test graph, package runners,
   coverage scripts, Test Engine state, and OpenTofu pipeline resources.
 - Approved the implementation decisions captured above.
+- Opened draft PR #1782 with the 41-workspace test manifest, cached `test:ci`
+  graph, normalized Bun/Vitest/Go/Playwright JUnit, partial Test Engine uploads,
+  and artifact retention.
+- Created the `monorepo-tests` Test Engine suite.
+- Implemented the second stack layer with an uncached complete reporting graph,
+  LCOV/Go coverage aggregation, script-coverage harvesting, a non-deploying
+  `monorepo-test-reporting` pipeline, and an initially disabled daily schedule.
+- Proved the complete local reporting graph: all 79 Turbo tasks passed, 50
+  JUnit files were indexed, and all 41 tested workspaces emitted coverage.
 
 ### Remaining
 
-- [ ] Implement and publish the three-PR git-spice stack.
-- [ ] Provision and verify the Test Engine suite token.
+- [ ] Publish PR 2 and implement/publish the PR 3 rollout layer.
+- [ ] Add the suite token to the existing 1Password item and verify Kubernetes
+      reconciliation.
 - [ ] Complete local and remote acceptance checks.
 - [ ] Archive the completed plan and related reporting TODOs after rollout.
 
 ### Caveats
 
-- The current organization has no Test Engine suites or Buildkite schedules.
+- The Test Engine suite exists, but local 1Password biometric authorization
+  timed out before its token could be added to `Buildkite CI Secrets`.
+- The daily schedule remains disabled until the dedicated pipeline succeeds
+  manually.
 - The first automatic scheduled run is remote evidence and cannot be claimed
   complete from configuration or a manual build alone.

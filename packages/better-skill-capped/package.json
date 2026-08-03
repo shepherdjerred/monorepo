@@ -13,7 +13,8 @@
     "lint": "eslint src --cache",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "deploy": "bun ../../scripts/deploy-site.ts better-skill-capped",
-    "test:ci": "bun ../../scripts/run-ci-test.ts"
+    "test:ci": "bun ../../scripts/run-ci-test.ts",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/run-ci-test.ts"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.2.0",
