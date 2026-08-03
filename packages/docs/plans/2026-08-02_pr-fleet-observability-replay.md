@@ -213,7 +213,7 @@ repository checkout.
   exact published implementation against a zero-open-PR repository. The
   manifest recorded clean controller-source provenance, default inspection hid
   command arguments and bodies, replay verified every lifecycle with no open
-  entries (including seven closed command lifecycles), every database sidecar
+  entries, every recorded command lifecycle was closed, every database sidecar
   was mode `0600`, and DuckDB contained one correlated trace with zero score or
   feedback rows. A separate SIGINT canary produced and replayed a closed bundle.
 
