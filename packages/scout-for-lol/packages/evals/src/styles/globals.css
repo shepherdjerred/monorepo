@@ -1,0 +1,128 @@
+@import "tailwindcss";
+@import "shadcn/tailwind.css";
+
+@theme inline {
+  --font-sans: "Geist Variable", sans-serif;
+  --font-mono: "SFMono-Regular", Consolas, monospace;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) * 0.65);
+  --radius-md: calc(var(--radius) * 0.82);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.35);
+}
+
+:root {
+  color-scheme: light;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.18 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0 0);
+  --primary: oklch(0.45 0.18 260);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.24 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.5 0 0);
+  --accent: oklch(0.96 0.01 260);
+  --accent-foreground: oklch(0.22 0 0);
+  --destructive: oklch(0.57 0.24 27);
+  --border: oklch(0.88 0 0);
+  --input: oklch(0.82 0 0);
+  --ring: oklch(0.55 0.16 260);
+  --radius: 0.4rem;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    @apply font-sans;
+  }
+
+  body {
+    @apply m-0 min-w-80 bg-background text-foreground;
+    min-height: 100vh;
+  }
+
+  button,
+  input,
+  textarea {
+    font: inherit;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+@layer components {
+  .field-label {
+    @apply grid gap-1.5 text-sm font-medium text-slate-800;
+  }
+
+  .form-input {
+    @apply w-full rounded-md border bg-white px-3 py-2 text-sm text-slate-950 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20;
+  }
+
+  .case-row {
+    @apply flex items-center gap-3 rounded-md border bg-card px-3 py-3 hover:bg-slate-50 sm:px-4;
+  }
+
+  .case-number {
+    @apply font-mono text-xs text-muted-foreground;
+  }
+
+  .score-field {
+    @apply border-0 p-0;
+  }
+
+  .score-option {
+    @apply flex cursor-pointer items-center gap-2 rounded-md border bg-background p-2 hover:bg-slate-50 has-[:checked]:border-blue-600 has-[:checked]:bg-blue-50 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring;
+  }
+
+  .score-option input {
+    @apply sr-only;
+  }
+
+  .score-dot {
+    @apply grid size-6 shrink-0 place-items-center rounded-full border font-mono text-xs font-semibold text-muted-foreground;
+  }
+
+  .score-option:has(:checked) .score-dot {
+    @apply border-blue-600 bg-blue-600 text-white;
+  }
+
+  .evidence-panel {
+    @apply overflow-hidden rounded-md border bg-card;
+  }
+
+  .evidence-panel summary {
+    @apply cursor-pointer px-4 py-3 text-sm font-medium transition hover:bg-muted/60;
+  }
+
+  .evidence-panel pre {
+    @apply m-0 max-h-96 overflow-auto border-t bg-slate-50 p-3 font-mono text-xs leading-5 whitespace-pre-wrap text-slate-800;
+  }
+}

@@ -22,6 +22,7 @@ import {
   getPatchChangeset,
   selectRelevantPatchChanges,
   formatPatchNotes,
+  requirePlayerAtIndex,
   type ReviewPipelineOutput,
 } from "@scout-for-lol/data/index.ts";
 import * as Sentry from "@sentry/bun";
@@ -55,7 +56,7 @@ export type ReviewMetadata = {
  *
  * Prefers "Jerred" if they're in the match, otherwise selects randomly.
  */
-function selectPlayerIndex(match: CompletedMatch | ArenaMatch): number {
+export function selectPlayerIndex(match: CompletedMatch | ArenaMatch): number {
   const jerredIndex = match.players.findIndex(
     (p) => p.playerConfig.alias.toLowerCase() === "jerred",
   );
@@ -97,8 +98,8 @@ function decodeReviewImage(
   try {
     const binaryString = atob(imageBase64);
     const bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.codePointAt(i) ?? 0;
+    for (let index = 0; index < binaryString.length; index++) {
+      bytes[index] = binaryString.codePointAt(index) ?? 0;
     }
     return bytes;
   } catch (error) {
@@ -109,6 +110,15 @@ function decodeReviewImage(
 
 type SelectedReviewPlayer = (CompletedMatch | ArenaMatch)["players"][number];
 
+function requireSelectedReviewPlayer(
+  match: CompletedMatch | ArenaMatch,
+  playerIndex: number,
+): SelectedReviewPlayer {
+  return match.queueType === "arena"
+    ? requirePlayerAtIndex(match.players, playerIndex)
+    : requirePlayerAtIndex(match.players, playerIndex);
+}
+
 /**
  * Build the DB-backed player-history block and the cross-referenced patch block
  * for the selected player. A player with no tracked account or no prior games
@@ -116,13 +126,13 @@ type SelectedReviewPlayer = (CompletedMatch | ArenaMatch)["players"][number];
  * propagates (fail-fast) to the review's outer error handler rather than being
  * silently swallowed.
  */
-async function buildDynamicReviewContext(params: {
+async function buildDynamicReviewContext(parameters: {
   match: CompletedMatch | ArenaMatch;
   selectedPlayer: SelectedReviewPlayer;
   matchId: MatchId;
   targetServerIds?: DiscordGuildId[];
 }): Promise<{ playerHistory: string; patchNotes: string }> {
-  const { match, selectedPlayer, matchId, targetServerIds } = params;
+  const { match, selectedPlayer, matchId, targetServerIds } = parameters;
 
   const selectedLane: Lane | undefined =
     match.queueType !== "arena" &&
@@ -164,7 +174,7 @@ async function buildDynamicReviewContext(params: {
   return { playerHistory: history.text, patchNotes };
 }
 
-function reportOpenAIProviderIssue(
+function didReportOpenAIProviderIssue(
   error: unknown,
   context: {
     matchId: MatchId;
@@ -208,6 +218,7 @@ function resolveOpenAIProviderIssues(): void {
  *
  * @param options.match - The completed match data (regular or arena)
  * @param options.matchId - The match ID for S3 storage
+ * @param options.playerIndex - The already-selected player to review
  * @param options.rawMatchData - Raw match data from Riot API (required for match summary generation)
  * @param options.timelineData - Timeline data from Riot API (required for timeline summary)
  * @param options.targetServerIds - Discord guild ids the report targets, used to scope player history
@@ -216,6 +227,7 @@ function resolveOpenAIProviderIssues(): void {
 export type GenerateMatchReviewOptions = {
   match: CompletedMatch | ArenaMatch;
   matchId: MatchId;
+  playerIndex: number;
   rawMatchData: RawMatch;
   timelineData: RawTimeline;
   targetServerIds?: DiscordGuildId[];
@@ -226,8 +238,16 @@ export async function generateMatchReview(
 ): Promise<
   { text: string; image?: Uint8Array; metadata?: ReviewMetadata } | undefined
 > {
-  const { match, matchId, rawMatchData, timelineData, targetServerIds } =
-    options;
+  const {
+    match,
+    matchId,
+    playerIndex,
+    rawMatchData,
+    timelineData,
+    targetServerIds,
+  } = options;
+  const selectedPlayer = requireSelectedReviewPlayer(match, playerIndex);
+
   // Initialize clients
   const openaiClient = getOpenAIClient();
   if (!openaiClient) {
@@ -236,16 +256,6 @@ export async function generateMatchReview(
   }
 
   const geminiClient = getGeminiClient();
-
-  // Select player
-  const playerIndex = selectPlayerIndex(match);
-  const selectedPlayer = match.players[playerIndex];
-  if (!selectedPlayer) {
-    logger.info(
-      "No player found at selected index, skipping review generation",
-    );
-    return undefined;
-  }
 
   const playerName = selectedPlayer.playerConfig.alias;
   if (!playerName) {
@@ -342,7 +352,7 @@ export async function generateMatchReview(
     });
   } catch (error) {
     if (
-      reportOpenAIProviderIssue(error, {
+      didReportOpenAIProviderIssue(error, {
         matchId,
       })
     ) {

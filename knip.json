@@ -154,6 +154,20 @@
       ],
       "project": ["src/**/*.{ts,tsx}", "*.ts", "public/**/*.js"]
     },
+    "packages/scout-for-lol/packages/evals": {
+      "entry": [
+        "src/client/main.tsx",
+        "src/dev.ts",
+        "src/server/index.ts",
+        "src/scripts/**/*.ts",
+        "src/**/*.test.ts",
+        "e2e/**/*.ts",
+        "playwright.config.ts",
+        "vite.config.ts"
+      ],
+      "project": ["src/**/*.{ts,tsx}", "e2e/**/*.ts", "*.ts"],
+      "ignoreDependencies": ["shadcn"]
+    },
     "packages/scout-for-lol/packages/desktop": {
       "entry": ["src/main.tsx"],
       "project": ["src/**/*.{ts,tsx}"],

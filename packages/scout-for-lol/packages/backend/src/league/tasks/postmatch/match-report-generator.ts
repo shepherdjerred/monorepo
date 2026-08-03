@@ -297,7 +297,6 @@ async function processStandardMatch(
       matchId,
       matchData,
       timelineData,
-      playersInMatch,
       targetGuildIds,
     });
 
