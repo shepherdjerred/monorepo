@@ -438,3 +438,52 @@ running`). Every subsequent `/play` then replies "Starting Mario Kart 64 in
   unrecoverable client state, and `/play` reporting success when it cannot
   stream (a fail-fast violation — it should surface the dead gateway). Not
   fixed here; filed as `packages/docs/todos/mk64-stop-bricks-stream-account.md`.
+
+## Session Log — 2026-08-03 (press-to-glass)
+
+### Done
+
+- Built and validated a real input-lag ruler after establishing that every
+  prior measurement in this plan was video-path only, not input lag.
+  `packages/discord-plays-mario-kart/packages/backend/scripts/e2e-press-to-glass.ts`
+  (input half) plus a `requestVideoFrameCallback` HUD decoder that samples every
+  presented frame (analysis harness in the session scratchpad).
+- Measured press-to-glass, single player, in Discord: **~172 ms settled,
+  ~500 ms on a fresh stream**, decomposed into input path / pod→browser /
+  client buffer / vsync. Charted the decay (attached to PR #1973).
+- Validated the measurement: exact glyph decode, single-frame rise gate, NTP
+  round-trip clock skew (18.54 ± 0.54 ms, re-verified), vsync quantisation of
+  `expectedDisplayTime`, and concurrent getStats corroboration of the client leg.
+- Ruled out clock drift, retransmission, ffmpeg input backpressure, and
+  sub-realtime encode as causes of the decaying pod→browser leg.
+- Shipped `video_playout_delay_max_ms` (fork opt-in + mario-kart config),
+  defaulting to the historical 100 ms so no consumer changes behavior.
+- Filed `packages/docs/todos/mk64-stop-bricks-stream-account.md`.
+- PR #1973 (draft, git-spice, off the new main after #1965 merged mid-session).
+
+### Remaining
+
+- **A/B `video_playout_delay_max_ms` 100 → 30 at matched stream age.** This is
+  the first change the new ruler can properly evaluate, and the client buffer
+  is ~92 ms of a ~172 ms settled budget. Requires a candidate image, deploy by
+  digest, and two runs started at the same stream age.
+- **Phase 3 metric repair is now the blocker for the biggest unexplained term.**
+  `stream_packet_ready_delay_ms` is pinned at its top bucket, so ~200 ms of
+  fresh-stream pod→browser latency cannot be localised to encode, packetize,
+  pacer, or SFU.
+- Understand and fix the startup decay itself — a player who `/play`s and races
+  immediately gets 2-3x the settled lag.
+- Phase 4 freeze attribution, Phase 5 4P gate (unchanged).
+
+### Caveats
+
+- The settled figure (~172 ms) comes from runs that had not finished decaying;
+  the true floor may be lower. Runs were 4 minutes.
+- `press → HUD digit lit` deliberately excludes MK64's own internal reaction
+  (~66-133 ms). It measures the part of the budget this system controls; felt
+  lag is higher.
+- `/stop` bricks the stream account, so every session cycle in this work used
+  a pod restart instead. `scratchpad/start_stream.sh` encodes that.
+- The A/B in the earlier Comment Log entries was measured with the video-path
+  ruler. Those numbers are not wrong, but they are not input lag, and the
+  stream-age confound means their confidence intervals understate uncertainty.
