@@ -64,6 +64,37 @@ export default defineConfig({
           ],
           label: "Homelab",
         },
+        {
+          items: [
+            { label: "Overview", link: "/temporal/" },
+            { label: "Scheduled automations", link: "/temporal/schedules/" },
+            { label: "Agent tasks", link: "/temporal/agent-tasks/" },
+            { label: "Event-driven surfaces", link: "/temporal/events/" },
+            {
+              collapsed: true,
+              items: [
+                { label: "Inventory", link: "/temporal/workflows/" },
+                {
+                  label: "Repo upkeep",
+                  link: "/temporal/workflows/repo-upkeep/",
+                },
+                { label: "Scout", link: "/temporal/workflows/scout/" },
+                { label: "Glitter", link: "/temporal/workflows/glitter/" },
+                {
+                  label: "Homelab maintenance",
+                  link: "/temporal/workflows/homelab-maintenance/",
+                },
+                {
+                  label: "Home automation",
+                  link: "/temporal/workflows/home-automation/",
+                },
+                { label: "GitHub PRs", link: "/temporal/workflows/pr-bots/" },
+              ],
+              label: "Workflows",
+            },
+          ],
+          label: "Temporal",
+        },
       ],
       social: [
         {

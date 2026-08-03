@@ -2,7 +2,14 @@
   "$schema": "https://turborepo.dev/schema.json",
   // Root-level files whose change must invalidate every task hash.
   // (Root package.json, turbo.json, and bun.lock are always hashed by turbo.)
-  "globalDependencies": [".mise.toml", "bunfig.toml", "patches/**"],
+  "globalDependencies": [
+    ".mise.toml",
+    "bunfig.toml",
+    "patches/**",
+    "scripts/ci-reporting.ts",
+    "scripts/ci-test-manifest.json",
+    "scripts/run-ci-test.ts"
+  ],
   // The toolkit / tasknotes-server `bun --compile` binaries are ~180 MB
   // (64 MB zstd) — over the default upload timeout, so those tasks
   // remote-MISSED every build ("cache artifact ... too large to upload
@@ -28,6 +35,20 @@
     "test": {
       "dependsOn": ["^build", "generate"],
       "env": ["NODE_ENV"]
+    },
+    // CI uses the same cache semantics as `test`, but packages emit JUnit on
+    // cache misses. Reports are deliberately not outputs: a cache hit must not
+    // restore a stale report from another build.
+    "test:ci": {
+      "env": ["NODE_ENV"],
+      "dependsOn": ["^build", "generate"]
+    },
+    // The scheduled reporting pipeline must execute every test and produce a
+    // complete fresh coverage set, so this task intentionally bypasses Turbo.
+    "test:report": {
+      "cache": false,
+      "env": ["NODE_ENV"],
+      "dependsOn": ["generate", "^build"]
     },
     "lint": {
       // "generate" for the same reason typecheck/test have it: type-aware
@@ -103,6 +124,7 @@
     },
     "//#script-coverage": {
       "dependsOn": ["//#check-script-migrations"],
+      "cache": false,
       "inputs": [
         "scripts/bunfig.coverage.toml",
         "scripts/check-script-coverage.ts",

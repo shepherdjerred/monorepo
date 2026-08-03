@@ -7,7 +7,7 @@
     "ios": "react-native run-ios",
     "start": "react-native start",
     "test": "bun test src scripts",
-    "test:coverage": "bun test --config ../../scripts/bunfig.coverage.toml --coverage scripts/clean-ios.test.ts scripts/ios-logs.test.ts",
+    "test:coverage": "bun test --coverage-reporter=text --coverage-reporter=lcov --coverage-dir=coverage --config ../../scripts/bunfig.coverage.toml --coverage scripts/clean-ios.test.ts scripts/ios-logs.test.ts",
     "test:contract": "bun test contract-tests --timeout 20000",
     "e2e": "bun run e2e/run.ts",
     "lint": "eslint .",
@@ -18,7 +18,9 @@
     "pod-install": "cd ios && pod install",
     "clean:ios": "bun scripts/clean-ios.ts",
     "ios:logs": "bun scripts/ios-logs.ts",
-    "lint:swift": "swiftlint lint --strict --quiet ios/TasksForObsidian ios/TasksWidget"
+    "lint:swift": "swiftlint lint --strict --quiet ios/TasksForObsidian ios/TasksWidget",
+    "test:ci": "bun ../../scripts/run-ci-test.ts",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/run-ci-test.ts"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^3.0.2",

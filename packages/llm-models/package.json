@@ -21,7 +21,9 @@
     "sync": "bun run scripts/sync-from-upstreams.ts",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "lint": "bunx eslint --cache .",
-    "test": "bun test test"
+    "test": "bun test test",
+    "test:ci": "bun ../../scripts/run-ci-test.ts",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/run-ci-test.ts"
   },
   "dependencies": {
     "zod": "^4.4.3"

@@ -9,6 +9,8 @@
     "preview": "astro preview",
     "typecheck": "astro check && PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "test": "bun test src",
+    "test:ci": "bun ../../../scripts/run-ci-test.ts",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../../scripts/run-ci-test.ts",
     "test:e2e": "bun x --no-install playwright test",
     "lint": "eslint --cache",
     "lint:fix": "eslint --cache --fix",

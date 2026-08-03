@@ -31,6 +31,8 @@ import {
 import { validateCaddySmokeContracts } from "./validate-pipeline-caddy.ts";
 import { validateImageMigrationContracts } from "./validate-image-migration.ts";
 import { validateReleasePipelineContracts } from "./validate-pipeline-release.ts";
+import { validatePlaywrightLanes } from "./validate-pipeline-playwright.ts";
+import { validateReportingPipeline } from "./validate-reporting-pipeline.ts";
 import { fixedCorpusMode, lanePaths, summarySteps } from "./migration-core.ts";
 
 const PIPELINE_PATH = ".buildkite/pipeline.yml";
@@ -52,6 +54,10 @@ const PATH_GATED_PR_KEYS = new Set([
 ]);
 const pipeline = await Bun.file(PIPELINE_PATH).text();
 const lines = pipeline.split("\n");
+const reportingPipeline = await Bun.file(
+  ".buildkite/reporting-pipeline.yml",
+).text();
+validateReportingPipeline(reportingPipeline);
 
 fixedCorpusMode(Bun.env);
 
@@ -116,6 +122,11 @@ const { stepStarts, keys, stepBlocks } = collectStepBlocks(lines, {
   pathGatedPrKeys: PATH_GATED_PR_KEYS,
   globalIfChanged: GLOBAL_IF_CHANGED,
 });
+requireIncludes(
+  stepBlocks.get("verify"),
+  "write-coverage-summary.ts --allow-partial",
+  "verify must explicitly allow an empty or partial ordinary-build coverage set",
+);
 
 const mainHardSteps = [...stepBlocks]
   .filter(
@@ -172,39 +183,7 @@ requireIncludes(
   "sites must wait for tofu-apply to provision static-site buckets",
 );
 
-for (const key of ["playwright-e2e-pr", "playwright-e2e-main"]) {
-  const block = stepBlocks.get(key);
-  const install =
-    ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/monorepo'";
-  if (!hasTrimmedLine(block, install)) {
-    fail(`Playwright lane ${key} is missing exact filtered install ${install}`);
-  }
-  requireIncludes(
-    block,
-    'image: "${CI_PLAYWRIGHT_IMAGE}"',
-    `Playwright lane ${key} does not consume the committed candidate pin`,
-  );
-  requireIncludes(
-    block,
-    "imagePullPolicy: IfNotPresent",
-    `Playwright lane ${key} does not use the immutable image pull policy`,
-  );
-  requireIncludes(
-    block,
-    "bun x --no-install turbo run build lint test test:e2e",
-    `Playwright lane ${key} is missing its exact test closure`,
-  );
-  for (const forbidden of [
-    "playwright install",
-    "bun.zip",
-    "apt-get",
-    "mcr.microsoft.com/playwright",
-  ]) {
-    if (block?.includes(forbidden) === true) {
-      fail(`Playwright lane ${key} restored runtime bootstrap ${forbidden}`);
-    }
-  }
-}
+validatePlaywrightLanes(stepBlocks);
 
 for (const [key, lane, candidate] of [
   ["ci-base-refresh", "ci-base", "ci-base-candidate.json"],

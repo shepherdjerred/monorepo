@@ -128,6 +128,11 @@
       ]
     },
     {
+      "source": ".buildkite/scripts/ci-image-refs.sh",
+      "disposition": "retain",
+      "reason": "Sourced Buildkite bootstrap validates and exports image refs before Bun is guaranteed"
+    },
+    {
       "source": ".buildkite/scripts/docker-env.sh",
       "disposition": "delete",
       "reason": "Remote BuildKit cutover removed every executable caller"
@@ -166,6 +171,11 @@
       "source": ".buildkite/scripts/upload-pipeline.test.sh",
       "disposition": "retain",
       "reason": "Tests the minimal shell bootstrap contract"
+    },
+    {
+      "source": ".buildkite/scripts/upload-reporting-pipeline.sh",
+      "disposition": "retain",
+      "reason": "Buildkite bootstrap runs before the repository runtime is guaranteed"
     },
     {
       "source": ".claude/hooks/trust-mise.sh",

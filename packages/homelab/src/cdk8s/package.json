@@ -7,6 +7,8 @@
     "lint": "bunx --no-install eslint .",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "test": "bun test && bun run test:gpu-resources",
+    "test:ci": "bun ../../../../scripts/run-ci-test.ts",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../../../scripts/run-ci-test.ts",
     "test:gpu-resources": "bun run scripts/test-gpu-resources.ts",
     "clear": "rm -rf dist/",
     "build-app": "bun run src/app.ts",

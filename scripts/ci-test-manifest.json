@@ -1,0 +1,435 @@
+{
+  "$schema": "./ci-test-manifest.schema.json",
+  "version": 1,
+  "workspaces": [
+    {
+      "package": "astro-opengraph-images",
+      "directory": "packages/astro-opengraph-images",
+      "steps": [
+        { "runner": "vitest", "name": "vitest", "args": ["src"] },
+        {
+          "runner": "bun",
+          "name": "readme",
+          "args": ["generate-readme.test.ts", "generate-readme-smoke.test.ts"]
+        }
+      ]
+    },
+    {
+      "package": "better-skill-capped",
+      "directory": "packages/better-skill-capped",
+      "steps": [{ "runner": "bun" }]
+    },
+    {
+      "package": "@shepherdjerred/birmel",
+      "directory": "packages/birmel",
+      "steps": [
+        {
+          "runner": "command",
+          "name": "generate",
+          "command": ["bun", "--env-file=.env.test", "run", "generate"]
+        },
+        {
+          "runner": "bun",
+          "bunArgs": ["--env-file=.env.test"],
+          "coverageConfig": "bunfig.reporting.toml"
+        }
+      ]
+    },
+    {
+      "package": "@shepherdjerred/code-review",
+      "directory": "packages/code-review",
+      "steps": [{ "runner": "bun" }]
+    },
+    {
+      "package": "cooklang-for-obsidian",
+      "directory": "packages/cooklang-for-obsidian",
+      "steps": [{ "runner": "bun" }]
+    },
+    {
+      "package": "@shepherdjerred/discord-plays-core",
+      "directory": "packages/discord-plays-core",
+      "steps": [{ "runner": "bun", "args": ["test/"] }]
+    },
+    {
+      "package": "@shepherdjerred/discord-plays-mario-kart-scripts",
+      "directory": "packages/discord-plays-mario-kart",
+      "steps": [
+        {
+          "runner": "bun",
+          "args": ["scripts"]
+        }
+      ]
+    },
+    {
+      "package": "@discord-plays-mario-kart/backend",
+      "directory": "packages/discord-plays-mario-kart/packages/backend",
+      "steps": [{ "runner": "bun" }]
+    },
+    {
+      "package": "@discord-plays-mario-kart/frontend",
+      "directory": "packages/discord-plays-mario-kart/packages/frontend",
+      "steps": [{ "runner": "bun" }]
+    },
+    {
+      "package": "@shepherdjerred/discord-plays-pokemon-scripts",
+      "directory": "packages/discord-plays-pokemon",
+      "steps": [{ "runner": "bun", "args": ["scripts"] }]
+    },
+    {
+      "package": "@discord-plays-pokemon/backend",
+      "directory": "packages/discord-plays-pokemon/packages/backend",
+      "steps": [{ "runner": "bun" }]
+    },
+    {
+      "package": "@shepherdjerred/discord-stream-lifecycle",
+      "directory": "packages/discord-stream-lifecycle",
+      "steps": [
+        {
+          "runner": "command",
+          "name": "build",
+          "command": ["bun", "run", "build"]
+        },
+        { "runner": "bun", "args": ["test/"] }
+      ]
+    },
+    {
+      "package": "@shepherdjerred/discord-video-stream",
+      "directory": "packages/discord-video-stream",
+      "steps": [{ "runner": "bun" }]
+    },
+    {
+      "package": "@shepherdjerred/docs-board",
+      "directory": "packages/docs-board",
+      "steps": [{ "runner": "bun" }]
+    },
+    {
+      "package": "@shepherdjerred/docs-wiki",
+      "directory": "packages/docs/wiki",
+      "steps": [{ "runner": "bun", "args": ["src"] }]
+    },
+    {
+      "package": "@shepherdjerred/dotfiles-scripts",
+      "directory": "packages/dotfiles",
+      "steps": [{ "runner": "bun", "args": ["scripts"] }]
+    },
+    {
+      "package": "@shepherdjerred/eslint-config",
+      "directory": "packages/eslint-config",
+      "steps": [{ "runner": "bun" }]
+    },
+    {
+      "package": "glitter",
+      "directory": "packages/glitter",
+      "steps": [{ "runner": "bun", "args": ["test"] }]
+    },
+    {
+      "package": "@shepherdjerred/glitter-context",
+      "directory": "packages/glitter-context",
+      "steps": [
+        {
+          "runner": "command",
+          "name": "generate",
+          "command": ["bun", "run", "scripts/generate.ts"]
+        },
+        { "runner": "bun", "args": ["test"] },
+        {
+          "runner": "command",
+          "name": "python-validation",
+          "command": ["uv", "run", "python/validate_context.py"]
+        }
+      ]
+    },
+    {
+      "package": "@shepherdjerred/home-assistant",
+      "directory": "packages/home-assistant",
+      "steps": [{ "runner": "bun" }]
+    },
+    {
+      "package": "@shepherdjerred/leetcode",
+      "directory": "packages/leetcode",
+      "steps": [{ "runner": "bun" }]
+    },
+    {
+      "package": "homelab",
+      "directory": "packages/homelab",
+      "steps": [
+        {
+          "runner": "bun",
+          "args": [
+            "scripts/argocd-manifest-overrides.test.ts",
+            "scripts/helm-release-core.test.ts",
+            "scripts/helm-set-version.test.ts",
+            "scripts/lint-helm.test.ts",
+            "scripts/migration-smoke.test.ts",
+            "scripts/velero-backups.test.ts"
+          ]
+        }
+      ]
+    },
+    {
+      "package": "@homelab/cdk8s",
+      "directory": "packages/homelab/src/cdk8s",
+      "steps": [
+        { "runner": "bun" },
+        {
+          "runner": "command",
+          "name": "gpu-resources",
+          "command": ["bun", "run", "test:gpu-resources"]
+        }
+      ]
+    },
+    {
+      "package": "@shepherdjerred/helm-types",
+      "directory": "packages/homelab/src/helm-types",
+      "steps": [{ "runner": "bun" }]
+    },
+    {
+      "package": "@shepherdjerred/llm-models",
+      "directory": "packages/llm-models",
+      "steps": [{ "runner": "bun", "args": ["test"] }]
+    },
+    {
+      "package": "@shepherdjerred/llm-observability",
+      "directory": "packages/llm-observability",
+      "steps": [
+        {
+          "runner": "bun",
+          "args": [
+            "test/unit",
+            "test/e2e/run.test.ts",
+            "test/e2e/run-smoke.test.ts"
+          ]
+        }
+      ],
+      "excludedSuites": [
+        {
+          "path": "test/e2e/openai-archive.e2e.test.ts",
+          "reason": "Service-backed observability E2E; requires the Tempo and MinIO containers provided only by the dedicated docker-e2e lanes. Full reporting is deliberately test-only and does not stand up service containers."
+        }
+      ]
+    },
+    {
+      "package": "@shepherdjerred/monarch",
+      "directory": "packages/monarch",
+      "steps": [{ "runner": "bun" }]
+    },
+    {
+      "package": "scout-for-lol",
+      "directory": "packages/scout-for-lol",
+      "steps": [
+        {
+          "runner": "bun",
+          "coverageConfig": "bunfig.reporting.toml",
+          "args": [
+            "scripts/create-minimal-png.test.ts",
+            "scripts/dev-web.test.ts",
+            "scripts/install-pkgs.test.ts",
+            "scripts/migration-smoke.test.ts"
+          ]
+        }
+      ]
+    },
+    {
+      "package": "@scout-for-lol/app",
+      "directory": "packages/scout-for-lol/packages/app",
+      "steps": [{ "runner": "bun" }]
+    },
+    {
+      "package": "@scout-for-lol/backend",
+      "directory": "packages/scout-for-lol/packages/backend",
+      "defaultEnv": { "DATABASE_URL": "file:./test.db" },
+      "steps": [
+        {
+          "runner": "bun",
+          "coverageConfig": "bunfig.reporting.toml",
+          "args": ["--timeout", "20000"]
+        }
+      ]
+    },
+    {
+      "package": "@scout-for-lol/data",
+      "directory": "packages/scout-for-lol/packages/data",
+      "steps": [{ "runner": "bun" }]
+    },
+    {
+      "package": "@scout-for-lol/frontend",
+      "directory": "packages/scout-for-lol/packages/frontend",
+      "steps": [{ "runner": "bun" }]
+    },
+    {
+      "package": "@scout-for-lol/report",
+      "directory": "packages/scout-for-lol/packages/report",
+      "steps": [{ "runner": "bun" }]
+    },
+    {
+      "package": "starlight-karma-bot",
+      "directory": "packages/starlight-karma-bot",
+      "steps": [{ "runner": "bun" }]
+    },
+    {
+      "package": "@shepherdjerred/streambot",
+      "directory": "packages/streambot",
+      "steps": [{ "runner": "bun", "args": ["test/"] }]
+    },
+    {
+      "package": "tasknotes-server",
+      "directory": "packages/tasknotes-server",
+      "steps": [{ "runner": "bun" }]
+    },
+    {
+      "package": "tasknotes-types",
+      "directory": "packages/tasknotes-types",
+      "steps": [{ "runner": "bun" }]
+    },
+    {
+      "package": "tasks-for-obsidian",
+      "directory": "packages/tasks-for-obsidian",
+      "steps": [{ "runner": "bun", "args": ["src", "scripts"] }],
+      "excludedSuites": [
+        {
+          "path": "contract-tests/contract.test.ts",
+          "reason": "The client/server wire-contract suite (test:contract) spawns a sibling tasknotes-server process over a temporary vault and runs as its own dedicated verify step. Full reporting is deliberately test-only and does not orchestrate spawned service dependencies."
+        }
+      ]
+    },
+    {
+      "package": "@shepherdjerred/temporal",
+      "directory": "packages/temporal",
+      "steps": [
+        {
+          "runner": "command",
+          "name": "ha-schema",
+          "command": ["bun", "run", "scripts/ensure-ha-schema.ts"]
+        },
+        {
+          "runner": "bun",
+          "args": [
+            "src/activities",
+            "src/event-bridge",
+            "src/observability",
+            "src/schedules",
+            "src/shared",
+            "src/workflows",
+            "src/lib"
+          ]
+        }
+      ]
+    },
+    {
+      "package": "@shepherdjerred/terraform-provider-asuswrt",
+      "directory": "packages/terraform-provider-asuswrt",
+      "steps": [{ "runner": "go", "args": ["./..."] }]
+    },
+    {
+      "package": "@shepherdjerred/toolkit",
+      "directory": "packages/toolkit",
+      "steps": [
+        {
+          "runner": "bun",
+          "args": [
+            "test/lib",
+            "test/bugsink",
+            "test/s3",
+            "test/deployed",
+            "test/screenshot",
+            "scripts"
+          ]
+        }
+      ]
+    },
+    {
+      "package": "@shepherdjerred/trmnl-dashboard",
+      "directory": "packages/trmnl-dashboard",
+      "steps": [{ "runner": "bun" }]
+    },
+    {
+      "package": "webring",
+      "directory": "packages/webring",
+      "steps": [
+        {
+          "runner": "command",
+          "name": "typedoc",
+          "command": ["bun", "run", "typedoc"]
+        },
+        { "runner": "bun", "args": ["src/"] }
+      ]
+    },
+    {
+      "package": "@shepherdjerred/root-scripts",
+      "directory": "scripts",
+      "coverageSourceDirectories": ["scripts", ".buildkite/scripts"],
+      "steps": [
+        { "runner": "bun", "args": [".", "../.buildkite/scripts"] },
+        {
+          "runner": "command",
+          "name": "upload-pipeline-shell",
+          "command": ["bash", "../.buildkite/scripts/upload-pipeline.test.sh"]
+        },
+        {
+          "runner": "command",
+          "name": "toolchain-shell",
+          "command": ["bash", "../.buildkite/scripts/toolchain.test.sh"]
+        }
+      ]
+    }
+  ],
+  "testlessWorkspaces": [
+    {
+      "package": "@discord-plays-mario-kart/common",
+      "directory": "packages/discord-plays-mario-kart/packages/common",
+      "reason": "Shared types only; no test files exist."
+    },
+    {
+      "package": "@discord-plays-pokemon/common",
+      "directory": "packages/discord-plays-pokemon/packages/common",
+      "reason": "Shared types only; no test files exist."
+    },
+    {
+      "package": "@discord-plays-pokemon/frontend",
+      "directory": "packages/discord-plays-pokemon/packages/frontend",
+      "reason": "Static frontend package; no test files exist."
+    },
+    {
+      "package": "@scout-for-lol/desktop",
+      "directory": "packages/scout-for-lol/packages/desktop",
+      "reason": "Desktop tests have not been implemented."
+    },
+    {
+      "package": "@scout-for-lol/desktop-rust",
+      "directory": "packages/scout-for-lol/packages/desktop/src-tauri",
+      "reason": "Tauri crate cargo tests need GTK/glib system libraries (libwebkit2gtk) in the ci-base image; that image only rebuilds on main after verify, so a PR cannot both add the deps and consume them. Reporting is deferred until an image-only change lands the Tauri prerequisites on main."
+    },
+    {
+      "package": "@scout-for-lol/ui",
+      "directory": "packages/scout-for-lol/packages/ui",
+      "reason": "Source-only UI package; no test files exist."
+    },
+    {
+      "package": "@shepherdjerred/cooklang-rich-preview",
+      "directory": "packages/cooklang-rich-preview",
+      "reason": "Static marketing site; no test files exist."
+    },
+    {
+      "package": "@shepherdjerred/release-tools",
+      "directory": "packages/release-tools",
+      "reason": "Release Please wrapper package; no test files exist."
+    },
+    {
+      "package": "@shepherdjerred/resume",
+      "directory": "packages/resume",
+      "reason": "LaTeX build artifact; no test files exist."
+    },
+    {
+      "package": "stocks-sjer-red",
+      "directory": "packages/stocks-sjer-red",
+      "reason": "Static Astro site; no test files exist."
+    }
+  ],
+  "separateTests": [
+    {
+      "package": "sjer.red",
+      "directory": "packages/sjer.red",
+      "reason": "The Playwright suite runs in the dedicated main and pull-request browser lanes."
+    }
+  ]
+}

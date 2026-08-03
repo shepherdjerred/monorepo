@@ -22,10 +22,12 @@
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "lint": "bunx eslint --cache .",
     "test": "bun test test/unit test/e2e/run*.test.ts",
-    "test:coverage": "bun test --config ../../scripts/bunfig.coverage.toml --coverage test/e2e/run.test.ts",
+    "test:coverage": "bun test --coverage-reporter=text --coverage-reporter=lcov --coverage-dir=coverage --config ../../scripts/bunfig.coverage.toml --coverage test/e2e/run.test.ts",
     "test:e2e": "bun test/e2e/run.ts",
     "test:e2e:ci": "bun test/e2e/run-ci.ts",
-    "test:e2e:debug": "docker compose -f test/e2e/compose.yaml up -d --wait && bun test test/e2e --watch"
+    "test:e2e:debug": "docker compose -f test/e2e/compose.yaml up -d --wait && bun test test/e2e --watch",
+    "test:ci": "bun ../../scripts/run-ci-test.ts",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/run-ci-test.ts"
   },
   "dependencies": {
     "@opentelemetry/api": "^1.9.1",

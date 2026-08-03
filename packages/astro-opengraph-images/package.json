@@ -26,9 +26,11 @@
     "build": "PATH=node_modules/@typescript/native/bin:$PATH tsc",
     "watch": "PATH=node_modules/@typescript/native/bin:$PATH tsc -w",
     "test": "vitest src && bun test generate-readme*.test.ts",
-    "test:coverage": "bun test --config ../../scripts/bunfig.coverage.toml --coverage generate-readme.test.ts",
+    "test:coverage": "bun test --coverage-reporter=text --coverage-reporter=lcov --coverage-dir=coverage --config ../../scripts/bunfig.coverage.toml --coverage generate-readme.test.ts",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit && PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit -p tsconfig.scripts.json",
-    "publish:npm": "bun ../../scripts/publish-npm.ts ."
+    "publish:npm": "bun ../../scripts/publish-npm.ts .",
+    "test:ci": "bun ../../scripts/run-ci-test.ts",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/run-ci-test.ts"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -80,7 +82,8 @@
     "eslint": "^10.3.0",
     "jiti": "^2.7.0",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.5"
+    "vitest": "^4.1.5",
+    "@vitest/coverage-istanbul": "4.1.9"
   },
   "files": [
     "dist",

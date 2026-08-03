@@ -7,7 +7,7 @@ import { BUTTON } from "./constants.ts";
 // Boots the real pokeemerald.wasm and asserts the game-state symbols still
 // resolve and a snapshot read doesn't throw. It's the canary for renamed/moved
 // symbols before they reach production. The wasm is no longer committed — it's
-// built from source in the Dagger image build (and locally by
+// built from source in the Docker image build (and locally by
 // scripts/build-wasm.ts), where this gate runs against the real artifact. When
 // the wasm is absent (plain `bun run test` on a clean checkout), skip.
 //
@@ -79,9 +79,13 @@ describeWasm("emulator game symbols (real wasm)", () => {
     expect(() => readGameSnapshot(reader, symbols)).not.toThrow();
     expect(() => readSpatialSnapshot(reader, symbols)).not.toThrow();
     const bootObservation = emulator.engineObservation();
-    expect(bootObservation.version).toBe(2);
-    expect(bootObservation.size).toBe(116);
+    expect(bootObservation.version).toBe(5);
+    expect(bootObservation.size).toBe(144);
     expect(() => emulator.engineMapTile(0, 0)).not.toThrow();
+    expect(emulator.engineMapTopology()).toBeNull();
+    expect(emulator.engineCanUseBattleItemOnPartyMon(13, 1)).toBe(false);
+    expect(emulator.engineCanUseBattleItemOnBattler(75, 0)).toBe(false);
+    expect(emulator.engineCanRunFromBattle(0)).toBe(false);
 
     // Run a few hundred frames and confirm reads stay safe as the game runs.
     emulator.start();
@@ -120,6 +124,43 @@ describeWasm("emulator game symbols (real wasm)", () => {
         const startingWorld = observation.world;
         if (startingWorld === null) {
           throw new Error("loaded save has no world before movement");
+        }
+        const topology = emulator.engineMapTopology();
+        if (topology === null) {
+          throw new Error("loaded save has no map topology");
+        }
+        expect(topology.mapGroup).toBe(startingWorld.mapGroup);
+        expect(topology.mapNum).toBe(startingWorld.mapNum);
+        expect(topology.width).toBeGreaterThan(0);
+        expect(topology.height).toBeGreaterThan(0);
+        expect(topology.bounds).toEqual({
+          minX: 7,
+          maxX: topology.width + 6,
+          minY: 7,
+          maxY: topology.height + 6,
+        });
+        expect(
+          topology.connections.map((connection) => connection.index),
+        ).toEqual(
+          Array.from(
+            { length: topology.connections.length },
+            (_, index) => index,
+          ),
+        );
+        expect(topology.warps.map((warp) => warp.index)).toEqual(
+          Array.from({ length: topology.warps.length }, (_, index) => index),
+        );
+        expect(
+          topology.connections.length + topology.warps.length,
+        ).toBeGreaterThan(0);
+        for (const warp of topology.warps) {
+          expect(warp.trigger.x).toBeGreaterThanOrEqual(topology.bounds.minX);
+          expect(warp.trigger.x).toBeLessThanOrEqual(topology.bounds.maxX);
+          expect(warp.trigger.y).toBeGreaterThanOrEqual(topology.bounds.minY);
+          expect(warp.trigger.y).toBeLessThanOrEqual(topology.bounds.maxY);
+          expect(
+            emulator.engineMapTile(warp.trigger.x, warp.trigger.y),
+          ).not.toBeNull();
         }
         const startingPosition = `${String(startingWorld.mapGroup)}:${String(startingWorld.mapNum)}:${String(startingWorld.x)}:${String(startingWorld.y)}`;
         const movementButton = passableMovementButton(observation);

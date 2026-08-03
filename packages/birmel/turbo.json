@@ -9,6 +9,10 @@
       "env": ["NODE_ENV"],
       "inputs": ["$TURBO_DEFAULT$", ".env.test"]
     },
+    "test:ci": {
+      "env": ["NODE_ENV"],
+      "inputs": ["$TURBO_DEFAULT$", ".env.test"]
+    },
     // generate-prisma.ts evaluates the database config module.
     "generate": {
       "env": ["DATABASE_URL", "DATABASE_PATH", "LOG_LEVEL"]

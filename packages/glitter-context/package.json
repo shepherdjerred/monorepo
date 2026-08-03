@@ -24,7 +24,9 @@
     "build:runtime": "bun --no-install run scripts/generate.ts && bun --no-install build src/index.ts src/schema.ts --outdir dist --target browser --external zod",
     "typecheck": "bun run scripts/generate.ts && PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "lint": "bun run scripts/generate.ts && bunx eslint --cache .",
-    "test": "bun run scripts/generate.ts && bun test test && uv run python/validate_context.py"
+    "test": "bun run scripts/generate.ts && bun test test && uv run python/validate_context.py",
+    "test:ci": "bun ../../scripts/run-ci-test.ts",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/run-ci-test.ts"
   },
   "dependencies": {
     "zod": "^4.4.3"

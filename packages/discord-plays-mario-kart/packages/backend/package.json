@@ -33,7 +33,9 @@
     "generate": "bunx --trust prisma generate",
     "db:push": "bunx prisma db push",
     "docker:build": "docker buildx build --cache-from type=registry,ref=ghcr.io/shepherdjerred/discord-plays-mario-kart:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t discord-plays-mario-kart:dev -f ../../Dockerfile ../../../..",
-    "smoke": "bun scripts/smoke.ts"
+    "smoke": "bun scripts/smoke.ts",
+    "test:ci": "bun ../../../../scripts/run-ci-test.ts",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../../../scripts/run-ci-test.ts"
   },
   "dependencies": {
     "@discord-plays-mario-kart/common": "workspace:*",

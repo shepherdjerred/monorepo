@@ -1,0 +1,41 @@
+diff --git a/src/wasm_observation.c b/src/wasm_observation.c
+--- a/src/wasm_observation.c
++++ b/src/wasm_observation.c
+@@ -10,6 +10,7 @@
+ #include "constants/party_menu.h"
+ #include "constants/moves.h"
+ #include "event_object_movement.h"
++#include "field_player_avatar.h"
+ #include "field_message_box.h"
+ #include "fieldmap.h"
+ #include "field_screen_effect.h"
+@@ -31,2 +32,2 @@
+-#define WASM_OBSERVATION_VERSION 4
++#define WASM_OBSERVATION_VERSION 5
+ #define WASM_MAP_TOPOLOGY_VERSION 1
+@@ -112,7 +113,7 @@ struct __attribute__((packed)) WasmObservationV1
+     u8 scriptActive;
+     u8 paletteFading;
+     u8 inBattle;
+-    u8 objectEventActive;
++    u8 elevation;
+     u8 battleMenu;
+     u8 battlersCount;
+     u32 battleTypeFlags;
+@@ -418,7 +419,7 @@ const struct WasmObservationV1 *WasmReadObservation(void)
+     sWasmObservation.scriptActive = scriptActive;
+     sWasmObservation.paletteFading = paletteFading;
+     sWasmObservation.inBattle = gMain.inBattle;
+-    sWasmObservation.objectEventActive = 0;
++    sWasmObservation.elevation = 0;
+     sWasmObservation.battleMenu = WASM_BATTLE_MENU_NONE;
+     sWasmObservation.battlersCount = gBattlersCount;
+     sWasmObservation.battleTypeFlags = gBattleTypeFlags;
+@@ -561,6 +562,6 @@ const struct WasmObservationV1 *WasmReadObservation(void)
+             sWasmObservation.collisionSouth = GetCollisionInDirectionForObservation(player, DIR_SOUTH);
+             sWasmObservation.collisionWest = GetCollisionInDirectionForObservation(player, DIR_WEST);
+             sWasmObservation.collisionEast = GetCollisionInDirectionForObservation(player, DIR_EAST);
+-            sWasmObservation.objectEventActive = TRUE;
++            sWasmObservation.elevation = PlayerGetElevation();
+         }
+     }

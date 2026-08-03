@@ -1,4 +1,4 @@
 interface:
   display_name: "Pokemon Battle"
-  short_description: "Search Generation III move and battle mechanics"
-  default_prompt: "Use Pokemon battle knowledge when selecting or evaluating battle actions."
+  short_description: "Operate Emerald battles and query mechanics"
+  default_prompt: "Use $pokemon-battle to inspect a live battle and execute one explicit semantic choice."

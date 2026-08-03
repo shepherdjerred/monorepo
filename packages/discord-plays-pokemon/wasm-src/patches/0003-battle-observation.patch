@@ -1,0 +1,181 @@
+diff --git a/include/item_menu.h b/include/item_menu.h
+index e63eb3b6c..31bbb5aff 100644
+--- a/include/item_menu.h
++++ b/include/item_menu.h
+@@ -108,5 +108,6 @@ void UpdatePocketItemList(u8 pocketId);
+ void DisplayItemMessage(u8 taskId, u8 fontId, const u8 *str, TaskFunc callback);
+ void DisplayItemMessageOnField(u8 taskId, const u8 *string, TaskFunc callback);
+ void CloseItemMessage(u8 taskId);
++u8 WasmGetBattleBagInputState(void);
+ 
+ #endif //GUARD_ITEM_MENU_H
+diff --git a/src/item_menu.c b/src/item_menu.c
+index 3fd931c32..157f4d984 100755
+--- a/src/item_menu.c
++++ b/src/item_menu.c
+@@ -1270,6 +1270,18 @@ static void Task_BagMenu_HandleInput(u8 taskId)
+     }
+ }
+ 
++u8 WasmGetBattleBagInputState(void)
++{
++    if (gBagPosition.location != ITEMMENULOCATION_BATTLE)
++        return 0;
++    if (FuncIsActiveTask(Task_BagMenu_HandleInput))
++        return 1;
++    if (FuncIsActiveTask(Task_ItemContext_SingleRow)
++     || FuncIsActiveTask(Task_ItemContext_MultipleRows))
++        return 2;
++    return 0;
++}
++
+ static void ReturnToItemList(u8 taskId)
+ {
+     CreatePocketScrollArrowPair();
+diff --git a/src/wasm_observation.c b/src/wasm_observation.c
+index 615d253c4..0bd8959c3 100644
+--- a/src/wasm_observation.c
++++ b/src/wasm_observation.c
+@@ -3,20 +3,26 @@
+ #include "battle_anim.h"
+ #include "battle_controllers.h"
+ #include "battle_pyramid.h"
++#include "constants/party_menu.h"
++#include "constants/moves.h"
+ #include "event_object_movement.h"
+ #include "field_message_box.h"
+ #include "fieldmap.h"
+ #include "field_screen_effect.h"
+ #include "main.h"
++#include "item.h"
++#include "item_menu.h"
+ #include "metatile_behavior.h"
+ #include "new_game.h"
+ #include "overworld.h"
+ #include "palette.h"
++#include "party_menu.h"
+ #include "save.h"
+ #include "script.h"
+ #include "text.h"
++#include "task.h"
+ 
+-#define WASM_OBSERVATION_VERSION 2
++#define WASM_OBSERVATION_VERSION 3
+ #define WASM_MAP_TOPOLOGY_VERSION 1
+ 
+ enum WasmMapWarpActivation
+@@ -67,6 +72,15 @@ struct __attribute__((packed)) WasmBattleParticipant
+ 
+ STATIC_ASSERT(sizeof(struct WasmBattleParticipant) == 16, WasmBattleParticipantMustBe16Bytes);
+ 
++struct __attribute__((packed)) WasmBattleMove
++{
++    u16 move;
++    u8 currentPp;
++    u8 maxPp;
++};
++
++STATIC_ASSERT(sizeof(struct WasmBattleMove) == 4, WasmBattleMoveMustBe4Bytes);
++
+ struct __attribute__((packed)) WasmObservationV1
+ {
+     u16 version;
+@@ -105,10 +119,21 @@ struct __attribute__((packed)) WasmObservationV1
+     struct WasmBattleParticipant battlers[MAX_BATTLERS_COUNT];
+     u16 currentMove;
+     u16 chosenMove;
++    u8 targetCursor;
++    u8 moveCount;
++    struct WasmBattleMove moves[MAX_MON_MOVES];
++    u8 bagInputState;
++    u8 bagPocket;
++    u16 bagPosition;
++    u16 bagItem;
++    u8 partyInputReady;
++    u8 partySlot;
++    u8 partyLayout;
++    u8 partyAction;
+     u8 trailingReserved[2];
+ };
+ 
+-STATIC_ASSERT(sizeof(struct WasmObservationV1) == 116, WasmObservationV1MustBe116Bytes);
++STATIC_ASSERT(sizeof(struct WasmObservationV1) == 144, WasmObservationV1MustBe144Bytes);
+ 
+ struct __attribute__((packed)) WasmMapTopologyV1
+ {
+@@ -184,6 +209,7 @@ const struct WasmObservationV1 *WasmReadObservation(void)
+ {
+     struct ObjectEvent *player;
+     struct WasmBattleParticipant *participant;
++    struct ChooseMoveStruct *moveInfo;
+     bool8 controlsLocked = ArePlayerFieldControlsLocked();
+     bool8 scriptActive = ScriptContext_IsEnabled();
+     bool8 paletteFading = gPaletteFade.active != 0;
+@@ -194,6 +220,7 @@ const struct WasmObservationV1 *WasmReadObservation(void)
+     bool8 dialogInputReady = dialogVisible
+         && (IsTextPrinterWaitingForInput(0) || WasmIsScriptWaitingForButtonPress());
+     u8 battler;
++    u8 moveSlot;
+ 
+     sWasmObservation.version = WASM_OBSERVATION_VERSION;
+     sWasmObservation.size = sizeof(sWasmObservation);
+@@ -243,6 +270,22 @@ const struct WasmObservationV1 *WasmReadObservation(void)
+     }
+     sWasmObservation.currentMove = gCurrentMove;
+     sWasmObservation.chosenMove = gChosenMove;
++    sWasmObservation.targetCursor = MAX_BATTLERS_COUNT;
++    sWasmObservation.moveCount = 0;
++    for (moveSlot = 0; moveSlot < MAX_MON_MOVES; moveSlot++)
++    {
++        sWasmObservation.moves[moveSlot].move = MOVE_NONE;
++        sWasmObservation.moves[moveSlot].currentPp = 0;
++        sWasmObservation.moves[moveSlot].maxPp = 0;
++    }
++    sWasmObservation.bagInputState = 0;
++    sWasmObservation.bagPocket = 0;
++    sWasmObservation.bagPosition = 0;
++    sWasmObservation.bagItem = ITEM_NONE;
++    sWasmObservation.partyInputReady = FALSE;
++    sWasmObservation.partySlot = PARTY_SIZE;
++    sWasmObservation.partyLayout = 0;
++    sWasmObservation.partyAction = 0;
+     sWasmObservation.trailingReserved[0] = 0;
+     sWasmObservation.trailingReserved[1] = 0;
+ 
+@@ -284,6 +327,37 @@ const struct WasmObservationV1 *WasmReadObservation(void)
+             battler = sWasmObservation.inputBattler;
+             sWasmObservation.actionCursor = gActionSelectionCursor[battler];
+             sWasmObservation.moveCursor = gMoveSelectionCursor[battler];
++            sWasmObservation.targetCursor = gMultiUsePlayerCursor;
++            moveInfo = (struct ChooseMoveStruct *)(&gBattleBufferA[battler][4]);
++            for (moveSlot = 0; moveSlot < MAX_MON_MOVES; moveSlot++)
++            {
++                sWasmObservation.moves[moveSlot].move = moveInfo->moves[moveSlot];
++                sWasmObservation.moves[moveSlot].currentPp = moveInfo->currentPp[moveSlot];
++                sWasmObservation.moves[moveSlot].maxPp = moveInfo->maxPp[moveSlot];
++                if (moveInfo->moves[moveSlot] != MOVE_NONE)
++                    sWasmObservation.moveCount++;
++            }
++            sWasmObservation.bagInputState = WasmGetBattleBagInputState();
++            if (sWasmObservation.bagInputState != 0 && gBagMenu != NULL)
++            {
++                sWasmObservation.bagPocket = gBagPosition.pocket;
++                sWasmObservation.bagPosition = GetItemListPosition(gBagPosition.pocket);
++                if (sWasmObservation.bagInputState == 1)
++                    sWasmObservation.bagItem = BagGetItemIdByPocketPosition(
++                        gBagPosition.pocket + 1,
++                        sWasmObservation.bagPosition);
++                else
++                    sWasmObservation.bagItem = gSpecialVar_ItemId;
++            }
++            if (sWasmObservation.battleMenu == WASM_BATTLE_MENU_PARTY
++             && gPartyMenu.menuType == PARTY_MENU_TYPE_IN_BATTLE
++             && FuncIsActiveTask(Task_HandleChooseMonInput))
++            {
++                sWasmObservation.partyInputReady = TRUE;
++                sWasmObservation.partySlot = GetCursorSelectionMonId();
++                sWasmObservation.partyLayout = gPartyMenu.layout;
++                sWasmObservation.partyAction = gPartyMenu.action;
++            }
+         }
+     }

@@ -1,4 +1,10 @@
 import type { Emulator } from "#src/emulator/emulator.ts";
+import type { CardinalDirection } from "#src/emulator/engine-observation.ts";
+import type {
+  EngineMapConnectionDirection,
+  EngineMapTopologyV1,
+} from "#src/emulator/engine-map-topology.ts";
+import { mapName } from "#src/game/spatial/generated/map-names.ts";
 import { readMapObjects } from "#src/game/spatial/spatial-snapshot.ts";
 import { readGameObservation } from "./game-observation.ts";
 
@@ -14,6 +20,61 @@ export type GameMapViewV1 = Readonly<{
   bounds: Readonly<{ minX: number; maxX: number; minY: number; maxY: number }>;
   rows: readonly Readonly<{ y: number; cells: string }>[];
   legend: Readonly<Record<string, string>>;
+}>;
+
+type GameMapDestination = Readonly<{
+  name: string;
+  group: number;
+  number: number;
+}>;
+
+export type GameMapConnectionExit = Readonly<{
+  id: string;
+  kind: "connection";
+  direction: EngineMapConnectionDirection;
+  destination: GameMapDestination;
+  edge: Readonly<{
+    from: Readonly<{ x: number; y: number }>;
+    to: Readonly<{ x: number; y: number }>;
+  }> | null;
+  traversableByNavigate: boolean;
+}>;
+
+export type GameMapWarpExit = Readonly<{
+  id: string;
+  kind: "warp";
+  trigger: Readonly<{
+    x: number;
+    y: number;
+    elevation: number;
+    behavior: number;
+  }>;
+  requiredDirection: CardinalDirection | null;
+  destination: Readonly<
+    GameMapDestination & {
+      warpId: number;
+      landing: Readonly<{ x: number; y: number }> | null;
+    }
+  > | null;
+  dynamicDestination: boolean;
+  traversableByNavigate: boolean;
+}>;
+
+export type GameMapExit = GameMapConnectionExit | GameMapWarpExit;
+
+export type GameMapExitsV1 = Readonly<{
+  schemaVersion: 1;
+  map: Readonly<
+    GameMapDestination & {
+      bounds: Readonly<{
+        minX: number;
+        maxX: number;
+        minY: number;
+        maxY: number;
+      }>;
+    }
+  >;
+  exits: readonly GameMapExit[];
 }>;
 
 function objectMarker(kind: "npc" | "item" | "tree" | "rock"): string {
@@ -98,4 +159,74 @@ export function readGameMap(emulator: Emulator, radius: number): GameMapViewV1 {
       "?": "unavailable tile",
     },
   };
+}
+
+export function gameMapExits(topology: EngineMapTopologyV1): GameMapExitsV1 {
+  const exits: GameMapExit[] = [];
+  for (const connection of topology.connections) {
+    exits.push({
+      id: `connection:${String(connection.index)}`,
+      kind: "connection",
+      direction: connection.direction,
+      destination: {
+        name: mapName(
+          connection.destination.mapGroup,
+          connection.destination.mapNum,
+        ),
+        group: connection.destination.mapGroup,
+        number: connection.destination.mapNum,
+      },
+      edge:
+        connection.span === null
+          ? null
+          : {
+              from: connection.span.start,
+              to: connection.span.end,
+            },
+      traversableByNavigate:
+        connection.span !== null &&
+        connection.direction !== "dive" &&
+        connection.direction !== "emerge",
+    });
+  }
+  for (const warp of topology.warps) {
+    exits.push({
+      id: `warp:${String(warp.index)}`,
+      kind: "warp",
+      trigger: warp.trigger,
+      requiredDirection:
+        warp.activation === "step" || warp.activation === "unsupported"
+          ? null
+          : warp.activation,
+      destination: warp.destination.dynamic
+        ? null
+        : {
+            name: mapName(warp.destination.mapGroup, warp.destination.mapNum),
+            group: warp.destination.mapGroup,
+            number: warp.destination.mapNum,
+            warpId: warp.destination.warpId,
+            landing: warp.destination.landing,
+          },
+      dynamicDestination: warp.destination.dynamic,
+      traversableByNavigate: warp.activation !== "unsupported",
+    });
+  }
+  return {
+    schemaVersion: 1,
+    map: {
+      name: mapName(topology.mapGroup, topology.mapNum),
+      group: topology.mapGroup,
+      number: topology.mapNum,
+      bounds: topology.bounds,
+    },
+    exits,
+  };
+}
+
+export function readGameMapExits(emulator: Emulator): GameMapExitsV1 {
+  const topology = emulator.engineMapTopology();
+  if (topology === null) {
+    throw new Error("current map topology is unavailable");
+  }
+  return gameMapExits(topology);
 }

@@ -21,7 +21,9 @@
     "e2e:goal": "bun test src/goal/e2e-goal.integration.test.ts",
     "benchmark:goal": "bun scripts/goal-benchmark.ts",
     "docker:build": "docker buildx build --cache-from type=registry,ref=ghcr.io/shepherdjerred/discord-plays-pokemon:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t discord-plays-pokemon:dev -f ../../Dockerfile ../../../..",
-    "smoke": "bun scripts/smoke.ts"
+    "smoke": "bun scripts/smoke.ts",
+    "test:ci": "bun ../../../../scripts/run-ci-test.ts",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../../../scripts/run-ci-test.ts"
   },
   "dependencies": {
     "@discord-plays-pokemon/common": "workspace:*",

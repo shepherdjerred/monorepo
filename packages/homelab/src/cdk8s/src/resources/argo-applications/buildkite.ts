@@ -100,6 +100,15 @@ export function createBuildkiteApp(chart: Chart) {
   // `defaultRequest`. Explicit-tier step containers and the controller's known
   // auxiliary containers set their own resources and aren't affected by this.
   // See packages/docs/logs/2026-07-08_torvalds-cluster-health-deep-check.md.
+  //
+  // 2026-08-02: the 768Mi default OOM-killed the tofu-managed bootstrap
+  // pipeline-upload pod when its container-0 had no explicit resources and a
+  // broken mirror mount made git fetch the full repo pack into the tmpfs
+  // workspace (fleet-wide red PRs; see
+  // packages/docs/logs/2026-08-02_buildkite-pipeline-upload-oom-diagnosis.md).
+  // The fix is explicit resources on every known container — do not raise or
+  // remove this default; validate-pipeline-release.ts now enforces the
+  // bootstrap pod's explicit limits.
   new KubeLimitRange(chart, "buildkite-limit-range", {
     metadata: { name: "buildkite-default-resources", namespace: "buildkite" },
     spec: {

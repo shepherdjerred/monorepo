@@ -283,17 +283,42 @@ steps:
       bun --no-install run verify -- --filter='!sjer.red' --filter='!@shepherdjerred/resume' --concurrency=6 --output-logs=errors-only --summarize
       verify_status=$?
       set -e
+      set +e
       bun --no-install scripts/annotate-turbo-summary.ts
+      annotation_status=$?
+      bun --no-install scripts/write-ci-report-index.ts
+      reporting_status=$?
+      bun --no-install scripts/write-coverage-summary.ts --allow-partial
+      coverage_status=$?
+      set -e
       if [ "$$verify_status" -eq 0 ]; then
         bun --no-install packages/homelab/src/cdk8s/scripts/generate-caddyfile.ts caddyfile.generated
       fi
+      if [ "$$verify_status" -eq 0 ] && [ "$$annotation_status" -ne 0 ]; then
+        exit "$$annotation_status"
+      fi
+      if [ "$$verify_status" -eq 0 ] && [ "$$reporting_status" -ne 0 ]; then
+        exit "$$reporting_status"
+      fi
+      if [ "$$verify_status" -eq 0 ] && [ "$$coverage_status" -ne 0 ]; then
+        exit "$$coverage_status"
+      fi
       exit "$$verify_status"
     artifact_paths:
+      - ".ci-reports/**/*"
       - "caddyfile.generated"
       - "packages/homelab/src/cdk8s/dist/**/*"
       - "packages/homelab/src/cdk8s/dist/*"
     retry: *retry
     plugins:
+      - test-collector#v1.11.0:
+          files: ".ci-reports/junit/**/*.xml"
+          format: junit
+          missing-error: 0 # selector skips are reportless; executed runs validate above
+          upload-concurrency: 8
+          tags:
+            - "scope=partial"
+            - "pipeline=monorepo"
       - kubernetes:
           <<: *pod_verify_kubernetes
           metadata:
@@ -331,10 +356,22 @@ steps:
         - "scripts/lib/run.ts"
     cancel_on_build_failing: true
     command: |
-      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/monorepo'
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'
       bun x --no-install turbo run build lint test test:e2e --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --concurrency=2
+      bun --no-install scripts/namespace-playwright-reports.ts
+      bun --no-install scripts/write-ci-report-index.ts
+    artifact_paths:
+      - ".ci-reports/**/*"
     retry: *retry
     plugins:
+      - test-collector#v1.11.0:
+          files: ".ci-reports/junit/**/*.xml"
+          format: junit
+          missing-error: 1
+          upload-concurrency: 8
+          tags:
+            - "scope=browser"
+            - "pipeline=monorepo"
       - kubernetes:
           metadata:
             labels:
@@ -368,15 +405,30 @@ steps:
     cancel_on_build_failing: true
     command: |
       if [ "$(buildkite-agent meta-data get ci-lane-run-playwright --default true)" != true ]; then exit 0; fi
-      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/monorepo'
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'
       bun x --no-install turbo run build lint test test:e2e --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --concurrency=2
+      if [ ! -s .ci-reports/junit/sjer.red/playwright.xml ]; then
+        echo "playwright-e2e-main completed without a non-empty JUnit report" >&2
+        exit 1
+      fi
+      bun --no-install scripts/namespace-playwright-reports.ts
+      bun --no-install scripts/write-ci-report-index.ts
     artifact_paths:
+      - ".ci-reports/**/*"
       - "packages/sjer.red/dist/**/*"
       - "packages/sjer.red/dist/*"
       - "packages/docs/wiki/dist/**/*"
       - "packages/docs/wiki/dist/*"
     retry: *retry
     plugins:
+      - test-collector#v1.11.0:
+          files: ".ci-reports/junit/**/*.xml"
+          format: junit
+          missing-error: 0 # selector skips are reportless; executed runs validate above
+          upload-concurrency: 8
+          tags:
+            - "scope=browser"
+            - "pipeline=monorepo"
       - kubernetes:
           metadata:
             labels:

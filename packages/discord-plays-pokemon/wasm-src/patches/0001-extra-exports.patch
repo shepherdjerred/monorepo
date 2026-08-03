@@ -7,7 +7,7 @@ index 829e603..2ed7f2c 100644
  		--export=AgbMain --export=WasmRunFrame \
  		--export=gSaveBlock1Ptr --export=gPlayerAvatar --export=gObjectEvents --export=VarGet \
 -		--export=gSoundInfo --export=gWasmPcmL --export=gWasmPcmR \
-+		--export=gSoundInfo --export=gWasmPcmL --export=gWasmPcmR --export=gSaveBlock2Ptr --export=gPlayerParty --export=gPlayerPartyCount --export=gBattleResults --export=WasmReadObservation --export=WasmReadMapTile --export=WasmCheckpointSave \
++		--export=gSoundInfo --export=gWasmPcmL --export=gWasmPcmR --export=gSaveBlock2Ptr --export=gPlayerParty --export=gPlayerPartyCount --export=gBattleResults --export=WasmReadObservation --export=WasmReadMapTile --export=WasmReadMapTopology --export=WasmReadMapConnection --export=WasmReadMapWarp --export=WasmCheckpointSave \
  		-o $@ $(filter %.o,$^)
  
  # m4a sound tables / voicegroups / samples (data/sound_data.s) -> wasm object.
@@ -16,7 +16,7 @@ new file mode 100644
 index 000000000..84f0d7839
 --- /dev/null
 +++ b/src/wasm_observation.c
-@@ -0,0 +1,272 @@
+@@ -0,0 +1,595 @@
 +#include "global.h"
 +#include "battle.h"
 +#include "battle_anim.h"
@@ -27,6 +27,7 @@ index 000000000..84f0d7839
 +#include "fieldmap.h"
 +#include "field_screen_effect.h"
 +#include "main.h"
++#include "metatile_behavior.h"
 +#include "new_game.h"
 +#include "overworld.h"
 +#include "palette.h"
@@ -35,6 +36,24 @@ index 000000000..84f0d7839
 +#include "text.h"
 +
 +#define WASM_OBSERVATION_VERSION 2
++#define WASM_MAP_TOPOLOGY_VERSION 1
++
++enum WasmMapWarpActivation
++{
++    WASM_MAP_WARP_UNSUPPORTED,
++    WASM_MAP_WARP_STEP,
++    WASM_MAP_WARP_NORTH,
++    WASM_MAP_WARP_SOUTH,
++    WASM_MAP_WARP_WEST,
++    WASM_MAP_WARP_EAST,
++};
++
++enum WasmMapTopologyFlags
++{
++    WASM_MAP_CONNECTION_HAS_SPAN = 1 << 0,
++    WASM_MAP_WARP_DYNAMIC_DESTINATION = 1 << 0,
++    WASM_MAP_WARP_DESTINATION_RESOLVED = 1 << 1,
++};
 +
 +enum WasmObservationPhase
 +{
@@ -110,7 +129,66 @@ index 000000000..84f0d7839
 +
 +STATIC_ASSERT(sizeof(struct WasmObservationV1) == 116, WasmObservationV1MustBe116Bytes);
 +
++struct __attribute__((packed)) WasmMapTopologyV1
++{
++    u16 version;
++    u16 size;
++    u32 frame;
++    u8 available;
++    u8 mapGroup;
++    u8 mapNum;
++    u8 reserved;
++    s32 width;
++    s32 height;
++    u32 warpCount;
++    u32 connectionCount;
++};
++
++STATIC_ASSERT(sizeof(struct WasmMapTopologyV1) == 28, WasmMapTopologyV1MustBe28Bytes);
++
++struct __attribute__((packed)) WasmMapConnectionV1
++{
++    u16 version;
++    u16 size;
++    u32 index;
++    u8 direction;
++    u8 destinationMapGroup;
++    u8 destinationMapNum;
++    u8 flags;
++    s32 offset;
++    s16 startX;
++    s16 startY;
++    s16 endX;
++    s16 endY;
++};
++
++STATIC_ASSERT(sizeof(struct WasmMapConnectionV1) == 24, WasmMapConnectionV1MustBe24Bytes);
++
++struct __attribute__((packed)) WasmMapWarpV1
++{
++    u16 version;
++    u16 size;
++    u32 index;
++    s16 x;
++    s16 y;
++    u8 elevation;
++    u8 metatileBehavior;
++    u8 activation;
++    u8 destinationMapGroup;
++    u8 destinationMapNum;
++    u8 destinationWarpId;
++    u8 flags;
++    u8 reserved;
++    s16 destinationX;
++    s16 destinationY;
++};
++
++STATIC_ASSERT(sizeof(struct WasmMapWarpV1) == 24, WasmMapWarpV1MustBe24Bytes);
++
 +static struct WasmObservationV1 sWasmObservation;
++static struct WasmMapTopologyV1 sWasmMapTopology;
++static struct WasmMapConnectionV1 sWasmMapConnection;
++static struct WasmMapWarpV1 sWasmMapWarp;
 +
 +static u8 GetCollisionInDirectionForObservation(struct ObjectEvent *objectEvent, u8 direction)
 +{
@@ -269,6 +347,251 @@ index 000000000..84f0d7839
 +         | (MapGridGetMetatileBehaviorAt(x, y) & 0xFF)
 +         | ((u32)MapGridGetCollisionAt(x, y) << 8)
 +         | ((u32)MapGridGetElevationAt(x, y) << 16);
++}
++
++const struct WasmMapTopologyV1 *WasmReadMapTopology(void)
++{
++    s32 connectionCount = 0;
++
++    sWasmMapTopology.version = WASM_MAP_TOPOLOGY_VERSION;
++    sWasmMapTopology.size = sizeof(sWasmMapTopology);
++    sWasmMapTopology.frame = gMain.vblankCounter1;
++    sWasmMapTopology.available = FALSE;
++    sWasmMapTopology.mapGroup = 0;
++    sWasmMapTopology.mapNum = 0;
++    sWasmMapTopology.reserved = 0;
++    sWasmMapTopology.width = 0;
++    sWasmMapTopology.height = 0;
++    sWasmMapTopology.warpCount = 0;
++    sWasmMapTopology.connectionCount = 0;
++
++    if (gMain.callback2 != CB2_Overworld
++     || gMapHeader.mapLayout == NULL
++     || gMapHeader.events == NULL
++     || gSaveBlock1Ptr == NULL)
++        return &sWasmMapTopology;
++
++    if (gMapHeader.connections != NULL)
++        connectionCount = gMapHeader.connections->count;
++    if (connectionCount < 0)
++        return &sWasmMapTopology;
++
++    sWasmMapTopology.available = TRUE;
++    sWasmMapTopology.mapGroup = gSaveBlock1Ptr->location.mapGroup;
++    sWasmMapTopology.mapNum = gSaveBlock1Ptr->location.mapNum;
++    sWasmMapTopology.width = gMapHeader.mapLayout->width;
++    sWasmMapTopology.height = gMapHeader.mapLayout->height;
++    sWasmMapTopology.warpCount = gMapHeader.events->warpCount;
++    sWasmMapTopology.connectionCount = connectionCount;
++    return &sWasmMapTopology;
++}
++
++static bool8 GetMapConnectionSpan(
++    const struct MapConnection *connection,
++    s16 *startX,
++    s16 *startY,
++    s16 *endX,
++    s16 *endY)
++{
++    s16 edge;
++    s16 first = 0;
++    s16 last = 0;
++    s16 coordinate;
++    bool8 found = FALSE;
++    bool8 gap = FALSE;
++
++    switch (connection->direction)
++    {
++    case CONNECTION_NORTH:
++    case CONNECTION_SOUTH:
++        for (coordinate = MAP_OFFSET;
++             coordinate < gMapHeader.mapLayout->width + MAP_OFFSET;
++             coordinate++)
++        {
++            s16 triggerY = connection->direction == CONNECTION_NORTH
++                ? MAP_OFFSET - 1
++                : gMapHeader.mapLayout->height + MAP_OFFSET;
++            const struct MapConnection *atPosition =
++                GetMapConnectionAtPos(coordinate, triggerY);
++            if (atPosition == connection)
++            {
++                if (gap)
++                    return FALSE;
++                if (!found)
++                    first = coordinate;
++                found = TRUE;
++                last = coordinate;
++            }
++            else if (found)
++            {
++                gap = TRUE;
++            }
++        }
++        if (!found)
++            return FALSE;
++        edge = connection->direction == CONNECTION_NORTH
++            ? MAP_OFFSET
++            : gMapHeader.mapLayout->height + MAP_OFFSET - 1;
++        *startX = first;
++        *startY = edge;
++        *endX = last;
++        *endY = edge;
++        return TRUE;
++    case CONNECTION_WEST:
++    case CONNECTION_EAST:
++        for (coordinate = MAP_OFFSET;
++             coordinate < gMapHeader.mapLayout->height + MAP_OFFSET;
++             coordinate++)
++        {
++            s16 triggerX = connection->direction == CONNECTION_WEST
++                ? MAP_OFFSET - 1
++                : gMapHeader.mapLayout->width + MAP_OFFSET;
++            const struct MapConnection *atPosition =
++                GetMapConnectionAtPos(triggerX, coordinate);
++            if (atPosition == connection)
++            {
++                if (gap)
++                    return FALSE;
++                if (!found)
++                    first = coordinate;
++                found = TRUE;
++                last = coordinate;
++            }
++            else if (found)
++            {
++                gap = TRUE;
++            }
++        }
++        if (!found)
++            return FALSE;
++        edge = connection->direction == CONNECTION_WEST
++            ? MAP_OFFSET
++            : gMapHeader.mapLayout->width + MAP_OFFSET - 1;
++        *startX = edge;
++        *startY = first;
++        *endX = edge;
++        *endY = last;
++        return TRUE;
++    default:
++        return FALSE;
++    }
++}
++
++const struct WasmMapConnectionV1 *WasmReadMapConnection(u32 index)
++{
++    const struct MapConnection *connection;
++    s16 startX;
++    s16 startY;
++    s16 endX;
++    s16 endY;
++
++    if (!sWasmMapTopology.available
++     || gMapHeader.connections == NULL
++     || index >= sWasmMapTopology.connectionCount)
++        return NULL;
++
++    connection = &gMapHeader.connections->connections[index];
++    sWasmMapConnection.version = WASM_MAP_TOPOLOGY_VERSION;
++    sWasmMapConnection.size = sizeof(sWasmMapConnection);
++    sWasmMapConnection.index = index;
++    sWasmMapConnection.direction = connection->direction;
++    sWasmMapConnection.destinationMapGroup = connection->mapGroup;
++    sWasmMapConnection.destinationMapNum = connection->mapNum;
++    sWasmMapConnection.flags = 0;
++    sWasmMapConnection.offset = connection->offset;
++    sWasmMapConnection.startX = 0;
++    sWasmMapConnection.startY = 0;
++    sWasmMapConnection.endX = 0;
++    sWasmMapConnection.endY = 0;
++    if (GetMapConnectionSpan(
++            connection,
++            &startX,
++            &startY,
++            &endX,
++            &endY))
++    {
++        sWasmMapConnection.startX = startX;
++        sWasmMapConnection.startY = startY;
++        sWasmMapConnection.endX = endX;
++        sWasmMapConnection.endY = endY;
++        sWasmMapConnection.flags |= WASM_MAP_CONNECTION_HAS_SPAN;
++    }
++    return &sWasmMapConnection;
++}
++
++static u8 GetMapWarpActivation(u8 metatileBehavior)
++{
++    if (MetatileBehavior_IsNorthArrowWarp(metatileBehavior))
++        return WASM_MAP_WARP_NORTH;
++    if (MetatileBehavior_IsSouthArrowWarp(metatileBehavior))
++        return WASM_MAP_WARP_SOUTH;
++    if (MetatileBehavior_IsWestArrowWarp(metatileBehavior))
++        return WASM_MAP_WARP_WEST;
++    if (MetatileBehavior_IsEastArrowWarp(metatileBehavior))
++        return WASM_MAP_WARP_EAST;
++    if (MetatileBehavior_IsWarpDoor(metatileBehavior))
++        return WASM_MAP_WARP_NORTH;
++    if (MetatileBehavior_IsLadder(metatileBehavior)
++     || MetatileBehavior_IsEscalator(metatileBehavior)
++     || MetatileBehavior_IsNonAnimDoor(metatileBehavior)
++     || MetatileBehavior_IsLavaridgeB1FWarp(metatileBehavior)
++     || MetatileBehavior_IsLavaridge1FWarp(metatileBehavior)
++     || MetatileBehavior_IsAquaHideoutWarp(metatileBehavior)
++     || MetatileBehavior_IsMtPyreHole(metatileBehavior)
++     || MetatileBehavior_IsMossdeepGymWarp(metatileBehavior)
++     || MetatileBehavior_IsUnionRoomWarp(metatileBehavior))
++        return WASM_MAP_WARP_STEP;
++    return WASM_MAP_WARP_UNSUPPORTED;
++}
++
++const struct WasmMapWarpV1 *WasmReadMapWarp(u32 index)
++{
++    const struct WarpEvent *warp;
++    const struct MapHeader *destinationMap;
++
++    if (!sWasmMapTopology.available
++     || index >= sWasmMapTopology.warpCount)
++        return NULL;
++
++    warp = &gMapHeader.events->warps[index];
++    sWasmMapWarp.version = WASM_MAP_TOPOLOGY_VERSION;
++    sWasmMapWarp.size = sizeof(sWasmMapWarp);
++    sWasmMapWarp.index = index;
++    sWasmMapWarp.x = warp->x + MAP_OFFSET;
++    sWasmMapWarp.y = warp->y + MAP_OFFSET;
++    sWasmMapWarp.elevation = warp->elevation;
++    sWasmMapWarp.metatileBehavior =
++        MapGridGetMetatileBehaviorAt(sWasmMapWarp.x, sWasmMapWarp.y);
++    sWasmMapWarp.activation =
++        GetMapWarpActivation(sWasmMapWarp.metatileBehavior);
++    sWasmMapWarp.destinationMapGroup = warp->mapGroup;
++    sWasmMapWarp.destinationMapNum = warp->mapNum;
++    sWasmMapWarp.destinationWarpId = warp->warpId;
++    sWasmMapWarp.flags = 0;
++    sWasmMapWarp.reserved = 0;
++    sWasmMapWarp.destinationX = 0;
++    sWasmMapWarp.destinationY = 0;
++
++    if (warp->mapGroup == MAP_GROUP(MAP_DYNAMIC)
++     && warp->mapNum == MAP_NUM(MAP_DYNAMIC))
++    {
++        sWasmMapWarp.flags |= WASM_MAP_WARP_DYNAMIC_DESTINATION;
++        return &sWasmMapWarp;
++    }
++
++    destinationMap =
++        Overworld_GetMapHeaderByGroupAndId(warp->mapGroup, warp->mapNum);
++    if (destinationMap != NULL
++     && destinationMap->events != NULL
++     && warp->warpId < destinationMap->events->warpCount)
++    {
++        const struct WarpEvent *destinationWarp =
++            &destinationMap->events->warps[warp->warpId];
++        sWasmMapWarp.destinationX = destinationWarp->x + MAP_OFFSET;
++        sWasmMapWarp.destinationY = destinationWarp->y + MAP_OFFSET;
++        sWasmMapWarp.flags |= WASM_MAP_WARP_DESTINATION_RESOLVED;
++    }
++    return &sWasmMapWarp;
 +}
 +
 +u8 WasmCheckpointSave(void)

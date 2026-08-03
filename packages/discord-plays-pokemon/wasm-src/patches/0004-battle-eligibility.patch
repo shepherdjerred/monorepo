@@ -1,0 +1,253 @@
+diff --git a/Makefile b/Makefile
+index bbf1afe6f..70aaa32a7 100644
+--- a/Makefile
++++ b/Makefile
+@@ -281,7 +281,7 @@ $(WASM): Makefile $(WASM_C_OBJS) $(WASM_DATA_OBJS) $(WASM_SOUND_OBJS)
+ 	$(WASM_LD) --no-entry --allow-undefined --initial-memory=268435456 --max-memory=268435456 \
+ 		--export=AgbMain --export=WasmRunFrame \
+ 		--export=gSaveBlock1Ptr --export=gPlayerAvatar --export=gObjectEvents --export=VarGet \
+-		--export=gSoundInfo --export=gWasmPcmL --export=gWasmPcmR --export=gSaveBlock2Ptr --export=gPlayerParty --export=gPlayerPartyCount --export=gBattleResults --export=WasmReadObservation --export=WasmReadMapTile --export=WasmReadMapTopology --export=WasmReadMapConnection --export=WasmReadMapWarp --export=WasmCheckpointSave \
++		--export=gSoundInfo --export=gWasmPcmL --export=gWasmPcmR --export=gSaveBlock2Ptr --export=gPlayerParty --export=gPlayerPartyCount --export=gBattleResults --export=WasmReadObservation --export=WasmReadMapTile --export=WasmReadMapTopology --export=WasmReadMapConnection --export=WasmReadMapWarp --export=WasmCanRunFromBattle --export=WasmCanUseBattleItemOnBattler --export=WasmCanUseBattleItemOnPartyMon --export=WasmCheckpointSave \
+ 		-o $@ $(filter %.o,$^)
+ 
+ # m4a sound tables / voicegroups / samples (data/sound_data.s) -> wasm object.
+diff --git a/src/wasm_observation.c b/src/wasm_observation.c
+index 3cf16ab7b..857983980 100644
+--- a/src/wasm_observation.c
++++ b/src/wasm_observation.c
+@@ -3,6 +3,10 @@
+ #include "battle_anim.h"
+ #include "battle_controllers.h"
+ #include "battle_pyramid.h"
++#include "battle_util.h"
++#include "constants/abilities.h"
++#include "constants/hold_effects.h"
++#include "constants/item_effects.h"
+ #include "constants/party_menu.h"
+ #include "constants/moves.h"
+ #include "event_object_movement.h"
+@@ -17,12 +21,14 @@
+ #include "overworld.h"
+ #include "palette.h"
+ #include "party_menu.h"
++#include "pokemon.h"
++#include "item.h"
+ #include "save.h"
+ #include "script.h"
+ #include "text.h"
+ #include "task.h"
+ 
+-#define WASM_OBSERVATION_VERSION 3
++#define WASM_OBSERVATION_VERSION 4
+ #define WASM_MAP_TOPOLOGY_VERSION 1
+ 
+ enum WasmMapWarpActivation
+@@ -131,7 +137,8 @@ struct __attribute__((packed)) WasmObservationV1
+     u8 partySlot;
+     u8 partyLayout;
+     u8 partyAction;
+-    u8 trailingReserved[2];
++    u8 moveLimitations;
++    u8 switchAllowed;
+ };
+ 
+ STATIC_ASSERT(sizeof(struct WasmObservationV1) == 144, WasmObservationV1MustBe144Bytes);
+@@ -206,6 +213,173 @@ static u8 GetCollisionInDirectionForObservation(struct ObjectEvent *objectEvent,
+     return GetCollisionAtCoords(objectEvent, x, y, direction);
+ }
+ 
++static bool8 WasmCanBattlerSwitch(u8 battler)
++{
++    u8 other;
++
++    if ((gBattleMons[battler].status2 & (STATUS2_WRAPPED | STATUS2_ESCAPE_PREVENTION))
++     || (gStatuses3[battler] & STATUS3_ROOTED)
++     || (gBattleTypeFlags & BATTLE_TYPE_ARENA))
++        return FALSE;
++
++    for (other = 0; other < gBattlersCount; other++)
++    {
++        if (GetBattlerSide(other) == GetBattlerSide(battler)
++         || (gAbsentBattlerFlags & (1u << other))
++         || gBattleMons[other].hp == 0)
++            continue;
++        if (gBattleMons[other].ability == ABILITY_SHADOW_TAG)
++            return FALSE;
++        if (gBattleMons[other].ability == ABILITY_ARENA_TRAP
++         && !IS_BATTLER_OF_TYPE(battler, TYPE_FLYING)
++         && gBattleMons[battler].ability != ABILITY_LEVITATE)
++            return FALSE;
++        if (gBattleMons[other].ability == ABILITY_MAGNET_PULL
++         && IS_BATTLER_OF_TYPE(battler, TYPE_STEEL))
++            return FALSE;
++    }
++    return TRUE;
++}
++
++static s8 WasmFindPlayerBattlerForPartyIndex(u8 partyIndex)
++{
++    u8 battler;
++
++    for (battler = 0; battler < gBattlersCount; battler++)
++    {
++        if (GetBattlerSide(battler) == B_SIDE_PLAYER
++         && (gAbsentBattlerFlags & (1u << battler)) == 0
++         && gBattlerPartyIndexes[battler] == partyIndex)
++            return battler;
++    }
++    return -1;
++}
++
++u32 WasmCanUseBattleItemOnPartyMon(u32 item, u32 partyIndex)
++{
++    const u8 *effect;
++    struct Pokemon *mon;
++    u32 hp;
++    u32 status;
++    s8 battler;
++
++    if (!gMain.inBattle
++     || partyIndex >= gPlayerPartyCount
++     || !ITEM_HAS_EFFECT(item))
++        return FALSE;
++    effect = item == ITEM_ENIGMA_BERRY
++        ? gSaveBlock1Ptr->enigmaBerry.itemEffect
++        : gItemEffectTable[item - ITEM_POTION];
++    if (effect == NULL)
++        return FALSE;
++
++    mon = &gPlayerParty[partyIndex];
++    if (GetMonData(mon, MON_DATA_SPECIES) == SPECIES_NONE
++     || GetMonData(mon, MON_DATA_IS_EGG))
++        return FALSE;
++    hp = GetMonData(mon, MON_DATA_HP);
++    if (effect[4] & ITEM4_REVIVE)
++        return hp == 0;
++    if (hp == 0)
++        return FALSE;
++    if ((effect[4] & ITEM4_HEAL_HP)
++     && hp < GetMonData(mon, MON_DATA_MAX_HP))
++        return TRUE;
++
++    status = GetMonData(mon, MON_DATA_STATUS);
++    if (((effect[3] & ITEM3_SLEEP) && (status & STATUS1_SLEEP))
++     || ((effect[3] & ITEM3_POISON) && (status & (STATUS1_PSN_ANY | STATUS1_TOXIC_COUNTER)))
++     || ((effect[3] & ITEM3_BURN) && (status & STATUS1_BURN))
++     || ((effect[3] & ITEM3_FREEZE) && (status & STATUS1_FREEZE))
++     || ((effect[3] & ITEM3_PARALYSIS) && (status & STATUS1_PARALYSIS)))
++        return TRUE;
++
++    battler = WasmFindPlayerBattlerForPartyIndex(partyIndex);
++    if (battler >= 0
++     && (((effect[3] & ITEM3_CONFUSION) && (gBattleMons[battler].status2 & STATUS2_CONFUSION))
++      || ((effect[0] & ITEM0_INFATUATION) && (gBattleMons[battler].status2 & STATUS2_INFATUATION))))
++        return TRUE;
++    return FALSE;
++}
++
++u32 WasmCanUseBattleItemOnBattler(u32 item, u32 battler)
++{
++    const u8 *effect;
++
++    if (!gMain.inBattle
++     || battler >= gBattlersCount
++     || GetBattlerSide(battler) != B_SIDE_PLAYER
++     || (gAbsentBattlerFlags & (1u << battler))
++     || gBattleMons[battler].hp == 0
++     || !ITEM_HAS_EFFECT(item))
++        return FALSE;
++    effect = item == ITEM_ENIGMA_BERRY
++        ? gSaveBlock1Ptr->enigmaBerry.itemEffect
++        : gItemEffectTable[item - ITEM_POTION];
++    if (effect == NULL)
++        return FALSE;
++
++    if (((effect[0] & ITEM0_DIRE_HIT)
++         && !(gBattleMons[battler].status2 & STATUS2_FOCUS_ENERGY))
++     || ((effect[0] & ITEM0_X_ATTACK)
++         && gBattleMons[battler].statStages[STAT_ATK] < MAX_STAT_STAGE)
++     || ((effect[1] & ITEM1_X_DEFEND)
++         && gBattleMons[battler].statStages[STAT_DEF] < MAX_STAT_STAGE)
++     || ((effect[1] & ITEM1_X_SPEED)
++         && gBattleMons[battler].statStages[STAT_SPEED] < MAX_STAT_STAGE)
++     || ((effect[2] & ITEM2_X_ACCURACY)
++         && gBattleMons[battler].statStages[STAT_ACC] < MAX_STAT_STAGE)
++     || ((effect[2] & ITEM2_X_SPATK)
++         && gBattleMons[battler].statStages[STAT_SPATK] < MAX_STAT_STAGE)
++     || ((effect[3] & ITEM3_GUARD_SPEC)
++         && gSideTimers[GetBattlerSide(battler)].mistTimer == 0))
++        return TRUE;
++    return FALSE;
++}
++
++u32 WasmCanRunFromBattle(u32 battler)
++{
++    u8 holdEffect;
++    u8 other;
++
++    if (!gMain.inBattle
++     || battler >= gBattlersCount
++     || GetBattlerSide(battler) != B_SIDE_PLAYER
++     || (gAbsentBattlerFlags & (1u << battler))
++     || gBattleMons[battler].hp == 0)
++        return FALSE;
++
++    holdEffect = gBattleMons[battler].item == ITEM_ENIGMA_BERRY
++        ? gEnigmaBerries[battler].holdEffect
++        : GetItemHoldEffect(gBattleMons[battler].item);
++    if (holdEffect == HOLD_EFFECT_CAN_ALWAYS_RUN
++     || gBattleMons[battler].ability == ABILITY_RUN_AWAY)
++        return TRUE;
++
++    for (other = 0; other < gBattlersCount; other++)
++    {
++        if (GetBattlerSide(other) == GetBattlerSide(battler)
++         || (gAbsentBattlerFlags & (1u << other))
++         || gBattleMons[other].hp == 0)
++            continue;
++        if (gBattleMons[other].ability == ABILITY_SHADOW_TAG)
++            return FALSE;
++        if (gBattleMons[other].ability == ABILITY_ARENA_TRAP
++         && !IS_BATTLER_OF_TYPE(battler, TYPE_FLYING)
++         && gBattleMons[battler].ability != ABILITY_LEVITATE)
++            return FALSE;
++        if (gBattleMons[other].ability == ABILITY_MAGNET_PULL
++         && IS_BATTLER_OF_TYPE(battler, TYPE_STEEL))
++            return FALSE;
++    }
++    if ((gBattleMons[battler].status2
++         & (STATUS2_ESCAPE_PREVENTION | STATUS2_WRAPPED))
++     || (gStatuses3[battler] & STATUS3_ROOTED)
++     || (gBattleTypeFlags & BATTLE_TYPE_FIRST_BATTLE))
++        return FALSE;
++    return TRUE;
++}
++
+ const struct WasmObservationV1 *WasmReadObservation(void)
+ {
+     struct ObjectEvent *player;
+@@ -287,8 +461,8 @@ const struct WasmObservationV1 *WasmReadObservation(void)
+     sWasmObservation.partySlot = PARTY_SIZE;
+     sWasmObservation.partyLayout = 0;
+     sWasmObservation.partyAction = 0;
+-    sWasmObservation.trailingReserved[0] = 0;
+-    sWasmObservation.trailingReserved[1] = 0;
++    sWasmObservation.moveLimitations = MOVE_LIMITATIONS_ALL;
++    sWasmObservation.switchAllowed = FALSE;
+ 
+     if (gMain.inBattle)
+         sWasmObservation.phase = WASM_PHASE_BATTLE;
+@@ -338,6 +512,13 @@ const struct WasmObservationV1 *WasmReadObservation(void)
+                 if (moveInfo->moves[moveSlot] != MOVE_NONE)
+                     sWasmObservation.moveCount++;
+             }
++            {
++                u8 potentialItemEffectBattler = gPotentialItemEffectBattler;
++                sWasmObservation.moveLimitations =
++                    CheckMoveLimitations(battler, 0, MOVE_LIMITATIONS_ALL);
++                gPotentialItemEffectBattler = potentialItemEffectBattler;
++            }
++            sWasmObservation.switchAllowed = WasmCanBattlerSwitch(battler);
+             sWasmObservation.bagInputState = WasmGetBattleBagInputState();
+             if (sWasmObservation.bagInputState != 0 && gBagMenu != NULL)
+             {

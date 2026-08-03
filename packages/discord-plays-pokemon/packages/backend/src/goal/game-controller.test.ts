@@ -3,6 +3,7 @@ import type {
   CardinalDirection,
   EngineMapTile,
 } from "#src/emulator/engine-observation.ts";
+import type { EngineMapTopologyV1 } from "#src/emulator/engine-map-topology.ts";
 import type { CommandInput } from "#src/game/command/command-input.ts";
 import { GameController, type GameControlPort } from "./game-controller.ts";
 import { actionOutcome } from "./game-action-outcome.ts";
@@ -13,6 +14,7 @@ type ObservationInput = Readonly<{
   phase?: GameObservationV2["phase"];
   x?: number;
   y?: number;
+  elevation?: number;
   facing?: CardinalDirection;
   mapNum?: number;
   inputReady?: boolean;
@@ -68,8 +70,13 @@ function observation(input: ObservationInput = {}): GameObservationV2 {
             menu: "action",
             actionCursor: input.battleActionCursor ?? 0,
             moveCursor: 0,
+            targetBattler: null,
             currentMove: 0,
             chosenMove: 0,
+            switchAllowed: true,
+            moves: [],
+            bag: null,
+            party: null,
             battlers: [],
           }
         : null,
@@ -79,6 +86,7 @@ function observation(input: ObservationInput = {}): GameObservationV2 {
       mapNum: input.mapNum ?? 0,
       x: input.x ?? 10,
       y: input.y ?? 10,
+      elevation: input.elevation ?? 0,
       facing: input.facing ?? "north",
       movementMode: "on foot",
       runningState: 0,
@@ -99,6 +107,132 @@ function observation(input: ObservationInput = {}): GameObservationV2 {
   };
 }
 
+function targetObservation(
+  frame: number,
+  allyPartyIndex: number,
+): GameObservationV2 {
+  const current = observation({ frame, phase: "battle" });
+  const battle = current.battle;
+  if (battle === null) throw new Error("test observation has no battle");
+  return {
+    ...current,
+    battle: {
+      ...battle,
+      typeFlags: 1,
+      battlersCount: 4,
+      menu: "target",
+      moveCursor: 0,
+      targetBattler: 2,
+      moves: [
+        {
+          slot: 1,
+          moveId: 33,
+          move: "TACKLE",
+          currentPp: 35,
+          maxPp: 35,
+          usable: true,
+        },
+      ],
+      battlers: [
+        {
+          battler: 0,
+          side: "player",
+          position: 0,
+          active: true,
+          speciesId: 258,
+          species: "Mudkip",
+          hp: 20,
+          maxHp: 20,
+          partyIndex: 0,
+          status: 0,
+        },
+        {
+          battler: 1,
+          side: "opponent",
+          position: 1,
+          active: true,
+          speciesId: 263,
+          species: "Zigzagoon",
+          hp: 15,
+          maxHp: 15,
+          partyIndex: 0,
+          status: 0,
+        },
+        {
+          battler: 2,
+          side: "player",
+          position: 2,
+          active: true,
+          speciesId: 252,
+          species: "Treecko",
+          hp: 19,
+          maxHp: 19,
+          partyIndex: allyPartyIndex,
+          status: 0,
+        },
+        {
+          battler: 3,
+          side: "opponent",
+          position: 3,
+          active: true,
+          speciesId: 261,
+          species: "Poochyena",
+          hp: 14,
+          maxHp: 14,
+          partyIndex: 1,
+          status: 0,
+        },
+      ],
+    },
+  };
+}
+
+function mapTopology(
+  input: Readonly<{
+    connections?: EngineMapTopologyV1["connections"];
+    warps?: EngineMapTopologyV1["warps"];
+  }> = {},
+): EngineMapTopologyV1 {
+  return {
+    version: 1,
+    size: 28,
+    frame: 10,
+    mapGroup: 0,
+    mapNum: 0,
+    width: 6,
+    height: 6,
+    bounds: { minX: 7, maxX: 12, minY: 7, maxY: 12 },
+    connections: input.connections ?? [],
+    warps: input.warps ?? [],
+  };
+}
+
+function sameMapWarpTopology(triggerElevation = 0): EngineMapTopologyV1 {
+  return mapTopology({
+    warps: [
+      {
+        version: 1,
+        size: 24,
+        index: 3,
+        trigger: {
+          x: 10,
+          y: 9,
+          elevation: triggerElevation,
+          behavior: 0,
+        },
+        activation: "step",
+        destination: {
+          mapGroup: 0,
+          mapNum: 0,
+          warpId: 1,
+          dynamic: false,
+          landing: { x: 8, y: 8 },
+        },
+      },
+    ],
+  });
+}
+
 class FakeControlPort implements GameControlPort {
   readonly presses: CommandInput[] = [];
   private current: GameObservationV2;
@@ -106,6 +240,7 @@ class FakeControlPort implements GameControlPort {
   private currentFrame: Uint8Array;
   private readonly afterPressFrames: Uint8Array[];
   private readonly blocked: ReadonlySet<string>;
+  private readonly topology: EngineMapTopologyV1 | null;
 
   constructor(
     initial: GameObservationV2,
@@ -114,6 +249,7 @@ class FakeControlPort implements GameControlPort {
       blocked?: ReadonlySet<string>;
       initialFrame?: Uint8Array;
       afterPressFrames?: readonly Uint8Array[];
+      topology?: EngineMapTopologyV1;
     }> = {},
   ) {
     this.current = initial;
@@ -121,6 +257,7 @@ class FakeControlPort implements GameControlPort {
     this.blocked = options.blocked ?? new Set<string>();
     this.currentFrame = options.initialFrame ?? renderedFrame();
     this.afterPressFrames = [...(options.afterPressFrames ?? [])];
+    this.topology = options.topology ?? null;
   }
 
   observe(): GameObservationV2 {
@@ -157,6 +294,22 @@ class FakeControlPort implements GameControlPort {
       elevation: 0,
       passable,
     };
+  }
+
+  readMapTopology(): EngineMapTopologyV1 | null {
+    return this.topology;
+  }
+
+  canUseBattleItemOnPartyMon(): boolean {
+    return true;
+  }
+
+  canUseBattleItemOnBattler(): boolean {
+    return true;
+  }
+
+  canRunFromBattle(): boolean {
+    return true;
   }
 }
 
@@ -367,6 +520,33 @@ describe("GameController", () => {
     expect(outcome.stopReason).toBe("completed");
     expect(outcome.battleChanged).toBe(true);
     expect(outcome.stateChanged).toBe(true);
+  });
+
+  test("resolves a queued party-slot target after a preceding switch", async () => {
+    const port = new FakeControlPort(targetObservation(10, 1), []);
+    const controller = new GameController(port);
+    const switchStarted = Promise.withResolvers<undefined>();
+    const releaseSwitch = Promise.withResolvers<undefined>();
+    const precedingSwitch = controller.perform(
+      "test:preceding-forced-switch",
+      async () => {
+        switchStarted.resolve();
+        await releaseSwitch.promise;
+        // The switch reuses battler 2 for party slot 3. Party slot 2 is no
+        // longer active when the queued target operation acquires the lock.
+        port.setObservation(targetObservation(20, 2));
+      },
+    );
+    await switchStarted.promise;
+
+    const queuedTarget = controller.battleTarget({ partySlot: 2 });
+    releaseSwitch.resolve();
+    await precedingSwitch;
+
+    await expect(queuedTarget).rejects.toThrow(
+      "requested party slot is not an active battle target",
+    );
+    expect(port.presses).toEqual([]);
   });
 
   test("recognizes a dialog waiting for input as an applied advance", async () => {
@@ -638,5 +818,512 @@ describe("GameController navigation", () => {
     expect(result.status).toBe("stopped");
     expect(result.stopReason).toBe("map-changed");
     expect(port.presses).toHaveLength(1);
+  });
+});
+
+describe("GameController exit navigation", () => {
+  test("navigates a selected connection and stops at the first map change", async () => {
+    const topology = mapTopology({
+      connections: [
+        {
+          version: 1,
+          size: 24,
+          index: 0,
+          direction: "east",
+          destination: { mapGroup: 0, mapNum: 1 },
+          offset: 0,
+          span: {
+            start: { x: 12, y: 9 },
+            end: { x: 12, y: 10 },
+          },
+        },
+      ],
+    });
+    const port = new FakeControlPort(
+      observation({ x: 10, y: 9, facing: "east" }),
+      [
+        observation({ frame: 12, x: 11, y: 9, facing: "east" }),
+        observation({ frame: 24, x: 12, y: 9, facing: "east" }),
+        observation({
+          frame: 36,
+          x: 7,
+          y: 9,
+          facing: "east",
+          mapNum: 1,
+        }),
+      ],
+      { topology },
+    );
+
+    const result = await new GameController(port).navigateExit(
+      "connection:0",
+      3,
+    );
+
+    expect(result.status).toBe("traversed");
+    expect(result.stopReason).toBe("exit-traversed");
+    expect(result.attemptsMade).toBe(3);
+    expect(result.stepsTaken).toBe(2);
+    expect(port.presses.map((press) => press.command)).toEqual([
+      "right",
+      "right",
+      "right",
+    ]);
+  });
+
+  test("does not route across an unselected automatic warp trigger", async () => {
+    const topology = mapTopology({
+      warps: [
+        {
+          version: 1,
+          size: 24,
+          index: 3,
+          trigger: { x: 11, y: 9, elevation: 0, behavior: 0 },
+          activation: "step",
+          destination: {
+            mapGroup: 1,
+            mapNum: 2,
+            warpId: 0,
+            dynamic: false,
+            landing: { x: 7, y: 7 },
+          },
+        },
+        {
+          version: 1,
+          size: 24,
+          index: 4,
+          trigger: { x: 9, y: 9, elevation: 0, behavior: 0 },
+          activation: "step",
+          destination: {
+            mapGroup: 1,
+            mapNum: 3,
+            warpId: 0,
+            dynamic: false,
+            landing: { x: 8, y: 8 },
+          },
+        },
+      ],
+    });
+    const corridor = new Set(["7,9", "8,9", "9,9", "10,9", "11,9"]);
+    const blocked = new Set<string>();
+    for (let x = 7; x <= 12; x += 1) {
+      for (let y = 7; y <= 12; y += 1) {
+        const key = `${String(x)},${String(y)}`;
+        if (!corridor.has(key)) blocked.add(key);
+      }
+    }
+    const port = new FakeControlPort(
+      observation({ x: 7, y: 9, facing: "east" }),
+      [],
+      { topology, blocked },
+    );
+
+    const result = await new GameController(port).navigateExit("warp:3", 5);
+
+    expect(result.status).toBe("stopped");
+    expect(result.stopReason).toBe("no-route");
+    expect(result.attemptsMade).toBe(0);
+    expect(result.stepsTaken).toBe(0);
+    expect(port.presses).toEqual([]);
+  });
+
+  test("activates only the selected warp and stops without choosing a next route", async () => {
+    const topology = mapTopology({
+      warps: [
+        {
+          version: 1,
+          size: 24,
+          index: 3,
+          trigger: { x: 10, y: 9, elevation: 0, behavior: 0 },
+          activation: "step",
+          destination: {
+            mapGroup: 1,
+            mapNum: 2,
+            warpId: 0,
+            dynamic: false,
+            landing: { x: 7, y: 7 },
+          },
+        },
+        {
+          version: 1,
+          size: 24,
+          index: 4,
+          trigger: { x: 11, y: 9, elevation: 0, behavior: 0 },
+          activation: "step",
+          destination: {
+            mapGroup: 1,
+            mapNum: 3,
+            warpId: 0,
+            dynamic: false,
+            landing: { x: 8, y: 8 },
+          },
+        },
+      ],
+    });
+    const port = new FakeControlPort(
+      observation({ x: 10, y: 10, facing: "north" }),
+      [
+        observation({
+          frame: 12,
+          x: 10,
+          y: 9,
+          elevation: 3,
+          facing: "north",
+        }),
+      ],
+      { topology },
+    );
+
+    const result = await new GameController(port).navigateExit("warp:3", 1);
+
+    expect(result.status).toBe("triggered");
+    expect(result.stopReason).toBe("exit-triggered");
+    expect(result.attemptsMade).toBe(1);
+    expect(result.stepsTaken).toBe(1);
+    expect(port.presses.map((press) => press.command)).toEqual(["up"]);
+  });
+
+  test("rejects unavailable and non-navigable exit ids without input", async () => {
+    const topology = mapTopology({
+      warps: [
+        {
+          version: 1,
+          size: 24,
+          index: 0,
+          trigger: { x: 10, y: 9, elevation: 0, behavior: 0 },
+          activation: "unsupported",
+          destination: {
+            mapGroup: 0,
+            mapNum: 0,
+            warpId: 127,
+            dynamic: true,
+            landing: null,
+          },
+        },
+      ],
+    });
+    const port = new FakeControlPort(observation(), [], { topology });
+    const controller = new GameController(port);
+
+    const missing = await controller.navigateExit("connection:9", 5);
+    const unsupported = await controller.navigateExit("warp:0", 5);
+
+    expect(missing.stopReason).toBe("exit-not-found");
+    expect(unsupported.stopReason).toBe("exit-not-navigable");
+    expect(port.presses).toEqual([]);
+  });
+});
+
+describe("GameController directed exit replanning", () => {
+  test("retains a blocked directed edge while approaching its destination from another side", async () => {
+    const topology = mapTopology({
+      connections: [
+        {
+          version: 1,
+          size: 24,
+          index: 0,
+          direction: "east",
+          destination: { mapGroup: 0, mapNum: 1 },
+          offset: 0,
+          span: {
+            start: { x: 12, y: 9 },
+            end: { x: 12, y: 9 },
+          },
+        },
+      ],
+    });
+    const passable = new Set(["9,9", "10,9", "11,9", "12,9", "9,10", "10,10"]);
+    const blocked = new Set<string>();
+    for (let x = 7; x <= 12; x += 1) {
+      for (let y = 7; y <= 12; y += 1) {
+        const key = `${String(x)},${String(y)}`;
+        if (!passable.has(key)) blocked.add(key);
+      }
+    }
+    const port = new FakeControlPort(
+      observation({ x: 9, y: 9, facing: "east" }),
+      [
+        // Raw collision says (10,9) is passable, but the directed (9,9) ->
+        // (10,9) movement is obstructed like the wrong side of a ledge.
+        observation({ frame: 12, x: 9, y: 9, facing: "east" }),
+        observation({ frame: 24, x: 9, y: 9, facing: "east" }),
+        // Replanning retains that edge, takes the southern approach, and
+        // enters the same (10,9) destination successfully from below.
+        observation({ frame: 36, x: 9, y: 10, facing: "south" }),
+        observation({ frame: 48, x: 10, y: 10, facing: "east" }),
+        observation({ frame: 60, x: 10, y: 9, facing: "north" }),
+        observation({ frame: 72, x: 11, y: 9, facing: "east" }),
+        observation({ frame: 84, x: 12, y: 9, facing: "east" }),
+        observation({
+          frame: 96,
+          x: 7,
+          y: 9,
+          facing: "east",
+          mapNum: 1,
+        }),
+      ],
+      { topology, blocked },
+    );
+
+    const result = await new GameController(port).navigateExit(
+      "connection:0",
+      7,
+    );
+
+    expect(result.status).toBe("traversed");
+    expect(result.stopReason).toBe("exit-traversed");
+    expect(result.attemptsMade).toBe(7);
+    expect(result.stepsTaken).toBe(5);
+    expect(port.presses.map((press) => press.command)).toEqual([
+      "right",
+      "right",
+      "down",
+      "right",
+      "up",
+      "right",
+      "right",
+      "right",
+    ]);
+  });
+});
+
+describe("GameController same-map warp traversal", () => {
+  test("reports the exported destination landing as traversed despite elevation mismatch", async () => {
+    const topology = sameMapWarpTopology(2);
+    const port = new FakeControlPort(
+      observation({ x: 10, y: 10, facing: "north" }),
+      [
+        observation({
+          frame: 12,
+          x: 8,
+          y: 8,
+          elevation: 1,
+          facing: "south",
+        }),
+      ],
+      { topology },
+    );
+
+    const result = await new GameController(port).navigateExit("warp:3", 1);
+
+    expect(result.status).toBe("traversed");
+    expect(result.stopReason).toBe("exit-traversed");
+    expect(result.attemptsMade).toBe(1);
+    expect(result.stepsTaken).toBe(4);
+    expect(port.presses.map((press) => press.command)).toEqual(["up"]);
+  });
+
+  test("reports matching trigger coordinates and elevation as triggered", async () => {
+    const topology = sameMapWarpTopology(2);
+    const port = new FakeControlPort(
+      observation({ x: 10, y: 10, facing: "north" }),
+      [
+        observation({
+          frame: 12,
+          x: 10,
+          y: 9,
+          elevation: 2,
+          facing: "north",
+        }),
+      ],
+      { topology },
+    );
+
+    const result = await new GameController(port).navigateExit("warp:3", 1);
+
+    expect(result.status).toBe("triggered");
+    expect(result.stopReason).toBe("exit-triggered");
+    expect(result.attemptsMade).toBe(1);
+    expect(result.stepsTaken).toBe(1);
+    expect(port.presses.map((press) => press.command)).toEqual(["up"]);
+  });
+
+  test("does not report trigger coordinates at the wrong elevation as triggered", async () => {
+    const topology = sameMapWarpTopology(2);
+    const port = new FakeControlPort(
+      observation({ x: 10, y: 10, elevation: 1, facing: "north" }),
+      [
+        observation({
+          frame: 12,
+          x: 10,
+          y: 9,
+          elevation: 1,
+          facing: "north",
+        }),
+      ],
+      { topology },
+    );
+
+    const result = await new GameController(port).navigateExit("warp:3", 1);
+
+    expect(result.status).toBe("stopped");
+    expect(result.stopReason).toBe("activation-no-effect");
+    expect(result.attemptsMade).toBe(1);
+    expect(result.stepsTaken).toBe(1);
+    expect(port.presses.map((press) => press.command)).toEqual(["up"]);
+  });
+
+  test("keeps a map change authoritative despite trigger elevation mismatch", async () => {
+    const topology = sameMapWarpTopology(2);
+    const port = new FakeControlPort(
+      observation({ x: 10, y: 10, elevation: 1, facing: "north" }),
+      [
+        observation({
+          frame: 12,
+          x: 10,
+          y: 9,
+          elevation: 1,
+          facing: "north",
+          mapNum: 1,
+        }),
+      ],
+      { topology },
+    );
+
+    const result = await new GameController(port).navigateExit("warp:3", 1);
+
+    expect(result.status).toBe("traversed");
+    expect(result.stopReason).toBe("exit-traversed");
+    expect(result.attemptsMade).toBe(1);
+    expect(result.stepsTaken).toBe(0);
+    expect(port.presses.map((press) => press.command)).toEqual(["up"]);
+  });
+
+  test("preserves activation no-effect when the player does not move", async () => {
+    const topology = sameMapWarpTopology();
+    const unchanged = observation({ x: 10, y: 10, facing: "north" });
+    const port = new FakeControlPort(unchanged, [unchanged], { topology });
+
+    const result = await new GameController(port).navigateExit("warp:3", 1);
+
+    expect(result.status).toBe("stopped");
+    expect(result.stopReason).toBe("activation-no-effect");
+    expect(result.attemptsMade).toBe(1);
+    expect(result.stepsTaken).toBe(0);
+    expect(port.presses.map((press) => press.command)).toEqual(["up", "up"]);
+  });
+});
+
+describe("GameController directional warp exclusion", () => {
+  test("does not enter an unselected directional warp from its triggering edge", async () => {
+    const topology = mapTopology({
+      warps: [
+        {
+          version: 1,
+          size: 24,
+          index: 3,
+          trigger: { x: 11, y: 9, elevation: 0, behavior: 0 },
+          activation: "step",
+          destination: {
+            mapGroup: 1,
+            mapNum: 2,
+            warpId: 0,
+            dynamic: false,
+            landing: { x: 7, y: 7 },
+          },
+        },
+        {
+          version: 1,
+          size: 24,
+          index: 4,
+          trigger: { x: 9, y: 9, elevation: 0, behavior: 0 },
+          activation: "east",
+          destination: {
+            mapGroup: 1,
+            mapNum: 3,
+            warpId: 0,
+            dynamic: false,
+            landing: { x: 8, y: 8 },
+          },
+        },
+      ],
+    });
+    const corridor = new Set(["7,9", "8,9", "9,9", "10,9", "11,9"]);
+    const blocked = new Set<string>();
+    for (let x = 7; x <= 12; x += 1) {
+      for (let y = 7; y <= 12; y += 1) {
+        const key = `${String(x)},${String(y)}`;
+        if (!corridor.has(key)) blocked.add(key);
+      }
+    }
+    const port = new FakeControlPort(
+      observation({ x: 7, y: 9, facing: "east" }),
+      [],
+      { topology, blocked },
+    );
+
+    const result = await new GameController(port).navigateExit("warp:3", 5);
+
+    expect(result.status).toBe("stopped");
+    expect(result.stopReason).toBe("no-route");
+    expect(result.attemptsMade).toBe(0);
+    expect(result.stepsTaken).toBe(0);
+    expect(port.presses).toEqual([]);
+  });
+
+  test("can cross a directional warp trigger from a non-triggering side", async () => {
+    const topology = mapTopology({
+      warps: [
+        {
+          version: 1,
+          size: 24,
+          index: 3,
+          trigger: { x: 7, y: 9, elevation: 0, behavior: 0 },
+          activation: "step",
+          destination: {
+            mapGroup: 1,
+            mapNum: 2,
+            warpId: 0,
+            dynamic: false,
+            landing: { x: 7, y: 7 },
+          },
+        },
+        {
+          version: 1,
+          size: 24,
+          index: 4,
+          trigger: { x: 9, y: 9, elevation: 0, behavior: 0 },
+          activation: "east",
+          destination: {
+            mapGroup: 1,
+            mapNum: 3,
+            warpId: 0,
+            dynamic: false,
+            landing: { x: 8, y: 8 },
+          },
+        },
+      ],
+    });
+    const corridor = new Set(["7,9", "8,9", "9,9", "10,9", "11,9"]);
+    const blocked = new Set<string>();
+    for (let x = 7; x <= 12; x += 1) {
+      for (let y = 7; y <= 12; y += 1) {
+        const key = `${String(x)},${String(y)}`;
+        if (!corridor.has(key)) blocked.add(key);
+      }
+    }
+    const port = new FakeControlPort(
+      observation({ x: 11, y: 9, facing: "west" }),
+      [
+        observation({ frame: 12, x: 10, y: 9, facing: "west" }),
+        observation({ frame: 24, x: 9, y: 9, facing: "west" }),
+        observation({ frame: 36, x: 8, y: 9, facing: "west" }),
+        observation({ frame: 48, x: 7, y: 9, facing: "west" }),
+      ],
+      { topology, blocked },
+    );
+
+    const result = await new GameController(port).navigateExit("warp:3", 4);
+
+    expect(result.status).toBe("triggered");
+    expect(result.stopReason).toBe("exit-triggered");
+    expect(result.attemptsMade).toBe(4);
+    expect(result.stepsTaken).toBe(4);
+    expect(port.presses.map((press) => press.command)).toEqual([
+      "left",
+      "left",
+      "left",
+      "left",
+    ]);
   });
 });

@@ -114,8 +114,10 @@ deferred by explicit direction.
 - [x] Implement and verify the knowledge corpus, retrieval, and skills.
 - [x] Publish the restacked #1803/#1805 heads and record replacement CI/review.
 - [x] Implement benchmark-truth corrections.
-- [ ] Implement and publish compact semantic exits and named battle actions.
-- [ ] Implement and publish early-prerequisite prompt and excerpt ranking.
+- [x] Implement compact semantic exits and named battle actions.
+- [ ] Publish and complete current-head verification for the semantic controls.
+- [x] Implement early-prerequisite prompt and excerpt ranking.
+- [ ] Publish and complete current-head verification for the decision policy.
 - [x] Replay the existing successful trace through the corrected telemetry.
 - [ ] Complete focused, real-WASM, Buildkite, and review verification for all
       new stack layers.
@@ -259,6 +261,14 @@ deferred by explicit direction.
   trace without another model run. It reports 141 movement actions, 54 stops,
   52 repeated-position loops, zero explicit ignored inputs, 44 compact
   observations, 233 full observations, and 721,752 tool-output characters.
+- 2026-07-29: Semantic gameplay now exposes decision-complete compact state,
+  authoritative stable current-map exit IDs, bounded traversal of one
+  caller-selected exit, and exact-name battle actions that execute only the
+  caller's move, item, switch, run, or target choice.
+- 2026-07-29: Decision policy now requires compact-state inspection, an
+  explicit immediate prerequisite, and one early targeted acquisition search
+  before exploratory travel. Knowledge results rank and excerpt the passage
+  with the strongest term coverage, proximity, and acquisition evidence.
 
 ## Session Log — 2026-07-28
 
@@ -545,3 +555,603 @@ deferred by explicit direction.
   text; tool-output characters count completed aggregated output exactly once.
 - The replay is corrected analysis of an existing run, not a new reliability
   measurement.
+
+## Session Log — 2026-07-29 (semantic gameplay)
+
+### Done
+
+- Expanded compact observations with movement, progression, party, inventory,
+  and battle decision data while preserving byte-for-byte `--full` output.
+- Added engine-backed current-map connection/warp discovery and bounded
+  traversal of exactly one caller-selected exit.
+- Added exact-name move/item catalogs and explicit move, item, switch, run,
+  and target controls that reject unavailable choices before input.
+- Passed 92 focused backend and generator tests covering the observation ABI,
+  exit interruption, named battle selection, compact output, and prior control
+  behavior.
+
+### Remaining
+
+- Rebuild and run the mandatory real-WASM ABI gate once the local OrbStack
+  Docker service responds.
+- Publish the semantic-control draft PR and complete current-head Buildkite and
+  review verification.
+- Implement and publish the early-prerequisite prompt and knowledge passage
+  ranking as the final code layer.
+
+### Caveats
+
+- The host-only WASM build reached patch application but lacks `pkg-config` and
+  `png.h`; only the Docker toolchain or Buildkite is authoritative for the C
+  integration.
+- OrbStack reported itself running but its Docker socket did not answer
+  `docker info`; no engine compile result has been inferred from that host
+  runtime failure.
+- Repeat paid model measurements remain explicitly deferred.
+
+## Session Log — 2026-07-29 (semantic gameplay review fixes)
+
+### Done
+
+- Triaged the five current hosted review findings on exact PR #1847 head
+  `3ac341da933615ea3b3721e4afcb14c330cccbb4`.
+- Added generated move-target and battle-item interaction metadata from the
+  pinned Emerald source, with fail-fast parsing and catalog tests.
+- Confirmed the Shift submenu after voluntary party selection; required and
+  validated item recipients; rejected unsupported, unavailable, and
+  trainer-ineligible items before input; and rejected explicit move targets
+  that the engine cannot expose.
+- Fingerprinted the complete WASM patch series, reset and reapplied changed
+  source patches while preserving cached build tools, and verified every
+  required observation-v3 bridge symbol before compilation.
+- Rebuilt the real WASM and passed all 349 backend tests, all 50 script tests,
+  and package-scoped TypeScript and ESLint checks.
+- Published the fix to PR #1847, restacked its decision-policy child PR #1848
+  with git-spice, and requested fresh hosted reviews for both new heads.
+
+### Remaining
+
+- Complete current-head Buildkite and hosted review verification.
+
+### Caveats
+
+- The rebuilt WASM asset is ignored and remains a local verification artifact;
+  CI rebuilds it from the fingerprinted patch series.
+- Repeat paid model measurements remain explicitly deferred.
+
+## Session Log — 2026-07-29 (battle eligibility review fixes)
+
+### Done
+
+- Added an observation-v4 engine contract for per-move limitations and
+  voluntary-switch eligibility, matching Emerald's Disable, Torment, Taunt,
+  Imprison, Encore, Choice Band, trapping-status, Battle Arena, Shadow Tag,
+  Arena Trap, and Magnet Pull rules.
+- Added a pure WASM preflight query for party-targeted battle medicine and
+  wired move, switch, and item actions to reject invalid choices before sending
+  controller input.
+- Kept Revive-compatible fainted party targets eligible for the authoritative
+  item query while retaining alive-only validation for voluntary switches.
+- Rebuilt the real WASM, invoked the new export through the runtime binding,
+  and passed focused semantic-control tests plus backend/common package
+  typecheck and lint.
+
+### Remaining
+
+- Update the runtime Pokemon battle and world skills for the new semantic
+  observation fields in the next review cycle.
+- Complete replacement Buildkite and hosted-review verification for PRs #1847
+  and #1848.
+
+### Caveats
+
+- Party-targeted HP, revive, major-status, confusion, and infatuation medicine
+  use the engine-owned item-effect table. PP medicine remains rejected because
+  the semantic item action does not accept a move choice.
+- The existing Buildkite script-coverage failure is queued for a separate
+  remediation cycle and is not bypassed by these changes.
+
+## Session Log — 2026-07-29 (semantic runtime skills)
+
+### Done
+
+- Updated the runtime `pokemon-battle` skill with live eligibility fields and
+  the exact semantic move, item, switch, run, and target command forms.
+- Updated the runtime `pokemon-world` skill with engine-authored exit
+  discovery, stable IDs, selected-exit traversal, and same-map navigation.
+- Regenerated both OpenAI skill metadata files and passed the skill schema and
+  focused Markdown validation.
+
+### Remaining
+
+- Complete replacement Buildkite and hosted-review verification for PRs #1847
+  and #1848.
+
+### Caveats
+
+- The existing script-coverage failure remains queued for its separate
+  remediation cycle.
+- PR #1848 retains its separate passage-coverage-versus-metadata review
+  finding; this #1847 documentation cycle does not alter ranking behavior.
+
+## Session Log — 2026-07-29 (battle decision eligibility)
+
+### Done
+
+- Added explicit forced-replacement support for Emerald's input-ready Send Out
+  party decision without weakening voluntary-switch trapping checks.
+- Rejected Run in trainer battles before controller input and limited trapping
+  abilities in the WASM switch preflight to present, living opponents.
+- Rebuilt the real WASM and passed focused control, patch-series, symbol smoke,
+  backend/common typecheck, and backend/common lint verification.
+- Published the review fixes to PR #1847 and restacked and published its child
+  PR #1848.
+
+### Remaining
+
+- Complete current-head Buildkite and hosted-review verification for PRs #1847
+  and #1848.
+- Address script coverage in its separate queued cycle.
+
+### Caveats
+
+- Forced replacement is admitted only for engine party action `SEND_OUT`; item
+  targeting and other party decisions remain invalid for `battle switch`.
+- The rebuilt WASM asset is ignored and remains a local verification artifact.
+- PR #1848's separate passage-coverage-versus-metadata finding is unchanged.
+
+## Session Log — 2026-07-29 (WASM build coverage)
+
+### Done
+
+- Refactored the WASM build entrypoint into typed, injectable orchestration
+  units without changing its executable command.
+- Bound source-cache identity to the upstream commit, ordered patch contents,
+  and required bridge symbols, and refused to bless incomplete patched source.
+- Validated compiled artifact existence, minimum size, WASM header, and copied
+  size before running generated-data updates.
+- Added behavior tests for toolchain failures, subprocess and patch failures,
+  clone/fetch/build orchestration, cache reuse and invalidation, bridge
+  completeness, artifact rejection, and generator ordering.
+- Raised exact package script coverage from 87.18% functions and 72.36% lines
+  to 100% functions and 98.39% lines, then rebuilt and smoke-tested the real
+  WASM.
+
+### Remaining
+
+- Complete replacement Buildkite and hosted-review verification for PRs #1847
+  and #1848.
+
+### Caveats
+
+- The one-mebibyte artifact floor is a truncation guard, not a substitute for
+  the real-WASM symbol and snapshot smoke.
+- The rebuilt WASM asset remains ignored and is not committed.
+
+## Session Log — 2026-07-29 (battle action preflight)
+
+### Done
+
+- Reused the pending move's generated target mode to reject illegal standalone
+  target selections before controller input.
+- Added read-only engine eligibility exports for direct battle-item effects and
+  deterministic Run restrictions, including stat caps, Guard Spec, trapping
+  statuses, Ingrain, Shadow Tag, Arena Trap, and Magnet Pull.
+- Switched `pokemonctl battle item --party-slot` to strict integer parsing so
+  fractional and trailing-text values fail before an HTTP request.
+- Rebuilt the real WASM and passed the symbol/reboot smoke, focused
+  zero-input controller tests, package typecheck and lint, and exact script
+  coverage at 100% functions and 98.39% lines.
+
+### Remaining
+
+- Complete current-head Buildkite and hosted-review verification for PRs #1847
+  and #1848.
+
+### Caveats
+
+- Normal wild-battle speed escape odds remain selectable; Run preflight rejects
+  only deterministic prevention and preserves Emerald's Smoke Ball and Run Away
+  exceptions.
+- The rebuilt WASM asset is ignored and remains a local verification artifact.
+- PR #1848's two passage-ranking findings are unchanged.
+
+## Session Log — 2026-07-29 (allied battle targets)
+
+### Done
+
+- Replaced one-direction target cycling with position-aware navigation over
+  Emerald's target ring.
+- Added focused controller coverage proving horizontal opponent targeting uses
+  Left and cross-side allied targeting uses Down before confirming the choice.
+- Passed the focused battle/controller tests plus backend typecheck and lint.
+
+### Remaining
+
+- Complete current-head Buildkite and hosted-review verification for PRs #1847
+  and #1848.
+
+### Caveats
+
+- The Enigma Berry review finding on #1847 remains unchanged.
+- PR #1848's two passage-ranking findings remain unchanged.
+- No WASM rebuild is required because this change uses existing decoded
+  battler-position observations and does not change engine exports.
+
+## Session Log — 2026-07-29 (Enigma Berry battle effects)
+
+### Done
+
+- Classified the dynamic Enigma Berry battle handler as party-targeted so its
+  live e-Reader effect reaches the existing engine eligibility query.
+- Added focused coverage for both an engine-approved Enigma Berry effect and a
+  genuinely ineffective live effect rejected before controller input.
+- Regenerated the pinned item interaction catalog and passed focused tests,
+  typecheck, and lint.
+
+### Remaining
+
+- Publish the #1847 fix, restack and publish #1848, and complete current-head
+  Buildkite and hosted-review verification for both pull requests.
+
+### Caveats
+
+- Enigma Berry HP and status restoration uses the party-item action; dynamic
+  PP-restoring and X-item effects remain unsupported by this action shape.
+- No WASM rebuild is required because the existing party-mon eligibility export
+  already reads the save's live Enigma Berry effect.
+- The other #1847 route finding and all #1848 findings remain unchanged.
+
+## Session Log — 2026-07-29 (live battle move state)
+
+### Done
+
+- Replaced controller-buffer move decoding with authoritative per-battler move
+  IDs, current PP, and PP-Up-derived maximum PP from Emerald's live battle
+  state.
+- Preserved the existing live move-limitation query for Disable, PP depletion,
+  Torment, Taunt, Imprison, Encore, and Choice Band restrictions.
+- Added first-turn, later-turn stale-order, absent-move, and disabled-move
+  regressions, plus a source-contract test for the live engine fields.
+- Rebuilt the real WASM and passed focused tests, the real-WASM ABI/reboot
+  smoke, typecheck, and lint.
+
+### Remaining
+
+- Publish the #1847 fix, restack and publish #1848, and complete current-head
+  hosted-review verification for both pull requests.
+
+### Caveats
+
+- The observation ABI remains version 4 and 144 bytes; only the source of its
+  existing move records changed.
+- The rebuilt WASM asset is ignored and remains a local verification artifact.
+- The #1847 warp finding and all #1848 findings remain unchanged.
+
+## Session Log — 2026-07-29 (selected-exit warp safety)
+
+### Done
+
+- Added every nonselected step-activated warp trigger to the selected exit
+  route's permanent blocked tiles.
+- Preserved the caller-selected warp trigger as a valid activation endpoint in
+  both initial planning and transient-blocker revalidation.
+- Added focused coverage proving a corridor through a competing automatic warp
+  returns `no-route` without input while a valid selected warp still activates.
+- Passed focused controller tests plus backend typecheck and lint.
+
+### Remaining
+
+- Publish the #1847 fix, restack and publish #1848, and complete current-head
+  hosted-review verification for both pull requests.
+
+### Caveats
+
+- Directional warp-arrow triggers are not added to the automatic-warp block set;
+  they activate only through their required directional input.
+- The forced-replacement settling finding on #1847 and all #1848 findings
+  remain unchanged.
+- Shared-cache Buildkite retries and cache mutations remain explicitly deferred.
+
+## Session Log — 2026-07-29 (forced-replacement settlement)
+
+### Done
+
+- Reused the forced-replacement rule's exact input-ready `SEND_OUT` predicate
+  when settling completed battle commands.
+- Applied the predicate to move confirmation as well as the shared
+  post-command settlement path used by items, switches, targets, and Run.
+- Added focused regressions proving a ready forced replacement completes
+  immediately while transient and non-replacement party states time out.
+- Passed the focused controller test file plus backend typecheck and lint.
+
+### Remaining
+
+- Await current-head hosted-review responses for PRs #1847 and #1848.
+
+### Caveats
+
+- Only an input-ready party action with the engine's `SEND_OUT` action code is
+  settled; non-input-ready and other party decisions remain unsettled.
+- The Struggle finding on #1847 and all #1848 findings remain unchanged.
+- Shared-cache Buildkite retries and cache mutations remain explicitly deferred.
+
+## Session Log — 2026-07-29 (forced Struggle)
+
+### Done
+
+- Traced Emerald's action-selection path and confirmed it checks all four move
+  limitations before opening the move menu, then assigns Struggle itself.
+- Routed an explicit exact-name Struggle request through Fight without
+  fabricating or selecting a live move slot.
+- Preserved fail-fast rejection for Struggle when any move remains legal and
+  for an individually exhausted or disabled move alongside a legal alternative.
+- Added focused controller and CLI regressions and passed backend tests,
+  typecheck, and lint.
+
+### Remaining
+
+- Await current-head hosted-review responses for PRs #1847 and #1848.
+
+### Caveats
+
+- Struggle has no caller-selected target; Emerald chooses its target as part of
+  the forced engine action.
+- No WASM rebuild is required because the existing live move limitation bits
+  already match Emerald's `AreAllMovesUnusable` decision.
+- The directional-warp `U-Zlx` finding surfaced after publication and remains
+  untouched.
+- All #1848 findings remain unchanged.
+- Shared-cache Buildkite retries and cache mutations remain explicitly deferred.
+
+## Session Log — 2026-07-29 (directional warp exclusion)
+
+### Done
+
+- Replaced the competing-warp tile blacklist with directed movement-edge
+  exclusions derived from each warp's engine-reported activation.
+- Blocked all four inbound edges for nonselected step warps and only the
+  required inbound edge for nonselected directional warps.
+- Added focused regressions proving a triggering directional edge returns
+  `no-route` without input while the same tile remains traversable from a safe
+  side.
+- Passed focused controller tests plus backend typecheck and lint.
+
+### Remaining
+
+- Await current-head hosted-review responses for PRs #1847 and #1848.
+
+### Caveats
+
+- Unsupported warps contribute no blocked edge because selected-exit navigation
+  cannot activate them.
+- No WASM rebuild is required because directional activation already exists in
+  the topology ABI.
+- The same-map warp traversal `U-gat` finding surfaced after publication and
+  remains untouched.
+- All #1848 findings remain unchanged.
+- Shared-cache Buildkite retries and cache mutations remain explicitly deferred.
+
+## Session Log — 2026-07-29 (same-map warp traversal)
+
+### Done
+
+- Recognized a selected same-map warp as `exit-traversed` when the settled
+  observation matches its engine-exported destination landing.
+- Preserved trigger-only and genuine activation-no-effect outcomes with focused
+  controller regressions.
+- Passed the focused controller suite, backend typecheck, changed-file ESLint,
+  and changed-file Prettier checks.
+
+### Remaining
+
+- Await current-head Buildkite and hosted-review responses for PRs #1847 and
+  #1848.
+
+### Caveats
+
+- Same-map traversal is reported only from a resolved exported landing that
+  differs from the trigger; an unresolved dynamic destination is not guessed
+  from unrelated state changes.
+- The four #1848 findings remain unchanged.
+- Shared-cache Buildkite retries and cache mutations remain explicitly deferred.
+
+## Session Log — 2026-07-29 (bidirectional Bag navigation)
+
+### Done
+
+- Derived the requested item's current pocket position from authoritative saved
+  inventory order and moved the remembered Bag cursor toward it with `up` or
+  `down`.
+- Preserved item-identity confirmation, pocket selection, quantities, use
+  confirmation, and timeout behavior.
+- Added focused regressions for cursor-below upward movement, cursor-above
+  downward movement, and an already-selected item.
+- Passed the focused battle-control suite, backend typecheck, changed-file
+  ESLint, and changed-file Prettier checks.
+
+### Remaining
+
+- Await current-head Buildkite and hosted-review responses for PRs #1847 and
+  #1848.
+
+### Caveats
+
+- If live inventory no longer contains the item or the observed item disagrees
+  at its recorded position, selection returns the existing timeout outcome
+  rather than guessing.
+- The four #1848 findings remain unchanged.
+- Shared-cache Buildkite retries and cache mutations remain explicitly deferred.
+
+## Session Log — 2026-07-29 (Frontier Bag preflight)
+
+### Done
+
+- Mirrored Emerald's pinned `B_ACTION_USE_ITEM` battle-type gate against the
+  already-exported live `gBattleTypeFlags` value.
+- Rejected Bag actions before controller input in the Battle Dome, Battle
+  Factory, and Battle Pike while preserving ordinary wild, trainer, and double
+  battle item preflight.
+- Added named table-driven controller regressions plus a structural assertion
+  that the observation patch exports the authoritative battle-type flags.
+- Passed the focused controller and WASM patch suites, backend typecheck,
+  changed-file ESLint, and changed-file Prettier checks.
+
+### Remaining
+
+- Await current-head Buildkite and hosted-review responses for PRs #1847 and
+  #1848.
+
+### Caveats
+
+- Emerald excludes the Battle Pyramid from this Bag-disabled mask; the
+  controller independently rejects Pyramid battles as unsupported.
+- The separate deep directional-warp thread on #1847 and the four #1848
+  findings remain unchanged.
+- Shared-cache Buildkite retries and cache mutations remain explicitly deferred.
+
+## Session Log — 2026-07-29 (locked party-target resolution)
+
+### Done
+
+- Passed the parsed battler-or-party-slot target selection unchanged from the
+  semantic route into `GameController`.
+- Resolved a party slot against the live active lineup only after the
+  controller acquired its existing exclusive-operation lock, then reused the
+  established battle-target validation and timeout path.
+- Added a deterministic queued-control regression where a preceding switch
+  reuses a battler index for another party member before the target operation
+  acquires the lock; the stale party-slot request now rejects without input.
+- Passed the focused controller and battle-control suites, backend typecheck,
+  changed-file ESLint, and changed-file Prettier checks.
+
+### Remaining
+
+- Await current-head Buildkite and hosted-review responses for PRs #1847 and
+  #1848.
+
+### Caveats
+
+- Explicit battler targeting retains its existing validation, navigation, and
+  timeout behavior.
+- The deep directional-warp and warp-elevation threads on #1847 and the four
+  #1848 findings remain unchanged.
+- Shared-cache Buildkite retries and cache mutations remain explicitly deferred.
+
+## Session Log — 2026-07-29 (elevation-aware warp triggers)
+
+### Done
+
+- Advanced the packed engine observation ABI to expose the player object's
+  authoritative current elevation without changing the byte size.
+- Matched selected warp triggers using Emerald's coordinate and elevation rule,
+  including elevation `0` as the transition wildcard.
+- Preserved map changes, exported same-map landings, and phase changes as
+  authoritative transition evidence.
+- Added focused regressions for wrong and matching elevations, the transition
+  wildcard, map changes, and same-map landings.
+- Passed the focused controller, observation-decoder, and WASM-build suites;
+  backend typecheck; changed-file ESLint and Prettier; docs validation; and
+  Markdown lint.
+- Passed the staged pre-commit checks, including Gitleaks and suppression
+  detection.
+
+### Remaining
+
+- Await current-head Buildkite and hosted-review responses for PRs #1847 and
+  #1848.
+
+### Caveats
+
+- The separate deep directional-warp and cached-WASM-patch threads on #1847
+  remain unchanged.
+- The four #1848 findings remain unchanged.
+- Shared-cache Buildkite retries and cache mutations remain explicitly deferred.
+
+## Session Log — 2026-07-29 (cached WASM pin refresh)
+
+### Done
+
+- Refreshed the exact PR stack and isolated the cached-worktree failure before
+  patch refresh.
+- Reordered source identity handling so an exact pin-and-patch fingerprint
+  reuses the cached tree, while changed source identity resets tracked patches
+  before switching upstream commits.
+- Added a focused pin-change regression that simulates stale tracked patches,
+  requires reset-before-checkout ordering, and verifies the current patch set
+  and fingerprint.
+- Passed the focused 16-test WASM build suite, package typecheck, changed-file
+  ESLint and Prettier, docs validation, and Markdown lint.
+- Passed the staged pre-commit checks, including Gitleaks and suppression
+  detection.
+
+### Remaining
+
+- Await current-head Buildkite for PR #1847 and the git-spice-required #1848
+  child restack.
+
+### Caveats
+
+- The deep directional-warp and failed-navigation-edge threads on #1847 remain
+  unchanged.
+- The four #1848 knowledge findings remain unchanged.
+- Hosted review is intentionally deferred because the provider reports an
+  explicit usage limit.
+
+## Session Log — 2026-07-29 (directed exit replanning)
+
+### Done
+
+- Replaced destination-tile failures in selected-exit navigation with
+  persistent directed movement edges shared with the existing warp-edge
+  exclusions.
+- Removed the replan fallback that discarded learned failures, while preserving
+  dynamic occupied-tile handling and the bounded movement budget.
+- Added a focused directional-obstruction regression that retains the failed
+  edge across replans, approaches its destination tile from another side, and
+  traverses the selected exit.
+- Passed the focused 34-test controller suite, backend typecheck, changed-file
+  ESLint and Prettier, docs validation, and Markdown lint.
+- Passed the staged pre-commit checks, including Gitleaks and suppression
+  detection.
+
+### Remaining
+
+- Await current-head Buildkite for PR #1847 and the git-spice-required #1848
+  child restack.
+
+### Caveats
+
+- The remaining #1847 finding `U-wi6` and the four #1848 knowledge findings
+  remain unchanged.
+- Coordinate-target navigation keeps its separate transient-blocker
+  revalidation behavior; this fix changes only selected-exit routing.
+- Hosted review is intentionally deferred because the provider reports an
+  explicit usage limit.
+
+## Session Log — 2026-07-29 (decision policy)
+
+### Done
+
+- Updated developer instructions to start from decision-complete compact state,
+  name an immediate prerequisite, make one early targeted search before
+  exploratory travel when needed, and prefer selected-exit/named-battle
+  semantics.
+- Added passage-level knowledge ranking by query-term coverage and proximity,
+  with additive acquisition evidence and decisive-passage excerpts.
+- Added regressions for prompt policy, acquisition ranking, and a decisive
+  Route 101 passage that beats scattered mentions.
+
+### Remaining
+
+- Publish the decision-policy draft PR and complete current-head Buildkite and
+  review verification for every open stack layer.
+- Complete the real-WASM gate for semantic controls when Docker responds, and
+  attach the required CLI recording to the semantic PR.
+
+### Caveats
+
+- The prompt and ranking improve general decision support without encoding a
+  deterministic quest route or battle strategy.
+- Repeat paid model measurements and Kubernetes mutation remain explicitly
+  deferred.

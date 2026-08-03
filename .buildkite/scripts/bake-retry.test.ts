@@ -10,6 +10,8 @@ test.each([
   "failed to receive status: error reading from server: EOF",
   'rpc error: code = Unavailable desc = closing transport, received prior goaway: debug data: "graceful_stop"',
   "panic: send on closed channel",
+  "429 Too Many Requests",
+  "toomanyrequests: retry your request later",
 ])("classifies %s as transient", (message) => {
   expect(bakeFailureIsTransient(message)).toBe(true);
 });

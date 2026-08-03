@@ -48,6 +48,13 @@ export function startGoalControlServer(
       await options.emulator.queuePress(0, frames, 0, "goal");
     },
     readMapTile: (x, y) => options.emulator.engineMapTile(x, y),
+    readMapTopology: () => options.emulator.engineMapTopology(),
+    canRunFromBattle: (battler) =>
+      options.emulator.engineCanRunFromBattle(battler),
+    canUseBattleItemOnBattler: (itemId, battler) =>
+      options.emulator.engineCanUseBattleItemOnBattler(itemId, battler),
+    canUseBattleItemOnPartyMon: (itemId, partySlot) =>
+      options.emulator.engineCanUseBattleItemOnPartyMon(itemId, partySlot),
   });
   const context: GoalControlContext = {
     ...options,

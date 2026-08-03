@@ -2,7 +2,7 @@ import { z } from "zod";
 import { parseCommandInput } from "#src/game/command/command-input.ts";
 import type { WaitCondition } from "./game-controller.ts";
 import type { GoalControlContext, Routed } from "./control-context.ts";
-import { readGameMap } from "./game-map.ts";
+import { readGameMap, readGameMapExits } from "./game-map.ts";
 
 const TapRequestSchema = z.strictObject({
   command: z.string().min(1),
@@ -27,12 +27,45 @@ const WaitRequestSchema = z.strictObject({
   maxFrames: z.number().int().min(1).max(1800).default(600),
 });
 
-const NavigateRequestSchema = z.strictObject({
-  x: z.number().int(),
-  y: z.number().int(),
-  maxSteps: z.number().int().min(1).max(200).default(64),
-  searchRadius: z.number().int().min(1).max(20).default(12),
+const NavigateRequestSchema = z.union([
+  z.strictObject({
+    x: z.number().int(),
+    y: z.number().int(),
+    maxSteps: z.number().int().min(1).max(200).default(64),
+    searchRadius: z.number().int().min(1).max(20).default(12),
+  }),
+  z.strictObject({
+    exitId: z.string().regex(/^(?:connection|warp):(0|[1-9]\d*)$/u),
+    maxSteps: z.number().int().min(1).max(200).default(64),
+  }),
+]);
+
+const BattleMoveRequestSchema = z.union([
+  z.strictObject({
+    slot: z.number().int().min(1).max(4),
+    targetBattler: z.number().int().min(0).max(3).optional(),
+  }),
+  z.strictObject({
+    moveId: z.number().int().positive(),
+    targetBattler: z.number().int().min(0).max(3).optional(),
+  }),
+]);
+
+const BattleItemRequestSchema = z.strictObject({
+  itemId: z.number().int().positive(),
+  partySlot: z.number().int().min(1).max(6).optional(),
 });
+
+const BattleSwitchRequestSchema = z.strictObject({
+  partySlot: z.number().int().min(1).max(6),
+});
+
+const BattleTargetRequestSchema = z.union([
+  z.strictObject({ battler: z.number().int().min(0).max(3) }),
+  z.strictObject({ partySlot: z.number().int().min(1).max(6) }),
+]);
+
+const EmptyRequestSchema = z.strictObject({});
 
 async function parseJsonBody(request: Request): Promise<unknown> {
   try {
@@ -160,16 +193,100 @@ export function mapResponse(
   };
 }
 
+export function mapExitsResponse(context: GoalControlContext): Routed {
+  const exits = readGameMapExits(context.emulator);
+  return {
+    response: jsonResponse(exits),
+    logBody: exits,
+  };
+}
+
 export async function navigateResponse(
   context: GoalControlContext,
   request: Request,
 ): Promise<Routed> {
   const parsed = NavigateRequestSchema.parse(await parseJsonBody(request));
-  const outcome = await context.controller.navigate(
-    { x: parsed.x, y: parsed.y },
-    parsed.maxSteps,
-    parsed.searchRadius,
+  const outcome =
+    "exitId" in parsed
+      ? await context.controller.navigateExit(parsed.exitId, parsed.maxSteps)
+      : await context.controller.navigate(
+          { x: parsed.x, y: parsed.y },
+          parsed.maxSteps,
+          parsed.searchRadius,
+        );
+  return {
+    response: jsonResponse(outcome),
+    requestMeta: parsed,
+    logBody: outcome,
+  };
+}
+
+async function battleMoveResponse(
+  context: GoalControlContext,
+  request: Request,
+): Promise<Routed> {
+  const parsed = BattleMoveRequestSchema.parse(await parseJsonBody(request));
+  const outcome = await context.controller.battleMove({
+    ...("slot" in parsed ? { slot: parsed.slot } : { moveId: parsed.moveId }),
+    ...(parsed.targetBattler === undefined
+      ? {}
+      : { targetBattler: parsed.targetBattler }),
+  });
+  return {
+    response: jsonResponse(outcome),
+    requestMeta: parsed,
+    logBody: outcome,
+  };
+}
+
+async function battleItemResponse(
+  context: GoalControlContext,
+  request: Request,
+): Promise<Routed> {
+  const parsed = BattleItemRequestSchema.parse(await parseJsonBody(request));
+  const outcome = await context.controller.battleItem(
+    parsed.itemId,
+    parsed.partySlot,
   );
+  return {
+    response: jsonResponse(outcome),
+    requestMeta: parsed,
+    logBody: outcome,
+  };
+}
+
+async function battleRunResponse(
+  context: GoalControlContext,
+  request: Request,
+): Promise<Routed> {
+  const parsed = EmptyRequestSchema.parse(await parseJsonBody(request));
+  const outcome = await context.controller.battleRun();
+  return {
+    response: jsonResponse(outcome),
+    requestMeta: parsed,
+    logBody: outcome,
+  };
+}
+
+async function battleSwitchResponse(
+  context: GoalControlContext,
+  request: Request,
+): Promise<Routed> {
+  const parsed = BattleSwitchRequestSchema.parse(await parseJsonBody(request));
+  const outcome = await context.controller.battleSwitch(parsed.partySlot);
+  return {
+    response: jsonResponse(outcome),
+    requestMeta: parsed,
+    logBody: outcome,
+  };
+}
+
+async function battleTargetResponse(
+  context: GoalControlContext,
+  request: Request,
+): Promise<Routed> {
+  const parsed = BattleTargetRequestSchema.parse(await parseJsonBody(request));
+  const outcome = await context.controller.battleTarget(parsed);
   return {
     response: jsonResponse(outcome),
     requestMeta: parsed,
@@ -189,6 +306,16 @@ export async function routeSemanticRequest(
       return await moveResponse(context, request);
     case "POST /navigate":
       return await navigateResponse(context, request);
+    case "POST /battle/move":
+      return await battleMoveResponse(context, request);
+    case "POST /battle/item":
+      return await battleItemResponse(context, request);
+    case "POST /battle/run":
+      return await battleRunResponse(context, request);
+    case "POST /battle/switch":
+      return await battleSwitchResponse(context, request);
+    case "POST /battle/target":
+      return await battleTargetResponse(context, request);
     case "POST /interact":
       return await interactResponse(context, request);
     case "POST /advance":

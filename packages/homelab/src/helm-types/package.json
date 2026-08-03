@@ -30,7 +30,9 @@
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "prepublishOnly": "bun run build",
     "generate:live": "bun run src/cli.ts",
-    "publish:npm": "bun ../../../../scripts/publish-npm.ts ."
+    "publish:npm": "bun ../../../../scripts/publish-npm.ts .",
+    "test:ci": "bun ../../../../scripts/run-ci-test.ts",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../../../scripts/run-ci-test.ts"
   },
   "keywords": [
     "helm",
