@@ -75,24 +75,73 @@ one-sided ~330 ms window that made the mean unusable). Probe:
 band (bright game content above the badge otherwise wins a naive
 first-bright-row heuristic).
 
-**Stream age is a first-class confound.** Measured glass-to-glass on the
-SAME build varies by hundreds of ms with how long the Go-Live stream has
-been running:
+**Per-SESSION client state is the dominant term, and it is not stream age.**
+Measured glass-to-glass on the SAME build varies by hundreds of ms between
+sessions:
 
-| Arm       | stream age | glass-to-glass mean          |
-| --------- | ---------- | ---------------------------- |
-| candidate | ~10 min    | 68.5 ms (p50 67.4, n=1204)   |
-| candidate | ~1-2 min   | 325.8 ms (p50 326.1, n=1200) |
-| baseline  | ~1-2 min   | 369.8 ms (p50 373.7, n=1207) |
-| baseline  | ~4 min     | 358.3 ms (p50 359.7, n=908)  |
+| Arm       | stream age | glass-to-glass mean               |
+| --------- | ---------- | --------------------------------- |
+| candidate | ~10 min    | **68.5 ms** (p50 67.4, n=1204)    |
+| candidate | ~1-2 min   | 325.8 ms (p50 326.1, n=1200)      |
+| candidate | 0-12 min   | 317.1 ms (p50 316.1, n=716 curve) |
+| baseline  | ~1-2 min   | 369.8 ms (p50 373.7, n=1207)      |
+| baseline  | ~4 min     | 358.3 ms (p50 359.7, n=908)       |
 
-A/B arms must therefore be compared at **matched stream age**, and any
-single-point comparison across differently-aged streams is worthless — the
-first candidate-vs-baseline pairing here looked like a 301 ms "win" that was
-almost entirely age. Viewer-side `jitterBufferDelay` (84 ms baseline vs
-84 ms candidate) does NOT track this, so it cannot substitute for the glass
-measurement: it reports the receiver's de-jitter buffer only, not total
-playout latency.
+A 12-minute continuous curve on the candidate is **flat** (per-2-min means
+332 / 304 / 337 / 308 / 299 / 322 ms) — so the low 68.5 ms reading is NOT
+stream-age decay, which was the first hypothesis and is refuted. It is a
+distinct, persistent low-latency playout state that the client entered once
+(that session had 4 freezes / 463 lost packets / 157 NACKs shortly before,
+consistent with a jitter-buffer re-anchor after a discontinuity) and held
+for at least a minute. It was not reproducible on demand.
+
+Consequences for any latency A/B through Discord:
+
+- The between-session client-state range (~68-370 ms) is **5-7x the
+  effect size** of the entire Tier-1 bundle (~40-60 ms), so one session per
+  arm cannot resolve it. A credible glass-level A/B needs many alternating
+  short sessions per arm, or a way to force the client into a known playout
+  state.
+- Viewer-side `jitterBufferDelay` (84 ms in both arms) does NOT track the
+  glass number and cannot substitute for it: it reports only the receiver's
+  de-jitter buffer, not total playout latency.
+- Server-side deltas remain the practical acceptance signal for encode-side
+  changes (see the Phase 1 results below).
+
+## Phase 1 live results (2026-08-03)
+
+Candidate image `candidate-9a45c738@sha256:0ad60c00` deployed by digest with
+an Argo hold; baseline is production main `2.0.0-7794`.
+
+**Flags verified in the live ffmpeg command** (pod log): `async_depth 1`,
+`flush_packets 1`, `lowdelay`, `frame_duration 10`, `h264_vaapi`.
+
+**Server-side, matched 12-press windows:**
+
+| Metric                                     | baseline  | candidate | delta     |
+| ------------------------------------------ | --------- | --------- | --------- |
+| `stream_packet_ready_delay_ms{video}` mean | 1222.8 ms | 1164.5 ms | **-58.3** |
+| `stream_input_to_send_complete_ms` mean    | 1248.4 ms | 1181.3 ms | **-67.1** |
+| `emulator_input_apply_delay_ms` mean       | 9.5 ms    | 9.3 ms    | -0.2      |
+| ffmpeg fps                                 | 29.92     | 29.95     | held      |
+| frames dropped (window)                    | 5         | 2         | improved  |
+
+Both arms carry the same standing pairing offset (the known corruption in
+[`mk64-stream-latency-correlation-desync`](../todos/mk64-stream-latency-correlation-desync.md)),
+so the absolute values are meaningless but the **delta is meaningful**, and
+-58 ms matches the predicted ~45-60 ms encode-side saving. Encoder health
+held: 30 fps, VAAPI engaged, fewer drops.
+
+**Glass-side: not separable in one session per arm** — see the client-state
+finding above. This is a measurement-power limit, not evidence against the
+change.
+
+**Verdict:** ship Tier 1 on the server-side evidence plus the mechanism
+(ffmpeg holds `async_depth` frames in the encode FIFO by construction) and
+the unchanged encoder health. Do NOT claim a measured glass-level win.
+The client playout buffer is now demonstrably the largest single term in
+the budget, which promotes the Phase 2 playout-delay experiment to the
+highest-value next lever.
 
 ## Phase 2 — Tier 2 A/B gambles (adopt on evidence, one at a time)
 
