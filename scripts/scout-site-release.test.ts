@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 
 import {
+  computeReleaseInputDigest,
   hashReleaseInputFiles,
   writeScoutReleaseState,
 } from "./scout-site-release.ts";
@@ -147,6 +148,33 @@ test("release source digest changes only with selected input content", async () 
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
+});
+
+test("release input digest binds to the source commit", () => {
+  const base = {
+    sourceCommit: "0123456789012345678901234567890123456789",
+    backendImageDigest: DIGEST,
+    sourceInputsDigest: DIGEST,
+    contractHash: "contract-abc",
+    pinterestTagId: "pin-1",
+    redditPixelId: "reddit-1",
+  };
+  const digest = computeReleaseInputDigest(base);
+  // Deterministic for identical inputs.
+  expect(computeReleaseInputDigest(base)).toBe(digest);
+  // A different commit must produce a different identity, even when every other
+  // input is unchanged — the site bytes bake in the commit, so the archive must
+  // not collide across commits.
+  expect(
+    computeReleaseInputDigest({
+      ...base,
+      sourceCommit: "fedcba9876543210fedcba9876543210fedcba98",
+    }),
+  ).not.toBe(digest);
+  // A non-commit input change still changes the identity.
+  expect(
+    computeReleaseInputDigest({ ...base, backendImageDigest: `${DIGEST}0` }),
+  ).not.toBe(digest);
 });
 
 test("release state output creates its parent directory", async () => {
