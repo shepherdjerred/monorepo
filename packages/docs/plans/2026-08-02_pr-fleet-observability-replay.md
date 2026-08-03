@@ -187,7 +187,10 @@ repository checkout.
 - Addressed the following exact-head findings by fingerprinting tracked and
   untracked inputs across the complete workspace source tree and requiring
   every recorded event to carry the manifest's run ID.
-- Passed focused typecheck, 85 controller tests, 42 observability tests, lint,
+- Addressed the latest exact-head findings by requiring exactly one successful
+  shutdown lifecycle in completed replays and rejecting unsafe short explicit
+  redaction values before a bundle can be created.
+- Passed focused typecheck, 86 controller tests, 42 observability tests, lint,
   native-aware build, docs validation, Markdown lint, diff checks, and staged
   Lefthook/Gitleaks/Prettier/lockfile checks.
 - Completed a final non-mutating `openai/gpt-5.6-terra` model/tool turn from the

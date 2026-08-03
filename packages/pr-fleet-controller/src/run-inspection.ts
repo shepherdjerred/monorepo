@@ -428,6 +428,16 @@ export function replayRunBundle(
         `Completed run has open lifecycles: ${openLifecycles.join("; ")}`,
       );
     }
+    if (
+      shutdown.started !== 1 ||
+      shutdown.completed !== 1 ||
+      shutdown.cancelled !== 0 ||
+      shutdown.failed !== 0
+    ) {
+      throw new Error(
+        "Completed run must contain exactly one completed shutdown lifecycle",
+      );
+    }
   }
 
   return {

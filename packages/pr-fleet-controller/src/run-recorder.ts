@@ -176,6 +176,14 @@ export class RunRecorder implements FleetTelemetry {
   }
 
   static async create(options: CreateRunRecorderOptions): Promise<RunRecorder> {
+    const unsafeSecret = options.secretValues?.find(
+      (secret) => secret.length > 0 && secret.length < 8,
+    );
+    if (unsafeSecret !== undefined) {
+      throw new Error(
+        "Explicit run-bundle secret values must be at least 8 characters",
+      );
+    }
     const now = options.now ?? (() => new Date());
     const randomId = options.randomId ?? (() => crypto.randomUUID());
     const root = path.resolve(

@@ -90,6 +90,12 @@ async function recordSuccessfulEmptyRun(recorder: RunRecorder): Promise<void> {
   await recorder.finalize("completed", snapshot);
 }
 
+async function finalizeCompletedRun(recorder: RunRecorder): Promise<void> {
+  recorder.record("shutdown.started", { activeWorkers: 0 });
+  recorder.record("shutdown.completed", { snapshot });
+  await recorder.finalize("completed", snapshot);
+}
+
 async function recordSyntheticWorkerRun(recorder: RunRecorder): Promise<void> {
   const correlation = {
     prNumber: 42,
@@ -139,7 +145,7 @@ async function recordSyntheticWorkerRun(recorder: RunRecorder): Promise<void> {
     { result: { state: "waiting-ci" } },
     correlation,
   );
-  await recorder.finalize("completed", null);
+  await finalizeCompletedRun(recorder);
 }
 
 describe("local run bundles", () => {
@@ -181,6 +187,12 @@ describe("local run bundles", () => {
     );
   });
 
+  test("rejects short explicit secrets before creating a bundle", async () => {
+    await expect(createRecorder(["abc"])).rejects.toThrow(
+      "Explicit run-bundle secret values must be at least 8 characters",
+    );
+  });
+
   test("fails closed when the selected state directory is group-readable", async () => {
     const stateDirectory = await mkdtemp(path.join(tmpdir(), "pr-fleet-open-"));
     temporaryDirectories.push(stateDirectory);
@@ -204,7 +216,7 @@ describe("local run bundles", () => {
   test("detects event-stream tampering", async () => {
     const recorder = await createRecorder();
     recorder.record("run.started", { marker: "original" });
-    await recorder.finalize("completed", null);
+    await finalizeCompletedRun(recorder);
     const text = await readFile(recorder.paths.events, "utf8");
     await writeFile(
       recorder.paths.events,
@@ -300,7 +312,7 @@ describe("run bundle replay", () => {
       { result: { state: "waiting-ci" } },
       correlation,
     );
-    await recorder.finalize("completed", null);
+    await finalizeCompletedRun(recorder);
 
     const report = replayRunBundle(
       await loadRunBundle(recorder.paths.runDirectory),
@@ -484,7 +496,7 @@ describe("run bundle lifecycle replay", () => {
       { trigger: "startup" },
       { tickId: openRecorder.newId("tick") },
     );
-    await openRecorder.finalize("completed", null);
+    await finalizeCompletedRun(openRecorder);
     const openBundle = await loadRunBundle(openRecorder.paths.runDirectory);
     expect(() =>
       replayRunBundle(openBundle, {
@@ -536,6 +548,21 @@ describe("run bundle lifecycle replay", () => {
     ).toThrow(
       "Summary status failed does not match final run event run.completed",
     );
+
+    const missingRecorder = await createRecorder();
+    missingRecorder.record("run.started", { scenario: "missing-shutdown" });
+    await missingRecorder.finalize("completed", null);
+    const missingBundle = await loadRunBundle(
+      missingRecorder.paths.runDirectory,
+    );
+    expect(() =>
+      replayRunBundle(missingBundle, {
+        currentControllerVersion: "0.1.0",
+        allowVersionMismatch: false,
+      }),
+    ).toThrow(
+      "Completed run must contain exactly one completed shutdown lifecycle",
+    );
   });
 
   test("replays deliberate worker cancellation as a terminal lifecycle", async () => {
@@ -556,7 +583,7 @@ describe("run bundle lifecycle replay", () => {
       { reason: "head advanced" },
       correlation,
     );
-    await recorder.finalize("completed", null);
+    await finalizeCompletedRun(recorder);
 
     const report = replayRunBundle(
       await loadRunBundle(recorder.paths.runDirectory),
