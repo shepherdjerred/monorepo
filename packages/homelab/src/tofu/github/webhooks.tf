@@ -6,12 +6,29 @@
 #   * the temporal worker's pr-bot webhook (the receiver in
 #     packages/temporal/src/event-bridge/github-webhook.ts).
 #
-# HMAC secrets are NOT mirrored into tofu state — they live on the receiving
-# end (Buildkite for the first hook, 1Password for the second), and tofu
-# ignores the masked round-trip value the GitHub API returns. The point of
-# tofu ownership here is to give the *event subscription list* an auditable,
-# version-controlled source of truth so drift between "what fires" and
-# "what the receiver expects" gets caught by the daily tofu plan in CI.
+# INCIDENT (2026-07-31): both hooks were brought under tofu via a
+# `terraform import`, which populates state's `configuration.secret` from a
+# GitHub Read -- and GitHub's API ALWAYS echoes back the literal masked
+# placeholder "********" for that field, never the real value. Both
+# resources had `lifecycle { ignore_changes = [configuration[0].secret] }`
+# to avoid a perpetual diff on that placeholder -- but ignore_changes only
+# suppresses *diff display*; it does not stop tofu from resending that
+# placeholder as part of the full `configuration` PATCH payload whenever
+# ANY OTHER attribute on the resource changes. PR #1863 changed pr_bot's
+# `events` list; the resulting apply resent the whole `configuration`
+# block including the literal "********", and GitHub accepted it as the
+# new real secret -- silently breaking the live webhook's HMAC
+# verification for ~ a day before it was noticed via a PagerDuty alert
+# and a required-status-check outage. Confirmed root cause via live HMAC
+# verification against a real GitHub delivery.
+#
+# Fix: neither resource's secret is knowable by tofu (both are owned by the
+# receiving end -- 1Password for pr_bot, Buildkite for buildkite), so tofu
+# has no business ever writing to that field again. Both resources are now
+# frozen with `lifecycle { ignore_changes = all }`, which stops tofu from
+# resending ANY attribute -- not just the secret -- on a future apply. See
+# each resource's comment below for the break-glass procedure to make a
+# legitimate change to url/events/active.
 ################################################################################
 
 # Buildkite webhook — drives Buildkite CI builds.
@@ -49,16 +66,39 @@ resource "github_repository_webhook" "buildkite" {
   events = ["deployment", "merge_group", "pull_request", "push"]
 
   lifecycle {
-    # Buildkite owns this secret; the GitHub API returns it masked, so
-    # letting tofu manage it would cause a perpetual diff.
-    ignore_changes = [configuration[0].secret]
+    # BREAK-GLASS -- read before touching this resource.
+    #
+    # Buildkite (not tofu) generates and owns this webhook's real HMAC
+    # secret; tofu never learns its value. `ignore_changes = all` freezes
+    # this resource against ANY future Update: even a single unrelated
+    # field change (events, active, url) would otherwise force tofu to
+    # reconstruct the full `configuration` object for the PATCH request
+    # from state, which holds the literal masked placeholder "********"
+    # captured at this resource's original `import {}` -- GitHub accepts
+    # that literal string as a real secret write, corrupting the live
+    # webhook. This is exactly the bug that broke pr_bot on 2026-07-31
+    # (see the file header above) -- pr_bot gets the identical treatment
+    # below.
+    #
+    # To make a legitimate change to url/events/active on this resource:
+    #   1. Make the change directly via the GitHub repo Settings ->
+    #      Webhooks UI (or API), OUTSIDE tofu. Do NOT touch tofu state.
+    #   2. Optionally update this file's literal `url`/`events` values to
+    #      match, for human-readability only -- with `ignore_changes =
+    #      all` in place, tofu will never plan a diff for this resource
+    #      regardless of whether this file's text matches live reality,
+    #      so step 2 has zero enforcement value beyond documentation.
+    #   3. Never remove this lifecycle block just to push an unrelated
+    #      field change through tofu -- that reproduces the incident.
+    ignore_changes = all
   }
 }
 
 # pr-bot webhook — feeds the temporal worker's GitHub event bridge in
 # packages/temporal/src/event-bridge/github-webhook.ts. The HMAC secret on
 # both ends is GITHUB_WEBHOOK_SECRET, sourced from 1Password by the worker
-# pod; tofu does not mirror it.
+# pod; tofu does not mirror it (see the file header above for why this
+# resource is frozen with `ignore_changes = all`, same as buildkite).
 #
 # ROLLOUT ORDERING — the `push` event in this list ships the
 # ci/merge-conflict check feature. Do NOT `tofu apply` it until BOTH:
@@ -92,9 +132,10 @@ resource "github_repository_webhook" "pr_bot" {
   events = ["pull_request", "push"]
 
   lifecycle {
-    # GITHUB_WEBHOOK_SECRET lives in 1Password and is synced to the worker
-    # pod; the GitHub API returns it masked, so letting tofu manage it would
-    # cause a perpetual diff.
-    ignore_changes = [configuration[0].secret]
+    # See buildkite's lifecycle block above for the full incident writeup
+    # and break-glass procedure -- same fix, same reason: tofu never learns
+    # this webhook's real secret, so no future apply may ever touch this
+    # resource's `configuration` again, regardless of which field changed.
+    ignore_changes = all
   }
 }
