@@ -72,3 +72,43 @@ out-of-band 1P relabel + operator resync.
 - Post-deploy: secret keys show UPPER_SNAKE; force a wake (`kubectl scale ... --replicas=1`,
   allowed via `ignoreDifferences`); shuxin drift-check prints `IGNORED`, all three reach
   `Running`.
+
+## Session Log — 2026-08-02
+
+### Done
+
+- **Fix 1 (drift):** added `./commands.yml|./spark/config.json|./mcMMO/chat.yml` to
+  `is_ignored()` in `minecraft-drift-check.ts`; confirmed it renders into shuxin's
+  `check-config-drift` command in `dist/apps.k8s.yaml` (shuxin is the only server wiring it).
+- **Fix 3 (linter):** `check-1password-items.ts` now buckets an ArgoCD Application's embedded
+  `secretKeyRef` consumption by `spec.destination.namespace`. Proven: pre-relabel the linter
+  reported exactly the 4 discord mismatches (previously silently skipped) and nothing else;
+  post-relabel it passes (137 field refs verified).
+- **Fix 2 (discord keys):** relabeled `discord-bot-token`→`DISCORD_BOT_TOKEN` and
+  `discord-channel-id`→`DISCORD_CHANNEL_ID` (values/CONCEALED type preserved) on both 1P items
+  (`q37vet…`, `yqp25g…`) via `op item edit` create-then-delete. Refreshed
+  `onepassword-vault-snapshot.json` (only the 4 discord field hashes changed). Updated stale
+  comments in `discordsrv-config.ts` + `minecraft-{sjerred,tsmc}.ts`.
+- Verification: typecheck ✓, eslint ✓, build ✓, `check-1password-items` ✓, cdk8s tests ✓
+  (316 pass / 0 fail / 14 expected skips).
+- Draft → ready PR **#1927** (branch `feature/minecraft-pod-fixes`), commits `5f1d3d4dd` +
+  `9f056eeec`.
+
+### Remaining
+
+- **Post-deploy verification (after merge → ArgoCD sync):** confirm the synced secrets show
+  `DISCORD_BOT_TOKEN`/`DISCORD_CHANNEL_ID`; force a wake with
+  `kubectl scale statefulset minecraft-{shuxin,sjerred,tsmc} -n <ns> --replicas=1`; confirm
+  shuxin's drift-check prints `IGNORED (runtime-modified)` for the three files and all three
+  pods reach `Running` (DiscordSRV connects on sjerred/tsmc).
+
+### Caveats
+
+- The 1P relabel is already applied to the live vault (out-of-band from git). If this PR is
+  reverted, the code still references UPPER_SNAKE, so no drift — but the snapshot and vault
+  must stay in sync.
+- All deploys go through ArgoCD; do not `kubectl apply`. Manual `kubectl scale` is only OK
+  because `/spec/replicas` is in each app's `ignoreDifferences` (mc-router owns it).
+- This session relabeled 1P fields (normally avoided) per the explicit UPPER_SNAKE decision;
+  the pods were already down, so there was no working state at risk.
+  `Running`.

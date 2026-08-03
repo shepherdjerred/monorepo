@@ -76,12 +76,11 @@ repo configs with the volume (or vice-versa), commit, redeploy.
 
 ### Remaining
 
-- No fix applied — diagnosis only. Two candidate fixes offered to user:
-  - shuxin: reconcile the 3 drifted config files with the volume, commit, PR.
-  - sjerred/tsmc: relabel 1P fields to UPPERCASE_SNAKE + refresh snapshot
-    (operator action), or flip code refs to lowercase-kebab.
-- Investigate why `check:1password` linter didn't catch the sjerred/tsmc key
-  mismatch.
+- Fix shipped in PR **#1927** — see `plans/2026-08-02_minecraft-pod-fixes.md`. Chosen
+  approach: shuxin → drift ignore-list; sjerred/tsmc → relabel 1P to UPPER_SNAKE (done) +
+  snapshot refresh; plus the `check:1password` linter blind spot (Application-embedded
+  `secretKeyRef`s now bucketed by destination namespace). Post-deploy verification pending
+  in that plan's Session Log.
 
 ### Caveats
 
