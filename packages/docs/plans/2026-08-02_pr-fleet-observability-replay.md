@@ -158,7 +158,11 @@ repository checkout.
   worker settlement before shutdown completion, correlating master tools with
   their commands, recording operator-aborted workers as cancellations, and
   masking payload-bearing final-summary fields during default JSON inspection.
-- Passed focused typecheck, 74 controller tests, 39 observability tests, lint,
+- Addressed the subsequent current-head findings by redacting xAI and
+  OpenRouter credential values, correlating controller ticks and PR refreshes,
+  retaining each worker's dispatched head through stale-head cancellation, and
+  routing patch application through the recorded command boundary.
+- Passed focused typecheck, 75 controller tests, 40 observability tests, lint,
   native-aware build, docs validation, Markdown lint, diff checks, and staged
   Lefthook/Gitleaks/Prettier/lockfile checks.
 - Completed a final non-mutating `openai/gpt-5.6-terra` model/tool turn from the

@@ -129,14 +129,19 @@ test("command events inherit their worker tool and model correlation", async () 
   await withCommandCorrelation(parentCorrelation, () =>
     environment.runLocalCommand({
       executable: process.execPath,
-      args: ["-e", "process.exit(0)"],
+      args: [
+        "-e",
+        "const input = await Bun.stdin.text(); process.stdout.write(input)",
+      ],
       cwd: tmpdir(),
       timeoutMs: 30_000,
+      stdin: "captured input",
     }),
   );
 
   expect(telemetry.events).toHaveLength(2);
   expect(telemetry.events[0]?.kind).toBe("command.started");
+  expect(telemetry.events[0]?.payload["hasStdin"]).toBe(true);
   expect(telemetry.events[1]?.kind).toBe("command.completed");
   expect(telemetry.events[0]?.correlation).toEqual({
     ...parentCorrelation,
@@ -146,4 +151,5 @@ test("command events inherit their worker tool and model correlation", async () 
     telemetry.events[0]?.correlation,
   );
   expect(telemetry.events[1]?.payload["termination"]).toBe("exit");
+  expect(telemetry.events[1]?.payload["stdout"]).toBe("captured input");
 });

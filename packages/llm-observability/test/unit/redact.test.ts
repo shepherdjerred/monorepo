@@ -103,6 +103,8 @@ test("does not redact Discord-style snowflake IDs or usernames", () => {
 
 afterEach(() => {
   delete Bun.env["OPENAI_API_KEY"];
+  delete Bun.env["XAI_API_KEY"];
+  delete Bun.env["OPENROUTER_API_KEY"];
 });
 
 // Composed from fragments so no single string literal trips the no-secrets rule.
@@ -116,6 +118,18 @@ test("redactText masks known secret env-var values in any format", () => {
   const out = redactText(body);
   expect(out).not.toContain(FAKE_SECRET);
   expect(out).toContain("[REDACTED]");
+});
+
+test("redactText masks every documented provider credential", () => {
+  const xaiSecret = ["xai", "provider", "credential"].join("-");
+  const openRouterSecret = ["openrouter", "provider", "credential"].join("-");
+  Bun.env["XAI_API_KEY"] = xaiSecret;
+  Bun.env["OPENROUTER_API_KEY"] = openRouterSecret;
+
+  const out = redactText(`xai=${xaiSecret} router=${openRouterSecret}`);
+  expect(out).not.toContain(xaiSecret);
+  expect(out).not.toContain(openRouterSecret);
+  expect(out.match(/\[REDACTED\]/g)).toHaveLength(2);
 });
 
 test("redactSecrets applies literal-value masking inside nested strings", () => {

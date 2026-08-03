@@ -257,26 +257,18 @@ export function createWorkerTools(
           for (const changedPath of paths) {
             await containedPath(worktree, changedPath);
           }
-          const subprocess = Bun.spawn(
-            ["git", "apply", "--whitespace=error-all", "-"],
-            {
-              cwd: worktree,
-              stdin: "pipe",
-              stdout: "pipe",
-              stderr: "pipe",
-              signal,
-            },
-          );
-          await subprocess.stdin.write(input.patch);
-          await subprocess.stdin.end();
-          const [exitCode, stderr] = await Promise.all([
-            subprocess.exited,
-            new Response(subprocess.stderr).text(),
-          ]);
-          if (exitCode !== 0) {
-            throw new Error(`Patch failed: ${stderr.trim()}`);
+          const result = await environment.runLocalCommand({
+            executable: "git",
+            args: ["apply", "--whitespace=error-all", "-"],
+            cwd: worktree,
+            timeoutMs: 30_000,
+            signal,
+            stdin: input.patch,
+          });
+          if (result.exitCode !== 0) {
+            throw new Error(`Patch failed: ${result.stderr.trim()}`);
           }
-          return { applied: true, stderr };
+          return { applied: true, stderr: result.stderr };
         }),
     }),
     request_lease: createTool({

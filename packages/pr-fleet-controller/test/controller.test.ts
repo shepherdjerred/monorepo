@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
 import { FleetController } from "@shepherdjerred/pr-fleet-controller/src/controller.ts";
+import { currentCommandCorrelation } from "@shepherdjerred/pr-fleet-controller/src/command-correlation.ts";
 import type {
   CommandRequest,
   CommandResult,
@@ -331,6 +332,40 @@ class DeferredWorktreeEnvironment extends FakeEnvironment {
   }
 }
 
+class CorrelationEnvironment extends FakeEnvironment {
+  readonly correlations: {
+    stage: string;
+    correlation: RunEventCorrelation;
+  }[] = [];
+
+  #capture(stage: string): void {
+    this.correlations.push({
+      stage,
+      correlation: currentCommandCorrelation(),
+    });
+  }
+
+  override listOpenPrs(): Promise<PrIdentity[]> {
+    this.#capture("list");
+    return super.listOpenPrs();
+  }
+
+  override refreshEvidence(pr: PrIdentity): Promise<ReadinessEvidence> {
+    this.#capture("refresh");
+    return super.refreshEvidence(pr);
+  }
+
+  override findWorktree(): Promise<string | null> {
+    this.#capture("find-worktree");
+    return super.findWorktree();
+  }
+
+  override assignWorktreeBranch(): Promise<void> {
+    this.#capture("assign-worktree");
+    return super.assignWorktreeBranch();
+  }
+}
+
 test("a fleet tick classifies every PR and queues excess actionable work", async () => {
   const first = identity(1);
   const second = identity(2);
@@ -437,6 +472,49 @@ test("shutdown waits for an in-flight reconciliation before completing", async (
   const kinds = telemetry.events.map((event) => event.kind);
   expect(kinds.at(-2)).toBe("tick.completed");
   expect(kinds.at(-1)).toBe("shutdown.completed");
+});
+
+test("controller tick commands carry tick and PR correlation", async () => {
+  const pr = identity(1);
+  const failedCheck = {
+    name: "verify",
+    state: "FAILURE",
+    bucket: "fail",
+    link: null,
+    softFail: false,
+  };
+  const environment = new CorrelationEnvironment(
+    [pr],
+    new Map([[1, evidence(pr, { checks: [failedCheck] })]]),
+  );
+  const controller = new FleetController({
+    config: {
+      model: "openai/gpt-5",
+      repo: "shepherdjerred/monorepo",
+      checkout: "/tmp/repo",
+      worktreeRoot: "/tmp/worktrees",
+      maxWorkers: 1,
+    },
+    environment,
+    workerRunner: new BlockingRunner(),
+    observer: new RecordingObserver(),
+    store: new FleetStore(1),
+    telemetry: new RecordingTelemetry(),
+  });
+
+  await controller.tick("startup");
+
+  const list = environment.correlations.find((entry) => entry.stage === "list");
+  expect(list?.correlation.tickId).toBeDefined();
+  for (const stage of ["refresh", "find-worktree", "assign-worktree"]) {
+    const entry = environment.correlations.find((item) => item.stage === stage);
+    expect(entry?.correlation).toEqual({
+      tickId: list?.correlation.tickId,
+      prNumber: pr.number,
+      headSha: pr.headSha,
+    });
+  }
+  await controller.stop();
 });
 
 test("shutdown cancels a worker dispatched by an already-running tick", async () => {
@@ -624,6 +702,10 @@ test("aborts a worker whose assigned head changes and does not pause it", async 
   expect(
     telemetry.events.some((event) => event.kind === "worker.cancelled"),
   ).toBe(true);
+  expect(
+    telemetry.events.find((event) => event.kind === "worker.cancelled")
+      ?.correlation.headSha,
+  ).toBe(before.headSha);
   expect(telemetry.events.some((event) => event.kind === "worker.failed")).toBe(
     false,
   );

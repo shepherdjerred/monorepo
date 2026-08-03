@@ -86,6 +86,7 @@ export class CommandFleetEnvironment implements FleetEnvironment {
         args: request.args,
         cwd: request.cwd,
         timeoutMs: request.timeoutMs,
+        hasStdin: request.stdin !== undefined,
         environmentNames: Object.keys(request.env ?? {}).sort(),
       },
       correlation,

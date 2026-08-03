@@ -37,11 +37,20 @@ export async function runCommand(
   }
   const subprocess = Bun.spawn([request.executable, ...request.args], {
     cwd: request.cwd,
+    stdin: request.stdin === undefined ? "ignore" : "pipe",
     stdout: "pipe",
     stderr: "pipe",
     env: request.env ?? Bun.env,
     detached: true,
   });
+  if (request.stdin !== undefined) {
+    const stdin = subprocess.stdin;
+    if (stdin === undefined || typeof stdin === "number") {
+      throw new Error(`Command stdin pipe unavailable: ${request.executable}`);
+    }
+    await stdin.write(request.stdin);
+    await stdin.end();
+  }
   let termination: CommandResult["termination"] = "exit";
   const terminationFailure = Promise.withResolvers<never>();
   const terminate = (reason: "timeout" | "abort"): void => {

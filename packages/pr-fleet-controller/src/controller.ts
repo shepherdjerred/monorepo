@@ -9,7 +9,6 @@ import { ControllerTelemetry } from "./controller-telemetry.ts";
 import {
   buildPrState,
   computeStackIds,
-  currentTimestamp,
   mapBounded,
   type RefreshedPr,
 } from "./fleet-logic.ts";
@@ -26,6 +25,12 @@ import { FleetStore } from "./state.ts";
 import type { MasterControllerTools } from "./master-tools.ts";
 import { createFleetTickWorkflow } from "./workflow.ts";
 import { defaultFleetScheduler } from "./scheduler.ts";
+import {
+  assignFleetWorktree,
+  withPrCommandCorrelation,
+  withTickCommandCorrelation,
+} from "./controller-correlation.ts";
+import { settleWorkerResult } from "./controller-worker-settlement.ts";
 
 export class FleetController implements MasterControllerTools {
   readonly #config: FleetControllerConfig;
@@ -42,6 +47,7 @@ export class FleetController implements MasterControllerTools {
   #currentTickId: string | undefined;
   #tickSettled: Promise<undefined> | null = null;
   readonly #workerSettlements = new Map<Promise<WorkerResult>, Promise<void>>();
+  readonly #dispatchedWorkers = new Map<number, PrState>();
 
   constructor(dependencies: FleetControllerDependencies) {
     const { config, environment, workerRunner, observer } = dependencies;
@@ -83,7 +89,9 @@ export class FleetController implements MasterControllerTools {
     this.#tickRunning = true;
     try {
       const run = await this.#workflow.createRun();
-      const result = await run.start({ inputData: { trigger } });
+      const result = await withTickCommandCorrelation(tickId, () =>
+        run.start({ inputData: { trigger } }),
+      );
       if (result.status !== "success") {
         if (result.status === "failed") {
           throw result.error;
@@ -138,11 +146,14 @@ export class FleetController implements MasterControllerTools {
     }
 
     const stackIds = computeStackIds(identities);
-    const refreshed = await mapBounded(identities, 5, async (identity) => ({
-      identity,
-      evidence: await this.#environment.refreshEvidence(identity),
-      stackId: stackIds.get(identity.number) ?? `pr-${String(identity.number)}`,
-    }));
+    const refreshed = await mapBounded(identities, 5, (identity) =>
+      withPrCommandCorrelation(identity, async () => ({
+        identity,
+        evidence: await this.#environment.refreshEvidence(identity),
+        stackId:
+          stackIds.get(identity.number) ?? `pr-${String(identity.number)}`,
+      })),
+    );
     this.#reconcileStates(refreshed, changes);
     await this.#dispatch(changes);
 
@@ -236,19 +247,10 @@ export class FleetController implements MasterControllerTools {
         continue;
       }
       try {
-        const siblingBranches = [...this.store.prs.values()]
-          .filter((pr) => pr.stackId === candidate.stackId)
-          .map((pr) => pr.identity.headRefName);
-        const worktree =
-          (await this.#environment.findWorktree(siblingBranches)) ??
-          (await this.#environment.provisionWorktree(
-            candidate.identity,
-            candidate.stackId,
-          ));
-        // Reassign the shared stack worktree to this exact current PR head.
-        await this.#environment.assignWorktreeBranch(
-          worktree,
-          candidate.identity,
+        const worktree = await assignFleetWorktree(
+          this.#environment,
+          this.store.prs.values(),
+          candidate,
         );
         const generation = candidate.agentGeneration + 1;
         const prNumber = String(candidate.identity.number);
@@ -265,6 +267,7 @@ export class FleetController implements MasterControllerTools {
           status: "diagnosing",
         };
         this.store.prs.set(candidate.identity.number, assigned);
+        this.#dispatchedWorkers.set(candidate.identity.number, assigned);
         const abortController = new AbortController();
         const promise = Promise.resolve().then(() =>
           this.#workerRunner.run(assigned, abortController.signal),
@@ -317,67 +320,32 @@ export class FleetController implements MasterControllerTools {
   }
 
   #handleWorkerResult(prNumber: number, result: WorkerResult): void {
-    const previous = this.store.prs.get(prNumber);
-    this.#telemetry.workerCompleted(prNumber, previous, result);
-    this.store.activeWorkers.delete(prNumber);
-    this.store.workerControllers.delete(prNumber);
-    this.store.cancelledWorkers.delete(prNumber);
-    this.store.releaseLeases(prNumber);
-    if (previous === undefined) {
-      return;
-    }
-    const needsLease =
-      result.state === "needs-setup-lease" ||
-      result.state === "needs-heavy-lease" ||
-      result.state === "needs-write-lease";
-    if (needsLease) {
-      // Queue lease contention until settlement/heartbeat, avoiding paid spin.
-      this.store.prs.set(prNumber, {
-        ...previous,
-        runtimeAgent: null,
-        status: "queued",
-        classification: "queued",
-        lastAgentReportAt: currentTimestamp(),
-      });
-      this.#observer.onChange(
-        `worker for PR #${String(prNumber)} deferred: ${result.state} — awaiting lease`,
-      );
-      return;
-    }
-    const paused = result.state === "escalation" || result.state === "blocked";
-    if (paused) {
-      this.store.pausedReasons.set(prNumber, result.blockers.join("; "));
-    }
-    this.store.prs.set(prNumber, {
-      ...previous,
-      runtimeAgent: null,
-      status: paused
-        ? "paused"
-        : result.state === "pushed"
-          ? "waiting-ci"
-          : previous.status,
-      classification: paused ? "paused" : previous.classification,
-      lastAgentReportAt: currentTimestamp(),
-      lastProgressAt: currentTimestamp(),
-      noProgressTicks: 0,
-      escalation: paused ? result.blockers.join("; ") : null,
+    const dispatched =
+      this.#dispatchedWorkers.get(prNumber) ?? this.store.prs.get(prNumber);
+    this.#dispatchedWorkers.delete(prNumber);
+    const shouldTick = settleWorkerResult({
+      store: this.store,
+      telemetry: this.#telemetry,
+      observer: this.#observer,
+      dispatched,
+      prNumber,
+      result,
     });
-    this.#observer.onChange(
-      `worker for PR #${String(prNumber)}: ${result.state} — ${result.lastAction}`,
-    );
-    if (!this.store.stopping) {
+    if (shouldTick && !this.store.stopping) {
       void this.#runTickSafely("worker-complete", "worker-complete tick");
     }
   }
 
   #handleWorkerFailure(prNumber: number, error: unknown): void {
     const recordedState = this.store.prs.get(prNumber);
+    const dispatched = this.#dispatchedWorkers.get(prNumber) ?? recordedState;
+    this.#dispatchedWorkers.delete(prNumber);
     const deliberatelyCancelled = this.store.cancelledWorkers.delete(prNumber);
     this.store.activeWorkers.delete(prNumber);
     this.store.workerControllers.delete(prNumber);
     this.store.releaseLeases(prNumber);
     if (deliberatelyCancelled) {
-      this.#telemetry.workerCancelled(prNumber, recordedState, error);
+      this.#telemetry.workerCancelled(prNumber, dispatched, error);
       // Deliberate cancel (PR went green or its head advanced) — not a failure.
       // Do not pause; re-run a tick so a moved-head PR re-dispatches against its
       // refreshed SHA (a green PR simply won't be a dispatch candidate).
@@ -389,7 +357,7 @@ export class FleetController implements MasterControllerTools {
       }
       return;
     }
-    this.#telemetry.workerFailed(prNumber, recordedState, error);
+    this.#telemetry.workerFailed(prNumber, dispatched, error);
     const message = error instanceof Error ? error.message : String(error);
     const state = this.store.prs.get(prNumber);
     if (

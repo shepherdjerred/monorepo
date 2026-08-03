@@ -15,6 +15,8 @@ export type CommandRequest = {
   cwd: string;
   timeoutMs: number;
   signal?: AbortSignal | undefined;
+  /** UTF-8 input written to the child before waiting for completion. */
+  stdin?: string;
   /**
    * Environment for the subprocess. Defaults to the controller's own
    * environment; model-driven worker commands pass a credential-scrubbed
