@@ -39,6 +39,7 @@ export type RunBundle = {
 export type ReplayLifecycle = {
   started: number;
   completed: number;
+  cancelled: number;
   failed: number;
   open: string[];
 };
@@ -123,7 +124,12 @@ function lifecycleKey(
 function replayLifecycle(
   events: RecordedRunEvent[],
   category: "commands" | "tools" | "workers" | "modelTurns",
-  kinds: { started: string; completed: string; failed: string },
+  kinds: {
+    started: string;
+    completed: string;
+    cancelled?: string;
+    failed: string;
+  },
 ): ReplayLifecycle {
   const {
     started: startedKind,
@@ -133,12 +139,14 @@ function replayLifecycle(
   const open = new Set<string>();
   let started = 0;
   let completed = 0;
+  let cancelled = 0;
   let failed = 0;
   for (const event of events) {
     if (
       event.kind !== startedKind &&
       event.kind !== completedKind &&
-      event.kind !== failedKind
+      event.kind !== failedKind &&
+      event.kind !== kinds.cancelled
     ) {
       continue;
     }
@@ -159,11 +167,13 @@ function replayLifecycle(
     }
     if (event.kind === completedKind) {
       completed += 1;
+    } else if (event.kind === kinds.cancelled) {
+      cancelled += 1;
     } else {
       failed += 1;
     }
   }
-  return { started, completed, failed, open: [...open].sort() };
+  return { started, completed, cancelled, failed, open: [...open].sort() };
 }
 
 function countKinds(events: RecordedRunEvent[]): Record<string, number> {
@@ -270,6 +280,49 @@ export function replayRunBundle(
     throw new Error("Summary final snapshot does not match replayed state");
   }
 
+  const commands = replayLifecycle(events, "commands", {
+    started: "command.started",
+    completed: "command.completed",
+    failed: "command.failed",
+  });
+  const tools = replayLifecycle(events, "tools", {
+    started: "tool.started",
+    completed: "tool.completed",
+    failed: "tool.failed",
+  });
+  const workers = replayLifecycle(events, "workers", {
+    started: "worker.started",
+    completed: "worker.completed",
+    cancelled: "worker.cancelled",
+    failed: "worker.failed",
+  });
+  const workerAttempts = replayLifecycle(events, "modelTurns", {
+    started: "worker.attempt.started",
+    completed: "worker.attempt.completed",
+    failed: "worker.attempt.failed",
+  });
+  const masterTurns = replayLifecycle(events, "modelTurns", {
+    started: "master.turn.started",
+    completed: "master.turn.completed",
+    failed: "master.turn.failed",
+  });
+  if (summary.status === "completed") {
+    const openLifecycles = Object.entries({
+      commands,
+      tools,
+      workers,
+      workerAttempts,
+      masterTurns,
+    })
+      .filter(([, lifecycle]) => lifecycle.open.length > 0)
+      .map(([name, lifecycle]) => `${name}=${lifecycle.open.join(",")}`);
+    if (openLifecycles.length > 0) {
+      throw new Error(
+        `Completed run has open lifecycles: ${openLifecycles.join("; ")}`,
+      );
+    }
+  }
+
   return {
     runId: manifest.runId,
     schemaVersion: manifest.schemaVersion,
@@ -277,31 +330,11 @@ export function replayRunBundle(
     status: summary.status,
     eventCount: events.length,
     countsByKind,
-    commands: replayLifecycle(events, "commands", {
-      started: "command.started",
-      completed: "command.completed",
-      failed: "command.failed",
-    }),
-    tools: replayLifecycle(events, "tools", {
-      started: "tool.started",
-      completed: "tool.completed",
-      failed: "tool.failed",
-    }),
-    workers: replayLifecycle(events, "workers", {
-      started: "worker.started",
-      completed: "worker.completed",
-      failed: "worker.failed",
-    }),
-    workerAttempts: replayLifecycle(events, "modelTurns", {
-      started: "worker.attempt.started",
-      completed: "worker.attempt.completed",
-      failed: "worker.attempt.failed",
-    }),
-    masterTurns: replayLifecycle(events, "modelTurns", {
-      started: "master.turn.started",
-      completed: "master.turn.completed",
-      failed: "master.turn.failed",
-    }),
+    commands,
+    tools,
+    workers,
+    workerAttempts,
+    masterTurns,
     finalSnapshot,
   };
 }

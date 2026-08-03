@@ -4,6 +4,7 @@ import {
 } from "@shepherdjerred/code-review";
 import { resolveReviewState } from "@shepherdjerred/code-review/github";
 import { fetchHeadPushedAt } from "@shepherdjerred/code-review/head-pushed-at";
+import { commandEventCorrelation } from "./command-correlation.ts";
 import {
   checksWithBuildkiteSoftFailure,
   fingerprint,
@@ -76,9 +77,8 @@ export class CommandFleetEnvironment implements FleetEnvironment {
   }
 
   async runLocalCommand(request: CommandRequest): Promise<CommandResult> {
-    const commandId = this.#telemetry?.newId("command");
     const startedAt = performance.now();
-    const correlation = commandId === undefined ? {} : { commandId };
+    const correlation = commandEventCorrelation(this.#telemetry);
     this.#telemetry?.record(
       "command.started",
       {

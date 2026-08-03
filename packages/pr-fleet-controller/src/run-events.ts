@@ -24,6 +24,7 @@ export const RunEventKindSchema = z.enum([
   "worker.attempt.completed",
   "worker.attempt.failed",
   "worker.completed",
+  "worker.cancelled",
   "worker.failed",
   "tool.started",
   "tool.completed",

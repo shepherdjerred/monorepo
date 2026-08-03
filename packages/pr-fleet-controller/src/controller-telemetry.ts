@@ -103,6 +103,24 @@ export class ControllerTelemetry {
     );
   }
 
+  workerCancelled(
+    prNumber: number,
+    state: PrState | undefined,
+    error: unknown,
+  ): void {
+    this.#telemetry?.record(
+      "worker.cancelled",
+      { reason: error instanceof Error ? error.message : String(error) },
+      state === undefined
+        ? { prNumber }
+        : {
+            prNumber,
+            headSha: state.identity.headSha,
+            generation: state.agentGeneration,
+          },
+    );
+  }
+
   workerFailed(
     prNumber: number,
     state: PrState | undefined,

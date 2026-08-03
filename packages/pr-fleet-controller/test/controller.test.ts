@@ -5,8 +5,13 @@ import type {
   FleetEnvironment,
   FleetObserver,
   FleetScheduler,
+  FleetTelemetry,
   WorkerRunner,
 } from "@shepherdjerred/pr-fleet-controller/src/ports.ts";
+import type {
+  RunEventCorrelation,
+  RunEventKind,
+} from "@shepherdjerred/pr-fleet-controller/src/run-events.ts";
 import type {
   FleetSnapshot,
   PrIdentity,
@@ -89,6 +94,58 @@ class RecordingRunner implements WorkerRunner {
     return new Promise((_resolve, reject) => {
       signal.addEventListener("abort", () => {
         this.aborts += 1;
+        reject(new Error("aborted"));
+      });
+    });
+  }
+}
+
+class RecordingTelemetry implements FleetTelemetry {
+  readonly runId = "controller-test";
+  readonly events: {
+    kind: RunEventKind;
+    correlation: RunEventCorrelation;
+  }[] = [];
+  #nextId = 0;
+
+  newId(prefix: string): string {
+    this.#nextId += 1;
+    return `${prefix}-${String(this.#nextId)}`;
+  }
+
+  traceId(): string {
+    return "0".repeat(32);
+  }
+
+  record(
+    kind: RunEventKind,
+    _payload: Record<string, unknown>,
+    correlation: RunEventCorrelation = {},
+  ): void {
+    this.events.push({ kind, correlation });
+  }
+}
+
+class AttemptRecordingRunner implements WorkerRunner {
+  readonly #telemetry: FleetTelemetry;
+
+  constructor(telemetry: FleetTelemetry) {
+    this.#telemetry = telemetry;
+  }
+
+  run(pr: PrState, signal: AbortSignal): Promise<WorkerResult> {
+    this.#telemetry.record(
+      "worker.attempt.started",
+      { attempt: 1 },
+      {
+        prNumber: pr.identity.number,
+        headSha: pr.identity.headSha,
+        generation: pr.agentGeneration,
+        modelTurnId: "worker-turn-test",
+      },
+    );
+    return new Promise((_resolve, reject) => {
+      signal.addEventListener("abort", () => {
         reject(new Error("aborted"));
       });
     });
@@ -294,6 +351,46 @@ test("a failed heartbeat rearms reconciliation", async () => {
   expect(scheduler.callbacks.size).toBe(0);
 });
 
+test("records worker start before the runner can emit its first attempt", async () => {
+  const pr = identity(1);
+  const failedCheck = {
+    name: "verify",
+    state: "FAILURE",
+    bucket: "fail",
+    link: null,
+    softFail: false,
+  };
+  const telemetry = new RecordingTelemetry();
+  const controller = new FleetController({
+    config: {
+      model: "openai/gpt-5",
+      repo: "shepherdjerred/monorepo",
+      checkout: "/tmp/repo",
+      worktreeRoot: "/tmp/worktrees",
+      maxWorkers: 1,
+    },
+    environment: new FakeEnvironment(
+      [pr],
+      new Map([[1, evidence(pr, { checks: [failedCheck] })]]),
+    ),
+    workerRunner: new AttemptRecordingRunner(telemetry),
+    observer: new RecordingObserver(),
+    store: new FleetStore(1),
+    telemetry,
+  });
+
+  await controller.tick("startup");
+  await flushMicrotasks();
+  const workerEvents = telemetry.events
+    .map((event) => event.kind)
+    .filter((kind) => kind.startsWith("worker."));
+  expect(workerEvents.slice(0, 2)).toEqual([
+    "worker.started",
+    "worker.attempt.started",
+  ]);
+  await controller.stop();
+});
+
 test("aborts a worker whose assigned head changes and does not pause it", async () => {
   const failedCheck = {
     name: "verify",
@@ -308,6 +405,7 @@ test("aborts a worker whose assigned head changes and does not pause it", async 
     new Map([[1, evidence(before, { checks: [failedCheck] })]]),
   );
   const runner = new RecordingRunner();
+  const telemetry = new RecordingTelemetry();
   const store = new FleetStore(1);
   const controller = new FleetController({
     config: {
@@ -321,6 +419,7 @@ test("aborts a worker whose assigned head changes and does not pause it", async 
     workerRunner: runner,
     observer: new RecordingObserver(),
     store,
+    telemetry,
   });
 
   await controller.tick("startup");
@@ -342,6 +441,12 @@ test("aborts a worker whose assigned head changes and does not pause it", async 
   expect(runner.aborts).toBe(1);
   expect(store.prs.get(1)?.classification).not.toBe("paused");
   expect(store.pausedReasons.has(1)).toBe(false);
+  expect(
+    telemetry.events.some((event) => event.kind === "worker.cancelled"),
+  ).toBe(true);
+  expect(telemetry.events.some((event) => event.kind === "worker.failed")).toBe(
+    false,
+  );
   await controller.stop();
 });
 

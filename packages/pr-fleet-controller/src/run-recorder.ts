@@ -318,18 +318,23 @@ export class RunRecorder implements FleetTelemetry {
     this.#closed = true;
     const countsByKind = Object.fromEntries(this.#counts);
     const finishedAt = this.#now();
-    const summary = RunSummarySchema.parse({
-      schemaVersion: RUN_BUNDLE_SCHEMA_VERSION,
-      runId: this.runId,
-      status,
-      finishedAt: finishedAt.toISOString(),
-      durationMs: Math.max(0, finishedAt.getTime() - this.#createdAt.getTime()),
-      eventCount: this.#sequence,
-      lastHash: this.#lastHash,
-      countsByKind,
-      finalSnapshot,
-      error: error === null ? null : errorDetails(error),
-    });
+    const summary = RunSummarySchema.parse(
+      this.redact({
+        schemaVersion: RUN_BUNDLE_SCHEMA_VERSION,
+        runId: this.runId,
+        status,
+        finishedAt: finishedAt.toISOString(),
+        durationMs: Math.max(
+          0,
+          finishedAt.getTime() - this.#createdAt.getTime(),
+        ),
+        eventCount: this.#sequence,
+        lastHash: this.#lastHash,
+        countsByKind,
+        finalSnapshot,
+        error: error === null ? null : errorDetails(error),
+      }),
+    );
     await secureWriteJson(this.paths.summary, summary);
     await this.secureRunArtifacts();
     return summary;

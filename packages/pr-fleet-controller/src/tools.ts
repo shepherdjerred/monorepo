@@ -3,7 +3,9 @@ import path from "node:path";
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import { validateWorkerCommand } from "./command-policy.ts";
+import { withCommandCorrelation } from "./command-correlation.ts";
 import type { FleetEnvironment, FleetTelemetry } from "./ports.ts";
+import type { RunEventCorrelation } from "./run-events.ts";
 import {
   sandboxProfile,
   sanitizedEnvironment,
@@ -87,7 +89,11 @@ async function resolveSetupDirectories(
 async function runRecordedTool<T>(
   tool: string,
   input: unknown,
-  context: { pr: PrState; telemetry: FleetTelemetry | undefined },
+  context: {
+    pr: PrState;
+    telemetry: FleetTelemetry | undefined;
+    parentCorrelation: () => RunEventCorrelation;
+  },
   run: () => Promise<T>,
 ): Promise<T> {
   const { pr, telemetry } = context;
@@ -96,6 +102,7 @@ async function runRecordedTool<T>(
   }
   const toolCallId = telemetry.newId("tool");
   const correlation = {
+    ...context.parentCorrelation(),
     prNumber: pr.identity.number,
     headSha: pr.identity.headSha,
     generation: pr.agentGeneration,
@@ -103,7 +110,7 @@ async function runRecordedTool<T>(
   };
   telemetry.record("tool.started", { tool, input }, correlation);
   try {
-    const result = await run();
+    const result = await withCommandCorrelation(correlation, run);
     telemetry.record("tool.completed", { tool, result }, correlation);
     return result;
   } catch (error) {
@@ -126,16 +133,22 @@ export function createWorkerTools(
     // beyond the credential heuristic — the operator's `--api-key-env` name.
     extraSecretNames?: readonly string[];
     telemetry?: FleetTelemetry;
+    parentCorrelation?: () => RunEventCorrelation;
   },
 ) {
-  const { signal, extraSecretNames = [], telemetry } = options;
+  const {
+    signal,
+    extraSecretNames = [],
+    telemetry,
+    parentCorrelation = () => ({}),
+  } = options;
   if (pr.worktree === null) {
     throw new Error(
       `PR #${String(pr.identity.number)} has no assigned worktree`,
     );
   }
   const worktree = pr.worktree;
-  const toolContext = { pr, telemetry };
+  const toolContext = { pr, telemetry, parentCorrelation };
 
   return {
     get_pr_context: createTool({

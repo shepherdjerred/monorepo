@@ -108,6 +108,22 @@ describe("local run bundles", () => {
     );
   });
 
+  test("redacts failure details before writing the summary", async () => {
+    const secret = ["summary", "only", "credential"].join("-");
+    const recorder = await createRecorder([secret]);
+    recorder.record("run.started", { phase: "startup" });
+    const summary = await recorder.finalize(
+      "failed",
+      null,
+      new Error(`provider rejected ${secret}`),
+    );
+
+    expect(summary.error?.message).toBe("provider rejected [REDACTED]");
+    expect(await readFile(recorder.paths.summary, "utf8")).not.toContain(
+      secret,
+    );
+  });
+
   test("fails closed when the selected state directory is group-readable", async () => {
     const stateDirectory = await mkdtemp(path.join(tmpdir(), "pr-fleet-open-"));
     temporaryDirectories.push(stateDirectory);
@@ -160,7 +176,9 @@ describe("local run bundles", () => {
     );
     expect(report.status).toBe("failed");
   });
+});
 
+describe("run bundle replay", () => {
   test("reconstructs synthetic command, retry, and worker lifecycles", async () => {
     const recorder = await createRecorder();
     const correlation = {
@@ -235,25 +253,89 @@ describe("local run bundles", () => {
     expect(report.commands).toEqual({
       started: 1,
       completed: 1,
+      cancelled: 0,
       failed: 0,
       open: [],
     });
     expect(report.workers).toEqual({
       started: 1,
       completed: 1,
+      cancelled: 0,
       failed: 0,
       open: [],
     });
     expect(report.tools).toEqual({
       started: 1,
       completed: 1,
+      cancelled: 0,
       failed: 0,
       open: [],
     });
     expect(report.workerAttempts).toEqual({
       started: 2,
       completed: 1,
+      cancelled: 0,
       failed: 1,
+      open: [],
+    });
+  });
+
+  test("rejects completed runs with open command or model lifecycles", async () => {
+    const recorder = await createRecorder();
+    recorder.record("run.started", { scenario: "incomplete-capture" });
+    recorder.record(
+      "command.started",
+      { executable: "git", args: ["status"] },
+      { commandId: recorder.newId("command") },
+    );
+    recorder.record(
+      "master.turn.started",
+      { prompt: "status" },
+      { modelTurnId: recorder.newId("master-turn") },
+    );
+    await recorder.finalize("completed", null);
+    const bundle = await loadRunBundle(recorder.paths.runDirectory);
+
+    expect(() =>
+      replayRunBundle(bundle, {
+        currentControllerVersion: "0.1.0",
+        allowVersionMismatch: false,
+      }),
+    ).toThrow("Completed run has open lifecycles");
+  });
+
+  test("replays deliberate worker cancellation as a terminal lifecycle", async () => {
+    const recorder = await createRecorder();
+    const correlation = {
+      prNumber: 42,
+      headSha: "b".repeat(40),
+      generation: 3,
+    };
+    recorder.record("run.started", { scenario: "worker-cancelled" });
+    recorder.record(
+      "worker.started",
+      { runtimeAgent: "pr-42-g3" },
+      correlation,
+    );
+    recorder.record(
+      "worker.cancelled",
+      { reason: "head advanced" },
+      correlation,
+    );
+    await recorder.finalize("completed", null);
+
+    const report = replayRunBundle(
+      await loadRunBundle(recorder.paths.runDirectory),
+      {
+        currentControllerVersion: "0.1.0",
+        allowVersionMismatch: false,
+      },
+    );
+    expect(report.workers).toEqual({
+      started: 1,
+      completed: 0,
+      cancelled: 1,
+      failed: 0,
       open: [],
     });
   });

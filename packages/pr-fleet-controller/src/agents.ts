@@ -81,6 +81,7 @@ export class MastraWorkerRunner implements WorkerRunner {
     const guidance = this.#store.takeGuidance(pr.identity.number);
     const prNumber = String(pr.identity.number);
     const generation = String(pr.agentGeneration);
+    let activeAttemptCorrelation: RunEventCorrelation = {};
     const agent = new Agent({
       id: `pr-${prNumber}-g${generation}`,
       name: `PR ${prNumber} worker`,
@@ -90,6 +91,7 @@ export class MastraWorkerRunner implements WorkerRunner {
         signal,
         extraSecretNames: this.#extraSecretNames,
         telemetry: this.#telemetry,
+        parentCorrelation: () => activeAttemptCorrelation,
       }),
     });
     const prompt = `Work one cycle on PR #${prNumber}.
@@ -119,6 +121,7 @@ Additional user guidance: ${guidance.length === 0 ? "none" : guidance.join("\n")
           generation: pr.agentGeneration,
           modelTurnId,
         };
+        activeAttemptCorrelation = correlation;
         this.#telemetry.record(
           "worker.attempt.started",
           { attempt: attemptNumber, prompt: attemptPrompt },
@@ -161,6 +164,8 @@ Additional user guidance: ${guidance.length === 0 ? "none" : guidance.join("\n")
             { attempt: attemptNumber, error: normalized.message },
             correlation,
           );
+        } finally {
+          activeAttemptCorrelation = {};
         }
       }
       throw firstError ?? new Error("Worker failed without an error");

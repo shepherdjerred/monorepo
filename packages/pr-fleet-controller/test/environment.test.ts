@@ -3,7 +3,39 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { codexProvider } from "@shepherdjerred/code-review";
+import { withCommandCorrelation } from "@shepherdjerred/pr-fleet-controller/src/command-correlation.ts";
 import { CommandFleetEnvironment } from "@shepherdjerred/pr-fleet-controller/src/environment.ts";
+import type { FleetTelemetry } from "@shepherdjerred/pr-fleet-controller/src/ports.ts";
+import type {
+  RunEventCorrelation,
+  RunEventKind,
+} from "@shepherdjerred/pr-fleet-controller/src/run-events.ts";
+
+class RecordingTelemetry implements FleetTelemetry {
+  readonly runId = "environment-test";
+  readonly events: {
+    kind: RunEventKind;
+    correlation: RunEventCorrelation;
+  }[] = [];
+  #nextId = 0;
+
+  newId(prefix: string): string {
+    this.#nextId += 1;
+    return `${prefix}-${String(this.#nextId)}`;
+  }
+
+  traceId(): string {
+    return "0".repeat(32);
+  }
+
+  record(
+    kind: RunEventKind,
+    _payload: Record<string, unknown>,
+    correlation: RunEventCorrelation = {},
+  ): void {
+    this.events.push({ kind, correlation });
+  }
+}
 
 describe("command process-group termination", () => {
   let directory: string;
@@ -72,4 +104,42 @@ describe("command process-group termination", () => {
     await Bun.sleep(400);
     expect(await Bun.file(output).exists()).toBe(false);
   });
+});
+
+test("command events inherit their worker tool and model correlation", async () => {
+  const telemetry = new RecordingTelemetry();
+  const environment = new CommandFleetEnvironment({
+    repo: "shepherdjerred/monorepo",
+    checkout: "/tmp/repo",
+    worktreeRoot: "/tmp/worktrees",
+    provider: codexProvider,
+    telemetry,
+  });
+  const parentCorrelation = {
+    traceId: "1".repeat(32),
+    prNumber: 42,
+    headSha: "a".repeat(40),
+    generation: 3,
+    modelTurnId: "worker-turn-1",
+    toolCallId: "tool-1",
+  };
+  await withCommandCorrelation(parentCorrelation, () =>
+    environment.runLocalCommand({
+      executable: process.execPath,
+      args: ["-e", "process.exit(0)"],
+      cwd: tmpdir(),
+      timeoutMs: 30_000,
+    }),
+  );
+
+  expect(telemetry.events).toHaveLength(2);
+  expect(telemetry.events[0]?.kind).toBe("command.started");
+  expect(telemetry.events[1]?.kind).toBe("command.completed");
+  expect(telemetry.events[0]?.correlation).toEqual({
+    ...parentCorrelation,
+    commandId: "command-1",
+  });
+  expect(telemetry.events[1]?.correlation).toEqual(
+    telemetry.events[0]?.correlation,
+  );
 });

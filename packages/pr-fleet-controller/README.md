@@ -100,8 +100,8 @@ The controller never merges, closes, or approves a pull request.
 
 Collection is mandatory and local-only. Each run writes:
 
-- `manifest.json` with the schema, controller commit/version, model, repository,
-  and capture contract;
+- `manifest.json` with the schema, controller source commit/version (independent
+  of the managed checkout), model, repository, and capture contract;
 - `events.jsonl` with sequenced, hash-chained controller, worker, command,
   evidence, model-turn, and shutdown events;
 - `summary.json` with final status, duration, event counts, last hash, and final
@@ -110,11 +110,13 @@ Collection is mandatory and local-only. Each run writes:
 
 The event payload redactor masks secret-shaped fields, bearer values, known
 credential environment values, and the value selected by `--api-key-env`
-before writing. The same literal-value redactor runs before Mastra's structural
-sensitive-field filter, so traces retain redacted model/tool bodies, timing,
-token metadata, and correlation IDs. Runs are retained indefinitely in v1,
-so operators must delete old run directories themselves when they no longer
-need them. Nothing is uploaded.
+before writing any event or summary. The same literal-value redactor runs
+before Mastra's structural sensitive-field filter, so traces retain redacted
+model/tool bodies, timing, token metadata, and correlation IDs. Commands inherit
+their worker attempt and tool-call correlation, and deliberate worker
+cancellation is recorded separately from failure. Runs are retained indefinitely
+in v1, so operators must delete old run directories themselves when they no
+longer need them. Nothing is uploaded.
 
 Verify and inspect a run without revealing prompt, output, patch, log, or
 operator-input bodies:
@@ -126,9 +128,10 @@ bun run pr:fleet:inspect --run <run-id-or-directory> --pr 1961 --show-bodies
 
 Deterministic replay is an offline control-plane audit. It verifies schema and
 controller versions, the hash chain, lifecycle correlations, tick/snapshot
-equivalence, aggregate state, summary counts, and final state. It does not
-resolve a model, read a credential, execute a subprocess, access the network,
-or touch a checkout:
+equivalence, aggregate state, summary counts, and final state. A completed run
+with any open command, tool, worker, or model-turn lifecycle is rejected rather
+than labeled verified. Replay does not resolve a model, read a credential,
+execute a subprocess, access the network, or touch a checkout:
 
 ```bash
 bun run pr:fleet:replay --run <run-id-or-directory>

@@ -9,6 +9,7 @@ import { resolveProvider } from "@shepherdjerred/code-review";
 import { z } from "zod";
 import { MastraMaster, MastraWorkerRunner } from "./agents.ts";
 import { FleetController } from "./controller.ts";
+import { resolveControllerCommit } from "./controller-metadata.ts";
 import { CommandFleetEnvironment } from "./environment.ts";
 import {
   createFleetMastraRuntime,
@@ -172,12 +173,7 @@ async function main(): Promise<void> {
   const packageMetadata = ControllerPackageSchema.parse(
     await Bun.file(path.join(import.meta.dir, "..", "package.json")).json(),
   );
-  const controllerCommit = await commandOutput("git", [
-    "-C",
-    checkout,
-    "rev-parse",
-    "HEAD",
-  ]);
+  const controllerCommit = await resolveControllerCommit();
   const configuredSecret =
     apiKeyEnvironment === undefined ? undefined : Bun.env[apiKeyEnvironment];
   const stateDirectory = parsed.values["state-dir"];

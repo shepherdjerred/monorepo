@@ -258,9 +258,8 @@ export class FleetController implements MasterControllerTools {
         };
         this.store.prs.set(candidate.identity.number, assigned);
         const abortController = new AbortController();
-        const promise = this.#workerRunner.run(
-          assigned,
-          abortController.signal,
+        const promise = Promise.resolve().then(() =>
+          this.#workerRunner.run(assigned, abortController.signal),
         );
         this.store.activeWorkers.set(candidate.identity.number, promise);
         this.store.workerControllers.set(
@@ -357,11 +356,12 @@ export class FleetController implements MasterControllerTools {
 
   #handleWorkerFailure(prNumber: number, error: unknown): void {
     const recordedState = this.store.prs.get(prNumber);
-    this.#telemetry.workerFailed(prNumber, recordedState, error);
+    const deliberatelyCancelled = this.store.cancelledWorkers.delete(prNumber);
     this.store.activeWorkers.delete(prNumber);
     this.store.workerControllers.delete(prNumber);
     this.store.releaseLeases(prNumber);
-    if (this.store.cancelledWorkers.delete(prNumber)) {
+    if (deliberatelyCancelled) {
+      this.#telemetry.workerCancelled(prNumber, recordedState, error);
       // Deliberate cancel (PR went green or its head advanced) — not a failure.
       // Do not pause; re-run a tick so a moved-head PR re-dispatches against its
       // refreshed SHA (a green PR simply won't be a dispatch candidate).
@@ -371,6 +371,7 @@ export class FleetController implements MasterControllerTools {
       void this.#runTickSafely("worker-complete", "worker-complete tick");
       return;
     }
+    this.#telemetry.workerFailed(prNumber, recordedState, error);
     const message = error instanceof Error ? error.message : String(error);
     const state = this.store.prs.get(prNumber);
     if (
