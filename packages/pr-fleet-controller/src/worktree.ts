@@ -150,7 +150,11 @@ export class WorktreeManager {
     await this.#mustRun("git", [
       "fetch",
       "origin",
-      `pull/${n}/head:${pullRef}`,
+      // Source fully qualified (`refs/pull/N/head`) on purpose: the unqualified
+      // `pull/N/head` resolves to the existing local `pullRef` once it exists,
+      // so git prunes the destination ("- [deleted] (none)") at exit 0 and the
+      // following rev-parse fails. See the matching note in environment.ts.
+      `refs/pull/${n}/head:${pullRef}`,
     ]);
     const fetchedOutput = await this.#mustRun(
       "git",

@@ -73,6 +73,29 @@ export class CommandFleetEnvironment implements FleetEnvironment {
     });
   }
 
+  // The reconcile fan-out refreshes evidence for up to five PRs concurrently
+  // (`mapBounded(identities, 5, …)`), and each PR's `#conflict()` runs a
+  // sequence of git commands against the single checkout's shared ref store.
+  // Git cannot tolerate ANY concurrent ref access there: two `git fetch`
+  // invocations race on the ref-lock / packed-refs transaction, and even a
+  // read (`git rev-parse`) can miss a loose ref while another PR's fetch is
+  // consolidating loose refs into `packed-refs`. Either way a ref reads back
+  // missing and the tick aborts. Every PR's whole git critical section is
+  // therefore run atomically through this promise-mutex, while the network
+  // evidence calls (`gh`, `bk`) stay fully parallel across the fan-out.
+  #gitQueue: Promise<unknown> = Promise.resolve();
+
+  #withGitLock<T>(operation: () => Promise<T>): Promise<T> {
+    // Chain onto the tail regardless of whether the prior section fulfilled or
+    // rejected, so one failed section cannot wedge the queue for later waiters.
+    const result = this.#gitQueue.then(operation, operation);
+    this.#gitQueue = result.then(
+      () => undefined,
+      () => undefined,
+    );
+    return result;
+  }
+
   async runLocalCommand(request: CommandRequest): Promise<CommandResult> {
     return runRecordedCommand(request, this.#telemetry);
   }
@@ -239,44 +262,54 @@ export class CommandFleetEnvironment implements FleetEnvironment {
   }
 
   async #conflict(pr: PrIdentity): Promise<boolean> {
-    await this.#mustRun("git", [
-      "fetch",
-      "origin",
-      `refs/heads/${pr.baseRefName}:refs/remotes/origin/${pr.baseRefName}`,
-    ]);
-    await this.#mustRun("git", [
-      "fetch",
-      "origin",
-      `pull/${String(pr.number)}/head:refs/remotes/pull/${String(pr.number)}/head`,
-    ]);
-    const fetchedHeadOutput = await this.#mustRun("git", [
-      "rev-parse",
-      `refs/remotes/pull/${String(pr.number)}/head`,
-    ]);
-    const fetchedHead = fetchedHeadOutput.trim();
-    if (fetchedHead !== pr.headSha) {
-      throw new Error(
-        `PR #${String(pr.number)} changed during conflict inspection (${pr.headSha} -> ${fetchedHead})`,
-      );
-    }
-    const result = await this.runLocalCommand({
-      executable: "git",
-      args: [
-        "merge-tree",
-        "--write-tree",
-        "--quiet",
-        `refs/remotes/origin/${pr.baseRefName}`,
+    // Run the whole fetch → rev-parse → merge-tree sequence as one critical
+    // section so no other PR's git ref access overlaps it (see #withGitLock).
+    return this.#withGitLock(async () => {
+      await this.#mustRun("git", [
+        "fetch",
+        "origin",
+        `refs/heads/${pr.baseRefName}:refs/remotes/origin/${pr.baseRefName}`,
+      ]);
+      await this.#mustRun("git", [
+        "fetch",
+        "origin",
+        // The source MUST be fully qualified (`refs/pull/N/head`). With the
+        // unqualified `pull/N/head`, once `refs/remotes/pull/N/head` exists its
+        // abbreviated name is also `pull/N/head`, so git resolves the source to
+        // that local ref, finds no matching remote ref, and prunes the
+        // destination ("- [deleted] (none)") while still exiting 0 — the next
+        // `rev-parse` then fails and the whole tick aborts.
+        `refs/pull/${String(pr.number)}/head:refs/remotes/pull/${String(pr.number)}/head`,
+      ]);
+      const fetchedHeadOutput = await this.#mustRun("git", [
+        "rev-parse",
         `refs/remotes/pull/${String(pr.number)}/head`,
-      ],
-      cwd: this.#checkout,
-      timeoutMs: 120_000,
+      ]);
+      const fetchedHead = fetchedHeadOutput.trim();
+      if (fetchedHead !== pr.headSha) {
+        throw new Error(
+          `PR #${String(pr.number)} changed during conflict inspection (${pr.headSha} -> ${fetchedHead})`,
+        );
+      }
+      const result = await this.runLocalCommand({
+        executable: "git",
+        args: [
+          "merge-tree",
+          "--write-tree",
+          "--quiet",
+          `refs/remotes/origin/${pr.baseRefName}`,
+          `refs/remotes/pull/${String(pr.number)}/head`,
+        ],
+        cwd: this.#checkout,
+        timeoutMs: 120_000,
+      });
+      if (result.exitCode !== 0 && result.exitCode !== 1) {
+        throw new Error(
+          `merge-tree failed for PR #${String(pr.number)}: ${result.stderr.trim()}`,
+        );
+      }
+      return result.exitCode === 1;
     });
-    if (result.exitCode !== 0 && result.exitCode !== 1) {
-      throw new Error(
-        `merge-tree failed for PR #${String(pr.number)}: ${result.stderr.trim()}`,
-      );
-    }
-    return result.exitCode === 1;
   }
 
   async #buildkiteEvidence(

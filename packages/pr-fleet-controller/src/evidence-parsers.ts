@@ -29,7 +29,10 @@ const GhCheckSchema = z.object({
   name: z.string(),
   state: z.string(),
   bucket: z.string(),
-  link: z.url().optional(),
+  // `gh pr checks` emits `link: ""` (not a valid URL) for checks that carry no
+  // details URL — e.g. a queued/pending status — so an empty string is
+  // accepted here and normalized to null in `parseChecks`.
+  link: z.union([z.url(), z.literal("")]).optional(),
 });
 
 const ReviewPageSchema = z.object({
@@ -120,7 +123,7 @@ export function parseChecks(text: string): RawCheck[] {
       name: check.name,
       state: check.state,
       bucket: check.bucket,
-      link: check.link ?? null,
+      link: check.link === undefined || check.link === "" ? null : check.link,
     }));
 }
 
