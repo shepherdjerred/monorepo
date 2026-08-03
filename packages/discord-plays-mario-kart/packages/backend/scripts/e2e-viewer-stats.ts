@@ -39,9 +39,24 @@ function requiredArg(name: string): string {
   return v;
 }
 
+// Sampling knobs must be finite and positive. Number() otherwise accepts 0, -1,
+// "foo" (NaN), and "Infinity": a non-positive interval hammers PinchTab as fast
+// as requests complete, and an infinite/NaN duration either never terminates or
+// dies later with the misleading "no samples collected" error. Fail up front.
+function positiveFiniteArg(name: string, fallback: number): number {
+  const raw = argValue(name);
+  const value = raw === undefined ? fallback : Number(raw);
+  if (!Number.isFinite(value) || value <= 0) {
+    throw new Error(
+      `${name} must be a finite positive number (got ${raw ?? String(fallback)})`,
+    );
+  }
+  return value;
+}
+
 const TAB = requiredArg("--tab");
-const DURATION_S = Number(argValue("--duration") ?? 120);
-const INTERVAL_MS = Number(argValue("--interval-ms") ?? 250);
+const DURATION_S = positiveFiniteArg("--duration", 120);
+const INTERVAL_MS = positiveFiniteArg("--interval-ms", 250);
 const OUT = argValue("--out") ?? `viewer-stats-${String(Date.now())}.json`;
 const BASE = argValue("--pinchtab") ?? "http://localhost:9867";
 const RELOAD = process.argv.includes("--reload");
@@ -291,17 +306,34 @@ function sleep(ms: number): Promise<void> {
 const hookResult = await evaluate(HOOK);
 console.error(`hook: ${String(hookResult)}`);
 if (RELOAD) {
-  await evaluate("location.reload() ?? 'reloading'").catch(() => {
-    // The navigation tears down the evaluation context; that IS the success
-    // signal for a reload.
-  });
-  // The reload destroyed the page realm that held the constructor hook
-  // (__rtcHooked / __rtcPeers / the patched RTCPeerConnection), so any peer the
-  // operator creates after rejoining would go unrecorded and every poll would
-  // see zero peers. Wait for the fresh realm and reinstall the hook BEFORE
-  // asking them to rejoin.
+  // A genuine reload tears down the evaluation context, so this evaluate can
+  // reject even though the reload succeeded. Capture any error but DON'T treat
+  // it as success — the fresh-realm hook below is the independent oracle. An
+  // HTTP/auth/network/PinchTab failure that prevents navigation is caught there.
+  let reloadError: unknown;
+  try {
+    await evaluate("location.reload() ?? 'reloading'");
+  } catch (error) {
+    reloadError = error;
+  }
+  // A real reload drops the constructor hook (__rtcHooked / __rtcPeers / the
+  // patched RTCPeerConnection) with the old realm, so reinstalling it on the
+  // fresh page returns "hooked". "already-hooked" means the page never
+  // navigated — the old realm (and its uncaptured peer) is still live — so fail
+  // instead of telling the operator to rejoin into a bogus run.
   const reHookResult = await evaluateWithRetry(HOOK, 30, 500);
-  console.error(`re-hook: ${String(reHookResult)}`);
+  if (reHookResult !== "hooked") {
+    const reloadDetail =
+      reloadError === undefined
+        ? ""
+        : ` reload error: ${reloadError instanceof Error ? reloadError.message : JSON.stringify(reloadError)}`;
+    throw new Error(
+      `--reload did not navigate the tab (hook returned ${JSON.stringify(reHookResult)}); ` +
+        "the existing peer is still uncaptured. Check the PinchTab tab id, token, and connectivity." +
+        reloadDetail,
+    );
+  }
+  console.error(`re-hook: ${reHookResult}`);
   console.error(
     "reloaded — re-join voice + re-open the stream, then sampling begins",
   );

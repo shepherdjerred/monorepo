@@ -139,13 +139,23 @@ export class StreamLatencyTracker {
 
   onSendStats(stats: SendStats): void {
     const observedAtMs = this.now();
+    // onSendStats fires only after the A/V ahead-sync wait, so this callback
+    // lags the frame's actual send completion by stats.syncWaitMs (0 on frames
+    // that didn't wait). Timestamp the send interval at real completion —
+    // otherwise the wait is charged to the preceding interval and stripped from
+    // the next, producing an artificial long/short pair in
+    // stream_send_interval_ms during the very sync stalls this metric diagnoses.
+    const sendCompletedAtMs = observedAtMs - stats.syncWaitMs;
     const lastSendAtMs =
       stats.kind === "video" ? this.lastVideoSendAtMs : this.lastAudioSendAtMs;
     if (lastSendAtMs !== undefined) {
-      this.observations.sendInterval?.(stats.kind, observedAtMs - lastSendAtMs);
+      this.observations.sendInterval?.(
+        stats.kind,
+        sendCompletedAtMs - lastSendAtMs,
+      );
     }
-    if (stats.kind === "video") this.lastVideoSendAtMs = observedAtMs;
-    else this.lastAudioSendAtMs = observedAtMs;
+    if (stats.kind === "video") this.lastVideoSendAtMs = sendCompletedAtMs;
+    else this.lastAudioSendAtMs = sendCompletedAtMs;
 
     const queue = stats.kind === "video" ? this.videoSends : this.audioSends;
     const pending = queue.shift();

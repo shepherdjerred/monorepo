@@ -207,4 +207,25 @@ describe("StreamLatencyTracker", () => {
       { kind: "video", intervalMs: 160 },
     ]);
   });
+
+  it("times send intervals at real completion, not after the ahead-sync wait", () => {
+    const { tracker, recorded, advance } = makeHarness();
+    // First frame completes and reports immediately (no wait).
+    tracker.onSendStats(sendStats("video", 0));
+    // 33ms of callback gap later, but this frame sat 10ms in the ahead-sync
+    // wait AFTER it finished sending, so it actually completed 23ms after the
+    // previous send. The interval must read 23 (real completion), not 33.
+    advance(33);
+    tracker.onSendStats({ ...sendStats("video", 33), syncWaitMs: 10 });
+    // The next frame reports with no wait 30ms after the second callback; from
+    // the corrected completion (23ms in) that is a 40ms cadence — the wait is
+    // not double-counted into this following interval.
+    advance(30);
+    tracker.onSendStats(sendStats("video", 66));
+
+    expect(recorded.sendIntervals).toEqual([
+      { kind: "video", intervalMs: 23 },
+      { kind: "video", intervalMs: 40 },
+    ]);
+  });
 });
