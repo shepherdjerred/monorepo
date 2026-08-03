@@ -261,6 +261,19 @@ export function getMinecraftExtraVolumes(
     (key) => !key.startsWith("config__"),
   );
 
+  // config/* files are seeded into /data/config by the init container with a
+  // raw cp, which does NOT run itzg's ${CFG_*} interpolation (that only happens
+  // during the /config sync we deliberately bypass). Reject placeholders here so
+  // a config that would silently ship an un-substituted ${CFG_...} fails at
+  // synthesis instead of at runtime.
+  for (const key of configSubdirKeys) {
+    if (configs[key]?.includes("${CFG_") === true) {
+      throw new Error(
+        `Minecraft config '${key}' for '${serverName}' uses a \${CFG_*} placeholder, but config/* files are seeded into /data/config without itzg interpolation. Inline the value or move it to a top-level (non-config/) file that stays on itzg's /config sync.`,
+      );
+    }
+  }
+
   const serverConfigMapName = useSplitConfigMaps
     ? `${namespace}-server-configs`
     : `${namespace}-configs`;
@@ -474,7 +487,13 @@ export function getMinecraftPluginConfigInitContainer(
       //    that subdir off the sync and merge it in here instead. Start from a
       //    clean /data/config so removed files do not linger.
       // 2. Copy plugin configs if they exist (same bypass, for /data/plugins).
-      `rm -rf /data/config
+      // `set -e` so a failed seed/copy (e.g. a full or read-only PVC) aborts the
+      // init container instead of letting the server boot with Paper defaults in
+      // place of the GitOps config. cp runs in the while (the pipeline's last
+      // stage), so its failure propagates under set -e without needing pipefail
+      // (which busybox ash does not universally support).
+      `set -e
+      rm -rf /data/config
       if [ -d /config-subdir ] && [ "$(ls -A /config-subdir)" ]; then
         cd /config-subdir && find -L . -type f -not -path '*/..*' | while read f; do
           mkdir -p "/data/config/$(dirname "$f")"
