@@ -91,6 +91,7 @@ export async function resolveControllerSource(
         "ls-files",
         "--others",
         "--exclude-standard",
+        "--full-name",
         "-z",
       ]),
     ]);

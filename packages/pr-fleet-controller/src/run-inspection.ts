@@ -54,6 +54,8 @@ export type ReplayReport = {
   status: RunSummary["status"];
   eventCount: number;
   countsByKind: Record<string, number>;
+  run: ReplayLifecycle;
+  shutdown: ReplayLifecycle;
   ticks: ReplayLifecycle;
   commands: ReplayLifecycle;
   tools: ReplayLifecycle;
@@ -131,9 +133,19 @@ export function inspectRunSummary(
 
 function lifecycleKey(
   event: RecordedRunEvent,
-  category: "ticks" | "commands" | "tools" | "workers" | "modelTurns",
+  category:
+    | "run"
+    | "shutdown"
+    | "ticks"
+    | "commands"
+    | "tools"
+    | "workers"
+    | "modelTurns",
 ): string | null {
   switch (category) {
+    case "run":
+    case "shutdown":
+      return event.runId;
     case "ticks":
       return event.correlation.tickId ?? null;
     case "commands":
@@ -152,7 +164,14 @@ function lifecycleKey(
 
 function replayLifecycle(
   events: RecordedRunEvent[],
-  category: "ticks" | "commands" | "tools" | "workers" | "modelTurns",
+  category:
+    | "run"
+    | "shutdown"
+    | "ticks"
+    | "commands"
+    | "tools"
+    | "workers"
+    | "modelTurns",
   kinds: {
     started: string;
     completed: string;
@@ -244,10 +263,10 @@ function verifySnapshot(snapshot: FleetSnapshot): void {
   }
 }
 
-export function replayRunBundle(
+function verifyBundleMetadata(
   bundle: RunBundle,
   options: { currentControllerVersion: string; allowVersionMismatch: boolean },
-): ReplayReport {
+): Record<string, number> {
   const { manifest, summary, events } = bundle;
   if (
     !options.allowVersionMismatch &&
@@ -266,14 +285,30 @@ export function replayRunBundle(
     );
   }
   const lastEvent = events.at(-1);
-  if (lastEvent?.hash !== summary.lastHash) {
+  if (lastEvent === undefined) {
+    throw new Error("Run bundle has no events");
+  }
+  if (lastEvent.hash !== summary.lastHash) {
     throw new Error("Summary last hash does not match the final event");
+  }
+  const expectedRunTerminal =
+    summary.status === "completed" ? "run.completed" : "run.failed";
+  if (lastEvent.kind !== expectedRunTerminal) {
+    throw new Error(
+      `Summary status ${summary.status} does not match final run event ${lastEvent.kind}`,
+    );
   }
   const countsByKind = countKinds(events);
   if (canonicalJson(countsByKind) !== canonicalJson(summary.countsByKind)) {
     throw new Error("Summary event-kind counts do not match the event stream");
   }
+  return countsByKind;
+}
 
+function replaySnapshots(
+  events: RecordedRunEvent[],
+  summary: RunSummary,
+): FleetSnapshot | null {
   const tickSnapshots = new Map<string, FleetSnapshot>();
   let finalSnapshot: FleetSnapshot | null = null;
   for (const event of events) {
@@ -308,9 +343,34 @@ export function replayRunBundle(
   if (canonicalJson(finalSnapshot) !== canonicalJson(summary.finalSnapshot)) {
     throw new Error("Summary final snapshot does not match replayed state");
   }
+  return finalSnapshot;
+}
+
+export function replayRunBundle(
+  bundle: RunBundle,
+  options: { currentControllerVersion: string; allowVersionMismatch: boolean },
+): ReplayReport {
+  const { manifest, summary, events } = bundle;
+  const countsByKind = verifyBundleMetadata(bundle, options);
+  const finalSnapshot = replaySnapshots(events, summary);
 
   verifyCorrelationGraph(events);
 
+  const run = replayLifecycle(events, "run", {
+    started: "run.started",
+    completed: "run.completed",
+    failed: "run.failed",
+  });
+  if (run.started !== 1 || run.completed + run.failed !== 1) {
+    throw new Error(
+      "Run bundle must contain exactly one complete run lifecycle",
+    );
+  }
+  const shutdown = replayLifecycle(events, "shutdown", {
+    started: "shutdown.started",
+    completed: "shutdown.completed",
+    failed: "shutdown.failed",
+  });
   const ticks = replayLifecycle(events, "ticks", {
     started: "tick.started",
     completed: "tick.completed",
@@ -344,6 +404,8 @@ export function replayRunBundle(
   });
   if (summary.status === "completed") {
     const openLifecycles = Object.entries({
+      run,
+      shutdown,
       ticks,
       commands,
       tools,
@@ -367,6 +429,8 @@ export function replayRunBundle(
     status: summary.status,
     eventCount: events.length,
     countsByKind,
+    run,
+    shutdown,
     ticks,
     commands,
     tools,

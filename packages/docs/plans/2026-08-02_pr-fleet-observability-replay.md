@@ -181,7 +181,10 @@ repository checkout.
   arrays, replay rejects open and orphaned tick lifecycles, cancellation is
   armed before a command can block writing stdin, and model-, terminal-, and
   failure-initiated shutdown all pass through one master-settlement boundary.
-- Passed focused typecheck, 83 controller tests, 42 observability tests, lint,
+- Addressed the next exact-head findings by resolving package-scoped untracked
+  source paths from the repository root and making replay validate the run and
+  shutdown lifecycles plus summary-to-terminal consistency.
+- Passed focused typecheck, 84 controller tests, 42 observability tests, lint,
   native-aware build, docs validation, Markdown lint, diff checks, and staged
   Lefthook/Gitleaks/Prettier/lockfile checks.
 - Completed a final non-mutating `openai/gpt-5.6-terra` model/tool turn from the

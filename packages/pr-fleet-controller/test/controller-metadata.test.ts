@@ -1,5 +1,5 @@
 import { afterEach, expect, test } from "bun:test";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { resolveControllerSource } from "@shepherdjerred/pr-fleet-controller/src/controller-metadata.ts";
@@ -32,9 +32,14 @@ async function git(directory: string, args: readonly string[]): Promise<void> {
 test("records clean and dirty identities for the exact controller source tree", async () => {
   const repository = await mkdtemp(path.join(tmpdir(), "controller-source-"));
   temporaryDirectories.push(repository);
+  const controllerDirectory = path.join(repository, "packages", "controller");
   await git(repository, ["init", "--quiet"]);
-  await writeFile(path.join(repository, "controller.ts"), "export {}\n");
-  await git(repository, ["add", "controller.ts"]);
+  await mkdir(controllerDirectory, { recursive: true });
+  await writeFile(
+    path.join(controllerDirectory, "controller.ts"),
+    "export {}\n",
+  );
+  await git(repository, ["add", "packages/controller/controller.ts"]);
   await git(repository, [
     "-c",
     "user.name=Test",
@@ -46,25 +51,25 @@ test("records clean and dirty identities for the exact controller source tree", 
     "initial",
   ]);
 
-  const clean = await resolveControllerSource(repository);
+  const clean = await resolveControllerSource(controllerDirectory);
   expect(clean.commit).toMatch(/^[0-9a-f]{40}$/);
   expect(clean.dirty).toBe(false);
   expect(clean.fingerprint).toMatch(/^[0-9a-f]{64}$/);
 
   await writeFile(
-    path.join(repository, "controller.ts"),
+    path.join(controllerDirectory, "controller.ts"),
     "export const x = 1\n",
   );
-  const trackedChange = await resolveControllerSource(repository);
+  const trackedChange = await resolveControllerSource(controllerDirectory);
   expect(trackedChange.commit).toBe(clean.commit);
   expect(trackedChange.dirty).toBe(true);
   expect(trackedChange.fingerprint).not.toBe(clean.fingerprint);
 
   await writeFile(
-    path.join(repository, "untracked.ts"),
+    path.join(controllerDirectory, "untracked.ts"),
     "export const y = 2\n",
   );
-  const untrackedChange = await resolveControllerSource(repository);
+  const untrackedChange = await resolveControllerSource(controllerDirectory);
   expect(untrackedChange.dirty).toBe(true);
   expect(untrackedChange.fingerprint).not.toBe(trackedChange.fingerprint);
 });

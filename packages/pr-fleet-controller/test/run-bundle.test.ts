@@ -488,6 +488,32 @@ describe("run bundle lifecycle replay", () => {
     ).toThrow("tick.failed has no matching tick.started");
   });
 
+  test("rejects incomplete shutdowns and run-summary terminal mismatches", async () => {
+    const recorder = await createRecorder();
+    recorder.record("run.started", { scenario: "open-shutdown" });
+    recorder.record("shutdown.started", { activeWorkers: 0 });
+    await recorder.finalize("completed", null);
+    const bundle = await loadRunBundle(recorder.paths.runDirectory);
+
+    expect(() =>
+      replayRunBundle(bundle, {
+        currentControllerVersion: "0.1.0",
+        allowVersionMismatch: false,
+      }),
+    ).toThrow("Completed run has open lifecycles: shutdown=");
+    expect(() =>
+      replayRunBundle(
+        { ...bundle, summary: { ...bundle.summary, status: "failed" } },
+        {
+          currentControllerVersion: "0.1.0",
+          allowVersionMismatch: false,
+        },
+      ),
+    ).toThrow(
+      "Summary status failed does not match final run event run.completed",
+    );
+  });
+
   test("replays deliberate worker cancellation as a terminal lifecycle", async () => {
     const recorder = await createRecorder();
     const correlation = {
@@ -535,6 +561,20 @@ describe("run bundle lifecycle replay", () => {
     expect(report.status).toBe("completed");
     expect(report.finalSnapshot).toEqual(snapshot);
     expect(report.eventCount).toBe(7);
+    expect(report.run).toEqual({
+      started: 1,
+      completed: 1,
+      cancelled: 0,
+      failed: 0,
+      open: [],
+    });
+    expect(report.shutdown).toEqual({
+      started: 1,
+      completed: 1,
+      cancelled: 0,
+      failed: 0,
+      open: [],
+    });
 
     const firstEvent = bundle.events[0];
     if (firstEvent === undefined) {
