@@ -26,7 +26,10 @@ import {
   useGlitterCompletionArtifact,
 } from "./glitter-context-refresh-openai.ts";
 import type { StyleRefreshCandidate } from "./glitter-context-refresh-selection.ts";
-import { requireKnownEvidence } from "./glitter-context-refresh-evidence.ts";
+import {
+  sanitizeChunkSummary,
+  validateChunkSummary,
+} from "./glitter-context-refresh-style-validation.ts";
 import {
   finalizeStyleSynthesis,
   priorFieldValues,
@@ -45,16 +48,23 @@ const EXTRACTION_MAX_OUTPUT_TOKENS = 2000;
 const SYNTHESIS_MAX_OUTPUT_TOKENS = 15_000;
 const DETERMINISTIC_SEED = 0;
 
-// A single repair attempt is not enough: gpt-5.6 occasionally emits an
-// observation/quote/sample citing a message ID outside its supplied evidence
-// set, and because every completion is cached (immutably, keyed by request
-// hash) *before* validation, a fixed-seed retry re-reads the same poisoned
-// artifact and fails identically forever. Each repair attempt therefore uses a
-// distinct seed (`DETERMINISTIC_SEED + attempt`) so it is a genuinely fresh,
-// cache-distinct model call while staying deterministic by attempt index — a
-// re-run reuses the first attempt that passed. Attempt 0 is the initial call
-// (unchanged seed 0, so its cache key is stable); attempts 1..N are repairs.
-const MAX_EXTRACTION_REPAIR_ATTEMPTS = 4;
+// gpt-5.6 sometimes emits an observation citing a message ID outside its
+// supplied evidence set. Because every completion is cached (immutably, keyed by
+// request hash) *before* validation, a fixed-seed retry re-reads the same
+// poisoned artifact and fails identically forever, so each repair attempt uses a
+// distinct seed (`DETERMINISTIC_SEED + attempt`) — a genuinely fresh,
+// cache-distinct model call, deterministic by attempt index (a re-run reuses the
+// first attempt that passed). Attempt 0 is the initial call (seed 0, stable
+// cache key); attempts 1..N are repairs.
+//
+// Repairs alone are not enough: for some chunks the model *deterministically*
+// cites an ID that appears inside message content (a reply/link/quote) but is
+// not a top-level chunk message, so every seed re-cites it. `sanitizeChunkSummary`
+// is the convergence guarantee — after the (few) repair attempts, unverifiable
+// evidence is dropped rather than failing the whole run (treating model output
+// as untrusted boundary input). Because sanitization guarantees a valid result,
+// the repair budget is kept small to bound spend on systematically-failing chunks.
+const MAX_EXTRACTION_REPAIR_ATTEMPTS = 2;
 const MAX_SYNTHESIS_REPAIR_ATTEMPTS = 3;
 
 type SummarizedChunk = {
@@ -73,38 +83,6 @@ function messageEvidence(message: CurrentMessage): {
     timestamp: message.timestamp,
     content: message.content,
   };
-}
-
-function validateChunkSummary(
-  chunk: StyleEvidenceChunk,
-  summary: StyleChunkSummary,
-): void {
-  const messagesById = new Map(
-    chunk.messages.map((message) => [message.messageId, message]),
-  );
-  const knownIds = new Set(messagesById.keys());
-  for (const observation of summary.observations) {
-    requireKnownEvidence(
-      observation.evidenceMessageIds,
-      knownIds,
-      `chunk ${chunk.key} observation`,
-    );
-  }
-  const representativeIds = new Set<string>();
-  for (const representative of summary.representativeMessages) {
-    const message = messagesById.get(representative.messageId);
-    if (message?.content !== representative.content) {
-      throw new Error(
-        `chunk ${chunk.key} returned non-verbatim representative message ${representative.messageId}`,
-      );
-    }
-    if (representativeIds.has(representative.messageId)) {
-      throw new Error(
-        `chunk ${chunk.key} returned duplicate representative message ${representative.messageId}`,
-      );
-    }
-    representativeIds.add(representative.messageId);
-  }
 }
 
 function chunkPrompt(input: {
@@ -223,15 +201,20 @@ async function summarizeChunk(input: {
   artifactStore: GenerationArtifactStore;
   budget: GenerationBudget;
 }): Promise<StyleChunkSummary> {
-  let previous = await runChunkExtraction({
+  // Keep every attempt's raw output: repairs are non-monotonic (a later repair
+  // can cite fewer valid IDs than an earlier one), so the fallback must consider
+  // all of them, not just the last.
+  const attempts: StyleChunkSummary[] = [];
+  let lastError: Error;
+  const initial = await runChunkExtraction({
     ...input,
     attempt: 0,
     repair: null,
   });
-  let lastError: Error;
+  attempts.push(initial);
   try {
-    validateChunkSummary(input.chunk, previous);
-    return previous;
+    validateChunkSummary(input.chunk, initial);
+    return initial;
   } catch (error: unknown) {
     lastError = z.instanceof(Error).parse(error);
   }
@@ -239,17 +222,44 @@ async function summarizeChunk(input: {
     const repaired = await runChunkExtraction({
       ...input,
       attempt,
-      repair: { previous, error: lastError.message },
+      repair: {
+        previous: attempts.at(-1) ?? initial,
+        error: lastError.message,
+      },
     });
+    attempts.push(repaired);
     try {
       validateChunkSummary(input.chunk, repaired);
       return repaired;
     } catch (error: unknown) {
       lastError = z.instanceof(Error).parse(error);
-      previous = repaired;
     }
   }
-  throw lastError;
+  // The model could not produce a fully valid summary for this chunk even after
+  // repairs (it deterministically cites an unverifiable in-content ID). Sanitize
+  // every attempt and keep the one that retains the most verifiable evidence, so
+  // an earlier attempt's valid observations are not lost to a worse final repair.
+  const verifiableContent = (summary: StyleChunkSummary): number =>
+    summary.observations.length + summary.representativeMessages.length;
+  const best = attempts
+    .map((attempt) => sanitizeChunkSummary(input.chunk, attempt))
+    .reduce((strongest, candidate) =>
+      verifiableContent(candidate) > verifiableContent(strongest)
+        ? candidate
+        : strongest,
+    );
+  // Fail only when *every* attempt sanitizes to nothing: a chunk that yields zero
+  // verifiable evidence from its entire month would otherwise let the card
+  // advertise full coverage (finalize still counts these messages as summarized)
+  // while silently omitting the month, so fail loudly instead of laundering the gap.
+  if (verifiableContent(best) === 0) {
+    throw new Error(
+      `chunk ${input.chunk.key} yielded no verifiable evidence after ${String(MAX_EXTRACTION_REPAIR_ATTEMPTS)} repair attempts and sanitization (last error: ${lastError.message})`,
+    );
+  }
+  // Validate the sanitized result to prove it now satisfies the contract.
+  validateChunkSummary(input.chunk, best);
+  return best;
 }
 
 function synthesisPrompt(input: {
