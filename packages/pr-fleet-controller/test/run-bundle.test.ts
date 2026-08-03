@@ -25,6 +25,7 @@ import {
 } from "@shepherdjerred/pr-fleet-controller/src/run-recorder.ts";
 import type { RecordedRunEvent } from "@shepherdjerred/pr-fleet-controller/src/run-events.ts";
 import type { FleetSnapshot } from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
+import { writeFileSinkSynchronously } from "@shepherdjerred/pr-fleet-controller/src/synchronous-file-sink.ts";
 import { evidence, identity } from "./fixtures.ts";
 
 const snapshot: FleetSnapshot = {
@@ -266,7 +267,50 @@ async function recordSyntheticWorkerRun(recorder: RunRecorder): Promise<void> {
   await finalizeCompletedRun(recorder);
 }
 
+async function testSynchronousPersistenceFailure(): Promise<void> {
+  const stateDirectory = await mkdtemp(path.join(tmpdir(), "pr-fleet-run-"));
+  temporaryDirectories.push(stateDirectory);
+  let failNextWrite = true;
+  const recorder = await RunRecorder.create({
+    stateDirectory,
+    controllerVersion: "0.1.0",
+    controllerCommit: "a".repeat(40),
+    controllerSourceDirty: false,
+    controllerSourceFingerprint: "b".repeat(64),
+    model: "openai/gpt-5.6-terra",
+    repository: "example/repository",
+    checkout: "/tmp/checkout",
+    worktreeRoot: "/tmp/worktrees",
+    maxWorkers: 2,
+    writeEvent: (sink, line) => {
+      if (failNextWrite) {
+        failNextWrite = false;
+        throw new Error("state volume is full");
+      }
+      writeFileSinkSynchronously(sink, line);
+    },
+  });
+
+  expect(() => recorder.record("run.started", { phase: "startup" })).toThrow(
+    "state volume is full",
+  );
+  recorder.record("run.started", { phase: "startup" });
+  await recorder.finalize("failed", null, new Error("capture recovered"));
+
+  const events = await readAndVerifyEvents(recorder.paths.runDirectory);
+  expect(events.map((event) => event.sequence)).toEqual([1, 2]);
+  expect(events.map((event) => event.kind)).toEqual([
+    "run.started",
+    "run.failed",
+  ]);
+}
+
 describe("local run bundles", () => {
+  test(
+    "event persistence failures are synchronous",
+    testSynchronousPersistenceFailure,
+  );
+
   test("writes private, redacted, hash-verifiable artifacts", async () => {
     const secret = ["custom", "provider", "credential"].join("-");
     const recorder = await createRecorder([secret]);
@@ -358,7 +402,9 @@ describe("local run bundles", () => {
     });
     expect(bundle.events[1]?.payload["detail"]).toBe("token=[REDACTED]");
   });
+});
 
+describe("local run bundle integrity", () => {
   test("fails closed when the selected state directory is group-readable", async () => {
     const stateDirectory = await mkdtemp(path.join(tmpdir(), "pr-fleet-open-"));
     temporaryDirectories.push(stateDirectory);
@@ -693,6 +739,33 @@ describe("run bundle correlation replay", () => {
     ).toThrow("mismatched tool correlation field headSha");
   });
 
+  test("rejects correlation introduced only by a terminal event", async () => {
+    const recorder = await createRecorder();
+    await recordSyntheticWorkerRun(recorder);
+    const bundle = await loadRunBundle(recorder.paths.runDirectory);
+    const events = bundle.events.map((event) =>
+      event.kind === "command.completed"
+        ? {
+            ...event,
+            correlation: {
+              ...event.correlation,
+              tickId: "fabricated-tick",
+            },
+          }
+        : event,
+    );
+
+    expect(() =>
+      replayRunBundle(
+        { ...bundle, events },
+        {
+          currentControllerVersion: "0.1.0",
+          allowVersionMismatch: false,
+        },
+      ),
+    ).toThrow("mismatched command start correlation field tickId");
+  });
+
   test("rejects a model turn that closes before its tool", async () => {
     const recorder = await createRecorder();
     await recordSyntheticWorkerRun(recorder);
@@ -825,6 +898,33 @@ describe("run bundle lifecycle replay", () => {
     ).toThrow(
       "Completed run must contain exactly one completed shutdown lifecycle",
     );
+  });
+
+  test("rejects controller events recorded after shutdown completes", async () => {
+    const recorder = await createRecorder();
+    const commandId = recorder.newId("command");
+    recorder.record("run.started", { scenario: "late-command" });
+    recorder.record("shutdown.started", { activeWorkers: 0 });
+    recorder.record("shutdown.completed", { snapshot });
+    recorder.record(
+      "command.started",
+      { executable: "git", args: ["status"] },
+      { commandId },
+    );
+    recorder.record(
+      "command.completed",
+      { executable: "git", exitCode: 0 },
+      { commandId },
+    );
+    await recorder.finalize("completed", snapshot);
+    const bundle = await loadRunBundle(recorder.paths.runDirectory);
+
+    expect(() =>
+      replayRunBundle(bundle, {
+        currentControllerVersion: "0.1.0",
+        allowVersionMismatch: false,
+      }),
+    ).toThrow("command.started was recorded after shutdown.completed");
   });
 
   test("replays deliberate worker cancellation as a terminal lifecycle", async () => {

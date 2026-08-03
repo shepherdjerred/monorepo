@@ -363,6 +363,21 @@ function replaySnapshots(
   return finalSnapshot;
 }
 
+function verifyShutdownBoundary(events: RecordedRunEvent[]): void {
+  const shutdownCompletedIndex = events.findIndex(
+    (event) => event.kind === "shutdown.completed",
+  );
+  if (shutdownCompletedIndex === -1) {
+    return;
+  }
+  const lateEvent = events
+    .slice(shutdownCompletedIndex + 1)
+    .find((event) => event.kind !== "run.completed");
+  if (lateEvent !== undefined) {
+    throw new Error(`${lateEvent.kind} was recorded after shutdown.completed`);
+  }
+}
+
 export function replayRunBundle(
   bundle: RunBundle,
   options: { currentControllerVersion: string; allowVersionMismatch: boolean },
@@ -447,6 +462,7 @@ export function replayRunBundle(
         "Completed run must contain exactly one completed shutdown lifecycle",
       );
     }
+    verifyShutdownBoundary(events);
   }
 
   return {

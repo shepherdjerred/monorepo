@@ -8,7 +8,6 @@ import {
   open,
   readdir,
   rename,
-  type FileHandle,
   unlink,
 } from "node:fs/promises";
 import { homedir } from "node:os";
@@ -32,6 +31,10 @@ import {
   type RunSummary,
 } from "./run-events.ts";
 import type { FleetSnapshot } from "./schemas.ts";
+import {
+  writeFileSinkSynchronously,
+  type SynchronousFileSinkWriter,
+} from "./synchronous-file-sink.ts";
 
 const PRIVATE_DIRECTORY_MODE = 0o700;
 const PRIVATE_FILE_MODE = 0o600;
@@ -62,6 +65,7 @@ export type CreateRunRecorderOptions = {
   now?: () => Date;
   randomId?: () => string;
   secretValues?: readonly string[];
+  writeEvent?: SynchronousFileSinkWriter;
 };
 
 type RunRecorderConstructorOptions = {
@@ -69,7 +73,8 @@ type RunRecorderConstructorOptions = {
   manifest: RunManifest;
   now: () => Date;
   secretValues: readonly string[];
-  eventsHandle: FileHandle;
+  eventsSink: Bun.FileSink;
+  writeEvent: SynchronousFileSinkWriter;
 };
 
 function defaultStateDirectory(): string {
@@ -188,7 +193,7 @@ export class RunRecorder implements FleetTelemetry {
   readonly runId: string;
   readonly paths: RunPaths;
   manifest: RunManifest;
-  readonly #eventsHandle: FileHandle;
+  readonly #eventsSink: Bun.FileSink;
   readonly #now: () => Date;
   readonly #createdAt: Date;
   readonly #counts = new Map<RunEventKind, number>();
@@ -196,7 +201,7 @@ export class RunRecorder implements FleetTelemetry {
   #sequence = 0;
   #lastHash = GENESIS_EVENT_HASH;
   #closed = false;
-  #writeQueue = Promise.resolve();
+  readonly #writeEvent: SynchronousFileSinkWriter;
   #finalizationPromise: Promise<RunSummary> | undefined;
 
   private constructor(options: RunRecorderConstructorOptions) {
@@ -206,7 +211,8 @@ export class RunRecorder implements FleetTelemetry {
     this.#now = options.now;
     this.#createdAt = new Date(options.manifest.createdAt);
     this.#secretValues = options.secretValues;
-    this.#eventsHandle = options.eventsHandle;
+    this.#eventsSink = options.eventsSink;
+    this.#writeEvent = options.writeEvent;
   }
 
   static async create(options: CreateRunRecorderOptions): Promise<RunRecorder> {
@@ -259,12 +265,15 @@ export class RunRecorder implements FleetTelemetry {
     });
     await secureWriteJson(paths.manifest, manifest);
     const eventsHandle = await open(paths.events, "wx", PRIVATE_FILE_MODE);
+    await eventsHandle.close();
+    const eventsSink = Bun.file(paths.events).writer();
     return new RunRecorder({
       paths,
       manifest,
       now,
       secretValues: options.secretValues ?? [],
-      eventsHandle,
+      eventsSink,
+      writeEvent: options.writeEvent ?? writeFileSinkSynchronously,
     });
   }
 
@@ -311,12 +320,6 @@ export class RunRecorder implements FleetTelemetry {
     return redactSecrets(value, this.#secretValues);
   }
 
-  async #appendEvent(previous: Promise<void>, line: string): Promise<void> {
-    await previous;
-    await this.#eventsHandle.write(line);
-    await this.#eventsHandle.sync();
-  }
-
   record(
     kind: RunEventKind,
     payload: Record<string, unknown>,
@@ -341,7 +344,10 @@ export class RunRecorder implements FleetTelemetry {
       hash: hashEvent(unsigned),
     });
     const line = `${JSON.stringify(event)}\n`;
-    this.#writeQueue = this.#appendEvent(this.#writeQueue, line);
+    // Audit capture is a prerequisite for controller work. Persist and sync the
+    // event before returning so a full disk or failed state volume stops the
+    // caller before it can perform the action represented by the next event.
+    this.#writeEvent(this.#eventsSink, line);
     this.#sequence = event.sequence;
     this.#lastHash = event.hash;
     this.#counts.set(kind, (this.#counts.get(kind) ?? 0) + 1);
@@ -390,8 +396,7 @@ export class RunRecorder implements FleetTelemetry {
       kind,
       error === null ? { status } : { status, error: errorDetails(error) },
     );
-    await this.#writeQueue;
-    await this.#eventsHandle.close();
+    await this.#eventsSink.end();
     this.#closed = true;
     const countsByKind = Object.fromEntries(this.#counts);
     const finishedAt = this.#now();

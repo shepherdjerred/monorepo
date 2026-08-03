@@ -206,7 +206,11 @@ repository checkout.
   replayable against the actual package version, masking command-output-bearing
   error strings during default inspection, and recording implicit checkout
   discovery through the shared command telemetry boundary.
-- Passed focused typecheck, 91 controller tests, 42 observability tests, lint,
+- Addressed the final three exact-head findings by making event writes and
+  flushes synchronous fail-fast prerequisites, requiring terminal correlation
+  to exactly match its starting event, and rejecting any controller event after
+  shutdown completion.
+- Passed focused typecheck, 94 controller tests, 42 observability tests, lint,
   native-aware build, docs validation, Markdown lint, diff checks, and staged
   Lefthook/Gitleaks/Prettier/lockfile checks.
 - Completed a final non-mutating `openai/gpt-5.6-terra` model/tool turn from the

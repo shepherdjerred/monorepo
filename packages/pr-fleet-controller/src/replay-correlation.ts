@@ -10,6 +10,18 @@ const PARENT_CORRELATION_FIELDS = [
   "toolCallId",
 ] as const;
 
+const TERMINAL_CORRELATION_FIELDS = [
+  "traceId",
+  "causationId",
+  "tickId",
+  "prNumber",
+  "headSha",
+  "generation",
+  "modelTurnId",
+  "toolCallId",
+  "commandId",
+] as const;
+
 type LifecycleCategory = "commands" | "tools" | "workers" | "modelTurns";
 
 function lifecycleKey(
@@ -82,7 +94,14 @@ function closeCorrelatedLifecycle(
   event: RecordedRunEvent,
   relationship: string,
 ): void {
-  requireActiveParent(active, key, event, relationship);
+  const started = requireActiveParent(active, key, event, relationship);
+  for (const field of TERMINAL_CORRELATION_FIELDS) {
+    if (event.correlation[field] !== started.correlation[field]) {
+      throw new Error(
+        `${event.kind} has mismatched ${relationship} correlation field ${field}`,
+      );
+    }
+  }
   active.delete(key);
 }
 
