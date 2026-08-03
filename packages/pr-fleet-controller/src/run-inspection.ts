@@ -1,3 +1,4 @@
+import path from "node:path";
 import {
   JsonValueSchema,
   RunEventPayloadSchema,
@@ -7,6 +8,7 @@ import {
   type RunManifest,
   type RunSummary,
 } from "./run-events.ts";
+import { verifyRunArtifacts } from "./run-artifacts.ts";
 import { canonicalJson, hashEvent } from "./run-hashing.ts";
 import {
   readAndVerifyEvents,
@@ -26,6 +28,7 @@ const RunTerminalPayloadSchema = RunSummarySchema.pick({
   finishedAt: true,
   durationMs: true,
   error: true,
+  artifacts: true,
 });
 
 export type RunBundle = {
@@ -61,9 +64,18 @@ export type ReplayReport = {
 };
 
 export async function loadRunBundle(runDirectory: string): Promise<RunBundle> {
+  const manifest = await readRunManifest(runDirectory);
+  const summary = await readRunSummary(runDirectory);
+  await verifyRunArtifacts(
+    {
+      mastra: path.join(runDirectory, manifest.files.mastra),
+      observability: path.join(runDirectory, manifest.files.observability),
+    },
+    summary.artifacts,
+  );
   return {
-    manifest: await readRunManifest(runDirectory),
-    summary: await readRunSummary(runDirectory),
+    manifest,
+    summary,
     events: await readAndVerifyEvents(runDirectory),
   };
 }

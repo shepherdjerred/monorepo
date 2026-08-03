@@ -384,6 +384,7 @@ async function main(): Promise<void> {
     const store = new FleetStore(config.maxWorkers);
     runtimeInitialization = createFleetMastraRuntime(recorder);
     runtime = await runtimeInitialization;
+    recorder.requireSidecars();
     if (await finishIfRequested()) {
       return;
     }

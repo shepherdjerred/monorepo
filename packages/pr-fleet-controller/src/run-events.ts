@@ -99,6 +99,20 @@ export const RunManifestSchema = z.object({
   }),
 });
 
+export const RunArtifactSchema = z.discriminatedUnion("state", [
+  z.object({ state: z.literal("absent") }),
+  z.object({
+    state: z.literal("present"),
+    bytes: z.number().int().nonnegative(),
+    sha256: z.string().regex(/^[0-9a-f]{64}$/),
+  }),
+]);
+
+export const RunArtifactsSchema = z.object({
+  mastra: RunArtifactSchema,
+  observability: RunArtifactSchema,
+});
+
 export const RunSummarySchema = z.object({
   schemaVersion: z.literal(RUN_BUNDLE_SCHEMA_VERSION),
   runId: z.string().min(1),
@@ -108,6 +122,7 @@ export const RunSummarySchema = z.object({
   eventCount: z.number().int().nonnegative(),
   lastHash: z.string().regex(/^[0-9a-f]{64}$/),
   countsByKind: z.record(z.string(), z.number().int().nonnegative()),
+  artifacts: RunArtifactsSchema,
   finalSnapshot: FleetSnapshotSchema.nullable(),
   error: z
     .object({
@@ -122,4 +137,6 @@ export type RunEventKind = z.infer<typeof RunEventKindSchema>;
 export type RunEventCorrelation = z.infer<typeof RunEventCorrelationSchema>;
 export type RecordedRunEvent = z.infer<typeof RecordedRunEventSchema>;
 export type RunManifest = z.infer<typeof RunManifestSchema>;
+export type RunArtifact = z.infer<typeof RunArtifactSchema>;
+export type RunArtifacts = z.infer<typeof RunArtifactsSchema>;
 export type RunSummary = z.infer<typeof RunSummarySchema>;

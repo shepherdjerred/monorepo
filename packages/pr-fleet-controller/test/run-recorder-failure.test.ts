@@ -123,6 +123,43 @@ test("replay binds every mutable terminal summary field", async () => {
   }
 });
 
+test("bundle loading verifies database sidecars against terminal digests", async () => {
+  stateDirectory = await mkdtemp(path.join(tmpdir(), "pr-fleet-run-"));
+  const recorder = await RunRecorder.create({
+    stateDirectory,
+    controllerVersion: "0.1.0",
+    controllerCommit: "a".repeat(40),
+    controllerSourceDirty: false,
+    controllerSourceFingerprint: "b".repeat(64),
+    model: "openai/gpt-5.6-terra",
+    repository: "example/repository",
+    checkout: "/repo",
+    worktreeRoot: "/repo/worktrees",
+    maxWorkers: 2,
+  });
+  recorder.record("run.started", { phase: "startup" });
+  await Bun.write(recorder.paths.mastra, "mastra-sidecar");
+  await Bun.write(recorder.paths.observability, "observability-sidecar");
+  recorder.requireSidecars();
+  await recorder.finalize("completed", snapshot);
+
+  await expect(
+    loadRunBundle(recorder.paths.runDirectory),
+  ).resolves.toBeDefined();
+  await rm(recorder.paths.mastra);
+  await expect(loadRunBundle(recorder.paths.runDirectory)).rejects.toThrow(
+    "Run artifact mastra.db is missing",
+  );
+  await Bun.write(recorder.paths.mastra, "mastra-sidecar");
+  await expect(
+    loadRunBundle(recorder.paths.runDirectory),
+  ).resolves.toBeDefined();
+  await Bun.write(recorder.paths.observability, "replacement");
+  await expect(loadRunBundle(recorder.paths.runDirectory)).rejects.toThrow(
+    "Run artifact observability.duckdb does not match its recorded digest",
+  );
+});
+
 test("replay reconciles emitted fleet changes with the tick report", async () => {
   stateDirectory = await mkdtemp(path.join(tmpdir(), "pr-fleet-run-"));
   const recorder = await RunRecorder.create({

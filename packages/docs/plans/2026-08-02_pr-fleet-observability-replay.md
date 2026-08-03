@@ -273,7 +273,12 @@ repository checkout.
 - Addressed the next exact-head finding by routing worker-originated telemetry
   capture errors directly to fatal controller shutdown before ordinary worker
   failure settlement can pause or mutate the PR state.
-- Passed focused typecheck, 146 controller tests, 42 observability tests, lint,
+- Addressed the final current-head finding by binding the settled Mastra SQLite
+  and observability DuckDB sidecars into terminal metadata with their presence,
+  byte count, and SHA-256 digest. Successful runtime initialization requires
+  both files, and bundle loading rejects missing or replaced sidecars before
+  inspection or replay.
+- Passed focused typecheck, 147 controller tests, 42 observability tests, lint,
   native-aware build, docs validation, Markdown lint, diff checks, and staged
   Lefthook/Gitleaks/Prettier/lockfile checks.
 - Completed a final non-mutating `openai/gpt-5.6-terra` model/tool turn from the

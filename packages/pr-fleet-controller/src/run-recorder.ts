@@ -1,12 +1,10 @@
 import { createHash } from "node:crypto";
 import {
   access,
-  chmod,
   constants,
   lstat,
   mkdir,
   open,
-  readdir,
   rename,
   unlink,
 } from "node:fs/promises";
@@ -30,6 +28,10 @@ import {
   type RunSummary,
 } from "./run-events.ts";
 import { hashEvent } from "./run-hashing.ts";
+import {
+  describeRunArtifacts,
+  secureRunArtifactFiles,
+} from "./run-artifacts.ts";
 import type { FleetSnapshot } from "./schemas.ts";
 import {
   SynchronousEventFile,
@@ -187,6 +189,7 @@ export class RunRecorder implements FleetTelemetry {
   #sequence = 0;
   #lastHash = GENESIS_EVENT_HASH;
   #closed = false;
+  #sidecarsRequired = false;
   readonly #writeEvent: SynchronousFileSinkWriter;
   #finalizationPromise: Promise<RunSummary> | undefined;
 
@@ -265,6 +268,10 @@ export class RunRecorder implements FleetTelemetry {
   configureSecretValues(values: readonly string[]): void {
     validateSecretValues(values);
     this.#secretValues = values;
+  }
+
+  requireSidecars(): void {
+    this.#sidecarsRequired = true;
   }
 
   async initializeController(controller: {
@@ -353,34 +360,16 @@ export class RunRecorder implements FleetTelemetry {
       hash: hashEvent(unsigned),
     });
     const line = `${JSON.stringify(event)}\n`;
-    // Audit capture is a prerequisite for controller work. Persist and sync the
-    // event before returning so a full disk or failed state volume stops the
-    // caller before it can perform the action represented by the next event.
+    // Persist and sync before returning so capture failure stops the caller
+    // before it can perform the action represented by the next event.
     this.#eventsFile.write(line, kind, this.#writeEvent);
     this.#sequence = event.sequence;
     this.#lastHash = event.hash;
     this.#counts.set(kind, (this.#counts.get(kind) ?? 0) + 1);
   }
 
-  async secureArtifact(file: string): Promise<void> {
-    const stats = await lstat(file);
-    if (!stats.isFile() || stats.isSymbolicLink()) {
-      throw new Error(`Run artifact is not a regular file: ${file}`);
-    }
-    await chmod(file, PRIVATE_FILE_MODE);
-  }
-
   async secureRunArtifacts(): Promise<void> {
-    const entries = await readdir(this.paths.runDirectory, {
-      withFileTypes: true,
-    });
-    for (const entry of entries) {
-      const artifact = path.join(this.paths.runDirectory, entry.name);
-      if (!entry.isFile() || entry.isSymbolicLink()) {
-        throw new Error(`Unexpected non-file run artifact: ${artifact}`);
-      }
-      await this.secureArtifact(artifact);
-    }
+    await secureRunArtifactFiles(this.paths.runDirectory);
   }
 
   finalize(
@@ -400,6 +389,16 @@ export class RunRecorder implements FleetTelemetry {
     if (this.#closed) {
       return readRunSummary(this.paths.runDirectory);
     }
+    const artifacts = await describeRunArtifacts(this.paths);
+    if (
+      this.#sidecarsRequired &&
+      (artifacts.mastra.state !== "present" ||
+        artifacts.observability.state !== "present")
+    ) {
+      throw new Error(
+        "Initialized controller run is missing a required database sidecar",
+      );
+    }
     const kind = status === "completed" ? "run.completed" : "run.failed";
     const finishedAt = this.#now();
     const durationMs = Math.max(
@@ -413,6 +412,7 @@ export class RunRecorder implements FleetTelemetry {
       finishedAt: finishedAt.toISOString(),
       durationMs,
       error: redactedError,
+      artifacts,
     });
     this.#eventsFile.close();
     this.#closed = true;
@@ -426,6 +426,7 @@ export class RunRecorder implements FleetTelemetry {
       eventCount: this.#sequence,
       lastHash: this.#lastHash,
       countsByKind,
+      artifacts,
       finalSnapshot:
         finalSnapshot === null
           ? null
