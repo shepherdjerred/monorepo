@@ -52,6 +52,75 @@ function pathIsInside(parent: string, candidate: string): boolean {
   );
 }
 
+function isMissingPath(error: unknown): boolean {
+  return error instanceof Error && "code" in error && error.code === "ENOENT";
+}
+
+async function pathExists(candidate: string): Promise<boolean> {
+  try {
+    await lstat(candidate);
+    return true;
+  } catch (error) {
+    if (isMissingPath(error)) {
+      return false;
+    }
+    throw error;
+  }
+}
+
+async function findGitRepositoryRoot(
+  controllerDirectory: string,
+): Promise<string | null> {
+  let current = await realpath(controllerDirectory);
+  while (path.dirname(current) !== current) {
+    if (await pathExists(path.join(current, ".git"))) {
+      return current;
+    }
+    current = path.dirname(current);
+  }
+  return (await pathExists(path.join(current, ".git"))) ? current : null;
+}
+
+async function canonicalizePotentialPath(candidate: string): Promise<string> {
+  const missing: string[] = [];
+  let current = path.resolve(candidate);
+  while (!(await pathExists(current))) {
+    const parent = path.dirname(current);
+    if (parent === current) {
+      throw new Error(
+        `Unable to resolve state directory ancestry: ${candidate}`,
+      );
+    }
+    missing.unshift(path.basename(current));
+    current = parent;
+  }
+  return path.join(await realpath(current), ...missing);
+}
+
+/**
+ * Reject an explicit state root inside the executing controller repository
+ * before RunRecorder creates any files there. The later Git-based provenance
+ * check remains the authoritative backstop after capture begins.
+ */
+export async function assertStateRootOutsideControllerRepository(
+  stateRoot: string,
+  controllerDirectory = path.join(import.meta.dir, ".."),
+): Promise<void> {
+  const repositoryRoot = await findGitRepositoryRoot(controllerDirectory);
+  if (repositoryRoot === null) {
+    return;
+  }
+  const [canonicalRepositoryRoot, canonicalStateRoot] = await Promise.all([
+    realpath(repositoryRoot),
+    canonicalizePotentialPath(stateRoot),
+  ]);
+  if (pathIsInside(canonicalRepositoryRoot, canonicalStateRoot)) {
+    throw new Error(
+      `Run-bundle state directory must be outside the controller repository: ${stateRoot}`,
+    );
+  }
+}
+
 async function hashUntrackedFile(
   hash: ReturnType<typeof createHash>,
   repositoryRoot: string,

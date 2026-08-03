@@ -35,6 +35,10 @@ import {
   writeFileSinkSynchronously,
   type SynchronousFileSinkWriter,
 } from "./synchronous-file-sink.ts";
+import {
+  redactFleetSnapshotBodies,
+  redactSummaryError,
+} from "./run-summary-redaction.ts";
 
 const PRIVATE_DIRECTORY_MODE = 0o700;
 const PRIVATE_FILE_MODE = 0o600;
@@ -400,23 +404,22 @@ export class RunRecorder implements FleetTelemetry {
     this.#closed = true;
     const countsByKind = Object.fromEntries(this.#counts);
     const finishedAt = this.#now();
-    const summary = RunSummarySchema.parse(
-      this.redact({
-        schemaVersion: RUN_BUNDLE_SCHEMA_VERSION,
-        runId: this.runId,
-        status,
-        finishedAt: finishedAt.toISOString(),
-        durationMs: Math.max(
-          0,
-          finishedAt.getTime() - this.#createdAt.getTime(),
-        ),
-        eventCount: this.#sequence,
-        lastHash: this.#lastHash,
-        countsByKind,
-        finalSnapshot,
-        error: error === null ? null : errorDetails(error),
-      }),
-    );
+    const details = error === null ? null : errorDetails(error);
+    const summary = RunSummarySchema.parse({
+      schemaVersion: RUN_BUNDLE_SCHEMA_VERSION,
+      runId: this.runId,
+      status,
+      finishedAt: finishedAt.toISOString(),
+      durationMs: Math.max(0, finishedAt.getTime() - this.#createdAt.getTime()),
+      eventCount: this.#sequence,
+      lastHash: this.#lastHash,
+      countsByKind,
+      finalSnapshot:
+        finalSnapshot === null
+          ? null
+          : redactFleetSnapshotBodies(finalSnapshot, this.#secretValues),
+      error: redactSummaryError(details, this.#secretValues),
+    });
     await secureWriteJson(this.paths.summary, summary);
     await this.secureRunArtifacts();
     return summary;

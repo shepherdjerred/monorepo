@@ -10,7 +10,10 @@ import { z } from "zod";
 import { MastraMaster, MastraWorkerRunner } from "./agents.ts";
 import { combineFailures, normalizeFailure } from "./cli-failures.ts";
 import { FleetController } from "./controller.ts";
-import { resolveControllerSource } from "./controller-metadata.ts";
+import {
+  assertStateRootOutsideControllerRepository,
+  resolveControllerSource,
+} from "./controller-metadata.ts";
 import { CommandFleetEnvironment } from "./environment.ts";
 import {
   createFleetMastraRuntime,
@@ -190,6 +193,9 @@ async function createBootstrapRecorder(
     path.join(bootstrapCheckout, ".claude", "worktrees", "pr-fleet");
   const bootstrapMaxWorkers = rawOptionValue(args, "max-workers") ?? "5";
   const stateDirectory = rawOptionValue(args, "state-dir");
+  if (stateDirectory !== undefined) {
+    await assertStateRootOutsideControllerRepository(stateDirectory);
+  }
   const recorder = await RunRecorder.create({
     ...(stateDirectory === undefined ? {} : { stateDirectory }),
     controllerVersion,

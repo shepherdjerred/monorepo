@@ -1,8 +1,11 @@
 import { afterEach, expect, test } from "bun:test";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { resolveControllerSource } from "@shepherdjerred/pr-fleet-controller/src/controller-metadata.ts";
+import {
+  assertStateRootOutsideControllerRepository,
+  resolveControllerSource,
+} from "@shepherdjerred/pr-fleet-controller/src/controller-metadata.ts";
 import type { CommandRequest } from "@shepherdjerred/pr-fleet-controller/src/ports.ts";
 import { runCommand } from "@shepherdjerred/pr-fleet-controller/src/process-runner.ts";
 
@@ -115,4 +118,20 @@ test("records clean and dirty identities for the exact controller source tree", 
   ).rejects.toThrow(
     "Run-bundle state directory must be outside the controller repository",
   );
+});
+
+test("rejects an uncreated in-repository state root before writing it", async () => {
+  const repository = await mkdtemp(path.join(tmpdir(), "controller-state-"));
+  temporaryDirectories.push(repository);
+  const controllerDirectory = path.join(repository, "packages", "controller");
+  await git(repository, ["init", "--quiet"]);
+  await mkdir(controllerDirectory, { recursive: true });
+  const stateRoot = path.join(repository, "uncreated", "state");
+
+  await expect(
+    assertStateRootOutsideControllerRepository(stateRoot, controllerDirectory),
+  ).rejects.toThrow(
+    "Run-bundle state directory must be outside the controller repository",
+  );
+  await expect(stat(stateRoot)).rejects.toThrow();
 });

@@ -214,7 +214,11 @@ repository checkout.
   finalization until active preflight commands settle, retaining already-shown
   master output on aborted turns, and requiring `run.started` to open every
   replayed event stream.
-- Passed focused typecheck, 97 controller tests, 42 observability tests, lint,
+- Addressed the next two exact-head findings by redacting only prose-bearing
+  summary fields so credentials cannot corrupt lifecycle control values and by
+  rejecting in-repository state roots before any run-bundle artifact is
+  created.
+- Passed focused typecheck, 99 controller tests, 42 observability tests, lint,
   native-aware build, docs validation, Markdown lint, diff checks, and staged
   Lefthook/Gitleaks/Prettier/lockfile checks.
 - Completed a final non-mutating `openai/gpt-5.6-terra` model/tool turn from the

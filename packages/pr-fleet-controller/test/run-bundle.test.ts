@@ -428,6 +428,17 @@ describe("local run bundles", () => {
     );
   });
 
+  test("does not redact summary control fields that equal a secret", async () => {
+    const recorder = await createRecorder(["completed"]);
+    recorder.record("run.started", { phase: "startup" });
+    const summary = await recorder.finalize("completed", snapshot);
+
+    expect(summary.status).toBe("completed");
+    expect(await loadRunBundle(recorder.paths.runDirectory)).toMatchObject({
+      summary: { status: "completed" },
+    });
+  });
+
   test("rejects short explicit secrets before creating a bundle", async () => {
     await expect(createRecorder(["abc"])).rejects.toThrow(
       "Explicit run-bundle secret values must be at least 8 characters",
