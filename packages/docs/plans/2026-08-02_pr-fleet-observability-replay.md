@@ -232,7 +232,10 @@ repository checkout.
 - Addressed three subsequent exact-head findings by separating successful tool
   operations from completion-capture failures, requiring fleet snapshots to
   reference active ticks, and enforcing the shutdown boundary for failed runs.
-- Passed focused typecheck, 113 controller tests, 42 observability tests, lint,
+- Addressed two further exact-head findings by separating successful command
+  execution and worker model turns from their completion-capture writes, so a
+  recorder failure cannot relabel or retry an already-completed mutation.
+- Passed focused typecheck, 116 controller tests, 42 observability tests, lint,
   native-aware build, docs validation, Markdown lint, diff checks, and staged
   Lefthook/Gitleaks/Prettier/lockfile checks.
 - Completed a final non-mutating `openai/gpt-5.6-terra` model/tool turn from the

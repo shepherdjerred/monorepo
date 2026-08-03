@@ -19,6 +19,7 @@ import {
 import type { FleetStore } from "./state.ts";
 import type { RunEventCorrelation } from "./run-events.ts";
 import { createWorkerTools } from "./tools.ts";
+import { runRecordedWorkerAttempt } from "./recorded-worker-attempt.ts";
 
 const MASTER_INSTRUCTIONS = `You are the conversational master for a deterministic PR fleet controller.
 Use only the provided control-plane tools. Never claim a state you have not obtained
@@ -128,48 +129,40 @@ Additional user guidance: ${guidance.length === 0 ? "none" : guidance.join("\n")
           modelTurnId,
         };
         activeAttemptCorrelation = correlation;
-        this.#telemetry.record(
-          "worker.attempt.started",
-          { attempt: attemptNumber, prompt: attemptPrompt },
-          correlation,
-        );
         try {
-          const result = await agent.generate(attemptPrompt, {
-            abortSignal: signal,
-            maxSteps: 20,
-            structuredOutput: {
-              schema: WorkerResultSchema,
-              jsonPromptInjection: "auto",
-              errorStrategy: "strict",
-            },
-            tracingOptions: {
-              traceId,
-              metadata: {
-                runId: this.#telemetry.runId,
-                prNumber: pr.identity.number,
-                headSha: pr.identity.headSha,
-                generation: pr.agentGeneration,
-                attempt: attemptNumber,
-              },
-              tags: ["pr-fleet", "worker"],
+          const outcome = await runRecordedWorkerAttempt({
+            attempt: attemptNumber,
+            prompt: attemptPrompt,
+            telemetry: this.#telemetry,
+            correlation,
+            run: async () => {
+              const result = await agent.generate(attemptPrompt, {
+                abortSignal: signal,
+                maxSteps: 20,
+                structuredOutput: {
+                  schema: WorkerResultSchema,
+                  jsonPromptInjection: "auto",
+                  errorStrategy: "strict",
+                },
+                tracingOptions: {
+                  traceId,
+                  metadata: {
+                    runId: this.#telemetry.runId,
+                    prNumber: pr.identity.number,
+                    headSha: pr.identity.headSha,
+                    generation: pr.agentGeneration,
+                    attempt: attemptNumber,
+                  },
+                  tags: ["pr-fleet", "worker"],
+                },
+              });
+              return WorkerResultSchema.parse(result.object);
             },
           });
-          const parsed = WorkerResultSchema.parse(result.object);
-          this.#telemetry.record(
-            "worker.attempt.completed",
-            { attempt: attemptNumber, result: parsed },
-            correlation,
-          );
-          return parsed;
-        } catch (error) {
-          const normalized =
-            error instanceof Error ? error : new Error(String(error));
-          firstError ??= normalized;
-          this.#telemetry.record(
-            "worker.attempt.failed",
-            { attempt: attemptNumber, error: normalized.message },
-            correlation,
-          );
+          if (outcome.status === "completed") {
+            return outcome.result;
+          }
+          firstError ??= outcome.error;
         } finally {
           activeAttemptCorrelation = {};
         }
