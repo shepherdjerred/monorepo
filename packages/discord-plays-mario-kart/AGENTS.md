@@ -49,6 +49,18 @@ automated gate; these harnesses are for driving the real game.
   offset without including Discord. Positive A/V offset means audio lags.
   `--audio-delay-ms` and `--video-delay-frames` inject known delays for analyzer
   validation.
+- **`e2e-viewer-stats.ts`** (`bun run e2e:viewer-stats`) — receive-side WebRTC
+  ruler for the Discord viewer leg. Polls `RTCInboundRtpStreamStats`
+  (jitterBufferDelay, freezeCount, packetsLost, decode FPS) plus selected-pair
+  RTT from a PinchTab-driven Discord web-client tab watching the Go-Live stream,
+  giving viewer-side numbers no server-side metric can see. Discord hides its
+  `RTCPeerConnection`, so the script installs a constructor hook that only
+  captures peers created _after_ it runs: start it before the viewer joins, or
+  pass `--reload` to reload the tab (it reinstalls the hook, then you re-join
+  voice and re-open the stream before sampling). Prerequisites: a running
+  PinchTab instance with a Discord tab, `--tab <tabId>`, and a `PINCHTAB_TOKEN`
+  (env or the standard PinchTab config file). Flags: `--duration`,
+  `--interval-ms`, `--out`, `--pinchtab`, `--reload`.
 - **`lib/harness.ts`** — reusable primitives: `resolveRom`, `bootEmulator`
   (sprint mode, deterministic per-tick), `driveUntil({schedule, until,
 timeoutFrames, onTick})`, `captureScreenshot({path, names, screenMode})`.

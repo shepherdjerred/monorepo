@@ -86,6 +86,28 @@ async function evaluate(expression: string): Promise<unknown> {
   return body.result;
 }
 
+// Retry an evaluate until the page realm is ready. A reload tears down the
+// evaluation context, so the first calls against the fresh page throw until
+// navigation settles; this polls through that window instead of racing it.
+async function evaluateWithRetry(
+  expression: string,
+  attempts: number,
+  delayMs: number,
+): Promise<unknown> {
+  let lastErr: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await evaluate(expression);
+    } catch (error) {
+      lastErr = error;
+      await sleep(delayMs);
+    }
+  }
+  throw new Error(
+    `evaluate did not succeed after ${String(attempts)} attempts: ${String(lastErr)}`,
+  );
+}
+
 // Constructor hook. Idempotent; static members (generateCertificate) are
 // carried via setPrototypeOf so Discord's own code keeps working.
 const HOOK = `(() => {
@@ -114,9 +136,15 @@ const POLL = `(() => {
   const peers = globalThis.__rtcPeers ?? [];
   const live = peers.filter((p) => p.connectionState === "connected");
   const pc = live.at(-1) ?? peers.at(-1);
-  if (pc) {
+  // Serialize getStats(): if the previous call is still pending — getStats can
+  // outlast --interval-ms during the very viewer stalls this ruler diagnoses —
+  // skip this tick instead of racing a second promise into the single __vsLast
+  // slot, where out-of-order resolution would reverse or drop counter samples.
+  if (pc && globalThis.__vsInFlight !== true) {
+    globalThis.__vsInFlight = true;
     pc.getStats().then((report) => {
       const out = { pageAtMs: Date.now(), video: null, pairRttMs: null };
+      let selectedPairId = null;
       report.forEach((s) => {
         if (s.type === "inbound-rtp" && s.kind === "video") {
           out.video = {
@@ -140,14 +168,43 @@ const POLL = `(() => {
           };
         }
         if (
-          s.type === "candidate-pair" &&
-          (s.state === "succeeded" || s.nominated === true) &&
-          typeof s.currentRoundTripTime === "number"
+          s.type === "transport" &&
+          typeof s.selectedCandidatePairId === "string"
         ) {
-          out.pairRttMs = s.currentRoundTripTime * 1000;
+          selectedPairId = s.selectedCandidatePairId;
         }
       });
+      // RTT must come from the ONE pair actually carrying media. Read the pair
+      // named by the transport's selectedCandidatePairId; accepting every
+      // "succeeded" pair let forEach leave whichever idle pair it visited last.
+      let rtt = null;
+      if (selectedPairId !== null) {
+        const pair = report.get(selectedPairId);
+        if (pair && typeof pair.currentRoundTripTime === "number") {
+          rtt = pair.currentRoundTripTime;
+        }
+      }
+      if (rtt === null) {
+        // Older stacks omit transport.selectedCandidatePairId; fall back to the
+        // nominated+succeeded pair (spec guarantees at most one).
+        report.forEach((s) => {
+          if (
+            s.type === "candidate-pair" &&
+            s.nominated === true &&
+            s.state === "succeeded" &&
+            typeof s.currentRoundTripTime === "number"
+          ) {
+            rtt = s.currentRoundTripTime;
+          }
+        });
+      }
+      if (rtt !== null) out.pairRttMs = rtt * 1000;
       globalThis.__vsLast = out;
+    }).catch(() => {
+      // A peer can close between selection and getStats(); drop this tick and
+      // let the next poll re-select a live peer.
+    }).finally(() => {
+      globalThis.__vsInFlight = false;
     });
   }
   return JSON.stringify({ prev, peerCount: peers.length, liveCount: live.length });
@@ -203,6 +260,13 @@ if (RELOAD) {
     // The navigation tears down the evaluation context; that IS the success
     // signal for a reload.
   });
+  // The reload destroyed the page realm that held the constructor hook
+  // (__rtcHooked / __rtcPeers / the patched RTCPeerConnection), so any peer the
+  // operator creates after rejoining would go unrecorded and every poll would
+  // see zero peers. Wait for the fresh realm and reinstall the hook BEFORE
+  // asking them to rejoin.
+  const reHookResult = await evaluateWithRetry(HOOK, 30, 500);
+  console.error(`re-hook: ${String(reHookResult)}`);
   console.error(
     "reloaded — re-join voice + re-open the stream, then sampling begins",
   );
