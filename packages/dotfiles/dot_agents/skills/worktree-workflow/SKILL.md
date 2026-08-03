@@ -7,13 +7,7 @@ description: |
 
 # Git Worktree Workflow Agent
 
-> **A monorepo worktree holds one stack owned by one tool.** New work uses
-> GitHub's native stacks: load `gh-stack`, initialize the worktree branch with
-> `gh stack init --base main <branch>`, and keep its full lifecycle on
-> `gh stack`. Existing git-spice work, including new layers on top of it, stays
-> on `git-spice-helper` and `git-spice`. Never mix the tools. Bare
-> `gh pr create` and manual-rebase examples below are generic references for
-> other repositories, stateless bots, or forks.
+> **Branch & PR management in `shepherdjerred/monorepo` uses git-spice — every PR is a stacked PR, and a worktree holds one stack.** Load the `git-spice-helper` skill first (it's authoritative); create/update PRs with `git-spice branch/stack submit` — a single PR is a stack of one. The `gh pr create` and manual-`git rebase` examples below are the generic fallback for repos without git-spice.
 
 ## What's New in Git Worktree & AI Agents (2025)
 
@@ -605,20 +599,6 @@ fi
 
 The generic workflow above applies, but this repo nests worktrees at `.claude/worktrees/<name>` and has fresh-worktree setup gotchas. Use the monorepo command from the root `CLAUDE.md` (`git worktree add .claude/worktrees/<slug> -b feature/<slug> origin/main`).
 
-For newly rooted work, trust the worktree and register its existing branch as a
-one-layer native stack before editing:
-
-```bash
-cd .claude/worktrees/<slug>
-mise trust -y --all
-gh stack init --base main feature/<slug>
-```
-
-Add dependent layers with `gh stack add <branch>`, publish drafts with
-`gh stack submit --auto`, and inspect state with `gh stack view --json`. If the
-worktree instead contains an existing git-spice branch/stack, skip
-`gh stack init`, load `git-spice-helper`, and continue only with `git-spice`.
-
 ### Team / multi-agent work stays out of main
 
 When spawning a team of agents to implement a plan, every teammate works in its own worktree (e.g. `.claude/worktrees/<feature>-<role>`), never the user's main checkout — bake the worktree-setup commands into each teammate's bootstrap prompt so they don't `cd` into main. The team lead coordinates from its own session and does not edit monorepo files in main either.
@@ -655,13 +635,6 @@ local pre-commit hook.
 A concurrent cleanup/prune over `.claude/worktrees/*` can delete your worktree's working tree AND its `.git` pointer mid-session. Symptoms: `git rev-parse --show-toplevel` suddenly returns the MAIN checkout and `--abbrev-ref HEAD` says `main`; files you read minutes ago are gone; Edit/Write fail with 'File does not exist'; `git worktree list` marks the worktree `prunable`. The branch ref + admin dir usually survive at `<main>/.git/worktrees/<name>/`, so committed work is safe.
 
 Recovery: (1) recreate the deleted pointer — `printf 'gitdir: <main>/.git/worktrees/<name>\n' > <worktree>/.git`; (2) VERIFY `git -C <worktree> rev-parse --show-toplevel` is the worktree (not main) before any restore, else a reset hits main; (3) `git reset --hard HEAD` to repopulate, then reinstall `node_modules` (untracked, also wiped). If the entire dir is gone, from main run `git worktree prune` then `git worktree add .claude/worktrees/<name> <branch>`. Commit + push ASAP afterward in case the cleanup re-fires.
-
-## Generic worktree automation reference
-
-The remaining scripts demonstrate worktree mechanics for repositories without
-this monorepo's stack policy. Do not copy their bare `gh pr create`, raw rebase,
-or merge commands into monorepo human/agent feature work; use the stack owner
-described above.
 
 ## Integration with PR Workflow
 

@@ -216,8 +216,6 @@ export async function closeSeasonRefreshPr(
 export async function openSeasonRefreshPr(
   input: OpenPrInput,
 ): Promise<OpenPrResult> {
-  // This helper owns a stateless, single-PR bot flow in a fresh clone. It
-  // intentionally uses plain gh instead of either human/agent stack tool.
   const askpass = await writeGitAskpass(input.tempDir);
   const gitEnv = {
     GH_TOKEN: input.ghToken,

@@ -3,7 +3,7 @@ name: pr-monitor
 description: |
   Monitor a PR through reviews and merge conflicts until ready for human review.
   Use when user says "monitor PR", "watch PR", or wants automated PR workflow.
-  Creates PR with its existing stack owner if needed, then monitors review comments and merge conflicts.
+  Creates PR if needed, then monitors review comments and merge conflicts.
   Note: this monorepo's CI runs on Buildkite (`buildkite/monorepo/pr` + `ci/merge-conflict`) per PR — watch it via `bk build view` or the Buildkite web UI, not `gh run`.
 user-invocable: true
 allowed-tools:
@@ -18,12 +18,7 @@ allowed-tools:
 
 # PR Monitor Skill
 
-> **Preserve the monorepo's stack owner while monitoring.** New work uses
-> GitHub's native stacks: load `gh-stack` and use `gh stack`. Work already
-> managed by git-spice stays on git-spice: load `git-spice-helper` and use
-> `git-spice`. Never mix the tools. Bare `gh pr create` and manual-rebase
-> examples are generic fallbacks for other repositories, stateless bots, or
-> forks.
+> **Branch & PR management in `shepherdjerred/monorepo` uses git-spice — every PR is a stacked PR.** Load the `git-spice-helper` skill first (it's authoritative); create/update PRs with `git-spice branch/stack submit` — a single PR is a stack of one. The `gh pr create` and manual-`git rebase` examples below are the generic fallback for repos without git-spice.
 
 Automates the complete PR workflow: create PR, monitor reviews/conflicts, fix issues, and notify when ready.
 
@@ -34,11 +29,8 @@ Automates the complete PR workflow: create PR, monitor reviews/conflicts, fix is
 When invoked:
 
 1. **Create PR** (if not already created)
-   - Determine and load the stack owner before mutating the branch.
-   - For new native-stack work, run `gh stack submit --auto`.
-   - For existing git-spice work, submit/update it with `git-spice`.
-   - Use bare `gh pr create` only for a documented stateless bot, fork, or
-     non-monorepo workflow.
+   - Push current branch to remote
+   - Create PR with `gh pr create`
 
 2. **Monitor Loop** (every 60 seconds)
    Check two things and resolve issues found:
@@ -51,8 +43,7 @@ When invoked:
 
    ### B. Merge Conflicts
    - Check if behind main with `git fetch origin main && git merge-base --is-ancestor origin/main HEAD`
-   - If behind, use the owning stack skill's sync/rebase flow and resolve any
-     conflicts that arise; never merge/rebase the stack by hand
+   - If behind, merge from main and resolve any conflicts that arise
    - YOU are responsible for merge conflicts, not the user
 
 3. **Completion Check**
@@ -66,13 +57,14 @@ When invoked:
 
 ## Commands Reference
 
-### Create/Check PR in this monorepo
+### Create/Check PR
 
 ```bash
-# New native-stack work: push and create/update draft PRs
-gh stack submit --auto
+# Push branch
+git push -u origin $(git branch --show-current)
 
-# Existing git-spice work: load git-spice-helper, then submit with git-spice.
+# Create PR
+gh pr create --fill
 
 # Check if PR exists
 gh pr view --json number,url
@@ -91,14 +83,22 @@ gh api repos/{owner}/{repo}/pulls/{number}/comments
 gh pr view --json reviewDecision --jq '.reviewDecision'
 ```
 
-### Handle Merge Conflicts in this monorepo
+### Handle Merge Conflicts
 
 ```bash
-# New native-stack work
-gh stack sync
+# Fetch latest main
+git fetch origin main
 
-# Existing git-spice work: load git-spice-helper, then use its
-# branch-restack and update-only submission flow.
+# Check if behind main
+git merge-base --is-ancestor origin/main HEAD && echo "Up to date" || echo "Need to merge"
+
+# Merge from main
+git merge origin/main
+
+# After resolving conflicts
+git add .
+git commit -m "Merge main and resolve conflicts"
+git push
 ```
 
 ### Amend and Push
