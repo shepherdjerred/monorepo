@@ -33,6 +33,9 @@ function makeGoalConfig(runtimeDirectory: string): Config["game"]["goal"] {
     max_runtime_minutes: 30,
     lock_minutes: 5,
     progress_update_interval_seconds: 60,
+    // Long real-clock floor so the interval timer never fires in tests that
+    // don't exercise it; interval tests override with a sub-second value.
+    update_interval_seconds: 600,
     command_limits: {
       max_quantity_per_action: 60,
       chord_max_commands: 32,
@@ -639,5 +642,145 @@ describe("GoalManager history", () => {
         path.join(runtimeDirectory, "goal-memory", "MEMORY.md"),
       ).exists(),
     ).toBe(true);
+  });
+});
+
+async function waitForCondition(
+  poll: () => boolean,
+  timeoutMs: number,
+): Promise<void> {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    if (poll()) return;
+    await Bun.sleep(10);
+  }
+  throw new Error("waitForCondition timeout");
+}
+
+describe("GoalManager interval status updates", () => {
+  const originalOpenAiKey = Bun.env.OPENAI_API_KEY;
+
+  beforeEach(() => {
+    Bun.env.OPENAI_API_KEY = "test-key";
+  });
+
+  afterEach(() => {
+    if (originalOpenAiKey === undefined) {
+      delete Bun.env.OPENAI_API_KEY;
+    } else {
+      Bun.env.OPENAI_API_KEY = originalOpenAiKey;
+    }
+  });
+
+  test("posts a floor status update with recent tool calls and stops on terminal paths", async () => {
+    const runtimeDirectory = await createRuntimeDirectory();
+    const messages: GoalDiscordMessage[] = [];
+    const process = makeProcess();
+    const manager = new GoalManager({
+      // Real clock (no `now` override): the floor check compares against
+      // wall time, and the timer is a real setInterval.
+      config: {
+        ...makeGoalConfig(runtimeDirectory),
+        update_interval_seconds: 0.1,
+      },
+      controlToken: "token",
+      spawner: () => process,
+      sendMessage: async (message) => {
+        messages.push(message);
+      },
+    });
+    const started = await manager.startGoal({
+      goal: "walk north",
+      requesterId: "user-a",
+      channelId: "channel",
+    });
+    expect(started.kind).toBe("started");
+    const goalId = manager.getStatus()?.id;
+    if (goalId === undefined) throw new Error("no active goal");
+    manager.recordToolCall(goalId, {
+      method: "POST",
+      path: "/move",
+      status: 200,
+    });
+    manager.recordToolCall(goalId, {
+      method: "POST",
+      path: "/battle/run",
+      status: 400,
+    });
+
+    await waitForCondition(() => messages.length > 0, 3000);
+    const status = messages[0];
+    expect(status?.content).toContain("2 actions");
+    expect(status?.content).toContain("1 /move");
+    expect(status?.content).toContain("1 err");
+    expect(status?.allowedUserIds).toEqual([]);
+
+    // Terminal teardown (claimActive) clears the timer — no posts after.
+    await manager.shutdown();
+    const count = messages.length;
+    await Bun.sleep(350);
+    expect(messages.length).toBe(count);
+  });
+
+  test("stays quiet while agent progress keeps landing inside the window", async () => {
+    const runtimeDirectory = await createRuntimeDirectory();
+    const messages: GoalDiscordMessage[] = [];
+    const manager = new GoalManager({
+      config: {
+        ...makeGoalConfig(runtimeDirectory),
+        update_interval_seconds: 0.25,
+        progress_update_interval_seconds: 0,
+      },
+      controlToken: "token",
+      spawner: () => makeProcess(),
+      sendMessage: async (message) => {
+        messages.push(message);
+      },
+    });
+    await manager.startGoal({
+      goal: "walk north",
+      requesterId: "user-a",
+      channelId: "channel",
+    });
+    for (let i = 0; i < 8; i++) {
+      await manager.publishProgress(`update ${String(i)}`);
+      await Bun.sleep(50);
+    }
+    expect(messages.some((m) => m.content.includes("No new actions"))).toBe(
+      false,
+    );
+    expect(
+      messages.filter((m) => m.content.startsWith("update ")),
+    ).toHaveLength(8);
+    await manager.shutdown();
+  });
+
+  test("dedups identical progress text (milestone + /progress overlap)", async () => {
+    const runtimeDirectory = await createRuntimeDirectory();
+    const messages: GoalDiscordMessage[] = [];
+    const manager = new GoalManager({
+      config: {
+        ...makeGoalConfig(runtimeDirectory),
+        progress_update_interval_seconds: 0,
+      },
+      controlToken: "token",
+      spawner: () => makeProcess(),
+      sendMessage: async (message) => {
+        messages.push(message);
+      },
+    });
+    await manager.startGoal({
+      goal: "walk north",
+      requesterId: "user-a",
+      channelId: "channel",
+    });
+    expect(await manager.publishProgress("heading north")).toBe(true);
+    expect(await manager.publishProgress("heading north")).toBe(false);
+    expect(await manager.publishProgress("entering Oldale")).toBe(true);
+    expect(messages.map((m) => m.content)).toEqual([
+      "heading north",
+      "entering Oldale",
+    ]);
+    await manager.shutdown();
   });
 });

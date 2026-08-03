@@ -69,3 +69,30 @@ export const goalDurationSeconds = new Histogram({
   buckets: [1, 5, 15, 30, 60, 120, 300, 600, 1200, 1800],
   registers: [registry],
 });
+
+export const goalToolCallsTotal = new Counter({
+  name: "pokemon_goal_tool_calls_total",
+  help: "Goal control-server tool calls by route and HTTP status (unknown routes collapse to 'other')",
+  labelNames: ["path", "status"],
+  registers: [registry],
+});
+
+export const goalTokensTotal = new Counter({
+  name: "pokemon_goal_tokens_total",
+  help: "Codex tokens consumed by terminal goal runs, by kind",
+  labelNames: ["kind"],
+  registers: [registry],
+});
+
+export const goalCostUsdTotal = new Counter({
+  name: "pokemon_goal_cost_usd_total",
+  help: "Estimated USD cost of terminal goal runs",
+  registers: [registry],
+});
+
+export const goalProgressUpdatesTotal = new Counter({
+  name: "pokemon_goal_progress_updates_total",
+  help: "Audience-facing goal updates posted to Discord, by source (agent /progress, forwarded milestone, interval floor)",
+  labelNames: ["source"],
+  registers: [registry],
+});

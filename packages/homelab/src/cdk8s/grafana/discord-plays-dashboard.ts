@@ -312,6 +312,109 @@ export function createDiscordPlaysDashboard() {
     }),
   );
 
+  // Goal agent (pokemon only): the `pokemon_goal_*` instruments exist only in
+  // the pokemon backend, so no namespace scoping is needed.
+  builder.withRow(new dashboard.RowBuilder("Goal agent (pokemon)"));
+
+  builder.withPanel(
+    timeSeriesPanel({
+      title: "Goal active",
+      description:
+        "1 while a goal Codex process is running. Stuck at 1 past max_runtime_minutes ⇒ teardown failed.",
+      targets: [{ expr: `max(pokemon_goal_active)`, legend: "active" }],
+      gridPos: { x: 0, y: 65, w: 4, h: 7 },
+    }),
+  );
+
+  builder.withPanel(
+    timeSeriesPanel({
+      title: "Goal runs by status (1h)",
+      targets: [
+        {
+          expr: `sum(increase(pokemon_goal_runs_total[1h])) by (status)`,
+          legend: "{{status}}",
+        },
+      ],
+      gridPos: { x: 4, y: 65, w: 5, h: 7 },
+    }),
+  );
+
+  builder.withPanel(
+    timeSeriesPanel({
+      title: "Goal duration p50 / p95",
+      targets: [
+        {
+          expr: `histogram_quantile(0.5, sum(rate(pokemon_goal_duration_seconds_bucket[1h])) by (le))`,
+          legend: "p50",
+        },
+        {
+          expr: `histogram_quantile(0.95, sum(rate(pokemon_goal_duration_seconds_bucket[1h])) by (le))`,
+          legend: "p95",
+        },
+      ],
+      gridPos: { x: 9, y: 65, w: 5, h: 7 },
+      unit: "s",
+    }),
+  );
+
+  builder.withPanel(
+    timeSeriesPanel({
+      title: "Tool calls (calls/s)",
+      description:
+        "Goal control-server requests by route, plus the 4xx/5xx error rate.",
+      targets: [
+        {
+          expr: `sum(rate(pokemon_goal_tool_calls_total[5m])) by (path)`,
+          legend: "{{path}}",
+        },
+        {
+          expr: `sum(rate(pokemon_goal_tool_calls_total{status=~"4..|5.."}[5m]))`,
+          legend: "errors",
+        },
+      ],
+      gridPos: { x: 14, y: 65, w: 5, h: 7 },
+    }),
+  );
+
+  builder.withPanel(
+    timeSeriesPanel({
+      title: "Tokens by kind (1h)",
+      targets: [
+        {
+          expr: `sum(increase(pokemon_goal_tokens_total[1h])) by (kind)`,
+          legend: "{{kind}}",
+        },
+      ],
+      gridPos: { x: 19, y: 65, w: 5, h: 7 },
+    }),
+  );
+
+  builder.withPanel(
+    timeSeriesPanel({
+      title: "Goal cost (USD, 1h)",
+      targets: [
+        { expr: `increase(pokemon_goal_cost_usd_total[1h])`, legend: "cost" },
+      ],
+      gridPos: { x: 0, y: 72, w: 12, h: 6 },
+      unit: "currencyUSD",
+    }),
+  );
+
+  builder.withPanel(
+    timeSeriesPanel({
+      title: "Discord updates by source (1h)",
+      description:
+        "agent = explicit /progress; milestone = forwarded codex narration; interval = harness floor updates.",
+      targets: [
+        {
+          expr: `sum(increase(pokemon_goal_progress_updates_total[1h])) by (source)`,
+          legend: "{{source}}",
+        },
+      ],
+      gridPos: { x: 12, y: 72, w: 12, h: 6 },
+    }),
+  );
+
   return builder.build();
 }
 

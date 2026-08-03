@@ -1,3 +1,4 @@
+import { z } from "zod";
 import type { Config } from "#src/config/schema.ts";
 import { logger } from "#src/logger.ts";
 import {
@@ -10,6 +11,7 @@ import {
   type GoalControlServerOptions,
 } from "./control-context.ts";
 import { jsonResponse, routeRequest } from "./control-routes.ts";
+import { withSpan } from "@shepherdjerred/discord-plays-core/observability/tracing.ts";
 import { GameController } from "./game-controller.ts";
 import { readGameObservation } from "./game-observation.ts";
 import { enqueueCommand } from "#src/emulator/command-sink.ts";
@@ -69,10 +71,13 @@ export function startGoalControlServer(
     async fetch(request) {
       const token = bearerToken(request);
       const goalId = request.headers.get("x-pokemon-goal-id") ?? undefined;
-      const finishControl =
-        token === undefined || goalId === undefined
-          ? undefined
-          : options.goalManager.beginControlRequest(token, goalId);
+      if (token === undefined || goalId === undefined) {
+        return jsonResponse({ error: "unauthorized" }, 401);
+      }
+      const finishControl = options.goalManager.beginControlRequest(
+        token,
+        goalId,
+      );
       if (finishControl === undefined) {
         return jsonResponse({ error: "unauthorized" }, 401);
       }
@@ -80,7 +85,27 @@ export function startGoalControlServer(
         const url = new URL(request.url);
         const startedAt = Date.now();
         try {
-          const routed = await routeRequest(context, request);
+          const routed = await withSpan(
+            "pokemon.goal.http_tool",
+            async (span) => {
+              span?.setAttributes({
+                "http.request.method": request.method,
+                "url.path": url.pathname,
+                "pokemon.goal.id": goalId,
+              });
+              const result = await routeRequest(context, request);
+              span?.setAttributes({
+                "http.response.status_code": result.response.status,
+                "pokemon.goal.duration_ms": Date.now() - startedAt,
+              });
+              return result;
+            },
+          );
+          options.goalManager.recordToolCall(goalId, {
+            method: request.method,
+            path: url.pathname,
+            status: routed.response.status,
+          });
           logGoalTool({
             goalId,
             method: request.method,
@@ -92,10 +117,32 @@ export function startGoalControlServer(
           });
           return routed.response;
         } catch (error) {
-          logger.error(error);
-          const errorBody = {
-            error: error instanceof Error ? error.message : "unknown error",
-          };
+          // Invalid input is a routine agent misfire — the prettified 400 body
+          // is the correction signal, so log it at warn. Anything else is an
+          // unexpected route failure and stays at error.
+          const isZodError = error instanceof z.ZodError;
+          const message = isZodError
+            ? z.prettifyError(error)
+            : error instanceof Error
+              ? error.message
+              : "unknown error";
+          if (isZodError) {
+            logger.warn(
+              `goal control invalid input: ${request.method} ${url.pathname}: ${message}`,
+              { goalId },
+            );
+          } else {
+            logger.error(
+              `goal control request failed: ${request.method} ${url.pathname}: ${message}`,
+              { goalId },
+            );
+          }
+          const errorBody = { error: message };
+          options.goalManager.recordToolCall(goalId, {
+            method: request.method,
+            path: url.pathname,
+            status: 400,
+          });
           logGoalTool({
             goalId,
             method: request.method,

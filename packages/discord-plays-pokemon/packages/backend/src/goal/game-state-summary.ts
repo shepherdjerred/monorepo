@@ -103,7 +103,7 @@ function popcount8(byte: number): number {
   return (n + (n >> 4)) & 0x0f;
 }
 
-function formatLocationLine(spatial: SpatialSnapshot): string {
+export function formatLocationLine(spatial: SpatialSnapshot): string {
   const name = mapName(spatial.mapGroup, spatial.mapNum);
   return `Location: ${name} @ (${String(spatial.x)}, ${String(spatial.y)}) facing ${spatial.facing}, ${spatial.movementMode}`;
 }

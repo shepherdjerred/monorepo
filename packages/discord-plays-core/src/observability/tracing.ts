@@ -15,6 +15,7 @@ import {
   trace,
   SpanStatusCode,
   type DiagLogger,
+  type Span,
   type Tracer,
 } from "@opentelemetry/api";
 import { AsyncLocalStorageContextManager } from "@opentelemetry/context-async-hooks";
@@ -138,17 +139,19 @@ export function getTracer(): Tracer | undefined {
 
 /**
  * Run `fn` inside a span named `name` (a no-op passthrough when telemetry is off).
- * Records exceptions and marks the span errored if `fn` throws.
+ * Records exceptions and marks the span errored if `fn` throws. The live span is
+ * handed to `fn` (undefined when telemetry is off) so callers can attach
+ * attributes; zero-arg callbacks keep working unchanged.
  */
 export async function withSpan<T>(
   name: string,
-  fn: () => Promise<T>,
+  fn: (span?: Span) => Promise<T>,
 ): Promise<T> {
   const t = tracer;
   if (t === undefined) return fn();
   return t.startActiveSpan(name, async (span) => {
     try {
-      return await fn();
+      return await fn(span);
     } catch (error) {
       span.recordException(
         error instanceof Error ? error : new Error(String(error)),

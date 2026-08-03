@@ -27,6 +27,10 @@ export type SpawnGoalCodexInput = {
   requestedBy: string;
   promptContext: PromptContext;
   spawner: GoalProcessSpawner;
+  // Subscribed BEFORE the stdout pump starts so no early agent_message is
+  // lost (post-spawn subscribers race the pump and can miss everything when
+  // stdout drains fast). Used to forward milestones to Discord.
+  onAgentMessage?: (text: string) => void;
 };
 
 export type SpawnedGoalCodex = {
@@ -97,6 +101,14 @@ export async function spawnGoalCodex(
     gameStateSummary: input.promptContext.gameStateSummary,
     initialPrompt: buildTracePrompt(input.goal, input.promptContext),
   });
+  const onAgentMessage = input.onAgentMessage;
+  if (onAgentMessage !== undefined) {
+    jsonl.subscribe((event) => {
+      if (event.kind === "agent_message") {
+        onAgentMessage(event.text);
+      }
+    });
+  }
   // Drain stdout fully before reading jsonl.total() in observeProcess.
   const stdoutPump = pumpCodexStdout(process.stdout, jsonl);
   void streamToLog(process.stderr, "stderr");

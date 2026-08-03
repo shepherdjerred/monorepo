@@ -17,6 +17,7 @@ import {
   mapExitsResponse,
   mapResponse,
   routeSemanticRequest,
+  VALID_BUTTONS_HINT,
 } from "./semantic-control-routes.ts";
 import { routeInformationalRequest } from "./informational-control-routes.ts";
 
@@ -268,21 +269,19 @@ async function pressResponse(
   const commandInput = parseCommandInput(parsed.command);
   if (commandInput === undefined) {
     return {
-      response: jsonResponse({ error: "invalid command" }, 400),
+      response: jsonResponse(
+        { error: `invalid command — ${VALID_BUTTONS_HINT}` },
+        400,
+      ),
       requestMeta,
       logBody: { error: "invalid command" },
     };
   }
-  const quantity = parsed.quantity ?? 1;
-  if (
-    quantity > context.config.game.goal.command_limits.max_quantity_per_action
-  ) {
-    return {
-      response: jsonResponse({ error: "quantity too high" }, 400),
-      requestMeta,
-      logBody: { error: "quantity too high" },
-    };
-  }
+  // Quantity is a tunable, not an identifier — clamp instead of rejecting.
+  const quantity = Math.min(
+    parsed.quantity ?? 1,
+    context.config.game.goal.command_limits.max_quantity_per_action,
+  );
   const nextCommand =
     parsed.holdMs === undefined
       ? { ...commandInput, quantity }
@@ -323,8 +322,19 @@ async function chordResponse(
     chord === undefined ||
     !isValid(chord, goalChordLimits(context.config.game.goal))
   ) {
+    const limits = goalChordLimits(context.config.game.goal);
     return {
-      response: jsonResponse({ error: "invalid chord" }, 400),
+      response: jsonResponse(
+        {
+          error:
+            `invalid chord — space-separated commands like "3a b 2up" ` +
+            `(max ${String(limits.maxCommands)} commands, ` +
+            `${String(limits.maxTotal)} total presses, ` +
+            `${String(limits.maxQuantityPerAction)} per command); ` +
+            VALID_BUTTONS_HINT,
+        },
+        400,
+      ),
       requestMeta,
       logBody: { error: "invalid chord" },
     };

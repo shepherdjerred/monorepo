@@ -117,6 +117,9 @@ max_runtime_minutes = 30
 # another user can replace the goal after this lock expires
 lock_minutes = 5
 progress_update_interval_seconds = 60
+# floor for audience updates: if nothing was posted for this long, the harness
+# composes and posts a status line itself (location + recent actions + milestone)
+update_interval_seconds = 90
 
 # The goal bot is trusted/operator-driven and behind the authed control server,
 # so it gets higher input caps than casual Discord chat users (who stay on the
