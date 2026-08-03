@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import {
@@ -53,6 +53,23 @@ const replayOptions = {
   currentControllerVersion: "0.1.0",
   allowVersionMismatch: false,
 };
+
+test("resolved controller provenance is bound into the event chain", async () => {
+  const recorder = await createRecorder();
+  recorder.record("run.started", { marker: "source-bound" });
+  await recorder.finalize("failed", null, new Error("synthetic stop"));
+  const bundle = await loadRunBundle(recorder.paths.runDirectory);
+  await writeFile(
+    recorder.paths.manifest,
+    `${JSON.stringify({ ...bundle.manifest, controllerCommit: "c".repeat(40) }, null, 2)}\n`,
+    "utf8",
+  );
+  const tamperedBundle = await loadRunBundle(recorder.paths.runDirectory);
+
+  expect(() => replayRunBundle(tamperedBundle, replayOptions)).toThrow(
+    "Resolved manifest digest does not match the event chain",
+  );
+});
 
 test("event and summary snapshots use one redaction policy", async () => {
   const recorder = await createRecorder();
@@ -299,6 +316,55 @@ describe("fleet change ancestry replay", () => {
 
     expect(() => replayRunBundle(bundle, replayOptions)).toThrow(
       `fleet.change references a nonexistent or inactive tick: ${tickId}`,
+    );
+  });
+});
+
+describe("queued tick ancestry replay", () => {
+  test("rejects a queued tick with a fabricated cause", async () => {
+    const recorder = await createRecorder();
+    recorder.record("run.started", { scenario: "orphaned-queued-tick" });
+    recorder.record(
+      "tick.queued",
+      { trigger: "user", snapshot },
+      { causationId: "fabricated-tick" },
+    );
+    await recorder.finalize("failed", null, new Error("capture rejected"));
+    const bundle = await loadRunBundle(recorder.paths.runDirectory);
+
+    expect(() => replayRunBundle(bundle, replayOptions)).toThrow(
+      "tick.queued references a nonexistent or inactive tick: fabricated-tick",
+    );
+  });
+
+  test("rejects a queued tick after its cause completes", async () => {
+    const recorder = await createRecorder();
+    const tickId = recorder.newId("tick");
+    recorder.record("run.started", { scenario: "late-queued-tick" });
+    recorder.record("tick.started", { trigger: "startup" }, { tickId });
+    recorder.record("fleet.snapshot", { snapshot }, { tickId });
+    recorder.record(
+      "tick.completed",
+      {
+        report: {
+          trigger: "startup",
+          snapshot,
+          changes: [],
+          nextHeartbeatSeconds: 600,
+        },
+      },
+      { tickId },
+    );
+    recorder.record(
+      "tick.queued",
+      { trigger: "user", snapshot },
+      { causationId: tickId },
+    );
+    await recorder.finalize("failed", snapshot, new Error("capture rejected"));
+    const bundle = await loadRunBundle(recorder.paths.runDirectory);
+
+    expect(() => replayRunBundle(bundle, replayOptions)).toThrow(
+      `tick.queued references a nonexistent or inactive tick: ${tickId}`,
     );
   });
 });

@@ -309,6 +309,9 @@ export class RunRecorder implements FleetTelemetry {
     });
     await secureReplaceJson(this.paths.manifest, manifest);
     this.manifest = manifest;
+    this.record("controller.initialized", {
+      manifestHash: hashEvent(manifest),
+    });
   }
 
   newId(prefix: string): string {
@@ -334,7 +337,13 @@ export class RunRecorder implements FleetTelemetry {
     if (this.#closed) {
       throw new Error(`Cannot record ${kind} after run finalization`);
     }
-    const redactedPayload = RunEventPayloadSchema.parse(this.redact(payload));
+    const manifestBoundPayload =
+      kind === "run.started"
+        ? { ...payload, manifestHash: hashEvent(this.manifest) }
+        : payload;
+    const redactedPayload = RunEventPayloadSchema.parse(
+      this.redact(manifestBoundPayload),
+    );
     const unsigned = UnsignedRunEventSchema.parse({
       schemaVersion: RUN_BUNDLE_SCHEMA_VERSION,
       runId: this.runId,

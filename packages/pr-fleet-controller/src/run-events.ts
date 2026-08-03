@@ -8,6 +8,7 @@ export const RunEventKindSchema = z.enum([
   "run.started",
   "run.completed",
   "run.failed",
+  "controller.initialized",
   "operator.input",
   "tick.started",
   "tick.queued",

@@ -9,6 +9,7 @@ import {
 } from "./run-events.ts";
 import {
   canonicalJson,
+  hashEvent,
   readAndVerifyEvents,
   readRunManifest,
   readRunSummary,
@@ -248,6 +249,37 @@ function verifyBundleMetadata(
   if (summary.runId !== manifest.runId) {
     throw new Error("Manifest and summary run IDs differ");
   }
+  const runStarted = events[0];
+  if (runStarted?.kind !== "run.started") {
+    throw new Error("Run bundle must begin with run.started");
+  }
+  const initializedBindings = events.filter(
+    (event) => event.kind === "controller.initialized",
+  );
+  if (manifest.controllerSourceResolved) {
+    if (initializedBindings.length > 1) {
+      throw new Error(
+        "Resolved manifest must have exactly one event-chain binding",
+      );
+    }
+    const resolvedBinding = initializedBindings[0] ?? runStarted;
+    if (resolvedBinding.payload["manifestHash"] !== hashEvent(manifest)) {
+      throw new Error(
+        "Resolved manifest digest does not match the event chain",
+      );
+    }
+  } else {
+    if (initializedBindings.length > 0) {
+      throw new Error(
+        "Unresolved manifest has a controller initialization event",
+      );
+    }
+    if (runStarted.payload["manifestHash"] !== hashEvent(manifest)) {
+      throw new Error(
+        "Unresolved manifest digest does not match the event chain",
+      );
+    }
+  }
   const mismatchedEvent = events.find(
     (event) => event.runId !== manifest.runId,
   );
@@ -267,10 +299,6 @@ function verifyBundleMetadata(
   }
   if (lastEvent.hash !== summary.lastHash) {
     throw new Error("Summary last hash does not match the final event");
-  }
-  const firstEvent = events[0];
-  if (firstEvent?.kind !== "run.started") {
-    throw new Error("Run bundle must begin with run.started");
   }
   const expectedRunTerminal =
     summary.status === "completed" ? "run.completed" : "run.failed";

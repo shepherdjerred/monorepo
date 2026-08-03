@@ -508,7 +508,14 @@ describe("local run bundles", () => {
       worktreeRoot: "/repo/worktrees",
       maxWorkers: 5,
     });
-    expect(bundle.events[1]?.payload["detail"]).toBe("token=[REDACTED]");
+    expect(
+      bundle.events.find((event) => event.kind === "controller.initialized")
+        ?.payload["manifestHash"],
+    ).toMatch(/^[0-9a-f]{64}$/);
+    expect(
+      bundle.events.find((event) => event.kind === "environment.result")
+        ?.payload["detail"],
+    ).toBe("token=[REDACTED]");
   });
 });
 

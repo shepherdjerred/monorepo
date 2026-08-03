@@ -257,7 +257,10 @@ repository checkout.
 - Addressed two further exact-head findings by propagating worktree capture
   failures instead of pausing the PR and wrapping environment results plus all
   remaining correlation allocation in the fatal capture boundary.
-- Passed focused typecheck, 136 controller tests, 42 observability tests, lint,
+- Addressed the next two exact-head findings by binding resolved controller
+  provenance into the hash-chained event stream and requiring queued ticks to
+  reference their still-active originating tick during replay.
+- Passed focused typecheck, 139 controller tests, 42 observability tests, lint,
   native-aware build, docs validation, Markdown lint, diff checks, and staged
   Lefthook/Gitleaks/Prettier/lockfile checks.
 - Completed a final non-mutating `openai/gpt-5.6-terra` model/tool turn from the
