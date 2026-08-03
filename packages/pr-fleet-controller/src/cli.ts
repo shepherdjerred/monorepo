@@ -241,26 +241,35 @@ async function main(): Promise<void> {
       store,
       telemetry: recorder,
     });
-    master = new MastraMaster(model, controller, observer, {
+    const activeController = controller;
+    const stop = createSharedShutdown(async () => {
+      const masterSettlement = master?.stop() ?? Promise.resolve();
+      const snapshot = await activeController.stop(masterSettlement);
+      observer.onSnapshot(snapshot);
+      terminal?.close();
+    });
+    const stopAfterMasterRequest = async (): Promise<void> => {
+      try {
+        await stop();
+      } catch (error) {
+        process.stderr.write(
+          `${error instanceof Error ? error.message : String(error)}\n`,
+        );
+        process.exitCode = 1;
+      }
+    };
+    master = new MastraMaster(model, activeController, observer, {
       mastra: runtime.mastra,
       telemetry: recorder,
+      requestShutdown: () => {
+        void stopAfterMasterRequest();
+      },
     });
     terminal = createInterface({
       input: process.stdin,
       output: process.stdout,
     });
 
-    const stop = createSharedShutdown(async () => {
-      const masterSettlement = master?.stop() ?? Promise.resolve();
-      const snapshot =
-        controller === undefined
-          ? await masterSettlement.then(() => null)
-          : await controller.stop(masterSettlement);
-      if (snapshot !== null) {
-        observer.onSnapshot(snapshot);
-      }
-      terminal?.close();
-    });
     process.once("SIGINT", () => {
       void (async (): Promise<void> => {
         try {
@@ -319,7 +328,9 @@ async function main(): Promise<void> {
   } catch (error) {
     let failure = error;
     try {
-      await Promise.all([controller?.stop(), master?.stop()]);
+      const masterSettlement = master?.stop() ?? Promise.resolve();
+      await controller?.stop(masterSettlement);
+      await masterSettlement;
       await runtime?.shutdown();
     } catch (shutdownError) {
       failure = new AggregateError(

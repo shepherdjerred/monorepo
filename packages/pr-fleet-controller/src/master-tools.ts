@@ -18,7 +18,6 @@ export type MasterControllerTools = {
   resume: (pr: number) => void;
   guide: (pr: number, message: string) => void;
   setWorkerLimit: (limit: number) => void;
-  stop: () => Promise<FleetSnapshot>;
 };
 
 type MasterToolTelemetry = {
@@ -69,6 +68,7 @@ export async function runRecordedMasterTool<T>(
 export function createMasterTools(
   controller: MasterControllerTools,
   instrumentation?: MasterToolTelemetry,
+  requestShutdown?: () => void,
 ) {
   return {
     fleet_status: createTool({
@@ -170,10 +170,22 @@ export function createMasterTools(
       description: "Safely stop the fleet controller.",
       inputSchema: z.object({}),
       outputSchema: FleetSnapshotSchema,
-      execute: (input) =>
-        runRecordedMasterTool("stop_controller", input, instrumentation, () =>
-          controller.stop(),
-        ),
+      execute: async (input) => {
+        if (requestShutdown === undefined) {
+          throw new Error("Master shutdown coordination is unavailable");
+        }
+        const result = await runRecordedMasterTool(
+          "stop_controller",
+          input,
+          instrumentation,
+          () => Promise.resolve(controller.snapshot()),
+        );
+        // Request coordinated shutdown only after this tool has emitted its
+        // terminal event. The coordinator aborts and awaits the enclosing
+        // master turn before it permits shutdown.completed.
+        requestShutdown();
+        return result;
+      },
     }),
   };
 }

@@ -49,6 +49,7 @@ type WorkerRunnerOptions = {
 type MasterOptions = {
   mastra?: Mastra;
   telemetry?: FleetTelemetry;
+  requestShutdown: () => void;
 };
 
 function signalIsAborted(signal: AbortSignal): boolean {
@@ -77,7 +78,11 @@ export class MastraWorkerRunner implements WorkerRunner {
     this.#extraSecretNames = options.extraSecretNames ?? [];
   }
 
-  async run(pr: PrState, signal: AbortSignal): Promise<WorkerResult> {
+  async run(
+    pr: PrState,
+    signal: AbortSignal,
+    tickId: string | undefined,
+  ): Promise<WorkerResult> {
     const guidance = this.#store.takeGuidance(pr.identity.number);
     const prNumber = String(pr.identity.number);
     const generation = String(pr.agentGeneration);
@@ -116,6 +121,7 @@ Additional user guidance: ${guidance.length === 0 ? "none" : guidance.join("\n")
             : `${prompt}\nThe prior response failed schema validation. Return every required field.`;
         const correlation = {
           traceId,
+          ...(tickId === undefined ? {} : { tickId }),
           prNumber: pr.identity.number,
           headSha: pr.identity.headSha,
           generation: pr.agentGeneration,
@@ -194,7 +200,7 @@ export class MastraMaster {
     model: MastraModelConfig,
     controller: MasterControllerTools,
     observer: FleetObserver,
-    options: MasterOptions = {},
+    options: MasterOptions,
   ) {
     this.#observer = observer;
     this.#mastra = options.mastra;
@@ -204,10 +210,14 @@ export class MastraMaster {
       name: "PR fleet master",
       instructions: MASTER_INSTRUCTIONS,
       model,
-      tools: createMasterTools(controller, {
-        telemetry: this.#telemetry,
-        correlation: () => this.#activeTurnCorrelation ?? {},
-      }),
+      tools: createMasterTools(
+        controller,
+        {
+          telemetry: this.#telemetry,
+          correlation: () => this.#activeTurnCorrelation ?? {},
+        },
+        options.requestShutdown,
+      ),
     });
     this.#mastra?.addAgent(this.#agent);
   }

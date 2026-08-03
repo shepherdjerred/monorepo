@@ -54,6 +54,7 @@ export type ReplayReport = {
   status: RunSummary["status"];
   eventCount: number;
   countsByKind: Record<string, number>;
+  ticks: ReplayLifecycle;
   commands: ReplayLifecycle;
   tools: ReplayLifecycle;
   workers: ReplayLifecycle;
@@ -76,12 +77,24 @@ function hideBodies(value: JsonValue): JsonValue {
   }
   if (value !== null && typeof value === "object") {
     return Object.fromEntries(
-      Object.entries(value).map(([key, inner]) => [
-        key,
-        BODY_FIELD_PATTERN.test(key)
-          ? "[hidden; pass --show-bodies]"
-          : hideBodies(inner),
-      ]),
+      Object.entries(value).map(([key, inner]) => {
+        if (key === "reviewFindings" && Array.isArray(inner)) {
+          return [
+            key,
+            inner.map((finding) =>
+              typeof finding === "string"
+                ? "[hidden; pass --show-bodies]"
+                : hideBodies(finding),
+            ),
+          ];
+        }
+        return [
+          key,
+          BODY_FIELD_PATTERN.test(key)
+            ? "[hidden; pass --show-bodies]"
+            : hideBodies(inner),
+        ];
+      }),
     );
   }
   return value;
@@ -118,9 +131,11 @@ export function inspectRunSummary(
 
 function lifecycleKey(
   event: RecordedRunEvent,
-  category: "commands" | "tools" | "workers" | "modelTurns",
+  category: "ticks" | "commands" | "tools" | "workers" | "modelTurns",
 ): string | null {
   switch (category) {
+    case "ticks":
+      return event.correlation.tickId ?? null;
     case "commands":
       return event.correlation.commandId ?? null;
     case "tools":
@@ -137,7 +152,7 @@ function lifecycleKey(
 
 function replayLifecycle(
   events: RecordedRunEvent[],
-  category: "commands" | "tools" | "workers" | "modelTurns",
+  category: "ticks" | "commands" | "tools" | "workers" | "modelTurns",
   kinds: {
     started: string;
     completed: string;
@@ -296,6 +311,11 @@ export function replayRunBundle(
 
   verifyCorrelationGraph(events);
 
+  const ticks = replayLifecycle(events, "ticks", {
+    started: "tick.started",
+    completed: "tick.completed",
+    failed: "tick.failed",
+  });
   const commands = replayLifecycle(events, "commands", {
     started: "command.started",
     completed: "command.completed",
@@ -324,6 +344,7 @@ export function replayRunBundle(
   });
   if (summary.status === "completed") {
     const openLifecycles = Object.entries({
+      ticks,
       commands,
       tools,
       workers,
@@ -346,6 +367,7 @@ export function replayRunBundle(
     status: summary.status,
     eventCount: events.length,
     countsByKind,
+    ticks,
     commands,
     tools,
     workers,

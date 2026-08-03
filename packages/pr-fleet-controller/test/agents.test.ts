@@ -32,7 +32,6 @@ const controller: MasterControllerTools = {
   resume: noop,
   guide: noop,
   setWorkerLimit: noop,
-  stop: () => Promise.resolve(snapshot),
 };
 
 class RecordingObserver implements FleetObserver {
@@ -88,7 +87,9 @@ const flush = (): Promise<void> =>
 describe("master shutdown", () => {
   test("aborts and awaits the in-flight master turn before resolving", async () => {
     const observer = new RecordingObserver();
-    const master = new HangingMaster("openai/gpt-5", controller, observer);
+    const master = new HangingMaster("openai/gpt-5", controller, observer, {
+      requestShutdown: noop,
+    });
 
     master.send("status?");
     await flush();
@@ -104,7 +105,9 @@ describe("master shutdown", () => {
 
   test("drops steering queued after shutdown instead of starting a new turn", async () => {
     const observer = new RecordingObserver();
-    const master = new HangingMaster("openai/gpt-5", controller, observer);
+    const master = new HangingMaster("openai/gpt-5", controller, observer, {
+      requestShutdown: noop,
+    });
     await master.stop();
 
     master.send("late steering");

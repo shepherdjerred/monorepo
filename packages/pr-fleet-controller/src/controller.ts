@@ -48,6 +48,7 @@ export class FleetController implements MasterControllerTools {
   #tickSettled: Promise<undefined> | null = null;
   readonly #workerSettlements = new Map<Promise<WorkerResult>, Promise<void>>();
   readonly #dispatchedWorkers = new Map<number, PrState>();
+  readonly #dispatchedTickIds = new Map<number, string>();
 
   constructor(dependencies: FleetControllerDependencies) {
     const { config, environment, workerRunner, observer } = dependencies;
@@ -268,16 +269,27 @@ export class FleetController implements MasterControllerTools {
         };
         this.store.prs.set(candidate.identity.number, assigned);
         this.#dispatchedWorkers.set(candidate.identity.number, assigned);
+        const dispatchTickId = this.#currentTickId;
+        if (dispatchTickId !== undefined) {
+          this.#dispatchedTickIds.set(
+            candidate.identity.number,
+            dispatchTickId,
+          );
+        }
         const abortController = new AbortController();
         const promise = Promise.resolve().then(() =>
-          this.#workerRunner.run(assigned, abortController.signal),
+          this.#workerRunner.run(
+            assigned,
+            abortController.signal,
+            dispatchTickId,
+          ),
         );
         this.store.activeWorkers.set(candidate.identity.number, promise);
         this.store.workerControllers.set(
           candidate.identity.number,
           abortController,
         );
-        this.#telemetry.workerStarted(this.#currentTickId, assigned);
+        this.#telemetry.workerStarted(dispatchTickId, assigned);
         busyStacks.add(candidate.stackId);
         changes.push(`started ${assigned.runtimeAgent ?? "worker"}`);
         const settlement = this.#observeWorker(
@@ -323,6 +335,8 @@ export class FleetController implements MasterControllerTools {
     const dispatched =
       this.#dispatchedWorkers.get(prNumber) ?? this.store.prs.get(prNumber);
     this.#dispatchedWorkers.delete(prNumber);
+    const tickId = this.#dispatchedTickIds.get(prNumber);
+    this.#dispatchedTickIds.delete(prNumber);
     const shouldTick = settleWorkerResult({
       store: this.store,
       telemetry: this.#telemetry,
@@ -330,6 +344,7 @@ export class FleetController implements MasterControllerTools {
       dispatched,
       prNumber,
       result,
+      tickId,
     });
     if (shouldTick && !this.store.stopping) {
       void this.#runTickSafely("worker-complete", "worker-complete tick");
@@ -340,12 +355,14 @@ export class FleetController implements MasterControllerTools {
     const recordedState = this.store.prs.get(prNumber);
     const dispatched = this.#dispatchedWorkers.get(prNumber) ?? recordedState;
     this.#dispatchedWorkers.delete(prNumber);
+    const tickId = this.#dispatchedTickIds.get(prNumber);
+    this.#dispatchedTickIds.delete(prNumber);
     const deliberatelyCancelled = this.store.cancelledWorkers.delete(prNumber);
     this.store.activeWorkers.delete(prNumber);
     this.store.workerControllers.delete(prNumber);
     this.store.releaseLeases(prNumber);
     if (deliberatelyCancelled) {
-      this.#telemetry.workerCancelled(prNumber, dispatched, error);
+      this.#telemetry.workerCancelled(prNumber, dispatched, error, tickId);
       // Deliberate cancel (PR went green or its head advanced) — not a failure.
       // Do not pause; re-run a tick so a moved-head PR re-dispatches against its
       // refreshed SHA (a green PR simply won't be a dispatch candidate).
@@ -357,7 +374,7 @@ export class FleetController implements MasterControllerTools {
       }
       return;
     }
-    this.#telemetry.workerFailed(prNumber, dispatched, error);
+    this.#telemetry.workerFailed(prNumber, dispatched, error, tickId);
     const message = error instanceof Error ? error.message : String(error);
     const state = this.store.prs.get(prNumber);
     if (
@@ -461,9 +478,7 @@ export class FleetController implements MasterControllerTools {
     this.store.workerLimit = limit;
   }
 
-  async stop(
-    externalSettlement: Promise<unknown> = Promise.resolve(),
-  ): Promise<FleetSnapshot> {
+  async stop(externalSettlement: Promise<unknown>): Promise<FleetSnapshot> {
     this.#telemetry.shutdownStarted(this.store.activeWorkers.size);
     this.store.stopping = true;
     if (this.#heartbeat !== null) {

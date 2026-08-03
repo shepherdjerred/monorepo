@@ -150,11 +150,16 @@ class AttemptRecordingRunner implements WorkerRunner {
     this.#telemetry = telemetry;
   }
 
-  run(pr: PrState, signal: AbortSignal): Promise<WorkerResult> {
+  run(
+    pr: PrState,
+    signal: AbortSignal,
+    tickId: string | undefined,
+  ): Promise<WorkerResult> {
     this.#telemetry.record(
       "worker.attempt.started",
       { attempt: 1 },
       {
+        ...(tickId === undefined ? {} : { tickId }),
         prNumber: pr.identity.number,
         headSha: pr.identity.headSha,
         generation: pr.agentGeneration,
@@ -403,7 +408,7 @@ test("a fleet tick classifies every PR and queues excess actionable work", async
   expect(report.snapshot.active).toBe(1);
   expect(report.snapshot.queued).toBe(1);
   expect(observer.snapshots).toHaveLength(1);
-  await controller.stop();
+  await controller.stop(Promise.resolve());
 });
 
 test("a failed heartbeat rearms reconciliation", async () => {
@@ -435,7 +440,7 @@ test("a failed heartbeat rearms reconciliation", async () => {
     observer.changes.some((change) => change.startsWith("heartbeat failed:")),
   ).toBe(true);
   expect(scheduler.callbacks.size).toBe(1);
-  await controller.stop();
+  await controller.stop(Promise.resolve());
   expect(scheduler.callbacks.size).toBe(0);
 });
 
@@ -461,7 +466,7 @@ test("shutdown waits for an in-flight reconciliation before completing", async (
   await environment.started.promise;
   let stopped = false;
   const stop = (async (): Promise<void> => {
-    await controller.stop();
+    await controller.stop(Promise.resolve());
     stopped = true;
   })();
   await flushMicrotasks();
@@ -547,7 +552,7 @@ test("controller tick commands carry tick and PR correlation", async () => {
       headSha: pr.headSha,
     });
   }
-  await controller.stop();
+  await controller.stop(Promise.resolve());
 });
 
 test("shutdown cancels a worker dispatched by an already-running tick", async () => {
@@ -583,7 +588,7 @@ test("shutdown cancels a worker dispatched by an already-running tick", async ()
 
   const tick = controller.tick("heartbeat");
   await environment.started.promise;
-  const stop = controller.stop();
+  const stop = controller.stop(Promise.resolve());
   environment.release.resolve(undefined);
   await Promise.all([tick, stop]);
 
@@ -639,7 +644,7 @@ test("pausing an active worker records cancellation instead of failure", async (
     false,
   );
   expect(store.prs.get(1)?.status).toBe("paused");
-  await controller.stop();
+  await controller.stop(Promise.resolve());
 });
 
 test("records worker start before the runner can emit its first attempt", async () => {
@@ -679,7 +684,18 @@ test("records worker start before the runner can emit its first attempt", async 
     "worker.started",
     "worker.attempt.started",
   ]);
-  await controller.stop();
+  const started = telemetry.events.find(
+    (event) => event.kind === "worker.started",
+  );
+  const attempt = telemetry.events.find(
+    (event) => event.kind === "worker.attempt.started",
+  );
+  expect(attempt?.correlation.tickId).toBe(started?.correlation.tickId);
+  await controller.stop(Promise.resolve());
+  const terminal = telemetry.events.find(
+    (event) => event.kind === "worker.cancelled",
+  );
+  expect(terminal?.correlation.tickId).toBe(started?.correlation.tickId);
 });
 
 test("aborts a worker whose assigned head changes and does not pause it", async () => {
@@ -742,7 +758,7 @@ test("aborts a worker whose assigned head changes and does not pause it", async 
   expect(telemetry.events.some((event) => event.kind === "worker.failed")).toBe(
     false,
   );
-  await controller.stop();
+  await controller.stop(Promise.resolve());
 });
 
 test("keeps a closed PR's leases until its worker settles", async () => {
@@ -797,5 +813,5 @@ test("keeps a closed PR's leases until its worker settles", async () => {
   await flushMicrotasks();
   expect(store.stackWriteOwners.has(dispatched.stackId)).toBe(false);
   expect(store.activeWorkers.has(1)).toBe(false);
-  await controller.stop();
+  await controller.stop(Promise.resolve());
 });

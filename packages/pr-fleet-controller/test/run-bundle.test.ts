@@ -452,6 +452,42 @@ describe("run bundle lifecycle replay", () => {
     ).toThrow("Completed run has open lifecycles");
   });
 
+  test("rejects open and orphaned tick lifecycles", async () => {
+    const openRecorder = await createRecorder();
+    openRecorder.record("run.started", { scenario: "open-tick" });
+    openRecorder.record(
+      "tick.started",
+      { trigger: "startup" },
+      { tickId: openRecorder.newId("tick") },
+    );
+    await openRecorder.finalize("completed", null);
+    const openBundle = await loadRunBundle(openRecorder.paths.runDirectory);
+    expect(() =>
+      replayRunBundle(openBundle, {
+        currentControllerVersion: "0.1.0",
+        allowVersionMismatch: false,
+      }),
+    ).toThrow("Completed run has open lifecycles: ticks=");
+
+    const orphanedRecorder = await createRecorder();
+    orphanedRecorder.record("run.started", { scenario: "orphaned-tick" });
+    orphanedRecorder.record(
+      "tick.failed",
+      { error: "failed before start" },
+      { tickId: orphanedRecorder.newId("tick") },
+    );
+    await orphanedRecorder.finalize("failed", null);
+    const orphanedBundle = await loadRunBundle(
+      orphanedRecorder.paths.runDirectory,
+    );
+    expect(() =>
+      replayRunBundle(orphanedBundle, {
+        currentControllerVersion: "0.1.0",
+        allowVersionMismatch: false,
+      }),
+    ).toThrow("tick.failed has no matching tick.started");
+  });
+
   test("replays deliberate worker cancellation as a terminal lifecycle", async () => {
     const recorder = await createRecorder();
     const correlation = {
@@ -512,6 +548,7 @@ describe("run bundle lifecycle replay", () => {
             prompt: "private model prompt",
             messages: ["private operator input"],
             input: { message: "private worker guidance" },
+            reviewFindings: ["private structured finding"],
             result: "kept",
           },
         },
@@ -523,6 +560,9 @@ describe("run bundle lifecycle replay", () => {
     expect(hidden[0]?.payload["input"]).toEqual({
       message: "[hidden; pass --show-bodies]",
     });
+    expect(hidden[0]?.payload["reviewFindings"]).toEqual([
+      "[hidden; pass --show-bodies]",
+    ]);
     expect(hidden[0]?.payload["result"]).toBe("kept");
   });
 });

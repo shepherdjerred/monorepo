@@ -14,6 +14,16 @@ function normalizeError(error: unknown): Error {
     : new Error("Non-Error command termination failure", { cause: error });
 }
 
+function signalIsAborted(signal: AbortSignal | undefined): boolean {
+  return signal?.aborted === true;
+}
+
+function commandWasTerminated(
+  termination: CommandResult["termination"],
+): boolean {
+  return termination !== "exit";
+}
+
 function killProcessGroup(pid: number): void {
   if (process.platform === "win32") {
     throw new Error("PR fleet process-group termination requires POSIX");
@@ -29,10 +39,29 @@ function killProcessGroup(pid: number): void {
   }
 }
 
+function throwAfterStdinFailure(
+  pid: number,
+  killChild: () => void,
+  executable: string,
+  error: unknown,
+): never {
+  try {
+    killProcessGroup(pid);
+  } catch (cleanupError) {
+    killChild();
+    throw new AggregateError(
+      [error, cleanupError],
+      `Command stdin failed and process cleanup also failed: ${executable}`,
+      { cause: cleanupError },
+    );
+  }
+  throw error;
+}
+
 export async function runCommand(
   request: CommandRequest,
 ): Promise<CommandResult> {
-  if (request.signal?.aborted === true) {
+  if (signalIsAborted(request.signal)) {
     throw new Error(`Command aborted before start: ${request.executable}`);
   }
   const subprocess = Bun.spawn([request.executable, ...request.args], {
@@ -43,14 +72,6 @@ export async function runCommand(
     env: request.env ?? Bun.env,
     detached: true,
   });
-  if (request.stdin !== undefined) {
-    const stdin = subprocess.stdin;
-    if (stdin === undefined || typeof stdin === "number") {
-      throw new Error(`Command stdin pipe unavailable: ${request.executable}`);
-    }
-    await stdin.write(request.stdin);
-    await stdin.end();
-  }
   let termination: CommandResult["termination"] = "exit";
   const terminationFailure = Promise.withResolvers<never>();
   const terminate = (reason: "timeout" | "abort"): void => {
@@ -74,16 +95,51 @@ export async function runCommand(
     terminate("abort");
   };
   request.signal?.addEventListener("abort", abort, { once: true });
+  // AbortSignal does not replay an abort to a listener registered after the
+  // transition. Recheck after registration and before the first await so
+  // cancellation and timeout cover stdin backpressure as well as child exit.
+  if (signalIsAborted(request.signal)) {
+    abort();
+  }
+  const stdout = new Response(subprocess.stdout).text();
+  const stderr = new Response(subprocess.stderr).text();
+  const processSettlement = Promise.race([
+    Promise.all([subprocess.exited, stdout, stderr]),
+    terminationFailure.promise,
+  ]);
   try {
-    const [exitCode, stdout, stderr] = await Promise.race([
-      Promise.all([
-        subprocess.exited,
-        new Response(subprocess.stdout).text(),
-        new Response(subprocess.stderr).text(),
-      ]),
-      terminationFailure.promise,
-    ]);
-    return { exitCode, stdout, stderr, termination };
+    if (request.stdin !== undefined) {
+      const stdin = subprocess.stdin;
+      if (stdin === undefined || typeof stdin === "number") {
+        throw new Error(
+          `Command stdin pipe unavailable: ${request.executable}`,
+        );
+      }
+      try {
+        await stdin.write(request.stdin);
+        await stdin.end();
+      } catch (error) {
+        if (!commandWasTerminated(termination)) {
+          throwAfterStdinFailure(
+            subprocess.pid,
+            () => {
+              subprocess.kill("SIGKILL");
+            },
+            request.executable,
+            error,
+          );
+        }
+        // Group termination closes a blocked pipe. Its write error is the
+        // expected consequence of the already-recorded timeout or abort.
+      }
+    }
+    const [exitCode, stdoutText, stderrText] = await processSettlement;
+    return {
+      exitCode,
+      stdout: stdoutText,
+      stderr: stderrText,
+      termination,
+    };
   } finally {
     clearTimeout(timer);
     request.signal?.removeEventListener("abort", abort);

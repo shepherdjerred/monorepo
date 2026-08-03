@@ -60,7 +60,11 @@ export type FleetEnvironment = {
 };
 
 export type WorkerRunner = {
-  run: (pr: PrState, signal: AbortSignal) => Promise<WorkerResult>;
+  run: (
+    pr: PrState,
+    signal: AbortSignal,
+    tickId: string | undefined,
+  ) => Promise<WorkerResult>;
 };
 
 export type FleetObserver = {

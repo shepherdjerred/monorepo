@@ -107,6 +107,28 @@ describe("command process-group termination", () => {
     await Bun.sleep(400);
     expect(await Bun.file(output).exists()).toBe(false);
   });
+
+  test("an abort bounds a command blocked while writing stdin", async () => {
+    const controller = new AbortController();
+    const command = environment.runLocalCommand({
+      executable: "sh",
+      args: ["-c", "sleep 30"],
+      cwd: directory,
+      timeoutMs: 5000,
+      signal: controller.signal,
+      stdin: "x".repeat(8_388_608),
+    });
+    const timer = setTimeout(() => {
+      controller.abort();
+    }, 50);
+    try {
+      const result = await command;
+      expect(result.exitCode).not.toBe(0);
+      expect(result.termination).toBe("abort");
+    } finally {
+      clearTimeout(timer);
+    }
+  });
 });
 
 test("command events inherit their worker tool and model correlation", async () => {

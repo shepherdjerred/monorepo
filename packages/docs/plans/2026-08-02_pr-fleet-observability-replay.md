@@ -176,7 +176,12 @@ repository checkout.
   removed a fixture inside the package while concurrent ESLint traversed it;
   the fixture now lives under the OS temp directory with explicit dependency
   resolution.
-- Passed focused typecheck, 81 controller tests, 42 observability tests, lint,
+- Addressed six further exact-head review findings: worker attempts and terminal
+  events now retain their dispatch tick, inspection masks structured finding
+  arrays, replay rejects open and orphaned tick lifecycles, cancellation is
+  armed before a command can block writing stdin, and model-, terminal-, and
+  failure-initiated shutdown all pass through one master-settlement boundary.
+- Passed focused typecheck, 83 controller tests, 42 observability tests, lint,
   native-aware build, docs validation, Markdown lint, diff checks, and staged
   Lefthook/Gitleaks/Prettier/lockfile checks.
 - Completed a final non-mutating `openai/gpt-5.6-terra` model/tool turn from the

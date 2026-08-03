@@ -11,12 +11,13 @@ type WorkerSettlement = {
   dispatched: PrState | undefined;
   prNumber: number;
   result: WorkerResult;
+  tickId: string | undefined;
 };
 
 export function settleWorkerResult(settlement: WorkerSettlement): boolean {
-  const { store, telemetry, observer, dispatched, prNumber, result } =
+  const { store, telemetry, observer, dispatched, prNumber, result, tickId } =
     settlement;
-  telemetry.workerCompleted(prNumber, dispatched, result);
+  telemetry.workerCompleted(prNumber, dispatched, result, tickId);
   store.activeWorkers.delete(prNumber);
   store.workerControllers.delete(prNumber);
   store.cancelledWorkers.delete(prNumber);

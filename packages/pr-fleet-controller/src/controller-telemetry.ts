@@ -89,13 +89,15 @@ export class ControllerTelemetry {
     prNumber: number,
     state: PrState | undefined,
     result: WorkerResult,
+    tickId: string | undefined,
   ): void {
     this.#telemetry?.record(
       "worker.completed",
       { result },
       state === undefined
-        ? { prNumber }
+        ? { prNumber, ...(tickId === undefined ? {} : { tickId }) }
         : {
+            ...(tickId === undefined ? {} : { tickId }),
             prNumber,
             headSha: state.identity.headSha,
             generation: state.agentGeneration,
@@ -107,13 +109,15 @@ export class ControllerTelemetry {
     prNumber: number,
     state: PrState | undefined,
     error: unknown,
+    tickId: string | undefined,
   ): void {
     this.#telemetry?.record(
       "worker.cancelled",
       { reason: error instanceof Error ? error.message : String(error) },
       state === undefined
-        ? { prNumber }
+        ? { prNumber, ...(tickId === undefined ? {} : { tickId }) }
         : {
+            ...(tickId === undefined ? {} : { tickId }),
             prNumber,
             headSha: state.identity.headSha,
             generation: state.agentGeneration,
@@ -125,13 +129,15 @@ export class ControllerTelemetry {
     prNumber: number,
     state: PrState | undefined,
     error: unknown,
+    tickId: string | undefined,
   ): void {
     this.#telemetry?.record(
       "worker.failed",
       { error: error instanceof Error ? error.message : String(error) },
       state === undefined
-        ? { prNumber }
+        ? { prNumber, ...(tickId === undefined ? {} : { tickId }) }
         : {
+            ...(tickId === undefined ? {} : { tickId }),
             prNumber,
             headSha: state.identity.headSha,
             generation: state.agentGeneration,
