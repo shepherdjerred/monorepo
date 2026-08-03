@@ -70,10 +70,13 @@ export function startGoalControlServer(
     async fetch(request) {
       const token = bearerToken(request);
       const goalId = request.headers.get("x-pokemon-goal-id") ?? undefined;
-      const finishControl =
-        token === undefined || goalId === undefined
-          ? undefined
-          : options.goalManager.beginControlRequest(token, goalId);
+      if (token === undefined || goalId === undefined) {
+        return jsonResponse({ error: "unauthorized" }, 401);
+      }
+      const finishControl = options.goalManager.beginControlRequest(
+        token,
+        goalId,
+      );
       if (finishControl === undefined) {
         return jsonResponse({ error: "unauthorized" }, 401);
       }
@@ -82,6 +85,11 @@ export function startGoalControlServer(
         const startedAt = Date.now();
         try {
           const routed = await routeRequest(context, request);
+          options.goalManager.recordToolCall(goalId, {
+            method: request.method,
+            path: url.pathname,
+            status: routed.response.status,
+          });
           logGoalTool({
             goalId,
             method: request.method,
@@ -114,6 +122,11 @@ export function startGoalControlServer(
             );
           }
           const errorBody = { error: message };
+          options.goalManager.recordToolCall(goalId, {
+            method: request.method,
+            path: url.pathname,
+            status: 400,
+          });
           logGoalTool({
             goalId,
             method: request.method,

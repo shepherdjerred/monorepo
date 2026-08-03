@@ -155,6 +155,7 @@ function makeGoalConfig(runtimeDirectory: string): Config["game"]["goal"] {
     max_runtime_minutes: 1,
     lock_minutes: 1,
     progress_update_interval_seconds: 60,
+    update_interval_seconds: 600,
     command_limits: {
       max_quantity_per_action: 60,
       chord_max_commands: 32,
@@ -210,8 +211,21 @@ describe("e2e: /goal pipeline (T1–T7 integration)", () => {
     });
     expect(start.kind).toBe("started");
 
-    // observeProcess fires asynchronously after exit + persistState.
-    await waitForCondition(() => messages.length > 0, 5000);
+    // observeProcess fires asynchronously after exit + persistState. Wait for
+    // the final cost-bearing message — the forwarded milestone lands first.
+    await waitForCondition(
+      () => messages.some((m) => /Cost: \$\d/.test(m.content)),
+      5000,
+    );
+
+    // ---- T8: the first agent_message is forwarded to Discord verbatim ----
+    expect(messages[0]?.content).toBe("Took a screenshot, see a dialog box.");
+    expect(messages[0]?.allowedUserIds).toEqual([]);
+    // The second agent_message is throttled: the fixed test clock keeps it
+    // inside the progress_update_interval_seconds window.
+    expect(
+      messages.filter((m) => m.content === "Advanced dialog 3x."),
+    ).toHaveLength(0);
 
     // ---- T1: --disable apps/plugins/multi_agent + --json all present ----
     const args = spawnedArgs();

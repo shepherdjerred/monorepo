@@ -7,7 +7,11 @@ import type { SpatialSnapshot } from "#src/game/spatial/spatial-snapshot.ts";
 import type { CodexJsonlParser } from "@shepherdjerred/llm-observability/codex-jsonl";
 import type { CodexTrace } from "./codex-trace.ts";
 import { sanitizeDiscordText, truncateForDiscord } from "./discord-message.ts";
-import { formatGameStateForPrompt } from "./game-state-summary.ts";
+import {
+  formatGameStateForPrompt,
+  formatLocationLine,
+} from "./game-state-summary.ts";
+import { GoalActivityLog } from "./goal-activity.ts";
 import { formatHistoryForPrompt } from "./history-summary.ts";
 import { computeCost, formatCostLine } from "./pricing.ts";
 import { spawnGoalCodex } from "./spawn-goal-codex.ts";
@@ -36,6 +40,13 @@ type ActiveGoal = {
   stdoutPump: Promise<void>;
   trace: CodexTrace;
   releaseInputLease: () => void;
+  // Interval-update machinery: what the run has been doing (fed by the
+  // control server + agent_message stream) and the floor timer that posts a
+  // status line when nothing else was published. Milestone forwarding needs
+  // no teardown handle: its callback no-ops once this goal is claimed.
+  activity: GoalActivityLog;
+  updateTimer: ReturnType<typeof setInterval>;
+  lastIntervalCheckAt: number;
 };
 
 type GoalManagerOptions = {
@@ -239,6 +250,26 @@ export class GoalManager {
     const memory = await this.memory.readMemory();
     const releaseInputLease = oneShot(this.acquireInputLease());
     this.controlGate.open(id);
+    // Milestone forwarding: the spawn site subscribes this callback before the
+    // stdout pump starts so no early agent_message is lost. Messages arriving
+    // before this.active is set are buffered and drained right after.
+    const activity = new GoalActivityLog();
+    let activeReady = false;
+    const pendingMilestones: string[] = [];
+    const forwardMilestone = (text: string): void => {
+      activity.noteAgentMessage(text);
+      if (this.active?.state.id !== id) return;
+      this.publishProgress(text, "milestone").catch((error: unknown) => {
+        logger.warn(`goal milestone forward failed: ${String(error)}`);
+      });
+    };
+    const onAgentMessage = (text: string): void => {
+      if (!activeReady) {
+        pendingMilestones.push(text);
+        return;
+      }
+      forwardMilestone(text);
+    };
     let spawned: Awaited<ReturnType<typeof spawnGoalCodex>>;
     try {
       spawned = await spawnGoalCodex({
@@ -253,6 +284,7 @@ export class GoalManager {
           memory,
         },
         spawner: this.spawner,
+        onAgentMessage,
       });
     } catch (error) {
       this.controlGate.close(id);
@@ -293,6 +325,9 @@ export class GoalManager {
     const timeout = setTimeout(() => {
       void this.timeoutGoal(id);
     }, this.config.max_runtime_minutes * 60_000);
+    const updateTimer = setInterval(() => {
+      void this.publishIntervalUpdate(id);
+    }, this.config.update_interval_seconds * 1000);
     this.active = {
       state,
       process: spawned.process,
@@ -303,7 +338,14 @@ export class GoalManager {
       stdoutPump: spawned.stdoutPump,
       trace: spawned.trace,
       releaseInputLease,
+      activity,
+      updateTimer,
+      lastIntervalCheckAt: this.now().getTime(),
     };
+    activeReady = true;
+    for (const text of pendingMilestones.splice(0)) {
+      forwardMilestone(text);
+    }
     recordGoalStarted();
     void this.observeProcess(id);
 
@@ -314,7 +356,10 @@ export class GoalManager {
     };
   }
 
-  async publishProgress(message: string): Promise<boolean> {
+  async publishProgress(
+    message: string,
+    source: "agent" | "milestone" = "agent",
+  ): Promise<boolean> {
     const active = this.active;
     if (active === undefined) {
       return false;
@@ -324,12 +369,18 @@ export class GoalManager {
     if (trimmed.length === 0) {
       return false;
     }
+    // A forwarded agent_message and the agent's own /progress call often carry
+    // the same text — post it once.
+    if (trimmed === active.state.lastProgress) {
+      return false;
+    }
 
     const now = this.now().getTime();
     const minimumDelay = this.config.progress_update_interval_seconds * 1000;
     if (now - active.lastProgressSentAt < minimumDelay) {
       return false;
     }
+    logger.debug(`goal progress update (${source})`);
 
     active.lastProgressSentAt = now;
     active.state.lastProgress = trimmed;
@@ -344,6 +395,85 @@ export class GoalManager {
       allowedUserIds: [],
     });
     return true;
+  }
+
+  /**
+   * Record one control-server tool call into the active goal's activity log.
+   * No-op when the goal id doesn't match the active goal (late calls from a
+   * replaced/finished goal).
+   */
+  recordToolCall(
+    goalId: string,
+    entry: Readonly<{ method: string; path: string; status: number }>,
+  ): void {
+    const active = this.active;
+    if (active?.state.id !== goalId) {
+      return;
+    }
+    active.activity.record({ ...entry, at: this.now().getTime() });
+  }
+
+  /**
+   * Deterministic floor for audience updates: fired by the per-goal interval
+   * timer. Posts a synthesized status line unless something else (agent
+   * /progress or a forwarded milestone) was published within the interval.
+   * Deliberately bypasses the publishProgress throttle — it enforces its own
+   * floor against the same lastProgressSentAt clock, so no configuration can
+   * silence updates entirely. Does not touch state.lastProgress or persist:
+   * synthetic status is not model narration.
+   */
+  private async publishIntervalUpdate(id: string): Promise<void> {
+    const active = this.active;
+    if (active?.state.id !== id) {
+      return;
+    }
+    const now = this.now().getTime();
+    const intervalMs = this.config.update_interval_seconds * 1000;
+    const since = active.lastIntervalCheckAt;
+    active.lastIntervalCheckAt = now;
+    if (now - active.lastProgressSentAt < intervalMs) {
+      return;
+    }
+    const content = this.composeStatusUpdate(active, since, now);
+    active.lastProgressSentAt = now;
+    try {
+      await this.sendMessage({
+        channelId: active.state.channelId,
+        content: truncateForDiscord(sanitizeDiscordText(content)),
+        allowedUserIds: [],
+      });
+    } catch (error) {
+      logger.warn(
+        `goal interval update failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  private composeStatusUpdate(
+    active: ActiveGoal,
+    since: number,
+    now: number,
+  ): string {
+    const lines: string[] = [];
+    const spatial = this.spatialSnapshotProvider();
+    if (spatial !== null) {
+      lines.push(formatLocationLine(spatial));
+    }
+    const windowSeconds = Math.max(1, Math.round((now - since) / 1000));
+    const actions = active.activity.summarizeSince(since);
+    lines.push(
+      actions === undefined
+        ? `No new actions in the last ${String(windowSeconds)}s.`
+        : `Last ${String(windowSeconds)}s: ${actions}.`,
+    );
+    const milestone =
+      active.activity.lastAgentMessage() ?? active.state.lastProgress;
+    if (milestone !== undefined) {
+      lines.push(
+        milestone.length > 300 ? `${milestone.slice(0, 300)}…` : milestone,
+      );
+    }
+    return lines.join("\n");
   }
 
   async shutdown(): Promise<void> {
@@ -455,6 +585,10 @@ export class GoalManager {
     this.terminating = active;
     this.controlGate.close(active.state.id);
     clearTimeout(active.timeout);
+    // Single choke point for all four terminal paths (finish, timeout,
+    // replace, shutdown): stop the interval updater. Milestone forwarding
+    // stops itself — its callback checks this.active, now cleared.
+    clearInterval(active.updateTimer);
     return active;
   }
 
