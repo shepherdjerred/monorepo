@@ -114,12 +114,19 @@ Additional user guidance: ${guidance.length === 0 ? "none" : guidance.join("\n")
       let firstError: Error | null = null;
       for (let attempt = 0; attempt < 2; attempt += 1) {
         const attemptNumber = attempt + 1;
-        const modelTurnId = this.#telemetry.newId("worker-turn");
-        const traceId = this.#telemetry.traceId(
-          "worker",
-          prNumber,
-          generation,
-          String(attemptNumber),
+        const modelTurnId = captureTelemetryOperation(
+          "worker-turn correlation",
+          () => this.#telemetry.newId("worker-turn"),
+        );
+        const traceId = captureTelemetryOperation(
+          "worker trace correlation",
+          () =>
+            this.#telemetry.traceId(
+              "worker",
+              prNumber,
+              generation,
+              String(attemptNumber),
+            ),
         );
         const attemptPrompt =
           attempt === 0

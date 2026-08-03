@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
 import { FleetController } from "@shepherdjerred/pr-fleet-controller/src/controller.ts";
 import { ControllerStopError } from "@shepherdjerred/pr-fleet-controller/src/controller-stop-error.ts";
+import { TelemetryCaptureError } from "@shepherdjerred/pr-fleet-controller/src/controller-telemetry.ts";
 import { currentCommandCorrelation } from "@shepherdjerred/pr-fleet-controller/src/command-correlation.ts";
 import type {
   CommandRequest,
@@ -405,6 +406,17 @@ class DeferredWorktreeEnvironment extends FakeEnvironment {
     this.started.resolve(undefined);
     await this.release.promise;
     return "/tmp/pr-fleet-fake";
+  }
+}
+
+class WorktreeCaptureFailingEnvironment extends FakeEnvironment {
+  override assignWorktreeBranch(): Promise<void> {
+    return Promise.reject(
+      new TelemetryCaptureError(
+        "command.completed",
+        new Error("state volume is full"),
+      ),
+    );
   }
 }
 
@@ -1030,6 +1042,42 @@ test("does not schedule a worker when persisting its start fails", async () => {
   expect(store.prs.get(1)?.runtimeAgent).toBeNull();
   expect(store.pausedReasons.has(1)).toBe(false);
   await controller.stop(Promise.resolve());
+});
+
+test("worktree capture failures stop the controller instead of pausing the PR", async () => {
+  const pr = identity(1);
+  const failedCheck = {
+    name: "verify",
+    state: "FAILURE",
+    bucket: "fail",
+    link: null,
+    softFail: false,
+  };
+  const runner = new RecordingRunner();
+  const store = new FleetStore(1);
+  const controller = new FleetController({
+    config: {
+      model: "openai/gpt-5",
+      repo: "shepherdjerred/monorepo",
+      checkout: "/tmp/repo",
+      worktreeRoot: "/tmp/worktrees",
+      maxWorkers: 1,
+    },
+    environment: new WorktreeCaptureFailingEnvironment(
+      [pr],
+      new Map([[1, evidence(pr, { checks: [failedCheck] })]]),
+    ),
+    workerRunner: runner,
+    observer: new RecordingObserver(),
+    store,
+    telemetry: new RecordingTelemetry(),
+  });
+
+  await expect(controller.tick("startup")).rejects.toMatchObject({
+    name: "TelemetryCaptureError",
+  });
+  expect(runner.runs).toBe(0);
+  expect(store.pausedReasons.has(1)).toBe(false);
 });
 
 test("aborts a worker whose assigned head changes and does not pause it", async () => {

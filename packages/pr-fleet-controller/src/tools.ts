@@ -3,6 +3,7 @@ import path from "node:path";
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import { validateWorkerCommand } from "./command-policy.ts";
+import { captureTelemetryOperation } from "./controller-telemetry.ts";
 import type { FleetEnvironment, FleetTelemetry } from "./ports.ts";
 import { runRecordedToolOperation } from "./recorded-tool.ts";
 import type { RunEventCorrelation } from "./run-events.ts";
@@ -100,7 +101,9 @@ async function runRecordedTool<T>(
   if (telemetry === undefined) {
     return run();
   }
-  const toolCallId = telemetry.newId("tool");
+  const toolCallId = captureTelemetryOperation("tool correlation", () =>
+    telemetry.newId("tool"),
+  );
   const correlation = {
     ...context.parentCorrelation(),
     prNumber: pr.identity.number,

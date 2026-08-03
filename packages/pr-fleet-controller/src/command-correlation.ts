@@ -1,4 +1,5 @@
 import { AsyncLocalStorage } from "node:async_hooks";
+import { captureTelemetryOperation } from "./controller-telemetry.ts";
 import type { FleetTelemetry } from "./ports.ts";
 import type { RunEventCorrelation } from "./run-events.ts";
 
@@ -19,6 +20,8 @@ export function commandEventCorrelation(
   telemetry: FleetTelemetry | undefined,
 ): RunEventCorrelation {
   const parent = currentCommandCorrelation();
-  const commandId = telemetry?.newId("command");
+  const commandId = captureTelemetryOperation("command correlation", () =>
+    telemetry?.newId("command"),
+  );
   return commandId === undefined ? parent : { ...parent, commandId };
 }

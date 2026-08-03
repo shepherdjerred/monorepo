@@ -1,5 +1,6 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
+import { captureTelemetryOperation } from "./controller-telemetry.ts";
 import type { FleetTelemetry } from "./ports.ts";
 import { runRecordedToolOperation } from "./recorded-tool.ts";
 import type { RunEventCorrelation } from "./run-events.ts";
@@ -34,7 +35,9 @@ export async function runRecordedMasterTool<T>(
   if (instrumentation === undefined) {
     return run();
   }
-  const toolCallId = instrumentation.telemetry.newId("tool");
+  const toolCallId = captureTelemetryOperation("tool correlation", () =>
+    instrumentation.telemetry.newId("tool"),
+  );
   const correlation = {
     ...instrumentation.correlation(),
     toolCallId,

@@ -126,9 +126,7 @@ export class FleetController implements MasterControllerTools {
         }
         report = FleetTickReportSchema.parse(result.result);
       } catch (error) {
-        if (isTelemetryCaptureError(error)) {
-          throw error;
-        }
+        if (isTelemetryCaptureError(error)) throw error;
         this.#telemetry.tickFailed(tickId, error);
         throw error;
       }
@@ -298,6 +296,9 @@ export class FleetController implements MasterControllerTools {
           candidate,
         );
       } catch (error) {
+        if (isTelemetryCaptureError(error)) {
+          throw error;
+        }
         const message = error instanceof Error ? error.message : String(error);
         this.pause(candidate.identity.number, message);
         changes.push(

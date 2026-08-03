@@ -12,6 +12,7 @@ import {
   type RawReviewThread,
 } from "./evidence-parsers.ts";
 import { GitOperations } from "./git-operations.ts";
+import { captureTelemetryOperation } from "./controller-telemetry.ts";
 import { resolveHostedReviewCompletion } from "./hosted-review.ts";
 import type {
   CommandRequest,
@@ -119,9 +120,11 @@ export class CommandFleetEnvironment implements FleetEnvironment {
       "number,title,url,isDraft,author,labels,headRefName,headRefOid,baseRefName,isCrossRepository,maintainerCanModify",
     ]);
     const prs = parsePrList(output);
-    this.#telemetry?.record("environment.result", {
-      operation: "listOpenPrs",
-      prs,
+    captureTelemetryOperation("environment.result", () => {
+      this.#telemetry?.record("environment.result", {
+        operation: "listOpenPrs",
+        prs,
+      });
     });
     return prs;
   }
@@ -410,11 +413,13 @@ export class CommandFleetEnvironment implements FleetEnvironment {
       hardFailureFingerprint: fingerprint(hardFailures),
       reviewFingerprint: fingerprint(blockingReviews),
     };
-    this.#telemetry?.record(
-      "environment.result",
-      { operation: "refreshEvidence", evidence },
-      { prNumber: pr.number, headSha: pr.headSha },
-    );
+    captureTelemetryOperation("environment.result", () => {
+      this.#telemetry?.record(
+        "environment.result",
+        { operation: "refreshEvidence", evidence },
+        { prNumber: pr.number, headSha: pr.headSha },
+      );
+    });
     return evidence;
   }
 

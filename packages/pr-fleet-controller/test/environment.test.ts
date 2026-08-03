@@ -38,6 +38,53 @@ class RecordingTelemetry implements FleetTelemetry {
   }
 }
 
+class EnvironmentResultFailingTelemetry extends RecordingTelemetry {
+  readonly failure = new Error("environment result persistence failed");
+
+  override record(
+    kind: RunEventKind,
+    payload: Record<string, unknown>,
+    correlation: RunEventCorrelation = {},
+  ): void {
+    if (kind === "environment.result") {
+      throw this.failure;
+    }
+    super.record(kind, payload, correlation);
+  }
+}
+
+class StubCommandFleetEnvironment extends CommandFleetEnvironment {
+  override runLocalCommand(): Promise<{
+    exitCode: number;
+    stdout: string;
+    stderr: string;
+    termination: "exit";
+  }> {
+    return Promise.resolve({
+      exitCode: 0,
+      stdout: "[]",
+      stderr: "",
+      termination: "exit",
+    });
+  }
+}
+
+test("environment result persistence failures use the fatal capture boundary", async () => {
+  const telemetry = new EnvironmentResultFailingTelemetry();
+  const environment = new StubCommandFleetEnvironment({
+    repo: "shepherdjerred/monorepo",
+    checkout: "/tmp/repo",
+    worktreeRoot: "/tmp/worktrees",
+    provider: codexProvider,
+    telemetry,
+  });
+
+  await expect(environment.listOpenPrs()).rejects.toMatchObject({
+    name: "TelemetryCaptureError",
+    cause: telemetry.failure,
+  });
+});
+
 describe("command process-group termination", () => {
   let directory: string;
 
