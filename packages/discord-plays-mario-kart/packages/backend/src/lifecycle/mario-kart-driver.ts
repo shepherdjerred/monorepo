@@ -134,6 +134,7 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
       encoderAsyncDepth: config.stream.video.encoder_async_depth,
       lowLatencyMux: config.stream.video.low_latency_mux,
       lowDelayAudio: config.stream.video.low_delay_audio,
+      videoPlayoutDelayMaxMs: config.stream.video.video_playout_delay_max_ms,
       onEncoderStarted: () => {
         emulator.start();
         logger.info("emulator running", { guildId: session.guildId });
