@@ -286,7 +286,9 @@ repository checkout.
   not checkpointed before sidecar hashing. Runtime shutdown now explicitly
   closes the concrete LibSQL and DuckDB stores before bundle finalization, and
   regression coverage requires the stable private database files to remain
-  without WAL or shared-memory companions.
+  without WAL or shared-memory companions. The private-file permission sweep
+  precedes connection close so SQLite can remove transient WAL/SHM files during
+  close without a path-enumeration race.
 - Addressed the remaining exact-head review finding by correlating
   PR-specific master steering tools with their validated target PR, so
   `pr:fleet:inspect --pr` includes priority, pause, resume, and guidance calls.
