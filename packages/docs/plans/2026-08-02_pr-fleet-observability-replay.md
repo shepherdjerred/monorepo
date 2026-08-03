@@ -190,6 +190,10 @@ repository checkout.
 - Addressed the latest exact-head findings by requiring exactly one successful
   shutdown lifecycle in completed replays and rejecting unsafe short explicit
   redaction values before a bundle can be created.
+- Addressed the subsequent exact-head finding by masking pause reasons,
+  escalation text, worker actions, blockers, failures, validation details, and
+  fleet-change prose while preserving structured array shapes during default
+  inspection.
 - Passed focused typecheck, 86 controller tests, 42 observability tests, lint,
   native-aware build, docs validation, Markdown lint, diff checks, and staged
   Lefthook/Gitleaks/Prettier/lockfile checks.

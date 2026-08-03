@@ -25,7 +25,9 @@ const TickCompletedPayloadSchema = z.object({ report: FleetTickReportSchema });
 const SnapshotPayloadSchema = z.object({ snapshot: FleetSnapshotSchema });
 
 const BODY_FIELD_PATTERN =
-  /^(?:body|content|line|log|message|messages|output|patch|prompt|response|stderr|stdout|text)$/i;
+  /^(?:body|content|escalation|lastAction|line|log|message|messages|output|patch|prompt|reason|response|stack|stderr|stdout|text)$/i;
+const BODY_ARRAY_FIELD_PATTERN =
+  /^(?:blockers|changes|hardFailures|reviewFindings|validation)$/i;
 const ACTIVE_STATUSES = new Set([
   "diagnosing",
   "editing",
@@ -80,7 +82,7 @@ function hideBodies(value: JsonValue): JsonValue {
   if (value !== null && typeof value === "object") {
     return Object.fromEntries(
       Object.entries(value).map(([key, inner]) => {
-        if (key === "reviewFindings" && Array.isArray(inner)) {
+        if (BODY_ARRAY_FIELD_PATTERN.test(key) && Array.isArray(inner)) {
           return [
             key,
             inner.map((finding) =>

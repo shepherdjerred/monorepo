@@ -22,6 +22,7 @@ import {
   readAndVerifyEvents,
   RunRecorder,
 } from "@shepherdjerred/pr-fleet-controller/src/run-recorder.ts";
+import type { RecordedRunEvent } from "@shepherdjerred/pr-fleet-controller/src/run-events.ts";
 import type { FleetSnapshot } from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
 import { evidence, identity } from "./fixtures.ts";
 
@@ -94,6 +95,48 @@ async function finalizeCompletedRun(recorder: RunRecorder): Promise<void> {
   recorder.record("shutdown.started", { activeWorkers: 0 });
   recorder.record("shutdown.completed", { snapshot });
   await recorder.finalize("completed", snapshot);
+}
+
+function expectFreeFormBodiesHidden(firstEvent: RecordedRunEvent): void {
+  const hidden = inspectEvents(
+    [
+      {
+        ...firstEvent,
+        payload: {
+          prompt: "private model prompt",
+          messages: ["private operator input"],
+          input: { message: "private worker guidance" },
+          reason: "private pause reason",
+          lastAction: "private worker action",
+          blockers: ["private worker blocker"],
+          hardFailures: ["private failure detail"],
+          reviewFindings: ["private structured finding"],
+          validation: ["private validation detail"],
+          changes: ["private fleet change"],
+          result: "kept",
+        },
+      },
+    ],
+    { showBodies: false },
+  );
+  expect(hidden[0]?.payload["prompt"]).toBe("[hidden; pass --show-bodies]");
+  expect(hidden[0]?.payload["messages"]).toBe("[hidden; pass --show-bodies]");
+  expect(hidden[0]?.payload["input"]).toEqual({
+    message: "[hidden; pass --show-bodies]",
+  });
+  for (const key of [
+    "blockers",
+    "changes",
+    "hardFailures",
+    "reviewFindings",
+    "validation",
+  ]) {
+    expect(hidden[0]?.payload[key]).toEqual(["[hidden; pass --show-bodies]"]);
+  }
+  for (const key of ["lastAction", "reason"]) {
+    expect(hidden[0]?.payload[key]).toBe("[hidden; pass --show-bodies]");
+  }
+  expect(hidden[0]?.payload["result"]).toBe("kept");
 }
 
 async function recordSyntheticWorkerRun(recorder: RunRecorder): Promise<void> {
@@ -631,30 +674,7 @@ describe("run bundle lifecycle replay", () => {
     if (firstEvent === undefined) {
       throw new Error("recorded run unexpectedly had no events");
     }
-    const hidden = inspectEvents(
-      [
-        {
-          ...firstEvent,
-          payload: {
-            prompt: "private model prompt",
-            messages: ["private operator input"],
-            input: { message: "private worker guidance" },
-            reviewFindings: ["private structured finding"],
-            result: "kept",
-          },
-        },
-      ],
-      { showBodies: false },
-    );
-    expect(hidden[0]?.payload["prompt"]).toBe("[hidden; pass --show-bodies]");
-    expect(hidden[0]?.payload["messages"]).toBe("[hidden; pass --show-bodies]");
-    expect(hidden[0]?.payload["input"]).toEqual({
-      message: "[hidden; pass --show-bodies]",
-    });
-    expect(hidden[0]?.payload["reviewFindings"]).toEqual([
-      "[hidden; pass --show-bodies]",
-    ]);
-    expect(hidden[0]?.payload["result"]).toBe("kept");
+    expectFreeFormBodiesHidden(firstEvent);
   });
 });
 
@@ -717,6 +737,9 @@ describe("run bundle inspection", () => {
       "[hidden; pass --show-bodies]",
     );
     expect(hidden.finalSnapshot?.prs[0]?.evidence.buildkiteFailure?.log).toBe(
+      "[hidden; pass --show-bodies]",
+    );
+    expect(hidden.finalSnapshot?.prs[0]?.escalation).toBe(
       "[hidden; pass --show-bodies]",
     );
     expect(inspectRunSummary(bundle.summary, true)).toEqual(bundle.summary);
