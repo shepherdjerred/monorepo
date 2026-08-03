@@ -635,6 +635,46 @@ describe("local run bundle integrity", () => {
 });
 
 describe("CLI command capture", () => {
+  test("rejects an in-repository default XDG state root before writing", async () => {
+    const packageDirectory = path.join(import.meta.dir, "..");
+    const stateBase = path.join(
+      packageDirectory,
+      `.test-xdg-state-${crypto.randomUUID()}`,
+    );
+    temporaryDirectories.push(stateBase);
+    const subprocess = Bun.spawn(
+      [
+        "bun",
+        "run",
+        "src/cli.ts",
+        "--model",
+        "openai/gpt-5.6-terra",
+        "--repo",
+        "acceptance/empty",
+        "--checkout",
+        "/tmp/checkout",
+      ],
+      {
+        cwd: packageDirectory,
+        env: { ...Bun.env, XDG_STATE_HOME: stateBase },
+        stdout: "pipe",
+        stderr: "pipe",
+      },
+    );
+    const [exitCode, stderr] = await Promise.all([
+      subprocess.exited,
+      new Response(subprocess.stderr).text(),
+    ]);
+
+    expect(exitCode).toBe(1);
+    expect(stderr).toContain(
+      "Run-bundle state directory must be outside the controller repository",
+    );
+    await expect(
+      stat(path.join(stateBase, "pr-fleet-controller")),
+    ).rejects.toThrow();
+  });
+
   test("records implicit checkout discovery before config validation", async () => {
     const { bundle, exitCode, stderr } = await runCliWithImplicitCheckout();
     expect(exitCode).not.toBe(0);
@@ -915,7 +955,9 @@ describe("run bundle correlation replay", () => {
       ),
     ).toThrow("mismatched command start correlation field tickId");
   });
+});
 
+describe("worker tick ancestry replay", () => {
   test("rejects a worker without a tick ancestor", async () => {
     const recorder = await createRecorder();
     await recordSyntheticWorkerRun(recorder);
@@ -964,7 +1006,56 @@ describe("run bundle correlation replay", () => {
           allowVersionMismatch: false,
         },
       ),
-    ).toThrow("worker.started references a nonexistent tick: fabricated-tick");
+    ).toThrow(
+      "worker.started references a nonexistent or inactive tick: fabricated-tick",
+    );
+  });
+
+  test("rejects a worker dispatched after its tick closes", async () => {
+    const recorder = await createRecorder();
+    const tickId = recorder.newId("tick");
+    const correlation = {
+      tickId,
+      prNumber: 42,
+      headSha: "b".repeat(40),
+      generation: 3,
+    };
+    recorder.record("run.started", { scenario: "late-worker-dispatch" });
+    recorder.record("tick.started", { trigger: "startup" }, { tickId });
+    recorder.record("fleet.snapshot", { snapshot }, { tickId });
+    recorder.record(
+      "tick.completed",
+      {
+        report: {
+          trigger: "startup",
+          snapshot,
+          changes: [],
+          nextHeartbeatSeconds: 600,
+        },
+      },
+      { tickId },
+    );
+    recorder.record(
+      "worker.started",
+      { runtimeAgent: "pr-42-g3" },
+      correlation,
+    );
+    recorder.record(
+      "worker.completed",
+      { result: { state: "waiting-ci" } },
+      correlation,
+    );
+    await finalizeCompletedRun(recorder);
+    const bundle = await loadRunBundle(recorder.paths.runDirectory);
+
+    expect(() =>
+      replayRunBundle(bundle, {
+        currentControllerVersion: "0.1.0",
+        allowVersionMismatch: false,
+      }),
+    ).toThrow(
+      `worker.started references a nonexistent or inactive tick: ${tickId}`,
+    );
   });
 
   test("rejects a model turn that closes before its tool", async () => {

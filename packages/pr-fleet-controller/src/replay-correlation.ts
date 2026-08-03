@@ -126,23 +126,23 @@ type ActiveCorrelations = {
 function trackStartedEvent(
   event: RecordedRunEvent,
   active: ActiveCorrelations,
-  recordedTickIds: Set<string>,
+  activeTickIds: Set<string>,
 ): void {
   if (event.kind === "tick.started") {
     const tickId = event.correlation.tickId;
     if (tickId === undefined) {
       throw new Error("tick.started is missing its tick correlation");
     }
-    recordedTickIds.add(tickId);
+    activeTickIds.add(tickId);
   }
   if (event.kind === "worker.started") {
     const tickId = event.correlation.tickId;
     if (tickId === undefined) {
       throw new Error("worker.started is missing its tick correlation");
     }
-    if (!recordedTickIds.has(tickId)) {
+    if (!activeTickIds.has(tickId)) {
       throw new Error(
-        `worker.started references a nonexistent tick: ${tickId}`,
+        `worker.started references a nonexistent or inactive tick: ${tickId}`,
       );
     }
     active.workers.set(requireLifecycleKey(event, "workers"), event);
@@ -208,7 +208,14 @@ function trackStartedEvent(
 function closeTerminalEvent(
   event: RecordedRunEvent,
   active: ActiveCorrelations,
+  activeTickIds: Set<string>,
 ): void {
+  if (event.kind === "tick.completed" || event.kind === "tick.failed") {
+    const tickId = event.correlation.tickId;
+    if (tickId !== undefined) {
+      activeTickIds.delete(tickId);
+    }
+  }
   if (event.kind === "command.completed" || event.kind === "command.failed") {
     closeCorrelatedLifecycle(
       active.commands,
@@ -282,7 +289,7 @@ function closeTerminalEvent(
 }
 
 export function verifyCorrelationGraph(events: RecordedRunEvent[]): void {
-  const recordedTickIds = new Set<string>();
+  const activeTickIds = new Set<string>();
   const active: ActiveCorrelations = {
     workers: new Map(),
     modelTurns: new Map(),
@@ -290,7 +297,7 @@ export function verifyCorrelationGraph(events: RecordedRunEvent[]): void {
     commands: new Map(),
   };
   for (const event of events) {
-    trackStartedEvent(event, active, recordedTickIds);
-    closeTerminalEvent(event, active);
+    trackStartedEvent(event, active, activeTickIds);
+    closeTerminalEvent(event, active, activeTickIds);
   }
 }

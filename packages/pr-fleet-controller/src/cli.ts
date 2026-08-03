@@ -21,7 +21,7 @@ import {
 } from "./mastra-runtime.ts";
 import type { FleetObserver } from "./ports.ts";
 import { runRecordedCommand } from "./recorded-command.ts";
-import { RunRecorder } from "./run-recorder.ts";
+import { resolveStateDirectory, RunRecorder } from "./run-recorder.ts";
 import { FleetControllerConfigSchema, type FleetSnapshot } from "./schemas.ts";
 import { FleetStore } from "./state.ts";
 import { consumeTerminalLines, createSharedShutdown } from "./terminal-loop.ts";
@@ -192,12 +192,12 @@ async function createBootstrapRecorder(
     rawOptionValue(args, "worktree-root") ??
     path.join(bootstrapCheckout, ".claude", "worktrees", "pr-fleet");
   const bootstrapMaxWorkers = rawOptionValue(args, "max-workers") ?? "5";
-  const stateDirectory = rawOptionValue(args, "state-dir");
-  if (stateDirectory !== undefined) {
-    await assertStateRootOutsideControllerRepository(stateDirectory);
-  }
+  const stateDirectory = resolveStateDirectory(
+    rawOptionValue(args, "state-dir"),
+  );
+  await assertStateRootOutsideControllerRepository(stateDirectory);
   const recorder = await RunRecorder.create({
-    ...(stateDirectory === undefined ? {} : { stateDirectory }),
+    stateDirectory,
     controllerVersion,
     controllerCommit: UNRESOLVED_COMMIT,
     controllerSourceDirty: true,

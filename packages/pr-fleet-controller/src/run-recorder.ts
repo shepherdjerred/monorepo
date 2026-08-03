@@ -90,6 +90,10 @@ function defaultStateDirectory(): string {
   return path.join(stateBase, "pr-fleet-controller");
 }
 
+export function resolveStateDirectory(stateDirectory?: string): string {
+  return path.resolve(stateDirectory ?? defaultStateDirectory());
+}
+
 async function assertPrivateDirectory(
   directory: string,
   create: boolean,
@@ -223,9 +227,7 @@ export class RunRecorder implements FleetTelemetry {
     validateSecretValues(options.secretValues ?? []);
     const now = options.now ?? (() => new Date());
     const randomId = options.randomId ?? (() => crypto.randomUUID());
-    const root = path.resolve(
-      options.stateDirectory ?? defaultStateDirectory(),
-    );
+    const root = resolveStateDirectory(options.stateDirectory);
     await assertPrivateDirectory(root, true);
     const createdAt = now();
     const runId = `${createdAt.toISOString().replaceAll(":", "-")}-${randomId()}`;
@@ -433,10 +435,7 @@ export function resolveRunDirectory(
   if (path.isAbsolute(run) || run.includes(path.sep)) {
     return path.resolve(run);
   }
-  return path.join(
-    path.resolve(stateDirectory ?? defaultStateDirectory()),
-    run,
-  );
+  return path.join(resolveStateDirectory(stateDirectory), run);
 }
 
 export async function readRunManifest(

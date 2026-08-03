@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { lstat, readFile, readlink, realpath } from "node:fs/promises";
+import { lstat, readFile, realpath } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import type { CommandRequest, CommandResult } from "./ports.ts";
@@ -130,8 +130,9 @@ async function hashUntrackedFile(
   const stats = await lstat(absolutePath);
   hash.update(`untracked\0${relativePath}\0`);
   if (stats.isSymbolicLink()) {
-    hash.update(`symlink\0${await readlink(absolutePath)}\0`);
-    return;
+    throw new Error(
+      `Unsupported untracked controller source symlink: ${relativePath}`,
+    );
   }
   if (!stats.isFile()) {
     throw new Error(

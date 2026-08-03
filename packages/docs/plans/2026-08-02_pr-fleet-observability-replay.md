@@ -222,7 +222,10 @@ repository checkout.
   before scheduling any worker work, masking singular fleet-change diagnostics
   during default inspection, and requiring every worker to reference a recorded
   dispatch tick during replay.
-- Passed focused typecheck, 102 controller tests, 42 observability tests, lint,
+- Addressed three subsequent exact-head findings by validating the XDG-derived
+  default state root before any write, rejecting unreproducible untracked source
+  symlinks, and requiring a worker's dispatch tick to still be active.
+- Passed focused typecheck, 104 controller tests, 42 observability tests, lint,
   native-aware build, docs validation, Markdown lint, diff checks, and staged
   Lefthook/Gitleaks/Prettier/lockfile checks.
 - Completed a final non-mutating `openai/gpt-5.6-terra` model/tool turn from the

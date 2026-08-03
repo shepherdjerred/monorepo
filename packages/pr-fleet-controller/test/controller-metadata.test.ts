@@ -1,5 +1,5 @@
 import { afterEach, expect, test } from "bun:test";
-import { mkdir, mkdtemp, rm, stat, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, stat, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import {
@@ -106,6 +106,19 @@ test("records clean and dirty identities for the exact controller source tree", 
   });
   expect(changedWorkspaceInput.fingerprint).not.toBe(
     workspaceInput.fingerprint,
+  );
+
+  const externalDirectory = await mkdtemp(
+    path.join(tmpdir(), "controller-external-source-"),
+  );
+  temporaryDirectories.push(externalDirectory);
+  const externalSource = path.join(externalDirectory, "external.ts");
+  await writeFile(externalSource, "export const external = 1\n");
+  await symlink(externalSource, path.join(repository, "untracked-link.ts"));
+  await expect(
+    resolveControllerSource({ controllerDirectory }),
+  ).rejects.toThrow(
+    "Unsupported untracked controller source symlink: untracked-link.ts",
   );
 
   const inRepositoryState = path.join(repository, "run-state");
