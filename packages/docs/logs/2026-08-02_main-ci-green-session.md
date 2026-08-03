@@ -183,6 +183,17 @@ config.yml: Operation not permitted`. The file was **root-owned** on the PVC
   }
   -->
 
+  **Not yet registered.** Per root `AGENTS.md` § Temporal Agent Follow-ups,
+  this block documents the follow-up; it does not itself create the schedule.
+  An operator with local Temporal access must run it once to activate the
+  monthly recheck:
+
+  ```bash
+  cd packages/temporal
+  TEMPORAL_ADDRESS=localhost:7233 bun run scripts/schedule-agent-task.ts \
+    --from-doc ../../packages/docs/logs/2026-08-02_main-ci-green-session.md
+  ```
+
 ### Caveats
 
 - Several fixes were operational (live-cluster), not code: golink/loki stale-op
