@@ -12,11 +12,13 @@ import {
   writeFallbackReport,
 } from "./bake-images.ts";
 import {
+  CI_IMAGE_IGNORED_ENV_PREFIXES,
   imageRuntimeFingerprint,
   runExactCandidateSmoke,
   runtimeFingerprintFromImage,
 } from "./application-image-runtime.ts";
 import type { BuildxCommandResult } from "./bake-retry.ts";
+import { TransientError } from "../../scripts/lib/transient-error.ts";
 import {
   caddyfileEntitlementArguments,
   expandTargets,
@@ -62,6 +64,42 @@ async function invalidManifestExecutor(): Promise<BuildxCommandResult> {
 
 async function failingExecutor(): Promise<BuildxCommandResult> {
   return commandResult(1);
+}
+
+async function transientInspectExecutor(): Promise<BuildxCommandResult> {
+  return commandResult(
+    1,
+    "",
+    "error: failed to do request: connection reset by peer",
+  );
+}
+
+async function notFoundInspectExecutor(): Promise<BuildxCommandResult> {
+  return commandResult(
+    1,
+    "",
+    `ghcr.io/example@sha256:${"a".repeat(64)}: not found`,
+  );
+}
+
+async function manifestUnknownInspectExecutor(): Promise<BuildxCommandResult> {
+  return commandResult(1, "", "MANIFEST_UNKNOWN: manifest unknown");
+}
+
+async function rateLimitedInspectExecutor(): Promise<BuildxCommandResult> {
+  return commandResult(1, "", "429 Too Many Requests");
+}
+
+async function credentialErrorInspectExecutor(): Promise<BuildxCommandResult> {
+  return commandResult(
+    1,
+    "",
+    "error getting credentials: docker-credential-desktop: executable file not found in $PATH",
+  );
+}
+
+async function unclassifiedInspectExecutor(): Promise<BuildxCommandResult> {
+  return commandResult(1, "", "unauthorized: authentication required");
 }
 
 async function imageExecutor(): Promise<BuildxCommandResult> {
@@ -383,12 +421,82 @@ test("fingerprints rootfs and runtime OCI config without build identity", async 
   expect(await imageRuntimeFingerprint("example:tag", imageExecutor)).toMatch(
     /^[a-f\d]{64}$/,
   );
-  expect(
-    await imageRuntimeFingerprint("example:tag", failingExecutor),
-  ).toBeUndefined();
+  // A bare, unclassified inspect failure (no recognized signature) must fail
+  // loud rather than masquerade as an unresolvable image.
+  await expect(
+    imageRuntimeFingerprint("example:tag", failingExecutor),
+  ).rejects.toThrow("Unclassified failure inspecting example:tag");
   expect(() => runtimeFingerprintFromImage({})).toThrow(
     "architecture, os, and rootfs",
   );
+});
+
+test("keeps build-identity env for CI images while dropping it for application images", () => {
+  const base = {
+    architecture: "amd64",
+    os: "linux",
+    rootfs: { type: "layers", diff_ids: ["sha256:one"] },
+    config: {
+      Env: ["PATH=/usr/bin", "VERSION=1", "GIT_SHA=old"],
+    },
+  };
+  const bumped = {
+    ...base,
+    config: { Env: ["PATH=/usr/bin", "VERSION=2", "GIT_SHA=new"] },
+  };
+  // Application default treats VERSION=/GIT_SHA= as disposable build identity.
+  expect(runtimeFingerprintFromImage(bumped)).toBe(
+    runtimeFingerprintFromImage(base),
+  );
+  // CI images carry no disposable identity, so those entries are meaningful
+  // configuration and must change the fingerprint.
+  expect(
+    runtimeFingerprintFromImage(bumped, CI_IMAGE_IGNORED_ENV_PREFIXES),
+  ).not.toBe(runtimeFingerprintFromImage(base, CI_IMAGE_IGNORED_ENV_PREFIXES));
+});
+
+test("classifies inspect failures as transient, missing, or unclassified", async () => {
+  const image = `ghcr.io/example@sha256:${"a".repeat(64)}`;
+  // A transient registry/BuildKit failure must be preserved as a retryable
+  // TransientError, not silently misclassified as an unresolvable image.
+  await expect(
+    imageRuntimeFingerprint(image, transientInspectExecutor),
+  ).rejects.toBeInstanceOf(TransientError);
+
+  // Registry rate limiting (429 / TOOMANYREQUESTS) is transient too.
+  await expect(
+    imageRuntimeFingerprint(image, rateLimitedInspectExecutor),
+  ).rejects.toBeInstanceOf(TransientError);
+
+  // A genuine missing manifest — tied to the requested digest, or a registry
+  // MANIFEST_UNKNOWN code — remains `undefined` (the legitimate pin-unresolvable
+  // signal).
+  expect(
+    await imageRuntimeFingerprint(image, notFoundInspectExecutor),
+  ).toBeUndefined();
+  expect(
+    await imageRuntimeFingerprint(image, manifestUnknownInspectExecutor),
+  ).toBeUndefined();
+
+  // A "not found" that is NOT tied to the manifest (e.g. a missing credential
+  // helper executable) is unclassified and must fail loud, not masquerade as an
+  // unresolvable pin.
+  await expect(
+    imageRuntimeFingerprint(image, credentialErrorInspectExecutor),
+  ).rejects.toThrow("Unclassified failure inspecting");
+
+  // Any other unclassified failure fails loud as a plain Error (not a
+  // TransientError, not `undefined`), so it never promotes against an
+  // unreadable pin.
+  let caught: unknown;
+  try {
+    await imageRuntimeFingerprint(image, unclassifiedInspectExecutor);
+  } catch (error) {
+    caught = error;
+  }
+  expect(caught).toBeInstanceOf(Error);
+  expect(caught).not.toBeInstanceOf(TransientError);
+  expect(String(caught)).toContain("Unclassified failure inspecting");
 });
 
 test("creates the remote BuildKit builder only when missing", async () => {

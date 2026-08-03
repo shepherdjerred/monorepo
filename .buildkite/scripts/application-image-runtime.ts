@@ -1,5 +1,7 @@
 import { asRecord } from "../../scripts/lib/json.ts";
+import { TransientError } from "../../scripts/lib/transient-error.ts";
 import {
+  bakeFailureIsTransient,
   retryTransientBuildx,
   type BuildxCommandResult,
 } from "./bake-retry.ts";
@@ -12,6 +14,15 @@ export type ImageCommandExecutor = (
 ) => Promise<BuildxCommandResult>;
 
 const applicationImageTargets = new Set(APPLICATION_IMAGE_TARGETS);
+
+// Registry/BuildKit diagnostics that specifically mean the requested manifest
+// or repository does not exist — the only inspect failure that legitimately
+// maps to an unresolvable image. `not found` is matched only when tied to a
+// manifest/reference or the requested `@sha256:` digest, so unrelated failures
+// (e.g. a missing credential helper: "executable file not found in $PATH") stay
+// unclassified errors and fail loud. Anything else non-transient is unclassified.
+const IMAGE_ABSENT_PATTERN =
+  /manifest[ _]unknown|name[ _]unknown|(?:manifest|reference|@sha256:[\da-f]{64})[^\n]*not found/i;
 
 function canonicalJson(value: unknown): string {
   if (value === null) return "null";
@@ -33,7 +44,30 @@ function canonicalJson(value: unknown): string {
     .join(",")}}`;
 }
 
-function normalizedRuntimeConfig(value: unknown): Record<string, unknown> {
+/**
+ * Environment entries that carry a disposable build identity for application
+ * images. The application bake injects `VERSION=<build number>` and
+ * `GIT_SHA=<commit>` on every push, so including them in the runtime
+ * fingerprint would make every commit look like a content change. CI images do
+ * not bake these identities — any `VERSION=`/`GIT_SHA=` entry in a CI image is
+ * meaningful runtime configuration — so CI callers pass a different prefix set
+ * (see `CI_IMAGE_IGNORED_ENV_PREFIXES`).
+ */
+export const APPLICATION_IGNORED_ENV_PREFIXES: readonly string[] = [
+  "GIT_SHA=",
+  "VERSION=",
+];
+
+/**
+ * CI images carry no disposable build identity in their runtime environment,
+ * so every `Env` entry is meaningful configuration and none are stripped.
+ */
+export const CI_IMAGE_IGNORED_ENV_PREFIXES: readonly string[] = [];
+
+function normalizedRuntimeConfig(
+  value: unknown,
+  ignoredEnvPrefixes: readonly string[],
+): Record<string, unknown> {
   const config = asRecord(value);
   if (config === null) {
     throw new TypeError("image runtime config must be an object");
@@ -44,7 +78,7 @@ function normalizedRuntimeConfig(value: unknown): Record<string, unknown> {
       const environment = parseStringArray(field, "image runtime environment");
       normalized[key] = environment.filter(
         (entry) =>
-          !entry.startsWith("GIT_SHA=") && !entry.startsWith("VERSION="),
+          !ignoredEnvPrefixes.some((prefix) => entry.startsWith(prefix)),
       );
     } else {
       normalized[key] = field;
@@ -53,7 +87,10 @@ function normalizedRuntimeConfig(value: unknown): Record<string, unknown> {
   return normalized;
 }
 
-export function runtimeFingerprintFromImage(value: unknown): string {
+export function runtimeFingerprintFromImage(
+  value: unknown,
+  ignoredEnvPrefixes: readonly string[] = APPLICATION_IGNORED_ENV_PREFIXES,
+): string {
   const image = asRecord(value);
   if (image === null) throw new TypeError("image metadata must be an object");
   const architecture = image["architecture"];
@@ -77,7 +114,7 @@ export function runtimeFingerprintFromImage(value: unknown): string {
     architecture,
     os,
     rootfs: { type: rootfsType, diff_ids: diffIds },
-    config: normalizedRuntimeConfig(image["config"]),
+    config: normalizedRuntimeConfig(image["config"], ignoredEnvPrefixes),
   };
   const variant = image["variant"];
   if (typeof variant === "string") fingerprintInput["variant"] = variant;
@@ -103,6 +140,7 @@ export function runtimeFingerprintFromImage(value: unknown): string {
 export async function imageRuntimeFingerprint(
   image: string,
   executor: ImageCommandExecutor,
+  ignoredEnvPrefixes: readonly string[] = APPLICATION_IGNORED_ENV_PREFIXES,
 ): Promise<string | undefined> {
   const result = await executor([
     "docker",
@@ -113,8 +151,33 @@ export async function imageRuntimeFingerprint(
     "--format",
     "{{json .Image}}",
   ]);
-  if (result.exitCode !== 0) return undefined;
-  return runtimeFingerprintFromImage(JSON.parse(result.stdout));
+  if (result.exitCode === 0) {
+    return runtimeFingerprintFromImage(
+      JSON.parse(result.stdout),
+      ignoredEnvPrefixes,
+    );
+  }
+  const diagnostics = `${result.stdout}\n${result.stderr}`;
+  const detail = result.stderr.trim() || result.stdout.trim();
+  // A transient registry/BuildKit failure (timeout, rate limit, TLS, 5xx, …)
+  // must NOT collapse to `undefined`: that would rethrow a candidate failure
+  // without diagnostics (an unretryable exit 1) and misclassify a pinned-image
+  // failure as `pin-unresolvable-bumped`, changing the promotion outcome on a
+  // temporary blip. Preserve the diagnostics as a TransientError so `runMain`
+  // exits EXIT_TRANSIENT and Buildkite retries the job.
+  if (bakeFailureIsTransient(diagnostics)) {
+    throw new TransientError(
+      `Transient failure inspecting ${image}: ${detail}`,
+    );
+  }
+  // Only an explicitly recognized missing-image response yields `undefined` —
+  // the legitimate signal that a pin or candidate is truly unresolvable. Every
+  // other unclassified failure (auth, quota, malformed response) must fail loud
+  // rather than silently promote a candidate against a pin we could not read.
+  if (IMAGE_ABSENT_PATTERN.test(diagnostics)) {
+    return undefined;
+  }
+  throw new Error(`Unclassified failure inspecting ${image}: ${detail}`);
 }
 
 export async function classifyRuntimeChange(

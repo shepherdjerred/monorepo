@@ -1,4 +1,5 @@
 import { asRecord } from "../../scripts/lib/json.ts";
+import { classifyRuntimeChange } from "./application-image-runtime.ts";
 import { ciImageDefinition } from "./build-ci-image-core.ts";
 
 const DIGEST_PATTERN = /^sha256:[\da-f]{64}$/;
@@ -43,6 +44,15 @@ export type CiImageCandidate = {
   readonly sourceFingerprint: string;
   readonly digest: string;
 };
+
+export type CiImageRuntimePromotionOutcome =
+  | "content-unchanged"
+  | "pin-unresolvable-bumped"
+  | "bumped";
+
+export type RuntimeFingerprintReader = (
+  image: string,
+) => Promise<string | undefined>;
 
 function exactRecord(
   value: unknown,
@@ -163,6 +173,35 @@ export function stateFromCandidate(
     sourceFingerprint: candidate.sourceFingerprint,
     digest: candidate.digest,
   };
+}
+
+/**
+ * Compare the exact candidate image with the immutable pin it would replace.
+ * A registry manifest digest can change without changing the filesystem or
+ * runtime configuration, so only a changed runtime fingerprint merits a pin
+ * PR.
+ */
+export async function classifyCiImageRuntimePromotion(
+  options: {
+    readonly repository: string;
+    readonly pinnedDigest: string;
+    readonly candidateDigest: string;
+  },
+  getRuntimeFingerprint: RuntimeFingerprintReader,
+): Promise<CiImageRuntimePromotionOutcome> {
+  const candidate = `${options.repository}@${options.candidateDigest}`;
+  const candidateFingerprint = await getRuntimeFingerprint(candidate);
+  if (candidateFingerprint === undefined) {
+    throw new Error(`Could not fingerprint CI image candidate ${candidate}`);
+  }
+  return classifyRuntimeChange(
+    {
+      image: options.repository,
+      pinnedDigest: options.pinnedDigest,
+      candidateFingerprint,
+    },
+    getRuntimeFingerprint,
+  );
 }
 
 export function isCurrentSourceCandidate(
