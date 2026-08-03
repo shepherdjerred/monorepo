@@ -61,6 +61,39 @@ Verification: fork + backend + frontend turbo typecheck/test/lint;
 deploy with Argo hold (glass decode + 1i ruler + depth gauge), numbers
 recorded here.
 
+## Measurement method (established 2026-08-03; use this, not screenshots)
+
+Glass-to-glass is measured **in-page**: draw the Discord viewer's `<video>`
+element to a canvas, return only the overlay-badge crop as PNG, decode the
+burned-in clock with the overlay's own 5×7 glyph table, and compare against
+the page's own `Date.now()` at draw time (same host as the analysis script,
+so only the pod's clock lead applies). This yields ~20 samples/s with
+Hamming-distance-0 decodes and **no capture-window uncertainty** — a large
+improvement over the 2026-08-02 CDP-screenshot rig (~2.8 samples/s with a
+one-sided ~330 ms window that made the mean unusable). Probe:
+`scratchpad/glass_probe.py` pattern; calibration must try every bright-row
+band (bright game content above the badge otherwise wins a naive
+first-bright-row heuristic).
+
+**Stream age is a first-class confound.** Measured glass-to-glass on the
+SAME build varies by hundreds of ms with how long the Go-Live stream has
+been running:
+
+| Arm       | stream age | glass-to-glass mean          |
+| --------- | ---------- | ---------------------------- |
+| candidate | ~10 min    | 68.5 ms (p50 67.4, n=1204)   |
+| candidate | ~1-2 min   | 325.8 ms (p50 326.1, n=1200) |
+| baseline  | ~1-2 min   | 369.8 ms (p50 373.7, n=1207) |
+| baseline  | ~4 min     | 358.3 ms (p50 359.7, n=908)  |
+
+A/B arms must therefore be compared at **matched stream age**, and any
+single-point comparison across differently-aged streams is worthless — the
+first candidate-vs-baseline pairing here looked like a 301 ms "win" that was
+almost entirely age. Viewer-side `jitterBufferDelay` (84 ms baseline vs
+84 ms candidate) does NOT track this, so it cannot substitute for the glass
+measurement: it reports the receiver's de-jitter buffer only, not total
+playout latency.
+
 ## Phase 2 — Tier 2 A/B gambles (adopt on evidence, one at a time)
 
 playout-delay max 100→30 ms; wire pacer 25→50 Mbps; camera-mode vs Go-Live
