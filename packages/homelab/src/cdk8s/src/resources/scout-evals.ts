@@ -31,12 +31,6 @@ export function createScoutEvalsDeployment(chart: Chart) {
     securityContext: {
       fsGroup: 1000,
     },
-    metadata: {
-      annotations: {
-        "ignore-check.kube-linter.io/no-read-only-root-fs":
-          "Bun writes runtime caches under HOME; app data lives on the PVC",
-      },
-    },
   });
 
   const dataVolume = new ZfsNvmeVolume(chart, "scout-evals-data", {
@@ -51,7 +45,8 @@ export function createScoutEvalsDeployment(chart: Chart) {
         user: 1000,
         group: 1000,
         ensureNonRoot: true,
-        readOnlyRootFilesystem: false,
+        readOnlyRootFilesystem: true,
+        allowPrivilegeEscalation: false,
       },
       ports: [{ number: 7341, name: "http" }],
       resources: {
@@ -88,8 +83,16 @@ export function createScoutEvalsDeployment(chart: Chart) {
             dataVolume.claim,
           ),
         },
+        // Bun writes runtime caches under $HOME; keep the root filesystem
+        // read-only by pointing HOME at a writable emptyDir (app data still
+        // lives on the /data PVC).
+        {
+          path: "/tmp",
+          volume: Volume.fromEmptyDir(chart, "scout-evals-tmp", "tmp"),
+        },
       ],
       envVariables: {
+        HOME: EnvValue.fromValue("/tmp"),
         SCOUT_EVAL_HOSTNAME: EnvValue.fromValue("0.0.0.0"),
         SCOUT_EVAL_DATABASE_PATH: EnvValue.fromValue(
           "/data/scout-review-evals.sqlite",
