@@ -350,3 +350,91 @@ follow-up plan (threads → parallel-RDP → native emulator).
   frames ≈ `stream_frame_interval_ms_count − stream_frames_dropped_total`;
   emitted packets = `stream_packet_ready_delay_ms_count` (no redundant
   counters added).
+- 2026-08-03: **Course correction — the session had been measuring the wrong
+  quantity.** Every ruler built up to this point (glass probe, viewer-stats,
+  in-pod encoder isolation) measures the _video path_: how long a frame takes
+  to reach a viewer. None of them involve an input. The user's goal is input
+  lag, so a real press-to-glass ruler was built and the earlier conclusions
+  were re-derived against it.
+
+  **Method.** `scripts/e2e-press-to-glass.ts` claims a real seat over the
+  production socket.io path and issues press/release edges, logging the
+  epoch-ms of each emit. In the Discord viewer tab, a
+  `requestVideoFrameCallback` loop decodes the burned-in HUD out of every
+  _presented_ frame — not a polling cadence, so the transition frame is never
+  missed. The HUD lights seat N's digit on the first frame the emulator
+  rendered while holding that seat's input, and carries the pod's capture
+  timestamp, so each press yields a full decomposition. `press -> on screen`
+  is skew-free (both ends are the Mac's clock); only the split between the
+  input leg and the video leg depends on the pod clock offset.
+
+  **Measurement validity.** 100% of frames decoded with exact (Hamming-0)
+  glyph match; calibration score 0; `u = 1.5` exactly as the framebuffer
+  geometry predicts. A gate rejects any rise not pinned to a single presented
+  frame (`riseGap == 1`). Pod clock offset pinned by NTP-style round trip on
+  an established exec stream: **18.54 ms ± 0.54** (best RTT 1.09 ms, offset
+  stable to 0.68 ms across the five fastest exchanges), re-measured later at
+  16.35 ms on a different pod — so **clock drift is ruled out** as an
+  explanation for the decay below. `callbackToGlass` comes out quantised at
+  vsync multiples (16.7 / 33.4 ms), which is what physics requires and
+  independently validates `expectedDisplayTime`. Receive-side getStats run
+  concurrently reports `meanJitterBufferMs 92` against a measured
+  `recvToCallback` of ~117-122 ms — consistent, since our window additionally
+  contains decode and delivery.
+
+  **Result (single player, in Discord, n=120/run).**
+
+  | Segment                                         | settled     | fresh stream |
+  | ----------------------------------------------- | ----------- | ------------ |
+  | input path (press → emulator renders the frame) | ~35 ms      | ~35 ms       |
+  | pod → last packet at browser                    | ~50 ms      | ~250 ms      |
+  | browser jitter buffer + decode                  | ~52 ms      | ~150 ms      |
+  | wait for a vsync                                | ~29 ms      | ~17 ms       |
+  | **press → on screen**                           | **~172 ms** | **~500 ms**  |
+
+  Add MK64's own internal reaction (~66-133 ms, not measured here) for felt
+  lag.
+
+  **Two findings change the plan's priorities.**
+  1. _The input path is not the problem._ It is ~35 ms and dead flat across
+     every condition — fresh stream, settled stream, whole 4-minute run. The
+     frontend coalesce removal and other input-side work is done; there is
+     nothing material left to win there. All remaining lag is video path.
+  2. _Stream age is a first-order confound and a first-order lever._ Input
+     lag decays monotonically ~500 → ~200 ms over the first 4+ minutes of a
+     stream and had not bottomed out when the run ended. Two identical runs
+     minutes apart in the same session measured 291 ms and 172 ms. **Any A/B
+     not matched on stream age measures the age, not the change** — which
+     retrospectively explains the earlier "301 ms win" artifact. It also means
+     a player who `/play`s and races immediately feels 2-3x the settled lag.
+
+  **Ruled out for the decaying pod→browser leg:** clock drift (skew
+  re-verified stable); retransmission (getStats: 0 packets lost, 0 NACKs, one
+  198 ms freeze in 5 min); ffmpeg input backpressure
+  (`stream_frame_write_ms` = 0.25 ms throughout); sub-realtime encode
+  (`stream_ffmpeg_speed_ratio` ≈ 1.000, the one 0.93 reading was a startup
+  transient). Root cause not yet identified — the in-pod
+  `stream_packet_ready_delay_ms` histogram is pinned at its top bucket
+  (2500 ms), the known Phase 3 corruption, so it cannot localise the queue.
+  **Repairing that histogram (Phase 3) is now the blocker for attributing
+  ~200 ms of fresh-stream lag.**
+
+  **Shipped this session:** `video_playout_delay_max_ms`. The fork advertises
+  `playout-delay` max = 100 ms and Chrome sits at that ceiling (92 ms
+  measured) on a link with zero loss, so the advertised cap is close to a
+  floor on client-side delay. Now configurable, opt-in, defaulting to the
+  historical 100 ms so streambot/pokemon are untouched. **Not yet A/B'd** —
+  it must be tested at matched stream age.
+
+- 2026-08-03: **Bug found while running the rig: `/stop` bricks the bot.**
+  Reproduced three times. On session end the stream account's selfbot client
+  fails to tear down (`selfbot client destroy failed (ignored)`:
+  `null is not an object (evaluating 'this.connection.readyState')` in
+  `WebSocketShard.destroy`), and the emulator worker is left stopped
+  (`emulator reset after stream session failed: emulator worker is not
+running`). Every subsequent `/play` then replies "Starting Mario Kart 64 in
+  Voice" and never goes live — `stream_active` stays 0 and the account never
+  joins voice. Only a pod restart recovers it. Two separate faults: the
+  unrecoverable client state, and `/play` reporting success when it cannot
+  stream (a fail-fast violation — it should surface the dead gateway). Not
+  fixed here; filed as `packages/docs/todos/mk64-stop-bricks-stream-account.md`.
