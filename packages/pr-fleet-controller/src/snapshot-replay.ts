@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { RecordedRunEvent, RunSummary } from "./run-events.ts";
-import { canonicalJson } from "./run-recorder.ts";
+import { canonicalJson } from "./run-hashing.ts";
 import {
   FleetSnapshotSchema,
   FleetTickReportSchema,

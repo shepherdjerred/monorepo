@@ -379,12 +379,12 @@ async function testSynchronousPersistenceFailure(): Promise<void> {
     checkout: "/tmp/checkout",
     worktreeRoot: "/tmp/worktrees",
     maxWorkers: 2,
-    writeEvent: (sink, line) => {
+    writeEvent: (fileDescriptor, line) => {
+      writeFileSinkSynchronously(fileDescriptor, line);
       if (failNextWrite) {
         failNextWrite = false;
         throw new Error("state volume is full");
       }
-      writeFileSinkSynchronously(sink, line);
     },
   });
 

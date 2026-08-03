@@ -23,15 +23,16 @@ import {
   RunManifestSchema,
   RunSummarySchema,
   UnsignedRunEventSchema,
-  type JsonValue,
   type RecordedRunEvent,
   type RunEventCorrelation,
   type RunEventKind,
   type RunManifest,
   type RunSummary,
 } from "./run-events.ts";
+import { hashEvent } from "./run-hashing.ts";
 import type { FleetSnapshot } from "./schemas.ts";
 import {
+  SynchronousEventFile,
   writeFileSinkSynchronously,
   type SynchronousFileSinkWriter,
 } from "./synchronous-file-sink.ts";
@@ -77,7 +78,7 @@ type RunRecorderConstructorOptions = {
   manifest: RunManifest;
   now: () => Date;
   secretValues: readonly string[];
-  eventsSink: Bun.FileSink;
+  eventsFile: SynchronousEventFile;
   writeEvent: SynchronousFileSinkWriter;
 };
 
@@ -158,29 +159,6 @@ function validateSecretValues(values: readonly string[]): void {
   }
 }
 
-function canonicalJsonValue(value: JsonValue): string {
-  if (value === null || typeof value !== "object") {
-    return JSON.stringify(value);
-  }
-  if (Array.isArray(value)) {
-    return `[${value.map((item) => canonicalJsonValue(item)).join(",")}]`;
-  }
-  const fields = Object.entries(value)
-    .sort(([left], [right]) => left.localeCompare(right))
-    .map(
-      ([key, inner]) => `${JSON.stringify(key)}:${canonicalJsonValue(inner)}`,
-    );
-  return `{${fields.join(",")}}`;
-}
-
-export function canonicalJson(value: unknown): string {
-  return canonicalJsonValue(JsonValueSchema.parse(value));
-}
-
-export function hashEvent(value: unknown): string {
-  return createHash("sha256").update(canonicalJson(value)).digest("hex");
-}
-
 export function errorDetails(error: unknown): {
   message: string;
   stack?: string;
@@ -201,7 +179,7 @@ export class RunRecorder implements FleetTelemetry {
   readonly runId: string;
   readonly paths: RunPaths;
   manifest: RunManifest;
-  readonly #eventsSink: Bun.FileSink;
+  readonly #eventsFile: SynchronousEventFile;
   readonly #now: () => Date;
   readonly #createdAt: Date;
   readonly #counts = new Map<RunEventKind, number>();
@@ -219,7 +197,7 @@ export class RunRecorder implements FleetTelemetry {
     this.#now = options.now;
     this.#createdAt = new Date(options.manifest.createdAt);
     this.#secretValues = options.secretValues;
-    this.#eventsSink = options.eventsSink;
+    this.#eventsFile = options.eventsFile;
     this.#writeEvent = options.writeEvent;
   }
 
@@ -270,15 +248,16 @@ export class RunRecorder implements FleetTelemetry {
       },
     });
     await secureWriteJson(paths.manifest, manifest);
-    const eventsHandle = await open(paths.events, "wx", PRIVATE_FILE_MODE);
-    await eventsHandle.close();
-    const eventsSink = Bun.file(paths.events).writer();
+    const eventsFile = new SynchronousEventFile(
+      paths.events,
+      PRIVATE_FILE_MODE,
+    );
     return new RunRecorder({
       paths,
       manifest,
       now,
       secretValues: options.secretValues ?? [],
-      eventsSink,
+      eventsFile,
       writeEvent: options.writeEvent ?? writeFileSinkSynchronously,
     });
   }
@@ -307,11 +286,26 @@ export class RunRecorder implements FleetTelemetry {
       ...controller,
       controllerSourceResolved: true,
     });
+    const bootstrapManifest = this.manifest;
     await secureReplaceJson(this.paths.manifest, manifest);
     this.manifest = manifest;
-    this.record("controller.initialized", {
-      manifestHash: hashEvent(manifest),
-    });
+    try {
+      this.record("controller.initialized", {
+        manifestHash: hashEvent(manifest),
+      });
+    } catch (error) {
+      try {
+        await secureReplaceJson(this.paths.manifest, bootstrapManifest);
+        this.manifest = bootstrapManifest;
+      } catch (rollbackError) {
+        throw new AggregateError(
+          [error, rollbackError],
+          "Failed to bind resolved controller provenance and restore the bootstrap manifest",
+          { cause: rollbackError },
+        );
+      }
+      throw error;
+    }
   }
 
   newId(prefix: string): string {
@@ -362,7 +356,7 @@ export class RunRecorder implements FleetTelemetry {
     // Audit capture is a prerequisite for controller work. Persist and sync the
     // event before returning so a full disk or failed state volume stops the
     // caller before it can perform the action represented by the next event.
-    this.#writeEvent(this.#eventsSink, line);
+    this.#eventsFile.write(line, kind, this.#writeEvent);
     this.#sequence = event.sequence;
     this.#lastHash = event.hash;
     this.#counts.set(kind, (this.#counts.get(kind) ?? 0) + 1);
@@ -411,7 +405,7 @@ export class RunRecorder implements FleetTelemetry {
       kind,
       error === null ? { status } : { status, error: errorDetails(error) },
     );
-    await this.#eventsSink.end();
+    this.#eventsFile.close();
     this.#closed = true;
     const countsByKind = Object.fromEntries(this.#counts);
     const finishedAt = this.#now();

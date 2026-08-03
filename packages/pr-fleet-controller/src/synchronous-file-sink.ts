@@ -1,37 +1,71 @@
+import {
+  closeSync,
+  fstatSync,
+  fsyncSync,
+  ftruncateSync,
+  openSync,
+  writeSync,
+} from "node:fs";
+
 export type SynchronousFileSinkWriter = (
-  sink: Bun.FileSink,
+  fileDescriptor: number,
   line: string,
 ) => void;
 
-async function reportAsynchronousFailure(
-  result: Promise<number>,
-): Promise<void> {
-  try {
-    await result;
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    process.stderr.write(
-      `Run event sink failed after entering asynchronous backpressure: ${message}\n`,
-    );
-  }
-}
-
-function requireSynchronousResult(
-  result: number | Promise<number>,
-  operation: string,
-): void {
-  if (result instanceof Promise) {
-    void reportAsynchronousFailure(result);
-    throw new Error(
-      `Run event ${operation} entered asynchronous backpressure; refusing to continue without durable capture`,
-    );
-  }
-}
-
 export const writeFileSinkSynchronously: SynchronousFileSinkWriter = (
-  sink,
+  fileDescriptor,
   line,
 ) => {
-  requireSynchronousResult(sink.write(line), "write");
-  requireSynchronousResult(sink.flush(), "flush");
+  const bytes = Buffer.from(line);
+  const initialSize = fstatSync(fileDescriptor).size;
+  let written = 0;
+  while (written < bytes.length) {
+    const count = writeSync(
+      fileDescriptor,
+      bytes,
+      written,
+      bytes.length - written,
+      initialSize + written,
+    );
+    if (count === 0) {
+      throw new Error("Run event write made no forward progress");
+    }
+    written += count;
+  }
+  fsyncSync(fileDescriptor);
 };
+
+export class SynchronousEventFile {
+  readonly #fileDescriptor: number;
+
+  constructor(file: string, mode: number) {
+    this.#fileDescriptor = openSync(file, "wx", mode);
+  }
+
+  write(
+    line: string,
+    eventKind: string,
+    writer: SynchronousFileSinkWriter,
+  ): void {
+    const previousSize = fstatSync(this.#fileDescriptor).size;
+    try {
+      writer(this.#fileDescriptor, line);
+    } catch (error) {
+      try {
+        ftruncateSync(this.#fileDescriptor, previousSize);
+        fsyncSync(this.#fileDescriptor);
+      } catch (rollbackError) {
+        throw new AggregateError(
+          [error, rollbackError],
+          `Failed to persist ${eventKind} and restore the event stream`,
+          { cause: rollbackError },
+        );
+      }
+      throw error;
+    }
+  }
+
+  close(): void {
+    closeSync(this.#fileDescriptor);
+  }
+}

@@ -7,9 +7,8 @@ import {
   type RunManifest,
   type RunSummary,
 } from "./run-events.ts";
+import { canonicalJson, hashEvent } from "./run-hashing.ts";
 import {
-  canonicalJson,
-  hashEvent,
   readAndVerifyEvents,
   readRunManifest,
   readRunSummary,
