@@ -7,6 +7,13 @@ board: false
 
 # Pokemon goal-agent: rough-edge fixes, deterministic Discord updates, observability
 
+> Implementation note (2026-08-02): all four phases are implemented on
+> `feature/pokemon-goal-updates` (PR #1953). One design change from the plan:
+> milestone forwarding subscribes inside `spawnGoalCodex` **before** the stdout
+> pump starts (with GoalManager buffering until the goal is active) — the
+> post-spawn subscription in the original plan provably loses early
+> agent_messages when stdout drains fast.
+
 ## Context
 
 The 2026-08-02 live goal session (runtime 7703, goal `be47ea13`) exposed three problem areas:

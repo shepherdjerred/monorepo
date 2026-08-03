@@ -11,6 +11,7 @@ import {
   type GoalControlServerOptions,
 } from "./control-context.ts";
 import { jsonResponse, routeRequest } from "./control-routes.ts";
+import { withSpan } from "@shepherdjerred/discord-plays-core/observability/tracing.ts";
 import { GameController } from "./game-controller.ts";
 import { readGameObservation } from "./game-observation.ts";
 import { enqueueCommand } from "#src/emulator/command-sink.ts";
@@ -84,7 +85,22 @@ export function startGoalControlServer(
         const url = new URL(request.url);
         const startedAt = Date.now();
         try {
-          const routed = await routeRequest(context, request);
+          const routed = await withSpan(
+            "pokemon.goal.http_tool",
+            async (span) => {
+              span?.setAttributes({
+                "http.request.method": request.method,
+                "url.path": url.pathname,
+                "pokemon.goal.id": goalId,
+              });
+              const result = await routeRequest(context, request);
+              span?.setAttributes({
+                "http.response.status_code": result.response.status,
+                "pokemon.goal.duration_ms": Date.now() - startedAt,
+              });
+              return result;
+            },
+          );
           options.goalManager.recordToolCall(goalId, {
             method: request.method,
             path: url.pathname,
