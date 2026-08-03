@@ -8,6 +8,7 @@ import type { MastraModelConfig } from "@mastra/core/llm";
 import { resolveProvider } from "@shepherdjerred/code-review";
 import { z } from "zod";
 import { MastraMaster, MastraWorkerRunner } from "./agents.ts";
+import { combineFailures, normalizeFailure } from "./cli-failures.ts";
 import { FleetController } from "./controller.ts";
 import { resolveControllerSource } from "./controller-metadata.ts";
 import { CommandFleetEnvironment } from "./environment.ts";
@@ -134,24 +135,6 @@ function configuredSecretValues(value: string | undefined): readonly string[] {
   return value === undefined || value.length === 0 ? [] : [value];
 }
 
-function normalizeFailure(failure: unknown): Error {
-  return failure instanceof Error
-    ? failure
-    : new Error("Non-Error controller failure", { cause: failure });
-}
-
-function combineFailures(current: Error | undefined, failure: unknown): Error {
-  const next = normalizeFailure(failure);
-  if (current === undefined || current === next) {
-    return next;
-  }
-  return new AggregateError(
-    [current, next],
-    "Controller and shutdown both failed",
-    { cause: next },
-  );
-}
-
 function parseCliArgs(args: string[]) {
   return parseArgs({
     args,
@@ -251,6 +234,7 @@ async function main(): Promise<void> {
   let master: MastraMaster | undefined;
   let terminal: ReturnType<typeof createInterface> | undefined;
   let shutdownRequested = false;
+  let preflightInProgress = true;
   let runFailure: Error | undefined;
   let finalizationPromise: Promise<void> | undefined;
   const observer = new TerminalObserver();
@@ -312,7 +296,9 @@ async function main(): Promise<void> {
   };
   const handleSigint = (): void => {
     shutdownRequested = true;
-    void stopAfterRequest();
+    if (!preflightInProgress) {
+      void stopAfterRequest();
+    }
   };
   process.once("SIGINT", handleSigint);
   const finishIfRequested = async (): Promise<boolean> => {
@@ -390,6 +376,10 @@ async function main(): Promise<void> {
       apiKeyEnvironment,
     );
     const reviewProvider = resolveProvider(parsed.values["review-provider"]);
+    preflightInProgress = false;
+    if (await finishIfRequested()) {
+      return;
+    }
     const store = new FleetStore(config.maxWorkers);
     runtimeInitialization = createFleetMastraRuntime(recorder);
     runtime = await runtimeInitialization;

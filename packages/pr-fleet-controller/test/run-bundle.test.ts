@@ -137,6 +137,85 @@ async function runCliWithImplicitCheckout(): Promise<{
   };
 }
 
+async function runCliInterruptedDuringCheckout(): Promise<{
+  bundle: Awaited<ReturnType<typeof loadRunBundle>>;
+  exitCode: number;
+  stderr: string;
+}> {
+  const parent = await mkdtemp(path.join(tmpdir(), "pr-fleet-sigint-"));
+  temporaryDirectories.push(parent);
+  const stateDirectory = path.join(parent, "state");
+  const binDirectory = path.join(parent, "bin");
+  const readyFifo = path.join(parent, "ready.fifo");
+  const releaseFifo = path.join(parent, "release.fifo");
+  await mkdir(binDirectory);
+  const fifoResult = Bun.spawnSync(["mkfifo", readyFifo, releaseFifo]);
+  if (fifoResult.exitCode !== 0) {
+    throw new Error(
+      `mkfifo failed: ${new TextDecoder().decode(fifoResult.stderr)}`,
+    );
+  }
+  const packageDirectory = path.join(import.meta.dir, "..");
+  const checkout = path.join(parent, "checkout");
+  const gitPath = path.join(binDirectory, "git");
+  await writeFile(
+    gitPath,
+    `#!/bin/sh\nif [ "$1" = "rev-parse" ] && [ "$2" = "--show-toplevel" ]; then\n  printf 'ready\\n' > "$PR_FLEET_READY_FIFO"\n  IFS= read -r release < "$PR_FLEET_RELEASE_FIFO"\n  printf '%s\\n' "$PR_FLEET_TEST_CHECKOUT"\n  exit 0\nfi\nexit 9\n`,
+  );
+  await chmod(gitPath, 0o700);
+  for (const executable of [
+    "bk",
+    "bun",
+    "gh",
+    "git-spice",
+    "mise",
+    "rg",
+    "sandbox-exec",
+  ]) {
+    const executablePath = path.join(binDirectory, executable);
+    await writeFile(executablePath, "#!/bin/sh\nexit 0\n");
+    await chmod(executablePath, 0o700);
+  }
+  const subprocess = Bun.spawn(
+    [
+      process.execPath,
+      path.join(packageDirectory, "src", "cli.ts"),
+      "--model",
+      "openai/gpt-5.6-terra",
+      "--max-workers",
+      "1",
+      "--state-dir",
+      stateDirectory,
+    ],
+    {
+      cwd: packageDirectory,
+      env: {
+        ...Bun.env,
+        PATH: binDirectory,
+        PR_FLEET_READY_FIFO: readyFifo,
+        PR_FLEET_RELEASE_FIFO: releaseFifo,
+        PR_FLEET_TEST_CHECKOUT: checkout,
+      },
+      stdout: "pipe",
+      stderr: "pipe",
+    },
+  );
+  expect(await readFile(readyFifo, "utf8")).toBe("ready\n");
+  subprocess.kill("SIGINT");
+  await writeFile(releaseFifo, "release\n");
+  const [exitCode, stderr] = await Promise.all([
+    subprocess.exited,
+    new Response(subprocess.stderr).text(),
+  ]);
+  const runs = await readdir(stateDirectory);
+  expect(runs).toHaveLength(1);
+  return {
+    bundle: await loadRunBundle(path.join(stateDirectory, runs[0] ?? "")),
+    exitCode,
+    stderr,
+  };
+}
+
 async function recordSuccessfulEmptyRun(recorder: RunRecorder): Promise<void> {
   const tickId = recorder.newId("tick");
   recorder.record("run.started", { model: "openai/gpt-5.6-terra" });
@@ -555,6 +634,32 @@ describe("CLI command capture", () => {
       open: [],
     });
   });
+
+  test("waits for checkout discovery before finalizing SIGINT", async () => {
+    const { bundle, exitCode, stderr } =
+      await runCliInterruptedDuringCheckout();
+    expect(exitCode).toBe(0);
+    expect(stderr).toBe("");
+    const report = replayRunBundle(bundle, {
+      currentControllerVersion: "0.1.0",
+      allowVersionMismatch: false,
+    });
+    expect(report.status).toBe("completed");
+    expect(report.commands).toEqual({
+      started: 1,
+      completed: 1,
+      cancelled: 0,
+      failed: 0,
+      open: [],
+    });
+    expect(report.shutdown).toEqual({
+      started: 1,
+      completed: 1,
+      cancelled: 0,
+      failed: 0,
+      open: [],
+    });
+  });
 });
 
 describe("run bundle replay", () => {
@@ -799,6 +904,40 @@ describe("run bundle correlation replay", () => {
 });
 
 describe("run bundle lifecycle replay", () => {
+  test("rejects events recorded before run.started", async () => {
+    const recorder = await createRecorder();
+    const commandId = recorder.newId("command");
+    recorder.record("run.started", { scenario: "misordered-run" });
+    recorder.record(
+      "command.started",
+      { executable: "git", args: ["status"] },
+      { commandId },
+    );
+    recorder.record(
+      "command.completed",
+      { executable: "git", exitCode: 0 },
+      { commandId },
+    );
+    await finalizeCompletedRun(recorder);
+    const bundle = await loadRunBundle(recorder.paths.runDirectory);
+    const runStarted = bundle.events[0];
+    const commandStarted = bundle.events[1];
+    if (runStarted === undefined || commandStarted === undefined) {
+      throw new Error("misordered-run fixture is incomplete");
+    }
+    const events = [commandStarted, runStarted, ...bundle.events.slice(2)];
+
+    expect(() =>
+      replayRunBundle(
+        { ...bundle, events },
+        {
+          currentControllerVersion: "0.1.0",
+          allowVersionMismatch: false,
+        },
+      ),
+    ).toThrow("Run bundle must begin with run.started");
+  });
+
   test("rejects completed runs with open command or model lifecycles", async () => {
     const recorder = await createRecorder();
     recorder.record("run.started", { scenario: "incomplete-capture" });
@@ -899,7 +1038,9 @@ describe("run bundle lifecycle replay", () => {
       "Completed run must contain exactly one completed shutdown lifecycle",
     );
   });
+});
 
+describe("shutdown boundary replay", () => {
   test("rejects controller events recorded after shutdown completes", async () => {
     const recorder = await createRecorder();
     const commandId = recorder.newId("command");

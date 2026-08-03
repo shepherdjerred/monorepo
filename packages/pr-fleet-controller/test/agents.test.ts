@@ -1,7 +1,14 @@
 import { describe, expect, test } from "bun:test";
 import { MastraMaster } from "@shepherdjerred/pr-fleet-controller/src/agents.ts";
 import type { MasterControllerTools } from "@shepherdjerred/pr-fleet-controller/src/master-tools.ts";
-import type { FleetObserver } from "@shepherdjerred/pr-fleet-controller/src/ports.ts";
+import type {
+  FleetObserver,
+  FleetTelemetry,
+} from "@shepherdjerred/pr-fleet-controller/src/ports.ts";
+import type {
+  RunEventCorrelation,
+  RunEventKind,
+} from "@shepherdjerred/pr-fleet-controller/src/run-events.ts";
 import type { FleetSnapshot } from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
 
 const snapshot: FleetSnapshot = {
@@ -48,6 +55,31 @@ class RecordingObserver implements FleetObserver {
   }
 }
 
+class RecordingTelemetry implements FleetTelemetry {
+  readonly runId = "master-abort-test";
+  readonly events: {
+    kind: RunEventKind;
+    payload: Record<string, unknown>;
+    correlation: RunEventCorrelation;
+  }[] = [];
+
+  newId(prefix: string): string {
+    return `${prefix}-test`;
+  }
+
+  traceId(): string {
+    return "a".repeat(32);
+  }
+
+  record(
+    kind: RunEventKind,
+    payload: Record<string, unknown>,
+    correlation: RunEventCorrelation = {},
+  ): void {
+    this.events.push({ kind, payload, correlation });
+  }
+}
+
 // A master whose streamed turn hangs until its abort signal fires, standing in
 // for a long remote model turn without a live model.
 class HangingMaster extends MastraMaster {
@@ -76,6 +108,27 @@ class HangingMaster extends MastraMaster {
       if (!signal.aborted) {
         yield "unreachable when aborted";
       }
+    })();
+    return Promise.resolve({ textStream });
+  }
+}
+
+class PartialOutputMaster extends MastraMaster {
+  protected override streamTurn(
+    _prompt: string,
+    signal: AbortSignal,
+  ): Promise<{ textStream: AsyncIterable<string> }> {
+    const textStream = (async function* (): AsyncGenerator<string> {
+      yield "visible partial output";
+      await new Promise<void>((resolve) => {
+        if (signal.aborted) {
+          resolve();
+          return;
+        }
+        signal.addEventListener("abort", () => {
+          resolve();
+        });
+      });
     })();
     return Promise.resolve({ textStream });
   }
@@ -113,5 +166,29 @@ describe("master shutdown", () => {
     master.send("late steering");
     await flush();
     expect(master.turns).toBe(0);
+  });
+
+  test("records partial output that was visible before an abort", async () => {
+    const observer = new RecordingObserver();
+    const telemetry = new RecordingTelemetry();
+    const master = new PartialOutputMaster(
+      "openai/gpt-5",
+      controller,
+      observer,
+      { requestShutdown: noop, telemetry },
+    );
+
+    master.send("status?");
+    await flush();
+    expect(observer.text).toEqual(["visible partial output"]);
+    await master.stop();
+
+    const failed = telemetry.events.find(
+      (event) => event.kind === "master.turn.failed",
+    );
+    expect(failed?.payload).toEqual({
+      aborted: true,
+      response: "visible partial output",
+    });
   });
 });

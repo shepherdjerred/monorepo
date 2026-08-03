@@ -257,6 +257,7 @@ export class MastraMaster {
   }
 
   async #runDrain(): Promise<void> {
+    let activeResponse = "";
     try {
       while (this.#queue.length > 0 && !this.#abort.signal.aborted) {
         const queued = this.#queue.splice(0);
@@ -270,6 +271,7 @@ export class MastraMaster {
         const traceId = this.#telemetry.traceId("master", modelTurnId);
         const correlation = { traceId, modelTurnId };
         this.#activeTurnCorrelation = correlation;
+        activeResponse = "";
         this.#telemetry.record(
           "master.turn.started",
           { prompt, messages: queued },
@@ -280,15 +282,14 @@ export class MastraMaster {
           this.#abort.signal,
           traceId,
         );
-        let response = "";
         for await (const text of output.textStream) {
-          response += text;
+          activeResponse += text;
           this.#observer.onMasterText(text);
         }
         if (signalIsAborted(this.#abort.signal)) {
           this.#telemetry.record(
             "master.turn.failed",
-            { aborted: true },
+            { aborted: true, response: activeResponse },
             correlation,
           );
           this.#activeTurnCorrelation = null;
@@ -297,11 +298,15 @@ export class MastraMaster {
         for (const item of queued) {
           this.#history.push(`user: ${item}`);
         }
-        this.#history.push(`assistant: ${response}`);
-        this.#telemetry.record("master.text", { text: response }, correlation);
+        this.#history.push(`assistant: ${activeResponse}`);
+        this.#telemetry.record(
+          "master.text",
+          { text: activeResponse },
+          correlation,
+        );
         this.#telemetry.record(
           "master.turn.completed",
-          { response },
+          { response: activeResponse },
           correlation,
         );
         this.#activeTurnCorrelation = null;
@@ -312,6 +317,7 @@ export class MastraMaster {
         {
           aborted: this.#abort.signal.aborted,
           error: error instanceof Error ? error.message : String(error),
+          response: activeResponse,
         },
         this.#activeTurnCorrelation ?? {},
       );

@@ -308,6 +308,10 @@ function verifyBundleMetadata(
   if (lastEvent.hash !== summary.lastHash) {
     throw new Error("Summary last hash does not match the final event");
   }
+  const firstEvent = events[0];
+  if (firstEvent?.kind !== "run.started") {
+    throw new Error("Run bundle must begin with run.started");
+  }
   const expectedRunTerminal =
     summary.status === "completed" ? "run.completed" : "run.failed";
   if (lastEvent.kind !== expectedRunTerminal) {
