@@ -227,7 +227,11 @@ const versions = {
     "3.6.0@sha256:9ea3331d891e436a7239e37e68ca4c8888500cb122be7cdc9d8400f345555c76",
   // renovate: datasource=github-releases versioning=semver
   "kubernetes/kubernetes": "v1.36.3",
-  // renovate: datasource=custom.papermc versioning=semver
+  // The papermc datasource lists both 2-part families (e.g. "26.2") and 3-part
+  // builds (e.g. "26.1.2"); strict semver drops the 2-part ones, so it never
+  // surfaced "26.2". semver-coerced compares them all, and the datasource
+  // transform now filters pre-releases (-rc/-pre) so only stable builds appear.
+  // renovate: datasource=custom.papermc versioning=semver-coerced
   paper: "26.1.2",
   // renovate: datasource=docker registryUrl=https://ghcr.io/recyclarr versioning=docker
   recyclarr:
