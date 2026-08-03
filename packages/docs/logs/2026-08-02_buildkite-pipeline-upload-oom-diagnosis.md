@@ -1,5 +1,5 @@
 ---
-id: 2026-08-02_buildkite-pipeline-upload-oom-diagnosis
+id: 2026-08-02-buildkite-pipeline-upload-oom-diagnosis
 type: log
 status: complete
 board: false
