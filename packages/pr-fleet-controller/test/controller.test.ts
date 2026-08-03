@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import { FleetController } from "@shepherdjerred/pr-fleet-controller/src/controller.ts";
 import type {
   CommandRequest,
+  CommandResult,
   FleetEnvironment,
   FleetObserver,
   FleetScheduler,
@@ -55,16 +56,31 @@ class FakeEnvironment implements FleetEnvironment {
     return Promise.resolve();
   }
 
-  runLocalCommand(_request: CommandRequest) {
-    return Promise.resolve({ exitCode: 0, stdout: "", stderr: "" });
+  runLocalCommand(_request: CommandRequest): Promise<CommandResult> {
+    return Promise.resolve({
+      exitCode: 0,
+      stdout: "",
+      stderr: "",
+      termination: "exit",
+    });
   }
 
-  startRestack() {
-    return Promise.resolve({ exitCode: 0, stdout: "", stderr: "" });
+  startRestack(): Promise<CommandResult> {
+    return Promise.resolve({
+      exitCode: 0,
+      stdout: "",
+      stderr: "",
+      termination: "exit",
+    });
   }
 
-  continueRestack() {
-    return Promise.resolve({ exitCode: 0, stdout: "", stderr: "" });
+  continueRestack(): Promise<CommandResult> {
+    return Promise.resolve({
+      exitCode: 0,
+      stdout: "",
+      stderr: "",
+      termination: "exit",
+    });
   }
 
   publishFix() {
@@ -185,16 +201,31 @@ class MutableEnvironment implements FleetEnvironment {
     return Promise.resolve();
   }
 
-  runLocalCommand(_request: CommandRequest) {
-    return Promise.resolve({ exitCode: 0, stdout: "", stderr: "" });
+  runLocalCommand(_request: CommandRequest): Promise<CommandResult> {
+    return Promise.resolve({
+      exitCode: 0,
+      stdout: "",
+      stderr: "",
+      termination: "exit",
+    });
   }
 
-  startRestack() {
-    return Promise.resolve({ exitCode: 0, stdout: "", stderr: "" });
+  startRestack(): Promise<CommandResult> {
+    return Promise.resolve({
+      exitCode: 0,
+      stdout: "",
+      stderr: "",
+      termination: "exit",
+    });
   }
 
-  continueRestack() {
-    return Promise.resolve({ exitCode: 0, stdout: "", stderr: "" });
+  continueRestack(): Promise<CommandResult> {
+    return Promise.resolve({
+      exitCode: 0,
+      stdout: "",
+      stderr: "",
+      termination: "exit",
+    });
   }
 
   publishFix() {
@@ -278,6 +309,17 @@ class OneFailureEnvironment extends FakeEnvironment {
   }
 }
 
+class DeferredListEnvironment extends FakeEnvironment {
+  readonly started = Promise.withResolvers<undefined>();
+  readonly release = Promise.withResolvers<undefined>();
+
+  override async listOpenPrs(): Promise<PrIdentity[]> {
+    this.started.resolve(undefined);
+    await this.release.promise;
+    return super.listOpenPrs();
+  }
+}
+
 test("a fleet tick classifies every PR and queues excess actionable work", async () => {
   const first = identity(1);
   const second = identity(2);
@@ -349,6 +391,41 @@ test("a failed heartbeat rearms reconciliation", async () => {
   expect(scheduler.callbacks.size).toBe(1);
   await controller.stop();
   expect(scheduler.callbacks.size).toBe(0);
+});
+
+test("shutdown waits for an in-flight reconciliation before completing", async () => {
+  const environment = new DeferredListEnvironment([], new Map());
+  const telemetry = new RecordingTelemetry();
+  const controller = new FleetController({
+    config: {
+      model: "openai/gpt-5",
+      repo: "shepherdjerred/monorepo",
+      checkout: "/tmp/repo",
+      worktreeRoot: "/tmp/worktrees",
+      maxWorkers: 1,
+    },
+    environment,
+    workerRunner: new BlockingRunner(),
+    observer: new RecordingObserver(),
+    store: new FleetStore(1),
+    telemetry,
+  });
+
+  const tick = controller.tick("heartbeat");
+  await environment.started.promise;
+  let stopped = false;
+  const stop = (async (): Promise<void> => {
+    await controller.stop();
+    stopped = true;
+  })();
+  await flushMicrotasks();
+  expect(stopped).toBe(false);
+
+  environment.release.resolve(undefined);
+  await Promise.all([tick, stop]);
+  const kinds = telemetry.events.map((event) => event.kind);
+  expect(kinds.at(-2)).toBe("tick.completed");
+  expect(kinds.at(-1)).toBe("shutdown.completed");
 });
 
 test("records worker start before the runner can emit its first attempt", async () => {

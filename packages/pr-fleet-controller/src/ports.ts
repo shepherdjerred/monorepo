@@ -27,6 +27,7 @@ export type CommandResult = {
   exitCode: number;
   stdout: string;
   stderr: string;
+  termination: "exit" | "timeout" | "abort";
 };
 
 export type FleetEnvironment = {

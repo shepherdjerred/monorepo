@@ -46,9 +46,15 @@ function scriptWorktree(
         exitCode: ancestorExit,
         stdout: "",
         stderr: "",
+        termination: "exit",
       });
     }
-    return Promise.resolve({ exitCode: 0, stdout: "", stderr: "" });
+    return Promise.resolve({
+      exitCode: 0,
+      stdout: "",
+      stderr: "",
+      termination: "exit",
+    });
   };
 
   const manager = new WorktreeManager({
@@ -98,7 +104,12 @@ describe("worktree reassignment preserves unpushed work", () => {
 });
 
 const okRun = (): Promise<CommandResult> =>
-  Promise.resolve({ exitCode: 0, stdout: "", stderr: "" });
+  Promise.resolve({
+    exitCode: 0,
+    stdout: "",
+    stderr: "",
+    termination: "exit",
+  });
 
 function managerWith(porcelain: string): WorktreeManager {
   const mustRun = (executable: string, args: string[]): Promise<string> => {
@@ -168,9 +179,19 @@ function scriptProvision(
       request.args[0] === "rev-parse" &&
       request.args.includes("REBASE_HEAD")
     ) {
-      return Promise.resolve({ exitCode: rebaseExit, stdout: "", stderr: "" });
+      return Promise.resolve({
+        exitCode: rebaseExit,
+        stdout: "",
+        stderr: "",
+        termination: "exit",
+      });
     }
-    return Promise.resolve({ exitCode: 0, stdout: "", stderr: "" });
+    return Promise.resolve({
+      exitCode: 0,
+      stdout: "",
+      stderr: "",
+      termination: "exit",
+    });
   };
   const manager = new WorktreeManager({
     checkout: "/tmp/checkout",

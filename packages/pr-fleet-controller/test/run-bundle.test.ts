@@ -363,6 +363,7 @@ describe("run bundle replay", () => {
           payload: {
             prompt: "private model prompt",
             messages: ["private operator input"],
+            input: { message: "private worker guidance" },
             result: "kept",
           },
         },
@@ -371,6 +372,9 @@ describe("run bundle replay", () => {
     );
     expect(hidden[0]?.payload["prompt"]).toBe("[hidden; pass --show-bodies]");
     expect(hidden[0]?.payload["messages"]).toBe("[hidden; pass --show-bodies]");
+    expect(hidden[0]?.payload["input"]).toEqual({
+      message: "[hidden; pass --show-bodies]",
+    });
     expect(hidden[0]?.payload["result"]).toBe("kept");
   });
 });

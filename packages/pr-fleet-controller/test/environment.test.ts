@@ -16,6 +16,7 @@ class RecordingTelemetry implements FleetTelemetry {
   readonly events: {
     kind: RunEventKind;
     correlation: RunEventCorrelation;
+    payload: Record<string, unknown>;
   }[] = [];
   #nextId = 0;
 
@@ -30,10 +31,10 @@ class RecordingTelemetry implements FleetTelemetry {
 
   record(
     kind: RunEventKind,
-    _payload: Record<string, unknown>,
+    payload: Record<string, unknown>,
     correlation: RunEventCorrelation = {},
   ): void {
-    this.events.push({ kind, correlation });
+    this.events.push({ kind, correlation, payload });
   }
 }
 
@@ -85,6 +86,7 @@ describe("command process-group termination", () => {
     const output = path.join(directory, "timeout-survivor.txt");
     const result = await runDescendant(output);
     expect(result.exitCode).not.toBe(0);
+    expect(result.termination).toBe("timeout");
     await Bun.sleep(400);
     expect(await Bun.file(output).exists()).toBe(false);
   });
@@ -98,6 +100,7 @@ describe("command process-group termination", () => {
     try {
       const result = await runDescendant(output, controller.signal);
       expect(result.exitCode).not.toBe(0);
+      expect(result.termination).toBe("abort");
     } finally {
       clearTimeout(timer);
     }
@@ -142,4 +145,5 @@ test("command events inherit their worker tool and model correlation", async () 
   expect(telemetry.events[1]?.correlation).toEqual(
     telemetry.events[0]?.correlation,
   );
+  expect(telemetry.events[1]?.payload["termination"]).toBe("exit");
 });

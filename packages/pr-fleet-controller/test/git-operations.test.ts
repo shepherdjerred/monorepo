@@ -29,9 +29,19 @@ function fakeGit(trackedExit: number) {
   const mustCalls: string[][] = [];
   const run = (request: CommandRequest): Promise<CommandResult> => {
     if (request.executable === "git" && request.args[0] === "cat-file") {
-      return Promise.resolve({ exitCode: trackedExit, stdout: "", stderr: "" });
+      return Promise.resolve({
+        exitCode: trackedExit,
+        stdout: "",
+        stderr: "",
+        termination: "exit",
+      });
     }
-    return Promise.resolve({ exitCode: 0, stdout: "", stderr: "" });
+    return Promise.resolve({
+      exitCode: 0,
+      stdout: "",
+      stderr: "",
+      termination: "exit",
+    });
   };
   const mustRun = (executable: string, args: string[]): Promise<string> => {
     mustCalls.push([executable, ...args]);

@@ -447,6 +447,7 @@ export function createWorkerTools(
         exitCode: z.number(),
         stdout: z.string(),
         stderr: z.string(),
+        termination: z.enum(["exit", "timeout", "abort"]),
       }),
       execute: (input) =>
         runRecordedTool("run_local_command", input, toolContext, async () => {
@@ -477,6 +478,7 @@ export function createWorkerTools(
               exitCode: result.exitCode,
               stdout: result.stdout.slice(0, 100_000),
               stderr: result.stderr.slice(0, 100_000),
+              termination: result.termination,
             };
           } finally {
             store.releaseLease(pr.identity.number, "heavy", pr.stackId);

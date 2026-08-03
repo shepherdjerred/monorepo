@@ -42,8 +42,13 @@ export async function runCommand(
     env: request.env ?? Bun.env,
     detached: true,
   });
+  let termination: CommandResult["termination"] = "exit";
   const terminationFailure = Promise.withResolvers<never>();
-  const terminate = (): void => {
+  const terminate = (reason: "timeout" | "abort"): void => {
+    if (termination !== "exit") {
+      return;
+    }
+    termination = reason;
     try {
       killProcessGroup(subprocess.pid);
     } catch (error) {
@@ -54,9 +59,12 @@ export async function runCommand(
     }
   };
   const timer = setTimeout(() => {
-    terminate();
+    terminate("timeout");
   }, request.timeoutMs);
-  request.signal?.addEventListener("abort", terminate, { once: true });
+  const abort = (): void => {
+    terminate("abort");
+  };
+  request.signal?.addEventListener("abort", abort, { once: true });
   try {
     const [exitCode, stdout, stderr] = await Promise.race([
       Promise.all([
@@ -66,9 +74,9 @@ export async function runCommand(
       ]),
       terminationFailure.promise,
     ]);
-    return { exitCode, stdout, stderr };
+    return { exitCode, stdout, stderr, termination };
   } finally {
     clearTimeout(timer);
-    request.signal?.removeEventListener("abort", terminate);
+    request.signal?.removeEventListener("abort", abort);
   }
 }

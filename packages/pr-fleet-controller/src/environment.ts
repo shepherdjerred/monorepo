@@ -99,6 +99,7 @@ export class CommandFleetEnvironment implements FleetEnvironment {
           exitCode: result.exitCode,
           stdout: result.stdout,
           stderr: result.stderr,
+          termination: result.termination,
           durationMs: Math.round(performance.now() - startedAt),
         },
         correlation,

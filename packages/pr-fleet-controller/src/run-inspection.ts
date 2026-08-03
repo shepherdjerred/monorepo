@@ -22,7 +22,7 @@ const TickCompletedPayloadSchema = z.object({ report: FleetTickReportSchema });
 const SnapshotPayloadSchema = z.object({ snapshot: FleetSnapshotSchema });
 
 const BODY_FIELD_PATTERN =
-  /^(?:body|content|line|log|messages|output|patch|prompt|response|stderr|stdout|text)$/i;
+  /^(?:body|content|line|log|message|messages|output|patch|prompt|response|stderr|stdout|text)$/i;
 const ACTIVE_STATUSES = new Set([
   "diagnosing",
   "editing",

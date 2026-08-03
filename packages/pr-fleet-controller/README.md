@@ -113,10 +113,11 @@ credential environment values, and the value selected by `--api-key-env`
 before writing any event or summary. The same literal-value redactor runs
 before Mastra's structural sensitive-field filter, so traces retain redacted
 model/tool bodies, timing, token metadata, and correlation IDs. Commands inherit
-their worker attempt and tool-call correlation, and deliberate worker
-cancellation is recorded separately from failure. Runs are retained indefinitely
-in v1, so operators must delete old run directories themselves when they no
-longer need them. Nothing is uploaded.
+their worker attempt and tool-call correlation, record whether they exited,
+timed out, or were aborted, and distinguish deliberate worker cancellation from
+failure. Shutdown awaits any active reconciliation before finalizing the bundle.
+Runs are retained indefinitely in v1, so operators must delete old run
+directories themselves when they no longer need them. Nothing is uploaded.
 
 Verify and inspect a run without revealing prompt, output, patch, log, or
 operator-input bodies:

@@ -40,6 +40,7 @@ export class FleetController implements MasterControllerTools {
   #tickRunning = false;
   #tickDue = false;
   #currentTickId: string | undefined;
+  #tickSettled: Promise<undefined> | null = null;
 
   constructor(dependencies: FleetControllerDependencies) {
     const { config, environment, workerRunner, observer } = dependencies;
@@ -75,6 +76,8 @@ export class FleetController implements MasterControllerTools {
       };
     }
     const tickId = this.#telemetry.tickStarted(trigger);
+    const settlement = Promise.withResolvers<undefined>();
+    this.#tickSettled = settlement.promise;
     this.#currentTickId = tickId;
     this.#tickRunning = true;
     try {
@@ -96,6 +99,10 @@ export class FleetController implements MasterControllerTools {
     } finally {
       this.#tickRunning = false;
       this.#currentTickId = undefined;
+      settlement.resolve(undefined);
+      if (this.#tickSettled === settlement.promise) {
+        this.#tickSettled = null;
+      }
       if (this.#tickDue && !this.store.stopping) {
         this.#tickDue = false;
         queueMicrotask(() => {
@@ -485,6 +492,7 @@ export class FleetController implements MasterControllerTools {
       controller.abort();
     }
     await Promise.allSettled(this.store.activeWorkers.values());
+    await this.#tickSettled;
     const snapshot = this.snapshot();
     this.#telemetry.shutdownCompleted(snapshot);
     return snapshot;

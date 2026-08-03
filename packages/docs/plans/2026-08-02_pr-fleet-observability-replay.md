@@ -151,7 +151,10 @@ repository checkout.
   before attempts, and record controller-source provenance independently of the
   managed checkout. The prior lower-layer Mise finding was accepted by a clean
   current-head re-review and its thread was resolved.
-- Passed focused typecheck, 70 controller tests, 39 observability tests, lint,
+- Addressed the next current-head review with reconciliation-aware shutdown,
+  explicit command exit/timeout/abort metadata, and default masking for singular
+  guidance-message fields.
+- Passed focused typecheck, 71 controller tests, 39 observability tests, lint,
   native-aware build, docs validation, Markdown lint, diff checks, and staged
   Lefthook/Gitleaks/Prettier/lockfile checks.
 - Completed a second non-mutating `openai/gpt-5.6-terra` model/tool turn from
