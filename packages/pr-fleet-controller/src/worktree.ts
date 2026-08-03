@@ -71,6 +71,49 @@ export class WorktreeManager {
     return null;
   }
 
+  // Is a worktree registered at exactly this path, regardless of what (if any)
+  // branch it currently has checked out? The branch-based `findWorktree` cannot
+  // see a DETACHED worktree — a git-spice restack halted on a conflict, or a
+  // controller restart mid-restack, leaves `git worktree list` with no
+  // `branch refs/heads/...` line for it — so provisioning needs a path-based
+  // check to recognize its own stack worktree.
+  async #worktreeRegisteredAt(worktreePath: string): Promise<boolean> {
+    const output = await this.#mustRun("git", [
+      "worktree",
+      "list",
+      "--porcelain",
+    ]);
+    const target = path.resolve(worktreePath);
+    for (const line of output.split("\n")) {
+      if (
+        line.startsWith("worktree ") &&
+        path.resolve(line.slice("worktree ".length)) === target
+      ) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // A restack halted on a conflict leaves `worktreePath` mid-rebase (HEAD
+  // detached with conflicted index entries). Detect the stopped rebase via
+  // `REBASE_HEAD` — the ref Git maintains only while a rebase is paused — and
+  // abort it so the shared worktree returns to a clean, branch-attached state
+  // that `assignWorktreeBranch` can sync. The controller re-diagnoses and
+  // re-attempts the restack from scratch, so nothing durable is lost: the
+  // branch's commits remain and only the partial rebase is discarded.
+  async #abortInProgressRebase(worktreePath: string): Promise<void> {
+    const rebaseInProgress = await this.#run({
+      executable: "git",
+      args: ["rev-parse", "--verify", "--quiet", "REBASE_HEAD"],
+      cwd: worktreePath,
+      timeoutMs: 30_000,
+    });
+    if (rebaseInProgress.exitCode === 0) {
+      await this.#mustRun("git", ["rebase", "--abort"], worktreePath);
+    }
+  }
+
   async assignWorktreeBranch(worktree: string, pr: PrIdentity): Promise<void> {
     const n = String(pr.number);
     const branch = pr.headRefName;
@@ -171,6 +214,16 @@ export class WorktreeManager {
     const existing = await this.findWorktree([pr.headRefName]);
     if (existing !== null) {
       return existing;
+    }
+    // The fleet's stack worktree lives at this deterministic path. If it is
+    // already registered but was missed by the branch-based lookups above (here
+    // and the sibling-branch lookup in the caller), it is DETACHED — a restack
+    // stopped on a conflict. Reuse it by path, aborting the incomplete rebase,
+    // instead of trying to `git worktree add` a second worktree at the occupied
+    // path (which fails and pauses the PR).
+    if (await this.#worktreeRegisteredAt(worktreePath)) {
+      await this.#abortInProgressRebase(worktreePath);
+      return worktreePath;
     }
     const branchExists = await this.#run({
       executable: "git",
