@@ -25,7 +25,7 @@ export const WorktreeReminder = async ({ worktree }) => {
       if (!isMainCheckout) return;
 
       output.system.push(
-        "Worktree reminder: This session is in the main checkout. Create a worktree before a non-trivial edit. New work uses `gh stack`: load `gh-stack` and run `gh stack init --base main <branch>` inside the worktree. If the work is already managed by git-spice, load `git-spice-helper` and keep that stack on git-spice; never mix the tools.",
+        "Worktree reminder: This session is in the main checkout. Create a worktree before a non-trivial edit.",
       );
     },
   };

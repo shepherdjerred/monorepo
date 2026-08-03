@@ -490,8 +490,6 @@ export const dataDragonActivities = {
           redactOutput: true,
         },
       );
-      // This activity owns a stateless, single-PR bot flow in a fresh clone.
-      // Plain gh also preserves the auto-merge behavior unavailable to stacks.
       // `recovered` means a concurrent retry attempt already opened this
       // version's PR on the same deterministic branch — GitHub refused our
       // duplicate create for that head, so we finish auto-merge on the existing

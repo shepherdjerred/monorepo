@@ -16,7 +16,7 @@ datasets, scorers, model judges, experiments, or evaluation gates.
 
 ## Stack
 
-Two native GitHub stack layers keep runtime hardening independently reviewable:
+Two git-spice stack layers keep runtime hardening independently reviewable:
 
 1. `fix/pr-fleet-runtime-safety`
 2. `feat/pr-fleet-observability`
@@ -134,7 +134,7 @@ and exits nonzero on divergence.
 
 ### Done
 
-- Approved the collection-only design and two-layer native stack boundary.
+- Approved the collection-only design and two-layer git-spice stack boundary.
 
 ### Remaining
 

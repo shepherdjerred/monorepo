@@ -1,22 +1,17 @@
 ---
 name: git-spice-helper
 description: |
-  Legacy git-spice (gs) stacked-branch and stacked-PR workflow for shepherdjerred/monorepo.
-  Load only when work is already managed by git-spice, extends an existing git-spice stack, or the user explicitly asks about git-spice/gs.
+  git-spice (gs) stacked-branch and stacked-PR workflow — the authoritative branch & PR reference for shepherdjerred/monorepo.
+  Load BEFORE any branch-management op: creating branches, creating/updating/stacking/moving PRs, restacking, rebasing a stack, or syncing a branch with main — and whenever the user mentions git-spice, gs, stacks/stacking, or "open/create a PR".
 ---
 
-# git-spice — existing stacks only
+# git-spice — stacked branches & stacked PRs
 
-New work in this repo uses GitHub's native stacked PRs via the `gh-stack` skill.
-This skill remains authoritative for work that was **already created or managed
-with [git-spice](https://abhinav.github.io/git-spice/)** (`gs`) and for new
-layers placed on top of an existing git-spice stack. Once git-spice owns a
-branch or stack, drive its branches, restacks, PRs, sync, and cleanup entirely
-with `git-spice`. Never register or operate that stack with `gh stack`, never
-hand-roll `git rebase --onto`, and never use bare `gh pr create` for its PRs.
-
-If the work is newly rooted and has no git-spice ownership, stop and load
-`gh-stack` instead. A single new PR is a one-layer native GitHub stack.
+In this repo **every feature PR is created and managed with
+[git-spice](https://abhinav.github.io/git-spice/)** (`gs`), as a stack. A single
+PR is just a stack of one. You drive branches, restacks, and PRs with native
+`git-spice` commands — never hand-rolled `git rebase --onto` and never a bare
+`gh pr create` for feature work.
 
 git-spice (by Abhinav Gupta, Go, GPL-3.0, currently **v0.31.x**, SemVer pre-1.0,
 needs **Git ≥ 2.38**) is offline-first: it only touches the network to
@@ -39,29 +34,16 @@ writes `git-spice` in all runnable command blocks for copy-paste safety; the
 short `gs …` forms (e.g. `gs bc`, `gs ss`) are the interactive equivalents and
 are listed in `references/command-reference.md`.
 
-## When to load this skill — the legacy gate
+## When to load this skill — the gate
 
-Load this skill before branch/PR operations only when at least one of these is
-true:
-
-- `git-spice log short -a` lists the branch or an ancestor/descendant in its
-  stack.
-- A current PR, worktree handoff, or active plan explicitly records git-spice
-  ownership for the work.
-- The new layer will be stacked on top of work already owned by git-spice.
-- The user explicitly asks to inspect, repair, or operate git-spice itself.
-
-For such existing work, load this skill before:
+Load this skill **before** running any of the following in this repo:
 
 - creating a branch (`git-spice branch create`, `git branch`, `git checkout -b`, `git switch -c`)
-- creating / updating / stacking a PR (`git-spice … submit`; never bare
-  `gh pr create` for the owned work)
+- creating / updating / stacking a PR (`git-spice … submit`, `gh pr create` for feature work)
 - restacking / rebasing a stack (`git-spice … restack`, `git-spice … onto`, `git rebase`)
 - syncing a branch with trunk (`git-spice repo sync`)
 
 `git commit` for normal edits does not require it; branch/stack/PR *management* does.
-Do not initialize git-spice for newly rooted work just because this skill is
-installed.
 
 ## Mental model
 
