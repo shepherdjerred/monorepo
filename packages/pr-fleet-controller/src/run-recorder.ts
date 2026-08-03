@@ -7,7 +7,9 @@ import {
   mkdir,
   open,
   readdir,
+  rename,
   type FileHandle,
+  unlink,
 } from "node:fs/promises";
 import { homedir } from "node:os";
 import path from "node:path";
@@ -51,6 +53,7 @@ export type CreateRunRecorderOptions = {
   controllerCommit: string;
   controllerSourceDirty: boolean;
   controllerSourceFingerprint: string;
+  controllerSourceResolved?: boolean;
   model: string;
   repository: string;
   checkout: string;
@@ -112,6 +115,36 @@ async function secureWriteJson(file: string, value: unknown): Promise<void> {
   }
 }
 
+async function secureReplaceJson(file: string, value: unknown): Promise<void> {
+  const replacement = `${file}.${crypto.randomUUID()}.tmp`;
+  await secureWriteJson(replacement, value);
+  try {
+    await rename(replacement, file);
+  } catch (error) {
+    try {
+      await unlink(replacement);
+    } catch (cleanupError) {
+      throw new AggregateError(
+        [error, cleanupError],
+        `Failed to replace ${file} and remove its temporary file`,
+        { cause: cleanupError },
+      );
+    }
+    throw error;
+  }
+}
+
+function validateSecretValues(values: readonly string[]): void {
+  const unsafeSecret = values.find(
+    (secret) => secret.length > 0 && secret.length < 8,
+  );
+  if (unsafeSecret !== undefined) {
+    throw new Error(
+      "Explicit run-bundle secret values must be at least 8 characters",
+    );
+  }
+}
+
 function canonicalJsonValue(value: JsonValue): string {
   if (value === null || typeof value !== "object") {
     return JSON.stringify(value);
@@ -154,12 +187,12 @@ function parseJson(text: string): unknown {
 export class RunRecorder implements FleetTelemetry {
   readonly runId: string;
   readonly paths: RunPaths;
-  readonly manifest: RunManifest;
+  manifest: RunManifest;
   readonly #eventsHandle: FileHandle;
   readonly #now: () => Date;
   readonly #createdAt: Date;
   readonly #counts = new Map<RunEventKind, number>();
-  readonly #secretValues: readonly string[];
+  #secretValues: readonly string[];
   #sequence = 0;
   #lastHash = GENESIS_EVENT_HASH;
   #closed = false;
@@ -176,14 +209,7 @@ export class RunRecorder implements FleetTelemetry {
   }
 
   static async create(options: CreateRunRecorderOptions): Promise<RunRecorder> {
-    const unsafeSecret = options.secretValues?.find(
-      (secret) => secret.length > 0 && secret.length < 8,
-    );
-    if (unsafeSecret !== undefined) {
-      throw new Error(
-        "Explicit run-bundle secret values must be at least 8 characters",
-      );
-    }
+    validateSecretValues(options.secretValues ?? []);
     const now = options.now ?? (() => new Date());
     const randomId = options.randomId ?? (() => crypto.randomUUID());
     const root = path.resolve(
@@ -212,6 +238,7 @@ export class RunRecorder implements FleetTelemetry {
       controllerCommit: options.controllerCommit,
       controllerSourceDirty: options.controllerSourceDirty,
       controllerSourceFingerprint: options.controllerSourceFingerprint,
+      controllerSourceResolved: options.controllerSourceResolved ?? true,
       model: options.model,
       repository: options.repository,
       checkout: options.checkout,
@@ -238,6 +265,34 @@ export class RunRecorder implements FleetTelemetry {
       secretValues: options.secretValues ?? [],
       eventsHandle,
     });
+  }
+
+  configureSecretValues(values: readonly string[]): void {
+    validateSecretValues(values);
+    this.#secretValues = values;
+  }
+
+  async initializeController(controller: {
+    controllerVersion: string;
+    controllerCommit: string;
+    controllerSourceDirty: boolean;
+    controllerSourceFingerprint: string;
+    model: string;
+    repository: string;
+    checkout: string;
+    worktreeRoot: string;
+    maxWorkers: number;
+  }): Promise<void> {
+    if (this.manifest.controllerSourceResolved) {
+      throw new Error("Controller source provenance is already resolved");
+    }
+    const manifest = RunManifestSchema.parse({
+      ...this.manifest,
+      ...controller,
+      controllerSourceResolved: true,
+    });
+    await secureReplaceJson(this.paths.manifest, manifest);
+    this.manifest = manifest;
   }
 
   newId(prefix: string): string {

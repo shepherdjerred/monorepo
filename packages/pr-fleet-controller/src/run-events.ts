@@ -78,6 +78,7 @@ export const RunManifestSchema = z.object({
   controllerCommit: z.string().regex(/^[0-9a-f]{40}$/),
   controllerSourceDirty: z.boolean(),
   controllerSourceFingerprint: z.string().regex(/^[0-9a-f]{64}$/),
+  controllerSourceResolved: z.boolean().default(true),
   model: z.string().min(1),
   repository: z.string().min(1),
   checkout: z.string().min(1),

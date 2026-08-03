@@ -1,9 +1,9 @@
 export type TerminalLineResult = "continue" | "stop";
 
-export function createSharedShutdown(
-  shutdown: () => Promise<void>,
-): () => Promise<void> {
-  let shutdownPromise: Promise<void> | undefined;
+export function createSharedShutdown<Result>(
+  shutdown: () => Promise<Result>,
+): () => Promise<Result> {
+  let shutdownPromise: Promise<Result> | undefined;
   return () => {
     shutdownPromise ??= Promise.resolve().then(shutdown);
     return shutdownPromise;

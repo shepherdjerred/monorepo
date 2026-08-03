@@ -40,6 +40,18 @@ Interactive commands:
   Any other line is queued conversational steering for the master.`;
 
 const ControllerPackageSchema = z.object({ version: z.string().min(1) });
+const UNRESOLVED_VERSION = "unresolved";
+const UNRESOLVED_COMMIT = "0".repeat(40);
+const UNRESOLVED_FINGERPRINT = "0".repeat(64);
+const EMPTY_SNAPSHOT: FleetSnapshot = {
+  open: 0,
+  green: 0,
+  active: 0,
+  queued: 0,
+  pending: 0,
+  paused: 0,
+  prs: [],
+};
 
 class TerminalObserver implements FleetObserver {
   onSnapshot(snapshot: FleetSnapshot): void {
@@ -131,9 +143,18 @@ function resolveModel(
   }).chatModel(modelId);
 }
 
-async function main(): Promise<void> {
-  const parsed = parseArgs({
-    args: Bun.argv.slice(2),
+function bootstrapWorkerLimit(value: string): number {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed >= 1 && parsed <= 5 ? parsed : 1;
+}
+
+function configuredSecretValues(value: string | undefined): readonly string[] {
+  return value === undefined || value.length === 0 ? [] : [value];
+}
+
+function parseCliArgs(args: string[]) {
+  return parseArgs({
+    args,
     options: {
       model: { type: "string" },
       repo: { type: "string", default: "shepherdjerred/monorepo" },
@@ -148,75 +169,193 @@ async function main(): Promise<void> {
     },
     strict: true,
   });
-  if (parsed.values.help) {
+}
+
+function rawOptionValue(args: string[], name: string): string | undefined {
+  const option = `--${name}`;
+  const assignment = `${option}=`;
+  for (const [index, argument] of args.entries()) {
+    if (argument === option) {
+      return args[index + 1];
+    }
+    if (argument.startsWith(assignment)) {
+      return argument.slice(assignment.length);
+    }
+  }
+  return undefined;
+}
+
+async function parseRecordedInvocation(args: string[], recorder: RunRecorder) {
+  try {
+    const parsed = parseCliArgs(args);
+    const modelName = parsed.values.model;
+    if (modelName === undefined) {
+      throw new Error("--model is required");
+    }
+    return { parsed, modelName };
+  } catch (error) {
+    await recorder.finalize("failed", null, error);
+    throw error;
+  }
+}
+
+async function createBootstrapRecorder(args: string[]): Promise<RunRecorder> {
+  const bootstrapModel = rawOptionValue(args, "model") ?? "unresolved/unknown";
+  const bootstrapRepository =
+    rawOptionValue(args, "repo") ?? "shepherdjerred/monorepo";
+  const bootstrapCheckout = rawOptionValue(args, "checkout") ?? process.cwd();
+  const bootstrapWorktreeRoot =
+    rawOptionValue(args, "worktree-root") ??
+    path.join(bootstrapCheckout, ".claude", "worktrees", "pr-fleet");
+  const bootstrapMaxWorkers = rawOptionValue(args, "max-workers") ?? "5";
+  const stateDirectory = rawOptionValue(args, "state-dir");
+  const recorder = await RunRecorder.create({
+    ...(stateDirectory === undefined ? {} : { stateDirectory }),
+    controllerVersion: UNRESOLVED_VERSION,
+    controllerCommit: UNRESOLVED_COMMIT,
+    controllerSourceDirty: true,
+    controllerSourceFingerprint: UNRESOLVED_FINGERPRINT,
+    controllerSourceResolved: false,
+    model: bootstrapModel,
+    repository: bootstrapRepository,
+    checkout: bootstrapCheckout,
+    worktreeRoot: bootstrapWorktreeRoot,
+    maxWorkers: bootstrapWorkerLimit(bootstrapMaxWorkers),
+  });
+  recorder.record("run.started", {
+    phase: "preflight",
+    model: bootstrapModel,
+    repository: bootstrapRepository,
+    checkout: bootstrapCheckout,
+    worktreeRoot: bootstrapWorktreeRoot,
+    maxWorkers: bootstrapMaxWorkers,
+    reviewProvider: rawOptionValue(args, "review-provider") ?? "codex",
+  });
+  process.stdout.write(`Run bundle: ${recorder.paths.runDirectory}\n`);
+  return recorder;
+}
+
+async function main(): Promise<void> {
+  const args = Bun.argv.slice(2);
+  if (args.includes("--help")) {
+    parseCliArgs(args);
     process.stdout.write(`${HELP}\n`);
     return;
   }
-  const modelName = parsed.values.model;
-  if (modelName === undefined) {
-    throw new Error("--model is required");
-  }
-  requireTools();
-  const checkout =
-    parsed.values.checkout ??
-    (await commandOutput("git", ["rev-parse", "--show-toplevel"]));
-  const config = FleetControllerConfigSchema.parse({
-    model: modelName,
-    repo: parsed.values.repo,
-    checkout,
-    worktreeRoot:
-      parsed.values["worktree-root"] ??
-      path.join(checkout, ".claude", "worktrees", "pr-fleet"),
-    maxWorkers: Number(parsed.values["max-workers"]),
-  });
-  const apiKeyEnvironment = parsed.values["api-key-env"];
-  const packageMetadata = ControllerPackageSchema.parse(
-    await Bun.file(path.join(import.meta.dir, "..", "package.json")).json(),
-  );
-  const controllerSource = await resolveControllerSource();
-  const configuredSecret =
-    apiKeyEnvironment === undefined ? undefined : Bun.env[apiKeyEnvironment];
-  const stateDirectory = parsed.values["state-dir"];
-  const recorder = await RunRecorder.create({
-    ...(stateDirectory === undefined ? {} : { stateDirectory }),
-    controllerVersion: packageMetadata.version,
-    controllerCommit: controllerSource.commit,
-    controllerSourceDirty: controllerSource.dirty,
-    controllerSourceFingerprint: controllerSource.fingerprint,
-    model: config.model,
-    repository: config.repo,
-    checkout: config.checkout,
-    worktreeRoot: config.worktreeRoot,
-    maxWorkers: config.maxWorkers,
-    secretValues:
-      configuredSecret === undefined || configuredSecret.length === 0
-        ? []
-        : [configuredSecret],
-  });
-  recorder.record("run.started", {
-    model: config.model,
-    repository: config.repo,
-    checkout: config.checkout,
-    worktreeRoot: config.worktreeRoot,
-    maxWorkers: config.maxWorkers,
-    reviewProvider: parsed.values["review-provider"] ?? "codex",
-  });
-  process.stdout.write(`Run bundle: ${recorder.paths.runDirectory}\n`);
+  const recorder = await createBootstrapRecorder(args);
 
   let runtime: FleetMastraRuntime | undefined;
+  let runtimeInitialization: Promise<FleetMastraRuntime> | undefined;
   let controller: FleetController | undefined;
   let master: MastraMaster | undefined;
   let terminal: ReturnType<typeof createInterface> | undefined;
+  let shutdownRequested = false;
+  const observer = new TerminalObserver();
+  const settleResources = createSharedShutdown(async () => {
+    const masterSettlement = master?.stop() ?? Promise.resolve();
+    let snapshot: FleetSnapshot | null = null;
+    if (controller === undefined) {
+      await masterSettlement;
+    } else {
+      snapshot = await controller.stop(masterSettlement);
+      observer.onSnapshot(snapshot);
+    }
+    terminal?.close();
+    if (runtimeInitialization !== undefined) {
+      runtime = await runtimeInitialization;
+    }
+    await runtime?.shutdown();
+    return snapshot;
+  });
+  const complete = createSharedShutdown(async () => {
+    let snapshot = await settleResources();
+    if (controller === undefined) {
+      snapshot = EMPTY_SNAPSHOT;
+      recorder.record("shutdown.started", {
+        activeWorkers: 0,
+        phase: "startup",
+      });
+      recorder.record("shutdown.completed", { snapshot });
+    }
+    await recorder.finalize("completed", snapshot);
+  });
+  const stopAfterRequest = async (): Promise<void> => {
+    try {
+      await complete();
+    } catch (error) {
+      process.stderr.write(
+        `${error instanceof Error ? error.message : String(error)}\n`,
+      );
+      process.exitCode = 1;
+    }
+  };
+  const handleSigint = (): void => {
+    shutdownRequested = true;
+    void stopAfterRequest();
+  };
+  process.once("SIGINT", handleSigint);
+  const finishIfRequested = async (): Promise<boolean> => {
+    if (!shutdownRequested) {
+      return false;
+    }
+    await complete();
+    return true;
+  };
   try {
+    const { parsed, modelName } = await parseRecordedInvocation(args, recorder);
+    const apiKeyEnvironment = parsed.values["api-key-env"];
+    const configuredSecret =
+      apiKeyEnvironment === undefined ? undefined : Bun.env[apiKeyEnvironment];
+    const packageMetadata = ControllerPackageSchema.parse(
+      await Bun.file(path.join(import.meta.dir, "..", "package.json")).json(),
+    );
+    if (await finishIfRequested()) {
+      return;
+    }
+    requireTools();
+    const checkout =
+      parsed.values.checkout ??
+      (await commandOutput("git", ["rev-parse", "--show-toplevel"]));
+    if (await finishIfRequested()) {
+      return;
+    }
+    const config = FleetControllerConfigSchema.parse({
+      model: modelName,
+      repo: parsed.values.repo,
+      checkout,
+      worktreeRoot:
+        parsed.values["worktree-root"] ??
+        path.join(checkout, ".claude", "worktrees", "pr-fleet"),
+      maxWorkers: Number(parsed.values["max-workers"]),
+    });
+    const controllerSource = await resolveControllerSource();
+    if (await finishIfRequested()) {
+      return;
+    }
+    await recorder.initializeController({
+      controllerVersion: packageMetadata.version,
+      controllerCommit: controllerSource.commit,
+      controllerSourceDirty: controllerSource.dirty,
+      controllerSourceFingerprint: controllerSource.fingerprint,
+      model: config.model,
+      repository: config.repo,
+      checkout: config.checkout,
+      worktreeRoot: config.worktreeRoot,
+      maxWorkers: config.maxWorkers,
+    });
+    recorder.configureSecretValues(configuredSecretValues(configuredSecret));
     const model = resolveModel(
       config.model,
       parsed.values["base-url"],
       apiKeyEnvironment,
     );
     const reviewProvider = resolveProvider(parsed.values["review-provider"]);
-    const observer = new TerminalObserver();
     const store = new FleetStore(config.maxWorkers);
-    runtime = await createFleetMastraRuntime(recorder);
+    runtimeInitialization = createFleetMastraRuntime(recorder);
+    runtime = await runtimeInitialization;
+    if (await finishIfRequested()) {
+      return;
+    }
     const environment = new CommandFleetEnvironment({
       repo: config.repo,
       checkout: config.checkout,
@@ -242,27 +381,12 @@ async function main(): Promise<void> {
       telemetry: recorder,
     });
     const activeController = controller;
-    const stop = createSharedShutdown(async () => {
-      const masterSettlement = master?.stop() ?? Promise.resolve();
-      const snapshot = await activeController.stop(masterSettlement);
-      observer.onSnapshot(snapshot);
-      terminal?.close();
-    });
-    const stopAfterMasterRequest = async (): Promise<void> => {
-      try {
-        await stop();
-      } catch (error) {
-        process.stderr.write(
-          `${error instanceof Error ? error.message : String(error)}\n`,
-        );
-        process.exitCode = 1;
-      }
-    };
     master = new MastraMaster(model, activeController, observer, {
       mastra: runtime.mastra,
       telemetry: recorder,
       requestShutdown: () => {
-        void stopAfterMasterRequest();
+        shutdownRequested = true;
+        void stopAfterRequest();
       },
     });
     terminal = createInterface({
@@ -270,23 +394,13 @@ async function main(): Promise<void> {
       output: process.stdout,
     });
 
-    process.once("SIGINT", () => {
-      void (async (): Promise<void> => {
-        try {
-          await stop();
-        } catch (error) {
-          process.stderr.write(
-            `${error instanceof Error ? error.message : String(error)}\n`,
-          );
-          process.exitCode = 1;
-        }
-      })();
-    });
-
     process.stdout.write(
       `PR fleet controller model=${config.model} workers=${String(config.maxWorkers)}\n${HELP}\n`,
     );
     await controller.start();
+    if (await finishIfRequested()) {
+      return;
+    }
     terminal.setPrompt("fleet> ");
     terminal.prompt();
     await consumeTerminalLines(
@@ -321,17 +435,13 @@ async function main(): Promise<void> {
         terminal?.prompt();
         return "continue";
       },
-      stop,
+      complete,
     );
-    await runtime.shutdown();
-    await recorder.finalize("completed", controller.snapshot());
+    await complete();
   } catch (error) {
     let failure = error;
     try {
-      const masterSettlement = master?.stop() ?? Promise.resolve();
-      await controller?.stop(masterSettlement);
-      await masterSettlement;
-      await runtime?.shutdown();
+      await settleResources();
     } catch (shutdownError) {
       failure = new AggregateError(
         [error, shutdownError],
@@ -340,6 +450,8 @@ async function main(): Promise<void> {
     }
     await recorder.finalize("failed", controller?.snapshot() ?? null, failure);
     throw failure;
+  } finally {
+    process.removeListener("SIGINT", handleSigint);
   }
 }
 

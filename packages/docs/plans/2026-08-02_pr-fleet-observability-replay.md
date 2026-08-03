@@ -194,7 +194,10 @@ repository checkout.
   escalation text, worker actions, blockers, failures, validation details, and
   fleet-change prose while preserving structured array shapes during default
   inspection.
-- Passed focused typecheck, 86 controller tests, 42 observability tests, lint,
+- Addressed three further exact-head findings by beginning a bootstrap bundle
+  before fallible preflight, installing SIGINT finalization before storage
+  initialization, and hiding command argument arrays during default inspection.
+- Passed focused typecheck, 88 controller tests, 42 observability tests, lint,
   native-aware build, docs validation, Markdown lint, diff checks, and staged
   Lefthook/Gitleaks/Prettier/lockfile checks.
 - Completed a final non-mutating `openai/gpt-5.6-terra` model/tool turn from the

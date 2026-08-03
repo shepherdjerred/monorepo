@@ -106,6 +106,7 @@ function expectFreeFormBodiesHidden(firstEvent: RecordedRunEvent): void {
           prompt: "private model prompt",
           messages: ["private operator input"],
           input: { message: "private worker guidance" },
+          args: ["pr", "comment", "--body", "private review reply"],
           reason: "private pause reason",
           lastAction: "private worker action",
           blockers: ["private worker blocker"],
@@ -133,6 +134,12 @@ function expectFreeFormBodiesHidden(firstEvent: RecordedRunEvent): void {
   ]) {
     expect(hidden[0]?.payload[key]).toEqual(["[hidden; pass --show-bodies]"]);
   }
+  expect(hidden[0]?.payload["args"]).toEqual([
+    "[hidden; pass --show-bodies]",
+    "[hidden; pass --show-bodies]",
+    "[hidden; pass --show-bodies]",
+    "[hidden; pass --show-bodies]",
+  ]);
   for (const key of ["lastAction", "reason"]) {
     expect(hidden[0]?.payload[key]).toBe("[hidden; pass --show-bodies]");
   }
@@ -236,6 +243,54 @@ describe("local run bundles", () => {
     );
   });
 
+  test("resolves bootstrap metadata before recording controller data", async () => {
+    const stateDirectory = await mkdtemp(path.join(tmpdir(), "pr-fleet-run-"));
+    temporaryDirectories.push(stateDirectory);
+    const recorder = await RunRecorder.create({
+      stateDirectory,
+      controllerVersion: "unresolved",
+      controllerCommit: "0".repeat(40),
+      controllerSourceDirty: true,
+      controllerSourceFingerprint: "0".repeat(64),
+      controllerSourceResolved: false,
+      model: "openai/gpt-5.6-terra",
+      repository: "shepherdjerred/monorepo",
+      checkout: "/bootstrap",
+      worktreeRoot: "/bootstrap/worktrees",
+      maxWorkers: 1,
+    });
+    recorder.record("run.started", { phase: "preflight" });
+    await recorder.initializeController({
+      controllerVersion: "0.1.0",
+      controllerCommit: "a".repeat(40),
+      controllerSourceDirty: false,
+      controllerSourceFingerprint: "b".repeat(64),
+      model: "openai/gpt-5.6-terra",
+      repository: "shepherdjerred/monorepo",
+      checkout: "/repo",
+      worktreeRoot: "/repo/worktrees",
+      maxWorkers: 5,
+    });
+    recorder.configureSecretValues(["private-provider-key"]);
+    recorder.record("environment.result", {
+      detail: "token=private-provider-key",
+    });
+    await recorder.finalize("failed", null, new Error("startup failed"));
+
+    const bundle = await loadRunBundle(recorder.paths.runDirectory);
+    expect(bundle.manifest).toMatchObject({
+      controllerVersion: "0.1.0",
+      controllerCommit: "a".repeat(40),
+      controllerSourceDirty: false,
+      controllerSourceFingerprint: "b".repeat(64),
+      controllerSourceResolved: true,
+      checkout: "/repo",
+      worktreeRoot: "/repo/worktrees",
+      maxWorkers: 5,
+    });
+    expect(bundle.events[1]?.payload["detail"]).toBe("token=[REDACTED]");
+  });
+
   test("fails closed when the selected state directory is group-readable", async () => {
     const stateDirectory = await mkdtemp(path.join(tmpdir(), "pr-fleet-open-"));
     temporaryDirectories.push(stateDirectory);
@@ -289,6 +344,56 @@ describe("local run bundles", () => {
       },
     );
     expect(report.status).toBe("failed");
+  });
+
+  test("captures a missing-tool preflight failure in a replayable bundle", async () => {
+    const parent = await mkdtemp(path.join(tmpdir(), "pr-fleet-cli-"));
+    temporaryDirectories.push(parent);
+    const stateDirectory = path.join(parent, "state");
+    const packageDirectory = path.join(import.meta.dir, "..");
+    const subprocess = Bun.spawn(
+      [
+        process.execPath,
+        path.join(packageDirectory, "src", "cli.ts"),
+        "--model",
+        "openai/gpt-5.6-terra",
+        "--checkout",
+        packageDirectory,
+        "--state-dir",
+        stateDirectory,
+      ],
+      {
+        cwd: packageDirectory,
+        env: { ...Bun.env, PATH: "" },
+        stdout: "pipe",
+        stderr: "pipe",
+      },
+    );
+    const [exitCode, stderr] = await Promise.all([
+      subprocess.exited,
+      new Response(subprocess.stderr).text(),
+    ]);
+    expect(exitCode).not.toBe(0);
+    expect(stderr).toContain("Required executable is missing: bk");
+
+    const runs = await readdir(stateDirectory);
+    expect(runs).toHaveLength(1);
+    const bundle = await loadRunBundle(
+      path.join(stateDirectory, runs[0] ?? ""),
+    );
+    expect(bundle.manifest.controllerSourceResolved).toBe(false);
+    expect(bundle.summary.status).toBe("failed");
+    const report = replayRunBundle(bundle, {
+      currentControllerVersion: bundle.manifest.controllerVersion,
+      allowVersionMismatch: false,
+    });
+    expect(report.run).toEqual({
+      started: 1,
+      completed: 0,
+      cancelled: 0,
+      failed: 1,
+      open: [],
+    });
   });
 });
 

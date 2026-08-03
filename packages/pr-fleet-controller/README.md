@@ -109,6 +109,14 @@ Collection is mandatory and local-only. Each run writes:
   fleet snapshot;
 - `mastra.db` and `observability.duckdb` with local Mastra storage and spans.
 
+The bundle begins before required-tool, Git-checkout, configuration, and source
+provenance preflight. A failed preflight therefore still produces an
+inspectable, replayable failed run; successful preflight atomically replaces
+the bootstrap manifest metadata with the resolved controller provenance and
+runtime configuration. SIGINT coordination is installed immediately after the
+bootstrap bundle is created and waits for in-progress storage initialization
+before shutting down and finalizing it.
+
 The event payload redactor masks secret-shaped fields, bearer values, known
 credential environment values, and the value selected by `--api-key-env`
 before writing any event or summary. The same literal-value redactor runs
@@ -121,8 +129,8 @@ turn before finalizing the bundle.
 Runs are retained indefinitely in v1, so operators must delete old run
 directories themselves when they no longer need them. Nothing is uploaded.
 
-Verify and inspect a run without revealing prompt, output, patch, log, or
-operator-input bodies:
+Verify and inspect a run without revealing prompt, output, patch, log,
+command-argument, operator-input, pause, escalation, or worker-result bodies:
 
 ```bash
 bun run pr:fleet:inspect --run <run-id-or-directory>

@@ -27,7 +27,7 @@ const SnapshotPayloadSchema = z.object({ snapshot: FleetSnapshotSchema });
 const BODY_FIELD_PATTERN =
   /^(?:body|content|escalation|lastAction|line|log|message|messages|output|patch|prompt|reason|response|stack|stderr|stdout|text)$/i;
 const BODY_ARRAY_FIELD_PATTERN =
-  /^(?:blockers|changes|hardFailures|reviewFindings|validation)$/i;
+  /^(?:args|blockers|changes|hardFailures|reviewFindings|validation)$/i;
 const ACTIVE_STATUSES = new Set([
   "diagnosing",
   "editing",
