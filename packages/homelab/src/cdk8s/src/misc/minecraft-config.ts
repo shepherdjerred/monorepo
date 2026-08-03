@@ -245,24 +245,39 @@ export function getMinecraftExtraVolumes(
 
   const volumes: object[] = [];
 
-  // Non-plugin configs mount to /config (itzg syncs to /data)
-  if (nonPluginKeys.length > 0) {
-    const nonPluginItems = nonPluginKeys.map((key) => ({
+  // Non-plugin configs. itzg's /config sync copies each top-level entry into
+  // /data with a directory move that throws DirectoryNotEmptyException when the
+  // target already exists. itzg pre-generates /data/config (paper-global.yml,
+  // paper-world-defaults.yml) during Paper setup, so any config under a
+  // /config/config subdir collides and crash-loops the server. Split the
+  // config/* files off itzg's /config sync and seed them into /data/config via
+  // the init container's cp-merge instead (the same bypass used for plugins);
+  // keep the remaining top-level files (server.properties, bukkit.yml, …) on
+  // itzg's sync, which handles flat files fine.
+  const configSubdirKeys = nonPluginKeys.filter((key) =>
+    key.startsWith("config__"),
+  );
+  const flatConfigKeys = nonPluginKeys.filter(
+    (key) => !key.startsWith("config__"),
+  );
+
+  const serverConfigMapName = useSplitConfigMaps
+    ? `${namespace}-server-configs`
+    : `${namespace}-configs`;
+
+  if (flatConfigKeys.length > 0) {
+    const flatItems = flatConfigKeys.map((key) => ({
       key,
       path: key.replaceAll("__", "/"),
     }));
-
-    const configMapName = useSplitConfigMaps
-      ? `${namespace}-server-configs`
-      : `${namespace}-configs`;
 
     volumes.push({
       volumes: [
         {
           name: `${serverName}-configs`,
           configMap: {
-            name: configMapName,
-            items: nonPluginItems,
+            name: serverConfigMapName,
+            items: flatItems,
           },
         },
       ],
@@ -270,6 +285,34 @@ export function getMinecraftExtraVolumes(
         {
           name: `${serverName}-configs`,
           mountPath: "/config",
+          readOnly: true,
+        },
+      ],
+    });
+  }
+
+  if (configSubdirKeys.length > 0) {
+    const subdirItems = configSubdirKeys.map((key) => ({
+      key,
+      // Strip the leading "config__" so the file lands directly under
+      // /config-subdir, then restore any remaining nested path separators.
+      path: key.replace(/^config__/, "").replaceAll("__", "/"),
+    }));
+
+    volumes.push({
+      volumes: [
+        {
+          name: `${serverName}-config-subdir`,
+          configMap: {
+            name: serverConfigMapName,
+            items: subdirItems,
+          },
+        },
+      ],
+      volumeMounts: [
+        {
+          name: `${serverName}-config-subdir`,
+          mountPath: "/config-subdir",
           readOnly: true,
         },
       ],
@@ -369,6 +412,9 @@ export function getMinecraftPluginConfigInitContainer(
   const pluginKeys = Object.keys(configs).filter((key) =>
     key.startsWith("plugins__"),
   );
+  const configSubdirKeys = Object.keys(configs).filter((key) =>
+    key.startsWith("config__"),
+  );
 
   // Build volume mounts based on split or unified ConfigMaps
   const volumeMounts: object[] = [
@@ -377,6 +423,17 @@ export function getMinecraftPluginConfigInitContainer(
       mountPath: "/data",
     },
   ];
+
+  // config/* files are routed off itzg's /config sync and seeded into
+  // /data/config here (see getMinecraftExtraVolumes). Mount them read-only so
+  // the copy step below can merge them in before itzg starts.
+  if (configSubdirKeys.length > 0) {
+    volumeMounts.push({
+      name: `${serverName}-config-subdir`,
+      mountPath: "/config-subdir",
+      readOnly: true,
+    });
+  }
 
   if (useSplitConfigMaps) {
     // Get unique plugin names
@@ -410,14 +467,20 @@ export function getMinecraftPluginConfigInitContainer(
     command: [
       "sh",
       "-c",
-      // 1. Remove /data/config so itzg's /config->/data sync can create it.
-      //    itzg copies the /config/config directory to /data/config with a
-      //    directory move that throws DirectoryNotEmptyException when the
-      //    target already exists. Recreating it here (mkdir) reintroduces that
-      //    collision, so leave it absent — the plugin copy below writes to
-      //    /data/plugins, not /data/config, and does not need it.
-      // 2. Copy plugin configs if they exist
+      // 1. Seed /data/config from the GitOps config/* files (mounted at
+      //    /config-subdir), bypassing itzg's /config sync. itzg pre-generates
+      //    /data/config during Paper setup and then its directory-move sync of
+      //    a /config/config subdir throws DirectoryNotEmptyException, so we take
+      //    that subdir off the sync and merge it in here instead. Start from a
+      //    clean /data/config so removed files do not linger.
+      // 2. Copy plugin configs if they exist (same bypass, for /data/plugins).
       `rm -rf /data/config
+      if [ -d /config-subdir ] && [ "$(ls -A /config-subdir)" ]; then
+        cd /config-subdir && find -L . -type f -not -path '*/..*' | while read f; do
+          mkdir -p "/data/config/$(dirname "$f")"
+          cp "$f" "/data/config/$f"
+        done
+      fi
       if [ -d /plugin-configs ] && [ "$(ls -A /plugin-configs)" ]; then
         cd /plugin-configs && find -L . -type f -not -path '*/..*' | while read f; do
           mkdir -p "/data/plugins/$(dirname "$f")"
