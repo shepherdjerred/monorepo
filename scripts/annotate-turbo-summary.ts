@@ -13,31 +13,12 @@
  *
  * Usage: bun scripts/annotate-turbo-summary.ts
  */
-import { z } from "zod";
-
-const TaskSummarySchema = z.object({
-  taskId: z.string(),
-  execution: z
-    .object({
-      exitCode: z.number().nullable().optional(),
-      startTime: z.number().optional(),
-      endTime: z.number().optional(),
-    })
-    .optional(),
-  cache: z.object({ status: z.string() }).optional(),
-});
-
-const RunSummarySchema = z.object({
-  execution: z.object({
-    attempted: z.number(),
-    cached: z.number(),
-    failed: z.number(),
-    success: z.number(),
-    startTime: z.number(),
-    endTime: z.number(),
-  }),
-  tasks: z.array(TaskSummarySchema),
-});
+import path from "node:path";
+import {
+  buildCiTaskReport,
+  renderCiTaskReport,
+  TurboRunSummarySchema,
+} from "./ci-task-summary.ts";
 
 function newestRunFile(dir: string): string {
   // Summary filenames embed a monotonic run id; lexicographic max = newest.
@@ -51,47 +32,29 @@ function newestRunFile(dir: string): string {
 
 const runsDir = new URL("../.turbo/runs", import.meta.url).pathname;
 const file = newestRunFile(runsDir);
-const summary = RunSummarySchema.parse(await Bun.file(file).json());
-
-const { attempted, cached, failed, success, startTime, endTime } =
-  summary.execution;
-const wallSeconds = ((endTime - startTime) / 1000).toFixed(1);
-
-const failures = summary.tasks.filter(
-  (t) => (t.execution?.exitCode ?? 0) !== 0,
+const summary = TurboRunSummarySchema.parse(await Bun.file(file).json());
+const report = buildCiTaskReport(
+  summary,
+  Bun.env["BUILDKITE_BUILD_URL"],
+  Bun.env["BUILDKITE_JOB_ID"],
 );
-
-const lines: string[] = [
-  `### :turborepo: verify — ${String(attempted)} tasks in ${wallSeconds}s`,
-  "",
-  "| Executed | Cache hits | Failed |",
-  "| --- | --- | --- |",
-  `| ${String(success)} | ${String(cached)} | ${String(failed)} |`,
-];
-
-if (failures.length > 0) {
-  lines.push(
-    "",
-    "**Failed tasks**",
-    "",
-    "| Task | Duration |",
-    "| --- | --- |",
-  );
-  for (const t of failures) {
-    const start = t.execution?.startTime;
-    const end = t.execution?.endTime;
-    const duration =
-      start !== undefined && end !== undefined
-        ? `${((end - start) / 1000).toFixed(1)}s`
-        : "?";
-    lines.push(`| \`${t.taskId}\` | ${duration} |`);
-  }
-}
-
-const markdown = lines.join("\n");
+const outputDirectory = new URL("../.ci-reports/tasks", import.meta.url)
+  .pathname;
+await Bun.$`mkdir -p ${outputDirectory}`;
+await Promise.all([
+  Bun.write(
+    path.join(outputDirectory, "summary.json"),
+    `${JSON.stringify(report, null, 2)}\n`,
+  ),
+  Bun.write(
+    path.join(outputDirectory, "summary.md"),
+    renderCiTaskReport(report, true),
+  ),
+]);
+const markdown = renderCiTaskReport(report, false);
 
 if (Bun.env["BUILDKITE"] === "true") {
-  const style = failures.length > 0 ? "error" : "success";
+  const style = report.run.failed > 0 ? "error" : "success";
   const proc = Bun.spawnSync(
     [
       "buildkite-agent",
