@@ -7,16 +7,11 @@
  * - Environment variable substitution via itzg/minecraft-server
  *
  * Required 1Password fields (canonical UPPERCASE_SNAKE names per the env-var
- * naming convention; all required — no optional secrets, a missing field fails
- * the pod at startup rather than booting with a silent gap):
+ * naming convention; the 1P item's field labels match these exactly, so the
+ * operator-synced secret keys resolve; all required — no optional secrets, a
+ * missing field fails the pod at startup rather than booting with a silent gap):
  * - DISCORD_BOT_TOKEN: The Discord bot token
  * - DISCORD_CHANNEL_ID: The main chat channel ID
- *
- * NOTE: the 1P item's field labels are currently lowercase-kebab
- * (`discord-bot-token` / `discord-channel-id`), so the synced secret keys are
- * lowercase and these UPPERCASE refs do not resolve. minecraft-sjerred runs at
- * 0 replicas so this is dormant; the fix is to relabel the 1P fields to the
- * canonical UPPERCASE names (not to lowercase the code).
  *
  * Console channel + invite link are not wired (features unused) — the config
  * template sets them to empty strings.

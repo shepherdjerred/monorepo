@@ -28,9 +28,9 @@ export function createMinecraftTsmcApp(chart: Chart) {
   createMinecraftConfigMaps(chart, "tsmc", NAMESPACE);
 
   // 1Password secret for DiscordSRV configuration
-  // Required fields in 1Password:
-  // - discord-bot-token: Discord bot token
-  // - discord-channel-id: Main chat channel ID
+  // Required fields in 1Password (UPPERCASE_SNAKE labels, matching the env-var refs):
+  // - DISCORD_BOT_TOKEN: Discord bot token
+  // - DISCORD_CHANNEL_ID: Main chat channel ID
   // - discord-console-channel-id: (optional) Console channel ID
   // - discord-invite-link: (optional) Discord invite link
   new OnePasswordItem(chart, "minecraft-tsmc-discord-1p", {
