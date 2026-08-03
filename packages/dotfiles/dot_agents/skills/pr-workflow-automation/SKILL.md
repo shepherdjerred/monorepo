@@ -15,6 +15,27 @@ description: |
 
 This agent automates the complete pull request workflow: pushing changes, creating PRs, and (in repos that have CI) monitoring CI status and fixing failures through amendments and retries.
 
+## Whole-fleet controller in `shepherdjerred/monorepo`
+
+When the user explicitly asks to operate the complete open PR fleet, start the
+foreground controller with one provider model:
+
+```bash
+bun run pr:fleet --model <provider>/<model-id>
+```
+
+Every invocation writes a private local run bundle. Inspect its body-masked
+timeline or verify it deterministically offline with:
+
+```bash
+bun run pr:fleet:inspect --run <run-id-or-directory>
+bun run pr:fleet:replay --run <run-id-or-directory>
+```
+
+The controller may repair and publish branches but may not merge, close, or
+approve PRs. Inspect and replay operate on collected evidence; they do not run
+evals.
+
 ## Core Workflow
 
 When creating a PR, follow this automated workflow:

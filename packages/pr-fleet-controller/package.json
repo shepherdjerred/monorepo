@@ -12,7 +12,9 @@
   },
   "scripts": {
     "start": "bun run src/cli.ts",
-    "build": "bun build src/cli.ts --target bun --outdir dist",
+    "inspect": "bun run src/inspect-cli.ts",
+    "replay": "bun run src/replay-cli.ts",
+    "build": "bun build src/cli.ts --target bun --outdir dist --external '@duckdb/node-bindings-*'",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "test": "bun test",
     "test:ci": "bun ../../scripts/run-ci-test.ts",
@@ -22,7 +24,11 @@
   "dependencies": {
     "@ai-sdk/openai-compatible": "^3.0.17",
     "@mastra/core": "^1.55.0",
+    "@mastra/duckdb": "^1.5.2",
+    "@mastra/libsql": "^1.18.0",
+    "@mastra/observability": "^1.16.3",
     "@shepherdjerred/code-review": "workspace:*",
+    "@shepherdjerred/llm-observability": "workspace:*",
     "zod": "^4.4.3"
   },
   "devDependencies": {

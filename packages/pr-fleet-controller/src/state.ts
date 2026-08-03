@@ -38,6 +38,10 @@ export class FleetStore {
     this.workerLimit = workerLimit;
   }
 
+  isStopping(): boolean {
+    return this.stopping;
+  }
+
   snapshot(): FleetSnapshot {
     const prs = [...this.prs.values()]
       .filter((pr) => pr.status !== "closed")

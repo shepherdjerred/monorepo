@@ -28,6 +28,14 @@ bun run pr:fleet \
 The invocation deliberately uses one model throughout. It does not silently
 route individual workers to another model or provider.
 
+Every non-help invocation also requires a private local run-bundle directory.
+The default is
+`${XDG_STATE_HOME:-~/.local/state}/pr-fleet-controller/<run-id>`; select a
+different private root with `--state-dir <path>`. The controller refuses a
+symlinked, non-owned, or group/world-accessible root before model access or PR
+mutation. The selected root and each run directory use mode `0700`; bundle
+files use mode `0600`.
+
 Readiness is gated on a hosted code-review provider (Codex by default). Select
 a different registered provider with `--review-provider <id>`; completion is
 detected as a review-at-head or a head-bound clean-review reaction, reusing the
@@ -87,6 +95,68 @@ process group so descendant processes cannot outlive the worker that spawned
 them.
 
 The controller never merges, closes, or approves a pull request.
+
+## Run data, inspection, and replay
+
+Collection is mandatory and local-only. Each run writes:
+
+- `manifest.json` with the schema, controller source commit/version, dirty-tree
+  state and content fingerprint (independent of the managed checkout), model,
+  repository, and capture contract;
+- `events.jsonl` with sequenced, hash-chained controller, worker, command,
+  evidence, model-turn, and shutdown events;
+- `summary.json` with final status, duration, event counts, last hash, and final
+  fleet snapshot;
+- `mastra.db` and `observability.duckdb` with local Mastra storage and spans.
+
+The bundle begins before required-tool, Git-checkout, configuration, and source
+provenance preflight. A failed preflight therefore still produces an
+inspectable, replayable failed run; successful preflight atomically replaces
+the bootstrap manifest metadata with the resolved controller provenance and
+runtime configuration. Source-provenance Git commands pass through the recorded
+command boundary, with their output redacted, and the state directory must be
+outside the controller repository so run data cannot change the source
+fingerprint it is recording. SIGINT coordination is installed immediately after
+the bootstrap bundle is created and waits for in-progress storage initialization
+before shutting down and finalizing it.
+
+The event payload redactor masks secret-shaped fields, bearer values, known
+credential environment values, and the value selected by `--api-key-env`
+before writing any event or summary. The same literal-value redactor runs
+before Mastra's structural sensitive-field filter, so traces retain redacted
+model/tool bodies, timing, token metadata, and correlation IDs. Commands inherit
+their worker attempt and tool-call correlation, record whether they exited,
+timed out, or were aborted, and distinguish deliberate worker cancellation from
+failure. Shutdown awaits active reconciliation, workers, and the master model
+turn before finalizing the bundle. Terminal, startup, controller, and shutdown
+failures converge on one outcome-aware finalizer, and overlapping recorder
+finalization attempts serialize around the first terminal outcome.
+Runs are retained indefinitely in v1, so operators must delete old run
+directories themselves when they no longer need them. Nothing is uploaded.
+
+Verify and inspect a run without revealing prompt, output, patch, log,
+command-argument, operator-input, pause, escalation, or worker-result bodies:
+
+```bash
+bun run pr:fleet:inspect --run <run-id-or-directory>
+bun run pr:fleet:inspect --run <run-id-or-directory> --pr 1961 --show-bodies
+```
+
+Deterministic replay is an offline control-plane audit. It verifies schema and
+controller versions, the hash chain, lifecycle correlations, tick/snapshot
+equivalence, aggregate state, summary counts, and final state. A completed run
+with any open command, tool, worker, or model-turn lifecycle is rejected rather
+than labeled verified. Replay does not resolve a model, read a credential,
+execute a subprocess, access the network, or touch a checkout:
+
+```bash
+bun run pr:fleet:replay --run <run-id-or-directory>
+```
+
+Use `--json` on either command for machine-readable output. Replay rejects a
+controller-version mismatch unless `--allow-version-mismatch` is explicit.
+This is collection and deterministic inspection infrastructure only: there are
+no datasets, scorers, judges, experiments, benchmarks, or evaluation gates.
 
 ## Verification
 

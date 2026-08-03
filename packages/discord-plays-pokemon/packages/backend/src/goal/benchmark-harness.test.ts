@@ -1232,14 +1232,20 @@ test("streamed worker boots against a target predating the boot-readiness helper
   ).text();
   // Stand in for a comparison checkout made before the harness helper existed:
   // a verbatim copy of the current backend source with
-  // benchmark-worker-boot-readiness.ts removed. Nesting the copy inside
-  // backendRoot lets the copied module graph resolve node_modules by walking up
+  // benchmark-worker-boot-readiness.ts removed. Keep the ephemeral copy outside
+  // the package tree so concurrent lint never observes a directory disappearing
+  // mid-traversal. A node_modules symlink preserves normal dependency resolution
   // while "#src/*" resolves to this helper-free copy.
-  const target = await mkdtemp(path.join(backendRoot, ".pre-helper-target-"));
+  const target = await mkdtemp(path.join(tmpdir(), "pre-helper-target-"));
   try {
     await cp(path.join(backendRoot, "src"), path.join(target, "src"), {
       recursive: true,
     });
+    await symlink(
+      path.join(backendRoot, "node_modules"),
+      path.join(target, "node_modules"),
+      "dir",
+    );
     await rm(path.join(target, "src/goal/benchmark-worker-boot-readiness.ts"), {
       force: true,
     });

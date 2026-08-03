@@ -114,8 +114,10 @@ export type ArchiveConfig = Identity<InnerArchiveConfig>;
 export type ArchiveRef = Identity<InnerArchiveRef>;
 export type BuildKeyParams = Identity<InnerBuildKeyParams>;
 
-export function redactSecrets(value: unknown): unknown {
-  return innerRedactSecrets(value);
+export function redactSecrets(
+  ...args: Parameters<typeof innerRedactSecrets>
+): ReturnType<typeof innerRedactSecrets> {
+  return innerRedactSecrets(...args);
 }
 
 // Wrapper functions defer to the inner generic; their signatures use `typeof`

@@ -1,7 +1,14 @@
 import { describe, expect, test } from "bun:test";
 import { MastraMaster } from "@shepherdjerred/pr-fleet-controller/src/agents.ts";
 import type { MasterControllerTools } from "@shepherdjerred/pr-fleet-controller/src/master-tools.ts";
-import type { FleetObserver } from "@shepherdjerred/pr-fleet-controller/src/ports.ts";
+import type {
+  FleetObserver,
+  FleetTelemetry,
+} from "@shepherdjerred/pr-fleet-controller/src/ports.ts";
+import type {
+  RunEventCorrelation,
+  RunEventKind,
+} from "@shepherdjerred/pr-fleet-controller/src/run-events.ts";
 import type { FleetSnapshot } from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
 
 const snapshot: FleetSnapshot = {
@@ -32,7 +39,6 @@ const controller: MasterControllerTools = {
   resume: noop,
   guide: noop,
   setWorkerLimit: noop,
-  stop: () => Promise.resolve(snapshot),
 };
 
 class RecordingObserver implements FleetObserver {
@@ -46,6 +52,31 @@ class RecordingObserver implements FleetObserver {
   }
   onMasterText(text: string): void {
     this.text.push(text);
+  }
+}
+
+class RecordingTelemetry implements FleetTelemetry {
+  readonly runId = "master-abort-test";
+  readonly events: {
+    kind: RunEventKind;
+    payload: Record<string, unknown>;
+    correlation: RunEventCorrelation;
+  }[] = [];
+
+  newId(prefix: string): string {
+    return `${prefix}-test`;
+  }
+
+  traceId(): string {
+    return "a".repeat(32);
+  }
+
+  record(
+    kind: RunEventKind,
+    payload: Record<string, unknown>,
+    correlation: RunEventCorrelation = {},
+  ): void {
+    this.events.push({ kind, payload, correlation });
   }
 }
 
@@ -82,13 +113,68 @@ class HangingMaster extends MastraMaster {
   }
 }
 
+class PartialOutputMaster extends MastraMaster {
+  protected override streamTurn(
+    _prompt: string,
+    signal: AbortSignal,
+  ): Promise<{ textStream: AsyncIterable<string> }> {
+    const textStream = (async function* (): AsyncGenerator<string> {
+      yield "visible partial output";
+      await new Promise<void>((resolve) => {
+        if (signal.aborted) {
+          resolve();
+          return;
+        }
+        signal.addEventListener("abort", () => {
+          resolve();
+        });
+      });
+    })();
+    return Promise.resolve({ textStream });
+  }
+}
+
+class CompletedMaster extends MastraMaster {
+  protected override streamTurn(): Promise<{
+    textStream: AsyncIterable<string>;
+  }> {
+    const textStream = (async function* (): AsyncGenerator<string> {
+      yield "completed output";
+    })();
+    return Promise.resolve({ textStream });
+  }
+}
+
+class KindFailingTelemetry extends RecordingTelemetry {
+  readonly #failedKind: RunEventKind;
+
+  constructor(failedKind: RunEventKind) {
+    super();
+    this.#failedKind = failedKind;
+  }
+
+  override record(
+    kind: RunEventKind,
+    payload: Record<string, unknown>,
+    correlation: RunEventCorrelation = {},
+  ): void {
+    if (kind === this.#failedKind) {
+      throw new Error("state volume is full");
+    }
+    super.record(kind, payload, correlation);
+  }
+}
+
 const flush = (): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, 5));
 
 describe("master shutdown", () => {
   test("aborts and awaits the in-flight master turn before resolving", async () => {
     const observer = new RecordingObserver();
-    const master = new HangingMaster("openai/gpt-5", controller, observer);
+    const master = new HangingMaster("openai/gpt-5", controller, observer, {
+      onFatalError: noop,
+      requestShutdown: noop,
+    });
 
     master.send("status?");
     await flush();
@@ -104,11 +190,65 @@ describe("master shutdown", () => {
 
   test("drops steering queued after shutdown instead of starting a new turn", async () => {
     const observer = new RecordingObserver();
-    const master = new HangingMaster("openai/gpt-5", controller, observer);
+    const master = new HangingMaster("openai/gpt-5", controller, observer, {
+      onFatalError: noop,
+      requestShutdown: noop,
+    });
     await master.stop();
 
     master.send("late steering");
     await flush();
     expect(master.turns).toBe(0);
   });
+
+  test("records partial output that was visible before an abort", async () => {
+    const observer = new RecordingObserver();
+    const telemetry = new RecordingTelemetry();
+    const master = new PartialOutputMaster(
+      "openai/gpt-5",
+      controller,
+      observer,
+      { onFatalError: noop, requestShutdown: noop, telemetry },
+    );
+
+    master.send("status?");
+    await flush();
+    expect(observer.text).toEqual(["visible partial output"]);
+    await master.stop();
+
+    const failed = telemetry.events.find(
+      (event) => event.kind === "master.turn.failed",
+    );
+    expect(failed?.payload).toEqual({
+      aborted: true,
+      response: "visible partial output",
+    });
+  });
+
+  for (const failedKind of [
+    "master.turn.started",
+    "master.text",
+    "master.turn.completed",
+  ] as const) {
+    test(`routes ${failedKind} capture failure into coordinated shutdown`, async () => {
+      const observer = new RecordingObserver();
+      const telemetry = new KindFailingTelemetry(failedKind);
+      const fatal = Promise.withResolvers<Error>();
+      const master = new CompletedMaster("openai/gpt-5", controller, observer, {
+        onFatalError: fatal.resolve,
+        requestShutdown: noop,
+        telemetry,
+      });
+
+      master.send("status?");
+      const failure = await fatal.promise;
+      expect(failure.name).toBe("TelemetryCaptureError");
+      expect(failure.message).toContain(`Failed to capture ${failedKind}`);
+      expect(
+        telemetry.events.some((event) => event.kind === "master.turn.failed"),
+      ).toBe(false);
+      expect(observer.changes).toEqual([]);
+      await master.stop();
+    });
+  }
 });

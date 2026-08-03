@@ -7,6 +7,7 @@ import type {
   WorkerResult,
 } from "./schemas.ts";
 import type { FleetStore } from "./state.ts";
+import type { RunEventCorrelation, RunEventKind } from "./run-events.ts";
 
 export type CommandRequest = {
   executable: string;
@@ -14,6 +15,10 @@ export type CommandRequest = {
   cwd: string;
   timeoutMs: number;
   signal?: AbortSignal | undefined;
+  /** UTF-8 input written to the child before waiting for completion. */
+  stdin?: string;
+  /** Return output to the caller but replace it in telemetry and errors. */
+  sensitiveOutput?: boolean | undefined;
   /**
    * Environment for the subprocess. Defaults to the controller's own
    * environment; model-driven worker commands pass a credential-scrubbed
@@ -26,6 +31,7 @@ export type CommandResult = {
   exitCode: number;
   stdout: string;
   stderr: string;
+  termination: "exit" | "timeout" | "abort";
 };
 
 export type FleetEnvironment = {
@@ -54,7 +60,11 @@ export type FleetEnvironment = {
 };
 
 export type WorkerRunner = {
-  run: (pr: PrState, signal: AbortSignal) => Promise<WorkerResult>;
+  run: (
+    pr: PrState,
+    signal: AbortSignal,
+    tickId: string | undefined,
+  ) => Promise<WorkerResult>;
 };
 
 export type FleetObserver = {
@@ -67,6 +77,17 @@ export type FleetScheduler = {
   schedule: (callback: () => void, delayMs: number) => () => void;
 };
 
+export type FleetTelemetry = {
+  runId: string;
+  newId: (prefix: string) => string;
+  traceId: (...parts: string[]) => string;
+  record: (
+    kind: RunEventKind,
+    payload: Record<string, unknown>,
+    correlation?: RunEventCorrelation,
+  ) => void;
+};
+
 export type FleetControllerDependencies = {
   config: FleetControllerConfig;
   environment: FleetEnvironment;
@@ -74,4 +95,6 @@ export type FleetControllerDependencies = {
   observer: FleetObserver;
   store?: FleetStore;
   scheduler?: FleetScheduler;
+  telemetry?: FleetTelemetry;
+  onFatalError?: (error: Error) => void;
 };

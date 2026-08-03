@@ -103,6 +103,8 @@ test("does not redact Discord-style snowflake IDs or usernames", () => {
 
 afterEach(() => {
   delete Bun.env["OPENAI_API_KEY"];
+  delete Bun.env["XAI_API_KEY"];
+  delete Bun.env["OPENROUTER_API_KEY"];
 });
 
 // Composed from fragments so no single string literal trips the no-secrets rule.
@@ -116,6 +118,53 @@ test("redactText masks known secret env-var values in any format", () => {
   const out = redactText(body);
   expect(out).not.toContain(FAKE_SECRET);
   expect(out).toContain("[REDACTED]");
+});
+
+test("redactText masks every documented provider credential", () => {
+  const xaiSecret = ["xai", "provider", "credential"].join("-");
+  const openRouterSecret = ["openrouter", "provider", "credential"].join("-");
+  Bun.env["XAI_API_KEY"] = xaiSecret;
+  Bun.env["OPENROUTER_API_KEY"] = openRouterSecret;
+
+  const out = redactText(`xai=${xaiSecret} router=${openRouterSecret}`);
+  expect(out).not.toContain(xaiSecret);
+  expect(out).not.toContain(openRouterSecret);
+  expect(out.match(/\[REDACTED\]/g)).toHaveLength(2);
+});
+
+test("redactSecrets applies literal-value masking inside nested strings", () => {
+  Bun.env["OPENAI_API_KEY"] = FAKE_SECRET;
+  const redacted = HeadersSchema.parse(
+    redactSecrets({ headers: { raw: `provider response: ${FAKE_SECRET}` } }),
+  );
+  expect(redacted.headers.raw).toBe("provider response: [REDACTED]");
+});
+
+test("redactSecrets masks an explicitly configured provider credential", () => {
+  const customSecret = ["private", "compatible", "endpoint", "key"].join("-");
+  const redacted = HeadersSchema.parse(
+    redactSecrets({ headers: { raw: `provider response: ${customSecret}` } }, [
+      customSecret,
+    ]),
+  );
+  expect(redacted.headers.raw).toBe("provider response: [REDACTED]");
+});
+
+test("redactSecrets masks short explicitly configured credentials", () => {
+  const customSecret = "abc";
+  const redacted = HeadersSchema.parse(
+    redactSecrets({ headers: { raw: `provider response: ${customSecret}` } }, [
+      customSecret,
+    ]),
+  );
+  expect(redacted.headers.raw).toBe("provider response: [REDACTED]");
+});
+
+test("redactSecrets ignores empty explicitly configured credentials", () => {
+  const redacted = HeadersSchema.parse(
+    redactSecrets({ headers: { raw: "provider response" } }, [""]),
+  );
+  expect(redacted.headers.raw).toBe("provider response");
 });
 
 test("redactText does not mask short env values that could hit unrelated text", () => {

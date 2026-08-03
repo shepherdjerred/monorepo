@@ -6,9 +6,12 @@ import type {
   WorkerRunner,
 } from "./ports.ts";
 import {
+  ControllerTelemetry,
+  isTelemetryCaptureError,
+} from "./controller-telemetry.ts";
+import {
   buildPrState,
   computeStackIds,
-  currentTimestamp,
   mapBounded,
   type RefreshedPr,
 } from "./fleet-logic.ts";
@@ -24,6 +27,27 @@ import {
 import { FleetStore } from "./state.ts";
 import type { MasterControllerTools } from "./master-tools.ts";
 import { createFleetTickWorkflow } from "./workflow.ts";
+import { defaultFleetScheduler } from "./scheduler.ts";
+import {
+  assignFleetWorktree,
+  withPrCommandCorrelation,
+  withTickCommandCorrelation,
+} from "./controller-correlation.ts";
+import {
+  settleWorkerFailure,
+  settleWorkerResult,
+} from "./controller-worker-settlement.ts";
+import { startWorkerObservation } from "./controller-worker-observer.ts";
+import {
+  guidePr,
+  prioritizePr,
+  resumePr,
+  updateWorkerLimit,
+} from "./controller-commands.ts";
+import {
+  abortFleetWorkers,
+  settleControllerShutdown,
+} from "./controller-shutdown.ts";
 
 export class FleetController implements MasterControllerTools {
   readonly #config: FleetControllerConfig;
@@ -31,11 +55,19 @@ export class FleetController implements MasterControllerTools {
   readonly #workerRunner: WorkerRunner;
   readonly #observer: FleetObserver;
   readonly #scheduler: FleetScheduler;
+  readonly #telemetry: ControllerTelemetry;
+  readonly #onFatalError: ((error: Error) => void) | undefined;
   readonly #workflow;
   readonly store: FleetStore;
   #heartbeat: (() => void) | null = null;
   #tickRunning = false;
   #tickDue = false;
+  #currentTickId: string | undefined;
+  #tickSettled: Promise<undefined> | null = null;
+  readonly #workerSettlements = new Map<Promise<WorkerResult>, Promise<void>>();
+  readonly #dispatchedWorkers = new Map<number, PrState>();
+  readonly #dispatchedTickIds = new Map<number, string>();
+  #fatalFailure: Error | undefined;
 
   constructor(dependencies: FleetControllerDependencies) {
     const { config, environment, workerRunner, observer } = dependencies;
@@ -43,16 +75,9 @@ export class FleetController implements MasterControllerTools {
     this.#environment = environment;
     this.#workerRunner = workerRunner;
     this.#observer = observer;
-    this.#scheduler =
-      dependencies.scheduler ??
-      ({
-        schedule: (callback, delayMs) => {
-          const timer = setTimeout(callback, delayMs);
-          return () => {
-            clearTimeout(timer);
-          };
-        },
-      } satisfies FleetScheduler);
+    this.#telemetry = new ControllerTelemetry(dependencies.telemetry);
+    this.#onFatalError = dependencies.onFatalError;
+    this.#scheduler = dependencies.scheduler ?? defaultFleetScheduler;
     this.store = dependencies.store ?? new FleetStore(config.maxWorkers);
     this.#workflow = createFleetTickWorkflow((trigger) =>
       this.#executeTick(trigger),
@@ -68,8 +93,12 @@ export class FleetController implements MasterControllerTools {
   }
 
   async tick(trigger: TickTrigger = "user"): Promise<FleetTickReport> {
+    if (this.store.stopping) {
+      throw new Error("Controller is stopping and cannot start another tick");
+    }
     if (this.#tickRunning) {
       this.#tickDue = true;
+      this.#telemetry.tickQueued(trigger, this.snapshot(), this.#currentTickId);
       return {
         trigger,
         snapshot: this.snapshot(),
@@ -77,22 +106,57 @@ export class FleetController implements MasterControllerTools {
         nextHeartbeatSeconds: 300,
       };
     }
+    const tickId = this.#telemetry.tickStarted(trigger);
+    const settlement = Promise.withResolvers<undefined>();
+    this.#tickSettled = settlement.promise;
+    this.#currentTickId = tickId;
     this.#tickRunning = true;
     try {
-      const run = await this.#workflow.createRun();
-      const result = await run.start({ inputData: { trigger } });
-      if (result.status !== "success") {
-        if (result.status === "failed") {
-          throw result.error;
+      let report: FleetTickReport;
+      try {
+        const run = await this.#workflow.createRun();
+        const result = await withTickCommandCorrelation(tickId, () =>
+          run.start({ inputData: { trigger } }),
+        );
+        if (result.status !== "success") {
+          if (result.status === "failed") {
+            throw result.error;
+          }
+          throw new Error(`Fleet workflow ended with status ${result.status}`);
         }
-        throw new Error(`Fleet workflow ended with status ${result.status}`);
+        report = FleetTickReportSchema.parse(result.result);
+      } catch (error) {
+        if (isTelemetryCaptureError(error)) throw error;
+        this.#telemetry.tickFailed(tickId, error);
+        throw error;
       }
-      const report = FleetTickReportSchema.parse(result.result);
+      // Persist the reconciled state outside the workflow's operational error
+      // boundary. Capture failures must never be relabeled as tick failures or
+      // retried as though GitHub reconciliation itself had failed.
+      this.#telemetry.snapshot(tickId, report.snapshot);
+      for (const change of report.changes) {
+        this.#telemetry.change(tickId, change);
+      }
       this.#armHeartbeat(report.nextHeartbeatSeconds);
+      this.#telemetry.tickCompleted(tickId, report);
       return report;
+    } catch (error) {
+      if (isTelemetryCaptureError(error)) {
+        this.#reportFatalError(error);
+      }
+      throw error;
     } finally {
       this.#tickRunning = false;
-      if (this.#tickDue && !this.store.stopping) {
+      this.#currentTickId = undefined;
+      settlement.resolve(undefined);
+      if (this.#tickSettled === settlement.promise) {
+        this.#tickSettled = null;
+      }
+      if (
+        this.#tickDue &&
+        !this.store.isStopping() &&
+        this.#fatalFailure === undefined
+      ) {
         this.#tickDue = false;
         queueMicrotask(() => {
           void this.#runTickSafely("due", "due tick");
@@ -113,13 +177,8 @@ export class FleetController implements MasterControllerTools {
           runtimeAgent: null,
         });
         if (this.store.activeWorkers.has(number)) {
-          // A worker is still running setup/restack/publish for this now-closed
-          // PR. Abort it but DON'T release its leases yet: doing so lets the
-          // same tick dispatch another worker that acquires setup/heavy/write
-          // authority while the cancelled subprocess is still touching deps,
-          // Git state, or remote branches. Cancel deliberately and let
-          // settlement release the leases once the worker actually stops (the
-          // pause path relies on the same invariant).
+          // Abort the closed PR's worker, but retain leases until settlement so
+          // no replacement overlaps its in-flight setup, Git, or publication.
           this.store.cancelledWorkers.add(number);
           this.store.workerControllers.get(number)?.abort();
         } else {
@@ -131,11 +190,14 @@ export class FleetController implements MasterControllerTools {
     }
 
     const stackIds = computeStackIds(identities);
-    const refreshed = await mapBounded(identities, 5, async (identity) => ({
-      identity,
-      evidence: await this.#environment.refreshEvidence(identity),
-      stackId: stackIds.get(identity.number) ?? `pr-${String(identity.number)}`,
-    }));
+    const refreshed = await mapBounded(identities, 5, (identity) =>
+      withPrCommandCorrelation(identity, async () => ({
+        identity,
+        evidence: await this.#environment.refreshEvidence(identity),
+        stackId:
+          stackIds.get(identity.number) ?? `pr-${String(identity.number)}`,
+      })),
+    );
     this.#reconcileStates(refreshed, changes);
     await this.#dispatch(changes);
 
@@ -170,11 +232,8 @@ export class FleetController implements MasterControllerTools {
         (headChanged || reconciled.state.classification === "green") &&
         this.store.activeWorkers.has(item.identity.number)
       ) {
-        // The active worker holds a now-stale PrState and checkout: the PR went
-        // green, or an external push moved its head under the worker (its
-        // worktree was synced to the old SHA at dispatch). Cancel it
-        // deliberately so settlement doesn't pause it — a green PR is done, and
-        // a moved-head PR re-dispatches against the refreshed SHA next tick.
+        // Cancel stale/resolved work deliberately: green stays done and a moved
+        // head can redispatch without being converted into a failure pause.
         this.store.cancelledWorkers.add(item.identity.number);
         this.store.workerControllers.get(item.identity.number)?.abort();
       }
@@ -229,174 +288,124 @@ export class FleetController implements MasterControllerTools {
         });
         continue;
       }
+      let worktree: string;
       try {
-        const siblingBranches = [...this.store.prs.values()]
-          .filter((pr) => pr.stackId === candidate.stackId)
-          .map((pr) => pr.identity.headRefName);
-        const worktree =
-          (await this.#environment.findWorktree(siblingBranches)) ??
-          (await this.#environment.provisionWorktree(
-            candidate.identity,
-            candidate.stackId,
-          ));
-        // Ensure the shared stack worktree is clean and synced to THIS
-        // candidate's PR head before assigning it. A reused sibling worktree is
-        // on another branch (any commit there would publish onto the wrong PR),
-        // and its local ref may be stale relative to the current PR head.
-        await this.#environment.assignWorktreeBranch(
-          worktree,
-          candidate.identity,
+        worktree = await assignFleetWorktree(
+          this.#environment,
+          this.store.prs.values(),
+          candidate,
         );
-        const generation = candidate.agentGeneration + 1;
-        const prNumber = String(candidate.identity.number);
-        const assigned: PrState = {
-          ...candidate,
-          worktree,
-          // Setup is only current when it ran for this exact head; a reused
-          // worktree at a different head must re-run it.
-          setupComplete:
-            this.store.setupWorktrees.get(worktree) ===
-            candidate.identity.headSha,
-          agentGeneration: generation,
-          runtimeAgent: `pr-${prNumber}-g${String(generation)}`,
-          status: "diagnosing",
-        };
-        this.store.prs.set(candidate.identity.number, assigned);
-        const abortController = new AbortController();
-        const promise = this.#workerRunner.run(
-          assigned,
-          abortController.signal,
-        );
-        this.store.activeWorkers.set(candidate.identity.number, promise);
-        this.store.workerControllers.set(
-          candidate.identity.number,
-          abortController,
-        );
-        busyStacks.add(candidate.stackId);
-        changes.push(`started ${assigned.runtimeAgent ?? "worker"}`);
-        void this.#observeWorker(candidate.identity.number, promise);
       } catch (error) {
+        if (isTelemetryCaptureError(error)) {
+          throw error;
+        }
         const message = error instanceof Error ? error.message : String(error);
         this.pause(candidate.identity.number, message);
         changes.push(
           `paused PR #${String(candidate.identity.number)}: ${message}`,
         );
+        continue;
       }
-    }
-  }
-
-  async #observeWorker(
-    prNumber: number,
-    promise: Promise<WorkerResult>,
-  ): Promise<void> {
-    try {
-      const result = await promise;
-      // The `pr` field is model-generated and only validated as a positive
-      // integer. Bind the result to the PR this worker was dispatched for; a
-      // result claiming a different PR must not mutate that PR or leave this one
-      // stuck in activeWorkers.
-      if (result.pr !== prNumber) {
-        this.#handleWorkerFailure(
-          prNumber,
-          new Error(
-            `worker returned a result for PR #${String(result.pr)} instead of #${String(prNumber)}`,
-          ),
-        );
-        return;
+      const generation = candidate.agentGeneration + 1;
+      const prNumber = String(candidate.identity.number);
+      const assigned: PrState = {
+        ...candidate,
+        worktree,
+        // Setup is only current when it ran for this exact head; a reused
+        // worktree at a different head must re-run it.
+        setupComplete:
+          this.store.setupWorktrees.get(worktree) ===
+          candidate.identity.headSha,
+        agentGeneration: generation,
+        runtimeAgent: `pr-${prNumber}-g${String(generation)}`,
+        status: "diagnosing",
+      };
+      const dispatchTickId = this.#currentTickId;
+      // Mandatory capture is outside the worktree-provisioning catch. Failure
+      // must stop the tick before state says a worker exists or work is run.
+      this.#telemetry.workerStarted(dispatchTickId, assigned);
+      this.store.prs.set(candidate.identity.number, assigned);
+      this.#dispatchedWorkers.set(candidate.identity.number, assigned);
+      if (dispatchTickId !== undefined) {
+        this.#dispatchedTickIds.set(candidate.identity.number, dispatchTickId);
       }
-      this.#handleWorkerResult(prNumber, result);
-    } catch (error) {
-      this.#handleWorkerFailure(prNumber, error);
+      const abortController = new AbortController();
+      const promise = Promise.resolve().then(() =>
+        this.#workerRunner.run(
+          assigned,
+          abortController.signal,
+          dispatchTickId,
+        ),
+      );
+      this.store.activeWorkers.set(candidate.identity.number, promise);
+      this.store.workerControllers.set(
+        candidate.identity.number,
+        abortController,
+      );
+      busyStacks.add(candidate.stackId);
+      changes.push(`started ${assigned.runtimeAgent ?? "worker"}`);
+      const observationPrNumber = candidate.identity.number;
+      const settlement = startWorkerObservation({
+        prNumber: observationPrNumber,
+        promise,
+        handleFailure: (error) => {
+          this.#handleWorkerFailure(observationPrNumber, error);
+        },
+        handleResult: (result) => {
+          this.#handleWorkerResult(observationPrNumber, result);
+        },
+        reportFatal: (error) => {
+          this.#reportFatalError(error);
+        },
+        onSettled: () => {
+          this.#workerSettlements.delete(promise);
+        },
+      });
+      this.#workerSettlements.set(promise, settlement);
     }
   }
 
   #handleWorkerResult(prNumber: number, result: WorkerResult): void {
-    const previous = this.store.prs.get(prNumber);
-    this.store.activeWorkers.delete(prNumber);
-    this.store.workerControllers.delete(prNumber);
-    this.store.cancelledWorkers.delete(prNumber);
-    this.store.releaseLeases(prNumber);
-    if (previous === undefined) {
-      return;
-    }
-    const needsLease =
-      result.state === "needs-setup-lease" ||
-      result.state === "needs-heavy-lease" ||
-      result.state === "needs-write-lease";
-    if (needsLease) {
-      // A required lease was unavailable — another same-stack worker holds it.
-      // Queue this PR and wait for that worker to release the lease rather than
-      // immediately redispatching a fresh paid model cycle, which would spin and
-      // exhaust provider quota. The lease-owner's worker-complete tick (or the
-      // heartbeat) re-dispatches it once the lease frees.
-      this.store.prs.set(prNumber, {
-        ...previous,
-        runtimeAgent: null,
-        status: "queued",
-        classification: "queued",
-        lastAgentReportAt: currentTimestamp(),
-      });
-      this.#observer.onChange(
-        `worker for PR #${String(prNumber)} deferred: ${result.state} — awaiting lease`,
-      );
-      return;
-    }
-    const paused = result.state === "escalation" || result.state === "blocked";
-    if (paused) {
-      this.store.pausedReasons.set(prNumber, result.blockers.join("; "));
-    }
-    this.store.prs.set(prNumber, {
-      ...previous,
-      runtimeAgent: null,
-      status: paused
-        ? "paused"
-        : result.state === "pushed"
-          ? "waiting-ci"
-          : previous.status,
-      classification: paused ? "paused" : previous.classification,
-      lastAgentReportAt: currentTimestamp(),
-      lastProgressAt: currentTimestamp(),
-      noProgressTicks: 0,
-      escalation: paused ? result.blockers.join("; ") : null,
+    const dispatched =
+      this.#dispatchedWorkers.get(prNumber) ?? this.store.prs.get(prNumber);
+    this.#dispatchedWorkers.delete(prNumber);
+    const tickId = this.#dispatchedTickIds.get(prNumber);
+    this.#dispatchedTickIds.delete(prNumber);
+    const shouldTick = settleWorkerResult({
+      store: this.store,
+      telemetry: this.#telemetry,
+      observer: this.#observer,
+      dispatched,
+      prNumber,
+      result,
+      tickId,
     });
-    this.#observer.onChange(
-      `worker for PR #${String(prNumber)}: ${result.state} — ${result.lastAction}`,
-    );
-    void this.#runTickSafely("worker-complete", "worker-complete tick");
+    if (shouldTick && !this.store.stopping) {
+      void this.#runTickSafely("worker-complete", "worker-complete tick");
+    }
   }
 
   #handleWorkerFailure(prNumber: number, error: unknown): void {
-    this.store.activeWorkers.delete(prNumber);
-    this.store.workerControllers.delete(prNumber);
-    this.store.releaseLeases(prNumber);
-    if (this.store.cancelledWorkers.delete(prNumber)) {
-      // Deliberate cancel (PR went green or its head advanced) — not a failure.
-      // Do not pause; re-run a tick so a moved-head PR re-dispatches against its
-      // refreshed SHA (a green PR simply won't be a dispatch candidate).
-      this.#observer.onChange(
-        `worker for PR #${String(prNumber)} cancelled (stale head or resolved)`,
-      );
+    const recordedState = this.store.prs.get(prNumber);
+    const dispatched = this.#dispatchedWorkers.get(prNumber) ?? recordedState;
+    this.#dispatchedWorkers.delete(prNumber);
+    const tickId = this.#dispatchedTickIds.get(prNumber);
+    this.#dispatchedTickIds.delete(prNumber);
+    const shouldTick = settleWorkerFailure({
+      store: this.store,
+      telemetry: this.#telemetry,
+      observer: this.#observer,
+      dispatched,
+      prNumber,
+      error,
+      tickId,
+      pause: (reason) => {
+        this.pause(prNumber, reason);
+      },
+    });
+    if (shouldTick && !this.store.stopping) {
       void this.#runTickSafely("worker-complete", "worker-complete tick");
-      return;
     }
-    const message = error instanceof Error ? error.message : String(error);
-    const state = this.store.prs.get(prNumber);
-    if (
-      this.store.stopping ||
-      state?.status === "closed" ||
-      this.store.pausedReasons.has(prNumber)
-    ) {
-      // Already stopping, closed, or deliberately paused (which aborts the
-      // worker). Don't overwrite the intended pause reason with the abort error.
-      this.#observer.onChange(
-        `worker for PR #${String(prNumber)} stopped: ${message}`,
-      );
-      return;
-    }
-    this.pause(prNumber, `worker failed: ${message}`);
-    this.#observer.onChange(
-      `worker for PR #${String(prNumber)} failed: ${message}`,
-    );
   }
 
   #armHeartbeat(seconds: 300 | 600): void {
@@ -416,6 +425,10 @@ export class FleetController implements MasterControllerTools {
     try {
       await this.tick(trigger);
     } catch (error) {
+      if (isTelemetryCaptureError(error)) {
+        this.#reportFatalError(error);
+        return;
+      }
       const message = error instanceof Error ? error.message : String(error);
       this.#observer.onChange(`${label} failed: ${message}`);
       // A heartbeat clears its handle before starting the tick. If that tick
@@ -427,12 +440,22 @@ export class FleetController implements MasterControllerTools {
     }
   }
 
-  prioritize(prNumber: number, priority: number): void {
-    const state = this.store.prs.get(prNumber);
-    if (state === undefined) {
-      throw new Error(`Unknown PR #${String(prNumber)}`);
+  #reportFatalError(error: unknown): void {
+    const failure = error instanceof Error ? error : new Error(String(error));
+    if (this.#fatalFailure !== undefined) {
+      return;
     }
-    this.store.prs.set(prNumber, { ...state, priority });
+    this.#fatalFailure = failure;
+    this.#tickDue = false;
+    if (this.#heartbeat !== null) {
+      this.#heartbeat();
+      this.#heartbeat = null;
+    }
+    this.#onFatalError?.(failure);
+  }
+
+  prioritize(prNumber: number, priority: number): void {
+    prioritizePr(this.store, prNumber, priority);
   }
 
   pause(prNumber: number, reason: string): void {
@@ -441,18 +464,10 @@ export class FleetController implements MasterControllerTools {
       throw new Error(`Unknown PR #${String(prNumber)}`);
     }
     this.store.pausedReasons.set(prNumber, reason);
-    // Stop any in-flight worker for this PR. Aborting its controller halts the
-    // model turn AND cancels its publication subprocesses (git-operations
-    // threads this signal into every commit/submit), so an in-flight publish is
-    // actually stopped rather than finishing after the PR is reported paused.
-    //
-    // When a worker is still active we must NOT release its leases here: the
-    // publication is being cancelled but has not necessarily stopped yet, and
-    // releasing the stack-write lease now would let a sibling stack worker grab
-    // the shared worktree mid-publish. Leave lease/activeWorkers cleanup to the
-    // worker's settlement path (#handleWorkerFailure), which runs only after the
-    // aborted worker (and its subprocess) has actually settled.
+    // Abort model/publication work, retaining leases until actual settlement so
+    // a sibling cannot acquire the shared checkout mid-cancellation.
     if (this.store.activeWorkers.has(prNumber)) {
+      this.store.cancelledWorkers.add(prNumber);
       this.store.workerControllers.get(prNumber)?.abort();
     } else {
       // No in-flight worker will settle, so release directly.
@@ -470,36 +485,36 @@ export class FleetController implements MasterControllerTools {
   }
 
   resume(prNumber: number): void {
-    if (!this.store.prs.has(prNumber)) {
-      throw new Error(`Unknown PR #${String(prNumber)}`);
-    }
-    this.store.pausedReasons.delete(prNumber);
+    resumePr(this.store, prNumber);
   }
 
   guide(prNumber: number, message: string): void {
-    if (!this.store.prs.has(prNumber)) {
-      throw new Error(`Unknown PR #${String(prNumber)}`);
-    }
-    this.store.addGuidance(prNumber, message);
+    guidePr(this.store, prNumber, message);
   }
 
   setWorkerLimit(limit: number): void {
-    if (!Number.isInteger(limit) || limit < 1 || limit > 5) {
-      throw new Error("Worker limit must be an integer between one and five");
-    }
-    this.store.workerLimit = limit;
+    updateWorkerLimit(this.store, limit);
   }
 
-  async stop(): Promise<FleetSnapshot> {
-    this.store.stopping = true;
-    if (this.#heartbeat !== null) {
-      this.#heartbeat();
-      this.#heartbeat = null;
-    }
-    for (const controller of this.store.workerControllers.values()) {
-      controller.abort();
-    }
-    await Promise.allSettled(this.store.activeWorkers.values());
-    return this.snapshot();
+  async stop(externalSettlement: Promise<unknown>): Promise<FleetSnapshot> {
+    return settleControllerShutdown({
+      begin: () => {
+        this.store.stopping = true;
+        if (this.#heartbeat !== null) {
+          this.#heartbeat();
+          this.#heartbeat = null;
+        }
+      },
+      abortActiveWorkers: () => {
+        abortFleetWorkers(this.store);
+      },
+      activeWorkerCount: () => this.store.activeWorkers.size,
+      inFlightTick: this.#tickSettled,
+      workerSettlements: () => this.#workerSettlements.values(),
+      externalSettlement,
+      initialFailure: this.#fatalFailure,
+      snapshot: () => this.snapshot(),
+      telemetry: this.#telemetry,
+    });
   }
 }

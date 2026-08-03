@@ -1,5 +1,9 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
+import { captureTelemetryOperation } from "./controller-telemetry.ts";
+import type { FleetTelemetry } from "./ports.ts";
+import { runRecordedToolOperation } from "./recorded-tool.ts";
+import type { RunEventCorrelation } from "./run-events.ts";
 import {
   FleetSnapshotSchema,
   FleetTickReportSchema,
@@ -15,24 +19,81 @@ export type MasterControllerTools = {
   resume: (pr: number) => void;
   guide: (pr: number, message: string) => void;
   setWorkerLimit: (limit: number) => void;
-  stop: () => Promise<FleetSnapshot>;
 };
 
-export function createMasterTools(controller: MasterControllerTools) {
+type MasterToolTelemetry = {
+  telemetry: FleetTelemetry;
+  correlation: () => RunEventCorrelation;
+};
+
+const PrTargetSchema = z.object({ pr: z.number().int().positive() });
+
+function masterToolTargetCorrelation(
+  tool: string,
+  input: unknown,
+): RunEventCorrelation {
+  switch (tool) {
+    case "prioritize_pr":
+    case "pause_pr":
+    case "resume_pr":
+    case "send_worker_guidance":
+      return { prNumber: PrTargetSchema.parse(input).pr };
+    default:
+      return {};
+  }
+}
+
+export async function runRecordedMasterTool<T>(
+  tool: string,
+  input: unknown,
+  instrumentation: MasterToolTelemetry | undefined,
+  run: () => Promise<T>,
+): Promise<T> {
+  if (instrumentation === undefined) {
+    return run();
+  }
+  const toolCallId = captureTelemetryOperation("tool correlation", () =>
+    instrumentation.telemetry.newId("tool"),
+  );
+  const correlation = {
+    ...instrumentation.correlation(),
+    ...masterToolTargetCorrelation(tool, input),
+    toolCallId,
+  };
+  return runRecordedToolOperation({
+    tool,
+    input,
+    telemetry: instrumentation.telemetry,
+    correlation,
+    run,
+  });
+}
+
+export function createMasterTools(
+  controller: MasterControllerTools,
+  instrumentation?: MasterToolTelemetry,
+  requestShutdown?: () => void,
+) {
   return {
     fleet_status: createTool({
       id: "fleet_status",
       description: "Get the current deterministic fleet snapshot.",
       inputSchema: z.object({}),
       outputSchema: FleetSnapshotSchema,
-      execute: () => Promise.resolve(controller.snapshot()),
+      execute: (input) =>
+        runRecordedMasterTool("fleet_status", input, instrumentation, () =>
+          Promise.resolve(controller.snapshot()),
+        ),
     }),
     run_fleet_tick: createTool({
       id: "run_fleet_tick",
       description: "Request an immediate complete fleet reconciliation.",
       inputSchema: z.object({}),
       outputSchema: FleetTickReportSchema,
-      execute: async () => controller.tick(),
+      execute: (input) =>
+        runRecordedMasterTool("run_fleet_tick", input, instrumentation, () =>
+          controller.tick(),
+        ),
     }),
     prioritize_pr: createTool({
       id: "prioritize_pr",
@@ -42,10 +103,11 @@ export function createMasterTools(controller: MasterControllerTools) {
         priority: z.number().int().min(-100).max(100),
       }),
       outputSchema: z.object({ updated: z.boolean() }),
-      execute: ({ pr, priority }) => {
-        controller.prioritize(pr, priority);
-        return Promise.resolve({ updated: true });
-      },
+      execute: (input) =>
+        runRecordedMasterTool("prioritize_pr", input, instrumentation, () => {
+          controller.prioritize(input.pr, input.priority);
+          return Promise.resolve({ updated: true });
+        }),
     }),
     pause_pr: createTool({
       id: "pause_pr",
@@ -55,20 +117,22 @@ export function createMasterTools(controller: MasterControllerTools) {
         reason: z.string().min(1),
       }),
       outputSchema: z.object({ paused: z.boolean() }),
-      execute: ({ pr, reason }) => {
-        controller.pause(pr, reason);
-        return Promise.resolve({ paused: true });
-      },
+      execute: (input) =>
+        runRecordedMasterTool("pause_pr", input, instrumentation, () => {
+          controller.pause(input.pr, input.reason);
+          return Promise.resolve({ paused: true });
+        }),
     }),
     resume_pr: createTool({
       id: "resume_pr",
       description: "Resume a user-paused PR.",
       inputSchema: z.object({ pr: z.number().int().positive() }),
       outputSchema: z.object({ resumed: z.boolean() }),
-      execute: ({ pr }) => {
-        controller.resume(pr);
-        return Promise.resolve({ resumed: true });
-      },
+      execute: (input) =>
+        runRecordedMasterTool("resume_pr", input, instrumentation, () => {
+          controller.resume(input.pr);
+          return Promise.resolve({ resumed: true });
+        }),
     }),
     send_worker_guidance: createTool({
       id: "send_worker_guidance",
@@ -78,27 +142,54 @@ export function createMasterTools(controller: MasterControllerTools) {
         message: z.string().min(1),
       }),
       outputSchema: z.object({ queued: z.boolean() }),
-      execute: ({ pr, message }) => {
-        controller.guide(pr, message);
-        return Promise.resolve({ queued: true });
-      },
+      execute: (input) =>
+        runRecordedMasterTool(
+          "send_worker_guidance",
+          input,
+          instrumentation,
+          () => {
+            controller.guide(input.pr, input.message);
+            return Promise.resolve({ queued: true });
+          },
+        ),
     }),
     set_worker_limit: createTool({
       id: "set_worker_limit",
       description: "Set worker concurrency between one and five.",
       inputSchema: z.object({ limit: z.number().int().min(1).max(5) }),
       outputSchema: z.object({ updated: z.boolean() }),
-      execute: ({ limit }) => {
-        controller.setWorkerLimit(limit);
-        return Promise.resolve({ updated: true });
-      },
+      execute: (input) =>
+        runRecordedMasterTool(
+          "set_worker_limit",
+          input,
+          instrumentation,
+          () => {
+            controller.setWorkerLimit(input.limit);
+            return Promise.resolve({ updated: true });
+          },
+        ),
     }),
     stop_controller: createTool({
       id: "stop_controller",
       description: "Safely stop the fleet controller.",
       inputSchema: z.object({}),
       outputSchema: FleetSnapshotSchema,
-      execute: async () => controller.stop(),
+      execute: async (input) => {
+        if (requestShutdown === undefined) {
+          throw new Error("Master shutdown coordination is unavailable");
+        }
+        const result = await runRecordedMasterTool(
+          "stop_controller",
+          input,
+          instrumentation,
+          () => Promise.resolve(controller.snapshot()),
+        );
+        // Request coordinated shutdown only after this tool has emitted its
+        // terminal event. The coordinator aborts and awaits the enclosing
+        // master turn before it permits shutdown.completed.
+        requestShutdown();
+        return result;
+      },
     }),
   };
 }

@@ -1,9 +1,4 @@
-import {
-  reviewGateSkipReasonForAuthor,
-  type ReviewProvider,
-} from "@shepherdjerred/code-review";
-import { resolveReviewState } from "@shepherdjerred/code-review/github";
-import { fetchHeadPushedAt } from "@shepherdjerred/code-review/head-pushed-at";
+import type { ReviewProvider } from "@shepherdjerred/code-review";
 import {
   checksWithBuildkiteSoftFailure,
   fingerprint,
@@ -17,12 +12,16 @@ import {
   type RawReviewThread,
 } from "./evidence-parsers.ts";
 import { GitOperations } from "./git-operations.ts";
+import { captureTelemetryOperation } from "./controller-telemetry.ts";
+import { currentCommandCorrelation } from "./command-correlation.ts";
+import { resolveHostedReviewCompletion } from "./hosted-review.ts";
 import type {
   CommandRequest,
   CommandResult,
   FleetEnvironment,
+  FleetTelemetry,
 } from "./ports.ts";
-import { runCommand } from "./process-runner.ts";
+import { runRecordedCommand } from "./recorded-command.ts";
 import type {
   CheckEvidence,
   PrIdentity,
@@ -32,47 +31,61 @@ import type {
 } from "./schemas.ts";
 import { WorktreeManager } from "./worktree.ts";
 
+export type CommandFleetEnvironmentOptions = {
+  repo: string;
+  checkout: string;
+  worktreeRoot: string;
+  provider: ReviewProvider;
+  telemetry?: FleetTelemetry;
+};
+
 export class CommandFleetEnvironment implements FleetEnvironment {
   readonly #repo: string;
   readonly #checkout: string;
   readonly #provider: ReviewProvider;
   readonly #gitOperations: GitOperations;
   readonly #worktreeManager: WorktreeManager;
+  readonly #telemetry: FleetTelemetry | undefined;
 
-  constructor(
-    repo: string,
-    checkout: string,
-    worktreeRoot: string,
-    provider: ReviewProvider,
-  ) {
-    this.#repo = repo;
-    this.#checkout = checkout;
-    this.#provider = provider;
+  constructor(options: CommandFleetEnvironmentOptions) {
+    this.#repo = options.repo;
+    this.#checkout = options.checkout;
+    this.#provider = options.provider;
+    this.#telemetry = options.telemetry;
     const run = (request: CommandRequest) => this.runLocalCommand(request);
     const mustRun = (
       executable: string,
       args: string[],
       cwd?: string,
-      options?: { timeoutMs?: number; signal?: AbortSignal | undefined },
-    ) => this.#mustRun(executable, args, cwd, options);
-    this.#gitOperations = new GitOperations({ repo, provider, run, mustRun });
+      commandOptions?: { timeoutMs?: number; signal?: AbortSignal | undefined },
+    ) => this.#mustRun(executable, args, cwd, commandOptions);
+    this.#gitOperations = new GitOperations({
+      repo: options.repo,
+      provider: options.provider,
+      run,
+      mustRun,
+    });
     this.#worktreeManager = new WorktreeManager({
-      checkout,
-      worktreeRoot,
+      checkout: options.checkout,
+      worktreeRoot: options.worktreeRoot,
       run,
       mustRun,
     });
   }
 
   async runLocalCommand(request: CommandRequest): Promise<CommandResult> {
-    return runCommand(request);
+    return runRecordedCommand(request, this.#telemetry);
   }
 
   async #mustRun(
     executable: string,
     args: string[],
     cwd = this.#checkout,
-    options: { timeoutMs?: number; signal?: AbortSignal | undefined } = {},
+    options: {
+      timeoutMs?: number;
+      signal?: AbortSignal | undefined;
+      sensitiveOutput?: boolean | undefined;
+    } = {},
   ): Promise<string> {
     const result = await this.runLocalCommand({
       executable,
@@ -80,10 +93,15 @@ export class CommandFleetEnvironment implements FleetEnvironment {
       cwd,
       timeoutMs: options.timeoutMs ?? 120_000,
       signal: options.signal,
+      sensitiveOutput: options.sensitiveOutput,
     });
     if (result.exitCode !== 0) {
+      const detail =
+        options.sensitiveOutput === true
+          ? "sensitive output omitted"
+          : result.stderr.trim();
       throw new Error(
-        `${executable} ${args.join(" ")} failed (${String(result.exitCode)}): ${result.stderr.trim()}`,
+        `${executable} ${args.join(" ")} failed (${String(result.exitCode)}): ${detail}`,
       );
     }
     return result.stdout;
@@ -102,7 +120,18 @@ export class CommandFleetEnvironment implements FleetEnvironment {
       "--json",
       "number,title,url,isDraft,author,labels,headRefName,headRefOid,baseRefName,isCrossRepository,maintainerCanModify",
     ]);
-    return parsePrList(output);
+    const prs = parsePrList(output);
+    captureTelemetryOperation("environment.result", () => {
+      this.#telemetry?.record(
+        "environment.result",
+        {
+          operation: "listOpenPrs",
+          prs,
+        },
+        currentCommandCorrelation(),
+      );
+    });
+    return prs;
   }
 
   async #checks(pr: PrIdentity) {
@@ -198,44 +227,15 @@ export class CommandFleetEnvironment implements FleetEnvironment {
   }
 
   async #hostedReviewComplete(pr: PrIdentity): Promise<boolean> {
-    // Honor the provider's bot-author skip policy, exactly as the canonical
-    // Buildkite gate does. A provider like Codex declares
-    // botAuthoredPullRequestPolicy: "skip" and emits NO completion signal for
-    // bot-authored PRs (Renovate, release automation), so resolving review
-    // state would leave those PRs pending forever. When the skip applies, treat
-    // hosted review as complete.
-    if (
-      reviewGateSkipReasonForAuthor({
-        author: { login: pr.author, type: pr.authorType },
-        provider: this.#provider,
-      }) !== null
-    ) {
-      return true;
-    }
-
-    // Completion is resolved with the canonical provider strategy: a
-    // review-at-head OR a head-bound 👍 clean-review reaction. Codex leaves NO
-    // review object on a clean PR — only a 👍 — so keying completion off review
-    // objects alone would leave every cleanly-reviewed PR pending forever.
-    // Binding the commit-less reaction to the current head requires the
-    // head-push time.
-    const tokenOutput = await this.#mustRun("gh", ["auth", "token"]);
-    const token = tokenOutput.trim();
-    const headPushedAt = await fetchHeadPushedAt({
+    return resolveHostedReviewCompletion({
       repo: this.#repo,
-      sha: pr.headSha,
-      prNumber: pr.number,
-      token,
-    });
-    const reviewState = await resolveReviewState({
       provider: this.#provider,
-      repo: this.#repo,
-      head: pr.headSha,
-      prNumber: pr.number,
-      token,
-      headPushedAt,
+      pr,
+      readToken: () =>
+        this.#mustRun("gh", ["auth", "token"], this.#checkout, {
+          sensitiveOutput: true,
+        }),
     });
-    return reviewState.state === "reviewed";
   }
 
   async #conflict(pr: PrIdentity): Promise<boolean> {
@@ -407,7 +407,7 @@ export class CommandFleetEnvironment implements FleetEnvironment {
       .filter((finding) => !finding.resolved && !finding.outdated)
       .map((finding) => `${finding.severity}:${finding.body}`);
 
-    return {
+    const evidence: ReadinessEvidence = {
       headSha: pr.headSha,
       checks,
       buildkiteCurrentHead,
@@ -418,6 +418,18 @@ export class CommandFleetEnvironment implements FleetEnvironment {
       hardFailureFingerprint: fingerprint(hardFailures),
       reviewFingerprint: fingerprint(blockingReviews),
     };
+    captureTelemetryOperation("environment.result", () => {
+      this.#telemetry?.record(
+        "environment.result",
+        { operation: "refreshEvidence", evidence },
+        {
+          ...currentCommandCorrelation(),
+          prNumber: pr.number,
+          headSha: pr.headSha,
+        },
+      );
+    });
+    return evidence;
   }
 
   findWorktree(branches: string[]): Promise<string | null> {
