@@ -47,11 +47,19 @@ const SecretVolumeSchema = z.object({
   items: z.array(z.object({ key: z.string() })).optional(),
 });
 const ManifestSchema = z.object({
+  apiVersion: z.string().optional(),
   kind: z.string().optional(),
   metadata: z
     .object({ name: z.string().optional(), namespace: z.string().optional() })
     .optional(),
-  spec: z.object({ itemPath: z.string().optional() }).optional(),
+  spec: z
+    .object({
+      itemPath: z.string().optional(),
+      // ArgoCD Application: the workload (and its consumed secrets) lives in the
+      // destination namespace, not the Application's own metadata.namespace.
+      destination: z.object({ namespace: z.string().optional() }).optional(),
+    })
+    .optional(),
 });
 
 function nsKey(namespace: string | undefined): string {
@@ -173,10 +181,22 @@ function collectReferences(manifests: unknown[]): {
       continue;
     }
 
-    let nsConsumption = consumption.get(namespace);
+    // An ArgoCD Application's own metadata.namespace is `argocd`, but the
+    // secretKeyRefs embedded in its helm valuesObject are consumed by the
+    // workload in spec.destination.namespace, where the OnePasswordItem lives.
+    // Bucket the Application's consumption there so validateFields can join it
+    // to the item (otherwise these refs are silently never checked).
+    const isArgoApp =
+      manifest.kind === "Application" &&
+      (manifest.apiVersion?.startsWith("argoproj.io/") ?? false);
+    const consumptionNamespace = isArgoApp
+      ? nsKey(manifest.spec?.destination?.namespace)
+      : namespace;
+
+    let nsConsumption = consumption.get(consumptionNamespace);
     if (nsConsumption === undefined) {
       nsConsumption = new Map();
-      consumption.set(namespace, nsConsumption);
+      consumption.set(consumptionNamespace, nsConsumption);
     }
     collectConsumption(raw, nsConsumption);
   }
