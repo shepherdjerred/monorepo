@@ -19,13 +19,19 @@ import {
 import { createStructuredLogger } from "./observability/logging.ts";
 import { restoreGlitterCorpusSnapshotMetrics } from "./activities/glitter-corpus-snapshot.ts";
 import { WORKFLOW_TASK_POLLER_BEHAVIOR } from "./shared/worker-options.ts";
+import {
+  parseWorkerRole,
+  workerRoleRunsCore,
+  workerRoleRunsGlitter,
+  type WorkerRole,
+} from "./shared/worker-role.ts";
 
 const DEFAULT_ADDRESS = "temporal-server.temporal.svc.cluster.local:7233";
 const DEFAULT_METRICS_ADDRESS = "0.0.0.0:9464";
 
 const jsonLog = createStructuredLogger();
 
-function installRuntime(): void {
+function installRuntime(role: WorkerRole): void {
   const metricsAddress =
     Bun.env["TEMPORAL_METRICS_ADDRESS"] ?? DEFAULT_METRICS_ADDRESS;
 
@@ -40,7 +46,8 @@ function installRuntime(): void {
         // scrape target reports `up=0`. Keep globalTags to labels the SDK
         // does NOT emit on its own.
         globalTags: {
-          worker: "temporal-worker",
+          worker: `temporal-worker-${role}`,
+          worker_role: role,
         },
         prometheus: {
           bindAddress: metricsAddress,
@@ -204,13 +211,13 @@ function startEventBridgeSupervisor(client: Client): EventBridgeHandle {
 }
 
 async function main(): Promise<void> {
-  installRuntime();
+  const role = parseWorkerRole(Bun.env["TEMPORAL_WORKER_ROLE"]);
+  installRuntime(role);
   initSentry();
   initializeTracing();
-  startMetricsServer();
 
   const address = Bun.env["TEMPORAL_ADDRESS"] ?? DEFAULT_ADDRESS;
-  jsonLog("info", "Connecting to Temporal server", { address });
+  jsonLog("info", "Connecting to Temporal server", { address, role });
 
   const connection = await NativeConnection.connect({ address });
 
@@ -223,59 +230,71 @@ async function main(): Promise<void> {
     workflowTaskPollerBehavior: WORKFLOW_TASK_POLLER_BEHAVIOR,
   };
 
-  const worker = await Worker.create({
-    ...commonWorkerOptions,
-    taskQueue: TASK_QUEUES.DEFAULT,
-  });
+  const workers: Worker[] = [];
+  let httpServers: EventBridgeHandle | undefined;
+  let eventBridge: EventBridgeHandle | undefined;
 
-  jsonLog("info", "Worker created", { taskQueue: TASK_QUEUES.DEFAULT });
+  if (workerRoleRunsCore(role)) {
+    const worker = await Worker.create({
+      ...commonWorkerOptions,
+      taskQueue: TASK_QUEUES.DEFAULT,
+    });
+    workers.push(worker);
+    jsonLog("info", "Worker created", { taskQueue: TASK_QUEUES.DEFAULT });
 
-  // Dedicated queue for delayed/recurring report-only Claude/Codex tasks.
-  // These can run for tens of minutes and must not head-of-line block HA,
-  // schedule registration, PR summaries, or PR review specialist traffic.
-  const agentTaskWorker = await Worker.create({
-    ...commonWorkerOptions,
-    taskQueue: TASK_QUEUES.AGENT_TASK,
-  });
+    // Dedicated queue for delayed/recurring report-only Claude/Codex tasks.
+    // These can run for tens of minutes and must not head-of-line block HA,
+    // schedule registration, PR summaries, or PR review specialist traffic.
+    const agentTaskWorker = await Worker.create({
+      ...commonWorkerOptions,
+      taskQueue: TASK_QUEUES.AGENT_TASK,
+    });
+    workers.push(agentTaskWorker);
+    jsonLog("info", "Worker created", { taskQueue: TASK_QUEUES.AGENT_TASK });
 
-  jsonLog("info", "Worker created", { taskQueue: TASK_QUEUES.AGENT_TASK });
+    const clientConnection = await Connection.connect({ address });
+    const client = new Client({ connection: clientConnection });
+    await registerSchedules(client);
+    jsonLog("info", "Schedules registered");
 
-  // Activity concurrency stays 1 (serial long work). Workflow-task concurrency
-  // must be ≥2 when sticky cache is on — Core rejects max_cached_workflows>0
-  // with a single workflow-task poller/slot (see WORKFLOW_TASK_POLLER_BEHAVIOR).
-  const glitterCorpusWorker = await Worker.create({
-    ...commonWorkerOptions,
-    taskQueue: TASK_QUEUES.GLITTER_CORPUS,
-    maxConcurrentActivityTaskExecutions: 1,
-    maxConcurrentWorkflowTaskExecutions: 2,
-  });
+    httpServers = startHttpServers(client);
+    eventBridge = startEventBridgeSupervisor(client);
+  }
 
-  jsonLog("info", "Worker created", {
-    taskQueue: TASK_QUEUES.GLITTER_CORPUS,
-    maxConcurrentActivityTaskExecutions: 1,
-    maxConcurrentWorkflowTaskExecutions: 2,
-  });
+  if (workerRoleRunsGlitter(role)) {
+    // Activity concurrency stays 1 (serial long work). Workflow-task
+    // concurrency must be ≥2 when sticky cache is on — Core rejects
+    // max_cached_workflows>0 with a single workflow-task poller/slot.
+    const glitterCorpusWorker = await Worker.create({
+      ...commonWorkerOptions,
+      taskQueue: TASK_QUEUES.GLITTER_CORPUS,
+      maxConcurrentActivityTaskExecutions: 1,
+      maxConcurrentWorkflowTaskExecutions: 2,
+    });
+    workers.push(glitterCorpusWorker);
+    jsonLog("info", "Worker created", {
+      taskQueue: TASK_QUEUES.GLITTER_CORPUS,
+      maxConcurrentActivityTaskExecutions: 1,
+      maxConcurrentWorkflowTaskExecutions: 2,
+    });
 
-  const glitterContextWorker = await Worker.create({
-    ...commonWorkerOptions,
-    taskQueue: TASK_QUEUES.GLITTER_CONTEXT,
-    maxConcurrentActivityTaskExecutions: 1,
-    maxConcurrentWorkflowTaskExecutions: 2,
-  });
+    const glitterContextWorker = await Worker.create({
+      ...commonWorkerOptions,
+      taskQueue: TASK_QUEUES.GLITTER_CONTEXT,
+      maxConcurrentActivityTaskExecutions: 1,
+      maxConcurrentWorkflowTaskExecutions: 2,
+    });
+    workers.push(glitterContextWorker);
+    jsonLog("info", "Worker created", {
+      taskQueue: TASK_QUEUES.GLITTER_CONTEXT,
+      maxConcurrentActivityTaskExecutions: 1,
+      maxConcurrentWorkflowTaskExecutions: 2,
+    });
+  }
 
-  jsonLog("info", "Worker created", {
-    taskQueue: TASK_QUEUES.GLITTER_CONTEXT,
-    maxConcurrentActivityTaskExecutions: 1,
-    maxConcurrentWorkflowTaskExecutions: 2,
-  });
-
-  const clientConnection = await Connection.connect({ address });
-  const client = new Client({ connection: clientConnection });
-  await registerSchedules(client);
-  jsonLog("info", "Schedules registered");
-
-  const httpServers = startHttpServers(client);
-  const eventBridge = startEventBridgeSupervisor(client);
+  // The event-loop-backed health endpoint starts only after every worker in
+  // this role has been created and all role-specific startup has completed.
+  startMetricsServer();
 
   // Guard against double-shutdown. Kubernetes may deliver SIGTERM more than
   // once during pod termination, and the Temporal SDK throws
@@ -294,43 +313,21 @@ async function main(): Promise<void> {
     }
     shutdownStarted = true;
     jsonLog("info", "Shutting down worker", { signal });
-    await httpServers.close();
-    await eventBridge.close();
-    const workerState = worker.getState();
-    if (workerState === "RUNNING") {
-      worker.shutdown();
-    } else {
-      jsonLog("info", "Worker not RUNNING, skipping worker.shutdown()", {
-        state: workerState,
-      });
+    if (httpServers !== undefined) {
+      await httpServers.close();
     }
-    const agentTaskState = agentTaskWorker.getState();
-    if (agentTaskState === "RUNNING") {
-      agentTaskWorker.shutdown();
-    } else {
-      jsonLog("info", "agent-task worker not RUNNING, skipping shutdown()", {
-        state: agentTaskState,
-      });
+    if (eventBridge !== undefined) {
+      await eventBridge.close();
     }
-    const glitterCorpusState = glitterCorpusWorker.getState();
-    if (glitterCorpusState === "RUNNING") {
-      glitterCorpusWorker.shutdown();
-    } else {
-      jsonLog(
-        "info",
-        "glitter-corpus worker not RUNNING, skipping shutdown()",
-        { state: glitterCorpusState },
-      );
-    }
-    const glitterContextState = glitterContextWorker.getState();
-    if (glitterContextState === "RUNNING") {
-      glitterContextWorker.shutdown();
-    } else {
-      jsonLog(
-        "info",
-        "glitter-context worker not RUNNING, skipping shutdown()",
-        { state: glitterContextState },
-      );
+    for (const roleWorker of workers) {
+      const state = roleWorker.getState();
+      if (state === "RUNNING") {
+        roleWorker.shutdown();
+      } else {
+        jsonLog("info", "Worker not RUNNING, skipping shutdown()", {
+          state,
+        });
+      }
     }
     await stopMetricsServer();
     await shutdownTracing();
@@ -343,13 +340,10 @@ async function main(): Promise<void> {
     void shutdown("SIGINT");
   });
 
-  const workerRuns = [
-    worker.run(),
-    agentTaskWorker.run(),
-    glitterCorpusWorker.run(),
-    glitterContextWorker.run(),
-  ];
-  void restoreGlitterCorpusMetricsAfterWorkerStart();
+  const workerRuns = workers.map((roleWorker) => roleWorker.run());
+  if (workerRoleRunsGlitter(role)) {
+    void restoreGlitterCorpusMetricsAfterWorkerStart();
+  }
   await Promise.all(workerRuns);
 }
 

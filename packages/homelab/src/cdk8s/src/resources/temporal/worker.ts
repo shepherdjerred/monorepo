@@ -34,6 +34,8 @@ import {
   createXcodeCloudWebhookService,
 } from "./http-services.ts";
 import { glitterCorpusEnv } from "./glitter-corpus-env.ts";
+import { createTemporalGlitterWorker } from "./glitter-worker.ts";
+import { temporalWorkerHealthProbes } from "./worker-health.ts";
 
 export type CreateTemporalWorkerDeploymentProps = {
   serverServiceName: string;
@@ -270,7 +272,6 @@ export function createTemporalWorkerDeployment(
   props: CreateTemporalWorkerDeploymentProps,
 ) {
   const UID = 1000;
-  const GID = 1000;
 
   const onePasswordItem = new OnePasswordItem(chart, "temporal-worker-1p", {
     spec: {
@@ -314,7 +315,7 @@ export function createTemporalWorkerDeployment(
     serviceAccount,
     automountServiceAccountToken: true,
     securityContext: {
-      fsGroup: GID,
+      fsGroup: UID,
     },
     podMetadata: {
       labels: {
@@ -349,7 +350,7 @@ export function createTemporalWorkerDeployment(
       ],
       securityContext: {
         user: UID,
-        group: GID,
+        group: UID,
         readOnlyRootFilesystem: false,
       },
       // Sized for in-process claude -p invocations. The pr-agent activity
@@ -368,9 +369,11 @@ export function createTemporalWorkerDeployment(
           limit: Size.gibibytes(6),
         },
       },
+      ...temporalWorkerHealthProbes(),
       envVariables: {
         TEMPORAL_ADDRESS: EnvValue.fromValue(`${props.serverServiceName}:7233`),
         TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
+        TEMPORAL_WORKER_ROLE: EnvValue.fromValue("core"),
         ENVIRONMENT: EnvValue.fromValue("production"),
         // Headless hygiene for the `claude -p` agent subprocesses: don't let
         // startup block on statsig/telemetry fetches or an auto-update check.
@@ -536,6 +539,18 @@ export function createTemporalWorkerDeployment(
   const tmpVolume = Volume.fromEmptyDir(chart, "temporal-worker-tmp", "tmp");
   container.mount("/tmp", tmpVolume);
 
+  // Glitter's corpus and context-refresh queues perform the heaviest Bun-side
+  // work. Keep them in a separate process and pod so a runtime wedge or
+  // resource spike cannot stop schedules, webhooks, or the general queues.
+  const glitterDeployment = createTemporalGlitterWorker(chart, {
+    serviceAccount,
+    envVariables: {
+      ...container.env.variables,
+      TEMPORAL_WORKER_ROLE: EnvValue.fromValue("glitter"),
+      TELEMETRY_SERVICE_NAME: EnvValue.fromValue("temporal-glitter-worker"),
+    },
+  });
+
   // Project the talosconfig YAML from 1Password into a file at
   // /etc/talos/config. The homelab-audit-daily workflow's §1 commands
   // (`talosctl health`, `talosctl get members`, `talosctl dmesg`) need it —
@@ -593,5 +608,5 @@ export function createTemporalWorkerDeployment(
   createAgentTaskApiService(chart, deployment);
   createXcodeCloudWebhookService(chart, deployment);
 
-  return { deployment };
+  return { deployment, glitterDeployment };
 }
