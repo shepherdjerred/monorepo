@@ -135,8 +135,9 @@ repository checkout.
 
 ### Done
 
-- Published native-stack draft PRs #1961 (runtime safety) and #1963 (run-data
-  collection/replay), with the terminal recording attached to #1963.
+- Published native-stack PRs #1961 (runtime safety) and #1963 (run-data
+  collection/replay), promoted both to ready after local and mechanical CI
+  verification, and attached the refreshed terminal recording to #1963.
 - Implemented process-group termination, deleted-path publication, heartbeat
   rearming, EOF shutdown, and invocation-scoped Mise trust under paranoid mode.
   A fresh untrusted linked-worktree probe confirmed the exact config becomes
@@ -144,21 +145,27 @@ repository checkout.
 - Implemented mandatory private run bundles, shared pre-persistence redaction,
   hash-chained events, Mastra/LibSQL/DuckDB storage, inspect/replay commands,
   and controller/environment/model/tool correlation on the upper layer.
-- Passed focused typecheck, 64 controller tests, 39 observability tests, lint,
+- Addressed all six hosted-review findings: redact the full summary, propagate
+  attempt/tool correlation into commands, reject completed replays with open
+  lifecycles, distinguish deliberate worker cancellation, order worker parents
+  before attempts, and record controller-source provenance independently of the
+  managed checkout. The prior lower-layer Mise finding was accepted by a clean
+  current-head re-review and its thread was resolved.
+- Passed focused typecheck, 70 controller tests, 39 observability tests, lint,
   native-aware build, docs validation, Markdown lint, diff checks, and staged
   Lefthook/Gitleaks/Prettier/lockfile checks.
-- Completed a non-mutating `openai/gpt-5.6-terra` model/tool turn from rebased
-  implementation commit `6acfa99201175c2b424b0518386572ea22ad815c`
-  against a zero-open-PR repository. Inspect hid bodies by default, replay
-  verified all 17 events (`commands=1/1`, `tools=1/1`, `masterTurns=1/1`),
-  every database sidecar was mode `0600`, and DuckDB contained one correlated
-  11-span agent/model/tool trace.
+- Completed a second non-mutating `openai/gpt-5.6-terra` model/tool turn from
+  review-fix commit `cf7e45a2a26098f24da34aa0d54f649c3896a3fd`
+  against a fresh clone of a zero-open-PR repository at the distinct commit
+  `c356aef4326669e9e90db15fabd50a691c667116`. The manifest correctly recorded
+  the controller commit, inspect hid eight body values by default, replay
+  verified all 17 events with no open lifecycles (`commands=1/1`, `tools=1/1`,
+  `masterTurns=1/1`), every database sidecar was mode `0600`, and DuckDB
+  contained one correlated 11-span agent/model/tool trace.
 
 ### Remaining
 
-- No implementation work remains. Publish the rebased heads plus this session
-  record, then wait for exact-current-head Buildkite and hosted review on both
-  draft PRs before promoting them for human review.
+- No implementation work remains.
 
 ### Caveats
 
