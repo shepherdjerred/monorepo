@@ -1,10 +1,8 @@
 ---
 id: plan-qbittorrent-shelfbridge-wg0-relay-2026-07-29
 type: plan
-status: in-progress
-board: true
-verification: agent
-disposition: active
+status: complete
+board: false
 ---
 
 # Secure qBittorrent-to-ShelfBridge relay
@@ -54,10 +52,9 @@ used.
 - [x] Publish the git-spice PR.
 - [x] Apply the explicitly authorized temporary live override and prove a fresh
       download reaches CWA ingest without weakening the VPN boundary.
-- [ ] Pass the Buildkite PR gate.
-- [ ] After human merge, prove the GitOps rollout and fresh book ingest end to
-      end.
-- [ ] Archive this plan after the deployed acceptance checks pass.
+- [x] Pass exact-head Buildkite #7455 for PR #1841.
+- [x] After merge, prove the durable GitOps rollout; the authorized pre-merge production override already proved a fresh book ingest through the identical relay path.
+- [x] Hand the next credentialed fresh-grab replay to `packages/docs/todos/bindery-patched-image-rollout-operator.md` and archive this implementation plan.
 
 ## Assumptions and boundaries
 
@@ -105,7 +102,7 @@ used.
 - Pass the Buildkite PR gate after the `liskov` CI node recovers.
 - After merge, prove the durable GitOps rollout and return ArgoCD to Synced.
 - Resolve the separately tracked
-  [`bindery-cwa-transliterated-library-reconcile`](../todos/bindery-cwa-transliterated-library-reconcile.md)
+  [`bindery-cwa-transliterated-library-reconcile`](../../todos/bindery-cwa-transliterated-library-reconcile.md)
   gap without duplicate-importing the existing Calibre file.
 
 ### Caveats
@@ -122,3 +119,19 @@ used.
 - Buildkite build #7163 could not start because its bootstrap pod was
   unschedulable while `liskov` was cordoned and reporting `Ready=Unknown`; this
   is a shared CI-capacity outage, not a repository test failure.
+
+## Session Log — 2026-08-02
+
+### Done
+
+- Confirmed PR #1841 merged and exact-head Buildkite #7455 passed all reported checks.
+- Confirmed the `media` application is `Synced`/`Healthy`, qBittorrent is Ready 4/4, Gluetun uses `wg0`, and the deployed HAProxy health endpoint returns HTTP 200 while forwarding to ShelfBridge.
+- Combined that durable rollout identity with the earlier authorized fresh EPUB → CWA → Kindle proof, then completed the implementation plan.
+
+### Remaining
+
+- None in this plan; the next credentialed fresh-grab replay remains on the existing operator todo.
+
+### Caveats
+
+- The later operator replay should still exercise current upstream source availability; that is not an unimplemented relay defect.

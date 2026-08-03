@@ -1,10 +1,8 @@
 ---
 id: plan-2026-04-25-renovate-blocked-majors
 type: plan
-status: planned
-board: true
-verification: agent
-disposition: deferred
+status: complete
+board: false
 ---
 
 # Renovate Blocked Majors
@@ -23,8 +21,8 @@ disposition: deferred
 
 ## Remaining
 
-- [ ] Re-audit the currently blocked Gradle 9 and Java 25 upgrades against the live dependency dashboard.
-- [ ] Create one focused migration item per still-blocked JVM/Birmel media major; close this tracker when every current major has an owner or explicit rejection.
+- [x] Re-audit the previously blocked Gradle 9 and Java 25 upgrades against the live dependency dashboard.
+- [x] Close this stale tracker: the repository no longer contains a Gradle project, Java 25 is already pinned, and the surviving AI ecosystem gate is tracked separately.
 
 ## Session Log — 2026-07-27
 
@@ -39,3 +37,18 @@ disposition: deferred
 ### Caveats
 
 - The 2026-07-27 board audit replaced generic or stale completion language with current ownership and verification semantics.
+
+## Session Log — 2026-08-02
+
+### Done
+
+- Rechecked the live repository and Renovate dependency dashboard #481: no Gradle or Java major remains, and `.mise.toml` already pins Java 25.
+- Confirmed the still-gated AI dependency family has a current dedicated tracker, then completed this superseded umbrella plan.
+
+### Remaining
+
+- None.
+
+### Caveats
+
+- This archive action does not reject future JVM work; it removes a tracker whose named upgrades no longer exist.

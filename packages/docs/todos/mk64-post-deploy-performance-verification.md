@@ -1,7 +1,7 @@
 ---
 id: mk64-post-deploy-performance-verification
 type: todo
-status: planned
+status: in-progress
 board: true
 verification: operator
 disposition: blocked
@@ -23,7 +23,8 @@ an immutable image built from the PR head and temporarily deployed by digest.
 - [x] During a sustained session, confirm ffmpeg remains near 30 fps and `1.0x`
       realtime with negligible frame drops.
 - [ ] Confirm game audio remains synchronized with video after correcting the
-      measured server-side video lag.
+      measured server-side video lag; correction is being tracked concurrently
+      as `mk64-stream-latency-correlation-desync`.
 
 ## Comment Log
 
@@ -48,3 +49,17 @@ an immutable image built from the PR head and temporarily deployed by digest.
   A/V content offset averaging `-198.5 ms`, meaning video lagged audio before
   Discord received the RTP packets. Synchronization remains unverified until
   that lag is corrected and the operator reruns the live check.
+
+## Session Log — 2026-08-02
+
+### Done
+
+- Reclassified this partially verified card to In Progress and linked the measured `-198.5 ms` video-lag correction to the concurrent agent-owned defect.
+
+### Remaining
+
+- After the lag fix deploys, rerun the authorized live A/V synchronization check.
+
+### Caveats
+
+- FPS and realtime pacing passed; content synchronization remains independently unverified.

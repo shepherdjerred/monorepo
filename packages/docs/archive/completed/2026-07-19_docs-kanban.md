@@ -1,10 +1,8 @@
 ---
 id: plan-2026-07-19-docs-kanban
 type: plan
-status: awaiting-human
-board: true
-verification: human
-disposition: active
+status: complete
+board: false
 ---
 
 # Markdown-Backed Documentation Kanban
@@ -118,3 +116,23 @@ All other documentation remains searchable without cluttering the board.
 
 - The user's main checkout contains separate uncommitted docs and dotfile work;
   this branch does not copy or modify those files.
+
+## Comment Log
+
+### 2026-08-03T05:46:45.315Z - Jerred Shepherd
+
+Moved `awaiting-human` -> `complete`.
+
+## Session Log — 2026-08-02
+
+### Done
+
+- Preserved the owner's acceptance transition and archived the completed docs-board implementation plan.
+
+### Remaining
+
+- None.
+
+### Caveats
+
+- None.

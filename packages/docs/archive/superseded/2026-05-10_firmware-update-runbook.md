@@ -1,10 +1,8 @@
 ---
 id: plan-2026-05-10-firmware-update-runbook
 type: plan
-status: planned
-board: true
-verification: operator
-disposition: blocked
+status: complete
+board: false
 ---
 
 # NVMe Firmware Update — `torvalds` (Samsung 990 PRO 4 TB × 2)
@@ -160,3 +158,18 @@ After Phase 4 all-pass:
 ### Caveats
 
 - The 2026-07-27 board audit replaced generic or stale completion language with current ownership and verification semantics.
+
+## Session Log — 2026-08-02
+
+### Done
+
+- Retired this runbook as unsafe and superseded: it assumes single-node Talos 1.12 and a Dagger namespace, while the current cluster uses the torvalds/liskov topology on Talos 1.13.7 and no load-bearing Dagger namespace.
+- Created `packages/docs/todos/nvme-firmware-maintenance-revalidation.md` for a fresh read-only assessment before any future maintenance authorization.
+
+### Remaining
+
+- None in this historical runbook.
+
+### Caveats
+
+- Do not execute the commands in this document against the current cluster.

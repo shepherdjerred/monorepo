@@ -5,7 +5,7 @@ status: planned
 board: true
 verification: agent
 disposition: active
-origin: packages/docs/plans/2026-07-30_homelab-audit-agent-task-schema-fix.md
+origin: packages/docs/archive/completed/2026-07-30_homelab-audit-agent-task-schema-fix.md
 ---
 
 # Investigate homelab-audit-daily's 2026-07-17 → 2026-07-26 non-zero-exit failures
@@ -59,3 +59,17 @@ for these specific runs is not recoverable from Temporal alone.
   `structured_output` bug (see
   `packages/docs/todos/homelab-audit-agent-task-production-verification.md`)
   so it isn't conflated with that fix's scope.
+
+## Session Log — 2026-08-02
+
+### Done
+
+- Updated the origin path after the schema-fix implementation plan moved to the completed archive.
+
+### Remaining
+
+- No change to this todo's existing investigation.
+
+### Caveats
+
+- This was reference maintenance only.

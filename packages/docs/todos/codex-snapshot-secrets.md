@@ -5,7 +5,7 @@ status: planned
 board: true
 verification: agent
 disposition: active
-origin: packages/docs/plans/2026-07-27_agent-plain-tools.md
+origin: packages/docs/archive/completed/2026-07-27_agent-plain-tools.md
 source_marker: false
 ---
 
@@ -51,3 +51,17 @@ Note: `~/.claude/shell-snapshots/` (Claude Code) was checked and only exports
 - [ ] Decide which secrets agents actually need in shells (Buildkite/Grafana/Bugsink tokens are used by skills; provider API keys likely are not — codex has its own auth)
 - [ ] Apply chosen fix (exclude list and/or cleanup job) in `packages/dotfiles/`
 - [ ] Rotate any long-lived tokens if the snapshot directory was ever synced/backed up off-machine
+
+## Session Log — 2026-08-02
+
+### Done
+
+- Updated the origin path after the accepted agent-tooling plan moved to the completed archive.
+
+### Remaining
+
+- No change to this todo's existing work.
+
+### Caveats
+
+- This was reference maintenance only.

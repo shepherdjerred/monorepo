@@ -1,10 +1,8 @@
 ---
 id: plan-2026-07-28-deterministic-bindery-image-identity
 type: plan
-status: in-progress
-board: true
-verification: agent
-disposition: active
+status: complete
+board: false
 ---
 
 # Stop repeated Bindery image-version bumps
@@ -62,7 +60,7 @@ remain unchanged.
 - [x] Add and run focused regression verification.
 - [x] Run the complete repository verification.
 - [x] Publish the git-spice PR and validate its executable Buildkite lanes.
-- [ ] Merge the PR and verify the generated pin bump, second-build stability,
+- [x] Merge the PR and verify the generated pin bump, second-build stability,
       and live rollout.
 
 ## Comment Log
@@ -113,3 +111,19 @@ remain unchanged.
   executable lanes passed with zero review findings; it is superseded by the
   restacked head.
 - The broader image-configuration comparison question remains unchanged.
+
+## Session Log — 2026-08-02
+
+### Done
+
+- Confirmed PR #1775 merged with green Buildkite #6769 and content-aware follow-up PR #1776 merged with green Buildkite #6921.
+- Confirmed the live media deployment uses Bindery identity `2.0.0-6874@sha256:2833…` and later generated version PRs left that pin stable.
+- Completed and archived the deterministic identity plan.
+
+### Remaining
+
+- None.
+
+### Caveats
+
+- The separate production Chinese-add replay remains operator-owned in its dedicated todo.

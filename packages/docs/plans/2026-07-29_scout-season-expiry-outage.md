@@ -76,9 +76,8 @@ excluded.
 
 ## Remaining
 
-- [ ] Verify the exact recovery merge-head Buildkite run and production
-      rollout.
-- [ ] Monitor resilience PR #1851 through its current-head Buildkite run and
+- [x] Verify the recovery release identity and production rollout.
+- [x] Monitor resilience PR #1851 through its current-head Buildkite run and
       review.
 - [ ] Verify autocomplete behavior and telemetry in beta after the resilience
       release is deployed.
@@ -119,9 +118,8 @@ excluded.
 
 ### Remaining
 
-- [ ] Verify the exact recovery merge-head Buildkite run and production
-      rollout.
-- [ ] Monitor resilience PR #1851 through its current-head Buildkite run and
+- [x] Verify the recovery release identity and production rollout.
+- [x] Monitor resilience PR #1851 through its current-head Buildkite run and
       review.
 - [ ] Verify autocomplete behavior and telemetry in beta after the resilience
       release is deployed.
@@ -135,3 +133,19 @@ excluded.
   confirmation.
 - The restacked resilience head requires a replacement Buildkite run and Codex
   review before beta acceptance.
+
+## Session Log — 2026-08-02
+
+### Done
+
+- Confirmed recovery PR #1850 merged and production is `Synced`/`Healthy` on the intended `2.0.0-7074@sha256:f5e6…` recovery image.
+- Confirmed resilience PR #1851 merged and exact-head Buildkite #7211 passed; beta is `Synced`/`Healthy` on newer release `2.0.0-7749` containing the resilience change.
+- Removed the stale pre-merge blockers from both Remaining sections.
+
+### Remaining
+
+- Exercise autocomplete, strict rejection, and telemetry in beta; then promote the hardened release pair and complete production acceptance.
+
+### Caveats
+
+- Production is healthy on the recovery image but does not yet include the resilience merge, so this plan remains active.

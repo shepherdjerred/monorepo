@@ -1,10 +1,8 @@
 ---
 id: plan-pokemon-agent-reliability-2026-07-28
 type: plan
-status: in-progress
-board: true
-verification: agent
-disposition: active
+status: complete
+board: false
 ---
 
 # Pokemon Goal-Agent Reliability
@@ -115,11 +113,11 @@ deferred by explicit direction.
 - [x] Publish the restacked #1803/#1805 heads and record replacement CI/review.
 - [x] Implement benchmark-truth corrections.
 - [x] Implement compact semantic exits and named battle actions.
-- [ ] Publish and complete current-head verification for the semantic controls.
+- [x] Publish and complete current-head verification for the semantic controls.
 - [x] Implement early-prerequisite prompt and excerpt ranking.
-- [ ] Publish and complete current-head verification for the decision policy.
+- [x] Publish and complete current-head verification for the decision policy.
 - [x] Replay the existing successful trace through the corrected telemetry.
-- [ ] Complete focused, real-WASM, Buildkite, and review verification for all
+- [x] Complete focused, real-WASM, Buildkite, and review verification for all
       new stack layers.
 
 ## Comment Log
@@ -1155,3 +1153,19 @@ deferred by explicit direction.
   deterministic quest route or battle strategy.
 - Repeat paid model measurements and Kubernetes mutation remain explicitly
   deferred.
+
+## Session Log — 2026-08-02
+
+### Done
+
+- Confirmed the implementation stack PRs #1803, #1805, #1847, and #1848 merged, with the final layers green on exact-head Buildkite #7642 and #7663.
+- Confirmed the current healthy Pokémon deployment `2.0.0-7749` contains those merges.
+- Reconciled the stale publication tasks and archived the completed reliability plan.
+
+### Remaining
+
+- None.
+
+### Caveats
+
+- Historical session sections retain the incremental state recorded during the long stack; the current top-level checklist and this final session entry are authoritative.
