@@ -347,6 +347,8 @@ concurrent edits that remain untouched in the user's checkout.
   Apple-required approvals interactive.
 - Applied and verified the five changed managed targets against the live home
   directory without installing or uninstalling software.
+- Published the verified changes as draft pull request #1959 from commit
+  `48afc5003`.
 
 ### Remaining
 

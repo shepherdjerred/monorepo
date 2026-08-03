@@ -68,10 +68,10 @@ database manipulation.
   live home directory.
 - Passed the focused Brew, macos-defaults, chezmoi, temporary-home, dotfiles
   package, shell, formatting, Markdown, docs-model, and link checks.
+- Published draft pull request #1959 from commit `48afc5003`.
 
 ### Remaining
 
-- Publish a draft pull request with the verified result.
 - Verify its current-head Buildkite and review state.
 - Complete a disposable-user or spare-Mac restore rehearsal before a real wipe.
 
