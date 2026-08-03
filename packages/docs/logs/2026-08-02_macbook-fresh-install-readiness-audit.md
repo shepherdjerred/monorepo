@@ -23,14 +23,17 @@ state and bootstrap automation to reproduce the current Mac after wiping it?
 
 ## Result
 
-No. The dotfiles are a strong partial developer-environment bootstrap, but they
-are not currently sufficient evidence that this Mac can be wiped and reproduced
-without loss. They can reconstruct much of the shell, CLI, editor, and selected
-application configuration after the missing prerequisites are supplied. They do
-not yet reconstruct the full desired software inventory, all bootstrap side
-effects, privileged approvals, application state, or user data.
+Not quite. Under the intended recovery model, synchronized services are the
+source of truth for user data and dotfiles are the source of truth for machine
+configuration. The absence of a conventional machine backup is therefore not a
+blocker by itself. The dotfiles can reconstruct much of the shell, CLI, editor,
+and selected application configuration after the missing prerequisites are
+supplied, but they do not yet reconstruct the full desired software inventory,
+all bootstrap side effects, privileged approvals, or every intended application
+configuration.
 
-Do not use the repository alone as the go/no-go signal for a wipe.
+Use the repository together with a completed-sync check as the go/no-go signal
+for a wipe.
 
 ## What Is Already Covered Well
 
@@ -58,20 +61,26 @@ Do not use the repository alone as the go/no-go signal for a wipe.
 
 ## Blocking Gaps
 
-### Data recovery is not established
+### Sync-based recovery needs a closure check
 
-- `tmutil destinationinfo` reports zero Time Machine destinations.
-- Syncthing is running with five configured folders, but its config is not
-  chezmoi-managed and none of those folders covers `Desktop`, `Documents`,
-  `Downloads`, `Movies`, `Music`, `Pictures`, or `~/git`.
-- iCloud Drive is running, but this audit did not prove that all local content is
-  uploaded and current.
+- The intended design does not rely on Time Machine or a full-machine backup;
+  `tmutil destinationinfo` reporting zero destinations is expected, not a gap.
+- Syncthing is running with five configured folders. Its local device identity
+  and folder/peer definitions are not chezmoi-managed, so a fresh Mac must be
+  enrolled as a new device and have the intended folders shared back to it.
+- iCloud Drive, Obsidian Sync, Syncthing, and any application-specific cloud
+  service remain authoritative for their data. Before erasure, each service
+  needs to report that synchronization is complete; a running process alone is
+  not that proof.
 - Four repositories were found in the bounded `~/git` scan. `monorepo` and
   `opencode-quota` have uncommitted changes; `opencode-quota` has modifications
   to `package.json`, `pnpm-lock.yaml`, and `pnpm-workspace.yaml`.
-- Dotfiles intentionally do not contain documents, media, application databases,
-  browser profiles, mail stores, Syncthing identity/state, or project working
-  trees. No restore runbook identifies an authoritative backup for those items.
+- Local-only working-tree changes are outside both dotfiles and sync services;
+  they must be committed and pushed or intentionally discarded.
+- Documents, media, application databases, browser profiles, and mail stores are
+  intentionally absent from dotfiles. Anything important in those categories
+  needs a named synchronization owner; anything without one is considered
+  disposable under this recovery model.
 
 ### The tracked package inventory is stale
 
@@ -193,13 +202,13 @@ preferences remain even though Spotlight finds no installed Contexts app.
 | Android Studio and IntelliJ IDEA | Current dump only          | IDE settings/plugins and Android SDK components are unmanaged; installed SDK state includes platforms, system images, emulator, NDK, and build tools           |
 | Xcode                            | Intentional manual install | Full Xcode and any required simulator runtimes are installed manually after the automated bootstrap                                                            |
 | Browsers and Safari extensions   | Mixed tracked/current-dump | Chrome, Firefox, and Safari profiles, bookmarks, extensions, enablement, certificates, and sign-ins are unmanaged; the six Safari extension apps are dump-only |
-| Anki                             | Tracked                    | Local `Anki2` data exists and is unmanaged; safe recovery depends on a verified AnkiWeb sync or separate export                                                |
-| Obsidian                         | Tracked                    | Application state is unmanaged and vault/plugin data lives outside dotfiles                                                                                    |
+| Anki                             | Tracked                    | Local `Anki2` data exists outside dotfiles; recovery relies on AnkiWeb being fully synchronized                                                                |
+| Obsidian                         | Tracked                    | Application state is unmanaged; vault and plugin data recovery relies on the configured Obsidian Sync or Syncthing source                                      |
 | NetNewsWire                      | Tracked                    | Default-handler setup is declared, but feed/account/read state relies on application/iCloud sync                                                               |
 | MailMate                         | Tracked                    | Only default-app handling is declared. MailMate account, rules, bundles, and local state are unmanaged; tracked mail profiles configure Apple Mail instead     |
 | TablePlus                        | Current dump only          | Connections, workspace state, and Keychain credentials are unmanaged                                                                                           |
 | OrbStack                         | Tracked                    | The application is restored; VM, container, image, and volume state is intentionally disposable                                                                |
-| Syncthing                        | Tracked                    | Identity, peer/folder definitions, and database are unmanaged; reinstalling the app does not reconnect this device                                             |
+| Syncthing                        | Tracked                    | Identity and peer/folder definitions are unmanaged; reinstalling requires enrolling a new device and resharing the intended folders                            |
 | Tailscale                        | Tracked package-style cask | VPN identity/login and system-extension approval are manual                                                                                                    |
 | CleanShot                        | Tracked                    | Preferences, license/account state, login behavior, and Screen Recording/Accessibility approval are not captured                                               |
 | BetterMouse/Middle/Swish         | Tracked                    | Middle has partial preferences and login behavior; Swish has one preference; BetterMouse has no source configuration. Input/Accessibility approvals are manual |
@@ -266,10 +275,11 @@ to bypass TCC.
 
 ## Recommended Path to Wipe-Ready
 
-1. Establish and verify an actual backup before any wipe: commit/push or archive
-   dirty repositories, verify iCloud status per folder, export/recover Syncthing
-   configuration and device identity as appropriate, and use a real backup for
-   local-only files.
+1. Close the sync inventory before any wipe: name the authoritative service for
+   each important data set, verify every service reports fully synchronized,
+   and commit/push every repository change that should survive. Record the
+   Syncthing re-enrollment and folder-sharing steps; preserving the old device
+   identity is not required when the new Mac can be enrolled normally.
 2. Verify access to the 1Password account and recovery material from a separate
    device. Record the Apple ID, software licenses, Tailscale login, and other
    manual authentication prerequisites in a private recovery checklist.
@@ -285,8 +295,8 @@ to bypass TCC.
    setup/privacy checklist into a completion gate after validating it on a
    disposable user or spare Mac.
 6. Add a safe fresh-home acceptance test plus a disposable-user or spare-Mac
-   rehearsal. A real wipe should happen only after that rehearsal and a restore
-   drill for non-dotfile data.
+   rehearsal. The rehearsal should prove both dotfile reconstruction and
+   rehydration from the selected synchronization services.
 
 ## Verification Performed
 
@@ -333,7 +343,7 @@ concurrent edits that remain untouched in the user's checkout.
 
 - Audited the declared dotfiles/bootstrap source against the live Mac.
 - Identified the Brew export path bug, current manifest drift, five chezmoi
-  target mismatches, bootstrap-order failures, and external data/recovery gaps.
+  target mismatches, bootstrap-order failures, and sync re-enrollment gaps.
 - Recorded a prioritized path from the current partial bootstrap to a wipe-ready
   recovery system in this log.
 - Extended the audit with an application install/config/state matrix, active
@@ -347,8 +357,9 @@ concurrent edits that remain untouched in the user's checkout.
   Apple-required approvals interactive.
 - Applied and verified the five changed managed targets against the live home
   directory without installing or uninstalling software.
-- Published the verified changes as draft pull request #1959 from commit
-  `48afc5003`.
+- Published the verified changes as draft pull request #1959.
+- Clarified that synchronized services, rather than a conventional backup, own
+  user-data recovery; only sync completion and re-enrollment need gating.
 
 ### Remaining
 
@@ -362,14 +373,15 @@ concurrent edits that remain untouched in the user's checkout.
 
 - Secret-backed templates were skipped to avoid interactive 1Password access and
   accidental secret exposure; they need a separate unlocked verification.
-- Running sync processes does not prove remote completeness or recoverability.
+- The audit did not inspect private content or independently prove that each
+  configured synchronization service is fully current.
 - Installed-but-undeclared software may be intentional; reconciliation requires
   deciding desired state rather than blindly copying every installed package.
 - The repository scan was bounded to `.git/config` files within five levels of
   `~/git`; other local repositories or worktrees may exist.
 - Application classification is based on declared install sources, managed path
-  coverage, and targeted live-state checks. Cloud/account recovery was not
-  assumed merely because an app supports sync.
+  coverage, and targeted live-state checks. A named and completed sync service,
+  rather than mere application support for sync, is the recovery boundary.
 - Keychain, TCC databases, browser contents, app databases, and Claude Desktop
   configuration contents were not read because they may contain credentials or
   private user data.

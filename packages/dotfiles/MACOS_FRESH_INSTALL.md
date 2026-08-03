@@ -5,15 +5,24 @@ mise runtimes, shell tools, and the macOS preferences under
 `~/.config/macos-defaults`. It deliberately stops short of credentials,
 personal data, and approvals that macOS requires the user to make.
 
+The recovery model is intentionally service-based: dotfiles restore machine
+configuration, while Syncthing, Obsidian Sync, iCloud, and application-specific
+cloud services restore user data. A full-machine backup is not required.
+
 ## Before erasing the Mac
 
-- Verify a separate backup of local documents, repositories, application data,
-  and any Syncthing folders or device identity that must survive.
+- Identify the authoritative sync service for every important data set and
+  verify that each service reports synchronization is complete.
 - Verify 1Password account and recovery access from another device.
-- Commit, push, or separately archive every repository with local changes.
-- Export application data that is not known to be synchronized elsewhere.
+- Commit and push every repository change that should survive, or deliberately
+  decide that it is disposable.
+- Confirm that another Syncthing device can authorize this Mac's replacement
+  and reshare each intended folder. The old local device identity need not be
+  preserved.
+- Treat any important application data without an identified sync service as an
+  unresolved exception before erasing the Mac.
 
-Dotfiles are configuration, not a data backup.
+Do not infer sync completeness merely because a client process is running.
 
 ## After the automated installer
 
@@ -74,4 +83,5 @@ decisions as part of routine setup.
 - The privacy feature checks above succeed.
 - Full Xcode launches and `xcode-select -p` points at the intended developer
   directory after manual installation.
-- The separate backup has been test-restored before the old Mac is erased.
+- Every authoritative sync service reports current, and the re-enrollment path
+  for Syncthing and account-backed applications is available.

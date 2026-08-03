@@ -25,6 +25,9 @@ database manipulation.
   profile.
 - Do not preserve or validate OrbStack containers or volumes as part of wipe
   readiness.
+- Treat synchronized services as the source of truth for user data and dotfiles
+  as the source of truth for configuration; a conventional machine backup is
+  not part of the recovery design.
 - Track the observed global appearance, key behavior, Dock, and trackpad
   preferences through the existing `macos-defaults` mechanism.
 - Use only Apple-supported privacy controls. If grants cannot be provisioned on
@@ -68,7 +71,9 @@ database manipulation.
   live home directory.
 - Passed the focused Brew, macos-defaults, chezmoi, temporary-home, dotfiles
   package, shell, formatting, Markdown, docs-model, and link checks.
-- Published draft pull request #1959 from commit `48afc5003`.
+- Published draft pull request #1959.
+- Updated the wipe-readiness standard to require completed synchronization and
+  documented service re-enrollment rather than a conventional backup.
 
 ### Remaining
 
@@ -77,8 +82,9 @@ database manipulation.
 
 ### Caveats
 
-- A dotfiles repository cannot serve as a backup for local documents, project
-  worktrees, credentials, or application databases.
+- Dotfiles do not own user data. Important data must have a named, fully current
+  sync source; local-only working-tree changes still require commit/push or an
+  explicit decision to discard them.
 - Privacy grants require interactive approval on this unmanaged personal Mac;
   the repository tracks the checklist and expected feature tests, not TCC state.
 - Full Xcode remains manual; Microsoft Office, OneDrive, and Honorlock are
