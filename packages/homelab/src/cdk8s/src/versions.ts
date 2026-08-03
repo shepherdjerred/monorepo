@@ -154,7 +154,7 @@ const versions = {
   openebs: "4.5.1",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/scout-for-lol/beta":
-    "2.0.0-7909@sha256:fd6992ed6f923c58626162c3d308282dfd1b18c0618265d25dd924c8bacd0ff2",
+    "2.0.0-7924@sha256:026d26b2304c9b629c4b6f59628eccea7457d370c9f9b57ae396afcefc46048b",
   // Prod promotion = merging the Renovate PR for this pin. Each 2.0.0-<n>
   // tag is minted by the scout-tag-release CI step only after site version
   // <n> is archived, pointing at the backend digest beta serves it against —
@@ -173,14 +173,14 @@ const versions = {
     "2.0.0-6673@sha256:4e0aaa2bc818f4e98c67462bfe95c722ea470a266b6c95f6861b7dc6a5da240f",
   // not managed by renovate
   "shepherdjerred/birmel":
-    "2.0.0-7909@sha256:ff7113bcefdc8695d94874987637527920c8364a8dfd3056e0ece9aaa0a0d782",
+    "2.0.0-7924@sha256:f71e5ad3c8be9a8b91a758cba6f7cc137ac9381c6c592368a85b2f82e8c87b5c",
   // not managed by renovate — placeholder digest; CI version-commit-back fills
   // the real digest after the first successful scout-evals image push.
   "shepherdjerred/scout-evals":
     "2.0.0-7909@sha256:722635266909a890e107a677c092d9b49bd5d002d830286f5a20bc312924de51",
   // not managed by renovate
   "shepherdjerred/discord-plays-pokemon":
-    "2.0.0-7909@sha256:eb6faf8372d8e2081e00ba585eca5fb6eef33a94fda2c25e2000a1e1d9ce071f",
+    "2.0.0-7924@sha256:ff1de6634086882d5e9df978dbf4244b77fb2eacf71a77d5ed0361451ec9f446",
   // not managed by renovate — placeholder digest; CI version-commit-back fills
   // the real digest after the first successful image push.
   "shepherdjerred/discord-plays-mario-kart":
@@ -337,7 +337,7 @@ const versions = {
   // Custom temporal-worker image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/temporal-worker":
-    "2.0.0-7914@sha256:8789aed1139ebeff1ba37ed55c8ad67848459908561b2cc8460696f713a84622",
+    "2.0.0-7924@sha256:b9ed95d3a5c2af36b08cbb015c22d135def8c4f9a11b59cb9c97df3ed2f80deb",
   // Custom TRMNL dashboard image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/trmnl-dashboard":
