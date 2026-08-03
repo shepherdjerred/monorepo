@@ -2,16 +2,10 @@
 
 ## [1.18.0](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.17.4...astro-opengraph-images-v1.18.0) (2026-08-03)
 
+No library behavior changes. The shipped code is identical to 1.17.4; this release exists only because of repo-level housekeeping that release-please picked up.
 
-### Features
-
-* **ci:** add complete coverage reporting ([#1786](https://github.com/shepherdjerred/monorepo/issues/1786)) ([d17b7ce](https://github.com/shepherdjerred/monorepo/commit/d17b7cecd76e5fdd6f742275c6744112ff579700))
-* **ci:** add test reporting foundation ([#1782](https://github.com/shepherdjerred/monorepo/issues/1782)) ([09a6ed1](https://github.com/shepherdjerred/monorepo/commit/09a6ed1566aec6cbe9e3f951586ab7ec9961e368))
-
-
-### Bug Fixes
-
-* **deps:** roll out TypeScript 7 native compiler ([#1843](https://github.com/shepherdjerred/monorepo/issues/1843)) ([e7cd0b6](https://github.com/shepherdjerred/monorepo/commit/e7cd0b6bde573a6c366f344461c3d46e37b79f48))
+- `package.json` was the only file touched in this package, and only in fields consumers don't consume: the `build`/`watch`/`typecheck` scripts now reach the TypeScript 7 native compiler via `PATH` instead of a hard-coded `node_modules` path ([e7cd0b6](https://github.com/shepherdjerred/monorepo/commit/e7cd0b6bde573a6c366f344461c3d46e37b79f48)), and `test:ci` / `test:report` scripts plus a `@vitest/coverage-istanbul` devDependency were added for CI reporting ([09a6ed1](https://github.com/shepherdjerred/monorepo/commit/09a6ed1566aec6cbe9e3f951586ab7ec9961e368), [d17b7ce](https://github.com/shepherdjerred/monorepo/commit/d17b7cecd76e5fdd6f742275c6744112ff579700))
+- No change to `src/`, to runtime `dependencies` or `peerDependencies`, or to the published entry points
 
 ## [1.17.4](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.17.3...astro-opengraph-images-v1.17.4) (2026-07-31)
 

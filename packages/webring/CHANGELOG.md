@@ -7,16 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.8.0](https://github.com/shepherdjerred/monorepo/compare/webring-v1.7.2...webring-v1.8.0) (2026-08-03)
 
+No library behavior changes. The shipped code is identical to 1.7.2; this release exists only because of repo-level housekeeping that release-please picked up.
 
-### Features
-
-* **ci:** add complete coverage reporting ([#1786](https://github.com/shepherdjerred/monorepo/issues/1786)) ([d17b7ce](https://github.com/shepherdjerred/monorepo/commit/d17b7cecd76e5fdd6f742275c6744112ff579700))
-* **ci:** add test reporting foundation ([#1782](https://github.com/shepherdjerred/monorepo/issues/1782)) ([09a6ed1](https://github.com/shepherdjerred/monorepo/commit/09a6ed1566aec6cbe9e3f951586ab7ec9961e368))
-
-
-### Bug Fixes
-
-* **deps:** roll out TypeScript 7 native compiler ([#1843](https://github.com/shepherdjerred/monorepo/issues/1843)) ([e7cd0b6](https://github.com/shepherdjerred/monorepo/commit/e7cd0b6bde573a6c366f344461c3d46e37b79f48))
+- `package.json` changed only in fields consumers don't consume: the `build`/`watch`/`typecheck` scripts now reach the TypeScript 7 native compiler via `PATH`, with `@typescript/native` added as a devDependency ([e7cd0b6](https://github.com/shepherdjerred/monorepo/commit/e7cd0b6bde573a6c366f344461c3d46e37b79f48)), plus `test:ci` / `test:report` scripts for CI reporting ([09a6ed1](https://github.com/shepherdjerred/monorepo/commit/09a6ed1566aec6cbe9e3f951586ab7ec9961e368), [d17b7ce](https://github.com/shepherdjerred/monorepo/commit/d17b7cecd76e5fdd6f742275c6744112ff579700))
+- The remaining changes are confined to `example/`, which is not part of the published tarball: an Astro content-collection migration (`src/content/config.ts` → `src/content.config.ts`) and example dependency bumps ([52f25f2](https://github.com/shepherdjerred/monorepo/commit/52f25f27187ab711efed79c3770f8e2ca2045620))
+- No change to `src/`, to runtime `dependencies` or `peerDependencies`, or to the published entry points
 
 ## [1.7.2](https://github.com/shepherdjerred/monorepo/compare/webring-v1.7.1...webring-v1.7.2) (2026-07-29)
 

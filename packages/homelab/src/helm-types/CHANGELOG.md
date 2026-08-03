@@ -2,17 +2,12 @@
 
 ## [1.6.0](https://github.com/shepherdjerred/monorepo/compare/helm-types-v1.5.0...helm-types-v1.6.0) (2026-08-03)
 
+No behavior or public API changes. Published `src/` did change textually — it ships in the tarball — but every change is semantically equivalent to 1.5.0.
 
-### Features
-
-* **ci:** add complete coverage reporting ([#1786](https://github.com/shepherdjerred/monorepo/issues/1786)) ([d17b7ce](https://github.com/shepherdjerred/monorepo/commit/d17b7cecd76e5fdd6f742275c6744112ff579700))
-* **ci:** add test reporting foundation ([#1782](https://github.com/shepherdjerred/monorepo/issues/1782)) ([09a6ed1](https://github.com/shepherdjerred/monorepo/commit/09a6ed1566aec6cbe9e3f951586ab7ec9961e368))
-
-
-### Bug Fixes
-
-* **deps:** roll out TypeScript 7 native compiler ([#1843](https://github.com/shepherdjerred/monorepo/issues/1843)) ([e7cd0b6](https://github.com/shepherdjerred/monorepo/commit/e7cd0b6bde573a6c366f344461c3d46e37b79f48))
-* **deps:** update eslint-plugin-unicorn to v72 ([#1837](https://github.com/shepherdjerred/monorepo/issues/1837)) ([60998f5](https://github.com/shepherdjerred/monorepo/commit/60998f50c3a5bc4d5a2a72a3e568f621d1ecb2f5))
+- An `eslint-plugin-unicorn` v72 autofix reordered boolean conditions across the generator (e.g. `x == null || x === ""` became `x === "" || x == null`) in the chart-info, CLI, code-generation, comment-parsing, type-conversion, and type-inference modules. Every reordered operand is side-effect-free, so the evaluated results are unchanged ([60998f5](https://github.com/shepherdjerred/monorepo/commit/60998f50c3a5bc4d5a2a72a3e568f621d1ecb2f5))
+- Dead `chartName` special-casing was removed from `chart-info-parser.ts`. The deleted branch overrode `chartName` to `"argo-cd"` only when `versionKey` was already `"argo-cd"`, so the emitted `ChartInfo` is identical ([52f25f2](https://github.com/shepherdjerred/monorepo/commit/52f25f27187ab711efed79c3770f8e2ca2045620))
+- `package.json` changed only in fields consumers don't consume: `typecheck` now reaches the TypeScript 7 native compiler via `PATH`, with `@typescript/native` added as a devDependency ([e7cd0b6](https://github.com/shepherdjerred/monorepo/commit/e7cd0b6bde573a6c366f344461c3d46e37b79f48)), plus `test:ci` / `test:report` scripts for CI reporting ([09a6ed1](https://github.com/shepherdjerred/monorepo/commit/09a6ed1566aec6cbe9e3f951586ab7ec9961e368), [d17b7ce](https://github.com/shepherdjerred/monorepo/commit/d17b7cecd76e5fdd6f742275c6744112ff579700))
+- No runtime dependency changes
 
 ## [1.5.0](https://github.com/shepherdjerred/monorepo/compare/helm-types-v1.4.0...helm-types-v1.5.0) (2026-07-26)
 
