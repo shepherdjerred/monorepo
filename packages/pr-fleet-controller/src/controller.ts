@@ -461,7 +461,9 @@ export class FleetController implements MasterControllerTools {
     this.store.workerLimit = limit;
   }
 
-  async stop(): Promise<FleetSnapshot> {
+  async stop(
+    externalSettlement: Promise<unknown> = Promise.resolve(),
+  ): Promise<FleetSnapshot> {
     this.#telemetry.shutdownStarted(this.store.activeWorkers.size);
     this.store.stopping = true;
     if (this.#heartbeat !== null) {
@@ -477,6 +479,10 @@ export class FleetController implements MasterControllerTools {
       controller.abort();
     }
     await Promise.allSettled(this.#workerSettlements.values());
+    // The CLI passes the active master-model settlement here. Keep it inside
+    // the shutdown lifecycle boundary so no model event can appear after the
+    // controller reports shutdown completion.
+    await externalSettlement;
     const snapshot = this.snapshot();
     this.#telemetry.shutdownCompleted(snapshot);
     return snapshot;

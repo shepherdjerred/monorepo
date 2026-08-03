@@ -67,7 +67,8 @@ const SECRET_JSON_PATTERN = new RegExp(
  * Redact secrets from a flat text body (command line, stdout, stderr) before it
  * is logged or archived. Four passes:
  *   1. Literal values of known secret env vars (only when ≥8 chars, so short/
- *      empty values can't blank out unrelated substrings).
+ *      empty values can't blank out unrelated substrings), plus every non-empty
+ *      explicitly supplied secret regardless of length.
  *   2. Unquoted `NAME=value` assignments with secret-shaped names.
  *   3. Quoted JSON `"name": "value"` fields with secret-shaped names.
  *   4. `Bearer <token>` substrings.
@@ -78,8 +79,13 @@ export function redactText(
 ): string {
   let out = value;
   const configuredSecrets = SECRET_ENV_NAMES.map((name) => Bun.env[name]);
-  for (const secret of [...configuredSecrets, ...additionalSecretValues]) {
+  for (const secret of configuredSecrets) {
     if (secret !== undefined && secret.length >= 8) {
+      out = out.split(secret).join("[REDACTED]");
+    }
+  }
+  for (const secret of additionalSecretValues) {
+    if (secret.length > 0) {
       out = out.split(secret).join("[REDACTED]");
     }
   }

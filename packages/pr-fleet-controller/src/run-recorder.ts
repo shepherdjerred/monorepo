@@ -49,6 +49,8 @@ export type CreateRunRecorderOptions = {
   stateDirectory?: string;
   controllerVersion: string;
   controllerCommit: string;
+  controllerSourceDirty: boolean;
+  controllerSourceFingerprint: string;
   model: string;
   repository: string;
   checkout: string;
@@ -200,6 +202,8 @@ export class RunRecorder implements FleetTelemetry {
       createdAt: createdAt.toISOString(),
       controllerVersion: options.controllerVersion,
       controllerCommit: options.controllerCommit,
+      controllerSourceDirty: options.controllerSourceDirty,
+      controllerSourceFingerprint: options.controllerSourceFingerprint,
       model: options.model,
       repository: options.repository,
       checkout: options.checkout,

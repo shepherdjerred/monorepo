@@ -168,7 +168,11 @@ repository checkout.
 - Prevented `gh auth token` output and related failure details from entering
   command telemetry while retaining the credential only for the in-memory API
   call that needs it.
-- Passed focused typecheck, 80 controller tests, 40 observability tests, lint,
+- Addressed the latest exact-head review by redacting even short explicitly
+  selected credentials, fingerprinting dirty controller source (including
+  tracked and untracked changes), and keeping shutdown completion behind the
+  active master-turn settlement boundary.
+- Passed focused typecheck, 81 controller tests, 42 observability tests, lint,
   native-aware build, docs validation, Markdown lint, diff checks, and staged
   Lefthook/Gitleaks/Prettier/lockfile checks.
 - Completed a final non-mutating `openai/gpt-5.6-terra` model/tool turn from the

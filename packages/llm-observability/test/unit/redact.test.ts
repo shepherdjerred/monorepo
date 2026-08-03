@@ -150,6 +150,23 @@ test("redactSecrets masks an explicitly configured provider credential", () => {
   expect(redacted.headers.raw).toBe("provider response: [REDACTED]");
 });
 
+test("redactSecrets masks short explicitly configured credentials", () => {
+  const customSecret = "abc";
+  const redacted = HeadersSchema.parse(
+    redactSecrets({ headers: { raw: `provider response: ${customSecret}` } }, [
+      customSecret,
+    ]),
+  );
+  expect(redacted.headers.raw).toBe("provider response: [REDACTED]");
+});
+
+test("redactSecrets ignores empty explicitly configured credentials", () => {
+  const redacted = HeadersSchema.parse(
+    redactSecrets({ headers: { raw: "provider response" } }, [""]),
+  );
+  expect(redacted.headers.raw).toBe("provider response");
+});
+
 test("redactText does not mask short env values that could hit unrelated text", () => {
   Bun.env["OPENAI_API_KEY"] = "short";
   expect(redactText("the word short appears here")).toBe(

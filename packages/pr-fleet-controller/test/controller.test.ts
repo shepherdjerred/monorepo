@@ -474,6 +474,39 @@ test("shutdown waits for an in-flight reconciliation before completing", async (
   expect(kinds.at(-1)).toBe("shutdown.completed");
 });
 
+test("shutdown completion waits for the coordinated master settlement", async () => {
+  const telemetry = new RecordingTelemetry();
+  const controller = new FleetController({
+    config: {
+      model: "openai/gpt-5",
+      repo: "shepherdjerred/monorepo",
+      checkout: "/tmp/repo",
+      worktreeRoot: "/tmp/worktrees",
+      maxWorkers: 1,
+    },
+    environment: new FakeEnvironment([], new Map()),
+    workerRunner: new BlockingRunner(),
+    observer: new RecordingObserver(),
+    store: new FleetStore(1),
+    telemetry,
+  });
+  const masterSettlement = Promise.withResolvers<undefined>();
+  let stopped = false;
+  const stop = (async (): Promise<void> => {
+    await controller.stop(masterSettlement.promise);
+    stopped = true;
+  })();
+
+  await flushMicrotasks();
+  expect(stopped).toBe(false);
+  expect(telemetry.events.at(-1)?.kind).toBe("shutdown.started");
+
+  masterSettlement.resolve(undefined);
+  await stop;
+  expect(stopped).toBe(true);
+  expect(telemetry.events.at(-1)?.kind).toBe("shutdown.completed");
+});
+
 test("controller tick commands carry tick and PR correlation", async () => {
   const pr = identity(1);
   const failedCheck = {

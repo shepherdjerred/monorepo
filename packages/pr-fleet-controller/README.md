@@ -100,8 +100,9 @@ The controller never merges, closes, or approves a pull request.
 
 Collection is mandatory and local-only. Each run writes:
 
-- `manifest.json` with the schema, controller source commit/version (independent
-  of the managed checkout), model, repository, and capture contract;
+- `manifest.json` with the schema, controller source commit/version, dirty-tree
+  state and content fingerprint (independent of the managed checkout), model,
+  repository, and capture contract;
 - `events.jsonl` with sequenced, hash-chained controller, worker, command,
   evidence, model-turn, and shutdown events;
 - `summary.json` with final status, duration, event counts, last hash, and final
@@ -115,7 +116,8 @@ before Mastra's structural sensitive-field filter, so traces retain redacted
 model/tool bodies, timing, token metadata, and correlation IDs. Commands inherit
 their worker attempt and tool-call correlation, record whether they exited,
 timed out, or were aborted, and distinguish deliberate worker cancellation from
-failure. Shutdown awaits any active reconciliation before finalizing the bundle.
+failure. Shutdown awaits active reconciliation, workers, and the master model
+turn before finalizing the bundle.
 Runs are retained indefinitely in v1, so operators must delete old run
 directories themselves when they no longer need them. Nothing is uploaded.
 
