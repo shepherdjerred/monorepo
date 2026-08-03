@@ -12,6 +12,7 @@ import { CommandFleetEnvironment } from "./environment.ts";
 import type { FleetObserver } from "./ports.ts";
 import { FleetControllerConfigSchema, type FleetSnapshot } from "./schemas.ts";
 import { FleetStore } from "./state.ts";
+import { consumeTerminalLines } from "./terminal-loop.ts";
 
 const HELP = `Usage:
   bun run pr:fleet --model <provider>/<model> [options]
@@ -227,35 +228,39 @@ async function main(): Promise<void> {
   await controller.start();
   terminal.setPrompt("fleet> ");
   terminal.prompt();
-  for await (const rawLine of terminal) {
-    const line = rawLine.trim();
-    if (line === "/stop") {
-      await stop();
-      break;
-    }
-    switch (line) {
-      case "/status": {
-        observer.onSnapshot(controller.snapshot());
-
-        break;
+  await consumeTerminalLines(
+    terminal,
+    async (rawLine) => {
+      const line = rawLine.trim();
+      if (line === "/stop") {
+        return "stop";
       }
-      case "/tick": {
-        await controller.tick("user");
+      switch (line) {
+        case "/status": {
+          observer.onSnapshot(controller.snapshot());
 
-        break;
-      }
-      case "/help": {
-        process.stdout.write(`${HELP}\n`);
-
-        break;
-      }
-      default:
-        if (line.length > 0) {
-          master.send(line);
+          break;
         }
-    }
-    terminal.prompt();
-  }
+        case "/tick": {
+          await controller.tick("user");
+
+          break;
+        }
+        case "/help": {
+          process.stdout.write(`${HELP}\n`);
+
+          break;
+        }
+        default:
+          if (line.length > 0) {
+            master.send(line);
+          }
+      }
+      terminal.prompt();
+      return "continue";
+    },
+    stop,
+  );
 }
 
 try {

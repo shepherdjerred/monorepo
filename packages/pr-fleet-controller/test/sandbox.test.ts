@@ -5,6 +5,7 @@ import {
   setupEnvironment,
   setupSandboxProfile,
 } from "@shepherdjerred/pr-fleet-controller/src/sandbox.ts";
+import { SETUP_COMMANDS } from "@shepherdjerred/pr-fleet-controller/src/tools.ts";
 
 describe("validation sandbox profile", () => {
   const worktree = "/tmp/pr-fleet-worktree";
@@ -65,9 +66,12 @@ describe("credential env scrubbing", () => {
 
     // Passing the configured name removes it from validation and setup envs.
     expect(sanitizedEnvironment(["LLM_ACCESS"])["LLM_ACCESS"]).toBeUndefined();
-    const setup = setupEnvironment(["LLM_ACCESS"]);
+    const miseConfig = "/tmp/pr-fleet-worktree/.mise.toml";
+    const setup = setupEnvironment(["LLM_ACCESS"], miseConfig);
     expect(setup["LLM_ACCESS"]).toBeUndefined();
     expect(setup["GIT_CONFIG_GLOBAL"]).toBe("/dev/null");
+    expect(setup["MISE_PARANOID"]).toBe("1");
+    expect(setup["MISE_TRUSTED_CONFIG_PATHS"]).toBe(miseConfig);
   });
 });
 
@@ -99,5 +103,14 @@ describe("setup sandbox write scope", () => {
   test("still permits network and denies the operator's credential stores", () => {
     expect(profile).toContain("(allow network*)");
     expect(profile).toContain(`(deny file-read* (subpath "${home}"))`);
+  });
+
+  test("never runs persistent trust for PR-controlled mise configuration", () => {
+    expect(
+      SETUP_COMMANDS.some(
+        (command) =>
+          command.executable === "mise" && command.args.includes("trust"),
+      ),
+    ).toBe(false);
   });
 });

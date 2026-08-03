@@ -38,8 +38,8 @@ Interactive input:
 - `/status` prints the deterministic fleet snapshot.
 - `/tick` requests an immediate complete reconciliation.
 - `/help` prints command help.
-- `/stop` aborts active model turns, preserves worktrees, waits for workers to
-  settle, and exits.
+- `/stop` or terminal EOF aborts active model turns, preserves worktrees, waits
+  for workers to settle, and exits.
 - Any other line is queued as conversational steering. Input remains available
   while the master is answering; queued messages are handled by the next
   serialized master turn.
@@ -77,6 +77,14 @@ denied, and a credential-scrubbed environment so tool output cannot exfiltrate
 host secrets. Only read-only script and task forms are accepted. Publication,
 worktree creation, current-head verification, review-request deduplication, and
 timers remain deterministic controller operations.
+
+Worktree setup never runs `mise trust`: the controller does not persist trust
+for configuration supplied by a pull request. Setup enables Mise paranoid mode
+and grants invocation-scoped trust to only the assigned worktree's exact
+`.mise.toml` while it runs inside the credential-scrubbed setup sandbox. Command
+timeouts, cancellation, and shutdown terminate the command's complete POSIX
+process group so descendant processes cannot outlive the worker that spawned
+them.
 
 The controller never merges, closes, or approves a pull request.
 

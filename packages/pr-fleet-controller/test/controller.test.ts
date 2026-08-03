@@ -4,6 +4,7 @@ import type {
   CommandRequest,
   FleetEnvironment,
   FleetObserver,
+  FleetScheduler,
   WorkerRunner,
 } from "@shepherdjerred/pr-fleet-controller/src/ports.ts";
 import type {
@@ -188,6 +189,38 @@ class RecordingObserver implements FleetObserver {
   }
 }
 
+class RecordingScheduler implements FleetScheduler {
+  readonly callbacks = new Set<() => void>();
+
+  schedule(callback: () => void): () => void {
+    this.callbacks.add(callback);
+    return () => {
+      this.callbacks.delete(callback);
+    };
+  }
+
+  fireNext(): void {
+    for (const callback of this.callbacks) {
+      this.callbacks.delete(callback);
+      callback();
+      return;
+    }
+    throw new Error("No scheduled heartbeat");
+  }
+}
+
+class OneFailureEnvironment extends FakeEnvironment {
+  failNextList = false;
+
+  override listOpenPrs(): Promise<PrIdentity[]> {
+    if (this.failNextList) {
+      this.failNextList = false;
+      return Promise.reject(new Error("transient GitHub failure"));
+    }
+    return super.listOpenPrs();
+  }
+}
+
 test("a fleet tick classifies every PR and queues excess actionable work", async () => {
   const first = identity(1);
   const second = identity(2);
@@ -226,6 +259,39 @@ test("a fleet tick classifies every PR and queues excess actionable work", async
   expect(report.snapshot.queued).toBe(1);
   expect(observer.snapshots).toHaveLength(1);
   await controller.stop();
+});
+
+test("a failed heartbeat rearms reconciliation", async () => {
+  const environment = new OneFailureEnvironment([], new Map());
+  const observer = new RecordingObserver();
+  const scheduler = new RecordingScheduler();
+  const controller = new FleetController({
+    config: {
+      model: "openai/gpt-5",
+      repo: "shepherdjerred/monorepo",
+      checkout: "/tmp/repo",
+      worktreeRoot: "/tmp/worktrees",
+      maxWorkers: 1,
+    },
+    environment,
+    workerRunner: new BlockingRunner(),
+    observer,
+    store: new FleetStore(1),
+    scheduler,
+  });
+
+  await controller.start();
+  expect(scheduler.callbacks.size).toBe(1);
+  environment.failNextList = true;
+  scheduler.fireNext();
+  await flushMicrotasks();
+
+  expect(
+    observer.changes.some((change) => change.startsWith("heartbeat failed:")),
+  ).toBe(true);
+  expect(scheduler.callbacks.size).toBe(1);
+  await controller.stop();
+  expect(scheduler.callbacks.size).toBe(0);
 });
 
 test("aborts a worker whose assigned head changes and does not pause it", async () => {

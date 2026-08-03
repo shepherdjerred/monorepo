@@ -14,6 +14,13 @@ import {
 import { LeaseKindSchema, PrStateSchema, type PrState } from "./schemas.ts";
 import type { FleetStore } from "./state.ts";
 
+export const SETUP_COMMANDS = [
+  { executable: "mise", args: ["install"] },
+  { executable: "bun", args: ["install", "--frozen-lockfile"] },
+  { executable: "bunx", args: ["turbo", "run", "generate"] },
+  { executable: "bunx", args: ["lefthook", "install"] },
+] satisfies { executable: string; args: string[] }[];
+
 async function containedPath(
   root: string,
   requestedPath: string,
@@ -247,27 +254,26 @@ export function createWorkerTools(
           store.releaseLease(pr.identity.number, "setup", pr.stackId);
           throw new Error("Heavy lease is not available for generation");
         }
-        const commands: { executable: string; args: string[] }[] = [
-          { executable: "mise", args: ["trust", "-y", "--all"] },
-          { executable: "mise", args: ["install"] },
-          { executable: "bun", args: ["install", "--frozen-lockfile"] },
-          { executable: "bunx", args: ["turbo", "run", "generate"] },
-          { executable: "bunx", args: ["lefthook", "install"] },
-        ];
         const completed: string[] = [];
         try {
           // These commands execute PR-controlled code (dependency lifecycle
-          // scripts, `turbo` generators, `.mise.toml`). Run each under the setup
-          // sandbox profile with scrubbed credentials so a malicious PR cannot
-          // read or exfiltrate the operator's credentials before validation.
+          // scripts, `turbo` generators, `.mise.toml`). The worker never
+          // persists trust for PR-controlled configuration: setup grants the
+          // exact worktree config invocation-scoped trust in paranoid mode.
+          // Run each command under the setup sandbox profile with scrubbed
+          // credentials so a malicious PR cannot read or exfiltrate operator
+          // credentials before validation.
           const directories = await resolveSetupDirectories(
             worktree,
             environment,
             signal,
           );
           const profile = setupSandboxProfile(worktree, directories);
-          const commandEnvironment = setupEnvironment(extraSecretNames);
-          for (const command of commands) {
+          const commandEnvironment = setupEnvironment(
+            extraSecretNames,
+            path.join(worktree, ".mise.toml"),
+          );
+          for (const command of SETUP_COMMANDS) {
             const result = await environment.runLocalCommand({
               executable: "sandbox-exec",
               args: ["-p", profile, command.executable, ...command.args],
