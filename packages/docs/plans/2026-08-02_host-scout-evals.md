@@ -88,6 +88,45 @@ On-cluster (after layer 2 merges):
 - E2E: push a real draft over the tailnet, rate a case in the hosted UI, re-push an extended draft, confirm merge.
 - Confirm next Velero run includes the PVC.
 
+## Session Log — 2026-08-02
+
+### Done
+
+- **Part A** (commit 36c8b5c56, PR #1955): `--host`/`SCOUT_EVAL_HOSTNAME` bind option; draft
+  transfer schemas + checksum machinery; `draft-transfer-store.ts` (additive-merge
+  `pushDraftIntoDatabase`, draft-only `exportDraftFromDatabase`); `datasets.pushDraft` tRPC
+  mutation; `dataset:push` CLI; freshness invalidation on pushed generations; 8 new tests +
+  API test; README + scout AGENTS.md docs. Live-verified over real HTTP against a second
+  server bound 0.0.0.0 (push → extend → additive re-push → idempotent re-push).
+- **Part B** (commit 43ec3e15a, PR #1955): evals Dockerfile (prod-deps/build/runtime/smoke/
+  image stages; scout's own tsconfig.base.json, not the root one, is the required extend);
+  bake target + selector + smoke-harness wiring; placeholder versions.ts pin; package
+  `docker:build`/`smoke` scripts; `.dockerignore` guard for the local eval DB. Image builds
+  (538 MB, `/app/packages` 4.2 MB — no data package leak) and container smoke passes.
+  `.buildkite` tests 155/155 (twisted-patch fixture now expects both scout images).
+- **Part C** (commit ff4f07502, PR #1956): scout-evals chart (recreate, uid 1000, 1 GiB
+  ZFS PVC at /data with backup enabled, TailscaleIngress `scout-evals`, /health probes,
+  DNS-only egress) + helm dir + ArgoCD app + registrations. Homelab suite 316 pass.
+- Published native GitHub stack #1957: PR #1955 (app + image) → PR #1956 (homelab).
+
+### Remaining
+
+- Merge PR #1955; wait for the main build's version commit-back PR to replace the
+  placeholder `shepherdjerred/scout-evals` pin; then merge PR #1956.
+- On-cluster verification after ArgoCD sync: pod Running / PVC Bound, tailnet
+  `curl https://scout-evals.<tailnet>.ts.net/health`, DB starts empty, push a real draft
+  over the tailnet + rate it in the hosted UI, confirm unreachable off-tailnet, confirm
+  the next Velero run includes the `scout-evals-data` PVC.
+
+### Caveats
+
+- PR #1956 must NOT merge before the real image pin lands — ArgoCD would deploy the
+  placeholder digest (ImagePullBackOff until the next commit-back; self-heals but avoidable).
+- `readOnlyRootFilesystem: false` initially (Bun writes caches under HOME); tightening is a
+  possible follow-up.
+- The draft-push CLI talks to the hosted server over the tailnet with no auth by design;
+  anyone on the tailnet can rate/push. Accepted decision.
+
 ## Risks
 
 - `.buildkite` fixture edits not fully enumerated — test failures will name them.
