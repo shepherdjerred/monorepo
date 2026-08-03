@@ -7,6 +7,12 @@
     "jsxImportSource": "react",
     "noEmit": true
   },
-  "include": ["src/**/*", "e2e/**/*", "playwright.config.ts", "vite.config.ts"],
+  "include": [
+    "src/**/*",
+    "e2e/**/*",
+    "scripts/**/*",
+    "playwright.config.ts",
+    "vite.config.ts"
+  ],
   "exclude": ["node_modules", "dist"]
 }
