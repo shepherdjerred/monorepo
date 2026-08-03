@@ -8,6 +8,7 @@ import { MastraCompositeStore } from "@mastra/core/storage";
 import { DuckDBStore } from "@mastra/duckdb";
 import { LibSQLStore } from "@mastra/libsql";
 import { MastraStorageExporter, Observability } from "@mastra/observability";
+import { shutdownMastraStores } from "./mastra-store-shutdown.ts";
 import type { RunRecorder } from "./run-recorder.ts";
 
 export type FleetMastraRuntime = {
@@ -109,12 +110,26 @@ export async function createFleetMastraRuntime(
     observability,
     environment: "local",
   });
+  const shutdownStores = () =>
+    shutdownMastraStores({
+      shutdownMastra: () => mastra.shutdown(),
+      secureArtifacts: () => recorder.secureRunArtifacts(),
+      closeDuckdb: () => duckdb.close(),
+      closeLibsql: () => libsql.close(),
+    });
   try {
     await storage.init();
     await recorder.secureRunArtifacts();
   } catch (error) {
-    await mastra.shutdown();
-    await Promise.all([duckdb.close(), libsql.close()]);
+    try {
+      await shutdownStores();
+    } catch (cleanupError) {
+      throw new AggregateError(
+        [error, cleanupError],
+        "Mastra storage initialization and cleanup failed",
+        { cause: cleanupError },
+      );
+    }
     throw error;
   }
 
@@ -126,15 +141,9 @@ export async function createFleetMastraRuntime(
         return;
       }
       closed = true;
-      await mastra.shutdown();
-      await recorder.secureRunArtifacts();
-      // The generic composite owns domain interfaces, not the concrete parent
-      // stores, so Mastra cannot close these connections on its behalf. Close
-      // them before bundle finalization to checkpoint WAL contents into the
-      // stable database files that inspect/replay authenticate. The permission
-      // sweep precedes close because SQLite removes its transient WAL/SHM files
-      // asynchronously while closing.
-      await Promise.all([duckdb.close(), libsql.close()]);
+      // Explicit parent-store close checkpoints WAL into authenticated files.
+      // Sweep permissions first because SQLite removes WAL/SHM while closing.
+      await shutdownStores();
     },
   };
 }

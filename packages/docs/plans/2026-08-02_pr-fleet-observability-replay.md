@@ -292,6 +292,10 @@ repository checkout.
 - Addressed the remaining exact-head review finding by correlating
   PR-specific master steering tools with their validated target PR, so
   `pr:fleet:inspect --pr` includes priority, pause, resume, and guidance calls.
+- Addressed the subsequent exact-head shutdown finding by making Mastra
+  shutdown, the permission sweep, and both concrete store closes an exhaustive
+  cleanup sequence. Earlier failures are aggregated only after LibSQL and
+  DuckDB have both been given their checkpoint-and-close opportunity.
 - Passed focused typecheck, 147 controller tests, 42 observability tests, lint,
   native-aware build, docs validation, Markdown lint, diff checks, and staged
   Lefthook/Gitleaks/Prettier/lockfile checks.
