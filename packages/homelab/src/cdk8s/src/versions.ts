@@ -232,7 +232,7 @@ const versions = {
   // surfaced "26.2". semver-coerced compares them all, and the datasource
   // transform now filters pre-releases (-rc/-pre) so only stable builds appear.
   // renovate: datasource=custom.papermc versioning=semver-coerced
-  paper: "26.1.2",
+  paper: "26.2",
   // renovate: datasource=docker registryUrl=https://ghcr.io/recyclarr versioning=docker
   recyclarr:
     "8.7.0@sha256:2d6107f758d882a59fe9d646aa54fa8a5a4fb7a40995125fade575652a3f7871",
