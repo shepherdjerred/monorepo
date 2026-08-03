@@ -1,21 +1,25 @@
 import type { ResourceSettlement } from "./terminal-loop.ts";
 import { settleRunResources } from "./terminal-loop.ts";
+import { combineFailures } from "./cli-failures.ts";
+import { ControllerStopError } from "./controller-stop-error.ts";
+import type { FleetSnapshot } from "./schemas.ts";
 
 type InputResource = { close: () => void };
 type MasterResource = { stop: () => Promise<unknown> };
-type ControllerResource<Snapshot> = {
-  stop: (masterSettlement: Promise<unknown>) => Promise<Snapshot>;
+type ControllerResource = {
+  stop: (masterSettlement: Promise<unknown>) => Promise<FleetSnapshot>;
 };
 type RuntimeResource = { shutdown: () => Promise<void> };
 
-export function settleCliResources<Snapshot>(options: {
+export async function settleCliResources(options: {
   input: () => InputResource | undefined;
   master: () => MasterResource | undefined;
-  controller: () => ControllerResource<Snapshot> | undefined;
+  controller: () => ControllerResource | undefined;
   runtime: () => Promise<RuntimeResource> | undefined;
-  observeSnapshot: (snapshot: Snapshot) => void;
-}): Promise<ResourceSettlement<Snapshot>> {
-  return settleRunResources({
+  observeSnapshot: (snapshot: FleetSnapshot) => void;
+}): Promise<ResourceSettlement<FleetSnapshot>> {
+  let controllerFailure: Error | undefined;
+  const settlement = await settleRunResources({
     closeInput: () => {
       options.input()?.close();
     },
@@ -26,7 +30,15 @@ export function settleCliResources<Snapshot>(options: {
         await masterSettlement;
         return null;
       }
-      return controller.stop(masterSettlement);
+      try {
+        return await controller.stop(masterSettlement);
+      } catch (error) {
+        if (error instanceof ControllerStopError) {
+          controllerFailure = error;
+          return error.snapshot;
+        }
+        throw error;
+      }
     },
     observeSnapshot: options.observeSnapshot,
     settleRuntime: async () => {
@@ -34,4 +46,11 @@ export function settleCliResources<Snapshot>(options: {
       await runtime?.shutdown();
     },
   });
+  return {
+    snapshot: settlement.snapshot,
+    failure:
+      controllerFailure === undefined
+        ? settlement.failure
+        : combineFailures(settlement.failure, controllerFailure),
+  };
 }

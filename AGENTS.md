@@ -241,6 +241,12 @@ bun run verify
 
 # Foreground, provider-neutral Mastra controller for the complete open PR fleet
 bun run pr:fleet --model <provider>/<model-id>
+
+# Inspect a captured run (accepts a run ID or run-directory path)
+bun run pr:fleet:inspect --run <run-id-or-directory>
+
+# Deterministically verify and replay a captured run without model or network access
+bun run pr:fleet:replay --run <run-id-or-directory>
 ```
 
 ### Fixed-corpus CI I/O candidate builds
@@ -363,7 +369,11 @@ controller in the foreground. One selected API model powers the conversational
 master and every bounded worker. Use `/status`, `/tick`, `/help`, `/stop`, or
 free-text steering. The controller may repair and publish PR branches but may
 never merge, close, or approve them. Its exact model tool boundary is documented
-in `packages/pr-fleet-controller/README.md`.
+in `packages/pr-fleet-controller/README.md`. Every run writes a private local
+bundle; use `bun run pr:fleet:inspect --run <run-id-or-directory>` for a
+body-masked view and `bun run pr:fleet:replay --run <run-id-or-directory>` for
+deterministic offline integrity and lifecycle verification. These commands
+collect and inspect evidence; they do not run evals.
 
 ## Parallel Work — Use Worktrees
 

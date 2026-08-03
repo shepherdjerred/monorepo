@@ -246,7 +246,7 @@ async function main(): Promise<void> {
   let finalizationPromise: Promise<void> | undefined;
   const observer = new TerminalObserver();
   const settleResources = createSharedShutdown(() =>
-    settleCliResources<FleetSnapshot>({
+    settleCliResources({
       input: () => terminal,
       master: () => master,
       controller: () => controller,

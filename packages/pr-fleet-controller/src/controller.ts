@@ -25,13 +25,16 @@ import { FleetStore } from "./state.ts";
 import type { MasterControllerTools } from "./master-tools.ts";
 import { createFleetTickWorkflow } from "./workflow.ts";
 import { defaultFleetScheduler } from "./scheduler.ts";
-import { settleAllOrThrow } from "./terminal-loop.ts";
 import {
   assignFleetWorktree,
   withPrCommandCorrelation,
   withTickCommandCorrelation,
 } from "./controller-correlation.ts";
 import { settleWorkerResult } from "./controller-worker-settlement.ts";
+import {
+  abortFleetWorkers,
+  settleControllerShutdown,
+} from "./controller-shutdown.ts";
 
 export class FleetController implements MasterControllerTools {
   readonly #config: FleetControllerConfig;
@@ -487,29 +490,23 @@ export class FleetController implements MasterControllerTools {
   }
 
   async stop(externalSettlement: Promise<unknown>): Promise<FleetSnapshot> {
-    this.#telemetry.shutdownStarted(this.store.activeWorkers.size);
-    this.store.stopping = true;
-    if (this.#heartbeat !== null) {
-      this.#heartbeat();
-      this.#heartbeat = null;
-    }
-    const inFlightTick = this.#tickSettled;
-    if (inFlightTick !== null) {
-      await inFlightTick;
-    }
-    for (const [prNumber, controller] of this.store.workerControllers) {
-      this.store.cancelledWorkers.add(prNumber);
-      controller.abort();
-    }
-    // The CLI passes the active master-model settlement here. Keep it inside
-    // the shutdown lifecycle boundary so no model event can appear after the
-    // controller reports shutdown completion.
-    await settleAllOrThrow([
-      ...this.#workerSettlements.values(),
+    return settleControllerShutdown({
+      begin: () => {
+        this.store.stopping = true;
+        if (this.#heartbeat !== null) {
+          this.#heartbeat();
+          this.#heartbeat = null;
+        }
+      },
+      abortActiveWorkers: () => {
+        abortFleetWorkers(this.store);
+      },
+      activeWorkerCount: () => this.store.activeWorkers.size,
+      inFlightTick: this.#tickSettled,
+      workerSettlements: () => this.#workerSettlements.values(),
       externalSettlement,
-    ]);
-    const snapshot = this.snapshot();
-    this.#telemetry.shutdownCompleted(snapshot);
-    return snapshot;
+      snapshot: () => this.snapshot(),
+      telemetry: this.#telemetry,
+    });
   }
 }
