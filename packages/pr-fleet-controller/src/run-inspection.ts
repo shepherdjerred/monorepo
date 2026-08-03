@@ -1,4 +1,3 @@
-import { z } from "zod";
 import {
   JsonValueSchema,
   RunEventPayloadSchema,
@@ -15,25 +14,13 @@ import {
   readRunSummary,
 } from "./run-recorder.ts";
 import { verifyCorrelationGraph } from "./replay-correlation.ts";
-import {
-  FleetSnapshotSchema,
-  FleetTickReportSchema,
-  type FleetSnapshot,
-} from "./schemas.ts";
-
-const TickCompletedPayloadSchema = z.object({ report: FleetTickReportSchema });
-const SnapshotPayloadSchema = z.object({ snapshot: FleetSnapshotSchema });
+import type { FleetSnapshot } from "./schemas.ts";
+import { replaySnapshots, verifyShutdownBoundary } from "./snapshot-replay.ts";
 
 const BODY_FIELD_PATTERN =
   /^(?:body|change|content|error|escalation|lastAction|line|log|message|messages|output|patch|prompt|reason|response|stack|stderr|stdout|text)$/i;
 const BODY_ARRAY_FIELD_PATTERN =
   /^(?:args|blockers|changes|hardFailures|reviewFindings|validation)$/i;
-const ACTIVE_STATUSES = new Set([
-  "diagnosing",
-  "editing",
-  "verifying",
-  "waiting-write-lease",
-]);
 
 export type RunBundle = {
   manifest: RunManifest;
@@ -245,35 +232,6 @@ function countKinds(events: RecordedRunEvent[]): Record<string, number> {
   );
 }
 
-function verifySnapshot(snapshot: FleetSnapshot): void {
-  const numbers = snapshot.prs.map((pr) => pr.identity.number);
-  if (new Set(numbers).size !== numbers.length) {
-    throw new Error("Fleet snapshot contains duplicate PR numbers");
-  }
-  const expected = {
-    open: snapshot.prs.length,
-    green: snapshot.prs.filter((pr) => pr.classification === "green").length,
-    active: snapshot.prs.filter((pr) => ACTIVE_STATUSES.has(pr.status)).length,
-    queued: snapshot.prs.filter((pr) => pr.classification === "queued").length,
-    pending: snapshot.prs.filter((pr) => pr.classification === "pending")
-      .length,
-    paused: snapshot.prs.filter((pr) => pr.classification === "paused").length,
-  };
-  const actual = {
-    open: snapshot.open,
-    green: snapshot.green,
-    active: snapshot.active,
-    queued: snapshot.queued,
-    pending: snapshot.pending,
-    paused: snapshot.paused,
-  };
-  if (canonicalJson(expected) !== canonicalJson(actual)) {
-    throw new Error(
-      "Fleet snapshot aggregate counts diverge from its PR states",
-    );
-  }
-}
-
 function verifyBundleMetadata(
   bundle: RunBundle,
   options: { currentControllerVersion: string; allowVersionMismatch: boolean },
@@ -326,65 +284,6 @@ function verifyBundleMetadata(
     throw new Error("Summary event-kind counts do not match the event stream");
   }
   return countsByKind;
-}
-
-function replaySnapshots(
-  events: RecordedRunEvent[],
-  summary: RunSummary,
-): FleetSnapshot | null {
-  const tickSnapshots = new Map<string, FleetSnapshot>();
-  let finalSnapshot: FleetSnapshot | null = null;
-  for (const event of events) {
-    if (event.kind === "fleet.snapshot") {
-      const parsed = SnapshotPayloadSchema.parse(event.payload).snapshot;
-      verifySnapshot(parsed);
-      finalSnapshot = parsed;
-      if (event.correlation.tickId !== undefined) {
-        tickSnapshots.set(event.correlation.tickId, parsed);
-      }
-    }
-    if (event.kind === "tick.completed") {
-      const report = TickCompletedPayloadSchema.parse(event.payload).report;
-      const recorded =
-        event.correlation.tickId === undefined
-          ? undefined
-          : tickSnapshots.get(event.correlation.tickId);
-      if (
-        recorded === undefined ||
-        canonicalJson(recorded) !== canonicalJson(report.snapshot)
-      ) {
-        throw new Error(
-          `Tick ${event.correlation.tickId ?? "without-id"} completed with a snapshot not emitted by that tick`,
-        );
-      }
-      if (event.correlation.tickId !== undefined) {
-        tickSnapshots.delete(event.correlation.tickId);
-      }
-    }
-    if (event.kind === "shutdown.completed") {
-      finalSnapshot = SnapshotPayloadSchema.parse(event.payload).snapshot;
-      verifySnapshot(finalSnapshot);
-    }
-  }
-  if (canonicalJson(finalSnapshot) !== canonicalJson(summary.finalSnapshot)) {
-    throw new Error("Summary final snapshot does not match replayed state");
-  }
-  return finalSnapshot;
-}
-
-function verifyShutdownBoundary(events: RecordedRunEvent[]): void {
-  const shutdownCompletedIndex = events.findIndex(
-    (event) => event.kind === "shutdown.completed",
-  );
-  if (shutdownCompletedIndex === -1) {
-    return;
-  }
-  const lateEvent = events
-    .slice(shutdownCompletedIndex + 1)
-    .find((event) => event.kind !== "run.completed");
-  if (lateEvent !== undefined) {
-    throw new Error(`${lateEvent.kind} was recorded after shutdown.completed`);
-  }
 }
 
 export function replayRunBundle(
@@ -471,8 +370,8 @@ export function replayRunBundle(
         "Completed run must contain exactly one completed shutdown lifecycle",
       );
     }
-    verifyShutdownBoundary(events);
   }
+  verifyShutdownBoundary(events);
 
   return {
     runId: manifest.runId,

@@ -1,7 +1,7 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import { withCommandCorrelation } from "./command-correlation.ts";
 import type { FleetTelemetry } from "./ports.ts";
+import { runRecordedToolOperation } from "./recorded-tool.ts";
 import type { RunEventCorrelation } from "./run-events.ts";
 import {
   FleetSnapshotSchema,
@@ -39,30 +39,13 @@ export async function runRecordedMasterTool<T>(
     ...instrumentation.correlation(),
     toolCallId,
   };
-  instrumentation.telemetry.record(
-    "tool.started",
-    { tool, input },
+  return runRecordedToolOperation({
+    tool,
+    input,
+    telemetry: instrumentation.telemetry,
     correlation,
-  );
-  try {
-    const result = await withCommandCorrelation(correlation, run);
-    instrumentation.telemetry.record(
-      "tool.completed",
-      { tool, result },
-      correlation,
-    );
-    return result;
-  } catch (error) {
-    instrumentation.telemetry.record(
-      "tool.failed",
-      {
-        tool,
-        error: error instanceof Error ? error.message : String(error),
-      },
-      correlation,
-    );
-    throw error;
-  }
+    run,
+  });
 }
 
 export function createMasterTools(

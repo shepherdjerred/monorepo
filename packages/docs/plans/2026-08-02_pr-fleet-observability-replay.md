@@ -229,7 +229,10 @@ repository checkout.
   persistence failures without abandoning the master settlement, closing input
   before shutdown waits, retaining the captured snapshot across later resource
   failures, and consuming tick snapshots when their lifecycle closes.
-- Passed focused typecheck, 109 controller tests, 42 observability tests, lint,
+- Addressed three subsequent exact-head findings by separating successful tool
+  operations from completion-capture failures, requiring fleet snapshots to
+  reference active ticks, and enforcing the shutdown boundary for failed runs.
+- Passed focused typecheck, 113 controller tests, 42 observability tests, lint,
   native-aware build, docs validation, Markdown lint, diff checks, and staged
   Lefthook/Gitleaks/Prettier/lockfile checks.
 - Completed a final non-mutating `openai/gpt-5.6-terra` model/tool turn from the

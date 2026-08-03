@@ -96,4 +96,36 @@ describe("master tool telemetry", () => {
       error: "tick failed",
     });
   });
+
+  test("propagates completion capture failures without relabeling the operation", async () => {
+    const events: CapturedEvent[] = [];
+    const captureFailure = new Error("state volume is full");
+    let operationRuns = 0;
+    const telemetry = createTelemetry(events);
+    const originalRecord = telemetry.record;
+    telemetry.record = (kind, payload, correlation = {}) => {
+      if (kind === "tool.completed") {
+        throw captureFailure;
+      }
+      originalRecord(kind, payload, correlation);
+    };
+
+    await expect(
+      runRecordedMasterTool(
+        "publish_fix",
+        { paths: ["file.ts"] },
+        {
+          telemetry,
+          correlation: () => ({ modelTurnId: "master-turn-3" }),
+        },
+        () => {
+          operationRuns += 1;
+          return Promise.resolve({ headSha: "a".repeat(40) });
+        },
+      ),
+    ).rejects.toBe(captureFailure);
+
+    expect(operationRuns).toBe(1);
+    expect(events.map((event) => event.kind)).toEqual(["tool.started"]);
+  });
 });

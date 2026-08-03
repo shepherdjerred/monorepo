@@ -3,8 +3,8 @@ import path from "node:path";
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import { validateWorkerCommand } from "./command-policy.ts";
-import { withCommandCorrelation } from "./command-correlation.ts";
 import type { FleetEnvironment, FleetTelemetry } from "./ports.ts";
+import { runRecordedToolOperation } from "./recorded-tool.ts";
 import type { RunEventCorrelation } from "./run-events.ts";
 import {
   sandboxProfile,
@@ -108,19 +108,7 @@ async function runRecordedTool<T>(
     generation: pr.agentGeneration,
     toolCallId,
   };
-  telemetry.record("tool.started", { tool, input }, correlation);
-  try {
-    const result = await withCommandCorrelation(correlation, run);
-    telemetry.record("tool.completed", { tool, result }, correlation);
-    return result;
-  } catch (error) {
-    telemetry.record(
-      "tool.failed",
-      { tool, error: error instanceof Error ? error.message : String(error) },
-      correlation,
-    );
-    throw error;
-  }
+  return runRecordedToolOperation({ tool, input, telemetry, correlation, run });
 }
 
 export function createWorkerTools(
