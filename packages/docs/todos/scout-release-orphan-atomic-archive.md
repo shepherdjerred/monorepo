@@ -54,15 +54,31 @@ Two fix shapes change deliberately fail-closed release semantics and the
 repository owner should choose between them (or reject both in favor of
 keeping the manual-cleanup runbook):
 
-1. **Atomic write** — write the flavor archive record(s) and the
-   `inputs/<digest>.json` pointer as a single logical commit (e.g. write the
-   input record first and have `archiveFlavor` require it to already exist,
-   or use a two-phase marker) so a cancellation between them can't happen.
+1. **Atomic write** — commit the flavor archive record(s) and the
+   `inputs/<digest>.json` pointer as a single logical unit that can never
+   leave the pointer visible without its archives. **Keep the existing
+   archive-then-input order** — do not flip it. Writing `inputs/<digest>.json`
+   before its archives exist would open a _worse_ orphan class: `prepareState`
+   treats a present input record as "already built" and returns early without
+   rebuilding `.scout-release/{prod,beta}`
+   (`scripts/scout-site-release.ts:203-214`), so a subsequent `archiveFlavor`
+   call would fail at `assertStaticSiteComplete`
+   (`scripts/lib/scout-site-storage.ts:285-299`) validating a local source
+   directory that was never produced — a silent "release is done" pointer with
+   no reachable site behind it. Concretely: only ever write
+   `inputs/<digest>.json` after both flavor archives are confirmed present (as
+   today), and make a retried job for the same digest resumable — check
+   whether `prod.json`/`beta.json` already exist before rebuilding, and if so
+   skip straight to writing the input pointer using those existing archives'
+   recorded digests rather than a freshly recomputed (and likely mismatched)
+   state.
 2. **Reconcile on read** — have `archiveFlavor`, on finding an existing
    `<digest>/<flavor>.json` with no matching `inputs/<digest>.json`, treat it
-   as an orphan and overwrite/reclaim it (loosens the current
-   `--if-none-match "*"` immutability guarantee for that narrow case) rather
-   than failing closed.
+   as an orphan and adopt its recorded content (rather than a freshly
+   recomputed state) to finish writing `inputs/<digest>.json`, instead of
+   failing closed on a digest mismatch. This loosens the current
+   `--if-none-match "*"` immutability guarantee only for the read path, not the
+   write path (the archive bytes themselves are never overwritten).
 
 ## Remaining
 
