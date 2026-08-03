@@ -132,16 +132,66 @@ so the absolute values are meaningless but the **delta is meaningful**, and
 -58 ms matches the predicted ~45-60 ms encode-side saving. Encoder health
 held: 30 fps, VAAPI engaged, fewer drops.
 
-**Glass-side: not separable in one session per arm** — see the client-state
-finding above. This is a measurement-power limit, not evidence against the
-change.
+**Glass-side, matched 12-minute curves (the decisive comparison):**
 
-**Verdict:** ship Tier 1 on the server-side evidence plus the mechanism
-(ffmpeg holds `async_depth` frames in the encode FIFO by construction) and
-the unchanged encoder health. Do NOT claim a measured glass-level win.
-The client playout buffer is now demonstrably the largest single term in
-the budget, which promotes the Phase 2 playout-delay experiment to the
-highest-value next lever.
+| Arm       | n   | mean     | p05      | p50      | p95      | sd      |
+| --------- | --- | -------- | -------- | -------- | -------- | ------- |
+| baseline  | 715 | 371.6 ms | 282.6 ms | 363.6 ms | 465.8 ms | 88.9 ms |
+| candidate | 716 | 317.1 ms | 233.1 ms | 316.1 ms | 389.9 ms | 64.7 ms |
+
+**Difference: −54.5 ms, bootstrap 95% CI [−62.8, −46.6]** (20 000
+resamples; the distributions are heavy-tailed so a t-test would not be
+valid). The candidate is significantly lower, and its spread is tighter
+(sd 64.7 vs 88.9), consistent with less encoder jitter from
+`async_depth 1`.
+
+**Encoder isolation (in-pod, real iGPU, no Discord in the path).** Fed
+rawvideo at a true 30 fps cadence through the production filter chain into
+`h264_vaapi` and timed each frame from stdin-write to its Annex-B access
+unit appearing on stdout (`-bf 0` ⇒ one AU per frame). Alternated arms,
+two runs each, 300 frames per run, first 30 frames discarded:
+
+| `-async_depth`     | frame-in → packet-out (mean) |
+| ------------------ | ---------------------------- |
+| 2 (ffmpeg default) | 68.15 ms / 68.04 ms          |
+| 1 (this PR)        | 36.88 ms / 36.82 ms          |
+
+**−31.2 ms, reproducible to within 0.1 ms**, ≈ exactly one frame interval —
+precisely the mechanism (the encode FIFO holds `async_depth` frames).
+Incidentally the runs emitted 299 packets for 300 frames, independently
+reproducing the fixed +1-frame startup boundary noted during the desync
+review.
+
+**Triangulation — three independent paths agree:**
+
+| Measurement              | scope              | delta                        |
+| ------------------------ | ------------------ | ---------------------------- |
+| In-pod encoder isolation | `async_depth` only | −31.2 ms                     |
+| Server-side histograms   | whole bundle       | −58.3 ms                     |
+| Viewer glass-to-glass    | whole bundle       | −54.5 ms (CI [−62.8, −46.6]) |
+
+The two whole-bundle numbers agree within ~4 ms, and the ~23 ms they exceed
+the isolated encoder saving is consistent with the Opus low-delay change
+(10 ms frames vs 20 ms, confirmed live: audio send interval measured
+exactly 10.0 ms) plus the muxer flush. Independent methods converging on
+the same effect is far stronger than any one of them alone.
+
+Honest limit: this is one session per arm, so the CI captures within-session
+sampling noise, not between-session client-state variance (which the 68.5 ms
+outlier shows can be far larger). The agreement with the server-side metric
+and the mechanism is what makes the result credible; a hostile reviewer
+should ask for alternating repeat sessions before treating −54.5 ms as the
+exact effect size.
+
+**Verdict: ship.** Tier 1 delivers a measured **~55 ms** reduction at the
+player's eye (95% CI [−63, −47]), corroborated by an independent −58 ms
+server-side delta and by the mechanism itself, with encoder health held
+(30 fps, VAAPI engaged, fewer drops) and less frame-timing jitter.
+
+That is ~15% off the ~370 ms baseline glass-to-glass. The client playout
+buffer remains the largest single remaining term (baseline p50 364 ms with
+only ~85 ms of it in the receiver's de-jitter buffer), which keeps the
+Phase 2 playout-delay experiment as the highest-value next lever.
 
 **CI note (2026-08-03):** the `robot-face-review-gate` timed out on every
 build of this PR (1200 s, `review_state: reviewing`, zero findings,

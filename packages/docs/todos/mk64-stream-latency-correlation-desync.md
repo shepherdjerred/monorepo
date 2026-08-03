@@ -38,6 +38,29 @@ histograms report ~1.0–1.2 s that does not physically exist, and the
   realtime send path (`BaseMediaStream.ts:173-184`); measured C3≈0 rules out
   observer-side parse lag.
 
+## CONFIRMED 2026-08-03 — the depth gauge settles it
+
+The `stream_tracker_video_source_depth` gauge shipped in PR #1965 was read
+during a live candidate session and **directly confirms phantom head
+entries**:
+
+- Depth sits at a standing **34-36** unconsumed video sources for the whole
+  session (sampled every 4 s; never drains).
+- Inflation is exactly that depth in frames: across consecutive scrapes,
+  the interval mean of `stream_packet_ready_delay_ms{video}` tracks
+  `depth x 33.37 ms` within ±1 frame (observed 1141-1183 ms vs predicted
+  1135-1201 ms).
+- Real end-to-end latency measured at the viewer's glass in the same
+  session is ~317 ms, so 1170 ms of genuine in-flight encode latency is
+  impossible; and `MAX_BUFFERED_FRAMES = 3` caps the sink at three frames,
+  so no real 35-frame backlog can exist.
+
+Therefore every packet is paired with a source ~35 frames too old, and
+every pipeline histogram derived from that pairing
+(`packet_ready`, `send_complete`, `input_to_*`, and the A/V offset gauge)
+is inflated by a constant ~1.17 s. Depth ~35 also matches the predicted
+startup gap (~1.2 s of frames produced before the RTP session attaches).
+
 ## Corrected mechanism hypothesis
 
 A **standing ~30-frame pairing offset created once near session startup on
@@ -60,12 +83,11 @@ extra-source consumption shrinks it). Leading suspects, in order:
 
 ## Remaining
 
-- [ ] **Decisive instrumentation first**: export a `videoSources`-depth
-      gauge plus delivered-frames and emitted-packets counters in
-      `StreamLatencyTracker`/game-streamer. Depth ≈ 30 sustained while glass
-      is realtime ⇒ phantom head entries (1:1 break confirmed); depth ≈ 0–3
-      ⇒ real in-flight backlog episodes (then fix the pipeline, not the
-      tracker).
+- [x] **Decisive instrumentation first**: `videoSources`-depth gauge
+      shipped in PR #1965. Result: standing depth 34-36 while the viewer's
+      glass showed ~317 ms ⇒ phantom head entries confirmed (see the
+      CONFIRMED section above). The remaining work is to find and close the
+      1:1 break, not to decide whether one exists.
 - [ ] Audit the fork's pre-attach packet path for silent drops (suspect 1)
       and run an in-cluster h264_vaapi frame-in/packet-out parity count
       (suspect 2).
