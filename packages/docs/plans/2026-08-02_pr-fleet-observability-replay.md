@@ -172,6 +172,10 @@ repository checkout.
   selected credentials, fingerprinting dirty controller source (including
   tracked and untracked changes), and keeping shutdown completion behind the
   active master-turn settlement boundary.
+- Fixed an exhaustive-verify race where the Pokémon benchmark test created and
+  removed a fixture inside the package while concurrent ESLint traversed it;
+  the fixture now lives under the OS temp directory with explicit dependency
+  resolution.
 - Passed focused typecheck, 81 controller tests, 42 observability tests, lint,
   native-aware build, docs validation, Markdown lint, diff checks, and staged
   Lefthook/Gitleaks/Prettier/lockfile checks.
