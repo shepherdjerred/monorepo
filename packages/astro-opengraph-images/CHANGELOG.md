@@ -2,16 +2,10 @@
 
 ## [1.18.0](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.17.4...astro-opengraph-images-v1.18.0) (2026-08-03)
 
+No library behavior changes. The shipped code is identical to 1.17.4; this release exists only because of repo-level housekeeping that release-please picked up. `src/`, `README.md`, the exported API, and the `dependencies` block (`@resvg/resvg-js`, `jsdom`, `react`, `satori`) are all untouched.
 
-### Features
-
-* **ci:** add complete coverage reporting ([#1786](https://github.com/shepherdjerred/monorepo/issues/1786)) ([d17b7ce](https://github.com/shepherdjerred/monorepo/commit/d17b7cecd76e5fdd6f742275c6744112ff579700))
-* **ci:** add test reporting foundation ([#1782](https://github.com/shepherdjerred/monorepo/issues/1782)) ([09a6ed1](https://github.com/shepherdjerred/monorepo/commit/09a6ed1566aec6cbe9e3f951586ab7ec9961e368))
-
-
-### Bug Fixes
-
-* **deps:** roll out TypeScript 7 native compiler ([#1843](https://github.com/shepherdjerred/monorepo/issues/1843)) ([e7cd0b6](https://github.com/shepherdjerred/monorepo/commit/e7cd0b6bde573a6c366f344461c3d46e37b79f48))
+- Added monorepo CI test-reporting and coverage scripts (`test:ci`, `test:report`) plus a `@vitest/coverage-istanbul` devDependency — build-time only, not in the tarball's dependency graph ([09a6ed1](https://github.com/shepherdjerred/monorepo/commit/09a6ed1566aec6cbe9e3f951586ab7ec9961e368), [d17b7ce](https://github.com/shepherdjerred/monorepo/commit/d17b7cecd76e5fdd6f742275c6744112ff579700))
+- Rewrote the internal `build`/`watch`/`typecheck` scripts to put the TypeScript 7 native compiler on `PATH` instead of invoking its binary by path. This is the same compiler 1.17.4 already built with, so the emitted `dist/` is produced the same way ([e7cd0b6](https://github.com/shepherdjerred/monorepo/commit/e7cd0b6bde573a6c366f344461c3d46e37b79f48))
 
 ## [1.17.4](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.17.3...astro-opengraph-images-v1.17.4) (2026-07-31)
 

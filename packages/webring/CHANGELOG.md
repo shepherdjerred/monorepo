@@ -7,16 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.8.0](https://github.com/shepherdjerred/monorepo/compare/webring-v1.7.2...webring-v1.8.0) (2026-08-03)
 
+No public API changes. `src/`, `README.md`, and the `dependencies` block (`htmlparser2`, `remeda`, `rss-parser`, `sanitize-html`, `zod`) are unchanged from 1.7.2. The one thing that could differ in the tarball is how `dist/` was compiled.
 
-### Features
-
-* **ci:** add complete coverage reporting ([#1786](https://github.com/shepherdjerred/monorepo/issues/1786)) ([d17b7ce](https://github.com/shepherdjerred/monorepo/commit/d17b7cecd76e5fdd6f742275c6744112ff579700))
-* **ci:** add test reporting foundation ([#1782](https://github.com/shepherdjerred/monorepo/issues/1782)) ([09a6ed1](https://github.com/shepherdjerred/monorepo/commit/09a6ed1566aec6cbe9e3f951586ab7ec9961e368))
-
-
-### Bug Fixes
-
-* **deps:** roll out TypeScript 7 native compiler ([#1843](https://github.com/shepherdjerred/monorepo/issues/1843)) ([e7cd0b6](https://github.com/shepherdjerred/monorepo/commit/e7cd0b6bde573a6c366f344461c3d46e37b79f48))
+- The published `dist/` JavaScript and `.d.ts` files are now emitted by the TypeScript 7 native compiler (`@typescript/native`, i.e. `typescript@7.0.2`) rather than TypeScript 6's `tsc`. Output is expected to be equivalent — this is just the first webring release built by TS 7 ([e7cd0b6](https://github.com/shepherdjerred/monorepo/commit/e7cd0b6bde573a6c366f344461c3d46e37b79f48))
+- Everything else was monorepo-internal: CI test-reporting and coverage scripts ([09a6ed1](https://github.com/shepherdjerred/monorepo/commit/09a6ed1566aec6cbe9e3f951586ab7ec9961e368), [d17b7ce](https://github.com/shepherdjerred/monorepo/commit/d17b7cecd76e5fdd6f742275c6744112ff579700)) and an Astro upgrade in the bundled `example/` app, which is not part of the npm tarball ([52f25f2](https://github.com/shepherdjerred/monorepo/commit/52f25f27187ab711efed79c3770f8e2ca2045620))
 
 ## [1.7.2](https://github.com/shepherdjerred/monorepo/compare/webring-v1.7.1...webring-v1.7.2) (2026-07-29)
 
