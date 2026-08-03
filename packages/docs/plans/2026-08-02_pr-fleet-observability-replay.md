@@ -157,12 +157,12 @@ repository checkout.
 - Passed focused typecheck, 71 controller tests, 39 observability tests, lint,
   native-aware build, docs validation, Markdown lint, diff checks, and staged
   Lefthook/Gitleaks/Prettier/lockfile checks.
-- Completed a second non-mutating `openai/gpt-5.6-terra` model/tool turn from
-  review-fix commit `cf7e45a2a26098f24da34aa0d54f649c3896a3fd`
-  against a fresh clone of a zero-open-PR repository at the distinct commit
-  `c356aef4326669e9e90db15fabd50a691c667116`. The manifest correctly recorded
-  the controller commit, inspect hid eight body values by default, replay
-  verified all 17 events with no open lifecycles (`commands=1/1`, `tools=1/1`,
+- Completed a final non-mutating `openai/gpt-5.6-terra` model/tool turn from the
+  latest implementation against a zero-open-PR repository at the distinct
+  commit `c356aef4326669e9e90db15fabd50a691c667116`. The manifest correctly
+  recorded controller-source provenance, inspect hid eight body values by
+  default, the command recorded `termination: exit`, replay verified all 17
+  events with no open lifecycles (`commands=1/1`, `tools=1/1`,
   `masterTurns=1/1`), every database sidecar was mode `0600`, and DuckDB
   contained one correlated 11-span agent/model/tool trace.
 
