@@ -135,24 +135,35 @@ repository checkout.
 
 ### Done
 
-- Published draft safety-layer PR #1961 with process-group termination,
-  deleted-path publication, heartbeat, setup-trust, and EOF-shutdown repairs.
+- Published native-stack draft PRs #1961 (runtime safety) and #1963 (run-data
+  collection/replay), with the terminal recording attached to #1963.
+- Implemented process-group termination, deleted-path publication, heartbeat
+  rearming, EOF shutdown, and invocation-scoped Mise trust under paranoid mode.
+  A fresh untrusted linked-worktree probe confirmed the exact config becomes
+  trusted only through `MISE_TRUSTED_CONFIG_PATHS` for that invocation.
 - Implemented mandatory private run bundles, shared pre-persistence redaction,
   hash-chained events, Mastra/LibSQL/DuckDB storage, inspect/replay commands,
   and controller/environment/model/tool correlation on the upper layer.
-- Passed focused typecheck, 62 controller tests, 39 observability tests, lint,
-  native-aware build, docs validation, and Markdown lint.
-- Completed a non-mutating `openai/gpt-5.6-terra` model turn against a verified
-  zero-open-PR repository; inspect and replay both accepted its 15-event bundle.
+- Passed focused typecheck, 64 controller tests, 39 observability tests, lint,
+  native-aware build, docs validation, Markdown lint, diff checks, and staged
+  Lefthook/Gitleaks/Prettier/lockfile checks.
+- Completed a non-mutating `openai/gpt-5.6-terra` model/tool turn from rebased
+  implementation commit `6acfa99201175c2b424b0518386572ea22ad815c`
+  against a zero-open-PR repository. Inspect hid bodies by default, replay
+  verified all 17 events (`commands=1/1`, `tools=1/1`, `masterTurns=1/1`),
+  every database sidecar was mode `0600`, and DuckDB contained one correlated
+  11-span agent/model/tool trace.
 
 ### Remaining
 
-- Commit and publish the upper native-stack layer, attach terminal evidence,
-  and drive both exact-current-head draft PRs through Buildkite and review.
+- No implementation work remains. Publish the rebased heads plus this session
+  record, then wait for exact-current-head Buildkite and hosted review on both
+  draft PRs before promoting them for human review.
 
 ### Caveats
 
-- The first Terra smoke preceded the upper commit, so its manifest identifies
-  the lower commit; rerun after committing for final provenance evidence.
 - Live mutating controller acceptance remains prohibited unless separately
-  authorized; verification uses zero-PR and synthetic scenarios.
+  authorized; verification uses a real zero-PR Terra turn plus synthetic worker
+  retry/failure/publication scenarios.
+- V1 retains redacted local bundles indefinitely and has no remote exporter or
+  pruning. It adds no datasets, scorers, judges, experiments, or eval gates.
