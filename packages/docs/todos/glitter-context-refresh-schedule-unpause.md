@@ -82,3 +82,18 @@ acts) rather than being duplicated in this blocked TODO.
 - This item is intentionally `disposition: blocked` / `verification: operator`
   — do not perform the unpause from an agent session; it requires explicit
   operator authorization in the Temporal Web UI.
+
+## Session Log — 2026-08-02
+
+### Done
+
+- Confirmed superseded V1 data PR #1834 is closed and V2 implementation PR #1846 is merged with green current-head checks.
+- Confirmed no V2 generated-data PR exists, so the pre-unpause gate is not yet satisfied.
+
+### Remaining
+
+- Wait for the V2 data PR, acceptance, merge, and consumer smokes; then perform the explicit operator unpause.
+
+### Caveats
+
+- The implementation merge alone does not authorize unpausing a schedule with no accepted V2 data output.

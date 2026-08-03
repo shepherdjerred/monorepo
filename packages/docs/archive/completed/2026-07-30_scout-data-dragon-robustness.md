@@ -1,10 +1,8 @@
 ---
 id: scout-data-dragon-robustness
 type: plan
-status: in-progress
-board: true
-verification: agent
-disposition: active
+status: complete
+board: false
 ---
 
 # Scout Data Dragon Temporal pipeline — robustness fixes
@@ -284,7 +282,7 @@ worst-case added delay (~10s across 3 attempts) is well under the 60s
 - [x] `bunx turbo run check:rehearsal --filter=@shepherdjerred/temporal`
       (passed — confirms the retry wrapper didn't change
       `rootInstallWithoutHooks`'s external contract)
-- [ ] Open PR via git-spice
+- [x] Open PR #1862 via git-spice and drive its exact-head Buildkite build #7525 through verification and review.
 
 ## Testing
 
@@ -432,3 +430,19 @@ describe the original approach; these supersede them:
   is unit tests + the bot-clone rehearsal script + a full code read. The next
   real Data Dragon version bump (or a manual schedule trigger) is the first
   live exercise of Fix 3's dedup check and Fix 4's retry path.
+
+## Session Log — 2026-08-02
+
+### Done
+
+- Confirmed PR #1862 merged and its exact-head Buildkite build #7525 passed the aggregate, verification, and review gates.
+- Confirmed the current Temporal worker Deployment is ready on the newer `2.0.0-7749` image, which includes the merged implementation.
+- Completed and archived the implementation plan.
+
+### Remaining
+
+- None.
+
+### Caveats
+
+- The next real Data Dragon version bump remains the first natural live exercise of the dedup and install-retry paths; it is operational observation, not unfinished implementation work.

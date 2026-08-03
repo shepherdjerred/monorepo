@@ -9,18 +9,16 @@ origin: packages/docs/archive/completed/2026-07-09_ha-registry-cleanup.md
 source_marker: false
 ---
 
-# Econet integration blocked by Rheem certificate chain
+# Restore Econet after the Home Assistant 2026.8 fix deploys
 
 ## Investigation
 
 - **smartthings**: RESOLVED — user re-authed, entry `loaded`.
-- **econet**: NOT an auth problem. `rheem.clearblade.com` chains to the legacy
-  DigiCert Global Root CA, which Mozilla/certifi distrusted 2026-04-15; the HA
-  container's certifi 2026.06.17 no longer contains that root, so TLS verification
-  fails. Known upstream: home-assistant/core#172228. Blocked on Rheem re-issuing
-  their chain. (Possible local workaround if it drags: append the legacy root to
-  the pod's certifi bundle via an init step — trusts a distrusted root, use only
-  if the water heater absence actually hurts.)
+- **econet**: Rheem's endpoint now passes TLS and returns HTTP 200. Upstream
+  issue home-assistant/core#172228 is closed and fix PR #176736 is merged for
+  Home Assistant 2026.8. The live and repository pin is still 2026.7.4, so the
+  remaining prerequisite is deploying 2026.8 or newer, not waiting on Rheem's
+  certificate chain.
 - **roborock**: vacuum is online; the integration failed to _import_ — cffi
   python-package vs compiled-backend version skew caused by a mid-startup pip
   upgrade race (the `install-eufy-security` init container). Site-packages are
@@ -29,8 +27,8 @@ source_marker: false
 
 ## Remaining
 
-- [ ] Wait for Rheem to serve a certificate chain trusted by current Home Assistant/certifi, tracked by home-assistant/core#172228.
-- [ ] After an upstream change, have an operator reload econet and verify the water-heater entities update without a local distrusted-root workaround.
+- [ ] Deploy Home Assistant 2026.8 or newer, which includes upstream fix PR #176736.
+- [ ] Have an operator reload Econet and verify the water-heater entities update without a local distrusted-root workaround.
 - [ ] If econet recovers, reconcile any duplicated `Heat Pump Water Heater_*` friendly names.
 
 ## Comment Log
@@ -39,3 +37,19 @@ source_marker: false
   only remaining problem is Rheem's upstream certificate chain, not reauth.
   Classified blocked and operator-verified because recovery requires live Home
   Assistant access after an external fix.
+
+- 2026-08-02 — Rheem TLS now succeeds, upstream issue #172228 is closed, and fix PR #176736 is merged for Home Assistant 2026.8. Updated the blocker from external certificate repair to the pending Home Assistant version rollout.
+
+## Session Log — 2026-08-02
+
+### Done
+
+- Cleared the stale external TLS blocker and identified the exact shipped Home Assistant release prerequisite.
+
+### Remaining
+
+- Deploy Home Assistant 2026.8+, reload Econet, and verify entity updates and naming.
+
+### Caveats
+
+- The current 2026.7.4 deployment does not contain the upstream fix.

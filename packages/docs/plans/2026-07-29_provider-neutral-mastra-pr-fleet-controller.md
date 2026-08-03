@@ -80,7 +80,11 @@ grant models unrestricted repository or external-system access.
 - [x] Add unit and integration tests.
 - [x] Run focused verification and repair every failure.
 - [x] Record the terminal demonstration and publish the draft PR.
-- [ ] Verify current-head Buildkite, merge-tree, and review readiness.
+- [x] Verify the merged PR #1855 head: core Buildkite verification passed, but the review gate failed with three unresolved findings.
+- [ ] Repair subprocess-tree termination on timeout.
+- [ ] Isolate `mise trust` from the operator session.
+- [ ] Permit deletions whose parent directory was removed.
+- [ ] Resolve the three exact-head review threads and pass a fresh exact-head Buildkite review gate.
 
 ## Comment Log
 
@@ -119,3 +123,19 @@ grant models unrestricted repository or external-system access.
   arbitrary OpenAI-compatible endpoints are implemented through the same
   Mastra model contract but were not each charged for redundant live smoke
   calls.
+
+## Session Log — 2026-08-02
+
+### Done
+
+- Confirmed PR #1855 merged and its core verification passed.
+- Inspected exact-head Buildkite #7737 and current review threads instead of treating merge as completion.
+- Converted the stale readiness task into the three concrete unresolved findings and a repair-PR acceptance gate.
+
+### Remaining
+
+- Fix subprocess-tree termination, operator-session `mise trust` isolation, and deleted-parent handling; resolve the threads and pass exact-head CI/review.
+
+### Caveats
+
+- The implementation is merged but not accepted complete: all three findings remain unresolved and non-outdated.

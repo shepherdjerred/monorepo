@@ -5,7 +5,7 @@ status: in-progress
 board: true
 verification: agent
 disposition: active
-origin: packages/docs/plans/2026-07-30_homelab-audit-agent-task-schema-fix.md
+origin: packages/docs/archive/completed/2026-07-30_homelab-audit-agent-task-schema-fix.md
 ---
 
 # Verify `ci-io-post-merge-impact` codex sandbox fix in production
@@ -28,24 +28,18 @@ the report runner environment; no acceptance conclusion is possible" — every
 command still failed with the same `bwrap` error, so the "success" is
 illusory.
 
-The fix exists but has **not landed on `main`**. Commit `cda4e819e`
-("fix(temporal): stop nesting a bwrap sandbox inside the worker pod") on the
-still-unmerged branch `feature/codex-sandbox-danger-full-access` switches both
+The fix landed through PR #1860. Commit `cda4e819e`
+("fix(temporal): stop nesting a bwrap sandbox inside the worker pod") switches both
 `codex exec` call sites in `packages/temporal/src/activities/agent-task-command.ts`
-from `--sandbox read-only` to `--sandbox danger-full-access`. As of this writing
-both `main` and this branch still pass `--sandbox read-only`, so the next
-`ci-io-post-merge-impact` firing (cron `0 9 * * *` PT) will **reproduce the same
-`bwrap` failure** — this is unresolved implementation work, not verification-only.
-Land `feature/codex-sandbox-danger-full-access` before treating any scheduled run
-as a test of the fix.
+from `--sandbox read-only` to `--sandbox danger-full-access`. The current
+Temporal worker `2.0.0-7749` contains the merge. The August 2 scheduled run
+`019fc334-1c27-7bc8-add0-c1142fbda866` completed before that deployment and is
+therefore not an acceptance test of the fix.
 
 ## Remaining
 
-- [ ] Land `feature/codex-sandbox-danger-full-access` (commit `cda4e819e`) onto
-      `main`. Until it merges, `agent-task-command.ts` still passes
-      `--sandbox read-only` and every `ci-io-post-merge-impact` run keeps failing
-      with the same `bwrap` error.
-- [ ] After that branch has merged **and** had at least one real scheduled run,
+- [x] Merge PR #1860 and deploy a Temporal worker containing the `danger-full-access` fix.
+- [ ] After the deployed fix has had at least one real scheduled run,
       inspect it via
       `temporal workflow list --query "WorkflowId STARTS_WITH 'ci-io-post-merge-impact'"`
       (`TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443 --tls`) and confirm
@@ -63,3 +57,18 @@ as a test of the fix.
   `homelab-audit-daily` (claude) in the live Temporal cluster to isolate the
   Claude-specific schema-dialect bug. This bwrap issue is unrelated to that
   fix and is not addressed by it.
+
+## Session Log — 2026-08-02
+
+### Done
+
+- Confirmed PR #1860 merged and the current healthy Temporal worker includes it.
+- Confirmed the latest scheduled run predates that deployment, so it cannot accept or reject the fix.
+
+### Remaining
+
+- Inspect the first post-deploy scheduled run for a real acceptance conclusion without the bubblewrap error.
+
+### Caveats
+
+- The card remains active, not blocked; time is the only prerequisite for the next scheduled observation.

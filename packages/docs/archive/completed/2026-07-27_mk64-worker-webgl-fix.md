@@ -1,10 +1,8 @@
 ---
 id: plan-mk64-worker-webgl-fix
 type: plan
-status: in-progress
-board: true
-verification: agent
-disposition: active
+status: complete
+board: false
 ---
 
 # MK64 Worker WebGL Initialization Fix
@@ -42,8 +40,8 @@ emulator core to boot, and the same initialization can be covered without a ROM.
 - [x] Implement the worker host and shared WASM loader.
 - [x] Add unit and image-level regression coverage.
 - [x] Complete local ROM, image, and affected verification.
-- [ ] Publish the git-spice PR and verify CI.
-- [ ] Verify the GitOps rollout and a real `/play` session after merge.
+- [x] Publish PR #1730 through git-spice and verify its executable CI lanes.
+- [x] Verify the GitOps rollout and a real `/play` session after merge.
 
 ## Assumptions
 
@@ -80,3 +78,19 @@ emulator core to boot, and the same initialization can be covered without a ROM.
   smoke.
 - No Kubernetes resources were mutated. Rollout validation remains intentionally
   post-merge.
+
+## Session Log — 2026-08-02
+
+### Done
+
+- Confirmed implementation PR #1730 merged and its executable Buildkite #6582 lanes passed.
+- Confirmed the current `mario-kart` application is `Synced`/`Healthy`; live pod logs show the ROM loaded, emulator and Go-Live stream started, graphics initialized, and a socket request handled.
+- Completed and archived the WebGL initialization plan.
+
+### Remaining
+
+- None.
+
+### Caveats
+
+- ROM-bearing developer verification remains local by design; the deployed runtime evidence independently proves the repaired path booted.

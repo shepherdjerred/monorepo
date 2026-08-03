@@ -1,10 +1,8 @@
 ---
 id: plan-2026-07-30-homelab-audit-agent-task-schema-fix
 type: plan
-status: in-progress
-board: true
-verification: agent
-disposition: active
+status: complete
+board: false
 ---
 
 # Fix `homelab-audit-daily` agent-task schema regression
@@ -93,7 +91,7 @@ below and the updated todo doc.
 
 ## Remaining
 
-- [ ] Confirm the next real `homelab-audit-daily` cron run (`30 6 * * *` PT)
+- [x] Hand off confirmation of the next real `homelab-audit-daily` cron run (`30 6 * * *` PT)
       completes successfully in production — tracked in
       `packages/docs/todos/homelab-audit-agent-task-production-verification.md`.
       Code changes in this plan are otherwise complete.
@@ -105,3 +103,18 @@ below and the updated todo doc.
 3. Open the PR from this worktree via git-spice, let Buildkite run the full `bun run verify` graph.
 4. After merge/deploy, watch the next real `homelab-audit-daily` cron firing (`30 6 * * *` PT) via `https://temporal-ui.tailnet-1a49.ts.net` → Schedules → `homelab-audit-daily`, or query `temporal workflow list --query "WorkflowId STARTS_WITH 'homelab-audit-daily'"` (`TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443 --tls`) — confirm `WORKFLOW_EXECUTION_STATUS_COMPLETED` and that the report email actually sent (Postal).
 5. Update the todo doc's checklist once a clean run is observed, and archive it to `packages/docs/archive/completed/` if fully resolved.
+
+## Session Log — 2026-08-02
+
+### Done
+
+- Confirmed PR #1864 merged and the current healthy Temporal worker `2.0.0-7749` includes the schema fix.
+- Kept the first post-deploy production-run proof in `packages/docs/todos/homelab-audit-agent-task-production-verification.md` and completed this implementation plan.
+
+### Remaining
+
+- None in this plan.
+
+### Caveats
+
+- The latest observed scheduled run predates the deployed fix; its post-deploy acceptance remains active on the dedicated todo.

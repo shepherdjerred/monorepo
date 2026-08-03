@@ -1,10 +1,8 @@
 ---
 id: ci-base-digest-pin
 type: todo
-status: in-progress
-board: true
-verification: agent
-disposition: active
+status: complete
+board: false
 origin: packages/docs/archive/completed/2026-07-25_ci-write-reduction-impl.md
 ---
 
@@ -44,7 +42,7 @@ write win of the reduction levers.
 - [x] Teach the CI image refresh/version-bump flow to carry the built digest into a narrow bump PR without an unpinned intermediate state.
 - [x] Make pipeline validation reject mutable or divergent CI base references.
 - [x] Add tests for no-change, changed-digest, and failed-bump behavior.
-- [ ] Prove one main-branch image change produces and lands a digest bump before pods consume it.
+- [x] Prove one main-branch image change produces and lands a digest bump before pods consume it.
 
 ## Comment Log
 
@@ -61,3 +59,19 @@ write win of the reduction levers.
 - PR #1776 adds independent immutable pins and monotonic candidate-to-pin
   promotion for `ci-base` and `ci-playwright`; the remaining proof requires a
   post-merge main build against live GHCR and the generated pin PR.
+
+## Session Log — 2026-08-02
+
+### Done
+
+- Confirmed implementation PR #1776 merged green and generated promotion PR #1810 merged with exact-head Buildkite #7417 green.
+- Confirmed the current pin remains the promoted `sha256:cbaa2bed…` from build #7414 while later content-aware candidates correctly produced no-change outcomes.
+- Completed and archived the digest-pin acceptance todo.
+
+### Remaining
+
+- None.
+
+### Caveats
+
+- Future CI image changes remain governed by the same content-aware promotion path.

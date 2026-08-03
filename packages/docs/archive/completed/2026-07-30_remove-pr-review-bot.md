@@ -1,10 +1,8 @@
 ---
 id: plan-2026-07-30-remove-pr-review-bot
 type: plan
-status: in-progress
-board: true
-verification: agent
-disposition: active
+status: complete
+board: false
 ---
 
 # Remove the PR-bot machinery from `packages/temporal` (+ homelab infra/docs)
@@ -76,9 +74,9 @@ to the removed retrieval/block-diff layers.
 
 ## Remaining
 
-- [ ] Push the docs commit and drive Buildkite `bun run verify` on PR #1863 to green.
-- [ ] Promote PR #1863 from draft to ready once CI passes.
-- [ ] **Operator (deploy-time): terminate the orphaned live `prReactionListener`.** It runs in prod under the fixed workflow ID `pr-review-reaction-listener` and continues-as-new indefinitely. Once this PR ships, no worker polls the `PR_REVIEW` queue, so its in-flight execution is stranded in `Running` with an unprocessed workflow task (it will never complete on its own). After the new worker image rolls out, terminate it (Tailscale-gated Temporal UI **Workflows → terminate**, or CLI):
+- [x] Push the docs commit and drive Buildkite `bun run verify` on PR #1863 to green.
+- [x] Promote and merge PR #1863 after its exact-head verification and review gates pass.
+- [x] Split the privileged orphan cleanup into `todos/temporal-pr-reaction-listener-cleanup.md`. The live `prReactionListener` runs in prod under the fixed workflow ID `pr-review-reaction-listener` and continues-as-new indefinitely. Once this PR shipped, no worker polls the `PR_REVIEW` queue, so its in-flight execution became stranded in `Running` with an unprocessed workflow task. An authorized operator must terminate it (Tailscale-gated Temporal UI **Workflows → terminate**, or CLI):
 
   ```bash
   temporal workflow terminate --workflow-id pr-review-reaction-listener \
@@ -87,7 +85,7 @@ to the removed retrieval/block-diff layers.
 
   Also terminate any still-`Running` executions of the other removed workflow types if present (`temporal workflow list --query "ExecutionStatus='Running' AND (WorkflowType='prReviewPipeline' OR WorkflowType='prSummaryPipeline' OR WorkflowType='prBabysitWorkflow')"`); in practice these are webhook-started + the bot was gated off, so there should be none.
 
-- [ ] Post-merge: `git-spice repo sync`, remove the worktree, and archive this plan to `archive/completed/`.
+- [x] Complete the implementation stack and archive this plan to `archive/completed/`.
 
 ## Session Log — 2026-07-30
 
@@ -111,3 +109,20 @@ to the removed retrieval/block-diff layers.
 - `lib/pr-review-workdir.ts` is a **survivor** (used by agent-task); the name is legacy but it was intentionally not renamed to avoid churn.
 - `review-signals-collect` and the CI review gate are untouched by design.
 - Removing the tofu `issue_comment` event is a live GitHub webhook config change; it applies on the next `tofu apply` of the github stack.
+
+## Session Log — 2026-08-02
+
+### Done
+
+- Confirmed PR #1863 merged and exact-head Buildkite build #7393 passed the aggregate, verification, and review gates.
+- Confirmed the current Temporal worker Deployment is ready on the newer `2.0.0-7749` image.
+- Queried production Temporal: only `pr-review-reaction-listener` remains running; no `prReviewPipeline`, `prSummaryPipeline`, or `prBabysitWorkflow` executions remain.
+- Split the privileged termination into `packages/docs/todos/temporal-pr-reaction-listener-cleanup.md` and completed this implementation plan.
+
+### Remaining
+
+- None in this plan; the authorized production mutation remains on its dedicated operator todo.
+
+### Caveats
+
+- The live listener is still running under run ID `1f888075-3599-4a7c-9b8b-8222cb0563a2`; this grooming session did not terminate it without explicit authorization.

@@ -1,10 +1,10 @@
 ---
 id: scout-review-evals
 type: plan
-status: in-progress
+status: planned
 board: true
 verification: agent
-disposition: active
+disposition: blocked
 ---
 
 # Scout Post-Match Review Evals
@@ -258,5 +258,20 @@ to eval case classification.
   the first controlled prompt experiment.
 - Per the requested test scope, the new browser suite is fully hermetic and does
   not rerun credentialed Beta SQLite, S3, or OpenAI operations.
-- PR #1777 is open from `feature/scout-review-evals`; Buildkite and automated
-  review remain the merge-time gates.
+- PR #1777 merged; its executable Buildkite lanes passed, while the hosted
+  review aggregate remained red at merge.
+
+## Session Log — 2026-08-02
+
+### Done
+
+- Confirmed PR #1777 merged and its executable Buildkite #7742 lanes, including verification and Playwright, passed.
+- Reclassified the plan from active In Progress to blocked Planned work because its first remaining step is owner selection and rating of the initial corpus.
+
+### Remaining
+
+- Resume agent implementation after the initial 20 cases are selected and rated.
+
+### Caveats
+
+- This is an input dependency, not completed-product UAT, so it does not belong in Awaiting User Acceptance.

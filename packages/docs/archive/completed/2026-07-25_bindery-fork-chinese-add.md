@@ -1,10 +1,8 @@
 ---
 id: plan-2026-07-25-bindery-fork-chinese-add
 type: plan
-status: in-progress
-board: true
-verification: agent
-disposition: active
+status: complete
+board: false
 ---
 
 # Self-built Bindery fork: fix Simplified-Chinese book adds
@@ -150,8 +148,8 @@ smokeBindery }` entry in `checks` (~line 524).
 ## Remaining
 
 - [x] Confirm the first-party Bindery tag@digest produced after PR #1643 is present in `versions.ts` and anonymously pullable after the operator visibility gate.
-- [ ] Merge PR #1759, which switches the deployment to the verified `shepherdjerred/bindery` pin.
-- [ ] After merge, hand the privileged production replay to `todos/bindery-patched-image-rollout-operator.md`; archive this plan when the deployment uses the patched image.
+- [x] Merge PR #1759, which switches the deployment to the verified `shepherdjerred/bindery` pin.
+- [x] After merge, hand the privileged production replay to `todos/bindery-patched-image-rollout-operator.md`; archive this plan when the deployment uses the patched image.
 
 ## Verification (end-to-end)
 
@@ -263,3 +261,19 @@ bindery:dev` succeeds; `bun packages/homelab/scripts/smoke-images.ts bindery`
 ### Caveats
 
 - The 2026-07-27 board audit replaced generic or stale completion language with current ownership and verification semantics.
+
+## Session Log — 2026-08-02
+
+### Done
+
+- Confirmed PR #1759 merged and its exact-head Buildkite build #6712 passed the aggregate, verification, and review gates.
+- Confirmed the `media` Argo application is `Synced`/`Healthy` and the ready Bindery Deployment uses the pinned first-party `ghcr.io/shepherdjerred/bindery` image.
+- Kept the restricted production replay in `packages/docs/todos/bindery-patched-image-rollout-operator.md` and completed this implementation plan.
+
+### Remaining
+
+- None in this plan; the operator-owned replay remains on its dedicated blocked todo.
+
+### Caveats
+
+- This closure proves the implementation and durable rollout, not the credentialed production API/UI replay.

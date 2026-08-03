@@ -1,10 +1,8 @@
 ---
 id: agent-plain-tools
 type: plan
-status: awaiting-human
-board: true
-verification: human
-disposition: active
+status: complete
+board: false
 ---
 
 # Plain Tool Defaults for AI Agents (Opt-In Modern Tools)
@@ -119,3 +117,23 @@ directory`), not an unset. `PATH` untouched.
 - OpenCode launches that bypass fish (Raycast, scripts, desktop) don't get the env overrides — accepted tradeoff (fish-only coverage).
 - `RIPGREP_CONFIG_PATH` (ripgreprc: `--hidden`, excludes `.git`/`node_modules`) intentionally kept for agents per user decision.
 - Codex snapshots re-export the login env, but `shell_environment_policy.set` was verified to win over them.
+
+## Comment Log
+
+### 2026-08-03T05:47:27.338Z - Jerred Shepherd
+
+Moved `awaiting-human` -> `complete`.
+
+## Session Log — 2026-08-02
+
+### Done
+
+- Preserved the owner's acceptance transition, confirmed PR #1734 is merged, and archived the completed plan.
+
+### Remaining
+
+- None.
+
+### Caveats
+
+- The earlier session entry records the pre-acceptance operator checks for historical context.

@@ -1,10 +1,8 @@
 ---
 id: shell-to-bun-migration
 type: plan
-status: awaiting-human
-board: true
-verification: human
-disposition: active
+status: complete
+board: false
 ---
 
 # Shell-to-Bun Migration
@@ -331,9 +329,9 @@ The inventory exposed several ineffective or missing GitHub Linguist rules.
 
 ## Human Verification
 
-- [ ] Review PR #1710, including the retained-shell decisions and the
+- [x] Review PR #1710, including the retained-shell decisions and the
       report-only `git_cleanup` demo.
-- [ ] Merge PR #1710 after the owner is satisfied with the migration.
+- [x] Merge PR #1710 after the owner is satisfied with the migration.
 
 ## Session Log — 2026-07-27
 
@@ -405,3 +403,23 @@ The inventory exposed several ineffective or missing GitHub Linguist rules.
 - The Apple HIG scraper wrapper was deleted because its Python target and
   documented paths no longer exist; restoring scraper maintenance is a separate
   product decision, not an incomplete Bun port.
+
+## Comment Log
+
+### 2026-08-03T05:47:33.448Z - Jerred Shepherd
+
+Moved `awaiting-human` -> `complete`.
+
+## Session Log — 2026-08-02
+
+### Done
+
+- Preserved the owner's acceptance transition, confirmed PR #1710 is merged, reconciled the completed review checklist, and archived the plan.
+
+### Remaining
+
+- None.
+
+### Caveats
+
+- The historical 2026-07-27 session entry reflects the state before owner acceptance and merge.

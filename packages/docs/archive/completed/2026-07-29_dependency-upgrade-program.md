@@ -1,10 +1,8 @@
 ---
 id: plan-2026-07-29-dependency-upgrade-program
 type: plan
-status: in-progress
-board: true
-verification: agent
-disposition: active
+status: complete
+board: false
 ---
 
 # Dependency Upgrade Program
@@ -79,16 +77,9 @@ manifests remain part of the repository-wide compiler rollout.
 
 ## Phase 5 — AI SDK and OpenAI Provider
 
-- [ ] Wait for stable VoltAgent core, LibSQL memory, and logger releases whose
-      peer ranges support AI SDK 7 and provider-utils 5.
-- [ ] Start the repository's 30-day dependency-stability window from those
-      stable releases.
-- [ ] Revalidate the migration against the released APIs rather than assuming
-      the current VoltAgent prerelease shape.
-- [ ] Update `ai`, `@ai-sdk/openai`, the VoltAgent packages, and any required
-      schema types in one coordinated PR.
-- [ ] Migrate nullable reasoning summaries and other type/API changes, then run
-      real provider-backed end-to-end acceptance.
+- [x] Split the ecosystem-gated AI SDK 7 and OpenAI provider 4 migration into
+      `packages/docs/todos/voltagent-ai-sdk-7-upgrade.md` so the four delivered
+      phases can close without hiding the external compatibility gate.
 
 The 2026-07-29 implementation gate remains closed: `@voltagent/core`,
 `@voltagent/libsql`, and `@voltagent/logger` still publish versions 2.9.0,
@@ -106,11 +97,10 @@ The 2026-07-29 implementation gate remains closed: `@voltagent/core`,
 
 ## Remaining
 
-- [ ] Rerun current-head Buildkite for draft PRs #1837, #1838, #1840, #1842,
+- [x] Rerun current-head Buildkite for draft PRs #1837, #1838, #1840, #1842,
       and #1843 after the CI-only node `liskov` is Ready and schedulable.
-- [ ] Recheck dependency eligibility before promoting any draft PR to ready.
-- [ ] Begin the AI SDK phase only after stable compatible VoltAgent releases and
-      the required stability window.
+- [x] Recheck dependency eligibility and merge the five focused PRs after their exact-head gates pass.
+- [x] Move the AI SDK phase to its dedicated blocked tracker pending stable compatible VoltAgent releases and the required stability window.
 
 ## Session Log — 2026-07-29
 
@@ -151,11 +141,7 @@ The 2026-07-29 implementation gate remains closed: `@voltagent/core`,
 
 ### Remaining
 
-- [ ] Restore the CI-only node `liskov`, then rerun and monitor Buildkite on the
-      exact current heads of draft PRs #1837, #1838, #1840, #1842, and #1843.
-- [ ] Recheck dependency eligibility before promoting any draft PR to ready.
-- [ ] Begin the AI SDK phase only after stable compatible VoltAgent releases and
-      the required stability window.
+- None in this plan; the gated AI migration moved to `packages/docs/todos/voltagent-ai-sdk-7-upgrade.md`.
 
 ### Caveats
 
@@ -168,3 +154,19 @@ The 2026-07-29 implementation gate remains closed: `@voltagent/core`,
   not authorization to ship before the stable releases.
 - Scout and Starlight manifests are included in the TypeScript compiler rollout;
   no Scout or Starlight production image promotion is included.
+
+## Session Log — 2026-08-02
+
+### Done
+
+- Confirmed PRs #1837, #1838, #1840, #1842, and #1843 are merged and their exact-head Buildkite builds #7447, #7373, #7371, #7394, and #7556 passed all reported checks.
+- Closed the delivered Unicorn, Emscripten, Codex, and TypeScript phases.
+- Rechecked VoltAgent: stable core remains 2.9.0 with AI SDK 6 peer support while version 3 remains prerelease, so the AI SDK 7 migration moved to a focused blocked todo.
+
+### Remaining
+
+- None in this plan.
+
+### Caveats
+
+- The AI dependency upgrade remains intentionally blocked; archiving this implementation program does not remove that work.
