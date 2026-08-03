@@ -278,6 +278,10 @@ repository checkout.
   byte count, and SHA-256 digest. Successful runtime initialization requires
   both files, and bundle loading rejects missing or replaced sidecars before
   inspection or replay.
+- Fixed the Buildkite-only SIGINT race exposed by the exact-head verify lane:
+  each preflight stop boundary now yields for pending signal delivery before
+  starting the next operation, so checkout discovery settles and finalizes the
+  requested shutdown instead of advancing into source resolution.
 - Passed focused typecheck, 147 controller tests, 42 observability tests, lint,
   native-aware build, docs validation, Markdown lint, diff checks, and staged
   Lefthook/Gitleaks/Prettier/lockfile checks.

@@ -9,6 +9,7 @@ import { resolveProvider } from "@shepherdjerred/code-review";
 import { z } from "zod";
 import { MastraMaster, MastraWorkerRunner } from "./agents.ts";
 import { combineFailures, normalizeFailure } from "./cli-failures.ts";
+import { HELP } from "./cli-help.ts";
 import { settleCliResources } from "./cli-shutdown.ts";
 import { FleetController } from "./controller.ts";
 import {
@@ -27,24 +28,6 @@ import { FleetControllerConfigSchema, type FleetSnapshot } from "./schemas.ts";
 import { FleetStore } from "./state.ts";
 import { consumeTerminalLines, createSharedShutdown } from "./terminal-loop.ts";
 import type { TerminalOutcome } from "./terminal-loop.ts";
-
-const HELP = `Usage:
-  bun run pr:fleet --model <provider>/<model> [options]
-
-Options:
-  --repo <owner/name>       Repository (default: shepherdjerred/monorepo)
-  --checkout <path>         Main checkout (default: current Git root)
-  --worktree-root <path>    Fleet worktrees (default: .claude/worktrees/pr-fleet)
-  --max-workers <1..5>      Worker limit (default: 5)
-  --base-url <url>          Required for openai-compatible/<model>
-  --api-key-env <name>      API-key environment variable for a compatible endpoint
-  --review-provider <id>    Hosted review provider to gate on (default: codex)
-  --state-dir <path>        Local run-bundle root (default: XDG state directory)
-  --help                    Show this help
-
-Interactive commands:
-  /status  /tick  /help  /stop
-  Any other line is queued conversational steering for the master.`;
 
 const ControllerPackageSchema = z.object({ version: z.string().min(1) });
 const UNRESOLVED_COMMIT = "0".repeat(40);
@@ -303,6 +286,7 @@ async function main(): Promise<void> {
   };
   process.once("SIGINT", handleSigint);
   const finishIfRequested = async (): Promise<boolean> => {
+    await new Promise<void>((resolve) => setImmediate(resolve));
     if (!shutdownRequested) {
       return false;
     }
