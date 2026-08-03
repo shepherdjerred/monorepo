@@ -1,5 +1,6 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
+import { withCommandCorrelation } from "./command-correlation.ts";
 import type { FleetTelemetry } from "./ports.ts";
 import type { RunEventCorrelation } from "./run-events.ts";
 import {
@@ -45,7 +46,7 @@ export async function runRecordedMasterTool<T>(
     correlation,
   );
   try {
-    const result = await run();
+    const result = await withCommandCorrelation(correlation, run);
     instrumentation.telemetry.record(
       "tool.completed",
       { tool, result },

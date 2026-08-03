@@ -2,7 +2,11 @@
 
 import path from "node:path";
 import { parseArgs } from "node:util";
-import { inspectEvents, loadRunBundle } from "./run-inspection.ts";
+import {
+  inspectEvents,
+  inspectRunSummary,
+  loadRunBundle,
+} from "./run-inspection.ts";
 import { resolveRunDirectory } from "./run-recorder.ts";
 
 const parsed = parseArgs({
@@ -32,10 +36,11 @@ const events = inspectEvents(bundle.events, {
   ...(prNumber === undefined ? {} : { prNumber }),
   showBodies: parsed.values["show-bodies"],
 });
+const summary = inspectRunSummary(bundle.summary, parsed.values["show-bodies"]);
 
 if (parsed.values.json) {
   process.stdout.write(
-    `${JSON.stringify({ directory: path.resolve(runDirectory), ...bundle, events }, null, 2)}\n`,
+    `${JSON.stringify({ directory: path.resolve(runDirectory), ...bundle, summary, events }, null, 2)}\n`,
   );
 } else {
   process.stdout.write(

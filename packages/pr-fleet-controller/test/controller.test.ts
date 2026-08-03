@@ -320,6 +320,17 @@ class DeferredListEnvironment extends FakeEnvironment {
   }
 }
 
+class DeferredWorktreeEnvironment extends FakeEnvironment {
+  readonly started = Promise.withResolvers<undefined>();
+  readonly release = Promise.withResolvers<undefined>();
+
+  override async findWorktree(): Promise<string | null> {
+    this.started.resolve(undefined);
+    await this.release.promise;
+    return "/tmp/pr-fleet-fake";
+  }
+}
+
 test("a fleet tick classifies every PR and queues excess actionable work", async () => {
   const first = identity(1);
   const second = identity(2);
@@ -426,6 +437,98 @@ test("shutdown waits for an in-flight reconciliation before completing", async (
   const kinds = telemetry.events.map((event) => event.kind);
   expect(kinds.at(-2)).toBe("tick.completed");
   expect(kinds.at(-1)).toBe("shutdown.completed");
+});
+
+test("shutdown cancels a worker dispatched by an already-running tick", async () => {
+  const pr = identity(1);
+  const failedCheck = {
+    name: "verify",
+    state: "FAILURE",
+    bucket: "fail",
+    link: null,
+    softFail: false,
+  };
+  const environment = new DeferredWorktreeEnvironment(
+    [pr],
+    new Map([[1, evidence(pr, { checks: [failedCheck] })]]),
+  );
+  const runner = new RecordingRunner();
+  const telemetry = new RecordingTelemetry();
+  const store = new FleetStore(1);
+  const controller = new FleetController({
+    config: {
+      model: "openai/gpt-5",
+      repo: "shepherdjerred/monorepo",
+      checkout: "/tmp/repo",
+      worktreeRoot: "/tmp/worktrees",
+      maxWorkers: 1,
+    },
+    environment,
+    workerRunner: runner,
+    observer: new RecordingObserver(),
+    store,
+    telemetry,
+  });
+
+  const tick = controller.tick("heartbeat");
+  await environment.started.promise;
+  const stop = controller.stop();
+  environment.release.resolve(undefined);
+  await Promise.all([tick, stop]);
+
+  expect(runner.runs).toBe(1);
+  expect(runner.aborts).toBe(1);
+  expect(store.activeWorkers.size).toBe(0);
+  expect(
+    telemetry.events.some((event) => event.kind === "worker.cancelled"),
+  ).toBe(true);
+  expect(telemetry.events.some((event) => event.kind === "worker.failed")).toBe(
+    false,
+  );
+  expect(telemetry.events.at(-1)?.kind).toBe("shutdown.completed");
+});
+
+test("pausing an active worker records cancellation instead of failure", async () => {
+  const pr = identity(1);
+  const failedCheck = {
+    name: "verify",
+    state: "FAILURE",
+    bucket: "fail",
+    link: null,
+    softFail: false,
+  };
+  const telemetry = new RecordingTelemetry();
+  const store = new FleetStore(1);
+  const controller = new FleetController({
+    config: {
+      model: "openai/gpt-5",
+      repo: "shepherdjerred/monorepo",
+      checkout: "/tmp/repo",
+      worktreeRoot: "/tmp/worktrees",
+      maxWorkers: 1,
+    },
+    environment: new FakeEnvironment(
+      [pr],
+      new Map([[1, evidence(pr, { checks: [failedCheck] })]]),
+    ),
+    workerRunner: new RecordingRunner(),
+    observer: new RecordingObserver(),
+    store,
+    telemetry,
+  });
+
+  await controller.tick("startup");
+  controller.pause(1, "operator requested pause");
+  await flushMicrotasks();
+
+  expect(
+    telemetry.events.some((event) => event.kind === "worker.cancelled"),
+  ).toBe(true);
+  expect(telemetry.events.some((event) => event.kind === "worker.failed")).toBe(
+    false,
+  );
+  expect(store.prs.get(1)?.status).toBe("paused");
+  await controller.stop();
 });
 
 test("records worker start before the runner can emit its first attempt", async () => {

@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { currentCommandCorrelation } from "@shepherdjerred/pr-fleet-controller/src/command-correlation.ts";
 import { runRecordedMasterTool } from "@shepherdjerred/pr-fleet-controller/src/master-tools.ts";
 import type { FleetTelemetry } from "@shepherdjerred/pr-fleet-controller/src/ports.ts";
 import type {
@@ -26,6 +27,7 @@ function createTelemetry(events: CapturedEvent[]): FleetTelemetry {
 describe("master tool telemetry", () => {
   test("records successful calls with turn and tool correlation", async () => {
     const events: CapturedEvent[] = [];
+    let commandCorrelation: RunEventCorrelation = {};
     const result = await runRecordedMasterTool(
       "fleet_status",
       {},
@@ -36,10 +38,18 @@ describe("master tool telemetry", () => {
           modelTurnId: "master-turn-1",
         }),
       },
-      () => Promise.resolve({ open: 0 }),
+      () => {
+        commandCorrelation = currentCommandCorrelation();
+        return Promise.resolve({ open: 0 });
+      },
     );
 
     expect(result).toEqual({ open: 0 });
+    expect(commandCorrelation).toEqual({
+      traceId: "1".repeat(32),
+      modelTurnId: "master-turn-1",
+      toolCallId: "tool-1",
+    });
     expect(events).toEqual([
       {
         kind: "tool.started",

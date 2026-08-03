@@ -41,6 +41,7 @@ export class FleetController implements MasterControllerTools {
   #tickDue = false;
   #currentTickId: string | undefined;
   #tickSettled: Promise<undefined> | null = null;
+  readonly #workerSettlements = new Map<Promise<WorkerResult>, Promise<void>>();
 
   constructor(dependencies: FleetControllerDependencies) {
     const { config, environment, workerRunner, observer } = dependencies;
@@ -276,7 +277,11 @@ export class FleetController implements MasterControllerTools {
         this.#telemetry.workerStarted(this.#currentTickId, assigned);
         busyStacks.add(candidate.stackId);
         changes.push(`started ${assigned.runtimeAgent ?? "worker"}`);
-        void this.#observeWorker(candidate.identity.number, promise);
+        const settlement = this.#observeWorker(
+          candidate.identity.number,
+          promise,
+        );
+        this.#workerSettlements.set(promise, settlement);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         this.pause(candidate.identity.number, message);
@@ -306,6 +311,8 @@ export class FleetController implements MasterControllerTools {
       this.#handleWorkerResult(prNumber, result);
     } catch (error) {
       this.#handleWorkerFailure(prNumber, error);
+    } finally {
+      this.#workerSettlements.delete(promise);
     }
   }
 
@@ -358,7 +365,9 @@ export class FleetController implements MasterControllerTools {
     this.#observer.onChange(
       `worker for PR #${String(prNumber)}: ${result.state} — ${result.lastAction}`,
     );
-    void this.#runTickSafely("worker-complete", "worker-complete tick");
+    if (!this.store.stopping) {
+      void this.#runTickSafely("worker-complete", "worker-complete tick");
+    }
   }
 
   #handleWorkerFailure(prNumber: number, error: unknown): void {
@@ -375,7 +384,9 @@ export class FleetController implements MasterControllerTools {
       this.#observer.onChange(
         `worker for PR #${String(prNumber)} cancelled (stale head or resolved)`,
       );
-      void this.#runTickSafely("worker-complete", "worker-complete tick");
+      if (!this.store.stopping) {
+        void this.#runTickSafely("worker-complete", "worker-complete tick");
+      }
       return;
     }
     this.#telemetry.workerFailed(prNumber, recordedState, error);
@@ -444,6 +455,7 @@ export class FleetController implements MasterControllerTools {
     // Abort model/publication work, retaining leases until actual settlement so
     // a sibling cannot acquire the shared checkout mid-cancellation.
     if (this.store.activeWorkers.has(prNumber)) {
+      this.store.cancelledWorkers.add(prNumber);
       this.store.workerControllers.get(prNumber)?.abort();
     } else {
       // No in-flight worker will settle, so release directly.
@@ -488,11 +500,15 @@ export class FleetController implements MasterControllerTools {
       this.#heartbeat();
       this.#heartbeat = null;
     }
-    for (const controller of this.store.workerControllers.values()) {
+    const inFlightTick = this.#tickSettled;
+    if (inFlightTick !== null) {
+      await inFlightTick;
+    }
+    for (const [prNumber, controller] of this.store.workerControllers) {
+      this.store.cancelledWorkers.add(prNumber);
       controller.abort();
     }
-    await Promise.allSettled(this.store.activeWorkers.values());
-    await this.#tickSettled;
+    await Promise.allSettled(this.#workerSettlements.values());
     const snapshot = this.snapshot();
     this.#telemetry.shutdownCompleted(snapshot);
     return snapshot;

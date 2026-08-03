@@ -13,14 +13,17 @@ import path from "node:path";
 import { createFleetMastraRuntime } from "@shepherdjerred/pr-fleet-controller/src/mastra-runtime.ts";
 import {
   inspectEvents,
+  inspectRunSummary,
   loadRunBundle,
   replayRunBundle,
 } from "@shepherdjerred/pr-fleet-controller/src/run-inspection.ts";
+import { PrStateSchema } from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
 import {
   readAndVerifyEvents,
   RunRecorder,
 } from "@shepherdjerred/pr-fleet-controller/src/run-recorder.ts";
 import type { FleetSnapshot } from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
+import { evidence, identity } from "./fixtures.ts";
 
 const snapshot: FleetSnapshot = {
   open: 0,
@@ -376,6 +379,71 @@ describe("run bundle replay", () => {
       message: "[hidden; pass --show-bodies]",
     });
     expect(hidden[0]?.payload["result"]).toBe("kept");
+  });
+});
+
+describe("run bundle inspection", () => {
+  test("hides payload-bearing snapshot fields in inspected summaries", async () => {
+    const recorder = await createRecorder();
+    const pr = identity(42);
+    const state = PrStateSchema.parse({
+      identity: pr,
+      logicalOwner: "fleet-controller",
+      runtimeAgent: null,
+      agentGeneration: 1,
+      model: "openai/gpt-5.6-terra",
+      status: "paused",
+      classification: "paused",
+      stackId: "pr-42",
+      worktree: "/tmp/worktrees/pr-42",
+      setupComplete: true,
+      evidence: evidence(pr, {
+        buildkiteFailure: {
+          jobId: "job-1",
+          name: "verify",
+          state: "failed",
+          webUrl: "https://buildkite.com/example/builds/1#job-1",
+          startedAt: "2026-08-03T00:00:00.000Z",
+          log: "private command log",
+        },
+        reviewFindings: [
+          {
+            id: "thread-1",
+            author: "reviewer",
+            body: "private review body",
+            severity: "P2",
+            resolved: false,
+            outdated: false,
+          },
+        ],
+      }),
+      lastAgentReportAt: null,
+      lastProgressAt: "2026-08-03T00:00:00.000Z",
+      noProgressTicks: 0,
+      prodSentAt: null,
+      escalation: "review blocked",
+      priority: 0,
+    });
+    recorder.record("run.started", { scenario: "summary-masking" });
+    await recorder.finalize("completed", {
+      open: 1,
+      green: 0,
+      active: 0,
+      queued: 0,
+      pending: 0,
+      paused: 1,
+      prs: [state],
+    });
+    const bundle = await loadRunBundle(recorder.paths.runDirectory);
+
+    const hidden = inspectRunSummary(bundle.summary, false);
+    expect(hidden.finalSnapshot?.prs[0]?.evidence.reviewFindings[0]?.body).toBe(
+      "[hidden; pass --show-bodies]",
+    );
+    expect(hidden.finalSnapshot?.prs[0]?.evidence.buildkiteFailure?.log).toBe(
+      "[hidden; pass --show-bodies]",
+    );
+    expect(inspectRunSummary(bundle.summary, true)).toEqual(bundle.summary);
   });
 });
 

@@ -154,7 +154,11 @@ repository checkout.
 - Addressed the next current-head review with reconciliation-aware shutdown,
   explicit command exit/timeout/abort metadata, and default masking for singular
   guidance-message fields.
-- Passed focused typecheck, 71 controller tests, 39 observability tests, lint,
+- Addressed the final current-head findings by waiting for reconciliation and
+  worker settlement before shutdown completion, correlating master tools with
+  their commands, recording operator-aborted workers as cancellations, and
+  masking payload-bearing final-summary fields during default JSON inspection.
+- Passed focused typecheck, 74 controller tests, 39 observability tests, lint,
   native-aware build, docs validation, Markdown lint, diff checks, and staged
   Lefthook/Gitleaks/Prettier/lockfile checks.
 - Completed a final non-mutating `openai/gpt-5.6-terra` model/tool turn from the

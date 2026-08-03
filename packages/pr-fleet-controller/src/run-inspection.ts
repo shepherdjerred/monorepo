@@ -1,6 +1,8 @@
 import { z } from "zod";
 import {
+  JsonValueSchema,
   RunEventPayloadSchema,
+  RunSummarySchema,
   type JsonValue,
   type RecordedRunEvent,
   type RunManifest,
@@ -100,6 +102,17 @@ export function inspectEvents(
         ? event.payload
         : RunEventPayloadSchema.parse(hideBodies(event.payload)),
     }));
+}
+
+export function inspectRunSummary(
+  summary: RunSummary,
+  showBodies: boolean,
+): RunSummary {
+  if (showBodies) {
+    return summary;
+  }
+  const json = JsonValueSchema.parse(summary);
+  return RunSummarySchema.parse(hideBodies(json));
 }
 
 function lifecycleKey(
