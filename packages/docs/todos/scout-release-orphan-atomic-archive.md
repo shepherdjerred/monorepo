@@ -82,13 +82,36 @@ keeping the manual-cleanup runbook):
      it (and any other partial flavor records for that identity) before doing
      a full fresh build under the current commit, then archive both flavors
      and write the input pointer as normal. This mirrors the manual cleanup
-     already performed for build #7794's orphan.
+     already performed for build #7794's orphan. **This is only safe before
+     `archiveScout` reaches the `versions/<version>.json` write
+     (`scripts/lib/scout-site-storage.ts:338`)** — see the version-linked case
+     below for why deletion is unsafe once that record exists.
    - **Rebuild at the recorded commit** — alternatively, check out the
      `sourceCommit` recorded in the existing `prod.json` in a scratch clone,
      rebuild `beta` there so its digest matches what a same-commit build would
      have produced, then archive `beta` and write the input pointer. More
      complex than delete-and-rebuild; only worth it if losing the already-spent
      `prod` build time matters.
+
+   **Version-linked cancellation is a separate, narrower case that
+   delete-and-rebuild must not touch.** `archiveScout` (lines 327-345) only
+   reaches the `versions/<version>.json` write (line 338) _after_ **both**
+   `archiveFlavor("prod", …)` and `archiveFlavor("beta", …)` have already
+   succeeded — so by the time that record exists, both flavor archives are
+   already complete and mutually consistent (produced from the same in-memory
+   `state`). A cancellation in the narrow window after line 338 but before the
+   `inputs/<digest>.json` write (lines 340-344) therefore never has a partial
+   (single-flavor) archive — it always has a complete, matching pair, plus an
+   immutable `versions/<version>.json` that already pins those exact digests.
+   Deleting and rebuilding under a new commit here would silently invalidate
+   that version record (later reads/deploys of that version number would find
+   digests that no longer match anything in S3). The only safe recovery once
+   `versions/<version>.json` exists is to **reuse the existing archives
+   verbatim** — read them back, confirm they still match the version record,
+   and finish only the missing `inputs/<digest>.json` write; never delete or
+   rebuild in this case. Any implementation must check for
+   `versions/<version>.json` first and route to this reuse-only path before
+   ever considering deletion.
 
 2. **Reconcile on read** — have `archiveFlavor`, on finding an existing
    `<digest>/<flavor>.json` with no matching `inputs/<digest>.json`, treat it
@@ -113,11 +136,14 @@ keeping the manual-cleanup runbook):
       cleanup" before implementing.
 - [ ] If approved, implement the chosen fix in `scout-site-storage.ts` /
       `scout-release-state.ts` / `scout-site-release.ts`.
-- [ ] Add regression tests reproducing both cancel-between-writes shapes: all
-      flavors archived with no input record, and (matching the actual #7794
-      incident) only one flavor archived with no input record — assert the
-      chosen recovery (delete-and-rebuild or rebuild-at-recorded-commit) in
-      each case.
+- [ ] Add regression tests reproducing all three cancel-between-writes shapes:
+      (1) only one flavor archived, no `versions/<version>.json`, no input
+      record (matching the actual #7794 incident) — assert delete-and-rebuild
+      or rebuild-at-recorded-commit; (2) both flavors archived but no
+      `versions/<version>.json` yet — safe to delete-and-rebuild or reuse; and
+      (3) both flavors archived **and** `versions/<version>.json` already
+      written, only the input record missing — assert the recovery reuses the
+      existing archives verbatim and never deletes/rebuilds.
 - [ ] If "keep manual cleanup" is chosen instead, document the cleanup runbook
       (verify true orphan: no input record, not in `versions/`, not the prod
       pin, then delete only that identity prefix) here or in `guides/` and
@@ -134,3 +160,9 @@ keeping the manual-cleanup runbook):
   partial-archive case (only `prod.json` written, matching the actual #7794
   incident), which the prior revision's "resume when both flavors exist"
   wording did not recover (chatgpt-codex-connector, P2).
+- 2026-08-03 — Split the "both flavors archived" recovery further: once
+  `versions/<version>.json` is also written (which — per `archiveScout`'s
+  order — only happens after both flavors are already complete and mutually
+  consistent), delete-and-rebuild would invalidate that immutable version
+  record; the only safe recovery there is reuse-existing-archives-verbatim,
+  never delete/rebuild (chatgpt-codex-connector, P2).
