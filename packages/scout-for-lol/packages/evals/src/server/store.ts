@@ -133,34 +133,51 @@ export class EvalStore {
     })();
   }
 
-  public finalizeDataset(datasetId: string): DatasetSummary {
+  public finalizeDataset(
+    datasetId: string,
+    expectedCaseCount: number,
+  ): DatasetSummary {
     const id = DatasetIdSchema.parse(datasetId);
-    const current = readDatasetSummary(this.#database, id);
-    if (current.status === "finalized") {
-      throw new Error(`Dataset ${id} is already finalized`);
-    }
+    // The count check and the status flip must be atomic: a concurrent
+    // materialization could append a case between them, otherwise, letting
+    // unseen cases into the permanently locked artifact.
+    return this.#database.transaction(() => {
+      const current = readDatasetSummary(this.#database, id);
+      if (current.status === "finalized") {
+        throw new Error(`Dataset ${id} is already finalized`);
+      }
 
-    const { caseCount } = CaseCountRowSchema.parse(
+      const { caseCount } = CaseCountRowSchema.parse(
+        this.#database
+          .query(
+            `SELECT COUNT(*) AS caseCount
+             FROM dataset_cases
+             WHERE dataset_id = ?`,
+          )
+          .get(id),
+      );
+      if (caseCount === 0) {
+        throw new Error(`Cannot finalize empty dataset ${id}`);
+      }
+      // Cases are append-only, so a count mismatch means the membership the
+      // reviewer saw is not the membership about to be locked.
+      if (caseCount !== expectedCaseCount) {
+        throw new Error(
+          `Dataset ${id} membership changed since it was reviewed ` +
+            `(expected ${String(expectedCaseCount)} cases, found ${String(caseCount)}); ` +
+            `reload the dataset before finalizing`,
+        );
+      }
+
       this.#database
         .query(
-          `SELECT COUNT(*) AS caseCount
-           FROM dataset_cases
-           WHERE dataset_id = ?`,
+          `UPDATE datasets
+           SET status = 'finalized', finalized_at = ?
+           WHERE id = ?`,
         )
-        .get(id),
-    );
-    if (caseCount === 0) {
-      throw new Error(`Cannot finalize empty dataset ${id}`);
-    }
-
-    this.#database
-      .query(
-        `UPDATE datasets
-         SET status = 'finalized', finalized_at = ?
-         WHERE id = ?`,
-      )
-      .run(new Date().toISOString(), id);
-    return readDatasetSummary(this.#database, id);
+        .run(new Date().toISOString(), id);
+      return readDatasetSummary(this.#database, id);
+    })();
   }
 
   public exportDataset(datasetId: string): DatasetExport {

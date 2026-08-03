@@ -253,7 +253,10 @@ export function DatasetPage(): React.JSX.Element {
                       dataset.caseCount === 0 || finalizeMutation.isPending
                     }
                     onClick={() => {
-                      finalizeMutation.mutate({ datasetId: dataset.id });
+                      finalizeMutation.mutate({
+                        datasetId: dataset.id,
+                        expectedCaseCount: dataset.caseCount,
+                      });
                     }}
                     variant="outline"
                   >

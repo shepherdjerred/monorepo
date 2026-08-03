@@ -16,7 +16,7 @@
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "test": "bun test src",
     "test:ci": "bun ../../../../scripts/run-ci-test.ts",
-    "test:e2e": "bun run build && bun x --no-install playwright test",
+    "test:e2e": "bun x --no-install playwright test",
     "lint": "bun x --no-install eslint . --max-warnings=0"
   },
   "imports": {

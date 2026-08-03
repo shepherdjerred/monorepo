@@ -16,9 +16,11 @@ const datasetsRouter = t.router({
     .output(EvalSchema.DatasetSummarySchema)
     .mutation(({ ctx, input }) => ctx.store.createDataset(input)),
   finalize: t.procedure
-    .input(EvalSchema.DatasetInputSchema)
+    .input(EvalSchema.FinalizeDatasetInputSchema)
     .output(EvalSchema.DatasetSummarySchema)
-    .mutation(({ ctx, input }) => ctx.store.finalizeDataset(input.datasetId)),
+    .mutation(({ ctx, input }) =>
+      ctx.store.finalizeDataset(input.datasetId, input.expectedCaseCount),
+    ),
   export: t.procedure
     .input(EvalSchema.DatasetInputSchema)
     .output(EvalSchema.DatasetExportSchema)

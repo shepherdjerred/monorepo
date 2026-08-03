@@ -161,7 +161,7 @@ describe("persistMaterializedDataset", () => {
         { dataset: { key: "finalized", name: "Finalized dataset" } },
         [materializedCase(FIRST_ARTIFACT, "Finalized output.")],
       );
-      store.finalizeDataset(dataset.datasetId);
+      store.finalizeDataset(dataset.datasetId, 1);
 
       expect(() =>
         persistMaterializedDataset(store, { datasetId: dataset.datasetId }, [

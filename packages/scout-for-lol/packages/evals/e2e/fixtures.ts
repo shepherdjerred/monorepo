@@ -73,7 +73,7 @@ function seedDataset(
   for (const evalCase of input.cases) {
     addGeneratedCase(store, dataset.id, evalCase);
   }
-  if (input.finalized) store.finalizeDataset(dataset.id);
+  if (input.finalized) store.finalizeDataset(dataset.id, input.cases.length);
 }
 
 export function seedEndToEndStore(store: EvalStore): void {

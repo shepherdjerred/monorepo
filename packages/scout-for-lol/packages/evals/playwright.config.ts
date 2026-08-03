@@ -18,7 +18,22 @@ export default defineConfig({
   retries: 0,
   workers: 1,
   expect: { timeout: 15_000 },
-  reporter: isCI ? "github" : "list",
+  // On CI, emit a JUnit report so the eval browser scenarios appear in Test
+  // Engine and the generated report index. The path is repo-root relative
+  // (this package is four levels below the root) and namespaced under
+  // `scout-evals` so scripts/namespace-playwright-reports.ts can pick it up.
+  reporter: isCI
+    ? [
+        ["github"],
+        [
+          "junit",
+          {
+            outputFile:
+              "../../../../.ci-reports/junit/scout-evals/playwright.xml",
+          },
+        ],
+      ]
+    : "list",
   use: {
     baseURL: "http://127.0.0.1:7351",
     screenshot: "only-on-failure",

@@ -258,7 +258,7 @@ describe("EvalStore datasets and cases", () => {
         datasetId: dataset.id,
         artifact: FIRST_ARTIFACT,
       });
-      const finalized = store.finalizeDataset(dataset.id);
+      const finalized = store.finalizeDataset(dataset.id, 1);
 
       expect(finalized.status).toBe("finalized");
       expect(finalized.finalizedAt).not.toBeNull();
@@ -266,7 +266,7 @@ describe("EvalStore datasets and cases", () => {
         store.getCaseDetail(dataset.id, evalCase.id).artifact.context
           .renderedPrompts,
       ).toEqual(FIRST_ARTIFACT.context.renderedPrompts);
-      expect(() => store.finalizeDataset(dataset.id)).toThrow(
+      expect(() => store.finalizeDataset(dataset.id, 1)).toThrow(
         "already finalized",
       );
       expect(() =>
@@ -304,10 +304,34 @@ describe("EvalStore datasets and cases", () => {
     try {
       const dataset = store.createDataset({ key: "empty", name: "Empty" });
 
-      expect(() => store.finalizeDataset(dataset.id)).toThrow(
+      expect(() => store.finalizeDataset(dataset.id, 0)).toThrow(
         `Cannot finalize empty dataset ${dataset.id}`,
       );
       expect(store.listDatasets()).toMatchObject([{ status: "draft" }]);
+    } finally {
+      store.close();
+    }
+  });
+
+  test("rejects finalizing when membership changed since review", () => {
+    const store = createEvalStore(":memory:");
+    try {
+      const dataset = store.createDataset({ key: "changed", name: "Changed" });
+      store.addMaterializedCase({
+        datasetId: dataset.id,
+        artifact: FIRST_ARTIFACT,
+      });
+      // The reviewer saw one case, but a second was appended before finalizing.
+      store.addMaterializedCase({
+        datasetId: dataset.id,
+        artifact: SECOND_ARTIFACT,
+      });
+      expect(() => store.finalizeDataset(dataset.id, 1)).toThrow(
+        "membership changed since it was reviewed",
+      );
+      expect(store.listDatasets()).toMatchObject([{ status: "draft" }]);
+      // Finalizing with the up-to-date count succeeds.
+      expect(store.finalizeDataset(dataset.id, 2).status).toBe("finalized");
     } finally {
       store.close();
     }
@@ -342,7 +366,7 @@ describe("EvalStore generations and ratings", () => {
         datasetId: dataset.id,
         artifact: FIRST_ARTIFACT,
       });
-      store.finalizeDataset(dataset.id);
+      store.finalizeDataset(dataset.id, 1);
 
       const firstGeneration = store.recordGeneration({
         caseId: evalCase.id,

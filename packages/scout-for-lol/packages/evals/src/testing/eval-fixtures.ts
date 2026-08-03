@@ -177,7 +177,7 @@ export function makeFinalizedRatedDataset(
   });
 
   return {
-    dataset: store.finalizeDataset(draft.id),
+    dataset: store.finalizeDataset(draft.id, 1),
     caseId: evalCase.id,
     generations: [firstGeneration, secondGeneration],
   };

@@ -22,6 +22,14 @@ export const CreateDatasetInputSchema = z.strictObject({
 export const DatasetInputSchema = z.strictObject({
   datasetId: DatasetIdSchema,
 });
+// Finalization is irreversible, so it must lock exactly the case set the
+// reviewer saw. Cases are append-only, so the case count is a sufficient
+// revision token: if another materialization appended cases after the draft
+// page rendered, the count no longer matches and finalization is rejected.
+export const FinalizeDatasetInputSchema = z.strictObject({
+  datasetId: DatasetIdSchema,
+  expectedCaseCount: z.number().int().nonnegative(),
+});
 export const CaseInputSchema = z.strictObject({
   caseId: CaseIdSchema,
   datasetId: DatasetIdSchema,
