@@ -160,12 +160,28 @@ config.yml: Operation not permitted`. The file was **root-owned** on the PVC
   write the archive + input-state record atomically, or have `archiveFlavor`
   reconcile an orphaned record whose `inputs/<id>.json` is missing instead of
   failing closed. This changes the deliberately fail-closed release semantics, so
-  it needs owner sign-off before implementing.
+  it needs owner sign-off before implementing. Tracked in
+  [`scout-release-orphan-atomic-archive`](../todos/scout-release-orphan-atomic-archive.md).
 - **Paper 26.2 bump (held).** Smoke-tested live: Paper 26.2 boots but EssentialsX
   (core) and LevelledMobs fail — their version parsers reject the `26.x` scheme,
   and no 26.2-aware plugin releases exist yet. Revisit when the plugin ecosystem
   catches up; also fix the Renovate `customDatasources.papermc` mapping (returns
   version families, so Renovate can't surface the bump).
+
+  <!-- temporal-agent-task
+  {
+    "title": "Recheck Paper 26.2 plugin compatibility (EssentialsX, LevelledMobs)",
+    "provider": "claude",
+    "mode": "report-only",
+    "cron": "0 9 1 * *",
+    "scheduleId": "scout-paper-26-2-plugin-recheck",
+    "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
+    "source": {
+      "docPath": "packages/docs/logs/2026-08-02_main-ci-green-session.md"
+    },
+    "prompt": "Check whether EssentialsX (core) and LevelledMobs have shipped releases compatible with Paper 26.2's version scheme, and whether the Renovate customDatasources.papermc mapping now surfaces the 26.2 bump instead of collapsing it into a version family. Email whether the held Paper 26.2 upgrade is unblocked, with links/evidence (plugin release notes, Renovate PR if any). If both plugins are compatible, recommend proceeding with the bump and note that this recurring schedule should be paused."
+  }
+  -->
 
 ### Caveats
 
