@@ -197,6 +197,7 @@ export class RunRecorder implements FleetTelemetry {
   #lastHash = GENESIS_EVENT_HASH;
   #closed = false;
   #writeQueue = Promise.resolve();
+  #finalizationPromise: Promise<RunSummary> | undefined;
 
   private constructor(options: RunRecorderConstructorOptions) {
     this.runId = options.manifest.runId;
@@ -367,10 +368,19 @@ export class RunRecorder implements FleetTelemetry {
     }
   }
 
-  async finalize(
+  finalize(
     status: RunSummary["status"],
     finalSnapshot: FleetSnapshot | null,
     error: unknown = null,
+  ): Promise<RunSummary> {
+    this.#finalizationPromise ??= this.#finalize(status, finalSnapshot, error);
+    return this.#finalizationPromise;
+  }
+
+  async #finalize(
+    status: RunSummary["status"],
+    finalSnapshot: FleetSnapshot | null,
+    error: unknown,
   ): Promise<RunSummary> {
     if (this.#closed) {
       return readRunSummary(this.paths.runDirectory);

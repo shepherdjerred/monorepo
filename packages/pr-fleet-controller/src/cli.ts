@@ -16,10 +16,12 @@ import {
   type FleetMastraRuntime,
 } from "./mastra-runtime.ts";
 import type { FleetObserver } from "./ports.ts";
+import { runRecordedCommand } from "./recorded-command.ts";
 import { RunRecorder } from "./run-recorder.ts";
 import { FleetControllerConfigSchema, type FleetSnapshot } from "./schemas.ts";
 import { FleetStore } from "./state.ts";
 import { consumeTerminalLines, createSharedShutdown } from "./terminal-loop.ts";
+import type { TerminalOutcome } from "./terminal-loop.ts";
 
 const HELP = `Usage:
   bun run pr:fleet --model <provider>/<model> [options]
@@ -152,6 +154,24 @@ function configuredSecretValues(value: string | undefined): readonly string[] {
   return value === undefined || value.length === 0 ? [] : [value];
 }
 
+function normalizeFailure(failure: unknown): Error {
+  return failure instanceof Error
+    ? failure
+    : new Error("Non-Error controller failure", { cause: failure });
+}
+
+function combineFailures(current: Error | undefined, failure: unknown): Error {
+  const next = normalizeFailure(failure);
+  if (current === undefined || current === next) {
+    return next;
+  }
+  return new AggregateError(
+    [current, next],
+    "Controller and shutdown both failed",
+    { cause: next },
+  );
+}
+
 function parseCliArgs(args: string[]) {
   return parseArgs({
     args,
@@ -185,18 +205,13 @@ function rawOptionValue(args: string[], name: string): string | undefined {
   return undefined;
 }
 
-async function parseRecordedInvocation(args: string[], recorder: RunRecorder) {
-  try {
-    const parsed = parseCliArgs(args);
-    const modelName = parsed.values.model;
-    if (modelName === undefined) {
-      throw new Error("--model is required");
-    }
-    return { parsed, modelName };
-  } catch (error) {
-    await recorder.finalize("failed", null, error);
-    throw error;
+function parseInvocation(args: string[]) {
+  const parsed = parseCliArgs(args);
+  const modelName = parsed.values.model;
+  if (modelName === undefined) {
+    throw new Error("--model is required");
   }
+  return { parsed, modelName };
 }
 
 async function createBootstrapRecorder(args: string[]): Promise<RunRecorder> {
@@ -250,6 +265,8 @@ async function main(): Promise<void> {
   let master: MastraMaster | undefined;
   let terminal: ReturnType<typeof createInterface> | undefined;
   let shutdownRequested = false;
+  let runFailure: Error | undefined;
+  let finalizationPromise: Promise<void> | undefined;
   const observer = new TerminalObserver();
   const settleResources = createSharedShutdown(async () => {
     const masterSettlement = master?.stop() ?? Promise.resolve();
@@ -267,21 +284,39 @@ async function main(): Promise<void> {
     await runtime?.shutdown();
     return snapshot;
   });
-  const complete = createSharedShutdown(async () => {
-    let snapshot = await settleResources();
-    if (controller === undefined) {
-      snapshot = EMPTY_SNAPSHOT;
-      recorder.record("shutdown.started", {
-        activeWorkers: 0,
-        phase: "startup",
-      });
-      recorder.record("shutdown.completed", { snapshot });
+  const finalizeRun = (outcome?: TerminalOutcome): Promise<void> => {
+    if (outcome?.status === "failed") {
+      runFailure = combineFailures(runFailure, outcome.error);
     }
-    await recorder.finalize("completed", snapshot);
-  });
+    finalizationPromise ??= Promise.resolve().then(async () => {
+      let snapshot: FleetSnapshot | null = null;
+      try {
+        snapshot = await settleResources();
+      } catch (shutdownError) {
+        runFailure = combineFailures(runFailure, shutdownError);
+      }
+      if (runFailure === undefined && controller === undefined) {
+        snapshot = EMPTY_SNAPSHOT;
+        recorder.record("shutdown.started", {
+          activeWorkers: 0,
+          phase: "startup",
+        });
+        recorder.record("shutdown.completed", { snapshot });
+      }
+      await recorder.finalize(
+        runFailure === undefined ? "completed" : "failed",
+        snapshot,
+        runFailure ?? null,
+      );
+    });
+    return finalizationPromise;
+  };
   const stopAfterRequest = async (): Promise<void> => {
     try {
-      await complete();
+      await finalizeRun();
+      if (runFailure !== undefined) {
+        throw runFailure;
+      }
     } catch (error) {
       process.stderr.write(
         `${error instanceof Error ? error.message : String(error)}\n`,
@@ -298,11 +333,14 @@ async function main(): Promise<void> {
     if (!shutdownRequested) {
       return false;
     }
-    await complete();
+    await finalizeRun();
+    if (runFailure !== undefined) {
+      throw runFailure;
+    }
     return true;
   };
   try {
-    const { parsed, modelName } = await parseRecordedInvocation(args, recorder);
+    const { parsed, modelName } = parseInvocation(args);
     const apiKeyEnvironment = parsed.values["api-key-env"];
     const configuredSecret =
       apiKeyEnvironment === undefined ? undefined : Bun.env[apiKeyEnvironment];
@@ -328,7 +366,10 @@ async function main(): Promise<void> {
         path.join(checkout, ".claude", "worktrees", "pr-fleet"),
       maxWorkers: Number(parsed.values["max-workers"]),
     });
-    const controllerSource = await resolveControllerSource();
+    const controllerSource = await resolveControllerSource({
+      stateRoot: recorder.paths.root,
+      run: (request) => runRecordedCommand(request, recorder),
+    });
     if (await finishIfRequested()) {
       return;
     }
@@ -435,21 +476,15 @@ async function main(): Promise<void> {
         terminal?.prompt();
         return "continue";
       },
-      complete,
+      finalizeRun,
     );
-    await complete();
-  } catch (error) {
-    let failure = error;
-    try {
-      await settleResources();
-    } catch (shutdownError) {
-      failure = new AggregateError(
-        [error, shutdownError],
-        "Controller failed and shutdown also failed",
-      );
+    await finalizeRun();
+    if (runFailure !== undefined) {
+      throw runFailure;
     }
-    await recorder.finalize("failed", controller?.snapshot() ?? null, failure);
-    throw failure;
+  } catch (error) {
+    await finalizeRun({ status: "failed", error });
+    throw runFailure ?? normalizeFailure(error);
   } finally {
     process.removeListener("SIGINT", handleSigint);
   }

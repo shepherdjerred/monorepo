@@ -197,7 +197,12 @@ repository checkout.
 - Addressed three further exact-head findings by beginning a bootstrap bundle
   before fallible preflight, installing SIGINT finalization before storage
   initialization, and hiding command argument arrays during default inspection.
-- Passed focused typecheck, 88 controller tests, 42 observability tests, lint,
+- Addressed the next three exact-head findings by converging terminal and
+  shutdown failures on one outcome-aware finalizer, serializing overlapping
+  recorder finalization, rejecting a run-data root inside the controller
+  repository, and routing source-provenance Git commands through redacted
+  command telemetry.
+- Passed focused typecheck, 90 controller tests, 42 observability tests, lint,
   native-aware build, docs validation, Markdown lint, diff checks, and staged
   Lefthook/Gitleaks/Prettier/lockfile checks.
 - Completed a final non-mutating `openai/gpt-5.6-terra` model/tool turn from the

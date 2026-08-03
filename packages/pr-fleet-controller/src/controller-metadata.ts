@@ -1,7 +1,9 @@
 import { createHash } from "node:crypto";
-import { lstat, readFile, readlink } from "node:fs/promises";
+import { lstat, readFile, readlink, realpath } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
+import type { CommandRequest, CommandResult } from "./ports.ts";
+import { runCommand } from "./process-runner.ts";
 
 const GitCommitSchema = z.string().regex(/^[0-9a-f]{40}$/);
 
@@ -12,31 +14,42 @@ export type ControllerSource = {
 };
 
 type GitResult = {
-  stdout: Uint8Array;
+  stdout: string;
   stderr: string;
+};
+
+type ControllerSourceOptions = {
+  controllerDirectory?: string;
+  stateRoot?: string;
+  run?: (request: CommandRequest) => Promise<CommandResult>;
 };
 
 async function runGit(
   controllerDirectory: string,
   args: readonly string[],
+  run: (request: CommandRequest) => Promise<CommandResult>,
 ): Promise<GitResult> {
-  const subprocess = Bun.spawn(["git", "-C", controllerDirectory, ...args], {
-    stdout: "pipe",
-    stderr: "pipe",
+  const result = await run({
+    executable: "git",
+    args: ["-C", controllerDirectory, ...args],
+    cwd: controllerDirectory,
+    timeoutMs: 120_000,
+    sensitiveOutput: true,
   });
-  const [exitCode, stdout, stderr] = await Promise.all([
-    subprocess.exited,
-    new Response(subprocess.stdout).arrayBuffer(),
-    new Response(subprocess.stderr).text(),
-  ]);
-  if (exitCode !== 0) {
-    throw new Error(`Failed to resolve controller source: ${stderr.trim()}`);
+  if (result.exitCode !== 0) {
+    throw new Error(
+      `Failed to resolve controller source: ${result.stderr.trim()}`,
+    );
   }
-  return { stdout: new Uint8Array(stdout), stderr };
+  return { stdout: result.stdout, stderr: result.stderr };
 }
 
-function decode(bytes: Uint8Array): string {
-  return new TextDecoder().decode(bytes);
+function pathIsInside(parent: string, candidate: string): boolean {
+  const relative = path.relative(parent, candidate);
+  return (
+    relative.length === 0 ||
+    (!relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative))
+  );
 }
 
 async function hashUntrackedFile(
@@ -68,40 +81,52 @@ async function hashUntrackedFile(
  * as runs from their clean HEAD commit.
  */
 export async function resolveControllerSource(
-  controllerDirectory = path.join(import.meta.dir, ".."),
+  options: ControllerSourceOptions = {},
 ): Promise<ControllerSource> {
+  const controllerDirectory =
+    options.controllerDirectory ?? path.join(import.meta.dir, "..");
+  const run = options.run ?? runCommand;
   const [commitResult, rootResult] = await Promise.all([
-    runGit(controllerDirectory, ["rev-parse", "HEAD"]),
-    runGit(controllerDirectory, ["rev-parse", "--show-toplevel"]),
+    runGit(controllerDirectory, ["rev-parse", "HEAD"], run),
+    runGit(controllerDirectory, ["rev-parse", "--show-toplevel"], run),
   ]);
-  const commit = GitCommitSchema.parse(decode(commitResult.stdout).trim());
-  const repositoryRoot = decode(rootResult.stdout).trim();
+  const commit = GitCommitSchema.parse(commitResult.stdout.trim());
+  const repositoryRoot = rootResult.stdout.trim();
+  if (
+    options.stateRoot !== undefined &&
+    pathIsInside(
+      await realpath(repositoryRoot),
+      await realpath(options.stateRoot),
+    )
+  ) {
+    throw new Error(
+      `Run-bundle state directory must be outside the controller repository: ${options.stateRoot}`,
+    );
+  }
   // The controller can execute workspace packages and root scripts outside its
   // own package directory. Fingerprint the complete repository source state so
   // untracked or tracked workspace inputs cannot masquerade as the same run.
   const [statusResult, diffResult, untrackedResult] = await Promise.all([
-    runGit(repositoryRoot, [
-      "status",
-      "--porcelain=v1",
-      "-z",
-      "--untracked-files=all",
-    ]),
-    runGit(repositoryRoot, ["diff", "--binary", "--no-ext-diff", "HEAD"]),
-    runGit(repositoryRoot, [
-      "ls-files",
-      "--others",
-      "--exclude-standard",
-      "-z",
-    ]),
+    runGit(
+      repositoryRoot,
+      ["status", "--porcelain=v1", "-z", "--untracked-files=all"],
+      run,
+    ),
+    runGit(repositoryRoot, ["diff", "--binary", "--no-ext-diff", "HEAD"], run),
+    runGit(
+      repositoryRoot,
+      ["ls-files", "--others", "--exclude-standard", "-z"],
+      run,
+    ),
   ]);
-  const dirty = statusResult.stdout.byteLength > 0;
+  const dirty = statusResult.stdout.length > 0;
   const hash = createHash("sha256");
   hash.update(`controller-source-v1\0${commit}\0`);
   hash.update(statusResult.stdout);
   hash.update("\0tracked-diff\0");
   hash.update(diffResult.stdout);
 
-  const untrackedPaths = decode(untrackedResult.stdout)
+  const untrackedPaths = untrackedResult.stdout
     .split("\0")
     .filter((entry) => entry.length > 0)
     .toSorted();

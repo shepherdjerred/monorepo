@@ -3,6 +3,8 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { resolveControllerSource } from "@shepherdjerred/pr-fleet-controller/src/controller-metadata.ts";
+import type { CommandRequest } from "@shepherdjerred/pr-fleet-controller/src/ports.ts";
+import { runCommand } from "@shepherdjerred/pr-fleet-controller/src/process-runner.ts";
 
 const temporaryDirectories: string[] = [];
 
@@ -51,16 +53,27 @@ test("records clean and dirty identities for the exact controller source tree", 
     "initial",
   ]);
 
-  const clean = await resolveControllerSource(controllerDirectory);
+  const requests: CommandRequest[] = [];
+  const clean = await resolveControllerSource({
+    controllerDirectory,
+    run: async (request) => {
+      requests.push(request);
+      return runCommand(request);
+    },
+  });
   expect(clean.commit).toMatch(/^[0-9a-f]{40}$/);
   expect(clean.dirty).toBe(false);
   expect(clean.fingerprint).toMatch(/^[0-9a-f]{64}$/);
+  expect(requests).toHaveLength(5);
+  expect(requests.every((request) => request.sensitiveOutput === true)).toBe(
+    true,
+  );
 
   await writeFile(
     path.join(controllerDirectory, "controller.ts"),
     "export const x = 1\n",
   );
-  const trackedChange = await resolveControllerSource(controllerDirectory);
+  const trackedChange = await resolveControllerSource({ controllerDirectory });
   expect(trackedChange.commit).toBe(clean.commit);
   expect(trackedChange.dirty).toBe(true);
   expect(trackedChange.fingerprint).not.toBe(clean.fingerprint);
@@ -69,7 +82,9 @@ test("records clean and dirty identities for the exact controller source tree", 
     path.join(controllerDirectory, "untracked.ts"),
     "export const y = 2\n",
   );
-  const untrackedChange = await resolveControllerSource(controllerDirectory);
+  const untrackedChange = await resolveControllerSource({
+    controllerDirectory,
+  });
   expect(untrackedChange.dirty).toBe(true);
   expect(untrackedChange.fingerprint).not.toBe(trackedChange.fingerprint);
 
@@ -77,15 +92,27 @@ test("records clean and dirty identities for the exact controller source tree", 
     path.join(repository, "workspace-input.ts"),
     "export const workspaceValue = 1\n",
   );
-  const workspaceInput = await resolveControllerSource(controllerDirectory);
+  const workspaceInput = await resolveControllerSource({ controllerDirectory });
   expect(workspaceInput.fingerprint).not.toBe(untrackedChange.fingerprint);
   await writeFile(
     path.join(repository, "workspace-input.ts"),
     "export const workspaceValue = 2\n",
   );
-  const changedWorkspaceInput =
-    await resolveControllerSource(controllerDirectory);
+  const changedWorkspaceInput = await resolveControllerSource({
+    controllerDirectory,
+  });
   expect(changedWorkspaceInput.fingerprint).not.toBe(
     workspaceInput.fingerprint,
+  );
+
+  const inRepositoryState = path.join(repository, "run-state");
+  await mkdir(inRepositoryState);
+  await expect(
+    resolveControllerSource({
+      controllerDirectory,
+      stateRoot: inRepositoryState,
+    }),
+  ).rejects.toThrow(
+    "Run-bundle state directory must be outside the controller repository",
   );
 });

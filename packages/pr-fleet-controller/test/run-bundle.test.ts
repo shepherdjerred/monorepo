@@ -346,6 +346,20 @@ describe("local run bundles", () => {
     expect(report.status).toBe("failed");
   });
 
+  test("serializes overlapping finalization attempts around the first outcome", async () => {
+    const recorder = await createRecorder();
+    recorder.record("run.started", { phase: "startup" });
+    const failure = new Error("tick failed");
+    const failed = recorder.finalize("failed", null, failure);
+    const completed = recorder.finalize("completed", snapshot);
+    expect(failed).toBe(completed);
+
+    const summary = await failed;
+    expect(summary.status).toBe("failed");
+    expect(summary.countsByKind["run.failed"]).toBe(1);
+    expect(summary.countsByKind["run.completed"]).toBeUndefined();
+  });
+
   test("captures a missing-tool preflight failure in a replayable bundle", async () => {
     const parent = await mkdtemp(path.join(tmpdir(), "pr-fleet-cli-"));
     temporaryDirectories.push(parent);

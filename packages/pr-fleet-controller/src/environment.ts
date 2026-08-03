@@ -1,5 +1,4 @@
 import type { ReviewProvider } from "@shepherdjerred/code-review";
-import { commandEventCorrelation } from "./command-correlation.ts";
 import {
   checksWithBuildkiteSoftFailure,
   fingerprint,
@@ -20,7 +19,7 @@ import type {
   FleetEnvironment,
   FleetTelemetry,
 } from "./ports.ts";
-import { runCommand } from "./process-runner.ts";
+import { runRecordedCommand } from "./recorded-command.ts";
 import type {
   CheckEvidence,
   PrIdentity,
@@ -73,50 +72,7 @@ export class CommandFleetEnvironment implements FleetEnvironment {
   }
 
   async runLocalCommand(request: CommandRequest): Promise<CommandResult> {
-    const startedAt = performance.now();
-    const correlation = commandEventCorrelation(this.#telemetry);
-    this.#telemetry?.record(
-      "command.started",
-      {
-        executable: request.executable,
-        args: request.args,
-        cwd: request.cwd,
-        timeoutMs: request.timeoutMs,
-        hasStdin: request.stdin !== undefined,
-        sensitiveOutput: request.sensitiveOutput === true,
-        environmentNames: Object.keys(request.env ?? {}).sort(),
-      },
-      correlation,
-    );
-    try {
-      const result = await runCommand(request);
-      this.#telemetry?.record(
-        "command.completed",
-        {
-          executable: request.executable,
-          exitCode: result.exitCode,
-          stdout:
-            request.sensitiveOutput === true ? "[REDACTED]" : result.stdout,
-          stderr:
-            request.sensitiveOutput === true ? "[REDACTED]" : result.stderr,
-          termination: result.termination,
-          durationMs: Math.round(performance.now() - startedAt),
-        },
-        correlation,
-      );
-      return result;
-    } catch (error) {
-      this.#telemetry?.record(
-        "command.failed",
-        {
-          executable: request.executable,
-          durationMs: Math.round(performance.now() - startedAt),
-          error: error instanceof Error ? error.message : String(error),
-        },
-        correlation,
-      );
-      throw error;
-    }
+    return runRecordedCommand(request, this.#telemetry);
   }
 
   async #mustRun(

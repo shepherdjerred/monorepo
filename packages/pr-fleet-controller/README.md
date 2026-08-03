@@ -113,8 +113,11 @@ The bundle begins before required-tool, Git-checkout, configuration, and source
 provenance preflight. A failed preflight therefore still produces an
 inspectable, replayable failed run; successful preflight atomically replaces
 the bootstrap manifest metadata with the resolved controller provenance and
-runtime configuration. SIGINT coordination is installed immediately after the
-bootstrap bundle is created and waits for in-progress storage initialization
+runtime configuration. Source-provenance Git commands pass through the recorded
+command boundary, with their output redacted, and the state directory must be
+outside the controller repository so run data cannot change the source
+fingerprint it is recording. SIGINT coordination is installed immediately after
+the bootstrap bundle is created and waits for in-progress storage initialization
 before shutting down and finalizing it.
 
 The event payload redactor masks secret-shaped fields, bearer values, known
@@ -125,7 +128,9 @@ model/tool bodies, timing, token metadata, and correlation IDs. Commands inherit
 their worker attempt and tool-call correlation, record whether they exited,
 timed out, or were aborted, and distinguish deliberate worker cancellation from
 failure. Shutdown awaits active reconciliation, workers, and the master model
-turn before finalizing the bundle.
+turn before finalizing the bundle. Terminal, startup, controller, and shutdown
+failures converge on one outcome-aware finalizer, and overlapping recorder
+finalization attempts serialize around the first terminal outcome.
 Runs are retained indefinitely in v1, so operators must delete old run
 directories themselves when they no longer need them. Nothing is uploaded.
 

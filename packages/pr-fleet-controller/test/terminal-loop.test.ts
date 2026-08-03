@@ -47,6 +47,22 @@ test("explicit stop uses the same idempotent end path", async () => {
   expect(stops).toBe(1);
 });
 
+test("terminal handler failures reach the outcome-aware end path", async () => {
+  const failure = new Error("tick failed");
+  let received: unknown;
+  await expect(
+    consumeTerminalLines(
+      oneLine(),
+      () => Promise.reject(failure),
+      (outcome) => {
+        received = outcome;
+        return Promise.resolve();
+      },
+    ),
+  ).rejects.toBe(failure);
+  expect(received).toEqual({ status: "failed", error: failure });
+});
+
 test("overlapping shutdown callers await one shared operation", async () => {
   let resolveShutdown: (() => void) | undefined;
   const shutdownSettled = new Promise<void>((resolve) => {
