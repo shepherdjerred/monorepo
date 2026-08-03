@@ -328,6 +328,11 @@
       "reason": "Machine bootstrap precedes Bun"
     },
     {
+      "source": "packages/homelab/mac-ci/restore-power.sh",
+      "disposition": "retain",
+      "reason": "Reverts bootstrap.sh's pmset power profile via sudo on the Mac Mini, before Bun is guaranteed"
+    },
+    {
       "source": "packages/homelab/scripts/helm-set-version.sh",
       "disposition": "port",
       "reason": "Homelab tooling already requires Bun",
