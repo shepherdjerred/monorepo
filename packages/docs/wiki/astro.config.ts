@@ -58,6 +58,15 @@ export default defineConfig({
         {
           items: [
             {
+              label: "PR Fleet Controller",
+              link: "/pr-fleet-controller/",
+            },
+          ],
+          label: "Tooling",
+        },
+        {
+          items: [
+            {
               label: "qBittorrent VPN webseed relay",
               link: "/homelab/qbittorrent-vpn-webseed-relay/",
             },

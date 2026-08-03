@@ -19,7 +19,7 @@ const RenovateConfigSchema = z.object({
       matchPackageNames: z.array(z.string()).optional(),
       groupName: z.string().optional(),
       enabled: z.boolean().optional(),
-      minimumReleaseAge: z.union([z.string(), z.literal(false)]).optional(),
+      minimumReleaseAge: z.string().nullable().optional(),
     }),
   ),
   ignorePaths: z.array(z.string()),
@@ -61,7 +61,6 @@ test("drives Playwright upgrades from the official image source only", async () 
     matchManagers: ["npm"],
     matchPackageNames: ["playwright", "@playwright/test"],
     enabled: false,
-    minimumReleaseAge: false,
   });
 
   const dockerfile = await Bun.file(

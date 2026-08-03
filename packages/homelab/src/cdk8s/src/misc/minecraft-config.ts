@@ -410,9 +410,14 @@ export function getMinecraftPluginConfigInitContainer(
     command: [
       "sh",
       "-c",
-      // 1. Clear /data/config to prevent DirectoryNotEmptyException during itzg sync
+      // 1. Remove /data/config so itzg's /config->/data sync can create it.
+      //    itzg copies the /config/config directory to /data/config with a
+      //    directory move that throws DirectoryNotEmptyException when the
+      //    target already exists. Recreating it here (mkdir) reintroduces that
+      //    collision, so leave it absent — the plugin copy below writes to
+      //    /data/plugins, not /data/config, and does not need it.
       // 2. Copy plugin configs if they exist
-      `rm -rf /data/config && mkdir -p /data/config
+      `rm -rf /data/config
       if [ -d /plugin-configs ] && [ "$(ls -A /plugin-configs)" ]; then
         cd /plugin-configs && find -L . -type f -not -path '*/..*' | while read f; do
           mkdir -p "/data/plugins/$(dirname "$f")"

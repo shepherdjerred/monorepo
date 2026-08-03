@@ -4,7 +4,10 @@
  * Usage: bun run src/league/review/test-reviews.ts [options]
  */
 
-import { generateMatchReview } from "#src/league/review/generator.ts";
+import {
+  generateMatchReview,
+  selectPlayerIndex,
+} from "#src/league/review/generator.ts";
 import {
   MatchIdSchema,
   LeaguePuuidSchema,
@@ -310,6 +313,7 @@ async function main(): Promise<void> {
     const reviewResult = await generateMatchReview({
       match,
       matchId,
+      playerIndex: selectPlayerIndex(match),
       rawMatchData: rawMatch,
       timelineData: rawTimeline,
     });

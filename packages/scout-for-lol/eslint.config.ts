@@ -18,6 +18,7 @@ const config = [
       "./packages/data/tsconfig.json",
       "./packages/report/tsconfig.json",
       "./packages/desktop/tsconfig.json",
+      "./packages/evals/tsconfig.json",
       "./packages/ui/tsconfig.json",
       "./tsconfig.scripts.json",
     ],
@@ -176,6 +177,7 @@ const config = [
     files: [
       "packages/frontend/src/components/ui/**",
       "packages/frontend/src/components/review-tool/ui/**",
+      "packages/evals/src/components/ui/**",
     ],
     rules: { "custom-rules/no-shadcn-theme-tokens": "off" },
   },

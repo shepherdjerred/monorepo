@@ -308,6 +308,7 @@ describe("generateMatchReview", () => {
       const review = await generateMatchReview({
         match: buildCompletedMatchFixture(),
         matchId: TEST_MATCH_ID,
+        playerIndex: 0,
         rawMatchData: MINIMAL_RAW_MATCH,
         timelineData: MINIMAL_RAW_TIMELINE,
       });
@@ -319,6 +320,7 @@ describe("generateMatchReview", () => {
       const review = await generateMatchReview({
         match: buildArenaMatchFixture(),
         matchId: TEST_MATCH_ID,
+        playerIndex: 0,
         rawMatchData: MINIMAL_RAW_MATCH,
         timelineData: MINIMAL_RAW_TIMELINE,
       });
@@ -338,6 +340,7 @@ describe("generateMatchReview", () => {
       const review = await generateMatchReview({
         match: buildCompletedMatchFixture(),
         matchId: TEST_MATCH_ID,
+        playerIndex: 0,
         rawMatchData: MINIMAL_RAW_MATCH,
         timelineData: MINIMAL_RAW_TIMELINE,
       });
@@ -360,6 +363,7 @@ describe("generateMatchReview", () => {
       const review = await generateMatchReview({
         match: buildCompletedMatchFixture(),
         matchId: TEST_MATCH_ID,
+        playerIndex: 0,
         rawMatchData: MINIMAL_RAW_MATCH,
         timelineData: MINIMAL_RAW_TIMELINE,
       });

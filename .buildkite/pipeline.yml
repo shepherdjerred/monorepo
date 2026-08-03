@@ -349,6 +349,10 @@ steps:
         - "packages/webring/**"
         - "packages/docs/**"
         - "packages/eslint-config/**"
+        - "packages/scout-for-lol/eslint.config.ts"
+        - "packages/scout-for-lol/tsconfig.base.json"
+        - "packages/scout-for-lol/packages/data/**"
+        - "packages/scout-for-lol/packages/evals/**"
         # Main's playwright lane also gates on the deploy consumers of its
         # artifact — mirror them (lane↔if_changed coverage test).
         - "scripts/deploy-site.ts"
@@ -356,8 +360,8 @@ steps:
         - "scripts/lib/run.ts"
     cancel_on_build_failing: true
     command: |
-      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'
-      bun x --no-install turbo run build lint test test:e2e --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --concurrency=2
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter scout-for-lol --filter '@scout-for-lol/evals' --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'
+      bun x --no-install turbo run build lint test test:e2e --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --filter='@scout-for-lol/evals' --concurrency=2
       bun --no-install scripts/namespace-playwright-reports.ts
       bun --no-install scripts/write-ci-report-index.ts
     artifact_paths:
@@ -405,8 +409,8 @@ steps:
     cancel_on_build_failing: true
     command: |
       if [ "$(buildkite-agent meta-data get ci-lane-run-playwright --default true)" != true ]; then exit 0; fi
-      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'
-      bun x --no-install turbo run build lint test test:e2e --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --concurrency=2
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter scout-for-lol --filter '@scout-for-lol/evals' --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'
+      bun x --no-install turbo run build lint test test:e2e --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --filter='@scout-for-lol/evals' --concurrency=2
       if [ ! -s .ci-reports/junit/sjer.red/playwright.xml ]; then
         echo "playwright-e2e-main completed without a non-empty JUnit report" >&2
         exit 1

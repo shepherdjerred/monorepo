@@ -41,6 +41,11 @@
       "steps": [{ "runner": "bun" }]
     },
     {
+      "package": "@shepherdjerred/pr-fleet-controller",
+      "directory": "packages/pr-fleet-controller",
+      "steps": [{ "runner": "bun" }]
+    },
+    {
       "package": "cooklang-for-obsidian",
       "directory": "packages/cooklang-for-obsidian",
       "steps": [{ "runner": "bun" }]
@@ -250,6 +255,11 @@
       "package": "@scout-for-lol/data",
       "directory": "packages/scout-for-lol/packages/data",
       "steps": [{ "runner": "bun" }]
+    },
+    {
+      "package": "@scout-for-lol/evals",
+      "directory": "packages/scout-for-lol/packages/evals",
+      "steps": [{ "runner": "bun", "args": ["src"] }]
     },
     {
       "package": "@scout-for-lol/frontend",
