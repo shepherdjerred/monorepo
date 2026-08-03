@@ -238,6 +238,9 @@ bun run verify
 
 # CI runs on Buildkite (NOT GitHub Actions) via the static .buildkite/pipeline.yml
 # Check CI status via Buildkite CLI or web UI, never `gh run`
+
+# Foreground, provider-neutral Mastra controller for the complete open PR fleet
+bun run pr:fleet --model <provider>/<model-id>
 ```
 
 ### Fixed-corpus CI I/O candidate builds
@@ -352,6 +355,15 @@ Local and CI verification deliberately have different scopes:
 
 Run `bun run verify` locally only when explicitly reproducing CI or modifying
 the verification machinery itself. There is no `pre-push` hook.
+
+## PR Fleet Controller
+
+`bun run pr:fleet --model <provider>/<model-id>` starts the standalone Mastra
+controller in the foreground. One selected API model powers the conversational
+master and every bounded worker. Use `/status`, `/tick`, `/help`, `/stop`, or
+free-text steering. The controller may repair and publish PR branches but may
+never merge, close, or approve them. Its exact model tool boundary is documented
+in `packages/pr-fleet-controller/README.md`.
 
 ## Parallel Work — Use Worktrees
 
@@ -471,3 +483,17 @@ toolkit pr asset <PR_NUMBER> ./before.png ./flow.mp4 ./demo.cast ./demo-site --p
   profile points at `https://seaweedfs.sjer.red`).
 - Objects under `pr/assets/` expire after 365 days; the homelab must be up for
   the artifacts to load.
+
+## Session Log — 2026-07-29
+
+### Done
+
+- Documented the provider-neutral `pr:fleet` command and its authority boundary.
+
+### Remaining
+
+- Verify the published PR's current-head Buildkite and hosted review results.
+
+### Caveats
+
+- Live use requires a provider API credential and macOS `sandbox-exec`.
