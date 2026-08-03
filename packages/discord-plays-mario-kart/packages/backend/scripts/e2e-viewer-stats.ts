@@ -142,7 +142,13 @@ const POLL = `(() => {
   // slot, where out-of-order resolution would reverse or drop counter samples.
   if (pc && globalThis.__vsInFlight !== true) {
     globalThis.__vsInFlight = true;
+    // Tag this request with the current run generation. A getStats() still in
+    // flight from a PRIOR run resolves into an old generation and is discarded
+    // below, so it can't repopulate __vsLast with a cross-run sample while this
+    // run waits behind __vsInFlight.
+    const gen = globalThis.__vsGen;
     pc.getStats().then((report) => {
+      if (globalThis.__vsGen !== gen) return;
       const out = { pageAtMs: Date.now(), video: null, pairRttMs: null };
       let selectedPairId = null;
       // A connection can carry several inbound video streams (other cameras,
@@ -224,10 +230,23 @@ const POLL = `(() => {
       // A peer can close between selection and getStats(); drop this tick and
       // let the next poll re-select a live peer.
     }).finally(() => {
-      globalThis.__vsInFlight = false;
+      // Only the current generation owns the in-flight guard; a stale run's
+      // resolution must not clear this run's flag.
+      if (globalThis.__vsGen === gen) globalThis.__vsInFlight = false;
     });
   }
   return JSON.stringify({ prev, peerCount: peers.length, liveCount: live.length });
+})()`;
+
+// Run-generation init: bump __vsGen and clear the in-flight guard + last-sample
+// slot. Any getStats() still pending from a prior invocation belongs to an
+// earlier generation and is discarded on resolution (see POLL), so it cannot
+// leak a cross-run sample into this window.
+const RUN_INIT = `(() => {
+  globalThis.__vsGen = (globalThis.__vsGen ?? 0) + 1;
+  globalThis.__vsInFlight = false;
+  globalThis.__vsLast = null;
+  return String(globalThis.__vsGen);
 })()`;
 
 const VideoStatsSchema = z.object({
@@ -271,11 +290,6 @@ function sleep(ms: number): Promise<void> {
 
 const hookResult = await evaluate(HOOK);
 console.error(`hook: ${String(hookResult)}`);
-// A previous run's final getStats() resolves after that run exits, leaving a
-// stale sample in __vsLast. Without this reset the first poll of the NEXT run
-// returns it — a sample minutes old, often from a since-closed peer, which
-// silently corrupts every window delta computed from sample[0].
-await evaluate("(globalThis.__vsLast = null) ?? 'cleared'");
 if (RELOAD) {
   await evaluate("location.reload() ?? 'reloading'").catch(() => {
     // The navigation tears down the evaluation context; that IS the success
@@ -293,6 +307,13 @@ if (RELOAD) {
   );
   await sleep(8000);
 }
+
+// Start a fresh run generation immediately before sampling: bump __vsGen and
+// clear the in-flight guard / last-sample slot so no prior run's still-pending
+// getStats() can leak a cross-run sample into this window. Runs after the
+// --reload re-hook so it targets the post-reload realm.
+const runGen = await evaluate(RUN_INIT);
+console.error(`run generation: ${String(runGen)}`);
 
 const samples: Sample[] = [];
 let polls = 0;
@@ -373,6 +394,18 @@ const delta = (a: number | null, b: number | null): number | null =>
 // otherwise a single leading null sample collapses the whole run to "no stats".
 function buildSummary() {
   const videoSamples = samples.filter((s) => s.video !== null);
+  if (videoSamples.length === 0) {
+    return { note: "no inbound video stats present" };
+  }
+  // A single video-bearing sample has no window: spanS would be 0 and every
+  // cumulative-counter delta 0, indistinguishable from a genuine
+  // no-freeze/no-loss result. Require at least two video samples before
+  // summarizing.
+  if (videoSamples.length < 2) {
+    return {
+      note: `insufficient video-bearing samples for a window (need >= 2, got ${String(videoSamples.length)})`,
+    };
+  }
   const firstVideo = videoSamples.at(0);
   const lastVideo = videoSamples.at(-1);
   if (firstVideo === undefined || lastVideo === undefined) {
@@ -383,8 +416,16 @@ function buildSummary() {
   if (v0 === null || v1 === null) {
     return { note: "no inbound video stats present" };
   }
+  const spanS = (lastVideo.pageAtMs - firstVideo.pageAtMs) / 1000;
+  // Two samples with the same page-side timestamp still yield no measurable
+  // window; reject a non-positive span rather than emit rates over zero time.
+  if (spanS <= 0) {
+    return {
+      note: `non-positive window span (${String(spanS)}s) across video-bearing samples`,
+    };
+  }
   return {
-    spanS: (lastVideo.pageAtMs - firstVideo.pageAtMs) / 1000,
+    spanS,
     framesDecodedDelta: delta(v0.framesDecoded, v1.framesDecoded),
     freezeCountDelta: delta(v0.freezeCount, v1.freezeCount),
     freezeDurationDeltaS: delta(
