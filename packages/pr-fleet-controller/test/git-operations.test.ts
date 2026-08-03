@@ -3,6 +3,7 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { codexProvider } from "@shepherdjerred/code-review";
+import { TelemetryCaptureError } from "@shepherdjerred/pr-fleet-controller/src/controller-telemetry.ts";
 import { buildPrState } from "@shepherdjerred/pr-fleet-controller/src/fleet-logic.ts";
 import { GitOperations } from "@shepherdjerred/pr-fleet-controller/src/git-operations.ts";
 import type {
@@ -149,6 +150,33 @@ describe("validatePaths rejects directory pathspecs", () => {
           call[0] === "git" && call[1] === "add" && call.includes("file.ts"),
       ),
     ).toBe(true);
+  });
+
+  test("does not mutate the index after command capture fails", async () => {
+    const fake = fakeGit(0);
+    const captureFailure = new TelemetryCaptureError(
+      "command.completed",
+      new Error("state volume is full"),
+    );
+    const git = new GitOperations({
+      repo: "shepherdjerred/monorepo",
+      provider: codexProvider,
+      run: fake.run,
+      mustRun: (executable, args) => {
+        if (executable === "git" && args[0] === "commit") {
+          fake.mustCalls.push([executable, ...args]);
+          return Promise.reject(captureFailure);
+        }
+        return fake.mustRun(executable, args);
+      },
+    });
+
+    await expect(
+      git.publishFix(prAt(worktree), ["file.ts"], "fix capture"),
+    ).rejects.toBe(captureFailure);
+    expect(
+      fake.mustCalls.filter((call) => call[0] === "git" && call[1] === "reset"),
+    ).toEqual([]);
   });
 
   test("accepts a deleted (missing) file as an explicit deletion", async () => {

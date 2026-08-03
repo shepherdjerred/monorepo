@@ -2,6 +2,7 @@ import { realpath, stat } from "node:fs/promises";
 import path from "node:path";
 import type { ReviewProvider } from "@shepherdjerred/code-review";
 import { z } from "zod";
+import { isTelemetryCaptureError } from "./controller-telemetry.ts";
 import { parseHeadSha, splitRepo } from "./evidence-parsers.ts";
 import type { CommandRequest, CommandResult } from "./ports.ts";
 import type { PrState } from "./schemas.ts";
@@ -226,6 +227,9 @@ export class GitOperations {
         signal,
       });
     } catch (error) {
+      if (isTelemetryCaptureError(error)) {
+        throw error;
+      }
       // Pre-commit (or the commit itself) failed after staging the validated
       // paths. Leaving them staged would trip the "unexpected staged changes"
       // guard above on every retry, and the worker has no unstage tool — a
