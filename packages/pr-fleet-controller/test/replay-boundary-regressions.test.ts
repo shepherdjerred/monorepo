@@ -173,6 +173,51 @@ describe("tick command ancestry replay", () => {
   });
 });
 
+describe("fleet change ancestry replay", () => {
+  test("rejects a fleet change with a fabricated tick", async () => {
+    const recorder = await createRecorder();
+    recorder.record("run.started", { scenario: "orphaned-fleet-change" });
+    recorder.record(
+      "fleet.change",
+      { change: "queued PR #42" },
+      { tickId: "fabricated-tick" },
+    );
+    await recorder.finalize("failed", null, new Error("capture rejected"));
+    const bundle = await loadRunBundle(recorder.paths.runDirectory);
+
+    expect(() => replayRunBundle(bundle, replayOptions)).toThrow(
+      "fleet.change references a nonexistent or inactive tick: fabricated-tick",
+    );
+  });
+
+  test("rejects a fleet change after its tick completes", async () => {
+    const recorder = await createRecorder();
+    const tickId = recorder.newId("tick");
+    recorder.record("run.started", { scenario: "late-fleet-change" });
+    recorder.record("tick.started", { trigger: "heartbeat" }, { tickId });
+    recorder.record("fleet.snapshot", { snapshot }, { tickId });
+    recorder.record(
+      "tick.completed",
+      {
+        report: {
+          trigger: "heartbeat",
+          snapshot,
+          changes: [],
+          nextHeartbeatSeconds: 600,
+        },
+      },
+      { tickId },
+    );
+    recorder.record("fleet.change", { change: "late change" }, { tickId });
+    await recorder.finalize("failed", snapshot, new Error("capture rejected"));
+    const bundle = await loadRunBundle(recorder.paths.runDirectory);
+
+    expect(() => replayRunBundle(bundle, replayOptions)).toThrow(
+      `fleet.change references a nonexistent or inactive tick: ${tickId}`,
+    );
+  });
+});
+
 test("failed shutdown events preserve the final replay snapshot", async () => {
   const recorder = await createRecorder();
   recorder.record("run.started", { scenario: "failed-shutdown-snapshot" });

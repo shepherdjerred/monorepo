@@ -247,7 +247,10 @@ repository checkout.
   event-backed snapshot through `shutdown.failed`, and requiring standalone
   commands attributed to a tick to reference its active lifecycle. Worker
   terminal evidence is persisted before the corresponding in-memory cleanup.
-- Passed focused typecheck, 124 controller tests, 42 observability tests, lint,
+- Addressed the next two exact-head findings by routing master-turn capture
+  failures into coordinated failed shutdown without relabeling them as model
+  failures and requiring every fleet-change event to reference its active tick.
+- Passed focused typecheck, 129 controller tests, 42 observability tests, lint,
   native-aware build, docs validation, Markdown lint, diff checks, and staged
   Lefthook/Gitleaks/Prettier/lockfile checks.
 - Completed a final non-mutating `openai/gpt-5.6-terra` model/tool turn from the

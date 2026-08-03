@@ -17,9 +17,13 @@ import {
   type WorkerResult,
 } from "./schemas.ts";
 import type { FleetStore } from "./state.ts";
-import type { RunEventCorrelation } from "./run-events.ts";
+import type { RunEventCorrelation, RunEventKind } from "./run-events.ts";
 import { createWorkerTools } from "./tools.ts";
 import { runRecordedWorkerAttempt } from "./recorded-worker-attempt.ts";
+import {
+  captureTelemetryOperation,
+  isTelemetryCaptureError,
+} from "./controller-telemetry.ts";
 
 const MASTER_INSTRUCTIONS = `You are the conversational master for a deterministic PR fleet controller.
 Use only the provided control-plane tools. Never claim a state you have not obtained
@@ -50,6 +54,7 @@ type WorkerRunnerOptions = {
 type MasterOptions = {
   mastra?: Mastra;
   telemetry?: FleetTelemetry;
+  onFatalError: (error: Error) => void;
   requestShutdown: () => void;
 };
 
@@ -185,6 +190,7 @@ export class MastraMaster {
   readonly #abort = new AbortController();
   readonly #mastra: Mastra | undefined;
   readonly #telemetry: FleetTelemetry;
+  readonly #onFatalError: (error: Error) => void;
   #drain: Promise<void> | null = null;
   #stopped = false;
   #activeTurnCorrelation: RunEventCorrelation | null = null;
@@ -198,6 +204,7 @@ export class MastraMaster {
     this.#observer = observer;
     this.#mastra = options.mastra;
     this.#telemetry = options.telemetry ?? NOOP_TELEMETRY;
+    this.#onFatalError = options.onFatalError;
     this.#agent = new Agent({
       id: "pr-fleet-master",
       name: "PR fleet master",
@@ -222,6 +229,35 @@ export class MastraMaster {
     }
     this.#queue.push(message);
     this.#drain ??= this.#runDrain();
+  }
+
+  #newId(prefix: string): string {
+    return captureTelemetryOperation(`${prefix} correlation`, () =>
+      this.#telemetry.newId(prefix),
+    );
+  }
+
+  #traceId(...parts: string[]): string {
+    return captureTelemetryOperation("master trace correlation", () =>
+      this.#telemetry.traceId(...parts),
+    );
+  }
+
+  #record(
+    kind: RunEventKind,
+    payload: Record<string, unknown>,
+    correlation: RunEventCorrelation,
+  ): void {
+    captureTelemetryOperation(kind, () => {
+      this.#telemetry.record(kind, payload, correlation);
+    });
+  }
+
+  #reportCaptureFailure(error: Error): void {
+    this.#activeTurnCorrelation = null;
+    this.#stopped = true;
+    this.#abort.abort();
+    this.#onFatalError(error);
   }
 
   // Stream one master turn's text. A protected seam so tests can drive the
@@ -260,12 +296,12 @@ export class MastraMaster {
           "New user messages:",
           ...queued.map((item) => `user: ${item}`),
         ].join("\n");
-        const modelTurnId = this.#telemetry.newId("master-turn");
-        const traceId = this.#telemetry.traceId("master", modelTurnId);
+        const modelTurnId = this.#newId("master-turn");
+        const traceId = this.#traceId("master", modelTurnId);
         const correlation = { traceId, modelTurnId };
         this.#activeTurnCorrelation = correlation;
         activeResponse = "";
-        this.#telemetry.record(
+        this.#record(
           "master.turn.started",
           { prompt, messages: queued },
           correlation,
@@ -280,7 +316,7 @@ export class MastraMaster {
           this.#observer.onMasterText(text);
         }
         if (signalIsAborted(this.#abort.signal)) {
-          this.#telemetry.record(
+          this.#record(
             "master.turn.failed",
             { aborted: true, response: activeResponse },
             correlation,
@@ -292,12 +328,8 @@ export class MastraMaster {
           this.#history.push(`user: ${item}`);
         }
         this.#history.push(`assistant: ${activeResponse}`);
-        this.#telemetry.record(
-          "master.text",
-          { text: activeResponse },
-          correlation,
-        );
-        this.#telemetry.record(
+        this.#record("master.text", { text: activeResponse }, correlation);
+        this.#record(
           "master.turn.completed",
           { response: activeResponse },
           correlation,
@@ -305,15 +337,33 @@ export class MastraMaster {
         this.#activeTurnCorrelation = null;
       }
     } catch (error) {
-      this.#telemetry.record(
-        "master.turn.failed",
-        {
-          aborted: this.#abort.signal.aborted,
-          error: error instanceof Error ? error.message : String(error),
-          response: activeResponse,
-        },
-        this.#activeTurnCorrelation ?? {},
-      );
+      if (isTelemetryCaptureError(error)) {
+        this.#reportCaptureFailure(
+          error instanceof Error ? error : new Error(String(error)),
+        );
+        return;
+      }
+      try {
+        this.#record(
+          "master.turn.failed",
+          {
+            aborted: this.#abort.signal.aborted,
+            error: error instanceof Error ? error.message : String(error),
+            response: activeResponse,
+          },
+          this.#activeTurnCorrelation ?? {},
+        );
+      } catch (captureError) {
+        if (isTelemetryCaptureError(captureError)) {
+          this.#reportCaptureFailure(
+            captureError instanceof Error
+              ? captureError
+              : new Error(String(captureError)),
+          );
+          return;
+        }
+        throw captureError;
+      }
       this.#activeTurnCorrelation = null;
       // An abort during shutdown is expected, not a failure to report.
       if (!this.#abort.signal.aborted) {

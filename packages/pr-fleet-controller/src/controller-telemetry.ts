@@ -16,6 +16,17 @@ export class TelemetryCaptureError extends Error {
   }
 }
 
+export function captureTelemetryOperation<T>(
+  operation: string,
+  capture: () => T,
+): T {
+  try {
+    return capture();
+  } catch (error) {
+    throw new TelemetryCaptureError(operation, error);
+  }
+}
+
 export function isTelemetryCaptureError(error: unknown): boolean {
   return (
     error instanceof TelemetryCaptureError ||
@@ -31,11 +42,9 @@ export class ControllerTelemetry {
   }
 
   #newId(prefix: string): string | undefined {
-    try {
-      return this.#telemetry?.newId(prefix);
-    } catch (error) {
-      throw new TelemetryCaptureError(`${prefix} correlation`, error);
-    }
+    return captureTelemetryOperation(`${prefix} correlation`, () =>
+      this.#telemetry?.newId(prefix),
+    );
   }
 
   #record(
@@ -43,11 +52,9 @@ export class ControllerTelemetry {
     payload: Record<string, unknown>,
     correlation: RunEventCorrelation = {},
   ): void {
-    try {
+    captureTelemetryOperation(kind, () => {
       this.#telemetry?.record(kind, payload, correlation);
-    } catch (error) {
-      throw new TelemetryCaptureError(kind, error);
-    }
+    });
   }
 
   tickQueued(

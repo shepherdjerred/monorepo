@@ -419,6 +419,11 @@ async function main(): Promise<void> {
     master = new MastraMaster(model, activeController, observer, {
       mastra: runtime.mastra,
       telemetry: recorder,
+      onFatalError: (error) => {
+        runFailure = combineFailures(runFailure, error);
+        shutdownRequested = true;
+        void stopAfterRequest();
+      },
       requestShutdown: () => {
         shutdownRequested = true;
         void stopAfterRequest();

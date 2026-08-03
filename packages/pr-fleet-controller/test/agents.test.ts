@@ -134,6 +134,37 @@ class PartialOutputMaster extends MastraMaster {
   }
 }
 
+class CompletedMaster extends MastraMaster {
+  protected override streamTurn(): Promise<{
+    textStream: AsyncIterable<string>;
+  }> {
+    const textStream = (async function* (): AsyncGenerator<string> {
+      yield "completed output";
+    })();
+    return Promise.resolve({ textStream });
+  }
+}
+
+class KindFailingTelemetry extends RecordingTelemetry {
+  readonly #failedKind: RunEventKind;
+
+  constructor(failedKind: RunEventKind) {
+    super();
+    this.#failedKind = failedKind;
+  }
+
+  override record(
+    kind: RunEventKind,
+    payload: Record<string, unknown>,
+    correlation: RunEventCorrelation = {},
+  ): void {
+    if (kind === this.#failedKind) {
+      throw new Error("state volume is full");
+    }
+    super.record(kind, payload, correlation);
+  }
+}
+
 const flush = (): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, 5));
 
@@ -141,6 +172,7 @@ describe("master shutdown", () => {
   test("aborts and awaits the in-flight master turn before resolving", async () => {
     const observer = new RecordingObserver();
     const master = new HangingMaster("openai/gpt-5", controller, observer, {
+      onFatalError: noop,
       requestShutdown: noop,
     });
 
@@ -159,6 +191,7 @@ describe("master shutdown", () => {
   test("drops steering queued after shutdown instead of starting a new turn", async () => {
     const observer = new RecordingObserver();
     const master = new HangingMaster("openai/gpt-5", controller, observer, {
+      onFatalError: noop,
       requestShutdown: noop,
     });
     await master.stop();
@@ -175,7 +208,7 @@ describe("master shutdown", () => {
       "openai/gpt-5",
       controller,
       observer,
-      { requestShutdown: noop, telemetry },
+      { onFatalError: noop, requestShutdown: noop, telemetry },
     );
 
     master.send("status?");
@@ -191,4 +224,31 @@ describe("master shutdown", () => {
       response: "visible partial output",
     });
   });
+
+  for (const failedKind of [
+    "master.turn.started",
+    "master.text",
+    "master.turn.completed",
+  ] as const) {
+    test(`routes ${failedKind} capture failure into coordinated shutdown`, async () => {
+      const observer = new RecordingObserver();
+      const telemetry = new KindFailingTelemetry(failedKind);
+      const fatal = Promise.withResolvers<Error>();
+      const master = new CompletedMaster("openai/gpt-5", controller, observer, {
+        onFatalError: fatal.resolve,
+        requestShutdown: noop,
+        telemetry,
+      });
+
+      master.send("status?");
+      const failure = await fatal.promise;
+      expect(failure.name).toBe("TelemetryCaptureError");
+      expect(failure.message).toContain(`Failed to capture ${failedKind}`);
+      expect(
+        telemetry.events.some((event) => event.kind === "master.turn.failed"),
+      ).toBe(false);
+      expect(observer.changes).toEqual([]);
+      await master.stop();
+    });
+  }
 });

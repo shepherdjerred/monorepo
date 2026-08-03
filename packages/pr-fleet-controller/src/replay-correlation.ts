@@ -123,11 +123,27 @@ type ActiveCorrelations = {
   commands: Map<string, RecordedRunEvent>;
 };
 
+function verifyFleetChangeTick(
+  event: RecordedRunEvent,
+  activeTickIds: Set<string>,
+): void {
+  if (event.kind !== "fleet.change") {
+    return;
+  }
+  const tickId = event.correlation.tickId;
+  if (tickId === undefined || !activeTickIds.has(tickId)) {
+    throw new Error(
+      `fleet.change references a nonexistent or inactive tick: ${tickId ?? "missing"}`,
+    );
+  }
+}
+
 function trackStartedEvent(
   event: RecordedRunEvent,
   active: ActiveCorrelations,
   activeTickIds: Set<string>,
 ): void {
+  verifyFleetChangeTick(event, activeTickIds);
   if (event.kind === "tick.started") {
     const tickId = event.correlation.tickId;
     if (tickId === undefined) {
