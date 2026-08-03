@@ -1,7 +1,7 @@
 ---
 id: main-ci-green-session-2026-08-02
 type: log
-status: in-progress
+status: complete
 board: false
 ---
 
@@ -132,26 +132,53 @@ config.yml: Operation not permitted`. The file was **root-owned** on the PVC
   (+ the stale artifact dirs) via a uid-1000 debug pod; itzg recreates it as
   uid 1000. tsmc then reached `1/1 Running`. No code change needed — durable
   because itzg runs as uid 1000.
+- PR #1960 (merged): the shuxin drift-check fix. Rolled all three servers onto the
+  fix + java25; all reached Healthy (they then hibernated to replicas 0 = Healthy).
+- Cleared **loki**'s stale ArgoCD `Operation=Failed` (same bound-PVC `volumeName`
+  class as golink). This was the real reason the root `apps` app stayed
+  `Progressing` even with every child Healthy — the app-of-apps health check
+  treats a child with a failed operation as Progressing. After clearing it, `apps`
+  → Healthy. (Restarting the argocd-application-controller did NOT clear it; the
+  child-op sync did.)
+- Cleared a **scout release orphan**: build #7794 (canceled on dotfiles commit
+  `694fc85d5`, which doesn't touch scout) archived `<releaseInputDigest>/prod.json`
+  then was canceled before writing `inputs/<id>.json`. Because scout content-
+  addresses by `releaseInputDigest` (excludes the full commit sha) but
+  `sameScoutReleaseContent` compares `sourceCommit`, the next build collided with
+  the orphan and failed `immutable prod archive record does not match state`.
+  Verified it was a true orphan (no input record, not in `versions/`, not the prod
+  pin) and deleted only that identity prefix from `s3://scout-site-releases/`.
+- **Main CI green confirmed: build #7807 (`25cd0cff2`) PASSED** — 22 jobs passed,
+  0 failed; `argo: sync + wait` and `scout beta release` both green. First fully
+  green main build in 30+ builds.
 
 ### Remaining
 
-- Merge the shuxin drift-check PR; after it deploys, delete `minecraft-shuxin-0`
-  so it rolls onto the new drift-check + java25, and confirm it reaches Healthy
-  (watch for the same DiscordSRV root-owned-config cruft on shuxin's PVC — clean
-  it the same way if present).
-- With all three Healthy, `apps` returns to Healthy → confirm a `main` build
-  completes the `argo: sync + wait` gate green (needs a quiet window — rapid
-  merges keep canceling in-flight main builds mid-argo).
+- **Durable scout orphan fix (recommended follow-up).** The rapid-merge
+  cancellation pattern will recreate scout release orphans (archive prod → build
+  canceled before the input record). Make the scout release step resilient — e.g.
+  write the archive + input-state record atomically, or have `archiveFlavor`
+  reconcile an orphaned record whose `inputs/<id>.json` is missing instead of
+  failing closed. This changes the deliberately fail-closed release semantics, so
+  it needs owner sign-off before implementing.
+- **Paper 26.2 bump (held).** Smoke-tested live: Paper 26.2 boots but EssentialsX
+  (core) and LevelledMobs fail — their version parsers reject the `26.x` scheme,
+  and no 26.2-aware plugin releases exist yet. Revisit when the plugin ecosystem
+  catches up; also fix the Renovate `customDatasources.papermc` mapping (returns
+  version families, so Renovate can't surface the bump).
 
 ### Caveats
 
-- The tsmc DiscordSRV fix was operational (PVC state), not code. Root cause of the
-  original root-ownership is historical (likely a past root-running deployment or
-  a ConfigMap once mounted onto the PVC path); the current manifest mounts the
-  config at `/plugins/...` correctly. If root-owned plugin files reappear, a
-  durable init-container safeguard would be warranted.
+- Several fixes were operational (live-cluster), not code: golink/loki stale-op
+  clears, the tsmc DiscordSRV PVC cleanup, the shuxin pod roll, and the scout
+  orphan deletion. They are durable for the fixed condition but not re-applied by
+  code; the scout orphan specifically WILL recur without the durable fix above.
+- The systemic bound-PVC `volumeName` immutable-patch (golink, loki, minecraft)
+  leaves stale `Operation=Failed` artifacts on otherwise-healthy apps. A global
+  ArgoCD `ignoreDifferences` for PVC `/spec/volumeName` would stop them recurring.
 - Minecraft servers hibernate at replicas 0 (mc-router); they only block the argo
   gate while woken+crashing. Something (likely the bluemap ingress) kept them
   woken through this session.
 - Rapid successive merges to main cancel in-flight builds before the ~15-min
-  deploy+argo train finishes; a fully-green main build needs a quiet window.
+  deploy+argo train finishes; a fully-green main build needs a quiet window (#7807
+  got one).
