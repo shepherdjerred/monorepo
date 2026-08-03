@@ -32,4 +32,7 @@ export const greptileProvider: ReviewProvider = {
       },
     ],
   },
+  // Greptile reviews automatically on every push; there is no manual trigger
+  // comment to post.
+  requestReview: null,
 };

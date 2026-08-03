@@ -73,7 +73,14 @@ export function createSyncthingChart(app: App) {
             { port: IntOrString.fromNumber(22_000), protocol: "TCP" }, // BEP sync
             { port: IntOrString.fromNumber(22_000), protocol: "UDP" }, // QUIC sync
             { port: IntOrString.fromNumber(21_027), protocol: "UDP" }, // Local discovery
-            { port: IntOrString.fromNumber(443), protocol: "TCP" }, // Global discovery + relays
+            { port: IntOrString.fromNumber(443), protocol: "TCP" }, // Global discovery + relay pool lookup
+            // Relay data connection. torvalds accepts no inbound sync connections
+            // (only the 8384 GUI is exposed), so peers behind symmetric NAT — with
+            // no directly-dialable address of their own — can only meet it on a
+            // relay. Public relays (strelaysrv) listen on 22067; without this,
+            // relaying silently fails and those peers never connect. See
+            // packages/docs/logs/2026-08-02_syncthing-relay-egress-fix.md.
+            { port: IntOrString.fromNumber(22_067), protocol: "TCP" }, // Relay data connection
           ],
         },
       ],

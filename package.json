@@ -4,6 +4,7 @@
   "scripts": {
     "verify": "turbo run build typecheck test:ci lint check-todos check-suppressions check-patched-deps check-script-migrations script-coverage markdownlint prettier shellcheck knip gitleaks jscpd quality-ratchet compliance-check lockfile-check merge-conflicts env-var-names line-endings react-version-sync large-files guard:migration ruff pyright tunnel-dns-coverage check:talos lint:helm check:1password check:test-template check:ios-native-deps check:release-bundle lint:swift check:caddyfile test:contract check:rehearsal --continue",
     "docs:board": "bun run --cwd packages/docs-board launch",
+    "pr:fleet": "bun run --cwd packages/pr-fleet-controller start",
     "knip": "knip --no-config-hints",
     "markdownlint": "markdownlint-cli2 '**/*.md'",
     "markdownlint:fix": "markdownlint-cli2 --fix '**/*.md'",
@@ -72,6 +73,7 @@
     "packages/llm-models",
     "packages/llm-observability",
     "packages/monarch",
+    "packages/pr-fleet-controller",
     "packages/release-tools",
     "packages/resume",
     "packages/scout-for-lol",

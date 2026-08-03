@@ -41,6 +41,11 @@
       "steps": [{ "runner": "bun" }]
     },
     {
+      "package": "@shepherdjerred/pr-fleet-controller",
+      "directory": "packages/pr-fleet-controller",
+      "steps": [{ "runner": "bun" }]
+    },
+    {
       "package": "cooklang-for-obsidian",
       "directory": "packages/cooklang-for-obsidian",
       "steps": [{ "runner": "bun" }]

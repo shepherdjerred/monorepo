@@ -24,4 +24,9 @@ export const codexProvider: ReviewProvider = {
   parseSeverity: parseCodexSeverity,
   completion: { kind: "review-at-head", cleanSignal: "thumbsup-reaction" },
   detectSkip: null,
+  // Codex re-reviews on push, but an explicit `@codex review` mention forces a
+  // fresh review of the current head (used after a bot publishes a fix).
+  requestReview: {
+    buildComment: (marker) => `@codex review\n\n${marker}`,
+  },
 };
