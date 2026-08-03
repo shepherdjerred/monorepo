@@ -74,9 +74,10 @@ is_ignored() {
     ./Geyser-Spigot/config.yml) return 0 ;;
     # Paper re-serializes commands.yml (SnakeYAML flattens the block-sequence
     # indentation), spark writes config.json via GSON (no trailing newline), and
-    # mcMMO re-serializes chat.yml (Bukkit YamlConfiguration reorders keys) — all
-    # normalized on disk at boot, so byte-compare always drifts.
-    ./commands.yml|./spark/config.json|./mcMMO/chat.yml) return 0 ;;
+    # mcMMO re-serializes chat.yml and party.yml (Bukkit YamlConfiguration
+    # reorders keys and reindents nested maps to 4 spaces) — all normalized on
+    # disk at boot, so byte-compare always drifts.
+    ./commands.yml|./spark/config.json|./mcMMO/chat.yml|./mcMMO/party.yml) return 0 ;;
     *) return 1 ;;
   esac
 }
