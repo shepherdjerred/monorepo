@@ -135,9 +135,11 @@ describe("selectImageTargets", () => {
     expect(await select(["packages/birmel/package.json"])).toEqual(["birmel"]);
   });
 
-  test("selects Scout for its shared base TypeScript config", async () => {
+  test("selects both Scout images for its shared base TypeScript config", async () => {
+    // The evals image build copies this file and its runtime tsconfig extends
+    // it, so a change to it must rebuild scout-evals alongside scout-for-lol.
     expect(await select(["packages/scout-for-lol/tsconfig.base.json"])).toEqual(
-      ["scout-for-lol"],
+      ["scout-evals", "scout-for-lol"],
     );
   });
 

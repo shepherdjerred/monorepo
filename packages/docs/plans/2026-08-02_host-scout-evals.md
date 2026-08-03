@@ -94,3 +94,42 @@ On-cluster (after layer 2 merges):
 - `readOnlyRootFilesystem: false` initially (Bun may write under `$HOME`); tightening is a follow-up.
 - Large drafts ship as one JSON POST — fine on tailnet; chunking only if ever needed.
 - No app auth by design: anyone on the tailnet can rate/push. Accepted.
+
+## Session Log — 2026-08-03
+
+### Done
+
+- Layer 1 (PR #1955, `feature/host-scout-evals`): shipped the app + image layer.
+  - Hosted-mode app support: additive draft transfer over the tailnet
+    (`src/server/dataset-transfer.ts`, `src/server/draft-transfer-store.ts` and
+    tests, `src/scripts/push-dataset.ts`, schema and store wiring), documented in
+    `packages/scout-for-lol/packages/evals/README.md` ("Push A Draft To The
+    Hosted Instance").
+  - Image build: `packages/scout-for-lol/packages/evals/Dockerfile`, smoke
+    (`scripts/smoke.ts`, `.buildkite/scripts/smoke-app-in-image.ts`),
+    `docker-bake.hcl`, `.dockerignore`, and image-target wiring
+    (`scout-evals` in `.buildkite/scripts/image-targets.ts`).
+  - Placeholder image pin in `packages/homelab/src/cdk8s/src/versions.ts`
+    (commit-back replaces it with the real tag@digest after merge).
+- CI selector correctness: `.buildkite/scripts/select-image-targets.ts` now
+  rebuilds `scout-evals` when `packages/scout-for-lol/tsconfig.base.json`
+  changes (the evals Dockerfile copies that file and its runtime tsconfig
+  extends it), with the assertion updated in `select-image-targets.test.ts`.
+
+### Remaining
+
+- Layer 2 (PR #1956, `feature/scout-evals-homelab`, stacked on this): homelab
+  chart + ArgoCD app + `TailscaleIngress`. Merge after this PR's commit-back
+  pin lands. The human-facing wiki page for the hosted service and its tailnet
+  trust boundary belongs with that layer, where the deployment actually exists.
+- On-cluster verification (post layer-2 merge): ArgoCD `scout-evals` Healthy,
+  PVC Bound, tailnet health check, off-tailnet unreachable, Velero includes the
+  PVC. See the Verification section above.
+
+### Caveats
+
+- `readOnlyRootFilesystem: false` initially (Bun may write under `$HOME`);
+  tightening is a follow-up.
+- No app auth by design: anyone on the tailnet can rate/push. Accepted.
+- Draft transfers are additive merges that reject drift/checksum mismatch;
+  server-authored ratings always survive re-pushes.
