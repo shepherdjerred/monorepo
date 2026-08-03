@@ -1,3 +1,4 @@
+import { z } from "zod";
 import type { Config } from "#src/config/schema.ts";
 import { logger } from "#src/logger.ts";
 import {
@@ -92,10 +93,27 @@ export function startGoalControlServer(
           });
           return routed.response;
         } catch (error) {
-          logger.error(error);
-          const errorBody = {
-            error: error instanceof Error ? error.message : "unknown error",
-          };
+          // Invalid input is a routine agent misfire — the prettified 400 body
+          // is the correction signal, so log it at warn. Anything else is an
+          // unexpected route failure and stays at error.
+          const isZodError = error instanceof z.ZodError;
+          const message = isZodError
+            ? z.prettifyError(error)
+            : error instanceof Error
+              ? error.message
+              : "unknown error";
+          if (isZodError) {
+            logger.warn(
+              `goal control invalid input: ${request.method} ${url.pathname}: ${message}`,
+              { goalId },
+            );
+          } else {
+            logger.error(
+              `goal control request failed: ${request.method} ${url.pathname}: ${message}`,
+              { goalId },
+            );
+          }
+          const errorBody = { error: message };
           logGoalTool({
             goalId,
             method: request.method,

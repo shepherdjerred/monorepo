@@ -148,23 +148,6 @@ export class GameStreamer extends GameStreamerBase {
     this.sendToActor({ type: "SHUTDOWN" });
   }
 
-  protected override destroyClient(): void {
-    // discord.js-selfbot-v13's client.destroy() dereferences `this.connection`
-    // on each shard, which is null when the gateway never fully connected (or was
-    // already torn down) — it throws "null is not an object (this.connection.
-    // readyState)". Left unguarded that abort propagates out of session teardown
-    // (`safeDriverStop`), so the userbot/voice/ffmpeg handles for the just-ended
-    // /play session are never released and pile up across sessions. Swallow it:
-    // destroy() is best-effort cleanup and there's nothing to recover here.
-    try {
-      this.streamer.client.destroy();
-    } catch (error) {
-      logger.warn("selfbot client destroy failed (ignored)", {
-        error: error instanceof Error ? error.message : String(error),
-      });
-    }
-  }
-
   protected async buildEncoder(signal: AbortSignal): Promise<EncoderHandles> {
     // Audio transport creation is the only awaited preparation step. Do it
     // before publishing session state so a STOP that cancels this invoke cannot

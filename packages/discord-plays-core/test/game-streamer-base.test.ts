@@ -103,4 +103,32 @@ describe("GameStreamerBase", () => {
     streamer.destroy();
     expect(closed).toBe(1);
   });
+
+  test("destroy() swallows the selfbot client's null-connection throw and warns", () => {
+    // discord.js-selfbot-v13 throws "null is not an object (this.connection.
+    // readyState)" from client.destroy() when the gateway never connected.
+    class ThrowingClient extends Client {
+      override destroy(): void {
+        throw new TypeError(
+          "null is not an object (evaluating 'this.connection.readyState')",
+        );
+      }
+    }
+    const warns: string[] = [];
+    const streamer = new TestStreamer({
+      selfbotClient: new ThrowingClient(),
+      guildId: "guild-1",
+      channelId: "channel-1",
+      logger: {
+        ...silentLogger,
+        warn: (message: string) => {
+          warns.push(message);
+        },
+      },
+    });
+    expect(() => {
+      streamer.destroy();
+    }).not.toThrow();
+    expect(warns).toEqual(["selfbot client destroy failed (ignored)"]);
+  });
 });
