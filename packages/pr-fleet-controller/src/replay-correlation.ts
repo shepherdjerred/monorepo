@@ -126,8 +126,25 @@ type ActiveCorrelations = {
 function trackStartedEvent(
   event: RecordedRunEvent,
   active: ActiveCorrelations,
+  recordedTickIds: Set<string>,
 ): void {
+  if (event.kind === "tick.started") {
+    const tickId = event.correlation.tickId;
+    if (tickId === undefined) {
+      throw new Error("tick.started is missing its tick correlation");
+    }
+    recordedTickIds.add(tickId);
+  }
   if (event.kind === "worker.started") {
+    const tickId = event.correlation.tickId;
+    if (tickId === undefined) {
+      throw new Error("worker.started is missing its tick correlation");
+    }
+    if (!recordedTickIds.has(tickId)) {
+      throw new Error(
+        `worker.started references a nonexistent tick: ${tickId}`,
+      );
+    }
     active.workers.set(requireLifecycleKey(event, "workers"), event);
   }
   if (event.kind === "worker.attempt.started") {
@@ -265,6 +282,7 @@ function closeTerminalEvent(
 }
 
 export function verifyCorrelationGraph(events: RecordedRunEvent[]): void {
+  const recordedTickIds = new Set<string>();
   const active: ActiveCorrelations = {
     workers: new Map(),
     modelTurns: new Map(),
@@ -272,7 +290,7 @@ export function verifyCorrelationGraph(events: RecordedRunEvent[]): void {
     commands: new Map(),
   };
   for (const event of events) {
-    trackStartedEvent(event, active);
+    trackStartedEvent(event, active, recordedTickIds);
     closeTerminalEvent(event, active);
   }
 }

@@ -143,6 +143,19 @@ class RecordingTelemetry implements FleetTelemetry {
   }
 }
 
+class WorkerStartFailingTelemetry extends RecordingTelemetry {
+  override record(
+    kind: RunEventKind,
+    payload: Record<string, unknown>,
+    correlation: RunEventCorrelation = {},
+  ): void {
+    if (kind === "worker.started") {
+      throw new Error("state volume is full");
+    }
+    super.record(kind, payload, correlation);
+  }
+}
+
 class AttemptRecordingRunner implements WorkerRunner {
   readonly #telemetry: FleetTelemetry;
 
@@ -696,6 +709,45 @@ test("records worker start before the runner can emit its first attempt", async 
     (event) => event.kind === "worker.cancelled",
   );
   expect(terminal?.correlation.tickId).toBe(started?.correlation.tickId);
+});
+
+test("does not schedule a worker when persisting its start fails", async () => {
+  const pr = identity(1);
+  const failedCheck = {
+    name: "verify",
+    state: "FAILURE",
+    bucket: "fail",
+    link: null,
+    softFail: false,
+  };
+  const runner = new RecordingRunner();
+  const store = new FleetStore(1);
+  const controller = new FleetController({
+    config: {
+      model: "openai/gpt-5",
+      repo: "shepherdjerred/monorepo",
+      checkout: "/tmp/repo",
+      worktreeRoot: "/tmp/worktrees",
+      maxWorkers: 1,
+    },
+    environment: new FakeEnvironment(
+      [pr],
+      new Map([[1, evidence(pr, { checks: [failedCheck] })]]),
+    ),
+    workerRunner: runner,
+    observer: new RecordingObserver(),
+    store,
+    telemetry: new WorkerStartFailingTelemetry(),
+  });
+
+  await controller.tick("startup");
+  await flushMicrotasks();
+
+  expect(runner.runs).toBe(0);
+  expect(store.activeWorkers.has(1)).toBe(false);
+  expect(store.prs.get(1)?.status).toBe("paused");
+  expect(store.pausedReasons.get(1)).toBe("state volume is full");
+  await controller.stop(Promise.resolve());
 });
 
 test("aborts a worker whose assigned head changes and does not pause it", async () => {

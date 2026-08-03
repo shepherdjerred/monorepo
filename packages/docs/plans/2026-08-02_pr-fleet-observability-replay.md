@@ -218,7 +218,11 @@ repository checkout.
   summary fields so credentials cannot corrupt lifecycle control values and by
   rejecting in-repository state roots before any run-bundle artifact is
   created.
-- Passed focused typecheck, 99 controller tests, 42 observability tests, lint,
+- Addressed three final exact-head findings by durably recording worker starts
+  before scheduling any worker work, masking singular fleet-change diagnostics
+  during default inspection, and requiring every worker to reference a recorded
+  dispatch tick during replay.
+- Passed focused typecheck, 102 controller tests, 42 observability tests, lint,
   native-aware build, docs validation, Markdown lint, diff checks, and staged
   Lefthook/Gitleaks/Prettier/lockfile checks.
 - Completed a final non-mutating `openai/gpt-5.6-terra` model/tool turn from the

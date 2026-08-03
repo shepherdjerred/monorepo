@@ -261,6 +261,7 @@ function expectFreeFormBodiesHidden(firstEvent: RecordedRunEvent): void {
           reviewFindings: ["private structured finding"],
           validation: ["private validation detail"],
           changes: ["private fleet change"],
+          change: "private singular fleet change",
           error: "Patch failed: private command stderr",
           result: "kept",
         },
@@ -288,6 +289,7 @@ function expectFreeFormBodiesHidden(firstEvent: RecordedRunEvent): void {
     "[hidden; pass --show-bodies]",
     "[hidden; pass --show-bodies]",
   ]);
+  expect(hidden[0]?.payload["change"]).toBe("[hidden; pass --show-bodies]");
   for (const key of ["error", "lastAction", "reason"]) {
     expect(hidden[0]?.payload[key]).toBe("[hidden; pass --show-bodies]");
   }
@@ -295,7 +297,9 @@ function expectFreeFormBodiesHidden(firstEvent: RecordedRunEvent): void {
 }
 
 async function recordSyntheticWorkerRun(recorder: RunRecorder): Promise<void> {
+  const tickId = recorder.newId("tick");
   const correlation = {
+    tickId,
     prNumber: 42,
     headSha: "b".repeat(40),
     generation: 3,
@@ -307,7 +311,21 @@ async function recordSyntheticWorkerRun(recorder: RunRecorder): Promise<void> {
   const toolCorrelation = { ...modelCorrelation, toolCallId };
   const commandCorrelation = { ...toolCorrelation, commandId };
   recorder.record("run.started", { scenario: "correlation" });
+  recorder.record("tick.started", { trigger: "startup" }, { tickId });
+  recorder.record("fleet.snapshot", { snapshot }, { tickId });
   recorder.record("worker.started", { runtimeAgent: "pr-42-g3" }, correlation);
+  recorder.record(
+    "tick.completed",
+    {
+      report: {
+        trigger: "startup",
+        snapshot,
+        changes: ["started pr-42-g3"],
+        nextHeartbeatSeconds: 300,
+      },
+    },
+    { tickId },
+  );
   recorder.record(
     "worker.attempt.started",
     { attempt: 1, prompt: "fix" },
@@ -676,7 +694,9 @@ describe("CLI command capture", () => {
 describe("run bundle replay", () => {
   test("reconstructs synthetic command, retry, and worker lifecycles", async () => {
     const recorder = await createRecorder();
+    const tickId = recorder.newId("tick");
     const correlation = {
+      tickId,
       prNumber: 42,
       headSha: "b".repeat(40),
       generation: 3,
@@ -686,10 +706,24 @@ describe("run bundle replay", () => {
     const commandId = recorder.newId("command");
     const toolCallId = recorder.newId("tool");
     recorder.record("run.started", { scenario: "synthetic-retry" });
+    recorder.record("tick.started", { trigger: "startup" }, { tickId });
+    recorder.record("fleet.snapshot", { snapshot }, { tickId });
     recorder.record(
       "worker.started",
       { runtimeAgent: "pr-42-g3" },
       correlation,
+    );
+    recorder.record(
+      "tick.completed",
+      {
+        report: {
+          trigger: "startup",
+          snapshot,
+          changes: ["started pr-42-g3"],
+          nextHeartbeatSeconds: 300,
+        },
+      },
+      { tickId },
     );
     recorder.record(
       "worker.attempt.started",
@@ -880,6 +914,57 @@ describe("run bundle correlation replay", () => {
         },
       ),
     ).toThrow("mismatched command start correlation field tickId");
+  });
+
+  test("rejects a worker without a tick ancestor", async () => {
+    const recorder = await createRecorder();
+    await recordSyntheticWorkerRun(recorder);
+    const bundle = await loadRunBundle(recorder.paths.runDirectory);
+    const events = bundle.events.map((event) =>
+      event.correlation.prNumber === 42
+        ? {
+            ...event,
+            correlation: { ...event.correlation, tickId: undefined },
+          }
+        : event,
+    );
+
+    expect(() =>
+      replayRunBundle(
+        { ...bundle, events },
+        {
+          currentControllerVersion: "0.1.0",
+          allowVersionMismatch: false,
+        },
+      ),
+    ).toThrow("worker.started is missing its tick correlation");
+  });
+
+  test("rejects a worker whose tick ancestor does not exist", async () => {
+    const recorder = await createRecorder();
+    await recordSyntheticWorkerRun(recorder);
+    const bundle = await loadRunBundle(recorder.paths.runDirectory);
+    const events = bundle.events.map((event) =>
+      event.correlation.prNumber === 42
+        ? {
+            ...event,
+            correlation: {
+              ...event.correlation,
+              tickId: "fabricated-tick",
+            },
+          }
+        : event,
+    );
+
+    expect(() =>
+      replayRunBundle(
+        { ...bundle, events },
+        {
+          currentControllerVersion: "0.1.0",
+          allowVersionMismatch: false,
+        },
+      ),
+    ).toThrow("worker.started references a nonexistent tick: fabricated-tick");
   });
 
   test("rejects a model turn that closes before its tool", async () => {
@@ -1081,16 +1166,32 @@ describe("shutdown boundary replay", () => {
 
   test("replays deliberate worker cancellation as a terminal lifecycle", async () => {
     const recorder = await createRecorder();
+    const tickId = recorder.newId("tick");
     const correlation = {
+      tickId,
       prNumber: 42,
       headSha: "b".repeat(40),
       generation: 3,
     };
     recorder.record("run.started", { scenario: "worker-cancelled" });
+    recorder.record("tick.started", { trigger: "startup" }, { tickId });
+    recorder.record("fleet.snapshot", { snapshot }, { tickId });
     recorder.record(
       "worker.started",
       { runtimeAgent: "pr-42-g3" },
       correlation,
+    );
+    recorder.record(
+      "tick.completed",
+      {
+        report: {
+          trigger: "startup",
+          snapshot,
+          changes: ["started pr-42-g3"],
+          nextHeartbeatSeconds: 300,
+        },
+      },
+      { tickId },
     );
     recorder.record(
       "worker.cancelled",

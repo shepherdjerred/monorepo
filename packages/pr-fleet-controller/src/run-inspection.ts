@@ -25,7 +25,7 @@ const TickCompletedPayloadSchema = z.object({ report: FleetTickReportSchema });
 const SnapshotPayloadSchema = z.object({ snapshot: FleetSnapshotSchema });
 
 const BODY_FIELD_PATTERN =
-  /^(?:body|content|error|escalation|lastAction|line|log|message|messages|output|patch|prompt|reason|response|stack|stderr|stdout|text)$/i;
+  /^(?:body|change|content|error|escalation|lastAction|line|log|message|messages|output|patch|prompt|reason|response|stack|stderr|stdout|text)$/i;
 const BODY_ARRAY_FIELD_PATTERN =
   /^(?:args|blockers|changes|hardFailures|reviewFindings|validation)$/i;
 const ACTIVE_STATUSES = new Set([

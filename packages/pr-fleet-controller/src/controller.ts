@@ -268,8 +268,9 @@ export class FleetController implements MasterControllerTools {
           status: "diagnosing",
         };
         this.store.prs.set(candidate.identity.number, assigned);
-        this.#dispatchedWorkers.set(candidate.identity.number, assigned);
         const dispatchTickId = this.#currentTickId;
+        this.#telemetry.workerStarted(dispatchTickId, assigned);
+        this.#dispatchedWorkers.set(candidate.identity.number, assigned);
         if (dispatchTickId !== undefined) {
           this.#dispatchedTickIds.set(
             candidate.identity.number,
@@ -289,7 +290,6 @@ export class FleetController implements MasterControllerTools {
           candidate.identity.number,
           abortController,
         );
-        this.#telemetry.workerStarted(dispatchTickId, assigned);
         busyStacks.add(candidate.stackId);
         changes.push(`started ${assigned.runtimeAgent ?? "worker"}`);
         const settlement = this.#observeWorker(
