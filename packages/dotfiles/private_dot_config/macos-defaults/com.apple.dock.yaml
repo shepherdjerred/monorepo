@@ -1,0 +1,10 @@
+---
+description: Dock preferences
+sudo: false
+current_host: false
+kill: [Dock]
+data:
+  com.apple.dock:
+    autohide: true
+    show-recents: false
+    tilesize: 92.0

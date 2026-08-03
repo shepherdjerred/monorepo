@@ -1,0 +1,10 @@
+---
+description: Current-host trackpad preferences
+sudo: false
+current_host: true
+kill: [cfprefsd]
+data:
+  NSGlobalDomain:
+    # Mirror tap-to-click and three-finger drag in the hardware-scoped domain.
+    com.apple.mouse.tapBehavior: 1
+    com.apple.trackpad.threeFingerDragGesture: true
