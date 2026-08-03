@@ -82,12 +82,6 @@ async function handleInit(opts: WorkerInitOpts): Promise<void> {
   batching = createBatchingMetricSink((batch) => {
     post({ kind: "metrics", batch });
   });
-  // Worker-thread stall visibility: a blocked worker loop delays frames but
-  // was previously invisible below the 66ms tick-lateness floor.
-  const sinkForLag = batching;
-  startEventLoopLagSampler((lagMs) => {
-    sinkForLag.observeEventLoopLagMs(lagMs);
-  });
   const emu = new N64Emulator({
     wasmDir: opts.wasmDir,
     romPath: opts.romPath,
@@ -98,6 +92,15 @@ async function handleInit(opts: WorkerInitOpts): Promise<void> {
     metrics: batching.sink,
   });
   await emu.init();
+
+  // Worker-thread stall visibility: a blocked worker loop delays frames but was
+  // previously invisible below the 66ms tick-lateness floor. Start sampling only
+  // AFTER init() so synchronous WASM/ROM boot latency is not recorded as
+  // streaming loop lag in the event_loop_lag_ms histogram.
+  const sinkForLag = batching;
+  startEventLoopLagSampler((lagMs) => {
+    sinkForLag.observeEventLoopLagMs(lagMs);
+  });
 
   emu.onFrame((rgba, contentTimeMs) => {
     frameCount += 1;

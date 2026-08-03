@@ -318,11 +318,6 @@ if (samples.length === 0) {
   );
 }
 
-const first = samples.at(0);
-const last = samples.at(-1);
-if (first === undefined || last === undefined) {
-  throw new Error("unreachable: samples is non-empty");
-}
 // Counters are per-RTCPeerConnection and per-SSRC; a stream restart or peer
 // switch mid-window resets them (or swaps to a different track), so a
 // first-to-last delta across that boundary is meaningless. Detect both a
@@ -366,39 +361,53 @@ if (countersWentBackwards || ssrcs.size > 1) {
       `peer switch. Raw samples written to ${OUT}.`,
   );
 }
-const v0 = first.video;
-const v1 = last.video;
 // A counter present at one endpoint but absent at the other cannot yield a real
 // delta; coercing null→0 would fake a zero (or manufacture a negative delta).
 // Return null for such a delta instead.
 const delta = (a: number | null, b: number | null): number | null =>
   a !== null && b !== null ? b - a : null;
-const summary =
-  v0 === null || v1 === null
-    ? { note: "no inbound video stats present" }
-    : {
-        spanS: (last.pageAtMs - first.pageAtMs) / 1000,
-        framesDecodedDelta: delta(v0.framesDecoded, v1.framesDecoded),
-        freezeCountDelta: delta(v0.freezeCount, v1.freezeCount),
-        freezeDurationDeltaS: delta(
-          v0.totalFreezesDuration,
-          v1.totalFreezesDuration,
-        ),
-        packetsLostDelta: delta(v0.packetsLost, v1.packetsLost),
-        nackDelta: delta(v0.nackCount, v1.nackCount),
-        // Mean time a frame sat in the jitter buffer over the window (W3C:
-        // cumulative seconds / cumulative emitted frames).
-        meanJitterBufferMs:
-          v1.jitterBufferDelay !== null &&
-          v0.jitterBufferDelay !== null &&
-          v1.jitterBufferEmittedCount !== null &&
-          v0.jitterBufferEmittedCount !== null &&
-          v1.jitterBufferEmittedCount > v0.jitterBufferEmittedCount
-            ? ((v1.jitterBufferDelay - v0.jitterBufferDelay) /
-                (v1.jitterBufferEmittedCount - v0.jitterBufferEmittedCount)) *
-              1000
-            : null,
-      };
+
+// The start-before-join workflow can capture the peer before its inbound video
+// stats appear, so early samples have `video: null`. Anchor the window on the
+// first and last samples that actually carry video, not the raw run endpoints —
+// otherwise a single leading null sample collapses the whole run to "no stats".
+function buildSummary() {
+  const videoSamples = samples.filter((s) => s.video !== null);
+  const firstVideo = videoSamples.at(0);
+  const lastVideo = videoSamples.at(-1);
+  if (firstVideo === undefined || lastVideo === undefined) {
+    return { note: "no inbound video stats present" };
+  }
+  const v0 = firstVideo.video;
+  const v1 = lastVideo.video;
+  if (v0 === null || v1 === null) {
+    return { note: "no inbound video stats present" };
+  }
+  return {
+    spanS: (lastVideo.pageAtMs - firstVideo.pageAtMs) / 1000,
+    framesDecodedDelta: delta(v0.framesDecoded, v1.framesDecoded),
+    freezeCountDelta: delta(v0.freezeCount, v1.freezeCount),
+    freezeDurationDeltaS: delta(
+      v0.totalFreezesDuration,
+      v1.totalFreezesDuration,
+    ),
+    packetsLostDelta: delta(v0.packetsLost, v1.packetsLost),
+    nackDelta: delta(v0.nackCount, v1.nackCount),
+    // Mean time a frame sat in the jitter buffer over the window (W3C:
+    // cumulative seconds / cumulative emitted frames).
+    meanJitterBufferMs:
+      v1.jitterBufferDelay !== null &&
+      v0.jitterBufferDelay !== null &&
+      v1.jitterBufferEmittedCount !== null &&
+      v0.jitterBufferEmittedCount !== null &&
+      v1.jitterBufferEmittedCount > v0.jitterBufferEmittedCount
+        ? ((v1.jitterBufferDelay - v0.jitterBufferDelay) /
+            (v1.jitterBufferEmittedCount - v0.jitterBufferEmittedCount)) *
+          1000
+        : null,
+  };
+}
+const summary = buildSummary();
 
 await Bun.write(OUT, JSON.stringify({ summary, samples }, null, 1));
 console.error(
