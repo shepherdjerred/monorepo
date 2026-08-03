@@ -131,6 +131,9 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
         Bun.env["STREAM_HARDWARE_ACCELERATION"] === "true" ||
         config.stream.video.hardware_acceleration,
       vaapiDevice: Bun.env["VAAPI_DEVICE"] ?? config.stream.video.vaapi_device,
+      encoderAsyncDepth: config.stream.video.encoder_async_depth,
+      lowLatencyMux: config.stream.video.low_latency_mux,
+      lowDelayAudio: config.stream.video.low_delay_audio,
       onEncoderStarted: () => {
         emulator.start();
         logger.info("emulator running", { guildId: session.guildId });

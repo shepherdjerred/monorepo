@@ -128,6 +128,74 @@ describe("prepareStream audioInput", () => {
   });
 });
 
+// Realtime latency opt-ins added 2026-08-03 for discord-plays-mario-kart. Both default OFF; the
+// assert-default cases protect streambot/pokemon, whose command lines must not change.
+describe("prepareStream realtime latency opt-ins", () => {
+  const liveAudioInput = {
+    source: "tcp://127.0.0.1:1",
+    inputOptions: ["-f", "s16le", "-ar", "44100", "-ac", "2"],
+  };
+
+  test("emits -flush_packets 1 and low-delay Opus flags when opted in", () => {
+    const { command, output, promise } = prepareStream("video.nut", {
+      includeAudio: true,
+      lowLatencyMux: true,
+      lowDelayAudio: true,
+      audioInput: liveAudioInput,
+    });
+    promise.catch(() => {});
+    try {
+      const args = ffmpegArgs(command);
+      const joined = args.join(" ");
+      expect(joined).toContain("-flush_packets 1");
+      expect(joined).toContain("-application lowdelay");
+      expect(joined).toContain("-frame_duration 10");
+      // The libopus private options must bind after the audio codec selection.
+      expect(args.indexOf("lowdelay")).toBeGreaterThan(
+        args.indexOf("libopus"),
+      );
+    } finally {
+      killQuietly(command);
+      output.destroy();
+    }
+  });
+
+  test("keeps the command unchanged when the opt-ins are omitted", () => {
+    const { command, output, promise } = prepareStream("video.nut", {
+      includeAudio: true,
+      audioInput: liveAudioInput,
+    });
+    promise.catch(() => {});
+    try {
+      const joined = ffmpegArgs(command).join(" ");
+      expect(joined).not.toContain("-flush_packets");
+      expect(joined).not.toContain("lowdelay");
+      expect(joined).not.toContain("-frame_duration");
+    } finally {
+      killQuietly(command);
+      output.destroy();
+    }
+  });
+
+  test("lowDelayAudio emits no Opus flags on an audio-less stream", () => {
+    const { command, output, promise } = prepareStream("video.nut", {
+      includeAudio: false,
+      lowLatencyMux: true,
+      lowDelayAudio: true,
+    });
+    promise.catch(() => {});
+    try {
+      const joined = ffmpegArgs(command).join(" ");
+      expect(joined).toContain("-flush_packets 1");
+      expect(joined).not.toContain("lowdelay");
+      expect(joined).not.toContain("-frame_duration");
+    } finally {
+      killQuietly(command);
+      output.destroy();
+    }
+  });
+});
+
 describe("prepareStream readrate pacing", () => {
   test("emits -readrate_initial_burst alongside -readrate when both are set", () => {
     const { command, output, promise } = prepareStream("video.mkv", {

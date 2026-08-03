@@ -51,6 +51,24 @@ describe("Encoders.vaapi", () => {
     expect(settings.AV1?.options).toEqual([]);
   });
 
+  test("threads asyncDepth into every VAAPI codec's encoder options", () => {
+    // -async_depth 1 trades encode pipelining for ~one frame-interval less steady-state latency
+    // (ffmpeg's default of 2 holds an extra frame in the encode FIFO). Realtime consumers opt in;
+    // the default-settings assertions above prove omission leaves the command untouched.
+    const tuned = Encoders.vaapi({
+      device: "/dev/dri/renderD128",
+      asyncDepth: 1,
+    })(4000, 8000);
+    expect(tuned.H264?.options).toEqual([
+      "-rc_mode",
+      "VBR",
+      "-async_depth",
+      "1",
+    ]);
+    expect(tuned.H265?.options).toEqual(["-async_depth", "1"]);
+    expect(tuned.AV1?.options).toEqual(["-async_depth", "1"]);
+  });
+
   test("threads the configured render device into decode and software-path global options", () => {
     const custom = Encoders.vaapi({ device: "/dev/dri/renderD129" })(4000, 8000);
     expect(custom.H264?.hwPipeline?.decodeOptions).toContain(

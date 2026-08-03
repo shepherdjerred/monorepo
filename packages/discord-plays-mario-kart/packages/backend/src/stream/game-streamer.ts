@@ -56,6 +56,11 @@ export type GameStreamerOptions = {
   // VAAPI hardware H.264 encoding on an Intel iGPU; falls back to libx264 when off.
   hardwareAcceleration: boolean;
   vaapiDevice: string;
+  // `-async_depth` for the VAAPI encoder (1 = lowest latency; ffmpeg default 2).
+  encoderAsyncDepth: number;
+  // Fork realtime opt-ins: per-packet muxer flush + low-delay Opus.
+  lowLatencyMux: boolean;
+  lowDelayAudio: boolean;
   onEncoderStarted: () => void;
   onSessionEnded?: () => void | Promise<void>;
 };
@@ -212,6 +217,8 @@ export class GameStreamer extends GameStreamerBase {
         inputOptions: audioTransport.inputOptions,
       },
       minimizeLatency: true,
+      lowLatencyMux: this.options.lowLatencyMux,
+      lowDelayAudio: this.options.lowDelayAudio,
       customInputOptions: [
         "-f",
         "rawvideo",
@@ -234,7 +241,10 @@ export class GameStreamer extends GameStreamerBase {
       // then uploads frames to the GPU (format=nv12|vaapi, hwupload) and encodes
       // with h264_vaapi. Software libx264 is the no-GPU fallback (local/arm64).
       encoder: this.options.hardwareAcceleration
-        ? Encoders.vaapi({ device: this.options.vaapiDevice })
+        ? Encoders.vaapi({
+            device: this.options.vaapiDevice,
+            asyncDepth: this.options.encoderAsyncDepth,
+          })
         : Encoders.software({
             x264: { preset: "ultrafast", tune: "zerolatency" },
           }),

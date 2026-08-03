@@ -10,6 +10,7 @@ export type MetricBatch = {
   lateMs: number[];
   copyMs: number[];
   inputApplyDelayMs: number[];
+  eventLoopLagMs: number[];
   ticks: number;
   loopResyncs: number;
   restarts: string[];
@@ -21,6 +22,7 @@ function emptyBatch(): MetricBatch {
     lateMs: [],
     copyMs: [],
     inputApplyDelayMs: [],
+    eventLoopLagMs: [],
     ticks: 0,
     loopResyncs: 0,
     restarts: [],
@@ -33,6 +35,7 @@ function isEmpty(batch: MetricBatch): boolean {
     batch.lateMs.length === 0 &&
     batch.copyMs.length === 0 &&
     batch.inputApplyDelayMs.length === 0 &&
+    batch.eventLoopLagMs.length === 0 &&
     batch.ticks === 0 &&
     batch.loopResyncs === 0 &&
     batch.restarts.length === 0
@@ -41,6 +44,12 @@ function isEmpty(batch: MetricBatch): boolean {
 
 export type BatchingMetricSink = {
   readonly sink: MetricSink;
+  /**
+   * Worker-thread event-loop-lag sample (outside MetricSink: the lag sampler
+   * is a bridge concern, not an emulator-loop metric — in-process harness
+   * runs sample their own thread directly).
+   */
+  observeEventLoopLagMs: (valueMs: number) => void;
   /** Post any accumulated observations now (no-op when empty). */
   flush: () => void;
   /** Final flush + stop the interval. */
@@ -84,6 +93,9 @@ export function createBatchingMetricSink(
       incRestarts(reason) {
         batch.restarts.push(reason);
       },
+    },
+    observeEventLoopLagMs(valueMs) {
+      batch.eventLoopLagMs.push(valueMs);
     },
     flush,
     close() {
