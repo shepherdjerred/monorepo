@@ -143,6 +143,13 @@ The client playout buffer is now demonstrably the largest single term in
 the budget, which promotes the Phase 2 playout-delay experiment to the
 highest-value next lever.
 
+**CI note (2026-08-03):** the `robot-face-review-gate` timed out on every
+build of this PR (1200 s, `review_state: reviewing`, zero findings,
+`timed_out: true`). It is NOT a review objection and NOT specific to this
+PR — PRs #1966 and #1967 show the same failure the same night, i.e. Codex
+is not completing reviews repo-wide. Retry the gate job once Codex
+recovers; do not treat the red as a code signal.
+
 ## Phase 2 — Tier 2 A/B gambles (adopt on evidence, one at a time)
 
 playout-delay max 100→30 ms; wire pacer 25→50 Mbps; camera-mode vs Go-Live
