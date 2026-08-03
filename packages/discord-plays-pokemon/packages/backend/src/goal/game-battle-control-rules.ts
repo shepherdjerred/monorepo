@@ -95,14 +95,30 @@ export function requireBattleMoveSelection(
     selection.slot === undefined
       ? battle.moves.find((move) => move.moveId === selection.moveId)
       : battle.moves.find((move) => move.slot === selection.slot);
+  // Enumerate the live moveset in rejections so the agent can pick a valid
+  // slot/moveId on its next call instead of guessing.
+  const moveset = battle.moves
+    .filter((move) => move.moveId !== 0)
+    .map(
+      (move) =>
+        `slot ${String(move.slot)}: ${move.move} (moveId ${String(move.moveId)}, ` +
+        `pp ${String(move.currentPp)}/${String(move.maxPp)}${move.usable ? "" : ", unusable"})`,
+    )
+    .join("; ");
   if (matchingMove === undefined || matchingMove.moveId === 0) {
-    throw new Error("requested move is not available to the input battler");
+    throw new Error(
+      `requested move is not available to the input battler — moves: ${moveset}`,
+    );
   }
   if (matchingMove.currentPp === 0) {
-    throw new Error("requested move has no remaining PP");
+    throw new Error(
+      `requested move ${matchingMove.move} has no remaining PP — moves: ${moveset}`,
+    );
   }
   if (!matchingMove.usable) {
-    throw new Error("requested move is currently disabled by battle rules");
+    throw new Error(
+      `requested move ${matchingMove.move} is currently disabled by battle rules — moves: ${moveset}`,
+    );
   }
   if (selection.targetBattler !== undefined) {
     requireSelectableMoveTarget(
