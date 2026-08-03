@@ -26,6 +26,23 @@ type MasterToolTelemetry = {
   correlation: () => RunEventCorrelation;
 };
 
+const PrTargetSchema = z.object({ pr: z.number().int().positive() });
+
+function masterToolTargetCorrelation(
+  tool: string,
+  input: unknown,
+): RunEventCorrelation {
+  switch (tool) {
+    case "prioritize_pr":
+    case "pause_pr":
+    case "resume_pr":
+    case "send_worker_guidance":
+      return { prNumber: PrTargetSchema.parse(input).pr };
+    default:
+      return {};
+  }
+}
+
 export async function runRecordedMasterTool<T>(
   tool: string,
   input: unknown,
@@ -40,6 +57,7 @@ export async function runRecordedMasterTool<T>(
   );
   const correlation = {
     ...instrumentation.correlation(),
+    ...masterToolTargetCorrelation(tool, input),
     toolCallId,
   };
   return runRecordedToolOperation({

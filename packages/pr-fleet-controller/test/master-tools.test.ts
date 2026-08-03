@@ -25,12 +25,12 @@ function createTelemetry(events: CapturedEvent[]): FleetTelemetry {
 }
 
 describe("master tool telemetry", () => {
-  test("records successful calls with turn and tool correlation", async () => {
+  test("records successful calls with turn, tool, and target correlation", async () => {
     const events: CapturedEvent[] = [];
     let commandCorrelation: RunEventCorrelation = {};
     const result = await runRecordedMasterTool(
-      "fleet_status",
-      {},
+      "prioritize_pr",
+      { pr: 42, priority: 1 },
       {
         telemetry: createTelemetry(events),
         correlation: () => ({
@@ -49,23 +49,29 @@ describe("master tool telemetry", () => {
       traceId: "1".repeat(32),
       modelTurnId: "master-turn-1",
       toolCallId: "tool-1",
+      prNumber: 42,
     });
     expect(events).toEqual([
       {
         kind: "tool.started",
-        payload: { tool: "fleet_status", input: {} },
+        payload: {
+          tool: "prioritize_pr",
+          input: { pr: 42, priority: 1 },
+        },
         correlation: {
           traceId: "1".repeat(32),
           modelTurnId: "master-turn-1",
+          prNumber: 42,
           toolCallId: "tool-1",
         },
       },
       {
         kind: "tool.completed",
-        payload: { tool: "fleet_status", result: { open: 0 } },
+        payload: { tool: "prioritize_pr", result: { open: 0 } },
         correlation: {
           traceId: "1".repeat(32),
           modelTurnId: "master-turn-1",
+          prNumber: 42,
           toolCallId: "tool-1",
         },
       },

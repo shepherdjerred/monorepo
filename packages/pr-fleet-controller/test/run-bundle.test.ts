@@ -1482,10 +1482,14 @@ describe("run-scoped Mastra storage", () => {
     await runtime.shutdown();
     await recorder.finalize("completed", null);
     const artifacts = await readdir(recorder.paths.runDirectory);
+    expect(artifacts).not.toContain("mastra.db-wal");
+    expect(artifacts).not.toContain("mastra.db-shm");
+    expect(artifacts).not.toContain("observability.duckdb.wal");
     for (const artifact of artifacts) {
       expect(await mode(path.join(recorder.paths.runDirectory, artifact))).toBe(
         0o600,
       );
     }
+    await loadRunBundle(recorder.paths.runDirectory);
   });
 });

@@ -114,6 +114,7 @@ export async function createFleetMastraRuntime(
     await recorder.secureRunArtifacts();
   } catch (error) {
     await mastra.shutdown();
+    await Promise.all([duckdb.close(), libsql.close()]);
     throw error;
   }
 
@@ -126,6 +127,11 @@ export async function createFleetMastraRuntime(
       }
       closed = true;
       await mastra.shutdown();
+      // The generic composite owns domain interfaces, not the concrete parent
+      // stores, so Mastra cannot close these connections on its behalf. Close
+      // them before hashing the bundle to checkpoint WAL contents into the
+      // stable database files that inspect/replay authenticate.
+      await Promise.all([duckdb.close(), libsql.close()]);
       await recorder.secureRunArtifacts();
     },
   };

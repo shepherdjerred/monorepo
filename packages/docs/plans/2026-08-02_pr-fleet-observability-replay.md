@@ -282,6 +282,14 @@ repository checkout.
   each preflight stop boundary now yields for pending signal delivery before
   starting the next operation, so checkout discovery settles and finalizes the
   requested shutdown instead of advancing into source resolution.
+- Fixed the exact-head Terra acceptance finding that database WAL contents were
+  not checkpointed before sidecar hashing. Runtime shutdown now explicitly
+  closes the concrete LibSQL and DuckDB stores before bundle finalization, and
+  regression coverage requires the stable private database files to remain
+  without WAL or shared-memory companions.
+- Addressed the remaining exact-head review finding by correlating
+  PR-specific master steering tools with their validated target PR, so
+  `pr:fleet:inspect --pr` includes priority, pause, resume, and guidance calls.
 - Passed focused typecheck, 147 controller tests, 42 observability tests, lint,
   native-aware build, docs validation, Markdown lint, diff checks, and staged
   Lefthook/Gitleaks/Prettier/lockfile checks.
