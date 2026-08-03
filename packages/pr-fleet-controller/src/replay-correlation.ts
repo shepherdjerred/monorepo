@@ -127,6 +127,15 @@ function verifyTickCausation(
   event: RecordedRunEvent,
   activeTickIds: Set<string>,
 ): void {
+  if (event.kind === "environment.result") {
+    const tickId = event.correlation.tickId;
+    if (tickId === undefined || !activeTickIds.has(tickId)) {
+      throw new Error(
+        `environment.result references a nonexistent or inactive tick: ${tickId ?? "missing"}`,
+      );
+    }
+    return;
+  }
   if (event.kind !== "fleet.change" && event.kind !== "tick.queued") {
     return;
   }

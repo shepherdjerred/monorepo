@@ -260,7 +260,10 @@ repository checkout.
 - Addressed the next two exact-head findings by binding resolved controller
   provenance into the hash-chained event stream and requiring queued ticks to
   reference their still-active originating tick during replay.
-- Passed focused typecheck, 139 controller tests, 42 observability tests, lint,
+- Addressed the final exact-head finding by propagating the active
+  reconciliation tick onto both environment-result paths and requiring replay
+  to reject missing, fabricated, or already-closed environment-result ancestry.
+- Passed focused typecheck, 142 controller tests, 42 observability tests, lint,
   native-aware build, docs validation, Markdown lint, diff checks, and staged
   Lefthook/Gitleaks/Prettier/lockfile checks.
 - Completed a final non-mutating `openai/gpt-5.6-terra` model/tool turn from the

@@ -142,6 +142,41 @@ test("event and summary snapshots use one redaction policy", async () => {
 });
 
 describe("tick command ancestry replay", () => {
+  test("rejects an environment result with a fabricated tick", async () => {
+    const recorder = await createRecorder();
+    recorder.record("run.started", { scenario: "orphaned-environment-result" });
+    recorder.record(
+      "environment.result",
+      { operation: "listOpenPrs", prs: [] },
+      { tickId: "fabricated-tick" },
+    );
+    await recorder.finalize("failed", null, new Error("capture rejected"));
+    const bundle = await loadRunBundle(recorder.paths.runDirectory);
+
+    expect(() => replayRunBundle(bundle, replayOptions)).toThrow(
+      "environment.result references a nonexistent or inactive tick: fabricated-tick",
+    );
+  });
+
+  test("rejects an environment result after its tick fails", async () => {
+    const recorder = await createRecorder();
+    const tickId = recorder.newId("tick");
+    recorder.record("run.started", { scenario: "late-environment-result" });
+    recorder.record("tick.started", { trigger: "heartbeat" }, { tickId });
+    recorder.record("tick.failed", { error: "refresh failed" }, { tickId });
+    recorder.record(
+      "environment.result",
+      { operation: "listOpenPrs", prs: [] },
+      { tickId },
+    );
+    await recorder.finalize("failed", null, new Error("capture rejected"));
+    const bundle = await loadRunBundle(recorder.paths.runDirectory);
+
+    expect(() => replayRunBundle(bundle, replayOptions)).toThrow(
+      `environment.result references a nonexistent or inactive tick: ${tickId}`,
+    );
+  });
+
   test("rejects a standalone command with a fabricated tick", async () => {
     const recorder = await createRecorder();
     const commandId = recorder.newId("command");

@@ -13,6 +13,7 @@ import {
 } from "./evidence-parsers.ts";
 import { GitOperations } from "./git-operations.ts";
 import { captureTelemetryOperation } from "./controller-telemetry.ts";
+import { currentCommandCorrelation } from "./command-correlation.ts";
 import { resolveHostedReviewCompletion } from "./hosted-review.ts";
 import type {
   CommandRequest,
@@ -121,10 +122,14 @@ export class CommandFleetEnvironment implements FleetEnvironment {
     ]);
     const prs = parsePrList(output);
     captureTelemetryOperation("environment.result", () => {
-      this.#telemetry?.record("environment.result", {
-        operation: "listOpenPrs",
-        prs,
-      });
+      this.#telemetry?.record(
+        "environment.result",
+        {
+          operation: "listOpenPrs",
+          prs,
+        },
+        currentCommandCorrelation(),
+      );
     });
     return prs;
   }
@@ -417,7 +422,11 @@ export class CommandFleetEnvironment implements FleetEnvironment {
       this.#telemetry?.record(
         "environment.result",
         { operation: "refreshEvidence", evidence },
-        { prNumber: pr.number, headSha: pr.headSha },
+        {
+          ...currentCommandCorrelation(),
+          prNumber: pr.number,
+          headSha: pr.headSha,
+        },
       );
     });
     return evidence;

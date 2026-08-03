@@ -492,9 +492,16 @@ describe("local run bundles", () => {
       maxWorkers: 5,
     });
     recorder.configureSecretValues(["private-provider-key"]);
-    recorder.record("environment.result", {
-      detail: "token=private-provider-key",
-    });
+    const tickId = recorder.newId("tick");
+    recorder.record("tick.started", { trigger: "startup" }, { tickId });
+    recorder.record(
+      "environment.result",
+      {
+        detail: "token=private-provider-key",
+      },
+      { tickId },
+    );
+    recorder.record("tick.failed", { error: "startup failed" }, { tickId });
     await recorder.finalize("failed", null, new Error("startup failed"));
 
     const bundle = await loadRunBundle(recorder.paths.runDirectory);

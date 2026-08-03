@@ -85,6 +85,26 @@ test("environment result persistence failures use the fatal capture boundary", a
   });
 });
 
+test("environment results inherit the active reconciliation tick", async () => {
+  const telemetry = new RecordingTelemetry();
+  const environment = new StubCommandFleetEnvironment({
+    repo: "shepherdjerred/monorepo",
+    checkout: "/tmp/repo",
+    worktreeRoot: "/tmp/worktrees",
+    provider: codexProvider,
+    telemetry,
+  });
+
+  await withCommandCorrelation({ tickId: "tick-1" }, () =>
+    environment.listOpenPrs(),
+  );
+
+  expect(
+    telemetry.events.find((event) => event.kind === "environment.result")
+      ?.correlation,
+  ).toEqual({ tickId: "tick-1" });
+});
+
 describe("command process-group termination", () => {
   let directory: string;
 
