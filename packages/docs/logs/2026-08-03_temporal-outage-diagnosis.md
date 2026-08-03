@@ -1,7 +1,7 @@
 ---
 id: log-2026-08-03-temporal-outage-diagnosis
 type: log
-status: in-progress
+status: complete
 board: false
 ---
 
@@ -152,24 +152,34 @@ separately because the recorded histories replayed successfully.
   exhaustive Buildkite verify graph passed.
 - Published the documentation follow-up as PR #1976 with a rendered system-map
   screenshot; its exact-head verify, Playwright, deploy-path drift, and
-  Temporal image build/smoke jobs passed.
+  Temporal image build/smoke jobs passed before merge at `7f7c16bdf`.
+- Published and smoke-tested the feature-bearing Bun image as
+  `2.0.0-7909@sha256:8f7a0c662ddc7afd9c6a5c1ec7c8f4252cffb98682da30e53ac471fcfe25ff11`,
+  then merged its durable version pin in generated PR #1977 at `117fab698`.
+- Verified the live rollout has separate Ready `core` and `glitter`
+  Deployments on that exact image, event-loop startup/readiness/liveness probes,
+  independent metrics endpoints, and HTTP 200 health responses.
+- Verified current queue polling follows the intended boundary: the core pod
+  polls `default` and `agent-task`, while the Glitter pod polls
+  `glitter-corpus` and `glitter-context`.
 
 ### Remaining
 
-- Verify that a main build publishes the feature-bearing Temporal image and
-  that GitOps rolls out two healthy worker Deployments with the expected
-  `core` and `glitter` roles.
-- Get a clean hosted review at the amended PR #1976 head; leave merging that
-  documentation follow-up to the normal human review workflow.
+- None.
 
 ### Caveats
 
-- No live recovery action has been authorized or performed.
 - The trigger correlation is strong, but the exact low-level defect remains
   unproven. Capturing it requires an invasive live native stack or a future
   recurrence with CPU profiling enabled.
-- Restarting now may interrupt active agent work and cause delayed schedules to
-  execute late.
+- No manual restart was performed. The old single-process pod restarted during
+  the investigation, and the subsequent GitOps rollout replaced it with the two
+  isolated worker roles.
+- Main build #7909 published the exact image and began the successful rollout,
+  then was canceled after the automated pin and documentation merges triggered
+  newer main builds. Runtime state and merged desired state were therefore
+  verified directly instead of treating the canceled predecessor as green-main
+  proof.
 - The wiki's Bun unit tests pass, but local Astro 7/Vite 8 typecheck and build
   fail during content-config loading with
   `Tsconfig not found /tsconfig.base.json` in this nested worktree. A minimal
