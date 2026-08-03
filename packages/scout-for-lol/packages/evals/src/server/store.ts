@@ -7,6 +7,10 @@ import {
   importDatasetIntoDatabase,
 } from "#server/dataset-transfer-store.ts";
 import {
+  exportDraftFromDatabase,
+  pushDraftIntoDatabase,
+} from "#server/draft-transfer-store.ts";
+import {
   generationSetRevision,
   requireCurrentGenerationSet,
   requireFreshnessAvailable,
@@ -37,6 +41,7 @@ import {
   type CaseSummary,
   CreateDatasetInputSchema,
   DatasetIdSchema,
+  type DatasetDraftTransfer,
   type DatasetExport,
   type DatasetSummary,
   DatasetSummarySchema,
@@ -186,6 +191,14 @@ export class EvalStore {
 
   public importDataset(value: unknown): DatasetSummary {
     return importDatasetIntoDatabase(this.#database, value);
+  }
+
+  public exportDraft(datasetId: string): DatasetDraftTransfer {
+    return exportDraftFromDatabase(this.#database, datasetId);
+  }
+
+  public pushDraft(value: unknown): DatasetSummary {
+    return pushDraftIntoDatabase(this.#database, value);
   }
 
   public addMaterializedCase(input: AddMaterializedCaseInput): CaseSummary {

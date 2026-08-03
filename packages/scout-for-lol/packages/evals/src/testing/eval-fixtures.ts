@@ -105,18 +105,14 @@ export function makeCaseArtifact(overrides: {
   });
 }
 
-export function makeFinalizedRatedDataset(
+export function makeDraftDataset(
   store: EvalStore,
   key: string,
-): {
-  dataset: DatasetSummary;
-  caseId: string;
-  generations: readonly [Generation, Generation];
-} {
+): { datasetId: string; caseId: string; generation: Generation } {
   const draft = store.createDataset({
     key,
     name: `${key} calibration`,
-    description: "Transfer fixture",
+    description: "Draft transfer fixture",
   });
   const artifact = makeCaseArtifact({
     matchId: `NA1_${key}`,
@@ -130,9 +126,9 @@ export function makeFinalizedRatedDataset(
     datasetId: draft.id,
     artifact,
   });
-  const firstGeneration = store.recordGeneration({
+  const generation = store.recordGeneration({
     caseId: evalCase.id,
-    outputText: "First frozen output.",
+    outputText: "Draft baseline output.",
     model: "test-model",
     promptRevision: "baseline-v1",
     renderedPrompts: artifact.context.renderedPrompts,
@@ -140,6 +136,19 @@ export function makeFinalizedRatedDataset(
     inputTokens: 200,
     outputTokens: 20,
   });
+  return { datasetId: draft.id, caseId: evalCase.id, generation };
+}
+
+export function makeFinalizedRatedDataset(
+  store: EvalStore,
+  key: string,
+): {
+  dataset: DatasetSummary;
+  caseId: string;
+  generations: readonly [Generation, Generation];
+} {
+  const draft = makeDraftDataset(store, key);
+  const firstGeneration = draft.generation;
   store.upsertHumanRating({
     generationId: firstGeneration.id,
     rating: {
@@ -150,11 +159,11 @@ export function makeFinalizedRatedDataset(
     },
   });
   const secondGeneration = store.recordGeneration({
-    caseId: evalCase.id,
+    caseId: draft.caseId,
     outputText: "Second frozen output.",
     model: "test-model",
     promptRevision: "candidate-v2",
-    renderedPrompts: artifact.context.renderedPrompts,
+    renderedPrompts: firstGeneration.renderedPrompts,
     durationMs: null,
     inputTokens: null,
     outputTokens: null,
@@ -168,17 +177,17 @@ export function makeFinalizedRatedDataset(
       note: "More entertaining.",
     },
   });
-  const batch = store.listStyleBatch(draft.id, "aaron");
+  const batch = store.listStyleBatch(draft.datasetId, "aaron");
   store.upsertFreshnessRating({
-    datasetId: draft.id,
+    datasetId: draft.datasetId,
     styleKey: "aaron",
     generationSetRevision: batch.generationSetRevision,
     rating: { score: 3, note: "Varied enough." },
   });
 
   return {
-    dataset: store.finalizeDataset(draft.id, 1),
-    caseId: evalCase.id,
+    dataset: store.finalizeDataset(draft.datasetId, 1),
+    caseId: draft.caseId,
     generations: [firstGeneration, secondGeneration],
   };
 }

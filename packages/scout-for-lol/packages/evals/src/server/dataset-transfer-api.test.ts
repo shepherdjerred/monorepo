@@ -2,7 +2,10 @@ import { describe, expect, test } from "bun:test";
 
 import { createEvalStore } from "#server/store.ts";
 import { appRouter } from "#server/trpc.ts";
-import { makeFinalizedRatedDataset } from "#testing/eval-fixtures.ts";
+import {
+  makeDraftDataset,
+  makeFinalizedRatedDataset,
+} from "#testing/eval-fixtures.ts";
 
 describe("dataset transfer tRPC API", () => {
   test("exports and imports through validated procedures", async () => {
@@ -32,6 +35,35 @@ describe("dataset transfer tRPC API", () => {
           sha256: "0".repeat(64),
         }),
       ).rejects.toThrow("Dataset export checksum mismatch");
+    } finally {
+      source.close();
+      target.close();
+    }
+  });
+
+  test("pushes drafts through the validated pushDraft procedure", async () => {
+    const source = createEvalStore(":memory:");
+    const target = createEvalStore(":memory:");
+    try {
+      const fixture = makeDraftDataset(source, "api-draft-push");
+      const targetCaller = appRouter.createCaller({ store: target });
+
+      const transfer = source.exportDraft(fixture.datasetId);
+      const pushed = await targetCaller.datasets.pushDraft(transfer);
+      expect(pushed).toMatchObject({
+        id: fixture.datasetId,
+        key: "api-draft-push",
+        status: "draft",
+        caseCount: 1,
+      });
+      expect(target.exportDraft(fixture.datasetId)).toEqual(transfer);
+
+      await expect(
+        targetCaller.datasets.pushDraft({
+          ...transfer,
+          sha256: "0".repeat(64),
+        }),
+      ).rejects.toThrow("Draft transfer checksum mismatch");
     } finally {
       source.close();
       target.close();
