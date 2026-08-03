@@ -14,6 +14,7 @@ import {
   readRunManifest,
   readRunSummary,
 } from "./run-recorder.ts";
+import { verifyCorrelationGraph } from "./replay-correlation.ts";
 import {
   FleetSnapshotSchema,
   FleetTickReportSchema,
@@ -292,6 +293,8 @@ export function replayRunBundle(
   if (canonicalJson(finalSnapshot) !== canonicalJson(summary.finalSnapshot)) {
     throw new Error("Summary final snapshot does not match replayed state");
   }
+
+  verifyCorrelationGraph(events);
 
   const commands = replayLifecycle(events, "commands", {
     started: "command.started",

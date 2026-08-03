@@ -162,7 +162,10 @@ repository checkout.
   OpenRouter credential values, correlating controller ticks and PR refreshes,
   retaining each worker's dispatched head through stale-head cancellation, and
   routing patch application through the recorded command boundary.
-- Passed focused typecheck, 75 controller tests, 40 observability tests, lint,
+- Addressed the next exact-head review by making every overlapping CLI shutdown
+  caller await the same in-flight operation and making replay reject missing,
+  mismatched, inactive, or prematurely closed correlation parents.
+- Passed focused typecheck, 79 controller tests, 40 observability tests, lint,
   native-aware build, docs validation, Markdown lint, diff checks, and staged
   Lefthook/Gitleaks/Prettier/lockfile checks.
 - Completed a final non-mutating `openai/gpt-5.6-terra` model/tool turn from the

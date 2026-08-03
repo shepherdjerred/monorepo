@@ -1,5 +1,15 @@
 export type TerminalLineResult = "continue" | "stop";
 
+export function createSharedShutdown(
+  shutdown: () => Promise<void>,
+): () => Promise<void> {
+  let shutdownPromise: Promise<void> | undefined;
+  return () => {
+    shutdownPromise ??= Promise.resolve().then(shutdown);
+    return shutdownPromise;
+  };
+}
+
 export async function consumeTerminalLines(
   lines: AsyncIterable<string>,
   onLine: (line: string) => Promise<TerminalLineResult>,

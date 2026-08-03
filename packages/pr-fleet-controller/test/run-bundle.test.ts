@@ -88,6 +88,58 @@ async function recordSuccessfulEmptyRun(recorder: RunRecorder): Promise<void> {
   await recorder.finalize("completed", snapshot);
 }
 
+async function recordSyntheticWorkerRun(recorder: RunRecorder): Promise<void> {
+  const correlation = {
+    prNumber: 42,
+    headSha: "b".repeat(40),
+    generation: 3,
+  };
+  const modelTurnId = recorder.newId("worker-turn");
+  const toolCallId = recorder.newId("tool");
+  const commandId = recorder.newId("command");
+  const modelCorrelation = { ...correlation, modelTurnId };
+  const toolCorrelation = { ...modelCorrelation, toolCallId };
+  const commandCorrelation = { ...toolCorrelation, commandId };
+  recorder.record("run.started", { scenario: "correlation" });
+  recorder.record("worker.started", { runtimeAgent: "pr-42-g3" }, correlation);
+  recorder.record(
+    "worker.attempt.started",
+    { attempt: 1, prompt: "fix" },
+    modelCorrelation,
+  );
+  recorder.record(
+    "tool.started",
+    { tool: "run_local_command", input: { executable: "git" } },
+    toolCorrelation,
+  );
+  recorder.record(
+    "command.started",
+    { executable: "git", args: ["status"] },
+    commandCorrelation,
+  );
+  recorder.record(
+    "command.completed",
+    { executable: "git", exitCode: 0 },
+    commandCorrelation,
+  );
+  recorder.record(
+    "tool.completed",
+    { tool: "run_local_command", result: { exitCode: 0 } },
+    toolCorrelation,
+  );
+  recorder.record(
+    "worker.attempt.completed",
+    { attempt: 1, result: { state: "waiting-ci" } },
+    modelCorrelation,
+  );
+  recorder.record(
+    "worker.completed",
+    { result: { state: "waiting-ci" } },
+    correlation,
+  );
+  await recorder.finalize("completed", null);
+}
+
 describe("local run bundles", () => {
   test("writes private, redacted, hash-verifiable artifacts", async () => {
     const secret = ["custom", "provider", "credential"].join("-");
@@ -217,22 +269,22 @@ describe("run bundle replay", () => {
     recorder.record(
       "tool.started",
       { tool: "run_local_command", input: { executable: "git" } },
-      { ...correlation, toolCallId },
+      { ...correlation, modelTurnId: secondTurn, toolCallId },
     );
     recorder.record(
       "command.started",
       { executable: "git", args: ["status"] },
-      { ...correlation, commandId },
+      { ...correlation, modelTurnId: secondTurn, toolCallId, commandId },
     );
     recorder.record(
       "command.completed",
       { executable: "git", exitCode: 0, stdout: "clean", stderr: "" },
-      { ...correlation, commandId },
+      { ...correlation, modelTurnId: secondTurn, toolCallId, commandId },
     );
     recorder.record(
       "tool.completed",
       { tool: "run_local_command", result: { exitCode: 0 } },
-      { ...correlation, toolCallId },
+      { ...correlation, modelTurnId: secondTurn, toolCallId },
     );
     recorder.record(
       "worker.attempt.completed",
@@ -282,7 +334,96 @@ describe("run bundle replay", () => {
       open: [],
     });
   });
+});
 
+describe("run bundle correlation replay", () => {
+  test("rejects tools whose model-turn parent does not exist", async () => {
+    const recorder = await createRecorder();
+    await recordSyntheticWorkerRun(recorder);
+    const bundle = await loadRunBundle(recorder.paths.runDirectory);
+    const events = bundle.events.map((event) =>
+      event.kind === "tool.started"
+        ? {
+            ...event,
+            correlation: {
+              ...event.correlation,
+              modelTurnId: "missing-model-turn",
+            },
+          }
+        : event,
+    );
+
+    expect(() =>
+      replayRunBundle(
+        { ...bundle, events },
+        {
+          currentControllerVersion: "0.1.0",
+          allowVersionMismatch: false,
+        },
+      ),
+    ).toThrow("nonexistent or inactive model turn");
+  });
+
+  test("rejects commands whose identity differs from their tool parent", async () => {
+    const recorder = await createRecorder();
+    await recordSyntheticWorkerRun(recorder);
+    const bundle = await loadRunBundle(recorder.paths.runDirectory);
+    const events = bundle.events.map((event) =>
+      event.kind === "command.started"
+        ? {
+            ...event,
+            correlation: {
+              ...event.correlation,
+              headSha: "c".repeat(40),
+            },
+          }
+        : event,
+    );
+
+    expect(() =>
+      replayRunBundle(
+        { ...bundle, events },
+        {
+          currentControllerVersion: "0.1.0",
+          allowVersionMismatch: false,
+        },
+      ),
+    ).toThrow("mismatched tool correlation field headSha");
+  });
+
+  test("rejects a model turn that closes before its tool", async () => {
+    const recorder = await createRecorder();
+    await recordSyntheticWorkerRun(recorder);
+    const bundle = await loadRunBundle(recorder.paths.runDirectory);
+    const events = bundle.events.toSorted((left, right) => {
+      if (
+        left.kind === "worker.attempt.completed" &&
+        right.kind === "tool.completed"
+      ) {
+        return -1;
+      }
+      if (
+        left.kind === "tool.completed" &&
+        right.kind === "worker.attempt.completed"
+      ) {
+        return 1;
+      }
+      return left.sequence - right.sequence;
+    });
+
+    expect(() =>
+      replayRunBundle(
+        { ...bundle, events },
+        {
+          currentControllerVersion: "0.1.0",
+          allowVersionMismatch: false,
+        },
+      ),
+    ).toThrow("closed before its active tool");
+  });
+});
+
+describe("run bundle lifecycle replay", () => {
   test("rejects completed runs with open command or model lifecycles", async () => {
     const recorder = await createRecorder();
     recorder.record("run.started", { scenario: "incomplete-capture" });

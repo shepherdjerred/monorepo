@@ -19,7 +19,7 @@ import type { FleetObserver } from "./ports.ts";
 import { RunRecorder } from "./run-recorder.ts";
 import { FleetControllerConfigSchema, type FleetSnapshot } from "./schemas.ts";
 import { FleetStore } from "./state.ts";
-import { consumeTerminalLines } from "./terminal-loop.ts";
+import { consumeTerminalLines, createSharedShutdown } from "./terminal-loop.ts";
 
 const HELP = `Usage:
   bun run pr:fleet --model <provider>/<model> [options]
@@ -205,7 +205,6 @@ async function main(): Promise<void> {
   let controller: FleetController | undefined;
   let master: MastraMaster | undefined;
   let terminal: ReturnType<typeof createInterface> | undefined;
-  let stopping = false;
   try {
     const model = resolveModel(
       config.model,
@@ -249,11 +248,7 @@ async function main(): Promise<void> {
       output: process.stdout,
     });
 
-    const stop = async (): Promise<void> => {
-      if (stopping) {
-        return;
-      }
-      stopping = true;
+    const stop = createSharedShutdown(async () => {
       const [snapshot] = await Promise.all([
         controller?.stop() ?? Promise.resolve(null),
         master?.stop(),
@@ -262,7 +257,7 @@ async function main(): Promise<void> {
         observer.onSnapshot(snapshot);
       }
       terminal?.close();
-    };
+    });
     process.once("SIGINT", () => {
       void (async (): Promise<void> => {
         try {
