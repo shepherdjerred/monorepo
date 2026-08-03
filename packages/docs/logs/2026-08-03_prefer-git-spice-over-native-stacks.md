@@ -56,7 +56,21 @@ sync`.
 - `packages/dotfiles/run_once_after_install-gh-extensions.sh` (chezmoi
   provisioning for the `github/gh-stack` extension) and its
   `scripts/script-migrations.json` retain entry.
-- `packages/docs/plans/2026-07-31_native-github-stacks.md` (the #1876 plan).
+- `packages/docs/plans/2026-07-31_native-github-stacks.md` (the #1876 plan) —
+  the bare `git revert` deleted it outright; per docs archival policy a
+  superseded plan is archived, not dropped, so it was restored to
+  `packages/docs/archive/superseded/2026-07-31_native-github-stacks.md`
+  (`type: reference`, `status: complete`) with a supersession note pointing
+  back at this PR.
+
+## Fix-ups after the automated review
+
+- `packages/docs/plans/2026-08-02_buildkite-bootstrap-oom-longterm-fix.md:122`
+  and `packages/docs/plans/2026-08-02_pr-fleet-observability-replay.md:19,137`
+  are active `status: in-progress` plans that still called for `gh stack
+init`/a "native GitHub stack." Updated both to the git-spice equivalent
+  (`git-spice branch track <branch> --base main`, "git-spice stack layers") so
+  an agent resuming either plan follows the now-current workflow.
 
 ## Verified
 
