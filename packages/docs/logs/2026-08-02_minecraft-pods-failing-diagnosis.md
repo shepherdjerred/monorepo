@@ -1,5 +1,5 @@
 ---
-id: 2026-08-02_minecraft-pods-failing-diagnosis
+id: log-2026-08-02-minecraft-pods-failing-diagnosis
 type: log
 status: complete
 board: false
@@ -56,7 +56,7 @@ never reaches root cause 1. It dies earlier in the `check-config-drift` init
 container (`misc/minecraft-drift-check.ts`), which compares live `/data` against
 the repo-baked ConfigMaps and refuses to boot (exit 1) on any drift. Detected:
 
-- `/data/commands.yml` — list indentation (`- version` vs `  - version`)
+- `/data/commands.yml` — list indentation (top-level `- version` vs a two-space-indented `- version`)
 - `/data/plugins/spark/config.json` — missing trailing newline
 - `/data/plugins/mcMMO/chat.yml` — reordering / whitespace
 

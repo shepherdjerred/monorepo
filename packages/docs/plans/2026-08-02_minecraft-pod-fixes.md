@@ -1,5 +1,5 @@
 ---
-id: 2026-08-02_minecraft-pod-fixes
+id: plan-2026-08-02-minecraft-pod-fixes
 type: plan
 status: in-progress
 board: false
@@ -96,11 +96,35 @@ out-of-band 1P relabel + operator resync.
 
 ### Remaining
 
-- **Post-deploy verification (after merge → ArgoCD sync):** confirm the synced secrets show
-  `DISCORD_BOT_TOKEN`/`DISCORD_CHANNEL_ID`; force a wake with
-  `kubectl scale statefulset minecraft-{shuxin,sjerred,tsmc} -n <ns> --replicas=1`; confirm
-  shuxin's drift-check prints `IGNORED (runtime-modified)` for the three files and all three
-  pods reach `Running` (DiscordSRV connects on sjerred/tsmc).
+- **Post-deploy verification — read-only (after merge → ArgoCD sync):** confirm the synced
+  secrets `minecraft-{sjerred,tsmc}-discord` expose data keys `DISCORD_BOT_TOKEN` /
+  `DISCORD_CHANNEL_ID` (not the old kebab-case keys) and report the current pod/replica state
+  of all three servers. Scheduled as the report-only Temporal check below.
+- **Post-deploy verification — privileged force-wake (separate operator step):** at 0 replicas
+  the crash paths stay dormant, so end-to-end proof needs an operator to
+  `kubectl scale statefulset minecraft-{shuxin,sjerred,tsmc} -n <ns> --replicas=1` (allowed via
+  `ignoreDifferences`), then confirm shuxin's drift-check prints `IGNORED (runtime-modified)`
+  for the three files and all three pods reach `Running` (DiscordSRV connects on sjerred/tsmc).
+  This mutates live state, so it is intentionally **not** part of the report-only automation.
+
+<!-- temporal-agent-task
+{
+  "title": "Minecraft pod fixes — post-deploy secret-key + pod-state report",
+  "provider": "claude",
+  "mode": "report-only",
+  "runAt": "2026-08-05T09:00:00-07:00",
+  "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
+  "source": {
+    "docPath": "packages/docs/plans/2026-08-02_minecraft-pod-fixes.md"
+  },
+  "prompt": "Read-only post-deploy check for PR #1927 (branch feature/minecraft-pod-fixes). For each of the sjerred and tsmc Minecraft servers, run `kubectl get secret minecraft-<name>-discord -n minecraft-<name> -o jsonpath='{.data}'` and confirm the data keys are DISCORD_BOT_TOKEN and DISCORD_CHANNEL_ID (the UPPER_SNAKE keys the DiscordSRV secretKeyRefs read), NOT the old kebab-case discord-bot-token / discord-channel-id. Then report the current phase and replica count of the minecraft-shuxin, minecraft-sjerred, and minecraft-tsmc StatefulSets/pods. Email the result: green if both discord secrets show UPPER_SNAKE keys and no minecraft pod is in CreateContainerConfigError or Init:Error; red otherwise with the offending keys/pod states. Do NOT scale, wake, or otherwise mutate any workload — the force-wake is a separate manual operator step tracked in this plan's Remaining section."
+}
+-->
+
+> The block above still needs an operator to schedule it (`cd packages/temporal &&
+TEMPORAL_ADDRESS=localhost:7233 bun run scripts/schedule-agent-task.ts --from-doc
+../../packages/docs/plans/2026-08-02_minecraft-pod-fixes.md`); it is report-only and never
+> performs the privileged force-wake.
 
 ### Caveats
 
