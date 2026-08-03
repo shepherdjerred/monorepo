@@ -59,26 +59,18 @@ type GoalManagerOptions = {
   snapshotProvider?: () => GameSnapshot | null;
   spatialSnapshotProvider?: () => SpatialSnapshot | null;
   acquireInputLease?: () => () => void;
+  // Commit live game progress to the flash save when a goal ends. Emerald only
+  // writes progress into flash on an in-game save, so without this a goal's
+  // work is lost on the next restart. The driver wires this to
+  // `emulator.checkpointSave()`; it rejects when the game is not in a saveable
+  // state (menu, cutscene, title), which the manager tolerates. Optional so
+  // tests that don't exercise persistence don't have to pass a stub.
+  checkpointGame?: () => Promise<void>;
 };
 
-function oneShot(action: () => void): () => void {
-  let completed = false;
-  return () => {
-    if (completed) return;
-    completed = true;
-    action();
-  };
-}
-
-function noOpRelease(): void {
-  return;
-}
-
-function noOpAcquireInputLease(): () => void {
-  return noOpRelease;
-}
-
 import { defaultSpawner, settleGoalProcess } from "./goal-process-helpers.ts";
+import { noOpAcquireInputLease, oneShot } from "./goal-lease-helpers.ts";
+import { saveOnGoalEnd } from "./goal-checkpoint.ts";
 
 export class GoalManager {
   private active: ActiveGoal | undefined;
@@ -93,6 +85,7 @@ export class GoalManager {
   private readonly snapshotProvider: () => GameSnapshot | null;
   private readonly spatialSnapshotProvider: () => SpatialSnapshot | null;
   private readonly acquireInputLease: () => () => void;
+  private readonly checkpointGame: () => Promise<void>;
   private readonly controlGate = new GoalControlGate();
   // Per-guild persistent memory: the curated MEMORY.md fed into every prompt,
   // system-written session logs, and MEMORY.md archives. Backed by
@@ -116,6 +109,7 @@ export class GoalManager {
     this.spatialSnapshotProvider =
       options.spatialSnapshotProvider ?? (() => null);
     this.acquireInputLease = options.acquireInputLease ?? noOpAcquireInputLease;
+    this.checkpointGame = options.checkpointGame ?? (() => Promise.resolve());
     this.memory = new GoalMemory(
       this.resolveRuntimePath(this.config.memory_dir),
       this.now,
@@ -404,6 +398,7 @@ export class GoalManager {
       recordGoalFinished(claimed.state);
       await this.recordCompletion(claimed.state);
       await this.persistState(claimed.state);
+      await saveOnGoalEnd(this.checkpointGame, claimed.state.status);
       const usage = claimed.jsonl.total();
       const cost = computeCost(this.config.model, usage);
       recordGoalUsage(usage, cost);
@@ -437,6 +432,7 @@ export class GoalManager {
       recordGoalFinished(active.state);
       await this.recordCompletion(active.state);
       await this.persistState(active.state);
+      await saveOnGoalEnd(this.checkpointGame, "timeout");
       await this.sendMessage({
         channelId: active.state.channelId,
         content: `<@${active.state.requestedBy}> goal timed out after ${String(
@@ -469,6 +465,11 @@ export class GoalManager {
       recordGoalFinished(active.state);
       await this.recordCompletion(active.state);
       await this.persistState(active.state);
+      // On "shutdown" the driver's onSessionStop checkpoints once for the whole
+      // session, so only the "replaced" path saves here to avoid a double save.
+      if (status === "replaced") {
+        await saveOnGoalEnd(this.checkpointGame, "replaced");
+      }
     } finally {
       active.releaseInputLease();
       active.trace.end();

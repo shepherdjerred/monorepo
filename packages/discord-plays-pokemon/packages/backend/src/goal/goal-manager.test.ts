@@ -400,6 +400,81 @@ describe("GoalManager final report", () => {
     expect(content).toContain("goal finished");
     await manager.shutdown();
   });
+
+  test("checkpoints the game save when a goal finishes", async () => {
+    const runtimeDirectory = await createRuntimeDirectory();
+    const process = makeProcess();
+    const messages: GoalDiscordMessage[] = [];
+    let checkpoints = 0;
+    const manager = new GoalManager({
+      config: makeGoalConfig(runtimeDirectory),
+      controlToken: "token",
+      spawner: () => process,
+      sendMessage: async (message) => {
+        messages.push(message);
+      },
+      now: () => new Date("2026-06-13T00:00:00.000Z"),
+      checkpointGame: async () => {
+        checkpoints += 1;
+        await Bun.sleep(0);
+      },
+    });
+
+    const start = await manager.startGoal({
+      goal: "Reach Petalburg",
+      requesterId: "user-a",
+      channelId: "channel",
+    });
+    expect(start.kind).toBe("started");
+
+    process.finish(0);
+    for (let attempt = 0; attempt < 50 && messages.length === 0; attempt += 1) {
+      await Bun.sleep(1);
+    }
+
+    expect(messages).toHaveLength(1);
+    expect(checkpoints).toBe(1);
+    await manager.shutdown();
+  });
+
+  test("still finishes a goal when the checkpoint save fails", async () => {
+    const runtimeDirectory = await createRuntimeDirectory();
+    const process = makeProcess();
+    const messages: GoalDiscordMessage[] = [];
+    let checkpoints = 0;
+    const manager = new GoalManager({
+      config: makeGoalConfig(runtimeDirectory),
+      controlToken: "token",
+      spawner: () => process,
+      sendMessage: async (message) => {
+        messages.push(message);
+      },
+      now: () => new Date("2026-06-13T00:00:00.000Z"),
+      // Emerald rejects a save outside the overworld/battle — teardown must not
+      // fail because of it.
+      checkpointGame: () => {
+        checkpoints += 1;
+        return Promise.reject(new Error("not in a saveable state"));
+      },
+    });
+
+    const start = await manager.startGoal({
+      goal: "Reach Petalburg",
+      requesterId: "user-a",
+      channelId: "channel",
+    });
+    expect(start.kind).toBe("started");
+
+    process.finish(0);
+    for (let attempt = 0; attempt < 50 && messages.length === 0; attempt += 1) {
+      await Bun.sleep(1);
+    }
+
+    expect(checkpoints).toBe(1);
+    expect(messages).toHaveLength(1);
+    expect(messages[0]?.content).toContain("goal finished");
+    await manager.shutdown();
+  });
 });
 
 describe("GoalManager concurrency", () => {

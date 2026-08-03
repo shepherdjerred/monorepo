@@ -141,6 +141,7 @@ export class PokemonGameDriver implements GameDriver<SelfbotPooledUserbot> {
         spatialSnapshotProvider: () =>
           readSpatialSnapshot(emulator.memoryReader(), emulator.gameSymbols()),
         acquireInputLease: () => emulator.acquireInputLease("goal"),
+        checkpointGame: () => emulator.checkpointSave(),
       });
       await goalManager.initialize();
       goalControlServer = startGoalControlServer({
@@ -250,6 +251,23 @@ export class PokemonGameDriver implements GameDriver<SelfbotPooledUserbot> {
       runtime.streamer.destroy();
     } catch (error) {
       logger.error("streamer destroy failed", error);
+    }
+    // Commit live progress to the flash save before halting, so a goal-driven
+    // session resumes where it left off instead of the last in-game save. Only
+    // when goal mode is active (per the "goals save at the end" requirement);
+    // Emerald rejects saves outside the overworld/battle, which we tolerate.
+    if (runtime.goalManager !== undefined) {
+      try {
+        await runtime.emulator.checkpointSave();
+        logger.info("pokemon driver saved game on stop", {
+          guildId: session.guildId,
+        });
+      } catch (error) {
+        logger.warn("pokemon driver checkpoint save skipped on stop", {
+          guildId: session.guildId,
+          reason: error instanceof Error ? error.message : String(error),
+        });
+      }
     }
     try {
       runtime.emulator.stop();
