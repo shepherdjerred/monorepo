@@ -262,6 +262,11 @@ export const DatasetExportCaseSchema = z.strictObject({
 
 export const DatasetExportFreshnessRatingSchema = z.strictObject({
   styleKey: z.string().min(1),
+  // Binds the transferred freshness score to the exact generation set it
+  // evaluated. The importer recomputes this from the transferred cases' latest
+  // generations and rejects a score whose generation set no longer matches, so
+  // a stale rating cannot be re-associated with outputs the reviewer never saw.
+  generationSetRevision: GenerationSetRevisionSchema,
   rating: FreshnessRatingSchema,
 });
 

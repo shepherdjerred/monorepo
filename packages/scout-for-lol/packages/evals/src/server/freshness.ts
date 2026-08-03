@@ -4,11 +4,9 @@ import { z } from "zod";
 import { GenerationSetRevisionSchema } from "#shared/schema.ts";
 import type {
   FreshnessRatingSchema,
-  StyleBatchSchema,
   UpsertFreshnessRatingInputSchema,
 } from "#shared/schema.ts";
 
-type StyleReviews = z.infer<typeof StyleBatchSchema>["reviews"];
 const FreshnessAccessRowSchema = z.strictObject({
   generatedCaseCount: z.number().int().nonnegative(),
   missingRatingCount: z.number().int().nonnegative(),
@@ -34,7 +32,11 @@ export const SELECT_FRESHNESS_RATING_SQL = `
   WHERE dataset_id = ? AND style_key = ?
 `;
 
-export function generationSetRevision(reviews: StyleReviews): string {
+type GenerationSetMember = { caseId: string; generationId: string };
+
+export function generationSetRevision(
+  reviews: readonly GenerationSetMember[],
+): string {
   const hasher = new Bun.CryptoHasher("sha256");
   for (const review of reviews) {
     hasher.update(review.caseId);
@@ -43,6 +45,40 @@ export function generationSetRevision(reviews: StyleReviews): string {
     hasher.update("\0");
   }
   return GenerationSetRevisionSchema.parse(hasher.digest("hex"));
+}
+
+type ExportedStyleCase = {
+  id: string;
+  ordinal: number;
+  artifact: { styleKey: string };
+  generations: readonly { generation: { id: string } }[];
+};
+
+// Recompute a style's generation-set revision from exported/transferred cases,
+// mirroring listStyleBatch: the style's cases in ordinal order, each keyed by
+// its latest generation. Used to bind transferred freshness ratings to the
+// generation set they evaluated.
+export function styleGenerationSetRevision(
+  cases: readonly ExportedStyleCase[],
+  styleKey: string,
+): string {
+  const members = cases
+    .filter(
+      (evalCase) =>
+        evalCase.artifact.styleKey === styleKey &&
+        evalCase.generations.length > 0,
+    )
+    .toSorted((left, right) => left.ordinal - right.ordinal)
+    .map((evalCase) => {
+      const latest = evalCase.generations.at(-1);
+      if (latest === undefined) {
+        throw new Error(
+          `Case ${evalCase.id} has no generations for style ${styleKey}`,
+        );
+      }
+      return { caseId: evalCase.id, generationId: latest.generation.id };
+    });
+  return generationSetRevision(members);
 }
 
 export function requireCurrentGenerationSet(

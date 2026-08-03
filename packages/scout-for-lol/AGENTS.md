@@ -158,6 +158,17 @@ from Beta SQLite, and discovery/materialization use that snapshot with the
 tracked membership; never infer those identities from arbitrary Riot
 participants or substitute the production bucket.
 
+The full operator workflow (flags and examples in `packages/evals/README.md`):
+
+| Command                                                                                  | Purpose                                                                                                    |
+| ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `bun run --filter=@scout-for-lol/evals dev`                                              | Launch the loopback web app to rate cases and run style-batch freshness checks.                            |
+| `bun run --filter=@scout-for-lol/evals sync-beta`                                        | Snapshot a sanitized Beta profile corpus into the local SQLite snapshot used by discovery/materialization. |
+| `AWS_PROFILE=seaweedfs bun run --filter=@scout-for-lol/evals discover -- …`              | Discover candidate matches from the `scout-beta` bucket against the snapshot.                              |
+| `bun run --filter=@scout-for-lol/evals materialize -- --spec <file>`                     | Materialize a new draft — or extend an existing draft via the spec's `datasetId` — with S3/model cases.    |
+| `bun run --filter=@scout-for-lol/evals dataset:export -- --dataset <id> --output <file>` | Export a finalized dataset to a checksummed, generation-set-bound transfer file.                           |
+| `bun run --filter=@scout-for-lol/evals dataset:import -- --input <file>`                 | Import a transfer file into another eval database (rejects tampered checksums or freshness bindings).      |
+
 Run the deterministic browser suite with
 `bunx turbo run test:e2e --filter=@scout-for-lol/evals`. It uses a test-only
 in-memory store and the production-built Hono/tRPC/React path; it never reads the

@@ -163,11 +163,48 @@ describe("dataset export and import", () => {
           ...evalCase,
           id: crypto.randomUUID(),
         })),
-        freshnessRatings: datasetExport.freshnessRatings,
+        // New case ids would no longer match the freshness generation-set
+        // revision; this scenario exercises generation-id collision, not
+        // freshness, so omit freshness ratings.
+        freshnessRatings: [],
       });
       expect(() =>
         target.importDataset(createDatasetExport(generationCollisionPayload)),
       ).toThrow(`Generation id ${fixture.generations[0].id} already exists`);
+    } finally {
+      source.close();
+      target.close();
+    }
+  });
+
+  test("rejects a freshness rating bound to a different generation set", () => {
+    const source = createEvalStore(":memory:");
+    const target = createEvalStore(":memory:");
+    try {
+      const fixture = makeFinalizedRatedDataset(source, "freshness-binding");
+      const datasetExport = source.exportDataset(fixture.dataset.id);
+      expect(datasetExport.freshnessRatings).not.toHaveLength(0);
+
+      // A checksum-valid export whose freshness revision no longer matches the
+      // transferred generation set must be rejected, not silently re-associated
+      // with outputs the reviewer never saw.
+      const tampered = createDatasetExport({
+        schemaVersion: datasetExport.schemaVersion,
+        dataset: {
+          ...datasetExport.dataset,
+          id: crypto.randomUUID(),
+          key: "freshness-binding-tampered",
+          version: 1,
+        },
+        cases: datasetExport.cases,
+        freshnessRatings: datasetExport.freshnessRatings.map((freshness) => ({
+          ...freshness,
+          generationSetRevision: "0".repeat(64),
+        })),
+      });
+      expect(() => target.importDataset(tampered)).toThrow(
+        "different generation set",
+      );
     } finally {
       source.close();
       target.close();
@@ -265,6 +302,7 @@ describe("dataset export snapshot", () => {
       expect(snapshot.freshnessRatings).toEqual([
         {
           styleKey: "aaron",
+          generationSetRevision: expect.stringMatching(/^[\da-f]{64}$/),
           rating: { score: 3, note: "Varied enough." },
         },
       ]);

@@ -5,6 +5,7 @@ import {
   createDatasetExport,
   validateDatasetExport,
 } from "#server/dataset-transfer.ts";
+import { styleGenerationSetRevision } from "#server/freshness.ts";
 import {
   INSERT_GENERATION_SQL,
   parseGenerationRow,
@@ -155,6 +156,7 @@ function readDatasetExportSnapshot(
     cases,
     freshnessRatings: freshnessRatings.map(({ styleKey, ...rating }) => ({
       styleKey,
+      generationSetRevision: styleGenerationSetRevision(cases, styleKey),
       rating,
     })),
   });
@@ -341,11 +343,28 @@ function insertImportedDataset(
     .run(dataset.finalizedAt, dataset.id);
 }
 
+function requireFreshnessGenerationSets(datasetExport: DatasetExport): void {
+  for (const freshness of datasetExport.freshnessRatings) {
+    const expected = styleGenerationSetRevision(
+      datasetExport.cases,
+      freshness.styleKey,
+    );
+    if (freshness.generationSetRevision !== expected) {
+      throw new Error(
+        `Freshness rating for style ${freshness.styleKey} was evaluated against a ` +
+          `different generation set than the transferred cases (declared ` +
+          `${freshness.generationSetRevision}, transferred cases produce ${expected})`,
+      );
+    }
+  }
+}
+
 export function importDatasetIntoDatabase(
   database: Database,
   value: unknown,
 ): z.infer<typeof DatasetSummarySchema> {
   const datasetExport = validateDatasetExport(value);
+  requireFreshnessGenerationSets(datasetExport);
   return database.transaction(() => {
     requireNoDatasetCollision(database, datasetExport);
     requireNoRecordCollisions(database, datasetExport);
