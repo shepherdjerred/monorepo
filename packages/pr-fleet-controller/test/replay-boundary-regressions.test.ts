@@ -7,7 +7,11 @@ import {
   replayRunBundle,
 } from "@shepherdjerred/pr-fleet-controller/src/run-inspection.ts";
 import { RunRecorder } from "@shepherdjerred/pr-fleet-controller/src/run-recorder.ts";
-import type { FleetSnapshot } from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
+import {
+  PrStateSchema,
+  type FleetSnapshot,
+} from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
+import { evidence, identity } from "./fixtures.ts";
 
 const snapshot: FleetSnapshot = {
   open: 0,
@@ -49,6 +53,76 @@ const replayOptions = {
   currentControllerVersion: "0.1.0",
   allowVersionMismatch: false,
 };
+
+test("event and summary snapshots use one redaction policy", async () => {
+  const recorder = await createRecorder();
+  const pr = identity(42, {
+    headRefName: "feature/token=cleanup",
+    labels: ["token=cleanup"],
+  });
+  const state = PrStateSchema.parse({
+    identity: pr,
+    logicalOwner: "fleet-controller",
+    runtimeAgent: null,
+    agentGeneration: 0,
+    model: "openai/gpt-5.6-terra",
+    status: "paused",
+    classification: "paused",
+    stackId: "pr-42",
+    worktree: null,
+    setupComplete: false,
+    evidence: evidence(pr),
+    lastAgentReportAt: null,
+    lastProgressAt: "2026-08-03T00:00:00.000Z",
+    noProgressTicks: 0,
+    prodSentAt: null,
+    escalation: null,
+    priority: 0,
+  });
+  const sensitiveSnapshot: FleetSnapshot = {
+    open: 1,
+    green: 0,
+    active: 0,
+    queued: 0,
+    pending: 0,
+    paused: 1,
+    prs: [state],
+  };
+  const tickId = recorder.newId("tick");
+  recorder.record("run.started", { scenario: "snapshot-redaction" });
+  recorder.record("tick.started", { trigger: "startup" }, { tickId });
+  recorder.record(
+    "fleet.snapshot",
+    { snapshot: sensitiveSnapshot },
+    { tickId },
+  );
+  recorder.record(
+    "tick.completed",
+    {
+      report: {
+        trigger: "startup",
+        snapshot: sensitiveSnapshot,
+        changes: [],
+        nextHeartbeatSeconds: 600,
+      },
+    },
+    { tickId },
+  );
+  recorder.record("shutdown.started", { activeWorkers: 0 });
+  recorder.record("shutdown.completed", { snapshot: sensitiveSnapshot });
+  await recorder.finalize("completed", sensitiveSnapshot);
+
+  const report = replayRunBundle(
+    await loadRunBundle(recorder.paths.runDirectory),
+    replayOptions,
+  );
+  expect(report.finalSnapshot?.prs[0]?.identity.headRefName).toBe(
+    "feature/token=[REDACTED]",
+  );
+  expect(report.finalSnapshot?.prs[0]?.identity.labels).toEqual([
+    "token=[REDACTED]",
+  ]);
+});
 
 describe("snapshot ancestry replay", () => {
   test("rejects a snapshot whose tick was never started", async () => {

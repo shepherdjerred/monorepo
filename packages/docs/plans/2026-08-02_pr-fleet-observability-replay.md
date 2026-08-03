@@ -239,7 +239,10 @@ repository checkout.
   cleanup after a failed start-audit write, preserving the settled snapshot
   when shutdown propagates a failure, and documenting inspect/replay in the
   root agent contract and PR automation skill.
-- Passed focused typecheck, 118 controller tests, 42 observability tests, lint,
+- Addressed two further exact-head findings by propagating worker-start capture
+  failures before scheduling work and applying the same recursively validated
+  snapshot redaction policy to events and summaries.
+- Passed focused typecheck, 119 controller tests, 42 observability tests, lint,
   native-aware build, docs validation, Markdown lint, diff checks, and staged
   Lefthook/Gitleaks/Prettier/lockfile checks.
 - Completed a final non-mutating `openai/gpt-5.6-terra` model/tool turn from the

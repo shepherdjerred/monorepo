@@ -254,63 +254,64 @@ export class FleetController implements MasterControllerTools {
         });
         continue;
       }
+      let worktree: string;
       try {
-        const worktree = await assignFleetWorktree(
+        worktree = await assignFleetWorktree(
           this.#environment,
           this.store.prs.values(),
           candidate,
         );
-        const generation = candidate.agentGeneration + 1;
-        const prNumber = String(candidate.identity.number);
-        const assigned: PrState = {
-          ...candidate,
-          worktree,
-          // Setup is only current when it ran for this exact head; a reused
-          // worktree at a different head must re-run it.
-          setupComplete:
-            this.store.setupWorktrees.get(worktree) ===
-            candidate.identity.headSha,
-          agentGeneration: generation,
-          runtimeAgent: `pr-${prNumber}-g${String(generation)}`,
-          status: "diagnosing",
-        };
-        this.store.prs.set(candidate.identity.number, assigned);
-        const dispatchTickId = this.#currentTickId;
-        this.#telemetry.workerStarted(dispatchTickId, assigned);
-        this.#dispatchedWorkers.set(candidate.identity.number, assigned);
-        if (dispatchTickId !== undefined) {
-          this.#dispatchedTickIds.set(
-            candidate.identity.number,
-            dispatchTickId,
-          );
-        }
-        const abortController = new AbortController();
-        const promise = Promise.resolve().then(() =>
-          this.#workerRunner.run(
-            assigned,
-            abortController.signal,
-            dispatchTickId,
-          ),
-        );
-        this.store.activeWorkers.set(candidate.identity.number, promise);
-        this.store.workerControllers.set(
-          candidate.identity.number,
-          abortController,
-        );
-        busyStacks.add(candidate.stackId);
-        changes.push(`started ${assigned.runtimeAgent ?? "worker"}`);
-        const settlement = this.#observeWorker(
-          candidate.identity.number,
-          promise,
-        );
-        this.#workerSettlements.set(promise, settlement);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         this.pause(candidate.identity.number, message);
         changes.push(
           `paused PR #${String(candidate.identity.number)}: ${message}`,
         );
+        continue;
       }
+      const generation = candidate.agentGeneration + 1;
+      const prNumber = String(candidate.identity.number);
+      const assigned: PrState = {
+        ...candidate,
+        worktree,
+        // Setup is only current when it ran for this exact head; a reused
+        // worktree at a different head must re-run it.
+        setupComplete:
+          this.store.setupWorktrees.get(worktree) ===
+          candidate.identity.headSha,
+        agentGeneration: generation,
+        runtimeAgent: `pr-${prNumber}-g${String(generation)}`,
+        status: "diagnosing",
+      };
+      const dispatchTickId = this.#currentTickId;
+      // Mandatory capture is outside the worktree-provisioning catch. Failure
+      // must stop the tick before state says a worker exists or work is run.
+      this.#telemetry.workerStarted(dispatchTickId, assigned);
+      this.store.prs.set(candidate.identity.number, assigned);
+      this.#dispatchedWorkers.set(candidate.identity.number, assigned);
+      if (dispatchTickId !== undefined) {
+        this.#dispatchedTickIds.set(candidate.identity.number, dispatchTickId);
+      }
+      const abortController = new AbortController();
+      const promise = Promise.resolve().then(() =>
+        this.#workerRunner.run(
+          assigned,
+          abortController.signal,
+          dispatchTickId,
+        ),
+      );
+      this.store.activeWorkers.set(candidate.identity.number, promise);
+      this.store.workerControllers.set(
+        candidate.identity.number,
+        abortController,
+      );
+      busyStacks.add(candidate.stackId);
+      changes.push(`started ${assigned.runtimeAgent ?? "worker"}`);
+      const settlement = this.#observeWorker(
+        candidate.identity.number,
+        promise,
+      );
+      this.#workerSettlements.set(promise, settlement);
     }
   }
 

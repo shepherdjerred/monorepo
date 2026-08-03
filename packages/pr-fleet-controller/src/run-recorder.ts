@@ -36,7 +36,7 @@ import {
   type SynchronousFileSinkWriter,
 } from "./synchronous-file-sink.ts";
 import {
-  redactFleetSnapshotBodies,
+  redactFleetSnapshot,
   redactSummaryError,
 } from "./run-summary-redaction.ts";
 
@@ -419,7 +419,7 @@ export class RunRecorder implements FleetTelemetry {
       finalSnapshot:
         finalSnapshot === null
           ? null
-          : redactFleetSnapshotBodies(finalSnapshot, this.#secretValues),
+          : redactFleetSnapshot(finalSnapshot, this.#secretValues),
       error: redactSummaryError(details, this.#secretValues),
     });
     await secureWriteJson(this.paths.summary, summary);

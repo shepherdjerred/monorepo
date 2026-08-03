@@ -891,13 +891,14 @@ test("does not schedule a worker when persisting its start fails", async () => {
     telemetry: new WorkerStartFailingTelemetry(),
   });
 
-  await controller.tick("startup");
-  await flushMicrotasks();
+  await expect(controller.tick("startup")).rejects.toThrow(
+    "state volume is full",
+  );
 
   expect(runner.runs).toBe(0);
   expect(store.activeWorkers.has(1)).toBe(false);
-  expect(store.prs.get(1)?.status).toBe("paused");
-  expect(store.pausedReasons.get(1)).toBe("state volume is full");
+  expect(store.prs.get(1)?.runtimeAgent).toBeNull();
+  expect(store.pausedReasons.has(1)).toBe(false);
   await controller.stop(Promise.resolve());
 });
 
