@@ -139,11 +139,19 @@ held: 30 fps, VAAPI engaged, fewer drops.
 | baseline  | 715 | 371.6 ms | 282.6 ms | 363.6 ms | 465.8 ms | 88.9 ms |
 | candidate | 716 | 317.1 ms | 233.1 ms | 316.1 ms | 389.9 ms | 64.7 ms |
 
-**Difference: −54.5 ms, bootstrap 95% CI [−62.8, −46.6]** (20 000
-resamples; the distributions are heavy-tailed so a t-test would not be
-valid). The candidate is significantly lower, and its spread is tighter
-(sd 64.7 vs 88.9), consistent with less encoder jitter from
-`async_depth 1`.
+**Difference: −54 ms, 95% CI [−72, −36]** (moving-block bootstrap, 30 s
+blocks, 20 000 resamples). The candidate is significantly lower, and its
+spread is tighter (sd 64.7 vs 88.9), consistent with less encoder jitter
+from `async_depth 1`.
+
+Note the CI must be a **block** bootstrap: consecutive glass samples are
+autocorrelated (integrated autocorrelation time 9.6 s baseline / 4.8 s
+candidate at ~1 sample/s), so effective n is ~75 and ~150, not 716. An
+i.i.d. bootstrap over samples reports [−62.9, −46.7] — about 2.2x too
+narrow. Interval width by block length: 16 ms (i.i.d., wrong), 28 ms
+(10 s), 36 ms (30 s), 42 ms (60 s); the effect stays significant at every
+block length. **Any future glass A/B must use the block bootstrap** and
+report the autocorrelation time it assumed.
 
 **Encoder isolation (in-pod, real iGPU, no Discord in the path).** Fed
 rawvideo at a true 30 fps cadence through the production filter chain into
@@ -176,12 +184,52 @@ the isolated encoder saving is consistent with the Opus low-delay change
 exactly 10.0 ms) plus the muxer flush. Independent methods converging on
 the same effect is far stronger than any one of them alone.
 
-Honest limit: this is one session per arm, so the CI captures within-session
-sampling noise, not between-session client-state variance (which the 68.5 ms
-outlier shows can be far larger). The agreement with the server-side metric
-and the mechanism is what makes the result credible; a hostile reviewer
-should ask for alternating repeat sessions before treating −54.5 ms as the
-exact effect size.
+Honest limit: this is one session per arm, so even the block-bootstrap CI
+captures only within-session variation, not between-session client-state
+variance (which the 68.5 ms outlier shows can be far larger). The agreement
+with the server-side metric and the mechanism is what makes the result
+credible; a hostile reviewer should ask for alternating repeat sessions
+before treating −54 ms as the exact effect size.
+
+## Methodology debt (fix before the Phase 2 experiments)
+
+Tonight's run exposed concrete gaps. Phase 2's levers (playout-delay hint,
+camera mode) are expected to be smaller and noisier than Tier 1, so these
+are prerequisites, not polish:
+
+1. **Run an A/A control first.** Baseline vs baseline, same protocol. It was
+   never done and it is the cheapest validation available: if A/A returns a
+   "significant" difference, the whole comparison method is broken and every
+   A/B number is suspect. It also directly measures between-session client
+   variance, which is currently the largest unquantified error term.
+2. **Alternate short sessions; make SESSION the unit of analysis.** Six 4-min
+   sessions per arm in ABABAB order beats one 12-min session per arm: it
+   converts session state from an uncontrolled confound into measured
+   variance, and spreads time-of-day/network drift across both arms.
+3. **Make probes refuse impossible data.** Both rig bugs this session were
+   caught by eye, not by the tooling. Every probe should assert its
+   invariants and fail loudly: glass-to-glass >= 0 (the 2026-08-02 rig
+   emitted 45% negatives and still produced a "mean"), sample span within
+   10% of the requested duration (the stale-`__vsLast` bug produced a 452 s
+   span for a 60 s run), monotonic RTP counters, and decode distance 0.
+4. **Write the analysis plan before collecting.** Window, statistic,
+   exclusions, and stopping rule were all chosen after seeing data this
+   session (the matched-age window was invented once the age confound
+   appeared) — textbook forking paths, even when the conclusion holds.
+5. **Normalize the corrupted server metric instead of only differencing it.**
+   With the depth gauge live, true delay ≈ reported − depth x frame-interval.
+   That yields a usable absolute number today and removes the assumption
+   that the standing offset is identical across arms (depth already varies
+   34-36 within one session).
+6. **Isolate the remaining flags.** `low_latency_mux` and `low_delay_audio`
+   are still bundled; the config knobs to separate them already shipped in
+   PR #1965 and were never exercised.
+7. **Control the obvious confounds.** Fixed game scene (encode complexity
+   varies by track), quiet viewer machine (the capture host was also
+   building images tonight), and interleaved arms.
+8. **Promote the probes to committed, tested code.** `glass_probe.py` and the
+   comparison script live in scratchpad; the calibration pitfall (bright game
+   content above the badge) will be rediscovered the hard way otherwise.
 
 **Verdict: ship.** Tier 1 delivers a measured **~55 ms** reduction at the
 player's eye (95% CI [−63, −47]), corroborated by an independent −58 ms
