@@ -68,6 +68,48 @@ if [ "$(cat "$FIXTURE/fallback")" != ".buildkite/pipeline.yml" ]; then
   exit 1
 fi
 
+# Healthy alternates (absolute + relative entries, comments, blank lines) must
+# not trip the mirror guard: the rename-safe diff path stays active.
+mkdir -p "$FIXTURE/.git/objects/info" "$FIXTURE/mirror-a" "$FIXTURE/mirror-b"
+{
+  printf '# comment\n'
+  printf '\n'
+  printf '%s\n' "$FIXTURE/mirror-a"
+  printf '../../mirror-b\n'
+} > "$FIXTURE/.git/objects/info/alternates"
+CAPTURE_PATH="$FIXTURE/alternates-ok" \
+  CI_BASE_IMAGE_CAPTURE="$FIXTURE/alternates-ok-ci-base-image" \
+  CI_PLAYWRIGHT_IMAGE_CAPTURE="$FIXTURE/alternates-ok-ci-playwright-image" \
+  CI_CHANGED_FILES_BASE="$BASE" \
+  PATH="$FIXTURE/fake-bin:$PATH" \
+  sh -c "cd '$FIXTURE' && sh '$UPLOADER'"
+if [ "$(cat "$FIXTURE/alternates-ok")" != "$expected" ]; then
+  echo "healthy git alternates tripped the mirror guard" >&2
+  exit 1
+fi
+
+# An alternates entry pointing at a missing directory (the unmounted-mirror
+# regression that OOM-killed the bootstrap pod) must fail open BEFORE any
+# fetch, with a WARN naming the path.
+printf '/nonexistent/git-mirrors/repo/objects\n' \
+  > "$FIXTURE/.git/objects/info/alternates"
+CAPTURE_PATH="$FIXTURE/alternates-broken" \
+  CI_BASE_IMAGE_CAPTURE="$FIXTURE/alternates-broken-ci-base-image" \
+  CI_PLAYWRIGHT_IMAGE_CAPTURE="$FIXTURE/alternates-broken-ci-playwright-image" \
+  CI_CHANGED_FILES_BASE="$BASE" \
+  PATH="$FIXTURE/fake-bin:$PATH" \
+  sh -c "cd '$FIXTURE' && sh '$UPLOADER'" 2> "$FIXTURE/alternates-warn"
+if [ "$(cat "$FIXTURE/alternates-broken")" != ".buildkite/pipeline.yml" ]; then
+  echo "broken git alternates did not fail open" >&2
+  exit 1
+fi
+if ! grep -q "alternate object directory" "$FIXTURE/alternates-warn"; then
+  echo "broken-alternates fail-open did not warn" >&2
+  cat "$FIXTURE/alternates-warn" >&2
+  exit 1
+fi
+rm "$FIXTURE/.git/objects/info/alternates"
+
 printf 'sha256:not-a-digest\n' > "$FIXTURE/packages/homelab/src/cdk8s/src/resources/argo-applications/ci-base.DIGEST"
 if CAPTURE_PATH="$FIXTURE/invalid" \
   CI_BASE_IMAGE_CAPTURE="$FIXTURE/invalid-ci-base-image" \

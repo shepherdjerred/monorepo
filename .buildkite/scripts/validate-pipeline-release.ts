@@ -206,6 +206,60 @@ async function validateSelectorAndUpload({
       fail(`pipeline upload is missing immutable CI image input ${required}`);
     }
   }
+  // Mirror-health guard (2026-08-02 pipeline-upload OOM): with the mirror
+  // volume unmounted, the uploader's base fetch silently degrades to a
+  // full-repo pack download that the LimitRange's default memory limit
+  // OOM-kills. The uploader must keep checking its alternates before any
+  // git operation, and the bootstrap pod must keep the mirror mount plus an
+  // explicit memory limit so the LimitRange default can never apply.
+  if (!uploadPipeline.includes("objects/info/alternates")) {
+    fail("pipeline upload dropped the git alternates health guard");
+  }
+  const bootstrapMarker = "- name: container-0";
+  const bootstrapStart = tofuPipeline.indexOf(bootstrapMarker);
+  if (bootstrapStart === -1) {
+    fail("bootstrap podSpecPatch is missing container-0");
+  }
+  // The block ends at the next SIBLING container entry (same indentation);
+  // nested list items like volumeMounts entries are indented deeper.
+  const lineStart = tofuPipeline.lastIndexOf("\n", bootstrapStart) + 1;
+  const containerIndent = tofuPipeline.slice(lineStart, bootstrapStart);
+  const nextContainer = tofuPipeline.indexOf(
+    `\n${containerIndent}- name:`,
+    bootstrapStart + bootstrapMarker.length,
+  );
+  const bootstrapContainer = tofuPipeline.slice(
+    bootstrapStart,
+    nextContainer === -1 ? tofuPipeline.length : nextContainer,
+  );
+  for (const required of [
+    "resources:",
+    "limits:",
+    "memory:",
+    "name: buildkite-git-mirrors",
+    "mountPath: /buildkite/git-mirrors",
+    "readOnly: true",
+  ]) {
+    if (!bootstrapContainer.includes(required)) {
+      fail(
+        `bootstrap container-0 is missing mirror/resource invariant ${required}`,
+      );
+    }
+  }
+  // Upload-time interpolation hazard: secret env sources must never reach the
+  // bootstrap pod (their values would be baked into the uploaded pipeline),
+  // and the CI image cannot be pinned there (its digest is computed by the
+  // upload step itself).
+  for (const forbidden of [
+    "envFrom",
+    "secretRef",
+    "buildkite-ci-secrets",
+    "image:",
+  ]) {
+    if (tofuPipeline.includes(forbidden)) {
+      fail(`bootstrap pipeline must not contain ${forbidden}`);
+    }
+  }
   if (pipeline.includes('".buildkite/**"')) {
     fail("PR lane selectors restored the blanket .buildkite glob");
   }
