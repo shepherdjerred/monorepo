@@ -7,7 +7,19 @@ const isCI = process.env.CI !== undefined;
 export default defineConfig({
   fullyParallel: true,
   outputDir: "test-results",
-  reporter: isCI ? [["github"], ["html", { open: "never" }]] : "list",
+  reporter: isCI
+    ? [
+        ["github"],
+        ["html", { open: "never" }],
+        [
+          "junit",
+          {
+            outputFile:
+              "../../../.ci-reports/junit/shepherdjerred__docs-wiki/playwright.xml",
+          },
+        ],
+      ]
+    : "list",
   retries: isCI ? 2 : 0,
   testDir: "./tests",
   use: {

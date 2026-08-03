@@ -10,35 +10,9 @@ set -eu
 changed_files=$(mktemp "${TMPDIR:-/tmp}/buildkite-changed-files.XXXXXX")
 trap 'rm -f "$changed_files"' EXIT
 
-read_image_ref() {
-  image=$1
-  digest_file=$2
-  if [ ! -f "$digest_file" ]; then
-    echo "missing CI image digest file: $digest_file" >&2
-    exit 1
-  fi
-  digest=$(cat "$digest_file")
-  hex=${digest#sha256:}
-  if [ "$digest" = "$hex" ] || [ "${#hex}" -ne 64 ]; then
-    echo "invalid CI image digest in $digest_file" >&2
-    exit 1
-  fi
-  case "$hex" in
-    *[!0-9a-f]*)
-      echo "invalid CI image digest in $digest_file" >&2
-      exit 1
-      ;;
-  esac
-  printf '%s@%s\n' "$image" "$digest"
-}
-
-CI_BASE_IMAGE=$(read_image_ref \
-  ghcr.io/shepherdjerred/ci-base \
-  packages/homelab/src/cdk8s/src/resources/argo-applications/ci-base.DIGEST)
-CI_PLAYWRIGHT_IMAGE=$(read_image_ref \
-  ghcr.io/shepherdjerred/ci-playwright \
-  .buildkite/ci-playwright/DIGEST)
-export CI_BASE_IMAGE CI_PLAYWRIGHT_IMAGE
+SCRIPT_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
+# shellcheck source=.buildkite/scripts/ci-image-refs.sh
+. "$SCRIPT_DIR/ci-image-refs.sh"
 
 fail_open() {
   echo "WARN: $1; scheduling every path-gated lane" >&2
@@ -60,7 +34,33 @@ write_changed_files() {
   fi
 }
 
-if [ -n "${CI_CHANGED_FILES_BASE:-}" ]; then
+# Mirror-health guard (2026-08-02 incident): CI checkouts are reference clones
+# against the shared git mirror, so the alternates file points into
+# /buildkite/git-mirrors. If that volume is missing or unreadable in this
+# container, git object lookups silently fall back to full network transfer:
+# the base fetch below downloads the entire repository pack into the
+# memory-backed workspace and the container is OOM-killed. A broken alternate
+# must never be a quiet slow path — degrade loudly to scheduling every lane.
+broken_alternate=""
+alternates_file=$(git rev-parse --git-path objects/info/alternates)
+objects_dir=$(git rev-parse --git-path objects)
+if [ -f "$alternates_file" ]; then
+  while IFS= read -r alternate || [ -n "$alternate" ]; do
+    case "$alternate" in
+      "" | "#"*) continue ;;
+      /*) alternate_dir=$alternate ;;
+      *) alternate_dir="$objects_dir/$alternate" ;;
+    esac
+    if [ ! -d "$alternate_dir" ] || [ ! -r "$alternate_dir" ]; then
+      broken_alternate=$alternate_dir
+      break
+    fi
+  done < "$alternates_file"
+fi
+
+if [ -n "$broken_alternate" ]; then
+  fail_open "git alternate object directory ${broken_alternate} is not readable (git-mirrors volume missing?)"
+elif [ -n "${CI_CHANGED_FILES_BASE:-}" ]; then
   write_changed_files "$CI_CHANGED_FILES_BASE"
 elif [ "${BUILDKITE_PULL_REQUEST:-false}" = "false" ]; then
   fail_open "build is not associated with a pull request"

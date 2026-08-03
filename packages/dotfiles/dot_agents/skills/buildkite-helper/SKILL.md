@@ -277,6 +277,25 @@ plugins:
                 readOnly: true
 ```
 
+### Debugging killed containers (memcg OOM red herrings)
+
+- Agent output `exit status -7` with "connected to the agent, but then stopped
+  communicating without exiting normally" = a client container was SIGKILLed.
+  The post-mortem k8s Job `DeadlineExceeded` events (deadline 60) that follow
+  are **cleanup**, not cause: the agent-stack completions watcher patches
+  `activeDeadlineSeconds` after the agent container terminates.
+- A container-level (memcg) OOM kill emits **no** Kubernetes events — `kubectl
+  get events` staying clean does not rule out OOM. Check the node kernel log:
+  `kubectl debug node/<node> -n kube-system --profile=sysadmin --image=busybox
+  -- sh -c 'dmesg | grep -i oom'` and look for `CONSTRAINT_MEMCG` plus a large
+  `shmem` count.
+- The workspace volume is a memory-backed emptyDir (tmpfs): every byte a step
+  writes under `/workspace` is charged to the **writing container's** memory
+  limit as shmem — a "disk-sized" write (e.g. a full git pack download) can
+  OOM a container whose processes use almost no RAM. Containers without
+  explicit resources get the namespace LimitRange default (768Mi). Incident:
+  packages/docs/logs/2026-08-02_buildkite-pipeline-upload-oom-diagnosis.md.
+
 ## This Monorepo's CI Patterns (historical — pipeline removed 2026-07)
 
 Everything in this section describes the pipeline as it existed before removal. The files below no longer exist in the repo; kept as history for anyone reading old builds/PRs.

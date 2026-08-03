@@ -3,6 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 UPLOADER="${SCRIPT_DIR}/upload-pipeline.sh"
+REPORTING_UPLOADER="${SCRIPT_DIR}/upload-reporting-pipeline.sh"
 FIXTURE=$(mktemp -d)
 trap 'rm -rf "$FIXTURE"' EXIT
 
@@ -24,11 +25,18 @@ git -C "$FIXTURE" commit -qm rename
 
 cat > "$FIXTURE/fake-bin/buildkite-agent" <<'EOF'
 #!/bin/sh
-if [ "$1" != pipeline ] || [ "$2" != upload ] || [ "$3" != --changed-files-path ]; then
+if [ "$1" != pipeline ] || [ "$2" != upload ]; then
   echo "unexpected buildkite-agent invocation: $*" >&2
   exit 2
 fi
-cp "$4" "$CAPTURE_PATH"
+if [ "$3" = "--changed-files-path" ]; then
+  cp "$4" "$CAPTURE_PATH"
+elif [ "$3" = ".buildkite/reporting-pipeline.yml" ]; then
+  printf '%s\n' "$3" > "$CAPTURE_PATH"
+else
+  echo "unexpected buildkite-agent pipeline upload arguments: $*" >&2
+  exit 2
+fi
 printf '%s\n' "$CI_BASE_IMAGE" > "$CI_BASE_IMAGE_CAPTURE"
 printf '%s\n' "$CI_PLAYWRIGHT_IMAGE" > "$CI_PLAYWRIGHT_IMAGE_CAPTURE"
 EOF
@@ -57,6 +65,24 @@ if [ "$(cat "$FIXTURE/ci-playwright-image")" != "ghcr.io/shepherdjerred/ci-playw
   exit 1
 fi
 
+CAPTURE_PATH="$FIXTURE/reporting-pipeline" \
+  CI_BASE_IMAGE_CAPTURE="$FIXTURE/reporting-ci-base-image" \
+  CI_PLAYWRIGHT_IMAGE_CAPTURE="$FIXTURE/reporting-ci-playwright-image" \
+  PATH="$FIXTURE/fake-bin:$PATH" \
+  sh -c "cd '$FIXTURE' && sh '$REPORTING_UPLOADER'"
+if [ "$(cat "$FIXTURE/reporting-pipeline")" != ".buildkite/reporting-pipeline.yml" ]; then
+  echo "reporting uploader did not upload the reporting pipeline" >&2
+  exit 1
+fi
+if [ "$(cat "$FIXTURE/reporting-ci-base-image")" != "ghcr.io/shepherdjerred/ci-base@sha256:0000000000000000000000000000000000000000000000000000000000000000" ]; then
+  echo "reporting uploader did not export the ci-base digest pin" >&2
+  exit 1
+fi
+if [ "$(cat "$FIXTURE/reporting-ci-playwright-image")" != "ghcr.io/shepherdjerred/ci-playwright@sha256:0000000000000000000000000000000000000000000000000000000000000001" ]; then
+  echo "reporting uploader did not export the ci-playwright digest pin" >&2
+  exit 1
+fi
+
 CAPTURE_PATH="$FIXTURE/fallback" \
   CI_BASE_IMAGE_CAPTURE="$FIXTURE/fallback-ci-base-image" \
   CI_PLAYWRIGHT_IMAGE_CAPTURE="$FIXTURE/fallback-ci-playwright-image" \
@@ -67,6 +93,48 @@ if [ "$(cat "$FIXTURE/fallback")" != ".buildkite/pipeline.yml" ]; then
   echo "invalid diff base did not fail open" >&2
   exit 1
 fi
+
+# Healthy alternates (absolute + relative entries, comments, blank lines) must
+# not trip the mirror guard: the rename-safe diff path stays active.
+mkdir -p "$FIXTURE/.git/objects/info" "$FIXTURE/mirror-a" "$FIXTURE/mirror-b"
+{
+  printf '# comment\n'
+  printf '\n'
+  printf '%s\n' "$FIXTURE/mirror-a"
+  printf '../../mirror-b\n'
+} > "$FIXTURE/.git/objects/info/alternates"
+CAPTURE_PATH="$FIXTURE/alternates-ok" \
+  CI_BASE_IMAGE_CAPTURE="$FIXTURE/alternates-ok-ci-base-image" \
+  CI_PLAYWRIGHT_IMAGE_CAPTURE="$FIXTURE/alternates-ok-ci-playwright-image" \
+  CI_CHANGED_FILES_BASE="$BASE" \
+  PATH="$FIXTURE/fake-bin:$PATH" \
+  sh -c "cd '$FIXTURE' && sh '$UPLOADER'"
+if [ "$(cat "$FIXTURE/alternates-ok")" != "$expected" ]; then
+  echo "healthy git alternates tripped the mirror guard" >&2
+  exit 1
+fi
+
+# An alternates entry pointing at a missing directory (the unmounted-mirror
+# regression that OOM-killed the bootstrap pod) must fail open BEFORE any
+# fetch, with a WARN naming the path.
+printf '/nonexistent/git-mirrors/repo/objects\n' \
+  > "$FIXTURE/.git/objects/info/alternates"
+CAPTURE_PATH="$FIXTURE/alternates-broken" \
+  CI_BASE_IMAGE_CAPTURE="$FIXTURE/alternates-broken-ci-base-image" \
+  CI_PLAYWRIGHT_IMAGE_CAPTURE="$FIXTURE/alternates-broken-ci-playwright-image" \
+  CI_CHANGED_FILES_BASE="$BASE" \
+  PATH="$FIXTURE/fake-bin:$PATH" \
+  sh -c "cd '$FIXTURE' && sh '$UPLOADER'" 2> "$FIXTURE/alternates-warn"
+if [ "$(cat "$FIXTURE/alternates-broken")" != ".buildkite/pipeline.yml" ]; then
+  echo "broken git alternates did not fail open" >&2
+  exit 1
+fi
+if ! grep -q "alternate object directory" "$FIXTURE/alternates-warn"; then
+  echo "broken-alternates fail-open did not warn" >&2
+  cat "$FIXTURE/alternates-warn" >&2
+  exit 1
+fi
+rm "$FIXTURE/.git/objects/info/alternates"
 
 printf 'sha256:not-a-digest\n' > "$FIXTURE/packages/homelab/src/cdk8s/src/resources/argo-applications/ci-base.DIGEST"
 if CAPTURE_PATH="$FIXTURE/invalid" \

@@ -23,7 +23,7 @@
   "scripts": {
     "build": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit -p tsconfig.scripts.json",
     "test": "bun test scripts/argocd-manifest-overrides.test.ts scripts/helm-set-version.test.ts scripts/helm-release-core.test.ts scripts/lint-helm.test.ts scripts/velero-backups.test.ts scripts/migration-smoke.test.ts",
-    "test:coverage": "bun test --config ../../scripts/bunfig.coverage.toml --coverage scripts/helm-set-version.test.ts scripts/lint-helm.test.ts scripts/velero-backups.test.ts",
+    "test:coverage": "bun test --coverage-reporter=text --coverage-reporter=lcov --coverage-dir=coverage --config ../../scripts/bunfig.coverage.toml --coverage scripts/helm-set-version.test.ts scripts/lint-helm.test.ts scripts/velero-backups.test.ts",
     "lint": "eslint scripts/argocd-manifest-overrides.ts scripts/argocd-manifest-overrides.test.ts scripts/canonical-json.ts scripts/helm-set-version.ts scripts/helm-set-version.test.ts scripts/helm-release-core.ts scripts/helm-release-core.test.ts scripts/helm-push.ts scripts/lint-helm.ts scripts/lint-helm.test.ts scripts/velero-backups.ts scripts/velero-backups.test.ts scripts/migration-core.ts scripts/migration-smoke.test.ts",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit -p tsconfig.scripts.json",
     "check:talos": "bun src/talos/update-image-id.ts --check",
@@ -39,6 +39,7 @@
     "helm:push": "bun scripts/helm-push.ts",
     "tofu:stack": "bun scripts/tofu-stack.ts",
     "argocd": "bun scripts/argocd.ts",
-    "test:ci": "bun ../../scripts/run-ci-test.ts"
+    "test:ci": "bun ../../scripts/run-ci-test.ts",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/run-ci-test.ts"
   }
 }

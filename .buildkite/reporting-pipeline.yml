@@ -1,0 +1,147 @@
+# Complete test and coverage reporting. Unlike the ordinary pipeline's cached
+# test graph, this scheduled/manual lane executes every test from a clean
+# report directory so Test Engine and LCOV summaries are complete and fresh.
+
+agents:
+  queue: default
+
+env:
+  TURBO_SCM_BASE: "origin/main"
+  TURBO_TELEMETRY_DISABLED: "1"
+  TURBO_API: "http://turbo-cache-turbo-cache-service.turbo-cache.svc.cluster.local:3000"
+  TURBO_TEAM: "monorepo"
+  CI_REPORTING_SCOPE: "full"
+
+steps:
+  - label: ":performing_arts: complete Playwright reporting"
+    key: playwright-reporting
+    timeout_in_minutes: 30
+    command: |
+      bun install --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'
+      bun x --no-install turbo run build lint test test:e2e --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --concurrency=2
+      if [ ! -s .ci-reports/junit/sjer.red/playwright.xml ]; then
+        echo "complete reporting run did not emit the sjer.red Playwright JUnit report" >&2
+        exit 1
+      fi
+      if [ ! -s .ci-reports/junit/shepherdjerred__docs-wiki/playwright.xml ]; then
+        echo "complete reporting run did not emit the docs-wiki Playwright JUnit report" >&2
+        exit 1
+      fi
+      bun --no-install scripts/namespace-playwright-reports.ts
+      bun --no-install scripts/write-ci-report-index.ts
+    artifact_paths:
+      - ".ci-reports/**/*"
+    plugins:
+      - test-collector#v1.11.0:
+          files: ".ci-reports/junit/**/*.xml"
+          format: junit
+          missing-error: 1
+          upload-concurrency: 8
+          tags:
+            - "scope=full"
+            - "pipeline=monorepo-test-reporting"
+      - kubernetes:
+          metadata:
+            labels:
+              ci.sjer.red/step-key: playwright-reporting
+          checkout:
+            cloneFlags: "--no-tags"
+          podSpecPatch:
+            serviceAccountName: buildkite-agent-stack-k8s-controller
+            containers:
+              - name: checkout
+                resources:
+                  requests: { cpu: "50m", memory: "1Gi" }
+                  limits: { cpu: "400m", memory: "2Gi" }
+              - name: container-0
+                image: "${CI_PLAYWRIGHT_IMAGE}"
+                imagePullPolicy: IfNotPresent
+                securityContext:
+                  allowPrivilegeEscalation: false
+                resources:
+                  requests: { cpu: "2", memory: "5Gi" }
+                  limits: { cpu: "4", memory: "8Gi" }
+                volumeMounts:
+                  - name: buildkite-git-mirrors
+                    mountPath: /buildkite/git-mirrors
+                    readOnly: true
+                envFrom:
+                  - secretRef: { name: buildkite-ci-secrets }
+
+  - label: ":bar_chart: complete tests and coverage"
+    key: complete-test-reporting
+    timeout_in_minutes: 90
+    command: |
+      . .buildkite/scripts/toolchain.sh
+      bun --no-install .buildkite/scripts/validate-pipeline.ts
+      bun install --frozen-lockfile
+      export TURBO_CACHE="local:rw,remote:rw"
+      set +e
+      bun --no-install x turbo run test:report \
+        --continue --concurrency=6 --output-logs=errors-only --summarize
+      test_status=$?
+      bun --no-install run script-coverage
+      script_coverage_status=$?
+      bun --no-install scripts/annotate-turbo-summary.ts
+      annotation_status=$?
+      bun --no-install scripts/write-ci-report-index.ts
+      reporting_status=$?
+      bun --no-install scripts/write-coverage-summary.ts --require-complete
+      coverage_status=$?
+      set -e
+      if [ "$$test_status" -eq 0 ] && [ "$$annotation_status" -ne 0 ]; then
+        exit "$$annotation_status"
+      fi
+      if [ "$$test_status" -eq 0 ] && [ "$$script_coverage_status" -ne 0 ]; then
+        exit "$$script_coverage_status"
+      fi
+      if [ "$$test_status" -eq 0 ] && [ "$$reporting_status" -ne 0 ]; then
+        exit "$$reporting_status"
+      fi
+      if [ "$$test_status" -eq 0 ] && [ "$$coverage_status" -ne 0 ]; then
+        exit "$$coverage_status"
+      fi
+      exit "$$test_status"
+    artifact_paths:
+      - ".ci-reports/**/*"
+    plugins:
+      - test-collector#v1.11.0:
+          files: ".ci-reports/junit/**/*.xml"
+          format: junit
+          missing-error: 1
+          upload-concurrency: 8
+          tags:
+            - "scope=full"
+            - "pipeline=monorepo-test-reporting"
+      - kubernetes:
+          metadata:
+            labels:
+              ci.sjer.red/step-key: complete-test-reporting
+          checkout:
+            cloneFlags: "--no-tags"
+          podSpecPatch:
+            serviceAccountName: buildkite-agent-stack-k8s-controller
+            containers:
+              - name: checkout
+                resources:
+                  requests: { cpu: "50m", memory: "1Gi" }
+                  limits: { cpu: "400m", memory: "2Gi" }
+              - name: container-0
+                image: "${CI_BASE_IMAGE}"
+                imagePullPolicy: IfNotPresent
+                securityContext:
+                  allowPrivilegeEscalation: false
+                env:
+                  - name: BUILDKITE_SHELL
+                    value: "/bin/bash -e -c"
+                resources:
+                  requests:
+                    { cpu: "1", memory: "14Gi", ephemeral-storage: "2Gi" }
+                  limits:
+                    { cpu: "7", memory: "20Gi", ephemeral-storage: "40Gi" }
+                volumeMounts:
+                  - name: buildkite-git-mirrors
+                    mountPath: /buildkite/git-mirrors
+                    readOnly: true
+                envFrom:
+                  - secretRef: { name: buildkite-ci-secrets }
