@@ -1,5 +1,5 @@
 ---
-id: 2026-08-02_syncthing-relay-egress-fix
+id: 2026-08-02-syncthing-relay-egress-fix
 type: log
 status: complete
 board: false
@@ -77,7 +77,9 @@ untouched. No client-side change.
 - **Post-deploy (ArgoCD):** on torvalds, confirm it establishes a `relay-client` connection
   (`/rest/system/connections` shows a relay address); then confirm macbook + steam deck
   flip to **Connected** with `dynamic` addresses (no client edit). This is the acceptance
-  step — it can't be verified until the change is merged and ArgoCD syncs.
+  step — it can't be verified until the change is merged and ArgoCD syncs, so it is tracked
+  as active board work in
+  `packages/docs/todos/syncthing-relay-egress-postdeploy-acceptance.md`.
 
 ## Session Log — 2026-08-02
 
@@ -92,8 +94,9 @@ untouched. No client-side change.
 
 ### Remaining
 
-- Post-merge acceptance (operator/human, after ArgoCD sync): confirm torvalds relay-connects
-  and macbook + steam deck reconnect automatically.
+- Post-merge acceptance (operator, after ArgoCD sync): confirm torvalds relay-connects
+  and macbook + steam deck reconnect automatically. Tracked as active board work in
+  `packages/docs/todos/syncthing-relay-egress-postdeploy-acceptance.md`.
 
 ### Caveats
 
