@@ -194,6 +194,7 @@ function replayLifecycle(
     failed: failedKind,
   } = kinds;
   const open = new Set<string>();
+  const seen = new Set<string>();
   let started = 0;
   let completed = 0;
   let cancelled = 0;
@@ -212,9 +213,10 @@ function replayLifecycle(
       throw new Error(`${event.kind} is missing its lifecycle correlation ID`);
     }
     if (event.kind === startedKind) {
-      if (open.has(key)) {
-        throw new Error(`${startedKind} duplicated lifecycle ${key}`);
+      if (seen.has(key)) {
+        throw new Error(`${startedKind} reused lifecycle ${key}`);
       }
+      seen.add(key);
       open.add(key);
       started += 1;
       continue;
@@ -354,6 +356,9 @@ function replaySnapshots(
         throw new Error(
           `Tick ${event.correlation.tickId ?? "without-id"} completed with a snapshot not emitted by that tick`,
         );
+      }
+      if (event.correlation.tickId !== undefined) {
+        tickSnapshots.delete(event.correlation.tickId);
       }
     }
     if (event.kind === "shutdown.completed") {

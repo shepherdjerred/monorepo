@@ -9,6 +9,7 @@ import { resolveProvider } from "@shepherdjerred/code-review";
 import { z } from "zod";
 import { MastraMaster, MastraWorkerRunner } from "./agents.ts";
 import { combineFailures, normalizeFailure } from "./cli-failures.ts";
+import { settleCliResources } from "./cli-shutdown.ts";
 import { FleetController } from "./controller.ts";
 import {
   assertStateRootOutsideControllerRepository,
@@ -244,32 +245,26 @@ async function main(): Promise<void> {
   let runFailure: Error | undefined;
   let finalizationPromise: Promise<void> | undefined;
   const observer = new TerminalObserver();
-  const settleResources = createSharedShutdown(async () => {
-    const masterSettlement = master?.stop() ?? Promise.resolve();
-    let snapshot: FleetSnapshot | null = null;
-    if (controller === undefined) {
-      await masterSettlement;
-    } else {
-      snapshot = await controller.stop(masterSettlement);
-      observer.onSnapshot(snapshot);
-    }
-    terminal?.close();
-    if (runtimeInitialization !== undefined) {
-      runtime = await runtimeInitialization;
-    }
-    await runtime?.shutdown();
-    return snapshot;
-  });
+  const settleResources = createSharedShutdown(() =>
+    settleCliResources<FleetSnapshot>({
+      input: () => terminal,
+      master: () => master,
+      controller: () => controller,
+      runtime: () => runtimeInitialization,
+      observeSnapshot: (snapshot) => {
+        observer.onSnapshot(snapshot);
+      },
+    }),
+  );
   const finalizeRun = (outcome?: TerminalOutcome): Promise<void> => {
     if (outcome?.status === "failed") {
       runFailure = combineFailures(runFailure, outcome.error);
     }
     finalizationPromise ??= Promise.resolve().then(async () => {
-      let snapshot: FleetSnapshot | null = null;
-      try {
-        snapshot = await settleResources();
-      } catch (shutdownError) {
-        runFailure = combineFailures(runFailure, shutdownError);
+      const settlement = await settleResources();
+      let snapshot: FleetSnapshot | null = settlement.snapshot;
+      if (settlement.failure !== undefined) {
+        runFailure = combineFailures(runFailure, settlement.failure);
       }
       if (runFailure === undefined && controller === undefined) {
         snapshot = EMPTY_SNAPSHOT;
@@ -442,6 +437,9 @@ async function main(): Promise<void> {
     await consumeTerminalLines(
       terminal,
       async (rawLine) => {
+        if (shutdownRequested) {
+          return "stop";
+        }
         const line = rawLine.trim();
         recorder.record("operator.input", { line });
         if (line === "/stop") {

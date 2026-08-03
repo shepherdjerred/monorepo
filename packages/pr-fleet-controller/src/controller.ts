@@ -25,6 +25,7 @@ import { FleetStore } from "./state.ts";
 import type { MasterControllerTools } from "./master-tools.ts";
 import { createFleetTickWorkflow } from "./workflow.ts";
 import { defaultFleetScheduler } from "./scheduler.ts";
+import { settleAllOrThrow } from "./terminal-loop.ts";
 import {
   assignFleetWorktree,
   withPrCommandCorrelation,
@@ -73,6 +74,9 @@ export class FleetController implements MasterControllerTools {
   }
 
   async tick(trigger: TickTrigger = "user"): Promise<FleetTickReport> {
+    if (this.store.stopping) {
+      throw new Error("Controller is stopping and cannot start another tick");
+    }
     if (this.#tickRunning) {
       this.#tickDue = true;
       this.#telemetry.tickQueued(trigger, this.snapshot(), this.#currentTickId);
@@ -113,7 +117,7 @@ export class FleetController implements MasterControllerTools {
       if (this.#tickSettled === settlement.promise) {
         this.#tickSettled = null;
       }
-      if (this.#tickDue && !this.store.stopping) {
+      if (this.#tickDue && !this.#isStopping()) {
         this.#tickDue = false;
         queueMicrotask(() => {
           void this.#runTickSafely("due", "due tick");
@@ -423,6 +427,10 @@ export class FleetController implements MasterControllerTools {
     }
   }
 
+  #isStopping(): boolean {
+    return this.store.stopping;
+  }
+
   prioritize(prNumber: number, priority: number): void {
     const state = this.store.prs.get(prNumber);
     if (state === undefined) {
@@ -493,11 +501,13 @@ export class FleetController implements MasterControllerTools {
       this.store.cancelledWorkers.add(prNumber);
       controller.abort();
     }
-    await Promise.allSettled(this.#workerSettlements.values());
     // The CLI passes the active master-model settlement here. Keep it inside
     // the shutdown lifecycle boundary so no model event can appear after the
     // controller reports shutdown completion.
-    await externalSettlement;
+    await settleAllOrThrow([
+      ...this.#workerSettlements.values(),
+      externalSettlement,
+    ]);
     const snapshot = this.snapshot();
     this.#telemetry.shutdownCompleted(snapshot);
     return snapshot;

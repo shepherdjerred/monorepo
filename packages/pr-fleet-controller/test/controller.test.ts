@@ -156,6 +156,19 @@ class WorkerStartFailingTelemetry extends RecordingTelemetry {
   }
 }
 
+class WorkerTerminalFailingTelemetry extends RecordingTelemetry {
+  override record(
+    kind: RunEventKind,
+    payload: Record<string, unknown>,
+    correlation: RunEventCorrelation = {},
+  ): void {
+    if (kind === "worker.cancelled") {
+      throw new Error("worker terminal event persistence failed");
+    }
+    super.record(kind, payload, correlation);
+  }
+}
+
 class AttemptRecordingRunner implements WorkerRunner {
   readonly #telemetry: FleetTelemetry;
 
@@ -523,6 +536,80 @@ test("shutdown completion waits for the coordinated master settlement", async ()
   await stop;
   expect(stopped).toBe(true);
   expect(telemetry.events.at(-1)?.kind).toBe("shutdown.completed");
+});
+
+test("shutdown rejects worker terminal telemetry persistence failures", async () => {
+  const pr = identity(1);
+  const failedCheck = {
+    name: "verify",
+    state: "FAILURE",
+    bucket: "fail",
+    link: null,
+    softFail: false,
+  };
+  const controller = new FleetController({
+    config: {
+      model: "openai/gpt-5",
+      repo: "shepherdjerred/monorepo",
+      checkout: "/tmp/repo",
+      worktreeRoot: "/tmp/worktrees",
+      maxWorkers: 1,
+    },
+    environment: new FakeEnvironment(
+      [pr],
+      new Map([[1, evidence(pr, { checks: [failedCheck] })]]),
+    ),
+    workerRunner: new BlockingRunner(),
+    observer: new RecordingObserver(),
+    store: new FleetStore(1),
+    telemetry: new WorkerTerminalFailingTelemetry(),
+  });
+
+  await controller.tick("startup");
+  const masterSettlement = Promise.withResolvers<undefined>();
+  let outcome: unknown;
+  const stop = (async (): Promise<void> => {
+    try {
+      await controller.stop(masterSettlement.promise);
+      outcome = "completed";
+    } catch (error) {
+      outcome = error;
+    }
+  })();
+  await flushMicrotasks();
+  expect(outcome).toBeUndefined();
+
+  masterSettlement.resolve(undefined);
+  await stop;
+  if (!(outcome instanceof Error)) {
+    throw new Error("shutdown unexpectedly lost its worker telemetry failure");
+  }
+  expect(outcome.message).toContain("worker terminal event persistence failed");
+});
+
+test("controller rejects ticks after shutdown starts", async () => {
+  const controller = new FleetController({
+    config: {
+      model: "openai/gpt-5",
+      repo: "shepherdjerred/monorepo",
+      checkout: "/tmp/repo",
+      worktreeRoot: "/tmp/worktrees",
+      maxWorkers: 1,
+    },
+    environment: new FakeEnvironment([], new Map()),
+    workerRunner: new BlockingRunner(),
+    observer: new RecordingObserver(),
+    store: new FleetStore(1),
+    telemetry: new RecordingTelemetry(),
+  });
+  const masterSettlement = Promise.withResolvers<undefined>();
+  const stop = controller.stop(masterSettlement.promise);
+
+  await expect(controller.tick("user")).rejects.toThrow(
+    "Controller is stopping",
+  );
+  masterSettlement.resolve(undefined);
+  await stop;
 });
 
 test("controller tick commands carry tick and PR correlation", async () => {

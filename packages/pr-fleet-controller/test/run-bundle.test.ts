@@ -1090,6 +1090,52 @@ describe("worker tick ancestry replay", () => {
   });
 });
 
+describe("tick snapshot replay", () => {
+  test("does not reuse a snapshot after its tick lifecycle closes", async () => {
+    const recorder = await createRecorder();
+    const tickId = recorder.newId("tick");
+    recorder.record("run.started", { scenario: "reused-tick" });
+    recorder.record("tick.started", { trigger: "startup" }, { tickId });
+    recorder.record("fleet.snapshot", { snapshot }, { tickId });
+    recorder.record(
+      "tick.completed",
+      {
+        report: {
+          trigger: "startup",
+          snapshot,
+          changes: [],
+          nextHeartbeatSeconds: 600,
+        },
+      },
+      { tickId },
+    );
+    recorder.record("tick.started", { trigger: "user" }, { tickId });
+    recorder.record(
+      "tick.completed",
+      {
+        report: {
+          trigger: "user",
+          snapshot,
+          changes: [],
+          nextHeartbeatSeconds: 600,
+        },
+      },
+      { tickId },
+    );
+    await finalizeCompletedRun(recorder);
+    const bundle = await loadRunBundle(recorder.paths.runDirectory);
+
+    expect(() =>
+      replayRunBundle(bundle, {
+        currentControllerVersion: "0.1.0",
+        allowVersionMismatch: false,
+      }),
+    ).toThrow(
+      `Tick ${tickId} completed with a snapshot not emitted by that tick`,
+    );
+  });
+});
+
 describe("run bundle lifecycle replay", () => {
   test("rejects events recorded before run.started", async () => {
     const recorder = await createRecorder();

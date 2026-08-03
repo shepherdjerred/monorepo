@@ -225,7 +225,11 @@ repository checkout.
 - Addressed three subsequent exact-head findings by validating the XDG-derived
   default state root before any write, rejecting unreproducible untracked source
   symlinks, and requiring a worker's dispatch tick to still be active.
-- Passed focused typecheck, 104 controller tests, 42 observability tests, lint,
+- Addressed four further exact-head findings by propagating worker-settlement
+  persistence failures without abandoning the master settlement, closing input
+  before shutdown waits, retaining the captured snapshot across later resource
+  failures, and consuming tick snapshots when their lifecycle closes.
+- Passed focused typecheck, 109 controller tests, 42 observability tests, lint,
   native-aware build, docs validation, Markdown lint, diff checks, and staged
   Lefthook/Gitleaks/Prettier/lockfile checks.
 - Completed a final non-mutating `openai/gpt-5.6-terra` model/tool turn from the
