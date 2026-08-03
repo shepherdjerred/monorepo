@@ -1,0 +1,162 @@
+---
+id: log-2026-08-03-temporal-outage-diagnosis
+type: log
+status: in-progress
+board: false
+---
+
+# Temporal Outage Diagnosis
+
+## Question
+
+Why is the production Temporal service down?
+
+## Investigation
+
+Temporal itself is serving. The production failure is a wedged TypeScript SDK
+worker process: it is alive according to Kubernetes, but it is no longer polling
+the `default` workflow task queue.
+
+### Healthy control plane and dependencies
+
+- Both Talos nodes are `Ready`; the Temporal namespace has no warning events.
+- PostgreSQL, Temporal server, Temporal UI, and the worker pod are all
+  `Running` with zero restarts. The PVC is bound, and service endpoint slices
+  are populated.
+- ArgoCD reports the `temporal` application `Synced` and `Healthy` at worker
+  image `ghcr.io/shepherdjerred/temporal-worker:2.0.0-7749`.
+- The Temporal gRPC health service reports `SERVING`; the UI and its namespace
+  API both return HTTP 200.
+
+### Failed worker path
+
+- The `default` queue has 10 workflow tasks with an approximately 1 hour 29
+  minute oldest-task age and a dispatch rate of zero. It has an activity poller
+  but no workflow poller.
+- The worker pod remains Kubernetes-ready with zero restarts, while consuming
+  approximately 0.9-1.0 CPU core and 2.34 GiB of memory. It has no
+  liveness/readiness probe that tests workflow-task polling, so Kubernetes only
+  knows that the container process exists.
+- Sampling `/proc/1/task` showed one unnamed Bun/JavaScriptCore thread consuming
+  a full core while the main thread and the named Temporal Core workflow threads
+  were sleeping. The pod permissions do not permit reading that thread's native
+  stack, so its exact runtime function is not proven.
+- Workflows on the `default` queue repeatedly time out their 10-second workflow
+  tasks. The `good-morning` workflow is one affected workflow, but its failure
+  began after the worker stopped making progress; its bounded preheat loop is
+  not the trigger.
+
+### Trigger and timeline
+
+Prometheus shows the worker changing from approximately 0.06 CPU core to a
+continuous full core between `2026-08-03T13:07:30Z` and `13:08:00Z`. Memory
+simultaneously peaked at approximately 2.67 GB before settling near 2.45 GB.
+There were no restarts.
+
+That transition coincides exactly with completion of the unusually large
+`glitter-corpus-daily-workflow-2026-08-03T11:15:00Z` run:
+
+- The parent ran for 1 hour 52 minutes, produced 212,683 messages, and reached
+  2,426 history events. Its 267 full-backfill children scheduled 5,115
+  activities and produced approximately 67.5 MB of history JSON in aggregate.
+- Two consecutive channel children were unusually large: 7,085 events / 58,873
+  messages and 10,013 events / 83,242 messages. The larger child alone scheduled
+  1,668 activities and produced approximately 23.8 MB of history JSON.
+- The final child completed at `13:06:59Z`; snapshot finalization and the parent
+  completed at `13:07:39Z`, within the same metrics interval in which the
+  worker thread pinned a core.
+
+The strongest supported diagnosis is therefore: the full Glitter refresh
+coincided with a nondeterministic stall in the shared Bun worker process,
+leaving an unnamed thread spinning and the JavaScript event loop unable to make
+progress. The live evidence proves the process-level failure but does not prove
+whether its low-level origin is Bun, the Temporal SDK, application code, or an
+interaction among them. Temporal still tracks
+[full Bun support as an open feature request](https://github.com/temporalio/sdk-typescript/issues/2273),
+which makes that compatibility boundary relevant, but the successful replays
+and stress tests do not justify identifying Bun itself as the root cause.
+
+All four queue workers are created inside one Bun process in
+`packages/temporal/src/worker.ts`, so separate Temporal task queues do not
+provide process/runtime fault isolation. The per-channel corpus workflow also
+accumulated 10,013 history events without continuing as new.
+
+### Further reproduction and exclusions
+
+- The successful August 2 parent had effectively the same 2,426-event parent
+  history and final payload sizes, and reached a higher memory peak than the
+  failed August 3 process before recovering. A simple parent-size or memory
+  threshold therefore does not explain the incident.
+- Exact August 2 and August 3 parent histories and the 10,013-event child replay
+  successfully under Bun. The full sequence of all 267 recorded child histories
+  plus the parent also replays successfully in the exact production image.
+- A real local Temporal worker running the exact production image completed two
+  consecutive mocked children matching the large production activity/message
+  counts, then completed a cleanup workflow.
+- A final controlled run exercised the complete 267-channel weekly-refresh
+  shape under the production 6 GiB / 1.5 CPU limits. It stayed responsive for
+  8.5 minutes, processed activities continuously, and recovered through repeated
+  garbage-collection cycles; it was stopped to avoid extending the diagnosis.
+
+These negative tests rule out deterministic workflow nondeterminism, recorded
+history replay, the two large child workflows alone, and a simple memory limit
+as sufficient causes. They do not rule out a timing-sensitive runtime defect or
+an interaction with the other queue workers that share the production process.
+
+After the initial event-loop stall, the `default` worker accumulated occupied
+workflow slots until all 40 SDK-default slots were full. Its workflow pollers
+then fell to zero and the task backlog grew. The missing poller was therefore a
+downstream cascade from the process stall, not the initiating failure.
+
+## Recovery boundary
+
+No restart or other live mutation was performed. Restarting the worker would
+probably restore polling, but it can interrupt the active `agent-task` work and
+release delayed time-sensitive workflows. Recovery should account for those
+effects before restarting the pod.
+
+The durable remediation keeps Bun while isolating the Glitter queues into a
+separate deployment/process and probing an event-loop-backed health endpoint.
+That contains a recurrence to one role and lets Kubernetes restart a process
+that exists but cannot service HTTP. Missing-poller and backlog alerts remain a
+useful additional detection layer; history rollover should be evaluated
+separately because the recorded histories replayed successfully.
+
+## Session Log — 2026-08-03
+
+### Done
+
+- Verified live Kubernetes, ArgoCD, Temporal gRPC/UI, PostgreSQL, queue, workflow
+  history, process-thread, and Prometheus evidence.
+- Identified the immediate failure as a spinning Bun/JavaScriptCore thread,
+  followed by workflow-slot saturation and loss of the `default` poller.
+- Correlated the failure onset to finalization of the weekly Glitter full
+  refresh and quantified its 267 children, 5,115 activities, and two largest
+  histories.
+- Replayed the exact histories and exercised equivalent real-worker workloads
+  in the production image without reproducing the wedge, excluding deterministic
+  workflow, history, and simple memory-threshold explanations.
+- Cross-checked Temporal's current experimental Bun-support status and narrowed
+  the remaining uncertainty without claiming that Bun itself caused the stall.
+- Added explicit `core`, `glitter`, and backward-compatible `all` Bun worker
+  roles with strict environment parsing and regression tests.
+- Split Glitter into a separate Kubernetes Deployment with independent SDK and
+  application metrics Services and event-loop-backed startup, readiness, and
+  liveness probes on `/healthz`.
+- Added synthesized-manifest regression coverage for the role split, probe
+  configuration, and exposed ports.
+
+### Remaining
+
+- Update the Temporal operator and architecture documentation.
+- Complete focused verification, publish the native-stack draft PR, and inspect
+  its exact-current-head Buildkite result.
+
+### Caveats
+
+- No live recovery action has been authorized or performed.
+- The trigger correlation is strong, but the exact low-level defect remains
+  unproven. Capturing it requires an invasive live native stack or a future
+  recurrence with CPU profiling enabled.
+- Restarting now may interrupt active agent work and cause delayed schedules to
+  execute late.

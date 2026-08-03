@@ -1,11 +1,17 @@
 ---
-id: plan-2026-07-31-native-github-stacks
-type: plan
-status: in-progress
+id: reference-superseded-2026-07-31-native-github-stacks
+type: reference
+status: complete
 board: false
 ---
 
 # Native GitHub stacks for new work
+
+> **Superseded (2026-08-03):** Reverted by PR #1970
+> (`docs(root): prefer git-spice over native GitHub stacks (revert #1876)`).
+> New human/agent work uses git-spice again — see the `git-spice-helper` skill
+> and root `AGENTS.md`. Preserved here for the decision history; do not follow
+> the `gh stack` guidance below for new work.
 
 ## Objective
 

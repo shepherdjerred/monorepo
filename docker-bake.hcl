@@ -81,6 +81,7 @@ group "app" {
     "temporal-worker",
     "trmnl-dashboard",
     "scout-for-lol",
+    "scout-evals",
     "discord-plays-pokemon",
     "discord-plays-mario-kart",
   ]
@@ -109,6 +110,14 @@ target "tasknotes-server" {
   tags       = imagetags("tasknotes-server")
   cache-from = cachefrom("tasknotes-server")
   cache-to   = cacheto("tasknotes-server")
+}
+
+target "scout-evals" {
+  inherits   = ["_app"]
+  dockerfile = "packages/scout-for-lol/packages/evals/Dockerfile"
+  tags       = imagetags("scout-evals")
+  cache-from = cachefrom("scout-evals")
+  cache-to   = cacheto("scout-evals")
 }
 
 target "starlight-karma-bot" {

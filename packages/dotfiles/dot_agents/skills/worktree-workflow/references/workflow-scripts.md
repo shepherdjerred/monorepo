@@ -2,10 +2,6 @@
 
 Shell scripts for managing git worktree workflows.
 
-> These scripts are generic reference. In `shepherdjerred/monorepo`, newly
-> rooted work uses `gh stack`; existing git-spice work stays on git-spice. See
-> the parent skill before copying branch, rebase, or PR commands.
-
 ## Starting New Work
 
 ```bash

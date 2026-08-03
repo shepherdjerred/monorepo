@@ -174,6 +174,10 @@ const versions = {
   // not managed by renovate
   "shepherdjerred/birmel":
     "2.0.0-7749@sha256:2afc31cb39cf67e37571644535ac93417fb5da79c401de318f3801b557c9c2ff",
+  // not managed by renovate — placeholder digest; CI version-commit-back fills
+  // the real digest after the first successful scout-evals image push.
+  "shepherdjerred/scout-evals":
+    "0.0.0-0@sha256:0000000000000000000000000000000000000000000000000000000000000000",
   // not managed by renovate
   "shepherdjerred/discord-plays-pokemon":
     "2.0.0-7794@sha256:bbad9108923e3512673a1ad110a1c385aeb2742fb6e2fa8db25817e285cd46e1",

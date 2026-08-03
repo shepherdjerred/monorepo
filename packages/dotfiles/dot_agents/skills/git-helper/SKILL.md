@@ -7,12 +7,7 @@ description: |
 
 # Git Helper Agent
 
-> **Branch & PR routing for `shepherdjerred/monorepo`:** new human/agent work
-> uses GitHub's native stacks, so load `gh-stack` before branch/PR operations.
-> Work already managed by git-spice, or stacked on top of it, stays on
-> git-spice; load `git-spice-helper` for that legacy stack. Never mix the tools.
-> Bare `gh pr create` and manual-rebase examples below are generic guidance for
-> other repositories or stateless automation, not monorepo feature workflow.
+> **Branch & PR management in `shepherdjerred/monorepo` uses git-spice — every PR is a stacked PR.** Load the `git-spice-helper` skill first (it's authoritative) before creating branches, stacking, restacking, or opening PRs; create/update PRs with `git-spice branch/stack submit`. The `gh pr create` and manual-`git rebase` examples below are the generic fallback for repos without git-spice.
 
 ## What's New in Git (2024-2026)
 

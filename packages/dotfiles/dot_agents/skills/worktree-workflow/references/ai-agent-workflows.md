@@ -1,10 +1,5 @@
 # AI Agent Workflows (2025)
 
-> These are generic worktree examples. In `shepherdjerred/monorepo`, newly
-> rooted work must register its worktree branch with `gh stack`; existing
-> git-spice work stays on git-spice. See the parent skill before copying branch,
-> rebase, or PR commands.
-
 ## The incident.io Case Study
 
 **Real-world example**: incident.io runs **4-5 Claude Code agents in parallel** using worktrees, enabling multiple AI agents to work on different features simultaneously without conflicts.

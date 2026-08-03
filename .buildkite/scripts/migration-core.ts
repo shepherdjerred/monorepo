@@ -8,6 +8,7 @@ const applicationTargets = [
   "temporal-worker",
   "trmnl-dashboard",
   "scout-for-lol",
+  "scout-evals",
   "discord-plays-pokemon",
   "discord-plays-mario-kart",
 ] as const;

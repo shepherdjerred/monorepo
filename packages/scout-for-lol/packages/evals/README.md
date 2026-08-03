@@ -1,6 +1,6 @@
 # Scout Review Evals
 
-Local calibration app for immutable post-match review datasets. It stores raw
+Calibration app for immutable post-match review datasets. It stores raw
 source artifacts, processed match context, exact prompts, model settings,
 generations, human ratings, and style-batch freshness ratings in SQLite.
 
@@ -12,6 +12,13 @@ bun run --filter=@scout-for-lol/evals dev
 
 The API binds to `127.0.0.1:7341`; Vite binds to `127.0.0.1:7342`.
 `SCOUT_EVAL_DATABASE_PATH` overrides the default database under `data/`.
+
+The production server (`bun run start`) binds loopback by default; `--host` or
+`SCOUT_EVAL_HOSTNAME` widens the bind. The app has no auth, so any non-loopback
+bind must sit behind a real trust boundary — the hosted instance runs on the
+homelab behind a tailnet-only Tailscale ingress at
+`https://scout-evals.<tailnet>.ts.net`, where the tailnet is the auth layer.
+Never expose it publicly (no Funnel).
 
 ## Discover Candidates
 
@@ -67,6 +74,31 @@ Raw S3 objects do not identify Scout aliases or tracked-player membership. The
 sanitized Beta snapshot supplies that mapping and materialization fails if the
 target is absent. API keys remain server-side and are never included in the
 Vite bundle.
+
+## Push A Draft To The Hosted Instance
+
+Materialization stays local (it needs `OPENAI_API_KEY`, AWS credentials, and
+the Beta corpus snapshot), but rating happens on the hosted app. Move a
+locally-materialized draft over the tailnet with:
+
+```bash
+bun run --filter=@scout-for-lol/evals dataset:push -- \
+  --dataset <dataset-id> \
+  --server https://scout-evals.<tailnet>.ts.net
+```
+
+`SCOUT_EVAL_REMOTE_URL` supplies the server when `--server` is omitted;
+`--database` / `SCOUT_EVAL_DATABASE_PATH` select the local source database.
+
+Draft transfers carry dataset metadata, frozen case artifacts, and generations
+— never human or freshness ratings, which are authored on the receiving
+instance. Pushes are additive merges: re-pushing after extending the draft
+(`materialize` with the spec's `datasetId`) inserts only the missing cases and
+generations, verifies existing records are byte-identical (canonical-JSON), and
+rejects any drift, checksum mismatch, or finalized target instead of
+overwriting. A push that adds a generation to a style invalidates that style's
+freshness rating on the server, exactly like recording a generation locally.
+Ratings authored on the server always survive re-pushes.
 
 ## Transfer A Finalized Dataset
 

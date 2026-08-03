@@ -24,6 +24,8 @@ import {
   streamSendCompleteDelayMs,
   streamSendFrametimeRatio,
   streamSendLateFramesTotal,
+  streamSendIntervalMs,
+  streamTrackerVideoSourceDepth,
 } from "#src/observability/metrics.ts";
 import type {
   StreamLatencyTracker,
@@ -94,10 +96,17 @@ export const prometheusLatencyObservations: StreamLatencyObservations = {
   correlationFailure: (kind, reason) => {
     streamLatencyCorrelationFailuresTotal.inc({ kind, reason });
   },
+  videoSourceDepth: (depth) => {
+    streamTrackerVideoSourceDepth.set(depth);
+  },
+  sendInterval: (kind, intervalMs) => {
+    streamSendIntervalMs.observe({ kind }, intervalMs);
+  },
 };
 
 export function resetStreamLatencyMetrics(): void {
   streamAvContentOffsetMs.set(0);
+  streamTrackerVideoSourceDepth.set(0);
 }
 
 export type StreamObserverOptions = {

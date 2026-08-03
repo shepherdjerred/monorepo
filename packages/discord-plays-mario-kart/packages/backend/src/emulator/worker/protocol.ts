@@ -64,6 +64,7 @@ const MetricBatchSchema: z.ZodType<MetricBatch> = z.strictObject({
   lateMs: z.array(z.number()),
   copyMs: z.array(z.number()),
   inputApplyDelayMs: z.array(z.number()),
+  eventLoopLagMs: z.array(z.number()),
   ticks: z.number(),
   loopResyncs: z.number(),
   restarts: z.array(z.string()),

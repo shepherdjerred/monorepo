@@ -3,10 +3,19 @@ import { buildVaapiVideoGraph } from "../videoGraph.js";
 
 type VaapiSettings = {
   device?: string;
+  /**
+   * `-async_depth` for the VAAPI encoders: how many frames the encode pipeline
+   * may hold in flight. ffmpeg's default (2) keeps one extra frame queued in
+   * the encode FIFO, adding ~one frame-interval of steady-state latency.
+   * Realtime consumers (discord-plays-mario-kart) pass 1 to trade pipelining
+   * throughput for latency. Omitted → flag not emitted, ffmpeg default kept.
+   */
+  asyncDepth?: number;
 };
 
 export function vaapi({
   device = "/dev/dri/renderD128",
+  asyncDepth,
 }: Partial<VaapiSettings> = {}): EncoderSettingsGetter {
   // Shared across codecs. The full-GPU pipeline (hardware decode into VAAPI surfaces + GPU
   // scale/tonemap/subtitle-overlay via `buildVaapiVideoGraph`) is codec-agnostic; it replaces the
@@ -55,13 +64,16 @@ export function vaapi({
       videoGraph: buildVaapiVideoGraph,
     },
   };
+  // `-async_depth` is a base VAAPI-encode option shared by all three codecs.
+  const asyncDepthOptions =
+    asyncDepth === undefined ? [] : ["-async_depth", String(asyncDepth)];
   return () => ({
     // VBR rate control so `-b:v`/`-maxrate`/`-bufsize` are honored. h264_vaapi defaults to AVBR,
     // which logs "Buffering settings are ignored" and leaves the bitrate effectively uncapped —
     // bitrate spikes can overwhelm the realtime Discord send path.
     H264: {
       name: "h264_vaapi",
-      options: ["-rc_mode", "VBR"],
+      options: ["-rc_mode", "VBR", ...asyncDepthOptions],
       ...shared,
     },
     // H265/AV1 keep the VAAPI default rate control: VBR support for these codecs is hardware-/
@@ -69,12 +81,12 @@ export function vaapi({
     // encodes H264, so these are validated only as far as the shared GPU pipeline.
     H265: {
       name: "hevc_vaapi",
-      options: [],
+      options: [...asyncDepthOptions],
       ...shared,
     },
     AV1: {
       name: "av1_vaapi",
-      options: [],
+      options: [...asyncDepthOptions],
       ...shared,
     },
   });

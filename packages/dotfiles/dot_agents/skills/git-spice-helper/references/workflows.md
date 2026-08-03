@@ -1,8 +1,5 @@
 # git-spice worked workflows (this repo)
 
-> Existing git-spice work only. Newly rooted monorepo work uses `gh-stack`;
-> never apply these workflows to a native GitHub stack.
-
 All examples use `git-spice` (agent/script-safe). Interactively, `gs` is the
 abbreviation. Every example assumes you're inside the stack's worktree (see
 `worktree-workflow` — **one worktree per stack**).

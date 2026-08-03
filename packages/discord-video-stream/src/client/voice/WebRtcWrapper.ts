@@ -23,6 +23,26 @@ import {
 import { rewriteSPSVUI } from "../processing/SPSVUIRewriter.js";
 import type { BaseMediaConnection } from "./BaseMediaConnection.js";
 
+// The playout-delay header extension carries min/max as 12-bit fields counted
+// in 10ms units (0..40950ms). https://webrtc.googlesource.com/src/+/main/docs/native-code/rtp-hdrext/playout-delay
+const PLAYOUT_DELAY_UNIT_MS = 10;
+const PLAYOUT_DELAY_MAX_UNITS = 0xfff;
+const DEFAULT_VIDEO_PLAYOUT_DELAY_MAX_MS = 100;
+
+/** Milliseconds -> the extension's 10ms units, rejecting unrepresentable values. */
+function toPlayoutDelayUnits(ms: number): number {
+  if (!Number.isFinite(ms) || ms < 0) {
+    throw new RangeError(`playout delay must be a non-negative number, got ${ms}`);
+  }
+  const units = Math.round(ms / PLAYOUT_DELAY_UNIT_MS);
+  if (units > PLAYOUT_DELAY_MAX_UNITS) {
+    throw new RangeError(
+      `playout delay ${ms}ms exceeds the ${PLAYOUT_DELAY_MAX_UNITS * PLAYOUT_DELAY_UNIT_MS}ms the extension can encode`,
+    );
+  }
+  return units;
+}
+
 const DAVE_MEDIA_TYPE_VIDEO = 1;
 const DAVE_CODEC = {
   UNKNOWN: 0,
@@ -164,7 +184,20 @@ export class WebRtcConnWrapper {
     rtpConfig.timestamp += Math.round((frametime * clockRate) / 1000);
   }
 
-  public setPacketizer(videoCodec: string): void {
+  /**
+   * @param videoPlayoutDelayMaxMs Upper bound advertised to the receiver via the
+   *   `playout-delay` RTP header extension, in milliseconds. Receivers size their
+   *   jitter buffer within [min, max]; Chrome sits at the ceiling on a clean
+   *   link, so this value is close to a floor on the client-side delay an
+   *   interactive stream pays. Defaults to 100 ms — the historical value — so
+   *   existing consumers are unaffected. Lower it only when the link is known
+   *   to be low-jitter: less headroom means a burst of jitter becomes a visible
+   *   freeze instead of being absorbed.
+   */
+  public setPacketizer(
+    videoCodec: string,
+    videoPlayoutDelayMaxMs = DEFAULT_VIDEO_PLAYOUT_DELAY_MAX_MS,
+  ): void {
     if (!this.mediaConnection.webRtcParams)
       throw new Error("WebRTC connection not ready");
     const { audioSsrc, videoSsrc } = this.mediaConnection.webRtcParams;
@@ -190,7 +223,9 @@ export class WebRtcConnWrapper {
     );
     rtpConfigVideo.playoutDelayId = 5;
     rtpConfigVideo.playoutDelayMin = 0;
-    rtpConfigVideo.playoutDelayMax = 10;
+    rtpConfigVideo.playoutDelayMax = toPlayoutDelayUnits(
+      videoPlayoutDelayMaxMs,
+    );
     switch (this._videoCodec) {
       case "H264":
         this._videoPacketizer = new H264RtpPacketizer(

@@ -33,12 +33,6 @@ import { AnalogStick } from "./analog-stick.tsx";
 import { NameEntry } from "./name-entry.tsx";
 import { Leaderboard } from "./leaderboard.tsx";
 
-// Input emit coalesce window: schedule one flush ~16ms after the first edge
-// so at most ~60 socket messages/sec/seat reach the backend. Static constant
-// at module scope so the value is stable across renders and won't confuse
-// react-hooks/exhaustive-deps.
-const EMIT_COALESCE_MS = 16;
-
 const BUTTON_LABELS = [
   ["up", "D↑"],
   ["down", "D↓"],
@@ -108,25 +102,16 @@ export function App() {
     });
   }, 2000);
 
-  // Input emit is setTimeout-coalesced: press/release schedule one flush
-  // ~16ms later and snapshot the FINAL pressed set at flush time. A user
-  // mashing buttons (or pointer-event bursts across many controller buttons)
-  // generates at most ~60 socket messages/sec/seat instead of one per raw
-  // edge — the emulator only samples input once per 33ms frame, so anything
-  // above ~30/sec is pure event-loop tax on the backend. Uses setTimeout
-  // (not requestAnimationFrame) so background/inactive tabs still emit input
-  // — Chromium throttles rAF to ~1Hz or pauses it in hidden tabs, which
-  // would silently break controllers when the user switches tabs. blur
-  // flushes synchronously so a lost-focus event lands before any pending
-  // schedule fires. See packages/docs/plans/2026-06-13_mk64-perf-test.md.
-  const emitDirty = useRef(false);
-  const emitTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
-    undefined,
-  );
-  const flushEmit = useCallback(() => {
-    emitTimer.current = undefined;
-    if (!emitDirty.current) return;
-    emitDirty.current = false;
+  // Input emits immediately on every edge. Every control is a discrete
+  // press/release code — the "analog" axes derive from held codes inside
+  // computeState — so a human produces at most a few dozen edges/sec, and the
+  // backend already coalesces per-seat latest-state before the emulator tick
+  // (worker-emulator pendingInput). The former ~16ms setTimeout coalesce
+  // added up to one output frame of input latency for no practical rate
+  // reduction (2026-08-03 latency plan,
+  // packages/docs/plans/2026-08-03_mk64-latency-full-surface.md). press() and
+  // release() no-op on non-edges, so every emit is a genuine state change.
+  const emitState = useCallback(() => {
     const s = seatRef.current;
     if (s === null) return;
     const request: InputRequest = {
@@ -136,44 +121,30 @@ export function App() {
     };
     socket.emit("request", request);
   }, []);
-  const scheduleEmit = useCallback(() => {
-    emitDirty.current = true;
-    if (emitTimer.current !== undefined) return;
-    emitTimer.current = setTimeout(flushEmit, EMIT_COALESCE_MS);
-  }, [flushEmit]);
-  const flushNow = useCallback(() => {
-    if (emitTimer.current !== undefined) {
-      clearTimeout(emitTimer.current);
-      emitTimer.current = undefined;
-    }
-    if (!emitDirty.current) return;
-    flushEmit();
-  }, [flushEmit]);
 
   const press = useCallback(
     (code: string) => {
       if (pressed.current.has(code)) return;
       pressed.current.add(code);
       setPressedCodes(new Set(pressed.current));
-      scheduleEmit();
+      emitState();
     },
-    [scheduleEmit],
+    [emitState],
   );
   const release = useCallback(
     (code: string) => {
       if (!pressed.current.delete(code)) return;
       setPressedCodes(new Set(pressed.current));
-      scheduleEmit();
+      emitState();
     },
-    [scheduleEmit],
+    [emitState],
   );
   const releaseAll = useCallback(() => {
     if (pressed.current.size === 0) return;
     pressed.current.clear();
     setPressedCodes(new Set());
-    emitDirty.current = true;
-    flushNow();
-  }, [flushNow]);
+    emitState();
+  }, [emitState]);
 
   // Subscribe to server responses (seat assignment + occupancy).
   useEffect(() => {
@@ -221,14 +192,6 @@ export function App() {
       globalThis.removeEventListener("keydown", onKeyDown);
       globalThis.removeEventListener("keyup", onKeyUp);
       globalThis.removeEventListener("blur", onBlur);
-      // Cancel any pending coalesce timer so it cannot fire a stale
-      // socket.emit after this effect tears down. releaseAll() only flushes
-      // when keys are currently held; this guard covers the case where all
-      // keys were released individually but the 16ms timer hasn't fired yet.
-      if (emitTimer.current !== undefined) {
-        clearTimeout(emitTimer.current);
-        emitTimer.current = undefined;
-      }
       releaseAll();
     };
   }, [press, release, releaseAll]);

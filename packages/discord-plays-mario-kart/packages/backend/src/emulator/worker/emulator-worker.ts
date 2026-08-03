@@ -11,6 +11,7 @@ import { N64Emulator } from "#src/emulator/n64-emulator.ts";
 import { readSnapshot } from "#src/emulator/mk64-memory.ts";
 import { MAX_AUDIO_IN_FLIGHT, MAX_FRAMES_IN_FLIGHT } from "./backpressure.ts";
 import { createBatchingMetricSink } from "./metric-bridge.ts";
+import { startEventLoopLagSampler } from "#src/observability/event-loop-lag.ts";
 import { parseMainMessage } from "./protocol.ts";
 import type { WorkerInitOpts, WorkerToMain } from "./protocol.ts";
 import { logger } from "#src/logger.ts";
@@ -91,6 +92,15 @@ async function handleInit(opts: WorkerInitOpts): Promise<void> {
     metrics: batching.sink,
   });
   await emu.init();
+
+  // Worker-thread stall visibility: a blocked worker loop delays frames but was
+  // previously invisible below the 66ms tick-lateness floor. Start sampling only
+  // AFTER init() so synchronous WASM/ROM boot latency is not recorded as
+  // streaming loop lag in the event_loop_lag_ms histogram.
+  const sinkForLag = batching;
+  startEventLoopLagSampler((lagMs) => {
+    sinkForLag.observeEventLoopLagMs(lagMs);
+  });
 
   emu.onFrame((rgba, contentTimeMs) => {
     frameCount += 1;
