@@ -5,7 +5,10 @@ import type {
   FleetScheduler,
   WorkerRunner,
 } from "./ports.ts";
-import { ControllerTelemetry } from "./controller-telemetry.ts";
+import {
+  ControllerTelemetry,
+  isTelemetryCaptureError,
+} from "./controller-telemetry.ts";
 import {
   buildPrState,
   computeStackIds,
@@ -30,7 +33,17 @@ import {
   withPrCommandCorrelation,
   withTickCommandCorrelation,
 } from "./controller-correlation.ts";
-import { settleWorkerResult } from "./controller-worker-settlement.ts";
+import {
+  settleWorkerFailure,
+  settleWorkerResult,
+} from "./controller-worker-settlement.ts";
+import { startWorkerObservation } from "./controller-worker-observer.ts";
+import {
+  guidePr,
+  prioritizePr,
+  resumePr,
+  updateWorkerLimit,
+} from "./controller-commands.ts";
 import {
   abortFleetWorkers,
   settleControllerShutdown,
@@ -43,6 +56,7 @@ export class FleetController implements MasterControllerTools {
   readonly #observer: FleetObserver;
   readonly #scheduler: FleetScheduler;
   readonly #telemetry: ControllerTelemetry;
+  readonly #onFatalError: ((error: Error) => void) | undefined;
   readonly #workflow;
   readonly store: FleetStore;
   #heartbeat: (() => void) | null = null;
@@ -53,6 +67,7 @@ export class FleetController implements MasterControllerTools {
   readonly #workerSettlements = new Map<Promise<WorkerResult>, Promise<void>>();
   readonly #dispatchedWorkers = new Map<number, PrState>();
   readonly #dispatchedTickIds = new Map<number, string>();
+  #fatalFailure: Error | undefined;
 
   constructor(dependencies: FleetControllerDependencies) {
     const { config, environment, workerRunner, observer } = dependencies;
@@ -61,6 +76,7 @@ export class FleetController implements MasterControllerTools {
     this.#workerRunner = workerRunner;
     this.#observer = observer;
     this.#telemetry = new ControllerTelemetry(dependencies.telemetry);
+    this.#onFatalError = dependencies.onFatalError;
     this.#scheduler = dependencies.scheduler ?? defaultFleetScheduler;
     this.store = dependencies.store ?? new FleetStore(config.maxWorkers);
     this.#workflow = createFleetTickWorkflow((trigger) =>
@@ -96,22 +112,40 @@ export class FleetController implements MasterControllerTools {
     this.#currentTickId = tickId;
     this.#tickRunning = true;
     try {
-      const run = await this.#workflow.createRun();
-      const result = await withTickCommandCorrelation(tickId, () =>
-        run.start({ inputData: { trigger } }),
-      );
-      if (result.status !== "success") {
-        if (result.status === "failed") {
-          throw result.error;
+      let report: FleetTickReport;
+      try {
+        const run = await this.#workflow.createRun();
+        const result = await withTickCommandCorrelation(tickId, () =>
+          run.start({ inputData: { trigger } }),
+        );
+        if (result.status !== "success") {
+          if (result.status === "failed") {
+            throw result.error;
+          }
+          throw new Error(`Fleet workflow ended with status ${result.status}`);
         }
-        throw new Error(`Fleet workflow ended with status ${result.status}`);
+        report = FleetTickReportSchema.parse(result.result);
+      } catch (error) {
+        if (isTelemetryCaptureError(error)) {
+          throw error;
+        }
+        this.#telemetry.tickFailed(tickId, error);
+        throw error;
       }
-      const report = FleetTickReportSchema.parse(result.result);
+      // Persist the reconciled state outside the workflow's operational error
+      // boundary. Capture failures must never be relabeled as tick failures or
+      // retried as though GitHub reconciliation itself had failed.
+      this.#telemetry.snapshot(tickId, report.snapshot);
+      for (const change of report.changes) {
+        this.#telemetry.change(tickId, change);
+      }
       this.#armHeartbeat(report.nextHeartbeatSeconds);
       this.#telemetry.tickCompleted(tickId, report);
       return report;
     } catch (error) {
-      this.#telemetry.tickFailed(tickId, error);
+      if (isTelemetryCaptureError(error)) {
+        this.#reportFatalError(error);
+      }
       throw error;
     } finally {
       this.#tickRunning = false;
@@ -120,7 +154,11 @@ export class FleetController implements MasterControllerTools {
       if (this.#tickSettled === settlement.promise) {
         this.#tickSettled = null;
       }
-      if (this.#tickDue && !this.#isStopping()) {
+      if (
+        this.#tickDue &&
+        !this.store.isStopping() &&
+        this.#fatalFailure === undefined
+      ) {
         this.#tickDue = false;
         queueMicrotask(() => {
           void this.#runTickSafely("due", "due tick");
@@ -166,10 +204,8 @@ export class FleetController implements MasterControllerTools {
     await this.#dispatch(changes);
 
     const snapshot = this.snapshot();
-    this.#telemetry.snapshot(this.#currentTickId, snapshot);
     this.#observer.onSnapshot(snapshot);
     for (const change of changes) {
-      this.#telemetry.change(this.#currentTickId, change);
       this.#observer.onChange(change);
     }
     return {
@@ -307,35 +343,24 @@ export class FleetController implements MasterControllerTools {
       );
       busyStacks.add(candidate.stackId);
       changes.push(`started ${assigned.runtimeAgent ?? "worker"}`);
-      const settlement = this.#observeWorker(
-        candidate.identity.number,
+      const observationPrNumber = candidate.identity.number;
+      const settlement = startWorkerObservation({
+        prNumber: observationPrNumber,
         promise,
-      );
+        handleFailure: (error) => {
+          this.#handleWorkerFailure(observationPrNumber, error);
+        },
+        handleResult: (result) => {
+          this.#handleWorkerResult(observationPrNumber, result);
+        },
+        reportFatal: (error) => {
+          this.#reportFatalError(error);
+        },
+        onSettled: () => {
+          this.#workerSettlements.delete(promise);
+        },
+      });
       this.#workerSettlements.set(promise, settlement);
-    }
-  }
-
-  async #observeWorker(
-    prNumber: number,
-    promise: Promise<WorkerResult>,
-  ): Promise<void> {
-    try {
-      const result = await promise;
-      // A model result cannot mutate a PR other than its dispatched owner.
-      if (result.pr !== prNumber) {
-        this.#handleWorkerFailure(
-          prNumber,
-          new Error(
-            `worker returned a result for PR #${String(result.pr)} instead of #${String(prNumber)}`,
-          ),
-        );
-        return;
-      }
-      this.#handleWorkerResult(prNumber, result);
-    } catch (error) {
-      this.#handleWorkerFailure(prNumber, error);
-    } finally {
-      this.#workerSettlements.delete(promise);
     }
   }
 
@@ -365,42 +390,21 @@ export class FleetController implements MasterControllerTools {
     this.#dispatchedWorkers.delete(prNumber);
     const tickId = this.#dispatchedTickIds.get(prNumber);
     this.#dispatchedTickIds.delete(prNumber);
-    const deliberatelyCancelled = this.store.cancelledWorkers.delete(prNumber);
-    this.store.activeWorkers.delete(prNumber);
-    this.store.workerControllers.delete(prNumber);
-    this.store.releaseLeases(prNumber);
-    if (deliberatelyCancelled) {
-      this.#telemetry.workerCancelled(prNumber, dispatched, error, tickId);
-      // Deliberate cancel (PR went green or its head advanced) — not a failure.
-      // Do not pause; re-run a tick so a moved-head PR re-dispatches against its
-      // refreshed SHA (a green PR simply won't be a dispatch candidate).
-      this.#observer.onChange(
-        `worker for PR #${String(prNumber)} cancelled (stale head or resolved)`,
-      );
-      if (!this.store.stopping) {
-        void this.#runTickSafely("worker-complete", "worker-complete tick");
-      }
-      return;
+    const shouldTick = settleWorkerFailure({
+      store: this.store,
+      telemetry: this.#telemetry,
+      observer: this.#observer,
+      dispatched,
+      prNumber,
+      error,
+      tickId,
+      pause: (reason) => {
+        this.pause(prNumber, reason);
+      },
+    });
+    if (shouldTick && !this.store.stopping) {
+      void this.#runTickSafely("worker-complete", "worker-complete tick");
     }
-    this.#telemetry.workerFailed(prNumber, dispatched, error, tickId);
-    const message = error instanceof Error ? error.message : String(error);
-    const state = this.store.prs.get(prNumber);
-    if (
-      this.store.stopping ||
-      state?.status === "closed" ||
-      this.store.pausedReasons.has(prNumber)
-    ) {
-      // Already stopping, closed, or deliberately paused (which aborts the
-      // worker). Don't overwrite the intended pause reason with the abort error.
-      this.#observer.onChange(
-        `worker for PR #${String(prNumber)} stopped: ${message}`,
-      );
-      return;
-    }
-    this.pause(prNumber, `worker failed: ${message}`);
-    this.#observer.onChange(
-      `worker for PR #${String(prNumber)} failed: ${message}`,
-    );
   }
 
   #armHeartbeat(seconds: 300 | 600): void {
@@ -420,6 +424,10 @@ export class FleetController implements MasterControllerTools {
     try {
       await this.tick(trigger);
     } catch (error) {
+      if (isTelemetryCaptureError(error)) {
+        this.#reportFatalError(error);
+        return;
+      }
       const message = error instanceof Error ? error.message : String(error);
       this.#observer.onChange(`${label} failed: ${message}`);
       // A heartbeat clears its handle before starting the tick. If that tick
@@ -431,16 +439,22 @@ export class FleetController implements MasterControllerTools {
     }
   }
 
-  #isStopping(): boolean {
-    return this.store.stopping;
+  #reportFatalError(error: unknown): void {
+    const failure = error instanceof Error ? error : new Error(String(error));
+    if (this.#fatalFailure !== undefined) {
+      return;
+    }
+    this.#fatalFailure = failure;
+    this.#tickDue = false;
+    if (this.#heartbeat !== null) {
+      this.#heartbeat();
+      this.#heartbeat = null;
+    }
+    this.#onFatalError?.(failure);
   }
 
   prioritize(prNumber: number, priority: number): void {
-    const state = this.store.prs.get(prNumber);
-    if (state === undefined) {
-      throw new Error(`Unknown PR #${String(prNumber)}`);
-    }
-    this.store.prs.set(prNumber, { ...state, priority });
+    prioritizePr(this.store, prNumber, priority);
   }
 
   pause(prNumber: number, reason: string): void {
@@ -470,24 +484,15 @@ export class FleetController implements MasterControllerTools {
   }
 
   resume(prNumber: number): void {
-    if (!this.store.prs.has(prNumber)) {
-      throw new Error(`Unknown PR #${String(prNumber)}`);
-    }
-    this.store.pausedReasons.delete(prNumber);
+    resumePr(this.store, prNumber);
   }
 
   guide(prNumber: number, message: string): void {
-    if (!this.store.prs.has(prNumber)) {
-      throw new Error(`Unknown PR #${String(prNumber)}`);
-    }
-    this.store.addGuidance(prNumber, message);
+    guidePr(this.store, prNumber, message);
   }
 
   setWorkerLimit(limit: number): void {
-    if (!Number.isInteger(limit) || limit < 1 || limit > 5) {
-      throw new Error("Worker limit must be an integer between one and five");
-    }
-    this.store.workerLimit = limit;
+    updateWorkerLimit(this.store, limit);
   }
 
   async stop(externalSettlement: Promise<unknown>): Promise<FleetSnapshot> {
@@ -506,6 +511,7 @@ export class FleetController implements MasterControllerTools {
       inFlightTick: this.#tickSettled,
       workerSettlements: () => this.#workerSettlements.values(),
       externalSettlement,
+      initialFailure: this.#fatalFailure,
       snapshot: () => this.snapshot(),
       telemetry: this.#telemetry,
     });

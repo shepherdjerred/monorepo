@@ -97,7 +97,10 @@ export function replaySnapshots(
       tickSnapshots.delete(event.correlation.tickId);
       activeTickIds.delete(event.correlation.tickId);
     }
-    if (event.kind === "shutdown.completed") {
+    if (
+      event.kind === "shutdown.completed" ||
+      event.kind === "shutdown.failed"
+    ) {
       finalSnapshot = SnapshotPayloadSchema.parse(event.payload).snapshot;
       verifySnapshot(finalSnapshot);
     }
@@ -109,18 +112,19 @@ export function replaySnapshots(
 }
 
 export function verifyShutdownBoundary(events: RecordedRunEvent[]): void {
-  const shutdownCompletedIndex = events.findIndex(
-    (event) => event.kind === "shutdown.completed",
+  const shutdownTerminalIndex = events.findIndex(
+    (event) =>
+      event.kind === "shutdown.completed" || event.kind === "shutdown.failed",
   );
-  if (shutdownCompletedIndex === -1) {
+  if (shutdownTerminalIndex === -1) {
     return;
   }
   const lateEvent = events
-    .slice(shutdownCompletedIndex + 1)
+    .slice(shutdownTerminalIndex + 1)
     .find(
       (event) => event.kind !== "run.completed" && event.kind !== "run.failed",
     );
   if (lateEvent !== undefined) {
-    throw new Error(`${lateEvent.kind} was recorded after shutdown.completed`);
+    throw new Error(`${lateEvent.kind} was recorded after shutdown terminal`);
   }
 }

@@ -6,6 +6,22 @@ import type {
   TickTrigger,
   WorkerResult,
 } from "./schemas.ts";
+import type { RunEventCorrelation, RunEventKind } from "./run-events.ts";
+
+export class TelemetryCaptureError extends Error {
+  constructor(operation: string, cause: unknown) {
+    const detail = cause instanceof Error ? cause.message : String(cause);
+    super(`Failed to capture ${operation}: ${detail}`, { cause });
+    this.name = "TelemetryCaptureError";
+  }
+}
+
+export function isTelemetryCaptureError(error: unknown): boolean {
+  return (
+    error instanceof TelemetryCaptureError ||
+    (error instanceof Error && error.name === "TelemetryCaptureError")
+  );
+}
 
 export class ControllerTelemetry {
   readonly #telemetry: FleetTelemetry | undefined;
@@ -14,12 +30,32 @@ export class ControllerTelemetry {
     this.#telemetry = telemetry;
   }
 
+  #newId(prefix: string): string | undefined {
+    try {
+      return this.#telemetry?.newId(prefix);
+    } catch (error) {
+      throw new TelemetryCaptureError(`${prefix} correlation`, error);
+    }
+  }
+
+  #record(
+    kind: RunEventKind,
+    payload: Record<string, unknown>,
+    correlation: RunEventCorrelation = {},
+  ): void {
+    try {
+      this.#telemetry?.record(kind, payload, correlation);
+    } catch (error) {
+      throw new TelemetryCaptureError(kind, error);
+    }
+  }
+
   tickQueued(
     trigger: TickTrigger,
     snapshot: FleetSnapshot,
     causationId?: string,
   ): void {
-    this.#telemetry?.record(
+    this.#record(
       "tick.queued",
       { trigger, snapshot },
       causationId === undefined ? {} : { causationId },
@@ -27,8 +63,8 @@ export class ControllerTelemetry {
   }
 
   tickStarted(trigger: TickTrigger): string | undefined {
-    const tickId = this.#telemetry?.newId("tick");
-    this.#telemetry?.record(
+    const tickId = this.#newId("tick");
+    this.#record(
       "tick.started",
       { trigger },
       tickId === undefined ? {} : { tickId },
@@ -37,7 +73,7 @@ export class ControllerTelemetry {
   }
 
   tickCompleted(tickId: string | undefined, report: FleetTickReport): void {
-    this.#telemetry?.record(
+    this.#record(
       "tick.completed",
       { report },
       tickId === undefined ? {} : { tickId },
@@ -45,7 +81,7 @@ export class ControllerTelemetry {
   }
 
   tickFailed(tickId: string | undefined, error: unknown): void {
-    this.#telemetry?.record(
+    this.#record(
       "tick.failed",
       { error: error instanceof Error ? error.message : String(error) },
       tickId === undefined ? {} : { tickId },
@@ -53,7 +89,7 @@ export class ControllerTelemetry {
   }
 
   snapshot(tickId: string | undefined, snapshot: FleetSnapshot): void {
-    this.#telemetry?.record(
+    this.#record(
       "fleet.snapshot",
       { snapshot },
       tickId === undefined ? {} : { tickId },
@@ -61,7 +97,7 @@ export class ControllerTelemetry {
   }
 
   change(tickId: string | undefined, change: string): void {
-    this.#telemetry?.record(
+    this.#record(
       "fleet.change",
       { change },
       tickId === undefined ? {} : { tickId },
@@ -69,7 +105,7 @@ export class ControllerTelemetry {
   }
 
   workerStarted(tickId: string | undefined, state: PrState): void {
-    this.#telemetry?.record(
+    this.#record(
       "worker.started",
       {
         runtimeAgent: state.runtimeAgent,
@@ -91,7 +127,7 @@ export class ControllerTelemetry {
     result: WorkerResult,
     tickId: string | undefined,
   ): void {
-    this.#telemetry?.record(
+    this.#record(
       "worker.completed",
       { result },
       state === undefined
@@ -111,7 +147,7 @@ export class ControllerTelemetry {
     error: unknown,
     tickId: string | undefined,
   ): void {
-    this.#telemetry?.record(
+    this.#record(
       "worker.cancelled",
       { reason: error instanceof Error ? error.message : String(error) },
       state === undefined
@@ -131,7 +167,7 @@ export class ControllerTelemetry {
     error: unknown,
     tickId: string | undefined,
   ): void {
-    this.#telemetry?.record(
+    this.#record(
       "worker.failed",
       { error: error instanceof Error ? error.message : String(error) },
       state === undefined
@@ -146,10 +182,17 @@ export class ControllerTelemetry {
   }
 
   shutdownStarted(activeWorkers: number): void {
-    this.#telemetry?.record("shutdown.started", { activeWorkers });
+    this.#record("shutdown.started", { activeWorkers });
   }
 
   shutdownCompleted(snapshot: FleetSnapshot): void {
-    this.#telemetry?.record("shutdown.completed", { snapshot });
+    this.#record("shutdown.completed", { snapshot });
+  }
+
+  shutdownFailed(snapshot: FleetSnapshot, error: unknown): void {
+    this.#record("shutdown.failed", {
+      snapshot,
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 }

@@ -1298,7 +1298,7 @@ describe("shutdown boundary replay", () => {
         currentControllerVersion: "0.1.0",
         allowVersionMismatch: false,
       }),
-    ).toThrow("command.started was recorded after shutdown.completed");
+    ).toThrow("command.started was recorded after shutdown terminal");
   });
 
   test("replays deliberate worker cancellation as a terminal lifecycle", async () => {

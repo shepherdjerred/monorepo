@@ -66,3 +66,50 @@ export function settleWorkerResult(settlement: WorkerSettlement): boolean {
   );
   return true;
 }
+
+type WorkerFailureSettlement = {
+  store: FleetStore;
+  telemetry: ControllerTelemetry;
+  observer: FleetObserver;
+  dispatched: PrState | undefined;
+  prNumber: number;
+  error: unknown;
+  tickId: string | undefined;
+  pause: (reason: string) => void;
+};
+
+export function settleWorkerFailure(
+  settlement: WorkerFailureSettlement,
+): boolean {
+  const { store, telemetry, observer, dispatched, prNumber, error, tickId } =
+    settlement;
+  const deliberatelyCancelled = store.cancelledWorkers.has(prNumber);
+  if (deliberatelyCancelled) {
+    telemetry.workerCancelled(prNumber, dispatched, error, tickId);
+  } else {
+    telemetry.workerFailed(prNumber, dispatched, error, tickId);
+  }
+  store.cancelledWorkers.delete(prNumber);
+  store.activeWorkers.delete(prNumber);
+  store.workerControllers.delete(prNumber);
+  store.releaseLeases(prNumber);
+  const message = error instanceof Error ? error.message : String(error);
+  if (deliberatelyCancelled) {
+    observer.onChange(
+      `worker for PR #${String(prNumber)} cancelled (stale head or resolved)`,
+    );
+    return true;
+  }
+  const state = store.prs.get(prNumber);
+  if (
+    store.stopping ||
+    state?.status === "closed" ||
+    store.pausedReasons.has(prNumber)
+  ) {
+    observer.onChange(`worker for PR #${String(prNumber)} stopped: ${message}`);
+    return false;
+  }
+  settlement.pause(`worker failed: ${message}`);
+  observer.onChange(`worker for PR #${String(prNumber)} failed: ${message}`);
+  return false;
+}

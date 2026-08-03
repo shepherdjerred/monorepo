@@ -177,6 +177,16 @@ function trackStartedEvent(
     active.tools.set(requireLifecycleKey(event, "tools"), event);
   }
   if (event.kind === "command.started") {
+    const tickId = event.correlation.tickId;
+    const isTickCommand =
+      event.correlation.toolCallId === undefined &&
+      event.correlation.modelTurnId === undefined &&
+      event.correlation.generation === undefined;
+    if (isTickCommand && tickId !== undefined && !activeTickIds.has(tickId)) {
+      throw new Error(
+        `command.started references a nonexistent or inactive tick: ${tickId}`,
+      );
+    }
     if (event.correlation.toolCallId !== undefined) {
       requireActiveParent(
         active.tools,

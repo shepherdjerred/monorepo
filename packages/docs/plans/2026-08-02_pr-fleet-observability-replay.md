@@ -242,7 +242,12 @@ repository checkout.
 - Addressed two further exact-head findings by propagating worker-start capture
   failures before scheduling work and applying the same recursively validated
   snapshot redaction policy to events and summaries.
-- Passed focused typecheck, 119 controller tests, 42 observability tests, lint,
+- Addressed four final exact-head findings by treating mandatory tick and worker
+  settlement capture failures as fatal controller failures, retaining a final
+  event-backed snapshot through `shutdown.failed`, and requiring standalone
+  commands attributed to a tick to reference its active lifecycle. Worker
+  terminal evidence is persisted before the corresponding in-memory cleanup.
+- Passed focused typecheck, 124 controller tests, 42 observability tests, lint,
   native-aware build, docs validation, Markdown lint, diff checks, and staged
   Lefthook/Gitleaks/Prettier/lockfile checks.
 - Completed a final non-mutating `openai/gpt-5.6-terra` model/tool turn from the

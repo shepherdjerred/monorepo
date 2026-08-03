@@ -96,4 +96,5 @@ export type FleetControllerDependencies = {
   store?: FleetStore;
   scheduler?: FleetScheduler;
   telemetry?: FleetTelemetry;
+  onFatalError?: (error: Error) => void;
 };

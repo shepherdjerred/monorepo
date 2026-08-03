@@ -35,6 +35,7 @@ export const RunEventKindSchema = z.enum([
   "environment.result",
   "shutdown.started",
   "shutdown.completed",
+  "shutdown.failed",
 ]);
 
 export const RunEventCorrelationSchema = z.object({

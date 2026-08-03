@@ -12,6 +12,7 @@ type ControllerShutdownOptions = {
   inFlightTick: Promise<unknown> | null;
   workerSettlements: () => Iterable<Promise<unknown>>;
   externalSettlement: Promise<unknown>;
+  initialFailure: Error | undefined;
   snapshot: () => FleetSnapshot;
   telemetry: ControllerTelemetry;
 };
@@ -28,7 +29,7 @@ export async function settleControllerShutdown(
 ): Promise<FleetSnapshot> {
   options.begin();
   options.abortActiveWorkers();
-  let failure: Error | undefined;
+  let failure = options.initialFailure;
   if (options.inFlightTick !== null) {
     try {
       await options.inFlightTick;
@@ -55,9 +56,24 @@ export async function settleControllerShutdown(
     failure = combineFailures(failure, error);
   }
   const snapshot = options.snapshot();
+  if (!shutdownStarted) {
+    try {
+      // A one-shot start-write failure must not suppress the final snapshot.
+      // Re-establish the lifecycle after settlement so shutdown.failed can
+      // durably close it with the state that will also reach the summary.
+      options.telemetry.shutdownStarted(options.activeWorkerCount());
+      shutdownStarted = true;
+    } catch (error) {
+      failure = combineFailures(failure, error);
+    }
+  }
   if (shutdownStarted) {
     try {
-      options.telemetry.shutdownCompleted(snapshot);
+      if (failure === undefined) {
+        options.telemetry.shutdownCompleted(snapshot);
+      } else {
+        options.telemetry.shutdownFailed(snapshot, failure);
+      }
     } catch (error) {
       failure = combineFailures(failure, error);
     }

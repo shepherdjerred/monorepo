@@ -171,15 +171,46 @@ class WorkerTerminalFailingTelemetry extends RecordingTelemetry {
 }
 
 class ShutdownStartFailingTelemetry extends RecordingTelemetry {
+  #failed = false;
+
   override record(
     kind: RunEventKind,
     payload: Record<string, unknown>,
     correlation: RunEventCorrelation = {},
   ): void {
-    if (kind === "shutdown.started") {
+    if (kind === "shutdown.started" && !this.#failed) {
+      this.#failed = true;
       throw new Error("shutdown start persistence failed");
     }
     super.record(kind, payload, correlation);
+  }
+}
+
+class KindFailingTelemetry extends RecordingTelemetry {
+  #failedKind: RunEventKind | undefined;
+
+  failNext(kind: RunEventKind): void {
+    this.#failedKind = kind;
+  }
+
+  override record(
+    kind: RunEventKind,
+    payload: Record<string, unknown>,
+    correlation: RunEventCorrelation = {},
+  ): void {
+    if (kind === this.#failedKind) {
+      this.#failedKind = undefined;
+      throw new Error(`${kind} persistence failed`);
+    }
+    super.record(kind, payload, correlation);
+  }
+}
+
+class DeferredSuccessfulRunner implements WorkerRunner {
+  readonly result = Promise.withResolvers<WorkerResult>();
+
+  run(): Promise<WorkerResult> {
+    return this.result.promise;
   }
 }
 
@@ -484,6 +515,41 @@ test("a failed heartbeat rearms reconciliation", async () => {
   expect(scheduler.callbacks.size).toBe(0);
 });
 
+test("a heartbeat capture failure requests coordinated shutdown", async () => {
+  const telemetry = new KindFailingTelemetry();
+  const scheduler = new RecordingScheduler();
+  const fatal = Promise.withResolvers<Error>();
+  const controller = new FleetController({
+    config: {
+      model: "openai/gpt-5",
+      repo: "shepherdjerred/monorepo",
+      checkout: "/tmp/repo",
+      worktreeRoot: "/tmp/worktrees",
+      maxWorkers: 1,
+    },
+    environment: new FakeEnvironment([], new Map()),
+    workerRunner: new BlockingRunner(),
+    observer: new RecordingObserver(),
+    store: new FleetStore(1),
+    scheduler,
+    telemetry,
+    onFatalError: fatal.resolve,
+  });
+
+  await controller.start();
+  telemetry.failNext("fleet.snapshot");
+  scheduler.fireNext();
+  const failure = await fatal.promise;
+
+  expect(failure.message).toContain("fleet.snapshot persistence failed");
+  expect(scheduler.callbacks.size).toBe(0);
+  expect(telemetry.events.at(-1)?.kind).toBe("tick.started");
+  await expect(controller.stop(Promise.resolve())).rejects.toThrow(
+    "fleet.snapshot persistence failed",
+  );
+  expect(telemetry.events.at(-1)?.kind).toBe("shutdown.failed");
+});
+
 test("shutdown waits for an in-flight reconciliation before completing", async () => {
   const environment = new DeferredListEnvironment([], new Map());
   const telemetry = new RecordingTelemetry();
@@ -644,11 +710,75 @@ test("shutdown start persistence failure still aborts and settles workers", asyn
   if (!(outcome instanceof ControllerStopError)) {
     throw new Error("shutdown start persistence failure was not propagated");
   }
-  expect(outcome.message).toBe("shutdown start persistence failed");
+  expect(outcome.message).toContain("shutdown start persistence failed");
   expect(outcome.snapshot.active).toBe(1);
   expect(runner.aborts).toBe(1);
   expect(controller.store.stopping).toBe(true);
   expect(controller.store.activeWorkers.size).toBe(0);
+});
+
+test("worker completion capture failures escape settlement and stop the controller", async () => {
+  const pr = identity(1);
+  const failedCheck = {
+    name: "verify",
+    state: "FAILURE",
+    bucket: "fail",
+    link: null,
+    softFail: false,
+  };
+  const telemetry = new KindFailingTelemetry();
+  const runner = new DeferredSuccessfulRunner();
+  const fatal = Promise.withResolvers<Error>();
+  const store = new FleetStore(1);
+  const controller = new FleetController({
+    config: {
+      model: "openai/gpt-5",
+      repo: "shepherdjerred/monorepo",
+      checkout: "/tmp/repo",
+      worktreeRoot: "/tmp/worktrees",
+      maxWorkers: 1,
+    },
+    environment: new FakeEnvironment(
+      [pr],
+      new Map([[1, evidence(pr, { checks: [failedCheck] })]]),
+    ),
+    workerRunner: runner,
+    observer: new RecordingObserver(),
+    store,
+    telemetry,
+    onFatalError: fatal.resolve,
+  });
+
+  await controller.tick("startup");
+  telemetry.failNext("worker.completed");
+  runner.result.resolve({
+    pr: 1,
+    state: "waiting-ci",
+    headShaBefore: pr.headSha,
+    headShaAfter: null,
+    hardFailures: [],
+    reviewFindings: [],
+    conflict: false,
+    validation: [],
+    lastAction: "observed CI",
+    blockers: [],
+    worktree: "/tmp/pr-fleet-fake",
+    worktreeDirty: false,
+    setupLeaseReleased: true,
+    heavyLeaseReleased: true,
+    writeLeaseReleased: true,
+  });
+  const failure = await fatal.promise;
+
+  expect(failure.message).toContain("worker.completed persistence failed");
+  expect(telemetry.events.some((event) => event.kind === "worker.failed")).toBe(
+    false,
+  );
+  expect(store.activeWorkers.has(1)).toBe(true);
+  await expect(controller.stop(Promise.resolve())).rejects.toThrow(
+    "worker.completed persistence failed",
+  );
+  expect(telemetry.events.at(-1)?.kind).toBe("shutdown.failed");
 });
 
 test("controller rejects ticks after shutdown starts", async () => {

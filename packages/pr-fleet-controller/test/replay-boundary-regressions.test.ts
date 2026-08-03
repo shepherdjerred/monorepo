@@ -124,6 +124,78 @@ test("event and summary snapshots use one redaction policy", async () => {
   ]);
 });
 
+describe("tick command ancestry replay", () => {
+  test("rejects a standalone command with a fabricated tick", async () => {
+    const recorder = await createRecorder();
+    const commandId = recorder.newId("command");
+    recorder.record("run.started", { scenario: "orphaned-tick-command" });
+    recorder.record(
+      "command.started",
+      { executable: "gh", args: ["pr", "list"] },
+      { tickId: "fabricated-tick", commandId },
+    );
+    recorder.record(
+      "command.completed",
+      { executable: "gh", exitCode: 0 },
+      { tickId: "fabricated-tick", commandId },
+    );
+    await recorder.finalize("failed", null, new Error("capture rejected"));
+    const bundle = await loadRunBundle(recorder.paths.runDirectory);
+
+    expect(() => replayRunBundle(bundle, replayOptions)).toThrow(
+      "command.started references a nonexistent or inactive tick: fabricated-tick",
+    );
+  });
+
+  test("rejects a standalone command after its tick fails", async () => {
+    const recorder = await createRecorder();
+    const tickId = recorder.newId("tick");
+    const commandId = recorder.newId("command");
+    recorder.record("run.started", { scenario: "late-tick-command" });
+    recorder.record("tick.started", { trigger: "heartbeat" }, { tickId });
+    recorder.record("tick.failed", { error: "refresh failed" }, { tickId });
+    recorder.record(
+      "command.started",
+      { executable: "gh", args: ["pr", "list"] },
+      { tickId, commandId },
+    );
+    recorder.record(
+      "command.completed",
+      { executable: "gh", exitCode: 0 },
+      { tickId, commandId },
+    );
+    await recorder.finalize("failed", null, new Error("capture rejected"));
+    const bundle = await loadRunBundle(recorder.paths.runDirectory);
+
+    expect(() => replayRunBundle(bundle, replayOptions)).toThrow(
+      `command.started references a nonexistent or inactive tick: ${tickId}`,
+    );
+  });
+});
+
+test("failed shutdown events preserve the final replay snapshot", async () => {
+  const recorder = await createRecorder();
+  recorder.record("run.started", { scenario: "failed-shutdown-snapshot" });
+  recorder.record("shutdown.started", { activeWorkers: 0 });
+  recorder.record("shutdown.failed", {
+    snapshot,
+    error: "shutdown start persistence failed",
+  });
+  await recorder.finalize(
+    "failed",
+    snapshot,
+    new Error("shutdown start persistence failed"),
+  );
+
+  const report = replayRunBundle(
+    await loadRunBundle(recorder.paths.runDirectory),
+    replayOptions,
+  );
+  expect(report.finalSnapshot).toEqual(snapshot);
+  expect(report.shutdown.failed).toBe(1);
+  expect(report.shutdown.open).toEqual([]);
+});
+
 describe("snapshot ancestry replay", () => {
   test("rejects a snapshot whose tick was never started", async () => {
     const recorder = await createRecorder();
@@ -181,6 +253,6 @@ test("failed runs still enforce the completed-shutdown boundary", async () => {
   const bundle = await loadRunBundle(recorder.paths.runDirectory);
 
   expect(() => replayRunBundle(bundle, replayOptions)).toThrow(
-    "command.started was recorded after shutdown.completed",
+    "command.started was recorded after shutdown terminal",
   );
 });
