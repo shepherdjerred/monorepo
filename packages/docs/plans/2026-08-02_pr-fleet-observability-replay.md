@@ -270,7 +270,10 @@ repository checkout.
 - Addressed two subsequent exact-head findings by binding error and timing
   fields from the final summary into terminal run telemetry and requiring each
   tick's ordered fleet-change events to exactly match its completed report.
-- Passed focused typecheck, 145 controller tests, 42 observability tests, lint,
+- Addressed the next exact-head finding by routing worker-originated telemetry
+  capture errors directly to fatal controller shutdown before ordinary worker
+  failure settlement can pause or mutate the PR state.
+- Passed focused typecheck, 146 controller tests, 42 observability tests, lint,
   native-aware build, docs validation, Markdown lint, diff checks, and staged
   Lefthook/Gitleaks/Prettier/lockfile checks.
 - Completed a final non-mutating `openai/gpt-5.6-terra` model/tool turn from the

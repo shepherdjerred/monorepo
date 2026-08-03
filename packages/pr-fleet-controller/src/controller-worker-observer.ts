@@ -1,3 +1,4 @@
+import { isTelemetryCaptureError } from "./controller-telemetry.ts";
 import type { WorkerResult } from "./schemas.ts";
 
 type WorkerObservationOptions = {
@@ -14,6 +15,10 @@ async function observeWorker(options: WorkerObservationOptions): Promise<void> {
   try {
     result = await options.promise;
   } catch (error) {
+    if (isTelemetryCaptureError(error)) {
+      options.onSettled();
+      throw error;
+    }
     try {
       options.handleFailure(error);
     } catch (captureError) {
