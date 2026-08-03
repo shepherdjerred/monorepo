@@ -211,8 +211,8 @@ repository checkout.
   command arguments and bodies, replay verified all 33 events with no open
   lifecycles (`commands=7/7`, `ticks=2/2`, `tools=2/2`, and run/shutdown
   `1/1`), every database sidecar was mode `0600`, and DuckDB contained one
-  correlated 15-span trace with zero score or feedback rows. A separate SIGINT
-  canary produced and replayed a closed 20-event bundle.
+  correlated trace with zero score or feedback rows. A separate SIGINT canary
+  produced and replayed a closed 20-event bundle.
 
 ### Remaining
 
