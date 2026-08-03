@@ -70,33 +70,30 @@ async function hashUntrackedFile(
 export async function resolveControllerSource(
   controllerDirectory = path.join(import.meta.dir, ".."),
 ): Promise<ControllerSource> {
-  const [commitResult, rootResult, statusResult, diffResult, untrackedResult] =
-    await Promise.all([
-      runGit(controllerDirectory, ["rev-parse", "HEAD"]),
-      runGit(controllerDirectory, ["rev-parse", "--show-toplevel"]),
-      runGit(controllerDirectory, [
-        "status",
-        "--porcelain=v1",
-        "-z",
-        "--untracked-files=all",
-      ]),
-      runGit(controllerDirectory, [
-        "diff",
-        "--binary",
-        "--no-ext-diff",
-        "HEAD",
-        "--",
-      ]),
-      runGit(controllerDirectory, [
-        "ls-files",
-        "--others",
-        "--exclude-standard",
-        "--full-name",
-        "-z",
-      ]),
-    ]);
+  const [commitResult, rootResult] = await Promise.all([
+    runGit(controllerDirectory, ["rev-parse", "HEAD"]),
+    runGit(controllerDirectory, ["rev-parse", "--show-toplevel"]),
+  ]);
   const commit = GitCommitSchema.parse(decode(commitResult.stdout).trim());
   const repositoryRoot = decode(rootResult.stdout).trim();
+  // The controller can execute workspace packages and root scripts outside its
+  // own package directory. Fingerprint the complete repository source state so
+  // untracked or tracked workspace inputs cannot masquerade as the same run.
+  const [statusResult, diffResult, untrackedResult] = await Promise.all([
+    runGit(repositoryRoot, [
+      "status",
+      "--porcelain=v1",
+      "-z",
+      "--untracked-files=all",
+    ]),
+    runGit(repositoryRoot, ["diff", "--binary", "--no-ext-diff", "HEAD"]),
+    runGit(repositoryRoot, [
+      "ls-files",
+      "--others",
+      "--exclude-standard",
+      "-z",
+    ]),
+  ]);
   const dirty = statusResult.stdout.byteLength > 0;
   const hash = createHash("sha256");
   hash.update(`controller-source-v1\0${commit}\0`);

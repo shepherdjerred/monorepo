@@ -341,6 +341,30 @@ describe("run bundle replay", () => {
 });
 
 describe("run bundle correlation replay", () => {
+  test("rejects an event whose run ID differs from the manifest", async () => {
+    const recorder = await createRecorder();
+    await recordSyntheticWorkerRun(recorder);
+    const bundle = await loadRunBundle(recorder.paths.runDirectory);
+    const firstEvent = bundle.events[0];
+    if (firstEvent === undefined) {
+      throw new Error("synthetic run unexpectedly had no events");
+    }
+    const events = [
+      { ...firstEvent, runId: "different-run" },
+      ...bundle.events.slice(1),
+    ];
+
+    expect(() =>
+      replayRunBundle(
+        { ...bundle, events },
+        {
+          currentControllerVersion: "0.1.0",
+          allowVersionMismatch: false,
+        },
+      ),
+    ).toThrow("Event 1 run ID does not match the manifest");
+  });
+
   test("rejects tools whose model-turn parent does not exist", async () => {
     const recorder = await createRecorder();
     await recordSyntheticWorkerRun(recorder);

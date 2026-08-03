@@ -72,4 +72,20 @@ test("records clean and dirty identities for the exact controller source tree", 
   const untrackedChange = await resolveControllerSource(controllerDirectory);
   expect(untrackedChange.dirty).toBe(true);
   expect(untrackedChange.fingerprint).not.toBe(trackedChange.fingerprint);
+
+  await writeFile(
+    path.join(repository, "workspace-input.ts"),
+    "export const workspaceValue = 1\n",
+  );
+  const workspaceInput = await resolveControllerSource(controllerDirectory);
+  expect(workspaceInput.fingerprint).not.toBe(untrackedChange.fingerprint);
+  await writeFile(
+    path.join(repository, "workspace-input.ts"),
+    "export const workspaceValue = 2\n",
+  );
+  const changedWorkspaceInput =
+    await resolveControllerSource(controllerDirectory);
+  expect(changedWorkspaceInput.fingerprint).not.toBe(
+    workspaceInput.fingerprint,
+  );
 });

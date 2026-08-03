@@ -279,6 +279,14 @@ function verifyBundleMetadata(
   if (summary.runId !== manifest.runId) {
     throw new Error("Manifest and summary run IDs differ");
   }
+  const mismatchedEvent = events.find(
+    (event) => event.runId !== manifest.runId,
+  );
+  if (mismatchedEvent !== undefined) {
+    throw new Error(
+      `Event ${String(mismatchedEvent.sequence)} run ID does not match the manifest`,
+    );
+  }
   if (summary.eventCount !== events.length) {
     throw new Error(
       `Summary event count ${String(summary.eventCount)} does not match JSONL count ${String(events.length)}`,
