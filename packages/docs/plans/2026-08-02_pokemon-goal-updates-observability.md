@@ -154,3 +154,40 @@ move; bad direction → prettified 400. (3) session stop — no `null is not an 
 - Earliest jsonl `agent_message` lines may precede subscription (same as existing trace
   subscriber) — acceptable.
 - `repeat: 0`/`quantity: 0` now clamps to 1 instead of erroring — documented in schema comment.
+
+## Session Log — 2026-08-02
+
+### Done
+
+- All four phases implemented and locally verified on `feature/pokemon-goal-updates`
+  (PR #1953, draft), 5 commits:
+  - `fix(discord-plays-core)`: destroy guard in `GameStreamerBase` (mario-kart override
+    deleted), `error: undefined` fixes, prettified ZodError 400s at warn.
+  - `feat(discord-plays-pokemon)`: normalize + clamp tool inputs (`goal/schema-helpers.ts`),
+    context-rich battle/button/chord rejections.
+  - `feat(discord-plays-pokemon)`: deterministic Discord updates — milestone forwarding
+    subscribed at spawn (pre-pump), `update_interval_seconds` floor timer (default 90s),
+    `GoalActivityLog` ring buffer, teardown via `claimActive`.
+  - `feat(discord-plays-pokemon)`: `pokemon.goal.http_tool` spans, 4 new Prometheus series,
+    `GoalIntervalReporter` extraction (`goal/goal-progress.ts`) for the max-lines cap.
+  - `feat(homelab)`: "Goal agent (pokemon)" dashboard row + `PokemonGoalStuck` /
+    `PokemonGoalStreamDownMidGoal` alerts.
+- `bunx turbo run typecheck test lint` green for core, pokemon backend, mario-kart
+  backend, and homelab (19/19 tasks).
+
+### Remaining
+
+- Buildkite on PR #1953's head + the Codex review gate; promote the PR from draft when green.
+- Live e2e after deploy: run a `/goal`, confirm milestones + interval floor post to the
+  channel, clamped inputs, clean session stop, and the four new `/metrics` series;
+  check the new dashboard row renders with data.
+
+### Caveats
+
+- Design change from the approved plan: milestone forwarding subscribes inside
+  `spawnGoalCodex` before the stdout pump (with buffering until active) — a post-spawn
+  subscription provably loses early agent_messages.
+- The interval floor shares `lastProgressSentAt` with the agent throttle: an interval
+  post can delay the agent's next `/progress` by up to the throttle window (accepted).
+- `publishProgress` moved into `GoalIntervalReporter`; `GoalManager.publishProgress`
+  is now a thin delegate (behavior unchanged, dedup added).
