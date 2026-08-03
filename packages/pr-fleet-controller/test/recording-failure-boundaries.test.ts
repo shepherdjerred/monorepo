@@ -1,7 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import { tmpdir } from "node:os";
 import { runRecordedCommand } from "@shepherdjerred/pr-fleet-controller/src/recorded-command.ts";
+import { runRecordedToolOperation } from "@shepherdjerred/pr-fleet-controller/src/recorded-tool.ts";
 import { runRecordedWorkerAttempt } from "@shepherdjerred/pr-fleet-controller/src/recorded-worker-attempt.ts";
+import { TelemetryCaptureError } from "@shepherdjerred/pr-fleet-controller/src/controller-telemetry.ts";
 import type { FleetTelemetry } from "@shepherdjerred/pr-fleet-controller/src/ports.ts";
 import type {
   RunEventCorrelation,
@@ -59,8 +61,47 @@ describe("terminal recording failure boundaries", () => {
         },
         telemetry,
       ),
-    ).rejects.toBe(failure);
+    ).rejects.toMatchObject({
+      name: "TelemetryCaptureError",
+      cause: failure,
+    });
     expect(telemetry.events).toEqual(["command.started"]);
+  });
+
+  test("does not relabel or retry a tool after command capture fails", async () => {
+    const failure = new Error("command completion capture failed");
+    const telemetry = new TerminalFailingTelemetry(
+      "command.completed",
+      failure,
+    );
+    let operationRuns = 0;
+
+    expect(
+      runRecordedToolOperation({
+        tool: "publish_fix",
+        input: {},
+        telemetry,
+        correlation: { toolCallId: "tool-1", modelTurnId: "turn-1" },
+        run: async () => {
+          operationRuns += 1;
+          await runRecordedCommand(
+            {
+              executable: process.execPath,
+              args: ["-e", "process.stdout.write('published')"],
+              cwd: tmpdir(),
+              timeoutMs: 30_000,
+            },
+            telemetry,
+          );
+          return { published: true };
+        },
+      }),
+    ).rejects.toMatchObject({
+      name: "TelemetryCaptureError",
+      cause: failure,
+    });
+    expect(operationRuns).toBe(1);
+    expect(telemetry.events).toEqual(["tool.started", "command.started"]);
   });
 
   test("does not retry a completed worker attempt", async () => {
@@ -80,6 +121,36 @@ describe("terminal recording failure boundaries", () => {
         run: async () => {
           operationRuns += 1;
           return { state: "waiting-ci" };
+        },
+      }),
+    ).rejects.toMatchObject({
+      name: "TelemetryCaptureError",
+      cause: failure,
+    });
+    expect(operationRuns).toBe(1);
+    expect(telemetry.events).toEqual(["worker.attempt.started"]);
+  });
+
+  test("does not relabel a nested capture failure as a retryable worker failure", async () => {
+    const telemetry = new TerminalFailingTelemetry(
+      "run.failed",
+      new Error("unused"),
+    );
+    const failure = new TelemetryCaptureError(
+      "command.completed",
+      new Error("state volume is full"),
+    );
+    let operationRuns = 0;
+
+    expect(
+      runRecordedWorkerAttempt({
+        attempt: 1,
+        prompt: "publish once",
+        telemetry,
+        correlation: { modelTurnId: "worker-turn-1" },
+        run: async () => {
+          operationRuns += 1;
+          throw failure;
         },
       }),
     ).rejects.toBe(failure);

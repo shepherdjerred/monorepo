@@ -171,6 +171,91 @@ describe("tick command ancestry replay", () => {
       `command.started references a nonexistent or inactive tick: ${tickId}`,
     );
   });
+
+  test("rejects a master tool command after its tick completes", async () => {
+    const recorder = await createRecorder();
+    const tickId = recorder.newId("tick");
+    const modelTurnId = recorder.newId("master-turn");
+    const toolCallId = recorder.newId("tool");
+    const commandId = recorder.newId("command");
+    recorder.record("run.started", { scenario: "late-master-tick-command" });
+    recorder.record(
+      "master.turn.started",
+      { prompt: "tick", messages: [] },
+      { modelTurnId },
+    );
+    recorder.record(
+      "tool.started",
+      { tool: "run_fleet_tick", input: {} },
+      { modelTurnId, toolCallId },
+    );
+    recorder.record("tick.started", { trigger: "user" }, { tickId });
+    recorder.record("fleet.snapshot", { snapshot }, { tickId });
+    recorder.record(
+      "tick.completed",
+      {
+        report: {
+          trigger: "user",
+          snapshot,
+          changes: [],
+          nextHeartbeatSeconds: 600,
+        },
+      },
+      { tickId },
+    );
+    recorder.record(
+      "command.started",
+      { executable: "gh", args: ["pr", "list"] },
+      { tickId, modelTurnId, toolCallId, commandId },
+    );
+    await recorder.finalize("failed", snapshot, new Error("capture rejected"));
+    const bundle = await loadRunBundle(recorder.paths.runDirectory);
+
+    expect(() => replayRunBundle(bundle, replayOptions)).toThrow(
+      `command.started references a nonexistent or inactive tick: ${tickId}`,
+    );
+  });
+});
+
+describe("master text ancestry replay", () => {
+  test("rejects master text after its turn completes", async () => {
+    const recorder = await createRecorder();
+    const modelTurnId = recorder.newId("master-turn");
+    recorder.record("run.started", { scenario: "late-master-text" });
+    recorder.record(
+      "master.turn.started",
+      { prompt: "status", messages: [] },
+      { modelTurnId },
+    );
+    recorder.record(
+      "master.turn.completed",
+      { response: "done" },
+      { modelTurnId },
+    );
+    recorder.record("master.text", { text: "late" }, { modelTurnId });
+    await recorder.finalize("failed", null, new Error("capture rejected"));
+    const bundle = await loadRunBundle(recorder.paths.runDirectory);
+
+    expect(() => replayRunBundle(bundle, replayOptions)).toThrow(
+      `master.text references a nonexistent or inactive model turn: ${modelTurnId}`,
+    );
+  });
+
+  test("rejects master text with a fabricated turn", async () => {
+    const recorder = await createRecorder();
+    recorder.record("run.started", { scenario: "orphaned-master-text" });
+    recorder.record(
+      "master.text",
+      { text: "orphaned" },
+      { modelTurnId: "fabricated-turn" },
+    );
+    await recorder.finalize("failed", null, new Error("capture rejected"));
+    const bundle = await loadRunBundle(recorder.paths.runDirectory);
+
+    expect(() => replayRunBundle(bundle, replayOptions)).toThrow(
+      "master.text references a nonexistent or inactive model turn: fabricated-turn",
+    );
+  });
 });
 
 describe("fleet change ancestry replay", () => {

@@ -250,7 +250,11 @@ repository checkout.
 - Addressed the next two exact-head findings by routing master-turn capture
   failures into coordinated failed shutdown without relabeling them as model
   failures and requiring every fleet-change event to reference its active tick.
-- Passed focused typecheck, 129 controller tests, 42 observability tests, lint,
+- Addressed three further exact-head findings by propagating nested command and
+  tool capture failures without relabeling or retrying completed mutations,
+  requiring master-triggered commands to retain active tick ancestry, and
+  requiring master text to belong to an active model turn during replay.
+- Passed focused typecheck, 134 controller tests, 42 observability tests, lint,
   native-aware build, docs validation, Markdown lint, diff checks, and staged
   Lefthook/Gitleaks/Prettier/lockfile checks.
 - Completed a final non-mutating `openai/gpt-5.6-terra` model/tool turn from the

@@ -123,7 +123,10 @@ describe("master tool telemetry", () => {
           return Promise.resolve({ headSha: "a".repeat(40) });
         },
       ),
-    ).rejects.toBe(captureFailure);
+    ).rejects.toMatchObject({
+      name: "TelemetryCaptureError",
+      cause: captureFailure,
+    });
 
     expect(operationRuns).toBe(1);
     expect(events.map((event) => event.kind)).toEqual(["tool.started"]);

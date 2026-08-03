@@ -175,6 +175,14 @@ function trackStartedEvent(
   if (event.kind === "master.turn.started") {
     active.modelTurns.set(requireLifecycleKey(event, "modelTurns"), event);
   }
+  if (event.kind === "master.text") {
+    requireActiveParent(
+      active.modelTurns,
+      event.correlation.modelTurnId,
+      event,
+      "model turn",
+    );
+  }
   if (event.kind === "tool.started") {
     requireActiveParent(
       active.modelTurns,
@@ -194,11 +202,9 @@ function trackStartedEvent(
   }
   if (event.kind === "command.started") {
     const tickId = event.correlation.tickId;
-    const isTickCommand =
-      event.correlation.toolCallId === undefined &&
-      event.correlation.modelTurnId === undefined &&
-      event.correlation.generation === undefined;
-    if (isTickCommand && tickId !== undefined && !activeTickIds.has(tickId)) {
+    const requiresActiveTick =
+      tickId !== undefined && event.correlation.generation === undefined;
+    if (requiresActiveTick && !activeTickIds.has(tickId)) {
       throw new Error(
         `command.started references a nonexistent or inactive tick: ${tickId}`,
       );

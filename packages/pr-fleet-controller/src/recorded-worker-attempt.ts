@@ -1,3 +1,7 @@
+import {
+  captureTelemetryOperation,
+  isTelemetryCaptureError,
+} from "./controller-telemetry.ts";
 import type { FleetTelemetry } from "./ports.ts";
 import type { RunEventCorrelation } from "./run-events.ts";
 
@@ -13,27 +17,40 @@ export async function runRecordedWorkerAttempt<T>(options: {
   run: () => Promise<T>;
 }): Promise<WorkerAttemptOutcome<T>> {
   const { attempt, prompt, telemetry, correlation, run } = options;
-  telemetry.record("worker.attempt.started", { attempt, prompt }, correlation);
+  captureTelemetryOperation("worker.attempt.started", () => {
+    telemetry.record(
+      "worker.attempt.started",
+      { attempt, prompt },
+      correlation,
+    );
+  });
   let result: T;
   try {
     result = await run();
   } catch (error) {
+    if (isTelemetryCaptureError(error)) {
+      throw error;
+    }
     const normalized =
       error instanceof Error ? error : new Error(String(error));
-    telemetry.record(
-      "worker.attempt.failed",
-      { attempt, error: normalized.message },
-      correlation,
-    );
+    captureTelemetryOperation("worker.attempt.failed", () => {
+      telemetry.record(
+        "worker.attempt.failed",
+        { attempt, error: normalized.message },
+        correlation,
+      );
+    });
     return { status: "failed", error: normalized };
   }
   // A successful model turn may already have invoked mutating tools. Let a
   // completion-capture failure abort the controller instead of retrying the
   // entire turn and repeating those mutations.
-  telemetry.record(
-    "worker.attempt.completed",
-    { attempt, result },
-    correlation,
-  );
+  captureTelemetryOperation("worker.attempt.completed", () => {
+    telemetry.record(
+      "worker.attempt.completed",
+      { attempt, result },
+      correlation,
+    );
+  });
   return { status: "completed", result };
 }
