@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   ciImagePromotionFiles,
+  classifyCiImageRuntimePromotion,
   isCurrentSourceCandidate,
   newestPinState,
   parseCiImageCandidate,
@@ -211,6 +212,67 @@ describe("CI image pin arbitration", () => {
   });
 });
 
+describe("CI image runtime promotion", () => {
+  const repository = "ghcr.io/shepherdjerred/ci-base";
+  const pinnedDigest = digest("a");
+  const candidateDigest = digest("b");
+
+  test("skips a distinct manifest with identical runtime content", async () => {
+    const inspected: string[] = [];
+    const outcome = await classifyCiImageRuntimePromotion(
+      { repository, pinnedDigest, candidateDigest },
+      async (image) => {
+        inspected.push(image);
+        return "same-runtime-content";
+      },
+    );
+
+    expect(outcome).toBe("content-unchanged");
+    expect(inspected).toEqual([
+      `${repository}@${candidateDigest}`,
+      `${repository}@${pinnedDigest}`,
+    ]);
+  });
+
+  test("promotes when the runtime identity changes", async () => {
+    const outcome = await classifyCiImageRuntimePromotion(
+      { repository, pinnedDigest, candidateDigest },
+      async (image) =>
+        image === `${repository}@${candidateDigest}`
+          ? "candidate-runtime-content"
+          : "pinned-runtime-content",
+    );
+
+    expect(outcome).toBe("bumped");
+  });
+
+  test("promotes a verified candidate when the existing pin is unavailable", async () => {
+    const outcome = await classifyCiImageRuntimePromotion(
+      { repository, pinnedDigest, candidateDigest },
+      async (image) => {
+        if (image === `${repository}@${candidateDigest}`) {
+          return "candidate-runtime-content";
+        }
+        return;
+      },
+    );
+
+    expect(outcome).toBe("pin-unresolvable-bumped");
+  });
+
+  test("fails when the candidate cannot be fingerprinted", async () => {
+    const unavailableFingerprints = new Map<string, string>();
+    await expect(
+      classifyCiImageRuntimePromotion(
+        { repository, pinnedDigest, candidateDigest },
+        async () => unavailableFingerprints.get("candidate"),
+      ),
+    ).rejects.toThrow(
+      `Could not fingerprint CI image candidate ${repository}@${candidateDigest}`,
+    );
+  });
+});
+
 describe("Playwright candidate promotion", () => {
   const futureVersion = "1.63.0";
   const futureDockerfile = [
@@ -307,5 +369,91 @@ describe("Playwright candidate promotion", () => {
       'await run([BUN_INSTALL_WRAPPER, "--lockfile-only"]',
     );
     expect(source).not.toContain('await run(["bun", "install"');
+  });
+
+  test("funnels every no-promotion exit through finalizeSkippedPromotion", async () => {
+    const source = await Bun.file(
+      new URL("update-ci-image-pin.ts", import.meta.url),
+    ).text();
+
+    // The single skip path retires any stale PR and re-verifies the main pin.
+    const helperStart = source.indexOf(
+      "async function finalizeSkippedPromotion(",
+    );
+    expect(helperStart).toBeGreaterThan(-1);
+    const helperBody = source.slice(
+      helperStart,
+      source.indexOf("\n}\n", helperStart),
+    );
+    expect(helperBody).toContain("skipping pin promotion");
+    expect(helperBody).toContain("await retireStalePromotion(");
+    expect(helperBody).toContain("await assertMainPinUnchanged(");
+
+    // All three no-promotion exits — digest-equal, older-than-pin, and
+    // content-unchanged — route through the one funnel with a distinct reason.
+    const calls = source.match(/await finalizeSkippedPromotion\(/g) ?? [];
+    expect(calls).toHaveLength(3);
+    expect(source).toContain(
+      'reason: "candidate has no runtime digest change"',
+    );
+    expect(source).toContain(
+      'reason: "candidate is older than the committed pin"',
+    );
+    expect(source).toContain(
+      'reason: "candidate runtime content is unchanged"',
+    );
+
+    // promote() never invokes retirement or the recheck inline — only via the
+    // funnel — so no exit path can bypass either guarantee.
+    const promoteBody = source.slice(source.indexOf("async function promote("));
+    expect(promoteBody).not.toContain("await retireStalePromotion(");
+    expect(promoteBody).not.toContain("await assertMainPinUnchanged(");
+  });
+
+  test("dry-run reports the decision without cloning or retiring", async () => {
+    const source = await Bun.file(
+      new URL("update-ci-image-pin.ts", import.meta.url),
+    ).text();
+
+    const dryRunIndex = source.indexOf("if (dryRun) {");
+    const cloneIndex = source.indexOf('"git", "clone"');
+    expect(dryRunIndex).toBeGreaterThan(-1);
+    expect(cloneIndex).toBeGreaterThan(dryRunIndex);
+    const dryRunBlock = source.slice(dryRunIndex, cloneIndex);
+    expect(dryRunBlock).not.toContain("finalizeSkippedPromotion");
+    expect(dryRunBlock).not.toContain("retireStalePromotion");
+    expect(dryRunBlock).toContain("DRYRUN: would promote");
+  });
+
+  test("the retirement helper closes the stale PR and deletes its branch", async () => {
+    const github = await Bun.file(
+      new URL("update-ci-image-pin-github.ts", import.meta.url),
+    ).text();
+    const helperStart = github.indexOf(
+      "export async function retireStalePromotion(",
+    );
+    expect(helperStart).toBeGreaterThan(-1);
+    const helperBody = github.slice(
+      helperStart,
+      github.indexOf("\n}\n", helperStart),
+    );
+    expect(helperBody).toContain('"close"');
+    expect(helperBody).toContain('"--delete"');
+  });
+
+  test("the main-pin guard re-fetches main and fails transiently on a move", async () => {
+    const source = await Bun.file(
+      new URL("update-ci-image-pin.ts", import.meta.url),
+    ).text();
+    const helperStart = source.indexOf(
+      "async function assertMainPinUnchanged(",
+    );
+    expect(helperStart).toBeGreaterThan(-1);
+    const helperBody = source.slice(
+      helperStart,
+      source.indexOf("\n}\n", helperStart),
+    );
+    expect(helperBody).toContain('"fetch", "origin", "main"');
+    expect(helperBody).toContain("throw new TransientError(");
   });
 });

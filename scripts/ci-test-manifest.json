@@ -28,7 +28,11 @@
           "name": "generate",
           "command": ["bun", "--env-file=.env.test", "run", "generate"]
         },
-        { "runner": "bun", "bunArgs": ["--env-file=.env.test"] }
+        {
+          "runner": "bun",
+          "bunArgs": ["--env-file=.env.test"],
+          "coverageConfig": "bunfig.reporting.toml"
+        }
       ]
     },
     {
@@ -49,7 +53,12 @@
     {
       "package": "@shepherdjerred/discord-plays-mario-kart-scripts",
       "directory": "packages/discord-plays-mario-kart",
-      "steps": [{ "runner": "bun", "args": ["scripts"] }]
+      "steps": [
+        {
+          "runner": "bun",
+          "args": ["scripts"]
+        }
+      ]
     },
     {
       "package": "@discord-plays-mario-kart/backend",
@@ -191,6 +200,12 @@
             "test/e2e/run-smoke.test.ts"
           ]
         }
+      ],
+      "excludedSuites": [
+        {
+          "path": "test/e2e/openai-archive.e2e.test.ts",
+          "reason": "Service-backed observability E2E; requires the Tempo and MinIO containers provided only by the dedicated docker-e2e lanes. Full reporting is deliberately test-only and does not stand up service containers."
+        }
       ]
     },
     {
@@ -204,6 +219,7 @@
       "steps": [
         {
           "runner": "bun",
+          "coverageConfig": "bunfig.reporting.toml",
           "args": [
             "scripts/create-minimal-png.test.ts",
             "scripts/dev-web.test.ts",
@@ -222,7 +238,13 @@
       "package": "@scout-for-lol/backend",
       "directory": "packages/scout-for-lol/packages/backend",
       "defaultEnv": { "DATABASE_URL": "file:./test.db" },
-      "steps": [{ "runner": "bun", "args": ["--timeout", "20000"] }]
+      "steps": [
+        {
+          "runner": "bun",
+          "coverageConfig": "bunfig.reporting.toml",
+          "args": ["--timeout", "20000"]
+        }
+      ]
     },
     {
       "package": "@scout-for-lol/data",
@@ -262,7 +284,13 @@
     {
       "package": "tasks-for-obsidian",
       "directory": "packages/tasks-for-obsidian",
-      "steps": [{ "runner": "bun", "args": ["src", "scripts"] }]
+      "steps": [{ "runner": "bun", "args": ["src", "scripts"] }],
+      "excludedSuites": [
+        {
+          "path": "contract-tests/contract.test.ts",
+          "reason": "The client/server wire-contract suite (test:contract) spawns a sibling tasknotes-server process over a temporary vault and runs as its own dedicated verify step. Full reporting is deliberately test-only and does not orchestrate spawned service dependencies."
+        }
+      ]
     },
     {
       "package": "@shepherdjerred/temporal",
@@ -329,6 +357,7 @@
     {
       "package": "@shepherdjerred/root-scripts",
       "directory": "scripts",
+      "coverageSourceDirectories": ["scripts", ".buildkite/scripts"],
       "steps": [
         { "runner": "bun", "args": [".", "../.buildkite/scripts"] },
         {

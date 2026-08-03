@@ -358,22 +358,28 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
   cooklang: [...workspacePaths, "packages/cooklang-for-obsidian"],
   "ci-base": [
     ".buildkite/ci-image/Dockerfile",
+    ".buildkite/scripts/application-image-runtime.ts",
     ".buildkite/scripts/bake-retry.ts",
     ".buildkite/scripts/build-ci-image-core.ts",
     ".buildkite/scripts/build-ci-image.ts",
     ".buildkite/scripts/buildkit-env.ts",
     ".buildkite/scripts/update-ci-image-pin-core.ts",
+    ".buildkite/scripts/update-ci-image-pin-github.ts",
     ".buildkite/scripts/update-ci-image-pin.ts",
+    "scripts/lib/transient-error.ts",
     ".mise.toml",
   ],
   "ci-playwright": [
     ".buildkite/ci-playwright/Dockerfile",
+    ".buildkite/scripts/application-image-runtime.ts",
     ".buildkite/scripts/bake-retry.ts",
     ".buildkite/scripts/build-ci-image-core.ts",
     ".buildkite/scripts/build-ci-image.ts",
     ".buildkite/scripts/buildkit-env.ts",
     ".buildkite/scripts/update-ci-image-pin-core.ts",
+    ".buildkite/scripts/update-ci-image-pin-github.ts",
     ".buildkite/scripts/update-ci-image-pin.ts",
+    "scripts/lib/transient-error.ts",
   ],
 };
 

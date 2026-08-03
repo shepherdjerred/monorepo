@@ -15,6 +15,8 @@
  * NOT — a bad pin or a real config error must stay a hard failure.
  */
 
+import { TransientError } from "./transient-error.ts";
+
 /** Exit code the pipeline's retry anchor treats as "transient, retry me". */
 export const EXIT_TRANSIENT = 34;
 
@@ -59,6 +61,9 @@ function hasTransientErrorCode(error: unknown): boolean {
 }
 
 export function isTransientError(error: unknown): boolean {
+  if (error instanceof TransientError) {
+    return true;
+  }
   const text =
     error instanceof Error
       ? `${error.message}\n${error.stack ?? ""}`

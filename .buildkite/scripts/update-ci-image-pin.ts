@@ -5,7 +5,12 @@ import { fileURLToPath } from "node:url";
 
 import { setupGitAuth } from "../../scripts/lib/github-auth.ts";
 import { run, runAllowExit, tmpBase } from "../../scripts/lib/run.ts";
+import { TransientError } from "../../scripts/lib/transient-error.ts";
 import { runMain } from "../../scripts/lib/transient.ts";
+import {
+  CI_IMAGE_IGNORED_ENV_PREFIXES,
+  imageRuntimeFingerprint,
+} from "./application-image-runtime.ts";
 import {
   ciImageDefinition,
   ciImageSourceFingerprint,
@@ -13,6 +18,7 @@ import {
 } from "./build-ci-image-core.ts";
 import {
   ciImagePromotionFiles,
+  classifyCiImageRuntimePromotion,
   isCurrentSourceCandidate,
   newestPinState,
   parseCiImageCandidate,
@@ -26,8 +32,12 @@ import {
   verifyDigestFile,
   type CiImagePinState,
 } from "./update-ci-image-pin-core.ts";
+import {
+  MONOREPO_REPO,
+  openOrUpdatePullRequest,
+  retireStalePromotion,
+} from "./update-ci-image-pin-github.ts";
 
-const MONOREPO_REPO = "shepherdjerred/monorepo";
 const MONOREPO_WRITE_URL = `https://github.com/${MONOREPO_REPO}.git`;
 const COMMIT_PATTERN = /^[\da-f]{40}$/;
 const BUN_INSTALL_WRAPPER = fileURLToPath(
@@ -76,102 +86,89 @@ async function pendingState(
   return { sha, state };
 }
 
-async function openOrUpdatePullRequest(options: {
+async function pinStateAtRevision(
+  cloneDir: string,
+  revision: string,
+  definition: CiImageDefinition,
+  env: Record<string, string>,
+): Promise<CiImagePinState> {
+  const [stateResult, digestResult] = await Promise.all([
+    run(
+      ["git", "-C", cloneDir, "show", `${revision}:${definition.stateFile}`],
+      {
+        env,
+        capture: true,
+      },
+    ),
+    run(
+      ["git", "-C", cloneDir, "show", `${revision}:${definition.digestFile}`],
+      { env, capture: true },
+    ),
+  ]);
+  const state = parseCiImagePinState(JSON.parse(stateResult.stdout));
+  verifyDigestFile(digestResult.stdout, state);
+  return state;
+}
+
+/**
+ * Guard the "content-unchanged" skip against a race: the auto-merge-enabled
+ * pending PR (or any other pin update) can merge into main after `mainState`
+ * was read, which would leave the runtime comparison — and thus the decision to
+ * skip promotion — measured against a now-obsolete pin, stranding CI on the
+ * wrong configuration. Re-fetch origin/main and, if the pin moved, fail
+ * transiently so the retry anchor re-runs the job and re-compares the candidate
+ * against the current pin.
+ */
+async function assertMainPinUnchanged(options: {
   readonly cloneDir: string;
   readonly definition: CiImageDefinition;
-  readonly state: CiImagePinState;
+  readonly comparedAgainst: CiImagePinState;
   readonly env: Record<string, string>;
-  readonly expectedRemoteSha: string | undefined;
 }): Promise<void> {
-  const { cloneDir, definition, state, env, expectedRemoteSha } = options;
-  await run(
-    [
-      "git",
-      "-C",
-      cloneDir,
-      "push",
-      `--force-with-lease=refs/heads/${definition.branch}:${expectedRemoteSha ?? ""}`,
-      "-u",
-      "origin",
-      definition.branch,
-    ],
-    { env },
+  const { cloneDir, definition, comparedAgainst, env } = options;
+  await run(["git", "-C", cloneDir, "fetch", "origin", "main"], { env });
+  const current = await pinStateAtRevision(
+    cloneDir,
+    "origin/main",
+    definition,
+    env,
   );
-  const listed = await run(
-    [
-      "gh",
-      "pr",
-      "list",
-      "--repo",
-      MONOREPO_REPO,
-      "--head",
-      definition.branch,
-      "--state",
-      "open",
-      "--json",
-      "number",
-      "-q",
-      ".[0].number // empty",
-    ],
-    { env, capture: true },
-  );
-  let prNumber = listed.stdout.trim();
-  if (prNumber === "") {
-    await run(
-      [
-        "gh",
-        "pr",
-        "create",
-        "--repo",
-        MONOREPO_REPO,
-        "--base",
-        "main",
-        "--head",
-        definition.branch,
-        "--title",
-        `chore(ci): promote ${definition.name} candidate`,
-        "--body",
-        [
-          `Promotes ${definition.name} build ${state.buildNumber.toString()} by immutable digest.`,
-          "",
-          "The PR CI lanes consume this candidate digest before auto-merge.",
-        ].join("\n"),
-      ],
-      { env },
+  if (current.digest !== comparedAgainst.digest) {
+    throw new TransientError(
+      `${definition.name} main pin moved from ${comparedAgainst.digest} to ${current.digest} during evaluation; retrying to re-compare the candidate against the current pin`,
     );
-    const viewed = await run(
-      [
-        "gh",
-        "pr",
-        "view",
-        "--repo",
-        MONOREPO_REPO,
-        definition.branch,
-        "--json",
-        "number",
-        "-q",
-        ".number",
-      ],
-      { env, capture: true },
-    );
-    prNumber = viewed.stdout.trim();
   }
-  if (!/^\d+$/.test(prNumber)) {
-    throw new Error("CI image pin PR number is invalid");
+}
+
+/**
+ * The single exit for every "no promotion warranted" decision. Whatever check
+ * decided to skip (digest-equal, older-than-pin, or content-unchanged), this
+ * neutralizes any still-open auto-merge promotion PR so it cannot land an
+ * obsolete digest, then re-verifies that main's pin did not move underneath the
+ * decision. Routing all skips through here keeps the two guarantees in lockstep
+ * and prevents a new skip path from silently bypassing either one.
+ */
+async function finalizeSkippedPromotion(options: {
+  readonly cloneDir: string;
+  readonly definition: CiImageDefinition;
+  readonly pending:
+    | { readonly sha: string; readonly state: CiImagePinState }
+    | undefined;
+  readonly mainState: CiImagePinState;
+  readonly reason: string;
+  readonly env: Record<string, string>;
+}): Promise<void> {
+  const { cloneDir, definition, pending, mainState, reason, env } = options;
+  console.log(`${definition.name} ${reason}; skipping pin promotion`);
+  if (pending !== undefined) {
+    await retireStalePromotion({ cloneDir, definition, env });
   }
-  await run(
-    [
-      "gh",
-      "pr",
-      "merge",
-      "--repo",
-      MONOREPO_REPO,
-      prNumber,
-      "--auto",
-      "--squash",
-    ],
-    { env },
-  );
+  await assertMainPinUnchanged({
+    cloneDir,
+    definition,
+    comparedAgainst: mainState,
+    env,
+  });
 }
 
 async function preparePlaywrightPromotion(
@@ -236,6 +233,19 @@ async function sourceFingerprintAtRevision(
   return `sha256:${fingerprint}`;
 }
 
+async function runtimeFingerprint(
+  image: string,
+  env: Record<string, string>,
+): Promise<string | undefined> {
+  return imageRuntimeFingerprint(
+    image,
+    async (command) => {
+      return runAllowExit([...command], { env, capture: true });
+    },
+    CI_IMAGE_IGNORED_ENV_PREFIXES,
+  );
+}
+
 async function promote(candidatePath: string, dryRun: boolean): Promise<void> {
   const candidate = parseCiImageCandidate(await Bun.file(candidatePath).json());
   const definition = ciImageDefinition(candidate.image);
@@ -243,18 +253,22 @@ async function promote(candidatePath: string, dryRun: boolean): Promise<void> {
   verifyDigestFile(await Bun.file(definition.digestFile).text(), currentState);
   const candidateState = stateFromCandidate(candidate);
   const localNewest = newestPinState([currentState, candidateState]);
-  if (localNewest.digest === currentState.digest) {
-    console.log(`${definition.name} candidate has no runtime digest change`);
-    return;
-  }
-  if (localNewest !== candidateState) {
-    console.log(`${definition.name} candidate is older than the committed pin`);
-    return;
-  }
+  const noDigestChange = localNewest.digest === currentState.digest;
+  const olderThanPin = !noDigestChange && localNewest !== candidateState;
+
   if (dryRun) {
-    console.log(
-      `DRYRUN: would promote ${definition.name} build ${candidate.buildNumber.toString()} at ${candidate.digest}`,
-    );
+    // Dry-run never clones or mutates remote state; report the decision only.
+    if (noDigestChange) {
+      console.log(`${definition.name} candidate has no runtime digest change`);
+    } else if (olderThanPin) {
+      console.log(
+        `${definition.name} candidate is older than the committed pin`,
+      );
+    } else {
+      console.log(
+        `DRYRUN: would promote ${definition.name} build ${candidate.buildNumber.toString()} at ${candidate.digest}`,
+      );
+    }
     return;
   }
 
@@ -278,6 +292,35 @@ async function promote(candidatePath: string, dryRun: boolean): Promise<void> {
       await Bun.file(`${cloneDir}/${definition.digestFile}`).text(),
       mainState,
     );
+    const pending = await pendingState(cloneDir, definition);
+
+    // Every "no promotion" exit routes through finalizeSkippedPromotion so a
+    // stale auto-merge PR can never land after the build declined to promote,
+    // and a mid-run main pin move is always caught — no skip path can bypass
+    // either guarantee.
+    if (noDigestChange) {
+      await finalizeSkippedPromotion({
+        cloneDir,
+        definition,
+        pending,
+        mainState,
+        reason: "candidate has no runtime digest change",
+        env: auth.env,
+      });
+      return;
+    }
+    if (olderThanPin) {
+      await finalizeSkippedPromotion({
+        cloneDir,
+        definition,
+        pending,
+        mainState,
+        reason: "candidate is older than the committed pin",
+        env: auth.env,
+      });
+      return;
+    }
+
     const mainSourceFingerprint = await sourceFingerprintAtRevision(
       cloneDir,
       definition,
@@ -285,12 +328,14 @@ async function promote(candidatePath: string, dryRun: boolean): Promise<void> {
       auth.env,
     );
     if (!isCurrentSourceCandidate(candidateState, mainSourceFingerprint)) {
+      // A superseded-source candidate establishes nothing about the current
+      // pin's currency, so it must not retire a possibly-legitimate pending
+      // promotion; leave any pending PR untouched.
       console.log(
         `${definition.name} candidate source is superseded by current main`,
       );
       return;
     }
-    const pending = await pendingState(cloneDir, definition);
     const currentPending =
       pending !== undefined &&
       isCurrentSourceCandidate(pending.state, mainSourceFingerprint)
@@ -314,6 +359,31 @@ async function promote(candidatePath: string, dryRun: boolean): Promise<void> {
       selectedBeforeCandidate?.digest === selected.digest
         ? selectedBeforeCandidate
         : selected;
+
+    const runtimeOutcome = await classifyCiImageRuntimePromotion(
+      {
+        repository: definition.repository,
+        pinnedDigest: mainState.digest,
+        candidateDigest: promoted.digest,
+      },
+      async (image) => runtimeFingerprint(image, auth.env),
+    );
+    if (runtimeOutcome === "content-unchanged") {
+      await finalizeSkippedPromotion({
+        cloneDir,
+        definition,
+        pending,
+        mainState,
+        reason: "candidate runtime content is unchanged",
+        env: auth.env,
+      });
+      return;
+    }
+    if (runtimeOutcome === "pin-unresolvable-bumped") {
+      console.warn(
+        `${definition.name} current pin could not be fingerprinted; promoting the verified candidate`,
+      );
+    }
 
     await run(
       [

@@ -288,6 +288,8 @@ steps:
       annotation_status=$?
       bun --no-install scripts/write-ci-report-index.ts
       reporting_status=$?
+      bun --no-install scripts/write-coverage-summary.ts --allow-partial
+      coverage_status=$?
       set -e
       if [ "$$verify_status" -eq 0 ]; then
         bun --no-install packages/homelab/src/cdk8s/scripts/generate-caddyfile.ts caddyfile.generated
@@ -297,6 +299,9 @@ steps:
       fi
       if [ "$$verify_status" -eq 0 ] && [ "$$reporting_status" -ne 0 ]; then
         exit "$$reporting_status"
+      fi
+      if [ "$$verify_status" -eq 0 ] && [ "$$coverage_status" -ne 0 ]; then
+        exit "$$coverage_status"
       fi
       exit "$$verify_status"
     artifact_paths:
