@@ -141,22 +141,29 @@ syncPolicy: {
 
 ### Mutually-exclusive field changes (probe handler swaps) can wedge a sync
 
-ArgoCD's default apply is a **client-side strategic-merge patch (SMP)**. SMP
-_merges_ the desired manifest onto the live object — it does not remove a field
-that is absent from the desired manifest but present live. That silently breaks
-when you change a field whose siblings are **mutually exclusive**, most commonly
-a **probe handler type** (`httpGet` ↔ `tcpSocket` ↔ `exec`, or `grpc`):
+ArgoCD's default sync is a **client-side apply** (`kubectl apply`), which builds a
+**three-way strategic-merge patch** from three inputs: the live object, the desired
+manifest, and the `last-applied-configuration` annotation (ArgoCD's record of what
+it previously applied). When a field ArgoCD manages is dropped from the desired
+manifest, that three-way merge normally **deletes** it — so a clean handler swap
+usually applies fine. The swap only wedges when the old handler field is **not** in
+ArgoCD's tracked prior state — it was set out-of-band, is owned by a different
+server-side field manager, or the ownership is otherwise stale — because then the
+merge has no record telling it to remove the orphan. This is most visible on a field
+whose siblings are **mutually exclusive**, e.g. a **probe handler type**
+(`httpGet` ↔ `tcpSocket` ↔ `exec`, or `grpc`):
 
-- Live object has `livenessProbe.httpGet`; you change the source to
+- Live object has an untracked `livenessProbe.httpGet`; you change the source to
   `Probe.fromTcpSocket(...)`.
-- SMP adds `tcpSocket` but leaves the old `httpGet` → the object now has two
-  handlers, and the apiserver rejects the patch:
+- The merge adds `tcpSocket` but, lacking prior ownership of `httpGet`, leaves it
+  in place → the object now has two handlers, and the apiserver rejects the patch:
   `Forbidden: may not specify more than 1 handler type`.
 - The app is stuck `OutOfSync`/`SyncFailed` even though the **synthesized
-  manifest is already correct** — no code change can heal it. (This wedged the
+  manifest is already correct** — no code change to the manifest heals it, because
+  the problem is the stale live-object ownership, not the manifest. (This wedged the
   `media` app in 2026-08; the `shelfbridge-relay` sidecar's probes were switched
-  from `httpGet` to `tcpSocket` while the `httpGet` object was already live. See
-  `packages/docs/logs/2026-08-01_main-ci-red-diagnosis.md`.)
+  from `httpGet` to `tcpSocket` while an untracked `httpGet` object was already
+  live. See `packages/docs/logs/2026-08-01_main-ci-red-diagnosis.md`.)
 
 **Remediate (one time):** force a full replace so the orphaned field is dropped.
 **Scope the replace to the one resource** with `--resource` — an app-level
@@ -184,10 +191,14 @@ metadata: {
 }
 ```
 
-Scope it to the single resource, not the whole app: an app-level `Replace=true`
-(or `ServerSideApply=true`) also full-replaces bound PVCs and other immutable
-resources in the chart, which fails on immutable fields (see
-`packages/docs/logs/2026-06-12_argocd-sync-failures.md`).
+Scope it to the single resource, not the whole app. An app-level `Replace=true`
+applies `kubectl replace` to **every** resource in the app, full-replacing bound
+PVCs and other immutable resources, which fails on immutable fields (see
+`packages/docs/logs/2026-06-12_argocd-sync-failures.md`). `ServerSideApply=true` is
+**not** a replace — it runs `kubectl apply --server-side`, a field-manager merge, so
+it does not full-replace PVCs; but at app scope it can still surface field-ownership
+conflicts and is overkill for healing one resource. Either way, scope the
+sync-option to the single manifest that needs it.
 
 ## Namespace with Pod Security
 
