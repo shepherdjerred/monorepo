@@ -298,3 +298,16 @@ User-directed review fan-out; verdicts:
   adding to the skill.
 - Discord's Slate message box ignores synthetic `type` input; per-character
   `press` key events work. Now recorded above for reuse.
+- Commit scopes are validated against a fixed list (`lefthook` commit-msg →
+  `validate-commit-msg`), and `mk64` is NOT valid — the scope is
+  `discord-plays-mario-kart`. The failure surfaces only after the whole
+  pre-commit suite runs, and the hook output is heavily ANSI-decorated, so a
+  piped/tailed commit looks like it succeeded while creating no revision.
+  Verify `git log -1` after committing (see also the never-pipe-git-commit
+  rule).
+- Pushing a candidate image to GHCR needs the CI `GH_TOKEN` from the
+  `buildkite-ci-secrets` secret; a personal `gh auth token` and a minted
+  GitHub App installation token both fail (`installation not allowed to
+Write organization package`). The in-cluster BuildKit builder is reachable
+  by port-forwarding `buildkitd-buildkitd-service` to the `ciwarm` builder
+  endpoint, which builds amd64 natively and hits the warm CI cache.
