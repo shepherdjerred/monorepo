@@ -42,6 +42,9 @@ bitrate_kbps = 5000
 bitrate_max_kbps = 8000
 hardware_acceleration = false  # VAAPI h264 on an Intel iGPU; also via STREAM_HARDWARE_ACCELERATION env
 vaapi_device = "/dev/dri/renderD128"
+encoder_async_depth = 1   # VAAPI -async_depth; 1 = lowest latency, 2 = ffmpeg default (A/B knob)
+low_latency_mux = true    # -flush_packets 1 on the container output
+low_delay_audio = true    # Opus lowdelay + 10ms frames
 
 [emulator]
 enabled = true

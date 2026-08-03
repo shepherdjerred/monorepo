@@ -227,8 +227,15 @@ export class GameBattleControl {
       !observation.readiness.inputReady ||
       !menus.includes(battle.menu)
     ) {
+      // Include the live state so the agent can self-correct in one retry
+      // instead of probing (e.g. "not in a battle — observe and wait").
+      const state =
+        battle === null || observation.phase !== "battle"
+          ? `not in a battle (phase: ${observation.phase})`
+          : `menu: ${battle.menu}, inputReady: ${String(observation.readiness.inputReady)}`;
       throw new Error(
-        `battle action requires an input-ready ${menus.join(" or ")} decision`,
+        `battle action requires an input-ready ${menus.join(" or ")} decision — ` +
+          `${state}; observe and wait until the required battle menu is active`,
       );
     }
     if ((battle.typeFlags & UNSUPPORTED_BATTLE_TYPE_MASK) !== 0) {

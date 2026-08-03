@@ -70,6 +70,10 @@ export default defineConfig({
               label: "qBittorrent VPN webseed relay",
               link: "/homelab/qbittorrent-vpn-webseed-relay/",
             },
+            {
+              label: "Scout evals tailnet boundary",
+              link: "/homelab/scout-evals-tailnet-boundary/",
+            },
           ],
           label: "Homelab",
         },

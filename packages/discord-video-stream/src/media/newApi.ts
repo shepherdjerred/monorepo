@@ -130,6 +130,26 @@ export type PrepareStreamOptions = {
   minimizeLatency: boolean;
 
   /**
+   * Flush the muxer's IO buffer after every packet (`-flush_packets 1` on the
+   * container output). Removes output-side buffering tails for realtime
+   * consumers. Off by default so VOD/throughput consumers keep ffmpeg's
+   * auto-flush behavior. Do NOT pair with `-max_interleave_delta 0` — that
+   * "low latency" folklore flag actually means *unbounded* interleave
+   * buffering (measured 2026-08-03; no steady-state win with continuous
+   * audio either).
+   */
+  lowLatencyMux: boolean;
+
+  /**
+   * Encode audio for realtime latency instead of the quality-first defaults:
+   * libopus `-application lowdelay -frame_duration 10` (defaults are
+   * `audio` / 20 ms). Trims ~10-16 ms from the audio pipeline and tightens
+   * the receiver's A/V-sync window, at slightly higher container overhead
+   * per second of audio. Off by default.
+   */
+  lowDelayAudio: boolean;
+
+  /**
    * Custom headers for HTTP requests
    */
   customHeaders: Record<string, string>;
@@ -537,6 +557,8 @@ export function prepareStream(
     hardwareAcceleratedDecoding: false,
     hardwarePipelineMode: "full",
     minimizeLatency: false,
+    lowLatencyMux: false,
+    lowDelayAudio: false,
     customHeaders: {
       "User-Agent":
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.3",
@@ -614,6 +636,10 @@ export function prepareStream(
         opts.hardwarePipelineMode ?? defaultOptions.hardwarePipelineMode,
 
       minimizeLatency: opts.minimizeLatency ?? defaultOptions.minimizeLatency,
+
+      lowLatencyMux: opts.lowLatencyMux ?? defaultOptions.lowLatencyMux,
+
+      lowDelayAudio: opts.lowDelayAudio ?? defaultOptions.lowDelayAudio,
 
       customHeaders: {
         ...defaultOptions.customHeaders,
@@ -881,9 +907,13 @@ export function prepareStream(
       .outputOptionsList(hwPipeline ? [] : (encoderSettings.globalOptions ?? []));
   }
 
+  // Per-packet muxer flush for realtime consumers (see PrepareStreamOptions.lowLatencyMux).
+  if (mergedOptions.lowLatencyMux)
+    commandBuilder.addOutputOption(["-flush_packets", "1"]);
+
   // audio setup
   const { includeAudio, bitrateAudio, audioInput } = mergedOptions;
-  if (includeAudio)
+  if (includeAudio) {
     commandBuilder
       // With a separate audio input, map its first audio stream (a required mapping — the caller
       // promised a stream); otherwise take audio from the primary input if it has any (`?`).
@@ -899,6 +929,16 @@ export function prepareStream(
       .audioCodec("libopus")
       .audioBitrate(`${bitrateAudio}k`)
       .audioFilters("volume@internal_lib=1.0");
+    // Realtime Opus tuning (see PrepareStreamOptions.lowDelayAudio). libopus private options —
+    // they bind to the (only) audio stream, after -c:a above.
+    if (mergedOptions.lowDelayAudio)
+      commandBuilder.addOutputOption([
+        "-application",
+        "lowdelay",
+        "-frame_duration",
+        "10",
+      ]);
+  }
 
   // Add custom ffmpeg flags
   if (
@@ -1084,6 +1124,19 @@ export type PlayStreamOptions = {
   streamPreview: boolean;
 
   /**
+   * Upper bound, in milliseconds, advertised to receivers through the
+   * `playout-delay` RTP header extension. Receivers pick their jitter-buffer
+   * target within [0, max]; on a clean link Chrome sits at the ceiling, so this
+   * effectively sets the client-side delay floor for an interactive stream.
+   *
+   * Defaults to 100ms (the long-standing value) so existing consumers keep
+   * their current behavior. Lower it only for genuinely low-jitter links —
+   * a real-time game stream on a good network — because the headroom you
+   * remove is what otherwise absorbs jitter without a visible freeze.
+   */
+  videoPlayoutDelayMaxMs: number | undefined;
+
+  /**
    * Optional observability seam. When supplied, per-frame send timing (frametime ratio) from the
    * video/audio send path is forwarded to the observer. No effect on behavior.
    */
@@ -1098,6 +1151,7 @@ const playStreamDefaultOptions = {
   frameRate: (video) => video.framerate_num / video.framerate_den,
   readrateInitialBurst: undefined,
   streamPreview: false,
+  videoPlayoutDelayMaxMs: undefined,
 } satisfies PlayStreamOptions;
 
 /**
@@ -1137,6 +1191,14 @@ export function mergePlayStreamOptions(
         : playStreamDefaultOptions.readrateInitialBurst,
 
     streamPreview: opts.streamPreview ?? playStreamDefaultOptions.streamPreview,
+
+    // 0 is meaningful here (ask the receiver not to buffer at all), so this
+    // cannot use the isFiniteNonZero guard the other numeric options use.
+    videoPlayoutDelayMaxMs:
+      typeof opts.videoPlayoutDelayMaxMs === "number" &&
+      Number.isFinite(opts.videoPlayoutDelayMaxMs)
+        ? opts.videoPlayoutDelayMaxMs
+        : playStreamDefaultOptions.videoPlayoutDelayMaxMs,
 
     ...(opts.observer !== undefined ? { observer: opts.observer } : {}),
   } satisfies PlayStreamOptions;
@@ -1197,7 +1259,7 @@ export async function attachPipeline(
     const videoCodec = videoCodecMap[video.codec];
     if (videoCodec === undefined)
       throw new Error(`Unsupported video codec ID: ${String(video.codec)}`);
-    conn.setPacketizer(videoCodec);
+    conn.setPacketizer(videoCodec, options.videoPlayoutDelayMaxMs);
     conn.mediaConnection.setSpeaking(true);
     const { width, height, frameRate } = options;
     conn.mediaConnection.setVideoAttributes(true, {

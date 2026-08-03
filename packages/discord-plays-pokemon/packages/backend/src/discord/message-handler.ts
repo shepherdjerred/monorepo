@@ -37,7 +37,9 @@ export function handleMessages(
         await handleMessage(messageEvent, driver, fn);
         return;
       } catch (error) {
-        logger.info(error);
+        logger.warn(
+          `message handler failed: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
     })();
   });
@@ -94,7 +96,8 @@ async function handleMessage(
   }
 
   if (chord === undefined) {
-    logger.error(chord);
+    // Non-chord chat in the play channel is normal — the ❓ react is the signal.
+    logger.debug(`not a chord (❓ reacted): ${event.content.slice(0, 80)}`);
     await event.react("❓");
     return;
   }

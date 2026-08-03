@@ -149,6 +149,22 @@ describe("validatePaths rejects directory pathspecs", () => {
     expect(result.exitCode).toBe(0);
   });
 
+  test("accepts a deletion whose parent directory was also removed", async () => {
+    const fake = fakeGit(0);
+    const result = await operations(fake).continueRestack(prAt(worktree), [
+      "removed-parent/nested/gone.ts",
+    ]);
+    expect(result.exitCode).toBe(0);
+    expect(
+      fake.mustCalls.some(
+        (call) =>
+          call[0] === "git" &&
+          call[1] === "add" &&
+          call.includes("removed-parent/nested/gone.ts"),
+      ),
+    ).toBe(true);
+  });
+
   test("rejects a directory pathspec and never stages it", async () => {
     const fake = fakeGit(0);
     await expect(

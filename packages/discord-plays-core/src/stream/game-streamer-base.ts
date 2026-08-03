@@ -140,12 +140,24 @@ export abstract class GameStreamerBase {
   }
 
   /**
-   * Destroy the underlying selfbot client. Default is a bare destroy();
-   * mario-kart overrides to swallow the null-connection throw discord.js-selfbot-v13
-   * raises when the gateway never fully connected.
+   * Destroy the underlying selfbot client.
+   *
+   * discord.js-selfbot-v13's client.destroy() dereferences `this.connection`
+   * on each shard, which is null when the gateway never fully connected (or was
+   * already torn down) — it throws "null is not an object (this.connection.
+   * readyState)". Left unguarded that abort propagates out of session teardown,
+   * so the userbot/voice/ffmpeg handles for the just-ended session are never
+   * released and pile up across sessions. Swallow it: destroy() is best-effort
+   * cleanup and there's nothing to recover here.
    */
   protected destroyClient(): void {
-    this.streamer.client.destroy();
+    try {
+      this.streamer.client.destroy();
+    } catch (error) {
+      this.logger.warn("selfbot client destroy failed (ignored)", {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
   }
 
   /** Send an event to the desired-stream machine (for subclass teardown hooks). */

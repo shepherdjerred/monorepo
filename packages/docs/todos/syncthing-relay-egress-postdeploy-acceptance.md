@@ -17,7 +17,8 @@ NetworkPolicy in `packages/homelab/src/cdk8s/src/cdk8s-charts/syncthing.ts`)
 lands local-verified only: cdk8s renders the port, typecheck/eslint are clean,
 and `helm-template.test.ts` passes. The acceptance step — that torvalds actually
 establishes a relay connection and the NAT'd peers reconnect automatically —
-cannot run until the change merges and ArgoCD syncs it onto torvalds. It is
+can now run: PR #1928 merged, ArgoCD is `Synced`/`Healthy`, and the live
+NetworkPolicy contains `22067/TCP`. The remaining checks are
 privileged homelab work (torvalds REST API plus the macbook / steam deck
 Syncthing state), so it is tracked here rather than left in the completed
 session log.
@@ -40,3 +41,22 @@ session log.
   `packages/docs/logs/2026-08-02_syncthing-relay-egress-fix.md` (`status:
 complete`). The operator acceptance that depends on merge + ArgoCD sync is
   moved here so it surfaces as active board work instead of being forgotten.
+
+### 2026-08-02 — merge and deploy prerequisite satisfied
+
+- Confirmed PR #1928 merged, the `syncthing` Argo application is `Synced`/`Healthy`, and the live egress policy includes `22067/TCP`.
+- The remaining connection and peer-state observations require the privileged Syncthing API/device surfaces.
+
+## Session Log — 2026-08-02
+
+### Done
+
+- Cleared the merge, ArgoCD rollout, and live NetworkPolicy prerequisites.
+
+### Remaining
+
+- Verify the relay-client session and automatic macbook/Steam Deck reconnection through the privileged Syncthing surfaces.
+
+### Caveats
+
+- Policy presence proves deployment, not that the NAT'd peers reconnected.

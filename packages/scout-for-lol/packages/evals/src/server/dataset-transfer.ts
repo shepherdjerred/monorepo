@@ -1,8 +1,12 @@
 import { z } from "zod";
 
 import {
+  DatasetDraftTransferPayloadSchema,
+  DatasetDraftTransferSchema,
   DatasetExportPayloadSchema,
   DatasetExportSchema,
+  type DatasetDraftTransfer,
+  type DatasetDraftTransferPayload,
   type DatasetExport,
   type DatasetExportPayload,
 } from "#shared/schema.ts";
@@ -36,7 +40,7 @@ function sortJsonValue(value: unknown): unknown {
   throw new TypeError(`Cannot serialize JSON value of type ${typeof value}`);
 }
 
-function canonicalJson(value: unknown): string {
+export function canonicalJson(value: unknown): string {
   return JSON.stringify(sortJsonValue(value));
 }
 
@@ -49,7 +53,7 @@ function payloadFromExport(datasetExport: DatasetExport): DatasetExportPayload {
   });
 }
 
-function payloadSha256(payload: DatasetExportPayload): string {
+function payloadSha256(payload: unknown): string {
   return new Bun.CryptoHasher("sha256")
     .update(canonicalJson(payload))
     .digest("hex");
@@ -93,4 +97,35 @@ export function parseDatasetExport(serialized: string): DatasetExport {
 export function serializeDatasetExport(value: unknown): string {
   const datasetExport = validateDatasetExport(value);
   return `${JSON.stringify(sortJsonValue(datasetExport), null, 2)}\n`;
+}
+
+function draftPayloadFromTransfer(
+  transfer: DatasetDraftTransfer,
+): DatasetDraftTransferPayload {
+  return DatasetDraftTransferPayloadSchema.parse({
+    schemaVersion: transfer.schemaVersion,
+    dataset: transfer.dataset,
+    cases: transfer.cases,
+  });
+}
+
+export function createDraftTransfer(
+  payload: DatasetDraftTransferPayload,
+): DatasetDraftTransfer {
+  const parsedPayload = DatasetDraftTransferPayloadSchema.parse(payload);
+  return DatasetDraftTransferSchema.parse({
+    ...parsedPayload,
+    sha256: payloadSha256(parsedPayload),
+  });
+}
+
+export function validateDraftTransfer(value: unknown): DatasetDraftTransfer {
+  const transfer = DatasetDraftTransferSchema.parse(value);
+  const actual = payloadSha256(draftPayloadFromTransfer(transfer));
+  if (actual !== transfer.sha256) {
+    throw new Error(
+      `Draft transfer checksum mismatch: expected ${transfer.sha256}, calculated ${actual}`,
+    );
+  }
+  return transfer;
 }

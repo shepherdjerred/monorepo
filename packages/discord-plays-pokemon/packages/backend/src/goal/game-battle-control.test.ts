@@ -373,7 +373,9 @@ describe("GameBattleControl move actions", () => {
 
     await expect(
       new GameBattleControl(port).move({ moveId: 33 }),
-    ).rejects.toThrow("requested move is currently disabled by battle rules");
+    ).rejects.toThrow(
+      "requested move TACKLE is currently disabled by battle rules",
+    );
     expect(port.presses).toEqual([]);
   });
 
@@ -523,7 +525,7 @@ describe("GameBattleControl forced Struggle", () => {
         maxPp: 35,
         usable: false,
       },
-      error: "requested move has no remaining PP",
+      error: "requested move TACKLE has no remaining PP",
     },
     {
       name: "disabled",
@@ -535,7 +537,7 @@ describe("GameBattleControl forced Struggle", () => {
         maxPp: 35,
         usable: false,
       },
-      error: "requested move is currently disabled by battle rules",
+      error: "requested move TACKLE is currently disabled by battle rules",
     },
   ])(
     "rejects an individually $name move when another move is legal",

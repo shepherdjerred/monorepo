@@ -270,6 +270,82 @@ export const DatasetExportFreshnessRatingSchema = z.strictObject({
   rating: FreshnessRatingSchema,
 });
 
+type TransferCaseIssue = { message: string; path: (string | number)[] };
+
+type TransferCaseView = {
+  id: string;
+  ordinal: number;
+  artifact: { matchId: string; targetPlayerPuuid: string; styleKey: string };
+  generationIds: readonly string[];
+};
+
+function collectTransferCaseIssues(
+  cases: readonly TransferCaseView[],
+  generationIdPath: (
+    casePosition: number,
+    generationPosition: number,
+  ) => (string | number)[],
+): {
+  issues: TransferCaseIssue[];
+  styles: Set<string>;
+  generatedStyles: Set<string>;
+} {
+  const issues: TransferCaseIssue[] = [];
+  const caseIds = new Set<string>();
+  const generationIds = new Set<string>();
+  const memberships = new Set<string>();
+  const styles = new Set<string>();
+  const generatedStyles = new Set<string>();
+
+  for (const [position, evalCase] of cases.entries()) {
+    if (evalCase.ordinal !== position) {
+      issues.push({
+        message: `Case ordinal ${String(evalCase.ordinal)} must match its array position ${String(position)}`,
+        path: ["cases", position, "ordinal"],
+      });
+    }
+    if (caseIds.has(evalCase.id)) {
+      issues.push({
+        message: `Duplicate case id ${evalCase.id}`,
+        path: ["cases", position, "id"],
+      });
+    }
+    caseIds.add(evalCase.id);
+
+    const membership = [
+      evalCase.artifact.matchId,
+      evalCase.artifact.targetPlayerPuuid,
+      evalCase.artifact.styleKey,
+    ].join("\0");
+    if (memberships.has(membership)) {
+      issues.push({
+        message: "Duplicate match-player-style case membership",
+        path: ["cases", position, "artifact"],
+      });
+    }
+    memberships.add(membership);
+    styles.add(evalCase.artifact.styleKey);
+    if (evalCase.generationIds.length > 0) {
+      generatedStyles.add(evalCase.artifact.styleKey);
+    }
+
+    for (const [
+      generationPosition,
+      generationId,
+    ] of evalCase.generationIds.entries()) {
+      if (generationIds.has(generationId)) {
+        issues.push({
+          message: `Duplicate generation id ${generationId}`,
+          path: generationIdPath(position, generationPosition),
+        });
+      }
+      generationIds.add(generationId);
+    }
+  }
+
+  return { issues, styles, generatedStyles };
+}
+
 export const DatasetExportPayloadSchema = z
   .strictObject({
     schemaVersion: z.literal(1),
@@ -278,67 +354,26 @@ export const DatasetExportPayloadSchema = z
     freshnessRatings: z.array(DatasetExportFreshnessRatingSchema),
   })
   .superRefine((payload, context) => {
-    const caseIds = new Set<string>();
-    const generationIds = new Set<string>();
-    const memberships = new Set<string>();
-    const styles = new Set<string>();
-    const generatedStyles = new Set<string>();
-
-    for (const [position, evalCase] of payload.cases.entries()) {
-      if (evalCase.ordinal !== position) {
-        context.addIssue({
-          code: "custom",
-          message: `Case ordinal ${String(evalCase.ordinal)} must match its array position ${String(position)}`,
-          path: ["cases", position, "ordinal"],
-        });
-      }
-      if (caseIds.has(evalCase.id)) {
-        context.addIssue({
-          code: "custom",
-          message: `Duplicate case id ${evalCase.id}`,
-          path: ["cases", position, "id"],
-        });
-      }
-      caseIds.add(evalCase.id);
-
-      const membership = [
-        evalCase.artifact.matchId,
-        evalCase.artifact.targetPlayerPuuid,
-        evalCase.artifact.styleKey,
-      ].join("\0");
-      if (memberships.has(membership)) {
-        context.addIssue({
-          code: "custom",
-          message: "Duplicate match-player-style case membership",
-          path: ["cases", position, "artifact"],
-        });
-      }
-      memberships.add(membership);
-      styles.add(evalCase.artifact.styleKey);
-      if (evalCase.generations.length > 0) {
-        generatedStyles.add(evalCase.artifact.styleKey);
-      }
-
-      for (const [
+    const { issues, styles, generatedStyles } = collectTransferCaseIssues(
+      payload.cases.map((evalCase) => ({
+        id: evalCase.id,
+        ordinal: evalCase.ordinal,
+        artifact: evalCase.artifact,
+        generationIds: evalCase.generations.map(
+          (record) => record.generation.id,
+        ),
+      })),
+      (casePosition, generationPosition) => [
+        "cases",
+        casePosition,
+        "generations",
         generationPosition,
-        record,
-      ] of evalCase.generations.entries()) {
-        if (generationIds.has(record.generation.id)) {
-          context.addIssue({
-            code: "custom",
-            message: `Duplicate generation id ${record.generation.id}`,
-            path: [
-              "cases",
-              position,
-              "generations",
-              generationPosition,
-              "generation",
-              "id",
-            ],
-          });
-        }
-        generationIds.add(record.generation.id);
-      }
+        "generation",
+        "id",
+      ],
+    );
+    for (const issue of issues) {
+      context.addIssue({ code: "custom", ...issue });
     }
 
     let previousStyleKey: string | undefined;
@@ -375,6 +410,61 @@ export const DatasetExportSchema = DatasetExportPayloadSchema.safeExtend({
   sha256: z.string().regex(/^[\da-f]{64}$/),
 });
 
+// Draft transfers move a locally-materialized draft onto another eval server
+// (the hosted instance) before any human rating exists. They deliberately carry
+// only dataset metadata, frozen case artifacts, and generations — never human
+// or freshness ratings, which are authored on the receiving instance. The
+// finalized export above remains the full-fidelity archival format.
+export const DraftTransferMetadataSchema = DatasetSummarySchema.pick({
+  id: true,
+  key: true,
+  version: true,
+  name: true,
+  description: true,
+  createdAt: true,
+}).extend({
+  status: z.literal("draft"),
+});
+
+export const DraftTransferCaseSchema = z.strictObject({
+  id: CaseIdSchema,
+  ordinal: z.number().int().nonnegative(),
+  artifact: CaseArtifactSchema,
+  generations: z.array(GenerationSchema),
+});
+
+export const DatasetDraftTransferPayloadSchema = z
+  .strictObject({
+    schemaVersion: z.literal(1),
+    dataset: DraftTransferMetadataSchema,
+    cases: z.array(DraftTransferCaseSchema).min(1),
+  })
+  .superRefine((payload, context) => {
+    const { issues } = collectTransferCaseIssues(
+      payload.cases.map((evalCase) => ({
+        id: evalCase.id,
+        ordinal: evalCase.ordinal,
+        artifact: evalCase.artifact,
+        generationIds: evalCase.generations.map((generation) => generation.id),
+      })),
+      (casePosition, generationPosition) => [
+        "cases",
+        casePosition,
+        "generations",
+        generationPosition,
+        "id",
+      ],
+    );
+    for (const issue of issues) {
+      context.addIssue({ code: "custom", ...issue });
+    }
+  });
+
+export const DatasetDraftTransferSchema =
+  DatasetDraftTransferPayloadSchema.safeExtend({
+    sha256: z.string().regex(/^[\da-f]{64}$/),
+  });
+
 export type DatasetSummary = z.infer<typeof DatasetSummarySchema>;
 export type CaseSummary = z.infer<typeof CaseSummarySchema>;
 export type CaseArtifact = z.infer<typeof CaseArtifactSchema>;
@@ -383,3 +473,7 @@ export type HumanRating = z.infer<typeof HumanRatingSchema>;
 export type EvalScore = z.infer<typeof EvalScoreSchema>;
 export type DatasetExportPayload = z.infer<typeof DatasetExportPayloadSchema>;
 export type DatasetExport = z.infer<typeof DatasetExportSchema>;
+export type DatasetDraftTransferPayload = z.infer<
+  typeof DatasetDraftTransferPayloadSchema
+>;
+export type DatasetDraftTransfer = z.infer<typeof DatasetDraftTransferSchema>;

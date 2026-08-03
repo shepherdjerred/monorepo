@@ -1,5 +1,6 @@
 install.sh
 install_macos.sh
+MACOS_FRESH_INSTALL.md
 
 {{- if ne .chezmoi.os "windows" }}
 AppData/

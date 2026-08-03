@@ -194,4 +194,5 @@ if command -v fish &>/dev/null; then
     fi
 fi
 
-log_success "macOS dotfiles install completed"
+log_success "Automated macOS dotfiles install completed"
+log_warn "Manual setup remains; review packages/dotfiles/MACOS_FRESH_INSTALL.md"

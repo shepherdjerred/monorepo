@@ -1,9 +1,5 @@
 # git-spice config (`spice.*` git-config keys)
 
-> Retained for branches/stacks already owned by git-spice. Newly rooted
-> monorepo work uses `gh-stack`; these settings are not a reason to initialize
-> git-spice for it.
-
 Set with `git config [--global|--local] spice.<key> <value>`. Keys are
 case-sensitive subsections, e.g. `spice.branchCreate.commit` →
 `[spice "branchCreate"]  commit = …`.

@@ -4,7 +4,7 @@ type: todo
 status: planned
 board: true
 verification: agent
-disposition: deferred
+disposition: active
 origin: packages/docs/logs/2026-08-01_pr-fleet-controller-codex-round5-p1s.md
 source_marker: false
 ---
@@ -111,3 +111,17 @@ the sandbox work) that was surfaced in the same review.
   `[priority — real correctness]` items (heartbeat, EOF) are small, testable
   fixes worth doing first; the `[capability gap]` item (native-stack restack)
   needs `gh stack` routing and live native-stack PRs to validate.
+
+## Session Log — 2026-08-02
+
+### Done
+
+- Confirmed PR #1855 is merged and the six listed fixes are immediately agent-operable; moved the card from Deferred to active Planned work.
+
+### Remaining
+
+- Implement the five locally testable hardening fixes and validate native-stack restacking against a live fixture.
+
+### Caveats
+
+- Only the end-to-end native-stack capability check depends on a suitable live PR; that does not block the other fixes.

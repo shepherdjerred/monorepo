@@ -1,0 +1,11 @@
+---
+description: Global macOS preferences
+sudo: false
+current_host: false
+kill: [cfprefsd]
+data:
+  NSGlobalDomain:
+    # Follow the automatic light/dark appearance schedule.
+    AppleInterfaceStyleSwitchesAutomatically: true
+    # Repeat held keys instead of showing the accent picker.
+    ApplePressAndHoldEnabled: "0"

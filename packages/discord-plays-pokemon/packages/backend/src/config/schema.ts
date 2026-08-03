@@ -30,6 +30,11 @@ const GoalConfigSchema = z
       .positive()
       .max(600)
       .default(60),
+    // Floor for audience-facing updates: if nothing was posted to Discord for
+    // this long during a goal run, the harness composes and posts a status
+    // line itself (location + recent actions + latest milestone). Should be
+    // >= progress_update_interval_seconds; the floor holds either way.
+    update_interval_seconds: z.number().int().min(30).max(600).default(90),
     // The goal bot is trusted/operator-driven and behind the authed control
     // server, so it gets higher input caps than casual Discord chat users (who
     // stay on game.commands.*). Bigger chords also cut LLM tool round-trips.
@@ -59,6 +64,7 @@ const GoalConfigSchema = z
     max_runtime_minutes: 30,
     lock_minutes: 5,
     progress_update_interval_seconds: 60,
+    update_interval_seconds: 90,
     command_limits: {
       max_quantity_per_action: 60,
       chord_max_commands: 32,

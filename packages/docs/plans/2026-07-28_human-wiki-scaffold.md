@@ -72,7 +72,8 @@ attempt to author a comprehensive monorepo atlas.
 
 - [x] Finish implementation verification and publish the draft PR with visual
       evidence.
-- [ ] Merge and run post-deploy HTTP, cache-header, and CSP verification.
+- [x] Merge PR #1784 and run post-deploy HTTP, sitemap, robots, and cache checks.
+- [ ] Make the Caddy Deployment roll or reload when its security-header ConfigMap changes, then verify CSP and related headers externally.
 
 ## Session Log — 2026-07-28
 
@@ -228,3 +229,19 @@ attempt to author a comprehensive monorepo atlas.
   enabled Unicorn rules report 1,079 errors across the package. Migrating that
   package-wide surface is intentionally not folded into this narrow
   duplicate-install review fix.
+
+## Session Log — 2026-08-02
+
+### Done
+
+- Confirmed PR #1784 merged with green exact-head Buildkite #7255.
+- Confirmed `wiki.sjer.red`, sitemap, and robots return HTTP 200 and the `s3-static-sites` application is `Synced`/`Healthy`.
+- Inspected both the public response and in-pod origin response: required CSP and related security headers are absent even though the current ConfigMap contains them.
+
+### Remaining
+
+- Add a GitOps-managed Caddy reload or Deployment checksum rollout for ConfigMap changes, then repeat external security-header verification.
+
+### Caveats
+
+- The site is live, but this plan remains active because configured security policy is not actually served.

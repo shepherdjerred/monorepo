@@ -3,9 +3,43 @@
 // without digging through OTel archives.
 
 import { logger } from "#src/logger.ts";
+import { goalToolCallsTotal } from "#src/observability/metrics.ts";
 
 const STATE_LOG_MAX = 4000;
 const GENERIC_BODY_MAX = 2000;
+
+// The fixed route set served by routeRequest/routeSemanticRequest/
+// routeInformationalRequest. Unknown paths (404 probes, typos) collapse to
+// "other" so they can't explode the metric's label cardinality.
+const KNOWN_TOOL_PATHS = new Set([
+  "/status",
+  "/state",
+  "/observe",
+  "/map",
+  "/map/exits",
+  "/screenshot",
+  "/press",
+  "/chord",
+  "/progress",
+  "/list",
+  "/read",
+  "/grep",
+  "/write",
+  "/tap",
+  "/move",
+  "/navigate",
+  "/interact",
+  "/advance",
+  "/wait",
+  "/battle/move",
+  "/battle/item",
+  "/battle/run",
+  "/battle/switch",
+  "/battle/target",
+  "/knowledge/search",
+  "/knowledge/get",
+  "/history",
+]);
 
 export type GoalToolLogEntry = {
   goalId: string | undefined;
@@ -18,6 +52,10 @@ export type GoalToolLogEntry = {
 };
 
 export function logGoalTool(entry: GoalToolLogEntry): void {
+  goalToolCallsTotal.inc({
+    path: KNOWN_TOOL_PATHS.has(entry.path) ? entry.path : "other",
+    status: String(entry.status),
+  });
   logger.info(
     `goal.tool ${JSON.stringify({
       goalId: entry.goalId ?? null,

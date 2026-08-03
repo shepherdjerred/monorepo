@@ -119,7 +119,7 @@ In `validateSelectorAndUpload()` after the existing `tofuPipeline` checks, match
 
 ## Rollout sequence
 
-1. Worktree per repo rules: `git worktree add .claude/worktrees/buildkite-bootstrap-oom -b fix/buildkite-bootstrap-oom origin/main`; `gh stack init --base main fix/buildkite-bootstrap-oom`; `mise install && bun install --frozen-lockfile && bunx turbo run generate && bunx lefthook install`. Move the untracked docs log in.
+1. Worktree per repo rules: `git worktree add .claude/worktrees/buildkite-bootstrap-oom -b fix/buildkite-bootstrap-oom origin/main`; `git-spice branch track fix/buildkite-bootstrap-oom --base main`; `mise install && bun install --frozen-lockfile && bunx turbo run generate && bunx lefthook install`. Move the untracked docs log in.
 2. Make Changes 1–7.
 3. Local verification (worktree root):
    - `bash .buildkite/scripts/upload-pipeline.test.sh`

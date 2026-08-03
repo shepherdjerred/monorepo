@@ -1,0 +1,9 @@
+---
+description: Built-in trackpad preferences
+sudo: false
+current_host: false
+kill: [cfprefsd]
+data:
+  com.apple.AppleMultitouchTrackpad:
+    Clicking: true
+    TrackpadThreeFingerDrag: true

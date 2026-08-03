@@ -56,6 +56,13 @@ export type GameStreamerOptions = {
   // VAAPI hardware H.264 encoding on an Intel iGPU; falls back to libx264 when off.
   hardwareAcceleration: boolean;
   vaapiDevice: string;
+  // `-async_depth` for the VAAPI encoder (1 = lowest latency; ffmpeg default 2).
+  encoderAsyncDepth: number;
+  // Fork realtime opt-ins: per-packet muxer flush + low-delay Opus.
+  lowLatencyMux: boolean;
+  lowDelayAudio: boolean;
+  // Jitter-buffer ceiling advertised to viewers (playout-delay RTP extension).
+  videoPlayoutDelayMaxMs: number;
   onEncoderStarted: () => void;
   onSessionEnded?: () => void | Promise<void>;
 };
@@ -148,23 +155,6 @@ export class GameStreamer extends GameStreamerBase {
     this.sendToActor({ type: "SHUTDOWN" });
   }
 
-  protected override destroyClient(): void {
-    // discord.js-selfbot-v13's client.destroy() dereferences `this.connection`
-    // on each shard, which is null when the gateway never fully connected (or was
-    // already torn down) — it throws "null is not an object (this.connection.
-    // readyState)". Left unguarded that abort propagates out of session teardown
-    // (`safeDriverStop`), so the userbot/voice/ffmpeg handles for the just-ended
-    // /play session are never released and pile up across sessions. Swallow it:
-    // destroy() is best-effort cleanup and there's nothing to recover here.
-    try {
-      this.streamer.client.destroy();
-    } catch (error) {
-      logger.warn("selfbot client destroy failed (ignored)", {
-        error: error instanceof Error ? error.message : String(error),
-      });
-    }
-  }
-
   protected async buildEncoder(signal: AbortSignal): Promise<EncoderHandles> {
     // Audio transport creation is the only awaited preparation step. Do it
     // before publishing session state so a STOP that cancels this invoke cannot
@@ -229,6 +219,8 @@ export class GameStreamer extends GameStreamerBase {
         inputOptions: audioTransport.inputOptions,
       },
       minimizeLatency: true,
+      lowLatencyMux: this.options.lowLatencyMux,
+      lowDelayAudio: this.options.lowDelayAudio,
       customInputOptions: [
         "-f",
         "rawvideo",
@@ -251,7 +243,10 @@ export class GameStreamer extends GameStreamerBase {
       // then uploads frames to the GPU (format=nv12|vaapi, hwupload) and encodes
       // with h264_vaapi. Software libx264 is the no-GPU fallback (local/arm64).
       encoder: this.options.hardwareAcceleration
-        ? Encoders.vaapi({ device: this.options.vaapiDevice })
+        ? Encoders.vaapi({
+            device: this.options.vaapiDevice,
+            asyncDepth: this.options.encoderAsyncDepth,
+          })
         : Encoders.software({
             x264: { preset: "ultrafast", tune: "zerolatency" },
           }),
@@ -271,10 +266,14 @@ export class GameStreamer extends GameStreamerBase {
   }
 
   protected override playOptions(): Partial<PlayStreamOptions> {
+    const base: Partial<PlayStreamOptions> = {
+      type: "go-live",
+      videoPlayoutDelayMaxMs: this.options.videoPlayoutDelayMaxMs,
+    };
     if (this.streamObserver) {
-      return { type: "go-live", observer: this.streamObserver };
+      return { ...base, observer: this.streamObserver };
     }
-    return { type: "go-live" };
+    return base;
   }
 
   private resetStreamMetrics(): void {

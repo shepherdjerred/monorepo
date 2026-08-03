@@ -318,11 +318,6 @@
       "reason": "Platform bootstrap precedes Bun"
     },
     {
-      "source": "packages/dotfiles/run_once_after_install-gh-extensions.sh",
-      "disposition": "retain",
-      "reason": "Chezmoi run_once provisioning hook runs during apply, before Bun is guaranteed"
-    },
-    {
       "source": "packages/homelab/mac-ci/bootstrap.sh",
       "disposition": "retain",
       "reason": "Machine bootstrap precedes Bun"

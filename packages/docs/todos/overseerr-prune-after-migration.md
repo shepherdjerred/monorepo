@@ -1,7 +1,7 @@
 ---
 id: overseerr-prune-after-migration
 type: todo
-status: planned
+status: in-progress
 board: true
 verification: operator
 disposition: blocked
@@ -77,8 +77,8 @@ merged, so `main` and production Cloudflare state are consistent.
 
 ## Remaining
 
-- [ ] Inventory the live `media` namespace and Tailscale state, recording every remaining Overseerr-owned resource before deletion.
-- [ ] Remove all remaining Overseerr workloads/services/secrets and its Tailscale proxy without changing Seerr resources.
+- [x] Inventory the live Kubernetes state: no Overseerr workload, Service, PVC, Application, PV, or ZFSVolume remains.
+- [x] Remove all remaining Overseerr Kubernetes and Tailscale resources without changing Seerr resources.
 - [ ] Decide whether to delete or intentionally retain the PV/ZFS dataset, and record the operator's decision and evidence.
 - [ ] Verify Seerr and the `overseerr.sjer.red` redirect remain healthy, then mark this record complete and archive it.
 
@@ -87,3 +87,22 @@ merged, so `main` and production Cloudflare state are consistent.
 - 2026-07-27 — Board audit confirmed PR #1385 merged and Overseerr is absent
   from current manifests. The 2026-07-08 health log still observed `overseerr-pvc`,
   so privileged live-state cleanup remains and verification is operator-owned.
+
+### 2026-08-02 — Kubernetes cleanup confirmed
+
+- Live inventory found no matching Overseerr workload, Service, PVC, Application, PV, or OpenEBS ZFSVolume.
+- The only unresolved storage question is whether a backing host dataset persists outside the Kubernetes API and should be retained or deleted.
+
+## Session Log — 2026-08-02
+
+### Done
+
+- Cleared the stale Kubernetes cleanup tasks and moved this partially completed operator card to In Progress.
+
+### Remaining
+
+- Verify host-dataset absence or record an explicit retention decision, then recheck Seerr/redirect health and archive.
+
+### Caveats
+
+- Absence from the Kubernetes API does not independently prove a retained host dataset was removed.

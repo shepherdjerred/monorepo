@@ -21,6 +21,7 @@ import { createGrafanaDbChart } from "./cdk8s-charts/grafana-db.ts";
 import { createS3StaticSitesChart } from "./cdk8s-charts/s3-static-sites.ts";
 import { createMcpGatewayChart } from "./cdk8s-charts/mcp-gateway.ts";
 import { createBugsinkChart } from "./cdk8s-charts/bugsink.ts";
+import { createScoutEvalsChart } from "./cdk8s-charts/scout-evals.ts";
 import { createTasknotesChart } from "./cdk8s-charts/tasknotes.ts";
 import { createRelayChart } from "./cdk8s-charts/relay.ts";
 import { createTemporalChart } from "./cdk8s-charts/temporal.ts";
@@ -72,6 +73,7 @@ export async function setupCharts(app: App): Promise<void> {
   createGrafanaDbChart(app);
   await createMcpGatewayChart(app);
   createBugsinkChart(app);
+  createScoutEvalsChart(app);
   createTasknotesChart(app);
   createRelayChart(app);
   createTemporalChart(app);

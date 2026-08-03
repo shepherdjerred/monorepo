@@ -6,6 +6,7 @@ export const IMAGE_TARGET_OWNERS: Readonly<Record<string, string>> = {
   "temporal-worker": "@shepherdjerred/temporal",
   "trmnl-dashboard": "@shepherdjerred/trmnl-dashboard",
   "scout-for-lol": "@scout-for-lol/backend",
+  "scout-evals": "@scout-for-lol/evals",
   "discord-plays-pokemon": "@discord-plays-pokemon/backend",
   "discord-plays-mario-kart": "@discord-plays-mario-kart/backend",
 };

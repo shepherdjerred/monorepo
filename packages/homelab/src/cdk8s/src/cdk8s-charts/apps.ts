@@ -33,6 +33,7 @@ import { createAllGrafanaDashboards } from "@shepherdjerred/homelab/cdk8s/src/re
 import { createDdnsApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ddns.ts";
 import { createAppsApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps.ts";
 import { createScoutBetaApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/scout-beta.ts";
+import { createScoutEvalsApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/scout-evals.ts";
 import { createScoutProdApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/scout-prod.ts";
 import { createStarlightKarmaBotBetaApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/starlight-karma-bot-beta.ts";
 import { createStarlightKarmaBotProdApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/starlight-karma-bot-prod.ts";
@@ -133,6 +134,7 @@ export async function createAppsChart(app: App) {
   // Per-service ArgoCD apps
   createDdnsApp(chart);
   createScoutBetaApp(chart);
+  createScoutEvalsApp(chart);
   createScoutProdApp(chart);
   createStarlightKarmaBotBetaApp(chart);
   createStarlightKarmaBotProdApp(chart);

@@ -3,17 +3,29 @@ import { parseCommandInput } from "#src/game/command/command-input.ts";
 import type { WaitCondition } from "./game-controller.ts";
 import type { GoalControlContext, Routed } from "./control-context.ts";
 import { readGameMap, readGameMapExits } from "./game-map.ts";
+import { caseInsensitiveEnum, clampedInt } from "./schema-helpers.ts";
 
-const TapRequestSchema = z.strictObject({
+// Validation convention: JSON-body routes use `.parse()` and rely on the
+// control-server catch to turn any ZodError into a prettified 400 body;
+// query-param routes keep bespoke `safeParse` handling with their own
+// messages. Tunable numeric ranges clamp (clampedInt) instead of rejecting;
+// domain identifiers (battle slots, move/item ids) stay strict.
+
+export const TapRequestSchema = z.strictObject({
   command: z.string().min(1),
-  repeat: z.number().int().min(1).max(20).default(1),
+  repeat: clampedInt(1, 20).default(1),
 });
 
-const DirectionSchema = z.enum(["north", "south", "west", "east"]);
+export const DirectionSchema = caseInsensitiveEnum([
+  "north",
+  "south",
+  "west",
+  "east",
+]);
 
-const MoveRequestSchema = z.strictObject({
+export const MoveRequestSchema = z.strictObject({
   direction: DirectionSchema,
-  tiles: z.number().int().min(1).max(20).default(1),
+  tiles: clampedInt(1, 20).default(1),
 });
 
 const InteractRequestSchema = z.strictObject({
@@ -22,21 +34,21 @@ const InteractRequestSchema = z.strictObject({
 
 const AdvanceRequestSchema = z.strictObject({});
 
-const WaitRequestSchema = z.strictObject({
+export const WaitRequestSchema = z.strictObject({
   until: z.enum(["ready", "stable", "phase-change"]),
-  maxFrames: z.number().int().min(1).max(1800).default(600),
+  maxFrames: clampedInt(1, 1800).default(600),
 });
 
-const NavigateRequestSchema = z.union([
+export const NavigateRequestSchema = z.union([
   z.strictObject({
     x: z.number().int(),
     y: z.number().int(),
-    maxSteps: z.number().int().min(1).max(200).default(64),
-    searchRadius: z.number().int().min(1).max(20).default(12),
+    maxSteps: clampedInt(1, 200).default(64),
+    searchRadius: clampedInt(1, 20).default(12),
   }),
   z.strictObject({
     exitId: z.string().regex(/^(?:connection|warp):(0|[1-9]\d*)$/u),
-    maxSteps: z.number().int().min(1).max(200).default(64),
+    maxSteps: clampedInt(1, 200).default(64),
   }),
 ]);
 
@@ -67,6 +79,10 @@ const BattleTargetRequestSchema = z.union([
 
 const EmptyRequestSchema = z.strictObject({});
 
+export const VALID_BUTTONS_HINT =
+  "valid buttons: up, down, left, right, a, b, start, select " +
+  "(case-insensitive; aliases u/d/l/r/st/se/sel)";
+
 async function parseJsonBody(request: Request): Promise<unknown> {
   try {
     return await request.json();
@@ -89,7 +105,7 @@ export async function tapResponse(
     return {
       response: jsonResponse(
         {
-          error: "tap requires one valid button without a quantity or modifier",
+          error: `tap requires exactly one button, no quantity/modifier — ${VALID_BUTTONS_HINT}`,
         },
         400,
       ),
@@ -100,7 +116,9 @@ export async function tapResponse(
   if (commandInput.quantity !== 1 || commandInput.modifier !== undefined) {
     return {
       response: jsonResponse(
-        { error: "tap requires one button without quantity or modifier" },
+        {
+          error: `tap takes a bare button (use "repeat" for repetition, /press for holds) — ${VALID_BUTTONS_HINT}`,
+        },
         400,
       ),
       requestMeta: parsed,

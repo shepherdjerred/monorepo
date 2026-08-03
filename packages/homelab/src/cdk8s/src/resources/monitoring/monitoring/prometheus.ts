@@ -23,6 +23,7 @@ import { getEtcdCustomRuleGroups } from "./rules/etcd-custom.ts";
 import { getZfsMaintenanceRuleGroups } from "./rules/zfs-maintenance.ts";
 import { getTemporalRuleGroups } from "./rules/temporal.ts";
 import { getStreambotRuleGroups } from "./rules/streambot.ts";
+import { getDiscordPlaysGoalRuleGroups } from "./rules/discord-plays-goal.ts";
 import { createBuildkiteMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/buildkite.ts";
 import { createBuildkitdMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/buildkitd.ts";
 
@@ -307,6 +308,19 @@ export function createPrometheusMonitoring(chart: Chart) {
     },
     spec: {
       groups: getStreambotRuleGroups(),
+    },
+  });
+
+  // Discord Plays Pokemon goal-agent harness alerts (stuck goal past the hard
+  // runtime cap, paid goal running with the Go-Live stream down).
+  new PrometheusRule(chart, "prometheus-discord-plays-goal-rules", {
+    metadata: {
+      name: "prometheus-discord-plays-goal-rules",
+      namespace: "pokemon",
+      labels: { release: "prometheus" },
+    },
+    spec: {
+      groups: getDiscordPlaysGoalRuleGroups(),
     },
   });
 }

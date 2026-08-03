@@ -8,6 +8,7 @@ import type { CodexJsonlParser } from "@shepherdjerred/llm-observability/codex-j
 import type { CodexTrace } from "./codex-trace.ts";
 import { sanitizeDiscordText, truncateForDiscord } from "./discord-message.ts";
 import { formatGameStateForPrompt } from "./game-state-summary.ts";
+import { GoalIntervalReporter } from "./goal-progress.ts";
 import { formatHistoryForPrompt } from "./history-summary.ts";
 import { computeCost, formatCostLine } from "./pricing.ts";
 import { spawnGoalCodex } from "./spawn-goal-codex.ts";
@@ -23,7 +24,11 @@ import type {
 } from "./goal-types.ts";
 import { GoalMemory, buildSessionLogMeta } from "./goal-memory.ts";
 import { GoalControlGate } from "./goal-control-gate.ts";
-import { recordGoalFinished, recordGoalStarted } from "./goal-metrics.ts";
+import {
+  recordGoalFinished,
+  recordGoalStarted,
+  recordGoalUsage,
+} from "./goal-metrics.ts";
 import { loadGoalHistory, persistGoalState } from "./goal-state-store.ts";
 
 type ActiveGoal = {
@@ -36,6 +41,9 @@ type ActiveGoal = {
   stdoutPump: Promise<void>;
   trace: CodexTrace;
   releaseInputLease: () => void;
+  // Interval updates + milestone forwarding (see goal-progress.ts).
+  reporter: GoalIntervalReporter;
+  updateTimer: ReturnType<typeof setInterval>;
 };
 
 type GoalManagerOptions = {
@@ -239,6 +247,16 @@ export class GoalManager {
     const memory = await this.memory.readMemory();
     const releaseInputLease = oneShot(this.acquireInputLease());
     this.controlGate.open(id);
+    // Subscribed at spawn (before the stdout pump) so no early agent_message
+    // is lost; reporter.activate below starts posting once the goal is active.
+    const reporter = new GoalIntervalReporter({
+      updateIntervalSeconds: this.config.update_interval_seconds,
+      progressUpdateIntervalSeconds:
+        this.config.progress_update_interval_seconds,
+      sendMessage: this.sendMessage,
+      now: () => this.now().getTime(),
+      spatialSnapshot: this.spatialSnapshotProvider,
+    });
     let spawned: Awaited<ReturnType<typeof spawnGoalCodex>>;
     try {
       spawned = await spawnGoalCodex({
@@ -253,6 +271,7 @@ export class GoalManager {
           memory,
         },
         spawner: this.spawner,
+        onAgentMessage: reporter.onAgentMessage,
       });
     } catch (error) {
       this.controlGate.close(id);
@@ -293,6 +312,11 @@ export class GoalManager {
     const timeout = setTimeout(() => {
       void this.timeoutGoal(id);
     }, this.config.max_runtime_minutes * 60_000);
+    const updateTimer = setInterval(() => {
+      const current = this.active;
+      if (current?.state.id !== id) return;
+      void current.reporter.tick(current);
+    }, this.config.update_interval_seconds * 1000);
     this.active = {
       state,
       process: spawned.process,
@@ -303,7 +327,10 @@ export class GoalManager {
       stdoutPump: spawned.stdoutPump,
       trace: spawned.trace,
       releaseInputLease,
+      reporter,
+      updateTimer,
     };
+    reporter.activate((text) => void this.forwardMilestone(id, text));
     recordGoalStarted();
     void this.observeProcess(id);
 
@@ -314,36 +341,37 @@ export class GoalManager {
     };
   }
 
-  async publishProgress(message: string): Promise<boolean> {
+  async publishProgress(
+    message: string,
+    source: "agent" | "milestone" = "agent",
+  ): Promise<boolean> {
     const active = this.active;
-    if (active === undefined) {
-      return false;
-    }
+    if (active === undefined) return false;
+    return active.reporter.publishProgress(active, message, source, () =>
+      this.persistState(active.state),
+    );
+  }
 
-    const trimmed = message.trim();
-    if (trimmed.length === 0) {
-      return false;
-    }
+  /**
+   * Record one control-server tool call into the active goal's activity log.
+   * No-op when the goal id doesn't match the active goal (late calls from a
+   * replaced/finished goal).
+   */
+  recordToolCall(
+    goalId: string,
+    entry: Readonly<{ method: string; path: string; status: number }>,
+  ): void {
+    if (this.active?.state.id !== goalId) return;
+    this.active.reporter.recordToolCall(entry);
+  }
 
-    const now = this.now().getTime();
-    const minimumDelay = this.config.progress_update_interval_seconds * 1000;
-    if (now - active.lastProgressSentAt < minimumDelay) {
-      return false;
+  private async forwardMilestone(id: string, text: string): Promise<void> {
+    if (this.active?.state.id !== id) return;
+    try {
+      await this.publishProgress(text, "milestone");
+    } catch (error) {
+      logger.warn(`goal milestone forward failed: ${String(error)}`);
     }
-
-    active.lastProgressSentAt = now;
-    active.state.lastProgress = trimmed;
-    await this.persistState(active.state);
-    // Mid-session updates are audience-facing narration for the livestream, not
-    // a reply to the requester — post the message verbatim with no mention/prefix
-    // so it reads naturally to viewers. (sanitizeDiscordText still defangs any @
-    // the model emits; allowedUserIds is empty so nobody is pinged.)
-    await this.sendMessage({
-      channelId: active.state.channelId,
-      content: truncateForDiscord(sanitizeDiscordText(trimmed)),
-      allowedUserIds: [],
-    });
-    return true;
   }
 
   async shutdown(): Promise<void> {
@@ -378,6 +406,7 @@ export class GoalManager {
       await this.persistState(claimed.state);
       const usage = claimed.jsonl.total();
       const cost = computeCost(this.config.model, usage);
+      recordGoalUsage(usage, cost);
       const costLine = formatCostLine(this.config.model, cost, usage);
       await this.sendMessage({
         channelId: claimed.state.channelId,
@@ -400,6 +429,8 @@ export class GoalManager {
     if (active === undefined) return;
     try {
       await settleGoalProcess(active, true, () => this.controlGate.drain());
+      const usage = active.jsonl.total();
+      recordGoalUsage(usage, computeCost(this.config.model, usage));
       active.state.status = "timeout";
       active.state.finishedAt = this.now().toISOString();
       active.state.finalReport = "Goal timed out before Codex finished.";
@@ -427,6 +458,8 @@ export class GoalManager {
     }
     try {
       await settleGoalProcess(active, true, () => this.controlGate.drain());
+      const usage = active.jsonl.total();
+      recordGoalUsage(usage, computeCost(this.config.model, usage));
       active.state.status = status;
       active.state.finishedAt = this.now().toISOString();
       active.state.finalReport =
@@ -455,6 +488,9 @@ export class GoalManager {
     this.terminating = active;
     this.controlGate.close(active.state.id);
     clearTimeout(active.timeout);
+    // All four terminal paths land here: stop the interval updater
+    // (milestone forwarding no-ops itself once this.active clears).
+    clearInterval(active.updateTimer);
     return active;
   }
 

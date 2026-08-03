@@ -1,11 +1,11 @@
 ---
 id: bindery-patched-image-rollout-operator
 type: todo
-status: planned
+status: in-progress
 board: true
 verification: operator
 disposition: blocked
-origin: packages/docs/plans/2026-07-25_bindery-fork-chinese-add.md
+origin: packages/docs/archive/completed/2026-07-25_bindery-fork-chinese-add.md
 ---
 
 # Complete the privileged Bindery patched-image rollout checks
@@ -13,9 +13,9 @@ origin: packages/docs/plans/2026-07-25_bindery-fork-chinese-add.md
 ## Context
 
 PR #1643 built and published the first-party image path. The GHCR package is
-publicly pullable and the pinned image passed a temporary live deployment
-smoke. Final validation uses the restricted production Bindery API and media
-pipeline after the durable deployment switch merges.
+publicly pullable, PR #1759 merged, and the durable deployment is Ready on the
+first-party pinned image. Final validation uses the restricted production
+Bindery API and media pipeline.
 
 ## Remaining
 
@@ -51,3 +51,23 @@ pipeline after the durable deployment switch merges.
 ### 2026-07-27 — split from active implementation plan
 
 - Package visibility and production API/media validation are privileged operator work; the deployment edit remains agent-owned in the parent plan.
+
+### 2026-08-02 — durable rollout confirmed
+
+- Confirmed PR #1759 merged with green exact-head Buildkite #6712.
+- Confirmed the `media` Argo application is `Synced`/`Healthy` and Bindery is Ready on `ghcr.io/shepherdjerred/bindery:2.0.0-6874@sha256:2833…`.
+- The remaining restricted API, UI, and media-chain checks are now the only work on this card.
+
+## Session Log — 2026-08-02
+
+### Done
+
+- Cleared the durable deployment prerequisite and moved this partially completed operator card to In Progress.
+
+### Remaining
+
+- Complete the credentialed Chinese add, UI, and fresh-grab acceptance checks.
+
+### Caveats
+
+- This session did not use production Bindery credentials or initiate a media grab.

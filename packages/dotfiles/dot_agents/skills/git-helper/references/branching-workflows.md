@@ -1,10 +1,5 @@
 # Branching Strategies and Workflows
 
-> This is generic Git guidance. In `shepherdjerred/monorepo`, newly rooted work
-> uses the `gh-stack` skill and existing git-spice work stays on
-> `git-spice-helper`; do not copy bare branch, rebase, or `gh pr create`
-> commands across that boundary.
-
 ## Branching Strategies
 
 ### Trunk-Based Development
