@@ -83,7 +83,26 @@ Codex review gate (3 P2s) addressed in the same PR:
 
 Verified: tsc + eslint clean; rendered manifests show 0 `config/` items under any
 `/config` mount and the new `/config-subdir` mount + init seed for all three
-servers.
+servers. Validated live after merge: deleted all three pods, the
+`DirectoryNotEmptyException` is gone, and the servers now reach
+`Starting the Minecraft server...`.
+
+### Minecraft fix part 2 — Java 25 (PR #1958)
+
+Removing the config-sync crash revealed a second, previously-masked crash: the
+server reached startup and died with `Minecraft 26.1 and newer requires running
+the server with Java 25 or above` (exit 1). `versions.paper` is pinned to
+`26.1.2` (needs Java 25) but `itzg/minecraft-server` was pinned to the `-java21`
+variant. Renovate bumps the two via independent datasources (`custom.papermc` vs
+`docker`), so the Java major drifted out of sync.
+
+Fix: bump the image to the `java25` variant of the same itzg release
+(`2026.7.2-java25`, digest verified with `crane`, multi-arch amd64/arm64/riscv64).
+Smoke-tested live on **sjerred only**: patched its StatefulSet to java25 → the
+pod reached `1/1 Running`, Paper 26.1.2 booted and all plugins (GravesX,
+DiscordSRV, LuckPerms, EssentialsX, …) loaded. This confirms java25 clears the
+startup crash on sjerred; shuxin and tsmc await the same post-deploy check (they
+may hit server-specific plugin/config issues) — see Remaining.
 
 ## Session Log — 2026-08-02
 
@@ -95,14 +114,18 @@ servers.
 - Cleared golink's stale ArgoCD failed-op operationally.
 - Diagnosed minecraft `DirectoryNotEmptyException` to root cause on the live PVC.
 - PR #1948 (merged): drop the counterproductive `mkdir -p /data/config` (partial).
-- PR #1952 (open): route `config/*` off itzg's `/config` sync via `/config-subdir`
-  - init `cp`-seed; `set -e`; `${CFG_*}` guard. The real minecraft fix.
+- PR #1952 (merged): route `config/*` off itzg's `/config` sync via `/config-subdir`
+  - init `cp`-seed; `set -e`; `${CFG_*}` guard. Validated live: no more
+    `DirectoryNotEmptyException`.
+- PR #1958 (open): bump itzg image to java25 to match Paper 26.1.2. Smoke-tested
+  live: sjerred reached `1/1 Running`.
 
 ### Remaining
 
-- Merge #1952 after CI + review gate pass.
-- **Validate on live pods post-merge**: delete a minecraft pod, confirm it starts
-  Healthy (no `DirectoryNotEmptyException`), and that `apps` returns to Healthy.
+- Merge #1958 after CI + review gate pass.
+- After #1958 deploys, confirm all three servers reach Healthy and `apps` returns
+  to Healthy (delete the crash-looping pods so RollingUpdate applies the new
+  revision — a not-Ready pod blocks the roll otherwise).
 - Confirm a `main` build then completes the `argo: sync + wait` gate green (needs
   a quiet window — rapid merges keep canceling in-flight main builds mid-argo).
 
