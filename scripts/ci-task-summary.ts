@@ -137,7 +137,9 @@ export function buildCiTaskReport(
       attempted: summary.execution.attempted,
       cached: summary.execution.cached,
       failed: summary.execution.failed,
-      passed: summary.execution.success,
+      // Turbo counts cache hits within `success`, so subtract them to keep
+      // `passed` mutually exclusive with `cached` (matching the per-task states).
+      passed: summary.execution.success - summary.execution.cached,
       durationSeconds:
         (summary.execution.endTime - summary.execution.startTime) / 1000,
       ...(jobUrl === undefined ? {} : { jobUrl }),

@@ -8,10 +8,13 @@ import {
 
 const summary = TurboRunSummarySchema.parse({
   execution: {
+    // Turbo counts cache hits within `success`, so the cached lint task below
+    // is part of `success` (2 = test:ci + lint) alongside the standalone
+    // `cached` tally.
     attempted: 3,
     cached: 1,
     failed: 1,
-    success: 1,
+    success: 2,
     startTime: 1000,
     endTime: 5000,
   },
@@ -58,6 +61,12 @@ describe("CI task summary", () => {
     expect(report.categories.test.passed).toBe(1);
     expect(report.categories.lint.cached).toBe(1);
     expect(report.categories.build.failed).toBe(1);
+    // Top-line counts exclude cache hits from `passed`, staying mutually
+    // exclusive with `cached` (Turbo bundles cache hits into `success`).
+    expect(report.run.attempted).toBe(3);
+    expect(report.run.passed).toBe(1);
+    expect(report.run.cached).toBe(1);
+    expect(report.run.failed).toBe(1);
     expect(report.tasks[0]?.jobUrl).toEndWith("#job-id");
     expect(report.tasks[0]?.durationSeconds).toBe(2);
     expect(report.links.artifacts).toBe(
