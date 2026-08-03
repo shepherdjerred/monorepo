@@ -63,10 +63,15 @@ export type FleetObserver = {
   onMasterText: (text: string) => void;
 };
 
+export type FleetScheduler = {
+  schedule: (callback: () => void, delayMs: number) => () => void;
+};
+
 export type FleetControllerDependencies = {
   config: FleetControllerConfig;
   environment: FleetEnvironment;
   workerRunner: WorkerRunner;
   observer: FleetObserver;
   store?: FleetStore;
+  scheduler?: FleetScheduler;
 };

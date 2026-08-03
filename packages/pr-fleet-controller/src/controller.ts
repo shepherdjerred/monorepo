@@ -2,6 +2,7 @@ import type {
   FleetControllerDependencies,
   FleetEnvironment,
   FleetObserver,
+  FleetScheduler,
   WorkerRunner,
 } from "./ports.ts";
 import {
@@ -29,9 +30,10 @@ export class FleetController implements MasterControllerTools {
   readonly #environment: FleetEnvironment;
   readonly #workerRunner: WorkerRunner;
   readonly #observer: FleetObserver;
+  readonly #scheduler: FleetScheduler;
   readonly #workflow;
   readonly store: FleetStore;
-  #heartbeat: ReturnType<typeof setTimeout> | null = null;
+  #heartbeat: (() => void) | null = null;
   #tickRunning = false;
   #tickDue = false;
 
@@ -41,6 +43,16 @@ export class FleetController implements MasterControllerTools {
     this.#environment = environment;
     this.#workerRunner = workerRunner;
     this.#observer = observer;
+    this.#scheduler =
+      dependencies.scheduler ??
+      ({
+        schedule: (callback, delayMs) => {
+          const timer = setTimeout(callback, delayMs);
+          return () => {
+            clearTimeout(timer);
+          };
+        },
+      } satisfies FleetScheduler);
     this.store = dependencies.store ?? new FleetStore(config.maxWorkers);
     this.#workflow = createFleetTickWorkflow((trigger) =>
       this.#executeTick(trigger),
@@ -392,9 +404,9 @@ export class FleetController implements MasterControllerTools {
       return;
     }
     if (this.#heartbeat !== null) {
-      clearTimeout(this.#heartbeat);
+      this.#heartbeat();
     }
-    this.#heartbeat = setTimeout(() => {
+    this.#heartbeat = this.#scheduler.schedule(() => {
       this.#heartbeat = null;
       void this.#runTickSafely("heartbeat", "heartbeat");
     }, seconds * 1000);
@@ -406,6 +418,12 @@ export class FleetController implements MasterControllerTools {
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       this.#observer.onChange(`${label} failed: ${message}`);
+      // A heartbeat clears its handle before starting the tick. If that tick
+      // fails, rearm it so one transient external outage does not permanently
+      // stop fleet reconciliation. Other tick triggers retain their timer.
+      if (!this.store.stopping && this.#heartbeat === null) {
+        this.#armHeartbeat(300);
+      }
     }
   }
 
@@ -475,7 +493,7 @@ export class FleetController implements MasterControllerTools {
   async stop(): Promise<FleetSnapshot> {
     this.store.stopping = true;
     if (this.#heartbeat !== null) {
-      clearTimeout(this.#heartbeat);
+      this.#heartbeat();
       this.#heartbeat = null;
     }
     for (const controller of this.store.workerControllers.values()) {

@@ -52,8 +52,10 @@ const READABLE_HOME_SUBPATHS = [
 // otherwise replace a toolchain binary the operator later runs OUTSIDE the
 // sandbox with normal credentials.
 //
-// `bun install --frozen-lockfile` writes only its module cache; `mise trust`
-// writes its trust state; `mise` reads (not writes) already-installed runtimes.
+// `bun install --frozen-lockfile` writes only its module cache; `mise` reads
+// (not writes) already-installed runtimes. Setup grants invocation-scoped trust
+// to the exact worktree config through its environment, with paranoid mode
+// disabling inherited/cross-worktree trust; it never persists a trust decision.
 // `mise install` for a NOT-yet-installed pinned runtime would need to write the
 // install dir and thus fails fast here — an acceptable, documented trade-off:
 // the fleet runs on the operator's machine where the pinned toolchain is already
@@ -289,10 +291,17 @@ export function sanitizedEnvironment(
 // git from chasing machine-specific config `include`s under the sandbox-denied
 // $HOME.
 export function setupEnvironment(
-  extraSecretNames: readonly string[] = [],
+  extraSecretNames: readonly string[],
+  miseConfigPath: string,
 ): Record<string, string | undefined> {
   const environment = sanitizedEnvironment(extraSecretNames);
   environment["GIT_CONFIG_GLOBAL"] = "/dev/null";
   environment["GIT_CONFIG_SYSTEM"] = "/dev/null";
+  // The setup command intentionally evaluates this PR's tool configuration
+  // inside the credential-scrubbed sandbox. Trust exactly that file for this
+  // subprocess tree, while paranoid mode disables persisted and repository-wide
+  // worktree trust. No `mise trust` mutation reaches the operator's machine.
+  environment["MISE_PARANOID"] = "1";
+  environment["MISE_TRUSTED_CONFIG_PATHS"] = miseConfigPath;
   return environment;
 }
