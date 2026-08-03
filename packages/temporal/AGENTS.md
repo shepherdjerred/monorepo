@@ -6,6 +6,13 @@ Temporal workflow worker for the monorepo. Consolidates ad-hoc scheduling (K8s C
 
 Runs under **Bun**. The Temporal TypeScript SDK supports Bun for workers, workflows, activities, and client.
 
+Production uses the same Bun image in two Kubernetes Deployments selected by
+`TEMPORAL_WORKER_ROLE`: `core` owns the `default` and `agent-task` queues plus
+schedules and HTTP/event surfaces; `glitter` owns `glitter-corpus` and
+`glitter-context`. The default `all` role preserves the single-process local
+development behavior. Keep new queue ownership explicit in `worker.ts` so a
+heavy Glitter failure cannot take down core automation.
+
 ## Structure
 
 ```
@@ -14,6 +21,7 @@ src/
   client.ts              # Shared Temporal client factory (reusable by other packages)
   shared/
     task-queues.ts       # Task queue name constants
+    worker-role.ts       # Strict process-role parsing and queue ownership
     schemas.ts           # Zod schemas for workflow inputs
   workflows/             # Temporal workflow definitions (deterministic, no I/O)
   activities/            # Temporal activity implementations (actual work: API calls, DB, etc.)
@@ -141,6 +149,7 @@ Workflow:
 ## Environment Variables
 
 - `TEMPORAL_ADDRESS` — Temporal server gRPC address (default: `temporal-server.temporal.svc.cluster.local:7233`)
+- `TEMPORAL_WORKER_ROLE` — process role: `all` (default/local), `core`, or `glitter`. Invalid values fail startup.
 - `HA_URL` — Home Assistant URL
 - `HA_TOKEN` — Home Assistant long-lived access token
 - `GOLINK_URL` — Golink service URL

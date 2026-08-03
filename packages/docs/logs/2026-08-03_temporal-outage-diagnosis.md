@@ -145,12 +145,22 @@ separately because the recorded histories replayed successfully.
   liveness probes on `/healthz`.
 - Added synthesized-manifest regression coverage for the role split, probe
   configuration, and exposed ports.
+- Updated the package operator reference and human Temporal architecture page
+  to document the two Bun process roles and their failure boundary.
+- Merged the durable implementation in PR #1972 at feature commit
+  `e90062752c868027a97118fff97301609be49c57`; exact-head focused checks and the
+  exhaustive Buildkite verify graph passed.
+- Published the documentation follow-up as PR #1976 with a rendered system-map
+  screenshot; its exact-head verify, Playwright, deploy-path drift, and
+  Temporal image build/smoke jobs passed.
 
 ### Remaining
 
-- Update the Temporal operator and architecture documentation.
-- Complete focused verification, publish the native-stack draft PR, and inspect
-  its exact-current-head Buildkite result.
+- Verify that a main build publishes the feature-bearing Temporal image and
+  that GitOps rolls out two healthy worker Deployments with the expected
+  `core` and `glitter` roles.
+- Get a clean hosted review at the amended PR #1976 head; leave merging that
+  documentation follow-up to the normal human review workflow.
 
 ### Caveats
 
@@ -160,3 +170,21 @@ separately because the recorded histories replayed successfully.
   recurrence with CPU profiling enabled.
 - Restarting now may interrupt active agent work and cause delayed schedules to
   execute late.
+- The wiki's Bun unit tests pass, but local Astro 7/Vite 8 typecheck and build
+  fail during content-config loading with
+  `Tsconfig not found /tsconfig.base.json` in this nested worktree. A minimal
+  Astro config failed at the same content-sync boundary, and attempted config
+  and tsconfig-path workarounds were removed. Exact-head Buildkite remains the
+  independent verification for the rendered page.
+
+## Workflow Friction
+
+- `packages/docs/wiki` cannot currently run its required Astro render checks
+  from a nested `.claude/worktrees/` checkout because Vite 8 resolves an
+  inherited config as `/tsconfig.base.json`. The wiki needs a documented,
+  reproducible worktree-safe config-loading fix so visual documentation changes
+  can be rendered and captured before publication.
+- `gh stack submit --auto` unexpectedly converted both submitted branches from
+  draft state, and PR #1972 then auto-merged before the requested verification
+  was complete. The native-stack workflow needs a reliable noninteractive way
+  to preserve draft state until the agent explicitly promotes a PR.
