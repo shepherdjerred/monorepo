@@ -229,11 +229,58 @@ follow-up plan (threads → parallel-RDP → native emulator).
 ## Remaining
 
 - [x] Phase 1 implementation + local verification + draft PR.
-- [ ] Phase 1 live A/B acceptance run (async_depth), numbers recorded here.
+- [x] Phase 1 live A/B acceptance run, numbers recorded above (PR #1965
+      ready for review; encoder isolation −31.2 ms, glass −54.5 ms,
+      server-side −58.3 ms).
+- [ ] Retry `robot-face-review-gate` on PR #1965 once Codex recovers (it
+      timed out repo-wide the night of 2026-08-03 — see the CI note).
 - [ ] Phase 2 experiment session; adopt/reject recorded here.
 - [ ] Phase 3 metric repair + todo archival.
 - [ ] Phase 4 freeze-attribution session.
 - [ ] Phase 5 4P stress measurement → follow-up plan.
+
+## Session Log — 2026-08-03
+
+### Done
+
+- Shipped Phase 1 as PR #1965 (ready for review, 8 commits): VAAPI
+  `asyncDepth`, `lowLatencyMux`, `lowDelayAudio` opt-ins in the fork (with
+  assert-default tests protecting streambot/pokemon), MK64 config knobs,
+  immediate button-edge emit in the frontend, and the four instrumentation
+  additions.
+- Ran the full live acceptance on the production pod: built and pushed the
+  candidate image, deployed by digest under an Argo hold, and measured both
+  arms. **Tier 1 delivers ~55 ms at the player's eye** (95% CI [−63, −47]),
+  corroborated by a −58 ms server-side delta and a −31.2 ms in-pod encoder
+  isolation for `async_depth` alone.
+- Settled the desync investigation: the new depth gauge reads a standing
+  34-36 with inflation tracking `depth x frame-interval`, proving phantom
+  head entries.
+- Built a much better ruler: the in-page canvas glass probe (~20 samples/s,
+  no capture-window uncertainty) replacing the 2.8 samples/s screenshot rig,
+  plus the receive-side `getStats` poller.
+- Restored the cluster exactly: declared image `2.0.0-7794`,
+  `syncPolicy.automated = {enabled: false}` matching the release policy and
+  sibling apps, `Synced / Healthy`; temp driver, in-pod script, PinchTab
+  instance and port-forwards all removed.
+
+### Remaining
+
+- Retry the review gate when Codex recovers (repo-wide outage, not a code
+  signal).
+- Phase 2 experiments — now the highest-value work, since the client playout
+  buffer is the largest remaining term (~364 ms baseline p50).
+- Phase 3 metric repair (mechanism now confirmed), Phase 4 freeze
+  attribution, Phase 5 4P gate.
+
+### Caveats
+
+- The glass A/B is one session per arm; its CI covers within-session noise,
+  not between-session client-playout variance (observed 68-370 ms). The
+  three-method agreement is what makes the result credible, not the CI alone.
+- The 68.5 ms low-latency playout state was observed once and never
+  reproduced on demand; understanding how to force it would be worth more
+  than any remaining server-side tuning.
 
 ## Comment Log
 
