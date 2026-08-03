@@ -27,6 +27,10 @@ const claudeSuccess: RunResult = {
     type: "result",
     subtype: "success",
     is_error: false,
+    // The real CLI includes `api_error_status: null` on a successful result.
+    // Keep it here so the fixture matches the production contract (its absence
+    // is exactly what let the `.optional()`-rejects-null regression ship green).
+    api_error_status: null,
     result: refinedEnvelope,
   }),
   stderr: "",
@@ -186,6 +190,32 @@ describe("release refiner provider selection", () => {
       "api",
       `repos/shepherdjerred/monorepo/commits/${refinedCommitSha}`,
     ]);
+  });
+
+  test("accepts a success result whose api_error_status is null", async () => {
+    // Regression guard, independent of the shared claudeSuccess fixture: the CLI
+    // emits `api_error_status: null` on a non-error result. Under the old
+    // `z.number().optional()` schema this failed to parse and the exit-0 branch
+    // threw "exited 0 without a valid non-error JSON result".
+    const claudeSuccessNullApiError: RunResult = {
+      stdout: JSON.stringify({
+        type: "result",
+        subtype: "success",
+        is_error: false,
+        api_error_status: null,
+        result: refinedEnvelope,
+      }),
+      stderr: "",
+      exitCode: 0,
+    };
+    const calls: RecordedCall[] = [];
+    const provider = await runReleaseRefiner(
+      input(
+        runner([claudeSuccessNullApiError, releasePr, refinerCommit], calls),
+      ),
+    );
+
+    expect(provider).toBe("claude");
   });
 
   test("falls back to Codex only for a validated Claude usage quota", async () => {

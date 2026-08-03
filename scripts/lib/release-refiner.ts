@@ -12,7 +12,11 @@ const REFINER_RESULT_END = "<!-- /release-refiner-result -->";
 const ClaudeResultSchema = z
   .object({
     is_error: z.boolean(),
-    api_error_status: z.number().optional(),
+    // The CLI emits `api_error_status: null` on a successful (non-error) result,
+    // so this must accept null — `.optional()` (number | undefined) rejects it and
+    // silently fails parsing of an otherwise-valid success payload. It is only read
+    // as `=== 429` on a non-zero exit (see isClaudeQuotaExhaustion).
+    api_error_status: z.number().nullish(),
     result: z.string().optional(),
   })
   .loose();
