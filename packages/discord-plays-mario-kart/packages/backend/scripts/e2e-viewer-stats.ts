@@ -193,6 +193,11 @@ function sleep(ms: number): Promise<void> {
 
 const hookResult = await evaluate(HOOK);
 console.error(`hook: ${String(hookResult)}`);
+// A previous run's final getStats() resolves after that run exits, leaving a
+// stale sample in __vsLast. Without this reset the first poll of the NEXT run
+// returns it — a sample minutes old, often from a since-closed peer, which
+// silently corrupts every window delta computed from sample[0].
+await evaluate("(globalThis.__vsLast = null) ?? 'cleared'");
 if (RELOAD) {
   await evaluate("location.reload() ?? 'reloading'").catch(() => {
     // The navigation tears down the evaluation context; that IS the success
@@ -232,6 +237,22 @@ const first = samples.at(0);
 const last = samples.at(-1);
 if (first === undefined || last === undefined) {
   throw new Error("unreachable: samples is non-empty");
+}
+// Counters are per-RTCPeerConnection; a stream restart mid-window swaps the
+// peer and resets them, so a delta across that boundary is meaningless.
+const decodeCounts: number[] = [];
+for (const s of samples) {
+  const decoded = s.video?.framesDecoded;
+  if (typeof decoded === "number") decodeCounts.push(decoded);
+}
+const wentBackwards = decodeCounts.some(
+  (v, i) => i > 0 && v < (decodeCounts[i - 1] ?? 0),
+);
+if (wentBackwards) {
+  console.error(
+    "WARNING: inbound counters reset mid-window (peer switch / stream restart) — " +
+      "window deltas span two connections and must not be compared",
+  );
 }
 const v0 = first.video;
 const v1 = last.video;
