@@ -117,24 +117,39 @@ may hit server-specific plugin/config issues) — see Remaining.
 - PR #1952 (merged): route `config/*` off itzg's `/config` sync via `/config-subdir`
   - init `cp`-seed; `set -e`; `${CFG_*}` guard. Validated live: no more
     `DirectoryNotEmptyException`.
-- PR #1958 (open): bump itzg image to java25 to match Paper 26.1.2. Smoke-tested
-  live: sjerred reached `1/1 Running`.
+- PR #1958 (merged): bump itzg image to java25 to match Paper 26.1.2. Deployed
+  and validated live — **sjerred and tsmc both reach `1/1 Running`** on java25.
+- **shuxin** had a second issue: its `check-config-drift` init container (from
+  #1927) refused to start on `mcMMO/party.yml` drift (mcMMO reindents nested maps
+  2→4 spaces on boot, same class as the already-ignored `chat.yml`). PR
+  (fix/minecraft-shuxin-drift): add `./mcMMO/party.yml` to the drift-check
+  `is_ignored()` allow-list.
+- **tsmc** had a third issue: `FileSystemException: /data/plugins/DiscordSRV/
+config.yml: Operation not permitted`. The file was **root-owned** on the PVC
+  (historical cruft, alongside dozens of stale ConfigMap `..timestamp` artifact
+  dirs), so itzg (uid 1000) could not overwrite it. Manifest is correct (same as
+  sjerred). Fix was a one-time PVC cleanup: deleted the root-owned `config.yml`
+  (+ the stale artifact dirs) via a uid-1000 debug pod; itzg recreates it as
+  uid 1000. tsmc then reached `1/1 Running`. No code change needed — durable
+  because itzg runs as uid 1000.
 
 ### Remaining
 
-- Merge #1958 after CI + review gate pass.
-- After #1958 deploys, confirm all three servers reach Healthy and `apps` returns
-  to Healthy (delete the crash-looping pods so RollingUpdate applies the new
-  revision — a not-Ready pod blocks the roll otherwise).
-- Confirm a `main` build then completes the `argo: sync + wait` gate green (needs
-  a quiet window — rapid merges keep canceling in-flight main builds mid-argo).
+- Merge the shuxin drift-check PR; after it deploys, delete `minecraft-shuxin-0`
+  so it rolls onto the new drift-check + java25, and confirm it reaches Healthy
+  (watch for the same DiscordSRV root-owned-config cruft on shuxin's PVC — clean
+  it the same way if present).
+- With all three Healthy, `apps` returns to Healthy → confirm a `main` build
+  completes the `argo: sync + wait` gate green (needs a quiet window — rapid
+  merges keep canceling in-flight main builds mid-argo).
 
 ### Caveats
 
-- The minecraft fix is verified at the manifest level and by root-cause analysis,
-  but itzg's runtime ordering (whether it preserves the init-seeded paper config
-  vs. regenerating it) is only fully confirmable post-deploy. The crash is
-  eliminated either way; only _which_ paper config wins needs the live check.
+- The tsmc DiscordSRV fix was operational (PVC state), not code. Root cause of the
+  original root-ownership is historical (likely a past root-running deployment or
+  a ConfigMap once mounted onto the PVC path); the current manifest mounts the
+  config at `/plugins/...` correctly. If root-owned plugin files reappear, a
+  durable init-container safeguard would be warranted.
 - Minecraft servers hibernate at replicas 0 (mc-router); they only block the argo
   gate while woken+crashing. Something (likely the bluemap ingress) kept them
   woken through this session.
