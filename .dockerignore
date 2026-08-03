@@ -22,3 +22,7 @@ packages/docs/wiki/*
 # context AND out of scoped runtime source COPYs (e.g. scout's report package).
 **/__snapshots__
 packages/sjer.red/src/content
+# The operator's local eval SQLite databases (ratings + Beta corpus snapshot)
+# must never reach an image: the scout-evals runtime COPYs this package's
+# whole source tree.
+packages/scout-for-lol/packages/evals/data

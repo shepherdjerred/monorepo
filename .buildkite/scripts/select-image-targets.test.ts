@@ -391,12 +391,14 @@ describe("patch attribution", () => {
     ).toEqual(["birmel"]);
   });
 
-  test("a patch resolved through several scout packages selects only scout", async () => {
+  test("a patch resolved through several scout packages selects only scout images", async () => {
     // twisted@1.82.0 is the live resolution across scout's closure (backend,
-    // data), so its patch attributes to exactly the scout image. (Stale
-    // patches — keys no closure resolves — can no longer exist:
+    // data), so its patch attributes to exactly the images whose closures
+    // resolve it: the backend and the evals app (via @scout-for-lol/data).
+    // (Stale patches — keys no closure resolves — can no longer exist:
     // scripts/check-patched-deps.ts fails verify on them.)
     expect(await select(["patches/twisted@1.82.0.patch"])).toEqual([
+      "scout-evals",
       "scout-for-lol",
     ]);
   });

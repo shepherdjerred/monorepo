@@ -260,6 +260,29 @@ const commands: Record<
       VIDEOS_DIR: "/tmp/videos",
     },
   },
+  "scout-evals": {
+    command: [
+      "set -eu",
+      "cd /app/packages/scout-for-lol/packages/evals",
+      "test -f dist/client/index.html",
+      "bun src/server/index.ts >/tmp/scout-evals-smoke.log 2>&1 &",
+      "pid=$!",
+      "trap 'if kill -0 $pid; then kill $pid; if wait $pid; then :; else cleanup_status=$?; [ $cleanup_status -eq 143 ] || exit $cleanup_status; fi; fi' EXIT",
+      "for _ in $(seq 1 30); do",
+      "  if grep -Fq 'Scout review evals:' /tmp/scout-evals-smoke.log; then exit 0; fi",
+      "  if ! kill -0 $pid; then cat /tmp/scout-evals-smoke.log; exit 1; fi",
+      "  sleep 1",
+      "done",
+      "cat /tmp/scout-evals-smoke.log",
+      "exit 1",
+    ].join("\n"),
+    // Proves the server boots as uid 1000 and creates its WAL-mode SQLite
+    // (plus sidecar files) at a fresh path — the exact K8s deployment shape.
+    env: {
+      SCOUT_EVAL_DATABASE_PATH: "/tmp/scout-evals-smoke.sqlite",
+      SCOUT_EVAL_HOSTNAME: "127.0.0.1",
+    },
+  },
   "tasknotes-server": {
     command: [
       "set -eu",
