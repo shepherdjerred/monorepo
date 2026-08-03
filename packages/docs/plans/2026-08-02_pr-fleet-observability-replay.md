@@ -202,7 +202,11 @@ repository checkout.
   recorder finalization, rejecting a run-data root inside the controller
   repository, and routing source-provenance Git commands through redacted
   command telemetry.
-- Passed focused typecheck, 90 controller tests, 42 observability tests, lint,
+- Addressed three additional exact-head findings by making bootstrap failures
+  replayable against the actual package version, masking command-output-bearing
+  error strings during default inspection, and recording implicit checkout
+  discovery through the shared command telemetry boundary.
+- Passed focused typecheck, 91 controller tests, 42 observability tests, lint,
   native-aware build, docs validation, Markdown lint, diff checks, and staged
   Lefthook/Gitleaks/Prettier/lockfile checks.
 - Completed a final non-mutating `openai/gpt-5.6-terra` model/tool turn from the

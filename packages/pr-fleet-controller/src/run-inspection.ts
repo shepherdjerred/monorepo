@@ -25,7 +25,7 @@ const TickCompletedPayloadSchema = z.object({ report: FleetTickReportSchema });
 const SnapshotPayloadSchema = z.object({ snapshot: FleetSnapshotSchema });
 
 const BODY_FIELD_PATTERN =
-  /^(?:body|content|escalation|lastAction|line|log|message|messages|output|patch|prompt|reason|response|stack|stderr|stdout|text)$/i;
+  /^(?:body|content|error|escalation|lastAction|line|log|message|messages|output|patch|prompt|reason|response|stack|stderr|stdout|text)$/i;
 const BODY_ARRAY_FIELD_PATTERN =
   /^(?:args|blockers|changes|hardFailures|reviewFindings|validation)$/i;
 const ACTIVE_STATUSES = new Set([
@@ -94,7 +94,7 @@ function hideBodies(value: JsonValue): JsonValue {
         }
         return [
           key,
-          BODY_FIELD_PATTERN.test(key)
+          shouldHideBodyField(key, inner)
             ? "[hidden; pass --show-bodies]"
             : hideBodies(inner),
         ];
@@ -102,6 +102,13 @@ function hideBodies(value: JsonValue): JsonValue {
     );
   }
   return value;
+}
+
+function shouldHideBodyField(key: string, value: JsonValue): boolean {
+  if (!BODY_FIELD_PATTERN.test(key)) {
+    return false;
+  }
+  return key.toLowerCase() !== "error" || typeof value === "string";
 }
 
 export function inspectEvents(

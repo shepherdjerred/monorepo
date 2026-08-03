@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import {
   chmod,
+  mkdir,
   mkdtemp,
   readFile,
   readdir,
@@ -69,6 +70,72 @@ async function mode(file: string): Promise<number> {
   return stats.mode & 0o777;
 }
 
+async function runCliWithImplicitCheckout(): Promise<{
+  bundle: Awaited<ReturnType<typeof loadRunBundle>>;
+  exitCode: number;
+  stderr: string;
+}> {
+  const parent = await mkdtemp(path.join(tmpdir(), "pr-fleet-cli-"));
+  temporaryDirectories.push(parent);
+  const stateDirectory = path.join(parent, "state");
+  const binDirectory = path.join(parent, "bin");
+  await mkdir(binDirectory);
+  const packageDirectory = path.join(import.meta.dir, "..");
+  const checkout = path.join(parent, "checkout");
+  const gitPath = path.join(binDirectory, "git");
+  await writeFile(
+    gitPath,
+    `#!/bin/sh\nif [ "$1" = "rev-parse" ] && [ "$2" = "--show-toplevel" ]; then\n  printf '%s\\n' "$PR_FLEET_TEST_CHECKOUT"\n  exit 0\nfi\nexit 9\n`,
+  );
+  await chmod(gitPath, 0o700);
+  for (const executable of [
+    "bk",
+    "bun",
+    "gh",
+    "git-spice",
+    "mise",
+    "rg",
+    "sandbox-exec",
+  ]) {
+    const executablePath = path.join(binDirectory, executable);
+    await writeFile(executablePath, "#!/bin/sh\nexit 0\n");
+    await chmod(executablePath, 0o700);
+  }
+  const subprocess = Bun.spawn(
+    [
+      process.execPath,
+      path.join(packageDirectory, "src", "cli.ts"),
+      "--model",
+      "openai/gpt-5.6-terra",
+      "--max-workers",
+      "0",
+      "--state-dir",
+      stateDirectory,
+    ],
+    {
+      cwd: packageDirectory,
+      env: {
+        ...Bun.env,
+        PATH: binDirectory,
+        PR_FLEET_TEST_CHECKOUT: checkout,
+      },
+      stdout: "pipe",
+      stderr: "pipe",
+    },
+  );
+  const [exitCode, stderr] = await Promise.all([
+    subprocess.exited,
+    new Response(subprocess.stderr).text(),
+  ]);
+  const runs = await readdir(stateDirectory);
+  expect(runs).toHaveLength(1);
+  return {
+    bundle: await loadRunBundle(path.join(stateDirectory, runs[0] ?? "")),
+    exitCode,
+    stderr,
+  };
+}
+
 async function recordSuccessfulEmptyRun(recorder: RunRecorder): Promise<void> {
   const tickId = recorder.newId("tick");
   recorder.record("run.started", { model: "openai/gpt-5.6-terra" });
@@ -114,6 +181,7 @@ function expectFreeFormBodiesHidden(firstEvent: RecordedRunEvent): void {
           reviewFindings: ["private structured finding"],
           validation: ["private validation detail"],
           changes: ["private fleet change"],
+          error: "Patch failed: private command stderr",
           result: "kept",
         },
       },
@@ -140,7 +208,7 @@ function expectFreeFormBodiesHidden(firstEvent: RecordedRunEvent): void {
     "[hidden; pass --show-bodies]",
     "[hidden; pass --show-bodies]",
   ]);
-  for (const key of ["lastAction", "reason"]) {
+  for (const key of ["error", "lastAction", "reason"]) {
     expect(hidden[0]?.payload[key]).toBe("[hidden; pass --show-bodies]");
   }
   expect(hidden[0]?.payload["result"]).toBe("kept");
@@ -396,9 +464,10 @@ describe("local run bundles", () => {
       path.join(stateDirectory, runs[0] ?? ""),
     );
     expect(bundle.manifest.controllerSourceResolved).toBe(false);
+    expect(bundle.manifest.controllerVersion).toBe("0.1.0");
     expect(bundle.summary.status).toBe("failed");
     const report = replayRunBundle(bundle, {
-      currentControllerVersion: bundle.manifest.controllerVersion,
+      currentControllerVersion: "0.1.0",
       allowVersionMismatch: false,
     });
     expect(report.run).toEqual({
@@ -406,6 +475,37 @@ describe("local run bundles", () => {
       completed: 0,
       cancelled: 0,
       failed: 1,
+      open: [],
+    });
+  });
+});
+
+describe("CLI command capture", () => {
+  test("records implicit checkout discovery before config validation", async () => {
+    const { bundle, exitCode, stderr } = await runCliWithImplicitCheckout();
+    expect(exitCode).not.toBe(0);
+    expect(stderr).toContain("maxWorkers");
+    const discoveryEvents = bundle.events.filter(
+      (event) =>
+        (event.kind === "command.started" ||
+          event.kind === "command.completed") &&
+        event.payload["executable"] === "git",
+    );
+    expect(discoveryEvents).toHaveLength(2);
+    expect(discoveryEvents[0]?.payload["args"]).toEqual([
+      "rev-parse",
+      "--show-toplevel",
+    ]);
+    expect(discoveryEvents[1]?.payload["stdout"]).toBe("[REDACTED]");
+    const report = replayRunBundle(bundle, {
+      currentControllerVersion: "0.1.0",
+      allowVersionMismatch: false,
+    });
+    expect(report.commands).toEqual({
+      started: 1,
+      completed: 1,
+      cancelled: 0,
+      failed: 0,
       open: [],
     });
   });

@@ -42,7 +42,6 @@ Interactive commands:
   Any other line is queued conversational steering for the master.`;
 
 const ControllerPackageSchema = z.object({ version: z.string().min(1) });
-const UNRESOLVED_VERSION = "unresolved";
 const UNRESOLVED_COMMIT = "0".repeat(40);
 const UNRESOLVED_FINGERPRINT = "0".repeat(64);
 const EMPTY_SNAPSHOT: FleetSnapshot = {
@@ -75,25 +74,6 @@ class TerminalObserver implements FleetObserver {
   onMasterText(text: string): void {
     process.stdout.write(text);
   }
-}
-
-async function commandOutput(
-  executable: string,
-  args: string[],
-): Promise<string> {
-  const subprocess = Bun.spawn([executable, ...args], {
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-  const [exitCode, stdout, stderr] = await Promise.all([
-    subprocess.exited,
-    new Response(subprocess.stdout).text(),
-    new Response(subprocess.stderr).text(),
-  ]);
-  if (exitCode !== 0) {
-    throw new Error(`${executable} failed: ${stderr.trim()}`);
-  }
-  return stdout.trim();
 }
 
 function requireTools(): void {
@@ -214,7 +194,10 @@ function parseInvocation(args: string[]) {
   return { parsed, modelName };
 }
 
-async function createBootstrapRecorder(args: string[]): Promise<RunRecorder> {
+async function createBootstrapRecorder(
+  args: string[],
+  controllerVersion: string,
+): Promise<RunRecorder> {
   const bootstrapModel = rawOptionValue(args, "model") ?? "unresolved/unknown";
   const bootstrapRepository =
     rawOptionValue(args, "repo") ?? "shepherdjerred/monorepo";
@@ -226,7 +209,7 @@ async function createBootstrapRecorder(args: string[]): Promise<RunRecorder> {
   const stateDirectory = rawOptionValue(args, "state-dir");
   const recorder = await RunRecorder.create({
     ...(stateDirectory === undefined ? {} : { stateDirectory }),
-    controllerVersion: UNRESOLVED_VERSION,
+    controllerVersion,
     controllerCommit: UNRESOLVED_COMMIT,
     controllerSourceDirty: true,
     controllerSourceFingerprint: UNRESOLVED_FINGERPRINT,
@@ -257,7 +240,10 @@ async function main(): Promise<void> {
     process.stdout.write(`${HELP}\n`);
     return;
   }
-  const recorder = await createBootstrapRecorder(args);
+  const packageMetadata = ControllerPackageSchema.parse(
+    await Bun.file(path.join(import.meta.dir, "..", "package.json")).json(),
+  );
+  const recorder = await createBootstrapRecorder(args, packageMetadata.version);
 
   let runtime: FleetMastraRuntime | undefined;
   let runtimeInitialization: Promise<FleetMastraRuntime> | undefined;
@@ -344,16 +330,29 @@ async function main(): Promise<void> {
     const apiKeyEnvironment = parsed.values["api-key-env"];
     const configuredSecret =
       apiKeyEnvironment === undefined ? undefined : Bun.env[apiKeyEnvironment];
-    const packageMetadata = ControllerPackageSchema.parse(
-      await Bun.file(path.join(import.meta.dir, "..", "package.json")).json(),
-    );
     if (await finishIfRequested()) {
       return;
     }
     requireTools();
-    const checkout =
-      parsed.values.checkout ??
-      (await commandOutput("git", ["rev-parse", "--show-toplevel"]));
+    let checkout = parsed.values.checkout;
+    if (checkout === undefined) {
+      const checkoutResult = await runRecordedCommand(
+        {
+          executable: "git",
+          args: ["rev-parse", "--show-toplevel"],
+          cwd: process.cwd(),
+          timeoutMs: 120_000,
+          sensitiveOutput: true,
+        },
+        recorder,
+      );
+      if (checkoutResult.exitCode !== 0) {
+        throw new Error(
+          `git rev-parse --show-toplevel failed: ${checkoutResult.stderr.trim()}`,
+        );
+      }
+      checkout = checkoutResult.stdout.trim();
+    }
     if (await finishIfRequested()) {
       return;
     }
