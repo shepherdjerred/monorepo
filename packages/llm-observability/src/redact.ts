@@ -18,8 +18,11 @@ const BEARER_PATTERN = /Bearer\s+[\w.\-+/=]+/g;
  * PII (usernames, channel IDs, message text) is intentionally not redacted:
  * this is a personal homelab and that data is required for debugging.
  */
-export function redactSecrets(value: unknown): unknown {
-  return walk(value);
+export function redactSecrets(
+  value: unknown,
+  additionalSecretValues: readonly string[] = [],
+): unknown {
+  return walk(value, additionalSecretValues);
 }
 
 /**
@@ -67,10 +70,13 @@ const SECRET_JSON_PATTERN = new RegExp(
  *   3. Quoted JSON `"name": "value"` fields with secret-shaped names.
  *   4. `Bearer <token>` substrings.
  */
-export function redactText(value: string): string {
+export function redactText(
+  value: string,
+  additionalSecretValues: readonly string[] = [],
+): string {
   let out = value;
-  for (const name of SECRET_ENV_NAMES) {
-    const secret = Bun.env[name];
+  const configuredSecrets = SECRET_ENV_NAMES.map((name) => Bun.env[name]);
+  for (const secret of [...configuredSecrets, ...additionalSecretValues]) {
     if (secret !== undefined && secret.length >= 8) {
       out = out.split(secret).join("[REDACTED]");
     }
@@ -86,17 +92,22 @@ export function redactText(value: string): string {
   return out.replaceAll(BEARER_PATTERN, "Bearer [REDACTED]");
 }
 
-function walk(value: unknown): unknown {
+function walk(
+  value: unknown,
+  additionalSecretValues: readonly string[],
+): unknown {
   if (typeof value === "string") {
-    return value.replaceAll(BEARER_PATTERN, "Bearer [REDACTED]");
+    return redactText(value, additionalSecretValues);
   }
   if (Array.isArray(value)) {
-    return value.map((item) => walk(item));
+    return value.map((item) => walk(item, additionalSecretValues));
   }
   if (value !== null && typeof value === "object") {
     const result: Record<string, unknown> = {};
     for (const [key, inner] of Object.entries(value)) {
-      result[key] = SECRET_KEY_PATTERN.test(key) ? "[REDACTED]" : walk(inner);
+      result[key] = SECRET_KEY_PATTERN.test(key)
+        ? "[REDACTED]"
+        : walk(inner, additionalSecretValues);
     }
     return result;
   }

@@ -1,6 +1,12 @@
 import { Agent } from "@mastra/core/agent";
 import type { MastraModelConfig } from "@mastra/core/llm";
-import type { FleetEnvironment, FleetObserver, WorkerRunner } from "./ports.ts";
+import type { Mastra } from "@mastra/core/mastra";
+import type {
+  FleetEnvironment,
+  FleetObserver,
+  FleetTelemetry,
+  WorkerRunner,
+} from "./ports.ts";
 import {
   createMasterTools,
   type MasterControllerTools,
@@ -11,6 +17,7 @@ import {
   type WorkerResult,
 } from "./schemas.ts";
 import type { FleetStore } from "./state.ts";
+import type { RunEventCorrelation } from "./run-events.ts";
 import { createWorkerTools } from "./tools.ts";
 
 const MASTER_INSTRUCTIONS = `You are the conversational master for a deterministic PR fleet controller.
@@ -24,24 +31,50 @@ use only the assigned worktree tools. Never merge, close, approve, suppress a ga
 use blanket staging, or bypass hooks. Return the required structured result after one
 cycle; do not poll or sleep.`;
 
+const NOOP_TELEMETRY: FleetTelemetry = {
+  runId: "unrecorded-test-run",
+  newId: (prefix) => `${prefix}-unrecorded`,
+  traceId: () => "0".repeat(32),
+  record: () => {
+    // Test seam for callers that exercise lifecycle behavior without capture.
+  },
+};
+
+type WorkerRunnerOptions = {
+  extraSecretNames?: readonly string[];
+  mastra?: Mastra;
+  telemetry?: FleetTelemetry;
+};
+
+type MasterOptions = {
+  mastra?: Mastra;
+  telemetry?: FleetTelemetry;
+};
+
+function signalIsAborted(signal: AbortSignal): boolean {
+  return signal.aborted;
+}
+
 export class MastraWorkerRunner implements WorkerRunner {
   readonly #model: MastraModelConfig;
   readonly #store: FleetStore;
   readonly #environment: FleetEnvironment;
   readonly #extraSecretNames: readonly string[];
+  readonly #mastra: Mastra | undefined;
+  readonly #telemetry: FleetTelemetry;
 
   constructor(
     model: MastraModelConfig,
     store: FleetStore,
     environment: FleetEnvironment,
-    // The operator's configured `--api-key-env` var name (if any), scrubbed from
-    // every validation/setup subprocess in addition to the credential heuristic.
-    extraSecretNames: readonly string[] = [],
+    options: WorkerRunnerOptions = {},
   ) {
     this.#model = model;
     this.#store = store;
     this.#environment = environment;
-    this.#extraSecretNames = extraSecretNames;
+    this.#mastra = options.mastra;
+    this.#telemetry = options.telemetry ?? NOOP_TELEMETRY;
+    this.#extraSecretNames = options.extraSecretNames ?? [];
   }
 
   async run(pr: PrState, signal: AbortSignal): Promise<WorkerResult> {
@@ -56,20 +89,43 @@ export class MastraWorkerRunner implements WorkerRunner {
       tools: createWorkerTools(pr, this.#store, this.#environment, {
         signal,
         extraSecretNames: this.#extraSecretNames,
+        telemetry: this.#telemetry,
       }),
     });
     const prompt = `Work one cycle on PR #${prNumber}.
 Current state: ${JSON.stringify(pr)}
 Additional user guidance: ${guidance.length === 0 ? "none" : guidance.join("\n")}`;
 
-    let firstError: Error | null = null;
-    for (let attempt = 0; attempt < 2; attempt += 1) {
-      try {
-        const result = await agent.generate(
+    this.#mastra?.addAgent(agent);
+    try {
+      let firstError: Error | null = null;
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        const attemptNumber = attempt + 1;
+        const modelTurnId = this.#telemetry.newId("worker-turn");
+        const traceId = this.#telemetry.traceId(
+          "worker",
+          prNumber,
+          generation,
+          String(attemptNumber),
+        );
+        const attemptPrompt =
           attempt === 0
             ? prompt
-            : `${prompt}\nThe prior response failed schema validation. Return every required field.`,
-          {
+            : `${prompt}\nThe prior response failed schema validation. Return every required field.`;
+        const correlation = {
+          traceId,
+          prNumber: pr.identity.number,
+          headSha: pr.identity.headSha,
+          generation: pr.agentGeneration,
+          modelTurnId,
+        };
+        this.#telemetry.record(
+          "worker.attempt.started",
+          { attempt: attemptNumber, prompt: attemptPrompt },
+          correlation,
+        );
+        try {
+          const result = await agent.generate(attemptPrompt, {
             abortSignal: signal,
             maxSteps: 20,
             structuredOutput: {
@@ -77,16 +133,40 @@ Additional user guidance: ${guidance.length === 0 ? "none" : guidance.join("\n")
               jsonPromptInjection: "auto",
               errorStrategy: "strict",
             },
-          },
-        );
-        return WorkerResultSchema.parse(result.object);
-      } catch (error) {
-        const normalized =
-          error instanceof Error ? error : new Error(String(error));
-        firstError ??= normalized;
+            tracingOptions: {
+              traceId,
+              metadata: {
+                runId: this.#telemetry.runId,
+                prNumber: pr.identity.number,
+                headSha: pr.identity.headSha,
+                generation: pr.agentGeneration,
+                attempt: attemptNumber,
+              },
+              tags: ["pr-fleet", "worker"],
+            },
+          });
+          const parsed = WorkerResultSchema.parse(result.object);
+          this.#telemetry.record(
+            "worker.attempt.completed",
+            { attempt: attemptNumber, result: parsed },
+            correlation,
+          );
+          return parsed;
+        } catch (error) {
+          const normalized =
+            error instanceof Error ? error : new Error(String(error));
+          firstError ??= normalized;
+          this.#telemetry.record(
+            "worker.attempt.failed",
+            { attempt: attemptNumber, error: normalized.message },
+            correlation,
+          );
+        }
       }
+      throw firstError ?? new Error("Worker failed without an error");
+    } finally {
+      this.#mastra?.removeAgent(agent.id);
     }
-    throw firstError ?? new Error("Worker failed without an error");
   }
 }
 
@@ -99,22 +179,32 @@ export class MastraMaster {
   readonly #history: string[] = [];
   readonly #queue: string[] = [];
   readonly #abort = new AbortController();
+  readonly #mastra: Mastra | undefined;
+  readonly #telemetry: FleetTelemetry;
   #drain: Promise<void> | null = null;
   #stopped = false;
+  #activeTurnCorrelation: RunEventCorrelation | null = null;
 
   constructor(
     model: MastraModelConfig,
     controller: MasterControllerTools,
     observer: FleetObserver,
+    options: MasterOptions = {},
   ) {
     this.#observer = observer;
+    this.#mastra = options.mastra;
+    this.#telemetry = options.telemetry ?? NOOP_TELEMETRY;
     this.#agent = new Agent({
       id: "pr-fleet-master",
       name: "PR fleet master",
       instructions: MASTER_INSTRUCTIONS,
       model,
-      tools: createMasterTools(controller),
+      tools: createMasterTools(controller, {
+        telemetry: this.#telemetry,
+        correlation: () => this.#activeTurnCorrelation ?? {},
+      }),
     });
+    this.#mastra?.addAgent(this.#agent);
   }
 
   send(message: string): void {
@@ -132,8 +222,23 @@ export class MastraMaster {
   protected streamTurn(
     prompt: string,
     signal: AbortSignal,
+    traceId?: string,
   ): Promise<MasterTurnStream> {
-    return this.#agent.stream(prompt, { maxSteps: 12, abortSignal: signal });
+    if (traceId === undefined) {
+      return this.#agent.stream(prompt, {
+        maxSteps: 12,
+        abortSignal: signal,
+      });
+    }
+    return this.#agent.stream(prompt, {
+      maxSteps: 12,
+      abortSignal: signal,
+      tracingOptions: {
+        traceId,
+        metadata: { runId: this.#telemetry.runId },
+        tags: ["pr-fleet", "master"],
+      },
+    });
   }
 
   async #runDrain(): Promise<void> {
@@ -146,18 +251,56 @@ export class MastraMaster {
           "New user messages:",
           ...queued.map((item) => `user: ${item}`),
         ].join("\n");
-        const output = await this.streamTurn(prompt, this.#abort.signal);
+        const modelTurnId = this.#telemetry.newId("master-turn");
+        const traceId = this.#telemetry.traceId("master", modelTurnId);
+        const correlation = { traceId, modelTurnId };
+        this.#activeTurnCorrelation = correlation;
+        this.#telemetry.record(
+          "master.turn.started",
+          { prompt, messages: queued },
+          correlation,
+        );
+        const output = await this.streamTurn(
+          prompt,
+          this.#abort.signal,
+          traceId,
+        );
         let response = "";
         for await (const text of output.textStream) {
           response += text;
           this.#observer.onMasterText(text);
         }
+        if (signalIsAborted(this.#abort.signal)) {
+          this.#telemetry.record(
+            "master.turn.failed",
+            { aborted: true },
+            correlation,
+          );
+          this.#activeTurnCorrelation = null;
+          break;
+        }
         for (const item of queued) {
           this.#history.push(`user: ${item}`);
         }
         this.#history.push(`assistant: ${response}`);
+        this.#telemetry.record("master.text", { text: response }, correlation);
+        this.#telemetry.record(
+          "master.turn.completed",
+          { response },
+          correlation,
+        );
+        this.#activeTurnCorrelation = null;
       }
     } catch (error) {
+      this.#telemetry.record(
+        "master.turn.failed",
+        {
+          aborted: this.#abort.signal.aborted,
+          error: error instanceof Error ? error.message : String(error),
+        },
+        this.#activeTurnCorrelation ?? {},
+      );
+      this.#activeTurnCorrelation = null;
       // An abort during shutdown is expected, not a failure to report.
       if (!this.#abort.signal.aborted) {
         this.#observer.onChange(
@@ -188,5 +331,6 @@ export class MastraMaster {
         this.#drain = null;
       }
     }
+    this.#mastra?.removeAgent(this.#agent.id);
   }
 }

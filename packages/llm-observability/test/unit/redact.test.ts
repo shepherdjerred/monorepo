@@ -118,6 +118,24 @@ test("redactText masks known secret env-var values in any format", () => {
   expect(out).toContain("[REDACTED]");
 });
 
+test("redactSecrets applies literal-value masking inside nested strings", () => {
+  Bun.env["OPENAI_API_KEY"] = FAKE_SECRET;
+  const redacted = HeadersSchema.parse(
+    redactSecrets({ headers: { raw: `provider response: ${FAKE_SECRET}` } }),
+  );
+  expect(redacted.headers.raw).toBe("provider response: [REDACTED]");
+});
+
+test("redactSecrets masks an explicitly configured provider credential", () => {
+  const customSecret = ["private", "compatible", "endpoint", "key"].join("-");
+  const redacted = HeadersSchema.parse(
+    redactSecrets({ headers: { raw: `provider response: ${customSecret}` } }, [
+      customSecret,
+    ]),
+  );
+  expect(redacted.headers.raw).toBe("provider response: [REDACTED]");
+});
+
 test("redactText does not mask short env values that could hit unrelated text", () => {
   Bun.env["OPENAI_API_KEY"] = "short";
   expect(redactText("the word short appears here")).toBe(

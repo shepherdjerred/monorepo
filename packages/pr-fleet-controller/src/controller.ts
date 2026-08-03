@@ -5,6 +5,7 @@ import type {
   FleetScheduler,
   WorkerRunner,
 } from "./ports.ts";
+import { ControllerTelemetry } from "./controller-telemetry.ts";
 import {
   buildPrState,
   computeStackIds,
@@ -24,6 +25,7 @@ import {
 import { FleetStore } from "./state.ts";
 import type { MasterControllerTools } from "./master-tools.ts";
 import { createFleetTickWorkflow } from "./workflow.ts";
+import { defaultFleetScheduler } from "./scheduler.ts";
 
 export class FleetController implements MasterControllerTools {
   readonly #config: FleetControllerConfig;
@@ -31,11 +33,13 @@ export class FleetController implements MasterControllerTools {
   readonly #workerRunner: WorkerRunner;
   readonly #observer: FleetObserver;
   readonly #scheduler: FleetScheduler;
+  readonly #telemetry: ControllerTelemetry;
   readonly #workflow;
   readonly store: FleetStore;
   #heartbeat: (() => void) | null = null;
   #tickRunning = false;
   #tickDue = false;
+  #currentTickId: string | undefined;
 
   constructor(dependencies: FleetControllerDependencies) {
     const { config, environment, workerRunner, observer } = dependencies;
@@ -43,16 +47,8 @@ export class FleetController implements MasterControllerTools {
     this.#environment = environment;
     this.#workerRunner = workerRunner;
     this.#observer = observer;
-    this.#scheduler =
-      dependencies.scheduler ??
-      ({
-        schedule: (callback, delayMs) => {
-          const timer = setTimeout(callback, delayMs);
-          return () => {
-            clearTimeout(timer);
-          };
-        },
-      } satisfies FleetScheduler);
+    this.#telemetry = new ControllerTelemetry(dependencies.telemetry);
+    this.#scheduler = dependencies.scheduler ?? defaultFleetScheduler;
     this.store = dependencies.store ?? new FleetStore(config.maxWorkers);
     this.#workflow = createFleetTickWorkflow((trigger) =>
       this.#executeTick(trigger),
@@ -70,6 +66,7 @@ export class FleetController implements MasterControllerTools {
   async tick(trigger: TickTrigger = "user"): Promise<FleetTickReport> {
     if (this.#tickRunning) {
       this.#tickDue = true;
+      this.#telemetry.tickQueued(trigger, this.snapshot(), this.#currentTickId);
       return {
         trigger,
         snapshot: this.snapshot(),
@@ -77,6 +74,8 @@ export class FleetController implements MasterControllerTools {
         nextHeartbeatSeconds: 300,
       };
     }
+    const tickId = this.#telemetry.tickStarted(trigger);
+    this.#currentTickId = tickId;
     this.#tickRunning = true;
     try {
       const run = await this.#workflow.createRun();
@@ -89,9 +88,14 @@ export class FleetController implements MasterControllerTools {
       }
       const report = FleetTickReportSchema.parse(result.result);
       this.#armHeartbeat(report.nextHeartbeatSeconds);
+      this.#telemetry.tickCompleted(tickId, report);
       return report;
+    } catch (error) {
+      this.#telemetry.tickFailed(tickId, error);
+      throw error;
     } finally {
       this.#tickRunning = false;
+      this.#currentTickId = undefined;
       if (this.#tickDue && !this.store.stopping) {
         this.#tickDue = false;
         queueMicrotask(() => {
@@ -113,13 +117,8 @@ export class FleetController implements MasterControllerTools {
           runtimeAgent: null,
         });
         if (this.store.activeWorkers.has(number)) {
-          // A worker is still running setup/restack/publish for this now-closed
-          // PR. Abort it but DON'T release its leases yet: doing so lets the
-          // same tick dispatch another worker that acquires setup/heavy/write
-          // authority while the cancelled subprocess is still touching deps,
-          // Git state, or remote branches. Cancel deliberately and let
-          // settlement release the leases once the worker actually stops (the
-          // pause path relies on the same invariant).
+          // Abort the closed PR's worker, but retain leases until settlement so
+          // no replacement overlaps its in-flight setup, Git, or publication.
           this.store.cancelledWorkers.add(number);
           this.store.workerControllers.get(number)?.abort();
         } else {
@@ -140,8 +139,10 @@ export class FleetController implements MasterControllerTools {
     await this.#dispatch(changes);
 
     const snapshot = this.snapshot();
+    this.#telemetry.snapshot(this.#currentTickId, snapshot);
     this.#observer.onSnapshot(snapshot);
     for (const change of changes) {
+      this.#telemetry.change(this.#currentTickId, change);
       this.#observer.onChange(change);
     }
     return {
@@ -170,11 +171,8 @@ export class FleetController implements MasterControllerTools {
         (headChanged || reconciled.state.classification === "green") &&
         this.store.activeWorkers.has(item.identity.number)
       ) {
-        // The active worker holds a now-stale PrState and checkout: the PR went
-        // green, or an external push moved its head under the worker (its
-        // worktree was synced to the old SHA at dispatch). Cancel it
-        // deliberately so settlement doesn't pause it — a green PR is done, and
-        // a moved-head PR re-dispatches against the refreshed SHA next tick.
+        // Cancel stale/resolved work deliberately: green stays done and a moved
+        // head can redispatch without being converted into a failure pause.
         this.store.cancelledWorkers.add(item.identity.number);
         this.store.workerControllers.get(item.identity.number)?.abort();
       }
@@ -239,10 +237,7 @@ export class FleetController implements MasterControllerTools {
             candidate.identity,
             candidate.stackId,
           ));
-        // Ensure the shared stack worktree is clean and synced to THIS
-        // candidate's PR head before assigning it. A reused sibling worktree is
-        // on another branch (any commit there would publish onto the wrong PR),
-        // and its local ref may be stale relative to the current PR head.
+        // Reassign the shared stack worktree to this exact current PR head.
         await this.#environment.assignWorktreeBranch(
           worktree,
           candidate.identity,
@@ -272,6 +267,7 @@ export class FleetController implements MasterControllerTools {
           candidate.identity.number,
           abortController,
         );
+        this.#telemetry.workerStarted(this.#currentTickId, assigned);
         busyStacks.add(candidate.stackId);
         changes.push(`started ${assigned.runtimeAgent ?? "worker"}`);
         void this.#observeWorker(candidate.identity.number, promise);
@@ -291,10 +287,7 @@ export class FleetController implements MasterControllerTools {
   ): Promise<void> {
     try {
       const result = await promise;
-      // The `pr` field is model-generated and only validated as a positive
-      // integer. Bind the result to the PR this worker was dispatched for; a
-      // result claiming a different PR must not mutate that PR or leave this one
-      // stuck in activeWorkers.
+      // A model result cannot mutate a PR other than its dispatched owner.
       if (result.pr !== prNumber) {
         this.#handleWorkerFailure(
           prNumber,
@@ -312,6 +305,7 @@ export class FleetController implements MasterControllerTools {
 
   #handleWorkerResult(prNumber: number, result: WorkerResult): void {
     const previous = this.store.prs.get(prNumber);
+    this.#telemetry.workerCompleted(prNumber, previous, result);
     this.store.activeWorkers.delete(prNumber);
     this.store.workerControllers.delete(prNumber);
     this.store.cancelledWorkers.delete(prNumber);
@@ -324,11 +318,7 @@ export class FleetController implements MasterControllerTools {
       result.state === "needs-heavy-lease" ||
       result.state === "needs-write-lease";
     if (needsLease) {
-      // A required lease was unavailable — another same-stack worker holds it.
-      // Queue this PR and wait for that worker to release the lease rather than
-      // immediately redispatching a fresh paid model cycle, which would spin and
-      // exhaust provider quota. The lease-owner's worker-complete tick (or the
-      // heartbeat) re-dispatches it once the lease frees.
+      // Queue lease contention until settlement/heartbeat, avoiding paid spin.
       this.store.prs.set(prNumber, {
         ...previous,
         runtimeAgent: null,
@@ -366,6 +356,8 @@ export class FleetController implements MasterControllerTools {
   }
 
   #handleWorkerFailure(prNumber: number, error: unknown): void {
+    const recordedState = this.store.prs.get(prNumber);
+    this.#telemetry.workerFailed(prNumber, recordedState, error);
     this.store.activeWorkers.delete(prNumber);
     this.store.workerControllers.delete(prNumber);
     this.store.releaseLeases(prNumber);
@@ -441,17 +433,8 @@ export class FleetController implements MasterControllerTools {
       throw new Error(`Unknown PR #${String(prNumber)}`);
     }
     this.store.pausedReasons.set(prNumber, reason);
-    // Stop any in-flight worker for this PR. Aborting its controller halts the
-    // model turn AND cancels its publication subprocesses (git-operations
-    // threads this signal into every commit/submit), so an in-flight publish is
-    // actually stopped rather than finishing after the PR is reported paused.
-    //
-    // When a worker is still active we must NOT release its leases here: the
-    // publication is being cancelled but has not necessarily stopped yet, and
-    // releasing the stack-write lease now would let a sibling stack worker grab
-    // the shared worktree mid-publish. Leave lease/activeWorkers cleanup to the
-    // worker's settlement path (#handleWorkerFailure), which runs only after the
-    // aborted worker (and its subprocess) has actually settled.
+    // Abort model/publication work, retaining leases until actual settlement so
+    // a sibling cannot acquire the shared checkout mid-cancellation.
     if (this.store.activeWorkers.has(prNumber)) {
       this.store.workerControllers.get(prNumber)?.abort();
     } else {
@@ -491,6 +474,7 @@ export class FleetController implements MasterControllerTools {
   }
 
   async stop(): Promise<FleetSnapshot> {
+    this.#telemetry.shutdownStarted(this.store.activeWorkers.size);
     this.store.stopping = true;
     if (this.#heartbeat !== null) {
       this.#heartbeat();
@@ -500,6 +484,8 @@ export class FleetController implements MasterControllerTools {
       controller.abort();
     }
     await Promise.allSettled(this.store.activeWorkers.values());
-    return this.snapshot();
+    const snapshot = this.snapshot();
+    this.#telemetry.shutdownCompleted(snapshot);
+    return snapshot;
   }
 }

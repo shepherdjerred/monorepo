@@ -16,12 +16,12 @@ describe("command process-group termination", () => {
     await rm(directory, { recursive: true, force: true });
   });
 
-  const environment = new CommandFleetEnvironment(
-    "shepherdjerred/monorepo",
-    "/tmp/repo",
-    "/tmp/worktrees",
-    codexProvider,
-  );
+  const environment = new CommandFleetEnvironment({
+    repo: "shepherdjerred/monorepo",
+    checkout: "/tmp/repo",
+    worktreeRoot: "/tmp/worktrees",
+    provider: codexProvider,
+  });
 
   async function runDescendant(output: string, signal?: AbortSignal) {
     const bun = Bun.which("bun");

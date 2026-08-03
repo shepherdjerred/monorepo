@@ -7,6 +7,7 @@ import type {
   WorkerResult,
 } from "./schemas.ts";
 import type { FleetStore } from "./state.ts";
+import type { RunEventCorrelation, RunEventKind } from "./run-events.ts";
 
 export type CommandRequest = {
   executable: string;
@@ -67,6 +68,17 @@ export type FleetScheduler = {
   schedule: (callback: () => void, delayMs: number) => () => void;
 };
 
+export type FleetTelemetry = {
+  runId: string;
+  newId: (prefix: string) => string;
+  traceId: (...parts: string[]) => string;
+  record: (
+    kind: RunEventKind,
+    payload: Record<string, unknown>,
+    correlation?: RunEventCorrelation,
+  ) => void;
+};
+
 export type FleetControllerDependencies = {
   config: FleetControllerConfig;
   environment: FleetEnvironment;
@@ -74,4 +86,5 @@ export type FleetControllerDependencies = {
   observer: FleetObserver;
   store?: FleetStore;
   scheduler?: FleetScheduler;
+  telemetry?: FleetTelemetry;
 };

@@ -6,10 +6,16 @@ import { parseArgs } from "node:util";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import type { MastraModelConfig } from "@mastra/core/llm";
 import { resolveProvider } from "@shepherdjerred/code-review";
+import { z } from "zod";
 import { MastraMaster, MastraWorkerRunner } from "./agents.ts";
 import { FleetController } from "./controller.ts";
 import { CommandFleetEnvironment } from "./environment.ts";
+import {
+  createFleetMastraRuntime,
+  type FleetMastraRuntime,
+} from "./mastra-runtime.ts";
 import type { FleetObserver } from "./ports.ts";
+import { RunRecorder } from "./run-recorder.ts";
 import { FleetControllerConfigSchema, type FleetSnapshot } from "./schemas.ts";
 import { FleetStore } from "./state.ts";
 import { consumeTerminalLines } from "./terminal-loop.ts";
@@ -25,11 +31,14 @@ Options:
   --base-url <url>          Required for openai-compatible/<model>
   --api-key-env <name>      API-key environment variable for a compatible endpoint
   --review-provider <id>    Hosted review provider to gate on (default: codex)
+  --state-dir <path>        Local run-bundle root (default: XDG state directory)
   --help                    Show this help
 
 Interactive commands:
   /status  /tick  /help  /stop
   Any other line is queued conversational steering for the master.`;
+
+const ControllerPackageSchema = z.object({ version: z.string().min(1) });
 
 class TerminalObserver implements FleetObserver {
   onSnapshot(snapshot: FleetSnapshot): void {
@@ -133,6 +142,7 @@ async function main(): Promise<void> {
       "base-url": { type: "string" },
       "api-key-env": { type: "string" },
       "review-provider": { type: "string" },
+      "state-dir": { type: "string" },
       help: { type: "boolean", default: false },
     },
     strict: true,
@@ -159,108 +169,173 @@ async function main(): Promise<void> {
     maxWorkers: Number(parsed.values["max-workers"]),
   });
   const apiKeyEnvironment = parsed.values["api-key-env"];
-  const model = resolveModel(
-    config.model,
-    parsed.values["base-url"],
-    apiKeyEnvironment,
+  const packageMetadata = ControllerPackageSchema.parse(
+    await Bun.file(path.join(import.meta.dir, "..", "package.json")).json(),
   );
-  const reviewProvider = resolveProvider(parsed.values["review-provider"]);
-  const observer = new TerminalObserver();
-  const store = new FleetStore(config.maxWorkers);
-  const environment = new CommandFleetEnvironment(
-    config.repo,
-    config.checkout,
-    config.worktreeRoot,
-    reviewProvider,
-  );
-  // The configured model key-env var (if any) is scrubbed from every worker
-  // validation/setup subprocess in addition to the credential-name heuristic.
-  const extraSecretNames =
-    apiKeyEnvironment === undefined ? [] : [apiKeyEnvironment];
-  const workerRunner = new MastraWorkerRunner(
-    model,
-    store,
-    environment,
-    extraSecretNames,
-  );
-  const controller = new FleetController({
-    config,
-    environment,
-    workerRunner,
-    observer,
-    store,
+  const controllerCommit = await commandOutput("git", [
+    "-C",
+    checkout,
+    "rev-parse",
+    "HEAD",
+  ]);
+  const configuredSecret =
+    apiKeyEnvironment === undefined ? undefined : Bun.env[apiKeyEnvironment];
+  const stateDirectory = parsed.values["state-dir"];
+  const recorder = await RunRecorder.create({
+    ...(stateDirectory === undefined ? {} : { stateDirectory }),
+    controllerVersion: packageMetadata.version,
+    controllerCommit,
+    model: config.model,
+    repository: config.repo,
+    checkout: config.checkout,
+    worktreeRoot: config.worktreeRoot,
+    maxWorkers: config.maxWorkers,
+    secretValues:
+      configuredSecret === undefined || configuredSecret.length === 0
+        ? []
+        : [configuredSecret],
   });
-  const master = new MastraMaster(model, controller, observer);
-  const terminal = createInterface({
-    input: process.stdin,
-    output: process.stdout,
+  recorder.record("run.started", {
+    model: config.model,
+    repository: config.repo,
+    checkout: config.checkout,
+    worktreeRoot: config.worktreeRoot,
+    maxWorkers: config.maxWorkers,
+    reviewProvider: parsed.values["review-provider"] ?? "codex",
   });
+  process.stdout.write(`Run bundle: ${recorder.paths.runDirectory}\n`);
+
+  let runtime: FleetMastraRuntime | undefined;
+  let controller: FleetController | undefined;
+  let master: MastraMaster | undefined;
+  let terminal: ReturnType<typeof createInterface> | undefined;
   let stopping = false;
+  try {
+    const model = resolveModel(
+      config.model,
+      parsed.values["base-url"],
+      apiKeyEnvironment,
+    );
+    const reviewProvider = resolveProvider(parsed.values["review-provider"]);
+    const observer = new TerminalObserver();
+    const store = new FleetStore(config.maxWorkers);
+    runtime = await createFleetMastraRuntime(recorder);
+    const environment = new CommandFleetEnvironment({
+      repo: config.repo,
+      checkout: config.checkout,
+      worktreeRoot: config.worktreeRoot,
+      provider: reviewProvider,
+      telemetry: recorder,
+    });
+    // The configured model key-env var (if any) is scrubbed from every worker
+    // validation/setup subprocess in addition to the credential-name heuristic.
+    const extraSecretNames =
+      apiKeyEnvironment === undefined ? [] : [apiKeyEnvironment];
+    const workerRunner = new MastraWorkerRunner(model, store, environment, {
+      extraSecretNames,
+      mastra: runtime.mastra,
+      telemetry: recorder,
+    });
+    controller = new FleetController({
+      config,
+      environment,
+      workerRunner,
+      observer,
+      store,
+      telemetry: recorder,
+    });
+    master = new MastraMaster(model, controller, observer, {
+      mastra: runtime.mastra,
+      telemetry: recorder,
+    });
+    terminal = createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
 
-  const stop = async (): Promise<void> => {
-    if (stopping) {
-      return;
-    }
-    stopping = true;
-    // Abort and await BOTH the controller workers and the master's in-flight
-    // model turn before reporting shutdown and closing the terminal, so no
-    // remote turn keeps emitting output or invoking tools after we have stopped.
-    const [snapshot] = await Promise.all([controller.stop(), master.stop()]);
-    observer.onSnapshot(snapshot);
-    terminal.close();
-  };
-  process.once("SIGINT", () => {
-    void (async (): Promise<void> => {
-      try {
-        await stop();
-      } catch (error) {
-        process.stderr.write(
-          `${error instanceof Error ? error.message : String(error)}\n`,
-        );
-        process.exitCode = 1;
+    const stop = async (): Promise<void> => {
+      if (stopping) {
+        return;
       }
-    })();
-  });
-
-  process.stdout.write(
-    `PR fleet controller model=${config.model} workers=${String(config.maxWorkers)}\n${HELP}\n`,
-  );
-  await controller.start();
-  terminal.setPrompt("fleet> ");
-  terminal.prompt();
-  await consumeTerminalLines(
-    terminal,
-    async (rawLine) => {
-      const line = rawLine.trim();
-      if (line === "/stop") {
-        return "stop";
+      stopping = true;
+      const [snapshot] = await Promise.all([
+        controller?.stop() ?? Promise.resolve(null),
+        master?.stop(),
+      ]);
+      if (snapshot !== null) {
+        observer.onSnapshot(snapshot);
       }
-      switch (line) {
-        case "/status": {
-          observer.onSnapshot(controller.snapshot());
-
-          break;
+      terminal?.close();
+    };
+    process.once("SIGINT", () => {
+      void (async (): Promise<void> => {
+        try {
+          await stop();
+        } catch (error) {
+          process.stderr.write(
+            `${error instanceof Error ? error.message : String(error)}\n`,
+          );
+          process.exitCode = 1;
         }
-        case "/tick": {
-          await controller.tick("user");
+      })();
+    });
 
-          break;
+    process.stdout.write(
+      `PR fleet controller model=${config.model} workers=${String(config.maxWorkers)}\n${HELP}\n`,
+    );
+    await controller.start();
+    terminal.setPrompt("fleet> ");
+    terminal.prompt();
+    await consumeTerminalLines(
+      terminal,
+      async (rawLine) => {
+        const line = rawLine.trim();
+        recorder.record("operator.input", { line });
+        if (line === "/stop") {
+          return "stop";
         }
-        case "/help": {
-          process.stdout.write(`${HELP}\n`);
+        switch (line) {
+          case "/status": {
+            observer.onSnapshot(controller?.snapshot() ?? store.snapshot());
 
-          break;
-        }
-        default:
-          if (line.length > 0) {
-            master.send(line);
+            break;
           }
-      }
-      terminal.prompt();
-      return "continue";
-    },
-    stop,
-  );
+          case "/tick": {
+            await controller?.tick("user");
+
+            break;
+          }
+          case "/help": {
+            process.stdout.write(`${HELP}\n`);
+
+            break;
+          }
+          default:
+            if (line.length > 0) {
+              master?.send(line);
+            }
+        }
+        terminal?.prompt();
+        return "continue";
+      },
+      stop,
+    );
+    await runtime.shutdown();
+    await recorder.finalize("completed", controller.snapshot());
+  } catch (error) {
+    let failure = error;
+    try {
+      await Promise.all([controller?.stop(), master?.stop()]);
+      await runtime?.shutdown();
+    } catch (shutdownError) {
+      failure = new AggregateError(
+        [error, shutdownError],
+        "Controller failed and shutdown also failed",
+      );
+    }
+    await recorder.finalize("failed", controller?.snapshot() ?? null, failure);
+    throw failure;
+  }
 }
 
 try {

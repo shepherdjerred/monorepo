@@ -101,11 +101,12 @@ Inspection verifies the hash chain and renders the exact correlated timeline,
 with bodies hidden unless explicitly requested.
 
 Replay verifies the bundle, rejects incompatible versions by default, and
-re-executes controller decisions against recorded environment and worker
-responses. Replay must not resolve a model, read credentials, access the
-network, spawn commands, or write to repository checkouts. It compares state
-transitions, dispatch decisions, snapshots, and final state with the recording
-and exits nonzero on divergence.
+reconstructs the control-plane history from recorded environment, command,
+tool, model-turn, worker, tick, and snapshot events. It validates lifecycle
+correlations, snapshot aggregates, per-tick snapshot equivalence, summary
+counts, and final state, exiting nonzero on divergence. Replay does not resolve
+a model, read credentials, access the network, spawn commands, or write to a
+repository checkout.
 
 ## Verification
 
@@ -134,13 +135,24 @@ and exits nonzero on divergence.
 
 ### Done
 
-- Approved the collection-only design and two-layer native stack boundary.
+- Published draft safety-layer PR #1961 with process-group termination,
+  deleted-path publication, heartbeat, setup-trust, and EOF-shutdown repairs.
+- Implemented mandatory private run bundles, shared pre-persistence redaction,
+  hash-chained events, Mastra/LibSQL/DuckDB storage, inspect/replay commands,
+  and controller/environment/model/tool correlation on the upper layer.
+- Passed focused typecheck, 62 controller tests, 39 observability tests, lint,
+  native-aware build, docs validation, and Markdown lint.
+- Completed a non-mutating `openai/gpt-5.6-terra` model turn against a verified
+  zero-open-PR repository; inspect and replay both accepted its 15-event bundle.
 
 ### Remaining
 
-- Implement, verify, publish, and drive both draft PRs to green.
+- Commit and publish the upper native-stack layer, attach terminal evidence,
+  and drive both exact-current-head draft PRs through Buildkite and review.
 
 ### Caveats
 
+- The first Terra smoke preceded the upper commit, so its manifest identifies
+  the lower commit; rerun after committing for final provenance evidence.
 - Live mutating controller acceptance remains prohibited unless separately
   authorized; verification uses zero-PR and synthetic scenarios.

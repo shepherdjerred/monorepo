@@ -21,6 +21,7 @@ import type {
   CommandRequest,
   CommandResult,
   FleetEnvironment,
+  FleetTelemetry,
 } from "./ports.ts";
 import { runCommand } from "./process-runner.ts";
 import type {
@@ -32,40 +33,89 @@ import type {
 } from "./schemas.ts";
 import { WorktreeManager } from "./worktree.ts";
 
+export type CommandFleetEnvironmentOptions = {
+  repo: string;
+  checkout: string;
+  worktreeRoot: string;
+  provider: ReviewProvider;
+  telemetry?: FleetTelemetry;
+};
+
 export class CommandFleetEnvironment implements FleetEnvironment {
   readonly #repo: string;
   readonly #checkout: string;
   readonly #provider: ReviewProvider;
   readonly #gitOperations: GitOperations;
   readonly #worktreeManager: WorktreeManager;
+  readonly #telemetry: FleetTelemetry | undefined;
 
-  constructor(
-    repo: string,
-    checkout: string,
-    worktreeRoot: string,
-    provider: ReviewProvider,
-  ) {
-    this.#repo = repo;
-    this.#checkout = checkout;
-    this.#provider = provider;
+  constructor(options: CommandFleetEnvironmentOptions) {
+    this.#repo = options.repo;
+    this.#checkout = options.checkout;
+    this.#provider = options.provider;
+    this.#telemetry = options.telemetry;
     const run = (request: CommandRequest) => this.runLocalCommand(request);
     const mustRun = (
       executable: string,
       args: string[],
       cwd?: string,
-      options?: { timeoutMs?: number; signal?: AbortSignal | undefined },
-    ) => this.#mustRun(executable, args, cwd, options);
-    this.#gitOperations = new GitOperations({ repo, provider, run, mustRun });
+      commandOptions?: { timeoutMs?: number; signal?: AbortSignal | undefined },
+    ) => this.#mustRun(executable, args, cwd, commandOptions);
+    this.#gitOperations = new GitOperations({
+      repo: options.repo,
+      provider: options.provider,
+      run,
+      mustRun,
+    });
     this.#worktreeManager = new WorktreeManager({
-      checkout,
-      worktreeRoot,
+      checkout: options.checkout,
+      worktreeRoot: options.worktreeRoot,
       run,
       mustRun,
     });
   }
 
   async runLocalCommand(request: CommandRequest): Promise<CommandResult> {
-    return runCommand(request);
+    const commandId = this.#telemetry?.newId("command");
+    const startedAt = performance.now();
+    const correlation = commandId === undefined ? {} : { commandId };
+    this.#telemetry?.record(
+      "command.started",
+      {
+        executable: request.executable,
+        args: request.args,
+        cwd: request.cwd,
+        timeoutMs: request.timeoutMs,
+        environmentNames: Object.keys(request.env ?? {}).sort(),
+      },
+      correlation,
+    );
+    try {
+      const result = await runCommand(request);
+      this.#telemetry?.record(
+        "command.completed",
+        {
+          executable: request.executable,
+          exitCode: result.exitCode,
+          stdout: result.stdout,
+          stderr: result.stderr,
+          durationMs: Math.round(performance.now() - startedAt),
+        },
+        correlation,
+      );
+      return result;
+    } catch (error) {
+      this.#telemetry?.record(
+        "command.failed",
+        {
+          executable: request.executable,
+          durationMs: Math.round(performance.now() - startedAt),
+          error: error instanceof Error ? error.message : String(error),
+        },
+        correlation,
+      );
+      throw error;
+    }
   }
 
   async #mustRun(
@@ -102,7 +152,12 @@ export class CommandFleetEnvironment implements FleetEnvironment {
       "--json",
       "number,title,url,isDraft,author,labels,headRefName,headRefOid,baseRefName,isCrossRepository,maintainerCanModify",
     ]);
-    return parsePrList(output);
+    const prs = parsePrList(output);
+    this.#telemetry?.record("environment.result", {
+      operation: "listOpenPrs",
+      prs,
+    });
+    return prs;
   }
 
   async #checks(pr: PrIdentity) {
@@ -407,7 +462,7 @@ export class CommandFleetEnvironment implements FleetEnvironment {
       .filter((finding) => !finding.resolved && !finding.outdated)
       .map((finding) => `${finding.severity}:${finding.body}`);
 
-    return {
+    const evidence: ReadinessEvidence = {
       headSha: pr.headSha,
       checks,
       buildkiteCurrentHead,
@@ -418,6 +473,12 @@ export class CommandFleetEnvironment implements FleetEnvironment {
       hardFailureFingerprint: fingerprint(hardFailures),
       reviewFingerprint: fingerprint(blockingReviews),
     };
+    this.#telemetry?.record(
+      "environment.result",
+      { operation: "refreshEvidence", evidence },
+      { prNumber: pr.number, headSha: pr.headSha },
+    );
+    return evidence;
   }
 
   findWorktree(branches: string[]): Promise<string | null> {
