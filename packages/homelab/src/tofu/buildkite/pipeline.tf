@@ -61,5 +61,36 @@ resource "buildkite_pipeline" "monorepo" {
                       limits:
                         cpu: 400m
                         memory: 2Gi
+                  # container-0 runs upload-pipeline.sh. The checkout is a
+                  # reference clone against the shared git mirror; without
+                  # this mount every git operation in this container degrades
+                  # to a full-repo pack download into the tmpfs workspace,
+                  # which the namespace LimitRange's 768Mi default limit then
+                  # OOM-kills (fleet-wide red PRs 2026-08-02; see
+                  # packages/docs/logs/2026-08-02_buildkite-pipeline-upload-oom-diagnosis.md).
+                  # Resources copy the pod_light container-0 shape from
+                  # .buildkite/pipeline.yml so the LimitRange default can
+                  # never apply and even a full-pack-fetch regression fits.
+                  # Do NOT add secret env sources here: pipeline upload
+                  # interpolates $VAR at upload time and would bake secret
+                  # values into the stored pipeline. Do NOT pin a CI image
+                  # here: its digest is computed BY this step; the default
+                  # agent container (git + buildkite-agent) is sufficient.
+                  - name: container-0
+                    resources:
+                      requests:
+                        cpu: 250m
+                        memory: 512Mi
+                        ephemeral-storage: 1Gi
+                      limits:
+                        cpu: "7"
+                        memory: 12Gi
+                        ephemeral-storage: 20Gi
+                    volumeMounts:
+                      # The pod-level volume is injected for every job by the
+                      # agent stack's default-checkout-params.gitMirrors.
+                      - name: buildkite-git-mirrors
+                        mountPath: /buildkite/git-mirrors
+                        readOnly: true
   YAML
 }

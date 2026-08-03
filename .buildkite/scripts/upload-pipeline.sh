@@ -60,7 +60,33 @@ write_changed_files() {
   fi
 }
 
-if [ -n "${CI_CHANGED_FILES_BASE:-}" ]; then
+# Mirror-health guard (2026-08-02 incident): CI checkouts are reference clones
+# against the shared git mirror, so the alternates file points into
+# /buildkite/git-mirrors. If that volume is missing or unreadable in this
+# container, git object lookups silently fall back to full network transfer:
+# the base fetch below downloads the entire repository pack into the
+# memory-backed workspace and the container is OOM-killed. A broken alternate
+# must never be a quiet slow path — degrade loudly to scheduling every lane.
+broken_alternate=""
+alternates_file=$(git rev-parse --git-path objects/info/alternates)
+objects_dir=$(git rev-parse --git-path objects)
+if [ -f "$alternates_file" ]; then
+  while IFS= read -r alternate || [ -n "$alternate" ]; do
+    case "$alternate" in
+      "" | "#"*) continue ;;
+      /*) alternate_dir=$alternate ;;
+      *) alternate_dir="$objects_dir/$alternate" ;;
+    esac
+    if [ ! -d "$alternate_dir" ] || [ ! -r "$alternate_dir" ]; then
+      broken_alternate=$alternate_dir
+      break
+    fi
+  done < "$alternates_file"
+fi
+
+if [ -n "$broken_alternate" ]; then
+  fail_open "git alternate object directory ${broken_alternate} is not readable (git-mirrors volume missing?)"
+elif [ -n "${CI_CHANGED_FILES_BASE:-}" ]; then
   write_changed_files "$CI_CHANGED_FILES_BASE"
 elif [ "${BUILDKITE_PULL_REQUEST:-false}" = "false" ]; then
   fail_open "build is not associated with a pull request"
