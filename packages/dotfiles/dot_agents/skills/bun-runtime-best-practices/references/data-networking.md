@@ -18,8 +18,11 @@ Create a connection, then use that connection as the tagged-template function:
 import { SQL } from "bun";
 import { z } from "zod";
 
+const Environment = z.object({ DATABASE_URL: z.string().url() });
+const { DATABASE_URL } = Environment.parse(Bun.env);
+
 const UserRow = z.object({ id: z.number().int(), email: z.string().email() });
-const sql = new SQL(Bun.env.DATABASE_URL);
+const sql = new SQL(DATABASE_URL);
 
 try {
   const rows = await sql`SELECT id, email FROM users WHERE active = ${true}`;
@@ -29,6 +32,8 @@ try {
   await sql.close();
 }
 ```
+
+Validate the connection URL before constructing the client. `new SQL(undefined)` does not throw — Bun falls back to implicit connection defaults — so a missing required `DATABASE_URL` silently connects to the wrong database instead of failing fast.
 
 Do not call `Bun.SQL` itself as a query tag. Do not interpolate SQL fragments or identifiers as values. Use the documented helpers for bulk inserts and transactions rather than inventing a `prepare()` contract.
 

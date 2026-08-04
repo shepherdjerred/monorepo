@@ -56,9 +56,15 @@ const environment = Environment.parse(Bun.env);
 
 ```typescript
 import { join } from "node:path";
+import { z } from "zod";
+
+const Config = z.object({
+  name: z.string(),
+  retries: z.number().int().min(0),
+});
 
 const configPath = join(import.meta.dir, "config.json");
-const config = await Bun.file(configPath).json();
+const config = Config.parse(await Bun.file(configPath).json());
 await Bun.write(join(import.meta.dir, "generated", "output.json"), JSON.stringify(config), {
   createPath: true,
 });
