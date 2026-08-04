@@ -1,408 +1,159 @@
 ---
 name: rust-helper
-description: |
-  Rust development with cargo, clippy, rustfmt, testing, and common patterns
-  When user works with .rs files, mentions Rust, cargo, clippy, rustfmt, or encounters Rust compiler errors
+description: Current Rust and Cargo development guidance for workspaces, editions, MSRV, testing, Clippy, rustfmt, unsafe code, debugging, and toolchains. Use when writing or reviewing Rust, Cargo manifests, Rust CI, edition migrations, or unsafe boundaries.
 ---
 
-# Rust Helper Agent
+# Rust Helper
 
-## What's New in Rust (2024-2026)
+Use Rust's type system to express invariants, keep unsafe boundaries small and documented, and run the repository's real Cargo workflow. Separate the stable toolchain from optional ecosystem tools.
 
-- **Rust 2024 Edition** (1.85, Feb 2025): Largest edition yet. Async closures `async || {}`, RPIT lifetime capture changes, `unsafe extern` blocks, `unsafe_op_in_unsafe_fn` warning by default, `gen` keyword reserved, `expr` fragment matches `const` and `_`
-- **Trait Upcasting** (1.86): Coerce `&dyn Trait` to `&dyn Supertrait` directly
-- **Disjoint Mutable Indexing** (1.86): `slice.get_disjoint_mut([i, j])` for multiple mutable refs
-- **Let Chains** (1.88, edition 2024): `if let Some(x) = a && x > 5 { ... }`
-- **Naked Functions** (1.88): `#[naked]` for functions with no compiler-generated prologue/epilogue
-- **Inline ASM Jumps** (1.87): Assembly can jump to Rust code labels
-- **LLD Default Linker** (1.90): `lld` is default on `x86_64-unknown-linux-gnu` for faster linking
-- **C-style Variadic Functions** (1.91): Stabilized for sysv64, win64, efiapi, aapcs ABIs
-- **Explicitly Inferred Const Args** (1.92): Deny-by-default never_type_fallback lints
-- **Conditional ASM Lines** (1.93): Individual `asm!` statements support `cfg` attributes
-- **String/Vec `into_raw_parts`** (1.93): `String::into_raw_parts()`, `Vec::into_raw_parts()`
-- **Current stable**: 1.93.0 (Jan 2026)
+## Current baseline
 
-## Overview
-
-This skill covers Rust development using cargo, clippy, rustfmt, testing frameworks (cargo test, nextest), background checking (bacon), compilation caching (sccache), and undefined behavior detection (miri). It includes ownership/borrowing patterns, error handling, async/await, and the cargo ecosystem.
-
-## CLI Commands
-
-### Auto-Approved Safe Commands
+Verified against Rust 1.97.1 on 2026-08-03:
 
 ```bash
-# Check compilation without producing binaries
-cargo check
-
-# Run clippy lints
-cargo clippy
-
-# Format code
-cargo fmt -- --check
-
-# Run tests
-cargo test
-
-# Run nextest
-cargo nextest run
-
-# Build (debug)
-cargo build
-
-# Show documentation
-cargo doc --open
-
-# List dependencies
-cargo tree
-
-# Check for outdated deps
-cargo outdated
-
-# Expand macros
-cargo expand
-
-# Show current toolchain
-rustup show
-
-# Run bacon (background checker)
-bacon
+rustc --version
+cargo --version
+rustup show active-toolchain
 ```
 
-### Build and Run
+Rust 1.97.1 is a patch release with a compiler miscompilation fix. Since Rust 1.93, relevant additions include Cargo TOML 1.1 and config inclusion, `array_windows`, `cfg_select!`, match if-let guards, `assert_matches!`, Cargo registry security fixes, symbol mangling v0 by default, and cache-friendly Cargo warning controls.
+
+Rust 2024 stabilized in Rust 1.85. A package's `rust-version` is its minimum supported Rust version, not the current stable release; do not mechanically update MSRV to 1.97.1.
+
+Read [references/releases.md](references/releases.md) for the 36-page research ledger and release constraints. Read [references/cargo-and-toolchains.md](references/cargo-and-toolchains.md) for workspaces, dependencies, toolchains, Clippy, rustfmt, and optional tools. Read [references/testing-and-debugging.md](references/testing-and-debugging.md) for tests, doctests, Nextest, Miri, profiling, and debugging. Read [references/safety-and-patterns.md](references/safety-and-patterns.md) for unsafe-code obligations and corrected implementation patterns.
+
+## Built-in and optional tools
+
+Built into or distributed as Rust toolchain components:
+
+- `cargo`, `rustc`, and `rustdoc`
+- `rustfmt`, Clippy, and rust-analyzer when the component is available for the selected toolchain
+- Miri, generally through a compatible nightly toolchain
+
+Optional external tools include cargo-nextest, Bacon, cargo-outdated, cargo-expand, and sccache. Check installation explicitly when the repository requires one; do not silently skip it or present it as a built-in Cargo command.
+
+## Focused verification
+
+Adapt features and targets to the project, but keep each result meaningful:
 
 ```bash
-# Debug build
-cargo build
-
-# Release build (optimized)
-cargo build --release
-
-# Build specific package in workspace
-cargo build -p my-crate
-
-# Build with specific features
-cargo build --features "feature1,feature2"
-cargo build --all-features
-cargo build --no-default-features
-
-# Run binary
-cargo run
-cargo run --release
-cargo run -- --arg1 value1
-
-# Run specific binary in multi-bin project
-cargo run --bin my-binary
-
-# Cross-compile
-rustup target add aarch64-unknown-linux-gnu
-cargo build --target aarch64-unknown-linux-gnu
+cargo check --workspace --all-targets --all-features
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+cargo test --workspace --all-features
+cargo test --workspace --doc
 ```
 
-### Clippy
+`cargo fmt -- --emit diff` is not supported by current stable rustfmt. `cargo fmt --all -- --check` prints differences and exits non-zero.
 
-```bash
-# Run clippy
-cargo clippy
+Pin the toolchain before making all warnings fatal in reproducible CI. On Rust 1.97+, `CARGO_BUILD_WARNINGS=deny cargo check` denies build warnings without invalidating the build cache.
 
-# Clippy with all targets (tests, benches, examples)
-cargo clippy --all-targets
+## Toolchain and MSRV
 
-# Deny warnings (useful in CI)
-cargo clippy -- -D warnings
-
-# Enable pedantic lints
-cargo clippy -- -W clippy::pedantic
-
-# Fix automatically
-cargo clippy --fix
-
-# Clippy for specific package
-cargo clippy -p my-crate
-```
-
-Configure in `clippy.toml` or via attributes:
-
-```rust
-// Allow specific lint
-#[allow(clippy::needless_return)]
-
-// Project-wide in lib.rs or main.rs
-#![warn(clippy::all, clippy::pedantic)]
-#![allow(clippy::module_name_repetitions)]
-```
-
-### Rustfmt
-
-```bash
-# Format all files
-cargo fmt
-
-# Check formatting without changing files
-cargo fmt -- --check
-
-# Format specific file
-rustfmt src/main.rs
-
-# Show diff of formatting changes
-cargo fmt -- --emit diff
-```
-
-Configure in `rustfmt.toml`:
+Commit `rust-toolchain.toml` when the project requires a reproducible compiler and components:
 
 ```toml
-edition = "2024"
-max_width = 100
-tab_spaces = 4
-use_field_init_shorthand = true
+[toolchain]
+channel = "1.97.1"
+components = ["clippy", "rustfmt"]
+profile = "minimal"
 ```
 
-### Toolchain Management
+Use `cargo +nightly` for a one-off nightly command. Avoid a hidden directory-local rustup override for a project requirement.
 
-```bash
-# Install/update stable
-rustup update stable
-
-# Install nightly
-rustup toolchain install nightly
-
-# Use nightly for current project
-rustup override set nightly
-
-# Add component
-rustup component add clippy rustfmt rust-analyzer
-
-# Add compilation target
-rustup target add wasm32-unknown-unknown
-
-# Show installed toolchains
-rustup show
-```
-
-## Essential Patterns Quick Reference
-
-### Ownership and Borrowing
-
-```rust
-// Move semantics (non-Copy types)
-let s1 = String::from("hello");
-let s2 = s1;  // s1 is moved, no longer usable
-
-// Borrowing (immutable reference)
-let s = String::from("hello");
-let len = calculate_length(&s);  // s is borrowed, still usable
-
-// Mutable borrowing (one at a time)
-let mut s = String::from("hello");
-change(&mut s);
-
-// Slice borrowing
-let s = String::from("hello world");
-let hello = &s[0..5];
-```
-
-### Error Handling
-
-```rust
-// Result with ? operator
-fn read_config(path: &str) -> Result<Config, Box<dyn std::error::Error>> {
-    let contents = std::fs::read_to_string(path)?;
-    let config: Config = serde_json::from_str(&contents)?;
-    Ok(config)
-}
-
-// Option with ? in functions returning Option
-fn first_even(numbers: &[i32]) -> Option<&i32> {
-    numbers.iter().find(|&&n| n % 2 == 0)
-}
-
-// Pattern matching on Result/Option
-match result {
-    Ok(value) => println!("Got: {value}"),
-    Err(e) => eprintln!("Error: {e}"),
-}
-
-// if let for single variant
-if let Some(value) = optional {
-    println!("Got: {value}");
-}
-```
-
-### Iterators
-
-```rust
-// Chain iterator adapters
-let result: Vec<i32> = items.iter()
-    .filter(|x| x.is_valid())
-    .map(|x| x.value * 2)
-    .collect();
-
-// Enumerate
-for (i, item) in items.iter().enumerate() {
-    println!("{i}: {item}");
-}
-
-// fold / reduce
-let sum: i32 = numbers.iter().fold(0, |acc, &x| acc + x);
-
-// flat_map
-let words: Vec<&str> = lines.iter()
-    .flat_map(|line| line.split_whitespace())
-    .collect();
-```
-
-### Struct and Enum Patterns
-
-```rust
-// Struct with derive macros
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-struct Config {
-    name: String,
-    port: u16,
-    #[serde(default)]
-    verbose: bool,
-}
-
-// Enum with data
-enum Command {
-    Quit,
-    Echo(String),
-    Move { x: i32, y: i32 },
-    Color(u8, u8, u8),
-}
-
-// impl block
-impl Config {
-    fn new(name: impl Into<String>) -> Self {
-        Self {
-            name: name.into(),
-            port: 8080,
-            verbose: false,
-        }
-    }
-}
-```
-
-## Bacon (Background Checker)
-
-```bash
-# Start bacon (watches for changes, shows errors)
-bacon
-
-# Keyboard shortcuts inside bacon:
-# c - show clippy warnings
-# t - run tests
-# d - open documentation
-# f - focus on failing test (when test fails)
-# Esc - back to all tests
-```
-
-Configure in `bacon.toml`:
-
-```toml
-[jobs.check]
-command = ["cargo", "check", "--all-targets"]
-
-[jobs.clippy]
-command = ["cargo", "clippy", "--all-targets"]
-
-[jobs.test]
-command = ["cargo", "test"]
-
-[jobs.nextest]
-command = ["cargo", "nextest", "run"]
-```
-
-## sccache (Compilation Cache)
-
-Set up sccache to speed up repeated compilations:
-
-```bash
-# Install
-cargo install sccache
-
-# Configure in ~/.cargo/config.toml
-# [build]
-# rustc-wrapper = "sccache"
-
-# Or via environment variable
-export RUSTC_WRAPPER=sccache
-
-# Check stats
-sccache --show-stats
-
-# Clear cache
-sccache --zero-stats
-```
-
-## Miri (Undefined Behavior Detection)
-
-```bash
-# Install miri (requires nightly)
-rustup +nightly component add miri
-
-# Run program under miri
-cargo +nightly miri run
-
-# Run tests under miri
-cargo +nightly miri test
-
-# Run specific test
-cargo +nightly miri test test_name
-
-# Set isolation (disable for tests needing system access)
-MIRIFLAGS="-Zmiri-disable-isolation" cargo +nightly miri test
-```
-
-Miri detects: uninitialized memory reads, out-of-bounds access, use-after-free, data races, invalid pointer provenance, type invariant violations.
-
-## Cargo.toml Quick Reference
+Declare the real MSRV in each package:
 
 ```toml
 [package]
-name = "my-project"
-version = "0.1.0"
 edition = "2024"
 rust-version = "1.85"
-
-[dependencies]
-serde = { version = "1", features = ["derive"] }
-tokio = { version = "1", features = ["full"] }
-anyhow = "1"
-thiserror = "2"
-clap = { version = "4", features = ["derive"] }
-tracing = "0.1"
-
-[dev-dependencies]
-tokio = { version = "1", features = ["test-util"] }
-
-[profile.release]
-lto = true
-codegen-units = 1
-strip = true
-
-[profile.dev]
-opt-level = 0    # Fast compile
-debug = true     # Full debug info
-
-[profile.dev.package."*"]
-opt-level = 2    # Optimize dependencies even in dev
 ```
 
-## When to Ask for Help
+With `rust-version`, `cargo add` selects the newest dependency compatible with that MSRV. It does not blindly choose the latest published version.
 
-Ask the user for clarification when:
+## Workspaces
 
-- Lifetime annotations are ambiguous or complex
-- Choice between async and sync is unclear
-- Error handling strategy (anyhow vs thiserror vs custom) needs deciding
-- Workspace structure decisions are needed
-- Unsafe code review is required
-- Performance vs readability tradeoffs exist
+Rust 2024 uses resolver 3. A virtual workspace has no package edition from which to infer it, so specify it explicitly:
 
----
+```toml
+[workspace]
+resolver = "3"
+members = ["crates/core", "crates/cli", "crates/server"]
 
-See `references/` for detailed guides:
+[workspace.package]
+edition = "2024"
+rust-version = "1.85"
+```
 
-- `patterns.md` - Ownership, traits, generics, lifetimes, async/await, iterators
-- `cargo-ecosystem.md` - Cargo commands, workspaces, popular crates, features, build scripts
-- `testing-debugging.md` - Testing with nextest, bacon, debugging with lldb, profiling, miri
+Workspace members share one lockfile and target directory. Profiles and `[patch]` belong at the workspace root.
+
+## Edition migration
+
+`cargo fix` edits source based on machine-applicable diagnostics and only sees enabled features and selected targets. Commit or otherwise preserve the current state first, then run the migration through every meaningful feature and target combination.
+
+```bash
+cargo fix --edition --workspace --all-features
+cargo check --workspace --all-targets --all-features
+```
+
+After changing each package's edition, rerun formatting, Clippy, tests, and doctests. Rust 2024 warns by default when unsafe operations inside an `unsafe fn` are not enclosed in an explicit `unsafe` block.
+
+## Errors and assertions
+
+Propagate errors when a test or helper can return `Result`. Assert the actual value or invariant; `assert!(result.is_ok())` discards useful failure context.
+
+```rust
+#[tokio::test]
+async fn fetches_non_empty_body() -> Result<(), reqwest::Error> {
+    let body = fetch_data("https://example.com").await?;
+    assert!(!body.is_empty());
+    Ok(())
+}
+```
+
+Check cleanup and writer errors when they can change the outcome. Do not ignore `Read`, `Write`, database close, trace write, or process exit errors.
+
+## Ownership and borrowing
+
+Prefer borrowing when a function need not own a value. The beginner rule “one mutable borrow at a time” is incomplete: Rust permits simultaneous mutable borrows when the compiler or an API proves they are disjoint. Do not contort code around a simplified slogan; model the actual aliasing invariant.
+
+For text, remember that string indexes are byte offsets. Never slice an arbitrary byte range that may split UTF-8 or exceed the string length:
+
+```rust
+fn preview(summary: &str) -> String {
+    let prefix: String = summary.chars().take(20).collect();
+    format!("{prefix}...")
+}
+```
+
+## Unsafe code
+
+Unsafe permits a small set of operations; it does not disable Rust's other checks. Every unsafe boundary transfers a proof obligation to the author:
+
+- minimize the unsafe region,
+- use an explicit `unsafe {}` block even inside `unsafe fn`,
+- document caller obligations in a `# Safety` section,
+- add a `// SAFETY:` explanation at each block,
+- test the invariant with focused tests and, where useful, Miri, property tests, or fuzzing.
+
+A clean Miri run checks only the executions observed and does not prove soundness. Miri's aliasing models are experimental, and its isolation is not a security sandbox. Disabling isolation exposes real host APIs.
+
+## Lints and formatting
+
+Use the repository's selected lint groups. Do not enable all of `clippy::pedantic` as a universal default. When a lint is deliberately inapplicable, keep any allowance narrow and explain the invariant. Clippy configuration is explicitly unstable, so verify options against the selected toolchain.
+
+Rustdoc runs Rust code blocks as tests by default. Keep `cargo test --doc` even when cargo-nextest is used, because Nextest does not run doctests.
+
+## Review checklist
+
+- Verify the rustc, Cargo, rustup, and component versions in use.
+- Keep MSRV separate from current stable.
+- Use resolver 3 explicitly for virtual Rust 2024 workspaces.
+- Run formatting, Clippy, tests, and doctests through the actual workspace.
+- Treat `cargo fix` and dependency updates as mutations requiring review.
+- Distinguish built-in commands from optional tools.
+- Propagate meaningful errors and use strong assertions.
+- Keep unsafe small, explicit, documented, and tested.
+- Treat Miri findings as evidence of a bug and clean runs as bounded evidence only.
+- Measure cache, linker, retry, and performance claims on the actual workload.
