@@ -105,7 +105,7 @@ skill's 30-source set rather than treated as independent 30-source units.
 - [x] Confirm that “30 sources” means per top-level skill, with commands and
       libraries inside that skill covered by the same 30-source set.
 - [x] Create and initialize the isolated native-stack worktree.
-- [ ] Inventory the full corpus, existing references, current versions, and
+- [x] Inventory the full corpus, existing references, current versions, and
       missing high-value skills.
 - [ ] Run the multi-agent research batches and build the per-skill evidence
       ledger.
@@ -124,6 +124,11 @@ skill's 30-source set rather than treated as independent 30-source units.
 - 2026-08-03: The user confirmed the 30-source requirement applies per
   top-level skill. Created `.claude/worktrees/agent-skills-refresh` on
   `feature/agent-skills-refresh` and initialized it with native `gh stack`.
+- 2026-08-03: Completed the first two research waves for Git, Bun, TypeScript,
+  Rust, and Python: 186 primary pages plus 15 supplemental official or
+  project-primary pages, 201 total, were successfully fetched and inspected. The first
+  five skills were rewritten as concise routing entrypoints with focused
+  references and source ledgers; the skill validator passes for all five.
 
 ## Session Log — 2026-08-03
 
@@ -135,6 +140,12 @@ skill's 30-source set rather than treated as independent 30-source units.
   overlap that must be preserved.
 - Confirmed the 30-source-per-top-level-skill scope with the user.
 - Created and initialized the isolated native-stack worktree.
+- Completed and distilled the first five 30-source research audits: Git, Bun,
+  TypeScript, Rust, and Python.
+- Replaced stale monolithic tutorials with concise entrypoints and focused
+  reference files, including current release and compatibility boundaries.
+- Validated all five rewritten skill structures with the skill-creator
+  validator.
 
 ### Remaining
 

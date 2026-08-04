@@ -1,274 +1,172 @@
 ---
 name: git-helper
-description: |
-  Git version control best practices, advanced operations, and modern features
-  When user works with git, mentions git commands, branching, rebasing, merging, or git troubleshooting
+description: Safe, current Git operations for inspection, commits, history, recovery, merging, rebasing, worktrees, configuration, maintenance, and repository troubleshooting. Use for Git commands and diagnosis; load the repository's owning stack or branching skill before branch or PR mutations.
 ---
 
-# Git Helper Agent
+# Git Helper
 
-> **Branch & PR management in `shepherdjerred/monorepo` uses git-spice — every PR is a stacked PR.** Load the `git-spice-helper` skill first (it's authoritative) before creating branches, stacking, restacking, or opening PRs; create/update PRs with `git-spice branch/stack submit`. The `gh pr create` and manual-`git rebase` examples below are the generic fallback for repos without git-spice.
+Inspect first, preserve user work, and use the repository's owning branch workflow for mutations. This skill covers Git itself; a stack or PR skill remains authoritative for branch creation, restacking, publishing, and synchronization.
 
-## What's New in Git (2024-2026)
+## Branch workflow ownership
 
-### Git 2.52 (2025)
+In `shepherdjerred/monorepo`, new human or agent work uses native GitHub stacks through the `gh-stack` skill. Existing work already tracked by git-spice stays on git-spice through `git-spice-helper`. Ownership is sticky: never mix the two tools on one stack.
 
-- **`git last-modified`**: New command to determine which commit most recently modified each file in a directory (5.5x faster than ls-tree + log)
-- **`git refs list` / `git refs exists`**: Consolidated reference operations
-- **`git repo`**: Experimental command for retrieving repository information
-- **`git maintenance` geometric task**: Alternative to all-into-one repacks
-- **`git sparse-checkout clean`**: Recover from difficult checkout state transitions
-- **Default branch change**: Git 3.0 will default to "main" instead of "master"
-- **Rust integration**: Optional Rust code for variable-width integer operations
-- **`git describe` 30% faster**, `git log -L` faster for merge commits
+Load `worktree-workflow` before creating an isolated worktree. Do not use a bare `gh pr create` or hand-written rebase in place of the owning stack tool.
 
-### Git 2.51 (2025)
+## Current baseline
 
-- **Stash interchange format**: `git stash export` and `git stash import` subcommands for cross-machine stash migration
-- **`--path-walk` repacking**: Significantly smaller pack files by emitting all objects from a given path simultaneously
-- **Cruft-free multi-pack indexes**: 38% smaller MIDXs, 35% faster writes, 5% better read performance at GitHub
-- **`git switch` / `git restore`**: No longer experimental after six years
-- **`git whatchanged`**: Marked for removal in Git 3.0
-
-### Git 2.50 (2025)
-
-- **ORT merge engine**: Completely replaced the older recursive merge engine
-- **`git merge-tree --quiet`**: Check mergeability without writing objects
-- **`git maintenance` new tasks**: `worktree-prune`, `rerere-gc`, `reflog-expire`
-- **Incremental multi-pack bitmap support**: Fast reachability bitmaps for extremely large repos
-- **`git cat-file` object filtering**: Filter objects by type using partial clone mechanisms
-- **Bundle URI**: Faster fill-in fetches by advertising all known references from bundles
-
-### Git 2.49 (2025)
-
-- **Name-hash v2**: Dramatically improved packing (fluentui: 96s to 34s, 439 MiB to 160 MiB)
-- **`git backfill`**: Batch-fault missing blobs in `--filter=blob:none` partial clones
-- **zlib-ng support**: ~25% speed improvement for compression
-- **`git clone --revision`**: Clone specific commits without branch/tag references
-- **`git gc --expire-to`**: Manage pruned objects by moving them elsewhere
-- **First Rust code integration** via libgit-sys and libgit crates
-
-### Git 2.48 (2025)
-
-- **Faster checksums**: 10-13% performance improvement in serving fetches/clones using non-collision-detecting SHA-1 for trailing checksums
-- **`range-diff --remerge-diff`**: Review merge conflict resolutions during rebase
-- **Remote HEAD tracking**: Fetch auto-updates `refs/remotes/origin/HEAD` if missing; configure `remote.origin.followRemoteHead`
-- **Meson build system**: Alternative build system alongside Make/CMake/Autoconf
-- **Memory leak elimination**: Entire test suite passes with leak checking
-- **`BreakingChanges.txt`**: Documents anticipated deprecations for future versions
-
-### Git 2.47 (2024)
-
-- **Incremental multi-pack indexes**: Layered MIDX chains for faster object addition
-- **Separate hash function for checksums**: 10-13% serving performance improvement
-
-### Git 2.46 (2024)
-
-- **Pseudo-merge bitmaps**: Faster reachability queries
-- **`git config list` / `git config get`**: New sub-command interface
-- **Reftable migration**: `git refs migrate --ref-format=reftable` for faster reference operations
-- **Enhanced credential helpers**: authtype/credential fields, multi-round auth (NTLM, Kerberos)
-
-### Git 2.45 (2024)
-
-- **Reftable backend**: New reference storage with faster lookups, reads, and writes
-
-### Git 2.44 (2024)
-
-- **Multi-pack reuse optimization**: Faster fetches and clones
-- **`builtin_objectmode` pathspec**: Filter paths by mode
-
-## Overview
-
-Git is the distributed version control system used by virtually all modern software projects. This skill covers general Git best practices, advanced operations, branching strategies, and modern features. For worktree-specific workflows (parallel development, AI agent isolation), see the `worktree-workflow` skill instead.
-
-## CLI Commands
-
-### Auto-Approved (Safe, Read-Only)
-
-These commands are safe to run without user confirmation:
-
-- `git status` - Working tree status
-- `git log` - Commit history (with `--oneline`, `--graph`, `--all`, `--since`, `--author`)
-- `git diff` - Show changes (staged: `--cached`, between branches, specific files)
-- `git branch` - List branches (`-a` for all, `-v` for verbose, `--merged`, `--no-merged`)
-- `git tag` - List tags (`-l "v1.*"` for patterns)
-- `git show` - Show commit details
-- `git remote -v` - List remotes
-- `git stash list` - List stashed changes
-- `git reflog` - Reference log history
-- `git blame` - Line-by-line authorship
-- `git shortlog` - Summarized log output
-- `git config --list` - Show configuration
-- `git rev-parse` - Parse revision/path info
-- `git ls-files` - Show tracked files
-- `git describe` - Human-readable name from commit
-
-### Common Operations
+Verified against Git 2.55.0 on 2026-08-03:
 
 ```bash
-# Stage changes
-git add <file>              # Stage specific file
-git add -p                  # Interactive staging (hunk-by-hunk)
-git add -N <file>           # Track file without staging content
-
-# Commit
-git commit -m "message"     # Commit with message
-git commit --amend          # Amend last commit (message or content)
-git commit --fixup=<sha>    # Create fixup commit for later autosquash
-git commit --allow-empty    # Empty commit (useful for CI triggers)
-
-# Branch operations
-git branch <name>           # Create branch
-git branch -d <name>        # Delete merged branch
-git branch -D <name>        # Force delete branch
-git branch -m <old> <new>   # Rename branch
-git switch <branch>         # Switch branch (preferred over checkout)
-git switch -c <new-branch>  # Create and switch
-
-# Remote operations
-git fetch                   # Fetch from default remote
-git fetch --all --prune     # Fetch all remotes and prune stale tracking
-git pull --rebase           # Pull with rebase instead of merge
-git push -u origin <branch> # Push and set upstream
-
-# Undoing changes
-git restore <file>          # Discard working tree changes (preferred over checkout --)
-git restore --staged <file> # Unstage file
-git reset --soft HEAD~1     # Undo last commit, keep changes staged
-git reset --mixed HEAD~1    # Undo last commit, keep changes unstaged
-git revert <sha>            # Create a new commit that undoes a previous commit
+git --version
 ```
 
-### Log and History
+Recent versions added stable `switch` and `restore`, stash export/import, `refs` commands, `last-modified`, `backfill`, `url-parse`, `format-rev`, maintenance improvements, and additional partial-clone and pack tooling. `repo`, `last-modified`, `history`, `format-rev`, and `backfill` should be treated according to their documented experimental or evolving status.
+
+Git's future-breaking-changes document is the source of truth for planned removals. Do not state a Git 3 release date or default change as certain until the project publishes it.
+
+Read [references/releases.md](references/releases.md) when adopting a recent command or upgrading Git. Read [references/history-and-recovery.md](references/history-and-recovery.md) for rebase, range-diff, bisect, reflog, stash, sparse checkout, bundles, and recovery. Read [references/configuration-and-maintenance.md](references/configuration-and-maintenance.md) for config, hooks, credentials, maintenance, refs, and repository health.
+
+## Start read-only
+
+Useful inspection commands:
 
 ```bash
-# Useful log formats
-git log --oneline --graph --all --decorate
-git log --since="2 weeks ago" --author="name"
-git log --follow -p -- <file>       # Full history of a file including renames
-git log -S "search_string"          # Find commits that add/remove a string (pickaxe)
-git log -G "regex_pattern"          # Find commits matching regex in diffs
-git log --first-parent              # Follow only first parent (clean merge history)
-git log --diff-filter=D -- <path>   # Find when files were deleted
-
-# Comparing
-git diff main..feature              # Changes in feature not in main
-git diff main...feature             # Changes since feature branched from main
-git diff --stat                     # Summary of changes
-git diff --name-only                # Just filenames
-git diff --word-diff                # Word-level diff
+git status --short --branch
+git diff --stat
+git diff
+git diff --cached
+git log --oneline --graph --decorate --all
+git branch --verbose --verbose
+git remote --verbose
+git reflog
+git worktree list --porcelain
+git config list --show-origin --show-scope
 ```
 
-## Essential Workflows
+Use `git show <ref>:<path>`, `git log <ref> -- <path>`, and `git diff <base>...<head>` to inspect another branch without switching the working tree.
 
-### Creating Good Commits
+## Preserve concurrent work
 
-1. **Atomic commits**: Each commit should represent one logical change
-2. **Write clear messages**: Follow conventional commit format
-
-   ```
-   type(scope): short description
-
-   Longer explanation if needed. Wrap at 72 characters.
-
-   Refs: #123
-   ```
-
-   Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `perf`, `ci`, `build`, `revert`
-
-3. **Stage intentionally**: Review staged changes with `git diff --cached` before committing
-4. **Verify before committing**: Run `git diff --cached` to review staged changes
-
-### Monorepo commit-msg convention (this repo)
-
-Lefthook enforces `type(scope): description` with a scope that is a
-`packages/` directory name or one of `root` / `practice` / `archive`
-(`monorepo`, `repo`, and `ALL` are invalid). Use `root` for sweeping
-cross-package commits (for example, `feat(root): …`). Types: `feat fix chore ci
-docs refactor test perf build style revert misc`. The pre-commit hook runs
-changed-file safety checks, including staged-file Prettier and Gitleaks; focused
-package tests remain the developer's responsibility and the exhaustive gate
-runs in Buildkite.
-
-### Syncing with Upstream
+- Never discard, stash, reset, restore, or switch away from unexpected work just to investigate.
+- Treat every existing modification as user-owned unless provenance proves otherwise.
+- Keep all agents read-only on history unless explicitly assigned an isolated branch mutation.
+- Verify the current branch and recent movements before pushing:
 
 ```bash
-# Rebase approach (linear history)
-git fetch origin
-git rebase origin/main
-
-# If conflicts arise during rebase
-git status                  # See conflicted files
-# ... resolve conflicts ...
-git add <resolved-files>
-git rebase --continue       # Continue after resolving
-git rebase --abort          # Abort and return to pre-rebase state
-
-# Merge approach (preserves branch topology)
-git fetch origin
-git merge origin/main
+git status --short --branch
+git reflog -n 10
 ```
 
-### Cleaning Up Before PR
+- Stage whole files by explicit path. Do not use interactive, hunk-level, current-directory, or repository-wide staging in agent workflows.
+
+## Intentional commits
 
 ```bash
-# Interactive rebase to clean commit history
-git rebase -i origin/main
-
-# With autosquash (processes fixup!/squash! commits automatically)
-git rebase -i --autosquash origin/main
-
-# Enable autosquash globally
-git config --global rebase.autoSquash true
+git add path/to/first path/to/second
+git diff --cached --check
+git diff --cached
+git commit -m "type(scope): concise description"
 ```
 
-### Recovering from Mistakes
+If `core.fsmonitor` makes a changed file appear unstaged, compare the working and index object IDs and disable fsmonitor for the affected command:
 
 ```bash
-# Find lost commits or states
-git reflog                          # Show recent HEAD movements
-git reflog show <branch>            # Show branch-specific reflog
-
-# Recover after bad rebase/reset
-git reset --hard HEAD@{2}           # Reset to state 2 moves ago
-
-# Recover deleted branch
-git reflog | grep "checkout.*branch-name"
-git branch <branch-name> <sha>      # Recreate from found SHA
+git hash-object path/to/file
+git rev-parse :path/to/file
+git -c core.fsmonitor=false add path/to/file
 ```
 
-## Safety Rules (Agent)
+Do not amend or force-push a commit another person may have based work on without explicit authorization.
 
-- **Never destroy uncommitted work to investigate.** Don't `git stash`, `git checkout -- <file>`, `git restore`, or switch branches just to test something (e.g. checking whether failures are pre-existing) — these discard the user's or a concurrent agent's in-progress changes. Note the observation and move on, or ask the user.
-- **Force-push only branches you own.** Never force-push `main`, release branches, or any branch others have pushed to or based work on without explicit confirmation at the moment of execution. Force-pushing a feature branch Claude created and owns this session is fine — use `--force-with-lease`, never `--force`. If unsure who else touched it, treat it as shared and ask first.
-- **Subagents must stay read-only on history.** When spawning Explore/Plan/general-purpose agents, explicitly forbid `git checkout <branch>`, `git switch`, `git stash`, `git reset`, or anything that moves HEAD or the working tree — they can silently leave the user on a stale commit. Tell them to use `git show <ref>:<path>`, `git log <ref>`, and `git diff <ref>..<ref>` for cross-branch inspection. Verify HEAD with `git reflog` before any push after a subagent ran.
-- **Never revert changes you didn't make.** Unexpected file modifications may be a concurrent human or agent, not a rogue linter — reverting them causes build failures and lost work. If a change looks intentional (new types, refactored functions, new files) rather than formatting-only, leave it; ask before reverting anything.
-- **Whole-file staging only.** Split work into multiple commits with plain `git add <path> ...` grouped by file or concern — never `git add -p` / `-i` / `--patch` or any interactive hunk staging (it is opaque and hard to review). This overrides the `git add -p` suggestions elsewhere in this skill; if one file truly mixes two unrelated concerns, ask rather than reaching for `-p`.
-- **`core.fsmonitor` can silently drop `git add`.** The user's git config enables `core.fsmonitor` + `core.untrackedCache`; a stale cache can make `git status` report a clean tree and `git add` no-op after tool-driven edits. Detect it when `git hash-object <file>` ≠ `git rev-parse :<file>`. Work around by prefixing commands with `-c core.fsmonitor=false` (e.g. `git -c core.fsmonitor=false add <files>`).
+## Compare the right ranges
 
-## When to Ask for Help
+```bash
+# Tip-to-tip difference
+git diff main..feature
 
-Ask the user for clarification when:
+# Changes introduced since the merge base
+git diff main...feature
 
-- Choosing between rebase vs merge strategy for their team
-- Whether to force push after rebase (check if others use the branch)
-- How to handle complex merge conflicts
-- Repository-specific branching conventions
-- Whether to squash commits before merging
+# Patch-series comparison before and after a rebase
+git range-diff old-base..old-tip new-base..new-tip
+```
 
-## References
+`range-diff` compares two commit ranges. Do not use the invalid single-range shorthand found in older copies of this skill.
 
-- [Git Official Documentation](https://git-scm.com/doc)
-- [Git Release Notes](https://github.com/git/git/tree/master/Documentation/RelNotes)
-- [GitHub Blog - Git Updates](https://github.blog/open-source/git/)
-- [Pro Git Book](https://git-scm.com/book/en/v2)
-- [Conventional Commits](https://www.conventionalcommits.org/)
+## Mergeability without changing the checkout
 
-### Skill References
+Use the repository's independent merge oracle when readiness matters:
 
-For detailed coverage of specific topics, see:
+```bash
+git merge-tree --write-tree --quiet <base> <head>
+```
 
-- `references/advanced-operations.md` - Interactive rebase, bisect, reflog, cherry-pick, filter-repo, stash, rerere, blame, notes, bundle, sparse-checkout
-- `references/branching-workflows.md` - Branching strategies, commit conventions, merge vs rebase, signed commits, tags, release workflows
-- `references/config-hooks.md` - Git configuration, conditional includes, aliases, hooks, maintenance, scalar, performance, .gitattributes, .gitignore
+`--quiet` avoids most object creation but is not a guarantee that no objects are written. Treat the exit status as the merge result. Do not replace this check with a checkout or an untrusted hosted mergeability field.
+
+## Undo and recovery
+
+Choose the least destructive operation:
+
+| Goal | Operation | Boundary |
+| --- | --- | --- |
+| Undo a published commit | `git revert <commit>` | Adds a new inverse commit |
+| Unstage a path | `git restore --staged <path>` | Keeps working-tree content |
+| Recover a lost commit | inspect `git reflog`, then create a branch | Preserves the recovered object |
+| Move a private branch while keeping changes | `git reset --soft` or `--mixed` after inspection | Rewrites only local branch position |
+| Discard work | destructive reset/restore | Requires exact target resolution and explicit user intent |
+
+Never present `git reset --hard HEAD@{n}` as a routine recovery recipe. First inspect the reflog entry and preserve it with a branch:
+
+```bash
+git reflog
+git show <recovered-commit>
+git branch recovery/<name> <recovered-commit>
+```
+
+## Rebasing and pushing
+
+Use the owning stack tool for repositories with stacked PR workflows. In a generic repository, inspect the branch, fetch explicitly, and compare the rewritten series with `range-diff`.
+
+Rebase does not always require a force push: an unpublished local branch can be pushed normally. When a published branch is intentionally rewritten, background fetches can invalidate the protection expected from plain `--force-with-lease`; verify the remote tip and use an explicit expected object when safety matters.
+
+Never force-push main, release branches, shared branches, or work another person may have based on without current authorization.
+
+## Hooks and credentials
+
+Repository hooks are executable policy. Inspect the configured hook path and hook source before relying on them:
+
+```bash
+git config get core.hooksPath
+git hook list
+```
+
+Use credential helpers or `GIT_ASKPASS`; never embed tokens in remotes, configuration, logs, or files. Treat hook input and filenames as untrusted shell data.
+
+## Maintenance and repository health
+
+Use `git maintenance` tasks documented for the installed version. `geometric-repack` is a maintenance task; `geometric` is a strategy, not a task name. Use `git maintenance is-needed` where supported to avoid unnecessary work.
+
+For diagnosis:
+
+```bash
+git fsck --full
+git count-objects -vH
+git gc --auto
+git reflog expire --dry-run --all
+```
+
+Do not change reflog expiry, run aggressive collection, or delete unreachable objects until recovery requirements and repository ownership are clear.
+
+## Review checklist
+
+- Load and obey the repository's owning stack/branch skill.
+- Inspect status, diff, branch, and worktrees before mutation.
+- Keep user-owned and concurrent work intact.
+- Stage explicit whole-file paths and review the staged diff.
+- Use independent merge-tree evidence for mergeability claims.
+- Compare rewritten series with a valid two-range `range-diff`.
+- Resolve exact reflog/reset/restore targets before destructive actions.
+- Verify remote tips before any authorized history rewrite.
+- Treat experimental commands and future Git changes as conditional.
+- Check hook configuration and credential exposure before publishing.
