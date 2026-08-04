@@ -286,12 +286,14 @@ describe("assignWorktreeBranch guards operator worktree reuse", () => {
     expect(script.resets).toEqual([]);
   });
 
-  test("reuses a clean operator worktree in place", async () => {
+  test("reuses a clean operator worktree without resetting it", async () => {
     const pr = identity(15);
     const script = scriptOperatorWorktree(pr, "");
     await script.manager.assignWorktreeBranch("/home/user/monorepo", pr);
-    // Clean and already at the PR head: aligned to it, no operator work lost.
-    expect(script.resets).toEqual([pr.headSha]);
+    // Clean and already at the PR head: nothing to sync, so the fleet must run
+    // NO destructive `reset --hard` against the operator's checkout — that would
+    // race a concurrent operator edit landing after the cleanliness check.
+    expect(script.resets).toEqual([]);
   });
 
   test("refuses a clean operator worktree whose HEAD holds unpushed commits", async () => {

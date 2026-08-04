@@ -275,6 +275,17 @@ export class WorktreeManager {
         return;
       }
     }
+    // Operator worktree that reached here is, by the guards above, clean and
+    // already exactly at the fetched PR head (a non-fleet worktree whose local
+    // head differs threw above). There is nothing to sync, so DON'T `reset
+    // --hard`: the cleanliness check and the reset are not atomic, and a live
+    // operator edit landing in that window would be silently destroyed by the
+    // reset. Skipping it means the fleet never runs a destructive Git command
+    // against an operator's own checkout — it only reads and then hands it to the
+    // worker. (Fleet worktrees are disposable and still get aligned below.)
+    if (!this.#isFleetWorktree(worktree)) {
+      return;
+    }
     // Local ref is at, behind, or diverged from the confirmed PR head: align to
     // the remote head, discarding prior failed-attempt working-tree edits.
     await this.#mustRun("git", ["reset", "--hard", fetchedHead], worktree);
