@@ -1,497 +1,184 @@
 ---
 name: fish-helper
-description: |
-  Fish shell scripting - functions, abbreviations, completions, and configuration
-  When user works with .fish files, mentions Fish shell, fish config, Fisher plugins, or Fish scripting patterns
+description: Current Fish shell scripting, functions, abbreviations, completions, variables, events, configuration, plugins, testing, and safety guidance. Use when writing or reviewing Fish config, `.fish` scripts, completions, functions, prompts, or plugin setup.
 ---
 
-# Fish Shell Helper Agent
+# Fish Helper
 
-## What's New in Fish 4.x (2025-2026)
+Write Fish as Fish rather than translated POSIX shell. Preserve argv boundaries, propagate statuses, make configuration idempotent, and distinguish optional integrations from required tools.
 
-### Fish 4.0 (February 2025)
+## Current baseline
 
-- **Rust rewrite**: Entire codebase ported from C++ to Rust (2,731 commits, 200+ contributors)
-- **New keyboard protocol**: Human-readable bind notation (`bind ctrl-right` instead of escape sequences), xterm modifyOtherKeys and kitty keyboard protocol support
-- **OSC 133 prompt marking**: Prompts and command output marked for terminal integration
-- **Command-specific abbreviations**: `abbr --command git co checkout`
-- **Self-installable builds**: Static binaries embed functions, man pages, and webconfig
-- **History filtering**: `fish_should_add_to_history` function for selective exclusion
-- **`string match --max-matches`** and **`set --no-event`** flags
-
-### Fish 4.1 (September 2025)
-
-- **Brace compound commands**: `{ echo 1; echo 2 }` syntax
-- **Transient prompts**: `fish_transient_prompt` function for simplified prompt after execution
-- **Mouse support**: OSC 133 prompt marking with kitty click events
-- **`string pad --center`** option
-- **Vi mode**: ctrl+a (increment) and ctrl+x (decrement)
-
-### Fish 4.2 (November 2025)
-
-- Multi-line autosuggestions from history
-- `fish_tab_title` function for separate tab titles
-- Fish assumes UTF-8 regardless of system locale
-
-### Fish 4.3 (December 2025)
-
-- **Universal variables replaced with global defaults** for cleaner configuration
-- **Adaptive themes**: `[light]` and `[dark]` sections in theme files
-- Terminal working directory reported via OSC 7
-
-### Fish 4.4 (February 2026)
-
-- Vi mode word motions aligned with Vim behavior (counts supported: `d3w`)
-- New `catppuccin-*` color themes
-- `set_color` strikethrough modifier
-
-## Overview
-
-Fish (Friendly Interactive SHell) is a modern interactive shell focused on user experience. It provides syntax highlighting, autosuggestions, and tab completions out of the box. Fish intentionally breaks POSIX compatibility in favor of cleaner, more discoverable syntax.
-
-Key design principles:
-
-- Discoverability over tradition (no hidden configuration)
-- User-friendliness over backward compatibility
-- Correctness (no word splitting on variables)
-
-## Syntax Differences from Bash
-
-### Variable Assignment
+Verified against Fish 4.8.1 on 2026-08-03:
 
 ```fish
-# Fish uses set, not VAR=value
-set name "world"
-set -gx PATH /usr/local/bin $PATH    # global + exported
-set -l local_var "temporary"           # local scope
-set -U EDITOR vim                      # universal (persists across sessions)
-set -e var_name                        # erase variable
+fish --version
 ```
 
-### Variable Scopes
+Fish 4.8 changed installed/embedded completion and function layout, added `cd -L/-P`, and removed automatic `__fish_initialized` universal creation. Fish 4.7 changed noninteractive theme initialization; Fish 4.6 changed emoji width and added prompt environment controls; Fish 4.5 mainly fixed Vi-mode regressions.
 
-- **Universal** (`-U`): Shared across all sessions, persisted to disk
-- **Global** (`-g`): Current session only
-- **Function** (`-f`): Current function
-- **Local** (`-l`): Current block
+Read [references/releases.md](references/releases.md) for the 51-page research ledger. Read [references/syntax-and-safety.md](references/syntax-and-safety.md) for variables, argv, statuses, reading, tracing, temp directories, and shell boundaries. Read [references/functions-completions-config.md](references/functions-completions-config.md) for functions, events, abbreviations, completions, startup, prompts, and themes. Read [references/plugins-and-testing.md](references/plugins-and-testing.md) for Fisher, popular plugins, testing, and installation security.
 
-### Command Substitution
+## Variables and environment
+
+Use exported global variables in version-controlled config for child-process environment:
 
 ```fish
-# Fish uses (command) or $(command), NOT backticks
-set files (ls)
-echo "Current dir: $(pwd)"
-
-# Output splits on newlines only (not whitespace like bash)
-# Use quotes to prevent splitting
-set content "$(cat file.txt)"
+set -gx EDITOR nvim
+fish_add_path $HOME/.local/bin
 ```
 
-### No Process Substitution
+Universal variables remain supported, but Fish 4.3 stopped creating several user-facing defaults as universal values. Use universal state only when cross-session persistence is intentional. `set -U EDITOR vim` is not exported; `set -Ux` is persistent and exported but can create hidden machine state.
+
+Use `fish_add_path` for idempotent path changes. Do not replace `PATH` with a short hard-coded list or prepend the same directory every time config is sourced.
+
+Fish supports command-scoped environment overrides:
 
 ```fish
-# Bash: diff <(cmd1) <(cmd2)
-# Fish: use psub
-diff (cmd1 | psub) (cmd2 | psub)
+MODE=test command --flag
 ```
 
-### Conditionals and Loops
+Standalone assignment still uses `set`.
+
+## Preserve argv
+
+Accept commands as the remaining arguments and invoke them directly:
 
 ```fish
-# if/else if/else/end (no then/fi)
-if test -f /etc/os-release
-    cat /etc/os-release
-else if test -f /etc/issue
-    cat /etc/issue
-else
-    echo "Unknown OS"
-end
-
-# switch/case/end (no esac, no fallthrough)
-switch (uname)
-case Linux
-    echo "Linux"
-case Darwin
-    echo "macOS"
-case '*'
-    echo "Other"
-end
-
-# for/end (no do/done)
-for file in *.txt
-    echo $file
-end
-
-# while/end
-while read -l line
-    echo "Line: $line"
-end < input.txt
-```
-
-### Lists (Arrays)
-
-```fish
-# All variables are lists. 1-indexed, negative indexing supported
-set colors red green blue
-echo $colors[1]        # red
-echo $colors[-1]       # blue
-echo $colors[2..3]     # green blue
-echo (count $colors)   # 3
-
-# PATH variables auto-split on colons
-set -gx PATH /usr/local/bin /usr/bin /bin
-```
-
-### String Manipulation
-
-```fish
-# Use the string builtin (no ${var%pattern} parameter expansion)
-string length "hello"                    # 5
-string upper "hello"                     # HELLO
-string replace "old" "new" "old text"    # new text
-string split "," "a,b,c"                 # a\nb\nc
-string match -r '(\d+)' "file42.txt"    # 42
-string trim "  hello  "                  # hello
-string sub -s 2 -l 3 "hello"            # ell
-```
-
-### Arithmetic
-
-```fish
-# Use math builtin (no $(( )) or let)
-math 2 + 2                # 4
-math "10 / 3"             # 3.333333 (floating point by default)
-math "sqrt(16)"           # 4
-set result (math "$x * 2")
-```
-
-### Special Variables
-
-| Bash       | Fish                |
-| ---------- | ------------------- |
-| `$?`       | `$status`           |
-| `$@`, `$*` | `$argv`             |
-| `$$`       | `$fish_pid`         |
-| `$#`       | `(count $argv)`     |
-| `$!`       | `$last_pid`         |
-| `$0`       | `(status filename)` |
-
-### Other Key Differences
-
-- No heredocs: use `printf '%s\n' "line1" "line2"` or multi-line strings
-- No `[[`: use `test` or `[` only
-- No subshells: use `begin; end` for grouping, `set -l` for scoping
-- No `export`: use `set -gx`
-- No `source ~/.bashrc`: use `source ~/.config/fish/config.fish`
-- Globs that match nothing cause command failure (not literal pass-through)
-- `?` glob deprecated; use `*` or disable with `qmark-noglob`
-- No word splitting on variable expansion (a feature, not a bug)
-
-## Functions Quick Reference
-
-```fish
-# Define a function
-function greet -d "Greet someone"
-    echo "Hello, $argv[1]!"
-end
-
-# Function with argument names
-function mkcd -a dir -d "Create and enter directory"
-    mkdir -p $dir && cd $dir
-end
-
-# Function wrapping a command (inherit completions)
-function ls --wraps ls -d "ls with color"
-    command ls --color=auto $argv
-end
-
-# Event handlers
-function on_pwd_change --on-variable PWD
-    echo "Changed to $PWD"
-end
-
-function on_exit --on-event fish_exit
-    echo "Goodbye!"
-end
-
-# Save function to autoload file
-funcsave greet   # saves to ~/.config/fish/functions/greet.fish
-```
-
-## Abbreviations Quick Reference
-
-```fish
-# Simple abbreviation
-abbr -a gco git checkout
-abbr -a gst git status
-
-# Position: expand anywhere (not just as command)
-abbr -a --position anywhere -- -C --color
-
-# Command-specific (Fish 4.0+)
-abbr --command git co checkout
-abbr --command git br branch
-
-# With cursor positioning
-abbr -a L --position anywhere --set-cursor "| less"
-
-# Function-based expansion
-abbr -a !! --position anywhere --function last_history_item
-
-# Regex-based
-abbr -a dotenv --regex '\.env.*' --function edit_with_caution
-```
-
-## Completions Quick Reference
-
-```fish
-# Basic completion for a command
-complete -c mycommand -s h -l help -d "Show help"
-complete -c mycommand -s v -l verbose -d "Verbose output"
-
-# Require a parameter
-complete -c mycommand -s o -l output -r -d "Output file" -F
-
-# Exclusive (require param, no files)
-complete -c mycommand -s f -l format -x -a "json yaml toml" -d "Output format"
-
-# Conditional completions
-complete -c git -n "__fish_use_subcommand" -a checkout -d "Switch branches"
-complete -c git -n "__fish_seen_subcommand_from checkout" -a "(git branch --format='%(refname:short)')" -d "Branch"
-
-# Disable file completions globally
-complete -c mycommand -f
-
-# Wrap another command's completions
-complete -c hub -w git
-```
-
-## Configuration Structure
-
-```
-~/.config/fish/
-  config.fish              # Main config (runs on every shell start)
-  conf.d/                  # Modular config snippets (sourced alphabetically)
-    abbr.fish
-    path.fish
-    env.fish
-  functions/               # Autoloaded functions (one per file)
-    fish_prompt.fish
-    fish_right_prompt.fish
-    mkcd.fish
-  completions/             # Custom completions (one per command)
-    mycommand.fish
-  themes/                  # Color themes (.theme files)
-  fish_plugins             # Fisher plugin list
-  fish_variables           # Universal variables (auto-managed, do not edit)
-```
-
-### Startup Order
-
-1. Files in `conf.d/` directories (system, then user) in alphabetical order
-2. `config.fish`
-3. Functions autoloaded on first call
-
-### Prompt Functions
-
-- `fish_prompt` -- left prompt
-- `fish_right_prompt` -- right prompt
-- `fish_mode_prompt` -- vi mode indicator
-- `fish_transient_prompt` -- simplified prompt shown after command execution (Fish 4.1+)
-- `fish_greeting` -- message shown on shell start (set to empty to disable)
-
-## Key Bindings
-
-```fish
-# Emacs mode (default)
-fish_default_key_bindings
-
-# Vi mode
-fish_vi_key_bindings
-
-# Custom bindings
-bind ctrl-r 'commandline -f history-pager'
-bind \t complete
-bind ctrl-e 'edit_command_buffer'
-
-# Vi mode insert-mode binding
-bind --mode insert ctrl-c 'commandline -r ""'
-```
-
-### Default Key Bindings (Emacs Mode)
-
-- Tab: complete, Shift+Tab: search completions
-- Ctrl+R: history pager
-- Ctrl+C: cancel/interrupt
-- Ctrl+L: clear screen
-- Ctrl+U: delete to beginning of line
-- Ctrl+K: delete to end of line
-- Ctrl+W: delete previous path component
-- Ctrl+Z: undo, Alt+/: redo
-- Alt+E: edit in $EDITOR
-- Alt+H: show man page for current command
-- Right arrow / Ctrl+F: accept autosuggestion
-- Alt+Right / Alt+F: accept next word of autosuggestion
-
-## Common Builtins
-
-### read -- User Input
-
-```fish
-read -l -P "Name: " name
-read -l -s -P "Password: " password    # silent input
-read -l -P "Continue? [Y/n] " -c "Y" answer
-read -l -n 1 char                       # single character
-read -la lines < file.txt              # read file into list
-
-# Read from pipe
-echo "hello world" | read -l first rest
-echo $first    # hello
-echo $rest     # world
-```
-
-### status -- Shell State
-
-```fish
-status is-interactive        # true in interactive shell
-status is-login              # true in login shell
-status is-command-substitution  # true inside $(...)
-status filename              # current script path
-status function              # current function name
-status line-number           # current line number
-status current-command       # name of currently running command
-status features              # list enabled features
-status test-feature qmark-noglob  # check feature flag
-```
-
-### contains -- List Membership
-
-```fish
-if contains "blue" $colors
-    echo "Found blue"
-end
-
-set idx (contains -i "green" $colors)  # get index
-```
-
-### type / command -- Command Resolution
-
-```fish
-type --short ls              # alias, builtin, function, or file
-type --path ls               # file path of command
-command -sq docker           # check if command exists (silent, quiet)
-builtin -n                   # list all builtins
-functions                    # list all defined functions
-functions --names            # names only
-functions myfunction         # print source of function
-```
-
-### source -- Execute Fish Scripts
-
-```fish
-source file.fish
-source (command which env_setup.fish)
-
-# Source with arguments
-source script.fish arg1 arg2   # $argv available in script
-```
-
-### emit -- Custom Events
-
-```fish
-emit my_custom_event "arg1" "arg2"
-
-function handle_event --on-event my_custom_event
-    echo "Event received: $argv"
-end
-```
-
-## Common Patterns
-
-### Guard for Interactive Shell
-
-```fish
-# At top of config.fish
-if not status is-interactive
-    return
-end
-```
-
-### Conditional PATH Setup
-
-```fish
-# Only add to PATH if directory exists
-for dir in ~/.local/bin ~/.cargo/bin ~/go/bin
-    test -d $dir; and fish_add_path $dir
-end
-```
-
-### Wrapper Function Pattern
-
-```fish
-function git --wraps git -d "Git with default options"
-    command git -c color.ui=always $argv
-end
-```
-
-### Retry Pattern
-
-```fish
-function retry -a max_attempts cmd
-    set -l attempt 1
-    while test $attempt -le $max_attempts
-        eval $cmd; and return 0
-        set attempt (math $attempt + 1)
-        sleep 1
+function retry --description 'Retry a command with exact arguments'
+    argparse 'n/max-attempts=' -- $argv
+    or return
+
+    set -l max_attempts 3
+    if set -q _flag_max_attempts
+        set max_attempts $_flag_max_attempts
     end
-    return 1
+    if test (count $argv) -eq 0
+        echo 'retry: missing command' >&2
+        return 2
+    end
+
+    for attempt in (seq $max_attempts)
+        $argv
+        set -l command_status $status
+        if test $command_status -eq 0
+            return 0
+        end
+        if test $attempt -eq $max_attempts
+            return $command_status
+        end
+    end
 end
 ```
 
-### Temporary Environment Variables
+Do not turn command arguments into source text with `eval`. Invoke the argv list directly or call an exact function.
+
+## Error propagation
+
+Fish functions return the status of their last command unless overridden. A helper named `die` that only executes `return 1` returns from itself; its caller continues unless it propagates the status.
 
 ```fish
-# Fish has no VAR=value command syntax. Use env or begin/end block:
-env PGPASSWORD=secret psql -U user db
-
-# Or scope with begin/end
-begin
-    set -lx NODE_ENV production
-    npm start
-end
+require_tool rg
+or return
 ```
 
-## Debugging
+Check `mktemp`, `pushd`, reads, generated init commands, and cleanup explicitly. Required tools should fail fast. Only optional integrations may be conditionally absent, and the config should label them optional.
+
+## Reading input
+
+`read` normally reads one line. It does not turn a whole file into an array by adding list flags:
 
 ```fish
-# Trace execution
-set fish_trace 1
-some_command
-set fish_trace 0
+while read -l line
+    process_line $line
+end < file.txt
+```
 
-# Profile script performance
-fish --profile profile.log -c 'source script.fish'
+Use `string split` when delimiter-based parsing is deliberate. Use `read --silent` for interactive secrets, or a tool-specific credential file/secret manager; do not write credential-shaped literals into shell config.
 
-# Check if interactive/login
+## Abbreviations
+
+Use abbreviations for interactive expansion and functions for reusable logic. Cursor markers default to `%`:
+
+```fish
+abbr --add L --position anywhere --set-cursor '% | less'
+```
+
+The expansion needs the marker for cursor movement.
+
+## Transient prompts and themes
+
+Enable transient prompts with a variable, not a function:
+
+```fish
+set -g fish_transient_prompt 1
+```
+
+Fish reruns `fish_prompt`, `fish_right_prompt`, and `fish_mode_prompt` with `--final-rendering`.
+
+Prefer `fish_config theme choose THEME` for adaptive theme behavior. `fish_config theme save` stores universal colors and disables dynamic light/dark switching. Theme files use `fish_color_command blue`, not assignment syntax.
+
+## Startup and configuration
+
+Fish searches user `conf.d`, system configuration, and user/vendor data directories according to documented priority; snippets are naturally sorted, and only the first same-named file is run. Do not describe a simple system-then-user order.
+
+Put environment and path setup needed by noninteractive Fish before an interactive-only guard:
+
+```fish
+fish_add_path $HOME/.local/bin
+set -gx EDITOR nvim
+
 status is-interactive
-status is-login
-
-# Print function source
-functions myfunction
-type myfunction
-
-# Debug completions
-complete -C "mycommand "    # show what would complete
-
-# List all key bindings
-bind                        # show all active bindings
-bind --mode insert          # vi insert mode bindings
+or return
 ```
 
-## Reference Files
+Use `fish --profile-startup <file> -ic exit` to profile startup. Plain `--profile` excludes startup/config loading.
 
-For detailed reference material, see:
+## Completions and events
 
-- `references/fish-syntax.md` -- Variables, control flow, strings, lists, pipes, math
-- `references/completions-functions.md` -- Writing completions, functions, abbreviations, event handlers
-- `references/plugins-config.md` -- Fisher, popular plugins, config patterns, prompt customization
+Fish 4.8 embeds bundled completions/functions; use `status list-files` to inspect embedded files rather than assuming `/usr/share/fish/completions`.
+
+Register multiple commands with repeated `--command` or brace expansion:
+
+```fish
+complete --command={docker,podman} --long-option help --description 'Show help'
+```
+
+Dynamic completion generators must be fast, bounded, side-effect-free, and must not interpret untrusted source. Avoid network calls on each Tab press.
+
+Variable event handlers can coalesce updates, can run on same-value sets, and have unspecified ordering across handlers. Universal updates from another shell have distinct delivery behavior. Use events for notifications, not ordering-critical state machines.
+
+## Tracing and introspection
+
+`type --type name` prints classifications such as function, builtin, or file. `type --short` only suppresses full function definitions.
+
+Tracing is enabled when `fish_trace` is set and non-empty. Disable it by erasing the variable:
+
+```fish
+set -e fish_trace
+```
+
+Use `$version` or compatibility variable `$FISH_VERSION`; `$fish_version` does not exist in Fish 4.8.1.
+
+## Security
+
+- Avoid `eval` and remote `curl | source` installation patterns.
+- Pin and inspect a downloaded plugin installer before sourcing it.
+- Resolve source paths with `type --path`, verify exactly one intended file, then source it.
+- Keep dynamic completions and event handlers free of destructive side effects.
+- Use secret managers, protected credential files, or `read --silent`; environment variables can still leak through child processes and diagnostics.
+- Preserve exact arguments rather than re-parsing command text.
+- Create and clean temporary directories only after each operation succeeds, preserving the wrapped command status.
+
+## Review checklist
+
+- Verify Fish 4.8.1 behavior and the project's minimum version.
+- Use exported globals and `fish_add_path` for version-controlled environment setup.
+- Preserve argv and avoid `eval`.
+- Propagate failures through functions and cleanup.
+- Read complete files with a loop or explicit splitting.
+- Use the current transient-prompt variable and adaptive theme workflow.
+- Put noninteractive environment setup before the interactive guard.
+- Treat completion subprocesses and event handlers as bounded, side-effect-free hooks.
+- Inspect embedded completion paths with `status list-files`.
+- Pin and review third-party plugin installation.

@@ -1,366 +1,146 @@
 ---
 name: jvm-helper
-description: |
-  Java and Kotlin development with modern patterns, build tools, and JVM tooling
-  When user works with .java or .kt files, mentions Java, Kotlin, Gradle, Maven, JVM, or JDK features
+description: Current Java, Kotlin, Gradle, Maven, JUnit, JVM diagnostics, packaging, and performance guidance. Use when writing or reviewing Java or Kotlin, build files, JVM tests, concurrency, GraalVM Native Image, jlink/jpackage, or JVM tuning.
 ---
 
-# JVM Helper Agent
+# JVM Helper
 
-## What's New
+Use the project's wrappers and toolchains, distinguish stable APIs from previews, and measure runtime behavior before changing JVM flags. Current releases are not automatic migration targets for an existing project.
 
-### Java Releases
+## Current baseline
 
-- **Java 25 LTS** (Sep 2025): Next LTS after 21. Finalizes: Scoped Values, Module Import Declarations, Compact Source Files / Instance Main Methods, Flexible Constructor Bodies, Compact Object Headers, Generational Shenandoah. Previews: Structured Concurrency (5th), Primitive Types in Patterns (3rd), Stable Values, PEM Encodings
-- **Java 24** (Mar 2025): 24 JEPs. Finalizes Stream Gatherers, Class-File API. Previews: Flexible Constructor Bodies (3rd), Primitive Types in Patterns (2nd). Deprecates 32-bit x86 port
-- **Java 23** (Sep 2024): Primitive Types in Patterns preview, Module Import Declarations preview, Implicitly Declared Classes (3rd preview). Removes String Templates (design issues). Introduces Oracle GraalVM JIT as JDK option
-- **Java 22** (Mar 2024): 12 JEPs. Finalizes Foreign Function & Memory API (JEP 454), Unnamed Variables & Patterns (JEP 456). Previews: Statements before super(), Implicitly Declared Classes (2nd)
-- **Java 21 LTS** (Sep 2023): 15 JEPs. Finalizes Virtual Threads (JEP 444), Record Patterns (JEP 440), Pattern Matching for switch (JEP 441), Sequenced Collections (JEP 431). Previews: String Templates, Structured Concurrency, Scoped Values, Unnamed Patterns
+Verified 2026-08-03:
 
-### Kotlin Releases
+| Component | Current | Boundary |
+| --- | --- | --- |
+| Java | JDK 26 GA | Java 25 is Oracle-designated LTS; lifecycle and support vary by vendor |
+| Kotlin | 2.4.10 | Kotlin 2.4 adds Java 26 support and stable context parameters |
+| Gradle | 9.6.1 | Runs on JVM 17–26; use the project wrapper |
+| Maven | 3.9.16 stable | 3.10 and Maven 4 remain preview lines |
+| JUnit | 6.1.2 | Requires Java 17; major migration from JUnit 5 |
+| kotlinx.coroutines | 1.11.0 | Follow structured cancellation and dispatcher lifecycles |
 
-- **Kotlin 2.1** (Nov 2024): Guard conditions in `when` expressions, basic Swift export support, stable Gradle DSL for compiler options, K2 kapt enabled by default (2.1.20), Lombok `@SuperBuilder` support
-- **Kotlin 2.0** (May 2024): Stable K2 compiler - 2x faster compilation on average (initialization up to 488% faster, analysis up to 376% faster). Unified pipeline for all backends (JVM, JS, Wasm, Native). Improved smart casts, redesigned multiplatform compilation scheme
+Spring Boot 4.1.0, Ktor 3.5.1, and Shadow 9.6.1 are current, but their major upgrades are not drop-in substitutions for an existing build.
 
-## Overview
+Read [references/releases.md](references/releases.md) for the 75-page research ledger. Read [references/java-and-kotlin.md](references/java-and-kotlin.md) for current language/concurrency APIs. Read [references/build-and-test.md](references/build-and-test.md) for wrappers, Gradle, Maven, JUnit, and build-cache correctness. Read [references/diagnostics-and-packaging.md](references/diagnostics-and-packaging.md) for jcmd/JFR/JMX, JVM tuning, jlink, jpackage, and Native Image.
 
-This skill covers Java and Kotlin development on the JVM, including modern language features (Java 21+ and Kotlin 2.x), build tools (Gradle and Maven), packaging tools (jlink, jpackage, GraalVM native-image), and JVM tuning. The user manages Java via mise (LTS versions), so focus on Java 21 LTS features with awareness of 25 LTS additions.
-
-## CLI Commands
-
-### Auto-Approved Safe Commands
+## Establish the toolchain
 
 ```bash
-# Compile Java source
-javac --version
-javac -d out src/Main.java
-
-# Run Java program
 java --version
-java -cp out Main
-
-# Interactive Java REPL
-jshell
-
-# Kotlin compiler
-kotlinc --version
-kotlinc hello.kt -include-runtime -d hello.jar
-
-# Gradle (read-only / build)
-gradle --version
-./gradlew tasks
-./gradlew build
-./gradlew test
-./gradlew check
-./gradlew dependencies
-./gradlew dependencyInsight --dependency <name>
-./gradlew projects
-
-# Maven (read-only / build)
-mvn --version
-mvn compile
-mvn test
-mvn package
-mvn dependency:tree
-mvn dependency:resolve
-mvn help:effective-pom
-mvn help:active-profiles
-
-# JDK tools
-jar --list --file app.jar
-javap -c MyClass.class
-jps
-jstack <pid>
-jmap -histo <pid>
-jcmd <pid> VM.flags
-jfr print recording.jfr
+javac --version
+./gradlew --version
+./mvnw --version
 ```
 
-### Build and Package
+Prefer repository wrappers and declared Java toolchains. A globally installed current JDK does not change the project's source, target, runtime, or support contract.
+
+## Command authority
+
+Build and test commands create outputs and can resolve dependencies:
 
 ```bash
-# Gradle build
-./gradlew clean build
-./gradlew build -x test          # skip tests
-./gradlew :module:build           # specific module
-./gradlew bootRun                 # Spring Boot
-./gradlew assemble                # build without tests
-./gradlew jar                     # build JAR
-
-# Maven build
-mvn clean package
-mvn package -DskipTests
-mvn -pl module-name package       # specific module
-mvn spring-boot:run               # Spring Boot
-mvn verify                        # run integration tests
-
-# Create runtime image with jlink
-jlink --module-path $JAVA_HOME/jmods:mods \
-  --add-modules com.myapp \
-  --output custom-runtime \
-  --strip-debug --compress zip-6
-
-# Create installable package with jpackage
-jpackage --input lib/ --main-jar app.jar \
-  --main-class com.example.Main \
-  --name MyApp --type dmg
-
-# GraalVM native image
-native-image -jar app.jar myapp
-native-image --no-fallback -jar app.jar
+./gradlew build
+./mvnw verify
 ```
 
-## Modern Java Essentials (21 LTS)
+Live-process diagnostics can pause, attach to, or materially affect the target. Inspect the command's documented impact and production authority before running `jcmd`, `jmap`, heap dumps, or JFR operations. `jmap` is experimental and unsupported; prefer supported `jcmd` operations where appropriate.
 
-### Records
+## Verification without skipped tests
+
+Do not recommend `-x test`, `-DskipTests`, or `maven.test.skip` as a normal workflow. `assemble` only creates artifacts and does not satisfy verification.
+
+For Maven, `verify` runs integration tests only when Failsafe or another plugin is bound to the `integration-test` and `verify` lifecycle phases. Check the POM before making the claim.
+
+For Gradle, configure `useJUnitPlatform()` and the intended test suites. JUnit parallel execution is opt-in and must preserve test isolation.
+
+## Java concurrency
+
+Virtual threads are appropriate for large numbers of blocking tasks, not CPU-bound parallelism. Create them through application-owned executors and close executor lifecycles.
+
+JDK 24 eliminated nearly all virtual-thread pinning caused by `synchronized`. Do not mechanically replace correct synchronization with `ReentrantLock`; use JFR or `jcmd` to diagnose remaining pinning cases.
+
+Structured Concurrency remains preview. The API changed across previews. On JDK 25, use `StructuredTaskScope.open()` or `open(Joiner...)`, compile with `--enable-preview --release 25`, and run with `--enable-preview`. Verify the exact target JDK docs before copying an example.
+
+Scoped Values finalized in JDK 25:
 
 ```java
-// Immutable data carrier - auto-generates constructor, equals, hashCode, toString, accessors
-record Point(int x, int y) {}
-
-// Records can have custom constructors and methods
-record Range(int lo, int hi) {
-    Range {  // compact constructor for validation
-        if (lo > hi) throw new IllegalArgumentException();
-    }
-    int length() { return hi - lo; }
-}
-
-// Records can implement interfaces
-record NamedPoint(String name, int x, int y) implements Serializable {}
+ScopedValue.where(CURRENT_USER, user).run(() -> handle(request));
 ```
 
-### Sealed Classes
+Do not use removed preview-era `runWhere` examples.
 
-```java
-// Restrict which classes can extend
-sealed interface Shape permits Circle, Rectangle, Triangle {}
-record Circle(double radius) implements Shape {}
-record Rectangle(double w, double h) implements Shape {}
-record Triangle(double a, double b, double c) implements Shape {}
+`HttpClient` makes no guarantee that its default executor uses virtual threads. If blocking `send` should run in a virtual thread, create that ownership explicitly.
 
-// Exhaustive switch - compiler verifies all cases covered
-double area(Shape s) {
-    return switch (s) {
-        case Circle c    -> Math.PI * c.radius() * c.radius();
-        case Rectangle r -> r.w() * r.h();
-        case Triangle t  -> { /* Heron's formula */ yield 0; }
-    };
-}
-```
+## Kotlin coroutines
 
-### Pattern Matching
-
-```java
-// Pattern matching for instanceof
-if (obj instanceof String s && s.length() > 5) {
-    System.out.println(s.toUpperCase());
-}
-
-// Pattern matching for switch with guards
-String format(Object obj) {
-    return switch (obj) {
-        case Integer i when i > 0 -> "positive: " + i;
-        case Integer i            -> "non-positive: " + i;
-        case String s             -> "string: " + s;
-        case null                 -> "null";
-        default                   -> "other: " + obj;
-    };
-}
-
-// Record patterns (destructuring)
-record Point(int x, int y) {}
-if (obj instanceof Point(int x, int y)) {
-    System.out.println("x=" + x + " y=" + y);
-}
-
-// Nested record patterns
-record Line(Point start, Point end) {}
-switch (shape) {
-    case Line(Point(var x1, var y1), Point(var x2, var y2)) ->
-        System.out.println("Line from (%d,%d) to (%d,%d)".formatted(x1, y1, x2, y2));
-}
-```
-
-### Virtual Threads
-
-```java
-// Create virtual threads directly
-Thread.startVirtualThread(() -> {
-    // lightweight, ideal for I/O-bound tasks
-    var result = fetchFromDatabase();
-});
-
-// With executor
-try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
-    IntStream.range(0, 10_000).forEach(i ->
-        executor.submit(() -> handleRequest(i))
-    );
-}
-
-// Virtual thread builder
-Thread vt = Thread.ofVirtual()
-    .name("worker-", 0)
-    .start(() -> doWork());
-```
-
-### Sequenced Collections
-
-```java
-// New interfaces: SequencedCollection, SequencedSet, SequencedMap
-SequencedCollection<String> list = new ArrayList<>(List.of("a", "b", "c"));
-list.getFirst();      // "a"
-list.getLast();       // "c"
-list.addFirst("z");
-list.reversed();     // reversed view
-
-SequencedMap<String, Integer> map = new LinkedHashMap<>();
-map.putFirst("first", 1);
-map.putLast("last", 99);
-map.firstEntry();     // first=1
-map.pollLastEntry();  // removes and returns last
-map.sequencedKeySet().reversed();
-```
-
-### Unnamed Variables (finalized in Java 22, preview in 21)
-
-```java
-// Underscore for unused variables
-try { /* ... */ } catch (Exception _) { log("failed"); }
-
-for (var _ : collection) { count++; }
-
-map.forEach((_, value) -> process(value));
-
-// Unnamed patterns in switch
-case Point(var x, _) -> "x=" + x;  // ignore y
-```
-
-## Kotlin Essentials
-
-### Null Safety
+Preserve cooperative cancellation. A broad `catch (Exception)` can swallow `CancellationException`:
 
 ```kotlin
-// Non-null by default
-var name: String = "hello"
-// name = null  // compile error
-
-// Nullable types with ?
-var nullable: String? = null
-
-// Safe call operator
-val length = nullable?.length  // null if nullable is null
-
-// Elvis operator
-val len = nullable?.length ?: 0
-
-// Not-null assertion (use sparingly)
-val forced = nullable!!.length  // throws if null
-
-// Smart cast after null check
-if (nullable != null) {
-    println(nullable.length)  // compiler knows it's non-null
+try {
+    performWork()
+} catch (cancellation: CancellationException) {
+    throw cancellation
+} catch (failure: IOException) {
+    handleFailure(failure)
 }
 ```
 
-### Data Classes and Sealed Classes
+`Dispatchers.IO` defaults to `max(64, availableProcessors)` parallelism and is configurable. `limitedParallelism` views can exceed that nominal bound. Treat these as implementation controls, not an application concurrency budget.
+
+Close executor-backed dispatchers:
 
 ```kotlin
-// Auto-generates equals, hashCode, toString, copy, componentN
-data class User(val name: String, val age: Int)
-val user = User("Alice", 30)
-val copy = user.copy(age = 31)
-
-// Sealed class hierarchy (exhaustive when)
-sealed class Result<out T> {
-    data class Success<T>(val data: T) : Result<T>()
-    data class Error(val message: String) : Result<Nothing>()
-    data object Loading : Result<Nothing>()
-}
-when (result) {
-    is Result.Success -> println(result.data)
-    is Result.Error   -> println(result.message)
-    Result.Loading    -> println("loading...")
+Executors.newFixedThreadPool(4).asCoroutineDispatcher().use { dispatcher ->
+    withContext(dispatcher) { performWork() }
 }
 ```
 
-### Extension Functions and Scope Functions
+K2 has been the default compiler since Kotlin 2.0. Remove obsolete `-Pkotlin.experimental.tryK2=true` guidance. Kotlin guard conditions were preview in 2.1 and stable in 2.2.
 
-```kotlin
-// Extension function
-fun String.isPalindrome(): Boolean = this == this.reversed()
-"racecar".isPalindrome()  // true
+## Nullability
 
-// Scope functions
-// let - transform, null-safe operations
-nullable?.let { println(it.length) }
+Platform types cross an unchecked Java/Kotlin boundary. Use an identified annotation ecosystem and migration mode. Prefer JSpecify for new shared Java APIs where it fits; otherwise name the chosen JetBrains or Eclipse annotations rather than using unqualified `@Nullable` examples.
 
-// apply - configure object, returns receiver
-val config = Config().apply {
-    host = "localhost"
-    port = 8080
-}
+## Build correctness
 
-// also - side effects, returns receiver
-val list = mutableListOf(1, 2).also { println("Initial: $it") }
+Gradle cacheable tasks must declare every input and output. A generated version file needs the project version as an input; otherwise a version change can reuse stale output.
 
-// run - compute and return result
-val result = connection.run {
-    connect()
-    query("SELECT ...")
-}
+Use `maven.compiler.release` rather than redundant source/target/release settings. A Maven project containing Kotlin sources needs `kotlin-maven-plugin` executions ordered correctly with Java compilation; declaring `kotlin.version` alone does nothing.
 
-// with - group calls on object
-with(builder) {
-    setName("app")
-    setVersion("1.0")
-    build()
-}
-```
+Avoid fast-decaying dependency versions in generic snippets. Use version catalogs, BOMs, project properties, or clearly dated examples and consult migration guides for majors.
 
-### Coroutines
+## Diagnostics and tuning
 
-```kotlin
-// Suspend function
-suspend fun fetchUser(id: Int): User {
-    return httpClient.get("/users/$id").body()
-}
+Tune from evidence:
 
-// Launch coroutine (fire and forget)
-scope.launch {
-    val user = fetchUser(1)
-    updateUI(user)
-}
+1. Establish resource limits and latency/throughput SLOs.
+2. Collect JFR, GC, native-memory, thread, and allocation evidence.
+3. Change one supported option.
+4. Load test the real workload.
+5. Retain only measured improvement and document rollback.
 
-// Async/await (concurrent)
-val deferred1 = async { fetchUser(1) }
-val deferred2 = async { fetchUser(2) }
-val users = listOf(deferred1.await(), deferred2.await())
+Do not prescribe fixed heap ratios, stack sizes, compiler threads, pause targets, or direct-memory limits as universal defaults. Current JDKs use generational ZGC through `-XX:+UseZGC`; `-XX:+ZGenerational` is obsolete.
 
-// Structured concurrency with coroutineScope
-suspend fun loadDashboard() = coroutineScope {
-    val profile = async { fetchProfile() }
-    val feed = async { fetchFeed() }
-    Dashboard(profile.await(), feed.await())
-}
-```
+Heap dumps can contain secrets. Write them only to a private, access-controlled, capacity-checked path. Never enable unauthenticated or unencrypted remote JMX; use local attach, authenticated TLS, or an SSH-protected path.
 
-## When to Ask for Help
+## Packaging
 
-Ask the user for clarification when:
+- JDK 25 `jlink` uses numeric compression such as `--compress=2`.
+- JDK 26 supports `--compress=zip-6` and related named levels.
+- `jpackage` does not cross-compile; build each package format on its target platform.
+- Native Image uses closed-world analysis. Tracing-agent output covers only exercised behavior; prefer framework plugins and reachability metadata, then test representative paths.
+- Remove obsolete canonical `--no-fallback` guidance and measure artifact/runtime size rather than promising fixed megabytes.
 
-- Choice between Java and Kotlin for a new module is unclear
-- Build tool selection (Gradle vs Maven) needs deciding
-- Spring Boot vs Quarkus vs Micronaut framework choice
-- GraalVM native-image compatibility concerns exist
-- Complex multi-module project structure decisions
-- JVM tuning for specific workload characteristics
-- Migration strategy between Java versions
+## Review checklist
 
----
-
-See `references/` for detailed guides:
-
-- `modern-java.md` - Records, sealed classes, pattern matching, virtual threads, structured concurrency, FFM API
-- `kotlin-patterns.md` - Null safety, coroutines, sealed classes, extension functions, K2 compiler, KMP
-- `build-tools.md` - Gradle Kotlin DSL, Maven, GraalVM native-image, jlink, jpackage, JVM tuning
+- Verify wrapper, JDK, Kotlin, build-tool, and test-platform versions.
+- Label previews and compile/run them with the exact target release.
+- Preserve cancellation and close custom executor/dispatcher lifecycles.
+- Do not claim HttpClient internals or stale virtual-thread pinning behavior.
+- Run tests without skip flags and verify Maven lifecycle bindings.
+- Declare complete Gradle task inputs and configure Kotlin Maven compilation explicitly.
+- Treat live-process diagnostics and heap dumps according to operational impact.
+- Secure JMX and diagnostic artifacts.
+- Tune from JFR/GC/native-memory evidence, not generic flag recipes.
+- Version-gate jlink syntax and build jpackage artifacts on each target platform.
