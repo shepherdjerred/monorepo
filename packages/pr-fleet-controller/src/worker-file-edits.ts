@@ -7,16 +7,24 @@ import type { FleetStore } from "./state.ts";
 
 // Resolve a worktree-relative path to an absolute one, refusing anything that
 // escapes the assigned worktree (absolute inputs, `..` segments, or a symlink
-// whose real target is outside the tree). Shared by every worker tool that
-// touches the filesystem.
+// whose real target is outside the tree) or reaches into Git's own metadata.
+// Shared by every worker tool that touches the filesystem.
 export async function containedPath(
   root: string,
   requestedPath: string,
 ): Promise<string> {
-  if (
-    path.isAbsolute(requestedPath) ||
-    requestedPath.split("/").includes("..")
-  ) {
+  const segments = requestedPath.split("/");
+  // A `.git` segment is off-limits regardless of where it sits: in a linked
+  // worktree `.git` is a file whose contents point at the real Git directory
+  // (overwriting it detaches the worktree), and when a primary checkout is
+  // reused `.git/config`, `.git/hooks/...`, etc. resolve inside the tree and so
+  // would pass the containment check below. A mistaken or prompt-injected worker
+  // edit must never corrupt the checkout or mutate remotes/hooks. Case-folded
+  // because Git treats `.git` case-insensitively on macOS/Windows.
+  if (segments.some((segment) => segment.toLowerCase() === ".git")) {
+    throw new Error(`Refusing to edit Git metadata path: ${requestedPath}`);
+  }
+  if (path.isAbsolute(requestedPath) || segments.includes("..")) {
     throw new Error(`Unsafe worktree path: ${requestedPath}`);
   }
   const canonicalRoot = await realpath(root);

@@ -222,6 +222,47 @@ describe("assignWorktreeBranch guards operator worktree reuse", () => {
     // Clean and already at the PR head: aligned to it, no operator work lost.
     expect(script.resets).toEqual([pr.headSha]);
   });
+
+  test("refuses a clean operator worktree whose HEAD holds unpushed commits", async () => {
+    const pr = identity(16);
+    // Clean working tree, but the operator's local HEAD is ahead of the PR head
+    // with committed-but-unpushed work. Reusing it would let #submitBranch
+    // force-push those commits under the fleet's PR.
+    const localHead = "e".repeat(40);
+    const pullRef = `refs/remotes/pull/${String(pr.number)}/head`;
+    const resets: string[] = [];
+    const mustRun = (executable: string, args: string[]): Promise<string> => {
+      if (executable === "git" && args[0] === "rev-parse") {
+        if (args[1] === "--abbrev-ref") {
+          return Promise.resolve(`${pr.headRefName}\n`);
+        }
+        if (args[1] === pullRef) {
+          return Promise.resolve(`${pr.headSha}\n`);
+        }
+        if (args[1] === "HEAD") {
+          return Promise.resolve(`${localHead}\n`);
+        }
+      }
+      if (executable === "git" && args[0] === "status") {
+        return Promise.resolve("");
+      }
+      if (executable === "git" && args[0] === "reset") {
+        resets.push(args[2] ?? "");
+      }
+      return Promise.resolve("");
+    };
+    const manager = new WorktreeManager({
+      checkout: "/tmp/checkout",
+      worktreeRoot: "/tmp/pr-fleet",
+      run: okRun,
+      mustRun,
+    });
+    await expect(
+      manager.assignWorktreeBranch("/home/user/monorepo", pr),
+    ).rejects.toThrow(/refusing to reuse it because publishing would/);
+    // Never reset an operator worktree we are refusing to reuse.
+    expect(resets).toEqual([]);
+  });
 });
 
 // Provisioning must recognize its own stack worktree even when a restack halted

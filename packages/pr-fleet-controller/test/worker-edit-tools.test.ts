@@ -119,6 +119,19 @@ describe("applyStrReplace", () => {
       }),
     ).rejects.toThrow(/Unsafe worktree path/);
   });
+
+  test("refuses a path reaching into Git metadata", async () => {
+    for (const gitPath of [".git", ".git/config", ".git/hooks/pre-commit"]) {
+      await expect(
+        applyStrReplace(worktree, {
+          path: gitPath,
+          old_string: "x",
+          new_string: "y",
+          replace_all: false,
+        }),
+      ).rejects.toThrow(/Git metadata path/);
+    }
+  });
 });
 
 describe("writeWorktreeFile", () => {
@@ -144,5 +157,11 @@ describe("writeWorktreeFile", () => {
     await expect(
       writeWorktreeFile(worktree, { path: "/etc/x", content: "y" }),
     ).rejects.toThrow(/Unsafe worktree path/);
+  });
+
+  test("refuses writing into the Git directory", async () => {
+    await expect(
+      writeWorktreeFile(worktree, { path: ".git/config", content: "y" }),
+    ).rejects.toThrow(/Git metadata path/);
   });
 });

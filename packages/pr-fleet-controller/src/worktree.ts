@@ -38,7 +38,8 @@ export class WorktreeManager {
   // worktree elsewhere; `findWorktree` prefers a fleet worktree but falls back
   // to reusing an operator worktree in place (see its note), and
   // `assignWorktreeBranch` guards that reuse so the operator's uncommitted work
-  // is never `reset --hard`-ed away.
+  // is never `reset --hard`-ed away and their committed-but-unpushed work is
+  // never force-pushed under the fleet's PR.
   #isFleetWorktree(worktreePath: string): boolean {
     const relative = path.relative(this.#worktreeRoot, worktreePath);
     return (
@@ -53,7 +54,8 @@ export class WorktreeManager {
   // fleet make progress on such a PR, reuse that existing checkout in place: a
   // fleet-owned worktree is always preferred (disposable, safe to hard-reset),
   // and an operator worktree is returned only as a fallback — `assignWorktreeBranch`
-  // refuses to reuse it while it is dirty, so operator edits are never lost.
+  // refuses to reuse it while it is dirty or when its HEAD has diverged from the
+  // PR head, so operator edits are never lost and never force-pushed.
   async findWorktree(branches: string[]): Promise<string | null> {
     const output = await this.#mustRun("git", [
       "worktree",
@@ -216,6 +218,20 @@ export class WorktreeManager {
     );
     const localHead = localHeadOutput.trim();
     if (localHead !== fetchedHead) {
+      // An operator-owned worktree must sit exactly at the fetched PR head.
+      // Working-tree cleanliness is not enough: a clean checkout can still hold
+      // committed-but-unpushed operator work (WIP, an unrelated branch tip), and
+      // the ahead-of-remote branch below would preserve that local HEAD, which
+      // `GitOperations.#submitBranch` later force-pushes — silently publishing
+      // the operator's commits under this PR. Only a fleet-owned worktree may
+      // carry an unpublished fix forward (it authored the commit); refuse an
+      // operator worktree that has diverged so the PR pauses with an actionable
+      // message instead.
+      if (!this.#isFleetWorktree(worktree)) {
+        throw new Error(
+          `Operator worktree ${worktree} is at ${localHead}, not PR #${n} head ${fetchedHead}; refusing to reuse it because publishing would force-push the operator's local commits. Push or remove them, or remove the worktree, to let the fleet work this PR.`,
+        );
+      }
       const aheadOfRemote = await this.#run({
         executable: "git",
         args: ["merge-base", "--is-ancestor", fetchedHead, localHead],
