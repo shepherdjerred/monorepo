@@ -255,3 +255,8 @@ verifiable evidence`, an earlier-attempt-has-evidence case still completes, and
   Next: land + deploy, then re-run Phase 1 (cached good chunks, incl.
   `2024-10-0000`, reuse for free; `2023-03-0000` now sanitizes to its verifiable
   subset).
+- 2026-08-04 (truncation fix): `fix/glitter-synthesis-truncation` raises
+  `SYNTHESIS_MAX_OUTPUT_TOKENS` 15k→28k and retries a synthesis call once at a
+  40k ceiling when the provider reports `finish_reason=length`. The preflight
+  estimate and budget authorization use the actual base/retry caps. This is a
+  probe for the observed `gpt-5.6-sol` reasoning-token drift.

@@ -12,6 +12,7 @@ import {
   StyleSynthesisSchema,
 } from "./glitter-context-refresh-style-schemas.ts";
 import * as glitterOpenai from "./glitter-context-refresh-openai.ts";
+import { LengthFinishReasonError } from "openai/core/error";
 import {
   sanitizeChunkSummary,
   validateChunkSummary,
@@ -310,10 +311,17 @@ const mockUsage = { prompt_tokens: 100, completion_tokens: 50 };
 let chunkResponder: (call: number) => unknown = () => goodChunkSummary;
 let chunkCallCount = 0;
 let recordedSeeds: number[] = [];
+// Synthesis calls whose max_completion_tokens is below this threshold reject with
+// a length-truncation error (0 = never truncate).
+let synthesisTruncateBelowTokens = 0;
+let recordedSynthesisMaxTokens: number[] = [];
 
 await mock.module("./glitter-context-refresh-openai.ts", () => ({
   ...glitterOpenai,
-  parseGlitterCompletion: (callSite: string, params: { seed: number }) => {
+  parseGlitterCompletion: (
+    callSite: string,
+    params: { seed: number; max_completion_tokens: number },
+  ) => {
     if (callSite.startsWith("glitter-style-chunk")) {
       recordedSeeds.push(params.seed);
       const parsed = chunkResponder(chunkCallCount);
@@ -322,6 +330,10 @@ await mock.module("./glitter-context-refresh-openai.ts", () => ({
         choices: [{ message: { parsed, content: null } }],
         usage: mockUsage,
       });
+    }
+    recordedSynthesisMaxTokens.push(params.max_completion_tokens);
+    if (params.max_completion_tokens < synthesisTruncateBelowTokens) {
+      return Promise.reject(new LengthFinishReasonError());
     }
     return Promise.resolve({
       choices: [{ message: { parsed: synthesis, content: null } }],
@@ -411,6 +423,24 @@ describe("Glitter extraction repair loop", () => {
 
     expect(result.schemaVersion).toBe(2);
     expect(recordedSeeds).toEqual([0, 1, 2]);
+  });
+});
+
+describe("Glitter synthesis truncation retry", () => {
+  test("retries synthesis at a higher token cap on a length truncation", async () => {
+    recordedSynthesisMaxTokens = [];
+    // The base 28k call rejects with a length truncation; only the 40k retry
+    // ceiling succeeds.
+    synthesisTruncateBelowTokens = 40_000;
+    try {
+      const result = await generateWithStubbedModel(() => goodChunkSummary);
+      expect(result.schemaVersion).toBe(2);
+      // Base call at the 28k cap truncated, then the run retried at the ceiling.
+      expect(recordedSynthesisMaxTokens).toContain(28_000);
+      expect(recordedSynthesisMaxTokens).toContain(40_000);
+    } finally {
+      synthesisTruncateBelowTokens = 0;
+    }
   });
 });
 

@@ -1,4 +1,5 @@
 import { zodResponseFormat } from "openai/helpers/zod";
+import { LengthFinishReasonError } from "openai/core/error";
 import { z } from "zod/v4";
 import {
   type StyleCard,
@@ -45,7 +46,14 @@ import {
 const EXTRACTION_MODEL = "gpt-5.6-luna";
 const SYNTHESIS_MODEL = "gpt-5.6-sol";
 const EXTRACTION_MAX_OUTPUT_TOKENS = 2000;
-const SYNTHESIS_MAX_OUTPUT_TOKENS = 15_000;
+// gpt-5.6-sol is a reasoning model at `reasoning_effort: "medium"`, so its
+// hidden reasoning tokens share `max_completion_tokens` with the (large) style
+// synthesis output. Observed live: reasoning + output crossed the former 15k cap
+// and truncated (finish_reason=length → unparseable → LengthFinishReasonError).
+// 28k gives comfortable headroom over the observed ~15k usage; if a call still
+// truncates, it is retried once at the ceiling below.
+const SYNTHESIS_MAX_OUTPUT_TOKENS = 28_000;
+const SYNTHESIS_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS = 40_000;
 const DETERMINISTIC_SEED = 0;
 
 // gpt-5.6 sometimes emits an observation citing a message ID outside its
@@ -379,10 +387,24 @@ async function runSynthesis(input: {
         estimatedCallCostUsd({
           model: SYNTHESIS_MODEL,
           inputTokenUpperBound: inputTokenUpperBound(JSON.stringify(params)),
-          outputTokenUpperBound: SYNTHESIS_MAX_OUTPUT_TOKENS,
+          outputTokenUpperBound: SYNTHESIS_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
         }),
       );
-      const completion = await parseGlitterCompletion(callSite, params);
+      // Reasoning + output can still truncate at the base cap; retry once with a
+      // higher `max_completion_tokens` on a length finish before giving up.
+      const completion = await (async () => {
+        try {
+          return await parseGlitterCompletion(callSite, params);
+        } catch (error: unknown) {
+          if (!(error instanceof LengthFinishReasonError)) {
+            throw error;
+          }
+          return await parseGlitterCompletion(callSite, {
+            ...params,
+            max_completion_tokens: SYNTHESIS_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
+          });
+        }
+      })();
       const message = completion.choices[0]?.message;
       return glitterCompletionArtifact({
         model: SYNTHESIS_MODEL,
@@ -431,18 +453,19 @@ export function estimateStyleGenerationCost(input: {
   const synthesisInputUpperBound =
     inputTokenUpperBound(synthesisBase) +
     chunks.length * EXTRACTION_MAX_OUTPUT_TOKENS;
+  // Worst-case output is the truncation-retry ceiling, not the base cap.
   const synthesisInitialCall = estimatedCallCostUsd({
     model: SYNTHESIS_MODEL,
     inputTokenUpperBound: synthesisInputUpperBound,
-    outputTokenUpperBound: SYNTHESIS_MAX_OUTPUT_TOKENS,
+    outputTokenUpperBound: SYNTHESIS_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
   });
   // A synthesis repair likewise serializes the prior synthesis (bounded by the
-  // output cap) plus the error into its request.
+  // output ceiling) plus the error into its request.
   const synthesisRepairCall = estimatedCallCostUsd({
     model: SYNTHESIS_MODEL,
     inputTokenUpperBound:
-      synthesisInputUpperBound + SYNTHESIS_MAX_OUTPUT_TOKENS,
-    outputTokenUpperBound: SYNTHESIS_MAX_OUTPUT_TOKENS,
+      synthesisInputUpperBound + SYNTHESIS_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
+    outputTokenUpperBound: SYNTHESIS_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
   });
   return (
     extractionCost +
