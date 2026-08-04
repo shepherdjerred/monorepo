@@ -41,7 +41,7 @@ git branch --verbose --verbose
 git remote --verbose
 git reflog
 git worktree list --porcelain
-git config list --show-origin --show-scope
+git config --list --show-origin --show-scope
 ```
 
 Use `git show <ref>:<path>`, `git log <ref> -- <path>`, and `git diff <base>...<head>` to inspect another branch without switching the working tree.
@@ -137,9 +137,11 @@ Never force-push main, release branches, shared branches, or work another person
 Repository hooks are executable policy. Inspect the configured hook path and hook source before relying on them:
 
 ```bash
-git config get core.hooksPath
-git hook list
+git config --get core.hooksPath
+ls -la "$(git rev-parse --git-path hooks)"
 ```
+
+`git config --get`/`--list` work on every supported Git version; the newer `git config get`/`git config list` subcommand syntax does not exist before Git 2.46. `git hook list <hook-name>` (added in Git 2.54, and it requires a hook name — it does not list every hook) can supplement this once the installed version is confirmed; do not rely on it as the portable default.
 
 Use credential helpers or `GIT_ASKPASS`; never embed tokens in remotes, configuration, logs, or files. Treat hook input and filenames as untrusted shell data.
 
