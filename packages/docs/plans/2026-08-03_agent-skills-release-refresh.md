@@ -138,6 +138,10 @@ skill's 30-source set rather than treated as independent 30-source units.
   date-version ledger originally described); the skill validator passes for
   all five. See the 2026-08-04 entry below for independent liveness
   verification of every listed source.
+- 2026-08-03: Completed the next language/tooling wave for Go, Lua, JVM, and
+  Fish: 238 primary pages fetched and inspected. Nine skills now have 424
+  primary plus 15 supplemental sources, 439 total. The new four rewrites pass
+  formatting, skill validation, and batched live-link checks.
 - 2026-08-04: Re-verified the five shipped Research ledgers (`git-helper`,
   `bun-runtime-best-practices`, `typescript-helper`, `rust-helper`,
   `python-helper`) by extracting all linked URLs and live-checking each with
@@ -150,6 +154,13 @@ skill's 30-source set rather than treated as independent 30-source units.
   reconciling the branch's actual tracking with the corrected Execution
   Model. The branch is git-spice-tracked going forward; no `gh stack` state
   remains authoritative for this work.
+- 2026-08-04: Found the jvm-helper and lua-helper Research ledgers linked 28
+  `.../releases/latest` URLs, which redirect (HTTP 302) and fail the
+  `curl -sI` liveness check the Quality Gates require even though the target
+  content is live. Resolved each to its actual release-tag URL and
+  re-verified all 28 return HTTP 200 with a plain `curl -sI` (no
+  redirect-follow), closing the same class of reproducibility gap as the
+  entry above.
 
 ## Session Log — 2026-08-03
 
