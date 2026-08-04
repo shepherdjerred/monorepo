@@ -3,7 +3,7 @@ id: pr-fleet-live-ui
 type: plan
 status: in-progress
 board: true
-verification: pending
+verification: agent
 disposition: active
 ---
 
@@ -62,6 +62,10 @@ client (mirror `packages/docs-board`); auto-spawn (`--no-ui` opts out).
   `spans.jsonl` fixture for reasoning until a fresh run exists).
 - Live: `pr:fleet --model …` opens browser, updates as events+spans append;
   `--no-ui` suppresses; Ctrl-C tears the child down.
+
+## Remaining
+
+- [ ] Drive PR #1992 (`feature/pr-fleet-live-ui`) to green on Buildkite `bun run verify` — the backstop for repo-wide gates (Knip, react-version-sync, markdownlint) that cannot run locally — and fix forward on any red step.
 
 ## Session Log — 2026-08-03
 
