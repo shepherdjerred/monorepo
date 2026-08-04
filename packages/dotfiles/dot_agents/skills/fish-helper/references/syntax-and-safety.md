@@ -42,14 +42,18 @@ function with_temp
     set -l command_status $status
 
     popd
-    or return
+    set -l popd_status $status
     command rm -rf -- $temp_dir
     or return
+
+    if test $popd_status -ne 0
+        return $popd_status
+    end
     return $command_status
 end
 ```
 
-Resolve and validate the exact temp path before cleanup. This wrapper handles ordinary completion; interruption-safe cleanup may need a job/process lifecycle outside a simple function.
+Resolve and validate the exact temp path before cleanup. Run the `rm -rf` unconditionally after `popd`, not gated behind its success: a wrapped Fish function that clears the directory stack, or a since-removed original directory, makes `popd` fail, and an early `return` there would skip cleanup and leak the temp directory. This wrapper handles ordinary completion; interruption-safe cleanup may need a job/process lifecycle outside a simple function.
 
 ## Source
 
