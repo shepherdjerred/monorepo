@@ -45,21 +45,32 @@ func TestFormatChanspec(t *testing.T) {
 		channel   int
 		bandwidth int
 		want      string
+		wantErr   bool
 	}{
-		{"auto", 0, 0, "0"},
-		{"channel-only", 6, 0, "6"},
-		{"bw-20", 6, 1, "6/20"},
-		{"bw-40", 36, 2, "36/40"},
-		{"bw-80", 36, 4, "36/80"},
-		{"bw-160", 149, 5, "149/160"},
-		{"unknown-bw", 6, 3, "6"},
+		{"auto", 0, 0, "0", false},
+		{"channel-only", 6, 0, "6", false},
+		{"bw-20", 6, 1, "6/20", false},
+		{"bw-40", 36, 2, "36/40", false},
+		{"bw-80-code-3", 149, 3, "149/80", false},
+		{"bw-80-code-4", 36, 4, "36/80", false},
+		{"bw-160", 149, 5, "149/160", false},
+		{"unsupported-bw", 6, 7, "", true},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := formatChanspec(tc.channel, tc.bandwidth)
+			got, err := formatChanspec(tc.channel, tc.bandwidth)
+			if tc.wantErr {
+				if err == nil {
+					t.Errorf("formatChanspec(%d, %d) = %q, want error", tc.channel, tc.bandwidth, got)
+				}
+				return
+			}
+			if err != nil {
+				t.Errorf("formatChanspec(%d, %d) unexpected error: %v", tc.channel, tc.bandwidth, err)
+			}
 			if got != tc.want {
 				t.Errorf("formatChanspec(%d, %d) = %q, want %q", tc.channel, tc.bandwidth, got, tc.want)
 			}
@@ -71,24 +82,35 @@ func TestBandwidthToString(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name string
-		bw   int
-		want string
+		name    string
+		bw      int
+		want    string
+		wantErr bool
 	}{
-		{"zero", 0, ""},
-		{"1", 1, "20"},
-		{"2", 2, "40"},
-		{"4", 4, "80"},
-		{"5", 5, "160"},
-		{"3-unknown", 3, ""},
-		{"negative", -1, ""},
+		{"zero-auto", 0, "", false},
+		{"1", 1, "20", false},
+		{"2", 2, "40", false},
+		{"3", 3, "80", false},
+		{"4", 4, "80", false},
+		{"5", 5, "160", false},
+		{"unsupported", 7, "", true},
+		{"negative", -1, "", true},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := bandwidthToString(tc.bw)
+			got, err := bandwidthToString(tc.bw)
+			if tc.wantErr {
+				if err == nil {
+					t.Errorf("bandwidthToString(%d) = %q, want error", tc.bw, got)
+				}
+				return
+			}
+			if err != nil {
+				t.Errorf("bandwidthToString(%d) unexpected error: %v", tc.bw, err)
+			}
 			if got != tc.want {
 				t.Errorf("bandwidthToString(%d) = %q, want %q", tc.bw, got, tc.want)
 			}

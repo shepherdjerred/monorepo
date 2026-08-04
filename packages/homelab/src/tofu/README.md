@@ -71,12 +71,17 @@ tofu -chdir=seaweedfs apply
 
 ## CI/CD
 
-There is no CI for these stacks (the Dagger/Buildkite pipeline was removed
-2026-07). Run `tofu plan` / `tofu apply` manually per module.
+The static Buildkite pipeline (`.buildkite/pipeline.yml`) drives these stacks.
+The allowlist is the inline `for stack in ...` loop in two steps: the
+`pr-dryrun` step (`:microscope: pr dry-run`) runs `tofu ... plan` for each
+listed stack on every PR, and the `tofu-apply` step (`:terraform: tofu apply`)
+runs `tofu ... apply` for each on merge to `main`. Both loops enumerate the
+managed stacks explicitly (`seaweedfs tailscale buildkite arr pagerduty github
+cloudflare`); grep `for stack in` in the pipeline for the current lines.
 
-The `asuswrt` module is **excluded from CI** (not in `TOFU_STACKS` in
-`scripts/ci/src/catalog.ts`): the CI container has tailnet-only egress and cannot
-reach the LAN routers. It is local-run only — see `asuswrt/README.md`.
+The `asuswrt` module is **excluded from CI** — it is deliberately absent from
+those `for stack in ...` allowlists because the CI pod has tailnet-only egress
+and cannot reach the LAN routers. It is local-run only — see `asuswrt/README.md`.
 
 ## What's Managed
 
