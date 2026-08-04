@@ -437,11 +437,15 @@ describe("GoalManager final report", () => {
     await manager.shutdown();
   });
 
-  test("still finishes a goal when the checkpoint save fails", async () => {
+  test("holds the input lease until the checkpoint save completes", async () => {
     const runtimeDirectory = await createRuntimeDirectory();
     const process = makeProcess();
     const messages: GoalDiscordMessage[] = [];
-    let checkpoints = 0;
+    let leaseReleased = false;
+    let leaseHeldAtCheckpoint: boolean | undefined;
+    const releaseInputLease = () => {
+      leaseReleased = true;
+    };
     const manager = new GoalManager({
       config: makeGoalConfig(runtimeDirectory),
       controlToken: "token",
@@ -450,11 +454,10 @@ describe("GoalManager final report", () => {
         messages.push(message);
       },
       now: () => new Date("2026-06-13T00:00:00.000Z"),
-      // Emerald rejects a save outside the overworld/battle — teardown must not
-      // fail because of it.
+      acquireInputLease: () => releaseInputLease,
       checkpointGame: () => {
-        checkpoints += 1;
-        return Promise.reject(new Error("not in a saveable state"));
+        leaseHeldAtCheckpoint = !leaseReleased;
+        return Promise.resolve();
       },
     });
 
@@ -470,7 +473,47 @@ describe("GoalManager final report", () => {
       await Bun.sleep(1);
     }
 
-    expect(checkpoints).toBe(1);
+    expect(leaseHeldAtCheckpoint).toBe(true);
+    expect(leaseReleased).toBe(true);
+    await manager.shutdown();
+  });
+
+  test("still finishes a goal when the checkpoint save fails", async () => {
+    const runtimeDirectory = await createRuntimeDirectory();
+    const process = makeProcess();
+    const messages: GoalDiscordMessage[] = [];
+    let checkpoints = 0;
+    const manager = new GoalManager({
+      config: makeGoalConfig(runtimeDirectory),
+      controlToken: "token",
+      spawner: () => process,
+      sendMessage: async (message) => {
+        messages.push(message);
+      },
+      now: () => new Date("2026-06-13T00:00:00.000Z"),
+      // Emerald rejects a save outside the overworld/battle — teardown must not
+      // fail because of it, but it should retry to let a transient state clear.
+      checkpointGame: () => {
+        checkpoints += 1;
+        return Promise.reject(new Error("not in a saveable state"));
+      },
+      checkpointRetry: { attempts: 3, delayMs: 0, sleep: Bun.sleep },
+    });
+
+    const start = await manager.startGoal({
+      goal: "Reach Petalburg",
+      requesterId: "user-a",
+      channelId: "channel",
+    });
+    expect(start.kind).toBe("started");
+
+    process.finish(0);
+    for (let attempt = 0; attempt < 50 && messages.length === 0; attempt += 1) {
+      await Bun.sleep(1);
+    }
+
+    // Retried the configured number of times, then finished teardown anyway.
+    expect(checkpoints).toBe(3);
     expect(messages).toHaveLength(1);
     expect(messages[0]?.content).toContain("goal finished");
     await manager.shutdown();

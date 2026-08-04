@@ -14,14 +14,18 @@ export const defaultSpawner: GoalProcessSpawner = (args, options) => {
   });
 };
 
+// Settle a goal's child process: optionally SIGTERM it, await its exit and
+// stdout pump, then run `onSettled` (drains in-flight control-server commands).
+// Deliberately does NOT release the input lease — the caller keeps it held
+// through its terminal checkpoint save and releases it afterwards, so no
+// Discord/web command can move the game between goal end and the save.
 export async function settleGoalProcess(
   resources: {
     process: GoalProcess;
     stdoutPump: Promise<void>;
-    releaseInputLease: () => void;
   },
   terminate: boolean,
-  beforeRelease: () => Promise<void> = () => Promise.resolve(),
+  onSettled: () => Promise<void> = () => Promise.resolve(),
 ): Promise<number> {
   if (terminate) resources.process.kill("SIGTERM");
   try {
@@ -29,8 +33,7 @@ export async function settleGoalProcess(
     await resources.stdoutPump;
     return exitCode;
   } finally {
-    await beforeRelease();
-    resources.releaseInputLease();
+    await onSettled();
   }
 }
 
