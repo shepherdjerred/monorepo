@@ -131,7 +131,13 @@ The `homelab-tofu-state` bucket has `prevent_destroy = true` since it stores sta
 
 The tailnet ACL policy (`tailscale_acl`): `tagOwners`, access rules, Tailscale SSH, and policy `tests`. Moves the tailnet from implicit allow-all (every device trusted) to deny-by-default — the account owner keeps full access, non-admin humans get only the published `*.ts.net` apps, and tagged/untrusted devices are denied by default.
 
-> **Not yet wired into CI drift.** `tailscale` is intentionally absent from `TOFU_STACKS` (`scripts/ci/src/catalog.ts`) until a Tailscale OAuth client + the `TAILSCALE_OAUTH_CLIENT_ID`/`TAILSCALE_OAUTH_CLIENT_SECRET` CI secrets exist — otherwise the plan/apply steps fail with no credentials. First apply also requires reconciling the existing admin-console policy. See `packages/docs/guides/2026-06-06_tailscale-acls-runbook.md` for the full enablement (including the exact CI wiring diff).
+> **Wired into CI.** `tailscale` is in both `for stack in ...` loops in
+> `.buildkite/pipeline.yml` — planned on every PR (`pr-dryrun`) and applied on
+> merge (`tofu-apply`), like the other in-loop stacks. Its plan/apply steps
+> require the `TAILSCALE_OAUTH_CLIENT_ID` / `TAILSCALE_OAUTH_CLIENT_SECRET` CI
+> secrets (scope `acl`). Enabling it originally required reconciling the
+> pre-existing admin-console policy; see
+> `packages/docs/guides/2026-06-06_tailscale-acls-runbook.md`.
 
 ## Adding a New Domain
 

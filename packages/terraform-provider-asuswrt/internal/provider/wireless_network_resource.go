@@ -367,8 +367,16 @@ func (r *wirelessNetworkResource) resolveChannelNumber(ctx context.Context, band
 		return 0, fmt.Errorf("reading current chanspec %s: %w", key, err)
 	}
 
-	if cur == "" || cur == "0" {
+	// "0" is the router's explicit auto-channel value; keep it auto. An empty
+	// value means the key is absent/unreadable (NvramGetSingle returns "" for a
+	// missing key) — that is not "auto", so fail rather than silently write
+	// channel 0 and switch the radio to automatic channel selection.
+	if cur == "0" {
 		return 0, nil
+	}
+
+	if cur == "" {
+		return 0, fmt.Errorf("cannot change bandwidth: %s is empty or absent, so the current channel is unknown; set channel explicitly", key)
 	}
 
 	lead := cur
