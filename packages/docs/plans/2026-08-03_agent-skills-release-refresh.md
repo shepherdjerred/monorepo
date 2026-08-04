@@ -130,6 +130,10 @@ skill's 30-source set rather than treated as independent 30-source units.
   project-primary pages, 201 total, were successfully fetched and inspected. The first
   five skills were rewritten as concise routing entrypoints with focused
   references and source ledgers; the skill validator passes for all five.
+- 2026-08-03: Completed the next language/tooling wave for Go, Lua, JVM, and
+  Fish: 238 primary pages fetched and inspected. Nine skills now have 424
+  primary plus 15 supplemental sources, 439 total. The new four rewrites pass
+  formatting, skill validation, and batched live-link checks.
 
 ## Session Log — 2026-08-03
 
