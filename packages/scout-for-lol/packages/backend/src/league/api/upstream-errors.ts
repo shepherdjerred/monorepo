@@ -7,16 +7,22 @@ import { z } from "zod";
  *
  * Two families:
  * - Standard origin 5xx (502/503/504) — Riot's own servers during maintenance.
- * - Cloudflare edge 5xx (520–527, 530) — Riot's API is fronted by Cloudflare,
- *   which emits these when it can't get a valid response from the origin (520
- *   unknown error, 521 down, 522 connection timeout, 523 unreachable, 524
- *   timeout, 525/526 SSL, 527 railgun, 530 origin DNS). These are transient
- *   edge failures, not bugs in our code; the Spectator poller sees 520 in bursts
- *   (chiefly the KOREA region) and they must route to the circuit breaker, not
- *   flood error tracking.
+ * - Cloudflare edge 5xx (520–527) — Riot's API is fronted by Cloudflare, which
+ *   emits these when it can't get a valid response from the origin (520 unknown
+ *   error, 521 down, 522 connection timeout, 523 unreachable, 524 timeout,
+ *   525/526 SSL, 527 railgun). These are transient edge failures, not bugs in
+ *   our code; the Spectator poller sees 520 in bursts (chiefly the KOREA region)
+ *   and they must route to the circuit breaker, not flood error tracking.
+ *
+ * 530 is deliberately excluded: Cloudflare returns it as a wrapper for the whole
+ * Error 1xxx range, which mixes transient origin conditions (e.g. 1016 origin
+ * DNS) with persistent ones (1015 rate limited, 1020 access denied/firewall
+ * block). The status alone cannot establish transience, so a persistent Riot-
+ * side block must stay visible in error tracking rather than be silently
+ * sampled away.
  */
 export const EXPECTED_UPSTREAM_ERROR_STATUSES = new Set([
-  502, 503, 504, 520, 521, 522, 523, 524, 525, 526, 527, 530,
+  502, 503, 504, 520, 521, 522, 523, 524, 525, 526, 527,
 ]);
 
 const HttpStatusShape = z.object({ status: z.coerce.number().int() });
