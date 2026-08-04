@@ -91,7 +91,7 @@ func (r *wirelessNetworkResource) Schema(_ context.Context, _ resource.SchemaReq
 				Computed:    true,
 			},
 			"bandwidth": schema.Int64Attribute{
-				Description: "Channel bandwidth: 0=auto, 1=20MHz, 2=40MHz, 4=80MHz, 5=160MHz.",
+				Description: "Channel bandwidth: 0=auto, 1=20MHz, 2=40MHz, 3/4=80MHz, 5=160MHz.",
 				Optional:    true,
 				Computed:    true,
 			},
@@ -267,7 +267,11 @@ func (r *wirelessNetworkResource) applyWireless(ctx context.Context, band int, p
 	setOptionalString(values, prefix+"wpa_psk", plan.WPAPassphrase)
 
 	if !plan.Channel.IsNull() && !plan.Channel.IsUnknown() {
-		values[prefix+"chanspec"] = formatChanspec(int(plan.Channel.ValueInt64()), int(plan.Bandwidth.ValueInt64()))
+		chanspec, err := formatChanspec(int(plan.Channel.ValueInt64()), int(plan.Bandwidth.ValueInt64()))
+		if err != nil {
+			return fmt.Errorf("formatting chanspec: %w", err)
+		}
+		values[prefix+"chanspec"] = chanspec
 	}
 
 	if !plan.Bandwidth.IsNull() && !plan.Bandwidth.IsUnknown() {
@@ -377,32 +381,45 @@ func parseChannel(chanspec string) int {
 	return ch
 }
 
-// formatChanspec creates a chanspec string from channel and bandwidth.
-func formatChanspec(channel, bandwidth int) string {
+// formatChanspec creates a chanspec string from channel and bandwidth. It
+// returns an error for bandwidth codes it cannot model, so an unsupported
+// value fails the apply loudly instead of silently writing a bare channel
+// (which would narrow the radio to the firmware default — e.g. turning a
+// 149/80 chanspec into 149).
+func formatChanspec(channel, bandwidth int) (string, error) {
 	if channel == 0 {
-		return "0"
+		return "0", nil
 	}
 
-	bwStr := bandwidthToString(bandwidth)
+	bwStr, err := bandwidthToString(bandwidth)
+	if err != nil {
+		return "", err
+	}
 	if bwStr == "" {
-		return strconv.Itoa(channel)
+		return strconv.Itoa(channel), nil
 	}
 
-	return strconv.Itoa(channel) + "/" + bwStr
+	return strconv.Itoa(channel) + "/" + bwStr, nil
 }
 
-// bandwidthToString converts the bandwidth int to the chanspec suffix.
-func bandwidthToString(bw int) string {
+// bandwidthToString converts the wl_bw bandwidth code to the chanspec suffix.
+// Code 0 (auto) maps to an empty suffix (a bare channel, which the firmware
+// reads as auto width). On this hardware the 80 MHz radio uses code 3 (some
+// firmwares report 4), so both are accepted. Any other code returns an error
+// rather than a silent empty suffix, which would corrupt the chanspec.
+func bandwidthToString(bw int) (string, error) {
 	switch bw {
+	case 0:
+		return "", nil
 	case 1:
-		return "20"
+		return "20", nil
 	case 2:
-		return "40"
-	case 4:
-		return "80"
+		return "40", nil
+	case 3, 4:
+		return "80", nil
 	case 5:
-		return "160"
+		return "160", nil
 	default:
-		return ""
+		return "", fmt.Errorf("unsupported wl_bw bandwidth code %d (expected 0=auto, 1=20MHz, 2=40MHz, 3/4=80MHz, 5=160MHz)", bw)
 	}
 }
