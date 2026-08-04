@@ -75,4 +75,4 @@ Project-local config through `exrc` executes code. Use `:trust` and `vim.secure.
 - [Options](https://neovim.io/doc/user/options.html)
 - [Deprecated APIs](https://neovim.io/doc/user/deprecated.html)
 - [Trust](https://neovim.io/doc/user/starting.html#trust)
-- [Neovim latest release](https://github.com/neovim/neovim/releases/latest)
+- [Neovim v0.12.4](https://github.com/neovim/neovim/releases/tag/v0.12.4)

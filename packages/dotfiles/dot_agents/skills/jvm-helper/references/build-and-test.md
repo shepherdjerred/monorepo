@@ -59,7 +59,7 @@ Avoid embedding current library/plugin versions in evergreen patterns. Use a ver
 - [Kotlin Gradle project configuration](https://kotlinlang.org/docs/gradle-configure-project.html)
 - [Kotlin JUnit tests](https://kotlinlang.org/docs/jvm-test-using-junit.html)
 - [kotlinx.coroutines API](https://kotlinlang.org/api/kotlinx.coroutines/)
-- [kotlinx.coroutines releases](https://github.com/Kotlin/kotlinx.coroutines/releases/latest)
+- [kotlinx.coroutines 1.11.0](https://github.com/Kotlin/kotlinx.coroutines/releases/tag/1.11.0)
 - [Gradle release notes](https://docs.gradle.org/current/release-notes.html)
 - [Gradle compatibility](https://docs.gradle.org/current/userguide/compatibility.html)
 - [Gradle wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html)
