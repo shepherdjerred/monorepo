@@ -1,5 +1,5 @@
 ---
-id: 2026-08-03_dpp-save-goals-at-end
+id: 2026-08-03-dpp-save-goals-at-end
 type: log
 status: complete
 board: false
