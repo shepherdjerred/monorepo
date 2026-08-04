@@ -232,7 +232,9 @@ func TestReadOptionalBoolFromFlag(t *testing.T) {
 
 		target := types.BoolValue(false)
 		result := map[string]string{"enabled": "1"}
-		readOptionalBoolFromFlag(&target, result, "enabled")
+		if err := readOptionalBoolFromFlag(&target, result, "enabled"); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 
 		if !target.ValueBool() {
 			t.Errorf("expected target to be true")
@@ -244,7 +246,9 @@ func TestReadOptionalBoolFromFlag(t *testing.T) {
 
 		target := types.BoolValue(true)
 		result := map[string]string{"enabled": "0"}
-		readOptionalBoolFromFlag(&target, result, "enabled")
+		if err := readOptionalBoolFromFlag(&target, result, "enabled"); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 
 		if target.ValueBool() {
 			t.Errorf("expected target to be false")
@@ -257,7 +261,9 @@ func TestReadOptionalBoolFromFlag(t *testing.T) {
 		// Optional+Computed: a null target is populated from the flag on import.
 		target := types.BoolNull()
 		result := map[string]string{"enabled": "1"}
-		readOptionalBoolFromFlag(&target, result, "enabled")
+		if err := readOptionalBoolFromFlag(&target, result, "enabled"); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 
 		if target.IsNull() || !target.ValueBool() {
 			t.Errorf("expected target to be populated true, got null=%v value=%v", target.IsNull(), target.ValueBool())
@@ -269,7 +275,9 @@ func TestReadOptionalBoolFromFlag(t *testing.T) {
 
 		target := types.BoolValue(true)
 		result := map[string]string{}
-		readOptionalBoolFromFlag(&target, result, "enabled")
+		if err := readOptionalBoolFromFlag(&target, result, "enabled"); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 
 		if !target.ValueBool() {
 			t.Errorf("expected target to remain true")
@@ -281,10 +289,28 @@ func TestReadOptionalBoolFromFlag(t *testing.T) {
 
 		target := types.BoolValue(true)
 		result := map[string]string{"enabled": ""}
-		readOptionalBoolFromFlag(&target, result, "enabled")
+		if err := readOptionalBoolFromFlag(&target, result, "enabled"); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 
 		if !target.IsNull() {
 			t.Errorf("expected target to be cleared to null, got %v", target.ValueBool())
+		}
+	})
+
+	t.Run("non-boolean-value-errors", func(t *testing.T) {
+		t.Parallel()
+
+		// A malformed flag (e.g. after a firmware/key-layout change) must be
+		// rejected, not silently coerced to false.
+		target := types.BoolValue(true)
+		result := map[string]string{"enabled": "2"}
+		if err := readOptionalBoolFromFlag(&target, result, "enabled"); err == nil {
+			t.Fatalf("expected error for non-boolean flag value, got none")
+		}
+
+		if !target.ValueBool() {
+			t.Errorf("expected target to be left unchanged on error, got %v", target.ValueBool())
 		}
 	})
 }
@@ -297,22 +323,28 @@ func TestReadOptionalInt64FromString(t *testing.T) {
 
 		target := types.Int64Value(0)
 		result := map[string]string{"port": "42"}
-		readOptionalInt64FromString(&target, result, "port")
+		if err := readOptionalInt64FromString(&target, result, "port"); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 
 		if target.ValueInt64() != 42 {
 			t.Errorf("expected target to be 42, got %d", target.ValueInt64())
 		}
 	})
 
-	t.Run("non-numeric-no-change", func(t *testing.T) {
+	t.Run("non-numeric-value-errors", func(t *testing.T) {
 		t.Parallel()
 
+		// A malformed encoding (e.g. after a firmware/key-layout change) must be
+		// rejected, not silently left at the prior value.
 		target := types.Int64Value(7)
 		result := map[string]string{"port": "abc"}
-		readOptionalInt64FromString(&target, result, "port")
+		if err := readOptionalInt64FromString(&target, result, "port"); err == nil {
+			t.Fatalf("expected error for non-numeric value, got none")
+		}
 
 		if target.ValueInt64() != 7 {
-			t.Errorf("expected target to remain 7, got %d", target.ValueInt64())
+			t.Errorf("expected target to be left unchanged on error, got %d", target.ValueInt64())
 		}
 	})
 
@@ -321,7 +353,9 @@ func TestReadOptionalInt64FromString(t *testing.T) {
 
 		target := types.Int64Value(5)
 		result := map[string]string{}
-		readOptionalInt64FromString(&target, result, "port")
+		if err := readOptionalInt64FromString(&target, result, "port"); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 
 		if target.ValueInt64() != 5 {
 			t.Errorf("expected target to remain 5, got %d", target.ValueInt64())
@@ -334,7 +368,9 @@ func TestReadOptionalInt64FromString(t *testing.T) {
 		// Optional+Computed: a null target is populated from the numeric value.
 		target := types.Int64Null()
 		result := map[string]string{"port": "42"}
-		readOptionalInt64FromString(&target, result, "port")
+		if err := readOptionalInt64FromString(&target, result, "port"); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 
 		if target.IsNull() || target.ValueInt64() != 42 {
 			t.Errorf("expected target to be populated 42, got null=%v value=%d", target.IsNull(), target.ValueInt64())
@@ -346,7 +382,9 @@ func TestReadOptionalInt64FromString(t *testing.T) {
 
 		target := types.Int64Value(42)
 		result := map[string]string{"port": ""}
-		readOptionalInt64FromString(&target, result, "port")
+		if err := readOptionalInt64FromString(&target, result, "port"); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 
 		if !target.IsNull() {
 			t.Errorf("expected target to be cleared to null, got %d", target.ValueInt64())
