@@ -14,6 +14,7 @@ import {
 import { encodePng } from "#src/emulator/png.ts";
 import { GameStreamer } from "#src/stream/game-streamer.ts";
 import { GoalManager } from "#src/goal/goal-manager.ts";
+import { checkpointWithRetry } from "#src/goal/goal-checkpoint.ts";
 import type { GoalDiscordMessage } from "#src/goal/goal-types.ts";
 import {
   startGoalControlServer,
@@ -254,20 +255,16 @@ export class PokemonGameDriver implements GameDriver<SelfbotPooledUserbot> {
     }
     // Commit live progress to the flash save before halting, so a goal-driven
     // session resumes where it left off instead of the last in-game save. Only
-    // when goal mode is active (per the "goals save at the end" requirement);
-    // Emerald rejects saves outside the overworld/battle, which we tolerate.
+    // when goal mode is active (per the "goals save at the end" requirement).
+    // Retries a transient non-saveable state and surfaces a persistent failure
+    // rather than swallowing it (shared with the goal-end path). The emulator
+    // loop is still running here, so a cutscene/animation can clear between
+    // attempts; it is halted just below.
     if (runtime.goalManager !== undefined) {
-      try {
-        await runtime.emulator.checkpointSave();
-        logger.info("pokemon driver saved game on stop", {
-          guildId: session.guildId,
-        });
-      } catch (error) {
-        logger.warn("pokemon driver checkpoint save skipped on stop", {
-          guildId: session.guildId,
-          reason: error instanceof Error ? error.message : String(error),
-        });
-      }
+      await checkpointWithRetry(
+        () => runtime.emulator.checkpointSave(),
+        `session stop (guild ${session.guildId})`,
+      );
     }
     try {
       runtime.emulator.stop();

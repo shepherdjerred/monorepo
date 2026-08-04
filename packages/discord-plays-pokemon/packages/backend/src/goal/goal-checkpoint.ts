@@ -16,20 +16,19 @@ export const defaultCheckpointRetry: CheckpointRetry = {
 };
 
 /**
- * Commit live game progress to the flash save at the end of a goal so a restart
- * resumes where the agent left off instead of the last in-game save. Call while
- * the goal still holds the input lease, so no queued Discord/web command can
- * move the game before the save. Emerald only saves in the overworld or a
- * battle; anywhere else the engine checkpoint rejects, so retry a few times to
- * let a transient cutscene/menu/title state clear. Teardown never fails on a
- * checkpoint error — a goal is not un-finished by a save miss — but a persistent
- * failure is surfaced at error level rather than swallowed, because it means the
- * goal's in-game progress will revert to the last in-game save on the next
- * restart.
+ * Commit live game progress to the flash save so a restart resumes where the
+ * agent left off instead of the last in-game save. Emerald only saves in the
+ * overworld or a battle; anywhere else the engine checkpoint rejects, so retry a
+ * few times to let a transient cutscene/menu/title state clear. Callers never
+ * fail teardown on a checkpoint error, but a persistent failure is surfaced at
+ * error level rather than swallowed, because it means the game's in-game
+ * progress will revert to the last in-game save on the next restart. `context`
+ * identifies the terminal path (e.g. "goal end: timeout", "session stop") in the
+ * logs.
  */
-export async function saveOnGoalEnd(
+export async function checkpointWithRetry(
   checkpointGame: () => Promise<void>,
-  status: string,
+  context: string,
   retry: CheckpointRetry = defaultCheckpointRetry,
 ): Promise<void> {
   const attempts = Math.max(1, retry.attempts);
@@ -40,7 +39,7 @@ export async function saveOnGoalEnd(
     } catch (error) {
       if (attempt === attempts) {
         logger.error(
-          `goal-manager: checkpoint save failed at goal end (${status}) after ${String(
+          `checkpoint save failed (${context}) after ${String(
             attempts,
           )} attempt(s); in-game progress will revert to the last in-game save on restart`,
           error,
@@ -48,12 +47,20 @@ export async function saveOnGoalEnd(
         return;
       }
       logger.warn(
-        `goal-manager: checkpoint save attempt ${String(
-          attempt,
-        )} failed at goal end (${status}); retrying`,
+        `checkpoint save attempt ${String(attempt)} failed (${context}); retrying`,
         error,
       );
       await retry.sleep(retry.delayMs);
     }
   }
+}
+
+/** Checkpoint at the end of a goal. Call while the goal still holds the input
+ * lease, so no queued Discord/web command can move the game before the save. */
+export function saveOnGoalEnd(
+  checkpointGame: () => Promise<void>,
+  status: string,
+  retry: CheckpointRetry = defaultCheckpointRetry,
+): Promise<void> {
+  return checkpointWithRetry(checkpointGame, `goal end: ${status}`, retry);
 }
