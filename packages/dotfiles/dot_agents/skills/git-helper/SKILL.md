@@ -99,10 +99,10 @@ git range-diff old-base..old-tip new-base..new-tip
 Use the repository's independent merge oracle when readiness matters:
 
 ```bash
-git merge-tree --write-tree --quiet <base> <head>
+git merge-tree --write-tree <base> <head>
 ```
 
-`--quiet` avoids most object creation but is not a guarantee that no objects are written. Treat the exit status as the merge result. Do not replace this check with a checkout or an untrusted hosted mergeability field.
+Treat the exit status as the merge result: 0 is a clean merge, 1 is a real conflict. `--quiet` (Git 2.50+) additionally suppresses most output and object creation when the exit status is all that's needed, but isn't available on older Git — omit it rather than assume it exists, or gate it behind a version check. Do not replace this check with a checkout or an untrusted hosted mergeability field.
 
 ## Undo and recovery
 
