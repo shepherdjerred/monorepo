@@ -1,879 +1,157 @@
 ---
 name: modern-cli-tools
-description: |
-  Modern Unix command alternatives - faster, more user-friendly tools for everyday tasks
-  When Claude is about to use legacy tools (find, grep, ls, cat, sed, du, df, ps) OR when user mentions fd, rg, eza, bat, or asks about faster alternatives
+description: Safe, current usage of ripgrep, fd, bat, eza, fzf, zoxide, sd, jq, yq, hyperfine, delta, bottom, dust, duf, procs, btop, and tldr. Use when selecting or invoking modern Unix CLI tools, especially instead of fragile shell pipelines.
 ---
 
-# Modern CLI Tools Agent
+# Modern CLI Tools
 
-## What's New in 2025
+Prefer a tool because its semantics fit the task, not because it is newer. Preserve filenames as data, use machine-readable output, validate empty selections, and never turn filenames into shell source.
 
-- **eza Replaces exa**: Original exa is unmaintained (@ogham unreachable), use **eza** fork instead
-- **eza v0.23.0+** (July 2025): Hyperlink support, custom themes, enhanced Git integration
-- **ripgrep Performance**: SIMD optimizations (Teddy algorithm), 23x-fastest on benchmarks
-- **fd Speed**: 23x faster than `find -iregex`, parallel directory traversal (~855ms vs 11-20s)
-- **bat Integrations**: Git sidebar (+ for additions, ~ for modifications), fzf/ripgrep/man integration
-- **Universal Adoption**: Modern tools now the de facto standard for Rust/Go development workflows
+## Current baseline
 
-## Overview
+Verified 2026-08-03:
 
-This agent teaches modern alternatives to traditional Unix commands that are faster, more user-friendly, and feature-rich. These tools are written in Rust and other modern languages, providing significant performance improvements and better default behaviors.
+| Tool | Current release | Primary use |
+| --- | --- | --- |
+| ripgrep | 15.2.0 | Recursive text/regex search |
+| fd | 10.4.2 | Filesystem path search |
+| bat | 0.26.1 | Syntax-aware file viewing |
+| eza | 0.23.5 | Interactive directory listing |
+| fzf | 0.74.2 | Interactive fuzzy selection |
+| zoxide | 0.10.0 | Frecency directory navigation |
+| sd | 1.1.0 | Search/replace with regex or fixed strings |
+| jq | 1.8.2 | JSON filtering/transformation |
+| yq | 4.53.3 | YAML and structured-data transformation |
+| hyperfine | 1.20.0 | Reproducible command benchmarking |
+| delta | 0.19.2 | Git diff/pager rendering |
+| bottom | 0.14.7 | Terminal process/system monitor (`btm`) |
 
-**Important Note**: Always use **eza**, not exa. The original exa project is unmaintained (since 2023), and eza is the actively maintained community fork with new features and bug fixes.
+Read [references/releases.md](references/releases.md) for the 34-page research ledger. Read [references/search-files-and-text.md](references/search-files-and-text.md) for ripgrep, fd, eza, bat, and sd semantics. Read [references/data-benchmarks-and-git.md](references/data-benchmarks-and-git.md) for jq, yq, hyperfine, and delta. Read [references/interactive-and-system-tools.md](references/interactive-and-system-tools.md) for fzf, zoxide, bottom/btop, dust, duf, procs, and tldr.
 
-## For Claude: Tool Selection Guidelines
+## Filename safety
 
-**When performing file operations, ALWAYS prefer modern tools:**
+Filenames can contain spaces, newlines, leading dashes, quotes, and shell metacharacters. Prefer:
 
-- ❌ `find` → ✅ `fd` - Faster, simpler syntax, respects .gitignore
-- ❌ `grep -r` → ✅ `rg` - 10-100x faster, better defaults
-- ❌ `ls -la` → ✅ `eza -la` - Better formatting, git integration
-- ❌ `cat file` → ✅ `bat file` - Syntax highlighting, line numbers
-- ❌ `sed` → ✅ `sd` - Simpler syntax, safer
-- ❌ `du -sh` → ✅ `dust` - Visual tree, faster
-- ❌ `df -h` → ✅ `duf` - Better formatting
-- ❌ `ps aux` → ✅ `procs` - Modern output, better filtering
+- native `fd --exec` / `--exec-batch`,
+- argv arrays in the current language/shell,
+- NUL-producing and NUL-consuming options only when every pipeline stage supports them,
+- `--` before path operands,
+- machine-readable output instead of parsing decorated tables.
 
-**Before using legacy tools, check if modern alternatives are available.**
+Do not interpolate `{}` into `sh -c`. Do not pipe newline-delimited paths into `xargs rm`, command substitution, or a shell loop that reparses text.
 
-## Tool Comparison
-
-| Traditional  | Modern Alternative | Key Benefits                                       |
-| ------------ | ------------------ | -------------------------------------------------- |
-| `find`       | `fd`               | Faster, simpler syntax, respects `.gitignore`      |
-| `grep`       | `rg` (ripgrep)     | 10-100x faster, better defaults, auto-ignore       |
-| `ls`         | `eza`              | Better formatting, colors, git integration         |
-| `cat`        | `bat`              | Syntax highlighting, line numbers, git integration |
-| `cd`         | `zoxide`           | Smart directory jumping based on frequency         |
-| `sed`        | `sd`               | Simpler syntax, safer replacements                 |
-| `top`/`htop` | `btop`             | Beautiful TUI, better metrics                      |
-| `du`         | `dust`             | Visual tree, faster analysis                       |
-| `df`         | `duf`              | Better formatting, clearer output                  |
-| `ps`         | `procs`            | Modern output, better filtering                    |
-
-## Installation
-
-### macOS (Homebrew)
+## ripgrep
 
 ```bash
-# Install all at once
-brew install fd ripgrep eza bat fzf sd zoxide dust duf procs btop
-
-# Or install individually
-brew install fd           # find alternative
-brew install ripgrep      # grep alternative (rg)
-brew install eza          # ls alternative
-brew install bat          # cat alternative
-brew install fzf          # fuzzy finder
-brew install sd           # sed alternative
-brew install zoxide       # smart cd
-brew install dust         # du alternative
-brew install duf          # df alternative
-brew install procs        # ps alternative
-brew install btop         # top/htop alternative
+rg 'pattern' src
+rg --hidden --glob '!.git/**' 'pattern'
+rg --count-matches 'pattern'
+rg --multiline --multiline-dotall 'start.*end'
 ```
 
-### Linux (cargo - Rust package manager)
+- `rg -c` counts matching lines; `--count-matches` counts occurrences.
+- `-U` / `--multiline` permits matches across lines, but dot still excludes newline unless dotall is enabled.
+- `-u` disables ignore rules but still omits hidden files; `-uu` includes hidden, and `-uuu` additionally searches binary data.
+- `--no-ignore --hidden` searches the working tree, not Git history. Use Git history commands for commit history.
+
+## fd
 
 ```bash
-# Install Rust first
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-
-# Install tools
-cargo install fd-find ripgrep eza bat-cat sd zoxide du-dust duf procs
+fd --absolute-path 'pattern' root
+fd --full-path 'src/.+\.ts$'
+fd --changed-within 2d
+fd --type d --empty --exec rmdir -- {}
 ```
 
-## fd - Modern Find
+- `-p` means match against the full path, not print an absolute path; use `-a` / `--absolute-path` for output.
+- `-S +1m` means greater than or equal to one decimal megabyte (1,000,000 bytes); use `+1mi` for one MiB (1,048,576 bytes) — `m`/`mi` are separate decimal/binary units, not aliases.
+- `-c` is color control; use `--changed-within` and `--changed-before` for time filters.
+- Native exec preserves argv and avoids shell injection.
 
-### Basic Usage
+## eza and bat
+
+Use eza for interactive display, not as a parser input. `-h` enables the column header row. `--color-scale` color-scales age/size fields; it is not a custom-theme loader. Use documented theme or `EZA_COLORS` configuration.
+
+Use bat for human viewing. In pipelines or scripts, disable decoration/color or use the underlying file directly so control sequences do not become data.
+
+## sd
+
+Current sd processes line by line by default. Use `-A` / `--across` for cross-line replacements, `-F` for fixed strings, `-p` for preview, and `--` before operands that can begin with `-`.
+
+Review replacements before in-place mutation. Regex replacement syntax is not identical to every sed dialect.
+
+## jq
 
 ```bash
-# Find files by name (case-insensitive by default)
-fd readme
-
-# Find with extension
-fd -e md
-fd -e js -e ts
-
-# Find in specific directory
-fd pattern ~/projects
-
-# Find directories only
-fd -t d config
-
-# Find files only
-fd -t f
-
-# Find hidden files
-fd -H config
-
-# Exclude patterns
-fd -E node_modules -E .git
-
-# Execute command on results
-fd -e jpg -x convert {} {.}.png
+jq -e -r '.items[]?.name' input.json
+jq --arg name "$NAME" '.name = $name' input.json
+jq --argjson config "$CONFIG_JSON" '.config = $config' input.json
 ```
 
-### Advanced Patterns
+- `-r` emits strings without JSON quoting.
+- `-e` makes false/null/no-result affect exit status.
+- `--arg` passes a string; `--argjson` parses JSON.
+- Shell-quote jq programs so the shell does not consume `$`, brackets, or quotes.
+- Slurp loads all inputs; streaming changes the data model. Consider memory before using either on large input.
+
+## yq
+
+This skill refers to Mike Farah's Go `yq`, not the separate Python wrapper with the same name.
 
 ```bash
-# Regex search
-fd '^[A-Z].*\.md$'
-
-# Show full path
-fd -p src/components
-
-# Search by file size
-fd -S +1m  # Files larger than 1MB
-fd -S -100k  # Files smaller than 100KB
-
-# Modified time
-fd -c never  # Changed within never
-fd --changed-within 1d  # Changed within 1 day
-fd --changed-before 1w  # Changed before 1 week
-
-# Case sensitive
-fd -s README
-
-# Max depth
-fd -d 3 config
+yq eval '.services.api.image' compose.yaml
+yq eval --inplace '.version = "2"' config.yaml
 ```
 
-### Common Use Cases
+Treat in-place editing as a local mutation and inspect the diff. Configure input/output format when extension detection is ambiguous. Preserve null and missing-value semantics deliberately; YAML round trips can change representation.
+
+## fzf
+
+Fuzzy selection can return no value and can return text beginning with `-`. Capture the result without word splitting, validate cancellation/empty output, then pass it as one argument with `--` where supported.
+
+Do not use `vim $(fzf)`, `cd $(...)`, or `git checkout $(...)`. Prefer shell arrays/read primitives or native NUL protocols.
+
+## hyperfine
+
+Replace invented performance numbers with a reproducible local benchmark:
 
 ```bash
-# Find all TypeScript files excluding node_modules
-fd -e ts -E node_modules
-
-# Find config files
-fd -g '*config*'
-
-# Find and delete empty directories
-fd -t d -x sh -c 'rmdir {} 2>/dev/null'
-
-# List all test files
-fd test -e ts -e js
-
-# Find large log files
-fd -e log -S +100m
+hyperfine --warmup 3 --runs 20 \
+  --export-json benchmark.json \
+  'rg pattern corpus' \
+  'grep -R pattern corpus'
 ```
 
-## rg (ripgrep) - Modern Grep
+Record tool versions, corpus, hardware, filesystem, cache state, warmup, and environment. Hyperfine commands run through a shell; do not interpolate untrusted input. A local result is not a universal speed or memory claim.
 
-### Basic Usage
+## Git delta
 
-```bash
-# Search for pattern
-rg "TODO"
+Configure delta as a Git pager through reviewed Git config. Side-by-side, navigation, line numbers, syntax themes, and pager environment all affect output. Do not feed decorated pager output into automation.
 
-# Case insensitive
-rg -i "readme"
+## System tools
 
-# Whole word match
-rg -w "config"
+- `btm` is bottom; `btop` is a different monitor.
+- dust visualizes disk usage; duf summarizes filesystem space.
+- procs presents process data; do not parse its human table for process control.
+- tldr clients implement a specification and vary by language/version; verify the installed client.
 
-# Show line numbers (default)
-rg "error"
+Use system-native structured interfaces for destructive process/storage operations. A fuzzy human selection is not authorization to kill or delete without exact target resolution.
 
-# Show context (3 lines before and after)
-rg -C 3 "function"
+## Interactive aliases
 
-# Search specific file types
-rg -t ts "interface"
-rg -t md "# Heading"
+Do not transparently alias `cat`, `ls`, `find`, or `grep` in automation: replacements are not CLI-compatible. Distinct interactive abbreviations/functions are fine when the user wants them.
 
-# Exclude file types
-rg -T js "pattern"
+Install through a trusted package manager or reviewed release artifact. Do not pipe a mutable installer into a shell. If Cargo installation is intentionally used, select the exact crate and use its locked package graph.
 
-# Search hidden files
-rg -. "secret"
+## Review checklist
 
-# Search without ignoring (.gitignore)
-rg -u "pattern"
-```
-
-### Advanced Patterns
-
-```bash
-# Regex search
-rg '^\s*function\s+\w+'
-
-# Multiple patterns (OR)
-rg -e "error" -e "warning"
-
-# Invert match (show non-matching lines)
-rg -v "test"
-
-# Count matches
-rg -c "import"
-
-# Show only filenames
-rg -l "TODO"
-
-# Show only matching parts
-rg -o '\b[A-Z]{3,}\b'
-
-# Replace (preview only)
-rg "old" -r "new"
-
-# Multiline search
-rg -U 'function.*\{.*\}'
-```
-
-### Common Use Cases
-
-```bash
-# Find all TODOs in code
-rg "TODO|FIXME|HACK"
-
-# Find imports of a specific module
-rg "import.*from.*'react'"
-
-# Find function definitions
-rg "function\s+\w+\s*\("
-
-# Search in specific directories
-rg "API_KEY" src/
-
-# Find unused exports
-rg -w "export" | rg -v "import"
-
-# Case-insensitive search in markdown files
-rg -i -t md "claude code"
-
-# Find potential secrets (be careful!)
-rg -i "(password|secret|api[_-]?key)\s*[:=]"
-
-# Search git history
-rg --no-ignore --hidden "sensitive_data"
-```
-
-## eza - Modern ls (Maintained Fork of exa)
-
-**Important**: eza is the actively maintained fork of exa. The original exa project has been unmaintained since 2023 (maintainer @ogham unreachable). Use **eza** for latest features and bug fixes.
-
-### What's New in eza v0.23.0+ (July 2025)
-
-- **Hyperlink Support**: Clickable file/directory links in terminal
-- **Custom Themes**: User-defined color schemes
-- **Enhanced Git Integration**: Better git status visualization
-- **Performance Improvements**: Faster tree rendering
-- **More File Type Icons**: Expanded icon support for modern file types
-
-### Basic Usage
-
-```bash
-# List files (basic)
-eza
-
-# Long format
-eza -l
-
-# All files including hidden
-eza -a
-
-# Long format with all files
-eza -la
-
-# Tree view
-eza -T
-
-# Tree with depth limit
-eza -T -L 2
-
-# Sort by time
-eza -l --sort modified
-
-# Sort by size
-eza -l --sort size
-
-# Reverse sort
-eza -lr
-```
-
-### Advanced Features (v0.23.0+)
-
-```bash
-# Git status integration (enhanced in v0.23)
-eza -l --git
-
-# Hyperlinks (clickable in compatible terminals)
-eza -l --hyperlink
-
-# Custom theme
-eza -l --color-scale
-
-# Show file headers
-eza -lh
-
-# Group directories first
-eza -l --group-directories-first
-
-# Show icons (with nerd fonts)
-eza -l --icons
-
-# Color scale for file ages
-eza -l --color-scale
-
-# Show file times
-eza -l --time-style long-iso
-eza -l --time modified
-eza -l --time accessed
-eza -l --time created
-
-# Binary size units
-eza -l --binary
-
-# Show inode
-eza -li
-
-# Only directories
-eza -lD
-
-# Only files
-eza -lf
-```
-
-### Common Use Cases
-
-```bash
-# Beautiful tree with git status
-eza -T --git-ignore --icons
-
-# Recently modified files
-eza -l --sort modified -r | head -10
-
-# Largest files in directory
-eza -l --sort size -r
-
-# Show all with git status and icons
-eza -la --git --icons --group-directories-first
-
-# Tree excluding node_modules
-eza -T --ignore-glob "node_modules|.git"
-
-# Quick overview with icons
-eza -1 --icons
-```
-
-## bat - Modern cat
-
-### Basic Usage
-
-```bash
-# Display file with syntax highlighting
-bat README.md
-
-# Display multiple files
-bat file1.js file2.ts
-
-# Display with line numbers
-bat -n file.py
-
-# Disable paging
-bat -P config.json
-
-# Show non-printable characters
-bat -A file.txt
-
-# Specify language
-bat -l rust file.txt
-```
-
-### Advanced Features
-
-```bash
-# Display specific lines
-bat -r 10:20 large-file.log
-
-# Show git diff
-bat --diff file.js
-
-# Different theme
-bat --theme="Dracula" file.md
-
-# List available themes
-bat --list-themes
-
-# Plain output (no decorations)
-bat -p file.txt
-
-# Show decorations
-bat --decorations=always file.js
-
-# Style options
-bat --style=numbers,grid file.py
-bat --style=plain file.txt
-```
-
-### Git Integration (2025)
-
-bat now includes enhanced Git integration showing changes in the sidebar:
-
-```bash
-# View file with Git changes
-bat modified-file.js
-# Shows:
-# + for line additions (green plus sign in left margin)
-# ~ for line modifications (yellow tilde in left margin)
-# Unchanged lines have no symbol
-
-# Compare with git diff
-git diff file.js | bat --language diff
-
-# View staged changes
-git diff --staged file.js | bat -l diff
-```
-
-**Benefits of Git Integration:**
-
-- Visual indicators for all changes
-- No need to run `git diff` separately
-- Works automatically with any Git repository
-- Color-coded for easy scanning
-
-### Integration with Other Tools
-
-```bash
-# Use bat as previewer for fzf
-fzf --preview 'bat --color=always {}'
-
-# Use bat with ripgrep (batgrep)
-rg -l "pattern" | xargs bat
-
-# View git show output
-git show HEAD:file.js | bat -l js
-
-# View git diff with syntax highlighting
-git diff | bat -l diff
-
-# Use bat as MANPAGER
-export MANPAGER="sh -c 'col -bx | bat -l man -p'"
-man ls  # Beautiful manual pages
-
-# Tail with syntax highlighting
-tail -f /var/log/app.log | bat --paging=never -l log
-```
-
-### Common Use Cases
-
-```bash
-# Quick preview of markdown
-bat README.md
-
-# View logs with syntax highlighting
-bat -l log application.log
-
-# Compare files side by side (with diff)
-diff -u old.js new.js | bat -l diff
-
-# Paginated output for large files
-bat large-file.json
-
-# View JSON with highlighting
-bat package.json
-
-# Pipe with syntax
-curl -s https://api.example.com | bat -l json
-
-# Preview file before editing
-bat config.yaml && vim config.yaml
-```
-
-## fzf - Fuzzy Finder
-
-### Basic Usage
-
-```bash
-# Interactive file search
-fzf
-
-# Search and open in editor
-vim $(fzf)
-
-# Multi-select mode
-fzf -m
-
-# Preview files
-fzf --preview 'bat --color=always {}'
-
-# Search command history
-history | fzf
-
-# Search processes
-ps aux | fzf
-
-# Search git branches
-git branch | fzf
-```
-
-### Integration with Other Tools
-
-```bash
-# Change directory interactively
-cd $(fd -t d | fzf)
-
-# Edit file interactively
-vim $(fd -t f | fzf --preview 'bat --color=always {}')
-
-# Git checkout branch
-git checkout $(git branch -a | fzf)
-
-# Kill process interactively
-kill $(ps aux | fzf | awk '{print $2}')
-
-# SSH to host
-ssh $(cat ~/.ssh/config | grep "^Host " | awk '{print $2}' | fzf)
-```
-
-## zoxide - Smart cd
-
-### Setup
-
-```bash
-# Install
-brew install zoxide
-
-# Add to shell (choose your shell)
-echo 'eval "$(zoxide init bash)"' >> ~/.bashrc
-echo 'eval "$(zoxide init zsh)"' >> ~/.zshrc
-echo 'zoxide init fish | source' >> ~/.config/fish/config.fish
-```
-
-### Usage
-
-```bash
-# Jump to directory (after visiting once)
-z projects
-
-# Jump to directory with multiple matches
-z doc
-
-# Jump to subdirectory
-z proj/my-app
-
-# Interactive selection
-zi
-
-# Add directory manually
-zoxide add /path/to/directory
-
-# Remove directory
-zoxide remove /path/to/directory
-
-# Query scores
-zoxide query --list
-```
-
-## sd - Modern sed
-
-### Basic Usage
-
-```bash
-# Simple replacement
-sd 'old' 'new' file.txt
-
-# Regex replacement
-sd '\d+' 'NUMBER' file.txt
-
-# In-place editing
-sd 'foo' 'bar' file.txt
-
-# Preview changes
-sd 'pattern' 'replacement' file.txt --preview
-
-# Multiple files
-sd 'old' 'new' *.txt
-
-# Case insensitive
-sd -f i 'pattern' 'replacement' file.txt
-```
-
-### Common Use Cases
-
-```bash
-# Rename variable across files
-sd 'oldVarName' 'newVarName' **/*.ts
-
-# Update import paths
-sd "from './old'" "from './new'" src/**/*.js
-
-# Fix common typos
-sd 'teh' 'the' **/*.md
-
-# Update version in files
-sd 'version: \d+\.\d+\.\d+' 'version: 2.0.0' package.json
-
-# Remove trailing whitespace
-sd '\s+$' '' **/*.ts
-```
-
-## Combining Tools
-
-### Powerful Workflows
-
-```bash
-# Find and edit files interactively
-fd -t f | fzf --preview 'bat --color=always {}' | xargs -o vim
-
-# Search code and preview results
-rg -l "TODO" | fzf --preview 'rg -C 3 "TODO" {}'
-
-# Find large files and review
-fd -t f -S +1m | fzf --preview 'eza -l {} && bat {}'
-
-# Search and replace across files
-rg -l "old_pattern" | xargs sd "old_pattern" "new_pattern"
-
-# Tree view of git modified files
-eza -T $(git status --short | awk '{print $2}')
-
-# Interactive git file selector
-git diff --name-only | fzf --preview 'bat --color=always {}'
-
-# Find and delete old files
-fd -t f --changed-before 30d | fzf -m | xargs rm -i
-
-# Quick directory navigation
-cd "$(fd -t d | fzf)"
-```
-
-### Alias Suggestions
-
-Add to your `.zshrc` or `.bashrc`:
-
-```bash
-# Override traditional commands (careful!)
-alias cat='bat'
-alias ls='eza'
-alias find='fd'
-alias grep='rg'
-
-# Or use different names
-alias c='bat'
-alias l='eza -la --git --icons'
-alias lt='eza -T --git-ignore'
-alias f='fd'
-alias g='rg'
-
-# Useful combinations
-alias preview="fzf --preview 'bat --color=always {}'"
-alias tree="eza -T --git-ignore --icons"
-alias lt2="eza -T -L 2 --git-ignore --icons"
-alias lt3="eza -T -L 3 --git-ignore --icons"
-
-# Interactive selections
-alias vf='vim $(fzf --preview "bat --color=always {}")'
-alias cdf='cd $(fd -t d | fzf)'
-```
-
-## Performance Comparisons
-
-### Real-World Benchmarks
-
-```bash
-# Search large codebase
-time grep -r "pattern" .     # ~30 seconds
-time rg "pattern"             # ~1 second
-
-# Find files
-time find . -name "*.js"      # ~5 seconds
-time fd -e js                 # ~0.5 seconds
-
-# List directory tree
-time tree -L 3                # ~2 seconds
-time eza -T -L 3              # ~0.3 seconds
-```
-
-### Memory Usage
-
-Modern tools are generally more memory efficient:
-
-- `rg` uses less memory than `grep -r`
-- `fd` is more memory efficient than `find`
-- `bat` lazy-loads files for better memory usage
-
-## Best Practices
-
-### 1. Start with Safe Aliases
-
-```bash
-# Don't override immediately, use new names first
-alias f='fd'
-alias g='rg'
-alias l='eza -la'
-alias c='bat'
-
-# After comfortable, then override
-# alias find='fd'
-# alias grep='rg'
-```
-
-### 2. Use Appropriate Tool for Task
-
-```bash
-# For simple tasks, traditional tools are fine
-ls -la  # Quick listing
-
-# For complex tasks, use modern tools
-eza -la --git --icons --group-directories-first  # Detailed view
-```
-
-### 3. Leverage Ignore Files
-
-```bash
-# Modern tools respect .gitignore by default
-rg "pattern"           # Ignores .gitignore
-fd "file"              # Ignores .gitignore
-
-# Disable when needed
-rg -u "pattern"        # Search all files
-fd -u "file"           # Search all files
-```
-
-### 4. Use Preview Functions
-
-```bash
-# Always preview before bulk operations
-fd -e log -S +100m --exec-batch rm -i
-
-# Use fzf for interactive selection
-fd -e log | fzf -m --preview 'bat {}' | xargs rm -i
-```
-
-## Configuration Files
-
-### bat Configuration
-
-`~/.config/bat/config`:
-
-```bash
---theme="Monokai Extended"
---style="numbers,grid,changes"
---paging=auto
---map-syntax "*.conf:INI"
-```
-
-### eza Configuration
-
-Create aliases in shell config:
-
-```bash
-# ~/.zshrc or ~/.bashrc
-export EZA_COLORS="uu=36:gu=37:sn=32:sb=32:da=34:ur=34:uw=35:ux=36:ue=36:gr=34:gw=35:gx=36:tr=34:tw=35:tx=36"
-```
-
-### fzf Configuration
-
-`~/.fzf.zsh` or `~/.fzf.bash`:
-
-```bash
-export FZF_DEFAULT_OPTS='
-  --height 40%
-  --layout=reverse
-  --border
-  --preview "bat --color=always {}"
-  --preview-window=right:60%
-'
-
-export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'
-```
-
-## Troubleshooting
-
-### Issue: Colors not showing
-
-```bash
-# Ensure terminal supports 256 colors
-echo $TERM  # Should be xterm-256color or similar
-
-# Force color output
-bat --color=always file.txt
-eza --color=always
-```
-
-### Issue: Icons not showing in eza
-
-```bash
-# Install a Nerd Font
-brew tap homebrew/cask-fonts
-brew install font-hack-nerd-font
-
-# Configure terminal to use the font
-# Then use:
-eza --icons
-```
-
-### Issue: Tool not found
-
-```bash
-# Check installation
-which fd
-which rg
-which eza
-
-# Add to PATH if needed
-export PATH="$HOME/.cargo/bin:$PATH"
-```
-
-## Migration Guide
-
-### From find to fd
-
-```bash
-# Before
-find . -name "*.js" -type f
-
-# After
-fd -e js
-
-# Before
-find . -name "test*" -not -path "*/node_modules/*"
-
-# After
-fd "^test" -E node_modules
-```
-
-### From grep to rg
-
-```bash
-# Before
-grep -r "pattern" .
-
-# After
-rg "pattern"
-
-# Before
-grep -i "pattern" **/*.js
-
-# After
-rg -i -t js "pattern"
-```
-
-### From ls to eza
-
-```bash
-# Before
-ls -la
-
-# After
-eza -la
-
-# Before
-ls -lt | head
-
-# After
-eza -l --sort modified -r | head
-```
-
-## When to Ask for Help
-
-Ask the user for clarification when:
-
-- Unsure which tool is best for their specific use case
-- Need to perform complex regex transformations
-- Working with very large files (>1GB)
-- Custom configuration needed for their workflow
-- Integration with existing scripts or tools
-- Performance optimization for specific scenarios
+- Verify the installed tool and release before using recent flags.
+- Preserve filenames with native argv/NUL mechanisms and `--`.
+- Distinguish ripgrep matching lines, occurrences, multiline, hidden, ignored, and binary semantics.
+- Use fd absolute-path and time flags correctly.
+- Keep human decoration out of machine pipelines.
+- Use jq `-e`, typed args, and deliberate raw/slurp/stream behavior.
+- Confirm the intended yq implementation before scripting.
+- Validate fzf cancellation and exact selection.
+- Benchmark a fixed corpus instead of repeating universal speed claims.
+- Keep destructive process/file actions outside brittle text pipelines.

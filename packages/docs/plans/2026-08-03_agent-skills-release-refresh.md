@@ -134,6 +134,10 @@ skill's 30-source set rather than treated as independent 30-source units.
   Fish: 238 primary pages fetched and inspected. Nine skills now have 424
   primary plus 15 supplemental sources, 439 total. The new four rewrites pass
   formatting, skill validation, and batched live-link checks.
+- 2026-08-03: Completed the developer-tooling wave for Bun tests, Bun
+  workspaces, Zellij, and modern CLI tools: 204 primary pages. Thirteen skills
+  now have 628 primary plus 15 supplemental sources, 643 total. The four new
+  rewrites pass formatting, skill validation, and live-link checks.
 
 ## Session Log — 2026-08-03
 

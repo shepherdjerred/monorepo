@@ -1,476 +1,208 @@
 ---
 name: bun-workspaces
-description: |
-  Bun monorepo workspaces - configuration, filtering, dependencies, and multi-package management
-  When user works with Bun monorepos, workspaces, multi-package projects, or mentions bun --filter
+description: Current Bun workspace guidance for isolated and hoisted linkers, catalogs, filters, scripts, dependency classes, lockfiles, lifecycle trust, caches, publishing, TypeScript package exports, and containers. Use when configuring or reviewing a Bun monorepo.
 ---
 
-# Bun Workspaces Agent
+# Bun Workspaces
 
-## What's New in Bun Workspaces (2024-2025)
+Use one root workspace and lockfile, resolve internal packages through `workspace:*` links and package exports, and choose script scheduling from dependency order and task lifetime. Do not hide packaging errors with TypeScript source aliases.
 
-- **Text-based lockfile**: `bun.lock` replaces binary `bun.lockb` (v1.2+)
-- **Catalogs**: Define shared dependency versions once in root package.json
-- **Dependency-aware filtering**: Scripts run in dependency order
-- **Glob patterns**: Full glob syntax with negative patterns
-- **Automatic lockfile migration**: From npm, yarn, pnpm
+## Current baseline
 
-## Performance
+Verified against Bun 1.3.14 on 2026-08-03:
 
-Bun workspaces are significantly faster than alternatives:
-
-- **28x faster** than npm install
-- **12x faster** than yarn install (v1)
-- **8x faster** than pnpm install
-
-## Monorepo Structure
-
-```
-my-monorepo/
-├── package.json          # Root config with workspaces field
-├── bun.lock              # Single lockfile for all packages
-├── bunfig.toml           # Optional Bun configuration
-├── tsconfig.json         # Shared TypeScript config
-└── packages/
-    ├── shared/
-    │   ├── package.json
-    │   ├── index.ts
-    │   └── tsconfig.json
-    ├── backend/
-    │   ├── package.json
-    │   ├── src/
-    │   └── tsconfig.json
-    └── frontend/
-        ├── package.json
-        ├── src/
-        └── tsconfig.json
+```bash
+bun --version
 ```
 
-## Root package.json
+New workspace projects with lockfile `configVersion = 1` default to the isolated linker. Existing and migrated projects preserve historical linker choices. Bun 1.3.14 adds an experimental isolated-linker global virtual store that is off by default.
+
+Read [references/releases.md](references/releases.md) for the 49-page research ledger. Read [references/linkers-dependencies-and-lockfiles.md](references/linkers-dependencies-and-lockfiles.md) for linker, store, catalogs, dependency classes, lifecycle trust, and migration. Read [references/scripts-builds-and-publishing.md](references/scripts-builds-and-publishing.md) for filters, scheduling, package exports, TypeScript, CI, containers, audit, pack, and publish.
+
+## Workspace declaration
+
+The root owns the workspace patterns and shared lockfile:
 
 ```json
 {
-  "name": "my-monorepo",
   "private": true,
-  "workspaces": ["packages/*"],
-  "scripts": {
-    "dev": "bun --filter '*' dev",
-    "build": "bun --filter '*' build",
-    "test": "bun --filter '*' test",
-    "typecheck": "bun --filter '*' typecheck"
-  },
-  "devDependencies": {
-    "typescript": "^5.0.0"
-  }
-}
-```
-
-### Fan-out cost — scope scripts to the packages you touched
-
-Root scripts like the above fan out over every workspace package, each booting its own node/bun toolchain (tsc, eslint, test runners — ~100 MB+ each). In a large monorepo (~35 packages in shepherdjerred/monorepo), **multiple concurrent sessions each running a root-level `typecheck`/`build`/`test` has frozen the machine** (6,000+ processes, 20-30 GB of anonymous memory within seconds → macOS jetsam freeze; see `packages/docs/logs/2026-07-11_macbook-hang-jetsam-investigation.md`). Default to scoping: `cd packages/<name> && bun run <script>` (or `bun run --filter='./packages/<name>' <script>` if the package is registered as a Bun workspace from the repo root — the `cd` form is reliable regardless). Reserve repo-wide runs for genuinely repo-wide changes, one at a time machine-wide; CI does the exhaustive pass.
-
-### Glob Patterns
-
-```json
-{
-  "workspaces": [
-    "packages/*",
-    "apps/*",
-    "packages/**",
-    "!packages/**/test/**",
-    "!packages/deprecated"
-  ]
-}
-```
-
-## Workspace Protocol
-
-Reference workspace packages in dependencies:
-
-```json
-{
-  "name": "@myorg/backend",
-  "dependencies": {
-    "@myorg/shared": "workspace:*"
-  }
-}
-```
-
-### Protocol Variants
-
-| Syntax            | Meaning       | Published As               |
-| ----------------- | ------------- | -------------------------- |
-| `workspace:*`     | Any version   | `"1.0.0"` (actual version) |
-| `workspace:^`     | Caret range   | `"^1.0.0"`                 |
-| `workspace:~`     | Tilde range   | `"~1.0.0"`                 |
-| `workspace:1.0.2` | Exact version | `"1.0.2"`                  |
-
-When publishing, `workspace:` references are replaced with actual versions.
-
-## Catalogs
-
-Define shared dependency versions once:
-
-```json
-{
-  "name": "my-monorepo",
-  "private": true,
-  "workspaces": ["packages/*"],
-  "catalog": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "typescript": "^5.0.0",
-    "zod": "^3.22.0"
-  }
-}
-```
-
-### Using Catalog in Workspace
-
-```json
-{
-  "name": "@myorg/frontend",
-  "dependencies": {
-    "react": "catalog:",
-    "react-dom": "catalog:",
-    "zod": "catalog:"
-  }
-}
-```
-
-### Named Catalogs
-
-```json
-{
-  "catalogs": {
-    "default": {
-      "typescript": "^5.0.0"
+  "workspaces": {
+    "packages": ["packages/*"],
+    "catalog": {
+      "typescript": "^7.0.0"
     },
-    "testing": {
-      "vitest": "^1.0.0",
-      "playwright": "^1.40.0"
+    "catalogs": {
+      "testing": {
+        "@types/bun": "latest"
+      }
     }
   }
 }
 ```
 
+`catalog:` resolves the singular default catalog. A named catalog entry uses `catalog:name`. Do not put a named `default` group under `catalogs` and reference it as bare `catalog:`.
+
+Internal package dependency:
+
 ```json
 {
-  "devDependencies": {
-    "typescript": "catalog:",
-    "vitest": "catalog:testing"
+  "dependencies": {
+    "@example/shared": "workspace:*"
   }
 }
 ```
 
-## Commands
+Bun rewrites workspace and catalog protocols appropriately during publication.
 
-### Installing Dependencies
+## Linker selection
 
-```bash
-# Install all workspaces
-bun install
+| Project | Default/behavior |
+| --- | --- |
+| New workspace with current lockfile config | Isolated linker |
+| New single-package project | Hoisted linker |
+| Existing/pre-1.3.2 project | Preserves historical hoisted behavior unless changed |
+| npm/yarn migration | Preserves hoisted model |
+| pnpm migration | Uses isolated model |
 
-# Install with frozen lockfile (CI)
-bun install --frozen-lockfile
-
-# Generate lockfile only
-bun install --lockfile-only
-
-# Filter to specific packages
-bun install --filter "pkg-*"
-bun install --filter "!pkg-c"
-```
-
-### Adding Dependencies
-
-```bash
-# Add to current workspace
-cd packages/backend
-bun add express
-
-# Add as dev dependency
-bun add -d typescript
-
-# Add with exact version
-bun add -E zod@3.22.0
-
-# Add to specific workspace from root
-bun add lodash --filter "@myorg/shared"
-```
-
-### Running Scripts
-
-```bash
-# Run in all workspaces
-bun --filter '*' dev
-
-# Run in specific package
-bun --filter '@myorg/backend' dev
-
-# Run with glob pattern
-bun --filter 'pkg-*' build
-
-# Run excluding packages
-bun --filter '*' --filter '!@myorg/frontend' test
-
-# Run by path
-bun --filter './packages/backend' dev
-```
-
-### Script Dependency Order
-
-When packages depend on each other, scripts run in dependency order:
-
-```
-# If @myorg/backend depends on @myorg/shared:
-bun --filter '*' build
-# Runs: shared build → backend build
-```
-
-### Other Commands
-
-```bash
-# Check outdated dependencies
-bun outdated
-bun outdated --filter 'pkg-*'
-
-# Update dependencies
-bun update
-
-# Remove dependency
-bun remove lodash
-
-# List installed packages
-bun pm ls
-bun pm ls --all
-```
-
-## Shared Configuration
-
-### TypeScript (tsconfig.json)
-
-**Root tsconfig.json:**
-
-```json
-{
-  "compilerOptions": {
-    "strict": true,
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "declaration": true,
-    "composite": true,
-    "paths": {
-      "@myorg/*": ["./packages/*/src"]
-    }
-  }
-}
-```
-
-**Workspace tsconfig.json:**
-
-```json
-{
-  "extends": "../../tsconfig.json",
-  "compilerOptions": {
-    "outDir": "./dist",
-    "rootDir": "./src"
-  },
-  "include": ["src"],
-  "references": [{ "path": "../shared" }]
-}
-```
-
-### ESLint (eslint.config.js)
-
-```javascript
-// Root eslint.config.js
-import baseConfig from "@myorg/eslint-config";
-
-export default [
-  ...baseConfig,
-  {
-    ignores: ["**/dist/**", "**/node_modules/**"],
-  },
-];
-```
-
-## bunfig.toml Configuration
+Set the linker explicitly when deterministic strictness is required:
 
 ```toml
 [install]
-# Auto-install missing dependencies
-auto = true
-
-# Lifecycle scripts control
-lifecycle = ["postinstall"]
-
-[install.lockfile]
-# Save text-based lockfile
-save = true
-# Also generate yarn.lock
-print = "yarn"
-
-[install.scopes]
-# Registry for scoped packages
-"@myorg" = { token = "$NPM_TOKEN", url = "https://npm.pkg.github.com" }
+linker = "isolated"
 ```
 
-## Common Patterns
+Isolated installs prevent phantom dependencies and create peer-set-specific package identities. Test tools and bundlers against the real layout; do not depend on accidental hoisting.
 
-### Shared Library Package
+## Cache versus global store
+
+The global cache at `~/.bun/install/cache` stores fetched package content and metadata. The experimental global virtual store is different: it is isolated-linker-only, disabled by default, and symlinks projects through the cache's links area.
+
+```toml
+[install]
+globalStore = true
+```
+
+Keep this setting machine-local unless the repository has revalidated parallel CI behavior. General upstream race-safety claims do not supersede the repository's known shared-store CI constraint.
+
+## Dependencies
+
+Bun installs peer and optional dependencies by default. `peerDependenciesMeta.optional` means a peer may be absent; it does not force installation.
+
+```bash
+bun add --cwd packages/shared lodash
+bun add --cwd packages/plugin --peer react
+bun add --cwd packages/tool --optional native-addon
+```
+
+`bun add` does not have `--filter`; use `--cwd` or run from the package directory. Use omit flags only when the install contract intentionally excludes peer/optional packages.
+
+## Lockfile and CI
+
+`bun.lock` is the authoritative text lockfile. Use:
+
+```bash
+bun ci
+```
+
+`bun ci` is the concise frozen install. `bun install --lockfile-only` skips `node_modules` installation but writes the lockfile and can populate global cache metadata or Git/tarball dependencies.
+
+Yarn v1 lockfile printing creates an interoperability artifact on every install; do not make it a generic default.
+
+For `bun.lockb` migration, generate and inspect `bun.lock`, run a clean frozen install and focused verification, then remove the preserved binary source lockfile. Automatic migration occurs only when `bun.lock` is absent.
+
+## Lifecycle trust
+
+Dependency lifecycle scripts are allow-listed. `trustedDependencies` replaces Bun's built-in trusted list rather than extending it; an empty list trusts none. Non-registry sources require explicit trust.
+
+`--ignore-scripts` disables project and trusted dependency lifecycle scripts. In bunfig, use `ignoreScripts`; there is no documented `lifecycle = ["postinstall"]` policy setting.
+
+Review untrusted scripts before enabling them:
+
+```bash
+bun pm untrusted
+bun pm trust <package>
+```
+
+## Script scheduling
+
+Filtered finite scripts honor workspace dependency order; independent packages can overlap. Use dependency-aware default execution for builds:
+
+```bash
+bun run --filter '*' build
+```
+
+Long-running dev servers block dependents under dependency ordering. Run intended independent servers explicitly in parallel:
+
+```bash
+bun run --parallel --workspaces --if-present dev
+```
+
+Focused execution remains the default during development. Do not apply blanket parallelism to builds whose order matters.
+
+## Updates and overrides
+
+`bun update` respects current semver ranges by default. For a reviewed workspace selection:
+
+```bash
+bun update --interactive --recursive
+```
+
+`--latest` can rewrite ranges across breaking versions and needs migration review.
+
+Overrides/resolutions are top-level only and can affect direct or transitive dependencies. Document the reason and removal condition for every forced version.
+
+## TypeScript and package exports
+
+Resolve workspace packages through Bun's `node_modules` links and each package's `exports`. TypeScript warns against `paths` entries that point at monorepo package sources because they bypass real package `exports` and consumer resolution.
+
+Use project references for compiler graph ordering. Put the `types` export condition before runtime conditions:
 
 ```json
 {
-  "name": "@myorg/shared",
-  "version": "1.0.0",
-  "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    },
-    "./utils": {
-      "import": "./dist/utils.js",
-      "types": "./dist/utils.d.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
     }
-  },
-  "scripts": {
-    "build": "bun build ./src/index.ts --outdir ./dist --target bun",
-    "typecheck": "tsc --noEmit"
-  },
-  "peerDependencies": {
-    "typescript": "^5.0.0"
   }
 }
 ```
 
-### Internal Dependencies
+Export every documented subpath or import public types from the root. Choose Bun, Node, or browser build targets from supported consumers. TypeScript normally belongs in `devDependencies`, not peers, unless consumers use a compiler API in the public contract.
 
-```typescript
-// packages/backend/src/index.ts
-import { validateUser, UserSchema } from "@myorg/shared";
-import type { User } from "@myorg/shared/types";
+Do not add `skipLibCheck` to conceal workspace declaration errors.
 
-const user = validateUser(data);
-```
+## CI and containers
 
-### Running Type Checks
+Use current `oven-sh/setup-bun@v2` and pin the project's Bun version instead of `latest`. In Docker, preserve workspace manifest paths; a wildcard copy into one directory flattens manifests and breaks the declared layout.
 
-```json
-{
-  "scripts": {
-    "typecheck": "tsc --noEmit -p tsconfig.json",
-    "typecheck:all": "bun --filter '*' typecheck"
-  }
-}
-```
+Prefer a pinned multi-stage image, install against the complete/preserved workspace tree, copy only runtime artifacts, and run as the image's non-root `bun` user.
 
-## Lockfile Management
+## Pack, publish, and audit
 
-### Text-based Lockfile (v1.2+)
+Inspect package contents before publication:
 
 ```bash
-# Migrate from binary lockfile
-bun install --save-text-lockfile --frozen-lockfile --lockfile-only
-rm bun.lockb
+bun pm pack
+bun publish --dry-run --access public
+bun audit
+bun why <package>
 ```
 
-### Automatic Migration
+Publishing is an external mutation requiring explicit package, registry, tag/access, artifact, and credentials. Bun strips/resolves workspace and catalog protocols. Publishing a supplied tarball does not run pack/publish lifecycle scripts. There is no implicit monorepo-wide publish command.
 
-Bun automatically migrates from:
+`bun audit` sends installed package/version data to npm and skips non-default registries. Account for that privacy and coverage boundary.
 
-- `package-lock.json` (npm)
-- `yarn.lock` (Yarn v1)
-- `pnpm-lock.yaml` (pnpm)
+## Review checklist
 
-```bash
-# Install and migrate lockfile
-bun install
-```
-
-## Dependency Overrides
-
-Force specific versions for transitive dependencies:
-
-```json
-{
-  "overrides": {
-    "lodash": "4.17.21",
-    "axios": "^1.6.0"
-  }
-}
-```
-
-Or Yarn-style:
-
-```json
-{
-  "resolutions": {
-    "lodash": "4.17.21"
-  }
-}
-```
-
-## CI/CD Integration
-
-### GitHub Actions
-
-```yaml
-- uses: oven-sh/setup-bun@v1
-  with:
-    bun-version: latest
-
-- run: bun install --frozen-lockfile
-
-- run: bun --filter '*' typecheck
-
-- run: bun --filter '*' build
-
-- run: bun --filter '*' test
-```
-
-### Docker
-
-```dockerfile
-FROM oven/bun:1
-
-WORKDIR /app
-
-# Copy lockfile first for caching
-COPY bun.lock package.json ./
-COPY packages/*/package.json ./packages/
-
-RUN bun install --frozen-lockfile
-
-COPY . .
-
-RUN bun --filter '*' build
-```
-
-## Best Practices Summary
-
-1. **Use `private: true`** on root package.json
-2. **Keep root dependencies minimal** - only shared dev tools
-3. **Use workspace protocol** (`workspace:*`) for internal deps
-4. **Use catalogs** for consistent versions across packages
-5. **Run `--frozen-lockfile`** in CI
-6. **Commit `bun.lock`** to version control
-7. **Use glob negation** to exclude test/template directories
-8. **Run scripts in parallel** with `bun --filter '*'`
-9. **Configure TypeScript paths** for seamless imports
-10. **Build dependencies first** - Bun handles order automatically
-
-## When to Ask for Help
-
-- Complex publishing workflows to npm
-- Custom registry authentication
-- Peer dependency conflicts
-- Selective version updates in catalogs
-- Integration with Turborepo or Nx
-- Workspace-specific bunfig.toml overrides
+- Verify Bun 1.3.14 and the lockfile config/linker history.
+- Use isolated installs explicitly when strict dependency boundaries matter.
+- Keep experimental global store machine-local until CI is revalidated.
+- Use singular default catalog and named `catalogs` correctly.
+- Add dependencies through package `--cwd`; do not invent add filters.
+- Preserve peer/optional semantics and lifecycle trust policy.
+- Use `bun ci` and inspect lockfile migration before deleting the old lock.
+- Run finite builds dependency-aware and long-lived servers explicitly parallel.
+- Resolve packages through workspace links/exports, not TypeScript source paths.
+- Preserve workspace directories in Docker and use a non-root runtime stage.
+- Dry-run and inspect package contents before authorized publication.
