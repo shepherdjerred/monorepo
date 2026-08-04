@@ -45,7 +45,7 @@ config on boot:
   whole file), 14 mcMMO files
 - single vs double quotes (`'{world}'` ↔ `"{world}"`), escaping
   (`'..."..."'` → `"...\"...\""`)
-- trailing whitespace after null-valued keys (`donation-key:` → `donation-key: `)
+- trailing whitespace after null-valued keys (a space added after `donation-key:`)
 - missing EOF newline (GSON/plugin writers)
 - YAML block↔flow normalization (GriefPrevention, WanderingTrades)
 
