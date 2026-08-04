@@ -64,4 +64,4 @@ The current stable binary remains from 2024 while online documentation includes 
 - [target_triple](https://wezterm.org/config/lua/wezterm/target_triple.html)
 - [SshDomain](https://wezterm.org/config/lua/SshDomain.html)
 - [procinfo.pid](https://wezterm.org/config/lua/wezterm.procinfo/pid.html)
-- [Latest WezTerm release](https://github.com/wezterm/wezterm/releases/latest)
+- [Latest WezTerm release 20240203-110809-5046fc22](https://github.com/wezterm/wezterm/releases/tag/20240203-110809-5046fc22)
