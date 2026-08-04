@@ -243,8 +243,18 @@ func (r *wirelessNetworkResource) readWireless(ctx context.Context, band int, mo
 
 	readOptionalString(&model.Crypto, result, prefix+"crypto")
 	readOptionalInt64(&model.Channel, result, prefix+"chanspec", parseChannel)
-	readOptionalInt64FromString(&model.Bandwidth, result, prefix+"bw")
-	readOptionalBoolFromFlag(&model.Hidden, result, prefix+"closed")
+
+	if err := readOptionalInt64FromString(&model.Bandwidth, result, prefix+"bw"); err != nil {
+		diags.AddError("Invalid wireless bandwidth encoding", err.Error())
+
+		return diags
+	}
+
+	if err := readOptionalBoolFromFlag(&model.Hidden, result, prefix+"closed"); err != nil {
+		diags.AddError("Invalid wireless hidden-flag encoding", err.Error())
+
+		return diags
+	}
 
 	return diags
 }
@@ -447,11 +457,13 @@ func readOptionalInt64(target *types.Int64, result map[string]string, key string
 
 // readOptionalInt64FromString reads a numeric string from NVRAM into an int64
 // attribute, applying the same empty-clears-stale-state behavior as
-// readOptionalInt64.
-func readOptionalInt64FromString(target *types.Int64, result map[string]string, key string) {
+// readOptionalInt64. A non-empty, non-numeric value is a malformed encoding
+// (e.g. after a firmware or key-layout change) and returns an error rather than
+// silently leaving the attribute at its prior/Unknown value.
+func readOptionalInt64FromString(target *types.Int64, result map[string]string, key string) error {
 	v, ok := result[key]
 	if !ok {
-		return
+		return nil
 	}
 
 	if v == "" {
@@ -459,27 +471,44 @@ func readOptionalInt64FromString(target *types.Int64, result map[string]string, 
 			*target = types.Int64Null()
 		}
 
-		return
+		return nil
 	}
 
-	if parsed, err := strconv.ParseInt(v, 10, 64); err == nil {
-		*target = types.Int64Value(parsed)
+	parsed, err := strconv.ParseInt(v, 10, 64)
+	if err != nil {
+		return fmt.Errorf("NVRAM %s has a non-numeric value %q", key, v)
 	}
+
+	*target = types.Int64Value(parsed)
+
+	return nil
 }
 
 // readOptionalBoolFromFlag reads a "0"/"1" NVRAM flag into a bool attribute,
-// applying the same empty-clears-stale-state behavior as readOptionalInt64.
-func readOptionalBoolFromFlag(target *types.Bool, result map[string]string, key string) {
+// applying the same empty-clears-stale-state behavior as readOptionalInt64. A
+// non-empty value other than "0" or "1" is a malformed encoding and returns an
+// error rather than being silently coerced to false.
+func readOptionalBoolFromFlag(target *types.Bool, result map[string]string, key string) error {
 	v, ok := result[key]
 	if !ok {
-		return
+		return nil
 	}
 
-	if v != "" {
-		*target = types.BoolValue(v == "1")
-	} else if !target.IsNull() {
-		*target = types.BoolNull()
+	if v == "" {
+		if !target.IsNull() {
+			*target = types.BoolNull()
+		}
+
+		return nil
 	}
+
+	if v != "0" && v != "1" {
+		return fmt.Errorf("NVRAM %s has a non-boolean flag value %q (expected 0 or 1)", key, v)
+	}
+
+	*target = types.BoolValue(v == "1")
+
+	return nil
 }
 
 // boolToFlag converts a bool to "0" or "1".
