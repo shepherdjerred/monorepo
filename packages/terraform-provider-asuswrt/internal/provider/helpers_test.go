@@ -15,21 +15,39 @@ func TestParseChannel(t *testing.T) {
 	tests := []struct {
 		chanspec string
 		want     int
+		wantErr  bool
 	}{
-		{"0", 0},
-		{"6", 6},
-		{"36/80", 36},
-		{"149/160", 149},
-		{"", 0},
-		{"abc", 0},
-		{"/80", 0},
+		{"0", 0, false},
+		{"", 0, false},
+		{"6", 6, false},
+		{"36/80", 36, false},
+		{"149/160", 149, false},
+		{"6u", 6, false},          // 2.4 GHz 40 MHz upper sideband
+		{"6l", 6, false},          // 2.4 GHz 40 MHz lower sideband
+		{"6g37/320-1", 37, false}, // 6 GHz WiFi7 band-prefixed form
+		{"abc", 0, true},
+		{"/80", 0, true},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.chanspec, func(t *testing.T) {
 			t.Parallel()
 
-			got := parseChannel(tc.chanspec)
+			got, err := parseChannel(tc.chanspec)
+			if tc.wantErr {
+				if err == nil {
+					t.Errorf("parseChannel(%q) = %d, want error", tc.chanspec, got)
+				}
+
+				return
+			}
+
+			if err != nil {
+				t.Errorf("parseChannel(%q) unexpected error: %v", tc.chanspec, err)
+
+				return
+			}
+
 			if got != tc.want {
 				t.Errorf("parseChannel(%q) = %d, want %d", tc.chanspec, got, tc.want)
 			}
@@ -395,10 +413,8 @@ func TestReadOptionalInt64FromString(t *testing.T) {
 func TestReadOptionalInt64(t *testing.T) {
 	t.Parallel()
 
-	identity := func(s string) int {
-		n, _ := strconv.Atoi(s)
-
-		return n
+	identity := func(s string) (int, error) {
+		return strconv.Atoi(s)
 	}
 
 	t.Run("key-present-target-set-updates", func(t *testing.T) {
@@ -406,7 +422,9 @@ func TestReadOptionalInt64(t *testing.T) {
 
 		target := types.Int64Value(1)
 		result := map[string]string{"channel": "6"}
-		readOptionalInt64(&target, result, "channel", identity)
+		if err := readOptionalInt64(&target, result, "channel", identity); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 
 		if target.ValueInt64() != 6 {
 			t.Errorf("expected target to be 6, got %d", target.ValueInt64())
@@ -420,7 +438,9 @@ func TestReadOptionalInt64(t *testing.T) {
 		// resolve to a known value from the router's read-back.
 		target := types.Int64Unknown()
 		result := map[string]string{"channel": "36"}
-		readOptionalInt64(&target, result, "channel", identity)
+		if err := readOptionalInt64(&target, result, "channel", identity); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 
 		if target.IsUnknown() || target.ValueInt64() != 36 {
 			t.Errorf("expected target to resolve to 36, got unknown=%v value=%d", target.IsUnknown(), target.ValueInt64())
@@ -432,7 +452,9 @@ func TestReadOptionalInt64(t *testing.T) {
 
 		target := types.Int64Value(6)
 		result := map[string]string{"channel": ""}
-		readOptionalInt64(&target, result, "channel", identity)
+		if err := readOptionalInt64(&target, result, "channel", identity); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 
 		if !target.IsNull() {
 			t.Errorf("expected target to be cleared to null, got %d", target.ValueInt64())
@@ -444,10 +466,26 @@ func TestReadOptionalInt64(t *testing.T) {
 
 		target := types.Int64Value(6)
 		result := map[string]string{}
-		readOptionalInt64(&target, result, "channel", identity)
+		if err := readOptionalInt64(&target, result, "channel", identity); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
 
 		if target.ValueInt64() != 6 {
 			t.Errorf("expected target to remain 6, got %d", target.ValueInt64())
+		}
+	})
+
+	t.Run("transform-error-propagates", func(t *testing.T) {
+		t.Parallel()
+
+		target := types.Int64Value(6)
+		result := map[string]string{"channel": "bogus"}
+		if err := readOptionalInt64(&target, result, "channel", identity); err == nil {
+			t.Fatalf("expected error from transform, got none")
+		}
+
+		if target.ValueInt64() != 6 {
+			t.Errorf("expected target to be left unchanged on error, got %d", target.ValueInt64())
 		}
 	})
 }

@@ -242,7 +242,12 @@ func (r *wirelessNetworkResource) readWireless(ctx context.Context, band int, mo
 	model.AuthMode = types.StringValue(result[prefix+"auth_mode_x"])
 
 	readOptionalString(&model.Crypto, result, prefix+"crypto")
-	readOptionalInt64(&model.Channel, result, prefix+"chanspec", parseChannel)
+
+	if err := readOptionalInt64(&model.Channel, result, prefix+"chanspec", parseChannel); err != nil {
+		diags.AddError("Invalid wireless chanspec encoding", err.Error())
+
+		return diags
+	}
 
 	if err := readOptionalInt64FromString(&model.Bandwidth, result, prefix+"bw"); err != nil {
 		diags.AddError("Invalid wireless bandwidth encoding", err.Error())
@@ -442,17 +447,28 @@ func setOptionalString(values map[string]string, key string, attr types.String) 
 // NVRAM value clears the target to null unless it's already null, so a value
 // cleared on the router (rather than merely unconfigured) surfaces as drift
 // instead of leaving a stale target.
-func readOptionalInt64(target *types.Int64, result map[string]string, key string, transform func(string) int) {
+func readOptionalInt64(target *types.Int64, result map[string]string, key string, transform func(string) (int, error)) error {
 	v, ok := result[key]
 	if !ok {
-		return
+		return nil
 	}
 
-	if v != "" {
-		*target = types.Int64Value(int64(transform(v)))
-	} else if !target.IsNull() {
-		*target = types.Int64Null()
+	if v == "" {
+		if !target.IsNull() {
+			*target = types.Int64Null()
+		}
+
+		return nil
 	}
+
+	n, err := transform(v)
+	if err != nil {
+		return err
+	}
+
+	*target = types.Int64Value(int64(n))
+
+	return nil
 }
 
 // readOptionalInt64FromString reads a numeric string from NVRAM into an int64
@@ -520,24 +536,37 @@ func boolToFlag(b bool) string {
 	return "0"
 }
 
-// parseChannel extracts the channel number from a chanspec string like "36/80" or "0".
-func parseChannel(chanspec string) int {
-	if chanspec == "0" {
-		return 0
+// parseChannel extracts the channel number from a chanspec string. It handles
+// the plain "36" and "36/80" forms, the 2.4 GHz 40 MHz sideband forms ("6u" /
+// "6l"), and 6 GHz band-prefixed forms ("6g37/320-1"). "" and "0" mean automatic
+// channel selection. A non-empty form whose channel cannot be parsed returns an
+// error rather than silently reporting channel 0 (automatic), which would hide
+// the router's real channel on import/refresh and produce false drift.
+func parseChannel(chanspec string) (int, error) {
+	if chanspec == "" || chanspec == "0" {
+		return 0, nil
 	}
 
-	idx := strings.Index(chanspec, "/")
-	channelStr := chanspec
-	if idx >= 0 {
-		channelStr = chanspec[:idx]
+	// Drop a "/<width>" suffix (e.g. "36/80", "6g37/320-1").
+	lead := chanspec
+	if i := strings.Index(lead, "/"); i >= 0 {
+		lead = lead[:i]
 	}
 
-	ch, err := strconv.Atoi(channelStr)
+	// Drop a band prefix such as "2g"/"5g"/"6g": the channel follows the 'g'.
+	if i := strings.LastIndexByte(lead, 'g'); i >= 0 {
+		lead = lead[i+1:]
+	}
+
+	// Drop a trailing 2.4 GHz 40 MHz sideband marker ("u"/"l").
+	lead = strings.TrimRight(lead, "ul")
+
+	ch, err := strconv.Atoi(lead)
 	if err != nil {
-		return 0
+		return 0, fmt.Errorf("unparseable chanspec %q", chanspec)
 	}
 
-	return ch
+	return ch, nil
 }
 
 // formatChanspec creates a chanspec string from channel and bandwidth. It
