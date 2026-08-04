@@ -71,17 +71,26 @@ tofu -chdir=seaweedfs apply
 
 ## CI/CD
 
-The static Buildkite pipeline (`.buildkite/pipeline.yml`) drives these stacks.
-The allowlist is the inline `for stack in ...` loop in two steps: the
-`pr-dryrun` step (`:microscope: pr dry-run`) runs `tofu ... plan` for each
-listed stack on every PR, and the `tofu-apply` step (`:terraform: tofu apply`)
-runs `tofu ... apply` for each on merge to `main`. Both loops enumerate the
-managed stacks explicitly (`seaweedfs tailscale buildkite arr pagerduty github
-cloudflare`); grep `for stack in` in the pipeline for the current lines.
+The static Buildkite pipeline (`.buildkite/pipeline.yml`) drives these stacks,
+and the **plan and apply allowlists differ**:
 
-The `asuswrt` module is **excluded from CI** — it is deliberately absent from
-those `for stack in ...` allowlists because the CI pod has tailnet-only egress
-and cannot reach the LAN routers. It is local-run only — see `asuswrt/README.md`.
+- **Plan (every PR)** — the `pr-dryrun` step (`:microscope: pr dry-run`) runs
+  `tofu ... plan` for all seven stacks:
+  `seaweedfs tailscale buildkite arr pagerduty github cloudflare`
+  (the inline `for stack in ...` loop).
+- **Apply (merge to `main`)** — the `tofu-apply` step (`:terraform: tofu apply`)
+  loop applies only five: `seaweedfs tailscale buildkite arr pagerduty`.
+  `github` and `cloudflare` are **not** in that loop; they are applied on merge
+  by their own dedicated steps, `tofu-github` and `tofu-cloudflare` (the latter
+  gated to run after the tunnel step). So all seven are planned on PRs and
+  applied on merge, but the apply is split across three steps, not one loop.
+
+Grep `for stack in` and `tofu-stack.ts` in the pipeline for the current lines.
+
+The `asuswrt` module is **excluded from all of these** — it is deliberately
+absent from the plan loop, the apply loop, and the dedicated apply steps because
+the CI pod has tailnet-only egress and cannot reach the LAN routers. It is
+local-run only — see `asuswrt/README.md`.
 
 ## What's Managed
 
