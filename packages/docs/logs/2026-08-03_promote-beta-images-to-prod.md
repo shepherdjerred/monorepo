@@ -25,12 +25,20 @@ stage, so nothing to promote there.)
 ## Mechanism (per version-management / scout AGENTS.md)
 
 Prod promotion = pinning the `/prod` entry to a **minted** `2.0.0-<n>`
-tag@digest. Every main build both archives the prod-flavored site artifact to
-`s3://scout-site-releases/2.0.0-<n>/` and mints
+tag@digest. On an **eligible Scout release build** — a main build that produces
+a `shepherdjerred/scout-for-lol/beta` image candidate or a `site-scout` source
+change (the `scout-beta-release`/`scout-tag-release` steps in
+`.buildkite/pipeline.yml` short-circuit with `exit 0` otherwise) — the release
+pipeline both immutably archives the prod-flavored site artifact and mints
 `ghcr.io/shepherdjerred/scout-for-lol:2.0.0-<n>` pointing at the backend digest
-beta serves — so a minted tag's existence in GHCR guarantees its paired prod
-site artifact exists. `scout-prod-reconcile` derives the prod site version from
-the pin's tag portion (no separate site pin). Only ever pin a minted tag@digest.
+beta serves, so a minted tag's existence in GHCR guarantees its paired prod
+site artifact exists. The artifact is **content-addressed**: `archiveFlavor`
+stores it under `s3://scout-site-releases/<releaseInputDigest>/prod/`
+(`scripts/lib/scout-site-storage.ts`); `versions/2.0.0-<n>.json` is only a
+lookup record mapping the tag to that release state, **not** the artifact path.
+`scout-prod-reconcile` resolves the pinned tag to its release state and
+reconciles prod to that immutable archive (no separate site pin). Only ever pin
+a minted tag@digest.
 
 No standing Renovate promotion PR was open, so the promotion was done by
 hand-editing the pins (doc-sanctioned).
@@ -70,13 +78,17 @@ hand-editing the pins (doc-sanctioned).
 
 - Open the PR and let it merge; on merge to main, ArgoCD rolls the prod
   backends and `scout-prod-reconcile` syncs the prod site bucket from the
-  archived `2.0.0-7926` artifact.
-- Post-merge, confirm prod serves the promoted versions:
-  `curl https://scout-for-lol.com/.release-version` should report `7926`.
+  immutable content-addressed archive for the pinned `2.0.0-7926` release state.
+- Post-merge, confirm prod serves the promoted site: the prod bucket's
+  `.release-version` marker (`curl https://scout-for-lol.com/.release-version`)
+  should read `scout-site@<releaseInputDigest>` — the content identity
+  `siteReleaseIdentity` writes (`scripts/lib/scout-release-state.ts`), not the
+  bare `7926` tag number.
 
 ### Caveats
 
 - This is a production deploy of both apps. Rollback = revert the promotion
   commit, or hand-edit a pin back to an older minted tag@digest.
-- Scout prod site version is derived from the pin's tag portion (`-7926`); do
-  not hand-pair a tag with a mismatched digest.
+- The prod site identity is the release's content digest (`releaseInputDigest`),
+  resolved from the pinned tag's release state — not the `-7926` tag portion
+  itself; do not hand-pair a tag with a mismatched digest.
