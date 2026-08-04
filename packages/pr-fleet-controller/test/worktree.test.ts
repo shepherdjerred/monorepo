@@ -139,24 +139,59 @@ describe("findWorktree prefers a fleet worktree, falls back to the operator's", 
       "branch refs/heads/feature/x",
       "",
     ].join("\n");
-    expect(await managerWith(porcelain).findWorktree(["feature/x"])).toBe(
-      "/tmp/pr-fleet/stack-7",
-    );
+    expect(
+      await managerWith(porcelain).findWorktree(["feature/x"], "feature/x"),
+    ).toBe("/tmp/pr-fleet/stack-7");
   });
 
-  test("falls back to the operator worktree so the fleet can reuse it in place", async () => {
-    // Only the operator holds the branch; git forbids a second checkout of it,
-    // so reusing the operator worktree is the only way to make progress. The
-    // dirty guard in assignWorktreeBranch keeps that reuse safe.
+  test("reuses a fleet worktree checked out on a sibling branch", async () => {
+    // The stack shares one fleet worktree; a sibling's checkout is disposable
+    // and will be reset onto the candidate, so matching any fleet branch is fine.
+    const porcelain = [
+      "worktree /tmp/pr-fleet/stack-7",
+      `HEAD ${"b".repeat(40)}`,
+      "branch refs/heads/feature/sibling",
+      "",
+    ].join("\n");
+    expect(
+      await managerWith(porcelain).findWorktree(
+        ["feature/sibling", "feature/candidate"],
+        "feature/candidate",
+      ),
+    ).toBe("/tmp/pr-fleet/stack-7");
+  });
+
+  test("falls back to the operator worktree when it holds the candidate branch", async () => {
+    // Only the operator holds the candidate branch; git forbids a second
+    // checkout of it, so reusing the operator worktree is the only way to make
+    // progress. The dirty/divergence guards in assignWorktreeBranch keep it safe.
     const porcelain = [
       "worktree /home/user/monorepo",
       `HEAD ${"a".repeat(40)}`,
       "branch refs/heads/feature/x",
       "",
     ].join("\n");
-    expect(await managerWith(porcelain).findWorktree(["feature/x"])).toBe(
-      "/home/user/monorepo",
-    );
+    expect(
+      await managerWith(porcelain).findWorktree(["feature/x"], "feature/x"),
+    ).toBe("/home/user/monorepo");
+  });
+
+  test("never reuses an operator worktree that only holds a sibling branch", async () => {
+    // The operator holds sibling A while candidate B is dispatched. Reusing A's
+    // checkout would switch and hard-reset it to B, changing the operator's
+    // checkout and deleting unpushed work on A — so it must NOT be returned.
+    const porcelain = [
+      "worktree /home/user/monorepo",
+      `HEAD ${"a".repeat(40)}`,
+      "branch refs/heads/feature/sibling",
+      "",
+    ].join("\n");
+    expect(
+      await managerWith(porcelain).findWorktree(
+        ["feature/sibling", "feature/candidate"],
+        "feature/candidate",
+      ),
+    ).toBeNull();
   });
 
   test("returns null when no worktree has the branch", async () => {
@@ -166,7 +201,9 @@ describe("findWorktree prefers a fleet worktree, falls back to the operator's", 
       "branch refs/heads/main",
       "",
     ].join("\n");
-    expect(await managerWith(porcelain).findWorktree(["feature/x"])).toBeNull();
+    expect(
+      await managerWith(porcelain).findWorktree(["feature/x"], "feature/x"),
+    ).toBeNull();
   });
 });
 

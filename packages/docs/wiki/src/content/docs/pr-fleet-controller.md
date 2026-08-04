@@ -45,6 +45,20 @@ prompt instructions — the worker's tools simply do not expose those actions.
 - **One worker per stack.** Each git-spice stack shares a single worktree, and
   only one worker holds it at a time; siblings queue. A worker is dispatched
   against a specific PR head, and its worktree is synced to that head first.
+- **Operator-owned checkouts are reused only when safe.** The controller
+  provisions its own disposable worktree per stack, but Git forbids the same
+  branch in two worktrees, so if you already have a PR's branch checked out in
+  your own worktree the fleet reuses that checkout in place — otherwise the PR
+  would be parked for the whole run. That reuse is fenced: an operator checkout
+  is reused only when it holds the **exact** PR being worked (never a sibling
+  branch that would get switched and hard-reset under you), and only when it is
+  clean **and** its `HEAD` already sits at the PR's fetched head. If it has
+  uncommitted changes or committed-but-unpushed commits, the fleet refuses and
+  pauses the PR with an actionable message instead of discarding your edits or
+  force-pushing your local commits. Worker file edits are likewise confined to
+  the worktree and cannot touch Git metadata (`.git`, config, hooks), even via a
+  symlink. To hand a PR to the fleet cleanly, commit and push (or remove) your
+  local work, or just delete your worktree for that branch.
 - **Leases** serialize the expensive/dangerous steps — setup (dependency
   install + codegen), heavy commands, and the stack-write that publishing needs.
   Leases are released only after a worker actually settles, so a cancelled or

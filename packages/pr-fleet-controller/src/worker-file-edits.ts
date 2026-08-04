@@ -37,6 +37,17 @@ export async function containedPath(
   if (fromRoot.startsWith("..") || path.isAbsolute(fromRoot)) {
     throw new Error(`Path escapes assigned worktree: ${requestedPath}`);
   }
+  // A symlink whose real target resolves into the checkout's own Git directory
+  // (`.git`, `.git/config`, `.git/hooks/...`) stays beneath the root and so
+  // passes the escape check above, yet `Bun.write` would follow it and corrupt
+  // the checkout or mutate remotes/hooks. The raw-segment guard above cannot see
+  // it because the requested segment is the innocuous link name, so check the
+  // resolved canonical path too.
+  if (
+    fromRoot.split(path.sep).some((segment) => segment.toLowerCase() === ".git")
+  ) {
+    throw new Error(`Refusing to edit Git metadata path: ${requestedPath}`);
+  }
   return absolute;
 }
 

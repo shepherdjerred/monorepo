@@ -1,5 +1,12 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  symlink,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import {
@@ -163,5 +170,24 @@ describe("writeWorktreeFile", () => {
     await expect(
       writeWorktreeFile(worktree, { path: ".git/config", content: "y" }),
     ).rejects.toThrow(/Git metadata path/);
+  });
+
+  test("refuses a symlink that resolves into the Git directory", async () => {
+    // A tracked symlink whose real target is `.git` (or a path inside it) passes
+    // the raw-segment check under its innocuous link name; the canonical-path
+    // guard must still reject it before Bun.write follows it.
+    await mkdir(path.join(worktree, ".git"));
+    await writeFile(path.join(worktree, ".git", "config"), "[core]\n");
+    await symlink(path.join(worktree, ".git"), path.join(worktree, "gitlink"));
+    await expect(
+      writeWorktreeFile(worktree, {
+        path: "gitlink/config",
+        content: "pwned",
+      }),
+    ).rejects.toThrow(/Git metadata path/);
+    // The real config file is untouched.
+    expect(await readFile(path.join(worktree, ".git", "config"), "utf8")).toBe(
+      "[core]\n",
+    );
   });
 });

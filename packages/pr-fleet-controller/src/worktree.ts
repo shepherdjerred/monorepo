@@ -48,15 +48,28 @@ export class WorktreeManager {
     );
   }
 
-  // Find a worktree that already has one of `branches` checked out. Git forbids
-  // the same branch in two worktrees, so a `git worktree add` for a branch the
-  // operator already holds fails and parks the PR for the whole run. To let the
-  // fleet make progress on such a PR, reuse that existing checkout in place: a
-  // fleet-owned worktree is always preferred (disposable, safe to hard-reset),
-  // and an operator worktree is returned only as a fallback — `assignWorktreeBranch`
-  // refuses to reuse it while it is dirty or when its HEAD has diverged from the
-  // PR head, so operator edits are never lost and never force-pushed.
-  async findWorktree(branches: string[]): Promise<string | null> {
+  // Find a worktree already holding a relevant branch. Git forbids the same
+  // branch in two worktrees, so a `git worktree add` for a branch that is
+  // already checked out fails and parks the PR for the whole run. To let the
+  // fleet make progress, reuse an existing checkout in place.
+  //
+  // A fleet-owned worktree (disposable, safe to hard-reset onto the candidate)
+  // is reused when it holds ANY of `fleetBranches` — the whole stack shares one
+  // fleet worktree, so a sibling's checkout is fair game and is always preferred.
+  //
+  // An operator worktree is reused only as a fallback and only when it holds the
+  // EXACT `candidateBranch`. Matching a mere sibling would let the caller switch
+  // the operator's checkout to a different branch and hard-reset it — changing
+  // their checkout and deleting committed-but-unpushed work on the sibling, whose
+  // divergence the assign-time guard cannot catch because that guard only runs
+  // when the worktree was already on the candidate branch. On the candidate
+  // branch itself, `assignWorktreeBranch` still refuses reuse while the worktree
+  // is dirty or its HEAD has diverged, so operator edits are never lost or
+  // force-pushed.
+  async findWorktree(
+    fleetBranches: string[],
+    candidateBranch: string,
+  ): Promise<string | null> {
     const output = await this.#mustRun("git", [
       "worktree",
       "list",
@@ -70,11 +83,19 @@ export class WorktreeManager {
       }
       if (line.startsWith("branch refs/heads/")) {
         const branch = line.slice("branch refs/heads/".length);
-        if (currentPath !== null && branches.includes(branch)) {
-          if (this.#isFleetWorktree(currentPath)) {
+        if (currentPath !== null) {
+          if (
+            fleetBranches.includes(branch) &&
+            this.#isFleetWorktree(currentPath)
+          ) {
             return currentPath;
           }
-          operatorFallback ??= currentPath;
+          if (
+            branch === candidateBranch &&
+            !this.#isFleetWorktree(currentPath)
+          ) {
+            operatorFallback ??= currentPath;
+          }
         }
       }
     }
@@ -259,7 +280,7 @@ export class WorktreeManager {
     }
     await mkdir(this.#worktreeRoot, { recursive: true });
     const worktreePath = path.join(this.#worktreeRoot, `stack-${stackId}`);
-    const existing = await this.findWorktree([pr.headRefName]);
+    const existing = await this.findWorktree([pr.headRefName], pr.headRefName);
     if (existing !== null) {
       return existing;
     }

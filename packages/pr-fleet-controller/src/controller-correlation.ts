@@ -40,7 +40,10 @@ export async function assignFleetWorktree(
       .filter((pr) => pr.stackId === candidate.stackId)
       .map((pr) => pr.identity.headRefName);
     const worktree =
-      (await environment.findWorktree(siblingBranches)) ??
+      (await environment.findWorktree(
+        siblingBranches,
+        candidate.identity.headRefName,
+      )) ??
       (await environment.provisionWorktree(
         candidate.identity,
         candidate.stackId,
