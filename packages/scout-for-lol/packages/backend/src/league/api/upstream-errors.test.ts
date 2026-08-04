@@ -12,17 +12,22 @@ describe("isExpectedUpstreamError", () => {
     }
   });
 
-  test("treats Cloudflare edge 5xx (520-527) as expected", () => {
-    for (const status of [520, 521, 522, 523, 524, 525, 526, 527]) {
+  test("treats Cloudflare edge/connectivity 5xx (520-524, 527) as expected", () => {
+    for (const status of [520, 521, 522, 523, 524, 527]) {
       expect(isExpectedUpstreamError(status)).toBe(true);
     }
   });
 
-  test("does not treat client errors, success, or ambiguous 530 as upstream errors", () => {
-    // 530 wraps the whole Cloudflare Error 1xxx range (rate limiting, access
-    // denial, …); the status alone cannot establish a transient origin outage,
-    // so it stays unexpected and remains visible in error tracking.
-    for (const status of [200, 400, 404, 429, 500, 501, 528, 529, 530]) {
+  test("does not treat client errors, success, certificate failures, or ambiguous 530 as upstream errors", () => {
+    // 525/526 are Cloudflare TLS handshake/certificate failures, which are
+    // typically a persistent origin misconfiguration rather than a transient
+    // edge condition. 530 wraps the whole Cloudflare Error 1xxx range (rate
+    // limiting, access denial, …); the status alone cannot establish a
+    // transient origin outage. Both stay unexpected and remain visible in
+    // error tracking.
+    for (const status of [
+      200, 400, 404, 429, 500, 501, 525, 526, 528, 529, 530,
+    ]) {
       expect(isExpectedUpstreamError(status)).toBe(false);
     }
   });
