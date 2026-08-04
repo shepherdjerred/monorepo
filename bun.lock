@@ -17,7 +17,7 @@
     },
     "packages/astro-opengraph-images": {
       "name": "astro-opengraph-images",
-      "version": "1.17.4",
+      "version": "1.18.0",
       "dependencies": {
         "@resvg/resvg-js": "^2.6.2",
         "jsdom": "^30.0.0",
@@ -738,7 +738,7 @@
     },
     "packages/homelab/src/helm-types": {
       "name": "@shepherdjerred/helm-types",
-      "version": "1.5.0",
+      "version": "1.6.0",
       "bin": {
         "helm-types": "dist/cli.js",
       },
@@ -879,6 +879,29 @@
         "eslint": "^10.3.0",
         "jiti": "^2.7.0",
         "typescript": "^6.0.3",
+      },
+    },
+    "packages/pr-fleet-controller/packages/web": {
+      "name": "@shepherdjerred/pr-fleet-web",
+      "version": "0.1.0",
+      "dependencies": {
+        "@shepherdjerred/pr-fleet-controller": "workspace:*",
+        "@tanstack/react-query": "^5.101.2",
+        "react": "19.2.8",
+        "react-dom": "19.2.8",
+        "zod": "^4.4.3",
+      },
+      "devDependencies": {
+        "@shepherdjerred/eslint-config": "workspace:*",
+        "@types/bun": "^1.3.13",
+        "@types/react": "^19.2.17",
+        "@types/react-dom": "^19.2.3",
+        "@typescript/native": "npm:typescript@7.0.2",
+        "@vitejs/plugin-react": "^6.0.1",
+        "eslint": "^10.3.0",
+        "jiti": "^2.7.0",
+        "typescript": "^6.0.3",
+        "vite": "^8.0.11",
       },
     },
     "packages/release-tools": {
@@ -1535,7 +1558,7 @@
     },
     "packages/webring": {
       "name": "webring",
-      "version": "1.7.2",
+      "version": "1.8.0",
       "dependencies": {
         "htmlparser2": "^12.0.0",
         "remeda": "^2.33.7",
@@ -3459,6 +3482,8 @@
     "@shepherdjerred/monarch": ["@shepherdjerred/monarch@workspace:packages/monarch"],
 
     "@shepherdjerred/pr-fleet-controller": ["@shepherdjerred/pr-fleet-controller@workspace:packages/pr-fleet-controller"],
+
+    "@shepherdjerred/pr-fleet-web": ["@shepherdjerred/pr-fleet-web@workspace:packages/pr-fleet-controller/packages/web"],
 
     "@shepherdjerred/release-tools": ["@shepherdjerred/release-tools@workspace:packages/release-tools"],
 

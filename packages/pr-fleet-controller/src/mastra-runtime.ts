@@ -10,6 +10,7 @@ import { LibSQLStore } from "@mastra/libsql";
 import { MastraStorageExporter, Observability } from "@mastra/observability";
 import { shutdownMastraStores } from "./mastra-store-shutdown.ts";
 import type { RunRecorder } from "./run-recorder.ts";
+import { SpanJsonlExporter } from "./span-jsonl-exporter.ts";
 
 export type FleetMastraRuntime = {
   mastra: Mastra;
@@ -18,9 +19,13 @@ export type FleetMastraRuntime = {
 
 // The exporter list is intentionally centralized. A future opt-in remote
 // exporter can be added here without changing the collection schema or the
-// default local-only behavior.
-export function createObservabilityExporters(): ObservabilityExporter[] {
-  return [new MastraStorageExporter()];
+// default local-only behavior. The DuckDB-backed MastraStorageExporter is the
+// authoritative store; SpanJsonlExporter is a best-effort live-view mirror the
+// dashboard tails while the run holds DuckDB's exclusive lock.
+export function createObservabilityExporters(
+  spansPath: string,
+): ObservabilityExporter[] {
+  return [new MastraStorageExporter(), new SpanJsonlExporter(spansPath)];
 }
 
 function redactStringsInPlace(
@@ -98,7 +103,7 @@ export async function createFleetMastraRuntime(
     configs: {
       default: {
         serviceName: "pr-fleet-controller",
-        exporters: createObservabilityExporters(),
+        exporters: createObservabilityExporters(recorder.paths.spans),
         spanOutputProcessors: [new RepositorySecretFilter(recorder)],
       },
     },

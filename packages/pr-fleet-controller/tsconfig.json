@@ -11,5 +11,6 @@
     "target": "ES2022",
     "noEmit": true,
     "allowImportingTsExtensions": true
-  }
+  },
+  "include": ["src", "test", "eslint.config.ts"]
 }

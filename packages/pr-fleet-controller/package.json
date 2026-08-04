@@ -14,9 +14,10 @@
     "start": "bun run src/cli.ts",
     "inspect": "bun run src/inspect-cli.ts",
     "replay": "bun run src/replay-cli.ts",
+    "watch": "bun run src/watch-cli.ts",
     "build": "bun build src/cli.ts --target bun --outdir dist --external '@duckdb/node-bindings-*'",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
-    "test": "bun test",
+    "test": "bun test src test",
     "test:ci": "bun ../../scripts/run-ci-test.ts",
     "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/run-ci-test.ts",
     "lint": "bunx eslint --cache ."

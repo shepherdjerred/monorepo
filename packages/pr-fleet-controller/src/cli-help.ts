@@ -10,6 +10,9 @@ Options:
   --api-key-env <name>      API-key environment variable for a compatible endpoint
   --review-provider <id>    Hosted review provider to gate on (default: codex)
   --state-dir <path>        Local run-bundle root (default: XDG state directory)
+  --no-ui                   Do not spawn the live web dashboard
+  --ui-port <port>          Dashboard port (default: an ephemeral loopback port)
+  --no-open                 Do not open the dashboard in a browser
   --help                    Show this help
 
 Interactive commands:

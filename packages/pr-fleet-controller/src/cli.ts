@@ -25,6 +25,7 @@ import type { FleetObserver } from "./ports.ts";
 import { runRecordedCommand } from "./recorded-command.ts";
 import { resolveStateDirectory, RunRecorder } from "./run-recorder.ts";
 import { FleetControllerConfigSchema, type FleetSnapshot } from "./schemas.ts";
+import { spawnWatcher, stopWatcher } from "./watch-supervisor.ts";
 import { FleetStore } from "./state.ts";
 import { consumeTerminalLines, createSharedShutdown } from "./terminal-loop.ts";
 import type { TerminalOutcome } from "./terminal-loop.ts";
@@ -135,6 +136,9 @@ function parseCliArgs(args: string[]) {
       "api-key-env": { type: "string" },
       "review-provider": { type: "string" },
       "state-dir": { type: "string" },
+      "no-ui": { type: "boolean", default: false },
+      "ui-port": { type: "string" },
+      "no-open": { type: "boolean", default: false },
       help: { type: "boolean", default: false },
     },
     strict: true,
@@ -217,7 +221,13 @@ async function main(): Promise<void> {
     await Bun.file(path.join(import.meta.dir, "..", "package.json")).json(),
   );
   const recorder = await createBootstrapRecorder(args, packageMetadata.version);
-
+  const uiPort = rawOptionValue(args, "ui-port");
+  const watcher = args.includes("--no-ui")
+    ? undefined
+    : spawnWatcher(recorder.paths.runDirectory, {
+        ...(uiPort === undefined ? {} : { uiPort }),
+        open: !args.includes("--no-open"),
+      });
   let runtime: FleetMastraRuntime | undefined;
   let runtimeInitialization: Promise<FleetMastraRuntime> | undefined;
   let controller: FleetController | undefined;
@@ -244,24 +254,31 @@ async function main(): Promise<void> {
       runFailure = combineFailures(runFailure, outcome.error);
     }
     finalizationPromise ??= Promise.resolve().then(async () => {
-      const settlement = await settleResources();
-      let snapshot: FleetSnapshot | null = settlement.snapshot;
-      if (settlement.failure !== undefined) {
-        runFailure = combineFailures(runFailure, settlement.failure);
+      try {
+        const settlement = await settleResources();
+        let snapshot: FleetSnapshot | null = settlement.snapshot;
+        if (settlement.failure !== undefined) {
+          runFailure = combineFailures(runFailure, settlement.failure);
+        }
+        if (runFailure === undefined && controller === undefined) {
+          snapshot = EMPTY_SNAPSHOT;
+          recorder.record("shutdown.started", {
+            activeWorkers: 0,
+            phase: "startup",
+          });
+          recorder.record("shutdown.completed", { snapshot });
+        }
+        await recorder.finalize(
+          runFailure === undefined ? "completed" : "failed",
+          snapshot,
+          runFailure ?? null,
+        );
+      } finally {
+        // Always tear the dashboard down — even if finalize throws — so it can't
+        // be orphaned; stopWatcher drains a bounded window first so the live view
+        // renders the terminal snapshot and outcome before disconnecting.
+        await stopWatcher(watcher);
       }
-      if (runFailure === undefined && controller === undefined) {
-        snapshot = EMPTY_SNAPSHOT;
-        recorder.record("shutdown.started", {
-          activeWorkers: 0,
-          phase: "startup",
-        });
-        recorder.record("shutdown.completed", { snapshot });
-      }
-      await recorder.finalize(
-        runFailure === undefined ? "completed" : "failed",
-        snapshot,
-        runFailure ?? null,
-      );
     });
     return finalizationPromise;
   };
@@ -278,13 +295,16 @@ async function main(): Promise<void> {
       process.exitCode = 1;
     }
   };
-  const handleSigint = (): void => {
+  const handleTerminationSignal = (): void => {
     shutdownRequested = true;
     if (!preflightInProgress) {
       void stopAfterRequest();
     }
   };
-  process.once("SIGINT", handleSigint);
+  // Handle SIGTERM (kill/supervisors) as well as SIGINT (Ctrl-C): both route
+  // through the finalizer so the detached dashboard child is torn down.
+  process.once("SIGINT", handleTerminationSignal);
+  process.once("SIGTERM", handleTerminationSignal);
   const finishIfRequested = async (): Promise<boolean> => {
     await new Promise<void>((resolve) => setImmediate(resolve));
     if (!shutdownRequested) {
@@ -473,7 +493,8 @@ async function main(): Promise<void> {
     await finalizeRun({ status: "failed", error });
     throw runFailure ?? normalizeFailure(error);
   } finally {
-    process.removeListener("SIGINT", handleSigint);
+    process.removeListener("SIGINT", handleTerminationSignal);
+    process.removeListener("SIGTERM", handleTerminationSignal);
   }
 }
 

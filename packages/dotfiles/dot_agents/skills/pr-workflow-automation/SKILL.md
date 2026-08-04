@@ -24,6 +24,17 @@ foreground controller with one provider model:
 bun run pr:fleet --model <provider>/<model-id>
 ```
 
+By default `pr:fleet` also builds and spawns a **read-only live web dashboard**
+that streams the run bundle over SSE on loopback — a fleet overview plus a
+per-PR transcript including model reasoning. It only observes (it never controls
+the fleet) and is torn down on shutdown. Suppress it with `--no-ui`, fix the
+port with `--ui-port`, or skip opening the browser with `--no-open`. Open the
+dashboard for any run (live or finished) standalone with:
+
+```bash
+bun run pr:fleet:watch [--run <id|dir>]
+```
+
 Every invocation writes a private local run bundle. Inspect its body-masked
 timeline or verify it deterministically offline with:
 

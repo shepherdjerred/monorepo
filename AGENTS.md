@@ -240,7 +240,11 @@ bun run verify
 # Check CI status via Buildkite CLI or web UI, never `gh run`
 
 # Foreground, provider-neutral Mastra controller for the complete open PR fleet
+# (spawns a read-only live web dashboard by default; --no-ui to suppress)
 bun run pr:fleet --model <provider>/<model-id>
+
+# Open the live/historical dashboard standalone (newest run, or --run <id|dir>)
+bun run pr:fleet:watch
 
 # Inspect a captured run (accepts a run ID or run-directory path)
 bun run pr:fleet:inspect --run <run-id-or-directory>
@@ -364,6 +368,16 @@ bundle; use `bun run pr:fleet:inspect --run <run-id-or-directory>` for a
 body-masked view and `bun run pr:fleet:replay --run <run-id-or-directory>` for
 deterministic offline integrity and lifecycle verification. These commands
 collect and inspect evidence; they do not run evals.
+
+By default `pr:fleet` also builds and spawns a **read-only live web dashboard**
+(the `@shepherdjerred/pr-fleet-web` package) that streams the run bundle over SSE
+on loopback — a fleet overview plus a per-PR transcript including model reasoning.
+It is view-only (never controls the fleet) and torn down on shutdown; suppress it
+with `--no-ui`, fix the port with `--ui-port`, or skip the browser with
+`--no-open`. Reasoning is mirrored live to a best-effort `spans.jsonl` in the
+bundle because `observability.duckdb` is exclusively locked while the run holds
+it. Open the dashboard for any run (live or finished) with `bun run
+pr:fleet:watch [--run <id|dir>]`.
 
 ## Parallel Work — Use Worktrees
 

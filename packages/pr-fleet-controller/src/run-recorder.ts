@@ -55,6 +55,9 @@ export type RunPaths = {
   summary: string;
   mastra: string;
   observability: string;
+  // Best-effort live-reasoning mirror. Not a manifest file and not hash-chained;
+  // see SpanJsonlExporter. DuckDB observability remains the authoritative store.
+  spans: string;
 };
 
 export type CreateRunRecorderOptions = {
@@ -223,6 +226,7 @@ export class RunRecorder implements FleetTelemetry {
       summary: path.join(runDirectory, "summary.json"),
       mastra: path.join(runDirectory, "mastra.db"),
       observability: path.join(runDirectory, "observability.duckdb"),
+      spans: path.join(runDirectory, "spans.jsonl"),
     };
     const manifest = RunManifestSchema.parse({
       schemaVersion: RUN_BUNDLE_SCHEMA_VERSION,

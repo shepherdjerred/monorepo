@@ -41,6 +41,30 @@ a different registered provider with `--review-provider <id>`; completion is
 detected as a review-at-head or a head-bound clean-review reaction, reusing the
 canonical `@shepherdjerred/code-review` gate logic.
 
+## Live dashboard
+
+`bun run pr:fleet` builds and spawns a **read-only live web dashboard** by
+default, opening it in a browser. It binds loopback only and streams the run
+bundle over SSE — a fleet overview plus a per-PR detail view with the full
+transcript: worker turns, tool calls, command output, evidence, state changes,
+and the model's reasoning spans. It never controls the fleet; steering stays in
+the terminal.
+
+- `--no-ui` does not spawn the dashboard.
+- `--ui-port <port>` binds a fixed port (default: an ephemeral loopback port).
+- `--no-open` starts the dashboard without opening a browser.
+
+The dashboard is a detached child process; controller shutdown (`/stop`, EOF, or
+SIGINT) terminates it. Attach to any run — live or finished — standalone:
+
+```bash
+bun run pr:fleet:watch                     # newest run under the state root
+bun run pr:fleet:watch --run <run-id-or-directory>
+```
+
+A finished run replays from its bundle, so the same dashboard doubles as the
+historical viewer.
+
 Interactive input:
 
 - `/status` prints the deterministic fleet snapshot.
@@ -108,6 +132,12 @@ Collection is mandatory and local-only. Each run writes:
 - `summary.json` with final status, duration, event counts, last hash, and final
   fleet snapshot;
 - `mastra.db` and `observability.duckdb` with local Mastra storage and spans.
+- `spans.jsonl` with a best-effort, append-only mirror of completed
+  model-reasoning spans and token/cost metrics. It exists because
+  `observability.duckdb` is exclusively locked by the running controller, so the
+  live dashboard cannot read it in flight; the DuckDB copy remains the
+  authoritative, verified store. This mirror is not hash-chained, is not part of
+  the manifest, and a write failure never aborts the run.
 
 The bundle begins before required-tool, Git-checkout, configuration, and source
 provenance preflight. A failed preflight therefore still produces an
