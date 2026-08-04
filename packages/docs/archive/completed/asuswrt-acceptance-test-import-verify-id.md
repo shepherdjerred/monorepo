@@ -3,7 +3,7 @@ id: asuswrt-acceptance-test-import-verify-id
 type: todo
 status: complete
 board: false
-origin: packages/docs/plans/2026-07-03_asuswrt-tofu-tracking.md
+origin: packages/docs/archive/completed/2026-07-03_asuswrt-tofu-tracking.md
 source_marker: false
 ---
 
