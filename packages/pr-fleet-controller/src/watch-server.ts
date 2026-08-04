@@ -128,6 +128,12 @@ function createEventStream(sources: TailSource[]): ReadableStream<Uint8Array> {
       };
 
       await pump();
+      // The initial replay may have errored the stream (a real read failure) or
+      // the client may have disconnected during it; in either case do not emit
+      // `ready` or install the poll/ping intervals on an already-closed stream.
+      if (closed) {
+        return;
+      }
       emit("event: ready\ndata: {}\n\n");
       pollTimer = setInterval(() => void pump(), POLL_INTERVAL_MS);
       pingTimer = setInterval(() => emit(": ping\n\n"), PING_INTERVAL_MS);
