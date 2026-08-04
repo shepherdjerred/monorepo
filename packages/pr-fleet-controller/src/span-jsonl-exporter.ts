@@ -106,7 +106,13 @@ export class SpanJsonlExporter implements ObservabilityExporter {
     const sink = this.#sink;
     this.#sink = undefined;
     if (sink !== undefined) {
-      await sink.end();
+      try {
+        await sink.end();
+      } catch {
+        // Best-effort mirror: a close-time I/O failure (e.g. a full disk) must
+        // not escape and be promoted into a controller shutdown failure.
+        this.#failed = true;
+      }
     }
   }
 }

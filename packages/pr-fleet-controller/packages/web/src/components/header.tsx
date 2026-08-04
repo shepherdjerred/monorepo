@@ -37,12 +37,14 @@ export function Header({
   fleet,
   runStatus,
   connected,
+  error,
 }: {
   manifest: RunManifest | null;
   summary: RunSummary | null;
   fleet: FleetSnapshot | null;
   runStatus: RunStatus;
   connected: boolean;
+  error: string | null;
 }): ReactElement {
   const label = statusLabel(runStatus, summary);
   return (
@@ -54,6 +56,11 @@ export function Header({
           className={`dot ${connected ? "dot-live" : "dot-off"}`}
           title={connected ? "streaming" : "disconnected"}
         />
+        {error === null ? null : (
+          <span className="pill pill-failed" title={error}>
+            event stream error — view may be incomplete
+          </span>
+        )}
       </div>
       <div className="app-meta">
         {manifest === null ? null : (

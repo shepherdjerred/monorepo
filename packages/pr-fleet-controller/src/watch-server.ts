@@ -20,6 +20,21 @@ export type WatchServer = {
 
 type TailSource = { name: "event" | "span"; file: string };
 
+// Tail files are created lazily, so a pre-creation ENOENT means "empty so far"
+// (returns null). Any other stat failure (EACCES, EIO, …) is a real problem
+// that must surface rather than be silently flattened into a zero-length file.
+async function tailFileSize(file: string): Promise<number | null> {
+  try {
+    const stats = await stat(file);
+    return stats.size;
+  } catch (error) {
+    if (error instanceof Error && "code" in error && error.code === "ENOENT") {
+      return null;
+    }
+    throw error;
+  }
+}
+
 async function readOptionalSummary(
   runDirectory: string,
 ): Promise<RunSummary | null> {
@@ -72,8 +87,7 @@ function createEventStream(sources: TailSource[]): ReadableStream<Uint8Array> {
         pumping = true;
         try {
           for (const cursor of cursors) {
-            const stats = await stat(cursor.source.file).catch(() => null);
-            const size = stats?.size ?? 0;
+            const size = (await tailFileSize(cursor.source.file)) ?? 0;
             if (size <= cursor.offset) {
               continue;
             }
@@ -94,6 +108,20 @@ function createEventStream(sources: TailSource[]): ReadableStream<Uint8Array> {
               }
             }
           }
+        } catch (error) {
+          // A real stat/read failure (not the expected pre-creation ENOENT)
+          // must surface: fail the SSE stream so the client sees an error
+          // instead of a silently truncated view.
+          closed = true;
+          if (pollTimer !== undefined) {
+            clearInterval(pollTimer);
+          }
+          if (pingTimer !== undefined) {
+            clearInterval(pingTimer);
+          }
+          controller.error(
+            error instanceof Error ? error : new Error(String(error)),
+          );
         } finally {
           pumping = false;
         }

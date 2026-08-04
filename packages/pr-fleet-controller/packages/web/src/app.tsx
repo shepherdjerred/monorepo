@@ -9,7 +9,7 @@ import { useRunStream } from "./use-run-stream.ts";
 export function App(): ReactElement {
   // useRunStream re-renders on every store version bump, and the view is cheap
   // to project, so derive the PR list inline rather than memoize on a mutable ref.
-  const { view, connected } = useRunStream();
+  const { view, connected, error } = useRunStream();
   const meta = useMeta();
   const [selected, setSelected] = useState<number | "fleet">("fleet");
 
@@ -32,6 +32,7 @@ export function App(): ReactElement {
         fleet={view.fleet}
         runStatus={view.runStatus}
         connected={connected}
+        error={error}
       />
       <div className="app-body">
         <PrList entries={entries} selected={selected} onSelect={setSelected} />
