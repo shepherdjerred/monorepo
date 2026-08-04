@@ -92,8 +92,18 @@ The Mac Mini was that surface.
 replatformed to the static `.buildkite/pipeline.yml`. Nothing dispatches to the
 `macos` queue until a step is re-added there.
 
-To wire it up (do this **after** the agent shows connected, so PRs never hang on
-a missing agent):
+To wire it up — do this only **after both** of the following hold, so a matching
+PR never hangs on a missing, sleeping, or disconnected agent:
+
+- the agent shows connected (step 5 above), **and**
+- **agent-offline health monitoring — or fail-fast dispatch protection — is in
+  place.** A one-time connected check is not enough on its own: `soft_fail` only
+  rescues a command that fails _after_ an agent accepts the job, so if the sole
+  Mini later sleeps or drops off the tailnet, a dispatched `queue=macos` job sits
+  queued with no agent and the required aggregate `buildkite/monorepo/pr` status
+  stays **pending forever** on every matching PR. This is the open prerequisite
+  tracked in `packages/docs/todos/mac-mini-buildkite-agent.md` ("Add agent-offline
+  health monitoring before making a Mac-only check required").
 
 1. Add a step to `.buildkite/pipeline.yml` with `agents: { queue: "macos" }`,
    `soft_fail: true`, an `if:` gating it to PR builds, and an
@@ -120,27 +130,21 @@ swiftlint lint --strict --quiet ios/TasksForObsidian ios/TasksWidget` — or
    would also lint the 155 unrelated Swift files under `sandbox/archive`. It
    executes on the agent's native checkout, **not** via the kubernetes
    plugin the Linux steps use.
-2. Leave it `soft_fail: true` until it's green, then drop `soft_fail`.
-   **Before dropping `soft_fail`** — which turns the step into a merge gate,
-   since a red macOS step then fails the aggregate `buildkite/monorepo/pr`
-   check — put **agent-offline health monitoring (or fail-fast dispatch
-   protection)** in place first. `soft_fail` only tolerates a command that
-   _fails after an agent picks up the job_; it does nothing for a job that no
-   agent ever accepts. If the sole Mini later sleeps or drops off the tailnet,
-   a dispatched `queue=macos` job stays queued with no agent to run it, so the
-   aggregate status stays **pending forever** and every matching PR hangs —
-   the one-time connected check in step 5 above does not cover this. This is
-   the open prerequisite tracked in
-   `packages/docs/todos/mac-mini-buildkite-agent.md` ("Add agent-offline
-   health monitoring before making a Mac-only check required"); don't gate
-   merges on this lane until it's satisfied. Separately, do **not** add a
-   macOS-specific required status check — the replatformed pipeline posts only
-   a single aggregate `buildkite/monorepo/pr` commit status per PR build; the
-   old per-step `buildkite/monorepo/pr/<step>` contexts are gone
-   (`src/tofu/github/rulesets.tf` requires only the aggregate). Once
-   `soft_fail` is removed, a red macOS step already fails that existing
-   aggregate check — adding a new required context that no build will ever
-   produce would block every PR forever.
+2. Leave it `soft_fail: true` until it's green, then drop `soft_fail`. Dropping
+   `soft_fail` turns the step into a merge gate — a red macOS step then fails the
+   required aggregate `buildkite/monorepo/pr` check — so don't drop it until the
+   agent-offline protection called out above is actually in place. Do **not** add
+   a macOS-specific _required_ status check to gate merges. Buildkite does emit a
+   per-step `buildkite/monorepo/pr/<step>` context alongside the aggregate (see
+   the other steps' contexts on any PR build), so a landed macOS step _would_
+   produce its own context — but only `buildkite/monorepo/pr` (plus
+   `ci/merge-conflict`) is **required**, and required checks are managed solely in
+   `src/tofu/github/rulesets.tf`. The real hazard is ordering: requiring a context
+   before its producer step has landed on `main` blocks every PR until it does, so
+   any such change must be producer-first (land the step, then require the
+   context — see `packages/homelab/AGENTS.md`). And it's unnecessary here anyway:
+   once `soft_fail` is removed, a red macOS step already fails the existing
+   required aggregate check.
 
 > **Note:** there's no `.swiftlint.yml` in `packages/tasks-for-obsidian/ios`
 > yet, so `swiftlint --strict` runs with defaults — expect to either add a
