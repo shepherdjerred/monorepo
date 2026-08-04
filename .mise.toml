@@ -19,6 +19,10 @@ golangci-lint = "2"
 gh = "2"
 # CI scripts (bake-images.ts affected-scoping + digest collection) use jq
 jq = "1"
+# Semantic YAML/JSON comparison in the Minecraft config-drift check test
+# (misc/minecraft-drift-check.test.ts shells out to yq, matching the yq the
+# init container runs at deploy time)
+yq = "4"
 # Homelab automation (helm push, tofu wrappers, ArgoCD sync, site deploys)
 helm = "4"
 opentofu = "1.12.5"

@@ -3,14 +3,28 @@
  *
  * Runs before the copy init container on pod startup. Compares the current
  * persistent volume state (/data) against repo-managed ConfigMap sources.
- * If any managed config differs, the pod refuses to start (exit 1).
+ * If any managed config has a real value change, the pod refuses to start
+ * (exit 1) so the copy step never silently overwrites a live edit.
  *
- * Files known to be rewritten by Paper/plugins at runtime are ignored.
+ * The comparison is SEMANTIC (parse with yq → canonical sorted JSON), not a
+ * byte compare: Spigot/Paper plugins re-serialize their configs on load
+ * (reindenting, flipping quote styles, dropping the trailing newline), which a
+ * byte compare flags as drift on every boot even though no value changed. The
+ * check logic lives in the co-located `minecraft-config-drift-check.sh`, run
+ * here via the yq image (Alpine/busybox + yq). See that script for details.
  */
 
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 type ServerName = "tsmc" | "sjerred" | "shuxin";
+
+// The drift-check logic is maintained as a standalone POSIX shell script so it
+// can be exercised directly by minecraft-drift-check.test.ts. It is inlined
+// into the init container's command at synth time (no extra ConfigMap/mount),
+// and reads its trees from the fixed production paths when run with no args.
+const DRIFT_CHECK_SCRIPT = await Bun.file(
+  new URL("minecraft-config-drift-check.sh", import.meta.url),
+).text();
 
 /**
  * Returns init container that checks for config drift before the server starts.
@@ -57,68 +71,8 @@ export function getMinecraftConfigDriftCheckInitContainer(
 
   return {
     name: "check-config-drift",
-    image: `library/busybox:${versions["library/busybox"]}`,
+    image: `mikefarah/yq:${versions["mikefarah/yq"]}`,
     command: ["sh", "-c", DRIFT_CHECK_SCRIPT],
     volumeMounts,
   };
 }
-
-const DRIFT_CHECK_SCRIPT = `rm -f /tmp/drift
-
-echo "=== Config drift check ==="
-
-# Known files that Paper/plugins rewrite at runtime — skip these
-is_ignored() {
-  case "$1" in
-    ./server.properties|./spigot.yml|./config/paper-global.yml|./config/paper-world-defaults.yml) return 0 ;;
-    ./Geyser-Spigot/config.yml) return 0 ;;
-    # Paper re-serializes commands.yml (SnakeYAML flattens the block-sequence
-    # indentation), spark writes config.json via GSON (no trailing newline), and
-    # mcMMO re-serializes chat.yml and party.yml (Bukkit YamlConfiguration
-    # reorders keys and reindents nested maps to 4 spaces) — all normalized on
-    # disk at boot, so byte-compare always drifts.
-    ./commands.yml|./spark/config.json|./mcMMO/chat.yml|./mcMMO/party.yml) return 0 ;;
-    *) return 1 ;;
-  esac
-}
-
-# Check plugin configs: compare /data/plugins against /plugin-configs source
-if [ -d /plugin-configs ] && [ "$(ls -A /plugin-configs 2>/dev/null)" ]; then
-  cd /plugin-configs && find -L . -type f -not -path '*/..*' | while read f; do
-    dest="/data/plugins/$f"
-    if is_ignored "$f"; then
-      [ -f "$dest" ] && ! cmp -s "$f" "$dest" && echo "IGNORED (runtime-modified): $f"
-    elif [ -f "$dest" ] && ! cmp -s "$f" "$dest"; then
-      echo "DRIFT DETECTED: $dest differs from repo"
-      diff "$f" "$dest" 2>/dev/null | head -20
-      echo "---"
-      echo "1" > /tmp/drift
-    fi
-  done
-fi
-
-# Check non-plugin configs: compare /data against /config source
-if [ -d /config ] && [ "$(ls -A /config 2>/dev/null)" ]; then
-  cd /config && find -L . -type f -not -path '*/..*' | while read f; do
-    dest="/data/$f"
-    if is_ignored "$f"; then
-      [ -f "$dest" ] && ! cmp -s "$f" "$dest" && echo "IGNORED (runtime-modified): $f"
-    elif [ -f "$dest" ] && ! cmp -s "$f" "$dest"; then
-      echo "DRIFT DETECTED: $dest differs from repo"
-      diff "$f" "$dest" 2>/dev/null | head -20
-      echo "---"
-      echo "1" > /tmp/drift
-    fi
-  done
-fi
-
-if [ -f /tmp/drift ]; then
-  echo ""
-  echo "=== CONFIG DRIFT DETECTED ==="
-  echo "Files on the server have been modified outside of the repo."
-  echo "To fix: update the repo configs, commit, and redeploy."
-  echo "Refusing to start."
-  exit 1
-fi
-
-echo "=== All configs match repo (or fresh deploy) ==="`;

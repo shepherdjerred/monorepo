@@ -383,6 +383,11 @@
       ]
     },
     {
+      "source": "packages/homelab/src/cdk8s/src/misc/minecraft-config-drift-check.sh",
+      "disposition": "retain",
+      "reason": "ConfigMap-mounted init-container drift check runs on the busybox+yq image where Bun is unavailable"
+    },
+    {
       "source": "packages/homelab/src/cdk8s/src/resources/argo-applications/buildkite-bun-cache-gc.sh",
       "disposition": "retain",
       "reason": "ConfigMap-mounted maintenance entrypoint coordinates Linux filesystem utilities under flock"
