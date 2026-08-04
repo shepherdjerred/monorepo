@@ -62,3 +62,43 @@ client (mirror `packages/docs-board`); auto-spawn (`--no-ui` opts out).
   `spans.jsonl` fixture for reasoning until a fresh run exists).
 - Live: `pr:fleet --model …` opens browser, updates as events+spans append;
   `--no-ui` suppresses; Ctrl-C tears the child down.
+
+## Session Log — 2026-08-03
+
+### Done
+
+- **PR #1992** (ready): `feature/pr-fleet-live-ui`, off `origin/main`.
+- Part 1 — `src/span-jsonl-exporter.ts` (`SpanJsonlExporter`, Bun `FileSink`,
+  best-effort); wired into `mastra-runtime.ts` `createObservabilityExporters`;
+  `RunPaths.spans` in `run-recorder.ts`.
+- Part 2 — `src/watch-tail.ts` (+ tests), `src/watch-server.ts` (`Bun.serve`:
+  static `dist` + `/api/meta` + `/api/stream` SSE tailing events + spans),
+  `src/watch-cli.ts` (`pr:fleet:watch`). No new deps (plain `Bun.serve`, not Hono).
+- Part 3 — `packages/web` (`@shepherdjerred/pr-fleet-web`) Vite+React, mirrors
+  docs-board; pure tested `src/lib/fold.ts`; header/pr-list/pr-detail/evidence/
+  transcript components; `use-run-stream.ts` (`useSyncExternalStore`) + `use-meta.ts`.
+- Wiring — `cli.ts` `--no-ui/--ui-port/--no-open`, detached spawn via
+  `src/watch-supervisor.ts`, teardown in `finalizeRun`. Root `pr:fleet` /
+  `pr:fleet:watch` build the client (turbo-cached) first. README + AGENTS.md updated.
+- Scoped the controller tsconfig/eslint/test to exclude the nested web package.
+- Verified: `turbo typecheck lint test` green for both packages; end-to-end
+  browser demo (fleet overview, per-PR evidence, transcript, live-appended
+  reasoning) — screenshots on the PR.
+
+### Remaining
+
+- Buildkite `bun run verify` on the PR is the backstop for repo-wide gates
+  (Knip, react-version-sync, markdownlint across the tree) I could not run locally
+  — watch it and fix forward if red.
+- Optional follow-ups (not in v1): DuckDB-backed authoritative reasoning reader;
+  browser-side steering (needs a control channel into the running controller).
+
+### Caveats
+
+- Live end-to-end against a real model needs a provider credential + macOS
+  `sandbox-exec`; not exercised in CI.
+- `spans.jsonl` line shape depends on Mastra's exported-span format; the client
+  parses leniently. If Mastra changes the span shape, only the reasoning rows are
+  affected, not events.
+- The dashboard demo used a synthesized `spans.jsonl` over a real captured run
+  (existing bundles predate the exporter).
