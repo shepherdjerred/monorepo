@@ -1,803 +1,173 @@
 ---
 name: bun-test-patterns
-description: |
-  Bun test runner - Jest-compatible testing with mocks, snapshots, coverage, and DOM testing patterns
-  When user writes tests with Bun, uses bun:test, creates mocks, runs test coverage, or mentions describe/it/expect patterns
+description: Current Bun test runner guidance for discovery, isolation, parallelism, sharding, changed tests, mocks, timers, snapshots, coverage, DOM Testing Library, and integration teardown. Use when writing, reviewing, or configuring tests run by `bun test`.
 ---
 
-# Bun Test Patterns Agent
+# Bun Test Patterns
 
-## What's New in Bun Test (2024-2025)
+Test one coherent behavior with strong assertions, make shared state explicit, and choose concurrency, isolation, or parallel workers deliberately. A passing runtime test does not replace TypeScript type-checking.
 
-- **Vitest compatibility**: `vi` alias for easier migration
-- **Module mocking**: `mock.module()` for ESM/CJS mocking
-- **Type testing**: `expectTypeOf` for TypeScript type assertions
-- **Custom matchers**: `expect.extend()` for custom assertions
-- **Improved coverage**: Built-in code coverage reporting
-- **Watch mode**: Automatic test re-runs on file changes
+## Current baseline
 
-## Running Tests
-
-### Basic Commands
+Verified against Bun 1.3.14 on 2026-08-03:
 
 ```bash
-# Run all tests
-bun test
-
-# Run specific file
-bun test math.test.ts
-
-# Run tests matching pattern
-bun test --test-name-pattern "add"
-bun test -t "add"
-
-# Run with watch mode
-bun test --watch
-
-# Run with coverage
-bun test --coverage
-
-# Run with timeout
-bun test --timeout 10000
-
-# Run specific files by path pattern
-bun test src/utils
+bun --version
+bun test --help
 ```
 
-### File Discovery
+Bun 1.3.13 added file isolation, worker-process parallelism, deterministic sharding, and Git-aware changed-test selection. Bun 1.3.14 fixed isolation/parallel crashes and a `--changed` false negative involving tsconfig path aliases. Use 1.3.14 or newer for those features.
 
-Bun automatically finds test files matching:
+Read [references/releases.md](references/releases.md) for the 64-page research ledger and first-party documentation contradictions. Read [references/runner-and-configuration.md](references/runner-and-configuration.md) for discovery, execution, retries, reporters, coverage, lifecycle, snapshots, and timers. Read [references/mocks-and-types.md](references/mocks-and-types.md) for mock lifecycle, module boundaries, and `expectTypeOf`. Read [references/dom-and-integrations.md](references/dom-and-integrations.md) for Happy DOM, Testing Library, Prisma, servers, and resource teardown.
 
-- `*.test.{js|jsx|ts|tsx}`
-- `*_test.{js|jsx|ts|tsx}`
-- `*.spec.{js|jsx|ts|tsx}`
-- `*_spec.{js|jsx|ts|tsx}`
+## Execution dimensions
 
-### Configuration (bunfig.toml)
+| Mode | Scope | Boundary |
+| --- | --- | --- |
+| Default | Files and tests sequential in one process | Global/module state can cross file boundaries |
+| `--concurrent` / `test.concurrent` | Async tests overlap within files | Default maximum concurrency is 20; concurrent tests cannot use `onTestFinished` |
+| `--isolate` | Fresh global per file in one process | Drains microtasks and cleans sockets, timers, and subprocesses between files |
+| `--parallel=N` | Files run in worker processes | Implies isolation; choose N from CI resources |
+| `--shard=M/N` | Deterministic path-sorted round-robin partition | One-based shard index; every shard must run |
+
+Isolation changes cross-file leak risk, but it does not excuse missing cleanup inside a test.
+
+## Discovery and exact paths
+
+Current canonical discovery includes `test`, `spec`, and test-directory conventions across JavaScript, JSX, TypeScript, TSX, MJS, CJS, MTS, and CTS.
+
+Positional arguments are substring filters. Prefix an exact relative path:
+
+```bash
+bun test ./src/math.test.ts
+```
+
+Do not call a positional value a glob. Use documented config/CLI ignore patterns for path selection.
+
+## Selection and flake diagnosis
+
+```bash
+bun test --changed
+bun test --changed=origin/main
+bun test --randomize --seed 12345
+bun test --rerun-each 20
+bun test --retry 1
+bun test --bail=1
+```
+
+`--changed` includes staged, unstaged, and untracked Git changes or compares against a supplied ref. With watch mode, selection is rebuilt each restart.
+
+Retries can mask flakes. Keep zero as the normal gate; use a narrow retry only with captured reporting and remediation. Reproduce randomized failures with the printed seed.
+
+`test.only()` restricts the run only when `bun test --only` is used. Do not leave focused tests as an implicit gate.
+
+## Configuration
+
+Current coverage threshold shape is plural and fractional:
 
 ```toml
 [test]
-# Enable coverage by default
 coverage = true
-
-# Set coverage threshold
-coverageThreshold = { line = 80, function = 80 }
-
-# Preload scripts
-preload = ["./test/setup.ts"]
-
-# Test timeout in ms
-timeout = 5000
-
-# Smol mode for reduced memory
-smol = true
+coverageThreshold = { lines = 0.80, functions = 0.80, statements = 0.80 }
 ```
 
-## Writing Tests
+`branch` is not a documented threshold field. `timeout` is a CLI or per-test value, not a documented `[test]` key.
 
-### Basic Structure
+Other current settings include root and path ignores, `concurrentTestGlob`, randomization and seed, retry/rerun, coverage reporters, test-file exclusion, and coverage path ignores.
+
+## Lifecycle and cleanup
+
+Use async hooks when cleanup returns a promise. `onTestFinished` runs after `afterEach` but is unavailable in concurrent tests.
+
+Restore timers, spies, environment, servers, clients, databases, and temporary files in the narrowest owner. The default runner shares process state between files.
+
+Required CI configuration must fail fast. Do not use `skipIf(!process.env.DATABASE_URL)` to silently remove a suite CI is expected to run. `process.env.CI` is a string; compare explicit values rather than treating `"false"` as false.
+
+## Assertions
+
+Use as many strong assertions as prove one behavior. Avoid weak truthiness when an exact value, status, state transition, or side effect is available.
+
+Supported Bun-specific matchers include `toBePositive`, `toContainAllKeys`, `toInclude`, and singular `toSatisfy`. These claimed matchers do not exist: `toIncludeAllMembers`, `toIncludeAnyMembers`, and `toSatisfyAll`.
+
+For arrays:
 
 ```typescript
-import { describe, test, it, expect, beforeAll, afterEach } from "bun:test";
-
-describe("Calculator", () => {
-  describe("add()", () => {
-    it("adds two positive numbers", () => {
-      expect(add(2, 3)).toBe(5);
-    });
-
-    it("handles negative numbers", () => {
-      expect(add(-1, 1)).toBe(0);
-    });
-  });
-});
+expect(received).toEqual(expect.arrayContaining(expected));
+expect(received).toHaveLength(expected.length);
+expect(received.some(predicate)).toBe(true);
+expect(received.every(predicate)).toBe(true);
 ```
 
-### Test Modifiers
+## Mocks
+
+Mock semantics differ:
+
+- `clearAllMocks`: call history only.
+- `resetAllMocks`: call history and implementations.
+- `restoreAllMocks` / `mock.restore`: restore spies/functions.
+- None of these undo `mock.module` overrides.
+
+Define mock signatures that match calls:
 
 ```typescript
-// Skip a test
-test.skip("not ready yet", () => {
-  // ...
-});
-
-// Run only this test
-test.only("focus on this", () => {
-  // ...
-});
-
-// Mark as todo
-test.todo("implement later");
-
-// Conditional skip
-test.if(process.env.CI)("only in CI", () => {
-  // ...
-});
-
-// Skip if condition
-test.skipIf(!process.env.DB_URL)("needs database", () => {
-  // ...
-});
+const calculate = mock((first: string, second: string) => 42);
+expect(calculate("a", "b")).toBe(42);
 ```
 
-### Async Tests
+Prefer dependency injection or a complete module mock registered before the first import. Importing the real module to spread a partial mock already executes its side effects.
 
-```typescript
-// Async/await
-test("fetches user", async () => {
-  const user = await fetchUser(1);
-  expect(user.name).toBe("Alice");
-});
+## Type tests
 
-// Promise
-test("resolves correctly", () => {
-  return fetchUser(1).then((user) => {
-    expect(user.name).toBe("Alice");
-  });
-});
+`expectTypeOf` is a runtime no-op. `bun test` can pass when an intended type relation is wrong. Put type assertions in a file included by the project checker and run:
 
-// Callback (done)
-test("callback style", (done) => {
-  setTimeout(() => {
-    expect(true).toBe(true);
-    done();
-  }, 100);
-});
+```bash
+bunx tsc --noEmit
 ```
 
-### Timeout
+In this monorepo, use the package's focused typecheck task.
 
-```typescript
-// Per-test timeout
-test("slow operation", async () => {
-  const result = await slowOperation();
-  expect(result).toBeDefined();
-}, 10000); // 10 second timeout
-```
+## Timers and dates
 
-## Expect Matchers
-
-### Equality
-
-```typescript
-expect(value).toBe(expected); // === comparison
-expect(value).toEqual(expected); // deep equality
-expect(value).toStrictEqual(expected); // strict deep equality
-expect(value).not.toBe(other); // negation
-```
-
-### Truthiness
-
-```typescript
-expect(value).toBeTruthy();
-expect(value).toBeFalsy();
-expect(value).toBeNull();
-expect(value).toBeUndefined();
-expect(value).toBeDefined();
-expect(value).toBeNaN();
-```
-
-### Numbers
-
-```typescript
-expect(num).toBeGreaterThan(5);
-expect(num).toBeGreaterThanOrEqual(5);
-expect(num).toBeLessThan(10);
-expect(num).toBeLessThanOrEqual(10);
-expect(num).toBeCloseTo(0.3, 5); // floating point
-expect(num).toBePositive();
-expect(num).toBeNegative();
-expect(num).toBeInteger();
-expect(num).toBeFinite();
-```
-
-### Strings
-
-```typescript
-expect(str).toMatch(/pattern/);
-expect(str).toContain("substring");
-expect(str).toStartWith("prefix");
-expect(str).toEndWith("suffix");
-expect(str).toHaveLength(10);
-```
-
-### Arrays and Iterables
-
-```typescript
-expect(arr).toContain(item);
-expect(arr).toContainEqual({ id: 1 });
-expect(arr).toHaveLength(3);
-expect(arr).toBeArray();
-expect(arr).toBeArrayOfSize(3);
-expect(arr).toInclude(item);
-expect(arr).toIncludeAllMembers([1, 2]);
-expect(arr).toIncludeAnyMembers([1, 5]);
-expect(arr).toSatisfyAll((x) => x > 0);
-```
-
-### Objects
-
-```typescript
-expect(obj).toHaveProperty("key");
-expect(obj).toHaveProperty("nested.key", value);
-expect(obj).toMatchObject({ subset: true });
-expect(obj).toContainKey("key");
-expect(obj).toContainKeys(["a", "b"]);
-expect(obj).toContainAllKeys(["a", "b"]);
-expect(obj).toContainValue(42);
-```
-
-### Functions and Errors
-
-```typescript
-expect(() => fn()).toThrow();
-expect(() => fn()).toThrow("message");
-expect(() => fn()).toThrow(Error);
-expect(() => fn()).toThrowError(/pattern/);
-
-// Async errors
-await expect(asyncFn()).rejects.toThrow();
-await expect(asyncFn()).resolves.toBe(value);
-```
-
-### Assertions Count
-
-```typescript
-test("multiple assertions", () => {
-  expect.assertions(3); // Must have exactly 3 assertions
-
-  expect(a).toBe(1);
-  expect(b).toBe(2);
-  expect(c).toBe(3);
-});
-
-test("at least one", async () => {
-  expect.hasAssertions(); // Must have at least one assertion
-
-  const data = await fetchData();
-  expect(data).toBeDefined();
-});
-```
-
-## Lifecycle Hooks
-
-### Basic Hooks
-
-```typescript
-import { beforeAll, afterAll, beforeEach, afterEach } from "bun:test";
-
-// Run once before all tests in file/describe block
-beforeAll(() => {
-  console.log("Setting up");
-});
-
-// Run once after all tests
-afterAll(() => {
-  console.log("Tearing down");
-});
-
-// Run before each test
-beforeEach(() => {
-  console.log("Before each test");
-});
-
-// Run after each test
-afterEach(() => {
-  console.log("After each test");
-});
-```
-
-### Async Hooks
-
-```typescript
-beforeAll(async () => {
-  await database.connect();
-});
-
-afterAll(async () => {
-  await database.disconnect();
-});
-```
-
-### Scoped Hooks
-
-```typescript
-describe("outer", () => {
-  beforeAll(() => console.log("outer beforeAll"));
-  beforeEach(() => console.log("outer beforeEach"));
-
-  describe("inner", () => {
-    beforeAll(() => console.log("inner beforeAll"));
-    beforeEach(() => console.log("inner beforeEach"));
-
-    test("example", () => {
-      // Runs: outer beforeAll, inner beforeAll,
-      //       outer beforeEach, inner beforeEach, test
-    });
-  });
-});
-```
-
-### Preload Scripts
-
-```typescript
-// test/setup.ts - loaded before all tests
-import { beforeEach, afterEach, mock } from "bun:test";
-
-// Global setup
-beforeEach(() => {
-  // Reset mocks before each test
-  mock.restore();
-});
-
-afterEach(() => {
-  // Cleanup after each test
-});
-```
-
-```toml
-# bunfig.toml
-[test]
-preload = ["./test/setup.ts"]
-```
-
-## Mocking
-
-### Mock Functions
-
-```typescript
-import { mock, expect, test } from "bun:test";
-
-test("mock function", () => {
-  // Create mock
-  const mockFn = mock(() => 42);
-
-  // Call it
-  const result = mockFn("arg1", "arg2");
-
-  // Assert
-  expect(mockFn).toHaveBeenCalled();
-  expect(mockFn).toHaveBeenCalledTimes(1);
-  expect(mockFn).toHaveBeenCalledWith("arg1", "arg2");
-  expect(result).toBe(42);
-
-  // Access call history
-  expect(mockFn.mock.calls).toEqual([["arg1", "arg2"]]);
-  expect(mockFn.mock.results).toEqual([{ type: "return", value: 42 }]);
-});
-```
-
-### Mock Implementations
-
-```typescript
-const mockFn = mock();
-
-// Set return value
-mockFn.mockReturnValue(42);
-expect(mockFn()).toBe(42);
-
-// Return once then default
-mockFn.mockReturnValueOnce(1).mockReturnValueOnce(2).mockReturnValue(0);
-expect(mockFn()).toBe(1);
-expect(mockFn()).toBe(2);
-expect(mockFn()).toBe(0);
-
-// Custom implementation
-mockFn.mockImplementation((x) => x * 2);
-expect(mockFn(5)).toBe(10);
-
-// Async mocks
-mockFn.mockResolvedValue({ data: "test" });
-await expect(mockFn()).resolves.toEqual({ data: "test" });
-
-mockFn.mockRejectedValue(new Error("fail"));
-await expect(mockFn()).rejects.toThrow("fail");
-```
-
-### Spies
-
-```typescript
-import { spyOn, expect, test } from "bun:test";
-
-const calculator = {
-  add(a: number, b: number) {
-    return a + b;
-  },
-};
-
-test("spy on method", () => {
-  const spy = spyOn(calculator, "add");
-
-  const result = calculator.add(2, 3);
-
-  expect(spy).toHaveBeenCalledWith(2, 3);
-  expect(spy).toHaveBeenCalledTimes(1);
-  expect(result).toBe(5); // Original still works
-  expect(spy.mock.calls).toEqual([[2, 3]]);
-});
-
-test("spy with mock implementation", () => {
-  const spy = spyOn(calculator, "add").mockImplementation(() => 100);
-
-  expect(calculator.add(1, 2)).toBe(100);
-
-  // Restore original
-  spy.mockRestore();
-  expect(calculator.add(1, 2)).toBe(3);
-});
-```
-
-### Module Mocking
-
-```typescript
-import { mock, test, expect } from "bun:test";
-
-// Mock a module
-mock.module("./database", () => ({
-  query: mock(() => [{ id: 1, name: "Test" }]),
-  connect: mock(() => Promise.resolve()),
-}));
-
-test("uses mocked module", async () => {
-  const db = await import("./database");
-
-  const result = db.query("SELECT * FROM users");
-  expect(result).toEqual([{ id: 1, name: "Test" }]);
-  expect(db.query).toHaveBeenCalled();
-});
-
-// Mock with factory for dynamic values
-mock.module("./config", () => {
-  return {
-    get apiUrl() {
-      return process.env.API_URL || "http://localhost:3000";
-    },
-  };
-});
-```
-
-**Gotcha — `mock.module` leaks across test files.** `mock.module(specifier, factory)` registers the mock **process-wide** and is **not** auto-restored between files (`mock.restore()` does not undo it). A **partial** mock returning only the symbols it overrides effectively deletes the module's other exports for every test file that runs afterward, surfacing as a flaky, CI-only `SyntaxError: Export named 'X' not found in module '...'` that can't be reproduced in isolation. Spread the real module so only the intended symbol changes:
-
-```ts
-import * as realMod from "./agent-task-command.ts";
-void mock.module("#activities/agent-task-command.ts", () => ({
-  ...realMod,
-  buildAgentTaskCommand: async () => {
-    /* override */
-  },
-}));
-```
-
-Specifier aliases that resolve to the same file (`#activities/x.ts` and `./x.ts`) share one mock.
-
-### Restoring Mocks
-
-```typescript
-import { mock, afterEach } from "bun:test";
-
-afterEach(() => {
-  // Restore all mocks and spies
-  mock.restore();
-});
-
-// Or restore individually
-const mockFn = mock(() => 42);
-mockFn.mockClear(); // Clear call history
-mockFn.mockReset(); // Clear history + implementation
-mockFn.mockRestore(); // Restore original (for spies)
-```
-
-### Vitest Compatibility
-
-```typescript
-import { vi, test, expect } from "bun:test";
-
-test("vitest-style mocking", () => {
-  const mockFn = vi.fn(() => 42);
-
-  mockFn();
-
-  expect(mockFn).toHaveBeenCalled();
-
-  // Available: vi.fn, vi.spyOn, vi.mock, vi.restoreAllMocks, vi.clearAllMocks
-});
-```
+Use `jest.useFakeTimers`, timer advancement/run/clear/count helpers, and `setSystemTime` for deterministic time. Always restore real timers and time in cleanup, especially in shared-process mode.
 
 ## Snapshots
 
-### Basic Snapshots
+An empty call lets Bun insert an inline snapshot:
 
 ```typescript
-import { test, expect } from "bun:test";
-
-test("snapshot object", () => {
-  const user = {
-    id: 1,
-    name: "Alice",
-    createdAt: new Date("2024-01-01"),
-  };
-
-  expect(user).toMatchSnapshot();
-});
+expect(result).toMatchInlineSnapshot();
 ```
 
-Snapshots are stored in `__snapshots__/` directory.
+Use property matchers for nondeterministic IDs/timestamps. Keep snapshots focused and review updates. Never update snapshots automatically merely because CI failed.
 
-### Inline Snapshots
+## DOM interaction
+
+Prefer the dedicated Bun Testing Library setup with explicit `expect.extend(matchers)` and type declaration merging. Use `user-event` for realistic async interactions:
 
 ```typescript
-test("inline snapshot", () => {
-  const result = formatUser({ name: "Bob", age: 30 });
-
-  // Bun automatically updates this string on first run
-  expect(result).toMatchInlineSnapshot(`
-    {
-      "displayName": "Bob",
-      "isAdult": true,
-    }
-  `);
-});
+const user = userEvent.setup();
+await user.click(button);
 ```
 
-### Error Snapshots
+Use `fireEvent` only for low-level events user-event cannot model.
 
-```typescript
-test("error snapshot", () => {
-  expect(() => {
-    throw new Error("Something went wrong");
-  }).toThrowErrorMatchingSnapshot();
-});
+## Integration safety
 
-test("inline error snapshot", () => {
-  expect(() => {
-    throw new Error("Invalid input");
-  }).toThrowErrorMatchingInlineSnapshot(`"Invalid input"`);
-});
-```
+- Validate a dedicated ephemeral database identity before destructive cleanup. Do not run unrestricted `deleteMany()` against an environment-selected database.
+- Prefer transactions or unique per-test records.
+- Await `server.stop()`. Use forced stop only when tests must close active traffic immediately.
+- Close Prisma, SQL, Redis, HTTP, file, worker, and timer resources in their owner.
+- Do not skip required integration tests because an artifact or credential is missing; build/provision the prerequisite or fail with a clear error.
 
-### Updating Snapshots
+## Review checklist
 
-```bash
-# Update all snapshots
-bun test --update-snapshots
-
-# Short flag
-bun test -u
-```
-
-## Coverage
-
-### Enabling Coverage
-
-```bash
-bun test --coverage
-```
-
-### Coverage Output
-
-```
-File         | % Funcs | % Lines | Uncovered Line #s
-All files    |   66.67 |   77.78 |
- math.ts     |   50.00 |   66.67 | 15-20
- utils.ts    |  100.00 |  100.00 |
-```
-
-### Configuration
-
-```toml
-# bunfig.toml
-[test]
-coverage = true
-coverageDir = "coverage"
-coverageThreshold = { line = 80, function = 80, branch = 80 }
-```
-
-## DOM Testing
-
-### Setup with Happy-DOM
-
-```typescript
-// test/setup.ts
-import { GlobalRegistrator } from "@happy-dom/global-registrator";
-GlobalRegistrator.register();
-```
-
-```toml
-# bunfig.toml
-[test]
-preload = ["./test/setup.ts"]
-```
-
-### Testing Components
-
-```typescript
-import { test, expect } from "bun:test";
-import { render, screen, fireEvent } from "@testing-library/react";
-import "@testing-library/jest-dom";
-import Button from "./Button";
-
-test("button click handler", async () => {
-  const handleClick = mock();
-
-  render(<Button onClick={handleClick}>Click me</Button>);
-
-  const button = screen.getByRole("button");
-  await fireEvent.click(button);
-
-  expect(handleClick).toHaveBeenCalledTimes(1);
-});
-
-test("renders with label", () => {
-  render(<Button>Submit</Button>);
-
-  expect(screen.getByText("Submit")).toBeInTheDocument();
-});
-```
-
-### Testing Library Setup
-
-```typescript
-// test/setup.ts
-import { afterEach } from "bun:test";
-import { cleanup } from "@testing-library/react";
-import "@testing-library/jest-dom";
-import { GlobalRegistrator } from "@happy-dom/global-registrator";
-
-GlobalRegistrator.register();
-
-afterEach(() => {
-  cleanup();
-});
-```
-
-## Custom Matchers
-
-```typescript
-import { expect } from "bun:test";
-
-expect.extend({
-  toBeWithinRange(received, floor, ceiling) {
-    const pass = received >= floor && received <= ceiling;
-    return {
-      pass,
-      message: () =>
-        pass
-          ? `expected ${received} not to be within range ${floor} - ${ceiling}`
-          : `expected ${received} to be within range ${floor} - ${ceiling}`,
-    };
-  },
-});
-
-// TypeScript declaration
-declare module "bun:test" {
-  interface Matchers<T> {
-    toBeWithinRange(floor: number, ceiling: number): void;
-  }
-}
-
-// Usage
-test("custom matcher", () => {
-  expect(5).toBeWithinRange(1, 10);
-  expect(20).not.toBeWithinRange(1, 10);
-});
-```
-
-## Type Testing
-
-```typescript
-import { test, expectTypeOf } from "bun:test";
-
-test("type inference", () => {
-  const result = add(1, 2);
-
-  expectTypeOf(result).toBeNumber();
-  expectTypeOf(result).not.toBeString();
-
-  expectTypeOf(add).toBeFunction();
-  expectTypeOf(add).parameters.toEqualTypeOf<[number, number]>();
-  expectTypeOf(add).returns.toEqualTypeOf<number>();
-});
-```
-
-## Integration Testing Patterns
-
-### Database Testing
-
-```typescript
-import {
-  beforeAll,
-  afterAll,
-  afterEach,
-  describe,
-  test,
-  expect,
-} from "bun:test";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
-
-beforeAll(async () => {
-  await prisma.$connect();
-});
-
-afterAll(async () => {
-  await prisma.$disconnect();
-});
-
-afterEach(async () => {
-  // Clean up test data
-  await prisma.user.deleteMany();
-});
-
-describe("User repository", () => {
-  test("creates user", async () => {
-    const user = await prisma.user.create({
-      data: { email: "test@example.com", name: "Test" },
-    });
-
-    expect(user.id).toBeDefined();
-    expect(user.email).toBe("test@example.com");
-  });
-});
-```
-
-### API Testing
-
-```typescript
-import { test, expect, beforeAll, afterAll } from "bun:test";
-import app from "./app";
-
-let server: ReturnType<typeof Bun.serve>;
-
-beforeAll(() => {
-  server = Bun.serve({
-    fetch: app.fetch,
-    port: 0, // Random available port
-  });
-});
-
-afterAll(() => {
-  server.stop();
-});
-
-test("GET /users returns list", async () => {
-  const response = await fetch(`http://localhost:${server.port}/users`);
-
-  expect(response.status).toBe(200);
-
-  const data = await response.json();
-  expect(data).toBeArray();
-});
-
-test("POST /users creates user", async () => {
-  const response = await fetch(`http://localhost:${server.port}/users`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name: "Test", email: "test@example.com" }),
-  });
-
-  expect(response.status).toBe(201);
-});
-```
-
-## Best Practices Summary
-
-1. **Use `describe` blocks** - organize related tests
-2. **One assertion focus** - each test verifies one behavior
-3. **Clean up in afterEach** - prevent test pollution
-4. **Use `mock.restore()`** - reset mocks between tests
-5. **Prefer spies over mocks** - when original behavior is needed
-6. **Use inline snapshots** - for small, readable values
-7. **Enable coverage** - maintain test quality
-8. **Preload common setup** - DRY principle
-9. **Use `.skip` and `.todo`** - track incomplete tests
-10. **Test edge cases** - null, empty, boundary values
-
-## When to Ask for Help
-
-- Complex module mocking scenarios
-- Performance optimization for large test suites
-- Integration with specific testing libraries
-- Parallel test execution configuration
-- Custom reporter development
-- CI/CD pipeline setup for Bun tests
+- Verify Bun 1.3.14+ and current CLI help.
+- Use exact `./path` selection and current discovery extensions.
+- Distinguish concurrent tests, file isolation, parallel workers, and sharding.
+- Keep retry zero normally and capture randomization seeds.
+- Use the current fractional coverage schema.
+- Restore timers/spies and understand that module mocks persist.
+- Type mock signatures correctly and register module mocks before import.
+- Run an actual TypeScript checker for type tests.
+- Prefer user-event and explicit jest-dom setup.
+- Protect databases and await async server/client teardown.

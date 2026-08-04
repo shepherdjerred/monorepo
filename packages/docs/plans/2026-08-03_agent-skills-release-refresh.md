@@ -162,6 +162,10 @@ skill's 30-source set rather than treated as independent 30-source units.
   re-verified all 28 return HTTP 200 with a plain `curl -sI` (no
   redirect-follow), closing the same class of reproducibility gap as the
   entry above.
+- 2026-08-03: Completed the developer-tooling wave for Bun tests, Bun
+  workspaces, Zellij, and modern CLI tools: 204 primary pages. Thirteen skills
+  now have 628 primary plus 15 supplemental sources, 643 total. The four new
+  rewrites pass formatting, skill validation, and live-link checks.
 - 2026-08-09: Recounted the live source tree as 64 top-level skill directories,
   each containing `SKILL.md`, correcting the 65-skill inventory above. At 30
   sources per skill, the current minimum is 1,920 sources.
