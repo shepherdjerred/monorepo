@@ -12,21 +12,25 @@ describe("isExpectedUpstreamError", () => {
     }
   });
 
-  test("treats Cloudflare edge/connectivity 5xx (520-524, 527) as expected", () => {
-    for (const status of [520, 521, 522, 523, 524, 527]) {
+  test("treats Cloudflare edge/connectivity 5xx (520, 522, 524) as expected", () => {
+    for (const status of [520, 522, 524]) {
       expect(isExpectedUpstreamError(status)).toBe(true);
     }
   });
 
-  test("does not treat client errors, success, certificate failures, or ambiguous 530 as upstream errors", () => {
-    // 525/526 are Cloudflare TLS handshake/certificate failures, which are
-    // typically a persistent origin misconfiguration rather than a transient
-    // edge condition. 530 wraps the whole Cloudflare Error 1xxx range (rate
-    // limiting, access denial, …); the status alone cannot establish a
-    // transient origin outage. Both stay unexpected and remain visible in
-    // error tracking.
+  test("does not treat client errors, success, unevidenced Cloudflare edge codes, certificate failures, or ambiguous 530 as upstream errors", () => {
+    // 521/523/527 are nominally part of the same Cloudflare edge 5xx family,
+    // but each can equally reflect a persistent origin firewall, DNS/routing,
+    // or Railgun configuration failure rather than a brief outage; the
+    // incident evidence backing this classification (Bugsink sampling)
+    // establishes repeated 520s only. 525/526 are Cloudflare TLS
+    // handshake/certificate failures, which are typically a persistent origin
+    // misconfiguration rather than a transient edge condition. 530 wraps the
+    // whole Cloudflare Error 1xxx range (rate limiting, access denial, …); the
+    // status alone cannot establish a transient origin outage. All stay
+    // unexpected and remain visible in error tracking.
     for (const status of [
-      200, 400, 404, 429, 500, 501, 525, 526, 528, 529, 530,
+      200, 400, 404, 429, 500, 501, 521, 523, 525, 526, 527, 528, 529, 530,
     ]) {
       expect(isExpectedUpstreamError(status)).toBe(false);
     }
