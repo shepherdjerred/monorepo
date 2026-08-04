@@ -87,6 +87,16 @@ func (r *dhcpStaticLeaseResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
+	// The config hostname (null when omitted) distinguishes an explicitly
+	// configured value — including an explicit "" — from an omitted
+	// Optional+Computed attribute. See the post-apply resolution below.
+	var config dhcpStaticLeaseResourceModel
+
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	mac := strings.ToUpper(plan.MAC.ValueString())
 
 	// Serialize the whole read-modify-write against dhcp_staticlist so a
@@ -117,14 +127,15 @@ func (r *dhcpStaticLeaseResource) Create(ctx context.Context, req resource.Creat
 
 	plan.MAC = types.StringValue(mac)
 
-	// hostname is Optional+Computed: when omitted, plan.Hostname is Unknown,
-	// and Terraform requires every attribute to be known after apply. Resolve
-	// it to what was actually written, matching Read's empty-means-null
+	// hostname is Optional+Computed. When the user configured it (config
+	// non-null), echo back exactly what they set — including an explicit "" —
+	// or Terraform rejects the apply as producing an inconsistent result. When
+	// omitted (config null), resolve to null using the empty-means-null
 	// convention so a later Read doesn't immediately report drift.
-	if hostname != "" {
-		plan.Hostname = types.StringValue(hostname)
-	} else {
+	if config.Hostname.IsNull() {
 		plan.Hostname = types.StringNull()
+	} else {
+		plan.Hostname = types.StringValue(hostname)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
