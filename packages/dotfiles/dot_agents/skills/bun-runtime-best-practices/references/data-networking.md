@@ -43,14 +43,23 @@ Use the default `redis` export when one shared default connection matches the ap
 
 ```typescript
 import { RedisClient } from "bun";
+import { z } from "zod";
 
-const client = new RedisClient(Bun.env.REDIS_URL);
+const Environment = z.object({ REDIS_URL: z.string().url() });
+const { REDIS_URL } = Environment.parse(Bun.env);
+
+const client = new RedisClient(REDIS_URL);
 try {
   await client.set("health:last", new Date().toISOString());
 } finally {
   client.close();
 }
 ```
+
+Validate the URL before constructing an explicit-endpoint client, same as `SQL`
+above: `new RedisClient(undefined)` does not throw, it silently falls through
+to Bun's default Redis connection instead of failing on a missing required
+`REDIS_URL`.
 
 Do not document `.connect(url)` or `.disconnect()` as the URL and lifecycle API.
 
