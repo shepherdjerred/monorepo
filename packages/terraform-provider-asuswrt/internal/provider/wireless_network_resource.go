@@ -127,10 +127,20 @@ func (r *wirelessNetworkResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
+	// The config channel (null when the user omitted it) gates the chanspec
+	// write; the plan value is Computed and would be non-null after refresh even
+	// when unconfigured. See applyWireless.
+	var config wirelessNetworkResourceModel
+
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	band := int(plan.Band.ValueInt64())
 	plan.ID = types.StringValue(fmt.Sprintf("wl%d", band))
 
-	if err := r.applyWireless(ctx, band, &plan); err != nil {
+	if err := r.applyWireless(ctx, band, &plan, config.Channel); err != nil {
 		resp.Diagnostics.AddError("Failed to configure wireless", err.Error())
 
 		return
@@ -174,10 +184,20 @@ func (r *wirelessNetworkResource) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
+	// The config channel (null when the user omitted it) gates the chanspec
+	// write, so an update that changes only e.g. ssid does not rewrite the
+	// channel from the Computed-refreshed plan value. See applyWireless.
+	var config wirelessNetworkResourceModel
+
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	band := int(plan.Band.ValueInt64())
 	plan.ID = types.StringValue(fmt.Sprintf("wl%d", band))
 
-	if err := r.applyWireless(ctx, band, &plan); err != nil {
+	if err := r.applyWireless(ctx, band, &plan, config.Channel); err != nil {
 		resp.Diagnostics.AddError("Failed to configure wireless", err.Error())
 
 		return
@@ -256,7 +276,7 @@ func (r *wirelessNetworkResource) ImportState(ctx context.Context, req resource.
 // (2g1_*/5g1_*) rather than wl<band>_*, wl_bw codes differ across firmwares, and
 // SAE/WPA3 needs wl_mfp. See docs/todos/asuswrt-wireless-write-path.md before
 // relying on wireless apply.
-func (r *wirelessNetworkResource) applyWireless(ctx context.Context, band int, plan *wirelessNetworkResourceModel) error {
+func (r *wirelessNetworkResource) applyWireless(ctx context.Context, band int, plan *wirelessNetworkResourceModel, configuredChannel types.Int64) error {
 	prefix := fmt.Sprintf("wl%d_", band)
 	values := map[string]string{
 		prefix + "ssid":        plan.SSID.ValueString(),
@@ -266,7 +286,7 @@ func (r *wirelessNetworkResource) applyWireless(ctx context.Context, band int, p
 	setOptionalString(values, prefix+"crypto", plan.Crypto)
 	setOptionalString(values, prefix+"wpa_psk", plan.WPAPassphrase)
 
-	if err := r.setChanspec(ctx, values, band, prefix, plan); err != nil {
+	if err := r.setChanspec(ctx, values, band, prefix, configuredChannel, plan.Bandwidth); err != nil {
 		return err
 	}
 
@@ -285,24 +305,30 @@ func (r *wirelessNetworkResource) applyWireless(ctx context.Context, band int, p
 	return nil
 }
 
-// setChanspec writes the channel+width chanspec when a channel is configured.
+// setChanspec writes the channel+width chanspec, but only when the channel is
+// actually configured (channel is the config value, which is null when the user
+// omitted it — unlike the Computed-refreshed plan value, which is populated from
+// the router after the first read). Gating on the config value means an update
+// that changes only e.g. ssid never rewrites the chanspec, so it can't reset a
+// radio to automatic channel selection or narrow a width it couldn't model.
+//
 // The chanspec encodes channel and width together, so both are needed. When
 // bandwidth is omitted (Optional+Computed → Unknown/null), defaulting it to 0
 // would write a bare channel that the firmware reads as auto width, silently
 // narrowing the radio; instead read the router's current width so the configured
-// channel is still applied, at the existing width. An explicitly configured
-// width (including 0 = auto) is honored as-is.
-func (r *wirelessNetworkResource) setChanspec(ctx context.Context, values map[string]string, band int, prefix string, plan *wirelessNetworkResourceModel) error {
-	if plan.Channel.IsNull() || plan.Channel.IsUnknown() {
+// channel is applied at the existing width. An explicitly configured width
+// (including 0 = auto) is honored as-is.
+func (r *wirelessNetworkResource) setChanspec(ctx context.Context, values map[string]string, band int, prefix string, channel, bandwidth types.Int64) error {
+	if channel.IsNull() || channel.IsUnknown() {
 		return nil
 	}
 
-	bandwidth, err := r.resolveBandwidthCode(ctx, band, plan.Bandwidth)
+	bw, err := r.resolveBandwidthCode(ctx, band, bandwidth)
 	if err != nil {
 		return err
 	}
 
-	chanspec, err := formatChanspec(int(plan.Channel.ValueInt64()), bandwidth)
+	chanspec, err := formatChanspec(int(channel.ValueInt64()), bw)
 	if err != nil {
 		return fmt.Errorf("formatting chanspec: %w", err)
 	}
