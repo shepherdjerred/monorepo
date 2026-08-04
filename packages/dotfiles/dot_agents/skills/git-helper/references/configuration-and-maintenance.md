@@ -7,9 +7,11 @@ Read this when changing Git configuration, hooks, credentials, maintenance, refs
 Inspect value, scope, and origin:
 
 ```bash
-git config get --show-origin --show-scope <key>
-git config list --show-origin --show-scope
+git config --get --show-origin --show-scope <key>
+git config --list --show-origin --show-scope
 ```
+
+Use the `--get`/`--list` flag forms, not the newer `git config get`/`git config list` subcommand syntax — the subcommand form does not exist before Git 2.46.
 
 Conditional includes are useful for identity and repository-family policy. Keep predicates narrow and test the effective value inside an affected repository.
 
@@ -21,7 +23,7 @@ Use `git check-ignore -v <path>` to explain why a path is ignored. Do not rely o
 
 ## Hooks
 
-`core.hooksPath` may redirect all hook lookup. Inspect it before assuming `.git/hooks` is authoritative. `git hook list` shows recognized configured hooks on current Git.
+`core.hooksPath` may redirect all hook lookup. Inspect it with `git config --get core.hooksPath` before assuming `.git/hooks` is authoritative; do not assume that path is correct. `git hook list <hook-name>` (added in Git 2.54) prints the resolved hook chain for one named hook and requires that argument — it does not enumerate every hook. For a portable listing of what's actually installed, inspect the hooks directory directly: `ls -la "$(git rev-parse --git-path hooks)"`.
 
 Hook scripts must quote filenames, propagate failures, and avoid blanket stderr suppression. Stage explicit paths; never stage the entire repository indiscriminately in automation.
 
