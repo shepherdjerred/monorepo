@@ -55,10 +55,11 @@ skill's 30-source set rather than treated as independent 30-source units.
   subagents through them. Research agents must use Lightpanda first for page
   extraction, then `curl`/`wget`, and PinchTab only for blocked or interactive
   sites.
-- Require a source ledger per skill containing the visited URL, fetch method,
-  retrieval result, source date/version when available, and distilled finding.
-- Keep source ledgers in repository working documentation rather than bloating
-  the runtime skill context.
+- Require a Research ledger per skill: a numbered list of the successfully
+  fetched primary source titles and URLs, appended to the skill's
+  `references/` material, sufficient to verify the 30-source quality gate.
+- Keep source ledgers in the skill's own `references/` files rather than
+  bloating the runtime `SKILL.md` context.
 - Edit skills only after the relevant 30-source threshold is met. Preserve
   durable workflows; replace release catalogs with concise current behavior and
   migration guidance.

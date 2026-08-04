@@ -9,7 +9,7 @@ Inspect first, preserve user work, and use the repository's owning branch workfl
 
 ## Branch workflow ownership
 
-In `shepherdjerred/monorepo`, new human or agent work uses native GitHub stacks through the `gh-stack` skill. Existing work already tracked by git-spice stays on git-spice through `git-spice-helper`. Ownership is sticky: never mix the two tools on one stack.
+In `shepherdjerred/monorepo`, every PR — human or agent, new or existing — is a git-spice stack. Load `git-spice-helper` first; it is authoritative for branch creation, restacking, and publishing.
 
 Load `worktree-workflow` before creating an isolated worktree. Do not use a bare `gh pr create` or hand-written rebase in place of the owning stack tool.
 
