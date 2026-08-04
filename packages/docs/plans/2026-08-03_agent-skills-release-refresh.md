@@ -106,7 +106,7 @@ skill's 30-source set rather than treated as independent 30-source units.
 
 - [x] Confirm that “30 sources” means per top-level skill, with commands and
       libraries inside that skill covered by the same 30-source set.
-- [x] Create and initialize the isolated native-stack worktree.
+- [x] Create the isolated worktree and register it as a git-spice stack.
 - [x] Inventory the full corpus, existing references, current versions, and
       missing high-value skills.
 - [ ] Run the multi-agent research batches and build the per-skill evidence
@@ -125,12 +125,19 @@ skill's 30-source set rather than treated as independent 30-source units.
   user change to `bugsink-helper/SKILL.md`, which must be preserved.
 - 2026-08-03: The user confirmed the 30-source requirement applies per
   top-level skill. Created `.claude/worktrees/agent-skills-refresh` on
-  `feature/agent-skills-refresh` and initialized it with native `gh stack`.
+  `feature/agent-skills-refresh`, at the time initialized with native
+  `gh stack` per the then-current policy. That policy was reverted repo-wide
+  to git-spice-only on 2026-08-03 (#1970); see the 2026-08-04 entry below for
+  the correction.
 - 2026-08-03: Completed the first two research waves for Git, Bun, TypeScript,
   Rust, and Python: 186 primary pages plus 15 supplemental official or
   project-primary pages, 201 total, were successfully fetched and inspected. The first
   five skills were rewritten as concise routing entrypoints with focused
-  references and source ledgers; the skill validator passes for all five.
+  references and Research ledgers (numbered title/URL lists, the format the
+  Execution Model now specifies — not the richer fetch-method/retrieval-result/
+  date-version ledger originally described); the skill validator passes for
+  all five. See the 2026-08-04 entry below for independent liveness
+  verification of every listed source.
 - 2026-08-04: Re-verified the five shipped Research ledgers (`git-helper`,
   `bun-runtime-best-practices`, `typescript-helper`, `rust-helper`,
   `python-helper`) by extracting all linked URLs and live-checking each with
@@ -138,6 +145,11 @@ skill's 30-source set rather than treated as independent 30-source units.
   links. This closes the reproducibility gap in the prior entry — a later
   reviewer can now confirm every listed source resolves, independent of the
   fetch-method/date detail the Execution Model no longer requires per entry.
+- 2026-08-04: Registered `feature/agent-skills-refresh` with git-spice
+  (`git-spice branch track feature/agent-skills-refresh --base main`),
+  reconciling the branch's actual tracking with the corrected Execution
+  Model. The branch is git-spice-tracked going forward; no `gh stack` state
+  remains authoritative for this work.
 
 ## Session Log — 2026-08-03
 
