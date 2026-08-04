@@ -1,5 +1,5 @@
 ---
-id: 2026-08-03_promote-beta-images-to-prod
+id: 2026-08-03-promote-beta-images-to-prod
 type: log
 status: complete
 board: false
