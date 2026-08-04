@@ -38,10 +38,11 @@ resource "asuswrt_nvram" "test" {
 			},
 			// Import by NVRAM key and verify state matches.
 			{
-				ResourceName:      "asuswrt_nvram.test",
-				ImportState:       true,
-				ImportStateId:     "test_key",
-				ImportStateVerify: true,
+				ResourceName:                         "asuswrt_nvram.test",
+				ImportState:                          true,
+				ImportStateId:                        "test_key",
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "key",
 			},
 		},
 	})

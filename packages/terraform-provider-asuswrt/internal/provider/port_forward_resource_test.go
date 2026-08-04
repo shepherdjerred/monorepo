@@ -47,10 +47,11 @@ resource "asuswrt_port_forward" "http" {
 			},
 			// Import by rule name and verify state matches.
 			{
-				ResourceName:      "asuswrt_port_forward.http",
-				ImportState:       true,
-				ImportStateId:     "HTTP",
-				ImportStateVerify: true,
+				ResourceName:                         "asuswrt_port_forward.http",
+				ImportState:                          true,
+				ImportStateId:                        "HTTP",
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "name",
 			},
 		},
 	})
