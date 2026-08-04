@@ -86,13 +86,27 @@ export class CommandFleetEnvironment implements FleetEnvironment {
   #gitQueue: Promise<unknown> = Promise.resolve();
 
   #withGitLock<T>(operation: () => Promise<T>): Promise<T> {
-    // Chain onto the tail regardless of whether the prior section fulfilled or
-    // rejected, so one failed section cannot wedge the queue for later waiters.
-    const result = this.#gitQueue.then(operation, operation);
-    this.#gitQueue = result.then(
-      () => undefined,
-      () => undefined,
-    );
+    const priorTail = this.#gitQueue;
+    const result = (async (): Promise<T> => {
+      // Await the tail regardless of whether the prior section fulfilled or
+      // rejected, so one failed section cannot wedge the queue for later
+      // waiters; its rejection was already surfaced to its own caller.
+      try {
+        await priorTail;
+      } catch {
+        // Prior section already reported this to its caller.
+      }
+      return operation();
+    })();
+    // Advance the queue only after this section settles, swallowing its outcome
+    // so the next waiter is not affected by a rejection here.
+    this.#gitQueue = (async (): Promise<void> => {
+      try {
+        await result;
+      } catch {
+        // Surfaced to this section's caller via the returned promise.
+      }
+    })();
     return result;
   }
 

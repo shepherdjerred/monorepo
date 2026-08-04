@@ -33,11 +33,12 @@ export class WorktreeManager {
     this.#mustRun = dependencies.mustRun;
   }
 
-  // Only a worktree UNDER `#worktreeRoot` is a fleet-managed worktree. The
-  // operator may have the same PR branch checked out in their own normal
-  // worktree elsewhere; returning that would let `assignWorktreeBranch`
-  // `reset --hard` the operator's real edits. Restrict the search to
-  // fleet-owned paths so only disposable fleet worktrees are ever reused.
+  // A worktree UNDER `#worktreeRoot` is a fleet-managed, disposable worktree.
+  // The operator may have the same PR branch checked out in their own normal
+  // worktree elsewhere; `findWorktree` prefers a fleet worktree but falls back
+  // to reusing an operator worktree in place (see its note), and
+  // `assignWorktreeBranch` guards that reuse so the operator's uncommitted work
+  // is never `reset --hard`-ed away.
   #isFleetWorktree(worktreePath: string): boolean {
     const relative = path.relative(this.#worktreeRoot, worktreePath);
     return (
@@ -46,6 +47,13 @@ export class WorktreeManager {
     );
   }
 
+  // Find a worktree that already has one of `branches` checked out. Git forbids
+  // the same branch in two worktrees, so a `git worktree add` for a branch the
+  // operator already holds fails and parks the PR for the whole run. To let the
+  // fleet make progress on such a PR, reuse that existing checkout in place: a
+  // fleet-owned worktree is always preferred (disposable, safe to hard-reset),
+  // and an operator worktree is returned only as a fallback — `assignWorktreeBranch`
+  // refuses to reuse it while it is dirty, so operator edits are never lost.
   async findWorktree(branches: string[]): Promise<string | null> {
     const output = await this.#mustRun("git", [
       "worktree",
@@ -53,22 +61,22 @@ export class WorktreeManager {
       "--porcelain",
     ]);
     let currentPath: string | null = null;
+    let operatorFallback: string | null = null;
     for (const line of output.split("\n")) {
       if (line.startsWith("worktree ")) {
         currentPath = line.slice("worktree ".length);
       }
       if (line.startsWith("branch refs/heads/")) {
         const branch = line.slice("branch refs/heads/".length);
-        if (
-          currentPath !== null &&
-          branches.includes(branch) &&
-          this.#isFleetWorktree(currentPath)
-        ) {
-          return currentPath;
+        if (currentPath !== null && branches.includes(branch)) {
+          if (this.#isFleetWorktree(currentPath)) {
+            return currentPath;
+          }
+          operatorFallback ??= currentPath;
         }
       }
     }
-    return null;
+    return operatorFallback;
   }
 
   // Is a worktree registered at exactly this path, regardless of what (if any)
@@ -123,6 +131,26 @@ export class WorktreeManager {
       worktree,
     );
     const onBranch = currentBranchOutput.trim() === branch;
+    // Reusing an operator-owned worktree in place: `findWorktree` falls back to
+    // the operator's own checkout when they already hold this PR's branch (git
+    // forbids the same branch in two worktrees, so the fleet cannot provision
+    // its own). That checkout is `onBranch` by definition, so the switch guard
+    // below never fires for it — yet the sync further down `reset --hard`s the
+    // working tree. Refuse while the operator worktree carries uncommitted work
+    // so their edits are never discarded; the PR pauses with an actionable
+    // message instead of silently losing local changes.
+    if (!this.#isFleetWorktree(worktree)) {
+      const dirtyOutput = await this.#mustRun(
+        "git",
+        ["status", "--porcelain"],
+        worktree,
+      );
+      if (dirtyOutput.trim().length > 0) {
+        throw new Error(
+          `Operator worktree ${worktree} has uncommitted changes; refusing to reuse it for PR #${n}. Commit or stash them, or remove the worktree, to let the fleet work this PR.`,
+        );
+      }
+    }
     // Refuse to carry another PR's uncommitted work across a branch switch. A
     // prior worker that ended blocked/failed on a DIFFERENT branch may have left
     // dirty edits; `git checkout` preserves non-conflicting modifications, so

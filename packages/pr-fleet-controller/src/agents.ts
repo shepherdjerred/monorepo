@@ -32,9 +32,34 @@ or request a tick. Never weaken readiness, merge, close, or approve a PR.`;
 
 const WORKER_INSTRUCTIONS = `You own one focused fix cycle for exactly one PR.
 Refresh evidence first, choose one actionable blocker, preserve the PR's intent, and
-use only the assigned worktree tools. Never merge, close, approve, suppress a gate,
-use blanket staging, or bypass hooks. Return the required structured result after one
+use only the assigned worktree tools. Edit files with str_replace (exact-match, the
+default) or write_file (full contents); apply_patch is a fallback that requires a
+correctly formatted unified diff. Never merge, close, approve, suppress a gate, use
+blanket staging, or bypass hooks. Return the required structured result after one
 cycle; do not poll or sleep.`;
+
+// Turn a Mastra `generate` result into a validated WorkerResult. Mastra leaves
+// `object` undefined when the model ends a turn without emitting the structured
+// result — e.g. it exhausted `maxSteps` mid-edit. Parsing `undefined` against
+// the object schema throws a bare Zod "expected object, received undefined"
+// whose message is an opaque issues array; detect that case first and throw a
+// legible, actionable error (with the model's final text) instead.
+export function coerceWorkerResult(result: {
+  object?: unknown;
+  text?: string;
+}): WorkerResult {
+  if (result.object === undefined) {
+    const finalText = result.text?.trim();
+    throw new Error(
+      `Worker produced no structured result (the model ended its turn without emitting a WorkerResult, likely after exhausting its step budget)${
+        finalText === undefined || finalText.length === 0
+          ? ""
+          : `. Final model text: ${finalText.slice(0, 500)}`
+      }`,
+    );
+  }
+  return WorkerResultSchema.parse(result.object);
+}
 
 const NOOP_TELEMETRY: FleetTelemetry = {
   runId: "unrecorded-test-run",
@@ -168,7 +193,7 @@ Additional user guidance: ${guidance.length === 0 ? "none" : guidance.join("\n")
                   tags: ["pr-fleet", "worker"],
                 },
               });
-              return WorkerResultSchema.parse(result.object);
+              return coerceWorkerResult(result);
             },
           });
           if (outcome.status === "completed") {

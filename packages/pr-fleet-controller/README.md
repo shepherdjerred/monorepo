@@ -69,8 +69,11 @@ The master receives:
 Each worker receives:
 
 - normalized current-head PR, Buildkite, merge-tree, and review evidence;
-- worktree-scoped UTF-8 reads, ripgrep, Git status, Git diff, and unified patch
-  application;
+- worktree-scoped UTF-8 reads, ripgrep, Git status, and Git diff;
+- worktree-scoped edits: `str_replace` (exact-match substring replacement) and
+  `write_file` (full-file create/overwrite) are the preferred edit surface, with
+  `apply_patch` (unified diff) retained as a fallback — all path-contained and
+  gated on the stack-write lease;
 - serial worktree setup;
 - setup, heavy-command, and stack-write lease requests;
 - an allowlisted validation command surface;
@@ -93,6 +96,14 @@ and grants invocation-scoped trust to only the assigned worktree's exact
 timeouts, cancellation, and shutdown terminate the command's complete POSIX
 process group so descendant processes cannot outlive the worker that spawned
 them.
+
+Each stack gets one worktree. A fleet-owned worktree is always preferred, but
+when a branch is already checked out in an operator's own worktree — git forbids
+the same branch in two worktrees, so the fleet cannot provision its own — the
+fleet reuses that operator worktree in place so the PR can still make progress.
+That reuse is refused while the operator worktree holds uncommitted changes, so
+operator edits are never `reset --hard`-ed away; the PR pauses with an actionable
+message instead.
 
 The controller never merges, closes, or approves a pull request.
 

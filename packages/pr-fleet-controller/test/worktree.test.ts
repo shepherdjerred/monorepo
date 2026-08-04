@@ -126,10 +126,10 @@ function managerWith(porcelain: string): WorktreeManager {
   });
 }
 
-describe("findWorktree is scoped to fleet-owned worktrees", () => {
-  test("returns the fleet worktree, not the operator's own checkout of the branch", async () => {
+describe("findWorktree prefers a fleet worktree, falls back to the operator's", () => {
+  test("prefers the fleet worktree even when the operator also has the branch", async () => {
     const porcelain = [
-      // The operator's own checkout is listed first and must be skipped.
+      // The operator's own checkout is listed first but the fleet worktree wins.
       "worktree /home/user/monorepo",
       `HEAD ${"a".repeat(40)}`,
       "branch refs/heads/feature/x",
@@ -144,14 +144,83 @@ describe("findWorktree is scoped to fleet-owned worktrees", () => {
     );
   });
 
-  test("returns null when only a non-fleet worktree has the branch", async () => {
+  test("falls back to the operator worktree so the fleet can reuse it in place", async () => {
+    // Only the operator holds the branch; git forbids a second checkout of it,
+    // so reusing the operator worktree is the only way to make progress. The
+    // dirty guard in assignWorktreeBranch keeps that reuse safe.
     const porcelain = [
       "worktree /home/user/monorepo",
       `HEAD ${"a".repeat(40)}`,
       "branch refs/heads/feature/x",
       "",
     ].join("\n");
+    expect(await managerWith(porcelain).findWorktree(["feature/x"])).toBe(
+      "/home/user/monorepo",
+    );
+  });
+
+  test("returns null when no worktree has the branch", async () => {
+    const porcelain = [
+      "worktree /home/user/monorepo",
+      `HEAD ${"a".repeat(40)}`,
+      "branch refs/heads/main",
+      "",
+    ].join("\n");
     expect(await managerWith(porcelain).findWorktree(["feature/x"])).toBeNull();
+  });
+});
+
+// Reuse of an operator-owned worktree (outside the fleet root) must never
+// `reset --hard` uncommitted operator edits. Script the branch-check, the
+// pull-ref fetch/rev-parse, and a `status --porcelain` whose output signals
+// whether the operator worktree is dirty.
+function scriptOperatorWorktree(pr: PrIdentity, porcelainStatus: string) {
+  const pullRef = `refs/remotes/pull/${String(pr.number)}/head`;
+  const resets: string[] = [];
+  const mustRun = (executable: string, args: string[]): Promise<string> => {
+    if (executable === "git" && args[0] === "rev-parse") {
+      if (args[1] === "--abbrev-ref") {
+        return Promise.resolve(`${pr.headRefName}\n`);
+      }
+      if (args[1] === pullRef || args[1] === "HEAD") {
+        return Promise.resolve(`${pr.headSha}\n`);
+      }
+    }
+    if (executable === "git" && args[0] === "status") {
+      return Promise.resolve(porcelainStatus);
+    }
+    if (executable === "git" && args[0] === "reset") {
+      resets.push(args[2] ?? "");
+    }
+    return Promise.resolve("");
+  };
+  const manager = new WorktreeManager({
+    checkout: "/tmp/checkout",
+    worktreeRoot: "/tmp/pr-fleet",
+    run: okRun,
+    mustRun,
+  });
+  return { manager, resets };
+}
+
+describe("assignWorktreeBranch guards operator worktree reuse", () => {
+  test("refuses a dirty operator worktree instead of discarding its edits", async () => {
+    const pr = identity(14);
+    const script = scriptOperatorWorktree(pr, " M packages/x/file.ts\n");
+    await expect(
+      // Operator worktree lives outside the fleet root.
+      script.manager.assignWorktreeBranch("/home/user/monorepo", pr),
+    ).rejects.toThrow(/uncommitted changes; refusing to reuse/);
+    // Never touch the working tree while it is dirty.
+    expect(script.resets).toEqual([]);
+  });
+
+  test("reuses a clean operator worktree in place", async () => {
+    const pr = identity(15);
+    const script = scriptOperatorWorktree(pr, "");
+    await script.manager.assignWorktreeBranch("/home/user/monorepo", pr);
+    // Clean and already at the PR head: aligned to it, no operator work lost.
+    expect(script.resets).toEqual([pr.headSha]);
   });
 });
 
