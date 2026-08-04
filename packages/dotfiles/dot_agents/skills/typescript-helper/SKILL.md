@@ -19,11 +19,15 @@ Verified 2026-08-03.
 
 TypeScript reports typical 8–12x full-build improvements for the native 7.0 compiler. Treat that as an official benchmark range, not a universal guarantee. The experimental `--checkers` and `--builders` controls trade memory for concurrency; do not make them default without measuring the project.
 
-Always inspect the selected toolchain:
+Always inspect the selected toolchain. A bare `tsc` on `PATH` can resolve to the
+6.x compatibility bridge even when a package also has the native compiler
+installed; use the explicit native-compiler path when both are present (this
+monorepo's `scripts/compliance-check.ts` enforces this same
+`PATH=node_modules/@typescript/native/bin:$PATH tsc` form):
 
 ```bash
-tsc --version
-tsc --showConfig
+PATH=node_modules/@typescript/native/bin:$PATH tsc --version
+PATH=node_modules/@typescript/native/bin:$PATH tsc --showConfig
 ```
 
 Read [references/releases-and-migration.md](references/releases-and-migration.md) before a TypeScript 6 or 7 upgrade. Read [references/configuration.md](references/configuration.md) when creating or reviewing a tsconfig. Read [references/modules-and-runtimes.md](references/modules-and-runtimes.md) for Node, Bun, bundler, ESM, and CommonJS decisions. Read [references/type-safety.md](references/type-safety.md) for narrowing, generics, validation, and exhaustiveness. Read [references/tooling.md](references/tooling.md) for ESLint and execution tooling.
