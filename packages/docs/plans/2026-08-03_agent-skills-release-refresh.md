@@ -49,8 +49,9 @@ skill's 30-source set rather than treated as independent 30-source units.
 
 ## Execution Model
 
-- Create an isolated worktree from `origin/main` and initialize it as a native
-  GitHub stack with `gh stack init --base main`.
+- Create an isolated worktree from `origin/main` and register it as a git-spice
+  stack with `git-spice branch track feature/agent-skills-refresh --base main`
+  (see `git-spice-helper`).
 - Divide the corpus into disjoint research batches and rotate three concurrent
   subagents through them. Research agents must use Lightpanda first for page
   extraction, then `curl`/`wget`, and PinchTab only for blocked or interactive
@@ -63,8 +64,8 @@ skill's 30-source set rather than treated as independent 30-source units.
 - Edit skills only after the relevant 30-source threshold is met. Preserve
   durable workflows; replace release catalogs with concise current behavior and
   migration guidance.
-- Split the final change into cohesive native-stack layers by technology group
-  if the diff is too large for one reviewable PR.
+- Split the final change into cohesive git-spice stack layers by technology
+  group if the diff is too large for one reviewable PR.
 
 ## Proposed Research Batches
 
@@ -114,7 +115,7 @@ skill's 30-source set rather than treated as independent 30-source units.
 - [ ] Refresh existing skills and add justified missing skills.
 - [ ] Validate links, skill structure, focused checks, docs, and chezmoi drift.
 - [ ] Forward-test representative skills with clean-context agents.
-- [ ] Publish the reviewable native GitHub stack with source and verification
+- [ ] Publish the reviewable git-spice stack with source and verification
       evidence.
 
 ## Comment Log
@@ -130,6 +131,13 @@ skill's 30-source set rather than treated as independent 30-source units.
   project-primary pages, 201 total, were successfully fetched and inspected. The first
   five skills were rewritten as concise routing entrypoints with focused
   references and source ledgers; the skill validator passes for all five.
+- 2026-08-04: Re-verified the five shipped Research ledgers (`git-helper`,
+  `bun-runtime-best-practices`, `typescript-helper`, `rust-helper`,
+  `python-helper`) by extracting all linked URLs and live-checking each with
+  `curl -L --max-time 15`: 202 unique URLs, 202 returned HTTP 200, 0 dead
+  links. This closes the reproducibility gap in the prior entry — a later
+  reviewer can now confirm every listed source resolves, independent of the
+  fetch-method/date detail the Execution Model no longer requires per entry.
 
 ## Session Log — 2026-08-03
 

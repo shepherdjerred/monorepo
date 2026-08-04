@@ -105,12 +105,22 @@ Propagate errors when a test or helper can return `Result`. Assert the actual va
 
 ```rust
 #[tokio::test]
-async fn fetches_non_empty_body() -> Result<(), reqwest::Error> {
-    let body = fetch_data("https://example.com").await?;
-    assert!(!body.is_empty());
+async fn fetches_expected_body() -> Result<(), reqwest::Error> {
+    let server = wiremock::MockServer::start().await;
+    wiremock::Mock::given(wiremock::matchers::method("GET"))
+        .respond_with(wiremock::ResponseTemplate::new(200).set_body_string("ok"))
+        .mount(&server)
+        .await;
+
+    let body = fetch_data(&server.uri()).await?;
+    assert_eq!(body, "ok");
     Ok(())
 }
 ```
+
+Use a local mock server (`wiremock`) or injected transport, not a live third-party
+endpoint — a real request makes the suite depend on DNS, outbound-network
+availability, and an external response.
 
 Check cleanup and writer errors when they can change the outcome. Do not ignore `Read`, `Write`, database close, trace write, or process exit errors.
 

@@ -152,7 +152,10 @@ Choose mypy or Pyright from the repository's existing configuration, plugin need
 - Pass subprocess argument sequences; avoid `shell=True` with untrusted input.
 - Never unpickle untrusted data.
 - Keep tarfile's safer `data` filter and inspect untrusted archives even on Python 3.14.
-- Audit with `uv audit` or `pip-audit`, not nonexistent `pip audit` / `uv pip audit` commands.
+- Audit with `pip-audit` (via `uvx pip-audit`), not the nonexistent `pip audit` /
+  `uv pip audit` commands. `uv audit` remains a preview-only subcommand (behind
+  `--preview`) and is absent entirely in older uv releases, so don't rely on it
+  as a stable, version-independent option.
 - Fail on missing required environment configuration; do not silently switch databases.
 - Prefer trusted publishing and pinned container artifacts over static tokens and `latest` tags.
 - Open text files with an explicit encoding while Python 3.14 remains platform-sensitive by default.
