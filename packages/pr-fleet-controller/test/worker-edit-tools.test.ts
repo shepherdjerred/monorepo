@@ -183,8 +183,27 @@ describe("writeWorktreeFile", () => {
     await symlink(outside, path.join(worktree, "dangling"));
     await expect(
       writeWorktreeFile(worktree, { path: "dangling", content: "escaped" }),
-    ).rejects.toThrow(/write through a symlink/);
+    ).rejects.toThrow(/dangling symlink/);
     expect(await Bun.file(outside).exists()).toBe(false);
+  });
+
+  test("allows editing through a safe in-tree symlink", async () => {
+    // A tracked symlink whose real target is a normal in-tree file (like this
+    // repo's CLAUDE.md -> AGENTS.md) must remain editable: the canonical
+    // containment check resolves the real target and confirms it is in-tree.
+    await writeFile(path.join(worktree, "AGENTS.md"), "# real\n");
+    await symlink(
+      path.join(worktree, "AGENTS.md"),
+      path.join(worktree, "CLAUDE.md"),
+    );
+    await writeWorktreeFile(worktree, {
+      path: "CLAUDE.md",
+      content: "# edited\n",
+    });
+    // The write followed the link and updated the real target.
+    expect(await readFile(path.join(worktree, "AGENTS.md"), "utf8")).toBe(
+      "# edited\n",
+    );
   });
 
   test("refuses a symlink that resolves into the Git directory", async () => {

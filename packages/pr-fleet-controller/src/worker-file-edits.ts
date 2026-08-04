@@ -44,16 +44,20 @@ export async function containedPath(
   }
   const canonicalRoot = await realpath(root);
   const absolute = path.resolve(canonicalRoot, requestedPath);
-  // Refuse to write through a symlink at the target itself. `Bun.write` follows
-  // it, and a DANGLING link (missing target) evades the canonicalization below:
-  // `Bun.file(absolute).exists()` is false, so only the in-tree parent gets
-  // resolved and the link passes — then the write follows it to an arbitrary
-  // operator-accessible path outside the checkout. Checked no-follow via lstat so
-  // it catches the link regardless of whether its target exists.
-  if (await isSymlink(absolute)) {
-    throw new Error(`Refusing to write through a symlink: ${requestedPath}`);
-  }
   const targetExists = await Bun.file(absolute).exists();
+  // Reject only a DANGLING symlink at the target (its link resolves to nothing).
+  // Such a link can't be canonicalized — `exists()` is false, so the branch
+  // below would resolve only the in-tree parent and let the link pass, then
+  // `Bun.write` would follow it to an arbitrary, possibly external path. An
+  // EXISTING symlink is deliberately allowed through: the canonical containment
+  // and `.git` checks below resolve its real target and reject it only if it
+  // escapes the tree or reaches Git metadata, so a safe in-tree link (e.g. this
+  // repo's `CLAUDE.md` -> `AGENTS.md`) can still be read and edited.
+  if (!targetExists && (await isSymlink(absolute))) {
+    throw new Error(
+      `Refusing to write through a dangling symlink: ${requestedPath}`,
+    );
+  }
   const canonicalTarget = await realpath(
     targetExists ? absolute : path.dirname(absolute),
   );
