@@ -1,5 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { MastraMaster } from "@shepherdjerred/pr-fleet-controller/src/agents.ts";
+import {
+  coerceWorkerResult,
+  MastraMaster,
+} from "@shepherdjerred/pr-fleet-controller/src/agents.ts";
+import type { WorkerResult } from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
 import type { MasterControllerTools } from "@shepherdjerred/pr-fleet-controller/src/master-tools.ts";
 import type {
   FleetObserver,
@@ -167,6 +171,53 @@ class KindFailingTelemetry extends RecordingTelemetry {
 
 const flush = (): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, 5));
+
+describe("coerceWorkerResult", () => {
+  const validResult: WorkerResult = {
+    pr: 42,
+    state: "waiting-ci",
+    headShaBefore: "a".repeat(40),
+    headShaAfter: null,
+    hardFailures: [],
+    reviewFindings: [],
+    conflict: false,
+    validation: [],
+    lastAction: "observed CI",
+    blockers: [],
+    worktree: "/tmp/pr-fleet-42",
+    worktreeDirty: false,
+    setupLeaseReleased: true,
+    heavyLeaseReleased: true,
+    writeLeaseReleased: true,
+  };
+
+  test("returns the validated object when present", () => {
+    expect(coerceWorkerResult({ object: validResult })).toEqual(validResult);
+  });
+
+  test("throws a legible error (not a raw Zod dump) when object is undefined", () => {
+    expect(() =>
+      coerceWorkerResult({ object: undefined, text: "  ran out of steps  " }),
+    ).toThrow(
+      /Worker produced no structured result.*Final model text: ran out of steps/s,
+    );
+  });
+
+  test("omits the final-text clause when there is no model text", () => {
+    let message = "";
+    try {
+      coerceWorkerResult({ object: undefined });
+    } catch (error) {
+      message = error instanceof Error ? error.message : String(error);
+    }
+    expect(message).toContain("Worker produced no structured result");
+    expect(message).not.toContain("Final model text");
+  });
+
+  test("still rejects a present-but-invalid object", () => {
+    expect(() => coerceWorkerResult({ object: { pr: 1 } })).toThrow();
+  });
+});
 
 describe("master shutdown", () => {
   test("aborts and awaits the in-flight master turn before resolving", async () => {

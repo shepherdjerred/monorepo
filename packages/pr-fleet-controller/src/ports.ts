@@ -37,7 +37,11 @@ export type CommandResult = {
 export type FleetEnvironment = {
   listOpenPrs: () => Promise<PrIdentity[]>;
   refreshEvidence: (pr: PrIdentity) => Promise<ReadinessEvidence>;
-  findWorktree: (branches: string[]) => Promise<string | null>;
+  findWorktree: (
+    fleetBranches: string[],
+    candidateBranch: string,
+    allowOperatorFallback: boolean,
+  ) => Promise<string | null>;
   provisionWorktree: (pr: PrIdentity, stackId: string) => Promise<string>;
   assignWorktreeBranch: (worktree: string, pr: PrIdentity) => Promise<void>;
   runLocalCommand: (request: CommandRequest) => Promise<CommandResult>;

@@ -1,4 +1,3 @@
-import { realpath } from "node:fs/promises";
 import path from "node:path";
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
@@ -16,6 +15,7 @@ import {
 } from "./sandbox.ts";
 import { LeaseKindSchema, PrStateSchema, type PrState } from "./schemas.ts";
 import type { FleetStore } from "./state.ts";
+import { containedPath, createFileEditTools } from "./worker-file-edits.ts";
 
 export const SETUP_COMMANDS = [
   { executable: "mise", args: ["install"] },
@@ -23,29 +23,6 @@ export const SETUP_COMMANDS = [
   { executable: "bunx", args: ["turbo", "run", "generate"] },
   { executable: "bunx", args: ["lefthook", "install"] },
 ] satisfies { executable: string; args: string[] }[];
-
-async function containedPath(
-  root: string,
-  requestedPath: string,
-): Promise<string> {
-  if (
-    path.isAbsolute(requestedPath) ||
-    requestedPath.split("/").includes("..")
-  ) {
-    throw new Error(`Unsafe worktree path: ${requestedPath}`);
-  }
-  const canonicalRoot = await realpath(root);
-  const absolute = path.resolve(canonicalRoot, requestedPath);
-  const targetExists = await Bun.file(absolute).exists();
-  const canonicalTarget = await realpath(
-    targetExists ? absolute : path.dirname(absolute),
-  );
-  const fromRoot = path.relative(canonicalRoot, canonicalTarget);
-  if (fromRoot.startsWith("..") || path.isAbsolute(fromRoot)) {
-    throw new Error(`Path escapes assigned worktree: ${requestedPath}`);
-  }
-  return absolute;
-}
 
 // Resolve the git directories and outer checkout root that the setup sandbox
 // profile needs. A linked worktree's git store lives outside the worktree tree,
@@ -261,6 +238,14 @@ export function createWorkerTools(
           }
           return { applied: true, stderr: result.stderr };
         }),
+    }),
+    // Reliable exact-match / full-file edit tools (see worker-file-edits.ts).
+    ...createFileEditTools({
+      worktree,
+      store,
+      pr,
+      record: (tool, input, run) =>
+        runRecordedTool(tool, input, toolContext, run),
     }),
     request_lease: createTool({
       id: "request_lease",
