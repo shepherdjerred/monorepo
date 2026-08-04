@@ -1,10 +1,8 @@
 ---
 id: asuswrt-acceptance-test-import-verify-id
 type: todo
-status: planned
-board: true
-verification: agent
-disposition: deferred
+status: complete
+board: false
 origin: packages/docs/plans/2026-07-03_asuswrt-tofu-tracking.md
 source_marker: false
 ---
@@ -36,7 +34,15 @@ tests are silently skipped (`resource.Test` calls `t.Skip` without it).
 
 ## Remaining
 
-- [ ] Add `ImportStateVerifyIdentifierAttribute` (pointing at `key`, `mac`, and
+- [x] Add `ImportStateVerifyIdentifierAttribute` (pointing at `key`, `mac`, and
       `name` respectively) to the `ImportStateVerify` step in each of the three
       tests, then confirm `TF_ACC=1 go test ./internal/provider/...` is fully
       green.
+
+## Comment Log
+
+- 2026-08-03: Set `ImportStateVerifyIdentifierAttribute` to `key`/`mac`/`name` on
+  the nvram, dhcp-static-lease, and port-forward `ImportStateVerify` steps.
+  `TF_ACC=1 go test ./internal/provider/...` passes (the mock server backs the
+  acceptance tests, so no real router is needed). Resolves Codex P2 on
+  `dhcp_static_lease_resource_test.go`.

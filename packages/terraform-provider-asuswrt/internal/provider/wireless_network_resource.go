@@ -266,7 +266,7 @@ func (r *wirelessNetworkResource) applyWireless(ctx context.Context, band int, p
 	setOptionalString(values, prefix+"crypto", plan.Crypto)
 	setOptionalString(values, prefix+"wpa_psk", plan.WPAPassphrase)
 
-	if err := setChanspec(values, prefix+"chanspec", plan.Channel, plan.Bandwidth); err != nil {
+	if err := r.setChanspec(ctx, values, band, prefix, plan); err != nil {
 		return err
 	}
 
@@ -285,29 +285,58 @@ func (r *wirelessNetworkResource) applyWireless(ctx context.Context, band int, p
 	return nil
 }
 
-// setChanspec writes the channel+width chanspec into values under key, but only
-// when both channel and bandwidth are known. The chanspec encodes channel and
-// width together, so both are required. When bandwidth is Unknown
-// (Optional+Computed, omitted from config), ValueInt64() would yield 0, which
-// formatChanspec reads as auto width and writes as a bare channel — silently
-// narrowing the radio from its current width. Deferring the write until both
-// inputs are known avoids that; the follow-up readWireless resolves the Computed
-// bandwidth from the router.
-func setChanspec(values map[string]string, key string, channel, bandwidth types.Int64) error {
-	channelKnown := !channel.IsNull() && !channel.IsUnknown()
-	bandwidthKnown := !bandwidth.IsNull() && !bandwidth.IsUnknown()
-	if !channelKnown || !bandwidthKnown {
+// setChanspec writes the channel+width chanspec when a channel is configured.
+// The chanspec encodes channel and width together, so both are needed. When
+// bandwidth is omitted (Optional+Computed → Unknown/null), defaulting it to 0
+// would write a bare channel that the firmware reads as auto width, silently
+// narrowing the radio; instead read the router's current width so the configured
+// channel is still applied, at the existing width. An explicitly configured
+// width (including 0 = auto) is honored as-is.
+func (r *wirelessNetworkResource) setChanspec(ctx context.Context, values map[string]string, band int, prefix string, plan *wirelessNetworkResourceModel) error {
+	if plan.Channel.IsNull() || plan.Channel.IsUnknown() {
 		return nil
 	}
 
-	chanspec, err := formatChanspec(int(channel.ValueInt64()), int(bandwidth.ValueInt64()))
+	bandwidth, err := r.resolveBandwidthCode(ctx, band, plan.Bandwidth)
+	if err != nil {
+		return err
+	}
+
+	chanspec, err := formatChanspec(int(plan.Channel.ValueInt64()), bandwidth)
 	if err != nil {
 		return fmt.Errorf("formatting chanspec: %w", err)
 	}
 
-	values[key] = chanspec
+	values[prefix+"chanspec"] = chanspec
 
 	return nil
+}
+
+// resolveBandwidthCode returns the wl_bw code to pair with a channel write: the
+// planned value when known, otherwise the router's current width, so an omitted
+// Optional+Computed bandwidth does not narrow the radio.
+func (r *wirelessNetworkResource) resolveBandwidthCode(ctx context.Context, band int, bandwidth types.Int64) (int, error) {
+	if !bandwidth.IsNull() && !bandwidth.IsUnknown() {
+		return int(bandwidth.ValueInt64()), nil
+	}
+
+	key := fmt.Sprintf("wl%d_bw", band)
+
+	cur, err := r.client.NvramGetSingle(ctx, key)
+	if err != nil {
+		return 0, fmt.Errorf("reading current bandwidth %s: %w", key, err)
+	}
+
+	if cur == "" {
+		return 0, nil
+	}
+
+	code, err := strconv.Atoi(cur)
+	if err != nil {
+		return 0, fmt.Errorf("parsing current bandwidth %s=%q: %w", key, cur, err)
+	}
+
+	return code, nil
 }
 
 // setOptionalString adds a string attribute to the values map if it is set.

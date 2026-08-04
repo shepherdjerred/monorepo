@@ -41,10 +41,11 @@ resource "asuswrt_dhcp_static_lease" "test" {
 			},
 			// Import by MAC and verify state matches.
 			{
-				ResourceName:      "asuswrt_dhcp_static_lease.test",
-				ImportState:       true,
-				ImportStateId:     "AA:BB:CC:DD:EE:FF",
-				ImportStateVerify: true,
+				ResourceName:                         "asuswrt_dhcp_static_lease.test",
+				ImportState:                          true,
+				ImportStateId:                        "AA:BB:CC:DD:EE:FF",
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "mac",
 			},
 		},
 	})
