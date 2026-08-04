@@ -25,6 +25,7 @@ import type { FleetObserver } from "./ports.ts";
 import { runRecordedCommand } from "./recorded-command.ts";
 import { resolveStateDirectory, RunRecorder } from "./run-recorder.ts";
 import { FleetControllerConfigSchema, type FleetSnapshot } from "./schemas.ts";
+import { spawnWatcher, stopWatcher } from "./watch-supervisor.ts";
 import { FleetStore } from "./state.ts";
 import { consumeTerminalLines, createSharedShutdown } from "./terminal-loop.ts";
 import type { TerminalOutcome } from "./terminal-loop.ts";
@@ -135,6 +136,9 @@ function parseCliArgs(args: string[]) {
       "api-key-env": { type: "string" },
       "review-provider": { type: "string" },
       "state-dir": { type: "string" },
+      "no-ui": { type: "boolean", default: false },
+      "ui-port": { type: "string" },
+      "no-open": { type: "boolean", default: false },
       help: { type: "boolean", default: false },
     },
     strict: true,
@@ -217,6 +221,15 @@ async function main(): Promise<void> {
     await Bun.file(path.join(import.meta.dir, "..", "package.json")).json(),
   );
   const recorder = await createBootstrapRecorder(args, packageMetadata.version);
+  const watcher = args.includes("--no-ui")
+    ? undefined
+    : spawnWatcher(recorder.paths.runDirectory, {
+        ...((): { uiPort?: string } => {
+          const uiPort = rawOptionValue(args, "ui-port");
+          return uiPort === undefined ? {} : { uiPort };
+        })(),
+        open: !args.includes("--no-open"),
+      });
 
   let runtime: FleetMastraRuntime | undefined;
   let runtimeInitialization: Promise<FleetMastraRuntime> | undefined;
@@ -244,6 +257,7 @@ async function main(): Promise<void> {
       runFailure = combineFailures(runFailure, outcome.error);
     }
     finalizationPromise ??= Promise.resolve().then(async () => {
+      stopWatcher(watcher);
       const settlement = await settleResources();
       let snapshot: FleetSnapshot | null = settlement.snapshot;
       if (settlement.failure !== undefined) {
