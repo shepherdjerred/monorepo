@@ -101,6 +101,12 @@ func (r *portForwardResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
+	// Serialize the whole read-modify-write against vts_rulelist so a concurrent
+	// apply on another rule can't read the same list and clobber this edit when
+	// it writes back.
+	unlockList := r.client.LockList("vts_rulelist")
+	defer unlockList()
+
 	entries, err := r.readRules(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to read port forward rules", err.Error())
@@ -165,6 +171,12 @@ func (r *portForwardResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
+	// Serialize the whole read-modify-write against vts_rulelist so a concurrent
+	// apply on another rule can't read the same list and clobber this edit when
+	// it writes back.
+	unlockList := r.client.LockList("vts_rulelist")
+	defer unlockList()
+
 	entries, err := r.readRules(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to read port forward rules", err.Error())
@@ -199,6 +211,12 @@ func (r *portForwardResource) Delete(ctx context.Context, req resource.DeleteReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// Serialize the whole read-modify-write against vts_rulelist so a concurrent
+	// apply on another rule can't read the same list and clobber this edit when
+	// it writes back.
+	unlockList := r.client.LockList("vts_rulelist")
+	defer unlockList()
 
 	entries, err := r.readRules(ctx)
 	if err != nil {

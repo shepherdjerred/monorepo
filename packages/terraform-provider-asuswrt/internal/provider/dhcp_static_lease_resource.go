@@ -89,6 +89,12 @@ func (r *dhcpStaticLeaseResource) Create(ctx context.Context, req resource.Creat
 
 	mac := strings.ToUpper(plan.MAC.ValueString())
 
+	// Serialize the whole read-modify-write against dhcp_staticlist so a
+	// concurrent apply on another lease can't read the same list and clobber
+	// this edit when it writes back.
+	unlockList := r.client.LockList("dhcp_staticlist")
+	defer unlockList()
+
 	entries, err := r.readLeases(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to read DHCP leases", err.Error())
@@ -180,6 +186,12 @@ func (r *dhcpStaticLeaseResource) Update(ctx context.Context, req resource.Updat
 
 	mac := strings.ToUpper(plan.MAC.ValueString())
 
+	// Serialize the whole read-modify-write against dhcp_staticlist so a
+	// concurrent apply on another lease can't read the same list and clobber
+	// this edit when it writes back.
+	unlockList := r.client.LockList("dhcp_staticlist")
+	defer unlockList()
+
 	entries, err := r.readLeases(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to read DHCP leases", err.Error())
@@ -222,6 +234,12 @@ func (r *dhcpStaticLeaseResource) Delete(ctx context.Context, req resource.Delet
 	}
 
 	mac := strings.ToUpper(state.MAC.ValueString())
+
+	// Serialize the whole read-modify-write against dhcp_staticlist so a
+	// concurrent apply on another lease can't read the same list and clobber
+	// this edit when it writes back.
+	unlockList := r.client.LockList("dhcp_staticlist")
+	defer unlockList()
 
 	entries, err := r.readLeases(ctx)
 	if err != nil {
