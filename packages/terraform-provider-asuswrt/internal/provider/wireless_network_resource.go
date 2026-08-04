@@ -266,12 +266,8 @@ func (r *wirelessNetworkResource) applyWireless(ctx context.Context, band int, p
 	setOptionalString(values, prefix+"crypto", plan.Crypto)
 	setOptionalString(values, prefix+"wpa_psk", plan.WPAPassphrase)
 
-	if !plan.Channel.IsNull() && !plan.Channel.IsUnknown() {
-		chanspec, err := formatChanspec(int(plan.Channel.ValueInt64()), int(plan.Bandwidth.ValueInt64()))
-		if err != nil {
-			return fmt.Errorf("formatting chanspec: %w", err)
-		}
-		values[prefix+"chanspec"] = chanspec
+	if err := setChanspec(values, prefix+"chanspec", plan.Channel, plan.Bandwidth); err != nil {
+		return err
 	}
 
 	if !plan.Bandwidth.IsNull() && !plan.Bandwidth.IsUnknown() {
@@ -285,6 +281,31 @@ func (r *wirelessNetworkResource) applyWireless(ctx context.Context, band int, p
 	if err := r.client.NvramSet(ctx, values, client.ServiceWireless); err != nil {
 		return fmt.Errorf("setting wireless NVRAM: %w", err)
 	}
+
+	return nil
+}
+
+// setChanspec writes the channel+width chanspec into values under key, but only
+// when both channel and bandwidth are known. The chanspec encodes channel and
+// width together, so both are required. When bandwidth is Unknown
+// (Optional+Computed, omitted from config), ValueInt64() would yield 0, which
+// formatChanspec reads as auto width and writes as a bare channel — silently
+// narrowing the radio from its current width. Deferring the write until both
+// inputs are known avoids that; the follow-up readWireless resolves the Computed
+// bandwidth from the router.
+func setChanspec(values map[string]string, key string, channel, bandwidth types.Int64) error {
+	channelKnown := !channel.IsNull() && !channel.IsUnknown()
+	bandwidthKnown := !bandwidth.IsNull() && !bandwidth.IsUnknown()
+	if !channelKnown || !bandwidthKnown {
+		return nil
+	}
+
+	chanspec, err := formatChanspec(int(channel.ValueInt64()), int(bandwidth.ValueInt64()))
+	if err != nil {
+		return fmt.Errorf("formatting chanspec: %w", err)
+	}
+
+	values[key] = chanspec
 
 	return nil
 }
