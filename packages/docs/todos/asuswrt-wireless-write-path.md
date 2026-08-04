@@ -1,9 +1,9 @@
 ---
 id: asuswrt-wireless-write-path
 type: todo
-status: awaiting-human
+status: planned
 board: true
-verification: human
+verification: operator
 disposition: blocked
 origin: packages/docs/plans/2026-07-03_asuswrt-tofu-tracking.md
 source_marker: false
@@ -33,16 +33,31 @@ not verified and has firmware-specific hazards found in Asuswrt-Merlin source:
    doesn't write `wl_mfp`, so setting an SAE auth mode via tofu could produce a
    non-functional band. (WPA2-PSK is fine.)
 
-## Human Verification
+## Remaining
 
-- Approve a controlled apply on real hardware, then validate a redesign that models wireless
-  channel/width as a single `chanspec` string attribute (firmware-stable,
-  1:1 with `wl_chanspec`) instead of `channel`+`bandwidth` ints; keep `bw` in sync or
-  derive it.
-- Include `mfp` handling (force for SAE/WPA3).
-- On 3006, target the band-named keys (map via `wlnband_list`) and confirm with a read-back.
-- Validate each change by applying a no-op-equivalent change on real hardware, reading NVRAM back,
-  confirm it matches. This requires an `apply` (blocked: user does not want router writes yet).
+The redesign below is agent-implementable; only its _validation_ depends on a controlled
+hardware apply, which is the operator-authorized prerequisite below. Do not land a wireless
+write change without that read-back.
 
-Until then, treat `asuswrt_wireless_network` as **read/track-only**; do not `apply` wireless
-changes without a hardware read-back test.
+- [ ] Model wireless channel/width as a single `chanspec` string attribute (firmware-stable,
+      1:1 with `wl_chanspec`) instead of `channel`+`bandwidth` ints; keep `wl_bw` in sync or
+      derive it.
+- [ ] Add `wl_mfp` handling (force for SAE/WPA3: `mfp >= 1` for `psk2sae`, `= 2` for `sae`).
+- [ ] On 3006, target the band-named keys (map via `wlnband_list`) rather than `wl<unit>_*`.
+- [ ] Complete `formatChanspec` for 2.4 GHz 40 MHz sidebands (`6u`/`6l`) and 6 GHz WiFi7 forms
+      (`6g37/320-1`), and error rather than drop the width for codes it can't model.
+
+### Operator prerequisite (blocked)
+
+Validating any of the above requires **operator authorization for a controlled apply on real
+hardware**: apply a no-op-equivalent change, read NVRAM back, and confirm it matches. This is a
+privileged physical action, not UAT — the owner has not authorized router writes yet. Until it is
+granted, treat `asuswrt_wireless_network` as **read/track-only**; do not `apply` wireless changes.
+
+## Comment Log
+
+- 2026-08-03: Reclassified from `verification: human` / `status: awaiting-human` to
+  `verification: operator` / `disposition: blocked` / `status: planned`, and split the
+  agent-implementable redesign (`## Remaining`) from the operator-authorized hardware apply that
+  gates its validation. The blocker is authorization for a controlled router write — a privileged
+  physical action — not user acceptance testing.
