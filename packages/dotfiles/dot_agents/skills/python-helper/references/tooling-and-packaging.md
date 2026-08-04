@@ -51,7 +51,7 @@ Use the repository's chosen checker and configuration. Do not add `--ignore-miss
 
 ## Auditing and images
 
-Use `pip-audit` (via `uvx pip-audit`) for environments, requirements, and lockfiles; it works regardless of uv version. `uv audit` remains a preview-only subcommand (behind `--preview`) and is absent entirely in older uv releases, so do not depend on it unconditionally. Vulnerability findings require reachability and remediation review; the command must remain a failing gate when policy requires it.
+Use `uv run --with pip-audit pip-audit` for environments, requirements, and lockfiles; it works regardless of uv version. Use `uv run --with`, not `uvx` — `uvx pip-audit` runs in its own isolated tool environment and audits pip-audit's dependencies rather than the project's, while `uv run --with pip-audit` layers pip-audit onto the project's synced environment. `uv audit` remains a preview-only subcommand (behind `--preview`) and is absent entirely in older uv releases, so do not depend on it unconditionally. Vulnerability findings require reachability and remediation review; the command must remain a failing gate when policy requires it.
 
 Pin container tools by reviewed version or immutable digest. Do not copy `latest` into a reproducible build.
 
