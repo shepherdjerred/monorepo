@@ -12,6 +12,10 @@ import {
   StyleSynthesisSchema,
 } from "./glitter-context-refresh-style-schemas.ts";
 import * as glitterOpenai from "./glitter-context-refresh-openai.ts";
+import {
+  sanitizeChunkSummary,
+  validateChunkSummary,
+} from "./glitter-context-refresh-style-validation.ts";
 import { GenerationBudget } from "./glitter-context-refresh-budget.ts";
 import type { GenerationArtifactStore } from "./glitter-context-refresh-cache.ts";
 
@@ -281,6 +285,26 @@ const badChunkSummary = {
   representativeMessages: [],
 };
 
+// Fails validation (one observation cites an unknown ID) but sanitizes to a
+// non-empty result because a second observation is fully verifiable.
+const partiallyBadChunkSummary = {
+  observations: [
+    {
+      field: "voice" as const,
+      claim: "Fully verifiable — survives sanitization.",
+      confidence: 0.9,
+      evidenceMessageIds: [firstMessage.messageId],
+    },
+    {
+      field: "topics" as const,
+      claim: "Cites a message from outside the supplied chunk.",
+      confidence: 0.9,
+      evidenceMessageIds: ["99999999999999999"],
+    },
+  ],
+  representativeMessages: [],
+};
+
 const mockUsage = { prompt_tokens: 100, completion_tokens: 50 };
 
 let chunkResponder: (call: number) => unknown = () => goodChunkSummary;
@@ -321,21 +345,25 @@ function memoryStore(): GenerationArtifactStore {
   };
 }
 
+function generateWithStubbedModel(responder: (call: number) => unknown) {
+  chunkCallCount = 0;
+  recordedSeeds = [];
+  chunkResponder = responder;
+  return generateStyleCard({
+    candidate,
+    existingCard,
+    sourceSnapshotSha256: "a".repeat(64),
+    artifactStore: memoryStore(),
+    budget: new GenerationBudget(100),
+  });
+}
+
 describe("Glitter extraction repair loop", () => {
   test("retries a poisoned chunk with a fresh seed and succeeds", async () => {
-    chunkCallCount = 0;
-    recordedSeeds = [];
     // Attempt 0 (seed 0) cites an unknown ID; the repair (seed 1) is clean.
-    chunkResponder = (call) =>
-      call === 0 ? badChunkSummary : goodChunkSummary;
-
-    const result = await generateStyleCard({
-      candidate,
-      existingCard,
-      sourceSnapshotSha256: "a".repeat(64),
-      artifactStore: memoryStore(),
-      budget: new GenerationBudget(100),
-    });
+    const result = await generateWithStubbedModel((call) =>
+      call === 0 ? badChunkSummary : goodChunkSummary,
+    );
 
     expect(result.schemaVersion).toBe(2);
     // Initial attempt seed 0, one repair at seed 1 — distinct seeds, so the
@@ -343,23 +371,103 @@ describe("Glitter extraction repair loop", () => {
     expect(recordedSeeds).toEqual([0, 1]);
   });
 
-  test("throws after exhausting the bounded repair attempts", async () => {
-    chunkCallCount = 0;
-    recordedSeeds = [];
-    chunkResponder = () => badChunkSummary;
+  test("sanitizes a partially-unfixable chunk and completes the run", async () => {
+    // Every attempt has one observation that deterministically cites an unknown
+    // ID (the systematic in-content-ID case) plus one fully-verifiable one.
+    // Repairs can never fix the bad observation, so after the bounded budget the
+    // chunk is sanitized to its verifiable subset and the run completes.
+    const result = await generateWithStubbedModel(
+      () => partiallyBadChunkSummary,
+    );
 
+    // Run completes rather than throwing.
+    expect(result.schemaVersion).toBe(2);
+    // Initial attempt (seed 0) plus MAX_EXTRACTION_REPAIR_ATTEMPTS (2) repairs,
+    // then sanitization — no unbounded retrying.
+    expect(recordedSeeds).toEqual([0, 1, 2]);
+  });
+
+  test("rejects a chunk that sanitizes to no verifiable evidence at all", async () => {
+    // Every observation cites an unknown ID and there are no representatives, so
+    // sanitization empties the chunk entirely. Returning it would let the card
+    // advertise full coverage while silently omitting the month, so the run must
+    // fail loudly instead.
     await expect(
-      generateStyleCard({
-        candidate,
-        existingCard,
-        sourceSnapshotSha256: "a".repeat(64),
-        artifactStore: memoryStore(),
-        budget: new GenerationBudget(100),
-      }),
-    ).rejects.toThrow("cites unknown message IDs");
+      generateWithStubbedModel(() => badChunkSummary),
+    ).rejects.toThrow("yielded no verifiable evidence");
 
-    // Initial attempt (seed 0) plus MAX_EXTRACTION_REPAIR_ATTEMPTS repairs,
-    // each with a distinct escalating seed.
-    expect(recordedSeeds).toEqual([0, 1, 2, 3, 4]);
+    // Still bounded: initial attempt plus MAX_EXTRACTION_REPAIR_ATTEMPTS repairs.
+    expect(recordedSeeds).toEqual([0, 1, 2]);
+  });
+
+  test("keeps an earlier attempt's evidence when a later repair sanitizes to nothing", async () => {
+    // Repairs are non-monotonic: attempt 0 has a verifiable observation, but the
+    // later repairs cite only unknown IDs and would sanitize to nothing. The
+    // fallback must keep attempt 0's evidence rather than failing on the empty
+    // final attempt.
+    const result = await generateWithStubbedModel((call) =>
+      call === 0 ? partiallyBadChunkSummary : badChunkSummary,
+    );
+
+    expect(result.schemaVersion).toBe(2);
+    expect(recordedSeeds).toEqual([0, 1, 2]);
+  });
+});
+
+describe("sanitizeChunkSummary", () => {
+  const chunk = {
+    key: "2026-07-0000",
+    month: "2026-07",
+    ordinal: 0,
+    messages,
+  };
+
+  test("keeps only fully-verifiable observations and drops the rest", () => {
+    const knownId = firstMessage.messageId;
+    const secondKnownId = CurrentMessageSchema.parse(messages[1]).messageId;
+    const summary = StyleChunkSummarySchema.parse({
+      observations: [
+        {
+          field: "voice",
+          claim: "Kept: every cited ID is verifiable.",
+          confidence: 0.9,
+          evidenceMessageIds: [knownId, secondKnownId],
+        },
+        {
+          field: "topics",
+          claim: "Dropped whole: a mixed citation must not be laundered.",
+          confidence: 0.9,
+          evidenceMessageIds: [knownId, "99999999999999999"],
+        },
+        {
+          field: "behaviors",
+          claim: "Dropped: only cites an unverifiable in-content ID.",
+          confidence: 0.9,
+          evidenceMessageIds: ["88888888888888888"],
+        },
+      ],
+      representativeMessages: [
+        { messageId: knownId, content: firstMessage.content },
+        { messageId: knownId, content: "not the real content" },
+      ],
+    });
+
+    const sanitized = sanitizeChunkSummary(chunk, summary);
+
+    // Only the fully-verifiable observation survives; the mixed-citation one is
+    // dropped whole (never laundered onto its surviving ID) and so is the
+    // fully-unverifiable one.
+    expect(sanitized.observations).toHaveLength(1);
+    expect(sanitized.observations[0]?.field).toBe("voice");
+    expect(sanitized.observations[0]?.evidenceMessageIds).toEqual([
+      knownId,
+      secondKnownId,
+    ]);
+    // The non-verbatim representative is dropped; the verbatim one survives.
+    expect(sanitized.representativeMessages).toEqual([
+      { messageId: knownId, content: firstMessage.content },
+    ]);
+    // The sanitized result satisfies the strict validator by construction.
+    expect(() => validateChunkSummary(chunk, sanitized)).not.toThrow();
   });
 });

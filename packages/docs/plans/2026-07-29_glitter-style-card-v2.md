@@ -218,6 +218,43 @@ The schedule remains paused. The ordered checklist to finish:
   `[0,1]`; persistent failure throws after seeds `[0,1,2,3,4]`). Next: land +
   deploy the worker, then re-run Phase 1 (the poisoned `2024-10-0000` artifact
   stays cached but now just triggers the repair loop instead of failing).
+- 2026-08-03 (repair-loop merged + deployed): PR #1982 merged (`c89baadf`);
+  glitter worker rolled out on image `2.0.0-7932` (verified the fix in-pod). A
+  pinned dry run then got **past** `2024-10-0000` (repair loop worked) but
+  **failed** on `2023-03-0000`, where the model cited `1082466476296884314`
+  (a real 2023-03-07 message) on **all 10 attempts** (2 Temporal retries × 5
+  internal repairs, every seed). Deterministic-across-seeds ⇒ the ID is present
+  in the model's _input_ — an ID embedded in another message's content (reply /
+  link / quote) that is not a top-level chunk message. Repairs + seed variation
+  cannot fix this: the model is correctly reading its input; the strict validator
+  just can't accept an in-content ID.
+- 2026-08-03 (sanitization fix): Operator chose to sanitize at the LLM boundary.
+  `fix/glitter-extraction-sanitize` adds `sanitizeChunkSummary`
+  (`glitter-context-refresh-style-validation.ts`, split out with
+  `validateChunkSummary` to stay under the 500-line cap): after the (now 2)
+  repair attempts, drop any observation citing a message ID not in the chunk's
+  known set (the whole observation, not just the offending ID — stripping only the
+  unknown ID would launder an unsupported claim onto its surviving citation), and
+  drop non-verbatim/duplicate representatives — a chunk the model can never cite
+  cleanly degrades to its fully-verifiable subset instead of failing the whole run
+  (untrusted model output is boundary input, the repo's explicit fail-fast exception). `MAX_EXTRACTION_REPAIR_ATTEMPTS`
+  cut 4→2 to bound spend on systematically-failing chunks since sanitization now
+  guarantees convergence. Three Codex P2s addressed on the PR: (1) drop the _whole_
+  observation on any unknown ID rather than stripping IDs (no laundering an
+  unsupported claim onto a surviving citation); (2) a chunk that sanitizes to
+  _nothing_ (no observations, no representatives) is rejected with a hard error —
+  returning it would let `finalizeStyleSynthesis` advertise full coverage while
+  silently omitting the month; (3) repairs are non-monotonic, so `summarizeChunk`
+  sanitizes _every_ attempt and keeps the one with the most verifiable evidence,
+  failing only when all attempts sanitize to nothing (a worse final repair can't
+  discard an earlier attempt's valid observations). Tests: a partially-unfixable
+  chunk completes (seeds `[0,1,2]`), a fully-unverifiable chunk throws `yielded no
+verifiable evidence`, an earlier-attempt-has-evidence case still completes, and
+  a direct `sanitizeChunkSummary` unit test proves only fully-verifiable
+  observations survive and non-verbatim representatives drop.
+  Next: land + deploy, then re-run Phase 1 (cached good chunks, incl.
+  `2024-10-0000`, reuse for free; `2023-03-0000` now sanitizes to its verifiable
+  subset).
 
 ## Session Log — 2026-07-29
 
