@@ -50,17 +50,34 @@ export class SpanJsonlExporter implements ObservabilityExporter {
     return this.#sink;
   }
 
+  async #drain(result: Promise<number>): Promise<void> {
+    try {
+      await result;
+    } catch {
+      this.#failed = true;
+    }
+  }
+
+  // write()/flush() may return a Promise under backpressure. The mirror is
+  // best-effort, so the result is not awaited inline, but a later async I/O
+  // rejection (e.g. a full disk) must disable the mirror rather than surface as
+  // an unhandled rejection that could take down the controller run.
+  #settle(result: number | Promise<number>): void {
+    if (result instanceof Promise) {
+      void this.#drain(result);
+    }
+  }
+
   #append(line: Record<string, unknown>): void {
     const sink = this.#writer();
     if (sink === undefined) {
       return;
     }
     try {
-      // write() may return a Promise under backpressure; the mirror is
-      // best-effort so the result is intentionally not awaited. Flush so a
-      // tailing dashboard sees spans promptly rather than waiting for the buffer.
-      void sink.write(`${JSON.stringify(line)}\n`);
-      void sink.flush();
+      this.#settle(sink.write(`${JSON.stringify(line)}\n`));
+      // Flush so a tailing dashboard sees spans promptly rather than waiting
+      // for the buffer to fill.
+      this.#settle(sink.flush());
     } catch {
       this.#failed = true;
     }
@@ -78,7 +95,10 @@ export class SpanJsonlExporter implements ObservabilityExporter {
   }
 
   flush(): Promise<void> {
-    void this.#sink?.flush();
+    const sink = this.#sink;
+    if (sink !== undefined) {
+      this.#settle(sink.flush());
+    }
     return Promise.resolve();
   }
 

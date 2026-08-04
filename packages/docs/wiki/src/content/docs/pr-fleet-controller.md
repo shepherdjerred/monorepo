@@ -28,6 +28,26 @@ Mastra storage, and a DuckDB observability database. The controller fails
 before model access or PR mutation if the selected directory is not owned by
 the operator with mode `0700`; persisted files use `0600`.
 
+## Watching it live
+
+By default `pr:fleet` also builds and spawns a **read-only live web dashboard**
+that streams the run bundle over SSE on loopback — a fleet overview plus a
+per-PR transcript that includes the model's reasoning. It only observes; it
+never steers the fleet, and it is torn down when the run finalizes (after the
+terminal snapshot and outcome are recorded, so the final state is visible).
+Suppress it with `--no-ui`, pin the port with `--ui-port`, or skip opening a
+browser with `--no-open`. Open the dashboard for any run — live or already
+finished — standalone:
+
+```bash
+bun run pr:fleet:watch [--run <id|dir>]
+```
+
+Because the DuckDB observability database is exclusively locked while the run
+holds it, the model's reasoning is mirrored live to a best-effort `spans.jsonl`
+in the bundle that the dashboard tails alongside the event timeline; the DuckDB
+copy remains the durable, verified source.
+
 ## What it may and may not do
 
 The authority boundary is the whole point. The controller may:

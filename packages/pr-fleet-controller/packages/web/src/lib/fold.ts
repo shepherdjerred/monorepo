@@ -87,7 +87,9 @@ function prView(view: RunView, prNumber: number): PrView {
 
 function snapshotFromEvent(event: RecordedRunEvent): FleetSnapshot | null {
   const candidate =
-    event.kind === "fleet.snapshot" || event.kind === "shutdown.completed"
+    event.kind === "fleet.snapshot" ||
+    event.kind === "shutdown.completed" ||
+    event.kind === "shutdown.failed"
       ? event.payload["snapshot"]
       : event.kind === "tick.completed"
         ? extractReportSnapshot(event.payload["report"])

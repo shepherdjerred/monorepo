@@ -257,7 +257,6 @@ async function main(): Promise<void> {
       runFailure = combineFailures(runFailure, outcome.error);
     }
     finalizationPromise ??= Promise.resolve().then(async () => {
-      stopWatcher(watcher);
       const settlement = await settleResources();
       let snapshot: FleetSnapshot | null = settlement.snapshot;
       if (settlement.failure !== undefined) {
@@ -276,6 +275,11 @@ async function main(): Promise<void> {
         snapshot,
         runFailure ?? null,
       );
+      // Tear the dashboard down only after settlement has recorded the shutdown
+      // events and finalize() has written run.completed/run.failed + summary.json,
+      // so the live view can render the terminal snapshot and outcome instead of
+      // disconnecting while the run still looks live.
+      stopWatcher(watcher);
     });
     return finalizationPromise;
   };
@@ -292,13 +296,18 @@ async function main(): Promise<void> {
       process.exitCode = 1;
     }
   };
-  const handleSigint = (): void => {
+  const handleTerminationSignal = (): void => {
     shutdownRequested = true;
     if (!preflightInProgress) {
       void stopAfterRequest();
     }
   };
-  process.once("SIGINT", handleSigint);
+  // Handle SIGTERM (kill/process supervisors) as well as SIGINT (Ctrl-C): both
+  // route through the finalizer so the detached dashboard child — which sits in
+  // its own process group and never receives the parent's signal — is torn down
+  // instead of being left serving the bundle forever.
+  process.once("SIGINT", handleTerminationSignal);
+  process.once("SIGTERM", handleTerminationSignal);
   const finishIfRequested = async (): Promise<boolean> => {
     await new Promise<void>((resolve) => setImmediate(resolve));
     if (!shutdownRequested) {
@@ -487,7 +496,8 @@ async function main(): Promise<void> {
     await finalizeRun({ status: "failed", error });
     throw runFailure ?? normalizeFailure(error);
   } finally {
-    process.removeListener("SIGINT", handleSigint);
+    process.removeListener("SIGINT", handleTerminationSignal);
+    process.removeListener("SIGTERM", handleTerminationSignal);
   }
 }
 
