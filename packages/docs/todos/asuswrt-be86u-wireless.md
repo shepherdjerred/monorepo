@@ -3,9 +3,9 @@ id: asuswrt-be86u-wireless
 type: todo
 status: planned
 board: true
-verification: human
+verification: agent
 disposition: deferred
-origin: packages/docs/plans/2026-07-03_asuswrt-tofu-tracking.md
+origin: packages/docs/archive/completed/2026-07-03_asuswrt-tofu-tracking.md
 source_marker: false
 ---
 

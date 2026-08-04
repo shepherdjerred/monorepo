@@ -1,7 +1,7 @@
 ---
 id: plan-2026-07-03-asuswrt-tofu-tracking
 type: plan
-status: awaiting-human
+status: complete
 board: false
 ---
 
