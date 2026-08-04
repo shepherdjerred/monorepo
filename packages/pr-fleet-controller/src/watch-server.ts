@@ -150,7 +150,6 @@ async function serveStaticAsset(pathname: string): Promise<Response> {
  */
 export function startWatchServer(options: {
   runDirectory: string;
-  hostname?: string;
   port?: number;
 }): WatchServer {
   const runDirectory = path.resolve(options.runDirectory);
@@ -159,7 +158,10 @@ export function startWatchServer(options: {
     { name: "span", file: path.join(runDirectory, "spans.jsonl") },
   ];
   const server = Bun.serve({
-    hostname: options.hostname ?? "127.0.0.1",
+    // Loopback only, always. The stream is unauthenticated and carries full
+    // operator/model/tool/command payloads, so the host is intentionally not
+    // configurable — it must never be reachable off the local machine.
+    hostname: "127.0.0.1",
     port: options.port ?? 0,
     idleTimeout: 255,
     async fetch(request) {

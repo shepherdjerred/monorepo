@@ -221,16 +221,13 @@ async function main(): Promise<void> {
     await Bun.file(path.join(import.meta.dir, "..", "package.json")).json(),
   );
   const recorder = await createBootstrapRecorder(args, packageMetadata.version);
+  const uiPort = rawOptionValue(args, "ui-port");
   const watcher = args.includes("--no-ui")
     ? undefined
     : spawnWatcher(recorder.paths.runDirectory, {
-        ...((): { uiPort?: string } => {
-          const uiPort = rawOptionValue(args, "ui-port");
-          return uiPort === undefined ? {} : { uiPort };
-        })(),
+        ...(uiPort === undefined ? {} : { uiPort }),
         open: !args.includes("--no-open"),
       });
-
   let runtime: FleetMastraRuntime | undefined;
   let runtimeInitialization: Promise<FleetMastraRuntime> | undefined;
   let controller: FleetController | undefined;
@@ -257,29 +254,31 @@ async function main(): Promise<void> {
       runFailure = combineFailures(runFailure, outcome.error);
     }
     finalizationPromise ??= Promise.resolve().then(async () => {
-      const settlement = await settleResources();
-      let snapshot: FleetSnapshot | null = settlement.snapshot;
-      if (settlement.failure !== undefined) {
-        runFailure = combineFailures(runFailure, settlement.failure);
+      try {
+        const settlement = await settleResources();
+        let snapshot: FleetSnapshot | null = settlement.snapshot;
+        if (settlement.failure !== undefined) {
+          runFailure = combineFailures(runFailure, settlement.failure);
+        }
+        if (runFailure === undefined && controller === undefined) {
+          snapshot = EMPTY_SNAPSHOT;
+          recorder.record("shutdown.started", {
+            activeWorkers: 0,
+            phase: "startup",
+          });
+          recorder.record("shutdown.completed", { snapshot });
+        }
+        await recorder.finalize(
+          runFailure === undefined ? "completed" : "failed",
+          snapshot,
+          runFailure ?? null,
+        );
+      } finally {
+        // Always tear the dashboard down — even if finalize throws — so it can't
+        // be orphaned; stopWatcher drains a bounded window first so the live view
+        // renders the terminal snapshot and outcome before disconnecting.
+        await stopWatcher(watcher);
       }
-      if (runFailure === undefined && controller === undefined) {
-        snapshot = EMPTY_SNAPSHOT;
-        recorder.record("shutdown.started", {
-          activeWorkers: 0,
-          phase: "startup",
-        });
-        recorder.record("shutdown.completed", { snapshot });
-      }
-      await recorder.finalize(
-        runFailure === undefined ? "completed" : "failed",
-        snapshot,
-        runFailure ?? null,
-      );
-      // Tear the dashboard down only after settlement has recorded the shutdown
-      // events and finalize() has written run.completed/run.failed + summary.json,
-      // so the live view can render the terminal snapshot and outcome instead of
-      // disconnecting while the run still looks live.
-      stopWatcher(watcher);
     });
     return finalizationPromise;
   };
@@ -302,10 +301,8 @@ async function main(): Promise<void> {
       void stopAfterRequest();
     }
   };
-  // Handle SIGTERM (kill/process supervisors) as well as SIGINT (Ctrl-C): both
-  // route through the finalizer so the detached dashboard child — which sits in
-  // its own process group and never receives the parent's signal — is torn down
-  // instead of being left serving the bundle forever.
+  // Handle SIGTERM (kill/supervisors) as well as SIGINT (Ctrl-C): both route
+  // through the finalizer so the detached dashboard child is torn down.
   process.once("SIGINT", handleTerminationSignal);
   process.once("SIGTERM", handleTerminationSignal);
   const finishIfRequested = async (): Promise<boolean> => {

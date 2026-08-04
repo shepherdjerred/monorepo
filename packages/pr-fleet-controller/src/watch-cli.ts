@@ -10,7 +10,6 @@ const parsed = parseArgs({
   options: {
     run: { type: "string" },
     "state-dir": { type: "string" },
-    host: { type: "string" },
     port: { type: "string" },
     "no-open": { type: "boolean", default: false },
   },
@@ -56,7 +55,6 @@ function openBrowser(url: string): void {
 const runDirectory = await resolveTarget();
 const server = startWatchServer({
   runDirectory,
-  ...(parsed.values.host === undefined ? {} : { hostname: parsed.values.host }),
   ...((): { port?: number } => {
     const port = parsePort(parsed.values.port);
     return port === undefined ? {} : { port };
