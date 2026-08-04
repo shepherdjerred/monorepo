@@ -366,10 +366,11 @@ func (r *wirelessNetworkResource) setChanspec(ctx context.Context, values map[st
 
 // resolveChannelNumber returns the channel to pair with a chanspec write: the
 // configured value when set, otherwise the router's current channel parsed from
-// wl<band>_chanspec. A non-empty current chanspec whose leading channel can't be
-// parsed (e.g. a "6u"/"6l" sideband form) is an error rather than a silent
-// fall-back to 0 (auto), which would drop the channel when only bandwidth
-// changed.
+// wl<band>_chanspec via the shared parseChannel (so sideband "6u"/"6l" and 6 GHz
+// band-prefixed forms are handled the same way the refresh path handles them).
+// An empty/absent key means the current channel is unknown, and a genuinely
+// unparseable chanspec is an error rather than a silent fall-back to 0 (auto),
+// which would drop the channel when only bandwidth changed.
 func (r *wirelessNetworkResource) resolveChannelNumber(ctx context.Context, band int, channel types.Int64) (int, error) {
 	if !channel.IsNull() && !channel.IsUnknown() {
 		return int(channel.ValueInt64()), nil
@@ -382,26 +383,18 @@ func (r *wirelessNetworkResource) resolveChannelNumber(ctx context.Context, band
 		return 0, fmt.Errorf("reading current chanspec %s: %w", key, err)
 	}
 
-	// "0" is the router's explicit auto-channel value; keep it auto. An empty
-	// value means the key is absent/unreadable (NvramGetSingle returns "" for a
-	// missing key) — that is not "auto", so fail rather than silently write
-	// channel 0 and switch the radio to automatic channel selection.
-	if cur == "0" {
-		return 0, nil
-	}
-
+	// An empty value means the key is absent/unreadable (NvramGetSingle returns
+	// "" for a missing key) — that is not "auto", so fail rather than silently
+	// dropping to channel 0. parseChannel handles the router's real chanspec
+	// forms (including "0" = auto and the "6u"/"6l"/6 GHz sideband forms) and
+	// errors on anything it can't model.
 	if cur == "" {
 		return 0, fmt.Errorf("cannot change bandwidth: %s is empty or absent, so the current channel is unknown; set channel explicitly", key)
 	}
 
-	lead := cur
-	if i := strings.Index(cur, "/"); i >= 0 {
-		lead = cur[:i]
-	}
-
-	ch, err := strconv.Atoi(lead)
+	ch, err := parseChannel(cur)
 	if err != nil {
-		return 0, fmt.Errorf("cannot model current chanspec %s=%q to change bandwidth without dropping the channel; set channel explicitly", key, cur)
+		return 0, fmt.Errorf("cannot change bandwidth: %w; set channel explicitly", err)
 	}
 
 	return ch, nil
