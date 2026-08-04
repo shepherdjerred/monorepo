@@ -482,8 +482,13 @@ export class CommandFleetEnvironment implements FleetEnvironment {
   findWorktree(
     fleetBranches: string[],
     candidateBranch: string,
+    allowOperatorFallback: boolean,
   ): Promise<string | null> {
-    return this.#worktreeManager.findWorktree(fleetBranches, candidateBranch);
+    return this.#worktreeManager.findWorktree(
+      fleetBranches,
+      candidateBranch,
+      allowOperatorFallback,
+    );
   }
 
   assignWorktreeBranch(worktree: string, pr: PrIdentity): Promise<void> {

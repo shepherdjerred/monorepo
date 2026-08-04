@@ -140,7 +140,11 @@ describe("findWorktree prefers a fleet worktree, falls back to the operator's", 
       "",
     ].join("\n");
     expect(
-      await managerWith(porcelain).findWorktree(["feature/x"], "feature/x"),
+      await managerWith(porcelain).findWorktree(
+        ["feature/x"],
+        "feature/x",
+        true,
+      ),
     ).toBe("/tmp/pr-fleet/stack-7");
   });
 
@@ -157,6 +161,7 @@ describe("findWorktree prefers a fleet worktree, falls back to the operator's", 
       await managerWith(porcelain).findWorktree(
         ["feature/sibling", "feature/candidate"],
         "feature/candidate",
+        true,
       ),
     ).toBe("/tmp/pr-fleet/stack-7");
   });
@@ -172,7 +177,11 @@ describe("findWorktree prefers a fleet worktree, falls back to the operator's", 
       "",
     ].join("\n");
     expect(
-      await managerWith(porcelain).findWorktree(["feature/x"], "feature/x"),
+      await managerWith(porcelain).findWorktree(
+        ["feature/x"],
+        "feature/x",
+        true,
+      ),
     ).toBe("/home/user/monorepo");
   });
 
@@ -190,6 +199,27 @@ describe("findWorktree prefers a fleet worktree, falls back to the operator's", 
       await managerWith(porcelain).findWorktree(
         ["feature/sibling", "feature/candidate"],
         "feature/candidate",
+        true,
+      ),
+    ).toBeNull();
+  });
+
+  test("never reuses an operator worktree when operator fallback is disallowed", async () => {
+    // Cross-repository (fork) PRs pass allowOperatorFallback=false: the fleet
+    // can never publish a fork branch, so an operator's fork checkout must not be
+    // reused (it would only leave an orphan commit). The PR falls through to
+    // provisionWorktree, which rejects it with a cross-repository message.
+    const porcelain = [
+      "worktree /home/user/monorepo",
+      `HEAD ${"a".repeat(40)}`,
+      "branch refs/heads/feature/x",
+      "",
+    ].join("\n");
+    expect(
+      await managerWith(porcelain).findWorktree(
+        ["feature/x"],
+        "feature/x",
+        false,
       ),
     ).toBeNull();
   });
@@ -202,7 +232,11 @@ describe("findWorktree prefers a fleet worktree, falls back to the operator's", 
       "",
     ].join("\n");
     expect(
-      await managerWith(porcelain).findWorktree(["feature/x"], "feature/x"),
+      await managerWith(porcelain).findWorktree(
+        ["feature/x"],
+        "feature/x",
+        true,
+      ),
     ).toBeNull();
   });
 });

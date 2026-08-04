@@ -172,6 +172,21 @@ describe("writeWorktreeFile", () => {
     ).rejects.toThrow(/Git metadata path/);
   });
 
+  test("refuses a dangling symlink pointing outside the worktree", async () => {
+    // The link target does not exist, so exists() is false and only the in-tree
+    // parent would be canonicalized; without the no-follow lstat guard, Bun.write
+    // would follow the link and create a file at the external target.
+    const outside = path.join(
+      tmpdir(),
+      `pr-fleet-escape-${String(Date.now())}.txt`,
+    );
+    await symlink(outside, path.join(worktree, "dangling"));
+    await expect(
+      writeWorktreeFile(worktree, { path: "dangling", content: "escaped" }),
+    ).rejects.toThrow(/write through a symlink/);
+    expect(await Bun.file(outside).exists()).toBe(false);
+  });
+
   test("refuses a symlink that resolves into the Git directory", async () => {
     // A tracked symlink whose real target is `.git` (or a path inside it) passes
     // the raw-segment check under its innocuous link name; the canonical-path

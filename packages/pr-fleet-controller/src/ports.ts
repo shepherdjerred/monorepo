@@ -40,6 +40,7 @@ export type FleetEnvironment = {
   findWorktree: (
     fleetBranches: string[],
     candidateBranch: string,
+    allowOperatorFallback: boolean,
   ) => Promise<string | null>;
   provisionWorktree: (pr: PrIdentity, stackId: string) => Promise<string>;
   assignWorktreeBranch: (worktree: string, pr: PrIdentity) => Promise<void>;

@@ -57,18 +57,25 @@ export class WorktreeManager {
   // is reused when it holds ANY of `fleetBranches` — the whole stack shares one
   // fleet worktree, so a sibling's checkout is fair game and is always preferred.
   //
-  // An operator worktree is reused only as a fallback and only when it holds the
-  // EXACT `candidateBranch`. Matching a mere sibling would let the caller switch
-  // the operator's checkout to a different branch and hard-reset it — changing
-  // their checkout and deleting committed-but-unpushed work on the sibling, whose
-  // divergence the assign-time guard cannot catch because that guard only runs
-  // when the worktree was already on the candidate branch. On the candidate
-  // branch itself, `assignWorktreeBranch` still refuses reuse while the worktree
-  // is dirty or its HEAD has diverged, so operator edits are never lost or
-  // force-pushed.
+  // An operator worktree is reused only as a fallback and only when
+  // `allowOperatorFallback` is set and it holds the EXACT `candidateBranch`.
+  // Matching a mere sibling would let the caller switch the operator's checkout
+  // to a different branch and hard-reset it — changing their checkout and
+  // deleting committed-but-unpushed work on the sibling, whose divergence the
+  // assign-time guard cannot catch because that guard only runs when the worktree
+  // was already on the candidate branch. On the candidate branch itself,
+  // `assignWorktreeBranch` still refuses reuse while the worktree is dirty or its
+  // HEAD has diverged, so operator edits are never lost or force-pushed.
+  //
+  // `allowOperatorFallback` is false for cross-repository (fork) PRs: the fleet
+  // can never publish a fork branch, so reusing an operator's fork checkout would
+  // only leave an orphan repair commit in it before `#submitBranch` rejects the
+  // push. Those PRs must fall through to `provisionWorktree`, which rejects them
+  // with an actionable cross-repository message instead of dispatching a worker.
   async findWorktree(
     fleetBranches: string[],
     candidateBranch: string,
+    allowOperatorFallback: boolean,
   ): Promise<string | null> {
     const output = await this.#mustRun("git", [
       "worktree",
@@ -91,6 +98,7 @@ export class WorktreeManager {
             return currentPath;
           }
           if (
+            allowOperatorFallback &&
             branch === candidateBranch &&
             !this.#isFleetWorktree(currentPath)
           ) {
@@ -280,7 +288,11 @@ export class WorktreeManager {
     }
     await mkdir(this.#worktreeRoot, { recursive: true });
     const worktreePath = path.join(this.#worktreeRoot, `stack-${stackId}`);
-    const existing = await this.findWorktree([pr.headRefName], pr.headRefName);
+    const existing = await this.findWorktree(
+      [pr.headRefName],
+      pr.headRefName,
+      !pr.crossRepository,
+    );
     if (existing !== null) {
       return existing;
     }

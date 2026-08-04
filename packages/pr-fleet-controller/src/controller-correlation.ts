@@ -43,6 +43,7 @@ export async function assignFleetWorktree(
       (await environment.findWorktree(
         siblingBranches,
         candidate.identity.headRefName,
+        !candidate.identity.crossRepository,
       )) ??
       (await environment.provisionWorktree(
         candidate.identity,

@@ -1,9 +1,24 @@
-import { realpath } from "node:fs/promises";
+import { lstat, realpath } from "node:fs/promises";
 import path from "node:path";
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import type { PrState } from "./schemas.ts";
 import type { FleetStore } from "./state.ts";
+
+// Is `candidate` itself a symlink? Uses `lstat` (no-follow) so it reports the
+// link, not its target — and treats a wholly missing path as "not a symlink"
+// (the normal write_file-creates-a-new-file case). Any other error propagates.
+async function isSymlink(candidate: string): Promise<boolean> {
+  try {
+    const stats = await lstat(candidate);
+    return stats.isSymbolicLink();
+  } catch (error) {
+    if (error instanceof Error && "code" in error && error.code === "ENOENT") {
+      return false;
+    }
+    throw error;
+  }
+}
 
 // Resolve a worktree-relative path to an absolute one, refusing anything that
 // escapes the assigned worktree (absolute inputs, `..` segments, or a symlink
@@ -29,6 +44,15 @@ export async function containedPath(
   }
   const canonicalRoot = await realpath(root);
   const absolute = path.resolve(canonicalRoot, requestedPath);
+  // Refuse to write through a symlink at the target itself. `Bun.write` follows
+  // it, and a DANGLING link (missing target) evades the canonicalization below:
+  // `Bun.file(absolute).exists()` is false, so only the in-tree parent gets
+  // resolved and the link passes — then the write follows it to an arbitrary
+  // operator-accessible path outside the checkout. Checked no-follow via lstat so
+  // it catches the link regardless of whether its target exists.
+  if (await isSymlink(absolute)) {
+    throw new Error(`Refusing to write through a symlink: ${requestedPath}`);
+  }
   const targetExists = await Bun.file(absolute).exists();
   const canonicalTarget = await realpath(
     targetExists ? absolute : path.dirname(absolute),
