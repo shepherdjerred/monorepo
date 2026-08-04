@@ -1,6 +1,6 @@
 import path from "node:path";
 
-export type WatcherProcess = ReturnType<typeof Bun.spawn>;
+type WatcherProcess = ReturnType<typeof Bun.spawn>;
 
 /**
  * Spawn the read-only live dashboard as a detached child pointed at this run's

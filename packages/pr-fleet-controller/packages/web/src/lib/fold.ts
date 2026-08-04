@@ -13,7 +13,7 @@ import {
  * to ISO strings. Lenient by design — this is an observability convenience
  * stream, so unknown/extra fields are tolerated.
  */
-export const SpanRecordSchema = z.object({
+const SpanRecordSchema = z.object({
   id: z.string(),
   traceId: z.string(),
   parentSpanId: z.string().optional(),
@@ -32,7 +32,7 @@ export const SpanRecordSchema = z.object({
 });
 export type SpanRecord = z.infer<typeof SpanRecordSchema>;
 
-export const SpanLineSchema = z.discriminatedUnion("kind", [
+const SpanLineSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("span"), span: SpanRecordSchema }),
   z.object({ kind: z.literal("metric"), metric: z.unknown() }),
 ]);
@@ -114,7 +114,7 @@ function parsedEpoch(value: string | undefined): number {
   return Number.isNaN(epoch) ? 0 : epoch;
 }
 
-export function applyEvent(view: RunView, event: RecordedRunEvent): void {
+function applyEvent(view: RunView, event: RecordedRunEvent): void {
   // The SSE endpoint replays the full history on every (re)connect. Sequences
   // are strictly increasing, so skipping any at-or-below the high-water mark
   // makes reconnects idempotent without a per-event id set.
@@ -151,7 +151,7 @@ function spanPrNumber(span: SpanRecord): number | undefined {
   return parsed.success ? parsed.data : undefined;
 }
 
-export function applySpan(view: RunView, span: SpanRecord): void {
+function applySpan(view: RunView, span: SpanRecord): void {
   const item: TimelineItem = {
     kind: "span",
     t: parsedEpoch(span.endTime ?? span.startTime),

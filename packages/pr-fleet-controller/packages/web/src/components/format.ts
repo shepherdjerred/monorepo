@@ -1,7 +1,7 @@
 import type { RecordedRunEvent } from "@shepherdjerred/pr-fleet-controller/src/run-events.ts";
 import type { SpanRecord, TimelineItem } from "#lib/fold";
 
-export type Category =
+type Category =
   | "run"
   | "tick"
   | "chat"
@@ -16,7 +16,7 @@ export type Category =
   | "error"
   | "muted";
 
-export type Descriptor = {
+type Descriptor = {
   category: Category;
   icon: string;
   title: string;
