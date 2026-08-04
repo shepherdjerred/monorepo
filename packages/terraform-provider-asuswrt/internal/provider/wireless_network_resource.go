@@ -140,7 +140,7 @@ func (r *wirelessNetworkResource) Create(ctx context.Context, req resource.Creat
 	band := int(plan.Band.ValueInt64())
 	plan.ID = types.StringValue(fmt.Sprintf("wl%d", band))
 
-	if err := r.applyWireless(ctx, band, &plan, config.Channel); err != nil {
+	if err := r.applyWireless(ctx, band, &plan, config.Channel, config.Bandwidth); err != nil {
 		resp.Diagnostics.AddError("Failed to configure wireless", err.Error())
 
 		return
@@ -197,7 +197,7 @@ func (r *wirelessNetworkResource) Update(ctx context.Context, req resource.Updat
 	band := int(plan.Band.ValueInt64())
 	plan.ID = types.StringValue(fmt.Sprintf("wl%d", band))
 
-	if err := r.applyWireless(ctx, band, &plan, config.Channel); err != nil {
+	if err := r.applyWireless(ctx, band, &plan, config.Channel, config.Bandwidth); err != nil {
 		resp.Diagnostics.AddError("Failed to configure wireless", err.Error())
 
 		return
@@ -276,7 +276,7 @@ func (r *wirelessNetworkResource) ImportState(ctx context.Context, req resource.
 // (2g1_*/5g1_*) rather than wl<band>_*, wl_bw codes differ across firmwares, and
 // SAE/WPA3 needs wl_mfp. See docs/todos/asuswrt-wireless-write-path.md before
 // relying on wireless apply.
-func (r *wirelessNetworkResource) applyWireless(ctx context.Context, band int, plan *wirelessNetworkResourceModel, configuredChannel types.Int64) error {
+func (r *wirelessNetworkResource) applyWireless(ctx context.Context, band int, plan *wirelessNetworkResourceModel, configuredChannel, configuredBandwidth types.Int64) error {
 	prefix := fmt.Sprintf("wl%d_", band)
 	values := map[string]string{
 		prefix + "ssid":        plan.SSID.ValueString(),
@@ -286,12 +286,15 @@ func (r *wirelessNetworkResource) applyWireless(ctx context.Context, band int, p
 	setOptionalString(values, prefix+"crypto", plan.Crypto)
 	setOptionalString(values, prefix+"wpa_psk", plan.WPAPassphrase)
 
-	if err := r.setChanspec(ctx, values, band, prefix, configuredChannel, plan.Bandwidth); err != nil {
+	if err := r.setChanspec(ctx, values, band, prefix, configuredChannel, configuredBandwidth); err != nil {
 		return err
 	}
 
-	if !plan.Bandwidth.IsNull() && !plan.Bandwidth.IsUnknown() {
-		values[prefix+"bw"] = strconv.FormatInt(plan.Bandwidth.ValueInt64(), 10)
+	// wl_bw is written only when bandwidth is configured; setChanspec keeps
+	// wl_chanspec consistent with it (or with the router's current width when
+	// bandwidth is omitted).
+	if !configuredBandwidth.IsNull() && !configuredBandwidth.IsUnknown() {
+		values[prefix+"bw"] = strconv.FormatInt(configuredBandwidth.ValueInt64(), 10)
 	}
 
 	if !plan.Hidden.IsNull() && !plan.Hidden.IsUnknown() {
@@ -305,22 +308,30 @@ func (r *wirelessNetworkResource) applyWireless(ctx context.Context, band int, p
 	return nil
 }
 
-// setChanspec writes the channel+width chanspec, but only when the channel is
-// actually configured (channel is the config value, which is null when the user
-// omitted it — unlike the Computed-refreshed plan value, which is populated from
-// the router after the first read). Gating on the config value means an update
-// that changes only e.g. ssid never rewrites the chanspec, so it can't reset a
-// radio to automatic channel selection or narrow a width it couldn't model.
+// setChanspec writes the channel+width chanspec, but only when the channel or
+// the bandwidth is actually configured (both are config values, null when the
+// user omitted them — unlike the Computed-refreshed plan values, populated from
+// the router after the first read). Gating on config means an update that
+// changes only e.g. ssid never rewrites the chanspec.
 //
-// The chanspec encodes channel and width together, so both are needed. When
-// bandwidth is omitted (Optional+Computed → Unknown/null), defaulting it to 0
-// would write a bare channel that the firmware reads as auto width, silently
-// narrowing the radio; instead read the router's current width so the configured
-// channel is applied at the existing width. An explicitly configured width
-// (including 0 = auto) is honored as-is.
+// The chanspec encodes channel and width together, so whenever either is being
+// changed we must write a complete, consistent chanspec — otherwise wl_bw and
+// wl_chanspec could disagree (e.g. a bandwidth-only change writes wl_bw but
+// leaves the old chanspec). The component the user did not configure is read
+// back from the router: the current channel from wl<band>_chanspec or the
+// current width from wl<band>_bw. An explicitly configured width (including
+// 0 = auto) is honored as-is; a current chanspec form this provider can't model
+// fails loudly rather than silently dropping the channel to auto.
 func (r *wirelessNetworkResource) setChanspec(ctx context.Context, values map[string]string, band int, prefix string, channel, bandwidth types.Int64) error {
-	if channel.IsNull() || channel.IsUnknown() {
+	channelSet := !channel.IsNull() && !channel.IsUnknown()
+	bandwidthSet := !bandwidth.IsNull() && !bandwidth.IsUnknown()
+	if !channelSet && !bandwidthSet {
 		return nil
+	}
+
+	ch, err := r.resolveChannelNumber(ctx, band, channel)
+	if err != nil {
+		return err
 	}
 
 	bw, err := r.resolveBandwidthCode(ctx, band, bandwidth)
@@ -328,7 +339,7 @@ func (r *wirelessNetworkResource) setChanspec(ctx context.Context, values map[st
 		return err
 	}
 
-	chanspec, err := formatChanspec(int(channel.ValueInt64()), bw)
+	chanspec, err := formatChanspec(ch, bw)
 	if err != nil {
 		return fmt.Errorf("formatting chanspec: %w", err)
 	}
@@ -336,6 +347,41 @@ func (r *wirelessNetworkResource) setChanspec(ctx context.Context, values map[st
 	values[prefix+"chanspec"] = chanspec
 
 	return nil
+}
+
+// resolveChannelNumber returns the channel to pair with a chanspec write: the
+// configured value when set, otherwise the router's current channel parsed from
+// wl<band>_chanspec. A non-empty current chanspec whose leading channel can't be
+// parsed (e.g. a "6u"/"6l" sideband form) is an error rather than a silent
+// fall-back to 0 (auto), which would drop the channel when only bandwidth
+// changed.
+func (r *wirelessNetworkResource) resolveChannelNumber(ctx context.Context, band int, channel types.Int64) (int, error) {
+	if !channel.IsNull() && !channel.IsUnknown() {
+		return int(channel.ValueInt64()), nil
+	}
+
+	key := fmt.Sprintf("wl%d_chanspec", band)
+
+	cur, err := r.client.NvramGetSingle(ctx, key)
+	if err != nil {
+		return 0, fmt.Errorf("reading current chanspec %s: %w", key, err)
+	}
+
+	if cur == "" || cur == "0" {
+		return 0, nil
+	}
+
+	lead := cur
+	if i := strings.Index(cur, "/"); i >= 0 {
+		lead = cur[:i]
+	}
+
+	ch, err := strconv.Atoi(lead)
+	if err != nil {
+		return 0, fmt.Errorf("cannot model current chanspec %s=%q to change bandwidth without dropping the channel; set channel explicitly", key, cur)
+	}
+
+	return ch, nil
 }
 
 // resolveBandwidthCode returns the wl_bw code to pair with a channel write: the
