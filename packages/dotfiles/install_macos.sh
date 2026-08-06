@@ -31,6 +31,11 @@ retry() {
     done
 }
 
+# Berkeley Mono is licensed, so its source fonts are intentionally not stored in
+# Git. Before a macOS reinstall, download and extract the static desktop TTF
+# package under ~/Downloads. If it lives elsewhere, set
+# BERKELEY_MONO_SOURCE_DIR to that extracted directory when running this script.
+# The patcher downloaded later is only the public Nerd Fonts glyph patcher.
 discover_berkeley_mono_source_dir() {
     if [ -n "${BERKELEY_MONO_SOURCE_DIR:-}" ]; then
         if [ ! -d "${BERKELEY_MONO_SOURCE_DIR}" ]; then

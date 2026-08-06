@@ -30,6 +30,8 @@ report how they are intended to be run.
 - Identified the automated macOS bootstrap and its companion manual checklist.
 - Continued the resulting Berkeley Mono implementation in
   `packages/docs/plans/2026-08-05_berkeley-mono-bootstrap.md`.
+- Documented the licensed Berkeley Mono prerequisite directly in
+  `packages/dotfiles/install_macos.sh`.
 
 ### Remaining
 

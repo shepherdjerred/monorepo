@@ -48,6 +48,8 @@ files.
   name rewriting.
 - Updated the fresh-install guide, package instructions, Chezmoi skill, and
   fonts summary with the licensed-source boundary and operator workflow.
+- Documented the licensed-font download prerequisite and source-directory
+  override directly in `install_macos.sh`.
 
 ## Verification
 
@@ -71,6 +73,7 @@ files.
 - Installed Homebrew `fontforge` and `uv`, then installed four patched Berkeley
   Mono styles in `~/Library/Fonts`.
 - Updated the live Chezmoi helper skill to match its managed source.
+- Added the reinstall prerequisite directly to the macOS installer comments.
 
 ### Remaining
 
