@@ -5,7 +5,6 @@ status: in-progress
 board: true
 verification: operator
 disposition: blocked
-origin: packages/docs/logs/2026-07-28_mk64-runtime-performance-followup.md
 source_marker: false
 ---
 
@@ -49,17 +48,3 @@ an immutable image built from the PR head and temporarily deployed by digest.
   A/V content offset averaging `-198.5 ms`, meaning video lagged audio before
   Discord received the RTP packets. Synchronization remains unverified until
   that lag is corrected and the operator reruns the live check.
-
-## Session Log — 2026-08-02
-
-### Done
-
-- Reclassified this partially verified card to In Progress and linked the measured `-198.5 ms` video-lag correction to the concurrent agent-owned defect.
-
-### Remaining
-
-- After the lag fix deploys, rerun the authorized live A/V synchronization check.
-
-### Caveats
-
-- FPS and realtime pacing passed; content synchronization remains independently unverified.

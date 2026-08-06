@@ -61,33 +61,6 @@ untouched. It operates on the SRT yt-dlp already produces — no yt-dlp arg chan
 - Integration burn (real libass) runs via `bun run test:integration` / the `testStreambotMedia` Dagger
   target (local Homebrew ffmpeg lacks the libass `subtitles` filter, so it's CI-only).
 
-## Session Log — 2026-06-19
-
-### Done
-
-- Implemented `src/sources/subtitle-clean.ts` (pure SRT parser/detector/collapser/serializer) and wired
-  `cleanRollingSubtitleFile` into `resolveSubtitleForYtdlp` (`src/sources/subtitle-io.ts`).
-- Added `test/subtitle-clean.test.ts` (13 tests, incl. an ffmpeg-conversion-derived fixture),
-  `test/subtitle-ytdlp-clean.test.ts` (offline e2e via fake `yt-dlp`), and a real-libass burn test in
-  `integration/subtitles.integration.test.ts`. Updated `AGENTS.md`.
-- 276 unit tests pass; typecheck + eslint clean. Validated detector against real data (clean manual
-  caption left untouched; real ffmpeg rolling output collapsed correctly).
-
-### Remaining
-
-- CI must run `bun run test:integration` (Dagger `testStreambotMedia`) for the real-libass burn — not
-  runnable locally (Homebrew ffmpeg has no libass `subtitles` filter).
-- Manual e2e: play a YouTube URL with auto-captions on a real Go-Live stream and confirm captions show
-  one clean line at a time.
-
-### Caveats
-
-- Detection is heuristic (signature, not URL). Thresholds were validated against a real manual caption
-  (no false positive) and real ffmpeg-converted rolling output (true positive), with comfortable margin,
-  but unusual tracks could still slip — tune `SHORT_CUE_MS` / ratios in `subtitle-clean.ts` if needed.
-- Collapsing uses SRT cue-level timing (adequate for burned display), not per-word VTT timing. A
-  legitimately repeated phrase within the 2-line window collapses (rare; acceptable for ASR captions).
-
 ## Phase 2 — Evidence-driven hardening (2026-06-19)
 
 Closed the "validate against a real _rolling_ ASR track end-to-end" gap. How the ecosystem handles this:

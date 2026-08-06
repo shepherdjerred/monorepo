@@ -63,29 +63,4 @@ Resolved via the authenticated web UI bulk action (`POST /issues/<project>/`,
 ## Out of scope
 
 - Discord 500 retry tuning (upstream, not actionable).
-- Music buffering/catch-up follow-up noted in `logs/2026-06-03_birza-music-live-patch.md`.
-
-## Session Log — 2026-06-06
-
-### Done
-
-- Triaged all Bugsink projects; resolved 28 stale/fixed/transient issues across
-  scout-for-lol, sjer.red, and birmel.
-- Diagnosed Pinterest noise + 4 Birmel issues from stacktraces; found 2 Birmel
-  issues already fixed-and-deployed in `2.0.0-3289`.
-- Shipped Pinterest Sentry `beforeSend` filter and the Birmel logger↔OTel
-  recursion fix with regression test.
-
-### Remaining
-
-- After the bumped scout + birmel images deploy, resolve Pinterest `70f32fda`
-  and Birmel `RangeError` `1360eb94` in Bugsink and confirm no `RangeError`
-  recurs on the next birmel pod restart.
-
-### Caveats
-
-- Birmel DAVE / `this.target.client` were resolved on the strength of the
-  deployed fix; no music has been played since 6/3 to re-confirm live. They will
-  auto-reopen as regressions if they recur.
-- `bun run scripts/setup.ts` in this worktree regenerated helm-types artifacts
-  and `sjer.red/bun.lock`; those were left unstaged and out of the PR.
+- Music buffering/catch-up follow-up noted in prior analysis.

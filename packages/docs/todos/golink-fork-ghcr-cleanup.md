@@ -5,7 +5,6 @@ status: planned
 board: true
 verification: operator
 disposition: blocked
-origin: packages/docs/logs/2026-07-25_ghcr-stale-package-cleanup.md
 source_marker: false
 ---
 
@@ -45,17 +44,3 @@ so it is blocked operator work rather than UAT.
 
 - Confirmed the live pod is healthy on the exact upstream digest and the root short-link returns HTTP 200 while `/temporal` returns the expected HTTP 302.
 - Only deletion of `ghcr.io/shepherdjerred/golink` and archival remain; both stay operator-owned because deletion is destructive and requires `delete:packages` authorization.
-
-## Session Log — 2026-08-02
-
-### Done
-
-- Cleared the merge, rollout, image-identity, and live short-link prerequisites.
-
-### Remaining
-
-- Delete the obsolete fork package with explicit operator authorization, then archive this todo.
-
-### Caveats
-
-- The obsolete package was not deleted during this grooming session.

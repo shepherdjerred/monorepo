@@ -81,7 +81,6 @@ Branch `fix/homekit-exclude-front-door` (worktree `.claude/worktrees/homekit-exc
 
 New throwaway Bun script in the scratchpad (pattern already proven this session — WS auth + `config/*_registry/list`):
 
-1. **Snapshot**: dump `entity_registry`, `device_registry`, `area_registry` to a timestamped rollback file (keep locally + attach summary to the session log).
 2. **Dry-run**: script prints the full old→new diff table; user approves before apply.
 3. **Apply** via WS commands: `config/area_registry/create|update|delete`, `config/device_registry/update`, `config/entity_registry/update` (supports `new_entity_id`, `name`, `area_id`).
 
@@ -150,9 +149,8 @@ Skip: disabled entities, `switch.hallway` family (load-named, correct), asuswrt 
 ## Phase 4 — Docs + follow-ups
 
 1. Mirror this plan to `packages/docs/plans/2026-07-09_ha-registry-cleanup.md` (commit with the PR or after).
-2. Update the session log `packages/docs/logs/2026-07-09_homekit-exposure-audit.md` with a new Session Log block.
-3. Create `packages/docs/todos/litter-robot-sonoff.md` (status: `active`): install spare Sonoff on Litter-Robot, name it per convention, then optional automation: `sensor.litter_robot_4_status_code` fault → power-cycle (needs user's plug install first).
-4. Create `packages/docs/todos/ha-integration-reauth.md` (status: `blocked`, user-only): re-auth `econet` + `smartthings` in HA UI; after econet re-auth, check whether the `Heat Pump Water Heater_*` doubled names self-heal — if not, fix friendly names in a quick follow-up.
+2. Create `packages/docs/todos/litter-robot-sonoff.md` (status: `active`): install spare Sonoff on Litter-Robot, name it per convention, then optional automation: `sensor.litter_robot_4_status_code` fault → power-cycle (needs user's plug install first).
+3. Create `packages/docs/todos/ha-integration-reauth.md` (status: `blocked`, user-only): re-auth `econet` + `smartthings` in HA UI; after econet re-auth, check whether the `Heat Pump Water Heater_*` doubled names self-heal — if not, fix friendly names in a quick follow-up.
 
 ## Your manual runbook (other apps, physical — can't be scripted)
 

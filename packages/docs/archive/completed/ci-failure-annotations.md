@@ -25,18 +25,3 @@ concise build-level summary linking directly to the failed step and artifact.
 - 2026-07-27 — Split from the obsolete combined reporting plan. The current
   pipeline has no general failure-annotation layer; this record deliberately
   excludes JUnit and coverage transport.
-
-## Session Log — 2026-08-02
-
-### Done
-
-- Confirmed the merged Buildkite reporting stack (#1782, #1786, and #1790) implements stable task-summary annotations, retry-safe contexts, links, and regression coverage.
-- Archived this duplicate implementation card; the parent reporting plan retains only scheduled-run acceptance.
-
-### Remaining
-
-- None.
-
-### Caveats
-
-- First scheduled-run verification remains on `packages/docs/plans/2026-07-28_buildkite-ci-reporting.md`.

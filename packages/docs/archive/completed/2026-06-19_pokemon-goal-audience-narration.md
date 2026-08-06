@@ -53,22 +53,3 @@ From `packages/discord-plays-pokemon/`:
 ## Notes
 
 - Production first-update behavior is already correct: `lastProgressSentAt` inits to `0` but real `now()` is a large epoch, so the first narration posts immediately and isn't throttled. (In the throttle unit test, mocked time starts at 0, so the first call is throttled there — a test artifact, not prod behavior.)
-
-## Session Log — 2026-06-19
-
-### Done
-
-- Strengthened the goal prompt to encourage occasional audience narration via `pokemonctl progress` (`codex-command.ts`: opening line + the `progress` tool bullet + a new OPERATIONAL GUIDANCE bullet).
-- Reformatted `GoalManager.publishProgress` to post clean, un-pinged narration (`goal-manager.ts`).
-- Updated the throttle test to assert the new format (`goal-manager.test.ts`).
-- Verified: backend goal tests (12 pass), full-package typecheck, and eslint on changed files all green.
-
-### Remaining
-
-- Open the PR (branch `feature/pokemon-goal-narration`) once the user confirms.
-- Manual live check on a test Discord server (emulator + Codex creds required).
-
-### Caveats
-
-- Only the **mid-session** progress updates were de-pinged. Completion/timeout messages intentionally still `<@>`-mention the requester.
-- The throttle remains 60s by default; if the model narrates more often, extra calls return `{ok:false, throttled:true}` and are silently dropped (by design).

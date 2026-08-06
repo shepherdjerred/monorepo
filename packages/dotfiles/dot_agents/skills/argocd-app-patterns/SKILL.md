@@ -163,7 +163,7 @@ whose siblings are **mutually exclusive**, e.g. a **probe handler type**
   the problem is the stale live-object ownership, not the manifest. (This wedged the
   `media` app in 2026-08; the `shelfbridge-relay` sidecar's probes were switched
   from `httpGet` to `tcpSocket` while an untracked `httpGet` object was already
-  live. See `packages/docs/logs/2026-08-01_main-ci-red-diagnosis.md`.)
+  live. See the original investigation.)
 
 **Remediate (one time):** force a full replace so the orphaned field is dropped.
 **Scope the replace to the one resource** with `--resource` — an app-level
@@ -194,7 +194,7 @@ metadata: {
 Scope it to the single resource, not the whole app. An app-level `Replace=true`
 applies `kubectl replace` to **every** resource in the app, full-replacing bound
 PVCs and other immutable resources, which fails on immutable fields (see
-`packages/docs/logs/2026-06-12_argocd-sync-failures.md`). `ServerSideApply=true` is
+the original investigation). `ServerSideApply=true` is
 **not** a replace — it runs `kubectl apply --server-side`, a field-manager merge, so
 it does not full-replace PVCs; but at app scope it can still surface field-ownership
 conflicts and is overkill for healing one resource. Either way, scope the

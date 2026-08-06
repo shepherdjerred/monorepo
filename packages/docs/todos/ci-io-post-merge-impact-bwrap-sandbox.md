@@ -57,18 +57,3 @@ therefore not an acceptance test of the fix.
   `homelab-audit-daily` (claude) in the live Temporal cluster to isolate the
   Claude-specific schema-dialect bug. This bwrap issue is unrelated to that
   fix and is not addressed by it.
-
-## Session Log — 2026-08-02
-
-### Done
-
-- Confirmed PR #1860 merged and the current healthy Temporal worker includes it.
-- Confirmed the latest scheduled run predates that deployment, so it cannot accept or reject the fix.
-
-### Remaining
-
-- Inspect the first post-deploy scheduled run for a real acceptance conclusion without the bubblewrap error.
-
-### Caveats
-
-- The card remains active, not blocked; time is the only prerequisite for the next scheduled observation.

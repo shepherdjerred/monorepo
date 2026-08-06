@@ -8,7 +8,7 @@
  * only during the initial burst or while catching back up to the wall-clock line after a dip. A
  * sustained value below ~1.0 means production fell behind realtime — either genuinely
  * transcode-bound (the 4K-software-decode case) or consumer backpressure through the zero-slack
- * NUT pipe (see packages/docs/logs/2026-07-18_streambot-f1-stutter-investigation.md). The
+ * NUT pipe (see the original investigation). The
  * send-path frametime ratio covers the complementary send-bound case. We derive the ratio from
  * `timemark` (media time) advance vs wall-clock between consecutive progress callbacks rather than
  * trusting fluent-ffmpeg to parse `speed`.

@@ -5,7 +5,6 @@ status: planned
 board: true
 verification: agent
 disposition: active
-origin: packages/docs/logs/2026-08-02_mk64-input-lag-attribution.md
 source_marker: false
 ---
 

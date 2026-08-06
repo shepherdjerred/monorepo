@@ -337,7 +337,6 @@ Add to Writing Style:
 - [ ] Replace the current `firstTime` claim, which is derived only from the bounded recent window, with either a full-history query or wording that explicitly says the champion is absent from the recent window.
 - [ ] Add regression coverage for a champion played before the recent-window cutoff.
 - [ ] Generate controlled reviews for true-new, old-but-not-recent, and recent-main champions and verify their prompt facts before requesting UAT again.
-- [ ] Refresh the historical Session Log statements that still say the feature is uncommitted and backed by `MatchParticipantFact`; the feature shipped in #1380 and history now reads from the report lake.
 
 ## Out of scope / follow-ups
 
@@ -348,71 +347,6 @@ Add to Writing Style:
 - Champion mastery API (`ChampionMasteryV4`) — not needed; recent-form aggregation is better.
 - Per-match exact patch matching — using latest patch is sufficient.
 - Surfacing history/patch in the rendered match image — this plan only feeds the AI text.
-
-## Session Log — 2026-07-03
-
-### Done
-
-- **Pipeline threading (data):** added optional `playerHistory?` / `patchNotes?` to
-  `PipelinePromptsInput` (`packages/scout-for-lol/packages/data/src/review/pipeline-types.ts`);
-  threaded through `pipeline.ts`, `generateReviewTextStage` (`pipeline-stages.ts`),
-  `buildPromptVariables` (`generator-helpers.ts`, patch fallback = generic changeset via
-  `formatGenericPatchNotes()`), and `replaceTemplateVariables` (`prompts.ts`, added the two
-  `.replaceAll`s). Added `<PLAYER HISTORY>` / `<PATCH NOTES>` blocks + style lines to
-  `prompts/user/2-review-text.txt`.
-- **Patch changeset (data):** new `src/data-dragon/patch-notes.ts` (`getPatchChangeset` Zod
-  reader, `selectRelevantPatchChanges`, `formatPatchNotes`, `formatGenericPatchNotes`; rich
-  schema with `overview` prose, `themes`, `summary`, and champion/item/system changes each
-  carrying `direction`/`magnitude`/`summary`/`details`); seed asset
-  `src/data-dragon/assets/patch-notes.json` (patch 26.13); exported from `src/index.ts`.
-- **Patch ingest (data scripts):** new `scripts/patch-analysis.ts` (`analyzePatch` via
-  `claude -p` WebFetch → validated changeset, `claude-sonnet-4-6`), replacing the removed
-  `patch-highlights.ts`. `scripts/update-data-dragon.ts` now writes the changeset asset (prettier'd),
-  archives raw notes to `patch-notes-archive/<patch>.html` (best-effort), and feeds
-  `changeset.summary` to the "What's New" changelog. `.prettierignore` excludes the archive;
-  `patch-notes-archive/.gitkeep` keeps the dir present.
-- **Player history (backend):** new `src/league/review/player-history-signals.ts` (pure
-  `computePlayerHistorySignals` + `formatPlayerHistory`, Zod-typed) and
-  `src/league/review/player-history.ts` (DB fetch of facts / rank history / co-tracked
-  teammates). `generator.ts` refactored to an options object (`GenerateMatchReviewOptions`),
-  builds history + cross-referenced patch notes via `buildDynamicReviewContext`, sets
-  `prompts.playerHistory` / `prompts.patchNotes`; call site in `match-report-ai-review.ts`
-  updated to pass `targetGuildIds`.
-- **Temporal:** added `packages/data/patch-notes-archive` to `GENERATED_PATHS` in
-  `src/activities/data-dragon.ts` (the changeset asset is already covered by the existing
-  `src/data-dragon` entry).
-- **Tests:** `patch-notes.test.ts`, `patch-analysis.test.ts`, `player-history.test.ts` (all
-  pass). Full data suite (413) + backend review suite green. typecheck/eslint clean across
-  data, backend, temporal, frontend.
-
-### Remaining
-
-- Not committed / no PR opened (awaiting user go-ahead).
-- Live acceptance: run the postmatch path (or the frontend review tool) against a tracked
-  player with existing `MatchParticipantFact` rows and confirm the `<PLAYER HISTORY>` /
-  `<PATCH NOTES>` blocks are populated and influence the review text; attach a before/after to
-  the PR per repo PR-media convention.
-- First real patch bump will regenerate `patch-notes.json` from live Riot notes; the seed is a
-  hand-written placeholder for patch 26.13.
-
-### Caveats
-
-- `analyzePatch` uses `claude -p` with WebFetch (offline/CI tooling only); the backend never
-  calls it — reviews read the committed changeset asset. A failed analysis leaves the existing
-  asset untouched and falls back to the data-refresh changelog line.
-- Champion matching normalizes to Data Dragon keys and strips non-alphanumerics, so human
-  names ("Lee Sin") match fact-row keys ("LeeSin"). Item matching is case-insensitive exact on
-  Data Dragon item names; system/role matching is keyword-based against the player's lane.
-- Player-history is **fail-fast**: a player with no tracked account or no prior games yields
-  an empty block (not an error), but a genuine DB/parse failure propagates and is handled by
-  the review's existing outer error handler (Sentry + no review posted) rather than being
-  silently swallowed. The generator unit test mocks `buildPlayerHistoryContext` since it isn't
-  about the DB.
-- "Today/this week" use `America/Los_Angeles`; "latest patch" is injected rather than the
-  match's exact `gameVersion` (accepted simplification).
-- Pre-existing environment gap: `@shepherdjerred/llm-models` must be built (`bun run build` in
-  `packages/llm-models`) + `bun install` re-copied before scout `data`/`temporal` typecheck;
-  `scripts/setup.ts` doesn't build it. Did this manually this session.
 
 ## Comment Log
 

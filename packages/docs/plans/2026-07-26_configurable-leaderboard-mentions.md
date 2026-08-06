@@ -50,19 +50,3 @@ count plan:
   player-group, and non-player label-collision behavior.
 - Scoped data/backend typecheck, tests, lint, docs checks, and the independent
   merge-tree check run before submission.
-
-## Session Log — 2026-07-26
-
-### Done
-
-- Mirrored the approved local configurable-mentions design into repository
-  documentation for PR #1678.
-
-### Remaining
-
-- Await Buildkite and review-gate results after publishing the remediation.
-
-### Caveats
-
-- This repository copy adds canonical frontmatter and records the later Codex
-  safety findings; the local harness plan remains the original approval record.

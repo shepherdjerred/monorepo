@@ -71,27 +71,6 @@ Phase 0 showed the worker's existing `scout` identity already has Admin on both 
 - Ship via GitOps (ArgoCD). After the worker picks up the new schedule, **trigger the workflow once manually with `dryRun: true`**, eyeball the counts/bytes, then trigger once with `dryRun: false` to reclaim the ~130 GiB immediately (rather than waiting for the nightly run).
 - Confirm reclaim via `aws s3 ls --summarize` and SeaweedFS volume count (target: well under the 360-`maxVolumes` cap; scout currently ~167 slots — `seaweedfs.ts` comment).
 
-## Session Log — 2026-07-03
-
-### Done
-
-- Analysis: scout SeaweedFS usage 167 GiB (prod 121.5 / beta 45.3); ~83% is png+svg. Confirmed images are never served from S3 (Discord `attachment://`, bundled site, JSON-only readers) so pruning is safe.
-- Chose scheduled prune-by-suffix over native lifecycle / key-restructure; home = Temporal schedule (precedent `bugsink-housekeeping`).
-- Phase 0: validated worker's `scout` identity has Admin on both buckets (no cred wiring needed) + validated filter against live data.
-- Phase 1: built activity + workflow + schedule + tests (files under `packages/temporal/src/...`), added `@aws-sdk/client-s3` dep. All local checks green; end-to-end list+filter cross-checked against the aws-cli oracle (exact 38,415 / 104.6 GiB).
-- Branch `feature/scout-s3-image-gc`.
-
-### Historical follow-up state
-
-- Open PR, get CI green, merge (deploys the schedule via GitOps/ArgoCD on the Temporal worker).
-- **Phase 3 (post-merge):** trigger `runScoutImageGcWorkflow` once with `dryRun: true`, eyeball counts, then once with `dryRun: false` to reclaim ~105 GiB immediately (don't wait for the 04:00 nightly). Verify via `aws s3 ls --summarize` + SeaweedFS volume count. SeaweedFS volume GC is async (`garbageThreshold: 0.3`) so disk frees after its own pass.
-
-### Caveats
-
-- `DeleteObjects` against SeaweedFS is the one path not yet exercised — the dry-run trigger is the gate before the real run.
-- Retention 30 days ⇒ steady state ~62 GiB (34 GiB rolling images + 28 GiB JSON). The <30d images (34 GiB) age out over subsequent nightly runs, not on the first run.
-- `reports/` and `leaderboards/` images are intentionally NOT pruned (tiny, DB-referenced / current-state).
-
 ## Risks / caveats
 
 - **Irreversible deletion.** Mitigated by dry-run-first on the initial run and the fact that images aren't served from S3.
@@ -111,17 +90,3 @@ Phase 0 showed the worker's existing `scout` identity already has Admin on both 
 ## Historical follow-up state
 
 - Complete and verify the work described in `Scout-for-LoL S3 image retention (30-day GC)`.
-
-## Session Log — 2026-07-27
-
-### Done
-
-- PR #1376 landed daily image GC and PR #1569 added the showcase exemption; the schedule exists in current source.
-
-### Remaining
-
-- None in this plan.
-
-### Caveats
-
-- The historical design is retained for context; it is not an active board item.

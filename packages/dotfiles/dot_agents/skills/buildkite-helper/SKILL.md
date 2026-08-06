@@ -294,7 +294,7 @@ plugins:
   limit as shmem — a "disk-sized" write (e.g. a full git pack download) can
   OOM a container whose processes use almost no RAM. Containers without
   explicit resources get the namespace LimitRange default (768Mi). Incident:
-  packages/docs/logs/2026-08-02_buildkite-pipeline-upload-oom-diagnosis.md.
+  the original investigation.
 
 ## This Monorepo's CI Patterns (historical — pipeline removed 2026-07)
 

@@ -69,9 +69,6 @@ packages/dpp/
 
 # Application logs
 logs/
-# Exception: per-session documentation journals
-!packages/docs/logs/
-!packages/docs/logs/**
 
 # Test coverage output
 coverage/

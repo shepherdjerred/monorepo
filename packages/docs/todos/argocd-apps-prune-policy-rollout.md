@@ -25,17 +25,3 @@ source_marker: false
   approval and the live pruning sync are privileged and potentially destructive.
 
 - 2026-08-02 — Refreshed the live `apps` Application: it is `Synced` and `requiresPruning` is empty. The policy decision remains operator-owned even though no current deletion inventory blocks it.
-
-## Session Log — 2026-08-02
-
-### Done
-
-- Cleared the stale orphan-inventory prerequisite with a live ArgoCD check.
-
-### Remaining
-
-- Approve a prune policy, supervise its first implementation sync, and record the resulting health and inventory.
-
-### Caveats
-
-- An empty current inventory reduces rollout risk but does not itself authorize changing deletion policy.

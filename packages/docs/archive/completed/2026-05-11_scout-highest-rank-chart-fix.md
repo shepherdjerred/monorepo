@@ -132,30 +132,3 @@ I'll prefer `--all-active` baked into the same script over a separate helper —
 5. **Cleanup apply.** Re-run without `--dry-run`. Re-run a second time and confirm zero changes (idempotency).
 6. **Beta deploy verification.** Trigger or wait for the next daily snapshot. Pull `current.json` from S3; confirm fetch-failed/unranked players are absent from `entries` rather than carrying Iron IV 0 LP. Use `/competition view` in the test guild; chart shows dot-less lines with clean breaks for any failures.
 7. **Production rollout.** Same as beta — fix forward + targeted cleanup. No new dips, dot-less chart, historical dips for competition 9 gone.
-
-## Session Log — 2026-05-11
-
-### Done
-
-- Stopped the synthetic Iron IV / 0 LP fabrication in `processHighestRank` (`packages/scout-for-lol/packages/backend/src/league/competition/processors/highest-rank.ts`) — missing-rank participants are now skipped with a logger.info, mirroring `most-rank-climb.ts`.
-- Updated `processors.test.ts`: existing "should use unranked (Iron IV)" case rewritten to assert skip behavior; added two new cases for queue-specific skip and a sweeping "no Iron IV fabricated" assertion. All 869 backend tests + 39 report tests pass; backend + report typecheck and eslint clean.
-- Disabled line-chart dot markers in `packages/scout-for-lol/packages/report/src/html/competition-chart.ts` (`showSymbol: false`); moved line color into `lineStyle.color`, dropped marker-only `borderColor`/`borderWidth`; replaced now-vestigial `SYMBOL_SHAPES`/`symbolFor` with a named `SOLID_LINE_THRESHOLD = 5` constant that `lineDashFor` still uses.
-- Wrote `packages/scout-for-lol/packages/backend/scripts/cleanup-iron-iv-entries.ts` — one-shot Bun script supporting `<id>` / `--all-active` and `--dry-run`. Lists `leaderboards/competition-{id}/**/*.json`, drops entries whose score deep-equals the synthetic Iron IV shape, renumbers `rank`, re-validates with `CachedLeaderboardSchema`, writes back.
-- Applied cleanup against both envs via `kubectl exec`:
-  - scout-beta: comp 10 "Best Solo Queue" — 100 files changed, 1752 entries removed; comp 9 "Most League of Legends" — 0 changes.
-  - scout-prod: comp 9 "Classement" — 0 changes; comp 3 "Ranked" — 3 files changed, 8 entries removed.
-  - Re-ran dry-run on both — 0 deltas → idempotency confirmed.
-- Mirrored plan to `packages/docs/plans/2026-05-11_scout-highest-rank-chart-fix.md` and added entry to `packages/docs/index.md`.
-
-### Remaining
-
-- Open the PR for branch `fix/scout-highest-rank-iron-iv`, get it through CI, merge to `main`.
-- After merge: prod rollout via ArgoCD/normal deploy path; no further S3 cleanup needed (cleanup is already applied to both envs).
-- Once shipped, update this doc's Status to `Complete` and `git mv` to `packages/docs/archive/completed/`; prune the entry from `packages/docs/index.md` under `## Plans`.
-
-### Caveats
-
-- A handful of historical days in beta comp 10 (`2026-02-12`–`14`) and prod comp 3 (`2026-02-17`, `2026-02-20`) dropped to **zero entries** after cleanup — every participant was synthetic Iron IV on those days, meaning the underlying Riot API fetch failed cluster-wide. The chart will now show a clean break for those dates (line discontinuity via `connectNulls: false`) instead of a dive to 0. This is the intended behavior but worth knowing if anyone asks "where did 2026-02-13 go in the chart".
-- Cleanup script is one-shot; not added to CI or to a Discord command. If the user wants ongoing maintenance, schedule via a cron / Discord debug command.
-- Beta + prod pods received the script via `kubectl cp` to `/workspace/.../scripts/`. That copy is ephemeral and will disappear on the next restart — harmless, because the script ships in the branch via the same path and is only needed once.
-- HIGHEST_RANK competitions will no longer show genuinely-unranked participants in the leaderboard at all (they're skipped, not zeroed). Matches the post-fix intent but is a visible behavior change for users who relied on seeing "Iron IV 0 LP" rows.

@@ -54,19 +54,3 @@ logic identifiers are labeled as randomizer metadata, not vanilla rewards or
 events. The records do not prove that a conditional obstacle is currently
 passable and they are not a quest solver. `navigate --exit` executes one
 caller-selected transition; it never chooses or chains a route.
-
-## Session Log — 2026-07-29
-
-### Done
-
-- Documented live exit discovery, stable exit IDs, selected-exit traversal, and
-  same-map coordinate navigation.
-
-### Remaining
-
-- None.
-
-### Caveats
-
-- Exit IDs are valid only for the observed map, and semantic navigation never
-  chooses or chains a route.

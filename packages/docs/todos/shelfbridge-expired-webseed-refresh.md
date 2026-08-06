@@ -5,7 +5,6 @@ status: planned
 board: true
 verification: agent
 disposition: deferred
-origin: packages/docs/logs/2026-07-29_bindery-qbittorrent-stall-diagnosis.md
 source_marker: false
 ---
 
@@ -32,20 +31,3 @@ change duplicate-torrent behavior.
 
 - 2026-07-29 — Split from the secure relay implementation because fresh
   downloads also stalled and required an independent routing fix.
-
-## Session Log — 2026-07-29
-
-### Done
-
-- Recorded the expired duplicate-webseed behavior separately from the fresh
-  `wg0` routing failure.
-
-### Remaining
-
-- Complete the reproduction, ownership decision, implementation, and regression
-  coverage listed above.
-
-### Caveats
-
-- Manual recovery remains removing the stalled torrent without deleting data
-  and immediately issuing a fresh grab.

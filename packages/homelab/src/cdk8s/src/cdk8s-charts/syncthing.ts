@@ -79,7 +79,7 @@ export function createSyncthingChart(app: App) {
             // no directly-dialable address of their own — can only meet it on a
             // relay. Public relays (strelaysrv) listen on 22067; without this,
             // relaying silently fails and those peers never connect. See
-            // packages/docs/logs/2026-08-02_syncthing-relay-egress-fix.md.
+            // the original investigation.
             { port: IntOrString.fromNumber(22_067), protocol: "TCP" }, // Relay data connection
           ],
         },

@@ -28,17 +28,3 @@ The 2026-08-02 board audit found workflow ID `pr-review-reaction-listener`, run 
 
 - PR #1863 is merged, its exact-head Buildkite build #7393 is green, and the newer Temporal worker is deployed.
 - The remaining action is a privileged production termination, so it is blocked on explicit operator authorization rather than left in an agent-owned implementation plan.
-
-## Session Log — 2026-08-02
-
-### Done
-
-- Captured the exact running workflow and separated its privileged cleanup from the completed PR-bot removal implementation.
-
-### Remaining
-
-- Terminate and verify the orphaned listener after explicit operator authorization.
-
-### Caveats
-
-- The listener remains `Running`; this document records but does not authorize the mutation.

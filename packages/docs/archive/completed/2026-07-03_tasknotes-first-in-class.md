@@ -30,7 +30,7 @@ In Progress — P1 merged (#1379); P0 in review; P2 next.
 
 ## Context
 
-The 2026-07-02 review (`packages/docs/logs/2026-07-02_tasknotes-system-review.md`, ~40 findings) found the system (iOS app → tasknotes-server → vault PVC ← `ob sync` sidecar ↔ Obsidian Sync ↔ TaskNotes plugin) trustworthy only online, in UTC, for non-recurring server-created tasks. Root causes: (1) every app mutation executes twice (enqueue + direct call + replay, no dequeue); (2) fail-silent strict parsing drops plugin-written files; (3) the server is a drifting hand-rolled clone of the plugin's semantics.
+The 2026-07-02 review (the original investigation, ~40 findings) found the system (iOS app → tasknotes-server → vault PVC ← `ob sync` sidecar ↔ Obsidian Sync ↔ TaskNotes plugin) trustworthy only online, in UTC, for non-recurring server-created tasks. Root causes: (1) every app mutation executes twice (enqueue + direct call + replay, no dequeue); (2) fail-silent strict parsing drops plugin-written files; (3) the server is a drifting hand-rolled clone of the plugin's semantics.
 
 **Goal (user-confirmed):** the app = Todoist ergonomics (instant capture, trustworthy today view, full offline); Obsidian = power interface. "First-in-class" = zero silent data loss, offline-first like Todoist, recurring tasks that work, structural (not best-effort) plugin compatibility.
 
@@ -173,114 +173,6 @@ Phase-specific: app phases — `bun run ios` builds + `bun run e2e` (Maestro, lo
 
 Mirror this plan to `packages/docs/plans/2026-07-03_tasknotes-first-in-class.md` before implementation; session summaries appended per phase; per-phase PRs reference the plan.
 
-## Session Log — 2026-07-03 (P2: offline-first sync rework)
-
-### Done
-
-All ten P2 build steps, on `feature/tasknotes-p2` (stacked on `feature/tasknotes-p0`), in `packages/tasks-for-obsidian`:
-
-- **Local-date fix (review #5)** — `lib/dates.ts` gains `parseLocalDate`; `use-tasks.ts` de-duplicated onto it; TZ tests (767cd6f31).
-- **Command model** — `src/data/sync/commands.ts`: absolute-state Command union, `applyCommand` pure rebase (create materializes), `remapTaskId`, `classify`, id/temp-id factories (b2e48c7c3).
-- **Persistence + migration** — `CommandQueue` (FIFO + dead-letter + create/delete squash), storage keys v2, `runMigrations` v0→v2 converting the legacy toggle queue (0786bea48).
-- **TaskStore** — `src/data/store/TaskStore.ts`: `view = rebase(base, pending)`, persisted temp→real aliases, `dispatch` never touches the network; `subscribe`/`getSnapshot` for `useSyncExternalStore` (41ecc6971).
-- **SyncEngine rework** — single-flight `requestSync()` with pass coalescing, FIFO drain with `X-Mutation-Id`, exponential backoff (1s→60s ±20% jitter, injectable scheduler/random), per-error classification: transient stops the drain, permanent dead-letters and continues, 404-on-delete = success, 401 → `auth_error` with no retry timer (41ecc6971).
-- **Client** — `TaskNotesClient` mutating methods take `{mutationId}` → `X-Mutation-Id`; `completeRecurringInstance(id, {date, completed})` set-semantics; `request()` params folded into an init object (41ecc6971).
-- **React cutover** — `TaskContext` rewritten onto the store (mutations are one-line dispatches; the enqueue + direct call + replay double-execution is deleted); `SyncContext` gains the foreground trigger via previously-unused `useAppState` (f58a2d6ae); `SyncEngine.dispose()` so a client swap can't leave a stale retry timer draining the queue (ea186254d).
-- **UI** — ConnectionBanner shows queued-change count offline and failed-change count; SettingsScreen gains a Sync section + Failed Changes review with Retry/Discard (41ecc6971).
-- **Tests** — harness reworked around the new stack (FakeServer dedups replayed mutation ids like the real P1 middleware; manual retry scheduler); `offline-scenarios.test.ts` covers subway crash/relaunch, exactly-once reconnect pile-up, crash-between-ack-and-dequeue replay, temp-ID chains, conflict rebase, retry classification, backoff schedule, 23:59 recurring tap, dead-letter review, engine disposal; `parseTaskCache` extracted + salvage tests (ba8ab8376). Old `MutationQueue`/`SyncEngine` and their tests deleted.
-- Verification: `tsc --noEmit` clean, 261 unit tests pass, `bun run test:contract` 18/18 vs the real spawned server, eslint + prettier clean.
-
-### Historical follow-up state
-
-- P2 PR review/merge; then TestFlight build (user-side). P0 PR #1388 must merge first (P2 is stacked on it).
-
-### E2E gate — green (7/7 flows + vault-byte asserts), first full pass ever
-
-Getting it green surfaced two real app bugs (QuickAdd's Create button hid behind the keyboard whenever the offline banner shifted the layout — KAV stale padding; ConnectionBanner's reanimated collapse never applied, leaving a stuck "Syncing..." bar) and four harness holes (stale server on the fixed port from an interrupted run silently adopted by later runs — THE root cause of the historic red; random Maestro flow order over a shared stateful vault; chaos-proxy offline state leaking across flows; delayed tip popovers swallowing taps). Fixes in 333c8bc34.
-
-### Caveats
-
-- `bun test` (bare) also picks up `contract-tests/` and fails without `../tasknotes-server` deps — use `bun run test` / `bun run test:contract`. In a fresh worktree the server needs its own `bun install` (not a workspace member) and the app needs `bun run pod-install` before e2e.
-- `ios/Podfile.lock` drifts by two prebuilt-pod checksums (hermes-engine, React-Core-prebuilt) after a fresh `pod install` in a new worktree — environment noise, left uncommitted.
-- v1→v2 queue migration maps `complete_instance` to `set_instance_complete{date: local day of enqueue timestamp, completed: true}` — best available record of the tapped day.
-- Aliases are pruned when the real id disappears from a server pull; UI surfaces holding a pruned temp id fall back to the id itself (task shows as gone — correct).
-
-## Session Log — 2026-07-03 (P3 start: tasknotes-types v2)
-
-### Done
-
-- Worktree `.claude/worktrees/tasknotes-p3` (branch `feature/tasknotes-p3`, stacked on `feature/tasknotes-p2`).
-- `tasknotes-types`: pinned `@tasknotes/model@0.2.1` (exact); new `src/v2.ts` with the upstream plugin HTTP API contract — full route table + shapes transcribed from the upstream controllers (fetched sources live in the session scratchpad under `upstream/`); `MUTATION_ID_HEADER`; P1's `{date?, completed?}` complete-instance extension (e4fbb80df).
-- Key discovery: the model bundles zod v3; its schemas cannot type-compose with this package's zod v4. Resolution: v4 mirror schemas (`TaskInfoV2Schema`, `StatusConfigV2Schema`, `PriorityConfigV2Schema`) with `src/v2.test.ts` pinning them key-for-key + optionality against the model's runtime shapes, so a model bump fails loudly. Package now has a real `bun test` script.
-
-### Historical follow-up state (P3)
-
-- Hono `:id` param spike (URL-encoded path IDs) — do FIRST per plan.
-- Server engine rebuild: `model-config.ts`, `engine/task-repository.ts` (tolerant read, patch-based write), `vault-files.ts`, `watcher.ts`, `query.ts`, `stats.ts`, `time-reports.ts`, `filename.ts`; routes on the upstream table; legacy adapter; `migrate-vault.ts` + `vault-audit.ts`; golden corpus / round-trip / conformance / idempotency / concurrency tests; contract-test extension.
-- Ring 3 ob-sync transport test ideally before the concurrency design hardens (needs test-vault creds — user-gated).
-
-### Caveats
-
-- Upstream reference sources are in the scratchpad (`upstream/src_api_*.ts`, `docs_HTTP_API.md`) — refetch from `github.com/callumalpass/tasknotes` if lost.
-- `tasknotes-types` consumers: the app (P5) will need Metro to bundle rrule/yaml (model deps) — verify then.
-
-## Session Log — 2026-07-03 (P3 continued: full server rebuild)
-
-### Done
-
-On `feature/tasknotes-p3` (stacked on P2), all in `packages/tasknotes-server` unless noted:
-
-- **Engine** (all model-backed, all tested): `engine/model-config.ts` (plugin data.json → TaskNotesModelConfig; corrupt file throws), `engine/vault-files.ts` (honest-error byte IO), `engine/task-repository.ts` (tolerant reads + loud skips, plan-based surgical writes, workflow toggle-status, set-semantics complete-instance, title-rename identity, time start/stop into frontmatter), `engine/watcher.ts` (max-wait debounce, error re-arm, safety rescan), `engine/query.ts` (upstream FilterQuery tree), `engine/stats.ts`, `engine/time-reports.ts`, `engine/filename.ts`.
-- **Surfaces**: `v2/routes.ts` = upstream plugin API endpoint-for-endpoint incl. NLP `{parsed,taskData}`/`{task,parsed}` and `/api/calendars/events` with recurring expansion; `legacy/routes.ts` = old camelCase contract at `/legacy/api/*` for the P2 app (health mounted there too; filter-options clamped to legacy enums). `index.ts` cutover boots the engine with a hard startup gate + `/api/engine-status`.
-- **P4 tooling**: `scripts/migrate-vault.ts` (tag legacy files, fold `_tasknotes/time-tracking.json` into frontmatter, drop injected ids; dry-run default, idempotent) and `scripts/vault-audit.ts` (parse-skips + round-trip byte-diff gate) — verified end-to-end on a synthetic legacy vault.
-- **Verification**: golden corpus (8 review kill-cases + spec-version pin + fixture-byte meta-test; fixtures excluded from prettier/markdownlint); idempotency suite ported to v2 (12/12); old hand-rolled vault layer + routes deleted; server suite 135 tests; **the P2 app's contract suite passes 18/18 against the rebuilt server via `/legacy`**. tasknotes-types v2 wire schemas + drift-pin tests; Hono path-ID routing pinned. CLAUDE.md rewritten for the new architecture.
-
-### Historical follow-up state (P3)
-
-- Optional depth: conformance test via `executeConformanceOperation`; concurrency test at HTTP level (repository-level concurrent-edit survival is covered).
-- Dagger smoke test / CI verification for the rebuilt server; then the P3 PR review.
-- Ring-3 ob-sync transport test before P4 (user-gated: needs a spare Obsidian Sync vault slot).
-
-### Caveats
-
-- The e2e seed fixtures (`tags: [seeded]`) are invisible to the new engine until migrated — by design; the app e2e suite stays on the P2 branch's old server until P5 realigns it.
-- `/legacy` lives on the app's configurable base URL: at P4 rollout the app's API URL gains the `/legacy` suffix.
-
-## Session Log — 2026-07-03 (P5: app on the v2 contract + recurrence UX)
-
-### Done
-
-On `feature/tasknotes-p5` (stacked on P3), in `packages/tasks-for-obsidian` + `packages/tasknotes-types`:
-
-- **v2 wire boundary** (`src/domain/wire.ts`, 5a6de55cf): the upstream contract (snake_case, path-as-ID, config-object filter options, `{message}` deletes, plural calendars, NLP envelopes, TimeSummaryResult) parsed and transformed into the UNCHANGED camelCase domain `Task` — no storage migration needed; the P2 store/queue untouched. Client: paginated listTasks (cap 200), absolute status via PUT, flat-filter→FilterQuery-tree translation, per-task time endpoint, report screen onto pre-aggregated v2 topTasks. **Contract suite 18/18 against the real rebuilt server on `/api`.** Two server gaps it caught fixed on the P3 branch (mutation responses carry `details`; `GET /api/tasks/:id/time` routed).
-- **Recurrence UX** (c62316f53): `isCompletedOn`/`occursOn` via the model — per-day checkbox state (finding #4) and rrule expansion in Today/Upcoming.
-- **Wikilink projects** (finding #10): `projectPath`/`projectDisplayName`/`projectMatches` in tasknotes-types v2, applied at filters, project detail, and browse grouping (deduped by canonical path).
-- **Archived filtering** client-side; app CLAUDE.md updated; e2e seed fixtures tagged for the model engine's detection (af53f16a5).
-
-### Historical follow-up state (P5)
-
-- ~~Maestro e2e~~ GREEN 7/7 on the full new stack (P5 app ↔ P3 server; Metro bundles the model). **PR #1394 open** (stack: #1388 → #1390 → #1391 → #1394). Null-as-clear + details-in-mutations + per-task-time server fixes landed on P3 en route; engine refinements (watcher rejection safety, unified path eligibility, migration id-gating, shared ymd) committed as 0ed84fdaf.
-- TestFlight build (user-side) after merge.
-
-### Caveats
-
-- The app keeps CLOSED status/priority enums: a plugin-side custom workflow status fails response validation loudly rather than being remapped — acceptable for a single-user vault whose post-P4 statuses are the defaults; open-workflow support would be a future phase.
-- v2 `/legacy` surface is now unused by this branch's app but stays for the P4 rollout window (P2 app in production until this ships).
-
 ## Historical follow-up state
 
 - Complete and verify the work described in `TaskNotes System — First-in-Class Reliability Plan`.
-
-## Session Log — 2026-07-27
-
-### Done
-
-- TaskNotes P2/P3/P5 and cleanup landed through PRs #1390, #1391, #1394, and #1510; the app uses the v2 contract and the interim legacy surface is gone.
-
-### Remaining
-
-- None in this plan.
-
-### Caveats
-
-- The historical design is retained for context; it is not an active board item.

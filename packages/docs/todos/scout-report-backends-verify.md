@@ -5,7 +5,6 @@ status: in-progress
 board: true
 verification: agent
 disposition: active
-origin: packages/docs/logs/2026-06-13_new-todos-batch.md
 source_marker: false
 ---
 

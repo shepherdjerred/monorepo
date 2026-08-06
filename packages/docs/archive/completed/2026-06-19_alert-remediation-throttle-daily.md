@@ -12,7 +12,7 @@ board: false
 `alert-remediation-hourly` (Temporal schedule, cron `0 * * * *`, `AGENT_TASK` queue)
 fans out PagerDuty/Bugsink alerts to a `claude -p` agent every hour. Per the
 2026-06-19 investigation
-(`packages/docs/logs/2026-06-19_bugsink-temporal-checkin-alert-remediation-hang.md`),
+(the original investigation),
 **every run currently hangs to its 30-min activity timeout** (100% failure, zero
 remediations, ~50 dead opus subprocesses/day, 228 duplicate Bugsink issues).
 
@@ -58,42 +58,3 @@ gone and `alert-remediation-daily` exists with spec `0 8 * * *`
   `reference_bugsink_resolve_via_ui` memory).
 - The non-firing `AlertRemediationDecisionsAllFailing` page and SIGINT/`maxIdleMs`
   observability gaps noted in the hang log.
-
-## Session Log — 2026-06-19
-
-### Done
-
-- `register-schedules.ts`: renamed `alert-remediation-hourly` →
-  `alert-remediation-daily`, cron `0 * * * *` → `0 8 * * *`, updated memo; added
-  `alert-remediation-hourly` to `DELETED_SCHEDULE_IDS` so the orphaned hourly
-  schedule is deleted on worker startup.
-- Updated the two id/cron references in
-  `packages/docs/architecture/2026-06-06_temporal-worker-and-scheduler.md`.
-
-### Remaining
-
-- Open PR, get CI green, merge.
-- After the worker redeploys, verify in Temporal UI that the hourly schedule is
-  gone and the daily one exists (cron `0 8 * * *`).
-
-<!-- temporal-agent-task
-{
-  "title": "Verify alert-remediation-hourly is gone and alert-remediation-daily is active",
-  "provider": "claude",
-  "mode": "report-only",
-  "runAt": "2026-06-21T09:00:00-07:00",
-  "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
-  "source": {
-    "docPath": "packages/docs/plans/2026-06-19_alert-remediation-throttle-daily.md"
-  },
-  "prompt": "Post-deploy verification for the alert-remediation throttle change (PR #1279). Check the Temporal UI / CLI: (1) confirm that the schedule `alert-remediation-hourly` no longer exists; (2) confirm that `alert-remediation-daily` exists, is active, and has cron spec `0 8 * * *` (America/Los_Angeles). Email the result with evidence (schedule list output or UI screenshots). Do NOT edit files or mutate any system state."
-}
--->
-
-### Caveats
-
-- Existing tests cover this transparently (`register-schedules.test.ts` keys timeout
-  checks off `workflowType`, and the `DELETED_SCHEDULE_IDS` test asserts deleted ids
-  aren't active — both stay green). No new test added.
-- This does not fix the underlying hang; daily runs will still fail until the
-  `claude -p` startup hang is resolved — it only reduces frequency/blast radius.

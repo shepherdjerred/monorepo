@@ -276,29 +276,3 @@ reconcile the README upgrade snippet (`version-management` skill rule).
   rule bounds it; log every major that was deferred (and why) so it's not silently dropped.
 - **Deployed-reality sync** needs live `talosctl`/`kubectl` access to the cluster;
   if unreachable, leave the pins untouched and note it rather than guessing.
-
-## Session Log — 2026-07-26
-
-### Done
-
-- Landed one PR (#1706, branch `deps/batched-renovate`, draft) — 67 files, full `verify --affected` green in pre-commit.
-- versions.ts: 14 docker image tag+digest bumps (crane-resolved), 10 helm charts (+regenerated types), @r-huijts/canvas-mcp 1.3.0, hass-dreo v1.10.2 (+DREO sha, integrity test 9-pass), kubernetes-event-exporter centralized.
-- Dockerfiles/compose: buildx-bin 0.35.0, emsdk 2.0.34, node/rust digests, grafana tempo→3.0.2 + grafana 13.1.0.
-- terraform: aws 6.56.0, cloudflare 5.22.0 (+regenerated locks, `tofu validate` clean). mise: go 1.26.4, opentofu 1.12.3, rust 1.96.0, corretto java 25.0.4.7.1.
-- npm: typescript-eslint 8.61.1, otel 0.219, temporalio 1.18.1, @sentry/bun 10.68.0, libsql, anthropic SDKs, satori, smol-toml, resolver-node, react/react-dom 19.2.8, knip/turbo/markdownlint, fast-uri/fast-xml-builder/js-cookie/shell-quote/tmp (overrides).
-- RN 0.86 cluster in tasks-for-obsidian + regenerated `ios/Podfile.lock` (pod update; portable) — Xcode Cloud Archive would have broken on the stale 0.85.3 lock.
-- Majors kept: @types/node 26, jscpd 5, pdfjs-dist 6, htmlparser2 12, @astrojs/mdx 6 (astro→6.4.8), eslint-plugin-astro 3, grafana/tempo 3.
-- Renovate coverage: annotations (birmel/ci-image ARGs, MISE_VERSION), new customManagers (scripts/\*.sh, corretto java, n64wasm source SHA), BUILDX_VERSION alignment.
-- Deployed-reality talos/k8s pins verified already aligned with the live cluster (no change).
-
-### Remaining
-
-- PR is **draft**; promote to ready-for-review after human glance (large diff). Full local iOS xcodebuild not run (pod update succeeded → native deps resolve; Archive is Xcode Cloud's gate).
-- Post-merge: helm chart bumps deploy via ArgoCD — watch kube-prometheus-stack / argo-cd / tailscale-operator sync.
-
-### Caveats
-
-- Deferred (heavy/architectural, each with reasons in the Defer sections): tslog v5 (v5.1.0 settings restructure + unreliable published types — attempted & reverted twice), eslint-plugin-unicorn v67 (731+ new errors across 39 packages), docker CLI v29, fast-uri v4 (ajv ^3.0.1 runtime risk), babel v8, react-native-gesture-handler v3, tokio-tungstenite 0.30, ubuntu v26, vite v8, typescript v7, helm CLI v4, node-av v6, ai v7/@ai-sdk v4.
-- bazarr/syncthing docker digests differ from the stale dashboard snapshot — pinned the live current digests (correct).
-- The "not restacked" git-spice warning on submit is benign (local main stale in another worktree; branch is correctly 1 commit off origin/main).
-- `ios/.xcode.env.local` created locally (gitignored, not committed).

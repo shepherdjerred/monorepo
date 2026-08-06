@@ -10,7 +10,7 @@ board: false
 ## Context
 
 The 2026-07-03 Dagger cache wipe exposed ~8 latent bugs at once (full story:
-[`../../logs/2026-07-04_ci-eexist-isolated-linker.md`](../../logs/2026-07-04_ci-eexist-isolated-linker.md)).
+the original investigation).
 The common thread: **warm layer cache had become load-bearing for
 correctness** — installs, postinstalls, image steps, and deploy paths hadn't
 actually executed in months, so bugs accumulated invisibly and then presented

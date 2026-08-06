@@ -9,7 +9,7 @@ board: false
 
 ## Context
 
-Every PR has been red since 2026-08-02 19:18 UTC: the bootstrap `pipeline-upload` step is memcg-OOM-killed (exit `-7`) before it can upload any steps. Diagnosed chain (full evidence: `packages/docs/logs/2026-08-02_buildkite-pipeline-upload-oom-diagnosis.md`):
+Every PR has been red since 2026-08-02 19:18 UTC: the bootstrap `pipeline-upload` step is memcg-OOM-killed (exit `-7`) before it can upload any steps. Diagnosed chain (full evidence: the original investigation):
 
 1. The tofu-managed bootstrap pod (`packages/homelab/src/tofu/buildkite/pipeline.tf:35-64`) patches only the `checkout` container — `container-0` lacks the `buildkite-git-mirrors` mount, so the checkout's `.git/objects/info/alternates` is unreadable there and `upload-pipeline.sh`'s base fetch silently downloads the **entire repo pack (~693 MiB)** every build.
 2. `container-0` has no explicit resources → the namespace LimitRange (`buildkite.ts:103-120`, intentional fail-safe) defaults its memory limit to **768Mi**; the workspace is tmpfs, so pack bytes are shmem charged to that limit.
@@ -39,7 +39,7 @@ Append to the existing `podSpecPatch.containers` (keep the `checkout` entry and 
   # shared git mirror; without this mount every git op degrades to a
   # full-repo pack download into the tmpfs workspace, which the namespace
   # LimitRange's 768Mi default then OOM-kills (fleet-wide red PRs
-  # 2026-08-02; see packages/docs/logs/2026-08-02_buildkite-pipeline-upload-oom-diagnosis.md).
+  # 2026-08-02; see the original investigation).
   # Resources copy the pod_light container-0 shape so the LimitRange
   # default can never apply and even a full-pack-fetch regression fits.
   # Do NOT add secret env sources here: pipeline upload interpolates $VAR

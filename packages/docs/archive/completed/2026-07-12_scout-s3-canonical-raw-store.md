@@ -143,47 +143,6 @@ One PR, but the rollout is ordered so the irreversible step is safe, and it is *
 | One-PR blast radius                                                             | Ordered rollout, beta-first; destructive migration (3e) held until the completeness gate + rebuild-parity pass on beta.                                     |
 | Cross-platform same-day `gameId` collision (prematch S3 key omits `platformId`) | Very low probability; note it — lake row still keys on `platformId:gameId`, but the S3 object would overwrite.                                              |
 
-## Session Log — 2026-07-12
-
-### Done
-
-- **Part 1 — Arena queue fix (complete, tested):**
-  - `packages/data/src/model/state.ts`: added `1750 → "arena"` to `parseQueueType` + a comment documenting Arena's queue-ID churn.
-  - `packages/backend/src/report-lake/flatten.ts`: both `flattenMatch` and `flattenPrematch` now classify `queue` via `resolveQueueTypeFromGame(queueId, gameMode, gameType)` (CHERRY-aware, immune to the next ID change) instead of bare `parseQueueType`.
-  - `packages/data/src/model/state.test.ts`: added `1750`/CHERRY regression cases. `bun test state.test.ts` → 50 pass.
-  - Corrected the wrong "Arena data sparsity" caveat in `packages/docs/plans/2026-07-11_scout-mute-groups.md`.
-- **Part 2 — Retire CD seeding + remove ARAM (complete, tested):**
-  - `packages/backend/src/reports/system-reports.ts`: removed `commonDenominatorDefinitions`, `commonGroupQuery`, `commonDenominatorReport`, CD constants, and the beta/flag gate; narrowed `SystemReportDefinition.systemSource` to `"COMPETITION"`; removed `previousTitles`; `disableStaleSystemReports` now only touches `COMPETITION` rows (so retired CD rows aren't disabled before conversion). Competition seeding untouched.
-  - `packages/backend/src/configuration/flags.ts`: pruned the now-unused `common_denominator_enabled` flag.
-  - `packages/backend/scripts/convert-common-denominator-reports.ts`: **new** one-time idempotent migration — deletes the two ARAM reports, converts the remaining CD rows to `isSystemManaged=false, systemSource=null, isEnabled=true` (optional `--owner-id`, `--dry-run`).
-  - `packages/backend/src/reports/system-reports.integration.test.ts`: rewritten around competition seeding (seed / bar-chart cap / disable-on-end / nextScheduledRunAt preserve+recompute). `bun test` → 5 pass.
-
-### Historical follow-up state
-
-- **Part 3 — S3-canonical pivot (not started in code; fully designed in this plan).** Core files read & analysed: `store.ts`, `live-ingest.ts`, `storage/s3.ts`, `storage/s3-helpers.ts`, `storage/s3-prematch.ts`, `report-lake/compactor.ts`, `report-store/s3-importer.ts`. Concrete next steps per §3a–3f: extract `report-store/s3-raw-source.ts` (clean `ContinuationToken` enumerate + fetch + `classifyKey` + deterministic key builders, from `s3-importer.ts:86-156`); rewrite `store.ts` ingest to S3-authoritative + staging (no SQLite/fact writes); make `saveMatchToS3`/`saveTimelineToS3`/`savePrematchDataToS3` return the key + retry + hard-fail on missing bucket; gate `Account.lastProcessedMatchId` advance on S3 success (`match-history-polling.ts`); rewrite `compactor.ts` `rebuildLocked` to enumerate S3 (prematch `observed_at` from `LastModified`); delete `s3-importer.ts`/`catch-up.ts` + their cron (`cron.ts`); delete `query-engine-legacy.ts`/`report-store/queries.ts` + parity/integration suites; drop the 7 models in `schema.prisma` (generated migration); write the §3f completeness + rebuild-parity scripts.
-- **Verify:** `bun install` at scout root (Part 1 touched `packages/data`); backend + data + app typecheck/test/lint; then open the PR.
-- **Operational rollout (post-merge, per §Rollout):** beta completeness gate → rebuild-parity → conversion script → destructive migration; then the same on **prod** (Definition of Done: prod SQLite holds only scout models; prod S3 lake drives working reports + comps).
-
-### Caveats
-
-- The branch has Parts 1 & 2 as uncommitted working-tree changes in the worktree `.claude/worktrees/scout-s3-canonical` (no commits yet). Part 3 is untouched, so the tree is build-consistent.
-- Part 3's ingest rewrite has real data-loss surface (authoritative S3 write + cursor gating) and ends in an **irreversible** table drop — it must be implemented with the §3f completeness gate + rebuild-parity, not rushed. The prematch `observed_at` shifts from a DB column to S3 `LastModified` (a documented behavior change to quantify in rebuild-parity).
-- `saveToS3` currently no-ops when `S3_BUCKET_NAME` is unset (relied on by dev/test); §3a must make that a hard failure only where S3 is authoritative without breaking the offline test path.
-
 ## Historical follow-up state
 
 - Complete and verify the work described in `Scout for LoL — Arena queue fix, retire report seeding, and S3-canonical raw store`.
-
-## Session Log — 2026-07-27
-
-### Done
-
-- PRs #1508, #1512, and #1514 are merged, and the seven retired report-store models are absent from the current Prisma schema.
-
-### Remaining
-
-- None in this plan.
-
-### Caveats
-
-- The historical design is retained for context; it is not an active board item.

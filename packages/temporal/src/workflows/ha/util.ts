@@ -134,7 +134,7 @@ export async function getEntitiesInDomain(
  *
  * Entity IDs are the floor-renamed ones (see the HA entity registry). If HA is
  * rebuilt/restored and the rename reverts, these become dead references — the
- * mapping is recorded in the migration plan/session log.
+ * mapping is recorded in the migration plan.
  */
 export const VACUUMS = [
   "vacuum.1st_floor",

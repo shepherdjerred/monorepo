@@ -10,7 +10,7 @@ source_marker: false
 # HomeKit great-refresh follow-ups (2026-07-09)
 
 The refresh itself shipped and verified (71 accessories / 12 canonical rooms /
-zero unreachable — see the plan and `packages/docs/logs/2026-07-09_homekit-exposure-audit.md`).
+zero unreachable — see the plan and the original investigation).
 These are the deliberate leftovers.
 
 ## Split Records

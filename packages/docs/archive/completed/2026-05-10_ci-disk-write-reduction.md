@@ -142,32 +142,3 @@ Re-deploy a privileged trace pod in `dagger` ns with `host:/` mounted; for a sam
 2. **Test the Dockerfile builds end-to-end before merging.** The opentofu installer requires `gpg`/`cosign`; the `oven/bun:debian` base has neither. The Buildkite-driven `:406` build also failed silently because of this. Fix in PR #760 added `gnupg`. Caught only after manually rebuilding from my workstation.
 3. **Bootstrap reference is a separate concern from `VERSION`.** The bootstrap `pipeline.yml:16` is read literally; it must point to a known-working image. The rest of CI reads VERSION at pipeline-gen time. PR #759 reverted bootstrap to `:404` for safety; PR #762 bumped it to `:406` after `:406` was verified working.
 4. **The Kueue + Buildkite combination can deadlock.** When all admitted workloads are stuck in `ImagePullBackOff` for a missing image, no new workloads (including the build that would create the image) can be admitted. Required manual recovery: build/push the image from my workstation to break the loop.
-
-## Session Log — 2026-05-10
-
-### Done
-
-- Investigation: identified per-pod overlay churn from runtime tool installs as root cause of nvme0n1 thermal throttling
-- Direct cgroup-level attribution proved `setup-tools.sh`'s `install_base` + `install_semgrep` were the dominant writers
-- PR #757 baked Tier 1 + Tier 2 tools into `ci-base:405` — produced wrong-arch image
-- PR #759 pinned `linux/amd64` + bumped to `:406` — Buildkite build failed silently due to missing `gnupg`
-- Manually built + pushed `:406` from workstation to break Kueue deadlock
-- PR #760 added `gnupg` permanently
-- PR #762 bumped pipeline.yml bootstrap to `:406` so the slow apt-install `Generate Pipeline` step is also fixed
-- Cluster verification: `du` on a real `:406` pod's container-0 upperdir = 24 MB (vs ~1,200 MB on `:404`)
-- Local verification: every `install_X()` in `setup-tools.sh` no-ops via `command -v` guard when run in `:406`
-- Baseline snapshot recorded for impact analysis
-
-### Remaining
-
-- T+24h: re-snapshot `nvme_data_units_written_total`, compute post-fix daily write rate
-- T+7d: same over 7d window; record peak burst rate + peak temp under burst
-- Per-burst sample: trace pod du across 5 `:406` pods to widen the confidence on the 24 MB/pod number
-- Optional: investigate the lockfile-frozen and `claude --dangerously-skip-permissions` test failures observed during the rollout (both appear pre-existing, not caused by the bake)
-
-### Caveats
-
-- The 1h write rate at the post-fix baseline (180 MB/s on nvme0n1) is dominated by this session's chaos (image builds, pulls, deadlock recovery) and is NOT representative of post-fix steady state. Use 30d/7d windows or T+24h re-snapshot for the real comparison.
-- The peak-temp 1h reading of 74 °C is from pre-fix bursts within the 1h window (the bursts happened before `:406` rolled out).
-- The `:406` image is amd64-only. If we ever spin up an arm64 node, ci-base will need a multi-arch manifest.
-- `setup-tools.sh` still has the install function bodies. Future cleanup PR can remove them; until then they're inert (no-op via `command -v` guards).

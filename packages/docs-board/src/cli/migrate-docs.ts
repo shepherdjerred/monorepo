@@ -63,17 +63,15 @@ function inferType(relativePath: string): DocumentFrontmatter["type"] {
       ? "decision"
       : directory === "guides"
         ? "guide"
-        : directory === "logs"
-          ? "log"
-          : directory === "patterns"
-            ? "pattern"
-            : directory === "plans"
-              ? "plan"
-              : directory === "todos"
-                ? "todo"
-                : directory === "architecture"
-                  ? "architecture"
-                  : "reference",
+        : directory === "patterns"
+          ? "pattern"
+          : directory === "plans"
+            ? "plan"
+            : directory === "todos"
+              ? "todo"
+              : directory === "architecture"
+                ? "architecture"
+                : "reference",
   );
   if (!result.success) throw new Error(`cannot infer type for ${relativePath}`);
   return result.data;

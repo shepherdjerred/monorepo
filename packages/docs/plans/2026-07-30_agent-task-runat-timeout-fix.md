@@ -96,8 +96,8 @@ no `idempotencyKey` juggling needed.
 | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- | -------------------- |
 | PVC backup-policy / ZFS re-audit               | doc `packages/docs/plans/2026-07-27_pvc-backup-policy-zfs-cleanup.md` (first block)                                                   | keep `2026-08-03` (future) | `--from-doc <path>`  |
 | Verify first automatic Buildkite reporting run | **no doc block** — reconstruct from the timed-out run's history (`workflowExecutionStartedEventAttributes.input` of run `019faca5-…`) | **omit** → run now         | `--json '<payload>'` |
-| npm publish CI green (pre-`NPM_TOKEN` expiry)  | doc `packages/docs/logs/2026-05-22_npm-token-rotation.md` (first block = the `runAt` one, line 137)                                   | keep `2026-08-13`          | `--from-doc <path>`  |
-| Refresh HA Seattle utility rates               | doc `packages/docs/logs/2026-07-19_ha-utility-price-tracking.md`                                                                      | keep `2027-01-05`          | `--from-doc <path>`  |
+| npm publish CI green (pre-`NPM_TOKEN` expiry)  | doc the original investigation (first block = the `runAt` one, line 137)                                                              | keep `2026-08-13`          | `--from-doc <path>`  |
+| Refresh HA Seattle utility rates               | doc the original investigation                                                                                                        | keep `2027-01-05`          | `--from-doc <path>`  |
 
 **Skip** `torvalds-memory-rightsize-1wk-post-change-verify` (2026-07-11, runAt now long past — stale).
 
@@ -153,7 +153,6 @@ Mirror the established visibility-query-gauge pattern (`detectOrphanSchedules` /
    future-dated agent tasks actually run + alert on timeouts").
 3. Verify (steps 1-4), draft → ready → merge.
 4. After the temporal-worker deploy, execute Part 2 backfill (step 5). Record results in the PR /
-   session log.
 
 ## Risks & caveats
 
@@ -172,38 +171,3 @@ Mirror the established visibility-query-gauge pattern (`detectOrphanSchedules` /
 
 - [ ] **Real-server e2e (pre-merge, plan step 4):** port-forward `localhost:7233`, submit a task with `runAt ≈ now+5m` via `schedule-agent-task.ts --json`; confirm it sits buffered then Completes (not TimedOut). Blocked: Temporal frontend is cluster-internal only — run in-cluster after the worker deploys.
 - [ ] **Part 2 backfill (post-deploy):** re-run pvc re-audit, buildkite-reporting-verify (reconstruct payload from run `019faca5-…` history), npm-token (08-13), ha-utility (2027-01-05). Skip stale torvalds-memory. Only after the worker image deploys.
-
-## Session Log — 2026-07-30
-
-### Done
-
-- **Part 1 (fix)** — `packages/temporal/src/lib/agent-task-scheduler.ts`: one-off `runAt` now defers via server-side `startDelay` (`startDelayFor`), args have `runAt` stripped (`workflowArgsForOneOff`), bound switched to `workflowRunTimeout`, reuse policy → `ALLOW_DUPLICATE_FAILED_ONLY`. Same `workflowExecutionTimeout → workflowRunTimeout` swap on the cron action blocks. `waitUntilRunAt` kept as a documented defensive no-op in `workflows/agent-task.ts`.
-- **Part 1 test** — new `packages/temporal/src/lib/agent-task-scheduler.test.ts` (mock client): far-future `runAt` → `startDelay ≈ runAt-now`, `runAt` stripped, `workflowRunTimeout` set, no `workflowExecutionTimeout`, `ALLOW_DUPLICATE_FAILED_ONLY`; plus past-`runAt`, no-`runAt`, and cron cases. 4/4 pass.
-- **Part 3 (guardrail)** — new activity `observe-agent-task-timeouts.ts` (+ gauge `temporal_agent_task_timeouts_24h` defined in that module, importing the shared `register`, mirroring `pr-review-metrics.ts`), thin workflow `observe-agent-task-timeouts.ts`, registered in `activities/index.ts` + `workflows/index.ts`, hourly `agent-task-timeout-watch` `SCHEDULES` entry. Alert rules `TemporalAgentTaskTimingOut` (>0) + `TemporalAgentTaskTimeoutScanFailed` (<0) added via `buildAgentTaskTimeoutRules()` in homelab `rules/temporal.ts`, with a test in `rules/temporal.test.ts`.
-- **Line-budget refactors** (both files were pinned exactly at the 500 cap): extracted the two large schedule arg payloads to `packages/temporal/src/schedules/schedule-payloads.ts`; extracted the alert rules into a helper; defined the new gauge outside `metrics.ts`.
-- **Verified:** `bunx turbo run typecheck lint test --filter=@shepherdjerred/temporal` → 6/6 green (0 errors). cdk8s `typecheck` + rule lint clean + `rules/temporal.test.ts` 2/2 pass.
-
-### Remaining
-
-- **Real-server e2e (pre-merge, plan step 4):** port-forward `localhost:7233`, submit a task with `runAt ≈ now+5m` via `schedule-agent-task.ts --json`; confirm it sits buffered then Completes (not TimedOut). Not yet run.
-- **Part 2 backfill (post-deploy):** re-run pvc re-audit, buildkite-reporting-verify (reconstruct payload from run `019faca5-…` history), npm-token (08-13), ha-utility (2027-01-05). Skip stale torvalds-memory. Only after the worker image deploys.
-- Draft PR → verify → ready → merge.
-
-### Caveats
-
-- The unit test mocks the client, so it proves the scheduler's _options_, not the server's actual `startDelay`/`workflowRunTimeout` behavior — the real-server e2e is the decisive check and is still pending.
-- Ultra-long `startDelay` (ha-utility ≈ 5 months) is expected to work (buffered), but confirm at submit time; fallback is a single-fire calendar Schedule.
-- Two temporal files (`register-schedules.ts`, `metrics.ts`) sit exactly at the max-lines cap on main — any future addition needs the same extract-to-sibling treatment.
-
-### Verification note (2026-07-30) — live e2e deferred
-
-The pre-merge real-server e2e (plan step 4) could **not** be run from the
-workstation: the Temporal frontend binds to the pod IP only (`kubectl
-port-forward … 7233` fails with `connect: connection refused inside namespace`),
-and the `temporal.tailnet-1a49.ts.net` ingress is HTTP-only (gRPC returns 502).
-The frontend is intentionally cluster-internal. Run the e2e **in-cluster after
-the worker deploys** (exec into a pod that has the client, or a temporary debug
-pod), or accept the unit-test + Temporal's documented `startDelay` semantics as
-the pre-merge bar. The within-session e2e also can't observe the decisive
-">2h delay survives" case anyway (would need a 2h wait); `workflowRunTimeout`
-was chosen specifically to make that server-side behavior unambiguous.

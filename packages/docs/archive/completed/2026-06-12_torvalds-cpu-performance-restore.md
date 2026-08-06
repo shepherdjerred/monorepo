@@ -80,7 +80,6 @@ talosctl upgrade --nodes 100.102.88.88 \
 ### 7. Docs & git
 
 - Mirror this plan to `packages/docs/plans/2026-06-12_torvalds-cpu-performance-restore.md` (Status: In Progress until the user runs the upgrade and RAPL/cmdline verify clean)
-- Append Session Log to the thermal investigation log (`packages/docs/logs/2026-05-24_torvalds-thermal-investigation.md`)
 - Commit on the existing `fix/talos-install-disk-selector` branch (same Talos-hygiene domain, still unmerged) — separate commit, conventional message
 
 ## Verification (pre-handoff)
@@ -96,27 +95,3 @@ talosctl upgrade --nodes 100.102.88.88 \
 - Grafana thermal alert rules (user-deferred again; still the standing follow-up in the thermal doc)
 - `processor.max_cstate=2`, kubelet reservations, Kueue quota (capacity caps, intentionally kept)
 - BIOS-level Vcore offset / power limits
-
-## Session Log — 2026-06-12
-
-### Done
-
-- Raised RAPL cap to Intel stock 125/253 W in `packages/homelab/src/cdk8s/src/cdk8s-charts/apps.ts` (deploys post-merge via CI → ChartMuseum → ArgoCD `apps`)
-- Removed `cpufreq.default_governor=powersave` + `intel_pstate=passive` from the factory schematic `packages/homelab/src/talos/image.yaml` (kept `processor.max_cstate=2`)
-- Fixed the stale-digest bug in `packages/homelab/src/talos/update-image-id.ts`: it now refreshes the pinned `@sha256` digest from the factory registry alongside the schematic ID (previously a regenerated reference silently kept resolving to the old image, since digest beats tag). Added zod to `packages/homelab` deps for response validation; replaced the banned `as { id: string }` assertion.
-- Regenerated: new schematic ID `cb41030567751f478585f38eb478b34adb4c262df80a6967cadbbf085974c38c`, digest `sha256:c3537137…edec8` (cross-checked with `crane digest`); written to `patches/image.yaml` + `packages/homelab/README.md`
-- Synced live machine config (no reboot): new `install.image`, removed the dead `install.extraKernelArgs` (SDBoot no-ops — the talosctl warning about them is gone now)
-- Verified: homelab typecheck clean, cdk8s lint clean, 247 tests pass, node Ready
-
-### Remaining
-
-- **Operator: run the upgrade** (reboots the node, ~5 min):
-  `talosctl upgrade --nodes 100.102.88.88 --image factory.talos.dev/metal-installer-secureboot/cb41030567751f478585f38eb478b34adb4c262df80a6967cadbbf085974c38c:v1.13.3 --drain=false`
-- Post-reboot verify: `/proc/cmdline` has no powersave/passive args; `scaling_driver` = `intel_pstate` (active/HWP; governor will read "powersave" — that's normal HWP mode, not min-freq)
-- Post-merge verify: RAPL = 125000000/253000000 in `/sys/class/powercap/intel-rapl:0/`, `cpu-power-cap` pod Running
-- Watch CPU + NVMe temps on the next heavy CI day under the restored limits (thermal alert rules still don't exist — standing follow-up)
-
-### Caveats
-
-- `src/talos/update-image-id.ts` has no typecheck/lint coverage (outside the cdk8s/helm-types workspaces, eslint-ignored) — it was exercised by running it for real
-- The new RAPL values only deploy after this branch merges; until then the DaemonSet still enforces 95/140

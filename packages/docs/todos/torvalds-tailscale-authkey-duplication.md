@@ -5,7 +5,6 @@ status: planned
 board: true
 verification: operator
 disposition: blocked
-origin: packages/docs/logs/2026-07-10_torvalds-kubelet-crashloop.md
 ---
 
 # torvalds: duplicate TS_AUTHKEY in live Tailscale ExtensionServiceConfig
@@ -57,7 +56,7 @@ Tailscale authkey via the admin console, replace both duplicate `TS_AUTHKEY`
 entries (and the duplicated `TS_ACCEPT_DNS`) with a single clean set, and apply via
 full-document `talosctl apply-config --mode=no-reboot` (not `talosctl patch
 machineconfig` — see the append-vs-replace gotcha in
-`packages/docs/logs/2026-07-10_torvalds-kubelet-crashloop.md`). This sidesteps the
+the original investigation). This sidesteps the
 need to identify which old key is live and eliminates the ambiguity outright. Low
 priority — no current impact — but worth cleaning up before it causes confusion in a
 future incident, and before `patches/tailscale.yaml` needs to be regenerated from

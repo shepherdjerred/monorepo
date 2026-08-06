@@ -87,36 +87,3 @@ Exits non-zero unless every affected variant is RUNNING.
 
 Static `*.sjer.red` sites + npm packages; Buildkite build drill-down; a `--watch`
 poll-until-deployed mode.
-
-## Session Log — 2026-06-07
-
-### Done
-
-- Built `toolkit deployed` per the plan: handler, command orchestration, and
-  `lib/deployed/{git,versions-file,catalog,argocd,kubectl,github,types,schemas,format}.ts`.
-- Wired into `src/index.ts` (+ usage) and `package.json` `test:unit`.
-- Added `test/deployed/` (drift + parser tests, 6 passing).
-- Docs: updated `packages/toolkit/AGENTS.md` (CLAUDE.md symlink) with a
-  `deployed` section + structure; added an automation pointer atop the
-  is-commit-deployed guide.
-- Verified live against `torvalds`: birmel/scout/streambot traces match the
-  manual traces; typecheck + eslint clean.
-
-### Remaining
-
-- Open a PR (branch `claude/interesting-babbage-52bb9d`); attach a screenshot of
-  sample output per repo convention (CLI output is the visual deliverable).
-- `./install.sh` to refresh the user's `~/.local/bin/toolkit` (optional; binary
-  build verified).
-
-### Caveats
-
-- Deviations from the original plan: parser file is `versions-file.ts` (not
-  `versions.ts`); a `github.ts` layer was added; verdict names finalized as
-  `NOT_MERGED/PENDING/NO_IMAGE/PINNED/SYNCED/RUNNING`; the drift test validates
-  the registry against live `versions.ts` (stronger and avoids the banned `../`
-  cross-package import) rather than importing `scripts/ci/src/catalog.ts`.
-- `obsidian-headless` has no dedicated ArgoCD app (mapped to umbrella `apps`);
-  its pod is still matched by image substring.
-- Fresh-worktree setup required: `bun install` in toolkit + build `eslint-config`
-  before typecheck/lint pass.

@@ -24,7 +24,7 @@
 # nothing to enable. kernel.panic and kernel.panic_on_oops are already set by
 # Talos by default (verified live: panic=10, panic_on_oops=1) — no action
 # needed for either.
-# See packages/docs/logs/2026-07-08_torvalds-cluster-health-deep-check.md.
+# See the original investigation.
 machine:
   sysctls:
     kernel.kptr_restrict: "1"

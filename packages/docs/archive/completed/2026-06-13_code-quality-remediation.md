@@ -9,8 +9,8 @@ board: false
 
 ## Context
 
-A high-bar audit (2026-06-13, see `logs/2026-06-13_code-quality-audit.md`, `logs/2026-06-13_consistency-conventions-audit.md`,
-`logs/2026-06-13_error-handling-audit.md`, `logs/2026-06-13_suppressions-ignore-inventory.md`) found the repo's safeguards
+A high-bar audit (2026-06-13, see prior analysis, prior analysis,
+prior analysis, prior analysis) found the repo's safeguards
 are often **performative** — present enough to look governed, not wired tightly enough to bind. The thesis: most of the work
 is making _existing_ policy binding and uniform, not inventing new policy. The maintainer scoped the first PR to item #1 and
 deferred the rest to this doc.
@@ -59,36 +59,6 @@ Themed PRs, low→high risk: (1) enable existing rules §3 one at a time; (2) ra
 - Module-boundary enforcement — handled separately via **dependency-cruiser** (maintainer).
 - A full Nx-style visibility system.
 
-## Session Log — 2026-06-13
-
-### Done
-
-- Shipped item #1 (check-todos CI gate + lefthook↔CI parity meta-test) on `feature/code-quality-ci-parity`.
-- Wrote the findings docs (consistency, error-handling, suppressions inventory) + this remediation plan.
-
-### Historical follow-up state
-
-- Items 2–10 above (deferred by maintainer to plan-doc tracking).
-
-### Caveats
-
-- Corrected two audit inaccuracies (ESLint _is_ in CI per-package; `migration-guard` _was_ already a CI gate) — re-verify
-  any audit claim against current `main` before acting, since the audit ran on `8f3538b1b`.
-
 ## Historical follow-up state
 
 - Complete and verify the work described in `Code-Quality Remediation Plan`.
-
-## Session Log — 2026-07-27
-
-### Done
-
-- The initial parity gate and later quality waves shipped; current root verification now includes jscpd, quality ratchets, ruff, pyright, knip, lint, and the other described enforcement surfaces.
-
-### Remaining
-
-- None in this plan.
-
-### Caveats
-
-- The historical design is retained for context; it is not an active board item.

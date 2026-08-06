@@ -339,8 +339,8 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         // (CPU% maxed ~93% during past healthy heavy bursts, not multiples of
         // thread count) and well below the catastrophic range actually
         // observed — a reasoned starting point, backtest before finalizing.
-        // See packages/docs/logs/2026-07-08_torvalds-cluster-health-deep-check.md
-        // and packages/docs/logs/2026-07-05_torvalds-ci-freeze-investigation.md.
+        // See the original investigation
+        // and the original investigation.
         {
           alert: "CriticalSystemLoad",
           annotations: {

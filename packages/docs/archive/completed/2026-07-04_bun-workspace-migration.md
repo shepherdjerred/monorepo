@@ -95,44 +95,6 @@ Turbo/Nx/Lerna/Rush. Each has a documented cause of death; the isolated linker r
 the contradiction that made "federation" look optimal (hoisting was the real enemy of
 both correctness AND performance).
 
-## Session Log — 2026-07-04 (execution, PR #1408)
-
-### Done
-
-- Full conversion in ONE PR on `fix/webring-truncate-html` (PR #1408, retitled):
-  45 members in root workspaces; overrides/trusted/patched unioned (protobufjs
-  conflict resolved to ^7.5.7 — CVE-clean, no forced major on temporal; REVIEW);
-  all `file:` → `workspace:*`; nested workspaces flattened; linker pins removed;
-  root bunfig = isolated (globalStore deliberately NOT committed);
-  45 per-package lockfiles deleted → one root bun.lock (2,702 pkgs, 8s install);
-  bun-types undici-types patch at root patchedDependencies.
-- birmel Prisma → in-repo generated output + `#generated/*` imports (10 files),
-  matching scout/dpmk; dvs got its missing @types/node; sjer.red declares vite.
-- Dagger rework: `workspaceMeta()` manifests-firewall + filtered root installs in
-  bunBaseContainer/playwright/6 image builders (helper installs consolidated);
-  `repoRoot` threaded through all helpers; Monorepo constructor + single
-  `--repo-root` injection in DAGGER_CALL; deps.ts parents list their members.
-- Deleted: drift gate everywhere (script, CI step, dagger func/helper, tests);
-  setup.ts per-package install fan-out + refresh phase; per-package linker pins.
-- Docs: AGENTS.md describes the real architecture; eslint-config npm label fixed;
-  todo swapped to bun-types-undici-phantom-dep.
-
-### Historical follow-up state
-
-- CI validation on Buildkite (local verification embargoed — machine stability);
-  expect per-package fixups (phantom deps, script assumptions) driven by CI.
-- File bun-types issue upstream (needs Jerred's OK).
-- Post-merge: ~/.bunfig.toml globalStore opt-in via chezmoi; CLAUDE.md worktree
-  section says setup.ts required — still true (shared builds/codegen).
-
-### Caveats
-
-- scripts/ci tests may need expectation updates for `--repo-root` in DAGGER_CALL.
-- Image-build symlink semantics (yt-dlp withFile through isolated symlink) are
-  guarded by existing smoke tests — if one fails, that's the designed signal.
-- Local tree has NOT run typecheck/tests for most packages (compute embargo);
-  CI is the verifier by design.
-
 ## CI round 1 results (build 5065) + round-2 fixes (pushed 51d9bd200)
 
 Pipeline itself worked (17+ steps green; filtered installs, meta firewall,
@@ -154,51 +116,6 @@ per-package lint steps + local hooks. Also: knip failures (soft-fail,
 artifact /tmp/knip.txt on build 5065), remaining pkg-check exit-1s to triage
 after round 2, Kueue quota watch after memory bumps.
 
-## Session Log — 2026-07-07
-
-### Done
-
-- Investigated PR #1408 Buildkite build 5100. The hard failure was
-  `shield-quality-bundle-15-checks` on this plan file's markdown table
-  formatting; the other red checks were canceled.
-- Finished the in-progress merge, merged current `origin/main`, and verified the
-  branch is conflict-free with `git merge-tree --write-tree --quiet origin/main HEAD`.
-- Fixed the remaining local `sjer.red` build failure by adding
-  `vite.resolve.noExternal` for `entities` and `rss-parser` in
-  `packages/sjer.red/astro.config.ts`, so Astro bundles the CommonJS
-  `rss-parser` -> `entities` path instead of generating an invalid default ESM
-  import.
-- Verified the targeted CI signals without running `bun run scripts/setup.ts`:
-  markdownlint/prettier on touched docs and CI files, `scripts/ci` tests,
-  pipeline generation, webring typecheck/test/build, sjer.red lint/typecheck via
-  build, and sjer.red build.
-
-### Historical follow-up state
-
-- Commit and push the final `sjer.red` bundling fix, then watch the new
-  Buildkite run for any remaining package-level failures.
-
-### Caveats
-
-- Root `bun run typecheck` was not re-run after the fix because the local run hit
-  process/resource exhaustion earlier; targeted package and CI generator checks
-  passed.
-- Setup was intentionally not run per operator instruction.
-
 ## Historical follow-up state
 
 - Complete and verify the work described in `Bun Architecture — Target: Single Workspace, Isolated Linker, Global Store`.
-
-## Session Log — 2026-07-27
-
-### Done
-
-- The migration landed through PRs #1408, #1517, and #1518; current source has one root workspace, one lockfile, and the isolated linker.
-
-### Remaining
-
-- None in this plan.
-
-### Caveats
-
-- The historical design is retained for context; it is not an active board item.

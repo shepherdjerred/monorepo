@@ -17,7 +17,7 @@ resource "buildkite_pipeline" "monorepo" {
   # public disclosure. Keep this managed here so a UI toggle can't drift it
   # back to public. Defense-in-depth for the log-scrubbing controls in
   # .buildkite/pipeline.yml + scripts/lib/github-auth.ts. See
-  # packages/docs/logs/2026-07-18_bk-log-secret-audit-and-hardening.md.
+  # the original investigation.
   visibility = "PRIVATE"
 
   default_branch       = "main"
@@ -67,7 +67,7 @@ resource "buildkite_pipeline" "monorepo" {
                   # to a full-repo pack download into the tmpfs workspace,
                   # which the namespace LimitRange's 768Mi default limit then
                   # OOM-kills (fleet-wide red PRs 2026-08-02; see
-                  # packages/docs/logs/2026-08-02_buildkite-pipeline-upload-oom-diagnosis.md).
+                  # the original investigation).
                   # Resources copy the pod_light container-0 shape from
                   # .buildkite/pipeline.yml so the LimitRange default can
                   # never apply and even a full-pack-fetch regression fits.

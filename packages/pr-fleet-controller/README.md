@@ -208,20 +208,3 @@ bun run test
 bun run lint
 bun run build
 ```
-
-## Session Log — 2026-07-29
-
-### Done
-
-- Added the provider-neutral Mastra workflow, interactive terminal, typed tool
-  boundary, current-head evidence collection, leases, sandboxing, worktrees,
-  git-spice publication, and deterministic tests.
-
-### Remaining
-
-- Verify the published PR's current-head Buildkite and hosted review results.
-
-### Caveats
-
-- A live model turn requires a configured API credential for the selected
-  provider; deterministic tests use fake ports and do not spend provider quota.

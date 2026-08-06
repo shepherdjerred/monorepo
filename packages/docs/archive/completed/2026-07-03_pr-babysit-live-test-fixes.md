@@ -71,30 +71,6 @@ left as `@temporal-worker` (user-facing command token, works as a literal match)
   trigger on a throwaway PR after the worker image deploys; confirm the workflow runs past 60s and
   completes, and the DoD gate no longer fails closed on the 403.
 
-## Session Log — 2026-07-03
-
-### Done
-
-- Diagnosed the live-run failure (PR #1353) end-to-end against the cluster: heartbeat timeout at 60s.
-- Fix 1 (heartbeat threading + env-overridable interval): `packages/temporal/src/activities/pr-babysit/iteration.ts`.
-- Fix 2 (defer-to-rulesets on classic 403): `packages/temporal/src/activities/pr-babysit/github.ts`.
-- Fix 3 (bot login constant): `packages/homelab/src/cdk8s/src/resources/temporal/worker.ts`.
-- Added `iteration.test.ts` + `github.test.ts` regression tests.
-- Filed todo `babysit-phase4-live-retest` (waiting-on-verification).
-- All local verification green (temporal typecheck/tests/eslint, homelab typecheck).
-
-### Historical handoff
-
-- Merge `fix/babysit-heartbeat`; after the temporal-worker image deploys, run the Phase 4 live
-  re-test (todo `babysit-phase4-live-retest`).
-
-### Caveats
-
-- The `@shepherdjerred/llm-models` `file:` dep needs `bun run --filter=./packages/llm-models build`
-  then `bun install` in a fresh worktree before temporal typechecks (setup aborted early on an
-  unrelated `scout-for-lol generate` failure).
-- Fix 2 intentionally still fails closed on non-403 classic errors and on an unknown rulesets read.
-
 ## Closure
 
 Shipped in commit `c1e044eeb` / PR #1374, reachable from `origin/main`. The

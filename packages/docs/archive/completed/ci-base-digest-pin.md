@@ -59,19 +59,3 @@ write win of the reduction levers.
 - PR #1776 adds independent immutable pins and monotonic candidate-to-pin
   promotion for `ci-base` and `ci-playwright`; the remaining proof requires a
   post-merge main build against live GHCR and the generated pin PR.
-
-## Session Log — 2026-08-02
-
-### Done
-
-- Confirmed implementation PR #1776 merged green and generated promotion PR #1810 merged with exact-head Buildkite #7417 green.
-- Confirmed the current pin remains the promoted `sha256:cbaa2bed…` from build #7414 while later content-aware candidates correctly produced no-change outcomes.
-- Completed and archived the digest-pin acceptance todo.
-
-### Remaining
-
-- None.
-
-### Caveats
-
-- Future CI image changes remain governed by the same content-aware promotion path.

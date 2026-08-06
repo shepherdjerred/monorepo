@@ -7,7 +7,7 @@ board: false
 
 # CI capacity remediation — analysis & proposals
 
-Companion to `packages/docs/logs/2026-07-22_ci-capacity-analysis.md` (all
+Companion to the original investigation (all
 measurements). Everything here is grounded in live data collected 2026-07-22,
 not docs.
 

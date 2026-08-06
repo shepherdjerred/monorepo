@@ -299,17 +299,3 @@ cd packages/terraform-provider-asuswrt && go mod tidy && go build ./... && go te
 ## Historical follow-up state
 
 - Complete and verify the work described in `Polyrepo → Monorepo Link Audit`.
-
-## Session Log — 2026-07-27
-
-### Done
-
-- The proposed Dagger/CI wiring and historical external-repository assumptions are stale; no lychee configuration was implemented.
-
-### Remaining
-
-- None in this plan.
-
-### Caveats
-
-- The historical implementation recipe must not be resumed without a fresh design against current architecture.

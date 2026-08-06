@@ -98,11 +98,8 @@ op run --env-file=.env -- tofu -chdir=src/tofu/cloudflare apply
 
 Expected plan output: `2 to destroy, 0 to add, 0 to change`. State is stored in SeaweedFS (per `reference_tofu_state_seaweedfs.md`).
 
-### Step 3 — Commit and end-of-session log
-
 - Commit: `fix(homelab): remove dangling status.sjer.red DNS records`
   - Scope `homelab` per `reference_commit_msg_validation.md`.
-- End-of-session log at `packages/docs/logs/2026-05-14_status-sjer-red-teardown.md` per project documentation discipline, capturing: what was already done in `5deb85d1b`, the stale-mount diagnosis, the operational steps run, and the DNS cleanup.
 
 ## Out of scope
 
@@ -112,7 +109,7 @@ Expected plan output: `2 to destroy, 0 to add, 0 to change`. State is stored in 
 ## Critical files
 
 - `packages/homelab/src/tofu/cloudflare/sjer-red.tf` (edit: delete lines 247-263)
-- `packages/docs/logs/2026-05-14_status-sjer-red-teardown.md` (new log file)
+- the original investigation (new log file)
 
 ## Verification
 
@@ -122,28 +119,3 @@ Expected plan output: `2 to destroy, 0 to add, 0 to change`. State is stored in 
 4. `tofu plan` → `No changes` after apply
 5. `dig +short status.sjer.red` and `dig +short status-api.sjer.red` → empty (or NXDOMAIN) after DNS propagation
 6. `grep -rn "status\.sjer\.red\|status-page" packages/ scripts/` → no matches outside `packages/docs/`
-
-## Session Log — 2026-05-14
-
-### Done
-
-- Mirrored plan from `~/.claude/plans/status-vivid-rose.md` and indexed it in `packages/docs/index.md`.
-- **Step 1 — unstuck the stale mount**: annotated `secret/prometheus-prometheus-kube-prometheus-prometheus` with `reloadedAt=$(date +%s)` to bump resourceVersion. After 90s the kubelet still hadn't reprojected the mount (`gunzip /etc/prometheus/config/prometheus.yaml.gz` still showed `static-site-status-sjer-red`), so fell through to the documented fallback: `kubectl delete pod prometheus-prometheus-kube-prometheus-prometheus-0`. The pod hit a non-obvious snag — both containers exited with `exitCode 0` and the pod sat in `Succeeded` with a deletionTimestamp for several hours; `kubectl delete --force --grace-period=0` cleared it and the StatefulSet recreated the pod cleanly. After restart, the mounted config has 9 static-site probes (down from 10) — `static-site-status-sjer-red` is gone.
-- **Step 2 — DNS records removed**: deleted `sjer_red_cname_status_api` and `sjer_red_cname_status` from `packages/homelab/src/tofu/cloudflare/sjer-red.tf`. Full `tofu plan` also surfaced 36 unrelated in-place updates (zone DNSSEC + SRV record drift across all zones from a Cloudflare provider schema shift), so applied with `-target` to scope just the two destroys: `Apply complete! Resources: 0 added, 0 changed, 2 destroyed.`
-- **Step 3 — verification**:
-  - `kubectl exec ... gunzip /etc/prometheus/config/prometheus.yaml.gz | grep -c static-site-status-sjer-red` → `0`
-  - `probe_success{site="status.sjer.red"}` query → empty
-  - `ALERTS{alertname="StaticSiteDown"}` → empty
-  - `toolkit pd incidents` → No open incidents found (all three open incidents from yesterday cleared — `Q0N6K8ERQ6R94C` from this work; `Q3P8QHJDXE4KKG` SSD wear and `Q0UQLAN7VWFQX4` HA entities auto-resolved as their conditions cleared)
-  - `dig +short status.sjer.red` / `dig +short status-api.sjer.red` → empty
-  - `grep -rln "status\.sjer\.red\|status-page" packages/ scripts/` outside `docs/` → only false-positive matches in the `pagerduty-helper` skill for unrelated `/status_pages` PD API endpoints
-
-### Remaining
-
-- None for this plan.
-
-### Caveats
-
-- **Unrelated tofu drift, not applied**: 36 changes (9 zone DNSSEC `status: active -> null` + 27 SRV records) are still pending in `src/tofu/cloudflare`. They appear to be provider-schema drift from Cloudflare provider 5.19.1 dropping a `status` field on DNSSEC and tweaking SRV defaults. Out of scope here; address in a separate "tofu drift" cleanup.
-- **Stale-mount mechanism is still unexplained**. The operator-regenerated secret on the API server was correct; the kubelet did not reproject it within at least 6 hours. Bumping `metadata.annotations.reloadedAt` did not provoke a remount either — only a pod delete fixed it. If this recurs for other Probe deletions, consider a checksum-annotation pod-restart pattern or open an upstream issue (Talos `v1.36.0` kubelet + `kube-prometheus-stack` v85.0.2 + gzipped secret).
-- **Pod was stuck terminating**, not just deleted — the original `kubectl delete pod` left the pod in `Succeeded` + deletionTimestamp for ~5h before the force-delete cleared it. Not investigated; same single-replica configuration as before.

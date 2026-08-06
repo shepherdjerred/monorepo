@@ -5,7 +5,6 @@ status: in-progress
 board: true
 verification: agent
 disposition: active
-origin: packages/docs/logs/2026-05-19_grafana-trace-log-correlation.md
 source_marker: false
 ---
 
@@ -50,7 +49,7 @@ Phase 5 of the source plan (in `~/.claude/plans/`) is explicitly post-deploy ver
 
 ## References
 
-- Originating log: `packages/docs/logs/2026-05-19_grafana-trace-log-correlation.md`
+- Originating log: the original investigation
 - Trigger commit: `59823f7c1`
 - Source plan: `~/.claude/plans/` (the trace↔log correlation plan, Phase 5 section)
 - Datasource mapping: `packages/homelab/src/cdk8s/src/resources/argo-applications/grafana-values.ts`

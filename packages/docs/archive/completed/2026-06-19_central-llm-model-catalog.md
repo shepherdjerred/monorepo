@@ -53,7 +53,7 @@ Node), so consumers typecheck the declarations rather than the source. Built in
 Each TS consumer: add `file:` dep, append the `.dagger/src/deps.ts` edge, delete
 its local map, point its helper at the catalog, refresh `bun.lock`.
 
-- scout data `review/models.ts` — rewrite as a thin adapter keeping every exported name/signature; drop legacy/deprecated rows. **The catalog `file:` dep is declared at the scout _workspace root_, not in `data`** — declaring it in `data` (consumed via `file:` by 6 siblings) hits a bun 1.3.14 bug that makes `--frozen-lockfile` unsatisfiable; root-hoisting resolves it for `data/review/models.ts`. See `logs/2026-06-20_pr-1281-scout-frozen-lockfile.md`.
+- scout data `review/models.ts` — rewrite as a thin adapter keeping every exported name/signature; drop legacy/deprecated rows. **The catalog `file:` dep is declared at the scout _workspace root_, not in `data`** — declaring it in `data` (consumed via `file:` by 6 siblings) hits a bun 1.3.14 bug that makes `--frozen-lockfile` unsatisfiable; root-hoisting resolves it for `data/review/models.ts`. See prior analysis.
 - temporal `pr-review/summary-cost.ts` — `estimateCostUsd` → `costForTextUsage("claude-haiku-4-5-20251001", …)`.
 - dpp `goal/pricing.ts` — `computeCost` reads `getPricing`.
 - monarch `lib/usage.ts` — `createUsageTracker` → `getPerTokenPricing(...) ?? getPerTokenPricing("claude-sonnet-4-6")`.
@@ -69,24 +69,3 @@ write corrections, and report drift plus any catalog models absent upstream
 prettier → drift-check → PR. Schedule `llm-catalog-refresh-weekly` (cron
 `0 9 * * 1`, queue DEFAULT, SKIP overlap). Secrets: only `GITHUB_APP_*` (no LLM,
 no scraping).
-
-## Session Log — 2026-06-19
-
-### Done
-
-All three phases shipped in PR #1281 (`feature/llm-models-catalog`):
-
-- **Phase 1** — `@shepherdjerred/llm-models` built package: `src/catalog.json` (active models only, all 3 providers), Zod loader + accessors, Pydantic validator, tests, full wiring (`ALL_PACKAGES`, `WORKSPACE_DEPS`, `setup.ts` DAG + refresh, `knip.json`).
-- **Phase 2** — migrated every consumer off its local map: monarch `usage.ts`, temporal `summary-cost.ts`, dpp `goal/pricing.ts`, scout `data/review/models.ts` (adapter, legacy rows dropped) + flagship bump `gpt-5.4→gpt-5.5`, scout Python `ai_analyze_llm.py` (Pydantic).
-- **Phase 3** — `scripts/sync-from-upstreams.ts` deterministic cross-check vs models.dev + LiteLLM (`bun run sync`) + Temporal `llm-catalog-refresh-weekly` workflow (opens a PR on drift via `openSeasonRefreshPr`).
-- Verified throughout: per-package typecheck/eslint/tests (scout data 339, scout frontend astro-check + **full browser build**, dpp + monarch + temporal incl. workflow-bundle smoke test), `generate-deps` consistent, live `sync --check` (no drift), Pydantic load.
-
-### Remaining
-
-- Merge #1281; **close #1272** (subsumed). After merge: `git worktree remove .claude/worktrees/llm-models-catalog`.
-
-### Caveats
-
-- The catalog is a **built** `file:` dep: after editing it, consumers need `bun install --force` to re-copy `dist/` (handled by `setup.ts`' refresh phase + the Temporal refresh activity; locally re-run setup or the per-consumer `bun install --force`).
-- `gpt-5.5` + the Gemini image models are absent from / priced differently by the community datasets, so they stay "overlay-only" (manually maintained); the weekly refresh report surfaces them each run.
-- A collaborator commit (`81e940580`, plain Gemini display names + Google test coverage) was rebased in and preserved.

@@ -63,7 +63,7 @@ describe("createFrontmatter", () => {
       "plans/fixture.md",
       {
         id: "plan-fixture",
-        type: "log",
+        type: "guide",
         status: "planned",
         board: true,
         verification: "agent",

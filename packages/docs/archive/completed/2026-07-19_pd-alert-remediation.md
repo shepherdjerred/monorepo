@@ -9,7 +9,7 @@ board: false
 
 ## Context
 
-Triage of the 21 open PD incidents (`packages/docs/logs/2026-07-19_pagerduty-alert-triage.md`) found four root causes. This plan fixes three; the API-server error-budget burn (etcd starved by parallel CI writes on the node's NVMe) is **out of scope** — a new CI server arrives in 1–2 weeks.
+Triage of the 21 open PD incidents (the original investigation) found four root causes. This plan fixes three; the API-server error-budget burn (etcd starved by parallel CI writes on the node's NVMe) is **out of scope** — a new CI server arrives in 1–2 weeks.
 
 Key discovery during planning: the live mario-kart/pokemon deployments carry **stale kubectl-patch hotfixes** (mario-kart `command` from 2026-06-13; pokemon `/tmp`+`/home/bun` mounts and `HOME`/`TMPDIR` env from ~2026-07-06) that ArgoCD never removes because it doesn't own those fields. The new `/app`-rooted images (from #1517's Dockerfile rewrite, deployed via the 2.0.0-5781 bump) collide with this un-codified state. All three images' CMDs are already correct for `/app` — only the manifests (and stale patches) are wrong.
 
@@ -88,56 +88,6 @@ Why smoke didn't catch this: #1517 updated the pokemon smoke script's config mou
 - `ts-mc` bucket lacks a `404.html` (error-page log noise only).
 - `cloudflare-tunnel` ArgoCD app reports Unknown/Missing while tunnels clearly route — worth a later look, not part of this fix.
 
-## Session Log — 2026-07-19
-
-### Done
-
-- pokemon.ts + mario-kart.ts: `APP_ROOT` → `/app/...`; pokemon codifies the
-  `/tmp` + `/home/bun` emptyDirs and `TMPDIR`/`HOME` env from the July 6 live
-  hotfix. Constants exported for the new guard test.
-- trmnl-dashboard/index.ts: numeric `user/group: 1000` securityContext.
-- qBittorrent.conf: `OnTorrentAdded\Program` unquoted `%I` (matches live).
-- service-probes delivery: `helm/service-probes/Chart.yaml`,
-  `argo-applications/service-probes.ts` (namespace `prometheus`), registered in
-  `cdk8s-charts/apps.ts`. Synth renders 64 Probe CRs.
-- `.buildkite/pipeline.yml`: e2e `artifact_paths` + deploy download now use two
-  globs (`dist/**/*` + `dist/*`); `scripts/deploy-site.ts` refuses any live
-  sync whose dist lacks a root `index.html`.
-- New `src/cdk8s/src/app-root-matches-dockerfile.test.ts` ties each `APP_ROOT`
-  to its Dockerfile's final `WORKDIR` (would have failed CI on #1517).
-- Bucket restored: rebuilt sjer.red dist (turbo) and deployed with the
-  existing SeaweedFS AWS-profile creds — https://sjer.red and /rss.xml both 200.
-- `bun run verify -- --affected` green (30/30 tasks).
-
-### Historical follow-up state
-
-- Merge the PR; after the main build pushes charts, confirm ArgoCD syncs
-  pokemon / mario-kart / trmnl-dashboard / service-probes.
-- Remove the stale mario-kart command patch (one-liner in §1b), confirm pods
-  Ready, `probe_success{job=~"probe-.*"}` non-empty, PD incidents auto-resolve.
-
-### Caveats
-
-- The main checkout has an untracked copy of the triage log at
-  `packages/docs/logs/2026-07-19_pagerduty-alert-triage.md`; after this PR
-  merges, `git pull` there may refuse to overwrite it — remove the untracked
-  copy first.
-- qbittorrent will still roll once on sync (config seed changed) — expected.
-
 ## Historical follow-up state
 
 - Complete and verify the work described in `PagerDuty Alert Remediation — crashed pods, service probes, sjer.red`.
-
-## Session Log — 2026-07-27
-
-### Done
-
-- PR #1561 merged the /app manifest corrections, service-probe delivery, and static-site deployment guard.
-
-### Remaining
-
-- None in this plan.
-
-### Caveats
-
-- The historical design is retained for context; it is not an active board item.

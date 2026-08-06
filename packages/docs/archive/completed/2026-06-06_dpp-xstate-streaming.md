@@ -105,31 +105,3 @@ test deferreds resolve a sentinel `true` because the repo's
 Not yet done: live behavior check against a real Discord guild (join/leave →
 Go-Live up/down; rapid flap → exactly one healthy stream, no orphaned ffmpeg;
 force a join failure → observe retry). This requires deploy/runtime access.
-
-## Session Log — 2026-06-06
-
-### Done
-
-- Added `xstate@^5.32.0` to backend `package.json`.
-- New: `src/stream/stream-machine.ts`, `src/stream/orchestrator-machine.ts`,
-  `src/stream/stream-machine.test.ts`, `src/stream/orchestrator-machine.test.ts`.
-- Rewrote `src/stream/game-streamer.ts` as a facade over the orchestrator actor
-  (deleted the `opChain` mutex + `active`/`rgba`/`playing` juggling).
-- Updated `eslint.config.ts` `allowDefaultProject` for the two new test files.
-- tsc / bun test (22) / eslint all green.
-
-### Remaining
-
-- Live runtime verification in a test guild (see Verification).
-- Open a PR (not yet created).
-
-### Caveats
-
-- Early in the session I accidentally wrote files to the **main checkout** (followed
-  stale absolute paths from exploration) and a relative-path `rm` briefly deleted
-  the worktree machine files. All recovered: main checkout restored to clean,
-  worktree holds the canonical work. Stay strictly on worktree paths.
-- `frameSink`/`encoder` in machine context are intentionally non-serializable; the
-  machine is never persisted.
-- Don't disturb the committed bun patch that lazy-loads sharp in
-  discord-video-stream (reference_bun_sharp_dvs_patch).

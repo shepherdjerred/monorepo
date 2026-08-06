@@ -6,7 +6,7 @@ SecureBoot Talos, schematic in `image.yaml`.
 
 Purpose and design: `packages/docs/plans/2026-07-25_liskov-cluster-join.md`
 (port/adapt/skip audit) and
-`packages/docs/logs/2026-07-18_ci-node-purchase-sanity-check.md` (why the
+the original investigation (why the
 node exists: CI/prod failure-domain isolation). Apply the `ci=only:NoSchedule`
 taint through the cluster API after the worker joins; Kubernetes' default
 NodeRestriction admission plugin prevents a worker identity from setting its

@@ -5,7 +5,6 @@ status: planned
 board: true
 verification: agent
 disposition: deferred
-origin: packages/docs/logs/2026-06-13_new-todos-batch.md
 source_marker: false
 ---
 

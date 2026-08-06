@@ -72,21 +72,3 @@ A gap audit (3 Explore agents over send paths, generation/scheduler paths, and h
 1. After the image deploys, run `cleanupRemovedGuild(prisma, "1345142904942760018")` in the `scout-prod` pod. Verify no new Bugsink events after the next `00:00 UTC`, then resolve Bugsink issue `b0de3030-c8b3-4cdb-bb93-7e908ee67920`. Note: with the auto-leave removed, that guild is no longer swept automatically, so the explicit one-time cleanup is required.
 2. Existing failing guilds will each receive one fresh `immediate` permission DM on their next failed send after deploy (then week/month). Expected and intended; watch `guild_send_blocked_total` on the new dashboard row to gauge the population.
 3. Optional follow-up: ESLint guard forbidding raw `.send(` on a `User` outside `dm.ts`.
-
-## Session Log — 2026-06-19
-
-### Done
-
-- PR-1 (commit `1b3040688`): DM audit log, `guildDelete` cleanup, dispatcher hardening, polling filter, feedback DM.
-- Phase 2 (`99f777e54`): escalating owner notifications (`immediate`/`week`/`month`), removed the 7-day auto-leave in favor of `reconcileRemovedGuilds`, guild-health metrics + Grafana "Guild health" row. Existing-guild deploy behavior handled by `lastNotifiedAt` anchoring + an explicit test.
-- Phase 3 (this session): channel-deleted/unreachable now escalates to the owner; operator PagerDuty alerts (disconnect / cron-stall / delivery-spike); idle-guild metric + 30-day nudge; extracted `metrics/registry.ts` to break an import cycle.
-
-### Remaining
-
-- Push the branch + open the PR (not yet done).
-- Post-deploy one-time prod cleanup + Bugsink resolve (see `packages/docs/todos/scout-orphan-guild-prod-cleanup.md`).
-
-### Caveats
-
-- `ownerNotified` column is now unused (deprecated; left in place to avoid a SQLite table-rebuild migration).
-- Escalation is tracked per `(serverId, channelId)`; a guild with multiple failing channels gets one track each (guild-level dedupe is a possible future refinement).

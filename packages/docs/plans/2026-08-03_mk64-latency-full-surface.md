@@ -13,7 +13,7 @@ Mirror of the approved 2026-08-03 harness plan. Evidence base and per-lever
 research live in
 [`2026-08-03_mk64-in-discord-latency-burn-down.md`](2026-08-03_mk64-in-discord-latency-burn-down.md);
 measurement provenance in
-[`../logs/2026-08-02_mk64-input-lag-attribution.md`](../logs/2026-08-02_mk64-input-lag-attribution.md).
+the original investigation.
 
 Constraints (user): Discord-only video path, single-player first, no
 run-ahead, no UI-echo. Goal: ~halve LAN felt lag (~210–360 ms → ~160–280 ms);
@@ -287,49 +287,6 @@ follow-up plan (threads → parallel-RDP → native emulator).
 - [ ] Phase 4 freeze-attribution session.
 - [ ] Phase 5 4P stress measurement → follow-up plan.
 
-## Session Log — 2026-08-03
-
-### Done
-
-- Shipped Phase 1 as PR #1965 (ready for review, 8 commits): VAAPI
-  `asyncDepth`, `lowLatencyMux`, `lowDelayAudio` opt-ins in the fork (with
-  assert-default tests protecting streambot/pokemon), MK64 config knobs,
-  immediate button-edge emit in the frontend, and the four instrumentation
-  additions.
-- Ran the full live acceptance on the production pod: built and pushed the
-  candidate image, deployed by digest under an Argo hold, and measured both
-  arms. **Tier 1 delivers ~55 ms at the player's eye** (95% CI [−63, −47]),
-  corroborated by a −58 ms server-side delta and a −31.2 ms in-pod encoder
-  isolation for `async_depth` alone.
-- Settled the desync investigation: the new depth gauge reads a standing
-  34-36 with inflation tracking `depth x frame-interval`, proving phantom
-  head entries.
-- Built a much better ruler: the in-page canvas glass probe (~20 samples/s,
-  no capture-window uncertainty) replacing the 2.8 samples/s screenshot rig,
-  plus the receive-side `getStats` poller.
-- Restored the cluster exactly: declared image `2.0.0-7794`,
-  `syncPolicy.automated = {enabled: false}` matching the release policy and
-  sibling apps, `Synced / Healthy`; temp driver, in-pod script, PinchTab
-  instance and port-forwards all removed.
-
-### Remaining
-
-- Retry the review gate when Codex recovers (repo-wide outage, not a code
-  signal).
-- Phase 2 experiments — now the highest-value work, since the client playout
-  buffer is the largest remaining term (~364 ms baseline p50).
-- Phase 3 metric repair (mechanism now confirmed), Phase 4 freeze
-  attribution, Phase 5 4P gate.
-
-### Caveats
-
-- The glass A/B is one session per arm; its CI covers within-session noise,
-  not between-session client-playout variance (observed 68-370 ms). The
-  three-method agreement is what makes the result credible, not the CI alone.
-- The 68.5 ms low-latency playout state was observed once and never
-  reproduced on demand; understanding how to force it would be worth more
-  than any remaining server-side tuning.
-
 ## Comment Log
 
 - 2026-08-03: Plan approved in harness plan mode; mirrored here per
@@ -438,52 +395,3 @@ running`). Every subsequent `/play` then replies "Starting Mario Kart 64 in
   unrecoverable client state, and `/play` reporting success when it cannot
   stream (a fail-fast violation — it should surface the dead gateway). Not
   fixed here; filed as `packages/docs/todos/mk64-stop-bricks-stream-account.md`.
-
-## Session Log — 2026-08-03 (press-to-glass)
-
-### Done
-
-- Built and validated a real input-lag ruler after establishing that every
-  prior measurement in this plan was video-path only, not input lag.
-  `packages/discord-plays-mario-kart/packages/backend/scripts/e2e-press-to-glass.ts`
-  (input half) plus a `requestVideoFrameCallback` HUD decoder that samples every
-  presented frame (analysis harness in the session scratchpad).
-- Measured press-to-glass, single player, in Discord: **~172 ms settled,
-  ~500 ms on a fresh stream**, decomposed into input path / pod→browser /
-  client buffer / vsync. Charted the decay (attached to PR #1973).
-- Validated the measurement: exact glyph decode, single-frame rise gate, NTP
-  round-trip clock skew (18.54 ± 0.54 ms, re-verified), vsync quantisation of
-  `expectedDisplayTime`, and concurrent getStats corroboration of the client leg.
-- Ruled out clock drift, retransmission, ffmpeg input backpressure, and
-  sub-realtime encode as causes of the decaying pod→browser leg.
-- Shipped `video_playout_delay_max_ms` (fork opt-in + mario-kart config),
-  defaulting to the historical 100 ms so no consumer changes behavior.
-- Filed `packages/docs/todos/mk64-stop-bricks-stream-account.md`.
-- PR #1973 (draft, git-spice, off the new main after #1965 merged mid-session).
-
-### Remaining
-
-- **A/B `video_playout_delay_max_ms` 100 → 30 at matched stream age.** This is
-  the first change the new ruler can properly evaluate, and the client buffer
-  is ~92 ms of a ~172 ms settled budget. Requires a candidate image, deploy by
-  digest, and two runs started at the same stream age.
-- **Phase 3 metric repair is now the blocker for the biggest unexplained term.**
-  `stream_packet_ready_delay_ms` is pinned at its top bucket, so ~200 ms of
-  fresh-stream pod→browser latency cannot be localised to encode, packetize,
-  pacer, or SFU.
-- Understand and fix the startup decay itself — a player who `/play`s and races
-  immediately gets 2-3x the settled lag.
-- Phase 4 freeze attribution, Phase 5 4P gate (unchanged).
-
-### Caveats
-
-- The settled figure (~172 ms) comes from runs that had not finished decaying;
-  the true floor may be lower. Runs were 4 minutes.
-- `press → HUD digit lit` deliberately excludes MK64's own internal reaction
-  (~66-133 ms). It measures the part of the budget this system controls; felt
-  lag is higher.
-- `/stop` bricks the stream account, so every session cycle in this work used
-  a pod restart instead. `scratchpad/start_stream.sh` encodes that.
-- The A/B in the earlier Comment Log entries was measured with the video-path
-  ruler. Those numbers are not wrong, but they are not input lag, and the
-  stream-age confound means their confidence intervals understate uncertainty.

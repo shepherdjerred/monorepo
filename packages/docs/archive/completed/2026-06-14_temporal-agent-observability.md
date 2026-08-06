@@ -110,7 +110,7 @@ Grafana panels in `packages/homelab/src/cdk8s/grafana/temporal-dashboard.ts` (ex
    - Open the Grafana "Temporal - Workflows" dashboard → "Alert remediation" row. We should see live decision counts inside one sweep cycle.
    - Tomorrow's `homelab-audit-daily` (06:30 PT) — same filter. Look for the first heartbeat where `idleMs` exceeds, say, 60 s; that's the suspect tool call.
 
-5. **24-hour soak**: re-run the workflow inventory from `packages/docs/logs/2026-06-14_temporal-health-check.md`. Confirm that either (a) decisions stop carrying `outcome: "failed"`, or (b) the soft-kill log + idle-seconds gauge tell us exactly what's wedged, so the follow-up PR can address the specific tool.
+5. **24-hour soak**: re-run the workflow inventory from the original investigation. Confirm that either (a) decisions stop carrying `outcome: "failed"`, or (b) the soft-kill log + idle-seconds gauge tell us exactly what's wedged, so the follow-up PR can address the specific tool.
 
 ## What this plan deliberately does NOT do
 
@@ -125,32 +125,3 @@ Grafana panels in `packages/homelab/src/cdk8s/grafana/temporal-dashboard.ts` (ex
 - Haiku-for-triage with Opus escalation.
 - Bisecting which runbook section / which tool is the long pole.
 - Migrating the duplicate `jsonLog` helpers (`agent-task.ts`, `alert-remediation.ts`, `metrics.ts`, `tracing.ts`) into a single shared module under `observability/log.ts`.
-
-## Session Log — 2026-06-14
-
-### Done
-
-- **Pokemon → weekly.** `packages/temporal/src/schedules/register-schedules.ts` (id `pokeemerald-wasm-monthly` → `-weekly`, cron `0 6 1 * *` → `0 6 * * 1`, memo/comment updated). Renamed references in `packages/docs/architecture/2026-06-06_temporal-worker-and-scheduler.md`, `packages/docs/archive/completed/2026-06-06_headless-pokeemerald-stream.md`, and `packages/discord-plays-pokemon/.gitignore`.
-- **Alert-remediation max-turns + tool surface.** `packages/temporal/src/shared/alert-remediation.ts` default 80 → 15; explicit `maxTurns: 15` at the schedule args in `register-schedules.ts`. Dropped `WebFetch` from `CLAUDE_ALLOWED_TOOLS` in `packages/temporal/src/activities/alert-remediation-command.ts`.
-- **Seven new Prom metrics** in `packages/temporal/src/observability/metrics.ts`: `alert_remediation_decisions_total{decision,outcome,source}`, `alert_remediation_subprocess_duration_seconds{model,exit_code}`, `alert_remediation_subprocess_exit_total{exit_code,signal}`, `agent_subprocess_idle_seconds{workflow_type}`, `agent_subprocess_soft_kills_total{workflow_type,reason}`. (Dropped the planned `sweep_duration_seconds` / `sweep_alerts_total` — Temporal SDK's `temporal_workflow_completed_total` + the child-level decisions metric subsume them.)
-- **Shared agent-subprocess module** at `packages/temporal/src/shared/agent-subprocess.ts`: `SOFT_KILL_BEFORE_MS`, `StderrState`, `computeSoftKillDelayMs`, `runTrackedAgentSubprocess` — the spawn-stderr-heartbeat-soft-kill loop now lives in one place, used by both agent activities.
-- **`runAlertRemediationAgent` observability uplift** (`packages/temporal/src/activities/alert-remediation.ts`): trace-context-aware `jsonLog` with OTel dual-emit, `captureWithContext` Sentry wrapper, `withSpan` around the run, per-step phase logs (`spawn`/`exited`/`parse`), heartbeat-with-stderr (`elapsedMs`/`lastStderrLine`/`idleMs`), pre-emptive SIGINT at T-90 s.
-- **`runAgentTask` observability uplift** (`packages/temporal/src/activities/agent-task.ts`): same withSpan + step phases + heartbeat-with-stderr + soft-kill pattern, calling the shared helper.
-- **Splits to satisfy max-lines**: `alert-remediation-find-pr.ts` (existingPrFromSearch + findExistingPr), `alert-remediation-email.ts` (formatOutcome + sendSweepEmail), `agent-task-side-activities.ts` (sendEmail + scheduleFollowUp + pauseSchedule + cleanup), shared dashboard helpers extracted to `packages/homelab/src/cdk8s/grafana/dashboard-panels.ts`.
-- **PrometheusRules** (`packages/homelab/src/cdk8s/src/resources/monitoring/monitoring/rules/temporal.ts`): `AlertRemediationDecisionsAllFailing`, `AlertRemediationSweepTimingOut`, `HomelabAuditFailedTwoDays`, `AgentSubprocessSoftKill` (info-only ticket).
-- **Grafana panels** (`packages/homelab/src/cdk8s/grafana/temporal-dashboard.ts`): two new rows — "Agent subprocesses" (wall-clock p50/p95/p99, exits by signal, max idle seconds, soft-kill count) and "Alert remediation" (decisions over time, per-source volume, PRs created, failed decisions, SIGTERM count).
-- **Unit tests** (`packages/temporal/src/shared/agent-subprocess.test.ts`): 10 tests covering `computeSoftKillDelayMs` boundary cases + `StderrState` idle tracking. All pass.
-
-### Remaining
-
-- **Operator steps post-merge** (PR description will repeat):
-  - `temporal schedule delete --schedule-id pokeemerald-wasm-monthly` once (orphaned by the rename).
-  - Watch the next hourly sweep + tomorrow's `homelab-audit-daily`, filtering Loki for `phase=agent` / `phase=soft-kill` / `decision=`. The heartbeat log is the actual hang detector.
-- **24-hour soak**: re-run the workflow inventory from `packages/docs/logs/2026-06-14_temporal-health-check.md` and confirm zero `outcome: "failed"` decisions in the latest 30 children. If the soft-kill log fires repeatedly with the same `lastStderrLine`, that's the diagnostic capture point for the follow-up PR.
-
-### Caveats
-
-- The 3 `temporal integration` test failures in `bun test` require a running local Temporal dev server (not part of this PR's scope). All 538 other tests pass.
-- The 15 `helm-template` test failures in `bun test` from `packages/homelab` are pre-existing per `reference_homelab_precommit_helm_template_timeout.md` — flaky on concurrent CI load, retry on real CI.
-- The plan originally listed two sweep-level metrics (`alert_remediation_sweep_duration_seconds`, `alert_remediation_sweep_alerts_total`). Dropped during implementation: emitting them cleanly required either a workflow-side activity (over-engineering for what the SDK already exposes) or partial coverage gated on the email-send path. Use the SDK's `temporal_workflow_completed_total{workflow_type="alertRemediationSweepWorkflow",status}` and the per-child `alert_remediation_decisions_total{source}` instead.
-- Splitting the activity files into siblings (`*-find-pr.ts`, `*-email.ts`, `*-side-activities.ts`) was forced by the 500-line cap, not by a redesign. Re-exports through the original file (`alert-remediation.ts`) would have been simpler but the `custom-rules/no-re-exports` ESLint rule forbids them; instead the one cross-file consumer (`workflows/alert-remediation.ts`) was updated to import the type from its new home.

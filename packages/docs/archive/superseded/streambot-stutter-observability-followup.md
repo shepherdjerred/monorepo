@@ -3,7 +3,6 @@ id: streambot-stutter-observability-followup
 type: todo
 status: complete
 board: false
-origin: packages/docs/logs/2026-07-18_streambot-f1-stutter-investigation.md
 ---
 
 # Streambot stutter observability — remaining items

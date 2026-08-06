@@ -71,27 +71,3 @@ Add two new Satori components alongside `Report`, route ranked queues through a 
 2. `cd packages/scout-for-lol/packages/report && bunx eslint . --fix`
 3. `bun run --filter='./packages/scout-for-lol/packages/report' test`
 4. Eyeball generated PNGs under `src/html/ranked-banner/__snapshots__/` and `src/html/ranked-square/__snapshots__/` (one per fixture).
-
-## Session Log — 2026-05-24
-
-### Done
-
-- Added optional `commentary?: string` to `CompletedMatch` schema
-- Built shared helpers under `packages/scout-for-lol/packages/report/src/html/shared/`: `grade.ts` (KDA→D/C/B/A/S/S+ banding + MVP picker + hero player), `pick-design.ts` (FNV-1a hash-based design picker, `isRankedQueue`), `splash.tsx` (full-bleed champion loading-screen background via `backgroundImage: cover` on a sized div), `grade-diamond.tsx`, `tier-pill.tsx`, `test-fixtures.ts`
-- Built `ranked-banner/` (Design A — 4760×1500 wide cinematic banner with solo + squad layouts) and `ranked-square/` (Design B — 4760×4760 with hero band, squad cards or single hero card, optional Scout commentary, bottom score bar with team-comp icons)
-- Wired routing in `packages/scout-for-lol/packages/report/src/html/index.tsx` — ranked solo/flex queues hash-pick between banner/square (override via `designOverride` opt); non-ranked queues keep the existing `Report`
-- Snapshot tests: 4 banner fixtures (solo victory, solo defeat ranked flex, 3-squad, 5-squad) + 4 square fixtures (solo victory w/ commentary, solo defeat w/o commentary, 5-squad w/ commentary, 3-squad) + pick-design determinism/distribution tests
-- Existing `index.test.ts` fixture switched from `queueType: "solo"` → `"draft pick"` so the legacy `Report` continues to be exercised independently of the new ranked path
-- Verified: `bun run typecheck` clean, `bunx eslint .` clean, `bun test` 56 pass / 0 fail
-- PNG fixtures rendered to disk and visually confirmed (Warwick splash for banner solo, Senna splash for 5-squad since she's MVP, victory in gold, defeat in red, "RANKED FLEX" queue label, MVP badge on highest-KDA tracked player, grade diamonds match KDA bands)
-
-### Remaining
-
-- Backend wiring for the Scout commentary line (`commentary` field is optional on `CompletedMatch` — populate from LLM/template in a follow-up PR)
-- Replace existing `Report` for non-ranked queues (out of scope; ship the new designs first and gather feedback)
-
-### Caveats
-
-- Satori discovery: nested `width: "100%"` / `height: "100%"` on `position: absolute` images produces `x="NaN"` and the `objectFit: cover` calculation overflows the canvas (causing `svgToPng` bbox-crop to expand the PNG). `Splash` works around this by using `backgroundImage: url(...)` on an absolutely-positioned div with explicit pixel dimensions and `backgroundSize: "cover"`. Both root containers (`RankedBannerReport`, `RankedSquareReport` hero band) also use explicit pixels for the same reason.
-- Mid-session edits accidentally landed in the main checkout (`/Users/jerred/git/monorepo/...`) instead of the worktree. All those edits were migrated into the worktree and the main checkout was restored with `git restore` (no other contributors' uncommitted work touched). The worktree had no `node_modules`; `bun install --frozen-lockfile` was run in the worktree's `scout-for-lol/` and at the repo root to populate them.
-- `test-fixtures.ts` uses low-entropy 78-char PUUID literals (`tracked_player_N_fixture_${"X".repeat(53)}`) so the `no-secrets/no-secrets` rule doesn't flag them — the rule exempts only `*.test.ts` files, and this fixture is shared between multiple test files.

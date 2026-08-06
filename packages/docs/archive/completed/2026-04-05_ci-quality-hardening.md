@@ -177,17 +177,3 @@ Remove `softFail: true` from all three steps in `scripts/ci/src/steps/quality.ts
 ## Historical follow-up state
 
 - Complete and verify the work described in `Harden Trivy, Semgrep, and Knip in CI`.
-
-## Session Log — 2026-07-27
-
-### Done
-
-- The original Dagger implementation path is gone. Current static CI deliberately treats Trivy/Semgrep findings as soft while scanner failures remain hard, so the old all-hard-fail umbrella is not current policy.
-
-### Remaining
-
-- None in this plan.
-
-### Caveats
-
-- The historical design is retained for context; it is not an active board item.

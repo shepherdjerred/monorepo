@@ -155,43 +155,6 @@ Do this in a **git worktree** (`git worktree add .claude/worktrees/depcruise -b 
 6. `bun run typecheck` + `bun run test` on every package touched by a violation fix →
    confirm the refactors (cycle breaks, dep moves) didn't regress behavior.
 
-## Session Log — 2026-06-13
-
-### Done
-
-- Explored the monorepo (package inventory, lefthook/check-script conventions, CI
-  pipeline generator + Dagger wiring) and designed the dependency-cruiser rollout.
-- Captured user decisions: fix-all-now (no baseline), nested sub-monorepos in scope,
-  include the temporal `workflows ↛ activities` rule.
-- Wrote this plan to `packages/docs/plans/`. No implementation started.
-
-### Historical follow-up state
-
-- Implement in a worktree per the Wiring + Files-to-modify sections.
-- Run dependency-cruiser to enumerate the actual violation set (intra-package cycles,
-  dev-dep/test imports, nested-monorepo relative cross-package imports) and fix all.
-- Resolve the three Open verifications.
-
-### Caveats
-
-- Total fix scope is **unknown until the tool is run once** — `no-circular` and the
-  nested sub-monorepo internals were never actually cruised, only eyeballed. The diff
-  could be large; reassess one-PR-vs-split after the first real run.
-
 ## Historical follow-up state
 
 - Complete and verify the work described in `Set up dependency-cruiser (architecture linting) in CI + lefthook`.
-
-## Session Log — 2026-07-27
-
-### Done
-
-- No dependency-cruiser gate landed, and the implementation targets removed Dagger/generated CI plus pre-workspace dependency assumptions.
-
-### Remaining
-
-- None in this plan.
-
-### Caveats
-
-- The historical implementation recipe must not be resumed without a fresh design against current architecture.

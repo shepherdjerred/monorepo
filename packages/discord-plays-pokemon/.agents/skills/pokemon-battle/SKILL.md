@@ -50,19 +50,3 @@ Inspect the command's settled `after` state and `stopReason` before acting
 again. These commands execute the caller's choice; they never choose battle
 strategy. The knowledge catalog supplies static facts, not live eligibility or
 a deterministic policy.
-
-## Session Log — 2026-07-29
-
-### Done
-
-- Documented the live battle fields and exact semantic move, item, switch, run,
-  and target command forms.
-
-### Remaining
-
-- None.
-
-### Caveats
-
-- Semantic battle actions execute one explicit choice; strategy remains the
-  agent's responsibility, and PP medicine lacks a move-selection argument.

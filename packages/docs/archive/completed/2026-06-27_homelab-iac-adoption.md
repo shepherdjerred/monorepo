@@ -16,7 +16,6 @@ All four subsystems were built, imported from live state to a **zero-change**
 `PAGERDUTY_TOKEN`, `RADARR_API_KEY`, `SONARR_API_KEY`, `PROWLARR_API_KEY`,
 `QBITTORRENT_PASSWORD`, `PRIVATEHD_PASSWORD`, and `PRIVATEHD_PID`) are stored in the `Buildkite CI Secrets` 1Password item and
 confirmed synced into the `buildkite-ci-secrets` k8s secret, so the post-merge
-`tofu-apply-all` is a no-op. See the Session Log at the bottom for specifics.
 
 ## Context
 
@@ -92,28 +91,6 @@ Per Tofu stack: `tofu init -backend=false && tofu validate`; full `tofu plan` (v
 3. `tofu plan` → iterate `.tf` until **zero changes**.
 4. Add stack to `TOFU_STACKS` + thread its secret flag through `tofuSecretFlags`/Dagger.
 5. Merge → CI apply is a no-op.
-
-## Session Log — 2026-06-27
-
-### Done
-
-- **qBittorrent (cdk8s)** — committed sanitized `qBittorrent.conf` baseline (password hash excluded) + seed-if-absent root init container in `qbittorrent.ts`; allowlisted the init container in `container-resource-allowlist.ts`. cdk8s synth/test/lint green. Commit `ada8bdacc`.
-- **Buildkite (tofu/buildkite)** — imported cluster, default queue, default-queue association, monorepo pipeline → zero-change. Agent token deliberately excluded (no import support, can't re-read → would force rotation). Commit `2e56e1b1d`.
-- **\*arr (tofu/arr)** — imported Radarr/Sonarr root folders + qBittorrent download clients, Prowlarr 4 indexers + download client + 2 application syncs (11 resources) via `import {}` + `-generate-config-out` → zero-change. Recyclarr keeps quality/custom-formats; Radarr/Sonarr indexers (Prowlarr-synced) and Bazarr/Maintainerr (no provider) excluded. Commit `96b4cb9d2`.
-- **PagerDuty (tofu/pagerduty)** — imported user, Default escalation policy, Homelab service, Events-v2 integration → zero-change. Routing key is read-only/preserved (Alertmanager unaffected) and never written to config. Commit `2139b6b28`.
-- **CI wiring** — added buildkite/arr/pagerduty to `TOFU_STACKS`; threaded `buildkiteApiToken`/`arrApiKeys`/`pagerdutyToken` secrets through the Dagger tofu helpers (`release.ts`/`index.ts`) and `tofuSecretFlags` (`steps/tofu.ts`). New secrets stored in 1P + synced to `buildkite-ci-secrets`.
-- All Tofu state written to the shared SeaweedFS backend (`{buildkite,arr,pagerduty}/terraform.tfstate`).
-
-### Historical handoff
-
-- Open the PR and let CI run `tofu-plan-all` (should be clean) before merge.
-- After merge, confirm `tofu-apply-all` is a no-op for the three new stacks.
-
-### Caveats
-
-- `PAGERDUTY_TOKEN` is the canonical name (per `decisions/2026-03-27`); the REST API token (CI bundle) and the Events-v2 routing key (`AlertManager secrets`) share this name but live in **separate 1P items / k8s secrets / namespaces** and never coexist in one pod.
-- \*arr/PagerDuty sensitive fields (download-client passwords, application api keys, integration_key) read back null from their APIs and are intentionally left masked; Tofu does not re-send them. A future edit to one of those resources must re-supply the secret to avoid nulling it.
-- The Buildkite cluster agent token remains 1Password-managed (not in Tofu) by design.
 
 ## Closure
 

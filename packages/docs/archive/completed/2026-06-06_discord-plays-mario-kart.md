@@ -79,7 +79,7 @@ Reuse the react shell. Add `seat-selector` (P1-P4 free/occupied from status; cla
 
 ## Step 8 — Docs
 
-Add `packages/docs/logs/2026-06-06_discord-plays-mario-kart.md` (or plan) recording the build-out and noting the pokemon headless update landed (PR #1042). Move the spike's design notes into the package README.
+Add the original investigation (or plan) recording the build-out and noting the pokemon headless update landed (PR #1042). Move the spike's design notes into the package README.
 
 ## Verification
 

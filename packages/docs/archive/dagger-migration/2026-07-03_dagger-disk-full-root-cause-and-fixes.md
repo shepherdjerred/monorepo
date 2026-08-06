@@ -10,7 +10,7 @@ board: false
 ## Context
 
 The 2026-07-03 Dagger engine disk-full outage (~2.5h CI-wide, ~15 PRs blocked) was
-post-mortem'd in `packages/docs/logs/2026-07-03_dagger-engine-disk-full-outage.md`,
+post-mortem'd in the original investigation,
 which originally claimed root cause = "no cache GC / keep-storage limit configured."
 
 **Investigation proved that claim wrong.** Evidence (Prometheus, Loki, Buildkite
@@ -69,7 +69,7 @@ API, PagerDuty API, live cluster):
    size changes into the live STS, and a pending-ops checklist for the user-run
    commands.
 5. **Outage log correction** —
-   `packages/docs/logs/2026-07-03_dagger-engine-disk-full-outage.md`: root cause
+   the original investigation: root cause
    rewritten with the measured mechanism + explicit correction notice; follow-ups
    updated (the "[HIGH] configure GC" item dropped as already-existing).
 6. **Decision record addendum** —

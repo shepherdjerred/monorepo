@@ -5,7 +5,6 @@ status: planned
 board: true
 verification: agent
 disposition: active
-origin: packages/docs/logs/2026-06-07_mario-kart-input-not-reaching-game.md
 source_marker: true
 ---
 

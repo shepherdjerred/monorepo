@@ -26,17 +26,3 @@ The 2026-05-10 operator runbook is unsafe for the current topology: it assumes T
 ### 2026-08-02 — replaced stale runbook
 
 - Archived the old single-node Talos 1.12 procedure without executing it.
-
-## Session Log — 2026-08-02
-
-### Done
-
-- Turned an unsafe operator card into an agent-operable read-only revalidation task.
-
-### Remaining
-
-- Produce a current runbook and a separately authorized maintenance card.
-
-### Caveats
-
-- This todo authorizes assessment and documentation only, not firmware changes, reboots, drains, or storage mutations.

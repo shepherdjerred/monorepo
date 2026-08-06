@@ -40,7 +40,7 @@ const CONFIRMATION_DELAY_MS = 24 * 60 * 60 * 1000;
  * data on a stale cache read. (Incident 2026-07: this reconciler treated its
  * own home guild as removed on a cache miss and repeatedly deleted + re-seeded
  * the COMMON_DENOMINATOR system reports, so `ScoutScheduledReportMissedWeekly`
- * fired forever — see packages/docs/logs/2026-07-09_scout-pd-alert.md.)
+ * fired forever — see the original investigation.)
  *
  * A single 10004 is still not fully trusted: a guild that is merely
  * *temporarily unavailable* (Discord region/shard outage) can also 404 on a

@@ -3,7 +3,6 @@ id: tasks-for-obsidian-e2e
 type: todo
 status: complete
 board: false
-origin: packages/docs/logs/2026-06-13_new-todos-batch.md
 source_marker: false
 ---
 

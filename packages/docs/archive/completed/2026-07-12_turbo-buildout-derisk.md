@@ -126,22 +126,6 @@ Prove turbo's shim story on real native code:
 - [x] S3-provider round-trip — verified against local MinIO (ducktors `STORAGE_PROVIDER=s3`: upload → objects in bucket → cold-client FULL TURBO 203 ms). R2 specifically deferred by user (tofu config ready when wanted); remaining R2 risk is endpoint quirks only, the provider code path is proven
 - [x] Phase-1 fixups: ALL DONE on the spike branch (rootDir, duckdb, bun-types, check-todos/dsl pin, home-assistant/report vestigial builds, dpc conversion, umbrella deletion). anki has no scripts — nothing to fix under turbo
 
-## Session Log — 2026-07-12 (execution)
-
-### Done
-
-- All plan items executed except the R2 half of item 4 (user-blocked). Commits on `spike/workspace-taskgraph`: c13080063 (config), 2753f05a8 (rust shim), a53a1ccf8 (tofu), 9071cb5b6 (root tasks). Docs mirrored + updated on `feature/rip-setup` (PR #1517).
-
-### Remaining
-
-- User: `tofu apply` in `packages/homelab/src/tofu/cloudflare` (spike worktree) + mint R2 S3 token → then I rerun the ducktors round-trip against R2 and check the box.
-- Consider filing the nested-package `--affected` bug upstream (vercel/turborepo) with the three-code-paths repro.
-
-### Caveats
-
-- The spike branch now intentionally diverges from #1408 (generate renames, root script deletions, shim) — Phase 1 should treat the spike as the reference implementation for these changes, not merge it blindly.
-- check-todos left failing on the branch (real violation, honest signal).
-
 ## Correction (2026-07-12, user challenge)
 
 The "birmel test must be `cache: false`" hack was based on a false claim: turbo's explicit `inputs` DO hash gitignored files. Verified empirically (distinct task hashes for two `.env.test` contents and for absence). birmel's test is now cache-enabled with `"inputs": ["$TURBO_DEFAULT$", ".env.test"]`. Note: cache artifacts store the hash (never file contents), but task LOG output is cached and replayed — tests must not print secrets (true of any cached test task).

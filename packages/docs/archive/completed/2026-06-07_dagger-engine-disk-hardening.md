@@ -42,24 +42,3 @@ runbook + the alert as the safety net.
 - Post-merge: `kubectl get prometheusrule -n dagger prometheus-dagger-engine-rules`; confirm
   alerts in Prometheus; after sync, `kubectl rollout restart statefulset/dagger-dagger-helm-engine -n dagger`
   to apply the new GC config; confirm engine healthy + green CI build.
-
-## Session Log — 2026-06-07
-
-### Done
-
-- Diagnosed build 3668 (EDQUOT on the engine PVC); expanded PVC 1 → 2 Ti online (authorized).
-- Researched + verified GC semantics (config IS applied; `maxUsedSpace` bounds only reclaimable
-  cache; ZFS `quota` reflects in statfs; STS VCT immutability). Pulled live usage from Grafana.
-- Added engine PVC alerts (`rules/dagger.ts` + `prometheus.ts`), conservative GC retune
-  (800 GB / 200 GB), runbook + decision record.
-
-### Remaining
-
-- Merge PR; after ArgoCD sync, restart the engine to apply the GC change.
-- Revisit `maxUsedSpace` once the new alerts give a few days of steady-state usage data.
-
-### Caveats
-
-- The ~560 GB sitting above the 600 GB cache cap isn't fully diagnosed (engine `exec` /
-  `buildctl du` was denied); the conservative GC value reflects that uncertainty.
-- GC config only takes effect on engine restart (read at startup).

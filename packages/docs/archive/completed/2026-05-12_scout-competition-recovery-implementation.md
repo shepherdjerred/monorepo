@@ -96,28 +96,3 @@ targeted active-competition repair run against existing data.
 - This Scout plan is included alongside the Renovate dependency branch because
   the competition compatibility work was needed to keep the branch passing on
   the current base.
-
-## Session Log — 2026-05-12
-
-### Done
-
-- Implemented competition lifecycle notification retry fields and migration.
-- Implemented match-time rank history and `HIGHEST_RANK` window scoring.
-- Implemented S3 match key/date filtering and paginated listing.
-- Implemented active-competition repair tooling for existing beta/prod data.
-- Updated competition data types, tests, and fixtures.
-- Verified backend and data package typecheck, lint, and tests.
-
-### Remaining
-
-- Apply migrations in beta/prod.
-- Run `repair-active-competitions.ts --dry-run` and `--apply` in beta, then prod
-  after reviewing beta output.
-- Watch lifecycle and S3 recovery logs after deploy.
-
-### Caveats
-
-- Repair does not mutate ended competitions.
-- Rank-climb baseline repair uses current rank when historical start snapshots
-  are missing.
-- The unrelated Renovate plan file was already dirty and was left untouched.

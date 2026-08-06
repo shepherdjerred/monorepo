@@ -72,33 +72,3 @@ carries over vs. not:
   follow-up could add stream-health metrics + Tempo traces if wanted.
 
 Owner decision (2026-06-07): leave streambot as-is for now.
-
-## Session Log — 2026-06-07
-
-### Done
-
-- Fork `pad` letterbox + `isBun/isDeno` type-safety: `packages/discord-video-stream` (commit c50f1746e).
-- Both bots: VAAPI/software encoder selection + 16:9 1280×720 pillarbox + config; Intel VAAPI stack in
-  the Dagger image builders + Dockerfiles (commits c50f1746e, 1beabdbad).
-- Both bots: Prometheus `/metrics` + emulator hot-loop instrumentation + OTLP lifecycle traces
-  (commit 271252c8c).
-- Homelab: i915 + VAAPI/telemetry env + ServiceMonitors; Pyroscope + Alloy eBPF; Grafana datasource +
-  "Discord Plays — Stream Health" dashboard (commits cf2494057, a67815b19).
-- Verified locally: ffmpeg pad render, both image smoke tests, prom-client under Bun, all
-  typecheck/test/lint, cdk8s synth. PR shepherdjerred/monorepo#1101.
-
-### Remaining
-
-- Post-deploy cluster verification (see "Remaining / cluster verification" above): confirm
-  `h264_vaapi` in use, 16:9 + smoothness in the live stream, dashboard/Tempo/Pyroscope populate,
-  Alloy eBPF River config valid at runtime.
-- Use the metrics/profile to choose the real fps fix (likely emulation-side, not encode).
-
-### Caveats
-
-- VAAPI frees CPU but won't fix an emulation-bound loop; observability is there to confirm the cause.
-- Alloy eBPF DaemonSet is cluster-wide privileged (owner-approved).
-- New config fields are `.default()`-ed and `scale` kept optional so the 1Password-sourced
-  `config.toml` still validates without edits; VAAPI is enabled via the deployment env, not 1Password.
-
-<!-- temporal-agent-task omitted: no standing future obligation with a concrete date. -->

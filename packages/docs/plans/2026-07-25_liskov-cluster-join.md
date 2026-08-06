@@ -9,9 +9,9 @@ board: false
 
 Second Talos node **liskov** (Ryzen 9950X, 128GB DDR5, 990 Pro 1TB OS +
 2TB cache, SecureBoot) joins the single-node cluster as a **CI-only worker**.
-Context: `logs/2026-07-25_liskov-build-talos-prep.md` (hardware status,
+Context: prior analysis (hardware status,
 schematic `d953d04c…`, SecureBoot decision),
-`logs/2026-07-18_ci-node-purchase-sanity-check.md` (justification),
+prior analysis (justification),
 `plans/2026-07-22_ci-capacity-remediation.md` (R2 option; Tracks 1–3
 compose with this).
 

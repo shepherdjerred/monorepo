@@ -92,77 +92,37 @@ Buildkite step). They apply repo-wide; per-package `AGENTS.md` files add more.
 - **Severity discipline.** Only flag genuine issues (P0–P2); skip nits and anything
   a linter would catch. A clean diff should get a clean review.
 
-## Documentation Discipline — Per Session
+## Documentation Discipline
 
-**Every session must produce one of: a session log OR a plan**, and end with a written summary appended to it. Default to a log; reserve plans for substantive design work.
+Do not create per-session journals or append session summaries to repository
+documents. Ordinary Q&A, investigations, and small fixes need no documentation
+artifact solely because an agent worked on them.
 
-### Log vs Plan — which one?
+Create a **plan** (`packages/docs/plans/<YYYY-MM-DD>_<kebab-slug>.md`) only when
+the design itself is durable: plan mode was used, the work has substantive
+design choices, or future implementation needs a decision-complete handoff.
+Architecture, decisions, guides, and TODOs remain appropriate when the content
+belongs to those durable categories independently of the current session.
 
-- **Log** (`packages/docs/logs/<YYYY-MM-DD>_<kebab-slug>.md`) — the default. Use for one-shot fixes, bug recaps, Q&A sessions, single-file edits, and any session where there was no real planning to write down.
-- **Plan** (`packages/docs/plans/<YYYY-MM-DD>_<kebab-slug>.md`) — use when (a) plan mode was used, or (b) the work is multi-step, has design choices to commit to, or introduces follow-up tasks for future sessions.
+### Plans and durable context
 
-**Rule of thumb:** if the design itself is the artifact, it's a plan. If you just need a journal of what happened, it's a log.
+- The primary artifact for a code-changing session is a pull request. Create a
+  draft PR from the feature branch as soon as it contains a coherent first commit,
+  and promote it to ready for review only after verification is complete.
+- Keep every agent-created write, including an implementation plan, in the
+  active checkout. Do not leave duplicate or partial work in another checkout.
+- When plan mode supplies an approved plan, mirror it into `packages/docs/plans/`
+  using the dated naming convention before implementation.
+- Record unfinished work in the relevant durable document, the PR description,
+  or the final response; do not create a journal just for handoff.
+- Plans use canonical YAML frontmatter with `id`, `type`, `status`, and `board`,
+  remain raw Markdown, and are not individually indexed.
+- When a plan reaches `status: complete` and its work ships, move it to
+  `packages/docs/archive/completed/`.
+- See `packages/docs/AGENTS.md` for the durable documentation taxonomy.
 
-### Session location and durable context
-
-- Create each session's log or plan in the active checkout under `packages/docs/`.
-- The primary artifact for a code-changing session is a pull request. Create a draft PR from the feature branch as soon as it contains a coherent first commit, and promote it to ready for review only after verification is complete.
-- Assume the chat may end immediately after the draft or final PR is created. Record unfinished work and handoff context in `packages/docs/`, the PR description, or an explicit final response to the user.
-- These instructions apply to all agents. Repository lifecycle hooks are scoped to local CLI runtimes and must exit immediately in hosted or web environments.
-
-### Mirroring harness plans
-
-When plan mode is used, copy the approved plan from `~/.claude/plans/<slug>.md` into `packages/docs/plans/` using the dated naming convention before beginning implementation.
-
-### Conventions (both logs and plans)
-
-- **Use canonical YAML frontmatter** with `id`, `type`, `status`, and `board`; frontmatter is the only workflow status source. Board items also require `verification` and `disposition`.
-- **Raw Markdown only** — never render to PDF or Typst.
-- **Do not individually index high-churn docs.** `packages/docs/plans/`, `packages/docs/logs/`, and `packages/docs/todos/` are linked as directories only to avoid merge conflicts.
-- See `packages/docs/AGENTS.md` for the broader docs taxonomy (architecture / patterns / decisions / guides / plans / logs / todos).
-
-### End-of-session summary
-
-Before ending any session, append a section to whichever file you produced (log or plan):
-
-```markdown
-## Session Log — <YYYY-MM-DD>
-
-### Done
-
-- <bullets of work actually completed: file paths, PR/commit refs>
-
-### Remaining
-
-- <work the user asked for that wasn't finished, with concrete next steps>
-
-### Caveats
-
-- <known issues, deferred decisions, surprises, warnings the next agent needs>
-```
-
-If a session spans multiple files, append a Session Log to each. **Also restate the same Done / Remaining / Caveats inline as the final chat message** so the user sees it without opening the file.
-
-### Workflow friction (optional — only if you hit some)
-
-**This is entirely optional and never required.** Most sessions should add nothing here. Only record an item when fixing it would be a **medium/high quality-of-life improvement** for future sessions, or a **low QOL improvement that is also low effort** to fix. Skip anything that is high-effort for low payoff, or a one-off that won't recur. An empty or padded section is worse than none.
-
-When you do hit something worth it, append a `## Workflow Friction` section to your log (logs only, not plans). For each item, describe what was painful and the concrete improvement, with file paths/commands so it can be acted on cold. Examples of the kind of thing worth recording:
-
-- It was hard to verify a change on Discord — a dedicated test Discord account/app would have helped.
-- I couldn't easily access test/dev credentials, so I ran `op` many times (a cached/scoped test credential set would have avoided this).
-- The `toolkit` CLI was missing a command I needed, or a flag behaved misleadingly.
-- This doc/AGENTS.md/skill was wrong or misleading (say which, and what's actually true).
-- I expected X to be in some location but it wasn't there — it actually lives at `<path>`.
-- I wanted to verify UI changes but couldn't effectively access a browser.
-- Task X was slower because I didn't have Y.
-- I hit roadblock X because there was no documentation about Y.
-
-If the fix is substantial or belongs to a future session, also file it as a `packages/docs/todos/<kebab-id>.md` per **TODO Documentation** below and link it from the section.
-
-### When a plan is finished
-
-When a plan in `packages/docs/plans/` reaches `status: complete` and the work is shipped, move it to `packages/docs/archive/completed/`. Don't leave finished plans accumulating in `plans/`.
+Repository lifecycle hooks are scoped to local CLI runtimes and must exit
+immediately in hosted or web environments.
 
 ## TODO Documentation
 
@@ -170,7 +130,7 @@ When a plan in `packages/docs/plans/` reaches `status: complete` and the work is
 
 - Every source marker (`TODO(todo:<kebab-id>)`, `FIXME(todo:<kebab-id>)`, `XXX(todo:<kebab-id>)`) MUST have a matching `packages/docs/todos/<kebab-id>.md`. This direction is enforced.
 - General issue todos may exist with no source marker. Use kebab-case ids; the filename (sans `.md`) is the id.
-- TODO docs use the canonical docs frontmatter. Set `type: todo`, `board: true`, a workflow `status` (`planned`, `in-progress`, `awaiting-human`, or `complete`), `verification`, `disposition`, and `origin`; add `source_marker: true` only when a code marker exists.
+- TODO docs use the canonical docs frontmatter. Set `type: todo`, `board: true`, a workflow `status` (`planned`, `in-progress`, `awaiting-human`, or `complete`), `verification`, and `disposition`; use `origin` only when the referenced source is durable, and add `source_marker: true` only when a code marker exists.
 - Active work uses unchecked tasks in `## Remaining`. Work ready for delayed signoff uses `status: awaiting-human` plus `## Human Verification`. Append steering notes and status audit entries under `## Comment Log`.
 - When resolved, remove any matching source marker and archive the complete TODO to `packages/docs/archive/completed/` in the same commit.
 - `bun run check-todos` enforces the complete docs model, including the source-marker → TODO invariant, frontmatter, semantic headings, workflow sections, IDs, and archival rules.
@@ -440,17 +400,3 @@ toolkit pr asset <PR_NUMBER> ./before.png ./flow.mp4 ./demo.cast ./demo-site --p
   profile points at `https://seaweedfs.sjer.red`).
 - Objects under `pr/assets/` expire after 365 days; the homelab must be up for
   the artifacts to load.
-
-## Session Log — 2026-07-29
-
-### Done
-
-- Documented the provider-neutral `pr:fleet` command and its authority boundary.
-
-### Remaining
-
-- Verify the published PR's current-head Buildkite and hosted review results.
-
-### Caveats
-
-- Live use requires a provider API credential and macOS `sandbox-exec`.

@@ -4,7 +4,7 @@
 # never grow past the memory kubelet has accounted for as non-pod; otherwise
 # ARC + pod allocatable + OS could demand more than physical RAM and wedge the
 # node under CI build storms (see
-# packages/docs/logs/2026-07-05_torvalds-ci-freeze-investigation.md).
+# the original investigation).
 #
 # Right-sized 48 -> 16 GiB on 2026-07-10 from 30d Prometheus evidence: hit rate
 # p50 99.95% (worst hour 89.6%), miss rate p50 3 reads/s, ghost hits (misses a

@@ -4,7 +4,6 @@ export const DOCUMENT_TYPES = [
   "architecture",
   "decision",
   "guide",
-  "log",
   "pattern",
   "plan",
   "todo",

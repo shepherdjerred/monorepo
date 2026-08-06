@@ -56,27 +56,6 @@ Added a line to `scout-season-refresh-prompt.ts`'s prompt instructing Claude to 
 - `packages/temporal/scripts/rehearse-bot-clone.ts` (extend `rehearseHookFreeCommit` to simulate + prove the fix)
 - `packages/temporal/src/activities/scout-season-refresh-prompt.ts` (prompt hardening line)
 
-## Session Log — 2026-07-12
-
-### Done
-
-- Diagnosed a new, live production failure in `scout-season-refresh-weekly` (triggered manually this session while checking on the other weekly workflows) via 2 Explore agents + reading the actual source: Claude's agentic session (unrestricted Bash+Edit) can run a plain `bun install` on its own initiative, arming lefthook hooks that `rootInstallWithoutHooks` alone can't undo.
-- Implemented `disarmGitHooks` in `bot-clone.ts`, wired into both shared-commit call sites.
-- Extended the `rehearse-bot-clone.ts` rehearsal canary to simulate and prove the exact regression class.
-- Added a prompt-hardening line as cheap defense-in-depth.
-- Verified: typecheck, tests, lint all pass; extended rehearsal canary passes end-to-end against a genuinely clean clone (after working around a branch-naming false positive in my own test methodology).
-- Work done in worktree `.claude/worktrees/fix-season-refresh-hooks` on branch `fix/season-refresh-lefthook-arming`, off `origin/main` (predates PR #1503's merge, so this branch doesn't yet include that fix — expected, since #1503 hasn't merged).
-
-### Historical handoff
-
-- Not yet committed or opened as a PR — user has not asked for that yet in this sub-task.
-- Real end-to-end proof is manually re-triggering `scout-season-refresh-weekly` after this merges and deploys.
-
-### Caveats
-
-- This worktree/branch is based on `origin/main`, which does NOT include PR #1503 (data-dragon shared-cache fix) — the two PRs are independent and can merge in either order; neither touches the other's files.
-- Testing rehearsal canaries against a clone whose branch name happens to contain a keyword the canary regex-matches on (here: "lefthook") produces a false-positive failure. Use a neutral branch name when locally verifying hook-related canaries.
-
 ## Closure
 
 Shipped in commit `d8af5b6aa` / PR #1511. The scheduled production execution

@@ -63,7 +63,7 @@ drift untracked); it is **not** a throughput change.
 ## Related
 
 - Shipped alongside this plan: PR #1162 — `max-in-flight` 20→24 + build-age job priority (`scripts/ci/src/lib/build-age-priority.ts`).
-- Background + live metrics: `packages/docs/logs/2026-06-13_ci-concurrency-and-homelab-health.md`.
+- Background + live metrics: the original investigation.
 - [[project_kueue_buildkite]], [[reference_github_rulesets_tofu_managed]], [[reference_tofu_state_seaweedfs]].
 
 ## Closure

@@ -9,7 +9,7 @@
 # evictionHard.memory.available=100Mi). That left ~all 125 GiB of RAM pod-
 # allocatable, so CI pods + the ZFS ARC could oversubscribe RAM and hard-freeze the
 # node. KubeletConfiguration is the canonical, reliably-applied form.
-# See packages/docs/logs/2026-07-05_torvalds-ci-freeze-investigation.md.
+# See the original investigation.
 machine:
   kubelet:
     extraArgs:
@@ -53,7 +53,7 @@ machine:
       # kube-apiserver stayed down until the ceiling was raised to 8Gi live on
       # 2026-07-11 (usage immediately settled at ~2.2Gi). If this ever needs
       # resizing again, measure /sys/fs/cgroup/podruntime/memory.peak first.
-      # See packages/docs/logs/2026-07-10_torvalds-podruntime-oom-outage.md.
+      # See the original investigation.
       kubeReserved:
         cpu: "1"
         memory: "8Gi"
@@ -98,8 +98,8 @@ machine:
       # adding the cgroup paths above (sourced from Talos's own constants, not
       # guessed) and live-verified working: kubelet came up Running/OK
       # immediately, and the resulting cgroup limits matched exactly (see comment
-      # above). See packages/docs/logs/2026-07-08_torvalds-cluster-health-deep-check.md,
-      # packages/docs/logs/2026-07-10_torvalds-kubelet-crashloop.md, and
+      # above). See the original investigation,
+      # the original investigation, and
       # packages/docs/plans/2026-07-10_torvalds-kubelet-cgroup-enforcement.md.
       podPidsLimit: 4096
       enforceNodeAllocatable:

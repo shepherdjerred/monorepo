@@ -44,22 +44,3 @@ The only unresolved concern is split into
 - 2026-07-27 — Board audit reconciled all three former remaining items against
   current source/history. Closed this mixed plan and retained only the narrow
   Buildkite webhook decision/action as active operator work.
-
-## Session Log — 2026-06-06
-
-### Done
-
-- Implemented + verified PR-1 (5 changes above) in worktree `flamboyant-matsumoto-184db1`.
-- Confirmed dead scripts are 100% unreferenced in-repo before deletion.
-- Reverted incidental `setup.ts` codegen churn (`generated/helm/promtail.types.ts`, `helm/index.ts`, `sjer.red/bun.lock`) so the diff is exactly the 8 intended paths.
-
-### Remaining
-
-- Tailnet ACLs (phased), Buildkite webhook secret, the two manual prerequisites above, and the alert-remediation scope decision.
-- Commit + open PR (not yet done — awaiting owner go-ahead).
-
-### Caveats
-
-- Running `bun run scripts/setup.ts` locally regenerates committed helm types and **drops `promtail.types.ts`** (promtail isn't in the codegen catalog) — a pre-existing codegen/catalog drift unrelated to this work; restore those files if setup churns them.
-- mcp-gateway change is deploy-coordinated: do the 1Password field + client header updates with the rollout.
-- Detailed pen-test findings (attack chains) intentionally kept out of this public repo.

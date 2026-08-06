@@ -61,27 +61,6 @@ Register `redirect_uri` on both apps or Discord rejects `invalid redirect_uri`:
 3. Local e2e via `dev:web`: marketing `/` → Get Started → login → guild picker → Add Scout → install → `/app/installed?guild_id=…` → `/g/<id>/subscriptions`.
 4. PR media: marketing screenshots + end-to-end flow recording.
 
-## Session Log — 2026-06-19
-
-### Done
-
-- **Part A (flow):** `handleDiscordInstall` + `GET /api/discord/install` (`backend/src/trpc/auth-web.ts`, `http-server.ts`); `/app/installed` landing route (`app/src/routes/installed.tsx`, `app.tsx`); "Add Scout to a server" button in `guild-picker.tsx`. Commit `c54c3f924`.
-- **Part B (copy):** dashboard-only CTAs, constant rename (`APP_DASHBOARD_URL`, `GET_STARTED_CLICK_EVENT`, `CtaLocation`), rewritten index/getting-started/docs/privacy. Commit `c54c3f924`.
-- **Part C (images):** captured + processed 3 dashboard screenshots, wired into index showcase + getting-started Step 3. Commit `c0f7f4e40`.
-- Verified: app/backend/frontend typecheck + eslint green; Astro build (15 pages) green with dummy `PUBLIC_*` pixel env; live dashboard flow exercised end-to-end via `dev:web` + headed browser.
-
-### Remaining
-
-- **Operator:** register `/app/installed` redirect URI on prod (`1182800769188110366`) and beta (`1311755320745394317`) Discord apps before the install leg works in prod/beta/local.
-- Open the PR and attach media.
-- Optional follow-up: refresh/compress the existing Discord-report images and prune unreferenced assets in `frontend/public/`.
-
-### Caveats
-
-- Analytics: the tracked conversion event was renamed `discord_install_click` → `get_started_click`; any Plausible/Pinterest/Reddit goals keyed on the old name need reconfiguring.
-- The dashboard workspace header renders the raw guild ID (and briefly raw channel IDs until names resolve) — minor UI polish opportunity, visible in `dashboard-subscriptions.png`.
-- Frontend build requires `PUBLIC_PINTEREST_TAG_ID` + `PUBLIC_REDDIT_PIXEL_ID` (CI-set); locally pass dummy values.
-
 ## Addendum — Marketing image regeneration (2026-06-19)
 
 Follow-up on the same PR: regenerated **all** product imagery from the showcase pipeline, made `discover` fast, and added Discord-message composites.

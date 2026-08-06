@@ -218,13 +218,13 @@ describe("Helm Escaping - E2E Content Verification (dist/)", () => {
       // Title (description) is a single clean line: shared summary (or alertname)
       // + namespace + firing count. The full per-alert body must NOT be in the
       // title — PagerDuty truncates it mid-word at ~1024 chars.
-      // See packages/docs/logs/2026-07-03_pagerduty-clean-titles.md
+      // See the original investigation
       expect(result.stdout).toContain("{{ .CommonAnnotations.summary }}");
       expect(result.stdout).toContain("{{ .CommonLabels.alertname }}");
       // Regression guard: the per-alert `message` (falling back to `description`)
       // must still reach PagerDuty — now in `details`, not the title — so distinct
       // namespaces/objects grouped into one incident stay distinguishable.
-      // See packages/docs/logs/2026-05-30_pagerduty-velero-duplicate-alerts.md
+      // See the original investigation
       expect(result.stdout).toContain("{{ range .Alerts.Firing }}");
       expect(result.stdout).toContain("{{ .Annotations.message }}");
       // Regression guard: the pre-2026-07 design inlined the whole body into the

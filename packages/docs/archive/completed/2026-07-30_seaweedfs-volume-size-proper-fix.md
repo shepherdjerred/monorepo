@@ -25,7 +25,7 @@ predicted. The promised durable follow-up (scout image GC, `scout-image-gc-daily
 PR #1376) already shipped but can't help: SeaweedFS vacuum compacts _within_ a
 volume and never frees a volume _slot_.
 
-Prior incident: `packages/docs/logs/2026-06-27_main-ci-red-seaweedfs-volume-exhaustion.md`.
+Prior incident: the original investigation.
 
 ## Root cause (verified live)
 
@@ -101,42 +101,3 @@ kubectl exec -n seaweedfs seaweedfs-master-0 -- \
 - [x] Confirm the `seaweedfs` Argo app synced and `SeaweedFS_volumeServer_max_volumes = 500` / `Free > 0`.
 - [x] Confirm a later main build deploys sites successfully without `No writable volumes` and returns main to green.
 - [x] Mark this plan `status: complete` and move it to `archive/completed/`.
-
-## Session Log — 2026-07-30
-
-### Done
-
-- Diagnosed main CI red: `deploy sites` failing on SeaweedFS 500 `No writable
-volumes` (slot ceiling 360/360). Confirmed root cause = `volumeSizeLimitMB`
-  defaulting to 1000 MB.
-- `packages/homelab/src/cdk8s/src/resources/argo-applications/seaweedfs.ts`:
-  added `master.volumeSizeLimitMB: 30_000`, bumped `maxVolumes` 360→500, rewrote
-  the stale comment.
-- New `packages/homelab/src/cdk8s/src/resources/monitoring/monitoring/rules/seaweedfs.ts`
-  (2 groups, 3 alerts) + registered in `prometheus.ts` (ns `seaweedfs`).
-- Verified both alert metrics are scraped into Prometheus and correctly labeled.
-- `bun run build` renders the changes; `typecheck`/`lint`/`test` green for
-  `homelab`/`@homelab/cdk8s`.
-
-### Caveats
-
-- The fix does not reduce the existing 360 slots immediately; it stops growth and
-  lets them consolidate over time. Immediate unblock comes from `maxVolumes: 500`.
-- `deploy sites` still has no auto-retry on agent preemption (separate issue seen
-  earlier this session — a SIGTERM'd deploy pod).
-
-## Session Log — 2026-08-02
-
-### Done
-
-- Confirmed the documentation follow-up passed Buildkite main build #7353 and successor build #7357 also passed.
-- Confirmed the `seaweedfs` Argo application is `Synced`/`Healthy`, `SeaweedFS_volumeServer_max_volumes` is `500`, and the master reports `133` free slots.
-- Searched 72 hours of S3 logs and found no recurrence of `No writable volumes`; subsequent site deployment completed successfully.
-
-### Remaining
-
-- None.
-
-### Caveats
-
-- The 367 existing small volumes remain allocated, but the larger volume limit and 133 free slots remove the production blocker without destructive compaction.

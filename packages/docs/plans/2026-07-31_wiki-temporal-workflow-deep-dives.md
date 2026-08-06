@@ -91,20 +91,18 @@ prose where avoidable — use "the two tracked people".
    `git-spice branch create feature/wiki-temporal-workflows` so the deep-dive
    PR depends on the overview PR (#1869), per the repo's git-spice stack
    model.
-2. Session log: continue `packages/docs/logs/2026-07-30_wiki-temporal-surfaces.md`?
-   No — new session, new log: `packages/docs/logs/2026-07-31_wiki-temporal-workflow-deep-dives.md`
+   No — new session, new log: the original investigation
    (committed on the new branch).
-3. Write the 9 new pages + 4 edits per the Appendix facts. Follow
+2. Write the 9 new pages + 4 edits per the Appendix facts. Follow
    `wiki/AGENTS.md`: frontmatter title+description, no H1, lead with the
    answer, absolute wiki routes, link exact GitHub sources.
-4. Liveness-check every GitHub URL written (batch curl → 200).
-5. Verify from `packages/docs/wiki/`: `bun run typecheck && bun run test &&
+3. Liveness-check every GitHub URL written (batch curl → 200).
+4. Verify from `packages/docs/wiki/`: `bun run typecheck && bun run test &&
 bun run build && bun run test:e2e`.
-6. Screenshots (existing scratchpad `shoot-wiki.ts` script, extended to the
+5. Screenshots (existing scratchpad `shoot-wiki.ts` script, extended to the
    new routes) at 1280px; mobile for one representative page. Upload via
    `toolkit pr asset`.
-7. `git-spice stack submit --draft --fill` to open the stacked draft PR;
-   PR body with screenshots; append Session Log to the log file.
+6. `git-spice stack submit --draft --fill` to open the stacked draft PR;
 
 ## Verification
 
@@ -318,38 +316,3 @@ installation token; `GITHUB_APP_*` stripped; claude gets OAuth token, no API
 key. One-off id = title + content-hash (REJECT_DUPLICATE + FAIL). Follow-up:
 one report-only task max; `cancelCron` pauses (never deletes) and only with
 `allowSelfCancel`. gen_ai span before exit-code check.
-
-## Session Log — 2026-07-31
-
-### Done
-
-- Three Explore agents deep-read every workflow; facts condensed in the
-  Appendix above.
-- Wrote `packages/docs/wiki/src/content/docs/temporal/workflows/`: inventory
-  `index.md` + six family pages (repo-upkeep, scout, glitter,
-  homelab-maintenance, home-automation, pr-bots); nested `Workflows` sidebar
-  group; cross-links + corrections in the four #1869 overview pages;
-  "Under the hood" section on agent-tasks.md.
-- **Course correction mid-write**: #1863 (PR-bot fleet removal), #1864,
-  #1865 landed on main after exploration — caught via URL liveness 404s.
-  Dropped the pr-review/pr-babysit dedicated pages, rewrote pr-bots.md,
-  corrected queue counts and PR-bot lists, added agent-task-timeout-watch.
-- Verified: wiki typecheck/test/build/test:e2e green; 19 GitHub links all
-  200 against current main; hygiene grep clean.
-- Draft PR #1880 (stacked on #1869) with 8 desktop + 1 mobile screenshots.
-
-### Remaining
-
-- Promote #1869 and #1880 from draft together once Buildkite + review gate
-  are green (merge #1869 first, then #1880; the overview's brief staleness
-  re the removed PR bots is closed by #1880).
-
-### Caveats
-
-- The worktree/stack base is the 2026-07-30 main; `git-spice` warns
-  feature/wiki-temporal-surfaces "needs restack". Content was written and
-  link-checked against CURRENT main, and no file overlap exists with
-  #1863–#1867, so merges should be clean without a restack.
-- Explorer reports for the removed PR bots (review pipeline, babysit,
-  reaction listener) remain in the plan Appendix as historical context only
-  — do not resurrect them into wiki pages.

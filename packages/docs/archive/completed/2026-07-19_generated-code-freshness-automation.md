@@ -320,17 +320,3 @@ generate-helm-types --check`.
 ## Historical follow-up state
 
 - Complete and verify the work described in `Generated-Code Freshness Automation`.
-
-## Session Log — 2026-07-27
-
-### Done
-
-- PRs #1566, #1568, and #1569 are merged and all three refresh schedules exist in current source.
-
-### Remaining
-
-- None in this plan.
-
-### Caveats
-
-- The historical design is retained for context; it is not an active board item.

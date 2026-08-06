@@ -5,7 +5,6 @@ status: planned
 board: true
 verification: agent
 disposition: blocked
-origin: packages/docs/logs/2026-07-18_ci-green-verify-hardening.md
 ---
 
 # ArgoCD `apps` never prunes — orphaned resources accumulate; decide a prune policy

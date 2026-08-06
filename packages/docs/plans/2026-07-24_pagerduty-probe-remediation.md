@@ -9,7 +9,7 @@ board: false
 
 ## Context
 
-13 PagerDuty incidents (#6718–#6730) fire recurringly against the Homelab service. Triage (2026-07-24, `packages/docs/logs/2026-07-24_pagerduty-alert-triage.md`) found **20 blackbox probes that have never succeeded** since PR #1505 auto-registered probes for every Tailnet/Cloudflare service:
+13 PagerDuty incidents (#6718–#6730) fire recurringly against the Homelab service. Triage (2026-07-24, the original investigation) found **20 blackbox probes that have never succeeded** since PR #1505 auto-registered probes for every Tailnet/Cloudflare service:
 
 - **14 probes** hit `/` with the `http_2xx` module (accepts 200/301/302) against services that legitimately return 401/403/404 at root. Backend (internal) probes cannot be pointed anywhere else: `BackendProbeDescriptor` has no `path` field and `buildTargetUrl` hardcodes `/`.
 - **6 probes** target the bluemap services of the three minecraft namespaces, which are intentionally hibernated at `replicaCount: 0` (mc-router wake-on-connect, committed 2026-04-04). Probes fail whenever the servers sleep.
@@ -66,22 +66,3 @@ unless on(namespace)
 1. `bun run verify -- --affected`.
 2. Post-merge: blackbox debug endpoint per fixed target → `probe_success 1`; Prometheus `probe_success == 0` shows only hibernated minecraft; `ALERTS{alertname="ServiceProbeDown"}` empty.
 3. Resolve PD incidents #6718–#6730; confirm no re-trigger.
-
-## Session Log — 2026-07-24
-
-### Done
-
-- Live-verified every candidate health endpoint through the blackbox exporter debug endpoint (results in the Part 2 table).
-- Implemented backend probe `path` support: `probe-registry.ts` (with fail-fast on conflicting duplicate registrations), `tailscale.ts`, `cloudflare-tunnel.ts`, `service-probes-chart.ts`.
-- Applied per-service fixes at all 10 call sites (Part 2 table) plus `argo-applications/argocd.ts` — the new conflict check exposed a real latent mismatch there (TailscaleIngress registered `https_2xx_insecure`, the tunnel binding silently registered `http_2xx`; now both explicit).
-- Hibernation-aware `ServiceProbeDown` expr in `rules/service-probes.ts`.
-- Tests: extended `probe-registry.test.ts` (path default/override, conflict throws), new `service-probes-chart.test.ts` (4 URL-building cases). Full cdk8s suite 239 pass / 0 fail; `bun run verify -- --affected` green.
-
-### Remaining
-
-- Merge the PR, wait for ArgoCD sync, then post-merge verification (see Verification section) and resolve PD incidents #6718–#6730.
-
-### Caveats
-
-- `packages/homelab/AGENTS.md` claims `bun run test` exists at `packages/homelab` — it doesn't anymore; the test script lives in `src/cdk8s` (not fixed here, noted as friction).
-- postal-web 403s every path via the in-cluster service DNS name (Rails host allowlist), so its probe is TCP-only; an HTTP probe would need a Host-header-aware blackbox module.

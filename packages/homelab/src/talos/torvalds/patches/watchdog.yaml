@@ -20,7 +20,7 @@
 # that's confirmed — an armed-but-unpetted watchdog reboots immediately; an
 # armed-and-petted-by-something-other-than-machined watchdog won't correctly fire when
 # machined itself starves.
-# See packages/docs/logs/2026-07-08_torvalds-cluster-health-deep-check.md.
+# See the original investigation.
 machine:
   kernel:
     modules:

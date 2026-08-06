@@ -9,8 +9,6 @@ board: false
 
 ## Status Notes (Historical)
 
-**Complete** — the `plans/`/`logs/` split, taxonomy, and discipline rewrite shipped 2026-05-10 (see Session Log below) and are now codified in `packages/docs/AGENTS.md` and root `CLAUDE.md`. Archived during the 2026-06-06 docs groom. The deferred archive-consolidation items under "Remaining" (delete `archive/stale/`, prune `archive/homelab-audits/`, merge `archive/dagger-migration/` + `archive/on-hold/`) were raised to the user on 2026-06-06 and **declined** — the archive stays intact per "Archive, don't delete". Considered closed; do not re-raise.
-
 ## Context
 
 `packages/docs/plans/` has accumulated 40 files because `monorepo/CLAUDE.md` ("Documentation Discipline — Per Session") forces a plan file for every session, even one-shot edits. The user wants:
@@ -56,11 +54,11 @@ Launched in a single message:
 
 Strict file scoping to prevent collisions. Cross-cutting files (`CLAUDE.md`, `packages/docs/CLAUDE.md`, `packages/docs/index.md`) are handled by me at the end, not by any agent.
 
-| Agent | Workstream                                                                                                                                                                                         | Files in scope                                                                                        |
-| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| E1    | **Plans/logs split.** Create `packages/docs/logs/` (with `.gitkeep`). `git mv` log-style files from `plans/` → `logs/`. `git mv` completed substantive plans from `plans/` → `archive/completed/`. | Only files under `packages/docs/plans/`, `packages/docs/logs/`, `packages/docs/archive/completed/`.   |
-| E2    | **Guides/decisions staleness + status sweep.** Apply per-file actions from A1 + A2 reports: edit stale guides/decisions in place where small; `git mv` to archive for big ones.                    | Only files under `packages/docs/guides/`, `packages/docs/decisions/`, and the target archive subdirs. |
-| E3    | **Archive subdir consolidation + broken-link fixes.** Merge/delete inside `archive/` per A3. Fix broken in-repo links per A4 (rewriting paths inside doc bodies; not moving files).                | Only files under `packages/docs/archive/`. Link fixes touch any doc but only edit link text.          |
+| Agent | Workstream                                                                                                                                                                                                          | Files in scope                                                                                                       |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| E1    | **Plans/logs split.** Create `the former session-journal directory` (with `.gitkeep`). `git mv` log-style files from `plans/` → `logs/`. `git mv` completed substantive plans from `plans/` → `archive/completed/`. | Only files under `packages/docs/plans/`, `the former session-journal directory`, `packages/docs/archive/completed/`. |
+| E2    | **Guides/decisions staleness + status sweep.** Apply per-file actions from A1 + A2 reports: edit stale guides/decisions in place where small; `git mv` to archive for big ones.                                     | Only files under `packages/docs/guides/`, `packages/docs/decisions/`, and the target archive subdirs.                |
+| E3    | **Archive subdir consolidation + broken-link fixes.** Merge/delete inside `archive/` per A3. Fix broken in-repo links per A4 (rewriting paths inside doc bodies; not moving files).                                 | Only files under `packages/docs/archive/`. Link fixes touch any doc but only edit link text.                         |
 
 After E1–E3 return:
 
@@ -71,11 +69,11 @@ After E1–E3 return:
 
 ### `/Users/jerred/git/monorepo/CLAUDE.md` — "Documentation Discipline — Per Session"
 
-Replace the "Every session must produce or update a plan file" framing with:
+This historical change replaced the earlier mandatory-plan framing with:
 
-- **Default: write a session log** at `packages/docs/logs/<YYYY-MM-DD>_<kebab-slug>.md` with Done / Remaining / Caveats.
 - **Write a plan** at `packages/docs/plans/...` only when (a) plan mode was used, or (b) work is multi-step / has design choices / introduces follow-ups. Mirror harness plans into `plans/` in that case.
-- **End-of-session summary** rule unchanged — append Done / Remaining / Caveats to whichever file this session produced; restate inline as the final chat message.
+- The then-current end-of-session summary rule remained unchanged: it required
+  Done / Remaining / Caveats in the produced file and final chat response.
 - Drop "even one-shot edits must produce a plan".
 
 ### `/Users/jerred/git/monorepo/packages/docs/CLAUDE.md`
@@ -93,7 +91,7 @@ Replace the "Every session must produce or update a plan file" framing with:
 ## Verification
 
 - `ls packages/docs/plans/ | wc -l` drops to roughly the count of still-active PLANs (~20 max, target ~16).
-- `ls packages/docs/logs/` populated; `git log --diff-filter=R --name-status` shows renames (preserves history via `git mv`).
+- `ls the former session-journal directory` populated; `git log --diff-filter=R --name-status` shows renames (preserves history via `git mv`).
 - `archive/completed/` grew by the substantive-completed plans.
 - `bunx markdown-link-check` (or equivalent grep for broken `[...](./...)` paths) returns clean on `packages/docs/**`.
 - `packages/docs/index.md` no longer references any moved file; `## Logs` dir link resolves.
@@ -109,43 +107,6 @@ Replace the "Every session must produce or update a plan file" framing with:
 
 ## Out of scope (deferred)
 
-- Backfilling Session Logs into existing archive files that lack them.
 - Re-styling archived docs.
 - Editing `/Users/jerred/CLAUDE.md` (global) — the discipline rule lives in monorepo CLAUDE.md.
 - Implementing fixes for the "packages with no docs" findings — surfaced as a follow-up plan only.
-
-## Session Log — 2026-05-10
-
-### Done
-
-- **Created `packages/docs/logs/`** with `.gitkeep`; new home for thin per-session journals.
-- **Reframed `packages/docs/plans/`** as the home for forward-looking design work only (`/Users/jerred/git/monorepo/CLAUDE.md:33–80` rewritten — log is now the default; plan only for plan-mode/multi-step work).
-- **Moved 12 substantive completed plans → `archive/completed/`**: `2026-05-09_{bypass-mode-defaults, claude-md-doc-discipline, dissociated-clone-workflow-skill, daily-homelab-audit-email, renovate-coverage-audit}`; `2026-05-10_{ci-disk-write-reduction, pi-feature-roadmap, pr-review-bot-cluster-key, pr-review-bot-specialists-consensus, pr-review-bot-verification, tasknotes-recurring-and-wiring, trmnl-dashboard-dagger-image}`.
-- **Moved 5 thin/Q&A sessions → `logs/`**: `2026-05-09_pi-codex-quota-fix`, `2026-05-10_{pi-overview, fix-toolkit-recall-zod-vector, fix-trmnl-dashboard-helm-chart, update-versions-script-fix}`.
-- **Moved 2 superseded docs → `archive/superseded/`**: `plans/2026-04-25_pr-review-and-summary-bot.md` (superseded by SOTA plan), `guides/2026-05-05_homelab-health-audit.md` (superseded by 5/8 audit).
-- **Updated stale "Dagger removed" claim** in `decisions/2026-02-23_dagger-disk-write-amplification.md:3` — Dagger is in active use; pointer added to the recent disk-write reduction work.
-- **Fixed 4 broken in-repo links** (kumo file ×2, sota-pr-review-bot ×2, homelab-health audit ×2). Final scan: **0 broken links** in `packages/docs/**` (excluding fenced code-block false positives).
-- **Updated `packages/docs/CLAUDE.md`** — `logs/` row added to structure block + "Where to Put New Docs" table; "Plan vs Log" disambiguation added.
-- **Rebuilt `packages/docs/index.md`** — added `## Logs` section linking the dir; pruned moved plans; removed superseded guide; archive section refreshed.
-
-### Remaining
-
-- **`plans/` final count: 24** (down from 40). Target was ~16–20. The extras are:
-  - 3 active backlog trackers (`homelab-ops-hardening-backlog`, `renovate-blocked-majors`, `tasks-for-obsidian-ios-target-wiring`) — these are tracker docs, not single-design plans, but they're active work and don't fit `logs/`. Acceptable.
-  - Multi-phase PR-review-bot cluster: 4 phase plans (8-measurement, 8-emit-site-wiring, 10-continuous-eval, sota master). Audit agent A3 suggested consolidating these into a `plans/pr-review-bot/` subdir or merging into the SOTA master. Deferred — touching active work risks breaking in-flight context.
-- **Archive consolidation suggestions deferred** (from audit A3):
-  - `archive/stale/` (7 files) — A3 suggested delete entirely; needs user OK before destroying history.
-  - `archive/homelab-audits/` (9 files) — A3 suggested keep 1, delete 8; needs user OK.
-  - `archive/dagger-migration/` (18 files) — A3 suggested merging 3 audit files + compressing 7 chunk task-tracking files; mechanical work, no risk, just volume.
-  - `archive/on-hold/` (4 files) — 3 Sentinel files could merge into 1; needs content review.
-- **In-place guide updates deferred** (from audit A1):
-  - `guides/2026-04-25_home-assistant-cleanup-followups.md` — status markers ambiguous; some "Open" items may be done.
-  - `guides/2026-03-08_dotfiles-update.md` — references deleted `PAGERDUTY_TOKEN` 1Password item; `chezmoi apply` will fail until config is updated.
-- **3 packages without docs** (audit A4): `fonts`, `hn-enhancer`, `leetcode` — all trivial/side projects, no action needed.
-
-### Caveats
-
-- **Untracked file `2026-05-10_ci-disk-write-reduction.md` was carried into this PR** — it was an uncommitted plan file from a recent session that this grooming naturally folds in by moving it to `archive/completed/` and pruning its index.md entry.
-- **The "Dagger removed" header note** in `decisions/2026-02-23_dagger-disk-write-amplification.md` was updated, not archived. The 2026-02-24 disk-write amplification analysis is still technically accurate; only the 2026-03-19 inline claim was wrong.
-- **Audit A3 made deletion recommendations** that the executor (me) deliberately did not act on per the plan's "no deletions without explicit user OK" rule. They're called out under Remaining for user review.
-- **The `## Status` line and `## Session Log` convention applies to both logs and plans now** — `packages/docs/CLAUDE.md` and root `CLAUDE.md` reflect this. The rule changed mid-session; existing plans and logs may not all conform but new ones will.

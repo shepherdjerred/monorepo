@@ -1,6 +1,6 @@
 ---
 name: monorepo-docs
-description: Author and maintain documentation in shepherdjerred/monorepo. Use for session logs, implementation plans, architecture notes, decisions, guides, TODO records, docs-board workflow changes, or the human-focused Starlight wiki in packages/docs/wiki. Also use when code or infrastructure changes should update durable AI or human documentation.
+description: Author and maintain documentation in shepherdjerred/monorepo. Use for implementation plans, architecture notes, decisions, guides, TODO records, docs-board workflow changes, or the human-focused Starlight wiki in packages/docs/wiki. Also use when code or infrastructure changes should update durable AI or human documentation.
 ---
 
 # Monorepo Docs
@@ -26,7 +26,6 @@ Use the parent workflow taxonomy for agent-operational artifacts:
 - `decisions/`: decisions, audits, and tradeoff records
 - `guides/`: procedures, runbooks, and research
 - `plans/`: substantive multi-step design and future work
-- `logs/`: the default session record
 - `todos/`: deferred work and source-marker records
 
 Do not copy a workflow document into the wiki. Parent docs are private by
@@ -60,13 +59,10 @@ refactors and ephemeral fixes do not need forced wiki churn.
 
 ## Author workflow documents
 
-Follow the canonical frontmatter, workflow, board, archival, TODO, and session
-log rules in the `AGENTS.md` hierarchy. Wiki files are not docs-board inputs and
-must not receive workflow frontmatter.
-
-Before finishing a session, append the required `Session Log` with exact Done,
-Remaining, and Caveats. Preserve evidence and unfinished handoff context in the
-workflow document even when a curated wiki page is also updated.
+Follow the canonical frontmatter, workflow, board, archival, and TODO rules in
+the `AGENTS.md` hierarchy. Wiki files are not docs-board inputs and must not
+receive workflow frontmatter. Do not create a workflow document solely to
+journal an agent session; use a plan only when the design is durable.
 
 ## Verify
 

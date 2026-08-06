@@ -49,21 +49,3 @@ Hard-enforcement escalation, documented but intentionally **not built**: `PreToo
 2. **Config validity:** `.claude/settings.json` parses as JSON; `.codex/config.toml` parses as TOML and `codex doctor` loads it clean.
 3. **Claude Code (manual):** fresh session in the main checkout → reminder lands in context; session inside a worktree → silent.
 4. **Codex (manual):** `codex` in the monorepo (accept the `.codex/` trust prompt) → SessionStart reminder; silent inside a worktree.
-
-## Session Log — 2026-06-13
-
-### Done
-
-- Diagnosed why agents skip worktrees (unenforced + conditional + escape hatch + low salience); verified hook surfaces directly from the `claude` (2.1.176) and `codex` (0.139.0) binaries.
-- Reworded `AGENTS.md` worktree section; added shared `.claude/hooks/worktree-reminder.sh`; wired it into `.claude/settings.json` (Claude) and a new `.codex/config.toml` (Codex).
-- Worked in worktree `feature/worktree-nudge` (dogfooding the rule) rather than the user's dirty main checkout.
-
-### Remaining
-
-- Manual end-to-end confirmation of both hooks firing in real Claude Code / Codex sessions.
-- Open PR (not yet requested). Commit pending user go-ahead.
-
-### Caveats
-
-- Nudge-only by design; hard enforcement deferred (documented above).
-- Codex hook firing verified by config-load + docs, not a live interactive session.

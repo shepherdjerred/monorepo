@@ -5,7 +5,6 @@ status: planned
 board: true
 verification: agent
 disposition: active
-origin: packages/docs/logs/2026-05-16_scout-common-denominator.md
 source_marker: false
 ---
 
@@ -36,7 +35,7 @@ The originating session was an inspection-only review of the Common Denominator 
 
 ## References
 
-- Originating log: `packages/docs/logs/2026-05-16_scout-common-denominator.md`
+- Originating log: the original investigation
 - Scheduler: `packages/scout-for-lol/packages/backend/src/league/cron.ts`
 - Calculations: `packages/scout-for-lol/packages/backend/src/league/tasks/pairing/calculate-pairings.ts`
 - Message builder: `weekly-update.ts` in the same directory tree

@@ -393,4 +393,4 @@ sqlite3 /tmp/scout-beta-migration-test.sqlite \
 - `packages/scout-for-lol/packages/backend/prisma/schema.prisma` (DateTime columns)
 - `packages/scout-for-lol/packages/backend/prisma/migrations/20260511000000_add_competition_update_schedule/migration.sql` (originator of the space-form `nextScheduledUpdateAt` backfill — covered by the new migration's space-form branch)
 - `node_modules/.bun/@prisma+adapter-libsql@7.8.0/.../dist/index-node.js:185-200` and `.d.ts:21` (the `timestampFormat` option being exploited)
-- `packages/docs/logs/2026-05-13_scout-beta-missing-daily-update.md` (initial Beta-only diagnosis — superseded by this plan)
+- the original investigation (initial Beta-only diagnosis — superseded by this plan)

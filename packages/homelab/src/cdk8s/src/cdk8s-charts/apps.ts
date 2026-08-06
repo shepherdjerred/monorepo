@@ -123,7 +123,7 @@ export async function createAppsChart(app: App) {
   // overheated the adjacent M.2 slots before the AIO cooler was installed
   // (2026-05-26). The original emergency cap was 95/140; raised to stock once
   // the AIO + per-drive NVMe cooling were verified.
-  // See packages/docs/logs/2026-05-24_torvalds-thermal-investigation.md.
+  // See the original investigation.
   createCpuPowerCap(chart, { pl1Watts: 125, pl2Watts: 253 });
   createVeleroApp(chart);
   createPostgresOperatorApp(chart);

@@ -9,7 +9,7 @@ board: false
 
 ## Context
 
-Today's Bugsink triage session root-caused all 8 open issues (6 distinct causes; full analysis in `packages/docs/logs/2026-07-19_bugsink-open-issues-root-cause.md`). The user dispositioned each item; this plan covers everything actionable that remains:
+Today's Bugsink triage session root-caused all 8 open issues (6 distinct causes; full analysis in the original investigation). The user dispositioned each item; this plan covers everything actionable that remains:
 
 - **Part A — Scout lockstep stage deploys** (user-confirmed design: prod gets a version pin for the marketing site + SPA; beta stays continuous). Detailed plan already written to `packages/docs/archive/superseded/2026-07-19_scout-lockstep-stage-deploys.md`; summarized below.
 - **Part B — Two small bug fixes**: streambot interaction double-ack/late-ack (confirmed bug), and the undefined-safe `subscriptionFilterQueues` quick win (defense-in-depth for Part A's rollout window).
@@ -68,42 +68,6 @@ Full detail with verified file:line anchors, idempotency table, risks: `packages
 - **Part A**: PR dry-run rehearses subcommands; post-merge — beta `curl https://beta.scout-for-lol.com/.release-version` == build version, archive listing shows `<v>/` + `<v>.json`, reconcile logs show sentinel → no-op; post-promotion — `curl https://scout-for-lol.com/.release-version` == promoted version, `kubectl -n scout-prod get deploy` digest == promoted pin, ArgoCD Healthy; rollback drill via `git revert` on a branch.
 - Whole-repo: `bun run verify -- --affected` before each push.
 
-## Session Log — 2026-07-19
-
-### Done
-
-- **PR #1564** (`fix/bugsink-triage-hardening`) — Part B: undefined-safe `subscriptionFilterQueues`/`describeSubscriptionFilters`/`summarizeFilters` + unit test; streambot total ack paths (`isStaleInteractionError` in `streambot/src/util/errors.ts`, guarded catch-block ack in `command-bot.ts`, `safePaginationClick` wrapper in `pagination.ts`); marketing-site `ignoreErrors` for frameless network errors (B3, optional — flagged droppable in the PR).
-- **PR #1565** (`feat/scout-site-releases-bucket`) — Part A PR 1: `scout-site-releases` bucket + 365d lifecycle in `tofu/seaweedfs/buckets.tf`; `tofu validate`/`fmt` green.
-- **PR #1567** (`feat/scout-lockstep-deploys`) — Part A PR 2: `scripts/lib/s3-static-site.ts` (extraction + `extraExcludes`), `scripts/scout-site-release.ts` (archive/deploy-beta/reconcile-prod, all `--dry-run`-capable, smoke-tested), `scripts/promote-scout.ts` (temp-worktree promotion PR flow with guards), `versions.ts` site pin + Renovate-annotation removal on scout prod, pipeline changes (sites step swap, `scout-prod-reconcile` step, PR dry-run rehearsal, Sentry release wiring), scout AGENTS.md + skill fixes (`version-management`, `buildkite-helper` stale "pipeline removed" claims; live `~/.claude/skills` copies synced per chezmoi dual-edit). `bun run verify -- --affected` green.
-
-- **Rework (same day, user feedback):** promotion is now fully CI-driven — commit `00d9612fc` on #1567 adds the `scout promotion PR` step (`promote-scout.ts --ci`) maintaining the standing `scout-promote-pending` PR (opens when beta is ahead via image-line or manifest-gitSha scout-diff gate, closes when caught up). Merging it = promotion; rollback = revert (or operator mode for arbitrary targets). No local runs in the normal path.
-
-### Historical follow-up state
-
-- Merge #1564 anytime; merge #1565, wait for tofu-apply, then merge #1567 (strict order for the latter two).
-- After one post-#1567 main build: CI opens the standing `scout-promote-pending` PR automatically (promote-scout.ts --ci; reworked 2026-07-19 per user feedback — promotion is now just merging that PR, no local script). First promotion jumps the backend 2.0.0-4791 → current beta; pre-flight before merging it: diff backend required env 4791→target vs prod stage wiring (beta-only AI keys `resources/scout/index.ts:173-194`), confirm Prisma migrations forward-only. Rollback stays operator mode (`promote-scout.ts --version <older> --force`).
-- After fixes deploy: resolve the `filters` + streambot Bugsink issues via the web UI (API is read-only for issues).
-
-### Caveats
-
-- Until the first promotion merges, prod site content is frozen at its last pre-#1567 sync (today's skew persists but stops worsening).
-- `promote-scout.ts`'s pending-bump guard greps the version-bump PR diff for the beta line; `--allow-pending-bump` overrides deliberately.
-- The dotfiles skill edits ship in #1567; `chezmoi apply` on other machines picks them up after merge.
-
 ## Historical follow-up state
 
 - Complete and verify the work described in `Bugsink Triage Follow-ups: Lockstep Deploys + Bug Fixes`.
-
-## Session Log — 2026-07-27
-
-### Done
-
-- PRs #1564 through #1567 are merged; the old bespoke promotion mechanism was later replaced by PR #1630.
-
-### Remaining
-
-- None in this plan.
-
-### Caveats
-
-- The historical design is retained for context; it is not an active board item.

@@ -11,7 +11,7 @@ The tasknotes-server engine skips (and loudly reports) any task-like vault
 file it cannot parse — but nothing watches that signal. The 2026-07-12
 Obsidian-Sync conflict corruption of `pay-rent.md`/`pay-airvpn.md` made two
 tasks invisible in the app for **10 days** before a manual inspection found
-them (`logs/2026-07-22_tasknotes-sync-conflict-repair.md`). This canary
+them (the original investigation). This canary
 closes that gap: same-day detection instead of accidental discovery.
 
 ## The check
@@ -43,7 +43,7 @@ schedule, `touch` to nudge the watcher, verify task count + 200s).
   "source": {
     "docPath": "packages/docs/guides/2026-07-23_tasknotes-skipped-files-canary.md"
   },
-  "prompt": "Run the kubectl engine-status check from 'The check' section of the source doc against the tasknotes namespace. Email the result: green if skippedFiles is empty and the fetch succeeded; red with the full skippedFiles list (path + reason) if not, plus a reminder that the repair runbook is in packages/docs/logs/2026-07-22_tasknotes-sync-conflict-repair.md. Also flag if the pod is not Running or the tasks count dropped more than 20% since the last report."
+  "prompt": "Run the kubectl engine-status check from 'The check' section of the source doc against the tasknotes namespace. Email the result: green if skippedFiles is empty and the fetch succeeded; red with the full skippedFiles list (path + reason) if not, plus a reminder that the repair runbook is in the original investigation. Also flag if the pod is not Running or the tasks count dropped more than 20% since the last report."
 }
 -->
 

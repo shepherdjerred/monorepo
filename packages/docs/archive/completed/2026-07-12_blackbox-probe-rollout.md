@@ -63,30 +63,6 @@ Added an ingress rule allowing the `prometheus` namespace (matching the existing
 - Full pre-commit (tier-1 + tier-2: helm lint, 1Password lint, quality ratchet, tunnel-DNS coverage, prettier, eslint) — pass.
 - Opened **PR #1505**.
 
-## Session Log — 2026-07-12
-
-### Done
-
-- Implemented the full auto-registration design: `probe-registry.ts`, `http-probe.ts`, `blackbox-modules.ts` additions, `TailscaleIngress`/`createIngress`/`createCloudflareTunnelBinding` edits, `service-probes.ts` alert rule, `service-probes-chart.ts` finalization pass, `setup-charts.ts` wiring.
-- Added `port` to all 21 `createCloudflareTunnelBinding` call sites, `probeModule` overrides for `temporal-server`/`argocd`, and `disableProbe` for `s3-static-sites`.
-- Updated 13 NetworkPolicy files to allow prometheus-namespace ingress.
-- Wrote 3 new test files (`probe-registry.test.ts`, `blackbox-modules.test.ts`, `http-probe.test.ts`) plus a new PagerDuty routing test case.
-- Found and fixed a real cross-test-file state-leak bug (module-level registry needed a reset at the top of `setupCharts()`) during verification — see Caveats.
-- Verified end-to-end: typecheck, full test suite, lint, rendered-manifest inspection (63 Probes, zero dupes, correct modules), NetworkPolicy spot-check, full pre-commit.
-- Opened PR #1505.
-
-### Historical handoff
-
-- Merge PR #1505, let ArgoCD sync, then confirm live: all 63 `probe_success` series report `1` via Prometheus, and `ServiceProbeDown`/`ServiceProbeAbsent` don't misfire in the first 24h.
-- **Forward-looking check** (the actual point of this design): the next time a new service is added with `TailscaleIngress`/`createCloudflareTunnelBinding`, confirm no separate action is needed for it to show up in `probe_success`.
-- Decide whether to resume the still-dormant `feature/torvalds-memory-rightsize` worktree (noted in the prior Scrypted-fix session, unrelated to this work) for the broader cluster memory-overcommit audit.
-
-### Caveats
-
-- **Module-level registry state leaks across independent `App`/`setupCharts()` invocations in the same process** — this is inherent to the design (a plain exported `Map`/array), not a bug introduced by a specific call site. It only matters because the test suite's ~28 files each build their own `App` and call `setupCharts()` (or an individual chart function) within one bun:test process. Fixed by calling `resetProbeRegistry()` at the top of `setupCharts()`, which is safe in production too (a single real run just clears an already-empty registry). If a future test calls an individual chart-creation function directly (bypassing `setupCharts()` entirely) many times in a row, its registrations would sit unconsumed until the next `setupCharts()`-based test resets them away — harmless, since `createServiceProbesChart` is only ever invoked from inside `setupCharts()`.
-- The plan's "64 Probe resources" estimate was off by one category: it didn't account for `s3-static-sites` opting out of _both_ the backend and public auto-probe (only the public-probe opt-out was originally planned for); the actual, correct count is 63 backend+public probes total, verified against the rendered manifest.
-- Did not independently re-verify every single Service `metadata.name` before this session (a few — home-assistant, zwave-js-ui, bugsink, plausible, birmel-oauth, postal-web — were flagged as unconfirmed during planning); all were read directly from source during implementation, not assumed.
-
 ## Closure
 
 Shipped in commit `6df2cfaa3` / PR #1505, reachable from `origin/main`. The

@@ -10,7 +10,7 @@ board: false
 ## Context
 
 On 2026-07-02/03, three movie streams died mid-playback with zero errors anywhere. Diagnosis
-(`packages/docs/logs/2026-07-03_streambot-mid-movie-death-investigation.md`):
+(the original investigation):
 
 1. Discord ends the userbot's voice session (close code never logged).
 2. dvs fork `BaseMediaConnection.ts:160-174`: non-resumable ws closes silently set `_closed` and
@@ -121,55 +121,3 @@ adopting the event in `discord-plays-*`.
   retries/exhausts like boot's "no userbot free" branch (session-manager.ts:272-289).
 - **Alone-timer gap** after auto-resume (occupancy re-checked only on next voice event) —
   pre-existing boot-resume behavior, documented not fixed.
-
-## Session Log — 2026-07-03
-
-### Done
-
-- **A (dvs fork)**: `BaseMediaConnection` logs every voice ws close with its code, emits a typed
-  `close` event (`MediaConnectionCloseInfo {code, canResume, deliberate}`) on non-resumable closes,
-  guards the close handler against locally-initiated `stop()` (fixing the latent phantom-resume
-  socket after every normal stop), and gains a `protected createWebSocket()` test seam +
-  `VoiceGatewaySocket` narrow type. README divergence #4 documented. New
-  `test/base-media-connection.test.ts` (4 tests incl. the phantom-resume regression).
-- **B (streamer)**: `StreamerLike.lastVoiceCloseInfo()` / `setVoiceCloseListener()`; subscription
-  attached after `joinVoice`, detached first in `safeStop` so local stops never fire it.
-- **C (recovery)**: `session/voice-recovery.ts` — pure `classifyVoiceLoss` (deliberate ⇔ fresh
-  4014, 15 s freshness) + `VoiceRecoveryCoordinator` (single-flight per key, snapshot-before-stop,
-  preserve-state teardown, delayed bounded retries with re-classification at fire time, exhausted
-  announcement keeping the file). `SessionManager` split into `session-types.ts`,
-  `resume-runner.ts` (`resumeSession`, shared boot/reconnect), and the slimmed manager (max-lines).
-  Recovery-spawned sessions keep their state file until `resumeConfirmed` (30 s healthy), then
-  count `streambot_voice_reconnects_total{outcome="success"}`; unconfirmed deaths re-arm the retry.
-- **D/E (surfacing)**: command-bot logs the gateway detach and routes it through
-  `sessions.notifyStreamerDetached`; `StatusSnapshot.lastError` + StatusReporter announces
-  "⏹️ Stream stopped: <reason>" once per active→idle-with-error edge.
-- **F/G**: `reconnect {enabled, delaySeconds, maxAttempts}` config
-  (`STREAMER_RECONNECT_ENABLED/_DELAY_SECONDS/_MAX_ATTEMPTS`);
-  `streambot_voice_disconnects_total{deliberate}` + `streambot_voice_reconnects_total{outcome}`;
-  homelab alerts `StreambotVoiceDisconnectsElevated` (warning) and
-  `StreambotVoiceReconnectExhausted` (critical).
-- **Tests**: 296 streambot unit tests green (5 new recovery scenarios, 8 classification/message
-  tests, 4 stop-reason reporter tests, 2 config tests), 41 dvs tests green, homelab typecheck +
-  monitoring/streambot tests green. ESLint clean in streambot (incl. a real refactor to satisfy
-  max-lines, no suppressions).
-- **Bonus fix**: `scripts/setup.ts` DAG ordering — `scout-for-lol generate` now depends on a
-  `bun install --force` refresh of the `@shepherdjerred/llm-models` file-dep copy, fixing setup in
-  every fresh worktree/clone (the phase-2 install copied llm-models before its dist was built).
-
-### Remaining
-
-- Live acceptance test on a real Discord voice drop (kick + transient) — verify announcements,
-  auto-resume position, and the Loki/metric breadcrumb trail on the next real incident.
-- Follow-up candidates deliberately out of scope: auto-recovery for `VOICE_TARGET_MOVED`,
-  wiring `PRODUCER_FAILED`, adopting the close event in `discord-plays-*`.
-
-### Caveats
-
-- Kick-vs-transient classification is heuristic when the 4014 lands late: the timer-fire
-  re-classification covers the common case, but a kick with no ws close observed at all will be
-  retried (bounded). The new close-code logging will show the real-world code distribution.
-- A `STOP` racing a mid-queue item failure can announce a stale stop reason (machine keeps
-  `lastError` until the next successful resolve) — narrow, pre-existing `lastError` semantics.
-- The silent-to-EOF hole (WebRTC dead, frames dropped) is closed by trigger 1 (ws close event),
-  not by making sends throw — documented as a non-goal.

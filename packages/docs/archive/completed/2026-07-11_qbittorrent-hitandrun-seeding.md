@@ -144,59 +144,6 @@ torrents now carry a correct seeding-time limit instead of qBittorrent's global 
 No changes to Radarr/Sonarr (`packages/homelab/src/tofu/arr/resources.tf`) or recyclarr — both
 already correctly defer torrent removal to qBittorrent's own seeding state.
 
-## Session Log — 2026-07-11
-
-### Done
-
-- Diagnosed the Hit & Run seeding-rule gap (flat global cap vs. size-based formula) and confirmed
-  it live against actual torrent sizes/ages in the cluster.
-- Found and reported a live incident (restart-triggered bulk torrent/file removal); scoped out of
-  this plan per user direction, user handling separately.
-- Implemented `hitandrun-share-limit.sh` (dual-mode: on-add hook + `--all` backfill), wired it into
-  `qbittorrent.ts` (volume mount + credentials) and `qBittorrent.conf` (AutoRun keys), confirming
-  exact conf key names and HTTP status semantics (204 on login, not 200) empirically against the
-  live pod before committing.
-- Added formula unit tests, ran the full homelab test suite, typecheck, eslint, prettier, and
-  shellcheck — all clean.
-- Executed the one-time backfill against the three at-risk Transformers torrents; verified their
-  `seeding_time_limit` now matches the H&R formula.
-- Confirmed the qBittorrent Prometheus exporter has no per-torrent metrics to build an alert on;
-  documented as a known gap.
-
-### Historical follow-up state
-
-- Open a PR from `feature/qbit-hitandrun-seeding` and deploy via ArgoCD.
-- Post-deploy: confirm the pod starts cleanly (drift guard passes with the new conf keys), then
-  run the live functional check — add a small throwaway public-domain test torrent, confirm the
-  `AutoRun\OnTorrentAdded` hook fires (script's stdout log line appears in `kubectl logs`), and
-  confirm `torrents/info` shows a non-`-2` `seeding_time_limit` within seconds.
-- Re-verify the three backfilled Transformers torrents' limits survived the qBittorrent pod
-  restart that this deploy will cause (their live per-torrent override lives in the app's own
-  state file, not the committed conf, so it should survive a normal restart — but confirm).
-
-### Caveats
-
-- The restart-triggered bulk-removal bug (root cause of the incident found during investigation)
-  is explicitly NOT addressed by this plan.
-- The one-time backfill was applied directly to the live pod via `kubectl exec` (not IaC) — by
-  design, since it's a one-off remediation of already-seeding torrents, not ongoing config.
-- No Grafana/Prometheus alerting exists yet for "seeding limit never got set" — the exporter
-  doesn't expose per-torrent fields to build one on.
-
 ## Historical follow-up state
 
 - Complete and verify the work described in `Per-torrent Hit & Run–compliant seeding for qBittorrent`.
-
-## Session Log — 2026-07-27
-
-### Done
-
-- PR #1454 is merged; the size-based hook, formula tests, configuration, mounts, and credential wiring are present.
-
-### Remaining
-
-- None in this plan.
-
-### Caveats
-
-- The historical design is retained for context; it is not an active board item.

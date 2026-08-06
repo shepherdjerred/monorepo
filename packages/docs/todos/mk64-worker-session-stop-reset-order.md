@@ -5,7 +5,6 @@ status: planned
 board: true
 verification: agent
 disposition: active
-origin: packages/docs/logs/2026-07-28_mk64-runtime-performance-followup.md
 source_marker: false
 ---
 

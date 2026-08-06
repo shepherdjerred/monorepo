@@ -121,17 +121,3 @@ For each change:
 ## Historical follow-up state
 
 - Complete and verify the work described in `OpenTofu Audit & Expansion Plan`.
-
-## Session Log — 2026-07-27
-
-### Done
-
-- The Buildkite, Tailscale, and GitHub ruleset stacks exist; the remaining GitHub inventory cleanup and SeaweedFS lifecycle migration are now separate TODOs.
-
-### Remaining
-
-- Residual work is owned by `todos/github-tofu-inventory-cleanup.md`, `todos/seaweedfs-lifecycle-provider-migration.md`.
-
-### Caveats
-
-- The historical design is retained for context; it is not an active board item.

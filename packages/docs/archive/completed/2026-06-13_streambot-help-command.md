@@ -77,28 +77,3 @@ error (same pattern as `expandPlaylist`).
 
 Manual (optional, post-deploy): run `/stream help` in the command channel; the ephemeral reference
 should list every subcommand. Slash commands register on `ready`, so it appears immediately.
-
-## Session Log — 2026-06-13
-
-### Done
-
-- Added `/stream help` with an exported pure `helpText()` builder (moved to `src/discord/help-text.ts`).
-- Added `/stream sources [query]` — `listExtractors()`/`parseExtractors()` in `sources/ytdlp.ts`
-  (memoized live `yt-dlp --list-extractors`) + `sourcesText()` in `help-text.ts`.
-- Fixed routing so `help`/`sources` work without an active session (`STATELESS_SUBCOMMANDS`).
-- Tests: 44 pass (drift guard + help content + sources bare/filtered/no-match/truncation + `parseExtractors`).
-- Documented both commands in streambot `AGENTS.md`.
-- Verified: typecheck clean, eslint clean; rendered real output (1620 sources; `twitch`→7, `soundcloud`→9).
-
-### Remaining
-
-- None for the requested scope. Optional follow-up (not requested): add a cookies-file/credentials
-  config so login/age-gated yt-dlp sources work.
-
-### Caveats
-
-- Fresh worktrees: streambot typecheck surfaces `discord-video-stream/src` strict errors until you
-  `bun run build` the dvs package and copy its `dist` into
-  `packages/streambot/node_modules/@shepherdjerred/discord-video-stream/dist`
-  (see `reference_dvs_dist_node_modules_stale`). Not a code issue; CI/main have the dist built.
-- `helpText()` must stay < 2000 chars; the drift-guard test requires the footer to list `/stream help`.

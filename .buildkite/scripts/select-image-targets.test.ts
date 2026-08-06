@@ -566,7 +566,7 @@ describe("selection reasons", () => {
 
   test("an unselecting change yields an empty report", async () => {
     const { targets, report } = await selectImageTargetsWithReasons(
-      ["packages/docs/logs/example.md"],
+      ["packages/docs/guides/example.md"],
       REPO_ROOT,
     );
     expect(targets).toEqual([]);

@@ -184,35 +184,3 @@ max_quantity_per_action == 10`); only matters if an operator set them apart.
    that `grep` still finds; `write logs/x.md` rejected (not MEMORY.md); `..`
    traversal rejected; a goal that ends leaves a `logs/<name>.md`. Plus: `chord
 "40_d"` accepted under goal limits, rejected under chat limits (10).
-
-## Session Log — 2026-06-19
-
-### Done
-
-- **Part A (limits):** added `game.goal.command_limits` (60/32/200); made
-  `isValid` pure (`ChordLimits`) + fixed the per-command-quantity bug (now bound
-  to `maxQuantityPerAction`); Discord chat path passes `game.commands.*` (numbers
-  unchanged), goal `chord`/`press` paths pass the higher goal caps; prompt notes
-  the higher caps. New `chord-validator.test.ts`.
-- **Part B (scoped fs):** reworked `goal-memory.ts` into `MEMORY.md` + `logs/` +
-  `archived-memory/` with `list`/`read`/`grep`/`writeMemory`, scoped-path guard,
-  archive-on-write (+ `pruneArchive`/`pruneLogs`), `isMemoryPath`. Logs are now
-  **system-written** at session teardown (folded into `recordCompletion`).
-  Control server routes replaced with `/list` `/read` `/grep` `/write`
-  (read-before-write gate via per-session `fs.memoryRead`, MEMORY.md-only write).
-  `pokemonctl` → `list/read/grep/write` (dispatch `Map`). Prompt END-OF-SESSION
-  rewritten (read-before-write curation; final answer = the session log).
-- Verify: typecheck clean, eslint clean, 123 tests pass; two throwaway smokes
-  (real control-server fs routes + pokemonctl CLI mapping) both green.
-
-### Caveats / deltas from plan
-
-- **First-write deadlock fix (found via smoke):** a brand-new save has no
-  `MEMORY.md`, so an explicit `read MEMORY.md` would 404 and the gate could never
-  be satisfied. `readResponse` now reads MEMORY.md through `readMemory()` (returns
-  empty, sets `memoryRead`) so the first curate works.
-- This reshapes the prior session's (unmerged) `memory show/write` + `session *`
-  tooling — net simpler; nothing merged depended on it.
-- Same-millisecond MEMORY.md archives would collide on filename (benign — the bot
-  writes MEMORY.md a couple times per 30-min session; real clock advances).
-- Web/UI command path still enforces no input limits (pre-existing; out of scope).

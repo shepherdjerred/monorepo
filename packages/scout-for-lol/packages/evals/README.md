@@ -140,33 +140,3 @@ The suite covers draft creation, finalization, individual ratings, browser
 history and deep links, freshness ratings, persistence, invalid route ownership,
 and narrow mobile layouts. Chromium runs single-worker because the scenarios
 mutate dedicated datasets in one in-memory store.
-
-## Session Log — 2026-07-29
-
-### Done
-
-- Preserved cross-guild Beta identities and required materialization to select
-  an explicit Beta player.
-- Updated candidate discovery, package scripts, documentation, and regression
-  coverage.
-- Allowed materialization specs to target the `datasetId` created by the app,
-  with fail-fast draft validation and atomic persistence into that same record.
-- Added strict, checksummed dataset export/import through store, tRPC, and CLI
-  surfaces with deterministic round trips and explicit ID and version collision
-  failures.
-
-### Remaining
-
-- Resolve the PR's Buildkite pipeline conflict and remaining P2 review findings.
-- Validate the published head in Buildkite and current-head review.
-
-### Caveats
-
-- Existing materialization specs must add `targetPlayerId` from candidate
-  discovery.
-- Existing version 1 Beta corpus snapshots must be regenerated with
-  `bun run --filter=@scout-for-lol/evals sync-beta`.
-- A materialization spec must provide exactly one of `dataset` or `datasetId`;
-  an existing target must be a draft.
-- Dataset imports preserve IDs and versions exactly, so operators must resolve
-  collisions rather than expecting overwrite or automatic renumbering.

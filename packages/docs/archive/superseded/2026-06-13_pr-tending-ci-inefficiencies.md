@@ -44,34 +44,6 @@ Each item below is something that **recurred** while tending ~25 PRs to green an
 | 12  | **`toolkit pr logs` targets `gh run` (GitHub Actions)** and errors.                                                                                                                                               | Can't get failing-job logs from the tool; used `bk build view … raw_log_url` + curl every time.        | Fetch BuildKite job logs (filter `soft_failed=false`, `--failed-only`).                                           |
 | 13  | **Fresh-worktree setup leaves generated artifacts missing** — agents repeatedly hand-copied generated helm types, built `discord-video-stream/dist`, and rebuilt `eslint-config` to get typecheck/eslint to pass. | Every per-PR agent re-runs heavy `setup.ts` and still patches generated artifacts by hand.             | Have `setup.ts` produce the generated helm types + built sibling `dist`s; or a lighter `setup --for-package <x>`. |
 
-## Session Log — 2026-06-13
-
-### Done
-
-- Logged 13 systemic/repeating CI + tooling issues observed while green-ing up ~25 PRs.
-
-### Historical follow-up state
-
-- Append only further **systemic/repeating** findings; keep one-offs out.
-
-### Caveats
-
-- Highest-leverage (cost time on _every_ PR/session): #2 (soft-fail flips aggregate), #3 (greptile gate on docs PRs), #11/#12 (toolkit ignores BuildKite), #6 (flaky-infra retries).
-
 ## Historical follow-up state
 
 - Complete and verify the work described in `CI / Tooling — systemic issues worth a follow-up fix`.
-
-## Session Log — 2026-07-27
-
-### Done
-
-- This historical issue inventory is centered on removed Dagger/generated-CI behavior; later workspace, static-CI, review-gate, and toolkit work replaced its premises.
-
-### Remaining
-
-- None in this plan.
-
-### Caveats
-
-- The historical implementation recipe must not be resumed without a fresh design against current architecture.

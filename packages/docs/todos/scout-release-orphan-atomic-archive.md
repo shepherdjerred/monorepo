@@ -5,7 +5,6 @@ status: planned
 board: true
 verification: agent
 disposition: blocked
-origin: packages/docs/logs/2026-08-02_main-ci-green-session.md
 source_marker: false
 ---
 
@@ -26,7 +25,7 @@ each flavor's immutable archive record before it commits the input record:
 
 If the Buildkite step is canceled between those writes (the rapid-merge
 cancellation pattern documented in
-[`2026-08-02_main-ci-green-session.md`](../logs/2026-08-02_main-ci-green-session.md)),
+`2026-08-02_main-ci-green-session.md`),
 the flavor archive is left orphaned: present in S3 with no matching
 `inputs/<digest>.json` pointer.
 

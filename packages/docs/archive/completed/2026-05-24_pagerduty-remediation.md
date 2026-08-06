@@ -37,43 +37,6 @@ board: false
 - Use live read-only Grafana/Prometheus queries after code verification.
 - Use live Kubernetes/ZFS checks before and after any approved snapshot cleanup.
 
-## Session Log - 2026-05-24
-
-### Done
-
-- Updated `packages/homelab/src/cdk8s/src/resources/monitoring/monitoring/rules/homeassistant.ts` to render the unavailable-entity ignored-domain regex with `[.]` instead of an escaped dot inside the Prometheus template query.
-- Added `packages/homelab/src/cdk8s/src/resources/monitoring/monitoring/rules/homeassistant.test.ts` to assert the rendered annotation contains `[.].*` and not the bad escaped-dot form.
-- Updated `packages/homelab/src/cdk8s/src/resources/argo-applications/prometheus.ts` so the Prometheus PVC desired state includes both `velero.io/backup: disabled` and `velero.io/exclude-from-backup: "true"`.
-- Updated `packages/temporal/src/activities/data-dragon-lane-priors.ts` to support optional `awsRegion`, derive a deterministic region fallback, pass `AWS_REGION` and `AWS_DEFAULT_REGION` to both lane-prior subprocesses, and clear inherited `ENVIRONMENT`.
-- Expanded `packages/temporal/src/activities/data-dragon-lane-priors.test.ts` for region/env propagation and fallback order.
-- Updated the Temporal lane-prior test setup to pass an explicit `awsRegion`, avoiding dependence on the test runner's ambient AWS region environment.
-- Deleted the live Prometheus ZFS snapshot `zfspv-pool-nvme/pvc-08c23bab-9a81-4206-b98a-6eac907eacb3@monthly-backup-20260401050007` after approval.
-- Verified ZFS `usedbysnapshots` dropped from `126040267264` to `47183690752`, and Prometheus PVC usage dropped from `93.38%` to `61.04%`.
-- Verified the live `PVCStorageHigh` alert for the Prometheus PVC was no longer firing.
-
-### Remaining
-
-- Deploy or merge the repo changes through the normal ArgoCD/GitOps path; no direct Kubernetes manifest apply was performed.
-- PagerDuty incident `Q3N6SLKHZ22Y69` was still `triggered` immediately after the alert cleared, so it may need Alertmanager/PagerDuty sync time or manual resolution.
-- `TemporalAiProviderIssueActive` was pending again for `anthropic` `rate_limit` from `pr_review_specialist`; no provider errors increased over the last hour, so this looks like a sticky active gauge rather than a fresh firing alert.
-- Data Dragon alerts still fire from the existing 24h failure window until a new successful run or alert window expiry.
-
-### Caveats
-
-- `mise` emitted sandbox-only tracked-config symlink warnings during verification, but the commands completed after trusting the repo configs.
-- Dependency installs were needed in this fresh worktree before tests could run.
-- The existing untracked `packages/docs/logs/2026-05-23_pagerduty-checkin.md` predates this implementation pass and was left untouched.
-
-### Verification
-
-- `bun test src/resources/monitoring/monitoring/rules/homeassistant.test.ts`
-- `bun run typecheck` in `packages/homelab/src/cdk8s`
-- `bun run build` in `packages/homelab/src/cdk8s`
-- Generated manifest check for `velero.io/backup: disabled`, `[.].*`, and absence of the bad `\\..*` annotation query.
-- `bun test src/activities/data-dragon-lane-priors.test.ts`
-- `bun run typecheck` in `packages/temporal`
-- Targeted `bunx eslint` on the changed Homelab and Temporal files.
-
 ## Conclusion
 
 The remediation reduced live Prometheus PVC usage by deleting the approved

@@ -222,7 +222,3 @@ kubectl logs -n pokemon deploy/pokemon --tail=200 | rg 'goal\.tool|codex tool'
 3. Codex tool begin/end logging + full initialPrompt.
 4. llm-observability full tool body archive.
 5. 1P config update + deploy verify.
-
-## Session Log
-
-_(filled when implementation finishes)_

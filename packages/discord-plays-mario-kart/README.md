@@ -169,22 +169,3 @@ Two things are provisioned out-of-band (by design):
 ## Disclaimer
 
 A fan project, unaffiliated with Nintendo, Mario Kart, or Twitch Plays Pokémon.
-
-## Session Log — 2026-07-29
-
-### Done
-
-- Updated the documented Emscripten build image from 2.0.34 to 6.0.5.
-- Clarified that the input assertion requires an explicit ROM path.
-- Verified the real patched build, ROM-free Worker host, and canonical-ROM input
-  path with Emscripten 6.0.5.
-
-### Remaining
-
-- Land the Emscripten 6.0.5 dependency PR after Buildkite and the dependency
-  stability gate pass.
-
-### Caveats
-
-- The generated WASM assets and canonical ROM remain local-only and are not
-  committed.

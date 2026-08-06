@@ -9,7 +9,7 @@ board: false
 
 ## Context
 
-A 2026-07-26 audit (`packages/docs/logs/2026-07-26_ci-health-audit-liskov-docker.md`) of the last 48h of CI work (liskov node, docker slim + closure-scoped rebuilds #1668, limit/request changes) found the pipeline healthy but observability weak: liskov's node-exporter has been unscrapeable its whole life, build/skip decisions are log-only, buildkitd has zero metrics, selector path-lists drift untested, and 3 DaemonSet alerts fire from the `ci=only` taint. This PR fixes all of it. **One PR**, single git-spice branch, worktree per repo convention.
+A 2026-07-26 audit (the original investigation) of the last 48h of CI work (liskov node, docker slim + closure-scoped rebuilds #1668, limit/request changes) found the pipeline healthy but observability weak: liskov's node-exporter has been unscrapeable its whole life, build/skip decisions are log-only, buildkitd has zero metrics, selector path-lists drift untested, and 3 DaemonSet alerts fire from the `ci=only` taint. This PR fixes all of it. **One PR**, single git-spice branch, worktree per repo convention.
 
 Key root-cause correction from exploration: the node-exporter outage is a **Tailscale ACL gap** (`tag:k8s → tag:k8s` grants 6443+10250 but not 9100; liskov is the first cross-node scrape), NOT missing Talos patches. Fix deploys automatically via the `tofu-apply` lane on merge — no operator step.
 
@@ -112,25 +112,3 @@ Post-merge live:
 - buildkitd Recreate rollout briefly interrupts in-flight bakes on merge.
 - ESLint over `.buildkite` may surface real debt — fix, don't suppress.
 - pr-dryrun if_changed additions slightly widen PR builds (intended gap fix).
-
-## Session Log — 2026-07-26
-
-### Done
-
-- All six workstreams implemented on `feature/ci-observability` (one PR):
-  - A `50c80b0` — Tailscale ACL: `tag:k8s:9100` added to the k8s→k8s grant (`acl.tf`); deploys via tofu-apply on merge.
-  - E `d8919db53` — `CI_NODE_TOLERATION` on promtail, loki-canary, nfd-worker.
-  - C `0fce07fef` — buildkitd `--debugaddr` metrics port + Service label + netpol; ServiceMonitor + 3 alerts (`rules/buildkitd.ts`); Grafana dashboard.
-  - B `cc9c70759` — selection reasons (`--reasons-out`), per-image push outcomes, `images` annotation via `annotate-image-summary.ts`, artifacts on images/images-pr, lane decisions → build-summary table.
-  - D `f6f5513d9` — `ci-lane-coverage.test.ts` (subset assertion, Bun.YAML/Bun.Glob); fixed 16 real PR-gate gaps it caught.
-  - F — ESLint over `.buildkite/scripts` (`scripts/lint-buildkite.ts` API runner + `.buildkite/tsconfig.json` shim); selector split into 3 modules, validate-pipeline split; all debt fixed except one documented scoped rule-off (no-type-guards, Zod impossible pre-install).
-
-### Remaining
-
-- Merge the PR, then post-merge verification (see Verification section): liskov `up==1`, NodeExporterDown resolves, DS alerts clear, buildkitd target scraped, dashboard screenshot, first main-build annotations.
-
-### Caveats
-
-- buildkitd rollout is Recreate — merging mid-bake kills that bake once.
-- The PR itself changes `pipeline.yml` → its own build correctly rebuilds ALL images (global input), so the images-pr annotation will show the fail-safe "ALL targets" path, not a selective one.
-- Grafana dashboard panel refinement against live buildkit metric names is deferred to post-deploy (panels currently use guaranteed client_golang/kubelet metrics only).

@@ -21,8 +21,7 @@ Bazarr is healthy but its subtitle pipeline is degraded and its Chinese strategy
   requests automatically get Chinese subtitles, while everyone else stays English.
 
 Coverage today (code-measured this session): TV 2086 eps / 37 series — EN 99.7%, forced-EN 0.8%, zh-Hans 25.2%.
-Movies 65 — EN 98.5%, forced-EN 13.8%, zh-Hans 52.3%. Source: prior session log
-`packages/docs/logs/2026-06-27_bazarr-whisper-subtitles-research.md` and the research report at
+the original investigation and the research report at
 `~/.claude-extra/research/arr-stack-subtitles.{md,pdf}`.
 
 ## Decisions (locked with user)
@@ -165,26 +164,6 @@ no match → default profile.
 - Forced-English improvement (embedded-extraction-only; low ROI).
 - Migrating off Groq for Whisper; bilingual file _merging_ (native bilingual `.ass` via the zh channel already covers most).
 - Consolidating Overseerr vs Seerr (user runs both).
-
-## Session Log — 2026-06-27
-
-### Done
-
-- Drafted this plan (Bazarr subtitle fix + per-Seerr-user Chinese gating) and saved it to `packages/docs/plans/`.
-- Verified, read-only against the live cluster: current Bazarr config/providers/profiles, library coverage, the
-  two Whisper bugs, the Seerr→Radarr/Sonarr→Bazarr tag mechanism (against Bazarr source), and Lingarr/MT quality.
-
-### Remaining
-
-- User to decide the **Lingarr/MT** question (defer recommended / build now / drop MT).
-- User inputs: target Seerr username; (if MT) Gemini key; purchase OS VIP; fund anti-captcha.
-- Then execute Workstreams A + B per sequencing. Mirror final approved plan stays here; archive to
-  `packages/docs/archive/completed/` once shipped.
-
-### Caveats
-
-- Plan not yet approved (ExitPlanMode was declined pending the Lingarr decision).
-- Live Bazarr/Seerr config changes are not version-controlled — this doc is the record.
 
 ## Closure
 

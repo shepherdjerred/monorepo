@@ -41,11 +41,7 @@ document's Markdown comment log.
 
 ## Plans
 
-Active or upcoming plans only — high-churn, so not individually indexed. See [`plans/`](plans/) for the current listing. Completed plans move to [`archive/completed/`](archive/completed/); thin per-session journals live in [`logs/`](logs/).
-
-## Logs
-
-Per-session journals (one-shot fixes, Q&A answers, bug recaps). Not individually indexed — see [`logs/`](logs/) for the directory listing.
+Active or upcoming plans only — high-churn, so not individually indexed. See [`plans/`](plans/) for the current listing. Completed plans move to [`archive/completed/`](archive/completed/).
 
 ## TODOs
 

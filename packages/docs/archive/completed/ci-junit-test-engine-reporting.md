@@ -25,18 +25,3 @@ results, so failures lack durable per-test history and flake visibility.
 - 2026-07-27 — Split from the obsolete Dagger reporting plan after the board
   audit verified current static CI still has no JUnit/Test Engine upload path.
   Kept separate from coverage and annotation work so it can ship independently.
-
-## Session Log — 2026-08-02
-
-### Done
-
-- Confirmed the merged Buildkite reporting stack (#1782, #1786, and #1790) implements normalized JUnit, full-suite Test Engine upload, exit-status preservation, and malformed/missing report validation.
-- Archived this duplicate implementation card; the parent reporting plan retains only scheduled-run acceptance.
-
-### Remaining
-
-- None.
-
-### Caveats
-
-- First scheduled-run verification remains on `packages/docs/plans/2026-07-28_buildkite-ci-reporting.md`.

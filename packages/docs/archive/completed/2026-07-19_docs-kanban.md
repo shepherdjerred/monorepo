@@ -70,69 +70,8 @@ All other documentation remains searchable without cluttering the board.
 - **Expected behavior:** The important work is easy to distinguish from reference documents; search finds the intended document; the detail view makes the next human decision obvious; comments and status changes feel predictable and preserve context.
 - **Acceptance decision:** Accept if the workflow is clear enough to use for delayed signoff without consulting Markdown source. Otherwise request changes and name the confusing navigation, prioritization, or transition.
 
-## Session Log - 2026-07-19
-
-### Done
-
-- Created an isolated `feature/docs-kanban` worktree from current `origin/main`.
-- Installed the workspace, ran code generation, and armed repository hooks.
-- Migrated and validated all 783 Markdown documents with an idempotent canonical
-  model; archived 15 completed plans.
-- Added `packages/docs-board` with the Bun/Hono store and API, React 19/Vite
-  board, latest shadcn `base-nova` components, Tailwind CSS v4, comments,
-  guarded transitions, archival, conflict detection, and external-edit refresh.
-- Added six automated workflow tests and passed package typecheck, lint, test,
-  build, Knip, Prettier, Markdownlint, and docs validation gates.
-- Replaced the handwritten REST client and global snapshot cache with an
-  inferred tRPC `AppRouter`, Zod-validated inputs/outputs, TanStack React Query,
-  optimistic board updates, cached detail prefetching, and a typed SSE
-  subscription.
-- Replaced the document sheet with `/documents/:id`: a task-first page with
-  contextual verification/remaining work, comment history, explicit signoff or
-  request-changes actions, and a Full Document tab.
-- Added transport, subscription, workflow-section, and optimistic-cache tests;
-  the docs-board suite now has 17 passing tests.
-- Replaced per-request 783-document scans with a shared ID/path index. The file
-  watcher reparses only changed paths, and mutations reread their live target
-  before revision validation so caching cannot overwrite an external edit.
-- Preloaded the lazy document route from the board and raised the Bun idle
-  timeout for the long-lived typed subscription. Warm detail requests measured
-  0-6 ms instead of 2.25-2.41 seconds.
-- Added indexed-read, watcher-refresh, external-edit conflict, and exact-section
-  migration regressions; the full suite passes with 17 tests and 43 assertions.
-- Rebased onto current `origin/main`, passed full and affected verification
-  (181/181 tasks each), pushed `feature/docs-kanban`, and opened draft PR #1573.
-- Rebased again after `main` advanced, migrated the 13 newly added Markdown
-  documents into the canonical model, and added regression coverage that keeps
-  explicit human-verification and disposition choices stable across migrations.
-- Captured the live four-column board and awaiting-human document detail views
-  with PinchTab, uploaded both screenshots, and embedded them in PR #1573.
-
-### Remaining
-
-- None.
-
-### Caveats
-
-- The user's main checkout contains separate uncommitted docs and dotfile work;
-  this branch does not copy or modify those files.
-
 ## Comment Log
 
 ### 2026-08-03T05:46:45.315Z - Jerred Shepherd
 
 Moved `awaiting-human` -> `complete`.
-
-## Session Log — 2026-08-02
-
-### Done
-
-- Preserved the owner's acceptance transition and archived the completed docs-board implementation plan.
-
-### Remaining
-
-- None.
-
-### Caveats
-
-- None.

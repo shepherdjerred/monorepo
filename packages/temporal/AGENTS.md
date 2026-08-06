@@ -286,7 +286,7 @@ Separate from the CI gate above: `review-signals-collect` (cron `0 */6 * * *` PT
 
 Two non-obvious bits the cog blocks + activity handle, learned the hard way (PR #1164):
 
-- **codex must ignore `AGENTS.md`.** `codex exec` runs in the repo root and, left alone, obeys the repo agent docs ("every session must produce a session log") and dumps `**Done**/**Remaining**/**Caveats**` meta into the summary. The cog blocks pass `-c project_doc_max_bytes=0` so codex returns a plain project summary. Without it, ~8/21 generated summaries came out contaminated.
+- **codex must ignore `AGENTS.md`.** The summary generator is a narrowly scoped content transform, so its output must remain independent of repository process instructions. The cog blocks pass `-c project_doc_max_bytes=0` so Codex returns only the requested project summary.
 - **cog output isn't prettier-clean.** Its raw markdown (e.g. a missing blank line after `]]]-->`) doesn't match the repo's prettier formatting, so an unformatted auto-PR would churn the committed bytes. The activity runs `bun install --frozen-lockfile` + `bunx prettier --write` on the regenerated files before opening the PR. In steady state cog un-formats and prettier re-formats back to the committed bytes, netting no diff. (markdownlint only checks the root `README.md`; `archive/**`, `practice/**`, and `**/_summary.md` are ignored — and clean single-paragraph summaries don't trip MD032.)
 
 ## GitHub webhook (merge-conflict check + PR-closed build cancel)

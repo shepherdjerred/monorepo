@@ -121,4 +121,4 @@ bump.
   builds during rapid commit bursts), the image fix is built and pinned but never charted, so
   ArgoCD keeps serving the prior image while reporting Synced/Healthy. A chart version and the image
   of the same number are therefore not the same release (`mario-kart-2.0.0-3637` shipped image
-  `2.0.0-3610`). See `logs/2026-06-08_mariokart-react-fix-not-deployed.md`.
+  `2.0.0-3610`). See prior analysis.

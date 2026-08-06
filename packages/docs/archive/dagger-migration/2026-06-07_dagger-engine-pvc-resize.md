@@ -112,7 +112,7 @@ kubectl -n dagger exec dagger-dagger-helm-engine-0 -- df -h /var/lib/dagger
 Expect a cold cache afterward: a family of transient failures (bun `EEXIST` link
 races, snapshot-rename races, heavy-render timeouts, docker OOM `exit=-1`) that
 should be retried, not code-fixed. See the
-[2026-07-03 post-mortem](../../logs/2026-07-03_dagger-engine-disk-full-outage.md).
+2026-07-03 post-mortem.
 
 ## Op: bake the VCT size into the live StatefulSet
 

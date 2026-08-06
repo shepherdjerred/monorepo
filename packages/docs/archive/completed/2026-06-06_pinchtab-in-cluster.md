@@ -85,28 +85,3 @@ browser action and confirm it reaches in-cluster pinchtab.
   recommends `true` — can harden later with extra writable mounts.
 - **PR ordering.** P0 and P1 both edit `birmel/index.ts`. P1 is independent off main; after
   P0 merges, P1 needs a trivial rebase (P1's env block wins).
-
-## Session Log — 2026-06-06
-
-### Done
-
-- Diagnosed the outage: missing `PINCHTAB_TOKEN` key in the 1Password-synced secret;
-  pinchtab namespace empty (ran only on the Mac).
-- P0 (branch `claude/birmel-disable-browser-p0`): disabled the browser tool / removed the
-  missing-key secret ref in `resources/birmel/index.ts`.
-- P1 (branch `claude/sleepy-thompson-4dd56c`): pinned image; created
-  `resources/pinchtab/index.ts`, `cdk8s-charts/pinchtab.ts`, `argo-applications/pinchtab.ts`,
-  `helm/pinchtab/`; registered in `setup-charts.ts`, `apps.ts`, `catalog.ts`; re-wired birmel
-  to the shared token + added egress netpol.
-- Created the shared "PinchTab" 1Password item (id `t2dgtdx47yd2gegad6zeelzylu`).
-- Verified: typecheck, eslint, CI pipeline gen, cdk8s synth all green.
-
-### Remaining
-
-- Open + merge the P0 PR (immediate birmel recovery), then the P1 PR.
-- After deploy: confirm pinchtab pod healthy, Chrome ready, and a birmel browser action
-  round-trips to in-cluster pinchtab. Resolve the `birmel` profile auto-create question.
-
-### Caveats
-
-- See Caveats above (fresh profile, datacenter IP, shm/memory, read-only FS, PR rebase).

@@ -15,7 +15,7 @@ pass. The last 60 days of work were enumerated and every follow-up item was
 and the live tree** by five parallel checker agents. Doc `Status:` fields were
 deliberately distrusted — many were stale (listed in §7).
 
-Companion log (how this was produced): `packages/docs/logs/2026-07-19_60d-retrospective-qa.md`.
+Companion log (how this was produced): the original investigation.
 
 Key distinction used throughout: **merged ≠ verified**. "Shipped-unverified" means
 the code is on main but no live/prod/human verification is recorded anywhere.
@@ -29,7 +29,7 @@ the code is on main but no live/prod/human verification is recorded anywhere.
   on HEAD as of this writing.
 - The argocd sync fail-fast fix (PR **#1559**, `6134541d7`) is merged but has
   **never been observed passing** the `tofu apply (cloudflare, after tunnel gate)`
-  step. Root cause history: `logs/2026-07-18_ci-green-verify-hardening.md` (orphaned
+  step. Root cause history: the original investigation (orphaned
   seaweedfs TunnelBinding deleted operationally 2026-07-19; prune policy decision
   tracked in `todos/argocd-apps-prune-policy.md`).
 - **First action for any session: check the latest main build; drive it green.**
@@ -68,7 +68,7 @@ console, physical presence).
   Greptile gate decided = **blocking** (`.buildkite/pipeline.yml:354-365`);
   `feature/ci-parity` clause removed.
 - HA custom components pinned — PR #1456 + follow-ups; pod recorded healthy
-  (`logs/2026-07-11_k8s-pod-triage-...`). Only the multi-day eufy auto-dismiss watch remains.
+  during prior triage. Only the multi-day eufy auto-dismiss watch remains.
 - Seerr TV request quota fix — user-confirmed working 2026-07-18.
 - Tailnet ACLs — PR #1045 (`tofu/tailscale/acl.tf`) + runbook
   `guides/2026-06-06_tailscale-acls-runbook.md`.
@@ -91,7 +91,7 @@ console, physical presence).
 
 ## 5. ⚪ Not started (verified unchanged since filed)
 
-PagerDuty triage's four fixes from `logs/2026-07-19_pagerduty-alert-triage.md`
+PagerDuty triage's four fixes from the original investigation
 (qBittorrent.conf `"%I"` quoting; pokemon/mario-kart manifest `/workspace`→`/app`
 paths; pipeline artifact glob + deploy-site index.html guard + bucket restore;
 service-probes Application) · PagerDuty→Alertmanager migration (prometheus.ts still

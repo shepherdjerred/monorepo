@@ -47,27 +47,6 @@ Findings baked into the skill as gotchas:
 - No audio/video sending from agent scripts — that's streambot's job via the discord-video-stream fork; agents observe.
 - No new Discord account provisioning — reuses the existing test identities.
 
-## Session Log — 2026-06-12
-
-### Done
-
-- Researched Discord MCP server landscape (none fit: slash-command invocation + voice-as-user require a userbot).
-- Wrote and live-verified `packages/streambot/scratch/verify-skill.ts` — all 3 checks passed against the test guild.
-- Authored `discord` skill: `packages/dotfiles/dot_agents/skills/discord/SKILL.md` + live copy in `~/.agents/skills/discord/`.
-- Revised per user feedback (twice): removed the test-server-only restriction (any server is allowed) and the assumed `streambot-config` credentials (agents must ask the user for the correct creds/1P item and targets); then removed all mentions of specific monorepo bots/projects from the skill, switching the script workflow to a standalone temp dir (`bun add discord.js@^14 discord.js-selfbot-v13@^3.7 debug` — `debug` is required because a selfbot transitive dep, werift-rtp, fails to declare it; verified by smoke test).
-- Added `packages/streambot/scratch/` to root `.gitignore`.
-- This plan doc; PR from branch `feature/discord-agent-skill`.
-
-### Remaining
-
-- Nothing for this task. Future option (only if friction appears): wrap the patterns in a `toolkit discord` subcommand or MCP server.
-
-### Caveats
-
-- Per user direction, the skill does NOT restrict agents to the test server — any server the identity is in is allowed, and agents must ask the user which credentials/1P item and target guild to use (the streambot test setup is documented as one example). The userbot is a real account, so deliberation in shared servers is on the agent.
-- `discord.js-selfbot-v13` is archived upstream; if Discord changes the gateway, `sendSlash`/op-4 join may break with no upstream fix.
-- Voice join is presence-only (no media). Verifying _stream content_ (frames/audio) is not possible with this setup — only the `streaming` flag.
-
 ## Phase 2 — `toolkit discord` daemon (tooling)
 
 The user asked to build tooling to reduce the friction of the script approach (one `op` approval per run, ~5s login per run, ~50 lines of boilerplate, no persistent voice presence). Added a `toolkit discord` subcommand: a **session daemon** that logs in once (one `op` call), holds the gateway connections + tokens in memory, and exposes one-shot CLI commands over a `~/.toolkit/discord/daemon.sock` unix socket.

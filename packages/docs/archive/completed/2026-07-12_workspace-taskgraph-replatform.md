@@ -205,47 +205,6 @@ Small alignments: consolidate ~70 per-package `mise.toml`s down to root + genuin
 3. Phase 3 store: confirm R2-primary (needs a Cloudflare bucket + token — will ask before creating any external resource) vs SeaweedFS-only (no new external resource, but tailnet/homelab-availability-coupled).
 4. Linker: plan keeps #1408's isolated (spike-verified on 1.3.14) over the research agent's hoisted recommendation — veto here if you'd rather start conservative; it's a one-line bunfig change either way.
 
-## Session Log — 2026-07-12
-
-### Done
-
-- Scanned repo for CI remnants; confirmed Dagger fully gone from source (cluster still holds an orphaned `dagger` namespace + 2 Ti PVC — user chose to leave as-is; Buildkite infra intentionally kept).
-- **PR #1517** (stacked on #1516): removed `scripts/setup.ts`, `.mise.toml` dev/install tasks, the setup.ts eslint grandfather block; rewrote root AGENTS.md Development Setup + worktree section; updated `worktree-workflow` skill (chezmoi source + live copy), both SessionStart hooks, `packages/{discord-plays-core,streambot}/AGENTS.md`, `bot-clone.ts` comment.
-- Investigation: found open **PR #1408** = complete Layer-1 workspace migration, stranded when its verifier (Buildkite) was removed.
-- Spike (`spike/workspace-taskgraph` = #1408 + rip-setup merged): install 5,817 pkgs/6.3 s clean, node_modules 4.0 G (vs 13–15 G), workspace symlinks kill stale-dist class, Prisma green (generate/typecheck/runtime resolution) under isolated linker on bun 1.3.14, turbo 2.10.4 caching stable after `.turbo` gitignore (FULL TURBO 73 ms), `--affected` exact, `bun pm pack` rewrites `workspace:*`.
-- Three research reports (turbo+bun, moon/alternatives, bun-workspace maturity) folded in above.
-- This plan authored and shipped on the #1517 branch.
-
-### Historical follow-up state
-
-- User review of this plan + the 3 open questions (land-#1408-vs-recut, R2 vs SeaweedFS, isolated-vs-hoisted veto).
-- Phase 1: refresh #1408 against post-#1516/#1517 main (conflict map captured above) and run the full turbo sweep locally before merge.
-- Phase 2: turbo landing (turbo.json, de-chain generate scripts, root script rewrite, delete `run-package-script.ts`, docs/skill updates).
-- Phase 3 (follow-up session): remote cache deploy.
-
-### Caveats
-
-- **Machine crash during moon de-risk (4th that day):** the per-project typecheck inventory fork-bombed the MacBook (see the incident section). The standing rule — explicit user go-ahead before ANY multi-minute local compute — was violated by this session and is now re-recorded in agent memory. The inventory was later COMPLETED with user go-ahead under the chunked protocol (31/38 pass, 4 root causes — see inventory section).
-- Moon PoC (2026-07-12, later in session): both runners verified head-to-head on the spike branch — see "Head-to-head PoC" section; user chose moon; de-risk pass done except the full sweep above.
-- Spike branch `spike/workspace-taskgraph` exists as a local worktree (`.claude/worktrees/spike-ws`), not pushed; it contains mechanical ours-side conflict resolutions (slightly stale main-side dep bumps) — fine for evidence, not for landing as-is.
-- Turbo cache instability will recur for any task whose script mutates tracked files non-deterministically; `.turbo` gitignore fixed the observed case but Phase 2 should audit `generate`-style scripts.
-- **Hold bun at 1.3.x** until turbo supports lockfileVersion 2 (turbo discussion #13126) — a Renovate bun bump to 1.4 would silently break turbo's workspace graph.
-- The bun-ws research agent recommends hoisted linker; this plan overrides with spike evidence — if Phase 1's full sweep surfaces isolated-linker weirdness, flip to hoisted immediately rather than debugging forward.
-
 ## Historical follow-up state
 
 - Complete and verify the work described in `Workspace + Task Graph Replatform (Local Dev Layers 1 & 2)`.
-
-## Session Log — 2026-07-27
-
-### Done
-
-- PRs #1408, #1516, #1517, and #1518 produced the current root Bun workspace, isolated linker, single lockfile, and Turbo task graph.
-
-### Remaining
-
-- None in this plan.
-
-### Caveats
-
-- The historical design is retained for context; it is not an active board item.

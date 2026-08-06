@@ -84,28 +84,3 @@ test is replaying the 2160p remux and reading this + `streambot_source_info`.
 
 OTEL tracing/Tempo; Prometheus alert rules (sustained `speed<1`, OOM, HW fallback) — revisit once the
 dashboard has real baselines.
-
-## Session Log — 2026-06-07
-
-### Done
-
-- Diagnosed the streambot crash loop as `OOMKilled`; bumped resources to 12 CPU / 12Gi (live patch +
-  committed in `streambot.ts`). Stutter shown to be CPU/realtime-bound, not GPU contention.
-- Killed the idle `mk64-spike/mk64-gpu` GPU-holder pod (freed the shared iGPU slot).
-- Implemented the full observability stack above (fork + streambot + homelab). All checks green.
-
-### Remaining
-
-- Open the PR; after merge run the post-merge verification above.
-- ~~Drop the now-empty `mk64-spike` namespace.~~ **Done 2026-06-27** (`kubectl delete namespace
-mk64-spike`) as part of the cdk8s-untracked-resource cleanup — see
-  `packages/docs/logs/2026-06-27_k8s-cdk8s-untracked-audit.md`.
-
-### Caveats
-
-- streambot resolves the fork via its built `dist/*.d.ts` (skipLibCheck) — a fresh worktree must
-  build the fork (`bun run build` in `packages/discord-video-stream`) BEFORE typechecking streambot,
-  or tsc falls back to fork source under the stricter config and reports spurious errors.
-- `streambot_ffmpeg_speed_ratio` reflects raw transcode throughput (ffmpeg is not readrate-limited):
-  > 1.0 early while the buffer fills, settling near the sustainable rate. Read it together with the
-  > send-path frametime ratio to tell transcode-bound from send-bound stutter.

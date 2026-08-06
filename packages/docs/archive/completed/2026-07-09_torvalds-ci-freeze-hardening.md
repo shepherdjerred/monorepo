@@ -12,7 +12,6 @@ board: false
 Complete — all four layers implemented, merged, and the Talos node-level manual rollout
 (watchdog, sysctls, kubelet podPidsLimit/enforceNodeAllocatable) is now live and verified
 on `torvalds` as of 2026-07-10. That rollout caused a real outage along the way — see the
-2026-07-10 Session Log below and `packages/docs/logs/2026-07-10_torvalds-kubelet-crashloop.md`
 for the full incident, and `packages/docs/plans/2026-07-10_torvalds-kubelet-cgroup-enforcement.md`
 (now archived to `packages/docs/archive/completed/`) for how it was ultimately completed
 correctly.
@@ -22,8 +21,8 @@ correctly.
 Between 2026-07-03 and 2026-07-07, the single-node Talos cluster `torvalds` suffered a
 disk-full deadlock (07-03) and 7 full kernel hard-lockups (07-05 ×6, 07-07 ×1) requiring
 physical power-cycle. Root cause, fully confirmed via Prometheus/Loki/Buildkite-API
-cross-correlation (see `packages/docs/logs/2026-07-08_torvalds-cluster-health-deep-check.md`
-and `packages/docs/logs/2026-07-05_torvalds-ci-freeze-investigation.md`):
+cross-correlation (see the original investigation
+and the original investigation):
 
 - The single, shared Dagger CI engine (`dagger-dagger-helm-engine-0`) has **no CPU limit
   and no PID limit**. Bursts of concurrent CI sessions (9–31 observed) landing on it —
@@ -470,7 +469,7 @@ slow; the worst observed ramp went from load=5 to load=1300 in under 8 minutes. 
       "Node {{ $labels.instance }} node_load1 is {{ $value }}, far above CPU thread count. " +
       "This pattern preceded every 2026-07 kernel hard-lockup freeze. Consider killing " +
       "in-flight Buildkite builds now — kubectl/talosctl may stop responding within minutes. " +
-      "Investigation: packages/docs/logs/2026-07-05_torvalds-ci-freeze-investigation.md",
+      "Investigation: the original investigation",
     ),
   },
   expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -543,122 +542,3 @@ false-positive.
    a true no-op — informs whether to flip it to `Enforce` in a follow-up, (d) whether the
    restored `max-in-flight: 24` reproduces any elevated-load pattern in the new
    `CriticalSystemLoad` alert — if so, that's real data to act on, unlike the prior guess.
-
-## Session Log — 2026-07-09
-
-### Done
-
-- Implemented all four layers as a single PR in worktree `feature/ci-freeze-hardening`:
-  - **Layer 1 (node/Talos)**: `packages/homelab/src/talos/patches/watchdog.yaml` (new —
-    `iTCO_wdt` kernel module + `WatchdogTimerConfig`, feasibility confirmed live on
-    `torvalds`: `/sys/class/watchdog/watchdog0` already exists with `identity=iTCO_wdt`);
-    `sysctls.yaml` (`kernel.panic_on_rcu_stall`); `kubelet.yaml` (`podPidsLimit: 4096`,
-    `enforceNodeAllocatable: [pods, system-reserved, kube-reserved]`); `README.md` updated
-    for all three.
-  - **Layer 2 (K8s cluster-wide)**: `buildkite.ts` (`LimitRange.default` limits,
-    `max-in-flight` 16→24 via new exported `BUILDKITE_MAX_IN_FLIGHT` constant);
-    `kueue-config.ts` (`pods` covered resource, quota locked to
-    `BUILDKITE_MAX_IN_FLIGHT`, +new test asserting lockstep); `kyverno-policies.ts` (new
-    Audit-mode `createResourceLimitEnforcementPolicy`, scoped to `dagger`/`buildkite`,
-    wired into `cdk8s-charts/kyverno-policies.ts`, +new test).
-  - **Layer 3 (Dagger/Buildkite)**: `dagger.ts` (`resources.limits.cpu: "16"`);
-    `catalog.ts` (`ResourceTier` extended with `cpuLimit`/`memoryLimit`, all three
-    tiers given tier-appropriate limit values); `k8s-plugin.ts` (`cpuLimit`/`memoryLimit`
-    opts, defaulted to LIGHT-tier values so every one of the ~25 `k8sPlugin()` call sites
-    gets a default limit, not just the ones threading a tier through); `per-package.ts`
-    (three functions widened from inline `{cpu,memory}` types to the shared
-    `ResourceTier`, all `k8sPlugin()` calls updated to pass limits through); extended
-    `k8s-plugin.test.ts` with default/custom limit assertions.
-  - **Layer 4 (fast detection)**: `resource-monitoring.ts` (`CriticalSystemLoad` alert on
-    `node_load1 > 8×cores` for `2m`, next to the existing slower `UnusualSystemLoad`);
-    +new `resource-monitoring.test.ts`.
-- Verified: `bun run typecheck` (all packages, 0 errors) and `bun run test` (root, exit 0
-  — homelab cdk8s: 163 pass/0 fail incl. all new tests) both clean.
-  `HELM_RENDER_TEST=1 bun test src/argocd-helm-render.test.ts`: 16/16 pass after priming
-  the local helm repo cache (8 unrelated external charts failed on the first run with
-  "no cached repo found" — a local-environment cache-miss issue, not caused by this
-  change; confirmed by the fact `dagger`/`buildkite`/`kueue`/`kyverno`, the 4 charts
-  actually touched, were never in the failure list even before priming the cache).
-- Reverted an incidental `packages/temporal/bun.lock` diff produced by
-  `scripts/setup.ts`/`bun install` during worktree setup — unrelated to this change,
-  not committed.
-- Mirrored the approved harness plan into this file per repo convention.
-
-### Remaining
-
-- **Manual operator step, not yet performed**: after this PR merges and ArgoCD syncs the
-  K8s-level changes, someone with `talosctl` access to `torvalds` must run the Layer 1
-  rollout — `talosctl patch machineconfig --patch @src/talos/patches/sysctls.yaml` and
-  `--patch @src/talos/patches/kubelet.yaml`, then separately and carefully apply
-  `watchdog.yaml` (it's two documents — a `machine.kernel.modules` patch plus a standalone
-  `WatchdogTimerConfig` resource; do not fold into a bulk patch invocation). Then verify
-  live effect per the checks listed in "Rollout for 1a–1d" above — do not assume any of
-  these took effect without checking, and update the README's "Applied: _(fill in...)_"
-  placeholders with the actual date and findings once done.
-- Pre-merge data validation the plan calls out as advisable but not blocking (can be done
-  before or shortly after merge): backtest `node_load1` in Grafana across the 07-05/07-07
-  incident windows to confirm `CriticalSystemLoad` would have fired with real lead time;
-  query real p99 CPU/memory usage for `buildkite`-namespace containers to sanity-check the
-  Layer 3b limit multipliers against actual usage rather than the reasoned-but-unverified
-  starting values currently in `catalog.ts`.
-- Post-rollout 1–2 week observation window per item 6 above (false-positive check on the
-  new alert, PID-pressure check, Kyverno PolicyReport review, `max-in-flight: 24`
-  reproduction check) — not something to do now, a note for whoever revisits this.
-
-### Caveats
-
-- The `podPidsLimit: 4096` and Kyverno Audit-mode policy are the two highest-risk items in
-  this PR (cluster-wide / could affect any of the 160+ pods on the node) — they're
-  deliberately conservative (Audit not Enforce; 4096 is the upstream-standard default, not
-  a tight custom value) but genuinely unverified against real PID counts under heavy load.
-  Do not tighten either without the verification steps above.
-- I did not run `talosctl patch machineconfig` against the live node during this session —
-  Talos machine-config changes are a real, hard-to-reverse-quickly infrastructure mutation
-  (a bad watchdog config reboots the box), so per this repo's risk posture that's an
-  explicit follow-up for the user/operator, not something to do unprompted from a coding
-  session.
-
-## Session Log — 2026-07-10 (manual rollout, incident, and completion)
-
-### Done
-
-- The deferred manual rollout was performed 2026-07-09 and immediately caused an outage:
-  `enforceNodeAllocatable: [pods, system-reserved, kube-reserved]` was applied without the
-  kubelet-required `systemReservedCgroup`/`kubeReservedCgroup` fields, crash-looping
-  kubelet (and the node itself, repeatedly) until diagnosed and reverted. Full incident:
-  `packages/docs/logs/2026-07-10_torvalds-kubelet-crashloop.md`. `kernel.panic_on_rcu_stall`
-  and `podPidsLimit: 4096` were applied successfully in the same rollout and were
-  unaffected by the crash-loop.
-- A second gotcha surfaced during recovery: `talosctl patch machineconfig` appends list
-  fields instead of replacing them on this node — the actual fix required a full-document
-  `talosctl apply-config` instead. This is now the standard mechanism for all Talos changes
-  on this cluster going forward.
-- Follow-up plan `packages/docs/plans/2026-07-10_torvalds-kubelet-cgroup-enforcement.md`
-  (now archived to `archive/completed/`) re-did the enforcement correctly — found the real
-  Talos cgroup paths (`/system`, `/podruntime`) from `siderolabs/talos` source rather than
-  guessing, applied live, and verified the cgroup limits are real (`memory.max` matches
-  `systemReserved`/`kubeReserved` exactly). Also completed the still-pending watchdog
-  rollout from this PR (1a), verified `machined` is actively petting it.
-- Found and fixed two pieces of unrelated live-vs-repo drift surfaced by the incident:
-  a duplicated `kernel.modules` list (`i915`/`zfs`), and a stale `zfs_arc_max` module
-  parameter (62.5 GiB from an orphaned, never-merged branch) that was silently masked by
-  `image.yaml`'s sysfs override actually being correct at runtime.
-- Investigated (not fixed) a third drift: duplicate `TS_AUTHKEY` values in the Tailscale
-  `ExtensionServiceConfig` — see `packages/docs/todos/torvalds-tailscale-authkey-duplication.md`.
-
-### Remaining
-
-- Same post-rollout 1-2 week observation window called out in the original 2026-07-09 log
-  (false-positive check on `CriticalSystemLoad`, PID-pressure check, Kyverno PolicyReport
-  review, `max-in-flight: 24` reproduction check) — nothing new added by this rollout.
-- `packages/docs/todos/torvalds-tailscale-authkey-duplication.md` — low-priority, no
-  current impact, deferred fix (regenerate a single fresh authkey).
-- No full audit was done of whether other Talos patch files beyond the ones this PR
-  touched have similar live-vs-repo drift from historical manual rollouts.
-
-### Caveats
-
-- The `talosctl patch machineconfig` append-vs-replace behavior is now confirmed but its
-  root cause (Talos version behavior vs. how `extraConfig`'s opaque map is merged) was not
-  investigated further — worth checking Talos's own docs/issues if it needs to be relied
-  on or reported upstream.

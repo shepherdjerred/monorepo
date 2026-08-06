@@ -31,7 +31,7 @@ Goal: same capabilities, much lower latency and SSD wear. Decisions taken:
 **conservative** quota target. R1 (hosted CI) rejected; R2 (second node) is a
 separate WIP; R3 (merge queue) deferred.
 
-Full evidence: `packages/docs/logs/2026-07-22_ci-capacity-analysis.md` +
+Full evidence: the original investigation +
 `packages/docs/plans/2026-07-22_ci-capacity-remediation.md`.
 
 ---
@@ -229,39 +229,6 @@ Remaining (lower priority, deferred):
   already content-gated (skips digest-unchanged entries), so the loop only fires
   on real image-content changes; debouncing trades deploy latency for fewer
   builds and adds state to the release path.
-
-## Session Log — 2026-07-22
-
-### Done
-
-- **Track 1** (commit `5a0cf8d0b`): `BUILDKITE_MAX_IN_FLIGHT` 10→20, Kueue quota
-  12 CPU / 20 Gi, right-sized pod requests to measured p90. ~6 concurrent heavy
-  pods vs 2. `verify --affected` green.
-- **Track 2.5** (commit `891fbd2f9`): ephemeral-storage limits on all heavy pod
-  anchors (dind 80Gi) — runaway-fill / freeze protection.
-- **Track 3.1 groundwork** (commit `d8fb2a67e`): persistent buildkitd service +
-  `zfs-ssd-lz4` StorageClass + chart/app wiring. Synth + homelab tests green.
-- Draft PR #1610 with all of the above + the analysis log and plans.
-
-### Remaining
-
-- **buildkitd CI cutover** — one-line `bake-images.sh` change, AFTER merge +
-  ArgoCD confirms buildkitd healthy (recipe above). This is what actually
-  realizes the write/latency win; the service alone is inert.
-- **T2.1 / T2.2 / T2.4** — pipeline-shape optimizations, deferred.
-- **T3.2 (shared bun cache)** — descoped as unsafe (oven-sh/bun#12917); needs a
-  real concurrent-write validation before any attempt.
-
-### Caveats
-
-- buildkitd remote-driver behavior is **not** live-validated (GitOps means it
-  can only be exercised post-merge). The manifests pass synth/helm/talos; the
-  runtime build path must be watched on the first main build after cutover.
-- Track 1 is the immediate relief and is fully verified. Watch the freeze
-  canaries (node MemAvailable > 8Gi, zero evictions, `ZfsArcHitRateLow` silent)
-  for a week; the quota constant is a one-line back-off if any fire.
-- buildkitd gRPC is plaintext tcp (cluster-internal); add a NetworkPolicy as
-  hardening.
 
 ## Comment Log
 

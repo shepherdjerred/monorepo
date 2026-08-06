@@ -157,8 +157,8 @@ def generate_summary(content, prompt, summary_path):
                 "bunx",
                 "@openai/codex",
                 "exec",
-                # Ignore AGENTS.md/CLAUDE.md project docs so codex returns just a
-                # project summary, not agent session-log meta (Done/Remaining/Caveats).
+                # Ignore AGENTS.md/CLAUDE.md project docs so this narrow content
+                # transform is independent of repository process instructions.
                 "-c",
                 "project_doc_max_bytes=0",
                 "--model",

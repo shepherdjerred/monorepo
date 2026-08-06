@@ -54,37 +54,3 @@ production image (libass + fonts present).
   resolves the fork's types from `dist` + `skipLibCheck`. Locally, the dev symlink makes `bun run
 typecheck` in streambot read the fork's _source_ and report ~46 pre-existing fork-internal errors
   (48 on plain `main`); streambot's _own_ code is type-clean and the fork's own typecheck passes.
-
-## Session Log — 2026-06-07
-
-### Done
-
-- Fork: `videoFilters` + `buildVideoFilterChain` in `packages/discord-video-stream/src/media/newApi.ts`;
-  tests `test/newApi.filters.test.ts` + extended `test/player.test.ts`; README divergence note.
-- streambot: `config/schema.ts` + `config/index.ts`; `sources/source.ts`; new `sources/subtitles.ts`
-  (pure) + `sources/subtitle-io.ts` (glue); `machine/types.ts`; `sources/resolve.ts` + `sources/ytdlp.ts`;
-  `streamer/streamer.ts`; `index.ts`; `discord/commands.ts` + `discord/command-handler.ts`.
-- Tests: `test/subtitles.test.ts`, extended `test/command-handler.test.ts`,
-  `integration/subtitles.integration.test.ts`, extended `e2e/run.ts`; `package.json`
-  (`test` scoped to `test/`, new `test:integration`); `tsconfig.json` (include `integration/`).
-- CI: media integration suite runs inside the existing `smoke-test-streambot` Dagger fn
-  (`.dagger/src/misc.ts`) — image has ffmpeg+libass+ffprobe+fonts. No pipeline-generator change needed.
-- Docs: `packages/streambot/AGENTS.md` (Subtitles section + commands), `FORK.md`, fork `README.md`.
-- Verified: streambot eslint clean, 117 unit tests pass; fork build+typecheck+13 tests pass; integration
-  4/5 pass locally (burn needs libass, passes in image); prettier + dagger-hygiene clean.
-
-### Remaining
-
-- Run the `smoke-test-streambot` Dagger target in CI to confirm the real burn passes in the image
-  (validated equivalently by hand on the live pod, but not yet exercised through the new test path).
-- Optional Layer 6: a manual/nightly yt-dlp subtitle-download network test (kept out of PR gating).
-- Manual homelab acceptance: YouTube human subs, auto-caption fallback, a Remux mkv (PGS → sidecar),
-  sidecar-only file, `subtitles:off`, and `/stream seek` keeping subtitles.
-
-### Caveats
-
-- Software-only encode while subtitles are burned (perf trade-off vs reliability).
-- Image subtitles (PGS/VobSub/DVB) are skipped, not burned — rely on a text sidecar.
-- yt-dlp subtitle resolution is best-effort (absence → no subtitles, not an error).
-- Local `bun run typecheck` in streambot shows pre-existing fork-internal errors via the dev symlink;
-  CI is green because it builds the fork's `dist` first. Don't "fix" those fork errors here.

@@ -51,4 +51,3 @@ Both are Samsung 990 PRO 4TB, so `model` cannot disambiguate — serial is the o
 ## Related decisions (same investigation, no action)
 
 - **Do not** put ZFS on the OS drive or move the Dagger buildcache to EPHEMERAL: BK overlayfs (the dominant CI write stream, ~66% of wear) is already on the actively-cooled OS disk, and the buildcache's `lz4 + sync=disabled` dataset cuts its physical writes 2–3×. Technically possible via `VolumeConfig` EPHEMERAL `maxSize` + `RawVolumeConfig` (requires wiping EPHEMERAL); rejected.
-- Full investigation log: `packages/docs/logs/2026-05-24_torvalds-thermal-investigation.md` (Session Log 2026-06-12).

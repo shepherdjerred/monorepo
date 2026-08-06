@@ -154,17 +154,3 @@ by §1, §2, §3. Pattern lifted from `deploySiteHelper()`
 ## Historical follow-up state
 
 - Complete and verify the work described in `CI Artifact Retention — Archives + Cleanup`.
-
-## Session Log — 2026-07-27
-
-### Done
-
-- No ci-archives implementation landed, and the proposed Dagger helpers and generated CI no longer exist. Any retention project needs a fresh static-Buildkite design.
-
-### Remaining
-
-- None in this plan.
-
-### Caveats
-
-- The historical implementation recipe must not be resumed without a fresh design against current architecture.

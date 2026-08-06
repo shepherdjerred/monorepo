@@ -99,57 +99,6 @@ links straight to the official patch notes.
   entry with the Claude highlights + a working "Read Riot's full Patch 26.13 notes →"
   link (`.claude/artifacts/whatsnew-patch-26-13-llm.jpg`).
 
-## Session Log — 2026-06-28
-
-### Done
-
-- Both paths + shared `buildChangelogEntry` (with optional link); split builder
-  into `changelog-builder.tsx`. `riot-patch.ts` pulls the real player-facing patch
-  number (26.x) from Riot; `patch-highlights.ts` has `claude -p` summarize the notes
-  into highlight bullets; `update-data-dragon.ts` wires both. Backfilled the current
-  **Patch 26.13** entry with the real Claude highlights + link. 47 tests total.
-- Verified typecheck/lint/prettier/tests across all touched packages; live-ran the
-  LLM highlight generation; screenshotted the rendered 26.13 entry + link.
-
-### Historical follow-up state
-
-- Commit + open PR; attach the `/whatsnew` screenshot.
-- Acceptance: watch the first real minor-bump Data Dragon PR to confirm the
-  Claude-highlight entry lands end-to-end (and the season PR for a new act).
-
-### Caveats
-
-- **Data Dragon version ≠ patch number.** DDragon `16.x` ↔ Riot patch `26.x` (same
-  minor, +10 major). Always source the player-facing number from Riot, never the
-  DDragon version. If Riot hasn't posted the matching minor yet, the entry is skipped
-  (assets still update); a Riot network/parse failure throws.
-- Fresh-worktree gap (pre-existing, not from this change): `@shepherdjerred/llm-models`
-  isn't in `setup.ts` shared builds, so its `dist` is missing from `file:` copies
-  and dependents fail typecheck until built + copies refreshed. Worked around locally.
-- Patch entries ride the **auto-merged** PR, so the minor-only gate is load-bearing.
-- Patch highlights need the `claude` CLI + `CLAUDE_CODE_OAUTH_TOKEN` on `PATH` in
-  the worker (already present for season-refresh / pr-agent). It's **best-effort**:
-  if Claude is missing/fails, the entry still ships with the data-refresh line + link.
-  Highlights are LLM-generated and auto-merged, so they're unreviewed — kept short,
-  WebFetch-only, and strictly-factual by the prompt; the deterministic patch number
-  and link are never LLM-controlled.
-- Season prettier step assumes Claude ran `bun install`; the explicit
-  `--frozen-lockfile` install before prettier covers the no-install case.
-
 ## Historical follow-up state
 
 - Complete and verify the work described in `Auto-update Scout "What's New" on new patches & seasons`.
-
-## Session Log — 2026-07-27
-
-### Done
-
-- PR #1354 merged automatic patch and season changelog generation.
-
-### Remaining
-
-- None in this plan.
-
-### Caveats
-
-- The historical design is retained for context; it is not an active board item.

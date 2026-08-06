@@ -3,7 +3,6 @@ id: pagerduty-velero-alert-formatting
 type: todo
 status: complete
 board: false
-origin: packages/docs/logs/2026-05-30_pagerduty-velero-duplicate-alerts.md
 source_marker: false
 ---
 

@@ -113,35 +113,11 @@ Add to `SCHEDULES` (mirror the `helm-types-weekly-refresh` entry):
   </content>
   </invoke>
 
-## Session Log — 2026-06-13
-
-### Done
-
-- New activity `packages/temporal/src/activities/readme-refresh.ts` — clones the monorepo (full blobless history), runs `cog -r README.md practice/README.md archive/README.md`, stages only the 3 READMEs + changed `_summary.md`, opens a PR via `openSeasonRefreshPr`. Mirrors `helm-types-refresh`.
-- New workflow `packages/temporal/src/workflows/readme-refresh.ts` (`runReadmeRefresh`; types-only import so the bundle smoke test stays green).
-- Registered in `workflows/index.ts` + `activities/index.ts`; added `readme-refresh-weekly` schedule (`0 8 * * 1` PT) to `schedules/register-schedules.ts`; classified `runReadmeRefresh` in `register-schedules.test.ts`'s `WORKFLOWS_WITHOUT_LONG_SLEEPS`.
-- Worker image gets `cog`: new `withCogapp` helper in `.dagger/src/image.ts` (python3 + `pip3 install cogapp`), wired into `buildTemporalWorkerImageHelper`; `COGAPP_VERSION` (renovate-pinned) added to `.dagger/src/constants.ts`. Corrected stale "docs-groom workflow" comments.
-- Deleted `.buildkite/scripts/update-readmes.sh`.
-- Docs: README "Updating READMEs" note, `packages/temporal/AGENTS.md` "Weekly README refresh" section, and `packages/docs/todos/disable-buildkite-readme-schedule.md`.
-- Verified: temporal typecheck ✓, workflow bundle smoke test ✓, schedule test 35/35 ✓, temporal eslint ✓, `.dagger` typecheck ✓ (after `dagger develop`), check-dagger-hygiene ✓, check-todos ✓, check-suppressions ✓, commit-msg ✓.
-
-### Remaining
-
-- **Manual (out-of-repo):** disable/delete the Buildkite scheduled build that ran `update-readmes.sh` in the Buildkite UI — no IaC resource exists for it. Tracked in `packages/docs/todos/disable-buildkite-readme-schedule.md`.
-- After merge + worker deploy: confirm `readme-refresh-weekly` fires once and opens (or no-diff's) a PR.
-
-### Caveats
-
-- **Behavioral change:** the old BK job force-pushed one rolling `auto/update-readmes` branch; this opens a fresh `chore/readme-refresh-<sha>` PR each week on drift (the scout/helm pattern).
-- The cog blocks call `bunx @openai/codex` only for brand-new packages lacking a committed `_summary.md`; needs the pod's `OPENAI_API_KEY` (already present) + network. Steady-state runs make no Codex calls.
-- `git status --porcelain` parsing deliberately avoids the leading `.trim()` bug in `changedFilesInPaths` (which mangles status lines whose first column is a space, i.e. unstaged-only changes) since this job stages scattered exact paths, not a directory.
-
 ## Testing & generation-quality fixes — 2026-06-13 (cont.)
 
 Ran the actual generation locally (blobless clone + `cog -r`) before relying on the workflow. This validated the infra **and surfaced three real problems the move alone wouldn't have caught**:
 
 - **`cog --version` doesn't exist** in cogapp 3.6.0 (`option --version not recognized`) → the `withCogapp` image smoke check would have failed the temporal-worker build. Fixed to `cog --help` (commit `8af0d035c`).
-- **codex contaminated ~8/21 summaries.** `codex exec` runs in the repo root, reads `AGENTS.md`, obeys "every session must produce a session log," and dumps `**Done**/**Remaining**/**Caveats**` meta into the summary (e.g. _"Workspace is read-only, so no session log was added"_). Fixed by passing `-c project_doc_max_bytes=0` in all three README cog blocks (validated: trmnl-dashboard summary went CONTAMINATED→CLEAN).
 - **cog output fails the prettier gate** (e.g. a missing blank line after `]]]-->`), so auto-PRs would fail CI. The activity now runs `bun install --frozen-lockfile` + `bunx prettier --write` on the regenerated files before opening the PR (mirrors helm-types). markdownlint only checks the root `README.md` (`archive/**`, `practice/**`, `**/_summary.md` are ignored); clean single-paragraph summaries don't trip MD032.
 
 **Seeded 23 `_summary.md`** (commits `47e34f5f8` + `529c5a1b4`) so the first scheduled run is ~a no-op rather than a 21-call codex batch. All summaries spot-checked for accuracy: terraform-provider-asuswrt initially got temporal's summary (codex wandered) — regenerated correctly; cooklang-for-obsidian had a stale "Bazel" mention — regenerated clean.

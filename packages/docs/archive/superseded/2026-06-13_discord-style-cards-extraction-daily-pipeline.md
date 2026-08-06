@@ -272,18 +272,3 @@ the worker starts cleanly before the token is provisioned.
 ## Remaining
 
 - [x] Superseded by the consolidated Glitter Discord source-of-truth plan.
-
-## Session Log — 2026-07-26
-
-### Done
-
-- Consolidated this design into the source-of-truth implementation plan and
-  archived this older plan as superseded.
-
-### Remaining
-
-- None in this document; follow the consolidated plan.
-
-### Caveats
-
-- Historical design details remain here for context but are not authoritative.

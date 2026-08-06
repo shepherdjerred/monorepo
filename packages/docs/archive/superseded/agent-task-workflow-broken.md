@@ -3,7 +3,6 @@ id: agent-task-workflow-broken
 type: todo
 status: complete
 board: false
-origin: packages/docs/logs/2026-06-14_protobufjs-v8-pr-1227.md
 source_marker: false
 ---
 

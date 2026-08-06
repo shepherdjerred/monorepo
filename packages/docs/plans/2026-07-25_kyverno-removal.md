@@ -11,7 +11,7 @@ board: false
 
 Kyverno is a Kubernetes policy engine deployed on the single-node Talos cluster
 (`torvalds`) via cdk8s + ArgoCD. Investigation (see
-`packages/docs/logs/2026-07-25_homelab-recent-warnings-etcd-diagnosis.md`) found it
+the original investigation) found it
 is doing almost nothing useful while actively worsening a cluster-wide incident:
 
 - It enforces exactly **two** ClusterPolicies, **both non-blocking**:
@@ -178,44 +178,3 @@ webhooks, which step 3 stops.
 Revert the PR — kyverno reinstalls via GitOps. Existing PVC labels persist on the
 objects, so backups continue throughout. The upstream etcd instability is separate
 and unaffected; this removal only takes kyverno off the critical path.
-
-## Session Log — 2026-07-25
-
-### Done
-
-- Phase A + B implemented in worktree `feature/remove-kyverno`; `bun run verify -- --affected` green (28/28).
-- Velero label migration render-verified; kyverno fully absent from `dist/`.
-
-### Remaining
-
-- Open draft PR; promote to ready after review.
-- Phase C live-cluster cleanup (operator-run, post-merge) — now a deterministic,
-  prune-independent teardown: stop the child Applications, remove webhooks before
-  scaling controllers to 0, then cascade-delete namespaced + cluster-scoped RBAC + CRDs.
-- Update kyverno mentions in health-audit runbooks/guides; resolve
-  `packages/docs/todos/torvalds-controller-restart-churn.md`.
-
-### Caveats
-
-- `inherited_labels` set via untyped `valuesObject` because the generated helm type
-  omits it (commented-out upstream) — intentional, not a regen gap.
-- The upstream etcd latency that caused kyverno's crashloops is a separate, unfixed
-  issue tracked in the diagnosis log; this PR only removes kyverno as an amplifier.
-
-### Addendum — 2026-07-25 (Phase C hardening)
-
-Corrected a wrong premise in Phase C: it claimed "removing kyverno from GitOps
-prunes its Deployment." It does **not** — `apps` and both kyverno child
-Applications run `automated: {}` with prune **off** and the CI sync sends no prune
-flag (`packages/docs/todos/argocd-apps-prune-policy.md`), so post-merge the child
-Applications linger as `requiresPruning`, keep re-syncing kyverno, and the
-admission controller keeps its fail-closed webhooks alive. Rewrote Phase C as a
-deterministic teardown that (1) deletes the orphaned `kyverno`/`kyverno-policies`
-Applications non-cascade to stop reconciliation, (2) deletes the webhooks while
-the backend is still Running (no dead-backend window), (3) scales the controllers
-to 0 so they can't re-create webhooks, (4) re-verifies no webhooks remain, then
-(5–6) cascade-deletes namespaced + cluster-scoped RBAC (~16 ClusterRoles / ~7
-ClusterRoleBindings), ClusterPolicies, reports, and CRDs. Verification now checks
-cluster-scoped objects and the orphaned Applications, not just the namespace/CRDs.
-Enabling global prune on `apps` was rejected as out of scope (it would also delete
-the Dagger stack). No source code changed — runbook only.

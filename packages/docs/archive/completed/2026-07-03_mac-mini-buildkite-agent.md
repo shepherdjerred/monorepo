@@ -54,48 +54,6 @@ Linux/Dagger in-cluster; there is no macOS runner.
   `src/tofu/github/rulesets.tf` (required checks) until the step is enabled and
   green, or it blocks all PRs.
 
-## Session Log — 2026-07-03
-
-### Done
-
-- Added `agents?: { queue }` to `BuildkiteStep` (`scripts/ci/src/lib/types.ts`).
-- Added dormant `macosSwiftLintStep()` gated on `MACOS_CI_ENABLED`, routed to
-  `queue=macos` with no k8s plugin (`scripts/ci/src/steps/per-package.ts`).
-- Added `buildkite_cluster_queue "macos"`
-  (`packages/homelab/src/tofu/buildkite/cluster.tf`).
-- Wrote `packages/homelab/mac-ci/bootstrap.sh` (thin idempotent provisioner)
-  and `README.md` runbook.
-- Verified: `tsc --noEmit` clean, 304 CI tests pass, shellcheck clean,
-  `tofu validate` clean, dagger-hygiene + check-todos + prettier clean.
-  Confirmed the step is omitted when `MACOS_CI_ENABLED` is unset and emitted
-  (with `agents.queue=macos`, no plugin) when `=true`.
-
-### Historical follow-up state
-
-- Operator: `tofu apply` the queue; run `bootstrap.sh` on the Mac with the
-  1Password token; `tailscale up`; enable auto-login; flip `MACOS_CI_ENABLED=true`.
-- Open the PR (not yet committed/pushed).
-
-### Caveats
-
-- No `.swiftlint.yml` in `ios/` — first real `--strict` run may fail; add a
-  config or start `soft_fail: true`.
-- Native execution has no ephemeral-pod isolation; Tart is the later upgrade.
-
 ## Historical follow-up state
 
 - Complete and verify the work described in `Mac Mini → Buildkite CI agent`.
-
-## Session Log — 2026-07-27
-
-### Done
-
-- PR #1386 merged the queue and bootstrap infrastructure; the intentionally deferred physical activation is tracked separately.
-
-### Remaining
-
-- Residual work is owned by `todos/mac-mini-buildkite-agent.md`.
-
-### Caveats
-
-- The historical design is retained for context; it is not an active board item.

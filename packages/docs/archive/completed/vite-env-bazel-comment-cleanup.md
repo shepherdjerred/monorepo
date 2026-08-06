@@ -3,7 +3,6 @@ id: vite-env-bazel-comment-cleanup
 type: todo
 status: complete
 board: false
-origin: packages/docs/logs/2026-07-12_rm-sccache-bazel-cache-buckets.md
 source_marker: false
 ---
 

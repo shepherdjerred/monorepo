@@ -44,12 +44,10 @@ All configuration is HA-side (UI helper + server-side energy prefs). **Nothing i
    - Electricity: <https://www.seattle.gov/city-light/residential-services/billing-information/rates> (flat rate, Seattle column, $/kWh)
 2. Edit the three constants at the top of the `sensor.seattle_water_sewer_price` template (`water_peak_ccf`, `water_offpeak_ccf`, `sewer_ccf`).
 3. Update the grid price: Energy dashboard settings UI, or `energy/save_prefs` with the grid source's `number_energy_price`.
-4. The log doc contains a `temporal-agent-task` block (runAt 2027-01-05) that emails a comparison report — schedule it with `cd packages/temporal && TEMPORAL_ADDRESS=localhost:7233 bun run scripts/schedule-agent-task.ts --from-doc ../../packages/docs/logs/2026-07-19_ha-utility-price-tracking.md` (not yet scheduled).
 
 ## Outstanding
 
 - **Mysa rate** (user action): Mysa thermostats' `*_electricity_rate` sensors read `unknown` until the Electricity Rate (0.1338 $/kWh) is set in the Mysa app (preferred — also enables Mysa's in-app cost charting) or via the Mysa integration's "Custom Electricity Rate" option in HA.
-- **Temporal reminder not scheduled** (operator action): step 4 above.
 - **TOU verification**: the $0.1338 flat rate assumes SCL's standard plan. If a bill shows Time-of-Use pricing, replace the grid static price with a TOU template entity (peak $0.1610 5–9pm Mon–Sat / mid $0.1409 / off-peak $0.0805 midnight–6am, 2026 values) using the same template-helper approach as water.
 
 ## Constraints & context

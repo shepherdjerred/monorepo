@@ -89,51 +89,8 @@ directory`), not an unset. `PATH` untouched.
 1. Run `packages/dotfiles/claude-managed/install-managed-settings.sh` (needs sudo) to install the managed policy including the new `env` block, then restart Claude Code; `/status` shows the managed source.
 2. In a fresh CC session: `git diff` in any repo shows plain unified diff (no difftastic), `git config core.pager` → `cat`, `git config diff.external` is empty, and `bat`/`eza`/`nvim` still resolve on `PATH` (opt-in intact). If the weekly quota is still exhausted (resets Jul 29 5pm PT), run this after the reset.
 
-## Session Log — 2026-07-27
-
-### Done
-
-- Audited every forcing vector (skill triggers, gitconfig pager/external-diff, exported `EDITOR`, shell rc leaks, CC/Codex shell snapshots, fish abbrs) — findings in the audit table above.
-- Experiment-driven design change: env-based git config injection (`GIT_CONFIG_KEY_n`) **cannot unset** `diff.external` (empty value → `error: cannot run : No such file or directory`), so the design moved to a curated `~/.config/agent/gitconfig` + `GIT_CONFIG_GLOBAL`.
-- `packages/dotfiles/dot_agents/skills/modern-cli-tools/SKILL.md` — rewritten to opt-in (loads only when the user names the tools); "ALWAYS prefer modern tools" section removed.
-- `packages/dotfiles/claude-managed/managed-settings.json` + `README.md` — `env` block added to the managed tier.
-- `packages/dotfiles/private_dot_codex/private_config.toml` **and live `~/.codex/config.toml`** — env vars in `[shell_environment_policy.set]`.
-- `packages/dotfiles/private_dot_config/private_fish/config.fish.tmpl` — `opencode()` wrapper extended with the same env (applied live via `chezmoi apply`).
-- `packages/dotfiles/dot_bashrc` — `[[ $- == *i* ]] || return 0` guard (applied live); verified non-interactive `bash -l` no longer exports `EDITOR=nvim`/aliases while PATH setup still runs.
-- `packages/dotfiles/private_dot_config/agent/gitconfig` — new curated gitconfig (applied live).
-- `packages/docs/todos/codex-snapshot-secrets.md` — follow-up for plaintext secrets in codex snapshots.
-- Verified end-to-end: scratch-repo git (plain diff with agent gitconfig vs difft without; identity/credentials/spice intact), **Codex** `codex exec` probe (`EDITOR=true`, `core.pager=cat`, empty `diff.external`, nice tools still resolvable), **OpenCode** `opencode run` probe (same results), bashrc guard both directions.
-- Commit `077d01ebd` (+ restack), draft PR: <https://github.com/shepherdjerred/monorepo/pull/1734>
-
-### Remaining
-
-- User runs the managed-settings installer (sudo; denied to agents) + restarts CC — the CC `env` block is inert until then. Note the managed policy was **not installed at all** on this machine before this change.
-- `claude -p` verification probe — blocked by weekly quota (resets Jul 29 5pm PT); codex/opencode probes passed with identical config.
-- After merge: `git-spice repo sync`, remove worktree, `chezmoi apply` from the main-checkout source to re-anchor live files to main.
-
-### Caveats
-
-- The pre-existing fish wrapper runs `(command -s opencode) --auto $argv`, which puts `--auto` **before** subcommands — `opencode run "..."` from fish prints usage instead of running. Pre-existing; not changed in this PR.
-- OpenCode launches that bypass fish (Raycast, scripts, desktop) don't get the env overrides — accepted tradeoff (fish-only coverage).
-- `RIPGREP_CONFIG_PATH` (ripgreprc: `--hidden`, excludes `.git`/`node_modules`) intentionally kept for agents per user decision.
-- Codex snapshots re-export the login env, but `shell_environment_policy.set` was verified to win over them.
-
 ## Comment Log
 
 ### 2026-08-03T05:47:27.338Z - Jerred Shepherd
 
 Moved `awaiting-human` -> `complete`.
-
-## Session Log — 2026-08-02
-
-### Done
-
-- Preserved the owner's acceptance transition, confirmed PR #1734 is merged, and archived the completed plan.
-
-### Remaining
-
-- None.
-
-### Caveats
-
-- The earlier session entry records the pre-acceptance operator checks for historical context.

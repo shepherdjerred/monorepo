@@ -42,31 +42,3 @@ the current Kimi CLI and the live Moonshot Coding API.
    under the Kimi OAuth provider receive compatible handling.
 4. Verify locally, publish the branch, and replace the local OpenCode plugin
    registration with the fork once it is ready.
-
-## Session Log — 2026-07-19
-
-### Done
-
-- Forked `lemon07r/opencode-kimi-full` as `shepherdjerred/opencode-kimi-full`.
-- Pushed `b92ca8a` on `fix/kimi-api-compatibility`.
-- Updated the fork to discover and expose every entitled Kimi Coding model,
-  preserve `max` effort, add session cache keys to every Kimi model, and force
-  explicit temperatures to the API-required value of `1`.
-- Aligned the plugin fingerprint and new device-id storage with Kimi Code v0.27.0
-  while retaining legacy device ids.
-- Switched live and chezmoi-managed OpenCode configuration to the local fork and
-  added the K3 `max` effort variant.
-- Verified TypeScript checks, syntax build, all 78 unit tests, and OpenCode model
-  discovery for K3, K2.7 Coding, and K2.7 Coding Highspeed.
-
-### Remaining
-
-- Open a PR for the fork branch when it is ready for external review.
-- Re-run a live chat smoke test after the Kimi subscription quota refreshes.
-
-### Caveats
-
-- A live completion could not be verified because the subscription reports its
-  billing-cycle quota is exhausted. Authenticated `/models` discovery succeeds.
-- The fork must be periodically rebased against upstream and current Kimi Code
-  releases.

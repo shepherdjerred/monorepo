@@ -39,17 +39,3 @@ policy are behavioral guidance, not a security boundary.
 - 2026-07-28 — Recorded during the reliability implementation. The immediate
   change limits `/goal` to the active session starter; full runner isolation is
   a separate architecture change and remains required before public access.
-
-## Session Log — 2026-08-02
-
-### Done
-
-- Updated the origin path after the Pokémon reliability implementation plan moved to the completed archive.
-
-### Remaining
-
-- No change to this todo's existing isolation work.
-
-### Caveats
-
-- This was reference maintenance only.

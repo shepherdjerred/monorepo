@@ -42,7 +42,7 @@ const MIN_BUNDLE_BYTES = 1_000_000;
 // monorepo root resolves another) make React's hooks dispatcher null ->
 // "Cannot read property 'useEffect' of null" at launch. This bit TestFlight
 // build #62; the dev server hides it, so only the Release bundle exposes it.
-// See packages/docs/logs/2026-07-24_ios-duplicate-react-startup-crash.md.
+// See the original investigation.
 const SINGLETON_PACKAGES = ["react", "react-native", "scheduler"] as const;
 
 /**
@@ -102,7 +102,7 @@ function assertSingletons(sourcemapPath: string): void {
         "-> \"Cannot read property 'useEffect' of null\"). Align the version so " +
         "the monorepo resolves one copy, or dedupe it in metro.config.js " +
         "(resolver.resolveRequest). See " +
-        "packages/docs/logs/2026-07-24_ios-duplicate-react-startup-crash.md.\n\n" +
+        "the original investigation.\n\n" +
         details,
     );
   }

@@ -27,17 +27,3 @@ The rest of the 2026-07-29 dependency program shipped. This coordinated migratio
 
 - PRs #1837, #1838, #1840, #1842, and #1843 all merged with green exact-head Buildkite checks.
 - The registry gate is unchanged: stable VoltAgent core remains 2.9.0 and version 3 remains prerelease.
-
-## Session Log — 2026-08-02
-
-### Done
-
-- Isolated the only externally blocked phase from the completed dependency-upgrade program.
-
-### Remaining
-
-- Recheck the stable VoltAgent releases and begin the migration only after the compatibility and stability gates open.
-
-### Caveats
-
-- Prerelease compatibility evidence does not authorize starting the production migration.

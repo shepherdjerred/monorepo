@@ -160,31 +160,3 @@ After implementing, in a worktree:
 ## Worktree note
 
 This is multi-file PR-bound work, so before the first edit: create `git worktree add .claude/worktrees/mk64-full-bindings -b feature/mk64-full-bindings origin/main`, then `bun run scripts/setup.ts` inside it. Every Write path needs `.claude/worktrees/mk64-full-bindings/` in it — never write to the main checkout.
-
-## Session Log — 2026-06-13
-
-### Done
-
-- Bound analog Y to `KeyR` / `KeyF` (input-map.ts) with matching `STICK_Y_CONTROLS` so the integrity tests stay green.
-- `AnalogStick` redesigned: 2D knob translate; four chevron press zones now show the actual keyboard letter (R/F/A/D) with a small direction arrow above; the outer well gets a recessed-hex N64 boot look (split out to `analog-stick.tsx` to keep `controller-ui.tsx` under the 500-line cap).
-- Global `onKeyDown`/`onKeyUp` skip `preventDefault` when the event target is an `INPUT`/`TEXTAREA`/`SELECT`/`contentEditable` element; verified live via PinchTab eval.
-- `/help` rewritten — bare `https://mariokart.sjer.red` and one bullet per N64 input.
-- Mapping panel rebuilt as a three-column Action / N64 / Keyboard reference table, keycap-styled keys, ordered by MK64 frequency-of-use.
-- D-pad cluster gets an `ARROW KEYS` caption badge under it.
-- Theme tokens extracted to a Tailwind v4 `@theme` block in `index.css`; `prefers-reduced-motion` baseline added.
-- Leaderboard and NameEntry repainted from `slate-*` to `zinc-*` to unify the palette; NameEntry becomes a pill chip.
-- Pressed pills lifted out of the controller card into a "Live input" sidebar card; status becomes a dot+text pill; latency hides when unmeasured.
-- Controller shell SVG gradients lightened to match the real N64 plastic gray.
-- Shipped as commits `0180e40` (bindings + textbox + /help), `fbeb390` (design polish), `04ce159` (discoverability — D-pad caption, stick keyboard labels, Mapping action column).
-
-### Remaining
-
-- Rear-trigger annotations for L/R/Z were planned but not shipped — the user mentioned the front/back/side complexity but didn't demand it; deferable to a follow-up if the rear-trigger affordance still reads as confusing.
-- A full SVG-shell redraw (matching the reference image proportions more closely) was scoped in but skipped; the lighter palette + analog-stick polish covered most of the visual gap. Bigger SVG rewrite would be its own PR.
-- Mobile-first reflow — single-column layout, sticky leaderboard, etc. — was scoped in the original plan but the desktop polish came first; mobile still uses the fixed 880-wide controller frame.
-- PR #1178 is open; no manual verification on prod yet (claim a seat, type a name, confirm `/help` renders the URL).
-
-### Caveats
-
-- **Never run `bunx eslint . --fix` on this package.** The custom `custom-rules/no-use-effect` rule's autofix silently deletes useEffect bodies (cost me an iteration mid-session — recovered via `git restore`). Lint without `--fix`; the 4 remaining useEffect warnings are pre-existing on `main`.
-- The new `MAPPING_ROWS` table is duplicated from `KEYMAP` + the on-controller positions. If a binding is added/changed in `input-map.ts` you must also update `MAPPING_ROWS` in `app.tsx` AND the `/help` command. There's no programmatic link yet — could be a future cleanup (derive the Mapping table from `KEYMAP` + action metadata).

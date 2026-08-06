@@ -5,7 +5,6 @@ status: planned
 board: true
 verification: agent
 disposition: deferred
-origin: packages/docs/logs/2026-08-01_main-ci-red-diagnosis.md
 ---
 
 # Catch source-vs-live ArgoCD drift before it wedges a sync
@@ -21,7 +20,7 @@ merges the new handler on top of the old one, the apiserver rejects the patch
 signal today is the `argocd-sync` step failing at deploy time.
 
 This wedged the `media` app in 2026-08 (build #7574) — see
-`packages/docs/logs/2026-08-01_main-ci-red-diagnosis.md`. The current `pr-dryrun`
+the original investigation. The current `pr-dryrun`
 lane (`.buildkite/pipeline.yml`) only checks helm-types regen, tofu plans, and
 side-effect-free `--dry-run` rehearsals; it never diffs rendered resource
 manifests against live cluster objects, so it can't see this class of drift.

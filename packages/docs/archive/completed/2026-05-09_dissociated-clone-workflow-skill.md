@@ -69,25 +69,3 @@ Documentation/skill content only — no runtime to test. To verify in a future s
    du -sh .git                              # expect: ~485 MB
    rm -rf /tmp/monorepo-test
    ```
-
-## Session Log — 2026-05-09
-
-### Done
-
-- Created `~/.claude/skills/dissociated-clone-workflow/SKILL.md` mirroring the structure of the worktree-workflow skill, with sections: why-not-worktrees, overview, core concept, CLI commands, complete workflow, advanced patterns, AI agent workflows, integration with PR workflow, best practices, common workflows, troubleshooting.
-- Added a deprecation note to `~/.claude/skills/worktree-workflow/SKILL.md` directing readers to the new skill.
-- Added `## Parallel Work — Prefer Dissociated Clones` to `/Users/jerred/git/monorepo/CLAUDE.md`, including an explicit `bun run scripts/setup.ts` reminder.
-- Mirrored plan to `packages/docs/plans/2026-05-09_dissociated-clone-workflow-skill.md` and updated `packages/docs/index.md`.
-- Smoke-tested the workflow end-to-end against `/Users/jerred/git/monorepo` in `/tmp/monorepo-shared-test` (cleaned up).
-- Mirrored both skill changes into chezmoi source via `chezmoi re-add` (worktree-workflow) and `chezmoi add` (dissociated-clone-workflow). Verified `diff` between live `~/.claude/skills/<name>/SKILL.md` and `packages/dotfiles/dot_claude/skills/<name>/SKILL.md` is clean for both skills.
-
-### Remaining
-
-- None for this scope.
-
-### Caveats
-
-- The skill recommends `--shared` (purely local) over `--reference <remote>` (which would set `origin` correctly out of the box) because the user prefers no network during the bootstrap. The trade-off is mandatory `git remote set-url origin <real-remote>` + `git fetch origin --prune` after clone — both documented prominently.
-- Cloning from a non-bare source brings local-only branches over as `remotes/origin/*` refs (e.g., `worktree-*` branches from prior worktree experiments). `git fetch origin --prune` after re-pointing the remote drops them.
-- Each clone needs ~20 GB after `bun run scripts/setup.ts` populates `node_modules`, generated files, and Rust `target/`. The trade-off is called out in CLAUDE.md and the skill.
-- The old `worktree-workflow` skill is deprecated but not deleted. The user may delete it later if dissociated clones fully replace worktree usage in their workflow.

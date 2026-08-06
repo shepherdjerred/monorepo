@@ -87,8 +87,6 @@ chezmoi diff   # expect no diff
 
 ## Phase 2d — Mirror plan into monorepo docs
 
-Per `monorepo/CLAUDE.md` "Documentation Discipline — Per Session", mirror this approved plan into `packages/docs/plans/` using the dated naming convention, add an index entry, and append a Session Log at end-of-session.
-
 - Copy: `~/.claude/plans/do-claude-code-and-flickering-pillow.md` → `packages/docs/plans/2026-05-09_bypass-mode-defaults.md`
 - Add `## Status` line near the top of the mirrored file (`Complete` once Phase 2 finishes; `In Progress` until then).
 - Append to `packages/docs/index.md` under `## Plans`:
@@ -96,8 +94,6 @@ Per `monorepo/CLAUDE.md` "Documentation Discipline — Per Session", mirror this
   ```
   - [Bypass Mode Defaults](plans/2026-05-09_bypass-mode-defaults.md) - Enable bypass-by-default for Claude Code + Codex; tier-A deny-list hardening
   ```
-
-- End-of-session: append a `## Session Log — 2026-05-09` section with Done / Remaining / Caveats to the in-repo copy AND restate it inline in chat.
 
 ## Verification
 
@@ -110,26 +106,3 @@ Per `monorepo/CLAUDE.md` "Documentation Discipline — Per Session", mirror this
 - Tier B (git history rewrites, force-push-to-main, talosctl shutdown, tmutil delete, cryptsetup) — revisit in a separate session.
 - Tier C (recursive chmod/chown, raw device redirects, promote `git push --force` and `npm publish` from ask→deny).
 - PreToolUse hook for regex-based URL filtering of curl-pipe-shell — more robust but heavier than pattern rules; defer.
-
-## Session Log — 2026-05-09
-
-### Done
-
-- Phase 1 (prior turn): added `permissions.defaultMode = "bypassPermissions"` to `~/.claude/settings.json`; added `approval_policy = "never"` and `sandbox_mode = "danger-full-access"` to `~/.codex/config.toml`. Both synced via `chezmoi re-add`.
-- Phase 2b: added 23 Tier-A deny rules to `~/.claude/settings.json` (curl-pipe-shell, macOS disk wipe, SIP/Gatekeeper, nvram, partition tools, crontab -r, kubectl delete crd / --all). Deny array grew 35 → 58 entries.
-- Phase 2c: `chezmoi re-add ~/.claude/settings.json ~/.codex/config.toml` clean (`chezmoi diff` empty).
-- Phase 2d: mirrored plan to `packages/docs/plans/2026-05-09_bypass-mode-defaults.md`; added entry to `packages/docs/index.md`.
-- Phase 2a: smoke tests run.
-  - **Codex**: ✅ confirmed live. Header showed `approval: never` / `sandbox: danger-full-access`; `/tmp/__bypass_codex` created; no prompt.
-  - **Claude Code**: ⚠️ inconclusive. `claude -p` returned `is_error:true, api_error_status:400, "Credit balance is too low"` — never reached the model, so behavioral confirmation impossible right now. Static positive evidence: `permission_denials:[]` in result JSON (so it wasn't blocked on permissions), `defaultMode: "bypassPermissions"` is present in settings, and `--permission-mode bypassPermissions` is documented as a valid mode.
-
-### Remaining
-
-- Re-run Claude Code smoke test once API credits are restored: `claude -p "Run this exact bash command and report stdout: touch /tmp/__bypass_claude && echo BYPASS_OK_CLAUDE"`. Pass = file exists and no permission-denied string in output.
-- Optional: investigate why headless `claude -p` reports credit exhaustion when interactive sessions still work — possibly different auth path (subscription-token vs API-key).
-
-### Caveats
-
-- Tier B (git history rewrites, force-push-to-main, talosctl shutdown, tmutil delete, cryptsetup) and Tier C (recursive chmod/chown, raw device redirects, promote `git push --force` and `npm publish` from ask→deny) intentionally deferred — revisit in a separate session if desired.
-- Pattern matching is per-subcommand — `Bash(sh)` catches `curl X | sh` because `sh` is a separate pipeline segment, but does NOT catch `sh -c '<arbitrary>'` (would require `Bash(sh *)` which would over-block legit shell wrapper usage). Acceptable risk for Tier A.
-- Codex `danger-full-access` removes the sandbox entirely; there is no equivalent denylist to the Claude Code `permissions.deny` array. Codex relies purely on the model + your trust. Worth keeping in mind.

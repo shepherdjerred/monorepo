@@ -91,8 +91,8 @@ export const readmeRefreshActivities = {
       // Regenerate the embedded listings. cog rewrites the three READMEs in
       // place and writes a `_summary.md` for any package missing one (calling
       // the Codex CLI via the pod's OPENAI_API_KEY, with `project_doc_max_bytes=0`
-      // so codex ignores AGENTS.md and returns a plain project summary rather
-      // than agent session-log meta). Existing summaries are reused as a cache,
+      // so codex ignores repository process instructions and returns only the
+      // requested project summary). Existing summaries are reused as a cache,
       // so a steady-state run makes no Codex calls.
       await runCommand(["cog", "-r", ...COG_TARGETS], { cwd: repoDir });
 

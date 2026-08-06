@@ -91,7 +91,7 @@ in production:
 - **New decision — smooth the input**: `prConcurrentLimit: 3` in `renovate.json`
   caps how many dep branches can be open (and thus rebase/rebuild at once).
 
-Post-mortem: [2026-07-03_dagger-engine-disk-full-outage.md](../../logs/2026-07-03_dagger-engine-disk-full-outage.md)
+Post-mortem: 2026-07-03_dagger-engine-disk-full-outage.md
 
 ## References
 

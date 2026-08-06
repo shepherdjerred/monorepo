@@ -84,23 +84,3 @@ trmnl-dashboard,temporal-worker,…}` in `versions.ts`) — auto-updated by
 4. `cd scripts/ci && bun test`
 5. `bunx prettier --check <changed files>`
 6. `git diff --check`
-
-## Session Log — 2026-05-10
-
-### Done
-
-- Bumped `shepherdjerred/scout-for-lol/prod` and `shepherdjerred/starlight-karma-bot/prod` 1904 → 2195 in `packages/homelab/src/cdk8s/src/versions.ts`.
-- Refreshed `ghcr.io/shepherdjerred/discord-plays-pokemon` digest in `packages/discord-plays-pokemon/compose.yml` (e9c30483 → fe9a84c2 = `2.0.0-2195`).
-- Bumped Dagger base images in `.dagger/src/constants.ts`: caddy 2.11.1 → 2.11.2 (alpine + builder-alpine), golang 1.26.1 → 1.26.3, rust 1.94.1 → 1.95.0; CLI versions: `GOLANGCI_LINT_VERSION` v2.11.4 → v2.12.2, `ARGOCD_CLI_VERSION` v3.3.6 → v3.4.1.
-- Bumped CI base image tools in `.buildkite/ci-image/Dockerfile`: `UV_VERSION` 0.11.12 → 0.11.13, `GH_VERSION` 2.91.0 → 2.92.0, `AWSCLI_VERSION` 2.34.35 → 2.34.45, `SEMGREP_VERSION` 1.161.0 → 1.162.0.
-- All digests verified via `crane digest` against the published image tags.
-- Verifications: `versions.test.ts` (10 pass), `helm-template.test.ts` (10 pass), `check-docker-images.ts` (44 OK / 12 SKIP / 0 FAIL), `.dagger/src/__tests__/constants.test.ts` (17 pass), `scripts/ci` test suite (142 pass), `check-dagger-hygiene.ts` (no violations), prettier clean, `git diff --check` clean.
-
-### Remaining
-
-- None for this PR. Out-of-scope items (terraform provider lockfile bumps, Talos installer schematic regen, npm major bumps) intentionally deferred — see "Out of scope" above.
-
-### Caveats
-
-- `.buildkite/ci-image/VERSION` (`406`) is intentionally left untouched. The pipeline guard `ci-base-version-guard` forbids editing it; CI publishes a new ci-base image and runs version-commit-back to bump the tag after this PR merges.
-- The `versions.ts` beta entries (`shepherdjerred/scout-for-lol/beta`, `…/starlight-karma-bot/beta`, `birmel`, `discord-plays-pokemon`) and `discord-plays-pokemon` itself were already at `2.0.0-2195` when this session started — version-commit-back from a prior CI run had already bumped them. Only the prod entries needed manual updating.

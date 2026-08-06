@@ -83,53 +83,6 @@ alert live at `https://alertmanager.tailnet-1a49.ts.net/api/v2/alerts` + inciden
 dashboard; SUCCEEDED fixture resolves it. Then a real failing iOS build or App Store Connect's
 webhook delivery-report re-send confirms end-to-end.
 
-## Session Log — 2026-07-11
-
-### Done
-
-- Implemented receiver + schema + fixtures + tests in `packages/temporal/src/event-bridge/`
-  (`xcode-cloud-webhook.ts`, `xcode-cloud-webhook-schema.ts`, `xcode-cloud-webhook.test.ts`,
-  `__fixtures__/xcode-cloud/*.json`), wired into `index.ts`.
-- Homelab wiring: `http-services.ts` (`createXcodeCloudWebhookService`), `worker.ts`
-  (port 9468 + env + secret ref). Added Alertmanager route-guard tests to
-  `pagerduty-alerting.test.ts`.
-- Updated `packages/temporal/AGENTS.md` env-var docs.
-- Green locally: temporal full `bun run test` (621 pass), temporal typecheck + eslint (0 errors),
-  homelab typecheck + eslint (0 errors), `pagerduty-alerting.test.ts` (11 pass).
-
-### Historical follow-up state
-
-- Add the `XCODE_CLOUD_WEBHOOK_TOKEN` 1Password field + refresh & commit the vault snapshot
-  (needs `op` login) — `check-1password-items.ts` (pre-commit + CI) is red until then.
-- Open PR, merge/deploy, register the webhook URL in App Store Connect, run the post-deploy
-  smoke + real-build verification.
-
-### Caveats
-
-- Payload nesting is inferred from Apple docs + one community example; the schema tolerates
-  both flat and `attributes`-wrapped shapes, but confirm against a real delivery-report payload
-  at verification time and tighten fixtures if needed.
-- Alert auto-resolves after 6h if no SUCCEEDED arrives (branch deleted/renamed); tune
-  `XCODE_CLOUD_ALERT_TTL_SECONDS` if that's too short/long.
-
 ## Historical follow-up state
 
 - Complete and verify the work described in `Xcode Cloud build-failure alerts → Alertmanager → PagerDuty`.
-
-## Session Log — 2026-07-27
-
-### Done
-
-- PR #1455 is merged; the webhook receiver, tests, Temporal wiring, secret reference, service, and tunnel are present.
-
-### Remaining
-
-- None in this implementation plan. App Store Connect registration and live
-  delivery are tracked in
-  `packages/docs/todos/xcode-cloud-webhook-registration-verification.md`.
-
-### Caveats
-
-- The historical design is retained for context; it is not an active board item.
-  The successor remains operator-blocked until App Store Connect access is
-  available.

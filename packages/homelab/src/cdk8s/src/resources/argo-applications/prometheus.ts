@@ -257,7 +257,7 @@ export async function createPrometheusApp(chart: Chart) {
                 // to the alertname), then append the namespace and a firing count so that
                 // distinct namespaces/objects grouped into one incident stay distinguishable
                 // (the original reason the body was inlined here — see
-                // packages/docs/logs/2026-07-03_pagerduty-clean-titles.md).
+                // the original investigation).
                 description: escapeHelmGoTemplate(
                   `{{ if .CommonAnnotations.summary }}{{ .CommonAnnotations.summary }}{{ else }}{{ .CommonLabels.alertname }}{{ end }}{{ if .CommonLabels.namespace }} [{{ .CommonLabels.namespace }}]{{ end }}{{ if gt (len .Alerts.Firing) 1 }} (x{{ len .Alerts.Firing }}){{ end }}`,
                 ),

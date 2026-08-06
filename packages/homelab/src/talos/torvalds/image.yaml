@@ -12,7 +12,7 @@ customization:
     # NOTE: cpufreq.default_governor=powersave and intel_pstate=passive were
     # removed 2026-06-12 to restore HWP (active-mode intel_pstate) after the
     # AIO cooler made power-saving caps unnecessary. See
-    # packages/docs/logs/2026-05-24_torvalds-thermal-investigation.md.
+    # the original investigation.
   systemExtensions:
     officialExtensions:
       - siderolabs/i915

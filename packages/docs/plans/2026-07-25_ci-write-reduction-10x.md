@@ -11,8 +11,8 @@ board: false
 
 Post-#1602 CI writes ~0.8–1 TiB/day (SMART; was 4.4 replatform, 3.1 Dagger
 era). User goal: **10x down → ≤~90 GiB/day**. Grounded in
-`logs/2026-07-25_ci-efficiency-research.md` (this session),
-`logs/2026-07-22_ci-capacity-analysis.md`,
+prior analysis (this session),
+prior analysis,
 `plans/2026-07-22_ci-capacity-remediation{,-impl}.md`,
 `plans/2026-07-19_ci-io-optimization.md`, `plans/2026-07-18_ci-speed.md`.
 
@@ -106,19 +106,3 @@ the 990 PROs stop absorbing TBW entirely).
 | buildkitd = shared daemon (mini-Dagger)                      | bounded PVC + GC keepBytes (designed); ghcr buildcache kept as fallback; NetworkPolicy hardening |
 | Selector correctness (skips a needed image)                  | fail-open on parse failure; P0 oracle replay; main still content-gates digests                   |
 | Budget shares are estimates                                  | P0 re-measures before any buildout claims credit                                                 |
-
-## Session Log — 2026-07-25
-
-### Done
-
-- Feasibility budget (scripted, scratchpad `write_budget.py`); phased plan
-  drafted from designed-but-unshipped tracks + this session's new levers.
-
-### Remaining
-
-- User green-light on phases; P0 first. No code changed.
-
-### Caveats
-
-- 10x is the _extended_ scenario; the four designed levers alone land ~5–6x.
-- R1 (PRs on GHA) stays rejected per impl-plan decision; not re-proposed.

@@ -99,13 +99,13 @@ export function createBuildkiteApp(chart: Chart) {
   // 2026-07 CI-freeze hardening: `default` (limits) added alongside the existing
   // `defaultRequest`. Explicit-tier step containers and the controller's known
   // auxiliary containers set their own resources and aren't affected by this.
-  // See packages/docs/logs/2026-07-08_torvalds-cluster-health-deep-check.md.
+  // See the original investigation.
   //
   // 2026-08-02: the 768Mi default OOM-killed the tofu-managed bootstrap
   // pipeline-upload pod when its container-0 had no explicit resources and a
   // broken mirror mount made git fetch the full repo pack into the tmpfs
   // workspace (fleet-wide red PRs; see
-  // packages/docs/logs/2026-08-02_buildkite-pipeline-upload-oom-diagnosis.md).
+  // the original investigation).
   // The fix is explicit resources on every known container — do not raise or
   // remove this default; validate-pipeline-release.ts now enforces the
   // bootstrap pod's explicit limits.
@@ -403,7 +403,7 @@ overrides:
               },
               // Cluster-wide cap on concurrently-scheduled CI jobs. Sized
               // during the 2026-07 incident response (see
-              // packages/docs/logs/2026-07-08_torvalds-cluster-health-deep-check.md
+              // the original investigation
               // and 2026-07-05_torvalds-ci-freeze-investigation.md); since the
               // Kueue removal this is the only concurrency cap — revisit its
               // value from liskov soak data.

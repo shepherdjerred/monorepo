@@ -39,17 +39,3 @@ source_marker: false
   Assistant access after an external fix.
 
 - 2026-08-02 — Rheem TLS now succeeds, upstream issue #172228 is closed, and fix PR #176736 is merged for Home Assistant 2026.8. Updated the blocker from external certificate repair to the pending Home Assistant version rollout.
-
-## Session Log — 2026-08-02
-
-### Done
-
-- Cleared the stale external TLS blocker and identified the exact shipped Home Assistant release prerequisite.
-
-### Remaining
-
-- Deploy Home Assistant 2026.8+, reload Econet, and verify entity updates and naming.
-
-### Caveats
-
-- The current 2026.7.4 deployment does not contain the upstream fix.

@@ -5,7 +5,6 @@ status: planned
 board: true
 verification: agent
 disposition: deferred
-origin: packages/docs/logs/2026-07-29_bindery-qbittorrent-stall-diagnosis.md
 source_marker: false
 ---
 
@@ -37,19 +36,3 @@ clear the Bindery queue state.
   qBittorrent → Bindery → CWA Chinese EPUB handoff. Direct database mutation
   and duplicate re-import were rejected because the Calibre copy is already
   correct.
-
-## Session Log — 2026-07-29
-
-### Done
-
-- Recorded the exact external-reconciliation failure after confirming CWA
-  successfully imported the EPUB.
-
-### Remaining
-
-- Complete the implementation and live reconciliation tasks above.
-
-### Caveats
-
-- Bindery's stale error text does not mean the Calibre import failed; the queue
-  item's current state is `importExternal`.

@@ -60,25 +60,3 @@ Pipeline: `src/cdk8s/scripts/generate-helm-types.ts` reads chart entries from `s
 3. `cd src/cdk8s && bun run build` — diff `dist/` against pre-change synth: only expected deltas (none for BestEffort annotations; 1password memory request added).
 4. `bun run generate-helm-types` twice → `git status` clean between runs; `bun run typecheck` + `bun test` green (new container-resources.test.ts and helm-types tests included).
 5. Root `bun run typecheck` + homelab pre-commit suite via the commit itself.
-6. Docs: mirror plan to `packages/docs/plans/2026-06-12_helm-types-and-resources-hygiene.md`; session log; todo doc only if OCI typing is deferred.
-
-## Session Log — 2026-06-12
-
-### Done
-
-- **Thread 3** — ESLint rule `custom-rules/require-container-resources` (`packages/eslint-config/src/rules/require-container-resources.ts` + test, 15 cases), enabled in `packages/homelab/src/cdk8s/eslint.config.ts`. Removed the hidden `resources: {}` from `commonProps` (`src/cdk8s/src/misc/common.ts`). Annotated 19 deliberately-BestEffort call sites across 16 files with explicit `resources: {}` + rationale. Added synth backstop `src/cdk8s/src/container-resources.test.ts` + allowlist `src/cdk8s/src/misc/container-resource-allowlist.ts` (21 entries, bidirectionally enforced).
-- **Thread 2** — Generator now emits canonical permissive types for well-known k8s fields (`resources`, `nodeSelector`, `tolerations`, `affinity`) instead of defaults-derived narrow ones; `getWellKnownK8sFieldType` in `src/helm-types/src/config.ts`, wired into `type-converter.ts`. Removed the now-dead `augmentK8sResourceSpec`/`isK8sResourceSpec`. Added converter unit tests + updated the integration/snapshot tests that asserted the old narrow output. Regenerated all 24 `generated/helm/*.types.ts`; **verified deterministic** (two consecutive runs, zero diff). Fixed the 1Password api memory request that the old narrow type blocked.
-- **Thread 1** — Registered + annotated `alloy`, `pyroscope`, `tempo`, `kyverno`, `mariadb` (typed `HelmValuesForChart<...>`). Two real latent bugs surfaced by the annotations:
-  - **pyroscope**: `"alloy-stack": { enabled: false }` was a silent no-op (the chart's key is `alloy`), so the bundled `pyroscope-alloy-0` StatefulSet ran despite the dedicated eBPF DaemonSet. Fixed to `alloy: { enabled: false }`.
-  - **kyverno**: `policyReportsCleanup` is not a chart key (no-op); the sibling `webhooksCleanup` bitnami/kubectl override is obsolete at chart 3.8.0 (default is now `kyverno/readiness-checker`). Removed the whole stale block.
-- Verified: typecheck/build/test/eslint green in eslint-config, helm-types, and cdk8s; synth confirms pyroscope `alloy.enabled=false`, kyverno block gone, 1password api `memory: 64Mi`.
-
-### Remaining
-
-- **OCI-registry charts** (kueue, dagger, buildkite) stay untyped — they use `datasource=docker`, indistinguishable from plain images, and need `helm pull oci://` support. Deferred to `packages/docs/todos/oci-helm-chart-types.md`; breadcrumb comments added at each `valuesObject`.
-- Post-merge: ArgoCD sync will remove `pyroscope-alloy-0` (intended) and reconcile the kyverno cleanup-hook images. Confirm pyroscope still profiles via the dedicated alloy DaemonSet.
-
-### Caveats
-
-- The generator's own internal `tsc` self-check prints a `TS5112` warning (tsconfig present + files-on-commandline). Pre-existing, not introduced here; the real cdk8s typecheck passes. Worth fixing separately (add `--ignoreConfig` or point at a tsconfig).
-- Regenerating brought several other `generated/helm/*.types.ts` current (they were mildly stale); diff is dominated by the well-known-field change plus that drift. Compile-time only — no synth impact.

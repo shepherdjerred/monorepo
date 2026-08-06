@@ -14,7 +14,7 @@ Reference — research complete (2026-06-27)
 > Provenance: deep-research (4 parallel investigators + adversarial review against Bazarr source code).
 > Rendered `.typ`/`.pdf` copies live at `~/.claude-extra/research/arr-stack-subtitles.{typ,pdf}` (not committed — docs are Markdown-only).
 > Applied to this homelab in plan [`archive/superseded/2026-06-27_bazarr-subtitles-chinese-gating.md`](../archive/superseded/2026-06-27_bazarr-subtitles-chinese-gating.md)
-> and diagnostic log [`logs/2026-06-27_bazarr-whisper-subtitles-research.md`](../logs/2026-06-27_bazarr-whisper-subtitles-research.md) (live config + coverage numbers).
+> and diagnostic log the original investigation (live config + coverage numbers).
 
 _Research report — June 2026. Target stack: Bazarr (current v1.5.x line) + Sonarr/Radarr, with a McCloud `bazarr-openai-whisperbridge → Groq` Whisper fallback, serving Plex and Jellyfin. Budget is not a constraint (paid tiers in scope)._
 

@@ -9,7 +9,7 @@ board: false
 
 ## Context
 
-The 2026-05-25 pen test ([packages/docs/logs/2026-05-25_sjer-red-pentest.md](../../logs/2026-05-25_sjer-red-pentest.md)) surfaced a long list of findings. This plan addresses **five specific ones**:
+The 2026-05-25 pen test (the original investigation) surfaced a long list of findings. This plan addresses **five specific ones**:
 
 1. `temporal.sjer.red` runs publicly with `Auth.Enabled: false` (P0).
 2. Cloudflare edge accepts TLS 1.0/1.1 across all 9 zones (P1).
@@ -271,30 +271,3 @@ This requires a `tls-reports@sjer.red` alias in Fastmail (analogous to `dmarc@sj
 - **MTA-STS `testing` mode** doesn't enforce; the value is purely operational (you'll get TLSRPT reports). The actual posture improvement lands in the follow-up flip to `enforce`.
 - **`tls-reports@sjer.red` alias** is a Fastmail UI action, not IaC — easy to forget. Plan calls it out as a prerequisite for PR D.
 - **v5 provider attribute names** for `cloudflare_zone_setting` `security_header` may take a typed-object shape rather than `jsonencode` — verify against the locally installed v5.19 provider schema before writing the final HCL.
-
-## Session Log — 2026-05-25
-
-### Done
-
-- **Bundled into a single PR** per user direction (override of the four-PR sequencing in the plan). All five plan items addressed except MTA-STS (4c), which has been deferred to [packages/docs/todos/sjer-red-mta-sts.md](../../todos/sjer-red-mta-sts.md) because it needs new SeaweedFS buckets, content publication, and per-zone reverse-proxy wiring that doesn't fit a single-PR scope.
-- **Item 1 (Temporal UI):** removed `createCloudflareTunnelBinding` and dropped the now-dead `https://temporal.sjer.red` CORS origin from [packages/homelab/src/cdk8s/src/resources/temporal/ui.ts](packages/homelab/src/cdk8s/src/resources/temporal/ui.ts); deleted `sjer_red_cname_temporal` from [packages/homelab/src/tofu/cloudflare/sjer-red.tf](packages/homelab/src/tofu/cloudflare/sjer-red.tf). `cdk8s build` confirms the rendered `temporal.k8s.yaml` no longer contains the FQDN or TunnelBinding; TailscaleIngress for `temporal-ui` still present.
-- **Item 2 (TLS+HSTS):** added `cloudflare_zone_setting` resources (`min_tls_version = "1.2"` + `security_header` HSTS at `max_age = 86400`, `include_subdomains`, `nosniff`) to all 10 zone files. Used the typed-object form per the v5.19 provider docs (the plan was uncertain — typed object is the correct shape). `tofu validate` green.
-- **Item 3 (timing-safe bearer):** added `bearerMatches()` helper in [packages/temporal/src/event-bridge/agent-task-api.ts](packages/temporal/src/event-bridge/agent-task-api.ts) using `node:crypto.timingSafeEqual`; replaced the `!==` compare in `/agent-tasks`. New test case in [packages/temporal/src/event-bridge/agent-task-api.test.ts](packages/temporal/src/event-bridge/agent-task-api.test.ts) covers the same-length-wrong-token branch; all 4 tests pass. `bun run typecheck` + `bun run lint` clean.
-- **Item 4a (DMARC/SPF on sjer.red):** SPF `~all` → `-all` on both `sjer.red` and `rp.sjer.red`; DMARC `p=quarantine` → `p=reject` with added `ruf` + `fo=1` for forensic reports.
-- **Item 4b (CAA, all 10 zones):** authorized issuers Cloudflare uses to provision certs — `letsencrypt.org`, `pki.goog; cansignhttpexchanges=yes`, `sectigo.com`, `ssl.com` — plus `issuewild ";"` (block wildcard issuance) and `iodef → mailto:dmarc@sjer.red`. Generated via `/tmp/add-zone-hardening.ts` to keep all 10 zones consistent.
-- **Item 4d (TLSRPT):** TXT records added for the 3 mail-receiving zones (`sjer.red`, `shepherdjerred.com`, `ts-mc.net`). Routed to `dmarc@sjer.red` (the existing Fastmail alias) — no separate `tls-reports@` mailbox needed.
-- **Codebase precedent retained:** the custom XOR-loop `timingSafeEqual` in [packages/trmnl-dashboard/src/app.ts:72-83](packages/trmnl-dashboard/src/app.ts:72) was intentionally left alone (out of scope; only two sites total).
-
-### Remaining
-
-- **MTA-STS (Item 4c)** deferred to [packages/docs/todos/sjer-red-mta-sts.md](../../todos/sjer-red-mta-sts.md). The deferred work: add per-zone `mta-sts.<zone>` static sites to [packages/homelab/src/cdk8s/src/resources/s3-static-sites/sites.ts](packages/homelab/src/cdk8s/src/resources/s3-static-sites/sites.ts), publish the `.well-known/mta-sts.txt` policy to the corresponding SeaweedFS buckets, add `_mta-sts.<zone>` TXT records, add `mta-sts.<zone>` CNAMEs.
-- **HSTS ramp:** after 1 week of clean traffic, follow-up PR should bump `max_age` from 86400 → 31536000.
-- The other P0 findings from the audit (origin-IP leak via Minecraft DDNS; Birmel OAuth state weakness) and the P3 transform-rule security headers are still outstanding — each will need its own plan.
-
-### Caveats
-
-- **CAA is a foot-gun.** I authorized the full set of CAs Cloudflare may use per their published guidance, but if Cloudflare adds a new edge-cert issuer in the future and someone forgets to add it to CAA, automatic renewal will silently break. Mitigation: re-check the published list whenever Cloudflare announces new SSL providers, and set up an alert on Cloudflare's "edge certificate not renewed" notification.
-- **tofu fmt -recursive** also reformatted `backend.tf` and `.terraform.lock.hcl`; both were reverted to keep the PR scoped to intentional changes only.
-- **HSTS at 1-day** means any subdomain that accidentally regresses to plain HTTP will be unreachable from browsers that saw the header for up to 24h after the regression is fixed. Acceptable rollback window per user-approved plan.
-- **DMARC `p=reject`** depends on the `dmarc@sjer.red` Fastmail alias actually being read — user confirmed it exists. If it bounces, aggregate reports go to /dev/null and the policy still enforces (just no visibility).
-- **No `tofu plan` ran** — backend is SeaweedFS, requires `op run` for credentials. The plan diff should be reviewed in CI/operator session before apply.

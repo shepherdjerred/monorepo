@@ -9,7 +9,7 @@ board: false
 
 ## Context
 
-Three Temporal schedules failed every week for 2–4 weeks (all `RETRY_STATE_MAXIMUM_ATTEMPTS_REACHED` — deterministic environment gaps in the worker's ephemeral `/tmp` clone, not flakes). Diagnosis: [2026-07-11_scout-temporal-workflow-failures.md](../../logs/2026-07-11_scout-temporal-workflow-failures.md).
+Three Temporal schedules failed every week for 2–4 weeks (all `RETRY_STATE_MAXIMUM_ATTEMPTS_REACHED` — deterministic environment gaps in the worker's ephemeral `/tmp` clone, not flakes). Diagnosis: 2026-07-11_scout-temporal-workflow-failures.md.
 
 | Workflow                           | Failing since | Root cause                                                                                                                                                        |
 | ---------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |

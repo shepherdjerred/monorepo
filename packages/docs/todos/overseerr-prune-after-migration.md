@@ -5,7 +5,6 @@ status: in-progress
 board: true
 verification: operator
 disposition: blocked
-origin: packages/docs/logs/2026-07-03_finish-seerr-migration.md
 ---
 
 # Prune orphaned Overseerr resources after Seerr migration
@@ -92,17 +91,3 @@ merged, so `main` and production Cloudflare state are consistent.
 
 - Live inventory found no matching Overseerr workload, Service, PVC, Application, PV, or OpenEBS ZFSVolume.
 - The only unresolved storage question is whether a backing host dataset persists outside the Kubernetes API and should be retained or deleted.
-
-## Session Log — 2026-08-02
-
-### Done
-
-- Cleared the stale Kubernetes cleanup tasks and moved this partially completed operator card to In Progress.
-
-### Remaining
-
-- Verify host-dataset absence or record an explicit retention decision, then recheck Seerr/redirect health and archive.
-
-### Caveats
-
-- Absence from the Kubernetes API does not independently prove a retained host dataset was removed.

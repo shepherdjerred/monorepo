@@ -52,7 +52,7 @@ Both outage cycles (2026-02 load-587, PagerDuty #3042; 2026-06/07 EDQUOT + disk-
 2026-07-10/11 restart loop that evicted 1.2Ti of cache) share one mechanism: concurrent
 build traffic × a shared **stateful engine** on the node that also runs production
 services. CPU/RAM never failed; the stateful cache dataset did (`decisions/2026-06-07_dagger-gc-and-pvc-drift.md`,
-`logs/2026-07-03_dagger-engine-disk-full-outage.md`, `logs/2026-07-11_afternoon-dagger-restart-loop.md`).
+prior analysis, prior analysis).
 Plus ~330 commits touching `.dagger/` in 8 months and a local-dev story (`dagger call`)
 nobody uses (verified: no package.json/mise/lefthook task invokes dagger locally).
 Removing the engine turns overload into queueing instead of deadlock; caches become soft
@@ -305,35 +305,3 @@ the GHA-hosted alternative so the comparison isn't lost, with claims verified.
   verification) and the C0 deps.ts relocation don't depend on the provider choice.
 - If this decision is ever revisited, the cheap test is a one-day spike: build
   discord-plays-pokemon + temporal-worker on a hosted runner and check wall-clock/disk.
-
-## Session Log — 2026-07-11 (v2 rewrite session)
-
-### Done
-
-- Corrected v1's false "approved by owner" Status line the moment it was flagged.
-- Full exploration: `.dagger/src` inventory (~8.7k lines, 87-119 fns), `scripts/ci`
-  coupling (>95% of steps are `dagger call`), infra + 8-month outage history, PR #1408
-  interaction, Renovate/generator coupling into `.dagger/` (verified against live tree).
-- Owner decisions captured: Buildkite stays; affected-only builds stay; compute =
-  recommend (→ homelab with exit triggers); Bun layout = "not sure" (→ decoupled, #1408
-  its own track with the change-detection prerequisite).
-- Two design agents (migration architect + adversarial risk analyst) produced the step
-  anatomy, buildx/dind pattern, sequencing, risk register, and cleanup inventory;
-  disagreements adjudicated (bun global cache over tarballs; per-PR constants moves over
-  bulk relocation; no shadow-running — Phase B validates instead).
-- This v2 plan written.
-
-### Remaining
-
-- Owner review/approval of this v2 plan.
-- Phase A pre-work, then Phase B measurement session (hard gate), then C0-C5.
-- Decide #1408 sequencing explicitly (recommended: #1408 first + lockfile-aware change
-  detection as its prerequisite).
-
-### Caveats
-
-- v1 of this doc claimed owner approval it did not have; trust nothing here as "decided"
-  beyond the four owner answers listed in Status.
-- Phase B is a hard gate — the SeaweedFS shared-fate risk (prod sites live there) must
-  produce an isolation design, not just timing numbers.
-- Effort estimates (~9-12 sessions) are the architect agent's; treat as rough.

@@ -67,24 +67,3 @@ bun test src/shared/pr-review/cluster-key.test.ts   # 9/9 pass
 bun run typecheck                                    # clean
 bunx eslint src/shared/pr-review/                    # clean
 ```
-
-## Session Log — 2026-05-10
-
-### Done
-
-- `packages/temporal/src/shared/pr-review/cluster-key.ts` — utility + header
-  doctest + boundary-case documentation
-- `packages/temporal/src/shared/pr-review/cluster-key.test.ts` — 9 tests
-- Standalone PR opened against `main` (Task 3 parent)
-
-### Remaining
-
-- Task 3 follow-up PR: specialists, consensus impl, diff slicing.
-- Task 4 follow-up PR: empirical verification activity.
-
-### Caveats
-
-- Bucketing has documented ±6 worst-case tolerance; revisit only if eval
-  fixtures show boundary FN driving regression.
-- `clusterKey` deliberately ignores `kind` — eval grader must use the
-  same shape (kind-agnostic cluster representative carrying `kinds` set).

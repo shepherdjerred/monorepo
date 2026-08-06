@@ -11,7 +11,7 @@ origin: packages/docs/archive/completed/2026-07-13_ci-parity-implementation.md
 Server deployed and reachable (in-cluster `TURBO_API`, tailnet ingress for dev
 shells). The storage backend moved from Cloudflare R2/S3 to a **local NVMe PVC**
 (`STORAGE_PROVIDER=local`, `turbo-cache-liskov`). See
-`packages/docs/logs/2026-07-16_turbo-cache-rollout.md` (initial rollout) and
+the original investigation (initial rollout) and
 `2026-07-26_turbo-cache-fsgroup-and-r2-removal.md` (local-backend fix + R2
 teardown).
 

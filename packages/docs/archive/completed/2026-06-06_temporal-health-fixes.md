@@ -31,26 +31,3 @@ A homelab audit surfaced several misconfigurations in the Temporal worker:
 | E   | `packages/temporal/src/schedules/register-schedules.test.ts`          | Test: none of DELETED_SCHEDULE_IDS appear in SCHEDULES                                      |
 | F   | `packages/homelab/src/cdk8s/src/resources/temporal/namespace-init.ts` | Retention 168h→720h (both create and update commands)                                       |
 | G   | `packages/docs/plans/2026-06-06_temporal-health-fixes.md`             | This document                                                                               |
-
-## Session Log — 2026-06-06
-
-### Done
-
-- Applied all changes A–G to the worktree at `/Users/jerred/git/monorepo-worktrees/temporal-health-fixes`
-- `packages/temporal` typecheck: PASS
-- `packages/temporal` tests: 506 pass, 3 fail (all 3 are pre-existing integration tests needing localhost:7233)
-- `packages/temporal` eslint: PASS (required extracting `handleDraftSkip` helper + splitting `buildWebhookApp` describe block into two)
-- `packages/homelab` typecheck: PASS
-- `packages/homelab` tests: 335 pass, 14 fail (all pre-existing ENOENT for missing cdk8s build artifacts)
-- `packages/homelab` eslint: 5 errors in untouched files (`openebs.ts`, `postgres-operator.ts`, `seaweedfs.ts`, `velero.ts`, `redis.ts`) — pre-existing `no-unsafe-assignment` errors
-
-### Remaining
-
-- Flip `PR_BOT_ENABLED` back to `"true"` once the rate-limit swallowing bug in the pr-review specialist pipeline is fixed
-- Monitor homelab-audit-daily after deploy to confirm it completes within 50-min workflow timeout
-
-### Caveats
-
-- `alert-remediation-hourly` sweep still has a 2h `workflowExecutionTimeout` at the schedule level (unchanged); only child execution and agent activity timeouts were tightened
-- The 3 Temporal integration tests that need a live server at localhost:7233 continue to fail with ECONNREFUSED — pre-existing, not caused by these changes
-- ESLint refactor needed for the webhook handler (extracted `handleDraftSkip` helper to reduce complexity from 21→20) and for the test file (moved `postWebhookStatus` tests into a sibling `describe` block to reduce line count from 207→~170)

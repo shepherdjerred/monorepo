@@ -8,7 +8,7 @@ board: false
 # Scout release resilience + Paper 26.2 upgrade
 
 Two durable follow-ups from the 2026-08-02 "get main CI green" session
-(`logs/2026-08-02_main-ci-green-session.md`): make Scout releases resilient to
+(prior analysis): make Scout releases resilient to
 canceled builds, and lay out the (partly upstream-blocked) Paper 26.2 upgrade.
 
 ## Part 1 — Scout release orphans (implementing now)
@@ -99,36 +99,3 @@ build per family (v3 builds endpoint) or repin to a family + build. Validate wit
   (`/spec/volumeName`) in `argo-applications/argocd.ts` to stop the stale
   `Operation=Failed` on ZFS-PVC apps (golink/loki/minecraft) recurring.
 - A privileged repair step for historically root-owned plugin config files.
-
-## Session Log — 2026-08-03
-
-### Done
-
-- **Part 1 (Scout orphan resilience) — implemented (PR #1967).** Bound the Scout
-  archive identity to `sourceCommit`: extracted `computeReleaseInputDigest()` in
-  `scripts/scout-site-release.ts` (input schema v1 → v2) and added a
-  commit-binding unit test. Chose Option A over the planned Option B after
-  finding `VITE_GIT_SHA` renders a used commit-link footer in both frontends.
-  Verified: 20 tests pass, typecheck + lint clean.
-- **Part 2 (Renovate `papermc` datasource) — implemented (PR #1968).** Corrected
-  the diagnosis (the transform already emits full versions; strict `semver`
-  dropped 2-part `26.2`): switched to `versioning=semver-coerced` and filtered
-  pre-releases from the transform. Verified against the live papermc API (54
-  stable releases, `26.2` in, `26.2-rc-2` out) and `renovate-config-validator`.
-
-### Remaining
-
-- **Paper 26.2 bump is upstream-blocked.** EssentialsX, LevelledMobs, and
-  Lunamatic reject the `26.x` version scheme (live smoke test). Take the bump
-  only once `26.x`-aware plugin releases land, following the Part 2 checklist.
-- The two Deferred items above (ArgoCD PVC `volumeName` `ignoreDifferences`;
-  root-owned-config safeguard) remain unaddressed by design (not selected).
-
-### Caveats
-
-- The Renovate fix's end-to-end behavior (Renovate actually opening the `26.2`
-  PR) can't be verified without the hosted runner; only the datasource output
-  and config syntax were verified locally.
-- Option A leaves harmless orphaned partial archives at dead identities from
-  canceled builds; the bucket lifecycle reaps them. Existing prod is unaffected
-  (old identities and their archives remain valid for `reconcile-prod-pin`).

@@ -56,26 +56,6 @@ Raised via live `kubectl exec`/`describe` against the `temporal` namespace (see 
 
 No changes needed to `scout-season-refresh.ts` or `readme-refresh.ts` — they inherit the cache isolation for free since `botCloneCacheDir` derives from the `repoDir` param they already pass.
 
-## Session Log — 2026-07-12
-
-### Done
-
-- Diagnosed the recurring `scout-data-dragon-weekly-refresh` failure via live Temporal REST API history (found the manual retry this morning had already failed) and live `kubectl exec`/`describe` against the `temporal` namespace (confirmed the shared, pod-lifetime-scoped Bun cache architecture).
-- Implemented Fix 1 (per-run `BUN_INSTALL_CACHE_DIR` isolation) in `bot-clone.ts` and `data-dragon.ts`.
-- Implemented Fix 2 (`--snapshots-only` flag + new `rehearseSnapshotRefresh` CI canary) in `update-data-dragon.ts` and `rehearse-bot-clone.ts`.
-- Verified: typecheck + test pass in both `packages/temporal` and `packages/scout-for-lol/packages/data`; ran the actual `--snapshots-only` flag directly; ran the full rehearsal script against a genuinely clean clone with all 4 canaries passing (except `cog`, blocked by a local-only missing binary).
-- Work done in worktree `.claude/worktrees/fix-data-dragon-cache` on branch `fix/data-dragon-shared-cache`.
-
-### Historical handoff
-
-- Not yet committed or opened as a PR — user has not asked for that yet.
-- The real end-to-end proof is the next scheduled (or manually triggered) `scout-data-dragon-weekly-refresh` run actually opening a PR after this ships.
-
-### Caveats
-
-- The exact corruption mechanism inside the shared Bun cache was never forensically confirmed — the pod that failed this morning was replaced by a new deploy before this investigation started, so the corrupted cache entry itself is gone. The architectural hazard (shared, pod-lifetime cache across all activities) is confirmed fact; the precise failure mode inside it is not. Per-run isolation is the correct fix regardless.
-- Local rehearsal testing against your own dev worktree gives a false "hooks" canary failure, because `scripts/setup.ts`'s root install (no `--ignore-scripts`) already armed real lefthook hooks — unlike a genuine ephemeral bot clone. Test against a fresh `git clone` (or a plain directory copy of uncommitted changes) instead, as this session had to learn the hard way.
-
 ## Closure
 
 Shipped in commit `56cbdeefe` / PR #1503, reachable from `origin/main`. The

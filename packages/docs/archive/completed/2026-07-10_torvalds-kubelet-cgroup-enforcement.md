@@ -22,12 +22,12 @@ Reverted live to `enforceNodeAllocatable: [pods]` (the kubelet default) to resto
 the cluster. Full incident writeup, including a second gotcha discovered mid-recovery
 (`talosctl patch machineconfig` appends list fields instead of replacing them —
 required a full-document `talosctl apply-config` to actually fix) is in
-`packages/docs/logs/2026-07-10_torvalds-kubelet-crashloop.md`.
+the original investigation.
 
 This plan is the follow-up: re-add the _hard cgroup enforcement_ correctly, so the
 original CI-freeze-hardening intent (protect kubelet/containerd/etcd/apid from being
 starved by pod-side memory/CPU pressure — see
-`packages/docs/logs/2026-07-08_torvalds-cluster-health-deep-check.md`) is actually
+the original investigation) is actually
 achieved, not just accounted for on paper.
 
 ## What `enforceNodeAllocatable` currently does vs. is supposed to do
@@ -161,61 +161,3 @@ machine config:
   forward.
 - Confirm current live `zfs_arc_max` value actually in effect given the duplicate
   `kernel.modules` entries (cross-reference against `packages/homelab/src/talos/patches/zfs.yaml`).
-  **Resolved** — see Session Log below.
-
-## Session Log — 2026-07-10 (execution)
-
-### Done
-
-- Applied the cgroup enforcement fields live via full-document `talosctl apply-config
---mode=no-reboot`: `systemReservedCgroup: /system`, `kubeReservedCgroup: /podruntime`,
-  `enforceNodeAllocatable: [pods, system-reserved, kube-reserved]`. Kubelet came up
-  `Running/OK` immediately, no crash loop. Verified the cgroup limits are real, not
-  just accounted: `/sys/fs/cgroup/system/memory.max` = 60129542144 (exactly 56Gi),
-  `/sys/fs/cgroup/podruntime/memory.max` = 2147483648 (exactly 2Gi). Full
-  `talosctl health` clean, all `kube-system` pods Running.
-- Applied the still-pending watchdog rollout (`watchdog.yaml`, from PR #1423) in a
-  separate full-document apply, after the kubelet fix was verified good: added
-  `iTCO_wdt`/`iTCO_vendor_support` kernel modules and the `WatchdogTimerConfig`
-  document. Verified `owner: runtime.WatchdogTimerController` (Talos's own `machined`
-  is petting it) with `feedInterval: 1m0s` against `timeout: 3m0s`. Node observed
-  stable through the full 3-minute timeout window post-apply — no unexpected reboot.
-- Bundled in a dedupe of the pre-existing `machine.kernel.modules` duplication
-  (`i915`/`zfs` each listed twice, second copies bare) while already reconstructing
-  that list for the watchdog modules.
-- **New finding during the same pass**: the live `zfs` kernel module parameters
-  (`zfs_arc_max=67108864000` = 62.5 GiB, plus an undocumented
-  `zfs_arc_average_blocksize=4096`) were stale, traced via `git log -S` +
-  `git merge-base --is-ancestor` to an orphaned, never-merged commit (`8a1c331b5`,
-  "Codex worktree snapshot: archive-cleanup", 2026-06-05) that had been applied
-  directly to the live node and never touched by the 2026-07-05 revert back to 48
-  GiB. Runtime was actually correct (48 GiB, confirmed via
-  `talosctl -n torvalds read /sys/module/zfs/parameters/zfs_arc_max`) only because
-  `image.yaml`'s sysfs override re-asserts it — the module-load parameter itself was
-  a latent landmine. Confirmed with user (48 GiB intended, drop the undocumented
-  blocksize param) and corrected live via a third full-document apply-config to
-  exactly match `zfs.yaml`.
-- Investigated (read-only) the Tailscale duplicate-`TS_AUTHKEY` finding — see
-  `packages/docs/todos/torvalds-tailscale-authkey-duplication.md`. Neither key is
-  actively used for reconnection (the node resumes from persisted Tailscale identity,
-  confirmed via `ext-tailscale` logs showing `machineAuthorized=true` with no fresh
-  auth handshake). No fix applied — recommended regenerating a single fresh key later.
-- Updated `packages/homelab/src/talos/README.md` (`kubelet.yaml`, `zfs.yaml`,
-  `watchdog.yaml`, `sysctls.yaml` sections) and
-  `packages/homelab/src/talos/patches/kubelet.yaml` comments to reflect the verified
-  live state and cite Talos's own source for the cgroup path provenance.
-
-### Remaining
-
-- None for this plan — all live changes applied and verified, repo docs updated.
-- Watch for `PIDPressure` node conditions and `PolicyReport` Kyverno violations over
-  the next 1-2 weeks per the original PR #1423 plan's observation window (unchanged
-  by this session).
-
-### Caveats
-
-- Did not re-investigate whether other Talos patch files (beyond `kubelet.yaml`,
-  `watchdog.yaml`, `zfs.yaml`) have similar live-vs-repo drift from past manual
-  `talosctl patch machineconfig` rollouts — only the fields directly touched by this
-  plan were audited. A full drift audit across every patch file would need a separate
-  pass.

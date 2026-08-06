@@ -82,26 +82,3 @@ Full steps: [operator guide](../guides/2026-07-19_ebook-stack-bindery-cwa.md).
 
 Shelfmark, Audiobookshelf, Bookshelf/Readarr forks, Seerr-for-books, public
 Cloudflare exposure, 1Password-wired CWA SMTP.
-
-## Session Log — 2026-07-19
-
-### Done
-
-- Worktree `feature/ebook-stack-bindery-cwa`
-- Deployments Bindery + CWA; 50 GiB books PVC; Postal SMTP scoped to `app=cwa`
-- Bindery library mount read-only; pod labels for netpol
-- Image pins Bindery v1.26.2, CWA v4.0.6
-- Operator guide under `packages/docs/guides/`
-- PR #1581
-
-### Remaining
-
-- CI green + merge
-- Argo sync media + postal
-- Operator checklist (see guide)
-
-### Caveats
-
-- CWA SMTP is UI-configured (Postal credential manual)
-- Bindery External path must be `/ingest` after first boot
-- Bindery health probe: unauthenticated `GET /api/v1/health`

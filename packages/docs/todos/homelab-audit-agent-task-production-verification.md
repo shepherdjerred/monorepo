@@ -100,17 +100,3 @@ also what will confirm or refute the hypothesis.
 
 - Confirmed the current healthy Temporal worker `2.0.0-7749` contains PR #1864.
 - The latest run `019fc2aa-c7ed-71a2-a940-ae400bee948a` predates that deployment and failed with `agent produced no structured output`, so it is not acceptance evidence for the deployed fix.
-
-## Session Log — 2026-08-02
-
-### Done
-
-- Cleared the deployment prerequisite and identified the exact pre-deploy run that must not be mistaken for current verification.
-
-### Remaining
-
-- Inspect the first post-deploy daily run, confirm a real report email, and accumulate the required terminal outcomes.
-
-### Caveats
-
-- The schema-dialect root-cause hypothesis remains unconfirmed until post-deploy production evidence exists.

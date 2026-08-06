@@ -59,17 +59,3 @@ for these specific runs is not recoverable from Temporal alone.
   `structured_output` bug (see
   `packages/docs/todos/homelab-audit-agent-task-production-verification.md`)
   so it isn't conflated with that fix's scope.
-
-## Session Log — 2026-08-02
-
-### Done
-
-- Updated the origin path after the schema-fix implementation plan moved to the completed archive.
-
-### Remaining
-
-- No change to this todo's existing investigation.
-
-### Caveats
-
-- This was reference maintenance only.

@@ -53,7 +53,7 @@ That's it. No `rules.md`. No restated banned-patterns list. If a rule deserves t
 | `instructions`     | One paragraph pointing at `AGENTS.md` as the single source of truth and noting that ESLint enforces mechanical rules separately | Grounds the reviewer in the architecture                                |
 | `ignorePatterns`   | gitignore-syntax block; see file                                                                                                | User ignore set                                                         |
 
-`ignorePatterns` covers: generated/build output, `archive/`, `packages/docs/archive/**`, `practice/**`, `**/poc/**`, `packages/docs/logs/**`, `packages/docs/todos/**`, `obsidian/**`, personal data files, test artifacts, generated Prisma clients and helm-types.
+`ignorePatterns` covers: generated/build output, `archive/`, `packages/docs/archive/**`, `practice/**`, `**/poc/**`, `the former session-journal directory**`, `packages/docs/todos/**`, `obsidian/**`, personal data files, test artifacts, generated Prisma clients and helm-types.
 
 Reviewable (explicitly): `packages/docs/architecture/`, `packages/docs/patterns/`, `packages/docs/decisions/`, `packages/docs/guides/`, `packages/docs/plans/`.
 
@@ -77,33 +77,6 @@ Per-package entries with substantive descriptions: `packages/docs`, `packages/ho
 
 1. **JSON validity** — both files parse via `Bun.file(...).json()`.
 2. **Context paths resolve** — all 14 `path` entries in `files.json` are real files (not symlinks, not missing).
-3. **Ignore spot-check** — `git ls-files | grep` confirms `packages/docs/logs/`, `archive/`, and `packages/docs/guides/` (reviewable) all match real tracked paths.
-4. **End-to-end on a real PR** — open a small no-op PR after this lands; confirm Greptile picks up the new config, the GitHub status check appears, and a drive-by change inside `packages/docs/logs/` is not flagged.
+3. **Ignore spot-check** — `git ls-files | grep` confirms `the former session-journal directory`, `archive/`, and `packages/docs/guides/` (reviewable) all match real tracked paths.
+4. **End-to-end on a real PR** — open a small no-op PR after this lands; confirm Greptile picks up the new config, the GitHub status check appears, and a drive-by change inside `the former session-journal directory` is not flagged.
 5. **Drift sentinel** — after the first real review, check whether Greptile is restating AGENTS.md content correctly. If it hallucinates rules not in AGENTS.md, tighten `instructions`; if it misses real AGENTS.md rules, consider splitting those files.
-
-## Session Log — 2026-05-23
-
-### Done
-
-- Confirmed `AGENTS.md` / `CLAUDE.md` symlink architecture is already in place at root and in every package.
-- Created `.greptile/config.json` (8 fields, gitignore-style `ignorePatterns`).
-- Created `.greptile/files.json` (14 entries; root unscoped + 13 per-package scoped).
-- Validated both files parse as JSON and every referenced `AGENTS.md` resolves to a real file (not a symlink).
-- Spot-checked ignore patterns against real tracked paths.
-- Mirrored harness plan into this file per the doc discipline rule.
-- Work performed in a dissociated clone at `~/git/monorepo-greptile-setup` on branch `feature/greptile-config`.
-
-### Remaining
-
-- Push branch and open PR.
-- After merge: open a small no-op PR to verify Greptile picks up the config end-to-end.
-- After verifying behavior: optionally mark the Greptile status check as **required** in repo branch protection (manual GitHub Settings step).
-- Future: investigate building a GitHub Action that approves a PR only when all Greptile review threads are resolved (the original IFF question from this session — out of scope for this PR).
-
-### Caveats
-
-- Greptile field names (`commentTypes`, `triggerOnUpdates`, `statusCheck`, `fixWithAI`, `ignorePatterns`, etc.) are taken from the documented reference. If any spelling diverges in practice, fix in a follow-up.
-- `files.json` `scope` is assumed to accept `**` globs. Reference docs describe glob support but exact behavior should be confirmed on the first real PR.
-- `instructions` is one paragraph (~500 chars). If Greptile truncates, move the longer guidance into root `AGENTS.md` and shorten `instructions` to a one-liner.
-- This PR only emits the GitHub status check; it does NOT make it required for merge. That's a manual step in repo settings.
-- Three `packages/*` directories from the original plan (`clauderon`, `glance`, `tips`) now live in `archive/`; they were dropped from `files.json` to match `origin/main`.

@@ -81,15 +81,3 @@ the emulator/frame-source module + N64 button **and analog-stick** input mapping
 2. If GREEN holds, build `packages/discord-plays-mario-kart` (or a shared core): native
    parallel-n64 child process → shm/pipe RGBA bridge → reused `GameStreamer`.
 3. Map N64 controls (incl. analog) to Discord chat commands.
-
-## Session Log — 2026-06-06
-
-### Done
-
-- Resolved native (GREEN) vs WASM (YELLOW) feasibility with 3 research threads + a
-  working headless build that confirms the no-GPU software-RDP path and frame plumbing.
-- Built reusable capture harness + Dockerfile; identified exact core/options/keys.
-
-### Remaining
-
-- Capture a real frame + perf number on Linux (dynarec); then implement the package.

@@ -57,23 +57,3 @@ regenerates and pushes. Acceptable for Renovate chart-bump PRs.** Deletes the Te
   that caught it; a monthly CI cron running the full `--check` could restore that if it ever matters.
 - **Post-merge:** the worker deletes `helm-types-weekly-refresh` from the Temporal server on next startup
   (via `DELETED_SCHEDULE_IDS`). Confirm it's gone in the Temporal UI after deploy.
-
-## Session Log — 2026-06-13
-
-### Done
-
-- Implemented the CI gate end-to-end (generator `--check`, Dagger `helmTypesDriftCheck`, scoped BK step) and
-  deleted the weekly Temporal refresh workflow/activity/schedule, on branch `feature/helm-types-ci-gate`.
-- Added `helm-types-weekly-refresh` to `DELETED_SCHEDULE_IDS`; removed unused `withHelm`/`HELM_IMAGE` from the worker image.
-- Added scoping unit tests; fixed a latent missing-`tofuChanged` type error in `lefthook-ci-parity.test.ts`.
-- Full local verification green (see Verification above).
-
-### Remaining
-
-- Push branch + open PR (not done — awaiting owner go-ahead). Attach the `--check` pass/fail terminal output as the demo artifact.
-- Optional follow-up: PR-tending agent auto-regenerates types on Renovate chart bumps; optional monthly cron for the same-version-republish gap.
-
-### Caveats
-
-- See Caveats / follow-ups above. The big ones: Renovate chart-bump PRs now go red until regenerated, and the
-  same-version-republish edge is no longer covered.

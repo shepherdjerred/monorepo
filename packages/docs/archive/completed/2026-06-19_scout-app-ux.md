@@ -45,26 +45,6 @@ The Scout-for-LoL **web app** (`packages/scout-for-lol/packages/app/`, a Vite + 
 - `bunx eslint` clean across changed files (both packages).
 - Backend `bun test`: 965 pass / 24 skip / 0 fail (incl. new pagination test).
 
-## Session Log — 2026-06-19
-
-### Done
-
-- Backend (`packages/scout-for-lol/packages/backend/`): schema migration + Riot ID cache lib; `discord` router (`resolveUsers`, `searchMembers`); `riot` router (`resolveRiotId`, `searchKnownAccounts`); cursor pagination on subs/competitions/audit (+ off-by-one fix in `listPlayers`); `player.updateAccount` mutation + `ACCOUNT_UPDATE` audit action; serializer enrichment for Discord names + Riot IDs; pagination integration test.
-- Frontend (`packages/scout-for-lol/packages/app/`): navbar with theme toggle + support link; guild name in header; `DiscordUser` + `useDiscordNames`; Riot ID column; `LoadMore` + infinite queries; combobox primitives + 3 domain wrappers swapped into add/invite/admin flows; inline rename/link-unlink/add-edit-delete-account dialogs on player detail.
-
-### Remaining
-
-- **Manual e2e** via `bun run --filter='./packages/scout-for-lol' dev:web` (needs `op signin`) — confirm each feature in the running app; capture PR before/after screenshots + a typeahead clip.
-- **Verify `discord.searchMembers`** returns results with the current gateway intents (`Guilds|GuildVoiceStates|GuildModeration`). Query-based `members.fetch` should not need the privileged `GuildMembers` intent, but confirm in staging; if empty, escalate the intent decision to the owner. The combobox degrades gracefully (raw-ID paste still works).
-- Open the PR and run the standard CI/review gates.
-
-### Caveats
-
-- **Riot read cost**: first load of a never-resolved account makes one Riot API call (await, capped at 10/req, fail-soft to alias); stale-but-present accounts refresh in the background. Backfill happens lazily on read — no separate backfill script was needed given the 24h cache.
-- **Inline account Delete** is keyed by the cached Riot ID (`gameName#tagLine`); it's disabled until the Riot ID resolves and falls back to the Admin page for accounts with an unparseable region. Inline **Transfer** still lives on the `/admin` route (uses `transferAccount`); not surfaced on the detail page.
-- `@radix-ui/react-popover@1.1.17` added to `packages/scout-for-lol/packages/app/package.json` (+ `bun.lock`); Renovate-tracked.
-- `subscription.list` / `competition.list` return shape changed from array → `{items, nextCursor}`; the Discord `/subscription list` command and all web callers were updated in the same change.
-
 ## Round 2 — post-demo feedback (commit `ef197f948`)
 
 After clicking through round 1, the owner asked for four refinements:

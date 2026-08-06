@@ -74,28 +74,3 @@ fallback for unconfigured workflows. Vacuum benign reasons: `someone-home`, `vac
   returns labeled PVCs; rewritten large-PVC expr returns empty; CrashLoopBackOff / anomalous-vacuum-skip
   / unlabeled-300Gi-PVC still fire in a rule preview.
 - After manual orphan cleanup: `velero_orphan_local_snapshots_total == 0`; 5383/5384 resolve.
-
-## Session Log — 2026-06-06
-
-### Done
-
-- Implemented all 4 fixes in `packages/homelab` (files above); homelab typecheck green.
-- Branch `fix/pagerduty-alert-denoise` (worktree `.claude/worktrees/pagerduty-alert-fixes`).
-- Investigation summary for all 16 incidents delivered in chat (4 parallel agents).
-
-### Remaining
-
-- Open PR; get Buildkite CI green.
-- **Operational, needs user go-ahead:** prune the 31 orphan ZFS snapshots (runbook); one-time
-  `kubectl label` the 3 excluded PVCs; resolve PD incidents once each fix deploys (needs user PD email
-  for `From`).
-- Out of scope (separate): NVMe temp 5400 / SSD writes 5404 (cooling + tmpfs), HA outage 5405 +
-  SmartThings re-auth, physical chores (5345/5376/5386/5396).
-
-### Caveats
-
-- `Prune=false` is applied to Schedule CRs only; BSL/VSL are Helm-rendered and can't be annotated
-  without forking — the documented "drain backups before re-deploy" procedure remains the primary
-  re-deploy guard. The TTL-finalizer recurrence stays detection + manual by design (auto-prune declined).
-- Kyverno labels apply on admission; existing PVCs need the one-time `kubectl label` to clear the alert
-  now.

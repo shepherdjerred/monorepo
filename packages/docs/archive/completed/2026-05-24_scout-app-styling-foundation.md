@@ -78,35 +78,3 @@ bun run --filter='./packages/scout-for-lol/packages/app' build
 ```
 
 Plus manual: `bun run --filter='./packages/scout-for-lol/packages/app' dev` and toggle between light/dark/system to confirm `dark:` variants fire (the marketing-site failure mode).
-
-## Session Log — 2026-05-24
-
-### Done
-
-- Plan doc created: `packages/docs/plans/2026-05-24_scout-app-styling-foundation.md`
-- Dependencies added to `packages/scout-for-lol/packages/app/package.json`: `tailwindcss@4`, `@tailwindcss/vite`, `@radix-ui/{react-dialog, react-label, react-select, react-slot}`, `class-variance-authority`, `clsx`, `tailwind-merge`, `lucide-react`, `react-hook-form`, `@hookform/resolvers`, `@tanstack/react-table`. Installed via `bun install` (lockfile updated, 806 packages resolved).
-- `vite.config.ts` now wires `@tailwindcss/vite` plugin alongside the React plugin.
-- `index.html` gained `<meta name="color-scheme" content="light dark">`.
-- `src/styles/global.css` (new): `@import "tailwindcss"`, `@custom-variant dark (&:where(.dark, .dark *))`, `@theme inline` block referencing CSS vars, `:root` + `.dark` token sets (neutral shadcn defaults), system font body, `color-scheme: light dark` on `<html>`.
-- `src/lib/cn.ts` (new): `clsx + tailwind-merge` helper.
-- `src/lib/use-theme.tsx` (new): `ThemeProvider` + `useTheme` hook — `system | light | dark` with localStorage persistence + system-pref listener. Mounted in `src/main.tsx` above the tRPC/router providers.
-- `src/components/ui/` (new): `button.tsx` (CVA variants), `card.tsx`, `dialog.tsx` (Radix), `input.tsx`, `label.tsx` (Radix), `select.tsx` (Radix), `table.tsx`, `theme-toggle.tsx` (lucide Sun/Monitor/Moon tri-state).
-- Routes refactored to use the new primitives: `login.tsx`, `guild-picker.tsx`, `guild-subscriptions.tsx`, `guild-audit.tsx`, and `components/add-subscription-dialog.tsx`. All inline `style={{}}` removed.
-- `eslint.config.ts`: added `packages/app/tsconfig.json` to `tsconfigPaths`, and added an override turning `custom-rules/no-shadcn-theme-tokens` **off** for `packages/app/**` — the app defines its own tokens in `global.css`, so they're live CSS, not the dead-token problem that motivated the rule on marketing surfaces.
-- Verification: `bun run typecheck` clean (after `bun run --filter='./packages/scout-for-lol/packages/backend' generate` to refresh the Prisma client; the worktree's generated client was stale and missing recently-added models like `auditLog`/`report`/`storedMatch`). `bun run lint` clean. `bun run build` clean (Vite emits `dist/index.html` + `dist/assets/*` under `/app/assets/`). Dev server starts, `curl -sf http://localhost:5180/app/` returns 200 and serves the Vite HTML shell with the right `color-scheme` meta.
-
-### Remaining
-
-- **Visual design language**: the foundation is plain neutral grays + system fonts. A distinct palette/type system for Scout's app surface (separate from marketing) is the next decision — when ready, it's a one-file edit to the `:root` / `.dark` blocks in `app/src/styles/global.css`.
-- **Manual browser smoke**: Claude in Chrome was disconnected at session end so light/dark/system toggling was not exercised end-to-end. `bun run --filter='./packages/scout-for-lol/packages/app' dev` to verify.
-- **Routing**: still on `react-router-dom@7`. TanStack Router migration is a separate follow-up if/when desired (HN-modal in 2026).
-- **Searchable channel/region picker**: native Radix `Select` is fine for ~15 options; a combobox would need `@radix-ui/react-popover` + the WAI Combobox pattern.
-- **App shell**: no persistent header/nav/guild-switcher yet. `ThemeToggle` is currently a floating top-right element in `App` — easy to relocate when a real layout lands.
-- **Bundle warning**: Vite reported one chunk > 500 kB gz (the main app bundle, 308 kB gz). Code-splitting via route-level dynamic `import()` is a follow-up if/when latency matters.
-
-### Caveats
-
-- The Prisma client was regenerated in this worktree (`bun run --filter='./packages/scout-for-lol/packages/backend' generate`). That's a non-shipped, gitignored artifact — but other agents working on `scout-for-lol` in this worktree benefit from the refresh. If the worktree is recreated, re-run that command before typechecking the app.
-- The lint rule scope-change (`packages/app/**` off) was the **right** fix, not a workaround. The marketing-site `no-shadcn-theme-tokens` rule was created to catch _dead_ tokens during the v3→v4 migration. In `app/` the tokens are live (defined in our own `global.css`), so the rule was wrong here. Documented inline in the config rationale.
-- All shadcn primitives live in `app/src/components/ui/` — **do not** import any of them from `packages/frontend/`, and vice versa. Each surface owns its own. See `project_scout_web_ui_distinct_design.md` and `feedback_tailwind_v4_pitfalls.md` in `~/.claude/projects/-Users-jerred-git-monorepo/memory/`.
-- The dev server requires the Scout backend running on `:3000` for any tRPC call to succeed. Login screen and theme toggle work without backend; everything past `RequireSession` will spin until backend is reachable.

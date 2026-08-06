@@ -5,7 +5,6 @@ status: planned
 board: true
 verification: operator
 disposition: blocked
-origin: packages/docs/logs/2026-05-13_scout-beta-missing-daily-update.md
 source_marker: false
 ---
 
@@ -36,7 +35,7 @@ is why this stays `waiting-on-verification`:
 
 ## References
 
-- Originating log: `packages/docs/logs/2026-05-13_scout-beta-missing-daily-update.md`
+- Originating log: the original investigation
 - Trigger commit: `d040b0b23` (renovate-481 Prisma 6→7 bump)
 - Affected paths: `packages/scout-for-lol/packages/backend/src/.../scheduled-update-dispatcher.ts:42`, `.../lifecycle.ts:319`
 

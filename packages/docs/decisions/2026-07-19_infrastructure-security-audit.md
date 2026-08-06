@@ -853,9 +853,3 @@ application vulnerabilities.
   [Agent Stack for Kubernetes](https://buildkite.com/docs/agent/self-hosted/agent-stack-k8s/running-builds)
 - [MITRE ATT&CK for Containers](https://attack.mitre.org/matrices/enterprise/containers/)
   and [NIST SP 800-61 Rev. 3](https://csrc.nist.gov/pubs/sp/800/61/r3/final)
-
-## Session log
-
-The per-session journal (Done / Remaining / Caveats) for the work that produced this decision lives
-in [`packages/docs/logs/2026-07-19_infrastructure-security-audit.md`](../logs/2026-07-19_infrastructure-security-audit.md),
-per the `decisions/` vs. `logs/` split in [`packages/docs/AGENTS.md`](../AGENTS.md).

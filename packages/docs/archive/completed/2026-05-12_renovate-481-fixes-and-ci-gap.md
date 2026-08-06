@@ -84,33 +84,6 @@ BUILDKITE_BRANCH=feature/test BUILDKITE_PIPELINE_DEFAULT_BRANCH=main \
 # Expect: only push/helm-push/argocd/release/tofu/npm/cooklang-release/clauderon-upload remain.
 ```
 
-## Session Log — 2026-05-12
-
-### Done
-
-- Applied Part A in commit 1 (`fix(root)`): temporal embedding.ts (drop dead `= null`), `.dagger/src/image.ts` (`prisma@6` → `prisma`), birmel `start` script (prepend `prisma generate`), scout frontend + desktop `react-dom` to `19.2.6` (exact), refreshed scout-for-lol `bun.lock`. Plan doc + index.md mirrored from `~/.claude/plans/`.
-- Applied Part B in commit 2 (`ci(root)`): removed `if: MAIN_ONLY` from `scripts/ci/src/steps/{images,sites,helm,clauderon}.ts` for build/smoke/synth/rust-build/site-deploy steps. Kept `MAIN_ONLY` on push/helm-push/argocd/release/tofu/npm/clauderon-upload. `DRYRUN_FLAG` in `scripts/ci/src/lib/buildkite.ts` now also flips on for non-default branches so PR site deploys run with `--dryrun`.
-- Verified locally:
-  - `bunx eslint packages/temporal/src/lib/pr-review/embedding.ts` clean.
-  - `dagger call build-scout-image …` succeeded (Container@xxh3:1fb0452d710f84f2). Initial run failed when I added `url = env(DATABASE_URL)` to schemas — Prisma 7 _rejects_ `url` in schema (must live exclusively in `prisma.config.ts`); reverted both schemas.
-  - `dagger call smoke-test-birmel …` reported "Smoke test passed: failed with expected auth error".
-  - `bun run --filter='./packages/scout-for-lol/packages/frontend' build` succeeded (no React version-mismatch).
-  - `cd scripts/ci && bun run typecheck && bun test` → 145 pass / 0 fail.
-  - Generated PR + main pipelines locally with `FULL_BUILD=true`. PR has no `if:` on `build-*`, `smoke-*`, `homelab-cdk8s`, `clauderon-build-*`, or `deploy-*` (deploy commands carry `--dryrun`); main pipeline gates only the production-side-effect set (`push-*`, `helm-push-*`, `argocd-*`, `tofu-*`, `npm-*`, `cooklang-push`, `cooklang-release-create`, `clauderon-upload`, `build-summary`).
-  - `bash scripts/check-dagger-hygiene.sh` clean.
-
-### Caveats
-
-- The original "Argument `url` is missing in data source block" error was _only_ coming from Prisma 6's WASM validator running against a Prisma-7-style schema — the `prisma@6` pin in `.dagger/src/image.ts:646` was the sole cause. The schemas didn't need `url`; in fact Prisma 7 rejects it. Plan was updated mid-flight.
-- `packages/birmel/prisma/schema.prisma` has mixed CRLF/LF line endings in `HEAD` (introduced by some earlier commit). Edit tool produced LF, which made `git diff` show the entire file as changed. Restored from HEAD; line-ending normalization left for a separate cleanup.
-- `helm-push-starlight-karma-bot-beta` failed on build #2336 with curl exit 6 (DNS resolution). Transient; not addressed by this PR.
-
-### Remaining
-
-- Push branch and open PR; monitor CI to confirm build/smoke/synth/rust-build steps actually run on the PR (they should, for affected packages).
-- Future: line-ending normalization for `packages/birmel/prisma/schema.prisma` (split work).
-- Future: also consider building the _push_ image once and reusing the digest, rather than rebuilding for push (current Dagger structure rebuilds; cache typically hits).
-
 ## Out of scope
 
 - Refactoring `deploy-site` Dagger function to split build from deploy (dryrun is sufficient).

@@ -81,7 +81,6 @@ All paths relative to `packages/homelab/src/cdk8s/`. Two code shapes:
 - Helm-values charts are typed via `HelmValuesForChart<...>` (`src/misc/typed-helm-parameters.ts`) — typecheck will catch wrong value paths. kueue/postal/plausible charts have no generated types (looser).
 - Copy resource style from existing code: cdk8s-plus shape per `src/resources/streambot.ts:126-140`; helm-string shape per dagger.ts.
 - Collectors' files need `Cpu`/`Size` imports (currently absent).
-- Mirror this plan to `packages/docs/plans/2026-06-12_k8s-resource-rightsizing.md` and update the existing session log `packages/docs/logs/2026-06-12_kueue-quota-bump.md`.
 - Also fix any stale comment near edits (e.g. mario-kart "give it room" comment should reflect measured peak).
 
 ## Risks
@@ -99,27 +98,3 @@ All paths relative to `packages/homelab/src/cdk8s/`. Two code shapes:
 4. `bunx eslint` on touched files; commit (pre-commit runs helm lint + full tier-2)
 5. Push to PR #1135; Buildkite CI green; merge on user approval
 6. **Post-merge**: ArgoCD auto-syncs → `kubectl describe node torvalds | grep -A8 'Allocated resources'` should show CPU requests ~60% (from 92%); `kubectl get pods -A` all Running; spot-check `kubectl get pod -n prometheus zfs-zpool-collector-... -o jsonpath='{.spec.containers[0].resources}'`
-
-## Session Log — 2026-06-12
-
-### Done
-
-- All three tiers implemented across 24 files in `packages/homelab/src/cdk8s/src/resources/` (second commit on PR #1135, after the Kueue quota bump).
-- Verified: cdk8s typecheck clean, `bun run build` synth spot-checks confirm new values in `dist/` (collectors 50m/64Mi, dagger `"6"`/16Gi, loki `allocatedMemory: 4096`, prometheusSpec 200m/4Gi, argocd controller 250m/1Gi, eufy init 100m/128Mi), `bun test` 132 pass, eslint clean on all touched files.
-- Root-cause note: services using `withCommonProps` get `resources: {}` (BestEffort), which is why birmel/scout had zero requests; bare `addContainer` (collectors, eufy init) gets the cdk8s-plus 1 CPU/512Mi default. Two opposite failure modes from the same omission.
-
-### Deviations from plan
-
-- 1Password connect: generated chart type only exposes a numeric `cpu` request for the api container (no memory key) — set `cpu: 0.025` for api and cpu+memory for sync; api memory request not expressible without a type assertion (banned).
-- pyroscope-alloy subchart (10m/50Mi req vs 20m/291Mi peak) left alone — values path is nested awkwardly and the delta is negligible.
-- loki caches: used the chart's `allocatedMemory`/`allocatedCPU` knobs (4096 MB / 100m) instead of raw `resources` overrides — the chart derives consistent pod resources from them.
-
-### Remaining
-
-- Merge PR #1135; then run the post-merge verification above during/after ArgoCD sync.
-- Dagger engine restart on sync will abort any in-flight CI build — retry via Buildkite if one was running.
-
-### Caveats
-
-- Prometheus's 17.6Gi 30d memory spike is real (compaction/query burst); it has a 4Gi request and deliberately no limit. If node memory pressure recurs, that spike is the first place to look.
-- temporal-worker limit raised 4Gi→6Gi; if its real footprint keeps growing, revisit the workflow's memory behavior rather than the limit.
