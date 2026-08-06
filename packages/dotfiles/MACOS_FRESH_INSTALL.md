@@ -32,13 +32,30 @@ Do not infer sync completeness merely because a client process is running.
    Tools.
 4. Sign in to GitHub CLI, Tailscale, Atuin, browsers, editors, and licensed apps
    as needed.
-5. Install the Claude Code managed settings by following
-   `claude-managed/README.md`.
+5. Approve the Fastmail Contacts profile in **System Settings > General >
+   Device Management**, then enter a dedicated Fastmail Contacts app password
+   when macOS requests it.
 6. Complete the privacy checklist below, then test each affected feature.
+
+Syncthing and OrbStack are launched automatically and configured to start at
+login. Syncthing still requires explicit authorization from another device and
+selection of the folders that should be shared with this Mac. If `docker` is
+not available after OrbStack launches, complete the setup shown in the OrbStack
+app; `orbctl doctor --fix` cannot repair an installation whose Docker CLI has
+not been provisioned yet.
 
 Microsoft Office, OneDrive, Honorlock, LinearMouse, Orion, and Raycast are not
 part of the desired machine profile. OrbStack itself is installed, but its
 containers, images, and volumes are intentionally disposable.
+
+The installer configures Touch ID for `sudo` through `/etc/pam.d/sudo_local`.
+It includes `pam_reattach` so authentication also works inside Zellij and other
+terminal multiplexers. Modern macOS preserves `sudo_local` across system
+updates, so the legacy `sudo-touchid` Homebrew service is not enabled.
+
+Chezmoi installs Claude Code's managed settings on the first apply and whenever
+the tracked policy changes. This step prompts for administrator access because
+Claude Code reads the policy from `/Library/Application Support/ClaudeCode`.
 
 ## Privacy-permission boundary
 
@@ -83,5 +100,14 @@ decisions as part of routine setup.
 - The privacy feature checks above succeed.
 - Full Xcode launches and `xcode-select -p` points at the intended developer
   directory after manual installation.
+- `/usr/libexec/java_home -V` lists the active mise-managed JDK.
+- `sudo -k && sudo true` requests Touch ID both in a regular terminal and in
+  Zellij.
+- `nvim --headless "+lua print(vim.inspect(require('nvim-treesitter').get_installed()))" +qa`
+  lists the configured parser set.
+- `orbctl doctor` reports no actionable errors and `docker version` reaches the
+  OrbStack engine.
 - Every authoritative sync service reports current, and the re-enrollment path
   for Syncthing and account-backed applications is available.
+- Fastmail contacts appear in Contacts and a test contact change syncs in both
+  directions.

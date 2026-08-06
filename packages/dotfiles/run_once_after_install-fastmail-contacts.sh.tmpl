@@ -1,0 +1,12 @@
+#!/bin/bash
+set -euo pipefail
+{{ if ne .chezmoi.os "darwin" -}}
+exit 0
+{{ end -}}
+
+profile="$HOME/.config/contact-profiles/fastmail.mobileconfig"
+
+echo "Opening the Fastmail Contacts profile..."
+open "$profile"
+echo "Approve it in System Settings > General > Device Management."
+echo "When prompted, enter a dedicated Fastmail Contacts app password."

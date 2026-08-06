@@ -87,9 +87,27 @@ fi
 
 # Install Brewfile
 if command -v brew &>/dev/null; then
+    log_info "Trusting third-party Homebrew formulae"
+    third_party_formulae=(
+        "artginzburg/tap/sudo-touchid"
+        "cormacrelf/tap/dark-notify"
+        "dsully/tap/macos-defaults"
+        "rsteube/tap/carapace"
+        "siderolabs/tap/talosctl"
+    )
+    for formula in "${third_party_formulae[@]}"; do
+        tap="${formula%/*}"
+        retry 3 5 brew tap "$tap"
+        brew trust --formula "$formula"
+    done
+
     log_info "Installing Brewfile packages"
     (cd ~ && retry 3 5 brew bundle --file=.Brewfile)
     log_success "Brewfile packages installed"
+
+    log_info "Enabling Touch ID for sudo, including terminal multiplexer support"
+    sudo-touchid --with-reattach
+    log_success "Touch ID for sudo enabled"
 
     # Re-apply chezmoi now that whiskers and other tools are available
     log_info "Re-applying chezmoi templates (post-brew)"
@@ -119,6 +137,22 @@ if command -v mise &>/dev/null; then
     log_info "Installing language runtimes via mise"
     retry 3 5 mise install --yes
     log_success "Mise runtimes installed"
+
+    log_info "Registering the active mise JDK with macOS"
+    java_path="$(mise where java)"
+    java_contents="${java_path}/Contents"
+    system_java_contents="/Library/Java/JavaVirtualMachines/mise-java.jdk/Contents"
+    if [ ! -d "$java_contents" ]; then
+        log_error "Active mise Java installation is not a macOS JDK: ${java_path}"
+        exit 1
+    fi
+    if [ -e "$system_java_contents" ] && [ ! -L "$system_java_contents" ]; then
+        log_error "Refusing to replace non-symlink JDK registration: ${system_java_contents}"
+        exit 1
+    fi
+    sudo mkdir -p "$(dirname "$system_java_contents")"
+    sudo ln -sfn "$java_contents" "$system_java_contents"
+    log_success "Active mise JDK registered with macOS"
 else
     log_warn "Skipping mise install: mise not available"
 fi
@@ -138,7 +172,7 @@ if command -v nvim &>/dev/null; then
     log_info "Installing Neovim plugins"
     nvim --headless "+Lazy! sync" +qa
     log_info "Installing tree-sitter parsers"
-    nvim --headless "+TSUpdateSync" +qa
+    nvim --headless "+lua require('config.treesitter').install():wait(300000)" +qa
     log_success "Neovim setup complete"
 else
     log_warn "Skipping Neovim setup: nvim not available"
@@ -164,6 +198,27 @@ if command -v atuin &>/dev/null; then
         atuin sync || true
     fi
     log_success "Atuin configured"
+fi
+
+# Initialize desktop services that should survive login/reboot. Syncthing
+# device and folder enrollment remains an explicit operator step.
+if [ -d "/Applications/Syncthing.app" ]; then
+    log_info "Starting Syncthing and enabling launch at login"
+    defaults write com.github.xor-gate.syncthing-macosx StartAtLogin -bool true
+    if [ "$(osascript -e 'tell application "System Events" to exists login item "Syncthing"')" != "true" ]; then
+        osascript -e 'tell application "System Events" to make login item at end with properties {path:"/Applications/Syncthing.app", hidden:true}'
+    fi
+    open -a Syncthing
+fi
+
+if command -v orbctl &>/dev/null; then
+    log_info "Starting OrbStack and enabling launch at login"
+    orbctl config set app.start_at_login true
+    orbctl start
+    if ! command -v docker &>/dev/null; then
+        log_warn "OrbStack is running but Docker CLI setup is incomplete; finish setup in the OrbStack app"
+        open -a OrbStack
+    fi
 fi
 
 # Bat themes

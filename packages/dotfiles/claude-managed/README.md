@@ -51,6 +51,13 @@ never consulted when everything not denied/asked is already permitted).
 
 ## Install / update the policy
 
+Chezmoi installs the policy automatically on macOS through
+`run_onchange_after_install-claude-managed-settings.sh.tmpl`. The hook runs on
+the first apply and whenever `managed-settings.json` changes. Because the
+destination is system-wide, `chezmoi apply` prompts for administrator access.
+
+To install it directly without Chezmoi:
+
 ```bash
 cd packages/dotfiles/claude-managed
 ./install-managed-settings.sh          # validates JSON, sudo-installs to the system path
@@ -63,10 +70,10 @@ re-run the script.
 
 ## New-machine bootstrap
 
-1. `chezmoi apply` (installs everything except `~/.claude/settings.json`, which is ignored).
+1. `chezmoi apply` (installs the managed policy after prompting for sudo;
+   `~/.claude/settings.json` remains ignored).
 2. Seed user settings: `cp settings.user-reference.json ~/.claude/settings.json` (then `chmod 600`).
-3. `./install-managed-settings.sh` to install the managed policy.
-4. Start Claude Code; adjust `model` / `effortLevel` freely — they stay local.
+3. Start Claude Code; adjust `model` / `effortLevel` freely — they stay local.
 
 ## Recovery
 

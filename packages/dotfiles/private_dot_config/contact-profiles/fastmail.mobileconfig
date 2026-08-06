@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>PayloadContent</key>
+  <array>
+    <dict>
+      <key>CardDAVAccountDescription</key>
+      <string>Fastmail Contacts</string>
+      <key>CardDAVHostName</key>
+      <string>carddav.fastmail.com</string>
+      <key>CardDAVPort</key>
+      <integer>443</integer>
+      <key>CardDAVUseSSL</key>
+      <true/>
+      <key>CardDAVUsername</key>
+      <string>root@sjer.red</string>
+      <key>PayloadIdentifier</key>
+      <string>com.jerred.contacts.fastmail</string>
+      <key>PayloadType</key>
+      <string>com.apple.carddav.account</string>
+      <key>PayloadUUID</key>
+      <string>A2CE6772-D6AB-4637-9FEA-F79931FAB46D</string>
+      <key>PayloadVersion</key>
+      <integer>1</integer>
+    </dict>
+  </array>
+
+  <key>PayloadDisplayName</key>
+  <string>Fastmail Contacts</string>
+  <key>PayloadDescription</key>
+  <string>Configures Fastmail CardDAV contact syncing for root@sjer.red</string>
+  <key>PayloadIdentifier</key>
+  <string>com.jerred.contacts.fastmail.profile</string>
+  <key>PayloadRemovalDisallowed</key>
+  <false/>
+  <key>PayloadType</key>
+  <string>Configuration</string>
+  <key>PayloadUUID</key>
+  <string>1236FC3B-EC3E-4ABC-8D08-022E834ABF92</string>
+  <key>PayloadVersion</key>
+  <integer>1</integer>
+</dict>
+</plist>

@@ -20,8 +20,10 @@ require("lazy").setup({
     opts = { flavour = "auto", background = { light = "latte", dark = "mocha" } } },
   { "zbirenbaum/copilot.lua", cmd = "Copilot", event = "InsertEnter",
     opts = { suggestion = { auto_trigger = true, keymap = { accept = "<Tab>" } } } },
-  { "nvim-treesitter/nvim-treesitter", build = ":TSUpdate",
-    opts = { auto_install = true, highlight = { enable = true } } },
+  { "nvim-treesitter/nvim-treesitter", lazy = false, build = ":TSUpdate",
+    config = function()
+      require("config.treesitter").setup()
+    end },
   { "mason-org/mason-lspconfig.nvim",
     opts = {
       automatic_enable = true,

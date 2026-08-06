@@ -1,0 +1,10 @@
+{{- if eq .chezmoi.os "darwin" -}}
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# Re-run when the authoritative managed policy changes.
+# Policy hash: {{ include "claude-managed/managed-settings.json" | sha256sum }}
+source_dir={{ .chezmoi.sourceDir | quote }}
+"${source_dir}/claude-managed/install-managed-settings.sh"
+{{- end }}
