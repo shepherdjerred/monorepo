@@ -25,7 +25,7 @@ Determine why Codex appears not to load skills from `~/.agents`.
 - The current session's available-skill catalog includes the personal skills,
   so the root itself is not the discovery failure.
 
-## Session Log — 2026-08-05
+## Session Log — 2026-08-05: Slash picker
 
 ### Done
 
@@ -52,7 +52,7 @@ the `/skills` command; selecting it and then “List skills” showed personal
 skills from `~/.agents/skills`, including `git-helper`. The picker also reports
 that `@` opens the skill list directly.
 
-## Session Log — 2026-08-05
+## Session Log — 2026-08-05: Clean CLI probe
 
 ### Done
 

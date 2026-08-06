@@ -88,7 +88,7 @@ Buildkite step). They apply repo-wide; per-package `AGENTS.md` files add more.
 - **Process invariants.** `TODO(todo:<id>)` markers need a matching
   `packages/docs/todos/<id>.md`; `temporal-agent-task` blocks must match the schema;
   prefer Bun-runtime APIs; ensure Prisma teardown in tests; follow the K8s/cdk8s
-  and worktree/git-spice conventions.
+  and git-spice conventions.
 - **Severity discipline.** Only flag genuine issues (P0–P2); skip nits and anything
   a linter would catch. A clean diff should get a clean review.
 
@@ -105,9 +105,8 @@ Buildkite step). They apply repo-wide; per-package `AGENTS.md` files add more.
 
 ### Session location and durable context
 
-- Start every session by creating its log or plan in the main checkout under `packages/docs/`, before creating a worktree.
-- If the task moves to a worktree, move every agent-created write, including the session log or plan, into that worktree immediately. Do not leave duplicate or partial agent work in the main checkout.
-- The primary artifact for a code-changing session is a pull request. Create a draft PR from the worktree as soon as it contains a coherent first commit, and promote it to ready for review only after verification is complete.
+- Create each session's log or plan in the active checkout under `packages/docs/`.
+- The primary artifact for a code-changing session is a pull request. Create a draft PR from the feature branch as soon as it contains a coherent first commit, and promote it to ready for review only after verification is complete.
 - Assume the chat may end immediately after the draft or final PR is created. Record unfinished work and handoff context in `packages/docs/`, the PR description, or an explicit final response to the user.
 - These instructions apply to all agents. Repository lifecycle hooks are scoped to local CLI runtimes and must exit immediately in hosted or web environments.
 
@@ -379,43 +378,7 @@ bundle because `observability.duckdb` is exclusively locked while the run holds
 it. Open the dashboard for any run (live or finished) with `bun run
 pr:fleet:watch [--run <id|dir>]`.
 
-## Parallel Work — Use Worktrees
-
-**Before your first edit on any non-trivial change, create a `git worktree` — don't edit in the main checkout.** "Non-trivial" = anything you'll open a PR for, anything touching more than one file, or any multi-step task. Only stay in the main checkout for a single-file, single-commit fix you won't PR (a typo, a one-line config tweak). **When unsure, make the worktree.** Each worktree gives a branch its own isolated working directory, so parallel work and concurrent agents never collide.
-
-**A worktree holds a _stack_, and every feature PR is created and managed with git-spice (`gs`) — load the `git-spice-helper` skill before any branch/PR op.** A single PR is a stack of one (unchanged from the old flow). When a change splits into dependent pieces, stack them in the same worktree with `git-spice branch create`, move between them with `git-spice up`/`down`, and open the PRs with `git-spice stack submit`. Restack, move, and sync with native `gs` commands — never a hand-rolled `git rebase` or a bare `gh pr create` for feature work. (In scripts and the agent Bash tool, `gs` is Ghostscript, not git-spice — call `git-spice` explicitly; see the skill.)
-
-```bash
-# Create an isolated worktree on a new branch off main
-git worktree add .claude/worktrees/<feature-slug> -b feature/<slug> origin/main
-
-cd .claude/worktrees/<feature-slug>
-
-# Register the branch with git-spice as the bottom of its stack (created with
-# raw Git above, so git-spice doesn't know about it yet without this).
-git-spice branch track feature/<slug> --base main
-
-# REQUIRED before any build/test in the new worktree — installs the toolchain,
-# does the one workspace-wide install, and runs codegen. Without generate, builds
-# fail with cryptic missing-module / missing-generated-file errors.
-mise install && bun install --frozen-lockfile && bunx turbo run generate
-bunx lefthook install   # arm hooks in this worktree
-```
-
-Because the repo is one bun workspace with the isolated linker, a single root
-`bun install` covers every package — internal `workspace:*` deps resolve via live
-symlinks, so there is no shared-artifact copy step to get wrong (the old
-`scripts/setup.ts --group/--link` flags no longer exist). Don't skip `turbo run
-generate`, though — it's what produces the Prisma clients and other generated
-files a build needs.
-
-After PR merge: run `git-spice repo sync` to delete merged branches and retarget the rest of the stack, then `git worktree remove .claude/worktrees/<feature-slug>` and `git branch -d feature/<slug>` from the main checkout. Run `git worktree prune` to clean up stale entries.
-
-See the `worktree-workflow` skill for the full workflow. `claude -w <slug>` creates and enters a worktree at launch; for Codex, create the worktree first and start it with `codex -C <dir>`.
-
-**If you were started in a worktree, stay in that worktree.** Keep every command, search, and file operation scoped to the worktree path you were launched in. Do not `cd` into, read from, or write to the main checkout (the parent of the `.claude/worktrees/` directory you are in) — the worktree is a complete checkout with the same files, so there is no reason to reach outside it. The main checkout may hold the user's own in-progress work; only touch it when the user explicitly asks.
-
-**Never trust an absolute path from a subagent (Explore/Plan/general-purpose) report.** Subagents search the entire repo and report main-checkout paths like `/…/monorepo/packages/<x>/…` — NOT your worktree path. The two trees share an identical relative layout, so a `Write`/`Edit` to a main-checkout absolute path **silently succeeds in the wrong tree** (your `git status` stays clean and you won't notice until much later). Before writing, **rebase every path onto your worktree root**: take the `packages/…`-relative portion and prepend `.claude/worktrees/<name>/`. A reliable check: the absolute target path of any `Write`/`Edit` MUST contain `/.claude/worktrees/<name>/`. If it doesn't, you're about to write to main — stop and fix the path. Prefer worktree-relative paths over absolute ones for exactly this reason.
+Feature PRs are created and updated with `git-spice` as stacks; a single PR is a stack of one. Load the `git-spice-helper` skill before a branch or PR operation, use `git-spice` explicitly in scripts, and do not hand-roll a stack rebase or use bare `gh pr create` for feature work.
 
 ## Package Notes
 

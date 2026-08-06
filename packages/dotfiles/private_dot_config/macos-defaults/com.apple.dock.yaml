@@ -8,3 +8,5 @@ data:
     autohide: true
     show-recents: false
     tilesize: 92.0
+    # Keep the lower-right hot corner disabled.
+    wvous-br-corner: 1

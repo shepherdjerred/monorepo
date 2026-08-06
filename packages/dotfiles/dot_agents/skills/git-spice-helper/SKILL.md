@@ -71,10 +71,9 @@ different tool's model.
 | Shorthand | `abbr gs git-spice` in fish (interactive only — see the Ghostscript trap above) |
 | Trunk | `main` |
 | Auth | `git-spice auth login` → **Service CLI** (reuses your `gh auth token`); CI uses the `GITHUB_TOKEN` env var |
-| First-run | `git-spice repo init` once per clone/worktree (or let it auto-init on first use) |
+| First-run | `git-spice repo init` once per clone (or let it auto-init on first use) |
 | `branch create` commit | `spice.branchCreate.commit = false` is set in `~/.gitconfig` → `git-spice branch create <name>` makes **no** commit (a name is required); commit real changes after with `git-spice commit create -m "type(scope): …"` |
 | Commit convention | `type(scope): description`; scope = a `packages/*` dir (e.g. `dotfiles`, `homelab`) or `root`/`deps`/`ci`/`practice`/`archive`/`dagger`/`cooklang`. Enforced by the `commit-msg` lefthook (`scripts/validate-commit-msg.ts`). This is exactly why the empty-commit default is turned off. |
-| Worktrees | **One worktree per stack** — see `worktree-workflow` skill + root `AGENTS.md` |
 | Required PR checks | `ci/merge-conflict` + `buildkite/monorepo/pr`, run **per PR** in the stack |
 
 Why the commit-msg detail matters: `git-spice branch create` normally commits
@@ -96,14 +95,14 @@ CI only.
 
 ## Core workflow (the daily loop)
 
-All commands run inside the stack's worktree. Before submitting, run focused
+All commands run in the checkout that manages the stack. Before submitting, run focused
 build/typecheck/test/lint tasks for the packages you changed. The commit hook
 checks staged files only; Buildkite runs the exhaustive whole-repo gate.
 
 ### 1. Start / extend a stack
 
 ```bash
-# The worktree already put you on feature/<slug> off origin/main (a stack of one).
+# Start on feature/<slug> off origin/main (a stack of one).
 # To add a branch ON TOP of the current one:
 git-spice branch create feature/auth-api      # no commit (commit=false); name required
 git add packages/…                            # stage the change
@@ -116,7 +115,7 @@ git-spice commit create -m "feat(scout): auth ui"
 
 `git-spice log short` (`gs ls`) shows the stack; add `-a` for every tracked branch.
 
-### 2. Navigate the stack (in place, one worktree)
+### 2. Navigate the stack
 
 ```bash
 git-spice down          # move to the branch below (git-spice up / top / bottom too)
@@ -151,8 +150,8 @@ git-spice repo sync                  # pull main, delete merged branches, retarg
 git-spice repo sync --restack        # …and rebase the survivors onto the new base
 ```
 
-`repo sync` is **repo-global** (it touches every tracked branch, not just this
-worktree's stack) but safely skips branches checked out in other worktrees.
+`repo sync` is **repo-global**: it touches every tracked branch, not just the
+current stack.
 
 ### 6. Reorder / move branches
 
@@ -189,8 +188,8 @@ git-spice rebase abort               # (gs rba) revert to the pre-rebase state
 - **Verify before every submit:** run focused package checks and commit through
   the staged-file pre-commit hook. Do not run the root verification graph
   locally by default; Buildkite runs it exhaustively for every PR.
-- **`repo sync` / `repo restack` are repo-global.** In a multi-worktree session
-  they act on all tracked branches; know what other stacks exist before running them.
+- **`repo sync` / `repo restack` are repo-global.** They act on all tracked
+  branches; know what other stacks exist before running them.
 - **Stack state is local and never pushed.** A fresh clone / CI / a teammate has
   no `refs/spice/data`. That's why automated bot PRs (Temporal, release
   automation) stay on plain `gh`, and why you manage a stack from the one machine
@@ -233,5 +232,5 @@ git-spice rebase abort               # (gs rba) revert to the pre-rebase state
 - `references/config.md` — the `spice.*` git-config keys used here and worth knowing.
 - Official docs: <https://abhinav.github.io/git-spice/> · FAQ (PR-per-branch
   rationale): <https://abhinav.github.io/git-spice/resources/faq/>
-- Related skills: `worktree-workflow` (one worktree per stack), `git-helper`
-  (general git), `gh-helper` (PR reviews/comments/merge), `pr-health` / `pr-monitor`.
+- Related skills: `git-helper` (general git), `gh-helper` (PR
+  reviews/comments/merge), `pr-health` / `pr-monitor`.

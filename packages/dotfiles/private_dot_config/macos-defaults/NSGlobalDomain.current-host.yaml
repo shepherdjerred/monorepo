@@ -5,6 +5,20 @@ current_host: true
 kill: [cfprefsd]
 data:
   NSGlobalDomain:
-    # Mirror tap-to-click and three-finger drag in the hardware-scoped domain.
+    # Mirror the configured trackpad gestures in the hardware-scoped domain.
     com.apple.mouse.tapBehavior: 1
+    com.apple.trackpad.enableSecondaryClick: true
+    com.apple.trackpad.fiveFingerPinchSwipeGesture: 2
+    com.apple.trackpad.fourFingerHorizSwipeGesture: 2
+    com.apple.trackpad.fourFingerPinchSwipeGesture: 2
+    com.apple.trackpad.fourFingerVertSwipeGesture: 2
+    com.apple.trackpad.momentumScroll: true
+    com.apple.trackpad.pinchGesture: true
+    com.apple.trackpad.rotateGesture: true
+    com.apple.trackpad.scrollBehavior: 2
     com.apple.trackpad.threeFingerDragGesture: true
+    com.apple.trackpad.threeFingerHorizSwipeGesture: 2
+    com.apple.trackpad.threeFingerTapGesture: 0
+    com.apple.trackpad.threeFingerVertSwipeGesture: 2
+    com.apple.trackpad.twoFingerDoubleTapGesture: 1
+    com.apple.trackpad.twoFingerFromRightEdgeSwipeGesture: 3
