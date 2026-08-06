@@ -10,9 +10,6 @@
   "project_panel": {
     "dock": "left"
   },
-  "session": {
-    "trust_all_worktrees": true
-  },
   "vim_mode": true,
   "agent_servers": {
     "codex-acp": {
