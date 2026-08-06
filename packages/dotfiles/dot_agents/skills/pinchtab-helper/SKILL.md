@@ -7,6 +7,21 @@ description: |
 
 # PinchTab Browser Automation
 
+## Installation
+
+On macOS, PinchTab is installed by the chezmoi-managed Homebrew bundle and its
+launchd daemon is configured by `run_once_after_install-pinchtab-daemon.sh.tmpl`:
+
+```bash
+brew install pinchtab/tap/pinchtab
+pinchtab health
+```
+
+The setup hook selects the separately installed Google Chrome Canary as its
+automation browser, installs uBlock Origin, enables full stealth and JavaScript
+evaluation, and keeps both headed and headless instances available. Runtime
+tokens, profiles, and generated config stay outside Git.
+
 ## Core Concepts
 
 - **Profile**: stored browser state on disk (cookies, local storage, history, extensions). Persistent across restarts.

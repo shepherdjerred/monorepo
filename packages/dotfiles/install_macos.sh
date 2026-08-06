@@ -96,13 +96,12 @@ if ! command -v chezmoi &>/dev/null; then
     retry 5 3 brew install -q chezmoi
 fi
 
-# Apply dotfiles
+# Resolve the dotfiles source before installing the Brewfile. Chezmoi setup
+# hooks depend on tools from that Brewfile, so applying first can incorrectly
+# record a run-once hook as complete while its prerequisite is still missing.
 if [ -n "${DOTFILES_LOCAL_PATH:-}" ] && [ -d "${DOTFILES_LOCAL_PATH}" ]; then
     DOTFILES_SOURCE_DIR="$(cd "${DOTFILES_LOCAL_PATH}" && pwd)"
     log_info "Using local dotfiles from: ${DOTFILES_SOURCE_DIR}"
-    if ! chezmoi init --source "${DOTFILES_SOURCE_DIR}" --apply --keep-going; then
-        log_warn "chezmoi apply encountered errors; continuing because secrets may be unavailable"
-    fi
 else
     log_info "Cloning dotfiles from GitHub"
     mkdir -p "${HOME}/git"
@@ -112,9 +111,6 @@ else
         retry 3 5 git clone --depth 1 https://github.com/shepherdjerred/monorepo.git "${HOME}/git/monorepo"
     fi
     DOTFILES_SOURCE_DIR="${HOME}/git/monorepo/packages/dotfiles"
-    if ! chezmoi init --source "${DOTFILES_SOURCE_DIR}" --apply --keep-going; then
-        log_warn "chezmoi apply encountered errors; continuing because secrets may be unavailable"
-    fi
 fi
 
 # Install Brewfile
@@ -124,6 +120,8 @@ if command -v brew &>/dev/null; then
         "artginzburg/tap/sudo-touchid"
         "cormacrelf/tap/dark-notify"
         "dsully/tap/macos-defaults"
+        "lightpanda-io/browser/lightpanda"
+        "pinchtab/tap/pinchtab"
         "rsteube/tap/carapace"
         "siderolabs/tap/talosctl"
     )
@@ -134,8 +132,13 @@ if command -v brew &>/dev/null; then
     done
 
     log_info "Installing Brewfile packages"
-    (cd ~ && retry 3 5 brew bundle --file=.Brewfile)
+    retry 3 5 brew bundle --file="${DOTFILES_SOURCE_DIR}/.Brewfile_darwin"
     log_success "Brewfile packages installed"
+
+    log_info "Applying dotfiles after package prerequisites are installed"
+    if ! chezmoi init --source "${DOTFILES_SOURCE_DIR}" --apply --keep-going; then
+        log_warn "chezmoi apply encountered errors; continuing because secrets may be unavailable"
+    fi
 
     log_info "Enabling Touch ID for sudo, including terminal multiplexer support"
     sudo-touchid --with-reattach
@@ -153,10 +156,6 @@ if command -v brew &>/dev/null; then
         "${HOME}/.cache/berkeley-mono/patched" \
         --install
     log_success "Berkeley Mono patched and installed"
-
-    # Re-apply chezmoi now that whiskers and other tools are available
-    log_info "Re-applying chezmoi templates (post-brew)"
-    chezmoi apply --keep-going || true
 
     # Apply macOS app defaults (run_onchange won't re-trigger since hashes unchanged)
     if command -v macos-defaults &>/dev/null && [ -d "$HOME/.config/macos-defaults" ]; then

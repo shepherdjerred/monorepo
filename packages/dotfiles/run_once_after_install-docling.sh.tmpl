@@ -1,0 +1,21 @@
+{{- if eq .chezmoi.os "darwin" -}}
+#!/bin/bash
+set -euo pipefail
+
+# Keep Docling isolated from project Python environments while installing the
+# useful macOS-compatible conversion, OCR, VLM, ASR, and remote-client extras.
+# Python 3.13 retains binary-wheel coverage for the remote-serving extra's
+# pinned gRPC client while remaining within Docling's supported Python range.
+uv tool install --python 3.13 --upgrade --compile-bytecode \
+  'docling[asr,easyocr,htmlrender,ocrmac,onnxruntime,rapidocr,remote-serving,tesserocr,vlm,xbrl]'
+
+# The HTML-rendering extra depends on Playwright, whose browser payload is
+# deliberately installed separately from its Python package.
+docling_tool_dir="$(uv tool dir)/docling"
+"$docling_tool_dir/bin/python" -m playwright install chromium
+
+# Prefetch the standard layout/table/formula models and English EasyOCR data.
+# Large task-specific VLM and ASR models remain lazy so fresh setup stays sane.
+"$HOME/.local/bin/docling-tools" models download
+"$HOME/.local/bin/docling-tools" models download easyocr --easyocr-lang en
+{{- end -}}
