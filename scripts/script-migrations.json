@@ -178,16 +178,6 @@
       "reason": "Buildkite bootstrap runs before the repository runtime is guaranteed"
     },
     {
-      "source": ".claude/hooks/trust-mise.sh",
-      "disposition": "retain",
-      "reason": "Lifecycle hook runs before Bun is guaranteed"
-    },
-    {
-      "source": ".claude/hooks/worktree-reminder.sh",
-      "disposition": "retain",
-      "reason": "Lifecycle hook runs before Bun is guaranteed"
-    },
-    {
       "source": "packages/anki/generate.sh",
       "disposition": "port",
       "reason": "Generation already requires Bun",

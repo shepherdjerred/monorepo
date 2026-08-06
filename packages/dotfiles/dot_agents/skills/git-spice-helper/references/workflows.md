@@ -1,10 +1,9 @@
 # git-spice worked workflows (this repo)
 
 All examples use `git-spice` (agent/script-safe). Interactively, `gs` is the
-abbreviation. Every example assumes you're inside the stack's worktree (see
-`worktree-workflow` — **one worktree per stack**).
+abbreviation. Run them from the checkout that manages the stack.
 
-## 0. One-time per clone/worktree
+## 0. One-time per clone
 
 ```bash
 git-spice repo init            # trunk auto-detected as main; usually auto-runs
@@ -16,7 +15,7 @@ git-spice auth status || git-spice auth login   # Service CLI (gh) reuses `gh au
 This is the common case and matches the pre-git-spice flow.
 
 ```bash
-# The worktree already created feature/<slug> off origin/main and put you on it.
+# Start on feature/<slug> off origin/main.
 git add packages/foo/…
 git-spice commit create -m "fix(foo): correct the thing"
 bun run verify -- --affected
@@ -26,7 +25,7 @@ git-spice branch submit --fill        # opens ONE PR targeting main
 ## 2. Build and submit a stack
 
 ```bash
-# Bottom branch (feature/<slug>) already exists from the worktree.
+# Bottom branch (feature/<slug>) already exists.
 git add packages/scout/schema/…
 git-spice commit create -m "feat(scout-for-lol): auth schema"
 
