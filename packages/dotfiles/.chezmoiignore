@@ -16,6 +16,14 @@ CLAUDE.md
 .claude.json
 Library/Application Support/Claude/claude_desktop_config.json
 
+# Bun workspace build artifacts for this package's own tooling (eslint.config.ts,
+# package.json) — not dotfiles content. bun install's isolated linker creates
+# node_modules directly under the chezmoi source root, so without this it leaks
+# into `chezmoi diff`/`apply` as bogus ~/node_modules/... entries.
+node_modules
+coverage
+.turbo
+
 # Claude Code rewrites model/effortLevel/fast into this file on every /model or
 # /effort, so tracking it caused perpetual drift and re-add snapshotting a
 # transient model. Durable config now lives in the managed layer (see

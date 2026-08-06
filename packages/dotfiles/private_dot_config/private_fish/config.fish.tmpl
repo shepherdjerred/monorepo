@@ -106,3 +106,9 @@ if status is-interactive
       carapace _carapace | source
   end
 end
+
+# Added by OrbStack: command-line tools and integration
+# Source the integration only when OrbStack is installed on this machine.
+if test -f ~/.orbstack/shell/init2.fish
+  source ~/.orbstack/shell/init2.fish
+end
