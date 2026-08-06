@@ -45,6 +45,7 @@ set -gx RIPGREP_CONFIG_PATH ~/.config/ripgrep/ripgreprc
 # back to ~/.pinchtab/config.json and the tokens diverge → 401 bad_token.
 {{ if eq .chezmoi.os "darwin" -}}
 set -gx PINCHTAB_CONFIG "$HOME/Library/Application Support/pinchtab/config.json"
+set -gx TESSDATA_PREFIX /opt/homebrew/share/tessdata
 {{ end -}}
 
 set -gx CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS "1"

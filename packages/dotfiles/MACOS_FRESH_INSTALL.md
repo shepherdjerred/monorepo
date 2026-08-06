@@ -108,6 +108,13 @@ decisions as part of routine setup.
 
 - `chezmoi diff` contains no unexplained configuration drift.
 - `brew bundle check --file="$HOME/.Brewfile" --no-upgrade` succeeds.
+- `pinchtab health` succeeds with `PINCHTAB_CONFIG` pointing at the launchd
+  daemon's config under `~/Library/Application Support/pinchtab/`.
+- `lightpanda fetch --dump markdown https://example.com` returns the rendered
+  Example Domain page as Markdown.
+- `docling --version`, `docling-tools models download --help`,
+  `tesseract --version`, and `ffmpeg -version` succeed; converting a
+  representative PDF produces Markdown.
 - `system_profiler SPFontsDataType` lists Berkeley Mono Regular, Bold, Oblique,
   and Bold Oblique from `~/Library/Fonts`.
 - Automatic appearance, key repeat, Dock behavior, tap-to-click, and

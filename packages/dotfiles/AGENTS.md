@@ -7,7 +7,7 @@ Before doing ANY work, scan the available skills list for relevant skills and LO
 - **ALWAYS load matching skills first** - If the task involves a technology that has a skill (Docker, Terraform, Kubernetes, Git, TypeScript, etc.), load that skill BEFORE taking any action. Do not attempt to solve the problem without the skill.
 - **Use MCP tools first** - When MCP servers provide relevant functionality, prefer them over manual approaches
 - **Leverage plugins** - Check available plugins before implementing something from scratch
-- **Web access — lightpanda, PinchTab, Docling, or similar** - For plain page/docs fetches, use [lightpanda](https://github.com/lightpanda-io/browser): `lightpanda fetch --dump markdown --strip_mode full --log_level fatal <url>` (see the `lightpanda-browser` skill). For sites that block lightpanda or need interaction (clicking, form filling, screenshots), use [PinchTab](https://github.com/pinchtab/pinchtab) — load the `pinchtab-helper` skill first. For document extraction (PDF/DOCX/etc.), use [Docling](https://github.com/docling-project/docling) per the PDF Extraction section below. Other similar tools are fine when they fit better.
+- **Web access — lightpanda, PinchTab, Docling, or similar** - For plain page/docs fetches, use [Lightpanda](https://github.com/lightpanda-io/browser): `lightpanda fetch --dump markdown --strip-mode full --log-level fatal <url>` (see the `lightpanda-browser` skill). For sites that block Lightpanda or need interaction (clicking, form filling, screenshots), use [PinchTab](https://github.com/pinchtab/pinchtab) — load the `pinchtab-helper` skill first. For document extraction (PDF/DOCX/etc.), use [Docling](https://github.com/docling-project/docling) per the PDF Extraction section below. Other similar tools are fine when they fit better.
 - **Look deeper** - If CI is failing, a build tool is erroring, or infrastructure has issues, don't just report the surface error. Load the relevant skill and investigate the root cause. The user wants solutions, not descriptions of problems.
 - **Branch & PR management → load the branching skill first.** Before creating branches, opening/updating/stacking/moving PRs, restacking, or syncing a branch with main, load the repo's branching skill first. In `shepherdjerred/monorepo` that is `git-spice-helper` — every PR is a git-spice stack. Do not run `git branch` / `git checkout -b` / `git rebase`, `gh pr create`, or `git-spice`/`gs` for feature work before loading it.
 
@@ -87,10 +87,9 @@ Never just print or read Typst source as the final output — the user wants to 
 For PDF to text/markdown conversion, use **Docling**. It handles tables, formulas, OCR, reading order, and complex layouts out of the box.
 
 ```bash
-uv pip install docling
 docling input.pdf                              # CLI — outputs markdown
 docling --to md --output ./out/ input.pdf      # Explicit markdown output
-uvx docling input.pdf                          # One-shot without installing
+docling-tools models download                  # Refresh standard local models
 ```
 
 ```python
@@ -102,6 +101,9 @@ print(doc.export_to_markdown())
 - **Docling Serve** for API deployment
 - **Docling MCP** for agent integration
 - Supports: PDF, DOCX, PPTX, XLSX, HTML, images, audio, LaTeX
+- Installed persistently by chezmoi as an isolated `uv tool` with the useful
+  macOS OCR, VLM, ASR, HTML, XBRL, and remote-client extras. Do not install it
+  into a repository environment.
 - MIT license, LF AI & Data Foundation project
 
 ## Chezmoi Dotfiles — Dual Edit Rule
