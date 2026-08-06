@@ -67,14 +67,15 @@ files.
 
 - Implemented and locally verified the Berkeley Mono bootstrap workflow in the
   `feature/berkeley-mono-bootstrap` worktree.
+- Created commit `1398f69e8` (`feat(dotfiles): install patched Berkeley Mono`).
 - Installed Homebrew `fontforge` and `uv`, then installed four patched Berkeley
   Mono styles in `~/Library/Fonts`.
 - Updated the live Chezmoi helper skill to match its managed source.
 
 ### Remaining
 
-- Commit the verified changes, open the stacked pull request, and confirm its
-  Buildkite and hosted-review results.
+- Authenticate GitHub CLI, submit the branch with git-spice, and confirm the
+  resulting Buildkite and hosted-review results.
 
 ### Caveats
 
@@ -83,3 +84,5 @@ files.
 - FontForge output is semantically stable but not byte-identical across runs.
 - The main checkout's existing dotfiles work remains untouched and separate
   from this worktree.
+- PR submission is blocked because `gh auth status` reports no authenticated
+  GitHub host; git-spice cannot submit until GitHub CLI authentication exists.

@@ -33,8 +33,8 @@ report how they are intended to be run.
 
 ### Remaining
 
-- Complete the pull-request and CI follow-through recorded in the Berkeley Mono
-  plan.
+- Authenticate GitHub CLI and complete the pull-request and CI follow-through
+  recorded in the Berkeley Mono plan.
 
 ### Caveats
 
@@ -44,3 +44,4 @@ report how they are intended to be run.
   `MACOS_FRESH_INSTALL.md`; this lookup did not alter either file.
 - The implementation is isolated in a worktree so those main-checkout changes
   remain untouched.
+- PR publication is blocked on missing GitHub CLI authentication.
