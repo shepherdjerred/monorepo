@@ -1,0 +1,10 @@
+---
+description: Spotlight preferences
+sudo: false
+current_host: false
+kill: [SystemUIServer]
+data:
+  com.apple.Spotlight:
+    # Retain Clipboard History for one week.
+    PasteboardHistoryEnabled: true
+    PasteboardHistoryTimeout: 604800

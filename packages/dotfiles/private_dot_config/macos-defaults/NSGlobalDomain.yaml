@@ -7,5 +7,10 @@ data:
   NSGlobalDomain:
     # Follow the automatic light/dark appearance schedule.
     AppleInterfaceStyleSwitchesAutomatically: true
+    # Use Celsius for macOS temperature displays.
+    AppleTemperatureUnit: Celsius
     # Repeat held keys instead of showing the accent picker.
     ApplePressAndHoldEnabled: "0"
+    # Keep haptic Force Click enabled at the selected trackpad pressure.
+    com.apple.trackpad.forceClick: true
+    com.apple.trackpad.scaling: 3.0
