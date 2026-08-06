@@ -108,3 +108,13 @@ print(doc.export_to_markdown())
 
 - When changing any preference, setting, or config file, **edit both the live copy and the chezmoi source** (`packages/dotfiles/`) if the file is managed by chezmoi.
 - If the file being edited is NOT managed by chezmoi, suggest that it be added if it's the kind of file that should be tracked (config files, shell settings, tool preferences, etc.).
+
+## macOS Fresh Install — Berkeley Mono
+
+- `install_macos.sh` requires the licensed static Berkeley Mono TTF package to
+  be extracted under `~/Downloads`, or supplied through
+  `BERKELEY_MONO_SOURCE_DIR`.
+- Never commit the licensed source fonts or patched outputs. The bootstrap uses
+  `packages/fonts/patch-berkeley-mono.py` to download the pinned Nerd Fonts
+  patcher, verify its checksum, patch the external TTFs, and install them into
+  `~/Library/Fonts`.

@@ -31,6 +31,31 @@ retry() {
     done
 }
 
+discover_berkeley_mono_source_dir() {
+    if [ -n "${BERKELEY_MONO_SOURCE_DIR:-}" ]; then
+        if [ ! -d "${BERKELEY_MONO_SOURCE_DIR}" ]; then
+            log_error "BERKELEY_MONO_SOURCE_DIR is not a directory: ${BERKELEY_MONO_SOURCE_DIR}"
+            return 1
+        fi
+        printf "%s\n" "${BERKELEY_MONO_SOURCE_DIR}"
+        return 0
+    fi
+
+    local regular_fonts=()
+    local font_path
+    while IFS= read -r font_path; do
+        regular_fonts+=("${font_path}")
+    done < <(fd --absolute-path --type f '^BerkeleyMono-Regular\.ttf$' "${HOME}/Downloads")
+
+    if [ "${#regular_fonts[@]}" -ne 1 ]; then
+        log_error "Expected exactly one BerkeleyMono-Regular.ttf under ${HOME}/Downloads; found ${#regular_fonts[@]}"
+        log_error "Set BERKELEY_MONO_SOURCE_DIR to the extracted static TTF directory"
+        return 1
+    fi
+
+    dirname "${regular_fonts[0]}"
+}
+
 log_info "Starting macOS dotfiles install"
 
 # Install Xcode Command Line Tools if not present
@@ -68,8 +93,9 @@ fi
 
 # Apply dotfiles
 if [ -n "${DOTFILES_LOCAL_PATH:-}" ] && [ -d "${DOTFILES_LOCAL_PATH}" ]; then
-    log_info "Using local dotfiles from: ${DOTFILES_LOCAL_PATH}"
-    if ! chezmoi init --source "${DOTFILES_LOCAL_PATH}" --apply --keep-going; then
+    DOTFILES_SOURCE_DIR="$(cd "${DOTFILES_LOCAL_PATH}" && pwd)"
+    log_info "Using local dotfiles from: ${DOTFILES_SOURCE_DIR}"
+    if ! chezmoi init --source "${DOTFILES_SOURCE_DIR}" --apply --keep-going; then
         log_warn "chezmoi apply encountered errors; continuing because secrets may be unavailable"
     fi
 else
@@ -80,7 +106,8 @@ else
     else
         retry 3 5 git clone --depth 1 https://github.com/shepherdjerred/monorepo.git "${HOME}/git/monorepo"
     fi
-    if ! chezmoi init --source "${HOME}/git/monorepo/packages/dotfiles" --apply --keep-going; then
+    DOTFILES_SOURCE_DIR="${HOME}/git/monorepo/packages/dotfiles"
+    if ! chezmoi init --source "${DOTFILES_SOURCE_DIR}" --apply --keep-going; then
         log_warn "chezmoi apply encountered errors; continuing because secrets may be unavailable"
     fi
 fi
@@ -108,6 +135,19 @@ if command -v brew &>/dev/null; then
     log_info "Enabling Touch ID for sudo, including terminal multiplexer support"
     sudo-touchid --with-reattach
     log_success "Touch ID for sudo enabled"
+
+    log_info "Patching and installing Berkeley Mono"
+    berkeley_mono_source_dir="$(discover_berkeley_mono_source_dir)"
+    berkeley_mono_patcher="$(dirname "${DOTFILES_SOURCE_DIR}")/fonts/patch-berkeley-mono.py"
+    if [ ! -f "${berkeley_mono_patcher}" ]; then
+        log_error "Berkeley Mono patcher is missing: ${berkeley_mono_patcher}"
+        exit 1
+    fi
+    uv run "${berkeley_mono_patcher}" \
+        "${berkeley_mono_source_dir}" \
+        "${HOME}/.cache/berkeley-mono/patched" \
+        --install
+    log_success "Berkeley Mono patched and installed"
 
     # Re-apply chezmoi now that whiskers and other tools are available
     log_info "Re-applying chezmoi templates (post-brew)"

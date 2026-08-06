@@ -24,6 +24,19 @@ cloud services restore user data. A full-machine backup is not required.
 
 Do not infer sync completeness merely because a client process is running.
 
+## Before the automated installer
+
+Download the licensed Berkeley Mono static TTF package and leave its extracted
+directory under `~/Downloads`. The installer locates the directory through its
+single `BerkeleyMono-Regular.ttf`, downloads the pinned Nerd Fonts patcher,
+patches every TTF in that directory, and installs the results in
+`~/Library/Fonts`. The licensed source fonts and generated fonts remain outside
+the repository.
+
+If the extracted fonts live elsewhere, set `BERKELEY_MONO_SOURCE_DIR` to that
+directory when invoking `install_macos.sh`. The source directory must contain
+the static desktop TTF files, not OTF, WOFF2, or variable fonts.
+
 ## After the automated installer
 
 1. Sign in to 1Password and enable its CLI and SSH-agent integrations.
@@ -95,6 +108,8 @@ decisions as part of routine setup.
 
 - `chezmoi diff` contains no unexplained configuration drift.
 - `brew bundle check --file="$HOME/.Brewfile" --no-upgrade` succeeds.
+- `system_profiler SPFontsDataType` lists Berkeley Mono Regular, Bold, Oblique,
+  and Bold Oblique from `~/Library/Fonts`.
 - Automatic appearance, key repeat, Dock behavior, tap-to-click, and
   three-finger drag match the tracked defaults.
 - The privacy feature checks above succeed.

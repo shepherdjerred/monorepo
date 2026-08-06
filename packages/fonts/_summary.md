@@ -1,1 +1,8 @@
-Project provides a command-line workflow to patch Berkeley Mono TTF fonts with Nerd Fonts glyphs, rename them, and optionally install or archive the results. It is implemented as a Python 3.10 script that uses fontTools, fontforge, and the Nerd Fonts FontPatcher fetched with `curl`. The pipeline caches the patcher in `~/.cache/nerd-fonts-patcher`, enforces consistent style naming through a filename-to-style map, and supports post-processing steps like zipping and installing fonts.
+Project provides a command-line workflow to patch static Berkeley Mono TTF
+fonts with Nerd Fonts glyphs, preserve Berkeley Mono family/style names, and
+optionally install or archive the results. The Python 3.10 script uses
+fontTools and fontforge, downloads a checksum-verified pinned Nerd Fonts
+FontPatcher release into `~/.cache/nerd-fonts-patcher`, fails if any input does
+not produce exactly one patched TTF, and supports zip creation or installation
+to `~/Library/Fonts`. The macOS dotfiles bootstrap invokes this workflow using
+licensed source fonts supplied outside the repository.
