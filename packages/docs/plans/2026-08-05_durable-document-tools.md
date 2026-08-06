@@ -50,4 +50,33 @@ its real runtime behavior.
 - [x] Implement the durable package inventory and setup hooks.
 - [x] Update live state through chezmoi and Homebrew.
 - [x] Verify all three tools end to end.
-- [ ] Commit, publish a draft PR, and complete the session handoff.
+- [x] Commit, publish the PR, and complete the session handoff.
+
+## Session Log — 2026-08-05
+
+### Done
+
+- Added reproducible Homebrew, chezmoi, Fish, PinchTab daemon, Docling model,
+  and Playwright-browser setup under `packages/dotfiles/`.
+- Applied the managed Brewfile and Fish environment to this Mac; installed and
+  configured PinchTab, Lightpanda, Docling, native OCR/media dependencies,
+  LibreOffice, and dedicated automation browsers.
+- Verified Lightpanda Markdown rendering, PinchTab navigation plus headed and
+  headless instances, Docling optional imports and six-page PDF conversion,
+  prefetched models, Playwright Chromium, template rendering, shell checks,
+  focused package tasks, docs validation, and the staged safety gate.
+- Published [PR #2000](https://github.com/shepherdjerred/monorepo/pull/2000)
+  from commit `7e4cf48b7`.
+
+### Remaining
+
+- Confirm PR #2000's current-head Buildkite and hosted review results, then
+  merge it.
+
+### Caveats
+
+- Docling intentionally uses isolated Python 3.13 because the remote-serving
+  extra pins a gRPC client without a Python 3.14 macOS arm64 wheel; the repo's
+  Python 3.14 toolchain is unchanged.
+- Downloaded Docling models, Playwright browsers, PinchTab tokens, profiles,
+  extensions, and generated runtime config remain outside Git by design.
