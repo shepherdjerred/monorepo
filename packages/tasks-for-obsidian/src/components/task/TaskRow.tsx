@@ -79,7 +79,13 @@ export const TaskRow = React.memo(function TaskRowComponent({
 
   const row = (
     <Pressable
-      style={[styles.row, { borderBottomColor: colors.borderLight }]}
+      style={[
+        styles.row,
+        {
+          backgroundColor: colors.surface,
+          borderBottomColor: colors.borderLight,
+        },
+      ]}
       onPress={onPress}
       testID="task-row"
       accessibilityRole={selectionMode ? "checkbox" : "button"}
