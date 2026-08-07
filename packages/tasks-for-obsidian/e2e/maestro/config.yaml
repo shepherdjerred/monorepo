@@ -14,3 +14,4 @@ executionOrder:
     - 04-edit-task
     - 05-offline-queue
     - 06-offline-crash-replay
+    - 07-swipe-actions
