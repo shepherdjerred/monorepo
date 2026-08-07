@@ -57,7 +57,7 @@ The chaos proxy is toggled from flows via `runScript` (GraalJS `http.post`)
 against `/__chaos/offline` and `/__chaos/online` on the proxy port itself;
 control endpoints keep working while "offline".
 
-## Current status (2026-08-07)
+## Current status
 
 The harness is **functional end-to-end**: it builds the app, boots the
 simulator, delivers config via the deep link, syncs the seeded vault, and

@@ -83,7 +83,7 @@ export const TaskRow = React.memo(function TaskRowComponent({
         styles.row,
         {
           backgroundColor: colors.surface,
-          borderBottomColor: colors.borderLight,
+          borderBottomColor: colors.divider,
         },
       ]}
       onPress={onPress}
