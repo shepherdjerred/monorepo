@@ -10,10 +10,6 @@ import type {
   TaskPatchOperation,
 } from "tasknotes-types/v2";
 
-function recurrenceRuleWithoutStart(recurrence: string): string {
-  return recurrence.replace(/^DTSTART:[^;]+;/, "");
-}
-
 export type RestoreValidationInput = {
   readonly task: TaskInfo;
   readonly restore: RecurringCompletionRestore;
@@ -79,11 +75,7 @@ export function assertRecurringRestoreIsCurrent({
         ? {}
         : { dateCreated: task.dateCreated }),
     }) ?? restore.recurrence;
-  const recurrenceMatches =
-    restore.scheduled === null
-      ? recurrenceRuleWithoutStart(task.recurrence ?? "") ===
-        recurrenceRuleWithoutStart(restore.recurrence)
-      : task.recurrence === expectedRecurrence;
+  const recurrenceMatches = task.recurrence === expectedRecurrence;
   const targetIsNotSkipped = !(task.skipped_instances ?? []).includes(date);
   if (
     !targetIsNotSkipped ||

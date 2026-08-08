@@ -417,6 +417,34 @@ tags:
 });
 
 describe("matching-state restore safeguards", () => {
+  test("rejects a matching-state restore after a DTSTART-only recurrence edit", async () => {
+    await seed(
+      "TaskNotes/weekly.md",
+      `---
+title: Weekly review
+status: open
+recurrence: DTSTART:20260901;FREQ=WEEKLY
+tags:
+  - task
+---
+`,
+    );
+    await repo.scan();
+
+    await expect(
+      repo.completeInstance("TaskNotes/weekly.md", {
+        date: "2026-08-01",
+        completed: false,
+        restore: {
+          scheduled: null,
+          due: null,
+          recurrence: "DTSTART:20260801;FREQ=WEEKLY",
+          skipped: false,
+        },
+      }),
+    ).rejects.toThrow("restore");
+  });
+
   test("rejects a matching-state restore after an unrelated recurrence edit", async () => {
     await seed(
       "TaskNotes/weekly.md",
