@@ -26,11 +26,11 @@ menu and iOS's native `UIMenu` without the old compatibility packages.
 
 ## Completed
 
-- [x] Replace every Zeego context/dropdown menu call site.
-- [x] Remove `zeego`, `react-native-ios-context-menu`, and
-      `react-native-ios-utilities` from the app and Bun lockfile.
-- [x] Remove the obsolete Bun patch and Podfile deployment-target workaround.
-- [x] Regenerate the CocoaPods lockfile and verify native dependency discovery.
+- Replace every Zeego context/dropdown menu call site.
+- Remove `zeego`, `react-native-ios-context-menu`, and
+  `react-native-ios-utilities` from the app and Bun lockfile.
+- Remove the obsolete Bun patch and Podfile deployment-target workaround.
+- Regenerate the CocoaPods lockfile and verify native dependency discovery.
 
 ## Evidence
 
