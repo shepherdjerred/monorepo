@@ -67,6 +67,10 @@ const PrometheusRuleSchema = z
   })
   .loose();
 
+function normalizePromql(value: string): string {
+  return value.replaceAll(/\s+/g, " ").trim();
+}
+
 function synthBuildkiteMonitoring(): unknown[] {
   const chart = Testing.chart();
   createBuildkiteMonitoring(chart);
@@ -77,8 +81,9 @@ function expectExpressionContains(
   expression: string,
   fragments: readonly string[],
 ): void {
+  const normalizedExpression = normalizePromql(expression);
   for (const fragment of fragments) {
-    expect(expression).toContain(fragment);
+    expect(normalizedExpression).toContain(normalizePromql(fragment));
   }
 }
 

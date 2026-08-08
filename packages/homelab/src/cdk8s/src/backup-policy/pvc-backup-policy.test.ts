@@ -54,6 +54,13 @@ const ValidatingAdmissionPolicySchema = z.object({
   }),
 });
 
+const PLANE_RUNTIME_PVC_NAMES = [
+  "pvc-plane-monitor-vol-plane-monitor-wl-0",
+  "pvc-plane-pgdb-vol-plane-pgdb-wl-0",
+  "pvc-plane-rabbitmq-vol-plane-rabbitmq-wl-0",
+  "pvc-plane-redis-vol-plane-redis-wl-0",
+] as const;
+
 const tempDirectories: string[] = [];
 
 afterEach(async () => {
@@ -77,6 +84,36 @@ describe("PVC backup policy", () => {
     expect(
       PVC_BACKUP_POLICY.filter((entry) => entry.backup === "disabled"),
     ).toHaveLength(23);
+  });
+
+  it("classifies Plane vendor StatefulSet PVCs in the admission policy", () => {
+    for (const name of PLANE_RUNTIME_PVC_NAMES) {
+      expect(getPvcBackupPolicy("plane", name)).toMatchObject({
+        backup: "enabled",
+      });
+    }
+
+    const app = new App();
+    const chart = new Chart(app, "pvc-backup-admission");
+    createPvcBackupAdmissionPolicies(chart);
+    const validatingPolicy = parseAllDocuments(app.synthYaml())
+      .map((document) => document.toJS())
+      .find((document) => {
+        const parsed = ManifestSchema.safeParse(document);
+        return (
+          parsed.success && parsed.data.kind === "ValidatingAdmissionPolicy"
+        );
+      });
+    if (validatingPolicy === undefined) {
+      throw new Error(
+        "PVC backup ValidatingAdmissionPolicy was not synthesized",
+      );
+    }
+
+    const serialized = JSON.stringify(validatingPolicy);
+    for (const name of PLANE_RUNTIME_PVC_NAMES) {
+      expect(serialized).toContain(`plane/${name}`);
+    }
   });
 
   it("classifies and labels every synthesized PVC", async () => {
