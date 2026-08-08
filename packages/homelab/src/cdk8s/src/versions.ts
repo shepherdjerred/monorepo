@@ -202,6 +202,9 @@ const versions = {
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "ducktors/turborepo-remote-cache":
     "2.11.5@sha256:dfd1ce24cc4bdd59113e3ba68c881269fda5dd5929e58e2ea95010c51c09056d",
+  // renovate: datasource=docker registryUrl=https://registry.k8s.io versioning=semver packageName=kueue/charts/kueue
+  kueue:
+    "0.18.2@sha256:156fbc8c6752b08cf66a2324fed33e269e0a64e54dd8d70d51118065bca651af",
   // Persistent BuildKit daemon backing CI image builds (bounded-GC cache on a
   // compressed ZFS PVC, replacing the per-run throwaway builder inside dind —
   // moves the build-layer write storm off the xfs /var system disk).

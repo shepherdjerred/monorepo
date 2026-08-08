@@ -51,6 +51,39 @@ describe("CriticalSystemLoad alert", () => {
   });
 });
 
+describe("liskov memory and Buildkite admission alerts", () => {
+  it("warns before the liskov eviction floor", () => {
+    const group = getResourceMonitoringRuleGroups().find(
+      (candidate) => candidate.name === "resource-liskov-memory-monitoring",
+    );
+    const alert = group?.rules?.find(
+      (rule) => rule.alert === "LiskovMemoryAvailableLow",
+    );
+    expect(alert?.expr.value).toContain('node="liskov"');
+    expect(alert?.expr.value).toContain("8589934592");
+    expect(alert?.for).toBe("10m");
+  });
+
+  it("keeps a critical signal for memory pressure and Kueue backlog", () => {
+    const groups = getResourceMonitoringRuleGroups();
+    const memory = groups
+      .find(
+        (candidate) => candidate.name === "resource-liskov-memory-monitoring",
+      )
+      ?.rules?.find((rule) => rule.alert === "LiskovMemoryPressure");
+    const admission = groups
+      .find(
+        (candidate) =>
+          candidate.name === "resource-buildkite-admission-monitoring",
+      )
+      ?.rules?.find((rule) => rule.alert === "BuildkiteKueueWorkloadsWaiting");
+    expect(memory?.expr.value).toContain("MemoryPressure");
+    expect(memory?.expr.value).toContain("4294967296");
+    expect(admission?.expr.value).toContain('cluster_queue="buildkite"');
+    expect(admission?.for).toBe("30m");
+  });
+});
+
 function securityRules() {
   const groups = getResourceMonitoringRuleGroups();
   const group = groups.find(

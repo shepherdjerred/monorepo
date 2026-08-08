@@ -95,6 +95,7 @@ import type { PyroscopeHelmValues } from "@shepherdjerred/homelab/cdk8s/generate
 import type { TempoHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/tempo.types";
 import type { MariadbHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/mariadb.types";
 import type { Agentstackk8sHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/agent-stack-k8s.types";
+import type { KueueHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/kueue.types";
 
 type HelmChartValuesMap = {
   "argo-cd": ArgocdHelmValues;
@@ -122,6 +123,7 @@ type HelmChartValuesMap = {
   tempo: TempoHelmValues;
   mariadb: MariadbHelmValues;
   "agent-stack-k8s": Agentstackk8sHelmValues;
+  kueue: KueueHelmValues;
 };
 
 export type HelmValuesForChart<TChart extends keyof HelmChartValuesMap> =

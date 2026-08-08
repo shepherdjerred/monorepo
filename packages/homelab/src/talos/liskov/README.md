@@ -17,7 +17,7 @@ own taints. The K8s side of the contract lives in `src/cdk8s/src/misc/nodes.ts`.
 | File                    | What                                                 | Delta vs torvalds                                                                  |
 | ----------------------- | ---------------------------------------------------- | ---------------------------------------------------------------------------------- |
 | `patches/image.yaml`    | install pin, disk serial, hostname, ZFS params       | AMD schematic; no RAPL caps (105W eco in BIOS is the AMD equivalent)               |
-| `patches/kubelet.yaml`  | reservations, eviction, pids cap, cgroup enforcement | systemReserved 32Gi (vs 40Gi), kubeReserved 4Gi (no etcd)                          |
+| `patches/kubelet.yaml`  | reservations, eviction, pids cap, cgroup enforcement | systemReserved 24Gi (vs 40Gi), kubeReserved 4Gi (no etcd)                          |
 | `patches/sysctls.yaml`  | kptr_restrict, panic_on_rcu_stall                    | identical                                                                          |
 | `patches/watchdog.yaml` | hardware watchdog                                    | `sp5100_tco` (AMD) instead of `iTCO_wdt` — **live-verify before arming, see file** |
 | `patches/certsans.yaml` | Talos API certificate SANs                           | adds Liskov's canonical Tailscale FQDN                                             |
@@ -128,9 +128,10 @@ committed).
    dashboards show both nodes; smartctl/nvme/zfs collector pods present on
    liskov.
 
-## After a week of soak
+## After the soak
 
-Right-size `systemReserved` from Prometheus slab/ARC data, relax torvalds
-(its 40Gi reservation was sized for the CI storm that now lives here), and
-revisit `BUILDKITE_MAX_IN_FLIGHT` (the sole CI concurrency cap since the
-Kueue removal) — see the plan doc, Phase 3.
+Prometheus slab/ARC data supports the 24Gi `systemReserved` value. Buildkite
+now has a resource-aware Kueue budget of 80Gi memory / 24 CPU / 20 pods, so
+`BUILDKITE_MAX_IN_FLIGHT` remains the count cap while Kueue handles weighted
+admission. Keep watching liskov's available-memory and eviction signals before
+raising either limit.

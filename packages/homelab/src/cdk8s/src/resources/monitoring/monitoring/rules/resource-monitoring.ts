@@ -2,6 +2,7 @@ import type { PrometheusRuleSpecGroups } from "@shepherdjerred/homelab/cdk8s/gen
 import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { escapePrometheusTemplate } from "./shared.ts";
 import { getSystemHealthRuleGroups } from "./resource-monitoring-system.ts";
+import { getLiskovResourceMonitoringRuleGroups } from "./resource-monitoring-liskov.ts";
 import { CI_NODE_HOSTNAME } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 
 // The dedicated CI node runs at high CPU by design (that's its job), so
@@ -105,6 +106,8 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         },
       ],
     },
+
+    ...getLiskovResourceMonitoringRuleGroups(),
 
     // Network monitoring
     {
