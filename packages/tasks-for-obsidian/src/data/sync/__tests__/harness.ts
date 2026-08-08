@@ -79,11 +79,14 @@ export function memoryStoreStorage(
   initial: {
     tasks?: Task[];
     aliases?: string | null;
+    acknowledgedCompletionRestores?: string | null;
     lastSync?: number | null;
   } = {},
 ): MemoryStoreStorage {
   let tasks = initial.tasks ?? [];
   let aliases = initial.aliases ?? null;
+  let acknowledgedCompletionRestores =
+    initial.acknowledgedCompletionRestores ?? null;
   let lastSync = initial.lastSync ?? null;
   return {
     getTasks: () => Promise.resolve(tasks),
@@ -96,12 +99,24 @@ export function memoryStoreStorage(
       aliases = d;
       return Promise.resolve();
     },
+    getAcknowledgedCompletionRestores: () =>
+      Promise.resolve(acknowledgedCompletionRestores),
+    setAcknowledgedCompletionRestores: (d) => {
+      acknowledgedCompletionRestores = d;
+      return Promise.resolve();
+    },
     getLastSyncTime: () => Promise.resolve(lastSync),
     setLastSyncTime: (t) => {
       lastSync = t;
       return Promise.resolve();
     },
-    clone: () => memoryStoreStorage({ tasks, aliases, lastSync }),
+    clone: () =>
+      memoryStoreStorage({
+        tasks,
+        aliases,
+        acknowledgedCompletionRestores,
+        lastSync,
+      }),
   };
 }
 

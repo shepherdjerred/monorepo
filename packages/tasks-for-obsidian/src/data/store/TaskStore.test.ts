@@ -341,6 +341,50 @@ describe("TaskStore pending restores", () => {
     await ack;
     await expect(pendingRestore).resolves.toEqual(restore);
   });
+
+  test("persists an acknowledged restore across relaunch", async () => {
+    const queueStorage = memoryQueueStorage();
+    const storeStorage = memoryStoreStorage();
+    const task = makeTask({
+      recurrence: "FREQ=WEEKLY",
+      scheduled: "2026-08-08",
+    });
+    const { store, queue } = makeStore(queueStorage, storeStorage);
+    await store.restore();
+    await store.replaceBase([task], now);
+    const restore = {
+      scheduled: "2026-08-08",
+      due: null,
+      recurrence: "FREQ=WEEKLY",
+      skipped: false,
+    };
+    await store.dispatch({
+      type: "set_instance_complete",
+      taskId: task.id,
+      date: "2026-08-08",
+      completed: true,
+      restore,
+    });
+    const command = queue.head();
+    if (command?.type !== "set_instance_complete") {
+      throw new Error("expected completion command");
+    }
+    await store.applyServerAck(command, {
+      ...task,
+      completeInstances: ["2026-08-08"],
+    });
+
+    const relaunchedQueue = new CommandQueue(queueStorage.clone(), clock);
+    const relaunched = new TaskStore(
+      relaunchedQueue,
+      storeStorage.clone(),
+      clock,
+    );
+    await relaunched.restore();
+    await expect(
+      relaunched.getPendingCompletionRestore(task.id, "2026-08-08"),
+    ).resolves.toEqual(restore);
+  });
 });
 
 describe("TaskStore server acks", () => {

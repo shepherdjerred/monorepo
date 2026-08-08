@@ -70,6 +70,8 @@ export type TaskStoreStorage = {
   setTasks: (tasks: Task[]) => Promise<void>;
   getIdAliases: () => Promise<string | null>;
   setIdAliases: (data: string) => Promise<void>;
+  getAcknowledgedCompletionRestores: () => Promise<string | null>;
+  setAcknowledgedCompletionRestores: (data: string) => Promise<void>;
   getLastSyncTime: () => Promise<number | null>;
   setLastSyncTime: (time: number) => Promise<void>;
 };
@@ -79,11 +81,50 @@ const defaultStorage: TaskStoreStorage = {
   setTasks: (tasks) => TypedStorage.setTasks(tasks),
   getIdAliases: () => TypedStorage.getIdAliases(),
   setIdAliases: (data) => TypedStorage.setIdAliases(data),
+  getAcknowledgedCompletionRestores: () =>
+    TypedStorage.getAcknowledgedCompletionRestores(),
+  setAcknowledgedCompletionRestores: (data) =>
+    TypedStorage.setAcknowledgedCompletionRestores(data),
   getLastSyncTime: () => TypedStorage.getLastSyncTime(),
   setLastSyncTime: (time) => TypedStorage.setLastSyncTime(time),
 };
 
 const AliasesSchema = z.record(z.string(), z.string());
+const CompletionRestoreSchema = z.object({
+  scheduled: z.string().nullable(),
+  due: z.string().nullable(),
+  recurrence: z.string(),
+  skipped: z.boolean(),
+});
+const AcknowledgedCompletionRestoresSchema = z.record(
+  z.string(),
+  CompletionRestoreSchema,
+);
+
+function parseAcknowledgedCompletionRestores(
+  raw: string | null,
+): Map<string, RecurringCompletionRestore> {
+  if (raw === null) return new Map();
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return new Map();
+  }
+  const result = AcknowledgedCompletionRestoresSchema.safeParse(parsed);
+  if (!result.success) return new Map();
+  const restores = new Map<string, RecurringCompletionRestore>();
+  for (const [key, value] of Object.entries(result.data)) {
+    restores.set(key, value);
+  }
+  return restores;
+}
+
+function serializeAcknowledgedCompletionRestores(
+  restores: ReadonlyMap<string, RecurringCompletionRestore>,
+): string {
+  return JSON.stringify(Object.fromEntries(restores));
+}
 
 function completionRestoreKey(id: TaskId, date: string): string {
   return `${String(id)}\u{0}${date}`;
@@ -149,13 +190,18 @@ export class TaskStore {
   async restore(): Promise<void> {
     await this.enqueueOperation(async () => {
       await this.queue.restore();
-      const [tasks, rawAliases, lastSync] = await Promise.all([
-        this.storage.getTasks(),
-        this.storage.getIdAliases(),
-        this.storage.getLastSyncTime(),
-      ]);
+      const [tasks, rawAliases, rawAcknowledgedRestores, lastSync] =
+        await Promise.all([
+          this.storage.getTasks(),
+          this.storage.getIdAliases(),
+          this.storage.getAcknowledgedCompletionRestores(),
+          this.storage.getLastSyncTime(),
+        ]);
       this.base = new Map(tasks.map((t) => [t.id, t]));
       this.aliases = parseAliases(rawAliases);
+      this.acknowledgedCompletionRestores = parseAcknowledgedCompletionRestores(
+        rawAcknowledgedRestores,
+      );
       this.lastSyncTime = lastSync;
       this.recompute();
     });
@@ -189,9 +235,19 @@ export class TaskStore {
         !command.completed &&
         command.restore !== undefined
       ) {
-        this.acknowledgedCompletionRestores.delete(
+        const nextAcknowledgedCompletionRestores = new Map(
+          this.acknowledgedCompletionRestores,
+        );
+        nextAcknowledgedCompletionRestores.delete(
           completionRestoreKey(command.taskId, command.date),
         );
+        await this.storage.setAcknowledgedCompletionRestores(
+          serializeAcknowledgedCompletionRestores(
+            nextAcknowledgedCompletionRestores,
+          ),
+        );
+        this.acknowledgedCompletionRestores =
+          nextAcknowledgedCompletionRestores;
       }
       this.recompute();
       this.onDispatch?.();
@@ -253,6 +309,11 @@ export class TaskStore {
       // If the process dies between these writes, idempotent mutation replay
       // is safe; the reverse order could lose the accepted mutation offline.
       await this.persistBase(nextBase);
+      await this.storage.setAcknowledgedCompletionRestores(
+        serializeAcknowledgedCompletionRestores(
+          nextAcknowledgedCompletionRestores,
+        ),
+      );
       await this.queue.ack(command.id);
 
       // Publish the alias/base/snapshot as one synchronous state transition.
