@@ -7,27 +7,30 @@
  *   2. tasknotes-server on 127.0.0.1:18901 over that vault
  *   3. chaos proxy on 127.0.0.1:18902 -> 18901 (offline/online control)
  *   4. booted iPhone simulator (boots the newest available one if needed)
- *   5. Metro + `bun run ios` debug build (skippable with E2E_SKIP_BUILD=1)
- *   6. `maestro test e2e/maestro` pointing the app at the proxy
+ *   5. Metro + xcodebuild debug build (skippable with E2E_SKIP_BUILD=1)
+ *   6. each ordered Maestro flow in a fresh process, pointing at the proxy
  *   7. vault-state assertions against the real markdown files
- *   8. teardown (always): kill children, remove the temp vault
+ *   8. teardown: kill children; remove a passing vault, preserve a failed one
  *
  * (node:child_process rather than Bun.spawn so the file typechecks against
  * the repo-pinned @types/node — Bun implements node:child_process natively.)
  */
 
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
-import { cp, mkdtemp, readdir, readFile, rm } from "node:fs/promises";
+import { access, cp, mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
+
+import { assertVaultState } from "./vault-assertions";
 
 const SERVER_PORT = 18_901;
 const CHAOS_PORT = 18_902;
 const AUTH_TOKEN = "e2e-test-token";
 const TASKS_DIR = "TaskNotes";
 const METRO_PORT = 8081;
+const APP_ID = "org.reactjs.native.example.TasksForObsidian";
 
 const packageDir = fileURLToPath(new URL("..", import.meta.url));
 const serverDir = fileURLToPath(
@@ -88,12 +91,36 @@ const SimListSchema = z.object({
 });
 type SimDevice = z.infer<typeof SimDeviceSchema>;
 
-function runSimctl(args: string[]): string {
+function runSimctl(args: string[], allowAlreadyStopped = false): string {
   const proc = spawnSync("xcrun", ["simctl", ...args], { encoding: "utf8" });
   if (proc.status !== 0) {
-    fail(`xcrun simctl ${args.join(" ")} failed:\n${proc.stderr}`);
+    const stderr = proc.stderr.trim();
+    if (
+      allowAlreadyStopped &&
+      (stderr.includes("No such process") ||
+        /application .* is not running/i.test(stderr))
+    ) {
+      log(`${APP_ID} was already stopped`);
+      return "";
+    }
+    fail(`xcrun simctl ${args.join(" ")} failed:\n${stderr}`);
   }
   return proc.stdout;
+}
+
+function isAppInstalled(simulator: SimDevice): boolean {
+  const proc = spawnSync(
+    "xcrun",
+    ["simctl", "get_app_container", simulator.udid, APP_ID, "data"],
+    { encoding: "utf8" },
+  );
+  if (proc.status === 0) return true;
+  if (proc.status === 2 && proc.stderr.includes("No such file or directory")) {
+    return false;
+  }
+  fail(
+    `could not determine whether ${APP_ID} is installed on ${simulator.name}:\n${proc.stderr}`,
+  );
 }
 
 function simctlList(filter: string): Map<string, SimDevice[]> {
@@ -350,6 +377,16 @@ async function buildAndInstallApp(simulator: SimDevice): Promise<void> {
     }
   }
 
+  // Start each suite with one clean data container. Clearing the app from every
+  // nested Maestro setup flow repeatedly tears down the React Native debug
+  // runtime; on newer simulators that can strand the app at "Downloading 100%"
+  // and turn a 60-second assertion into a many-minute XCTest timeout. The
+  // flows already intentionally share one server vault, so relaunching the same
+  // clean install between flows is the matching local-state model.
+  if (isAppInstalled(simulator)) {
+    log(`uninstalling existing ${APP_ID} data container`);
+    runSimctl(["uninstall", simulator.udid, APP_ID]);
+  }
   log(`installing ${appPath}`);
   runSimctl(["install", simulator.udid, appPath]);
 }
@@ -379,110 +416,86 @@ async function waitForJsBundle(): Promise<void> {
   log("Metro bundle ready");
 }
 
+function launchApp(simulator: SimDevice): void {
+  runSimctl(["launch", simulator.udid, APP_ID]);
+}
+
+function restartApp(simulator: SimDevice, flow: string): void {
+  log(`restarting ${APP_ID} before ${flow}`);
+  runSimctl(["terminate", simulator.udid, APP_ID], true);
+  launchApp(simulator);
+}
+
 // ---------------------------------------------------------------------------
 // Maestro
 // ---------------------------------------------------------------------------
 
-async function runMaestro(simulator: SimDevice): Promise<void> {
+const MaestroConfigSchema = z.object({
+  executionOrder: z.object({
+    flowsOrder: z.array(z.string().regex(/^\d{2}-[a-z0-9-]+$/)).min(1),
+  }),
+});
+
+async function orderedFlowFiles(): Promise<readonly string[]> {
+  const configPath = path.join(packageDir, "e2e", "maestro", "config.yaml");
+  const source = await readFile(configPath, "utf8");
+  const config = MaestroConfigSchema.parse(Bun.YAML.parse(source));
+  return config.executionOrder.flowsOrder.map((flow) => `${flow}.yaml`);
+}
+
+async function runMaestro(
+  simulator: SimDevice,
+  focusedFlow: string | null,
+): Promise<void> {
   const which = spawnSync("which", ["maestro"], { encoding: "utf8" });
   if (which.status !== 0) {
     fail(
       "maestro CLI not found — install it: brew install mobile-dev-inc/tap/maestro",
     );
   }
-  // Pin the device: maestro aborts with "Multiple devices connected" if any
-  // other simulator (or a paired watch/host) is also up.
-  const proc = spawn(
-    "maestro",
-    [
-      "--device",
-      simulator.udid,
-      "test",
-      path.join("e2e", "maestro"),
-      "--env",
-      `APP_URL=http://127.0.0.1:${String(CHAOS_PORT)}`,
-      "--env",
-      `AUTH_TOKEN=${AUTH_TOKEN}`,
-    ],
-    { cwd: packageDir, stdio: "inherit" },
-  );
-  const exitCode = await waitForExit(proc);
-  if (exitCode !== 0) {
-    fail(`maestro test failed with exit code ${String(exitCode)}`);
+  const flows = focusedFlow === null ? await orderedFlowFiles() : [focusedFlow];
+  for (const [index, flow] of flows.entries()) {
+    if (index > 0) restartApp(simulator, flow);
+    const target = path.join(packageDir, "e2e", "maestro", flow);
+    try {
+      await access(target);
+    } catch {
+      fail(`requested Maestro flow does not exist: ${target}`);
+    }
+
+    log(`Maestro flow ${String(index + 1)}/${String(flows.length)}: ${flow}`);
+    // Pin the device: maestro aborts with "Multiple devices connected" if any
+    // other simulator (or a paired watch/host) is also up.
+    const proc = spawn(
+      "maestro",
+      [
+        "--device",
+        simulator.udid,
+        "test",
+        target,
+        "--env",
+        `APP_URL=http://127.0.0.1:${String(CHAOS_PORT)}`,
+        "--env",
+        `AUTH_TOKEN=${AUTH_TOKEN}`,
+      ],
+      { cwd: packageDir, stdio: "inherit" },
+    );
+    const exitCode = await waitForExit(proc);
+    if (exitCode !== 0) {
+      fail(`${flow} failed with exit code ${String(exitCode)}`);
+    }
   }
 }
 
-// ---------------------------------------------------------------------------
-// Vault-state assertions
-// ---------------------------------------------------------------------------
-
-type VaultAssertion = {
-  name: string;
-  check: (files: Map<string, string>) => boolean;
-};
-
-function fileWithTitle(
-  files: Map<string, string>,
-  title: string,
-): string | undefined {
-  for (const content of files.values()) {
-    if (content.includes(`title: ${title}`)) return content;
+function requestedFlow(): string | null {
+  const value = process.env["E2E_FLOW"];
+  if (value === undefined || value === "") return null;
+  if (!/^\d{2}-[a-z0-9-]+\.yaml$/.test(value)) {
+    fail(
+      "E2E_FLOW must be a Maestro filename such as 03-recurring-complete.yaml",
+    );
   }
-  return undefined;
-}
-
-const VAULT_ASSERTIONS: VaultAssertion[] = [
-  {
-    name: 'a task file containing "Created by e2e" exists (01-create-task)',
-    check: (files) => fileWithTitle(files, "Created by e2e") !== undefined,
-  },
-  {
-    name: '"Seeded open task" has status done (02-complete-task)',
-    check: (files) =>
-      fileWithTitle(files, "Seeded open task")?.includes("status: done") ===
-      true,
-  },
-  {
-    name: '"Water plants" has a complete_instances entry (03-recurring-complete)',
-    check: (files) => {
-      const content = fileWithTitle(files, "Water plants");
-      if (content === undefined) return false;
-      // Server writes block-style YAML: "complete_instances:\n  - '2026-…'"
-      return /complete_instances:\n\s+- /.test(content);
-    },
-  },
-  {
-    name: '"Swipe complete task" has status done (07-swipe-actions)',
-    check: (files) =>
-      fileWithTitle(files, "Swipe complete task")?.includes("status: done") ===
-      true,
-  },
-  {
-    name: '"Swipe delete task" is absent (07-swipe-actions)',
-    check: (files) => fileWithTitle(files, "Swipe delete task") === undefined,
-  },
-];
-
-async function assertVaultState(vaultDir: string): Promise<void> {
-  const tasksDir = path.join(vaultDir, TASKS_DIR);
-  const files = new Map<string, string>();
-  for (const entry of await readdir(tasksDir)) {
-    if (!entry.endsWith(".md")) continue;
-    files.set(entry, await readFile(path.join(tasksDir, entry), "utf8"));
-  }
-  log(
-    `vault contains ${String(files.size)} task file(s): ${[...files.keys()].join(", ")}`,
-  );
-
-  let failures = 0;
-  for (const assertion of VAULT_ASSERTIONS) {
-    const passed = assertion.check(files);
-    console.log(`[e2e] ${passed ? "PASS" : "FAIL"} — ${assertion.name}`);
-    if (!passed) failures += 1;
-  }
-  if (failures > 0) {
-    fail(`${String(failures)} vault assertion(s) failed`);
-  }
+  return value;
 }
 
 // ---------------------------------------------------------------------------
@@ -503,6 +516,7 @@ for (const signal of ["SIGINT", "SIGTERM"] as const) {
 async function main(): Promise<void> {
   let vaultDir: string | null = null;
   let passed = false;
+  const focusedFlow = requestedFlow();
   try {
     // (1) temp vault seeded with fixtures
     vaultDir = await mkdtemp(path.join(tmpdir(), "tasknotes-e2e-"));
@@ -521,12 +535,16 @@ async function main(): Promise<void> {
     if (metro !== null) children.push(metro);
     await buildAndInstallApp(simulator);
     await waitForJsBundle();
+    log(`launching ${APP_ID} for the first flow`);
+    launchApp(simulator);
 
     // (6) Maestro flows
-    await runMaestro(simulator);
+    await runMaestro(simulator, focusedFlow);
 
-    // (7) vault-state assertions
-    await assertVaultState(vaultDir);
+    // (7) vault-state assertions. Focused runs still verify the selected
+    // flow's authoritative Markdown mutation, rather than relying only on
+    // optimistic UI state.
+    await assertVaultState(vaultDir, log, focusedFlow);
 
     log("e2e suite passed");
     passed = true;
