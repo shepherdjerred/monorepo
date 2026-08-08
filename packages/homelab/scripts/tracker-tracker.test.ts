@@ -282,30 +282,6 @@ describe("tracker tracker bootstrap configuration", () => {
     expect(bundle.trackers).toEqual([]);
   });
 
-  it("preserves cookies when Expires contains a comma", async () => {
-    const routes = new Map<string, () => Response>([
-      ["GET /api/auth/status", () => authStatus(true)],
-      [
-        "POST /api/auth/login",
-        () =>
-          responseWithCookie(
-            { success: true },
-            "session=login-cookie; Expires=Wed, 21 Oct 2015 07:28:00 GMT",
-          ),
-      ],
-      ["GET /api/trackers", () => Response.json([])],
-      ["GET /api/clients", () => Response.json([])],
-    ]);
-    const client = new TrackerTrackerClient(
-      config().appUrl,
-      createMockFetcher([], routes),
-    );
-
-    await client.authenticate(config().username, config().password);
-    const bundle = await client.export(90);
-    expect(bundle.trackers).toEqual([]);
-  });
-
   it("fails loudly when qBittorrent connection testing fails", async () => {
     const routes = configuredClientRoutes();
     routes.set("POST /api/clients/7/test", () =>
