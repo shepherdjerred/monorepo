@@ -33,7 +33,7 @@ export function createPostalChart(app: App) {
       policyTypes: ["Ingress", "Egress"],
       ingress: [
         {
-          // Allow SMTP from bugsink, plausible, and other namespaces
+          // Allow SMTP from Bugsink, Matomo, and other namespaces
           from: [
             {
               namespaceSelector: {
@@ -42,7 +42,7 @@ export function createPostalChart(app: App) {
             },
             {
               namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "plausible" },
+                matchLabels: { "kubernetes.io/metadata.name": "matomo" },
               },
             },
             {

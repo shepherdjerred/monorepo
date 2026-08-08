@@ -1,0 +1,6 @@
+apiVersion: v2
+name: matomo
+description: Matomo Analytics - self-hosted privacy-friendly analytics
+type: application
+version: "$version"
+appVersion: "$appVersion"

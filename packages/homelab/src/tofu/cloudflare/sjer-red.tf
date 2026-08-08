@@ -127,10 +127,10 @@ resource "cloudflare_dns_record" "sjer_red_cname_peertube" {
   proxied = true
 }
 
-resource "cloudflare_dns_record" "sjer_red_cname_plausible" {
+resource "cloudflare_dns_record" "sjer_red_cname_matomo" {
   zone_id = cloudflare_zone.sjer_red.id
   ttl     = 1
-  name    = "plausible"
+  name    = "matomo"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true

@@ -1,27 +1,20 @@
 import type { Chart } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 
-/**
- * Keep the existing Plausible release managed during Matomo initialization.
- * The old analytics data is intentionally not dual-written; this Application
- * is removed in the post-cutover cleanup after Matomo smoke testing.
- */
-export function createPlausibleMigrationHold(chart: Chart) {
-  return new Application(chart, "plausible-migration-hold", {
-    metadata: {
-      name: "plausible",
-    },
+export function createMatomoApp(chart: Chart) {
+  return new Application(chart, "matomo-app", {
+    metadata: { name: "matomo" },
     spec: {
       revisionHistoryLimit: 5,
       project: "default",
       source: {
         repoUrl: "https://chartmuseum.tailnet-1a49.ts.net",
         targetRevision: "~2.0.0-0",
-        chart: "plausible",
+        chart: "matomo",
       },
       destination: {
         server: "https://kubernetes.default.svc",
-        namespace: "plausible",
+        namespace: "matomo",
       },
       syncPolicy: {
         automated: {},

@@ -4,7 +4,7 @@ import { createScoutChart } from "./cdk8s-charts/scout.ts";
 import { createStarlightKarmaBotChart } from "./cdk8s-charts/starlight-karma-bot.ts";
 import { createDdnsChart } from "./cdk8s-charts/ddns.ts";
 import { createRedlibChart } from "./cdk8s-charts/redlib.ts";
-import { createPlausibleChart } from "./cdk8s-charts/plausible.ts";
+import { createMatomoChart } from "./cdk8s-charts/matomo.ts";
 import { createBirmelChart } from "./cdk8s-charts/birmel.ts";
 import { createCloudflareTunnelChart } from "./cdk8s-charts/cloudflare-tunnel.ts";
 import { createMediaChart } from "./cdk8s-charts/media.ts";
@@ -56,7 +56,7 @@ export async function setupCharts(app: App): Promise<void> {
   createS3StaticSitesChart(app);
 
   // New namespace charts
-  createPlausibleChart(app);
+  createMatomoChart(app);
   createBirmelChart(app);
   createCloudflareTunnelChart(app);
 

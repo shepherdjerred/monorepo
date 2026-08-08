@@ -277,6 +277,7 @@ const sitePaths = {
     "packages/astro-opengraph-images",
     "packages/llm-models",
     "packages/glitter-context",
+    "config/analytics-sites.json",
     "scripts/package.json",
     "scripts/scout-site-release.ts",
     "scripts/lib/pin-candidates.ts",

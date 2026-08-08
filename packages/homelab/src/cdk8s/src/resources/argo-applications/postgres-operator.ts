@@ -29,8 +29,9 @@ export function createPostgresOperatorApp(chart: Chart) {
       enable_cross_namespace_secret: true,
       // Single-node cluster: the operator's PDBs (minAvailable=1 on 1-replica
       // postgres clusters) can never be satisfied, so they permanently block
-      // node drains — the 2026-06-12 Talos upgrade hung evicting bugsink/
-      // temporal/plausible postgres until these PDBs were deleted by hand.
+      // node drains — the 2026-06-12 Talos upgrade hung evicting the
+      // single-node Bugsink and Temporal PostgreSQL clusters until these PDBs
+      // were deleted by hand.
       enable_pod_disruption_budget: false,
     },
     configPatroni: {
