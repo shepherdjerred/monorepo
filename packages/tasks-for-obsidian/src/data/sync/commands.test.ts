@@ -308,6 +308,32 @@ describe("applyCommand — idempotent absolute-state semantics", () => {
   });
 });
 
+test("uncompleting without restore preserves a skipped instance", () => {
+  const id = taskId("TaskNotes/a.md");
+  const tasks = new Map<TaskId, Task>([
+    [
+      id,
+      makeTask({
+        recurrence: "FREQ=WEEKLY",
+        completeInstances: ["2026-08-01"],
+        skippedInstances: ["2026-08-01"],
+      }),
+    ],
+  ]);
+  const uncomplete: Command = {
+    id: "uncomplete-skipped",
+    createdAt: 0,
+    type: "set_instance_complete",
+    taskId: id,
+    date: "2026-08-01",
+    completed: false,
+  };
+
+  expect(applyCommand(uncomplete, tasks).get(id)?.skippedInstances).toEqual([
+    "2026-08-01",
+  ]);
+});
+
 describe("remapTaskId / commandTarget", () => {
   const from = taskId("tmp-1");
   const to = taskId("TaskNotes/real.md");

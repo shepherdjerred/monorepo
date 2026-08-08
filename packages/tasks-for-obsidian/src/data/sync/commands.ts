@@ -287,10 +287,13 @@ function applyInstanceCompletion(
   const updated: Task = {
     ...existing,
     completeInstances,
-    skippedInstances:
-      cmd.restore?.skipped === true
+    skippedInstances: cmd.restore
+      ? cmd.restore.skipped
         ? [...withoutSkippedTarget, cmd.date]
-        : withoutSkippedTarget,
+        : withoutSkippedTarget
+      : cmd.completed
+        ? withoutSkippedTarget
+        : existing.skippedInstances,
   };
   if (cmd.restore === undefined) return updated;
 
