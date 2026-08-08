@@ -32,8 +32,10 @@ review/summary/reaction-listener/babysit bot** (~120 files, its Redis,
 dashboards, three task queues), keeping only the merge-conflict check,
 Buildkite cancel, review-signal collector, webhook ingress, and the CI
 review gate. #1864 split claude/codex agent-task schema dialects; #1865
-moved `runAt` deferral to Temporal `startDelay` and added an hourly
-`agent-task-timeout-watch` schedule. Caught by URL liveness checks (the
+moved `runAt` deferral to Temporal `startDelay` and briefly added an hourly
+`agent-task-timeout-watch` schedule. The aggregate watcher was subsequently
+replaced by the per-execution `temporal-failure-watch` and worker queue-health
+signals in the 2026-08-08 hardening plan. Caught by URL liveness checks (the
 pr-review/pr-babysit source links 404'd on main).
 
 Consequences applied:
@@ -41,11 +43,14 @@ Consequences applied:
 - Dropped the planned `pr-review.md` and `pr-babysit.md` dedicated pages.
 - `pr-bots.md` covers the three surviving workflows + a short note on the
   removed fleet (linking #1863).
-- Inventory table updated (removed rows; added `agent-task-timeout-watch`).
+- Inventory table updated (removed rows; the later hardening removed the
+  aggregate `agent-task-timeout-watch` in favor of per-execution failure
+  alerts).
 - Overview pages from PR #1869 corrected in THIS branch (queues seven→four,
   PR-bot lists, "no pollers"): #1869 merges with a brief staleness window
   that the stacked PR closes immediately.
-- agent-tasks.md gains startDelay + timeout-watch + schema-dialect notes.
+- agent-tasks.md gains startDelay + per-execution failure-watch/queue-health +
+  schema-dialect notes.
 
 ## Page inventory
 

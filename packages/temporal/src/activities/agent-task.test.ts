@@ -1,4 +1,4 @@
-import { mkdtemp } from "node:fs/promises";
+import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
@@ -6,7 +6,11 @@ import { register } from "#observability/metrics.ts";
 import type { AgentTaskInput } from "#shared/agent-task.ts";
 import type { AgentTaskCommand } from "./agent-task-command.ts";
 import { createAgentTaskActivities } from "./agent-task.ts";
-import { agentTaskSecretTokens, envForProvider } from "./agent-task-env.ts";
+import {
+  agentTaskSecretTokens,
+  envForProvider,
+  readAgentTaskMountedSecretTokens,
+} from "./agent-task-env.ts";
 
 const originalFetch = globalThis.fetch;
 const originalGitHubAppId = Bun.env["GITHUB_APP_ID"];
@@ -237,6 +241,23 @@ describe("agentTaskActivities", () => {
     expect(tokens).toContain("database-secret");
     expect(tokens).toContain("sentry-public");
     expect(tokens).toContain("sentry-query-secret");
+  });
+
+  it("includes mounted service-account credentials in diagnostic redaction", async () => {
+    const tokenPath = path.join(
+      os.tmpdir(),
+      `agent-task-service-account-${crypto.randomUUID()}`,
+    );
+    await Bun.write(tokenPath, "mounted-service-account-token\n");
+
+    try {
+      const mountedTokens = await readAgentTaskMountedSecretTokens(tokenPath);
+      const tokens = agentTaskSecretTokens("github-token", {}, mountedTokens);
+
+      expect(tokens).toContain("mounted-service-account-token");
+    } finally {
+      await rm(tokenPath);
+    }
   });
 
   it("aliases OPENAI_API_KEY for Codex without overriding an explicit key", async () => {

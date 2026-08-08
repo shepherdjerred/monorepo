@@ -1,5 +1,8 @@
 import type { AgentTaskProvider } from "#shared/agent-task.ts";
 
+const SERVICE_ACCOUNT_TOKEN_PATH =
+  "/var/run/secrets/kubernetes.io/serviceaccount/token";
+
 // envForProvider deliberately forwards the full worker env, so scrub every
 // forwarded value rather than maintaining a partial credential-name list. This
 // also covers credentials embedded in values such as DATABASE_URL.
@@ -23,14 +26,29 @@ function compositeSecretTokens(value: string): readonly string[] {
   return tokens;
 }
 
+export async function readAgentTaskMountedSecretTokens(
+  path = SERVICE_ACCOUNT_TOKEN_PATH,
+): Promise<readonly string[]> {
+  const file = Bun.file(path);
+  if (!(await file.exists())) {
+    return [];
+  }
+
+  const contents = await file.text();
+  const token = contents.trim();
+  return token === "" ? [] : [token];
+}
+
 export function agentTaskSecretTokens(
   githubAppToken: string | undefined,
   env: Readonly<Record<string, string | undefined>> = Bun.env,
+  mountedSecretTokens: readonly string[] = [],
 ): readonly (string | undefined)[] {
   return [
     ...Object.values(env).flatMap((value) =>
       value === undefined ? [] : compositeSecretTokens(value),
     ),
+    ...mountedSecretTokens,
     githubAppToken,
   ];
 }

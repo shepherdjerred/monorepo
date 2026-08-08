@@ -16,6 +16,7 @@ import { buildAgentTaskCommand } from "#activities/agent-task-command.ts";
 import {
   agentTaskSecretTokens,
   envForProvider,
+  readAgentTaskMountedSecretTokens,
 } from "#activities/agent-task-env.ts";
 import { workflowExecutionContext } from "#activities/temporal-context.ts";
 import { runTrackedAgentSubprocess } from "#shared/agent-subprocess.ts";
@@ -193,6 +194,12 @@ async function runAgent(
       });
 
       const githubTokenResult = await createGitHubAppInstallationToken();
+      const mountedSecretTokens = await readAgentTaskMountedSecretTokens();
+      const secretTokens = agentTaskSecretTokens(
+        githubTokenResult.token,
+        Bun.env,
+        mountedSecretTokens,
+      );
 
       const llmStartMs = Date.now();
       const llmTrace = startAgentTaskLlmTrace({
@@ -217,7 +224,7 @@ async function runAgent(
             command: command.args,
             cwd: input.workdir,
             env: envForProvider(provider, githubTokenResult.token),
-            redactTokens: agentTaskSecretTokens(githubTokenResult.token),
+            redactTokens: secretTokens,
             startToCloseTimeoutMs: startToCloseTimeoutMsOrUndefined(),
             cancellationSignal: activityCancellationSignalOrUndefined(),
             heartbeatIntervalMs: HEARTBEAT_INTERVAL_MS,
@@ -371,10 +378,7 @@ async function runAgent(
       try {
         if (provider === "claude") {
           payload = parseClaudeAgentTaskResult(result.stdout, (excerpt) =>
-            redactSecrets(
-              excerpt,
-              agentTaskSecretTokens(githubTokenResult.token),
-            ),
+            redactSecrets(excerpt, secretTokens),
           );
         } else {
           if (command.outputPath === undefined) {
