@@ -10,6 +10,7 @@ import type { AlertmanagerAlert, AlertPoster } from "#lib/alertmanager.ts";
 import { classifyWorkflowTimeoutHistory } from "./workflow-failure-history.ts";
 import {
   buildVisibilityQuery,
+  parseAlertTtlMs,
   pollWorkflowFailuresOnce,
   type WorkflowVisibilityClient,
 } from "./workflow-failure-watch.ts";
@@ -691,5 +692,59 @@ describe("pollWorkflowFailuresOnce", () => {
 
     expect(result).toEqual({ scanned: 0, alerted: 0, errored: 0 });
     expect(calls.length).toBe(0);
+  });
+});
+
+describe("bounded workflow failure recovery", () => {
+  it("posts a bounded batch before requesting the rest of the visibility scan", async () => {
+    const executions = Array.from({ length: 25 }, (_, index) => ({
+      workflowId: `wf-${String(index)}`,
+      runId: `run-${String(index)}`,
+      type: "syncGolinks",
+      taskQueue: "default",
+      closeTime: new Date(NOW.getTime() - index * 1000),
+      status: { name: "FAILED" },
+    }));
+    const client = fakeClient(
+      executions,
+      Object.fromEntries(
+        executions.map((execution) => [
+          `${execution.workflowId}/${execution.runId}`,
+          rejectWithApplicationFailure("recovery failure"),
+        ]),
+      ),
+    );
+    const originalList = client.workflow.list;
+    client.workflow.list = (options) => ({
+      async *[Symbol.asyncIterator]() {
+        for await (const execution of originalList(options)) {
+          yield execution;
+        }
+        throw new Error("next visibility page timed out");
+      },
+    });
+    const { poster, calls } = capturingPoster();
+
+    await expect(
+      pollWorkflowFailuresOnce(client, poster, {
+        now: NOW,
+        lookbackMs: LOOKBACK_MS,
+        ttlMs: TTL_MS,
+      }),
+    ).rejects.toThrow("next visibility page timed out");
+
+    expect(calls.length).toBe(1);
+    expect(calls[0]?.alerts.length).toBe(25);
+  });
+});
+
+describe("parseAlertTtlMs", () => {
+  it("requires the alert TTL to cover the complete recovery lookback", () => {
+    expect(parseAlertTtlMs(undefined)).toBe(TTL_MS);
+    expect(parseAlertTtlMs("86400")).toBe(TTL_MS);
+    expect(() => parseAlertTtlMs("86399")).toThrow("must be at least 86400");
+    expect(() => parseAlertTtlMs("86400seconds")).toThrow(
+      "must be a positive integer",
+    );
   });
 });

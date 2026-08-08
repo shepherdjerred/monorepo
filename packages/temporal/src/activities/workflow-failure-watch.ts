@@ -103,18 +103,27 @@ function requiredEnv(name: string): string {
   return value;
 }
 
-function readTtlMs(): number {
-  const raw = Bun.env["TEMPORAL_FAILURE_ALERT_TTL_SECONDS"];
+export function parseAlertTtlMs(raw: string | undefined): number {
   if (raw === undefined || raw === "") {
     return DEFAULT_ALERT_TTL_SECONDS * 1000;
   }
-  const parsed = Number.parseInt(raw, 10);
-  if (Number.isNaN(parsed) || parsed <= 0) {
+  const parsed = Number(raw);
+  if (!Number.isSafeInteger(parsed) || parsed <= 0) {
     throw new Error(
       `TEMPORAL_FAILURE_ALERT_TTL_SECONDS must be a positive integer, got ${raw}`,
     );
   }
-  return parsed * 1000;
+  const ttlMs = parsed * 1000;
+  if (ttlMs < DEFAULT_LOOKBACK_MS) {
+    throw new Error(
+      `TEMPORAL_FAILURE_ALERT_TTL_SECONDS must be at least ${String(DEFAULT_LOOKBACK_MS / 1000)} to cover the recovery lookback, got ${raw}`,
+    );
+  }
+  return ttlMs;
+}
+
+function readTtlMs(): number {
+  return parseAlertTtlMs(Bun.env["TEMPORAL_FAILURE_ALERT_TTL_SECONDS"]);
 }
 
 function toFailureStatusName(name: string): FailureStatusName | undefined {
@@ -364,6 +373,58 @@ async function buildFailureAlertForExecution(
   }
 }
 
+type FailureBatchResult = {
+  alerted: number;
+  errored: number;
+};
+
+async function postFailureBatch(
+  client: WorkflowVisibilityClient,
+  poster: AlertPoster,
+  executions: readonly FailedWorkflowExecution[],
+  options: PollWorkflowFailuresOptions,
+): Promise<FailureBatchResult> {
+  const { now, ttlMs } = options;
+  const alerts: AlertmanagerAlert[] = [];
+  let errored = 0;
+  for (
+    let chunkStart = 0;
+    chunkStart < executions.length;
+    chunkStart += FAILURE_DETAIL_CONCURRENCY
+  ) {
+    const chunk = executions.slice(
+      chunkStart,
+      chunkStart + FAILURE_DETAIL_CONCURRENCY,
+    );
+    const chunkAlerts = await Promise.all(
+      chunk.map((execution) =>
+        buildFailureAlertForExecution(client, execution, now, ttlMs),
+      ),
+    );
+    for (const alert of chunkAlerts) {
+      if (alert === undefined) {
+        errored += 1;
+      } else {
+        alerts.push(alert);
+      }
+    }
+  }
+
+  if (alerts.length > 0) {
+    await poster(alerts);
+    // Recorded after the poster succeeds, mirroring observe-review-signals.ts —
+    // an activity retry after a failed post re-alerts (safe: Alertmanager
+    // dedups by label) but this counter is informational only, not exactly-once.
+    for (const alert of alerts) {
+      temporalFailureWatcherAlertsTotal.inc({
+        workflowType: alert.labels["workflowType"] ?? "unknown",
+      });
+    }
+  }
+
+  return { alerted: alerts.length, errored };
+}
+
 export type PollWorkflowFailuresOptions = {
   now: Date;
   lookbackMs: number;
@@ -380,17 +441,20 @@ export async function pollWorkflowFailuresOnce(
   poster: AlertPoster,
   options: PollWorkflowFailuresOptions,
 ): Promise<PollWorkflowFailuresResult> {
-  const { now, lookbackMs, ttlMs } = options;
+  const { now, lookbackMs } = options;
   const since = new Date(now.getTime() - lookbackMs);
   const query = buildVisibilityQuery(since);
 
-  const executions: FailedWorkflowExecution[] = [];
+  const pendingExecutions: FailedWorkflowExecution[] = [];
+  let scanned = 0;
+  let errored = 0;
+  let alerted = 0;
   for await (const info of client.workflow.list({ query })) {
     const status = toFailureStatusName(info.status.name);
     if (status === undefined || info.closeTime === undefined) {
       continue;
     }
-    executions.push({
+    pendingExecutions.push({
       workflowId: info.workflowId,
       runId: info.runId,
       workflowType: info.type,
@@ -398,52 +462,29 @@ export async function pollWorkflowFailuresOnce(
       closeTime: info.closeTime,
       status,
     });
+    scanned += 1;
+    if (pendingExecutions.length === ALERT_BATCH_SIZE) {
+      const result = await postFailureBatch(
+        client,
+        poster,
+        pendingExecutions,
+        options,
+      );
+      alerted += result.alerted;
+      errored += result.errored;
+      pendingExecutions.length = 0;
+    }
   }
 
-  let errored = 0;
-  let alerted = 0;
-  for (
-    let batchStart = 0;
-    batchStart < executions.length;
-    batchStart += ALERT_BATCH_SIZE
-  ) {
-    const batch = executions.slice(batchStart, batchStart + ALERT_BATCH_SIZE);
-    const alerts: AlertmanagerAlert[] = [];
-    for (
-      let chunkStart = 0;
-      chunkStart < batch.length;
-      chunkStart += FAILURE_DETAIL_CONCURRENCY
-    ) {
-      const chunk = batch.slice(
-        chunkStart,
-        chunkStart + FAILURE_DETAIL_CONCURRENCY,
-      );
-      const chunkAlerts = await Promise.all(
-        chunk.map((execution) =>
-          buildFailureAlertForExecution(client, execution, now, ttlMs),
-        ),
-      );
-      for (const alert of chunkAlerts) {
-        if (alert === undefined) {
-          errored += 1;
-        } else {
-          alerts.push(alert);
-        }
-      }
-    }
-
-    if (alerts.length > 0) {
-      await poster(alerts);
-      // Recorded after the poster succeeds, mirroring observe-review-signals.ts —
-      // an activity retry after a failed post re-alerts (safe: Alertmanager
-      // dedups by label) but this counter is informational only, not exactly-once.
-      for (const alert of alerts) {
-        temporalFailureWatcherAlertsTotal.inc({
-          workflowType: alert.labels["workflowType"] ?? "unknown",
-        });
-      }
-      alerted += alerts.length;
-    }
+  if (pendingExecutions.length > 0) {
+    const result = await postFailureBatch(
+      client,
+      poster,
+      pendingExecutions,
+      options,
+    );
+    alerted += result.alerted;
+    errored += result.errored;
   }
 
   // Isolated per-execution detail-extraction failures are tolerated, but if
@@ -451,19 +492,19 @@ export async function pollWorkflowFailuresOnce(
   // (e.g. the Temporal server rejected result() calls broadly) — throw so
   // Temporal retries instead of silently reporting a clean poll that alerted
   // on nothing.
-  if (alerted === 0 && executions.length > 0) {
+  if (alerted === 0 && scanned > 0) {
     throw new Error(
-      `workflow-failure-watch found ${String(executions.length)} failed execution(s) but could not extract detail for any of them (${String(errored)} errored); treating as a systematic failure so Temporal retries.`,
+      `workflow-failure-watch found ${String(scanned)} failed execution(s) but could not extract detail for any of them (${String(errored)} errored); treating as a systematic failure so Temporal retries.`,
     );
   }
 
   jsonLog("info", "workflow-failure-watch poll complete", {
-    scanned: executions.length,
+    scanned,
     alerted,
     errored,
   });
 
-  return { scanned: executions.length, alerted, errored };
+  return { scanned, alerted, errored };
 }
 
 async function runPollWorkflowFailuresImpl(): Promise<PollWorkflowFailuresResult> {
