@@ -376,7 +376,7 @@ describe("capture autocomplete", () => {
     );
     expect(
       resolveProjectIdentity("Work", ["[[Projects/Work]]", "[[Areas/Work]]"]),
-    ).toBeUndefined();
+    ).toBeNull();
     expect(
       resolveProjectIdentity("Projects/Work", [
         "[[Projects/Work]]",
