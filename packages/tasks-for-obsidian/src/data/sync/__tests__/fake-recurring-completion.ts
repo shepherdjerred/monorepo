@@ -15,7 +15,7 @@ function localDay(timestamp: number): string {
 function advanceSchedule(
   existing: Task,
   updated: Task,
-  timestamp: number,
+  completionDate: string,
 ): void {
   const recurrence = existing.recurrence;
   if (recurrence === undefined) {
@@ -38,7 +38,7 @@ function advanceSchedule(
     skipped_instances: updated.skippedInstances,
   };
   const next = updateToNextScheduledOccurrence(scheduleSource, true, {
-    today: localDay(timestamp),
+    today: completionDate,
   });
   if (next.scheduled === null) {
     Reflect.deleteProperty(updated, "scheduled");
@@ -76,7 +76,7 @@ export function applyFakeRecurringCompletion(
       : existing.skippedInstances,
   };
   if (completed) {
-    advanceSchedule(existing, updated, timestamp);
+    advanceSchedule(existing, updated, targetDate);
   }
   const restore = instance?.restore;
   if (restore === undefined) return updated;
