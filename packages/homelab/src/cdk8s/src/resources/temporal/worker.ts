@@ -122,10 +122,9 @@ function createTemporalWorkerMaintenanceRbac(
   chart: Chart,
   serviceAccount: ServiceAccount,
 ) {
-  // Namespace-scoped RBAC for the ZFS maintenance workflow, which execs into
-  // the zfs-zpool-collector DaemonSet pod in the prometheus namespace.
-  // `kubectl exec daemonset/<name>` resolves the daemonset → pod via a
-  // GET on daemonsets.apps before opening the exec stream.
+  // Namespace-scoped RBAC for the ZFS maintenance workflow, which lists the
+  // zfs-zpool-collector pods and execs into one Running and Ready pod per node
+  // in the prometheus namespace.
   new KubeRole(chart, "temporal-worker-zfs-exec", {
     metadata: { name: "temporal-worker-zfs-exec", namespace: "prometheus" },
     rules: [
@@ -138,11 +137,6 @@ function createTemporalWorkerMaintenanceRbac(
         apiGroups: [""],
         resources: ["pods"],
         verbs: ["get", "list"],
-      },
-      {
-        apiGroups: ["apps"],
-        resources: ["daemonsets"],
-        verbs: ["get"],
       },
     ],
   });

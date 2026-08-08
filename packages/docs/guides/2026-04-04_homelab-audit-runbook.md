@@ -115,6 +115,33 @@ toolkit gf query 'zfs_zpool_capacity_used_ratio'           # Pool utilization
 toolkit gf query 'node_zfs_arc_hits / (node_zfs_arc_hits + node_zfs_arc_misses)'   # ARC hit rate
 ```
 
+### ZFS maintenance workflow
+
+The weekly `zfs-maintenance-weekly` Temporal schedule discovers the managed
+`zfspv-pool-*` pools on each node's `zfs-zpool-collector` pod. Do not use
+`kubectl exec daemonset/...` for verification: the DaemonSet spans nodes with
+different pool inventories.
+
+```bash
+temporal schedule describe --schedule-id zfs-maintenance-weekly
+temporal workflow list --query "WorkflowType='runZfsMaintenanceWorkflow'"
+kubectl -n prometheus get pods -l app=zfs-zpool-collector -o wide
+toolkit gf query 'zfs_zpool_last_scrub_completion_timestamp'
+```
+
+For a failed or overdue run, select the Ready collector pod for the relevant
+node and inspect each pool it reports:
+
+```bash
+temporal workflow describe --workflow-id <WORKFLOW_ID>
+kubectl -n prometheus exec <COLLECTOR_POD> -c zfs-zpool-collector -- zpool list -H -o name
+kubectl -n prometheus exec <COLLECTOR_POD> -c zfs-zpool-collector -- zpool status <POOL>
+```
+
+An `ONLINE` pool with no known data errors is healthy but can still need a
+scrub. A zero `zfs_zpool_last_scrub_completion_timestamp` means no completed
+scrub has been recorded and is intentionally alertable.
+
 ### Velero Backups
 
 ```bash

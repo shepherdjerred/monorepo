@@ -91,3 +91,26 @@ describe("crypto-mining alerts", () => {
     expect(alert.labels?.["severity"]).toBe("critical");
   });
 });
+
+describe("memory leak alerts", () => {
+  it("applies the 24-hour offset to every historical memory and ARC selector", () => {
+    const groups = getResourceMonitoringRuleGroups();
+    const memoryGroup = groups.find(
+      (group) => group.name === "resource-memory-monitoring",
+    );
+    if (memoryGroup?.rules === undefined) {
+      throw new Error("expected resource-memory-monitoring rules");
+    }
+
+    const alert = memoryGroup.rules.find(
+      (rule) => rule.alert === "MemoryLeakSuspected",
+    );
+    if (alert === undefined) {
+      throw new Error("expected MemoryLeakSuspected alert");
+    }
+
+    expect(alert.expr.value).toBe(
+      "((node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) - on(instance) group_left node_zfs_arc_size) - ((node_memory_MemTotal_bytes offset 24h - node_memory_MemAvailable_bytes offset 24h) - on(instance) group_left node_zfs_arc_size offset 24h) > 8589934592",
+    );
+  });
+});

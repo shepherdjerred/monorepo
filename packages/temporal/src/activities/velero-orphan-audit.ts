@@ -11,6 +11,12 @@ import {
   veleroOrphanLocalSnapshotsTotal,
   zfsDatasetSnapshotCount,
 } from "#observability/metrics.ts";
+import {
+  selectRunningReadyNodePods,
+  type KubernetesNodePod,
+  type KubernetesNodePodCandidate,
+} from "#shared/kubernetes-node-pods.ts";
+import { kubectlExecInPod } from "#shared/kubectl-exec.ts";
 
 // The audit detects ZFS snapshots on PVC datasets whose name does not match
 // any live `velero.io/v1/Backup` CR. Such snapshots are orphans from a prior
@@ -39,26 +45,7 @@ export type VeleroOrphanDataset = {
   liveCount: number;
 };
 
-type ZfsNodePod = {
-  node: string;
-  pod: string;
-};
-
-type ZfsNodePodCandidate = {
-  metadata?: {
-    name?: string;
-  };
-  spec?: {
-    nodeName?: string;
-  };
-  status?: {
-    phase?: string;
-    conditions?: {
-      type: string;
-      status: string;
-    }[];
-  };
-};
+type ZfsNodePod = KubernetesNodePod;
 
 export type VeleroOrphanAuditResult = {
   liveBackupCount: number;
@@ -191,39 +178,13 @@ async function findZfsNodePods(): Promise<ZfsNodePod[]> {
 }
 
 export function selectZfsNodePods(
-  pods: readonly ZfsNodePodCandidate[],
+  pods: readonly KubernetesNodePodCandidate[],
 ): ZfsNodePod[] {
-  const nodePods = new Map<string, string>();
-  for (const pod of pods) {
-    const isReady = pod.status?.conditions?.some(
-      (condition) => condition.type === "Ready" && condition.status === "True",
-    );
-    if (isReady !== true || pod.status?.phase !== "Running") {
-      continue;
-    }
-    const name = pod.metadata?.name;
-    const node = pod.spec?.nodeName;
-    if (name === undefined || node === undefined) {
-      throw new Error(
-        "Running and Ready openebs-zfs-localpv-node pod is missing metadata.name or spec.nodeName",
-      );
-    }
-    const existingPod = nodePods.get(node);
-    if (existingPod !== undefined) {
-      throw new Error(
-        `Multiple Running and Ready openebs-zfs-localpv-node pods found for node ${node}: ${existingPod}, ${name}`,
-      );
-    }
-    nodePods.set(node, name);
-  }
-  if (nodePods.size === 0) {
-    throw new Error(
-      `No Running and Ready openebs-zfs-localpv-node pods found in ${NAMESPACE_OPENEBS} (label selector: ${ZFS_NODE_LABEL})`,
-    );
-  }
-  return [...nodePods.entries()]
-    .map(([node, pod]) => ({ node, pod }))
-    .toSorted((left, right) => left.node.localeCompare(right.node));
+  return selectRunningReadyNodePods(pods, {
+    namespace: NAMESPACE_OPENEBS,
+    labelSelector: ZFS_NODE_LABEL,
+    resourceDescription: "openebs-zfs-localpv-node",
+  });
 }
 
 async function listZfsOrphanSnapshots(
@@ -372,34 +333,10 @@ export function parseZfsInventory(
 }
 
 async function execInPod(podName: string, command: string): Promise<string> {
-  const args = [
-    "kubectl",
-    "exec",
-    "-n",
-    NAMESPACE_OPENEBS,
-    "-c",
-    ZFS_NODE_CONTAINER,
-    podName,
-    "--",
-    "sh",
-    "-c",
+  return kubectlExecInPod({
+    namespace: NAMESPACE_OPENEBS,
+    container: ZFS_NODE_CONTAINER,
+    pod: podName,
     command,
-  ];
-  const proc = Bun.spawn(args, {
-    stdin: "ignore",
-    stdout: "pipe",
-    stderr: "pipe",
   });
-  const [stdout, stderr, exitCode] = await Promise.all([
-    new Response(proc.stdout).text(),
-    new Response(proc.stderr).text(),
-    proc.exited,
-  ]);
-  if (exitCode !== 0) {
-    const detail = stderr.trim() || stdout.trim() || "(no output)";
-    throw new Error(
-      `kubectl exec [${command}] in ${NAMESPACE_OPENEBS}/${podName} exited ${String(exitCode)}: ${detail}`,
-    );
-  }
-  return stdout;
 }

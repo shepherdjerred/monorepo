@@ -90,7 +90,7 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
             summary: "Potential memory leak detected",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "((node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) - on(instance) group_left node_zfs_arc_size) - ((node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) - on(instance) group_left node_zfs_arc_size offset 24h) > 8589934592", // 8GB increase over 24h, excluding ZFS ARC cache
+            "((node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) - on(instance) group_left node_zfs_arc_size) - ((node_memory_MemTotal_bytes offset 24h - node_memory_MemAvailable_bytes offset 24h) - on(instance) group_left node_zfs_arc_size offset 24h) > 8589934592", // 8GB increase over 24h, excluding ZFS ARC cache
           ),
           for: "4h",
           labels: { severity: "warning" },
