@@ -64,7 +64,7 @@ function requireTrustedContext(): RequestContext {
 
 function deriveGuildFromRuntime(input: unknown, context: RequestContext) {
   const objectInput = ObjectInputSchema.safeParse(input);
-  if (!objectInput.success || !("guildId" in objectInput.data)) {
+  if (!objectInput.success) {
     return input;
   }
   return {
@@ -127,16 +127,16 @@ async function withCancellation<T>(
   }, timeoutMs);
   try {
     controller.signal.throwIfAborted();
-    const abortPromise = new Promise<never>((_resolve, reject) => {
-      controller.signal.addEventListener(
-        "abort",
-        () => {
-          reject(abortReason(controller.signal));
-        },
-        { once: true },
-      );
-    });
-    return await Promise.race([operation(controller.signal), abortPromise]);
+    try {
+      const result = await operation(controller.signal);
+      controller.signal.throwIfAborted();
+      return result;
+    } catch (error) {
+      if (controller.signal.aborted) {
+        throw abortReason(controller.signal);
+      }
+      throw error;
+    }
   } finally {
     clearTimeout(timeout);
     callerSignal?.removeEventListener("abort", forwardCallerAbort);

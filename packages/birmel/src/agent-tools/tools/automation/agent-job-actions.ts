@@ -14,16 +14,14 @@ import {
   updateAgentJobWithinLimits,
 } from "@shepherdjerred/birmel/scheduler/agent-job-limits.ts";
 import { getErrorMessage } from "@shepherdjerred/birmel/utils/errors.ts";
+import {
+  serializeCreatePayload,
+  serializeEditPayload,
+  type AgentJobPayload,
+} from "./durable-tool-payload.ts";
 
 type BasicJobResult = { success: boolean; message: string };
 export type AgentJobToolResult = BasicJobResult & { data?: unknown };
-
-type JobInput = Record<string, unknown> | undefined;
-
-export type AgentJobPayload =
-  | { kind: "message"; message: string }
-  | { kind: "tool"; toolId: string; input?: JobInput }
-  | { kind: "agent"; prompt: string };
 
 type LegacyIdentityFields = Record<string, unknown>;
 
@@ -82,66 +80,6 @@ function requireTrustedRequestContext(): RequestContext {
     throw new Error("Job actor is not trusted");
   }
   return request;
-}
-
-function payloadFromCreateOptions(
-  options: CreateAgentJobOptions,
-): AgentJobPayload {
-  if (options.payload != null) {
-    return options.payload;
-  }
-  if (options.toolId != null && options.toolId.length > 0) {
-    return {
-      kind: "tool",
-      toolId: options.toolId,
-      input: options.toolInput,
-    };
-  }
-  if (options.agentPrompt != null && options.agentPrompt.length > 0) {
-    return { kind: "agent", prompt: options.agentPrompt };
-  }
-  if (options.message != null && options.message.length > 0) {
-    return { kind: "message", message: options.message };
-  }
-  throw new Error("A message, tool, or agent payload is required");
-}
-
-function payloadData(payload: AgentJobPayload): {
-  payloadKind: string;
-  message: string | null;
-  toolId: string | null;
-  toolInput: string | null;
-  agentPrompt: string | null;
-} {
-  switch (payload.kind) {
-    case "message":
-      return {
-        payloadKind: "message",
-        message: payload.message,
-        toolId: null,
-        toolInput: null,
-        agentPrompt: null,
-      };
-    case "tool":
-      if (payload.toolId === "manage-job") {
-        throw new Error("manage-job cannot schedule itself as a tool payload");
-      }
-      return {
-        payloadKind: "tool",
-        message: null,
-        toolId: payload.toolId,
-        toolInput: JSON.stringify(payload.input ?? {}),
-        agentPrompt: null,
-      };
-    case "agent":
-      return {
-        payloadKind: "agent",
-        message: null,
-        toolId: null,
-        toolInput: null,
-        agentPrompt: payload.prompt,
-      };
-  }
 }
 
 async function resolveDeliveryTarget(
@@ -211,7 +149,7 @@ export async function createAgentJob(
       scheduleValue: options.scheduleValue,
       timezone: options.timezone,
     });
-    const payload = payloadData(payloadFromCreateOptions(options));
+    const payload = await serializeCreatePayload(options);
     const target = await resolveDeliveryTarget(request, options.sessionId);
     const job = await createAgentJobWithinLimits({
       guildId: request.guildId,
@@ -307,22 +245,6 @@ export async function showAgentJob(options: {
   return { success: true, message: "Agent job found", data: { job } };
 }
 
-function editPayload(options: EditAgentJobOptions): AgentJobPayload | null {
-  if (options.payload != null) {
-    return options.payload;
-  }
-  if (options.toolId != null) {
-    return { kind: "tool", toolId: options.toolId, input: options.toolInput };
-  }
-  if (options.agentPrompt != null) {
-    return { kind: "agent", prompt: options.agentPrompt };
-  }
-  if (options.message != null) {
-    return { kind: "message", message: options.message };
-  }
-  return null;
-}
-
 export async function editAgentJob(
   options: EditAgentJobOptions,
 ): Promise<AgentJobToolResult> {
@@ -368,8 +290,7 @@ export async function editAgentJob(
             sessionId: existing.sessionId,
           }
         : await resolveDeliveryTarget(request, options.sessionId);
-    const nextPayload = editPayload(options);
-    const payloadPatch = nextPayload == null ? {} : payloadData(nextPayload);
+    const payloadPatch = await serializeEditPayload(options, existing);
     const resultingStatus = options.status ?? existing.status;
     const updateCount = await updateAgentJobWithinLimits({
       where: {

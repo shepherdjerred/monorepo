@@ -12,6 +12,8 @@ export const FlowScenarioSchema = z.enum([
   "dedupe",
   "concurrent-ordering",
   "agent-run-persistence",
+  "session-persistence-failure",
+  "agent-run-completion-failure",
 ]);
 
 export type FlowScenario = z.infer<typeof FlowScenarioSchema>;

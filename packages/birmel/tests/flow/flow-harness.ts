@@ -28,6 +28,7 @@ const RouteOptionsSchema = z.object({
   persona: z.literal("PERSONA_SOURCE_SENTINEL"),
 });
 const ContextOptionsSchema = z.object({ turn: TurnInputSchema });
+const SessionEventOptionsSchema = z.object({ role: z.string() });
 const AgentRunRowSchema = z.object({
   status: z.string(),
   responseMessageId: z.string().nullable(),
@@ -215,7 +216,16 @@ void mock.module("@shepherdjerred/birmel/config/index.ts", () => ({
 }));
 
 void mock.module("@shepherdjerred/birmel/sessions/service.ts", () => ({
-  appendSessionEvent: () => Promise.resolve(),
+  appendSessionEvent: (rawOptions: unknown) => {
+    const options = SessionEventOptionsSchema.parse(rawOptions);
+    if (
+      state.scenario === "session-persistence-failure" &&
+      options.role === "assistant"
+    ) {
+      return Promise.reject(new Error("SESSION_PERSISTENCE_SECRET_EXCEPTION"));
+    }
+    return Promise.resolve();
+  },
 }));
 
 void mock.module("@shepherdjerred/birmel/sessions/summarization.ts", () => ({
@@ -285,7 +295,13 @@ function messageContext(options: {
     triggerKind: "mention",
     receivedAt: new Date("2026-08-08T12:00:00.000Z"),
   });
-  return { message, turn };
+  return {
+    message,
+    turn,
+    ...(state.scenario === "session-persistence-failure"
+      ? { activeSessionId: "session-persistence-failure" }
+      : {}),
+  };
 }
 
 async function invokeHandler(
@@ -435,6 +451,21 @@ async function main(): Promise<void> {
   const { deployDatabaseMigrations } =
     await import("@shepherdjerred/birmel/database/migration-bootstrap.ts");
   await deployDatabaseMigrations(Bun.env);
+  const agentRuns =
+    await import("@shepherdjerred/birmel/agent-runtime/agent-runs.ts");
+  const completeAgentRun = agentRuns.completeAgentRun;
+  const completeAgentRunWithFailure: typeof completeAgentRun = async (
+    options,
+  ) => {
+    if (state.scenario === "agent-run-completion-failure") {
+      throw new Error("AGENT_RUN_PERSISTENCE_SECRET_EXCEPTION");
+    }
+    await completeAgentRun(options);
+  };
+  void mock.module(
+    "@shepherdjerred/birmel/agent-runtime/agent-runs.ts",
+    () => ({ ...agentRuns, completeAgentRun: completeAgentRunWithFailure }),
+  );
   const [{ handleMessage }, { prisma, disconnectPrisma }] = await Promise.all([
     import("@shepherdjerred/birmel/agent-runtime/message-handler.ts"),
     import("@shepherdjerred/birmel/database/index.ts"),

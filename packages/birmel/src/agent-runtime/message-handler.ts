@@ -20,6 +20,7 @@ import {
   captureException,
   clearSentryContext,
   setSentryContext,
+  type DiscordContext,
 } from "@shepherdjerred/birmel/observability/sentry.ts";
 import { withSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import { getGuildPersona } from "@shepherdjerred/birmel/persona/guild-persona.ts";
@@ -30,6 +31,11 @@ import { logger } from "@shepherdjerred/birmel/utils/logger.ts";
 
 const PLACEHOLDER = "…";
 const MAX_DISCORD_RESPONSE_CHARACTERS = 2000;
+
+type PostDeliveryOperation =
+  | "agent-run.complete"
+  | "session.events"
+  | "turn.post-delivery";
 
 function incidentId(): string {
   return `B3-${crypto.randomUUID().slice(0, 8)}`;
@@ -111,12 +117,79 @@ async function appendCompletedSessionEvents(options: {
   await summarizeSessionIfNeeded(options.sessionId);
 }
 
+function reportPostDeliveryPersistenceFailure(options: {
+  error: unknown;
+  operation: PostDeliveryOperation;
+  runId: string;
+  messageId: string;
+  discordContext: DiscordContext;
+}): void {
+  const errorClass =
+    options.error instanceof Error ? options.error.name : "UnknownError";
+  logger.error("Post-delivery persistence failed", options.error, {
+    runId: options.runId,
+    messageId: options.messageId,
+    operation: options.operation,
+    errorClass,
+  });
+  captureException(toError(options.error), {
+    operation: options.operation,
+    discord: options.discordContext,
+    extra: { runId: options.runId, errorClass },
+  });
+}
+
+async function persistDeliveredTurn(options: {
+  context: MessageContext;
+  runId: string;
+  response: string;
+  responseMessageId: string;
+  execution: Awaited<ReturnType<typeof executeRoutedTurn>>;
+  discordContext: DiscordContext;
+}): Promise<void> {
+  if (options.context.activeSessionId != null) {
+    try {
+      await appendCompletedSessionEvents({
+        sessionId: options.context.activeSessionId,
+        response: options.response,
+        responseMessageId: options.responseMessageId,
+        toolEvents: options.execution.toolEvents,
+      });
+    } catch (error) {
+      reportPostDeliveryPersistenceFailure({
+        error,
+        operation: "session.events",
+        runId: options.runId,
+        messageId: options.context.turn.discordMessageId,
+        discordContext: options.discordContext,
+      });
+    }
+  }
+
+  try {
+    await completeAgentRun({
+      runId: options.runId,
+      responseMessageId: options.responseMessageId,
+      execution: options.execution,
+    });
+  } catch (error) {
+    reportPostDeliveryPersistenceFailure({
+      error,
+      operation: "agent-run.complete",
+      runId: options.runId,
+      messageId: options.context.turn.discordMessageId,
+      discordContext: options.discordContext,
+    });
+  }
+}
+
 async function processAdmittedTurn(
   context: MessageContext,
   runId: string,
 ): Promise<void> {
   let responseMessage: Message | undefined;
-  const discordContext = {
+  let finalResponseDelivered = false;
+  const discordContext: DiscordContext = {
     guildId: context.turn.guildId,
     channelId: context.turn.channelId,
     userId: context.turn.userId,
@@ -189,19 +262,15 @@ async function processAdmittedTurn(
       phase: "final",
       operation: async () => await deliveredResponseMessage.edit(response),
     });
+    finalResponseDelivered = true;
     markEngaged(context.turn.channelId);
-    if (context.activeSessionId != null) {
-      await appendCompletedSessionEvents({
-        sessionId: context.activeSessionId,
-        response,
-        responseMessageId: deliveredResponseMessage.id,
-        toolEvents: execution.toolEvents,
-      });
-    }
-    await completeAgentRun({
+    await persistDeliveredTurn({
+      context,
       runId,
+      response,
       responseMessageId: deliveredResponseMessage.id,
       execution,
+      discordContext,
     });
 
     const config = getConfig();
@@ -228,6 +297,16 @@ async function processAdmittedTurn(
       });
     }
   } catch (error) {
+    if (finalResponseDelivered) {
+      reportPostDeliveryPersistenceFailure({
+        error,
+        operation: "turn.post-delivery",
+        runId,
+        messageId: context.turn.discordMessageId,
+        discordContext,
+      });
+      return;
+    }
     const reference = incidentId();
     if (responseMessage != null) {
       try {

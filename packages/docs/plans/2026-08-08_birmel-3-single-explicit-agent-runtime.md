@@ -231,3 +231,8 @@ succeeds.
   scheduling-wrapper tool IDs and cancellation finalization for actively claimed
   jobs. The exact CI suite now passes 267 tests with zero failures or skips; the
   six-task build, typecheck, and lint graph remains green.
+- 2026-08-08: The next current-head review made final Discord delivery an
+  irreversible boundary, fenced signal-ignoring tool timeouts until settlement,
+  and validated durable tool IDs and payloads before persistence. The exact CI
+  suite now passes 277 tests with zero failures or skips; the six-task build,
+  typecheck, and lint graph remains green.

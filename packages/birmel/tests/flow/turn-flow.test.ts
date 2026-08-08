@@ -190,6 +190,28 @@ describe("boundary failures", () => {
     expect(result.errorClasses).toEqual(["Error"]);
     expect(result.memoryExtractionCalls).toBe(0);
   });
+
+  test("session persistence failure cannot replace an already delivered response", () => {
+    const result = resultFor("session-persistence-failure");
+
+    expect(result.runStatuses).toEqual(["completed"]);
+    expect(result.editAttempts).toHaveLength(1);
+    expect(result.deliveredEdits).toHaveLength(1);
+    expect(result.deliveredEdits[0]).toMatch(/^direct reply/u);
+    expect(result.incidentIds).toEqual([]);
+    expect(result.memoryExtractionCalls).toBe(1);
+  });
+
+  test("run completion failure cannot cause a second final edit", () => {
+    const result = resultFor("agent-run-completion-failure");
+
+    expect(result.runStatuses).toEqual(["running"]);
+    expect(result.editAttempts).toHaveLength(1);
+    expect(result.deliveredEdits).toHaveLength(1);
+    expect(result.deliveredEdits[0]).toMatch(/^direct reply/u);
+    expect(result.incidentIds).toEqual([]);
+    expect(result.memoryExtractionCalls).toBe(1);
+  });
 });
 
 test("AgentRun SQLite schema and rows contain no assembled prompt or message content", () => {

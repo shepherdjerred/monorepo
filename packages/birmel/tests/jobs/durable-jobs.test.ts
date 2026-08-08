@@ -28,11 +28,13 @@ import {
   setAgentJobRuntimeDependencies,
   waitForActiveAgentJobs,
 } from "@shepherdjerred/birmel/scheduler/jobs/agent-jobs.ts";
+import { parseJsonRecord } from "@shepherdjerred/birmel/utils/errors.ts";
 
 const ACTOR_USER_ID = "186665676134547461";
 const GUILD_ID = "987654321098765432";
 const CHANNEL_ID = "876543210987654321";
 const SOURCE_MESSAGE_ID = "765432109876543210";
+const DURABLE_TOOL_ID = "list-repos";
 const previousTrustedUserIds = Bun.env["TRUSTED_USER_IDS"];
 const previousSchedulerEnabled = Bun.env["SCHEDULER_ENABLED"];
 const previousSchedulerShutdownTimeoutMs =
@@ -331,6 +333,168 @@ describe("durable AgentJob creation limits", () => {
   });
 });
 
+describe("durable AgentJob tool payload validation", () => {
+  test("rejects an unregistered tool before create persists it", async () => {
+    const result = await executeManageJob({
+      action: "create",
+      scheduleKind: "at",
+      scheduleValue: new Date(Date.now() + 60_000).toISOString(),
+      payload: { kind: "tool", toolId: "removed-tool", input: {} },
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.message).toContain("missing or no longer registered");
+    expect(await prisma.agentJob.count()).toBe(0);
+  });
+
+  test("rejects malformed registered-tool input before create persists it", async () => {
+    const result = await executeManageJob({
+      action: "create",
+      scheduleKind: "at",
+      scheduleValue: new Date(Date.now() + 60_000).toISOString(),
+      payload: {
+        kind: "tool",
+        toolId: "execute-shell-command",
+        input: { args: ["--version"] },
+      },
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.message).toContain(
+      'Invalid input for tool "execute-shell-command"',
+    );
+    expect(result.message).toContain("command");
+    expect(await prisma.agentJob.count()).toBe(0);
+  });
+
+  test.each([
+    {
+      name: "unregistered tool",
+      payload: { kind: "tool", toolId: "removed-tool", input: {} },
+      expectedMessage: "missing or no longer registered",
+    },
+    {
+      name: "malformed registered-tool input",
+      payload: {
+        kind: "tool",
+        toolId: "execute-shell-command",
+        input: { timeout: 1000 },
+      },
+      expectedMessage: 'Invalid input for tool "execute-shell-command"',
+    },
+  ])(
+    "rejects $name before edit persists it",
+    async ({ payload, expectedMessage }) => {
+      const jobId = await createDueJob({
+        payload: { kind: "tool", toolId: DURABLE_TOOL_ID },
+      });
+      const before = await prisma.agentJob.findUniqueOrThrow({
+        where: { id: jobId },
+      });
+
+      const result = await executeManageJob({
+        action: "edit",
+        jobId,
+        payload,
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.message).toContain(expectedMessage);
+      const after = await prisma.agentJob.findUniqueOrThrow({
+        where: { id: jobId },
+      });
+      expect(after.toolId).toBe(before.toolId);
+      expect(after.toolInput).toBe(before.toolInput);
+    },
+  );
+
+  test("persists the registered schema's parsed tool input", async () => {
+    const result = await executeManageJob({
+      action: "create",
+      scheduleKind: "at",
+      scheduleValue: new Date(Date.now() + 60_000).toISOString(),
+      payload: {
+        kind: "tool",
+        toolId: DURABLE_TOOL_ID,
+        input: { modelSuppliedField: "discarded" },
+      },
+    });
+
+    expect(result.success).toBe(true);
+    const created = CreatedJobSchema.parse(result.data);
+    const job = await prisma.agentJob.findUniqueOrThrow({
+      where: { id: created.jobId },
+    });
+    expect(job.toolId).toBe(DURABLE_TOOL_ID);
+    expect(job.toolInput).toBe("{}");
+    expect(job.guildId).toBe(GUILD_ID);
+    expect(job.actorUserId).toBe(ACTOR_USER_ID);
+  });
+
+  test("derives the stored tool guild from trusted request context", async () => {
+    const result = await executeManageJob({
+      action: "create",
+      scheduleKind: "at",
+      scheduleValue: new Date(Date.now() + 60_000).toISOString(),
+      payload: {
+        kind: "tool",
+        toolId: "manage-guild",
+        input: {
+          guildId: "111111111111111111",
+          action: "get-info",
+        },
+      },
+    });
+
+    expect(result.success).toBe(true);
+    const created = CreatedJobSchema.parse(result.data);
+    const job = await prisma.agentJob.findUniqueOrThrow({
+      where: { id: created.jobId },
+    });
+    expect(
+      z
+        .object({
+          guildId: z.literal(GUILD_ID),
+          action: z.literal("get-info"),
+        })
+        .parse(parseJsonRecord(job.toolInput ?? "{}")),
+    ).toEqual({ guildId: GUILD_ID, action: "get-info" });
+  });
+
+  test("rejects metadata-only edits of an invalid stored tool payload", async () => {
+    const job = await prisma.agentJob.create({
+      data: {
+        guildId: GUILD_ID,
+        channelId: CHANNEL_ID,
+        actorUserId: ACTOR_USER_ID,
+        sourceChannelId: CHANNEL_ID,
+        sourceMessageId: SOURCE_MESSAGE_ID,
+        scheduleKind: "at",
+        scheduleValue: new Date(Date.now() + 60_000).toISOString(),
+        nextRunAt: new Date(Date.now() + 60_000),
+        payloadKind: "tool",
+        toolId: "removed-tool",
+        toolInput: "{}",
+        maxAttempts: 1,
+      },
+    });
+
+    const result = await executeManageJob({
+      action: "edit",
+      jobId: job.id,
+      name: "must not persist",
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.message).toContain("missing or no longer registered");
+    const unchanged = await prisma.agentJob.findUniqueOrThrow({
+      where: { id: job.id },
+    });
+    expect(unchanged.name).toBeNull();
+    expect(unchanged.toolId).toBe("removed-tool");
+  });
+});
+
 describe("durable AgentJob execution", () => {
   test("derives immutable actor and Discord provenance from request context", async () => {
     const result = await executeManageJob({
@@ -367,7 +531,7 @@ describe("durable AgentJob execution", () => {
       },
     });
     const jobId = await createDueJob({
-      payload: { kind: "tool", toolId: "test-deterministic-tool" },
+      payload: { kind: "tool", toolId: DURABLE_TOOL_ID },
     });
 
     await Promise.all([
@@ -409,7 +573,7 @@ describe("active AgentJob cancellation", () => {
         },
       });
       const jobId = await createDueJob({
-        payload: { kind: "tool", toolId: "test-cancellation" },
+        payload: { kind: "tool", toolId: DURABLE_TOOL_ID },
         maxAttempts: 2,
       });
       const execution = runAgentJobById(jobId);
@@ -488,7 +652,7 @@ describe("durable AgentJob execution outcomes", () => {
       },
     });
     const jobId = await createDueJob({
-      payload: { kind: "tool", toolId: "test-deterministic-tool" },
+      payload: { kind: "tool", toolId: DURABLE_TOOL_ID },
       maxAttempts: 2,
     });
 
@@ -525,7 +689,7 @@ describe("durable AgentJob execution outcomes", () => {
       },
     });
     const jobId = await createDueJob({
-      payload: { kind: "tool", toolId: "test-deterministic-tool" },
+      payload: { kind: "tool", toolId: DURABLE_TOOL_ID },
       maxAttempts: 1,
       timeoutMs: 20,
     });
@@ -571,7 +735,7 @@ describe("durable AgentJob execution outcomes", () => {
         },
       });
       const jobId = await createDueJob({
-        payload: { kind: "tool", toolId: "test-deterministic-tool" },
+        payload: { kind: "tool", toolId: DURABLE_TOOL_ID },
         maxAttempts: 1,
         timeoutMs: 20,
       });
@@ -604,7 +768,7 @@ describe("durable job recovery and scheduling", () => {
       executeTool: async () => ({ success: true }),
     });
     const jobId = await createDueJob({
-      payload: { kind: "tool", toolId: "test-deterministic-tool" },
+      payload: { kind: "tool", toolId: DURABLE_TOOL_ID },
     });
     await prisma.agentJob.update({
       where: { id: jobId },
@@ -638,7 +802,7 @@ describe("durable job recovery and scheduling", () => {
     });
     const before = new Date();
     const jobId = await createDueJob({
-      payload: { kind: "tool", toolId: "test-deterministic-tool" },
+      payload: { kind: "tool", toolId: DURABLE_TOOL_ID },
       scheduleKind: "every",
       scheduleValue: "1 second",
     });
@@ -702,7 +866,7 @@ describe("durable job recovery and scheduling", () => {
       },
     });
     const jobId = await createDueJob({
-      payload: { kind: "tool", toolId: "test-deterministic-tool" },
+      payload: { kind: "tool", toolId: DURABLE_TOOL_ID },
     });
 
     const first = runAgentJobsJob();
@@ -749,7 +913,7 @@ describe("scheduler AgentJob concurrency and shutdown", () => {
         await createDueJob({
           payload: {
             kind: "tool",
-            toolId: `test-concurrency-${String(index)}`,
+            toolId: DURABLE_TOOL_ID,
           },
         });
       }
@@ -796,11 +960,11 @@ describe("scheduler AgentJob concurrency and shutdown", () => {
 
     try {
       const firstJobId = await createDueJob({
-        payload: { kind: "tool", toolId: "first-timeout" },
+        payload: { kind: "tool", toolId: DURABLE_TOOL_ID },
         timeoutMs: 20,
       });
       await createDueJob({
-        payload: { kind: "tool", toolId: "second-waits" },
+        payload: { kind: "tool", toolId: DURABLE_TOOL_ID },
       });
 
       const tick = runAgentJobsJob();
@@ -846,7 +1010,7 @@ describe("scheduler AgentJob concurrency and shutdown", () => {
       },
     });
     const jobId = await createDueJob({
-      payload: { kind: "tool", toolId: "test-deterministic-tool" },
+      payload: { kind: "tool", toolId: DURABLE_TOOL_ID },
     });
     const running = runAgentJobById(jobId);
     await started;

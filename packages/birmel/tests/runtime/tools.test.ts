@@ -595,6 +595,19 @@ describe("createTool", () => {
       ),
     ).rejects.toThrow();
   });
+});
+
+describe("createTool cancellation", () => {
+  beforeEach(() => {
+    Bun.env["DISCORD_CLIENT_ID"] = "100000000000000001";
+    Bun.env["DISCORD_TOKEN"] = "test-discord-token";
+    Bun.env["OPENAI_API_KEY"] = "test-openai-key";
+    resetConfig();
+  });
+
+  afterEach(() => {
+    resetConfig();
+  });
 
   test("aborts timed-out work before a later side effect", async () => {
     const metadata = getToolMetadata("manage-guild");
@@ -637,6 +650,52 @@ describe("createTool", () => {
       expect(sideEffectCount).toBe(0);
     } finally {
       metadata.timeoutMs = originalTimeoutMs;
+    }
+  });
+
+  test("does not release a timed-out tool until signal-ignoring work settles", async () => {
+    const metadata = getToolMetadata("manage-guild");
+    const originalTimeoutMs = metadata.timeoutMs;
+    metadata.timeoutMs = 10;
+    const started = Promise.withResolvers<undefined>();
+    const release = Promise.withResolvers<undefined>();
+    let sideEffectCount = 0;
+    const tool = createTool({
+      id: "manage-guild",
+      description: "Test tool",
+      inputSchema: z.object({ guildId: z.string() }),
+      outputSchema: z.object({ ok: z.boolean() }),
+      execute: async () => {
+        started.resolve(undefined);
+        await release.promise;
+        sideEffectCount += 1;
+        return { ok: true };
+      },
+    });
+
+    try {
+      const execution = executeInContext(trustedContext(), () =>
+        tool.execute({ guildId: "model-guild" }),
+      );
+      await started.promise;
+      const state = await Promise.race([
+        execution.then(
+          () => "settled",
+          () => "settled",
+        ),
+        Bun.sleep(30).then(() => "pending"),
+      ]);
+      expect(state).toBe("pending");
+      expect(sideEffectCount).toBe(0);
+
+      release.resolve(undefined);
+      await expect(execution).rejects.toThrow(
+        "Tool execution timed out after 10ms",
+      );
+      expect(sideEffectCount).toBe(1);
+    } finally {
+      metadata.timeoutMs = originalTimeoutMs;
+      release.resolve(undefined);
     }
   });
 
