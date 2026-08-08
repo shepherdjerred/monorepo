@@ -20,6 +20,10 @@ import {
 } from "../../domain/types";
 import type { TaskStatus } from "../../domain/status";
 import { TaskStatusSchema } from "../../domain/schemas";
+import {
+  RecurringCompletionRestoreSchema,
+  type RecurringCompletionRestore,
+} from "tasknotes-types/v2";
 
 /**
  * Offline-first sync commands.
@@ -69,12 +73,24 @@ export type SetStatusCommand = CommandBase & {
   readonly status: TaskStatus;
 };
 
-export type SetInstanceCompleteCommand = CommandBase & {
+type SetInstanceCompleteTarget = {
   readonly type: "set_instance_complete";
   readonly taskId: TaskId;
   readonly date: string;
-  readonly completed: boolean;
 };
+
+export type SetInstanceCompleteCommand = CommandBase &
+  SetInstanceCompleteTarget &
+  (
+    | {
+        readonly completed: true;
+        readonly restore?: undefined;
+      }
+    | {
+        readonly completed: false;
+        readonly restore?: RecurringCompletionRestore | undefined;
+      }
+  );
 
 export type Command =
   | CreateCommand
@@ -83,14 +99,13 @@ export type Command =
   | SetStatusCommand
   | SetInstanceCompleteCommand;
 
-export type CommandInput =
-  | Omit<CreateCommand, "id" | "createdAt">
-  | Omit<UpdateCommand, "id" | "createdAt">
-  | Omit<DeleteCommand, "id" | "createdAt">
-  | Omit<SetStatusCommand, "id" | "createdAt">
-  | Omit<SetInstanceCompleteCommand, "id" | "createdAt">;
+type WithoutCommandMetadata<CommandType> = CommandType extends Command
+  ? Omit<CommandType, "id" | "createdAt">
+  : never;
 
-export const CommandSchema = z.discriminatedUnion("type", [
+export type CommandInput = WithoutCommandMetadata<Command>;
+
+const StandardCommandSchema = z.discriminatedUnion("type", [
   z.object({
     id: z.string(),
     createdAt: z.number(),
@@ -118,13 +133,25 @@ export const CommandSchema = z.discriminatedUnion("type", [
     taskId: TaskIdSchema,
     status: TaskStatusSchema,
   }),
-  z.object({
-    id: z.string(),
-    createdAt: z.number(),
-    type: z.literal("set_instance_complete"),
-    taskId: TaskIdSchema,
-    date: z.string(),
-    completed: z.boolean(),
+]);
+
+const SetInstanceCompleteBaseSchema = z.object({
+  id: z.string(),
+  createdAt: z.number(),
+  type: z.literal("set_instance_complete"),
+  taskId: TaskIdSchema,
+  date: z.string(),
+});
+
+export const CommandSchema = z.union([
+  StandardCommandSchema,
+  SetInstanceCompleteBaseSchema.extend({
+    completed: z.literal(true),
+    restore: z.undefined().optional(),
+  }),
+  SetInstanceCompleteBaseSchema.extend({
+    completed: z.literal(false),
+    restore: RecurringCompletionRestoreSchema.optional(),
   }),
 ]);
 
@@ -238,15 +265,50 @@ export function applyCommand(
     case "set_instance_complete": {
       const existing = next.get(cmd.taskId);
       if (existing === undefined) return next;
-      const has = existing.completeInstances.includes(cmd.date);
-      if (cmd.completed === has) return next;
-      const completeInstances = cmd.completed
-        ? [...existing.completeInstances, cmd.date]
-        : existing.completeInstances.filter((d) => d !== cmd.date);
-      next.set(cmd.taskId, { ...existing, completeInstances });
+      next.set(cmd.taskId, applyInstanceCompletion(existing, cmd));
       return next;
     }
   }
+}
+
+function applyInstanceCompletion(
+  existing: Task,
+  cmd: SetInstanceCompleteCommand,
+): Task {
+  const has = existing.completeInstances.includes(cmd.date);
+  if (cmd.completed === has && cmd.restore === undefined) return existing;
+
+  const completeInstances = cmd.completed
+    ? [...existing.completeInstances, cmd.date]
+    : existing.completeInstances.filter((date) => date !== cmd.date);
+  const withoutSkippedTarget = existing.skippedInstances.filter(
+    (date) => date !== cmd.date,
+  );
+  const updated: Task = {
+    ...existing,
+    completeInstances,
+    skippedInstances: cmd.restore
+      ? cmd.restore.skipped
+        ? [...withoutSkippedTarget, cmd.date]
+        : withoutSkippedTarget
+      : cmd.completed
+        ? withoutSkippedTarget
+        : existing.skippedInstances,
+  };
+  if (cmd.restore === undefined) return updated;
+
+  updated.recurrence = cmd.restore.recurrence;
+  if (cmd.restore.scheduled === null) {
+    Reflect.deleteProperty(updated, "scheduled");
+  } else {
+    updated.scheduled = cmd.restore.scheduled;
+  }
+  if (cmd.restore.due === null) {
+    Reflect.deleteProperty(updated, "due");
+  } else {
+    updated.due = cmd.restore.due;
+  }
+  return updated;
 }
 
 /** Rewrite a command's task reference from a temp id to the real server id. */

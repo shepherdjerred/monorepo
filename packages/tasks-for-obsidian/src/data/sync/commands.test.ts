@@ -10,6 +10,7 @@ import {
 import { taskId, type Task, type TaskId } from "../../domain/types";
 import {
   type Command,
+  CommandSchema,
   type CreateCommand,
   applyCommand,
   classify,
@@ -142,6 +143,120 @@ describe("applyCommand — idempotent absolute-state semantics", () => {
     expect(d.get(id)?.completeInstances).toEqual([]);
   });
 
+  test("rejects a recurrence restore while completing", () => {
+    expect(
+      CommandSchema.safeParse({
+        id: "invalid-restore",
+        createdAt: 0,
+        type: "set_instance_complete",
+        taskId: id,
+        date: "2026-07-03",
+        completed: true,
+        restore: {
+          recurrence: "FREQ=DAILY",
+          scheduled: "2026-07-03",
+          due: null,
+          skipped: false,
+        },
+      }).success,
+    ).toBe(false);
+  });
+
+  test("recurring Undo restores the pre-completion schedule atomically", () => {
+    const tasks = new Map<TaskId, Task>([
+      [
+        id,
+        makeTask({
+          recurrence: "DTSTART:20260801;FREQ=WEEKLY",
+          scheduled: "2026-08-08",
+          due: "2026-08-10",
+          completeInstances: ["2026-08-01"],
+        }),
+      ],
+    ]);
+    const undo: Command = {
+      id: "undo-1",
+      createdAt: 0,
+      type: "set_instance_complete",
+      taskId: id,
+      date: "2026-08-01",
+      completed: false,
+      restore: {
+        recurrence: "DTSTART:20260801;FREQ=WEEKLY",
+        scheduled: "2026-08-01",
+        due: null,
+        skipped: false,
+      },
+    };
+
+    const restored = applyCommand(undo, tasks).get(id);
+    expect(restored?.completeInstances).toEqual([]);
+    expect(restored?.scheduled).toBe("2026-08-01");
+    expect(restored?.due).toBeUndefined();
+    expect(applyCommand(undo, applyCommand(undo, tasks)).get(id)).toEqual(
+      restored,
+    );
+  });
+
+  test("recurring Undo restores prior skipped membership", () => {
+    const tasks = new Map<TaskId, Task>([
+      [
+        id,
+        makeTask({
+          recurrence: "FREQ=WEEKLY",
+          completeInstances: ["2026-08-01"],
+          skippedInstances: [],
+        }),
+      ],
+    ]);
+    const restored = applyCommand(
+      {
+        id: "undo-skipped",
+        createdAt: 0,
+        type: "set_instance_complete",
+        taskId: id,
+        date: "2026-08-01",
+        completed: false,
+        restore: {
+          recurrence: "FREQ=WEEKLY",
+          scheduled: null,
+          due: null,
+          skipped: true,
+        },
+      },
+      tasks,
+    ).get(id);
+
+    expect(restored?.completeInstances).toEqual([]);
+    expect(restored?.skippedInstances).toEqual(["2026-08-01"]);
+  });
+
+  test("set_status uncompletes a recurring parent without touching instances", () => {
+    const tasks = new Map<TaskId, Task>([
+      [
+        id,
+        makeTask({
+          status: "done",
+          recurrence: "FREQ=WEEKLY",
+          completeInstances: ["2026-08-01"],
+        }),
+      ],
+    ]);
+    const restored = applyCommand(
+      {
+        id: "status-1",
+        createdAt: 0,
+        type: "set_status",
+        taskId: id,
+        status: "open",
+      },
+      tasks,
+    ).get(id);
+
+    expect(restored?.status).toBe("open");
+    expect(restored?.completeInstances).toEqual(["2026-08-01"]);
+  });
+
   test("update merges only defined fields; missing target is a no-op", () => {
     const tasks = new Map<TaskId, Task>([
       [id, makeTask({ title: "Old", priority: "normal" })],
@@ -191,6 +306,32 @@ describe("applyCommand — idempotent absolute-state semantics", () => {
     expect(base.get(id)?.status).toBe("open");
     expect(base.has(taskId("tmp-1"))).toBe(false);
   });
+});
+
+test("uncompleting without restore preserves a skipped instance", () => {
+  const id = taskId("TaskNotes/a.md");
+  const tasks = new Map<TaskId, Task>([
+    [
+      id,
+      makeTask({
+        recurrence: "FREQ=WEEKLY",
+        completeInstances: ["2026-08-01"],
+        skippedInstances: ["2026-08-01"],
+      }),
+    ],
+  ]);
+  const uncomplete: Command = {
+    id: "uncomplete-skipped",
+    createdAt: 0,
+    type: "set_instance_complete",
+    taskId: id,
+    date: "2026-08-01",
+    completed: false,
+  };
+
+  expect(applyCommand(uncomplete, tasks).get(id)?.skippedInstances).toEqual([
+    "2026-08-01",
+  ]);
 });
 
 describe("remapTaskId / commandTarget", () => {

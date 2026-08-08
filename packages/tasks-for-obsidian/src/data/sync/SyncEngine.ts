@@ -8,6 +8,7 @@ import type {
   UpdateTaskRequest,
 } from "../../domain/types";
 import type { TaskStatus } from "../../domain/status";
+import type { CompleteInstanceRequest } from "tasknotes-types/v2";
 import type { TaskStore } from "../store/TaskStore";
 import type { CommandQueue } from "./CommandQueue";
 import { type Clock, type Command, classify } from "./commands";
@@ -58,7 +59,7 @@ export type CommandClient = {
   ) => Promise<Result<Task, AppError>>;
   completeRecurringInstance: (
     id: TaskId,
-    instance?: { date: string; completed: boolean },
+    instance?: CompleteInstanceRequest,
     options?: MutationOptions,
   ) => Promise<Result<Task, AppError>>;
 };
@@ -258,7 +259,13 @@ export class SyncEngine {
       case "set_instance_complete":
         return client.completeRecurringInstance(
           command.taskId,
-          { date: command.date, completed: command.completed },
+          {
+            date: command.date,
+            completed: command.completed,
+            ...(command.restore === undefined
+              ? {}
+              : { restore: command.restore }),
+          },
           options,
         );
     }

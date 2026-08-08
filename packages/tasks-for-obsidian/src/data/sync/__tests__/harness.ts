@@ -14,6 +14,8 @@ import { CommandQueue, type CommandQueueStorage } from "../CommandQueue";
 import type { CommandClient, MutationOptions, SyncStatus } from "../SyncEngine";
 import { SyncEngine } from "../SyncEngine";
 import { TaskStore, type TaskStoreStorage } from "../../store/TaskStore";
+import type { CompleteInstanceRequest } from "tasknotes-types/v2";
+import { applyFakeRecurringCompletion } from "./fake-recurring-completion";
 
 /**
  * Deterministic simulation harness for the offline-first sync stack.
@@ -43,13 +45,6 @@ export function makeClock(startMs = 1_750_000_000_000): ManualClock {
       current = ms;
     },
   };
-}
-
-function ymdOf(ms: number): string {
-  const d = new Date(ms);
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${String(d.getFullYear())}-${month}-${day}`;
 }
 
 export type MemoryQueueStorage = CommandQueueStorage & {
@@ -417,7 +412,7 @@ export class FakeServer implements CommandClient {
 
   completeRecurringInstance(
     id: TaskId,
-    instance?: { date: string; completed: boolean },
+    instance?: CompleteInstanceRequest,
     options?: MutationOptions,
   ): Promise<Result<Task, AppError>> {
     const mutationId = options?.mutationId ?? null;
@@ -440,28 +435,11 @@ export class FakeServer implements CommandClient {
     if (existing === undefined) {
       return Promise.resolve(err(new NotFoundError("Task", String(id))));
     }
-    let completeInstances: string[];
-    if (instance === undefined) {
-      // Legacy fallback: toggle "server today".
-      const today = ymdOf(this.clock.now());
-      const has = existing.completeInstances.includes(today);
-      completeInstances = has
-        ? existing.completeInstances.filter((d) => d !== today)
-        : [...existing.completeInstances, today];
-    } else {
-      // P1 set-semantics: absolute state at the app-provided date.
-      const has = existing.completeInstances.includes(instance.date);
-      if (instance.completed === has) {
-        completeInstances = [...existing.completeInstances];
-      } else if (instance.completed) {
-        completeInstances = [...existing.completeInstances, instance.date];
-      } else {
-        completeInstances = existing.completeInstances.filter(
-          (d) => d !== instance.date,
-        );
-      }
-    }
-    const updated: Task = { ...existing, completeInstances };
+    const updated = applyFakeRecurringCompletion(
+      existing,
+      instance,
+      this.clock.now(),
+    );
     this.tasks.set(id, updated);
     this.remember(mutationId, { kind: "task", task: updated });
     return Promise.resolve(ok({ ...updated }));

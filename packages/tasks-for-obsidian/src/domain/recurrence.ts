@@ -65,8 +65,11 @@ export function isRecurring(task: Task): boolean {
  *
  * Only meaningful for recurring tasks; callers gate on `isRecurring`.
  */
-export function completionTargetDate(task: Task): string {
-  if (task.recurrenceAnchor === "completion") return localTodayYmd();
+export function completionTargetDate(
+  task: Task,
+  today: string = localTodayYmd(),
+): string {
+  if (task.recurrenceAnchor === "completion") return today;
   return resolveOperationTargetDate(undefined, task.scheduled, task.due);
 }
 
@@ -100,7 +103,7 @@ export function isCompletedOn(task: Task, day: string): boolean {
   if (!isRecurring(task)) return isCompletedStatus(task.status);
   const effective = getEffectiveTaskStatus(
     toRecurringLike(task),
-    localDate(day),
+    modelCalendarDate(day),
     "done",
   );
   return effective === "done";
@@ -114,26 +117,47 @@ export function isCompletedOn(task: Task, day: string): boolean {
  */
 export function occursOn(task: Task, day: string): boolean {
   if (!isRecurring(task)) return false;
-  return shouldShowRecurringTaskOnDate(toRecurringLike(task), localDate(day));
-}
-
-/** Parse a YYYY-MM-DD string as a LOCAL date (never UTC midnight). */
-function localDate(day: string): Date {
-  const parts = day.split("-");
-  const y = Number(parts[0]);
-  const m = Number(parts[1]);
-  const d = Number(parts[2]);
-  // `??` only guards null/undefined; a malformed segment yields NaN, which
-  // would silently flow into an invalid Date. Fail fast instead.
-  if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) {
-    throw new TypeError(`localDate: invalid YYYY-MM-DD string "${day}"`);
-  }
-  return new Date(y, m - 1, d);
+  return shouldShowRecurringTaskOnDate(
+    toRecurringLike(task),
+    modelCalendarDate(day),
+  );
 }
 
 /**
- * The next occurrence STRICTLY AFTER `afterYmd`, scanning up to
- * `horizonDays` ahead. Used for the "Completed · Next: <date>" undo toast.
+ * The TaskNotes model reads Date arguments with UTC calendar getters. Feed it
+ * UTC midnight so a local positive or negative offset cannot shift the task
+ * occurrence into an adjacent day. UI-only date parsing remains local.
+ */
+function modelCalendarDate(day: string): Date {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(day);
+  if (match === null) {
+    throw new TypeError(`localDate: invalid YYYY-MM-DD string "${day}"`);
+  }
+  const y = Number(match[1]);
+  const m = Number(match[2]);
+  const d = Number(match[3]);
+  const date = new Date(Date.UTC(y, m - 1, d));
+  if (
+    date.getUTCFullYear() !== y ||
+    date.getUTCMonth() !== m - 1 ||
+    date.getUTCDate() !== d
+  ) {
+    throw new TypeError(`localDate: invalid YYYY-MM-DD string "${day}"`);
+  }
+  return date;
+}
+
+function utcCalendarDay(date: Date): string {
+  const y = String(date.getUTCFullYear());
+  const m = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+/**
+ * The next uncompleted and unskipped occurrence STRICTLY AFTER `afterYmd`,
+ * scanning up to `horizonDays` ahead. Used by Upcoming and the completion
+ * undo toast, which must never advertise a processed date.
  */
 export function nextOccurrenceAfter(
   task: Task,
@@ -141,12 +165,16 @@ export function nextOccurrenceAfter(
   horizonDays = 366,
 ): string | undefined {
   if (!isRecurring(task)) return undefined;
-  const start = localDate(afterYmd);
+  const start = modelCalendarDate(afterYmd);
+  const processed = new Set([
+    ...task.completeInstances,
+    ...task.skippedInstances,
+  ]);
   for (let i = 1; i <= horizonDays; i += 1) {
     const d = new Date(start);
-    d.setDate(d.getDate() + i);
-    const ymd = localTodayYmd(d);
-    if (occursOn(task, ymd)) return ymd;
+    d.setUTCDate(d.getUTCDate() + i);
+    const ymd = utcCalendarDay(d);
+    if (occursOn(task, ymd) && !processed.has(ymd)) return ymd;
   }
   return undefined;
 }

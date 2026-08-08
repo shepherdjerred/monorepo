@@ -79,10 +79,14 @@ contract. The interim `/legacy/api/*` camelCase adapter was removed in P6.
 
 ### Complete-instance body (optional)
 
-`POST /api/tasks/:id/complete-instance` accepts `{date?: "YYYY-MM-DD", completed?: boolean}`:
-no body = legacy toggle of server-local today (upstream plugin parity); `date` targets the
+`POST /api/tasks/:id/complete-instance` accepts `{date?: "YYYY-MM-DD", completed?: boolean,
+restore?: {scheduled: string | null, due: string | null, recurrence: string,
+skipped: boolean}}`: no body =
+legacy toggle of server-local today (upstream plugin parity); `date` targets the
 device-captured instance; `completed` gives idempotent SET semantics (required for safe
-offline-queue replay). Non-recurring tasks are a 400 (upstream parity).
+offline-queue replay). `restore` is valid only with `completed: false` and atomically restores
+the schedule snapshot from before a completion advanced it. Non-recurring tasks are a 400
+(upstream parity).
 
 ### Idempotent mutations
 

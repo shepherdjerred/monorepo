@@ -14,7 +14,7 @@ import { NotFoundError } from "../domain/errors";
 import type { Result } from "../domain/result";
 import { OK_VOID, err, ok } from "../domain/result";
 import { getNextStatus } from "../domain/status";
-import { completionTargetDate, isRecurring } from "../domain/recurrence";
+import type { RecurringCompletionRestore } from "tasknotes-types/v2";
 import type {
   CreateTaskRequest,
   Task,
@@ -57,6 +57,7 @@ type TaskContextValue = {
     id: TaskId,
     date: string,
     completed: boolean,
+    restore?: RecurringCompletionRestore,
   ) => Promise<Result<Task, AppError>>;
   refreshTasks: () => Promise<Result<void, AppError>>;
   retryDeadLetter: (commandId: string) => Promise<void>;
@@ -180,26 +181,11 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       if (existing === undefined) {
         return err(new NotFoundError("Task", String(id)));
       }
-      // Absolute target state, computed once at tap time — replaying the
-      // command later (even after midnight) applies exactly this intent.
-      // Recurring completion targets the SCHEDULED occurrence (plugin parity via
-      // completionTargetDate), not the literal tap day — otherwise a tap on a
-      // non-occurrence day records an orphaned date the model never reads as
-      // done. Capture the date once so `date` and `completed` can't straddle a
-      // midnight boundary (object properties evaluate left-to-right).
-      const instanceDate = completionTargetDate(existing);
-      const updated = isRecurring(existing)
-        ? await store.dispatch({
-            type: "set_instance_complete",
-            taskId: target,
-            date: instanceDate,
-            completed: !existing.completeInstances.includes(instanceDate),
-          })
-        : await store.dispatch({
-            type: "set_status",
-            taskId: target,
-            status: getNextStatus(existing.status),
-          });
+      const updated = await store.dispatch({
+        type: "set_status",
+        taskId: target,
+        status: getNextStatus(existing.status),
+      });
       if (updated === undefined) {
         return err(new NotFoundError("Task", String(id)));
       }
@@ -217,6 +203,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       id: TaskId,
       date: string,
       completed: boolean,
+      restore?: RecurringCompletionRestore,
     ): Promise<Result<Task, AppError>> => {
       const target = store.resolveTaskId(id);
       const updated = await store.dispatch({
@@ -224,6 +211,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
         taskId: target,
         date,
         completed,
+        ...(restore === undefined ? {} : { restore }),
       });
       if (updated === undefined) {
         return err(new NotFoundError("Task", String(id)));
