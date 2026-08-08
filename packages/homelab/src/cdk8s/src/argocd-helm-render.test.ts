@@ -181,7 +181,7 @@ function extractExternalCharts(yamlContent: string): ExternalChart[] {
 // is never silent. Note `404`/`not found` (a missing chart version) and helm
 // template errors deliberately do NOT match here and remain hard failures.
 const TRANSIENT_HELM_ERROR_PATTERN =
-  /\b(?:502|503|504)\b|Bad Gateway|Proxy Error|Service Unavailable|Gateway Timeout|ECONNRESET|ECONNREFUSED|EAI_AGAIN|ETIMEDOUT|i\/o timeout|TLS handshake|tls: handshake|connection reset|connection refused|temporary failure in name resolution/i;
+  /\b(?:502|503|504)\b|Bad Gateway|Proxy Error|Service Unavailable|Gateway Timeout|ECONNRESET|ECONNREFUSED|EAI_AGAIN|ETIMEDOUT|i\/o timeout|TLS handshake|tls: handshake|connection reset|connection refused|no route to host|temporary failure in name resolution/i;
 
 // Exponential backoff (ms) for transient upstream errors. Seven attempts over
 // ~60s base (plus jitter) rides out the multi-second 504 windows GitHub's
@@ -442,6 +442,7 @@ describe("transient helm error classification", () => {
     "Error: looks like the repo is down : 502 Bad Gateway",
     "Error: 503 Service Unavailable",
     "Error: Get ... dial tcp 140.82.112.3:443: connect: connection refused",
+    "Error: Get ... dial tcp 20.29.134.23:443: connect: no route to host",
     "Error: read tcp: connection reset by peer",
     "Error: dial tcp: lookup github.com: temporary failure in name resolution",
     "Error: net/http: TLS handshake timeout",
