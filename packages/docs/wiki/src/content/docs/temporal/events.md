@@ -1,16 +1,18 @@
 ---
 title: Event-driven surfaces
-description: GitHub PR workflows, an Xcode Cloud failure webhook, and the Home Assistant event bridge — the worker's reactive side.
+description: GitHub PR workflows, Xcode Cloud and sleep webhooks, and the Home Assistant event bridge — the worker's reactive side.
 ---
 
-Beyond the cron fleet, the worker reacts to three event sources: GitHub PR
-webhooks, Xcode Cloud build webhooks, and Home Assistant state changes. Each
-public HTTP surface is a Cloudflare Tunnel to a dedicated port on the worker.
+Beyond the cron fleet, the worker reacts to four event sources: GitHub PR
+webhooks, Xcode Cloud build webhooks, direct sleep webhooks, and Home Assistant
+state changes. Each public HTTP surface is a Cloudflare Tunnel to a dedicated
+port on the worker.
 
 | Surface                 | Public host                     | Triggers                                             |
 | ----------------------- | ------------------------------- | ---------------------------------------------------- |
 | GitHub webhook receiver | `pr-bot.sjer.red`               | Merge-conflict check, Buildkite build cancel         |
 | Agent-task API          | `temporal-agent-tasks.sjer.red` | [Agent tasks](/temporal/agent-tasks/) (bearer-token) |
+| Sleep webhook           | `temporal-sleep.sjer.red`       | Sleep workflows (bearer-token)                       |
 | Xcode Cloud webhook     | `xcode-cloud-webhook.sjer.red`  | iOS build failures → Alertmanager alerts             |
 
 ## GitHub PR workflows
@@ -37,6 +39,10 @@ through a singleton workflow with a 90-second cooldown, so a person flapping
 at the edge of a zone cannot rapid-fire the lock. Time-of-day routines
 (good-morning, vacuum) come from [schedules](/temporal/schedules/) instead —
 events for state changes, crons for wall-clock behavior.
+
+Sleep Shortcuts use the separate `temporal-sleep.sjer.red` HTTP surface; they do
+not require Home Assistant for ingress. The webhook accepts hours, converts and
+rounds to minutes, then starts the corresponding Temporal workflow.
 
 ## Why webhooks and not polling
 

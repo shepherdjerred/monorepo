@@ -2,6 +2,7 @@ import type { Chart } from "cdk8s";
 import type { Deployment } from "cdk8s-plus-31";
 import {
   createAgentTaskApiService,
+  createSleepWebhookService,
   createTemporalWorkerGithubWebhookService,
   createXcodeCloudWebhookService,
 } from "./http-services.ts";
@@ -12,5 +13,6 @@ export function createTemporalWorkerHttpServices(
 ): void {
   createTemporalWorkerGithubWebhookService(chart, deployment);
   createAgentTaskApiService(chart, deployment);
+  createSleepWebhookService(chart, deployment);
   createXcodeCloudWebhookService(chart, deployment);
 }

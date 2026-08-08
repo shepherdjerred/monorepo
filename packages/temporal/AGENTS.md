@@ -171,6 +171,8 @@ Workflow:
 - `POSTAL_HOST`, `POSTAL_API_KEY` — Postal email service
 - `RECIPIENT_EMAIL`, `SENDER_EMAIL` — Email addresses for dependency summary and homelab audit
 - `AGENT_TASK_API_TOKEN` — required bearer token for the authenticated `/agent-tasks` scheduling API on port 9467
+- `SLEEP_WEBHOOK_TOKEN` — required bearer token for the direct iOS sleep webhook on port 9469
+- `SLEEP_WEBHOOK_PORT` — port for the direct sleep webhook (default `9469`)
 - `RUNBOOK_PATH` — local override for the homelab-audit runbook (defaults to fetching `https://raw.githubusercontent.com/.../packages/docs/guides/2026-04-04_homelab-audit-runbook.md`)
 - `PAGERDUTY_TOKEN` — PagerDuty REST API token (homelab audit)
 - `BUGSINK_URL`, `BUGSINK_TOKEN` — Bugsink REST API base + token (homelab audit)
@@ -227,7 +229,10 @@ curl -fsS https://temporal-agent-tasks.sjer.red/agent-tasks \
   --data @agent-task.json
 ```
 
-Do not expose direct Temporal scheduling as a public ingress path. Public creation must go through the authenticated `/agent-tasks` HTTP API with `Authorization: Bearer $AGENT_TASK_API_TOKEN`.
+Do not expose general-purpose Temporal scheduling as a public ingress path.
+Narrow, dedicated APIs such as the authenticated sleep webhook are allowed;
+agent-task creation must still go through `/agent-tasks` with
+`Authorization: Bearer $AGENT_TASK_API_TOKEN`.
 
 Inputs use `runAt` for one-off tasks or `cron` + stable `scheduleId` for recurring tasks. Recurring schedules use `America/Los_Angeles`. Agents may return `followUp` to schedule one more report-only task. Agents may return `cancelCron: true` only when the original input has `allowSelfCancel: true`; cancellation pauses the Temporal Schedule rather than deleting it.
 

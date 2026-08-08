@@ -141,6 +141,7 @@ describe("temporal homelab audit tooling", () => {
     );
 
     expect(envValue(core, "TEMPORAL_WORKER_ROLE")).toBe("core");
+    expect(envValue(core, "SLEEP_WEBHOOK_PORT")).toBe("9469");
     expect(envValue(glitter, "TEMPORAL_WORKER_ROLE")).toBe("glitter");
 
     const coreContainer = core.spec.template.spec.containers[0];
@@ -161,11 +162,16 @@ describe("temporal homelab audit tooling", () => {
     }
 
     expect(coreContainer.ports.map((port) => port.containerPort)).toEqual([
-      9464, 9465, 9466, 9467, 9468,
+      9464, 9465, 9466, 9467, 9468, 9469,
     ]);
     expect(glitterContainer.ports.map((port) => port.containerPort)).toEqual([
       9464, 9465,
     ]);
+
+    const yaml = await synthesizeApp();
+    expect(yaml).toContain("name: temporal-worker-sleep-webhook");
+    expect(yaml).toContain("https://temporal-sleep.sjer.red/healthz");
+    expect(yaml).toContain("name: SLEEP_WEBHOOK_TOKEN");
   });
 
   it("enables Temporal worker observability dynamic config with v1.29 key casing", async () => {

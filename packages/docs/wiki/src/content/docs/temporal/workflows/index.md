@@ -58,14 +58,16 @@ as a child of the daily capture.
 
 ## Home automation — [deep dive](/temporal/workflows/home-automation/)
 
-| Workflow           | Trigger               | Brain         | Output               |
-| ------------------ | --------------------- | ------------- | -------------------- |
-| good-morning ×3    | weekday/weekend crons | deterministic | heat, music, scenes  |
-| vacuum-if-not-home | 09/12/17:00           | deterministic | vacuum fleet         |
-| welcome-home       | arrival edge          | deterministic | scenes, lights, dock |
-| leaving-home       | last-departure edge   | deterministic | lights off, vacuums  |
-| reconcile-lock     | every presence edge   | deterministic | deadbolt (settled)   |
-| good-night         | iOS shortcut          | deterministic | scene + sleep audio  |
+| Workflow           | Trigger                 | Brain         | Output               |
+| ------------------ | ----------------------- | ------------- | -------------------- |
+| good-morning ×3    | weekday/weekend crons   | deterministic | heat, music, scenes  |
+| vacuum-if-not-home | 09/12/17:00             | deterministic | vacuum fleet         |
+| welcome-home       | arrival edge            | deterministic | scenes, lights, dock |
+| leaving-home       | last-departure edge     | deterministic | lights off, vacuums  |
+| reconcile-lock     | every presence edge     | deterministic | deadbolt (settled)   |
+| good-night         | iOS shortcut            | deterministic | scene + sleep audio  |
+| sleep-music        | iOS Shortcut + duration | deterministic | bedroom sleep audio  |
+| sleep-ac           | iOS Shortcut + duration | deterministic | bedroom cooling      |
 
 ## GitHub PRs — [deep dive](/temporal/workflows/pr-bots/)
 
