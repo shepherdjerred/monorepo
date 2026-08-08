@@ -132,6 +132,10 @@ function maintenanceDeployment(resources: readonly unknown[]) {
           }),
           spec: z.object({
             automountServiceAccountToken: z.literal(false),
+            securityContext: z.object({
+              fsGroup: z.literal(1000),
+              fsGroupChangePolicy: z.literal("OnRootMismatch"),
+            }),
             affinity: z.object({
               nodeAffinity: z.object({
                 requiredDuringSchedulingIgnoredDuringExecution: z.object({
@@ -284,7 +288,7 @@ describe("Buildkite application", () => {
         "/buildkite/uv-cache",
         "/buildkite/trivy-db",
         "/buildkite/maintenance",
-        "/etc/kometa/config.yml",
+        "/etc/kometa",
       ]),
     );
     expect(

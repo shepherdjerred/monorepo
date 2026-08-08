@@ -25,19 +25,20 @@ function findScheduleById(id: string) {
 
 describe("direct maintenance schedules", () => {
   const definitions = [
-    ["buildkite-bun-cache-gc", "runBunCacheGcWorkflow"],
-    ["kometa-daily", "runKometaWorkflow"],
-    ["buildkite-uv-cache-prune-weekly", "runUvCachePruneWorkflow"],
-    ["buildkite-trivy-db-refresh", "runTrivyDbRefreshWorkflow"],
+    ["buildkite-bun-cache-gc", "runBunCacheGcWorkflow", "1 hour"],
+    ["kometa-daily", "runKometaWorkflow", "2 hours"],
+    ["buildkite-uv-cache-prune-weekly", "runUvCachePruneWorkflow", "2 hours"],
+    ["buildkite-trivy-db-refresh", "runTrivyDbRefreshWorkflow", "2 hours"],
   ] as const;
 
   it.each(definitions)(
     "%s keeps its workflow identity while using the maintenance queue",
-    (id, workflowType) => {
+    (id, workflowType, workflowExecutionTimeout) => {
       const schedule = findScheduleById(id);
       expect(schedule.workflowType).toBe(workflowType);
       expect(schedule.taskQueue).toBe(TASK_QUEUES.MAINTENANCE);
       expect(schedule.requiredEnvironment).toBeUndefined();
+      expect(schedule.workflowExecutionTimeout).toBe(workflowExecutionTimeout);
     },
   );
 });

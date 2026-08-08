@@ -200,5 +200,8 @@ describe("Buildkite monitoring manifests", () => {
     expect(String(collectorStale?.["expr"])).toContain(
       'temporal_worker_app_process_start_time_seconds{\n        namespace="buildkite",\n        pod=~"temporal-maintenance-worker-.*"\n      }',
     );
+    expect(String(collectorStale?.["expr"])).toContain(
+      'kube_deployment_status_replicas_available{\n        namespace="buildkite",\n        deployment="temporal-maintenance-worker"\n      }',
+    );
   });
 });

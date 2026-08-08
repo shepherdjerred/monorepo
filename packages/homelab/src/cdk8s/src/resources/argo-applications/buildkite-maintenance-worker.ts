@@ -4,6 +4,7 @@ import {
   Deployment,
   DeploymentStrategy,
   EnvValue,
+  FsGroupChangePolicy,
   Node,
   NodeLabelQuery,
   PersistentVolumeClaim,
@@ -127,7 +128,10 @@ export function createBuildkiteMaintenanceWorker(chart: Chart): void {
     automountServiceAccountToken: false,
     metadata: { name: WORKER_NAME, namespace: NAMESPACE },
     podMetadata: { labels: WORKER_LABELS },
-    securityContext: { fsGroup: 1000 },
+    securityContext: {
+      fsGroup: 1000,
+      fsGroupChangePolicy: FsGroupChangePolicy.ON_ROOT_MISMATCH,
+    },
   });
   deployment.scheduling.attract(
     Node.labeled(NodeLabelQuery.is("kubernetes.io/hostname", CI_NODE_HOSTNAME)),
@@ -238,8 +242,7 @@ export function createBuildkiteMaintenanceWorker(chart: Chart): void {
         { path: "/buildkite/trivy-db", volume: trivyDb },
         { path: "/buildkite/maintenance", volume: gcScript, readOnly: true },
         {
-          path: "/etc/kometa/config.yml",
-          subPath: "config.yml",
+          path: "/etc/kometa",
           volume: kometaConfig,
           readOnly: true,
         },

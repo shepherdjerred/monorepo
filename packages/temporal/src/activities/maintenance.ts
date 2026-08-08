@@ -10,6 +10,8 @@ const MAINTENANCE_WORKDIR = "/tmp";
 const HEARTBEAT_INTERVAL_MS = 15_000;
 const OUTPUT_TAIL_LINES = 20;
 const OUTPUT_TAIL_CHARS = 8192;
+const CANCELLATION_GRACE_PERIOD_MS = 1000;
+const CANCELLATION = Symbol("maintenance-cancellation");
 
 export type MaintenanceKind =
   | "kometa"
@@ -191,18 +193,21 @@ export const spawnMaintenanceCommand: MaintenanceCommandRunner = async (
   command,
   hooks,
 ) => {
+  let resolveCancellation: (() => void) | undefined;
+  const cancellationPromise =
+    hooks.cancellationSignal === undefined
+      ? undefined
+      : new Promise<typeof CANCELLATION>((resolve) => {
+          resolveCancellation = () => {
+            resolve(CANCELLATION);
+          };
+        });
   const childEnv = command.env;
   const process = Bun.spawn([...command.command], {
     cwd: command.cwd,
     env: childEnv,
     stdout: "pipe",
     stderr: "pipe",
-    ...(hooks.cancellationSignal === undefined
-      ? {}
-      : {
-          signal: hooks.cancellationSignal,
-          killSignal: "SIGKILL" as const,
-        }),
   });
   const startedAt = Date.now();
   const heartbeatTimer = setInterval(() => {
@@ -211,26 +216,51 @@ export const spawnMaintenanceCommand: MaintenanceCommandRunner = async (
       elapsedMs: Date.now() - startedAt,
     });
   }, hooks.heartbeatIntervalMs ?? HEARTBEAT_INTERVAL_MS);
+  let cancellationTimer: ReturnType<typeof setTimeout> | undefined;
+  let wasCancelled = false;
   const abort = (): void => {
     hooks.onCancellation();
+    process.kill("SIGTERM");
+    cancellationTimer = setTimeout(() => {
+      process.kill("SIGKILL");
+    }, CANCELLATION_GRACE_PERIOD_MS);
+    resolveCancellation?.();
   };
-  if (hooks.cancellationSignal?.aborted === true) {
-    hooks.onCancellation();
-  }
   hooks.cancellationSignal?.addEventListener("abort", abort, { once: true });
+  if (hooks.cancellationSignal?.aborted === true) {
+    abort();
+  }
 
-  let stdout: string;
-  let stderr: string;
-  let exitCode: number;
+  let stdout = "";
+  let stderr = "";
+  let exitCode = 0;
   try {
-    [stdout, stderr, exitCode] = await Promise.all([
+    const completion = Promise.all([
       streamMaintenanceOutput(process.stdout, "stdout", command),
       streamMaintenanceOutput(process.stderr, "stderr", command),
       process.exited,
     ]);
+    const result =
+      cancellationPromise === undefined
+        ? await completion
+        : await Promise.race([completion, cancellationPromise]);
+    if (result === CANCELLATION) {
+      void Promise.allSettled([completion]);
+      wasCancelled = true;
+    } else {
+      [stdout, stderr, exitCode] = result;
+    }
   } finally {
+    if (!wasCancelled && cancellationTimer !== undefined) {
+      clearTimeout(cancellationTimer);
+    }
     clearInterval(heartbeatTimer);
     hooks.cancellationSignal?.removeEventListener("abort", abort);
+  }
+
+  if (wasCancelled) {
+    hooks.cancellationSignal?.throwIfAborted();
+    throw new Error("Maintenance subprocess cancellation was not requested");
   }
 
   if (hooks.cancellationSignal?.aborted === true) {

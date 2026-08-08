@@ -81,7 +81,8 @@ export const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "*/5 * * * *",
     taskQueue: TASK_QUEUES.MAINTENANCE,
     overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "30 minutes",
+    // Three 15-minute attempts plus exponential backoff and workflow overhead.
+    workflowExecutionTimeout: "1 hour",
     memo: "Every-five-minute Buildkite Bun cache GC on the CI node",
   },
   {
@@ -151,7 +152,8 @@ export const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "30 4 * * *",
     taskQueue: TASK_QUEUES.MAINTENANCE,
     overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "30 minutes",
+    // Three 30-minute attempts plus exponential backoff and workflow overhead.
+    workflowExecutionTimeout: "2 hours",
     memo: "Daily Kometa Plex metadata and collection synchronization",
   },
   {
@@ -266,7 +268,8 @@ export const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "15 3 * * 0",
     taskQueue: TASK_QUEUES.MAINTENANCE,
     overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "30 minutes",
+    // Three 30-minute attempts plus exponential backoff and workflow overhead.
+    workflowExecutionTimeout: "2 hours",
     memo: "Weekly Buildkite uv cache prune on the CI node",
   },
   {
@@ -276,7 +279,8 @@ export const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "30 */6 * * *",
     taskQueue: TASK_QUEUES.MAINTENANCE,
     overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "30 minutes",
+    // Three 30-minute attempts plus exponential backoff and workflow overhead.
+    workflowExecutionTimeout: "2 hours",
     memo: "Buildkite Trivy vulnerability database refresh every six hours",
   },
   {

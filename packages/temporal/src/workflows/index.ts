@@ -87,10 +87,10 @@ import type {
   GlitterContextRefreshResult,
 } from "#activities/glitter-context-refresh.ts";
 import {
-  runKometaWorkflow as _runKometaWorkflow,
-  runBunCacheGcWorkflow as _runBunCacheGcWorkflow,
-  runUvCachePruneWorkflow as _runUvCachePruneWorkflow,
-  runTrivyDbRefreshWorkflow as _runTrivyDbRefreshWorkflow,
+  runKometaWorkflow as runKometaWorkflowImplementation,
+  runBunCacheGcWorkflow as runBunCacheGcWorkflowImplementation,
+  runUvCachePruneWorkflow as runUvCachePruneWorkflowImplementation,
+  runTrivyDbRefreshWorkflow as runTrivyDbRefreshWorkflowImplementation,
 } from "./maintenance.ts";
 
 export async function fetchSkillCappedManifest(): Promise<void> {
@@ -98,19 +98,19 @@ export async function fetchSkillCappedManifest(): Promise<void> {
 }
 
 export async function runKometaWorkflow(): Promise<void> {
-  return _runKometaWorkflow();
+  return runKometaWorkflowImplementation();
 }
 
 export async function runBunCacheGcWorkflow(): Promise<void> {
-  return _runBunCacheGcWorkflow();
+  return runBunCacheGcWorkflowImplementation();
 }
 
 export async function runUvCachePruneWorkflow(): Promise<void> {
-  return _runUvCachePruneWorkflow();
+  return runUvCachePruneWorkflowImplementation();
 }
 
 export async function runTrivyDbRefreshWorkflow(): Promise<void> {
-  return _runTrivyDbRefreshWorkflow();
+  return runTrivyDbRefreshWorkflowImplementation();
 }
 
 export async function generateDependencySummary(daysBack = 7): Promise<void> {
