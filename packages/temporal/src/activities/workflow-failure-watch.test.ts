@@ -172,6 +172,9 @@ describe("workflow timeout history classification", () => {
     expect(calls[0]?.alerts[0]?.annotations["description"]).toContain(
       "diagnosis worker/task-queue availability failure",
     );
+    expect(calls[0]?.alerts[0]?.annotations["description"]).toContain(
+      "no activity reached execution",
+    );
   });
 });
 
@@ -249,6 +252,9 @@ describe("workflow timeout history edge cases", () => {
     expect(calls[0]?.alerts[0]?.annotations["description"]).toContain(
       "diagnosis worker/task-queue availability failure",
     );
+    expect(calls[0]?.alerts[0]?.annotations["description"]).toContain(
+      "a scheduled activity has not started",
+    );
   });
 
   it("diagnoses an execution timeout with an undispatched later workflow task", async () => {
@@ -299,6 +305,9 @@ describe("workflow timeout history edge cases", () => {
 
     expect(calls[0]?.alerts[0]?.annotations["description"]).toContain(
       "diagnosis worker/task-queue availability failure",
+    );
+    expect(calls[0]?.alerts[0]?.annotations["description"]).toContain(
+      "a scheduled workflow task has not started",
     );
   });
 

@@ -17,6 +17,11 @@ export type FailedWorkflowExecution = {
   status: "FAILED" | "TIMED_OUT";
 };
 
+export type WorkerTaskQueueUnavailableReason =
+  | "no activity reached execution"
+  | "a scheduled activity has not started"
+  | "a scheduled workflow task has not started";
+
 export type WorkflowFailureDetail = {
   /** e.g. `ApplicationFailure`, `ActivityFailure`, `TimeoutFailure` — the TemporalFailure subclass name. */
   failureType: string;
@@ -28,6 +33,7 @@ export type WorkflowFailureDetail = {
     | "execution"
     | "unknown";
   workerTaskQueueUnavailable?: boolean;
+  workerTaskQueueUnavailableReason?: WorkerTaskQueueUnavailableReason;
   historyError?: string;
 };
 
@@ -91,7 +97,7 @@ export function buildWorkflowFailureAlert(
   }
   if (failure.workerTaskQueueUnavailable === true) {
     descriptionParts.push(
-      "diagnosis worker/task-queue availability failure: no activity reached execution",
+      `diagnosis worker/task-queue availability failure: ${failure.workerTaskQueueUnavailableReason ?? "no activity reached execution"}`,
     );
   }
   if (failure.historyError !== undefined) {

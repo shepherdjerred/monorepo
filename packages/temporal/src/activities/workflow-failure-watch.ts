@@ -192,26 +192,49 @@ async function inspectTimeoutHistory(
   }
 }
 
+function workerTaskQueueUnavailableReason(
+  classification: WorkflowTimeoutHistoryClassification,
+): WorkflowFailureDetail["workerTaskQueueUnavailableReason"] {
+  if (classification.activityScheduledButNotStarted) {
+    return "a scheduled activity has not started";
+  }
+  if (classification.workflowTaskScheduledButNotStarted) {
+    return "a scheduled workflow task has not started";
+  }
+  if (!classification.activityStarted) {
+    return "no activity reached execution";
+  }
+  return undefined;
+}
+
 function timeoutFailureFields(
   workflowType: string,
   inspection: TimeoutInspection,
 ): Pick<
   WorkflowFailureDetail,
-  "timeoutClassification" | "workerTaskQueueUnavailable" | "historyError"
+  | "timeoutClassification"
+  | "workerTaskQueueUnavailable"
+  | "workerTaskQueueUnavailableReason"
+  | "historyError"
 > {
   const classification = inspection.classification;
+  const timeoutClassification = classification?.classification;
+  const workerTaskQueueReason =
+    classification === undefined ||
+    workflowType !== "agentTaskWorkflow" ||
+    (timeoutClassification !== "workflow-task" &&
+      timeoutClassification !== "execution")
+      ? undefined
+      : workerTaskQueueUnavailableReason(classification);
   return {
     ...(classification === undefined
       ? {}
       : {
           timeoutClassification: classification.classification,
-          workerTaskQueueUnavailable:
-            workflowType === "agentTaskWorkflow" &&
-            (!classification.activityStarted ||
-              classification.activityScheduledButNotStarted ||
-              classification.workflowTaskScheduledButNotStarted) &&
-            (classification.classification === "workflow-task" ||
-              classification.classification === "execution"),
+          workerTaskQueueUnavailable: workerTaskQueueReason !== undefined,
+          ...(workerTaskQueueReason === undefined
+            ? {}
+            : { workerTaskQueueUnavailableReason: workerTaskQueueReason }),
         }),
     ...(inspection.historyError === undefined
       ? {}
