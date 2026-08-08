@@ -39,9 +39,12 @@ flowchart LR
   H&R, and reseed values. qBittorrent supplies torrent progress, status,
   client, transfer, ratio, timing, and history fields. Tracker-verified H&R
   `Y/N` per torrent is intentionally outside this v1 boundary.
-- **Secret-safe automation.** Bootstrap and export commands receive the app
-  login, qBittorrent credentials, and tracker cookies through an untracked
-  environment file resolved by 1Password.
+- **Secret-safe automation.** The Deployment receives only runtime/database
+  values from the `tracker-tracker-secrets` 1Password item. An operator-only
+  Bun command resolves tracker cookies, tracker login fields, and qBittorrent
+  credentials through `op://` references, then sends them through Tracker
+  Tracker's authenticated API. Tracker Tracker persists those credentials in
+  its encrypted database; they are not placed in the pod environment.
 
 ## Where to look
 
@@ -49,6 +52,8 @@ flowchart LR
   `packages/homelab/src/cdk8s/src/resources/tracker-tracker/`.
 - Bootstrap and exporter:
   `packages/homelab/scripts/tracker-tracker.ts`.
+- Operator reference template:
+  `packages/homelab/tracker-tracker.env.example`.
 - Backup inventory:
   `packages/homelab/src/cdk8s/src/backup-policy/pvc-backup-policy.json`.
 - Operator commands and environment requirements:

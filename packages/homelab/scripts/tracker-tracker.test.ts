@@ -5,6 +5,7 @@ import {
   ExportBundleSchema,
   buildAvistaZApiToken,
   parseExportDays,
+  readAuthConfig,
   readBootstrapConfig,
   TrackerTrackerClient,
   toJsonLines,
@@ -128,6 +129,23 @@ describe("tracker tracker bootstrap configuration", () => {
     );
   });
 
+  it("allows export authentication without bootstrap-only credentials", () => {
+    const authEnv = Object.fromEntries(
+      Object.entries(baseEnv).filter(
+        ([key]) =>
+          !key.startsWith("TRACKER_TRACKER_QBIT_") &&
+          !key.startsWith("TRACKER_TRACKER_PRIVATEHD_") &&
+          !key.startsWith("TRACKER_TRACKER_AVISTAZ_") &&
+          !key.startsWith("TRACKER_TRACKER_ANIMEZ_"),
+      ),
+    );
+    expect(readAuthConfig(authEnv)).toEqual({
+      appUrl: "https://tracker-tracker.example.test",
+      username: "operator",
+      password: "a-password-that-is-long-enough",
+    });
+  });
+
   it("rejects malformed qBittorrent ports instead of partially parsing them", () => {
     expect(() =>
       readBootstrapConfig({ ...baseEnv, TRACKER_TRACKER_QBIT_PORT: "8080x" }),
@@ -211,8 +229,16 @@ describe("tracker tracker bootstrap configuration", () => {
     ]);
     const fetcher = createMockFetcher(calls, routes);
 
-    const client = new TrackerTrackerClient(config().appUrl, fetcher);
-    await client.authenticate(config().username, config().password, "123456");
+    let prompts = 0;
+    const client = new TrackerTrackerClient(
+      config().appUrl,
+      fetcher,
+      async () => {
+        prompts += 1;
+        return "123456";
+      },
+    );
+    await client.authenticate(config().username, config().password);
 
     expect(calls.map(({ path }) => path)).toEqual([
       "/api/auth/status",
@@ -229,6 +255,7 @@ describe("tracker tracker bootstrap configuration", () => {
       pendingToken: "pending-token",
       code: "123456",
     });
+    expect(prompts).toBe(1);
   });
 
   it("preserves cookies when Expires contains a comma", async () => {

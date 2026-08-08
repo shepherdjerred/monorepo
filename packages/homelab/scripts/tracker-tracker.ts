@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 
 import { z } from "zod";
+import { readConfirmationLine } from "./migration-core.ts";
 
 const JsonObjectSchema = z.record(z.string(), z.unknown());
 const JsonPayloadSchema = JsonObjectSchema.or(z.array(z.unknown()));
@@ -14,7 +15,7 @@ const TrackerInputSchema = z.object({
 });
 export type TrackerInput = z.infer<typeof TrackerInputSchema>;
 
-const BootstrapConfigSchema = z.object({
+const TrackerTrackerAuthConfigSchema = z.object({
   appUrl: z.url(),
   username: z.string().min(3),
   password: z.string().min(8),
@@ -22,6 +23,12 @@ const BootstrapConfigSchema = z.object({
     .string()
     .regex(/^\d{6}$/)
     .optional(),
+});
+export type TrackerTrackerAuthConfig = z.infer<
+  typeof TrackerTrackerAuthConfigSchema
+>;
+
+const BootstrapConfigSchema = TrackerTrackerAuthConfigSchema.extend({
   qbitHost: z.string().min(1),
   qbitPort: z.number().int().positive().max(65_535),
   qbitUsername: z.string().min(1),
@@ -48,6 +55,21 @@ const StatusSchema = z.object({
 });
 
 type Fetcher = (input: string, init?: RequestInit) => Promise<Response>;
+type TotpProvider = () => Promise<string>;
+
+export async function readInteractiveTotp(): Promise<string> {
+  if (!process.stdin.isTTY) {
+    throw new Error(
+      "Tracker Tracker requires TOTP; rerun bootstrap from an interactive terminal or set TRACKER_TRACKER_TOTP",
+    );
+  }
+  process.stderr.write("Tracker Tracker TOTP code: ");
+  const code = await readConfirmationLine(Bun.stdin.stream());
+  return z
+    .string()
+    .regex(/^\d{6}$/, "TOTP code must be exactly six digits")
+    .parse(code.trim());
+}
 
 function requiredEnv(
   env: Record<string, string | undefined>,
@@ -84,6 +106,7 @@ function trackerFromEnv(
 export function readBootstrapConfig(
   env: Record<string, string | undefined>,
 ): BootstrapConfig {
+  const auth = readAuthConfig(env);
   const rawPort = env["TRACKER_TRACKER_QBIT_PORT"] ?? "8080";
   if (!/^\d+$/.test(rawPort)) {
     throw new Error("TRACKER_TRACKER_QBIT_PORT must be a positive integer");
@@ -93,10 +116,7 @@ export function readBootstrapConfig(
     throw new Error("TRACKER_TRACKER_QBIT_PORT must be a positive integer");
   }
   return BootstrapConfigSchema.parse({
-    appUrl: requiredEnv(env, "TRACKER_TRACKER_URL").replace(/\/$/, ""),
-    username: requiredEnv(env, "TRACKER_TRACKER_USERNAME"),
-    password: requiredEnv(env, "TRACKER_TRACKER_PASSWORD"),
-    totp: optionalEnv(env, "TRACKER_TRACKER_TOTP"),
+    ...auth,
     qbitHost:
       env["TRACKER_TRACKER_QBIT_HOST"] ??
       "media-qbittorrent-service.media.svc.cluster.local",
@@ -108,6 +128,17 @@ export function readBootstrapConfig(
       trackerFromEnv(env, "TRACKER_TRACKER_AVISTAZ", "AvistaZ"),
       trackerFromEnv(env, "TRACKER_TRACKER_ANIMEZ", "AnimeZ"),
     ],
+  });
+}
+
+export function readAuthConfig(
+  env: Record<string, string | undefined>,
+): TrackerTrackerAuthConfig {
+  return TrackerTrackerAuthConfigSchema.parse({
+    appUrl: requiredEnv(env, "TRACKER_TRACKER_URL").replace(/\/$/, ""),
+    username: requiredEnv(env, "TRACKER_TRACKER_USERNAME"),
+    password: requiredEnv(env, "TRACKER_TRACKER_PASSWORD"),
+    totp: optionalEnv(env, "TRACKER_TRACKER_TOTP"),
   });
 }
 
@@ -154,6 +185,7 @@ export class TrackerTrackerClient {
   public constructor(
     private readonly baseUrl: string,
     private readonly fetcher: Fetcher = fetch,
+    private readonly totpProvider: TotpProvider = readInteractiveTotp,
   ) {}
 
   private async call(
@@ -246,15 +278,16 @@ export class TrackerTrackerClient {
       .parse(z.object({ body: z.unknown() }).parse(loginResult).body);
 
     if (login.requiresTotp === true) {
-      if (totp === undefined || login.pendingToken === undefined) {
+      if (login.pendingToken === undefined) {
         throw new Error(
-          "Tracker Tracker requires TOTP; set TRACKER_TRACKER_TOTP for this invocation",
+          "Tracker Tracker requested TOTP without a pending token",
         );
       }
+      const code = totp ?? (await this.totpProvider());
       const totpResult = await this.call(
         "/api/auth/totp/verify",
         "POST",
-        { pendingToken: login.pendingToken, code: totp },
+        { pendingToken: login.pendingToken, code },
         false,
       );
       this.sessionCookie = getSetCookieHeader(
@@ -432,15 +465,17 @@ export function parseExportDays(rawValue = "90"): number {
 }
 
 async function main(): Promise<void> {
-  const config = readBootstrapConfig(Bun.env);
   const command = Bun.argv[2] ?? "bootstrap";
-  const client = new TrackerTrackerClient(config.appUrl);
   if (command === "bootstrap") {
+    const config = readBootstrapConfig(Bun.env);
+    const client = new TrackerTrackerClient(config.appUrl);
     const summary = await client.bootstrap(config);
     console.log(JSON.stringify(BootstrapSummarySchema.parse(summary), null, 2));
     return;
   }
   if (command === "export") {
+    const config = readAuthConfig(Bun.env);
+    const client = new TrackerTrackerClient(config.appUrl);
     await client.authenticate(config.username, config.password, config.totp);
     const days = parseExportDays(Bun.env["TRACKER_TRACKER_EXPORT_DAYS"]);
     const bundle = ExportBundleSchema.parse(await client.export(days));

@@ -75,6 +75,7 @@ describe("Tracker Tracker chart", () => {
                       image: z.literal(
                         "ghcr.io/jordanlambrecht/tracker-tracker:2.8.9@sha256:27b93eb839812c7ccaf03b1024f31d23b5981f8fcc13257447e2082100b7a71c",
                       ),
+                      env: z.array(z.object({ name: z.string() }).loose()),
                       readinessProbe: z
                         .object({
                           httpGet: z
@@ -97,6 +98,26 @@ describe("Tracker Tracker chart", () => {
     expect(deploymentLabels.spec.template.metadata.labels.app).toBe(
       "tracker-tracker",
     );
+    const envNames = new Set(
+      deploymentLabels.spec.template.spec.containers[0]?.env.map(
+        ({ name }) => name,
+      ),
+    );
+    expect(envNames).toEqual(
+      new Set([
+        "TZ",
+        "POSTGRES_HOST",
+        "POSTGRES_PORT",
+        "POSTGRES_DB",
+        "POSTGRES_USER",
+        "POSTGRES_PASSWORD",
+        "SESSION_SECRET",
+        "SECURE_COOKIES",
+        "LOG_LEVEL",
+      ]),
+    );
+    expect([...envNames].some((name) => name.includes("QBIT"))).toBe(false);
+    expect([...envNames].some((name) => name.includes("TRACKER"))).toBe(false);
 
     const database = z
       .object({
