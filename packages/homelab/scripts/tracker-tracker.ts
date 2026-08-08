@@ -409,6 +409,21 @@ export function toJsonLines(bundle: ExportBundle): string {
   return records.map((record) => JSON.stringify(record)).join("\n");
 }
 
+export function parseExportDays(rawValue = "90"): number {
+  if (!/^\d+$/.test(rawValue)) {
+    throw new Error(
+      "TRACKER_TRACKER_EXPORT_DAYS must be an integer from 1 to 3650",
+    );
+  }
+  const days = Number(rawValue);
+  if (!Number.isSafeInteger(days) || days < 1 || days > 3650) {
+    throw new Error(
+      "TRACKER_TRACKER_EXPORT_DAYS must be an integer from 1 to 3650",
+    );
+  }
+  return days;
+}
+
 async function main(): Promise<void> {
   const config = readBootstrapConfig(Bun.env);
   const command = Bun.argv[2] ?? "bootstrap";
@@ -420,15 +435,7 @@ async function main(): Promise<void> {
   }
   if (command === "export") {
     await client.authenticate(config.username, config.password, config.totp);
-    const days = Number.parseInt(
-      Bun.env["TRACKER_TRACKER_EXPORT_DAYS"] ?? "90",
-      10,
-    );
-    if (!Number.isInteger(days) || days < 1 || days > 3650) {
-      throw new Error(
-        "TRACKER_TRACKER_EXPORT_DAYS must be an integer from 1 to 3650",
-      );
-    }
+    const days = parseExportDays(Bun.env["TRACKER_TRACKER_EXPORT_DAYS"]);
     const bundle = ExportBundleSchema.parse(await client.export(days));
     const format = Bun.env["TRACKER_TRACKER_OUTPUT_FORMAT"] ?? "json";
     if (format === "json") console.log(JSON.stringify(bundle, null, 2));

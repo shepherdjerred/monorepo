@@ -4,6 +4,7 @@ import {
   BootstrapSummarySchema,
   ExportBundleSchema,
   buildAvistaZApiToken,
+  parseExportDays,
   readBootstrapConfig,
   TrackerTrackerClient,
   toJsonLines,
@@ -262,6 +263,20 @@ describe("tracker tracker bootstrap configuration", () => {
 });
 
 describe("tracker tracker exporter output", () => {
+  it("rejects malformed export day values instead of partially parsing them", () => {
+    expect(parseExportDays(undefined)).toBe(90);
+    expect(parseExportDays("365")).toBe(365);
+    expect(() => parseExportDays("1.5")).toThrow(
+      "TRACKER_TRACKER_EXPORT_DAYS must be an integer from 1 to 3650",
+    );
+    expect(() => parseExportDays("90days")).toThrow(
+      "TRACKER_TRACKER_EXPORT_DAYS must be an integer from 1 to 3650",
+    );
+    expect(() => parseExportDays("0")).toThrow(
+      "TRACKER_TRACKER_EXPORT_DAYS must be an integer from 1 to 3650",
+    );
+  });
+
   it("fetches authenticated tracker and qBittorrent route fixtures", async () => {
     const calls: MockCall[] = [];
     const routes = new Map<string, () => Response>([
