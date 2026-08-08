@@ -196,7 +196,9 @@ export function createTrackerTrackerDeployment(chart: Chart) {
           to: [
             {
               podSelector: {
-                matchLabels: { cluster_name: "tracker-tracker-postgresql" },
+                matchLabels: {
+                  "cluster-name": "tracker-tracker-postgresql",
+                },
               },
             },
           ],

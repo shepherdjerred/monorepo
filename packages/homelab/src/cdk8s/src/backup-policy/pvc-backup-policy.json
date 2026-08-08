@@ -438,6 +438,12 @@
     "reason": "Tracker Tracker database backups and application state"
   },
   {
+    "namespace": "tracker-tracker",
+    "name": "pgdata-tracker-tracker-postgresql-0",
+    "backup": "enabled",
+    "reason": "Tracker Tracker PostgreSQL database"
+  },
+  {
     "namespace": "tempo",
     "name": "storage-tempo-0",
     "backup": "disabled",
