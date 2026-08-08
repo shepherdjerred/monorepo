@@ -36,6 +36,7 @@ import { ymd } from "./date.ts";
 import {
   assertRecurringRestoreIsCurrent,
   recurringCompletionRestorePatch,
+  recurringRestoreMatchesCurrent,
   useDeterministicRecurringSchedule,
 } from "./recurring-completion.ts";
 import {
@@ -327,6 +328,18 @@ export class TaskRepository {
     if (options.completed !== undefined && options.completed === already) {
       if (options.restore === undefined) {
         return fresh.task; // set-semantics no-op
+      }
+      if (
+        !options.completed &&
+        !recurringRestoreMatchesCurrent(fresh.task, options.restore, dateStr)
+      ) {
+        assertRecurringRestoreIsCurrent({
+          task: fresh.task,
+          restore: options.restore,
+          date: dateStr,
+          today: options.date === undefined ? ymd(now) : dateStr,
+          maintainDueDateOffset: this.config.recurrence.maintainDueDateOffset,
+        });
       }
       const patch: TaskPatchOperation[] = [
         {

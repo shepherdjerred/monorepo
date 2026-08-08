@@ -330,7 +330,7 @@ status: open
 priority: normal
 scheduled: 2026-08-08
 due: 2026-08-10
-recurrence: FREQ=DAILY
+recurrence: DTSTART:20260801;FREQ=WEEKLY
 skipped_instances:
   - 2026-07-25
 tags:
@@ -397,6 +397,38 @@ tags:
 
     const updated = await edgeRepo.completeInstance("TaskNotes/water.md");
     expect(updated.complete_instances).toEqual([ymdOf(edgeNow)]);
+  });
+});
+
+describe("matching-state restore safeguards", () => {
+  test("rejects a matching-state restore after an unrelated recurrence edit", async () => {
+    await seed(
+      "TaskNotes/weekly.md",
+      `---
+title: Weekly review
+status: open
+scheduled: 2026-08-08
+due: 2026-08-10
+recurrence: FREQ=DAILY
+tags:
+  - task
+---
+`,
+    );
+    await repo.scan();
+
+    await expect(
+      repo.completeInstance("TaskNotes/weekly.md", {
+        date: "2026-08-01",
+        completed: false,
+        restore: {
+          scheduled: "2026-08-01",
+          due: "2026-08-03",
+          recurrence: "FREQ=WEEKLY",
+          skipped: false,
+        },
+      }),
+    ).rejects.toThrow("restore");
   });
 });
 

@@ -38,7 +38,9 @@ function restoreScheduleSource(
     ...(task.recurrence_anchor === undefined
       ? {}
       : { recurrence_anchor: task.recurrence_anchor }),
-    complete_instances: task.complete_instances ?? [],
+    complete_instances: (task.complete_instances ?? []).includes(date)
+      ? (task.complete_instances ?? [])
+      : [...(task.complete_instances ?? []), date],
     skipped_instances: (task.skipped_instances ?? []).filter(
       (entry) => entry !== date,
     ),
@@ -73,7 +75,9 @@ export function assertRecurringRestoreIsCurrent({
       ? recurrenceRuleWithoutStart(task.recurrence ?? "") ===
         recurrenceRuleWithoutStart(restore.recurrence)
       : task.recurrence === expectedRecurrence;
+  const targetIsNotSkipped = !(task.skipped_instances ?? []).includes(date);
   if (
+    !targetIsNotSkipped ||
     !recurrenceMatches ||
     (restore.scheduled !== null && task.scheduled !== expectedScheduled) ||
     (restore.due === null ? task.due !== undefined : task.due !== expectedDue)
@@ -82,6 +86,25 @@ export function assertRecurringRestoreIsCurrent({
       `recurring restore for ${task.path} is stale; refusing to overwrite newer task state`,
     );
   }
+}
+
+export function recurringRestoreMatchesCurrent(
+  task: TaskInfo,
+  restore: RecurringCompletionRestore,
+  date: string,
+): boolean {
+  return (
+    task.recurrence === restore.recurrence &&
+    (restore.scheduled === null
+      ? task.scheduled === undefined
+      : task.scheduled === restore.scheduled) &&
+    (restore.due === null
+      ? task.due === undefined
+      : task.due === restore.due) &&
+    (restore.skipped
+      ? (task.skipped_instances ?? []).includes(date)
+      : !(task.skipped_instances ?? []).includes(date))
+  );
 }
 
 function withInstanceMembership(
