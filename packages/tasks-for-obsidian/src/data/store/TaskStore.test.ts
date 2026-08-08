@@ -281,6 +281,66 @@ describe("TaskStore pending restores", () => {
     await ack;
     await expect(pendingRestore).resolves.toEqual(restore);
   });
+
+  test("retains a restore while its completion acknowledgement is settling", async () => {
+    const backingStorage = memoryStoreStorage();
+    const ackWriteStarted = Promise.withResolvers<null>();
+    const releaseAckWrite = Promise.withResolvers<null>();
+    let pauseAckWrite = false;
+    const storeStorage: MemoryStoreStorage = {
+      ...backingStorage,
+      setTasks: async (tasks) => {
+        if (pauseAckWrite) {
+          pauseAckWrite = false;
+          ackWriteStarted.resolve(null);
+          await releaseAckWrite.promise;
+        }
+        await backingStorage.setTasks(tasks);
+      },
+    };
+    const task = makeTask({
+      recurrence: "FREQ=WEEKLY",
+      scheduled: "2026-08-08",
+    });
+    const { queue } = makeStore(
+      memoryQueueStorage(),
+      memoryStoreStorage({ tasks: [task] }),
+    );
+    const storeWithPausedAck = new TaskStore(queue, storeStorage, clock);
+    await storeWithPausedAck.restore();
+    const restore = {
+      scheduled: "2026-08-08",
+      due: null,
+      recurrence: "FREQ=WEEKLY",
+      skipped: false,
+    };
+    await storeWithPausedAck.dispatch({
+      type: "set_instance_complete",
+      taskId: task.id,
+      date: "2026-08-08",
+      completed: true,
+      restore,
+    });
+    const command = queue.head();
+    if (command?.type !== "set_instance_complete") {
+      throw new Error("expected completion command");
+    }
+
+    pauseAckWrite = true;
+    const ack = storeWithPausedAck.applyServerAck(command, {
+      ...task,
+      completeInstances: ["2026-08-08"],
+    });
+    await ackWriteStarted.promise;
+    const pendingRestore = storeWithPausedAck.getPendingCompletionRestore(
+      task.id,
+      "2026-08-08",
+    );
+    releaseAckWrite.resolve(null);
+
+    await ack;
+    await expect(pendingRestore).resolves.toEqual(restore);
+  });
 });
 
 describe("TaskStore server acks", () => {

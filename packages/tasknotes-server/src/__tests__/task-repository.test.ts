@@ -366,6 +366,9 @@ tags:
     expect(restored.recurrence).toBe("FREQ=WEEKLY");
     expect(restored.skipped_instances).toEqual(["2026-07-25", "2026-08-01"]);
 
+    const beforeReplay = await Bun.file(
+      path.join(vault, "TaskNotes/weekly.md"),
+    ).text();
     const replay = await repo.completeInstance("TaskNotes/weekly.md", {
       date: "2026-08-01",
       completed: false,
@@ -378,6 +381,9 @@ tags:
     });
     expect(replay.complete_instances ?? []).toEqual([]);
     expect(replay.skipped_instances).toEqual(["2026-07-25", "2026-08-01"]);
+    expect(await Bun.file(path.join(vault, "TaskNotes/weekly.md")).text()).toBe(
+      beforeReplay,
+    );
   });
 
   test("bodyless call toggles (upstream parity); non-recurring throws", async () => {

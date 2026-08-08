@@ -85,9 +85,17 @@ const defaultStorage: TaskStoreStorage = {
 
 const AliasesSchema = z.record(z.string(), z.string());
 
+function completionRestoreKey(id: TaskId, date: string): string {
+  return `${String(id)}\u{0}${date}`;
+}
+
 export class TaskStore {
   private base = new Map<TaskId, Task>();
   private aliases = new Map<TaskId, TaskId>();
+  private acknowledgedCompletionRestores = new Map<
+    string,
+    RecurringCompletionRestore
+  >();
   private lastSyncTime: number | null = null;
   private snapshot: TaskStoreSnapshot;
   private readonly listeners = new Set<() => void>();
@@ -117,7 +125,14 @@ export class TaskStore {
           break;
         }
       }
-      return Promise.resolve(pendingRestore);
+      if (pendingRestore !== undefined) {
+        return Promise.resolve(pendingRestore);
+      }
+      return Promise.resolve(
+        this.acknowledgedCompletionRestores.get(
+          completionRestoreKey(target, date),
+        ),
+      );
     });
   }
 
@@ -169,6 +184,15 @@ export class TaskStore {
       // alias and snapshot together.
       const command = this.buildCommand(input);
       await this.queue.enqueue(command);
+      if (
+        command.type === "set_instance_complete" &&
+        !command.completed &&
+        command.restore !== undefined
+      ) {
+        this.acknowledgedCompletionRestores.delete(
+          completionRestoreKey(command.taskId, command.date),
+        );
+      }
       this.recompute();
       this.onDispatch?.();
       const target =
@@ -197,6 +221,8 @@ export class TaskStore {
   ): Promise<void> {
     await this.enqueueOperation(async () => {
       let nextAliases = this.aliases;
+      let nextAcknowledgedCompletionRestores =
+        this.acknowledgedCompletionRestores;
       if (serverTask !== null && command.type === "create") {
         nextAliases = new Map(this.aliases);
         nextAliases.set(command.tempId, serverTask.id);
@@ -210,6 +236,19 @@ export class TaskStore {
       } else if (serverTask !== null) {
         nextBase.set(serverTask.id, serverTask);
       }
+      if (
+        command.type === "set_instance_complete" &&
+        command.completed &&
+        command.restore !== undefined
+      ) {
+        nextAcknowledgedCompletionRestores = new Map(
+          this.acknowledgedCompletionRestores,
+        );
+        nextAcknowledgedCompletionRestores.set(
+          completionRestoreKey(command.taskId, command.date),
+          command.restore,
+        );
+      }
       // Persist the authoritative base before removing the durable command.
       // If the process dies between these writes, idempotent mutation replay
       // is safe; the reverse order could lose the accepted mutation offline.
@@ -221,6 +260,7 @@ export class TaskStore {
       // preceding temp-id snapshot while persistence is in flight.
       this.aliases = nextAliases;
       this.base = nextBase;
+      this.acknowledgedCompletionRestores = nextAcknowledgedCompletionRestores;
       this.recompute();
     });
   }
