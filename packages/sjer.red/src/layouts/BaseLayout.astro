@@ -73,10 +73,27 @@ import "@fontsource-variable/lora";
     <title>{title}</title>
     <ClientRouter />
 
-    <script
-      defer
-      data-domain="sjer.red"
-      src="https://plausible.sjer.red/js/script.js"></script>
+    <script is:inline>
+      var _paq = (window._paq = window._paq || []);
+      _paq.push(["disableCookies"]);
+      _paq.push(["setDoNotTrack", true]);
+      _paq.push(["setTrackerUrl", "https://matomo.sjer.red/matomo.php"]);
+      _paq.push(["setSiteId", 1]);
+      _paq.push(["enableLinkTracking"]);
+      document.addEventListener("astro:page-load", function () {
+        _paq.push(["setCustomUrl", window.location.href]);
+        _paq.push(["setDocumentTitle", document.title]);
+        _paq.push(["trackPageView"]);
+      });
+      (function () {
+        var d = document;
+        var g = d.createElement("script");
+        var s = d.getElementsByTagName("script")[0];
+        g.async = true;
+        g.src = "https://matomo.sjer.red/matomo.js";
+        s.parentNode.insertBefore(g, s);
+      })();
+    </script>
     <script>
       import * as Sentry from "@sentry/browser";
       // PUBLIC_SENTRY_RELEASE is injected at build time by the CI site-deploy

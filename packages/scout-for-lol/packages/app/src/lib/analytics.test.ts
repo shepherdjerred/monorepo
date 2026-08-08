@@ -9,6 +9,19 @@ import {
   trackPageview,
 } from "#src/lib/analytics.ts";
 
+type MatomoCommand = readonly [string, ...unknown[]];
+
+function installQueue(): unknown[][] {
+  const calls: unknown[][] = [];
+  globalThis._paq = {
+    push(...commands: MatomoCommand[]) {
+      calls.push(...commands.map((command) => [...command]));
+      return calls.length;
+    },
+  };
+  return calls;
+}
+
 function fakeClick(
   overrides: Partial<{
     defaultPrevented: boolean;
@@ -44,7 +57,7 @@ function fakeClick(
 }
 
 afterEach(() => {
-  globalThis.plausible = undefined;
+  globalThis._paq = undefined;
 });
 
 describe("normalizePath", () => {
@@ -79,7 +92,7 @@ describe("normalizePath", () => {
     );
   });
 
-  test("preserves static sibling routes (new / help)", () => {
+  test("preserves static sibling routes", () => {
     expect(normalizePath("/g/123/reports/new")).toBe("/g/:guildId/reports/new");
     expect(normalizePath("/g/123/reports/help")).toBe(
       "/g/:guildId/reports/help",
@@ -98,35 +111,27 @@ describe("normalizePath", () => {
 });
 
 describe("track", () => {
-  test("forwards event + props to plausible when present", () => {
-    const calls: [string, unknown][] = [];
-    globalThis.plausible = (event, options) => {
-      calls.push([event, options]);
-    };
+  test("emits Matomo events and bounded custom dimensions", () => {
+    const calls = installQueue();
     track("ai_edit_applied");
     track("report_preset_used", { category: "Champions" });
     expect(calls).toEqual([
-      ["ai_edit_applied", undefined],
-      ["report_preset_used", { props: { category: "Champions" } }],
+      ["trackEvent", "scout", "ai_edit_applied"],
+      ["setCustomDimension", 4, "Champions"],
+      ["trackEvent", "scout", "report_preset_used"],
+      ["deleteCustomDimension", 4],
     ]);
   });
 
-  test("no-ops (never throws) when plausible is absent", () => {
-    globalThis.plausible = undefined;
-    expect(() => {
-      track("login_click");
-    }).not.toThrow();
+  test("no-ops when Matomo is absent", () => {
+    globalThis._paq = undefined;
+    expect(() => track("login_click")).not.toThrow();
   });
 });
 
 describe("trackPageview", () => {
-  test("no-ops when analytics is disabled (no domain in this build)", () => {
-    // The test build injects no VITE_PLAUSIBLE_DOMAIN, so pageviews must not
-    // fire even if a plausible function is present.
-    const calls: string[] = [];
-    globalThis.plausible = (event) => {
-      calls.push(event);
-    };
+  test("does not send when the site build has no Matomo identity", () => {
+    const calls = installQueue();
     trackPageview("/g/:guildId/reports");
     expect(calls).toEqual([]);
   });
@@ -139,62 +144,62 @@ describe("analyticsMeta + trackMutationMeta", () => {
     });
   });
 
-  test("fires the meta's event with the outcome", () => {
-    const calls: [string, unknown][] = [];
-    globalThis.plausible = (event, options) => {
-      calls.push([event, options]);
-    };
+  test("fires the meta event with an outcome dimension", () => {
+    const calls = installQueue();
     trackMutationMeta(analyticsMeta("report_created"), "success");
     trackMutationMeta(analyticsMeta("report_deleted"), "error");
     expect(calls).toEqual([
-      ["report_created", { props: { outcome: "success" } }],
-      ["report_deleted", { props: { outcome: "error" } }],
+      ["setCustomDimension", 1, "success"],
+      ["trackEvent", "scout", "report_created"],
+      ["deleteCustomDimension", 1],
+      ["setCustomDimension", 1, "error"],
+      ["trackEvent", "scout", "report_deleted"],
+      ["deleteCustomDimension", 1],
     ]);
   });
 
-  test("records the discriminated result kind instead of a blanket success", () => {
-    const calls: [string, unknown][] = [];
-    globalThis.plausible = (event, options) => {
-      calls.push([event, options]);
-    };
-    // A resolved business failure must not be recorded as `outcome: "success"`.
+  test("records the discriminated result kind", () => {
+    const calls = installQueue();
     trackMutationMeta(analyticsMeta("subscription_removed"), "success", {
       kind: "player-not-found",
     });
     trackMutationMeta(analyticsMeta("subscription_removed"), "success", {
       kind: "removed",
     });
-    // A thrown error always records `outcome: "error"`, ignoring any data.
     trackMutationMeta(analyticsMeta("subscription_removed"), "error", {
       kind: "removed",
     });
     expect(calls).toEqual([
-      ["subscription_removed", { props: { kind: "player-not-found" } }],
-      ["subscription_removed", { props: { kind: "removed" } }],
-      ["subscription_removed", { props: { outcome: "error" } }],
+      ["setCustomDimension", 3, "player-not-found"],
+      ["trackEvent", "scout", "subscription_removed"],
+      ["deleteCustomDimension", 3],
+      ["setCustomDimension", 3, "removed"],
+      ["trackEvent", "scout", "subscription_removed"],
+      ["deleteCustomDimension", 3],
+      ["setCustomDimension", 1, "error"],
+      ["trackEvent", "scout", "subscription_removed"],
+      ["deleteCustomDimension", 1],
     ]);
   });
 
   test("falls back to outcome when the result carries no kind", () => {
-    const calls: [string, unknown][] = [];
-    globalThis.plausible = (event, options) => {
-      calls.push([event, options]);
-    };
+    const calls = installQueue();
     trackMutationMeta(analyticsMeta("player_account_added"), "success", {
       id: "abc",
     });
     trackMutationMeta(analyticsMeta("player_account_added"), "success");
     expect(calls).toEqual([
-      ["player_account_added", { props: { outcome: "success" } }],
-      ["player_account_added", { props: { outcome: "success" } }],
+      ["setCustomDimension", 1, "success"],
+      ["trackEvent", "scout", "player_account_added"],
+      ["deleteCustomDimension", 1],
+      ["setCustomDimension", 1, "success"],
+      ["trackEvent", "scout", "player_account_added"],
+      ["deleteCustomDimension", 1],
     ]);
   });
 
   test("no-ops on absent, empty, or unknown-event meta", () => {
-    const calls: string[] = [];
-    globalThis.plausible = (event) => {
-      calls.push(event);
-    };
+    const calls = installQueue();
     trackMutationMeta(undefined, "success");
     trackMutationMeta({}, "success");
     trackMutationMeta({ analyticsEvent: "not_a_real_event" }, "success");
@@ -203,40 +208,27 @@ describe("analyticsMeta + trackMutationMeta", () => {
 });
 
 describe("trackOutboundClick", () => {
-  test("emits without preventing native navigation when analytics is disabled", () => {
-    // No VITE_PLAUSIBLE_DOMAIN in the test build, so the click keeps default
-    // behavior (the browser navigates) and the event fires fire-and-forget.
-    const calls: [string, unknown][] = [];
-    globalThis.plausible = (event, options) => {
-      calls.push([event, options]);
-    };
+  test("keeps native navigation when analytics is disabled", () => {
+    const calls = installQueue();
     const click = fakeClick();
     trackOutboundClick(click, "login_click", "/api/auth/discord/start");
     expect(click.prevented).toBe(false);
-    expect(calls).toEqual([["login_click", undefined]]);
+    expect(calls).toEqual([["trackEvent", "scout", "login_click"]]);
   });
 
-  test("keeps native behavior for modified clicks (open-in-new-tab)", () => {
-    const calls: [string, unknown][] = [];
-    globalThis.plausible = (event, options) => {
-      calls.push([event, options]);
-    };
+  test("keeps native behavior for modified clicks", () => {
+    const calls = installQueue();
     const click = fakeClick({ metaKey: true });
     trackOutboundClick(click, "bot_install_click", "/api/discord/install");
     expect(click.prevented).toBe(false);
-    expect(calls).toEqual([["bot_install_click", undefined]]);
+    expect(calls).toEqual([["trackEvent", "scout", "bot_install_click"]]);
   });
 });
 
 describe("trackAndFlush", () => {
-  test("emits the event and resolves when analytics is disabled", async () => {
-    // No VITE_PLAUSIBLE_DOMAIN in the test build, so it fires fire-and-forget and
-    // resolves immediately rather than waiting on a callback that never comes.
-    const calls: [string, unknown][] = [];
-    globalThis.plausible = (event, options) => {
-      calls.push([event, options]);
-    };
+  test("emits and resolves immediately when analytics is disabled", async () => {
+    const calls = installQueue();
     await trackAndFlush("sign_out");
-    expect(calls).toEqual([["sign_out", undefined]]);
+    expect(calls).toEqual([["trackEvent", "scout", "sign_out"]]);
   });
 });

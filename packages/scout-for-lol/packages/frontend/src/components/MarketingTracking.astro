@@ -123,10 +123,15 @@ const getStartedClickEvent = GET_STARTED_CLICK_EVENT;
           }),
         );
 
-        if (typeof window.plausible === "function") {
-          window.plausible(getStartedClickEvent, {
-            props: eventProperties,
-          });
+        if (Array.isArray(window._paq)) {
+          // The conversion UUID is for Pinterest/Reddit deduplication only;
+          // never send it to Matomo as a high-cardinality analytics property.
+          window._paq.push([
+            "trackEvent",
+            "marketing",
+            getStartedClickEvent,
+            ctaLocation,
+          ]);
         }
 
         if (typeof window.pintrk === "function") {

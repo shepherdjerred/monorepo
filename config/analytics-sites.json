@@ -1,0 +1,13 @@
+{
+  "trackerOrigin": "https://matomo.sjer.red",
+  "sites": [
+    { "hostname": "sjer.red", "siteId": 1 },
+    { "hostname": "resume.sjer.red", "siteId": 2 },
+    { "hostname": "webring.sjer.red", "siteId": 3 },
+    { "hostname": "better-skill-capped.com", "siteId": 4 },
+    { "hostname": "discord-plays-mario-kart.com", "siteId": 5 },
+    { "hostname": "discord-plays-pokemon.com", "siteId": 6 },
+    { "hostname": "scout-for-lol.com", "siteId": 7 },
+    { "hostname": "beta.scout-for-lol.com", "siteId": 8 }
+  ]
+}

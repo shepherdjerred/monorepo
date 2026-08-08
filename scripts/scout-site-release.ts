@@ -2,6 +2,7 @@
 
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
+import { z } from "zod";
 
 import { optionalEnv, requireEnv, run } from "./lib/run.ts";
 import {
@@ -37,10 +38,16 @@ const BETA_PIXEL_PLACEHOLDERS: Readonly<Record<string, string>> = {
   PUBLIC_PINTEREST_TAG_ID: "beta-placeholder-pinterest-tag-id",
   PUBLIC_REDDIT_PIXEL_ID: "beta-placeholder-reddit-pixel-id",
 };
-const PLAUSIBLE_DOMAIN_BY_FLAVOR: Readonly<Record<"prod" | "beta", string>> = {
-  prod: "scout-for-lol.com",
-  beta: "beta.scout-for-lol.com",
-};
+const ANALYTICS_REGISTRY_PATH = "config/analytics-sites.json";
+const AnalyticsRegistrySchema = z.object({
+  trackerOrigin: z.literal("https://matomo.sjer.red"),
+  sites: z.array(
+    z.object({
+      hostname: z.string().min(1),
+      siteId: z.number().int().positive(),
+    }),
+  ),
+});
 const RELEASE_INPUT_PATHS = [
   "bun.lock",
   "bunfig.toml",
@@ -54,12 +61,32 @@ const RELEASE_INPUT_PATHS = [
   "scripts/package.json",
   "scripts/scout-site-release.ts",
   "scripts/lib",
+  ANALYTICS_REGISTRY_PATH,
   "docker-bake.hcl",
   ".dockerignore",
 ] as const;
 
 function repoRoot(): string {
   return new URL("..", import.meta.url).pathname.replace(/\/$/, "");
+}
+
+async function readMatomoSite(flavor: "prod" | "beta"): Promise<{
+  domain: string;
+  siteId: string;
+}> {
+  const registryRaw: unknown = JSON.parse(
+    await Bun.file(`${repoRoot()}/${ANALYTICS_REGISTRY_PATH}`).text(),
+  );
+  const registry = AnalyticsRegistrySchema.parse(registryRaw);
+  const domain =
+    flavor === "prod" ? "scout-for-lol.com" : "beta.scout-for-lol.com";
+  const site = registry.sites.find(
+    (candidate) => candidate.hostname === domain,
+  );
+  if (site === undefined) {
+    throw new Error(`Analytics registry has no Matomo site for ${domain}`);
+  }
+  return { domain: site.hostname, siteId: String(site.siteId) };
 }
 
 async function resolveGitSha(): Promise<string> {
@@ -118,7 +145,7 @@ export function computeReleaseInputDigest(inputs: {
       backendImageDigest: inputs.backendImageDigest,
       sourceInputsDigest: inputs.sourceInputsDigest,
       contractHash: inputs.contractHash,
-      plausibleDomains: PLAUSIBLE_DOMAIN_BY_FLAVOR,
+      matomoTrackerOrigin: "https://matomo.sjer.red",
       pinterestTagId: inputs.pinterestTagId,
       redditPixelId: inputs.redditPixelId,
     }),
@@ -160,6 +187,7 @@ async function buildSite(
     );
   }
   const identity = siteReleaseIdentity(state);
+  const matomoSite = await readMatomoSite(flavor);
   const env: Record<string, string> = {
     VITE_SENTRY_RELEASE: identity,
     PUBLIC_SENTRY_RELEASE: identity,
@@ -168,7 +196,9 @@ async function buildSite(
     VITE_GIT_SHA: sourceCommit,
     PUBLIC_GIT_SHA: sourceCommit,
     VITE_CONTRACT_HASH: await contractHash(),
-    VITE_PLAUSIBLE_DOMAIN: PLAUSIBLE_DOMAIN_BY_FLAVOR[flavor],
+    VITE_MATOMO_SITE_ID: matomoSite.siteId,
+    VITE_MATOMO_SITE_DOMAIN: matomoSite.domain,
+    PUBLIC_MATOMO_SITE_ID: matomoSite.siteId,
   };
   if (flavor === "prod") {
     env["PUBLIC_PINTEREST_TAG_ID"] = requireEnv("PUBLIC_PINTEREST_TAG_ID");

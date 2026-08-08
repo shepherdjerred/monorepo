@@ -39,7 +39,7 @@ import { createStarlightKarmaBotBetaApp } from "@shepherdjerred/homelab/cdk8s/sr
 import { createStarlightKarmaBotProdApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/starlight-karma-bot-prod.ts";
 import { createProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/project.ts";
 import { createRedlibApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/redlib.ts";
-import { createPlausibleApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/plausible.ts";
+import { createMatomoApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/matomo.ts";
 import { createBirmelApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/birmel.ts";
 import { createCloudflareTunnelApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/cloudflare-tunnel.ts";
 import { createMediaApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/media.ts";
@@ -152,7 +152,7 @@ export async function createAppsChart(app: App) {
   createS3StaticSitesApp(chart);
 
   // New namespace apps
-  createPlausibleApp(chart);
+  createMatomoApp(chart);
   createBirmelApp(chart);
   createCloudflareTunnelApp(chart);
 

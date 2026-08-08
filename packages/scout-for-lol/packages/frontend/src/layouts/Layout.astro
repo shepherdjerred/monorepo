@@ -11,6 +11,10 @@ interface Props {
 }
 
 const { title, description, image, noindex } = Astro.props;
+const matomoSiteId =
+  typeof import.meta.env["PUBLIC_MATOMO_SITE_ID"] === "string"
+    ? import.meta.env["PUBLIC_MATOMO_SITE_ID"]
+    : undefined;
 ---
 
 <!doctype html>
@@ -34,11 +38,20 @@ const { title, description, image, noindex } = Astro.props;
         document.documentElement.classList.remove("dark");
       }
     </script>
-    <script
-      is:inline
-      defer
-      data-domain="scout-for-lol.com"
-      src="https://plausible.sjer.red/js/script.js"></script>
+    {
+      matomoSiteId !== undefined && (
+        <script is:inline define:vars={{ matomoSiteId }}>
+          var _paq = (window._paq = window._paq || []);
+          _paq.push(["disableCookies"]); _paq.push(["setDoNotTrack", true]);
+          _paq.push(["setTrackerUrl", "https://matomo.sjer.red/matomo.php"]);
+          _paq.push(["setSiteId", matomoSiteId]); _paq.push(["trackPageView"]);
+          _paq.push(["enableLinkTracking"]); var matomoScript =
+          document.createElement("script"); matomoScript.async = true;
+          matomoScript.src = "https://matomo.sjer.red/matomo.js";
+          document.head.appendChild(matomoScript);
+        </script>
+      )
+    }
     <script>
       import * as Sentry from "@sentry/browser";
       // PUBLIC_SENTRY_RELEASE is injected at build time by the CI site-deploy
