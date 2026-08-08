@@ -7,7 +7,9 @@ import * as Sentry from "@sentry/bun";
 
 const logger = createLogger("prematch-active-game-queries");
 
-const ACTIVE_GAME_TTL_MS = 2 * 60 * 60 * 1000; // 2 hours
+// Keep reply metadata through the full postmatch alert window, which is three
+// hours from match creation.
+const ACTIVE_GAME_TTL_MS = 3 * 60 * 60 * 1000;
 
 const TrackedPuuidsSchema = z.array(z.string());
 const PrematchMessageIdsSchema = z.record(z.string(), z.string());
