@@ -40,6 +40,34 @@ function mentionedDiscordUserIds(content: string): string[] {
   ];
 }
 
+function explicitlyNamedFriendReferences(content: string): string[] {
+  const references = new Set<string>();
+  const addReference = (reference: string): void => {
+    const trimmed = reference.trim();
+    if (trimmed.length > 0) {
+      references.add(trimmed);
+    }
+  };
+
+  // Keep broad alias matching disabled: ordinary words such as "Google" and
+  // "Mark" are also valid lore entries. CamelCase names/aliases and quoted
+  // references are high-confidence explicit references that can be resolved
+  // without scanning every alias against the whole message.
+  for (const token of content.match(/[\p{L}\p{N}]+/gu) ?? []) {
+    const uppercaseCount = token.match(/\p{Lu}/gu)?.length ?? 0;
+    if (uppercaseCount >= 2) {
+      addReference(token);
+    }
+  }
+  for (const match of content.matchAll(/["“]([^"”]+)["”]/gu)) {
+    const reference = match[1];
+    if (reference !== undefined) {
+      addReference(reference);
+    }
+  }
+  return [...references];
+}
+
 async function queryEmbedding(content: string): Promise<number[] | null> {
   if (content.trim().length === 0) {
     return null;
@@ -78,6 +106,9 @@ async function assembleContextForTurn(
 ): Promise<ContextBundle> {
   const config = getConfig();
   const mentioned = mentionedDiscordUserIds(options.turn.content);
+  const explicitFriendReferences = explicitlyNamedFriendReferences(
+    options.turn.content,
+  );
   const userIds = [...new Set([options.turn.userId, ...mentioned])];
   const [transcript, embedding, sessionContext] = await Promise.all([
     getConversationTranscriptResult(options.message, {
@@ -104,8 +135,8 @@ async function assembleContextForTurn(
     limit: CONTEXT_BUDGETS.maximumClaims,
   });
   const friendContext = getFriendContext({
-    message: "",
-    references: mentioned,
+    message: options.turn.content,
+    references: [...mentioned, ...explicitFriendReferences],
     mentionedDiscordUserIds: mentioned,
     resolveMessageAliases: false,
     characterBudget: CONTEXT_BUDGETS.loreAndMemory,
