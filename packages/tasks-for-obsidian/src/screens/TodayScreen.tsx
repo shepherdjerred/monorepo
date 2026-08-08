@@ -1,15 +1,18 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { CompositeScreenProps } from "@react-navigation/native";
-import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
-import type { RootStackParamList, MainTabParamList } from "../navigation/types";
+import type { Task, TaskId } from "../domain/types";
+import { createCaptureSeed } from "../domain/quick-capture-seed";
+import { localTodayYmd } from "../domain/recurrence";
+import type { RootStackParamList } from "../navigation/types";
+import type { MainTabScreenProps } from "../navigation/main-tabs";
 import {
   EMPTY_FILTER,
-  DEFAULT_SORT,
   applyFilter,
-  applySort,
+  applySortOverride,
 } from "../domain/filters";
+import type { SortConfig } from "../domain/filters";
 import { useTaskListScreen } from "../hooks/use-task-list-screen";
 import { formatDayHeading } from "../lib/dates";
 import { useSettings } from "../hooks/use-settings";
@@ -18,16 +21,22 @@ import { useSelection } from "../hooks/use-selection";
 import { BulkActionBar } from "../components/task/BulkActionBar";
 import { TaskList } from "../components/task/TaskList";
 import { FilterSortBar } from "../components/input/FilterSortBar";
+import { ScheduleSheet } from "../components/input/ScheduleSheet";
 import { Fab } from "../components/common/Fab";
 
+const TODAY_SECTION_ORDER = ["Overdue", "Today", "Due Today"] as const;
+
 type Props = CompositeScreenProps<
-  BottomTabScreenProps<MainTabParamList, "Today">,
+  MainTabScreenProps<"Today">,
   NativeStackScreenProps<RootStackParamList>
 >;
 
 export function TodayScreen({ navigation }: Props) {
   const {
     todayTasks,
+    todaySectionByTaskId,
+    todayDateContextByTaskId,
+    todayCompletionDateByTaskId,
     pendingTaskIds,
     projectNames,
     contextNames,
@@ -39,7 +48,6 @@ export function TodayScreen({ navigation }: Props) {
     handleDelete,
     handleRefresh,
     handleSchedule,
-    handleFabPress,
     handleBulkComplete,
     handleBulkDelete,
     handleBulkSchedule,
@@ -54,17 +62,48 @@ export function TodayScreen({ navigation }: Props) {
   } = useSelection();
   const { colors } = useSettings();
   const [filter, setFilter] = useState(EMPTY_FILTER);
-  const [sort, setSort] = useState(DEFAULT_SORT);
+  const [sort, setSort] = useState<SortConfig | null>(null);
+  const [rescheduleTaskIds, setRescheduleTaskIds] = useState<readonly TaskId[]>(
+    [],
+  );
   // Distinguishes "cleared the day" from "nothing was ever here": the
   // celebration only shows after a completion interaction on this screen.
   const interacted = useRef(false);
 
+  useEffect(() => {
+    navigation.setParams({ selectionMode });
+  }, [navigation, selectionMode]);
+
   const displayTasks = useMemo(
-    () => applySort(applyFilter(todayTasks, filter), sort),
+    () => applySortOverride(applyFilter(todayTasks, filter), sort),
     [todayTasks, filter, sort],
   );
 
-  const allClear = displayTasks.length === 0 && interacted.current;
+  const allClear = todayTasks.length === 0 && interacted.current;
+  const noFilterMatches = displayTasks.length === 0 && todayTasks.length > 0;
+  const sectionBy = useMemo(
+    () => (task: Task) => {
+      const section = todaySectionByTaskId.get(task.id);
+      if (section === undefined) {
+        throw new Error(`Missing Today agenda section for task ${task.id}`);
+      }
+      return section;
+    },
+    [todaySectionByTaskId],
+  );
+  const sectionAction = useMemo(
+    () =>
+      ({ title, tasks }: { title: string; tasks: readonly Task[] }) =>
+        title === "Overdue"
+          ? {
+              label: "Reschedule",
+              onPress: () => {
+                setRescheduleTaskIds(tasks.map((task) => task.id));
+              },
+            }
+          : undefined,
+    [],
+  );
 
   return (
     <View style={styles.container}>
@@ -92,9 +131,9 @@ export function TodayScreen({ navigation }: Props) {
       <TaskList
         tasks={displayTasks}
         onTaskPress={handlePress}
-        onTaskToggle={(id) => {
+        onTaskToggle={(id, occurrenceDate) => {
           interacted.current = true;
-          handleToggle(id);
+          handleToggle(id, occurrenceDate);
         }}
         onTaskDelete={handleDelete}
         onTaskSchedule={handleSchedule}
@@ -104,15 +143,40 @@ export function TodayScreen({ navigation }: Props) {
         onToggleSelect={toggleSelected}
         onRefresh={handleRefresh}
         refreshing={refreshing}
-        emptyTitle={allClear ? "All clear" : "Nothing due today"}
+        emptyTitle={
+          noFilterMatches
+            ? "No matching tasks"
+            : allClear
+              ? "All clear"
+              : "Nothing planned today"
+        }
         emptySubtitle={
-          allClear
-            ? "Every task for today is done. Nice work."
-            : "Tasks due today and overdue tasks appear here"
+          noFilterMatches
+            ? "Adjust or clear your filters to see today's tasks."
+            : allClear
+              ? "Every task for today is done. Nice work."
+              : "Overdue, planned, and deadline tasks appear here"
         }
         emptyIcon={allClear ? "sun" : undefined}
         emptyCelebrate={allClear}
         pendingIds={pendingTaskIds}
+        sectionBy={sectionBy}
+        sectionOrder={TODAY_SECTION_ORDER}
+        sectionAction={sectionAction}
+        dateContextByTaskId={todayDateContextByTaskId}
+        completionDateByTaskId={todayCompletionDateByTaskId}
+      />
+      <ScheduleSheet
+        visible={rescheduleTaskIds.length > 0}
+        initialField="scheduled"
+        dayCounts={dayCounts}
+        onClose={() => {
+          setRescheduleTaskIds([]);
+        }}
+        onApply={(field, value) => {
+          handleBulkSchedule(rescheduleTaskIds, field, value);
+          setRescheduleTaskIds([]);
+        }}
       />
       {selectionMode ? (
         <BulkActionBar
@@ -123,7 +187,8 @@ export function TodayScreen({ navigation }: Props) {
             exitSelection();
           }}
           onComplete={() => {
-            handleBulkComplete([...selected]);
+            interacted.current = true;
+            handleBulkComplete([...selected], todayCompletionDateByTaskId);
             exitSelection();
           }}
           onDelete={() => {
@@ -136,7 +201,14 @@ export function TodayScreen({ navigation }: Props) {
           onDone={exitSelection}
         />
       ) : (
-        <Fab onPress={handleFabPress} />
+        <Fab
+          onPress={() => {
+            navigation.navigate(
+              "QuickAdd",
+              createCaptureSeed({ scheduled: localTodayYmd() }),
+            );
+          }}
+        />
       )}
     </View>
   );

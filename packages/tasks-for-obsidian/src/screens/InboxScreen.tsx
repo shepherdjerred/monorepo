@@ -1,9 +1,9 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { View, StyleSheet } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { CompositeScreenProps } from "@react-navigation/native";
-import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
-import type { RootStackParamList, MainTabParamList } from "../navigation/types";
+import type { RootStackParamList } from "../navigation/types";
+import type { MainTabScreenProps } from "../navigation/main-tabs";
 import {
   EMPTY_FILTER,
   DEFAULT_SORT,
@@ -20,7 +20,7 @@ import { Fab } from "../components/common/Fab";
 import { TipPopover } from "../components/common/TipPopover";
 
 type Props = CompositeScreenProps<
-  BottomTabScreenProps<MainTabParamList, "Inbox">,
+  MainTabScreenProps<"Inbox">,
   NativeStackScreenProps<RootStackParamList>
 >;
 
@@ -54,6 +54,10 @@ export function InboxScreen({ navigation }: Props) {
   const swipeTip = useTip("swipe-actions");
   const [filter, setFilter] = useState(EMPTY_FILTER);
   const [sort, setSort] = useState(DEFAULT_SORT);
+
+  useEffect(() => {
+    navigation.setParams({ selectionMode });
+  }, [navigation, selectionMode]);
 
   const displayTasks = useMemo(
     () => applySort(applyFilter(inboxTasks, filter), sort),

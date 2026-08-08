@@ -79,6 +79,7 @@ export function UndoToast({ visible, message, onUndo, onDismiss }: Props) {
         <Text
           style={[typography.body, styles.message, { color: colors.text }]}
           numberOfLines={1}
+          testID="undo-toast-message"
         >
           {message}
         </Text>

@@ -8,8 +8,6 @@ import Animated, {
   withTiming,
   interpolateColor,
 } from "react-native-reanimated";
-import type { TaskStatus } from "../../domain/status";
-import { isCompletedStatus } from "../../domain/status";
 import type { Priority } from "../../domain/priority";
 import { PRIORITY_COLORS } from "../../domain/priority";
 import {
@@ -18,17 +16,20 @@ import {
 } from "../../lib/feedback";
 
 type TaskCheckboxProps = {
-  status: TaskStatus;
+  completed: boolean;
   priority: Priority;
   onToggle: () => void;
+  accessibilityLabel: string;
+  testID: string;
 };
 
 export const TaskCheckbox = React.memo(function TaskCheckboxComponent({
-  status,
+  completed,
   priority,
   onToggle,
+  accessibilityLabel,
+  testID,
 }: TaskCheckboxProps) {
-  const completed = isCompletedStatus(status);
   const borderColor = PRIORITY_COLORS[priority];
 
   const scale = useSharedValue(1);
@@ -69,11 +70,11 @@ export const TaskCheckbox = React.memo(function TaskCheckboxComponent({
   return (
     <Pressable
       onPress={handleToggle}
-      hitSlop={11}
-      testID="task-checkbox"
+      style={styles.touchTarget}
+      testID={testID}
       accessibilityRole="checkbox"
       accessibilityState={{ checked: completed }}
-      accessibilityLabel={`${completed ? "Uncheck" : "Check"} task`}
+      accessibilityLabel={accessibilityLabel}
     >
       <Animated.View style={[styles.circle, { borderColor }, animatedStyle]} />
     </Pressable>
@@ -81,6 +82,12 @@ export const TaskCheckbox = React.memo(function TaskCheckboxComponent({
 });
 
 const styles = StyleSheet.create({
+  touchTarget: {
+    width: 44,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   circle: {
     width: 22,
     height: 22,

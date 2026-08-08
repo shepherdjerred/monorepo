@@ -1,31 +1,41 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { View, StyleSheet } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { CompositeScreenProps } from "@react-navigation/native";
-import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
-import type { RootStackParamList, MainTabParamList } from "../navigation/types";
+import type { Task } from "../domain/types";
+import { deriveUpcomingWeek } from "../domain/agenda";
+import { calendarDayOrNull } from "../domain/calendar-day";
+import { createCaptureSeed } from "../domain/quick-capture-seed";
+import { localTodayYmd } from "../domain/recurrence";
+import type { RootStackParamList } from "../navigation/types";
+import type { MainTabScreenProps } from "../navigation/main-tabs";
 import {
   EMPTY_FILTER,
-  DEFAULT_SORT,
   applyFilter,
-  applySort,
+  applySortOverride,
 } from "../domain/filters";
+import type { SortConfig } from "../domain/filters";
 import { useTaskListScreen } from "../hooks/use-task-list-screen";
 import { useSelection } from "../hooks/use-selection";
 import { BulkActionBar } from "../components/task/BulkActionBar";
-import { getDateGroup } from "../lib/dates";
+import { formatAgendaDayHeading } from "../lib/dates";
 import { TaskList } from "../components/task/TaskList";
 import { FilterSortBar } from "../components/input/FilterSortBar";
 import { Fab } from "../components/common/Fab";
+import { UpcomingWeekStrip } from "../components/calendar/UpcomingWeekStrip";
 
 type Props = CompositeScreenProps<
-  BottomTabScreenProps<MainTabParamList, "Upcoming">,
+  MainTabScreenProps<"Upcoming">,
   NativeStackScreenProps<RootStackParamList>
 >;
 
-export function UpcomingScreen({ navigation }: Props) {
+export function UpcomingScreen({ navigation, route }: Props) {
   const {
     upcomingTasks,
+    upcomingAgenda,
+    upcomingDayByTaskId,
+    upcomingDateContextByTaskId,
+    upcomingCompletionDateByTaskId,
     projectNames,
     contextNames,
     tagNames,
@@ -37,7 +47,6 @@ export function UpcomingScreen({ navigation }: Props) {
     handleDelete,
     handleRefresh,
     handleSchedule,
-    handleFabPress,
     handleBulkComplete,
     handleBulkDelete,
     handleBulkSchedule,
@@ -51,17 +60,41 @@ export function UpcomingScreen({ navigation }: Props) {
     toggleSelected,
   } = useSelection();
   const [filter, setFilter] = useState(EMPTY_FILTER);
-  const [sort, setSort] = useState(DEFAULT_SORT);
+  const [sort, setSort] = useState<SortConfig | null>(null);
+  const selectedDay = calendarDayOrNull(route.params?.selectedDay);
+  const today = localTodayYmd();
 
-  const displayTasks = useMemo(
-    () => applySort(applyFilter(upcomingTasks, filter), sort),
-    [upcomingTasks, filter, sort],
+  useEffect(() => {
+    navigation.setParams({ selectionMode });
+  }, [navigation, selectionMode]);
+  const week = useMemo(
+    () => deriveUpcomingWeek(upcomingAgenda, today),
+    [today, upcomingAgenda],
+  );
+  const sectionOrder = useMemo(
+    () => upcomingAgenda.map((section) => formatAgendaDayHeading(section.day)),
+    [upcomingAgenda],
   );
 
+  const displayTasks = useMemo(() => {
+    const selectedTasks =
+      selectedDay === null
+        ? upcomingTasks
+        : upcomingTasks.filter(
+            (task) => upcomingDayByTaskId.get(task.id) === selectedDay,
+          );
+    return applySortOverride(applyFilter(selectedTasks, filter), sort);
+  }, [upcomingTasks, upcomingDayByTaskId, selectedDay, filter, sort]);
+
   const sectionBy = useCallback(
-    (task: { due?: string | undefined }) =>
-      task.due ? getDateGroup(task.due) : "No Date",
-    [],
+    (task: Task) => {
+      const day = upcomingDayByTaskId.get(task.id);
+      if (day === undefined) {
+        throw new Error(`Missing Upcoming agenda day for task ${task.id}`);
+      }
+      return formatAgendaDayHeading(day);
+    },
+    [upcomingDayByTaskId],
   );
 
   return (
@@ -77,6 +110,16 @@ export function UpcomingScreen({ navigation }: Props) {
         selectionMode={selectionMode}
         onToggleSelection={selectionMode ? exitSelection : enterSelection}
       />
+      <UpcomingWeekStrip
+        days={week}
+        selectedDay={selectedDay}
+        onSelectDay={(day) => {
+          navigation.setParams({ selectedDay: day });
+        }}
+        onToday={() => {
+          navigation.navigate("Today");
+        }}
+      />
       <TaskList
         tasks={displayTasks}
         onTaskPress={handlePress}
@@ -90,9 +133,18 @@ export function UpcomingScreen({ navigation }: Props) {
         pendingIds={pendingTaskIds}
         onRefresh={handleRefresh}
         refreshing={refreshing}
-        emptyTitle="No upcoming tasks"
-        emptySubtitle="Tasks with future due dates appear here"
+        emptyTitle={
+          selectedDay === null ? "No upcoming tasks" : "Nothing on this day"
+        }
+        emptySubtitle={
+          selectedDay === null
+            ? "Future planned dates and deadlines appear here"
+            : formatAgendaDayHeading(selectedDay)
+        }
         sectionBy={sectionBy}
+        sectionOrder={sectionOrder}
+        dateContextByTaskId={upcomingDateContextByTaskId}
+        completionDateByTaskId={upcomingCompletionDateByTaskId}
       />
       {selectionMode ? (
         <BulkActionBar
@@ -103,7 +155,7 @@ export function UpcomingScreen({ navigation }: Props) {
             exitSelection();
           }}
           onComplete={() => {
-            handleBulkComplete([...selected]);
+            handleBulkComplete([...selected], upcomingCompletionDateByTaskId);
             exitSelection();
           }}
           onDelete={() => {
@@ -116,7 +168,16 @@ export function UpcomingScreen({ navigation }: Props) {
           onDone={exitSelection}
         />
       ) : (
-        <Fab onPress={handleFabPress} />
+        <Fab
+          onPress={() => {
+            navigation.navigate(
+              "QuickAdd",
+              createCaptureSeed({
+                ...(selectedDay === null ? {} : { scheduled: selectedDay }),
+              }),
+            );
+          }}
+        />
       )}
     </View>
   );

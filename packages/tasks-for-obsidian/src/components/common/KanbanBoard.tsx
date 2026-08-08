@@ -13,6 +13,8 @@ export type KanbanColumnConfig = {
 
 type Props = {
   columns: readonly KanbanColumnConfig[];
+  referenceDate: Date;
+  pendingTaskIds?: ReadonlySet<TaskId> | undefined;
   onTaskPress: (id: TaskId) => void;
   onTaskToggle?: ((id: TaskId) => void) | undefined;
   onTaskEdit?: ((id: TaskId) => void) | undefined;
@@ -23,6 +25,8 @@ type Props = {
 
 export function KanbanBoard({
   columns,
+  referenceDate,
+  pendingTaskIds,
   onTaskPress,
   onTaskToggle,
   onTaskEdit,
@@ -42,6 +46,8 @@ export function KanbanBoard({
           title={col.title}
           color={col.color}
           tasks={col.tasks}
+          referenceDate={referenceDate}
+          pendingTaskIds={pendingTaskIds}
           onTaskPress={onTaskPress}
           onTaskToggle={onTaskToggle}
           onTaskEdit={onTaskEdit}

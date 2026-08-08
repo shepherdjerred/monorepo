@@ -1,4 +1,5 @@
 import AppIntents
+import Foundation
 import SwiftUI
 import WidgetKit
 
@@ -19,9 +20,16 @@ struct QuickAddTaskControl: ControlWidget {
 struct QuickAddControlIntent: ControlConfigurationIntent {
   static var title: LocalizedStringResource = "Quick Add Task"
   static var isDiscoverable: Bool = true
-  static var openAppWhenRun: Bool = true
 
-  func perform() async throws -> some IntentResult {
-    return .result()
+  func perform() async throws -> some IntentResult & OpensIntent {
+    guard let url = URL(string: "tasknotes://quick-add") else {
+      throw QuickAddControlError.invalidURL
+    }
+    return .result(opensIntent: OpenURLIntent(url))
   }
+}
+
+@available(iOS 18.0, *)
+private enum QuickAddControlError: Error {
+  case invalidURL
 }

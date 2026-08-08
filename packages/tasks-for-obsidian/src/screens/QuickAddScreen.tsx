@@ -1,80 +1,247 @@
-import React, { useState, useMemo, useCallback } from "react";
-import { View, Pressable, Text, StyleSheet } from "react-native";
+import React, { useCallback, useMemo, useState } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+
 import type { RootStackParamList } from "../navigation/types";
+import type { CaptureMetadataChip } from "../domain/quick-capture";
+import type { CaptureSeed } from "../domain/quick-capture-seed";
+import {
+  createCaptureRequest,
+  deriveCaptureDraft,
+  unparseCaptureChip,
+} from "../domain/quick-capture";
+import {
+  captureSessionFromSeed,
+  captureSeedFromRouteParams,
+  clearCaptureSeedField,
+  resetCaptureSessionForAnother,
+  setCaptureSeedProject,
+} from "../domain/quick-capture-seed";
 import { useTasks } from "../hooks/use-tasks";
 import { useSettings } from "../hooks/use-settings";
 import { useTip } from "../hooks/use-tip";
-import { parseTaskInput } from "../lib/nlp";
-import { feedbackTaskCreate } from "../lib/feedback";
-import { NaturalLanguageInput } from "../components/input/NaturalLanguageInput";
+import {
+  feedbackError,
+  feedbackSelection,
+  feedbackTaskCreate,
+} from "../lib/feedback";
+import { QuickCaptureComposer } from "../components/input/QuickCaptureComposer";
 import { TipPopover } from "../components/common/TipPopover";
+import { typography } from "../styles/typography";
+import {
+  quickAddCaptureKey,
+  quickAddDismissTarget,
+} from "../navigation/quick-add-navigation";
 
 type Props = NativeStackScreenProps<RootStackParamList, "QuickAdd">;
 
 export function QuickAddScreen({ route, navigation }: Props) {
-  const initialText = route.params?.initialText ?? "";
-  const [text, setText] = useState(initialText);
-  const { createTask, projectNames, contextNames, tagNames } = useTasks();
+  const seedResult = useMemo(
+    () => captureSeedFromRouteParams(route.params),
+    [route.params],
+  );
+
+  if (!seedResult.ok) {
+    return (
+      <InvalidCaptureSeed
+        message={seedResult.error.message}
+        onClose={() => {
+          dismissQuickAdd(navigation);
+        }}
+      />
+    );
+  }
+
+  return (
+    <QuickAddCaptureScreen
+      key={quickAddCaptureKey(route.key, seedResult.value)}
+      seed={seedResult.value}
+      navigation={navigation}
+    />
+  );
+}
+
+function dismissQuickAdd(navigation: Props["navigation"]): void {
+  if (quickAddDismissTarget(navigation.canGoBack()) === "back") {
+    navigation.goBack();
+    return;
+  }
+  navigation.replace("Main");
+}
+
+type QuickAddCaptureScreenProps = {
+  readonly seed: CaptureSeed;
+  readonly navigation: Props["navigation"];
+};
+
+function QuickAddCaptureScreen({
+  seed,
+  navigation,
+}: QuickAddCaptureScreenProps) {
+  const [session, setSession] = useState(() => captureSessionFromSeed(seed));
+  const [referenceDate, setReferenceDate] = useState(() => new Date());
+  const [saving, setSaving] = useState(false);
+  const [focusRequestKey, setFocusRequestKey] = useState(0);
+  const [saveError, setSaveError] = useState<string | undefined>();
+  const { createTask, projectOptions, contextNames, tagNames } = useTasks();
   const { colors } = useSettings();
   const nlpTip = useTip("natural-language");
 
-  const parsed = useMemo(() => parseTaskInput(text), [text]);
+  const draft = useMemo(
+    () =>
+      deriveCaptureDraft(
+        session.text,
+        session.literalSources,
+        referenceDate,
+        session.seed,
+      ),
+    [session, referenceDate],
+  );
+  const validationMessage =
+    session.text.trim().length > 0 && draft.title.trim().length === 0
+      ? "Add a task name before saving these details."
+      : undefined;
+
+  const create = useCallback(
+    (addAnother: boolean) => {
+      if (saving || draft.title.trim().length === 0) return;
+      setSaving(true);
+      setSaveError(undefined);
+      void (async () => {
+        const result = await createTask(createCaptureRequest(draft));
+        if (!result.ok) {
+          feedbackError();
+          setSaveError(result.error.message);
+          setSaving(false);
+          return;
+        }
+        feedbackTaskCreate();
+        if (!addAnother) {
+          dismissQuickAdd(navigation);
+          return;
+        }
+        setSession((current) => resetCaptureSessionForAnother(current));
+        setReferenceDate(new Date());
+        setSaving(false);
+        setFocusRequestKey((current) => current + 1);
+      })();
+    },
+    [saving, draft, createTask, navigation],
+  );
 
   const handleCreate = useCallback(() => {
-    if (!parsed.title.trim()) return;
-    feedbackTaskCreate();
-    void createTask({
-      title: parsed.title,
-      due: parsed.due,
-      priority: parsed.priority,
-      projects: parsed.projects,
-      contexts: parsed.contexts,
-      tags: parsed.tags,
-    });
-    navigation.goBack();
-  }, [parsed, createTask, navigation]);
+    create(false);
+  }, [create]);
+
+  const handleCreateAnother = useCallback(() => {
+    create(true);
+  }, [create]);
+
+  const handleChange = useCallback((value: string) => {
+    setSession((current) => ({ ...current, text: value }));
+    setSaveError(undefined);
+  }, []);
+
+  const handleChipPress = useCallback((chip: CaptureMetadataChip) => {
+    feedbackSelection();
+    if (chip.origin === "parsed") {
+      setSession((current) => ({
+        ...current,
+        literalSources: unparseCaptureChip(current.literalSources, chip),
+      }));
+    } else {
+      setSession((current) => ({
+        ...current,
+        seed: clearCaptureSeedField(current.seed, chip.seedField),
+      }));
+    }
+    setSaveError(undefined);
+  }, []);
+
+  const handleProjectChange = useCallback((project: string | undefined) => {
+    setSession((current) => ({
+      ...current,
+      seed: setCaptureSeedProject(current.seed, project),
+    }));
+    setSaveError(undefined);
+  }, []);
 
   // The Create button sits directly under the input, NOT pinned to the
   // bottom of a KeyboardAvoidingView: KAV's padding goes stale when the
   // connection banner appears mid-session (its layout shift isn't
   // re-measured), which left the bottom-pinned button hidden behind the
   // keyboard — untappable exactly when the user is offline.
+  // Keep a concrete native root. Otherwise iOS form-sheet scroll discovery
+  // can flatten this wrapper and lay out the focused ScrollView offscreen.
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <NaturalLanguageInput
-        value={text}
-        onChange={setText}
-        parsedResult={parsed}
-        availableProjects={projectNames}
+    <View
+      style={[styles.container, { backgroundColor: colors.background }]}
+      collapsable={false}
+    >
+      <QuickCaptureComposer
+        value={session.text}
+        draft={draft}
+        onChange={handleChange}
+        onChipPress={handleChipPress}
+        onProjectChange={handleProjectChange}
+        onSave={handleCreate}
+        onSaveAndAddAnother={handleCreateAnother}
+        saving={saving}
+        focusRequestKey={focusRequestKey}
+        message={saveError ?? validationMessage}
+        projectOptions={projectOptions}
         availableContexts={contextNames}
         availableTags={tagNames}
-        testID="quick-add-input"
       />
-      <Pressable
-        style={[
-          styles.createButton,
-          {
-            backgroundColor: parsed.title.trim()
-              ? colors.primary
-              : colors.border,
-          },
-        ]}
-        onPress={handleCreate}
-        disabled={!parsed.title.trim()}
-        accessibilityRole="button"
-        accessibilityLabel="Create task"
-        accessibilityState={{ disabled: !parsed.title.trim() }}
-        testID="quick-add-submit"
-      >
-        <Text style={styles.createText}>Create Task</Text>
-      </Pressable>
       <TipPopover
         visible={nlpTip.visible}
         title="Try natural language"
-        message={'Type "Buy milk tomorrow !high p:Shopping"'}
+        message={'Type: Plan launch tomorrow p:"Client Work"'}
         onDismiss={nlpTip.dismiss}
       />
+    </View>
+  );
+}
+
+type InvalidCaptureSeedProps = {
+  readonly message: string;
+  readonly onClose: () => void;
+};
+
+function InvalidCaptureSeed({ message, onClose }: InvalidCaptureSeedProps) {
+  const { colors } = useSettings();
+
+  return (
+    <View
+      style={[styles.invalidContainer, { backgroundColor: colors.background }]}
+      accessibilityRole="alert"
+      testID="quick-add-invalid-seed"
+    >
+      <Text style={[typography.heading, { color: colors.text }]}>
+        Quick Add couldn&apos;t open
+      </Text>
+      <Text
+        style={[
+          typography.body,
+          styles.invalidMessage,
+          { color: colors.textSecondary },
+        ]}
+      >
+        {message}
+      </Text>
+      <Pressable
+        style={({ pressed }) => [
+          styles.invalidButton,
+          { backgroundColor: colors.primary },
+          pressed && styles.invalidButtonPressed,
+        ]}
+        onPress={onClose}
+        accessibilityRole="button"
+        accessibilityLabel="Close Quick Add"
+        testID="quick-add-invalid-close"
+      >
+        <Text style={styles.invalidButtonText}>Close</Text>
+      </Pressable>
     </View>
   );
 }
@@ -82,17 +249,32 @@ export function QuickAddScreen({ route, navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
   },
-  createButton: {
-    paddingVertical: 14,
-    borderRadius: 8,
+  invalidContainer: {
+    flex: 1,
     alignItems: "center",
-    marginTop: 16,
+    justifyContent: "center",
+    gap: 12,
+    padding: 32,
   },
-  createText: {
+  invalidMessage: {
+    textAlign: "center",
+  },
+  invalidButton: {
+    minWidth: 120,
+    minHeight: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 8,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+  },
+  invalidButtonPressed: {
+    opacity: 0.78,
+  },
+  invalidButtonText: {
     color: "#ffffff",
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: "600",
   },
 });
