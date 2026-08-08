@@ -1,7 +1,11 @@
 import { Context } from "@temporalio/activity";
 import * as Sentry from "@sentry/bun";
 import { WorkflowFailedError } from "@temporalio/client";
-import { ApplicationFailure, TemporalFailure } from "@temporalio/common";
+import {
+  ApplicationFailure,
+  TemporalFailure,
+  TimeoutFailure,
+} from "@temporalio/common";
 import { createTemporalClient } from "#client";
 import {
   type AlertmanagerAlert,
@@ -132,6 +136,18 @@ function innermostTemporalFailure(failure: TemporalFailure): TemporalFailure {
   return current;
 }
 
+function containsTimeoutFailure(failure: TemporalFailure): boolean {
+  let current: TemporalFailure | undefined = failure;
+  while (current !== undefined) {
+    if (current instanceof TimeoutFailure) {
+      return true;
+    }
+    const nestedCause: Error | undefined = current.cause;
+    current = nestedCause instanceof TemporalFailure ? nestedCause : undefined;
+  }
+  return false;
+}
+
 /**
  * The failure "type" the Temporal UI shows. For an `ApplicationFailure` that is
  * its custom `type` (e.g. `BilledGenerationFinalizationError`), not the generic
@@ -164,37 +180,25 @@ type TimeoutInspection = {
 
 async function inspectTimeoutHistory(
   handle: ReturnType<WorkflowVisibilityClient["workflow"]["getHandle"]>,
-  status: FailureStatusName,
 ): Promise<TimeoutInspection> {
   try {
-    const classification = classifyWorkflowTimeoutHistory(
-      await handle.fetchHistory(),
-    );
     return {
-      // Failed executions can contain a causal activity timeout, but an
-      // ordinary application failure may also have unrelated timeout events
-      // from earlier retries. Only report activity timeouts for FAILED runs;
-      // TIMED_OUT runs retain the full history classification.
-      classification:
-        status === "TIMED_OUT" || classification.classification === "activity"
-          ? classification
-          : undefined,
+      classification: classifyWorkflowTimeoutHistory(
+        await handle.fetchHistory(),
+      ),
       historyError: undefined,
     };
   } catch (error: unknown) {
     return {
-      classification:
-        status === "TIMED_OUT"
-          ? {
-              classification: "unknown",
-              workflowTaskScheduled: false,
-              workflowTaskStarted: false,
-              workflowTaskScheduledButNotStarted: false,
-              activityScheduled: false,
-              activityStarted: false,
-              activityScheduledButNotStarted: false,
-            }
-          : undefined,
+      classification: {
+        classification: "unknown",
+        workflowTaskScheduled: false,
+        workflowTaskStarted: false,
+        workflowTaskScheduledButNotStarted: false,
+        activityScheduled: false,
+        activityStarted: false,
+        activityScheduledButNotStarted: false,
+      },
       historyError: error instanceof Error ? error.message : String(error),
     };
   }
@@ -284,7 +288,6 @@ async function fetchFailureDetail(
     execution.workflowId,
     execution.runId,
   );
-  const inspection = await inspectTimeoutHistory(handle, execution.status);
   try {
     await handle.result();
     // The visibility query already filtered to Failed/TimedOut, so a
@@ -297,6 +300,14 @@ async function fetchFailureDetail(
     );
   } catch (error) {
     if (error instanceof WorkflowFailedError) {
+      const temporalCause =
+        error.cause instanceof TemporalFailure ? error.cause : undefined;
+      const shouldInspectTimeout =
+        execution.status === "TIMED_OUT" ||
+        (temporalCause !== undefined && containsTimeoutFailure(temporalCause));
+      const inspection = shouldInspectTimeout
+        ? await inspectTimeoutHistory(handle)
+        : { classification: undefined, historyError: undefined };
       return workflowFailureDetail(error, execution, inspection);
     }
     throw error;

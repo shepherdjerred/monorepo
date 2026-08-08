@@ -1,6 +1,11 @@
 import { describe, expect, it } from "bun:test";
 import { ApplicationFailure, WorkflowFailedError } from "@temporalio/client";
-import { ActivityFailure, RetryState } from "@temporalio/common";
+import {
+  ActivityFailure,
+  RetryState,
+  TimeoutFailure,
+  TimeoutType,
+} from "@temporalio/common";
 import type { AlertmanagerAlert, AlertPoster } from "#lib/alertmanager.ts";
 import { classifyWorkflowTimeoutHistory } from "./workflow-failure-history.ts";
 import {
@@ -100,6 +105,27 @@ function rejectWithActivityWrappedFailure(
         RetryState.NON_RETRYABLE_FAILURE,
       ),
     );
+}
+
+function rejectWithActivityTimeoutFailure(): Promise<unknown> {
+  return Promise.reject(
+    new WorkflowFailedError(
+      "workflow execution failed",
+      new ActivityFailure(
+        "Activity task failed",
+        "someActivity",
+        "act-timeout",
+        RetryState.TIMEOUT,
+        "worker-1",
+        new TimeoutFailure(
+          "Activity timed out",
+          undefined,
+          TimeoutType.START_TO_CLOSE,
+        ),
+      ),
+      RetryState.TIMEOUT,
+    ),
+  );
 }
 
 function capturingPoster(): {
@@ -354,6 +380,76 @@ describe("workflow timeout history edge cases", () => {
   });
 });
 
+describe("failed execution timeout diagnostics", () => {
+  it("omits unrelated historical timeouts from an ordinary failure", async () => {
+    const client = fakeClient(
+      [
+        {
+          workflowId: "wf-ordinary-failure",
+          runId: "run-1",
+          type: "syncGolinks",
+          taskQueue: "default",
+          closeTime: new Date("2026-07-30T17:50:00.000Z"),
+          status: { name: "FAILED" },
+        },
+      ],
+      {
+        "wf-ordinary-failure/run-1": rejectWithApplicationFailure("golink 500"),
+      },
+      {
+        "wf-ordinary-failure/run-1": {
+          events: [{ eventType: "EVENT_TYPE_ACTIVITY_TASK_TIMED_OUT" }],
+        },
+      },
+    );
+    const { poster, calls } = capturingPoster();
+
+    await pollWorkflowFailuresOnce(client, poster, {
+      now: NOW,
+      lookbackMs: LOOKBACK_MS,
+      ttlMs: TTL_MS,
+    });
+
+    const description = calls[0]?.alerts[0]?.annotations["description"];
+    expect(description).not.toContain("timeoutClassification");
+    expect(description).not.toContain("worker/task-queue availability");
+  });
+
+  it("includes a timeout that caused the failed execution", async () => {
+    const client = fakeClient(
+      [
+        {
+          workflowId: "wf-causal-activity-timeout",
+          runId: "run-1",
+          type: "syncGolinks",
+          taskQueue: "default",
+          closeTime: new Date("2026-07-30T17:50:00.000Z"),
+          status: { name: "FAILED" },
+        },
+      ],
+      {
+        "wf-causal-activity-timeout/run-1": rejectWithActivityTimeoutFailure,
+      },
+      {
+        "wf-causal-activity-timeout/run-1": {
+          events: [{ eventType: "EVENT_TYPE_ACTIVITY_TASK_TIMED_OUT" }],
+        },
+      },
+    );
+    const { poster, calls } = capturingPoster();
+
+    await pollWorkflowFailuresOnce(client, poster, {
+      now: NOW,
+      lookbackMs: LOOKBACK_MS,
+      ttlMs: TTL_MS,
+    });
+
+    expect(calls[0]?.alerts[0]?.annotations["description"]).toContain(
+      "timeoutClassification activity",
+    );
+  });
+});
+
 describe("pollWorkflowFailuresOnce", () => {
   it("posts one alert per failed execution and increments scanned/alerted", async () => {
     const client = fakeClient(
@@ -398,8 +494,8 @@ describe("pollWorkflowFailuresOnce", () => {
     expect(calls[0]?.alerts.length).toBe(2);
     const workflowIds = calls[0]?.alerts.map((a) => a.labels["workflowId"]);
     expect(workflowIds).toEqual(["wf-1", "wf-2"]);
-    expect(calls[0]?.alerts[0]?.annotations["description"]).toContain(
-      "timeoutClassification activity",
+    expect(calls[0]?.alerts[0]?.annotations["description"]).not.toContain(
+      "timeoutClassification",
     );
   });
 
@@ -441,35 +537,6 @@ describe("pollWorkflowFailuresOnce", () => {
       "failureType BilledGenerationFinalizationError",
     );
     expect(alert?.annotations["summary"]).not.toContain("Activity task failed");
-  });
-
-  it("omits timeout diagnostics from an ordinary failed execution", async () => {
-    const client = fakeClient(
-      [
-        {
-          workflowId: "wf-ordinary-failure",
-          runId: "run-1",
-          type: "syncGolinks",
-          taskQueue: "default",
-          closeTime: new Date("2026-07-30T17:50:00.000Z"),
-          status: { name: "FAILED" },
-        },
-      ],
-      {
-        "wf-ordinary-failure/run-1": rejectWithApplicationFailure("golink 500"),
-      },
-    );
-    const { poster, calls } = capturingPoster();
-
-    await pollWorkflowFailuresOnce(client, poster, {
-      now: NOW,
-      lookbackMs: LOOKBACK_MS,
-      ttlMs: TTL_MS,
-    });
-
-    const description = calls[0]?.alerts[0]?.annotations["description"];
-    expect(description).not.toContain("timeoutClassification");
-    expect(description).not.toContain("worker/task-queue availability");
   });
 
   it("skips executions missing FAILED/TIMED_OUT status or closeTime", async () => {
