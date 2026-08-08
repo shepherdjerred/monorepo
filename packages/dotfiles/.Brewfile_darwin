@@ -1,100 +1,220 @@
 tap "artginzburg/tap"
+tap "catppuccin/tap"
 tap "cormacrelf/tap"
 tap "dsully/tap"
+tap "jdx/tap"
 tap "lightpanda-io/browser"
+tap "mobile-dev-inc/tap"
 tap "pinchtab/tap"
 tap "rsteube/tap"
 tap "siderolabs/tap"
+# Static checker for GitHub Actions workflow files
 brew "actionlint"
+# GitOps Continuous Delivery for Kubernetes
 brew "argocd"
+# Improved shell history for zsh, bash, fish and nushell
 brew "atuin"
+# Official Amazon AWS command-line interface
 brew "awscli"
+# Bourne-Again SHell, a UNIX command interpreter
 brew "bash"
+# Clone of cat(1) with syntax highlighting and Git integration
 brew "bat"
+# Resource monitor. C++ version and continuation of bashtop and bpytop
 brew "btop"
+# Define k8s native apps and abstractions using object-oriented programming
 brew "cdk8s"
+# Manage your dotfiles across multiple diverse machines, securely
 brew "chezmoi"
+# Cloudflare Tunnel client (formerly Argo Tunnel)
 brew "cloudflared"
+# Dependency manager for Cocoa projects
+brew "cocoapods"
+# Diff that understands syntax
 brew "difftastic"
+# Select default apps for documents and URL schemes on macOS
 brew "duti"
+# Modern, maintained replacement for ls
 brew "eza"
+# Simple, fast and user-friendly alternative to find
 brew "fd"
-brew "fish"
+# Play, record, convert, and stream select audio and video codecs
 brew "ffmpeg"
+# User-friendly command-line shell for UNIX-like operating systems
+brew "fish"
+# Command-line outline and bitmap font editor/converter
 brew "fontforge"
+# GitHub command-line tool
 brew "gh"
+# Distributed revision control system
 brew "git"
+# Syntax-highlighting pager for git and diff output
 brew "git-delta"
+# Manage stacked Git branches
 brew "git-spice"
+# Command-line Golang template processor
 brew "gomplate"
+# Ping, but with a graph
 brew "gping"
+# Smarter Dockerfile linter to validate best practices
 brew "hadolint"
+# Kubernetes package manager
 brew "helm"
+# Command-line benchmarking tool
 brew "hyperfine"
+# Lightweight and flexible command-line JSON processor
 brew "jq"
+# Static analysis tool for Kubernetes YAML files and Helm charts
 brew "kube-linter"
+# Kubernetes command-line interface
 brew "kubernetes-cli"
+# Image processing and image analysis library
 brew "leptonica"
-brew "lightpanda-io/browser/lightpanda"
+# Fast, flexible, config-based cli for linting Markdown/CommonMark files
 brew "markdownlint-cli2"
+# Polyglot runtime manager (asdf rust clone)
 brew "mise"
-brew "dsully/tap/macos-defaults"
+# Ambitious Vim-fork focused on extensibility and agility
 brew "neovim"
-brew "opencode"
-brew "opentofu"
-brew "ov"
-brew "pam-reattach"
-brew "pinchtab/tap/pinchtab"
-brew "pkg-config"
-brew "poppler"
-brew "qemu"
-brew "rclone"
+# Search tool like grep and The Silver Searcher
 brew "ripgrep"
+# AI coding agent, built for the terminal
+brew "opencode"
+# Drop-in replacement for Terraform. Infrastructure as Code Tool
+brew "opentofu"
+# Feature-rich terminal-based text viewer
+brew "ov"
+# PAM module for reattaching to the user's GUI (Aqua) session
+brew "pam-reattach"
+# Package compiler and linker metadata toolkit
+brew "pkgconf"
+# PDF rendering library (based on the xpdf-3.0 code base)
+brew "poppler"
+# Generic machine emulator and virtualizer
+brew "qemu"
+# Rsync for cloud storage
+brew "rclone"
+# Cross-shell prompt for astronauts
 brew "starship"
+# Tool to enforce Swift style and conventions
+brew "swiftlint"
+# OCR (Optical Character Recognition) engine
 brew "tesseract"
+# CLI tool that moves files or folder to the trash
 brew "trash"
+# Display directories as trees (with optional color/HTML output)
 brew "tree"
+# Markup-based typesetting system
 brew "typst"
+# Extremely fast Python package installer and resolver, written in Rust
 brew "uv"
+# Disaster recovery for Kubernetes resources and persistent volumes
 brew "velero"
+# Generator for LS_COLORS with support for multiple color themes
 brew "vivid"
+# Executes a program periodically, showing output fullscreen
 brew "watch"
+# Watch files and take action when they change
 brew "watchman"
+# Internet file retriever
 brew "wget"
+# Process YAML, JSON, XML, CSV and properties documents from the CLI
 brew "yq"
+# Feature-rich command-line audio/video downloader
 brew "yt-dlp"
+# Pluggable terminal workspace, with terminal multiplexer as the base feature
 brew "zellij"
-brew "cormacrelf/tap/dark-notify"
-brew "rsteube/tap/carapace"
-brew "siderolabs/tap/talosctl"
-brew "artginzburg/tap/sudo-touchid"
+# Permanent TouchID support for sudo
+brew "artginzburg/tap/sudo-touchid", trusted: true
+# Watcher for macOS 10.14+ light/dark mode changes
+brew "cormacrelf/tap/dark-notify", trusted: true
+# Defaults setting for macOS
+brew "dsully/tap/macos-defaults", trusted: true
+# Headless browser for AI agents and automation (nightly build)
+brew "lightpanda-io/browser/lightpanda", trusted: true
+# The easiest way to automate UI testing for your mobile app
+brew "mobile-dev-inc/tap/maestro", trusted: true
+# High-performance browser automation bridge and multi-instance orchestrator for AI agents
+brew "pinchtab/tap/pinchtab", trusted: true
+# A multi-shell completion binary
+brew "rsteube/tap/carapace", trusted: true
+# CLI for out-of-band management of Kubernetes nodes created by Talos
+brew "siderolabs/tap/talosctl", trusted: true
+# Password manager that keeps all passwords secure behind one password
 cask "1password"
+# Command-line interface for 1Password
 cask "1password-cli"
+# Image editing and design software
 cask "affinity"
+# Memory training application
 cask "anki"
+# Kubernetes desktop client
 cask "aptakube"
+# Utility improving 3rd party mouse performance and functionalities
 cask "bettermouse"
+# OpenAI's official ChatGPT desktop app
 cask "chatgpt"
+# Terminal-based AI coding assistant
 cask "claude-code"
+# Screen capturing tool
 cask "cleanshot"
+# OpenAI's coding agent that runs in your terminal
 cask "codex"
+# Claude code parallelisation
+cask "conductor"
+# Write, edit, and chat about your code with AI
 cask "cursor"
+# Disk space visualiser
+cask "daisydisk"
+# Voice and text chat software
 cask "discord"
+# Web browser
 cask "firefox"
+# Terminal emulator that uses platform-native UI and GPU acceleration
 cask "ghostty"
+# Web browser
 cask "google-chrome"
+# Web browser
 cask "google-chrome@canary"
+# Free and open-source media player
 cask "iina"
+# File archiver
 cask "keka"
+# Free cross-platform office suite, fresh version
 cask "libreoffice"
+# IMAP email client
 cask "mailmate"
+# Add middle click for Trackpad and Magic Mouse
 cask "middle"
+# Free and open-source RSS reader
 cask "netnewswire"
+# Knowledge base that works on top of a local folder of plain text Markdown files
 cask "obsidian"
+# Replacement for Docker Desktop
 cask "orbstack"
+# Quick Look generator for Markdown files
 cask "qlmarkdown"
+# Text editor for code, markup and prose
 cask "sublime-text"
+# Control windows and applications right from your trackpad
 cask "swish"
-cask "syntax-highlight"
+# Real time file synchronisation software
 cask "syncthing-app"
+# Quicklook extension for source files
+cask "syntax-highlight"
+# Mesh VPN based on WireGuard
 cask "tailscale-app"
+# Open-source code editor
+cask "visual-studio-code"
+# Multiplayer code editor
+cask "zed"
+go "cmd/go"
+go "cmd/gofmt"
+uv "docling[asr,easyocr,htmlrender,ocrmac,onnxruntime,rapidocr,remote-serving,tesserocr,vlm,xbrl]"
+npm "@google/gemini-cli"
+npm "corepack"
+npm "eslint"
+npm "neovim"
+npm "prettier"
+npm "tree-sitter-cli"
+npm "typescript"

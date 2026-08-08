@@ -11,10 +11,12 @@ if ! command -v duti &>/dev/null; then
 fi
 
 # Sublime Text — text and source code
+# Keep HTML with Safari. Assigning .html to Sublime with the "all" role makes
+# macOS treat every chezmoi apply as a protected default-browser change.
 SUBLIME="com.sublimetext.4"
 for ext in txt md log csv json yaml yml xml toml ini cfg conf \
            sh bash zsh fish py js ts tsx rs go java \
-           c cpp h hpp css scss html svg lua rb swift sql \
+           c cpp h hpp css scss svg lua rb swift sql \
            dockerfile diff patch properties proto plist; do
     duti -s "$SUBLIME" ".$ext" all
 done
