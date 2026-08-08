@@ -20,10 +20,16 @@ Avoid a static catalog of “best crates” and pinned example versions in a gen
 
 ## Publishing
 
-Current Cargo supports workspace publishing. Perform a dry run and review the exact package set:
+Use workspace publishing only when `cargo publish --help` lists `--workspace` as stable. Perform a dry run and review the exact package set:
 
 ```bash
 cargo publish --workspace --dry-run
+```
+
+On Cargo versions where `--workspace` is absent or marked unstable, inspect the workspace members with `cargo metadata --no-deps --format-version 1`, exclude packages whose manifests disable publishing, order the remaining packages by their workspace dependency relationships, and dry-run each package explicitly:
+
+```bash
+cargo publish --package <package-name> --dry-run
 ```
 
 Publishing is an external mutation; do not remove `--dry-run` without explicit authorization and release ownership.

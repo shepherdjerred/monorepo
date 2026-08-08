@@ -31,7 +31,7 @@ Default expiry is generally 90 days for reachable entries and 30 days for unreac
 
 ## Stash interchange
 
-Current Git supports exporting stash entries to a commit chain and importing that chain into another repository. Follow the installed `git stash export` and `git stash import` syntax; do not invent file-based `--to-ref` or import flags from older drafts.
+Newer Git releases can export stash entries to a commit chain and import that chain into another repository. Use this workflow only when the installed `git stash -h` lists both `export` and `import`, then follow that version's help exactly; do not invent file-based `--to-ref` or import flags from older drafts. If either subcommand is absent, upgrade Git before attempting stash interchange. There is no portable older-version equivalent that preserves the complete stash structure and metadata.
 
 A stash changes working-tree state. Agents should not use it to hide or move user work merely for investigation.
 

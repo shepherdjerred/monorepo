@@ -150,31 +150,3 @@ skill's 30-source set rather than treated as independent 30-source units.
   reconciling the branch's actual tracking with the corrected Execution
   Model. The branch is git-spice-tracked going forward; no `gh stack` state
   remains authoritative for this work.
-
-## Session Log — 2026-08-03
-
-### Done
-
-- Loaded the skill-authoring, deep-research, Lightpanda, chezmoi, worktree,
-  native GitHub stack, Git, and monorepo-documentation guidance.
-- Inventoried 65 top-level managed skills and identified the existing Bugsink
-  overlap that must be preserved.
-- Confirmed the 30-source-per-top-level-skill scope with the user.
-- Created and initialized the isolated native-stack worktree.
-- Completed and distilled the first five 30-source research audits: Git, Bun,
-  TypeScript, Rust, and Python.
-- Replaced stale monolithic tutorials with concise entrypoints and focused
-  reference files, including current release and compatibility boundaries.
-- Validated all five rewritten skill structures with the skill-creator
-  validator.
-
-### Remaining
-
-- Complete all research, implementation, verification, forward-testing, and
-  publication work.
-
-### Caveats
-
-- `bun run check-todos` in the main checkout stopped on the invalid frontmatter
-  ID in the existing untracked file
-  `packages/docs/logs/2026-08-03_scout-evals-populate-100-case-dataset.md`.
