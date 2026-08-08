@@ -292,7 +292,20 @@ function sendEventBeacon(
   ) {
     return false;
   }
-  if (navigator.doNotTrack === "1") return true;
+  const doNotTrackSignals: unknown[] = [
+    navigator.doNotTrack,
+    typeof globalThis.window === "object"
+      ? globalThis.window.doNotTrack
+      : undefined,
+    Object.getOwnPropertyDescriptor(navigator, "msDoNotTrack")?.value,
+  ];
+  if (
+    doNotTrackSignals.some(
+      (signal) => signal === "1" || signal === "yes" || signal === "true",
+    )
+  ) {
+    return true;
+  }
   if (config.siteId === undefined) return false;
 
   const body = new URLSearchParams({

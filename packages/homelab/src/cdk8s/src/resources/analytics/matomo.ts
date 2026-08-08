@@ -98,6 +98,13 @@ export function createMatomoDeployment(
     "matomo-data-volume",
     matomoVolume.claim,
   );
+  const publicReadiness = Probe.fromCommand(
+    ["test", "-f", "/var/www/html/config/config.ini.php"],
+    {
+      periodSeconds: Duration.seconds(10),
+      failureThreshold: 3,
+    },
+  );
 
   deployment.addContainer(
     withCommonProps({
@@ -126,11 +133,7 @@ export function createMatomoDeployment(
         periodSeconds: Duration.seconds(30),
         failureThreshold: 3,
       }),
-      readiness: Probe.fromHttpGet("/", {
-        port: 80,
-        periodSeconds: Duration.seconds(10),
-        failureThreshold: 3,
-      }),
+      readiness: publicReadiness,
     }),
   );
 
@@ -160,6 +163,9 @@ export function createMatomoDeployment(
 
   setRevisionHistoryLimit(deployment);
 
+  // The public Service has no endpoints until the operator completes
+  // Matomo's first-run installer. The admin Service deliberately publishes
+  // not-ready addresses so initialization remains available over Tailscale.
   const service = new Service(chart, "matomo-service", {
     selector: deployment,
     metadata: {
@@ -167,9 +173,17 @@ export function createMatomoDeployment(
     },
     ports: [{ port: 80, name: "http" }],
   });
+  const adminService = new Service(chart, "matomo-admin-service", {
+    selector: deployment,
+    publishNotReadyAddresses: true,
+    metadata: {
+      labels: { app: "matomo" },
+    },
+    ports: [{ port: 80, name: "http" }],
+  });
 
   new TailscaleIngress(chart, "matomo-tailscale-ingress", {
-    service,
+    service: adminService,
     host: "matomo",
   });
 
