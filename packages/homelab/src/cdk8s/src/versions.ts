@@ -348,7 +348,7 @@ const versions = {
   // Custom temporal-worker image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/temporal-worker":
-    "2.0.0-8036@sha256:47a1d29da71b5571ffa9465797b75aa79f12276af8633e69d4be9068decea291",
+    "2.0.0-8106@sha256:de5e970cf2dba247af0568d10ca408eb370fde7f3eff00558994b2e77bcf2ebf",
   // Custom TRMNL dashboard image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/trmnl-dashboard":
