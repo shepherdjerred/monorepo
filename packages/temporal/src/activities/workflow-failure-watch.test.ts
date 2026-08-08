@@ -227,6 +227,29 @@ describe("workflow timeout history edge cases", () => {
       "unknown",
     );
   });
+
+  it("does not treat a recovered workflow-task timeout as pending work", () => {
+    const classification = classifyWorkflowTimeoutHistory({
+      events: [
+        {
+          event_id: protobufLong("5"),
+          eventType: "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
+        },
+        {
+          eventType: "EVENT_TYPE_WORKFLOW_TASK_TIMED_OUT",
+          workflow_task_timed_out_event_attributes: {
+            scheduled_event_id: protobufLong("5"),
+          },
+        },
+        { eventType: "EVENT_TYPE_WORKFLOW_EXECUTION_TIMED_OUT" },
+      ],
+    });
+
+    expect(classification.workflowTaskScheduled).toBe(true);
+    expect(classification.workflowTaskStarted).toBe(false);
+    expect(classification.workflowTaskScheduledButNotStarted).toBe(false);
+    expect(classification.activityScheduled).toBe(false);
+  });
 });
 
 describe("workflow timeout queue diagnostics", () => {

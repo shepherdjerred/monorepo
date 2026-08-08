@@ -94,6 +94,25 @@ function startedWorkflowTaskScheduledEventId(
       );
 }
 
+function timedOutWorkflowTaskScheduledEventId(
+  event: unknown,
+): string | undefined {
+  const record = eventRecord(event);
+  if (record === undefined) {
+    return undefined;
+  }
+  const attributes =
+    record["workflowTaskTimedOutEventAttributes"] ??
+    record["workflow_task_timed_out_event_attributes"];
+  const attributesRecord = eventRecord(attributes);
+  return attributesRecord === undefined
+    ? undefined
+    : eventId(
+        attributesRecord["scheduledEventId"] ??
+          attributesRecord["scheduled_event_id"],
+      );
+}
+
 function historyEvents(history: unknown): readonly unknown[] {
   if (Array.isArray(history)) {
     return history;
@@ -148,7 +167,7 @@ export function classifyWorkflowTimeoutHistory(
   let activityScheduled = false;
   let activityStarted = false;
   const scheduledWorkflowTaskEventIds = new Set<string>();
-  const startedWorkflowTaskScheduledEventIds = new Set<string>();
+  const handledWorkflowTaskScheduledEventIds = new Set<string>();
   const scheduledActivityEventIds = new Set<string>();
   const startedActivityScheduledEventIds = new Set<string>();
   let latestTimeout: WorkflowTimeoutClassification | undefined;
@@ -169,7 +188,7 @@ export function classifyWorkflowTimeoutHistory(
       workflowTaskStarted = true;
       const scheduledId = startedWorkflowTaskScheduledEventId(event);
       if (scheduledId !== undefined) {
-        startedWorkflowTaskScheduledEventIds.add(scheduledId);
+        handledWorkflowTaskScheduledEventIds.add(scheduledId);
       }
     }
     if (name === "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED") {
@@ -188,6 +207,12 @@ export function classifyWorkflowTimeoutHistory(
     }
     switch (name) {
       case "EVENT_TYPE_WORKFLOW_TASK_TIMED_OUT":
+        {
+          const scheduledId = timedOutWorkflowTaskScheduledEventId(event);
+          if (scheduledId !== undefined) {
+            handledWorkflowTaskScheduledEventIds.add(scheduledId);
+          }
+        }
         latestTimeout = "workflow-task";
         break;
       case "EVENT_TYPE_ACTIVITY_TASK_TIMED_OUT":
@@ -204,7 +229,7 @@ export function classifyWorkflowTimeoutHistory(
     workflowTaskScheduled,
     workflowTaskStarted,
     workflowTaskScheduledButNotStarted: [...scheduledWorkflowTaskEventIds].some(
-      (id) => !startedWorkflowTaskScheduledEventIds.has(id),
+      (id) => !handledWorkflowTaskScheduledEventIds.has(id),
     ),
     activityScheduled,
     activityStarted,
