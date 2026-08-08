@@ -26,6 +26,21 @@ function fileWithTitle(
   return undefined;
 }
 
+function frontmatterTitle(content: string): string | undefined {
+  const match = /^title: ([^\r\n]*)$/m.exec(content);
+  return match?.[1].trim();
+}
+
+function fileWithExactTitle(
+  files: Map<string, string>,
+  title: string,
+): string | undefined {
+  for (const content of files.values()) {
+    if (frontmatterTitle(content) === title) return content;
+  }
+  return undefined;
+}
+
 function scheduledDate(content: string): string | undefined {
   return /^scheduled:\s*(\d{4}-\d{2}-\d{2})\s*$/m.exec(content)?.[1];
 }
@@ -119,7 +134,7 @@ const VAULT_ASSERTIONS: readonly VaultAssertion[] = [
     name: '"Context capture alpha" is persisted with a scheduled date (08-contextual-quick-capture)',
     flow: "08-contextual-quick-capture.yaml",
     check: (files, context) => {
-      const content = fileWithTitle(files, "Context capture alpha");
+      const content = fileWithExactTitle(files, "Context capture alpha");
       return content !== undefined && scheduledDate(content) === context.today;
     },
   },
@@ -127,7 +142,7 @@ const VAULT_ASSERTIONS: readonly VaultAssertion[] = [
     name: '"Context capture beta" is persisted with a scheduled date (08-contextual-quick-capture)',
     flow: "08-contextual-quick-capture.yaml",
     check: (files, context) => {
-      const content = fileWithTitle(files, "Context capture beta");
+      const content = fileWithExactTitle(files, "Context capture beta");
       return content !== undefined && scheduledDate(content) === context.today;
     },
   },
