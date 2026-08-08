@@ -4,7 +4,7 @@ import { escapePrometheusTemplate } from "./shared.ts";
 
 const zfsScrubOverdueExpression = [
   "(time() - zfs_zpool_last_scrub_completion_timestamp > 777600) and ",
-  "on(zpool_name) (zfs_zpool_scan_state != 1)",
+  "on(instance, zpool_name) (zfs_zpool_scan_state != 1)",
 ].join("");
 
 export function getZfsMaintenanceRuleGroups(): PrometheusRuleSpecGroups[] {
