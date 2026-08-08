@@ -541,12 +541,10 @@ async function main(): Promise<void> {
     // (6) Maestro flows
     await runMaestro(simulator, focusedFlow);
 
-    // (7) vault-state assertions
-    if (focusedFlow === null) {
-      await assertVaultState(vaultDir, log);
-    } else {
-      log(`focused flow passed: ${focusedFlow}`);
-    }
+    // (7) vault-state assertions. Focused runs still verify the selected
+    // flow's authoritative Markdown mutation, rather than relying only on
+    // optimistic UI state.
+    await assertVaultState(vaultDir, log, focusedFlow);
 
     log("e2e suite passed");
     passed = true;
