@@ -36,7 +36,7 @@ Read-only or check-oriented commands:
 python --version
 uv --version
 uv python list
-uv tree
+uv tree --locked
 ruff check .
 ruff format --check .
 pytest --collect-only

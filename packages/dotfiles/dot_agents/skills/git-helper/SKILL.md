@@ -154,11 +154,10 @@ For diagnosis:
 ```bash
 git fsck --full
 git count-objects -vH
-git gc --auto
 git reflog expire --dry-run --all
 ```
 
-Do not change reflog expiry, run aggressive collection, or delete unreachable objects until recovery requirements and repository ownership are clear.
+Run `git gc --auto` only as an explicitly authorized maintenance step: it may repack objects and prune expired unreachable data. Do not change reflog expiry, run aggressive collection, or delete unreachable objects until recovery requirements and repository ownership are clear.
 
 ## Review checklist
 
