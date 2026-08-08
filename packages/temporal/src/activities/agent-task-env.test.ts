@@ -19,7 +19,7 @@ describe("agent-task secret token state", () => {
       await Bun.write(tokenPath, "second-mounted-secret-value\n");
       await state.refresh();
 
-      expect(state.tokens).not.toContain("first-mounted-secret-value");
+      expect(state.tokens).toContain("first-mounted-secret-value");
       expect(state.tokens).toContain("second-mounted-secret-value");
     } finally {
       await rm(tokenPath);

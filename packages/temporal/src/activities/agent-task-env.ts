@@ -93,7 +93,11 @@ export async function createAgentTaskSecretTokenState(
         env,
         await readAgentTaskMountedSecretTokens(paths),
       );
-      tokens.splice(0, tokens.length, ...nextSecretTokens);
+      for (const token of nextSecretTokens) {
+        if (!tokens.includes(token)) {
+          tokens.push(token);
+        }
+      }
     })();
     refreshInFlight = (async (): Promise<void> => {
       try {
