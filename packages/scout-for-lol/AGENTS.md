@@ -684,3 +684,31 @@ running these yourself before pushing catches failures earlier:
 - Markdownlint on `.md` files
 - Per-package: typecheck, ESLint, and relevant tests
 - Rust formatting and Clippy for desktop/src-tauri
+
+## Non-core message budget — a promise to users, not a guideline
+
+Scout sends at most **3** onboarding/feedback messages per server, ever, and
+says so in the body of every one of them ("Message 2 of 3 for <server>").
+That text is generated from the same counter that gates sending, so it cannot
+drift from reality. Treat this as an invariant:
+
+- **Route every non-core message through `sendDM` with a `budget`.** Enforcement
+  lives in `discord/utils/dm.ts`, the audit chokepoint, precisely so no caller
+  can forget the check. Do not add a second send path.
+- **Budget is consumed only on delivery.** A DM that bounced (`dm_disabled`,
+  `failed`) must not advance `GuildInstall.outreachStage` — the user received
+  nothing. Charging for attempts is what previously burned 33 of 37 guilds out
+  of the feedback ask without ever messaging them.
+- **Core product output is not budgeted.** Match reports, competition invites,
+  and permission errors are what the user asked for; never gate them on this.
+- **A new channel shares the budget.** If email or any other channel is added,
+  it consumes the same allowance (`emailNudgeSentAt` exists for this) — a fourth
+  message arriving by another route would make the printed count a lie.
+- **Never re-arm outreach without an observed removal.** `handleGuildCreate`
+  restarts the ladder only when `GuildInstall.removedAt` is set; a replayed
+  `guildCreate` for a guild we never left must not re-post the welcome message
+  or re-send DMs.
+
+Validate ladder changes with `bun run scripts/outreach-dry-run.ts` against a
+copy of production before the first real fire — the failure mode here is
+messaging real people.
