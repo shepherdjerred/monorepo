@@ -23,6 +23,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
 
+import { parseSimulatorToday } from "./simulator-date";
 import { assertVaultState } from "./vault-assertions";
 
 const SERVER_PORT = 18_901;
@@ -446,7 +447,7 @@ async function orderedFlowFiles(): Promise<readonly string[]> {
 async function runMaestro(
   simulator: SimDevice,
   focusedFlow: string | null,
-): Promise<void> {
+): Promise<ReadonlyMap<string, string>> {
   const which = spawnSync("which", ["maestro"], { encoding: "utf8" });
   if (which.status !== 0) {
     fail(
@@ -454,6 +455,7 @@ async function runMaestro(
     );
   }
   const flows = focusedFlow === null ? await orderedFlowFiles() : [focusedFlow];
+  const todayByFlow = new Map<string, string>();
   for (const [index, flow] of flows.entries()) {
     if (index > 0) restartApp(simulator, flow);
     const target = path.join(packageDir, "e2e", "maestro", flow);
@@ -461,6 +463,13 @@ async function runMaestro(
       await access(target);
     } catch {
       fail(`requested Maestro flow does not exist: ${target}`);
+    }
+    if (
+      flow === "01-create-task.yaml" ||
+      flow === "08-contextual-quick-capture.yaml"
+    ) {
+      const today = runSimctl(["spawn", simulator.udid, "date", "+%Y-%m-%d"]);
+      todayByFlow.set(flow, parseSimulatorToday(today));
     }
 
     log(`Maestro flow ${String(index + 1)}/${String(flows.length)}: ${flow}`);
@@ -485,6 +494,7 @@ async function runMaestro(
       fail(`${flow} failed with exit code ${String(exitCode)}`);
     }
   }
+  return todayByFlow;
 }
 
 function requestedFlow(): string | null {
@@ -539,21 +549,12 @@ async function main(): Promise<void> {
     launchApp(simulator);
 
     // (6) Maestro flows
-    await runMaestro(simulator, focusedFlow);
+    const todayByFlow = await runMaestro(simulator, focusedFlow);
 
     // (7) vault-state assertions. Focused runs still verify the selected
     // flow's authoritative Markdown mutation, rather than relying only on
     // optimistic UI state.
-    const simulatorToday = runSimctl([
-      "spawn",
-      simulator.udid,
-      "date",
-      "+%Y-%m-%d",
-    ]).trim();
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(simulatorToday)) {
-      fail(`simulator returned an invalid date: ${simulatorToday}`);
-    }
-    await assertVaultState(vaultDir, log, focusedFlow, simulatorToday);
+    await assertVaultState(vaultDir, log, focusedFlow, todayByFlow);
 
     log("e2e suite passed");
     passed = true;

@@ -13,7 +13,7 @@ type VaultAssertion = {
 };
 
 export type VaultAssertionContext = {
-  readonly today: string;
+  readonly todayByFlow: ReadonlyMap<string, string>;
 };
 
 function fileWithTitle(
@@ -43,6 +43,10 @@ function fileWithExactTitle(
 
 function scheduledDate(content: string): string | undefined {
   return /^scheduled:\s*(\d{4}-\d{2}-\d{2})\s*$/m.exec(content)?.[1];
+}
+
+function dueDate(content: string): string | undefined {
+  return /^due:\s*(\d{4}-\d{2}-\d{2})\s*$/m.exec(content)?.[1];
 }
 
 function isMissingFileError(error: unknown): boolean {
@@ -94,9 +98,15 @@ async function waitForVaultAssertions(
 
 const VAULT_ASSERTIONS: readonly VaultAssertion[] = [
   {
-    name: 'a task file containing "Created by e2e" exists (01-create-task)',
+    name: '"Created by e2e" is persisted with today as its deadline (01-create-task)',
     flow: "01-create-task.yaml",
-    check: (files) => fileWithTitle(files, "Created by e2e") !== undefined,
+    check: (files, context) => {
+      const content = fileWithExactTitle(files, "Created by e2e");
+      return (
+        content !== undefined &&
+        dueDate(content) === context.todayByFlow.get("01-create-task.yaml")
+      );
+    },
   },
   {
     name: '"Offline created task" is persisted (05-offline-queue)',
@@ -135,7 +145,11 @@ const VAULT_ASSERTIONS: readonly VaultAssertion[] = [
     flow: "08-contextual-quick-capture.yaml",
     check: (files, context) => {
       const content = fileWithExactTitle(files, "Context capture alpha");
-      return content !== undefined && scheduledDate(content) === context.today;
+      return (
+        content !== undefined &&
+        scheduledDate(content) ===
+          context.todayByFlow.get("08-contextual-quick-capture.yaml")
+      );
     },
   },
   {
@@ -143,7 +157,11 @@ const VAULT_ASSERTIONS: readonly VaultAssertion[] = [
     flow: "08-contextual-quick-capture.yaml",
     check: (files, context) => {
       const content = fileWithExactTitle(files, "Context capture beta");
-      return content !== undefined && scheduledDate(content) === context.today;
+      return (
+        content !== undefined &&
+        scheduledDate(content) ===
+          context.todayByFlow.get("08-contextual-quick-capture.yaml")
+      );
     },
   },
   {
@@ -176,7 +194,7 @@ export async function assertVaultState(
   vaultDir: string,
   log: (message: string) => void,
   focusedFlow: string | null = null,
-  today: string,
+  todayByFlow: ReadonlyMap<string, string>,
 ): Promise<void> {
   const assertions =
     focusedFlow === null
@@ -195,7 +213,9 @@ export async function assertVaultState(
     );
   }
 
-  const files = await waitForVaultAssertions(vaultDir, assertions, { today });
+  const files = await waitForVaultAssertions(vaultDir, assertions, {
+    todayByFlow,
+  });
   log(
     `vault contains ${String(files.size)} task file(s): ${[...files.keys()].join(", ")}`,
   );

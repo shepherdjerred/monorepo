@@ -19,11 +19,10 @@ appId: org.reactjs.native.example.TasksForObsidian
 - tapOn:
     id: "quick-add-save-another"
 # Save & Add Another clears the title, re-enables capture, and retains source
-# defaults. Waiting for disabled Save avoids racing the async create.
+# defaults. The ready marker appears only after the async create resets input.
 - extendedWaitUntil:
     visible:
-      id: "quick-add-submit"
-      enabled: false
+      id: "quick-add-ready"
     timeout: 20000
 - assertVisible:
     id: "quick-add-seed-scheduled"
