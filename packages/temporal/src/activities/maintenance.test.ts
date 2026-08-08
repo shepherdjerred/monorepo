@@ -40,6 +40,9 @@ describe("maintenance command construction", () => {
         BUN_CACHE_LOCK_FILE: "/buildkite/bun-cache-control/.gc.lock",
       },
     });
+    expect(
+      buildMaintenanceCommand("buildkite-bun-cache-gc").env,
+    ).not.toHaveProperty("KOMETA_PLEXTOKEN");
     expect(buildMaintenanceCommand("buildkite-uv-cache-prune")).toMatchObject({
       command: ["uv", "cache", "prune", "--ci"],
       env: { UV_CACHE_DIR: "/buildkite/uv-cache" },

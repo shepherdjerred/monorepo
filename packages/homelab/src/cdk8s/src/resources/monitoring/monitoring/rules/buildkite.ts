@@ -344,6 +344,12 @@ or (
         pod=~"temporal-maintenance-worker-.*"
       }
     ) > 1200
+    or time() - max(
+      kube_pod_start_time{
+        namespace="buildkite",
+        pod=~"temporal-maintenance-worker-.*"
+      }
+    ) > 1200
     or on() absent(
       kube_deployment_status_replicas_available{
         namespace="buildkite",

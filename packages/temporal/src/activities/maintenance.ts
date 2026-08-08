@@ -10,6 +10,15 @@ const MAINTENANCE_WORKDIR = "/tmp";
 const HEARTBEAT_INTERVAL_MS = 15_000;
 const OUTPUT_TAIL_LINES = 20;
 const OUTPUT_TAIL_CHARS = 8192;
+const INHERITED_ENVIRONMENT_KEYS = [
+  "HOME",
+  "LANG",
+  "LC_ALL",
+  "NO_COLOR",
+  "PATH",
+  "SSL_CERT_FILE",
+  "TMPDIR",
+] as const;
 const CANCELLATION_GRACE_PERIOD_MS = 1000;
 
 export type MaintenanceKind =
@@ -65,7 +74,8 @@ function commandEnvironment(
   overrides: Record<string, string>,
 ): Record<string, string> {
   const environment: Record<string, string> = {};
-  for (const [key, value] of Object.entries(Bun.env)) {
+  for (const key of INHERITED_ENVIRONMENT_KEYS) {
+    const value = Bun.env[key];
     if (value !== undefined) {
       environment[key] = value;
     }

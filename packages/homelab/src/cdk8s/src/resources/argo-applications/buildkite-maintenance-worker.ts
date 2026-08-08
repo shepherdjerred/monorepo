@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { Size, type Chart } from "cdk8s";
 import {
   Cpu,
@@ -30,6 +31,9 @@ import {
 const NAMESPACE = "buildkite";
 const WORKER_NAME = "temporal-maintenance-worker";
 const WORKER_LABELS = { app: WORKER_NAME };
+const WORKER_IMAGE =
+  "ghcr.io/shepherdjerred/temporal-worker:" +
+  versions["shepherdjerred/temporal-worker"];
 
 const KOMETA_CONFIG = `libraries:
   Movies:
@@ -134,7 +138,14 @@ export function createBuildkiteMaintenanceWorker(chart: Chart): void {
           "Buildkite CI cache writers run as root; maintenance must share their UID to prune cache entries",
       },
     },
-    podMetadata: { labels: WORKER_LABELS },
+    podMetadata: {
+      labels: WORKER_LABELS,
+      annotations: {
+        "sjer.red/kometa-config-sha256": createHash("sha256")
+          .update(KOMETA_CONFIG)
+          .digest("hex"),
+      },
+    },
     securityContext: {
       fsGroup: 1000,
       fsGroupChangePolicy: FsGroupChangePolicy.ON_ROOT_MISMATCH,
@@ -197,11 +208,37 @@ export function createBuildkiteMaintenanceWorker(chart: Chart): void {
     config,
     { items: { "config.yml": { path: "config.yml" } } },
   );
+  const kometaState = Volume.fromEmptyDir(
+    chart,
+    "temporal-maintenance-kometa-state",
+    "kometa-state",
+  );
+
+  deployment.addInitContainer(
+    withCommonProps({
+      name: "copy-kometa-config",
+      image: WORKER_IMAGE,
+      command: ["/bin/sh", "-c"],
+      args: ["cp /etc/kometa-config/config.yml /etc/kometa/config.yml"],
+      securityContext: {
+        user: 0,
+        group: 0,
+        ensureNonRoot: false,
+        allowPrivilegeEscalation: false,
+        readOnlyRootFilesystem: false,
+      },
+      resources: {},
+      volumeMounts: [
+        { path: "/etc/kometa-config", volume: kometaConfig, readOnly: true },
+        { path: "/etc/kometa", volume: kometaState },
+      ],
+    }),
+  );
 
   deployment.addContainer(
     withCommonProps({
       name: WORKER_NAME,
-      image: `ghcr.io/shepherdjerred/temporal-worker:${versions["shepherdjerred/temporal-worker"]}`,
+      image: WORKER_IMAGE,
       ports: [
         { name: "metrics", number: 9464 },
         { name: "app-metrics", number: 9465 },
@@ -251,11 +288,9 @@ export function createBuildkiteMaintenanceWorker(chart: Chart): void {
         { path: "/buildkite/uv-cache", volume: uvCache },
         { path: "/buildkite/trivy-db", volume: trivyDb },
         { path: "/buildkite/maintenance", volume: gcScript, readOnly: true },
-        {
-          path: "/etc/kometa",
-          volume: kometaConfig,
-          readOnly: true,
-        },
+        // Kometa writes logs and cache beside config.yml. Keep its state
+        // writable and project only the declarative configuration read-only.
+        { path: "/etc/kometa", volume: kometaState },
         {
           path: "/tmp",
           volume: Volume.fromEmptyDir(chart, "temporal-maintenance-tmp", "tmp"),

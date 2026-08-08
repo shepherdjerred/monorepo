@@ -159,10 +159,22 @@ function maintenanceDeployment(resources: readonly unknown[]) {
                 effect: z.literal("NoSchedule"),
               }),
             ),
+            initContainers: z
+              .array(
+                z
+                  .object({
+                    name: z.string(),
+                    volumeMounts: z.array(z.unknown()),
+                  })
+                  .loose(),
+              )
+              .optional(),
             containers: z.array(
               z.object({
                 env: z.array(z.unknown()),
-                volumeMounts: z.array(z.object({ mountPath: z.string() })),
+                volumeMounts: z.array(
+                  z.object({ mountPath: z.string() }).loose(),
+                ),
               }),
             ),
             volumes: z.array(z.object({ name: z.string() }).loose()),
@@ -291,16 +303,37 @@ describe("Buildkite application", () => {
         "/etc/kometa",
       ]),
     );
-    expect(
-      deployment.spec.template.spec.volumes.map((volume) => volume.name),
-    ).toEqual(
+    expect(container.volumeMounts).toContainEqual(
+      expect.objectContaining({
+        mountPath: "/etc/kometa",
+      }),
+    );
+    expect(deployment.spec.template.spec.initContainers).toContainEqual(
+      expect.objectContaining({
+        name: "copy-kometa-config",
+        volumeMounts: expect.arrayContaining([
+          expect.objectContaining({
+            mountPath: "/etc/kometa-config",
+            readOnly: true,
+          }),
+          expect.objectContaining({ mountPath: "/etc/kometa" }),
+        ]),
+      }),
+    );
+    expect(deployment.spec.template.spec.volumes).toEqual(
       expect.arrayContaining([
-        "pvc-buildkite-bun-cache",
-        "pvc-buildkite-bun-cache-control",
-        "pvc-buildkite-uv-cache",
-        "pvc-buildkite-trivy-db",
-        "configmap-buildkite-bun-cache-gc",
-        "configmap-temporal-maintenance-kometa-config",
+        expect.objectContaining({ name: "pvc-buildkite-bun-cache" }),
+        expect.objectContaining({ name: "pvc-buildkite-bun-cache-control" }),
+        expect.objectContaining({ name: "pvc-buildkite-uv-cache" }),
+        expect.objectContaining({ name: "pvc-buildkite-trivy-db" }),
+        expect.objectContaining({ name: "configmap-buildkite-bun-cache-gc" }),
+        expect.objectContaining({
+          name: "configmap-temporal-maintenance-kometa-config",
+        }),
+        expect.objectContaining({
+          name: "kometa-state",
+          emptyDir: expect.any(Object),
+        }),
       ]),
     );
 
