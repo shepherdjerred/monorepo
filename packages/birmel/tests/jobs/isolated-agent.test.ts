@@ -85,6 +85,29 @@ describe("isolated scheduled agent", () => {
     });
   });
 
+  test("fails the occurrence when an isolated tool reports failure", async () => {
+    const dependencies: IsolatedJobAgentDependencies = {
+      getPersona: async () => "virmel",
+      getSession: async () => ({ summary: undefined, events: [] }),
+      executeAgent: async () => ({
+        ...agentResult,
+        toolEvents: [
+          {
+            toolId: "manage-message",
+            content: "Tool manage-message failed",
+            success: false,
+          },
+        ],
+      }),
+    };
+
+    expect(
+      executeIsolatedAgentJob("send this later", execution, dependencies),
+    ).rejects.toThrow(
+      "Isolated scheduled agent tool execution failed: manage-message",
+    );
+  });
+
   test("caps the summary instead of evicting it from session context", async () => {
     const oversizedSummary = "old".repeat(10_000);
     let observedContext = "";

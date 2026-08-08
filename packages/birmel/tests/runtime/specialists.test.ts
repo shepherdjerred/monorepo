@@ -16,6 +16,7 @@ describe("summarizeToolResultForSession", () => {
     ).toEqual({
       toolId: "manage-message",
       content: "Tool manage-message succeeded",
+      success: true,
     });
   });
 
@@ -36,6 +37,7 @@ describe("summarizeToolResultForSession", () => {
     expect(event).toEqual({
       toolId: "manage-message",
       content: "Tool manage-message failed",
+      success: false,
     });
     expect(JSON.stringify(event)).not.toContain("SECRET");
     expect(event.content.length).toBeLessThanOrEqual(96);

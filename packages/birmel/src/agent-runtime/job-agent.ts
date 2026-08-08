@@ -94,6 +94,14 @@ export async function executeIsolatedAgentJob(
         }),
     timeoutMs: execution.timeoutMs,
   });
+  const failedToolIds = result.toolEvents
+    .filter((event) => !event.success)
+    .map((event) => event.toolId);
+  if (failedToolIds.length > 0) {
+    throw new Error(
+      `Isolated scheduled agent tool execution failed: ${failedToolIds.join(", ")}`,
+    );
+  }
   return {
     message: result.text,
     data: {

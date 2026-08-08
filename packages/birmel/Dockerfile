@@ -130,6 +130,7 @@ ARG GIT_SHA=unknown
 ENV VERSION=${VERSION}
 ENV GIT_SHA=${GIT_SHA}
 ENV NODE_ENV=production
+ENV BIRMEL_SCREENSHOTS_DIR=/app/data/screenshots
 LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"
 
 # Run from the package dir so Bun resolves this package's tsconfig / imports map

@@ -30,6 +30,7 @@ const ToolResultForSessionSchema = z.object({
 const SessionToolEventSchema = z.strictObject({
   toolId: ToolIdSchema,
   content: z.string().min(1).max(96),
+  success: z.boolean(),
 });
 
 type SessionToolEvent = z.infer<typeof SessionToolEventSchema>;
@@ -76,6 +77,7 @@ export function summarizeToolResultForSession(
   return SessionToolEventSchema.parse({
     toolId: toolResult.toolName,
     content: `Tool ${toolResult.toolName} ${status}`,
+    success: toolResult.output.success,
   });
 }
 
