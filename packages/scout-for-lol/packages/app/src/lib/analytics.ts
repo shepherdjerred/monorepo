@@ -295,7 +295,7 @@ function sendEventBeacon(
   const doNotTrackSignals: unknown[] = [
     navigator.doNotTrack,
     typeof globalThis.window === "object"
-      ? globalThis.window.doNotTrack
+      ? Object.getOwnPropertyDescriptor(globalThis.window, "doNotTrack")?.value
       : undefined,
     Object.getOwnPropertyDescriptor(navigator, "msDoNotTrack")?.value,
   ];
