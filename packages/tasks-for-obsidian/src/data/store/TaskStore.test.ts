@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, test } from "bun:test";
 import { ApiError } from "../../domain/errors";
 import type { Task, TaskId } from "../../domain/types";
 import { taskId } from "../../domain/types";
-import { UNDO_TOAST_MS } from "../../domain/task-toggle";
 import { CommandQueue } from "../sync/CommandQueue";
 import {
   type MemoryQueueStorage,
@@ -444,7 +443,7 @@ describe("TaskStore pending restores", () => {
 });
 
 describe("TaskStore restore expiry", () => {
-  test("expires acknowledged restores after the undo window", async () => {
+  test("prunes acknowledged restores after their occurrence day", async () => {
     const task = makeTask({
       recurrence: "FREQ=WEEKLY",
       scheduled: "2026-08-08",
@@ -475,7 +474,7 @@ describe("TaskStore restore expiry", () => {
       ...task,
       completeInstances: ["2026-08-08"],
     });
-    now += UNDO_TOAST_MS + 1;
+    now = Date.parse("2026-08-09T12:00:00.000Z");
 
     await expect(
       store.getPendingCompletionRestore(task.id, "2026-08-08"),

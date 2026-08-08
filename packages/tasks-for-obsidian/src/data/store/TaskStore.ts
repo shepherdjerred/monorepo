@@ -19,7 +19,7 @@ import {
   makeCommandIdFactory,
   makeTempId,
 } from "../sync/commands";
-import { UNDO_TOAST_MS } from "../../domain/task-toggle";
+import { localTodayYmd } from "../../domain/recurrence";
 import {
   type StoredCompletionRestore,
   completionRestoreKey,
@@ -152,7 +152,10 @@ export class TaskStore {
       }
       const key = completionRestoreKey(target, date);
       const stored = this.acknowledgedCompletionRestores.get(key);
-      if (stored === undefined || stored.expiresAt <= this.clock()) {
+      if (
+        stored === undefined ||
+        date < localTodayYmd(new Date(this.clock()))
+      ) {
         if (stored !== undefined) {
           const next = new Map(this.acknowledgedCompletionRestores);
           next.delete(key);
@@ -191,7 +194,7 @@ export class TaskStore {
       this.aliases = parseAliases(rawAliases);
       const nextAcknowledgedCompletionRestores = pruneCompletionRestores(
         parseAcknowledgedCompletionRestores(rawAcknowledgedRestores),
-        this.clock(),
+        localTodayYmd(new Date(this.clock())),
         this.base,
       );
       await this.storage.setAcknowledgedCompletionRestores(
@@ -305,7 +308,7 @@ export class TaskStore {
       }
       nextAcknowledgedCompletionRestores = pruneCompletionRestores(
         nextAcknowledgedCompletionRestores,
-        this.clock(),
+        localTodayYmd(new Date(this.clock())),
         nextBase,
       );
       if (isOccurrenceEdit(command) && command.type === "update") {
@@ -319,16 +322,13 @@ export class TaskStore {
         command.completed &&
         command.restore !== undefined
       ) {
-        const expiresAt = command.createdAt + UNDO_TOAST_MS;
-        if (expiresAt > this.clock()) {
-          nextAcknowledgedCompletionRestores = new Map(
-            nextAcknowledgedCompletionRestores,
-          );
-          nextAcknowledgedCompletionRestores.set(
-            completionRestoreKey(command.taskId, command.date),
-            { restore: command.restore, expiresAt },
-          );
-        }
+        nextAcknowledgedCompletionRestores = new Map(
+          nextAcknowledgedCompletionRestores,
+        );
+        nextAcknowledgedCompletionRestores.set(
+          completionRestoreKey(command.taskId, command.date),
+          { restore: command.restore },
+        );
       }
       // Persist the authoritative base before removing the durable command.
       // If the process dies between these writes, idempotent mutation replay
@@ -388,7 +388,7 @@ export class TaskStore {
       await this.persistAliases(nextAliases);
       const nextAcknowledgedCompletionRestores = pruneCompletionRestores(
         this.acknowledgedCompletionRestores,
-        this.clock(),
+        localTodayYmd(new Date(this.clock())),
         nextBase,
       );
       await this.storage.setAcknowledgedCompletionRestores(

@@ -12,7 +12,6 @@ const CompletionRestoreSchema = z.object({
 });
 const StoredCompletionRestoreSchema = z.object({
   restore: CompletionRestoreSchema,
-  expiresAt: z.number(),
 });
 const AcknowledgedCompletionRestoresSchema = z.record(
   z.string(),
@@ -21,7 +20,6 @@ const AcknowledgedCompletionRestoresSchema = z.record(
 
 export type StoredCompletionRestore = {
   readonly restore: RecurringCompletionRestore;
-  readonly expiresAt: number;
 };
 
 export function parseAcknowledgedCompletionRestores(
@@ -76,13 +74,13 @@ export function invalidateCompletionRestores(
 
 export function pruneCompletionRestores(
   restores: ReadonlyMap<string, StoredCompletionRestore>,
-  now: number,
+  today: string,
   tasks: ReadonlyMap<TaskId, Task>,
 ): Map<string, StoredCompletionRestore> {
   const next = new Map<string, StoredCompletionRestore>();
   for (const [key, value] of restores) {
     const separator = key.indexOf("\u{0}");
-    if (separator === -1 || value.expiresAt <= now) continue;
+    if (separator === -1 || key.slice(separator + 1) < today) continue;
     if (!tasks.has(taskId(key.slice(0, separator)))) continue;
     next.set(key, value);
   }
