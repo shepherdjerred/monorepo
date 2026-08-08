@@ -289,7 +289,7 @@ describe("Buildkite application", () => {
     if (container === undefined) {
       throw new Error("maintenance worker container is missing");
     }
-    expect(deployment.spec.replicas).toBe(0);
+    expect(deployment.spec.replicas).toBe(MAINTENANCE_IMAGE_READY ? 1 : 0);
     const envNames = container.env.flatMap((entry) => {
       const parsed = z.object({ name: z.string() }).safeParse(entry);
       return parsed.success ? [parsed.data.name] : [];
