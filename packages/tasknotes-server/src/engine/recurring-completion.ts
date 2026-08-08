@@ -1,4 +1,7 @@
-import { updateToNextScheduledOccurrence } from "tasknotes-types/v2";
+import {
+  addDTSTARTToRecurrenceRule,
+  updateToNextScheduledOccurrence,
+} from "tasknotes-types/v2";
 import type {
   FieldMapping,
   RecurringCompletionRestore,
@@ -6,6 +9,80 @@ import type {
   TaskInfo,
   TaskPatchOperation,
 } from "tasknotes-types/v2";
+
+function recurrenceRuleWithoutStart(recurrence: string): string {
+  return recurrence.replace(/^DTSTART:[^;]+;/, "");
+}
+
+export type RestoreValidationInput = {
+  readonly task: TaskInfo;
+  readonly restore: RecurringCompletionRestore;
+  readonly date: string;
+  readonly today: string;
+  readonly maintainDueDateOffset: boolean;
+};
+
+function restoreScheduleSource(
+  task: TaskInfo,
+  restore: RecurringCompletionRestore,
+  date: string,
+) {
+  return {
+    title: task.title,
+    recurrence: restore.recurrence,
+    ...(restore.scheduled === null ? {} : { scheduled: restore.scheduled }),
+    ...(restore.due === null ? {} : { due: restore.due }),
+    ...(task.dateCreated === undefined
+      ? {}
+      : { dateCreated: task.dateCreated }),
+    ...(task.recurrence_anchor === undefined
+      ? {}
+      : { recurrence_anchor: task.recurrence_anchor }),
+    complete_instances: task.complete_instances ?? [],
+    skipped_instances: (task.skipped_instances ?? []).filter(
+      (entry) => entry !== date,
+    ),
+  };
+}
+
+export function assertRecurringRestoreIsCurrent({
+  task,
+  restore,
+  date,
+  today,
+  maintainDueDateOffset,
+}: RestoreValidationInput): void {
+  const scheduleSource = restoreScheduleSource(task, restore, date);
+  const next = updateToNextScheduledOccurrence(
+    scheduleSource,
+    maintainDueDateOffset,
+    { today },
+  );
+  const expectedScheduled = next.scheduled ?? restore.scheduled ?? undefined;
+  const expectedDue = next.due ?? restore.due ?? undefined;
+  const expectedRecurrence =
+    addDTSTARTToRecurrenceRule({
+      recurrence: restore.recurrence,
+      ...(restore.scheduled === null ? {} : { scheduled: restore.scheduled }),
+      ...(task.dateCreated === undefined
+        ? {}
+        : { dateCreated: task.dateCreated }),
+    }) ?? restore.recurrence;
+  const recurrenceMatches =
+    restore.scheduled === null
+      ? recurrenceRuleWithoutStart(task.recurrence ?? "") ===
+        recurrenceRuleWithoutStart(restore.recurrence)
+      : task.recurrence === expectedRecurrence;
+  if (
+    !recurrenceMatches ||
+    (restore.scheduled !== null && task.scheduled !== expectedScheduled) ||
+    (restore.due !== null && task.due !== expectedDue)
+  ) {
+    throw new Error(
+      `recurring restore for ${task.path} is stale; refusing to overwrite newer task state`,
+    );
+  }
+}
 
 function withInstanceMembership(
   instances: readonly string[] | undefined,

@@ -34,6 +34,7 @@ import {
 import { newTaskPath } from "./filename.ts";
 import { ymd } from "./date.ts";
 import {
+  assertRecurringRestoreIsCurrent,
   recurringCompletionRestorePatch,
   useDeterministicRecurringSchedule,
 } from "./recurring-completion.ts";
@@ -315,7 +316,8 @@ export class TaskRepository {
       // Upstream 400s on non-recurring; route layer translates this.
       throw new NotRecurringError(id);
     }
-    const dateStr = options.date ?? ymd(this.clock());
+    const now = this.clock();
+    const dateStr = options.date ?? ymd(now);
     // Date-only request values are calendar days, not instants. Construct the
     // model target at UTC midnight so its UTC formatter preserves the exact
     // requested day in every server timezone. Bodyless legacy calls first
@@ -335,7 +337,7 @@ export class TaskRepository {
         {
           op: "set",
           field: this.config.fieldMapping.dateModified,
-          value: this.clock().toISOString(),
+          value: now.toISOString(),
         },
         ...recurringCompletionRestorePatch(
           options.restore,
@@ -346,7 +348,6 @@ export class TaskRepository {
       ];
       return this.applyPlanPatch(id, fresh, patch, {});
     }
-    const now = this.clock();
     const maintainDueDateOffset = this.config.recurrence.maintainDueDateOffset;
     const plan = buildRecurringTaskCompletePlan({
       freshTask: fresh.task,
@@ -365,6 +366,15 @@ export class TaskRepository {
       this.config.fieldMapping,
     );
     if (options.restore !== undefined) {
+      if (options.completed === false) {
+        assertRecurringRestoreIsCurrent({
+          task: fresh.task,
+          restore: options.restore,
+          date: dateStr,
+          today: options.date === undefined ? ymd(now) : dateStr,
+          maintainDueDateOffset,
+        });
+      }
       patch.push(
         ...recurringCompletionRestorePatch(
           options.restore,

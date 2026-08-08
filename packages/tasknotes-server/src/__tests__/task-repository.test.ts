@@ -190,8 +190,7 @@ describe("status workflow + archive", () => {
   });
 });
 
-describe("recurring instance completion", () => {
-  const RECURRING = `---
+const RECURRING = `---
 title: Water plants
 status: open
 priority: normal
@@ -202,6 +201,7 @@ tags:
 ---
 `;
 
+describe("recurring instance completion", () => {
   test("explicit date is honored (not server-today)", async () => {
     await seed("TaskNotes/water.md", RECURRING);
     await repo.scan();
@@ -397,6 +397,65 @@ tags:
 
     const updated = await edgeRepo.completeInstance("TaskNotes/water.md");
     expect(updated.complete_instances).toEqual([ymdOf(edgeNow)]);
+  });
+});
+
+describe("recurring completion safeguards", () => {
+  test("rejects an Undo snapshot after the server schedule changed", async () => {
+    await seed(
+      "TaskNotes/weekly.md",
+      `---
+title: Weekly review
+status: open
+priority: normal
+scheduled: 2026-09-01
+recurrence: FREQ=WEEKLY
+complete_instances:
+  - 2026-08-01
+tags:
+  - task
+---
+`,
+    );
+    await repo.scan();
+
+    await expect(
+      repo.completeInstance("TaskNotes/weekly.md", {
+        date: "2026-08-01",
+        completed: false,
+        restore: {
+          scheduled: "2026-08-01",
+          due: null,
+          recurrence: "FREQ=WEEKLY",
+          skipped: false,
+        },
+      }),
+    ).rejects.toThrow("restore");
+    expect(
+      repo.list().find((task) => task.path === "TaskNotes/weekly.md")
+        ?.scheduled,
+    ).toBe("2026-09-01");
+  });
+
+  test("bodyless call samples the clock once", async () => {
+    let calls = 0;
+    await seed("TaskNotes/water.md", RECURRING);
+    const edgeRepo = new TaskRepository(
+      vault,
+      "TaskNotes",
+      resolveModelConfig(),
+      () => {
+        calls += 1;
+        return new Date(
+          calls === 1 ? "2026-07-03T01:00:00.000Z" : "2026-07-04T01:00:00.000Z",
+        );
+      },
+    );
+    await edgeRepo.scan();
+
+    const updated = await edgeRepo.completeInstance("TaskNotes/water.md");
+    expect(updated.complete_instances).toEqual(["2026-07-03"]);
+    expect(calls).toBe(1);
   });
 });
 
