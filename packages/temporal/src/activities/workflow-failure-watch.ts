@@ -50,6 +50,11 @@ const DEFAULT_LOOKBACK_MS = 24 * 60 * 60 * 1000;
 // case).
 const DEFAULT_ALERT_TTL_SECONDS = 24 * 60 * 60;
 
+// Bound recovery work so the 24-hour visibility window cannot turn into one
+// serial activity that exhausts its deadline before posting any alerts.
+const FAILURE_DETAIL_CONCURRENCY = 16;
+const ALERT_BATCH_SIZE = 25;
+
 const FAILURE_STATUS_NAMES = ["FAILED", "TIMED_OUT"] as const;
 type FailureStatusName = (typeof FAILURE_STATUS_NAMES)[number];
 
@@ -325,6 +330,40 @@ async function fetchFailureDetail(
   }
 }
 
+async function buildFailureAlertForExecution(
+  client: WorkflowVisibilityClient,
+  execution: FailedWorkflowExecution,
+  now: Date,
+  ttlMs: number,
+): Promise<AlertmanagerAlert | undefined> {
+  try {
+    const failure = await fetchFailureDetail(client, execution);
+    return buildWorkflowFailureAlert(execution, failure, now, ttlMs);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    Sentry.withScope((scope) => {
+      scope.setTag("component", COMPONENT);
+      scope.setContext("workflowFailureWatch", {
+        workflowId: execution.workflowId,
+        runId: execution.runId,
+        workflowType: execution.workflowType,
+      });
+      Sentry.captureException(error);
+    });
+    jsonLog(
+      "warning",
+      "failed to extract failure detail for execution; skipping",
+      {
+        workflowId: execution.workflowId,
+        runId: execution.runId,
+        workflowType: execution.workflowType,
+        error: message,
+      },
+    );
+    return undefined;
+  }
+}
+
 export type PollWorkflowFailuresOptions = {
   now: Date;
   lookbackMs: number;
@@ -361,34 +400,49 @@ export async function pollWorkflowFailuresOnce(
     });
   }
 
-  const alerts: AlertmanagerAlert[] = [];
   let errored = 0;
-  for (const execution of executions) {
-    try {
-      const failure = await fetchFailureDetail(client, execution);
-      alerts.push(buildWorkflowFailureAlert(execution, failure, now, ttlMs));
-    } catch (error) {
-      errored += 1;
-      const message = error instanceof Error ? error.message : String(error);
-      Sentry.withScope((scope) => {
-        scope.setTag("component", COMPONENT);
-        scope.setContext("workflowFailureWatch", {
-          workflowId: execution.workflowId,
-          runId: execution.runId,
-          workflowType: execution.workflowType,
-        });
-        Sentry.captureException(error);
-      });
-      jsonLog(
-        "warning",
-        "failed to extract failure detail for execution; skipping",
-        {
-          workflowId: execution.workflowId,
-          runId: execution.runId,
-          workflowType: execution.workflowType,
-          error: message,
-        },
+  let alerted = 0;
+  for (
+    let batchStart = 0;
+    batchStart < executions.length;
+    batchStart += ALERT_BATCH_SIZE
+  ) {
+    const batch = executions.slice(batchStart, batchStart + ALERT_BATCH_SIZE);
+    const alerts: AlertmanagerAlert[] = [];
+    for (
+      let chunkStart = 0;
+      chunkStart < batch.length;
+      chunkStart += FAILURE_DETAIL_CONCURRENCY
+    ) {
+      const chunk = batch.slice(
+        chunkStart,
+        chunkStart + FAILURE_DETAIL_CONCURRENCY,
       );
+      const chunkAlerts = await Promise.all(
+        chunk.map((execution) =>
+          buildFailureAlertForExecution(client, execution, now, ttlMs),
+        ),
+      );
+      for (const alert of chunkAlerts) {
+        if (alert === undefined) {
+          errored += 1;
+        } else {
+          alerts.push(alert);
+        }
+      }
+    }
+
+    if (alerts.length > 0) {
+      await poster(alerts);
+      // Recorded after the poster succeeds, mirroring observe-review-signals.ts —
+      // an activity retry after a failed post re-alerts (safe: Alertmanager
+      // dedups by label) but this counter is informational only, not exactly-once.
+      for (const alert of alerts) {
+        temporalFailureWatcherAlertsTotal.inc({
+          workflowType: alert.labels["workflowType"] ?? "unknown",
+        });
+      }
+      alerted += alerts.length;
     }
   }
 
@@ -397,31 +451,19 @@ export async function pollWorkflowFailuresOnce(
   // (e.g. the Temporal server rejected result() calls broadly) — throw so
   // Temporal retries instead of silently reporting a clean poll that alerted
   // on nothing.
-  if (executions.length > 0 && alerts.length === 0) {
+  if (alerted === 0 && executions.length > 0) {
     throw new Error(
       `workflow-failure-watch found ${String(executions.length)} failed execution(s) but could not extract detail for any of them (${String(errored)} errored); treating as a systematic failure so Temporal retries.`,
     );
   }
 
-  if (alerts.length > 0) {
-    await poster(alerts);
-    // Recorded after the poster succeeds, mirroring observe-review-signals.ts —
-    // an activity retry after a failed post re-alerts (safe: Alertmanager
-    // dedups by label) but this counter is informational only, not exactly-once.
-    for (const alert of alerts) {
-      temporalFailureWatcherAlertsTotal.inc({
-        workflowType: alert.labels["workflowType"] ?? "unknown",
-      });
-    }
-  }
-
   jsonLog("info", "workflow-failure-watch poll complete", {
     scanned: executions.length,
-    alerted: alerts.length,
+    alerted,
     errored,
   });
 
-  return { scanned: executions.length, alerted: alerts.length, errored };
+  return { scanned: executions.length, alerted, errored };
 }
 
 async function runPollWorkflowFailuresImpl(): Promise<PollWorkflowFailuresResult> {
