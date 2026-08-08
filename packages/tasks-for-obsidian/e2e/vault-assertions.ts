@@ -36,6 +36,20 @@ const VAULT_ASSERTIONS: readonly VaultAssertion[] = [
       true,
   },
   {
+    name: '"Context capture alpha" is persisted with a scheduled date (08-contextual-quick-capture)',
+    check: (files) => {
+      const content = fileWithTitle(files, "Context capture alpha");
+      return content !== undefined && /^scheduled:/m.test(content);
+    },
+  },
+  {
+    name: '"Context capture beta" is persisted with a scheduled date (08-contextual-quick-capture)',
+    check: (files) => {
+      const content = fileWithTitle(files, "Context capture beta");
+      return content !== undefined && /^scheduled:/m.test(content);
+    },
+  },
+  {
     name: '"Water plants" stays open and gains a complete_instances entry (03-recurring-complete)',
     check: (files) => {
       const content = fileWithTitle(files, "Water plants");
