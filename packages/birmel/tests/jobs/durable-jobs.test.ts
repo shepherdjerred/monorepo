@@ -855,12 +855,14 @@ describe("durable AgentJob effect checkpoints", () => {
     expect(job.lastStatus).toBe("effect_ambiguous");
   });
 
-  test("retries an isolated agent failure before any write tool starts", async () => {
-    let executions = 0;
+  test("retries an isolated agent tool failure that is definitely not applied", async () => {
     setAgentJobRuntimeDependencies({
       executeAgent: async () => {
-        executions += 1;
-        throw new Error("provider unavailable before tool execution");
+        await getRequestContext()?.beforeExternalEffect?.();
+        return {
+          message: "Isolated tool failure",
+          data: { effectDisposition: "not_applied" },
+        };
       },
     });
     const jobId = await createDueJob({
@@ -873,12 +875,11 @@ describe("durable AgentJob effect checkpoints", () => {
       data: { nextRunAt: new Date(Date.now() - 1000) },
     });
     await runAgentJobById(jobId);
-
     const job = await prisma.agentJob.findUniqueOrThrow({
       where: { id: jobId },
     });
-    expect(executions).toBe(2);
     expect(job.status).toBe("failed");
+    expect(job.lastStatus).toBe("error");
   });
 
   test.each([
