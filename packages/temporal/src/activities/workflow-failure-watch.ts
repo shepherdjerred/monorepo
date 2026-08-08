@@ -248,6 +248,7 @@ function timeoutFailureFields(
 ): Pick<
   WorkflowFailureDetail,
   | "timeoutClassification"
+  | "timeoutDispatchState"
   | "workerTaskQueueUnavailable"
   | "workerTaskQueueUnavailableReason"
   | "historyError"
@@ -273,6 +274,9 @@ function timeoutFailureFields(
       ? {}
       : {
           timeoutClassification: classification.classification,
+          ...(activityScheduleToStartTimeout
+            ? { timeoutDispatchState: "pre-dispatch" as const }
+            : {}),
           workerTaskQueueUnavailable: workerTaskQueueReason !== undefined,
           ...(workerTaskQueueReason === undefined
             ? {}

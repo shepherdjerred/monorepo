@@ -32,6 +32,7 @@ export type WorkflowFailureDetail = {
     | "activity"
     | "execution"
     | "unknown";
+  timeoutDispatchState?: "pre-dispatch" | "post-dispatch";
   workerTaskQueueUnavailable?: boolean;
   workerTaskQueueUnavailableReason?: WorkerTaskQueueUnavailableReason;
   historyError?: string;
@@ -93,6 +94,11 @@ export function buildWorkflowFailureAlert(
   if (failure.timeoutClassification !== undefined) {
     descriptionParts.push(
       `timeoutClassification ${failure.timeoutClassification}`,
+    );
+  }
+  if (failure.timeoutDispatchState !== undefined) {
+    descriptionParts.push(
+      `timeoutDispatchState ${failure.timeoutDispatchState}`,
     );
   }
   if (failure.workerTaskQueueUnavailable === true) {

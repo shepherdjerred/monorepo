@@ -605,6 +605,7 @@ describe("failed execution timeout diagnostics", () => {
       "diagnosis worker/task-queue availability failure",
     );
     expect(description).toContain("a scheduled activity has not started");
+    expect(description).toContain("timeoutDispatchState pre-dispatch");
   });
 
   it("does not diagnose a terminal schedule-to-start timeout as pending work", async () => {
