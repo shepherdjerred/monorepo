@@ -1,0 +1,6 @@
+apiVersion: v2
+name: plane
+description: Plane Commercial infrastructure resources - private ingress and secrets
+type: application
+version: "$version"
+appVersion: "$appVersion"

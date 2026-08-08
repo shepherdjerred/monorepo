@@ -67,6 +67,10 @@ export default defineConfig({
         {
           items: [
             {
+              label: "Plane issue tracker",
+              link: "/homelab/plane/",
+            },
+            {
               label: "qBittorrent VPN webseed relay",
               link: "/homelab/qbittorrent-vpn-webseed-relay/",
             },

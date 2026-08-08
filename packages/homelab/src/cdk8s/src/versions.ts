@@ -260,6 +260,11 @@ const versions = {
   redis: "27.0.18",
   // renovate: datasource=helm registryUrl=https://seaweedfs.github.io/seaweedfs/helm versioning=semver
   seaweedfs: "4.40.0",
+  // renovate: datasource=helm registryUrl=https://helm.plane.so/ versioning=semver
+  "plane-enterprise": "3.1.0",
+  // The Plane Commercial chart and application version must remain paired.
+  // not managed by renovate
+  "plane-enterprise-app": "v3.0.1",
   // renovate: datasource=helm registryUrl=https://charts.bitnami.com/bitnami versioning=semver
   mariadb: "26.2.0",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver

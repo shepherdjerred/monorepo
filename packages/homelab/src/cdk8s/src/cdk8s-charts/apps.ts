@@ -64,6 +64,10 @@ import { createServiceProbesApp } from "@shepherdjerred/homelab/cdk8s/src/resour
 import { createTrmnlDashboardApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/trmnl-dashboard.ts";
 import { createTurboCacheApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/turbo-cache.ts";
 import { createBuildkitdApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/buildkitd.ts";
+import {
+  createPlaneApp,
+  createPlaneInfrastructureApp,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/plane.ts";
 import { createPvcBackupAdmissionPolicies } from "@shepherdjerred/homelab/cdk8s/src/resources/pvc-backup-admission.ts";
 
 export async function createAppsChart(app: App) {
@@ -128,6 +132,8 @@ export async function createAppsChart(app: App) {
   createVeleroApp(chart);
   createPostgresOperatorApp(chart);
   createSeaweedfsApp(chart);
+  createPlaneInfrastructureApp(chart);
+  createPlaneApp(chart);
   // Create all Grafana dashboards (gitckup, ha-workflow, scout, smartctl, velero, zfs)
   createAllGrafanaDashboards(chart);
 

@@ -282,6 +282,30 @@
     "reason": "Pokemon game and application state"
   },
   {
+    "namespace": "plane",
+    "name": "pvc-plane-monitor-vol",
+    "backup": "enabled",
+    "reason": "Plane monitor state used by the issue tracker"
+  },
+  {
+    "namespace": "plane",
+    "name": "pvc-plane-pgdb-vol",
+    "backup": "enabled",
+    "reason": "Plane PostgreSQL issue-tracking database"
+  },
+  {
+    "namespace": "plane",
+    "name": "pvc-plane-rabbitmq-vol",
+    "backup": "enabled",
+    "reason": "Plane RabbitMQ durable queue state"
+  },
+  {
+    "namespace": "plane",
+    "name": "pvc-plane-redis-vol",
+    "backup": "enabled",
+    "reason": "Plane Redis application state"
+  },
+  {
     "namespace": "postal",
     "name": "data-postal-mariadb-0",
     "backup": "enabled",
