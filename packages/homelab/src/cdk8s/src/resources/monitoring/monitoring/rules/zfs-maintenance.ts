@@ -60,7 +60,7 @@ export function getZfsMaintenanceRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "zfs_zpool_last_scrub_completion_timestamp == 0 or (time() - zfs_zpool_last_scrub_completion_timestamp) > 777600",
+            "time() - zfs_zpool_last_scrub_completion_timestamp > 777600",
           ),
           for: "1h",
           labels: {

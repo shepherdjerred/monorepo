@@ -110,7 +110,12 @@ describe("memory leak alerts", () => {
     }
 
     expect(alert.expr.value).toBe(
-      "((node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) - on(instance) group_left node_zfs_arc_size) - ((node_memory_MemTotal_bytes offset 24h - node_memory_MemAvailable_bytes offset 24h) - on(instance) group_left node_zfs_arc_size offset 24h) > 8589934592",
+      [
+        "((node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) - on(instance) ",
+        "group_left node_zfs_arc_size) - ((node_memory_MemTotal_bytes offset 24h - ",
+        "node_memory_MemAvailable_bytes offset 24h) - on(instance) group_left ",
+        "node_zfs_arc_size offset 24h) > 8589934592",
+      ].join(""),
     );
   });
 });
