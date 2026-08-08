@@ -227,3 +227,7 @@ succeeds.
   and made Playwright cancellation cooperative. The exact CI suite now passes
   265 tests with zero failures or skips; the six-task build, typecheck, and lint
   graph also passes.
+- 2026-08-08: Current-head review added deterministic migration of removed
+  scheduling-wrapper tool IDs and cancellation finalization for actively claimed
+  jobs. The exact CI suite now passes 267 tests with zero failures or skips; the
+  six-task build, typecheck, and lint graph remains green.

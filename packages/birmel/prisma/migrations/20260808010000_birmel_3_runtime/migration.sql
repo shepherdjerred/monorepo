@@ -153,22 +153,104 @@ CREATE TABLE "new_AgentJob" (
     CONSTRAINT "AgentJob_sessionId_fkey" FOREIGN KEY ("sessionId") REFERENCES "AgentSession" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
 
+WITH "legacy_agent_jobs" AS (
+  SELECT "AgentJob".*,
+    CASE WHEN json_valid("toolInput") = 1
+         THEN json_extract("toolInput", '$.action') END AS "legacyAction",
+    CASE WHEN json_valid("toolInput") = 1
+         THEN json_extract("toolInput", '$.channelId') END AS "legacyChannelId",
+    CASE WHEN json_valid("toolInput") = 1
+         THEN json_extract("toolInput", '$.message') END AS "legacyMessage",
+    CASE WHEN json_valid("toolInput") = 1
+         THEN json_extract("toolInput", '$.scheduledAt') END AS "legacyScheduledAt",
+    CASE WHEN json_valid("toolInput") = 1
+         THEN json_extract("toolInput", '$.repeat') END AS "legacyRepeat"
+  FROM "AgentJob"
+)
 INSERT INTO "new_AgentJob" (
   "id", "guildId", "channelId", "threadId", "actorUserId",
   "sourceChannelId", "name", "description", "scheduleKind", "scheduleValue",
   "timezone", "nextRunAt", "status", "payloadKind", "message", "toolId",
-  "toolInput", "deliveryMode", "model", "reasoningEffort", "textVerbosity",
-  "maxAttempts", "timeoutMs", "attemptCount", "lastRunAt", "lastStatus",
-  "lastError", "legacyTaskId", "createdAt", "updatedAt"
+  "toolInput", "agentPrompt", "deliveryMode", "model", "reasoningEffort",
+  "textVerbosity", "maxAttempts", "timeoutMs", "attemptCount", "lastRunAt",
+  "lastStatus", "lastError", "legacyTaskId", "createdAt", "updatedAt"
 )
 SELECT
-  "id", "guildId", "channelId", "threadId", "userId", "channelId",
-  "name", "description", "scheduleKind", "scheduleValue", "timezone",
-  "nextRunAt", "status", "payloadKind", "message", "toolId", "toolInput",
+  "id", "guildId",
+  CASE WHEN "toolId" = 'manage-scheduled-message'
+              AND "legacyAction" = 'schedule'
+              AND "legacyChannelId" IS NOT NULL
+              AND "legacyMessage" IS NOT NULL
+              AND julianday("legacyScheduledAt") IS NOT NULL
+       THEN "legacyChannelId" ELSE "channelId" END,
+  CASE WHEN "toolId" = 'manage-scheduled-message'
+              AND "legacyAction" = 'schedule'
+              AND "legacyChannelId" IS NOT NULL
+              AND "legacyMessage" IS NOT NULL
+              AND julianday("legacyScheduledAt") IS NOT NULL
+       THEN NULL ELSE "threadId" END,
+  "userId", "channelId", "name", "description",
+  CASE WHEN "toolId" = 'manage-scheduled-message'
+              AND "legacyAction" = 'schedule'
+              AND julianday("legacyScheduledAt") IS NOT NULL
+       THEN CASE "legacyRepeat"
+              WHEN 'daily' THEN 'every'
+              WHEN 'weekly' THEN 'every'
+              WHEN 'monthly' THEN 'cron'
+              ELSE 'at' END
+       ELSE "scheduleKind" END,
+  CASE WHEN "toolId" = 'manage-scheduled-message'
+              AND "legacyAction" = 'schedule'
+              AND julianday("legacyScheduledAt") IS NOT NULL
+       THEN CASE "legacyRepeat"
+              WHEN 'daily' THEN '1d'
+              WHEN 'weekly' THEN '1w'
+              WHEN 'monthly' THEN strftime('%M %H %d * *', "legacyScheduledAt")
+              ELSE "legacyScheduledAt" END
+       ELSE "scheduleValue" END,
+  CASE WHEN "toolId" = 'manage-scheduled-message'
+              AND "legacyAction" = 'schedule'
+              AND julianday("legacyScheduledAt") IS NOT NULL
+       THEN 'UTC' ELSE "timezone" END,
+  CASE WHEN "toolId" = 'manage-scheduled-message'
+              AND "legacyAction" = 'schedule'
+              AND julianday("legacyScheduledAt") IS NOT NULL
+       THEN "legacyScheduledAt" ELSE "nextRunAt" END,
+  "status",
+  CASE WHEN "toolId" = 'manage-scheduled-message'
+              AND "legacyAction" = 'schedule'
+              AND "legacyChannelId" IS NOT NULL
+              AND "legacyMessage" IS NOT NULL
+              AND julianday("legacyScheduledAt") IS NOT NULL
+       THEN 'message'
+       WHEN "toolId" IN ('manage-task', 'manage-scheduled-message')
+       THEN 'agent' ELSE "payloadKind" END,
+  CASE WHEN "toolId" = 'manage-scheduled-message'
+              AND "legacyAction" = 'schedule'
+              AND "legacyChannelId" IS NOT NULL
+              AND "legacyMessage" IS NOT NULL
+              AND julianday("legacyScheduledAt") IS NOT NULL
+       THEN "legacyMessage"
+       WHEN "toolId" IN ('manage-task', 'manage-scheduled-message')
+       THEN NULL ELSE "message" END,
+  CASE WHEN "toolId" IN ('manage-task', 'manage-scheduled-message')
+       THEN NULL ELSE "toolId" END,
+  CASE WHEN "toolId" IN ('manage-task', 'manage-scheduled-message')
+       THEN NULL ELSE "toolInput" END,
+  CASE WHEN "toolId" IN ('manage-task', 'manage-scheduled-message')
+              AND NOT ("toolId" = 'manage-scheduled-message'
+                       AND "legacyAction" = 'schedule'
+                       AND "legacyChannelId" IS NOT NULL
+                       AND "legacyMessage" IS NOT NULL
+                       AND julianday("legacyScheduledAt") IS NOT NULL)
+       THEN 'Execute this migrated legacy ' || "toolId" ||
+            ' operation using the current manage-job surface. Preserve every supplied value exactly. Legacy input JSON: ' ||
+            COALESCE("toolInput", '{}')
+       ELSE NULL END,
   "deliveryMode", "model", "reasoningEffort", "textVerbosity", "maxAttempts",
   "timeoutMs", "attemptCount", "lastRunAt", "lastStatus", "lastError",
   "legacyTaskId", "createdAt", "updatedAt"
-FROM "AgentJob";
+FROM "legacy_agent_jobs";
 
 INSERT OR IGNORE INTO "new_AgentJob" (
   "id", "guildId", "channelId", "actorUserId", "sourceChannelId", "name",

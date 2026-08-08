@@ -1,6 +1,7 @@
 import type { AgentJob } from "#generated/prisma/client/index.js";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
+import { finalizeCancelledAgentJobRun } from "@shepherdjerred/birmel/scheduler/agent-job-cancellation.ts";
 import {
   AgentJobTimeoutError,
   getAgentJobFailureTransition,
@@ -24,16 +25,13 @@ import { randomUUID } from "node:crypto";
 
 const logger = loggers.scheduler.child("agent-jobs");
 const WORKER_ID = `${String(process.pid)}:${randomUUID()}`;
-
 let agentJobTick: Promise<void> | null = null;
 const activeJobExecutions = new Set<Promise<void>>();
-
 export function setAgentJobRuntimeDependencies(
   dependencies: Partial<AgentJobRuntimeDependencies> | null,
 ): void {
   configureAgentJobRuntime(dependencies);
 }
-
 const toolResultStatus = {
   isSuccess(value: unknown): boolean {
     if (typeof value !== "object" || value == null || !("success" in value)) {
@@ -42,18 +40,15 @@ const toolResultStatus = {
     return value.success !== false;
   },
 };
-
 function parseScheduleKind(value: string): AgentJobScheduleKind {
   if (value === "at" || value === "every" || value === "cron") {
     return value;
   }
   throw new Error(`Unknown schedule kind: ${value}`);
 }
-
 function serializeOutput(value: unknown): string {
   return typeof value === "string" ? value : JSON.stringify(value);
 }
-
 async function markJobSuccess(
   job: AgentJob,
   runId: string,
@@ -67,7 +62,7 @@ async function markJobSuccess(
     timezone: job.timezone,
     from: finishedAt,
   });
-  return await prisma.$transaction(async (transaction) => {
+  const finalized = await prisma.$transaction(async (transaction) => {
     const updated = await transaction.agentJob.updateMany({
       where: { id: job.id, status: "running", claimedBy: claimId },
       data: {
@@ -95,8 +90,14 @@ async function markJobSuccess(
     });
     return true;
   });
+  return finalized
+    ? true
+    : await finalizeCancelledAgentJobRun({
+        jobId: job.id,
+        runId,
+        claimId,
+      });
 }
-
 async function markJobFailure(
   job: AgentJob,
   runId: string,
@@ -113,7 +114,7 @@ async function markJobFailure(
     maxAttempts: job.maxAttempts,
     finishedAt,
   });
-  return await prisma.$transaction(async (transaction) => {
+  const finalized = await prisma.$transaction(async (transaction) => {
     const updated = await transaction.agentJob.updateMany({
       where: { id: job.id, status: "running", claimedBy: claimId },
       data: {
@@ -141,8 +142,14 @@ async function markJobFailure(
     });
     return true;
   });
+  return finalized
+    ? true
+    : await finalizeCancelledAgentJobRun({
+        jobId: job.id,
+        runId,
+        claimId,
+      });
 }
-
 async function markJobTimedOut(
   job: AgentJob,
   runId: string,
@@ -166,7 +173,6 @@ async function markJobTimedOut(
   ]);
   return jobUpdate.count === 1;
 }
-
 async function finalizeTimedOutExecution(options: {
   job: AgentJob;
   runId: string;
@@ -179,6 +185,11 @@ async function finalizeTimedOutExecution(options: {
     operation: options.operation,
   });
   if (result == null) {
+    await finalizeCancelledAgentJobRun({
+      jobId: options.job.id,
+      runId: options.runId,
+      claimId: options.claimId,
+    });
     return;
   }
   if (result.kind === "failure") {
@@ -206,7 +217,6 @@ async function finalizeTimedOutExecution(options: {
     result.output,
   );
 }
-
 async function claimAgentJob(job: AgentJob): Promise<{
   job: AgentJob;
   claimId: string;
@@ -240,7 +250,6 @@ async function claimAgentJob(job: AgentJob): Promise<{
   }
   return { job: runningJob, claimId };
 }
-
 async function processAgentJob(job: AgentJob): Promise<void> {
   await withSpan(
     "birmel.job.execute",
@@ -297,14 +306,13 @@ async function processAgentJob(job: AgentJob): Promise<void> {
             claimed.claimId,
             error,
           );
-          if (fenced) {
-            await finalizeTimedOutExecution({
-              job: claimed.job,
-              runId: run.id,
-              claimId: claimed.claimId,
-              operation: execution,
-            });
-          }
+          span.setAttribute("birmel.job.timeout_fenced", fenced);
+          await finalizeTimedOutExecution({
+            job: claimed.job,
+            runId: run.id,
+            claimId: claimed.claimId,
+            operation: execution,
+          });
         } else {
           await markJobFailure(claimed.job, run.id, claimed.claimId, error);
         }

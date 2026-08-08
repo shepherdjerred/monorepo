@@ -431,9 +431,6 @@ export async function cancelAgentJob(options: {
     data: {
       status: "cancelled",
       nextRunAt: null,
-      claimedAt: null,
-      claimedBy: null,
-      leaseExpiresAt: null,
     },
   });
   if (updated.count === 0) {

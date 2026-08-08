@@ -205,6 +205,34 @@ function seedProductionShapedRows(database: Database): void {
       '2026-08-01T00:00:00.000Z', '2026-08-02T00:00:00.000Z'
     );
 
+    INSERT INTO "AgentJob" (
+      "id", "guildId", "channelId", "userId", "name", "scheduleKind",
+      "scheduleValue", "timezone", "nextRunAt", "status", "payloadKind",
+      "toolId", "toolInput", "deliveryMode", "createdAt", "updatedAt"
+    ) VALUES (
+      'legacy-manage-task-job', 'guild-job', 'channel-task-source',
+      'trusted-user', 'Legacy reminder wrapper', 'at',
+      '2026-08-13T12:00:00.000Z', 'UTC', '2026-08-13T12:00:00.000Z',
+      'active', 'tool', 'manage-task',
+      '{"action":"remind","when":"in 20 minutes","channelId":"channel-reminder","reminderAction":"check the deploy","reminderMessage":"Check the deploy now"}',
+      'discord', '2026-08-01T00:00:00.000Z', '2026-08-02T00:00:00.000Z'
+    );
+
+    INSERT INTO "AgentJob" (
+      "id", "guildId", "channelId", "threadId", "userId", "name",
+      "scheduleKind", "scheduleValue", "timezone", "nextRunAt", "status",
+      "payloadKind", "toolId", "toolInput", "deliveryMode", "createdAt",
+      "updatedAt"
+    ) VALUES (
+      'legacy-scheduled-message-job', 'guild-job', 'channel-schedule-source',
+      'thread-schedule-source', 'trusted-user', 'Legacy scheduled message',
+      'at', '2026-08-13T12:00:00.000Z', 'America/Los_Angeles',
+      '2026-08-13T12:00:00.000Z', 'active', 'tool',
+      'manage-scheduled-message',
+      '{"action":"schedule","channelId":"channel-schedule-target","message":"Weekly legacy announcement","scheduledAt":"2026-08-20T17:30:00.000Z","repeat":"weekly","createdBy":"trusted-user"}',
+      'discord', '2026-08-01T00:00:00.000Z', '2026-08-02T00:00:00.000Z'
+    );
+
     INSERT INTO "AgentJobRun" (
       "id", "jobId", "status", "startedAt", "output", "createdAt"
     ) VALUES (
@@ -322,6 +350,76 @@ function expectPreservedJobRows(database: Database): void {
     maxAttempts: 4,
     timeoutMs: 42_000,
   });
+  const migratedManageTask = database
+    .query<
+      {
+        payloadKind: string;
+        toolId: string | null;
+        toolInput: string | null;
+        agentPrompt: string | null;
+        sourceChannelId: string | null;
+      },
+      []
+    >(
+      `SELECT "payloadKind", "toolId", "toolInput", "agentPrompt", "sourceChannelId" FROM "AgentJob" WHERE "id" = 'legacy-manage-task-job'`,
+    )
+    .get();
+  expect(migratedManageTask).toMatchObject({
+    payloadKind: "agent",
+    toolId: null,
+    toolInput: null,
+    sourceChannelId: "channel-task-source",
+  });
+  expect(migratedManageTask?.agentPrompt).toContain(
+    "migrated legacy manage-task operation",
+  );
+  expect(migratedManageTask?.agentPrompt).toContain(
+    '"reminderMessage":"Check the deploy now"',
+  );
+  expect(
+    database
+      .query<
+        {
+          channelId: string | null;
+          threadId: string | null;
+          sourceChannelId: string | null;
+          scheduleKind: string;
+          scheduleValue: string;
+          timezone: string;
+          nextRunAt: string | null;
+          payloadKind: string;
+          message: string | null;
+          toolId: string | null;
+          toolInput: string | null;
+          agentPrompt: string | null;
+        },
+        []
+      >(
+        `SELECT "channelId", "threadId", "sourceChannelId", "scheduleKind", "scheduleValue", "timezone", "nextRunAt", "payloadKind", "message", "toolId", "toolInput", "agentPrompt" FROM "AgentJob" WHERE "id" = 'legacy-scheduled-message-job'`,
+      )
+      .get(),
+  ).toEqual({
+    channelId: "channel-schedule-target",
+    threadId: null,
+    sourceChannelId: "channel-schedule-source",
+    scheduleKind: "every",
+    scheduleValue: "1w",
+    timezone: "UTC",
+    nextRunAt: "2026-08-20T17:30:00.000Z",
+    payloadKind: "message",
+    message: "Weekly legacy announcement",
+    toolId: null,
+    toolInput: null,
+    agentPrompt: null,
+  });
+  expect(
+    database
+      .query<
+        CountRow,
+        []
+      >(`SELECT COUNT(*) AS count FROM "AgentJob" WHERE "toolId" IN ('manage-task', 'manage-scheduled-message')`)
+      .get()?.count,
+  ).toBe(0);
   expect(
     database
       .query<

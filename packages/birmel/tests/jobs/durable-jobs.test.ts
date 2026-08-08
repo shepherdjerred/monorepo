@@ -384,7 +384,66 @@ describe("durable AgentJob execution", () => {
     });
     expect(completed.status).toBe("completed");
   });
+});
 
+describe("active AgentJob cancellation", () => {
+  test.each(["success", "failure"])(
+    "finalizes an active cancelled job after late %s without rescheduling",
+    async (settlement) => {
+      let releaseExecution: (() => void) | undefined;
+      let executionStarted: (() => void) | undefined;
+      const release = new Promise<void>((resolve) => {
+        releaseExecution = resolve;
+      });
+      const started = new Promise<void>((resolve) => {
+        executionStarted = resolve;
+      });
+      setAgentJobRuntimeDependencies({
+        executeTool: async () => {
+          executionStarted?.();
+          await release;
+          if (settlement === "failure") {
+            throw new Error("late failure after cancellation");
+          }
+          return { success: true };
+        },
+      });
+      const jobId = await createDueJob({
+        payload: { kind: "tool", toolId: "test-cancellation" },
+        maxAttempts: 2,
+      });
+      const execution = runAgentJobById(jobId);
+      await started;
+
+      const cancelled = await executeManageJob({ action: "cancel", jobId });
+      expect(cancelled.success).toBe(true);
+      const fenced = await prisma.agentJob.findUniqueOrThrow({
+        where: { id: jobId },
+      });
+      expect(fenced.status).toBe("cancelled");
+      expect(fenced.claimedBy).not.toBeNull();
+
+      releaseExecution?.();
+      await execution;
+
+      const job = await prisma.agentJob.findUniqueOrThrow({
+        where: { id: jobId },
+      });
+      const run = await prisma.agentJobRun.findFirstOrThrow({
+        where: { jobId },
+      });
+      expect(job.status).toBe("cancelled");
+      expect(job.nextRunAt).toBeNull();
+      expect(job.claimedBy).toBeNull();
+      expect(job.lastStatus).toBe("cancelled");
+      expect(run.status).toBe("cancelled");
+      expect(run.finishedAt).not.toBeNull();
+      expect(await prisma.agentJobRun.count({ where: { jobId } })).toBe(1);
+    },
+  );
+});
+
+describe("durable AgentJob execution outcomes", () => {
   test("rejects execution when a stored actor is no longer trusted", async () => {
     let executions = 0;
     setAgentJobRuntimeDependencies({
