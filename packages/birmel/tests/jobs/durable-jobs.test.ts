@@ -1338,9 +1338,7 @@ describe("scheduled payload delivery and session history", () => {
       payload: { kind: "message", message: "scheduled reminder" },
       sessionId: session.id,
     });
-
     await runAgentJobById(jobId);
-
     expect(deliveries).toBe(1);
     expect(
       await prisma.agentJob.findUniqueOrThrow({ where: { id: jobId } }),
