@@ -31,6 +31,7 @@ type Props<T extends string> = {
    */
   matches?: ((selectedValue: T, item: T) => boolean) | undefined;
   testIDPrefix?: string | undefined;
+  disabled?: boolean | undefined;
 };
 
 /**
@@ -47,6 +48,7 @@ export function MultiSelectSection<T extends string>({
   createPlaceholder,
   matches,
   testIDPrefix,
+  disabled = false,
 }: Props<T>) {
   const { colors } = useSettings();
   const reducedMotion = useReducedMotion();
@@ -97,6 +99,7 @@ export function MultiSelectSection<T extends string>({
                     borderColor: isSelected ? colors.primary : colors.border,
                   },
                 ]}
+                disabled={disabled}
                 onPress={() => {
                   feedbackSelection();
                   onToggle(item);
@@ -132,6 +135,7 @@ export function MultiSelectSection<T extends string>({
               },
             ]}
             value={draft}
+            editable={!disabled}
             onChangeText={setDraft}
             onSubmitEditing={handleCreate}
             placeholder={createPlaceholder ?? "Add…"}

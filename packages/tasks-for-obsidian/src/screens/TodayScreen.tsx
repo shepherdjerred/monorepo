@@ -81,6 +81,13 @@ export function TodayScreen({ navigation }: Props) {
 
   const allClear = todayTasks.length === 0 && interacted.current;
   const noFilterMatches = displayTasks.length === 0 && todayTasks.length > 0;
+  const rescheduleInitialField = useMemo(() => {
+    const firstTaskId = rescheduleTaskIds[0];
+    if (firstTaskId === undefined) return "scheduled";
+    return todayDateContextByTaskId.get(firstTaskId)?.kind === "deadline"
+      ? "due"
+      : "scheduled";
+  }, [rescheduleTaskIds, todayDateContextByTaskId]);
   const sectionBy = useMemo(
     () => (task: Task) => {
       const section = todaySectionByTaskId.get(task.id);
@@ -168,7 +175,7 @@ export function TodayScreen({ navigation }: Props) {
       />
       <ScheduleSheet
         visible={rescheduleTaskIds.length > 0}
-        initialField="scheduled"
+        initialField={rescheduleInitialField}
         dayCounts={dayCounts}
         onClose={() => {
           setRescheduleTaskIds([]);

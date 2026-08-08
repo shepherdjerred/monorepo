@@ -158,6 +158,7 @@ export function SavedViewEditorModal({
         </View>
 
         <ScrollView
+          pointerEvents={isSaving ? "none" : "auto"}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={[
             styles.content,
@@ -193,6 +194,7 @@ export function SavedViewEditorModal({
               },
             ]}
             value={definition.name}
+            editable={!isSaving}
             onChangeText={(name) => {
               setDefinition((current) => ({ ...current, name }));
             }}

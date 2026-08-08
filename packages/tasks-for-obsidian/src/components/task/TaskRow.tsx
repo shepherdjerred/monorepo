@@ -275,7 +275,6 @@ export const TaskRow = React.memo(function TaskRowComponent({
         title={task.title}
         actions={actions}
         onPressAction={handleMenuAction}
-        shouldOpenOnLongPress
         testID={`task-row-menu-${String(task.id)}`}
       >
         <View
