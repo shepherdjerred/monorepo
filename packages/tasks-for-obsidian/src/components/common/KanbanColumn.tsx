@@ -8,6 +8,8 @@ type Props = {
   title: string;
   color: string;
   tasks: readonly Task[];
+  referenceDate: Date;
+  pendingTaskIds?: ReadonlySet<TaskId> | undefined;
   onTaskPress: (id: TaskId) => void;
   onTaskToggle?: ((id: TaskId) => void) | undefined;
   onTaskEdit?: ((id: TaskId) => void) | undefined;
@@ -20,6 +22,8 @@ export function KanbanColumn({
   title,
   color,
   tasks,
+  referenceDate,
+  pendingTaskIds,
   onTaskPress,
   onTaskToggle,
   onTaskEdit,
@@ -43,6 +47,8 @@ export function KanbanColumn({
         renderItem={({ item }) => (
           <KanbanCard
             task={item}
+            referenceDate={referenceDate}
+            pending={pendingTaskIds?.has(item.id) ?? false}
             onPress={() => {
               onTaskPress(item.id);
             }}

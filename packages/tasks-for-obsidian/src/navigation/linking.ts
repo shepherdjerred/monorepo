@@ -1,11 +1,20 @@
 import type { LinkingOptions, PathConfigMap } from "@react-navigation/native";
 
 import { taskId } from "../domain/types";
+import { calendarDayOrNull } from "../domain/calendar-day";
 import type { RootStackParamList } from "./types";
 
-// Validate that a taskId param looks like a plausible task identifier (non-empty, no path traversal)
+// Task IDs are vault-relative paths. Allow internal separators while rejecting
+// absolute paths, empty segments, and traversal.
 function isValidTaskId(value: string): boolean {
-  return value.length > 0 && !value.includes("/") && !value.includes("..");
+  if (value.length === 0 || value.startsWith("/") || value.includes("\\")) {
+    return false;
+  }
+  return value
+    .split("/")
+    .every(
+      (segment) => segment.length > 0 && segment !== "." && segment !== "..",
+    );
 }
 
 const screens: PathConfigMap<RootStackParamList> = {
@@ -13,7 +22,10 @@ const screens: PathConfigMap<RootStackParamList> = {
     screens: {
       Inbox: "inbox",
       Today: "today",
-      Upcoming: "upcoming",
+      Upcoming: {
+        path: "upcoming",
+        parse: { selectedDay: calendarDayOrNull },
+      },
       Browse: "browse",
     },
   },
@@ -22,7 +34,7 @@ const screens: PathConfigMap<RootStackParamList> = {
     parse: {
       taskId: (value: string) => {
         if (!isValidTaskId(value)) return taskId("");
-        return taskId(decodeURIComponent(value));
+        return taskId(value);
       },
     },
   },
@@ -40,5 +52,5 @@ const screens: PathConfigMap<RootStackParamList> = {
 
 export const linking: LinkingOptions<RootStackParamList> = {
   prefixes: ["tasknotes://"],
-  config: { screens },
+  config: { initialRouteName: "Main", screens },
 };

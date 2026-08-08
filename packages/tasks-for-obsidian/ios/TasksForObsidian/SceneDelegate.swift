@@ -23,39 +23,48 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     let window = UIWindow(windowScene: windowScene)
+    var launchOptions = appDelegate.launchOptions ?? [:]
+    if let initialURL = initialURL(from: connectionOptions) {
+      // RCTLinkingManager.getInitialURL reads only the bridge launch options.
+      // UIScene cold-start URLs otherwise arrive before JS has subscribed and
+      // are lost if posted as warm-link notifications.
+      launchOptions[.url] = initialURL
+    }
     factory.startReactNative(
       withModuleName: "TasksForObsidian",
       in: window,
-      launchOptions: appDelegate.launchOptions
+      launchOptions: launchOptions
     )
     self.window = window
     // Libraries (and our widget/live-activity bridges) still reach the
     // window through the app delegate.
     appDelegate.window = window
 
-    // Cold-start deep link / user activity delivered with the connection.
-    for context in connectionOptions.urlContexts {
-      _ = RCTLinkingManager.application(
-        UIApplication.shared, open: context.url, options: [:])
+  }
+
+  private func initialURL(from options: UIScene.ConnectionOptions) -> URL? {
+    if let url = options.urlContexts.first?.url { return url }
+    if let shortcutItem = options.shortcutItem {
+      return shortcutURL(for: shortcutItem)
     }
-    for activity in connectionOptions.userActivities {
-      _ = RCTLinkingManager.application(
-        UIApplication.shared, continue: activity, restorationHandler: { _ in })
-    }
-    if let shortcutItem = connectionOptions.shortcutItem {
-      _ = handleShortcut(shortcutItem)
-    }
+    return options.userActivities.first(where: {
+      $0.activityType == NSUserActivityTypeBrowsingWeb
+    })?.webpageURL
+  }
+
+  private func shortcutURL(for item: UIApplicationShortcutItem) -> URL? {
+    let urlByType = [
+      "red.sjer.tasksforobsidian.quick-add": "tasknotes://quick-add",
+      "red.sjer.tasksforobsidian.today": "tasknotes://today"
+    ]
+    guard let urlString = urlByType[item.type] else { return nil }
+    return URL(string: urlString)
   }
 
   /// Home Screen quick actions (long-press app icon) → deep links.
   /// Types are declared in Info.plist under UIApplicationShortcutItems.
   private func handleShortcut(_ item: UIApplicationShortcutItem) -> Bool {
-    let urlByType = [
-      "red.sjer.tasksforobsidian.quick-add": "tasknotes://quick-add",
-      "red.sjer.tasksforobsidian.today": "tasknotes://today"
-    ]
-    guard let urlString = urlByType[item.type], let url = URL(string: urlString)
-    else { return false }
+    guard let url = shortcutURL(for: item) else { return false }
     return RCTLinkingManager.application(
       UIApplication.shared, open: url, options: [:])
   }

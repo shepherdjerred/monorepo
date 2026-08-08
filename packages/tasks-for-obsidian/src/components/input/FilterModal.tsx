@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -15,6 +15,11 @@ import type { FilterConfig } from "../../domain/filters";
 import type { TaskStatus } from "../../domain/status";
 import { STATUS_LABELS } from "../../domain/status";
 import { PRIORITY_LABELS, ALL_PRIORITIES } from "../../domain/priority";
+import { projectMatches } from "tasknotes-types/v2";
+import {
+  deriveProjectOptions,
+  projectIdentityLabel,
+} from "../../domain/project-options";
 
 type Props = {
   visible: boolean;
@@ -47,6 +52,11 @@ export function FilterModal({
   const { colors } = useSettings();
   const insets = useSafeAreaInsets();
   const [local, setLocal] = useState(filter);
+  const projectOptions = useMemo(
+    () =>
+      deriveProjectOptions([...availableProjects, ...(local.projects ?? [])]),
+    [availableProjects, local.projects],
+  );
 
   const handleOpen = useCallback(() => {
     setLocal(filter);
@@ -107,7 +117,8 @@ export function FilterModal({
             title="Projects"
             items={availableProjects}
             selected={local.projects}
-            labelFn={(p) => p}
+            labelFn={(project) => projectIdentityLabel(project, projectOptions)}
+            matches={projectMatches}
             onToggle={(p) => {
               setLocal((prev) => ({
                 ...prev,

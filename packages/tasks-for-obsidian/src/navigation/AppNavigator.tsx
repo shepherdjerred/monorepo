@@ -1,14 +1,18 @@
 import React from "react";
-import { Pressable, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import {
+  createNativeStackNavigator,
+  type NativeStackScreenProps,
+} from "@react-navigation/native-stack";
 
 import { useSettings } from "../hooks/use-settings";
 import { AppIcon } from "../components/common/AppIcon";
 import { linking } from "./linking";
 import { navigationRef } from "./navigation-ref";
-import type { RootStackParamList, MainTabParamList } from "./types";
+import { MainTabNavigator } from "./main-tabs";
+import type { MainTabParamList, RootStackParamList } from "./types";
+import { PlatformSymbol } from "../components/common/PlatformSymbol";
 
 import { InboxScreen } from "../screens/InboxScreen";
 import { TodayScreen } from "../screens/TodayScreen";
@@ -27,46 +31,109 @@ import { SavedViewScreen } from "../screens/SavedViewScreen";
 import { JobSearchKanbanScreen } from "../screens/JobSearchKanbanScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
-const Tab = createBottomTabNavigator<MainTabParamList>();
 
-function MainTabs() {
+type MainTabsProps = NativeStackScreenProps<RootStackParamList, "Main">;
+
+function MainTabs({ navigation }: MainTabsProps) {
   const { colors } = useSettings();
 
   return (
-    <Tab.Navigator
-      screenOptions={{
+    <MainTabNavigator.Navigator
+      screenOptions={({ route }) => ({
         tabBarActiveTintColor: colors.tabBarActive,
         tabBarInactiveTintColor: colors.tabBarInactive,
         tabBarStyle: { backgroundColor: colors.tabBarBackground },
         headerStyle: { backgroundColor: colors.surface },
         headerTintColor: colors.text,
-      }}
+        tabBarIcon: ({ color, focused, size }) => (
+          <PlatformSymbol
+            symbol={tabSymbol(route.name, focused)}
+            fallback={tabFallbackIcon(route.name)}
+            size={size}
+            color={color}
+          />
+        ),
+        headerRight: () => (
+          <View style={styles.headerActions}>
+            <Pressable
+              onPress={() => {
+                navigation.navigate("Search");
+              }}
+              hitSlop={8}
+              testID="header-search"
+              accessibilityRole="button"
+              accessibilityLabel="Search"
+            >
+              <AppIcon name="search" size={22} color={colors.text} />
+            </Pressable>
+            <Pressable
+              onPress={() => {
+                navigation.navigate("Settings");
+              }}
+              hitSlop={8}
+              testID="tab-settings"
+              accessibilityRole="button"
+              accessibilityLabel="Settings"
+            >
+              <AppIcon name="settings" size={22} color={colors.text} />
+            </Pressable>
+          </View>
+        ),
+      })}
     >
-      <Tab.Screen
+      <MainTabNavigator.Screen
         name="Inbox"
         component={InboxScreen}
-        options={{ tabBarButtonTestID: "tab-inbox" }}
+        options={{ title: "Inbox", tabBarButtonTestID: "tab-inbox" }}
       />
-      <Tab.Screen
+      <MainTabNavigator.Screen
         name="Today"
         component={TodayScreen}
-        options={{ tabBarButtonTestID: "tab-today" }}
+        options={{ title: "Today", tabBarButtonTestID: "tab-today" }}
       />
-      <Tab.Screen
+      <MainTabNavigator.Screen
         name="Upcoming"
         component={UpcomingScreen}
-        options={{ tabBarButtonTestID: "tab-upcoming" }}
+        options={{ title: "Upcoming", tabBarButtonTestID: "tab-upcoming" }}
       />
-      <Tab.Screen
+      <MainTabNavigator.Screen
         name="Browse"
         component={BrowseScreen}
-        options={{ tabBarButtonTestID: "tab-browse" }}
+        options={{ title: "Browse", tabBarButtonTestID: "tab-browse" }}
       />
-    </Tab.Navigator>
+    </MainTabNavigator.Navigator>
   );
 }
 
-export function AppNavigator() {
+function tabFallbackIcon(
+  route: keyof MainTabParamList,
+): "inbox" | "calendar" | "clock" | "grid" {
+  switch (route) {
+    case "Inbox":
+      return "inbox";
+    case "Today":
+      return "calendar";
+    case "Upcoming":
+      return "clock";
+    case "Browse":
+      return "grid";
+  }
+}
+
+function tabSymbol(route: keyof MainTabParamList, focused: boolean): string {
+  switch (route) {
+    case "Inbox":
+      return focused ? "tray.fill" : "tray";
+    case "Today":
+      return "calendar";
+    case "Upcoming":
+      return "calendar.badge.clock";
+    case "Browse":
+      return focused ? "square.grid.2x2.fill" : "square.grid.2x2";
+  }
+}
+
+export const AppNavigator = React.memo(function AppNavigatorComponent() {
   const { colors, isDarkMode } = useSettings();
 
   return (
@@ -94,6 +161,7 @@ export function AppNavigator() {
       <Stack.Navigator
         screenOptions={{
           headerStyle: { backgroundColor: colors.surface },
+          headerTransparent: false,
           headerTintColor: colors.text,
           contentStyle: { backgroundColor: colors.background },
         }}
@@ -101,59 +169,39 @@ export function AppNavigator() {
         <Stack.Screen
           name="Main"
           component={MainTabs}
-          options={({ navigation: nav }) => ({
-            headerShown: true,
-            title: "Tasks",
-            headerRight: () => (
-              <View style={{ flexDirection: "row", gap: 12 }}>
-                <Pressable
-                  onPress={() => {
-                    nav.navigate("Search");
-                  }}
-                  hitSlop={8}
-                  testID="header-search"
-                  accessibilityLabel="Search"
-                >
-                  <AppIcon name="search" size={22} color={colors.text} />
-                </Pressable>
-                <Pressable
-                  onPress={() => {
-                    nav.navigate("Settings");
-                  }}
-                  hitSlop={8}
-                  testID="tab-settings"
-                  accessibilityLabel="Settings"
-                >
-                  <AppIcon name="settings" size={22} color={colors.text} />
-                </Pressable>
-              </View>
-            ),
-          })}
+          options={{ headerShown: false }}
         />
         <Stack.Screen
           name="TaskDetail"
           component={TaskDetailScreen}
-          options={{ title: "Task" }}
+          options={{
+            title: "Task",
+            presentation: "formSheet",
+            sheetAllowedDetents: [0.75, 1],
+            sheetInitialDetentIndex: "last",
+            sheetGrabberVisible: true,
+            headerBackButtonMenuEnabled: false,
+          }}
         />
         <Stack.Screen
           name="ProjectDetail"
           component={ProjectDetailScreen}
-          options={{ title: "Project" }}
+          options={{ title: "Project", headerLargeTitleEnabled: true }}
         />
         <Stack.Screen
           name="ContextDetail"
           component={ContextDetailScreen}
-          options={{ title: "Context" }}
+          options={{ title: "Context", headerLargeTitleEnabled: true }}
         />
         <Stack.Screen
           name="TagDetail"
           component={TagDetailScreen}
-          options={{ title: "Tag" }}
+          options={{ title: "Tag", headerLargeTitleEnabled: true }}
         />
         <Stack.Screen
           name="SavedView"
           component={SavedViewScreen}
-          options={{ title: "Saved View" }}
+          options={{ title: "Saved View", headerLargeTitleEnabled: true }}
         />
         <Stack.Screen
           name="JobSearchKanban"
@@ -163,17 +211,23 @@ export function AppNavigator() {
         <Stack.Screen
           name="QuickAdd"
           component={QuickAddScreen}
-          options={{ title: "Quick Add", presentation: "modal" }}
+          options={{
+            title: "Quick Add",
+            presentation: "formSheet",
+            sheetAllowedDetents: [0.55, 0.9],
+            sheetInitialDetentIndex: 0,
+            sheetGrabberVisible: true,
+          }}
         />
         <Stack.Screen
           name="Search"
           component={SearchScreen}
-          options={{ title: "Search" }}
+          options={{ title: "Search", headerLargeTitleEnabled: true }}
         />
         <Stack.Screen
           name="Settings"
           component={SettingsScreen}
-          options={{ title: "Settings" }}
+          options={{ title: "Settings", headerLargeTitleEnabled: true }}
         />
         <Stack.Screen
           name="Pomodoro"
@@ -183,9 +237,16 @@ export function AppNavigator() {
         <Stack.Screen
           name="TimeReport"
           component={TimeReportScreen}
-          options={{ title: "Time Report" }}
+          options={{ title: "Time Report", headerLargeTitleEnabled: true }}
         />
       </Stack.Navigator>
     </NavigationContainer>
   );
-}
+});
+
+const styles = StyleSheet.create({
+  headerActions: {
+    flexDirection: "row",
+    gap: 12,
+  },
+});

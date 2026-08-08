@@ -6,6 +6,7 @@ import type {
   ContextName,
   TagName,
 } from "../domain/types";
+import type { CaptureSeedRouteParams } from "../domain/quick-capture-seed";
 
 export type RootStackParamList = {
   Main: NavigatorScreenParams<MainTabParamList> | undefined;
@@ -15,7 +16,7 @@ export type RootStackParamList = {
   TagDetail: { tagName: TagName };
   SavedView: { viewId: string };
   JobSearchKanban: undefined;
-  QuickAdd: { initialText?: string } | undefined;
+  QuickAdd: CaptureSeedRouteParams | undefined;
   Search: undefined;
   Settings: undefined;
   Pomodoro: { taskId?: TaskId } | undefined;
@@ -23,8 +24,10 @@ export type RootStackParamList = {
 };
 
 export type MainTabParamList = {
-  Inbox: undefined;
-  Today: undefined;
-  Upcoming: undefined;
+  Inbox: { selectionMode?: boolean } | undefined;
+  Today: { selectionMode?: boolean } | undefined;
+  Upcoming:
+    | { selectedDay?: string | null; selectionMode?: boolean }
+    | undefined;
   Browse: undefined;
 };

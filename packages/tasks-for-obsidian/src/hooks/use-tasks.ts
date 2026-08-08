@@ -2,18 +2,19 @@ import { useCallback, useMemo, useState } from "react";
 
 import type { TaskId } from "../domain/types";
 import { isActiveStatus } from "../domain/status";
+import { localTodayYmd, nextOccurrenceAfter } from "../domain/recurrence";
 import {
-  isRecurring,
-  localTodayYmd,
-  nextOccurrenceAfter,
-  occursOn,
-} from "../domain/recurrence";
+  deriveAgendaDayCounts,
+  deriveTodayAgenda,
+  deriveUpcomingAgenda,
+} from "../domain/agenda";
+import type { AgendaDateKind } from "../domain/agenda";
 import { executeTaskToggle } from "../domain/task-toggle";
+import { findTaskByResolvedId } from "../domain/task-lookup";
+import { deriveProjectOptions } from "../domain/project-options";
 import { useUndo } from "../state/UndoContext";
 import { feedbackTaskUncomplete } from "../lib/feedback";
 import { formatDate } from "../lib/dates";
-import { projectDisplayName, projectPath } from "tasknotes-types/v2";
-import { isOverdue, isToday, isUpcoming } from "../lib/dates";
 import { useTaskContext } from "../state/TaskContext";
 
 export function useTasks() {
@@ -35,62 +36,117 @@ export function useTasks() {
     [taskList],
   );
 
-  const todayTasks = useMemo(() => {
-    const today = localTodayYmd();
-    return taskList.filter((t) => {
-      // Recurring: today's OCCURRENCE decides (model rrule expansion) —
-      // stays visible when checked so completion feedback is felt. The
-      // active-status guard still applies: a globally done/cancelled
-      // recurring task must not reappear each time its rrule fires
-      // (checking off today's instance mutates completeInstances, not
-      // status, so a live recurring task stays visible).
-      if (isRecurring(t)) return isActiveStatus(t.status) && occursOn(t, today);
-      return isActiveStatus(t.status) && (isToday(t.due) || isOverdue(t.due));
-    });
-  }, [taskList]);
-
-  const upcomingTasks = useMemo(() => {
-    const horizon: string[] = [];
-    const start = new Date();
-    for (let i = 1; i <= 7; i += 1) {
-      const d = new Date(start);
-      d.setDate(d.getDate() + i);
-      horizon.push(localTodayYmd(d));
-    }
-    return taskList
-      .filter((t) => {
-        if (isRecurring(t))
-          return (
-            isActiveStatus(t.status) && horizon.some((day) => occursOn(t, day))
-          );
-        return (
-          isActiveStatus(t.status) &&
-          isUpcoming(t.due, Number.POSITIVE_INFINITY)
-        );
-      })
-      .sort((a, b) => {
-        // Recurring tasks surface via occursOn and are often scheduled-only
-        // (no due), so key on scheduled ?? due to keep calendar order.
-        const aKey = a.scheduled ?? a.due;
-        const bKey = b.scheduled ?? b.due;
-        if (!aKey || !bKey) return 0;
-        return new Date(aKey).getTime() - new Date(bKey).getTime();
-      });
-  }, [taskList]);
-
-  const projectNames = useMemo(() => {
-    // Dedupe the wikilink/bare-name duality by canonical path; show the
-    // human name. Navigation passes the display name; projectMatches
-    // bridges back to every spelling.
-    const byKey = new Map<string, string>();
-    for (const t of taskList) {
-      for (const p of t.projects) {
-        const key = projectPath(String(p)).toLowerCase();
-        if (!byKey.has(key)) byKey.set(key, projectDisplayName(String(p)));
+  const today = localTodayYmd();
+  const todayAgenda = useMemo(
+    () => deriveTodayAgenda(taskList, today),
+    [taskList, today],
+  );
+  const todayTasks = useMemo(
+    () =>
+      todayAgenda.flatMap((section) =>
+        section.entries.map((entry) => entry.task),
+      ),
+    [todayAgenda],
+  );
+  const todaySectionByTaskId = useMemo(() => {
+    const sections = new Map<TaskId, string>();
+    for (const section of todayAgenda) {
+      for (const entry of section.entries) {
+        sections.set(entry.task.id, section.title);
       }
     }
-    return [...byKey.values()].sort();
-  }, [taskList]);
+    return sections;
+  }, [todayAgenda]);
+
+  const todayDateContextByTaskId = useMemo(() => {
+    const dates = new Map<
+      TaskId,
+      { readonly kind: AgendaDateKind; readonly date: string }
+    >();
+    for (const section of todayAgenda) {
+      for (const entry of section.entries) {
+        dates.set(entry.task.id, {
+          kind: entry.primaryKind,
+          date: entry.day,
+        });
+      }
+    }
+    return dates;
+  }, [todayAgenda]);
+  const todayCompletionDateByTaskId = useMemo(() => {
+    const dates = new Map<TaskId, string>();
+    for (const section of todayAgenda) {
+      for (const entry of section.entries) {
+        if (entry.completionDay !== undefined) {
+          dates.set(entry.task.id, entry.completionDay);
+        }
+      }
+    }
+    return dates;
+  }, [todayAgenda]);
+
+  const upcomingAgenda = useMemo(
+    () => deriveUpcomingAgenda(taskList, today),
+    [taskList, today],
+  );
+  const upcomingTasks = useMemo(
+    () =>
+      upcomingAgenda.flatMap((section) =>
+        section.entries.map((entry) => entry.task),
+      ),
+    [upcomingAgenda],
+  );
+  const upcomingDayByTaskId = useMemo(() => {
+    const days = new Map<TaskId, string>();
+    for (const section of upcomingAgenda) {
+      for (const entry of section.entries) {
+        days.set(entry.task.id, section.day);
+      }
+    }
+    return days;
+  }, [upcomingAgenda]);
+
+  const upcomingDateContextByTaskId = useMemo(() => {
+    const dates = new Map<
+      TaskId,
+      { readonly kind: AgendaDateKind; readonly date: string }
+    >();
+    for (const section of upcomingAgenda) {
+      for (const entry of section.entries) {
+        dates.set(entry.task.id, {
+          kind: entry.primaryKind,
+          date: entry.day,
+        });
+      }
+    }
+    return dates;
+  }, [upcomingAgenda]);
+  const upcomingCompletionDateByTaskId = useMemo(() => {
+    const dates = new Map<TaskId, string>();
+    for (const section of upcomingAgenda) {
+      for (const entry of section.entries) {
+        if (entry.completionDay !== undefined) {
+          dates.set(entry.task.id, entry.completionDay);
+        }
+      }
+    }
+    return dates;
+  }, [upcomingAgenda]);
+
+  const projectOptions = useMemo(
+    () =>
+      deriveProjectOptions(
+        taskList.flatMap((task) => task.projects.map(String)),
+      ),
+    [taskList],
+  );
+  // Keep exact TaskNotes identities in every editor and filter. Labels are
+  // derived at the presentation boundary so same-basename vault paths remain
+  // independently selectable.
+  const projectNames = useMemo(
+    () => projectOptions.map((option) => option.identity),
+    [projectOptions],
+  );
 
   const tagNames = useMemo(() => {
     const names = new Set<string>();
@@ -112,27 +168,11 @@ export function useTasks() {
     return [...names].sort();
   }, [taskList]);
 
-  // Active-task count per YYYY-MM-DD (due + scheduled), for the schedule
-  // sheet's calendar dots — a glanceable per-day load indicator.
-  const dayCounts = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const t of taskList) {
-      if (!isActiveStatus(t.status)) continue;
-      const days = new Set<string>();
-      if (t.due) days.add(t.due.slice(0, 10));
-      if (t.scheduled) days.add(t.scheduled.slice(0, 10));
-      for (const d of days) counts.set(d, (counts.get(d) ?? 0) + 1);
-    }
-    return counts;
-  }, [taskList]);
+  const dayCounts = useMemo(
+    () => deriveAgendaDayCounts(taskList, today),
+    [taskList, today],
+  );
 
-  // Completing a recurring task offers a transient Undo: the occurrence
-  // date it targets is invisible in the UI and the server may advance
-  // `scheduled` on completion, so this is the one tap that's hard to
-  // reverse by hand. Undo resends the SAME date with completed:false
-  // (idempotent set-semantics both sides). Bulk callers pass suppressUndo:
-  // one toast per task would overwrite each other, leaving N-1 completions
-  // silently un-undoable while implying otherwise.
   const toggleTask = useCallback(
     async (
       id: TaskId,
@@ -142,9 +182,9 @@ export function useTasks() {
         suppressUndo?: boolean;
       },
     ) => {
-      const task = ctx.tasks.get(ctx.resolveTaskId(id));
+      const task = findTaskByResolvedId(ctx.tasks, ctx.resolveTaskId, id);
       const execution = await executeTaskToggle(
-        task,
+        task ?? undefined,
         options?.occurrenceDate,
         options?.scope ?? "occurrence",
         {
@@ -161,19 +201,13 @@ export function useTasks() {
         execution.result.ok &&
         options?.suppressUndo !== true
       ) {
-        const next = task
-          ? nextOccurrenceAfter(task, recurring.date)
-          : undefined;
+        const restore = recurring.restore;
+        const next = task ? nextOccurrenceAfter(task, recurring.date) : null;
         showUndo({
           message: next ? `Completed · Next: ${formatDate(next)}` : "Completed",
           onUndo: () => {
             feedbackTaskUncomplete();
-            void ctx.setInstanceComplete(
-              id,
-              recurring.date,
-              false,
-              recurring.restore ?? undefined,
-            );
+            void ctx.setInstanceComplete(id, recurring.date, false, restore);
           },
         });
       }
@@ -183,8 +217,8 @@ export function useTasks() {
   );
 
   const getTask = useCallback(
-    (id: TaskId) => ctx.tasks.get(id) ?? null,
-    [ctx.tasks],
+    (id: TaskId) => findTaskByResolvedId(ctx.tasks, ctx.resolveTaskId, id),
+    [ctx.resolveTaskId, ctx.tasks],
   );
 
   const refresh = useCallback(async () => {
@@ -200,9 +234,18 @@ export function useTasks() {
     ...ctx,
     taskList,
     inboxTasks,
+    todayAgenda,
     todayTasks,
+    todaySectionByTaskId,
+    todayDateContextByTaskId,
+    todayCompletionDateByTaskId,
+    upcomingAgenda,
     upcomingTasks,
+    upcomingDayByTaskId,
+    upcomingDateContextByTaskId,
+    upcomingCompletionDateByTaskId,
     projectNames,
+    projectOptions,
     tagNames,
     contextNames,
     dayCounts,

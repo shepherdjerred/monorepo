@@ -5,6 +5,7 @@ import {
   EMPTY_FILTER,
   applyFilter,
   applySort,
+  applySortOverride,
   countActiveFilters,
   isFilterActive,
 } from "./filters";
@@ -291,5 +292,35 @@ describe("applySort", () => {
       direction: "asc",
     });
     expect(sorted).toHaveLength(2);
+  });
+});
+
+describe("applySortOverride", () => {
+  const semanticOrder = [
+    makeTask({
+      id: taskId("planned"),
+      title: "Planned first",
+      scheduled: "2026-08-08",
+    }),
+    makeTask({
+      id: taskId("deadline"),
+      title: "Deadline second",
+      due: "2026-08-08",
+    }),
+  ];
+
+  test("preserves semantic collection order before a user selects a sort", () => {
+    expect(
+      applySortOverride(semanticOrder, null).map((task) => task.id),
+    ).toEqual([taskId("planned"), taskId("deadline")]);
+  });
+
+  test("applies a generic sort after the user explicitly selects one", () => {
+    expect(
+      applySortOverride(semanticOrder, {
+        field: "dueDate",
+        direction: "asc",
+      }).map((task) => task.id),
+    ).toEqual([taskId("deadline"), taskId("planned")]);
   });
 });
