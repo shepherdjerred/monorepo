@@ -19,7 +19,9 @@ import {
   createFlowMessageContext,
   invokeFlowHandler,
   waitForAgentRunAdmission,
+  waitForFirstFlowPlaceholder,
 } from "./message-fixture.ts";
+import { suppressAutomaticMemoryExtraction } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
 
 const RuntimeOptionsSchema = z.object({
   turn: TurnInputSchema,
@@ -152,6 +154,9 @@ void mock.module("@shepherdjerred/birmel/agent-runtime/runtime.ts", () => ({
     const options = RuntimeOptionsSchema.parse(rawOptions);
     if (options.route.route === "direct") {
       state.directCalls += 1;
+      if (state.scenario === "memory-deletion") {
+        suppressAutomaticMemoryExtraction();
+      }
       return {
         text: `direct reply for ${options.turn.discordMessageId}`,
         finishReason: "stop",
@@ -293,16 +298,6 @@ function messageContext(
   return createFlowMessageContext(options, state);
 }
 
-async function waitForFirstPlaceholder(): Promise<void> {
-  const deadline = Date.now() + 2000;
-  while (state.replyCalls === 0 && Date.now() < deadline) {
-    await Bun.sleep(1);
-  }
-  if (state.replyCalls === 0) {
-    throw new Error("Timed out waiting for the first queued placeholder");
-  }
-}
-
 async function queryScenarioRuns(prisma: PrismaClient, messageIds: string[]) {
   return AgentRunRowsSchema.parse(
     await prisma.agentRun.findMany({
@@ -354,7 +349,7 @@ async function runScenario(options: {
           : "first concurrent request",
       }),
     );
-    await waitForFirstPlaceholder();
+    await waitForFirstFlowPlaceholder(state);
     const second = invokeFlowHandler(
       options.handler,
       messageContext({

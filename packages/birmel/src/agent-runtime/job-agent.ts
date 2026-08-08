@@ -6,6 +6,7 @@ import type { AgentJobExecution } from "@shepherdjerred/birmel/scheduler/jobs/sc
 import { getSessionContext } from "@shepherdjerred/birmel/sessions/service.ts";
 import type { IsolatedAgentOptions } from "@shepherdjerred/birmel/agent-runtime/specialists.ts";
 import { buildCompactPersonaProjection } from "@shepherdjerred/birmel/persona/projection.ts";
+import { MAX_SESSION_SUMMARY_CHARACTERS } from "@shepherdjerred/birmel/sessions/summarization.ts";
 
 const ReasoningEffortSchema = z.enum(["minimal", "low", "medium", "high"]);
 const TextVerbositySchema = z.enum(["low", "medium", "high"]);
@@ -39,13 +40,21 @@ async function jobSessionContext(
     return "";
   }
   const context = await dependencies.getSession(sessionId);
-  const events = context.events
-    .map((event) => `${String(event.sequence)} ${event.role}: ${event.content}`)
-    .join("\n");
-  const assembled = [context.summary, events]
+  const summary = context.summary?.slice(0, MAX_SESSION_SUMMARY_CHARACTERS);
+  const selectedEvents: string[] = [];
+  for (const event of context.events.toReversed()) {
+    const rendered = `${String(event.sequence)} ${event.role}: ${event.content}`;
+    const proposedEvents = [rendered, ...selectedEvents].join("\n");
+    const proposed = [summary, proposedEvents]
+      .filter((value) => value != null && value.length > 0)
+      .join("\n\n");
+    if (proposed.length <= MAX_JOB_SESSION_CONTEXT_CHARACTERS) {
+      selectedEvents.unshift(rendered);
+    }
+  }
+  return [summary, selectedEvents.join("\n")]
     .filter((value) => value != null && value.length > 0)
     .join("\n\n");
-  return assembled.slice(-MAX_JOB_SESSION_CONTEXT_CHARACTERS);
 }
 
 export async function executeIsolatedAgentJob(

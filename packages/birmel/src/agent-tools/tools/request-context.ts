@@ -15,6 +15,10 @@ export type RequestContext = {
   userId: string;
   /** Whether a reply has already been sent for this request (prevents spam) */
   replySent?: boolean;
+  /** Whether this turn performed a forget/privacy erase operation. */
+  suppressAutomaticMemoryExtraction?: boolean;
+  /** Internal durable-job hook invoked immediately before a write-risk tool. */
+  beforeExternalEffect?: () => Promise<void>;
 };
 
 const requestContextStorage = new AsyncLocalStorage<RequestContext>();
@@ -55,4 +59,11 @@ export function markReplySent(): void {
 export function hasReplySent(): boolean {
   const context = requestContextStorage.getStore();
   return context?.replySent === true;
+}
+
+export function suppressAutomaticMemoryExtraction(): void {
+  const context = requestContextStorage.getStore();
+  if (context != null) {
+    context.suppressAutomaticMemoryExtraction = true;
+  }
 }

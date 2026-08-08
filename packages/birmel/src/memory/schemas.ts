@@ -23,9 +23,19 @@ export type MemoryApplicationContext = z.infer<
   typeof MemoryApplicationContextSchema
 >;
 
+export const MemoryCandidateProvenanceSchema = z.strictObject({
+  authorUserId: DiscordIdSchema,
+  channelId: DiscordIdSchema,
+  sourceOrder: DiscordIdSchema,
+});
+export type MemoryCandidateProvenance = z.infer<
+  typeof MemoryCandidateProvenanceSchema
+>;
+
 export const MemoryCandidateEnvelopeSchema = z.strictObject({
   candidate: StrictMemoryCandidateSchema,
   embedding: MemoryEmbeddingSchema.nullable().default(null),
+  provenance: MemoryCandidateProvenanceSchema.optional(),
 });
 export type MemoryCandidateEnvelope = z.infer<
   typeof MemoryCandidateEnvelopeSchema
@@ -34,6 +44,7 @@ export type MemoryCandidateEnvelope = z.infer<
 export const ApplyMemoryCandidatesInputSchema = z.strictObject({
   context: MemoryApplicationContextSchema,
   candidates: z.array(MemoryCandidateEnvelopeSchema).min(1).max(50),
+  reactivateForgotten: z.boolean().default(false),
 });
 export type ApplyMemoryCandidatesInput = z.infer<
   typeof ApplyMemoryCandidatesInputSchema
@@ -84,6 +95,7 @@ export const RememberMemoryInputSchema = z.strictObject({
     origin: z.literal("explicit"),
   }),
   embedding: MemoryEmbeddingSchema.nullable().default(null),
+  sourceOrder: DiscordIdSchema,
 });
 export type RememberMemoryInput = z.infer<typeof RememberMemoryInputSchema>;
 
@@ -120,6 +132,7 @@ export const CorrectMemoryClaimInputSchema = z.strictObject({
   validFrom: z.iso.datetime().nullable().default(null),
   validUntil: z.iso.datetime().nullable().default(null),
   sourceDiscordMessageIds: z.array(DiscordIdSchema).min(1),
+  sourceOrder: DiscordIdSchema,
   authorUserId: DiscordIdSchema,
   channelId: DiscordIdSchema,
   extractorModel: z.string().min(1).max(200),
@@ -140,7 +153,10 @@ export type ForgetMemoryClaimInput = z.infer<
   typeof ForgetMemoryClaimInputSchema
 >;
 
-export const PrivacyEraseMemoryClaimInputSchema = MemoryClaimReferenceSchema;
+export const PrivacyEraseMemoryClaimInputSchema = z.strictObject({
+  claimId: z.uuid(),
+  sourceDiscordMessageId: DiscordIdSchema,
+});
 
 export const MemoryScopeSelectionSchema = z.strictObject({
   guildId: DiscordIdSchema,

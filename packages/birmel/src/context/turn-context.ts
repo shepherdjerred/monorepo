@@ -154,6 +154,7 @@ async function assembleContextForTurn(
             : "tool",
         content: event.content,
         sequence: event.sequence,
+        createdAt: event.createdAt,
         ...(event.discordMessageId == null
           ? {}
           : { discordMessageId: event.discordMessageId }),

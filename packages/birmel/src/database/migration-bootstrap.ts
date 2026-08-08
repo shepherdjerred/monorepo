@@ -8,6 +8,24 @@ export const REQUIRED_MIGRATIONS = [
   "20260808010000_birmel_3_runtime",
 ] as const;
 
+export const LEGACY_BASELINE_MIGRATIONS = [
+  {
+    migrationName: "20251222203142_add_polls_activity_birthdays",
+    checksum:
+      "53d4ab1b63581bd6b502699cb59b9e9b453697c84fb6f6ab4c91099730238443",
+  },
+  {
+    migrationName: "20251223072521_add_scheduled_task",
+    checksum:
+      "44ba8134535f1552fdfad47c44a79b7e5e29db73b9d9edabda6d3bd4aafbc19e",
+  },
+  {
+    migrationName: "20260603000000_add_agent_runtime_capabilities",
+    checksum:
+      "a4d3c27d3934e7da90e715d2342db073da351a8c488c2c1422efa4f31d65df82",
+  },
+] as const;
+
 const EXPECTED_BASELINE_TABLES = [
   "AgentJob",
   "AgentJobRun",
@@ -71,6 +89,15 @@ const EXPECTED_BASELINE_INDEXES = [
 
 const SchemaNameRowSchema = z.object({ name: z.string() });
 const SchemaNameRowsSchema = z.array(SchemaNameRowSchema);
+const MigrationHistoryRowSchema = z.object({
+  migrationName: z.string(),
+  checksum: z.string(),
+  isFinished: z.union([z.literal(0), z.literal(1)]),
+  isRolledBack: z.union([z.literal(0), z.literal(1)]),
+});
+const MigrationHistoryRowsSchema = z.array(MigrationHistoryRowSchema);
+
+type MigrationHistoryRow = z.infer<typeof MigrationHistoryRowSchema>;
 
 export type DatabaseFingerprint = {
   tables: string[];
@@ -139,6 +166,60 @@ export function readDatabaseFingerprint(
   };
 }
 
+function readMigrationHistory(database: Database): MigrationHistoryRow[] {
+  return MigrationHistoryRowsSchema.parse(
+    database
+      .query<
+        {
+          migrationName: string;
+          checksum: string;
+          isFinished: number;
+          isRolledBack: number;
+        },
+        []
+      >(
+        `
+        SELECT
+          "migration_name" AS "migrationName",
+          "checksum",
+          ("finished_at" IS NOT NULL) AS "isFinished",
+          ("rolled_back_at" IS NOT NULL) AS "isRolledBack"
+        FROM "_prisma_migrations"
+        ORDER BY "migration_name", "started_at", "id"
+      `,
+      )
+      .all(),
+  );
+}
+
+function hasAppliedMigration(
+  history: readonly MigrationHistoryRow[],
+  migrationName: string,
+): boolean {
+  return history.some(
+    (migration) =>
+      migration.migrationName === migrationName &&
+      migration.isFinished === 1 &&
+      migration.isRolledBack === 0,
+  );
+}
+
+function verifyLegacyMigrationHistory(
+  history: readonly MigrationHistoryRow[],
+): void {
+  const expected = LEGACY_BASELINE_MIGRATIONS.map((migration) => ({
+    migrationName: migration.migrationName,
+    checksum: migration.checksum,
+    isFinished: 1,
+    isRolledBack: 0,
+  }));
+  if (JSON.stringify(history) !== JSON.stringify(expected)) {
+    throw new Error(
+      `Existing Birmel database migration history is not the verified pre-squash history: ${JSON.stringify({ expected: expected.map((migration) => migration.migrationName), actual: history.map((migration) => migration.migrationName) })}`,
+    );
+  }
+}
+
 export function databasePathFromEnvironment(
   environment: Readonly<Record<string, string | undefined>>,
 ): string {
@@ -185,6 +266,13 @@ export async function deployDatabaseMigrations(
     if (!fingerprint.hasMigrationTable && fingerprint.tables.length > 0) {
       verifyBaselineFingerprint(fingerprint);
       shouldResolveBaseline = true;
+    } else if (fingerprint.hasMigrationTable) {
+      const migrationHistory = readMigrationHistory(database);
+      if (!hasAppliedMigration(migrationHistory, BASELINE_MIGRATION)) {
+        verifyBaselineFingerprint(fingerprint);
+        verifyLegacyMigrationHistory(migrationHistory);
+        shouldResolveBaseline = true;
+      }
     }
   } finally {
     database.close();

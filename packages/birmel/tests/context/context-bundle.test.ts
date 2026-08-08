@@ -102,12 +102,14 @@ describe("assembleContextBundle ordering and source representation", () => {
             role: "assistant",
             content: "event two",
             sequence: 2,
+            createdAt: new Date("2026-08-08T10:02:00.000Z"),
           },
           {
             id: "event-1",
             role: "user",
             content: "event one",
             sequence: 1,
+            createdAt: new Date("2026-08-08T10:01:00.000Z"),
           },
         ],
         transcript: [
@@ -168,8 +170,20 @@ describe("assembleContextBundle ordering and source representation", () => {
       }),
     ];
     const sessionEvents = [
-      { id: "event-b", role: "assistant" as const, content: "b", sequence: 1 },
-      { id: "event-a", role: "user" as const, content: "a", sequence: 1 },
+      {
+        id: "event-b",
+        role: "assistant" as const,
+        content: "b",
+        sequence: 1,
+        createdAt: new Date("2026-08-08T10:00:00.000Z"),
+      },
+      {
+        id: "event-a",
+        role: "user" as const,
+        content: "a",
+        sequence: 1,
+        createdAt: new Date("2026-08-08T10:00:00.000Z"),
+      },
     ];
 
     const first = assembleContextBundle(
@@ -203,7 +217,13 @@ describe("assembleContextBundle ordering and source representation", () => {
         ],
         sessionSummary: "session summary",
         sessionEvents: [
-          { id: "event", role: "tool", content: "tool result", sequence: 1 },
+          {
+            id: "event",
+            role: "tool",
+            content: "tool result",
+            sequence: 1,
+            createdAt: new Date("2026-08-08T11:00:00.000Z"),
+          },
         ],
         transcript: [transcriptMessage({ id: "4001" })],
       }),
@@ -328,6 +348,145 @@ describe("assembleContextBundle budgets", () => {
       "discord:5003",
       `discord:${CURRENT_MESSAGE_ID}`,
     ]);
+  });
+});
+
+describe("assembleContextBundle session transcript budgets", () => {
+  test("compares session events and raw transcript messages on one timeline", () => {
+    const bundle = assembleContextBundle(
+      assemblyInput({
+        currentMessage: messageWithRenderedLength({
+          id: CURRENT_MESSAGE_ID,
+          renderedLength: 8000,
+          createdAt: new Date("2026-08-08T12:00:00.000Z"),
+        }),
+        sessionEvents: [
+          {
+            id: "new-session-event",
+            role: "user",
+            content: "e".repeat(5994),
+            sequence: 1,
+            createdAt: new Date("2026-08-08T11:03:00.000Z"),
+          },
+        ],
+        transcript: [
+          messageWithRenderedLength({
+            id: "5101",
+            renderedLength: 6000,
+            createdAt: new Date("2026-08-08T11:01:00.000Z"),
+          }),
+          messageWithRenderedLength({
+            id: "5102",
+            renderedLength: 6000,
+            createdAt: new Date("2026-08-08T11:02:00.000Z"),
+          }),
+        ],
+      }),
+    );
+
+    expect(sourceIds(bundle)).not.toContain("discord:5101");
+    expect(sourceIds(bundle)).toContain("discord:5102");
+    expect(sourceIds(bundle)).toContain("session-event:new-session-event");
+  });
+
+  test("uses session sequence to break equal-timestamp event ties", () => {
+    const sharedTimestamp = new Date("2026-08-08T11:03:00.000Z");
+    const bundle = assembleContextBundle(
+      assemblyInput({
+        currentMessage: messageWithRenderedLength({
+          id: CURRENT_MESSAGE_ID,
+          renderedLength: 8000,
+        }),
+        sessionEvents: [
+          {
+            id: "aaa-oldest",
+            role: "user",
+            content: "a".repeat(5994),
+            sequence: 1,
+            createdAt: sharedTimestamp,
+          },
+          {
+            id: "bbb-middle",
+            role: "user",
+            content: "b".repeat(5994),
+            sequence: 2,
+            createdAt: sharedTimestamp,
+          },
+          {
+            id: "zzz-newest",
+            role: "user",
+            content: "c".repeat(5994),
+            sequence: 3,
+            createdAt: sharedTimestamp,
+          },
+        ],
+      }),
+    );
+
+    expect(sourceIds(bundle)).not.toContain("session-event:aaa-oldest");
+    expect(sourceIds(bundle)).toContain("session-event:bbb-middle");
+    expect(sourceIds(bundle)).toContain("session-event:zzz-newest");
+  });
+
+  test("reserves the versioned session summary before trimming oldest recent events", () => {
+    const sessionEvents = Array.from({ length: 16 }, (_, index) => ({
+      id: `event-${String(index + 1)}`,
+      role: "user" as const,
+      content: "e".repeat(1194),
+      sequence: index + 1,
+      createdAt: new Date(Date.UTC(2026, 7, 8, 11, 0, index)),
+      discordMessageId: String(20_000 + index),
+    }));
+    const summary = `Version 7 summary:${"s".repeat(1982)}`;
+
+    const bundle = assembleContextBundle(
+      assemblyInput({ sessionSummary: summary, sessionEvents }),
+    );
+
+    expect(
+      bundle.sources.find(({ id }) => id === "session-summary")?.content,
+    ).toBe(summary);
+    expect(sourceIds(bundle)).toContain(`discord:${CURRENT_MESSAGE_ID}`);
+    expect(sourceIds(bundle)).not.toContain("session-event:event-1");
+    expect(sourceIds(bundle)).not.toContain("session-event:event-2");
+    expect(sourceIds(bundle)).toContain("session-event:event-3");
+    expect(sourceIds(bundle)).toContain("session-event:event-16");
+    expect(bundle.sizes.transcript).toBeLessThanOrEqual(
+      CONTEXT_BUDGETS.transcript,
+    );
+    expect(bundle.sizes.total).toBeLessThanOrEqual(CONTEXT_BUDGETS.total);
+    const messageIds = discordMessageIds(bundle);
+    expect(messageIds).toHaveLength(new Set(messageIds).size);
+  });
+
+  test("bounds an oversized summary while retaining recent session events", () => {
+    const currentMessage = messageWithRenderedLength({
+      id: CURRENT_MESSAGE_ID,
+      renderedLength: 5000,
+    });
+    const bundle = assembleContextBundle(
+      assemblyInput({
+        currentMessage,
+        sessionSummary: "s".repeat(CONTEXT_BUDGETS.transcript),
+        sessionEvents: [
+          {
+            id: "recent-event",
+            role: "assistant",
+            content: "e".repeat(6000),
+            sequence: 1,
+            createdAt: new Date("2026-08-08T11:30:00.000Z"),
+          },
+        ],
+      }),
+    );
+
+    const summary = bundle.sources.find(({ id }) => id === "session-summary");
+    expect(summary?.characterCount).toBe(CONTEXT_BUDGETS.sessionSummary);
+    expect(sourceIds(bundle)).toContain("session-event:recent-event");
+    expect(sourceIds(bundle)).toContain(`discord:${CURRENT_MESSAGE_ID}`);
+    expect(bundle.sizes.transcript).toBeLessThanOrEqual(
+      CONTEXT_BUDGETS.transcript,
+    );
   });
 
   test("rejects a current message that cannot fit the transcript budget", () => {
@@ -541,6 +700,7 @@ describe("assembleContextBundle validation and provenance", () => {
             role: "user",
             content: "duplicate current session event",
             sequence: 3,
+            createdAt: new Date("2026-08-08T12:00:00.000Z"),
             discordMessageId: CURRENT_MESSAGE_ID,
           },
           {
@@ -548,6 +708,7 @@ describe("assembleContextBundle validation and provenance", () => {
             role: "assistant",
             content: "authoritative session event",
             sequence: 2,
+            createdAt: new Date("2026-08-08T11:30:00.000Z"),
             discordMessageId: "12001",
           },
         ],

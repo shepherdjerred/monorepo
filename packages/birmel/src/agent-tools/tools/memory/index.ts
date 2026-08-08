@@ -9,6 +9,7 @@ import {
 import { createTool } from "@shepherdjerred/birmel/agent-runtime/tools/create-tool.ts";
 import {
   getRequestContext,
+  suppressAutomaticMemoryExtraction,
   type RequestContext,
 } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
@@ -138,24 +139,33 @@ async function inspectOrMutateMemory(
         message: "Memory claim history",
         data: await getMemoryClaimHistory(prisma, { claimId }),
       };
-    case "forget":
+    case "forget": {
+      const data = await forgetMemoryClaim(prisma, {
+        claimId,
+        sourceDiscordMessageIds: [request.sourceMessageId],
+        authorUserId: request.userId,
+        channelId: request.sourceChannelId,
+        extractorModel: config.openai.memoryModel,
+      });
+      suppressAutomaticMemoryExtraction();
       return {
         success: true,
         message: "Memory claim forgotten",
-        data: await forgetMemoryClaim(prisma, {
-          claimId,
-          sourceDiscordMessageIds: [request.sourceMessageId],
-          authorUserId: request.userId,
-          channelId: request.sourceChannelId,
-          extractorModel: config.openai.memoryModel,
-        }),
+        data,
       };
-    case "privacy-erase":
+    }
+    case "privacy-erase": {
+      const data = await privacyEraseMemoryClaim(prisma, {
+        claimId,
+        sourceDiscordMessageId: request.sourceMessageId,
+      });
+      suppressAutomaticMemoryExtraction();
       return {
         success: true,
         message: "Memory claim and revision history permanently erased",
-        data: await privacyEraseMemoryClaim(prisma, { claimId }),
+        data,
       };
+    }
     case "correct": {
       const value = required(input.value, "value");
       return {
@@ -169,6 +179,7 @@ async function inspectOrMutateMemory(
           validFrom: input.validFrom ?? null,
           validUntil: input.validUntil ?? null,
           sourceDiscordMessageIds: [request.sourceMessageId],
+          sourceOrder: request.sourceMessageId,
           authorUserId: request.userId,
           channelId: request.sourceChannelId,
           extractorModel: config.openai.memoryModel,
@@ -210,6 +221,7 @@ async function rememberMemory(input: MemoryToolInput, request: RequestContext) {
       embedding: await embedding(
         `${candidate.subject} ${candidate.predicate} ${candidate.value}`,
       ),
+      sourceOrder: request.sourceMessageId,
     }),
   };
 }

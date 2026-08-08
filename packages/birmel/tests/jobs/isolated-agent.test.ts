@@ -8,6 +8,8 @@ import type { AgentJobExecution } from "@shepherdjerred/birmel/scheduler/jobs/sc
 
 const execution: AgentJobExecution = {
   jobId: "job-1",
+  runId: "run-1",
+  claimId: "claim-1",
   guildId: "123456789012345678",
   actorUserId: "234567890123456789",
   sessionId: "session-1",
@@ -82,7 +84,7 @@ describe("isolated scheduled agent", () => {
     });
   });
 
-  test("keeps only the newest 20,000 session-context characters", async () => {
+  test("caps the summary instead of evicting it from session context", async () => {
     const oversizedSummary = "old".repeat(10_000);
     let observedContext = "";
     const dependencies: IsolatedJobAgentDependencies = {
@@ -99,7 +101,33 @@ describe("isolated scheduled agent", () => {
 
     await executeIsolatedAgentJob("finish this later", execution, dependencies);
 
-    expect(observedContext).toHaveLength(20_000);
-    expect(observedContext).toBe(oversizedSummary.slice(-20_000));
+    expect(observedContext).toHaveLength(8000);
+    expect(observedContext).toBe(oversizedSummary.slice(0, 8000));
+  });
+
+  test("reserves summary space and keeps the newest whole events that fit", async () => {
+    const summary = "s".repeat(8000);
+    let observedContext = "";
+    const dependencies: IsolatedJobAgentDependencies = {
+      getPersona: async () => "virmel",
+      getSession: async () => ({
+        summary,
+        events: [
+          { sequence: 1, role: "user", content: "a".repeat(7000) },
+          { sequence: 2, role: "assistant", content: "b".repeat(7000) },
+        ],
+      }),
+      executeAgent: async (packet) => {
+        observedContext = packet.context;
+        return agentResult;
+      },
+    };
+
+    await executeIsolatedAgentJob("finish this later", execution, dependencies);
+
+    expect(observedContext.startsWith(`${summary}\n\n`)).toBeTrue();
+    expect(observedContext).toContain("2 assistant:");
+    expect(observedContext).not.toContain("1 user:");
+    expect(observedContext.length).toBeLessThanOrEqual(20_000);
   });
 });

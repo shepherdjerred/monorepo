@@ -10,7 +10,10 @@ import {
   listAgentJobs,
   showAgentJob,
 } from "./agent-job-actions.ts";
-import { runAgentJobNow } from "./agent-job-execution-actions.ts";
+import {
+  resolveAmbiguousAgentJobEffect,
+  runAgentJobNow,
+} from "./agent-job-execution-actions.ts";
 
 const logger = loggers.automation.child("agent-jobs");
 
@@ -83,6 +86,11 @@ const ManageJobInputSchema = z.discriminatedUnion("action", [
     jobId: z.uuid(),
   }),
   z.object({
+    action: z.literal("resolve-effect"),
+    jobId: z.uuid(),
+    disposition: z.literal("applied"),
+  }),
+  z.object({
     action: z.literal("run-history"),
     jobId: z.uuid(),
   }),
@@ -97,7 +105,7 @@ const ManageJobOutputSchema = z.object({
 export const manageJobTool = createTool({
   id: "manage-job",
   description:
-    "Create and manage durable jobs. Payloads can deliver a message, execute one deterministic tool, or run one isolated agent. Supports create, list, show, edit, cancel, run-now, and run-history.",
+    "Create and manage durable jobs. Payloads can deliver a message, execute one deterministic tool, or run one isolated agent. Supports create, list, show, edit, cancel, run-now, explicit ambiguous-effect resolution, and run-history.",
   inputSchema: ManageJobInputSchema,
   outputSchema: ManageJobOutputSchema,
   execute: async (input) => {
@@ -115,6 +123,8 @@ export const manageJobTool = createTool({
           return await cancelAgentJob(input);
         case "run-now":
           return await runAgentJobNow(input);
+        case "resolve-effect":
+          return await resolveAmbiguousAgentJobEffect(input);
         case "run-history":
           return await getAgentJobRunHistory(input);
       }

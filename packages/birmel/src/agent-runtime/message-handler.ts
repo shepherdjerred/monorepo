@@ -11,7 +11,10 @@ import { extractAndApplyTurnMemory } from "@shepherdjerred/birmel/agent-runtime/
 import { executeRoutedTurn } from "@shepherdjerred/birmel/agent-runtime/runtime.ts";
 import { routeTurn } from "@shepherdjerred/birmel/agent-runtime/router.ts";
 import { withTurnQueue } from "@shepherdjerred/birmel/agent-runtime/turn-queue.ts";
-import { runWithRequestContext } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
+import {
+  runWithRequestContext,
+  type RequestContext,
+} from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { buildContextForTurn } from "@shepherdjerred/birmel/context/turn-context.ts";
 import type { MessageContext } from "@shepherdjerred/birmel/discord/events/message-create.ts";
@@ -240,17 +243,18 @@ async function processAdmittedTurn(
       context: bundle,
     });
     await recordAgentRunRoute(runId, route);
+    const requestContext: RequestContext = {
+      sourceChannelId: context.turn.channelId,
+      sourceMessageId: context.turn.discordMessageId,
+      guildId: context.turn.guildId,
+      userId: context.turn.userId,
+      personaId: persona,
+      ...(context.turn.voiceChannelId == null
+        ? {}
+        : { voiceChannelId: context.turn.voiceChannelId }),
+    };
     const execution = await runWithRequestContext(
-      {
-        sourceChannelId: context.turn.channelId,
-        sourceMessageId: context.turn.discordMessageId,
-        guildId: context.turn.guildId,
-        userId: context.turn.userId,
-        personaId: persona,
-        ...(context.turn.voiceChannelId == null
-          ? {}
-          : { voiceChannelId: context.turn.voiceChannelId }),
-      },
+      requestContext,
       async () =>
         await executeRoutedTurn({
           turn: context.turn,
@@ -277,28 +281,38 @@ async function processAdmittedTurn(
       discordContext,
     });
 
-    const config = getConfig();
-    const transcript = await getConversationTranscriptResult(context.message, {
-      windowMs: config.responder.transcriptWindowMs,
-      maxMessages: config.responder.transcriptMaxMessages,
-    });
-    try {
-      await extractAndApplyTurnMemory({
-        turn: context.turn,
-        persona,
-        rawRecentMessages: transcript.messages,
-      });
-    } catch (error) {
-      logger.error("Post-response memory extraction failed", error, {
+    if (requestContext.suppressAutomaticMemoryExtraction === true) {
+      logger.info("Automatic memory extraction suppressed after deletion", {
         runId,
         messageId: context.turn.discordMessageId,
-        errorClass: error instanceof Error ? error.name : "UnknownError",
       });
-      captureException(toError(error), {
-        operation: "memory.extract",
-        discord: discordContext,
-        extra: { runId },
-      });
+    } else {
+      const config = getConfig();
+      const transcript = await getConversationTranscriptResult(
+        context.message,
+        {
+          windowMs: config.responder.transcriptWindowMs,
+          maxMessages: config.responder.transcriptMaxMessages,
+        },
+      );
+      try {
+        await extractAndApplyTurnMemory({
+          turn: context.turn,
+          persona,
+          rawRecentMessages: transcript.messages,
+        });
+      } catch (error) {
+        logger.error("Post-response memory extraction failed", error, {
+          runId,
+          messageId: context.turn.discordMessageId,
+          errorClass: error instanceof Error ? error.name : "UnknownError",
+        });
+        captureException(toError(error), {
+          operation: "memory.extract",
+          discord: discordContext,
+          extra: { runId },
+        });
+      }
     }
   } catch (error) {
     if (finalResponseDelivered) {

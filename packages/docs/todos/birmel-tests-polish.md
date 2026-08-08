@@ -29,7 +29,8 @@ and a fake PinchTab HTTP service with no skipped tests.
 - Thread admission, monotonic session events, versioned summaries,
   archive/resume, concurrent turns, and scheduled delivery.
 - Atomic job claims, actor propagation/revalidation, retries, timeout,
-  recurrence, restart recovery, isolated agents, and non-overlapping ticks.
+  recurrence, restart recovery, isolated agents, durable effect resolution,
+  and non-overlapping ticks.
 - Fresh and production-shaped migration fixtures and liveness/readiness checks.
 
 ## Remaining

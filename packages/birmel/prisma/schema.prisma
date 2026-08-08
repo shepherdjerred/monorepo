@@ -288,6 +288,20 @@ model MemoryRevision {
   @@index([sourceDiscordMessageIds])
 }
 
+model MemoryExtractionFence {
+  familyKey   String   @id
+  sourceOrder String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model MemorySourceFence {
+  sourceDiscordMessageId String   @id
+  reason                 String
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+}
+
 model AgentRun {
   id                       String    @id @default(uuid())
   discordMessageId         String    @unique

@@ -766,6 +766,178 @@ describe("durable AgentJob execution outcomes", () => {
   );
 });
 
+describe("durable AgentJob effect checkpoints", () => {
+  test("pauses a write tool whose external effect outcome is ambiguous", async () => {
+    let executions = 0;
+    setAgentJobRuntimeDependencies({
+      executeTool: async () => {
+        executions += 1;
+        throw new Error("connection dropped after write started");
+      },
+    });
+    const jobId = await createDueJob({
+      payload: {
+        kind: "tool",
+        toolId: "connect-github",
+        input: { action: "disconnect" },
+      },
+      maxAttempts: 3,
+    });
+
+    await runAgentJobById(jobId);
+    await runAgentJobById(jobId);
+
+    const job = await prisma.agentJob.findUniqueOrThrow({
+      where: { id: jobId },
+    });
+    const run = await prisma.agentJobRun.findFirstOrThrow({
+      where: { jobId },
+    });
+    expect(executions).toBe(1);
+    expect(job.status).toBe("paused");
+    expect(job.nextRunAt).toBeNull();
+    expect(job.lastStatus).toBe("effect_ambiguous");
+    expect(run.status).toBe("effect_ambiguous");
+  });
+
+  test("does not retry a write tool that reports failure after effect start", async () => {
+    let executions = 0;
+    setAgentJobRuntimeDependencies({
+      executeTool: async () => {
+        executions += 1;
+        return { success: false };
+      },
+    });
+    const jobId = await createDueJob({
+      payload: {
+        kind: "tool",
+        toolId: "connect-github",
+        input: { action: "disconnect" },
+      },
+      maxAttempts: 3,
+    });
+
+    await runAgentJobById(jobId);
+    await runAgentJobById(jobId);
+
+    const job = await prisma.agentJob.findUniqueOrThrow({
+      where: { id: jobId },
+    });
+    expect(executions).toBe(1);
+    expect(job.status).toBe("paused");
+    expect(job.lastStatus).toBe("effect_ambiguous");
+  });
+
+  test("fences an isolated agent before it can perform tool effects", async () => {
+    let executions = 0;
+    setAgentJobRuntimeDependencies({
+      executeAgent: async () => {
+        executions += 1;
+        await getRequestContext()?.beforeExternalEffect?.();
+        throw new Error("agent failed after an internal tool call");
+      },
+    });
+    const jobId = await createDueJob({
+      payload: { kind: "agent", prompt: "perform bounded work" },
+      maxAttempts: 3,
+    });
+
+    await runAgentJobById(jobId);
+    await runAgentJobById(jobId);
+
+    const job = await prisma.agentJob.findUniqueOrThrow({
+      where: { id: jobId },
+    });
+    expect(executions).toBe(1);
+    expect(job.status).toBe("paused");
+    expect(job.lastStatus).toBe("effect_ambiguous");
+  });
+
+  test("retries an isolated agent failure before any write tool starts", async () => {
+    let executions = 0;
+    setAgentJobRuntimeDependencies({
+      executeAgent: async () => {
+        executions += 1;
+        throw new Error("provider unavailable before tool execution");
+      },
+    });
+    const jobId = await createDueJob({
+      payload: { kind: "agent", prompt: "perform bounded work" },
+      maxAttempts: 2,
+    });
+    await runAgentJobById(jobId);
+    await prisma.agentJob.update({
+      where: { id: jobId },
+      data: { nextRunAt: new Date(Date.now() - 1000) },
+    });
+    await runAgentJobById(jobId);
+
+    const job = await prisma.agentJob.findUniqueOrThrow({
+      where: { id: jobId },
+    });
+    expect(executions).toBe(2);
+    expect(job.status).toBe("failed");
+  });
+
+  test.each([
+    {
+      settlement: "success",
+      expectedJobStatus: "cancelled_after_effect",
+      expectedRunStatus: "success",
+    },
+    {
+      settlement: "failure",
+      expectedJobStatus: "effect_ambiguous",
+      expectedRunStatus: "effect_ambiguous",
+    },
+  ])(
+    "preserves a $settlement write checkpoint when cancellation races settlement",
+    async ({ settlement, expectedJobStatus, expectedRunStatus }) => {
+      let executionStarted: (() => void) | undefined;
+      let releaseExecution: (() => void) | undefined;
+      const started = new Promise<void>((resolve) => {
+        executionStarted = resolve;
+      });
+      const release = new Promise<void>((resolve) => {
+        releaseExecution = resolve;
+      });
+      setAgentJobRuntimeDependencies({
+        executeTool: async () => {
+          executionStarted?.();
+          await release;
+          if (settlement === "failure") {
+            throw new Error("write outcome unknown after cancellation");
+          }
+          return { success: true };
+        },
+      });
+      const jobId = await createDueJob({
+        payload: {
+          kind: "tool",
+          toolId: "connect-github",
+          input: { action: "disconnect" },
+        },
+      });
+      const execution = runAgentJobById(jobId);
+      await started;
+
+      const cancelled = await executeManageJob({ action: "cancel", jobId });
+      expect(cancelled.success).toBe(true);
+      releaseExecution?.();
+      await execution;
+
+      const [job, run] = await Promise.all([
+        prisma.agentJob.findUniqueOrThrow({ where: { id: jobId } }),
+        prisma.agentJobRun.findFirstOrThrow({ where: { jobId } }),
+      ]);
+      expect(job.status).toBe("cancelled");
+      expect(job.lastStatus).toBe(expectedJobStatus);
+      expect(job.claimedBy).toBeNull();
+      expect(run.status).toBe(expectedRunStatus);
+    },
+  );
+});
+
 describe("durable job recovery and scheduling", () => {
   test("recovers an expired lease and resumes the job after restart", async () => {
     setAgentJobRuntimeDependencies({
@@ -929,7 +1101,7 @@ describe("durable job recovery and scheduling", () => {
       executeAgent: async (prompt, execution) => {
         expect(prompt).toBe("summarize the thread");
         expect(execution.sessionId).toBe(session.id);
-        expect(getRequestContext()).toEqual(requestContext);
+        expect(getRequestContext()).toMatchObject(requestContext);
         return { message: "isolated result", data: { complete: true } };
       },
       deliverMessage: async (channelId, message) => {
@@ -973,6 +1145,207 @@ describe("durable job recovery and scheduling", () => {
 
     expect(executions).toBe(1);
     expect(await prisma.agentJobRun.count({ where: { jobId } })).toBe(1);
+  });
+});
+
+describe("scheduled payload delivery and session history", () => {
+  test("pauses an isolated agent when its external effect outcome is ambiguous", async () => {
+    const session = await prisma.agentSession.create({
+      data: {
+        guildId: GUILD_ID,
+        channelId: CHANNEL_ID,
+        threadId: "654321098765432109",
+        actorUserId: ACTOR_USER_ID,
+      },
+    });
+    let deliveryAttempts = 0;
+    setAgentJobRuntimeDependencies({
+      executeAgent: async () => ({ message: "isolated result" }),
+      deliverMessage: async () => {
+        deliveryAttempts += 1;
+        return { success: false, message: "Discord rejected delivery" };
+      },
+    });
+    const jobId = await createDueJob({
+      payload: { kind: "agent", prompt: "summarize the thread" },
+      sessionId: session.id,
+      maxAttempts: 2,
+    });
+
+    await runAgentJobById(jobId);
+    const paused = await prisma.agentJob.findUniqueOrThrow({
+      where: { id: jobId },
+    });
+    expect(paused.status).toBe("paused");
+    expect(paused.lastStatus).toBe("effect_ambiguous");
+    expect(paused.lastError).toContain("Discord rejected delivery");
+    expect(
+      await prisma.agentSessionEvent.count({
+        where: { sessionId: session.id },
+      }),
+    ).toBe(0);
+
+    await runAgentJobById(jobId);
+
+    const stillPaused = await prisma.agentJob.findUniqueOrThrow({
+      where: { id: jobId },
+    });
+    expect(stillPaused.status).toBe("paused");
+    expect(deliveryAttempts).toBe(1);
+    expect(
+      await prisma.agentSessionEvent.count({
+        where: { sessionId: session.id },
+      }),
+    ).toBe(0);
+  });
+
+  test("pauses a message job without recording session history when delivery is ambiguous", async () => {
+    const session = await prisma.agentSession.create({
+      data: {
+        guildId: GUILD_ID,
+        channelId: CHANNEL_ID,
+        threadId: "654321098765432109",
+        actorUserId: ACTOR_USER_ID,
+      },
+    });
+    setAgentJobRuntimeDependencies({
+      deliverMessage: async () => ({
+        success: false,
+        message: "Discord rejected scheduled message",
+      }),
+    });
+    const jobId = await createDueJob({
+      payload: { kind: "message", message: "scheduled reminder" },
+      sessionId: session.id,
+      maxAttempts: 1,
+    });
+
+    await runAgentJobById(jobId);
+
+    const paused = await prisma.agentJob.findUniqueOrThrow({
+      where: { id: jobId },
+    });
+    expect(paused.status).toBe("paused");
+    expect(paused.lastStatus).toBe("effect_ambiguous");
+    expect(paused.lastError).toContain("Discord rejected scheduled message");
+    expect(
+      await prisma.agentSessionEvent.count({
+        where: { sessionId: session.id },
+      }),
+    ).toBe(0);
+  });
+
+  test.each([
+    {
+      success: true,
+      expectedStatus: "succeeded",
+      expectedJobStatus: "completed",
+    },
+    { success: false, expectedStatus: "failed", expectedJobStatus: "failed" },
+  ])(
+    "records a scheduled tool session event as $expectedStatus",
+    async ({ success, expectedStatus, expectedJobStatus }) => {
+      const session = await prisma.agentSession.create({
+        data: {
+          guildId: GUILD_ID,
+          channelId: CHANNEL_ID,
+          threadId: "654321098765432109",
+          actorUserId: ACTOR_USER_ID,
+        },
+      });
+      setAgentJobRuntimeDependencies({
+        executeTool: async () => ({ success }),
+      });
+      const jobId = await createDueJob({
+        payload: { kind: "tool", toolId: DURABLE_TOOL_ID },
+        sessionId: session.id,
+        maxAttempts: 1,
+      });
+
+      await runAgentJobById(jobId);
+
+      const job = await prisma.agentJob.findUniqueOrThrow({
+        where: { id: jobId },
+      });
+      const events = await prisma.agentSessionEvent.findMany({
+        where: { sessionId: session.id },
+      });
+      expect(job.status).toBe(expectedJobStatus);
+      expect(events).toHaveLength(1);
+      expect(events[0]).toMatchObject({
+        role: "tool",
+        eventType: "scheduled-tool-summary",
+        toolId: DURABLE_TOOL_ID,
+        content: `Scheduled tool ${DURABLE_TOOL_ID} ${expectedStatus}`,
+      });
+      expect(events[0]?.content).not.toContain("completed");
+    },
+  );
+
+  test("does not retry a successful tool after session persistence fails", async () => {
+    const session = await prisma.agentSession.create({
+      data: {
+        guildId: GUILD_ID,
+        channelId: CHANNEL_ID,
+        threadId: "654321098765432109",
+        actorUserId: ACTOR_USER_ID,
+      },
+    });
+    let toolCalls = 0;
+    setAgentJobRuntimeDependencies({
+      executeTool: async () => {
+        toolCalls += 1;
+        await prisma.agentSession.delete({ where: { id: session.id } });
+        return { success: true };
+      },
+    });
+    const jobId = await createDueJob({
+      payload: { kind: "tool", toolId: DURABLE_TOOL_ID },
+      sessionId: session.id,
+    });
+
+    await runAgentJobById(jobId);
+
+    expect(toolCalls).toBe(1);
+    expect(
+      await prisma.agentJob.findUniqueOrThrow({ where: { id: jobId } }),
+    ).toMatchObject({ status: "completed", lastStatus: "success" });
+    expect(
+      await prisma.agentJobRun.findFirstOrThrow({ where: { jobId } }),
+    ).toMatchObject({ status: "success" });
+  });
+
+  test("does not retry a delivered message after session persistence fails", async () => {
+    const session = await prisma.agentSession.create({
+      data: {
+        guildId: GUILD_ID,
+        channelId: CHANNEL_ID,
+        threadId: "654321098765432109",
+        actorUserId: ACTOR_USER_ID,
+      },
+    });
+    let deliveries = 0;
+    setAgentJobRuntimeDependencies({
+      deliverMessage: async () => {
+        deliveries += 1;
+        await prisma.agentSession.delete({ where: { id: session.id } });
+        return { success: true };
+      },
+    });
+    const jobId = await createDueJob({
+      payload: { kind: "message", message: "scheduled reminder" },
+      sessionId: session.id,
+    });
+
+    await runAgentJobById(jobId);
+
+    expect(deliveries).toBe(1);
+    expect(
+      await prisma.agentJob.findUniqueOrThrow({ where: { id: jobId } }),
+    ).toMatchObject({ status: "completed", lastStatus: "success" });
+    expect(
+      await prisma.agentJobRun.findFirstOrThrow({ where: { jobId } }),
+    ).toMatchObject({ status: "success" });
   });
 });
 

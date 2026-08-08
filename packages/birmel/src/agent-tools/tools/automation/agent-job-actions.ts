@@ -13,6 +13,7 @@ import {
   createAgentJobWithinLimits,
   updateAgentJobWithinLimits,
 } from "@shepherdjerred/birmel/scheduler/agent-job-limits.ts";
+import { hasAmbiguousAgentJobEffect } from "@shepherdjerred/birmel/scheduler/agent-job-effect-state.ts";
 import { getErrorMessage } from "@shepherdjerred/birmel/utils/errors.ts";
 import {
   serializeCreatePayload,
@@ -125,6 +126,40 @@ function requireUpdatedJob(updateCount: number): void {
   if (updateCount === 0) {
     throw new Error("Agent job became unavailable");
   }
+}
+
+function wouldUnsafelyReactivateEffect(
+  options: EditAgentJobOptions,
+  lastStatus: string | null,
+): boolean {
+  if (
+    lastStatus === "cancelled_after_effect" ||
+    hasAmbiguousAgentJobEffect(lastStatus)
+  ) {
+    return options.status === "active";
+  }
+
+  if (lastStatus !== "effect_resolved_applied") {
+    return false;
+  }
+
+  return (
+    options.scheduleKind !== undefined ||
+    options.scheduleValue !== undefined ||
+    options.timezone !== undefined ||
+    options.payload !== undefined ||
+    options.sessionId !== undefined ||
+    options.message !== undefined ||
+    options.toolId !== undefined ||
+    options.toolInput !== undefined ||
+    options.agentPrompt !== undefined ||
+    options.status === "active" ||
+    options.maxAttempts !== undefined ||
+    options.timeoutMs !== undefined ||
+    options.model !== undefined ||
+    options.reasoningEffort !== undefined ||
+    options.textVerbosity !== undefined
+  );
 }
 
 function requestScope(): { request: RequestContext; guildId: string } {
@@ -259,6 +294,12 @@ export async function editAgentJob(
   if (existing.status === "running") {
     return { success: false, message: "A running job cannot be edited" };
   }
+  if (wouldUnsafelyReactivateEffect(options, existing.lastStatus)) {
+    return {
+      success: false,
+      message: "This job effect cannot be reactivated without safe resolution",
+    };
+  }
 
   try {
     const hasScheduleChange =
@@ -297,6 +338,7 @@ export async function editAgentJob(
         id: existing.id,
         guildId,
         status: { not: "running" },
+        lastStatus: existing.lastStatus,
       },
       subject: {
         id: existing.id,

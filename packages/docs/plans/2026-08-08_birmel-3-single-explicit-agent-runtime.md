@@ -218,6 +218,12 @@ succeeds.
 - 2026-08-08: The focused Turbo graph passed all seven Birmel tasks with 252
   tests, zero failures, and zero skips. The rebuilt runtime image also passed
   the in-container startup and dependency smoke test.
+- 2026-08-08: Final local verification passed with 340 tests across 42 files,
+  zero failures, and zero skips; the focused Turbo graph passed 7/7 tasks;
+  Docker build, smoke, diff check, and staged pre-commit passed. The referenced
+  scheduler audit agent was unavailable for status retrieval, so the scheduler
+  remediation was independently reviewed locally with no additional P0-P2
+  finding; production acceptance remains outstanding.
 - 2026-08-08: Review remediation added legacy reminder compatibility, removed
   the final legacy scheduling tool surface, made tool timeouts cooperative at
   Discord, shell, browser, and file-write boundaries, and fenced timed-out jobs.
@@ -241,3 +247,32 @@ succeeds.
   revalidated thread sessions after queue admission, and fenced expired-lease
   recovery to the original claim. The exact CI suite now passes 284 tests with
   zero failures or skips.
+- 2026-08-08: The current-head hardening pass recovers interrupted legacy jobs,
+  validates exact pre-squash migration histories, prevents completed scheduled
+  side effects from replaying after bookkeeping failures, preserves mandatory
+  session summaries, and makes memory provenance, chronology, and deletion
+  semantics explicit. The focused Turbo graph passes all seven tasks with 301
+  tests, zero failures, and zero skips.
+- 2026-08-08: Final self-review made explicit evidence outrank inferred
+  contradictions even when mixed with equal-priority history; chronology now
+  breaks ties only within the same evidence priority. The exact CI suite passes
+  302 tests with zero failures and zero skips.
+- 2026-08-08: The final local durability pass added content-free extraction
+  fences for forget and privacy erasure, bounded oversized session summaries,
+  fenced ambiguous external job effects from automatic replay, and recovered
+  acknowledged effects without redelivery. The exact CI suite passes 308 tests
+  across 40 files with zero failures and zero skips; all seven focused Turbo
+  tasks and the rebuilt container smoke test pass.
+- 2026-08-08: Independent durability rechecks extended privacy erasure across
+  all source-derived claims, made job side-effect acknowledgement explicit,
+  fenced interrupted legacy running and retrying jobs, bounded session summary
+  database reads and rendered prompts, and put session events and raw Discord
+  messages on one chronological axis. The exact CI suite passes 327 tests across
+  41 files with zero failures and zero skips; all seven focused Turbo tasks and
+  the rebuilt container smoke test pass.
+- 2026-08-08: Final local hardening narrowed privacy erasure to deterministic
+  claim families, preserved explicit memory chronology across delayed commands,
+  and added operator resolution for ambiguous scheduled side effects without
+  permitting run-now or edit bypasses. The exact CI suite passes 335 tests across
+  42 files with zero failures and zero skips; all seven focused Turbo tasks and
+  the rebuilt container smoke test pass.

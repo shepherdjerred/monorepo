@@ -68,7 +68,10 @@ never be opened by runtime code.
 - `manage-job` is the only jobs surface. Jobs support message, deterministic
   tool, and isolated-agent payloads; preserve the original request context,
   re-check the actor allowlist at execution, claim atomically, recover after
-  restart, and drain on shutdown.
+  restart, and drain on shutdown. External writes and Discord deliveries need
+  a durable effect checkpoint. An ambiguous effect stays paused until
+  `resolve-effect` records that it was applied. An ambiguous occurrence is
+  never replayed in place because the prior executor may still settle.
 
 ## Persistence, startup, and health
 

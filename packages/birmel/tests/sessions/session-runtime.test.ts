@@ -6,11 +6,17 @@ const {
   getActiveSessionForThread,
   getSessionContext,
   isSessionActiveForThread,
+  MAX_SESSION_EVENT_CONTENT_CHARACTERS,
   SessionEventRoleSchema,
   updateSessionStatus,
 } = await import("@shepherdjerred/birmel/sessions/service.ts");
-const { summarizeSessionIfNeeded } =
-  await import("@shepherdjerred/birmel/sessions/summarization.ts");
+const {
+  MAX_SESSION_SUMMARIZATION_EVENTS_PER_PASS,
+  MAX_SESSION_SUMMARY_CHARACTERS,
+  MAX_SESSION_SUMMARIZATION_INPUT_CHARACTERS,
+  renderSessionSummaryPrompt,
+  summarizeSessionIfNeeded,
+} = await import("@shepherdjerred/birmel/sessions/summarization.ts");
 const { manageAgentSessionTool } =
   await import("@shepherdjerred/birmel/agent-tools/tools/sessions/index.ts");
 const { prisma } = await import("@shepherdjerred/birmel/database/index.ts");
@@ -378,6 +384,162 @@ describe("session summarization", () => {
         },
       }),
     ).toEqual({ summary: null, summaryVersion: 1, summaryThroughSequence: 0 });
+  });
+
+  test("rejects an oversized model summary before persistence", async () => {
+    const session = await createFixture();
+    for (let index = 1; index <= 17; index += 1) {
+      await appendNumberedEvent(session.id, index);
+    }
+
+    await expect(
+      summarizeSessionIfNeeded(session.id, async () =>
+        "s".repeat(MAX_SESSION_SUMMARY_CHARACTERS + 1),
+      ),
+    ).rejects.toThrow();
+    expect(
+      await prisma.agentSession.findUniqueOrThrow({
+        where: { id: session.id },
+        select: {
+          summary: true,
+          summaryVersion: true,
+          summaryThroughSequence: true,
+        },
+      }),
+    ).toEqual({ summary: null, summaryVersion: 1, summaryThroughSequence: 0 });
+  });
+
+  test("bounds summary input and advances incrementally", async () => {
+    const session = await createFixture();
+    await prisma.agentSession.update({
+      where: { id: session.id },
+      data: { summary: "p".repeat(MAX_SESSION_SUMMARY_CHARACTERS) },
+    });
+    for (let index = 1; index <= 20; index += 1) {
+      await appendSessionEvent({
+        sessionId: session.id,
+        role: "tool",
+        eventType: `large-${String(index)}`,
+        content: "e".repeat(MAX_SESSION_EVENT_CONTENT_CHARACTERS),
+      });
+    }
+    let inputCharacters = 0;
+
+    const summarized = await summarizeSessionIfNeeded(
+      session.id,
+      async (input) => {
+        inputCharacters = renderSessionSummaryPrompt(input).length;
+        return "Bounded summary";
+      },
+    );
+
+    expect(summarized).toBeTrue();
+    expect(inputCharacters).toBeLessThanOrEqual(
+      MAX_SESSION_SUMMARIZATION_INPUT_CHARACTERS,
+    );
+    const updated = await prisma.agentSession.findUniqueOrThrow({
+      where: { id: session.id },
+    });
+    expect(updated.summaryThroughSequence).toBe(1);
+  });
+});
+
+describe("session summarization batching and concurrency", () => {
+  test("loads and summarizes at most one bounded event batch", async () => {
+    const session = await createFixture();
+    for (let index = 1; index <= 100; index += 1) {
+      await appendNumberedEvent(session.id, index);
+    }
+    let observedSequences: number[] = [];
+
+    expect(
+      await summarizeSessionIfNeeded(session.id, async (input) => {
+        observedSequences = input.events.map(({ sequence }) => sequence);
+        expect(renderSessionSummaryPrompt(input).length).toBeLessThanOrEqual(
+          MAX_SESSION_SUMMARIZATION_INPUT_CHARACTERS,
+        );
+        return "Bounded batch summary";
+      }),
+    ).toBeTrue();
+
+    expect(observedSequences).toHaveLength(
+      MAX_SESSION_SUMMARIZATION_EVENTS_PER_PASS,
+    );
+    expect(observedSequences.at(0)).toBe(1);
+    expect(observedSequences.at(-1)).toBe(
+      MAX_SESSION_SUMMARIZATION_EVENTS_PER_PASS,
+    );
+    const updated = await prisma.agentSession.findUniqueOrThrow({
+      where: { id: session.id },
+    });
+    expect(updated.summaryThroughSequence).toBe(
+      MAX_SESSION_SUMMARIZATION_EVENTS_PER_PASS,
+    );
+  });
+
+  test("does not let a slower summarizer regress a newer checkpoint", async () => {
+    const session = await createFixture();
+    for (let index = 1; index <= 20; index += 1) {
+      await appendNumberedEvent(session.id, index);
+    }
+    let markSlowStarted: (() => void) | undefined;
+    let releaseSlow: (() => void) | undefined;
+    const slowStarted = new Promise<void>((resolve) => {
+      markSlowStarted = resolve;
+    });
+    const slowGate = new Promise<void>((resolve) => {
+      releaseSlow = resolve;
+    });
+    const slow = summarizeSessionIfNeeded(session.id, async () => {
+      markSlowStarted?.();
+      await slowGate;
+      return "Older slow summary";
+    });
+    await slowStarted;
+    for (let index = 21; index <= 24; index += 1) {
+      await appendNumberedEvent(session.id, index);
+    }
+
+    expect(
+      await summarizeSessionIfNeeded(
+        session.id,
+        async () => "Newer fast summary",
+      ),
+    ).toBeTrue();
+    releaseSlow?.();
+    expect(await slow).toBeFalse();
+
+    expect(
+      await prisma.agentSession.findUniqueOrThrow({
+        where: { id: session.id },
+        select: {
+          summary: true,
+          summaryVersion: true,
+          summaryThroughSequence: true,
+        },
+      }),
+    ).toEqual({
+      summary: "Newer fast summary",
+      summaryVersion: 2,
+      summaryThroughSequence: 8,
+    });
+  });
+
+  test("rejects session event content above the persistence boundary", async () => {
+    const session = await createFixture();
+    await expect(
+      appendSessionEvent({
+        sessionId: session.id,
+        role: "tool",
+        eventType: "oversized",
+        content: "x".repeat(MAX_SESSION_EVENT_CONTENT_CHARACTERS + 1),
+      }),
+    ).rejects.toThrow();
+    expect(
+      await prisma.agentSessionEvent.count({
+        where: { sessionId: session.id },
+      }),
+    ).toBe(0);
   });
 });
 

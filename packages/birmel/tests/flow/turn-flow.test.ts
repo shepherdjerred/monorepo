@@ -136,6 +136,16 @@ describe("successful deterministic turn flow", () => {
     expect(result.incidentIds).toEqual([]);
     expect(result.errorClasses).toEqual([]);
   });
+
+  test("a memory deletion turn cannot immediately re-extract erased evidence", () => {
+    const result = resultFor("memory-deletion");
+
+    expect(result.runStatuses).toEqual(["completed"]);
+    expect(result.replyCalls).toBe(1);
+    expect(result.directCalls).toBe(1);
+    expect(result.memoryExtractionCalls).toBe(0);
+    expect(result.incidentIds).toEqual([]);
+  });
 });
 
 describe("boundary failures", () => {

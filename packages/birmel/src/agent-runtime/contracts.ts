@@ -5,6 +5,7 @@ export const CONTEXT_BUDGETS = {
   persona: 8000,
   loreAndMemory: 8000,
   transcript: 20_000,
+  sessionSummary: 8000,
   total: 48_000,
   transcriptFetchLimit: 50,
   maximumClaims: 12,

@@ -96,6 +96,8 @@ beforeAll(async () => {
 
 afterEach(async () => {
   await client().memoryClaim.deleteMany();
+  await client().memoryExtractionFence.deleteMany();
+  await client().memorySourceFence.deleteMany();
 });
 
 afterAll(async () => {
@@ -185,6 +187,143 @@ describe("claim memory application", () => {
     expect(history.claim.sourceDiscordMessageIds).toEqual(["900", "901"]);
   });
 
+  test("does not reconfirm an identical claim from identical evidence", async () => {
+    const envelope: MemoryCandidateEnvelope = {
+      candidate: candidate(),
+      embedding: null,
+      provenance: {
+        authorUserId: "300",
+        channelId: "200",
+        sourceOrder: "900",
+      },
+    };
+    const first = await applyEnvelopes([envelope]);
+    const claimId = first.claims[0]?.id;
+    if (claimId === undefined) {
+      throw new Error("Expected a created memory claim");
+    }
+    const before = await client().memoryClaim.findUniqueOrThrow({
+      where: { id: claimId },
+    });
+
+    const repeated = await applyEnvelopes([envelope]);
+    const after = await client().memoryClaim.findUniqueOrThrow({
+      where: { id: claimId },
+      include: { revisions: true },
+    });
+
+    expect(repeated.claims).toHaveLength(0);
+    expect(after.lastConfirmedAt).toEqual(before.lastConfirmedAt);
+    expect(after.revisions).toHaveLength(1);
+  });
+});
+
+describe("claim memory evidence updates", () => {
+  test("retains newly discovered older evidence without refreshing recency", async () => {
+    const first = await applyEnvelopes([
+      {
+        candidate: candidate({ sourceDiscordMessageIds: ["902"] }),
+        embedding: null,
+        provenance: {
+          authorUserId: "300",
+          channelId: "200",
+          sourceOrder: "902",
+        },
+      },
+    ]);
+    const claimId = first.claims[0]?.id;
+    if (claimId === undefined) {
+      throw new Error("Expected a created memory claim");
+    }
+    const before = await client().memoryClaim.findUniqueOrThrow({
+      where: { id: claimId },
+    });
+
+    const expanded = await applyEnvelopes([
+      {
+        candidate: candidate({ sourceDiscordMessageIds: ["901", "902"] }),
+        embedding: null,
+        provenance: {
+          authorUserId: "300",
+          channelId: "200",
+          sourceOrder: "902",
+        },
+      },
+    ]);
+    const after = await client().memoryClaim.findUniqueOrThrow({
+      where: { id: claimId },
+      include: { revisions: true },
+    });
+    expect(expanded.confirmedCount).toBe(1);
+    expect(after.lastConfirmedAt).toEqual(before.lastConfirmedAt);
+    expect(after.revisions.at(-1)?.sourceDiscordMessageIds).toBe(
+      '["901","902"]',
+    );
+
+    await privacyEraseMemoryClaim(client(), {
+      claimId,
+      sourceDiscordMessageId: "903",
+    });
+    const replayedParaphrase = await applyEnvelopes([
+      {
+        candidate: candidate({
+          subject: "Jerred preferences",
+          predicate: "drink selection",
+          sourceDiscordMessageIds: ["901"],
+        }),
+        embedding: null,
+        provenance: {
+          authorUserId: "300",
+          channelId: "200",
+          sourceOrder: "901",
+        },
+      },
+    ]);
+    expect(replayedParaphrase.claims).toHaveLength(0);
+  });
+
+  test("promotes older explicit evidence over a newer inferred duplicate", async () => {
+    const inferred = await applyEnvelopes([
+      {
+        candidate: candidate({
+          origin: "inferred",
+          sourceDiscordMessageIds: ["902"],
+        }),
+        embedding: null,
+        provenance: {
+          authorUserId: "300",
+          channelId: "200",
+          sourceOrder: "902",
+        },
+      },
+    ]);
+    const claimId = inferred.claims[0]?.id;
+    if (claimId === undefined) {
+      throw new Error("Expected an inferred memory claim");
+    }
+
+    const promoted = await applyEnvelopes([
+      {
+        candidate: candidate({ sourceDiscordMessageIds: ["901"] }),
+        embedding: null,
+        provenance: {
+          authorUserId: "300",
+          channelId: "200",
+          sourceOrder: "901",
+        },
+      },
+    ]);
+    const stored = await client().memoryClaim.findUniqueOrThrow({
+      where: { id: claimId },
+      include: { revisions: true },
+    });
+
+    expect(promoted.confirmedCount).toBe(1);
+    expect(stored.origin).toBe("explicit");
+    expect(stored.revisions).toHaveLength(2);
+    expect(stored.revisions.at(-1)?.sourceDiscordMessageIds).toBe('["901"]');
+  });
+
   test("rolls back the whole extraction batch when one candidate is invalid", async () => {
     await expect(
       applyEnvelopes([
@@ -262,6 +401,192 @@ describe("claim precedence and temporal conflicts", () => {
     expect(
       retrieved.claims.every((entry) => entry.conflictingClaimIds.length === 1),
     ).toBeTrue();
+  });
+
+  test("keeps equal-priority contradictions from one source unresolved", async () => {
+    const fromSameMessage = (value: string): MemoryCandidateEnvelope => ({
+      candidate: candidate({
+        value,
+        sourceDiscordMessageIds: ["901"],
+      }),
+      embedding: null,
+      provenance: {
+        authorUserId: BASE_CONTEXT.authorUserId,
+        channelId: BASE_CONTEXT.channelId,
+        sourceOrder: "901",
+      },
+    });
+
+    const result = await applyEnvelopes([
+      fromSameMessage("coffee"),
+      fromSameMessage("tea"),
+    ]);
+    expect(result.supersededCount).toBe(0);
+    expect(result.uncertainCount).toBe(1);
+    expect(
+      await listMemoryClaims(client(), {
+        guildId: BASE_CONTEXT.guildId,
+        statuses: ["active", "uncertain"],
+      }),
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ value: "coffee", status: "active" }),
+        expect.objectContaining({ value: "tea", status: "uncertain" }),
+      ]),
+    );
+  });
+});
+
+describe("claim source ordering", () => {
+  test("compares chronology only among equal-priority contradictions", async () => {
+    const envelope = (
+      value: string,
+      origin: "explicit" | "inferred",
+      sourceOrder: string,
+    ): MemoryCandidateEnvelope => ({
+      candidate: candidate({
+        value,
+        origin,
+        sourceDiscordMessageIds: [sourceOrder],
+      }),
+      embedding: null,
+      provenance: {
+        authorUserId: BASE_CONTEXT.authorUserId,
+        channelId: BASE_CONTEXT.channelId,
+        sourceOrder,
+      },
+    });
+
+    await applyEnvelopes([envelope("coffee", "explicit", "900")]);
+    await applyEnvelopes([envelope("tea", "inferred", "902")]);
+    const corrected = await applyEnvelopes([
+      envelope("water", "explicit", "901"),
+    ]);
+
+    expect(corrected.supersededCount).toBe(2);
+    expect(
+      await listMemoryClaims(client(), {
+        guildId: BASE_CONTEXT.guildId,
+        statuses: ["active"],
+      }),
+    ).toEqual([expect.objectContaining({ value: "water" })]);
+  });
+
+  test("applies contradictory automatic candidates by source chronology and provenance", async () => {
+    const older = {
+      candidate: candidate({
+        value: "tea",
+        relatedUserIds: [],
+        sourceDiscordMessageIds: ["901"],
+      }),
+      embedding: [0.1, 0.2],
+      provenance: {
+        authorUserId: "400",
+        channelId: "201",
+        sourceOrder: "901",
+      },
+    };
+    const newer = {
+      candidate: candidate({
+        value: "coffee",
+        relatedUserIds: [],
+        sourceDiscordMessageIds: ["902"],
+      }),
+      embedding: [0.3, 0.4],
+      provenance: {
+        authorUserId: "400",
+        channelId: "201",
+        sourceOrder: "902",
+      },
+    };
+
+    await applyEnvelopes([newer, older]);
+    const claims = await listMemoryClaims(client(), {
+      guildId: BASE_CONTEXT.guildId,
+      statuses: ["active", "superseded"],
+    });
+    const active = claims.find(({ status }) => status === "active");
+    const superseded = claims.find(({ status }) => status === "superseded");
+    expect(active).toMatchObject({ value: "coffee", userId: "400" });
+    expect(superseded).toMatchObject({ value: "tea", userId: "400" });
+    if (active == null) {
+      throw new Error("Expected the newer memory claim to be active");
+    }
+    const history = await getMemoryClaimHistory(client(), {
+      claimId: active.id,
+    });
+    expect(history.revisions[0]).toMatchObject({
+      authorUserId: "400",
+      channelId: "201",
+      sourceDiscordMessageIds: ["902"],
+    });
+
+    const replay = await applyEnvelopes([older]);
+    expect(replay.confirmedCount).toBe(0);
+    expect(
+      await listMemoryClaims(client(), {
+        guildId: BASE_CONTEXT.guildId,
+        statuses: ["active"],
+      }),
+    ).toEqual([expect.objectContaining({ value: "coffee", userId: "400" })]);
+  });
+
+  test("automatic extraction cannot reactivate a tombstone but explicit remember can", async () => {
+    const created = await applyFixture();
+    const claim = created.claims[0];
+    if (claim == null) {
+      throw new Error("Expected an initial memory claim");
+    }
+    await forgetMemoryClaim(client(), {
+      claimId: claim.id,
+      sourceDiscordMessageIds: ["901"],
+      authorUserId: BASE_CONTEXT.authorUserId,
+      channelId: BASE_CONTEXT.channelId,
+      extractorModel: BASE_CONTEXT.extractorModel,
+    });
+
+    const automatic = await applyEnvelopes([
+      {
+        candidate: candidate({ sourceDiscordMessageIds: ["900"] }),
+        embedding: [1, 0],
+        provenance: {
+          authorUserId: BASE_CONTEXT.authorUserId,
+          channelId: BASE_CONTEXT.channelId,
+          sourceOrder: "900",
+        },
+      },
+    ]);
+    expect(automatic.confirmedCount).toBe(0);
+    const stillForgotten = await inspectMemoryClaim(client(), {
+      claimId: claim.id,
+    });
+    expect(stillForgotten.claim).toMatchObject({ status: "forgotten" });
+    const oldAlternative = await applyEnvelopes([
+      {
+        candidate: candidate({
+          value: "tea",
+          sourceDiscordMessageIds: ["900"],
+        }),
+        embedding: null,
+        provenance: {
+          authorUserId: BASE_CONTEXT.authorUserId,
+          channelId: BASE_CONTEXT.channelId,
+          sourceOrder: "900",
+        },
+      },
+    ]);
+    expect(oldAlternative.claims).toHaveLength(0);
+
+    const remembered = await rememberMemoryClaim(client(), {
+      context: BASE_CONTEXT,
+      candidate: candidate({ sourceDiscordMessageIds: ["902"] }),
+      embedding: [0, 1],
+      sourceOrder: "902",
+    });
+    expect(remembered.claim).toMatchObject({
+      id: claim.id,
+      status: "active",
+    });
   });
 
   test("keeps non-overlapping temporal values and retrieves the valid one", async () => {
@@ -623,11 +948,73 @@ describe("composite retrieval ranking", () => {
 });
 
 describe("explicit memory lifecycle", () => {
+  test("privacy erase follows deterministic claim identity, not shared evidence", async () => {
+    const exact = await applyFixture({
+      candidate: { sourceDiscordMessageIds: ["910"] },
+      embedding: [1, 0],
+    });
+    const paraphrase = await applyFixture({
+      candidate: {
+        subject: "Jerred preferences",
+        predicate: "drink selection",
+        sourceDiscordMessageIds: ["910"],
+      },
+      embedding: [0, 1],
+    });
+    const paraphraseClaimId = paraphrase.claims[0]?.id;
+    if (paraphraseClaimId === undefined) {
+      throw new Error("Expected a paraphrased claim");
+    }
+    const unrelated = await applyFixture({
+      candidate: {
+        scope: "relationship",
+        subject: "Jerred and Alice",
+        predicate: "family relationship",
+        value: "siblings",
+        relatedUserIds: ["300", "400"],
+        sourceDiscordMessageIds: ["910"],
+      },
+    });
+    const unrelatedClaimId = unrelated.claims[0]?.id;
+    if (unrelatedClaimId === undefined) {
+      throw new Error("Expected an unrelated relationship claim");
+    }
+    const claimId = exact.claims[0]?.id;
+    if (claimId === undefined) {
+      throw new Error("Expected an exact memory claim");
+    }
+
+    const erased = await privacyEraseMemoryClaim(client(), {
+      claimId,
+      sourceDiscordMessageId: "911",
+    });
+
+    expect(erased.erasedRevisionCount).toBe(1);
+    expect(await client().memoryClaim.count()).toBe(2);
+    expect(await client().memoryRevision.count()).toBe(2);
+    expect(
+      await client().memoryClaim.findUnique({
+        where: { id: paraphraseClaimId },
+      }),
+    ).not.toBeNull();
+    expect(
+      await client().memoryClaim.findUnique({
+        where: { id: unrelatedClaimId },
+      }),
+    ).not.toBeNull();
+    expect(
+      await client().memorySourceFence.findUnique({
+        where: { sourceDiscordMessageId: "910" },
+      }),
+    ).not.toBeNull();
+  });
+
   test("remembers, inspects, corrects, tombstones, and physically erases", async () => {
     const remembered = await rememberMemoryClaim(client(), {
       context: BASE_CONTEXT,
       candidate: candidate(),
       embedding: [1, 0],
+      sourceOrder: "900",
     });
     expect(remembered.claim.status).toBe("active");
     expect(remembered.revisions[0]?.action).toBe("create");
@@ -640,6 +1027,7 @@ describe("explicit memory lifecycle", () => {
       validFrom: null,
       validUntil: null,
       sourceDiscordMessageIds: ["901"],
+      sourceOrder: "901",
       authorUserId: "300",
       channelId: "200",
       extractorModel: "correction-test",
@@ -672,8 +1060,9 @@ describe("explicit memory lifecycle", () => {
 
     const erased = await privacyEraseMemoryClaim(client(), {
       claimId: corrected.claim.id,
+      sourceDiscordMessageId: "903",
     });
-    expect(erased.erasedRevisionCount).toBe(2);
+    expect(erased.erasedRevisionCount).toBe(4);
     expect(
       await client().memoryClaim.findUnique({
         where: { id: corrected.claim.id },
@@ -684,8 +1073,66 @@ describe("explicit memory lifecycle", () => {
         where: { claimId: corrected.claim.id },
       }),
     ).toBe(0);
-  });
+    expect(await client().memoryExtractionFence.count()).toBe(1);
+    expect(await client().memorySourceFence.count()).toBeGreaterThan(0);
 
+    const replayedOldTranscript = await applyEnvelopes([
+      {
+        candidate: candidate({
+          value: "tea",
+          sourceDiscordMessageIds: ["901"],
+        }),
+        embedding: null,
+        provenance: {
+          authorUserId: BASE_CONTEXT.authorUserId,
+          channelId: BASE_CONTEXT.channelId,
+          sourceOrder: "901",
+        },
+      },
+    ]);
+    expect(replayedOldTranscript.claims).toHaveLength(0);
+    expect(await client().memoryClaim.count()).toBe(0);
+
+    const paraphrasedMixedSource = await applyEnvelopes([
+      {
+        candidate: candidate({
+          subject: "Jerred's preferences",
+          predicate: "drink choice",
+          value: "tea",
+          sourceDiscordMessageIds: ["901", "904"],
+        }),
+        embedding: null,
+        provenance: {
+          authorUserId: BASE_CONTEXT.authorUserId,
+          channelId: BASE_CONTEXT.channelId,
+          sourceOrder: "904",
+        },
+      },
+    ]);
+    expect(paraphrasedMixedSource.claims).toHaveLength(0);
+    expect(await client().memoryClaim.count()).toBe(0);
+
+    const freshStatement = await applyEnvelopes([
+      {
+        candidate: candidate({
+          value: "water",
+          sourceDiscordMessageIds: ["905"],
+        }),
+        embedding: null,
+        provenance: {
+          authorUserId: BASE_CONTEXT.authorUserId,
+          channelId: BASE_CONTEXT.channelId,
+          sourceOrder: "905",
+        },
+      },
+    ]);
+    expect(freshStatement.claims).toEqual([
+      expect.objectContaining({ value: "water", status: "active" }),
+    ]);
+  });
+});
+
+describe("explicit memory persistence failures", () => {
   test("fails loudly when persisted embedding JSON is malformed", async () => {
     const created = await applyFixture({ embedding: [1, 0] });
     const claimId = created.claims[0]?.id;
@@ -718,5 +1165,104 @@ describe("explicit memory lifecycle", () => {
         queryEmbedding: [1, 0, 0],
       }),
     ).rejects.toThrow("dimensions do not match");
+  });
+});
+
+describe("explicit memory source chronology", () => {
+  test("does not let a delayed older remember command supersede newer evidence", async () => {
+    const newer = await applyEnvelopes([
+      {
+        candidate: candidate({
+          value: "tea",
+          sourceDiscordMessageIds: ["902"],
+        }),
+        embedding: null,
+        provenance: {
+          authorUserId: BASE_CONTEXT.authorUserId,
+          channelId: BASE_CONTEXT.channelId,
+          sourceOrder: "902",
+        },
+      },
+    ]);
+
+    const delayed = await rememberMemoryClaim(client(), {
+      context: BASE_CONTEXT,
+      candidate: candidate({ sourceDiscordMessageIds: ["901"] }),
+      embedding: null,
+      sourceOrder: "901",
+    });
+    const newerClaimId = newer.claims[0]?.id;
+    if (newerClaimId === undefined) {
+      throw new Error("Expected a newer claim");
+    }
+
+    expect(delayed.claim.status).toBe("superseded");
+    expect(newer.claims[0]?.status).toBe("active");
+    expect(
+      await client().memoryClaim.findUniqueOrThrow({
+        where: { id: newerClaimId },
+      }),
+    ).toMatchObject({ status: "active", value: "tea" });
+  });
+
+  test("does not let a delayed older correction supersede newer evidence", async () => {
+    const original = await applyEnvelopes([
+      {
+        candidate: candidate({ sourceDiscordMessageIds: ["900"] }),
+        embedding: null,
+        provenance: {
+          authorUserId: BASE_CONTEXT.authorUserId,
+          channelId: BASE_CONTEXT.channelId,
+          sourceOrder: "900",
+        },
+      },
+    ]);
+    const originalClaimId = original.claims[0]?.id;
+    if (originalClaimId === undefined) {
+      throw new Error("Expected an original claim");
+    }
+    const newer = await applyEnvelopes([
+      {
+        candidate: candidate({
+          value: "tea",
+          sourceDiscordMessageIds: ["902"],
+        }),
+        embedding: null,
+        provenance: {
+          authorUserId: BASE_CONTEXT.authorUserId,
+          channelId: BASE_CONTEXT.channelId,
+          sourceOrder: "902",
+        },
+      },
+    ]);
+
+    const delayed = await correctMemoryClaim(client(), {
+      claimId: originalClaimId,
+      value: "water",
+      confidence: 1,
+      salience: 0.9,
+      validFrom: null,
+      validUntil: null,
+      sourceDiscordMessageIds: ["901"],
+      sourceOrder: "901",
+      authorUserId: BASE_CONTEXT.authorUserId,
+      channelId: BASE_CONTEXT.channelId,
+      extractorModel: "correction-test",
+      embedding: null,
+    });
+    const newerClaimId = newer.claims[0]?.id;
+    if (newerClaimId === undefined) {
+      throw new Error("Expected a newer claim");
+    }
+
+    expect(delayed.claim).toMatchObject({
+      status: "superseded",
+      value: "water",
+    });
+    expect(
+      await client().memoryClaim.findUniqueOrThrow({
+        where: { id: newerClaimId },
+      }),
+    ).toMatchObject({ status: "active", value: "tea" });
   });
 });

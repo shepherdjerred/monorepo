@@ -10,6 +10,10 @@ const UniqueConstraintErrorSchema = z.object({ code: z.literal("P2002") });
 
 export const SessionEventRoleSchema = z.enum(["user", "assistant", "tool"]);
 export type SessionEventRole = z.infer<typeof SessionEventRoleSchema>;
+export const MAX_SESSION_EVENT_CONTENT_CHARACTERS = 20_000;
+const SessionEventContentSchema = z
+  .string()
+  .max(MAX_SESSION_EVENT_CONTENT_CHARACTERS);
 
 export async function getActiveSessionForThread(
   threadId: string,
@@ -95,6 +99,7 @@ export async function appendSessionEvent(options: {
   const input = {
     ...options,
     role: SessionEventRoleSchema.parse(options.role),
+    content: SessionEventContentSchema.parse(options.content),
   };
   for (let attempt = 0; attempt < 4; attempt += 1) {
     try {

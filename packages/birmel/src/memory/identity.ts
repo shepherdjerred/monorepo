@@ -1,5 +1,6 @@
 import {
   MemoryCandidateSchema,
+  MemoryClaimSchema,
   MemoryScopeSchema,
 } from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
 import {
@@ -125,6 +126,35 @@ export function buildMemoryClaimFamilyKey(input: unknown): string {
     value: "",
     validFrom: null,
     validUntil: null,
+  });
+}
+
+export function buildMemoryClaimFamilyKeyFromClaim(input: unknown): string {
+  const claim = MemoryClaimSchema.parse(input);
+  const fallbackDiscordId =
+    claim.userId ?? claim.relatedUserIds[0] ?? claim.guildId;
+  return buildMemoryClaimFamilyKey({
+    context: {
+      guildId: claim.guildId,
+      channelId: claim.channelId ?? claim.guildId,
+      userId: fallbackDiscordId,
+      personaId: claim.personaId,
+      authorUserId: fallbackDiscordId,
+      extractorModel: "memory-family-key",
+    },
+    candidate: {
+      scope: claim.scope,
+      subject: claim.subject,
+      predicate: claim.predicate,
+      value: claim.value,
+      confidence: claim.confidence,
+      salience: claim.salience,
+      origin: claim.origin,
+      validFrom: claim.validFrom?.toISOString() ?? null,
+      validUntil: claim.validUntil?.toISOString() ?? null,
+      relatedUserIds: claim.relatedUserIds,
+      sourceDiscordMessageIds: claim.sourceDiscordMessageIds,
+    },
   });
 }
 

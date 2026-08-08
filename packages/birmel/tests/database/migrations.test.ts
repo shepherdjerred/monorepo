@@ -6,6 +6,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
+  LEGACY_BASELINE_MIGRATIONS,
   readDatabaseFingerprint,
   REQUIRED_MIGRATIONS,
   verifyBaselineFingerprint,
@@ -42,6 +43,8 @@ const FINAL_TABLES = [
   "GuildOwner",
   "LegacyAgentRuntimeArchive",
   "MemoryClaim",
+  "MemoryExtractionFence",
+  "MemorySourceFence",
   "MemoryRevision",
   "MusicHistory",
   "PollRecord",
@@ -67,6 +70,43 @@ async function withTemporaryDatabase(
 
 function openDatabase(databasePath: string): Database {
   return new Database(databasePath, { create: true, strict: true });
+}
+
+function seedLegacyMigrationHistory(
+  database: Database,
+  migrations: readonly {
+    migrationName: string;
+    checksum: string;
+  }[] = LEGACY_BASELINE_MIGRATIONS,
+): void {
+  database.run(`
+    CREATE TABLE "_prisma_migrations" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "checksum" TEXT NOT NULL,
+      "finished_at" DATETIME,
+      "migration_name" TEXT NOT NULL,
+      "logs" TEXT,
+      "rolled_back_at" DATETIME,
+      "started_at" DATETIME NOT NULL DEFAULT current_timestamp,
+      "applied_steps_count" INTEGER UNSIGNED NOT NULL DEFAULT 0
+    )
+  `);
+  const insertMigration = database.prepare(`
+    INSERT INTO "_prisma_migrations" (
+      "id", "checksum", "finished_at", "migration_name", "started_at",
+      "applied_steps_count"
+    ) VALUES (?, ?, ?, ?, ?, 1)
+  `);
+  for (const [index, migration] of migrations.entries()) {
+    const timestamp = `2026-06-03T00:00:0${String(index)}.000Z`;
+    insertMigration.run(
+      `00000000-0000-0000-0000-${String(index + 1).padStart(12, "0")}`,
+      migration.checksum,
+      timestamp,
+      migration.migrationName,
+      timestamp,
+    );
+  }
 }
 
 async function runCommand(
@@ -564,6 +604,107 @@ describe("Birmel database migrations", () => {
       }
 
       await expectPrismaSchemaMatch(databasePath);
+    });
+  }, 30_000);
+
+  test("a production-shaped database with the verified pre-squash migration history resolves the new baseline and migrates", async () => {
+    await withTemporaryDatabase(async (databasePath) => {
+      const productionDatabase = openDatabase(databasePath);
+      try {
+        productionDatabase.run(BASELINE_SQL);
+        seedLegacyMigrationHistory(productionDatabase);
+        seedProductionShapedRows(productionDatabase);
+
+        const fingerprint = readDatabaseFingerprint(productionDatabase);
+        expect(fingerprint.hasMigrationTable).toBeTrue();
+        expect(() => verifyBaselineFingerprint(fingerprint)).not.toThrow();
+        expect(readAppliedMigrations(productionDatabase)).toEqual(
+          LEGACY_BASELINE_MIGRATIONS.map(
+            (migration) => migration.migrationName,
+          ),
+        );
+      } finally {
+        productionDatabase.close();
+      }
+
+      await runMigrationBootstrap(databasePath);
+
+      const migratedDatabase = openDatabase(databasePath);
+      try {
+        expectFinalSchema(migratedDatabase, true);
+        expectPreservedProductRows(migratedDatabase);
+        expectPreservedJobRows(migratedDatabase);
+        expectArchivedLegacyRows(migratedDatabase);
+        expect(readAppliedMigrations(migratedDatabase)).toEqual([
+          ...LEGACY_BASELINE_MIGRATIONS.map(
+            (migration) => migration.migrationName,
+          ),
+          ...REQUIRED_MIGRATIONS,
+        ]);
+      } finally {
+        migratedDatabase.close();
+      }
+
+      await expectPrismaSchemaMatch(databasePath);
+    });
+  }, 30_000);
+
+  test("a database with legacy migration history is fingerprinted before the new baseline is resolved", async () => {
+    await withTemporaryDatabase(async (databasePath) => {
+      const database = openDatabase(databasePath);
+      try {
+        database.run(BASELINE_SQL);
+        database.run(
+          `CREATE TABLE "UnexpectedLegacyTable" ("id" INTEGER NOT NULL PRIMARY KEY)`,
+        );
+        seedLegacyMigrationHistory(database);
+      } finally {
+        database.close();
+      }
+
+      await expect(runMigrationBootstrap(databasePath)).rejects.toThrow(
+        /table fingerprint.*UnexpectedLegacyTable/,
+      );
+
+      const rejectedDatabase = openDatabase(databasePath);
+      try {
+        expect(readAppliedMigrations(rejectedDatabase)).not.toContain(
+          REQUIRED_MIGRATIONS[0],
+        );
+      } finally {
+        rejectedDatabase.close();
+      }
+    });
+  }, 30_000);
+
+  test("an unverified legacy migration history cannot resolve the new baseline", async () => {
+    await withTemporaryDatabase(async (databasePath) => {
+      const database = openDatabase(databasePath);
+      try {
+        database.run(BASELINE_SQL);
+        seedLegacyMigrationHistory(database, [
+          ...LEGACY_BASELINE_MIGRATIONS,
+          {
+            migrationName: "20260701000000_unknown_legacy_change",
+            checksum: "unknown-checksum",
+          },
+        ]);
+      } finally {
+        database.close();
+      }
+
+      await expect(runMigrationBootstrap(databasePath)).rejects.toThrow(
+        /migration history is not the verified pre-squash history/,
+      );
+
+      const rejectedDatabase = openDatabase(databasePath);
+      try {
+        expect(readAppliedMigrations(rejectedDatabase)).not.toContain(
+          REQUIRED_MIGRATIONS[0],
+        );
+      } finally {
+        rejectedDatabase.close();
+      }
     });
   }, 30_000);
 

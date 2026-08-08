@@ -1,6 +1,11 @@
-import type { PrismaClient } from "#generated/prisma/client/index.js";
+import type { Prisma, PrismaClient } from "#generated/prisma/client/index.js";
 import type { MemoryClaim } from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
 import { applyMemoryCandidates } from "@shepherdjerred/birmel/memory/apply.ts";
+import {
+  upsertMemoryExtractionFence,
+  upsertMemorySourceFences,
+} from "@shepherdjerred/birmel/memory/extraction-fence.ts";
+import { buildMemoryClaimFamilyKeyFromClaim } from "@shepherdjerred/birmel/memory/identity.ts";
 import {
   ForgetMemoryClaimInputSchema,
   ForgetMemoryClaimResultSchema,
@@ -14,7 +19,10 @@ import {
   type MemoryClaimHistory,
   type PrivacyEraseMemoryClaimResult,
 } from "@shepherdjerred/birmel/memory/schemas.ts";
-import { serializeDiscordIds } from "@shepherdjerred/birmel/memory/serialization.ts";
+import {
+  deserializeDiscordIds,
+  serializeDiscordIds,
+} from "@shepherdjerred/birmel/memory/serialization.ts";
 import {
   memoryClaimWithRevisions,
   toMemoryClaim,
@@ -23,6 +31,29 @@ import {
 import { withMemorySpan } from "@shepherdjerred/birmel/memory/telemetry.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 
+type MemoryClaimRow = Prisma.MemoryClaimGetPayload<{
+  include: { revisions: true };
+}>;
+
+function revisionSourceIds(claim: MemoryClaimRow): string[] {
+  return claim.revisions.flatMap((revision) =>
+    deserializeDiscordIds(revision.sourceDiscordMessageIds),
+  );
+}
+
+function privacyEraseSelection(options: {
+  exactFamily: MemoryClaimRow[];
+  commandSourceId: string;
+}): { claimIds: string[]; sourceDiscordMessageIds: string[] } {
+  return {
+    claimIds: options.exactFamily.map(({ id }) => id),
+    sourceDiscordMessageIds: [
+      options.commandSourceId,
+      ...options.exactFamily.flatMap((claim) => revisionSourceIds(claim)),
+    ],
+  };
+}
+
 export async function rememberMemoryClaim(
   client: PrismaClient,
   input: unknown,
@@ -30,7 +61,18 @@ export async function rememberMemoryClaim(
   const parsed = RememberMemoryInputSchema.parse(input);
   const applied = await applyMemoryCandidates(client, {
     context: parsed.context,
-    candidates: [{ candidate: parsed.candidate, embedding: parsed.embedding }],
+    candidates: [
+      {
+        candidate: parsed.candidate,
+        embedding: parsed.embedding,
+        provenance: {
+          authorUserId: parsed.context.authorUserId,
+          channelId: parsed.context.channelId,
+          sourceOrder: parsed.sourceOrder,
+        },
+      },
+    ],
+    reactivateForgotten: true,
   });
   const claim = applied.claims[0];
   if (claim === undefined) {
@@ -91,6 +133,35 @@ export async function forgetMemoryClaim(
     const alreadyForgotten = await client.$transaction(async (transaction) => {
       const existing = await transaction.memoryClaim.findUniqueOrThrow({
         where: { id: parsed.claimId },
+        include: memoryClaimWithRevisions,
+      });
+      const selectedClaim = toMemoryClaim(existing);
+      const familyKey = buildMemoryClaimFamilyKeyFromClaim(selectedClaim);
+      const possibleFamily = await transaction.memoryClaim.findMany({
+        where: { guildId: selectedClaim.guildId, scope: selectedClaim.scope },
+        include: memoryClaimWithRevisions,
+      });
+      const family = possibleFamily.filter(
+        (claim) =>
+          buildMemoryClaimFamilyKeyFromClaim(toMemoryClaim(claim)) ===
+          familyKey,
+      );
+      await upsertMemoryExtractionFence({
+        transaction,
+        claim: selectedClaim,
+        sourceDiscordMessageIds: parsed.sourceDiscordMessageIds,
+      });
+      await upsertMemorySourceFences({
+        transaction,
+        sourceDiscordMessageIds: [
+          ...family.flatMap(({ revisions }) =>
+            revisions.flatMap((revision) =>
+              deserializeDiscordIds(revision.sourceDiscordMessageIds),
+            ),
+          ),
+          ...parsed.sourceDiscordMessageIds,
+        ],
+        reason: "forget",
       });
       await transaction.memoryClaim.update({
         where: { id: parsed.claimId },
@@ -133,13 +204,41 @@ export async function privacyEraseMemoryClaim(
   return withMemorySpan("memory.privacy_erase", async () => {
     const erasedRevisionCount = await client.$transaction(
       async (transaction) => {
-        const revisionCount = await transaction.memoryRevision.count({
-          where: { claimId: parsed.claimId },
-        });
-        await transaction.memoryClaim.delete({
+        const existing = await transaction.memoryClaim.findUniqueOrThrow({
           where: { id: parsed.claimId },
+          include: memoryClaimWithRevisions,
         });
-        return revisionCount;
+        const selectedClaim = toMemoryClaim(existing);
+        const familyKey = buildMemoryClaimFamilyKeyFromClaim(selectedClaim);
+        await upsertMemoryExtractionFence({
+          transaction,
+          claim: selectedClaim,
+          sourceDiscordMessageIds: [parsed.sourceDiscordMessageId],
+        });
+        const possibleFamily = await transaction.memoryClaim.findMany({
+          where: { guildId: selectedClaim.guildId },
+          include: memoryClaimWithRevisions,
+        });
+        const family = possibleFamily.filter(
+          (claim) =>
+            buildMemoryClaimFamilyKeyFromClaim(toMemoryClaim(claim)) ===
+            familyKey,
+        );
+        const erase = privacyEraseSelection({
+          exactFamily: family,
+          commandSourceId: parsed.sourceDiscordMessageId,
+        });
+        await upsertMemorySourceFences({
+          transaction,
+          sourceDiscordMessageIds: erase.sourceDiscordMessageIds,
+          reason: "privacy",
+        });
+        await transaction.memoryClaim.deleteMany({
+          where: { id: { in: erase.claimIds } },
+        });
+        return possibleFamily
+          .filter(({ id }) => erase.claimIds.includes(id))
+          .reduce((count, claim) => count + claim.revisions.length, 0);
       },
     );
     loggers.memory.info("memory claim privacy-erased", {

@@ -93,3 +93,15 @@ export async function waitForAgentRunAdmission(
   }
   throw new Error("Timed out waiting for queued AgentRun admission");
 }
+
+export async function waitForFirstFlowPlaceholder(
+  state: FlowMessageState,
+): Promise<void> {
+  const deadline = Date.now() + 2000;
+  while (state.replyCalls === 0 && Date.now() < deadline) {
+    await Bun.sleep(1);
+  }
+  if (state.replyCalls === 0) {
+    throw new Error("Timed out waiting for the first queued placeholder");
+  }
+}

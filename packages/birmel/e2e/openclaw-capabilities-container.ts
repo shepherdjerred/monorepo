@@ -120,6 +120,7 @@ async function setupPhase(): Promise<void> {
       sourceDiscordMessageIds: [MESSAGE_ID],
     },
     embedding: [1, 0],
+    sourceOrder: MESSAGE_ID,
   });
   const session = await createSession({
     guildId: GUILD_ID,

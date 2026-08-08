@@ -171,6 +171,9 @@ export function createTool<
       async (span) => {
         const startedAt = performance.now();
         try {
+          if (metadata.riskClass !== "read") {
+            await requestContext.beforeExternalEffect?.();
+          }
           const output = await withCancellation(
             async (signal) => {
               signal.throwIfAborted();

@@ -3,6 +3,10 @@ import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
 import { finalizeCancelledAgentJobRun } from "@shepherdjerred/birmel/scheduler/agent-job-cancellation.ts";
 import {
+  finalizeCheckpointedEffect,
+  serializeAgentJobOutput,
+} from "@shepherdjerred/birmel/scheduler/agent-job-effect-state.ts";
+import {
   AgentJobTimeoutError,
   getAgentJobFailureTransition,
   getNextAgentJobRun,
@@ -50,9 +54,6 @@ function parseScheduleKind(value: string): AgentJobScheduleKind {
   }
   throw new Error(`Unknown schedule kind: ${value}`);
 }
-function serializeOutput(value: unknown): string {
-  return typeof value === "string" ? value : JSON.stringify(value);
-}
 async function markJobSuccess(
   job: AgentJob,
   runId: string,
@@ -85,11 +86,16 @@ async function markJobSuccess(
       return false;
     }
     await transaction.agentJobRun.updateMany({
-      where: { id: runId, status: { in: ["running", "timed_out"] } },
+      where: {
+        id: runId,
+        status: {
+          in: ["running", "timed_out", "effect_acknowledged"],
+        },
+      },
       data: {
         status: "success",
         finishedAt,
-        output: serializeOutput(output).slice(0, 20_000),
+        output: serializeAgentJobOutput(output).slice(0, 20_000),
       },
     });
     return true;
@@ -119,6 +125,17 @@ async function markJobFailure(
     finishedAt,
   });
   const finalized = await prisma.$transaction(async (transaction) => {
+    const checkpointed = await finalizeCheckpointedEffect({
+      transaction,
+      job,
+      runId,
+      claimId,
+      errorMessage,
+      finishedAt,
+    });
+    if (checkpointed != null) {
+      return checkpointed;
+    }
     const updated = await transaction.agentJob.updateMany({
       where: { id: job.id, status: "running", claimedBy: claimId },
       data: {
@@ -214,12 +231,15 @@ async function finalizeTimedOutExecution(options: {
     );
     return;
   }
-  await markJobSuccess(
+  const finalized = await markJobSuccess(
     options.job,
     options.runId,
     options.claimId,
     result.output,
   );
+  if (!finalized) {
+    throw new Error(`Timed-out job ${options.job.id} was not finalized`);
+  }
 }
 async function claimAgentJob(job: AgentJob): Promise<{
   job: AgentJob;
@@ -282,7 +302,7 @@ async function processAgentJob(job: AgentJob): Promise<void> {
           }),
         },
       });
-      const execution = executeDurableAgentJob(claimed.job);
+      const execution = executeDurableAgentJob(claimed.job, run.id);
       try {
         const output = await withAgentJobTimeout(
           execution,
@@ -291,7 +311,15 @@ async function processAgentJob(job: AgentJob): Promise<void> {
         if (!toolResultStatus.isSuccess(output)) {
           throw new Error("Tool reported failure");
         }
-        await markJobSuccess(claimed.job, run.id, claimed.claimId, output);
+        const finalized = await markJobSuccess(
+          claimed.job,
+          run.id,
+          claimed.claimId,
+          output,
+        );
+        if (!finalized) {
+          throw new Error(`Agent job ${claimed.job.id} was not finalized`);
+        }
         span.setAttribute("birmel.job.success", true);
       } catch (error) {
         span.setAttribute("birmel.job.success", false);

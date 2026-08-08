@@ -29,6 +29,7 @@ const SessionEventSchema = z.object({
   role: z.enum(["user", "assistant", "tool"]),
   content: z.string(),
   sequence: z.number().int().nonnegative(),
+  createdAt: z.date(),
   discordMessageId: DiscordIdSchema.optional(),
 });
 
@@ -82,6 +83,27 @@ function categorySize(
     .reduce((total, item) => total + item.characterCount, 0);
 }
 
+type TranscriptCandidate = {
+  source: ContextSource;
+  createdAt: Date;
+  sessionSequence: number | undefined;
+};
+
+function compareTranscriptCandidates(
+  left: TranscriptCandidate,
+  right: TranscriptCandidate,
+): number {
+  const timestamp = left.createdAt.getTime() - right.createdAt.getTime();
+  if (timestamp !== 0) {
+    return timestamp;
+  }
+  const sequence = (left.sessionSequence ?? -1) - (right.sessionSequence ?? -1);
+  if (sequence !== 0) {
+    return sequence;
+  }
+  return left.source.id.localeCompare(right.source.id);
+}
+
 function selectRankedFragments(
   fragments: z.infer<typeof RankedFragmentSchema>[],
 ): ContextSource[] {
@@ -133,25 +155,47 @@ function selectTranscriptSources(
     throw new Error("Current Discord message exceeds the transcript budget");
   }
 
-  const byDiscordId = new Map<string, ContextSource>();
-  const withoutDiscordId: ContextSource[] = [];
+  const summaryCapacity = Math.min(
+    CONTEXT_BUDGETS.sessionSummary,
+    CONTEXT_BUDGETS.transcript - current.characterCount,
+  );
+  const boundedSummary = input.sessionSummary?.slice(0, summaryCapacity);
+  const summary =
+    boundedSummary == null || boundedSummary.length === 0
+      ? undefined
+      : source({
+          id: "session-summary",
+          kind: "session-summary",
+          content: boundedSummary,
+          rank: -1,
+        });
+
+  const byDiscordId = new Map<string, TranscriptCandidate>();
+  const withoutDiscordId: TranscriptCandidate[] = [];
 
   for (const event of input.sessionEvents.toSorted(
     (left, right) => right.sequence - left.sequence,
   )) {
-    const eventSource = source({
-      id: `session-event:${event.id}`,
-      kind: "session-event",
-      content: `${event.role}: ${event.content}`,
-      rank: event.sequence,
-      ...(event.discordMessageId == null
-        ? {}
-        : { discordMessageId: event.discordMessageId }),
-    });
+    const candidate = {
+      source: source({
+        id: `session-event:${event.id}`,
+        kind: "session-event",
+        content: `${event.role}: ${event.content}`,
+        rank: event.createdAt.getTime(),
+        ...(event.discordMessageId == null
+          ? {}
+          : { discordMessageId: event.discordMessageId }),
+      }),
+      createdAt: event.createdAt,
+      sessionSequence: event.sequence,
+    };
     if (event.discordMessageId == null) {
-      withoutDiscordId.push(eventSource);
-    } else if (event.discordMessageId !== input.currentMessage.id) {
-      byDiscordId.set(event.discordMessageId, eventSource);
+      withoutDiscordId.push(candidate);
+    } else if (
+      event.discordMessageId !== input.currentMessage.id &&
+      !byDiscordId.has(event.discordMessageId)
+    ) {
+      byDiscordId.set(event.discordMessageId, candidate);
     }
   }
 
@@ -161,45 +205,39 @@ function selectTranscriptSources(
     if (message.id === input.currentMessage.id || byDiscordId.has(message.id)) {
       continue;
     }
-    byDiscordId.set(
-      message.id,
-      source({
+    byDiscordId.set(message.id, {
+      source: source({
         id: `discord:${message.id}`,
         kind: "transcript",
         content: renderTranscriptMessage(message),
         rank: message.createdAt.getTime(),
         discordMessageId: message.id,
       }),
-    );
+      createdAt: message.createdAt,
+      sessionSequence: undefined,
+    });
   }
 
   const candidates = [...byDiscordId.values(), ...withoutDiscordId].toSorted(
-    (left, right) => right.rank - left.rank || left.id.localeCompare(right.id),
+    (left, right) => compareTranscriptCandidates(right, left),
   );
-  const selectedNewestFirst: ContextSource[] = [current];
-  let used = current.characterCount;
+  const selectedCandidates: TranscriptCandidate[] = [];
+  let used = current.characterCount + (summary?.characterCount ?? 0);
 
   for (const candidate of candidates) {
-    if (used + candidate.characterCount > CONTEXT_BUDGETS.transcript) {
+    if (used + candidate.source.characterCount > CONTEXT_BUDGETS.transcript) {
       continue;
     }
-    selectedNewestFirst.push(candidate);
-    used += candidate.characterCount;
+    selectedCandidates.push(candidate);
+    used += candidate.source.characterCount;
   }
 
-  const selected = selectedNewestFirst.toSorted(
-    (left, right) => left.rank - right.rank || left.id.localeCompare(right.id),
-  );
-  if (input.sessionSummary != null && input.sessionSummary.length > 0) {
-    const summary = source({
-      id: "session-summary",
-      kind: "session-summary",
-      content: input.sessionSummary,
-      rank: -1,
-    });
-    if (used + summary.characterCount <= CONTEXT_BUDGETS.transcript) {
-      selected.unshift(summary);
-    }
+  const selected = selectedCandidates
+    .toSorted(compareTranscriptCandidates)
+    .map((candidate) => candidate.source);
+  selected.push(current);
+  if (summary != null) {
+    selected.unshift(summary);
   }
   return selected;
 }

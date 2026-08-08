@@ -114,6 +114,13 @@ retries survive restarts, scheduler ticks cannot overlap, and execution carries
 the original trusted actor's request context. Thread messages steer live
 sessions; jobs are the explicit mechanism for background work.
 
+Every external write and Discord delivery crosses a durable effect checkpoint.
+If a crash or cancellation leaves the outcome unknown, the job pauses instead
+of replaying. The `manage-job` resolution action can record that the effect was
+applied and finalize it without replay. An ambiguous occurrence cannot be
+marked not applied or retried in place because its prior executor may still
+settle.
+
 ## Persistence and health are explicit too
 
 Prisma migrations own the product database schema, including agent runs,

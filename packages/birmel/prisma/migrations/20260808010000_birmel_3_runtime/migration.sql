@@ -212,11 +212,25 @@ SELECT
               AND "legacyAction" = 'schedule'
               AND julianday("legacyScheduledAt") IS NOT NULL
        THEN 'UTC' ELSE "timezone" END,
-  CASE WHEN "toolId" = 'manage-scheduled-message'
-              AND "legacyAction" = 'schedule'
-              AND julianday("legacyScheduledAt") IS NOT NULL
+  CASE WHEN "status" = 'running'
+              AND NOT EXISTS (
+                SELECT 1 FROM "AgentJobRun"
+                WHERE "AgentJobRun"."jobId" = "legacy_agent_jobs"."id"
+              )
+       THEN COALESCE("nextRunAt", CURRENT_TIMESTAMP)
+       WHEN "status" = 'running' THEN NULL
+       WHEN "toolId" = 'manage-scheduled-message'
+                AND "legacyAction" = 'schedule'
+                AND julianday("legacyScheduledAt") IS NOT NULL
        THEN "legacyScheduledAt" ELSE "nextRunAt" END,
-  "status",
+  CASE WHEN "status" = 'running'
+              AND NOT EXISTS (
+                SELECT 1 FROM "AgentJobRun"
+                WHERE "AgentJobRun"."jobId" = "legacy_agent_jobs"."id"
+              )
+       THEN 'retrying'
+       WHEN "status" = 'running' THEN 'paused'
+       ELSE "status" END,
   CASE WHEN "toolId" = 'manage-scheduled-message'
               AND "legacyAction" = 'schedule'
               AND "legacyChannelId" IS NOT NULL
@@ -248,9 +262,50 @@ SELECT
             COALESCE("toolInput", '{}')
        ELSE NULL END,
   "deliveryMode", "model", "reasoningEffort", "textVerbosity", "maxAttempts",
-  "timeoutMs", "attemptCount", "lastRunAt", "lastStatus", "lastError",
+  "timeoutMs", "attemptCount", "lastRunAt",
+  CASE WHEN "status" = 'running'
+              AND NOT EXISTS (
+                SELECT 1 FROM "AgentJobRun"
+                WHERE "AgentJobRun"."jobId" = "legacy_agent_jobs"."id"
+              )
+       THEN 'recovered'
+       WHEN "status" = 'running' THEN 'recovery_ambiguous'
+       ELSE "lastStatus" END,
+  CASE WHEN "status" = 'running'
+              AND NOT EXISTS (
+                SELECT 1 FROM "AgentJobRun"
+                WHERE "AgentJobRun"."jobId" = "legacy_agent_jobs"."id"
+              )
+       THEN 'Recovered legacy execution before a run was recorded'
+       WHEN "status" = 'running'
+       THEN 'Legacy execution was interrupted with an unknown effect outcome'
+       ELSE "lastError" END,
   "legacyTaskId", "createdAt", "updatedAt"
 FROM "legacy_agent_jobs";
+
+UPDATE "AgentJobRun"
+SET "status" = 'effect_ambiguous',
+    "finishedAt" = COALESCE("finishedAt", CURRENT_TIMESTAMP),
+    "error" = COALESCE(
+      "error",
+      'Legacy execution was interrupted with an unknown effect outcome'
+    )
+WHERE "status" = 'running';
+
+UPDATE "new_AgentJob"
+SET "status" = 'paused',
+    "nextRunAt" = NULL,
+    "lastStatus" = 'recovery_ambiguous',
+    "lastError" = COALESCE(
+      "lastError",
+      'Legacy execution was interrupted with an unknown effect outcome'
+    )
+WHERE "id" IN (
+  SELECT "jobId"
+  FROM "AgentJobRun"
+  WHERE "status" = 'effect_ambiguous'
+    AND "error" = 'Legacy execution was interrupted with an unknown effect outcome'
+);
 
 INSERT OR IGNORE INTO "new_AgentJob" (
   "id", "guildId", "channelId", "actorUserId", "sourceChannelId", "name",
@@ -329,6 +384,20 @@ CREATE TABLE "AgentSessionEvent" (
     "metadata" TEXT,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "AgentSessionEvent_sessionId_fkey" FOREIGN KEY ("sessionId") REFERENCES "AgentSession" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE "MemoryExtractionFence" (
+    "familyKey" TEXT NOT NULL PRIMARY KEY,
+    "sourceOrder" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
+);
+
+CREATE TABLE "MemorySourceFence" (
+    "sourceDiscordMessageId" TEXT NOT NULL PRIMARY KEY,
+    "reason" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
 );
 
 CREATE UNIQUE INDEX "AgentJob_legacyTaskId_key" ON "AgentJob"("legacyTaskId");

@@ -52,6 +52,18 @@ const MEMORY_SCHEMA_SQL = `
       FOREIGN KEY ("claimId") REFERENCES "MemoryClaim" ("id")
       ON DELETE CASCADE ON UPDATE CASCADE
   );
+  CREATE TABLE "MemoryExtractionFence" (
+    "familyKey" TEXT NOT NULL PRIMARY KEY,
+    "sourceOrder" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
+  );
+  CREATE TABLE "MemorySourceFence" (
+    "sourceDiscordMessageId" TEXT NOT NULL PRIMARY KEY,
+    "reason" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
+  );
   CREATE UNIQUE INDEX "MemoryClaim_identityKey_key"
     ON "MemoryClaim"("identityKey");
   CREATE INDEX "MemoryClaim_guildId_scope_status_idx"
