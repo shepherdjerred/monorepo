@@ -315,6 +315,32 @@ export function createTemporalChart(app: App) {
           ],
           ports: [{ port: IntOrString.fromNumber(9464), protocol: "TCP" }],
         },
+        {
+          // Allow cloudflared to reach the authenticated sleep webhook.
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: {
+                  "kubernetes.io/metadata.name": "cloudflare-tunnel",
+                },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(9469), protocol: "TCP" }],
+        },
+        {
+          // Allow the blackbox exporter to probe the webhook health endpoint.
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: {
+                  "kubernetes.io/metadata.name": "prometheus",
+                },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(9469), protocol: "TCP" }],
+        },
       ],
       egress: [
         // DNS

@@ -162,7 +162,7 @@ cd packages/temporal
 TEMPORAL_ADDRESS=localhost:7233 bun run scripts/schedule-agent-task.ts --from-doc ../../packages/docs/guides/<doc>.md
 ```
 
-Do not expose direct Temporal scheduling as a public ingress path. Public creation must go through the authenticated `/agent-tasks` HTTP API with `Authorization: Bearer $AGENT_TASK_API_TOKEN`.
+Do not expose general-purpose Temporal scheduling as a public ingress path. Public creation must go through the authenticated `/agent-tasks` HTTP API with `Authorization: Bearer $AGENT_TASK_API_TOKEN`. A narrowly scoped, separately authenticated webhook may start a fixed workflow when its route, input schema, workflow ID, and authorization token are dedicated to that automation and covered by equivalent tests.
 
 ## Automation Code — Banned Patterns
 

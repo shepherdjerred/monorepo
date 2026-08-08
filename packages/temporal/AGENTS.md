@@ -171,7 +171,7 @@ Workflow:
 - `POSTAL_HOST`, `POSTAL_API_KEY` — Postal email service
 - `RECIPIENT_EMAIL`, `SENDER_EMAIL` — Email addresses for dependency summary and homelab audit
 - `AGENT_TASK_API_TOKEN` — required bearer token for the authenticated `/agent-tasks` scheduling API on port 9467
-- `SLEEP_WEBHOOK_TOKEN` — required bearer token for the direct iOS sleep webhook on port 9469
+- `SLEEP_WEBHOOK_TOKEN` — bearer token for the direct iOS sleep webhook on port 9469; the listener is skipped when unset (local/dev workers can omit it)
 - `SLEEP_WEBHOOK_PORT` — port for the direct sleep webhook (default `9469`)
 - `RUNBOOK_PATH` — local override for the homelab-audit runbook (defaults to fetching `https://raw.githubusercontent.com/.../packages/docs/guides/2026-04-04_homelab-audit-runbook.md`)
 - `PAGERDUTY_TOKEN` — PagerDuty REST API token (homelab audit)

@@ -1,7 +1,7 @@
 import { ApplicationFailure, sleep } from "@temporalio/workflow";
 import type { SleepAutomationInput } from "#shared/schemas.ts";
 import { SleepAutomationInputSchema } from "#shared/schemas.ts";
-import { callServiceUnchecked } from "./util.ts";
+import { callServiceForCleanup, callServiceUnchecked } from "./util.ts";
 
 const BEDROOM_MEDIA = "media_player.bedroom" as const;
 const BEDROOM_AC = "climate.bedroom" as const;
@@ -32,20 +32,30 @@ export async function sleepMusic(input?: SleepAutomationInput): Promise<void> {
       ? DEFAULT_SLEEP_MUSIC_DURATION_MINUTES
       : validatedDurationMinutes(input);
 
-  await callServiceUnchecked("media_player", "unjoin", {
-    entity_id: BEDROOM_MEDIA,
-  });
-  await callServiceUnchecked("media_player", "volume_set", {
-    entity_id: BEDROOM_MEDIA,
-    volume_level: 0.1,
-  });
-  await callServiceUnchecked("media_player", "play_media", {
-    entity_id: BEDROOM_MEDIA,
-    media: SLEEP_MEDIA,
-  });
+  try {
+    await callServiceUnchecked("media_player", "unjoin", {
+      entity_id: BEDROOM_MEDIA,
+    });
+    await callServiceUnchecked("media_player", "volume_set", {
+      entity_id: BEDROOM_MEDIA,
+      volume_level: 0.1,
+    });
+    await callServiceUnchecked("media_player", "play_media", {
+      entity_id: BEDROOM_MEDIA,
+      media: SLEEP_MEDIA,
+    });
+  } catch (error: unknown) {
+    // A retrigger terminates the old run before this replacement initializes.
+    // If HA is unavailable, still retain cleanup ownership rather than
+    // leaving the old playback running indefinitely.
+    await callServiceForCleanup("media_player", "media_stop", {
+      entity_id: BEDROOM_MEDIA,
+    });
+    throw error;
+  }
 
   await sleep(durationMinutes * MINUTE_MS);
-  await callServiceUnchecked("media_player", "media_stop", {
+  await callServiceForCleanup("media_player", "media_stop", {
     entity_id: BEDROOM_MEDIA,
   });
 }
@@ -56,14 +66,23 @@ export async function sleepAc(input?: SleepAutomationInput): Promise<void> {
       ? DEFAULT_SLEEP_AC_DURATION_MINUTES
       : validatedDurationMinutes(input);
 
-  await callServiceUnchecked("climate", "set_temperature", {
-    entity_id: BEDROOM_AC,
-    temperature: 24,
-    hvac_mode: "cool",
-  });
+  try {
+    await callServiceUnchecked("climate", "set_temperature", {
+      entity_id: BEDROOM_AC,
+      temperature: 24,
+      hvac_mode: "cool",
+    });
+  } catch (error: unknown) {
+    // See the corresponding sleepMusic path: the replacement run must own a
+    // durable off attempt after TERMINATE_EXISTING cancels the old run.
+    await callServiceForCleanup("climate", "turn_off", {
+      entity_id: BEDROOM_AC,
+    });
+    throw error;
+  }
 
   await sleep(durationMinutes * MINUTE_MS);
-  await callServiceUnchecked("climate", "turn_off", {
+  await callServiceForCleanup("climate", "turn_off", {
     entity_id: BEDROOM_AC,
   });
 }

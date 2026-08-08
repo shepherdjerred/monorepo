@@ -54,3 +54,9 @@ sleep scripts or custom sleep events are required in HA.
       at the requested deadline.
 - [ ] Invoke either Shortcut again with a different duration and verify the
       active timer is replaced.
+
+Accept the implementation if each request reaches the authenticated webhook,
+the requested device setting is applied, and the device is stopped or turned
+off at the requested deadline, including after a retrigger. Reject it and keep
+the plan open if authentication, device application, retrigger replacement, or
+deadline cleanup fails.

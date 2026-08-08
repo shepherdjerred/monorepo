@@ -30,7 +30,12 @@ export function startHttpServers(client: Client): EventBridgeHandle {
   }
 
   const agentTaskApi: AgentTaskApiHandle = startAgentTaskApi(client);
-  const sleepWebhook: SleepWebhookHandle = startSleepWebhook(client);
+  let sleepWebhook: SleepWebhookHandle | undefined;
+  if ((Bun.env["SLEEP_WEBHOOK_TOKEN"] ?? "") === "") {
+    console.warn("SLEEP_WEBHOOK_TOKEN not set; skipping sleep webhook server");
+  } else {
+    sleepWebhook = startSleepWebhook(client);
+  }
 
   // Xcode Cloud webhook receiver is optional — only start when its token is
   // set. Translates iOS build-failure webhooks into Alertmanager alerts.
@@ -49,7 +54,9 @@ export function startHttpServers(client: Client): EventBridgeHandle {
         await webhook.close();
       }
       await agentTaskApi.close();
-      await sleepWebhook.close();
+      if (sleepWebhook !== undefined) {
+        await sleepWebhook.close();
+      }
       if (xcodeCloud !== undefined) {
         await xcodeCloud.close();
       }
