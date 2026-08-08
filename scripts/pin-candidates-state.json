@@ -42,9 +42,9 @@
       "buildNumber": 8036
     },
     "shepherdjerred/temporal-worker": {
-      "buildNumber": 8106,
-      "version": "2.0.0-8106",
-      "digest": "sha256:de5e970cf2dba247af0568d10ca408eb370fde7f3eff00558994b2e77bcf2ebf"
+      "buildNumber": 8114,
+      "version": "2.0.0-8114",
+      "digest": "sha256:971a6347401004fa60acac0c24a8d82281aa33f64e1c575724a7d9a0582728cb"
     },
     "shepherdjerred/trmnl-dashboard": {
       "version": "2.0.0-8036",
