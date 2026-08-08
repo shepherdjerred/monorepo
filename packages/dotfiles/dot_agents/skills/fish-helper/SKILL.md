@@ -53,6 +53,10 @@ function retry --description 'Retry a command with exact arguments'
     if set -q _flag_max_attempts
         set max_attempts $_flag_max_attempts
     end
+    if not string match --quiet --regex '^[1-9][0-9]*$' -- $max_attempts
+        echo 'retry: max-attempts must be a positive integer' >&2
+        return 2
+    end
     if test (count $argv) -eq 0
         echo 'retry: missing command' >&2
         return 2

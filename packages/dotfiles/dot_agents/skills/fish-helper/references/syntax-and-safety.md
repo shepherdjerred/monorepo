@@ -31,8 +31,9 @@ function with_temp
 
     set -l temp_dir (mktemp -d)
     or return
+    set -l original_dir $PWD
 
-    pushd $temp_dir
+    cd -- $temp_dir
     or begin
         command rm -rf -- $temp_dir
         return 1
@@ -41,19 +42,29 @@ function with_temp
     $argv
     set -l command_status $status
 
-    popd
-    set -l popd_status $status
+    cd -- $original_dir
+    set -l restore_status $status
+    if test $restore_status -ne 0
+        cd /
+        or return
+    end
     command rm -rf -- $temp_dir
     or return
 
-    if test $popd_status -ne 0
-        return $popd_status
+    if test $restore_status -ne 0
+        return $restore_status
     end
     return $command_status
 end
 ```
 
-Resolve and validate the exact temp path before cleanup. Run the `rm -rf` unconditionally after `popd`, not gated behind its success: a wrapped Fish function that clears the directory stack, or a since-removed original directory, makes `popd` fail, and an early `return` there would skip cleanup and leak the temp directory. This wrapper handles ordinary completion; interruption-safe cleanup may need a job/process lifecycle outside a simple function.
+Resolve and validate the exact temp path before cleanup. Preserve the original
+directory explicitly instead of relying on the directory stack, which the
+wrapped function may clear. Always leave the temporary directory before
+removing it; if the original directory disappeared, move to `/`, clean up, and
+then report the restoration failure. This wrapper handles ordinary completion;
+interruption-safe cleanup may need a job/process lifecycle outside a simple
+function.
 
 ## Source
 
