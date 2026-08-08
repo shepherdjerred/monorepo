@@ -217,9 +217,21 @@ describe("agentTaskActivities", () => {
     const tokens = agentTaskSecretTokens("github-token", {
       CODEX_API_KEY: codexApiKey,
       OPENAI_API_KEY: "openai-distinct-secret",
+      HA_TOKEN: "ha-distinct-secret",
+      AWS_SECRET_ACCESS_KEY: "aws-distinct-secret",
+      AGENT_TASK_API_TOKEN: "agent-task-distinct-secret",
+      GITHUB_WEBHOOK_SECRET: "github-webhook-secret",
+      XCODE_CLOUD_WEBHOOK_TOKEN: "xcode-distinct-secret",
+      DATABASE_URL: "postgres://user:database-secret@example",
     });
 
     expect(tokens).toContain(codexApiKey);
+    expect(tokens).toContain("ha-distinct-secret");
+    expect(tokens).toContain("aws-distinct-secret");
+    expect(tokens).toContain("agent-task-distinct-secret");
+    expect(tokens).toContain("github-webhook-secret");
+    expect(tokens).toContain("xcode-distinct-secret");
+    expect(tokens).toContain("postgres://user:database-secret@example");
   });
 
   it("aliases OPENAI_API_KEY for Codex without overriding an explicit key", async () => {

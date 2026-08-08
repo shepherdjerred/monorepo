@@ -1,30 +1,13 @@
 import type { AgentTaskProvider } from "#shared/agent-task.ts";
 
-// Every secret value that might pass through an agent-task run, listed so the
-// subprocess output redactor can scrub them from logs/results. This is a
-// belt-and-suspenders redaction list for the process OUTPUT — it is independent
-// of what the subprocess env actually contains (envForProvider forwards the
-// full worker env; see the note there). Keeping the list explicit means a token
-// that does reach the child is still stripped from anything we capture/store.
+// envForProvider deliberately forwards the full worker env, so scrub every
+// forwarded value rather than maintaining a partial credential-name list. This
+// also covers credentials embedded in values such as DATABASE_URL.
 export function agentTaskSecretTokens(
   githubAppToken: string | undefined,
   env: Readonly<Record<string, string | undefined>> = Bun.env,
 ): readonly (string | undefined)[] {
-  return [
-    env["CLAUDE_CODE_OAUTH_TOKEN"],
-    env["ANTHROPIC_API_KEY"],
-    env["CODEX_API_KEY"],
-    env["OPENAI_API_KEY"],
-    env["GITHUB_PERSONAL_ACCESS_TOKEN"],
-    env["GITHUB_APP_PRIVATE_KEY"],
-    githubAppToken,
-    env["POSTAL_API_KEY"],
-    env["PAGERDUTY_TOKEN"],
-    env["BUGSINK_TOKEN"],
-    env["GRAFANA_API_KEY"],
-    env["ARGOCD_AUTH_TOKEN"],
-    env["CLOUDFLARE_API_TOKEN"],
-  ];
+  return [...Object.values(env), githubAppToken];
 }
 
 // Build the subprocess environment for an agent-task provider run.

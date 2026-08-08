@@ -379,6 +379,11 @@ describe("pollWorkflowFailuresOnce", () => {
         "wf-1/run-1": rejectWithApplicationFailure("golink 500"),
         "wf-2/run-2": rejectWithApplicationFailure("execution timed out"),
       },
+      {
+        "wf-1/run-1": {
+          events: [{ eventType: "EVENT_TYPE_ACTIVITY_TASK_TIMED_OUT" }],
+        },
+      },
     );
     const { poster, calls } = capturingPoster();
 
@@ -393,6 +398,9 @@ describe("pollWorkflowFailuresOnce", () => {
     expect(calls[0]?.alerts.length).toBe(2);
     const workflowIds = calls[0]?.alerts.map((a) => a.labels["workflowId"]);
     expect(workflowIds).toEqual(["wf-1", "wf-2"]);
+    expect(calls[0]?.alerts[0]?.annotations["description"]).toContain(
+      "timeoutClassification activity",
+    );
   });
 
   it("surfaces the innermost cause when an activity failure wraps the real error", async () => {

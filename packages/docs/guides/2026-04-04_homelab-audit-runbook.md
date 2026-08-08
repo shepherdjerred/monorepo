@@ -341,12 +341,17 @@ Flag: non-zero failure rate, scrape target down.
 
 The `temporal-failure-watch` schedule is the sole Temporal PagerDuty source.
 It emits one `TemporalWorkflowFailed` alert per `workflowId`/`runId` and fetches
-history for every timed-out execution. For a timeout, inspect the alert
-annotation `timeoutClassification`:
+history for every failed or timed-out execution. For a timeout, inspect the
+alert annotations `timeoutClassification` and, when present,
+`workerTaskQueueUnavailableReason`:
 
-- `workflow-task` or `execution` with the worker/task-queue diagnosis means no
-  activity reached execution; inspect worker readiness, Temporal connectivity,
-  and the `agent-task` queue.
+- `no activity reached execution` means inspect worker readiness, Temporal
+  connectivity, and the `agent-task` queue for an initial poller outage.
+- `a scheduled activity has not started` means an earlier activity may have
+  completed, but the current activity remains pending; inspect activity-poller
+  availability and the `agent-task` queue.
+- `a scheduled workflow task has not started` means the workflow needs another
+  workflow-task poll; inspect workflow-task poller availability and the queue.
 - `activity` means an activity was scheduled and timed out after dispatch.
 - `execution` means the workflow execution timeout fired without a more
   specific task timeout event.

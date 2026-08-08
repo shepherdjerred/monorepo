@@ -164,11 +164,7 @@ type TimeoutInspection = {
 
 async function inspectTimeoutHistory(
   handle: ReturnType<WorkflowVisibilityClient["workflow"]["getHandle"]>,
-  status: FailureStatusName,
 ): Promise<TimeoutInspection> {
-  if (status !== "TIMED_OUT") {
-    return { classification: undefined, historyError: undefined };
-  }
   try {
     return {
       classification: classifyWorkflowTimeoutHistory(
@@ -276,7 +272,7 @@ async function fetchFailureDetail(
     execution.workflowId,
     execution.runId,
   );
-  const inspection = await inspectTimeoutHistory(handle, execution.status);
+  const inspection = await inspectTimeoutHistory(handle);
   try {
     await handle.result();
     // The visibility query already filtered to Failed/TimedOut, so a
