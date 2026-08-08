@@ -62,7 +62,8 @@ function retry --description 'Retry a command with exact arguments'
         return 2
     end
 
-    for attempt in (seq $max_attempts)
+    set -l attempt 1
+    while test $attempt -le $max_attempts
         $argv
         set -l command_status $status
         if test $command_status -eq 0
@@ -71,6 +72,8 @@ function retry --description 'Retry a command with exact arguments'
         if test $attempt -eq $max_attempts
             return $command_status
         end
+        set attempt (math $attempt + 1)
+        or return
     end
 end
 ```
