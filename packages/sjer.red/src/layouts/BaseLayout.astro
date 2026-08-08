@@ -81,7 +81,10 @@ import "@fontsource-variable/lora";
       _paq.push(["setSiteId", 1]);
       _paq.push(["enableLinkTracking"]);
       document.addEventListener("astro:page-load", function () {
-        _paq.push(["setCustomUrl", window.location.href]);
+        _paq.push([
+          "setCustomUrl",
+          window.location.origin + window.location.pathname,
+        ]);
         _paq.push(["setDocumentTitle", document.title]);
         _paq.push(["trackPageView"]);
       });

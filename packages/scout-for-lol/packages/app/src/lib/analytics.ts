@@ -211,6 +211,14 @@ function currentEventUrl(): string | undefined {
   return pageUrl(siteDomain, normalizePath(path));
 }
 
+function analyticsReady(): boolean {
+  return (
+    config.siteId !== undefined &&
+    config.siteDomain !== undefined &&
+    globalThis._paq !== undefined
+  );
+}
+
 /** Report a templated SPA pageview. */
 export function trackPageview(path: string): void {
   if (config.siteId === undefined || config.siteDomain === undefined) return;
@@ -288,7 +296,7 @@ export function trackOutboundClick(
   props?: AnalyticsProps,
 ): void {
   if (
-    config.siteId === undefined ||
+    !analyticsReady() ||
     clickEvent.defaultPrevented ||
     clickEvent.button !== 0 ||
     clickEvent.metaKey ||
@@ -310,7 +318,7 @@ export function trackAndFlush(
   event: ScoutAnalyticsEvent,
   props?: AnalyticsProps,
 ): Promise<void> {
-  if (config.siteId === undefined) {
+  if (!analyticsReady()) {
     emit(event, props);
     return Promise.resolve();
   }

@@ -39,15 +39,38 @@ const BETA_PIXEL_PLACEHOLDERS: Readonly<Record<string, string>> = {
   PUBLIC_REDDIT_PIXEL_ID: "beta-placeholder-reddit-pixel-id",
 };
 const ANALYTICS_REGISTRY_PATH = "config/analytics-sites.json";
-const AnalyticsRegistrySchema = z.object({
-  trackerOrigin: z.literal("https://matomo.sjer.red"),
-  sites: z.array(
-    z.object({
-      hostname: z.string().min(1),
-      siteId: z.number().int().positive(),
-    }),
-  ),
-});
+const AnalyticsRegistrySchema = z
+  .object({
+    trackerOrigin: z.literal("https://matomo.sjer.red"),
+    sites: z.array(
+      z.object({
+        hostname: z.string().min(1),
+        siteId: z.number().int().positive(),
+      }),
+    ),
+  })
+  .superRefine((registry, context) => {
+    const hostnames = new Set<string>();
+    const siteIds = new Set<number>();
+    for (const site of registry.sites) {
+      if (hostnames.has(site.hostname)) {
+        context.addIssue({
+          code: "custom",
+          path: ["sites"],
+          message: `Duplicate analytics hostname: ${site.hostname}`,
+        });
+      }
+      if (siteIds.has(site.siteId)) {
+        context.addIssue({
+          code: "custom",
+          path: ["sites"],
+          message: `Duplicate analytics site ID: ${String(site.siteId)}`,
+        });
+      }
+      hostnames.add(site.hostname);
+      siteIds.add(site.siteId);
+    }
+  });
 const RELEASE_INPUT_PATHS = [
   "bun.lock",
   "bunfig.toml",
@@ -80,12 +103,15 @@ async function readMatomoSite(flavor: "prod" | "beta"): Promise<{
   const registry = AnalyticsRegistrySchema.parse(registryRaw);
   const domain =
     flavor === "prod" ? "scout-for-lol.com" : "beta.scout-for-lol.com";
-  const site = registry.sites.find(
+  const matchingSites = registry.sites.filter(
     (candidate) => candidate.hostname === domain,
   );
-  if (site === undefined) {
-    throw new Error(`Analytics registry has no Matomo site for ${domain}`);
+  if (matchingSites.length !== 1) {
+    throw new Error(
+      `Analytics registry must have exactly one Matomo site for ${domain}`,
+    );
   }
+  const site = matchingSites[0];
   return { domain: site.hostname, siteId: String(site.siteId) };
 }
 

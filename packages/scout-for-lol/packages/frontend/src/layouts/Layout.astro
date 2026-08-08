@@ -40,16 +40,12 @@ const matomoSiteId =
     </script>
     {
       matomoSiteId !== undefined && (
-        <script is:inline define:vars={{ matomoSiteId }}>
-          var _paq = (window._paq = window._paq || []);
-          _paq.push(["disableCookies"]); _paq.push(["setDoNotTrack", true]);
-          _paq.push(["setTrackerUrl", "https://matomo.sjer.red/matomo.php"]);
-          _paq.push(["setSiteId", matomoSiteId]); _paq.push(["trackPageView"]);
-          _paq.push(["enableLinkTracking"]); var matomoScript =
-          document.createElement("script"); matomoScript.async = true;
-          matomoScript.src = "https://matomo.sjer.red/matomo.js";
-          document.head.appendChild(matomoScript);
-        </script>
+        <script
+          is:inline
+          defer
+          src="/matomo-bootstrap.js"
+          data-matomo-site-id={matomoSiteId}
+        />
       )
     }
     <script>

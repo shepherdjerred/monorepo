@@ -24,6 +24,16 @@ import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-v
 import type { MatomoMariaDB } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/matomo-mariadb.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
+const archiveCommand = [
+  "while true; do until",
+  "php /var/www/html/console config:set --section=General --key=enable_browser_archiving_triggering --value=0 &&",
+  "php /var/www/html/console config:set --section=General --key=browser_archiving_disabled_enforce --value=1;",
+  "do sleep 30; done;",
+  "php /var/www/html/console core:archive;",
+  "sleep 300;",
+  "done",
+].join(" ");
+
 export type MatomoDeploymentProps = {
   mariadb: MatomoMariaDB;
 };
@@ -120,9 +130,7 @@ export function createMatomoDeployment(
       name: "matomo-archive",
       image: `matomo:${versions.matomo}`,
       command: ["/bin/sh", "-c"],
-      args: [
-        "while true; do until php /var/www/html/console config:set --section=General --key=enable_browser_archiving_triggering --value=0 && php /var/www/html/console config:set --section=General --key=browser_archiving_disabled_enforce --value=1; do sleep 30; done; php /var/www/html/console core:archive; sleep 300; done",
-      ],
+      args: [archiveCommand],
       envVariables: sharedEnv,
       volumeMounts: [{ path: "/var/www/html", volume: dataVolume }],
       resources: {

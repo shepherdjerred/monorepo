@@ -27,7 +27,7 @@ const scoutCsp = [
   "script-src 'self' https://matomo.sjer.red",
   "worker-src 'self' blob:",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' https://cdn.discordapp.com data: blob:",
+  "img-src 'self' https://cdn.discordapp.com https://matomo.sjer.red data: blob:",
   "connect-src 'self' https://matomo.sjer.red",
   "frame-ancestors 'none'",
   "base-uri 'self'",

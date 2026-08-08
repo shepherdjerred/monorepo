@@ -123,7 +123,10 @@ const getStartedClickEvent = GET_STARTED_CLICK_EVENT;
           }),
         );
 
-        if (Array.isArray(window._paq)) {
+        if (
+          window._paq !== undefined &&
+          typeof window._paq.push === "function"
+        ) {
           // The conversion UUID is for Pinterest/Reddit deduplication only;
           // never send it to Matomo as a high-cardinality analytics property.
           window._paq.push([
