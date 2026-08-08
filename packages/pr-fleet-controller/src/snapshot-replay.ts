@@ -29,6 +29,9 @@ function verifySnapshot(snapshot: FleetSnapshot): void {
     queued: snapshot.prs.filter((pr) => pr.classification === "queued").length,
     pending: snapshot.prs.filter((pr) => pr.classification === "pending")
       .length,
+    waiting: snapshot.prs.filter(
+      (pr) => pr.classification === "waiting-for-answer",
+    ).length,
     paused: snapshot.prs.filter((pr) => pr.classification === "paused").length,
   };
   const actual = {
@@ -37,6 +40,7 @@ function verifySnapshot(snapshot: FleetSnapshot): void {
     active: snapshot.active,
     queued: snapshot.queued,
     pending: snapshot.pending,
+    waiting: snapshot.waiting,
     paused: snapshot.paused,
   };
   if (canonicalJson(expected) !== canonicalJson(actual)) {

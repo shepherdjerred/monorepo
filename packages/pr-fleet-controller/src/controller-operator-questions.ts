@@ -38,6 +38,9 @@ function answerGuidance(
   request: OperatorInputRequest,
   answer: OperatorInputAnswer,
 ): string {
+  if (answer.answers.length !== request.questions.length) {
+    throw new Error("Every operator question must be answered exactly once");
+  }
   const answersByQuestion = new Map(
     answer.answers.map((item) => [item.questionId, item]),
   );
@@ -87,14 +90,6 @@ export async function acceptOperatorAnswer(
     throw new Error(
       `Unknown or already-resolved operator request: ${answer.requestId}`,
     );
-  }
-  const state = store.prs.get(request.pr);
-  if (
-    state === undefined ||
-    state.status === "closed" ||
-    state.identity.headSha !== request.headSha
-  ) {
-    throw new Error(`Operator request ${request.id} is stale`);
   }
   const remoteHead = await currentPrHead(request.pr);
   const currentRequest = store.operatorRequests.get(request.pr);

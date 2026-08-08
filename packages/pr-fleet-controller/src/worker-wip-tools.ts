@@ -152,12 +152,13 @@ export function createWorkerWipTools(options: {
                 "Local HEAD changed after inherited work was captured; inspect again",
               );
             }
+            const inheritedRange = `${pr.identity.headSha}..HEAD`;
             const commitLog = await runGit(environment, worktree, signal, [
               "log",
               "--format=fuller",
               "--name-status",
               "--no-renames",
-              `${pr.identity.headSha}..HEAD`,
+              inheritedRange,
               "--",
             ]);
             const patch = await runGit(environment, worktree, signal, [
@@ -165,7 +166,7 @@ export function createWorkerWipTools(options: {
               "--binary",
               "--full-index",
               "--no-ext-diff",
-              `${pr.identity.headSha}..HEAD`,
+              inheritedRange,
               "--",
             ]);
             const bounded = boundedInheritedCommitEvidence(commitLog, patch);

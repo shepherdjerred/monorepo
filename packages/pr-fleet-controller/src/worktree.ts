@@ -281,10 +281,21 @@ export class WorktreeManager {
       await this.#mustRun("git", ["reset", "--hard", fetchedHead], worktree);
       return this.#worktreeContext(worktree, fetchedHead);
     }
-    // Never reset a matching-branch worktree. This preserves both operator WIP
-    // and a prior fleet attempt across controller restarts; the returned context
-    // makes any ahead/behind/diverged state explicit to the worker and dashboard.
-    return this.#worktreeContext(worktree, fetchedHead);
+    const context = await this.#worktreeContext(worktree, fetchedHead);
+    if (
+      context.ownership === "fleet" &&
+      !context.dirty &&
+      context.relation === "behind"
+    ) {
+      // A clean fleet checkout has no local work to preserve when remote merely
+      // advanced. Align the disposable branch so the worker receives an exact
+      // publication context instead of an unrecoverable behind state.
+      await this.#mustRun("git", ["reset", "--hard", fetchedHead], worktree);
+      return this.#worktreeContext(worktree, fetchedHead);
+    }
+    // Preserve matching operator WIP and fleet-owned ahead/diverged attempts;
+    // their explicit context lets the worker inspect, continue, or ask.
+    return context;
   }
 
   async provisionWorktree(pr: PrIdentity, stackId: string): Promise<string> {

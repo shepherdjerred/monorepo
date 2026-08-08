@@ -113,20 +113,47 @@ export const OperatorQuestionSchema = z
     }
   });
 
-export const OperatorInputRequestSchema = z.object({
-  id: z.string().min(1),
-  pr: z.number().int().positive(),
-  headSha: z.string().regex(/^[0-9a-f]{40}$/),
-  generation: z.number().int().nonnegative(),
+const OperatorInputRequestDraftFields = {
   context: z.string().min(1).max(4000),
   questions: z.array(OperatorQuestionSchema).min(1).max(3),
-  createdAt: z.iso.datetime(),
-});
+};
 
-export const OperatorInputRequestDraftSchema = OperatorInputRequestSchema.pick({
-  context: true,
-  questions: true,
-});
+export const OperatorInputRequestDraftSchema = z
+  .object(OperatorInputRequestDraftFields)
+  .superRefine((request, context) => {
+    const questionIds = new Set(
+      request.questions.map((question) => question.id),
+    );
+    if (questionIds.size !== request.questions.length) {
+      context.addIssue({
+        code: "custom",
+        message: "Operator-question IDs must be unique",
+        path: ["questions"],
+      });
+    }
+  });
+
+export const OperatorInputRequestSchema = z
+  .object({
+    id: z.string().min(1),
+    pr: z.number().int().positive(),
+    headSha: z.string().regex(/^[0-9a-f]{40}$/),
+    generation: z.number().int().nonnegative(),
+    ...OperatorInputRequestDraftFields,
+    createdAt: z.iso.datetime(),
+  })
+  .superRefine((request, context) => {
+    const questionIds = new Set(
+      request.questions.map((question) => question.id),
+    );
+    if (questionIds.size !== request.questions.length) {
+      context.addIssue({
+        code: "custom",
+        message: "Operator-question IDs must be unique",
+        path: ["questions"],
+      });
+    }
+  });
 
 export const OperatorQuestionAnswerSchema = z
   .object({
@@ -143,10 +170,23 @@ export const OperatorQuestionAnswerSchema = z
     }
   });
 
-export const OperatorInputAnswerSchema = z.object({
-  requestId: z.string().min(1),
-  answers: z.array(OperatorQuestionAnswerSchema).min(1).max(3),
-});
+export const OperatorInputAnswerSchema = z
+  .object({
+    requestId: z.string().min(1),
+    answers: z.array(OperatorQuestionAnswerSchema).min(1).max(3),
+  })
+  .superRefine((answer, context) => {
+    const questionIds = new Set(
+      answer.answers.map((response) => response.questionId),
+    );
+    if (questionIds.size !== answer.answers.length) {
+      context.addIssue({
+        code: "custom",
+        message: "Operator-answer question IDs must be unique",
+        path: ["answers"],
+      });
+    }
+  });
 
 export const WorktreeContextSchema = z.object({
   ownership: z.enum(["fleet", "operator"]),
@@ -186,7 +226,10 @@ export const FleetSnapshotSchema = z.object({
   active: z.number().int().nonnegative(),
   queued: z.number().int().nonnegative(),
   pending: z.number().int().nonnegative(),
-  waiting: z.number().int().nonnegative(),
+  // Schema-v1 bundles predate operator questions. Defaulting only this additive
+  // aggregate keeps those immutable bundles readable while replay still checks
+  // the count against current waiting-for-answer PR states.
+  waiting: z.number().int().nonnegative().default(0),
   paused: z.number().int().nonnegative(),
   prs: z.array(PrStateSchema),
 });

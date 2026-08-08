@@ -36,6 +36,11 @@ function verifyAnswer(
   if (answer.requestId !== request.id) {
     throw new Error(`Operator answer does not match request ${request.id}`);
   }
+  if (answer.answers.length !== request.questions.length) {
+    throw new Error(
+      `Operator answer for ${request.id} must answer every question exactly once`,
+    );
+  }
   const answers = new Map(
     answer.answers.map((item) => [item.questionId, item]),
   );

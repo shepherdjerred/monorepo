@@ -205,7 +205,11 @@ export function startWatchServer(options: {
       const answerMatch = /^\/api\/operator-requests\/([^/]+)\/answer$/.exec(
         url.pathname,
       );
-      if (answerMatch !== null && request.method === "POST") {
+      const isOperatorAnswer =
+        answerMatch !== null && request.method === "POST";
+      // This head-bound answer endpoint is the live dashboard's sole control;
+      // every standalone or historical dashboard lacks a control socket.
+      if (isOperatorAnswer) {
         if (options.controlSocket === undefined) {
           return Response.json(
             { error: "This dashboard is read-only" },
