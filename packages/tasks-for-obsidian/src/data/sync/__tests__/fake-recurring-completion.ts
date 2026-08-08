@@ -40,15 +40,17 @@ function advanceSchedule(
   const next = updateToNextScheduledOccurrence(scheduleSource, true, {
     today: completionDate,
   });
-  if (next.scheduled === null) {
+  const scheduled = next.scheduled ?? existing.scheduled;
+  if (scheduled === undefined) {
     Reflect.deleteProperty(updated, "scheduled");
   } else {
-    updated.scheduled = next.scheduled;
+    updated.scheduled = scheduled;
   }
-  if (next.due === null) {
+  const due = next.due ?? existing.due;
+  if (due === undefined) {
     Reflect.deleteProperty(updated, "due");
   } else {
-    updated.due = next.due;
+    updated.due = due;
   }
 }
 
