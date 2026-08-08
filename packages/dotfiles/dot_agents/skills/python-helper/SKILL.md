@@ -152,10 +152,10 @@ Choose mypy or Pyright from the repository's existing configuration, plugin need
 - Pass subprocess argument sequences; avoid `shell=True` with untrusted input.
 - Never unpickle untrusted data.
 - Keep tarfile's safer `data` filter and inspect untrusted archives even on Python 3.14.
-- Audit with `uv run --with pip-audit pip-audit`, not the nonexistent
-  `pip audit` / `uv pip audit` commands. Use `uv run --with`, not `uvx`: `uvx
+- Audit with `uv run --locked --with pip-audit pip-audit`, not the nonexistent
+  `pip audit` / `uv pip audit` commands. Use `uv run --locked --with`, not `uvx`: `uvx
   pip-audit` runs pip-audit in its own isolated tool environment and audits
-  pip-audit's dependencies, not the project's; `uv run --with pip-audit`
+  pip-audit's dependencies, not the project's; `uv run --locked --with pip-audit`
   layers pip-audit onto the project's synced environment so it inspects the
   project's actual installed packages. `uv audit` remains a preview-only
   subcommand (behind `--preview`) and is absent entirely in older uv releases,

@@ -21,11 +21,14 @@ TypeScript reports typical 8–12x full-build improvements for the native 7.0 co
 
 Always inspect the selected toolchain. A bare `tsc` on `PATH` can resolve to the
 6.x compatibility bridge even when a package also has the native compiler
-installed; use the explicit native-compiler path when both are present (this
-monorepo's `scripts/compliance-check.ts` enforces this same
-`PATH=node_modules/@typescript/native/bin:$PATH tsc` form):
+installed; run from the package that declares `@typescript/native`, then use
+the explicit native-compiler path when both are present. This matters with
+isolated workspace linkers because the repository root may not own the package's
+compiler dependency. This monorepo's `scripts/compliance-check.ts` enforces the
+same `PATH=node_modules/@typescript/native/bin:$PATH tsc` form:
 
 ```bash
+cd packages/<package-that-declares-typescript-native>
 PATH=node_modules/@typescript/native/bin:$PATH tsc --version
 PATH=node_modules/@typescript/native/bin:$PATH tsc --showConfig
 ```
@@ -37,6 +40,7 @@ Read [references/releases-and-migration.md](references/releases-and-migration.md
 Type-check through the project configuration or build graph:
 
 ```bash
+cd packages/<package-that-declares-typescript-native>
 PATH=node_modules/@typescript/native/bin:$PATH tsc -p tsconfig.json --noEmit
 PATH=node_modules/@typescript/native/bin:$PATH tsc -b
 ```

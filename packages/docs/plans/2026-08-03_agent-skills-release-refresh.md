@@ -141,10 +141,11 @@ skill's 30-source set rather than treated as independent 30-source units.
 - 2026-08-04: Re-verified the five shipped Research ledgers (`git-helper`,
   `bun-runtime-best-practices`, `typescript-helper`, `rust-helper`,
   `python-helper`) by extracting all linked URLs and live-checking each with
-  `curl -L --max-time 15`: 202 unique URLs, 202 returned HTTP 200, 0 dead
-  links. This closes the reproducibility gap in the prior entry — a later
-  reviewer can now confirm every listed source resolves, independent of the
-  fetch-method/date detail the Execution Model no longer requires per entry.
+  `curl -sI -o /dev/null -w '%{http_code}' <url>`: 202 unique URLs, 202
+  returned HTTP 200, 0 dead links. This closes the reproducibility gap in the
+  prior entry — a later reviewer can now confirm every listed source resolves,
+  independent of the fetch-method/date detail the Execution Model no longer
+  requires per entry.
 - 2026-08-04: Registered `feature/agent-skills-refresh` with git-spice
   (`git-spice branch track feature/agent-skills-refresh --base main`),
   reconciling the branch's actual tracking with the corrected Execution
