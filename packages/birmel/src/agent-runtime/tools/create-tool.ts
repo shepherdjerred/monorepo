@@ -78,7 +78,7 @@ function enforceSingleRuntimeReply(
   input: unknown,
   context: RequestContext,
 ): void {
-  if (toolId !== "manage-message" || context.ownsSourceReply === false) {
+  if (toolId !== "manage-message" || !context.ownsSourceReply) {
     return;
   }
   const parsed = ObjectInputSchema.safeParse(input);
