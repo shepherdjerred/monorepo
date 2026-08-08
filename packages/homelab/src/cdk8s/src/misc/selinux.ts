@@ -3,7 +3,6 @@ import type { Deployment } from "cdk8s-plus-31";
 import { z } from "zod";
 
 export const zfsVolumeSelinuxLevels = {
-  clickhouse: "s0:c101,c201",
   scoutBeta: "s0:c220,c221",
   scoutProd: "s0:c222,c223",
 } as const;

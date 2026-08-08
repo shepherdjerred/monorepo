@@ -30,7 +30,6 @@ const DeploymentSchema = z.looseObject({
 type Deployment = z.infer<typeof DeploymentSchema>;
 
 const expectedSelinuxLevels = new Map([
-  ["plausible-clickhouse", zfsVolumeSelinuxLevels.clickhouse],
   ["scout-beta-scout-backend", zfsVolumeSelinuxLevels.scoutBeta],
   ["scout-prod-scout-backend", zfsVolumeSelinuxLevels.scoutProd],
 ]);

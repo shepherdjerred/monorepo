@@ -141,7 +141,13 @@
       "project": ["src/**/*.{ts,tsx}", "*.ts"]
     },
     "packages/scout-for-lol/packages/frontend": {
-      "entry": ["astro.config.ts", "src/**/*.tsx", "src/*-stub.ts"],
+      "entry": [
+        "astro.config.ts",
+        "src/**/*.astro",
+        "src/**/*.tsx",
+        "src/lib/sentry.ts",
+        "src/*-stub.ts"
+      ],
       "project": ["src/**/*.{ts,tsx,astro}", "*.ts"]
     },
     "packages/scout-for-lol/packages/app": {

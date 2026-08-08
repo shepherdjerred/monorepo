@@ -18,6 +18,7 @@
     "scripts/migration-core.ts",
     "scripts/migration-smoke.test.ts",
     "scripts/velero-backups.ts",
-    "scripts/velero-backups.test.ts"
+    "scripts/velero-backups.test.ts",
+    "scripts/wait-for-matomo.ts"
   ]
 }

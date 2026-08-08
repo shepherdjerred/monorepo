@@ -258,6 +258,18 @@
     "reason": "Selected Minecraft world"
   },
   {
+    "namespace": "matomo",
+    "name": "data-matomo-mariadb-0",
+    "backup": "enabled",
+    "reason": "Matomo MariaDB database"
+  },
+  {
+    "namespace": "matomo",
+    "name": "matomo-data",
+    "backup": "enabled",
+    "reason": "Matomo application state"
+  },
+  {
     "namespace": "pinchtab",
     "name": "pinchtab-data",
     "backup": "disabled",

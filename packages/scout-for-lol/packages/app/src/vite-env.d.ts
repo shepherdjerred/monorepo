@@ -13,8 +13,9 @@ interface ImportMetaEnv {
   readonly VITE_GIT_SHA?: string;
   readonly VITE_CONTRACT_HASH?: string;
   readonly VITE_DISCORD_CLIENT_ID?: string;
-  // Plausible site domain for product analytics; per-flavor (prod
+  // Matomo site identity for product analytics; per-flavor (prod
   // scout-for-lol.com, beta beta.scout-for-lol.com). Absent locally → no-op.
-  readonly VITE_PLAUSIBLE_DOMAIN?: string;
-  readonly VITE_PLAUSIBLE_SRC?: string;
+  readonly VITE_MATOMO_SITE_ID?: string;
+  readonly VITE_MATOMO_SITE_DOMAIN?: string;
+  readonly VITE_MATOMO_SRC?: string;
 }

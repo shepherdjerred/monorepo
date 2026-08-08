@@ -33,8 +33,8 @@ Sentry.init({
   ],
 });
 
-// Product-usage analytics (self-hosted Plausible). No-op unless the site build
-// injected VITE_PLAUSIBLE_DOMAIN (prod/beta only) — see lib/analytics.ts.
+// Product-usage analytics (self-hosted Matomo). No-op unless the site build
+// injected a Matomo site identity (prod/beta only) — see lib/analytics.ts.
 initAnalytics();
 
 // Recover from a stale dynamic-import chunk after a deploy. A still-open tab can

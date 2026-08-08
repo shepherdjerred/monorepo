@@ -18,9 +18,10 @@ export function createPokemonApp(chart: Chart) {
         server: "https://kubernetes.default.svc",
         namespace: "pokemon",
       },
-      syncPolicy: {
-        automated: {},
-      },
+      // The image embeds the Matomo tracker. CI explicitly syncs this app
+      // after the public Matomo readiness gate; automatic sync would deploy it
+      // during the preceding apps release.
+      syncPolicy: {},
     },
   });
 }

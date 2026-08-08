@@ -1,0 +1,151 @@
+(function () {
+  var currentScript = document.currentScript;
+  if (!(currentScript instanceof HTMLScriptElement)) {
+    return;
+  }
+
+  var pinterestTagId = currentScript.dataset["pinterestTagId"];
+  var redditPixelId = currentScript.dataset["redditPixelId"];
+  var getStartedClickEvent = currentScript.dataset["getStartedClickEvent"];
+  if (
+    pinterestTagId === undefined ||
+    redditPixelId === undefined ||
+    getStartedClickEvent === undefined ||
+    pinterestTagId.length === 0 ||
+    redditPixelId.length === 0 ||
+    getStartedClickEvent.length === 0
+  ) {
+    return;
+  }
+
+  function insertBeforeFirstScript(script) {
+    var firstScript = document.getElementsByTagName("script")[0];
+    if (firstScript.parentNode) {
+      firstScript.parentNode.insertBefore(script, firstScript);
+    }
+  }
+
+  function loadPinterestPixel() {
+    if (window.pintrk) {
+      return;
+    }
+
+    window.pintrk = function () {
+      window.pintrk.queue.push(Array.prototype.slice.call(arguments));
+    };
+    window.pintrk.queue = [];
+    window.pintrk.version = "3.0";
+
+    var script = document.createElement("script");
+    script.async = true;
+    script.src = "https://s.pinimg.com/ct/core.js";
+    insertBeforeFirstScript(script);
+
+    window.pintrk("load", pinterestTagId);
+    window.pintrk("page");
+  }
+
+  function loadRedditPixel() {
+    if (window.rdt) {
+      return;
+    }
+
+    var redditTracker = (window.rdt = function () {
+      if (redditTracker.sendEvent) {
+        redditTracker.sendEvent.apply(redditTracker, arguments);
+        return;
+      }
+
+      redditTracker.callQueue.push(arguments);
+    });
+    redditTracker.callQueue = [];
+
+    var script = document.createElement("script");
+    script.async = true;
+    script.src = "https://www.redditstatic.com/ads/pixel.js";
+    insertBeforeFirstScript(script);
+
+    window.rdt("init", redditPixelId);
+    window.rdt("track", "PageVisit");
+  }
+
+  function initializeMarketingTracking() {
+    loadPinterestPixel();
+    loadRedditPixel();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initializeMarketingTracking);
+  } else {
+    initializeMarketingTracking();
+  }
+
+  document.addEventListener(
+    "click",
+    function (event) {
+      if (!(event.target instanceof Element)) {
+        return;
+      }
+
+      var ctaElement = event.target.closest(
+        "[data-scout-conversion='" + getStartedClickEvent + "']",
+      );
+      if (!(ctaElement instanceof HTMLElement)) {
+        return;
+      }
+
+      var ctaLocation = ctaElement.dataset.scoutCtaLocation;
+      if (!ctaLocation) {
+        console.error("Tracked Scout CTA is missing a location");
+        return;
+      }
+
+      var eventId =
+        window.crypto && window.crypto.randomUUID
+          ? window.crypto.randomUUID()
+          : String(Date.now()) + "-" + Math.random().toString(36).slice(2);
+
+      var eventProperties = {
+        cta_location: ctaLocation,
+        event_id: eventId,
+      };
+
+      window.dispatchEvent(
+        new CustomEvent("scout:conversion", {
+          detail: {
+            event: getStartedClickEvent,
+            properties: eventProperties,
+          },
+        }),
+      );
+
+      if (window._paq !== undefined && typeof window._paq.push === "function") {
+        // The conversion UUID is for Pinterest/Reddit deduplication only;
+        // never send it to Matomo as a high-cardinality analytics property.
+        window._paq.push([
+          "trackEvent",
+          "marketing",
+          getStartedClickEvent,
+          ctaLocation,
+        ]);
+      }
+
+      if (typeof window.pintrk === "function") {
+        window.pintrk("track", "Lead", {
+          cta_location: ctaLocation,
+          event_id: eventId,
+          lead_type: getStartedClickEvent,
+        });
+      }
+
+      if (typeof window.rdt === "function") {
+        window.rdt("track", "Lead", {
+          conversionId: eventId,
+          cta_location: ctaLocation,
+          customEventName: getStartedClickEvent,
+        });
+      }
+    },
+    { capture: true },
+  );
+})();

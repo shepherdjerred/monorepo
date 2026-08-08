@@ -12,11 +12,23 @@
     <link rel="apple-touch-icon" href="/logo192.png" />
     <link rel="manifest" href="/manifest.json" />
     <title>Better Skill Capped</title>
-    <script
-      defer
-      data-domain="better-skill-capped.com"
-      src="https://plausible.sjer.red/js/script.js"
-    ></script>
+    <script>
+      var _paq = (window._paq = window._paq || []);
+      _paq.push(["disableCookies"]);
+      _paq.push(["setDoNotTrack", true]);
+      _paq.push(["setTrackerUrl", "https://matomo.sjer.red/matomo.php"]);
+      _paq.push(["setSiteId", 4]);
+      _paq.push(["trackPageView"]);
+      _paq.push(["enableLinkTracking"]);
+      (function () {
+        var d = document;
+        var g = d.createElement("script");
+        var s = d.getElementsByTagName("script")[0];
+        g.async = true;
+        g.src = "https://matomo.sjer.red/matomo.js";
+        s.parentNode.insertBefore(g, s);
+      })();
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>

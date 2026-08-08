@@ -176,6 +176,8 @@ export const summarySteps = [
   "tofu-apply",
   "tofu-github",
   "argocd-sync",
+  "matomo-sites",
+  "discord-tracker-apps",
   "scout-beta-release",
   "publish",
   "scout-tag-release",
@@ -245,10 +247,23 @@ const sitePaths = {
     "packages/sjer.red",
     "packages/astro-opengraph-images",
     "packages/webring",
+    // Registry corrections must rebuild every static tracker consumer.
+    "config/analytics-sites.json",
     ...deployScripts,
   ],
-  "site-resume": ["packages/resume", ...deployScripts],
-  "site-webring": [...workspacePaths, "packages/webring", ...deployScripts],
+  "site-resume": [
+    "packages/resume",
+    // Registry corrections must rebuild every static tracker consumer.
+    "config/analytics-sites.json",
+    ...deployScripts,
+  ],
+  "site-webring": [
+    ...workspacePaths,
+    "packages/webring",
+    // Registry corrections must rebuild every static tracker consumer.
+    "config/analytics-sites.json",
+    ...deployScripts,
+  ],
   "site-cooklang": [
     ...workspacePaths,
     "packages/cooklang-rich-preview",
@@ -263,6 +278,8 @@ const sitePaths = {
   "site-better-skill-capped": [
     ...workspacePaths,
     "packages/better-skill-capped",
+    // Registry corrections must rebuild every static tracker consumer.
+    "config/analytics-sites.json",
     ...deployScripts,
   ],
   "site-glitter": [
@@ -277,6 +294,8 @@ const sitePaths = {
     "packages/astro-opengraph-images",
     "packages/llm-models",
     "packages/glitter-context",
+    // Registry corrections must rebuild Scout with the corrected site ID.
+    "config/analytics-sites.json",
     "scripts/package.json",
     "scripts/scout-site-release.ts",
     "scripts/lib/pin-candidates.ts",
@@ -335,6 +354,7 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
     ...workspacePaths,
     "packages/homelab/src/cdk8s",
     "packages/homelab/scripts/argocd.ts",
+    "packages/homelab/scripts/wait-for-matomo.ts",
     "scripts/lib/run.ts",
     "scripts/lib/transient.ts",
   ],

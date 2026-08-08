@@ -71,13 +71,37 @@ function validateReleaseSteps({
       ],
     ],
     [
+      "matomo-sites",
+      [
+        "depends_on:",
+        "argocd-sync",
+        "tofu-cloudflare",
+        "wait-for-matomo.ts",
+        "scripts/deploy-site.ts",
+      ],
+    ],
+    [
       "scout-beta-release",
       [
-        "depends_on: [images, argocd-sync]",
+        "depends_on:",
+        "images",
+        "argocd-sync",
+        "discord-tracker-apps",
         "shepherdjerred/scout-for-lol/beta",
         "prepare-state",
         "meta-data set scout-release-state",
         "deploy-beta --state",
+      ],
+    ],
+    [
+      "discord-tracker-apps",
+      [
+        "depends_on:",
+        "argocd-sync",
+        "tofu-cloudflare",
+        "wait-for-matomo.ts",
+        "argocd.ts sync",
+        "release-health-wait argocd-release-expected.json",
       ],
     ],
     [

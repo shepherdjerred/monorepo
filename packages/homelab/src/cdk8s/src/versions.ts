@@ -267,6 +267,12 @@ const versions = {
   "plane-enterprise-app": "v3.0.1",
   // renovate: datasource=helm registryUrl=https://charts.bitnami.com/bitnami versioning=semver
   mariadb: "26.2.0",
+  // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
+  "bitnami/mariadb":
+    "latest@sha256:991b66aa2a16e9cf518bc6c36b32d21fcad14b5f199b5a1a8bcf4637fcae03bb",
+  // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
+  "bitnami/mysqld-exporter":
+    "latest@sha256:52e63f43bc03a4e6fb173864826845c81ec5002d5a4184ed69e073417dc6470b",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
   "postalserver/postal":
     "3.3.7@sha256:e54b4a7eb106ee15eda5664311c4b9415546d4196f5c4336d23a78d6ce57b819",
@@ -298,11 +304,11 @@ const versions = {
   "library/debian":
     "bookworm-slim@sha256:7b140f374b289a7c2befc338f42ebe6441b7ea838a042bbd5acbfca6ec875818",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
-  "plausible/analytics":
-    "v2.0.0@sha256:cd5f75e1399073669b13b4151cc603332a825324d0b8f13dfc9de9112a3c68a1",
-  // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
-  "clickhouse/clickhouse-server":
-    "26.7-alpine@sha256:79b3b3d5765447b928473d0f510e000c5738d066bc018b5e8a105a7c57b1e345",
+  matomo:
+    "5.12.0@sha256:85d27206a4acdd43259909aa00cab1913dec88cfba53e1ce66a51e6caa430a55",
+  // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
+  "library/nginx":
+    "1.29.1-alpine@sha256:42a516af16b852e33b7682d5ef8acbd5d13fe08fecadc7ed98605ba5e3b26ab8",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
   "tbxark/mcp-proxy":
     "v0.43.2@sha256:70c0e02d39c4c0898e610b3a30954f7930628fa6f4fb447bad14c32382a25879",
