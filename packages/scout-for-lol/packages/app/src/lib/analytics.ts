@@ -309,7 +309,7 @@ function sendEventBeacon(
     for (const [name, value] of Object.entries(props)) {
       const dimensionId = DIMENSION_IDS[name];
       if (dimensionId === undefined) continue;
-      body.set(`dimension${dimensionId}`, String(value));
+      body.set(`dimension${String(dimensionId)}`, String(value));
     }
   }
 

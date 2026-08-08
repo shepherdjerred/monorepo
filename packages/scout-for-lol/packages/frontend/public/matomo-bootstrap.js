@@ -5,7 +5,7 @@
   }
 
   var siteId = currentScript.dataset["matomoSiteId"];
-  if (siteId === undefined) {
+  if (siteId === undefined || siteId.length === 0) {
     return;
   }
 

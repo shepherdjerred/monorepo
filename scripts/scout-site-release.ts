@@ -112,6 +112,9 @@ async function readMatomoSite(flavor: "prod" | "beta"): Promise<{
     );
   }
   const site = matchingSites[0];
+  if (site === undefined) {
+    throw new Error(`Analytics registry has no Matomo site for ${domain}`);
+  }
   return { domain: site.hostname, siteId: String(site.siteId) };
 }
 
