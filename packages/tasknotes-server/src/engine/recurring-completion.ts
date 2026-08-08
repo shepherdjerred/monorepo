@@ -66,6 +66,15 @@ export function useDeterministicRecurringSchedule(
   today: string,
   maintainDueDateOffset: boolean,
 ): void {
+  // Uncompleting clears the targeted instance but must not advance the
+  // already-advanced schedule. This also covers bodyless toggles and older
+  // clients that send completed:false without a restore snapshot.
+  if (!plan.newComplete) {
+    setTaskDate(plan.updatedTask, "scheduled", original.scheduled);
+    setTaskDate(plan.updatedTask, "due", original.due);
+    return;
+  }
+
   const scheduleSource: TaskInfo = { ...plan.updatedTask };
   setTaskDate(scheduleSource, "scheduled", original.scheduled);
   setTaskDate(scheduleSource, "due", original.due);

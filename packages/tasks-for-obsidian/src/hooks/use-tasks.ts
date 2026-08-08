@@ -4,6 +4,7 @@ import type { TaskId } from "../domain/types";
 import { isActiveStatus } from "../domain/status";
 import {
   completionTargetDate,
+  isCompletedOn,
   isRecurring,
   localTodayYmd,
   nextOccurrenceAfter,
@@ -141,10 +142,11 @@ export function useTasks() {
           ? completionTargetDate(task)
           : undefined;
       const completing =
-        task !== undefined &&
-        date !== undefined &&
-        !task.completeInstances.includes(date);
-      const result = await ctx.toggleStatus(id);
+        task !== undefined && date !== undefined && !isCompletedOn(task, date);
+      const result =
+        task !== undefined && date !== undefined
+          ? await ctx.setInstanceComplete(id, date, completing)
+          : await ctx.toggleStatus(id);
       if (
         task !== undefined &&
         date !== undefined &&

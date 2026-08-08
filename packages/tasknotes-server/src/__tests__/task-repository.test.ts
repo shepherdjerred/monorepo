@@ -347,6 +347,7 @@ tags:
     expect(on.complete_instances).toEqual([ymdOf(NOW)]);
     const off = await repo.completeInstance("TaskNotes/water.md");
     expect(off.complete_instances ?? []).toEqual([]);
+    expect(off.scheduled).toBe(on.scheduled);
     await expect(repo.completeInstance("TaskNotes/plain.md")).rejects.toThrow(
       NotRecurringError,
     );
