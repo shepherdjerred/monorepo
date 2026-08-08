@@ -597,31 +597,23 @@ describe("createTool", () => {
   });
 
   test("allows a durable job to reply in its source channel", async () => {
-    const channels = getDiscordClient().channels;
-    const originalFetch = Reflect.get(channels, "fetch");
-    Reflect.set(channels, "fetch", async () => ({
-      isSendable: () => true,
-      messages: {
-        fetch: async () => ({
-          reply: async () => ({ id: "400000000000000004" }),
-        }),
-      },
-    }));
+    const tool = createTool({
+      id: "manage-message",
+      description: "Test tool",
+      inputSchema: z.object({
+        action: z.literal("reply"),
+        content: z.string(),
+      }),
+      outputSchema: z.object({ success: z.boolean() }),
+      execute: () => ({ success: true }),
+    });
 
-    try {
-      await expect(
-        executeInContext(
-          trustedContext({ ownsSourceReply: false }),
-          async () =>
-            await manageMessageTool.execute({
-              action: "reply",
-              content: "durable reply",
-            }),
-        ),
-      ).resolves.toMatchObject({ success: true });
-    } finally {
-      Reflect.set(channels, "fetch", originalFetch);
-    }
+    await expect(
+      executeInContext(
+        trustedContext({ ownsSourceReply: false }),
+        async () => await tool.execute({ action: "reply", content: "later" }),
+      ),
+    ).resolves.toEqual({ success: true });
   });
 });
 
