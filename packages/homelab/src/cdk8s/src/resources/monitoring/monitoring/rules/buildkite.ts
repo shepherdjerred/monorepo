@@ -337,7 +337,7 @@ or (
       job="${BUILDKITE_BUN_CACHE_GC_ACTIVITY}"
     }
   )
-  and (
+  and on() (
     time() - max(
       temporal_worker_app_process_start_time_seconds{
         namespace="buildkite",
