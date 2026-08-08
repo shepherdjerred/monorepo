@@ -1,6 +1,7 @@
 import type * as echarts from "echarts";
 import { fileURLToPath } from "node:url";
 import { palette } from "#src/assets/colors.ts";
+import { containsCjkText } from "#src/assets/index.ts";
 import { generateSeriesPalette } from "#src/html/competition-chart-palette.ts";
 import {
   echartsOptionToSvg,
@@ -89,6 +90,12 @@ const BEAUFORT_FONT_FILES = [
 
 const FONT_FILE_PATHS = [...SPIEGEL_FONT_FILES, ...BEAUFORT_FONT_FILES].map(
   (name) => fileURLToPath(new URL(`../assets/fonts/${name}`, import.meta.url)),
+);
+const CJK_FONT_FILE_PATH = fileURLToPath(
+  new URL(
+    "../assets/fonts/NotoSansCJK/NotoSansCJKsc-Regular.otf",
+    import.meta.url,
+  ),
 );
 
 const DAY_MS = 86_400_000;
@@ -383,7 +390,10 @@ export function competitionChartToSvg(props: CompetitionChartProps): string {
 export function competitionChartToImage(
   props: CompetitionChartProps,
 ): Promise<Buffer> {
+  const fontFiles = containsCjkText(props)
+    ? [...FONT_FILE_PATHS, CJK_FONT_FILE_PATH]
+    : FONT_FILE_PATHS;
   return Promise.resolve(
-    echartsSvgToImage(competitionChartToSvg(props), FONT_FILE_PATHS, BODY_FONT),
+    echartsSvgToImage(competitionChartToSvg(props), fontFiles, BODY_FONT),
   );
 }

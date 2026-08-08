@@ -4,7 +4,9 @@ import type {
   ReportChartOrientation,
 } from "@scout-for-lol/data";
 import type * as echarts from "echarts";
+import { containsCjkText } from "#src/assets/index.ts";
 import {
+  ANALYTICS_CJK_FONT_FILE_PATH,
   ANALYTICS_BODY_FONT as BODY_FONT,
   ANALYTICS_CHART_HEIGHT as HEIGHT,
   ANALYTICS_CHART_WIDTH as WIDTH,
@@ -425,9 +427,8 @@ export function analyticsChartToSvg(props: AnalyticsChartProps): string {
 }
 
 export function analyticsChartToImage(props: AnalyticsChartProps): Buffer {
-  return echartsSvgToImage(
-    analyticsChartToSvg(props),
-    FONT_FILE_PATHS,
-    BODY_FONT,
-  );
+  const fontFiles = containsCjkText(props)
+    ? [...FONT_FILE_PATHS, ANALYTICS_CJK_FONT_FILE_PATH]
+    : FONT_FILE_PATHS;
+  return echartsSvgToImage(analyticsChartToSvg(props), fontFiles, BODY_FONT);
 }
