@@ -3,8 +3,8 @@ import {
   progressLabel,
   progressStep,
   TOTAL_PROGRESS_STEPS,
-  type OnboardingStepKind,
 } from "#src/lib/onboarding-steps.ts";
+import type { OnboardingStepKind } from "@scout-for-lol/data";
 
 /**
  * Shared frame for every wizard step: a progress bar, a "Skip setup"

@@ -6,6 +6,7 @@
 
 import { prisma } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
+import { webSessionRejectedTotal } from "#src/metrics/web.ts";
 import type { ApiToken, User } from "#generated/prisma/client/index.js";
 import { verifySession } from "#src/trpc/jwt.ts";
 
@@ -115,16 +116,28 @@ export async function createContext(request: Request): Promise<Context> {
     }
   }
 
-  // Web session via signed cookie
+  // Web session via signed cookie.
+  //
+  // The rejection reasons are separated because they mean very different
+  // things: `absent` is ordinary anonymous traffic and dominates by design,
+  // while a rise in `invalid` (bad signature) or `unknown_user` (a session for
+  // a user we no longer have) points at a real problem.
   const cookies = parseCookies(request.headers.get("Cookie"));
   const sessionJwt = cookies.get(SESSION_COOKIE);
-  if (sessionJwt !== undefined && sessionJwt.length > 0) {
+  if (sessionJwt === undefined || sessionJwt.length === 0) {
+    webSessionRejectedTotal.inc({ reason: "absent" });
+  } else {
     const claims = await verifySession(sessionJwt);
-    if (claims !== null) {
+    if (claims === null) {
+      // verifySession covers both a bad signature and an expired token.
+      webSessionRejectedTotal.inc({ reason: "invalid" });
+    } else {
       const dbUser = await prisma.user.findUnique({
         where: { discordId: claims.sub },
       });
-      if (dbUser !== null) {
+      if (dbUser === null) {
+        webSessionRejectedTotal.inc({ reason: "unknown_user" });
+      } else {
         webSession = {
           discordId: claims.sub,
           csrfToken: cookies.get(CSRF_COOKIE) ?? null,

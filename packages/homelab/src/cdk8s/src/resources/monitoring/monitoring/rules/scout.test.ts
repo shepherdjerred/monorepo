@@ -77,3 +77,71 @@ describe("Scout bot-health alert rules", () => {
     expect(JSON.stringify(rule.expr)).toContain("guild_send_blocked_total");
   });
 });
+
+describe("Scout web alert rules", () => {
+  const web = getScoutRuleGroups().find((group) => group.name === "scout-web");
+
+  test("defines the scout-web group", () => {
+    if (web === undefined) {
+      throw new Error("Missing scout-web rule group");
+    }
+    expect(web.rules).toBeDefined();
+  });
+
+  test("pages on sustained backend 5xx responses", () => {
+    const rule = web?.rules?.find(
+      (candidate) => candidate.alert === "ScoutWeb5xxRateHigh",
+    );
+    if (rule === undefined) {
+      throw new Error("Missing ScoutWeb5xxRateHigh rule");
+    }
+    expect(rule.labels?.["severity"]).toBe("critical");
+    expect(JSON.stringify(rule.expr)).toContain("scout_http_requests_total");
+    expect(JSON.stringify(rule.expr)).toContain("5xx");
+  });
+
+  test("warns when Discord is unreachable, excluding expired user grants", () => {
+    const rule = web?.rules?.find(
+      (candidate) => candidate.alert === "ScoutDiscordUpstreamFailures",
+    );
+    if (rule === undefined) {
+      throw new Error("Missing ScoutDiscordUpstreamFailures rule");
+    }
+    const expression = JSON.stringify(rule.expr);
+    expect(expression).toContain("scout_discord_user_guilds_failures_total");
+    // A user whose Discord grant lapsed is not an outage — they just sign in
+    // again — so it must not contribute to this alert.
+    expect(expression).toContain("token_refresh_failed");
+    expect(expression).toContain("reason!=");
+  });
+
+  test("tRPC error alert ignores ordinary anonymous and permission traffic", () => {
+    const rule = web?.rules?.find(
+      (candidate) => candidate.alert === "ScoutTrpcErrorRateHigh",
+    );
+    if (rule === undefined) {
+      throw new Error("Missing ScoutTrpcErrorRateHigh rule");
+    }
+    const expression = JSON.stringify(rule.expr);
+    // Anonymous page loads (UNAUTHORIZED) and permission denials (FORBIDDEN)
+    // are normal on a public web surface; alerting on them would never stop.
+    expect(expression).toContain("UNAUTHORIZED");
+    expect(expression).toContain("FORBIDDEN");
+    expect(expression).toContain("code!~");
+  });
+
+  test("sign-in failure alert is guarded by a minimum attempt rate", () => {
+    const rule = web?.rules?.find(
+      (candidate) => candidate.alert === "ScoutWebSigninFailureRate",
+    );
+    if (rule === undefined) {
+      throw new Error("Missing ScoutWebSigninFailureRate rule");
+    }
+    const expression = JSON.stringify(rule.expr);
+    expect(expression).toContain("scout_web_signin_total");
+    // Without the attempt-rate guard, one failed sign-in on a quiet night
+    // would be a 100% failure ratio and would page.
+    expect(expression).toContain(" and ");
+    expect(expression).toContain(String.raw`result=\"started\"`);
+  });
+});

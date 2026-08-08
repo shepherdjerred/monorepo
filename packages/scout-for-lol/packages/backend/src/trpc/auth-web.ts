@@ -21,6 +21,7 @@ import { z } from "zod";
 import * as Sentry from "@sentry/bun";
 import { prisma } from "#src/database/index.ts";
 import { CSRF_COOKIE, SESSION_COOKIE } from "#src/trpc/context.ts";
+import { webSigninTotal } from "#src/metrics/web.ts";
 import { signSession, verifySession } from "#src/trpc/jwt.ts";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 import { createLogger } from "#src/logger.ts";
@@ -158,6 +159,7 @@ export function generateCsrfToken(): string {
  * the same nonce in the state parameter. The callback compares the two.
  */
 export function handleDiscordStart(request: Request): Response {
+  webSigninTotal.inc({ result: "started" });
   const url = new URL(request.url);
   const returnTo = safeReturnTo(url.searchParams.get("returnTo"));
 
@@ -300,6 +302,7 @@ export async function handleDiscordCallback(
   const clearStateCookie = buildClearCookie(OAUTH_STATE_COOKIE, isHttps, "Lax");
 
   if (oauthError !== null) {
+    webSigninTotal.inc({ result: "failed" });
     logger.info(`OAuth denied or failed: ${oauthError}`);
     const headers = new Headers();
     headers.append("Set-Cookie", clearStateCookie);
@@ -319,6 +322,7 @@ export async function handleDiscordCallback(
   // the null check out so TS can narrow `state` to string in the rest
   // of this function.
   if (state === null || !checkStateNonce(state, expectedNonce)) {
+    webSigninTotal.inc({ result: "callback_error" });
     logger.warn("OAuth state mismatch — possible CSRF or expired flow", {
       hasCookie: expectedNonce !== undefined,
       hasState: state !== null,
@@ -433,6 +437,7 @@ export async function handleDiscordCallback(
   );
   headers.set("Location", `${appOrigin}${returnTo}`);
 
+  webSigninTotal.inc({ result: "succeeded" });
   logger.info(
     `Web sign-in succeeded for ${discordUser.username} (${discordId})`,
   );

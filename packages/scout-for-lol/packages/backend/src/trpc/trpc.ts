@@ -11,6 +11,7 @@ import {
 } from "@scout-for-lol/data";
 import type { Context } from "#src/trpc/context.ts";
 import configuration from "#src/configuration.ts";
+import { trpcCallDuration, trpcCallsTotal } from "#src/metrics/web.ts";
 
 /**
  * Find the missing `{ resource, action }` a FORBIDDEN carries. The
@@ -46,8 +47,39 @@ const t = initTRPC.context<Context>().create({
  * Export reusable router and procedure helpers
  */
 export const router = t.router;
-export const publicProcedure = t.procedure;
 export const middleware = t.middleware;
+
+/**
+ * Records latency and outcome for every procedure call.
+ *
+ * Deliberately a middleware rather than the adapter's `onError` hook: `onError`
+ * only fires on failure, so it can produce an error count but never an error
+ * *rate*. `next()` reports `{ ok }` without throwing, so success and failure
+ * are both observed here.
+ *
+ * `path` is the procedure name from the router definition — a bounded set — so
+ * it is safe as a label.
+ */
+const withTrpcMetrics = t.middleware(async ({ path, type, next }) => {
+  const start = performance.now();
+  const result = await next();
+  const procedure = path === "" ? "unknown" : path;
+  trpcCallDuration.observe({ procedure }, (performance.now() - start) / 1000);
+  trpcCallsTotal.inc({
+    procedure,
+    type,
+    code: result.ok ? "OK" : result.error.code,
+  });
+  return result;
+});
+
+/**
+ * Base procedure every exported procedure builds on, so instrumentation is
+ * automatic and no router has to opt in (or can forget to).
+ */
+const instrumentedProcedure = t.procedure.use(withTrpcMetrics);
+
+export const publicProcedure = instrumentedProcedure;
 
 /**
  * Middleware that enforces user authentication via session
@@ -95,12 +127,12 @@ const hasApiToken = middleware(async ({ ctx, next }) => {
 /**
  * Protected procedure - requires session-based authentication
  */
-export const protectedProcedure = t.procedure.use(isAuthenticated);
+export const protectedProcedure = instrumentedProcedure.use(isAuthenticated);
 
 /**
  * Desktop client procedure - requires API token authentication
  */
-export const desktopClientProcedure = t.procedure.use(hasApiToken);
+export const desktopClientProcedure = instrumentedProcedure.use(hasApiToken);
 
 /**
  * Web read middleware - requires a valid scout_session cookie.
@@ -168,5 +200,7 @@ const hasWebSessionWithCsrf = middleware(async ({ ctx, next }) => {
   });
 });
 
-export const webProcedure = t.procedure.use(hasWebSession);
-export const webMutationProcedure = t.procedure.use(hasWebSessionWithCsrf);
+export const webProcedure = instrumentedProcedure.use(hasWebSession);
+export const webMutationProcedure = instrumentedProcedure.use(
+  hasWebSessionWithCsrf,
+);

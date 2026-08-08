@@ -6,6 +6,7 @@
 
 import { router } from "#src/trpc/trpc.ts";
 import { authRouter } from "#src/trpc/router/auth.router.ts";
+import { telemetryRouter } from "#src/trpc/router/telemetry.router.ts";
 import { soundPackRouter } from "#src/trpc/router/sound-pack.router.ts";
 import { eventRouter } from "#src/trpc/router/event.router.ts";
 import { userRouter } from "#src/trpc/router/user.router.ts";
@@ -20,6 +21,7 @@ import { rolesRouter } from "#src/trpc/router/roles.router.ts";
 
 export const appRouter = router({
   auth: authRouter,
+  telemetry: telemetryRouter,
   soundPack: soundPackRouter,
   event: eventRouter,
   user: userRouter,
