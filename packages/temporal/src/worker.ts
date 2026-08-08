@@ -18,7 +18,9 @@ import {
 } from "./observability/metrics.ts";
 import { createStructuredLogger } from "./observability/logging.ts";
 import { restoreGlitterCorpusSnapshotMetrics } from "./activities/glitter-corpus-snapshot.ts";
+import { isTransientCorpusStorageError } from "./activities/glitter-corpus-store.ts";
 import { WORKFLOW_TASK_POLLER_BEHAVIOR } from "./shared/worker-options.ts";
+import { retryUntilReady, sleepUnlessClosed } from "./shared/startup-retry.ts";
 import {
   parseWorkerRole,
   workerRoleRunsCore,
@@ -82,24 +84,39 @@ function initSentry(): void {
   jsonLog("info", "Sentry initialized");
 }
 
-async function sleepUnlessClosed(
-  delayMs: number,
-  isClosed: () => boolean,
-): Promise<void> {
-  const deadline = Date.now() + delayMs;
-  while (!isClosed() && Date.now() < deadline) {
-    const remainingMs = deadline - Date.now();
-    await Bun.sleep(Math.min(remainingMs, 1000));
-  }
-}
-
 function formatError(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-async function restoreGlitterCorpusMetricsAfterWorkerStart(): Promise<void> {
+async function restoreGlitterCorpusMetricsAfterWorkerStart(
+  isClosed: () => boolean,
+): Promise<void> {
   try {
-    await restoreGlitterCorpusSnapshotMetrics();
+    const result = await retryUntilReady({
+      operation: restoreGlitterCorpusSnapshotMetrics,
+      shouldRetry: isTransientCorpusStorageError,
+      isClosed,
+      onRetry: ({ attempt, delayMs, error }) => {
+        jsonLog(
+          "error",
+          "Glitter corpus snapshot metric restoration failed; retrying",
+          {
+            attempt,
+            delayMs,
+            error: formatError(error),
+          },
+        );
+      },
+      onEscalate: ({ attempt, error }) => {
+        Sentry.captureMessage(
+          `Glitter corpus snapshot metric restoration has failed ${String(attempt)} consecutive times (latest error: ${formatError(error)}); still retrying`,
+          "warning",
+        );
+      },
+    });
+    if (result === "succeeded") {
+      jsonLog("info", "Glitter corpus snapshot metric restoration completed");
+    }
   } catch (error: unknown) {
     Sentry.captureException(error);
     jsonLog(
@@ -342,7 +359,7 @@ async function main(): Promise<void> {
 
   const workerRuns = workers.map((roleWorker) => roleWorker.run());
   if (workerRoleRunsGlitter(role)) {
-    void restoreGlitterCorpusMetricsAfterWorkerStart();
+    void restoreGlitterCorpusMetricsAfterWorkerStart(() => shutdownStarted);
   }
   await Promise.all(workerRuns);
 }
