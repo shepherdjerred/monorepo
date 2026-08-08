@@ -12,6 +12,46 @@ function localDay(timestamp: number): string {
   return `${String(date.getFullYear())}-${month}-${day}`;
 }
 
+function advanceSchedule(
+  existing: Task,
+  updated: Task,
+  timestamp: number,
+): void {
+  const recurrence = existing.recurrence;
+  if (recurrence === undefined) {
+    throw new Error("recurring completion fake requires a recurrence");
+  }
+  const scheduleSource = {
+    title: existing.title,
+    recurrence,
+    ...(existing.scheduled === undefined
+      ? {}
+      : { scheduled: existing.scheduled }),
+    ...(existing.due === undefined ? {} : { due: existing.due }),
+    ...(existing.dateCreated === undefined
+      ? {}
+      : { dateCreated: existing.dateCreated }),
+    ...(existing.recurrenceAnchor === undefined
+      ? {}
+      : { recurrence_anchor: existing.recurrenceAnchor }),
+    complete_instances: updated.completeInstances,
+    skipped_instances: updated.skippedInstances,
+  };
+  const next = updateToNextScheduledOccurrence(scheduleSource, true, {
+    today: localDay(timestamp),
+  });
+  if (next.scheduled === null) {
+    Reflect.deleteProperty(updated, "scheduled");
+  } else {
+    updated.scheduled = next.scheduled;
+  }
+  if (next.due === null) {
+    Reflect.deleteProperty(updated, "due");
+  } else {
+    updated.due = next.due;
+  }
+}
+
 export function applyFakeRecurringCompletion(
   existing: Task,
   instance: CompleteInstanceRequest | undefined,
@@ -36,39 +76,7 @@ export function applyFakeRecurringCompletion(
       : existing.skippedInstances,
   };
   if (completed) {
-    const recurrence = existing.recurrence;
-    if (recurrence === undefined) {
-      throw new Error("recurring completion fake requires a recurrence");
-    }
-    const scheduleSource = {
-      title: existing.title,
-      recurrence,
-      ...(existing.scheduled === undefined
-        ? {}
-        : { scheduled: existing.scheduled }),
-      ...(existing.due === undefined ? {} : { due: existing.due }),
-      ...(existing.dateCreated === undefined
-        ? {}
-        : { dateCreated: existing.dateCreated }),
-      ...(existing.recurrenceAnchor === undefined
-        ? {}
-        : { recurrence_anchor: existing.recurrenceAnchor }),
-      complete_instances: updated.completeInstances,
-      skipped_instances: updated.skippedInstances,
-    };
-    const next = updateToNextScheduledOccurrence(scheduleSource, true, {
-      today: localDay(timestamp),
-    });
-    if (next.scheduled === null) {
-      Reflect.deleteProperty(updated, "scheduled");
-    } else {
-      updated.scheduled = next.scheduled;
-    }
-    if (next.due === null) {
-      Reflect.deleteProperty(updated, "due");
-    } else {
-      updated.due = next.due;
-    }
+    advanceSchedule(existing, updated, timestamp);
   }
   const restore = instance?.restore;
   if (restore === undefined) return updated;
