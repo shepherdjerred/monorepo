@@ -21,10 +21,10 @@ Delta is a Git pager, not a diff computation oracle. Keep pager themes and decor
 ## Primary documentation
 
 - [jq manual](https://jqlang.org/manual/)
-- [jq releases](https://github.com/jqlang/jq/releases/latest)
+- [jq releases](https://github.com/jqlang/jq/releases/tag/jq-1.8.2)
 - [yq documentation](https://mikefarah.gitbook.io/yq/)
-- [yq releases](https://github.com/mikefarah/yq/releases/latest)
+- [yq releases](https://github.com/mikefarah/yq/releases/tag/v4.53.3)
 - [hyperfine](https://github.com/sharkdp/hyperfine)
-- [hyperfine releases](https://github.com/sharkdp/hyperfine/releases/latest)
+- [hyperfine releases](https://github.com/sharkdp/hyperfine/releases/tag/v1.20.0)
 - [delta](https://github.com/dandavison/delta)
-- [delta releases](https://github.com/dandavison/delta/releases/latest)
+- [delta releases](https://github.com/dandavison/delta/releases/tag/0.19.2)
