@@ -97,10 +97,6 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   // GitHub reads + one S3 NDJSON write). No workflow-level sleeps; the
   // activity carries its own startToCloseTimeout + retry budget.
   "observeReviewSignalsWorkflow",
-  // Awaits a single runObserveAgentTaskTimeouts activity (one visibility
-  // list + gauge set). No workflow-level sleeps; the activity carries its own
-  // startToCloseTimeout + retry budget.
-  "observeAgentTaskTimeoutsWorkflow",
   "runGlitterCorpusDaily",
   "runGlitterContextRefresh",
   // Awaits a single pollWorkflowFailures activity (visibility list + per-

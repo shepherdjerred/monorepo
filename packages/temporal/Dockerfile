@@ -91,7 +91,10 @@ FROM base AS runtime
 # renovate: datasource=github-releases depName=cli/cli
 ARG GH_CLI_VERSION=2.96.0
 # renovate: datasource=npm depName=@anthropic-ai/claude-code
-ARG CLAUDE_CODE_VERSION=2.1.175
+# Claude structured-output failures were silent before 2.1.205. Keep this pin
+# at or above the provider contract floor and run the command/image contract
+# tests on every future upgrade.
+ARG CLAUDE_CODE_VERSION=2.1.220
 # renovate: datasource=npm depName=@openai/codex
 ARG CODEX_CLI_VERSION=0.139.0
 # renovate: datasource=github-releases depName=kubernetes/kubectl

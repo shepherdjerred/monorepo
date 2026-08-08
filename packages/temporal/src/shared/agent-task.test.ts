@@ -1,11 +1,16 @@
 import { describe, expect, it } from "bun:test";
 import {
+  AGENT_TASK_CLAUDE_SCHEMA_FINGERPRINT,
+  AGENT_TASK_CLAUDE_SCHEMA_VERSION,
   AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE,
   AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX,
+  AgentTaskOutputContractError,
   AgentTaskInputSchema,
   agentTaskScheduleId,
   agentTaskWorkflowId,
+  parseClaudeAgentTaskResult,
   parseAgentTaskResultPayload,
+  stripClaudeSchemaAnnotations,
 } from "./agent-task.ts";
 import { z } from "zod/v4";
 
@@ -113,8 +118,12 @@ describe("agent task structured output", () => {
     expect(AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX["anyOf"]).toBeUndefined();
     assertStrictJsonSchemaObjects(AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX);
   });
+});
 
+describe("Claude structured output contract", () => {
   it("generates a plain/optional schema for claude from the canonical Zod schema", () => {
+    expect(AGENT_TASK_CLAUDE_SCHEMA_VERSION).toBe("draft-07-v1");
+    expect(AGENT_TASK_CLAUDE_SCHEMA_FINGERPRINT).toMatch(/^[0-9a-f]{16}$/);
     expect(AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE["type"]).toBe("object");
     expect(AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE["$schema"]).toBeUndefined();
     expect(AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE["required"]).toEqual([
@@ -134,8 +143,118 @@ describe("agent task structured output", () => {
     expect(AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE).not.toEqual(
       AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX,
     );
+
+    const containsFormat = (value: unknown): boolean => {
+      if (Array.isArray(value)) {
+        return value.some((entry) => containsFormat(entry));
+      }
+      if (typeof value !== "object" || value === null) {
+        return false;
+      }
+      return Object.entries(value).some(
+        ([key, entry]) => key === "format" || containsFormat(entry),
+      );
+    };
+    expect(containsFormat(AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE)).toBe(false);
   });
 
+  it("preserves properties named like stripped schema annotations", () => {
+    const schema = stripClaudeSchemaAnnotations(
+      z.toJSONSchema(z.object({ format: z.string(), $schema: z.string() }), {
+        target: "draft-7",
+      }),
+    );
+    const properties = z
+      .record(z.string(), z.unknown())
+      .parse(z.record(z.string(), z.unknown()).parse(schema)["properties"]);
+
+    expect(properties["format"]).toBeDefined();
+    expect(properties["$schema"]).toBeDefined();
+  });
+
+  it("parses a valid Claude result message structured_output payload", () => {
+    expect(
+      parseClaudeAgentTaskResult(
+        JSON.stringify({
+          type: "result",
+          subtype: "success",
+          is_error: false,
+          result: "I returned the report payload.",
+          structured_output: { markdown: "Claude report" },
+        }),
+      ),
+    ).toEqual({ markdown: "Claude report" });
+  });
+
+  it("rejects a successful Claude result with missing structured_output", () => {
+    expect(() =>
+      parseClaudeAgentTaskResult(
+        JSON.stringify({
+          type: "result",
+          subtype: "success",
+          is_error: false,
+          result: "Here is prose instead of the contract.",
+        }),
+      ),
+    ).toThrow(AgentTaskOutputContractError);
+  });
+
+  it("rejects semantically invalid structured_output without prose fallback", () => {
+    try {
+      parseClaudeAgentTaskResult(
+        JSON.stringify({
+          type: "result",
+          subtype: "success",
+          is_error: false,
+          result: '{"markdown":"prose fallback must not be used"}',
+          structured_output: { markdown: "" },
+        }),
+      );
+      throw new Error("Expected Claude contract failure");
+    } catch (error: unknown) {
+      expect(error).toBeInstanceOf(AgentTaskOutputContractError);
+      if (!(error instanceof AgentTaskOutputContractError)) {
+        throw error;
+      }
+      expect(error.reason).toBe("invalid-structured-output");
+    }
+  });
+
+  it("surfaces is_error and bounded redacted diagnostics", () => {
+    try {
+      parseClaudeAgentTaskResult(
+        JSON.stringify({
+          type: "result",
+          subtype: "error_max_turns",
+          is_error: true,
+          result: `token=supersecret-token ${"x".repeat(400)}`,
+          extra_result_key: true,
+        }),
+        (text) => text.replaceAll("supersecret-token", "[REDACTED]"),
+      );
+      throw new Error("Expected Claude contract failure");
+    } catch (error: unknown) {
+      expect(error).toBeInstanceOf(AgentTaskOutputContractError);
+      if (!(error instanceof AgentTaskOutputContractError)) {
+        throw error;
+      }
+      expect(error.reason).toBe("is-error");
+      expect(error.diagnostics.resultSubtype).toBe("error_max_turns");
+      expect(error.diagnostics.resultMessageKeys).toContain("extra_result_key");
+      expect(error.diagnostics.finalTextExcerpt).toContain("[REDACTED]");
+      expect(error.diagnostics.finalTextExcerpt).not.toContain(
+        "supersecret-token",
+      );
+      expect(error.diagnostics.finalTextExcerpt?.length).toBeLessThanOrEqual(
+        241,
+      );
+      expect(error.message).toContain("schemaFingerprint=");
+      expect(error.message).toContain("resultMessageKeys=");
+    }
+  });
+});
+
+describe("agent task payload normalization", () => {
   it("normalizes a minimal nullable wire payload (codex)", () => {
     expect(
       parseAgentTaskResultPayload(
