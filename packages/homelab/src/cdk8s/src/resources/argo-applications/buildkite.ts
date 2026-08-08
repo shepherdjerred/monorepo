@@ -15,6 +15,7 @@ import {
   CI_NODE_HOSTNAME,
   CI_NODE_TOLERATION,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
+import { BUILDKITE_MAX_IN_FLIGHT } from "@shepherdjerred/homelab/cdk8s/src/misc/buildkite.ts";
 import {
   BUN_CACHE_MOUNT_PATH,
   createLegacyBuildkiteBunCacheJob,
@@ -24,10 +25,6 @@ import { createLegacyBuildkiteMaintenanceJobs } from "./buildkite-legacy-mainten
 import { createBuildkiteMaintenanceWorker } from "./buildkite-maintenance-worker.ts";
 import { MAINTENANCE_IMAGE_READY } from "./maintenance-image-readiness.ts";
 
-// Buildkite's count-based cap complements Kueue's resource-aware admission:
-// the agent-stack controller stops creating Jobs beyond this count, while
-// Kueue suspends workloads whose requests do not fit liskov's budget.
-export const BUILDKITE_MAX_IN_FLIGHT = 20;
 function createBuildkiteNamespace(chart: Chart): void {
   new Namespace(chart, "buildkite-namespace", {
     metadata: {

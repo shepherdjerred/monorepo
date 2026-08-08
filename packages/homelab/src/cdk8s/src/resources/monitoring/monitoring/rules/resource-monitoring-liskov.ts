@@ -1,5 +1,6 @@
 import type { PrometheusRuleSpecGroups } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
+import { CI_NODE_HOSTNAME } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 import { escapePrometheusTemplate } from "./shared.ts";
 
 export function getLiskovResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
@@ -11,29 +12,29 @@ export function getLiskovResourceMonitoringRuleGroups(): PrometheusRuleSpecGroup
           alert: "LiskovMemoryAvailableLow",
           annotations: {
             description: escapePrometheusTemplate(
-              "CI node liskov has less than 8GiB of available memory: {{ $value | humanize }} bytes remaining",
+              `CI node ${CI_NODE_HOSTNAME} has less than 8GiB of available memory: {{ $value | humanize }} bytes remaining`,
             ),
             summary:
               "Liskov available memory is below the eviction warning floor",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'node_memory_MemAvailable_bytes{node="liskov"} < 8589934592',
+            `node_memory_MemAvailable_bytes{node="${CI_NODE_HOSTNAME}"} < 8589934592`,
           ),
-          for: "10m",
+          for: "1m",
           labels: { severity: "warning" },
         },
         {
           alert: "LiskovMemoryPressure",
           annotations: {
             description: escapePrometheusTemplate(
-              "CI node liskov has less than 4GiB available or Kubernetes reports MemoryPressure",
+              `CI node ${CI_NODE_HOSTNAME} has less than 4GiB available or Kubernetes reports MemoryPressure`,
             ),
             summary: "Critical memory pressure on liskov",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            '(node_memory_MemAvailable_bytes{node="liskov"} < 4294967296) or (kube_node_status_condition{node="liskov", condition="MemoryPressure", status="true"} == 1)',
+            `(node_memory_MemAvailable_bytes{node="${CI_NODE_HOSTNAME}"} < 4294967296) or (kube_node_status_condition{node="${CI_NODE_HOSTNAME}", condition="MemoryPressure", status="true"} == 1)`,
           ),
-          for: "5m",
+          for: "1m",
           labels: { severity: "critical" },
         },
       ],

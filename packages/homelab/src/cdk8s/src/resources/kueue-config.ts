@@ -1,6 +1,6 @@
 import type { Chart } from "cdk8s";
 import { ApiObject } from "cdk8s";
-import { BUILDKITE_MAX_IN_FLIGHT } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/buildkite.ts";
+import { BUILDKITE_MAX_IN_FLIGHT } from "@shepherdjerred/homelab/cdk8s/src/misc/buildkite.ts";
 
 /**
  * Creates Kueue resource management configuration for the Buildkite namespace.

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+import { CI_NODE_HOSTNAME } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 import { getResourceMonitoringRuleGroups } from "./resource-monitoring.ts";
 
 describe("CriticalSystemLoad alert", () => {
@@ -59,9 +60,9 @@ describe("liskov memory and Buildkite admission alerts", () => {
     const alert = group?.rules?.find(
       (rule) => rule.alert === "LiskovMemoryAvailableLow",
     );
-    expect(alert?.expr.value).toContain('node="liskov"');
+    expect(alert?.expr.value).toContain(`node="${CI_NODE_HOSTNAME}"`);
     expect(alert?.expr.value).toContain("8589934592");
-    expect(alert?.for).toBe("10m");
+    expect(alert?.for).toBe("1m");
   });
 
   it("keeps a critical signal for memory pressure and Kueue backlog", () => {
@@ -79,6 +80,7 @@ describe("liskov memory and Buildkite admission alerts", () => {
       ?.rules?.find((rule) => rule.alert === "BuildkiteKueueWorkloadsWaiting");
     expect(memory?.expr.value).toContain("MemoryPressure");
     expect(memory?.expr.value).toContain("4294967296");
+    expect(memory?.for).toBe("1m");
     expect(admission?.expr.value).toContain('cluster_queue="buildkite"');
     expect(admission?.for).toBe("30m");
   });
