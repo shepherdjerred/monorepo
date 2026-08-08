@@ -126,7 +126,10 @@ function reasonsForToday(task: Task, today: string): AgendaDateReason[] {
   // appears overdue is the same occurrence a checkbox tap completes.
   if (task.scheduled !== undefined) {
     const day = taskDay(task.scheduled);
-    if (day <= today) {
+    const processed =
+      task.completeInstances.includes(day) ||
+      task.skippedInstances.includes(day);
+    if (!processed && day <= today) {
       addReason(reasons, { kind: "planned", day, recurring });
     }
   }
@@ -297,7 +300,7 @@ function reasonsForUpcoming(
       task.completeInstances.includes(day) ||
       task.skippedInstances.includes(day);
     currentOccurrenceProcessed ||= processed;
-    if (!processed && day > today) {
+    if (!currentOccurrenceProcessed && !processed && day > today) {
       addReason(reasons, { kind: "deadline", day, recurring: false });
     }
   }

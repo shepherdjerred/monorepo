@@ -135,29 +135,77 @@ export const TaskRow = React.memo(function TaskRowComponent({
   // Keep completion and opening details as sibling accessibility targets.
   // Nesting the checkbox inside one accessible row button makes VoiceOver
   // collapse it into the parent and removes direct completion from the rotor.
-  const openButton = (
-    <Pressable
-      style={styles.openButton}
-      onPress={onPress}
-      testID={`task-row-${String(task.id)}`}
-      accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel}
-      accessibilityHint="Double tap to view details"
+  type MenuPressAction = NonNullable<
+    React.ComponentProps<typeof MenuView>["onPressAction"]
+  >;
+  const handleMenuAction: MenuPressAction = ({ nativeEvent }) => {
+    switch (nativeEvent.event) {
+      case "toggle":
+        onToggle();
+        return;
+      case "schedule":
+        if (!onSchedule) {
+          throw new Error("Schedule action is unavailable for this task");
+        }
+        onSchedule();
+        return;
+      case "edit":
+        if (!onEdit) {
+          throw new Error("Edit action is unavailable for this task");
+        }
+        onEdit();
+        return;
+      case "delete":
+        if (!onDelete) {
+          throw new Error("Delete action is unavailable for this task");
+        }
+        onDelete();
+        return;
+      default: {
+        const priority = ALL_PRIORITIES.find(
+          (candidate) => `priority-${candidate}` === nativeEvent.event,
+        );
+        if (priority === undefined || !onSetPriority) {
+          throw new Error(`Unknown task menu action: ${nativeEvent.event}`);
+        }
+        onSetPriority(priority);
+      }
+    }
+  };
+
+  const renderOpenButton = (menuActions: MenuAction[]) => (
+    <MenuView
+      title={task.title}
+      actions={menuActions}
+      shouldOpenOnLongPress
+      onPressAction={handleMenuAction}
     >
-      <RowContent
-        presentation={presentation}
-        completed={completed}
-        colors={colors}
-      />
-      {pending ? (
-        <View
-          style={[styles.pendingDot, { backgroundColor: colors.textTertiary }]}
-          testID="task-row-pending-dot"
-          accessibilityElementsHidden
-          importantForAccessibility="no-hide-descendants"
+      <Pressable
+        style={styles.openButton}
+        onPress={onPress}
+        testID={`task-row-${String(task.id)}`}
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel}
+        accessibilityHint="Double tap to view details"
+      >
+        <RowContent
+          presentation={presentation}
+          completed={completed}
+          colors={colors}
         />
-      ) : null}
-    </Pressable>
+        {pending ? (
+          <View
+            style={[
+              styles.pendingDot,
+              { backgroundColor: colors.textTertiary },
+            ]}
+            testID="task-row-pending-dot"
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+          />
+        ) : null}
+      </Pressable>
+    </MenuView>
   );
 
   const actions: MenuAction[] = [
@@ -201,6 +249,8 @@ export const TaskRow = React.memo(function TaskRowComponent({
     });
   }
 
+  const openButton = renderOpenButton(actions);
+
   return (
     <View
       style={[
@@ -224,42 +274,8 @@ export const TaskRow = React.memo(function TaskRowComponent({
         style={styles.menuButton}
         title={task.title}
         actions={actions}
-        onPressAction={({ nativeEvent }) => {
-          switch (nativeEvent.event) {
-            case "toggle":
-              onToggle();
-              return;
-            case "schedule":
-              if (!onSchedule) {
-                throw new Error("Schedule action is unavailable for this task");
-              }
-              onSchedule();
-              return;
-            case "edit":
-              if (!onEdit) {
-                throw new Error("Edit action is unavailable for this task");
-              }
-              onEdit();
-              return;
-            case "delete":
-              if (!onDelete) {
-                throw new Error("Delete action is unavailable for this task");
-              }
-              onDelete();
-              return;
-            default: {
-              const priority = ALL_PRIORITIES.find(
-                (candidate) => `priority-${candidate}` === nativeEvent.event,
-              );
-              if (priority === undefined || !onSetPriority) {
-                throw new Error(
-                  `Unknown task menu action: ${nativeEvent.event}`,
-                );
-              }
-              onSetPriority(priority);
-            }
-          }
-        }}
+        onPressAction={handleMenuAction}
+        shouldOpenOnLongPress
         testID={`task-row-menu-${String(task.id)}`}
       >
         <View

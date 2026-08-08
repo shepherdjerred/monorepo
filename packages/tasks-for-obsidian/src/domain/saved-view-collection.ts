@@ -18,7 +18,13 @@ type SavedViewGroup = z.infer<typeof SavedViewGroupSchema>;
 
 function dateOnly(value: string, field: string): Date {
   const parsed = parseLocalDate(value);
-  if (!Number.isFinite(parsed.getTime())) {
+  const dateOnlyMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  const validCalendarDate =
+    dateOnlyMatch === null ||
+    (parsed.getFullYear() === Number(dateOnlyMatch[1]) &&
+      parsed.getMonth() + 1 === Number(dateOnlyMatch[2]) &&
+      parsed.getDate() === Number(dateOnlyMatch[3]));
+  if (!validCalendarDate || !Number.isFinite(parsed.getTime())) {
     throw new TypeError(`Invalid ${field} date: ${value}`);
   }
   return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
