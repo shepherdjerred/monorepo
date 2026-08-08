@@ -110,7 +110,9 @@ export async function assertVaultState(
       ? VAULT_ASSERTIONS
       : VAULT_ASSERTIONS.filter((assertion) => assertion.flow === focusedFlow);
   if (assertions.length === 0) {
-    throw new Error(`no vault assertions registered for ${focusedFlow}`);
+    throw new Error(
+      `no vault assertions registered for ${String(focusedFlow)}`,
+    );
   }
   for (const assertion of assertions) {
     const passed = assertion.check(files);
