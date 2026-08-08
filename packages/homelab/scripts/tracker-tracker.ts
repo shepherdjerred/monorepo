@@ -115,13 +115,25 @@ export function buildAvistaZApiToken(tracker: TrackerInput): string {
 function getSetCookieHeader(headers: Headers): string | null {
   const value = headers.get("set-cookie");
   if (value === null || value.length === 0) return null;
-  const cookies = value
-    .split(",")
+  const cookies = splitSetCookieHeader(value)
     .map((cookie) => cookie.split(";", 1)[0]?.trim())
     .map((cookie) => z.string().min(1).safeParse(cookie))
     .filter((result) => result.success)
     .map((result) => result.data);
   return cookies.length > 0 ? cookies.join("; ") : null;
+}
+
+function splitSetCookieHeader(value: string): string[] {
+  const cookies: string[] = [];
+  let start = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    if (value[index] !== ",") continue;
+    if (!/^\s*[^=;,\s]+\s*=/.test(value.slice(index + 1))) continue;
+    cookies.push(value.slice(start, index));
+    start = index + 1;
+  }
+  cookies.push(value.slice(start));
+  return cookies;
 }
 
 function safeErrorMessage(body: unknown): string {
