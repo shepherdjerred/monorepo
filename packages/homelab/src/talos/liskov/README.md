@@ -103,8 +103,8 @@ committed).
    on liskov first.
 
 6. **Watchdog**: run the verification in `patches/watchdog.yaml`, then apply it.
-7. **Merge the join PR** (Buildkite pinning + tolerations + Kueue removal —
-   they land in one ArgoCD sync by design). Then recreate the git-mirrors
+7. **Merge the join PR** (Buildkite pinning + tolerations + weighted Kueue
+   admission — they land in one ArgoCD sync by design). Then recreate the git-mirrors
    PVC on liskov (it is a node-local ZFS volume currently bound on
    torvalds; step pods pinned to liskov cannot mount it):
 
@@ -114,9 +114,10 @@ committed).
    ```
 
 8. **Confirm**: first builds run on liskov (`kubectl get pods -n buildkite
--o wide`); new buildkite Jobs are NOT `suspend: true` and the kueue-system
-   namespace is gone (cancel/retry any build whose Job was left suspended by
-   the Kueue teardown — nothing will ever unsuspend it); the new
+-o wide`); new Buildkite Jobs carry `kueue.x-k8s.io/queue-name: default`,
+   oversized workloads are `suspend: true` rather than rejected, and the
+   `kueue-system` application is Healthy. Cancel/retry any build whose Job was
+   created before Kueue was enabled and has no queue label. Confirm the
    `buildkitd-cache-liskov` PVC is bound on liskov and buildkitd is Ready.
    Then remove the retired cache claim still bound to torvalds:
 

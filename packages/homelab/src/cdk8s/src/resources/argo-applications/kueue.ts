@@ -1,5 +1,9 @@
 import type { Chart } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
+import {
+  ServiceMonitor,
+  ServiceMonitorSpecEndpointsScheme,
+} from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com.ts";
 import { Namespace } from "cdk8s-plus-31";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
@@ -55,6 +59,7 @@ export function createKueueApp(chart: Chart) {
   });
 
   const kueueValues: HelmValuesForChart<"kueue"> = {
+    enablePrometheus: true,
     controllerManager: {
       manager: {
         priorityClassName: "infrastructure-critical",
@@ -79,7 +84,46 @@ export function createKueueApp(chart: Chart) {
     managerConfig: {
       controllerManagerConfigYaml: KUEUE_CONFIG_YAML,
     },
+    metrics: {
+      // This cluster's Prometheus Operator lives in `prometheus`, not the
+      // chart default `monitoring` namespace.
+      prometheusNamespace: "prometheus",
+    },
   };
+
+  // The Kueue chart's ServiceMonitor carries the chart's own labels, while
+  // this cluster deliberately selects monitors with `release: prometheus`.
+  // Keep a selected monitor here so kueue_pending_workloads is actually
+  // scraped without broadening Prometheus to every ServiceMonitor in the
+  // cluster.
+  new ServiceMonitor(chart, "kueue-metrics-service-monitor", {
+    metadata: {
+      name: "kueue-controller-manager-metrics",
+      namespace: "kueue-system",
+      labels: { release: "prometheus" },
+      annotations: { "argocd.argoproj.io/sync-wave": "2" },
+    },
+    spec: {
+      selector: {
+        matchLabels: {
+          "app.kubernetes.io/name": "kueue",
+          "app.kubernetes.io/instance": "kueue",
+          "control-plane": "controller-manager",
+          "app.kubernetes.io/component": "metrics-service",
+        },
+      },
+      endpoints: [
+        {
+          port: "https",
+          path: "/metrics",
+          scheme: ServiceMonitorSpecEndpointsScheme.HTTPS,
+          bearerTokenFile:
+            "/var/run/secrets/kubernetes.io/serviceaccount/token",
+          tlsConfig: { insecureSkipVerify: true },
+        },
+      ],
+    },
+  });
 
   return new Application(chart, "kueue-app", {
     metadata: {
