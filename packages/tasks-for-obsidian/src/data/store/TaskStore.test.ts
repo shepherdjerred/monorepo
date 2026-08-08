@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, test } from "bun:test";
 import { ApiError } from "../../domain/errors";
 import type { Task, TaskId } from "../../domain/types";
 import { taskId } from "../../domain/types";
+import { UNDO_TOAST_MS } from "../../domain/task-toggle";
 import { CommandQueue } from "../sync/CommandQueue";
 import {
   type MemoryQueueStorage,
@@ -423,6 +424,9 @@ describe("TaskStore pending restores", () => {
       taskId: task.id,
       payload: { recurrence: "FREQ=MONTHLY" },
     });
+    await expect(
+      store.getPendingCompletionRestore(task.id, "2026-08-08"),
+    ).resolves.toEqual(undefined);
     const updateCommand = queue.head();
     if (updateCommand?.type !== "update") {
       throw new Error("expected update command");
@@ -436,6 +440,47 @@ describe("TaskStore pending restores", () => {
     await expect(
       store.getPendingCompletionRestore(task.id, "2026-08-08"),
     ).resolves.toEqual(undefined);
+  });
+});
+
+describe("TaskStore restore expiry", () => {
+  test("expires acknowledged restores after the undo window", async () => {
+    const task = makeTask({
+      recurrence: "FREQ=WEEKLY",
+      scheduled: "2026-08-08",
+    });
+    const { store, queue, storeStorage } = makeStore(
+      memoryQueueStorage(),
+      memoryStoreStorage({ tasks: [task] }),
+    );
+    await store.restore();
+    const restore = {
+      scheduled: "2026-08-08",
+      due: null,
+      recurrence: "FREQ=WEEKLY",
+      skipped: false,
+    };
+    await store.dispatch({
+      type: "set_instance_complete",
+      taskId: task.id,
+      date: "2026-08-08",
+      completed: true,
+      restore,
+    });
+    const command = queue.head();
+    if (command?.type !== "set_instance_complete") {
+      throw new Error("expected completion command");
+    }
+    await store.applyServerAck(command, {
+      ...task,
+      completeInstances: ["2026-08-08"],
+    });
+    now += UNDO_TOAST_MS + 1;
+
+    await expect(
+      store.getPendingCompletionRestore(task.id, "2026-08-08"),
+    ).resolves.toEqual(undefined);
+    expect(await storeStorage.getAcknowledgedCompletionRestores()).toBe("{}");
   });
 });
 

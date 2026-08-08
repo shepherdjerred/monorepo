@@ -14,8 +14,7 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSettings } from "../../hooks/use-settings";
 import { typography } from "../../styles/typography";
-
-export const UNDO_TOAST_MS = 5000;
+import { UNDO_TOAST_MS } from "../../domain/task-toggle";
 
 type Props = {
   visible: boolean;

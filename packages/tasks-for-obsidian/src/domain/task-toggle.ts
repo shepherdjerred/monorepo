@@ -2,6 +2,8 @@ import { completionTargetDate, isRecurring } from "./recurrence";
 import type { Task } from "./types";
 import type { RecurringCompletionRestore } from "tasknotes-types/v2";
 
+export const UNDO_TOAST_MS = 5000;
+
 export type RecurringToggleExecution = {
   readonly date: string;
   readonly completed: boolean;

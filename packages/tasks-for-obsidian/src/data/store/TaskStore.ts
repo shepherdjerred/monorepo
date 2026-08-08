@@ -19,6 +19,16 @@ import {
   makeCommandIdFactory,
   makeTempId,
 } from "../sync/commands";
+import { UNDO_TOAST_MS } from "../../domain/task-toggle";
+import {
+  type StoredCompletionRestore,
+  completionRestoreKey,
+  invalidateCompletionRestores,
+  isOccurrenceEdit,
+  parseAcknowledgedCompletionRestores,
+  pruneCompletionRestores,
+  serializeAcknowledgedCompletionRestores,
+} from "./acknowledged-completion-restores";
 
 /**
  * The single source of truth the UI reads.
@@ -90,52 +100,13 @@ const defaultStorage: TaskStoreStorage = {
 };
 
 const AliasesSchema = z.record(z.string(), z.string());
-const CompletionRestoreSchema = z.object({
-  scheduled: z.string().nullable(),
-  due: z.string().nullable(),
-  recurrence: z.string(),
-  skipped: z.boolean(),
-});
-const AcknowledgedCompletionRestoresSchema = z.record(
-  z.string(),
-  CompletionRestoreSchema,
-);
-
-function parseAcknowledgedCompletionRestores(
-  raw: string | null,
-): Map<string, RecurringCompletionRestore> {
-  if (raw === null) return new Map();
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(raw);
-  } catch {
-    return new Map();
-  }
-  const result = AcknowledgedCompletionRestoresSchema.safeParse(parsed);
-  if (!result.success) return new Map();
-  const restores = new Map<string, RecurringCompletionRestore>();
-  for (const [key, value] of Object.entries(result.data)) {
-    restores.set(key, value);
-  }
-  return restores;
-}
-
-function serializeAcknowledgedCompletionRestores(
-  restores: ReadonlyMap<string, RecurringCompletionRestore>,
-): string {
-  return JSON.stringify(Object.fromEntries(restores));
-}
-
-function completionRestoreKey(id: TaskId, date: string): string {
-  return `${String(id)}\u{0}${date}`;
-}
 
 export class TaskStore {
   private base = new Map<TaskId, Task>();
   private aliases = new Map<TaskId, TaskId>();
   private acknowledgedCompletionRestores = new Map<
     string,
-    RecurringCompletionRestore
+    StoredCompletionRestore
   >();
   private lastSyncTime: number | null = null;
   private snapshot: TaskStoreSnapshot;
@@ -151,8 +122,18 @@ export class TaskStore {
     id: TaskId,
     date: string,
   ): Promise<RecurringCompletionRestore | undefined> {
-    return this.enqueueOperation(() => {
+    return this.enqueueOperation(async () => {
       const target = this.resolveTaskId(id);
+      if (
+        this.queue.pending.some(
+          (command) =>
+            isOccurrenceEdit(command) &&
+            command.type === "update" &&
+            command.taskId === target,
+        )
+      ) {
+        return;
+      }
       let pendingRestore: RecurringCompletionRestore | undefined;
       for (const command of [...this.queue.pending].reverse()) {
         if (
@@ -167,13 +148,22 @@ export class TaskStore {
         }
       }
       if (pendingRestore !== undefined) {
-        return Promise.resolve(pendingRestore);
+        return pendingRestore;
       }
-      return Promise.resolve(
-        this.acknowledgedCompletionRestores.get(
-          completionRestoreKey(target, date),
-        ),
-      );
+      const key = completionRestoreKey(target, date);
+      const stored = this.acknowledgedCompletionRestores.get(key);
+      if (stored === undefined || stored.expiresAt <= this.clock()) {
+        if (stored !== undefined) {
+          const next = new Map(this.acknowledgedCompletionRestores);
+          next.delete(key);
+          await this.storage.setAcknowledgedCompletionRestores(
+            serializeAcknowledgedCompletionRestores(next),
+          );
+          this.acknowledgedCompletionRestores = next;
+        }
+        return;
+      }
+      return stored.restore;
     });
   }
 
@@ -199,9 +189,17 @@ export class TaskStore {
         ]);
       this.base = new Map(tasks.map((t) => [t.id, t]));
       this.aliases = parseAliases(rawAliases);
-      this.acknowledgedCompletionRestores = parseAcknowledgedCompletionRestores(
-        rawAcknowledgedRestores,
+      const nextAcknowledgedCompletionRestores = pruneCompletionRestores(
+        parseAcknowledgedCompletionRestores(rawAcknowledgedRestores),
+        this.clock(),
+        this.base,
       );
+      await this.storage.setAcknowledgedCompletionRestores(
+        serializeAcknowledgedCompletionRestores(
+          nextAcknowledgedCompletionRestores,
+        ),
+      );
+      this.acknowledgedCompletionRestores = nextAcknowledgedCompletionRestores;
       this.lastSyncTime = lastSync;
       this.recompute();
     });
@@ -230,17 +228,30 @@ export class TaskStore {
       // alias and snapshot together.
       const command = this.buildCommand(input);
       await this.queue.enqueue(command);
+      let nextAcknowledgedCompletionRestores =
+        this.acknowledgedCompletionRestores;
+      if (isOccurrenceEdit(command) && command.type === "update") {
+        nextAcknowledgedCompletionRestores = invalidateCompletionRestores(
+          nextAcknowledgedCompletionRestores,
+          command.taskId,
+        );
+      }
       if (
         command.type === "set_instance_complete" &&
         !command.completed &&
         command.restore !== undefined
       ) {
-        const nextAcknowledgedCompletionRestores = new Map(
-          this.acknowledgedCompletionRestores,
+        nextAcknowledgedCompletionRestores = new Map(
+          nextAcknowledgedCompletionRestores,
         );
         nextAcknowledgedCompletionRestores.delete(
           completionRestoreKey(command.taskId, command.date),
         );
+      }
+      if (
+        nextAcknowledgedCompletionRestores !==
+        this.acknowledgedCompletionRestores
+      ) {
         await this.storage.setAcknowledgedCompletionRestores(
           serializeAcknowledgedCompletionRestores(
             nextAcknowledgedCompletionRestores,
@@ -292,34 +303,32 @@ export class TaskStore {
       } else if (serverTask !== null) {
         nextBase.set(serverTask.id, serverTask);
       }
-      if (
-        command.type === "update" &&
-        (command.payload.recurrence !== undefined ||
-          command.payload.scheduled !== undefined ||
-          command.payload.due !== undefined)
-      ) {
-        nextAcknowledgedCompletionRestores = new Map(
-          this.acknowledgedCompletionRestores,
+      nextAcknowledgedCompletionRestores = pruneCompletionRestores(
+        nextAcknowledgedCompletionRestores,
+        this.clock(),
+        nextBase,
+      );
+      if (isOccurrenceEdit(command) && command.type === "update") {
+        nextAcknowledgedCompletionRestores = invalidateCompletionRestores(
+          nextAcknowledgedCompletionRestores,
+          command.taskId,
         );
-        const keyPrefix = `${String(command.taskId)}\u{0}`;
-        for (const key of nextAcknowledgedCompletionRestores.keys()) {
-          if (key.startsWith(keyPrefix)) {
-            nextAcknowledgedCompletionRestores.delete(key);
-          }
-        }
       }
       if (
         command.type === "set_instance_complete" &&
         command.completed &&
         command.restore !== undefined
       ) {
-        nextAcknowledgedCompletionRestores = new Map(
-          this.acknowledgedCompletionRestores,
-        );
-        nextAcknowledgedCompletionRestores.set(
-          completionRestoreKey(command.taskId, command.date),
-          command.restore,
-        );
+        const expiresAt = command.createdAt + UNDO_TOAST_MS;
+        if (expiresAt > this.clock()) {
+          nextAcknowledgedCompletionRestores = new Map(
+            nextAcknowledgedCompletionRestores,
+          );
+          nextAcknowledgedCompletionRestores.set(
+            completionRestoreKey(command.taskId, command.date),
+            { restore: command.restore, expiresAt },
+          );
+        }
       }
       // Persist the authoritative base before removing the durable command.
       // If the process dies between these writes, idempotent mutation replay
@@ -377,10 +386,21 @@ export class TaskStore {
       }
       await this.persistBase(nextBase);
       await this.persistAliases(nextAliases);
+      const nextAcknowledgedCompletionRestores = pruneCompletionRestores(
+        this.acknowledgedCompletionRestores,
+        this.clock(),
+        nextBase,
+      );
+      await this.storage.setAcknowledgedCompletionRestores(
+        serializeAcknowledgedCompletionRestores(
+          nextAcknowledgedCompletionRestores,
+        ),
+      );
       await this.storage.setLastSyncTime(syncedAt);
 
       this.base = nextBase;
       this.aliases = nextAliases;
+      this.acknowledgedCompletionRestores = nextAcknowledgedCompletionRestores;
       this.lastSyncTime = syncedAt;
       this.recompute();
     });
