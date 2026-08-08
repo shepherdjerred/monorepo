@@ -12,29 +12,37 @@ postal, etc.) using an app-of-apps pattern in ArgoCD.
 
 Tracker Tracker runs at the private Tailscale hostname `tracker-tracker` and
 collects the PrivateHD, AvistaZ, and AnimeZ account metrics alongside the
-existing qBittorrent instance. Use `op run` to inject local 1Password
-references, then run the idempotent bootstrap:
+existing qBittorrent instance. Its Kubernetes Deployment receives only
+runtime/database configuration from the `tracker-tracker-secrets` 1Password
+item. Tracker and qBittorrent credentials are configured through Tracker
+Tracker's authenticated API and persisted in its database; they are not
+Deployment environment variables.
+
+Use the checked-in reference template with `op run` to inject the operator-only
+bootstrap configuration, then run the idempotent bootstrap:
 
 ```bash
 cd packages/homelab
-op run --env-file ../../.env.tracker-tracker -- bun run tracker-tracker:bootstrap
+op run --env-file tracker-tracker.env.example -- bun run tracker-tracker:bootstrap
 ```
 
-The local env file must provide `TRACKER_TRACKER_URL`, the Tracker Tracker
-login fields, qBittorrent credentials, and each tracker's `BASE_URL`,
-`USERNAME`, `COOKIES`, and `USER_AGENT`. Keep that file untracked. Export
-collected data as JSON by default. Set `TRACKER_TRACKER_OUTPUT_FORMAT=jsonl`
-to emit JSONL instead:
+The template contains only `op://` references and public service URLs. Populate
+the referenced fields in the dedicated `tracker-tracker-secrets` item with the
+Tracker Tracker login and each tracker's cookies, User-Agent, and username. It
+references the existing qBittorrent item's `username` and `password` fields.
+The dedicated item fields are `TRACKER_TRACKER_USERNAME`,
+`TRACKER_TRACKER_PASSWORD`, and the corresponding
+`PRIVATEHD_*`, `AVISTAZ_*`, and `ANIMEZ_*` `USERNAME`, `COOKIES`, and
+`USER_AGENT` fields. Its built-in `password` field remains the Kubernetes
+`SESSION_SECRET`.
 
-Use `op://` references in that file for every secret. The existing qBittorrent
-item uses `op://Homelab (Kubernetes)/qBittorrent/username` and
-`op://Homelab (Kubernetes)/qBittorrent/qbittorrent-password`; add equivalent
-private items/fields for the Tracker Tracker login and each tracker's cookies,
-User-Agent, and username rather than placing their values in the repository.
+TOTP is entered interactively if Tracker Tracker requests it; it is not logged
+or persisted by the bootstrap command. Export collected data as JSON by
+default. Set `TRACKER_TRACKER_OUTPUT_FORMAT=jsonl` to emit JSONL instead:
 
 ```bash
 cd packages/homelab
-op run --env-file ../../.env.tracker-tracker -- bun run tracker-tracker:export
+op run --env-file tracker-tracker.env.example -- bun run tracker-tracker:export
 ```
 
 Currently my server is managed with Kubernetes. I've used Docker, Ansible, and

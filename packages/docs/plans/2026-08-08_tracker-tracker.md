@@ -21,6 +21,15 @@ JSON/JSONL exporter.
 V1 provides tracker-level H&R/reseed counts plus qBittorrent torrent state and
 history. It does not infer tracker-verified H&R status per individual torrent.
 
+## Secret boundary
+
+The Kubernetes Deployment receives PostgreSQL settings, `SESSION_SECRET`, and
+non-secret runtime settings through the standard `OnePasswordItem` to Secret
+mapping. Tracker and qBittorrent credentials are not Deployment environment
+variables: the operator-only Bun bootstrap resolves them from 1Password and
+sends them through Tracker Tracker's authenticated API, where the application
+stores them in its encrypted database.
+
 ## Verification
 
 - Synthesis tests cover deployment, database, PVCs, ingress, secrets, and
