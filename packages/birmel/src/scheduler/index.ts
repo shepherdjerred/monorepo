@@ -127,11 +127,17 @@ export async function stopScheduler(): Promise<void> {
   }
 
   const timeoutMs = getConfig().scheduler.shutdownTimeoutMs;
+  const shutdownDeadline = Date.now() + timeoutMs;
   const schedulerWork = schedulerTick;
   if (schedulerWork != null) {
-    await waitUntilSettled(schedulerWork, timeoutMs);
+    await waitUntilSettled(
+      schedulerWork,
+      Math.max(0, shutdownDeadline - Date.now()),
+    );
   }
-  const drained = await waitForActiveAgentJobs(timeoutMs);
+  const drained = await waitForActiveAgentJobs(
+    Math.max(0, shutdownDeadline - Date.now()),
+  );
   schedulerStarted = false;
   if (!drained) {
     logger.error("Scheduler shutdown timed out with active jobs", {

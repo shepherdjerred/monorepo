@@ -807,7 +807,7 @@ describe("durable AgentJob effect checkpoints", () => {
     setAgentJobRuntimeDependencies({
       executeTool: async () => {
         executions += 1;
-        return { success: false };
+        return { success: false, effectDisposition: "unknown" };
       },
     });
     const jobId = await createDueJob({
