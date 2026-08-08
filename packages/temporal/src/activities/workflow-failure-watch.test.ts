@@ -124,6 +124,7 @@ describe("workflow timeout history classification", () => {
       classification: "workflow-task",
       activityScheduled: false,
       activityStarted: false,
+      activityScheduledButNotStarted: false,
     });
 
     const client = fakeClient(
@@ -181,6 +182,55 @@ describe("workflow timeout history classification", () => {
     ).toBe("execution");
     expect(classifyWorkflowTimeoutHistory({ events: [] }).classification).toBe(
       "unknown",
+    );
+  });
+
+  it("diagnoses an agent-task execution timeout with an undispatched later activity as worker availability failure", async () => {
+    const client = fakeClient(
+      [
+        {
+          workflowId: "agent-task-timeout-after-progress",
+          runId: "run-timeout",
+          type: "agentTaskWorkflow",
+          taskQueue: "agent-task",
+          closeTime: new Date("2026-07-30T17:50:00.000Z"),
+          status: { name: "TIMED_OUT" },
+        },
+      ],
+      {
+        "agent-task-timeout-after-progress/run-timeout":
+          rejectWithApplicationFailure("execution timed out"),
+      },
+      {
+        "agent-task-timeout-after-progress/run-timeout": {
+          events: [
+            {
+              eventId: 5,
+              eventType: "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
+            },
+            {
+              eventType: "EVENT_TYPE_ACTIVITY_TASK_STARTED",
+              activityTaskStartedEventAttributes: { scheduledEventId: 5 },
+            },
+            {
+              eventId: 8,
+              eventType: "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
+            },
+            { eventType: "EVENT_TYPE_WORKFLOW_EXECUTION_TIMED_OUT" },
+          ],
+        },
+      },
+    );
+    const { poster, calls } = capturingPoster();
+
+    await pollWorkflowFailuresOnce(client, poster, {
+      now: NOW,
+      lookbackMs: LOOKBACK_MS,
+      ttlMs: TTL_MS,
+    });
+
+    expect(calls[0]?.alerts[0]?.annotations["description"]).toContain(
+      "diagnosis worker/task-queue availability failure",
     );
   });
 

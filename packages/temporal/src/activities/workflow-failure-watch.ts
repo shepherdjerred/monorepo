@@ -82,7 +82,42 @@ type WorkflowTimeoutHistoryClassification = {
   classification: WorkflowTimeoutClassification;
   activityScheduled: boolean;
   activityStarted: boolean;
+  activityScheduledButNotStarted: boolean;
 };
+
+function eventRecord(event: unknown): Record<string, unknown> | undefined {
+  if (typeof event !== "object" || event === null) {
+    return undefined;
+  }
+  return z.record(z.string(), z.unknown()).parse(event);
+}
+
+function eventId(value: unknown): string | undefined {
+  if (typeof value === "string" || typeof value === "number") {
+    return String(value);
+  }
+  if (typeof value === "bigint") {
+    return value.toString();
+  }
+  return undefined;
+}
+
+function startedActivityScheduledEventId(event: unknown): string | undefined {
+  const record = eventRecord(event);
+  if (record === undefined) {
+    return undefined;
+  }
+  const attributes =
+    record["activityTaskStartedEventAttributes"] ??
+    record["activity_task_started_event_attributes"];
+  const attributesRecord = eventRecord(attributes);
+  return attributesRecord === undefined
+    ? undefined
+    : eventId(
+        attributesRecord["scheduledEventId"] ??
+          attributesRecord["scheduled_event_id"],
+      );
+}
 
 function historyEvents(history: unknown): readonly unknown[] {
   if (Array.isArray(history)) {
@@ -122,11 +157,8 @@ function eventTypeName(value: unknown): string | undefined {
 }
 
 function eventType(event: unknown): unknown {
-  if (typeof event !== "object" || event === null) {
-    return undefined;
-  }
-  const record = z.record(z.string(), z.unknown()).parse(event);
-  return record["eventType"] ?? record["event_type"];
+  const record = eventRecord(event);
+  return record?.["eventType"] ?? record?.["event_type"];
 }
 
 export function classifyWorkflowTimeoutHistory(
@@ -134,6 +166,8 @@ export function classifyWorkflowTimeoutHistory(
 ): WorkflowTimeoutHistoryClassification {
   let activityScheduled = false;
   let activityStarted = false;
+  const scheduledActivityEventIds = new Set<string>();
+  const startedActivityScheduledEventIds = new Set<string>();
   let latestTimeout: WorkflowTimeoutClassification | undefined;
   for (const event of historyEvents(history)) {
     const name = eventTypeName(eventType(event));
@@ -142,9 +176,17 @@ export function classifyWorkflowTimeoutHistory(
     }
     if (name === "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED") {
       activityScheduled = true;
+      const id = eventId(eventRecord(event)?.["eventId"]);
+      if (id !== undefined) {
+        scheduledActivityEventIds.add(id);
+      }
     }
     if (name === "EVENT_TYPE_ACTIVITY_TASK_STARTED") {
       activityStarted = true;
+      const scheduledEventId = startedActivityScheduledEventId(event);
+      if (scheduledEventId !== undefined) {
+        startedActivityScheduledEventIds.add(scheduledEventId);
+      }
     }
     switch (name) {
       case "EVENT_TYPE_WORKFLOW_TASK_TIMED_OUT":
@@ -162,6 +204,9 @@ export function classifyWorkflowTimeoutHistory(
     classification: latestTimeout ?? "unknown",
     activityScheduled,
     activityStarted,
+    activityScheduledButNotStarted: [...scheduledActivityEventIds].some(
+      (id) => !startedActivityScheduledEventIds.has(id),
+    ),
   };
 }
 
@@ -272,6 +317,7 @@ async function inspectTimeoutHistory(
         classification: "unknown",
         activityScheduled: false,
         activityStarted: false,
+        activityScheduledButNotStarted: false,
       },
       historyError: error instanceof Error ? error.message : String(error),
     };
@@ -293,7 +339,8 @@ function timeoutFailureFields(
           timeoutClassification: classification.classification,
           workerTaskQueueUnavailable:
             workflowType === "agentTaskWorkflow" &&
-            !classification.activityStarted &&
+            (!classification.activityStarted ||
+              classification.activityScheduledButNotStarted) &&
             (classification.classification === "workflow-task" ||
               classification.classification === "execution"),
         }),
