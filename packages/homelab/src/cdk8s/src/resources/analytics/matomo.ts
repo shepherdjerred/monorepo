@@ -1,6 +1,7 @@
 import { Duration, Size } from "cdk8s";
 import type { Chart } from "cdk8s";
 import {
+  ConfigMap,
   Cpu,
   Deployment,
   DeploymentStrategy,
@@ -45,6 +46,8 @@ const archiveCommand = [
   "sleep 300;",
   "done",
 ].join(" ");
+
+const publicReadyMarker = "/var/www/html/.matomo-public-ready";
 
 export type MatomoDeploymentProps = {
   mariadb: MatomoMariaDB;
@@ -98,12 +101,31 @@ export function createMatomoDeployment(
     "matomo-data-volume",
     matomoVolume.claim,
   );
-  const publicReadiness = Probe.fromCommand(
-    ["test", "-f", "/var/www/html/config/config.ini.php"],
-    {
-      periodSeconds: Duration.seconds(10),
-      failureThreshold: 3,
+  const publicGateConfig = new ConfigMap(chart, "matomo-public-gate-config", {
+    data: {
+      "nginx.conf": `events {}
+http {
+  server {
+    listen 8080;
+    location / {
+      if (!-f ${publicReadyMarker}) { return 503; }
+      proxy_set_header Host $host;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Host $host;
+      proxy_set_header X-Forwarded-Proto $scheme;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header CF-Connecting-IP $http_cf_connecting_ip;
+      proxy_pass http://127.0.0.1:80;
+    }
+  }
+}
+`,
     },
+  });
+  const publicGateConfigVolume = Volume.fromConfigMap(
+    chart,
+    "matomo-public-gate-config-volume",
+    publicGateConfig,
   );
 
   deployment.addContainer(
@@ -133,7 +155,11 @@ export function createMatomoDeployment(
         periodSeconds: Duration.seconds(30),
         failureThreshold: 3,
       }),
-      readiness: publicReadiness,
+      readiness: Probe.fromHttpGet("/", {
+        port: 80,
+        periodSeconds: Duration.seconds(10),
+        failureThreshold: 3,
+      }),
     }),
   );
 
@@ -161,11 +187,39 @@ export function createMatomoDeployment(
     }),
   );
 
+  // Keep the Matomo process healthy and available through Tailscale during
+  // first-run setup, but make the Cloudflare-facing port fail closed until
+  // the operator creates the marker after the installer and privacy settings
+  // are complete. This decouples Argo health from the manual cutover gate.
+  deployment.addContainer(
+    withCommonProps({
+      name: "matomo-public-gate",
+      image: `nginx:${versions["library/nginx"]}`,
+      command: ["nginx"],
+      args: ["-g", "daemon off;", "-c", "/etc/nginx/nginx.conf"],
+      ports: [{ name: "public-http", number: 8080 }],
+      volumeMounts: [
+        { path: "/etc/nginx", volume: publicGateConfigVolume },
+        { path: "/var/www/html", volume: dataVolume, readOnly: true },
+      ],
+      resources: {
+        cpu: {
+          request: Cpu.millis(10),
+          limit: Cpu.millis(100),
+        },
+        memory: {
+          request: Size.mebibytes(16),
+          limit: Size.mebibytes(64),
+        },
+      },
+    }),
+  );
+
   setRevisionHistoryLimit(deployment);
 
-  // The public Service has no endpoints until the operator completes
-  // Matomo's first-run installer. The admin Service deliberately publishes
-  // not-ready addresses so initialization remains available over Tailscale.
+  // Matomo's process Service remains available through Tailscale for setup.
+  // The public Service targets the fail-closed nginx gate instead of the
+  // installer, and only proxies after the operator creates publicReadyMarker.
   const service = new Service(chart, "matomo-service", {
     selector: deployment,
     metadata: {
@@ -173,24 +227,25 @@ export function createMatomoDeployment(
     },
     ports: [{ port: 80, name: "http" }],
   });
-  const adminService = new Service(chart, "matomo-admin-service", {
+  const publicService = new Service(chart, "matomo-public-service", {
     selector: deployment,
-    publishNotReadyAddresses: true,
     metadata: {
       labels: { app: "matomo" },
     },
-    ports: [{ port: 80, name: "http" }],
+    ports: [{ port: 80, targetPort: 8080, name: "http" }],
   });
 
   new TailscaleIngress(chart, "matomo-tailscale-ingress", {
-    service: adminService,
+    service,
     host: "matomo",
   });
 
   createCloudflareTunnelBinding(chart, "matomo-cf-tunnel", {
-    serviceName: service.name,
+    serviceName: publicService.name,
     subdomain: "matomo",
     port: 80,
+    publicProbePath:
+      "/matomo.php?module=API&method=API.getMatomoVersion&format=json",
   });
 
   new KubeNetworkPolicy(chart, "matomo-netpol", {
@@ -206,6 +261,11 @@ export function createMatomoDeployment(
                 matchLabels: { "kubernetes.io/metadata.name": "tailscale" },
               },
             },
+          ],
+          ports: [{ port: IntOrString.fromNumber(80), protocol: "TCP" }],
+        },
+        {
+          from: [
             {
               namespaceSelector: {
                 matchLabels: {
@@ -213,13 +273,21 @@ export function createMatomoDeployment(
                 },
               },
             },
+          ],
+          ports: [{ port: IntOrString.fromNumber(8080), protocol: "TCP" }],
+        },
+        {
+          from: [
             {
               namespaceSelector: {
                 matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
               },
             },
           ],
-          ports: [{ port: IntOrString.fromNumber(80), protocol: "TCP" }],
+          ports: [
+            { port: IntOrString.fromNumber(80), protocol: "TCP" },
+            { port: IntOrString.fromNumber(8080), protocol: "TCP" },
+          ],
         },
       ],
       egress: [

@@ -1188,7 +1188,15 @@ steps:
     # Static-site buckets are owned by the SeaweedFS tofu stack. Waiting for
     # tofu-apply is a no-op when infra is unchanged, and guarantees a new
     # bucket exists before its first deployment sync.
-    depends_on: [verify, playwright-e2e-main, resume-build-main, tofu-apply]
+    depends_on:
+      [
+        verify,
+        playwright-e2e-main,
+        resume-build-main,
+        tofu-apply,
+        argocd-sync,
+        tofu-cloudflare,
+      ]
     cancel_on_build_failing: true
     concurrency: 1
     concurrency_group: monorepo/site-deploys
@@ -1254,6 +1262,7 @@ steps:
       # Site syncs push to SeaweedFS S3 — same credential mapping as the
       # tofu steps (the secret exposes SEAWEEDFS_*, the AWS CLI wants AWS_*).
       export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
+      bun --no-install packages/homelab/scripts/wait-for-matomo.ts
       if $$site_sjer; then
         buildkite-agent artifact download "packages/sjer.red/dist/**/*" . --step playwright-e2e-main
         buildkite-agent artifact download "packages/sjer.red/dist/*" . --step playwright-e2e-main
@@ -1456,7 +1465,7 @@ steps:
   - label: ":test_tube: scout beta release"
     key: scout-beta-release
     if: build.branch == pipeline.default_branch
-    depends_on: [images, argocd-sync]
+    depends_on: [images, argocd-sync, tofu-cloudflare]
     concurrency: 1
     concurrency_group: monorepo/site-deploys
     command: |
@@ -1467,6 +1476,7 @@ steps:
         scout_source_changed=true
       fi
       if [ -z "$$scout_candidate" ] && ! $$scout_source_changed; then exit 0; fi
+      bun --no-install packages/homelab/scripts/wait-for-matomo.ts
       . .buildkite/scripts/toolchain.sh
       .buildkite/scripts/bun-install.sh --frozen-lockfile \
         --filter '@shepherdjerred/root-scripts' \
@@ -1533,11 +1543,12 @@ steps:
   - label: ":rocket: scout prod reconcile"
     key: scout-prod-reconcile
     if: build.branch == pipeline.default_branch
-    depends_on: [argocd-sync, scout-beta-release]
+    depends_on: [argocd-sync, scout-beta-release, tofu-cloudflare]
     concurrency: 1
     concurrency_group: monorepo/site-deploys
     command: |
       if ! bun --no-install .buildkite/scripts/ci-changed.ts scout-reconcile; then exit 0; fi
+      bun --no-install packages/homelab/scripts/wait-for-matomo.ts
       . .buildkite/scripts/toolchain.sh
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
       export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"

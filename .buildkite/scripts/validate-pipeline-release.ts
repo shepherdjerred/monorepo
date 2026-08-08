@@ -73,7 +73,9 @@ function validateReleaseSteps({
     [
       "scout-beta-release",
       [
-        "depends_on: [images, argocd-sync]",
+        "depends_on:",
+        "images",
+        "argocd-sync",
         "shepherdjerred/scout-for-lol/beta",
         "prepare-state",
         "meta-data set scout-release-state",

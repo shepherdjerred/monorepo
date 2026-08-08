@@ -306,6 +306,9 @@ const versions = {
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   matomo:
     "5.12.0@sha256:85d27206a4acdd43259909aa00cab1913dec88cfba53e1ce66a51e6caa430a55",
+  // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
+  "library/nginx":
+    "1.29.1-alpine@sha256:42a516af16b852e33b7682d5ef8acbd5d13fe08fecadc7ed98605ba5e3b26ab8",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
   "tbxark/mcp-proxy":
     "v0.43.2@sha256:70c0e02d39c4c0898e610b3a30954f7930628fa6f4fb447bad14c32382a25879",
