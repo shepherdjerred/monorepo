@@ -1,3 +1,8 @@
 # ip@2.0.1 is pulled through the Discord video streaming stack. Trivy reports
 # no fixed version for this finding as of 2026-06-13.
 CVE-2024-29415
+
+# image-size@1.2.1 is pulled through Metro. Trivy reports no fixed version for
+# these findings as of 2026-08-08; 1.2.1 is the newest Metro-compatible release.
+CVE-2025-71329
+CVE-2025-71330

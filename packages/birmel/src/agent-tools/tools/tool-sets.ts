@@ -1,6 +1,9 @@
+import type { ToolSet } from "ai";
+import { z } from "zod";
+
 /**
  * Specialized tool sets for different agent types.
- * Split into 5 focused agents to stay well under the 128 tool limit.
+ * Each tool belongs to exactly one of the six specialist agents.
  */
 
 import { guildTools } from "./discord/guild.ts";
@@ -17,13 +20,11 @@ import { automodTools } from "./discord/automod.ts";
 import { pollTools } from "./discord/polls.ts";
 import { threadTools } from "./discord/threads.ts";
 import { activityTools } from "./discord/activity.ts";
-import { schedulingTools } from "./discord/scheduling.ts";
 import { playbackTools } from "./music/playback.ts";
 import { queueTools } from "./music/queue.ts";
 import { playlistTools } from "./music/playlists.ts";
 import { executeShellCommandTool } from "./automation/shell.ts";
-import { manageTaskTool } from "./automation/timers.ts";
-import { manageAgentJobTool } from "./automation/agent-jobs.ts";
+import { manageJobTool } from "./automation/agent-jobs.ts";
 import { browserAutomationTool } from "./automation/browser.ts";
 import { externalServiceTool } from "./external/web.ts";
 import { webResearchTool } from "./external/research.ts";
@@ -31,6 +32,7 @@ import { manageMemoryTool } from "./memory/index.ts";
 import { manageAgentSessionTool } from "./sessions/index.ts";
 import { sqliteTools } from "./database/sqlite-query.ts";
 import { electionTools } from "./elections/elections.ts";
+import { getCandidateStatsTool } from "./elections/candidate-stats.ts";
 import { manageBirthdayTool } from "./birthdays/index.ts";
 import { editRepoTool } from "./editor/edit-repo.ts";
 import { listReposTool } from "./editor/list-repos.ts";
@@ -39,27 +41,21 @@ import { approveChangesTool } from "./editor/approve-changes.ts";
 import { connectGitHubTool } from "./editor/connect-github.ts";
 
 /**
- * Messaging Agent - handles messages, threads, polls, and scheduling
+ * Messaging Agent - handles messages, threads, polls, memory, and sessions
  */
 export const messagingToolSet = [
   ...messageTools,
   ...threadTools,
   ...pollTools,
   ...activityTools,
-  ...schedulingTools,
   manageMemoryTool,
   manageAgentSessionTool,
 ];
 
 /**
- * Server Agent - handles guild info, channels, and members
+ * Server Agent - handles guild information, channels, and database reads
  */
-export const serverToolSet = [
-  ...guildTools,
-  ...channelTools,
-  ...memberTools,
-  ...sqliteTools,
-];
+export const serverToolSet = [...guildTools, ...channelTools, ...sqliteTools];
 
 /**
  * Moderation Agent - handles moderation, roles, automod, webhooks.
@@ -87,14 +83,13 @@ export const musicToolSet = [...playbackTools, ...queueTools, ...playlistTools];
  */
 export const automationToolSet = [
   executeShellCommandTool,
-  manageTaskTool,
-  manageAgentJobTool,
+  manageJobTool,
   browserAutomationTool,
   externalServiceTool,
   webResearchTool,
-  manageAgentSessionTool,
   ...eventTools,
   ...electionTools,
+  getCandidateStatsTool,
   manageBirthdayTool,
 ];
 
@@ -107,7 +102,6 @@ export const editorToolSet = [
   getSessionTool,
   approveChangesTool,
   connectGitHubTool,
-  ...messageTools, // Needs message tools for replies
 ];
 
 export type AgentType =
@@ -161,25 +155,23 @@ export function getAgentDescription(agentType: AgentType): string {
 /**
  * Convert a tool array to a record keyed by tool id.
  *
- * Uses `unknown` for the value type because tool schemas differ across the
- * tool set; callers that need the concrete shape should narrow at the call
- * site with Zod or a type guard.
+ * Tool schemas differ across the set, so validate their shared AI SDK shape
+ * at registration and retain the AI SDK's heterogeneous ToolSet type.
  */
-export function toolsToRecord(
-  tools: { id: string }[],
-): Record<string, unknown> {
-  const entries: [string, unknown][] = tools.map((tool) => [tool.id, tool]);
-  return Object.fromEntries(entries);
-}
+type AiSdkTool = ToolSet[string];
 
-// Log tool counts on module load (for debugging)
-console.log(`[tool-sets] Messaging: ${String(messagingToolSet.length)} tools`);
-console.log(`[tool-sets] Server: ${String(serverToolSet.length)} tools`);
-console.log(
-  `[tool-sets] Moderation: ${String(moderationToolSet.length)} tools`,
+const AiSdkToolShapeSchema = z
+  .object({ inputSchema: z.unknown(), execute: z.function() })
+  .loose();
+const AiSdkToolSchema = z.custom<AiSdkTool>(
+  (value) => AiSdkToolShapeSchema.safeParse(value).success,
+  "Invalid AI SDK tool registration",
 );
-console.log(`[tool-sets] Music: ${String(musicToolSet.length)} tools`);
-console.log(
-  `[tool-sets] Automation: ${String(automationToolSet.length)} tools`,
-);
-console.log(`[tool-sets] Editor: ${String(editorToolSet.length)} tools`);
+
+export function toolsToRecord(tools: readonly { id: string }[]): ToolSet {
+  const result: ToolSet = {};
+  for (const tool of tools) {
+    result[tool.id] = AiSdkToolSchema.parse(tool);
+  }
+  return result;
+}

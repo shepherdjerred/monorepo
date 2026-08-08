@@ -19,13 +19,13 @@ import {
   BatchLogRecordProcessor,
   LoggerProvider,
 } from "@opentelemetry/sdk-logs";
+import { NodeSDK } from "@opentelemetry/sdk-node";
 import { resourceFromAttributes } from "@opentelemetry/resources";
 import {
   ATTR_SERVICE_NAME,
   ATTR_SERVICE_VERSION,
 } from "@opentelemetry/semantic-conventions";
 import { ExportResultCode, type ExportResult } from "@opentelemetry/core";
-import { AgentRegistry, VoltAgentObservability } from "@voltagent/core";
 import { buildArchiveSpanProcessor } from "@shepherdjerred/llm-observability";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import {
@@ -33,14 +33,7 @@ import {
   setOtlpLogsEnabled,
 } from "@shepherdjerred/birmel/utils/logger.ts";
 
-// Single VoltAgentObservability instance shared across the whole process.
-// VoltAgent's `Agent.getObservability()` falls back to `createVoltAgentObservability()`
-// (in @voltagent/core) when no global is set — and that constructor calls
-// `provider.register()`, which spams `Attempted duplicate registration of API`
-// errors every time we (or any worker/sub-agent) build a new agent. Setting
-// one global instance here, before any agent is constructed, eliminates the
-// storm and gives us a single tracer provider with our OTLP exporter wired in.
-let voltAgentObservability: VoltAgentObservability | null = null;
+let nodeSdk: NodeSDK | null = null;
 let tracer: Tracer | null = null;
 let batchProcessor: BatchSpanProcessor | null = null;
 let loggerProvider: LoggerProvider | null = null;
@@ -67,10 +60,8 @@ const DEFAULT_LOKI_OTLP_LOGS_ENDPOINT = "http://loki-gateway.loki/otlp/v1/logs";
 //   exporter retries on its own. Lossy traces are acceptable.
 //
 // "Attempted duplicate registration of API" is intentionally NOT demoted.
-// With skipOpenTelemetrySetup: true on Sentry, VoltAgentObservability owns
-// the global TracerProvider unopposed and that warning should never fire.
-// If it does, something else has started competing for the global and our
-// OTLP exporter is silently being bypassed — pageworthy.
+// If it appears, another provider is competing with Birmel's explicit global
+// provider and the OTLP exporter may be bypassed.
 function shouldDemoteOtelError(message: string): boolean {
   return message.includes("ECONNREFUSED");
 }
@@ -148,9 +139,6 @@ class LoggingSpanExporter implements SpanExporter {
 
 export function initializeTracing(): void {
   // Idempotent — guards against double-bootstrap from accidental re-imports.
-  // VoltAgentObservability registers the global tracer provider exactly once,
-  // and a second initializeTracing() would either spawn a competing provider
-  // or no-op silently; explicit guard makes the intent obvious.
   if (initialized) {
     return;
   }
@@ -204,8 +192,7 @@ export function initializeTracing(): void {
 
   // OTLP logs path. Sibling LoggerProvider shipping LogRecords to Loki via
   // OTLP HTTP. We build the Resource directly (rather than reading off
-  // VoltAgent's TracerProvider) so we don't depend on @voltagent internals
-  // — but we mirror the same serviceName/serviceVersion so spans and logs
+  // the trace provider. We mirror the same serviceName/serviceVersion so spans and logs
   // join on `service.name` in Loki's OTLP receiver.
   //
   // Loki auto-promotes `service.name` to the `service_name` stream label and
@@ -217,17 +204,8 @@ export function initializeTracing(): void {
   // logsAPI.getLogger().emit() automatically attaches the active span's
   // trace_id/span_id to every LogRecord, which is the whole point.
   //
-  // IMPORTANT — order matters in two ways on Bun (1.3.14):
-  //
-  //   (a) The OTLPLogExporter + processor + LoggerProvider must be CREATED
-  //       before VoltAgentObservability's constructor, otherwise outgoing
-  //       OTLP log POSTs ECONNREFUSE — likely a NodeSDK/AsyncLocalStorage
-  //       side effect interfering with Bun's node:http compat layer.
-  //
-  //   (b) `setGlobalLoggerProvider` must be called AFTER VoltAgentObservability
-  //       — its constructor unconditionally registers its own internal
-  //       LoggerProvider as the global, which would shadow ours if we set
-  //       ours first. Setting after wins.
+  // Create both providers before registering either one so startup has a
+  // deterministic global-provider order under Bun.
   const lokiOtlpLogsEndpoint =
     Bun.env["LOKI_OTLP_ENDPOINT"] ?? DEFAULT_LOKI_OTLP_LOGS_ENDPOINT;
   const otlpLogExporter = new OTLPLogExporter({
@@ -249,37 +227,21 @@ export function initializeTracing(): void {
     processors: [logRecordProcessor],
   });
 
-  // Hand the wrapped processor to VoltAgent's observability, which registers a
-  // single NodeTracerProvider globally and runs all spans (ours + voltagent's
-  // own) through this processor list. VoltAgent owns provider.register(); we
-  // own the OTLP exporter shipped to Tempo.
-  //
-  // spanFilters.enabled = false disables VoltAgent's SpanFilterProcessor.
-  // Without this, every user-supplied span processor is wrapped in a filter
-  // that only forwards spans whose instrumentation scope matches
-  // `instrumentationScopeName` (default "@voltagent/core"). Birmel emits via
-  // trace.getTracer("birmel"), so the filter would drop every birmel span on
-  // the floor — and our OTLP exporter (also wrapped) would never see them.
-  // We want all spans (birmel + voltagent + transitive deps) shipped to Tempo.
-  voltAgentObservability = new VoltAgentObservability({
-    serviceName: config.telemetry.serviceName,
-    serviceVersion: "0.0.1",
+  nodeSdk = new NodeSDK({
+    resource: resourceFromAttributes({
+      [ATTR_SERVICE_NAME]: config.telemetry.serviceName,
+      [ATTR_SERVICE_VERSION]: "0.0.1",
+    }),
     spanProcessors: [rootProcessor],
-    spanFilters: { enabled: false },
   });
+  nodeSdk.start();
 
-  // Override VoltAgent's auto-registered LoggerProvider so our OTLP exporter
-  // — not VoltAgent's internal one — is what handles `logsAPI.getLogger`
-  // calls from the rest of the app. Disable the global first because
+  // Register the OTLP logger provider after the trace SDK. Disable the global
+  // first because
   // logs.setGlobalLoggerProvider is a one-shot register that silently no-ops
-  // if a provider is already registered (which VoltAgent just did).
+  // if another provider is already registered.
   logsAPI.disable();
   logsAPI.setGlobalLoggerProvider(loggerProvider);
-
-  // Make this the global so every Agent (and workflow) reuses it instead of
-  // calling createVoltAgentObservability() and triggering the duplicate-
-  // registration storm we saw in production.
-  AgentRegistry.getInstance().setGlobalObservability(voltAgentObservability);
 
   tracer = trace.getTracer(config.telemetry.serviceName);
 
@@ -335,13 +297,13 @@ export async function shutdownTracing(): Promise<void> {
       });
     }
   }
-  if (voltAgentObservability != null) {
-    await voltAgentObservability.shutdown();
+  if (nodeSdk != null) {
+    await nodeSdk.shutdown();
   }
   // Allow a subsequent initializeTracing() to re-bootstrap from scratch.
   // In production this is a no-op (process exits after shutdown); in tests
   // it lets a sibling test file fresh-init without stale module state.
-  voltAgentObservability = null;
+  nodeSdk = null;
   tracer = null;
   batchProcessor = null;
   loggerProvider = null;
@@ -371,6 +333,16 @@ export type DiscordSpanAttributes = {
   userId?: string;
   messageId?: string;
   operation?: string;
+  route?: string;
+  triggerKind?: string;
+  persona?: string;
+  errorClass?: string;
+  sourceCharacters?: number;
+  selectedMemoryCount?: number;
+  durationMs?: number;
+  finishReason?: string;
+  jobId?: string;
+  payloadKind?: string;
 };
 
 /**
@@ -402,6 +374,16 @@ export async function withSpan<T>(
         "discord.user_id": attributes.userId ?? "",
         "discord.message_id": attributes.messageId ?? "",
         "operation.name": attributes.operation ?? name,
+        "birmel.route": attributes.route ?? "",
+        "birmel.trigger_kind": attributes.triggerKind ?? "",
+        "birmel.persona": attributes.persona ?? "",
+        "error.type": attributes.errorClass ?? "",
+        "birmel.source_characters": attributes.sourceCharacters ?? 0,
+        "birmel.selected_memory_count": attributes.selectedMemoryCount ?? 0,
+        "birmel.duration_ms": attributes.durationMs ?? 0,
+        "gen_ai.response.finish_reasons": attributes.finishReason ?? "",
+        "birmel.job_id": attributes.jobId ?? "",
+        "birmel.job_payload_kind": attributes.payloadKind ?? "",
       });
 
       const result = await fn(span);

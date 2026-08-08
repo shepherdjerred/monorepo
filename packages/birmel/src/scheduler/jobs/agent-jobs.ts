@@ -1,399 +1,496 @@
-import type {
-  AgentJob,
-  ScheduledTask,
-} from "#generated/prisma/client/index.js";
+import type { AgentJob } from "#generated/prisma/client/index.js";
+import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
-import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
-import { handleSend } from "@shepherdjerred/birmel/agent-tools/tools/discord/message-actions.ts";
+import { finalizeCancelledAgentJobRun } from "@shepherdjerred/birmel/scheduler/agent-job-cancellation.ts";
 import {
-  parseJsonRecord,
-  getErrorMessage,
-} from "@shepherdjerred/birmel/utils/errors.ts";
-import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
+  finalizeCheckpointedEffect,
+  serializeAgentJobOutput,
+} from "@shepherdjerred/birmel/scheduler/agent-job-effect-state.ts";
 import {
+  AgentJobTimeoutError,
+  getAgentJobFailureTransition,
   getNextAgentJobRun,
-  resolveAgentJobSchedule,
+  withAgentJobTimeout,
   type AgentJobScheduleKind,
 } from "@shepherdjerred/birmel/scheduler/agent-job-schedule.ts";
+import {
+  findExpiredAgentJobLeases,
+  recoverExpiredAgentJobLease,
+} from "@shepherdjerred/birmel/scheduler/agent-job-lease-recovery.ts";
+import {
+  AGENT_JOB_LEASE_GRACE_MS,
+  waitForTimedOutExecution,
+} from "@shepherdjerred/birmel/scheduler/agent-job-timeout-fence.ts";
+import {
+  configureAgentJobRuntime,
+  executeDurableAgentJob,
+  type AgentJobRuntimeDependencies,
+} from "@shepherdjerred/birmel/scheduler/jobs/scheduled-tasks.ts";
+import { getErrorMessage } from "@shepherdjerred/birmel/utils/errors.ts";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
+import { withSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
+import { randomUUID } from "node:crypto";
 
 const logger = loggers.scheduler.child("agent-jobs");
-
+const WORKER_ID = `${String(process.pid)}:${randomUUID()}`;
+let agentJobTick: Promise<void> | null = null;
+const activeJobExecutions = new Set<Promise<void>>();
+export function setAgentJobRuntimeDependencies(
+  dependencies: Partial<AgentJobRuntimeDependencies> | null,
+): void {
+  configureAgentJobRuntime(dependencies);
+}
 const toolResultStatus = {
   isSuccess(value: unknown): boolean {
-    if (typeof value !== "object" || value == null) {
+    if (typeof value !== "object" || value == null || !("success" in value)) {
       return true;
     }
-    if (!("success" in value)) {
-      return true;
-    }
-    return Boolean(value.success);
+    return value.success !== false;
   },
 };
-
 function parseScheduleKind(value: string): AgentJobScheduleKind {
   if (value === "at" || value === "every" || value === "cron") {
     return value;
   }
   throw new Error(`Unknown schedule kind: ${value}`);
 }
-
-function serializeOutput(value: unknown): string {
-  if (typeof value === "string") {
-    return value;
+async function markJobSuccess(
+  job: AgentJob,
+  runId: string,
+  claimId: string,
+  output: unknown,
+): Promise<boolean> {
+  const finishedAt = new Date();
+  const nextRunAt = getNextAgentJobRun({
+    scheduleKind: parseScheduleKind(job.scheduleKind),
+    scheduleValue: job.scheduleValue,
+    timezone: job.timezone,
+    from: finishedAt,
+  });
+  const finalized = await prisma.$transaction(async (transaction) => {
+    const updated = await transaction.agentJob.updateMany({
+      where: { id: job.id, status: "running", claimedBy: claimId },
+      data: {
+        status: nextRunAt == null ? "completed" : "active",
+        nextRunAt,
+        attemptCount: 0,
+        lastRunAt: finishedAt,
+        lastStatus: "success",
+        lastError: null,
+        claimedAt: null,
+        claimedBy: null,
+        leaseExpiresAt: null,
+      },
+    });
+    if (updated.count === 0) {
+      return false;
+    }
+    await transaction.agentJobRun.updateMany({
+      where: {
+        id: runId,
+        status: {
+          in: ["running", "timed_out", "effect_acknowledged"],
+        },
+      },
+      data: {
+        status: "success",
+        finishedAt,
+        output: serializeAgentJobOutput(output).slice(0, 20_000),
+      },
+    });
+    return true;
+  });
+  return finalized
+    ? true
+    : await finalizeCancelledAgentJobRun({
+        jobId: job.id,
+        runId,
+        claimId,
+      });
+}
+async function markJobFailure(
+  job: AgentJob,
+  runId: string,
+  claimId: string,
+  error: unknown,
+): Promise<boolean> {
+  const finishedAt = new Date();
+  const errorMessage = getErrorMessage(error);
+  const transition = getAgentJobFailureTransition({
+    scheduleKind: parseScheduleKind(job.scheduleKind),
+    scheduleValue: job.scheduleValue,
+    timezone: job.timezone,
+    currentAttemptCount: job.attemptCount,
+    maxAttempts: job.maxAttempts,
+    finishedAt,
+  });
+  const finalized = await prisma.$transaction(async (transaction) => {
+    const checkpointed = await finalizeCheckpointedEffect({
+      transaction,
+      job,
+      runId,
+      claimId,
+      errorMessage,
+      finishedAt,
+    });
+    if (checkpointed != null) {
+      return checkpointed;
+    }
+    const updated = await transaction.agentJob.updateMany({
+      where: { id: job.id, status: "running", claimedBy: claimId },
+      data: {
+        status: transition.jobStatus,
+        nextRunAt: transition.nextRunAt,
+        attemptCount: transition.attemptCount,
+        lastRunAt: finishedAt,
+        lastStatus: "error",
+        lastError: errorMessage.slice(0, 20_000),
+        claimedAt: null,
+        claimedBy: null,
+        leaseExpiresAt: null,
+      },
+    });
+    if (updated.count === 0) {
+      return false;
+    }
+    await transaction.agentJobRun.updateMany({
+      where: { id: runId, status: { in: ["running", "timed_out"] } },
+      data: {
+        status: transition.runStatus,
+        finishedAt,
+        error: errorMessage.slice(0, 20_000),
+      },
+    });
+    return true;
+  });
+  return finalized
+    ? true
+    : await finalizeCancelledAgentJobRun({
+        jobId: job.id,
+        runId,
+        claimId,
+      });
+}
+async function markJobTimedOut(
+  job: AgentJob,
+  runId: string,
+  claimId: string,
+  error: AgentJobTimeoutError,
+): Promise<boolean> {
+  const errorMessage = getErrorMessage(error).slice(0, 20_000);
+  const [_runUpdate, jobUpdate] = await prisma.$transaction([
+    prisma.agentJobRun.updateMany({
+      where: { id: runId, status: "running" },
+      data: { status: "timed_out", error: errorMessage },
+    }),
+    prisma.agentJob.updateMany({
+      where: { id: job.id, status: "running", claimedBy: claimId },
+      data: {
+        lastStatus: "timed_out",
+        lastError: errorMessage,
+        leaseExpiresAt: new Date(Date.now() + AGENT_JOB_LEASE_GRACE_MS),
+      },
+    }),
+  ]);
+  return jobUpdate.count === 1;
+}
+async function finalizeTimedOutExecution(options: {
+  job: AgentJob;
+  runId: string;
+  claimId: string;
+  operation: Promise<unknown>;
+}): Promise<void> {
+  const result = await waitForTimedOutExecution({
+    jobId: options.job.id,
+    claimId: options.claimId,
+    operation: options.operation,
+  });
+  if (result == null) {
+    await finalizeCancelledAgentJobRun({
+      jobId: options.job.id,
+      runId: options.runId,
+      claimId: options.claimId,
+    });
+    return;
   }
-  return JSON.stringify(value);
+  if (result.kind === "failure") {
+    await markJobFailure(
+      options.job,
+      options.runId,
+      options.claimId,
+      result.error,
+    );
+    return;
+  }
+  if (!toolResultStatus.isSuccess(result.output)) {
+    await markJobFailure(
+      options.job,
+      options.runId,
+      options.claimId,
+      new Error("Tool reported failure after job timeout"),
+    );
+    return;
+  }
+  const finalized = await markJobSuccess(
+    options.job,
+    options.runId,
+    options.claimId,
+    result.output,
+  );
+  if (!finalized) {
+    throw new Error(`Timed-out job ${options.job.id} was not finalized`);
+  }
+}
+async function claimAgentJob(job: AgentJob): Promise<{
+  job: AgentJob;
+  claimId: string;
+} | null> {
+  const now = new Date();
+  const claimId = `${WORKER_ID}:${randomUUID()}`;
+  const claimed = await prisma.agentJob.updateMany({
+    where: {
+      id: job.id,
+      status: { in: ["active", "retrying"] },
+      nextRunAt: { lte: now },
+      OR: [{ leaseExpiresAt: null }, { leaseExpiresAt: { lt: now } }],
+    },
+    data: {
+      status: "running",
+      claimedAt: now,
+      claimedBy: claimId,
+      leaseExpiresAt: new Date(
+        now.getTime() + job.timeoutMs + AGENT_JOB_LEASE_GRACE_MS,
+      ),
+    },
+  });
+  if (claimed.count === 0) {
+    return null;
+  }
+  const runningJob = await prisma.agentJob.findFirst({
+    where: { id: job.id, status: "running", claimedBy: claimId },
+  });
+  if (runningJob == null) {
+    throw new Error(`Claimed job ${job.id} could not be loaded`);
+  }
+  return { job: runningJob, claimId };
+}
+async function processAgentJob(job: AgentJob): Promise<void> {
+  await withSpan(
+    "birmel.job.execute",
+    {
+      guildId: job.guildId,
+      jobId: job.id,
+      payloadKind: job.payloadKind,
+      operation: "job.execute",
+    },
+    async (span) => {
+      const startedAt = performance.now();
+      const claimed = await claimAgentJob(job);
+      span.setAttribute("birmel.job.claimed", claimed != null);
+      if (claimed == null) {
+        return;
+      }
+      const run = await prisma.agentJobRun.create({
+        data: {
+          jobId: claimed.job.id,
+          status: "running",
+          metadata: JSON.stringify({
+            scheduledFor: job.nextRunAt?.toISOString() ?? null,
+            attemptCount: job.attemptCount,
+            claimId: claimed.claimId,
+            restoredLegacySource: job.sourceMessageId == null,
+          }),
+        },
+      });
+      const execution = executeDurableAgentJob(claimed.job, run.id);
+      try {
+        const output = await withAgentJobTimeout(
+          execution,
+          claimed.job.timeoutMs,
+        );
+        if (!toolResultStatus.isSuccess(output)) {
+          throw new Error("Tool reported failure");
+        }
+        const finalized = await markJobSuccess(
+          claimed.job,
+          run.id,
+          claimed.claimId,
+          output,
+        );
+        if (!finalized) {
+          throw new Error(`Agent job ${claimed.job.id} was not finalized`);
+        }
+        span.setAttribute("birmel.job.success", true);
+      } catch (error) {
+        span.setAttribute("birmel.job.success", false);
+        span.setAttribute(
+          "birmel.job.error_class",
+          error instanceof Error ? error.name : "UnknownError",
+        );
+        logger.error("Agent job failed", {
+          jobId: claimed.job.id,
+          error: getErrorMessage(error),
+        });
+        if (error instanceof AgentJobTimeoutError) {
+          const fenced = await markJobTimedOut(
+            claimed.job,
+            run.id,
+            claimed.claimId,
+            error,
+          );
+          span.setAttribute("birmel.job.timeout_fenced", fenced);
+          await finalizeTimedOutExecution({
+            job: claimed.job,
+            runId: run.id,
+            claimId: claimed.claimId,
+            operation: execution,
+          });
+        } else {
+          await markJobFailure(claimed.job, run.id, claimed.claimId, error);
+        }
+      } finally {
+        span.setAttribute(
+          "birmel.job.duration_ms",
+          performance.now() - startedAt,
+        );
+      }
+    },
+  );
 }
 
-function retryDelayMs(attemptCount: number): number {
-  const boundedAttempt = Math.min(Math.max(attemptCount, 1), 6);
-  return 30_000 * 2 ** (boundedAttempt - 1);
-}
-
-async function withTimeout<T>(
-  promise: Promise<T>,
-  timeoutMs: number,
-): Promise<T> {
-  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+async function removeTrackedExecution(operation: Promise<void>): Promise<void> {
   try {
-    return await Promise.race([
-      promise,
-      new Promise<T>((_, reject) => {
-        timeoutId = setTimeout(() => {
-          reject(new Error(`Agent job timed out after ${String(timeoutMs)}ms`));
-        }, timeoutMs);
-      }),
-    ]);
+    await operation;
+  } catch (error) {
+    logger.error("Tracked agent job execution rejected", {
+      error: getErrorMessage(error),
+    });
+  } finally {
+    activeJobExecutions.delete(operation);
+  }
+}
+
+function trackJobExecution(operation: Promise<void>): Promise<void> {
+  activeJobExecutions.add(operation);
+  void removeTrackedExecution(operation);
+  return operation;
+}
+
+async function recoverExpiredJobLeases(): Promise<void> {
+  const now = new Date();
+  const expiredLeases = await findExpiredAgentJobLeases(now);
+  if (expiredLeases.length === 0) {
+    return;
+  }
+  let recoveredCount = 0;
+  for (const lease of expiredLeases) {
+    if (await recoverExpiredAgentJobLease(lease, now)) {
+      recoveredCount += 1;
+    }
+  }
+  if (recoveredCount > 0) {
+    logger.warn("Recovered expired agent job leases", {
+      count: recoveredCount,
+    });
+  }
+}
+
+async function runAgentJobsTick(): Promise<void> {
+  await recoverExpiredJobLeases();
+  const now = new Date();
+  const dueJobs = await prisma.agentJob.findMany({
+    where: {
+      status: { in: ["active", "retrying"] },
+      nextRunAt: { lte: now },
+      OR: [{ leaseExpiresAt: null }, { leaseExpiresAt: { lt: now } }],
+    },
+    orderBy: { nextRunAt: "asc" },
+    take: 25,
+  });
+  if (dueJobs.length === 0) {
+    return;
+  }
+  logger.info("Processing due agent jobs", { count: dueJobs.length });
+  const maxConcurrentJobs = getConfig().scheduler.maxConcurrentJobs;
+  for (let offset = 0; offset < dueJobs.length; offset += maxConcurrentJobs) {
+    const batch = dueJobs.slice(offset, offset + maxConcurrentJobs);
+    const results = await Promise.allSettled(
+      batch.map((job) => trackJobExecution(processAgentJob(job))),
+    );
+    for (const result of results) {
+      if (result.status === "rejected") {
+        logger.error("Agent job processing failed outside execution boundary", {
+          error: getErrorMessage(result.reason),
+        });
+      }
+    }
+  }
+}
+
+async function clearAgentJobTick(tick: Promise<void>): Promise<void> {
+  try {
+    await tick;
+  } catch (error) {
+    logger.error("Agent job scheduler tick failed", {
+      error: getErrorMessage(error),
+    });
+  } finally {
+    if (agentJobTick === tick) {
+      agentJobTick = null;
+    }
+  }
+}
+
+export function runAgentJobsJob(): Promise<void> {
+  if (agentJobTick != null) {
+    return agentJobTick;
+  }
+  const tick = runAgentJobsTick();
+  agentJobTick = tick;
+  void clearAgentJobTick(tick);
+  return tick;
+}
+
+export async function runAgentJobById(jobId: string): Promise<void> {
+  await recoverExpiredJobLeases();
+  const job = await prisma.agentJob.findFirst({
+    where: {
+      id: jobId,
+      status: { in: ["active", "retrying"] },
+      nextRunAt: { lte: new Date() },
+    },
+  });
+  if (job != null) {
+    await trackJobExecution(processAgentJob(job));
+  }
+}
+
+async function settleAll(work: Promise<void>[]): Promise<true> {
+  await Promise.allSettled(work);
+  return true;
+}
+
+export async function waitForActiveAgentJobs(
+  timeoutMs: number,
+): Promise<boolean> {
+  const work = [
+    ...(agentJobTick == null ? [] : [agentJobTick]),
+    ...activeJobExecutions,
+  ];
+  if (work.length === 0) {
+    return true;
+  }
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timedOut = new Promise<false>((resolve) => {
+    timeoutId = setTimeout(() => {
+      resolve(false);
+    }, timeoutMs);
+  });
+  try {
+    return await Promise.race([settleAll(work), timedOut]);
   } finally {
     if (timeoutId !== undefined) {
       clearTimeout(timeoutId);
     }
   }
-}
-
-async function executeToolPayload(job: AgentJob): Promise<unknown> {
-  if (job.toolId == null || job.toolId.length === 0) {
-    throw new Error("toolId is required for tool jobs");
-  }
-
-  const { allTools } =
-    await import("@shepherdjerred/birmel/agent-tools/tools/index.ts");
-  const tool = allTools[job.toolId];
-  if (typeof tool !== "object" || tool == null || !("execute" in tool)) {
-    throw new Error(`Tool not found or not executable: ${job.toolId}`);
-  }
-  const execute = tool.execute;
-  if (typeof execute !== "function") {
-    throw new TypeError(`Tool execute is not a function: ${job.toolId}`);
-  }
-
-  const input =
-    job.toolInput != null && job.toolInput.length > 0
-      ? parseJsonRecord(job.toolInput)
-      : {};
-  return await Reflect.apply(execute, undefined, [
-    input,
-    {
-      runId: `agent-job-${job.id}`,
-      agentId: "birmel",
-    },
-  ]);
-}
-
-async function executeMessagePayload(job: AgentJob): Promise<unknown> {
-  const targetChannelId = job.threadId ?? job.channelId;
-  if (targetChannelId == null || targetChannelId.length === 0) {
-    throw new Error("channelId or threadId is required for message jobs");
-  }
-  if (job.message == null || job.message.length === 0) {
-    throw new Error("message is required for message jobs");
-  }
-  if (Bun.env["BIRMEL_MOCK_DISCORD_DELIVERY"] === "true") {
-    return {
-      success: true,
-      mockDelivery: true,
-      channelId: targetChannelId,
-      message: job.message,
-    };
-  }
-  return await handleSend(getDiscordClient(), targetChannelId, job.message);
-}
-
-async function executeAgentJob(job: AgentJob): Promise<unknown> {
-  if (job.payloadKind === "message") {
-    return await executeMessagePayload(job);
-  }
-  if (job.payloadKind === "tool") {
-    return await executeToolPayload(job);
-  }
-  throw new Error(`Unknown payload kind: ${job.payloadKind}`);
-}
-
-function nextStatusAfterSuccess(job: AgentJob): {
-  status: string;
-  nextRunAt: Date | null;
-} {
-  const nextRunAt = getNextAgentJobRun({
-    scheduleKind: parseScheduleKind(job.scheduleKind),
-    scheduleValue: job.scheduleValue,
-    timezone: job.timezone,
-    from: new Date(),
-  });
-  return {
-    status: nextRunAt == null ? "completed" : "active",
-    nextRunAt,
-  };
-}
-
-async function markJobSuccess(
-  job: AgentJob,
-  runId: string,
-  output: unknown,
-): Promise<void> {
-  const finishedAt = new Date();
-  const next = nextStatusAfterSuccess(job);
-  await prisma.$transaction([
-    prisma.agentJobRun.update({
-      where: { id: runId },
-      data: {
-        status: "success",
-        finishedAt,
-        output: serializeOutput(output).slice(0, 20_000),
-      },
-    }),
-    prisma.agentJob.update({
-      where: { id: job.id },
-      data: {
-        status: next.status,
-        nextRunAt: next.nextRunAt,
-        attemptCount: 0,
-        lastRunAt: finishedAt,
-        lastStatus: "success",
-        lastError: null,
-      },
-    }),
-  ]);
-}
-
-async function markJobFailure(
-  job: AgentJob,
-  runId: string,
-  error: unknown,
-): Promise<void> {
-  const finishedAt = new Date();
-  const errorMessage = getErrorMessage(error);
-  const nextAttemptCount = job.attemptCount + 1;
-  const shouldRetry = nextAttemptCount < job.maxAttempts;
-  const nextRunAt = shouldRetry
-    ? new Date(finishedAt.getTime() + retryDelayMs(nextAttemptCount))
-    : getNextAgentJobRun({
-        scheduleKind: parseScheduleKind(job.scheduleKind),
-        scheduleValue: job.scheduleValue,
-        timezone: job.timezone,
-        from: finishedAt,
-      });
-  const nextStatus =
-    !shouldRetry && nextRunAt == null
-      ? "failed"
-      : shouldRetry
-        ? "retrying"
-        : "active";
-
-  await prisma.$transaction([
-    prisma.agentJobRun.update({
-      where: { id: runId },
-      data: {
-        status: shouldRetry ? "error" : "failed",
-        finishedAt,
-        error: errorMessage.slice(0, 20_000),
-      },
-    }),
-    prisma.agentJob.update({
-      where: { id: job.id },
-      data: {
-        status: nextStatus,
-        nextRunAt,
-        attemptCount: shouldRetry ? nextAttemptCount : 0,
-        lastRunAt: finishedAt,
-        lastStatus: "error",
-        lastError: errorMessage.slice(0, 20_000),
-      },
-    }),
-  ]);
-}
-
-async function processAgentJob(job: AgentJob): Promise<void> {
-  const claimed = await prisma.agentJob.updateMany({
-    where: { id: job.id, status: { in: ["active", "retrying"] } },
-    data: { status: "running" },
-  });
-  if (claimed.count === 0) {
-    await prisma.agentJobRun.create({
-      data: {
-        jobId: job.id,
-        status: "skipped",
-        finishedAt: new Date(),
-        metadata: JSON.stringify({ reason: "job was already claimed" }),
-      },
-    });
-    return;
-  }
-  const runningJob = await prisma.agentJob.findUniqueOrThrow({
-    where: { id: job.id },
-  });
-  const run = await prisma.agentJobRun.create({
-    data: {
-      jobId: runningJob.id,
-      status: "running",
-      metadata: JSON.stringify({
-        scheduledFor: job.nextRunAt?.toISOString() ?? null,
-        attemptCount: job.attemptCount,
-      }),
-    },
-  });
-
-  try {
-    const output = await withTimeout(
-      executeAgentJob(runningJob),
-      runningJob.timeoutMs,
-    );
-    if (!toolResultStatus.isSuccess(output)) {
-      throw new Error(`Tool reported failure: ${serializeOutput(output)}`);
-    }
-    await markJobSuccess(runningJob, run.id, output);
-  } catch (error) {
-    await markJobFailure(runningJob, run.id, error);
-    logger.error("Agent job failed", {
-      jobId: runningJob.id,
-      error: getErrorMessage(error),
-    });
-  }
-}
-
-function legacyScheduleKind(task: ScheduledTask): AgentJobScheduleKind {
-  return task.cronPattern == null ? "at" : "cron";
-}
-
-function legacyScheduleValue(task: ScheduledTask): string {
-  return task.cronPattern ?? task.naturalDesc ?? task.scheduledAt.toISOString();
-}
-
-function legacyMessage(task: ScheduledTask): string | null {
-  if (task.toolId !== "send-message") {
-    return task.toolId == null ? task.description : null;
-  }
-  if (task.toolInput == null || task.toolInput.length === 0) {
-    return task.description;
-  }
-  try {
-    const input = parseJsonRecord(task.toolInput);
-    const content = input["content"];
-    return typeof content === "string" ? content : task.description;
-  } catch {
-    return task.description;
-  }
-}
-
-export async function migrateLegacyScheduledTasks(): Promise<number> {
-  const legacyTasks = await prisma.scheduledTask.findMany({
-    where: { enabled: true, executedAt: null },
-    orderBy: { scheduledAt: "asc" },
-  });
-  let migratedCount = 0;
-  for (const task of legacyTasks) {
-    const existing = await prisma.agentJob.findUnique({
-      where: { legacyTaskId: task.id },
-    });
-    if (existing != null) {
-      continue;
-    }
-    const scheduleKind = legacyScheduleKind(task);
-    const scheduleValue = legacyScheduleValue(task);
-    const message = legacyMessage(task);
-    const nextRunAt =
-      scheduleKind === "at"
-        ? task.scheduledAt
-        : resolveAgentJobSchedule({
-            scheduleKind,
-            scheduleValue,
-            timezone: "UTC",
-            from: new Date(),
-          }).nextRunAt;
-    await prisma.agentJob.create({
-      data: {
-        guildId: task.guildId,
-        channelId: task.channelId,
-        userId: task.userId,
-        name: task.name,
-        description: task.description,
-        scheduleKind,
-        scheduleValue,
-        timezone: "UTC",
-        nextRunAt,
-        payloadKind: message == null ? "tool" : "message",
-        message,
-        toolId: message == null ? task.toolId : null,
-        toolInput: message == null ? task.toolInput : null,
-        legacyTaskId: task.id,
-      },
-    });
-    migratedCount += 1;
-  }
-  if (migratedCount > 0) {
-    logger.info("Migrated legacy scheduled tasks", { migratedCount });
-  }
-  return migratedCount;
-}
-
-async function recoverStaleRunningJobs(): Promise<void> {
-  const staleBefore = new Date(Date.now() - 15 * 60 * 1000);
-  const recovered = await prisma.agentJob.updateMany({
-    where: { status: "running", updatedAt: { lt: staleBefore } },
-    data: {
-      status: "retrying",
-      nextRunAt: new Date(),
-      lastStatus: "skipped",
-      lastError: "Recovered stale running job after restart",
-    },
-  });
-  if (recovered.count > 0) {
-    logger.warn("Recovered stale running agent jobs", {
-      count: recovered.count,
-    });
-  }
-}
-
-export async function runAgentJobsJob(): Promise<void> {
-  await migrateLegacyScheduledTasks();
-  await recoverStaleRunningJobs();
-  const dueJobs = await prisma.agentJob.findMany({
-    where: {
-      status: { in: ["active", "retrying"] },
-      nextRunAt: { lte: new Date() },
-    },
-    orderBy: { nextRunAt: "asc" },
-    take: 25,
-  });
-
-  if (dueJobs.length === 0) {
-    return;
-  }
-  logger.info("Processing due agent jobs", { count: dueJobs.length });
-  for (const job of dueJobs) {
-    await processAgentJob(job);
-  }
-}
-
-export async function runAgentJobById(jobId: string): Promise<void> {
-  const job = await prisma.agentJob.findFirst({
-    where: {
-      id: jobId,
-      status: { in: ["active", "retrying"] },
-    },
-  });
-
-  if (job == null) {
-    return;
-  }
-
-  await processAgentJob(job);
 }

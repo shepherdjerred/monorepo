@@ -77,9 +77,7 @@ export async function getRecentChannelMessages(
 }
 
 export type TranscriptOptions = {
-  /** Always include at least this many of the most recent messages. */
-  minMessages: number;
-  /** Also include every message newer than this many ms. */
+  /** Include messages newer than this many ms. */
   windowMs: number;
   /** Hard cap on how many messages to fetch/return. */
   maxMessages: number;
@@ -87,10 +85,7 @@ export type TranscriptOptions = {
 
 /**
  * Fetch a conversation transcript for context, excluding the triggering
- * message. The size is `MAX(minMessages, messages-within-windowMs)` capped at
- * `maxMessages`: keep a message if it falls within the recency window OR is
- * among the most recent `minMessages`, so a quiet channel still yields enough
- * context while a busy one includes the whole recent burst.
+ * message. It includes messages within `windowMs`, capped at `maxMessages`.
  *
  * Returns messages in chronological order (oldest first). A single Discord
  * fetch page is 100 messages, so `maxMessages` should stay <= 100 to avoid
@@ -100,28 +95,41 @@ export async function getConversationTranscript(
   message: TranscriptSource,
   options: TranscriptOptions,
 ): Promise<ChannelMessage[]> {
-  const { minMessages, windowMs, maxMessages } = options;
+  const result = await getConversationTranscriptResult(message, options);
+  return result.messages;
+}
+
+export type TranscriptResult = {
+  messages: ChannelMessage[];
+  fetchFailed: boolean;
+};
+
+export async function getConversationTranscriptResult(
+  message: TranscriptSource,
+  options: TranscriptOptions,
+): Promise<TranscriptResult> {
+  const { windowMs, maxMessages } = options;
   try {
     const messages = await message.channel.messages.fetch({
       limit: Math.min(maxMessages, 100),
       before: message.id,
     });
 
-    // Newest-first so index < minMessages selects the most recent N.
     const newestFirst = [...messages.values()].toSorted(
       (a, b) => b.createdTimestamp - a.createdTimestamp,
     );
     const cutoff = Date.now() - windowMs;
 
-    const kept = newestFirst.filter(
-      (msg, index) => index < minMessages || msg.createdTimestamp >= cutoff,
-    );
+    const kept = newestFirst.filter((msg) => msg.createdTimestamp >= cutoff);
 
     // Chronological order (oldest first) for prompt readability.
-    return kept.map((msg) => toChannelMessage(msg)).reverse();
+    return {
+      messages: kept.map((msg) => toChannelMessage(msg)).reverse(),
+      fetchFailed: false,
+    };
   } catch (error) {
     console.error("Failed to fetch conversation transcript:", error);
-    return [];
+    return { messages: [], fetchFailed: true };
   }
 }
 

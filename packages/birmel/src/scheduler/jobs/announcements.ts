@@ -3,6 +3,7 @@ import type { ScheduledAnnouncement } from "#generated/prisma/client/index.js";
 import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
 import { logger } from "@shepherdjerred/birmel/utils/logger.ts";
+import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 
 type ScheduleAnnouncementOptions = {
   guildId: string;
@@ -103,6 +104,11 @@ async function sendAnnouncement(
   announcement: ScheduledAnnouncement,
 ): Promise<void> {
   try {
+    if (
+      !getConfig().authority.trustedUserIds.includes(announcement.createdBy)
+    ) {
+      throw new Error("Scheduled announcement actor is no longer trusted");
+    }
     const client = getDiscordClient();
     const channel = await client.channels.fetch(announcement.channelId);
 

@@ -2,7 +2,7 @@ import {
   getErrorMessage,
   toError,
 } from "@shepherdjerred/birmel/utils/errors.ts";
-import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
+import { createTool } from "@shepherdjerred/birmel/agent-runtime/tools/create-tool.ts";
 import { z } from "zod";
 import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
@@ -100,9 +100,10 @@ export const manageMessageTool = createTool({
       ])
       .optional(),
   }),
-  execute: async (ctx) => {
+  execute: async (ctx, { signal }) => {
     return withToolSpan("manage-message", undefined, async () => {
       try {
+        signal.throwIfAborted();
         const idError = validateSnowflakes([
           { value: ctx.channelId, fieldName: "channelId" },
           { value: ctx.userId, fieldName: "userId" },
@@ -122,47 +123,57 @@ export const manageMessageTool = createTool({
 
         switch (ctx.action) {
           case "send":
-            return await handleSend(client, ctx.channelId, ctx.content);
+            return await handleSend(client, ctx.channelId, ctx.content, signal);
           case "reply":
-            return await handleReply(client, ctx.content);
+            return await handleReply(client, ctx.content, signal);
           case "send-dm":
-            return await handleSendDm(client, ctx.userId, ctx.content);
+            return await handleSendDm(client, ctx.userId, ctx.content, signal);
           case "edit":
-            return await handleEdit(
+            return await handleEdit({
+              client,
+              channelId: ctx.channelId,
+              messageId: ctx.messageId,
+              content: ctx.content,
+              signal,
+            });
+          case "delete":
+            return await handleDelete(
               client,
               ctx.channelId,
               ctx.messageId,
-              ctx.content,
+              signal,
             );
-          case "delete":
-            return await handleDelete(client, ctx.channelId, ctx.messageId);
           case "bulk-delete":
             return await handleBulkDelete(
               client,
               ctx.channelId,
               ctx.messageIds,
+              signal,
             );
           case "pin":
-            return await handlePinUnpin(
+            return await handlePinUnpin({
               client,
-              ctx.channelId,
-              ctx.messageId,
-              true,
-            );
+              channelId: ctx.channelId,
+              messageId: ctx.messageId,
+              pin: true,
+              signal,
+            });
           case "unpin":
-            return await handlePinUnpin(
+            return await handlePinUnpin({
               client,
-              ctx.channelId,
-              ctx.messageId,
-              false,
-            );
+              channelId: ctx.channelId,
+              messageId: ctx.messageId,
+              pin: false,
+              signal,
+            });
           case "add-reaction":
-            return await handleAddReaction(
+            return await handleAddReaction({
               client,
-              ctx.channelId,
-              ctx.messageId,
-              ctx.emoji,
-            );
+              channelId: ctx.channelId,
+              messageId: ctx.messageId,
+              emoji: ctx.emoji,
+              signal,
+            });
           case "remove-reaction":
             return await handleRemoveReaction({
               client,
@@ -170,16 +181,19 @@ export const manageMessageTool = createTool({
               messageId: ctx.messageId,
               emoji: ctx.emoji,
               userId: ctx.userId,
+              signal,
             });
           case "get":
-            return await handleGetMessages(
+            return await handleGetMessages({
               client,
-              ctx.channelId,
-              ctx.limit,
-              ctx.before,
-            );
+              channelId: ctx.channelId,
+              limit: ctx.limit,
+              before: ctx.before,
+              signal,
+            });
         }
       } catch (error) {
+        signal.throwIfAborted();
         const apiError = parseDiscordAPIError(error);
         if (apiError != null) {
           logger.error("Discord API error in manage-message", {
@@ -188,7 +202,9 @@ export const manageMessageTool = createTool({
             message: apiError.message,
             method: apiError.method,
             url: apiError.url,
-            ctx,
+            action: ctx.action,
+            channelId: ctx.channelId,
+            messageId: ctx.messageId,
           });
           captureException(new Error(formatDiscordAPIError(apiError)), {
             operation: "tool.manage-message",

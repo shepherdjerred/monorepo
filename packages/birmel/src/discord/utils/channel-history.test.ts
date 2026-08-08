@@ -56,14 +56,13 @@ describe("getConversationTranscript", () => {
       fakeMsg("3", 1000),
     ]);
     const result = await getConversationTranscript(trigger.message, {
-      minMessages: 25,
       windowMs: 3_600_000,
       maxMessages: 100,
     });
     expect(result.map((m) => m.id)).toEqual(["1", "2", "3"]);
   });
 
-  it("keeps minMessages most-recent even when older than the window", async () => {
+  it("does not include messages older than the context window", async () => {
     const trigger = fakeTrigger([
       fakeMsg("old1", 7_200_000), // 2h ago
       fakeMsg("old2", 7_100_000),
@@ -71,18 +70,15 @@ describe("getConversationTranscript", () => {
       fakeMsg("recent", 1000), // within window
     ]);
     const result = await getConversationTranscript(trigger.message, {
-      minMessages: 2,
       windowMs: 3_600_000, // 1h
       maxMessages: 100,
     });
-    // recent (in window) + the single next-most-recent (index < min=2).
-    expect(result.map((m) => m.id)).toEqual(["old3", "recent"]);
+    expect(result.map((m) => m.id)).toEqual(["recent"]);
   });
 
   it("caps the fetch limit at 100", async () => {
     const trigger = fakeTrigger([fakeMsg("1", 1000)]);
     await getConversationTranscript(trigger.message, {
-      minMessages: 25,
       windowMs: 3_600_000,
       maxMessages: 500,
     });
@@ -102,7 +98,6 @@ describe("getConversationTranscript", () => {
       },
     };
     const result = await getConversationTranscript(message, {
-      minMessages: 25,
       windowMs: 3_600_000,
       maxMessages: 100,
     });

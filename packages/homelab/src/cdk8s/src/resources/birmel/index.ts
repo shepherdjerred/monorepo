@@ -3,12 +3,13 @@ import {
   Deployment,
   DeploymentStrategy,
   EnvValue,
+  Probe,
   Secret,
   Service,
   Volume,
 } from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
-import { Size } from "cdk8s";
+import { Duration, Size } from "cdk8s";
 import {
   withCommonProps,
   setRevisionHistoryLimit,
@@ -91,7 +92,25 @@ export function createBirmelDeployment(chart: Chart) {
           request: Size.mebibytes(512),
         },
       },
-      ports: [{ number: 4112, name: "oauth" }],
+      ports: [
+        { number: 4112, name: "oauth" },
+        { number: 8080, name: "health" },
+      ],
+      startup: Probe.fromHttpGet("/live", {
+        port: 8080,
+        periodSeconds: Duration.seconds(5),
+        failureThreshold: 24,
+      }),
+      liveness: Probe.fromHttpGet("/live", {
+        port: 8080,
+        periodSeconds: Duration.seconds(30),
+        failureThreshold: 3,
+      }),
+      readiness: Probe.fromHttpGet("/ready", {
+        port: 8080,
+        periodSeconds: Duration.seconds(10),
+        failureThreshold: 3,
+      }),
       volumeMounts: [
         {
           path: "/app/data",
@@ -148,12 +167,9 @@ export function createBirmelDeployment(chart: Chart) {
         // Database paths
         DATABASE_URL: EnvValue.fromValue("file:/app/data/birmel.db"),
         OPS_DATABASE_URL: EnvValue.fromValue("file:/app/data/birmel-ops.db"),
-        // Keep the existing on-disk filename so the production database
-        // doesn't get re-created when this rolls out. The schema config now
-        // accepts `MEMORY_DB_PATH` as the canonical name; the legacy
-        // `MASTRA_MEMORY_DB_PATH` env var is still accepted as a fallback by
-        // the bot, but every code reference uses the new name.
-        MEMORY_DB_PATH: EnvValue.fromValue("file:/app/data/mastra-memory.db"),
+        // The historical /app/data/mastra-memory.db remains on the PVC as a
+        // forensic archive. Birmel 3.0 deliberately has no runtime path to it.
+        HEALTH_PORT: EnvValue.fromValue("8080"),
 
         // Telemetry configuration (OpenTelemetry)
         TELEMETRY_ENABLED: EnvValue.fromValue("true"),

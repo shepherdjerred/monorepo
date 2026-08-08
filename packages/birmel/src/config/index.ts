@@ -1,25 +1,35 @@
 import { z } from "zod";
 import { ConfigSchema, type Config } from "./schema.ts";
 
+type Environment = Readonly<Record<string, string | undefined>>;
+
+const BooleanEnvironmentValueSchema = z
+  .enum(["true", "false"])
+  .transform((value) => value === "true");
+
+const NumberEnvironmentValueSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .transform(Number)
+  .pipe(z.number());
+
 function parseBoolean(
   value: string | undefined,
   defaultValue: boolean,
 ): boolean {
-  if (value === undefined) {
-    return defaultValue;
-  }
-  return value.toLowerCase() === "true";
+  return value === undefined
+    ? defaultValue
+    : BooleanEnvironmentValueSchema.parse(value);
 }
 
 function parseNumber(value: string | undefined, defaultValue: number): number {
-  if (value === undefined) {
-    return defaultValue;
-  }
-  const parsed = Number(value);
-  return Number.isNaN(parsed) ? defaultValue : parsed;
+  return value === undefined
+    ? defaultValue
+    : NumberEnvironmentValueSchema.parse(value);
 }
 
-function parseJSON<T>(
+function parseJson<T>(
   value: string | undefined,
   defaultValue: T,
   schema: z.ZodType<T>,
@@ -27,170 +37,85 @@ function parseJSON<T>(
   if (value === undefined) {
     return defaultValue;
   }
-  try {
-    const parsed: unknown = JSON.parse(value);
-    return schema.parse(parsed);
-  } catch {
-    return defaultValue;
-  }
+  const parsed: unknown = JSON.parse(value);
+  return schema.parse(parsed);
 }
 
-function loadCoreConfig() {
+function loadCoreConfig(environment: Environment) {
   return {
     discord: {
-      token: Bun.env["DISCORD_TOKEN"] ?? "",
-      clientId: Bun.env["DISCORD_CLIENT_ID"] ?? "",
+      token: environment["DISCORD_TOKEN"] ?? "",
+      clientId: environment["DISCORD_CLIENT_ID"] ?? "",
     },
     openai: {
-      apiKey: Bun.env["OPENAI_API_KEY"] ?? "",
-      model: Bun.env["OPENAI_MODEL"] ?? "gpt-5.6-sol",
-      classifierModel: Bun.env["OPENAI_CLASSIFIER_MODEL"] ?? "gpt-5.4-nano",
-      reasoningEffort: Bun.env["OPENAI_REASONING_EFFORT"] ?? "medium",
-      textVerbosity: Bun.env["OPENAI_TEXT_VERBOSITY"] ?? "low",
-      maxTokens: parseNumber(Bun.env["OPENAI_MAX_TOKENS"], 4096),
+      apiKey: environment["OPENAI_API_KEY"] ?? "",
+      model: environment["OPENAI_MODEL"] ?? "gpt-5.6-sol",
+      classifierModel: environment["OPENAI_CLASSIFIER_MODEL"] ?? "gpt-5.4-nano",
+      memoryModel: environment["OPENAI_MEMORY_MODEL"] ?? "gpt-5.4-nano",
+      embeddingModel:
+        environment["OPENAI_EMBEDDING_MODEL"] ?? "text-embedding-3-small",
+      reasoningEffort: environment["OPENAI_REASONING_EFFORT"] ?? "medium",
+      textVerbosity: environment["OPENAI_TEXT_VERBOSITY"] ?? "low",
+      maxTokens: parseNumber(environment["OPENAI_MAX_TOKENS"], 4096),
     },
     agent: {
-      // Accept the legacy MASTRA_MEMORY_DB_PATH variable as a fallback so a
-      // single deploy that hasn't yet rolled the env var rename keeps using
-      // the same database file. Once the homelab chart is rolled out
-      // everywhere, the legacy fallback can be dropped.
-      memoryDbPath:
-        Bun.env["MEMORY_DB_PATH"] ??
-        Bun.env["MASTRA_MEMORY_DB_PATH"] ??
-        "file:/app/data/birmel-memory.db",
+      maxSteps: parseNumber(environment["AGENT_MAX_STEPS"], 8),
+      responseTimeoutMs: parseNumber(
+        environment["AGENT_RESPONSE_TIMEOUT_MS"],
+        120_000,
+      ),
+      routerTimeoutMs: parseNumber(
+        environment["AGENT_ROUTER_TIMEOUT_MS"],
+        30_000,
+      ),
+    },
+    authority: {
+      trustedUserIds: parseJson(
+        environment["TRUSTED_USER_IDS"],
+        undefined,
+        z.array(z.string().regex(/^\d+$/)).min(1).optional(),
+      ),
     },
     telemetry: {
-      enabled: parseBoolean(Bun.env["TELEMETRY_ENABLED"], true),
+      enabled: parseBoolean(environment["TELEMETRY_ENABLED"], true),
       otlpEndpoint:
-        Bun.env["OTLP_ENDPOINT"] ??
+        environment["OTLP_ENDPOINT"] ??
         "http://tempo.monitoring.svc.cluster.local:4318",
-      serviceName: Bun.env["TELEMETRY_SERVICE_NAME"] ?? "birmel",
+      serviceName: environment["TELEMETRY_SERVICE_NAME"] ?? "birmel",
     },
     dailyPosts: {
-      enabled: parseBoolean(Bun.env["DAILY_POSTS_ENABLED"], true),
-      time: Bun.env["DAILY_POST_TIME"] ?? "09:00",
-      timezone: Bun.env["DAILY_POST_TIMEZONE"] ?? "America/Los_Angeles",
+      enabled: parseBoolean(environment["DAILY_POSTS_ENABLED"], true),
+      time: environment["DAILY_POST_TIME"] ?? "09:00",
+      timezone: environment["DAILY_POST_TIMEZONE"] ?? "America/Los_Angeles",
     },
     externalApis: {
-      newsApiKey: Bun.env["NEWS_API_KEY"],
-      riotApiKey: Bun.env["RIOT_API_KEY"],
-      webSearchProvider: Bun.env["WEB_SEARCH_PROVIDER"] ?? "openai",
+      newsApiKey: environment["NEWS_API_KEY"],
+      riotApiKey: environment["RIOT_API_KEY"],
+      webSearchProvider: environment["WEB_SEARCH_PROVIDER"] ?? "openai",
     },
     logging: {
-      level: Bun.env["LOG_LEVEL"] ?? "info",
+      level: environment["LOG_LEVEL"] ?? "info",
     },
   };
 }
 
-function loadFeatureConfig() {
-  return {
-    sentry: {
-      enabled: parseBoolean(Bun.env["SENTRY_ENABLED"], false),
-      dsn: Bun.env["SENTRY_DSN"],
-      environment: Bun.env["SENTRY_ENVIRONMENT"] ?? "development",
-      release: Bun.env["SENTRY_RELEASE"] ?? Bun.env["GIT_SHA"],
-      sampleRate: parseNumber(Bun.env["SENTRY_SAMPLE_RATE"], 1),
-      tracesSampleRate: parseNumber(Bun.env["SENTRY_TRACES_SAMPLE_RATE"], 0),
-      debug: parseBoolean(Bun.env["SENTRY_DEBUG"], false),
-    },
-    persona: {
-      enabled: parseBoolean(Bun.env["PERSONA_ENABLED"], true),
-      defaultPersona: Bun.env["PERSONA_DEFAULT"] ?? "virmel",
-      styleModel: Bun.env["PERSONA_STYLE_MODEL"] ?? "gpt-5.4-nano",
-    },
-    responder: {
-      enabled: parseBoolean(Bun.env["RESPONDER_ENABLED"], true),
-      engagementWindowMs: parseNumber(
-        Bun.env["RESPONDER_ENGAGEMENT_WINDOW_MS"],
-        180_000,
-      ),
-      transcriptMinMessages: parseNumber(
-        Bun.env["RESPONDER_TRANSCRIPT_MIN_MESSAGES"],
-        25,
-      ),
-      transcriptWindowMs: parseNumber(
-        Bun.env["RESPONDER_TRANSCRIPT_WINDOW_MS"],
-        3_600_000,
-      ),
-      transcriptMaxMessages: parseNumber(
-        Bun.env["RESPONDER_TRANSCRIPT_MAX_MESSAGES"],
-        100,
-      ),
-    },
-    shell: {
-      enabled: parseBoolean(Bun.env["SHELL_ENABLED"], true),
-      defaultTimeout: parseNumber(Bun.env["SHELL_DEFAULT_TIMEOUT"], 30_000),
-      maxTimeout: parseNumber(Bun.env["SHELL_MAX_TIMEOUT"], 300_000),
-    },
-    scheduler: {
-      enabled: parseBoolean(Bun.env["SCHEDULER_ENABLED"], true),
-      maxTasksPerGuild: parseNumber(
-        Bun.env["SCHEDULER_MAX_TASKS_PER_GUILD"],
-        100,
-      ),
-      maxRecurringTasks: parseNumber(
-        Bun.env["SCHEDULER_MAX_RECURRING_TASKS"],
-        50,
-      ),
-    },
-    browser: {
-      enabled: parseBoolean(Bun.env["BROWSER_ENABLED"], true),
-      provider: Bun.env["BROWSER_PROVIDER"] ?? "pinchtab",
-      headless: parseBoolean(Bun.env["BROWSER_HEADLESS"], true),
-      viewportWidth: parseNumber(Bun.env["BROWSER_VIEWPORT_WIDTH"], 1280),
-      viewportHeight: parseNumber(Bun.env["BROWSER_VIEWPORT_HEIGHT"], 720),
-      maxSessions: parseNumber(Bun.env["BROWSER_MAX_SESSIONS"], 5),
-      sessionTimeoutMs: parseNumber(
-        Bun.env["BROWSER_SESSION_TIMEOUT_MS"],
-        300_000,
-      ),
-      userAgent: Bun.env["BROWSER_USER_AGENT"],
-      pinchtabBaseUrl: Bun.env["PINCHTAB_BASE_URL"] ?? "http://localhost:9867",
-      pinchtabToken: Bun.env["PINCHTAB_TOKEN"],
-      pinchtabProfile: Bun.env["PINCHTAB_PROFILE"] ?? "default",
-    },
-    birthdays: {
-      enabled: parseBoolean(Bun.env["BIRTHDAYS_ENABLED"], true),
-      defaultTimezone: Bun.env["BIRTHDAYS_DEFAULT_TIMEZONE"] ?? "UTC",
-      birthdayRoleId: Bun.env["BIRTHDAYS_ROLE_ID"],
-      announcementChannelId: Bun.env["BIRTHDAYS_ANNOUNCEMENT_CHANNEL_ID"],
-    },
-    activityTracking: {
-      enabled: parseBoolean(Bun.env["ACTIVITY_TRACKING_ENABLED"], true),
-      roleTiers: parseJSON(
-        Bun.env["ACTIVITY_ROLE_TIERS"],
-        [],
-        z.array(z.object({ minimumActivity: z.number(), roleId: z.string() })),
-      ),
-    },
-    elections: {
-      enabled: parseBoolean(Bun.env["ELECTIONS_ENABLED"], true),
-      startTime: Bun.env["ELECTION_START_TIME"] ?? "17:00",
-      endTime: Bun.env["ELECTION_END_TIME"] ?? "19:00",
-      timezone: Bun.env["ELECTION_TIMEZONE"] ?? "America/Los_Angeles",
-      channelId: Bun.env["ELECTION_CHANNEL_ID"],
-    },
-    editor: loadEditorConfig(),
-  };
-}
-
-function loadGithubConfig() {
-  const clientId = Bun.env["EDITOR_GITHUB_CLIENT_ID"];
+function loadGithubConfig(environment: Environment) {
+  const clientId = environment["EDITOR_GITHUB_CLIENT_ID"];
   if (clientId == null || clientId.length === 0) {
     return;
   }
   return {
     clientId,
-    clientSecret: Bun.env["EDITOR_GITHUB_CLIENT_SECRET"] ?? "",
-    callbackUrl: Bun.env["EDITOR_GITHUB_CALLBACK_URL"] ?? "",
+    clientSecret: environment["EDITOR_GITHUB_CLIENT_SECRET"] ?? "",
+    callbackUrl: environment["EDITOR_GITHUB_CALLBACK_URL"] ?? "",
   };
 }
 
-function loadEditorConfig() {
+function loadEditorConfig(environment: Environment) {
   return {
-    enabled: parseBoolean(Bun.env["EDITOR_ENABLED"], false),
-    allowedRepos: parseJSON(
-      Bun.env["EDITOR_ALLOWED_REPOS"],
+    enabled: parseBoolean(environment["EDITOR_ENABLED"], false),
+    allowedRepos: parseJson(
+      environment["EDITOR_ALLOWED_REPOS"],
       [],
       z.array(
         z.object({
@@ -202,27 +127,137 @@ function loadEditorConfig() {
       ),
     ),
     maxSessionDurationMs: parseNumber(
-      Bun.env["EDITOR_MAX_SESSION_DURATION_MS"],
+      environment["EDITOR_MAX_SESSION_DURATION_MS"],
       1_800_000,
     ),
-    maxSessionsPerUser: parseNumber(Bun.env["EDITOR_MAX_SESSIONS_PER_USER"], 1),
-    oauthPort: parseNumber(Bun.env["EDITOR_OAUTH_PORT"], 4112),
-    oauthHost: Bun.env["EDITOR_OAUTH_HOST"] ?? "0.0.0.0",
-    github: loadGithubConfig(),
+    maxSessionsPerUser: parseNumber(
+      environment["EDITOR_MAX_SESSIONS_PER_USER"],
+      1,
+    ),
+    oauthPort: parseNumber(environment["EDITOR_OAUTH_PORT"], 4112),
+    oauthHost: environment["EDITOR_OAUTH_HOST"] ?? "0.0.0.0",
+    github: loadGithubConfig(environment),
   };
 }
 
-function loadConfigFromEnv(): Config {
+function loadFeatureConfig(environment: Environment) {
+  return {
+    sentry: {
+      enabled: parseBoolean(environment["SENTRY_ENABLED"], false),
+      dsn: environment["SENTRY_DSN"],
+      environment: environment["SENTRY_ENVIRONMENT"] ?? "development",
+      release: environment["SENTRY_RELEASE"] ?? environment["GIT_SHA"],
+      sampleRate: parseNumber(environment["SENTRY_SAMPLE_RATE"], 1),
+      tracesSampleRate: parseNumber(
+        environment["SENTRY_TRACES_SAMPLE_RATE"],
+        0,
+      ),
+      debug: parseBoolean(environment["SENTRY_DEBUG"], false),
+    },
+    persona: {
+      enabled: parseBoolean(environment["PERSONA_ENABLED"], true),
+      defaultPersona: environment["PERSONA_DEFAULT"] ?? "virmel",
+      styleModel: environment["PERSONA_STYLE_MODEL"] ?? "gpt-5.4-nano",
+    },
+    responder: {
+      enabled: parseBoolean(environment["RESPONDER_ENABLED"], true),
+      engagementWindowMs: parseNumber(
+        environment["RESPONDER_ENGAGEMENT_WINDOW_MS"],
+        180_000,
+      ),
+      transcriptWindowMs: parseNumber(
+        environment["RESPONDER_TRANSCRIPT_WINDOW_MS"],
+        3_600_000,
+      ),
+      transcriptMaxMessages: parseNumber(
+        environment["RESPONDER_TRANSCRIPT_MAX_MESSAGES"],
+        50,
+      ),
+    },
+    shell: {
+      enabled: parseBoolean(environment["SHELL_ENABLED"], true),
+      defaultTimeout: parseNumber(environment["SHELL_DEFAULT_TIMEOUT"], 30_000),
+      maxTimeout: parseNumber(environment["SHELL_MAX_TIMEOUT"], 300_000),
+    },
+    scheduler: {
+      enabled: parseBoolean(environment["SCHEDULER_ENABLED"], true),
+      maxTasksPerGuild: parseNumber(
+        environment["SCHEDULER_MAX_TASKS_PER_GUILD"],
+        100,
+      ),
+      maxRecurringTasks: parseNumber(
+        environment["SCHEDULER_MAX_RECURRING_TASKS"],
+        50,
+      ),
+      maxConcurrentJobs: parseNumber(
+        environment["SCHEDULER_MAX_CONCURRENT_JOBS"],
+        5,
+      ),
+      tickIntervalMs: parseNumber(
+        environment["SCHEDULER_TICK_INTERVAL_MS"],
+        10_000,
+      ),
+      shutdownTimeoutMs: parseNumber(
+        environment["SCHEDULER_SHUTDOWN_TIMEOUT_MS"],
+        30_000,
+      ),
+    },
+    browser: {
+      enabled: parseBoolean(environment["BROWSER_ENABLED"], true),
+      provider: environment["BROWSER_PROVIDER"] ?? "pinchtab",
+      headless: parseBoolean(environment["BROWSER_HEADLESS"], true),
+      viewportWidth: parseNumber(environment["BROWSER_VIEWPORT_WIDTH"], 1280),
+      viewportHeight: parseNumber(environment["BROWSER_VIEWPORT_HEIGHT"], 720),
+      maxSessions: parseNumber(environment["BROWSER_MAX_SESSIONS"], 5),
+      sessionTimeoutMs: parseNumber(
+        environment["BROWSER_SESSION_TIMEOUT_MS"],
+        300_000,
+      ),
+      userAgent: environment["BROWSER_USER_AGENT"],
+      pinchtabBaseUrl:
+        environment["PINCHTAB_BASE_URL"] ?? "http://localhost:9867",
+      pinchtabToken: environment["PINCHTAB_TOKEN"],
+      pinchtabProfile: environment["PINCHTAB_PROFILE"] ?? "default",
+    },
+    birthdays: {
+      enabled: parseBoolean(environment["BIRTHDAYS_ENABLED"], true),
+      defaultTimezone: environment["BIRTHDAYS_DEFAULT_TIMEZONE"] ?? "UTC",
+      birthdayRoleId: environment["BIRTHDAYS_ROLE_ID"],
+      announcementChannelId: environment["BIRTHDAYS_ANNOUNCEMENT_CHANNEL_ID"],
+    },
+    activityTracking: {
+      enabled: parseBoolean(environment["ACTIVITY_TRACKING_ENABLED"], true),
+      roleTiers: parseJson(
+        environment["ACTIVITY_ROLE_TIERS"],
+        [],
+        z.array(z.object({ minimumActivity: z.number(), roleId: z.string() })),
+      ),
+    },
+    elections: {
+      enabled: parseBoolean(environment["ELECTIONS_ENABLED"], true),
+      startTime: environment["ELECTION_START_TIME"] ?? "17:00",
+      endTime: environment["ELECTION_END_TIME"] ?? "19:00",
+      timezone: environment["ELECTION_TIMEZONE"] ?? "America/Los_Angeles",
+      channelId: environment["ELECTION_CHANNEL_ID"],
+    },
+    editor: loadEditorConfig(environment),
+    health: {
+      port: parseNumber(environment["HEALTH_PORT"], 8080),
+    },
+  };
+}
+
+export function loadConfigFromEnvironment(environment: Environment): Config {
   return ConfigSchema.parse({
-    ...loadCoreConfig(),
-    ...loadFeatureConfig(),
+    ...loadCoreConfig(environment),
+    ...loadFeatureConfig(environment),
   });
 }
 
 let cachedConfig: Config | null = null;
 
 export function getConfig(): Config {
-  cachedConfig ??= loadConfigFromEnv();
+  cachedConfig ??= loadConfigFromEnvironment(Bun.env);
   return cachedConfig;
 }
 

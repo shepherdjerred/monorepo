@@ -1,10 +1,5 @@
 import { beforeAll, afterAll, mock } from "bun:test";
 
-// (The previous version of this file mocked `@mastra/*` packages; the bot
-// no longer depends on them — VoltAgent's libSQL adapter is used instead and
-// is mocked indirectly by the @ai-sdk/openai mock plus the discord.js mocks.
-// The Mastra mocks were removed during the migration cleanup pass.)
-
 // Mock @ai-sdk/openai
 type ModelFn = (model: string) => { provider: string; model: string };
 type OpenaiMock = ModelFn & { chat: ModelFn; responses: ModelFn };
@@ -22,7 +17,7 @@ void mock.module("@ai-sdk/openai", () => ({
 // Mock environment variables for testing
 beforeAll(() => {
   Bun.env["DISCORD_TOKEN"] = "test-discord-token";
-  Bun.env["DISCORD_CLIENT_ID"] = "test-client-id";
+  Bun.env["DISCORD_CLIENT_ID"] = "123456789012345678";
   Bun.env["ANTHROPIC_API_KEY"] = "test-anthropic-key";
   Bun.env["OPENAI_API_KEY"] = "test-openai-key";
 });
