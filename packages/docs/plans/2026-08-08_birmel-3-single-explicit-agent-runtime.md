@@ -224,6 +224,11 @@ succeeds.
   scheduler audit agent was unavailable for status retrieval, so the scheduler
   remediation was independently reviewed locally with no additional P0-P2
   finding; production acceptance remains outstanding.
+- 2026-08-08: Buildkite #8061 exposed a CI-load timeout in the six-case legacy
+  migration fixture: 338 passed and two cases exceeded Bun's default 5-second
+  test budget without assertion failures. The fixture now uses Bun's explicit
+  30-second file timeout; the targeted six-test file, typecheck, lint, and diff
+  check pass locally. A fresh PR verification run is required.
 - 2026-08-08: Review remediation added legacy reminder compatibility, removed
   the final legacy scheduling tool surface, made tool timeouts cooperative at
   Discord, shell, browser, and file-write boundaries, and fenced timed-out jobs.
