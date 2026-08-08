@@ -24,8 +24,12 @@ function dependenciesFor(
   heartbeat: ZfsMaintenanceDependencies["heartbeat"] = (details) => {
     expect(details.phase).toBeDefined();
   },
+  nodes: readonly string[] = pods.flatMap((pod) =>
+    pod.spec?.nodeName === undefined ? [] : [pod.spec.nodeName],
+  ),
 ): ZfsMaintenanceDependencies {
   return {
+    listClusterNodes: async () => nodes,
     listCollectorPods: async () => pods,
     execInPod: execute,
     heartbeat,
@@ -74,6 +78,19 @@ describe("selectZfsCollectorPods", () => {
         },
       ]),
     ).toThrow("exactly one Running and Ready");
+  });
+
+  it("fails when a collector pod is absent for a cluster node", async () => {
+    const deps = dependenciesFor(
+      [readyPod("torvalds", "zfs-torvalds")],
+      async () => "",
+      undefined,
+      ["torvalds", "liskov"],
+    );
+
+    await expect(runZfsMaintenanceWithDependencies(deps)).rejects.toThrow(
+      "node liskov",
+    );
   });
 
   it("fails when a Ready collector lacks node identity", () => {

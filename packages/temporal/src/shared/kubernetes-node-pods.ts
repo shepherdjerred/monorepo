@@ -26,6 +26,7 @@ export function selectRunningReadyNodePods(
     labelSelector: string;
     resourceDescription: string;
     requireExactlyOneReadyPodPerNode?: boolean;
+    expectedNodes?: readonly string[];
   },
 ): KubernetesNodePod[] {
   const nodePods = new Map<string, string>();
@@ -75,6 +76,7 @@ export function selectRunningReadyNodePods(
       candidateCountsByNode,
       nodePods,
       context.resourceDescription,
+      context.expectedNodes,
     );
   }
 
@@ -121,8 +123,14 @@ function validateExactlyOneReadyPodPerNode(
   candidateCountsByNode: ReadonlyMap<string, number>,
   nodePods: ReadonlyMap<string, string>,
   resourceDescription: string,
+  expectedNodes: readonly string[] | undefined,
 ): void {
-  for (const [node, candidateCount] of candidateCountsByNode) {
+  const nodes = new Set([
+    ...candidateCountsByNode.keys(),
+    ...(expectedNodes ?? []),
+  ]);
+  for (const node of nodes) {
+    const candidateCount = candidateCountsByNode.get(node) ?? 0;
     if (candidateCount !== 1 || !nodePods.has(node)) {
       const readyState = nodePods.has(node) ? "one Ready pod" : "no Ready pod";
       throw new Error(

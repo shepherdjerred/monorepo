@@ -32,6 +32,7 @@ type ZfsMaintenanceHeartbeat = (details: {
 }) => void;
 
 export type ZfsMaintenanceDependencies = {
+  listClusterNodes: () => Promise<readonly string[]>;
   listCollectorPods: () => Promise<readonly ZfsCollectorPodCandidate[]>;
   execInPod: (pod: ZfsCollectorPod, command: string) => Promise<string>;
   heartbeat: ZfsMaintenanceHeartbeat;
@@ -42,6 +43,7 @@ export type ZfsMaintenanceActivities = typeof zfsMaintenanceActivities;
 export const zfsMaintenanceActivities = {
   async runZfsMaintenance(): Promise<string> {
     return runZfsMaintenanceWithDependencies({
+      listClusterNodes: findKubernetesNodes,
       listCollectorPods: findZfsCollectorPods,
       execInPod: (pod, command) =>
         kubectlExecInPod({
@@ -60,8 +62,9 @@ export const zfsMaintenanceActivities = {
 export async function runZfsMaintenanceWithDependencies(
   dependencies: ZfsMaintenanceDependencies,
 ): Promise<string> {
+  const nodes = await dependencies.listClusterNodes();
   const candidates = await dependencies.listCollectorPods();
-  const nodePods = selectZfsCollectorPods(candidates);
+  const nodePods = selectZfsCollectorPods(candidates, nodes);
   const results: string[] = [];
 
   for (const nodePod of nodePods) {
@@ -126,13 +129,18 @@ export async function runZfsMaintenanceWithDependencies(
 
 export function selectZfsCollectorPods(
   pods: readonly ZfsCollectorPodCandidate[],
+  expectedNodes?: readonly string[],
 ): ZfsCollectorPod[] {
-  return selectRunningReadyNodePods(pods, {
+  const context = {
     namespace: NAMESPACE,
     labelSelector: ZFS_COLLECTOR_LABEL,
     resourceDescription: "zfs-zpool-collector",
     requireExactlyOneReadyPodPerNode: true,
-  });
+  };
+  if (expectedNodes !== undefined) {
+    return selectRunningReadyNodePods(pods, { ...context, expectedNodes });
+  }
+  return selectRunningReadyNodePods(pods, context);
 }
 
 export function parseManagedZfsPools(
@@ -194,6 +202,23 @@ async function findZfsCollectorPods(): Promise<ZfsCollectorPodCandidate[]> {
     }
     return candidate;
   });
+}
+
+async function findKubernetesNodes(): Promise<string[]> {
+  const kc = new k8s.KubeConfig();
+  kc.loadFromCluster();
+  const response = await kc.makeApiClient(k8s.CoreV1Api).listNode();
+  const nodes: string[] = [];
+  for (const node of response.items) {
+    const name = node.metadata?.name;
+    if (name === undefined) {
+      throw new Error(
+        "Kubernetes node inventory contains a node without metadata.name",
+      );
+    }
+    nodes.push(name);
+  }
+  return nodes.toSorted();
 }
 
 async function runCommand(
