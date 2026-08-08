@@ -71,6 +71,10 @@ export default defineConfig({
               link: "/homelab/plane/",
             },
             {
+              label: "Asus router tracking (local-apply Tofu)",
+              link: "/homelab/asuswrt-router-tracking/",
+            },
+            {
               label: "qBittorrent VPN webseed relay",
               link: "/homelab/qbittorrent-vpn-webseed-relay/",
             },

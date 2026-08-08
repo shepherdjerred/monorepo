@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -15,8 +16,9 @@ import (
 )
 
 var (
-	_ resource.Resource              = &portForwardResource{}
-	_ resource.ResourceWithConfigure = &portForwardResource{}
+	_ resource.Resource                = &portForwardResource{}
+	_ resource.ResourceWithConfigure   = &portForwardResource{}
+	_ resource.ResourceWithImportState = &portForwardResource{}
 )
 
 type portForwardResource struct {
@@ -99,6 +101,12 @@ func (r *portForwardResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
+	// Serialize the whole read-modify-write against vts_rulelist so a concurrent
+	// apply on another rule can't read the same list and clobber this edit when
+	// it writes back.
+	unlockList := r.client.LockList("vts_rulelist")
+	defer unlockList()
+
 	entries, err := r.readRules(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to read port forward rules", err.Error())
@@ -163,6 +171,12 @@ func (r *portForwardResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
+	// Serialize the whole read-modify-write against vts_rulelist so a concurrent
+	// apply on another rule can't read the same list and clobber this edit when
+	// it writes back.
+	unlockList := r.client.LockList("vts_rulelist")
+	defer unlockList()
+
 	entries, err := r.readRules(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to read port forward rules", err.Error())
@@ -197,6 +211,12 @@ func (r *portForwardResource) Delete(ctx context.Context, req resource.DeleteReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// Serialize the whole read-modify-write against vts_rulelist so a concurrent
+	// apply on another rule can't read the same list and clobber this edit when
+	// it writes back.
+	unlockList := r.client.LockList("vts_rulelist")
+	defer unlockList()
 
 	entries, err := r.readRules(ctx)
 	if err != nil {
@@ -260,6 +280,12 @@ func (r *portForwardResource) planToEntry(plan *portForwardResourceModel) client
 	}
 
 	return entry
+}
+
+// ImportState imports a port forward rule by its name. Read then populates the
+// remaining attributes from the router.
+func (r *portForwardResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("name"), req, resp)
 }
 
 // findRuleByName searches for a port forward rule by name (case-insensitive).

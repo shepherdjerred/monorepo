@@ -22,11 +22,19 @@ tofu/
 │   ├── providers.tf     # AWS provider ~> 5.0 (custom S3 endpoint)
 │   ├── variables.tf     # Input variables
 │   └── buckets.tf       # S3 bucket definitions
-└── tailscale/           # Tailnet ACL policy (deny-by-default access control)
+├── tailscale/           # Tailnet ACL policy (deny-by-default access control)
+│   ├── backend.tf       # S3 state backend (SeaweedFS)
+│   ├── providers.tf     # Tailscale provider ~> 0.17 (OAuth via env)
+│   ├── variables.tf     # Input variables
+│   └── acl.tf           # tailscale_acl: tagOwners, ACLs, ssh, tests
+└── asuswrt/             # Asus routers & APs (custom provider, LOCAL-RUN ONLY)
     ├── backend.tf       # S3 state backend (SeaweedFS)
-    ├── providers.tf     # Tailscale provider ~> 0.17 (OAuth via env)
-    ├── variables.tf     # Input variables
-    └── acl.tf           # tailscale_acl: tagOwners, ACLs, ssh, tests
+    ├── providers.tf     # asuswrt provider 0.1.0 (filesystem mirror), 3 aliases
+    ├── variables.tf     # Router credentials
+    ├── router.tf        # RT-AX88U Pro @ .1 (system, DHCP, port-forward, wifi)
+    ├── ap-ax88u.tf      # RT-AX88U @ .213 (system, wifi)
+    ├── ap-be86u.tf      # RT-BE86U @ .2 (system)
+    └── import.sh        # Import existing device config into state
 ```
 
 Each subdirectory is an independent root module with its own state.
@@ -40,6 +48,7 @@ Each subdirectory is an independent root module with its own state.
   - `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` - S3 credentials for SeaweedFS state backend
   - `TF_VAR_cloudflare_account_id` - Cloudflare account ID
   - `TAILSCALE_OAUTH_CLIENT_ID` / `TAILSCALE_OAUTH_CLIENT_SECRET` - Tailscale OAuth client (scope `acl`) for the `tailscale` module
+  - `TF_VAR_asuswrt_username` / `TF_VAR_asuswrt_password` - Asus router/AP admin login for the `asuswrt` module (local-run only)
 
 ## Usage
 
@@ -62,8 +71,26 @@ tofu -chdir=seaweedfs apply
 
 ## CI/CD
 
-There is no CI for these stacks (the Dagger/Buildkite pipeline was removed
-2026-07). Run `tofu plan` / `tofu apply` manually per module.
+The static Buildkite pipeline (`.buildkite/pipeline.yml`) drives these stacks,
+and the **plan and apply allowlists differ**:
+
+- **Plan (every PR)** — the `pr-dryrun` step (`:microscope: pr dry-run`) runs
+  `tofu ... plan` for all seven stacks:
+  `seaweedfs tailscale buildkite arr pagerduty github cloudflare`
+  (the inline `for stack in ...` loop).
+- **Apply (merge to `main`)** — the `tofu-apply` step (`:terraform: tofu apply`)
+  loop applies only five: `seaweedfs tailscale buildkite arr pagerduty`.
+  `github` and `cloudflare` are **not** in that loop; they are applied on merge
+  by their own dedicated steps, `tofu-github` and `tofu-cloudflare` (the latter
+  gated to run after the tunnel step). So all seven are planned on PRs and
+  applied on merge, but the apply is split across three steps, not one loop.
+
+Grep `for stack in` and `tofu-stack.ts` in the pipeline for the current lines.
+
+The `asuswrt` module is **excluded from all of these** — it is deliberately
+absent from the plan loop, the apply loop, and the dedicated apply steps because
+the CI pod has tailnet-only egress and cannot reach the LAN routers. It is
+local-run only — see `asuswrt/README.md`.
 
 ## What's Managed
 
@@ -104,7 +131,13 @@ The `homelab-tofu-state` bucket has `prevent_destroy = true` since it stores sta
 
 The tailnet ACL policy (`tailscale_acl`): `tagOwners`, access rules, Tailscale SSH, and policy `tests`. Moves the tailnet from implicit allow-all (every device trusted) to deny-by-default — the account owner keeps full access, non-admin humans get only the published `*.ts.net` apps, and tagged/untrusted devices are denied by default.
 
-> **Not yet wired into CI drift.** `tailscale` is intentionally absent from `TOFU_STACKS` (`scripts/ci/src/catalog.ts`) until a Tailscale OAuth client + the `TAILSCALE_OAUTH_CLIENT_ID`/`TAILSCALE_OAUTH_CLIENT_SECRET` CI secrets exist — otherwise the plan/apply steps fail with no credentials. First apply also requires reconciling the existing admin-console policy. See `packages/docs/guides/2026-06-06_tailscale-acls-runbook.md` for the full enablement (including the exact CI wiring diff).
+> **Wired into CI.** `tailscale` is in both `for stack in ...` loops in
+> `.buildkite/pipeline.yml` — planned on every PR (`pr-dryrun`) and applied on
+> merge (`tofu-apply`), like the other in-loop stacks. Its plan/apply steps
+> require the `TAILSCALE_OAUTH_CLIENT_ID` / `TAILSCALE_OAUTH_CLIENT_SECRET` CI
+> secrets (scope `acl`). Enabling it originally required reconciling the
+> pre-existing admin-console policy; see
+> `packages/docs/guides/2026-06-06_tailscale-acls-runbook.md`.
 
 ## Adding a New Domain
 

@@ -673,6 +673,11 @@
       "source": "packages/discord-plays-mario-kart/wasm-src/code/src/mupen64plus-core/tools/uninstall_binary_bundle.sh",
       "disposition": "delete",
       "reason": "Unused vendored release wrapper"
+    },
+    {
+      "source": "packages/homelab/src/tofu/asuswrt/import.sh",
+      "disposition": "retain",
+      "reason": "Operator-run OpenTofu import bootstrap invoked manually via op run; drives the tofu CLI with a shell heredoc and is not part of the Bun runtime"
     }
   ]
 }
