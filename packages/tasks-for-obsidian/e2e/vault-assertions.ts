@@ -30,6 +30,12 @@ const VAULT_ASSERTIONS: readonly VaultAssertion[] = [
       true,
   },
   {
+    name: '"Seeded done task" has status open (10-completed-search-uncomplete)',
+    check: (files) =>
+      fileWithTitle(files, "Seeded done task")?.includes("status: open") ===
+      true,
+  },
+  {
     name: '"Water plants" stays open and gains a complete_instances entry (03-recurring-complete)',
     check: (files) => {
       const content = fileWithTitle(files, "Water plants");
