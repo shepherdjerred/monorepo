@@ -38,23 +38,42 @@ or (
         pod=~"temporal-maintenance-worker-.*"
       }
     ) > 1200
-    or on() absent(
-      kube_deployment_status_replicas_available{
+    or on() (
+      kube_deployment_status_condition{
         namespace="buildkite",
-        deployment="temporal-maintenance-worker"
-      }
-    )
-    or on() max(
-      kube_deployment_status_replicas_available{
-        namespace="buildkite",
-        deployment="temporal-maintenance-worker"
-      }
-    ) == 0
-    or on() absent(
-      up{
-        namespace="buildkite",
-        service="temporal-maintenance-worker-app-metrics"
-      }
+        deployment="temporal-maintenance-worker",
+        condition="Progressing",
+        status="false"
+      } == 1
+      or on() (
+        kube_deployment_status_condition{
+          namespace="buildkite",
+          deployment="temporal-maintenance-worker",
+          condition="Progressing",
+          status="true",
+          reason="NewReplicaSetAvailable"
+        } == 1
+        and on() (
+          absent(
+            kube_deployment_status_replicas_available{
+              namespace="buildkite",
+              deployment="temporal-maintenance-worker"
+            }
+          )
+          or max(
+            kube_deployment_status_replicas_available{
+              namespace="buildkite",
+              deployment="temporal-maintenance-worker"
+            }
+          ) == 0
+          or absent(
+            up{
+              namespace="buildkite",
+              service="temporal-maintenance-worker-app-metrics"
+            }
+          )
+        )
+      )
     )
   )
 )`

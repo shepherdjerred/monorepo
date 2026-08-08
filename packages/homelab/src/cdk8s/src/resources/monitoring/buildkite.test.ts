@@ -211,6 +211,12 @@ describe("Buildkite monitoring manifests", () => {
       expect(String(collectorStale?.["expr"])).toContain(
         'up{\n        namespace="buildkite",\n        service="temporal-maintenance-worker-app-metrics"\n      }',
       );
+      expect(String(collectorStale?.["expr"])).toContain(
+        'condition="Progressing",\n        status="false"',
+      );
+      expect(String(collectorStale?.["expr"])).toContain(
+        'reason="NewReplicaSetAvailable"',
+      );
     } else {
       expect(String(collectorStale?.["expr"])).toContain(
         "kube_cronjob_status_last_successful_time",
