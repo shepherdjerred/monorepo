@@ -2,7 +2,6 @@ import { Context } from "@temporalio/activity";
 import * as Sentry from "@sentry/bun";
 import { WorkflowFailedError } from "@temporalio/client";
 import { ApplicationFailure, TemporalFailure } from "@temporalio/common";
-import { z } from "zod/v4";
 import { createTemporalClient } from "#client";
 import {
   type AlertmanagerAlert,
@@ -15,6 +14,10 @@ import {
   type WorkflowFailureDetail,
 } from "#shared/workflow-failure-alert.ts";
 import { temporalFailureWatcherAlertsTotal } from "#observability/metrics.ts";
+import {
+  classifyWorkflowTimeoutHistory,
+  type WorkflowTimeoutHistoryClassification,
+} from "./workflow-failure-history.ts";
 
 /**
  * Polls the Temporal visibility API for workflow executions that closed as
@@ -71,144 +74,6 @@ export type WorkflowVisibilityClient = {
     };
   };
 };
-
-export type WorkflowTimeoutClassification =
-  | "workflow-task"
-  | "activity"
-  | "execution"
-  | "unknown";
-
-type WorkflowTimeoutHistoryClassification = {
-  classification: WorkflowTimeoutClassification;
-  activityScheduled: boolean;
-  activityStarted: boolean;
-  activityScheduledButNotStarted: boolean;
-};
-
-function eventRecord(event: unknown): Record<string, unknown> | undefined {
-  if (typeof event !== "object" || event === null) {
-    return undefined;
-  }
-  return z.record(z.string(), z.unknown()).parse(event);
-}
-
-function eventId(value: unknown): string | undefined {
-  if (typeof value === "string" || typeof value === "number") {
-    return String(value);
-  }
-  if (typeof value === "bigint") {
-    return value.toString();
-  }
-  return undefined;
-}
-
-function startedActivityScheduledEventId(event: unknown): string | undefined {
-  const record = eventRecord(event);
-  if (record === undefined) {
-    return undefined;
-  }
-  const attributes =
-    record["activityTaskStartedEventAttributes"] ??
-    record["activity_task_started_event_attributes"];
-  const attributesRecord = eventRecord(attributes);
-  return attributesRecord === undefined
-    ? undefined
-    : eventId(
-        attributesRecord["scheduledEventId"] ??
-          attributesRecord["scheduled_event_id"],
-      );
-}
-
-function historyEvents(history: unknown): readonly unknown[] {
-  if (Array.isArray(history)) {
-    return history;
-  }
-  if (typeof history !== "object" || history === null) {
-    return [];
-  }
-  const record = z.record(z.string(), z.unknown()).parse(history);
-  const events = record["events"];
-  return Array.isArray(events) ? events : [];
-}
-
-function eventTypeName(value: unknown): string | undefined {
-  if (typeof value === "string") {
-    return value.toUpperCase().replaceAll(/[^A-Z0-9]+/g, "_");
-  }
-  if (typeof value !== "number") {
-    return undefined;
-  }
-  // These are the stable Temporal HistoryEvent enum values used by
-  // @temporalio/client's fetchHistory() protobuf objects.
-  switch (value) {
-    case 4:
-      return "EVENT_TYPE_WORKFLOW_EXECUTION_TIMED_OUT";
-    case 8:
-      return "EVENT_TYPE_WORKFLOW_TASK_TIMED_OUT";
-    case 10:
-      return "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED";
-    case 11:
-      return "EVENT_TYPE_ACTIVITY_TASK_STARTED";
-    case 14:
-      return "EVENT_TYPE_ACTIVITY_TASK_TIMED_OUT";
-    default:
-      return undefined;
-  }
-}
-
-function eventType(event: unknown): unknown {
-  const record = eventRecord(event);
-  return record?.["eventType"] ?? record?.["event_type"];
-}
-
-export function classifyWorkflowTimeoutHistory(
-  history: unknown,
-): WorkflowTimeoutHistoryClassification {
-  let activityScheduled = false;
-  let activityStarted = false;
-  const scheduledActivityEventIds = new Set<string>();
-  const startedActivityScheduledEventIds = new Set<string>();
-  let latestTimeout: WorkflowTimeoutClassification | undefined;
-  for (const event of historyEvents(history)) {
-    const name = eventTypeName(eventType(event));
-    if (name === undefined) {
-      continue;
-    }
-    if (name === "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED") {
-      activityScheduled = true;
-      const id = eventId(eventRecord(event)?.["eventId"]);
-      if (id !== undefined) {
-        scheduledActivityEventIds.add(id);
-      }
-    }
-    if (name === "EVENT_TYPE_ACTIVITY_TASK_STARTED") {
-      activityStarted = true;
-      const scheduledEventId = startedActivityScheduledEventId(event);
-      if (scheduledEventId !== undefined) {
-        startedActivityScheduledEventIds.add(scheduledEventId);
-      }
-    }
-    switch (name) {
-      case "EVENT_TYPE_WORKFLOW_TASK_TIMED_OUT":
-        latestTimeout = "workflow-task";
-        break;
-      case "EVENT_TYPE_ACTIVITY_TASK_TIMED_OUT":
-        latestTimeout = "activity";
-        break;
-      case "EVENT_TYPE_WORKFLOW_EXECUTION_TIMED_OUT":
-        latestTimeout = "execution";
-        break;
-    }
-  }
-  return {
-    classification: latestTimeout ?? "unknown",
-    activityScheduled,
-    activityStarted,
-    activityScheduledButNotStarted: [...scheduledActivityEventIds].some(
-      (id) => !startedActivityScheduledEventIds.has(id),
-    ),
-  };
-}
 
 function jsonLog(
   level: "info" | "warning" | "error",
@@ -315,6 +180,9 @@ async function inspectTimeoutHistory(
     return {
       classification: {
         classification: "unknown",
+        workflowTaskScheduled: false,
+        workflowTaskStarted: false,
+        workflowTaskScheduledButNotStarted: false,
         activityScheduled: false,
         activityStarted: false,
         activityScheduledButNotStarted: false,
@@ -340,7 +208,8 @@ function timeoutFailureFields(
           workerTaskQueueUnavailable:
             workflowType === "agentTaskWorkflow" &&
             (!classification.activityStarted ||
-              classification.activityScheduledButNotStarted) &&
+              classification.activityScheduledButNotStarted ||
+              classification.workflowTaskScheduledButNotStarted) &&
             (classification.classification === "workflow-task" ||
               classification.classification === "execution"),
         }),

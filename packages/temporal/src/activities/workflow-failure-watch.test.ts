@@ -2,9 +2,9 @@ import { describe, expect, it } from "bun:test";
 import { ApplicationFailure, WorkflowFailedError } from "@temporalio/client";
 import { ActivityFailure, RetryState } from "@temporalio/common";
 import type { AlertmanagerAlert, AlertPoster } from "#lib/alertmanager.ts";
+import { classifyWorkflowTimeoutHistory } from "./workflow-failure-history.ts";
 import {
   buildVisibilityQuery,
-  classifyWorkflowTimeoutHistory,
   pollWorkflowFailuresOnce,
   type WorkflowVisibilityClient,
 } from "./workflow-failure-watch.ts";
@@ -12,6 +12,14 @@ import {
 const NOW = new Date("2026-07-30T18:00:00.000Z");
 const LOOKBACK_MS = 24 * 60 * 60 * 1000;
 const TTL_MS = 24 * 60 * 60 * 1000;
+
+function protobufLong(value: string) {
+  return {
+    low: Number(value),
+    high: 0,
+    unsigned: false,
+  };
+}
 
 type ExecutionInfo = {
   workflowId: string;
@@ -116,17 +124,22 @@ describe("buildVisibilityQuery", () => {
 });
 
 describe("workflow timeout history classification", () => {
-  it("classifies workflow-task timeout history with no activity as worker availability failure", async () => {
+  it("classifies workflow-task timeout history with no activity", () => {
     const classification = classifyWorkflowTimeoutHistory({
       events: [{ eventType: "EVENT_TYPE_WORKFLOW_TASK_TIMED_OUT" }],
     });
     expect(classification).toEqual({
       classification: "workflow-task",
+      workflowTaskScheduled: false,
+      workflowTaskStarted: false,
+      workflowTaskScheduledButNotStarted: false,
       activityScheduled: false,
       activityStarted: false,
       activityScheduledButNotStarted: false,
     });
+  });
 
+  it("reports workflow-task timeout history as worker availability failure", async () => {
     const client = fakeClient(
       [
         {
@@ -160,7 +173,9 @@ describe("workflow timeout history classification", () => {
       "diagnosis worker/task-queue availability failure",
     );
   });
+});
 
+describe("workflow timeout history edge cases", () => {
   it("classifies activity, execution, and unknown timeout histories", () => {
     expect(
       classifyWorkflowTimeoutHistory({
@@ -205,16 +220,69 @@ describe("workflow timeout history classification", () => {
         "agent-task-timeout-after-progress/run-timeout": {
           events: [
             {
-              eventId: 5,
+              event_id: protobufLong("5"),
               eventType: "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
             },
             {
               eventType: "EVENT_TYPE_ACTIVITY_TASK_STARTED",
-              activityTaskStartedEventAttributes: { scheduledEventId: 5 },
+              activity_task_started_event_attributes: {
+                scheduled_event_id: protobufLong("5"),
+              },
             },
             {
-              eventId: 8,
+              event_id: protobufLong("8"),
               eventType: "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
+            },
+            { eventType: "EVENT_TYPE_WORKFLOW_EXECUTION_TIMED_OUT" },
+          ],
+        },
+      },
+    );
+    const { poster, calls } = capturingPoster();
+
+    await pollWorkflowFailuresOnce(client, poster, {
+      now: NOW,
+      lookbackMs: LOOKBACK_MS,
+      ttlMs: TTL_MS,
+    });
+
+    expect(calls[0]?.alerts[0]?.annotations["description"]).toContain(
+      "diagnosis worker/task-queue availability failure",
+    );
+  });
+
+  it("diagnoses an execution timeout with an undispatched later workflow task", async () => {
+    const client = fakeClient(
+      [
+        {
+          workflowId: "agent-task-timeout-after-workflow-progress",
+          runId: "run-timeout",
+          type: "agentTaskWorkflow",
+          taskQueue: "agent-task",
+          closeTime: new Date("2026-07-30T17:50:00.000Z"),
+          status: { name: "TIMED_OUT" },
+        },
+      ],
+      {
+        "agent-task-timeout-after-workflow-progress/run-timeout":
+          rejectWithApplicationFailure("execution timed out"),
+      },
+      {
+        "agent-task-timeout-after-workflow-progress/run-timeout": {
+          events: [
+            {
+              event_id: protobufLong("5"),
+              eventType: "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
+            },
+            {
+              eventType: "EVENT_TYPE_WORKFLOW_TASK_STARTED",
+              workflow_task_started_event_attributes: {
+                scheduled_event_id: protobufLong("5"),
+              },
+            },
+            {
+              event_id: protobufLong("8"),
+              eventType: "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
             },
             { eventType: "EVENT_TYPE_WORKFLOW_EXECUTION_TIMED_OUT" },
           ],
