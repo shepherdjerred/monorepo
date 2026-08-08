@@ -101,20 +101,24 @@ export class TaskStore {
   getPendingCompletionRestore(
     id: TaskId,
     date: string,
-  ): RecurringCompletionRestore | undefined {
-    const target = this.resolveTaskId(id);
-    for (const command of [...this.queue.pending].reverse()) {
-      if (
-        command.type === "set_instance_complete" &&
-        command.taskId === target &&
-        command.date === date &&
-        command.completed &&
-        command.restore !== undefined
-      ) {
-        return command.restore;
+  ): Promise<RecurringCompletionRestore | undefined> {
+    return this.enqueueOperation(() => {
+      const target = this.resolveTaskId(id);
+      let pendingRestore: RecurringCompletionRestore | undefined;
+      for (const command of [...this.queue.pending].reverse()) {
+        if (
+          command.type === "set_instance_complete" &&
+          command.taskId === target &&
+          command.date === date &&
+          command.completed &&
+          command.restore !== undefined
+        ) {
+          pendingRestore = command.restore;
+          break;
+        }
       }
-    }
-    return undefined;
+      return Promise.resolve(pendingRestore);
+    });
   }
 
   constructor(

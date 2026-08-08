@@ -13,6 +13,11 @@ export type TaskToggleExecution<Result> = {
   readonly recurring: RecurringToggleExecution | null;
 };
 
+type PendingRestore =
+  | RecurringCompletionRestore
+  | Promise<RecurringCompletionRestore | undefined>
+  | undefined;
+
 /**
  * Executes the one toggle intent computed at tap time. Keeping the target date
  * and absolute completion state together prevents an offline replay from
@@ -29,7 +34,7 @@ export async function executeTaskToggle<Result>(
       completed: boolean,
       restore?: RecurringCompletionRestore,
     ) => Promise<Result>;
-    readonly pendingRestore?: RecurringCompletionRestore | undefined;
+    readonly pendingRestore?: PendingRestore;
   },
 ): Promise<TaskToggleExecution<Result>> {
   if (task === undefined || scope === "task-status" || !isRecurring(task)) {
@@ -43,7 +48,7 @@ export async function executeTaskToggle<Result>(
   const completed = !task.completeInstances.includes(date);
   const restore = completed
     ? recurringCompletionRestore(task, date)
-    : (operations.pendingRestore ?? null);
+    : ((await operations.pendingRestore) ?? null);
   return {
     result: await operations.setInstanceComplete(
       date,

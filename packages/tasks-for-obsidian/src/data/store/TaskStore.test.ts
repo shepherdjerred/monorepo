@@ -231,7 +231,59 @@ describe("TaskStore server acks", () => {
     const pending = queue.head();
     expect(pending?.type === "set_status" && pending.taskId).toBe(real.id);
   });
+});
 
+describe("TaskStore pending restores", () => {
+  test("reads a pending restore after an in-flight create remaps its id", async () => {
+    const backingStorage = memoryStoreStorage();
+    const aliasWriteStarted = Promise.withResolvers<null>();
+    const releaseAliasWrite = Promise.withResolvers<null>();
+    const storeStorage: MemoryStoreStorage = {
+      ...backingStorage,
+      setIdAliases: async (data) => {
+        aliasWriteStarted.resolve(null);
+        await releaseAliasWrite.promise;
+        await backingStorage.setIdAliases(data);
+      },
+    };
+    const { store, queue } = makeStore(memoryQueueStorage(), storeStorage);
+    await store.restore();
+    const optimistic = await store.dispatch({
+      type: "create",
+      payload: { title: "New" },
+    });
+    if (optimistic === undefined) throw new Error("expected optimistic task");
+    const restore = {
+      scheduled: "2026-08-08",
+      due: null,
+      recurrence: "FREQ=WEEKLY",
+      skipped: false,
+    };
+    await store.dispatch({
+      type: "set_instance_complete",
+      taskId: optimistic.id,
+      date: "2026-08-08",
+      completed: true,
+      restore,
+    });
+    const createCmd = queue.head();
+    if (createCmd?.type !== "create") throw new Error("expected create head");
+    const real = makeTask({ id: taskId("TaskNotes/New.md"), title: "New" });
+
+    const ack = store.applyServerAck(createCmd, real);
+    await aliasWriteStarted.promise;
+    const pendingRestore = store.getPendingCompletionRestore(
+      optimistic.id,
+      "2026-08-08",
+    );
+    releaseAliasWrite.resolve(null);
+
+    await ack;
+    await expect(pendingRestore).resolves.toEqual(restore);
+  });
+});
+
+describe("TaskStore server acks", () => {
   test("delete ack removes from base; update ack merges the server task", async () => {
     const seeded = makeTask();
     const other = makeTask({

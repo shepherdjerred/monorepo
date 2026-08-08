@@ -49,7 +49,7 @@ type TaskContextValue = {
   getPendingCompletionRestore: (
     id: TaskId,
     date: string,
-  ) => RecurringCompletionRestore | undefined;
+  ) => Promise<RecurringCompletionRestore | undefined>;
   createTask: (req: CreateTaskRequest) => Promise<Result<Task, AppError>>;
   updateTask: (
     id: TaskId,

@@ -329,10 +329,12 @@ export class TaskRepository {
       if (options.restore === undefined) {
         return fresh.task; // set-semantics no-op
       }
-      if (
-        !options.completed &&
-        !recurringRestoreMatchesCurrent(fresh.task, options.restore, dateStr)
-      ) {
+      if (!options.completed) {
+        if (
+          recurringRestoreMatchesCurrent(fresh.task, options.restore, dateStr)
+        ) {
+          return fresh.task;
+        }
         assertRecurringRestoreIsCurrent({
           task: fresh.task,
           restore: options.restore,
