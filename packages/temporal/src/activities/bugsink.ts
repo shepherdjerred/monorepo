@@ -1,5 +1,6 @@
 import { Context } from "@temporalio/activity";
 import * as k8s from "@kubernetes/client-node";
+import { kubectlExecInPod } from "#shared/kubectl-exec.ts";
 
 const NAMESPACE = "bugsink";
 const CONTAINER = "bugsink";
@@ -35,7 +36,12 @@ export const bugsinkHousekeepingActivities = {
       // heartbeatTimeout: "90 seconds" in workflows/bugsink.ts. SDK
       // throttles transmission to 80% of timeout automatically.
       Context.current().heartbeat({ command: command.join(" ") });
-      const out = await kubectlExec(podName, command);
+      const out = await kubectlExecInPod({
+        namespace: NAMESPACE,
+        container: CONTAINER,
+        pod: podName,
+        command,
+      });
       const trimmed = out.trim();
       results.push(`${command.join(" ")}: ${trimmed === "" ? "ok" : trimmed}`);
     }
@@ -61,36 +67,3 @@ async function findRunningBugsinkPod(): Promise<string> {
 // ErrorEvent objects under Bun (the library targets Node's `ws` shim, which
 // Bun doesn't replicate exactly). Pod discovery via the HTTP API still works
 // and is kept above.
-async function kubectlExec(
-  podName: string,
-  command: string[],
-): Promise<string> {
-  const args = [
-    "kubectl",
-    "exec",
-    "--namespace",
-    NAMESPACE,
-    "--container",
-    CONTAINER,
-    podName,
-    "--",
-    ...command,
-  ];
-  const proc = Bun.spawn(args, {
-    stdin: "ignore",
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-  const [stdout, stderr, exitCode] = await Promise.all([
-    new Response(proc.stdout).text(),
-    new Response(proc.stderr).text(),
-    proc.exited,
-  ]);
-  if (exitCode !== 0) {
-    const detail = stderr.trim() || stdout.trim() || "(no output)";
-    throw new Error(
-      `kubectl exec [${command.join(" ")}] in ${NAMESPACE}/${podName} exited ${String(exitCode)}: ${detail}`,
-    );
-  }
-  return stdout;
-}

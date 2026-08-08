@@ -2,6 +2,11 @@ import type { PrometheusRuleSpecGroups } from "@shepherdjerred/homelab/cdk8s/gen
 import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { escapePrometheusTemplate } from "./shared.ts";
 
+const zfsScrubOverdueExpression = [
+  "(time() - zfs_zpool_last_scrub_completion_timestamp > 777600) and ",
+  "on(instance, zpool_name) (zfs_zpool_scan_state != 1)",
+].join("");
+
 export function getZfsMaintenanceRuleGroups(): PrometheusRuleSpecGroups[] {
   return [
     {
@@ -56,11 +61,11 @@ export function getZfsMaintenanceRuleGroups(): PrometheusRuleSpecGroups[] {
               "ZFS scrub overdue on {{ $labels.zpool_name }}",
             ),
             description: escapePrometheusTemplate(
-              "ZFS pool {{ $labels.zpool_name }} has not been scrubbed in over 9 days. The weekly Temporal maintenance workflow may have failed.",
+              "ZFS pool {{ $labels.zpool_name }} has never completed a scrub or has not been scrubbed in over 9 days. The weekly Temporal maintenance workflow may have failed.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "zfs_zpool_last_scrub_completion_timestamp > 0 and (time() - zfs_zpool_last_scrub_completion_timestamp) > 777600",
+            zfsScrubOverdueExpression,
           ),
           for: "1h",
           labels: {

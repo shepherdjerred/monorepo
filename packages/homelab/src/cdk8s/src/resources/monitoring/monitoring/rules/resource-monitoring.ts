@@ -12,6 +12,13 @@ const NOT_CI_NODE = `node!="${CI_NODE_HOSTNAME}"`;
 // watch it (crypto-mining), we scope to it explicitly.
 const CI_NODE_ONLY = `node="${CI_NODE_HOSTNAME}"`;
 
+const memoryLeakExpression = [
+  "((node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) - on(instance) ",
+  "group_left node_zfs_arc_size) - ((node_memory_MemTotal_bytes offset 24h - ",
+  "node_memory_MemAvailable_bytes offset 24h) - on(instance) group_left ",
+  "node_zfs_arc_size offset 24h) > 8589934592",
+].join("");
+
 export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
   return [
     // CPU monitoring
@@ -89,8 +96,9 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
             summary: "Potential memory leak detected",
           },
+          // 8GB increase over 24h, excluding ZFS ARC cache.
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "((node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) - on(instance) group_left node_zfs_arc_size) - ((node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) - on(instance) group_left node_zfs_arc_size offset 24h) > 8589934592", // 8GB increase over 24h, excluding ZFS ARC cache
+            memoryLeakExpression,
           ),
           for: "4h",
           labels: { severity: "warning" },

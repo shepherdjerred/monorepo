@@ -66,6 +66,11 @@ export async function createZfsZpoolMonitoring(chart: Chart) {
       },
     },
     serviceAccount,
+    podMetadata: {
+      labels: {
+        app: "zfs-zpool-collector",
+      },
+    },
     securityContext: {
       ensureNonRoot: false,
       fsGroup: 0,
