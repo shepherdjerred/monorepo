@@ -126,7 +126,14 @@ export function createBuildkiteMaintenanceWorker(chart: Chart): void {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
     automountServiceAccountToken: false,
-    metadata: { name: WORKER_NAME, namespace: NAMESPACE },
+    metadata: {
+      name: WORKER_NAME,
+      namespace: NAMESPACE,
+      annotations: {
+        "ignore-check.kube-linter.io/run-as-non-root":
+          "Buildkite CI cache writers run as root; maintenance must share their UID to prune cache entries",
+      },
+    },
     podMetadata: { labels: WORKER_LABELS },
     securityContext: {
       fsGroup: 1000,
@@ -200,9 +207,12 @@ export function createBuildkiteMaintenanceWorker(chart: Chart): void {
         { name: "app-metrics", number: 9465 },
       ],
       securityContext: {
-        user: 1000,
-        group: 1000,
-        ensureNonRoot: true,
+        // Buildkite's CI image has no USER directive and writes the shared
+        // cache as root. Run maintenance with the same UID so root-owned
+        // cache entries remain writable and prunable after GC.
+        user: 0,
+        group: 0,
+        ensureNonRoot: false,
         allowPrivilegeEscalation: false,
         readOnlyRootFilesystem: false,
       },

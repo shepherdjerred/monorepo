@@ -119,6 +119,7 @@ ARG UV_VERSION=0.12.3
 ARG TRIVY_VERSION=0.72.0
 # renovate: datasource=github-releases depName=Kometa-Team/Kometa
 ARG KOMETA_VERSION=2.4.5
+ARG KOMETA_COMMIT=4ea818399a458f9e791ca04b4a02458751cf2a46
 
 # --- Base system deps: ca-certificates, curl, git (gh/claude open PRs) ---
 RUN set -e; \
@@ -299,6 +300,8 @@ RUN set -e; \
 # direct CLI behavior while the Temporal activity supplies config/credentials.
 RUN set -e; \
     git clone --depth 1 --branch "v${KOMETA_VERSION}" "https://github.com/Kometa-Team/Kometa.git" /opt/kometa; \
+    actual_commit="$(git -C /opt/kometa rev-parse HEAD)"; \
+    [ "$actual_commit" = "$KOMETA_COMMIT" ] || { echo "Kometa commit mismatch (expected $KOMETA_COMMIT, got $actual_commit)" >&2; exit 1; }; \
     python3 -m venv /opt/kometa/venv; \
     /opt/kometa/venv/bin/python -m pip install --no-cache-dir --upgrade pip; \
     /opt/kometa/venv/bin/pip install --no-cache-dir -r /opt/kometa/requirements.txt; \
