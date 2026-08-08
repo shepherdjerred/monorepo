@@ -195,6 +195,22 @@ describe("deriveTodayAgenda", () => {
 });
 
 describe("deriveUpcomingAgenda", () => {
+  test("previews the next recurrence after optimistic completion", () => {
+    const result = deriveUpcomingAgenda(
+      [
+        makeTask("weekly-done", {
+          recurrence: "DTSTART:20260801;FREQ=WEEKLY",
+          scheduled: "2026-08-08",
+          completeInstances: ["2026-08-08"],
+        }),
+      ],
+      "2026-08-07",
+    );
+
+    expect(result[0]?.day).toBe("2026-08-15");
+    expect(result[0]?.entries[0]?.completionDay).toBe("2026-08-15");
+  });
+
   test("groups each task by its earliest future planned date or deadline", () => {
     const result = deriveUpcomingAgenda(
       [

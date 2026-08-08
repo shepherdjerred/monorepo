@@ -279,17 +279,25 @@ function reasonsForUpcoming(
 ): AgendaDateReason[] {
   const reasons: AgendaDateReason[] = [];
   const recurring = isRecurring(task);
+  let currentOccurrenceProcessed = false;
 
   if (task.scheduled !== undefined) {
     const day = taskDay(task.scheduled);
-    if (day > today) {
+    currentOccurrenceProcessed =
+      task.completeInstances.includes(day) ||
+      task.skippedInstances.includes(day);
+    if (day > today && !currentOccurrenceProcessed) {
       addReason(reasons, { kind: "planned", day, recurring });
     }
   }
 
   if (task.due !== undefined) {
     const day = taskDay(task.due);
-    if (day > today) {
+    const processed =
+      task.completeInstances.includes(day) ||
+      task.skippedInstances.includes(day);
+    currentOccurrenceProcessed ||= processed;
+    if (day > today && !processed) {
       addReason(reasons, { kind: "deadline", day, recurring: false });
     }
   }
@@ -299,7 +307,11 @@ function reasonsForUpcoming(
   // is still actionable; doing so makes the visible row complete a different
   // date. A date-less recurring task has no current occurrence field, so its
   // next RRULE day is the explicit completion target carried by the agenda.
-  if (recurring && task.scheduled === undefined && task.due === undefined) {
+  if (
+    recurring &&
+    (currentOccurrenceProcessed ||
+      (task.scheduled === undefined && task.due === undefined))
+  ) {
     const occurrence = nextOccurrenceAfter(task, today, recurrenceHorizonDays);
     if (occurrence !== undefined) {
       addReason(reasons, {
