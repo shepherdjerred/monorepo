@@ -196,7 +196,9 @@ overrides:
     spec: {
       accessModes: ["ReadWriteMany"],
       storageClassName: NVME_STORAGE_CLASS_LZ4,
-      resources: { requests: { storage: Quantity.fromString("20Gi") } },
+      // The mirror is a shared FULL-clone object cache; retain 3x headroom so
+      // repository growth and concurrent mirror updates do not exhaust it.
+      resources: { requests: { storage: Quantity.fromString("60Gi") } },
     },
   });
 

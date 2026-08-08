@@ -295,25 +295,25 @@
   },
   {
     "namespace": "plane",
-    "name": "pvc-plane-monitor-vol",
+    "name": "pvc-plane-monitor-vol-plane-monitor-wl-0",
     "backup": "enabled",
     "reason": "Plane monitor state used by the issue tracker"
   },
   {
     "namespace": "plane",
-    "name": "pvc-plane-pgdb-vol",
+    "name": "pvc-plane-pgdb-vol-plane-pgdb-wl-0",
     "backup": "enabled",
     "reason": "Plane PostgreSQL issue-tracking database"
   },
   {
     "namespace": "plane",
-    "name": "pvc-plane-rabbitmq-vol",
+    "name": "pvc-plane-rabbitmq-vol-plane-rabbitmq-wl-0",
     "backup": "enabled",
     "reason": "Plane RabbitMQ durable queue state"
   },
   {
     "namespace": "plane",
-    "name": "pvc-plane-redis-vol",
+    "name": "pvc-plane-redis-vol-plane-redis-wl-0",
     "backup": "enabled",
     "reason": "Plane Redis application state"
   },
