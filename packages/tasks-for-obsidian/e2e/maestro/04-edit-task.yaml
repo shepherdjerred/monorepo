@@ -6,7 +6,7 @@ appId: org.reactjs.native.example.TasksForObsidian
     id: "tab-inbox"
 - extendedWaitUntil:
     visible:
-      id: "task-row-TaskNotes/task-with-details-3c4d5e6f.md"
+      id: "task-row-TaskNotes/Edited by e2e.md"
     timeout: 15000
 - retry:
     maxRetries: 2

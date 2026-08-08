@@ -27,23 +27,14 @@ appId: org.reactjs.native.example.TasksForObsidian
       id: "task-row-TaskNotes/Swipe complete task.md"
     timeout: 15000
 - tapOn:
-    id: "fab-add-task"
+    id: "tab-inbox"
 - extendedWaitUntil:
     visible:
-      id: "quick-add-input"
-    timeout: 10000
-- tapOn:
-    id: "quick-add-input"
-- inputText: "Swipe delete task today"
-- tapOn:
-    id: "quick-add-submit"
-- extendedWaitUntil:
-    visible:
-      id: "task-row-TaskNotes/Swipe delete task.md"
+      id: "task-row-TaskNotes/swipe-delete-task-5e6f7a8b.md"
     timeout: 20000
 - swipe:
     from:
-      id: "task-row-TaskNotes/Swipe delete task.md"
+      id: "task-row-TaskNotes/swipe-delete-task-5e6f7a8b.md"
     direction: LEFT
 - extendedWaitUntil:
     visible:
@@ -53,5 +44,5 @@ appId: org.reactjs.native.example.TasksForObsidian
     text: "Delete"
 - extendedWaitUntil:
     notVisible:
-      id: "task-row-TaskNotes/Swipe delete task.md"
+      id: "task-row-TaskNotes/swipe-delete-task-5e6f7a8b.md"
     timeout: 15000

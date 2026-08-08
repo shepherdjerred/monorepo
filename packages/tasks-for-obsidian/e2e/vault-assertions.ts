@@ -19,6 +19,16 @@ function fileWithTitle(
   return undefined;
 }
 
+async function readVaultFiles(vaultDir: string): Promise<Map<string, string>> {
+  const tasksDir = path.join(vaultDir, TASKS_DIR);
+  const files = new Map<string, string>();
+  for (const entry of await readdir(tasksDir)) {
+    if (!entry.endsWith(".md")) continue;
+    files.set(entry, await readFile(path.join(tasksDir, entry), "utf8"));
+  }
+  return files;
+}
+
 const VAULT_ASSERTIONS: readonly VaultAssertion[] = [
   {
     name: 'a task file containing "Created by e2e" exists (01-create-task)',
@@ -47,9 +57,8 @@ const VAULT_ASSERTIONS: readonly VaultAssertion[] = [
     name: 'the seeded task file is renamed to "Edited by e2e" (04-edit-task)',
     flow: "04-edit-task.yaml",
     check: (files) =>
-      files
-        .get("task-with-details-3c4d5e6f.md")
-        ?.includes("title: Edited by e2e") === true,
+      files.get("Edited by e2e.md")?.includes("title: Edited by e2e") ===
+        true && !files.has("task-with-details-3c4d5e6f.md"),
   },
   {
     name: '"Seeded done task" has status open (10-completed-search-uncomplete)',
@@ -105,17 +114,6 @@ export async function assertVaultState(
   log: (message: string) => void,
   focusedFlow: string | null = null,
 ): Promise<void> {
-  const tasksDir = path.join(vaultDir, TASKS_DIR);
-  const files = new Map<string, string>();
-  for (const entry of await readdir(tasksDir)) {
-    if (!entry.endsWith(".md")) continue;
-    files.set(entry, await readFile(path.join(tasksDir, entry), "utf8"));
-  }
-  log(
-    `vault contains ${String(files.size)} task file(s): ${[...files.keys()].join(", ")}`,
-  );
-
-  let failures = 0;
   const assertions =
     focusedFlow === null
       ? VAULT_ASSERTIONS
@@ -132,12 +130,23 @@ export async function assertVaultState(
       `no vault assertions registered for ${String(focusedFlow)}`,
     );
   }
-  for (const assertion of assertions) {
-    const passed = assertion.check(files);
-    console.log(`[e2e] ${passed ? "PASS" : "FAIL"} — ${assertion.name}`);
-    if (!passed) failures += 1;
+
+  const deadline = Date.now() + 30_000;
+  let files = await readVaultFiles(vaultDir);
+  for (;;) {
+    const failures = assertions.filter((assertion) => !assertion.check(files));
+    if (failures.length === 0) break;
+    if (Date.now() >= deadline) {
+      throw new Error(`${String(failures.length)} vault assertion(s) failed`);
+    }
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    files = await readVaultFiles(vaultDir);
   }
-  if (failures > 0) {
-    throw new Error(`${String(failures)} vault assertion(s) failed`);
+
+  log(
+    `vault contains ${String(files.size)} task file(s): ${[...files.keys()].join(", ")}`,
+  );
+  for (const assertion of assertions) {
+    console.log(`[e2e] PASS — ${assertion.name}`);
   }
 }
