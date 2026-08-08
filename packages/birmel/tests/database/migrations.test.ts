@@ -232,6 +232,15 @@ function seedProductionShapedRows(database: Database): void {
       '2026-08-01T00:00:00.000Z'
     );
 
+    INSERT INTO "ScheduledAnnouncement" (
+      "id", "guildId", "channelId", "message", "scheduledAt", "repeat",
+      "createdBy", "createdAt"
+    ) VALUES (
+      7, 'guild-announcement', 'channel-announcement',
+      'Migrated weekly announcement', '2026-08-20T17:30:00.000Z', 'weekly',
+      'trusted-user', '2026-08-01T00:00:00.000Z'
+    );
+
     INSERT INTO "AgentJob" (
       "id", "guildId", "channelId", "threadId", "userId", "name",
       "scheduleKind", "scheduleValue", "timezone", "nextRunAt", "status",
@@ -515,6 +524,38 @@ function expectPreservedJobRows(database: Database): void {
     toolId: null,
     toolInput: null,
     legacyTaskId: 42,
+    status: "active",
+  });
+  expect(
+    database
+      .query<
+        {
+          guildId: string;
+          channelId: string | null;
+          sourceChannelId: string | null;
+          actorUserId: string;
+          scheduleKind: string;
+          scheduleValue: string;
+          nextRunAt: string | null;
+          payloadKind: string;
+          message: string | null;
+          status: string;
+        },
+        []
+      >(
+        `SELECT "guildId", "channelId", "sourceChannelId", "actorUserId", "scheduleKind", "scheduleValue", "nextRunAt", "payloadKind", "message", "status" FROM "AgentJob" WHERE "name" = 'Migrated announcement #7'`,
+      )
+      .get(),
+  ).toEqual({
+    guildId: "guild-announcement",
+    channelId: "channel-announcement",
+    sourceChannelId: "channel-announcement",
+    actorUserId: "trusted-user",
+    scheduleKind: "every",
+    scheduleValue: "1w",
+    nextRunAt: "2026-08-20T17:30:00.000Z",
+    payloadKind: "message",
+    message: "Migrated weekly announcement",
     status: "active",
   });
 }

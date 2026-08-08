@@ -197,6 +197,10 @@ function loadFeatureConfig(environment: Environment) {
         environment["SCHEDULER_TICK_INTERVAL_MS"],
         10_000,
       ),
+      operationTimeoutMs: parseNumber(
+        environment["SCHEDULER_OPERATION_TIMEOUT_MS"],
+        30_000,
+      ),
       shutdownTimeoutMs: parseNumber(
         environment["SCHEDULER_SHUTDOWN_TIMEOUT_MS"],
         30_000,

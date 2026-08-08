@@ -347,6 +347,37 @@ SELECT
   "id", "createdAt", "updatedAt"
 FROM "ScheduledTask";
 
+INSERT INTO "new_AgentJob" (
+  "id", "guildId", "channelId", "actorUserId", "sourceChannelId",
+  "name", "description", "scheduleKind", "scheduleValue", "timezone",
+  "nextRunAt", "status", "payloadKind", "message", "deliveryMode",
+  "maxAttempts", "timeoutMs", "attemptCount", "lastRunAt", "lastStatus",
+  "lastError", "createdAt", "updatedAt"
+)
+SELECT
+  lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' ||
+    substr(lower(hex(randomblob(2))), 2) || '-' ||
+    substr('89ab', abs(random()) % 4 + 1, 1) ||
+    substr(lower(hex(randomblob(2))), 2) || '-' || lower(hex(randomblob(6))),
+  "guildId", "channelId", "createdBy", "channelId",
+  'Migrated announcement #' || CAST("id" AS TEXT),
+  'Migrated from ScheduledAnnouncement #' || CAST("id" AS TEXT),
+  CASE
+    WHEN "repeat" IN ('daily', 'weekly') THEN 'every'
+    WHEN "repeat" = 'monthly' THEN 'cron'
+    ELSE 'at'
+  END,
+  CASE "repeat"
+    WHEN 'daily' THEN '1d'
+    WHEN 'weekly' THEN '1w'
+    WHEN 'monthly' THEN strftime('%M %H %d * *', "scheduledAt")
+    ELSE CAST("scheduledAt" AS TEXT)
+  END,
+  'UTC', "scheduledAt", 'active', 'message', "message", 'discord',
+  3, 300000, 0, NULL, NULL, NULL, "createdAt", "createdAt"
+FROM "ScheduledAnnouncement"
+WHERE "sentAt" IS NULL;
+
 DROP TABLE "AgentJob";
 ALTER TABLE "new_AgentJob" RENAME TO "AgentJob";
 DROP TABLE "ScheduledTask";

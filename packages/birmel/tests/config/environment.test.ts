@@ -20,6 +20,10 @@ describe("strict environment configuration", () => {
     ["malformed number", { AGENT_RESPONSE_TIMEOUT_MS: "fast" }],
     ["non-positive timeout", { AGENT_RESPONSE_TIMEOUT_MS: "0" }],
     ["non-positive job concurrency", { SCHEDULER_MAX_CONCURRENT_JOBS: "0" }],
+    [
+      "non-positive scheduler operation timeout",
+      { SCHEDULER_OPERATION_TIMEOUT_MS: "0" },
+    ],
     ["too many steps", { AGENT_MAX_STEPS: "9" }],
     ["empty model", { OPENAI_MODEL: "" }],
     ["malformed user IDs", { TRUSTED_USER_IDS: '["not-a-user"]' }],

@@ -3,6 +3,7 @@ import {
   runScheduledJob,
   throwIfAborted,
 } from "@shepherdjerred/birmel/scheduler/utils/job-runner.ts";
+import { waitUntilSettled } from "@shepherdjerred/birmel/scheduler/index.ts";
 
 describe("throwIfAborted", () => {
   test("does not throw when signal is not aborted", () => {
@@ -98,5 +99,16 @@ describe("runScheduledJob", () => {
       },
     );
     expect(observedAborted).toBe(false);
+  });
+});
+
+describe("waitUntilSettled", () => {
+  test("releases a scheduler barrier when an operation stalls", async () => {
+    const stalled = new Promise<void>(() => {
+      // Intentionally never settle: this simulates a hung scheduler sibling.
+    });
+    const settled = await waitUntilSettled(stalled, 10);
+
+    expect(settled).toBe(false);
   });
 });

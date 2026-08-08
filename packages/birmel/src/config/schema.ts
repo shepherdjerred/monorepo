@@ -166,6 +166,7 @@ export const SchedulerConfigSchema = z.object({
   maxRecurringTasks: z.number().int().positive().default(50),
   maxConcurrentJobs: z.number().int().positive().default(5),
   tickIntervalMs: z.number().int().positive().default(10_000),
+  operationTimeoutMs: z.number().int().positive().default(30_000),
   shutdownTimeoutMs: z.number().int().positive().default(30_000),
 });
 

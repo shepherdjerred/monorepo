@@ -2,7 +2,6 @@ import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { getErrorMessage } from "@shepherdjerred/birmel/utils/errors.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { checkAndSendDailyPosts } from "./daily-posts.ts";
-import { runAnnouncementsJob } from "./jobs/announcements.ts";
 import { aggregateActivityMetrics } from "./jobs/activity-aggregator.ts";
 import { checkAndPostBirthdays } from "./jobs/birthday-checker.ts";
 import {
@@ -18,7 +17,7 @@ let schedulerInterval: ReturnType<typeof setInterval> | null = null;
 let schedulerTick: Promise<void> | null = null;
 let schedulerStarted = false;
 
-async function waitUntilSettled(
+export async function waitUntilSettled(
   operation: Promise<void>,
   timeoutMs: number,
 ): Promise<boolean> {
@@ -50,26 +49,34 @@ async function settleOperation(operation: Promise<void>): Promise<true> {
 
 async function runSchedulerOperations(): Promise<void> {
   const config = getConfig();
-  const operations: Promise<void>[] = [
-    runAnnouncementsJob(),
-    checkAndPostBirthdays(),
-    aggregateActivityMetrics(),
-    checkAndStartElections(),
-    checkAndEndElections(),
-    processElectionResults(),
-    runAgentJobsJob(),
+  const operations: { name: string; operation: Promise<void> }[] = [
+    { name: "birthdays", operation: checkAndPostBirthdays() },
+    { name: "activity", operation: aggregateActivityMetrics() },
+    { name: "election-start", operation: checkAndStartElections() },
+    { name: "election-end", operation: checkAndEndElections() },
+    { name: "election-results", operation: processElectionResults() },
+    { name: "agent-jobs", operation: runAgentJobsJob() },
   ];
   if (config.dailyPosts.enabled) {
-    operations.push(checkAndSendDailyPosts());
+    operations.push({
+      name: "daily-posts",
+      operation: checkAndSendDailyPosts(),
+    });
   }
-  const results = await Promise.allSettled(operations);
-  for (const result of results) {
-    if (result.status === "rejected") {
-      logger.error("Scheduled operation failed", {
-        error: getErrorMessage(result.reason),
-      });
-    }
-  }
+  await Promise.all(
+    operations.map(async ({ name, operation }) => {
+      const settled = await waitUntilSettled(
+        operation,
+        config.scheduler.operationTimeoutMs,
+      );
+      if (!settled) {
+        logger.error("Scheduled operation timed out", {
+          operation: name,
+          timeoutMs: config.scheduler.operationTimeoutMs,
+        });
+      }
+    }),
+  );
 }
 
 export function runSchedulerTick(): Promise<void> {
