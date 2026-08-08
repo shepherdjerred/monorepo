@@ -143,23 +143,33 @@ describe("applyCommand — idempotent absolute-state semantics", () => {
     expect(d.get(id)?.completeInstances).toEqual([]);
   });
 
-  test("rejects a recurrence restore while completing", () => {
-    expect(
-      CommandSchema.safeParse({
-        id: "invalid-restore",
-        createdAt: 0,
-        type: "set_instance_complete",
-        taskId: id,
-        date: "2026-07-03",
-        completed: true,
-        restore: {
-          recurrence: "FREQ=DAILY",
-          scheduled: "2026-07-03",
-          due: null,
-          skipped: false,
-        },
-      }).success,
-    ).toBe(false);
+  test("retains completion restore metadata without applying it optimistically", () => {
+    const parsed = CommandSchema.safeParse({
+      id: "invalid-restore",
+      createdAt: 0,
+      type: "set_instance_complete",
+      taskId: id,
+      date: "2026-07-03",
+      completed: true,
+      restore: {
+        recurrence: "FREQ=DAILY",
+        scheduled: "2026-07-03",
+        due: null,
+        skipped: false,
+      },
+    });
+    expect(parsed.success).toBe(true);
+    if (!parsed.success) return;
+
+    const original = makeTask({
+      recurrence: "FREQ=DAILY",
+      scheduled: "2026-07-03",
+    });
+    const applied = applyCommand(parsed.data, new Map([[id, original]])).get(
+      id,
+    );
+    expect(applied?.completeInstances).toEqual(["2026-07-03"]);
+    expect(applied?.scheduled).toBe("2026-07-03");
   });
 
   test("recurring Undo restores the pre-completion schedule atomically", () => {

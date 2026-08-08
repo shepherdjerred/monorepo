@@ -3,6 +3,7 @@ import { useCallback, useMemo, useState } from "react";
 import type { TaskId } from "../domain/types";
 import { isActiveStatus } from "../domain/status";
 import {
+  completionTargetDate,
   isRecurring,
   localTodayYmd,
   nextOccurrenceAfter,
@@ -149,8 +150,15 @@ export function useTasks() {
         options?.scope ?? "occurrence",
         {
           toggleStatus: () => ctx.toggleStatus(id),
-          setInstanceComplete: (date, completed) =>
-            ctx.setInstanceComplete(id, date, completed),
+          setInstanceComplete: (date, completed, restore) =>
+            ctx.setInstanceComplete(id, date, completed, restore),
+          pendingRestore:
+            task?.recurrence === undefined
+              ? undefined
+              : ctx.getPendingCompletionRestore(
+                  id,
+                  options?.occurrenceDate ?? completionTargetDate(task),
+                ),
         },
       );
       const recurring = execution.recurring;

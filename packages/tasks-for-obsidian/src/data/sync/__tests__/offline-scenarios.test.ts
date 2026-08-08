@@ -442,6 +442,59 @@ describe("recurring completion captures the tapped day", () => {
     expect(server?.scheduled).toBe("2026-08-01");
     expect(server?.due).toBeUndefined();
   });
+
+  test("offline re-toggle preserves the pending completion restore", async () => {
+    const harness = makeHarness();
+    await harness.store.restore();
+    const recurring = makeTask({
+      recurrence: "DTSTART:20260801;FREQ=WEEKLY",
+      scheduled: "2026-08-08",
+      due: "2026-08-10",
+    });
+    harness.server.seed(recurring);
+    expect((await harness.engine.syncNow()).ok).toBe(true);
+    harness.server.goOffline();
+
+    const restore = {
+      recurrence: "DTSTART:20260801;FREQ=WEEKLY",
+      scheduled: "2026-08-08",
+      due: "2026-08-10",
+      skipped: false,
+    };
+    await harness.store.dispatch({
+      type: "set_instance_complete",
+      taskId: recurring.id,
+      date: "2026-08-08",
+      completed: true,
+      restore,
+    });
+    await harness.store.dispatch({
+      type: "set_instance_complete",
+      taskId: recurring.id,
+      date: "2026-08-08",
+      completed: false,
+      restore,
+    });
+
+    harness.server.goOnline();
+    expect((await harness.engine.syncNow()).ok).toBe(true);
+    const completionCalls = harness.server.calls.filter(
+      (call) => call.method === "completeRecurringInstance",
+    );
+    expect(completionCalls).toHaveLength(2);
+    expect(completionCalls[0]?.payload).toEqual({
+      date: "2026-08-08",
+      completed: true,
+    });
+    expect(completionCalls[1]?.payload).toEqual({
+      date: "2026-08-08",
+      completed: false,
+      restore,
+    });
+    expect(harness.server.tasks.get(recurring.id)?.scheduled).toBe(
+      "2026-08-08",
+    );
+  });
 });
 
 describe("engine disposal (API client swapped in Settings)", () => {

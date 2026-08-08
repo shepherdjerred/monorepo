@@ -3,6 +3,7 @@ import { describe, expect, test } from "bun:test";
 import { executeTaskToggle, recurringCompletionRestore } from "./task-toggle";
 import { taskId } from "./types";
 import type { Task } from "./types";
+import type { RecurringCompletionRestore } from "tasknotes-types/v2";
 
 function recurringTask(completeInstances: readonly string[]): Task {
   return {
@@ -81,6 +82,32 @@ describe("executeTaskToggle", () => {
       recurring: { date: "2026-08-15", completed: false, restore: null },
     });
     expect(calls).toEqual([{ date: "2026-08-15", completed: false }]);
+  });
+
+  test("passes a pending completion restore when unchecking offline", async () => {
+    const restore = {
+      scheduled: "2026-08-08",
+      due: null,
+      recurrence: "DTSTART:20260808;FREQ=WEEKLY",
+      skipped: false,
+    };
+    let received: RecurringCompletionRestore | undefined;
+    const execution = await executeTaskToggle(
+      recurringTask(["2026-08-15"]),
+      "2026-08-15",
+      "occurrence",
+      {
+        toggleStatus: async () => "status",
+        setInstanceComplete: async (_date, _completed, pendingRestore) => {
+          received = pendingRestore;
+          return "instance";
+        },
+        pendingRestore: restore,
+      },
+    );
+
+    expect(received).toEqual(restore);
+    expect(execution.recurring?.restore).toEqual(restore);
   });
 
   test("captures the exact recurrence fields needed by atomic Undo", () => {

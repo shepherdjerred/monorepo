@@ -76,7 +76,7 @@ export function assertRecurringRestoreIsCurrent({
   if (
     !recurrenceMatches ||
     (restore.scheduled !== null && task.scheduled !== expectedScheduled) ||
-    (restore.due !== null && task.due !== expectedDue)
+    (restore.due === null ? task.due !== undefined : task.due !== expectedDue)
   ) {
     throw new Error(
       `recurring restore for ${task.path} is stale; refusing to overwrite newer task state`,

@@ -98,6 +98,25 @@ export class TaskStore {
   /** Wired to SyncEngine.requestSync — fired after every dispatch. */
   onDispatch: (() => void) | null = null;
 
+  getPendingCompletionRestore(
+    id: TaskId,
+    date: string,
+  ): RecurringCompletionRestore | undefined {
+    const target = this.resolveTaskId(id);
+    for (const command of [...this.queue.pending].reverse()) {
+      if (
+        command.type === "set_instance_complete" &&
+        command.taskId === target &&
+        command.date === date &&
+        command.completed &&
+        command.restore !== undefined
+      ) {
+        return command.restore;
+      }
+    }
+    return undefined;
+  }
+
   constructor(
     private readonly queue: CommandQueue,
     private readonly storage: TaskStoreStorage = defaultStorage,
@@ -268,6 +287,7 @@ export class TaskStore {
             taskId: resolvedTaskId,
             date: input.date,
             completed: true,
+            ...(input.restore === undefined ? {} : { restore: input.restore }),
           };
         }
         return {

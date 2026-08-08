@@ -262,7 +262,7 @@ export class SyncEngine {
           {
             date: command.date,
             completed: command.completed,
-            ...(command.restore === undefined
+            ...(command.completed || command.restore === undefined
               ? {}
               : { restore: command.restore }),
           },

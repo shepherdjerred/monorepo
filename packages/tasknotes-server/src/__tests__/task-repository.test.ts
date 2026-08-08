@@ -437,6 +437,38 @@ tags:
     ).toBe("2026-09-01");
   });
 
+  test("rejects an Undo snapshot after a nullable due date was added", async () => {
+    await seed(
+      "TaskNotes/weekly.md",
+      `---
+title: Weekly review
+status: open
+scheduled: 2026-09-01
+due: 2026-09-02
+recurrence: FREQ=WEEKLY
+complete_instances:
+  - 2026-08-01
+tags:
+  - task
+---
+`,
+    );
+    await repo.scan();
+
+    await expect(
+      repo.completeInstance("TaskNotes/weekly.md", {
+        date: "2026-08-01",
+        completed: false,
+        restore: {
+          scheduled: null,
+          due: null,
+          recurrence: "FREQ=WEEKLY",
+          skipped: false,
+        },
+      }),
+    ).rejects.toThrow("restore");
+  });
+
   test("bodyless call samples the clock once", async () => {
     let calls = 0;
     await seed("TaskNotes/water.md", RECURRING);

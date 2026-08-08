@@ -84,7 +84,7 @@ export type SetInstanceCompleteCommand = CommandBase &
   (
     | {
         readonly completed: true;
-        readonly restore?: undefined;
+        readonly restore?: RecurringCompletionRestore | undefined;
       }
     | {
         readonly completed: false;
@@ -147,7 +147,7 @@ export const CommandSchema = z.union([
   StandardCommandSchema,
   SetInstanceCompleteBaseSchema.extend({
     completed: z.literal(true),
-    restore: z.undefined().optional(),
+    restore: RecurringCompletionRestoreSchema.optional(),
   }),
   SetInstanceCompleteBaseSchema.extend({
     completed: z.literal(false),
@@ -295,7 +295,7 @@ function applyInstanceCompletion(
         ? withoutSkippedTarget
         : existing.skippedInstances,
   };
-  if (cmd.restore === undefined) return updated;
+  if (cmd.restore === undefined || cmd.completed) return updated;
 
   updated.recurrence = cmd.restore.recurrence;
   if (cmd.restore.scheduled === null) {

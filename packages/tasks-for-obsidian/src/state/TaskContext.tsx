@@ -46,6 +46,10 @@ type TaskContextValue = {
   syncStatus: SyncStatus;
   lastSyncTime: number | null;
   resolveTaskId: (id: TaskId) => TaskId;
+  getPendingCompletionRestore: (
+    id: TaskId,
+    date: string,
+  ) => RecurringCompletionRestore | undefined;
   createTask: (req: CreateTaskRequest) => Promise<Result<Task, AppError>>;
   updateTask: (
     id: TaskId,
@@ -238,6 +242,11 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     [store],
   );
 
+  const getPendingCompletionRestore = useCallback(
+    (id: TaskId, date: string) => store.getPendingCompletionRestore(id, date),
+    [store],
+  );
+
   const value = useMemo<TaskContextValue>(
     () => ({
       tasks: snapshot.tasks,
@@ -249,6 +258,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       syncStatus,
       lastSyncTime: snapshot.lastSyncTime,
       resolveTaskId,
+      getPendingCompletionRestore,
       createTask,
       updateTask,
       deleteTask,
@@ -262,6 +272,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       snapshot,
       syncStatus,
       resolveTaskId,
+      getPendingCompletionRestore,
       createTask,
       updateTask,
       deleteTask,

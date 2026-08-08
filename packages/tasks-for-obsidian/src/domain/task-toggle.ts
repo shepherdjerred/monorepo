@@ -27,7 +27,9 @@ export async function executeTaskToggle<Result>(
     readonly setInstanceComplete: (
       date: string,
       completed: boolean,
+      restore?: RecurringCompletionRestore,
     ) => Promise<Result>;
+    readonly pendingRestore?: RecurringCompletionRestore | undefined;
   },
 ): Promise<TaskToggleExecution<Result>> {
   if (task === undefined || scope === "task-status" || !isRecurring(task)) {
@@ -39,12 +41,19 @@ export async function executeTaskToggle<Result>(
 
   const date = occurrenceDate ?? completionTargetDate(task);
   const completed = !task.completeInstances.includes(date);
+  const restore = completed
+    ? recurringCompletionRestore(task, date)
+    : (operations.pendingRestore ?? null);
   return {
-    result: await operations.setInstanceComplete(date, completed),
+    result: await operations.setInstanceComplete(
+      date,
+      completed,
+      restore ?? undefined,
+    ),
     recurring: {
       date,
       completed,
-      restore: completed ? recurringCompletionRestore(task, date) : null,
+      restore,
     },
   };
 }
