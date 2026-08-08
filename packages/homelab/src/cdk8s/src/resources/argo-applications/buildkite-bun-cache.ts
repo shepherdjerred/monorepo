@@ -5,22 +5,20 @@ import {
   KubePersistentVolumeClaim,
   Quantity,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
-import { NVME_STORAGE_CLASS_LZ4 } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
 import {
   CI_NODE_HOSTNAME,
   CI_NODE_TOLERATION,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
+import { NVME_STORAGE_CLASS_LZ4 } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
 
 export const BUN_CACHE_MOUNT_PATH = "/buildkite/bun-cache";
-export const BUN_CACHE_DATA_PATH = `${BUN_CACHE_MOUNT_PATH}/data`;
-export const BUN_CACHE_CONTROL_PATH = "/buildkite/bun-cache-control";
-export const BUN_CACHE_LOCK_PATH = `${BUN_CACHE_CONTROL_PATH}/.gc.lock`;
+const BUN_CACHE_DATA_PATH = `${BUN_CACHE_MOUNT_PATH}/data`;
+const BUN_CACHE_CONTROL_PATH = "/buildkite/bun-cache-control";
+const BUN_CACHE_LOCK_PATH = `${BUN_CACHE_CONTROL_PATH}/.gc.lock`;
 const BUN_CACHE_GC_THRESHOLD_PERCENT = "60";
-
-const CI_BASE_DIGEST_CONTENT = await Bun.file(
-  new URL("ci-base.DIGEST", import.meta.url),
-).text();
-const CI_BASE_DIGEST = CI_BASE_DIGEST_CONTENT.trim();
+const ciBaseDigestFile = Bun.file(new URL("ci-base.DIGEST", import.meta.url));
+const ciBaseDigestText = await ciBaseDigestFile.text();
+const CI_BASE_DIGEST = ciBaseDigestText.trim();
 if (!/^sha256:[\da-f]{64}$/.test(CI_BASE_DIGEST)) {
   throw new Error("ci-base.DIGEST must contain a canonical sha256 digest");
 }
@@ -77,7 +75,9 @@ export function createBuildkiteBunCache(chart: Chart): void {
       "bun-cache-gc.sh": BUN_CACHE_GC_SCRIPT,
     },
   });
+}
 
+export function createLegacyBuildkiteBunCacheJob(chart: Chart): void {
   new KubeCronJob(chart, "buildkite-bun-cache-gc", {
     metadata: { name: "buildkite-bun-cache-gc", namespace: "buildkite" },
     spec: {
@@ -99,7 +99,6 @@ export function createBuildkiteBunCache(chart: Chart): void {
                 {
                   name: "bun-cache-gc",
                   image: `ghcr.io/shepherdjerred/ci-base@${CI_BASE_DIGEST}`,
-                  imagePullPolicy: "IfNotPresent",
                   command: ["bash", "/buildkite/maintenance/bun-cache-gc.sh"],
                   env: [
                     {
@@ -126,10 +125,7 @@ export function createBuildkiteBunCache(chart: Chart): void {
                     },
                   },
                   volumeMounts: [
-                    {
-                      name: "bun-cache",
-                      mountPath: BUN_CACHE_MOUNT_PATH,
-                    },
+                    { name: "bun-cache", mountPath: BUN_CACHE_MOUNT_PATH },
                     {
                       name: "bun-cache-control",
                       mountPath: BUN_CACHE_CONTROL_PATH,

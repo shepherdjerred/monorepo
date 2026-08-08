@@ -1,0 +1,320 @@
+import { Context } from "@temporalio/activity";
+import {
+  maintenanceLastSuccessTimestampSeconds,
+  maintenanceRunsTotal,
+} from "#observability/metrics.ts";
+import { log } from "#observability/log.ts";
+
+const KOMETA_CONFIG_PATH = "/etc/kometa/config.yml";
+const MAINTENANCE_WORKDIR = "/tmp";
+const HEARTBEAT_INTERVAL_MS = 15_000;
+const OUTPUT_TAIL_LINES = 20;
+const OUTPUT_TAIL_CHARS = 8192;
+const INHERITED_ENVIRONMENT_KEYS = [
+  "HOME",
+  "LANG",
+  "LC_ALL",
+  "NO_COLOR",
+  "PATH",
+  "SSL_CERT_FILE",
+  "TMPDIR",
+] as const;
+const CANCELLATION_GRACE_PERIOD_MS = 1000;
+
+export type MaintenanceKind =
+  | "kometa"
+  | "buildkite-bun-cache-gc"
+  | "buildkite-uv-cache-prune"
+  | "buildkite-trivy-db-refresh";
+
+export type MaintenanceCommand = {
+  kind: MaintenanceKind;
+  command: readonly string[];
+  cwd: string;
+  env: Record<string, string>;
+  secretValues: readonly string[];
+};
+
+export type MaintenanceCommandHooks = {
+  heartbeat: (payload: Record<string, unknown>) => void;
+  cancellationSignal?: AbortSignal;
+  onCancellation: () => void;
+  heartbeatIntervalMs?: number;
+};
+
+export type MaintenanceCommandRunner = (
+  command: MaintenanceCommand,
+  hooks: MaintenanceCommandHooks,
+) => Promise<number>;
+
+function requiredEnvironment(name: string): string {
+  const value = Bun.env[name];
+  if (value === undefined || value === "") {
+    throw new Error(`${name} is required for Temporal maintenance`);
+  }
+  return value;
+}
+
+async function requiredSecretFile(name: string): Promise<string> {
+  const path = requiredEnvironment(name);
+  const secretFile = Bun.file(path);
+  const secretText = await secretFile.text();
+  const value = secretText.trim();
+  if (value === "") {
+    throw new Error(`${name} points to an empty secret file`);
+  }
+  return value;
+}
+
+function activityHooks(): MaintenanceCommandHooks {
+  const context = Context.current();
+
+  const hooks: MaintenanceCommandHooks = {
+    heartbeat: (payload) => {
+      context.heartbeat(payload);
+    },
+    onCancellation: () => {
+      // The subprocess runner owns cancellation termination.
+    },
+  };
+  hooks.cancellationSignal = context.cancellationSignal;
+  return hooks;
+}
+
+function commandEnvironment(
+  overrides: Record<string, string>,
+): Record<string, string> {
+  const environment: Record<string, string> = {};
+  for (const key of INHERITED_ENVIRONMENT_KEYS) {
+    const value = Bun.env[key];
+    if (value !== undefined) {
+      environment[key] = value;
+    }
+  }
+  Object.assign(environment, overrides);
+  return environment;
+}
+
+export async function buildMaintenanceCommand(
+  kind: MaintenanceKind,
+): Promise<MaintenanceCommand> {
+  switch (kind) {
+    case "kometa": {
+      const plexToken = await requiredSecretFile("KOMETA_PLEXTOKEN_FILE");
+      const tmdbApiKey = await requiredSecretFile("KOMETA_TMDBAPIKEY_FILE");
+      return {
+        kind,
+        command: ["kometa", "--config", KOMETA_CONFIG_PATH, "--run"],
+        cwd: MAINTENANCE_WORKDIR,
+        env: commandEnvironment({
+          KOMETA_PLEXTOKEN: plexToken,
+          KOMETA_TMDBAPIKEY: tmdbApiKey,
+          KOMETA_READ_ONLY_CONFIG: "true",
+          TZ: "America/Los_Angeles",
+        }),
+        secretValues: [plexToken, tmdbApiKey],
+      };
+    }
+    case "buildkite-bun-cache-gc":
+      return {
+        kind,
+        command: ["bash", "/buildkite/maintenance/bun-cache-gc.sh"],
+        cwd: MAINTENANCE_WORKDIR,
+        env: commandEnvironment({
+          BUN_INSTALL_CACHE_DIR: "/buildkite/bun-cache/data",
+          BUN_CACHE_LOCK_FILE: "/buildkite/bun-cache-control/.gc.lock",
+          BUN_CACHE_GC_THRESHOLD_PERCENT: "60",
+        }),
+        secretValues: [],
+      };
+    case "buildkite-uv-cache-prune":
+      return {
+        kind,
+        command: ["uv", "cache", "prune", "--ci"],
+        cwd: MAINTENANCE_WORKDIR,
+        env: commandEnvironment({ UV_CACHE_DIR: "/buildkite/uv-cache" }),
+        secretValues: [],
+      };
+    case "buildkite-trivy-db-refresh":
+      return {
+        kind,
+        command: [
+          "trivy",
+          "image",
+          "--download-db-only",
+          "--cache-dir",
+          "/buildkite/trivy-db",
+        ],
+        cwd: MAINTENANCE_WORKDIR,
+        env: commandEnvironment({}),
+        secretValues: [],
+      };
+  }
+}
+
+function redact(text: string, secretValues: readonly string[]): string {
+  return secretValues.reduce(
+    (redacted, secret) =>
+      secret === "" ? redacted : redacted.replaceAll(secret, "<redacted>"),
+    text,
+  );
+}
+
+function appendOutputTail(tail: string[], line: string): void {
+  tail.push(line);
+  while (tail.length > OUTPUT_TAIL_LINES) {
+    tail.shift();
+  }
+  while (tail.join("\n").length > OUTPUT_TAIL_CHARS) {
+    tail.shift();
+  }
+}
+
+async function streamMaintenanceOutput(
+  stream: ReadableStream<Uint8Array>,
+  streamName: "stdout" | "stderr",
+  command: MaintenanceCommand,
+): Promise<string> {
+  const decoder = new TextDecoder();
+  const tail: string[] = [];
+  let pending = "";
+  for await (const value of stream) {
+    pending += decoder.decode(value, { stream: true });
+    const lastNewline = pending.lastIndexOf("\n");
+    if (lastNewline === -1) {
+      continue;
+    }
+    const completeLines = pending.slice(0, lastNewline).split("\n");
+    pending = pending.slice(lastNewline + 1);
+    for (const line of completeLines) {
+      const redacted = redact(line.replace(/\r$/, ""), command.secretValues);
+      appendOutputTail(tail, redacted);
+      log("info", "Maintenance subprocess output", {
+        maintenanceKind: command.kind,
+        stream: streamName,
+        line: redacted,
+      });
+    }
+  }
+  pending += decoder.decode();
+  if (pending !== "") {
+    const redacted = redact(pending, command.secretValues);
+    appendOutputTail(tail, redacted);
+    log("info", "Maintenance subprocess output", {
+      maintenanceKind: command.kind,
+      stream: streamName,
+      line: redacted,
+    });
+  }
+  return tail.join("\n");
+}
+
+export const spawnMaintenanceCommand: MaintenanceCommandRunner = async (
+  command,
+  hooks,
+) => {
+  const childEnv = command.env;
+  const subprocess = Bun.spawn([...command.command], {
+    cwd: command.cwd,
+    env: childEnv,
+    stdout: "pipe",
+    stderr: "pipe",
+    detached: true,
+  });
+  const startedAt = Date.now();
+  const heartbeatTimer = setInterval(() => {
+    hooks.heartbeat({
+      kind: command.kind,
+      elapsedMs: Date.now() - startedAt,
+    });
+  }, hooks.heartbeatIntervalMs ?? HEARTBEAT_INTERVAL_MS);
+  let cancellationTimer: ReturnType<typeof setTimeout> | undefined;
+  const signalProcessGroup = (signal: "SIGKILL" | "SIGTERM"): void => {
+    try {
+      globalThis.process.kill(-subprocess.pid, signal);
+    } catch {
+      subprocess.kill(signal);
+    }
+  };
+  const abort = (): void => {
+    hooks.onCancellation();
+    signalProcessGroup("SIGTERM");
+    cancellationTimer = setTimeout(() => {
+      signalProcessGroup("SIGKILL");
+    }, CANCELLATION_GRACE_PERIOD_MS);
+  };
+  hooks.cancellationSignal?.addEventListener("abort", abort, { once: true });
+  if (hooks.cancellationSignal?.aborted === true) {
+    abort();
+  }
+
+  let result: [string, string, number] | undefined;
+  try {
+    const completion = Promise.all([
+      streamMaintenanceOutput(subprocess.stdout, "stdout", command),
+      streamMaintenanceOutput(subprocess.stderr, "stderr", command),
+      subprocess.exited,
+    ]);
+    result = await completion;
+  } finally {
+    if (cancellationTimer !== undefined) {
+      clearTimeout(cancellationTimer);
+    }
+    clearInterval(heartbeatTimer);
+    hooks.cancellationSignal?.removeEventListener("abort", abort);
+  }
+
+  if (hooks.cancellationSignal?.aborted === true) {
+    hooks.cancellationSignal.throwIfAborted();
+  }
+
+  const [stdout, stderr, exitCode] = result;
+  if (exitCode !== 0) {
+    const detail = [stdout, stderr]
+      .filter((output) => output !== "")
+      .join("\n");
+    throw new Error(
+      `${command.kind} command exited ${String(exitCode)}${detail === "" ? "" : `: ${detail}`}`,
+    );
+  }
+  return exitCode;
+};
+
+export async function executeMaintenance(
+  kind: MaintenanceKind,
+  runner: MaintenanceCommandRunner = spawnMaintenanceCommand,
+  hooks: MaintenanceCommandHooks = activityHooks(),
+): Promise<void> {
+  const command = await buildMaintenanceCommand(kind);
+  try {
+    const exitCode = await runner(command, hooks);
+    if (exitCode !== 0) {
+      throw new Error(`${kind} command exited ${String(exitCode)}`);
+    }
+    maintenanceLastSuccessTimestampSeconds.set(
+      { job: kind },
+      Date.now() / 1000,
+    );
+    maintenanceRunsTotal.inc({ job: kind, outcome: "success" });
+  } catch (error: unknown) {
+    maintenanceRunsTotal.inc({ job: kind, outcome: "failure" });
+    throw error;
+  }
+}
+
+export type MaintenanceActivities = typeof maintenanceActivities;
+
+export const maintenanceActivities = {
+  async runKometa(): Promise<void> {
+    await executeMaintenance("kometa");
+  },
+  async runBunCacheGc(): Promise<void> {
+    await executeMaintenance("buildkite-bun-cache-gc");
+  },
+  async runUvCachePrune(): Promise<void> {
+    await executeMaintenance("buildkite-uv-cache-prune");
+  },
+  async runTrivyDbRefresh(): Promise<void> {
+    await executeMaintenance("buildkite-trivy-db-refresh");
+  },
+};

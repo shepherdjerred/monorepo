@@ -40,6 +40,9 @@ const CLI_CHECKS: readonly { name: string; args: readonly string[] }[] = [
   { name: "temporal", args: ["temporal", "--version"] },
   { name: "toolkit", args: ["toolkit", "--version"] },
   { name: "cog", args: ["cog", "-v"] },
+  { name: "uv", args: ["uv", "--version"] },
+  { name: "trivy", args: ["trivy", "version"] },
+  { name: "kometa", args: ["kometa", "--help"] },
 ];
 // Reaching this log line proves the worker booted through runtime install,
 // Sentry, tracing, and the metrics server, and is attempting the connection.

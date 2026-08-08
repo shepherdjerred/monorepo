@@ -6,12 +6,13 @@ Temporal workflow worker for the monorepo. Consolidates ad-hoc scheduling (K8s C
 
 Runs under **Bun**. The Temporal TypeScript SDK supports Bun for workers, workflows, activities, and client.
 
-Production uses the same Bun image in two Kubernetes Deployments selected by
+Production uses the same Bun image in three Kubernetes Deployments selected by
 `TEMPORAL_WORKER_ROLE`: `core` owns the `default` and `agent-task` queues plus
 schedules and HTTP/event surfaces; `glitter` owns `glitter-corpus` and
-`glitter-context`. The default `all` role preserves the single-process local
-development behavior. Keep new queue ownership explicit in `worker.ts` so a
-heavy Glitter failure cannot take down core automation.
+`glitter-context`; `maintenance` owns the serial `maintenance` queue. The
+default `all` role preserves the single-process local development behavior.
+Keep new queue ownership explicit in `worker.ts` so a heavy Glitter failure or
+maintenance subprocess cannot take down core automation.
 
 ## Structure
 
@@ -35,6 +36,14 @@ src/
 - **Workflows** are deterministic functions. No direct I/O — call activities instead.
 - **Activities** do the real work (HTTP calls, DB queries, file I/O). They run outside the sandbox.
 - **Schedules** replace K8s CronJobs — managed by Temporal, visible in the UI.
+
+The Kometa and Buildkite cache maintenance schedules use the `maintenance` task
+queue. A single `temporal-maintenance-worker` Deployment in the `buildkite`
+namespace runs them as direct `Bun.spawn` activities, with one activity slot so
+cache and database writers never overlap. The Deployment mounts the existing
+Buildkite PVCs and has no Kubernetes API token or Job RBAC; Kometa reaches Plex
+over the cluster network with credentials projected from namespace-local
+OnePassword resources.
 
 ## Schedules (`src/schedules/register-schedules.ts`, `src/schedules/schedule-definitions.ts`)
 

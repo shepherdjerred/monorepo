@@ -91,6 +91,23 @@ export const haEventBridgeConnected = new Gauge({
   registers: [register],
 });
 
+// Maintenance runs execute as direct subprocesses in the persistent Temporal
+// maintenance worker. Keep a last-success gauge so stale-run alerts survive
+// worker restarts and do not depend on short-lived Kubernetes resources.
+export const maintenanceLastSuccessTimestampSeconds = new Gauge({
+  name: "kubernetes_maintenance_last_success_timestamp_seconds",
+  help: "Unix timestamp of the last successful Temporal maintenance activity, by job",
+  labelNames: ["job"] as const,
+  registers: [register],
+});
+
+export const maintenanceRunsTotal = new Counter({
+  name: "kubernetes_maintenance_runs_total",
+  help: "Temporal maintenance activity runs, by job and outcome",
+  labelNames: ["job", "outcome"] as const,
+  registers: [register],
+});
+
 // ---------------------------------------------------------------------------
 // generic agent-task workflow metrics
 // ---------------------------------------------------------------------------

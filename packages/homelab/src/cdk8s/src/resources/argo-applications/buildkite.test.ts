@@ -2,24 +2,12 @@ import { describe, expect, it } from "bun:test";
 import { Testing } from "cdk8s";
 import { z } from "zod";
 import { createBuildkiteApp } from "./buildkite.ts";
-
-const ResourceRequirementsSchema = z.object({
-  requests: z.object({
-    cpu: z.string(),
-    memory: z.string(),
-  }),
-  limits: z.object({
-    cpu: z.string(),
-    memory: z.string(),
-  }),
-});
+import { MAINTENANCE_IMAGE_READY } from "./maintenance-image-readiness.ts";
 
 const ApplicationSchema = z
   .object({
     kind: z.literal("Application"),
-    metadata: z.object({
-      name: z.literal("buildkite"),
-    }),
+    metadata: z.object({ name: z.literal("buildkite") }),
     spec: z.object({
       source: z.object({
         helm: z.object({
@@ -39,33 +27,10 @@ const ApplicationSchema = z
                 volumes: z.array(
                   z.object({
                     name: z.string(),
-                    persistentVolumeClaim: z.object({
-                      claimName: z.string(),
-                    }),
+                    persistentVolumeClaim: z.object({ claimName: z.string() }),
                   }),
                 ),
-                containers: z.array(
-                  z.object({
-                    name: z.string(),
-                    resources: ResourceRequirementsSchema.optional(),
-                    env: z
-                      .array(
-                        z.object({
-                          name: z.string(),
-                          value: z.string(),
-                        }),
-                      )
-                      .optional(),
-                    volumeMounts: z
-                      .array(
-                        z.object({
-                          name: z.string(),
-                          mountPath: z.string(),
-                        }),
-                      )
-                      .optional(),
-                  }),
-                ),
+                containers: z.array(z.object({ name: z.string() }).loose()),
               }),
             }),
           }),
@@ -88,17 +53,12 @@ const PersistentVolumeClaimSchema = z
     }),
     spec: z.object({
       accessModes: z.tuple([z.literal("ReadWriteMany")]),
-      storageClassName: z.string(),
-      resources: z.object({
-        requests: z.object({
-          storage: z.string(),
-        }),
-      }),
+      resources: z.object({ requests: z.object({ storage: z.string() }) }),
     }),
   })
   .loose();
 
-const ConfigMapSchema = z
+const HooksConfigMapSchema = z
   .object({
     apiVersion: z.literal("v1"),
     kind: z.literal("ConfigMap"),
@@ -106,95 +66,15 @@ const ConfigMapSchema = z
       name: z.literal("buildkite-agent-hooks"),
       namespace: z.literal("buildkite"),
     }),
-    data: z.object({
-      "agent-shutdown": z.string(),
-    }),
-  })
-  .loose();
-
-const UvCachePruneCronJobSchema = z
-  .object({
-    kind: z.literal("CronJob"),
-    metadata: z.object({
-      name: z.literal("buildkite-uv-cache-prune"),
-    }),
-    spec: z.object({
-      jobTemplate: z.object({
-        spec: z.object({
-          template: z.object({
-            spec: z.object({
-              containers: z.array(
-                z.object({
-                  name: z.string(),
-                  image: z.string(),
-                  imagePullPolicy: z.string().optional(),
-                }),
-              ),
-            }),
-          }),
-        }),
-      }),
-    }),
-  })
-  .loose();
-
-const BunCacheGcCronJobSchema = z
-  .object({
-    kind: z.literal("CronJob"),
-    metadata: z.object({
-      name: z.literal("buildkite-bun-cache-gc"),
-    }),
-    spec: z.object({
-      schedule: z.string(),
-      timeZone: z.string(),
-      concurrencyPolicy: z.string(),
-      jobTemplate: z.object({
-        spec: z.object({
-          activeDeadlineSeconds: z.number().int(),
-          template: z.object({
-            spec: z.object({
-              containers: z.array(
-                z
-                  .object({
-                    name: z.string(),
-                    image: z.string(),
-                    imagePullPolicy: z.string().optional(),
-                    command: z.array(z.string()),
-                    env: z.array(
-                      z.object({
-                        name: z.string(),
-                        value: z.string(),
-                      }),
-                    ),
-                    volumeMounts: z.array(
-                      z
-                        .object({
-                          name: z.string(),
-                          mountPath: z.string(),
-                        })
-                        .loose(),
-                    ),
-                  })
-                  .loose(),
-              ),
-              volumes: z.array(z.object({ name: z.string() }).loose()),
-            }),
-          }),
-        }),
-      }),
-    }),
+    data: z.object({ "agent-shutdown": z.string() }),
   })
   .loose();
 
 const BunCacheGcConfigMapSchema = z
   .object({
     kind: z.literal("ConfigMap"),
-    metadata: z.object({
-      name: z.literal("buildkite-bun-cache-gc"),
-    }),
-    data: z.object({
-      "bun-cache-gc.sh": z.string(),
-    }),
+    metadata: z.object({ name: z.literal("buildkite-bun-cache-gc") }),
+    data: z.object({ "bun-cache-gc.sh": z.string() }),
   })
   .loose();
 
@@ -206,13 +86,7 @@ function synthBuildkiteResources() {
     (manifest) => ApplicationSchema.safeParse(manifest).success,
   );
   const hooks = resources.find(
-    (manifest) => ConfigMapSchema.safeParse(manifest).success,
-  );
-  const cachePruneCronJob = resources.find(
-    (manifest) => UvCachePruneCronJobSchema.safeParse(manifest).success,
-  );
-  const bunCacheGcCronJob = resources.find(
-    (manifest) => BunCacheGcCronJobSchema.safeParse(manifest).success,
+    (manifest) => HooksConfigMapSchema.safeParse(manifest).success,
   );
   const bunCacheGcConfigMap = resources.find(
     (manifest) => BunCacheGcConfigMapSchema.safeParse(manifest).success,
@@ -223,12 +97,93 @@ function synthBuildkiteResources() {
   });
   return {
     application: ApplicationSchema.parse(application),
-    hooks: ConfigMapSchema.parse(hooks),
-    cachePruneCronJob: UvCachePruneCronJobSchema.parse(cachePruneCronJob),
-    persistentVolumeClaims,
-    bunCacheGcCronJob: BunCacheGcCronJobSchema.parse(bunCacheGcCronJob),
+    hooks: HooksConfigMapSchema.parse(hooks),
     bunCacheGcConfigMap: BunCacheGcConfigMapSchema.parse(bunCacheGcConfigMap),
+    persistentVolumeClaims,
+    resources,
   };
+}
+
+function maintenanceDeployment(resources: readonly unknown[]) {
+  const deployment = resources.find((manifest) => {
+    const result = z
+      .object({
+        kind: z.literal("Deployment"),
+        metadata: z.object({
+          name: z.literal("temporal-maintenance-worker"),
+          namespace: z.literal("buildkite"),
+        }),
+      })
+      .safeParse(manifest);
+    return result.success;
+  });
+  return z
+    .object({
+      kind: z.literal("Deployment"),
+      metadata: z.object({
+        name: z.literal("temporal-maintenance-worker"),
+        namespace: z.literal("buildkite"),
+      }),
+      spec: z.object({
+        replicas: z.union([z.literal(0), z.literal(1)]),
+        strategy: z.object({ type: z.literal("Recreate") }),
+        template: z.object({
+          metadata: z.object({
+            labels: z.object({ app: z.literal("temporal-maintenance-worker") }),
+          }),
+          spec: z.object({
+            automountServiceAccountToken: z.literal(false),
+            securityContext: z.object({
+              fsGroup: z.literal(1000),
+              fsGroupChangePolicy: z.literal("OnRootMismatch"),
+            }),
+            affinity: z.object({
+              nodeAffinity: z.object({
+                requiredDuringSchedulingIgnoredDuringExecution: z.object({
+                  nodeSelectorTerms: z.array(
+                    z.object({
+                      matchExpressions: z.array(
+                        z.object({
+                          key: z.literal("kubernetes.io/hostname"),
+                          values: z.tuple([z.literal("liskov")]),
+                        }),
+                      ),
+                    }),
+                  ),
+                }),
+              }),
+            }),
+            tolerations: z.array(
+              z.object({
+                key: z.literal("ci"),
+                value: z.literal("only"),
+                effect: z.literal("NoSchedule"),
+              }),
+            ),
+            initContainers: z
+              .array(
+                z
+                  .object({
+                    name: z.string(),
+                    volumeMounts: z.array(z.unknown()),
+                  })
+                  .loose(),
+              )
+              .optional(),
+            containers: z.array(
+              z.object({
+                env: z.array(z.unknown()),
+                volumeMounts: z.array(
+                  z.object({ mountPath: z.string() }).loose(),
+                ),
+              }),
+            ),
+            volumes: z.array(z.object({ name: z.string() }).loose()),
+          }),
+        }),
+      }),
+    })
+    .parse(deployment);
 }
 
 describe("Buildkite application", () => {
@@ -262,15 +217,10 @@ describe("Buildkite application", () => {
     const { application, persistentVolumeClaims } = synthBuildkiteResources();
     const podSpecPatch =
       application.spec.source.helm.valuesObject.config["pod-spec-patch"];
-    const commandContainer = podSpecPatch.containers.find(
-      (container) => container.name === "container-0",
-    );
 
     expect(persistentVolumeClaims).toContainEqual(
       expect.objectContaining({
-        metadata: expect.objectContaining({
-          name: "buildkite-bun-cache",
-        }),
+        metadata: expect.objectContaining({ name: "buildkite-bun-cache" }),
         spec: expect.objectContaining({
           accessModes: ["ReadWriteMany"],
           resources: { requests: { storage: "60Gi" } },
@@ -290,20 +240,8 @@ describe("Buildkite application", () => {
     );
     expect(podSpecPatch.volumes).toContainEqual({
       name: "buildkite-bun-cache-control",
-      persistentVolumeClaim: {
-        claimName: "buildkite-bun-cache-control",
-      },
+      persistentVolumeClaim: { claimName: "buildkite-bun-cache-control" },
     });
-    expect(commandContainer?.volumeMounts).toContainEqual({
-      name: "buildkite-bun-cache-control",
-      mountPath: "/buildkite/bun-cache-control",
-    });
-    expect(commandContainer?.env).toEqual([
-      {
-        name: "UV_CACHE_DIR",
-        value: "/buildkite/uv-cache",
-      },
-    ]);
   });
 
   it("retains the agent for terminal cAdvisor scrapes after job finish", () => {
@@ -326,111 +264,116 @@ describe("Buildkite application", () => {
     expect(hooks.data["agent-shutdown"]).toContain("sleep 20");
   });
 
-  it("pins cache pruning to the promoted immutable ci-base image", async () => {
-    const { cachePruneCronJob } = synthBuildkiteResources();
-    const digestContents = await Bun.file(
-      new URL("ci-base.DIGEST", import.meta.url),
-    ).text();
-    const digest = digestContents.trim();
-    const container =
-      cachePruneCronJob.spec.jobTemplate.spec.template.spec.containers.find(
-        (candidate) => candidate.name === "uv-cache-prune",
-      );
-
-    expect(container).toEqual(
-      expect.objectContaining({
-        image: `ghcr.io/shepherdjerred/ci-base@${digest}`,
-        imagePullPolicy: "IfNotPresent",
-      }),
-    );
-    expect(container?.image).toMatch(
-      /^ghcr\.io\/shepherdjerred\/ci-base@sha256:[\da-f]{64}$/,
-    );
-  });
-
-  it("bounds the Bun cache without racing active installs", async () => {
-    const { application, bunCacheGcConfigMap, bunCacheGcCronJob } =
-      synthBuildkiteResources();
-    const digestContents = await Bun.file(
-      new URL("ci-base.DIGEST", import.meta.url),
-    ).text();
-    const digest = digestContents.trim();
-    const container =
-      bunCacheGcCronJob.spec.jobTemplate.spec.template.spec.containers.find(
-        (candidate) => candidate.name === "bun-cache-gc",
-      );
-    const stepContainer = application.spec.source.helm.valuesObject.config[
-      "pod-spec-patch"
-    ].containers.find((candidate) => candidate.name === "container-0");
-
-    expect(bunCacheGcCronJob.spec).toMatchObject({
-      schedule: "*/5 * * * *",
-      timeZone: "America/Los_Angeles",
-      concurrencyPolicy: "Forbid",
-      jobTemplate: {
-        spec: {
-          activeDeadlineSeconds: 900,
-        },
-      },
+  it("leaves recurring maintenance scheduling to Temporal", () => {
+    const { resources, bunCacheGcConfigMap } = synthBuildkiteResources();
+    const cronJobs = resources.filter((manifest) => {
+      const resource = z.object({ kind: z.string() }).safeParse(manifest);
+      return resource.success && resource.data.kind === "CronJob";
     });
-    expect(container).toEqual(
-      expect.objectContaining({
-        image: `ghcr.io/shepherdjerred/ci-base@${digest}`,
-        imagePullPolicy: "IfNotPresent",
-        command: ["bash", "/buildkite/maintenance/bun-cache-gc.sh"],
-        env: [
-          {
-            name: "BUN_INSTALL_CACHE_DIR",
-            value: "/buildkite/bun-cache/data",
-          },
-          {
-            name: "BUN_CACHE_LOCK_FILE",
-            value: "/buildkite/bun-cache-control/.gc.lock",
-          },
-          {
-            name: "BUN_CACHE_GC_THRESHOLD_PERCENT",
-            value: "60",
-          },
-        ],
-      }),
-    );
-    expect(container?.volumeMounts).toContainEqual({
-      name: "bun-cache",
-      mountPath: "/buildkite/bun-cache",
-    });
-    expect(container?.volumeMounts).toContainEqual({
-      name: "bun-cache-control",
-      mountPath: "/buildkite/bun-cache-control",
-    });
-    expect(
-      bunCacheGcCronJob.spec.jobTemplate.spec.template.spec.volumes,
-    ).toContainEqual(
-      expect.objectContaining({
-        name: "bun-cache",
-        persistentVolumeClaim: { claimName: "buildkite-bun-cache" },
-      }),
-    );
-    expect(
-      bunCacheGcCronJob.spec.jobTemplate.spec.template.spec.volumes,
-    ).toContainEqual(
-      expect.objectContaining({
-        name: "bun-cache-control",
-        persistentVolumeClaim: {
-          claimName: "buildkite-bun-cache-control",
-        },
-      }),
-    );
-    expect(stepContainer?.env).toEqual([
-      {
-        name: "UV_CACHE_DIR",
-        value: "/buildkite/uv-cache",
-      },
-    ]);
+
+    // The legacy schedulers remain only while the committed worker image pin
+    // predates maintenance support; the follow-up image pin removes them.
+    expect(cronJobs).toHaveLength(MAINTENANCE_IMAGE_READY ? 0 : 3);
     expect(bunCacheGcConfigMap.data["bun-cache-gc.sh"]).toContain(
       "flock --exclusive 9",
     );
     expect(bunCacheGcConfigMap.data["bun-cache-gc.sh"]).toContain(
       'find "$CACHE_DIR" -mindepth 1 -depth -delete',
+    );
+  });
+
+  it("deploys one serial maintenance worker with all maintenance mounts", () => {
+    const { resources } = synthBuildkiteResources();
+    const deployment = maintenanceDeployment(resources);
+    const container = deployment.spec.template.spec.containers[0];
+    if (container === undefined) {
+      throw new Error("maintenance worker container is missing");
+    }
+    expect(deployment.spec.replicas).toBe(0);
+    const envNames = container.env.flatMap((entry) => {
+      const parsed = z.object({ name: z.string() }).safeParse(entry);
+      return parsed.success ? [parsed.data.name] : [];
+    });
+    expect(envNames).toContain("TEMPORAL_WORKER_ROLE");
+    expect(envNames).toContain("KOMETA_PLEXTOKEN_FILE");
+    expect(envNames).toContain("KOMETA_TMDBAPIKEY_FILE");
+    expect(container.volumeMounts.map((mount) => mount.mountPath)).toEqual(
+      expect.arrayContaining([
+        "/buildkite/bun-cache",
+        "/buildkite/bun-cache-control",
+        "/buildkite/uv-cache",
+        "/buildkite/trivy-db",
+        "/buildkite/maintenance",
+        "/etc/kometa",
+      ]),
+    );
+    expect(container.volumeMounts).toContainEqual(
+      expect.objectContaining({
+        mountPath: "/etc/kometa",
+      }),
+    );
+    expect(deployment.spec.template.spec.initContainers).toContainEqual(
+      expect.objectContaining({
+        name: "copy-kometa-config",
+        volumeMounts: expect.arrayContaining([
+          expect.objectContaining({
+            mountPath: "/etc/kometa-config",
+            readOnly: true,
+          }),
+          expect.objectContaining({ mountPath: "/etc/kometa" }),
+        ]),
+      }),
+    );
+    expect(deployment.spec.template.spec.volumes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: "pvc-buildkite-bun-cache" }),
+        expect.objectContaining({ name: "pvc-buildkite-bun-cache-control" }),
+        expect.objectContaining({ name: "pvc-buildkite-uv-cache" }),
+        expect.objectContaining({ name: "pvc-buildkite-trivy-db" }),
+        expect.objectContaining({ name: "configmap-buildkite-bun-cache-gc" }),
+        expect.objectContaining({
+          name: "configmap-temporal-maintenance-kometa-config",
+        }),
+        expect.objectContaining({
+          name: "kometa-state",
+          emptyDir: expect.any(Object),
+        }),
+      ]),
+    );
+
+    const serviceNames = resources.flatMap((manifest) => {
+      const parsed = z
+        .object({
+          kind: z.literal("Service"),
+          metadata: z.object({ name: z.string(), namespace: z.string() }),
+        })
+        .safeParse(manifest);
+      return parsed.success && parsed.data.metadata.namespace === "buildkite"
+        ? [parsed.data.metadata.name]
+        : [];
+    });
+    expect(serviceNames).toEqual(
+      expect.arrayContaining([
+        "temporal-maintenance-worker-metrics",
+        "temporal-maintenance-worker-app-metrics",
+      ]),
+    );
+    const serviceMonitorNames = resources.flatMap((manifest) => {
+      const parsed = z
+        .object({
+          kind: z.literal("ServiceMonitor"),
+          metadata: z.object({ name: z.string(), namespace: z.string() }),
+        })
+        .safeParse(manifest);
+      return parsed.success && parsed.data.metadata.namespace === "buildkite"
+        ? [parsed.data.metadata.name]
+        : [];
+    });
+    expect(serviceMonitorNames).toEqual(
+      expect.arrayContaining([
+        "temporal-maintenance-worker-metrics-service-monitor",
+        "temporal-maintenance-worker-app-metrics-service-monitor",
+      ]),
     );
   });
 });

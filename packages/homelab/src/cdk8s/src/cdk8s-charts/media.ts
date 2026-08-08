@@ -17,7 +17,11 @@ import { createStreambotDeployment } from "@shepherdjerred/homelab/cdk8s/src/res
 import { createBinderyDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/bindery.ts";
 import { createShelfbridgeDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/shelfbridge.ts";
 import { createCalibreWebAutomatedDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/media/calibre-web-automated.ts";
-import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import {
+  IntOrString,
+  KubeNetworkPolicy,
+} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { MAINTENANCE_IMAGE_READY } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/maintenance-image-readiness.ts";
 
 export async function createMediaChart(app: App) {
   const chart = new Chart(app, "media", {
@@ -50,7 +54,9 @@ export async function createMediaChart(app: App) {
     tv: tvVolume.claim,
     movies: moviesVolume.claim,
   });
-  createKometaCronJob(chart);
+  if (!MAINTENANCE_IMAGE_READY) {
+    createKometaCronJob(chart);
+  }
   createRadarrDeployment(chart, {
     movies: moviesVolume.claim,
     downloads: downloadsVolume.claim,
@@ -130,6 +136,21 @@ export async function createMediaChart(app: App) {
               },
             },
           ],
+        },
+        {
+          // Kometa runs in the Buildkite-owned Temporal maintenance worker and
+          // only needs Plex's HTTP API.
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "buildkite" },
+              },
+              podSelector: {
+                matchLabels: { app: "temporal-maintenance-worker" },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(32_400), protocol: "TCP" }],
         },
       ],
     },

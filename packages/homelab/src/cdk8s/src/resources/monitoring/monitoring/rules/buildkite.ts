@@ -1,5 +1,6 @@
 import type { PrometheusRuleSpecGroups } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
+import { MAINTENANCE_IMAGE_READY } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/maintenance-image-readiness.ts";
 import { escapePrometheusTemplate } from "./shared.ts";
 
 export const BUILDKITE_JOB_POD_PATTERN =
@@ -14,7 +15,102 @@ export const BUILDKITE_POD_LIFETIME_WRITES_SEEN_24H_METRIC =
 export const BUILDKITE_POD_PARENT_FS_WRITES_BYTES_BY_JOB_METRIC =
   "buildkite:pod_parent_fs_writes_bytes_by_job_total";
 export const BUILDKITE_BUN_CACHE_PVC = "buildkite-bun-cache";
-export const BUILDKITE_BUN_CACHE_GC_CRONJOB = "buildkite-bun-cache-gc";
+export const BUILDKITE_BUN_CACHE_GC_ACTIVITY = "buildkite-bun-cache-gc";
+
+const MAINTENANCE_WORKER_STALE_EXPRESSION = MAINTENANCE_IMAGE_READY
+  ? `
+or (
+  absent(
+    kubernetes_maintenance_last_success_timestamp_seconds{
+      job="${BUILDKITE_BUN_CACHE_GC_ACTIVITY}"
+    }
+  )
+  and on() (
+    time() - max(
+      temporal_worker_app_process_start_time_seconds{
+        namespace="buildkite",
+        pod=~"temporal-maintenance-worker-.*"
+      }
+    ) > 1200
+    or time() - max(
+      kube_pod_start_time{
+        namespace="buildkite",
+        pod=~"temporal-maintenance-worker-.*"
+      }
+    ) > 1200
+    or on() (
+      kube_deployment_status_condition{
+        namespace="buildkite",
+        deployment="temporal-maintenance-worker",
+        condition="Progressing",
+        status="false"
+      } == 1
+      or on() (
+        kube_deployment_status_condition{
+          namespace="buildkite",
+          deployment="temporal-maintenance-worker",
+          condition="Progressing",
+          status="true",
+          reason="NewReplicaSetAvailable"
+        } == 1
+        and on() (
+          absent(
+            kube_deployment_status_replicas_available{
+              namespace="buildkite",
+              deployment="temporal-maintenance-worker"
+            }
+          )
+          or max(
+            kube_deployment_status_replicas_available{
+              namespace="buildkite",
+              deployment="temporal-maintenance-worker"
+            }
+          ) == 0
+          or absent(
+            up{
+              namespace="buildkite",
+              service="temporal-maintenance-worker-app-metrics"
+            }
+          )
+        )
+      )
+    )
+  )
+)`
+  : "";
+
+const MAINTENANCE_STALE_EXPRESSION = MAINTENANCE_IMAGE_READY
+  ? `(
+  time() - kubernetes_maintenance_last_success_timestamp_seconds{
+    job="${BUILDKITE_BUN_CACHE_GC_ACTIVITY}"
+  } > 1200
+)
+${MAINTENANCE_WORKER_STALE_EXPRESSION}`
+  : `(
+  time() - kube_cronjob_status_last_successful_time{
+    namespace="buildkite",
+    cronjob="buildkite-bun-cache-gc"
+  } > 1200
+)
+or
+(
+  time() - kube_cronjob_created{
+    namespace="buildkite",
+    cronjob="buildkite-bun-cache-gc"
+  } > 1200
+  unless on (namespace, cronjob)
+  kube_cronjob_status_last_successful_time{
+    namespace="buildkite",
+    cronjob="buildkite-bun-cache-gc"
+  }
+)
+or
+absent(
+  kube_cronjob_created{
+    namespace="buildkite",
+    cronjob="buildkite-bun-cache-gc"
+  }
+)`;
 
 const POD_LABEL_METADATA = [
   "label_buildkite_com_job_uuid",
@@ -322,35 +418,13 @@ and on ()
           alert: "BuildkiteBunCacheCollectorStale",
           annotations: {
             summary:
-              "Buildkite Bun cache collector is missing or has not succeeded",
+              "Buildkite Bun cache maintenance activity is missing or has not succeeded",
             description:
-              "The five-minute Buildkite Bun cache collector is missing (its CronJob was deleted or never created) or has not completed successfully in the last 20 minutes.",
+              "The five-minute Buildkite Bun cache maintenance activity has not completed successfully in the last 20 minutes.",
           },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(`(
-  time() - kube_cronjob_status_last_successful_time{
-    namespace="buildkite",
-    cronjob="${BUILDKITE_BUN_CACHE_GC_CRONJOB}"
-  } > 1200
-)
-or
-(
-  time() - kube_cronjob_created{
-    namespace="buildkite",
-    cronjob="${BUILDKITE_BUN_CACHE_GC_CRONJOB}"
-  } > 1200
-  unless on (namespace, cronjob)
-  kube_cronjob_status_last_successful_time{
-    namespace="buildkite",
-    cronjob="${BUILDKITE_BUN_CACHE_GC_CRONJOB}"
-  }
-)
-or
-absent(
-  kube_cronjob_created{
-    namespace="buildkite",
-    cronjob="${BUILDKITE_BUN_CACHE_GC_CRONJOB}"
-  }
-)`),
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            MAINTENANCE_STALE_EXPRESSION,
+          ),
           for: "1m",
           labels: {
             severity: "warning",

@@ -46,32 +46,20 @@ tmdb:
   language: en
 `;
 
-export function createKometaCronJob(chart: Chart) {
+export function createKometaCronJob(chart: Chart): void {
   new KubeConfigMap(chart, "kometa-config", {
-    metadata: {
-      name: "kometa-config",
-    },
-    data: {
-      "config.yml": KOMETA_CONFIG,
-    },
+    metadata: { name: "kometa-config" },
+    data: { "config.yml": KOMETA_CONFIG },
   });
-
   const plexSecrets = new OnePasswordItem(chart, "kometa-plex-secrets", {
-    spec: {
-      itemPath: vaultItemPath("xov5k65uwjmm3nfhc7udwmvhny"),
-    },
+    spec: { itemPath: vaultItemPath("xov5k65uwjmm3nfhc7udwmvhny") },
   });
-
   const kometaCredentials = new OnePasswordItem(chart, "kometa-credentials", {
-    spec: {
-      itemPath: vaultItemPath("gjrl6xqfupvhwnhgmjsncokiou"),
-    },
+    spec: { itemPath: vaultItemPath("gjrl6xqfupvhwnhgmjsncokiou") },
   });
 
   new KubeCronJob(chart, "kometa", {
-    metadata: {
-      name: "kometa",
-    },
+    metadata: { name: "kometa" },
     spec: {
       schedule: "30 4 * * *",
       timeZone: "America/Los_Angeles",
@@ -82,11 +70,6 @@ export function createKometaCronJob(chart: Chart) {
         spec: {
           backoffLimit: 1,
           template: {
-            metadata: {
-              labels: {
-                app: "kometa",
-              },
-            },
             spec: {
               restartPolicy: "Never",
               securityContext: {
@@ -103,14 +86,8 @@ export function createKometaCronJob(chart: Chart) {
                   image: `docker.io/kometateam/kometa:${versions["kometateam/kometa"]}`,
                   args: ["--run"],
                   env: [
-                    {
-                      name: "TZ",
-                      value: "America/Los_Angeles",
-                    },
-                    {
-                      name: "KOMETA_READ_ONLY_CONFIG",
-                      value: "true",
-                    },
+                    { name: "TZ", value: "America/Los_Angeles" },
+                    { name: "KOMETA_READ_ONLY_CONFIG", value: "true" },
                     {
                       name: "KOMETA_PLEXTOKEN",
                       valueFrom: {
@@ -146,15 +123,10 @@ export function createKometaCronJob(chart: Chart) {
                     runAsNonRoot: true,
                     allowPrivilegeEscalation: false,
                     readOnlyRootFilesystem: false,
-                    capabilities: {
-                      drop: ["ALL"],
-                    },
+                    capabilities: { drop: ["ALL"] },
                   },
                   volumeMounts: [
-                    {
-                      name: "kometa-workdir",
-                      mountPath: "/config",
-                    },
+                    { name: "kometa-workdir", mountPath: "/config" },
                     {
                       name: "kometa-config",
                       mountPath: "/config/config.yml",
@@ -165,20 +137,12 @@ export function createKometaCronJob(chart: Chart) {
                 },
               ],
               volumes: [
-                {
-                  name: "kometa-workdir",
-                  emptyDir: {},
-                },
+                { name: "kometa-workdir", emptyDir: {} },
                 {
                   name: "kometa-config",
                   configMap: {
                     name: "kometa-config",
-                    items: [
-                      {
-                        key: "config.yml",
-                        path: "config.yml",
-                      },
-                    ],
+                    items: [{ key: "config.yml", path: "config.yml" }],
                   },
                 },
               ],
