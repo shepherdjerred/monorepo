@@ -1,10 +1,15 @@
-import type { MessageCreateOptions, MessagePayload, Message } from "discord.js";
+import {
+  type MessageCreateOptions,
+  type MessagePayload,
+  type Message,
+} from "discord.js";
 import { z } from "zod";
 import * as Sentry from "@sentry/bun";
 import { client } from "#src/discord/client.ts";
 import { asTextChannel } from "#src/discord/utils/channel.ts";
 import {
   checkSendMessagePermission,
+  hasReadMessageHistoryPermission,
   isPermissionError,
   isMissingChannelError,
   formatPermissionErrorForLog,
@@ -38,6 +43,27 @@ export class ChannelSendError extends Error {
     super(message);
     this.name = "ChannelSendError";
   }
+}
+
+const replyPermissionErrors = new WeakSet<ChannelSendError>();
+
+export function markReplyPermissionError(
+  error: ChannelSendError,
+): ChannelSendError {
+  replyPermissionErrors.add(error);
+  return error;
+}
+
+export function isReplyPermissionError(error: ChannelSendError): boolean {
+  return replyPermissionErrors.has(error);
+}
+
+const MessageWithReplySchema = z.object({ reply: z.unknown() });
+
+function hasMessageReply(
+  options: string | MessagePayload | MessageCreateOptions,
+): boolean {
+  return MessageWithReplySchema.safeParse(options).success;
 }
 
 // Zod schema for validating ChannelSendError instances
@@ -218,6 +244,18 @@ export async function send(
     }
 
     // Send the message
+    if (
+      hasMessageReply(options) &&
+      !hasReadMessageHistoryPermission(fetchedChannel, client.user)
+    ) {
+      throw markReplyPermissionError(
+        new ChannelSendError(
+          "Bot does not have 'Read Message History' permission for this reply",
+          channelId,
+          true,
+        ),
+      );
+    }
     const sentMessage = await channel.send(options);
 
     // Record successful send if serverId is provided

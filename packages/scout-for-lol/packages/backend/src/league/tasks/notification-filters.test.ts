@@ -14,11 +14,16 @@ class MockChannelSendError extends Error {
   constructor(message: string, permissionError: boolean) {
     super(message);
     this.permissionError = permissionError;
+    this.replyPermissionError = true;
   }
+
+  replyPermissionError: boolean;
 }
 
 await mock.module("#src/league/discord/channel.ts", () => ({
   ChannelSendError: MockChannelSendError,
+  isReplyPermissionError: (error: MockChannelSendError) =>
+    error.replyPermissionError,
   send: (message: MessageCreateOptions) => {
     if (failReplyOnce && message.reply !== undefined) {
       failReplyOnce = false;

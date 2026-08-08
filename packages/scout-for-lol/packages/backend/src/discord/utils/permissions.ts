@@ -166,6 +166,22 @@ export async function checkSendMessagePermission(
   }
 }
 
+/** Return false only when Read Message History is explicitly unavailable. */
+export function hasReadMessageHistoryPermission(
+  channel: Channel,
+  botUser: User | null,
+): boolean {
+  if (botUser === null || channel.isDMBased()) {
+    return true;
+  }
+
+  const permissions = channel.permissionsFor(botUser);
+  return (
+    permissions === null ||
+    permissions.has(PermissionFlagsBits.ReadMessageHistory)
+  );
+}
+
 /**
  * Get a user-friendly error message for permission failures
  */

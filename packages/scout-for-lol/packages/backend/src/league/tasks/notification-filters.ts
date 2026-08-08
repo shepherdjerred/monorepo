@@ -5,7 +5,11 @@ import {
   type QueueType,
 } from "@scout-for-lol/data/index.ts";
 import type { SubscribedChannel } from "#src/database/index.ts";
-import { send, ChannelSendError } from "#src/league/discord/channel.ts";
+import {
+  send,
+  ChannelSendError,
+  isReplyPermissionError,
+} from "#src/league/discord/channel.ts";
 import { createLogger } from "#src/logger.ts";
 import type { MessageCreateOptions } from "discord.js";
 
@@ -64,7 +68,7 @@ export async function deliverToChannels(params: {
         if (
           replyToMessageId !== undefined &&
           error instanceof ChannelSendError &&
-          error.permissionError
+          isReplyPermissionError(error)
         ) {
           // A reply requires Read Message History. Retry as a normal message
           // when that permission is missing; the post-match report itself is
