@@ -71,6 +71,10 @@ export default defineConfig({
         {
           items: [
             {
+              label: "Alerts and incident history",
+              link: "/homelab/alerts/",
+            },
+            {
               label: "Plane issue tracker",
               link: "/homelab/plane/",
             },

@@ -325,6 +325,67 @@ steps:
             labels:
               ci.sjer.red/step-key: verify
 
+  - label: ":postgres: alert ledger integration"
+    key: alert-dashboard-postgres
+    if: (build.pull_request.id != null || build.branch == pipeline.default_branch) && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if_changed:
+      include:
+        - ".buildkite/pipeline.yml"
+        - ".buildkite/scripts/**"
+        - "bun.lock"
+        - "bunfig.toml"
+        - "package.json"
+        - "packages/alert-dashboard/**"
+        - "packages/eslint-config/**"
+    cancel_on_build_failing: true
+    command: |
+      . .buildkite/scripts/toolchain.sh
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/alert-dashboard'
+      export DATABASE_URL='postgresql://alerts:alerts@127.0.0.1:5432/alerts'
+      bun --no-install run --cwd packages/alert-dashboard generate
+      bun --no-install run --cwd packages/alert-dashboard wait:database
+      bun --no-install run --cwd packages/alert-dashboard migrate:deploy
+      bun --no-install run --cwd packages/alert-dashboard test:postgres
+    retry: *retry
+    plugins:
+      - kubernetes:
+          <<: *pod_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: alert-dashboard-postgres
+          podSpecPatch:
+            serviceAccountName: buildkite-agent-stack-k8s-controller
+            containers:
+              - *checkout_container
+              - name: container-0
+                image: "${CI_BASE_IMAGE}"
+                imagePullPolicy: IfNotPresent
+                securityContext:
+                  allowPrivilegeEscalation: false
+                env:
+                  - name: BUILDKITE_SHELL
+                    value: "/bin/bash -e -c"
+                resources:
+                  requests:
+                    { cpu: "1", memory: "2Gi", ephemeral-storage: "2Gi" }
+                  limits:
+                    { cpu: "7", memory: "12Gi", ephemeral-storage: "40Gi" }
+                volumeMounts:
+                  - name: buildkite-git-mirrors
+                    mountPath: /buildkite/git-mirrors
+                    readOnly: true
+              - name: postgres
+                image: "postgres:16@sha256:95206741a5b214807675e14165369d05b93a9cf692223b616d07cca227e74b0b"
+                securityContext:
+                  allowPrivilegeEscalation: false
+                env:
+                  - { name: POSTGRES_DB, value: alerts }
+                  - { name: POSTGRES_USER, value: alerts }
+                  - { name: POSTGRES_PASSWORD, value: alerts }
+                resources:
+                  requests: { cpu: "250m", memory: "256Mi" }
+                  limits: { cpu: "1", memory: "1Gi" }
+
   # PR change filters include the global CI/toolchain closure. A selector
   # mistake can therefore only run extra work; it cannot hide changes to the
   # machinery that decides or executes a lane.
@@ -348,6 +409,7 @@ steps:
         - "packages/astro-opengraph-images/**"
         - "packages/webring/**"
         - "packages/docs/**"
+        - "packages/alert-dashboard/**"
         - "packages/eslint-config/**"
         - "packages/scout-for-lol/eslint.config.ts"
         - "packages/scout-for-lol/tsconfig.base.json"
@@ -360,8 +422,8 @@ steps:
         - "scripts/lib/run.ts"
     cancel_on_build_failing: true
     command: |
-      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter scout-for-lol --filter '@scout-for-lol/evals' --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'
-      bun x --no-install turbo run build lint test test:e2e --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --filter='@scout-for-lol/evals' --concurrency=2
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/alert-dashboard' --filter scout-for-lol --filter '@scout-for-lol/evals' --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'
+      bun x --no-install turbo run build lint test test:e2e --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --filter='@shepherdjerred/alert-dashboard' --filter='@scout-for-lol/evals' --concurrency=2
       bun --no-install scripts/namespace-playwright-reports.ts
       bun --no-install scripts/write-ci-report-index.ts
     artifact_paths:
@@ -409,10 +471,14 @@ steps:
     cancel_on_build_failing: true
     command: |
       if [ "$(buildkite-agent meta-data get ci-lane-run-playwright --default true)" != true ]; then exit 0; fi
-      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter scout-for-lol --filter '@scout-for-lol/evals' --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'
-      bun x --no-install turbo run build lint test test:e2e --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --filter='@scout-for-lol/evals' --concurrency=2
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/alert-dashboard' --filter scout-for-lol --filter '@scout-for-lol/evals' --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'
+      bun x --no-install turbo run build lint test test:e2e --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --filter='@shepherdjerred/alert-dashboard' --filter='@scout-for-lol/evals' --concurrency=2
       if [ ! -s .ci-reports/junit/sjer.red/playwright.xml ]; then
         echo "playwright-e2e-main completed without a non-empty JUnit report" >&2
+        exit 1
+      fi
+      if [ ! -s .ci-reports/junit/shepherdjerred__alert-dashboard/playwright.xml ]; then
+        echo "alert-dashboard browser tests completed without a non-empty JUnit report" >&2
         exit 1
       fi
       bun --no-install scripts/namespace-playwright-reports.ts
@@ -1020,7 +1086,7 @@ steps:
           export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
           export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
           flock -x 9
-          for stack in seaweedfs tailscale buildkite arr pagerduty github cloudflare; do
+          for stack in seaweedfs tailscale buildkite arr github cloudflare; do
             bun --no-install packages/homelab/scripts/tofu-stack.ts "$$stack" plan
           done
         ) 9>/buildkite/tofu-plugin-cache/.lock
@@ -1089,6 +1155,7 @@ steps:
         - "turbo.json"
         - "tsconfig.base.json"
         - "packages/birmel/**"
+        - "packages/alert-dashboard/**"
         - "packages/code-review/**"
         - "packages/discord-plays-core/**"
         - "packages/discord-plays-mario-kart/**"
@@ -1419,7 +1486,7 @@ steps:
         export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
         export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
         flock -x 9
-        for stack in seaweedfs tailscale buildkite arr pagerduty; do
+        for stack in seaweedfs tailscale buildkite arr; do
           bun --no-install packages/homelab/scripts/tofu-stack.ts "$$stack" apply
         done
       ) 9>/buildkite/tofu-plugin-cache/.lock

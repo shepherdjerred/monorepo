@@ -9,7 +9,8 @@ CLI utilities for development workflows, optimized for Claude Code consumption.
 bun run src/index.ts pr health             # PR health check
 bun run src/index.ts deployed scout        # Is a service/commit live on the homelab?
 
-bun run src/index.ts pd incidents          # PagerDuty incidents
+bun run src/index.ts alerts list           # Alert ledger occurrences
+bun run src/index.ts pd incidents          # PagerDuty incidents during staged migration
 bun run src/index.ts bugsink issues        # Bugsink issues
 bun run src/index.ts gf dashboards         # Grafana dashboards
 bun run src/index.ts screenshot stocks-sjer-red /   # Visually verify a frontend change
@@ -33,21 +34,24 @@ src/
 ├── handlers/             # Command routers
 │   ├── pr.ts             # toolkit pr
 │   ├── deployed.ts       # toolkit deployed
-│   ├── pagerduty.ts      # toolkit pd
+│   ├── alerts.ts         # toolkit alerts
+│   ├── pagerduty.ts      # toolkit pd (retained until production cutover)
 │   ├── bugsink.ts        # toolkit bugsink
 │   ├── grafana.ts        # toolkit gf
 │   └── screenshot.ts     # toolkit screenshot
 ├── commands/
 │   ├── pr/               # PR subcommands
 │   ├── deployed/         # `deployed` orchestration
-│   ├── pagerduty/        # PagerDuty subcommands
+│   ├── alerts.ts         # Alert ledger subcommands
+│   ├── pagerduty/        # PagerDuty subcommands retained during migration
 │   ├── bugsink/          # Bugsink subcommands
 │   ├── grafana/          # Grafana subcommands
 │   └── screenshot/       # `screenshot` orchestration
 └── lib/
     ├── github/           # GitHub API via gh CLI
     ├── deployed/         # Commit → homelab deploy trace (git/argocd/kubectl)
-    ├── pagerduty/        # PagerDuty REST API client
+    ├── alerts.ts         # Alerts REST API client
+    ├── pagerduty/        # PagerDuty REST API client retained during migration
     ├── bugsink/          # Bugsink REST API client
     ├── grafana/          # Grafana REST API client
     ├── pinchtab-cli/     # PinchTab CLI wrapper (screenshot's browser driver)
@@ -57,16 +61,17 @@ src/
 
 ## Environment Variables
 
-| Variable             | Description                                                      |
-| -------------------- | ---------------------------------------------------------------- |
-| `PAGERDUTY_TOKEN`    | PagerDuty API token                                              |
-| `BUGSINK_URL`        | Bugsink instance URL (e.g., `https://bugsink.example.com`)       |
-| `BUGSINK_TOKEN`      | Bugsink API token                                                |
-| `GRAFANA_URL`        | Grafana instance URL                                             |
-| `GRAFANA_API_KEY`    | Grafana API key or service account token                         |
-| `AWS_PROFILE`        | AWS profile for `pr asset` (or pass `--profile`)                 |
-| `DISCORD_BOT_TOKEN`  | Discord bot token for `discord daemon start` (optional)          |
-| `DISCORD_USER_TOKEN` | Discord user/selfbot token for `discord daemon start` (optional) |
+| Variable              | Description                                                      |
+| --------------------- | ---------------------------------------------------------------- |
+| `ALERT_DASHBOARD_URL` | Alerts service URL (defaults to the tailnet service)             |
+| `PAGERDUTY_TOKEN`     | PagerDuty API token retained until the production cutover        |
+| `BUGSINK_URL`         | Bugsink instance URL (e.g., `https://bugsink.example.com`)       |
+| `BUGSINK_TOKEN`       | Bugsink API token                                                |
+| `GRAFANA_URL`         | Grafana instance URL                                             |
+| `GRAFANA_API_KEY`     | Grafana API key or service account token                         |
+| `AWS_PROFILE`         | AWS profile for `pr asset` (or pass `--profile`)                 |
+| `DISCORD_BOT_TOKEN`   | Discord bot token for `discord daemon start` (optional)          |
+| `DISCORD_USER_TOKEN`  | Discord user/selfbot token for `discord daemon start` (optional) |
 
 ## `deployed` — is my commit/service live on the homelab?
 

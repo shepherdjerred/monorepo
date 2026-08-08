@@ -3,59 +3,109 @@ id: pagerduty-migration
 type: todo
 status: in-progress
 board: true
-verification: agent
-disposition: active
+verification: operator
+disposition: blocked
 source_marker: false
 ---
 
-# Migrate off PagerDuty to another alerting/on-call platform
+# Complete the Alerts cutover and retire PagerDuty
 
-## What
+## Context
 
-Move alerting + on-call + incident querying off PagerDuty. Candidates: Grafana
-OnCall (we already run Grafana), Opsgenie, or a self-hosted webhook flow (the
-Sentinel POC already handles incident webhooks).
+The Alerts service, durable ledger, UI, APIs, image build, deployment chart, and
+parallel `toolkit alerts` command are implemented. PagerDuty remains the active
+Alertmanager receiver and the Temporal/TRMNL consumers remain unchanged until a
+deployable Alerts image exists.
 
-## Integration points to migrate
+The first merge intentionally does not register the Alert Dashboard Argo CD
+Application, switch Alertmanager receivers, enable the service-health rules, or
+replace the active Temporal/TRMNL clients. The existing `toolkit pd` command is
+retained beside `toolkit alerts`. The image version is an all-zero placeholder
+until the main image lane publishes a real digest. Activating those resources
+before that pin would guarantee an `ImagePullBackOff` while removing working
+PagerDuty paths.
 
-| #   | Surface                                                          | Path                                                                                  |
-| --- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| 1   | Alertmanager PagerDuty receiver + routing (critical/warning)     | `packages/homelab/src/cdk8s/src/resources/argo-applications/prometheus.ts` (~184–274) |
-| 2   | Toolkit CLI (`toolkit pd incidents` / `incident <id>`)           | `packages/toolkit/src/handlers/pagerduty.ts`                                          |
-| 3   | Homelab audit incident summary                                   | `packages/temporal/src/activities/homelab-audit-prompts.ts`                           |
-| 4   | Temporal worker `PAGERDUTY_TOKEN` injection                      | `packages/homelab/src/cdk8s/src/resources/temporal/worker.ts`                         |
-| 5   | TRMNL dashboard incident/on-call widget                          | `packages/trmnl-dashboard/src/clients/pagerduty.ts`                                   |
-| 6   | Sentinel POC webhook + triager                                   | `poc/sentinel/src/adapters/webhook.ts`, `poc/sentinel/src/agents/pd-triager.ts`       |
-| 7   | `pagerduty-helper` skill + `PAGERDUTY_TOKEN` secret in 1Password | skill dir; secret resource in `prometheus.ts`                                         |
-
-## Why it's open
-
-PagerDuty is wired into alert routing, the CLI, a Temporal activity (homelab
-audit), the TRMNL dashboard, and a POC. A migration must replace each
-integration, not just the Alertmanager receiver.
+After production cutover, retain the PagerDuty account and
+`packages/homelab/src/tofu/pagerduty` state read-only for 30 days. Account
+cancellation and OpenTofu destruction remain separate, explicitly authorized
+operations.
 
 ## Remaining
 
-- [ ] Select the replacement and record how it provides Alertmanager delivery,
-      escalation/on-call ownership, acknowledgement, and incident queries.
-- [ ] Migrate or retire each of the seven inventoried integrations with tests or
-      rendered configuration proving the replacement path.
-- [ ] Verify a test alert reaches the replacement and can be queried by the
-      toolkit/dashboard consumers before removing PagerDuty routing.
-- [ ] Remove PagerDuty credentials and resources from code and 1Password only
-      after the replacement has carried production alerts successfully.
+- [ ] Let the main image lane publish
+      `ghcr.io/shepherdjerred/alert-dashboard`, mark the GHCR package public,
+      and merge the generated real digest pin.
+- [ ] Register the Alert Dashboard Argo CD Application and service-health rules
+      with normal email disabled; verify database migration, snapshot bootstrap,
+      UI, REST/tRPC, previews, reconciliation freshness, and probes.
+- [ ] Only after the service is ready, replace the PagerDuty receiver with the
+      authenticated Alerts webhook and independent Postal fallback route.
+- [ ] Verify a synthetic fire/resolve lifecycle without normal email, including
+      webhook retry idempotency and reconciliation repair.
+- [ ] Enable Postal opening email and verify one distinct synthetic firing alert
+      produces exactly one grouped message.
+- [ ] Migrate and deploy the Temporal audit and TRMNL consumers, remove the
+      retained `toolkit pd` command, and remove runtime PagerDuty credentials
+      only after those consumers and alert routing are healthy.
+- [ ] Record the production cutover timestamp in the Comment Log, then wait 30
+      full days before performing the operator verification below.
+- [ ] Complete the production acceptance checks in
+      `packages/docs/plans/2026-08-08_alert-dashboard-pagerduty-replacement.md`.
+- [ ] With separate explicit operator approval, cancel the PagerDuty account and
+      destroy or remove the retained OpenTofu stack.
+- [ ] Archive this TODO and the completed implementation plan.
 
-## Related
+## Operator Verification
 
-- [PagerDuty Velero alert formatting](../archive/completed/pagerduty-velero-alert-formatting.md)
-  is production-verified; preserve its title and Custom Details behavior in any
-  replacement platform.
+The report-only Temporal task deliberately has no PagerDuty credential. It may
+verify source, CI, and live workload state, but it cannot prove that PagerDuty
+received no incidents.
+
+After 30 full days from the recorded production cutover, use an operator shell
+to inject the retained PagerDuty REST token from 1Password for one read-only API
+session. Query and paginate incidents created from the cutover timestamp through
+the audit timestamp, record the count and any incident IDs in the Comment Log,
+then clear the shell environment. Do not restore the token to Kubernetes,
+Temporal, Buildkite, toolkit configuration, or tracked files. Separately verify
+the live cluster, CI secrets, and active source contain no PagerDuty credential
+consumer before requesting authorization to cancel the account or destroy the
+OpenTofu state.
 
 ## Comment Log
 
-### 2026-07-27 — board audit reconciliation
+### 2026-08-08 — implementation staged behind a deployable image
 
-- Consolidated the Postal/Alertmanager design from the superseded migration plan here; this TODO is the sole active owner for removing all current PagerDuty integrations.
-- Current-tree audit found the Alertmanager receiver, toolkit handler, Temporal
-  audit input, worker secret, TRMNL client, and helper surface still present;
-  this remains genuine migration work.
+The replacement service and parallel toolkit client are complete, but activation
+and active workload migration are deliberately split from the foundation merge.
+Alertmanager, Temporal, TRMNL, and `toolkit pd` continue using PagerDuty until a
+real, public GHCR digest is pinned and the Alerts service passes its
+email-disabled bootstrap checks. This preserves every working path while the
+first image is produced.
+
+### 2026-08-08 — deployment credentials provisioned
+
+Created the application 1Password item with email disabled and a dedicated
+Grafana Viewer service-account token. The shared Postal sender credential was
+copied from the existing Temporal mail integration; no email was sent.
+PostgreSQL credentials are generated and owned by the Zalando operator. The
+committed vault snapshot contains hashes and blank-state metadata only.
+
+### 2026-08-08 — retention eligibility check scheduled
+
+The scheduled follow-up is report-only and checks whether a production cutover
+timestamp exists and 30 full days have elapsed. It has no PagerDuty credential
+and cannot substitute for the operator API check.
+
+<!-- temporal-agent-task
+{
+  "title": "Check PagerDuty retention-audit eligibility",
+  "provider": "claude",
+  "mode": "report-only",
+  "runAt": "2026-09-07T09:00:00-07:00",
+  "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
+  "source": {
+    "docPath": "packages/docs/todos/pagerduty-migration.md"
+  },
+  "prompt": "Read this TODO and inspect current source plus read-only live state. Report whether a production cutover timestamp is recorded, whether 30 full days have elapsed, and whether any active workload or CI path still requires PagerDuty credentials. This task intentionally has no PagerDuty credential: do not claim that PagerDuty received no incidents. Direct the operator to complete the explicitly credentialed API check under Operator Verification before decommission approval. Do not edit files, cancel the account, or run tofu destroy."
+}
+-->

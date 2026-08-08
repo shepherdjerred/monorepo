@@ -1,6 +1,7 @@
 import { asRecord } from "../../scripts/lib/json.ts";
 
 const applicationTargets = [
+  "alert-dashboard",
   "birmel",
   "tasknotes-server",
   "starlight-karma-bot",
@@ -311,6 +312,7 @@ const sitePaths = {
 export const lanePaths: Readonly<Record<string, readonly string[]>> = {
   playwright: [
     ...workspacePaths,
+    "packages/alert-dashboard",
     "packages/sjer.red",
     "packages/astro-opengraph-images",
     "packages/webring",

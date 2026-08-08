@@ -30,6 +30,7 @@ import { createTurboCacheChart } from "./cdk8s-charts/turbo-cache.ts";
 import { createBuildkitdChart } from "./cdk8s-charts/buildkitd.ts";
 import { createPlaneChart } from "./cdk8s-charts/plane.ts";
 import { createTrackerTrackerChart } from "./cdk8s-charts/tracker-tracker.ts";
+import { createAlertDashboardChart } from "./cdk8s-charts/alert-dashboard.ts";
 import { createServiceProbesChart } from "./resources/monitoring/service-probes-chart.ts";
 import { resetProbeRegistry } from "./misc/probe-registry.ts";
 import { applyApplicationReleasePolicy } from "./application-release-policy.ts";
@@ -77,6 +78,7 @@ export async function setupCharts(app: App): Promise<void> {
   createBugsinkChart(app);
   createScoutEvalsChart(app);
   createTasknotesChart(app);
+  createAlertDashboardChart(app);
   createRelayChart(app);
   createTemporalChart(app);
   createTrmnlDashboardChart(app);

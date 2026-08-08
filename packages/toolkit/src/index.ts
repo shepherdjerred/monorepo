@@ -23,6 +23,8 @@ Commands:
   screenshot <pkg> [route]   Boot a package's dev server, screenshot a route
   screenshot --list          List screenshot-able packages
 
+  alerts list                List alert occurrences and history
+  alerts show <ID>           View an alert occurrence and timeline
   pagerduty incidents        List open PagerDuty incidents
   pagerduty incident <ID>    View PagerDuty incident details
   pd ...                     Alias for pagerduty
@@ -72,6 +74,7 @@ Options:
   --verbose, -v              Verbose output (timing, debug info)
 
 Environment Variables:
+  ALERT_DASHBOARD_URL        Alerts service URL (tailnet default)
   PAGERDUTY_TOKEN            PagerDuty API token
   BUGSINK_URL                Bugsink instance URL
   BUGSINK_TOKEN              Bugsink API token
@@ -86,6 +89,7 @@ Examples:
   toolkit deployed scout
   toolkit deployed scout/prod
   toolkit screenshot stocks-sjer-red /
+  toolkit alerts list
   toolkit pd incidents
   toolkit gf dashboards
 `);
@@ -128,6 +132,11 @@ async function main(): Promise<void> {
         await import("./handlers/screenshot.ts");
       // No sub-subcommand: the first token after `screenshot` is the package alias.
       await handleScreenshotCommand(subcommand, args.slice(1));
+      break;
+    }
+    case "alerts": {
+      const { handleAlertsCommand } = await import("./handlers/alerts.ts");
+      await handleAlertsCommand(subcommand, args.slice(2));
       break;
     }
     case "pagerduty":

@@ -46,9 +46,13 @@ describe("namespace-playwright-reports", () => {
     await rm(root, { recursive: true, force: true });
   });
 
-  test("namespaces sjer.red (separateTests) and docs-wiki (workspaces) reports", async () => {
+  test("namespaces separate and workspace Playwright reports", async () => {
     const sjerReport = await writeReport(root, "sjer.red");
     const wikiReport = await writeReport(root, "shepherdjerred__docs-wiki");
+    const alertsReport = await writeReport(
+      root,
+      "shepherdjerred__alert-dashboard",
+    );
 
     const { exitCode } = await run(root);
     expect(exitCode).toBe(0);
@@ -58,6 +62,9 @@ describe("namespace-playwright-reports", () => {
     );
     expect(await Bun.file(wikiReport).text()).toContain(
       'classname="@shepherdjerred/docs-wiki::home.spec.ts',
+    );
+    expect(await Bun.file(alertsReport).text()).toContain(
+      'classname="@shepherdjerred/alert-dashboard::home.spec.ts',
     );
   });
 

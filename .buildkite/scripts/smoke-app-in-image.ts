@@ -188,6 +188,36 @@ const commands: Record<
   string,
   { readonly command: string; readonly env: Record<string, string> }
 > = {
+  "alert-dashboard": {
+    command: [
+      "set -eu",
+      "cd /app",
+      "bun packages/alert-dashboard/src/server/index.ts >/tmp/alert-dashboard-smoke.log 2>&1 &",
+      "pid=$!",
+      "trap 'if kill -0 $pid; then kill $pid; if wait $pid; then :; else cleanup_status=$?; [ $cleanup_status -eq 143 ] || exit $cleanup_status; fi; fi' EXIT",
+      "for _ in $(seq 1 30); do",
+      "  if grep -Fq 'alert_dashboard_started' /tmp/alert-dashboard-smoke.log; then",
+      String.raw`    bun -e 'const response = await fetch("http://127.0.0.1:17341/"); const body = await response.text(); if (!response.ok || !body.includes("<div id=\"root\"></div>")) throw new Error("alert dashboard UI was not served"); const font = await fetch("http://127.0.0.1:17341/fonts/BerkeleyMono-Regular.woff2"); const bytes = new Uint8Array(await font.arrayBuffer()); if (!font.ok || !font.headers.get("content-type")?.includes("font/woff2") || String.fromCodePoint(...bytes.slice(0, 4)) !== "wOF2") throw new Error("alert dashboard font was not served")'`,
+      "    exit 0",
+      "  fi",
+      "  if ! kill -0 $pid; then cat /tmp/alert-dashboard-smoke.log; exit 1; fi",
+      "  sleep 1",
+      "done",
+      "cat /tmp/alert-dashboard-smoke.log",
+      "exit 1",
+    ].join("\n"),
+    env: {
+      ALERTMANAGER_URL: "http://127.0.0.1:19093",
+      ALERT_DASHBOARD_WEBHOOK_TOKEN:
+        "smoke-test-token-with-at-least-32-characters",
+      DATABASE_URL: "postgresql://alerts:alerts@127.0.0.1:15432/alerts",
+      EMAIL_ENABLED: "false",
+      GRAFANA_API_KEY: "smoke-viewer-token",
+      GRAFANA_URL: "http://127.0.0.1:13000",
+      HOST: "127.0.0.1",
+      PORT: "17341",
+    },
+  },
   birmel: {
     command: [
       "set -eu",

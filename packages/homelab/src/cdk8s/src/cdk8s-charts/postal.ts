@@ -57,6 +57,12 @@ export function createPostalChart(app: App) {
               },
             },
             {
+              // Alertmanager's independent alert-dashboard fallback receiver.
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
+              },
+            },
+            {
               // CWA Kindle Auto-Send only (not every media pod)
               namespaceSelector: {
                 matchLabels: { "kubernetes.io/metadata.name": "media" },
@@ -121,6 +127,19 @@ export function createPostalChart(app: App) {
             {
               namespaceSelector: {
                 matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(5000), protocol: "TCP" }],
+        },
+        // Alert Dashboard submits opening notifications through Postal's API.
+        {
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: {
+                  "kubernetes.io/metadata.name": "alert-dashboard",
+                },
               },
             },
           ],

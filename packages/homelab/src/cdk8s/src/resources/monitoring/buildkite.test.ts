@@ -114,6 +114,10 @@ function assertCollectorStaleExpression(
   ]);
 }
 
+function ruleExpression(rule: Record<string, unknown> | undefined): string {
+  return z.string().parse(rule?.["expr"]);
+}
+
 describe("Buildkite monitoring manifests", () => {
   it("synthesizes a selectable 10-second controller PodMonitor", () => {
     const manifests = synthBuildkiteMonitoring();
@@ -191,6 +195,8 @@ describe("Buildkite monitoring manifests", () => {
     const collectorStale = alerts.find(
       (rule) => rule["alert"] === "BuildkiteBunCacheCollectorStale",
     );
+    const bunCacheWarningExpr = ruleExpression(bunCacheWarning);
+    const bunCacheCriticalExpr = ruleExpression(bunCacheCritical);
 
     expect(bunCacheWarning).toMatchObject({
       for: "10m",
@@ -200,16 +206,12 @@ describe("Buildkite monitoring manifests", () => {
         namespace: "buildkite",
       },
     });
-    expect(String(bunCacheWarning?.["expr"])).toContain(
+    expect(bunCacheWarningExpr).toContain(
       `persistentvolumeclaim="${BUILDKITE_BUN_CACHE_PVC}"`,
     );
-    expect(String(bunCacheWarning?.["expr"])).toContain("> 0.75");
-    expect(String(bunCacheWarning?.["expr"])).toContain(
-      "zfs_dataset_used_bytes",
-    );
-    expect(String(bunCacheWarning?.["expr"])).toContain(
-      "kube_persistentvolumeclaim_info",
-    );
+    expect(bunCacheWarningExpr).toContain("> 0.75");
+    expect(bunCacheWarningExpr).toContain("zfs_dataset_used_bytes");
+    expect(bunCacheWarningExpr).toContain("kube_persistentvolumeclaim_info");
 
     expect(bunCacheCritical).toMatchObject({
       for: "5m",
@@ -219,7 +221,7 @@ describe("Buildkite monitoring manifests", () => {
         namespace: "buildkite",
       },
     });
-    expect(String(bunCacheCritical?.["expr"])).toContain("> 0.9");
+    expect(bunCacheCriticalExpr).toContain("> 0.9");
 
     expect(collectorStale).toMatchObject({
       for: "1m",

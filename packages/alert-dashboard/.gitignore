@@ -1,0 +1,7 @@
+# Prisma code generation output is rebuilt by the package generate task.
+generated/
+
+# Package-local coverage and Playwright artifacts.
+coverage/
+playwright-report/
+test-results/

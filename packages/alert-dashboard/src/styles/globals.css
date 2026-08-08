@@ -1,0 +1,603 @@
+@import "tailwindcss";
+@import "shadcn/tailwind.css";
+
+@font-face {
+  font-family: "Berkeley Mono";
+  src: url("/fonts/BerkeleyMono-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Berkeley Mono";
+  src: url("/fonts/BerkeleyMono-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: light;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #17211c;
+  background: #f4f6f2;
+  font-synthesis: none;
+  --line: #d9ded8;
+  --muted: #657069;
+  --panel: #fff;
+  --accent: #176b4d;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+button,
+input,
+select {
+  font: inherit;
+}
+a {
+  color: inherit;
+}
+svg {
+  width: 1rem;
+  height: 1rem;
+}
+.mono,
+code,
+pre,
+time,
+table {
+  font-family: "Berkeley Mono", ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+.app-header {
+  height: 64px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  padding: 0 max(24px, calc((100vw - 1440px) / 2));
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  backdrop-filter: blur(12px);
+}
+.brand {
+  font-weight: 750;
+  font-size: 1.2rem;
+  text-decoration: none;
+  margin-right: 2rem;
+}
+nav {
+  display: flex;
+  height: 100%;
+  gap: 0.25rem;
+}
+nav a {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0 0.9rem;
+  color: var(--muted);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+}
+nav a.active {
+  color: #17211c;
+  border-color: var(--accent);
+}
+main {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 36px 24px 72px;
+}
+h1 {
+  margin: 0.2rem 0 0.35rem;
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+  letter-spacing: -0.04em;
+}
+h2 {
+  font-size: 1rem;
+  margin: 0;
+}
+h3 {
+  font-size: 0.8rem;
+  margin: 1.5rem 0 0.6rem;
+  text-transform: uppercase;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+}
+p {
+  color: var(--muted);
+  margin: 0.25rem 0;
+}
+.eyebrow {
+  color: var(--accent);
+  text-transform: uppercase;
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+}
+.page-heading,
+.detail-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-bottom: 28px;
+}
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 36px;
+  padding: 0.45rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+  color: #17211c;
+  font-weight: 650;
+  cursor: pointer;
+}
+.button:hover {
+  background: #f3f5f2;
+}
+.button:focus-visible,
+.input:focus-visible,
+select:focus-visible,
+a:focus-visible {
+  outline: 3px solid rgba(23, 107, 77, 0.25);
+  outline-offset: 2px;
+}
+.input,
+select {
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+  padding: 0 0.7rem;
+  color: #17211c;
+}
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.summary-card,
+.health-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 16px;
+}
+.summary-card span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+.summary-card strong {
+  display: block;
+  margin-top: 5px;
+  font:
+    700 1.7rem "Berkeley Mono",
+    monospace;
+}
+.panel {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.section-heading {
+  padding: 20px 20px 0;
+}
+.filters {
+  padding: 14px;
+  border-bottom: 1px solid var(--line);
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) repeat(3, minmax(130px, auto));
+  gap: 12px;
+  align-items: end;
+}
+.filters label {
+  display: grid;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 650;
+}
+.search {
+  position: relative;
+}
+.search svg {
+  position: absolute;
+  left: 0.65rem;
+  bottom: 0.6rem;
+  color: var(--muted);
+}
+.search .input {
+  padding-left: 2rem;
+  width: 100%;
+}
+.history-filters {
+  grid-template-columns: repeat(6, minmax(130px, 1fr));
+}
+.table-wrap {
+  overflow-x: auto;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.77rem;
+}
+th {
+  text-align: left;
+  color: var(--muted);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: #fafbf9;
+}
+th,
+td {
+  padding: 11px 13px;
+  border-bottom: 1px solid #e9ece8;
+  vertical-align: middle;
+}
+tbody tr:hover {
+  background: #fafcf9;
+}
+.alert-link {
+  display: grid;
+  gap: 2px;
+  text-decoration: none;
+  min-width: 220px;
+}
+.alert-link strong {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 0.85rem;
+}
+.alert-link span {
+  color: var(--muted);
+}
+.severity,
+.state,
+.suppression,
+.preview-status {
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 0.25rem 0.48rem;
+  font:
+    700 0.65rem "Berkeley Mono",
+    monospace;
+  text-transform: uppercase;
+}
+.severity-critical {
+  color: #9d241e;
+  background: #fde9e7;
+}
+.severity-warning {
+  color: #8a5700;
+  background: #fff2cf;
+}
+.severity-info {
+  color: #175989;
+  background: #e5f2fc;
+}
+.severity-unknown {
+  color: #555;
+  background: #eee;
+}
+.state {
+  background: #e7f3ec;
+  color: #176b4d;
+}
+.suppression {
+  margin-left: 0.3rem;
+  background: #ececef;
+  color: #565564;
+}
+.loading-state,
+.empty-state,
+.error-state {
+  padding: 56px 24px;
+  text-align: center;
+  color: var(--muted);
+}
+.error-state {
+  color: #9d241e;
+}
+.timeline {
+  padding: 18px 24px;
+}
+.timeline article {
+  display: grid;
+  grid-template-columns: 15px 1fr;
+  gap: 10px;
+  position: relative;
+  padding-bottom: 24px;
+}
+.timeline article:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  width: 1px;
+  background: var(--line);
+  left: 5px;
+  top: 12px;
+  bottom: 0;
+}
+.timeline-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 99px;
+  background: var(--accent);
+  margin-top: 4px;
+  z-index: 1;
+}
+.timeline-title {
+  display: flex;
+  gap: 0.75rem;
+  align-items: baseline;
+}
+.timeline-title a {
+  color: var(--accent);
+}
+.timeline time {
+  color: var(--muted);
+  font-size: 0.73rem;
+}
+.history-pagination {
+  display: flex;
+  justify-content: center;
+  padding: 0 24px 24px;
+}
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--muted);
+  margin-bottom: 18px;
+}
+.badge-row,
+.link-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.link-row a {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--accent);
+}
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+.metadata {
+  padding: 20px;
+}
+.metadata dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.metadata dl div {
+  min-width: 0;
+}
+.metadata dt {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+.metadata dd {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+}
+.label-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.label-list code,
+.preview code {
+  background: #f0f3ef;
+  border-radius: 4px;
+  padding: 0.3rem 0.45rem;
+  font-size: 0.7rem;
+  overflow-wrap: anywhere;
+}
+.compact {
+  padding: 20px;
+}
+.previews {
+  margin-top: 28px;
+}
+.previews > h2 {
+  margin-bottom: 12px;
+  font-size: 1.2rem;
+}
+.preview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+.preview {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  padding: 16px;
+  min-width: 0;
+}
+.preview-heading {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.preview-status.available {
+  background: #e7f3ec;
+  color: #176b4d;
+}
+.preview-status.unavailable {
+  background: #eee;
+}
+.preview-status.error {
+  background: #fde9e7;
+  color: #9d241e;
+}
+.preview pre {
+  max-height: 300px;
+  overflow: auto;
+  font-size: 0.65rem;
+  background: #111a15;
+  color: #d4e6dc;
+  padding: 12px;
+  border-radius: 6px;
+}
+.health-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.health-card {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.health-card h2 {
+  margin-bottom: 2px;
+}
+.health-card strong {
+  font:
+    700 0.75rem "Berkeley Mono",
+    monospace;
+  text-transform: uppercase;
+}
+.health-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #b6b9b7;
+}
+.health-dot.ok {
+  background: #2b9a6d;
+}
+.health-dot.error,
+.health-dot.stale {
+  background: #c7463e;
+}
+.health-dot.disabled {
+  background: #777;
+}
+@media (max-width: 900px) {
+  .summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .filters,
+  .history-filters {
+    grid-template-columns: 1fr 1fr;
+  }
+  .detail-grid,
+  .preview-grid {
+    grid-template-columns: 1fr;
+  }
+  .health-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 600px) {
+  .app-header {
+    padding: 0 14px;
+  }
+  .brand {
+    margin-right: 0.5rem;
+  }
+  nav a {
+    padding: 0 0.55rem;
+    font-size: 0.8rem;
+  }
+  main {
+    padding: 24px 14px 56px;
+  }
+  .page-heading,
+  .detail-heading {
+    display: grid;
+  }
+  .summary-grid,
+  .filters,
+  .history-filters,
+  .health-grid,
+  .metadata dl {
+    grid-template-columns: 1fr;
+  }
+  .table-wrap {
+    overflow-x: visible;
+    padding: 10px;
+    background: #fafbf9;
+  }
+  .table-wrap table,
+  .table-wrap tbody,
+  .table-wrap tr,
+  .table-wrap td {
+    display: block;
+    width: 100%;
+  }
+  .table-wrap thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .table-wrap tbody {
+    display: grid;
+    gap: 10px;
+  }
+  .table-wrap tbody tr {
+    padding: 8px 12px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: var(--panel);
+  }
+  .table-wrap td {
+    display: grid;
+    grid-template-columns: 76px minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
+    padding: 8px 0;
+    border-bottom: 1px solid #e9ece8;
+  }
+  .table-wrap td:last-child {
+    border-bottom: 0;
+  }
+  .table-wrap td::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font:
+      700 0.65rem "Berkeley Mono",
+      monospace;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .alert-link {
+    min-width: 0;
+  }
+}
