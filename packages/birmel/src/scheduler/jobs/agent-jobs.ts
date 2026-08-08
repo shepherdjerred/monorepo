@@ -339,12 +339,14 @@ async function processAgentJob(job: AgentJob): Promise<void> {
             error,
           );
           span.setAttribute("birmel.job.timeout_fenced", fenced);
-          await finalizeTimedOutExecution({
-            job: claimed.job,
-            runId: run.id,
-            claimId: claimed.claimId,
-            operation: execution,
-          });
+          void trackJobExecution(
+            finalizeTimedOutExecution({
+              job: claimed.job,
+              runId: run.id,
+              claimId: claimed.claimId,
+              operation: execution,
+            }),
+          );
         } else {
           await markJobFailure(claimed.job, run.id, claimed.claimId, error);
         }

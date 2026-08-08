@@ -12,6 +12,7 @@ describe("request-scoped memory extraction control", () => {
       sourceMessageId: "200",
       guildId: "300",
       userId: "400",
+      ownsSourceReply: true,
     };
 
     await runWithRequestContext(context, async () => {

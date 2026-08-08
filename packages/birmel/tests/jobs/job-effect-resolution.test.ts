@@ -36,6 +36,7 @@ const requestContext: RequestContext = {
   userId: ACTOR_USER_ID,
   sourceChannelId: CHANNEL_ID,
   sourceMessageId: SOURCE_MESSAGE_ID,
+  ownsSourceReply: false,
 };
 
 async function withRequest<T>(operation: () => Promise<T>): Promise<T> {

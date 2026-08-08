@@ -450,6 +450,7 @@ function trustedContext(
     sourceMessageId: "100000000000000001",
     guildId: "100000000000000002",
     userId: trustedUserId,
+    ownsSourceReply: true,
     ...overrides,
   };
 }

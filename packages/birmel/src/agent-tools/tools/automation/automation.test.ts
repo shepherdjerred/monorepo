@@ -33,6 +33,7 @@ async function executeTool(tool: unknown, input: Record<string, unknown>) {
       sourceChannelId: "223456789012345678",
       sourceMessageId: "323456789012345678",
       userId: actor,
+      ownsSourceReply: true,
     },
     async () => await Reflect.apply(executable.execute, undefined, [input, {}]),
   );

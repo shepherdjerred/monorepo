@@ -55,6 +55,7 @@ const requestContext: RequestContext = {
   userId: ACTOR_USER_ID,
   sourceChannelId: CHANNEL_ID,
   sourceMessageId: SOURCE_MESSAGE_ID,
+  ownsSourceReply: false,
 };
 
 const ToolResultSchema = z.object({
@@ -714,7 +715,7 @@ describe("durable AgentJob execution outcomes", () => {
 
     releaseExecution?.();
     await execution;
-    expect(await waitForActiveAgentJobs(1000)).toBe(true);
+    await waitForJobLastStatus(jobId, "success");
     job = await prisma.agentJob.findUniqueOrThrow({ where: { id: jobId } });
     expect(job.status).toBe("completed");
     expect(job.lastStatus).toBe("success");
@@ -1441,9 +1442,6 @@ describe("scheduler AgentJob concurrency and shutdown", () => {
       const tick = runAgentJobsJob();
       await waitForJobLastStatus(firstJobId, "timed_out");
       await Bun.sleep(20);
-      expect(executionCount).toBe(1);
-      expect(await waitForActiveAgentJobs(10)).toBe(false);
-
       releaseFirstExecution?.();
       await tick;
       expect(executionCount).toBe(2);

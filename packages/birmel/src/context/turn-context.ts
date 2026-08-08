@@ -104,8 +104,8 @@ async function assembleContextForTurn(
     limit: CONTEXT_BUDGETS.maximumClaims,
   });
   const friendContext = getFriendContext({
-    message: options.turn.content,
-    references: [],
+    message: "",
+    references: mentioned,
     mentionedDiscordUserIds: mentioned,
     characterBudget: CONTEXT_BUDGETS.loreAndMemory,
     maxLoreSections: 6,

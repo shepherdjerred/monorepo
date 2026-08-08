@@ -249,6 +249,7 @@ async function processAdmittedTurn(
       sourceMessageId: context.turn.discordMessageId,
       guildId: context.turn.guildId,
       userId: context.turn.userId,
+      ownsSourceReply: true,
       personaId: persona,
       ...(context.turn.voiceChannelId == null
         ? {}

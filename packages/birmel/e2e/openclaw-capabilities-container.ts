@@ -143,6 +143,7 @@ async function setupPhase(): Promise<void> {
       sourceChannelId: CHANNEL_ID,
       sourceMessageId: MESSAGE_ID,
       userId: USER_ID,
+      ownsSourceReply: true,
     },
     async () => {
       expectSuccess(

@@ -22,6 +22,7 @@ const execution: AgentJobExecution = {
     userId: "234567890123456789",
     sourceChannelId: "345678901234567890",
     sourceMessageId: "456789012345678901",
+    ownsSourceReply: false,
   },
 };
 

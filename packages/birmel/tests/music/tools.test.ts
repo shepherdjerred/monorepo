@@ -176,6 +176,7 @@ function withMusicContext<T>(
     {
       sourceChannelId: "text-1",
       sourceMessageId: "message-1",
+      ownsSourceReply: true,
       guildId: context.guildId ?? "guild-1",
       userId: z.string().parse(getConfig().authority.trustedUserIds[0]),
       ...(context.voiceChannelId != null && {
