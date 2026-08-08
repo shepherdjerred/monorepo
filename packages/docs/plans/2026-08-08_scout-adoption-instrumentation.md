@@ -5,6 +5,8 @@ status: in-progress
 board: false
 ---
 
+# Scout for LoL — adoption instrumentation, outreach rework, and web UI fixes
+
 ## Context
 
 Prod investigation (Prometheus + Loki + read-only queries against the prod SQLite DB) found that Scout's install growth is healthy (32 → 59 guilds in 12 weeks) but activation is not: **only 13 of 48 tracked installs ever created a subscription (27%)**, and that rate plateaus at ~30% and never recovers. The supporting systems that should catch this are broken or absent:
