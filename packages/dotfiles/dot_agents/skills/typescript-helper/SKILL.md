@@ -37,8 +37,8 @@ Read [references/releases-and-migration.md](references/releases-and-migration.md
 Type-check through the project configuration or build graph:
 
 ```bash
-tsc -p tsconfig.json --noEmit
-tsc -b
+PATH=node_modules/@typescript/native/bin:$PATH tsc -p tsconfig.json --noEmit
+PATH=node_modules/@typescript/native/bin:$PATH tsc -b
 ```
 
 Passing source filenames to `tsc` bypasses project configuration historically. TypeScript 7 errors when a config is present unless that bypass is made explicit with `--ignoreConfig`. Do not use `tsc file.ts` as the normal project check.
