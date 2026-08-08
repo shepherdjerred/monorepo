@@ -416,6 +416,42 @@ tags:
   });
 });
 
+describe("due-only recurring completion", () => {
+  test("uncomplete restores a due-only recurrence snapshot", async () => {
+    const due = "2026-08-03";
+    const recurrence = "FREQ=WEEKLY";
+    await seed(
+      "TaskNotes/due-only.md",
+      `---
+title: Due-only review
+status: open
+priority: normal
+due: ${due}
+recurrence: ${recurrence}
+tags:
+  - task
+---
+`,
+    );
+    await repo.scan();
+
+    await repo.completeInstance("TaskNotes/due-only.md", {
+      date: due,
+      completed: true,
+    });
+    const restored = await repo.completeInstance("TaskNotes/due-only.md", {
+      date: due,
+      completed: false,
+      restore: { scheduled: null, due, recurrence, skipped: false },
+    });
+
+    expect(restored.complete_instances).toEqual([]);
+    expect(restored.scheduled).toBeUndefined();
+    expect(restored.due).toBe(due);
+    expect(restored.recurrence).toBe(recurrence);
+  });
+});
+
 describe("matching-state restore safeguards", () => {
   test("rejects a matching-state restore after a DTSTART-only recurrence edit", async () => {
     await seed(

@@ -71,6 +71,7 @@ export function assertRecurringRestoreIsCurrent({
     addDTSTARTToRecurrenceRule({
       recurrence: restore.recurrence,
       ...(restore.scheduled === null ? {} : { scheduled: restore.scheduled }),
+      ...(restore.due === null ? {} : { due: restore.due }),
       ...(task.dateCreated === undefined
         ? {}
         : { dateCreated: task.dateCreated }),
