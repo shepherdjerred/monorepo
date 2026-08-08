@@ -10,6 +10,7 @@ import {
   type AgentSoftKill,
   type TrackedAgentInput,
 } from "./agent-subprocess.ts";
+import { redactSecrets } from "./redact.ts";
 
 const noRedact = (line: string): string => line;
 
@@ -142,6 +143,25 @@ describe("runTrackedAgentSubprocess", () => {
     expect(result.firstOutputLatencyMs).toBeTypeOf("number");
     expect(result.sigkillEscalated).toBe(false);
     expect(result.softKillFired).toBe(false);
+  });
+
+  it("uses updated token contents when the shared redaction list changes", async () => {
+    const redactionTokens = ["first-mounted-token"];
+    const script = [
+      "console.log('first-mounted-token');",
+      "await Bun.sleep(50);",
+      "console.log('second-mounted-token');",
+    ].join(" ");
+    const { input, stdoutLines } = harness(["bun", "-e", script], {
+      redactTokens: redactionTokens,
+    });
+    setTimeout(() => {
+      redactionTokens.splice(0, redactionTokens.length, "second-mounted-token");
+    }, 25);
+
+    await runTrackedAgentSubprocess(input, redactSecrets);
+
+    expect(stdoutLines).toEqual(["***", "***"]);
   });
 
   it("reports firstOutputLatencyMs=undefined and maxIdleMs≈duration for a silent run", async () => {

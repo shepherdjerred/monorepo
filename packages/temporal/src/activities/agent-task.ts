@@ -14,9 +14,9 @@ import { provisionWorkdir } from "#lib/pr-review-workdir.ts";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import { buildAgentTaskCommand } from "#activities/agent-task-command.ts";
 import {
-  agentTaskSecretTokens,
+  createAgentTaskSecretTokenState,
   envForProvider,
-  readAgentTaskMountedSecretTokens,
+  refreshAgentTaskSecretTokenStateInBackground,
 } from "#activities/agent-task-env.ts";
 import { workflowExecutionContext } from "#activities/temporal-context.ts";
 import { runTrackedAgentSubprocess } from "#shared/agent-subprocess.ts";
@@ -42,6 +42,7 @@ import {
 
 const COMPONENT = "agent-task";
 const HEARTBEAT_INTERVAL_MS = 10_000;
+const MOUNTED_SECRET_REFRESH_INTERVAL_MS = 10_000;
 const DEFAULT_WORKFLOW_TYPE = "agentTaskWorkflow";
 
 export type PrepareAgentTaskWorkdirInput = {
@@ -194,13 +195,10 @@ async function runAgent(
       });
 
       const githubTokenResult = await createGitHubAppInstallationToken();
-      const mountedSecretTokens = await readAgentTaskMountedSecretTokens();
-      const secretTokens = agentTaskSecretTokens(
+      const secretTokenState = await createAgentTaskSecretTokenState(
         githubTokenResult.token,
-        Bun.env,
-        mountedSecretTokens,
       );
-
+      const secretTokens = secretTokenState.tokens;
       const llmStartMs = Date.now();
       const llmTrace = startAgentTaskLlmTrace({
         provider,
@@ -216,6 +214,16 @@ async function runAgent(
           jsonLog("warning", message, { phase: "llm-trace" });
         },
       });
+      const mountedSecretRefreshTimer = setInterval(() => {
+        void refreshAgentTaskSecretTokenStateInBackground(
+          secretTokenState,
+          () => {
+            jsonLog("warning", "Unable to refresh mounted agent-task secrets", {
+              phase: "secret-redaction",
+            });
+          },
+        );
+      }, MOUNTED_SECRET_REFRESH_INTERVAL_MS);
 
       let result: TrackedAgentResult;
       try {
@@ -298,10 +306,13 @@ async function runAgent(
           redactSecrets,
         );
       } finally {
+        clearInterval(mountedSecretRefreshTimer);
         // Close codex spans on every exit path (incl. spawn failure) so a
         // crashed run still shows up in Tempo with whatever turns completed.
         llmTrace.close();
       }
+
+      await secretTokenState.refresh();
 
       // Post-hoc claude span — before the cancelled/exit-code checks so
       // failed runs are traced too (they still spent tokens).

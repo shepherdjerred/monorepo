@@ -65,6 +65,59 @@ export function agentTaskSecretTokens(
   ];
 }
 
+export type AgentTaskSecretTokenState = {
+  tokens: (string | undefined)[];
+  refresh: () => Promise<void>;
+};
+
+export async function createAgentTaskSecretTokenState(
+  githubAppToken: string,
+  env: Readonly<Record<string, string | undefined>> = Bun.env,
+  paths: readonly string[] = MOUNTED_SECRET_PATHS,
+): Promise<AgentTaskSecretTokenState> {
+  const tokens = [
+    ...agentTaskSecretTokens(
+      githubAppToken,
+      env,
+      await readAgentTaskMountedSecretTokens(paths),
+    ),
+  ];
+  let refreshInFlight: Promise<void> | undefined;
+  const refresh = (): Promise<void> => {
+    if (refreshInFlight !== undefined) {
+      return refreshInFlight;
+    }
+    const refreshRun = (async (): Promise<void> => {
+      const nextSecretTokens = agentTaskSecretTokens(
+        githubAppToken,
+        env,
+        await readAgentTaskMountedSecretTokens(paths),
+      );
+      tokens.splice(0, tokens.length, ...nextSecretTokens);
+    })();
+    refreshInFlight = (async (): Promise<void> => {
+      try {
+        await refreshRun;
+      } finally {
+        refreshInFlight = undefined;
+      }
+    })();
+    return refreshInFlight;
+  };
+  return { tokens, refresh };
+}
+
+export async function refreshAgentTaskSecretTokenStateInBackground(
+  state: AgentTaskSecretTokenState,
+  onError: () => void,
+): Promise<void> {
+  try {
+    await state.refresh();
+  } catch {
+    onError();
+  }
+}
+
 // Build the subprocess environment for an agent-task provider run.
 //
 // ACCEPTED-RISK NOTE (owner decision, see PR #1860 Codex threads A & B):
