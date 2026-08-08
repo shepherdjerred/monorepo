@@ -199,6 +199,16 @@ async function runAgent(
         githubTokenResult.token,
       );
       const secretTokens = secretTokenState.tokens;
+      const redactionFailureController = new AbortController();
+      const activityCancellationSignal =
+        activityCancellationSignalOrUndefined();
+      const cancellationSignal =
+        activityCancellationSignal === undefined
+          ? redactionFailureController.signal
+          : AbortSignal.any([
+              activityCancellationSignal,
+              redactionFailureController.signal,
+            ]);
       const llmStartMs = Date.now();
       const llmTrace = startAgentTaskLlmTrace({
         provider,
@@ -218,9 +228,10 @@ async function runAgent(
         void refreshAgentTaskSecretTokenStateInBackground(
           secretTokenState,
           () => {
-            jsonLog("warning", "Unable to refresh mounted agent-task secrets", {
+            jsonLog("error", "Unable to refresh mounted agent-task secrets", {
               phase: "secret-redaction",
             });
+            redactionFailureController.abort();
           },
         );
       }, MOUNTED_SECRET_REFRESH_INTERVAL_MS);
@@ -234,7 +245,7 @@ async function runAgent(
             env: envForProvider(provider, githubTokenResult.token),
             redactTokens: secretTokens,
             startToCloseTimeoutMs: startToCloseTimeoutMsOrUndefined(),
-            cancellationSignal: activityCancellationSignalOrUndefined(),
+            cancellationSignal,
             heartbeatIntervalMs: HEARTBEAT_INTERVAL_MS,
             onHeartbeat: (beat) => {
               safeHeartbeat({ phase: "agent", provider, ...beat });
