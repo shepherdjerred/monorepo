@@ -432,6 +432,12 @@
     "reason": "Tasknotes user vault"
   },
   {
+    "namespace": "tracker-tracker",
+    "name": "tracker-tracker-data-pvc",
+    "backup": "enabled",
+    "reason": "Tracker Tracker database backups and application state"
+  },
+  {
     "namespace": "tempo",
     "name": "storage-tempo-0",
     "backup": "disabled",

@@ -8,6 +8,34 @@ This repository contains resources related to my homelab. The server is named
 them over time. Services are deployed across multiple namespaces (media, home,
 postal, etc.) using an app-of-apps pattern in ArgoCD.
 
+## Tracker Tracker
+
+Tracker Tracker runs at the private Tailscale hostname `tracker-tracker` and
+collects the PrivateHD, AvistaZ, and AnimeZ account metrics alongside the
+existing qBittorrent instance. Use `op run` to inject local 1Password
+references, then run the idempotent bootstrap:
+
+```bash
+cd packages/homelab
+op run --env-file ../../.env.tracker-tracker -- bun run tracker-tracker:bootstrap
+```
+
+The local env file must provide `TRACKER_TRACKER_URL`, the Tracker Tracker
+login fields, qBittorrent credentials, and each tracker's `BASE_URL`,
+`USERNAME`, `COOKIES`, and `USER_AGENT`. Keep that file untracked. Export
+collected data as JSONL with:
+
+Use `op://` references in that file for every secret. The existing qBittorrent
+item uses `op://Homelab (Kubernetes)/qBittorrent/username` and
+`op://Homelab (Kubernetes)/qBittorrent/qbittorrent-password`; add equivalent
+private items/fields for the Tracker Tracker login and each tracker's cookies,
+User-Agent, and username rather than placing their values in the repository.
+
+```bash
+cd packages/homelab
+op run --env-file ../../.env.tracker-tracker -- bun run tracker-tracker:export
+```
+
 Currently my server is managed with Kubernetes. I've used Docker, Ansible, and
 bash scripts in the past. Kubernetes has been an interesting experiment and I
 think it's overall worthwhile since the ecosystem is so rich.

@@ -155,4 +155,27 @@ export async function createMediaChart(app: App) {
       ],
     },
   });
+
+  // Tracker Tracker reads only qBittorrent's Web API from its dedicated namespace.
+  new KubeNetworkPolicy(chart, "qbittorrent-tracker-tracker-policy", {
+    metadata: { name: "qbittorrent-tracker-tracker-policy" },
+    spec: {
+      podSelector: { matchLabels: { app: "qbittorrent" } },
+      policyTypes: ["Ingress"],
+      ingress: [
+        {
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: {
+                  "kubernetes.io/metadata.name": "tracker-tracker",
+                },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(8080), protocol: "TCP" }],
+        },
+      ],
+    },
+  });
 }
