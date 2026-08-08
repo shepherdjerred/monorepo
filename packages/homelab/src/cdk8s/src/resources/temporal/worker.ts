@@ -28,6 +28,7 @@ import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-ar
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createTemporalWorkerAuditRbac } from "./audit-rbac.ts";
 import { createTemporalWorkerCrdReaderRbac } from "./crd-rbac.ts";
+import { sleepWebhookEnv } from "./http-services.ts";
 import { glitterCorpusEnv } from "./glitter-corpus-env.ts";
 import { createTemporalGlitterWorker } from "./glitter-worker.ts";
 import { temporalWorkerHealthProbes } from "./worker-health.ts";
@@ -331,12 +332,14 @@ export function createTemporalWorkerDeployment(
       // :9468 = Xcode Cloud webhook receiver (Hono server in event-bridge/
       //        xcode-cloud-webhook.ts) — exposed via Cloudflare Tunnel; POSTs
       //        iOS build failures into Alertmanager.
+      // :9469 = authenticated iOS sleep automation webhook.
       ports: [
         { number: 9464, name: "metrics" },
         { number: 9465, name: "app-metrics" },
         { number: 9466, name: "gh-webhook" },
         { number: 9467, name: "agent-tasks" },
         { number: 9468, name: "xc-webhook" },
+        { number: 9469, name: "sleep-webhook" },
       ],
       securityContext: {
         user: UID,
@@ -448,6 +451,7 @@ export function createTemporalWorkerDeployment(
           secret,
           key: "AGENT_TASK_API_TOKEN",
         }),
+        ...sleepWebhookEnv(secret),
         // Xcode Cloud webhook receiver (event-bridge/xcode-cloud-webhook.ts).
         // The receiver only starts when XCODE_CLOUD_WEBHOOK_TOKEN is set; the
         // token authenticates the unguessable URL path (Xcode Cloud webhooks

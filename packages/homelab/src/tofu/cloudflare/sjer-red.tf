@@ -195,6 +195,18 @@ resource "cloudflare_dns_record" "sjer_red_cname_temporal_agent_tasks" {
   proxied = true
 }
 
+# Receives authenticated sleep automation requests from iOS Shortcuts. The
+# Temporal worker's TunnelBinding lives in cdk8s; this record completes the
+# public path.
+resource "cloudflare_dns_record" "sjer_red_cname_temporal_sleep" {
+  zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
+  name    = "temporal-sleep"
+  type    = "CNAME"
+  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
+  proxied = true
+}
+
 # Receives Xcode Cloud build webhooks (tasks-for-obsidian iOS app). The temporal
 # worker's receiver (event-bridge/xcode-cloud-webhook.ts) translates FAILED/
 # ERRORED builds into Alertmanager alerts. TunnelBinding lives in cdk8s; this

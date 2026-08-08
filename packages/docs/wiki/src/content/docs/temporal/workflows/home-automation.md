@@ -6,8 +6,9 @@ description: Presence-driven and wall-clock routines — a 90-second settle mode
 Home automation splits by trigger type: **presence edges** (arrivals and
 departures) start event workflows, while **wall-clock routines** (mornings,
 vacuums) are [schedules](/temporal/schedules/). The worker holds a websocket
-to Home Assistant; person-state changes and iOS shortcut actions arrive as
-events.
+to Home Assistant; person-state changes and the existing iOS shortcut actions
+arrive as events. Parameterized sleep actions use the separate Temporal HTTP
+webhook described below.
 
 ## The presence model
 
@@ -94,6 +95,52 @@ Triggered by an iOS shortcut, once per day. Dims the bedroom if lit and
 starts the sleep playlist with a slow nine-step volume ramp. No presence
 guard: an explicit user action is its own authorization.
 
+## Parameterized sleep routines
+
+The `sleep-music` and `sleep-ac` workflows are started by the authenticated
+Temporal sleep webhook. The iOS Shortcut sends `duration_hours`; Temporal
+rounds it to minutes, validates the 1–1440-minute range, and restarts the fixed
+workflow ID when a new invocation arrives. Home Assistant is only the downstream
+service target for the workflow activities.
+
+- **Sleep music** defaults to 180 minutes, sets the bedroom speaker to 10%,
+  plays the existing sleep favorite, and stops playback at the deadline.
+- **Sleep AC** defaults to 120 minutes, sets `climate.bedroom` to 24°C in
+  cooling mode, and turns it off at the deadline.
+- Durations from 1–1440 rounded minutes are accepted. A Shortcut can ask for
+  hours and send the value directly to Temporal; the webhook performs the
+  conversion.
+
+This keeps the long timer and device orchestration in Temporal, where the timer
+survives worker restarts, while leaving only input collection in the Shortcut.
+
+### Shortcut construction
+
+For each routine, create a Shortcut with these actions:
+
+1. **Ask for Input** — Number, prompt “How many hours?”
+2. **Get Contents of URL** — use `POST`, the matching URL below, and add an
+   `Authorization: Bearer <SleepWebhookToken>` header plus
+   `Content-Type: application/json`.
+
+```json
+{
+  "duration_hours": "<ShortcutInput>"
+}
+```
+
+Use `https://temporal-sleep.sjer.red/sleep/music` for music. For AC, use
+`https://temporal-sleep.sjer.red/sleep/ac` with the same request body:
+
+```json
+{
+  "duration_hours": "<ShortcutInput>"
+}
+```
+
+Name each Shortcut for its intended
+Siri phrase, such as “Sleep music” or “Sleep AC”.
+
 Sources: [`src/workflows/ha/`](https://github.com/shepherdjerred/monorepo/tree/main/packages/temporal/src/workflows/ha),
 presence model in [`src/shared/presence.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/shared/presence.ts),
-event wiring in [`src/event-bridge/triggers.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/event-bridge/triggers.ts).
+event wiring in [`src/event-bridge/`](https://github.com/shepherdjerred/monorepo/tree/main/packages/temporal/src/event-bridge).

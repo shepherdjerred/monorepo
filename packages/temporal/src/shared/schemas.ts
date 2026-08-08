@@ -12,6 +12,12 @@ export const GolinkSyncInputSchema = z.object({});
 
 export const VacuumInputSchema = z.object({});
 
+export const SleepDurationMinutesSchema = z.number().int().min(1).max(1440);
+
+export const SleepAutomationInputSchema = z.object({
+  durationMinutes: SleepDurationMinutesSchema,
+});
+
 /**
  * Input for `cancelBuildkiteBuildsWorkflow`. Started from the GitHub webhook
  * `closed` action (merge *or* plain close) to stop any still-active Buildkite
@@ -67,6 +73,7 @@ export type DepsSummaryInput = z.infer<typeof DepsSummaryInputSchema>;
 export type DnsAuditInput = z.infer<typeof DnsAuditInputSchema>;
 export type GolinkSyncInput = z.infer<typeof GolinkSyncInputSchema>;
 export type VacuumInput = z.infer<typeof VacuumInputSchema>;
+export type SleepAutomationInput = z.infer<typeof SleepAutomationInputSchema>;
 export type CancelBuildkiteBuildsInput = z.infer<
   typeof CancelBuildkiteBuildsInputSchema
 >;

@@ -206,10 +206,10 @@ describe("Buildkite monitoring manifests", () => {
         'kube_pod_start_time{\n        namespace="buildkite",\n        pod=~"temporal-maintenance-worker-.*"\n      }',
       );
       expect(String(collectorStale?.["expr"])).toContain(
-        'kube_deployment_status_replicas_available{\n        namespace="buildkite",\n        deployment="temporal-maintenance-worker"\n      }',
+        'kube_deployment_status_replicas_available{\n              namespace="buildkite",\n              deployment="temporal-maintenance-worker"\n            }',
       );
       expect(String(collectorStale?.["expr"])).toContain(
-        'up{\n        namespace="buildkite",\n        service="temporal-maintenance-worker-app-metrics"\n      }',
+        'up{\n              namespace="buildkite",\n              service="temporal-maintenance-worker-app-metrics"\n            }',
       );
       expect(String(collectorStale?.["expr"])).toContain(
         'condition="Progressing",\n        status="false"',

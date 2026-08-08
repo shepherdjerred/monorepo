@@ -24,6 +24,19 @@ const activities = proxyActivities<HaActivities>({
   retry: { maximumAttempts: 3 },
 });
 
+// Cleanup owns the last chance to turn off a device after the sleep timer. Use
+// a bounded, fixed retry budget that fits within the workflow's 60-minute
+// cleanup buffer instead of the normal three-attempt activity policy.
+const cleanupActivities = proxyActivities<HaActivities>({
+  startToCloseTimeout: "10 seconds",
+  retry: {
+    maximumAttempts: 90,
+    initialInterval: "30 seconds",
+    maximumInterval: "30 seconds",
+    backoffCoefficient: 1,
+  },
+});
+
 const outcomeActivities = proxyActivities<OutcomeActivities>({
   startToCloseTimeout: "10 seconds",
   retry: { maximumAttempts: 2 },
@@ -110,6 +123,13 @@ export async function callServiceUnchecked(
   data: Record<string, unknown>,
 ): Promise<void> {
   return activities.callService(domain, service, data);
+}
+
+export async function callServiceForCleanup<
+  D extends Domain<HaSchema>,
+  V extends Service<HaSchema, D>,
+>(domain: D, service: V, data: ServiceDataFor<HaSchema, D, V>): Promise<void> {
+  return cleanupActivities.callService(domain, service, data);
 }
 
 export async function sendNotification(

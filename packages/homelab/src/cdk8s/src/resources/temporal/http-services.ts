@@ -1,6 +1,6 @@
 import type { Chart } from "cdk8s";
-import type { Deployment } from "cdk8s-plus-31";
-import { Service } from "cdk8s-plus-31";
+import type { Deployment, ISecret } from "cdk8s-plus-31";
+import { EnvValue, Service } from "cdk8s-plus-31";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 
 export function createTemporalWorkerGithubWebhookService(
@@ -67,6 +67,47 @@ export function createAgentTaskApiService(
     publicProbeModule: "http_2xx",
     publicProbePath: "/healthz",
   });
+}
+
+export function createSleepWebhookService(
+  chart: Chart,
+  deployment: Deployment,
+) {
+  const sleepWebhookService = new Service(
+    chart,
+    "temporal-worker-sleep-webhook-service",
+    {
+      metadata: {
+        name: "temporal-worker-sleep-webhook",
+        labels: { app: "temporal-worker-sleep-webhook" },
+      },
+      selector: deployment,
+      ports: [{ name: "sleep-webhook", port: 9469, targetPort: 9469 }],
+    },
+  );
+
+  createCloudflareTunnelBinding(
+    chart,
+    "temporal-worker-sleep-webhook-cf-tunnel",
+    {
+      serviceName: sleepWebhookService.name,
+      subdomain: "temporal-sleep",
+      port: 9469,
+      probeModule: "tcp_connect",
+      publicProbeModule: "http_2xx",
+      publicProbePath: "/healthz",
+    },
+  );
+}
+
+export function sleepWebhookEnv(secret: ISecret): Record<string, EnvValue> {
+  return {
+    SLEEP_WEBHOOK_PORT: EnvValue.fromValue("9469"),
+    SLEEP_WEBHOOK_TOKEN: EnvValue.fromSecretValue({
+      secret,
+      key: "SLEEP_WEBHOOK_TOKEN",
+    }),
+  };
 }
 
 export function createXcodeCloudWebhookService(
