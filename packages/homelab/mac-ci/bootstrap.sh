@@ -21,6 +21,8 @@
 
 set -euo pipefail
 
+POWER_BACKUP_FILE="/var/db/buildkite-mac-ci-pmset-before"
+
 if [[ "$(uname -s)" != "Darwin" ]]; then
   echo "error: this provisions a macOS host, but uname -s is $(uname -s)" >&2
   exit 1
@@ -77,7 +79,32 @@ EOF
 chmod 600 "$CFG_FILE"
 umask 022
 
-# --- 4. Start the agent as a login service ---------------------------------
+# --- 4. Power management — never sleep -------------------------------------
+# A CI agent that sleeps drops off Buildkite and hangs any job dispatched to it
+# (this is why the Mini kept "falling asleep" and never held a stable agent). A
+# Mac Mini is AC-powered with no battery, so force a permanent always-on
+# profile. `-c` scopes this to the charger (AC Power) profile only — the same
+# scope restore-power.sh captures and restores; `-a` would also stomp a
+# separately-managed UPS Power profile if one is ever attached. Needs sudo
+# (will prompt).
+#   sleep 0         never idle-sleep the system
+#   disksleep 0     never spin the disk down
+#   displaysleep 0  don't sleep the (headless) display
+#   powernap 0      no Power Nap wake/maintenance cycles
+#   womp 1          wake on network access (magic packet)
+#   autorestart 1   power back on automatically after a power loss
+echo "==> Configuring power management (never sleep) — needs sudo"
+if ! sudo test -e "$POWER_BACKUP_FILE"; then
+  power_backup="$(mktemp)"
+  pmset -g custom >"$power_backup"
+  sudo install -m 600 "$power_backup" "$POWER_BACKUP_FILE"
+  rm "$power_backup"
+  echo "    Saved the previous profile to $POWER_BACKUP_FILE"
+fi
+sudo pmset -c sleep 0 disksleep 0 displaysleep 0 powernap 0 womp 1 autorestart 1
+echo "    Full profile (verify sleep=0): pmset -g custom"
+
+# --- 5. Start the agent as a login service ---------------------------------
 # brew services installs a per-user LaunchAgent (runs on login). For a headless
 # box, enable auto-login (README) so the agent comes up after a reboot. A
 # LaunchAgent (user context) — not a LaunchDaemon — is chosen so keychain/Xcode
@@ -92,4 +119,4 @@ echo
 echo "    Remaining MANUAL steps (see README.md):"
 echo "      1. Join the tailnet:  sudo tailscaled install-system-daemon && sudo tailscale up"
 echo "      2. Enable auto-login  (System Settings > Users & Groups) for headless reboots"
-echo "      3. Flip MACOS_CI_ENABLED=true in the pipeline-upload env to activate the SwiftLint step"
+echo "      3. Wire a macOS CI step onto the 'macos' queue (see README follow-up)"
