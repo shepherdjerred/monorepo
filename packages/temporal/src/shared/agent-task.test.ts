@@ -220,6 +220,31 @@ describe("Claude structured output contract", () => {
     }
   });
 
+  it("reports malformed structured_output as a contract diagnostic", () => {
+    for (const structuredOutput of [null, [], "not an object"]) {
+      try {
+        parseClaudeAgentTaskResult(
+          JSON.stringify({
+            type: "result",
+            subtype: "success",
+            is_error: false,
+            result: "The provider returned a malformed payload.",
+            structured_output: structuredOutput,
+          }),
+        );
+        throw new Error("Expected Claude contract failure");
+      } catch (error: unknown) {
+        expect(error).toBeInstanceOf(AgentTaskOutputContractError);
+        if (!(error instanceof AgentTaskOutputContractError)) {
+          throw error;
+        }
+        expect(error.reason).toBe("invalid-structured-output");
+        expect(error.diagnostics.resultSubtype).toBe("success");
+        expect(error.diagnostics.schemaFingerprint).toMatch(/^[0-9a-f]{16}$/);
+      }
+    }
+  });
+
   it("surfaces is_error and bounded redacted diagnostics", () => {
     try {
       parseClaudeAgentTaskResult(

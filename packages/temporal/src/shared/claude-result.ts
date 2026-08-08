@@ -24,7 +24,10 @@ export const ClaudeResultMessage = z.looseObject({
     .optional(),
   // Schema-validated structured output, populated by `--json-schema`. This —
   // NOT `result` (which is the model's prose) — is the agent's payload.
-  structured_output: z.record(z.string(), z.unknown()).optional(),
+  // Keep this as unknown until the agent-task contract validator sees it.
+  // Claude can return null, an array, or another malformed value here; those
+  // are provider contract failures and must retain the result diagnostics.
+  structured_output: z.unknown().optional(),
 });
 export type ClaudeResultMessage = z.infer<typeof ClaudeResultMessage>;
 
