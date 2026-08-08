@@ -1,6 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { Testing } from "cdk8s";
 import { z } from "zod";
+import { MAINTENANCE_IMAGE_READY } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/maintenance-image-readiness.ts";
 import {
   BUILDKITE_CONTROLLER_METRICS_INTERVAL,
   createBuildkiteMonitoring,
@@ -187,27 +188,36 @@ describe("Buildkite monitoring manifests", () => {
         namespace: "buildkite",
       },
     });
-    expect(String(collectorStale?.["expr"])).toContain(
-      `job="${BUILDKITE_BUN_CACHE_GC_ACTIVITY}"`,
-    );
-    expect(String(collectorStale?.["expr"])).toContain(
-      "kubernetes_maintenance_last_success_timestamp_seconds",
-    );
     expect(String(collectorStale?.["expr"])).toContain("> 1200");
-    expect(String(collectorStale?.["expr"])).toContain(
-      `absent(\n    kubernetes_maintenance_last_success_timestamp_seconds{\n      job="${BUILDKITE_BUN_CACHE_GC_ACTIVITY}"\n    }\n  )`,
-    );
-    expect(String(collectorStale?.["expr"])).toContain(
-      'temporal_worker_app_process_start_time_seconds{\n        namespace="buildkite",\n        pod=~"temporal-maintenance-worker-.*"\n      }',
-    );
-    expect(String(collectorStale?.["expr"])).toContain(
-      'kube_pod_start_time{\n        namespace="buildkite",\n        pod=~"temporal-maintenance-worker-.*"\n      }',
-    );
-    expect(String(collectorStale?.["expr"])).toContain(
-      'kube_deployment_status_replicas_available{\n        namespace="buildkite",\n        deployment="temporal-maintenance-worker"\n      }',
-    );
-    expect(String(collectorStale?.["expr"])).toContain(
-      'up{\n        namespace="buildkite",\n        service="temporal-maintenance-worker-app-metrics"\n      }',
-    );
+    if (MAINTENANCE_IMAGE_READY) {
+      expect(String(collectorStale?.["expr"])).toContain(
+        `job="${BUILDKITE_BUN_CACHE_GC_ACTIVITY}"`,
+      );
+      expect(String(collectorStale?.["expr"])).toContain(
+        "kubernetes_maintenance_last_success_timestamp_seconds",
+      );
+      expect(String(collectorStale?.["expr"])).toContain(
+        `absent(\n    kubernetes_maintenance_last_success_timestamp_seconds{\n      job="${BUILDKITE_BUN_CACHE_GC_ACTIVITY}"\n    }\n  )`,
+      );
+      expect(String(collectorStale?.["expr"])).toContain(
+        'temporal_worker_app_process_start_time_seconds{\n        namespace="buildkite",\n        pod=~"temporal-maintenance-worker-.*"\n      }',
+      );
+      expect(String(collectorStale?.["expr"])).toContain(
+        'kube_pod_start_time{\n        namespace="buildkite",\n        pod=~"temporal-maintenance-worker-.*"\n      }',
+      );
+      expect(String(collectorStale?.["expr"])).toContain(
+        'kube_deployment_status_replicas_available{\n        namespace="buildkite",\n        deployment="temporal-maintenance-worker"\n      }',
+      );
+      expect(String(collectorStale?.["expr"])).toContain(
+        'up{\n        namespace="buildkite",\n        service="temporal-maintenance-worker-app-metrics"\n      }',
+      );
+    } else {
+      expect(String(collectorStale?.["expr"])).toContain(
+        "kube_cronjob_status_last_successful_time",
+      );
+      expect(String(collectorStale?.["expr"])).toContain(
+        "kube_cronjob_created",
+      );
+    }
   });
 });
