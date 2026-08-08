@@ -18,6 +18,7 @@ import { cleanupRemovedGuild } from "#src/league/tasks/cleanup/remove-guild.ts";
 import { sendDM } from "#src/discord/utils/dm.ts";
 import { buildFeedbackRequestMessage } from "#src/discord/utils/feedback.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
+import { guildsLeftTotal } from "#src/metrics/web.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("guild-delete");
@@ -40,6 +41,24 @@ export async function handleGuildDelete(guild: Guild): Promise<void> {
   );
 
   const serverId = DiscordGuildIdSchema.parse(guild.id);
+
+  guildsLeftTotal.inc();
+
+  // Stamp the removal so a later guildCreate can be recognised as a genuine
+  // re-install rather than a replayed event. `cleanupRemovedGuild` keeps the
+  // GuildInstall row, so without this there is no way to tell them apart.
+  // Best-effort: never block cleanup on it.
+  try {
+    await prisma.guildInstall.updateMany({
+      where: { serverId },
+      data: { removedAt: new Date() },
+    });
+  } catch (error) {
+    logger.error(
+      `[Guild Delete] Failed to stamp removedAt for guild ${guild.id}:`,
+      getErrorMessage(error),
+    );
+  }
 
   try {
     const summary = await cleanupRemovedGuild(prisma, serverId);

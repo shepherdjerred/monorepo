@@ -51,7 +51,7 @@ export function OnboardingWizard() {
   }, [state.step]);
 
   const meQuery = useQuery(
-    trpc.auth.meWeb.queryOptions(undefined, { retry: false }),
+    trpc.auth.sessionState.queryOptions(undefined, { retry: false }),
   );
   const guildsQuery = useQuery(trpc.guild.listManageable.queryOptions());
   const channelsQuery = useQuery(
@@ -74,8 +74,9 @@ export function OnboardingWizard() {
   const subs = subsQuery.data?.items ?? [];
 
   function complete(): void {
-    if (meQuery.data !== undefined) {
-      markOnboardingComplete(meQuery.data.discordId);
+    const user = meQuery.data?.user ?? null;
+    if (user !== null) {
+      markOnboardingComplete(user.discordId);
     }
   }
   function finish(): void {
@@ -157,8 +158,8 @@ export function OnboardingWizard() {
           mode="self"
           guildId={gid}
           channels={channels}
-          username={meQuery.data?.username ?? ""}
-          discordId={meQuery.data?.discordId ?? ""}
+          username={meQuery.data?.user?.username ?? ""}
+          discordId={meQuery.data?.user?.discordId ?? ""}
           existingSubs={[]}
           onAdded={() => {
             void queryClient.invalidateQueries({

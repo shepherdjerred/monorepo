@@ -275,10 +275,16 @@ const server = Bun.serve({
           allowMethodOverride: true,
           createContext: () => createContext(request),
           onError({ error, path }) {
-            logger.error(`tRPC error on ${path ?? "unknown"}:`, error);
-            // Only report genuine server faults; expected client errors (bad
-            // input, auth, not-found, rate limits) are not bugs.
-            if (!EXPECTED_CLIENT_ERROR_CODES.has(error.code)) {
+            // Log expected client faults at info: they are normal traffic (an
+            // anonymous page load, a stale guild) and logging them at error
+            // buried the genuine faults in noise. Only real server bugs are
+            // logged at error and shipped to Sentry.
+            const expected = EXPECTED_CLIENT_ERROR_CODES.has(error.code);
+            const description = `tRPC ${error.code} on ${path ?? "unknown"}:`;
+            if (expected) {
+              logger.info(description, error.message);
+            } else {
+              logger.error(description, error);
               Sentry.captureException(error, {
                 tags: { source: "trpc", path },
               });

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { SubscriptionFieldsValue } from "#src/lib/use-add-subscription.ts";
 import { RegionSelect } from "#src/components/region-select.tsx";
 import { RiotIdCombobox } from "#src/components/riot-id-combobox.tsx";
@@ -5,7 +6,7 @@ import { DiscordMemberCombobox } from "#src/components/discord-member-combobox.t
 import { SubscriptionFilterFields } from "#src/components/subscription-filter-fields.tsx";
 import { Input } from "#src/components/ui/input.tsx";
 import { Label } from "#src/components/ui/label.tsx";
-import { findRegion } from "#src/lib/regions.ts";
+import { findRegion, regionLabel } from "#src/lib/regions.ts";
 import {
   Select,
   SelectContent,
@@ -32,6 +33,11 @@ export function SubscriptionFields(props: {
   onChange: (next: SubscriptionFieldsValue) => void;
 }) {
   const { idPrefix, guildId, value, onChange } = props;
+  // Selecting a suggestion adopts that account's region, which is correct (the
+  // account really does live there) but used to happen silently — a user who
+  // deliberately picked EUW could be moved to NA by clicking a same-name
+  // suggestion and never know. Applying it and saying so keeps both properties.
+  const [regionNotice, setRegionNotice] = useState<string | null>(null);
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -62,9 +68,15 @@ export function SubscriptionFields(props: {
           id={`${idPrefix}-region`}
           value={value.region}
           onValueChange={(region) => {
+            setRegionNotice(null);
             onChange({ ...value, region });
           }}
         />
+        {regionNotice !== null && (
+          <p className="text-xs text-muted-foreground" role="status">
+            {regionNotice}
+          </p>
+        )}
       </div>
 
       <div className="space-y-2">
@@ -77,12 +89,19 @@ export function SubscriptionFields(props: {
           region={value.region}
           value={value.riotId}
           onValueChange={(riotId) => {
+            setRegionNotice(null);
             onChange({ ...value, riotId });
           }}
           onSelectAccount={({ riotId, region: accountRegion }) => {
             // Fires right after onValueChange(riotId); rebuild from the
             // selected Riot ID so the region update doesn't clobber it.
             const match = findRegion(accountRegion);
+            const changed = match !== null && match !== value.region;
+            setRegionNotice(
+              changed
+                ? `Region set to ${regionLabel(match)} — that's where ${riotId} plays. Change it above if that's not the account you meant.`
+                : null,
+            );
             onChange({
               ...value,
               riotId,

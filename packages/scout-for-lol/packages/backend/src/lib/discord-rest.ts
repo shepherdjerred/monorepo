@@ -50,15 +50,51 @@ export function hasAdministrator(permissionsString: string): boolean {
 }
 
 /**
- * Wrap fetch with a hard timeout. Returns null on fetch failure /
- * timeout so callers can degrade to an auth-failure path rather than
- * leaking the error to the tRPC response.
+ * Why a call to Discord's REST API could not be completed.
+ *
+ * `token_refresh_failed` is the only reason that means "this user must sign in
+ * again" — every other reason is a transient upstream problem and says nothing
+ * about the user's credentials. Callers MUST preserve that distinction: an
+ * upstream failure is not evidence of missing permissions.
+ */
+export type DiscordUpstreamReason =
+  | "token_refresh_failed"
+  | "fetch_error"
+  | "http_error"
+  | "parse_error"
+  | "schema_error";
+
+/**
+ * Raised when we could not obtain an authoritative answer from Discord.
+ *
+ * This exists because the previous behaviour — returning `[]` from
+ * {@link fetchUserGuilds} on any failure — was indistinguishable from "this
+ * user is genuinely in no guilds", so a Discord outage surfaced to the user as
+ * "You are not a member of that guild". Never convert an instance of this into
+ * an empty result; propagate it.
+ */
+export class DiscordUpstreamError extends Error {
+  readonly reason: DiscordUpstreamReason;
+  readonly status: number | undefined;
+
+  constructor(reason: DiscordUpstreamReason, message: string, status?: number) {
+    super(message);
+    this.name = "DiscordUpstreamError";
+    this.reason = reason;
+    this.status = status;
+  }
+}
+
+/**
+ * Wrap fetch with a hard timeout. Throws {@link DiscordUpstreamError} on
+ * network failure or timeout so the caller cannot silently mistake an
+ * unreachable upstream for a valid empty answer.
  */
 async function fetchWithTimeout(
   url: string,
   init: RequestInit,
   description: string,
-): Promise<Response | null> {
+): Promise<Response> {
   const controller = new AbortController();
   const timer = setTimeout(() => {
     controller.abort();
@@ -67,18 +103,24 @@ async function fetchWithTimeout(
     return await fetch(url, { ...init, signal: controller.signal });
   } catch (error) {
     logger.warn(`Discord fetch failed: ${description}`, { url, error });
-    return null;
+    throw new DiscordUpstreamError(
+      "fetch_error",
+      `Discord request failed: ${description}`,
+    );
   } finally {
     clearTimeout(timer);
   }
 }
 
-async function refreshUserToken(user: User): Promise<string | null> {
+async function refreshUserToken(user: User): Promise<string> {
   if (
     user.discordRefreshToken === null ||
     configuration.discordClientSecret === undefined
   ) {
-    return null;
+    throw new DiscordUpstreamError(
+      "token_refresh_failed",
+      "No Discord refresh token available for this user",
+    );
   }
 
   const response = await fetchWithTimeout(
@@ -96,13 +138,18 @@ async function refreshUserToken(user: User): Promise<string | null> {
     "oauth2/token refresh",
   );
 
-  if (response === null) {
-    logger.warn("Discord refresh-token failed", { status: "fetch-error" });
-    return null;
-  }
   if (!response.ok) {
     logger.warn("Discord refresh-token failed", { status: response.status });
-    return null;
+    // 400 (`invalid_grant`) / 401 mean the grant is genuinely gone — the user
+    // revoked access or the refresh token expired, so they must sign in again.
+    // Any other status is an upstream fault and must not be reported as an
+    // authentication problem.
+    const revoked = response.status === 400 || response.status === 401;
+    throw new DiscordUpstreamError(
+      revoked ? "token_refresh_failed" : "http_error",
+      `Discord token refresh returned ${response.status.toString()}`,
+      response.status,
+    );
   }
 
   let body: unknown;
@@ -110,7 +157,10 @@ async function refreshUserToken(user: User): Promise<string | null> {
     body = await response.json();
   } catch (error) {
     logger.warn("Discord refresh-token JSON parse failed", { error });
-    return null;
+    throw new DiscordUpstreamError(
+      "parse_error",
+      "Discord token refresh returned malformed JSON",
+    );
   }
 
   const parsed = RefreshResponseSchema.safeParse(body);
@@ -118,7 +168,10 @@ async function refreshUserToken(user: User): Promise<string | null> {
     logger.warn("Discord refresh-token schema mismatch", {
       issues: parsed.error.issues.slice(0, 3),
     });
-    return null;
+    throw new DiscordUpstreamError(
+      "schema_error",
+      "Discord token refresh returned an unexpected shape",
+    );
   }
 
   const refreshed = parsed.data;
@@ -133,9 +186,12 @@ async function refreshUserToken(user: User): Promise<string | null> {
   return refreshed.access_token;
 }
 
-export async function getFreshUserAccessToken(
-  user: User,
-): Promise<string | null> {
+/**
+ * The user's current Discord access token, refreshing it if it is expired or
+ * about to be. Throws {@link DiscordUpstreamError} rather than returning null
+ * so a refresh failure cannot be mistaken for "no access".
+ */
+export async function getFreshUserAccessToken(user: User): Promise<string> {
   const expiresAt = user.tokenExpiresAt;
   // Refresh if expired or within 60s of expiry.
   if (
@@ -155,6 +211,15 @@ type CachedGuilds = {
 const guildsCache = new Map<string, CachedGuilds>();
 const GUILDS_CACHE_TTL_MS = 5 * 60 * 1000;
 
+/**
+ * The guilds the signed-in user belongs to, as reported by Discord.
+ *
+ * An empty array means Discord authoritatively said "no guilds". Every failure
+ * to reach that answer throws {@link DiscordUpstreamError} instead — callers
+ * must not treat an unreachable upstream as an empty membership list, because
+ * that is what previously surfaced a Discord outage to the user as the flatly
+ * wrong "You are not a member of that guild".
+ */
 export async function fetchUserGuilds(user: User): Promise<PartialGuild[]> {
   const cached = guildsCache.get(user.discordId);
   if (cached !== undefined) {
@@ -166,7 +231,6 @@ export async function fetchUserGuilds(user: User): Promise<PartialGuild[]> {
   }
 
   const token = await getFreshUserAccessToken(user);
-  if (token === null) return [];
 
   const response = await fetchWithTimeout(
     `${DISCORD_API_BASE}/users/@me/guilds`,
@@ -174,15 +238,17 @@ export async function fetchUserGuilds(user: User): Promise<PartialGuild[]> {
     "users/@me/guilds",
   );
 
-  if (response === null) {
-    logger.warn("Discord /users/@me/guilds failed", { status: "fetch-error" });
-    return [];
-  }
   if (!response.ok) {
     logger.warn("Discord /users/@me/guilds failed", {
       status: response.status,
     });
-    return [];
+    // A 401 here means the access token we just presented was rejected, which
+    // is an authentication problem; anything else is an upstream fault.
+    throw new DiscordUpstreamError(
+      response.status === 401 ? "token_refresh_failed" : "http_error",
+      `Discord /users/@me/guilds returned ${response.status.toString()}`,
+      response.status,
+    );
   }
 
   let body: unknown;
@@ -190,7 +256,10 @@ export async function fetchUserGuilds(user: User): Promise<PartialGuild[]> {
     body = await response.json();
   } catch (error) {
     logger.warn("Discord guilds JSON parse failed", { error });
-    return [];
+    throw new DiscordUpstreamError(
+      "parse_error",
+      "Discord /users/@me/guilds returned malformed JSON",
+    );
   }
 
   const parsed = PartialGuildsArraySchema.safeParse(body);
@@ -198,7 +267,10 @@ export async function fetchUserGuilds(user: User): Promise<PartialGuild[]> {
     logger.warn("Discord guilds schema mismatch", {
       issues: parsed.error.issues.slice(0, 3),
     });
-    return [];
+    throw new DiscordUpstreamError(
+      "schema_error",
+      "Discord /users/@me/guilds returned an unexpected shape",
+    );
   }
 
   guildsCache.set(user.discordId, {

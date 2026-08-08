@@ -7,14 +7,17 @@
 import { TRPCError } from "@trpc/server";
 import { ChannelType } from "discord.js";
 import type { User } from "#generated/prisma/client/index.js";
-import { fetchUserGuilds, hasAdministrator } from "#src/lib/discord-rest.ts";
+import { hasAdministrator } from "#src/lib/discord-rest.ts";
+import { fetchUserGuildsForRequest } from "#src/trpc/discord-upstream.ts";
 import { client as discordClient } from "#src/discord/client.ts";
 
 export async function assertGuildAdmin(params: {
   user: User;
   guildId: string;
 }): Promise<void> {
-  const guilds = await fetchUserGuilds(params.user);
+  // Throws UNAUTHORIZED / SERVICE_UNAVAILABLE if Discord can't be reached, so
+  // the FORBIDDEN below only ever means a real membership answer.
+  const guilds = await fetchUserGuildsForRequest(params.user);
   const match = guilds.find((g) => g.id === params.guildId);
   if (match === undefined) {
     throw new TRPCError({

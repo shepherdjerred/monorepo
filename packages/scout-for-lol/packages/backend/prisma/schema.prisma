@@ -437,6 +437,13 @@ model GuildInstall {
   outreach14dSentAt DateTime? // null = not yet sent
   outreach30dSentAt DateTime? // 30-day "still not configured" nudge; null = not yet sent
 
+  // Set when guildDelete confirms a removal; cleared on the next install.
+  // This is the ONLY signal that distinguishes a genuine re-install (which
+  // should restart onboarding) from a spurious `guildCreate` for a guild we
+  // never left. `cleanupRemovedGuild` deliberately keeps this row, so row
+  // existence alone cannot tell the two apart.
+  removedAt         DateTime?
+
   @@index([installedAt])
 }
 

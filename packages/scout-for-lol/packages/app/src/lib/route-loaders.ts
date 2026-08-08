@@ -19,7 +19,7 @@ import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
 
 export function requireSessionLoader(): null {
   void queryClient.prefetchQuery(
-    trpcOptions.auth.meWeb.queryOptions(undefined, { retry: false }),
+    trpcOptions.auth.sessionState.queryOptions(undefined, { retry: false }),
   );
   void queryClient.prefetchQuery(
     trpcOptions.guild.listManageable.queryOptions(undefined, {

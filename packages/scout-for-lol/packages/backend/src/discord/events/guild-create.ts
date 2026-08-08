@@ -125,30 +125,51 @@ async function saveGuildInstall(
     const ownerId = DiscordAccountIdSchema.parse(guild.ownerId);
     const installerId = DiscordAccountIdSchema.parse(addedByDiscordId);
 
+    const existing = await prisma.guildInstall.findUnique({
+      where: { serverId },
+      select: { removedAt: true },
+    });
+
+    // Restart onboarding only for a genuine re-install — i.e. we previously
+    // observed a removal. Resetting unconditionally would re-arm the onboarding
+    // DMs (and falsify `installedAt`) for a long-standing server every time
+    // Discord replayed a guildCreate for it.
+    const isReinstall = existing !== null && existing.removedAt !== null;
+    const isFirstInstall = existing === null;
+    const restartOnboarding = isFirstInstall || isReinstall;
+
+    const identity = {
+      serverName: guild.name,
+      ownerDiscordId: ownerId,
+      addedByDiscordId: installerId,
+      memberCount: guild.memberCount,
+    };
+
     await prisma.guildInstall.upsert({
       where: { serverId },
       create: {
         serverId,
-        serverName: guild.name,
-        ownerDiscordId: ownerId,
-        addedByDiscordId: installerId,
-        memberCount: guild.memberCount,
+        ...identity,
         installedAt: new Date(),
       },
       update: {
-        serverName: guild.name,
-        ownerDiscordId: ownerId,
-        addedByDiscordId: installerId,
-        memberCount: guild.memberCount,
-        installedAt: new Date(),
-        // Reset outreach timestamps on re-install
-        outreach3dSentAt: null,
-        outreach14dSentAt: null,
+        ...identity,
+        // A guild we never left keeps its original install date and outreach
+        // progress; only a real re-install restarts the clock.
+        ...(restartOnboarding
+          ? {
+              installedAt: new Date(),
+              outreach3dSentAt: null,
+              outreach14dSentAt: null,
+              outreach30dSentAt: null,
+            }
+          : {}),
+        removedAt: null,
       },
     });
 
     logger.info(
-      `[Guild Create] Saved install info for ${guild.name} (${guild.id}), installer: ${addedByDiscordId}`,
+      `[Guild Create] Saved install info for ${guild.name} (${guild.id}), installer: ${addedByDiscordId}, reinstall: ${isReinstall.toString()}`,
     );
   } catch (error) {
     logger.error(
@@ -162,6 +183,18 @@ async function saveGuildInstall(
  * Handle guildCreate event - send welcome message when bot joins a server
  */
 export async function handleGuildCreate(guild: Guild): Promise<void> {
+  // guildCreate also fires when a guild the bot was already in becomes
+  // available again (Discord outage, shard reconnect). That is NOT an install:
+  // treating it as one would re-post the welcome message into their channel and
+  // re-arm the onboarding DMs for a server that has had Scout for months.
+  // Mirrors the same guard in handleGuildDelete.
+  if (!guild.available) {
+    logger.warn(
+      `[Guild Create] Guild ${guild.id} is unavailable (likely a Discord outage) - skipping install handling`,
+    );
+    return;
+  }
+
   logger.info(
     `[Guild Create] Bot added to server: ${guild.name} (${guild.id})`,
   );
