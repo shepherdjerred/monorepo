@@ -339,7 +339,8 @@ Flag: non-zero failure rate, scrape target down.
 
 ### Agent-task execution hardening signals
 
-The `temporal-failure-watch` schedule is the sole Temporal PagerDuty source.
+The `temporal-failure-watch` schedule is the sole per-execution workflow-failure
+PagerDuty source.
 It emits one `TemporalWorkflowFailed` alert per `workflowId`/`runId` and fetches
 history for every failed or timed-out execution. For a timeout, inspect the
 alert annotations `timeoutClassification` and, when present,

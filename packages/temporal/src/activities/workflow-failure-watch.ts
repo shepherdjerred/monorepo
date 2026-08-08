@@ -164,25 +164,37 @@ type TimeoutInspection = {
 
 async function inspectTimeoutHistory(
   handle: ReturnType<WorkflowVisibilityClient["workflow"]["getHandle"]>,
+  status: FailureStatusName,
 ): Promise<TimeoutInspection> {
   try {
+    const classification = classifyWorkflowTimeoutHistory(
+      await handle.fetchHistory(),
+    );
     return {
-      classification: classifyWorkflowTimeoutHistory(
-        await handle.fetchHistory(),
-      ),
+      // Failed executions can contain a causal activity timeout, but an
+      // ordinary application failure may also have unrelated timeout events
+      // from earlier retries. Only report activity timeouts for FAILED runs;
+      // TIMED_OUT runs retain the full history classification.
+      classification:
+        status === "TIMED_OUT" || classification.classification === "activity"
+          ? classification
+          : undefined,
       historyError: undefined,
     };
   } catch (error: unknown) {
     return {
-      classification: {
-        classification: "unknown",
-        workflowTaskScheduled: false,
-        workflowTaskStarted: false,
-        workflowTaskScheduledButNotStarted: false,
-        activityScheduled: false,
-        activityStarted: false,
-        activityScheduledButNotStarted: false,
-      },
+      classification:
+        status === "TIMED_OUT"
+          ? {
+              classification: "unknown",
+              workflowTaskScheduled: false,
+              workflowTaskStarted: false,
+              workflowTaskScheduledButNotStarted: false,
+              activityScheduled: false,
+              activityStarted: false,
+              activityScheduledButNotStarted: false,
+            }
+          : undefined,
       historyError: error instanceof Error ? error.message : String(error),
     };
   }
@@ -272,7 +284,7 @@ async function fetchFailureDetail(
     execution.workflowId,
     execution.runId,
   );
-  const inspection = await inspectTimeoutHistory(handle);
+  const inspection = await inspectTimeoutHistory(handle, execution.status);
   try {
     await handle.result();
     // The visibility query already filtered to Failed/TimedOut, so a

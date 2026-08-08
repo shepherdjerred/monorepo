@@ -443,6 +443,35 @@ describe("pollWorkflowFailuresOnce", () => {
     expect(alert?.annotations["summary"]).not.toContain("Activity task failed");
   });
 
+  it("omits timeout diagnostics from an ordinary failed execution", async () => {
+    const client = fakeClient(
+      [
+        {
+          workflowId: "wf-ordinary-failure",
+          runId: "run-1",
+          type: "syncGolinks",
+          taskQueue: "default",
+          closeTime: new Date("2026-07-30T17:50:00.000Z"),
+          status: { name: "FAILED" },
+        },
+      ],
+      {
+        "wf-ordinary-failure/run-1": rejectWithApplicationFailure("golink 500"),
+      },
+    );
+    const { poster, calls } = capturingPoster();
+
+    await pollWorkflowFailuresOnce(client, poster, {
+      now: NOW,
+      lookbackMs: LOOKBACK_MS,
+      ttlMs: TTL_MS,
+    });
+
+    const description = calls[0]?.alerts[0]?.annotations["description"];
+    expect(description).not.toContain("timeoutClassification");
+    expect(description).not.toContain("worker/task-queue availability");
+  });
+
   it("skips executions missing FAILED/TIMED_OUT status or closeTime", async () => {
     const client = fakeClient(
       [

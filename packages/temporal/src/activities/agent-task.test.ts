@@ -223,6 +223,8 @@ describe("agentTaskActivities", () => {
       GITHUB_WEBHOOK_SECRET: "github-webhook-secret",
       XCODE_CLOUD_WEBHOOK_TOKEN: "xcode-distinct-secret",
       DATABASE_URL: "postgres://user:database-secret@example",
+      SENTRY_DSN:
+        "https://sentry-public@sentry.example/42?token=sentry-query-secret",
     });
 
     expect(tokens).toContain(codexApiKey);
@@ -232,6 +234,9 @@ describe("agentTaskActivities", () => {
     expect(tokens).toContain("github-webhook-secret");
     expect(tokens).toContain("xcode-distinct-secret");
     expect(tokens).toContain("postgres://user:database-secret@example");
+    expect(tokens).toContain("database-secret");
+    expect(tokens).toContain("sentry-public");
+    expect(tokens).toContain("sentry-query-secret");
   });
 
   it("aliases OPENAI_API_KEY for Codex without overriding an explicit key", async () => {

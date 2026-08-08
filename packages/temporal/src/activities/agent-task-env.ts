@@ -3,11 +3,36 @@ import type { AgentTaskProvider } from "#shared/agent-task.ts";
 // envForProvider deliberately forwards the full worker env, so scrub every
 // forwarded value rather than maintaining a partial credential-name list. This
 // also covers credentials embedded in values such as DATABASE_URL.
+function compositeSecretTokens(value: string): readonly string[] {
+  const tokens = [value];
+  try {
+    const url = new URL(value);
+    for (const component of [url.username, url.password]) {
+      if (component !== "") {
+        tokens.push(component);
+        tokens.push(decodeURIComponent(component));
+      }
+    }
+    for (const component of url.searchParams.values()) {
+      tokens.push(component);
+      tokens.push(decodeURIComponent(component));
+    }
+  } catch {
+    // Non-URL values are still covered by the complete-value token.
+  }
+  return tokens;
+}
+
 export function agentTaskSecretTokens(
   githubAppToken: string | undefined,
   env: Readonly<Record<string, string | undefined>> = Bun.env,
 ): readonly (string | undefined)[] {
-  return [...Object.values(env), githubAppToken];
+  return [
+    ...Object.values(env).flatMap((value) =>
+      value === undefined ? [] : compositeSecretTokens(value),
+    ),
+    githubAppToken,
+  ];
 }
 
 // Build the subprocess environment for an agent-task provider run.
