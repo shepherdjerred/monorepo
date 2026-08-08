@@ -34,9 +34,9 @@ appId: org.reactjs.native.example.TasksForObsidian
 # races app startup and the config deep link is dropped (see 00-setup).
 - extendedWaitUntil:
     visible:
-      id: "tab-inbox"
+      id: "header-search"
     timeout: 60000
-- openLink: "tasknotes://e2e-config?apiUrl=${APP_URL}&token=${AUTH_TOKEN}&tips=off"
+- openLink: "tasknotes://e2e-config?apiUrl=${APP_URL}&token=${AUTH_TOKEN}&tips=off&nonce=${MAESTRO_FILENAME}-relaunch"
 - runFlow:
     when:
       visible:
@@ -44,6 +44,10 @@ appId: org.reactjs.native.example.TasksForObsidian
     commands:
       - tapOn:
           text: "Open"
+- extendedWaitUntil:
+    visible:
+      id: "e2e-config-ready-${MAESTRO_FILENAME}-relaunch"
+    timeout: 15000
 - runScript:
     file: scripts/chaos-online.js
     env:

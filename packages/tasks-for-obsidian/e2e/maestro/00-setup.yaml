@@ -1,5 +1,7 @@
-# Shared setup: clean app state, point the app at the local test stack via the
+# Shared setup: point the running app at the local test stack via the
 # __DEV__-only e2e-config deep link, and wait for the seeded vault to sync in.
+# The orchestrator installs one clean data container and launches once before
+# the suite; nested setup calls retain it so flows do not tear down Metro.
 # Requires --env APP_URL and --env AUTH_TOKEN (provided by e2e/run.ts).
 appId: org.reactjs.native.example.TasksForObsidian
 ---
@@ -10,18 +12,16 @@ appId: org.reactjs.native.example.TasksForObsidian
     file: scripts/chaos-online.js
     env:
       CHAOS_BASE: ${APP_URL}
-- launchApp:
-    clearState: true
-# Wait for the app to finish booting (tab bar present) BEFORE openLink. A
-# clearState relaunch is still initializing when the flow continues; firing
-# openLink immediately races app startup and the JS Linking listener misses
+# Wait for the app to finish booting (root header present) BEFORE openLink. The
+# orchestrator's cold launch is still initializing when the first flow starts;
+# firing openLink immediately races app startup and the JS Linking listener misses
 # the url event (and it is not a launch URL, so getInitialURL is empty too) —
 # the deep link is silently dropped and config never applies.
 - extendedWaitUntil:
     visible:
-      id: "tab-inbox"
+      id: "header-search"
     timeout: 60000
-- openLink: "tasknotes://e2e-config?apiUrl=${APP_URL}&token=${AUTH_TOKEN}&tips=off"
+- openLink: "tasknotes://e2e-config?apiUrl=${APP_URL}&token=${AUTH_TOKEN}&tips=off&nonce=${MAESTRO_FILENAME}"
 # If SpringBoard shows an "Open in <app>?" confirmation for the custom scheme,
 # dismiss it. runFlow's `when` only taps if the button is actually present, so
 # the common direct-delivery path (app already frontmost) is unaffected.
@@ -32,6 +32,13 @@ appId: org.reactjs.native.example.TasksForObsidian
     commands:
       - tapOn:
           text: "Open"
+# A cached task can already be visible before AsyncStorage/keychain writes and
+# the final navigation complete. The flow-specific nonce prevents a previous
+# setup's UI from satisfying this transaction boundary.
+- extendedWaitUntil:
+    visible:
+      id: "e2e-config-ready-${MAESTRO_FILENAME}"
+    timeout: 15000
 # The config handler applies apiUrl+token and navigates to Today. Applying the
 # apiUrl rebuilds the API client, which triggers an automatic refreshTasks — so
 # the seeded vault syncs in without any manual pull. "Water plants" (recurring,
@@ -39,5 +46,7 @@ appId: org.reactjs.native.example.TasksForObsidian
 # and sync succeeded. Generous timeout because it's the first cold sync.
 - extendedWaitUntil:
     visible:
-      text: ".*Water plants.*"
+      id: "task-row-TaskNotes/water-plants-4d5e6f7a.md"
     timeout: 45000
+- waitForAnimationToEnd:
+    timeout: 5000

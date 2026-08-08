@@ -1,4 +1,4 @@
-# Edit the seeded "Task with details": rename it via the detail edit form.
+# Edit the seeded "Task with details": rename it directly in task detail.
 appId: org.reactjs.native.example.TasksForObsidian
 ---
 - runFlow: 00-setup.yaml
@@ -6,32 +6,27 @@ appId: org.reactjs.native.example.TasksForObsidian
     id: "tab-inbox"
 - extendedWaitUntil:
     visible:
-      text: ".*Task with details.*"
+      id: "task-row-TaskNotes/task-with-details-3c4d5e6f.md"
     timeout: 15000
-- tapOn:
-    text: ".*Task with details.*"
-- extendedWaitUntil:
-    visible:
-      id: "task-detail-edit"
-    timeout: 10000
-- tapOn:
-    id: "task-detail-edit"
-- extendedWaitUntil:
-    visible:
-      id: "task-detail-title-input"
-    timeout: 10000
+- retry:
+    maxRetries: 2
+    commands:
+      - tapOn:
+          id: "task-row-TaskNotes/task-with-details-3c4d5e6f.md"
+          retryTapIfNoChange: true
+      - extendedWaitUntil:
+          visible:
+            id: "task-detail-title-input"
+          timeout: 5000
 - tapOn:
     id: "task-detail-title-input"
 - eraseText: 50
 - inputText: "Edited by e2e"
-# Dismiss the keyboard first: with it up, the Save button is half-covered and
-# the tap lands on the keyboard. Tapping the PRIORITY section label is a
-# side-effect-free way to blur the input (labels aren't tappable controls).
-- tapOn:
-    text: "Priority"
+# Dismiss the keyboard before using the native editor's Save button.
+- hideKeyboard
 - tapOn:
     id: "task-detail-save"
 - extendedWaitUntil:
     visible:
-      text: "Edited by e2e"
+      id: "task-row-TaskNotes/task-with-details-3c4d5e6f.md"
     timeout: 15000

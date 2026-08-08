@@ -1,0 +1,48 @@
+# Today quick capture preserves its planned-for-today source default across
+# Save & Add Another, then creates both tasks in the Today agenda.
+appId: org.reactjs.native.example.TasksForObsidian
+---
+- runFlow: 00-setup.yaml
+- tapOn:
+    id: "fab-add-task"
+- extendedWaitUntil:
+    visible:
+      id: "quick-add-input"
+    timeout: 10000
+# This stable selector proves the Today entry point supplied a planned date
+# without coupling the flow to a calendar date.
+- assertVisible:
+    id: "quick-add-seed-scheduled"
+- tapOn:
+    id: "quick-add-input"
+- inputText: "Context capture alpha"
+- tapOn:
+    id: "quick-add-save-another"
+# Save & Add Another clears the title, re-enables capture, and retains source
+# defaults. Waiting for disabled Save avoids racing the async create.
+- extendedWaitUntil:
+    visible:
+      id: "quick-add-submit"
+      enabled: false
+    timeout: 20000
+- assertVisible:
+    id: "quick-add-seed-scheduled"
+- tapOn:
+    id: "quick-add-input"
+- inputText: "Context capture beta"
+- tapOn:
+    id: "quick-add-submit"
+- scrollUntilVisible:
+    element:
+      text: ".*Context capture alpha.*"
+    direction: DOWN
+    timeout: 20000
+    speed: 40
+    visibilityPercentage: 90
+- scrollUntilVisible:
+    element:
+      text: ".*Context capture beta.*"
+    direction: DOWN
+    timeout: 20000
+    speed: 40
+    visibilityPercentage: 90
