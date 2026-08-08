@@ -23,14 +23,19 @@ const ToolIdSchema = z
   .min(1)
   .max(64)
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+const EffectDispositionSchema = z.enum(["not_applied", "applied", "unknown"]);
 const ToolResultForSessionSchema = z.object({
   toolName: ToolIdSchema,
-  output: z.object({ success: z.boolean() }),
+  output: z.object({
+    success: z.boolean(),
+    effectDisposition: EffectDispositionSchema.optional(),
+  }),
 });
 const SessionToolEventSchema = z.strictObject({
   toolId: ToolIdSchema,
   content: z.string().min(1).max(96),
   success: z.boolean(),
+  effectDisposition: EffectDispositionSchema.optional(),
 });
 
 type SessionToolEvent = z.infer<typeof SessionToolEventSchema>;
@@ -78,6 +83,9 @@ export function summarizeToolResultForSession(
     toolId: toolResult.toolName,
     content: `Tool ${toolResult.toolName} ${status}`,
     success: toolResult.output.success,
+    ...(toolResult.output.effectDisposition == null
+      ? {}
+      : { effectDisposition: toolResult.output.effectDisposition }),
   });
 }
 

@@ -97,18 +97,26 @@ export async function executeIsolatedAgentJob(
   const failedToolIds = result.toolEvents
     .filter((event) => !event.success)
     .map((event) => event.toolId);
-  if (failedToolIds.length > 0) {
-    throw new Error(
-      `Isolated scheduled agent tool execution failed: ${failedToolIds.join(", ")}`,
-    );
-  }
+  const failedToolEvents = result.toolEvents.filter((event) => !event.success);
+  const effectDisposition =
+    failedToolEvents.length === 0
+      ? undefined
+      : failedToolEvents.every(
+            (event) => event.effectDisposition === "not_applied",
+          )
+        ? "not_applied"
+        : "unknown";
   return {
-    message: result.text,
+    message:
+      failedToolIds.length === 0
+        ? result.text
+        : `Isolated scheduled agent tool execution failed: ${failedToolIds.join(", ")}`,
     data: {
       finishReason: result.finishReason,
       inputTokens: result.inputTokens,
       outputTokens: result.outputTokens,
       stepCount: result.stepCount,
+      ...(effectDisposition == null ? {} : { effectDisposition }),
     },
   };
 }

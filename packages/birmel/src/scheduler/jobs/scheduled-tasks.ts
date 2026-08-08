@@ -1,6 +1,5 @@
 import type { AgentJob } from "#generated/prisma/client/index.js";
 import {
-  getRequestContext,
   runWithRequestContext,
   type RequestContext,
 } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
@@ -52,7 +51,6 @@ export type AgentJobRuntimeDependencies = {
     execution: AgentJobExecution,
   ) => Promise<unknown>;
 };
-
 const AgentExecutionResultSchema = z.object({
   message: z.string().min(1).max(20_000),
   data: z.unknown().optional(),
@@ -441,6 +439,16 @@ async function executeAgentPayload(
         await runtimeDependencies.executeAgent(agentPrompt, execution),
     ),
   );
+  const resultData = z
+    .object({ effectDisposition: EffectDispositionSchema.optional() })
+    .loose()
+    .parse(result.data ?? {});
+  if (resultData.effectDisposition === "not_applied") {
+    await recordExternalEffectNotApplied(execution);
+  }
+  if (resultData.effectDisposition != null) {
+    throw new Error(result.message);
+  }
   const channelId = await deliveryChannelFor(job);
   if (!effectState.acquiredByTool) {
     effectState.checkpoint ??= beginExternalEffect(execution);
@@ -470,7 +478,6 @@ async function executeAgentPayload(
   });
   return { data: result.data, delivery: successfulDelivery };
 }
-
 export async function executeDurableAgentJob(
   job: AgentJob,
   runId: string,
@@ -490,8 +497,4 @@ export async function executeDurableAgentJob(
         throw new Error(`Unknown payload kind: ${job.payloadKind}`);
     }
   });
-}
-
-export function currentAgentJobRequestContext(): RequestContext | undefined {
-  return getRequestContext();
 }
