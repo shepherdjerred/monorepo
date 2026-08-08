@@ -26,6 +26,8 @@ import {
   inferStandardLanesWithCurrentPriors,
   resolveQueueTypeFromGame,
   resolveClassicChampionKey,
+  getClassicChampionId,
+  getClassicSpellId,
   getModernChampionIdForClassic,
   getModernSpellIdForClassic,
   loadingScreenLayoutForQueueType,
@@ -140,7 +142,8 @@ function buildClassicParticipant(
   participant: RawCurrentGameParticipant,
   trackedPuuids: ReadonlySet<string>,
 ): ClassicLoadingScreenParticipant {
-  const championName = resolveClassicChampionKey(participant.championId);
+  const championId = getClassicChampionId(participant.championId);
+  const championName = resolveClassicChampionKey(championId);
   const puuid =
     participant.puuid === null
       ? null
@@ -152,12 +155,16 @@ function buildClassicParticipant(
   return {
     puuid,
     summonerName: participant.riotId,
-    championId: LoadingScreenChampionIdSchema.parse(participant.championId),
+    championId: LoadingScreenChampionIdSchema.parse(championId),
     championName,
     championDisplayName: getChampionDisplayName(participant.championId),
     team,
-    spell1Id: SummonerSpellIdSchema.parse(participant.spell1Id),
-    spell2Id: SummonerSpellIdSchema.parse(participant.spell2Id),
+    spell1Id: SummonerSpellIdSchema.parse(
+      getClassicSpellId(participant.spell1Id),
+    ),
+    spell2Id: SummonerSpellIdSchema.parse(
+      getClassicSpellId(participant.spell2Id),
+    ),
     isTrackedPlayer: puuid !== null && trackedPuuids.has(puuid),
   };
 }
@@ -393,7 +400,11 @@ export async function buildLoadingScreenData(
   const layout = loadingScreenLayoutForQueueType(queueType);
   let mapName: ReturnType<typeof mapIdToName>;
   try {
-    mapName = mapIdToName(gameInfo.mapId);
+    mapName =
+      queueType === "classic aram mayhem" &&
+      (gameInfo.mapId === 12 || gameInfo.mapId === 35)
+        ? "The Bandlewood"
+        : mapIdToName(gameInfo.mapId);
   } catch (error) {
     throw new Error(
       `${error instanceof Error ? error.message : String(error)} (gameId=${gameInfo.gameId.toString()}, queueConfigId=${gameInfo.gameQueueConfigId.toString()}, gameMode=${gameInfo.gameMode})`,

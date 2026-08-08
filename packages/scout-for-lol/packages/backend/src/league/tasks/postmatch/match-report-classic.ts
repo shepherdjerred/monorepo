@@ -14,6 +14,8 @@ import {
   mapIdToName,
   parseTeam,
   resolveClassicChampionKey,
+  getClassicChampionId,
+  getClassicSpellId,
   resolveQueueTypeFromGame,
 } from "@scout-for-lol/data";
 import { createLogger } from "#src/logger.ts";
@@ -47,7 +49,7 @@ function toClassicChampion(participant: RawParticipant): ClassicChampion {
   return {
     puuid: participant.puuid,
     ...resolveClassicIdentity(participant),
-    championId: participant.championId,
+    championId: getClassicChampionId(participant.championId),
     championName: resolveClassicChampionKey(participant.championId),
     kills: participant.kills,
     deaths: participant.deaths,
@@ -62,7 +64,10 @@ function toClassicChampion(participant: RawParticipant): ClassicChampion {
       participant.item5,
       participant.item6,
     ],
-    spells: [participant.summoner1Id, participant.summoner2Id],
+    spells: [
+      getClassicSpellId(participant.summoner1Id),
+      getClassicSpellId(participant.summoner2Id),
+    ],
     gold: participant.goldEarned,
     creepScore:
       participant.totalMinionsKilled + participant.neutralMinionsKilled,
@@ -148,7 +153,11 @@ export function buildClassicMatch(
     return undefined;
   }
 
-  const mapName = mapIdToName(matchData.info.mapId);
+  const mapName =
+    queueType === "classic aram mayhem" &&
+    (matchData.info.mapId === 12 || matchData.info.mapId === 35)
+      ? "The Bandlewood"
+      : mapIdToName(matchData.info.mapId);
   const expectedMapName =
     queueType === "classic" ? "Classic Rift" : "The Bandlewood";
   if (mapName !== expectedMapName) {

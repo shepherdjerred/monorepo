@@ -2,6 +2,8 @@ import { describe, expect, test, mock } from "bun:test";
 import {
   RawCurrentGameInfoSchema,
   LoadingScreenDataSchema,
+  LoadingScreenChampionIdSchema,
+  SummonerSpellIdSchema,
   type Lane,
 } from "@scout-for-lol/data/index.ts";
 import { buildLoadingScreenData } from "#src/league/tasks/prematch/loading-screen-builder.ts";
@@ -394,6 +396,46 @@ describe("buildLoadingScreenData for The Bandlewood", () => {
       expect("ranks" in (parsed.participants[0] ?? {})).toBe(false);
     },
   );
+
+  test("accepts Riot modern IDs and the real Classic ARAM Mayhem map ID", async () => {
+    const baseGameInfo = await loadSpectatorPayload(
+      `${currentDir}testdata/spectator-ranked-flex.json`,
+    );
+    const gameInfo = RawCurrentGameInfoSchema.parse({
+      ...baseGameInfo,
+      gameQueueConfigId: 2450,
+      mapId: 12,
+      gameMode: "KIWI_JADE",
+      bannedChampions: [],
+      participants: baseGameInfo.participants.map((participant, index) => ({
+        ...participant,
+        championId: [80, 11, 14, 30, 62, 63, 80, 67, 1, 30][index],
+        spell1Id: index === 0 ? 4 : 6,
+        spell2Id: index === 0 ? 32 : 7,
+      })),
+    });
+
+    const result = await buildLoadingScreenData(
+      gameInfo,
+      new Set(),
+      "AMERICA_NORTH",
+    );
+
+    expect(result.layout).toBe("classic");
+    expect(result.mapName).toBe("The Bandlewood");
+    if (result.layout !== "classic") {
+      throw new Error("Expected Classic loading screen data");
+    }
+    expect(result.participants[0]?.championId).toBe(
+      LoadingScreenChampionIdSchema.parse(60_080),
+    );
+    expect(result.participants[0]?.spell1Id).toBe(
+      SummonerSpellIdSchema.parse(74),
+    );
+    expect(result.participants[0]?.spell2Id).toBe(
+      SummonerSpellIdSchema.parse(32),
+    );
+  });
 });
 
 describe("buildLoadingScreenData with Arena spectator payloads", () => {

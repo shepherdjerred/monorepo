@@ -182,6 +182,47 @@ describe("buildClassicMatch", () => {
     },
   );
 
+  test("accepts Riot modern IDs and the real Classic ARAM Mayhem map ID", async () => {
+    const rawMatch = await classicMatchFixture({
+      queueId: 2450,
+      gameMode: "KIWI_JADE",
+      mapId: 12,
+    });
+    const modernChampionIds = [103, 12, 32, 34, 1, 22, 53, 63, 31, 42];
+    const modernMatch = RawMatchSchema.parse({
+      ...rawMatch,
+      info: {
+        ...rawMatch.info,
+        participants: rawMatch.info.participants.map((participant, index) => ({
+          ...participant,
+          championId: modernChampionIds[index],
+          summoner1Id: 4,
+          summoner2Id: 32,
+        })),
+      },
+    });
+    const trackedParticipant = modernMatch.info.participants[0];
+    if (trackedParticipant === undefined) {
+      throw new Error("Classic match is missing its tracked participant");
+    }
+    const trackedPlayer = PlayerConfigEntrySchema.parse({
+      alias: "Scout Classic",
+      league: {
+        leagueAccount: {
+          puuid: trackedParticipant.puuid,
+          region: "AMERICA_NORTH",
+        },
+      },
+    });
+
+    const result = buildClassicMatch(modernMatch, [trackedPlayer]);
+
+    expect(result?.queueType).toBe("classic aram mayhem");
+    expect(result?.mapName).toBe("The Bandlewood");
+    expect(result?.teams.blue[0]?.championId).toBe(60_103);
+    expect(result?.teams.blue[0]?.spells).toEqual([74, 32]);
+  });
+
   test("groups full rosters by team ID and keeps the narrow Classic model", async () => {
     const rawMatch = await classicMatchFixture();
     const trackedParticipant = rawMatch.info.participants[6];

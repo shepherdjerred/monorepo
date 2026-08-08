@@ -2,6 +2,8 @@ import { describe, expect, test } from "bun:test";
 import {
   CLASSIC_CHAMPION_COUNT,
   CLASSIC_SUMMONER_SPELL_COUNT,
+  getClassicChampionId,
+  getClassicSpellId,
   getModernChampionIdForClassic,
   getModernSpellIdForClassic,
   getSummonerSpellImageNameById,
@@ -22,12 +24,19 @@ describe("League Classic Data Dragon assets", () => {
 
   test("resolves Classic champion art while mapping inference to modern IDs", async () => {
     expect(resolveClassicChampionKey(60_103)).toBe("Jade_Ahri");
+    expect(resolveClassicChampionKey(103)).toBe("Jade_Ahri");
+    expect(getClassicChampionId(103)).toBe(60_103);
+    expect(getClassicChampionId(60_103)).toBe(60_103);
     expect(getModernChampionIdForClassic(60_103)).toBe(103);
     await expect(validateChampionImage("Jade_Ahri")).resolves.toBeUndefined();
   });
 
   test("resolves exact Jade spell art and modern inference spell IDs", async () => {
     expect(getSummonerSpellImageNameById(74)).toBe("SummonerFlash_Jade.png");
+    expect(getClassicSpellId(4)).toBe(74);
+    expect(getClassicSpellId(74)).toBe(74);
+    expect(getClassicSpellId(32)).toBe(32);
+    expect(getModernSpellIdForClassic(32)).toBe(32);
     expect(getModernSpellIdForClassic(74)).toBe(4);
     await expect(
       validateSpellImage("SummonerFlash_Jade.png"),
