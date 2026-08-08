@@ -40,20 +40,25 @@ export function applyFakeRecurringCompletion(
     if (recurrence === undefined) {
       throw new Error("recurring completion fake requires a recurrence");
     }
-    const next = updateToNextScheduledOccurrence(
-      {
-        title: existing.title,
-        recurrence,
-        scheduled: existing.scheduled,
-        due: existing.due,
-        dateCreated: existing.dateCreated,
-        recurrence_anchor: existing.recurrenceAnchor,
-        complete_instances: updated.completeInstances,
-        skipped_instances: updated.skippedInstances,
-      },
-      true,
-      { today: localDay(timestamp) },
-    );
+    const scheduleSource = {
+      title: existing.title,
+      recurrence,
+      ...(existing.scheduled === undefined
+        ? {}
+        : { scheduled: existing.scheduled }),
+      ...(existing.due === undefined ? {} : { due: existing.due }),
+      ...(existing.dateCreated === undefined
+        ? {}
+        : { dateCreated: existing.dateCreated }),
+      ...(existing.recurrenceAnchor === undefined
+        ? {}
+        : { recurrence_anchor: existing.recurrenceAnchor }),
+      complete_instances: updated.completeInstances,
+      skipped_instances: updated.skippedInstances,
+    };
+    const next = updateToNextScheduledOccurrence(scheduleSource, true, {
+      today: localDay(timestamp),
+    });
     if (next.scheduled === null) {
       Reflect.deleteProperty(updated, "scheduled");
     } else {
