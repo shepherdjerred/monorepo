@@ -49,8 +49,9 @@ Prefer `vim.system` for ordinary subprocesses:
 
 ```lua
 local result = vim.system({ "git", "status", "--short" }, { text = true }):wait()
-if result.code ~= 0 then
-  error(result.stderr)
+local signal = result.signal or 0
+if result.code ~= 0 or signal ~= 0 then
+  error(("command failed (code=%s, signal=%s): %s"):format(result.code, signal, result.stderr))
 end
 ```
 
