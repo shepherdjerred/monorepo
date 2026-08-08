@@ -226,6 +226,119 @@ tags:
     expect(replay.complete_instances).toEqual(["2026-07-01"]);
   });
 
+  test("uncomplete atomically restores the pre-completion recurrence snapshot", async () => {
+    const recurrence = "FREQ=WEEKLY";
+    const scheduled = "2026-08-01";
+    const due = "2026-08-03";
+    await seed(
+      "TaskNotes/weekly.md",
+      `---
+title: Weekly review
+status: open
+priority: normal
+scheduled: ${scheduled}
+due: ${due}
+recurrence: ${recurrence}
+tags:
+  - task
+---
+`,
+    );
+    await repo.scan();
+
+    const completed = await repo.completeInstance("TaskNotes/weekly.md", {
+      date: scheduled,
+      completed: true,
+    });
+    expect(completed.complete_instances).toEqual([scheduled]);
+    expect(completed.scheduled).toBe("2026-08-08");
+    expect(completed.due).toBe("2026-08-10");
+
+    const restored = await repo.completeInstance("TaskNotes/weekly.md", {
+      date: scheduled,
+      completed: false,
+      restore: { scheduled, due, recurrence, skipped: false },
+    });
+    expect(restored.complete_instances).toEqual([]);
+    expect(restored.scheduled).toBe(scheduled);
+    expect(restored.due).toBe(due);
+    expect(restored.recurrence).toBe(recurrence);
+  });
+
+  test("a restore snapshot deletes nullable schedule fields", async () => {
+    await seed("TaskNotes/weekly.md", RECURRING);
+    await repo.scan();
+    await repo.completeInstance("TaskNotes/weekly.md", {
+      date: "2026-07-01",
+      completed: true,
+    });
+
+    const restored = await repo.completeInstance("TaskNotes/weekly.md", {
+      date: "2026-07-01",
+      completed: false,
+      restore: {
+        scheduled: null,
+        due: null,
+        recurrence: "FREQ=DAILY",
+        skipped: false,
+      },
+    });
+    expect(restored.scheduled).toBeUndefined();
+    expect(restored.due).toBeUndefined();
+    const raw = await Bun.file(path.join(vault, "TaskNotes/weekly.md")).text();
+    expect(raw).not.toContain("scheduled:");
+    expect(raw).not.toContain("due:");
+  });
+
+  test("restore repairs schedule and skipped membership when completion is already clear", async () => {
+    await seed(
+      "TaskNotes/weekly.md",
+      `---
+title: Weekly review
+status: open
+priority: normal
+scheduled: 2026-08-08
+due: 2026-08-10
+recurrence: FREQ=DAILY
+skipped_instances:
+  - 2026-07-25
+tags:
+  - task
+---
+`,
+    );
+    await repo.scan();
+
+    const restored = await repo.completeInstance("TaskNotes/weekly.md", {
+      date: "2026-08-01",
+      completed: false,
+      restore: {
+        scheduled: "2026-08-01",
+        due: "2026-08-03",
+        recurrence: "FREQ=WEEKLY",
+        skipped: true,
+      },
+    });
+    expect(restored.complete_instances ?? []).toEqual([]);
+    expect(restored.scheduled).toBe("2026-08-01");
+    expect(restored.due).toBe("2026-08-03");
+    expect(restored.recurrence).toBe("FREQ=WEEKLY");
+    expect(restored.skipped_instances).toEqual(["2026-07-25", "2026-08-01"]);
+
+    const replay = await repo.completeInstance("TaskNotes/weekly.md", {
+      date: "2026-08-01",
+      completed: false,
+      restore: {
+        scheduled: "2026-08-01",
+        due: "2026-08-03",
+        recurrence: "FREQ=WEEKLY",
+        skipped: true,
+      },
+    });
+    expect(replay.complete_instances ?? []).toEqual([]);
+    expect(replay.skipped_instances).toEqual(["2026-07-25", "2026-08-01"]);
+  });
+
   test("bodyless call toggles (upstream parity); non-recurring throws", async () => {
     await seed("TaskNotes/water.md", RECURRING);
     await seed("TaskNotes/plain.md", PLUGIN_AUTHORED);
@@ -237,6 +350,21 @@ tags:
     await expect(repo.completeInstance("TaskNotes/plain.md")).rejects.toThrow(
       NotRecurringError,
     );
+  });
+
+  test("bodyless call targets the server-local day across a UTC boundary", async () => {
+    const edgeNow = new Date("2026-07-03T01:00:00.000Z");
+    await seed("TaskNotes/water.md", RECURRING);
+    const edgeRepo = new TaskRepository(
+      vault,
+      "TaskNotes",
+      resolveModelConfig(),
+      () => edgeNow,
+    );
+    await edgeRepo.scan();
+
+    const updated = await edgeRepo.completeInstance("TaskNotes/water.md");
+    expect(updated.complete_instances).toEqual([ymdOf(edgeNow)]);
   });
 });
 

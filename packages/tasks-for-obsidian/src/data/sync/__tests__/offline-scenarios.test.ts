@@ -376,6 +376,47 @@ describe("recurring completion captures the tapped day", () => {
     const server = harness.server.tasks.get(recurring.id);
     expect(server?.completeInstances).toEqual(["2026-07-01"]); // not 07-02
   });
+
+  test("atomic Undo survives an offline replay with the original schedule", async () => {
+    const harness = makeHarness();
+    await harness.store.restore();
+    const recurring = makeTask({
+      recurrence: "DTSTART:20260801;FREQ=WEEKLY",
+      scheduled: "2026-08-08",
+      due: "2026-08-10",
+      completeInstances: ["2026-08-01"],
+    });
+    harness.server.seed(recurring);
+    const initialSync = await harness.engine.syncNow();
+    expect(initialSync.ok).toBe(true);
+    harness.server.goOffline();
+
+    await harness.store.dispatch({
+      type: "set_instance_complete",
+      taskId: recurring.id,
+      date: "2026-08-01",
+      completed: false,
+      restore: {
+        recurrence: "DTSTART:20260801;FREQ=WEEKLY",
+        scheduled: "2026-08-01",
+        due: null,
+        skipped: false,
+      },
+    });
+
+    const optimistic = harness.store.getSnapshot().tasks.get(recurring.id);
+    expect(optimistic?.completeInstances).toEqual([]);
+    expect(optimistic?.scheduled).toBe("2026-08-01");
+    expect(optimistic?.due).toBeUndefined();
+
+    harness.server.goOnline();
+    const syncResult = await harness.engine.syncNow();
+    expect(syncResult.ok).toBe(true);
+    const server = harness.server.tasks.get(recurring.id);
+    expect(server?.completeInstances).toEqual([]);
+    expect(server?.scheduled).toBe("2026-08-01");
+    expect(server?.due).toBeUndefined();
+  });
 });
 
 describe("engine disposal (API client swapped in Settings)", () => {

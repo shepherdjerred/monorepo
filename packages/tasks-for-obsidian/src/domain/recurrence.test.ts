@@ -231,6 +231,16 @@ describe("nextOccurrenceAfter", () => {
     expect(nextOccurrenceAfter(task, "2026-08-01")).toBe("2026-09-01");
   });
 
+  test("skips already completed and skipped future occurrences", () => {
+    const task = makeTask({
+      recurrence: "DTSTART:20260808;FREQ=DAILY",
+      completeInstances: ["2026-08-08"],
+      skippedInstances: ["2026-08-09"],
+    });
+
+    expect(nextOccurrenceAfter(task, "2026-08-07")).toBe("2026-08-10");
+  });
+
   test("non-recurring tasks have no next occurrence", () => {
     expect(nextOccurrenceAfter(makeTask(), "2026-07-24")).toBeUndefined();
   });

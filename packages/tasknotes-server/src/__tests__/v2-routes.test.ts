@@ -253,6 +253,80 @@ describe("v2 task routes", () => {
   });
 });
 
+describe("complete-instance restore", () => {
+  test("restores a weekly task and validates restore direction", async () => {
+    const created = await app.request("/api/tasks", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        title: "Weekly review",
+        scheduled: "2026-08-01",
+        due: "2026-08-03",
+        recurrence: "FREQ=WEEKLY",
+      }),
+    });
+    expect(created.status).toBe(201);
+    const weeklyId = encodeURIComponent("TaskNotes/Weekly review.md");
+
+    const completed = await app.request(
+      `/api/tasks/${weeklyId}/complete-instance`,
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ date: "2026-08-01", completed: true }),
+      },
+    );
+    expect(completed.status).toBe(200);
+    const advanced = await unwrap(completed);
+    expect(advanced["complete_instances"]).toEqual(["2026-08-01"]);
+    expect(advanced["scheduled"]).toBe("2026-08-08");
+    expect(advanced["due"]).toBe("2026-08-10");
+
+    const invalid = await app.request(
+      `/api/tasks/${weeklyId}/complete-instance`,
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          date: "2026-08-01",
+          completed: true,
+          restore: {
+            scheduled: "2026-08-01",
+            due: "2026-08-03",
+            recurrence: "FREQ=WEEKLY",
+            skipped: false,
+          },
+        }),
+      },
+    );
+    expect(invalid.status).toBe(400);
+
+    const restored = await app.request(
+      `/api/tasks/${weeklyId}/complete-instance`,
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          date: "2026-08-01",
+          completed: false,
+          restore: {
+            scheduled: "2026-08-01",
+            due: "2026-08-03",
+            recurrence: "FREQ=WEEKLY",
+            skipped: false,
+          },
+        }),
+      },
+    );
+    expect(restored.status).toBe(200);
+    const task = await unwrap(restored);
+    expect(task["complete_instances"]).toEqual([]);
+    expect(task["scheduled"]).toBe("2026-08-01");
+    expect(task["due"]).toBe("2026-08-03");
+    expect(task["recurrence"]).toBe("FREQ=WEEKLY");
+  });
+});
+
 describe("v2 NLP + calendars", () => {
   test("nlp/parse returns {parsed, taskData}; nlp/create returns {task, parsed} at 201", async () => {
     const parsedRes = await app.request("/api/nlp/parse", {

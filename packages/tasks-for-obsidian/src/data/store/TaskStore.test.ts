@@ -181,6 +181,57 @@ describe("TaskStore server acks", () => {
     expect(store.getSnapshot().tasks.get(real.id)?.status).toBe("done");
   });
 
+  test("serializes a stale-id dispatch across an in-flight create ack", async () => {
+    const backingStorage = memoryStoreStorage();
+    const aliasWriteStarted = Promise.withResolvers<null>();
+    const releaseAliasWrite = Promise.withResolvers<null>();
+    let pauseAliasWrite = false;
+    const storeStorage: MemoryStoreStorage = {
+      ...backingStorage,
+      setIdAliases: async (data) => {
+        if (pauseAliasWrite) {
+          pauseAliasWrite = false;
+          aliasWriteStarted.resolve(null);
+          await releaseAliasWrite.promise;
+        }
+        await backingStorage.setIdAliases(data);
+      },
+    };
+    const { store, queue } = makeStore(memoryQueueStorage(), storeStorage);
+    await store.restore();
+    const optimistic = await store.dispatch({
+      type: "create",
+      payload: { title: "New" },
+    });
+    if (optimistic === undefined) throw new Error("expected optimistic task");
+    const createCmd = queue.head();
+    if (createCmd?.type !== "create") throw new Error("expected create head");
+    const real = makeTask({ id: taskId("TaskNotes/New.md"), title: "New" });
+
+    pauseAliasWrite = true;
+    const ack = store.applyServerAck(createCmd, real);
+    await aliasWriteStarted.promise;
+
+    // While persistence is paused, readers still observe the prior alias and
+    // snapshot together. The queued dispatch waits and resolves its stale id
+    // only after the acknowledgement publishes the real task.
+    expect(store.resolveTaskId(optimistic.id)).toBe(optimistic.id);
+    expect(store.getSnapshot().tasks.has(optimistic.id)).toBe(true);
+    const dispatch = store.dispatch({
+      type: "set_status",
+      taskId: optimistic.id,
+      status: "done",
+    });
+
+    releaseAliasWrite.resolve(null);
+    await ack;
+    const updated = await dispatch;
+    expect(updated?.id).toBe(real.id);
+    expect(updated?.status).toBe("done");
+    const pending = queue.head();
+    expect(pending?.type === "set_status" && pending.taskId).toBe(real.id);
+  });
+
   test("delete ack removes from base; update ack merges the server task", async () => {
     const seeded = makeTask();
     const other = makeTask({
@@ -214,6 +265,40 @@ describe("TaskStore server acks", () => {
     await store.applyServerAck(deleteCmd, null);
     expect(store.getSnapshot().tasks.has(other.id)).toBe(false);
     expect(store.getSnapshot().pendingCount).toBe(0);
+  });
+
+  test("keeps an acknowledged command durable until its base write succeeds", async () => {
+    const seeded = makeTask();
+    const queueStorage = memoryQueueStorage();
+    const backingStorage = memoryStoreStorage({ tasks: [seeded] });
+    const storeStorage: MemoryStoreStorage = {
+      ...backingStorage,
+      setTasks: () => Promise.reject(new Error("base write interrupted")),
+    };
+    const { store, queue } = makeStore(queueStorage, storeStorage);
+    await store.restore();
+    await store.dispatch({
+      type: "update",
+      taskId: seeded.id,
+      payload: { title: "Durable rename" },
+    });
+    const command = queue.head();
+    if (command === undefined) throw new Error("expected queued update");
+
+    await expect(
+      store.applyServerAck(command, { ...seeded, title: "Durable rename" }),
+    ).rejects.toThrow("base write interrupted");
+    expect(queue.pending.map((pending) => pending.id)).toEqual([command.id]);
+
+    const relaunched = makeStore(
+      queueStorage.clone(),
+      backingStorage.clone(),
+    ).store;
+    await relaunched.restore();
+    expect(relaunched.getSnapshot().pendingCount).toBe(1);
+    expect(relaunched.getSnapshot().tasks.get(seeded.id)?.title).toBe(
+      "Durable rename",
+    );
   });
 });
 

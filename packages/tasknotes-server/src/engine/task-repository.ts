@@ -16,9 +16,11 @@ import {
   taskInfoUpdatesToFrontmatterPatch,
 } from "tasknotes-types/v2";
 import type {
+  CompleteInstanceRequest,
   TaskCreationRequest,
   TaskInfo,
   TaskNotesModelConfig,
+  TaskPatchOperation,
   TaskUpdateInput,
   TaskUpdateRequest,
 } from "tasknotes-types/v2";
@@ -31,6 +33,10 @@ import {
 } from "./vault-files.ts";
 import { newTaskPath } from "./filename.ts";
 import { ymd } from "./date.ts";
+import {
+  recurringCompletionRestorePatch,
+  useDeterministicRecurringSchedule,
+} from "./recurring-completion.ts";
 import {
   tasksCreatedTotal,
   tasksDeletedTotal,
@@ -301,10 +307,7 @@ export class TaskRepository {
    */
   async completeInstance(
     id: string,
-    options: {
-      date?: string | undefined;
-      completed?: boolean | undefined;
-    } = {},
+    options: CompleteInstanceRequest = {},
   ): Promise<TaskInfo> {
     const fresh = await this.readFresh(id);
     const recurrence = fresh.task.recurrence;
@@ -312,24 +315,65 @@ export class TaskRepository {
       // Upstream 400s on non-recurring; route layer translates this.
       throw new NotRecurringError(id);
     }
-    const targetDate =
-      options.date === undefined ? this.clock() : new Date(options.date);
-    const dateStr = ymd(targetDate);
+    const dateStr = options.date ?? ymd(this.clock());
+    // Date-only request values are calendar days, not instants. Construct the
+    // model target at UTC midnight so its UTC formatter preserves the exact
+    // requested day in every server timezone. Bodyless legacy calls first
+    // resolve the server-local day, then use the same model representation.
+    const targetDate = new Date(`${dateStr}T00:00:00.000Z`);
     const already = (fresh.task.complete_instances ?? []).includes(dateStr);
     if (options.completed !== undefined && options.completed === already) {
-      return fresh.task; // set-semantics no-op
+      if (options.restore === undefined) {
+        return fresh.task; // set-semantics no-op
+      }
+      const patch: TaskPatchOperation[] = [
+        {
+          op: "set",
+          field: this.config.fieldMapping.completeInstances,
+          value: fresh.task.complete_instances ?? [],
+        },
+        {
+          op: "set",
+          field: this.config.fieldMapping.dateModified,
+          value: this.clock().toISOString(),
+        },
+        ...recurringCompletionRestorePatch(
+          options.restore,
+          dateStr,
+          fresh.task.skipped_instances,
+          this.config.fieldMapping,
+        ),
+      ];
+      return this.applyPlanPatch(id, fresh, patch, {});
     }
+    const now = this.clock();
+    const maintainDueDateOffset = this.config.recurrence.maintainDueDateOffset;
     const plan = buildRecurringTaskCompletePlan({
       freshTask: fresh.task,
       targetDate,
-      currentTimestamp: this.clock().toISOString(),
-      maintainDueDateOffsetInRecurring:
-        this.config.recurrence.maintainDueDateOffset,
+      currentTimestamp: now.toISOString(),
+      maintainDueDateOffsetInRecurring: maintainDueDateOffset,
     });
+    useDeterministicRecurringSchedule(
+      plan,
+      fresh.task,
+      ymd(now),
+      maintainDueDateOffset,
+    );
     const patch = recurringCompletePlanToFrontmatterPatch(
       plan,
       this.config.fieldMapping,
     );
+    if (options.restore !== undefined) {
+      patch.push(
+        ...recurringCompletionRestorePatch(
+          options.restore,
+          dateStr,
+          plan.updatedTask.skipped_instances,
+          this.config.fieldMapping,
+        ),
+      );
+    }
     return this.applyPlanPatch(id, fresh, patch, {});
   }
 
