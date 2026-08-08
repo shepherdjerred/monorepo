@@ -10,9 +10,14 @@ import {
 const MetaSchema = z.object({
   manifest: RunManifestSchema,
   summary: RunSummarySchema.nullable(),
+  interactive: z.boolean(),
 });
 
-export type Meta = { manifest: RunManifest; summary: RunSummary | null };
+export type Meta = {
+  manifest: RunManifest;
+  summary: RunSummary | null;
+  interactive: boolean;
+};
 
 async function fetchMeta(): Promise<Meta> {
   const response = await fetch("/api/meta");

@@ -34,6 +34,7 @@ const snapshot: FleetSnapshot = {
   active: 0,
   queued: 0,
   pending: 0,
+  waiting: 0,
   paused: 0,
   prs: [],
 };
@@ -491,6 +492,7 @@ describe("local run bundles", () => {
       checkout: "/repo",
       worktreeRoot: "/repo/worktrees",
       maxWorkers: 5,
+      author: null,
     });
     recorder.configureSecretValues(["private-provider-key"]);
     const tickId = recorder.newId("tick");
@@ -1453,6 +1455,7 @@ describe("run bundle inspection", () => {
       active: 0,
       queued: 0,
       pending: 0,
+      waiting: 0,
       paused: 1,
       prs: [state],
     });

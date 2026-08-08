@@ -1,4 +1,15 @@
 import type { RecordedRunEvent } from "./run-events.ts";
+import { z } from "zod";
+
+const ListedPrsPayloadSchema = z.object({
+  operation: z.literal("listOpenPrs"),
+  prs: z.array(
+    z.object({
+      number: z.number().int().positive(),
+      headSha: z.string().min(1),
+    }),
+  ),
+});
 
 const PARENT_CORRELATION_FIELDS = [
   "traceId",
@@ -123,13 +134,43 @@ type ActiveCorrelations = {
   commands: Map<string, RecordedRunEvent>;
 };
 
+function tickDrainLane(event: RecordedRunEvent): string | null {
+  const prNumber = event.correlation.prNumber;
+  const headSha = event.correlation.headSha;
+  return prNumber === undefined || headSha === undefined
+    ? null
+    : `${String(prNumber)}:${headSha}`;
+}
+
+function recordListedPrLanes(
+  event: RecordedRunEvent,
+  activeTickIds: Set<string>,
+  tickLanes: Map<string, Set<string>>,
+): void {
+  if (event.kind !== "environment.result") return;
+  const tickId = event.correlation.tickId;
+  if (tickId === undefined || !activeTickIds.has(tickId)) return;
+  const parsed = ListedPrsPayloadSchema.safeParse(event.payload);
+  if (!parsed.success) return;
+  const lanes = tickLanes.get(tickId);
+  for (const pr of parsed.data.prs) {
+    lanes?.add(`${String(pr.number)}:${pr.headSha}`);
+  }
+}
+
 function verifyTickCausation(
   event: RecordedRunEvent,
   activeTickIds: Set<string>,
+  failedTickDrainLanes: Map<string, Set<string>>,
 ): void {
   if (event.kind === "environment.result") {
     const tickId = event.correlation.tickId;
-    if (tickId === undefined || !activeTickIds.has(tickId)) {
+    const lane = tickDrainLane(event);
+    const draining =
+      tickId !== undefined &&
+      lane !== null &&
+      failedTickDrainLanes.get(tickId)?.has(lane) === true;
+    if (tickId === undefined || (!draining && !activeTickIds.has(tickId))) {
       throw new Error(
         `environment.result references a nonexistent or inactive tick: ${tickId ?? "missing"}`,
       );
@@ -149,18 +190,70 @@ function verifyTickCausation(
   }
 }
 
+function trackCommandStarted(
+  event: RecordedRunEvent,
+  active: ActiveCorrelations,
+  activeTickIds: Set<string>,
+  failedTickDrainLanes: Map<string, Set<string>>,
+): void {
+  const tickId = event.correlation.tickId;
+  const requiresActiveTick =
+    tickId !== undefined && event.correlation.generation === undefined;
+  const lane = tickDrainLane(event);
+  if (lane !== null && tickId !== undefined && activeTickIds.has(tickId)) {
+    failedTickDrainLanes.get(tickId)?.add(lane);
+  }
+  const draining =
+    tickId !== undefined &&
+    lane !== null &&
+    failedTickDrainLanes.get(tickId)?.has(lane) === true;
+  if (!draining && requiresActiveTick && !activeTickIds.has(tickId)) {
+    throw new Error(
+      `command.started references a nonexistent or inactive tick: ${tickId}`,
+    );
+  }
+  if (event.correlation.toolCallId !== undefined) {
+    requireActiveParent(
+      active.tools,
+      event.correlation.toolCallId,
+      event,
+      "tool",
+    );
+  }
+  if (event.correlation.modelTurnId !== undefined) {
+    requireActiveParent(
+      active.modelTurns,
+      event.correlation.modelTurnId,
+      event,
+      "model turn",
+    );
+  }
+  if (event.correlation.generation !== undefined) {
+    requireActiveParent(
+      active.workers,
+      requireLifecycleKey(event, "workers"),
+      event,
+      "worker",
+    );
+  }
+  active.commands.set(requireLifecycleKey(event, "commands"), event);
+}
+
 function trackStartedEvent(
   event: RecordedRunEvent,
   active: ActiveCorrelations,
   activeTickIds: Set<string>,
+  failedTickDrainLanes: Map<string, Set<string>>,
 ): void {
-  verifyTickCausation(event, activeTickIds);
+  verifyTickCausation(event, activeTickIds, failedTickDrainLanes);
+  recordListedPrLanes(event, activeTickIds, failedTickDrainLanes);
   if (event.kind === "tick.started") {
     const tickId = event.correlation.tickId;
     if (tickId === undefined) {
       throw new Error("tick.started is missing its tick correlation");
     }
     activeTickIds.add(tickId);
+    failedTickDrainLanes.set(tickId, new Set());
   }
   if (event.kind === "worker.started") {
     const tickId = event.correlation.tickId;
@@ -212,39 +305,7 @@ function trackStartedEvent(
     active.tools.set(requireLifecycleKey(event, "tools"), event);
   }
   if (event.kind === "command.started") {
-    const tickId = event.correlation.tickId;
-    const requiresActiveTick =
-      tickId !== undefined && event.correlation.generation === undefined;
-    if (requiresActiveTick && !activeTickIds.has(tickId)) {
-      throw new Error(
-        `command.started references a nonexistent or inactive tick: ${tickId}`,
-      );
-    }
-    if (event.correlation.toolCallId !== undefined) {
-      requireActiveParent(
-        active.tools,
-        event.correlation.toolCallId,
-        event,
-        "tool",
-      );
-    }
-    if (event.correlation.modelTurnId !== undefined) {
-      requireActiveParent(
-        active.modelTurns,
-        event.correlation.modelTurnId,
-        event,
-        "model turn",
-      );
-    }
-    if (event.correlation.generation !== undefined) {
-      requireActiveParent(
-        active.workers,
-        requireLifecycleKey(event, "workers"),
-        event,
-        "worker",
-      );
-    }
-    active.commands.set(requireLifecycleKey(event, "commands"), event);
+    trackCommandStarted(event, active, activeTickIds, failedTickDrainLanes);
   }
 }
 
@@ -252,10 +313,14 @@ function closeTerminalEvent(
   event: RecordedRunEvent,
   active: ActiveCorrelations,
   activeTickIds: Set<string>,
+  failedTickDrainLanes: Map<string, Set<string>>,
 ): void {
   if (event.kind === "tick.completed" || event.kind === "tick.failed") {
     const tickId = event.correlation.tickId;
     if (tickId !== undefined) {
+      if (event.kind === "tick.completed") {
+        failedTickDrainLanes.delete(tickId);
+      }
       activeTickIds.delete(tickId);
     }
   }
@@ -333,6 +398,7 @@ function closeTerminalEvent(
 
 export function verifyCorrelationGraph(events: RecordedRunEvent[]): void {
   const activeTickIds = new Set<string>();
+  const failedTickDrainLanes = new Map<string, Set<string>>();
   const active: ActiveCorrelations = {
     workers: new Map(),
     modelTurns: new Map(),
@@ -340,7 +406,7 @@ export function verifyCorrelationGraph(events: RecordedRunEvent[]): void {
     commands: new Map(),
   };
   for (const event of events) {
-    trackStartedEvent(event, active, activeTickIds);
-    closeTerminalEvent(event, active, activeTickIds);
+    trackStartedEvent(event, active, activeTickIds, failedTickDrainLanes);
+    closeTerminalEvent(event, active, activeTickIds, failedTickDrainLanes);
   }
 }

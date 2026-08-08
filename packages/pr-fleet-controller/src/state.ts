@@ -1,6 +1,7 @@
 import type {
   FleetSnapshot,
   LeaseKind,
+  OperatorInputRequest,
   PrState,
   WorkerResult,
 } from "./schemas.ts";
@@ -28,6 +29,7 @@ export class FleetStore {
   // prevents validating against stale dependencies/generated artifacts.
   readonly setupWorktrees = new Map<string, string>();
   readonly pausedReasons = new Map<number, string>();
+  readonly operatorRequests = new Map<number, OperatorInputRequest>();
   readonly stackWriteOwners = new Map<string, number>();
   setupOwner: number | null = null;
   readonly heavyOwners = new Set<number>();
@@ -53,6 +55,8 @@ export class FleetStore {
       active: prs.filter((pr) => ACTIVE_STATUSES.has(pr.status)).length,
       queued: prs.filter((pr) => pr.classification === "queued").length,
       pending: prs.filter((pr) => pr.classification === "pending").length,
+      waiting: prs.filter((pr) => pr.classification === "waiting-for-answer")
+        .length,
       paused: prs.filter((pr) => pr.classification === "paused").length,
       prs,
     };

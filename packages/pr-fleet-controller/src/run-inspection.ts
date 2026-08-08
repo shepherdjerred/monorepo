@@ -16,11 +16,15 @@ import {
   readRunSummary,
 } from "./run-recorder.ts";
 import { verifyCorrelationGraph } from "./replay-correlation.ts";
+import {
+  verifyOperatorQuestionLifecycle,
+  type OperatorQuestionReplay,
+} from "./operator-question-replay.ts";
 import type { FleetSnapshot } from "./schemas.ts";
 import { replaySnapshots, verifyShutdownBoundary } from "./snapshot-replay.ts";
 
 const BODY_FIELD_PATTERN =
-  /^(?:body|change|content|error|escalation|lastAction|line|log|message|messages|output|patch|prompt|reason|response|stack|stderr|stdout|text)$/i;
+  /^(?:body|change|content|context|description|error|escalation|freeText|header|label|lastAction|line|log|message|messages|output|patch|prompt|question|reason|response|stack|stderr|stdout|text)$/i;
 const BODY_ARRAY_FIELD_PATTERN =
   /^(?:args|blockers|changes|hardFailures|reviewFindings|validation)$/i;
 const RunTerminalPayloadSchema = RunSummarySchema.pick({
@@ -60,6 +64,7 @@ export type ReplayReport = {
   workers: ReplayLifecycle;
   workerAttempts: ReplayLifecycle;
   masterTurns: ReplayLifecycle;
+  operatorQuestions: OperatorQuestionReplay;
   finalSnapshot: FleetSnapshot | null;
 };
 
@@ -396,6 +401,7 @@ export function replayRunBundle(
     completed: "master.turn.completed",
     failed: "master.turn.failed",
   });
+  const operatorQuestions = verifyOperatorQuestionLifecycle(events);
   if (summary.status === "completed") {
     const openLifecycles = Object.entries({
       run,
@@ -442,6 +448,7 @@ export function replayRunBundle(
     workers,
     workerAttempts,
     masterTurns,
+    operatorQuestions,
     finalSnapshot,
   };
 }

@@ -10,6 +10,9 @@ export const RunEventKindSchema = z.enum([
   "run.failed",
   "controller.initialized",
   "operator.input",
+  "operator.question.asked",
+  "operator.question.answered",
+  "operator.question.superseded",
   "tick.started",
   "tick.queued",
   "tick.completed",
@@ -86,6 +89,7 @@ export const RunManifestSchema = z.object({
   checkout: z.string().min(1),
   worktreeRoot: z.string().min(1),
   maxWorkers: z.number().int().positive(),
+  author: z.string().min(1).nullable().default(null),
   files: z.object({
     events: z.literal("events.jsonl"),
     summary: z.literal("summary.json"),

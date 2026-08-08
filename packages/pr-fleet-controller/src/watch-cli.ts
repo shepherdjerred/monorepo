@@ -1,7 +1,8 @@
 #!/usr/bin/env bun
 
 import { parseArgs } from "node:util";
-import { resolveRunDirectory, resolveStateDirectory } from "./run-recorder.ts";
+import { resolveRunDirectory } from "./run-recorder.ts";
+import { resolveStateDirectory } from "./state-directory.ts";
 import { startWatchServer } from "./watch-server.ts";
 import { resolveLatestRunDirectory } from "./watch-tail.ts";
 
@@ -11,6 +12,7 @@ const parsed = parseArgs({
     run: { type: "string" },
     "state-dir": { type: "string" },
     port: { type: "string" },
+    "control-socket": { type: "string" },
     "no-open": { type: "boolean", default: false },
   },
   strict: true,
@@ -55,6 +57,9 @@ function openBrowser(url: string): void {
 const runDirectory = await resolveTarget();
 const server = startWatchServer({
   runDirectory,
+  ...(parsed.values["control-socket"] === undefined
+    ? {}
+    : { controlSocket: parsed.values["control-socket"] }),
   ...((): { port?: number } => {
     const port = parsePort(parsed.values.port);
     return port === undefined ? {} : { port };

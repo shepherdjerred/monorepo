@@ -4,6 +4,7 @@ import type {
   PrIdentity,
   PrState,
   ReadinessEvidence,
+  WorktreeContext,
   WorkerResult,
 } from "./schemas.ts";
 import type { FleetStore } from "./state.ts";
@@ -43,7 +44,10 @@ export type FleetEnvironment = {
     allowOperatorFallback: boolean,
   ) => Promise<string | null>;
   provisionWorktree: (pr: PrIdentity, stackId: string) => Promise<string>;
-  assignWorktreeBranch: (worktree: string, pr: PrIdentity) => Promise<void>;
+  assignWorktreeBranch: (
+    worktree: string,
+    pr: PrIdentity,
+  ) => Promise<WorktreeContext>;
   runLocalCommand: (request: CommandRequest) => Promise<CommandResult>;
   startRestack: (pr: PrState, signal?: AbortSignal) => Promise<CommandResult>;
   continueRestack: (

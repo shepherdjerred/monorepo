@@ -3,9 +3,16 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { codexProvider } from "@shepherdjerred/code-review";
-import { withCommandCorrelation } from "@shepherdjerred/pr-fleet-controller/src/command-correlation.ts";
+import {
+  currentCommandCorrelation,
+  withCommandCorrelation,
+  withoutCommandCorrelation,
+} from "@shepherdjerred/pr-fleet-controller/src/command-correlation.ts";
 import { CommandFleetEnvironment } from "@shepherdjerred/pr-fleet-controller/src/environment.ts";
-import type { FleetTelemetry } from "@shepherdjerred/pr-fleet-controller/src/ports.ts";
+import type {
+  CommandRequest,
+  FleetTelemetry,
+} from "@shepherdjerred/pr-fleet-controller/src/ports.ts";
 import type {
   RunEventCorrelation,
   RunEventKind,
@@ -54,7 +61,7 @@ class EnvironmentResultFailingTelemetry extends RecordingTelemetry {
 }
 
 class StubCommandFleetEnvironment extends CommandFleetEnvironment {
-  override runLocalCommand(): Promise<{
+  override runLocalCommand(_request: CommandRequest): Promise<{
     exitCode: number;
     stdout: string;
     stderr: string;
@@ -66,6 +73,15 @@ class StubCommandFleetEnvironment extends CommandFleetEnvironment {
       stderr: "",
       termination: "exit",
     });
+  }
+}
+
+class CapturingCommandFleetEnvironment extends StubCommandFleetEnvironment {
+  request: CommandRequest | undefined;
+
+  override runLocalCommand(request: CommandRequest) {
+    this.request = request;
+    return super.runLocalCommand(request);
   }
 }
 
@@ -103,6 +119,36 @@ test("environment results inherit the active reconciliation tick", async () => {
     telemetry.events.find((event) => event.kind === "environment.result")
       ?.correlation,
   ).toEqual({ tickId: "tick-1" });
+});
+
+test("autonomous work can clear inherited command correlation", async () => {
+  await withCommandCorrelation(
+    {
+      modelTurnId: "master-turn-1",
+      toolCallId: "tool-1",
+    },
+    async () => {
+      await withoutCommandCorrelation(async () => {
+        expect(currentCommandCorrelation()).toEqual({});
+      });
+    },
+  );
+});
+
+test("author scope is passed to GitHub without excluding drafts", async () => {
+  const environment = new CapturingCommandFleetEnvironment({
+    repo: "shepherdjerred/monorepo",
+    checkout: "/tmp/repo",
+    worktreeRoot: "/tmp/worktrees",
+    provider: codexProvider,
+    author: "shepherdjerred",
+  });
+
+  await environment.listOpenPrs();
+
+  expect(environment.request?.args).toContain("--author");
+  expect(environment.request?.args).toContain("shepherdjerred");
+  expect(environment.request?.args).not.toContain("--draft");
 });
 
 describe("command process-group termination", () => {

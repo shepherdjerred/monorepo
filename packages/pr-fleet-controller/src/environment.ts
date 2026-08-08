@@ -28,8 +28,10 @@ import type {
   PrState,
   ReadinessEvidence,
   ReviewFinding,
+  WorktreeContext,
 } from "./schemas.ts";
 import { WorktreeManager } from "./worktree.ts";
+import { PrHeadChangedDuringRefreshError } from "./controller-evidence-refresh.ts";
 
 export type CommandFleetEnvironmentOptions = {
   repo: string;
@@ -37,12 +39,14 @@ export type CommandFleetEnvironmentOptions = {
   worktreeRoot: string;
   provider: ReviewProvider;
   telemetry?: FleetTelemetry;
+  author?: string | null;
 };
 
 export class CommandFleetEnvironment implements FleetEnvironment {
   readonly #repo: string;
   readonly #checkout: string;
   readonly #provider: ReviewProvider;
+  readonly #author: string | null;
   readonly #gitOperations: GitOperations;
   readonly #worktreeManager: WorktreeManager;
   readonly #telemetry: FleetTelemetry | undefined;
@@ -51,6 +55,7 @@ export class CommandFleetEnvironment implements FleetEnvironment {
     this.#repo = options.repo;
     this.#checkout = options.checkout;
     this.#provider = options.provider;
+    this.#author = options.author ?? null;
     this.#telemetry = options.telemetry;
     const run = (request: CommandRequest) => this.runLocalCommand(request);
     const mustRun = (
@@ -156,6 +161,7 @@ export class CommandFleetEnvironment implements FleetEnvironment {
       "200",
       "--json",
       "number,title,url,isDraft,author,labels,headRefName,headRefOid,baseRefName,isCrossRepository,maintainerCanModify",
+      ...(this.#author === null ? [] : ["--author", this.#author]),
     ]);
     const prs = parsePrList(output);
     captureTelemetryOperation("environment.result", () => {
@@ -293,7 +299,7 @@ export class CommandFleetEnvironment implements FleetEnvironment {
         // that local ref, finds no matching remote ref, and prunes the
         // destination ("- [deleted] (none)") while still exiting 0 — the next
         // `rev-parse` then fails and the whole tick aborts.
-        `refs/pull/${String(pr.number)}/head:refs/remotes/pull/${String(pr.number)}/head`,
+        `+refs/pull/${String(pr.number)}/head:refs/remotes/pull/${String(pr.number)}/head`,
       ]);
       const fetchedHeadOutput = await this.#mustRun("git", [
         "rev-parse",
@@ -301,8 +307,10 @@ export class CommandFleetEnvironment implements FleetEnvironment {
       ]);
       const fetchedHead = fetchedHeadOutput.trim();
       if (fetchedHead !== pr.headSha) {
-        throw new Error(
-          `PR #${String(pr.number)} changed during conflict inspection (${pr.headSha} -> ${fetchedHead})`,
+        throw new PrHeadChangedDuringRefreshError(
+          pr.number,
+          pr.headSha,
+          fetchedHead,
         );
       }
       const result = await this.runLocalCommand({
@@ -491,7 +499,10 @@ export class CommandFleetEnvironment implements FleetEnvironment {
     );
   }
 
-  assignWorktreeBranch(worktree: string, pr: PrIdentity): Promise<void> {
+  assignWorktreeBranch(
+    worktree: string,
+    pr: PrIdentity,
+  ): Promise<WorktreeContext> {
     return this.#worktreeManager.assignWorktreeBranch(worktree, pr);
   }
 

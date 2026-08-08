@@ -1,4 +1,3 @@
-import path from "node:path";
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import { validateWorkerCommand } from "./command-policy.ts";
@@ -6,63 +5,16 @@ import { captureTelemetryOperation } from "./controller-telemetry.ts";
 import type { FleetEnvironment, FleetTelemetry } from "./ports.ts";
 import { runRecordedToolOperation } from "./recorded-tool.ts";
 import type { RunEventCorrelation } from "./run-events.ts";
-import {
-  sandboxProfile,
-  sanitizedEnvironment,
-  setupEnvironment,
-  setupSandboxProfile,
-  type SetupDirectories,
-} from "./sandbox.ts";
+import { sandboxProfile, sanitizedEnvironment } from "./sandbox.ts";
 import { LeaseKindSchema, PrStateSchema, type PrState } from "./schemas.ts";
 import type { FleetStore } from "./state.ts";
 import { containedPath, createFileEditTools } from "./worker-file-edits.ts";
+import { createSetupWorktreeTool } from "./worker-setup-tool.ts";
+import { createWorkerWipTools } from "./worker-wip-tools.ts";
 
-export const SETUP_COMMANDS = [
-  { executable: "mise", args: ["install"] },
-  { executable: "bun", args: ["install", "--frozen-lockfile"] },
-  { executable: "bunx", args: ["turbo", "run", "generate"] },
-  { executable: "bunx", args: ["lefthook", "install"] },
-] satisfies { executable: string; args: string[] }[];
-
-// Resolve the git directories and outer checkout root that the setup sandbox
-// profile needs. A linked worktree's git store lives outside the worktree tree,
-// and the fleet worktrees are nested inside the checkout that turbo treats as
-// the workspace root, so these must be discovered rather than assumed.
-async function resolveSetupDirectories(
-  worktree: string,
-  environment: FleetEnvironment,
-  signal: AbortSignal,
-): Promise<SetupDirectories> {
-  const result = await environment.runLocalCommand({
-    executable: "git",
-    args: [
-      "rev-parse",
-      "--path-format=absolute",
-      "--git-common-dir",
-      "--git-dir",
-    ],
-    cwd: worktree,
-    timeoutMs: 30_000,
-    signal,
-  });
-  if (result.exitCode !== 0) {
-    throw new Error(
-      `Failed to resolve git directories for setup: ${result.stderr.trim()}`,
-    );
-  }
-  const [gitCommonDir, gitDir] = result.stdout.trim().split("\n");
-  if (
-    gitCommonDir === undefined ||
-    gitDir === undefined ||
-    gitCommonDir.length === 0 ||
-    gitDir.length === 0
-  ) {
-    throw new Error(
-      `Unexpected git directory output during setup: ${result.stdout.trim()}`,
-    );
-  }
-  return { gitCommonDir, gitDir, checkoutRoot: path.dirname(gitCommonDir) };
-}
+export const ConventionalCommitMessageSchema = z
+  .string()
+  .regex(/^[a-z][a-z0-9-]*(?:\([a-z0-9][a-z0-9-]*\))?!?: \S.*$/);
 
 async function runRecordedTool<T>(
   tool: string,
@@ -117,6 +69,13 @@ export function createWorkerTools(
   }
   const worktree = pr.worktree;
   const toolContext = { pr, telemetry, parentCorrelation };
+  const assertNotWaitingForAnswer = (): void => {
+    if (store.operatorRequests.has(pr.identity.number)) {
+      throw new Error(
+        "PR is waiting for operator input; return waiting-for-answer now",
+      );
+    }
+  };
 
   return {
     get_pr_context: createTool({
@@ -129,6 +88,18 @@ export function createWorkerTools(
         runRecordedTool("get_pr_context", input, toolContext, () =>
           Promise.resolve(pr),
         ),
+    }),
+    ...createWorkerWipTools({
+      pr,
+      store,
+      environment,
+      worktree,
+      signal,
+      telemetry,
+      parentCorrelation,
+      record: (tool, input, run) =>
+        runRecordedTool(tool, input, toolContext, run),
+      assertNotWaitingForAnswer,
     }),
     read_file: createTool({
       id: "read_file",
@@ -209,6 +180,7 @@ export function createWorkerTools(
       outputSchema: z.object({ applied: z.boolean(), stderr: z.string() }),
       execute: (input) =>
         runRecordedTool("apply_patch", input, toolContext, async () => {
+          assertNotWaitingForAnswer();
           if (store.stackWriteOwners.get(pr.stackId) !== pr.identity.number) {
             throw new Error("Worker does not hold the stack write lease");
           }
@@ -244,6 +216,8 @@ export function createWorkerTools(
       worktree,
       store,
       pr,
+      environment,
+      signal,
       record: (tool, input, run) =>
         runRecordedTool(tool, input, toolContext, run),
     }),
@@ -253,85 +227,23 @@ export function createWorkerTools(
       inputSchema: z.object({ kind: LeaseKindSchema }),
       outputSchema: z.object({ granted: z.boolean() }),
       execute: (input) =>
-        runRecordedTool("request_lease", input, toolContext, () =>
-          Promise.resolve({ granted: store.requestLease(pr, input.kind) }),
-        ),
-    }),
-    setup_worktree: createTool({
-      id: "setup_worktree",
-      description:
-        "Run the controller-approved serial toolchain, dependency, generation, and hook setup.",
-      inputSchema: z.object({}),
-      outputSchema: z.object({ commands: z.array(z.string()) }),
-      execute: (input) =>
-        runRecordedTool("setup_worktree", input, toolContext, async () => {
-          // Setup validity is tied to the checked-out head: a shared worktree that
-          // moved to a sibling branch, or a PR with a new head, may have different
-          // dependencies/generated artifacts. Only skip when setup already ran for
-          // exactly this head.
-          const headSha = pr.identity.headSha;
-          if (store.setupWorktrees.get(worktree) === headSha) {
-            return { commands: ["already complete"] };
-          }
-          if (!store.requestLease(pr, "setup")) {
-            throw new Error("Setup lease is not available");
-          }
-          if (!store.requestLease(pr, "heavy")) {
-            store.releaseLease(pr.identity.number, "setup", pr.stackId);
-            throw new Error("Heavy lease is not available for generation");
-          }
-          const completed: string[] = [];
-          try {
-            // These commands execute PR-controlled code (dependency lifecycle
-            // scripts, `turbo` generators, `.mise.toml`). The worker never
-            // persists trust for PR-controlled configuration: setup grants the
-            // exact worktree config invocation-scoped trust in paranoid mode.
-            // Run each command under the setup sandbox profile with scrubbed
-            // credentials so a malicious PR cannot read or exfiltrate operator
-            // credentials before validation.
-            const directories = await resolveSetupDirectories(
-              worktree,
-              environment,
-              signal,
-            );
-            const profile = setupSandboxProfile(worktree, directories);
-            const commandEnvironment = setupEnvironment(
-              extraSecretNames,
-              path.join(worktree, ".mise.toml"),
-            );
-            for (const command of SETUP_COMMANDS) {
-              const result = await environment.runLocalCommand({
-                executable: "sandbox-exec",
-                args: ["-p", profile, command.executable, ...command.args],
-                cwd: worktree,
-                timeoutMs: 900_000,
-                signal,
-                env: commandEnvironment,
-              });
-              if (result.exitCode !== 0) {
-                throw new Error(
-                  `${command.executable} failed: ${result.stderr.trim()}`,
-                );
-              }
-              completed.push([command.executable, ...command.args].join(" "));
-            }
-            store.setupWorktrees.set(worktree, headSha);
-            // Mark setup complete only for PRs sharing this worktree AT this head;
-            // a sibling on a different head still needs its own setup pass.
-            for (const [number, state] of store.prs) {
-              if (
-                state.worktree === worktree &&
-                state.identity.headSha === headSha
-              ) {
-                store.prs.set(number, { ...state, setupComplete: true });
-              }
-            }
-            return { commands: completed };
-          } finally {
-            store.releaseLease(pr.identity.number, "heavy", pr.stackId);
-            store.releaseLease(pr.identity.number, "setup", pr.stackId);
-          }
+        runRecordedTool("request_lease", input, toolContext, () => {
+          assertNotWaitingForAnswer();
+          return Promise.resolve({
+            granted: store.requestLease(pr, input.kind),
+          });
         }),
+    }),
+    setup_worktree: createSetupWorktreeTool({
+      pr,
+      store,
+      environment,
+      worktree,
+      signal,
+      extraSecretNames,
+      assertNotWaitingForAnswer,
+      record: (tool, input, run) =>
+        runRecordedTool(tool, input, toolContext, run),
     }),
     start_restack: createTool({
       id: "start_restack",
@@ -344,6 +256,7 @@ export function createWorkerTools(
       }),
       execute: (input) =>
         runRecordedTool("start_restack", input, toolContext, async () => {
+          assertNotWaitingForAnswer();
           if (!store.requestLease(pr, "stack-write")) {
             throw new Error("Stack write lease is not available");
           }
@@ -369,6 +282,7 @@ export function createWorkerTools(
       }),
       execute: (input) =>
         runRecordedTool("continue_restack", input, toolContext, async () => {
+          assertNotWaitingForAnswer();
           if (store.stackWriteOwners.get(pr.stackId) !== pr.identity.number) {
             throw new Error("Worker does not hold the stack write lease");
           }
@@ -392,6 +306,7 @@ export function createWorkerTools(
       outputSchema: z.object({ headSha: z.string() }),
       execute: (input) =>
         runRecordedTool("publish_restack", input, toolContext, async () => {
+          assertNotWaitingForAnswer();
           if (store.stackWriteOwners.get(pr.stackId) !== pr.identity.number) {
             throw new Error("Worker does not hold the stack write lease");
           }
@@ -419,6 +334,7 @@ export function createWorkerTools(
       }),
       execute: (input) =>
         runRecordedTool("run_local_command", input, toolContext, async () => {
+          assertNotWaitingForAnswer();
           validateWorkerCommand(input.executable, input.args);
           if (store.setupWorktrees.get(worktree) !== pr.identity.headSha) {
             throw new Error(
@@ -459,11 +375,12 @@ export function createWorkerTools(
         "Publish explicit changed paths through hooks and git-spice.",
       inputSchema: z.object({
         paths: z.array(z.string().min(1)).min(1).max(100),
-        message: z.string().regex(/^[a-z]+\\([a-z0-9-]+\\): .+/),
+        message: ConventionalCommitMessageSchema,
       }),
       outputSchema: z.object({ headSha: z.string() }),
       execute: (input) =>
         runRecordedTool("publish_fix", input, toolContext, async () => {
+          assertNotWaitingForAnswer();
           if (!store.requestLease(pr, "stack-write")) {
             throw new Error("Stack write lease is not available");
           }

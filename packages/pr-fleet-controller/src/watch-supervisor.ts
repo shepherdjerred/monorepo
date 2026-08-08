@@ -11,7 +11,7 @@ type WatcherProcess = ReturnType<typeof Bun.spawn>;
  */
 export function spawnWatcher(
   runDirectory: string,
-  options: { uiPort?: string; open: boolean },
+  options: { uiPort?: string; open: boolean; controlSocket?: string },
 ): WatcherProcess | undefined {
   const watcherArgs = [
     "bun",
@@ -20,6 +20,9 @@ export function spawnWatcher(
     "--run",
     runDirectory,
     ...(options.uiPort === undefined ? [] : ["--port", options.uiPort]),
+    ...(options.controlSocket === undefined
+      ? []
+      : ["--control-socket", options.controlSocket]),
     ...(options.open ? [] : ["--no-open"]),
   ];
   try {
@@ -35,6 +38,23 @@ export function spawnWatcher(
     );
     return undefined;
   }
+}
+
+export function spawnCliWatcher(
+  runDirectory: string,
+  controlSocket: string,
+  args: readonly string[],
+): WatcherProcess | undefined {
+  if (args.includes("--no-ui")) {
+    return undefined;
+  }
+  const portIndex = args.indexOf("--ui-port");
+  const uiPort = portIndex === -1 ? undefined : args[portIndex + 1];
+  return spawnWatcher(runDirectory, {
+    ...(uiPort === undefined ? {} : { uiPort }),
+    open: !args.includes("--no-open"),
+    controlSocket,
+  });
 }
 
 // The dashboard tails the run bundle on a fixed poll interval and has no

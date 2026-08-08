@@ -44,6 +44,7 @@ export function App(): ReactElement {
               prNumber={selected}
               state={stateByNumber.get(selected) ?? null}
               items={view.prs.get(selected)?.timeline ?? []}
+              interactive={meta.data?.interactive ?? false}
             />
           )}
         </main>

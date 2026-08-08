@@ -2,6 +2,7 @@ import { stat } from "node:fs/promises";
 import path from "node:path";
 import { RunSummarySchema, type RunSummary } from "./run-events.ts";
 import { readRunManifest } from "./run-recorder.ts";
+import { OperatorInputAnswerSchema } from "./schemas.ts";
 import { splitAppendedLines } from "./watch-tail.ts";
 
 const POLL_INTERVAL_MS = 300;
@@ -185,6 +186,7 @@ async function serveStaticAsset(pathname: string): Promise<Response> {
 export function startWatchServer(options: {
   runDirectory: string;
   port?: number;
+  controlSocket?: string;
 }): WatchServer {
   const runDirectory = path.resolve(options.runDirectory);
   const sources: TailSource[] = [
@@ -200,11 +202,66 @@ export function startWatchServer(options: {
     idleTimeout: 255,
     async fetch(request) {
       const url = new URL(request.url);
+      const answerMatch = /^\/api\/operator-requests\/([^/]+)\/answer$/.exec(
+        url.pathname,
+      );
+      if (answerMatch !== null && request.method === "POST") {
+        if (options.controlSocket === undefined) {
+          return Response.json(
+            { error: "This dashboard is read-only" },
+            { status: 409 },
+          );
+        }
+        if (request.headers.get("origin") !== url.origin) {
+          return Response.json(
+            { error: "Invalid request origin" },
+            { status: 403 },
+          );
+        }
+        const contentType = request.headers.get("content-type");
+        if (
+          contentType?.toLowerCase().startsWith("application/json") !== true
+        ) {
+          return Response.json(
+            { error: "Answers must use application/json" },
+            { status: 415 },
+          );
+        }
+        try {
+          const requestId = answerMatch[1];
+          if (requestId === undefined) {
+            throw new Error("Missing operator request ID");
+          }
+          const answer = OperatorInputAnswerSchema.parse(await request.json());
+          if (answer.requestId !== decodeURIComponent(requestId)) {
+            throw new Error("Answer request ID does not match the URL");
+          }
+          const response = await fetch(
+            `http://controller/operator-requests/${encodeURIComponent(answer.requestId)}/answer`,
+            {
+              unix: options.controlSocket,
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify(answer),
+            },
+          );
+          return new Response(response.body, {
+            status: response.status,
+            headers: { "content-type": "application/json" },
+          });
+        } catch (error) {
+          return Response.json(
+            { error: error instanceof Error ? error.message : String(error) },
+            { status: 400 },
+          );
+        }
+      }
       switch (url.pathname) {
         case "/api/meta":
           return jsonResponse({
             manifest: await readRunManifest(runDirectory),
             summary: await readOptionalSummary(runDirectory),
+            interactive: options.controlSocket !== undefined,
           });
         case "/api/stream":
           return new Response(createEventStream(sources), {

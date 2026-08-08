@@ -3,6 +3,7 @@ import {
   mkdir,
   mkdtemp,
   readFile,
+  realpath,
   rm,
   symlink,
   writeFile,
@@ -11,6 +12,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import {
   applyStrReplace,
+  containedPath,
   writeWorktreeFile,
 } from "@shepherdjerred/pr-fleet-controller/src/worker-file-edits.ts";
 
@@ -22,6 +24,24 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await rm(worktree, { recursive: true, force: true });
+});
+
+describe("containedPath", () => {
+  test("accepts the worktree root and existing directories", async () => {
+    await mkdir(path.join(worktree, "packages"));
+    const canonical = await realpath(worktree);
+    expect(await containedPath(worktree, ".")).toBe(canonical);
+    expect(await containedPath(worktree, "packages")).toBe(
+      path.join(canonical, "packages"),
+    );
+  });
+
+  test("accepts missing nested search paths beneath an existing ancestor", async () => {
+    const canonical = await realpath(worktree);
+    expect(await containedPath(worktree, "missing/nested/path")).toBe(
+      path.join(canonical, "missing", "nested", "path"),
+    );
+  });
 });
 
 describe("applyStrReplace", () => {

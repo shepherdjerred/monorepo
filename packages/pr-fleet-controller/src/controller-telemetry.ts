@@ -2,6 +2,8 @@ import type { FleetTelemetry } from "./ports.ts";
 import type {
   FleetSnapshot,
   FleetTickReport,
+  OperatorInputAnswer,
+  OperatorInputRequest,
   PrState,
   TickTrigger,
   WorkerResult,
@@ -145,6 +147,48 @@ export class ControllerTelemetry {
             headSha: state.identity.headSha,
             generation: state.agentGeneration,
           },
+    );
+  }
+
+  operatorQuestionAsked(request: OperatorInputRequest): void {
+    this.#record(
+      "operator.question.asked",
+      { request },
+      {
+        prNumber: request.pr,
+        headSha: request.headSha,
+        generation: request.generation,
+      },
+    );
+  }
+
+  operatorQuestionAnswered(
+    request: OperatorInputRequest,
+    answer: OperatorInputAnswer,
+  ): void {
+    this.#record(
+      "operator.question.answered",
+      { requestId: request.id, answer },
+      {
+        prNumber: request.pr,
+        headSha: request.headSha,
+        generation: request.generation,
+      },
+    );
+  }
+
+  operatorQuestionSuperseded(
+    request: OperatorInputRequest,
+    reason: string,
+  ): void {
+    this.#record(
+      "operator.question.superseded",
+      { requestId: request.id, reason },
+      {
+        prNumber: request.pr,
+        headSha: request.headSha,
+        generation: request.generation,
+      },
     );
   }
 

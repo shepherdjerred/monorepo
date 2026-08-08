@@ -65,7 +65,8 @@ export class GitOperations {
     for (const requestedPath of paths) {
       if (
         path.isAbsolute(requestedPath) ||
-        requestedPath.split("/").includes("..")
+        requestedPath.split("/").includes("..") ||
+        requestedPath.split("/").includes(".git")
       ) {
         throw new Error(`Unsafe publication path: ${requestedPath}`);
       }
@@ -141,13 +142,25 @@ export class GitOperations {
   ): Promise<CommandResult> {
     const worktree = this.#worktree(pr);
     const owner = await this.#stackOwner(pr, worktree, signal);
-    if (owner !== "git-spice") {
-      // The controller only implements git-spice's stack-aware restack. A native
-      // (gh-stack) or fork branch must be rebased by its owning tool; refuse
-      // rather than corrupt its stack state by running git-spice against it.
-      throw new Error(
-        `Cannot restack PR #${String(pr.identity.number)}: branch ${pr.identity.headRefName} is not git-spice-owned; its native/fork stack tool must perform the restack`,
+    if (owner === "native") {
+      const remoteBase = `refs/remotes/origin/${pr.identity.baseRefName}`;
+      await this.#mustRun(
+        "git",
+        [
+          "fetch",
+          "origin",
+          `+refs/heads/${pr.identity.baseRefName}:${remoteBase}`,
+        ],
+        worktree,
+        { timeoutMs: 120_000, signal },
       );
+      return this.#run({
+        executable: "git",
+        args: ["rebase", remoteBase],
+        cwd: worktree,
+        timeoutMs: 600_000,
+        signal,
+      });
     }
     return this.#run({
       executable: "git-spice",
@@ -177,9 +190,13 @@ export class GitOperations {
     await this.#mustRun("git", ["add", "--", ...validated], worktree, {
       signal,
     });
+    const owner = await this.#stackOwner(pr, worktree, signal);
     return this.#run({
-      executable: "git-spice",
-      args: ["--no-prompt", "rebase", "continue"],
+      executable: owner === "git-spice" ? "git-spice" : "git",
+      args:
+        owner === "git-spice"
+          ? ["--no-prompt", "rebase", "continue"]
+          : ["-c", "core.editor=true", "rebase", "--continue"],
       cwd: worktree,
       timeoutMs: 600_000,
       signal,
