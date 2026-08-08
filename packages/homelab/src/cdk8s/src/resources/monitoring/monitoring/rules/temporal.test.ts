@@ -49,7 +49,7 @@ describe("Temporal workflow outcome rules", () => {
     expect(expression).toContain('reason!~"no-one-home|not-cold"');
   });
 
-  test("alerts on agent-task timeouts and on a failed timeout scan", () => {
+  test("alerts on agent-task poller and schedule-to-start health", () => {
     const failuresGroup = getTemporalRuleGroups().find(
       (group) => group.name === "temporal-workflow-failures",
     );
@@ -57,25 +57,48 @@ describe("Temporal workflow outcome rules", () => {
       throw new Error("Missing temporal-workflow-failures rule group");
     }
 
-    const timingOut = failuresGroup.rules.find(
-      (rule) => rule.alert === "TemporalAgentTaskTimingOut",
+    const pollerUnavailable = failuresGroup.rules.find(
+      (rule) => rule.alert === "TemporalAgentTaskWorkflowPollerUnavailable",
     );
-    if (timingOut === undefined) {
-      throw new Error("Missing TemporalAgentTaskTimingOut alert");
+    if (pollerUnavailable === undefined) {
+      throw new Error(
+        "Missing TemporalAgentTaskWorkflowPollerUnavailable alert",
+      );
     }
-    expect(timingOut.expr.value).toBe(
-      "max(temporal_agent_task_timeouts_24h) > 0",
+    expect(pollerUnavailable.expr.value).toContain(
+      "temporal_worker_temporal_num_pollers",
     );
+    expect(pollerUnavailable.for).toBe("5m");
 
-    const scanFailed = failuresGroup.rules.find(
-      (rule) => rule.alert === "TemporalAgentTaskTimeoutScanFailed",
+    const scheduleToStartHigh = failuresGroup.rules.find(
+      (rule) =>
+        rule.alert === "TemporalAgentTaskWorkflowTaskScheduleToStartHigh",
     );
-    if (scanFailed === undefined) {
-      throw new Error("Missing TemporalAgentTaskTimeoutScanFailed alert");
+    if (scheduleToStartHigh === undefined) {
+      throw new Error(
+        "Missing TemporalAgentTaskWorkflowTaskScheduleToStartHigh alert",
+      );
     }
-    expect(scanFailed.expr.value).toBe(
-      "min(temporal_agent_task_timeouts_24h) < 0",
+    expect(scheduleToStartHigh.expr.value).toContain(
+      "temporal_worker_temporal_workflow_task_schedule_to_start_latency_seconds_bucket",
     );
+    expect(scheduleToStartHigh.for).toBe("5m");
+
+    const workerMetricsDown = failuresGroup.rules.find(
+      (rule) => rule.alert === "TemporalWorkerMetricsDown",
+    );
+    if (workerMetricsDown === undefined) {
+      throw new Error("Missing TemporalWorkerMetricsDown alert");
+    }
+    expect(workerMetricsDown.for).toBe("5m");
+  });
+
+  test("does not emit the removed aggregate agent-task timeout alerts", () => {
+    const alerts = getTemporalRuleGroups()
+      .flatMap((group) => group.rules ?? [])
+      .map((rule) => rule.alert);
+    expect(alerts).not.toContain("TemporalAgentTaskTimingOut");
+    expect(alerts).not.toContain("TemporalAgentTaskTimeoutScanFailed");
   });
 });
 

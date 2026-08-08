@@ -82,7 +82,6 @@ as a child of the daily capture.
 | agent-task               | doc block / CLI / API | **agent** (read-only) | emailed report |
 | homelab-audit-daily      | daily 06:30           | **agent** (read-only) | emailed report |
 | homelab-audit (operator) | operator CLI          | **agent** (read-only) | emailed report |
-| agent-task-timeout-watch | hourly                | deterministic         | gauge + alert  |
 
 Cron times are `America/Los_Angeles` wall-clock; the full schedule mechanics
 are on [Scheduled automations](/temporal/schedules/).

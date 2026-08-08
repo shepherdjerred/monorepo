@@ -47,6 +47,14 @@ export async function createPrometheusApp(chart: Chart) {
     matchers: ['alertname = "TemporalWorkflowFailed"'],
     group_by: ["alertname", "workflowId", "runId"],
   };
+  const removedAgentTaskAggregateRoute: AlertmanagerChildRoute = {
+    receiver: "null",
+    // These alert names belonged to the removed hourly aggregate timeout
+    // watcher. Keep stale rules/metrics from paging while the new per-run
+    // TemporalWorkflowFailed route remains the sole Temporal PagerDuty source.
+    matchers: ['alertname =~ "TemporalAgentTask(TimingOut|TimeoutScanFailed)"'],
+    group_by: ["alertname"],
+  };
   createIngress(chart, "alertmanager-ingress", {
     namespace: "prometheus",
     service: "prometheus-kube-prometheus-alertmanager",
@@ -351,6 +359,7 @@ export async function createPrometheusApp(chart: Chart) {
             // see temporalWorkflowFailureRoute's definition above. Precedes the
             // severity catch-all (these alerts are severity=warning).
             temporalWorkflowFailureRoute,
+            removedAgentTaskAggregateRoute,
             {
               // Route critical and warning alerts to PagerDuty
               receiver: "pagerduty",

@@ -22,6 +22,13 @@ export type WorkflowFailureDetail = {
   failureType: string;
   message: string;
   stack: string | undefined;
+  timeoutClassification?:
+    | "workflow-task"
+    | "activity"
+    | "execution"
+    | "unknown";
+  workerTaskQueueUnavailable?: boolean;
+  historyError?: string;
 };
 
 function truncate(value: string, maxChars: number): string {
@@ -77,10 +84,28 @@ export function buildWorkflowFailureAlert(
       `stack ${truncate(failure.stack, MAX_STACK_EXCERPT_CHARS)}`,
     );
   }
+  if (failure.timeoutClassification !== undefined) {
+    descriptionParts.push(
+      `timeoutClassification ${failure.timeoutClassification}`,
+    );
+  }
+  if (failure.workerTaskQueueUnavailable === true) {
+    descriptionParts.push(
+      "diagnosis worker/task-queue availability failure: no activity reached execution",
+    );
+  }
+  if (failure.historyError !== undefined) {
+    descriptionParts.push(
+      `historyError ${truncate(failure.historyError, 240)}`,
+    );
+  }
   const description = descriptionParts.join("\n");
 
   const startsAt = now.toISOString();
-  const endsAt = new Date(now.getTime() + ttlMs).toISOString();
+  // Keep the alert lifecycle tied to the execution rather than to the last
+  // poll. Re-observing a failure during the lookback must not extend its
+  // PagerDuty repeat/resolution window indefinitely.
+  const endsAt = new Date(execution.closeTime.getTime() + ttlMs).toISOString();
 
   return {
     labels,

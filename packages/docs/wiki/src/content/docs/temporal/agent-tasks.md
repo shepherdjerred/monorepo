@@ -60,6 +60,15 @@ returns 500 — while a failed or timed-out one starts a fresh run
 The daily homelab audit is the flagship consumer: a scheduled agent task with
 a bounded read-only prompt over cluster, DNS, backup, and alert state.
 
+Claude's output is a versioned provider contract. The worker sends a draft-07
+plain-optional schema inline and accepts only the CLI result message's
+`structured_output` field, then validates it with Zod. A successful process
+without that field is a failure; prose and fenced JSON are not fallback
+formats. Contract failures include a bounded redacted final-text excerpt,
+result subtype and keys, and the schema fingerprint in logs/traces, while the
+Prometheus counter uses only bounded reason labels. The worker image pins
+Claude Code `2.1.220` and tests the minimum supported version.
+
 ## Under the hood
 
 - **Claude tasks** run `claude -p` with a JSON schema forced on the output
@@ -89,8 +98,17 @@ WebFetch`, on claude-opus-5. **Codex tasks** run `codex exec` with
 - **Cost is traced even on failure**: the LLM span (with token cost) is
   emitted before the exit-code check, so a failed run that spent tokens
   still shows up in observability.
-- **Timeouts alarm**: an hourly watcher counts agent-task runs that timed
-  out in the last 24 hours into a gauge that alerts above zero.
+- **Timeout diagnosis**: `temporal-failure-watch` is the sole Temporal
+  PagerDuty source. It fetches each failed execution's history and classifies
+  timeouts as workflow-task, activity, execution, or unknown. A workflow-task
+  timeout before any activity is explicitly reported as worker/task-queue
+  availability. SDK metrics alert after five minutes for missing agent-task
+  workflow pollers, high schedule-to-start latency, or worker scrape loss.
+- **Production canary**: after deploying the image, operators run
+  `bun run canary:agent-task` from `packages/temporal`. It uses the real
+  `agent-task` queue, OAuth token, parser, and a tagged report-only email; the
+  production-verification TODO stays open until that canary and seven daily
+  audits pass.
 
 Schema and dispatcher:
 [`agent-task.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/shared/agent-task.ts),

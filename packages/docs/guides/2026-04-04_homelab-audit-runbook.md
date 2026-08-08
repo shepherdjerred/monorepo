@@ -310,6 +310,37 @@ toolkit gf query 'up{namespace="temporal"}'
 
 Flag: non-zero failure rate, scrape target down.
 
+### Agent-task execution hardening signals
+
+The `temporal-failure-watch` schedule is the sole Temporal PagerDuty source.
+It emits one `TemporalWorkflowFailed` alert per `workflowId`/`runId` and fetches
+history for every timed-out execution. For a timeout, inspect the alert
+annotation `timeoutClassification`:
+
+- `workflow-task` or `execution` with the worker/task-queue diagnosis means no
+  activity reached execution; inspect worker readiness, Temporal connectivity,
+  and the `agent-task` queue.
+- `activity` means an activity was scheduled and timed out after dispatch.
+- `execution` means the workflow execution timeout fired without a more
+  specific task timeout event.
+- `unknown` means history was unavailable or had no recognized timeout event.
+
+The removed `agent-task-timeout-watch` aggregate alert must not be used as a
+health signal. Query the SDK metrics instead:
+
+```bash
+toolkit gf query 'temporal_worker_temporal_num_pollers{namespace="default",task_queue="agent-task",poller_type="workflow_task"}'
+toolkit gf query 'histogram_quantile(0.95, sum by (le) (rate(temporal_worker_temporal_workflow_task_schedule_to_start_latency_seconds_bucket{namespace="default",task_queue="agent-task"}[5m])))'
+toolkit gf query 'up{namespace="temporal",service=~".*temporal.*worker.*metrics.*|temporal-worker-app-metrics"}'
+```
+
+The corresponding warning alerts use a five-minute window. Do not change
+replicas or concurrency until the poller, schedule-to-start, and scrape data
+show starvation. The one-time post-deploy canary is an operator action tracked
+in the [production-verification TODO](../todos/homelab-audit-agent-task-production-verification.md),
+not part of this recurring report-only audit. Keep that TODO open until the
+canary and seven consecutive daily audits pass.
+
 ## Section 11: CI on `main`
 
 Buildkite is the source of truth for CI (pipeline `sjerred/monorepo`). **Do not use `gh run`** — this repo does not use GitHub Actions. Requires `BUILDKITE_API_TOKEN` in env; the scheduled audit worker also sets `BUILDKITE_ORGANIZATION_SLUG=sjerred` and `BUILDKITE_PIPELINE_SLUG=monorepo`.

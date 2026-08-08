@@ -4,6 +4,7 @@ import { agentSubprocessFailure } from "#activities/agent-task-failures.ts";
 import {
   agentSubprocessIdleSeconds,
   agentSubprocessSoftKillsTotal,
+  agentTaskOutputContractFailuresTotal,
   agentTaskRunsTotal,
   agentTaskSubprocessDurationSeconds,
   agentTaskSubprocessExitTotal,
@@ -23,6 +24,7 @@ import {
   AgentTaskInputSchema,
   parseAgentTaskResultPayload,
   parseClaudeAgentTaskResult,
+  AgentTaskOutputContractError,
   type AgentTaskInput,
   type AgentTaskProvider,
   type AgentTaskResultPayload,
@@ -368,7 +370,12 @@ async function runAgent(
       let payload: AgentTaskResultPayload;
       try {
         if (provider === "claude") {
-          payload = parseClaudeAgentTaskResult(result.stdout);
+          payload = parseClaudeAgentTaskResult(result.stdout, (excerpt) =>
+            redactSecrets(
+              excerpt,
+              agentTaskSecretTokens(githubTokenResult.token),
+            ),
+          );
         } else {
           if (command.outputPath === undefined) {
             throw new Error(
@@ -382,10 +389,33 @@ async function runAgent(
         }
       } catch (error: unknown) {
         agentTaskRunsTotal.inc({ provider, outcome: "parse_failed" });
+        const contractDiagnostics =
+          error instanceof AgentTaskOutputContractError
+            ? error.diagnostics
+            : undefined;
+        if (error instanceof AgentTaskOutputContractError) {
+          agentTaskOutputContractFailuresTotal.inc({
+            provider,
+            reason: error.reason,
+          });
+          jsonLog("warning", "Agent task output contract failed", {
+            provider,
+            outputContractReason: error.reason,
+            ...error.diagnostics,
+          });
+        }
         captureWithContext(error, {
           provider,
           durationMs: result.durationMs,
           phase: "parse-output",
+          schemaFingerprint: contractDiagnostics?.schemaFingerprint,
+          outputContractReason:
+            error instanceof AgentTaskOutputContractError
+              ? error.reason
+              : undefined,
+          resultSubtype: contractDiagnostics?.resultSubtype,
+          resultMessageKeys: contractDiagnostics?.resultMessageKeys,
+          finalTextExcerpt: contractDiagnostics?.finalTextExcerpt,
         });
         throw error;
       }

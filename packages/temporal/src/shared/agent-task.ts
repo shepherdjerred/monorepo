@@ -1,6 +1,9 @@
 import { zodResponseFormat } from "openai/helpers/zod.mjs";
 import { z } from "zod/v4";
-import { parseClaudeResultMessage } from "./claude-result.ts";
+import {
+  parseClaudeResultMessage,
+  type ClaudeResultMessage,
+} from "./claude-result.ts";
 
 export const AgentTaskProviderSchema = z.enum(["claude", "codex"]);
 export const AgentTaskModeSchema = z.enum(["report-only"]);
@@ -140,6 +143,37 @@ export type AgentTaskStartResult =
       scheduleId: string;
     };
 
+export const AGENT_TASK_CLAUDE_SCHEMA_VERSION = "draft-07-v1";
+
+export type AgentTaskOutputContractFailureReason =
+  | "is-error"
+  | "missing-structured-output"
+  | "invalid-structured-output";
+
+export type ClaudeOutputContractDiagnostics = {
+  resultSubtype: string | undefined;
+  resultMessageKeys: readonly string[];
+  schemaFingerprint: string;
+  finalTextExcerpt: string | undefined;
+};
+
+export class AgentTaskOutputContractError extends Error {
+  readonly reason: AgentTaskOutputContractFailureReason;
+  readonly diagnostics: ClaudeOutputContractDiagnostics;
+
+  constructor(
+    reason: AgentTaskOutputContractFailureReason,
+    diagnostics: ClaudeOutputContractDiagnostics,
+    message: string,
+    options?: ErrorOptions,
+  ) {
+    super(message, options);
+    this.name = "AgentTaskOutputContractError";
+    this.reason = reason;
+    this.diagnostics = diagnostics;
+  }
+}
+
 // Codex's `--output-schema` is OpenAI's own CLI and requires OpenAI
 // Structured-Outputs "strict mode": every field in `required`, optional
 // fields modeled as nullable rather than absent. `AgentTaskWireResultPayloadSchema`
@@ -151,29 +185,62 @@ export const AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX: Record<string, unknown> = z
       .json_schema.schema,
   );
 
-// The LEADING (but unconfirmed) hypothesis for the 2026-07-30
-// homelab-audit-daily outage is that Claude Code CLI's `--json-schema` mishandles
-// the OpenAI-strict/nullable dialect above: given it, `claude -p` was observed to
-// exit 0 but silently omit `structured_output` from its result message entirely,
-// rather than erroring. This is correlation, not a proven root cause — local
-// repro of the pinned CLI omitted `structured_output` with BOTH schema dialects
-// (including the historically-working plain one), and the model and turn limit
-// also differed between the compared runs, so the schema dialect is not isolated
-// as the cause (see
-// packages/docs/todos/homelab-audit-agent-task-production-verification.md).
-// Regardless of the eventual root cause, Claude wants a plain JSON Schema:
-// optional fields simply absent from `required`, no forced nullable unions.
-// Generate it straight from the canonical, already-plain-optional
-// `AgentTaskResultPayloadSchema` (not the wire schema), and strip the `$schema`
-// key `z.toJSONSchema` injects by default so the payload matches the
-// pre-2026-07-28 hand-written schema this restores. Do NOT merge this back into a
-// single constant shared with Codex until the production run (or an independent
-// reproduction) confirms or refutes the hypothesis.
-const { $schema: _agentTaskClaudeSchemaMeta, ...agentTaskClaudeJsonSchema } =
-  z.toJSONSchema(AgentTaskResultPayloadSchema);
+// Claude's `--json-schema` contract is intentionally independent from Codex's
+// strict wire schema. Draft-07 is the provider's documented compatibility
+// target. `$schema` and `format` are removed because the CLI consumes the
+// payload shape, not dialect metadata or nonessential annotations; the final
+// semantic check remains AgentTaskResultPayloadSchema below.
+export function stripClaudeSchemaAnnotations(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((entry) => stripClaudeSchemaAnnotations(entry));
+  }
+  const record = z.record(z.string(), z.unknown()).safeParse(value);
+  if (!record.success) {
+    return value;
+  }
+  const normalized: Record<string, unknown> = {};
+  for (const [key, entry] of Object.entries(record.data)) {
+    if (
+      (key === "$schema" && typeof entry === "string") ||
+      (key === "format" && typeof entry === "string")
+    ) {
+      continue;
+    }
+    normalized[key] = stripClaudeSchemaAnnotations(entry);
+  }
+  return normalized;
+}
+
+const agentTaskClaudeJsonSchema = stripClaudeSchemaAnnotations(
+  z.toJSONSchema(AgentTaskResultPayloadSchema, { target: "draft-7" }),
+);
 export const AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE: Record<string, unknown> = z
   .record(z.string(), z.unknown())
   .parse(agentTaskClaudeJsonSchema);
+
+function sortJson(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((item) => sortJson(item));
+  }
+  if (typeof value === "object" && value !== null) {
+    const sorted: Record<string, unknown> = {};
+    for (const [key, entryValue] of Object.entries(value).toSorted(([a], [b]) =>
+      a.localeCompare(b),
+    )) {
+      sorted[key] = sortJson(entryValue);
+    }
+    return sorted;
+  }
+  return value;
+}
+
+const claudeSchemaHasher = new Bun.CryptoHasher("sha256");
+claudeSchemaHasher.update(
+  JSON.stringify(sortJson(AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE)),
+);
+export const AGENT_TASK_CLAUDE_SCHEMA_FINGERPRINT = claudeSchemaHasher
+  .digest("hex")
+  .slice(0, 16);
 
 // Codex-only: converts the OpenAI-strict/nullable wire shape into the
 // canonical plain-optional shape. Claude's output already parses directly
@@ -236,32 +303,77 @@ export function parseAgentTaskResultPayload(
 // surfacing a distinct is_error=true diagnostic (e.g. --max-turns exhaustion)
 // instead of letting it collapse into the generic "no structured output"
 // message thrown by parseAgentTaskResultPayload.
-export function parseClaudeAgentTaskResult(
-  stdout: string,
-): AgentTaskResultPayload {
-  const resultMessage = parseClaudeResultMessage(stdout);
-  if (resultMessage.is_error === true) {
-    throw new Error(
-      `claude -p reported is_error=true for agent task: ${resultMessage.result ?? "(no result text)"}`,
-    );
+function boundedFinalTextExcerpt(
+  result: string | undefined,
+  redact: (value: string) => string,
+): string | undefined {
+  if (result === undefined) {
+    return undefined;
   }
-  return parseAgentTaskResultPayload(resultMessage.structured_output, "claude");
+  const normalized = redact(result).replaceAll(/\s+/g, " ").trim();
+  return normalized.length <= 240 ? normalized : `${normalized.slice(0, 240)}…`;
 }
 
-function sortJson(value: unknown): unknown {
-  if (Array.isArray(value)) {
-    return value.map((item) => sortJson(item));
+function claudeDiagnostics(
+  resultMessage: ClaudeResultMessage,
+  redact: (value: string) => string,
+): ClaudeOutputContractDiagnostics {
+  return {
+    resultSubtype: resultMessage.subtype,
+    resultMessageKeys: Object.keys(resultMessage).toSorted(),
+    schemaFingerprint: AGENT_TASK_CLAUDE_SCHEMA_FINGERPRINT,
+    finalTextExcerpt: boundedFinalTextExcerpt(resultMessage.result, redact),
+  };
+}
+
+function contractErrorMessage(
+  reason: AgentTaskOutputContractFailureReason,
+  diagnostics: ClaudeOutputContractDiagnostics,
+): string {
+  const excerpt = diagnostics.finalTextExcerpt ?? "(none)";
+  const reasonDescription = reason === "is-error" ? "is_error=true" : reason;
+  return [
+    `claude structured-output contract failure: ${reasonDescription}`,
+    `subtype=${diagnostics.resultSubtype ?? "(none)"}`,
+    `resultMessageKeys=${diagnostics.resultMessageKeys.join(",")}`,
+    `schemaFingerprint=${diagnostics.schemaFingerprint}`,
+    `finalTextExcerpt=${excerpt}`,
+  ].join(" ");
+}
+
+export function parseClaudeAgentTaskResult(
+  stdout: string,
+  redactExcerpt: (value: string) => string = (value) => value,
+): AgentTaskResultPayload {
+  const resultMessage = parseClaudeResultMessage(stdout);
+  const diagnostics = claudeDiagnostics(resultMessage, redactExcerpt);
+  if (resultMessage.is_error === true) {
+    throw new AgentTaskOutputContractError(
+      "is-error",
+      diagnostics,
+      contractErrorMessage("is-error", diagnostics),
+    );
   }
-  if (typeof value === "object" && value !== null) {
-    const sorted: Record<string, unknown> = {};
-    for (const [key, entryValue] of Object.entries(value).toSorted(([a], [b]) =>
-      a.localeCompare(b),
-    )) {
-      sorted[key] = sortJson(entryValue);
-    }
-    return sorted;
+  if (resultMessage.structured_output === undefined) {
+    throw new AgentTaskOutputContractError(
+      "missing-structured-output",
+      diagnostics,
+      contractErrorMessage("missing-structured-output", diagnostics),
+    );
   }
-  return value;
+  try {
+    return parseAgentTaskResultPayload(
+      resultMessage.structured_output,
+      "claude",
+    );
+  } catch (error: unknown) {
+    throw new AgentTaskOutputContractError(
+      "invalid-structured-output",
+      diagnostics,
+      `${contractErrorMessage("invalid-structured-output", diagnostics)}: ${error instanceof Error ? error.message : String(error)}`,
+      { cause: error },
+    );
+  }
 }
 
 async function shortSha256(input: string): Promise<string> {

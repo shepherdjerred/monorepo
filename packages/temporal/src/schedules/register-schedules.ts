@@ -54,6 +54,9 @@ export const DELETED_SCHEDULE_IDS = [
   // down with them.
   "pr-review-eval-nightly",
   "pr-review-ab-weekly-report",
+  // Replaced by per-execution temporal-failure-watch alerts and worker-task
+  // health guardrails. Delete the old aggregate pager on worker startup.
+  "agent-task-timeout-watch",
 ] as const;
 
 export function buildSchedulePolicies(schedule: ScheduleDefinition): {
