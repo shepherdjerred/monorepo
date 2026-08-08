@@ -84,7 +84,14 @@ function trackerFromEnv(
 export function readBootstrapConfig(
   env: Record<string, string | undefined>,
 ): BootstrapConfig {
-  const port = Number.parseInt(env["TRACKER_TRACKER_QBIT_PORT"] ?? "8080", 10);
+  const rawPort = env["TRACKER_TRACKER_QBIT_PORT"] ?? "8080";
+  if (!/^\d+$/.test(rawPort)) {
+    throw new Error("TRACKER_TRACKER_QBIT_PORT must be a positive integer");
+  }
+  const port = Number(rawPort);
+  if (!Number.isSafeInteger(port) || port < 1 || port > 65_535) {
+    throw new Error("TRACKER_TRACKER_QBIT_PORT must be a positive integer");
+  }
   return BootstrapConfigSchema.parse({
     appUrl: requiredEnv(env, "TRACKER_TRACKER_URL").replace(/\/$/, ""),
     username: requiredEnv(env, "TRACKER_TRACKER_USERNAME"),

@@ -35,12 +35,11 @@ history. It does not infer tracker-verified H&R status per individual torrent.
 A checklist item is accepted only when the stated live behavior is observed;
 if any item fails, the plan remains `awaiting-human`.
 
-- [ ] Confirm the ArgoCD application syncs and `https://tracker-tracker` loads
-      through Tailscale.
-- [ ] Populate the untracked `.env.tracker-tracker` with 1Password references
-      and observe a successful bootstrap connection to qBittorrent and all three
-      trackers.
+- [ ] Confirm the deployed dashboard loads through Tailscale and is usable for
+      the intended operator workflow.
 - [ ] Confirm the displayed tracker profile values and exported torrent state
       match the live tracker and qBittorrent data.
-- [ ] Confirm no real cookies or passwords appear in Git, manifests, or command
-      output.
+
+Privileged deployment, 1Password setup, bootstrap, and secret-hygiene checks
+are tracked separately in
+`packages/docs/todos/tracker-tracker-deployment-activation.md`.

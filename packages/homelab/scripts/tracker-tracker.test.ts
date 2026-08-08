@@ -128,6 +128,18 @@ describe("tracker tracker bootstrap configuration", () => {
     );
   });
 
+  it("rejects malformed qBittorrent ports instead of partially parsing them", () => {
+    expect(() =>
+      readBootstrapConfig({ ...baseEnv, TRACKER_TRACKER_QBIT_PORT: "8080x" }),
+    ).toThrow("TRACKER_TRACKER_QBIT_PORT must be a positive integer");
+    expect(() =>
+      readBootstrapConfig({ ...baseEnv, TRACKER_TRACKER_QBIT_PORT: "8080.5" }),
+    ).toThrow("TRACKER_TRACKER_QBIT_PORT must be a positive integer");
+    expect(() =>
+      readBootstrapConfig({ ...baseEnv, TRACKER_TRACKER_QBIT_PORT: "65536" }),
+    ).toThrow("TRACKER_TRACKER_QBIT_PORT must be a positive integer");
+  });
+
   it("creates missing resources and updates existing resources on reruns", async () => {
     const calls: MockCall[] = [];
     const routes = configuredClientRoutes();

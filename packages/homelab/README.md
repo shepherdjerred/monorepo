@@ -23,7 +23,8 @@ op run --env-file ../../.env.tracker-tracker -- bun run tracker-tracker:bootstra
 The local env file must provide `TRACKER_TRACKER_URL`, the Tracker Tracker
 login fields, qBittorrent credentials, and each tracker's `BASE_URL`,
 `USERNAME`, `COOKIES`, and `USER_AGENT`. Keep that file untracked. Export
-collected data as JSONL with:
+collected data as JSON by default. Set `TRACKER_TRACKER_OUTPUT_FORMAT=jsonl`
+to emit JSONL instead:
 
 Use `op://` references in that file for every secret. The existing qBittorrent
 item uses `op://Homelab (Kubernetes)/qBittorrent/username` and
