@@ -452,7 +452,8 @@ describe("recurring completion captures the tapped day", () => {
       due: "2026-08-10",
     });
     harness.server.seed(recurring);
-    expect((await harness.engine.syncNow()).ok).toBe(true);
+    const initialSync = await harness.engine.syncNow();
+    expect(initialSync.ok).toBe(true);
     harness.server.goOffline();
 
     const restore = {
@@ -477,7 +478,8 @@ describe("recurring completion captures the tapped day", () => {
     });
 
     harness.server.goOnline();
-    expect((await harness.engine.syncNow()).ok).toBe(true);
+    const syncResult = await harness.engine.syncNow();
+    expect(syncResult.ok).toBe(true);
     const completionCalls = harness.server.calls.filter(
       (call) => call.method === "completeRecurringInstance",
     );
