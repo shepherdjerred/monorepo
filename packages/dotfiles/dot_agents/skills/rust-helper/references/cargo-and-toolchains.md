@@ -9,8 +9,8 @@ Resolver 3 is the Rust 2024 default. Specify it in a virtual workspace. `rust-ve
 Use these diagnostics before changing dependency constraints:
 
 ```bash
-cargo tree -d
-cargo tree -e features
+cargo tree --locked -d
+cargo tree --locked -e features
 cargo report future-incompatibilities
 ```
 
