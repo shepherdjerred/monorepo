@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { parseChatCompletion } from "openai/lib/parser";
 import { z } from "zod/v4";
 import {
   traceOpenAi,
@@ -54,7 +55,39 @@ export async function parseGlitterCompletion<
       callSite,
       request: params,
     },
-    async () => client().chat.completions.parse(params),
+    async () => {
+      const completion = await client().chat.completions.create(params);
+      const completionForParsing = {
+        ...completion,
+        choices: completion.choices.map((choice) =>
+          choice.finish_reason === "length"
+            ? {
+                ...choice,
+                finish_reason: "stop" as const,
+                message: { ...choice.message, content: null },
+              }
+            : choice,
+        ),
+      };
+      const parsedCompletion = parseChatCompletion(
+        completionForParsing,
+        params,
+      );
+      return {
+        ...parsedCompletion,
+        choices: parsedCompletion.choices.map((choice, index) => ({
+          ...choice,
+          finish_reason:
+            completion.choices[index]?.finish_reason ?? choice.finish_reason,
+          message: {
+            ...choice.message,
+            content:
+              completion.choices[index]?.message.content ??
+              choice.message.content,
+          },
+        })),
+      };
+    },
   );
 }
 
@@ -129,6 +162,7 @@ export function glitterCompletionArtifact<Response>(input: {
   parsed: Response | null | undefined;
   rawContent: string | null;
   usage: OpenAI.Completions.CompletionUsage | undefined;
+  failureError?: string;
   missingParsedError: string;
 }): {
   response: GlitterCompletionArtifact<Response>;
@@ -143,7 +177,7 @@ export function glitterCompletionArtifact<Response>(input: {
       input.parsed === null || input.parsed === undefined
         ? {
             outcome: "failure",
-            error: input.missingParsedError,
+            error: input.failureError ?? input.missingParsedError,
             rawContent: input.rawContent,
           }
         : { outcome: "success", value: input.parsed },

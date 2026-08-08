@@ -1,5 +1,4 @@
 import { zodResponseFormat } from "openai/helpers/zod";
-import { LengthFinishReasonError } from "openai/core/error";
 import { z } from "zod/v4";
 import {
   type StyleCard,
@@ -28,6 +27,17 @@ import {
 } from "./glitter-context-refresh-openai.ts";
 import type { StyleRefreshCandidate } from "./glitter-context-refresh-selection.ts";
 import {
+  estimateStyleGenerationCost as estimateStyleGenerationCostInternal,
+  EXTRACTION_MAX_OUTPUT_TOKENS,
+  EXTRACTION_MODEL,
+  MAX_EXTRACTION_REPAIR_ATTEMPTS,
+  MAX_SYNTHESIS_REPAIR_ATTEMPTS,
+  SYNTHESIS_MAX_OUTPUT_TOKENS,
+  SYNTHESIS_MODEL,
+  SYNTHESIS_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
+  type SummarizedChunk,
+} from "./glitter-context-refresh-style-generation-cost.ts";
+import {
   sanitizeChunkSummary,
   validateChunkSummary,
 } from "./glitter-context-refresh-style-validation.ts";
@@ -43,44 +53,23 @@ import {
   type StyleSynthesis,
 } from "./glitter-context-refresh-style-schemas.ts";
 
-const EXTRACTION_MODEL = "gpt-5.6-luna";
-const SYNTHESIS_MODEL = "gpt-5.6-sol";
-const EXTRACTION_MAX_OUTPUT_TOKENS = 2000;
 // gpt-5.6-sol is a reasoning model at `reasoning_effort: "medium"`, so its
 // hidden reasoning tokens share `max_completion_tokens` with the (large) style
 // synthesis output. Observed live: reasoning + output crossed the former 15k cap
-// and truncated (finish_reason=length → unparseable → LengthFinishReasonError).
+// and truncated (finish_reason=length → unparseable).
 // 28k gives comfortable headroom over the observed ~15k usage; if a call still
 // truncates, it is retried once at the ceiling below.
-const SYNTHESIS_MAX_OUTPUT_TOKENS = 28_000;
-const SYNTHESIS_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS = 40_000;
+const SYNTHESIS_TRUNCATION_ERROR =
+  "GPT-5.6 Sol synthesis reached the completion-token limit";
 const DETERMINISTIC_SEED = 0;
 
-// gpt-5.6 sometimes emits an observation citing a message ID outside its
-// supplied evidence set. Because every completion is cached (immutably, keyed by
-// request hash) *before* validation, a fixed-seed retry re-reads the same
-// poisoned artifact and fails identically forever, so each repair attempt uses a
-// distinct seed (`DETERMINISTIC_SEED + attempt`) — a genuinely fresh,
-// cache-distinct model call, deterministic by attempt index (a re-run reuses the
-// first attempt that passed). Attempt 0 is the initial call (seed 0, stable
-// cache key); attempts 1..N are repairs.
+// Completions are cached before validation, so repairs use distinct seeds
+// (`DETERMINISTIC_SEED + attempt`) and cache keys. Attempt 0 is the initial call;
+// attempts 1..N are repairs, and a rerun reuses the first passing attempt.
 //
-// Repairs alone are not enough: for some chunks the model *deterministically*
-// cites an ID that appears inside message content (a reply/link/quote) but is
-// not a top-level chunk message, so every seed re-cites it. `sanitizeChunkSummary`
-// is the convergence guarantee — after the (few) repair attempts, unverifiable
-// evidence is dropped rather than failing the whole run (treating model output
-// as untrusted boundary input). Because sanitization guarantees a valid result,
-// the repair budget is kept small to bound spend on systematically-failing chunks.
-const MAX_EXTRACTION_REPAIR_ATTEMPTS = 2;
-const MAX_SYNTHESIS_REPAIR_ATTEMPTS = 3;
-
-type SummarizedChunk = {
-  key: string;
-  month: string;
-  summary: StyleChunkSummary;
-};
-
+// Sanitization is the convergence guarantee when a model repeatedly cites an ID
+// found inside content but not in the top-level chunk: unverifiable evidence is
+// dropped at the boundary instead of failing the run.
 function messageEvidence(message: CurrentMessage): {
   messageId: string;
   timestamp: string;
@@ -368,110 +357,83 @@ async function runSynthesis(input: {
   };
   const CompletionArtifactSchema =
     glitterCompletionArtifactSchema(StyleSynthesisSchema);
-  const artifact = await readOrCreateGenerationArtifact({
-    store: input.artifactStore,
-    model: SYNTHESIS_MODEL,
-    callSite,
-    request: {
-      schemaVersion: 3,
+  const createArtifact = async (
+    inputParams: typeof params,
+    inputCallSite: string,
+  ) =>
+    readOrCreateGenerationArtifact({
+      store: input.artifactStore,
       model: SYNTHESIS_MODEL,
-      messages,
-      maxCompletionTokens: params.max_completion_tokens,
-      reasoningEffort: params.reasoning_effort,
-      seed: params.seed,
-      responseSchema: "style-card-synthesis-v2",
-    },
-    responseSchema: CompletionArtifactSchema,
-    generate: async () => {
-      input.budget.authorizeUncachedCall(
-        estimatedCallCostUsd({
-          model: SYNTHESIS_MODEL,
-          inputTokenUpperBound: inputTokenUpperBound(JSON.stringify(params)),
-          outputTokenUpperBound: SYNTHESIS_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
-        }),
-      );
-      // Reasoning + output can still truncate at the base cap; retry once with a
-      // higher `max_completion_tokens` on a length finish before giving up.
-      const completion = await (async () => {
-        try {
-          return await parseGlitterCompletion(callSite, params);
-        } catch (error: unknown) {
-          if (!(error instanceof LengthFinishReasonError)) {
-            throw error;
-          }
-          return await parseGlitterCompletion(callSite, {
-            ...params,
-            max_completion_tokens: SYNTHESIS_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
-          });
-        }
-      })();
-      const message = completion.choices[0]?.message;
-      return glitterCompletionArtifact({
+      callSite: inputCallSite,
+      request: {
+        schemaVersion: 3,
         model: SYNTHESIS_MODEL,
-        parsed: message?.parsed,
-        rawContent: message?.content ?? null,
-        usage: completion.usage,
-        missingParsedError: `GPT-5.6 Sol did not return a parsed synthesis for ${input.candidate.person.id}`,
-      });
-    },
-  });
-  return useGlitterCompletionArtifact({
-    artifact,
-    budget: input.budget,
-  });
+        messages: inputParams.messages,
+        maxCompletionTokens: inputParams.max_completion_tokens,
+        truncationRetryMaxCompletionTokens:
+          SYNTHESIS_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
+        reasoningEffort: inputParams.reasoning_effort,
+        seed: inputParams.seed,
+        responseSchema: "style-card-synthesis-v2",
+      },
+      responseSchema: CompletionArtifactSchema,
+      generate: async () => {
+        input.budget.authorizeUncachedCall(
+          estimatedCallCostUsd({
+            model: SYNTHESIS_MODEL,
+            inputTokenUpperBound: inputTokenUpperBound(
+              JSON.stringify(inputParams),
+            ),
+            outputTokenUpperBound: inputParams.max_completion_tokens,
+          }),
+        );
+        const completion = await parseGlitterCompletion(
+          inputCallSite,
+          inputParams,
+        );
+        const message = completion.choices[0]?.message;
+        return glitterCompletionArtifact({
+          model: SYNTHESIS_MODEL,
+          parsed: message?.parsed,
+          rawContent: message?.content ?? null,
+          usage: completion.usage,
+          ...(completion.choices[0]?.finish_reason === "length"
+            ? { failureError: SYNTHESIS_TRUNCATION_ERROR }
+            : {}),
+          missingParsedError: `GPT-5.6 Sol did not return a parsed synthesis for ${input.candidate.person.id}`,
+        });
+      },
+    });
+  const artifact = await createArtifact(params, callSite);
+  if (
+    artifact.response.outcome === "failure" &&
+    artifact.response.error === SYNTHESIS_TRUNCATION_ERROR
+  ) {
+    input.budget.record(artifact);
+    const retryParams = {
+      ...params,
+      max_completion_tokens: SYNTHESIS_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
+    };
+    const retryArtifact = await createArtifact(
+      retryParams,
+      `${callSite}-truncation-retry`,
+    );
+    return useGlitterCompletionArtifact({
+      artifact: retryArtifact,
+      budget: input.budget,
+    });
+  }
+  return useGlitterCompletionArtifact({ artifact, budget: input.budget });
 }
 
 export function estimateStyleGenerationCost(input: {
   candidate: StyleRefreshCandidate;
   existingCard: StyleCard;
 }): number {
-  const chunks = buildStyleEvidenceChunks(input.candidate.safeMessages);
-  const extractionCost = chunks.reduce((total, chunk) => {
-    const prompt = chunkPrompt({ candidate: input.candidate, chunk });
-    const initialInputTokens = inputTokenUpperBound(prompt);
-    const initialCall = estimatedCallCostUsd({
-      model: EXTRACTION_MODEL,
-      inputTokenUpperBound: initialInputTokens,
-      outputTokenUpperBound: EXTRACTION_MAX_OUTPUT_TOKENS,
-    });
-    // Every repair attempt also serializes the prior summary (bounded by the
-    // output cap) and the validation error back into its request, so its input
-    // is larger than the initial call's.
-    const repairCall = estimatedCallCostUsd({
-      model: EXTRACTION_MODEL,
-      inputTokenUpperBound: initialInputTokens + EXTRACTION_MAX_OUTPUT_TOKENS,
-      outputTokenUpperBound: EXTRACTION_MAX_OUTPUT_TOKENS,
-    });
-    return total + initialCall + repairCall * MAX_EXTRACTION_REPAIR_ATTEMPTS;
-  }, 0);
-  const synthesisBase = synthesisPrompt({
-    candidate: input.candidate,
-    existingCard: input.existingCard,
-    chunks: [],
-    repair: null,
+  return estimateStyleGenerationCostInternal(input, {
+    chunkPrompt,
+    synthesisPrompt,
   });
-  const synthesisInputUpperBound =
-    inputTokenUpperBound(synthesisBase) +
-    chunks.length * EXTRACTION_MAX_OUTPUT_TOKENS;
-  // Worst-case output is the truncation-retry ceiling, not the base cap.
-  const synthesisInitialCall = estimatedCallCostUsd({
-    model: SYNTHESIS_MODEL,
-    inputTokenUpperBound: synthesisInputUpperBound,
-    outputTokenUpperBound: SYNTHESIS_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
-  });
-  // A synthesis repair likewise serializes the prior synthesis (bounded by the
-  // output ceiling) plus the error into its request.
-  const synthesisRepairCall = estimatedCallCostUsd({
-    model: SYNTHESIS_MODEL,
-    inputTokenUpperBound:
-      synthesisInputUpperBound + SYNTHESIS_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
-    outputTokenUpperBound: SYNTHESIS_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
-  });
-  return (
-    extractionCost +
-    synthesisInitialCall +
-    synthesisRepairCall * MAX_SYNTHESIS_REPAIR_ATTEMPTS
-  );
 }
 
 export async function generateStyleCard(input: {
