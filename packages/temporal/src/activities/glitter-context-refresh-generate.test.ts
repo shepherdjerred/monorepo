@@ -310,16 +310,36 @@ const mockUsage = { prompt_tokens: 100, completion_tokens: 50 };
 let chunkResponder: (call: number) => unknown = () => goodChunkSummary;
 let chunkCallCount = 0;
 let recordedSeeds: number[] = [];
+// Synthesis calls whose max_completion_tokens is below this threshold report a
+// length truncation (0 = never truncate).
+let synthesisTruncateBelowTokens = 0;
+let recordedSynthesisMaxTokens: number[] = [];
+let lastGenerationBudget: GenerationBudget | undefined;
 
 await mock.module("./glitter-context-refresh-openai.ts", () => ({
   ...glitterOpenai,
-  parseGlitterCompletion: (callSite: string, params: { seed: number }) => {
+  parseGlitterCompletion: (
+    callSite: string,
+    params: { seed: number; max_completion_tokens: number },
+  ) => {
     if (callSite.startsWith("glitter-style-chunk")) {
       recordedSeeds.push(params.seed);
       const parsed = chunkResponder(chunkCallCount);
       chunkCallCount += 1;
       return Promise.resolve({
         choices: [{ message: { parsed, content: null } }],
+        usage: mockUsage,
+      });
+    }
+    recordedSynthesisMaxTokens.push(params.max_completion_tokens);
+    if (params.max_completion_tokens < synthesisTruncateBelowTokens) {
+      return Promise.resolve({
+        choices: [
+          {
+            finish_reason: "length",
+            message: { parsed: null, content: "truncated" },
+          },
+        ],
         usage: mockUsage,
       });
     }
@@ -349,12 +369,14 @@ function generateWithStubbedModel(responder: (call: number) => unknown) {
   chunkCallCount = 0;
   recordedSeeds = [];
   chunkResponder = responder;
+  const budget = new GenerationBudget(100);
+  lastGenerationBudget = budget;
   return generateStyleCard({
     candidate,
     existingCard,
     sourceSnapshotSha256: "a".repeat(64),
     artifactStore: memoryStore(),
-    budget: new GenerationBudget(100),
+    budget,
   });
 }
 
@@ -411,6 +433,28 @@ describe("Glitter extraction repair loop", () => {
 
     expect(result.schemaVersion).toBe(2);
     expect(recordedSeeds).toEqual([0, 1, 2]);
+  });
+});
+
+describe("Glitter synthesis truncation retry", () => {
+  test("retries synthesis at a higher token cap on a length truncation", async () => {
+    recordedSynthesisMaxTokens = [];
+    // The base 28k call reports a length truncation; only the 40k retry ceiling
+    // succeeds.
+    synthesisTruncateBelowTokens = 40_000;
+    try {
+      const result = await generateWithStubbedModel(() => goodChunkSummary);
+      expect(result.schemaVersion).toBe(2);
+      // Base call at the 28k cap truncated, then the run retried at the ceiling.
+      expect(recordedSynthesisMaxTokens).toContain(28_000);
+      expect(recordedSynthesisMaxTokens).toContain(40_000);
+      const synthesisArtifactKeys = lastGenerationBudget
+        ?.summary()
+        .artifactKeys.filter((key) => key.includes("glitter-style-synthesis"));
+      expect(synthesisArtifactKeys).toHaveLength(2);
+    } finally {
+      synthesisTruncateBelowTokens = 0;
+    }
   });
 });
 
