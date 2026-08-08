@@ -55,6 +55,17 @@ function requiredEnvironment(name: string): string {
   return value;
 }
 
+async function requiredSecretFile(name: string): Promise<string> {
+  const path = requiredEnvironment(name);
+  const secretFile = Bun.file(path);
+  const secretText = await secretFile.text();
+  const value = secretText.trim();
+  if (value === "") {
+    throw new Error(`${name} points to an empty secret file`);
+  }
+  return value;
+}
+
 function activityHooks(): MaintenanceCommandHooks {
   const context = Context.current();
 
@@ -84,13 +95,13 @@ function commandEnvironment(
   return environment;
 }
 
-export function buildMaintenanceCommand(
+export async function buildMaintenanceCommand(
   kind: MaintenanceKind,
-): MaintenanceCommand {
+): Promise<MaintenanceCommand> {
   switch (kind) {
     case "kometa": {
-      const plexToken = requiredEnvironment("KOMETA_PLEXTOKEN");
-      const tmdbApiKey = requiredEnvironment("KOMETA_TMDBAPIKEY");
+      const plexToken = await requiredSecretFile("KOMETA_PLEXTOKEN_FILE");
+      const tmdbApiKey = await requiredSecretFile("KOMETA_TMDBAPIKEY_FILE");
       return {
         kind,
         command: ["kometa", "--config", KOMETA_CONFIG_PATH, "--run"],
@@ -274,7 +285,7 @@ export async function executeMaintenance(
   runner: MaintenanceCommandRunner = spawnMaintenanceCommand,
   hooks: MaintenanceCommandHooks = activityHooks(),
 ): Promise<void> {
-  const command = buildMaintenanceCommand(kind);
+  const command = await buildMaintenanceCommand(kind);
   try {
     const exitCode = await runner(command, hooks);
     if (exitCode !== 0) {

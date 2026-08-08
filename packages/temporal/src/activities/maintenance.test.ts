@@ -22,54 +22,63 @@ const testHooks: MaintenanceCommandHooks = {
 };
 
 describe("maintenance command construction", () => {
-  it("builds all four direct commands and their mounted paths", () => {
-    setEnvironment("KOMETA_PLEXTOKEN", "plex-secret-for-test");
-    setEnvironment("KOMETA_TMDBAPIKEY", "tmdb-secret-for-test");
+  it("builds all four direct commands and their mounted paths", async () => {
+    const plexTokenFile = Bun.file("/tmp/kometa-plex-token-test");
+    const tmdbKeyFile = Bun.file("/tmp/kometa-tmdb-key-test");
+    await Bun.write(plexTokenFile, "plex-secret-for-test");
+    await Bun.write(tmdbKeyFile, "tmdb-secret-for-test");
+    setEnvironment("KOMETA_PLEXTOKEN_FILE", "/tmp/kometa-plex-token-test");
+    setEnvironment("KOMETA_TMDBAPIKEY_FILE", "/tmp/kometa-tmdb-key-test");
 
-    expect(buildMaintenanceCommand("kometa")).toMatchObject({
+    expect(await buildMaintenanceCommand("kometa")).toMatchObject({
       command: ["kometa", "--config", "/etc/kometa/config.yml", "--run"],
       env: {
         KOMETA_PLEXTOKEN: "plex-secret-for-test",
         KOMETA_TMDBAPIKEY: "tmdb-secret-for-test",
       },
     });
-    expect(buildMaintenanceCommand("buildkite-bun-cache-gc")).toMatchObject({
+    expect(
+      await buildMaintenanceCommand("buildkite-bun-cache-gc"),
+    ).toMatchObject({
       command: ["bash", "/buildkite/maintenance/bun-cache-gc.sh"],
       env: {
         BUN_INSTALL_CACHE_DIR: "/buildkite/bun-cache/data",
         BUN_CACHE_LOCK_FILE: "/buildkite/bun-cache-control/.gc.lock",
       },
     });
+    const cacheCommand = await buildMaintenanceCommand(
+      "buildkite-bun-cache-gc",
+    );
+    expect(cacheCommand.env).not.toHaveProperty("KOMETA_PLEXTOKEN");
     expect(
-      buildMaintenanceCommand("buildkite-bun-cache-gc").env,
-    ).not.toHaveProperty("KOMETA_PLEXTOKEN");
-    expect(buildMaintenanceCommand("buildkite-uv-cache-prune")).toMatchObject({
+      await buildMaintenanceCommand("buildkite-uv-cache-prune"),
+    ).toMatchObject({
       command: ["uv", "cache", "prune", "--ci"],
       env: { UV_CACHE_DIR: "/buildkite/uv-cache" },
     });
-    expect(buildMaintenanceCommand("buildkite-trivy-db-refresh")).toMatchObject(
-      {
-        command: [
-          "trivy",
-          "image",
-          "--download-db-only",
-          "--cache-dir",
-          "/buildkite/trivy-db",
-        ],
-      },
-    );
+    expect(
+      await buildMaintenanceCommand("buildkite-trivy-db-refresh"),
+    ).toMatchObject({
+      command: [
+        "trivy",
+        "image",
+        "--download-db-only",
+        "--cache-dir",
+        "/buildkite/trivy-db",
+      ],
+    });
   });
 
-  it("fails fast when Kometa credentials are absent", () => {
-    const plexToken = Bun.env["KOMETA_PLEXTOKEN"];
-    const tmdbApiKey = Bun.env["KOMETA_TMDBAPIKEY"];
-    setEnvironment("KOMETA_PLEXTOKEN", undefined);
-    setEnvironment("KOMETA_TMDBAPIKEY", undefined);
-    expect(() => buildMaintenanceCommand("kometa")).toThrow(
-      "KOMETA_PLEXTOKEN is required",
+  it("fails fast when Kometa credential files are absent", async () => {
+    const plexPath = Bun.env["KOMETA_PLEXTOKEN_FILE"];
+    const tmdbPath = Bun.env["KOMETA_TMDBAPIKEY_FILE"];
+    setEnvironment("KOMETA_PLEXTOKEN_FILE", undefined);
+    setEnvironment("KOMETA_TMDBAPIKEY_FILE", undefined);
+    await expect(buildMaintenanceCommand("kometa")).rejects.toThrow(
+      "KOMETA_PLEXTOKEN_FILE is required",
     );
-    setEnvironment("KOMETA_PLEXTOKEN", plexToken);
-    setEnvironment("KOMETA_TMDBAPIKEY", tmdbApiKey);
+    setEnvironment("KOMETA_PLEXTOKEN_FILE", plexPath);
+    setEnvironment("KOMETA_TMDBAPIKEY_FILE", tmdbPath);
   });
 });
 
@@ -135,8 +144,10 @@ describe("maintenance subprocess runner", () => {
       commands.push(command);
       return 0;
     };
-    setEnvironment("KOMETA_PLEXTOKEN", "plex-secret-for-test");
-    setEnvironment("KOMETA_TMDBAPIKEY", "tmdb-secret-for-test");
+    setEnvironment("KOMETA_PLEXTOKEN_FILE", "/tmp/kometa-plex-token-test");
+    setEnvironment("KOMETA_TMDBAPIKEY_FILE", "/tmp/kometa-tmdb-key-test");
+    await Bun.write("/tmp/kometa-plex-token-test", "plex-secret-for-test");
+    await Bun.write("/tmp/kometa-tmdb-key-test", "tmdb-secret-for-test");
     await executeMaintenance("kometa", runner, testHooks);
     expect(commands).toHaveLength(1);
     const exposition = await register.metrics();

@@ -23,6 +23,7 @@ import {
   ciNodeTaintedNode,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
+import { MAINTENANCE_IMAGE_READY } from "./maintenance-image-readiness.ts";
 import {
   setRevisionHistoryLimit,
   withCommonProps,
@@ -31,17 +32,9 @@ import {
 const NAMESPACE = "buildkite";
 const WORKER_NAME = "temporal-maintenance-worker";
 const WORKER_LABELS = { app: WORKER_NAME };
-// The image pin is updated by the main-branch image pipeline in a follow-up
-// commit. Keep this Deployment scaled down while the committed pin still
-// points at the pre-maintenance worker; otherwise ArgoCD would remove the old
-// schedulers and start a worker that cannot parse TEMPORAL_WORKER_ROLE=maintenance.
-const PRE_MAINTENANCE_WORKER_IMAGE =
-  "2.0.0-8036@sha256:47a1d29da71b5571ffa9465797b75aa79f12276af8633e69d4be9068decea291";
 const WORKER_IMAGE =
   "ghcr.io/shepherdjerred/temporal-worker:" +
   versions["shepherdjerred/temporal-worker"];
-const MAINTENANCE_IMAGE_READY =
-  versions["shepherdjerred/temporal-worker"] !== PRE_MAINTENANCE_WORKER_IMAGE;
 
 const KOMETA_CONFIG = `libraries:
   Movies:
@@ -221,6 +214,18 @@ export function createBuildkiteMaintenanceWorker(chart: Chart): void {
     "temporal-maintenance-kometa-state",
     "kometa-state",
   );
+  const plexSecretVolume = Volume.fromSecret(
+    chart,
+    "temporal-maintenance-kometa-plex-volume",
+    secrets.plex,
+    { items: { password: { path: "plex-token" } } },
+  );
+  const tmdbSecretVolume = Volume.fromSecret(
+    chart,
+    "temporal-maintenance-kometa-tmdb-volume",
+    secrets.credentials,
+    { items: { TMDB_API_KEY: { path: "tmdb-api-key" } } },
+  );
 
   deployment.addInitContainer(
     withCommonProps({
@@ -287,14 +292,12 @@ export function createBuildkiteMaintenanceWorker(chart: Chart): void {
         ),
         TELEMETRY_SERVICE_NAME: EnvValue.fromValue(WORKER_NAME),
         HOME: EnvValue.fromValue("/tmp"),
-        KOMETA_PLEXTOKEN: EnvValue.fromSecretValue({
-          secret: secrets.plex,
-          key: "password",
-        }),
-        KOMETA_TMDBAPIKEY: EnvValue.fromSecretValue({
-          secret: secrets.credentials,
-          key: "TMDB_API_KEY",
-        }),
+        KOMETA_PLEXTOKEN_FILE: EnvValue.fromValue(
+          "/run/secrets/kometa-plex/plex-token",
+        ),
+        KOMETA_TMDBAPIKEY_FILE: EnvValue.fromValue(
+          "/run/secrets/kometa-tmdb/tmdb-api-key",
+        ),
       },
       volumeMounts: [
         { path: "/buildkite/bun-cache", volume: bunCache },
@@ -305,6 +308,16 @@ export function createBuildkiteMaintenanceWorker(chart: Chart): void {
         // Kometa writes logs and cache beside config.yml. Keep its state
         // writable and project only the declarative configuration read-only.
         { path: "/etc/kometa", volume: kometaState },
+        {
+          path: "/run/secrets/kometa-plex",
+          volume: plexSecretVolume,
+          readOnly: true,
+        },
+        {
+          path: "/run/secrets/kometa-tmdb",
+          volume: tmdbSecretVolume,
+          readOnly: true,
+        },
         {
           path: "/tmp",
           volume: Volume.fromEmptyDir(chart, "temporal-maintenance-tmp", "tmp"),

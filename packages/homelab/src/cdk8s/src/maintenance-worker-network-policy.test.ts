@@ -3,6 +3,7 @@ import { App } from "cdk8s";
 import { parse as parseYaml } from "yaml";
 import { z } from "zod";
 import { createMediaChart } from "./cdk8s-charts/media.ts";
+import { MAINTENANCE_IMAGE_READY } from "./resources/argo-applications/maintenance-image-readiness.ts";
 import { createTemporalChart } from "./cdk8s-charts/temporal.ts";
 
 const NetworkPolicySchema = z
@@ -115,6 +116,6 @@ describe("maintenance worker network boundary", () => {
     expect(jobs[0]?.metadata?.name).toBe("temporal-namespace-init");
     expect(
       namedResources.filter((resource) => resource.kind === "CronJob"),
-    ).toHaveLength(0);
+    ).toHaveLength(MAINTENANCE_IMAGE_READY ? 0 : 1);
   });
 });

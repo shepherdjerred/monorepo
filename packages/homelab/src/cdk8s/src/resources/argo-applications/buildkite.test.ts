@@ -2,6 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { Testing } from "cdk8s";
 import { z } from "zod";
 import { createBuildkiteApp } from "./buildkite.ts";
+import { MAINTENANCE_IMAGE_READY } from "./maintenance-image-readiness.ts";
 
 const ApplicationSchema = z
   .object({
@@ -270,7 +271,9 @@ describe("Buildkite application", () => {
       return resource.success && resource.data.kind === "CronJob";
     });
 
-    expect(cronJobs).toHaveLength(0);
+    // The legacy schedulers remain only while the committed worker image pin
+    // predates maintenance support; the follow-up image pin removes them.
+    expect(cronJobs).toHaveLength(MAINTENANCE_IMAGE_READY ? 0 : 3);
     expect(bunCacheGcConfigMap.data["bun-cache-gc.sh"]).toContain(
       "flock --exclusive 9",
     );
@@ -292,8 +295,8 @@ describe("Buildkite application", () => {
       return parsed.success ? [parsed.data.name] : [];
     });
     expect(envNames).toContain("TEMPORAL_WORKER_ROLE");
-    expect(envNames).toContain("KOMETA_PLEXTOKEN");
-    expect(envNames).toContain("KOMETA_TMDBAPIKEY");
+    expect(envNames).toContain("KOMETA_PLEXTOKEN_FILE");
+    expect(envNames).toContain("KOMETA_TMDBAPIKEY_FILE");
     expect(container.volumeMounts.map((mount) => mount.mountPath)).toEqual(
       expect.arrayContaining([
         "/buildkite/bun-cache",

@@ -17,9 +17,12 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 import {
   BUN_CACHE_MOUNT_PATH,
+  createLegacyBuildkiteBunCacheJob,
   createBuildkiteBunCache,
 } from "./buildkite-bun-cache.ts";
+import { createLegacyBuildkiteMaintenanceJobs } from "./buildkite-legacy-maintenance.ts";
 import { createBuildkiteMaintenanceWorker } from "./buildkite-maintenance-worker.ts";
+import { MAINTENANCE_IMAGE_READY } from "./maintenance-image-readiness.ts";
 
 // The sole cluster-wide cap on concurrently-scheduled CI jobs (the
 // agent-stack controller stops creating Jobs beyond it). Kueue and its
@@ -60,6 +63,10 @@ sleep 20
 export function createBuildkiteApp(chart: Chart) {
   createBuildkiteNamespace(chart);
   createBuildkiteBunCache(chart);
+  if (!MAINTENANCE_IMAGE_READY) {
+    createLegacyBuildkiteBunCacheJob(chart);
+    createLegacyBuildkiteMaintenanceJobs(chart);
+  }
   createBuildkiteMaintenanceWorker(chart);
 
   new OnePasswordItem(chart, "buildkite-agent-token", {
