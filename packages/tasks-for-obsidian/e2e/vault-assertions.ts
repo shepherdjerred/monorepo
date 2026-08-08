@@ -26,6 +26,17 @@ const VAULT_ASSERTIONS: readonly VaultAssertion[] = [
     check: (files) => fileWithTitle(files, "Created by e2e") !== undefined,
   },
   {
+    name: '"Offline created task" is persisted (05-offline-queue)',
+    flow: "05-offline-queue.yaml",
+    check: (files) =>
+      fileWithTitle(files, "Offline created task") !== undefined,
+  },
+  {
+    name: '"Offline crash task" is persisted after relaunch (06-offline-crash-replay)',
+    flow: "06-offline-crash-replay.yaml",
+    check: (files) => fileWithTitle(files, "Offline crash task") !== undefined,
+  },
+  {
     name: '"Seeded open task" has status done (02-complete-task)',
     flow: "02-complete-task.yaml",
     check: (files) =>
@@ -110,6 +121,13 @@ export async function assertVaultState(
       ? VAULT_ASSERTIONS
       : VAULT_ASSERTIONS.filter((assertion) => assertion.flow === focusedFlow);
   if (assertions.length === 0) {
+    if (
+      focusedFlow === "00-setup.yaml" ||
+      focusedFlow === "09-saved-view-lifecycle.yaml"
+    ) {
+      log(`focused flow passed without vault mutation: ${focusedFlow}`);
+      return;
+    }
     throw new Error(
       `no vault assertions registered for ${String(focusedFlow)}`,
     );
