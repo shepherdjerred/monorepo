@@ -19,6 +19,19 @@ function fileWithTitle(
   return undefined;
 }
 
+function localTodayYmd(): string {
+  const now = new Date();
+  return [
+    String(now.getFullYear()),
+    String(now.getMonth() + 1).padStart(2, "0"),
+    String(now.getDate()).padStart(2, "0"),
+  ].join("-");
+}
+
+function scheduledDate(content: string): string | undefined {
+  return /^scheduled:\s*(\d{4}-\d{2}-\d{2})\s*$/m.exec(content)?.[1];
+}
+
 async function readVaultFiles(vaultDir: string): Promise<Map<string, string>> {
   const tasksDir = path.join(vaultDir, TASKS_DIR);
   const files = new Map<string, string>();
@@ -72,7 +85,9 @@ const VAULT_ASSERTIONS: readonly VaultAssertion[] = [
     flow: "08-contextual-quick-capture.yaml",
     check: (files) => {
       const content = fileWithTitle(files, "Context capture alpha");
-      return content !== undefined && /^scheduled:/m.test(content);
+      return (
+        content !== undefined && scheduledDate(content) === localTodayYmd()
+      );
     },
   },
   {
@@ -80,7 +95,9 @@ const VAULT_ASSERTIONS: readonly VaultAssertion[] = [
     flow: "08-contextual-quick-capture.yaml",
     check: (files) => {
       const content = fileWithTitle(files, "Context capture beta");
-      return content !== undefined && /^scheduled:/m.test(content);
+      return (
+        content !== undefined && scheduledDate(content) === localTodayYmd()
+      );
     },
   },
   {
