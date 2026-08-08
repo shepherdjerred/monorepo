@@ -110,6 +110,22 @@ const baseSpiegelFonts = generateFonts(
   spiegelConfigs,
 );
 
+// Satori does not have access to the host OS font fallback chain. The Riot
+// fonts intentionally cover the Latin glyphs used by the original designs,
+// but player aliases and Riot IDs can contain Korean, Chinese, and Japanese
+// text. Register this font only for renders that need those glyphs so the
+// original visual typography and SVG output remain unchanged for Latin text.
+const cjkFont = {
+  name: "Noto Sans CJK",
+  src: `${fontPath}/NotoSansCJK/NotoSansCJKsc-Regular.otf`,
+  weight: 400 as const,
+  style: "normal" as const,
+};
+
+const baseCjkFonts = [cjkFont] satisfies (Omit<Font, "data"> & {
+  src: string;
+})[];
+
 /**
  * These fonts are used by satori.
  * They're used server-side, so we need Bun APIs to load them.
@@ -137,3 +153,45 @@ export const bunSpiegelFonts: () => Promise<Font[]> = () =>
       }),
     ),
   );
+
+export const bunCjkFonts: () => Promise<Font[]> = () =>
+  Promise.all(
+    baseCjkFonts.map(
+      async (baseFont): Promise<Font> => ({
+        ...baseFont,
+        data: await Bun.file(
+          new URL(baseFont.src, import.meta.url),
+        ).arrayBuffer(),
+      }),
+    ),
+  );
+
+const cjkCharacterPattern =
+  /[\p{Script=Han}\p{Script=Hangul}\p{Script=Hiragana}\p{Script=Katakana}]/u;
+
+export function containsCjkText(value: unknown): boolean {
+  if (typeof value === "string") {
+    return cjkCharacterPattern.test(value);
+  }
+  if (Array.isArray(value)) {
+    return value.some((entry) => containsCjkText(entry));
+  }
+  if (
+    value === null ||
+    typeof value !== "object" ||
+    ArrayBuffer.isView(value)
+  ) {
+    return false;
+  }
+  return Object.values(value).some((entry) => containsCjkText(entry));
+}
+
+export async function bunReportFonts(
+  includeCjkFallback = false,
+): Promise<Font[]> {
+  const fonts = [...(await bunBeaufortFonts()), ...(await bunSpiegelFonts())];
+  if (includeCjkFallback) {
+    fonts.push(...(await bunCjkFonts()));
+  }
+  return fonts;
+}

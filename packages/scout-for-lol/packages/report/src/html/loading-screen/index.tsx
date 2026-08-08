@@ -1,7 +1,11 @@
 import satori from "satori";
 import type { LoadingScreenData } from "@scout-for-lol/data";
 import { LoadingScreen } from "#src/html/loading-screen/loading-screen.tsx";
-import { bunBeaufortFonts, bunSpiegelFonts } from "#src/assets/index.ts";
+import {
+  bunCjkFonts,
+  bunReportFonts,
+  containsCjkText,
+} from "#src/assets/index.ts";
 import { bunClassicFonts } from "#src/assets/classic-fonts.ts";
 import { ClassicLoadingScreen } from "#src/html/loading-screen/classic-layout.tsx";
 import { getClassicBackgroundBase64 } from "@scout-for-lol/data";
@@ -130,17 +134,18 @@ export async function loadingScreenToSvg(
       bunClassicFonts(),
       getClassicBackgroundBase64(),
     ]);
+    const cjkFonts = containsCjkText(data) ? await bunCjkFonts() : [];
     return satori(
       <ClassicLoadingScreen data={data} background={background} />,
       {
         width,
         height,
-        fonts,
+        fonts: [...fonts, ...cjkFonts],
       },
     );
   }
 
-  const fonts = [...(await bunBeaufortFonts()), ...(await bunSpiegelFonts())];
+  const fonts = await bunReportFonts(containsCjkText(data));
   const svg = await satori(<LoadingScreen data={data} />, {
     width,
     height,

@@ -1,7 +1,7 @@
 import satori from "satori";
 import { type ArenaMatch } from "@scout-for-lol/data";
 import { ArenaReport } from "#src/html/arena/report.tsx";
-import { bunBeaufortFonts, bunSpiegelFonts } from "#src/assets/index.ts";
+import { bunReportFonts, containsCjkText } from "#src/assets/index.ts";
 import { svgToPng } from "#src/html/index.tsx";
 import {
   preloadChampionImages,
@@ -62,7 +62,7 @@ export async function arenaMatchToSvg(match: ArenaMatch) {
     preloadAugmentIcons(augmentIconPaths),
   ]);
 
-  const fonts = [...(await bunBeaufortFonts()), ...(await bunSpiegelFonts())];
+  const fonts = await bunReportFonts(containsCjkText(match));
   const { width, height } = getCanvasDimensions(match);
   const svg = await satori(<ArenaReport match={match} />, {
     width,

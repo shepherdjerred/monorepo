@@ -17,7 +17,7 @@ import {
   type RankedDesign,
 } from "#src/html/shared/pick-design.ts";
 import { heroPlayer } from "#src/html/shared/grade.ts";
-import { bunBeaufortFonts, bunSpiegelFonts } from "#src/assets/index.ts";
+import { bunReportFonts, containsCjkText } from "#src/assets/index.ts";
 import {
   preloadChampionImages,
   preloadChampionSplashImages,
@@ -56,7 +56,7 @@ export async function matchToSvg(
     ...match.teams.red.map((champion) => champion.championName),
   ]);
 
-  const fonts = [...(await bunBeaufortFonts()), ...(await bunSpiegelFonts())];
+  const fonts = await bunReportFonts(containsCjkText(match));
 
   const rankedDesignsEnabled = options.enableRankedDesigns ?? true;
   if (

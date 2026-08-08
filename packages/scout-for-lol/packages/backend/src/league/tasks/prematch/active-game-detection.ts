@@ -12,6 +12,7 @@ import {
   upsertActiveGame,
   deleteExpiredActiveGames,
   getActiveGameCount,
+  recordPrematchMessageIds,
 } from "#src/league/tasks/prematch/active-game-queries.ts";
 import { sendPrematchNotification } from "#src/league/tasks/prematch/prematch-notification.ts";
 import { MAX_PLAYERS_PER_RUN } from "@scout-for-lol/data/polling-config.ts";
@@ -379,7 +380,11 @@ export async function checkActiveGames(
         });
 
         // Send notification
-        await sendPrematchNotification(gameInfo, trackedPlayersInGame);
+        const prematchMessageIds = await sendPrematchNotification(
+          gameInfo,
+          trackedPlayersInGame,
+        );
+        await recordPrematchMessageIds(gameInfo.gameId, prematchMessageIds);
 
         prematchDetectionsTotal.inc({ status: "detected" });
         gamesDetected++;

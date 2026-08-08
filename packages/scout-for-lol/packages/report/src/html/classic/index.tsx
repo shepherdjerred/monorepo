@@ -1,6 +1,7 @@
 import satori from "satori";
 import type { ClassicMatch } from "@scout-for-lol/data";
 import { bunClassicFonts } from "#src/assets/classic-fonts.ts";
+import { bunCjkFonts, containsCjkText } from "#src/assets/index.ts";
 import {
   preloadChampionImages,
   preloadChampionSplashImages,
@@ -25,10 +26,14 @@ export async function classicMatchToSvg(match: ClassicMatch): Promise<string> {
     preloadChampionImages(championNames),
     preloadChampionSplashImages([hero.champion.championName]),
   ]);
+  const fonts = [
+    ...(await bunClassicFonts()),
+    ...(containsCjkText(match) ? await bunCjkFonts() : []),
+  ];
   return satori(<ClassicMatchReport match={match} />, {
     width: CLASSIC_MATCH_WIDTH,
     height: classicMatchHeight(match),
-    fonts: await bunClassicFonts(),
+    fonts,
   });
 }
 

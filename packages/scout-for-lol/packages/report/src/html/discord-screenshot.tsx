@@ -1,5 +1,10 @@
 import satori from "satori";
-import { font, bunSpiegelFonts } from "#src/assets/index.ts";
+import {
+  bunCjkFonts,
+  bunSpiegelFonts,
+  containsCjkText,
+  font,
+} from "#src/assets/index.ts";
 import { svgToPng } from "#src/html/index.tsx";
 
 const CANVAS_WIDTH = 1280;
@@ -404,7 +409,10 @@ export async function discordScreenshotToSvg(
     options.embedImageWidth ?? DEFAULT_EMBED_IMAGE_WIDTH,
   );
   const embeddedImageDataUri = pngDataUri(options.embeddedImageBytes);
-  const fonts = await bunSpiegelFonts();
+  const fonts = [
+    ...(await bunSpiegelFonts()),
+    ...(containsCjkText(options) ? await bunCjkFonts() : []),
+  ];
 
   return await satori(
     <DiscordScreenshot

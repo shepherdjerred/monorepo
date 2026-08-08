@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { MatchId } from "@scout-for-lol/data/index.ts";
 import { prisma } from "#src/database/index.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
@@ -9,10 +10,12 @@ const logger = createLogger("prematch-active-game-queries");
 const ACTIVE_GAME_TTL_MS = 2 * 60 * 60 * 1000; // 2 hours
 
 const TrackedPuuidsSchema = z.array(z.string());
+const PrematchMessageIdsSchema = z.record(z.string(), z.string());
 
 export type ActiveGameRecord = {
   gameId: number;
   trackedPuuids: string[];
+  prematchMessageIds: Record<string, string>;
   detectedAt: Date;
   expiresAt: Date;
 };
@@ -28,6 +31,10 @@ export async function getActiveGames(
     return rows.map((row) => ({
       gameId: Number(row.gameId),
       trackedPuuids: TrackedPuuidsSchema.parse(JSON.parse(row.trackedPuuids)),
+      prematchMessageIds:
+        row.prematchMessageIds === null
+          ? {}
+          : PrematchMessageIdsSchema.parse(JSON.parse(row.prematchMessageIds)),
       detectedAt: row.detectedAt,
       expiresAt: row.expiresAt,
     }));
@@ -82,6 +89,71 @@ export async function upsertActiveGame(
     });
     throw error;
   }
+}
+
+/**
+ * Persist the Discord message IDs produced by the prematch notification.
+ * Message IDs are stored per channel because one game can be delivered to
+ * several subscribed channels, and the postmatch report must reply in each
+ * channel to its own corresponding prematch message.
+ */
+export async function recordPrematchMessageIds(
+  gameId: number,
+  messageIds: ReadonlyMap<string, string>,
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<void> {
+  const serialized = Object.fromEntries(messageIds.entries());
+  try {
+    await prismaClient.activeGame.update({
+      where: { gameId: BigInt(gameId) },
+      data: { prematchMessageIds: JSON.stringify(serialized) },
+    });
+  } catch (error) {
+    logger.error(
+      `❌ Error recording prematch message IDs for game ${gameId.toString()}:`,
+      error,
+    );
+    Sentry.captureException(error, {
+      tags: {
+        source: "prematch-record-message-ids",
+        gameId: gameId.toString(),
+      },
+    });
+    throw error;
+  }
+}
+
+/** Return the prematch Discord message IDs for a game, keyed by channel ID. */
+export async function getPrematchMessageIds(
+  gameId: number,
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<Map<string, string>> {
+  const row = await prismaClient.activeGame.findUnique({
+    where: { gameId: BigInt(gameId) },
+    select: { prematchMessageIds: true },
+  });
+  if (row === null) {
+    return new Map();
+  }
+  if (row.prematchMessageIds === null) {
+    return new Map();
+  }
+  const parsed = PrematchMessageIdsSchema.parse(
+    JSON.parse(row.prematchMessageIds),
+  );
+  return new Map(Object.entries(parsed));
+}
+
+export async function getPrematchMessageIdsForMatchId(
+  matchId: MatchId,
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<Map<string, string>> {
+  const suffix = matchId.split("_").at(-1);
+  const gameId =
+    suffix !== undefined && /^\d+$/.test(suffix) ? Number(suffix) : NaN;
+  return Number.isSafeInteger(gameId)
+    ? getPrematchMessageIds(gameId, prismaClient)
+    : new Map();
 }
 
 /**

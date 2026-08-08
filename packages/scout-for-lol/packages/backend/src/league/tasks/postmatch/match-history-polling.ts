@@ -48,21 +48,18 @@ import {
 } from "#src/league/tasks/recovery/app-state.ts";
 import { fetchMatchIdsForTimeRange } from "#src/league/tasks/recovery/backfill-to-s3.ts";
 import { recordMatchForReportStore } from "#src/report-store/live-ingest.ts";
+import { getPrematchMessageIdsForMatchId } from "#src/league/tasks/prematch/active-game-queries.ts";
 
 const logger = createLogger("postmatch-match-history-polling");
 
 let isPollingInProgress = false;
 let pollingStartTime: number | undefined;
-const POLLING_TIMEOUT_MS = 5 * 60 * 1000;
 
-// Discord notifications and AI reviews are suppressed for matches older than
-// this — covers the "bot recovered after a multi-hour outage and is replaying
-// stale matches" case so users don't get pinged about games from yesterday.
+// Suppress stale Discord notifications and AI reviews after recovery.
 const MAX_DISCORD_ALERT_AGE_MS = 3 * 60 * 60 * 1000;
 
-export function isMatchHistoryPollingInProgress(): boolean {
-  return isPollingInProgress;
-}
+export const isMatchHistoryPollingInProgress = (): boolean =>
+  isPollingInProgress;
 
 export function resetPollingState(): void {
   isPollingInProgress = false;
@@ -77,7 +74,7 @@ function shouldSkipPollingRun(): boolean {
     pollingStartTime === undefined ? 0 : Date.now() - pollingStartTime;
 
   // Check if the lock is stale (stuck for over 5 minutes)
-  if (elapsed > POLLING_TIMEOUT_MS) {
+  if (elapsed > 5 * 60 * 1000) {
     logger.error(
       `⚠️  Polling lock timeout detected after ${Math.round(elapsed / 1000).toString()}s, force-resetting stale lock`,
     );
@@ -162,6 +159,7 @@ async function processMatch(
     channels: deliverChannels,
     logPrefix: "[processMatch]",
     sentryTags: { matchId },
+    replyToMessageIds: await getPrematchMessageIdsForMatchId(matchId),
   });
 
   logger.info(`[processMatch] ✅ Processed match ${matchId}`);

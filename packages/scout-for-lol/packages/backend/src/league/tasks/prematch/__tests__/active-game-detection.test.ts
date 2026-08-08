@@ -113,6 +113,7 @@ await mock.module("#src/league/tasks/prematch/active-game-queries.ts", () => ({
   },
   deleteExpiredActiveGames: () => Promise.resolve(0),
   getActiveGameCount: () => Promise.resolve(mockActiveGames.length),
+  recordPrematchMessageIds: () => Promise.resolve(),
 }));
 
 await mock.module("#src/league/api/spectator.ts", () => ({
@@ -133,7 +134,7 @@ await mock.module(
       trackedPlayers: PlayerConfigEntry[],
     ) => {
       notificationCalls.push({ gameId: gameInfo.gameId, trackedPlayers });
-      return Promise.resolve();
+      return Promise.resolve(new Map<string, string>());
     },
   }),
 );
@@ -179,6 +180,7 @@ describe("checkActiveGames — subsequent-match polling", () => {
       {
         gameId: G1,
         trackedPuuids: [P1],
+        prematchMessageIds: {},
         detectedAt: new Date(),
         expiresAt,
       },
@@ -302,6 +304,7 @@ describe("checkActiveGames — subsequent-match polling", () => {
       {
         gameId: G1,
         trackedPuuids: [P1],
+        prematchMessageIds: {},
         detectedAt: new Date(),
         expiresAt,
       },
