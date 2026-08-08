@@ -233,6 +233,55 @@ describe("TaskStore server acks", () => {
   });
 });
 
+describe("TaskStore full pulls", () => {
+  test("invalidates acknowledged restores after an external recurrence edit", async () => {
+    const task = makeTask({
+      recurrence: "FREQ=WEEKLY",
+      scheduled: "2026-08-08",
+    });
+    const { store, queue } = makeStore(
+      memoryQueueStorage(),
+      memoryStoreStorage({ tasks: [task] }),
+    );
+    await store.restore();
+    await store.dispatch({
+      type: "set_instance_complete",
+      taskId: task.id,
+      date: "2026-08-08",
+      completed: true,
+      restore: {
+        scheduled: "2026-08-08",
+        due: null,
+        recurrence: "FREQ=WEEKLY",
+        skipped: false,
+      },
+    });
+    const command = queue.head();
+    if (command?.type !== "set_instance_complete") {
+      throw new Error("expected completion command");
+    }
+    await store.applyServerAck(command, {
+      ...task,
+      completeInstances: ["2026-08-08"],
+    });
+
+    await store.replaceBase(
+      [
+        {
+          ...task,
+          recurrence: "FREQ=MONTHLY",
+          completeInstances: ["2026-08-08"],
+        },
+      ],
+      now,
+    );
+
+    await expect(
+      store.getPendingCompletionRestore(task.id, "2026-08-08"),
+    ).resolves.toEqual(undefined);
+  });
+});
+
 describe("TaskStore pending restores", () => {
   test("reads a pending restore after an in-flight create remaps its id", async () => {
     const backingStorage = memoryStoreStorage();

@@ -86,3 +86,28 @@ export function pruneCompletionRestores(
   }
   return next;
 }
+
+export function invalidateChangedCompletionRestores(
+  restores: ReadonlyMap<string, StoredCompletionRestore>,
+  previousTasks: ReadonlyMap<TaskId, Task>,
+  nextTasks: ReadonlyMap<TaskId, Task>,
+): Map<string, StoredCompletionRestore> {
+  const next = new Map(restores);
+  for (const key of next.keys()) {
+    const separator = key.indexOf("\u{0}");
+    if (separator === -1) continue;
+    const id = taskId(key.slice(0, separator));
+    const previous = previousTasks.get(id);
+    const current = nextTasks.get(id);
+    if (
+      previous !== undefined &&
+      current !== undefined &&
+      (previous.recurrence !== current.recurrence ||
+        previous.scheduled !== current.scheduled ||
+        previous.due !== current.due)
+    ) {
+      next.delete(key);
+    }
+  }
+  return next;
+}

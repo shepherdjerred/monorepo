@@ -23,6 +23,7 @@ import { localTodayYmd } from "../../domain/recurrence";
 import {
   type StoredCompletionRestore,
   completionRestoreKey,
+  invalidateChangedCompletionRestores,
   invalidateCompletionRestores,
   isOccurrenceEdit,
   parseAcknowledgedCompletionRestores,
@@ -386,11 +387,17 @@ export class TaskStore {
       }
       await this.persistBase(nextBase);
       await this.persistAliases(nextAliases);
-      const nextAcknowledgedCompletionRestores = pruneCompletionRestores(
+      const prunedAcknowledgedCompletionRestores = pruneCompletionRestores(
         this.acknowledgedCompletionRestores,
         localTodayYmd(new Date(this.clock())),
         nextBase,
       );
+      const nextAcknowledgedCompletionRestores =
+        invalidateChangedCompletionRestores(
+          prunedAcknowledgedCompletionRestores,
+          this.base,
+          nextBase,
+        );
       await this.storage.setAcknowledgedCompletionRestores(
         serializeAcknowledgedCompletionRestores(
           nextAcknowledgedCompletionRestores,
