@@ -293,6 +293,22 @@ export class TaskStore {
         nextBase.set(serverTask.id, serverTask);
       }
       if (
+        command.type === "update" &&
+        (command.payload.recurrence !== undefined ||
+          command.payload.scheduled !== undefined ||
+          command.payload.due !== undefined)
+      ) {
+        nextAcknowledgedCompletionRestores = new Map(
+          this.acknowledgedCompletionRestores,
+        );
+        const keyPrefix = `${String(command.taskId)}\u{0}`;
+        for (const key of nextAcknowledgedCompletionRestores.keys()) {
+          if (key.startsWith(keyPrefix)) {
+            nextAcknowledgedCompletionRestores.delete(key);
+          }
+        }
+      }
+      if (
         command.type === "set_instance_complete" &&
         command.completed &&
         command.restore !== undefined

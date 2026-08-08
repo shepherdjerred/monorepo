@@ -385,6 +385,58 @@ describe("TaskStore pending restores", () => {
       relaunched.getPendingCompletionRestore(task.id, "2026-08-08"),
     ).resolves.toEqual(restore);
   });
+
+  test("invalidates an acknowledged restore after recurrence edits", async () => {
+    const task = makeTask({
+      recurrence: "FREQ=WEEKLY",
+      scheduled: "2026-08-08",
+    });
+    const { store, queue } = makeStore(
+      memoryQueueStorage(),
+      memoryStoreStorage({ tasks: [task] }),
+    );
+    await store.restore();
+    const restore = {
+      scheduled: "2026-08-08",
+      due: null,
+      recurrence: "FREQ=WEEKLY",
+      skipped: false,
+    };
+    await store.dispatch({
+      type: "set_instance_complete",
+      taskId: task.id,
+      date: "2026-08-08",
+      completed: true,
+      restore,
+    });
+    const completionCommand = queue.head();
+    if (completionCommand?.type !== "set_instance_complete") {
+      throw new Error("expected completion command");
+    }
+    await store.applyServerAck(completionCommand, {
+      ...task,
+      completeInstances: ["2026-08-08"],
+    });
+
+    await store.dispatch({
+      type: "update",
+      taskId: task.id,
+      payload: { recurrence: "FREQ=MONTHLY" },
+    });
+    const updateCommand = queue.head();
+    if (updateCommand?.type !== "update") {
+      throw new Error("expected update command");
+    }
+    await store.applyServerAck(updateCommand, {
+      ...task,
+      recurrence: "FREQ=MONTHLY",
+      completeInstances: [],
+    });
+
+    await expect(
+      store.getPendingCompletionRestore(task.id, "2026-08-08"),
+    ).resolves.toEqual(undefined);
+  });
 });
 
 describe("TaskStore server acks", () => {
