@@ -15,7 +15,8 @@ Deploy the free Plane Commercial tier with the official `plane-enterprise`
 Helm chart, pinned to chart `3.1.0` and app `v3.0.1`. Use Plane for private
 issue tracking only; leave wiki/pages available but unused. Access is through
 the Tailscale Kubernetes ingress at `plane.tailnet-1a49.ts.net`, with no public
-Funnel exposure.
+Funnel exposure. The curated homelab wiki documents the durable access,
+storage, and backup boundary.
 
 ## Implementation
 
