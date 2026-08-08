@@ -94,9 +94,9 @@ export function estimateStyleGenerationCost(
       outputTokenUpperBound: SYNTHESIS_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
     });
   // A synthesis repair likewise serializes the prior synthesis (bounded by the
-  // base cap) plus the error into its request, and may incur the same retry.
+  // retry ceiling) plus the error into its request, and may incur the same retry.
   const synthesisRepairInput =
-    synthesisInputUpperBound + SYNTHESIS_MAX_OUTPUT_TOKENS;
+    synthesisInputUpperBound + SYNTHESIS_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS;
   const synthesisRepairCall =
     estimatedCallCostUsd({
       model: SYNTHESIS_MODEL,
