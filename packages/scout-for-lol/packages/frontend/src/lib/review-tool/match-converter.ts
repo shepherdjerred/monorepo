@@ -14,9 +14,15 @@ import {
   type ArenaMatch,
   type CompletedMatch,
   type QueueType,
+  QueueTypeSchema,
 } from "@scout-for-lol/data";
 import { getExampleMatch } from "@scout-for-lol/data";
 import { getOutcome, participantToChampion } from "./s3-helpers.ts";
+
+const ReviewToolQueueTypeSchema = QueueTypeSchema.exclude([
+  "classic",
+  "classic aram mayhem",
+]);
 
 /**
  * Get the base example match structure for a given queue type
@@ -113,7 +119,11 @@ export function convertRawMatchToInternalFormat(
       "League Classic matches are not supported by the review tool",
     );
   }
-  const baseMatch = getBaseMatch(queueType);
+  const reviewToolQueueType =
+    queueType === undefined
+      ? undefined
+      : ReviewToolQueueTypeSchema.parse(queueType);
+  const baseMatch = getBaseMatch(reviewToolQueueType);
   const reorderedParticipants = reorderParticipants(
     rawMatch.info.participants,
     selectedPlayerName,
