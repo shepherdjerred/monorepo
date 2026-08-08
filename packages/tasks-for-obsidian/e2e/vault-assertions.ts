@@ -32,14 +32,48 @@ function scheduledDate(content: string): string | undefined {
   return /^scheduled:\s*(\d{4}-\d{2}-\d{2})\s*$/m.exec(content)?.[1];
 }
 
-async function readVaultFiles(vaultDir: string): Promise<Map<string, string>> {
+function isMissingFileError(error: unknown): boolean {
+  return error instanceof Error && "code" in error && error.code === "ENOENT";
+}
+
+async function readVaultFiles(
+  vaultDir: string,
+): Promise<Map<string, string> | undefined> {
   const tasksDir = path.join(vaultDir, TASKS_DIR);
-  const files = new Map<string, string>();
-  for (const entry of await readdir(tasksDir)) {
-    if (!entry.endsWith(".md")) continue;
-    files.set(entry, await readFile(path.join(tasksDir, entry), "utf8"));
+  try {
+    const files = new Map<string, string>();
+    for (const entry of await readdir(tasksDir)) {
+      if (!entry.endsWith(".md")) continue;
+      files.set(entry, await readFile(path.join(tasksDir, entry), "utf8"));
+    }
+    return files;
+  } catch (error) {
+    if (isMissingFileError(error)) return undefined;
+    throw error;
   }
-  return files;
+}
+
+async function waitForVaultAssertions(
+  vaultDir: string,
+  assertions: readonly VaultAssertion[],
+): Promise<Map<string, string>> {
+  const deadline = Date.now() + 30_000;
+  for (;;) {
+    const files = await readVaultFiles(vaultDir);
+    if (files === undefined) {
+      if (Date.now() >= deadline) {
+        throw new Error("vault changed while reading assertions");
+      }
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      continue;
+    }
+    const failures = assertions.filter((assertion) => !assertion.check(files));
+    if (failures.length === 0) return files;
+    if (Date.now() >= deadline) {
+      throw new Error(`${String(failures.length)} vault assertion(s) failed`);
+    }
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
 }
 
 const VAULT_ASSERTIONS: readonly VaultAssertion[] = [
@@ -148,18 +182,7 @@ export async function assertVaultState(
     );
   }
 
-  const deadline = Date.now() + 30_000;
-  let files = await readVaultFiles(vaultDir);
-  for (;;) {
-    const failures = assertions.filter((assertion) => !assertion.check(files));
-    if (failures.length === 0) break;
-    if (Date.now() >= deadline) {
-      throw new Error(`${String(failures.length)} vault assertion(s) failed`);
-    }
-    await new Promise((resolve) => setTimeout(resolve, 250));
-    files = await readVaultFiles(vaultDir);
-  }
-
+  const files = await waitForVaultAssertions(vaultDir, assertions);
   log(
     `vault contains ${String(files.size)} task file(s): ${[...files.keys()].join(", ")}`,
   );
