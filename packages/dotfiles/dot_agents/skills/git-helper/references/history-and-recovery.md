@@ -17,8 +17,10 @@ Use `--remerge-diff` when reviewing conflict-resolution changes in merge commits
 `git bisect run <command>` interprets exit codes as follows:
 
 - `0`: good
-- `1` through `127`, except `125`: bad
+- `1` through `124`: bad
 - `125`: skip this commit
+- `126` or `127`: abort/error because the test command could not be executed
+  or found
 - other termination or signal states: abort/error conditions
 
 The test command must reliably distinguish good from bad. Do not append a blanket shell fallback that turns failures into a chosen result.
