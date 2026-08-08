@@ -84,6 +84,12 @@ describe("prematch message IDs", () => {
     await expect(getPrematchMessageIds(123)).resolves.toEqual(new Map());
   });
 
+  test("ignores malformed optional records", async () => {
+    storedPrematchMessageIds = "not-json";
+
+    await expect(getPrematchMessageIds(123)).resolves.toEqual(new Map());
+  });
+
   test("resolves the numeric game ID from a match ID", async () => {
     await recordPrematchMessageIds(
       123,

@@ -137,7 +137,7 @@ function PlayerRow({
         color: classicPalette.text.primary,
         backgroundColor: isTracked ? colors.deep : classicPalette.panel,
         borderBottom: `1px solid ${colors.accent}`,
-        fontFamily: classicTypography.family.body,
+        fontFamily: classicTypography.stack.body,
         fontSize: classicTypography.size.bodyMedium.fontSize,
         lineHeight: classicTypography.size.bodyMedium.lineHeight,
       }}
@@ -264,7 +264,7 @@ function TeamHeader({
           borderTop: `2px solid ${colors.accent}`,
           borderBottom: `2px solid ${colors.accent}`,
           color: colors.highlight,
-          fontFamily: classicTypography.family.display,
+          fontFamily: classicTypography.stack.display,
           fontSize: classicTypography.size.medium.fontSize,
           lineHeight: classicTypography.size.medium.lineHeight,
           fontWeight: 700,
@@ -286,7 +286,7 @@ function TeamHeader({
           alignItems: "center",
           backgroundColor: classicPalette.raised,
           color: classicPalette.text.secondary,
-          fontFamily: classicTypography.family.body,
+          fontFamily: classicTypography.stack.body,
           fontSize: classicTypography.size.caption.fontSize,
           lineHeight: classicTypography.size.caption.lineHeight,
           fontWeight: 700,
@@ -417,7 +417,7 @@ export function ClassicMatchReport({ match }: { match: ClassicMatch }) {
           <span
             style={{
               color: outcomeColor,
-              fontFamily: classicTypography.family.display,
+              fontFamily: classicTypography.stack.display,
               fontSize: classicTypography.size.xl.fontSize,
               lineHeight: classicTypography.size.xl.lineHeight,
               fontWeight: 700,
@@ -428,7 +428,7 @@ export function ClassicMatchReport({ match }: { match: ClassicMatch }) {
           <span
             style={{
               marginTop: 12,
-              fontFamily: classicTypography.family.display,
+              fontFamily: classicTypography.stack.display,
               fontSize: classicTypography.size.large.fontSize,
               lineHeight: classicTypography.size.large.lineHeight,
             }}
@@ -439,7 +439,7 @@ export function ClassicMatchReport({ match }: { match: ClassicMatch }) {
             style={{
               marginTop: 10,
               color: classicPalette.text.secondary,
-              fontFamily: classicTypography.family.body,
+              fontFamily: classicTypography.stack.body,
               fontSize: classicTypography.size.bodyLarge.fontSize,
               lineHeight: classicTypography.size.bodyLarge.lineHeight,
             }}

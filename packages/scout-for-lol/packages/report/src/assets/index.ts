@@ -4,9 +4,14 @@ const fontPath = "fonts";
 
 // https://brand.riotgames.com/en-us/league-of-legends/typography
 export const font = {
+  title: "Beaufort for LOL, Noto Sans CJK",
+  body: "Spiegel, Noto Sans CJK",
+};
+
+const registeredFont = {
   title: "Beaufort for LOL",
   body: "Spiegel",
-};
+} as const;
 
 type FontConfig = {
   weight: NonNullable<Font["weight"]>;
@@ -100,12 +105,12 @@ const spiegelConfigs = [
 ] satisfies FontConfig[];
 
 const baseBeaufortFonts = generateFonts(
-  font.title,
+  registeredFont.title,
   "BeaufortForLoL-TTF",
   beaufortConfigs,
 );
 const baseSpiegelFonts = generateFonts(
-  font.body,
+  registeredFont.body,
   "Spiegel-TTF",
   spiegelConfigs,
 );
@@ -154,8 +159,10 @@ export const bunSpiegelFonts: () => Promise<Font[]> = () =>
     ),
   );
 
-export const bunCjkFonts: () => Promise<Font[]> = () =>
-  Promise.all(
+let cjkFontsPromise: Promise<Font[]> | undefined;
+
+export const bunCjkFonts: () => Promise<Font[]> = () => {
+  cjkFontsPromise ??= Promise.all(
     baseCjkFonts.map(
       async (baseFont): Promise<Font> => ({
         ...baseFont,
@@ -165,6 +172,8 @@ export const bunCjkFonts: () => Promise<Font[]> = () =>
       }),
     ),
   );
+  return cjkFontsPromise;
+};
 
 const cjkCharacterPattern =
   /[\p{Script=Han}\p{Script=Hangul}\p{Script=Hiragana}\p{Script=Katakana}]/u;

@@ -57,7 +57,23 @@ export async function deliverToChannels(params: {
                 failIfNotExists: false,
               },
             };
-      await send(message, channel, DiscordGuildIdSchema.parse(serverId));
+      const guildId = DiscordGuildIdSchema.parse(serverId);
+      try {
+        await send(message, channel, guildId);
+      } catch (error) {
+        if (
+          replyToMessageId !== undefined &&
+          error instanceof ChannelSendError &&
+          error.permissionError
+        ) {
+          // A reply requires Read Message History. Retry as a normal message
+          // when that permission is missing; the post-match report itself is
+          // still deliverable in channels where sending is allowed.
+          await send(params.message, channel, guildId);
+          continue;
+        }
+        throw error;
+      }
     } catch (error) {
       if (error instanceof ChannelSendError && error.permissionError) {
         logger.warn(

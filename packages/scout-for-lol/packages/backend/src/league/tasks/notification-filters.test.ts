@@ -7,12 +7,23 @@ import type {
 } from "#src/database/index.ts";
 
 const sentMessages: MessageCreateOptions[] = [];
+let failReplyOnce = false;
+class MockChannelSendError extends Error {
+  permissionError: boolean;
+
+  constructor(message: string, permissionError: boolean) {
+    super(message);
+    this.permissionError = permissionError;
+  }
+}
 
 await mock.module("#src/league/discord/channel.ts", () => ({
-  ChannelSendError: class ChannelSendError extends Error {
-    permissionError = false;
-  },
+  ChannelSendError: MockChannelSendError,
   send: (message: MessageCreateOptions) => {
+    if (failReplyOnce && message.reply !== undefined) {
+      failReplyOnce = false;
+      throw new MockChannelSendError("missing Read Message History", true);
+    }
     sentMessages.push(message);
     return Promise.resolve({ id: "sent-message" });
   },
@@ -121,5 +132,21 @@ describe("deliverToChannels", () => {
       },
       { content: "Game finished" },
     ]);
+  });
+
+  test("retries as a normal message when the reply permission is missing", async () => {
+    sentMessages.length = 0;
+    failReplyOnce = true;
+    const channelId = DiscordChannelIdSchema.parse("123456789012345678");
+
+    await deliverToChannels({
+      message: { content: "Game finished" },
+      channels: [{ channel: channelId, serverId: "123456789012345680" }],
+      logPrefix: "[test]",
+      sentryTags: {},
+      replyToMessageIds: new Map([[channelId, "prematch-message"]]),
+    });
+
+    expect(sentMessages).toEqual([{ content: "Game finished" }]);
   });
 });

@@ -36,6 +36,10 @@ export const classicTypography = {
     display: "QTFrizQuad",
     body: "Gill Sans",
   },
+  stack: {
+    display: "QTFrizQuad, Noto Sans CJK",
+    body: "Gill Sans, Noto Sans CJK",
+  },
   size: {
     xl: { fontSize: 64, lineHeight: "64px" },
     large: { fontSize: 44, lineHeight: "48px" },

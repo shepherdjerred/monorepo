@@ -12,6 +12,31 @@ const ACTIVE_GAME_TTL_MS = 2 * 60 * 60 * 1000; // 2 hours
 const TrackedPuuidsSchema = z.array(z.string());
 const PrematchMessageIdsSchema = z.record(z.string(), z.string());
 
+function parsePrematchMessageIds(
+  raw: string | null,
+  gameId: bigint,
+): Record<string, string> {
+  if (raw === null || raw.length === 0) {
+    return {};
+  }
+
+  try {
+    return PrematchMessageIdsSchema.parse(JSON.parse(raw));
+  } catch (error) {
+    logger.error(
+      `⚠️ Invalid prematch message IDs for game ${gameId.toString()}:`,
+      error,
+    );
+    Sentry.captureException(error, {
+      tags: {
+        source: "prematch-message-ids-parse",
+        gameId: gameId.toString(),
+      },
+    });
+    return {};
+  }
+}
+
 export type ActiveGameRecord = {
   gameId: number;
   trackedPuuids: string[];
@@ -31,10 +56,10 @@ export async function getActiveGames(
     return rows.map((row) => ({
       gameId: Number(row.gameId),
       trackedPuuids: TrackedPuuidsSchema.parse(JSON.parse(row.trackedPuuids)),
-      prematchMessageIds:
-        row.prematchMessageIds === null
-          ? {}
-          : PrematchMessageIdsSchema.parse(JSON.parse(row.prematchMessageIds)),
+      prematchMessageIds: parsePrematchMessageIds(
+        row.prematchMessageIds,
+        row.gameId,
+      ),
       detectedAt: row.detectedAt,
       expiresAt: row.expiresAt,
     }));
@@ -125,22 +150,18 @@ export async function recordPrematchMessageIds(
 
 /** Return the prematch Discord message IDs for a game, keyed by channel ID. */
 export async function getPrematchMessageIds(
-  gameId: number,
+  gameId: number | bigint,
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<Map<string, string>> {
+  const gameIdBigInt = typeof gameId === "bigint" ? gameId : BigInt(gameId);
   const row = await prismaClient.activeGame.findUnique({
-    where: { gameId: BigInt(gameId) },
+    where: { gameId: gameIdBigInt },
     select: { prematchMessageIds: true },
   });
   if (row === null) {
     return new Map();
   }
-  if (row.prematchMessageIds === null) {
-    return new Map();
-  }
-  const parsed = PrematchMessageIdsSchema.parse(
-    JSON.parse(row.prematchMessageIds),
-  );
+  const parsed = parsePrematchMessageIds(row.prematchMessageIds, gameIdBigInt);
   return new Map(Object.entries(parsed));
 }
 
@@ -149,11 +170,10 @@ export async function getPrematchMessageIdsForMatchId(
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<Map<string, string>> {
   const suffix = matchId.split("_").at(-1);
-  const gameId =
-    suffix !== undefined && /^\d+$/.test(suffix) ? Number(suffix) : NaN;
-  return Number.isSafeInteger(gameId)
-    ? getPrematchMessageIds(gameId, prismaClient)
-    : new Map();
+  if (suffix === undefined || !/^\d+$/.test(suffix)) {
+    return new Map();
+  }
+  return getPrematchMessageIds(BigInt(suffix), prismaClient);
 }
 
 /**
