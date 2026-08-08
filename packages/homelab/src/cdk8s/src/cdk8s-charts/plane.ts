@@ -24,6 +24,7 @@ export function createPlaneChart(app: App) {
         // The vendor chart's bundled databases are not PSA-restricted. Keep
         // the namespace visible to the audit/warn profiles without blocking
         // those third-party containers.
+        "pod-security.kubernetes.io/enforce": "privileged",
         "pod-security.kubernetes.io/audit": "restricted",
         "pod-security.kubernetes.io/warn": "restricted",
       },

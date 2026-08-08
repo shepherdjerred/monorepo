@@ -7,6 +7,8 @@ const PLANE_NAMESPACE = "plane";
 const PLANE_RELEASE = "plane";
 const PLANE_URL = "https://plane.tailnet-1a49.ts.net";
 const PLANE_SECRET_NAME = "plane-secrets";
+const PLANE_INFRASTRUCTURE_SYNC_WAVE = "-1";
+const PLANE_SYNC_WAVE = "0";
 
 export function createPlaneApp(chart: Chart) {
   const planeValues: HelmValuesForChart<"plane-enterprise"> = {
@@ -71,6 +73,9 @@ export function createPlaneApp(chart: Chart) {
   return new Application(chart, "plane-app", {
     metadata: {
       name: PLANE_RELEASE,
+      annotations: {
+        "argocd.argoproj.io/sync-wave": PLANE_SYNC_WAVE,
+      },
     },
     spec: {
       revisionHistoryLimit: 5,
@@ -100,6 +105,9 @@ export function createPlaneInfrastructureApp(chart: Chart) {
   return new Application(chart, "plane-infrastructure-app", {
     metadata: {
       name: "plane-infrastructure",
+      annotations: {
+        "argocd.argoproj.io/sync-wave": PLANE_INFRASTRUCTURE_SYNC_WAVE,
+      },
     },
     spec: {
       revisionHistoryLimit: 5,

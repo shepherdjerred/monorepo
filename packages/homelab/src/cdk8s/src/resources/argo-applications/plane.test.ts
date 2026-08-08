@@ -4,11 +4,16 @@ import { parseAllDocuments } from "yaml";
 import { z } from "zod";
 import { createPlaneChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/plane.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
-import { createPlaneApp } from "./plane.ts";
+import { createPlaneApp, createPlaneInfrastructureApp } from "./plane.ts";
 
 const PlaneApplicationSchema = z.object({
   kind: z.literal("Application"),
-  metadata: z.object({ name: z.literal("plane") }),
+  metadata: z.object({
+    name: z.literal("plane"),
+    annotations: z.object({
+      "argocd.argoproj.io/sync-wave": z.literal("0"),
+    }),
+  }),
   spec: z.object({
     source: z.object({
       repoURL: z.literal("https://helm.plane.so/"),
@@ -63,6 +68,22 @@ const PlaneApplicationSchema = z.object({
   }),
 });
 
+const PlaneInfrastructureApplicationSchema = z.object({
+  kind: z.literal("Application"),
+  metadata: z.object({
+    name: z.literal("plane-infrastructure"),
+    annotations: z.object({
+      "argocd.argoproj.io/sync-wave": z.literal("-1"),
+    }),
+  }),
+  spec: z.object({
+    source: z.object({
+      repoURL: z.literal("https://chartmuseum.tailnet-1a49.ts.net"),
+      chart: z.literal("plane"),
+    }),
+  }),
+});
+
 const InfrastructureSecretSchema = z.object({
   kind: z.literal("OnePasswordItem"),
   metadata: z.object({
@@ -73,6 +94,18 @@ const InfrastructureSecretSchema = z.object({
     itemPath: z.literal(
       "vaults/v64ocnykdqju4ui6j6pua56xw4/items/plane-commercial-secrets",
     ),
+  }),
+});
+
+const PlaneNamespaceSchema = z.object({
+  kind: z.literal("Namespace"),
+  metadata: z.object({
+    name: z.literal("plane"),
+    labels: z.object({
+      "pod-security.kubernetes.io/enforce": z.literal("privileged"),
+      "pod-security.kubernetes.io/audit": z.literal("restricted"),
+      "pod-security.kubernetes.io/warn": z.literal("restricted"),
+    }),
   }),
 });
 
@@ -110,13 +143,22 @@ describe("Plane Commercial deployment", () => {
   it("pins the vendor chart and configures private issue tracking", () => {
     const app = new App();
     const chart = new Chart(app, "test");
+    createPlaneInfrastructureApp(chart);
     createPlaneApp(chart);
 
-    const manifest = parseAllDocuments(app.synthYaml())
-      .map((document) => PlaneApplicationSchema.safeParse(document.toJS()))
+    const documents = parseAllDocuments(app.synthYaml()).map((document) =>
+      document.toJS(),
+    );
+    const manifest = documents
+      .map((document) => PlaneApplicationSchema.safeParse(document))
       .find((result) => result.success);
-    if (!manifest?.success) {
-      throw new Error("Plane Application was not synthesized");
+    const infrastructure = documents
+      .map((document) =>
+        PlaneInfrastructureApplicationSchema.safeParse(document),
+      )
+      .find((result) => result.success);
+    if (!manifest?.success || !infrastructure?.success) {
+      throw new Error("Plane Applications were not synthesized");
     }
 
     expect(manifest.data.spec.destination.namespace).toBe("plane");
@@ -126,6 +168,9 @@ describe("Plane Commercial deployment", () => {
     expect(manifest.data.spec.syncPolicy.syncOptions).toEqual([
       "CreateNamespace=true",
     ]);
+    expect(infrastructure.data.metadata.annotations).toEqual({
+      "argocd.argoproj.io/sync-wave": "-1",
+    });
   });
 
   it("creates the secret bridge and Tailscale-only route map", () => {
@@ -138,14 +183,22 @@ describe("Plane Commercial deployment", () => {
     const secret = documents
       .map((document) => InfrastructureSecretSchema.safeParse(document))
       .find((result) => result.success);
+    const namespace = documents
+      .map((document) => PlaneNamespaceSchema.safeParse(document))
+      .find((result) => result.success);
     const ingress = documents
       .map((document) => IngressSchema.safeParse(document))
       .find((result) => result.success);
-    if (!secret?.success || !ingress?.success) {
+    if (!secret?.success || !namespace?.success || !ingress?.success) {
       throw new Error("Plane infrastructure resources were not synthesized");
     }
 
     expect(secret.data.spec.itemPath).toContain("plane-commercial-secrets");
+    expect(namespace.data.metadata.labels).toEqual({
+      "pod-security.kubernetes.io/enforce": "privileged",
+      "pod-security.kubernetes.io/audit": "restricted",
+      "pod-security.kubernetes.io/warn": "restricted",
+    });
     expect(
       ingress.data.spec.rules[0]?.http.paths.map((path) => path.path),
     ).toEqual([

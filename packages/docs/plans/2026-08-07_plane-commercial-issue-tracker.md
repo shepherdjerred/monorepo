@@ -22,6 +22,9 @@ Funnel exposure.
 - Pin the vendor chart and app versions and generate the typed Helm values.
 - Add the Plane CDK8s chart with the private ingress and a 1Password-backed
   `plane-secrets` Kubernetes Secret.
+- Keep the bundled stateful dependencies in a namespace with explicit
+  privileged PSA enforcement and restricted audit/warn visibility, and sync
+  the infrastructure Application before the vendor Application.
 - Add layered Argo CD applications: one for the local infrastructure chart and
   one sourcing `plane-enterprise` from `https://helm.plane.so/`.
 - Disable the vendor ingress, AI/PI, runner, local MinIO, and local OpenSearch.
