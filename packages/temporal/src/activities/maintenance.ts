@@ -152,6 +152,12 @@ export const spawnMaintenanceCommand: MaintenanceCommandRunner = async (
     env: childEnv,
     stdout: "pipe",
     stderr: "pipe",
+    ...(hooks.cancellationSignal === undefined
+      ? {}
+      : {
+          signal: hooks.cancellationSignal,
+          killSignal: "SIGKILL" as const,
+        }),
   });
   const startedAt = Date.now();
   const heartbeatTimer = setInterval(() => {
@@ -162,8 +168,10 @@ export const spawnMaintenanceCommand: MaintenanceCommandRunner = async (
   }, hooks.heartbeatIntervalMs ?? HEARTBEAT_INTERVAL_MS);
   const abort = (): void => {
     hooks.onCancellation();
-    process.kill();
   };
+  if (hooks.cancellationSignal?.aborted === true) {
+    hooks.onCancellation();
+  }
   hooks.cancellationSignal?.addEventListener("abort", abort, { once: true });
 
   let stderr: string;

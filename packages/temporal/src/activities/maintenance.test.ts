@@ -90,7 +90,7 @@ describe("maintenance subprocess runner", () => {
     let cancellations = 0;
     const command: MaintenanceCommand = {
       kind: "buildkite-uv-cache-prune",
-      command: ["sh", "-c", "sleep 60"],
+      command: ["sleep", "60"],
       cwd: "/tmp",
       env: {},
       secretValues: [],
