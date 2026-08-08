@@ -1264,7 +1264,9 @@ steps:
       # Site syncs push to SeaweedFS S3 — same credential mapping as the
       # tofu steps (the secret exposes SEAWEEDFS_*, the AWS CLI wants AWS_*).
       export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
-      bun --no-install packages/homelab/scripts/wait-for-matomo.ts
+      if $$site_sjer || $$site_resume || $$site_webring || $$site_better_skill_capped; then
+        bun --no-install packages/homelab/scripts/wait-for-matomo.ts
+      fi
       if $$site_sjer; then
         buildkite-agent artifact download "packages/sjer.red/dist/**/*" . --step playwright-e2e-main
         buildkite-agent artifact download "packages/sjer.red/dist/*" . --step playwright-e2e-main
