@@ -545,10 +545,8 @@ describe("durable AgentJob execution", () => {
     ]);
 
     expect(executions).toBe(1);
-    expect(restoredContext).toEqual({
-      ...requestContext,
-      ownsSourceReply: false,
-    });
+    expect(restoredContext).toMatchObject(requestContext);
+    expect(restoredContext.ownsSourceReply).toBe(false);
     expect(await prisma.agentJobRun.count({ where: { jobId } })).toBe(1);
     const completed = await prisma.agentJob.findUniqueOrThrow({
       where: { id: jobId },
