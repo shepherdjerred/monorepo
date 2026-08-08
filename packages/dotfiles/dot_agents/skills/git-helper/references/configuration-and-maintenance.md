@@ -35,7 +35,17 @@ Never embed a token in a remote URL or persist one in a generated config file.
 
 ## References
 
-The current `git refs` command provides consolidated ref operations such as list and exists. Use `git update-ref` for atomic scripted ref changes, including transactions. Do not edit files under `.git/refs` directly.
+`git refs` provides consolidated ref operations such as list and exists in Git 2.52 or newer. Gate its use by the installed Git version; on older installations, use portable `git for-each-ref` to list refs and `git update-ref` for atomic scripted ref changes, including transactions. Do not edit files under `.git/refs` directly.
+
+```bash
+if git version | awk '{ split($3, version, "."); exit !(version[1] > 2 || (version[1] == 2 && version[2] >= 52)) }'; then
+  git refs list
+else
+  git for-each-ref
+fi
+```
+
+Use `git update-ref` for atomic scripted ref changes on all supported Git versions.
 
 ## Maintenance
 
