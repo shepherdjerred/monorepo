@@ -7,7 +7,7 @@ import {
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data";
 import { getErrorMessage } from "#src/utils/errors.ts";
-import { sendDM } from "#src/discord/utils/dm.ts";
+import { sendDM, type DmStatus } from "#src/discord/utils/dm.ts";
 import { getFeedbackUrl } from "#src/discord/utils/feedback.ts";
 import type { PermissionNotifyStage } from "#src/database/guild-permission-errors.ts";
 import {
@@ -363,11 +363,18 @@ export async function notifyServerOwnerAboutPermissionError(options: {
     recipientTag: ownerTag,
   });
 
-  const metricStatus = {
+  // Typed as a full Record so a new DmStatus is a compile error here rather
+  // than an undefined metric label. The budget statuses are unreachable on this
+  // path — permission errors are core functionality and are never budgeted —
+  // but they still need a defined mapping.
+  const metricStatusByDmStatus: Record<DmStatus, string> = {
     sent: "success",
     dm_disabled: "dm_disabled",
     failed: "dm_failed",
-  }[status];
+    budget_exhausted: "skipped",
+    deferred: "skipped",
+  };
+  const metricStatus = metricStatusByDmStatus[status];
   discordOwnerNotificationsTotal.inc({
     guild_id: serverId,
     status: metricStatus,

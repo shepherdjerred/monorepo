@@ -433,9 +433,23 @@ model GuildInstall {
   addedByDiscordId  String // Installer (from audit log), fallback to ownerId
   memberCount       Int
   installedAt       DateTime
-  outreach3dSentAt  DateTime? // null = not yet sent
-  outreach14dSentAt DateTime? // null = not yet sent
-  outreach30dSentAt DateTime? // 30-day "still not configured" nudge; null = not yet sent
+  // Legacy one-shot markers, kept for one release so a rollback can still read
+  // them. `outreachStage` is the source of truth; these are no longer written.
+  outreach3dSentAt  DateTime?
+  outreach14dSentAt DateTime?
+  outreach30dSentAt DateTime?
+
+  // Non-core messages actually DELIVERED to this guild's installer, 0..3.
+  //
+  // Counting deliveries rather than attempts is the whole fix: the old columns
+  // were stamped whether or not anything was sent, which permanently burned 33
+  // of 37 guilds out of the 14-day feedback ask without ever messaging them.
+  outreachStage       Int       @default(0)
+  lastOutreachAt      DateTime?
+  // Set once a feedback ask has been delivered, so we never ask twice.
+  feedbackRequestedAt DateTime?
+  // Set once the one-time email nudge has been sent (see the email channel).
+  emailNudgeSentAt    DateTime?
 
   // Set when guildDelete confirms a removal; cleared on the next install.
   // This is the ONLY signal that distinguishes a genuine re-install (which
