@@ -18,9 +18,9 @@ operations that cannot be performed by repository verification.
 
 - [ ] Confirm ArgoCD syncs the Tracker Tracker application and the Tailscale
       endpoint is healthy.
-- [ ] Populate the untracked `.env.tracker-tracker` with 1Password references
-      and run the idempotent bootstrap against qBittorrent and all three
-      trackers.
+- [ ] Populate the required fields in the `tracker-tracker-secrets` 1Password
+      item and run the idempotent bootstrap using
+      `packages/homelab/tracker-tracker.env.example`.
 - [ ] Confirm real cookies and passwords are absent from Git, manifests, and
       command output during the live bootstrap/export workflow.
 

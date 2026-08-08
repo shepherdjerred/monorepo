@@ -2,16 +2,26 @@
 
 ## Tracker Tracker operator commands
 
-Use the untracked `.env.tracker-tracker` file with `op run` to bootstrap the
-private Tracker Tracker deployment or export its collected data. The env file
-contains the app login, qBittorrent credentials, and each tracker’s cookie,
-User-Agent, username, and base URL; never commit it.
+The Tracker Tracker Deployment receives only runtime/database configuration from
+the `tracker-tracker-secrets` 1Password item. Tracker and qBittorrent
+credentials are bootstrap inputs for Tracker Tracker's authenticated API, not
+pod environment variables. Use the checked-in `tracker-tracker.env.example`,
+which contains only `op://` references and public URLs:
 
 ```bash
 cd packages/homelab
-op run --env-file ../../.env.tracker-tracker -- bun run tracker-tracker:bootstrap
-op run --env-file ../../.env.tracker-tracker -- bun run tracker-tracker:export
+op run --env-file tracker-tracker.env.example -- bun run tracker-tracker:bootstrap
+op run --env-file tracker-tracker.env.example -- bun run tracker-tracker:export
 ```
+
+The dedicated 1Password item must provide the app login plus each tracker's
+cookies, User-Agent, and username. The template reuses the existing
+qBittorrent item's `username` and `password` fields. TOTP is entered
+interactively when requested and is never logged. Required custom fields are
+`TRACKER_TRACKER_USERNAME`, `TRACKER_TRACKER_PASSWORD`, and the corresponding
+`PRIVATEHD_*`, `AVISTAZ_*`, and `ANIMEZ_*` `USERNAME`, `COOKIES`, and
+`USER_AGENT` fields; the built-in `password` field is the Kubernetes
+`SESSION_SECRET`.
 
 This is a Kubernetes homelab infrastructure monorepo using CDK8s for infrastructure-as-code.
 
