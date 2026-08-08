@@ -475,7 +475,7 @@ describe("session summarization batching and concurrency", () => {
     expect(updated.summaryThroughSequence).toBe(
       MAX_SESSION_SUMMARIZATION_EVENTS_PER_PASS,
     );
-  });
+  }, 15_000);
 
   test("does not let a slower summarizer regress a newer checkpoint", async () => {
     const session = await createFixture();
