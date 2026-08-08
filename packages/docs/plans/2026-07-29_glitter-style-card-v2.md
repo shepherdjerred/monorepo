@@ -260,23 +260,3 @@ verifiable evidence`, an earlier-attempt-has-evidence case still completes, and
   40k ceiling when the provider reports `finish_reason=length`. The preflight
   estimate and budget authorization use the actual base/retry caps. This is a
   probe for the observed `gpt-5.6-sol` reasoning-token drift.
-
-## Session Log — 2026-08-08
-
-### Done
-
-- Updated `packages/temporal/src/activities/glitter-context-refresh-style-generation.ts`
-  so the cached synthesis request identity includes the 40k truncation-retry
-  ceiling as well as the initial 28k completion-token cap.
-- Persisted the billable truncated attempt as its own artifact and budget entry
-  before issuing the distinct 40k retry artifact.
-- Updated the preflight estimate to include both calls when truncation occurs.
-
-### Remaining
-
-- Re-run focused Temporal verification and obtain a current-head Codex review.
-
-### Caveats
-
-- Worktree setup could not rebuild mise shims because the sandbox lacks
-  permission to write the shared mise cache and shim directories.
