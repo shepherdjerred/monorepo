@@ -1,4 +1,4 @@
-# Create a task through the FAB + Quick Add flow and see it in the Today list.
+# Create a task through the contextual quick-capture FAB and see it in Today.
 appId: org.reactjs.native.example.TasksForObsidian
 ---
 - runFlow: 00-setup.yaml

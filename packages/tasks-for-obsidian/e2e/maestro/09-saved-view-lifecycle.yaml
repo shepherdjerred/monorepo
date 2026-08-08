@@ -1,0 +1,76 @@
+# Create, rename, and delete a device-local saved view through Browse.
+appId: org.reactjs.native.example.TasksForObsidian
+---
+- runFlow: 00-setup.yaml
+- tapOn:
+    id: "tab-browse"
+- scrollUntilVisible:
+    element:
+      id: "create-saved-view"
+    direction: DOWN
+    timeout: 15000
+    speed: 40
+    visibilityPercentage: 90
+- tapOn:
+    id: "create-saved-view"
+- extendedWaitUntil:
+    visible:
+      id: "saved-view-name"
+    timeout: 10000
+- tapOn:
+    id: "saved-view-name"
+- inputText: "Maestro saved view"
+- tapOn:
+    id: "saved-view-editor-save"
+- extendedWaitUntil:
+    visible:
+      id: "saved-view-maestro-saved-view"
+    timeout: 15000
+# Resolve the row before invoking its native menu so virtualized-section
+# position never becomes an implicit assumption.
+- scrollUntilVisible:
+    element:
+      id: "saved-view-menu-maestro-saved-view"
+    direction: UP
+    timeout: 15000
+    speed: 40
+    visibilityPercentage: 90
+- tapOn:
+    id: "saved-view-menu-maestro-saved-view"
+- tapOn:
+    text: "Edit View"
+- extendedWaitUntil:
+    visible:
+      id: "saved-view-name"
+    timeout: 10000
+- tapOn:
+    id: "saved-view-name"
+- eraseText: 100
+- inputText: "Maestro renamed view"
+- tapOn:
+    id: "saved-view-editor-save"
+- extendedWaitUntil:
+    visible:
+      id: "saved-view-maestro-saved-view"
+    timeout: 15000
+- scrollUntilVisible:
+    element:
+      id: "saved-view-menu-maestro-saved-view"
+    direction: UP
+    timeout: 15000
+    speed: 40
+    visibilityPercentage: 90
+- tapOn:
+    id: "saved-view-menu-maestro-saved-view"
+- tapOn:
+    text: "Delete View"
+- extendedWaitUntil:
+    visible:
+      text: "Delete “Maestro renamed view”?"
+    timeout: 10000
+- tapOn:
+    text: "Delete"
+- extendedWaitUntil:
+    notVisible:
+      id: "saved-view-maestro-saved-view"
+    timeout: 15000

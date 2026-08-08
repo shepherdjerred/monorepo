@@ -5,19 +5,41 @@
 appId: org.reactjs.native.example.TasksForObsidian
 ---
 - runFlow: 00-setup.yaml
-- tapOn:
-    text: ".*Water plants.*"
-- extendedWaitUntil:
-    visible:
-      id: "task-detail-toggle"
-    timeout: 10000
+- retry:
+    maxRetries: 2
+    commands:
+      - tapOn:
+          id: "task-row-TaskNotes/water-plants-4d5e6f7a.md"
+          retryTapIfNoChange: true
+      - extendedWaitUntil:
+          visible:
+            id: "task-detail-toggle"
+          timeout: 5000
 # Sanity: this really is the recurring task.
-- assertVisible: "FREQ=DAILY"
+- assertVisible:
+    id: "task-detail-recurrence-menu"
+# Do not use retryTapIfNoChange here: a recurring completion advances to the
+# next occurrence, so this control intentionally returns to its Open state.
+# The toast and durable vault assertion are the independent completion signal.
 - tapOn:
     id: "task-detail-toggle"
-# Recurring semantics: the task itself must stay Open (not flip to Done).
+# Recurring semantics: the represented occurrence is recorded as complete,
+# then the same task advances to its next open occurrence. The suite's vault
+# assertion verifies the completed instance persisted; the toast proves this
+# tap completed rather than merely observing the already-open next instance.
 - extendedWaitUntil:
     visible:
-      text: "Open"
+      id: "undo-toast-message"
+      text: "Completed.*"
     timeout: 10000
-- assertVisible: ".*Water plants.*"
+- assertVisible:
+    id: "task-detail-toggle"
+    text: "Open"
+- assertVisible:
+    id: "task-detail-title-input"
+- tapOn:
+    id: "task-detail-cancel"
+- extendedWaitUntil:
+    visible:
+      text: "^Today$"
+    timeout: 10000

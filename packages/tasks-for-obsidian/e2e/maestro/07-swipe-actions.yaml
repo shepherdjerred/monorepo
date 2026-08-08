@@ -1,5 +1,5 @@
 # Exercise both task-row swipe actions after the Gesture Handler 3 upgrade.
-# A left swipe completes a task; a right swipe deletes a task.
+# A right swipe reveals Complete; a left swipe reveals Delete.
 appId: org.reactjs.native.example.TasksForObsidian
 ---
 - runFlow: 00-setup.yaml
@@ -16,15 +16,15 @@ appId: org.reactjs.native.example.TasksForObsidian
     id: "quick-add-submit"
 - extendedWaitUntil:
     visible:
-      text: ".*Swipe complete task.*"
+      id: "task-row-TaskNotes/Swipe complete task.md"
     timeout: 20000
 - swipe:
     from:
-      text: ".*Swipe complete task.*"
-    direction: LEFT
+      id: "task-row-TaskNotes/Swipe complete task.md"
+    direction: RIGHT
 - extendedWaitUntil:
     notVisible:
-      text: ".*Swipe complete task.*"
+      id: "task-row-TaskNotes/Swipe complete task.md"
     timeout: 15000
 - tapOn:
     id: "fab-add-task"
@@ -39,12 +39,12 @@ appId: org.reactjs.native.example.TasksForObsidian
     id: "quick-add-submit"
 - extendedWaitUntil:
     visible:
-      text: ".*Swipe delete task.*"
+      id: "task-row-TaskNotes/Swipe delete task.md"
     timeout: 20000
 - swipe:
     from:
-      text: ".*Swipe delete task.*"
-    direction: RIGHT
+      id: "task-row-TaskNotes/Swipe delete task.md"
+    direction: LEFT
 - extendedWaitUntil:
     visible:
       text: "Delete Task"
@@ -53,5 +53,5 @@ appId: org.reactjs.native.example.TasksForObsidian
     text: "Delete"
 - extendedWaitUntil:
     notVisible:
-      text: ".*Swipe delete task.*"
+      id: "task-row-TaskNotes/Swipe delete task.md"
     timeout: 15000
