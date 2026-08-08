@@ -183,7 +183,7 @@ describe("buildLoadingScreenData layout variants", () => {
       throw new Error("Real Classic ARAM Mayhem fixture has no tracked PUUID");
     }
 
-    expect(Number(gameInfo.gameId)).toBe(3_267_199_656);
+    expect(gameInfo.gameId).toBe(3_267_199_656);
     expect(gameInfo.gameQueueConfigId).toBe(2450);
     expect(gameInfo.gameMode).toBe("KIWI_JADE");
     expect(gameInfo.mapId).toBe(12);
@@ -212,7 +212,9 @@ describe("buildLoadingScreenData layout variants", () => {
     expect("bans" in parsed).toBe(false);
     expect("isRanked" in parsed).toBe(false);
   });
+});
 
+describe("buildLoadingScreenData standard and custom layouts", () => {
   test("queue 2400 (ARAM: Mayhem) with Rek'Sai resolves without throwing", async () => {
     // Start from the ranked-flex payload and mutate just enough to simulate
     // an ARAM Mayhem game with Rek'Sai in it — the two previously-failing

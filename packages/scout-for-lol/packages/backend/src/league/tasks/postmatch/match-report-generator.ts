@@ -427,7 +427,7 @@ export async function generateMatchReport(
       if (result === undefined) {
         return undefined;
       }
-      reportsGeneratedTotal.inc({ queue_type: String(queueType) });
+      reportsGeneratedTotal.inc({ queue_type: z.string().parse(queueType) });
       return result;
     }
 

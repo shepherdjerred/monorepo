@@ -8,9 +8,9 @@ import type {
 } from "@scout-for-lol/data";
 import {
   ClassicMatchSchema,
+  ClassicQueueTypeSchema,
   findParticipant,
   getOutcome,
-  isClassicQueueType,
   mapIdToName,
   parseTeam,
   resolveClassicChampionKey,
@@ -93,11 +93,13 @@ export function buildClassicMatch(
     matchData.info.gameMode,
     matchData.info.gameType,
   );
-  if (!isClassicQueueType(queueType)) {
+  const classicQueueType = ClassicQueueTypeSchema.safeParse(queueType);
+  if (!classicQueueType.success) {
     throw new Error(
       `Classic renderer received non-Classic queue ${queueType ?? "unknown"}`,
     );
   }
+  const resolvedQueueType = classicQueueType.data;
 
   const blue = matchData.info.participants
     .filter((participant) => requireTeam(participant) === "blue")
@@ -137,7 +139,7 @@ export function buildClassicMatch(
               .length,
           },
         );
-        participantMismatchTotal.inc({ queue_type: queueType });
+        participantMismatchTotal.inc({ queue_type: resolvedQueueType });
         return;
       }
       return {
@@ -154,21 +156,21 @@ export function buildClassicMatch(
   }
 
   const mapName =
-    queueType === "classic aram mayhem" &&
+    resolvedQueueType === "classic aram mayhem" &&
     (matchData.info.mapId === 12 || matchData.info.mapId === 35)
       ? "The Bandlewood"
       : mapIdToName(matchData.info.mapId);
   const expectedMapName =
-    queueType === "classic" ? "Classic Rift" : "The Bandlewood";
+    resolvedQueueType === "classic" ? "Classic Rift" : "The Bandlewood";
   if (mapName !== expectedMapName) {
     throw new Error(
-      `${queueType} queue used unexpected map ${mapName} (${matchData.info.mapId.toString()}); expected ${expectedMapName}`,
+      `${resolvedQueueType} queue used unexpected map ${mapName} (${matchData.info.mapId.toString()}); expected ${expectedMapName}`,
     );
   }
 
   return ClassicMatchSchema.parse({
     durationInSeconds: matchData.info.gameDuration,
-    queueType,
+    queueType: resolvedQueueType,
     mapName,
     players,
     teams: { blue, red },

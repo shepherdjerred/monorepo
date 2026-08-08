@@ -28,19 +28,14 @@ export const QueueTypeSchema = z.enum([
 const ARENA_QUEUE_ID = 1700;
 const ARENA_GAME_MODE = "CHERRY";
 
-export type ClassicQueueType = Extract<
-  QueueType,
-  "classic" | "classic aram mayhem"
->;
-const CLASSIC_QUEUE_TYPES: readonly ClassicQueueType[] = [
+export const ClassicQueueTypeSchema = z.enum([
   "classic",
   "classic aram mayhem",
-];
+]);
+export type ClassicQueueType = z.infer<typeof ClassicQueueTypeSchema>;
 
-export function isClassicQueueType(
-  queueType: QueueType | undefined,
-): queueType is ClassicQueueType {
-  return CLASSIC_QUEUE_TYPES.some((candidate) => candidate === queueType);
+export function isClassicQueueType(queueType: QueueType | undefined): boolean {
+  return ClassicQueueTypeSchema.safeParse(queueType).success;
 }
 
 // Most queue IDs come from Riot's queues.json. Some are absent from that file

@@ -14,7 +14,7 @@ const fixtureUrl = new URL(
   import.meta.url,
 );
 const realS3FixtureUrl = new URL(
-  "./testdata/match-classic-aram-mayhem-s3.json",
+  "testdata/match-classic-aram-mayhem-s3.json",
   import.meta.url,
 );
 const PNG_SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10];
@@ -272,7 +272,9 @@ describe("buildClassicMatch", () => {
     expect(svg).toContain('width="1920" height="1200"');
     expect([...png.subarray(0, 8)]).toEqual(PNG_SIGNATURE);
   });
+});
 
+describe("buildClassicMatch roster handling", () => {
   test("groups full rosters by team ID and keeps the narrow Classic model", async () => {
     const rawMatch = await classicMatchFixture();
     const trackedParticipant = rawMatch.info.participants[6];
@@ -416,7 +418,9 @@ describe("buildClassicMatch", () => {
 
     expect(buildClassicMatch(mismatch, [missingPlayer])).toBeUndefined();
   });
+});
 
+describe("generateMatchReport Classic routing", () => {
   test("routes before rank, timeline, history, and AI dependencies", async () => {
     const rawMatch = await classicMatchFixture();
     const trackedParticipant = rawMatch.info.participants[0];
