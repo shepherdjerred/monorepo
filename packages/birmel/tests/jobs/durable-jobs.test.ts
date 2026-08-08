@@ -26,6 +26,7 @@ import {
   runAgentJobById,
   runAgentJobsJob,
   setAgentJobRuntimeDependencies,
+  waitForActiveAgentJobs,
 } from "@shepherdjerred/birmel/scheduler/jobs/agent-jobs.ts";
 
 const ACTOR_USER_ID = "186665676134547461";
@@ -36,6 +37,12 @@ const previousTrustedUserIds = Bun.env["TRUSTED_USER_IDS"];
 const previousSchedulerEnabled = Bun.env["SCHEDULER_ENABLED"];
 const previousSchedulerShutdownTimeoutMs =
   Bun.env["SCHEDULER_SHUTDOWN_TIMEOUT_MS"];
+const previousSchedulerMaxTasksPerGuild =
+  Bun.env["SCHEDULER_MAX_TASKS_PER_GUILD"];
+const previousSchedulerMaxRecurringTasks =
+  Bun.env["SCHEDULER_MAX_RECURRING_TASKS"];
+const previousSchedulerMaxConcurrentJobs =
+  Bun.env["SCHEDULER_MAX_CONCURRENT_JOBS"];
 
 const requestContext: RequestContext = {
   guildId: GUILD_ID,
@@ -103,11 +110,30 @@ async function executeManageJob(
   });
 }
 
+async function waitForJobLastStatus(jobId: string, expectedStatus: string) {
+  const deadline = Date.now() + 1000;
+  while (Date.now() < deadline) {
+    const job = await prisma.agentJob.findUniqueOrThrow({
+      where: { id: jobId },
+    });
+    if (job.lastStatus === expectedStatus) {
+      return job;
+    }
+    await Bun.sleep(5);
+  }
+  throw new Error(
+    `Job ${jobId} did not reach lastStatus ${expectedStatus} within 1000ms`,
+  );
+}
+
 beforeAll(() => {
   Bun.env["DISCORD_CLIENT_ID"] = "123456789012345678";
   Bun.env["TRUSTED_USER_IDS"] = JSON.stringify([ACTOR_USER_ID]);
   Bun.env["SCHEDULER_ENABLED"] = "true";
   Bun.env["SCHEDULER_SHUTDOWN_TIMEOUT_MS"] = "1000";
+  Bun.env["SCHEDULER_MAX_TASKS_PER_GUILD"] = "100";
+  Bun.env["SCHEDULER_MAX_RECURRING_TASKS"] = "50";
+  Bun.env["SCHEDULER_MAX_CONCURRENT_JOBS"] = "5";
   resetConfig();
 });
 
@@ -141,7 +167,168 @@ afterAll(() => {
     Bun.env["SCHEDULER_SHUTDOWN_TIMEOUT_MS"] =
       previousSchedulerShutdownTimeoutMs;
   }
+  if (previousSchedulerMaxTasksPerGuild == null) {
+    delete Bun.env["SCHEDULER_MAX_TASKS_PER_GUILD"];
+  } else {
+    Bun.env["SCHEDULER_MAX_TASKS_PER_GUILD"] =
+      previousSchedulerMaxTasksPerGuild;
+  }
+  if (previousSchedulerMaxRecurringTasks == null) {
+    delete Bun.env["SCHEDULER_MAX_RECURRING_TASKS"];
+  } else {
+    Bun.env["SCHEDULER_MAX_RECURRING_TASKS"] =
+      previousSchedulerMaxRecurringTasks;
+  }
+  if (previousSchedulerMaxConcurrentJobs == null) {
+    delete Bun.env["SCHEDULER_MAX_CONCURRENT_JOBS"];
+  } else {
+    Bun.env["SCHEDULER_MAX_CONCURRENT_JOBS"] =
+      previousSchedulerMaxConcurrentJobs;
+  }
   resetConfig();
+});
+
+describe("durable AgentJob creation limits", () => {
+  test("enforces the active per-guild job cap during create", async () => {
+    Bun.env["SCHEDULER_MAX_TASKS_PER_GUILD"] = "2";
+    resetConfig();
+    try {
+      const scheduleValue = new Date(Date.now() + 60_000).toISOString();
+      const results = await Promise.all([
+        executeManageJob({
+          action: "create",
+          scheduleKind: "at",
+          scheduleValue,
+          payload: { kind: "message", message: "first" },
+        }),
+        executeManageJob({
+          action: "create",
+          scheduleKind: "at",
+          scheduleValue,
+          payload: { kind: "message", message: "second" },
+        }),
+        executeManageJob({
+          action: "create",
+          scheduleKind: "at",
+          scheduleValue,
+          payload: { kind: "message", message: "over the cap" },
+        }),
+      ]);
+      expect(results.filter((result) => result.success)).toHaveLength(2);
+      const rejected = results.find((result) => !result.success);
+      if (rejected == null) {
+        throw new Error("Expected one create to be rejected by the guild cap");
+      }
+      expect(rejected.success).toBe(false);
+      expect(rejected.message).toContain("Guild active job limit of 2 reached");
+      expect(
+        await prisma.agentJob.count({ where: { guildId: GUILD_ID } }),
+      ).toBe(2);
+    } finally {
+      Bun.env["SCHEDULER_MAX_TASKS_PER_GUILD"] = "100";
+      resetConfig();
+    }
+  });
+
+  test("enforces the active recurring job cap during create", async () => {
+    Bun.env["SCHEDULER_MAX_RECURRING_TASKS"] = "1";
+    resetConfig();
+    try {
+      const first = await executeManageJob({
+        action: "create",
+        scheduleKind: "every",
+        scheduleValue: "1 hour",
+        payload: { kind: "message", message: "first recurring" },
+      });
+      expect(first.success).toBe(true);
+
+      const rejected = await executeManageJob({
+        action: "create",
+        scheduleKind: "every",
+        scheduleValue: "2 hours",
+        payload: { kind: "message", message: "over the recurring cap" },
+      });
+      expect(rejected.success).toBe(false);
+      expect(rejected.message).toContain(
+        "Active recurring job limit of 1 reached",
+      );
+      expect(
+        await prisma.agentJob.count({
+          where: { scheduleKind: { in: ["every", "cron"] } },
+        }),
+      ).toBe(1);
+    } finally {
+      Bun.env["SCHEDULER_MAX_RECURRING_TASKS"] = "50";
+      resetConfig();
+    }
+  });
+
+  test("enforces the recurring cap when editing an active one-shot", async () => {
+    Bun.env["SCHEDULER_MAX_RECURRING_TASKS"] = "1";
+    resetConfig();
+    try {
+      const recurringJobId = await createDueJob({
+        payload: { kind: "message", message: "existing recurring" },
+        scheduleKind: "every",
+        scheduleValue: "1 hour",
+      });
+      expect(recurringJobId).toBeString();
+      const oneShotJobId = await createDueJob({
+        payload: { kind: "message", message: "candidate" },
+      });
+
+      const rejected = await executeManageJob({
+        action: "edit",
+        jobId: oneShotJobId,
+        scheduleKind: "every",
+        scheduleValue: "2 hours",
+      });
+
+      expect(rejected.success).toBe(false);
+      expect(rejected.message).toContain(
+        "Active recurring job limit of 1 reached",
+      );
+      const unchanged = await prisma.agentJob.findUniqueOrThrow({
+        where: { id: oneShotJobId },
+      });
+      expect(unchanged.scheduleKind).toBe("at");
+    } finally {
+      Bun.env["SCHEDULER_MAX_RECURRING_TASKS"] = "50";
+      resetConfig();
+    }
+  });
+
+  test("enforces the guild cap when run-now reactivates a terminal job", async () => {
+    const terminalJobId = await createDueJob({
+      payload: { kind: "message", message: "terminal candidate" },
+    });
+    await prisma.agentJob.update({
+      where: { id: terminalJobId },
+      data: { status: "completed", nextRunAt: null },
+    });
+    Bun.env["SCHEDULER_MAX_TASKS_PER_GUILD"] = "1";
+    resetConfig();
+    try {
+      await createDueJob({
+        payload: { kind: "message", message: "active slot holder" },
+      });
+
+      const rejected = await executeManageJob({
+        action: "run-now",
+        jobId: terminalJobId,
+      });
+
+      expect(rejected.success).toBe(false);
+      expect(rejected.message).toContain("Guild active job limit of 1 reached");
+      const unchanged = await prisma.agentJob.findUniqueOrThrow({
+        where: { id: terminalJobId },
+      });
+      expect(unchanged.status).toBe("completed");
+    } finally {
+      Bun.env["SCHEDULER_MAX_TASKS_PER_GUILD"] = "100";
+      resetConfig();
+    }
+  });
 });
 
 describe("durable AgentJob execution", () => {
@@ -265,12 +452,18 @@ describe("durable AgentJob execution", () => {
     expect(await prisma.agentJobRun.count({ where: { jobId } })).toBe(2);
   });
 
-  test("times out an execution and records the failure", async () => {
+  test("keeps a timed-out execution fenced and records late success", async () => {
+    let executions = 0;
+    let releaseExecution: (() => void) | undefined;
+    const executionGate = new Promise<void>((resolve) => {
+      releaseExecution = resolve;
+    });
     setAgentJobRuntimeDependencies({
-      executeTool: async () =>
-        await new Promise<never>(() => {
-          // Intentionally unresolved so the durable job timeout wins.
-        }),
+      executeTool: async () => {
+        executions += 1;
+        await executionGate;
+        return { success: true };
+      },
     });
     const jobId = await createDueJob({
       payload: { kind: "tool", toolId: "test-deterministic-tool" },
@@ -278,14 +471,72 @@ describe("durable AgentJob execution", () => {
       timeoutMs: 20,
     });
 
-    await runAgentJobById(jobId);
+    const execution = runAgentJobById(jobId);
 
-    const job = await prisma.agentJob.findUniqueOrThrow({
-      where: { id: jobId },
-    });
-    expect(job.status).toBe("failed");
+    let job = await waitForJobLastStatus(jobId, "timed_out");
+    expect(job.status).toBe("running");
+    expect(job.lastStatus).toBe("timed_out");
     expect(job.lastError).toContain("timed out after 20ms");
+    expect(job.claimedBy).not.toBeNull();
+    expect(job.leaseExpiresAt?.getTime()).toBeGreaterThan(Date.now());
+
+    await Promise.all([runAgentJobById(jobId), runAgentJobsJob()]);
+    expect(executions).toBe(1);
+    expect(await prisma.agentJobRun.count({ where: { jobId } })).toBe(1);
+
+    releaseExecution?.();
+    await execution;
+    expect(await waitForActiveAgentJobs(1000)).toBe(true);
+    job = await prisma.agentJob.findUniqueOrThrow({ where: { id: jobId } });
+    expect(job.status).toBe("completed");
+    expect(job.lastStatus).toBe("success");
+    expect(job.claimedBy).toBeNull();
   });
+
+  test.each(["rejection", "tool failure"])(
+    "records late %s through normal failure policy",
+    async (failureKind) => {
+      let executions = 0;
+      let releaseExecution: (() => void) | undefined;
+      const executionGate = new Promise<void>((resolve) => {
+        releaseExecution = resolve;
+      });
+      setAgentJobRuntimeDependencies({
+        executeTool: async () => {
+          executions += 1;
+          await executionGate;
+          if (failureKind === "rejection") {
+            throw new Error("late executor rejection");
+          }
+          return { success: false };
+        },
+      });
+      const jobId = await createDueJob({
+        payload: { kind: "tool", toolId: "test-deterministic-tool" },
+        maxAttempts: 1,
+        timeoutMs: 20,
+      });
+
+      const execution = runAgentJobById(jobId);
+      const timedOut = await waitForJobLastStatus(jobId, "timed_out");
+      expect(timedOut.status).toBe("running");
+      expect(timedOut.lastStatus).toBe("timed_out");
+
+      releaseExecution?.();
+      await execution;
+      expect(await waitForActiveAgentJobs(1000)).toBe(true);
+      const failed = await prisma.agentJob.findUniqueOrThrow({
+        where: { id: jobId },
+      });
+      expect(failed.status).toBe("failed");
+      expect(failed.lastError).toContain(
+        failureKind === "rejection"
+          ? "late executor rejection"
+          : "Tool reported failure after job timeout",
+      );
+      expect(executions).toBe(1);
+    },
+  );
 });
 
 describe("durable job recovery and scheduling", () => {
@@ -402,6 +653,112 @@ describe("durable job recovery and scheduling", () => {
 
     expect(executions).toBe(1);
     expect(await prisma.agentJobRun.count({ where: { jobId } })).toBe(1);
+  });
+});
+
+describe("scheduler AgentJob concurrency and shutdown", () => {
+  test("limits each scheduler tick to configured job concurrency", async () => {
+    Bun.env["SCHEDULER_MAX_CONCURRENT_JOBS"] = "2";
+    resetConfig();
+    let activeExecutions = 0;
+    let maximumConcurrency = 0;
+    let executionCount = 0;
+    let releaseExecutions: (() => void) | undefined;
+    let twoExecutionsStarted: (() => void) | undefined;
+    const releaseGate = new Promise<void>((resolve) => {
+      releaseExecutions = resolve;
+    });
+    const startedGate = new Promise<void>((resolve) => {
+      twoExecutionsStarted = resolve;
+    });
+    setAgentJobRuntimeDependencies({
+      executeTool: async () => {
+        executionCount += 1;
+        activeExecutions += 1;
+        maximumConcurrency = Math.max(maximumConcurrency, activeExecutions);
+        if (executionCount === 2) {
+          twoExecutionsStarted?.();
+        }
+        await releaseGate;
+        activeExecutions -= 1;
+        return { success: true };
+      },
+    });
+
+    try {
+      for (let index = 0; index < 5; index += 1) {
+        await createDueJob({
+          payload: {
+            kind: "tool",
+            toolId: `test-concurrency-${String(index)}`,
+          },
+        });
+      }
+
+      const tick = runAgentJobsJob();
+      await startedGate;
+      await Bun.sleep(20);
+      expect(executionCount).toBe(2);
+      expect(maximumConcurrency).toBe(2);
+      expect(await prisma.agentJobRun.count()).toBe(2);
+      releaseExecutions?.();
+      await tick;
+      expect(executionCount).toBe(5);
+      expect(maximumConcurrency).toBe(2);
+      expect(
+        await prisma.agentJob.count({
+          where: { status: "completed" },
+        }),
+      ).toBe(5);
+    } finally {
+      releaseExecutions?.();
+      Bun.env["SCHEDULER_MAX_CONCURRENT_JOBS"] = "5";
+      resetConfig();
+    }
+  });
+
+  test("keeps a timed-out execution inside its concurrency slot", async () => {
+    Bun.env["SCHEDULER_MAX_CONCURRENT_JOBS"] = "1";
+    resetConfig();
+    let executionCount = 0;
+    let releaseFirstExecution: (() => void) | undefined;
+    const firstExecutionGate = new Promise<void>((resolve) => {
+      releaseFirstExecution = resolve;
+    });
+    setAgentJobRuntimeDependencies({
+      executeTool: async () => {
+        executionCount += 1;
+        if (executionCount === 1) {
+          await firstExecutionGate;
+        }
+        return { success: true };
+      },
+    });
+
+    try {
+      const firstJobId = await createDueJob({
+        payload: { kind: "tool", toolId: "first-timeout" },
+        timeoutMs: 20,
+      });
+      await createDueJob({
+        payload: { kind: "tool", toolId: "second-waits" },
+      });
+
+      const tick = runAgentJobsJob();
+      await waitForJobLastStatus(firstJobId, "timed_out");
+      await Bun.sleep(20);
+      expect(executionCount).toBe(1);
+      expect(await waitForActiveAgentJobs(10)).toBe(false);
+
+      releaseFirstExecution?.();
+      await tick;
+      expect(executionCount).toBe(2);
+      expect(await waitForActiveAgentJobs(1000)).toBe(true);
+    } finally {
+      releaseFirstExecution?.();
+      Bun.env["SCHEDULER_MAX_CONCURRENT_JOBS"] = "5";
+      resetConfig();
+    }
   });
 
   test("stopScheduler awaits active job execution and exposes readiness", async () => {

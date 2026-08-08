@@ -12,8 +12,10 @@ let currentPinchtabTabId: string | null = null;
 
 async function pinchtabRequest(
   pathSuffix: string,
+  signal: AbortSignal,
   options: RequestInit = {},
 ): Promise<unknown> {
+  signal.throwIfAborted();
   const config = getConfig();
   const baseUrl = config.browser.pinchtabBaseUrl.replace(/\/$/, "");
   const headers = new Headers(options.headers);
@@ -29,6 +31,7 @@ async function pinchtabRequest(
   const response = await fetch(`${baseUrl}${pathSuffix}`, {
     ...options,
     headers,
+    signal,
   });
   if (!response.ok) {
     throw new Error(
@@ -52,8 +55,10 @@ function getStringField(value: unknown, field: string): string | null {
 }
 
 async function ensurePinchtabInstance(
-  profileOverride?: string,
+  profileOverride: string | undefined,
+  signal: AbortSignal,
 ): Promise<string> {
+  signal.throwIfAborted();
   if (currentPinchtabInstanceId != null) {
     return currentPinchtabInstanceId;
   }
@@ -61,6 +66,7 @@ async function ensurePinchtabInstance(
   const profile = profileOverride ?? config.browser.pinchtabProfile;
   const started = await pinchtabRequest(
     `/profiles/${encodeURIComponent(profile)}/start`,
+    signal,
     {
       method: "POST",
       body: JSON.stringify({
@@ -77,12 +83,13 @@ async function ensurePinchtabInstance(
   if (instanceId == null || instanceId.length === 0) {
     throw new Error("PinchTab start response did not include an instance ID");
   }
+  signal.throwIfAborted();
   currentPinchtabInstanceId = instanceId;
   return instanceId;
 }
 
-async function handleListProfiles(): Promise<BrowserResult> {
-  const raw = await pinchtabRequest("/profiles");
+async function handleListProfiles(signal: AbortSignal): Promise<BrowserResult> {
+  const raw = await pinchtabRequest("/profiles", signal);
   return {
     success: true,
     message: "PinchTab profiles listed",
@@ -90,8 +97,11 @@ async function handleListProfiles(): Promise<BrowserResult> {
   };
 }
 
-async function handleStart(ctx: BrowserContext): Promise<BrowserResult> {
-  const instanceId = await ensurePinchtabInstance(ctx.profile);
+async function handleStart(
+  ctx: BrowserContext,
+  signal: AbortSignal,
+): Promise<BrowserResult> {
+  const instanceId = await ensurePinchtabInstance(ctx.profile, signal);
   return {
     success: true,
     message: "PinchTab profile started",
@@ -99,11 +109,15 @@ async function handleStart(ctx: BrowserContext): Promise<BrowserResult> {
   };
 }
 
-async function handleTabs(ctx: BrowserContext): Promise<BrowserResult> {
+async function handleTabs(
+  ctx: BrowserContext,
+  signal: AbortSignal,
+): Promise<BrowserResult> {
   const instanceId =
-    ctx.instanceId ?? (await ensurePinchtabInstance(ctx.profile));
+    ctx.instanceId ?? (await ensurePinchtabInstance(ctx.profile, signal));
   const raw = await pinchtabRequest(
     `/instances/${encodeURIComponent(instanceId)}/tabs`,
+    signal,
   );
   return {
     success: true,
@@ -112,11 +126,15 @@ async function handleTabs(ctx: BrowserContext): Promise<BrowserResult> {
   };
 }
 
-async function handleOpen(ctx: BrowserContext): Promise<BrowserResult> {
+async function handleOpen(
+  ctx: BrowserContext,
+  signal: AbortSignal,
+): Promise<BrowserResult> {
   const instanceId =
-    ctx.instanceId ?? (await ensurePinchtabInstance(ctx.profile));
+    ctx.instanceId ?? (await ensurePinchtabInstance(ctx.profile, signal));
   const raw = await pinchtabRequest(
     `/instances/${encodeURIComponent(instanceId)}/tabs/open`,
+    signal,
     {
       method: "POST",
       body: JSON.stringify({ url: ctx.url ?? "about:blank" }),
@@ -126,6 +144,7 @@ async function handleOpen(ctx: BrowserContext): Promise<BrowserResult> {
   if (tabId == null || tabId.length === 0) {
     throw new Error("PinchTab open response did not include a tab ID");
   }
+  signal.throwIfAborted();
   currentPinchtabTabId = tabId;
   return {
     success: true,
@@ -134,20 +153,26 @@ async function handleOpen(ctx: BrowserContext): Promise<BrowserResult> {
   };
 }
 
-async function handleNavigate(ctx: BrowserContext): Promise<BrowserResult> {
+async function handleNavigate(
+  ctx: BrowserContext,
+  signal: AbortSignal,
+): Promise<BrowserResult> {
   const existingTabId = ctx.tabId ?? currentPinchtabTabId;
-  const openedTab = existingTabId == null ? await handleOpen(ctx) : null;
+  const openedTab =
+    existingTabId == null ? await handleOpen(ctx, signal) : null;
   const tabId = existingTabId ?? getStringField(openedTab?.data, "tabId");
   if (tabId == null || ctx.url == null || ctx.url.length === 0) {
     return { success: false, message: "url is required for navigate" };
   }
   const raw = await pinchtabRequest(
     `/tabs/${encodeURIComponent(tabId)}/navigate`,
+    signal,
     {
       method: "POST",
       body: JSON.stringify({ url: ctx.url }),
     },
   );
+  signal.throwIfAborted();
   currentPinchtabTabId = tabId;
   return {
     success: true,
@@ -156,7 +181,10 @@ async function handleNavigate(ctx: BrowserContext): Promise<BrowserResult> {
   };
 }
 
-async function handleText(ctx: BrowserContext): Promise<BrowserResult> {
+async function handleText(
+  ctx: BrowserContext,
+  signal: AbortSignal,
+): Promise<BrowserResult> {
   const tabId = ctx.tabId ?? currentPinchtabTabId;
   if (tabId == null) {
     return { success: false, message: "tabId is required" };
@@ -164,6 +192,7 @@ async function handleText(ctx: BrowserContext): Promise<BrowserResult> {
   const endpoint = ctx.action === "snapshot" ? "snapshot" : "text";
   const raw = await pinchtabRequest(
     `/tabs/${encodeURIComponent(tabId)}/${endpoint}`,
+    signal,
   );
   const text =
     typeof raw === "string" ? raw : (getStringField(raw, "text") ?? undefined);
@@ -179,13 +208,17 @@ async function handleText(ctx: BrowserContext): Promise<BrowserResult> {
   };
 }
 
-async function handleCookies(ctx: BrowserContext): Promise<BrowserResult> {
+async function handleCookies(
+  ctx: BrowserContext,
+  signal: AbortSignal,
+): Promise<BrowserResult> {
   const tabId = ctx.tabId ?? currentPinchtabTabId;
   if (tabId == null) {
     return { success: false, message: "tabId is required" };
   }
   const raw = await pinchtabRequest(
     `/tabs/${encodeURIComponent(tabId)}/cookies`,
+    signal,
   );
   return {
     success: true,
@@ -194,13 +227,17 @@ async function handleCookies(ctx: BrowserContext): Promise<BrowserResult> {
   };
 }
 
-async function handlePageAction(ctx: BrowserContext): Promise<BrowserResult> {
+async function handlePageAction(
+  ctx: BrowserContext,
+  signal: AbortSignal,
+): Promise<BrowserResult> {
   const tabId = ctx.tabId ?? currentPinchtabTabId;
   if (tabId == null) {
     return { success: false, message: "tabId is required" };
   }
   const raw = await pinchtabRequest(
     `/tabs/${encodeURIComponent(tabId)}/action`,
+    signal,
     {
       method: "POST",
       body: JSON.stringify({
@@ -219,7 +256,10 @@ async function handlePageAction(ctx: BrowserContext): Promise<BrowserResult> {
   };
 }
 
-async function handleScreenshot(ctx: BrowserContext): Promise<BrowserResult> {
+async function handleScreenshot(
+  ctx: BrowserContext,
+  signal: AbortSignal,
+): Promise<BrowserResult> {
   const tabId = ctx.tabId ?? currentPinchtabTabId;
   if (tabId == null) {
     return { success: false, message: "tabId is required" };
@@ -235,7 +275,7 @@ async function handleScreenshot(ctx: BrowserContext): Promise<BrowserResult> {
   }
   const response = await fetch(
     `${baseUrl}/tabs/${encodeURIComponent(tabId)}/screenshot`,
-    { headers },
+    { headers, signal },
   );
   if (!response.ok) {
     throw new Error(
@@ -248,8 +288,11 @@ async function handleScreenshot(ctx: BrowserContext): Promise<BrowserResult> {
     Bun.env["BIRMEL_SCREENSHOTS_DIR"] ??
     path.join(import.meta.dir, "..", "..", "..", "..", "data", "screenshots");
   const filepath = path.join(screenshotsDir, filename);
+  signal.throwIfAborted();
   await mkdir(path.dirname(filepath), { recursive: true });
-  await writeFile(filepath, Buffer.from(await response.arrayBuffer()));
+  await writeFile(filepath, Buffer.from(await response.arrayBuffer()), {
+    signal,
+  });
   return {
     success: true,
     message: "Screenshot saved",
@@ -257,13 +300,17 @@ async function handleScreenshot(ctx: BrowserContext): Promise<BrowserResult> {
   };
 }
 
-async function handleClose(ctx: BrowserContext): Promise<BrowserResult> {
+async function handleClose(
+  ctx: BrowserContext,
+  signal: AbortSignal,
+): Promise<BrowserResult> {
   const tabId = ctx.tabId ?? currentPinchtabTabId;
   if (tabId != null) {
-    await pinchtabRequest(`/tabs/${encodeURIComponent(tabId)}/close`, {
+    await pinchtabRequest(`/tabs/${encodeURIComponent(tabId)}/close`, signal, {
       method: "POST",
     });
   }
+  signal.throwIfAborted();
   currentPinchtabTabId = null;
   return {
     success: true,
@@ -274,31 +321,33 @@ async function handleClose(ctx: BrowserContext): Promise<BrowserResult> {
 
 export async function handlePinchtab(
   ctx: BrowserContext,
+  signal: AbortSignal,
 ): Promise<BrowserResult> {
+  signal.throwIfAborted();
   switch (ctx.action) {
     case "list-profiles":
-      return await handleListProfiles();
+      return await handleListProfiles(signal);
     case "start":
-      return await handleStart(ctx);
+      return await handleStart(ctx, signal);
     case "tabs":
-      return await handleTabs(ctx);
+      return await handleTabs(ctx, signal);
     case "open":
-      return await handleOpen(ctx);
+      return await handleOpen(ctx, signal);
     case "navigate":
-      return await handleNavigate(ctx);
+      return await handleNavigate(ctx, signal);
     case "snapshot":
     case "get-text":
-      return await handleText(ctx);
+      return await handleText(ctx, signal);
     case "cookies":
-      return await handleCookies(ctx);
+      return await handleCookies(ctx, signal);
     case "click":
     case "type":
     case "press":
-      return await handlePageAction(ctx);
+      return await handlePageAction(ctx, signal);
     case "screenshot":
-      return await handleScreenshot(ctx);
+      return await handleScreenshot(ctx, signal);
     case "close":
-      return await handleClose(ctx);
+      return await handleClose(ctx, signal);
   }
   return {
     success: false,

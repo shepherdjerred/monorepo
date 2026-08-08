@@ -1,11 +1,17 @@
 import type { AgentJob } from "#generated/prisma/client/index.js";
+import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
 import {
+  AgentJobTimeoutError,
   getAgentJobFailureTransition,
   getNextAgentJobRun,
   withAgentJobTimeout,
   type AgentJobScheduleKind,
 } from "@shepherdjerred/birmel/scheduler/agent-job-schedule.ts";
+import {
+  AGENT_JOB_LEASE_GRACE_MS,
+  waitForTimedOutExecution,
+} from "@shepherdjerred/birmel/scheduler/agent-job-timeout-fence.ts";
 import {
   configureAgentJobRuntime,
   executeDurableAgentJob,
@@ -18,7 +24,6 @@ import { randomUUID } from "node:crypto";
 
 const logger = loggers.scheduler.child("agent-jobs");
 const WORKER_ID = `${String(process.pid)}:${randomUUID()}`;
-const LEASE_GRACE_MS = 30_000;
 
 let agentJobTick: Promise<void> | null = null;
 const activeJobExecutions = new Set<Promise<void>>();
@@ -54,7 +59,7 @@ async function markJobSuccess(
   runId: string,
   claimId: string,
   output: unknown,
-): Promise<void> {
+): Promise<boolean> {
   const finishedAt = new Date();
   const nextRunAt = getNextAgentJobRun({
     scheduleKind: parseScheduleKind(job.scheduleKind),
@@ -62,16 +67,8 @@ async function markJobSuccess(
     timezone: job.timezone,
     from: finishedAt,
   });
-  await prisma.$transaction([
-    prisma.agentJobRun.update({
-      where: { id: runId },
-      data: {
-        status: "success",
-        finishedAt,
-        output: serializeOutput(output).slice(0, 20_000),
-      },
-    }),
-    prisma.agentJob.updateMany({
+  return await prisma.$transaction(async (transaction) => {
+    const updated = await transaction.agentJob.updateMany({
       where: { id: job.id, status: "running", claimedBy: claimId },
       data: {
         status: nextRunAt == null ? "completed" : "active",
@@ -84,8 +81,20 @@ async function markJobSuccess(
         claimedBy: null,
         leaseExpiresAt: null,
       },
-    }),
-  ]);
+    });
+    if (updated.count === 0) {
+      return false;
+    }
+    await transaction.agentJobRun.updateMany({
+      where: { id: runId, status: { in: ["running", "timed_out"] } },
+      data: {
+        status: "success",
+        finishedAt,
+        output: serializeOutput(output).slice(0, 20_000),
+      },
+    });
+    return true;
+  });
 }
 
 async function markJobFailure(
@@ -93,7 +102,7 @@ async function markJobFailure(
   runId: string,
   claimId: string,
   error: unknown,
-): Promise<void> {
+): Promise<boolean> {
   const finishedAt = new Date();
   const errorMessage = getErrorMessage(error);
   const transition = getAgentJobFailureTransition({
@@ -104,16 +113,8 @@ async function markJobFailure(
     maxAttempts: job.maxAttempts,
     finishedAt,
   });
-  await prisma.$transaction([
-    prisma.agentJobRun.update({
-      where: { id: runId },
-      data: {
-        status: transition.runStatus,
-        finishedAt,
-        error: errorMessage.slice(0, 20_000),
-      },
-    }),
-    prisma.agentJob.updateMany({
+  return await prisma.$transaction(async (transaction) => {
+    const updated = await transaction.agentJob.updateMany({
       where: { id: job.id, status: "running", claimedBy: claimId },
       data: {
         status: transition.jobStatus,
@@ -126,8 +127,84 @@ async function markJobFailure(
         claimedBy: null,
         leaseExpiresAt: null,
       },
+    });
+    if (updated.count === 0) {
+      return false;
+    }
+    await transaction.agentJobRun.updateMany({
+      where: { id: runId, status: { in: ["running", "timed_out"] } },
+      data: {
+        status: transition.runStatus,
+        finishedAt,
+        error: errorMessage.slice(0, 20_000),
+      },
+    });
+    return true;
+  });
+}
+
+async function markJobTimedOut(
+  job: AgentJob,
+  runId: string,
+  claimId: string,
+  error: AgentJobTimeoutError,
+): Promise<boolean> {
+  const errorMessage = getErrorMessage(error).slice(0, 20_000);
+  const [_runUpdate, jobUpdate] = await prisma.$transaction([
+    prisma.agentJobRun.updateMany({
+      where: { id: runId, status: "running" },
+      data: { status: "timed_out", error: errorMessage },
+    }),
+    prisma.agentJob.updateMany({
+      where: { id: job.id, status: "running", claimedBy: claimId },
+      data: {
+        lastStatus: "timed_out",
+        lastError: errorMessage,
+        leaseExpiresAt: new Date(Date.now() + AGENT_JOB_LEASE_GRACE_MS),
+      },
     }),
   ]);
+  return jobUpdate.count === 1;
+}
+
+async function finalizeTimedOutExecution(options: {
+  job: AgentJob;
+  runId: string;
+  claimId: string;
+  operation: Promise<unknown>;
+}): Promise<void> {
+  const result = await waitForTimedOutExecution({
+    jobId: options.job.id,
+    claimId: options.claimId,
+    operation: options.operation,
+  });
+  if (result == null) {
+    return;
+  }
+  if (result.kind === "failure") {
+    await markJobFailure(
+      options.job,
+      options.runId,
+      options.claimId,
+      result.error,
+    );
+    return;
+  }
+  if (!toolResultStatus.isSuccess(result.output)) {
+    await markJobFailure(
+      options.job,
+      options.runId,
+      options.claimId,
+      new Error("Tool reported failure after job timeout"),
+    );
+    return;
+  }
+  await markJobSuccess(
+    options.job,
+    options.runId,
+    options.claimId,
+    result.output,
+  );
 }
 
 async function claimAgentJob(job: AgentJob): Promise<{
@@ -147,7 +224,9 @@ async function claimAgentJob(job: AgentJob): Promise<{
       status: "running",
       claimedAt: now,
       claimedBy: claimId,
-      leaseExpiresAt: new Date(now.getTime() + job.timeoutMs + LEASE_GRACE_MS),
+      leaseExpiresAt: new Date(
+        now.getTime() + job.timeoutMs + AGENT_JOB_LEASE_GRACE_MS,
+      ),
     },
   });
   if (claimed.count === 0) {
@@ -190,9 +269,10 @@ async function processAgentJob(job: AgentJob): Promise<void> {
           }),
         },
       });
+      const execution = executeDurableAgentJob(claimed.job);
       try {
         const output = await withAgentJobTimeout(
-          executeDurableAgentJob(claimed.job),
+          execution,
           claimed.job.timeoutMs,
         );
         if (!toolResultStatus.isSuccess(output)) {
@@ -206,11 +286,28 @@ async function processAgentJob(job: AgentJob): Promise<void> {
           "birmel.job.error_class",
           error instanceof Error ? error.name : "UnknownError",
         );
-        await markJobFailure(claimed.job, run.id, claimed.claimId, error);
         logger.error("Agent job failed", {
           jobId: claimed.job.id,
           error: getErrorMessage(error),
         });
+        if (error instanceof AgentJobTimeoutError) {
+          const fenced = await markJobTimedOut(
+            claimed.job,
+            run.id,
+            claimed.claimId,
+            error,
+          );
+          if (fenced) {
+            await finalizeTimedOutExecution({
+              job: claimed.job,
+              runId: run.id,
+              claimId: claimed.claimId,
+              operation: execution,
+            });
+          }
+        } else {
+          await markJobFailure(claimed.job, run.id, claimed.claimId, error);
+        }
       } finally {
         span.setAttribute(
           "birmel.job.duration_ms",
@@ -254,7 +351,10 @@ async function recoverExpiredJobLeases(): Promise<void> {
   const staleIds = staleJobs.map((job) => job.id);
   await prisma.$transaction([
     prisma.agentJobRun.updateMany({
-      where: { jobId: { in: staleIds }, status: "running" },
+      where: {
+        jobId: { in: staleIds },
+        status: { in: ["running", "timed_out"] },
+      },
       data: {
         status: "recovered",
         finishedAt: now,
@@ -299,14 +399,18 @@ async function runAgentJobsTick(): Promise<void> {
     return;
   }
   logger.info("Processing due agent jobs", { count: dueJobs.length });
-  const results = await Promise.allSettled(
-    dueJobs.map((job) => trackJobExecution(processAgentJob(job))),
-  );
-  for (const result of results) {
-    if (result.status === "rejected") {
-      logger.error("Agent job processing failed outside execution boundary", {
-        error: getErrorMessage(result.reason),
-      });
+  const maxConcurrentJobs = getConfig().scheduler.maxConcurrentJobs;
+  for (let offset = 0; offset < dueJobs.length; offset += maxConcurrentJobs) {
+    const batch = dueJobs.slice(offset, offset + maxConcurrentJobs);
+    const results = await Promise.allSettled(
+      batch.map((job) => trackJobExecution(processAgentJob(job))),
+    );
+    for (const result of results) {
+      if (result.status === "rejected") {
+        logger.error("Agent job processing failed outside execution boundary", {
+          error: getErrorMessage(result.reason),
+        });
+      }
     }
   }
 }

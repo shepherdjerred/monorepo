@@ -8,9 +8,9 @@ import {
   editAgentJob,
   getAgentJobRunHistory,
   listAgentJobs,
-  runAgentJobNow,
   showAgentJob,
 } from "./agent-job-actions.ts";
+import { runAgentJobNow } from "./agent-job-execution-actions.ts";
 
 const logger = loggers.automation.child("agent-jobs");
 

@@ -223,6 +223,18 @@ function seedProductionShapedRows(database: Database): void {
       '2026-08-01T00:00:00.000Z', '2026-08-01T00:00:00.000Z'
     );
 
+    INSERT INTO "ScheduledTask" (
+      "id", "guildId", "channelId", "userId", "scheduledAt", "naturalDesc",
+      "toolId", "toolInput", "enabled", "name", "description", "createdAt",
+      "updatedAt"
+    ) VALUES (
+      42, 'guild-scheduled', 'channel-scheduled', 'trusted-user',
+      '2026-08-12T12:00:00.000Z', 'Send the stored legacy message',
+      'send-message', '{"content":"Stored legacy reminder content"}', true,
+      'Stored message reminder', 'Fallback legacy reminder content',
+      '2026-08-01T00:00:00.000Z', '2026-08-01T00:00:00.000Z'
+    );
+
     INSERT INTO "AgentMemory" (
       "id", "guildId", "scope", "ownerKey", "channelId", "userId", "key",
       "content", "sourceType", "sourceId", "salience", "createdAt", "updatedAt"
@@ -341,6 +353,30 @@ function expectPreservedJobRows(database: Database): void {
     payloadKind: "message",
     message: "Post the deploy reminder",
     legacyTaskId: 41,
+    status: "active",
+  });
+  expect(
+    database
+      .query<
+        {
+          payloadKind: string;
+          message: string | null;
+          toolId: string | null;
+          toolInput: string | null;
+          legacyTaskId: number | null;
+          status: string;
+        },
+        []
+      >(
+        `SELECT "payloadKind", "message", "toolId", "toolInput", "legacyTaskId", "status" FROM "AgentJob" WHERE "legacyTaskId" = 42`,
+      )
+      .get(),
+  ).toEqual({
+    payloadKind: "message",
+    message: "Stored legacy reminder content",
+    toolId: null,
+    toolInput: null,
+    legacyTaskId: 42,
     status: "active",
   });
 }

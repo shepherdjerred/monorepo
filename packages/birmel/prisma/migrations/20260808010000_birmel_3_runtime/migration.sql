@@ -188,9 +188,22 @@ SELECT
   CASE WHEN "executedAt" IS NULL THEN COALESCE("nextRun", "scheduledAt") ELSE NULL END,
   CASE WHEN "enabled" = false THEN 'cancelled'
        WHEN "executedAt" IS NOT NULL THEN 'completed' ELSE 'active' END,
-  CASE WHEN "toolId" IS NULL THEN 'message' ELSE 'tool' END,
-  CASE WHEN "toolId" IS NULL THEN "naturalDesc" ELSE NULL END,
-  "toolId", "toolInput", 'discord', 3, 300000,
+  CASE WHEN "toolId" IS NULL OR "toolId" = 'send-message'
+       THEN 'message' ELSE 'tool' END,
+  CASE WHEN "toolId" IS NULL THEN "naturalDesc"
+       WHEN "toolId" = 'send-message' THEN
+         CASE WHEN "toolInput" IS NULL OR length("toolInput") = 0
+              THEN "description"
+              WHEN json_valid("toolInput") = 0 THEN "description"
+              WHEN json_type("toolInput", '$.content') = 'text'
+              THEN json_extract("toolInput", '$.content')
+              ELSE "description" END
+       ELSE NULL END,
+  CASE WHEN "toolId" IS NULL OR "toolId" = 'send-message'
+       THEN NULL ELSE "toolId" END,
+  CASE WHEN "toolId" IS NULL OR "toolId" = 'send-message'
+       THEN NULL ELSE "toolInput" END,
+  'discord', 3, 300000,
   CASE WHEN "executedAt" IS NULL THEN 0 ELSE 1 END,
   "executedAt",
   CASE WHEN "executedAt" IS NULL THEN NULL ELSE 'completed' END,

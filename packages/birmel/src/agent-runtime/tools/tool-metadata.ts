@@ -33,10 +33,6 @@ const TOOL_METADATA = new Map<string, BirmelToolMetadata>([
   ["manage-poll", metadata("manage-poll", "messaging", "write")],
   ["get-activity-stats", metadata("get-activity-stats", "messaging", "read")],
   ["record-activity", metadata("record-activity", "messaging", "write")],
-  [
-    "manage-scheduled-message",
-    metadata("manage-scheduled-message", "messaging", "write"),
-  ],
   ["manage-memory", metadata("manage-memory", "messaging", "write")],
   [
     "manage-agent-session",

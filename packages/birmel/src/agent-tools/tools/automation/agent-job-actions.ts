@@ -9,9 +9,11 @@ import {
   inferAgentJobScheduleKind,
   resolveAgentJobSchedule,
 } from "@shepherdjerred/birmel/scheduler/agent-job-schedule.ts";
-import { runAgentJobById } from "@shepherdjerred/birmel/scheduler/jobs/agent-jobs.ts";
+import {
+  createAgentJobWithinLimits,
+  updateAgentJobWithinLimits,
+} from "@shepherdjerred/birmel/scheduler/agent-job-limits.ts";
 import { getErrorMessage } from "@shepherdjerred/birmel/utils/errors.ts";
-import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 
 type BasicJobResult = { success: boolean; message: string };
 export type AgentJobToolResult = BasicJobResult & { data?: unknown };
@@ -181,6 +183,12 @@ function requireJobId(jobId: string | undefined): string {
   return jobId;
 }
 
+function requireUpdatedJob(updateCount: number): void {
+  if (updateCount === 0) {
+    throw new Error("Agent job became unavailable");
+  }
+}
+
 function requestScope(): { request: RequestContext; guildId: string } {
   const request = requireTrustedRequestContext();
   return { request, guildId: request.guildId };
@@ -205,28 +213,26 @@ export async function createAgentJob(
     });
     const payload = payloadData(payloadFromCreateOptions(options));
     const target = await resolveDeliveryTarget(request, options.sessionId);
-    const job = await prisma.agentJob.create({
-      data: {
-        guildId: request.guildId,
-        channelId: target.channelId,
-        threadId: target.threadId,
-        actorUserId: request.userId,
-        sourceChannelId: request.sourceChannelId,
-        sourceMessageId: request.sourceMessageId,
-        name: options.name ?? null,
-        description: options.description ?? null,
-        scheduleKind: resolved.scheduleKind,
-        scheduleValue: resolved.scheduleValue,
-        timezone: resolved.timezone,
-        nextRunAt: resolved.nextRunAt,
-        ...payload,
-        sessionId: target.sessionId,
-        maxAttempts: options.maxAttempts ?? 3,
-        timeoutMs: options.timeoutMs ?? 300_000,
-        model: options.model ?? null,
-        reasoningEffort: options.reasoningEffort ?? null,
-        textVerbosity: options.textVerbosity ?? null,
-      },
+    const job = await createAgentJobWithinLimits({
+      guildId: request.guildId,
+      channelId: target.channelId,
+      threadId: target.threadId,
+      actorUserId: request.userId,
+      sourceChannelId: request.sourceChannelId,
+      sourceMessageId: request.sourceMessageId,
+      name: options.name ?? null,
+      description: options.description ?? null,
+      scheduleKind: resolved.scheduleKind,
+      scheduleValue: resolved.scheduleValue,
+      timezone: resolved.timezone,
+      nextRunAt: resolved.nextRunAt,
+      ...payload,
+      sessionId: target.sessionId,
+      maxAttempts: options.maxAttempts ?? 3,
+      timeoutMs: options.timeoutMs ?? 300_000,
+      model: options.model ?? null,
+      reasoningEffort: options.reasoningEffort ?? null,
+      textVerbosity: options.textVerbosity ?? null,
     });
 
     return {
@@ -364,8 +370,19 @@ export async function editAgentJob(
         : await resolveDeliveryTarget(request, options.sessionId);
     const nextPayload = editPayload(options);
     const payloadPatch = nextPayload == null ? {} : payloadData(nextPayload);
-    const updated = await prisma.agentJob.update({
-      where: { id: existing.id },
+    const resultingStatus = options.status ?? existing.status;
+    const updateCount = await updateAgentJobWithinLimits({
+      where: {
+        id: existing.id,
+        guildId,
+        status: { not: "running" },
+      },
+      subject: {
+        id: existing.id,
+        guildId,
+        scheduleKind: schedulePatch.scheduleKind,
+        status: resultingStatus,
+      },
       data: {
         scheduleKind: schedulePatch.scheduleKind,
         scheduleValue: schedulePatch.scheduleValue,
@@ -375,7 +392,7 @@ export async function editAgentJob(
         threadId: target.threadId,
         sessionId: target.sessionId,
         ...payloadPatch,
-        status: options.status ?? existing.status,
+        status: resultingStatus,
         name: options.name ?? existing.name,
         description: options.description ?? existing.description,
         maxAttempts: options.maxAttempts ?? existing.maxAttempts,
@@ -384,6 +401,10 @@ export async function editAgentJob(
         reasoningEffort: options.reasoningEffort ?? existing.reasoningEffort,
         textVerbosity: options.textVerbosity ?? existing.textVerbosity,
       },
+    });
+    requireUpdatedJob(updateCount);
+    const updated = await prisma.agentJob.findUniqueOrThrow({
+      where: { id: existing.id },
     });
     return {
       success: true,
@@ -419,50 +440,6 @@ export async function cancelAgentJob(options: {
     return { success: false, message: "Agent job not found" };
   }
   return { success: true, message: "Agent job cancelled" };
-}
-
-function runRequestedJobInBackground(jobId: string): void {
-  queueMicrotask(() => {
-    void executeRequestedJob(jobId);
-  });
-}
-
-async function executeRequestedJob(jobId: string): Promise<void> {
-  try {
-    await runAgentJobById(jobId);
-  } catch (error) {
-    loggers.automation.error("Failed to run requested agent job", {
-      jobId,
-      error: getErrorMessage(error),
-    });
-  }
-}
-
-export async function runAgentJobNow(options: {
-  guildId?: string | undefined;
-  jobId?: string | undefined;
-}): Promise<AgentJobToolResult> {
-  const { guildId } = requestScope();
-  const jobId = requireJobId(options.jobId);
-  const updated = await prisma.agentJob.updateMany({
-    where: {
-      id: jobId,
-      guildId,
-      status: { in: ["active", "retrying", "paused", "completed", "failed"] },
-    },
-    data: {
-      status: "active",
-      nextRunAt: new Date(),
-      claimedAt: null,
-      claimedBy: null,
-      leaseExpiresAt: null,
-    },
-  });
-  if (updated.count === 0) {
-    return { success: false, message: "Agent job not found or unavailable" };
-  }
-  runRequestedJobInBackground(jobId);
-  return { success: true, message: "Agent job run requested" };
 }
 
 export async function getAgentJobRunHistory(options: {

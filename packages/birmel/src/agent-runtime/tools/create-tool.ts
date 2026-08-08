@@ -21,7 +21,12 @@ type BirmelToolOptions<
   outputSchema: OutputSchema;
   execute: (
     input: z.infer<InputSchema>,
+    context: BirmelToolExecutionContext,
   ) => Promise<z.infer<OutputSchema>> | z.infer<OutputSchema>;
+};
+
+export type BirmelToolExecutionContext = {
+  signal: AbortSignal;
 };
 
 export type BirmelTool<
@@ -42,6 +47,9 @@ export type BirmelTool<
 };
 
 const ObjectInputSchema = z.record(z.string(), z.unknown());
+const ToolExecutionOptionsSchema = z
+  .object({ abortSignal: z.instanceof(AbortSignal).optional() })
+  .loose();
 
 function requireTrustedContext(): RequestContext {
   const context = getRequestContext();
@@ -89,24 +97,49 @@ function enforceSingleRuntimeReply(
   }
 }
 
-async function withTimeout<T>(
-  operation: Promise<T>,
+function abortReason(signal: AbortSignal): Error {
+  if (signal.reason instanceof Error) {
+    return signal.reason;
+  }
+  return new DOMException("Tool execution aborted", "AbortError");
+}
+
+async function withCancellation<T>(
+  operation: (signal: AbortSignal) => Promise<T>,
   timeoutMs: number,
+  callerSignal: AbortSignal | undefined,
 ): Promise<T> {
-  let timeout: ReturnType<typeof setTimeout> | undefined;
-  const timeoutPromise = new Promise<never>((_resolve, reject) => {
-    timeout = setTimeout(() => {
-      reject(
-        new Error(`Tool execution timed out after ${String(timeoutMs)}ms`),
-      );
-    }, timeoutMs);
-  });
+  const controller = new AbortController();
+  const forwardCallerAbort = () => {
+    controller.abort(
+      callerSignal == null ? undefined : abortReason(callerSignal),
+    );
+  };
+  if (callerSignal?.aborted === true) {
+    forwardCallerAbort();
+  } else {
+    callerSignal?.addEventListener("abort", forwardCallerAbort, { once: true });
+  }
+  const timeout = setTimeout(() => {
+    controller.abort(
+      new Error(`Tool execution timed out after ${String(timeoutMs)}ms`),
+    );
+  }, timeoutMs);
   try {
-    return await Promise.race([operation, timeoutPromise]);
+    controller.signal.throwIfAborted();
+    const abortPromise = new Promise<never>((_resolve, reject) => {
+      controller.signal.addEventListener(
+        "abort",
+        () => {
+          reject(abortReason(controller.signal));
+        },
+        { once: true },
+      );
+    });
+    return await Promise.race([operation(controller.signal), abortPromise]);
   } finally {
-    if (timeout !== undefined) {
-      clearTimeout(timeout);
-    }
+    clearTimeout(timeout);
+    callerSignal?.removeEventListener("abort", forwardCallerAbort);
   }
 }
 
@@ -117,12 +150,19 @@ export function createTool<
   options: BirmelToolOptions<InputSchema, OutputSchema>,
 ): BirmelTool<InputSchema, OutputSchema> {
   const metadata = getToolMetadata(options.id);
-  const execute = async (untrustedInput: unknown) => {
+  const execute = async (
+    untrustedInput: unknown,
+    untrustedExecutionOptions?: unknown,
+  ) => {
     const requestContext = requireTrustedContext();
     enforceSingleRuntimeReply(options.id, untrustedInput, requestContext);
     const input = options.inputSchema.parse(
       deriveGuildFromRuntime(untrustedInput, requestContext),
     );
+    const executionOptions =
+      untrustedExecutionOptions == null
+        ? undefined
+        : ToolExecutionOptionsSchema.parse(untrustedExecutionOptions);
     return await withSpan(
       "birmel.tool.execute",
       {
@@ -131,9 +171,15 @@ export function createTool<
       async (span) => {
         const startedAt = performance.now();
         try {
-          const output = await withTimeout(
-            Promise.resolve(options.execute(input)),
+          const output = await withCancellation(
+            async (signal) => {
+              signal.throwIfAborted();
+              const result = await options.execute(input, { signal });
+              signal.throwIfAborted();
+              return result;
+            },
             metadata.timeoutMs,
+            executionOptions?.abortSignal,
           );
           const validatedOutput = options.outputSchema.parse(output);
           span.setAttribute("tool.success", true);

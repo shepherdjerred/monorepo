@@ -49,6 +49,12 @@ and a fake PinchTab HTTP service with no skipped tests.
 
 ## Comment Log
 
+### 2026-07-27 — in-progress board audit
+
+- Retained as active. The repository still has broad unit coverage and several
+  component e2e scripts, but no committed deterministic message-to-tool
+  delegation test or recorded full Discord happy-path proof.
+
 ### 2026-08-08 — Birmel 3.0 implementation
 
 - Replaced the stale VoltAgent-era testing inventory with the current explicit

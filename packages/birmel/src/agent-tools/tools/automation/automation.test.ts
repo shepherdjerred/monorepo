@@ -3,7 +3,10 @@ import { rm } from "node:fs/promises";
 import { z } from "zod";
 import { runWithRequestContext } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
 import { getConfig, resetConfig } from "@shepherdjerred/birmel/config/index.ts";
-import { browserAutomationTool } from "./browser.ts";
+import {
+  browserAutomationTool,
+  runAbortablePlaywrightOperation,
+} from "./browser.ts";
 import { executeShellCommandTool } from "./shell.ts";
 
 beforeAll(() => {
@@ -82,6 +85,58 @@ describe("shell automation", () => {
     });
     expect(nonzero.success).toBe(true);
     expect(nonzero.data?.["exitCode"]).not.toBe(0);
+  });
+});
+
+describe("Playwright cancellation", () => {
+  test("cleans up a browser or page returned after cancellation", async () => {
+    const operation = Promise.withResolvers<{ close: () => Promise<void> }>();
+    const cleanupFinished = Promise.withResolvers<undefined>();
+    const controller = new AbortController();
+    let closeCount = 0;
+    const execution = runAbortablePlaywrightOperation(
+      controller.signal,
+      async () => await operation.promise,
+      undefined,
+      async (resource) => {
+        await resource.close();
+        cleanupFinished.resolve(undefined);
+      },
+    );
+
+    controller.abort(new Error("cancelled during Playwright creation"));
+    await expect(execution).rejects.toThrow(
+      "cancelled during Playwright creation",
+    );
+
+    operation.resolve({
+      close: async () => {
+        closeCount += 1;
+      },
+    });
+    await cleanupFinished.promise;
+    expect(closeCount).toBe(1);
+  });
+
+  test("starts active-resource cleanup before rejecting cancellation", async () => {
+    const operation = Promise.withResolvers<string>();
+    const controller = new AbortController();
+    let closeCount = 0;
+    const execution = runAbortablePlaywrightOperation(
+      controller.signal,
+      async () => await operation.promise,
+      async () => {
+        closeCount += 1;
+        operation.reject(new Error("page closed"));
+      },
+    );
+
+    controller.abort(new Error("cancelled during Playwright action"));
+
+    await expect(execution).rejects.toThrow(
+      "cancelled during Playwright action",
+    );
+    expect(closeCount).toBe(1);
   });
 });
 

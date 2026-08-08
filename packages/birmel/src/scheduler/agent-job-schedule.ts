@@ -22,6 +22,13 @@ export type AgentJobFailureTransition = {
   attemptCount: number;
 };
 
+export class AgentJobTimeoutError extends Error {
+  constructor(timeoutMs: number) {
+    super(`Agent job timed out after ${String(timeoutMs)}ms`);
+    this.name = "AgentJobTimeoutError";
+  }
+}
+
 const EVERY_PATTERN =
   /^(?:every\s+)?(?<amount>\d+)\s*(?<unit>second|seconds|sec|secs|s|minute|minutes|min|mins|m|hour|hours|hr|hrs|h|day|days|d|week|weeks|w)$/i;
 
@@ -178,7 +185,7 @@ export async function withAgentJobTimeout<T>(
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<never>((_resolve, reject) => {
     timeoutId = setTimeout(() => {
-      reject(new Error(`Agent job timed out after ${String(timeoutMs)}ms`));
+      reject(new AgentJobTimeoutError(timeoutMs));
     }, timeoutMs);
   });
   try {

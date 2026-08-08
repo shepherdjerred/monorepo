@@ -14,6 +14,8 @@ import {
   runWithRequestContext,
   type RequestContext,
 } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
+import { manageMessageTool } from "@shepherdjerred/birmel/agent-tools/tools/discord/messages.ts";
+import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
 
 const trustedUserId = "186665676134547461";
 
@@ -68,18 +70,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "record-activity",
-    specialist: "messaging",
-    riskClass: "write",
-    timeoutMs: 30_000,
-    requiredRequestContext: [
-      "guildId",
-      "channelId",
-      "userId",
-      "sourceMessageId",
-    ],
-  },
-  {
-    id: "manage-scheduled-message",
     specialist: "messaging",
     riskClass: "write",
     timeoutMs: 30_000,
@@ -606,19 +596,34 @@ describe("createTool", () => {
     ).rejects.toThrow();
   });
 
-  test("enforces the declared tool timeout without waiting for wall time", async () => {
+  test("aborts timed-out work before a later side effect", async () => {
     const metadata = getToolMetadata("manage-guild");
     const originalTimeoutMs = metadata.timeoutMs;
-    metadata.timeoutMs = 1;
+    metadata.timeoutMs = 10;
+    let observedSignal: AbortSignal | undefined;
+    let sideEffectCount = 0;
     const tool = createTool({
       id: "manage-guild",
       description: "Test tool",
       inputSchema: z.object({ guildId: z.string() }),
       outputSchema: z.object({ ok: z.boolean() }),
-      execute: async () =>
-        await new Promise<{ ok: boolean }>(() => {
-          // Intentionally pending so the adapter's timeout wins the race.
-        }),
+      execute: async (_input, { signal }) => {
+        observedSignal = signal;
+        await new Promise<void>((resolve, reject) => {
+          const timer = setTimeout(resolve, 100);
+          signal.addEventListener(
+            "abort",
+            () => {
+              clearTimeout(timer);
+              reject(new Error("operation aborted", { cause: signal.reason }));
+            },
+            { once: true },
+          );
+        });
+        signal.throwIfAborted();
+        sideEffectCount += 1;
+        return { ok: true };
+      },
     });
 
     try {
@@ -626,9 +631,85 @@ describe("createTool", () => {
         executeInContext(trustedContext(), () =>
           tool.execute({ guildId: "model-guild" }),
         ),
-      ).rejects.toThrow("Tool execution timed out after 1ms");
+      ).rejects.toThrow("Tool execution timed out after 10ms");
+      await Bun.sleep(120);
+      expect(observedSignal?.aborted).toBe(true);
+      expect(sideEffectCount).toBe(0);
     } finally {
       metadata.timeoutMs = originalTimeoutMs;
+    }
+  });
+
+  test("propagates an AI SDK caller abort signal", async () => {
+    const caller = new AbortController();
+    const started = Promise.withResolvers<undefined>();
+    let observedSignal: AbortSignal | undefined;
+    const tool = createTool({
+      id: "manage-guild",
+      description: "Test tool",
+      inputSchema: z.object({ guildId: z.string() }),
+      outputSchema: z.object({ ok: z.boolean() }),
+      execute: async (_input, { signal }) => {
+        observedSignal = signal;
+        started.resolve(undefined);
+        await new Promise<void>((_resolve, reject) => {
+          signal.addEventListener(
+            "abort",
+            () => {
+              reject(new Error("operation aborted", { cause: signal.reason }));
+            },
+            { once: true },
+          );
+        });
+        return { ok: true };
+      },
+    });
+    const execution = executeInContext(trustedContext(), () =>
+      tool.execute({ guildId: "model-guild" }, { abortSignal: caller.signal }),
+    );
+
+    await started.promise;
+    caller.abort(new Error("caller cancelled"));
+
+    await expect(execution).rejects.toThrow("caller cancelled");
+    expect(observedSignal?.aborted).toBe(true);
+  });
+
+  test("an already-aborted signal prevents a manage-message Discord write", async () => {
+    const channels = getDiscordClient().channels;
+    const originalFetch = Reflect.get(channels, "fetch");
+    let fetchCount = 0;
+    let sendCount = 0;
+    Reflect.set(channels, "fetch", async () => {
+      fetchCount += 1;
+      return {
+        isSendable: () => true,
+        send: async () => {
+          sendCount += 1;
+          return { id: "400000000000000001" };
+        },
+      };
+    });
+    const caller = new AbortController();
+    caller.abort(new Error("cancelled before Discord write"));
+
+    try {
+      await expect(
+        executeInContext(trustedContext(), () =>
+          manageMessageTool.execute(
+            {
+              action: "send",
+              channelId: "400000000000000002",
+              content: "must not be sent",
+            },
+            { abortSignal: caller.signal },
+          ),
+        ),
+      ).rejects.toThrow("cancelled before Discord write");
+      expect(fetchCount).toBe(0);
+      expect(sendCount).toBe(0);
+    } finally {
+      Reflect.set(channels, "fetch", originalFetch);
     }
   });
 });

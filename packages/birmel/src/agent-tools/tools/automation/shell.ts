@@ -51,8 +51,9 @@ The tool captures stdout, stderr, exit code, and execution time.`,
       })
       .optional(),
   }),
-  execute: async (ctx) => {
+  execute: async (ctx, { signal }) => {
     const config = getConfig();
+    signal.throwIfAborted();
 
     if (!config.shell.enabled) {
       return {
@@ -85,10 +86,12 @@ The tool captures stdout, stderr, exit code, and execution time.`,
       const controller = new AbortController();
       const timeoutId = setTimeout(() => {
         timeoutState.timedOut = true;
-        controller.abort();
+        controller.abort(new Error("Command timed out"));
       }, timeout);
+      const commandSignal = AbortSignal.any([signal, controller.signal]);
 
       // Execute command using Bun.spawn
+      commandSignal.throwIfAborted();
       const proc = Bun.spawn({
         cmd: [ctx.command, ...(ctx.args ?? [])],
         ...(ctx.cwd != null && ctx.cwd.length > 0 ? { cwd: ctx.cwd } : {}),
@@ -96,6 +99,7 @@ The tool captures stdout, stderr, exit code, and execution time.`,
         stdout: "pipe",
         stderr: "pipe",
         stdin: "ignore",
+        signal: commandSignal,
       });
 
       // Read output with timeout handling
@@ -104,18 +108,9 @@ The tool captures stdout, stderr, exit code, and execution time.`,
       let exitCode = 0;
 
       try {
-        // Wait for process with timeout
-        const raceResult: unknown = await Promise.race([
-          proc.exited,
-          new Promise((_, reject) => {
-            controller.signal.addEventListener("abort", () => {
-              proc.kill();
-              reject(new Error("Command timed out"));
-            });
-          }),
-        ]);
-
-        exitCode = typeof raceResult === "number" ? raceResult : 0;
+        exitCode = await proc.exited;
+        signal.throwIfAborted();
+        controller.signal.throwIfAborted();
 
         // Read stdout and stderr
         const stdoutText = await new Response(proc.stdout).text();
@@ -124,6 +119,7 @@ The tool captures stdout, stderr, exit code, and execution time.`,
         stdout = stdoutText;
         stderr = stderrText;
       } catch (error) {
+        signal.throwIfAborted();
         if (timeoutState.timedOut) {
           const duration = Date.now() - startTime;
           return {
@@ -168,6 +164,7 @@ The tool captures stdout, stderr, exit code, and execution time.`,
         },
       };
     } catch (error) {
+      signal.throwIfAborted();
       const duration = Date.now() - startTime;
       logger.error(`Shell command failed`, {
         command: fullCommand,

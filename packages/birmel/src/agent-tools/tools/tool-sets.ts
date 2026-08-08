@@ -20,7 +20,6 @@ import { automodTools } from "./discord/automod.ts";
 import { pollTools } from "./discord/polls.ts";
 import { threadTools } from "./discord/threads.ts";
 import { activityTools } from "./discord/activity.ts";
-import { schedulingTools } from "./discord/scheduling.ts";
 import { playbackTools } from "./music/playback.ts";
 import { queueTools } from "./music/queue.ts";
 import { playlistTools } from "./music/playlists.ts";
@@ -42,14 +41,13 @@ import { approveChangesTool } from "./editor/approve-changes.ts";
 import { connectGitHubTool } from "./editor/connect-github.ts";
 
 /**
- * Messaging Agent - handles messages, threads, polls, and scheduling
+ * Messaging Agent - handles messages, threads, polls, memory, and sessions
  */
 export const messagingToolSet = [
   ...messageTools,
   ...threadTools,
   ...pollTools,
   ...activityTools,
-  ...schedulingTools,
   manageMemoryTool,
   manageAgentSessionTool,
 ];

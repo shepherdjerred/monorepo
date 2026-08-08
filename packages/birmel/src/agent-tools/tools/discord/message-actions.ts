@@ -11,6 +11,7 @@ import {
 } from "./channel-resolver.ts";
 
 const logger = loggers.tools.child("discord.messages");
+const NON_ABORTING_SIGNAL = new AbortController().signal;
 
 type MessageResult = {
   success: boolean;
@@ -36,9 +37,12 @@ type ChannelOpResult<T> =
 async function withSendableChannel<T>(
   client: Client,
   channelId: string,
+  signal: AbortSignal,
   body: (channel: SendableChannels) => Promise<T>,
 ): Promise<ChannelOpResult<T>> {
+  signal.throwIfAborted();
   const resolution = await resolveSendableChannel(client, channelId);
+  signal.throwIfAborted();
   if (resolution.kind !== "ok") {
     return {
       ok: false,
@@ -53,6 +57,7 @@ export async function handleSend(
   client: Client,
   channelId: string | null | undefined,
   content: string | null | undefined,
+  signal = NON_ABORTING_SIGNAL,
 ): Promise<MessageResult> {
   if (
     channelId == null ||
@@ -68,7 +73,11 @@ export async function handleSend(
   const result = await withSendableChannel<Message>(
     client,
     channelId,
-    async (channel) => channel.send(content),
+    signal,
+    async (channel) => {
+      signal.throwIfAborted();
+      return await channel.send(content);
+    },
   );
   if (!result.ok) {
     return { success: false, message: result.message };
@@ -84,6 +93,7 @@ export async function handleSend(
 export async function handleReply(
   client: Client,
   content: string | null | undefined,
+  signal: AbortSignal,
 ): Promise<MessageResult> {
   if (content == null || content.length === 0) {
     return { success: false, message: "content is required for reply" };
@@ -113,11 +123,14 @@ export async function handleReply(
   const result = await withSendableChannel(
     client,
     requestContext.sourceChannelId,
+    signal,
     async (channel) => {
+      signal.throwIfAborted();
       const originalMessage = await channel.messages.fetch(
         requestContext.sourceMessageId,
       );
-      return originalMessage.reply(content);
+      signal.throwIfAborted();
+      return await originalMessage.reply(content);
     },
   );
   if (!result.ok) {
@@ -141,6 +154,7 @@ export async function handleSendDm(
   client: Client,
   userId: string | null | undefined,
   content: string | null | undefined,
+  signal: AbortSignal,
 ): Promise<MessageResult> {
   if (
     userId == null ||
@@ -153,8 +167,11 @@ export async function handleSendDm(
       message: "userId and content are required for send-dm",
     };
   }
+  signal.throwIfAborted();
   const user = await client.users.fetch(userId);
+  signal.throwIfAborted();
   const dmChannel = await user.createDM();
+  signal.throwIfAborted();
   const sent = await dmChannel.send(content);
   logger.info("DM sent", { userId, messageId: sent.id });
   return {
@@ -164,12 +181,18 @@ export async function handleSendDm(
   };
 }
 
+type EditMessageOptions = {
+  client: Client;
+  channelId: string | null | undefined;
+  messageId: string | null | undefined;
+  content: string | null | undefined;
+  signal: AbortSignal;
+};
+
 export async function handleEdit(
-  client: Client,
-  channelId: string | null | undefined,
-  messageId: string | null | undefined,
-  content: string | null | undefined,
+  options: EditMessageOptions,
 ): Promise<MessageResult> {
+  const { client, channelId, messageId, content, signal } = options;
   if (
     channelId == null ||
     channelId.length === 0 ||
@@ -186,8 +209,11 @@ export async function handleEdit(
   const result = await withSendableChannel(
     client,
     channelId,
+    signal,
     async (channel) => {
+      signal.throwIfAborted();
       const message = await channel.messages.fetch(messageId);
+      signal.throwIfAborted();
       await message.edit(content);
     },
   );
@@ -202,6 +228,7 @@ export async function handleDelete(
   client: Client,
   channelId: string | null | undefined,
   messageId: string | null | undefined,
+  signal: AbortSignal,
 ): Promise<MessageResult> {
   if (
     channelId == null ||
@@ -217,8 +244,11 @@ export async function handleDelete(
   const result = await withSendableChannel(
     client,
     channelId,
+    signal,
     async (channel) => {
+      signal.throwIfAborted();
       const message = await channel.messages.fetch(messageId);
+      signal.throwIfAborted();
       await message.delete();
     },
   );
@@ -233,6 +263,7 @@ export async function handleBulkDelete(
   client: Client,
   channelId: string | null | undefined,
   messageIds: string[] | null | undefined,
+  signal: AbortSignal,
 ): Promise<MessageResult> {
   if (
     channelId == null ||
@@ -253,12 +284,14 @@ export async function handleBulkDelete(
   const result = await withSendableChannel(
     client,
     channelId,
+    signal,
     async (channel) => {
       if (!("bulkDelete" in channel)) {
         throw new Error(
           "Bulk delete is only supported on guild text-based channels",
         );
       }
+      signal.throwIfAborted();
       await channel.bulkDelete(messageIds);
     },
   );
@@ -272,12 +305,18 @@ export async function handleBulkDelete(
   };
 }
 
+type PinMessageOptions = {
+  client: Client;
+  channelId: string | null | undefined;
+  messageId: string | null | undefined;
+  pin: boolean;
+  signal: AbortSignal;
+};
+
 export async function handlePinUnpin(
-  client: Client,
-  channelId: string | null | undefined,
-  messageId: string | null | undefined,
-  pin: boolean,
+  options: PinMessageOptions,
 ): Promise<MessageResult> {
+  const { client, channelId, messageId, pin, signal } = options;
   const action = pin ? "pin" : "unpin";
   if (
     channelId == null ||
@@ -293,8 +332,11 @@ export async function handlePinUnpin(
   const result = await withSendableChannel(
     client,
     channelId,
+    signal,
     async (channel) => {
+      signal.throwIfAborted();
       const message = await channel.messages.fetch(messageId);
+      signal.throwIfAborted();
       await (pin ? message.pin() : message.unpin());
     },
   );
@@ -305,12 +347,18 @@ export async function handlePinUnpin(
   return { success: true, message: `Message ${action}ned successfully` };
 }
 
+type AddReactionOptions = {
+  client: Client;
+  channelId: string | null | undefined;
+  messageId: string | null | undefined;
+  emoji: string | null | undefined;
+  signal: AbortSignal;
+};
+
 export async function handleAddReaction(
-  client: Client,
-  channelId: string | null | undefined,
-  messageId: string | null | undefined,
-  emoji: string | null | undefined,
+  options: AddReactionOptions,
 ): Promise<MessageResult> {
+  const { client, channelId, messageId, emoji, signal } = options;
   if (
     channelId == null ||
     channelId.length === 0 ||
@@ -327,8 +375,11 @@ export async function handleAddReaction(
   const result = await withSendableChannel(
     client,
     channelId,
+    signal,
     async (channel) => {
+      signal.throwIfAborted();
       const message = await channel.messages.fetch(messageId);
+      signal.throwIfAborted();
       await message.react(emoji);
     },
   );
@@ -345,12 +396,13 @@ type RemoveReactionOptions = {
   messageId: string | null | undefined;
   emoji: string | null | undefined;
   userId: string | null | undefined;
+  signal: AbortSignal;
 };
 
 export async function handleRemoveReaction(
   options: RemoveReactionOptions,
 ): Promise<MessageResult> {
-  const { client, channelId, messageId, emoji, userId } = options;
+  const { client, channelId, messageId, emoji, userId, signal } = options;
   if (
     channelId == null ||
     channelId.length === 0 ||
@@ -368,12 +420,15 @@ export async function handleRemoveReaction(
   const result = await withSendableChannel(
     client,
     channelId,
+    signal,
     async (channel) => {
+      signal.throwIfAborted();
       const message = await channel.messages.fetch(messageId);
       const reaction = message.reactions.cache.get(emoji);
       if (reaction == null) {
         return { reactionMissing: true } as const;
       }
+      signal.throwIfAborted();
       await (userId != null && userId.length > 0
         ? reaction.users.remove(userId)
         : reaction.users.remove());
@@ -390,12 +445,18 @@ export async function handleRemoveReaction(
   return { success: true, message: "Reaction removed successfully" };
 }
 
+type GetMessagesOptions = {
+  client: Client;
+  channelId: string | null | undefined;
+  limit: number | null | undefined;
+  before: string | null | undefined;
+  signal: AbortSignal;
+};
+
 export async function handleGetMessages(
-  client: Client,
-  channelId: string | null | undefined,
-  limit: number | null | undefined,
-  before: string | null | undefined,
+  options: GetMessagesOptions,
 ): Promise<MessageResult> {
+  const { client, channelId, limit, before, signal } = options;
   if (channelId == null || channelId.length === 0) {
     return { success: false, message: "channelId is required for get" };
   }
@@ -403,7 +464,9 @@ export async function handleGetMessages(
   const result = await withSendableChannel(
     client,
     channelId,
+    signal,
     async (channel) => {
+      signal.throwIfAborted();
       const messages = await channel.messages.fetch({
         limit: fetchLimit,
         ...(before != null && before.length > 0 && { before }),

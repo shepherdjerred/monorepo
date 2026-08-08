@@ -189,6 +189,10 @@ function loadFeatureConfig(environment: Environment) {
         environment["SCHEDULER_MAX_RECURRING_TASKS"],
         50,
       ),
+      maxConcurrentJobs: parseNumber(
+        environment["SCHEDULER_MAX_CONCURRENT_JOBS"],
+        5,
+      ),
       tickIntervalMs: parseNumber(
         environment["SCHEDULER_TICK_INTERVAL_MS"],
         10_000,

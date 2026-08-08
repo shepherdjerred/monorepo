@@ -175,21 +175,24 @@ delivery. Attributes may include route, trigger, persona, source sizes,
 selected-memory count, model usage, duration, finish reason, and error class,
 but never message or memory contents.
 
+## Delivered
+
+- Mirrored the approved contracts in code and added the baseline and additive
+  schema migrations.
+- Replaced VoltAgent orchestration, memory, and tool adaptation with the
+  explicit AI SDK runtime.
+- Implemented bounded context, compact persona, and just-in-time Glitter friend
+  context.
+- Implemented claim memory, real thread sessions, and consolidated jobs.
+- Added strict configuration, health endpoints, shutdown behavior, and
+  deployment changes.
+- Added deterministic, migration, browser, contract, and failure-path coverage
+  with zero skipped tests.
+- Updated package guidance, environment examples, the active testing TODO, and
+  the human Birmel architecture page.
+
 ## Remaining
 
-- [x] Mirror the approved contracts in code and add the baseline/additive
-      schema migrations.
-- [x] Replace VoltAgent orchestration, memory, and tool adaptation with the
-      explicit AI SDK runtime.
-- [x] Implement bounded context, compact persona, and just-in-time Glitter
-      friend context.
-- [x] Implement claim memory, real thread sessions, and consolidated jobs.
-- [x] Add strict configuration, health endpoints, shutdown behavior, and
-      deployment changes.
-- [x] Complete deterministic, migration, browser, contract, and failure-path
-      coverage with zero skipped tests.
-- [x] Update package guidance, environment examples, the active testing TODO,
-      and the human Birmel architecture page.
 - [ ] Pass focused Birmel build, typecheck, test, lint, Docker smoke, staged
       hooks, and Buildkite's exhaustive gate.
 - [ ] Recheck production row counts, snapshot the PVC, deploy, and run the live
@@ -215,3 +218,12 @@ succeeds.
 - 2026-08-08: The focused Turbo graph passed all seven Birmel tasks with 252
   tests, zero failures, and zero skips. The rebuilt runtime image also passed
   the in-container startup and dependency smoke test.
+- 2026-08-08: Review remediation added legacy reminder compatibility, removed
+  the final legacy scheduling tool surface, made tool timeouts cooperative at
+  Discord, shell, browser, and file-write boundaries, and fenced timed-out jobs.
+  The exact CI test command now passes 260 tests with zero failures or skips.
+- 2026-08-08: The final audit closed job-limit bypasses in edit and run-now,
+  retained timed-out jobs inside the scheduler concurrency and shutdown fence,
+  and made Playwright cancellation cooperative. The exact CI suite now passes
+  265 tests with zero failures or skips; the six-task build, typecheck, and lint
+  graph also passes.
