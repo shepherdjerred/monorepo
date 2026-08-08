@@ -45,10 +45,17 @@ Register background maintenance only when the host and repository lifecycle supp
 git maintenance register
 git maintenance start
 git maintenance run --task=commit-graph
-git maintenance run --task=geometric-repack
 ```
 
-`geometric-repack` is the task; `geometric` is a repack strategy. Use `git maintenance is-needed` on versions that support it. Do not assume incremental maintenance is always better; select tasks from repository size, fetch/write workload, and host scheduling.
+`geometric-repack` is the task; `geometric` is a repack strategy. It requires Git 2.50 or newer, so gate it by the installed Git version:
+
+```bash
+if git version | awk '{ split($3, version, "."); exit !(version[1] > 2 || (version[1] == 2 && version[2] >= 50)) }'; then
+  git maintenance run --task=geometric-repack
+fi
+```
+
+On Git versions older than 2.50, omit it and use only the maintenance tasks supported by that Git version. Use `git maintenance is-needed` on versions that support it. Do not assume incremental maintenance is always better; select tasks from repository size, fetch/write workload, and host scheduling.
 
 ## Object health and collection
 
