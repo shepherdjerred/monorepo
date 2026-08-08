@@ -276,6 +276,18 @@
     "reason": "Replaceable browser automation state"
   },
   {
+    "namespace": "plausible",
+    "name": "clickhouse-data",
+    "backup": "enabled",
+    "reason": "Plausible analytics event data"
+  },
+  {
+    "namespace": "plausible",
+    "name": "pgdata-plausible-postgresql-0",
+    "backup": "enabled",
+    "reason": "Plausible PostgreSQL database"
+  },
+  {
     "namespace": "pokemon",
     "name": "pokemon-volume",
     "backup": "enabled",

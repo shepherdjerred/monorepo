@@ -41,6 +41,9 @@ const archiveCommand = [
   "if ! grep -Fq 'HTTP_X_FORWARDED_HOST' /var/www/html/config/config.ini.php; then",
   "php /var/www/html/console config:set 'General.proxy_host_headers[]=\"HTTP_X_FORWARDED_HOST\"';",
   "fi;",
+  "if ! grep -Fq 'matomo.sjer.red' /var/www/html/config/config.ini.php; then",
+  "php /var/www/html/console config:set 'General.trusted_hosts[]=\"matomo.sjer.red\"';",
+  "fi;",
   "while true; do",
   "php /var/www/html/console core:archive || exit 1;",
   "sleep 300;",
@@ -145,17 +148,17 @@ http {
           limit: Size.gibibytes(2),
         },
       },
-      startup: Probe.fromHttpGet("/", {
+      startup: Probe.fromTcpSocket({
         port: 80,
         periodSeconds: Duration.seconds(10),
         failureThreshold: 60,
       }),
-      liveness: Probe.fromHttpGet("/", {
+      liveness: Probe.fromTcpSocket({
         port: 80,
         periodSeconds: Duration.seconds(30),
         failureThreshold: 3,
       }),
-      readiness: Probe.fromHttpGet("/", {
+      readiness: Probe.fromTcpSocket({
         port: 80,
         periodSeconds: Duration.seconds(10),
         failureThreshold: 3,
