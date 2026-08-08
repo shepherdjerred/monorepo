@@ -1,4 +1,8 @@
-import { projectDisplayName, projectPath } from "tasknotes-types/v2";
+import {
+  projectDisplayName,
+  projectMatches,
+  projectPath,
+} from "tasknotes-types/v2";
 
 import type { SavedView } from "../../domain/saved-views";
 import { isActiveStatus } from "../../domain/status";
@@ -79,10 +83,8 @@ export function activeTasksForDimension(
     if (!isActiveStatus(task.status)) return false;
     switch (dimension) {
       case "project":
-        return task.projects.some(
-          (project) =>
-            projectPath(String(project)).toLowerCase() ===
-            projectPath(name).toLowerCase(),
+        return task.projects.some((project) =>
+          projectMatches(String(project), name),
         );
       case "context":
         return task.contexts.some((context) => String(context) === name);

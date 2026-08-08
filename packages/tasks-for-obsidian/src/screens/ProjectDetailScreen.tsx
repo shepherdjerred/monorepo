@@ -10,6 +10,7 @@ import {
   applySort,
 } from "../domain/filters";
 import { projectDisplayName } from "tasknotes-types/v2";
+import { resolveProjectIdentity } from "../domain/project-options";
 
 import { useTaskListScreen } from "../hooks/use-task-list-screen";
 import { TaskList } from "../components/task/TaskList";
@@ -45,6 +46,10 @@ export function ProjectDetailScreen({ route, navigation }: Props) {
     () => applySort(applyFilter(projectTasks, filter), sort),
     [projectTasks, filter, sort],
   );
+  const captureProject = useMemo(
+    () => resolveProjectIdentity(String(projectName), projectNames),
+    [projectName, projectNames],
+  );
 
   React.useEffect(() => {
     navigation.setOptions({ title: projectDisplayName(String(projectName)) });
@@ -71,14 +76,16 @@ export function ProjectDetailScreen({ route, navigation }: Props) {
         pendingIds={pendingTaskIds}
         emptyTitle="No tasks in this project"
       />
-      <Fab
-        onPress={() => {
-          navigation.navigate(
-            "QuickAdd",
-            createCaptureSeed({ project: String(projectName) }),
-          );
-        }}
-      />
+      {captureProject === null ? null : (
+        <Fab
+          onPress={() => {
+            navigation.navigate(
+              "QuickAdd",
+              createCaptureSeed({ project: captureProject }),
+            );
+          }}
+        />
+      )}
     </View>
   );
 }

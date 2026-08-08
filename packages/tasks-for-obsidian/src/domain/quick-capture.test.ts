@@ -13,6 +13,7 @@ import {
   deriveProjectOptions,
   projectIdentityLabel,
   projectOptionLabel,
+  resolveProjectIdentity,
 } from "./project-options";
 import {
   captureSeedFromInitialText,
@@ -147,6 +148,29 @@ describe("CaptureSeed", () => {
       literalSources: [],
       seed,
     });
+  });
+});
+
+describe("resolveProjectIdentity", () => {
+  test("uses the existing qualified identity for a bare deep link", () => {
+    expect(
+      resolveProjectIdentity("Work", ["[[Projects/Work]]", "Personal"]),
+    ).toBe("[[Projects/Work]]");
+  });
+
+  test("preserves exact identities and projects that do not exist yet", () => {
+    expect(resolveProjectIdentity("Projects/Work", ["[[Projects/Work]]"])).toBe(
+      "[[Projects/Work]]",
+    );
+    expect(resolveProjectIdentity("New Project", ["Personal"])).toBe(
+      "New Project",
+    );
+  });
+
+  test("rejects an ambiguous bare project identity", () => {
+    expect(
+      resolveProjectIdentity("Work", ["[[Areas/Work]]", "[[Projects/Work]]"]),
+    ).toBeNull();
   });
 });
 

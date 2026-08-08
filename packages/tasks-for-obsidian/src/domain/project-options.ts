@@ -1,4 +1,8 @@
-import { projectDisplayName, projectPath } from "tasknotes-types/v2";
+import {
+  projectDisplayName,
+  projectMatches,
+  projectPath,
+} from "tasknotes-types/v2";
 
 export type ProjectOption = {
   /** Exact project value written back to TaskNotes. */
@@ -66,4 +70,21 @@ export function projectIdentityLabel(
     throw new Error(`Project option is missing for identity: ${identity}`);
   }
   return projectOptionLabel(option, options);
+}
+
+export function resolveProjectIdentity(
+  routeIdentity: string,
+  projectIdentities: readonly string[],
+): string | null {
+  const routeKey = canonicalProjectKey(routeIdentity);
+  const exact = projectIdentities.find(
+    (identity) => canonicalProjectKey(identity) === routeKey,
+  );
+  if (exact !== undefined) return exact;
+
+  const matching = projectIdentities.filter((identity) =>
+    projectMatches(identity, routeIdentity),
+  );
+  if (matching.length === 0) return routeIdentity;
+  return matching.length === 1 ? (matching[0] ?? null) : null;
 }

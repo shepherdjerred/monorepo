@@ -1,4 +1,5 @@
 import { formatRelativeDate } from "../lib/dates";
+import { projectMatches } from "tasknotes-types/v2";
 import { PRIORITY_LABELS } from "./priority";
 import type {
   CaptureChipKind,
@@ -83,10 +84,14 @@ export function mergeProjects(
   seededProject: string | undefined,
   parsedProjects: readonly string[] | undefined,
 ): readonly string[] {
-  const projects = new Set<string>();
-  if (seededProject !== undefined) projects.add(seededProject);
-  for (const project of parsedProjects ?? []) projects.add(project);
-  return [...projects];
+  const projects: string[] = [];
+  if (seededProject !== undefined) projects.push(seededProject);
+  for (const project of parsedProjects ?? []) {
+    if (!projects.some((existing) => projectMatches(existing, project))) {
+      projects.push(project);
+    }
+  }
+  return projects;
 }
 
 function seedMetadataChip(

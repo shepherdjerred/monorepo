@@ -114,9 +114,11 @@ export function UpcomingScreen({ navigation, route }: Props) {
         days={week}
         selectedDay={selectedDay}
         onSelectDay={(day) => {
+          exitSelection();
           navigation.setParams({ selectedDay: day });
         }}
         onToday={() => {
+          exitSelection();
           navigation.navigate("Today");
         }}
       />

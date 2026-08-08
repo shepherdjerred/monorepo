@@ -36,6 +36,22 @@ describe("savedViewTaskCountLabel", () => {
 });
 
 describe("activeTasksForDimension", () => {
+  test("matches an unqualified deep link to a qualified project", () => {
+    const tasks = [
+      TaskSchema.parse({
+        id: "projects-work.md",
+        title: "Project work",
+        projects: ["[[Projects/Work]]"],
+      }),
+    ];
+
+    expect(
+      activeTasksForDimension(tasks, "project", "Work").map(
+        (task) => task.title,
+      ),
+    ).toEqual(["Project work"]);
+  });
+
   test("matches Browse counts to active project destinations", () => {
     const tasks = [
       TaskSchema.parse({

@@ -85,6 +85,7 @@ export function TaskDetailEditor({
       <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
+        pointerEvents={isWorking ? "none" : "auto"}
       >
         <View style={[styles.card, { backgroundColor: colors.surface }]}>
           <TextInput
@@ -98,6 +99,7 @@ export function TaskDetailEditor({
             multiline
             clearButtonMode="while-editing"
             accessibilityLabel="Task title"
+            editable={!isWorking}
             accessibilityHint="Always editable"
             testID="task-detail-title-input"
           />
@@ -118,6 +120,7 @@ export function TaskDetailEditor({
             multiline
             textAlignVertical="top"
             accessibilityLabel="Task details"
+            editable={!isWorking}
             testID="task-detail-details-input"
           />
           {validationField === "title" && validationMessage ? (
@@ -241,6 +244,7 @@ export function TaskDetailEditor({
               placeholderTextColor={colors.textTertiary}
               keyboardType="decimal-pad"
               inputMode="decimal"
+              editable={!isWorking}
               accessibilityLabel="Time estimate in minutes"
               testID="task-detail-estimate-input"
             />

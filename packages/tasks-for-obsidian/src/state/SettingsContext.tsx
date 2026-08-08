@@ -58,6 +58,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     useState<AppearancePreference>("system");
   const [feedbackEnabled, setFeedbackEnabledState] = useState(true);
   const [loaded, setLoaded] = useState(false);
+  const [loadError, setLoadError] = useState<Error | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -101,7 +102,18 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       }
       setLoaded(true);
     }
-    void load();
+    async function bootstrap() {
+      try {
+        await load();
+      } catch (error: unknown) {
+        setLoadError(
+          error instanceof Error
+            ? error
+            : new Error(`Settings bootstrap failed: ${String(error)}`),
+        );
+      }
+    }
+    void bootstrap();
   }, []);
 
   const setApiUrl = useCallback(async (url: string) => {
@@ -171,6 +183,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     ],
   );
 
+  if (loadError !== null) throw loadError;
   if (!loaded) return null;
 
   return (
