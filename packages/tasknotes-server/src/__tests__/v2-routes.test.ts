@@ -301,6 +301,39 @@ describe("complete-instance restore", () => {
     );
     expect(invalid.status).toBe(400);
 
+    const edited = await app.request(`/api/tasks/${weeklyId}`, {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ scheduled: "2026-08-15", due: "2026-08-17" }),
+    });
+    expect(edited.status).toBe(200);
+
+    const stale = await app.request(
+      `/api/tasks/${weeklyId}/complete-instance`,
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          date: "2026-08-01",
+          completed: false,
+          restore: {
+            scheduled: "2026-08-01",
+            due: "2026-08-03",
+            recurrence: "FREQ=WEEKLY",
+            skipped: false,
+          },
+        }),
+      },
+    );
+    expect(stale.status).toBe(409);
+
+    const reset = await app.request(`/api/tasks/${weeklyId}`, {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ scheduled: "2026-08-08", due: "2026-08-10" }),
+    });
+    expect(reset.status).toBe(200);
+
     const restored = await app.request(
       `/api/tasks/${weeklyId}/complete-instance`,
       {

@@ -18,6 +18,7 @@ import {
   type Clock,
   type TaskRepository,
 } from "../engine/task-repository.ts";
+import { RecurringRestoreConflictError } from "../engine/recurring-completion.ts";
 import { FilterQuerySchema, evaluateQuery } from "../engine/query.ts";
 import { ymd } from "../engine/date.ts";
 import { parseTaskInput } from "../nlp/parser.ts";
@@ -41,8 +42,9 @@ export type V2Dependencies = {
   clock?: Clock;
 };
 
-function errorStatus(error: unknown): 400 | 404 | 500 {
+function errorStatus(error: unknown): 400 | 404 | 409 | 500 {
   if (error instanceof TaskNotFoundError) return 404;
+  if (error instanceof RecurringRestoreConflictError) return 409;
   if (error instanceof NotRecurringError) return 400;
   if (error instanceof TimeTrackingError) return 400;
   if (error instanceof z.ZodError) return 400;

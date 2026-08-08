@@ -297,7 +297,17 @@ tags:
   });
 
   test("a restore snapshot deletes nullable schedule fields", async () => {
-    await seed("TaskNotes/weekly.md", RECURRING);
+    await seed(
+      "TaskNotes/weekly.md",
+      `---
+title: Weekly review
+status: open
+recurrence: FREQ=DAILY
+tags:
+  - task
+---
+`,
+    );
     await repo.scan();
     await repo.completeInstance("TaskNotes/weekly.md", {
       date: "2026-07-01",
@@ -486,6 +496,38 @@ tags:
 `,
     );
     await repo.scan();
+
+    await expect(
+      repo.completeInstance("TaskNotes/weekly.md", {
+        date: "2026-08-01",
+        completed: false,
+        restore: {
+          scheduled: null,
+          due: null,
+          recurrence: "FREQ=WEEKLY",
+          skipped: false,
+        },
+      }),
+    ).rejects.toThrow("restore");
+  });
+
+  test("rejects an Undo snapshot after a nullable scheduled date was added", async () => {
+    await seed(
+      "TaskNotes/weekly.md",
+      `---
+title: Weekly review
+status: open
+recurrence: FREQ=WEEKLY
+complete_instances:
+  - 2026-08-01
+tags:
+  - task
+---
+`,
+    );
+    await repo.scan();
+
+    await repo.update("TaskNotes/weekly.md", { scheduled: "2026-09-01" });
 
     await expect(
       repo.completeInstance("TaskNotes/weekly.md", {

@@ -22,6 +22,15 @@ export type RestoreValidationInput = {
   readonly maintainDueDateOffset: boolean;
 };
 
+export class RecurringRestoreConflictError extends Error {
+  constructor(path: string) {
+    super(
+      `recurring restore for ${path} is stale; refusing to overwrite newer task state`,
+    );
+    this.name = "RecurringRestoreConflictError";
+  }
+}
+
 function restoreScheduleSource(
   task: TaskInfo,
   restore: RecurringCompletionRestore,
@@ -79,12 +88,10 @@ export function assertRecurringRestoreIsCurrent({
   if (
     !targetIsNotSkipped ||
     !recurrenceMatches ||
-    (restore.scheduled !== null && task.scheduled !== expectedScheduled) ||
+    task.scheduled !== expectedScheduled ||
     (restore.due === null ? task.due !== undefined : task.due !== expectedDue)
   ) {
-    throw new Error(
-      `recurring restore for ${task.path} is stale; refusing to overwrite newer task state`,
-    );
+    throw new RecurringRestoreConflictError(task.path);
   }
 }
 
