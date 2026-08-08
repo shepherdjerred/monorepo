@@ -233,6 +233,7 @@ void mock.module(
 void mock.module("@shepherdjerred/birmel/config/index.ts", () => ({
   getConfig: () => ({
     responder: { transcriptWindowMs: 3_600_000, transcriptMaxMessages: 50 },
+    persona: { enabled: true },
   }),
 }));
 
