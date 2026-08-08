@@ -11,6 +11,7 @@ import {
 import { useTaskListScreen } from "../hooks/use-task-list-screen";
 import { TaskList } from "../components/task/TaskList";
 import { FilterSortBar } from "../components/input/FilterSortBar";
+import { activeTasksForDimension } from "../components/saved-view/browse-model";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ContextDetail">;
 
@@ -22,6 +23,7 @@ export function ContextDetailScreen({ route, navigation }: Props) {
     contextNames,
     tagNames,
     dayCounts,
+    pendingTaskIds,
     handlePress,
     handleToggle,
     handleDelete,
@@ -31,7 +33,7 @@ export function ContextDetailScreen({ route, navigation }: Props) {
   const [sort, setSort] = useState(DEFAULT_SORT);
 
   const contextTasks = useMemo(
-    () => taskList.filter((t) => t.contexts.includes(contextName)),
+    () => activeTasksForDimension(taskList, "context", String(contextName)),
     [taskList, contextName],
   );
 
@@ -62,6 +64,7 @@ export function ContextDetailScreen({ route, navigation }: Props) {
         onTaskDelete={handleDelete}
         onTaskSchedule={handleSchedule}
         dayCounts={dayCounts}
+        pendingIds={pendingTaskIds}
         emptyTitle="No tasks in this context"
       />
     </View>

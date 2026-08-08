@@ -43,9 +43,22 @@ export function useTaskListScreen(navigation: NavigateFn) {
   );
 
   const handleToggle = useCallback(
+    (id: TaskId, occurrenceDate?: string) => {
+      void (async () => {
+        const result =
+          occurrenceDate === undefined
+            ? await tasks.toggleTask(id)
+            : await tasks.toggleTask(id, { occurrenceDate });
+        showResultError(result, "Toggle Failed");
+      })();
+    },
+    [tasks.toggleTask],
+  );
+
+  const handleStatusToggle = useCallback(
     (id: TaskId) => {
       void (async () => {
-        const result = await tasks.toggleTask(id);
+        const result = await tasks.toggleTask(id, { scope: "task-status" });
         showResultError(result, "Toggle Failed");
       })();
     },
@@ -94,19 +107,30 @@ export function useTaskListScreen(navigation: NavigateFn) {
   // task; the single-flight SyncEngine coalesces the N dispatches into one
   // drain pass.
   const handleBulkComplete = useCallback(
-    (ids: readonly TaskId[]) => {
+    (
+      ids: readonly TaskId[],
+      completionDateByTaskId?: ReadonlyMap<TaskId, string>,
+    ) => {
       feedbackTaskComplete();
       void (async () => {
         const targets = ids.filter((id) => {
           const task = tasks.getTask(id);
           if (!task) return false;
           const day = isRecurring(task)
-            ? completionTargetDate(task)
+            ? (completionDateByTaskId?.get(id) ?? completionTargetDate(task))
             : localTodayYmd();
           return !isCompletedOn(task, day);
         });
         const results = await Promise.all(
-          targets.map((id) => tasks.toggleTask(id, { suppressUndo: true })),
+          targets.map((id) => {
+            const occurrenceDate = completionDateByTaskId?.get(id);
+            return occurrenceDate === undefined
+              ? tasks.toggleTask(id, { suppressUndo: true })
+              : tasks.toggleTask(id, {
+                  occurrenceDate,
+                  suppressUndo: true,
+                });
+          }),
         );
         alertBulkFailures("Complete Failed", results, targets.length);
       })();
@@ -174,6 +198,7 @@ export function useTaskListScreen(navigation: NavigateFn) {
     ...tasks,
     handlePress,
     handleToggle,
+    handleStatusToggle,
     handleDelete,
     handleRefresh,
     handleSchedule,

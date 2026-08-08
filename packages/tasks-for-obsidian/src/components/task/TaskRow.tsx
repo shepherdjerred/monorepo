@@ -1,6 +1,6 @@
 import React from "react";
-import { Pressable, View, Text, StyleSheet } from "react-native";
-import * as ContextMenu from "zeego/context-menu";
+import { MenuView, type MenuAction } from "@react-native-menu/menu";
+import { Platform, Pressable, View, Text, StyleSheet } from "react-native";
 import type { Task } from "../../domain/types";
 import type { Priority } from "../../domain/priority";
 import { ALL_PRIORITIES, PRIORITY_LABELS } from "../../domain/priority";
@@ -10,8 +10,11 @@ import {
   isRecurring,
   localTodayYmd,
 } from "../../domain/recurrence";
-import { isOverdue } from "../../lib/dates";
-import { formatRelativeDate } from "../../lib/dates";
+import {
+  deriveTaskPresentation,
+  type TaskDateKind,
+  type TaskMetadataPresentation,
+} from "../../domain/task-presentation";
 import { useSettings } from "../../hooks/use-settings";
 import { typography } from "../../styles/typography";
 import { AppIcon } from "../common/AppIcon";
@@ -26,6 +29,10 @@ const PRIORITY_SF_ICONS: Record<Priority, string> = {
   none: "circle.dashed",
 };
 
+function actionImage(image: string): Pick<MenuAction, "image"> {
+  return Platform.OS === "ios" ? { image } : {};
+}
+
 type TaskRowProps = {
   task: Task;
   onPress: () => void;
@@ -39,21 +46,14 @@ type TaskRowProps = {
   selected?: boolean | undefined;
   /** Has unsynced pending changes — renders a quiet dot by the title. */
   pending?: boolean | undefined;
+  /** One list-wide clock keeps every row's relative date in agreement. */
+  referenceDate: Date;
+  dateContext?:
+    | { readonly kind: TaskDateKind; readonly date: string }
+    | undefined;
+  /** Explicit recurring instance represented by this agenda row. */
+  completionDate?: string | undefined;
 };
-
-function rowAccessibilityLabel(
-  task: Task,
-  completed: boolean,
-  overdue: boolean,
-): string {
-  const parts = [`Task: ${task.title}`];
-  if (completed) parts.push("completed");
-  if (overdue) parts.push("overdue");
-  if (task.due) parts.push(`due ${formatRelativeDate(task.due)}`);
-  const project = task.projects[0];
-  if (project !== undefined) parts.push(`project ${String(project)}`);
-  return parts.join(", ");
-}
 
 export const TaskRow = React.memo(function TaskRowComponent({
   task,
@@ -66,6 +66,9 @@ export const TaskRow = React.memo(function TaskRowComponent({
   selectionMode = false,
   selected = false,
   pending = false,
+  referenceDate,
+  dateContext,
+  completionDate,
 }: TaskRowProps) {
   const { colors } = useSettings();
   // Recurring tasks read the state of the occurrence a tap would target
@@ -73,12 +76,133 @@ export const TaskRow = React.memo(function TaskRowComponent({
   // checkbox and the toggle always agree); plain tasks read by status.
   const completed = isCompletedOn(
     task,
-    isRecurring(task) ? completionTargetDate(task) : localTodayYmd(),
+    isRecurring(task)
+      ? (completionDate ?? completionTargetDate(task))
+      : localTodayYmd(),
   );
-  const overdue = isOverdue(task.due);
+  const presentation = deriveTaskPresentation(task, {
+    referenceDate,
+    pending,
+    dateContext,
+  });
+  const accessibilityLabel = completed
+    ? `${presentation.accessibilityLabel}, completed`
+    : presentation.accessibilityLabel;
 
-  const row = (
+  if (selectionMode) {
+    return (
+      <Pressable
+        style={[
+          styles.row,
+          {
+            backgroundColor: colors.surface,
+            borderBottomColor: colors.divider,
+          },
+        ]}
+        onPress={onPress}
+        testID={`task-row-${String(task.id)}`}
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: selected }}
+        accessibilityLabel={accessibilityLabel}
+        accessibilityHint="Double tap to toggle selection"
+      >
+        <View style={styles.selectionTarget} testID="task-row-selection-mark">
+          <AppIcon
+            name={selected ? "check-circle" : "circle"}
+            size={22}
+            color={selected ? colors.primary : colors.textTertiary}
+          />
+        </View>
+        <RowContent
+          presentation={presentation}
+          completed={completed}
+          colors={colors}
+        />
+        {pending ? (
+          <View
+            style={[
+              styles.pendingDot,
+              { backgroundColor: colors.textTertiary },
+            ]}
+            testID="task-row-pending-dot"
+            accessibilityLabel="Waiting to sync"
+          />
+        ) : null}
+      </Pressable>
+    );
+  }
+
+  // Keep completion and opening details as sibling accessibility targets.
+  // Nesting the checkbox inside one accessible row button makes VoiceOver
+  // collapse it into the parent and removes direct completion from the rotor.
+  const openButton = (
     <Pressable
+      style={styles.openButton}
+      onPress={onPress}
+      testID={`task-row-${String(task.id)}`}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      accessibilityHint="Double tap to view details"
+    >
+      <RowContent
+        presentation={presentation}
+        completed={completed}
+        colors={colors}
+      />
+      {pending ? (
+        <View
+          style={[styles.pendingDot, { backgroundColor: colors.textTertiary }]}
+          testID="task-row-pending-dot"
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+        />
+      ) : null}
+    </Pressable>
+  );
+
+  const actions: MenuAction[] = [
+    {
+      id: "toggle",
+      title: completed ? "Uncomplete" : "Complete",
+      ...actionImage(
+        completed ? "arrow.uturn.backward.circle" : "checkmark.circle",
+      ),
+    },
+  ];
+  if (onSchedule) {
+    actions.push({
+      id: "schedule",
+      title: "Schedule",
+      ...actionImage("calendar"),
+    });
+  }
+  if (onEdit) {
+    actions.push({ id: "edit", title: "Edit", ...actionImage("pencil") });
+  }
+  if (onSetPriority) {
+    actions.push({
+      id: "priority",
+      title: "Priority",
+      ...actionImage("flag"),
+      subactions: ALL_PRIORITIES.map((priority) => ({
+        id: `priority-${priority}`,
+        title: PRIORITY_LABELS[priority],
+        ...actionImage(PRIORITY_SF_ICONS[priority]),
+        state: priority === task.priority ? "on" : "off",
+      })),
+    });
+  }
+  if (onDelete) {
+    actions.push({
+      id: "delete",
+      title: "Delete",
+      attributes: { destructive: true },
+      ...actionImage("trash"),
+    });
+  }
+
+  return (
+    <View
       style={[
         styles.row,
         {
@@ -86,118 +210,83 @@ export const TaskRow = React.memo(function TaskRowComponent({
           borderBottomColor: colors.divider,
         },
       ]}
-      onPress={onPress}
-      testID="task-row"
-      accessibilityRole={selectionMode ? "checkbox" : "button"}
-      {...(selectionMode ? { accessibilityState: { checked: selected } } : {})}
-      accessibilityLabel={rowAccessibilityLabel(task, completed, overdue)}
+      testID="task-row-container"
     >
-      {selectionMode ? (
-        <View testID="task-row-selection-mark">
+      <TaskCheckbox
+        completed={completed}
+        priority={task.priority}
+        onToggle={onToggle}
+        accessibilityLabel={`${completed ? "Uncheck" : "Check"} ${task.title}`}
+        testID={`task-checkbox-${String(task.id)}`}
+      />
+      {openButton}
+      <MenuView
+        style={styles.menuButton}
+        title={task.title}
+        actions={actions}
+        onPressAction={({ nativeEvent }) => {
+          switch (nativeEvent.event) {
+            case "toggle":
+              onToggle();
+              return;
+            case "schedule":
+              if (!onSchedule) {
+                throw new Error("Schedule action is unavailable for this task");
+              }
+              onSchedule();
+              return;
+            case "edit":
+              if (!onEdit) {
+                throw new Error("Edit action is unavailable for this task");
+              }
+              onEdit();
+              return;
+            case "delete":
+              if (!onDelete) {
+                throw new Error("Delete action is unavailable for this task");
+              }
+              onDelete();
+              return;
+            default: {
+              const priority = ALL_PRIORITIES.find(
+                (candidate) => `priority-${candidate}` === nativeEvent.event,
+              );
+              if (priority === undefined || !onSetPriority) {
+                throw new Error(
+                  `Unknown task menu action: ${nativeEvent.event}`,
+                );
+              }
+              onSetPriority(priority);
+            }
+          }
+        }}
+        testID={`task-row-menu-${String(task.id)}`}
+      >
+        <View
+          style={styles.menuIcon}
+          accessible
+          accessibilityRole="button"
+          accessibilityLabel={`More actions for ${task.title}`}
+          pointerEvents="none"
+        >
           <AppIcon
-            name={selected ? "check-circle" : "circle"}
-            size={22}
-            color={selected ? colors.primary : colors.textTertiary}
+            name="more-horizontal"
+            size={20}
+            color={colors.textTertiary}
           />
         </View>
-      ) : (
-        <TaskCheckbox
-          status={task.status}
-          priority={task.priority}
-          onToggle={onToggle}
-        />
-      )}
-      <RowContent
-        task={task}
-        completed={completed}
-        overdue={overdue}
-        colors={colors}
-      />
-      {pending ? (
-        <View
-          style={[styles.pendingDot, { backgroundColor: colors.textTertiary }]}
-          testID="task-row-pending-dot"
-          accessibilityLabel="Waiting to sync"
-        />
-      ) : null}
-    </Pressable>
-  );
-
-  // The native context menu owns long-press; in selection mode the row is
-  // a plain pressable so taps toggle selection without menu interference.
-  if (selectionMode) return row;
-
-  return (
-    <ContextMenu.Root>
-      <ContextMenu.Trigger>{row}</ContextMenu.Trigger>
-      <ContextMenu.Content>
-        <ContextMenu.Item key="toggle" onSelect={onToggle}>
-          <ContextMenu.ItemTitle>
-            {completed ? "Uncomplete" : "Complete"}
-          </ContextMenu.ItemTitle>
-          <ContextMenu.ItemIcon
-            ios={{
-              name: completed
-                ? "arrow.uturn.backward.circle"
-                : "checkmark.circle",
-            }}
-          />
-        </ContextMenu.Item>
-        {onSchedule ? (
-          <ContextMenu.Item key="schedule" onSelect={onSchedule}>
-            <ContextMenu.ItemTitle>Schedule</ContextMenu.ItemTitle>
-            <ContextMenu.ItemIcon ios={{ name: "calendar" }} />
-          </ContextMenu.Item>
-        ) : null}
-        {onEdit ? (
-          <ContextMenu.Item key="edit" onSelect={onEdit}>
-            <ContextMenu.ItemTitle>Edit</ContextMenu.ItemTitle>
-            <ContextMenu.ItemIcon ios={{ name: "pencil" }} />
-          </ContextMenu.Item>
-        ) : null}
-        {onSetPriority ? (
-          <ContextMenu.Sub>
-            <ContextMenu.SubTrigger key="priority">
-              <ContextMenu.ItemTitle>Priority</ContextMenu.ItemTitle>
-              <ContextMenu.ItemIcon ios={{ name: "flag" }} />
-            </ContextMenu.SubTrigger>
-            <ContextMenu.SubContent>
-              {ALL_PRIORITIES.map((p) => (
-                <ContextMenu.Item
-                  key={`priority-${p}`}
-                  onSelect={() => {
-                    onSetPriority(p);
-                  }}
-                >
-                  <ContextMenu.ItemTitle>
-                    {PRIORITY_LABELS[p]}
-                  </ContextMenu.ItemTitle>
-                  <ContextMenu.ItemIcon ios={{ name: PRIORITY_SF_ICONS[p] }} />
-                </ContextMenu.Item>
-              ))}
-            </ContextMenu.SubContent>
-          </ContextMenu.Sub>
-        ) : null}
-        {onDelete ? (
-          <ContextMenu.Item key="delete" destructive onSelect={onDelete}>
-            <ContextMenu.ItemTitle>Delete</ContextMenu.ItemTitle>
-            <ContextMenu.ItemIcon ios={{ name: "trash" }} />
-          </ContextMenu.Item>
-        ) : null}
-      </ContextMenu.Content>
-    </ContextMenu.Root>
+      </MenuView>
+    </View>
   );
 });
 
 function RowContent({
-  task,
+  presentation,
   completed,
-  overdue,
   colors,
 }: {
-  task: Task;
+  presentation: ReturnType<typeof deriveTaskPresentation>;
   completed: boolean;
-  overdue: boolean;
   colors: {
     text: string;
     error: string;
@@ -213,29 +302,77 @@ function RowContent({
           { color: colors.text },
           completed && styles.completedText,
         ]}
-        numberOfLines={1}
+        numberOfLines={2}
       >
-        {task.title}
+        {presentation.title}
       </Text>
-      <View style={styles.badges}>
-        {task.due ? (
-          <Text
-            style={[
-              typography.caption,
-              { color: overdue ? colors.error : colors.textSecondary },
-            ]}
-          >
-            {formatRelativeDate(task.due)}
-          </Text>
-        ) : null}
-        {task.projects.length > 0 ? (
-          <Text style={[typography.caption, { color: colors.primary }]}>
-            {task.projects[0]}
-          </Text>
-        ) : null}
-      </View>
+      {presentation.metadata.length > 0 ? (
+        <View style={styles.metadata}>
+          {presentation.metadata.slice(0, 3).map((item) => (
+            <Text
+              key={metadataKey(item)}
+              style={[
+                typography.caption,
+                styles.metadataItem,
+                {
+                  color: metadataColor(item, colors),
+                },
+              ]}
+              numberOfLines={1}
+            >
+              {item.label}
+            </Text>
+          ))}
+        </View>
+      ) : null}
+      {presentation.indicators.some(
+        (indicator) => indicator.kind !== "pending-sync",
+      ) ? (
+        <View style={styles.indicators}>
+          {presentation.indicators
+            .filter((indicator) => indicator.kind !== "pending-sync")
+            .slice(0, 3)
+            .map((indicator) => (
+              <Text
+                key={indicator.kind}
+                style={[typography.caption, { color: colors.textSecondary }]}
+                numberOfLines={1}
+              >
+                {indicator.label}
+              </Text>
+            ))}
+        </View>
+      ) : null}
     </View>
   );
+}
+
+function metadataKey(item: TaskMetadataPresentation): string {
+  switch (item.kind) {
+    case "planned":
+    case "deadline":
+      return `${item.kind}-${item.date}`;
+    case "project":
+    case "context":
+    case "tag":
+      return `${item.kind}-${item.value}`;
+  }
+}
+
+function metadataColor(
+  item: TaskMetadataPresentation,
+  colors: { error: string; textSecondary: string; primary: string },
+): string {
+  switch (item.kind) {
+    case "planned":
+    case "deadline":
+      return item.relation === "overdue" ? colors.error : colors.textSecondary;
+    case "project":
+      return colors.primary;
+    case "context":
+    case "tag":
+      return colors.textSecondary;
+  }
 }
 
 const styles = StyleSheet.create({
@@ -243,15 +380,47 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingHorizontal: 8,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    gap: 12,
+    gap: 4,
+  },
+  selectionTarget: {
+    width: 44,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
   },
   content: {
     flex: 1,
   },
-  badges: {
+  menuButton: {
+    width: 44,
+    height: 44,
+  },
+  menuIcon: {
+    width: 44,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  openButton: {
+    minHeight: 44,
+    flex: 1,
     flexDirection: "row",
+    alignItems: "center",
+  },
+  metadata: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 2,
+  },
+  metadataItem: {
+    flexShrink: 1,
+  },
+  indicators: {
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 8,
     marginTop: 2,
   },

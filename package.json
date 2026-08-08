@@ -152,7 +152,6 @@
     "markdown-it@10.0.0": "patches/markdown-it@10.0.0.patch",
     "markdown-it@14.1.1": "patches/markdown-it@14.1.1.patch",
     "markdown-it@14.3.0": "patches/markdown-it@14.3.0.patch",
-    "react-native-ios-utilities@5.2.0": "patches/react-native-ios-utilities@5.2.0.patch",
     "react-native-sound@0.13.0": "patches/react-native-sound@0.13.0.patch",
     "react-native-worklets@0.11.3": "patches/react-native-worklets@0.11.3.patch",
     "twisted@1.82.0": "patches/twisted@1.82.0.patch"

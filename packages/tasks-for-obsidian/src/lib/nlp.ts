@@ -14,6 +14,71 @@ const PRIORITY_MAP: Record<string, Priority> = {
   "!4": "low",
 };
 
+const TASK_INPUT_TOKEN_PATTERN = /p:"(?:\\.|[^"\\])*"|\S+/g;
+
+export type TaskInputToken = {
+  readonly text: string;
+  readonly start: number;
+  readonly end: number;
+};
+
+export function tokenizeTaskInput(input: string): TaskInputToken[] {
+  const tokens: TaskInputToken[] = [];
+  for (const match of input.matchAll(TASK_INPUT_TOKEN_PATTERN)) {
+    const text = match[0];
+    tokens.push({
+      text,
+      start: match.index,
+      end: match.index + text.length,
+    });
+  }
+  return tokens;
+}
+
+export function projectNameFromInputToken(token: string): string | undefined {
+  if (!token.startsWith("p:")) return undefined;
+  const raw = token.slice(2);
+  if (!raw.startsWith('"')) return nonEmptyProjectName(raw);
+  if (!raw.endsWith('"') || raw.length < 2) return undefined;
+
+  let decoded = "";
+  const quoted = raw.slice(1, -1);
+  for (let index = 0; index < quoted.length; index += 1) {
+    const character = quoted[index];
+    if (character === undefined) {
+      throw new Error("Quoted project token index is out of bounds");
+    }
+    if (character !== "\\") {
+      decoded += character;
+      continue;
+    }
+    const escaped = quoted[index + 1];
+    if (escaped !== "\\" && escaped !== '"') return undefined;
+    decoded += escaped;
+    index += 1;
+  }
+  return nonEmptyProjectName(decoded);
+}
+
+export function projectInputToken(name: string): string {
+  const project = nonEmptyProjectName(name);
+  if (project === undefined) {
+    throw new Error("Project name must not be empty");
+  }
+  if (!/[\s"\\]/.test(project)) return `p:${project}`;
+  let escaped = "";
+  for (const character of project) {
+    if (character === "\\" || character === '"') escaped += "\\";
+    escaped += character;
+  }
+  return `p:"${escaped}"`;
+}
+
+function nonEmptyProjectName(value: string): string | undefined {
+  const trimmed = value.trim();
+  return trimmed.length === 0 ? undefined : trimmed;
+}
+
 const DAY_NAMES = [
   "sunday",
   "monday",
@@ -23,6 +88,16 @@ const DAY_NAMES = [
   "friday",
   "saturday",
 ];
+
+const RRULE_DAY_NAMES: Readonly<Record<string, string>> = {
+  sunday: "SU",
+  monday: "MO",
+  tuesday: "TU",
+  wednesday: "WE",
+  thursday: "TH",
+  friday: "FR",
+  saturday: "SA",
+};
 
 const MONTH_NAMES: Record<string, number> = {
   jan: 0,
@@ -95,6 +170,7 @@ function resolveSingleWord(word: string, today: Date): string | undefined {
 }
 
 type PhraseMatch = { due: string; consumed: number };
+type RecurrencePhraseMatch = { recurrence: string; consumed: number };
 
 type WordAt = (offset: number) => string;
 
@@ -192,13 +268,61 @@ function matchDatePhrase(
   return undefined;
 }
 
+function matchRecurrencePhrase(
+  words: readonly string[],
+  index: number,
+): RecurrencePhraseMatch | undefined {
+  if (words[index]?.toLowerCase() !== "every") return undefined;
+  const cadence = words[index + 1]?.toLowerCase();
+  if (cadence === undefined) return undefined;
+
+  switch (cadence) {
+    case "day":
+    case "daily":
+      return { recurrence: "FREQ=DAILY", consumed: 2 };
+    case "weekday":
+    case "weekdays":
+      return {
+        recurrence: "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR",
+        consumed: 2,
+      };
+    case "week":
+    case "weekly":
+      return { recurrence: "FREQ=WEEKLY", consumed: 2 };
+    case "month":
+    case "monthly":
+      return { recurrence: "FREQ=MONTHLY", consumed: 2 };
+    case "year":
+    case "yearly":
+    case "annually":
+      return { recurrence: "FREQ=YEARLY", consumed: 2 };
+    default: {
+      const byDay = RRULE_DAY_NAMES[cadence];
+      return byDay === undefined
+        ? undefined
+        : { recurrence: `FREQ=WEEKLY;BYDAY=${byDay}`, consumed: 2 };
+    }
+  }
+}
+
+function matchUnsetRecurrencePhrase(
+  recurrence: string | undefined,
+  words: readonly string[],
+  index: number,
+): RecurrencePhraseMatch | undefined {
+  return recurrence === undefined
+    ? matchRecurrencePhrase(words, index)
+    : undefined;
+}
+
 export function parseTaskInput(
   input: string,
   now = new Date(),
 ): NlpParseResult {
-  const words = input.split(/\s+/);
+  const words = tokenizeTaskInput(input).map((token) => token.text);
   const titleParts: string[] = [];
   let due: string | undefined;
+  let recurrence: string | undefined;
   let priority: Priority | undefined;
   const projects: string[] = [];
   const contexts: string[] = [];
@@ -215,9 +339,10 @@ export function parseTaskInput(
       continue;
     }
 
-    // Project: p:ProjectName
-    if (word.startsWith("p:") && word.length > 2) {
-      projects.push(word.slice(2));
+    // Project: p:ProjectName or p:"Multiword Project"
+    const project = projectNameFromInputToken(word);
+    if (project !== undefined) {
+      projects.push(project);
       continue;
     }
 
@@ -230,6 +355,14 @@ export function parseTaskInput(
     // Tag: #tag
     if (word.startsWith("#") && word.length > 1) {
       tags.push(word.slice(1));
+      continue;
+    }
+
+    // Recurrence phrases (first match wins; later phrases stay in the title)
+    const recurrenceMatch = matchUnsetRecurrencePhrase(recurrence, words, i);
+    if (recurrenceMatch !== undefined) {
+      recurrence = recurrenceMatch.recurrence;
+      i += recurrenceMatch.consumed - 1;
       continue;
     }
 
@@ -253,5 +386,6 @@ export function parseTaskInput(
     ...(projects.length > 0 ? { projects } : {}),
     ...(contexts.length > 0 ? { contexts } : {}),
     ...(tags.length > 0 ? { tags } : {}),
+    ...(recurrence ? { recurrence } : {}),
   };
 }

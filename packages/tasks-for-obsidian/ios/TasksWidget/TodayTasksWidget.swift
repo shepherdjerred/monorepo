@@ -41,7 +41,7 @@ private struct SmallWidgetView: View {
         }
       }
 
-      Text("\(data.stats.today) due today")
+      Text("\(data.stats.today) today")
         .font(.headline)
 
       Text("\(data.stats.total) total")
@@ -80,8 +80,8 @@ private struct TaskRowView: View {
 
       Spacer()
 
-      if let due = task.due {
-        Text(due)
+      if let dateLabel = task.dateLabel ?? task.due {
+        Text(dateLabel)
           .font(.caption2)
           .foregroundStyle(.secondary)
       }
@@ -189,7 +189,7 @@ struct TodayTasksWidget: Widget {
       .containerBackground(.fill.tertiary, for: .widget)
     }
     .configurationDisplayName("Today's Tasks")
-    .description("View your tasks due today.")
+    .description("View tasks planned for or due today.")
     .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
   }
 }
@@ -199,15 +199,28 @@ private struct TodayTasksEntryView: View {
   let entry: TodayTasksEntry
 
   var body: some View {
-    switch family {
-    case .systemSmall:
-      SmallWidgetView(data: entry.data)
-    case .systemMedium:
-      MediumWidgetView(data: entry.data)
-    case .systemLarge:
-      LargeWidgetView(data: entry.data)
-    default:
-      MediumWidgetView(data: entry.data)
+    if entry.isStale {
+      VStack(spacing: 8) {
+        Image(systemName: "arrow.clockwise.circle")
+          .font(.title2)
+          .foregroundStyle(.secondary)
+        Text("Open TaskNotes to refresh")
+          .font(.caption)
+          .multilineTextAlignment(.center)
+          .foregroundStyle(.secondary)
+      }
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
+    } else {
+      switch family {
+      case .systemSmall:
+        SmallWidgetView(data: entry.data)
+      case .systemMedium:
+        MediumWidgetView(data: entry.data)
+      case .systemLarge:
+        LargeWidgetView(data: entry.data)
+      default:
+        MediumWidgetView(data: entry.data)
+      }
     }
   }
 }
