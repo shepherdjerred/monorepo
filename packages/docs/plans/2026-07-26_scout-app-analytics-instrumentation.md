@@ -4,7 +4,7 @@ type: plan
 status: in-progress
 board: true
 verification: operator
-disposition: active
+disposition: blocked
 ---
 
 # Scout product analytics on Matomo
@@ -67,3 +67,11 @@ Configure Custom Dimensions 1–8 as event-scoped dimensions named
 - [ ] Confirm normalized SPA routes never include raw identifiers or query strings.
 - [ ] Confirm Scout events and dimensions appear in Matomo real-time reports.
 - [ ] Confirm marketing conversion events include `cta_location` but not `event_id`.
+
+## Remaining
+
+- [ ] Publish and sync the Matomo GitOps resources.
+- [ ] Initialize Matomo sites, privacy settings, and Custom Dimensions.
+- [ ] Release the affected sites and Scout production/beta together.
+- [ ] Smoke-test pageviews, SPA navigation, events, dimensions, and persistence.
+- [ ] Remove the live Plausible namespace and persistent volumes after smoke testing.
