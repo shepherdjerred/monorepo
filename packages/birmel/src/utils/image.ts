@@ -2,6 +2,7 @@ import type { Attachment, Message } from "discord.js";
 import { logger } from "./logger.ts";
 
 export type ImageAttachment = {
+  id: string;
   url: string;
   filename: string;
   contentType: string;
@@ -40,6 +41,7 @@ export function extractImageAttachments(message: Message): ImageAttachment[] {
   for (const attachment of message.attachments.values()) {
     if (isImageAttachment(attachment)) {
       images.push({
+        id: attachment.id,
         url: attachment.url,
         filename: attachment.name,
         contentType: attachment.contentType ?? "image/png",

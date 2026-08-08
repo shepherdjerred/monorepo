@@ -15,6 +15,13 @@ export type ResolvedAgentJobSchedule = {
   nextRunAt: Date;
 };
 
+export type AgentJobFailureTransition = {
+  jobStatus: "active" | "failed" | "retrying";
+  runStatus: "error" | "failed";
+  nextRunAt: Date | null;
+  attemptCount: number;
+};
+
 const EVERY_PATTERN =
   /^(?:every\s+)?(?<amount>\d+)\s*(?<unit>second|seconds|sec|secs|s|minute|minutes|min|mins|m|hour|hours|hr|hrs|h|day|days|d|week|weeks|w)$/i;
 
@@ -49,6 +56,17 @@ function durationToMilliseconds(value: string): number | null {
     return amount * 7 * 24 * 60 * 60 * 1000;
   }
   return null;
+}
+
+export function inferAgentJobScheduleKind(value: string): AgentJobScheduleKind {
+  const trimmed = value.trim();
+  if (/^[\d\s*,/-]+$/.test(trimmed) && trimmed.split(/\s+/).length === 5) {
+    return "cron";
+  }
+  if (/^every\s+/i.test(trimmed) || /^\d+\s*[smhdw]$/i.test(trimmed)) {
+    return "every";
+  }
+  return "at";
 }
 
 export function resolveAgentJobSchedule(options: {
@@ -118,4 +136,56 @@ export function getNextAgentJobRun(options: {
     timezone: options.timezone,
     from: options.from,
   }).nextRunAt;
+}
+
+export function getAgentJobFailureTransition(options: {
+  scheduleKind: AgentJobScheduleKind;
+  scheduleValue: string;
+  timezone: string;
+  currentAttemptCount: number;
+  maxAttempts: number;
+  finishedAt: Date;
+}): AgentJobFailureTransition {
+  const nextAttemptCount = options.currentAttemptCount + 1;
+  const shouldRetry = nextAttemptCount < options.maxAttempts;
+  const boundedAttempt = Math.min(Math.max(nextAttemptCount, 1), 6);
+  const retryAt = new Date(
+    options.finishedAt.getTime() + 30_000 * 2 ** (boundedAttempt - 1),
+  );
+  const recurringRun = getNextAgentJobRun({
+    scheduleKind: options.scheduleKind,
+    scheduleValue: options.scheduleValue,
+    timezone: options.timezone,
+    from: options.finishedAt,
+  });
+  const nextRunAt = shouldRetry ? retryAt : recurringRun;
+  return {
+    jobStatus: shouldRetry
+      ? "retrying"
+      : nextRunAt == null
+        ? "failed"
+        : "active",
+    runStatus: shouldRetry ? "error" : "failed",
+    nextRunAt,
+    attemptCount: shouldRetry ? nextAttemptCount : 0,
+  };
+}
+
+export async function withAgentJobTimeout<T>(
+  operation: Promise<T>,
+  timeoutMs: number,
+): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_resolve, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new Error(`Agent job timed out after ${String(timeoutMs)}ms`));
+    }, timeoutMs);
+  });
+  try {
+    return await Promise.race([operation, timeout]);
+  } finally {
+    if (timeoutId !== undefined) {
+      clearTimeout(timeoutId);
+    }
+  }
 }

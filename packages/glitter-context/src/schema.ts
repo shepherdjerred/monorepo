@@ -263,3 +263,82 @@ export const LoreDocumentSchema = z.strictObject({
   historyMarkdown: z.string().min(1),
 });
 export type LoreDocument = z.infer<typeof LoreDocumentSchema>;
+
+export const FriendContextSourceSchema = z.strictObject({
+  peopleDocument: PeopleDocumentSchema,
+  relationshipsDocument: RelationshipsDocumentSchema,
+  loreDocument: LoreDocumentSchema,
+});
+export type FriendContextSource = z.infer<typeof FriendContextSourceSchema>;
+
+export const FriendContextInputSchema = z.strictObject({
+  message: z.string(),
+  references: z.array(z.string().min(1)).default([]),
+  mentionedDiscordUserIds: z.array(DiscordIdSchema).default([]),
+  characterBudget: z.number().int().nonnegative().max(48_000),
+  maxLoreSections: z.number().int().positive().max(12).default(6),
+});
+export type FriendContextInput = z.infer<typeof FriendContextInputSchema>;
+
+export const PersonReferenceMatchKindSchema = z.enum([
+  "alias",
+  "discord-user-id",
+  "prefix",
+]);
+export type PersonReferenceMatchKind = z.infer<
+  typeof PersonReferenceMatchKindSchema
+>;
+
+const MatchedPersonReferenceSchema = z.strictObject({
+  status: z.literal("matched"),
+  reference: z.string(),
+  matchKind: PersonReferenceMatchKindSchema,
+  person: PersonSchema,
+});
+const AmbiguousPersonReferenceSchema = z.strictObject({
+  status: z.literal("ambiguous"),
+  reference: z.string(),
+  candidates: z.array(PersonSchema).min(2),
+});
+const UnmatchedPersonReferenceSchema = z.strictObject({
+  status: z.literal("unmatched"),
+  reference: z.string(),
+});
+export const PersonReferenceResolutionSchema = z.discriminatedUnion("status", [
+  MatchedPersonReferenceSchema,
+  AmbiguousPersonReferenceSchema,
+  UnmatchedPersonReferenceSchema,
+]);
+export type PersonReferenceResolution = z.infer<
+  typeof PersonReferenceResolutionSchema
+>;
+
+export const ResolvedFriendContextPersonSchema = z.strictObject({
+  person: PersonSchema,
+  matchedReferences: z.array(z.string().min(1)).min(1),
+});
+export type ResolvedFriendContextPerson = z.infer<
+  typeof ResolvedFriendContextPersonSchema
+>;
+
+export const FriendContextLoreSectionSchema = z.strictObject({
+  id: IdentifierSchema,
+  title: z.string().min(1),
+  markdown: z.string().min(1),
+  score: z.number().int().positive(),
+  matchedTerms: z.array(z.string().min(1)),
+});
+export type FriendContextLoreSection = z.infer<
+  typeof FriendContextLoreSectionSchema
+>;
+
+export const FriendContextResultSchema = z.strictObject({
+  resolutions: z.array(PersonReferenceResolutionSchema),
+  people: z.array(ResolvedFriendContextPersonSchema),
+  relationships: z.array(RelationshipEventSchema),
+  loreSections: z.array(FriendContextLoreSectionSchema),
+  contextText: z.string(),
+  characterCount: z.number().int().nonnegative(),
+  truncated: z.boolean(),
+});
+export type FriendContextResult = z.infer<typeof FriendContextResultSchema>;

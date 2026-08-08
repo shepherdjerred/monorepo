@@ -3,7 +3,7 @@
 # bun.lock, isolated linker). Built via `bun run docker:build` in this package
 # (which passes `-f Dockerfile ../..`).
 #
-# birmel's editor sub-agent shells out to `gh` (opens PRs) and `claude` (runs
+# birmel's editor specialist shells out to `gh` (opens PRs) and `claude` (runs
 # edits); its music stack shells out through youtube-dl-exec (needs Node + Python
 # + a yt-dlp binary) and ffmpeg-static.
 #
@@ -127,11 +127,11 @@ ENV NODE_ENV=production
 LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"
 
 # Run from the package dir so Bun resolves this package's tsconfig / imports map
-# (the `#generated/*` subpath imports). The old prod entrypoint also ran
-# `prisma db push` before boot; that's a runtime DB step for the deployed
-# service and is left to the deployment (not baked into the image CMD).
+# (the `#generated/*` subpath imports). The entrypoint fingerprints an existing
+# unmigrated database, resolves the verified baseline, and runs migrate deploy
+# before starting Discord.
 WORKDIR /app/packages/birmel
-CMD ["bun", "src/index.ts"]
+CMD ["bun", "scripts/start.ts"]
 
 FROM runtime AS smoke
 # The smoke harness ships in CI context only — the scoped source COPY

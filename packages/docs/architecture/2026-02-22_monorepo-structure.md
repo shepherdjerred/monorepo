@@ -28,7 +28,7 @@ The root `package.json` owns only repo-level scripts and dev dependencies. Packa
 | --------------- | ---------------------------------------------------- |
 | `eslint-config` | Shared ESLint flat config (`recommended()` function) |
 | `homelab`       | K8s infrastructure (cdk8s, OpenTofu)                 |
-| `birmel`        | Discord bot (VoltAgent + Claude AI)                  |
+| `birmel`        | Discord bot (AI SDK 6 explicit agent runtime)        |
 | `scout-for-lol` | League of Legends match analysis                     |
 | `toolkit`       | CLI developer tools (pr, pd, bugsink, grafana)       |
 | `docs`          | This documentation (AI-maintained)                   |

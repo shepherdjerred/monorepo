@@ -17,7 +17,7 @@ packages/
 ├── anki/                       # Anki flashcard tools
 ├── astro-opengraph-images/     # Astro OpenGraph image generation (npm)
 ├── better-skill-capped/        # Browser extension
-├── birmel/                     # Discord bot (VoltAgent + Claude AI)
+├── birmel/                     # Discord bot (AI SDK explicit agent runtime)
 ├── cooklang-for-obsidian/      # Cooklang Obsidian plugin
 ├── cooklang-rich-preview/      # Cooklang rich link preview site
 ├── discord-plays-pokemon/      # Discord Plays Pokemon (headless emulator + Go-Live stream)
@@ -344,7 +344,7 @@ Feature PRs are created and updated with `git-spice` as stacks; a single PR is a
 
 Each package has its own AGENTS.md with specific instructions:
 
-- `packages/birmel/AGENTS.md` - VoltAgent setup, Discord bot config
+- `packages/birmel/AGENTS.md` - explicit agent runtime, Discord bot config
 - `packages/homelab/AGENTS.md` - K8s, cdk8s, OpenTofu infrastructure
 - `packages/scout-for-lol/AGENTS.md` - Match analysis pipeline
 - `packages/resume/AGENTS.md` - Resume site

@@ -2,7 +2,8 @@ import {
   getErrorMessage,
   toError,
 } from "@shepherdjerred/birmel/utils/errors.ts";
-import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
+import { createTool } from "@shepherdjerred/birmel/agent-runtime/tools/create-tool.ts";
+import { getRequestContext } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
 import { z } from "zod";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { captureException } from "@shepherdjerred/birmel/observability/sentry.ts";
@@ -145,10 +146,6 @@ export const manageScheduledMessageTool = createTool({
       .enum(["none", "daily", "weekly", "monthly"])
       .optional()
       .describe("Repeat pattern (for schedule, default: none)"),
-    createdBy: z
-      .string()
-      .optional()
-      .describe("User ID of creator (required for schedule)"),
     scheduleId: z
       .number()
       .optional()
@@ -178,16 +175,24 @@ export const manageScheduledMessageTool = createTool({
   execute: async (ctx) => {
     return withToolSpan("manage-scheduled-message", ctx.guildId, async () => {
       try {
+        const request = getRequestContext();
+        if (request == null) {
+          throw new Error("Scheduled messages require trusted request context");
+        }
+        const trustedInput: SchedulingInput = {
+          ...ctx,
+          createdBy: request.userId,
+        };
         const idError = validateSnowflakes([
-          { value: ctx.guildId, fieldName: "guildId" },
-          { value: ctx.channelId, fieldName: "channelId" },
-          { value: ctx.createdBy, fieldName: "createdBy" },
+          { value: trustedInput.guildId, fieldName: "guildId" },
+          { value: trustedInput.channelId, fieldName: "channelId" },
+          { value: trustedInput.createdBy, fieldName: "createdBy" },
         ]);
         if (idError != null && idError.length > 0) {
           return { success: false, message: idError };
         }
 
-        return await dispatchSchedulingAction(ctx);
+        return await dispatchSchedulingAction(trustedInput);
       } catch (error) {
         logger.error("Failed to manage scheduled message", error);
         captureException(toError(error), {

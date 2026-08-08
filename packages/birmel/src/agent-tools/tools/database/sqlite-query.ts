@@ -2,7 +2,7 @@ import {
   getErrorMessage,
   toError,
 } from "@shepherdjerred/birmel/utils/errors.ts";
-import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
+import { createTool } from "@shepherdjerred/birmel/agent-runtime/tools/create-tool.ts";
 import { z } from "zod";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";

@@ -2,7 +2,7 @@ import {
   getErrorMessage,
   toError,
 } from "@shepherdjerred/birmel/utils/errors.ts";
-import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
+import { createTool } from "@shepherdjerred/birmel/agent-runtime/tools/create-tool.ts";
 import { z } from "zod";
 import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
@@ -188,7 +188,9 @@ export const manageMessageTool = createTool({
             message: apiError.message,
             method: apiError.method,
             url: apiError.url,
-            ctx,
+            action: ctx.action,
+            channelId: ctx.channelId,
+            messageId: ctx.messageId,
           });
           captureException(new Error(formatDiscordAPIError(apiError)), {
             operation: "tool.manage-message",

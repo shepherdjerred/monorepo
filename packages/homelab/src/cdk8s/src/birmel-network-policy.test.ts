@@ -43,6 +43,29 @@ const NetworkPolicySchema = z.object({
     .optional(),
 });
 
+const BirmelDeploymentSchema = z.object({
+  kind: z.literal("Deployment"),
+  metadata: z.object({ name: z.literal("birmel") }),
+  spec: z.object({
+    template: z.object({
+      spec: z.object({
+        containers: z.array(
+          z.object({
+            name: z.literal("main"),
+            env: z.array(z.object({ name: z.string() }).loose()),
+            ports: z.array(
+              z.object({ name: z.string(), containerPort: z.number() }),
+            ),
+            startupProbe: z.unknown(),
+            livenessProbe: z.unknown(),
+            readinessProbe: z.unknown(),
+          }),
+        ),
+      }),
+    }),
+  }),
+});
+
 function parseSynthesizedDocuments(yamlContent: string): unknown[] {
   const documents = yamlContent
     .split(/^---$/m)
@@ -93,5 +116,45 @@ describe("birmel NetworkPolicy", () => {
     );
 
     expect(allowsDiscordVoiceUdp).toBe(true);
+  });
+});
+
+describe("birmel runtime deployment", () => {
+  it("probes the explicit runtime and leaves legacy memory disconnected", () => {
+    const app = new App({ outdir: ".test-synth-birmel-runtime" });
+    createBirmelChart(app);
+    const deployment = parseSynthesizedDocuments(app.synthYaml())
+      .map((document) => BirmelDeploymentSchema.safeParse(document))
+      .find((result) => result.success);
+    if (deployment?.success !== true) {
+      throw new Error("birmel Deployment was not synthesized");
+    }
+    const container = deployment.data.spec.template.spec.containers[0];
+    if (container == null) {
+      throw new Error("birmel container was not synthesized");
+    }
+    expect(container.ports).toContainEqual({
+      name: "health",
+      containerPort: 8080,
+    });
+    expect(container.startupProbe).toEqual({
+      failureThreshold: 24,
+      httpGet: { path: "/live", port: 8080, scheme: "HTTP" },
+      periodSeconds: 5,
+    });
+    expect(container.livenessProbe).toEqual({
+      failureThreshold: 3,
+      httpGet: { path: "/live", port: 8080, scheme: "HTTP" },
+      periodSeconds: 30,
+    });
+    expect(container.readinessProbe).toEqual({
+      failureThreshold: 3,
+      httpGet: { path: "/ready", port: 8080, scheme: "HTTP" },
+      periodSeconds: 10,
+    });
+    const environmentNames = container.env.map(({ name }) => name);
+    expect(environmentNames).toContain("HEALTH_PORT");
+    expect(environmentNames).not.toContain("MEMORY_DB_PATH");
+    expect(environmentNames).not.toContain("MASTRA_MEMORY_DB_PATH");
   });
 });

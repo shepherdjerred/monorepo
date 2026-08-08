@@ -65,6 +65,10 @@ export default defineConfig({
           label: "Tooling",
         },
         {
+          items: [{ label: "Birmel 3.0", link: "/birmel/" }],
+          label: "Applications",
+        },
+        {
           items: [
             {
               label: "qBittorrent VPN webseed relay",

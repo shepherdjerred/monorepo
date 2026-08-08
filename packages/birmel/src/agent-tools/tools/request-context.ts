@@ -7,6 +7,8 @@ export type RequestContext = {
   sourceMessageId: string;
   /** The guild where the request originated */
   guildId: string;
+  /** Compact elected persona identifier for persona-scoped memory */
+  personaId?: string;
   /** Voice channel the requesting user was in, when available */
   voiceChannelId?: string;
   /** The user who sent the message */

@@ -90,7 +90,6 @@ export async function handleReply(
   }
   if (hasReplySent()) {
     logger.warn("Duplicate reply attempt blocked", {
-      content: content.slice(0, 50),
       attemptedContentLength: content.length,
     });
     return {

@@ -1,4 +1,4 @@
-import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
+import { createTool } from "@shepherdjerred/birmel/agent-runtime/tools/create-tool.ts";
 import { z } from "zod";
 import { chromium, type Browser, type Page } from "playwright";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";

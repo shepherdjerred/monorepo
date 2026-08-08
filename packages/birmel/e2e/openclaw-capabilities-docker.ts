@@ -48,15 +48,13 @@ async function runPhase(phase: "setup" | "verify"): Promise<void> {
     "--env",
     "DISCORD_TOKEN=e2e-token",
     "--env",
-    "DISCORD_CLIENT_ID=e2e-client",
+    `DISCORD_CLIENT_ID=${"1".repeat(18)}`,
     "--env",
     "OPENAI_API_KEY=e2e-openai",
     "--env",
     "ANTHROPIC_API_KEY=dummy",
     "--env",
     "DATABASE_URL=file:/workspace/packages/birmel/data/openclaw-e2e.db",
-    "--env",
-    "MEMORY_DB_PATH=file:/workspace/packages/birmel/data/openclaw-memory.db",
     "--env",
     "BIRMEL_MOCK_DISCORD_DELIVERY=true",
     "--env",
@@ -67,7 +65,7 @@ async function runPhase(phase: "setup" | "verify"): Promise<void> {
     "PINCHTAB_PROFILE=birmel-e2e",
     imageTag,
     "-lc",
-    `bun run generate && bunx --trust prisma db push --accept-data-loss && bun e2e/openclaw-capabilities-container.ts ${phase}`,
+    `bun run generate && bun scripts/migrate.ts && bun e2e/openclaw-capabilities-container.ts ${phase}`,
   ]);
 }
 

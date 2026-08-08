@@ -4,7 +4,7 @@ import {
   type Player,
   type Track,
 } from "discord-player";
-import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
+import { createTool } from "@shepherdjerred/birmel/agent-runtime/tools/create-tool.ts";
 import { z } from "zod";
 import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
 import { getMusicPlayer } from "@shepherdjerred/birmel/music/player.ts";

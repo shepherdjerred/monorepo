@@ -14,11 +14,12 @@
     "src"
   ],
   "scripts": {
-    "start": "bun run build:context && bun run generate && bunx prisma db push && bun run src/index.ts",
-    "dev": "bun run build:context && bun run --watch src/index.ts",
+    "build": "bun run build:context && bun run generate && bun build src/index.ts --target=bun --packages external --outdir=dist",
+    "start": "bun run build:context && bun run generate && bun run scripts/start.ts",
+    "dev": "bun run build:context && bun run generate && bun run scripts/migrate.ts && bun run --watch src/index.ts",
     "build:context": "bunx turbo run build --filter=@shepherdjerred/glitter-context",
     "generate": "bun run scripts/generate-prisma.ts",
-    "test": "bun --env-file=.env.test run generate && bun --env-file=.env.test test",
+    "test": "bun run build:context && bun --env-file=.env.test run generate && bun --env-file=.env.test test",
     "test:e2e:music": "bun run e2e/music-playback.ts",
     "test:e2e:youtube-stream": "bun run e2e/youtube-stream-resource.ts",
     "test:e2e:openclaw-docker": "bun run e2e/openclaw-capabilities-docker.ts",
@@ -32,7 +33,6 @@
   "dependencies": {
     "@ai-sdk/openai": "^3.0.63",
     "@anthropic-ai/claude-agent-sdk": "^0.3.220",
-    "@libsql/client": "0.17.4",
     "@opentelemetry/api": "^1.9.1",
     "@opentelemetry/api-logs": "^0.221.0",
     "@opentelemetry/core": "^2.7.1",
@@ -50,8 +50,6 @@
     "@shepherdjerred/llm-observability": "workspace:*",
     "@shepherdjerred/glitter-context": "workspace:*",
     "@snazzah/davey": "^0.1.11",
-    "@voltagent/core": "^2.7.4",
-    "@voltagent/libsql": "^2.1.2",
     "ai": "^6.0.180",
     "chrono-node": "^2.9.1",
     "cron-parser": "^5.5.0",
@@ -62,6 +60,7 @@
     "hono": "^4.12.18",
     "mediaplex": "^1.0.0",
     "playwright": "1.62.0",
+    "prisma": "7.9.1",
     "youtube-dl-exec": "^3.1.6",
     "youtubei.js": "^17.0.1",
     "zod": "^4.4.3"
@@ -72,7 +71,6 @@
     "@typescript-eslint/utils": "^8.65.0",
     "eslint": "^10.3.0",
     "jiti": "^2.7.0",
-    "prisma": "^7.9.1",
     "typescript": "^6.0.3",
     "@typescript/native": "npm:typescript@7.0.2"
   }

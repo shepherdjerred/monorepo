@@ -5,19 +5,49 @@ import {
   relationshipsDocument,
   styleCards as validatedStyleCards,
 } from "./generated-data.ts";
+import { createFriendContextResolver as createResolver } from "./friend-context.ts";
 import {
   StyleCardV2Schema,
+  type FriendContextResult,
   type Person,
+  type PersonReferenceResolution,
   type RelationshipEvent,
   type StyleCard,
   type StylePromptContext,
 } from "./schema.ts";
+
+export type FriendContextResolver = {
+  resolvePersonReference: (reference: unknown) => PersonReferenceResolution;
+  getFriendContext: (input: unknown) => FriendContextResult;
+};
 
 export const people = peopleDocument.people;
 export const relationshipEvents = relationshipsDocument.events;
 export const generationState = generationStateDocument.people;
 export const friendGroupHistory = loreDocument.historyMarkdown;
 export const styleCards = { ...validatedStyleCards };
+
+export function createFriendContextResolver(
+  source: unknown,
+): FriendContextResolver {
+  return createResolver(source);
+}
+
+const defaultFriendContextResolver = createResolver({
+  peopleDocument,
+  relationshipsDocument,
+  loreDocument,
+});
+
+export function resolvePersonReference(
+  reference: unknown,
+): PersonReferenceResolution {
+  return defaultFriendContextResolver.resolvePersonReference(reference);
+}
+
+export function getFriendContext(input: unknown): FriendContextResult {
+  return defaultFriendContextResolver.getFriendContext(input);
+}
 
 function normalizeAlias(value: string): string {
   return value.trim().toLocaleLowerCase();
