@@ -39,6 +39,7 @@ await mock.module("#src/database/index.ts", () => ({
 const {
   getPrematchMessageIds,
   getPrematchMessageIdsForMatchId,
+  getPrematchMessageIdsForMatchIdOrEmpty,
   recordPrematchMessageIds,
 } = await import("#src/league/tasks/prematch/active-game-queries.ts");
 
@@ -87,7 +88,10 @@ describe("prematch message IDs", () => {
   test("ignores malformed optional records", async () => {
     storedPrematchMessageIds = "not-json";
 
-    await expect(getPrematchMessageIds(123)).resolves.toEqual(new Map());
+    await expect(getPrematchMessageIds(123)).rejects.toThrow();
+    await expect(
+      getPrematchMessageIdsForMatchIdOrEmpty(MatchIdSchema.parse("NA1_123")),
+    ).resolves.toEqual(new Map());
   });
 
   test("resolves the numeric game ID from a match ID", async () => {

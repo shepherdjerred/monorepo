@@ -12,29 +12,11 @@ const ACTIVE_GAME_TTL_MS = 2 * 60 * 60 * 1000; // 2 hours
 const TrackedPuuidsSchema = z.array(z.string());
 const PrematchMessageIdsSchema = z.record(z.string(), z.string());
 
-function parsePrematchMessageIds(
-  raw: string | null,
-  gameId: bigint,
-): Record<string, string> {
-  if (raw === null || raw.length === 0) {
+function parsePrematchMessageIds(raw: string | null): Record<string, string> {
+  if (raw === null) {
     return {};
   }
-
-  try {
-    return PrematchMessageIdsSchema.parse(JSON.parse(raw));
-  } catch (error) {
-    logger.error(
-      `⚠️ Invalid prematch message IDs for game ${gameId.toString()}:`,
-      error,
-    );
-    Sentry.captureException(error, {
-      tags: {
-        source: "prematch-message-ids-parse",
-        gameId: gameId.toString(),
-      },
-    });
-    return {};
-  }
+  return PrematchMessageIdsSchema.parse(JSON.parse(raw));
 }
 
 export type ActiveGameRecord = {
@@ -56,10 +38,7 @@ export async function getActiveGames(
     return rows.map((row) => ({
       gameId: Number(row.gameId),
       trackedPuuids: TrackedPuuidsSchema.parse(JSON.parse(row.trackedPuuids)),
-      prematchMessageIds: parsePrematchMessageIds(
-        row.prematchMessageIds,
-        row.gameId,
-      ),
+      prematchMessageIds: parsePrematchMessageIds(row.prematchMessageIds),
       detectedAt: row.detectedAt,
       expiresAt: row.expiresAt,
     }));
@@ -161,7 +140,7 @@ export async function getPrematchMessageIds(
   if (row === null) {
     return new Map();
   }
-  const parsed = parsePrematchMessageIds(row.prematchMessageIds, gameIdBigInt);
+  const parsed = parsePrematchMessageIds(row.prematchMessageIds);
   return new Map(Object.entries(parsed));
 }
 
@@ -174,6 +153,29 @@ export async function getPrematchMessageIdsForMatchId(
     return new Map();
   }
   return getPrematchMessageIds(BigInt(suffix), prismaClient);
+}
+
+/**
+ * Retrieve reply references at the postmatch delivery boundary. A database
+ * lookup failure must not prevent the report from being sent as a normal
+ * message, but the underlying query remains strict for polling callers.
+ */
+export async function getPrematchMessageIdsForMatchIdOrEmpty(
+  matchId: MatchId,
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<Map<string, string>> {
+  try {
+    return await getPrematchMessageIdsForMatchId(matchId, prismaClient);
+  } catch (error) {
+    logger.error(
+      `⚠️ Could not retrieve prematch reply references for ${matchId}:`,
+      error,
+    );
+    Sentry.captureException(error, {
+      tags: { source: "postmatch-prematch-reply-lookup", matchId },
+    });
+    return new Map();
+  }
 }
 
 /**

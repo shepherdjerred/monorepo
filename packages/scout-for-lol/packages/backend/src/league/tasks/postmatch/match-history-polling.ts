@@ -48,7 +48,7 @@ import {
 } from "#src/league/tasks/recovery/app-state.ts";
 import { fetchMatchIdsForTimeRange } from "#src/league/tasks/recovery/backfill-to-s3.ts";
 import { recordMatchForReportStore } from "#src/report-store/live-ingest.ts";
-import { getPrematchMessageIdsForMatchId } from "#src/league/tasks/prematch/active-game-queries.ts";
+import { getPrematchMessageIdsForMatchIdOrEmpty } from "#src/league/tasks/prematch/active-game-queries.ts";
 
 const logger = createLogger("postmatch-match-history-polling");
 
@@ -159,7 +159,7 @@ async function processMatch(
     channels: deliverChannels,
     logPrefix: "[processMatch]",
     sentryTags: { matchId },
-    replyToMessageIds: await getPrematchMessageIdsForMatchId(matchId),
+    replyToMessageIds: await getPrematchMessageIdsForMatchIdOrEmpty(matchId),
   });
 
   logger.info(`[processMatch] ✅ Processed match ${matchId}`);
