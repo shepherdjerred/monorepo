@@ -20,6 +20,7 @@ type GitOperationsDependencies = {
 };
 
 const SystemErrorSchema = z.object({ code: z.string() });
+type PublicationIntent = "fix" | "restack" | "inherited-commits";
 
 function isMissingPath(error: unknown): boolean {
   const parsed = SystemErrorSchema.safeParse(error);
@@ -57,6 +58,23 @@ export class GitOperations {
     this.#provider = dependencies.provider;
     this.#run = dependencies.run;
     this.#mustRun = dependencies.mustRun;
+  }
+
+  #assertPublicationContext(pr: PrState, intent: PublicationIntent): void {
+    const context = pr.worktreeContext;
+    const relation =
+      context?.remoteHeadSha === pr.identity.headSha
+        ? context.relation
+        : undefined;
+    if (
+      intent === "inherited-commits"
+        ? relation !== "ahead"
+        : relation !== "exact"
+    ) {
+      throw new Error(
+        `Cannot publish ${intent} from an unvalidated ${relation ?? "unknown"} worktree context; inspect inherited work or ask the operator`,
+      );
+    }
   }
 
   async #validatePaths(worktree: string, paths: string[]): Promise<string[]> {
@@ -209,6 +227,7 @@ export class GitOperations {
     message: string,
     signal?: AbortSignal,
   ): Promise<{ headSha: string }> {
+    this.#assertPublicationContext(pr, "fix");
     const worktree = this.#worktree(pr);
     const validated = await this.#validatePaths(worktree, paths);
     if (validated.length === 0) {
@@ -263,7 +282,9 @@ export class GitOperations {
   async publishRestack(
     pr: PrState,
     signal?: AbortSignal,
+    intent: "restack" | "inherited-commits" = "restack",
   ): Promise<{ headSha: string }> {
+    this.#assertPublicationContext(pr, intent);
     return this.#submitBranch(pr, signal);
   }
 

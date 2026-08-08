@@ -530,11 +530,11 @@ export class CommandFleetEnvironment implements FleetEnvironment {
   ): Promise<{ headSha: string }> {
     return this.#gitOperations.publishFix(pr, paths, message, signal);
   }
-
   publishRestack(
     pr: PrState,
     signal?: AbortSignal,
+    intent?: "restack" | "inherited-commits",
   ): Promise<{ headSha: string }> {
-    return this.#gitOperations.publishRestack(pr, signal);
+    return this.#gitOperations.publishRestack(pr, signal, intent);
   }
 }

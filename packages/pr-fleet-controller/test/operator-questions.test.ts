@@ -1,9 +1,16 @@
 import { describe, expect, test } from "bun:test";
 import {
   OperatorInputRequestSchema,
+  PrStateSchema,
   WorkerResultSchema,
 } from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
+import { FleetStore } from "@shepherdjerred/pr-fleet-controller/src/state.ts";
 import { ConventionalCommitMessageSchema } from "@shepherdjerred/pr-fleet-controller/src/tools.ts";
+import {
+  boundedInheritedCommitEvidence,
+  requireCompleteInheritedCommitInspection,
+} from "@shepherdjerred/pr-fleet-controller/src/worker-wip-tools.ts";
+import { evidence, identity } from "./fixtures.ts";
 
 function requestWithRecommendations(recommendations: boolean[]) {
   return {
@@ -50,6 +57,70 @@ describe("operator question contracts", () => {
       ConventionalCommitMessageSchema.safeParse("preserve inherited commits")
         .success,
     ).toBe(false);
+  });
+
+  test("marks oversized inherited commit evidence incomplete and blocks publication", () => {
+    const complete = boundedInheritedCommitEvidence(
+      "commit abc\nM\tpackages/x.ts",
+      "diff --git a/packages/x.ts b/packages/x.ts",
+    );
+    expect(complete.complete).toBe(true);
+    expect(complete.evidence).toContain("Complete patch");
+
+    const truncated = boundedInheritedCommitEvidence(
+      "commit abc",
+      "x".repeat(110_000),
+    );
+    expect(truncated.complete).toBe(false);
+    expect(truncated.evidence).toContain("publication is disabled");
+
+    const pr = identity(43);
+    const state = PrStateSchema.parse({
+      identity: pr,
+      logicalOwner: "pr-43",
+      runtimeAgent: "pr-43-g1",
+      agentGeneration: 1,
+      model: "openai/gpt-5.6-terra",
+      status: "diagnosing",
+      classification: "actionable-red",
+      stackId: "pr-43",
+      worktree: "/tmp/worktrees/pr-43",
+      worktreeContext: {
+        ownership: "operator",
+        remoteHeadSha: pr.headSha,
+        localHeadSha: "b".repeat(40),
+        relation: "ahead",
+        dirty: false,
+        stagedPaths: [],
+        unstagedPaths: [],
+      },
+      setupComplete: true,
+      evidence: evidence(pr),
+      lastAgentReportAt: null,
+      lastProgressAt: "2026-08-08T20:00:00.000Z",
+      noProgressTicks: 0,
+      prodSentAt: null,
+      escalation: null,
+      priority: 0,
+    });
+    const store = new FleetStore(1);
+    store.inheritedCommitInspections.set(pr.number, {
+      remoteHeadSha: pr.headSha,
+      localHeadSha: "b".repeat(40),
+      complete: false,
+    });
+    expect(() =>
+      requireCompleteInheritedCommitInspection(store, state, "b".repeat(40)),
+    ).toThrow(/complete current-head/);
+
+    store.inheritedCommitInspections.set(pr.number, {
+      remoteHeadSha: pr.headSha,
+      localHeadSha: "b".repeat(40),
+      complete: true,
+    });
+    expect(() =>
+      requireCompleteInheritedCommitInspection(store, state, "b".repeat(40)),
+    ).not.toThrow();
   });
 
   test("requires two or three choices with exactly one recommendation", () => {

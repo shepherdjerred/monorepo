@@ -45,7 +45,6 @@ readiness, and destructive-action boundaries remain deterministic.
 
 ## Remaining
 
-- [x] Implement and verify the controller, worker tools, and dashboard changes.
 - [ ] Drive the original user-authored PR fleet to current-head green.
 - [ ] Publish the controller changes as a draft git-spice PR and make it green.
 
@@ -56,3 +55,5 @@ readiness, and destructive-action boundaries remain deterministic.
   original fleet is green.
 - 2026-08-08: The operator narrowed this implementation pass to local code and
   verification. Fleet execution and controller-PR publication remain deferred.
+- 2026-08-08: Implemented and locally verified the controller, worker tools,
+  dashboard, operator-input lifecycle, and inherited-work safety boundaries.

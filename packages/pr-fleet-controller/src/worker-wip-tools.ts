@@ -19,12 +19,70 @@ type RecordTool = <T>(
   run: () => Promise<T>,
 ) => Promise<T>;
 
+const MAX_INHERITED_COMMIT_EVIDENCE_BYTES = 100_000;
+
+export function boundedInheritedCommitEvidence(
+  commitLog: string,
+  patch: string,
+): { evidence: string; complete: boolean } {
+  const evidence = `Commit metadata and changed paths:\n${commitLog}\nComplete patch:\n${patch}`;
+  if (
+    Buffer.byteLength(evidence, "utf8") <= MAX_INHERITED_COMMIT_EVIDENCE_BYTES
+  ) {
+    return { evidence, complete: true };
+  }
+  const prefix = Buffer.from(evidence, "utf8")
+    .subarray(0, MAX_INHERITED_COMMIT_EVIDENCE_BYTES)
+    .toString("utf8");
+  return {
+    evidence: `${prefix}\n[TRUNCATED: inherited commit evidence exceeds ${String(MAX_INHERITED_COMMIT_EVIDENCE_BYTES)} bytes; publication is disabled]`,
+    complete: false,
+  };
+}
+
+export function requireCompleteInheritedCommitInspection(
+  store: FleetStore,
+  pr: PrState,
+  localHeadSha: string,
+): void {
+  const inspection = store.inheritedCommitInspections.get(pr.identity.number);
+  if (
+    inspection === undefined ||
+    !inspection.complete ||
+    inspection.remoteHeadSha !== pr.identity.headSha ||
+    inspection.localHeadSha !== localHeadSha
+  ) {
+    throw new Error(
+      "Inherited commits must have complete current-head metadata, changed-path, and patch evidence before publication",
+    );
+  }
+}
+
 export function abortWorkerForOperatorInput(
   store: FleetStore,
   prNumber: number,
 ): void {
   store.cancelledWorkers.add(prNumber);
   store.workerControllers.get(prNumber)?.abort();
+}
+
+async function runGit(
+  environment: FleetEnvironment,
+  worktree: string,
+  signal: AbortSignal,
+  args: string[],
+): Promise<string> {
+  const result = await environment.runLocalCommand({
+    executable: "git",
+    args,
+    cwd: worktree,
+    timeoutMs: 30_000,
+    signal,
+  });
+  if (result.exitCode !== 0) {
+    throw new Error(`git ${args.join(" ")} failed: ${result.stderr}`);
+  }
+  return result.stdout;
 }
 
 export function createWorkerWipTools(options: {
@@ -61,41 +119,73 @@ export function createWorkerWipTools(options: {
         stagedDiff: z.string(),
         unstagedDiff: z.string(),
         localCommits: z.string(),
+        localCommitEvidenceComplete: z.boolean(),
       }),
       execute: (input) =>
         record("inspect_worktree_wip", input, async () => {
-          const commands = [
-            ["status", "--short"],
-            ["diff", "--cached", "--"],
-            ["diff", "--"],
-            [
-              "log",
-              "--oneline",
-              "--decorate",
-              "--max-count=30",
-              `${pr.identity.headSha}..HEAD`,
-            ],
-          ];
-          const results: string[] = [];
-          for (const args of commands) {
-            const result = await environment.runLocalCommand({
-              executable: "git",
-              args,
-              cwd: worktree,
-              timeoutMs: 30_000,
+          const status = await runGit(environment, worktree, signal, [
+            "status",
+            "--short",
+          ]);
+          const stagedDiff = await runGit(environment, worktree, signal, [
+            "diff",
+            "--cached",
+            "--",
+          ]);
+          const unstagedDiff = await runGit(environment, worktree, signal, [
+            "diff",
+            "--",
+          ]);
+          let localCommits = "No ahead-of-remote inherited commits.";
+          let localCommitEvidenceComplete = true;
+          const context = pr.worktreeContext;
+          if (context?.relation === "ahead") {
+            const localHeadOutput = await runGit(
+              environment,
+              worktree,
               signal,
-            });
-            if (result.exitCode !== 0) {
-              throw new Error(`git ${args.join(" ")} failed: ${result.stderr}`);
+              ["rev-parse", "HEAD"],
+            );
+            const localHeadSha = localHeadOutput.trim();
+            if (localHeadSha !== context.localHeadSha) {
+              throw new Error(
+                "Local HEAD changed after inherited work was captured; inspect again",
+              );
             }
-            results.push(result.stdout.slice(0, 100_000));
+            const commitLog = await runGit(environment, worktree, signal, [
+              "log",
+              "--format=fuller",
+              "--name-status",
+              "--no-renames",
+              `${pr.identity.headSha}..HEAD`,
+              "--",
+            ]);
+            const patch = await runGit(environment, worktree, signal, [
+              "diff",
+              "--binary",
+              "--full-index",
+              "--no-ext-diff",
+              `${pr.identity.headSha}..HEAD`,
+              "--",
+            ]);
+            const bounded = boundedInheritedCommitEvidence(commitLog, patch);
+            localCommits = bounded.evidence;
+            localCommitEvidenceComplete = bounded.complete;
+            store.inheritedCommitInspections.set(pr.identity.number, {
+              remoteHeadSha: pr.identity.headSha,
+              localHeadSha,
+              complete: bounded.complete,
+            });
+          } else {
+            store.inheritedCommitInspections.delete(pr.identity.number);
           }
           return {
-            context: pr.worktreeContext,
-            status: results[0] ?? "",
-            stagedDiff: results[1] ?? "",
-            unstagedDiff: results[2] ?? "",
-            localCommits: results[3] ?? "",
+            context,
+            status: status.slice(0, 100_000),
+            stagedDiff: stagedDiff.slice(0, 100_000),
+            unstagedDiff: unstagedDiff.slice(0, 100_000),
+            localCommits,
+            localCommitEvidenceComplete,
           };
         }),
     }),
@@ -184,7 +274,7 @@ export function createWorkerWipTools(options: {
     publish_inherited_commits: createTool({
       id: "publish_inherited_commits",
       description:
-        "Publish already-validated local commits that are descendants of the captured PR head, without committing unrelated working-tree changes. Use only when every inherited commit clearly belongs to this PR.",
+        "Publish already-validated local commits that are descendants of the captured PR head, without committing unrelated working-tree changes. Use only after inspect_worktree_wip returns complete commit metadata, changed paths, and patch evidence and every inherited commit clearly belongs to this PR.",
       inputSchema: z.object({}),
       outputSchema: z.object({ headSha: z.string() }),
       execute: (input) =>
@@ -214,6 +304,11 @@ export function createWorkerWipTools(options: {
               "Local HEAD changed after inherited work was captured; inspect again or ask the operator",
             );
           }
+          requireCompleteInheritedCommitInspection(
+            store,
+            pr,
+            head.stdout.trim(),
+          );
           const relation = await environment.runLocalCommand({
             executable: "git",
             args: ["merge-base", "--is-ancestor", pr.identity.headSha, "HEAD"],
@@ -227,7 +322,13 @@ export function createWorkerWipTools(options: {
             );
           }
           try {
-            return await environment.publishRestack(pr, signal);
+            const published = await environment.publishRestack(
+              pr,
+              signal,
+              "inherited-commits",
+            );
+            store.inheritedCommitInspections.delete(pr.identity.number);
+            return published;
           } finally {
             store.releaseLease(pr.identity.number, "stack-write", pr.stackId);
           }

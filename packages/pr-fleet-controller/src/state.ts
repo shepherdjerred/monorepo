@@ -30,6 +30,14 @@ export class FleetStore {
   readonly setupWorktrees = new Map<string, string>();
   readonly pausedReasons = new Map<number, string>();
   readonly operatorRequests = new Map<number, OperatorInputRequest>();
+  readonly inheritedCommitInspections = new Map<
+    number,
+    {
+      remoteHeadSha: string;
+      localHeadSha: string;
+      complete: boolean;
+    }
+  >();
   readonly stackWriteOwners = new Map<string, number>();
   setupOwner: number | null = null;
   readonly heavyOwners = new Set<number>();

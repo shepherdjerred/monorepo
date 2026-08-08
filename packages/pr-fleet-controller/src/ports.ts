@@ -64,6 +64,7 @@ export type FleetEnvironment = {
   publishRestack: (
     pr: PrState,
     signal?: AbortSignal,
+    intent?: "restack" | "inherited-commits",
   ) => Promise<{ headSha: string }>;
 };
 

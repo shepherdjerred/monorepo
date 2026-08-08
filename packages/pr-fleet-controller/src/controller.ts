@@ -49,12 +49,16 @@ import {
   acceptOperatorAnswer,
   acceptOperatorTextAnswer,
   listOperatorQuestions,
+  lookupCurrentPrHead,
 } from "./controller-operator-questions.ts";
 import {
   closeMissingPrStates,
   reconcilePrStates,
 } from "./controller-reconciliation.ts";
-import { refreshFleetEvidence } from "./controller-evidence-refresh.ts";
+import {
+  deferPrAfterHeadChange,
+  refreshFleetEvidence,
+} from "./controller-evidence-refresh.ts";
 import { withoutCommandCorrelation } from "./command-correlation.ts";
 
 export class FleetController implements MasterControllerTools {
@@ -103,8 +107,9 @@ export class FleetController implements MasterControllerTools {
   answerOperatorQuestion(
     rawAnswer: OperatorInputAnswer,
   ): Promise<FleetTickReport> {
-    return Promise.resolve(
-      acceptOperatorAnswer(rawAnswer, this.#operatorQuestionDependencies()),
+    return acceptOperatorAnswer(
+      rawAnswer,
+      this.#operatorQuestionDependencies(),
     );
   }
 
@@ -112,12 +117,10 @@ export class FleetController implements MasterControllerTools {
     requestId: string,
     text: string,
   ): Promise<FleetTickReport> {
-    return Promise.resolve(
-      acceptOperatorTextAnswer(
-        requestId,
-        text,
-        this.#operatorQuestionDependencies(),
-      ),
+    return acceptOperatorTextAnswer(
+      requestId,
+      text,
+      this.#operatorQuestionDependencies(),
     );
   }
 
@@ -126,6 +129,8 @@ export class FleetController implements MasterControllerTools {
       store: this.store,
       telemetry: this.#telemetry,
       observer: this.#observer,
+      currentPrHead: (prNumber: number) =>
+        lookupCurrentPrHead(this.#environment, prNumber),
       queueReconciliation: () => {
         queueMicrotask(() => {
           void this.#runTickSafely("user", "operator-answer tick");
@@ -221,7 +226,8 @@ export class FleetController implements MasterControllerTools {
       identities,
       environment: this.#environment,
       changes,
-      onHeadChanged: () => {
+      onHeadChanged: (error) => {
+        deferPrAfterHeadChange(this.store, error);
         this.#tickDue = true;
       },
     });

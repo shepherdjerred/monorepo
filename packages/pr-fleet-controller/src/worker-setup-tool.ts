@@ -25,6 +25,46 @@ export const SETUP_COMMANDS = [
   },
 ] satisfies { executable: string; args: string[] }[];
 
+type RemoveScratchDirectory = (
+  directory: string,
+  options: { recursive: true; force: true },
+) => Promise<void>;
+
+export async function releaseSetupResources(options: {
+  store: FleetStore;
+  pr: PrState;
+  miseScratchDirectory: string | undefined;
+  setupFailed: boolean;
+  removeScratchDirectory?: RemoveScratchDirectory;
+}): Promise<void> {
+  const {
+    store,
+    pr,
+    miseScratchDirectory,
+    setupFailed,
+    removeScratchDirectory = rm,
+  } = options;
+  let cleanupFailed = false;
+  let cleanupError: unknown;
+  try {
+    if (miseScratchDirectory !== undefined) {
+      await removeScratchDirectory(miseScratchDirectory, {
+        recursive: true,
+        force: true,
+      });
+    }
+  } catch (error) {
+    cleanupFailed = true;
+    cleanupError = error;
+  } finally {
+    store.releaseLease(pr.identity.number, "heavy", pr.stackId);
+    store.releaseLease(pr.identity.number, "setup", pr.stackId);
+  }
+  if (cleanupFailed && !setupFailed) {
+    throw cleanupError;
+  }
+}
+
 async function resolveSetupDirectories(
   worktree: string,
   environment: FleetEnvironment,
@@ -107,6 +147,7 @@ export function createSetupWorktreeTool(options: {
         }
         const completed: string[] = [];
         let miseScratchDirectory: string | undefined;
+        let setupFailed = false;
         try {
           const directories = await resolveSetupDirectories(
             worktree,
@@ -148,12 +189,16 @@ export function createSetupWorktreeTool(options: {
             }
           }
           return { commands: completed };
+        } catch (error) {
+          setupFailed = true;
+          throw error;
         } finally {
-          if (miseScratchDirectory !== undefined) {
-            await rm(miseScratchDirectory, { recursive: true, force: true });
-          }
-          store.releaseLease(pr.identity.number, "heavy", pr.stackId);
-          store.releaseLease(pr.identity.number, "setup", pr.stackId);
+          await releaseSetupResources({
+            store,
+            pr,
+            miseScratchDirectory,
+            setupFailed,
+          });
         }
       }),
   });

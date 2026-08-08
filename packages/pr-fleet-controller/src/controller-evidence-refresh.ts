@@ -6,6 +6,7 @@ import {
   type RefreshedPr,
 } from "./fleet-logic.ts";
 import { withPrCommandCorrelation } from "./controller-correlation.ts";
+import type { FleetStore } from "./state.ts";
 
 export class PrHeadChangedDuringRefreshError extends Error {
   readonly prNumber: number;
@@ -23,11 +24,30 @@ export class PrHeadChangedDuringRefreshError extends Error {
   }
 }
 
+export function deferPrAfterHeadChange(
+  store: FleetStore,
+  error: PrHeadChangedDuringRefreshError,
+): void {
+  const stale = store.prs.get(error.prNumber);
+  if (stale === undefined) {
+    return;
+  }
+  store.prs.set(error.prNumber, {
+    ...stale,
+    classification: "pending",
+    status: "waiting-ci",
+  });
+  if (store.activeWorkers.has(error.prNumber)) {
+    store.cancelledWorkers.add(error.prNumber);
+    store.workerControllers.get(error.prNumber)?.abort();
+  }
+}
+
 export async function refreshFleetEvidence(options: {
   identities: PrIdentity[];
   environment: FleetEnvironment;
   changes: string[];
-  onHeadChanged: () => void;
+  onHeadChanged: (error: PrHeadChangedDuringRefreshError) => void;
 }): Promise<RefreshedPr[]> {
   const { identities, environment, changes, onHeadChanged } = options;
   const stackIds = computeStackIds(identities);
@@ -45,7 +65,7 @@ export async function refreshFleetEvidence(options: {
         changes.push(
           `deferred PR #${String(error.prNumber)}: head changed during evidence refresh (${error.expectedHead} -> ${error.actualHead})`,
         );
-        onHeadChanged();
+        onHeadChanged(error);
         return null;
       }
     }),

@@ -1,5 +1,5 @@
 import type { ControllerTelemetry } from "./controller-telemetry.ts";
-import type { FleetObserver } from "./ports.ts";
+import type { FleetEnvironment, FleetObserver } from "./ports.ts";
 import {
   OperatorInputAnswerSchema,
   type FleetTickReport,
@@ -12,8 +12,19 @@ type OperatorQuestionDependencies = {
   store: FleetStore;
   telemetry: ControllerTelemetry;
   observer: FleetObserver;
+  currentPrHead: (prNumber: number) => Promise<string | null>;
   queueReconciliation: () => void;
 };
+
+export async function lookupCurrentPrHead(
+  environment: FleetEnvironment,
+  prNumber: number,
+): Promise<string | null> {
+  const identities = await environment.listOpenPrs();
+  return (
+    identities.find((identity) => identity.number === prNumber)?.headSha ?? null
+  );
+}
 
 export function listOperatorQuestions(
   store: FleetStore,
@@ -62,11 +73,12 @@ function answerGuidance(
   return guidance.join("\n\n");
 }
 
-export function acceptOperatorAnswer(
+export async function acceptOperatorAnswer(
   rawAnswer: OperatorInputAnswer,
   dependencies: OperatorQuestionDependencies,
-): FleetTickReport {
-  const { store, telemetry, observer, queueReconciliation } = dependencies;
+): Promise<FleetTickReport> {
+  const { store, telemetry, observer, currentPrHead, queueReconciliation } =
+    dependencies;
   const answer = OperatorInputAnswerSchema.parse(rawAnswer);
   const request = [...store.operatorRequests.values()].find(
     (candidate) => candidate.id === answer.requestId,
@@ -84,12 +96,24 @@ export function acceptOperatorAnswer(
   ) {
     throw new Error(`Operator request ${request.id} is stale`);
   }
+  const remoteHead = await currentPrHead(request.pr);
+  const currentRequest = store.operatorRequests.get(request.pr);
+  const currentState = store.prs.get(request.pr);
+  if (
+    currentState === undefined ||
+    currentState.status === "closed" ||
+    currentRequest?.id !== request.id ||
+    remoteHead !== request.headSha ||
+    currentState.identity.headSha !== request.headSha
+  ) {
+    throw new Error(`Operator request ${request.id} is stale`);
+  }
   const guidance = answerGuidance(request, answer);
   telemetry.operatorQuestionAnswered(request, answer);
   store.operatorRequests.delete(request.pr);
   store.addGuidance(request.pr, guidance);
   store.prs.set(request.pr, {
-    ...state,
+    ...currentState,
     operatorRequest: null,
     classification: "queued",
     status: "queued",
@@ -109,11 +133,11 @@ export function acceptOperatorAnswer(
   };
 }
 
-export function acceptOperatorTextAnswer(
+export async function acceptOperatorTextAnswer(
   requestId: string,
   text: string,
   dependencies: OperatorQuestionDependencies,
-): FleetTickReport {
+): Promise<FleetTickReport> {
   const request = [...dependencies.store.operatorRequests.values()].find(
     (candidate) => candidate.id === requestId,
   );

@@ -21,15 +21,18 @@ When the user explicitly asks to operate the complete open PR fleet, start the
 foreground controller with one provider model:
 
 ```bash
-bun run pr:fleet --model <provider>/<model-id>
+bun run pr:fleet --model <provider>/<model-id> [--author <login>]
 ```
 
-By default `pr:fleet` also builds and spawns a **read-only live web dashboard**
-that streams the run bundle over SSE on loopback — a fleet overview plus a
-per-PR transcript including model reasoning. It only observes (it never controls
-the fleet) and is torn down on shutdown. Suppress it with `--no-ui`, fix the
-port with `--ui-port`, or skip opening the browser with `--no-open`. Open the
-dashboard for any run (live or finished) standalone with:
+The optional author scope includes that login's draft PRs and is recorded in
+the run manifest and dashboard. By default `pr:fleet` also builds and spawns a
+live web dashboard that streams the run bundle over SSE on loopback — a fleet
+overview plus a per-PR transcript including model reasoning. Its only control
+is answering an active, head-bound operator question inside that PR's detail
+view; it cannot pause, prioritize, steer, merge, or publish. Standalone and
+historical dashboards remain read-only. The live dashboard is torn down on
+shutdown. Suppress it with `--no-ui`, fix the port with `--ui-port`, or skip
+opening the browser with `--no-open`. Open any run standalone with:
 
 ```bash
 bun run pr:fleet:watch [--run <id|dir>]
@@ -45,7 +48,8 @@ bun run pr:fleet:replay --run <run-id-or-directory>
 
 The controller may repair and publish branches but may not merge, close, or
 approve PRs. Inspect and replay operate on collected evidence; they do not run
-evals.
+evals. In the controller terminal, `/questions` lists pending requests and
+`/answer <request-id> <free-text>` answers one when the dashboard is unavailable.
 
 ## Core Workflow
 

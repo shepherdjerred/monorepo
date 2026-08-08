@@ -372,7 +372,7 @@ export function createWorkerTools(
     publish_fix: createTool({
       id: "publish_fix",
       description:
-        "Publish explicit changed paths through hooks and git-spice.",
+        "Publish explicit changed paths through hooks and git-spice from an exact-head worktree. Use the inherited-commit tool first when local commits are ahead of the captured PR head.",
       inputSchema: z.object({
         paths: z.array(z.string().min(1)).min(1).max(100),
         message: ConventionalCommitMessageSchema,
