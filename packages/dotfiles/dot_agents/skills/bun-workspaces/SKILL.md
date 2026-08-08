@@ -125,11 +125,13 @@ bun pm trust <package>
 
 ## Script scheduling
 
-Filtered finite scripts honor workspace dependency order; independent packages can overlap. Use dependency-aware default execution for builds:
+Filtered finite scripts honor workspace dependency order; independent packages can overlap. Keep local builds focused:
 
 ```bash
-bun run --filter '*' build
+bun run --filter '<workspace>' build
 ```
+
+At this monorepo's root, use `bunx turbo run build` for a repo-wide build. Never use `bun run --filter '*' build` here: bypassing the bounded Turbo task graph can launch thousands of processes and exhaust the machine.
 
 Long-running dev servers block dependents under dependency ordering. Run intended independent servers explicitly in parallel:
 
