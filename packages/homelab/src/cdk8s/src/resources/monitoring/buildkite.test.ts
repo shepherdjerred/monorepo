@@ -195,7 +195,10 @@ describe("Buildkite monitoring manifests", () => {
     );
     expect(String(collectorStale?.["expr"])).toContain("> 1200");
     expect(String(collectorStale?.["expr"])).toContain(
-      `absent(\n  kubernetes_maintenance_last_success_timestamp_seconds{\n    job="${BUILDKITE_BUN_CACHE_GC_ACTIVITY}"\n  }\n)`,
+      `absent(\n    kubernetes_maintenance_last_success_timestamp_seconds{\n      job="${BUILDKITE_BUN_CACHE_GC_ACTIVITY}"\n    }\n  )`,
+    );
+    expect(String(collectorStale?.["expr"])).toContain(
+      'temporal_worker_app_process_start_time_seconds{\n        namespace="buildkite",\n        pod=~"temporal-maintenance-worker-.*"\n      }',
     );
   });
 });

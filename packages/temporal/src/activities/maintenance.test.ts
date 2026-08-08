@@ -12,6 +12,15 @@ function setEnvironment(name: string, value: string | undefined): void {
   Bun.env[name] = value;
 }
 
+const testHooks: MaintenanceCommandHooks = {
+  heartbeat: () => {
+    // Temporal heartbeats are not available in unit tests.
+  },
+  onCancellation: () => {
+    // Cancellation is exercised by the subprocess runner test below.
+  },
+};
+
 describe("maintenance command construction", () => {
   it("builds all four direct commands and their mounted paths", () => {
     setEnvironment("KOMETA_PLEXTOKEN", "plex-secret-for-test");
@@ -65,7 +74,7 @@ describe("maintenance subprocess runner", () => {
   it("propagates non-zero exits without exposing secret values", async () => {
     const command: MaintenanceCommand = {
       kind: "kometa",
-      command: ["sh", "-c", "echo secret-value >&2; exit 7"],
+      command: ["sh", "-c", "echo stdout-value; echo secret-value >&2; exit 7"],
       cwd: "/tmp",
       env: {},
       secretValues: ["secret-value"],
@@ -80,7 +89,7 @@ describe("maintenance subprocess runner", () => {
     };
 
     await expect(spawnMaintenanceCommand(command, hooks)).rejects.toThrow(
-      "kometa command exited 7: <redacted>",
+      "kometa command exited 7: stdout-value\n<redacted>",
     );
   });
 
@@ -125,7 +134,7 @@ describe("maintenance subprocess runner", () => {
     };
     setEnvironment("KOMETA_PLEXTOKEN", "plex-secret-for-test");
     setEnvironment("KOMETA_TMDBAPIKEY", "tmdb-secret-for-test");
-    await executeMaintenance("kometa", runner);
+    await executeMaintenance("kometa", runner, testHooks);
     expect(commands).toHaveLength(1);
     const exposition = await register.metrics();
     expect(exposition).toMatch(
@@ -139,8 +148,9 @@ describe("maintenance subprocess runner", () => {
       _command: MaintenanceCommand,
       _hooks: MaintenanceCommandHooks,
     ): Promise<number> => 9;
+    // The activity context is supplied explicitly at this unit-test seam.
     await expect(
-      executeMaintenance("buildkite-bun-cache-gc", failingRunner),
+      executeMaintenance("buildkite-bun-cache-gc", failingRunner, testHooks),
     ).rejects.toThrow("buildkite-bun-cache-gc command exited 9");
   });
 });

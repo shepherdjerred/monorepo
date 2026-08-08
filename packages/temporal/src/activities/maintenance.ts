@@ -3,10 +3,13 @@ import {
   maintenanceLastSuccessTimestampSeconds,
   maintenanceRunsTotal,
 } from "#observability/metrics.ts";
+import { log } from "#observability/log.ts";
 
 const KOMETA_CONFIG_PATH = "/etc/kometa/config.yml";
 const MAINTENANCE_WORKDIR = "/tmp";
 const HEARTBEAT_INTERVAL_MS = 15_000;
+const OUTPUT_TAIL_LINES = 20;
+const OUTPUT_TAIL_CHARS = 8192;
 
 export type MaintenanceKind =
   | "kometa"
@@ -43,24 +46,17 @@ function requiredEnvironment(name: string): string {
 }
 
 function activityHooks(): MaintenanceCommandHooks {
-  let context: ReturnType<typeof Context.current> | undefined;
-  try {
-    context = Context.current();
-  } catch {
-    context = undefined;
-  }
+  const context = Context.current();
 
   const hooks: MaintenanceCommandHooks = {
     heartbeat: (payload) => {
-      context?.heartbeat(payload);
+      context.heartbeat(payload);
     },
     onCancellation: () => {
       // The subprocess runner owns cancellation termination.
     },
   };
-  if (context !== undefined) {
-    hooks.cancellationSignal = context.cancellationSignal;
-  }
+  hooks.cancellationSignal = context.cancellationSignal;
   return hooks;
 }
 
@@ -142,6 +138,55 @@ function redact(text: string, secretValues: readonly string[]): string {
   );
 }
 
+function appendOutputTail(tail: string[], line: string): void {
+  tail.push(line);
+  while (tail.length > OUTPUT_TAIL_LINES) {
+    tail.shift();
+  }
+  while (tail.join("\n").length > OUTPUT_TAIL_CHARS) {
+    tail.shift();
+  }
+}
+
+async function streamMaintenanceOutput(
+  stream: ReadableStream<Uint8Array>,
+  streamName: "stdout" | "stderr",
+  command: MaintenanceCommand,
+): Promise<string> {
+  const decoder = new TextDecoder();
+  const tail: string[] = [];
+  let pending = "";
+  for await (const value of stream) {
+    pending += decoder.decode(value, { stream: true });
+    const lastNewline = pending.lastIndexOf("\n");
+    if (lastNewline === -1) {
+      continue;
+    }
+    const completeLines = pending.slice(0, lastNewline).split("\n");
+    pending = pending.slice(lastNewline + 1);
+    for (const line of completeLines) {
+      const redacted = redact(line.replace(/\r$/, ""), command.secretValues);
+      appendOutputTail(tail, redacted);
+      log("info", "Maintenance subprocess output", {
+        maintenanceKind: command.kind,
+        stream: streamName,
+        line: redacted,
+      });
+    }
+  }
+  pending += decoder.decode();
+  if (pending !== "") {
+    const redacted = redact(pending, command.secretValues);
+    appendOutputTail(tail, redacted);
+    log("info", "Maintenance subprocess output", {
+      maintenanceKind: command.kind,
+      stream: streamName,
+      line: redacted,
+    });
+  }
+  return tail.join("\n");
+}
+
 export const spawnMaintenanceCommand: MaintenanceCommandRunner = async (
   command,
   hooks,
@@ -174,12 +219,13 @@ export const spawnMaintenanceCommand: MaintenanceCommandRunner = async (
   }
   hooks.cancellationSignal?.addEventListener("abort", abort, { once: true });
 
+  let stdout: string;
   let stderr: string;
   let exitCode: number;
   try {
-    [, stderr, exitCode] = await Promise.all([
-      new Response(process.stdout).text(),
-      new Response(process.stderr).text(),
+    [stdout, stderr, exitCode] = await Promise.all([
+      streamMaintenanceOutput(process.stdout, "stdout", command),
+      streamMaintenanceOutput(process.stderr, "stderr", command),
       process.exited,
     ]);
   } finally {
@@ -192,7 +238,9 @@ export const spawnMaintenanceCommand: MaintenanceCommandRunner = async (
   }
 
   if (exitCode !== 0) {
-    const detail = redact(stderr.trim(), command.secretValues);
+    const detail = [stdout, stderr]
+      .filter((output) => output !== "")
+      .join("\n");
     throw new Error(
       `${command.kind} command exited ${String(exitCode)}${detail === "" ? "" : `: ${detail}`}`,
     );
@@ -203,10 +251,11 @@ export const spawnMaintenanceCommand: MaintenanceCommandRunner = async (
 export async function executeMaintenance(
   kind: MaintenanceKind,
   runner: MaintenanceCommandRunner = spawnMaintenanceCommand,
+  hooks: MaintenanceCommandHooks = activityHooks(),
 ): Promise<void> {
   const command = buildMaintenanceCommand(kind);
   try {
-    const exitCode = await runner(command, activityHooks());
+    const exitCode = await runner(command, hooks);
     if (exitCode !== 0) {
       throw new Error(`${kind} command exited ${String(exitCode)}`);
     }

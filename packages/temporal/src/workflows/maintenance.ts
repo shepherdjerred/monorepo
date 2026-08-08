@@ -1,17 +1,25 @@
 import { proxyActivities } from "@temporalio/workflow";
 import type { MaintenanceActivities } from "#activities/maintenance.ts";
 
-const { runKometa, runBunCacheGc, runUvCachePrune, runTrivyDbRefresh } =
+const maintenanceActivityOptions = {
+  heartbeatTimeout: "90 seconds",
+  retry: {
+    maximumAttempts: 3,
+    initialInterval: "30s",
+    backoffCoefficient: 2,
+    maximumInterval: "5 minutes",
+  },
+} as const;
+
+const { runKometa, runUvCachePrune, runTrivyDbRefresh } =
   proxyActivities<MaintenanceActivities>({
+    ...maintenanceActivityOptions,
     startToCloseTimeout: "30 minutes",
-    heartbeatTimeout: "90 seconds",
-    retry: {
-      maximumAttempts: 3,
-      initialInterval: "30s",
-      backoffCoefficient: 2,
-      maximumInterval: "5 minutes",
-    },
   });
+const { runBunCacheGc } = proxyActivities<MaintenanceActivities>({
+  ...maintenanceActivityOptions,
+  startToCloseTimeout: "15 minutes",
+});
 
 export async function runKometaWorkflow(): Promise<void> {
   await runKometa();

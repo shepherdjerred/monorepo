@@ -331,10 +331,20 @@ and on ()
     job="${BUILDKITE_BUN_CACHE_GC_ACTIVITY}"
   } > 1200
 )
-or absent(
-  kubernetes_maintenance_last_success_timestamp_seconds{
-    job="${BUILDKITE_BUN_CACHE_GC_ACTIVITY}"
-  }
+or (
+  absent(
+    kubernetes_maintenance_last_success_timestamp_seconds{
+      job="${BUILDKITE_BUN_CACHE_GC_ACTIVITY}"
+    }
+  )
+  and (
+    time() - max(
+      temporal_worker_app_process_start_time_seconds{
+        namespace="buildkite",
+        pod=~"temporal-maintenance-worker-.*"
+      }
+    ) > 1200
+  )
 )`),
           for: "1m",
           labels: {

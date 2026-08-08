@@ -33,7 +33,7 @@ headroom alone would only delay another incident.
   mark.
 - Alert on the Bun PVC alone at 75% for 10 minutes and 90% for 5 minutes using
   persistent ZFS telemetry joined to kube-state-metrics. Alert when the
-  collector has not succeeded for 20 minutes.
+  maintenance activity has not succeeded for 20 minutes.
 - Apply PVC admission-policy changes one Argo sync wave before PVC changes so a
   newly classified claim can be created in the same release.
 - Validate the synthesized Kubernetes resources, the static pipeline
