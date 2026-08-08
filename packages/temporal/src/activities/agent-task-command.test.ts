@@ -6,7 +6,11 @@ import {
   AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE,
   AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX,
 } from "#shared/agent-task.ts";
-import { buildAgentTaskCommand } from "./agent-task-command.ts";
+import {
+  buildAgentTaskCommand,
+  CLAUDE_CODE_MINIMUM_VERSION,
+  CLAUDE_CODE_PINNED_VERSION,
+} from "./agent-task-command.ts";
 
 const originalCodexApiKey = Bun.env["CODEX_API_KEY"];
 const originalOpenAiApiKey = Bun.env["OPENAI_API_KEY"];
@@ -41,6 +45,27 @@ afterEach(async () => {
 });
 
 describe("buildAgentTaskCommand", () => {
+  it("keeps the Claude image pin at the structured-output contract minimum", async () => {
+    const dockerfile = await Bun.file(
+      `${import.meta.dir}/../../Dockerfile`,
+    ).text();
+    const match = /^ARG CLAUDE_CODE_VERSION=(.+)$/m.exec(dockerfile);
+    const imageVersion = match?.[1];
+    if (imageVersion === undefined) {
+      throw new Error("Temporal Dockerfile is missing CLAUDE_CODE_VERSION");
+    }
+    expect(imageVersion).toBe(CLAUDE_CODE_PINNED_VERSION);
+    const versionParts = imageVersion.split(".").map(Number);
+    const minimumParts = CLAUDE_CODE_MINIMUM_VERSION.split(".").map(Number);
+    const imageNumber = Number(
+      versionParts.map((part) => String(part).padStart(4, "0")).join(""),
+    );
+    const minimumNumber = Number(
+      minimumParts.map((part) => String(part).padStart(4, "0")).join(""),
+    );
+    expect(imageNumber).toBeGreaterThanOrEqual(minimumNumber);
+  });
+
   it("writes the generated strict schema for Codex output validation", async () => {
     Bun.env["CODEX_API_KEY"] = "test-codex-key";
     const workdir = await mkdtemp(
@@ -102,5 +127,11 @@ describe("buildAgentTaskCommand", () => {
     expect(JSON.parse(schemaArg)).not.toEqual(
       AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX,
     );
+    expect(command.args).toContain("--output-format");
+    expect(command.args[command.args.indexOf("--output-format") + 1]).toBe(
+      "stream-json",
+    );
+    expect(command.args).toContain("--verbose");
+    expect(command.args).not.toContain("--output-schema");
   });
 });

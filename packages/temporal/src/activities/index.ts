@@ -21,7 +21,6 @@ import { pokeemeraldDataRefreshActivities } from "./dpp-pokeemerald-data-refresh
 import { scoutShowcaseRefreshActivities } from "./scout-showcase-refresh.ts";
 import { scoutQueueWindowsActivities } from "./scout-queue-windows.ts";
 import { observeReviewSignalsActivities } from "./observe-review-signals.ts";
-import { observeAgentTaskTimeoutsActivities } from "./observe-agent-task-timeouts.ts";
 import { glitterCorpusActivities } from "./glitter-corpus.ts";
 import { glitterContextRefreshActivities } from "./glitter-context-refresh.ts";
 import { weatherActivities } from "./weather.ts";
@@ -52,7 +51,6 @@ export const activities = {
   ...scoutShowcaseRefreshActivities,
   ...scoutQueueWindowsActivities,
   ...observeReviewSignalsActivities,
-  ...observeAgentTaskTimeoutsActivities,
   ...glitterCorpusActivities,
   ...glitterContextRefreshActivities,
   ...weatherActivities,

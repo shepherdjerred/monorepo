@@ -134,6 +134,13 @@ export const agentTaskSubprocessExitTotal = new Counter({
   registers: [register],
 });
 
+export const agentTaskOutputContractFailuresTotal = new Counter({
+  name: "agent_task_output_contract_failures_total",
+  help: "Claude agent-task structured-output contract failures, by provider and bounded reason",
+  labelNames: ["provider", "reason"] as const,
+  registers: [register],
+});
+
 export const agentTaskEmailSentTotal = new Counter({
   name: "agent_task_email_sent_total",
   help: "Generic agent-task emails sent via Postal, by outcome (success | failure)",

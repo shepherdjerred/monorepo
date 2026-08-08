@@ -190,7 +190,7 @@ Workflow:
 - `XCODE_CLOUD_WEBHOOK_PORT` — port for the Xcode Cloud webhook receiver (default `9468`).
 - `XCODE_CLOUD_ALERT_TTL_SECONDS` — safety auto-resolve window for a fired build-failure alert if no later `SUCCEEDED` clears it (default `21600` = 6h).
 - `ALERTMANAGER_URL` — in-cluster Alertmanager base URL (`http://prometheus-kube-prometheus-alertmanager.prometheus:9093`). **Required** by two features: the Xcode Cloud webhook receiver (when enabled) and the `temporal-failure-watch` schedule (see below) — both POST to `/api/v2/alerts` via `src/lib/alertmanager.ts`.
-- `TEMPORAL_FAILURE_ALERT_TTL_SECONDS` — how long a `TemporalWorkflowFailed` alert stays firing in Alertmanager before auto-resolving if the watcher stops re-observing it (default `21600` = 6h, same rationale as `XCODE_CLOUD_ALERT_TTL_SECONDS`).
+- `TEMPORAL_FAILURE_ALERT_TTL_SECONDS` — how long a `TemporalWorkflowFailed` alert stays firing in Alertmanager before auto-resolving if the watcher stops re-observing it (default `86400` = 24h, matching the failure watcher's recovery lookback).
 
 ## Homelab audit (daily)
 
@@ -202,9 +202,9 @@ The activity (`src/activities/homelab-audit.ts`) follows the shared `claude -p` 
 
 `temporal-failure-watch` (cron `*/5 * * * *`, `pollWorkflowFailuresWorkflow` on `TASK_QUEUES.DEFAULT`) pages PagerDuty with the specific error for **every** Temporal workflow execution that fails or times out — not just the workflows/thresholds covered by the hand-maintained Prometheus rules in `packages/homelab/.../monitoring/rules/temporal.ts`. The activity (`src/activities/workflow-failure-watch.ts`) is stateless (no persisted checkpoint, matching `review-signals-collect`):
 
-1. Queries the Temporal visibility API for `ExecutionStatus IN ("Failed", "TimedOut")` closed in the last 15 minutes (3x the 5-minute cron, so a missed tick can't create a gap — safe to overlap because Alertmanager dedups alerts by label set).
-2. For each match, calls `getHandle(workflowId, runId).result()` — since the execution is already closed, this rejects immediately with `WorkflowFailedError`, whose `.cause` carries the same failure type/message/stack the Temporal UI shows.
-3. Builds one `AlertmanagerAlert` per execution via the pure `buildWorkflowFailureAlert` helper (`src/shared/workflow-failure-alert.ts`) — labels `{alertname: "TemporalWorkflowFailed", workflowType, taskQueue, workflowId, runId}` for identity/dedup, plus a summary/description with the actual error and a direct link to the failed run in the Temporal UI (`temporalUiExecutionUrl`).
+1. Queries the Temporal visibility API for `ExecutionStatus IN ("Failed", "TimedOut")` closed in the last 24 hours so a worker outage can be recovered by the next poll (safe to overlap because Alertmanager dedups alerts by label set and each alert expires from the execution's close time, not from the latest poll).
+2. For each match, calls `getHandle(workflowId, runId).fetchHistory()` and then `.result()`. The history classifies timeouts as `workflow-task`, `activity`, `execution`, or `unknown`; an agent-task timeout before any `ACTIVITY_TASK_STARTED` event is explicitly a worker/task-queue availability failure, including scheduled-but-undispatched activities. The closed `result()` rejects immediately with `WorkflowFailedError`, whose `.cause` carries the same failure type/message/stack the Temporal UI shows.
+3. Builds one `AlertmanagerAlert` per execution via the pure `buildWorkflowFailureAlert` helper (`src/shared/workflow-failure-alert.ts`) — labels `{alertname: "TemporalWorkflowFailed", workflowType, taskQueue, workflowId, runId}` for identity/dedup, plus a summary/description with the actual error, timeout classification/diagnosis, and a direct link to the failed run in the Temporal UI (`temporalUiExecutionUrl`).
 4. Posts the batch via `createAlertmanagerPoster` (`src/lib/alertmanager.ts`, shared with the Xcode Cloud webhook), which routes through the existing Alertmanager `pagerduty` receiver — no new PagerDuty integration/routing key needed.
 
 No exclusion list — every workflow type pages on any failure, including per-PR bots (`prReview`/`prSummary`) that the older threshold-based rules deliberately exclude. Revisit with an exclusion list if that proves too noisy. See `packages/docs/plans/2026-07-30_temporal-workflow-failure-pagerduty-alerts.md` for the full design rationale.
@@ -236,9 +236,21 @@ agent-task creation must still go through `/agent-tasks` with
 
 Inputs use `runAt` for one-off tasks or `cron` + stable `scheduleId` for recurring tasks. Recurring schedules use `America/Los_Angeles`. Agents may return `followUp` to schedule one more report-only task. Agents may return `cancelCron: true` only when the original input has `allowSelfCancel: true`; cancellation pauses the Temporal Schedule rather than deleting it.
 
-**`claude -p --json-schema` gotcha (claude-code).** Pass the schema **inline** (`--json-schema "$(cat schema.json)"`), never a file path — a path wedges the CLI (zero bytes on stdout+stderr until killed) and was the 100% root cause of the agent-task / alert-remediation 30-min SIGTERM(143) hangs (PR #1264). The validated object is in the result message's **`structured_output`** field, NOT `result` (which is the model's prose) — read `parseClaudeResultMessage(stdout).structured_output` and Zod-validate it. Keep `--output-format stream-json --verbose` and pump **stdout** line-by-line for liveness: `claude -p` is silent on stderr, so a stderr-only idle detector is structurally blind.
+**`claude -p --json-schema` gotcha (claude-code).** Pass the schema **inline** (`--json-schema "$(cat schema.json)"`), never a file path — a path wedges the CLI (zero bytes on stdout+stderr until killed) and was the 100% root cause of the agent-task / alert-remediation 30-min SIGTERM(143) hangs (PR #1264). The validated object is in the result message's **`structured_output`** field, NOT `result` (which is the model's prose) — read `parseClaudeResultMessage(stdout).structured_output` and Zod-validate it. A successful process without `structured_output` is a contract failure; never parse prose or fenced JSON. Keep `--output-format stream-json --verbose` and pump **stdout** line-by-line for liveness: `claude -p` is silent on stderr, so a stderr-only idle detector is structurally blind. The Claude schema is draft-07 with `$schema` and `format` annotations removed, and the image pin is `2.1.220` (minimum `2.1.205`).
 
-**Claude and Codex need different schema dialects — never share one constant.** `AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE` (`shared/agent-task.ts`, generated via `z.toJSONSchema(AgentTaskResultPayloadSchema)`) is a **plain** JSON Schema: optional fields simply absent from `required`, no nullable unions. `AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX` (generated via OpenAI's `zodResponseFormat()`) is OpenAI Structured-Outputs **strict mode**: every field in `required`, optional fields modeled as nullable. Codex's `--output-schema` needs strict mode (a plain schema fails Codex's own validation — the original motivation for introducing the strict dialect, PR #1785); Claude's `--json-schema` has been observed to silently drop `structured_output` from its result message entirely (no error) when fed the strict/nullable dialect, correlated with the `homelab-audit-daily` outage starting 2026-07-30 (see `packages/docs/todos/homelab-audit-agent-task-production-verification.md` — local repro of the pinned CLI version couldn't fully confirm this in isolation, so treat it as the best available explanation, not a proven one). Merging these back into one constant risks reintroducing that regression for Claude.
+**Claude and Codex need different schema dialects — never share one constant.** `AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE` (`shared/agent-task.ts`) is a versioned draft-07 **plain** JSON Schema: optional fields simply absent from `required`, no nullable unions, with a logged schema fingerprint. `AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX` (generated via OpenAI's `zodResponseFormat()`) is OpenAI Structured-Outputs **strict mode**: every field in `required`, optional fields modeled as nullable. Codex's `--output-schema` needs strict mode; Claude's `--json-schema` gets the provider-specific plain contract. Contract failures log the CLI result subtype, result-message keys, fingerprint, and a bounded redacted final-text excerpt, while the metric labels remain low-cardinality.
+
+Run the post-deploy canary only after the image is live:
+
+```bash
+cd packages/temporal
+TEMPORAL_ADDRESS=... CLAUDE_CODE_OAUTH_TOKEN=... bun run canary:agent-task
+```
+
+It must complete on the real `agent-task` queue and deliver the tagged
+`[agent-task-canary]` report-only email. Keep
+`packages/docs/todos/homelab-audit-agent-task-production-verification.md` open
+until the canary and seven consecutive daily audit runs pass.
 
 **Local dev loop (no Temporal, no cluster)** — see `scripts/run-homelab-audit-local.ts`:
 

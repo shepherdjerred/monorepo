@@ -4,13 +4,14 @@ import { ActivityFailure, RetryState } from "@temporalio/common";
 import type { AlertmanagerAlert, AlertPoster } from "#lib/alertmanager.ts";
 import {
   buildVisibilityQuery,
+  classifyWorkflowTimeoutHistory,
   pollWorkflowFailuresOnce,
   type WorkflowVisibilityClient,
 } from "./workflow-failure-watch.ts";
 
 const NOW = new Date("2026-07-30T18:00:00.000Z");
-const LOOKBACK_MS = 15 * 60 * 1000;
-const TTL_MS = 6 * 60 * 60 * 1000;
+const LOOKBACK_MS = 24 * 60 * 60 * 1000;
+const TTL_MS = 24 * 60 * 60 * 1000;
 
 type ExecutionInfo = {
   workflowId: string;
@@ -25,6 +26,7 @@ type ExecutionInfo = {
 function fakeClient(
   executions: ExecutionInfo[],
   results: Record<string, () => Promise<unknown>>,
+  histories: Record<string, unknown> = {},
 ): WorkflowVisibilityClient {
   return {
     workflow: {
@@ -47,6 +49,7 @@ function fakeClient(
             }
             return resolver();
           },
+          fetchHistory: () => Promise.resolve(histories[key] ?? { events: [] }),
         };
       },
     },
@@ -108,6 +111,118 @@ describe("buildVisibilityQuery", () => {
     const since = new Date("2026-07-30T17:45:00.000Z");
     expect(buildVisibilityQuery(since)).toBe(
       'ExecutionStatus IN ("Failed", "TimedOut") AND CloseTime > "2026-07-30T17:45:00.000Z"',
+    );
+  });
+});
+
+describe("workflow timeout history classification", () => {
+  it("classifies workflow-task timeout history with no activity as worker availability failure", async () => {
+    const classification = classifyWorkflowTimeoutHistory({
+      events: [{ eventType: "EVENT_TYPE_WORKFLOW_TASK_TIMED_OUT" }],
+    });
+    expect(classification).toEqual({
+      classification: "workflow-task",
+      activityScheduled: false,
+      activityStarted: false,
+    });
+
+    const client = fakeClient(
+      [
+        {
+          workflowId: "wf-timeout",
+          runId: "run-timeout",
+          type: "agentTaskWorkflow",
+          taskQueue: "agent-task",
+          closeTime: new Date("2026-07-30T17:50:00.000Z"),
+          status: { name: "TIMED_OUT" },
+        },
+      ],
+      { "wf-timeout/run-timeout": rejectWithApplicationFailure("timed out") },
+      {
+        "wf-timeout/run-timeout": {
+          events: [{ eventType: "EVENT_TYPE_WORKFLOW_TASK_TIMED_OUT" }],
+        },
+      },
+    );
+    const { poster, calls } = capturingPoster();
+
+    await pollWorkflowFailuresOnce(client, poster, {
+      now: NOW,
+      lookbackMs: LOOKBACK_MS,
+      ttlMs: TTL_MS,
+    });
+
+    expect(calls[0]?.alerts[0]?.annotations["description"]).toContain(
+      "timeoutClassification workflow-task",
+    );
+    expect(calls[0]?.alerts[0]?.annotations["description"]).toContain(
+      "diagnosis worker/task-queue availability failure",
+    );
+  });
+
+  it("classifies activity, execution, and unknown timeout histories", () => {
+    expect(
+      classifyWorkflowTimeoutHistory({
+        events: [
+          { eventType: "EVENT_TYPE_WORKFLOW_TASK_TIMED_OUT" },
+          { eventType: "EVENT_TYPE_ACTIVITY_TASK_TIMED_OUT" },
+        ],
+      }).classification,
+    ).toBe("activity");
+    expect(
+      classifyWorkflowTimeoutHistory({
+        events: [{ eventType: "EVENT_TYPE_ACTIVITY_TASK_TIMED_OUT" }],
+      }).classification,
+    ).toBe("activity");
+    expect(
+      classifyWorkflowTimeoutHistory({
+        events: [{ eventType: "EVENT_TYPE_WORKFLOW_EXECUTION_TIMED_OUT" }],
+      }).classification,
+    ).toBe("execution");
+    expect(classifyWorkflowTimeoutHistory({ events: [] }).classification).toBe(
+      "unknown",
+    );
+  });
+
+  it("diagnoses an agent-task execution timeout with no activity as worker availability failure", async () => {
+    const client = fakeClient(
+      [
+        {
+          workflowId: "agent-task-timeout",
+          runId: "run-timeout",
+          type: "agentTaskWorkflow",
+          taskQueue: "agent-task",
+          closeTime: new Date("2026-07-30T17:50:00.000Z"),
+          status: { name: "TIMED_OUT" },
+        },
+      ],
+      {
+        "agent-task-timeout/run-timeout": rejectWithApplicationFailure(
+          "execution timed out",
+        ),
+      },
+      {
+        "agent-task-timeout/run-timeout": {
+          events: [
+            { eventType: "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED" },
+            { eventType: "EVENT_TYPE_WORKFLOW_EXECUTION_TIMED_OUT" },
+          ],
+        },
+      },
+    );
+    const { poster, calls } = capturingPoster();
+
+    await pollWorkflowFailuresOnce(client, poster, {
+      now: NOW,
+      lookbackMs: LOOKBACK_MS,
+      ttlMs: TTL_MS,
+    });
+
+    expect(calls[0]?.alerts[0]?.annotations["description"]).toContain(
+      "timeoutClassification execution",
+    );
+    expect(calls[0]?.alerts[0]?.annotations["description"]).toContain(
+      "diagnosis worker/task-queue availability failure",
     );
   });
 });

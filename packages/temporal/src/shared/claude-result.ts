@@ -6,9 +6,10 @@ import { z } from "zod/v4";
  * the ones we use. Emitted identically by `--output-format json` (one
  * object) and `--output-format stream-json` (the last NDJSON line).
  */
-export const ClaudeResultMessage = z.object({
+export const ClaudeResultMessage = z.looseObject({
   type: z.literal("result"),
   is_error: z.boolean().optional(),
+  subtype: z.string().optional(),
   result: z.string().optional(),
   total_cost_usd: z.number().nonnegative().optional(),
   duration_ms: z.number().nonnegative().optional(),

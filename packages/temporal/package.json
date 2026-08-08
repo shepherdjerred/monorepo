@@ -22,6 +22,7 @@
     "generate:live": "bun ../home-assistant/src/codegen/cli.ts --out src/generated/ha-schema.ts --name HaSchema",
     "docker:build": "docker buildx build --cache-from type=registry,ref=ghcr.io/shepherdjerred/temporal-worker:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t temporal-worker:dev -f Dockerfile ../..",
     "smoke": "bun scripts/smoke.ts",
+    "canary:agent-task": "bun run scripts/agent-task-structured-output-canary.ts",
     "check:rehearsal": "bun run scripts/check-schedule-rehearsal.ts",
     "glitter:import-seed": "bun run scripts/import-glitter-seed.ts",
     "glitter:operate": "bun run scripts/operate-glitter-corpus.ts",

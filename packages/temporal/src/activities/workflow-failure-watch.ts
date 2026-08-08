@@ -2,6 +2,7 @@ import { Context } from "@temporalio/activity";
 import * as Sentry from "@sentry/bun";
 import { WorkflowFailedError } from "@temporalio/client";
 import { ApplicationFailure, TemporalFailure } from "@temporalio/common";
+import { z } from "zod/v4";
 import { createTemporalClient } from "#client";
 import {
   type AlertmanagerAlert,
@@ -29,15 +30,17 @@ import { temporalFailureWatcherAlertsTotal } from "#observability/metrics.ts";
 const COMPONENT = "temporal-failure-watch";
 const HEARTBEAT_INTERVAL_MS = 10_000;
 
-// 3x the schedule's 5-minute cron, so a single missed tick or worker restart
-// can't create a gap. Overlap across polls is safe — see module doc above.
-const DEFAULT_LOOKBACK_MS = 15 * 60 * 1000;
+// Keep a full day of terminal executions queryable so a worker outage can be
+// recovered by the next poll. The alert TTL matches this window, preventing a
+// recovered poll from re-paging an execution that was already observed.
+const DEFAULT_LOOKBACK_MS = 24 * 60 * 60 * 1000;
 
 // Matches XCODE_CLOUD_ALERT_TTL_SECONDS's rationale (xcode-cloud-webhook.ts):
-// keeps a failure visible across a workday without lingering forever if
-// polling stops re-observing it (there's no "next success" signal to resolve
-// a specific past failure early, unlike the Xcode Cloud build-outcome case).
-const DEFAULT_ALERT_TTL_SECONDS = 6 * 60 * 60;
+// keeps a failure visible across the recovery window without lingering forever
+// if polling stops re-observing it (there's no "next success" signal to
+// resolve a specific past failure early, unlike the Xcode Cloud build-outcome
+// case).
+const DEFAULT_ALERT_TTL_SECONDS = 24 * 60 * 60;
 
 const FAILURE_STATUS_NAMES = ["FAILED", "TIMED_OUT"] as const;
 type FailureStatusName = (typeof FAILURE_STATUS_NAMES)[number];
@@ -64,9 +67,103 @@ export type WorkflowVisibilityClient = {
       runId: string,
     ) => {
       result: () => Promise<unknown>;
+      fetchHistory: () => Promise<unknown>;
     };
   };
 };
+
+export type WorkflowTimeoutClassification =
+  | "workflow-task"
+  | "activity"
+  | "execution"
+  | "unknown";
+
+type WorkflowTimeoutHistoryClassification = {
+  classification: WorkflowTimeoutClassification;
+  activityScheduled: boolean;
+  activityStarted: boolean;
+};
+
+function historyEvents(history: unknown): readonly unknown[] {
+  if (Array.isArray(history)) {
+    return history;
+  }
+  if (typeof history !== "object" || history === null) {
+    return [];
+  }
+  const record = z.record(z.string(), z.unknown()).parse(history);
+  const events = record["events"];
+  return Array.isArray(events) ? events : [];
+}
+
+function eventTypeName(value: unknown): string | undefined {
+  if (typeof value === "string") {
+    return value.toUpperCase().replaceAll(/[^A-Z0-9]+/g, "_");
+  }
+  if (typeof value !== "number") {
+    return undefined;
+  }
+  // These are the stable Temporal HistoryEvent enum values used by
+  // @temporalio/client's fetchHistory() protobuf objects.
+  switch (value) {
+    case 4:
+      return "EVENT_TYPE_WORKFLOW_EXECUTION_TIMED_OUT";
+    case 8:
+      return "EVENT_TYPE_WORKFLOW_TASK_TIMED_OUT";
+    case 10:
+      return "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED";
+    case 11:
+      return "EVENT_TYPE_ACTIVITY_TASK_STARTED";
+    case 14:
+      return "EVENT_TYPE_ACTIVITY_TASK_TIMED_OUT";
+    default:
+      return undefined;
+  }
+}
+
+function eventType(event: unknown): unknown {
+  if (typeof event !== "object" || event === null) {
+    return undefined;
+  }
+  const record = z.record(z.string(), z.unknown()).parse(event);
+  return record["eventType"] ?? record["event_type"];
+}
+
+export function classifyWorkflowTimeoutHistory(
+  history: unknown,
+): WorkflowTimeoutHistoryClassification {
+  let activityScheduled = false;
+  let activityStarted = false;
+  let latestTimeout: WorkflowTimeoutClassification | undefined;
+  for (const event of historyEvents(history)) {
+    const name = eventTypeName(eventType(event));
+    if (name === undefined) {
+      continue;
+    }
+    if (name === "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED") {
+      activityScheduled = true;
+    }
+    if (name === "EVENT_TYPE_ACTIVITY_TASK_STARTED") {
+      activityStarted = true;
+    }
+    switch (name) {
+      case "EVENT_TYPE_WORKFLOW_TASK_TIMED_OUT":
+        latestTimeout = "workflow-task";
+        break;
+      case "EVENT_TYPE_ACTIVITY_TASK_TIMED_OUT":
+        latestTimeout = "activity";
+        break;
+      case "EVENT_TYPE_WORKFLOW_EXECUTION_TIMED_OUT":
+        latestTimeout = "execution";
+        break;
+    }
+  }
+  return {
+    classification: latestTimeout ?? "unknown",
+    activityScheduled,
+    activityStarted,
+  };
+}
 
 function jsonLog(
   level: "info" | "warning" | "error",
@@ -150,38 +247,110 @@ function failureTypeName(failure: TemporalFailure): string {
  * subclass (ApplicationFailure/ActivityFailure/TimeoutFailure/...) carrying
  * the same type/message/stack the Temporal UI shows.
  */
+type TimeoutInspection = {
+  classification: WorkflowTimeoutHistoryClassification | undefined;
+  historyError: string | undefined;
+};
+
+async function inspectTimeoutHistory(
+  handle: ReturnType<WorkflowVisibilityClient["workflow"]["getHandle"]>,
+  status: FailureStatusName,
+): Promise<TimeoutInspection> {
+  if (status !== "TIMED_OUT") {
+    return { classification: undefined, historyError: undefined };
+  }
+  try {
+    return {
+      classification: classifyWorkflowTimeoutHistory(
+        await handle.fetchHistory(),
+      ),
+      historyError: undefined,
+    };
+  } catch (error: unknown) {
+    return {
+      classification: {
+        classification: "unknown",
+        activityScheduled: false,
+        activityStarted: false,
+      },
+      historyError: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
+function timeoutFailureFields(
+  workflowType: string,
+  inspection: TimeoutInspection,
+): Pick<
+  WorkflowFailureDetail,
+  "timeoutClassification" | "workerTaskQueueUnavailable" | "historyError"
+> {
+  const classification = inspection.classification;
+  return {
+    ...(classification === undefined
+      ? {}
+      : {
+          timeoutClassification: classification.classification,
+          workerTaskQueueUnavailable:
+            workflowType === "agentTaskWorkflow" &&
+            !classification.activityStarted &&
+            (classification.classification === "workflow-task" ||
+              classification.classification === "execution"),
+        }),
+    ...(inspection.historyError === undefined
+      ? {}
+      : { historyError: inspection.historyError }),
+  };
+}
+
+function workflowFailureDetail(
+  error: WorkflowFailedError,
+  execution: FailedWorkflowExecution,
+  inspection: TimeoutInspection,
+): WorkflowFailureDetail {
+  const outerCause = error.cause;
+  const cause =
+    outerCause instanceof TemporalFailure
+      ? innermostTemporalFailure(outerCause)
+      : undefined;
+  return {
+    failureType:
+      cause === undefined
+        ? (outerCause?.name ?? "UnknownFailure")
+        : failureTypeName(cause),
+    message:
+      cause === undefined
+        ? (outerCause?.message ?? error.message)
+        : cause.message === ""
+          ? error.message
+          : cause.message,
+    stack: cause?.stack ?? outerCause?.stack,
+    ...timeoutFailureFields(execution.workflowType, inspection),
+  };
+}
+
 async function fetchFailureDetail(
   client: WorkflowVisibilityClient,
-  workflowId: string,
-  runId: string,
+  execution: FailedWorkflowExecution,
 ): Promise<WorkflowFailureDetail> {
+  const handle = client.workflow.getHandle(
+    execution.workflowId,
+    execution.runId,
+  );
+  const inspection = await inspectTimeoutHistory(handle, execution.status);
   try {
-    await client.workflow.getHandle(workflowId, runId).result();
+    await handle.result();
     // The visibility query already filtered to Failed/TimedOut, so a
     // resolved result() here means the execution's terminal state changed
     // between list() and this call (or the query matched unexpectedly) —
     // surface it as a detail-extraction failure rather than silently
     // skipping, so it's visible in Sentry.
     throw new Error(
-      `workflow ${workflowId}/${runId} unexpectedly resolved while polling failures`,
+      `workflow ${execution.workflowId}/${execution.runId} unexpectedly resolved while polling failures`,
     );
   } catch (error) {
     if (error instanceof WorkflowFailedError) {
-      const outerCause = error.cause;
-      if (outerCause instanceof TemporalFailure) {
-        const cause = innermostTemporalFailure(outerCause);
-        return {
-          failureType: failureTypeName(cause),
-          message: cause.message === "" ? error.message : cause.message,
-          stack: cause.stack,
-        };
-      }
-      // No TemporalFailure cause (unusual) — fall back to the outer error.
-      return {
-        failureType: outerCause?.name ?? "UnknownFailure",
-        message: outerCause?.message ?? error.message,
-        stack: outerCause?.stack,
-      };
+      return workflowFailureDetail(error, execution, inspection);
     }
     throw error;
   }
@@ -227,11 +396,7 @@ export async function pollWorkflowFailuresOnce(
   let errored = 0;
   for (const execution of executions) {
     try {
-      const failure = await fetchFailureDetail(
-        client,
-        execution.workflowId,
-        execution.runId,
-      );
+      const failure = await fetchFailureDetail(client, execution);
       alerts.push(buildWorkflowFailureAlert(execution, failure, now, ttlMs));
     } catch (error) {
       errored += 1;
