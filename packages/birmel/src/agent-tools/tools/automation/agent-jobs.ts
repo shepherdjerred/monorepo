@@ -1,4 +1,5 @@
 import { createTool } from "@shepherdjerred/birmel/agent-runtime/tools/create-tool.ts";
+import { DISCORD_MESSAGE_LIMIT } from "@shepherdjerred/birmel/config/constants.ts";
 import { getErrorMessage } from "@shepherdjerred/birmel/utils/errors.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { z } from "zod";
@@ -26,7 +27,7 @@ const ScheduleFieldsSchema = z.object({
 const JobPayloadSchema = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("message"),
-    message: z.string().min(1).max(20_000),
+    message: z.string().min(1).max(DISCORD_MESSAGE_LIMIT),
   }),
   z.object({
     kind: z.literal("tool"),

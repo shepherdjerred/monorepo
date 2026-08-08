@@ -366,8 +366,7 @@ async function executeToolPayload(
     await acknowledgeExternalEffect(execution, result);
   } else if (
     requiresEffectCheckpoint &&
-    (toolResult.effectDisposition == null ||
-      toolResult.effectDisposition === "not_applied")
+    toolResult.effectDisposition === "not_applied"
   ) {
     await recordExternalEffectNotApplied(execution);
   }

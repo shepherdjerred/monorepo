@@ -1,6 +1,6 @@
 import { openai } from "@ai-sdk/openai";
 import { embed } from "ai";
-import { getFriendContext } from "@shepherdjerred/glitter-context";
+import { getFriendContext, people } from "@shepherdjerred/glitter-context";
 import {
   CONTEXT_BUDGETS,
   type ContextBundle,
@@ -42,6 +42,12 @@ function mentionedDiscordUserIds(content: string): string[] {
 
 function explicitlyNamedFriendReferences(content: string): string[] {
   const references = new Set<string>();
+  const singleWordFriendNames = new Set(
+    people
+      .filter(({ id }) => !id.startsWith("group-"))
+      .flatMap(({ displayName, aliases }) => [displayName, ...aliases])
+      .filter((reference) => !/\s/u.test(reference)),
+  );
   const addReference = (reference: string): void => {
     const trimmed = reference.trim();
     if (trimmed.length > 0) {
@@ -49,13 +55,15 @@ function explicitlyNamedFriendReferences(content: string): string[] {
     }
   };
 
-  // Keep broad alias matching disabled: ordinary words such as "Google" and
-  // "Mark" are also valid lore entries. CamelCase names/aliases and quoted
-  // references are high-confidence explicit references that can be resolved
-  // without scanning every alias against the whole message.
+  // Keep broad alias matching disabled: ordinary words such as "Google" are
+  // also valid lore entries. Resolve only capitalized roster names, CamelCase
+  // aliases, and quoted references explicitly present in the request.
   for (const token of content.match(/[\p{L}\p{N}]+/gu) ?? []) {
-    const uppercaseCount = token.match(/\p{Lu}/gu)?.length ?? 0;
-    if (uppercaseCount >= 2) {
+    if (
+      /^\p{Lu}/u.test(token) &&
+      (singleWordFriendNames.has(token) ||
+        (token.match(/\p{Lu}/gu)?.length ?? 0) >= 2)
+    ) {
       addReference(token);
     }
   }
