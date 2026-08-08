@@ -1,177 +1,256 @@
-import { createTool } from "@shepherdjerred/birmel/voltagent/tools/create-tool.ts";
+import { openai } from "@ai-sdk/openai";
+import { embed } from "ai";
 import { z } from "zod";
-import { logger } from "@shepherdjerred/birmel/utils/logger.ts";
-import { getRequestContext } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
 import {
-  handleGetMemory,
-  handleUpdateMemory,
-  handleAppendMemory,
-  handleClearMemory,
-  handleAddStructuredMemory,
-  handleSearchStructuredMemory,
-  handleGetStructuredMemory,
-  handleUpdateStructuredMemory,
-  handleDeleteStructuredMemory,
-  type PromptMemoryScope,
-  type StructuredMemoryScope,
-} from "./memory-actions.ts";
+  DiscordIdSchema,
+  MemoryScopeSchema,
+  type MemoryCandidate,
+} from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
+import { createTool } from "@shepherdjerred/birmel/agent-runtime/tools/create-tool.ts";
+import {
+  getRequestContext,
+  suppressAutomaticMemoryExtraction,
+  type RequestContext,
+} from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
+import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
+import { prisma } from "@shepherdjerred/birmel/database/index.ts";
+import { correctMemoryClaim } from "@shepherdjerred/birmel/memory/apply.ts";
+import {
+  forgetMemoryClaim,
+  getMemoryClaimHistory,
+  privacyEraseMemoryClaim,
+  rememberMemoryClaim,
+} from "@shepherdjerred/birmel/memory/operations.ts";
+import { retrieveMemoryClaims } from "@shepherdjerred/birmel/memory/retrieve.ts";
+import { getErrorMessage } from "@shepherdjerred/birmel/utils/errors.ts";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 
-// The tool accepts a union of prompt-memory scopes (server/channel/persona, with
-// the legacy "owner" alias) and structured-memory scopes
-// (server/owner/channel/user/session). get/update/append/clear operate on prompt
-// working memory; add/search/delete (and get/update with a memoryId) operate on
-// structured durable records.
-type InputScope =
-  | "server"
-  | "channel"
-  | "persona"
-  | "owner"
-  | "user"
-  | "session";
+const logger = loggers.memory.child("manage-memory");
 
-// Map the input scope onto a prompt-memory scope. "owner" is a legacy alias for
-// "persona". Scopes that only exist for structured memory (user/session) have no
-// prompt equivalent and return null.
-function toPromptScope(scope: InputScope): PromptMemoryScope | null {
-  switch (scope) {
-    case "server":
-      return "server";
-    case "channel":
-      return "channel";
-    case "persona":
-    case "owner":
-      return "persona";
-    case "user":
-    case "session":
-      return null;
+const InputSchema = z.object({
+  action: z.enum([
+    "remember",
+    "query",
+    "correct",
+    "history",
+    "forget",
+    "privacy-erase",
+  ]),
+  guildId: z.string(),
+  claimId: z.uuid().optional(),
+  scope: MemoryScopeSchema.optional(),
+  subject: z.string().min(1).max(500).optional(),
+  predicate: z.string().min(1).max(200).optional(),
+  value: z.string().min(1).max(4000).optional(),
+  query: z.string().max(8000).optional(),
+  confidence: z.number().min(0).max(1).optional(),
+  salience: z.number().min(0).max(1).optional(),
+  validFrom: z.iso.datetime().nullable().optional(),
+  validUntil: z.iso.datetime().nullable().optional(),
+  relatedUserIds: z.array(DiscordIdSchema).max(50).optional(),
+});
+
+const OutputSchema = z.object({
+  success: z.boolean(),
+  message: z.string(),
+  data: z.unknown().optional(),
+});
+type MemoryToolInput = z.infer<typeof InputSchema>;
+const ClaimMutationActionSchema = z.enum([
+  "history",
+  "forget",
+  "privacy-erase",
+  "correct",
+]);
+
+async function embedding(value: string): Promise<number[]> {
+  const config = getConfig();
+  const result = await embed({
+    model: openai.embedding(config.openai.embeddingModel),
+    value,
+    abortSignal: AbortSignal.timeout(config.agent.responseTimeoutMs),
+  });
+  return result.embedding;
+}
+
+function required<T>(value: T | undefined, name: string): T {
+  if (
+    value === undefined ||
+    (typeof value === "string" && value.length === 0)
+  ) {
+    throw new Error(`${name} is required`);
+  }
+  return value;
+}
+
+function requireRequestContext(): RequestContext {
+  const request = getRequestContext();
+  if (request == null) {
+    throw new Error("Memory operation requires request context");
+  }
+  return request;
+}
+
+async function queryMemory(input: MemoryToolInput, request: RequestContext) {
+  const query = input.query ?? "";
+  const result = await retrieveMemoryClaims(prisma, {
+    guildId: request.guildId,
+    channelId: request.sourceChannelId,
+    personaId: request.personaId ?? null,
+    userIds: [request.userId, ...(input.relatedUserIds ?? [])],
+    relationshipUserIds: [request.userId, ...(input.relatedUserIds ?? [])],
+    query,
+    queryEmbedding: query.length === 0 ? null : await embedding(query),
+    at: new Date(),
+    limit: 12,
+  });
+  return {
+    success: true,
+    message: `Found ${String(result.claims.length)} relevant memory claims`,
+    data: result,
+  };
+}
+
+async function requireClaimInGuild(
+  claimId: string,
+  guildId: string,
+): Promise<void> {
+  const claim = await prisma.memoryClaim.findFirst({
+    where: { id: claimId, guildId },
+    select: { id: true },
+  });
+  if (claim == null) {
+    throw new Error("Memory claim was not found in this guild");
   }
 }
 
-// Map the input scope onto a structured-memory scope. "persona" is the prompt-era
-// name for the legacy "owner" structured scope.
-function toStructuredScope(scope: InputScope): StructuredMemoryScope {
-  return scope === "persona" ? "owner" : scope;
+async function inspectOrMutateMemory(
+  input: MemoryToolInput,
+  request: RequestContext,
+) {
+  const config = getConfig();
+  const claimId = required(input.claimId, "claimId");
+  await requireClaimInGuild(claimId, request.guildId);
+  const action = ClaimMutationActionSchema.parse(input.action);
+  switch (action) {
+    case "history":
+      return {
+        success: true,
+        message: "Memory claim history",
+        data: await getMemoryClaimHistory(prisma, { claimId }),
+      };
+    case "forget": {
+      const data = await forgetMemoryClaim(prisma, {
+        claimId,
+        sourceDiscordMessageIds: [request.sourceMessageId],
+        authorUserId: request.userId,
+        channelId: request.sourceChannelId,
+        extractorModel: config.openai.memoryModel,
+      });
+      suppressAutomaticMemoryExtraction();
+      return {
+        success: true,
+        message: "Memory claim forgotten",
+        data,
+      };
+    }
+    case "privacy-erase": {
+      const data = await privacyEraseMemoryClaim(prisma, {
+        claimId,
+        sourceDiscordMessageId: request.sourceMessageId,
+      });
+      suppressAutomaticMemoryExtraction();
+      return {
+        success: true,
+        message: "Memory claim and revision history permanently erased",
+        data,
+      };
+    }
+    case "correct": {
+      const value = required(input.value, "value");
+      return {
+        success: true,
+        message: "Memory claim corrected",
+        data: await correctMemoryClaim(prisma, {
+          claimId,
+          value,
+          confidence: input.confidence ?? 1,
+          salience: input.salience ?? 0.8,
+          validFrom: input.validFrom ?? null,
+          validUntil: input.validUntil ?? null,
+          sourceDiscordMessageIds: [request.sourceMessageId],
+          sourceOrder: request.sourceMessageId,
+          authorUserId: request.userId,
+          channelId: request.sourceChannelId,
+          extractorModel: config.openai.memoryModel,
+          embedding: await embedding(value),
+        }),
+      };
+    }
+  }
+}
+
+async function rememberMemory(input: MemoryToolInput, request: RequestContext) {
+  const config = getConfig();
+  const candidate: MemoryCandidate = {
+    scope: required(input.scope, "scope"),
+    subject: required(input.subject, "subject"),
+    predicate: required(input.predicate, "predicate"),
+    value: required(input.value, "value"),
+    confidence: input.confidence ?? 1,
+    salience: input.salience ?? 0.8,
+    origin: "explicit",
+    validFrom: input.validFrom ?? null,
+    validUntil: input.validUntil ?? null,
+    relatedUserIds: input.relatedUserIds ?? [],
+    sourceDiscordMessageIds: [request.sourceMessageId],
+  };
+  return {
+    success: true,
+    message: "Memory claim remembered",
+    data: await rememberMemoryClaim(prisma, {
+      context: {
+        guildId: request.guildId,
+        channelId: request.sourceChannelId,
+        userId: request.userId,
+        personaId: request.personaId ?? null,
+        authorUserId: request.userId,
+        extractorModel: config.openai.memoryModel,
+      },
+      candidate,
+      embedding: await embedding(
+        `${candidate.subject} ${candidate.predicate} ${candidate.value}`,
+      ),
+      sourceOrder: request.sourceMessageId,
+    }),
+  };
+}
+
+async function executeMemoryAction(input: MemoryToolInput) {
+  const request = requireRequestContext();
+  if (input.action === "query") {
+    return await queryMemory(input, request);
+  }
+  if (input.action === "remember") {
+    return await rememberMemory(input, request);
+  }
+  return await inspectOrMutateMemory(input, request);
 }
 
 export const manageMemoryTool = createTool({
   id: "manage-memory",
   description:
-    "Manage Birmel memory. Prompt working memory has three scopes — 'server' (permanent, shared), 'channel' (this channel's saved rules/notes, shared; targets the current channel automatically), and 'persona' (the active persona's preferences; legacy 'owner' is an alias) — managed via get/update/append/clear. Structured durable memory records (tags, source metadata, salience, embeddings) for server/owner/channel/user/session scopes are managed via add/search/delete, plus get/update with a memoryId.",
-  inputSchema: z.object({
-    action: z
-      .enum(["get", "update", "append", "clear", "add", "search", "delete"])
-      .describe("The action to perform"),
-    guildId: z.string().describe("The guild/server ID"),
-    scope: z
-      .enum(["server", "channel", "persona", "owner", "user", "session"])
-      .default("server")
-      .describe(
-        "Memory scope. Prompt memory (get/update/append/clear): 'server' (default), 'channel', or 'persona' ('owner' is a legacy alias). Structured memory (add/search/delete) also allows 'user' and 'session'.",
-      ),
-    memoryId: z.string().optional().describe("Structured memory record ID"),
-    query: z.string().optional().describe("Search query"),
-    key: z.string().optional().describe("Optional memory key"),
-    tags: z.array(z.string()).optional().describe("Optional tags"),
-    channelId: z.string().optional().describe("Channel scope anchor"),
-    userId: z.string().optional().describe("User scope anchor"),
-    sessionId: z.string().optional().describe("Session scope anchor"),
-    sourceType: z.string().optional().describe("Source type"),
-    sourceId: z.string().optional().describe("Source ID"),
-    salience: z.number().min(0).max(1).optional(),
-    embedding: z.string().optional().describe("Serialized vector embedding"),
-    memory: z
-      .string()
-      .optional()
-      .describe("Memory content in markdown format or structured content"),
-    item: z.string().optional().describe("Item to add (for append)"),
-    section: z
-      .enum(["rules", "preferences", "notes"])
-      .optional()
-      .describe("Section to append to (for append)"),
-  }),
-  outputSchema: z.object({
-    success: z.boolean(),
-    message: z.string(),
-    data: z.unknown().optional(),
-  }),
-  execute: async (ctx) => {
+    "Manage durable typed memory claims. Remember an explicit fact or preference, query what is remembered, inspect correction history, correct a claim, tombstone it with forget, or physically erase it for privacy.",
+  inputSchema: InputSchema,
+  outputSchema: OutputSchema,
+  execute: async (input) => {
     try {
-      // Prompt working memory: channel scope always targets the channel the
-      // request originated in, never a model-supplied id.
-      const promptScope = toPromptScope(ctx.scope);
-      const promptRef =
-        promptScope == null
-          ? null
-          : {
-              guildId: ctx.guildId,
-              scope: promptScope,
-              channelId: getRequestContext()?.sourceChannelId,
-            };
-      const structuredScope = toStructuredScope(ctx.scope);
-
-      switch (ctx.action) {
-        case "get":
-          if (ctx.memoryId != null) {
-            return await handleGetStructuredMemory(ctx);
-          }
-          if (promptRef == null) {
-            return {
-              success: false,
-              message:
-                "get on prompt memory supports server, channel, or persona scope; use search for user/session structured memory",
-            };
-          }
-          return await handleGetMemory(promptRef);
-        case "update":
-          if (ctx.memoryId != null) {
-            return await handleUpdateStructuredMemory({
-              ...ctx,
-              content: ctx.memory,
-            });
-          }
-          if (promptRef == null) {
-            return {
-              success: false,
-              message:
-                "update on prompt memory supports server, channel, or persona scope; use add for user/session structured memory",
-            };
-          }
-          return await handleUpdateMemory(promptRef, ctx.memory);
-        case "append":
-          if (promptRef == null) {
-            return {
-              success: false,
-              message:
-                "append on prompt memory supports server, channel, or persona scope; use add for user/session structured memory",
-            };
-          }
-          return await handleAppendMemory(promptRef, ctx.item, ctx.section);
-        case "clear":
-          if (promptRef == null) {
-            return {
-              success: false,
-              message:
-                "clear only supports server, channel, or persona prompt memory",
-            };
-          }
-          return await handleClearMemory(promptRef);
-        case "add":
-          return await handleAddStructuredMemory({
-            ...ctx,
-            scope: structuredScope,
-            content: ctx.memory ?? ctx.item,
-          });
-        case "search":
-          return await handleSearchStructuredMemory({
-            ...ctx,
-            scope: structuredScope,
-          });
-        case "delete":
-          return await handleDeleteStructuredMemory(ctx);
-      }
+      return await executeMemoryAction(input);
     } catch (error) {
-      logger.error("Failed to manage memory", error);
-      return { success: false, message: "Failed to manage memory" };
+      logger.error("Memory operation failed", error, {
+        errorClass: error instanceof Error ? error.name : "UnknownError",
+      });
+      return { success: false, message: getErrorMessage(error) };
     }
   },
 });

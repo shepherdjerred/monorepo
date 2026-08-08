@@ -2,24 +2,14 @@
 // OTLP HTTP POST to /v1/traces. Embeds an ephemeral Bun.serve receiver on a
 // dynamically-allocated port (port: 0) so concurrent CI runs don't collide.
 //
-// Two regressions this guards against, both surfaced by the local stub-test:
-//
-// 1. Sentry-bun's init() registering OTel globals first (when
-//    skipOpenTelemetrySetup is missing) → VoltAgentObservability's provider
-//    can't become global → trace.getTracer() routes to a no-OTLP provider →
-//    no POST to the stub → test fails.
-//
-// 2. VoltAgentObservability's default SpanFilterProcessor (when
-//    spanFilters: { enabled: false } is missing) wraps every user-supplied
-//    processor and drops spans whose instrumentation scope isn't
-//    "@voltagent/core". Birmel's tracer scope is "birmel", so spans get
-//    dropped before reaching the OTLP exporter → no POST → test fails.
+// This guards against Sentry registering OTel globals before Birmel's explicit
+// provider, which would route spans to a no-OTLP provider.
 
 // Env must be set before the observability module loads — getConfig() runs a
 // Zod schema with min(1) on Discord/OpenAI tokens; tracing reads OTLP_ENDPOINT
 // inside initializeTracing() but pinning here avoids any module-load surprise.
 Bun.env["DISCORD_TOKEN"] ??= "test-token";
-Bun.env["DISCORD_CLIENT_ID"] ??= "test-client";
+Bun.env["DISCORD_CLIENT_ID"] ??= "123456789012345678";
 Bun.env["OPENAI_API_KEY"] ??= "test-key";
 Bun.env["TELEMETRY_ENABLED"] = "true";
 Bun.env["TELEMETRY_SERVICE_NAME"] = "birmel-test";

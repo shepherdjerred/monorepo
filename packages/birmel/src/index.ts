@@ -1,85 +1,82 @@
-// Initialize observability first - must be before other imports that might throw
 import {
   initializeObservability,
   shutdownObservability,
 } from "./observability/index.ts";
+
 initializeObservability();
 
-import { captureException } from "./observability/sentry.ts";
+import { handleMessage } from "./agent-runtime/message-handler.ts";
+import { executeIsolatedAgentJob } from "./agent-runtime/job-agent.ts";
 import { getConfig } from "./config/index.ts";
-import { getDiscordClient, destroyDiscordClient } from "./discord/client.ts";
+import { disconnectPrisma } from "./database/index.ts";
+import { destroyDiscordClient, getDiscordClient } from "./discord/client.ts";
 import { registerEventHandlers } from "./discord/events/index.ts";
 import { setMessageHandler } from "./discord/events/message-create.ts";
-import { disconnectPrisma } from "./database/index.ts";
-import { handleMessageWithStreaming } from "./voltagent/message-handler.ts";
-import { initializeMusicPlayer, destroyMusicPlayer } from "./music/player.ts";
-import { startScheduler, stopScheduler } from "./scheduler/index.ts";
 import { startOAuthServer, stopOAuthServer } from "./editor/oauth-server.ts";
+import { startHealthServer, stopHealthServer } from "./health/server.ts";
+import { destroyMusicPlayer, initializeMusicPlayer } from "./music/player.ts";
+import { captureException } from "./observability/sentry.ts";
+import {
+  isSchedulerStarted,
+  startScheduler,
+  stopScheduler,
+} from "./scheduler/index.ts";
+import { setAgentJobRuntimeDependencies } from "./scheduler/jobs/agent-jobs.ts";
 import { logger } from "./utils/logger.ts";
 
-async function shutdown(): Promise<void> {
-  logger.info("Shutting down Birmel...");
+let shuttingDown = false;
 
-  stopScheduler();
+async function shutdown(exitCode: number): Promise<void> {
+  if (shuttingDown) {
+    return;
+  }
+  shuttingDown = true;
+  logger.info("Shutting down Birmel");
+  await stopScheduler();
+  await stopHealthServer();
   await stopOAuthServer();
   await destroyMusicPlayer();
   await destroyDiscordClient();
   await disconnectPrisma();
-
-  // Shutdown observability last to capture any final events
   await shutdownObservability();
-
   logger.info("Birmel shutdown complete");
-  process.exit(0);
+  process.exit(exitCode);
 }
 
 async function main(): Promise<void> {
-  logger.info("Starting Birmel (VoltAgent)...");
-
-  // Validate config on startup
   const config = getConfig();
-  logger.info("Configuration loaded", {
+  logger.info("Starting Birmel 3.0", {
     model: config.openai.model,
     classifierModel: config.openai.classifierModel,
-    dailyPostsEnabled: config.dailyPosts.enabled,
+    memoryModel: config.openai.memoryModel,
     personaEnabled: config.persona.enabled,
-    personaDefault: config.persona.defaultPersona,
-    sentryEnabled: config.sentry.enabled,
     telemetryEnabled: config.telemetry.enabled,
+    trustedActorCount: config.authority.trustedUserIds.length,
   });
 
-  // Set up Discord client
   const client = getDiscordClient();
   registerEventHandlers(client);
-
-  // Use VoltAgent streaming message handler
-  setMessageHandler(handleMessageWithStreaming);
-
-  // Login to Discord
+  setMessageHandler(handleMessage);
+  startHealthServer({
+    port: config.health.port,
+    isSchedulerStarted,
+  });
   await client.login(config.discord.token);
-
-  // Initialize music player
   await initializeMusicPlayer();
-  logger.info("Music player initialized");
-
-  // Start scheduler after Discord is ready
+  setAgentJobRuntimeDependencies({ executeAgent: executeIsolatedAgentJob });
   startScheduler();
-
-  // Start OAuth server for GitHub authentication (exposed via Tailscale Funnel)
   await startOAuthServer();
 
-  // Handle graceful shutdown
-  process.on("SIGINT", () => void shutdown());
-  process.on("SIGTERM", () => void shutdown());
+  process.on("SIGINT", () => void shutdown(0));
+  process.on("SIGTERM", () => void shutdown(0));
 }
 
 try {
   await main();
-} catch (error: unknown) {
-  logger.error("Fatal error", error);
+} catch (error) {
+  logger.error("Fatal Birmel startup error", error);
   if (error instanceof Error) {
     captureException(error, { operation: "main" });
   }
-  await shutdownObservability();
-  process.exit(1);
+  await shutdown(1);
 }

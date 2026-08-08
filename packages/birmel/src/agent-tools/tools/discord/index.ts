@@ -12,7 +12,6 @@ import { automodTools } from "./automod.ts";
 import { pollTools } from "./polls.ts";
 import { threadTools } from "./threads.ts";
 import { activityTools } from "./activity.ts";
-import { schedulingTools } from "./scheduling.ts";
 
 export const allDiscordTools = [
   ...guildTools,
@@ -29,5 +28,4 @@ export const allDiscordTools = [
   ...pollTools,
   ...threadTools,
   ...activityTools,
-  ...schedulingTools,
 ];

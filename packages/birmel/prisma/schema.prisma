@@ -60,15 +60,15 @@ model MusicHistory {
 }
 
 model PollRecord {
-  id          Int      @id @default(autoincrement())
-  guildId     String
-  channelId   String
-  messageId   String   @unique
-  pollId      String
-  question    String
-  createdBy   String
-  expiresAt   DateTime
-  createdAt   DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  guildId   String
+  channelId String
+  messageId String   @unique
+  pollId    String
+  question  String
+  createdBy String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 
   @@index([guildId, createdAt])
 }
@@ -132,34 +132,14 @@ model ElectionPoll {
   @@index([scheduledStart])
 }
 
-model ScheduledTask {
-  id          Int       @id @default(autoincrement())
-  guildId     String
-  channelId   String?
-  userId      String
-  scheduledAt DateTime
-  cronPattern String?
-  naturalDesc String?
-  toolId      String?
-  toolInput   String?
-  executedAt  DateTime?
-  nextRun     DateTime?
-  enabled     Boolean   @default(true)
-  name        String?
-  description String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  @@index([guildId])
-  @@index([enabled, scheduledAt])
-}
-
 model AgentJob {
   id              String        @id @default(uuid())
   guildId         String
   channelId       String?
   threadId        String?
-  userId          String
+  actorUserId     String
+  sourceChannelId String?
+  sourceMessageId String?
   name            String?
   description     String?
   scheduleKind    String
@@ -171,6 +151,9 @@ model AgentJob {
   message         String?
   toolId          String?
   toolInput       String?
+  agentPrompt     String?
+  sessionId       String?
+  session         AgentSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
   deliveryMode    String        @default("discord")
   model           String?
   reasoningEffort String?
@@ -181,6 +164,9 @@ model AgentJob {
   lastRunAt       DateTime?
   lastStatus      String?
   lastError       String?
+  claimedAt       DateTime?
+  claimedBy       String?
+  leaseExpiresAt  DateTime?
   legacyTaskId    Int?          @unique
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
@@ -190,6 +176,8 @@ model AgentJob {
   @@index([status, nextRunAt])
   @@index([channelId])
   @@index([threadId])
+  @@index([sessionId])
+  @@index([leaseExpiresAt])
 }
 
 model AgentJobRun {
@@ -209,85 +197,172 @@ model AgentJobRun {
 }
 
 model AgentSession {
-  id              String              @id @default(uuid())
-  guildId         String
-  channelId       String
-  threadId        String?
-  userId          String
-  label           String?
-  status          String              @default("active")
-  steeringPolicy  String              @default("steer")
-  model           String?
-  reasoningEffort String?
-  textVerbosity   String?
-  summary         String?
-  expiresAt       DateTime?
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
-  events          AgentSessionEvent[]
+  id                     String              @id @default(uuid())
+  guildId                String
+  channelId              String
+  threadId               String              @unique
+  actorUserId            String
+  label                  String?
+  status                 String              @default("active")
+  summary                String?
+  summaryVersion         Int                 @default(1)
+  summaryThroughSequence Int                 @default(0)
+  expiresAt              DateTime?
+  archivedAt             DateTime?
+  cancelledAt            DateTime?
+  createdAt              DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
+  events                 AgentSessionEvent[]
+  jobs                   AgentJob[]
 
   @@index([guildId, status])
   @@index([channelId, status])
-  @@index([threadId, status])
-  @@index([userId, status])
+  @@index([actorUserId, status])
 }
 
 model AgentSessionEvent {
-  id        String       @id @default(uuid())
-  sessionId String
-  session   AgentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  role      String
-  eventType String
-  content   String
-  metadata  String?
-  createdAt DateTime     @default(now())
+  id               String       @id @default(uuid())
+  sessionId        String
+  session          AgentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sequence         Int
+  role             String
+  eventType        String
+  content          String
+  discordMessageId String?
+  toolId           String?
+  metadata         String?
+  createdAt        DateTime     @default(now())
 
-  @@index([sessionId, createdAt])
+  @@unique([sessionId, sequence])
+  @@unique([sessionId, discordMessageId])
   @@index([eventType, createdAt])
 }
 
-model AgentMemory {
-  id          String   @id @default(uuid())
-  guildId     String
-  scope       String
-  ownerKey    String?
-  channelId   String?
-  userId      String?
-  sessionId   String?
-  key         String?
-  content     String
-  tags        String?
-  sourceType  String?
-  sourceId    String?
-  salience    Float    @default(0.5)
-  embedding    String?
+model MemoryClaim {
+  id              String           @id @default(uuid())
+  identityKey     String           @unique
+  guildId         String
+  scope           String
+  subject         String
+  predicate       String
+  value           String
+  confidence      Float
+  salience        Float
+  origin          String
+  validFrom       DateTime?
+  validUntil      DateTime?
+  status          String           @default("active")
+  channelId       String?
+  personaId       String?
+  userId          String?
+  relatedUserIds  String           @default("[]")
+  embedding       String?
+  lastConfirmedAt DateTime         @default(now())
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  revisions       MemoryRevision[]
+
+  @@index([guildId, scope, status])
+  @@index([channelId])
+  @@index([personaId])
+  @@index([userId])
+  @@index([guildId, subject, predicate])
+  @@index([lastConfirmedAt])
+}
+
+model MemoryRevision {
+  id                      String      @id @default(uuid())
+  claimId                 String
+  claim                   MemoryClaim @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  action                  String
+  previousValue           String?
+  nextValue               String?
+  sourceDiscordMessageIds String
+  authorUserId            String
+  channelId               String
+  extractorModel          String
+  confidence              Float
+  createdAt               DateTime    @default(now())
+
+  @@index([claimId, createdAt])
+  @@index([sourceDiscordMessageIds])
+}
+
+model MemoryExtractionFence {
+  familyKey   String   @id
+  sourceOrder String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
 
-  @@index([guildId, scope])
-  @@index([channelId])
-  @@index([userId])
-  @@index([sessionId])
-  @@index([updatedAt])
+model MemorySourceFence {
+  sourceDiscordMessageId String   @id
+  reason                 String
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+}
+
+model AgentRun {
+  id                       String    @id @default(uuid())
+  discordMessageId         String    @unique
+  guildId                  String
+  channelId                String
+  threadId                 String?
+  actorUserId              String
+  triggerKind              String
+  persona                  String?
+  route                    String?
+  status                   String    @default("admitted")
+  responseMessageId        String?
+  incidentId               String?   @unique
+  contextCoreCharacters    Int       @default(0)
+  contextPersonaCharacters Int       @default(0)
+  contextMemoryCharacters  Int       @default(0)
+  contextTranscriptChars   Int       @default(0)
+  selectedMemoryCount      Int       @default(0)
+  inputTokens              Int?
+  outputTokens             Int?
+  finishReason             String?
+  errorClass               String?
+  startedAt                DateTime  @default(now())
+  completedAt              DateTime?
+  failedAt                 DateTime?
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+
+  @@index([guildId, createdAt])
+  @@index([channelId, createdAt])
+  @@index([status, createdAt])
+}
+
+model LegacyAgentRuntimeArchive {
+  id          String   @id @default(uuid())
+  sourceTable String
+  sourceId    String
+  payload     String
+  archivedAt  DateTime @default(now())
+
+  @@unique([sourceTable, sourceId])
+  @@index([archivedAt])
 }
 
 model EditorSession {
-  id              String    @id @default(uuid())
-  userId          String
-  guildId         String
-  channelId       String
-  threadId        String?
-  messageId       String?
-  repoName        String
-  sdkSessionId    String?
-  clonedRepoPath  String?   // Path to cloned repo in /tmp
-  state           String    @default("active")
-  pendingChanges  String?
-  summary         String?
-  prUrl           String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  expiresAt       DateTime
+  id             String   @id @default(uuid())
+  userId         String
+  guildId        String
+  channelId      String
+  threadId       String?
+  messageId      String?
+  repoName       String
+  sdkSessionId   String?
+  clonedRepoPath String? // Path to cloned repo in /tmp
+  state          String   @default("active")
+  pendingChanges String?
+  summary        String?
+  prUrl          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  expiresAt      DateTime
 
   @@index([userId, state])
   @@index([guildId])

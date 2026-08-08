@@ -1,36 +1,25 @@
-import { allDiscordTools } from "./discord/index.ts";
-import { playbackTools } from "./music/playback.ts";
-import { queueTools } from "./music/queue.ts";
-import { externalServiceTool } from "./external/web.ts";
-import { webResearchTool } from "./external/research.ts";
-import { manageMemoryTool } from "./memory/index.ts";
-import { manageAgentSessionTool } from "./sessions/index.ts";
-import { sqliteTools } from "./database/sqlite-query.ts";
-import { electionTools } from "./elections/elections.ts";
-import { executeShellCommandTool } from "./automation/shell.ts";
-import { manageTaskTool } from "./automation/timers.ts";
-import { manageAgentJobTool } from "./automation/agent-jobs.ts";
-import { browserAutomationTool } from "./automation/browser.ts";
-import { manageBirthdayTool } from "./birthdays/index.ts";
+import {
+  automationToolSet,
+  editorToolSet,
+  messagingToolSet,
+  moderationToolSet,
+  musicToolSet,
+  serverToolSet,
+  toolsToRecord,
+} from "./tool-sets.ts";
 
-function toolsToRecord(tools: { id: string }[]): Record<string, unknown> {
-  return Object.fromEntries(tools.map((tool) => [tool.id, tool]));
+const registeredTools = [
+  ...messagingToolSet,
+  ...serverToolSet,
+  ...moderationToolSet,
+  ...musicToolSet,
+  ...automationToolSet,
+  ...editorToolSet,
+];
+
+const ids = registeredTools.map(({ id }) => id);
+if (new Set(ids).size !== ids.length) {
+  throw new Error("Birmel tool registry contains duplicate tool IDs");
 }
 
-export const allTools: Record<string, unknown> = {
-  ...toolsToRecord(allDiscordTools),
-  ...toolsToRecord(playbackTools),
-  ...toolsToRecord(queueTools),
-  ...toolsToRecord([externalServiceTool, webResearchTool]),
-  ...toolsToRecord([manageMemoryTool]),
-  ...toolsToRecord([manageAgentSessionTool]),
-  ...toolsToRecord(sqliteTools),
-  ...toolsToRecord(electionTools),
-  ...toolsToRecord([
-    executeShellCommandTool,
-    manageTaskTool,
-    manageAgentJobTool,
-    browserAutomationTool,
-  ]),
-  ...toolsToRecord([manageBirthdayTool]),
-};
+export const allTools = toolsToRecord(registeredTools);

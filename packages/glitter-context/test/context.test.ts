@@ -1,6 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import {
   currentRelationships,
+  friendGroupHistory,
+  getFriendContext,
   getPerson,
   getRelationshipHistory,
   getStyleCard,
@@ -8,6 +10,7 @@ import {
   people,
   relationshipEvents,
   relationshipContextText,
+  resolvePersonReference,
   styleCardToPromptContext,
 } from "#src/index.ts";
 import { StyleCardV2Schema } from "#src/schema.ts";
@@ -111,6 +114,32 @@ describe("Glitter context", () => {
       expect(personIds.has(event.targetId)).toBe(true);
     }
     expect(getPerson("NekoRyan")?.id).toBe("ryan");
+  });
+
+  test("assembles bounded just-in-time context from canonical data", () => {
+    expect(resolvePersonReference("gex")).toMatchObject({
+      status: "matched",
+      person: { id: "aaron" },
+    });
+
+    const context = getFriendContext({
+      message: "What happened with Gex and NekoRyan on the Vancouver trip?",
+      characterBudget: 8000,
+      maxLoreSections: 4,
+    });
+
+    expect(context.people.map(({ person }) => person.id)).toEqual([
+      "aaron",
+      "ryan",
+    ]);
+    expect(
+      context.loreSections.some(({ markdown }) =>
+        markdown.includes("Vancouver trip"),
+      ),
+    ).toBe(true);
+    expect(context.characterCount).toBe(context.contextText.length);
+    expect(context.characterCount).toBeLessThanOrEqual(8000);
+    expect(context.contextText).not.toBe(friendGroupHistory);
   });
 
   test("validates V2 cardinality and projects the complete prompt context", () => {

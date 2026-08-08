@@ -3,7 +3,7 @@
 # bun.lock, isolated linker). Built via `bun run docker:build` in this package
 # (which passes `-f Dockerfile ../..`).
 #
-# birmel's editor sub-agent shells out to `gh` (opens PRs) and `claude` (runs
+# birmel's editor specialist shells out to `gh` (opens PRs) and `claude` (runs
 # edits); its music stack shells out through youtube-dl-exec (needs Node + Python
 # + a yt-dlp binary) and ffmpeg-static.
 #
@@ -116,6 +116,12 @@ COPY --parents \
   packages/birmel \
   packages/llm-observability \
   ./
+# Bake Prisma's migration engines into the production dependency tree. Bun's
+# production install omits lifecycle scripts, so the CLI otherwise downloads
+# engines on first use. Runtime and smoke execute as uid 1000 over root-owned
+# node_modules, which correctly prevents that startup write. Generate once as
+# root during the image build so migrate deploy is read-only at runtime.
+RUN cd packages/birmel && bunx --trust prisma generate
 COPY --from=build /app/packages/birmel/generated packages/birmel/generated
 COPY --from=build /app/packages/glitter-context/dist packages/glitter-context/dist
 
@@ -124,14 +130,17 @@ ARG GIT_SHA=unknown
 ENV VERSION=${VERSION}
 ENV GIT_SHA=${GIT_SHA}
 ENV NODE_ENV=production
+ENV BIRMEL_SCREENSHOTS_DIR=/app/data/screenshots
 LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"
 
 # Run from the package dir so Bun resolves this package's tsconfig / imports map
-# (the `#generated/*` subpath imports). The old prod entrypoint also ran
-# `prisma db push` before boot; that's a runtime DB step for the deployed
-# service and is left to the deployment (not baked into the image CMD).
+# (the `#generated/*` subpath imports). The entrypoint fingerprints an existing
+# unmigrated database, resolves the verified baseline, and runs migrate deploy
+# before starting Discord.
 WORKDIR /app/packages/birmel
-CMD ["bun", "src/index.ts"]
+RUN mkdir -p /app/data/screenshots && chown -R 1000:1000 /app/data
+USER 1000:1000
+CMD ["bun", "scripts/start.ts"]
 
 FROM runtime AS smoke
 # The smoke harness ships in CI context only — the scoped source COPY

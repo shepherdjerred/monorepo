@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, mock, test } from "bun:test";
 import { z } from "zod";
-import { runWithRequestContext } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
+import {
+  getRequestContext,
+  runWithRequestContext,
+} from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
+import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import {
   clearAllPlaylistsForTests,
   getPlaylist,
@@ -172,8 +176,9 @@ function withMusicContext<T>(
     {
       sourceChannelId: "text-1",
       sourceMessageId: "message-1",
+      ownsSourceReply: true,
       guildId: context.guildId ?? "guild-1",
-      userId: "user-1",
+      userId: z.string().parse(getConfig().authority.trustedUserIds[0]),
       ...(context.voiceChannelId != null && {
         voiceChannelId: context.voiceChannelId,
       }),
@@ -189,7 +194,9 @@ async function executePlayback(
   if (execute == null) {
     throw new Error("music playback tool has no execute function");
   }
-  return await execute(input);
+  return getRequestContext() == null
+    ? await withMusicContext({}, async () => await execute(input))
+    : await execute(input);
 }
 
 async function executeQueue(
@@ -199,7 +206,9 @@ async function executeQueue(
   if (execute == null) {
     throw new Error("music queue tool has no execute function");
   }
-  return await execute(input);
+  return getRequestContext() == null
+    ? await withMusicContext({}, async () => await execute(input))
+    : await execute(input);
 }
 
 async function executePlaylist(
@@ -209,7 +218,9 @@ async function executePlaylist(
   if (execute == null) {
     throw new Error("music playlist tool has no execute function");
   }
-  return await execute(input);
+  return getRequestContext() == null
+    ? await withMusicContext({}, async () => await execute(input))
+    : await execute(input);
 }
 
 beforeEach(() => {
@@ -323,11 +334,15 @@ describe("music AI tools", () => {
       action: "create",
       playlistName: "mix",
     });
-    await executePlaylist({
-      guildId: "guild-2",
-      action: "create",
-      playlistName: "mix",
-    });
+    await withMusicContext(
+      { guildId: "guild-2" },
+      async () =>
+        await executePlaylist({
+          guildId: "guild-2",
+          action: "create",
+          playlistName: "mix",
+        }),
+    );
 
     const addResult = PlaylistToolResultSchema.parse(
       await executePlaylist({

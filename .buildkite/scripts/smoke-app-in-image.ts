@@ -201,7 +201,7 @@ const commands: Record<
       "test -x node_modules/youtube-dl-exec/bin/yt-dlp",
       "timeout 10s node_modules/youtube-dl-exec/bin/yt-dlp --version",
       "set +e",
-      'output="$(timeout 30s bun run src/index.ts 2>&1)"',
+      'output="$(timeout 30s bun run scripts/start.ts 2>&1)"',
       "status=$?",
       String.raw`printf '%s\n' "$output"`,
       String.raw`[ "$status" -eq 124 ] || printf "%s\n" "$output" | grep -iE "` +
@@ -210,11 +210,10 @@ const commands: Record<
     ].join("\n"),
     env: {
       DISCORD_TOKEN: "smoke-test-dummy",
-      DISCORD_CLIENT_ID: "smoke-test-dummy",
+      DISCORD_CLIENT_ID: "1".repeat(18),
       ANTHROPIC_API_KEY: "smoke-test-dummy",
       OPENAI_API_KEY: "smoke-test-dummy",
       DATABASE_URL: "file:/tmp/smoke-test.db",
-      MEMORY_DB_PATH: "file:/tmp/birmel-memory.db",
       TELEMETRY_ENABLED: "false",
     },
   },

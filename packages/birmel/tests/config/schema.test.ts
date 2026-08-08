@@ -15,14 +15,14 @@ describe("DiscordConfigSchema", () => {
   test("validates valid config", () => {
     const result = DiscordConfigSchema.safeParse({
       token: "test-token",
-      clientId: "test-client-id",
+      clientId: "123456789012345678",
     });
     expect(result.success).toBe(true);
   });
 
   test("rejects missing token", () => {
     const result = DiscordConfigSchema.safeParse({
-      clientId: "test-client-id",
+      clientId: "123456789012345678",
     });
     expect(result.success).toBe(false);
   });
@@ -30,7 +30,7 @@ describe("DiscordConfigSchema", () => {
   test("rejects empty token", () => {
     const result = DiscordConfigSchema.safeParse({
       token: "",
-      clientId: "test-client-id",
+      clientId: "123456789012345678",
     });
     expect(result.success).toBe(false);
   });
@@ -82,18 +82,17 @@ describe("AgentConfigSchema", () => {
     const result = AgentConfigSchema.safeParse({});
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.memoryDbPath).toBe("file:/app/data/birmel-memory.db");
+      expect(result.data.maxSteps).toBe(8);
+      expect(result.data.responseTimeoutMs).toBe(120_000);
+      expect(result.data.routerTimeoutMs).toBe(30_000);
     }
   });
 
-  test("allows custom memoryDbPath", () => {
+  test("rejects more than eight tool-loop steps", () => {
     const result = AgentConfigSchema.safeParse({
-      memoryDbPath: "file:/custom/path/memory.db",
+      maxSteps: 9,
     });
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.memoryDbPath).toBe("file:/custom/path/memory.db");
-    }
+    expect(result.success).toBe(false);
   });
 });
 
@@ -222,12 +221,13 @@ describe("ConfigSchema (full)", () => {
     const result = ConfigSchema.safeParse({
       discord: {
         token: "test-token",
-        clientId: "test-client-id",
+        clientId: "123456789012345678",
       },
       openai: {
         apiKey: "test-openai-key",
       },
       agent: {},
+      authority: {},
       telemetry: {},
       dailyPosts: {},
       externalApis: {},
@@ -242,6 +242,7 @@ describe("ConfigSchema (full)", () => {
       browser: {},
       elections: {},
       editor: {},
+      health: {},
     });
     expect(result.success).toBe(true);
   });

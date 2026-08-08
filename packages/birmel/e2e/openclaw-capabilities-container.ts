@@ -1,10 +1,20 @@
-import { manageAgentSessionTool } from "@shepherdjerred/birmel/agent-tools/tools/sessions/index.ts";
 import { browserAutomationTool } from "@shepherdjerred/birmel/agent-tools/tools/automation/browser.ts";
 import { webResearchTool } from "@shepherdjerred/birmel/agent-tools/tools/external/research.ts";
-import { manageMemoryTool } from "@shepherdjerred/birmel/agent-tools/tools/memory/index.ts";
 import { createAgentJob } from "@shepherdjerred/birmel/agent-tools/tools/automation/agent-job-actions.ts";
+import { runWithRequestContext } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
 import { runAgentJobsJob } from "@shepherdjerred/birmel/scheduler/jobs/agent-jobs.ts";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
+import { rememberMemoryClaim } from "@shepherdjerred/birmel/memory/operations.ts";
+import {
+  appendSessionEvent,
+  createSession,
+} from "@shepherdjerred/birmel/sessions/service.ts";
+
+const GUILD_ID = "123456789012345678";
+const CHANNEL_ID = "223456789012345678";
+const THREAD_ID = "323456789012345678";
+const USER_ID = "160509172704739328";
+const MESSAGE_ID = "423456789012345678";
 
 type ToolLike = {
   execute: (input: Record<string, unknown>) => Promise<unknown>;
@@ -84,102 +94,110 @@ function startMockServer() {
 }
 
 async function setupPhase(): Promise<void> {
-  const memoryTool = getExecutableTool(manageMemoryTool);
-  const sessionTool = getExecutableTool(manageAgentSessionTool);
   const browserTool = getExecutableTool(browserAutomationTool);
   const researchTool = getExecutableTool(webResearchTool);
 
-  expectSuccess(
-    await memoryTool.execute({
-      action: "add",
-      guildId: "guild-1",
-      scope: "session",
-      sessionId: "session-anchor",
-      memory: "persistent docker e2e memory",
-      tags: ["docker", "e2e"],
+  await rememberMemoryClaim(prisma, {
+    context: {
+      guildId: GUILD_ID,
+      channelId: CHANNEL_ID,
+      userId: USER_ID,
+      personaId: "virmel",
+      authorUserId: USER_ID,
+      extractorModel: "docker-e2e",
+    },
+    candidate: {
+      scope: "guild",
+      subject: "docker e2e",
+      predicate: "preference",
+      value: "persistent docker e2e memory",
+      confidence: 1,
       salience: 0.9,
-    }),
-    "memory add",
-  );
-  expectSuccess(
-    await sessionTool.execute({
-      action: "create",
-      guildId: "guild-1",
-      channelId: "channel-1",
-      threadId: "thread-1",
-      userId: "user-1",
-      label: "docker e2e",
-      model: "gpt-5.6-sol",
-      reasoningEffort: "medium",
-      textVerbosity: "low",
-    }),
-    "session create",
-  );
-  const session = await prisma.agentSession.findFirstOrThrow();
-  expectSuccess(
-    await sessionTool.execute({
-      action: "steer",
-      guildId: "guild-1",
-      sessionId: session.id,
-      content: "prefer concise status with evidence",
-    }),
-    "session steer",
-  );
-  expectSuccess(
-    await browserTool.execute({ action: "start", profile: "birmel-e2e" }),
-    "pinchtab start",
-  );
-  expectSuccess(
-    await browserTool.execute({
-      action: "open",
-      instanceId: "instance-1",
-      url: "http://localhost:9867/page",
-    }),
-    "pinchtab open",
-  );
-  expectSuccess(
-    await browserTool.execute({
-      action: "navigate",
-      tabId: "tab-1",
-      url: "http://localhost:9867/page",
-    }),
-    "pinchtab navigate",
-  );
-  expectSuccess(
-    await browserTool.execute({ action: "get-text", tabId: "tab-1" }),
-    "pinchtab text",
-  );
-  expectSuccess(
-    await researchTool.execute({
-      action: "fetch",
-      url: "http://localhost:9867/page",
-    }),
-    "web fetch",
-  );
-  await createAgentJob({
-    guildId: "guild-1",
-    userId: "user-1",
-    channelId: "channel-1",
-    threadId: "thread-1",
-    scheduleKind: "every",
-    scheduleValue: "1s",
-    timezone: "UTC",
-    toolId: undefined,
-    toolInput: undefined,
-    message: "docker e2e scheduled message",
-    name: "docker e2e job",
-    description: "persistent restart job",
-    maxAttempts: 2,
-    timeoutMs: 30_000,
-    model: "gpt-5.6-sol",
-    reasoningEffort: "medium",
-    textVerbosity: "low",
+      origin: "explicit",
+      validFrom: null,
+      validUntil: null,
+      relatedUserIds: [],
+      sourceDiscordMessageIds: [MESSAGE_ID],
+    },
+    embedding: [1, 0],
+    sourceOrder: MESSAGE_ID,
   });
+  const session = await createSession({
+    guildId: GUILD_ID,
+    channelId: CHANNEL_ID,
+    threadId: THREAD_ID,
+    actorUserId: USER_ID,
+    label: "docker e2e",
+  });
+  await appendSessionEvent({
+    sessionId: session.id,
+    role: "user",
+    eventType: "message",
+    content: "prefer concise status with evidence",
+    discordMessageId: MESSAGE_ID,
+  });
+
+  await runWithRequestContext(
+    {
+      guildId: GUILD_ID,
+      sourceChannelId: CHANNEL_ID,
+      sourceMessageId: MESSAGE_ID,
+      userId: USER_ID,
+      ownsSourceReply: true,
+    },
+    async () => {
+      expectSuccess(
+        await browserTool.execute({ action: "start", profile: "birmel-e2e" }),
+        "pinchtab start",
+      );
+      expectSuccess(
+        await browserTool.execute({
+          action: "open",
+          instanceId: "instance-1",
+          url: "http://localhost:9867/page",
+        }),
+        "pinchtab open",
+      );
+      expectSuccess(
+        await browserTool.execute({
+          action: "navigate",
+          tabId: "tab-1",
+          url: "http://localhost:9867/page",
+        }),
+        "pinchtab navigate",
+      );
+      expectSuccess(
+        await browserTool.execute({ action: "get-text", tabId: "tab-1" }),
+        "pinchtab text",
+      );
+      expectSuccess(
+        await researchTool.execute({
+          action: "fetch",
+          url: "http://localhost:9867/page",
+        }),
+        "web fetch",
+      );
+      expectSuccess(
+        await createAgentJob({
+          scheduleKind: "every",
+          scheduleValue: "1s",
+          timezone: "UTC",
+          payload: { kind: "message", message: "docker e2e scheduled message" },
+          sessionId: session.id,
+          name: "docker e2e job",
+          description: "persistent restart job",
+          maxAttempts: 2,
+          timeoutMs: 30_000,
+        }),
+        "job create",
+      );
+    },
+  );
 }
 
 async function verifyPhase(): Promise<void> {
-  const memoryCount = await prisma.agentMemory.count({
-    where: { content: { contains: "persistent docker e2e memory" } },
+  const memoryCount = await prisma.memoryClaim.count({
+    where: { value: { contains: "persistent docker e2e memory" } },
   });
   const sessionCount = await prisma.agentSession.count({
     where: { label: "docker e2e" },

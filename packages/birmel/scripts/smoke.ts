@@ -6,7 +6,7 @@
  * image, that the editor + music runtime dependencies are present, then boots
  * the bot with dummy creds and asserts the Discord login fails with the expected
  * auth error:
- *   - gh + claude on PATH (editor sub-agent)
+ *   - gh + claude on PATH (editor specialist)
  *   - node + python3 (youtube-dl-exec)
  *   - ffmpeg-static resolves (audio transcode)
  *   - @snazzah/davey imports (discord-voip DAVE)
@@ -54,7 +54,7 @@ async function main(): Promise<void> {
     "timeout 10s node_modules/youtube-dl-exec/bin/yt-dlp --version",
     // Time-boxed boot; capture output and assert the expected auth failure.
     "set +e",
-    'output="$(timeout 30s bun run src/index.ts 2>&1)"',
+    'output="$(timeout 30s bun run scripts/start.ts 2>&1)"',
     'status="$?"',
     String.raw`printf '%s\n' "$output"`,
     '[ "$status" -eq 124 ] && exit 0',
@@ -69,15 +69,13 @@ async function main(): Promise<void> {
     "-e",
     "DISCORD_TOKEN=smoke-test-dummy",
     "-e",
-    "DISCORD_CLIENT_ID=smoke-test-dummy",
+    `DISCORD_CLIENT_ID=${"1".repeat(18)}`,
     "-e",
     "ANTHROPIC_API_KEY=smoke-test-dummy",
     "-e",
     "OPENAI_API_KEY=smoke-test-dummy",
     "-e",
     "DATABASE_URL=file:/tmp/smoke-test.db",
-    "-e",
-    "MEMORY_DB_PATH=file:/tmp/birmel-memory.db",
     "-e",
     "TELEMETRY_ENABLED=false",
     "--entrypoint",
