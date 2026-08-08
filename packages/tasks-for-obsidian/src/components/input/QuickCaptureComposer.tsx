@@ -76,6 +76,7 @@ export function QuickCaptureComposer({
 
   return (
     <ScrollView
+      pointerEvents={saving ? "none" : "auto"}
       style={styles.scroll}
       contentContainerStyle={styles.scrollContent}
       keyboardShouldPersistTaps="handled"
@@ -94,6 +95,7 @@ export function QuickCaptureComposer({
           ref={inputRef}
           style={[styles.input, { color: colors.text }]}
           value={value}
+          editable={!saving}
           onChangeText={onChange}
           onSubmitEditing={onSave}
           placeholder="What needs doing?"
