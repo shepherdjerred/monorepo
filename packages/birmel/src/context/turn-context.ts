@@ -16,7 +16,7 @@ import {
 } from "@shepherdjerred/birmel/discord/utils/channel-history.ts";
 import { retrieveMemoryClaims } from "@shepherdjerred/birmel/memory/retrieve.ts";
 import { withSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
-import { buildCompactPersonaProjection } from "@shepherdjerred/birmel/persona/projection.ts";
+import { buildConfiguredPersonaProjection } from "@shepherdjerred/birmel/persona/projection.ts";
 import { getSessionContext } from "@shepherdjerred/birmel/sessions/service.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 
@@ -113,7 +113,10 @@ async function assembleContextForTurn(
 
   return assembleContextBundle({
     systemPolicy: CORE_SYSTEM_POLICY,
-    personaProjection: buildCompactPersonaProjection(options.persona),
+    personaProjection: buildConfiguredPersonaProjection(
+      options.persona,
+      config.persona.enabled,
+    ),
     currentMessage: {
       id: options.turn.discordMessageId,
       authorName: options.turn.username,

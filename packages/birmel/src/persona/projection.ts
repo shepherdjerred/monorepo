@@ -53,3 +53,10 @@ export function buildCompactPersonaProjection(persona: string): string {
 
   return keepCompleteLines(blocks.join("\n\n"), CONTEXT_BUDGETS.persona);
 }
+
+export function buildConfiguredPersonaProjection(
+  persona: string,
+  enabled: boolean,
+): string {
+  return enabled ? buildCompactPersonaProjection(persona) : "";
+}

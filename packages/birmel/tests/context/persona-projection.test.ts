@@ -1,7 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import { getStyleCard } from "@shepherdjerred/glitter-context";
 import { CONTEXT_BUDGETS } from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
-import { buildCompactPersonaProjection } from "@shepherdjerred/birmel/persona/projection.ts";
+import {
+  buildCompactPersonaProjection,
+  buildConfiguredPersonaProjection,
+} from "@shepherdjerred/birmel/persona/projection.ts";
 
 describe("buildCompactPersonaProjection", () => {
   test("builds a deterministic projection within the persona budget", () => {
@@ -53,5 +56,12 @@ describe("buildCompactPersonaProjection", () => {
     );
 
     expect(projection.length).toBeLessThanOrEqual(CONTEXT_BUDGETS.persona);
+  });
+
+  test("omits the projection when persona behavior is disabled", () => {
+    expect(buildConfiguredPersonaProjection("jerred", false)).toBe("");
+    expect(buildConfiguredPersonaProjection("jerred", true)).toContain(
+      "## Elected persona: jerred",
+    );
   });
 });

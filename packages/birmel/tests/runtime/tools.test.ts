@@ -595,6 +595,34 @@ describe("createTool", () => {
       ),
     ).rejects.toThrow();
   });
+
+  test("allows a durable job to reply in its source channel", async () => {
+    const channels = getDiscordClient().channels;
+    const originalFetch = Reflect.get(channels, "fetch");
+    Reflect.set(channels, "fetch", async () => ({
+      isSendable: () => true,
+      messages: {
+        fetch: async () => ({
+          reply: async () => ({ id: "400000000000000004" }),
+        }),
+      },
+    }));
+
+    try {
+      await expect(
+        executeInContext(
+          trustedContext({ ownsSourceReply: false }),
+          async () =>
+            await manageMessageTool.execute({
+              action: "reply",
+              content: "durable reply",
+            }),
+        ),
+      ).resolves.toMatchObject({ success: true });
+    } finally {
+      Reflect.set(channels, "fetch", originalFetch);
+    }
+  });
 });
 
 describe("createTool cancellation", () => {

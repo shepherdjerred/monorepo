@@ -5,7 +5,8 @@ import { getGuildPersona } from "@shepherdjerred/birmel/persona/guild-persona.ts
 import type { AgentJobExecution } from "@shepherdjerred/birmel/scheduler/jobs/scheduled-tasks.ts";
 import { getSessionContext } from "@shepherdjerred/birmel/sessions/service.ts";
 import type { IsolatedAgentOptions } from "@shepherdjerred/birmel/agent-runtime/specialists.ts";
-import { buildCompactPersonaProjection } from "@shepherdjerred/birmel/persona/projection.ts";
+import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
+import { buildConfiguredPersonaProjection } from "@shepherdjerred/birmel/persona/projection.ts";
 import { MAX_SESSION_SUMMARY_CHARACTERS } from "@shepherdjerred/birmel/sessions/summarization.ts";
 
 const ReasoningEffortSchema = z.enum(["minimal", "low", "medium", "high"]);
@@ -70,7 +71,10 @@ export async function executeIsolatedAgentJob(
     userId: execution.actorUserId,
     username: `trusted actor ${execution.actorUserId}`,
     personaId,
-    persona: buildCompactPersonaProjection(personaId),
+    persona: buildConfiguredPersonaProjection(
+      personaId,
+      getConfig().persona.enabled,
+    ),
     context: await jobSessionContext(execution.sessionId, dependencies),
     attachments: [],
   });

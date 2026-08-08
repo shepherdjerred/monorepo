@@ -4,7 +4,7 @@ import { z } from "zod";
 import { getOpenAIProviderOptions } from "@shepherdjerred/birmel/agent-runtime/provider-options.ts";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { withSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
-import { buildCompactPersonaProjection } from "@shepherdjerred/birmel/persona/projection.ts";
+import { buildConfiguredPersonaProjection } from "@shepherdjerred/birmel/persona/projection.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 
 const logger = loggers.discord.child("should-respond-classifier");
@@ -40,7 +40,7 @@ export async function classifyShouldRespond(
           model: openai(config.openai.classifierModel),
           system:
             "Decide whether the elected persona should reply to the latest Discord message. Reply only when it is directed at the assistant or naturally continues the assistant's active conversation. Ignore unrelated side chatter.",
-          prompt: `${buildCompactPersonaProjection(input.persona)}\n\nRecent conversation:\n${input.transcript.length === 0 ? "(none)" : input.transcript}\n\nLatest message:\n${input.latestMessage}`,
+          prompt: `${buildConfiguredPersonaProjection(input.persona, config.persona.enabled)}\n\nRecent conversation:\n${input.transcript.length === 0 ? "(none)" : input.transcript}\n\nLatest message:\n${input.latestMessage}`,
           output: Output.object({ schema: ClassificationSchema }),
           timeout: config.agent.routerTimeoutMs,
           providerOptions: getOpenAIProviderOptions(),

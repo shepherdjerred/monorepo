@@ -181,6 +181,10 @@ async function executeSpecialistWithOptions(
         instructions: `${specialistInstructions(specialist)}\n\n${packet.persona}`,
         tools,
         stopWhen: stepCountIs(config.agent.maxSteps),
+        prepareStep: ({ stepNumber }) =>
+          stepNumber >= config.agent.maxSteps - 1
+            ? { activeTools: [] }
+            : undefined,
         maxOutputTokens: config.openai.maxTokens,
         providerOptions: getOpenAIProviderOptions(options),
       });

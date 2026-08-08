@@ -282,6 +282,7 @@ function restoredRequestContext(job: AgentJob): RequestContext {
     userId: job.actorUserId,
     sourceChannelId,
     sourceMessageId: job.sourceMessageId ?? `legacy-agent-job:${job.id}`,
+    ownsSourceReply: false,
   };
 }
 

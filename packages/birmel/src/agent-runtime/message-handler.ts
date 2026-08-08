@@ -231,15 +231,16 @@ async function processAdmittedTurn(
     });
     await recordAgentRunContext({ runId, persona, context: bundle });
     const personaSource = bundle.sources.find(({ kind }) => kind === "persona");
-    if (personaSource == null) {
+    if (getConfig().persona.enabled && personaSource == null) {
       throw new Error(
         "Context bundle is missing its compact persona projection",
       );
     }
+    const personaPrompt = personaSource?.content ?? "";
     const route = await routeTurn({
       turn: context.turn,
       personaId: persona,
-      persona: personaSource.content,
+      persona: personaPrompt,
       context: bundle,
     });
     await recordAgentRunRoute(runId, route);
@@ -260,7 +261,7 @@ async function processAdmittedTurn(
           turn: context.turn,
           context: bundle,
           personaId: persona,
-          persona: personaSource.content,
+          persona: personaPrompt,
           route,
         }),
     );

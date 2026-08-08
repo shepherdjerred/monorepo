@@ -15,6 +15,8 @@ export type RequestContext = {
   userId: string;
   /** Whether a reply has already been sent for this request (prevents spam) */
   replySent?: boolean;
+  /** Whether the live turn runtime owns the source-channel reply. */
+  ownsSourceReply?: boolean;
   /** Whether this turn performed a forget/privacy erase operation. */
   suppressAutomaticMemoryExtraction?: boolean;
   /** Internal durable-job hook invoked immediately before a write-risk tool. */

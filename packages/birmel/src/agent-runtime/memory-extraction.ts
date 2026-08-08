@@ -16,7 +16,7 @@ import {
   type MemoryCandidateProvenance,
 } from "@shepherdjerred/birmel/memory/schemas.ts";
 import { withSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
-import { buildCompactPersonaProjection } from "@shepherdjerred/birmel/persona/projection.ts";
+import { buildConfiguredPersonaProjection } from "@shepherdjerred/birmel/persona/projection.ts";
 
 const ExtractionSchema = z.object({
   candidates: z.array(MemoryCandidateSchema).max(20),
@@ -155,7 +155,7 @@ export async function extractAndApplyTurnMemory(options: {
         system: `Extract durable memory claims from raw Discord messages only.
 
 Elected persona projection:
-${buildCompactPersonaProjection(options.persona)}
+${buildConfiguredPersonaProjection(options.persona, config.persona.enabled)}
 
 Use that persona's social judgment, but never invent evidence. Extract stable rules, explicit preferences, personal facts, and relationships that will improve future conversation. Broad social and relationship inference is allowed, but inferred claims must use origin=inferred and calibrated confidence. Direct user statements use origin=explicit. Do not extract transient plans, secrets, or the assistant's own claims. Every sourceDiscordMessageIds entry must cite one or more bracketed raw message IDs. Use guild, channel, persona, user, or relationship scope appropriately. For user scope include the target Discord user ID in relatedUserIds; omit it only when the target is the cited statement's author. For relationship scope include at least two Discord user IDs. Return an empty candidate list when nothing is durable.`,
         prompt: messages,
