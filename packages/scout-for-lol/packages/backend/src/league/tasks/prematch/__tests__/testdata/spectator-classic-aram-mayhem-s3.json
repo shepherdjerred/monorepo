@@ -1,0 +1,186 @@
+{
+  "gameId": 3267199656,
+  "gameStartTime": 1785377068408,
+  "gameMode": "KIWI_JADE",
+  "mapId": 12,
+  "gameType": "MATCHED",
+  "gameQueueConfigId": 2450,
+  "gameLength": 83,
+  "platformId": "BR1",
+  "participants": [
+    {
+      "championId": 80,
+      "puuid": "SMznYTV7QWwE10OLPIr6C5KGv7KeNzDMl8iFQU4jYA5EOlVLqCqwJ-SIq9SRNoZa1xxXoCIsMgtubQ",
+      "teamId": 100,
+      "riotId": "notevenclose#BR2",
+      "spell1Id": 4,
+      "spell2Id": 32,
+      "lastSelectedSkinIndex": 21,
+      "bot": false,
+      "profileIconId": 7185,
+      "gameCustomizationObjects": [],
+      "perks": {
+        "perkIds": [8439],
+        "perkStyle": 8400,
+        "perkSubStyle": 8200
+      }
+    },
+    {
+      "championId": 11,
+      "puuid": "nq9puwENN1So6E_IYbVeydP1mvGVOU85CQ_nRSZNBgjLysYQi--mCe1H0yFpGMXgflRvEJWaxc81Xw",
+      "teamId": 100,
+      "riotId": "Taldo Craquinho#BR1",
+      "spell1Id": 4,
+      "spell2Id": 14,
+      "lastSelectedSkinIndex": 106,
+      "bot": false,
+      "profileIconId": 7176,
+      "gameCustomizationObjects": [],
+      "perks": {
+        "perkIds": [8112],
+        "perkStyle": 8100,
+        "perkSubStyle": 8000
+      }
+    },
+    {
+      "championId": 14,
+      "puuid": "RvEGputsjOvwtEZm1lfdO4kWQo7RjvSpknzMBLlEr-lQDtZ8CgNTRnFuPTV1Q7ud8r0JsvTKcg3PyA",
+      "teamId": 100,
+      "riotId": "I am not jujuba#br1",
+      "spell1Id": 6,
+      "spell2Id": 7,
+      "lastSelectedSkinIndex": 22,
+      "bot": false,
+      "profileIconId": 1427,
+      "gameCustomizationObjects": [],
+      "perks": {
+        "perkIds": [8439],
+        "perkStyle": 8400,
+        "perkSubStyle": 8000
+      }
+    },
+    {
+      "championId": 30,
+      "puuid": "s8bPIKPZ8-0QfoPQO-8sVALebdOOYv6dNMlUUyZF8OU2JyiI3_X-KmtP9oZ8HYIw6CGgupOSUxbpkQ",
+      "teamId": 100,
+      "riotId": "Taldo ViTs#BR1",
+      "spell1Id": 4,
+      "spell2Id": 32,
+      "lastSelectedSkinIndex": 5,
+      "bot": false,
+      "profileIconId": 6487,
+      "gameCustomizationObjects": [],
+      "perks": {
+        "perkIds": [8360],
+        "perkStyle": 8300,
+        "perkSubStyle": 8100
+      }
+    },
+    {
+      "championId": 62,
+      "puuid": "H49UJRHJ8-RKSIUqwzwHcSgaHOp53v2YK7VCyFhwasWfl38laswNZ2DorxqwsBOzeYW9U5k4qeAU-w",
+      "teamId": 100,
+      "riotId": "Ryfer#001",
+      "spell1Id": 32,
+      "spell2Id": 4,
+      "lastSelectedSkinIndex": 6,
+      "bot": false,
+      "profileIconId": 2073,
+      "gameCustomizationObjects": [],
+      "perks": {
+        "perkIds": [8214],
+        "perkStyle": 8200,
+        "perkSubStyle": 8000
+      }
+    },
+    {
+      "championId": 63,
+      "puuid": "_MT8r5eaQptxCKPXuhnHOkywAoIUoKjVlCTxB7PslOR51He12N7DCkQY_dFjCcBNSFe-7Ly_p2d87w",
+      "teamId": 200,
+      "riotId": "demo escarlate#BR1",
+      "spell1Id": 21,
+      "spell2Id": 4,
+      "lastSelectedSkinIndex": 12,
+      "bot": false,
+      "profileIconId": 5923,
+      "gameCustomizationObjects": [],
+      "perks": {
+        "perkIds": [8229],
+        "perkStyle": 8200,
+        "perkSubStyle": 8000
+      }
+    },
+    {
+      "championId": 80,
+      "puuid": "6deJqbbeQcaPGQBEnDEI31RQP_sfdK5mYqrjG6PxRbngFofcO6sYWSoM9lsMp5N6UKceTvfOkE5u2A",
+      "teamId": 200,
+      "riotId": "Ekko De Rabadon#Ekko",
+      "spell1Id": 6,
+      "spell2Id": 7,
+      "lastSelectedSkinIndex": 1,
+      "bot": false,
+      "profileIconId": 6235,
+      "gameCustomizationObjects": [],
+      "perks": {
+        "perkIds": [8010],
+        "perkStyle": 8000,
+        "perkSubStyle": 8100
+      }
+    },
+    {
+      "championId": 67,
+      "puuid": "9tQZ8C5jFrvEN-7XJHGTtFu4-0uvx1X7sBfpoMmaCjz1hGsc34DBmRGBh1lK3fkKCldjMPxFhyBTCA",
+      "teamId": 200,
+      "riotId": "trovador moderno#fer",
+      "spell1Id": 4,
+      "spell2Id": 21,
+      "lastSelectedSkinIndex": 0,
+      "bot": false,
+      "profileIconId": 5659,
+      "gameCustomizationObjects": [],
+      "perks": {
+        "perkIds": [8992],
+        "perkStyle": 8200,
+        "perkSubStyle": 8400
+      }
+    },
+    {
+      "championId": 1,
+      "puuid": "YyToR7q_Mlx466vKwpES7GVWT_gpHrHQqJuaGyNZQ4lsRyN0WScpm8W3ifCxciW74EFO-0OmjEBcSQ",
+      "teamId": 200,
+      "riotId": "DreamerAlice#PE1",
+      "spell1Id": 4,
+      "spell2Id": 6,
+      "lastSelectedSkinIndex": 4,
+      "bot": false,
+      "profileIconId": 6077,
+      "gameCustomizationObjects": [],
+      "perks": {
+        "perkIds": [8128],
+        "perkStyle": 8100,
+        "perkSubStyle": 8200
+      }
+    },
+    {
+      "championId": 30,
+      "puuid": "EXy1WGv7a1-Oj_tlY5dhsOzTEzQgJnh0hMMicP4QD05LNsaxPcqmT7jdZaiJHAShrpIVfLsiE3L9MQ",
+      "teamId": 200,
+      "riotId": "Blackfire#00006",
+      "spell1Id": 13,
+      "spell2Id": 4,
+      "lastSelectedSkinIndex": 24,
+      "bot": false,
+      "profileIconId": 7154,
+      "gameCustomizationObjects": [],
+      "perks": {
+        "perkIds": [8229],
+        "perkStyle": 8200,
+        "perkSubStyle": 8100
+      }
+    }
+  ],
+  "bannedChampions": [],
+  "observers": {
+    "encryptionKey": "ptVJhGV3jIbrzHHqEmd7nc3n76GJj+/s"
+  }
+}

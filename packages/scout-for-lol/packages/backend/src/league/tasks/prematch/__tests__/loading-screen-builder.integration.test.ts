@@ -27,6 +27,7 @@ void mock.module("#src/league/model/rank.ts", () => ({
 }));
 
 const currentDir = new URL(".", import.meta.url).pathname;
+const realS3ClassicAramMayhemFixture = `${currentDir}testdata/spectator-classic-aram-mayhem-s3.json`;
 
 async function loadSpectatorPayload(path: string) {
   const file = Bun.file(path);
@@ -172,6 +173,44 @@ describe("buildLoadingScreenData layout variants", () => {
     expect("bans" in result).toBe(false);
     expect("isRanked" in result).toBe(false);
     expect("ranks" in (result.participants[0] ?? {})).toBe(false);
+  });
+
+  test("builds the captured production S3 Classic ARAM Mayhem lobby with Classic assets", async () => {
+    // Captured from scout-prod/prematch/2026/07/29/3267199656/spectator-data.json.
+    const gameInfo = await loadSpectatorPayload(realS3ClassicAramMayhemFixture);
+    const trackedPuuid = gameInfo.participants[0]?.puuid;
+    if (trackedPuuid === null || trackedPuuid === undefined) {
+      throw new Error("Real Classic ARAM Mayhem fixture has no tracked PUUID");
+    }
+
+    expect(Number(gameInfo.gameId)).toBe(3_267_199_656);
+    expect(gameInfo.gameQueueConfigId).toBe(2450);
+    expect(gameInfo.gameMode).toBe("KIWI_JADE");
+    expect(gameInfo.mapId).toBe(12);
+
+    const result = await buildLoadingScreenData(
+      gameInfo,
+      new Set([trackedPuuid]),
+      "AMERICA_NORTH",
+    );
+
+    const parsed = LoadingScreenDataSchema.parse(result);
+    expect(parsed.layout).toBe("classic");
+    expect(parsed.queueType).toBe("classic aram mayhem");
+    expect(parsed.mapName).toBe("The Bandlewood");
+    expect(parsed.participants).toHaveLength(10);
+    const trackedParticipant = parsed.participants.find(
+      (participant) => participant.isTrackedPlayer,
+    );
+    if (trackedParticipant === undefined) {
+      throw new Error("Real Classic ARAM Mayhem result has no tracked player");
+    }
+    expect(trackedParticipant.championName).toBe("Jade_Pantheon");
+    expect(trackedParticipant.spell1Id).toBe(SummonerSpellIdSchema.parse(74));
+    expect(trackedParticipant.spell2Id).toBe(SummonerSpellIdSchema.parse(32));
+    expect(trackedParticipant.isTrackedPlayer).toBe(true);
+    expect("bans" in parsed).toBe(false);
+    expect("isRanked" in parsed).toBe(false);
   });
 
   test("queue 2400 (ARAM: Mayhem) with Rek'Sai resolves without throwing", async () => {

@@ -5,6 +5,7 @@ import {
   RawMatchSchema,
   type RawMatch,
 } from "@scout-for-lol/data";
+import { classicMatchToImage, classicMatchToSvg } from "@scout-for-lol/report";
 import { buildClassicMatch } from "./match-report-classic.ts";
 import { generateMatchReport } from "./match-report-generator.ts";
 
@@ -12,6 +13,11 @@ const fixtureUrl = new URL(
   "../../../../../../testdata/rift.json",
   import.meta.url,
 );
+const realS3FixtureUrl = new URL(
+  "./testdata/match-classic-aram-mayhem-s3.json",
+  import.meta.url,
+);
+const PNG_SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10];
 
 async function classicMatchFixture(
   options: {
@@ -221,6 +227,50 @@ describe("buildClassicMatch", () => {
     expect(result?.mapName).toBe("The Bandlewood");
     expect(result?.teams.blue[0]?.championId).toBe(60_103);
     expect(result?.teams.blue[0]?.spells).toEqual([74, 32]);
+  });
+
+  test("builds and renders the captured production S3 Classic ARAM Mayhem match", async () => {
+    // Captured from scout-prod/games/2026/07/29/BR1_3267199656/match.json.
+    const input: unknown = await Bun.file(realS3FixtureUrl).json();
+    const rawMatch = RawMatchSchema.parse(input);
+    const trackedParticipant = rawMatch.info.participants[0];
+    if (trackedParticipant === undefined) {
+      throw new Error("Real Classic ARAM Mayhem fixture has no participants");
+    }
+    const trackedPlayer = PlayerConfigEntrySchema.parse({
+      alias: "Real Classic ARAM",
+      league: {
+        leagueAccount: {
+          puuid: trackedParticipant.puuid,
+          region: "AMERICA_NORTH",
+        },
+      },
+    });
+
+    expect(rawMatch.metadata.matchId).toBe("BR1_3267199656");
+    expect(rawMatch.info.queueId).toBe(2450);
+    expect(rawMatch.info.gameMode).toBe("KIWI_JADE");
+    expect(rawMatch.info.mapId).toBe(12);
+    expect(rawMatch.info.gameModeMutators).toEqual(["mapskin_map12_jade"]);
+
+    const result = buildClassicMatch(rawMatch, [trackedPlayer]);
+    if (result === undefined) {
+      throw new Error("Real Classic ARAM Mayhem match omitted its player");
+    }
+
+    expect(result.queueType).toBe("classic aram mayhem");
+    expect(result.mapName).toBe("The Bandlewood");
+    expect(result.teams.blue[0]?.championName).toBe("Jade_Pantheon");
+    expect(result.teams.blue[0]?.spells).toEqual([74, 32]);
+
+    const [svg, repeatSvg, png] = await Promise.all([
+      classicMatchToSvg(result),
+      classicMatchToSvg(result),
+      classicMatchToImage(result),
+    ]);
+    expect(svg).toBe(repeatSvg);
+    expect(svg).toContain('width="1920" height="1200"');
+    expect([...png.subarray(0, 8)]).toEqual(PNG_SIGNATURE);
   });
 
   test("groups full rosters by team ID and keeps the narrow Classic model", async () => {
