@@ -57,7 +57,7 @@ beforeAll(async () => {
   harnessResult = FlowHarnessResultSchema.parse(
     JSON.parse(resultLine.slice(FLOW_RESULT_PREFIX.length)),
   );
-});
+}, 30_000);
 
 afterAll(async () => {
   if (temporaryDirectory != null) {

@@ -23,5 +23,5 @@ describe("Birmel 3.0 Discord admission", () => {
     expect(exitCode, output).toBe(0);
     expect(output).toContain("6 pass");
     expect(output).toContain("0 fail");
-  });
+  }, 30_000);
 });

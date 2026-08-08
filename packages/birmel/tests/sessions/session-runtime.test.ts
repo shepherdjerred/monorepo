@@ -1,73 +1,4 @@
-import { afterAll, afterEach, describe, expect, test } from "bun:test";
-import { Database } from "bun:sqlite";
-import { mkdtemp, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import path from "node:path";
-
-const previousDatabaseUrl = Bun.env["DATABASE_URL"];
-const previousDatabasePath = Bun.env["DATABASE_PATH"];
-const directory = await mkdtemp(path.join(tmpdir(), "birmel-sessions-"));
-const databasePath = path.join(directory, "sessions.db");
-const database = new Database(databasePath, { create: true, strict: true });
-
-try {
-  database.run(`
-    PRAGMA foreign_keys = ON;
-    CREATE TABLE "AgentSession" (
-      "id" TEXT NOT NULL PRIMARY KEY,
-      "guildId" TEXT NOT NULL,
-      "channelId" TEXT NOT NULL,
-      "threadId" TEXT NOT NULL,
-      "actorUserId" TEXT NOT NULL,
-      "label" TEXT,
-      "status" TEXT NOT NULL DEFAULT 'active',
-      "summary" TEXT,
-      "summaryVersion" INTEGER NOT NULL DEFAULT 1,
-      "summaryThroughSequence" INTEGER NOT NULL DEFAULT 0,
-      "expiresAt" DATETIME,
-      "archivedAt" DATETIME,
-      "cancelledAt" DATETIME,
-      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      "updatedAt" DATETIME NOT NULL
-    );
-    CREATE UNIQUE INDEX "AgentSession_threadId_key"
-      ON "AgentSession"("threadId");
-    CREATE INDEX "AgentSession_guildId_status_idx"
-      ON "AgentSession"("guildId", "status");
-    CREATE INDEX "AgentSession_channelId_status_idx"
-      ON "AgentSession"("channelId", "status");
-    CREATE INDEX "AgentSession_actorUserId_status_idx"
-      ON "AgentSession"("actorUserId", "status");
-
-    CREATE TABLE "AgentSessionEvent" (
-      "id" TEXT NOT NULL PRIMARY KEY,
-      "sessionId" TEXT NOT NULL,
-      "sequence" INTEGER NOT NULL,
-      "role" TEXT NOT NULL,
-      "eventType" TEXT NOT NULL,
-      "content" TEXT NOT NULL,
-      "discordMessageId" TEXT,
-      "toolId" TEXT,
-      "metadata" TEXT,
-      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      CONSTRAINT "AgentSessionEvent_sessionId_fkey"
-        FOREIGN KEY ("sessionId") REFERENCES "AgentSession" ("id")
-        ON DELETE CASCADE ON UPDATE CASCADE
-    );
-    CREATE UNIQUE INDEX "AgentSessionEvent_sessionId_sequence_key"
-      ON "AgentSessionEvent"("sessionId", "sequence");
-    CREATE UNIQUE INDEX "AgentSessionEvent_sessionId_discordMessageId_key"
-      ON "AgentSessionEvent"("sessionId", "discordMessageId");
-    CREATE INDEX "AgentSessionEvent_eventType_createdAt_idx"
-      ON "AgentSessionEvent"("eventType", "createdAt");
-  `);
-} finally {
-  database.close();
-}
-
-Bun.env["DATABASE_URL"] = `file:${databasePath}`;
-delete Bun.env["DATABASE_PATH"];
-Reflect.deleteProperty(globalThis, "__birmel_prisma__");
+import { afterEach, describe, expect, test } from "bun:test";
 
 const {
   appendSessionEvent,
@@ -81,8 +12,7 @@ const { summarizeSessionIfNeeded } =
   await import("@shepherdjerred/birmel/sessions/summarization.ts");
 const { manageAgentSessionTool } =
   await import("@shepherdjerred/birmel/agent-tools/tools/sessions/index.ts");
-const { disconnectPrisma, prisma } =
-  await import("@shepherdjerred/birmel/database/index.ts");
+const { prisma } = await import("@shepherdjerred/birmel/database/index.ts");
 
 let fixtureNumber = 0;
 
@@ -147,23 +77,9 @@ async function appendNumberedEvent(
 }
 
 afterEach(async () => {
-  await prisma.agentSession.deleteMany();
-});
-
-afterAll(async () => {
-  await disconnectPrisma();
-  Reflect.deleteProperty(globalThis, "__birmel_prisma__");
-  if (previousDatabaseUrl === undefined) {
-    delete Bun.env["DATABASE_URL"];
-  } else {
-    Bun.env["DATABASE_URL"] = previousDatabaseUrl;
-  }
-  if (previousDatabasePath === undefined) {
-    delete Bun.env["DATABASE_PATH"];
-  } else {
-    Bun.env["DATABASE_PATH"] = previousDatabasePath;
-  }
-  await rm(directory, { recursive: true, force: true });
+  await prisma.agentSession.deleteMany({
+    where: { guildId: "guild-session-test" },
+  });
 });
 
 describe("thread-bound sessions", () => {

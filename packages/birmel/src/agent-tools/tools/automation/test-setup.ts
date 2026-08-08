@@ -3,7 +3,8 @@
  * This must be loaded before the test file to ensure Prisma Client
  * is initialized with the correct database URL
  */
-import { mkdir, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { afterAll } from "bun:test";
@@ -135,8 +136,13 @@ const fakePinchtabServer = Bun.serve({
   fetch: handleFakePinchtabRequest,
 });
 
+let temporaryTestDatabaseDirectory: string | undefined;
+
 afterAll(async () => {
   await fakePinchtabServer.stop(true);
+  if (temporaryTestDatabaseDirectory !== undefined) {
+    await rm(temporaryTestDatabaseDirectory, { recursive: true, force: true });
+  }
 });
 
 // Set up minimal test environment
@@ -153,12 +159,28 @@ Bun.env["PINCHTAB_BASE_URL"] = fakePinchtabServer.url.origin;
 Bun.env["PINCHTAB_TOKEN"] = PINCHTAB_TOKEN;
 Bun.env["PINCHTAB_PROFILE"] = "test-profile";
 
-// If no database path is set (local dev), use a local file database
+// A nested `bun test` inherits its parent's environment. Give every test
+// process its own database so a child cannot recreate a database while the
+// parent still has an open Prisma client for it.
+const currentProcessId = String(process.pid);
+const databaseOwnerProcessId = Bun.env["BIRMEL_TEST_DATABASE_OWNER_PID"];
+if (
+  databaseOwnerProcessId !== undefined &&
+  databaseOwnerProcessId !== currentProcessId
+) {
+  delete Bun.env["DATABASE_PATH"];
+  delete Bun.env["DATABASE_URL"];
+}
+Bun.env["BIRMEL_TEST_DATABASE_OWNER_PID"] = currentProcessId;
+
 if (Bun.env["DATABASE_PATH"] == null || Bun.env["DATABASE_PATH"].length === 0) {
-  const dataDir = path.join(process.cwd(), "data");
-  await mkdir(dataDir, { recursive: true });
-  const testDbPath = path.join(dataDir, "test-automation.db");
-  Bun.env["DATABASE_PATH"] = testDbPath;
+  temporaryTestDatabaseDirectory = await mkdtemp(
+    path.join(tmpdir(), "birmel-test-"),
+  );
+  Bun.env["DATABASE_PATH"] = path.join(
+    temporaryTestDatabaseDirectory,
+    "birmel.db",
+  );
 }
 
 // Create screenshots directory
@@ -178,6 +200,7 @@ const normalizedDbPath = strippedPath
   : "";
 if (normalizedDbPath) {
   Bun.env["DATABASE_PATH"] = normalizedDbPath;
+  Bun.env["DATABASE_URL"] = `file:${normalizedDbPath}`;
   await mkdir(path.dirname(normalizedDbPath), { recursive: true });
   // Remove stale test database so tests start with a clean slate
   await rm(normalizedDbPath, { force: true });
