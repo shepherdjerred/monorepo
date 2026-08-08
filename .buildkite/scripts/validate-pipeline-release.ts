@@ -71,6 +71,16 @@ function validateReleaseSteps({
       ],
     ],
     [
+      "matomo-sites",
+      [
+        "depends_on:",
+        "argocd-sync",
+        "tofu-cloudflare",
+        "wait-for-matomo.ts",
+        "scripts/deploy-site.ts",
+      ],
+    ],
+    [
       "scout-beta-release",
       [
         "depends_on:",

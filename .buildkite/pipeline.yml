@@ -1190,8 +1190,8 @@ steps:
     # Static-site buckets are owned by the SeaweedFS tofu stack. Waiting for
     # tofu-apply is a no-op when infra is unchanged, and guarantees a new
     # bucket exists before its first deployment sync. Matomo-consuming sites
-    # independently wait for the public tracker below; unrelated site releases
-    # do not inherit the homelab release gates.
+    # are deployed by the gated matomo-sites step below; unrelated site
+    # releases do not inherit the homelab release gates.
     depends_on: [verify, playwright-e2e-main, resume-build-main, tofu-apply]
     cancel_on_build_failing: true
     concurrency: 1
@@ -1213,22 +1213,13 @@ steps:
       fi
       . .buildkite/scripts/toolchain.sh
       filters=()
-      site_sjer=false
-      site_resume=false
-      site_webring=false
       site_cooklang=false
       site_stocks=false
       site_wiki=false
-      site_better_skill_capped=false
       site_glitter=false
-      if bun --no-install .buildkite/scripts/ci-changed.ts site-sjer-red; then
-        site_sjer=true
-      fi
-      if bun --no-install .buildkite/scripts/ci-changed.ts site-resume; then site_resume=true; fi
-      if bun --no-install .buildkite/scripts/ci-changed.ts site-webring; then
-        site_webring=true
-        filters+=(--filter webring)
-      fi
+      if bun --no-install .buildkite/scripts/ci-changed.ts site-sjer-red; then :; fi
+      if bun --no-install .buildkite/scripts/ci-changed.ts site-resume; then :; fi
+      if bun --no-install .buildkite/scripts/ci-changed.ts site-webring; then :; fi
       if bun --no-install .buildkite/scripts/ci-changed.ts site-cooklang; then
         site_cooklang=true
         filters+=(--filter '@shepherdjerred/cooklang-rich-preview')
@@ -1241,10 +1232,7 @@ steps:
         site_wiki=true
         filters+=(--filter '@shepherdjerred/docs-wiki')
       fi
-      if bun --no-install .buildkite/scripts/ci-changed.ts site-better-skill-capped; then
-        site_better_skill_capped=true
-        filters+=(--filter better-skill-capped)
-      fi
+      if bun --no-install .buildkite/scripts/ci-changed.ts site-better-skill-capped; then :; fi
       if bun --no-install .buildkite/scripts/ci-changed.ts site-glitter; then
         site_glitter=true
         # The build imports @shepherdjerred/glitter-context through Glitter's
@@ -1258,9 +1246,62 @@ steps:
       # Site syncs push to SeaweedFS S3 — same credential mapping as the
       # tofu steps (the secret exposes SEAWEEDFS_*, the AWS CLI wants AWS_*).
       export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
-      if $$site_sjer || $$site_resume || $$site_webring || $$site_better_skill_capped; then
-        bun --no-install packages/homelab/scripts/wait-for-matomo.ts
+      if $$site_cooklang; then bun --no-install scripts/deploy-site.ts cooklang-rich-preview; fi
+      if $$site_stocks; then bun --no-install scripts/deploy-site.ts stocks-sjer-red; fi
+      if $$site_wiki; then
+        buildkite-agent artifact download "packages/docs/wiki/dist/**/*" . --step playwright-e2e-main
+        buildkite-agent artifact download "packages/docs/wiki/dist/*" . --step playwright-e2e-main
+        bun --no-install scripts/deploy-site.ts wiki --prebuilt
       fi
+      if $$site_glitter; then bun --no-install scripts/deploy-site.ts glitter; fi
+    retry: *retry
+    plugins:
+      - kubernetes:
+          <<: *pod_light_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: sites
+
+  # Matomo-consuming static sites must wait for both the Argo Matomo release
+  # and the Cloudflare DNS apply before their public bundles are published.
+  # Keeping this separate leaves unrelated site releases on the shorter path
+  # above.
+  - label: ":chart_with_upwards_trend: deploy Matomo sites"
+    key: matomo-sites
+    if: build.branch == pipeline.default_branch
+    depends_on:
+      [
+        verify,
+        playwright-e2e-main,
+        resume-build-main,
+        tofu-apply,
+        argocd-sync,
+        tofu-cloudflare,
+      ]
+    cancel_on_build_failing: true
+    concurrency: 1
+    concurrency_group: monorepo/site-deploys
+    command: |
+      site_sjer=false
+      site_resume=false
+      site_webring=false
+      site_better_skill_capped=false
+      if bun --no-install .buildkite/scripts/ci-changed.ts site-sjer-red; then site_sjer=true; fi
+      if bun --no-install .buildkite/scripts/ci-changed.ts site-resume; then site_resume=true; fi
+      if bun --no-install .buildkite/scripts/ci-changed.ts site-webring; then site_webring=true; fi
+      if bun --no-install .buildkite/scripts/ci-changed.ts site-better-skill-capped; then site_better_skill_capped=true; fi
+      if ! $$site_sjer && ! $$site_resume && ! $$site_webring && ! $$site_better_skill_capped; then exit 0; fi
+      . .buildkite/scripts/toolchain.sh
+      filters=()
+      if $$site_webring; then filters+=(--filter webring); fi
+      if $$site_better_skill_capped; then filters+=(--filter better-skill-capped); fi
+      if [ "$${#filters[@]}" -gt 0 ]; then
+        .buildkite/scripts/bun-install.sh --frozen-lockfile "$${filters[@]}"
+      fi
+      bun --no-install packages/homelab/scripts/wait-for-matomo.ts
+      # Site syncs push to SeaweedFS S3 — same credential mapping as the
+      # tofu steps (the secret exposes SEAWEEDFS_*, the AWS CLI wants AWS_*).
+      export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
       if $$site_sjer; then
         buildkite-agent artifact download "packages/sjer.red/dist/**/*" . --step playwright-e2e-main
         buildkite-agent artifact download "packages/sjer.red/dist/*" . --step playwright-e2e-main
@@ -1271,22 +1312,14 @@ steps:
         bun --no-install scripts/deploy-site.ts resume --prebuilt
       fi
       if $$site_webring; then bun --no-install scripts/deploy-site.ts webring; fi
-      if $$site_cooklang; then bun --no-install scripts/deploy-site.ts cooklang-rich-preview; fi
-      if $$site_stocks; then bun --no-install scripts/deploy-site.ts stocks-sjer-red; fi
-      if $$site_wiki; then
-        buildkite-agent artifact download "packages/docs/wiki/dist/**/*" . --step playwright-e2e-main
-        buildkite-agent artifact download "packages/docs/wiki/dist/*" . --step playwright-e2e-main
-        bun --no-install scripts/deploy-site.ts wiki --prebuilt
-      fi
       if $$site_better_skill_capped; then bun --no-install scripts/deploy-site.ts better-skill-capped; fi
-      if $$site_glitter; then bun --no-install scripts/deploy-site.ts glitter; fi
     retry: *retry
     plugins:
       - kubernetes:
           <<: *pod_light_kubernetes
           metadata:
             labels:
-              ci.sjer.red/step-key: sites
+              ci.sjer.red/step-key: matomo-sites
 
   # ── Main-only: npm publishes ──────────────────────────────────────────────
   # Two lanes, matching the old pipeline's npm-publish-all-prod/-dev pair:
@@ -1444,18 +1477,15 @@ steps:
       export ARGOCD_TOKEN="$$ARGOCD_AUTH_TOKEN"
       buildkite-agent artifact download "helm-release-plan.json" . --step helm-push
       buildkite-agent artifact download "argocd-release-expected.json" . --step helm-push
-      defer_discord_apps=false
-      if jq -e '[.selected[] | select(.name == "pokemon" or .name == "mario-kart")] | length > 0' helm-release-plan.json >/dev/null; then
-        defer_discord_apps=true
-      fi
-      if $$defer_discord_apps; then
-        bun --no-install packages/homelab/scripts/argocd.ts reconcile-release argocd-release-expected.json --defer-apps pokemon,mario-kart --skip-health-wait --timeout 300
+      deferred_discord_apps=$$(jq -r '[.selected[] | select(.name == "pokemon" or .name == "mario-kart") | .name] | join(",")' helm-release-plan.json)
+      if [ -n "$$deferred_discord_apps" ]; then
+        bun --no-install packages/homelab/scripts/argocd.ts reconcile-release argocd-release-expected.json --defer-apps "$$deferred_discord_apps" --skip-health-wait --timeout 300
       else
         bun --no-install packages/homelab/scripts/argocd.ts reconcile-release argocd-release-expected.json --timeout 300
       fi
       apps_revision=$$(jq -er '.[] | select(.name == "apps") | .revision' argocd-release-expected.json)
       bun --no-install packages/homelab/scripts/argocd.ts sync apps --revision "$$apps_revision" --prune
-      if ! $$defer_discord_apps; then
+      if [ -z "$$deferred_discord_apps" ]; then
         bun --no-install packages/homelab/scripts/argocd.ts release-health-wait argocd-release-expected.json --timeout 300
         bun --no-install packages/homelab/scripts/argocd.ts tree-health-wait apps --timeout 300
       fi
@@ -1748,6 +1778,7 @@ steps:
       - tofu-apply
       - tofu-github
       - argocd-sync
+      - matomo-sites
       - discord-tracker-apps
       - scout-beta-release
       - publish
