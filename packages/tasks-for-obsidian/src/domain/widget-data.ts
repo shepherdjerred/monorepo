@@ -32,6 +32,8 @@ export type WidgetDataEnvelope = {
   readonly projections: Readonly<Record<string, WidgetDataProjection>>;
 };
 
+export const WIDGET_HORIZON_DAYS = 33;
+
 export function deriveWidgetData(
   tasks: readonly Task[],
   today: string,
@@ -92,7 +94,7 @@ export function deriveWidgetDataEnvelope(
   tasks: readonly Task[],
   startDay: string,
   generatedAt: string,
-  horizonDays = 8,
+  horizonDays = WIDGET_HORIZON_DAYS,
 ): WidgetDataEnvelope {
   if (!Number.isInteger(horizonDays) || horizonDays < 1) {
     throw new RangeError("widget: horizonDays must be a positive integer");
