@@ -42,6 +42,7 @@ describe("LoadingScreenLayoutSchema", () => {
     { queueType: "aram mayhem", layout: "aram" },
     { queueType: "arena", layout: "arena" },
     { queueType: "classic", layout: "classic" },
+    { queueType: "classic aram mayhem", layout: "classic" },
     { queueType: "solo", layout: "standard" },
     { queueType: "custom", layout: "standard" },
   ];

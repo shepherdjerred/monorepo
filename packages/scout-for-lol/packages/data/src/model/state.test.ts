@@ -1,6 +1,7 @@
 import { describe, test, expect } from "bun:test";
 import {
   isArenaQueueOrMode,
+  isClassicQueueType,
   parseQueueType,
   queueTypeToDisplayString,
   resolveQueueTypeFromGame,
@@ -28,11 +29,15 @@ describe("parseQueueType", () => {
     [1750, "arena"],
     [1900, "urf"],
     [2300, "brawl"],
+    [3260, "classic"],
+    [3262, "classic"],
     [4310, "classic"],
     [2400, "aram mayhem"],
+    [2450, "classic aram mayhem"],
     [3200, "aram mayhem"],
     [3220, "aram mayhem"],
     [3270, "aram mayhem"],
+    [3280, "classic aram mayhem"],
     [3100, "custom"],
     [3130, "custom"],
     [4250, "easy doom bots"],
@@ -81,15 +86,44 @@ describe("Arena queue resolution", () => {
 });
 
 describe("League Classic queue resolution", () => {
-  test("resolves queue 4310 and exact JADE mode as Classic", () => {
-    expect(parseQueueType(4310)).toBe("classic");
+  test.each([3260, 3262, 4310])("resolves queue %i as Classic", (queueId) => {
+    expect(parseQueueType(queueId)).toBe("classic");
+  });
+
+  test("resolves the exact CLASSIC mode and legacy JADE alias as Classic", () => {
+    expect(resolveQueueTypeFromGame(4310, "CLASSIC")).toBe("classic");
     expect(resolveQueueTypeFromGame(4310, "JADE")).toBe("classic");
     expect(resolveQueueTypeFromGame(0, "JADE", "CUSTOM_GAME")).toBe("classic");
   });
 
-  test("does not confuse ARAM Mayhem KIWI_JADE with Classic", () => {
-    expect(parseQueueType(2450)).toBe("aram mayhem");
-    expect(resolveQueueTypeFromGame(2450, "KIWI_JADE")).toBe("aram mayhem");
+  test.each([2450, 3280])(
+    "resolves queue %i as Classic ARAM Mayhem",
+    (queueId) => {
+      expect(parseQueueType(queueId)).toBe("classic aram mayhem");
+      expect(resolveQueueTypeFromGame(queueId, "CLASSIC ARAM MAYHEM")).toBe(
+        "classic aram mayhem",
+      );
+    },
+  );
+
+  test("preserves the historical KIWI_JADE alias for Classic ARAM Mayhem", () => {
+    expect(resolveQueueTypeFromGame(2450, "KIWI_JADE")).toBe(
+      "classic aram mayhem",
+    );
+  });
+
+  test("keeps unknown custom CLASSIC games custom", () => {
+    expect(resolveQueueTypeFromGame(0, "CLASSIC", "CUSTOM_GAME")).toBe(
+      "custom",
+    );
+    expect(resolveQueueTypeFromGame(3110, "CLASSIC", "CUSTOM")).toBe("custom");
+  });
+
+  test("identifies both dedicated Classic queue types", () => {
+    expect(isClassicQueueType("classic")).toBe(true);
+    expect(isClassicQueueType("classic aram mayhem")).toBe(true);
+    expect(isClassicQueueType("aram mayhem")).toBe(false);
+    expect(isClassicQueueType(undefined)).toBe(false);
   });
 });
 
@@ -112,13 +146,15 @@ describe("custom games with unmapped queue IDs", () => {
     );
   });
 
-  test("leaves an unmapped queue ID undefined without a gameType (legacy behavior)", () => {
-    expect(resolveQueueTypeFromGame(3110, "CLASSIC")).toBeUndefined();
+  test("does not classify an unknown matched CLASSIC queue as Classic", () => {
+    expect(resolveQueueTypeFromGame(3110, "CLASSIC", "MATCHED")).toBe(
+      undefined,
+    );
   });
 
   test("does not mislabel an unmapped non-custom queue as custom", () => {
     expect(
-      resolveQueueTypeFromGame(99_999, "CLASSIC", "MATCHED"),
+      resolveQueueTypeFromGame(99_999, "UNKNOWN", "MATCHED"),
     ).toBeUndefined();
   });
 });
@@ -135,6 +171,7 @@ describe("queueTypeToDisplayString", () => {
     ["urf", "URF"],
     ["arena", "arena"],
     ["classic", "League Classic"],
+    ["classic aram mayhem", "ARAM: Mayhem Classic-ish"],
     ["brawl", "brawl"],
     ["aram mayhem", "ARAM: Mayhem"],
     ["draft pick", "draft pick"],

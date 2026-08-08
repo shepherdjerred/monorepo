@@ -19,7 +19,10 @@ import {
   findParticipant,
   getOutcome,
   getTeams,
+  isClassicQueueType,
+  ClassicQueueTypeSchema,
   PlayerConfigEntrySchema,
+  QueueTypeSchema,
 } from "@scout-for-lol/data/index.ts";
 import { strict as assert } from "node:assert";
 import { participantToArenaChampion } from "#src/league/model/champion.ts";
@@ -28,6 +31,11 @@ import { createLogger } from "#src/logger.ts";
 import { participantMismatchTotal } from "#src/metrics/index.ts";
 
 const logger = createLogger("model-match");
+const CompletedQueueTypeSchema = QueueTypeSchema.exclude([
+  "arena",
+  "classic",
+  "classic aram mayhem",
+]);
 
 export function toMatch(
   players: Player[],
@@ -41,11 +49,21 @@ export function toMatch(
   const queueType = resolveQueueTypeFromGame(
     rawMatch.info.queueId,
     rawMatch.info.gameMode,
+    rawMatch.info.gameType,
   );
 
-  if (queueType === "arena" || queueType === "classic") {
-    throw new Error(`${queueType} matches are not supported`);
+  if (queueType === "arena") {
+    throw new Error("arena matches are not supported");
   }
+  if (isClassicQueueType(queueType)) {
+    throw new Error(
+      `${ClassicQueueTypeSchema.parse(queueType)} matches are not supported`,
+    );
+  }
+  const completedQueueType =
+    queueType === undefined
+      ? undefined
+      : CompletedQueueTypeSchema.parse(queueType);
 
   // Build CompletedMatch.players for all tracked players, skipping any with missing participant data
   const matchPlayers = players
@@ -139,7 +157,7 @@ export function toMatch(
   }
 
   const result: CompletedMatch = {
-    queueType,
+    queueType: completedQueueType,
     players: matchPlayers,
     durationInSeconds: rawMatch.info.gameDuration,
     teams,

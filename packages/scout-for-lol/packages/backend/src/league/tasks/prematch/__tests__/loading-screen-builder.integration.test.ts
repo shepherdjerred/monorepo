@@ -2,6 +2,8 @@ import { describe, expect, test, mock } from "bun:test";
 import {
   RawCurrentGameInfoSchema,
   LoadingScreenDataSchema,
+  LoadingScreenChampionIdSchema,
+  SummonerSpellIdSchema,
   type Lane,
 } from "@scout-for-lol/data/index.ts";
 import { buildLoadingScreenData } from "#src/league/tasks/prematch/loading-screen-builder.ts";
@@ -25,6 +27,7 @@ void mock.module("#src/league/model/rank.ts", () => ({
 }));
 
 const currentDir = new URL(".", import.meta.url).pathname;
+const realS3ClassicAramMayhemFixture = `${currentDir}testdata/spectator-classic-aram-mayhem-s3.json`;
 
 async function loadSpectatorPayload(path: string) {
   const file = Bun.file(path);
@@ -172,6 +175,46 @@ describe("buildLoadingScreenData layout variants", () => {
     expect("ranks" in (result.participants[0] ?? {})).toBe(false);
   });
 
+  test("builds the captured production S3 Classic ARAM Mayhem lobby with Classic assets", async () => {
+    // Captured from scout-prod/prematch/2026/07/29/3267199656/spectator-data.json.
+    const gameInfo = await loadSpectatorPayload(realS3ClassicAramMayhemFixture);
+    const trackedPuuid = gameInfo.participants[0]?.puuid;
+    if (trackedPuuid === null || trackedPuuid === undefined) {
+      throw new Error("Real Classic ARAM Mayhem fixture has no tracked PUUID");
+    }
+
+    expect(gameInfo.gameId).toBe(3_267_199_656);
+    expect(gameInfo.gameQueueConfigId).toBe(2450);
+    expect(gameInfo.gameMode).toBe("KIWI_JADE");
+    expect(gameInfo.mapId).toBe(12);
+
+    const result = await buildLoadingScreenData(
+      gameInfo,
+      new Set([trackedPuuid]),
+      "AMERICA_NORTH",
+    );
+
+    const parsed = LoadingScreenDataSchema.parse(result);
+    expect(parsed.layout).toBe("classic");
+    expect(parsed.queueType).toBe("classic aram mayhem");
+    expect(parsed.mapName).toBe("The Bandlewood");
+    expect(parsed.participants).toHaveLength(10);
+    const trackedParticipant = parsed.participants.find(
+      (participant) => participant.isTrackedPlayer,
+    );
+    if (trackedParticipant === undefined) {
+      throw new Error("Real Classic ARAM Mayhem result has no tracked player");
+    }
+    expect(trackedParticipant.championName).toBe("Jade_Pantheon");
+    expect(trackedParticipant.spell1Id).toBe(SummonerSpellIdSchema.parse(74));
+    expect(trackedParticipant.spell2Id).toBe(SummonerSpellIdSchema.parse(32));
+    expect(trackedParticipant.isTrackedPlayer).toBe(true);
+    expect("bans" in parsed).toBe(false);
+    expect("isRanked" in parsed).toBe(false);
+  });
+});
+
+describe("buildLoadingScreenData standard and custom layouts", () => {
   test("queue 2400 (ARAM: Mayhem) with Rek'Sai resolves without throwing", async () => {
     // Start from the ranked-flex payload and mutate just enough to simulate
     // an ARAM Mayhem game with Rek'Sai in it — the two previously-failing
@@ -346,16 +389,71 @@ describe("buildLoadingScreenData layout variants", () => {
 });
 
 describe("buildLoadingScreenData for The Bandlewood", () => {
-  test("queue 2450 KIWI_JADE uses the ARAM layout", async () => {
+  test.each([
+    [2450, "CLASSIC ARAM MAYHEM"],
+    [3280, "CLASSIC ARAM MAYHEM"],
+    [2450, "KIWI_JADE"],
+  ] as const)(
+    "queue %i %s uses the Classic ARAM Mayhem layout",
+    async (queueId, gameMode) => {
+      const baseGameInfo = await loadSpectatorPayload(
+        `${currentDir}testdata/spectator-ranked-flex.json`,
+      );
+      const classicChampionIds = [
+        60_103, 60_012, 60_032, 60_034, 60_001, 60_022, 60_053, 60_063, 60_031,
+        60_042,
+      ];
+      const gameInfo = RawCurrentGameInfoSchema.parse({
+        ...baseGameInfo,
+        gameQueueConfigId: queueId,
+        mapId: 35,
+        gameMode,
+        bannedChampions: [],
+        participants: baseGameInfo.participants.map((participant, index) => ({
+          ...participant,
+          championId: classicChampionIds[index],
+          spell1Id: 74,
+          spell2Id: 714,
+        })),
+      });
+
+      const result = await buildLoadingScreenData(
+        gameInfo,
+        new Set(),
+        "AMERICA_NORTH",
+      );
+
+      const parsed = LoadingScreenDataSchema.parse(result);
+      expect(parsed.queueType).toBe("classic aram mayhem");
+      expect(String(parsed.queueDisplayName)).toBe("ARAM: Mayhem Classic-ish");
+      expect(parsed.layout).toBe("classic");
+      expect(parsed.mapName).toBe("The Bandlewood");
+      if (parsed.layout !== "classic") {
+        throw new Error("Expected Classic loading screen data");
+      }
+      expect(parsed.participants).toHaveLength(10);
+      expect(parsed.participants[0]?.championName).toStartWith("Jade_");
+      expect("bans" in parsed).toBe(false);
+      expect("ranks" in (parsed.participants[0] ?? {})).toBe(false);
+    },
+  );
+
+  test("accepts Riot modern IDs and the real Classic ARAM Mayhem map ID", async () => {
     const baseGameInfo = await loadSpectatorPayload(
       `${currentDir}testdata/spectator-ranked-flex.json`,
     );
     const gameInfo = RawCurrentGameInfoSchema.parse({
       ...baseGameInfo,
       gameQueueConfigId: 2450,
-      mapId: 35,
+      mapId: 12,
       gameMode: "KIWI_JADE",
       bannedChampions: [],
+      participants: baseGameInfo.participants.map((participant, index) => ({
+        ...participant,
+        championId: [80, 11, 14, 30, 62, 63, 80, 67, 1, 30][index],
+        spell1Id: index === 0 ? 4 : 6,
+        spell2Id: index === 0 ? 32 : 7,
+      })),
     });
 
     const result = await buildLoadingScreenData(
@@ -364,16 +462,20 @@ describe("buildLoadingScreenData for The Bandlewood", () => {
       "AMERICA_NORTH",
     );
 
-    const parsed = LoadingScreenDataSchema.parse(result);
-    expect(parsed.queueType).toBe("aram mayhem");
-    expect(String(parsed.queueDisplayName)).toBe("ARAM: Mayhem");
-    expect(parsed.layout).toBe("aram");
-    expect(parsed.mapName).toBe("The Bandlewood");
-    if (parsed.layout !== "aram") {
-      throw new Error("Expected ARAM loading screen data");
+    expect(result.layout).toBe("classic");
+    expect(result.mapName).toBe("The Bandlewood");
+    if (result.layout !== "classic") {
+      throw new Error("Expected Classic loading screen data");
     }
-    expect(parsed.bans).toHaveLength(0);
-    expect(parsed.participants).toHaveLength(10);
+    expect(result.participants[0]?.championId).toBe(
+      LoadingScreenChampionIdSchema.parse(60_080),
+    );
+    expect(result.participants[0]?.spell1Id).toBe(
+      SummonerSpellIdSchema.parse(74),
+    );
+    expect(result.participants[0]?.spell2Id).toBe(
+      SummonerSpellIdSchema.parse(32),
+    );
   });
 });
 

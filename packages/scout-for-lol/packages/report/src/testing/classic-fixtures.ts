@@ -21,6 +21,14 @@ const champions = [
   { id: 60_042, name: "Jade_Corki" },
 ] as const;
 
+type ClassicQueueType = ClassicLoadingScreenData["queueType"];
+
+function classicMapName(
+  queueType: ClassicQueueType,
+): "Classic Rift" | "The Bandlewood" {
+  return queueType === "classic" ? "Classic Rift" : "The Bandlewood";
+}
+
 function fixturePuuid(index: number): string {
   return `classic-${index.toString().padStart(2, "0")}`.padEnd(78, "x");
 }
@@ -28,6 +36,7 @@ function fixturePuuid(index: number): string {
 export function classicLoadingScreenFixture(
   blueCount = 5,
   redCount = 5,
+  queueType: ClassicQueueType = "classic",
 ): ClassicLoadingScreenData {
   const participants = champions
     .map((champion, index) => ({
@@ -50,10 +59,12 @@ export function classicLoadingScreenFixture(
     );
   const parsed = LoadingScreenDataSchema.parse({
     gameId: GameIdSchema.parse(7_933_730_085),
-    queueType: "classic",
-    queueDisplayName: QueueDisplayNameSchema.parse("League Classic"),
+    queueType,
+    queueDisplayName: QueueDisplayNameSchema.parse(
+      queueType === "classic" ? "League Classic" : "ARAM: Mayhem Classic-ish",
+    ),
     layout: "classic",
-    mapName: "Classic Rift",
+    mapName: classicMapName(queueType),
     participants,
     gameStartTime: 1_775_000_000_000,
   });
@@ -67,8 +78,13 @@ export function classicMatchFixture(
   blueCount = 5,
   redCount = 5,
   outcome: ClassicMatch["players"][number]["outcome"] = "Victory",
-  heroGameName = "Classic Player 1",
+  options: {
+    heroGameName?: string;
+    queueType?: ClassicQueueType;
+  } = {},
 ): ClassicMatch {
+  const heroGameName = options.heroGameName ?? "Classic Player 1";
+  const queueType = options.queueType ?? "classic";
   const roster = champions.map((champion, index) => ({
     puuid: fixturePuuid(index),
     riotIdGameName:
@@ -100,8 +116,8 @@ export function classicMatchFixture(
   }
   return ClassicMatchSchema.parse({
     durationInSeconds: 2147,
-    queueType: "classic",
-    mapName: "Classic Rift",
+    queueType,
+    mapName: classicMapName(queueType),
     players: [
       {
         playerConfig,

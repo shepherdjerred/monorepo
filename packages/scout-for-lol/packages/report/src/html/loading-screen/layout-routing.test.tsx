@@ -90,3 +90,44 @@ test("Classic keeps its isolated report canvas", async () => {
     height: 1280,
   });
 });
+
+test("Classic ARAM Mayhem uses the Classic loading-screen layout", async () => {
+  const data = LoadingScreenDataSchema.parse({
+    gameId: 7_933_730_085,
+    queueType: "classic aram mayhem",
+    queueDisplayName: "ARAM: Mayhem Classic-ish",
+    layout: "classic",
+    mapName: "The Bandlewood",
+    participants: [
+      {
+        puuid: null,
+        summonerName: "Blue Classic",
+        championId: 60_001,
+        championName: "Jade_Annie",
+        championDisplayName: "Annie",
+        team: "blue",
+        spell1Id: 74,
+        spell2Id: 714,
+        isTrackedPlayer: false,
+      },
+      {
+        puuid: null,
+        summonerName: "Red Classic",
+        championId: 60_002,
+        championName: "Jade_Brand",
+        championDisplayName: "Brand",
+        team: "red",
+        spell1Id: 74,
+        spell2Id: 714,
+        isTrackedPlayer: false,
+      },
+    ],
+    gameStartTime: Date.now(),
+  });
+
+  expect(data.layout).toBe("classic");
+  expect(getLoadingScreenCanvasDimensions(data)).toEqual({
+    width: 1920,
+    height: 1280,
+  });
+});

@@ -2,6 +2,7 @@ import type { ClassicChampion, ClassicMatch, Team } from "@scout-for-lol/data";
 import {
   championNameToDisplayName,
   getSummonerSpellImageNameById,
+  queueTypeToDisplayString,
 } from "@scout-for-lol/data";
 import {
   getChampionImage,
@@ -351,6 +352,7 @@ export function ClassicMatchReport({ match }: { match: ClassicMatch }) {
     hero.outcome === "Victory"
       ? classicPalette.gold.highlight
       : classicPalette.red.highlight;
+  const queueLabel = queueTypeToDisplayString(match.queueType).toUpperCase();
   return (
     <div
       style={{
@@ -431,7 +433,7 @@ export function ClassicMatchReport({ match }: { match: ClassicMatch }) {
               lineHeight: classicTypography.size.large.lineHeight,
             }}
           >
-            LEAGUE CLASSIC
+            {queueLabel}
           </span>
           <span
             style={{

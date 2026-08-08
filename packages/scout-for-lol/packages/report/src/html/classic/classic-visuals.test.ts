@@ -54,6 +54,45 @@ describe("Classic report renders with committed fonts", () => {
     expect(svg).toContain('width="1920" height="1200"');
   });
 
+  test.each(["classic", "classic aram mayhem"] as const)(
+    "%s postmatch uses the deterministic Classic renderer",
+    async (queueType) => {
+      const match = classicMatchFixture(5, 5, "Victory", { queueType });
+      const svg = await classicMatchToSvg(match);
+      const repeat = await classicMatchToSvg(match);
+
+      expect(svg).toBe(repeat);
+      expect(svg).toContain('width="1920" height="1200"');
+    },
+  );
+
+  test("Classic ARAM Mayhem prematch and postmatch render SVG and PNG", async () => {
+    const loadingScreen = classicLoadingScreenFixture(
+      5,
+      5,
+      "classic aram mayhem",
+    );
+    const match = classicMatchFixture(5, 5, "Victory", {
+      queueType: "classic aram mayhem",
+    });
+
+    const [loadingSvg, matchSvg] = await Promise.all([
+      loadingScreenToSvg(loadingScreen),
+      classicMatchToSvg(match),
+    ]);
+    expect(loadingSvg).toStartWith("<svg ");
+    expect(loadingSvg).toContain('width="1920" height="1280"');
+    expect(matchSvg).toStartWith("<svg ");
+    expect(matchSvg).toContain('width="1920" height="1200"');
+
+    const [loadingPng, matchPng] = await Promise.all([
+      loadingScreenToImage(loadingScreen),
+      classicMatchToImage(match),
+    ]);
+    expect([...loadingPng.subarray(0, 8)]).toEqual(PNG_SIGNATURE);
+    expect([...matchPng.subarray(0, 8)]).toEqual(PNG_SIGNATURE);
+  });
+
   test("Victory, Defeat, and Surrender produce distinct reports", async () => {
     const outcomes = ["Victory", "Defeat", "Surrender"] as const;
     const svgs = await Promise.all(

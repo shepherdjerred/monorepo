@@ -18,7 +18,11 @@ export const MatchIdSchema = z.string().brand<"MatchId">();
 export type CompletedMatch = z.infer<typeof CompletedMatchSchema>;
 export const CompletedMatchSchema = z.strictObject({
   durationInSeconds: z.number().nonnegative(),
-  queueType: QueueTypeSchema.exclude(["arena", "classic"]).optional(),
+  queueType: QueueTypeSchema.exclude([
+    "arena",
+    "classic",
+    "classic aram mayhem",
+  ]).optional(),
   /**
    * Data specific to all players we care about (e.g. all subscribed players in this match).
    * This was previously a single 'player' object, now an array for multi-player support.
@@ -69,25 +73,37 @@ export type ClassicChampion = z.infer<typeof ClassicChampionSchema>;
 
 const ClassicRosterSchema = z.array(ClassicChampionSchema).min(1).max(5);
 
-export const ClassicMatchSchema = z.strictObject({
-  durationInSeconds: z.number().nonnegative(),
-  queueType: z.literal("classic"),
-  mapName: z.literal("Classic Rift"),
-  players: z
-    .array(
-      z.strictObject({
-        playerConfig: PlayerConfigEntrySchema,
-        outcome: z.enum(["Victory", "Defeat", "Surrender"]),
-        champion: ClassicChampionSchema,
-        team: TeamSchema,
-      }),
-    )
-    .min(1),
-  teams: z.strictObject({
-    red: ClassicRosterSchema,
-    blue: ClassicRosterSchema,
-  }),
-});
+export const ClassicMatchSchema = z
+  .strictObject({
+    durationInSeconds: z.number().nonnegative(),
+    queueType: z.enum(["classic", "classic aram mayhem"]),
+    mapName: z.enum(["Classic Rift", "The Bandlewood"]),
+    players: z
+      .array(
+        z.strictObject({
+          playerConfig: PlayerConfigEntrySchema,
+          outcome: z.enum(["Victory", "Defeat", "Surrender"]),
+          champion: ClassicChampionSchema,
+          team: TeamSchema,
+        }),
+      )
+      .min(1),
+    teams: z.strictObject({
+      red: ClassicRosterSchema,
+      blue: ClassicRosterSchema,
+    }),
+  })
+  .superRefine((data, context) => {
+    const expectedMapName =
+      data.queueType === "classic" ? "Classic Rift" : "The Bandlewood";
+    if (data.mapName !== expectedMapName) {
+      context.addIssue({
+        code: "custom",
+        message: `${data.queueType} matches must use ${expectedMapName}`,
+        path: ["mapName"],
+      });
+    }
+  });
 export type ClassicMatch = z.infer<typeof ClassicMatchSchema>;
 
 export function getLaneOpponent(

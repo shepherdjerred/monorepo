@@ -15,8 +15,9 @@ import { match } from "ts-pattern";
 /**
  * Layout mode determines how participants are arranged visually.
  * - "standard": 5v5 with two columns (ranked, draft, quickplay, swiftplay, brawl, URF, custom, clash)
- * - "aram": 5v5 with two columns, no bans (ARAM / ARAM clash)
+ * - "aram": 5v5 with two columns, no bans (ARAM / ARAM clash / normal ARAM Mayhem)
  * - "arena": Arena prematch focused on followed-player champion cards only
+ * - "classic": Classic champion/spell assets for League Classic modes
  */
 export type LoadingScreenLayout = z.infer<typeof LoadingScreenLayoutSchema>;
 export const LoadingScreenLayoutSchema = z.enum([
@@ -33,7 +34,7 @@ export function loadingScreenLayoutForQueueType(
     .returnType<LoadingScreenLayout>()
     .with("aram", "aram clash", "aram mayhem", () => "aram")
     .with("arena", () => "arena")
-    .with("classic", () => "classic")
+    .with("classic", "classic aram mayhem", () => "classic")
     .with(
       "solo",
       "flex",
@@ -260,14 +261,23 @@ export type ClassicLoadingScreenParticipant = z.infer<
 export const ClassicLoadingScreenDataSchema = z
   .strictObject({
     gameId: GameIdSchema,
-    queueType: z.literal("classic"),
+    queueType: z.enum(["classic", "classic aram mayhem"]),
     queueDisplayName: QueueDisplayNameSchema,
     layout: z.literal("classic"),
-    mapName: z.literal("Classic Rift"),
+    mapName: z.enum(["Classic Rift", "The Bandlewood"]),
     participants: z.array(ClassicLoadingScreenParticipantSchema).min(2).max(10),
     gameStartTime: z.number().int().nonnegative(),
   })
   .superRefine((data, context) => {
+    const expectedMapName =
+      data.queueType === "classic" ? "Classic Rift" : "The Bandlewood";
+    if (data.mapName !== expectedMapName) {
+      context.addIssue({
+        code: "custom",
+        message: `${data.queueType} loading screens must use ${expectedMapName}`,
+        path: ["mapName"],
+      });
+    }
     for (const team of ["blue", "red"] as const) {
       const teamSize = data.participants.filter(
         (participant) => participant.team === team,

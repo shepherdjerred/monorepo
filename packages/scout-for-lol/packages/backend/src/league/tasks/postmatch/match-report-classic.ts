@@ -8,11 +8,15 @@ import type {
 } from "@scout-for-lol/data";
 import {
   ClassicMatchSchema,
+  ClassicQueueTypeSchema,
   findParticipant,
   getOutcome,
   mapIdToName,
   parseTeam,
   resolveClassicChampionKey,
+  getClassicChampionId,
+  getClassicSpellId,
+  resolveQueueTypeFromGame,
 } from "@scout-for-lol/data";
 import { createLogger } from "#src/logger.ts";
 import { participantMismatchTotal } from "#src/metrics/index.ts";
@@ -45,7 +49,7 @@ function toClassicChampion(participant: RawParticipant): ClassicChampion {
   return {
     puuid: participant.puuid,
     ...resolveClassicIdentity(participant),
-    championId: participant.championId,
+    championId: getClassicChampionId(participant.championId),
     championName: resolveClassicChampionKey(participant.championId),
     kills: participant.kills,
     deaths: participant.deaths,
@@ -60,7 +64,10 @@ function toClassicChampion(participant: RawParticipant): ClassicChampion {
       participant.item5,
       participant.item6,
     ],
-    spells: [participant.summoner1Id, participant.summoner2Id],
+    spells: [
+      getClassicSpellId(participant.summoner1Id),
+      getClassicSpellId(participant.summoner2Id),
+    ],
     gold: participant.goldEarned,
     creepScore:
       participant.totalMinionsKilled + participant.neutralMinionsKilled,
@@ -81,6 +88,19 @@ export function buildClassicMatch(
   matchData: RawMatch,
   playersInMatch: PlayerConfigEntry[],
 ): ClassicMatch | undefined {
+  const queueType = resolveQueueTypeFromGame(
+    matchData.info.queueId,
+    matchData.info.gameMode,
+    matchData.info.gameType,
+  );
+  const classicQueueType = ClassicQueueTypeSchema.safeParse(queueType);
+  if (!classicQueueType.success) {
+    throw new Error(
+      `Classic renderer received non-Classic queue ${queueType ?? "unknown"}`,
+    );
+  }
+  const resolvedQueueType = classicQueueType.data;
+
   const blue = matchData.info.participants
     .filter((participant) => requireTeam(participant) === "blue")
     .map((participant) => toClassicChampion(participant));
@@ -119,7 +139,7 @@ export function buildClassicMatch(
               .length,
           },
         );
-        participantMismatchTotal.inc({ queue_type: "classic" });
+        participantMismatchTotal.inc({ queue_type: resolvedQueueType });
         return;
       }
       return {
@@ -135,16 +155,22 @@ export function buildClassicMatch(
     return undefined;
   }
 
-  const mapName = mapIdToName(matchData.info.mapId);
-  if (mapName !== "Classic Rift") {
+  const mapName =
+    resolvedQueueType === "classic aram mayhem" &&
+    (matchData.info.mapId === 12 || matchData.info.mapId === 35)
+      ? "The Bandlewood"
+      : mapIdToName(matchData.info.mapId);
+  const expectedMapName =
+    resolvedQueueType === "classic" ? "Classic Rift" : "The Bandlewood";
+  if (mapName !== expectedMapName) {
     throw new Error(
-      `Classic queue used unexpected map ${mapName} (${matchData.info.mapId.toString()})`,
+      `${resolvedQueueType} queue used unexpected map ${mapName} (${matchData.info.mapId.toString()}); expected ${expectedMapName}`,
     );
   }
 
   return ClassicMatchSchema.parse({
     durationInSeconds: matchData.info.gameDuration,
-    queueType: "classic",
+    queueType: resolvedQueueType,
     mapName,
     players,
     teams: { blue, red },

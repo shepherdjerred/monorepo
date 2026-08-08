@@ -30,6 +30,7 @@ export function matchesQueue(
   const queueType = resolveQueueTypeFromGame(
     match.info.queueId,
     match.info.gameMode,
+    match.info.gameType,
   );
 
   // Handle special queue filters

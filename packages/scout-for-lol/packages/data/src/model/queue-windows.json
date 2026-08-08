@@ -115,6 +115,14 @@
         "note": "League Classic launch; no announced end date"
       }
     ],
+    "classic aram mayhem": [
+      {
+        "start": "2026-07-29",
+        "end": null,
+        "source": "manual",
+        "note": "ARAM: Mayhem Classic-ish launch; no announced end date"
+      }
+    ],
     "easy doom bots": [
       {
         "start": "2025-08-27",

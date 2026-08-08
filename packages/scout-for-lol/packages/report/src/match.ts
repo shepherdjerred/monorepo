@@ -12,9 +12,18 @@ import {
   findParticipant,
   getOutcome,
   getTeams,
+  isClassicQueueType,
+  ClassicQueueTypeSchema,
   participantToChampion,
+  QueueTypeSchema,
 } from "@scout-for-lol/data";
 import { strict as assert } from "node:assert";
+
+const CompletedQueueTypeSchema = QueueTypeSchema.exclude([
+  "arena",
+  "classic",
+  "classic aram mayhem",
+]);
 
 export function toMatch(
   player: Player,
@@ -42,14 +51,24 @@ export function toMatch(
   const queueType = resolveQueueTypeFromGame(
     rawMatch.info.queueId,
     rawMatch.info.gameMode,
+    rawMatch.info.gameType,
   );
 
-  if (queueType === "arena" || queueType === "classic") {
-    throw new Error(`${queueType} matches are not supported`);
+  if (queueType === "arena") {
+    throw new Error("arena matches are not supported");
   }
+  if (isClassicQueueType(queueType)) {
+    throw new Error(
+      `${ClassicQueueTypeSchema.parse(queueType)} matches are not supported`,
+    );
+  }
+  const completedQueueType =
+    queueType === undefined
+      ? undefined
+      : CompletedQueueTypeSchema.parse(queueType);
 
   return {
-    queueType,
+    queueType: completedQueueType,
     players: [
       {
         playerConfig: player.config,

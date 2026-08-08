@@ -5,6 +5,7 @@ import {
   RawMatchSchema,
   type RawMatch,
 } from "@scout-for-lol/data";
+import { classicMatchToImage, classicMatchToSvg } from "@scout-for-lol/report";
 import { buildClassicMatch } from "./match-report-classic.ts";
 import { generateMatchReport } from "./match-report-generator.ts";
 
@@ -12,8 +13,19 @@ const fixtureUrl = new URL(
   "../../../../../../testdata/rift.json",
   import.meta.url,
 );
+const realS3FixtureUrl = new URL(
+  "testdata/match-classic-aram-mayhem-s3.json",
+  import.meta.url,
+);
+const PNG_SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10];
 
-async function classicMatchFixture(): Promise<RawMatch> {
+async function classicMatchFixture(
+  options: {
+    queueId?: number;
+    gameMode?: string;
+    mapId?: number;
+  } = {},
+): Promise<RawMatch> {
   const input: unknown = await Bun.file(fixtureUrl).json();
   const base = RawMatchSchema.parse(input);
   const classicChampionIds = [
@@ -24,9 +36,9 @@ async function classicMatchFixture(): Promise<RawMatch> {
     ...base,
     info: {
       ...base.info,
-      queueId: 4310,
-      gameMode: "JADE",
-      mapId: 453,
+      queueId: options.queueId ?? 4310,
+      gameMode: options.gameMode ?? "JADE",
+      mapId: options.mapId ?? 453,
       participants: base.info.participants.map((participant, index) => ({
         ...participant,
         championId: classicChampionIds[index],
@@ -133,6 +145,136 @@ describe("buildClassicMatch identity normalization", () => {
 });
 
 describe("buildClassicMatch", () => {
+  test.each([
+    [4310, "CLASSIC", "Classic Rift"],
+    [2450, "CLASSIC ARAM MAYHEM", "The Bandlewood"],
+    [3280, "CLASSIC ARAM MAYHEM", "The Bandlewood"],
+    [2450, "KIWI_JADE", "The Bandlewood"],
+  ] as const)(
+    "builds the %s Classic report model for %s",
+    async (queueId, gameMode, mapName) => {
+      const rawMatch = await classicMatchFixture({
+        queueId,
+        gameMode,
+        mapId: mapName === "Classic Rift" ? 453 : 35,
+      });
+      const trackedParticipant = rawMatch.info.participants[0];
+      if (trackedParticipant === undefined) {
+        throw new Error("Classic fixture is missing its tracked participant");
+      }
+      const trackedPlayer = PlayerConfigEntrySchema.parse({
+        alias: "Scout Classic",
+        league: {
+          leagueAccount: {
+            puuid: trackedParticipant.puuid,
+            region: "AMERICA_NORTH",
+          },
+        },
+      });
+
+      const result = buildClassicMatch(rawMatch, [trackedPlayer]);
+      if (result === undefined) {
+        throw new Error(
+          "Classic match unexpectedly omitted its tracked player",
+        );
+      }
+
+      expect(result.queueType).toBe(
+        mapName === "Classic Rift" ? "classic" : "classic aram mayhem",
+      );
+      expect(result.mapName).toBe(mapName);
+      expect(result.teams.blue[0]?.championName).toStartWith("Jade_");
+      expect(result.teams.blue[0]?.spells).toEqual([74, 714]);
+    },
+  );
+
+  test("accepts Riot modern IDs and the real Classic ARAM Mayhem map ID", async () => {
+    const rawMatch = await classicMatchFixture({
+      queueId: 2450,
+      gameMode: "KIWI_JADE",
+      mapId: 12,
+    });
+    const modernChampionIds = [103, 12, 32, 34, 1, 22, 53, 63, 31, 42];
+    const modernMatch = RawMatchSchema.parse({
+      ...rawMatch,
+      info: {
+        ...rawMatch.info,
+        participants: rawMatch.info.participants.map((participant, index) => ({
+          ...participant,
+          championId: modernChampionIds[index],
+          summoner1Id: 4,
+          summoner2Id: 32,
+        })),
+      },
+    });
+    const trackedParticipant = modernMatch.info.participants[0];
+    if (trackedParticipant === undefined) {
+      throw new Error("Classic match is missing its tracked participant");
+    }
+    const trackedPlayer = PlayerConfigEntrySchema.parse({
+      alias: "Scout Classic",
+      league: {
+        leagueAccount: {
+          puuid: trackedParticipant.puuid,
+          region: "AMERICA_NORTH",
+        },
+      },
+    });
+
+    const result = buildClassicMatch(modernMatch, [trackedPlayer]);
+
+    expect(result?.queueType).toBe("classic aram mayhem");
+    expect(result?.mapName).toBe("The Bandlewood");
+    expect(result?.teams.blue[0]?.championId).toBe(60_103);
+    expect(result?.teams.blue[0]?.spells).toEqual([74, 32]);
+  });
+
+  test("builds and renders the captured production S3 Classic ARAM Mayhem match", async () => {
+    // Captured from scout-prod/games/2026/07/29/BR1_3267199656/match.json.
+    const input: unknown = await Bun.file(realS3FixtureUrl).json();
+    const rawMatch = RawMatchSchema.parse(input);
+    const trackedParticipant = rawMatch.info.participants[0];
+    if (trackedParticipant === undefined) {
+      throw new Error("Real Classic ARAM Mayhem fixture has no participants");
+    }
+    const trackedPlayer = PlayerConfigEntrySchema.parse({
+      alias: "Real Classic ARAM",
+      league: {
+        leagueAccount: {
+          puuid: trackedParticipant.puuid,
+          region: "AMERICA_NORTH",
+        },
+      },
+    });
+
+    expect(rawMatch.metadata.matchId).toBe("BR1_3267199656");
+    expect(rawMatch.info.queueId).toBe(2450);
+    expect(rawMatch.info.gameMode).toBe("KIWI_JADE");
+    expect(rawMatch.info.mapId).toBe(12);
+    expect(rawMatch.info.gameModeMutators).toEqual(["mapskin_map12_jade"]);
+
+    const result = buildClassicMatch(rawMatch, [trackedPlayer]);
+    if (result === undefined) {
+      throw new Error("Real Classic ARAM Mayhem match omitted its player");
+    }
+
+    expect(result.queueType).toBe("classic aram mayhem");
+    expect(result.mapName).toBe("The Bandlewood");
+    expect(result.teams.blue[0]?.championName).toBe("Jade_Pantheon");
+    expect(result.teams.blue[0]?.spells).toEqual([74, 32]);
+
+    const [svg, repeatSvg, png] = await Promise.all([
+      classicMatchToSvg(result),
+      classicMatchToSvg(result),
+      classicMatchToImage(result),
+    ]);
+    expect(svg).toBe(repeatSvg);
+    expect(svg).toContain('width="1920" height="1200"');
+    expect([...png.subarray(0, 8)]).toEqual(PNG_SIGNATURE);
+  });
+});
+
+describe("buildClassicMatch roster handling", () => {
   test("groups full rosters by team ID and keeps the narrow Classic model", async () => {
     const rawMatch = await classicMatchFixture();
     const trackedParticipant = rawMatch.info.participants[6];
@@ -276,7 +418,9 @@ describe("buildClassicMatch", () => {
 
     expect(buildClassicMatch(mismatch, [missingPlayer])).toBeUndefined();
   });
+});
 
+describe("generateMatchReport Classic routing", () => {
   test("routes before rank, timeline, history, and AI dependencies", async () => {
     const rawMatch = await classicMatchFixture();
     const trackedParticipant = rawMatch.info.participants[0];

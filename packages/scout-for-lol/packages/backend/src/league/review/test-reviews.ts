@@ -148,6 +148,7 @@ function convertRawMatchToInternalFormat(
   const queueType = resolveQueueTypeFromGame(
     rawMatch.info.queueId,
     rawMatch.info.gameMode,
+    rawMatch.info.gameType,
   );
 
   // Pick the first participant as our "tracked player"
@@ -239,6 +240,7 @@ async function getRandomMatchFromS3(
     const queueType = resolveQueueTypeFromGame(
       rawMatch.info.queueId,
       rawMatch.info.gameMode,
+      rawMatch.info.gameType,
     );
 
     // Check if this match type matches what we're looking for
