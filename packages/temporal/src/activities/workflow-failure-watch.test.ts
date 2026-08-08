@@ -17,7 +17,7 @@ import {
 
 const NOW = new Date("2026-07-30T18:00:00.000Z");
 const LOOKBACK_MS = 24 * 60 * 60 * 1000;
-const TTL_MS = 24 * 60 * 60 * 1000;
+const TTL_MS = LOOKBACK_MS + 5 * 60 * 1000;
 
 function protobufLong(value: string) {
   return {
@@ -227,7 +227,9 @@ describe("workflow timeout history edge cases", () => {
       "unknown",
     );
   });
+});
 
+describe("workflow timeout queue diagnostics", () => {
   it("diagnoses an agent-task execution timeout with an undispatched later activity as worker availability failure", async () => {
     const client = fakeClient(
       [
@@ -335,7 +337,9 @@ describe("workflow timeout history edge cases", () => {
       "a scheduled workflow task has not started",
     );
   });
+});
 
+describe("initial workflow timeout diagnosis", () => {
   it("diagnoses an agent-task execution timeout with no activity as worker availability failure", async () => {
     const client = fakeClient(
       [
@@ -376,6 +380,45 @@ describe("workflow timeout history edge cases", () => {
     expect(calls[0]?.alerts[0]?.annotations["description"]).toContain(
       "diagnosis worker/task-queue availability failure",
     );
+  });
+
+  it("diagnoses an initial execution timeout with no task having started", async () => {
+    const client = fakeClient(
+      [
+        {
+          workflowId: "agent-task-initial-timeout",
+          runId: "run-timeout",
+          type: "agentTaskWorkflow",
+          taskQueue: "agent-task",
+          closeTime: new Date("2026-07-30T17:50:00.000Z"),
+          status: { name: "TIMED_OUT" },
+        },
+      ],
+      {
+        "agent-task-initial-timeout/run-timeout": rejectWithApplicationFailure(
+          "execution timed out",
+        ),
+      },
+      {
+        "agent-task-initial-timeout/run-timeout": {
+          events: [{ eventType: "EVENT_TYPE_WORKFLOW_EXECUTION_TIMED_OUT" }],
+        },
+      },
+    );
+    const { poster, calls } = capturingPoster();
+
+    await pollWorkflowFailuresOnce(client, poster, {
+      now: NOW,
+      lookbackMs: LOOKBACK_MS,
+      ttlMs: TTL_MS,
+    });
+
+    const description = calls[0]?.alerts[0]?.annotations["description"];
+    expect(description).toContain("timeoutClassification execution");
+    expect(description).toContain(
+      "diagnosis worker/task-queue availability failure",
+    );
+    expect(description).toContain("no activity reached execution");
   });
 });
 
@@ -739,10 +782,10 @@ describe("bounded workflow failure recovery", () => {
 });
 
 describe("parseAlertTtlMs", () => {
-  it("requires the alert TTL to cover the complete recovery lookback", () => {
+  it("requires the alert TTL to cover recovery and delivery", () => {
     expect(parseAlertTtlMs(undefined)).toBe(TTL_MS);
-    expect(parseAlertTtlMs("86400")).toBe(TTL_MS);
-    expect(() => parseAlertTtlMs("86399")).toThrow("must be at least 86400");
+    expect(parseAlertTtlMs("86700")).toBe(TTL_MS);
+    expect(() => parseAlertTtlMs("86699")).toThrow("must be at least 86700");
     expect(() => parseAlertTtlMs("86400seconds")).toThrow(
       "must be a positive integer",
     );

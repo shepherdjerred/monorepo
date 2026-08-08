@@ -39,16 +39,21 @@ const COMPONENT = "temporal-failure-watch";
 const HEARTBEAT_INTERVAL_MS = 10_000;
 
 // Keep a full day of terminal executions queryable so a worker outage can be
-// recovered by the next poll. The alert TTL matches this window, preventing a
-// recovered poll from re-paging an execution that was already observed.
+// recovered by the next poll. The alert TTL covers this window plus delivery
+// margin, preventing a recovered poll from re-paging an execution that was
+// already observed while leaving Alertmanager time to notify PagerDuty.
 const DEFAULT_LOOKBACK_MS = 24 * 60 * 60 * 1000;
+// Leave enough time for Alertmanager's grouping and notification delays after
+// the final recovery poll can still observe the oldest execution.
+const ALERT_DELIVERY_MARGIN_MS = 5 * 60 * 1000;
 
 // Matches XCODE_CLOUD_ALERT_TTL_SECONDS's rationale (xcode-cloud-webhook.ts):
 // keeps a failure visible across the recovery window without lingering forever
 // if polling stops re-observing it (there's no "next success" signal to
 // resolve a specific past failure early, unlike the Xcode Cloud build-outcome
 // case).
-const DEFAULT_ALERT_TTL_SECONDS = 24 * 60 * 60;
+const DEFAULT_ALERT_TTL_SECONDS =
+  (DEFAULT_LOOKBACK_MS + ALERT_DELIVERY_MARGIN_MS) / 1000;
 
 // Bound recovery work so the 24-hour visibility window cannot turn into one
 // serial activity that exhausts its deadline before posting any alerts.
@@ -114,9 +119,10 @@ export function parseAlertTtlMs(raw: string | undefined): number {
     );
   }
   const ttlMs = parsed * 1000;
-  if (ttlMs < DEFAULT_LOOKBACK_MS) {
+  const minimumTtlMs = DEFAULT_LOOKBACK_MS + ALERT_DELIVERY_MARGIN_MS;
+  if (ttlMs < minimumTtlMs) {
     throw new Error(
-      `TEMPORAL_FAILURE_ALERT_TTL_SECONDS must be at least ${String(DEFAULT_LOOKBACK_MS / 1000)} to cover the recovery lookback, got ${raw}`,
+      `TEMPORAL_FAILURE_ALERT_TTL_SECONDS must be at least ${String(minimumTtlMs / 1000)} to cover the recovery lookback and alert delivery margin, got ${raw}`,
     );
   }
   return ttlMs;
@@ -228,7 +234,7 @@ function workerTaskQueueUnavailableReason(
   if (classification.workflowTaskScheduledButNotStarted) {
     return "a scheduled workflow task has not started";
   }
-  if (!classification.activityStarted) {
+  if (!classification.workflowTaskStarted && !classification.activityStarted) {
     return "no activity reached execution";
   }
   return undefined;

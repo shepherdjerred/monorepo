@@ -190,7 +190,7 @@ Workflow:
 - `XCODE_CLOUD_WEBHOOK_PORT` — port for the Xcode Cloud webhook receiver (default `9468`).
 - `XCODE_CLOUD_ALERT_TTL_SECONDS` — safety auto-resolve window for a fired build-failure alert if no later `SUCCEEDED` clears it (default `21600` = 6h).
 - `ALERTMANAGER_URL` — in-cluster Alertmanager base URL (`http://prometheus-kube-prometheus-alertmanager.prometheus:9093`). **Required** by two features: the Xcode Cloud webhook receiver (when enabled) and the `temporal-failure-watch` schedule (see below) — both POST to `/api/v2/alerts` via `src/lib/alertmanager.ts`.
-- `TEMPORAL_FAILURE_ALERT_TTL_SECONDS` — how long a `TemporalWorkflowFailed` alert stays firing in Alertmanager before auto-resolving if the watcher stops re-observing it (default `86400` = 24h, matching the failure watcher's recovery lookback).
+- `TEMPORAL_FAILURE_ALERT_TTL_SECONDS` — how long a `TemporalWorkflowFailed` alert stays firing in Alertmanager before auto-resolving if the watcher stops re-observing it (default `86700` = 24h plus a 5m delivery margin, covering the failure watcher's recovery lookback and notification delay).
 
 ## Homelab audit (daily)
 

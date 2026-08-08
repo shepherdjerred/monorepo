@@ -157,10 +157,10 @@ preserves timeout details across worker outages and covers all workflow types.
 
 ## Operator follow-up
 
-After the worker image deploys, perform the real-server `runAt` e2e and the Part 2
-backfill from a cluster-authorized environment. Verify the replacement runs complete
-and that `temporal-failure-watch` emits no failure alerts. These privileged deployment
-operations are outside this completed implementation plan.
+The real-server `runAt` e2e and Part 2 backfill are tracked in the active
+[`agent-task-runat-timeout-production-follow-up`](../../todos/agent-task-runat-timeout-production-follow-up.md)
+TODO. This completed implementation plan does not claim those privileged
+deployment operations are complete.
 
 ## Comment Log
 
