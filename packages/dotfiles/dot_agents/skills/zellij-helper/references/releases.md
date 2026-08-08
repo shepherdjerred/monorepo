@@ -60,7 +60,7 @@ The following 57 documentation and release pages were fetched and inspected:
 48. [Web client](https://zellij.dev/documentation/web-client.html)
 49. [Compatibility](https://zellij.dev/documentation/compatibility.html)
 50. [Zellij releases](https://github.com/zellij-org/zellij/releases)
-51. [Latest release](https://github.com/zellij-org/zellij/releases/latest)
+51. [Latest release](https://github.com/zellij-org/zellij/releases/tag/v0.44.3)
 52. [Zellij 0.44.0](https://github.com/zellij-org/zellij/releases/tag/v0.44.0)
 53. [Zellij 0.44.1](https://github.com/zellij-org/zellij/releases/tag/v0.44.1)
 54. [Zellij 0.44.2](https://github.com/zellij-org/zellij/releases/tag/v0.44.2)

@@ -48,7 +48,7 @@ The following 49 authoritative pages were fetched and inspected:
 36. [Module resolution](https://bun.com/docs/runtime/module-resolution.md)
 37. [Auto-install](https://bun.com/docs/runtime/auto-install.md)
 38. [Documentation inventory](https://bun.com/docs/llms.txt)
-39. [Latest Bun release](https://github.com/oven-sh/bun/releases/latest)
+39. [Latest Bun release](https://github.com/oven-sh/bun/releases/tag/bun-v1.3.14)
 40. [Bun 1.3.14](https://bun.com/blog/bun-v1.3.14)
 41. [Bun 1.3.2](https://bun.com/blog/bun-v1.3.2)
 42. [Text lockfile](https://bun.com/blog/bun-lock-text-lockfile)

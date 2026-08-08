@@ -45,7 +45,7 @@ The following 64 official or project-primary pages were fetched and inspected:
 33. [TypeScript](https://bun.com/docs/typescript)
 34. [Bun 1.3.13](https://bun.com/blog/bun-v1.3.13)
 35. [Bun 1.3.14](https://bun.com/blog/bun-v1.3.14)
-36. [Latest Bun release](https://github.com/oven-sh/bun/releases/latest)
+36. [Latest Bun release](https://github.com/oven-sh/bun/releases/tag/bun-v1.3.14)
 37. [Concurrent test](https://bun.com/reference/bun/test/Test/concurrent)
 38. [Serial test](https://bun.com/reference/bun/test/Test/serial)
 39. [Expected failure](https://bun.com/reference/bun/test/Test/failing)
