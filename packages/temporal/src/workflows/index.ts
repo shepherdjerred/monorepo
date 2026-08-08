@@ -86,9 +86,31 @@ import type {
   GlitterContextRefreshInput,
   GlitterContextRefreshResult,
 } from "#activities/glitter-context-refresh.ts";
+import {
+  runKometaWorkflow as _runKometaWorkflow,
+  runBunCacheGcWorkflow as _runBunCacheGcWorkflow,
+  runUvCachePruneWorkflow as _runUvCachePruneWorkflow,
+  runTrivyDbRefreshWorkflow as _runTrivyDbRefreshWorkflow,
+} from "./kubernetes-maintenance.ts";
 
 export async function fetchSkillCappedManifest(): Promise<void> {
   return _fetchSkillCappedManifest();
+}
+
+export async function runKometaWorkflow(): Promise<void> {
+  return _runKometaWorkflow();
+}
+
+export async function runBunCacheGcWorkflow(): Promise<void> {
+  return _runBunCacheGcWorkflow();
+}
+
+export async function runUvCachePruneWorkflow(): Promise<void> {
+  return _runUvCachePruneWorkflow();
+}
+
+export async function runTrivyDbRefreshWorkflow(): Promise<void> {
+  return _runTrivyDbRefreshWorkflow();
 }
 
 export async function generateDependencySummary(daysBack = 7): Promise<void> {

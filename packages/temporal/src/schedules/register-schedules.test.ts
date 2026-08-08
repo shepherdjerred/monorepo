@@ -61,6 +61,12 @@ const WORKFLOW_MAX_SLEEP_MS: Record<string, number> = {
 
 const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "fetchSkillCappedManifest",
+  // These workflows await one Kubernetes Job activity; the activity timeout
+  // and retry policy are the relevant execution budget.
+  "runBunCacheGcWorkflow",
+  "runKometaWorkflow",
+  "runUvCachePruneWorkflow",
+  "runTrivyDbRefreshWorkflow",
   "generateDependencySummary",
   "runDnsAudit",
   "runHomelabAuditWorkflow",

@@ -4,7 +4,7 @@ import { ZfsSataVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-sata-v
 import { createBazarrDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/bazarr.ts";
 import { createTautulliDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/media/tautulli.ts";
 import { createPlexDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/media/plex.ts";
-import { createKometaCronJob } from "@shepherdjerred/homelab/cdk8s/src/resources/media/kometa.ts";
+import { createKometaResources } from "@shepherdjerred/homelab/cdk8s/src/resources/media/kometa.ts";
 import { createRadarrDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/radarr.ts";
 import { createSeerrDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/seerr.ts";
 import { createQBitTorrentDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/qbittorrent.ts";
@@ -50,7 +50,7 @@ export async function createMediaChart(app: App) {
     tv: tvVolume.claim,
     movies: moviesVolume.claim,
   });
-  createKometaCronJob(chart);
+  createKometaResources(chart);
   createRadarrDeployment(chart, {
     movies: moviesVolume.claim,
     downloads: downloadsVolume.claim,
