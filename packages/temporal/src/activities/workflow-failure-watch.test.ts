@@ -250,6 +250,44 @@ describe("workflow timeout history edge cases", () => {
     expect(classification.workflowTaskScheduledButNotStarted).toBe(false);
     expect(classification.activityScheduled).toBe(false);
   });
+
+  it("does not treat a recovered schedule-to-start activity attempt as pending", () => {
+    const classification = classifyWorkflowTimeoutHistory({
+      events: [
+        {
+          event_id: protobufLong("5"),
+          eventType: "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
+          activity_task_scheduled_event_attributes: {
+            activity_id: "run-agent-task",
+          },
+        },
+        {
+          eventType: "EVENT_TYPE_ACTIVITY_TASK_TIMED_OUT",
+          activity_task_timed_out_event_attributes: {
+            scheduled_event_id: protobufLong("5"),
+          },
+        },
+        {
+          event_id: protobufLong("8"),
+          eventType: "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
+          activity_task_scheduled_event_attributes: {
+            activity_id: "run-agent-task",
+          },
+        },
+        {
+          eventType: "EVENT_TYPE_ACTIVITY_TASK_STARTED",
+          activity_task_started_event_attributes: {
+            scheduled_event_id: protobufLong("8"),
+          },
+        },
+        { eventType: "EVENT_TYPE_WORKFLOW_EXECUTION_TIMED_OUT" },
+      ],
+    });
+
+    expect(classification.activityScheduled).toBe(true);
+    expect(classification.activityStarted).toBe(true);
+    expect(classification.activityScheduledButNotStarted).toBe(false);
+  });
 });
 
 describe("workflow timeout queue diagnostics", () => {
@@ -536,8 +574,16 @@ describe("failed execution timeout diagnostics", () => {
             {
               event_id: protobufLong("5"),
               eventType: "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
+              activity_task_scheduled_event_attributes: {
+                activity_id: "run-agent-task",
+              },
             },
-            { eventType: "EVENT_TYPE_ACTIVITY_TASK_TIMED_OUT" },
+            {
+              eventType: "EVENT_TYPE_ACTIVITY_TASK_TIMED_OUT",
+              activity_task_timed_out_event_attributes: {
+                scheduled_event_id: protobufLong("5"),
+              },
+            },
           ],
         },
       },

@@ -113,6 +113,54 @@ function timedOutWorkflowTaskScheduledEventId(
       );
 }
 
+function activityTaskScheduledActivityId(event: unknown): string | undefined {
+  const record = eventRecord(event);
+  if (record === undefined) {
+    return undefined;
+  }
+  const attributes =
+    record["activityTaskScheduledEventAttributes"] ??
+    record["activity_task_scheduled_event_attributes"];
+  const attributesRecord = eventRecord(attributes);
+  const value =
+    attributesRecord?.["activityId"] ?? attributesRecord?.["activity_id"];
+  return typeof value === "string" || typeof value === "number"
+    ? String(value)
+    : undefined;
+}
+
+function timedOutActivityTaskScheduledEventId(
+  event: unknown,
+): string | undefined {
+  const record = eventRecord(event);
+  if (record === undefined) {
+    return undefined;
+  }
+  const attributes =
+    record["activityTaskTimedOutEventAttributes"] ??
+    record["activity_task_timed_out_event_attributes"];
+  const attributesRecord = eventRecord(attributes);
+  return attributesRecord === undefined
+    ? undefined
+    : eventId(
+        attributesRecord["scheduledEventId"] ??
+          attributesRecord["scheduled_event_id"],
+      );
+}
+
+function markRecoveredActivitySchedules(
+  activityId: string,
+  timedOutScheduleIds: ReadonlySet<string>,
+  activityIdsByScheduleId: ReadonlyMap<string, string>,
+  recoveredScheduleIds: Set<string>,
+): void {
+  for (const timedOutId of timedOutScheduleIds) {
+    if (activityIdsByScheduleId.get(timedOutId) === activityId) {
+      recoveredScheduleIds.add(timedOutId);
+    }
+  }
+}
+
 function historyEvents(history: unknown): readonly unknown[] {
   if (Array.isArray(history)) {
     return history;
@@ -170,6 +218,9 @@ export function classifyWorkflowTimeoutHistory(
   const handledWorkflowTaskScheduledEventIds = new Set<string>();
   const scheduledActivityEventIds = new Set<string>();
   const startedActivityScheduledEventIds = new Set<string>();
+  const activityIdByScheduledEventId = new Map<string, string>();
+  const timedOutActivityScheduledEventIds = new Set<string>();
+  const recoveredActivityScheduledEventIds = new Set<string>();
   let latestTimeout: WorkflowTimeoutClassification | undefined;
 
   for (const event of historyEvents(history)) {
@@ -196,6 +247,16 @@ export function classifyWorkflowTimeoutHistory(
       const id = scheduledEventId(event);
       if (id !== undefined) {
         scheduledActivityEventIds.add(id);
+        const activityId = activityTaskScheduledActivityId(event);
+        if (activityId !== undefined) {
+          markRecoveredActivitySchedules(
+            activityId,
+            timedOutActivityScheduledEventIds,
+            activityIdByScheduledEventId,
+            recoveredActivityScheduledEventIds,
+          );
+          activityIdByScheduledEventId.set(id, activityId);
+        }
       }
     }
     if (name === "EVENT_TYPE_ACTIVITY_TASK_STARTED") {
@@ -216,6 +277,12 @@ export function classifyWorkflowTimeoutHistory(
         latestTimeout = "workflow-task";
         break;
       case "EVENT_TYPE_ACTIVITY_TASK_TIMED_OUT":
+        {
+          const scheduledId = timedOutActivityTaskScheduledEventId(event);
+          if (scheduledId !== undefined) {
+            timedOutActivityScheduledEventIds.add(scheduledId);
+          }
+        }
         latestTimeout = "activity";
         break;
       case "EVENT_TYPE_WORKFLOW_EXECUTION_TIMED_OUT":
@@ -234,7 +301,9 @@ export function classifyWorkflowTimeoutHistory(
     activityScheduled,
     activityStarted,
     activityScheduledButNotStarted: [...scheduledActivityEventIds].some(
-      (id) => !startedActivityScheduledEventIds.has(id),
+      (id) =>
+        !startedActivityScheduledEventIds.has(id) &&
+        !recoveredActivityScheduledEventIds.has(id),
     ),
   };
 }
