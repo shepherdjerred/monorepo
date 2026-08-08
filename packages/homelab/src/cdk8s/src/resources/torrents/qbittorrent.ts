@@ -118,6 +118,9 @@ export function createQBitTorrentDeployment(
           "VPN and torrent client require writable filesystem",
       },
     },
+    podMetadata: {
+      labels: { app: "qbittorrent" },
+    },
   });
 
   const localPathVolume = new ZfsNvmeVolume(chart, "qbittorrent-pvc", {

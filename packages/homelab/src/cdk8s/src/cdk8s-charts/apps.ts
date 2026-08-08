@@ -69,6 +69,7 @@ import {
   createPlaneApp,
   createPlaneInfrastructureApp,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/plane.ts";
+import { createTrackerTrackerApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/tracker-tracker.ts";
 import { createPvcBackupAdmissionPolicies } from "@shepherdjerred/homelab/cdk8s/src/resources/pvc-backup-admission.ts";
 
 export async function createAppsChart(app: App) {
@@ -181,6 +182,7 @@ export async function createAppsChart(app: App) {
   createTrmnlDashboardApp(chart);
   createTurboCacheApp(chart);
   createBuildkitdApp(chart);
+  createTrackerTrackerApp(chart);
 
   // ArgoCD AppProject
   createProject(chart);

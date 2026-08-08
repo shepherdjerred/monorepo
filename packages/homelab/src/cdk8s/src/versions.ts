@@ -1,6 +1,9 @@
 import { applyCurrentBuildImageOverrides } from "./release-configuration.ts";
 
 const versions = {
+  // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
+  "jordanlambrecht/tracker-tracker":
+    "2.8.9@sha256:27b93eb839812c7ccaf03b1024f31d23b5981f8fcc13257447e2082100b7a71c",
   // renovate: datasource=helm registryUrl=https://1password.github.io/connect-helm-charts/ versioning=semver
   connect: "2.4.1",
   // renovate: datasource=helm registryUrl=https://argoproj.github.io/argo-helm versioning=semver

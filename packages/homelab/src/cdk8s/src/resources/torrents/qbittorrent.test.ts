@@ -96,6 +96,9 @@ const DeploymentSchema = z
     spec: z
       .object({
         template: z.object({
+          metadata: z
+            .object({ labels: z.object({ app: z.string() }).loose() })
+            .loose(),
           spec: z
             .object({
               containers: z.array(ContainerSchema),
@@ -220,6 +223,10 @@ function getEnvValue(
 }
 
 describe("qBittorrent ShelfBridge relay", () => {
+  it("labels qBittorrent pods for the dedicated tracker policy", () => {
+    expect(deployment.spec.template.metadata.labels.app).toBe("qbittorrent");
+  });
+
   it("routes the ShelfBridge hostname to the WireGuard-side relay", () => {
     expect(deployment.spec.template.spec.hostAliases).toEqual([
       {

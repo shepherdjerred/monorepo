@@ -73,6 +73,42 @@ function synthBuildkiteMonitoring(): unknown[] {
   return z.array(z.unknown()).parse(Testing.synth(chart));
 }
 
+function expectExpressionContains(
+  expression: string,
+  fragments: readonly string[],
+): void {
+  for (const fragment of fragments) {
+    expect(expression).toContain(fragment);
+  }
+}
+
+function assertCollectorStaleExpression(
+  rule: Record<string, unknown> | undefined,
+): void {
+  const expression = String(rule?.["expr"]);
+  expectExpressionContains(expression, ["> 1200"]);
+  if (MAINTENANCE_IMAGE_READY) {
+    expectExpressionContains(expression, [
+      `job="${BUILDKITE_BUN_CACHE_GC_ACTIVITY}"`,
+      "kubernetes_maintenance_last_success_timestamp_seconds",
+      `absent(\n    kubernetes_maintenance_last_success_timestamp_seconds{\n      job="${BUILDKITE_BUN_CACHE_GC_ACTIVITY}"\n    }\n  )`,
+      'temporal_worker_app_process_start_time_seconds{\n        namespace="buildkite",\n        pod=~"temporal-maintenance-worker-.*"\n      }',
+      'kube_pod_start_time{\n        namespace="buildkite",\n        pod=~"temporal-maintenance-worker-.*"\n      }',
+      "kube_deployment_status_replicas_available",
+      'deployment="temporal-maintenance-worker"',
+      "up{",
+      'service="temporal-maintenance-worker-app-metrics"',
+      'condition="Progressing",\n        status="false"',
+      'reason="NewReplicaSetAvailable"',
+    ]);
+    return;
+  }
+  expectExpressionContains(expression, [
+    "kube_cronjob_status_last_successful_time",
+    "kube_cronjob_created",
+  ]);
+}
+
 describe("Buildkite monitoring manifests", () => {
   it("synthesizes a selectable 10-second controller PodMonitor", () => {
     const manifests = synthBuildkiteMonitoring();
@@ -188,42 +224,6 @@ describe("Buildkite monitoring manifests", () => {
         namespace: "buildkite",
       },
     });
-    expect(String(collectorStale?.["expr"])).toContain("> 1200");
-    if (MAINTENANCE_IMAGE_READY) {
-      expect(String(collectorStale?.["expr"])).toContain(
-        `job="${BUILDKITE_BUN_CACHE_GC_ACTIVITY}"`,
-      );
-      expect(String(collectorStale?.["expr"])).toContain(
-        "kubernetes_maintenance_last_success_timestamp_seconds",
-      );
-      expect(String(collectorStale?.["expr"])).toContain(
-        `absent(\n    kubernetes_maintenance_last_success_timestamp_seconds{\n      job="${BUILDKITE_BUN_CACHE_GC_ACTIVITY}"\n    }\n  )`,
-      );
-      expect(String(collectorStale?.["expr"])).toContain(
-        'temporal_worker_app_process_start_time_seconds{\n        namespace="buildkite",\n        pod=~"temporal-maintenance-worker-.*"\n      }',
-      );
-      expect(String(collectorStale?.["expr"])).toContain(
-        'kube_pod_start_time{\n        namespace="buildkite",\n        pod=~"temporal-maintenance-worker-.*"\n      }',
-      );
-      expect(String(collectorStale?.["expr"])).toContain(
-        'kube_deployment_status_replicas_available{\n              namespace="buildkite",\n              deployment="temporal-maintenance-worker"\n            }',
-      );
-      expect(String(collectorStale?.["expr"])).toContain(
-        'up{\n              namespace="buildkite",\n              service="temporal-maintenance-worker-app-metrics"\n            }',
-      );
-      expect(String(collectorStale?.["expr"])).toContain(
-        'condition="Progressing",\n        status="false"',
-      );
-      expect(String(collectorStale?.["expr"])).toContain(
-        'reason="NewReplicaSetAvailable"',
-      );
-    } else {
-      expect(String(collectorStale?.["expr"])).toContain(
-        "kube_cronjob_status_last_successful_time",
-      );
-      expect(String(collectorStale?.["expr"])).toContain(
-        "kube_cronjob_created",
-      );
-    }
+    assertCollectorStaleExpression(collectorStale);
   });
 });
