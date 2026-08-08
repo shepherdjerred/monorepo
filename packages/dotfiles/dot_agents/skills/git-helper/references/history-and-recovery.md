@@ -10,7 +10,7 @@ Compare an old and a new series with two explicit ranges:
 git range-diff old-base..old-tip new-base..new-tip
 ```
 
-Use `--remerge-diff` when reviewing conflict-resolution changes in merge commits. Range-diff is a review aid; patch pairing is heuristic and is not commit identity.
+Use `--remerge-diff` when reviewing conflict-resolution changes in merge commits **only when the installed `git range-diff -h` lists that option** (it was added in Git 2.48). On older Git versions, use the base `git range-diff old-base..old-tip new-base..new-tip` command above; it remains a useful review aid, although it cannot show the remerge-specific view. Patch pairing is heuristic and is not commit identity.
 
 ## Bisect
 
@@ -37,7 +37,7 @@ A stash changes working-tree state. Agents should not use it to hide or move use
 
 ## Sparse checkout
 
-Use `git sparse-checkout set` to initialize or change patterns; a separate `init` step is deprecated for most current workflows. Inspect tracked and untracked paths before `sparse-checkout clean`, because cleanup can remove paths outside the sparse specification.
+Use `git sparse-checkout set` to initialize or change patterns; a separate `init` step is deprecated for most current workflows. `git sparse-checkout clean` is not available in older Git versions, so use it only when `git sparse-checkout -h` lists the `clean` subcommand. Before any cleanup, inspect tracked and untracked paths because it can remove paths outside the sparse specification. On versions without `clean`, there is no equivalent automatic cleanup: preserve user work and remove only individually reviewed, disposable untracked paths with the user's approval.
 
 ## Partial clones and backfill
 
