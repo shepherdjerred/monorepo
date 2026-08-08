@@ -6,7 +6,7 @@ import {
   UIManager,
   View,
 } from "react-native";
-import type { ViewProps } from "react-native";
+import type { ColorValue, ViewProps } from "react-native";
 import type { FeatherIconName } from "@react-native-vector-icons/feather";
 
 import { AppIcon } from "./AppIcon";
@@ -15,7 +15,7 @@ type NativeSymbolProps = ViewProps & {
   readonly symbolName: string;
   readonly symbolSize: number;
   readonly symbolWeight: string;
-  readonly tintColorHex: string;
+  readonly tintColor: ColorValue;
 };
 
 const NativeSymbolView =
@@ -42,7 +42,7 @@ export function PlatformSymbol({ symbol, fallback, size, color }: Props) {
         symbolName={symbol}
         symbolSize={size}
         symbolWeight="semibold"
-        tintColorHex={color}
+        tintColor={color}
       />
     </View>
   );

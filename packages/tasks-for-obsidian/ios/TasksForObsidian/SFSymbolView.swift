@@ -20,16 +20,6 @@ class SFSymbolImageView: UIImageView {
   @objc var symbolWeight: String = "regular" {
     didSet { updateImage() }
   }
-  @objc var tintColorHex: String = "" {
-    didSet { applyTintColor() }
-  }
-
-  private func applyTintColor() {
-    if !tintColorHex.isEmpty, let color = UIColor(hex: tintColorHex) {
-      tintColor = color
-    }
-    updateImage()
-  }
 
   private func updateImage() {
     let weight = mapWeight(symbolWeight)
@@ -56,31 +46,6 @@ class SFSymbolImageView: UIImageView {
     case "heavy": return .heavy
     case "black": return .black
     default: return .regular
-    }
-  }
-}
-
-private extension UIColor {
-  convenience init?(hex: String) {
-    var hexStr = hex.trimmingCharacters(in: .whitespacesAndNewlines)
-    if hexStr.hasPrefix("#") { hexStr.removeFirst() }
-    guard hexStr.count == 6 || hexStr.count == 8 else { return nil }
-    var rgb: UInt64 = 0
-    Scanner(string: hexStr).scanHexInt64(&rgb)
-    if hexStr.count == 6 {
-      self.init(
-        red: CGFloat((rgb >> 16) & 0xFF) / 255,
-        green: CGFloat((rgb >> 8) & 0xFF) / 255,
-        blue: CGFloat(rgb & 0xFF) / 255,
-        alpha: 1
-      )
-    } else {
-      self.init(
-        red: CGFloat((rgb >> 24) & 0xFF) / 255,
-        green: CGFloat((rgb >> 16) & 0xFF) / 255,
-        blue: CGFloat((rgb >> 8) & 0xFF) / 255,
-        alpha: CGFloat(rgb & 0xFF) / 255
-      )
     }
   }
 }
