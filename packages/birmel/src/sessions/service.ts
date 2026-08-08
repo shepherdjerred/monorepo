@@ -19,6 +19,23 @@ export async function getActiveSessionForThread(
   });
 }
 
+export async function isSessionActiveForThread(options: {
+  sessionId: string;
+  guildId: string;
+  threadId: string;
+}): Promise<boolean> {
+  const session = await prisma.agentSession.findFirst({
+    where: {
+      id: options.sessionId,
+      guildId: options.guildId,
+      threadId: options.threadId,
+      status: "active",
+    },
+    select: { id: true },
+  });
+  return session != null;
+}
+
 export async function createThreadForSession(options: {
   sourceChannelId: string;
   sourceMessageId: string;

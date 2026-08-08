@@ -5,6 +5,7 @@ import {
   failAgentRun,
   recordAgentRunContext,
   recordAgentRunRoute,
+  suppressQueuedSessionAgentRun,
 } from "@shepherdjerred/birmel/agent-runtime/agent-runs.ts";
 import { extractAndApplyTurnMemory } from "@shepherdjerred/birmel/agent-runtime/memory-extraction.ts";
 import { executeRoutedTurn } from "@shepherdjerred/birmel/agent-runtime/runtime.ts";
@@ -24,7 +25,10 @@ import {
 } from "@shepherdjerred/birmel/observability/sentry.ts";
 import { withSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import { getGuildPersona } from "@shepherdjerred/birmel/persona/guild-persona.ts";
-import { appendSessionEvent } from "@shepherdjerred/birmel/sessions/service.ts";
+import {
+  appendSessionEvent,
+  isSessionActiveForThread,
+} from "@shepherdjerred/birmel/sessions/service.ts";
 import { summarizeSessionIfNeeded } from "@shepherdjerred/birmel/sessions/summarization.ts";
 import { toError } from "@shepherdjerred/birmel/utils/errors.ts";
 import { logger } from "@shepherdjerred/birmel/utils/logger.ts";
@@ -374,8 +378,34 @@ export async function handleMessage(context: MessageContext): Promise<void> {
       messageId: context.turn.discordMessageId,
       triggerKind: context.turn.triggerKind,
     },
-    async () => {
+    async (span) => {
       await withTurnQueue(queueId, async () => {
+        if (context.activeSessionId != null) {
+          const threadId = context.turn.threadId;
+          const sessionIsActive =
+            threadId != null &&
+            (await isSessionActiveForThread({
+              sessionId: context.activeSessionId,
+              guildId: context.turn.guildId,
+              threadId,
+            }));
+          if (!sessionIsActive) {
+            await suppressQueuedSessionAgentRun(run.id);
+            span.setAttribute("birmel.turn.suppressed", true);
+            span.setAttribute(
+              "birmel.turn.suppression_reason",
+              "session-inactive-while-queued",
+            );
+            logger.info("Queued session turn suppressed", {
+              runId: run.id,
+              messageId: context.turn.discordMessageId,
+              guildId: context.turn.guildId,
+              threadId: context.turn.threadId ?? "missing",
+              reason: "session-inactive-while-queued",
+            });
+            return;
+          }
+        }
         await processAdmittedTurn(context, run.id);
       });
     },

@@ -1,5 +1,6 @@
 import { openai } from "@ai-sdk/openai";
 import { generateText, stepCountIs, ToolLoopAgent } from "ai";
+import { z } from "zod";
 import {
   SpecialistTaskPacketSchema,
   type SpecialistId,
@@ -17,13 +18,29 @@ import { CORE_SYSTEM_POLICY, specialistInstructions } from "./prompts.ts";
 
 const logger = loggers.agent.child("execution");
 
+const ToolIdSchema = z
+  .string()
+  .min(1)
+  .max(64)
+  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+const ToolResultForSessionSchema = z.object({
+  toolName: ToolIdSchema,
+  output: z.object({ success: z.boolean() }),
+});
+const SessionToolEventSchema = z.strictObject({
+  toolId: ToolIdSchema,
+  content: z.string().min(1).max(96),
+});
+
+type SessionToolEvent = z.infer<typeof SessionToolEventSchema>;
+
 export type AgentExecutionResult = {
   text: string;
   finishReason: string;
   inputTokens: number;
   outputTokens: number;
   stepCount: number;
-  toolEvents: { toolId: string; content: string }[];
+  toolEvents: SessionToolEvent[];
 };
 
 export type DirectExecutor = (
@@ -41,6 +58,26 @@ export type IsolatedAgentOptions = {
   textVerbosity?: "low" | "medium" | "high";
   timeoutMs?: number;
 };
+
+export function summarizeToolResultForSession(
+  rawToolResult: unknown,
+  registeredToolIds: readonly string[],
+): SessionToolEvent {
+  const toolResult = ToolResultForSessionSchema.parse(rawToolResult);
+  const parsedRegisteredToolIds = z
+    .array(ToolIdSchema)
+    .parse(registeredToolIds);
+  if (!parsedRegisteredToolIds.includes(toolResult.toolName)) {
+    throw new Error(
+      `AI SDK returned an unregistered tool result: ${toolResult.toolName}`,
+    );
+  }
+  const status = toolResult.output.success ? "succeeded" : "failed";
+  return SessionToolEventSchema.parse({
+    toolId: toolResult.toolName,
+    content: `Tool ${toolResult.toolName} ${status}`,
+  });
+}
 
 function taskPrompt(packet: SpecialistTaskPacket): string {
   return `Current request from ${packet.username} (${packet.userId}):\n${packet.request}\n\nDiscord context:\nguild=${packet.guildId}\nchannel=${packet.channelId}${packet.threadId == null ? "" : `\nthread=${packet.threadId}`}\n\nRelevant context:\n${packet.context}`;
@@ -125,6 +162,7 @@ async function executeSpecialistWithOptions(
   const packet = SpecialistTaskPacketSchema.parse(rawPacket);
   const config = getConfig();
   const tools = toolsToRecord(getToolSet(specialist));
+  const registeredToolIds = Object.keys(tools);
   return await withSpan(
     `birmel.agent.${specialist}`,
     {
@@ -176,10 +214,9 @@ async function executeSpecialistWithOptions(
         outputTokens: result.totalUsage.outputTokens ?? 0,
         stepCount: result.steps.length,
         toolEvents: result.steps.flatMap((step) =>
-          step.toolResults.map((toolResult) => ({
-            toolId: toolResult.toolName,
-            content: `Tool ${toolResult.toolName} completed`,
-          })),
+          step.toolResults.map((toolResult) =>
+            summarizeToolResultForSession(toolResult, registeredToolIds),
+          ),
         ),
       };
     },

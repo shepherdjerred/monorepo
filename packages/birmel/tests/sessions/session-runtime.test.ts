@@ -5,6 +5,7 @@ const {
   createSession,
   getActiveSessionForThread,
   getSessionContext,
+  isSessionActiveForThread,
   SessionEventRoleSchema,
   updateSessionStatus,
 } = await import("@shepherdjerred/birmel/sessions/service.ts");
@@ -108,6 +109,54 @@ describe("thread-bound sessions", () => {
       status: "active",
     });
     expect(await getActiveSessionForThread("thread-missing")).toBeNull();
+  });
+
+  test("revalidates the exact active guild and thread session", async () => {
+    const session = await createFixture({ threadId: "thread-revalidate" });
+    const exactSession = {
+      sessionId: session.id,
+      guildId: session.guildId,
+      threadId: session.threadId,
+    };
+
+    expect(await isSessionActiveForThread(exactSession)).toBeTrue();
+    expect(
+      await isSessionActiveForThread({
+        ...exactSession,
+        sessionId: "different-session",
+      }),
+    ).toBeFalse();
+    expect(
+      await isSessionActiveForThread({
+        ...exactSession,
+        guildId: "different-guild",
+      }),
+    ).toBeFalse();
+    expect(
+      await isSessionActiveForThread({
+        ...exactSession,
+        threadId: "different-thread",
+      }),
+    ).toBeFalse();
+
+    await updateSessionStatus({
+      sessionId: session.id,
+      guildId: session.guildId,
+      status: "archived",
+    });
+    expect(await isSessionActiveForThread(exactSession)).toBeFalse();
+
+    await updateSessionStatus({
+      sessionId: session.id,
+      guildId: session.guildId,
+      status: "active",
+    });
+    await updateSessionStatus({
+      sessionId: session.id,
+      guildId: session.guildId,
+      status: "cancelled",
+    });
+    expect(await isSessionActiveForThread(exactSession)).toBeFalse();
   });
 
   test("archive, cancel, and resume change active thread routing state", async () => {

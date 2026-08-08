@@ -77,6 +77,19 @@ export async function completeAgentRun(options: {
   });
 }
 
+export async function suppressQueuedSessionAgentRun(
+  runId: string,
+): Promise<void> {
+  await prisma.agentRun.update({
+    where: { id: runId },
+    data: {
+      status: "suppressed",
+      finishReason: "session-inactive-while-queued",
+      completedAt: new Date(),
+    },
+  });
+}
+
 export async function failAgentRun(options: {
   runId: string;
   responseMessageId?: string;

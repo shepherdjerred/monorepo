@@ -10,15 +10,15 @@ describe("getOpenAIProviderOptions", () => {
     resetConfig();
   });
 
-  test("disables provider storage without replaying encrypted reasoning", () => {
+  test("keeps tool-loop reasoning self-contained without provider storage", () => {
     const options = getOpenAIProviderOptions();
     const serialized = JSON.stringify(options);
 
     expect(options.openai.store).toBe(false);
     expect(options.openai.parallelToolCalls).toBe(false);
-    expect("include" in options.openai).toBe(false);
+    expect(options.openai.include).toEqual(["reasoning.encrypted_content"]);
     expect("previousResponseId" in options.openai).toBe(false);
-    expect(serialized).not.toContain("reasoning.encrypted_content");
+    expect(serialized).toContain("reasoning.encrypted_content");
     expect(serialized).not.toContain("reasoningEncryptedContent");
   });
 });

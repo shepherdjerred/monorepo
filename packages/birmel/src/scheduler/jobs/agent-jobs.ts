@@ -10,6 +10,10 @@ import {
   type AgentJobScheduleKind,
 } from "@shepherdjerred/birmel/scheduler/agent-job-schedule.ts";
 import {
+  findExpiredAgentJobLeases,
+  recoverExpiredAgentJobLease,
+} from "@shepherdjerred/birmel/scheduler/agent-job-lease-recovery.ts";
+import {
   AGENT_JOB_LEASE_GRACE_MS,
   waitForTimedOutExecution,
 } from "@shepherdjerred/birmel/scheduler/agent-job-timeout-fence.ts";
@@ -346,49 +350,21 @@ function trackJobExecution(operation: Promise<void>): Promise<void> {
 
 async function recoverExpiredJobLeases(): Promise<void> {
   const now = new Date();
-  const staleJobs = await prisma.agentJob.findMany({
-    where: {
-      status: "running",
-      OR: [{ leaseExpiresAt: null }, { leaseExpiresAt: { lt: now } }],
-    },
-    select: { id: true },
-  });
-  if (staleJobs.length === 0) {
+  const expiredLeases = await findExpiredAgentJobLeases(now);
+  if (expiredLeases.length === 0) {
     return;
   }
-  const staleIds = staleJobs.map((job) => job.id);
-  await prisma.$transaction([
-    prisma.agentJobRun.updateMany({
-      where: {
-        jobId: { in: staleIds },
-        status: { in: ["running", "timed_out"] },
-      },
-      data: {
-        status: "recovered",
-        finishedAt: now,
-        error: "Execution lease expired before completion",
-      },
-    }),
-    prisma.agentJob.updateMany({
-      where: {
-        id: { in: staleIds },
-        status: "running",
-        OR: [{ leaseExpiresAt: null }, { leaseExpiresAt: { lt: now } }],
-      },
-      data: {
-        status: "retrying",
-        nextRunAt: now,
-        lastStatus: "recovered",
-        lastError: "Recovered expired execution lease after restart",
-        claimedAt: null,
-        claimedBy: null,
-        leaseExpiresAt: null,
-      },
-    }),
-  ]);
-  logger.warn("Recovered expired agent job leases", {
-    count: staleIds.length,
-  });
+  let recoveredCount = 0;
+  for (const lease of expiredLeases) {
+    if (await recoverExpiredAgentJobLease(lease, now)) {
+      recoveredCount += 1;
+    }
+  }
+  if (recoveredCount > 0) {
+    logger.warn("Recovered expired agent job leases", {
+      count: recoveredCount,
+    });
+  }
 }
 
 async function runAgentJobsTick(): Promise<void> {

@@ -236,3 +236,8 @@ succeeds.
   and validated durable tool IDs and payloads before persistence. The exact CI
   suite now passes 277 tests with zero failures or skips; the six-task build,
   typecheck, and lint graph remains green.
+- 2026-08-08: The latest review pass preserved encrypted reasoning within each
+  stateless tool loop, recorded validated tool success and failure outcomes,
+  revalidated thread sessions after queue admission, and fenced expired-lease
+  recovery to the original claim. The exact CI suite now passes 284 tests with
+  zero failures or skips.

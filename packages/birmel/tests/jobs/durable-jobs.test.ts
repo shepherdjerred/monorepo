@@ -23,6 +23,10 @@ import {
   stopScheduler,
 } from "@shepherdjerred/birmel/scheduler/index.ts";
 import {
+  findExpiredAgentJobLeases,
+  recoverExpiredAgentJobLease,
+} from "@shepherdjerred/birmel/scheduler/agent-job-lease-recovery.ts";
+import {
   runAgentJobById,
   runAgentJobsJob,
   setAgentJobRuntimeDependencies,
@@ -770,17 +774,22 @@ describe("durable job recovery and scheduling", () => {
     const jobId = await createDueJob({
       payload: { kind: "tool", toolId: DURABLE_TOOL_ID },
     });
+    const claimId = "dead-worker";
     await prisma.agentJob.update({
       where: { id: jobId },
       data: {
         status: "running",
         claimedAt: new Date(Date.now() - 60_000),
-        claimedBy: "dead-worker",
+        claimedBy: claimId,
         leaseExpiresAt: new Date(Date.now() - 1000),
       },
     });
     const abandonedRun = await prisma.agentJobRun.create({
-      data: { jobId, status: "running" },
+      data: {
+        jobId,
+        status: "running",
+        metadata: JSON.stringify({ claimId }),
+      },
     });
 
     await runAgentJobsJob();
@@ -794,6 +803,94 @@ describe("durable job recovery and scheduling", () => {
     expect(recoveredRun.status).toBe("recovered");
     expect(recoveredJob.status).toBe("completed");
     expect(await prisma.agentJobRun.count({ where: { jobId } })).toBe(2);
+  });
+
+  test("a delayed concurrent recovery caller cannot recover a newly claimed run", async () => {
+    let releaseExecution: (() => void) | undefined;
+    let executionStarted: (() => void) | undefined;
+    const releaseGate = new Promise<void>((resolve) => {
+      releaseExecution = resolve;
+    });
+    const startedGate = new Promise<void>((resolve) => {
+      executionStarted = resolve;
+    });
+    setAgentJobRuntimeDependencies({
+      executeTool: async () => {
+        executionStarted?.();
+        await releaseGate;
+        return { success: true };
+      },
+    });
+    const jobId = await createDueJob({
+      payload: { kind: "tool", toolId: DURABLE_TOOL_ID },
+    });
+    const expiredClaimId = "expired-claim";
+    const expiredAt = new Date(Date.now() - 1000);
+    await prisma.agentJob.update({
+      where: { id: jobId },
+      data: {
+        status: "running",
+        claimedAt: new Date(Date.now() - 60_000),
+        claimedBy: expiredClaimId,
+        leaseExpiresAt: expiredAt,
+      },
+    });
+    const expiredRun = await prisma.agentJobRun.create({
+      data: {
+        jobId,
+        status: "running",
+        metadata: JSON.stringify({ claimId: expiredClaimId }),
+      },
+    });
+
+    const recoveryTime = new Date();
+    const [firstSnapshot, secondSnapshot] = await Promise.all([
+      findExpiredAgentJobLeases(recoveryTime),
+      findExpiredAgentJobLeases(recoveryTime),
+    ]);
+    expect(firstSnapshot).toHaveLength(1);
+    expect(secondSnapshot).toHaveLength(1);
+    const firstLease = firstSnapshot[0];
+    const secondLease = secondSnapshot[0];
+    if (firstLease == null || secondLease == null) {
+      throw new Error("Expected both recovery callers to capture the lease");
+    }
+    let releaseSecondRecovery: (() => void) | undefined;
+    const secondRecoveryGate = new Promise<void>((resolve) => {
+      releaseSecondRecovery = resolve;
+    });
+    const secondRecovery = (async () => {
+      await secondRecoveryGate;
+      return await recoverExpiredAgentJobLease(secondLease, recoveryTime);
+    })();
+
+    expect(await recoverExpiredAgentJobLease(firstLease, recoveryTime)).toBe(
+      true,
+    );
+    const execution = runAgentJobById(jobId);
+    await startedGate;
+    releaseSecondRecovery?.();
+    expect(await secondRecovery).toBe(false);
+
+    const recoveredExpiredRun = await prisma.agentJobRun.findUniqueOrThrow({
+      where: { id: expiredRun.id },
+    });
+    const newlyClaimedRun = await prisma.agentJobRun.findFirstOrThrow({
+      where: { jobId, id: { not: expiredRun.id } },
+    });
+    expect(recoveredExpiredRun.status).toBe("recovered");
+    expect(newlyClaimedRun.status).toBe("running");
+
+    releaseExecution?.();
+    await execution;
+    const completedExpiredRun = await prisma.agentJobRun.findUniqueOrThrow({
+      where: { id: expiredRun.id },
+    });
+    const completedNewRun = await prisma.agentJobRun.findUniqueOrThrow({
+      where: { id: newlyClaimedRun.id },
+    });
+    expect(completedExpiredRun.status).toBe("recovered");
+    expect(completedNewRun.status).toBe("success");
   });
 
   test("reschedules recurring jobs after a successful run", async () => {

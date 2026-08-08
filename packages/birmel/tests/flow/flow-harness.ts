@@ -15,6 +15,11 @@ import {
   type FlowScenarioResult,
 } from "./contracts.ts";
 import { createContextBundle } from "./fixtures.ts";
+import {
+  createFlowMessageContext,
+  invokeFlowHandler,
+  waitForAgentRunAdmission,
+} from "./message-fixture.ts";
 
 const RuntimeOptionsSchema = z.object({
   turn: TurnInputSchema,
@@ -29,11 +34,17 @@ const RouteOptionsSchema = z.object({
 });
 const ContextOptionsSchema = z.object({ turn: TurnInputSchema });
 const SessionEventOptionsSchema = z.object({ role: z.string() });
+const SessionRevalidationOptionsSchema = z.object({
+  sessionId: z.string(),
+  guildId: z.string(),
+  threadId: z.string(),
+});
 const AgentRunRowSchema = z.object({
   status: z.string(),
   responseMessageId: z.string().nullable(),
   incidentId: z.string().nullable(),
   errorClass: z.string().nullable(),
+  finishReason: z.string().nullable(),
 });
 const AgentRunRowsSchema = z.array(AgentRunRowSchema);
 const ColumnRowsSchema = z.array(z.object({ name: z.string() }));
@@ -52,8 +63,10 @@ type MutableScenarioState = {
   specialistCalls: number;
   toolCalls: number;
   memoryExtractionCalls: number;
+  sessionEventCalls: number;
   deliveryOrder: string[];
   secondReplyObservedWhileFirstBlocked: boolean;
+  sessionActive: boolean;
   concurrentGate: Promise<void>;
   releaseConcurrentGate?: () => void;
 };
@@ -75,8 +88,10 @@ function createState(scenario: FlowScenario): MutableScenarioState {
     specialistCalls: 0,
     toolCalls: 0,
     memoryExtractionCalls: 0,
+    sessionEventCalls: 0,
     deliveryOrder: [],
     secondReplyObservedWhileFirstBlocked: false,
+    sessionActive: true,
     concurrentGate,
     ...(releaseConcurrentGate == null ? {} : { releaseConcurrentGate }),
   };
@@ -98,8 +113,9 @@ void mock.module("@shepherdjerred/birmel/context/turn-context.ts", () => ({
       throw new Error("CONTEXT_SECRET_EXCEPTION");
     }
     if (
-      state.scenario === "concurrent-ordering" &&
-      options.turn.content === "first concurrent request"
+      (state.scenario === "concurrent-ordering" ||
+        state.scenario === "queued-session-inactive") &&
+      options.turn.content.startsWith("first ")
     ) {
       await state.concurrentGate;
     }
@@ -218,6 +234,7 @@ void mock.module("@shepherdjerred/birmel/config/index.ts", () => ({
 void mock.module("@shepherdjerred/birmel/sessions/service.ts", () => ({
   appendSessionEvent: (rawOptions: unknown) => {
     const options = SessionEventOptionsSchema.parse(rawOptions);
+    state.sessionEventCalls += 1;
     if (
       state.scenario === "session-persistence-failure" &&
       options.role === "assistant"
@@ -225,6 +242,23 @@ void mock.module("@shepherdjerred/birmel/sessions/service.ts", () => ({
       return Promise.reject(new Error("SESSION_PERSISTENCE_SECRET_EXCEPTION"));
     }
     return Promise.resolve();
+  },
+  isSessionActiveForThread: (rawOptions: unknown) => {
+    const options = SessionRevalidationOptionsSchema.parse(rawOptions);
+    if (options.guildId !== "22222222222222222") {
+      throw new Error("Queued session revalidation used the wrong guild");
+    }
+    if (options.threadId !== "33333333333333333") {
+      throw new Error("Queued session revalidation used the wrong thread");
+    }
+    const expectedSessionId =
+      state.scenario === "queued-session-inactive"
+        ? "queued-session"
+        : "session-persistence-failure";
+    if (options.sessionId !== expectedSessionId) {
+      throw new Error("Queued session revalidation used the wrong session");
+    }
+    return Promise.resolve(state.sessionActive);
   },
 }));
 
@@ -253,63 +287,10 @@ void mock.module("@shepherdjerred/birmel/utils/logger.ts", () => ({
   },
 }));
 
-function messageContext(options: {
-  messageId: string;
-  channelId?: string;
-  content?: string;
-}) {
-  const channelId = options.channelId ?? "33333333333333333";
-  const content = options.content ?? `request ${options.messageId}`;
-  const responseMessageId = `response-${options.messageId}`;
-  const message = {
-    id: options.messageId,
-    reply: (payload: string) => {
-      state.replyCalls += 1;
-      state.replyPayloads.push(payload);
-      state.deliveryOrder.push(`reply:${options.messageId}`);
-      if (state.scenario === "placeholder-failure") {
-        return Promise.reject(new Error("PLACEHOLDER_SECRET_EXCEPTION"));
-      }
-      return Promise.resolve({
-        id: responseMessageId,
-        edit: (editedPayload: string) => {
-          state.editAttempts.push(editedPayload);
-          state.deliveryOrder.push(`edit:${options.messageId}`);
-          if (state.scenario === "final-delivery-failure") {
-            return Promise.reject(new Error("DELIVERY_SECRET_EXCEPTION"));
-          }
-          state.deliveredEdits.push(editedPayload);
-          return Promise.resolve();
-        },
-      });
-    },
-  };
-  const turn = TurnInputSchema.parse({
-    discordMessageId: options.messageId,
-    guildId: "22222222222222222",
-    channelId,
-    userId: "44444444444444444",
-    username: "flow-user",
-    content,
-    attachments: [],
-    triggerKind: "mention",
-    receivedAt: new Date("2026-08-08T12:00:00.000Z"),
-  });
-  return {
-    message,
-    turn,
-    ...(state.scenario === "session-persistence-failure"
-      ? { activeSessionId: "session-persistence-failure" }
-      : {}),
-  };
-}
-
-async function invokeHandler(
-  handler: MessageHandler,
-  context: ReturnType<typeof messageContext>,
-): Promise<void> {
-  const result: unknown = Reflect.apply(handler, undefined, [context]);
-  await Promise.resolve(result);
+function messageContext(
+  options: Parameters<typeof createFlowMessageContext>[0],
+) {
+  return createFlowMessageContext(options, state);
 }
 
 async function waitForFirstPlaceholder(): Promise<void> {
@@ -332,6 +313,7 @@ async function queryScenarioRuns(prisma: PrismaClient, messageIds: string[]) {
         responseMessageId: true,
         incidentId: true,
         errorClass: true,
+        finishReason: true,
       },
     }),
   );
@@ -349,36 +331,50 @@ async function runScenario(options: {
   const firstId = base.toString();
   const secondId = (base + 1n).toString();
   const messageIds =
-    options.scenario === "concurrent-ordering"
+    options.scenario === "concurrent-ordering" ||
+    options.scenario === "queued-session-inactive"
       ? [firstId, secondId]
       : [firstId];
 
   if (options.scenario === "dedupe") {
     const context = messageContext({ messageId: firstId });
-    await invokeHandler(options.handler, context);
-    await invokeHandler(options.handler, context);
-  } else if (options.scenario === "concurrent-ordering") {
-    const first = invokeHandler(
+    await invokeFlowHandler(options.handler, context);
+    await invokeFlowHandler(options.handler, context);
+  } else if (
+    options.scenario === "concurrent-ordering" ||
+    options.scenario === "queued-session-inactive"
+  ) {
+    const queuedSession = options.scenario === "queued-session-inactive";
+    const first = invokeFlowHandler(
       options.handler,
       messageContext({
         messageId: firstId,
-        content: "first concurrent request",
+        content: queuedSession
+          ? "first queued session request"
+          : "first concurrent request",
       }),
     );
     await waitForFirstPlaceholder();
-    const second = invokeHandler(
+    const second = invokeFlowHandler(
       options.handler,
       messageContext({
         messageId: secondId,
-        content: "second concurrent request",
+        content: queuedSession
+          ? "second queued session request"
+          : "second concurrent request",
       }),
     );
-    await Bun.sleep(10);
-    state.secondReplyObservedWhileFirstBlocked = state.replyCalls > 1;
+    if (queuedSession) {
+      await waitForAgentRunAdmission(options.prisma, secondId);
+      state.sessionActive = false;
+    } else {
+      await Bun.sleep(10);
+      state.secondReplyObservedWhileFirstBlocked = state.replyCalls > 1;
+    }
     state.releaseConcurrentGate?.();
     await Promise.all([first, second]);
   } else {
-    await invokeHandler(
+    await invokeFlowHandler(
       options.handler,
       messageContext({
         messageId: firstId,
@@ -425,6 +421,7 @@ async function runScenario(options: {
     specialistCalls: state.specialistCalls,
     toolCalls: state.toolCalls,
     memoryExtractionCalls: state.memoryExtractionCalls,
+    sessionEventCalls: state.sessionEventCalls,
     deliveryOrder: state.deliveryOrder,
     incidentIds: rows.flatMap((row) =>
       row.incidentId == null ? [] : [row.incidentId],
@@ -434,6 +431,9 @@ async function runScenario(options: {
     ),
     errorClasses: rows.flatMap((row) =>
       row.errorClass == null ? [] : [row.errorClass],
+    ),
+    finishReasons: rows.flatMap((row) =>
+      row.finishReason == null ? [] : [row.finishReason],
     ),
     agentRunColumns,
     serializedAgentRuns,

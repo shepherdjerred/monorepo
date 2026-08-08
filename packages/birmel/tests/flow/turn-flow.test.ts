@@ -118,6 +118,24 @@ describe("successful deterministic turn flow", () => {
     expect(result.replyCalls).toBe(2);
     expect(result.deliveredEdits).toHaveLength(2);
   });
+
+  test("a queued session turn is suppressed if its exact session becomes inactive", () => {
+    const result = resultFor("queued-session-inactive");
+
+    expect(result.runStatuses).toEqual(["completed", "suppressed"]);
+    expect(result.finishReasons).toEqual([
+      "stop",
+      "session-inactive-while-queued",
+    ]);
+    expect(result.replyCalls).toBe(1);
+    expect(result.sessionEventCalls).toBe(2);
+    expect(result.contextCalls).toBe(1);
+    expect(result.routerCalls).toBe(1);
+    expect(result.directCalls).toBe(1);
+    expect(result.memoryExtractionCalls).toBe(1);
+    expect(result.incidentIds).toEqual([]);
+    expect(result.errorClasses).toEqual([]);
+  });
 });
 
 describe("boundary failures", () => {
