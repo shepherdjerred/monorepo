@@ -1,7 +1,7 @@
 import { ApplicationFailure, sleep } from "@temporalio/workflow";
 import type { SleepAutomationInput } from "#shared/schemas.ts";
 import { SleepAutomationInputSchema } from "#shared/schemas.ts";
-import { callServiceForCleanup, callServiceUnchecked } from "./util.ts";
+import { callService, callServiceForCleanup } from "./util.ts";
 
 const BEDROOM_MEDIA = "media_player.bedroom" as const;
 const BEDROOM_AC = "climate.bedroom" as const;
@@ -33,14 +33,14 @@ export async function sleepMusic(input?: SleepAutomationInput): Promise<void> {
       : validatedDurationMinutes(input);
 
   try {
-    await callServiceUnchecked("media_player", "unjoin", {
+    await callService("media_player", "unjoin", {
       entity_id: BEDROOM_MEDIA,
     });
-    await callServiceUnchecked("media_player", "volume_set", {
+    await callService("media_player", "volume_set", {
       entity_id: BEDROOM_MEDIA,
       volume_level: 0.1,
     });
-    await callServiceUnchecked("media_player", "play_media", {
+    await callService("media_player", "play_media", {
       entity_id: BEDROOM_MEDIA,
       media: SLEEP_MEDIA,
     });
@@ -67,7 +67,7 @@ export async function sleepAc(input?: SleepAutomationInput): Promise<void> {
       : validatedDurationMinutes(input);
 
   try {
-    await callServiceUnchecked("climate", "set_temperature", {
+    await callService("climate", "set_temperature", {
       entity_id: BEDROOM_AC,
       temperature: 24,
       hvac_mode: "cool",

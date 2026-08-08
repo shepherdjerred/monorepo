@@ -19,7 +19,19 @@ const SLEEP_MUSIC_WORKFLOW_ID = "sleep-music";
 const SLEEP_AC_WORKFLOW_ID = "sleep-ac";
 
 const SleepWebhookInputSchema = z
-  .object({ duration_hours: z.coerce.number() })
+  .object({
+    duration_hours: z.union([
+      z.number(),
+      z
+        .string()
+        .trim()
+        .min(1)
+        .refine((value) => Number.isFinite(Number(value)), {
+          message: "duration_hours must be numeric",
+        })
+        .transform(Number),
+    ]),
+  })
   .strict();
 
 type SleepWorkflowType = "sleepMusic" | "sleepAc";

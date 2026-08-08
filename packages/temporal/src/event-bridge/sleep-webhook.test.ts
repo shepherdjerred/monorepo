@@ -153,7 +153,15 @@ describe("sleep webhook", () => {
     );
     expect(malformed.status).toBe(400);
 
-    for (const durationHours of [0, -1, 0.001, 24.01, "not-a-number"]) {
+    for (const durationHours of [
+      0,
+      -1,
+      0.001,
+      24.01,
+      "not-a-number",
+      true,
+      [1],
+    ]) {
       const response = await post(app, "/sleep/ac", {
         duration_hours: durationHours,
       });

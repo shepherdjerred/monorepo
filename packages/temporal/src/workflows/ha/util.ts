@@ -125,11 +125,10 @@ export async function callServiceUnchecked(
   return activities.callService(domain, service, data);
 }
 
-export async function callServiceForCleanup(
-  domain: string,
-  service: string,
-  data: Record<string, unknown>,
-): Promise<void> {
+export async function callServiceForCleanup<
+  D extends Domain<HaSchema>,
+  V extends Service<HaSchema, D>,
+>(domain: D, service: V, data: ServiceDataFor<HaSchema, D, V>): Promise<void> {
   return cleanupActivities.callService(domain, service, data);
 }
 
