@@ -30,8 +30,8 @@ and #7033, #7035, #7040, #7047, #7050, and #7058:
 - Contract failures record the result subtype, result-message keys, schema
   fingerprint, and bounded redacted final-text excerpt. The metric has only
   provider and bounded failure-reason labels.
-- `temporal-failure-watch` is the only Temporal PagerDuty producer. Its
-  `WorkflowHandle.fetchHistory()` classification distinguishes workflow-task,
+- `temporal-failure-watch` is the only per-execution workflow-failure PagerDuty
+  producer. Its `WorkflowHandle.fetchHistory()` classification distinguishes workflow-task,
   activity, execution, and unknown timeouts. A workflow-task timeout before
   any activity is called out as a worker/task-queue availability failure.
 - Prometheus warns after five minutes for missing agent-task workflow pollers,

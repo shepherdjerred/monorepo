@@ -98,8 +98,8 @@ WebFetch`, on claude-opus-5. **Codex tasks** run `codex exec` with
 - **Cost is traced even on failure**: the LLM span (with token cost) is
   emitted before the exit-code check, so a failed run that spent tokens
   still shows up in observability.
-- **Timeout diagnosis**: `temporal-failure-watch` is the sole Temporal
-  PagerDuty source. It fetches each failed execution's history and classifies
+- **Timeout diagnosis**: `temporal-failure-watch` is the sole per-execution
+  workflow-failure PagerDuty source. It fetches each failed execution's history and classifies
   timeouts as workflow-task, activity, execution, or unknown. A workflow-task
   timeout before any activity is explicitly reported as worker/task-queue
   availability. SDK metrics alert after five minutes for missing agent-task

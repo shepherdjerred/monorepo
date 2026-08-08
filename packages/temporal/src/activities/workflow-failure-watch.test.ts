@@ -107,7 +107,9 @@ function rejectWithActivityWrappedFailure(
     );
 }
 
-function rejectWithActivityTimeoutFailure(): Promise<unknown> {
+function rejectWithActivityTimeoutFailure(
+  timeoutType: TimeoutType = TimeoutType.START_TO_CLOSE,
+): Promise<unknown> {
   return Promise.reject(
     new WorkflowFailedError(
       "workflow execution failed",
@@ -117,11 +119,7 @@ function rejectWithActivityTimeoutFailure(): Promise<unknown> {
         "act-timeout",
         RetryState.TIMEOUT,
         "worker-1",
-        new TimeoutFailure(
-          "Activity timed out",
-          undefined,
-          TimeoutType.START_TO_CLOSE,
-        ),
+        new TimeoutFailure("Activity timed out", undefined, timeoutType),
       ),
       RetryState.TIMEOUT,
     ),
@@ -447,6 +445,50 @@ describe("failed execution timeout diagnostics", () => {
     expect(calls[0]?.alerts[0]?.annotations["description"]).toContain(
       "timeoutClassification activity",
     );
+  });
+
+  it("diagnoses a causal schedule-to-start activity timeout as worker unavailability", async () => {
+    const client = fakeClient(
+      [
+        {
+          workflowId: "wf-agent-task-activity-timeout",
+          runId: "run-1",
+          type: "agentTaskWorkflow",
+          taskQueue: "agent-task",
+          closeTime: new Date("2026-07-30T17:50:00.000Z"),
+          status: { name: "FAILED" },
+        },
+      ],
+      {
+        "wf-agent-task-activity-timeout/run-1": () =>
+          rejectWithActivityTimeoutFailure(TimeoutType.SCHEDULE_TO_START),
+      },
+      {
+        "wf-agent-task-activity-timeout/run-1": {
+          events: [
+            {
+              event_id: protobufLong("5"),
+              eventType: "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
+            },
+            { eventType: "EVENT_TYPE_ACTIVITY_TASK_TIMED_OUT" },
+          ],
+        },
+      },
+    );
+    const { poster, calls } = capturingPoster();
+
+    await pollWorkflowFailuresOnce(client, poster, {
+      now: NOW,
+      lookbackMs: LOOKBACK_MS,
+      ttlMs: TTL_MS,
+    });
+
+    const description = calls[0]?.alerts[0]?.annotations["description"];
+    expect(description).toContain("timeoutClassification activity");
+    expect(description).toContain(
+      "diagnosis worker/task-queue availability failure",
+    );
+    expect(description).toContain("a scheduled activity has not started");
   });
 });
 

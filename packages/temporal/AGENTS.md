@@ -244,7 +244,7 @@ Run the post-deploy canary only after the image is live:
 
 ```bash
 cd packages/temporal
-TEMPORAL_ADDRESS=... CLAUDE_CODE_OAUTH_TOKEN=... bun run canary:agent-task
+TEMPORAL_ADDRESS=... bun run canary:agent-task
 ```
 
 It must complete on the real `agent-task` queue and deliver the tagged

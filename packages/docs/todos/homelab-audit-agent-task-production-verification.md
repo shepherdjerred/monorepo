@@ -50,9 +50,10 @@ worker-task health signals rather than an aggregate timeout pager.
 
 - [ ] Build and deploy the worker image containing the `2.1.220` Claude CLI
       pin; record the deployed image digest.
-- [ ] Run `bun run canary:agent-task` with the production Temporal address and
-      `CLAUDE_CODE_OAUTH_TOKEN`; record workflow ID, run ID, successful parser
-      outcome, and the tagged `[agent-task-canary]` email.
+- [ ] Run `bun run canary:agent-task` with the production Temporal address;
+      the deployed worker supplies its configured `CLAUDE_CODE_OAUTH_TOKEN`.
+      Record workflow ID, run ID, successful parser outcome, and the tagged
+      `[agent-task-canary]` email.
 - [ ] Record seven consecutive `homelab-audit-daily` terminal outcomes as
       `COMPLETED`, with successful structured parsing, one Postal delivery per
       run, and no duplicate timeout incidents.
@@ -109,5 +110,5 @@ Record the workflow ID, run ID, successful structured parsing, and the tagged
   audits provide evidence.
 - The current cluster worker is still on `2.0.0-8036` with Claude Code
   `2.1.175`; build/deploy of the `2.1.220` image is therefore still required.
-- The local workspace has no production Temporal endpoint override or
-  `CLAUDE_CODE_OAUTH_TOKEN`, so the tagged canary was not run.
+- The local workspace has no production Temporal endpoint override or cluster
+  access, so the tagged canary was not run.

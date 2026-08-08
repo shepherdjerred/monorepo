@@ -5,6 +5,7 @@ import {
   ApplicationFailure,
   TemporalFailure,
   TimeoutFailure,
+  TimeoutType,
 } from "@temporalio/common";
 import { createTemporalClient } from "#client";
 import {
@@ -222,6 +223,7 @@ function workerTaskQueueUnavailableReason(
 function timeoutFailureFields(
   workflowType: string,
   inspection: TimeoutInspection,
+  timeoutType: TimeoutType | undefined,
 ): Pick<
   WorkflowFailureDetail,
   | "timeoutClassification"
@@ -231,11 +233,16 @@ function timeoutFailureFields(
 > {
   const classification = inspection.classification;
   const timeoutClassification = classification?.classification;
+  const activityScheduleToStartTimeout =
+    timeoutClassification === "activity" &&
+    timeoutType === TimeoutType.SCHEDULE_TO_START &&
+    classification?.activityScheduledButNotStarted === true;
   const workerTaskQueueReason =
     classification === undefined ||
     workflowType !== "agentTaskWorkflow" ||
     (timeoutClassification !== "workflow-task" &&
-      timeoutClassification !== "execution")
+      timeoutClassification !== "execution" &&
+      !activityScheduleToStartTimeout)
       ? undefined
       : workerTaskQueueUnavailableReason(classification);
   return {
@@ -276,7 +283,11 @@ function workflowFailureDetail(
           ? error.message
           : cause.message,
     stack: cause?.stack ?? outerCause?.stack,
-    ...timeoutFailureFields(execution.workflowType, inspection),
+    ...timeoutFailureFields(
+      execution.workflowType,
+      inspection,
+      cause instanceof TimeoutFailure ? cause.timeoutType : undefined,
+    ),
   };
 }
 
