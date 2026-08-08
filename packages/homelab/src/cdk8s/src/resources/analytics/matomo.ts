@@ -25,11 +25,23 @@ import type { MatomoMariaDB } from "@shepherdjerred/homelab/cdk8s/src/resources/
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 const archiveCommand = [
-  "while true; do until",
-  "php /var/www/html/console config:set --section=General --key=enable_browser_archiving_triggering --value=0 &&",
-  "php /var/www/html/console config:set --section=General --key=browser_archiving_disabled_enforce --value=1;",
-  "do sleep 30; done;",
-  "php /var/www/html/console core:archive;",
+  "set -e;",
+  "until test -f /var/www/html/config/config.ini.php; do sleep 30; done;",
+  "php /var/www/html/console config:set",
+  "'General.enable_browser_archiving_triggering=0'",
+  "'General.browser_archiving_disabled_enforce=1'",
+  "'General.assume_secure_protocol=1'",
+  "'General.force_ssl=1'",
+  "'General.proxy_ip_read_last_in_list=0'",
+  ";",
+  "if ! grep -Fq 'HTTP_CF_CONNECTING_IP' /var/www/html/config/config.ini.php; then",
+  "php /var/www/html/console config:set 'General.proxy_client_headers[]=\"HTTP_CF_CONNECTING_IP\"';",
+  "fi;",
+  "if ! grep -Fq 'HTTP_X_FORWARDED_HOST' /var/www/html/config/config.ini.php; then",
+  "php /var/www/html/console config:set 'General.proxy_host_headers[]=\"HTTP_X_FORWARDED_HOST\"';",
+  "fi;",
+  "while true; do",
+  "php /var/www/html/console core:archive || exit 1;",
   "sleep 300;",
   "done",
 ].join(" ");

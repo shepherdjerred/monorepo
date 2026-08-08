@@ -274,6 +274,48 @@ type NavigationClick = {
 
 const FLUSH_TIMEOUT_MS = 150;
 
+/**
+ * Send an unload-safe event when a navigation is about to happen.
+ *
+ * The normal queue is sufficient once matomo.js has loaded, but an async
+ * tracker script can still be pending when a user clicks a login or install
+ * link. sendBeacon talks directly to Matomo in that case and lets the browser
+ * finish the request while the document is being unloaded.
+ */
+function sendEventBeacon(
+  event: string,
+  props: AnalyticsProps | undefined,
+): boolean {
+  if (
+    typeof navigator === "undefined" ||
+    typeof navigator.sendBeacon !== "function"
+  ) {
+    return false;
+  }
+  if (navigator.doNotTrack === "1") return true;
+  if (config.siteId === undefined) return false;
+
+  const body = new URLSearchParams({
+    idsite: config.siteId,
+    rec: "1",
+    cookie: "0",
+    e_c: "scout",
+    e_a: event,
+  });
+  const url = currentEventUrl();
+  if (url !== undefined) body.set("url", url);
+
+  if (props !== undefined) {
+    for (const [name, value] of Object.entries(props)) {
+      const dimensionId = DIMENSION_IDS[name];
+      if (dimensionId === undefined) continue;
+      body.set(`dimension${dimensionId}`, String(value));
+    }
+  }
+
+  return navigator.sendBeacon(TRACKER_URL, body);
+}
+
 function emitThenFlush(
   event: string,
   props: AnalyticsProps | undefined,
@@ -285,6 +327,10 @@ function emitThenFlush(
     flushed = true;
     onFlushed();
   };
+  if (sendEventBeacon(event, props)) {
+    done();
+    return;
+  }
   emit(event, props);
   globalThis.setTimeout(done, FLUSH_TIMEOUT_MS);
 }
