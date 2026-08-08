@@ -281,7 +281,7 @@ export function createBuildkiteMaintenanceWorker(chart: Chart): void {
       readiness: Probe.fromHttpGet("/healthz", { port: 9465 }),
       envVariables: {
         TEMPORAL_ADDRESS: EnvValue.fromValue(
-          "temporal-server-service.temporal.svc.cluster.local:7233",
+          "temporal-temporal-server-service.temporal.svc.cluster.local:7233",
         ),
         TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
         TEMPORAL_WORKER_ROLE: EnvValue.fromValue("maintenance"),

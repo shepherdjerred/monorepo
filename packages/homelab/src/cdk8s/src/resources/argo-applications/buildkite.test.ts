@@ -297,6 +297,10 @@ describe("Buildkite application", () => {
     expect(envNames).toContain("TEMPORAL_WORKER_ROLE");
     expect(envNames).toContain("KOMETA_PLEXTOKEN_FILE");
     expect(envNames).toContain("KOMETA_TMDBAPIKEY_FILE");
+    expect(container.env).toContainEqual({
+      name: "TEMPORAL_ADDRESS",
+      value: "temporal-temporal-server-service.temporal.svc.cluster.local:7233",
+    });
     expect(container.volumeMounts.map((mount) => mount.mountPath)).toEqual(
       expect.arrayContaining([
         "/buildkite/bun-cache",

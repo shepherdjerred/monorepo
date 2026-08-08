@@ -19,9 +19,8 @@ export function createPokemonApp(chart: Chart) {
         namespace: "pokemon",
       },
       // The image embeds the Matomo tracker. CI explicitly syncs this app
-      // after the public Matomo readiness gate; automatic sync would deploy it
-      // during the preceding apps release.
-      syncPolicy: {},
+      // after the public Matomo readiness gate; omitting syncPolicy keeps
+      // automatic sync disabled without rendering a null policy.
     },
   });
 }
