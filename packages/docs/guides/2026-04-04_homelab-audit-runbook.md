@@ -362,8 +362,8 @@ The removed `agent-task-timeout-watch` aggregate alert must not be used as a
 health signal. Query the SDK metrics instead:
 
 ```bash
-toolkit gf query 'temporal_worker_temporal_num_pollers{namespace="default",task_queue="agent-task",poller_type="workflow_task"}'
-toolkit gf query 'histogram_quantile(0.95, sum by (le) (rate(temporal_worker_temporal_workflow_task_schedule_to_start_latency_seconds_bucket{namespace="default",task_queue="agent-task"}[5m])))'
+toolkit gf query 'temporal_worker_num_pollers{namespace="default",task_queue="agent-task",poller_type="workflow_task"}'
+toolkit gf query 'histogram_quantile(0.95, sum by (le) (rate(temporal_worker_workflow_task_schedule_to_start_latency_seconds_bucket{namespace="default",task_queue="agent-task"}[5m])))'
 toolkit gf query 'up{namespace="temporal",service=~".*temporal.*worker.*metrics.*|temporal-worker-app-metrics"}'
 ```
 

@@ -114,7 +114,7 @@ function buildAgentTaskWorkerHealthRules(): PrometheusRule[] {
         ),
       },
       expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-        'absent(temporal_worker_temporal_num_pollers{namespace="default",task_queue="agent-task",poller_type="workflow_task"}) or max(temporal_worker_temporal_num_pollers{namespace="default",task_queue="agent-task",poller_type="workflow_task"}) < 1',
+        'absent(temporal_worker_num_pollers{namespace="default",task_queue="agent-task",poller_type="workflow_task"}) or max(temporal_worker_num_pollers{namespace="default",task_queue="agent-task",poller_type="workflow_task"}) < 1',
       ),
       for: "5m",
       labels: {
@@ -129,7 +129,7 @@ function buildAgentTaskWorkerHealthRules(): PrometheusRule[] {
           "The 95th percentile Temporal workflow-task schedule-to-start latency for agent-task has exceeded five seconds for five minutes. Inspect task-queue poll health and worker scrape availability; do not change concurrency without this evidence.",
       },
       expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-        'histogram_quantile(0.95, sum by (le) (rate(temporal_worker_temporal_workflow_task_schedule_to_start_latency_seconds_bucket{namespace="default",task_queue="agent-task"}[5m]))) > 5',
+        'histogram_quantile(0.95, sum by (le) (rate(temporal_worker_workflow_task_schedule_to_start_latency_seconds_bucket{namespace="default",task_queue="agent-task"}[5m]))) > 5',
       ),
       for: "5m",
       labels: {

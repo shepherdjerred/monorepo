@@ -66,7 +66,7 @@ describe("Temporal workflow outcome rules", () => {
       );
     }
     expect(pollerUnavailable.expr.value).toContain(
-      "temporal_worker_temporal_num_pollers",
+      "temporal_worker_num_pollers",
     );
     expect(pollerUnavailable.for).toBe("5m");
 
@@ -80,7 +80,7 @@ describe("Temporal workflow outcome rules", () => {
       );
     }
     expect(scheduleToStartHigh.expr.value).toContain(
-      "temporal_worker_temporal_workflow_task_schedule_to_start_latency_seconds_bucket",
+      "temporal_worker_workflow_task_schedule_to_start_latency_seconds_bucket",
     );
     expect(scheduleToStartHigh.for).toBe("5m");
 
