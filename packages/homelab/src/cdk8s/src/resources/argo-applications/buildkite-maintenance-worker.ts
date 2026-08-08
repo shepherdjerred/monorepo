@@ -227,7 +227,13 @@ export function createBuildkiteMaintenanceWorker(chart: Chart): void {
         allowPrivilegeEscalation: false,
         readOnlyRootFilesystem: false,
       },
-      resources: {},
+      resources: {
+        cpu: { request: Cpu.millis(10), limit: Cpu.millis(100) },
+        memory: {
+          request: Size.mebibytes(16),
+          limit: Size.mebibytes(64),
+        },
+      },
       volumeMounts: [
         { path: "/etc/kometa-config", volume: kometaConfig, readOnly: true },
         { path: "/etc/kometa", volume: kometaState },
