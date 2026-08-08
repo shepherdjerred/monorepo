@@ -1,7 +1,9 @@
 import type { AgentTaskProvider } from "#shared/agent-task.ts";
 
-const SERVICE_ACCOUNT_TOKEN_PATH =
-  "/var/run/secrets/kubernetes.io/serviceaccount/token";
+const MOUNTED_SECRET_PATHS = [
+  "/var/run/secrets/kubernetes.io/serviceaccount/token",
+  "/etc/talos/config",
+] as const;
 
 // envForProvider deliberately forwards the full worker env, so scrub every
 // forwarded value rather than maintaining a partial credential-name list. This
@@ -27,16 +29,26 @@ function compositeSecretTokens(value: string): readonly string[] {
 }
 
 export async function readAgentTaskMountedSecretTokens(
-  path = SERVICE_ACCOUNT_TOKEN_PATH,
+  paths: readonly string[] = MOUNTED_SECRET_PATHS,
 ): Promise<readonly string[]> {
-  const file = Bun.file(path);
-  if (!(await file.exists())) {
-    return [];
-  }
+  const tokens: string[] = [];
+  for (const path of paths) {
+    const file = Bun.file(path);
+    if (!(await file.exists())) {
+      continue;
+    }
 
-  const contents = await file.text();
-  const token = contents.trim();
-  return token === "" ? [] : [token];
+    const contents = await file.text();
+    const token = contents.trim();
+    if (token === "") {
+      continue;
+    }
+    tokens.push(token);
+    tokens.push(
+      ...token.split(/\s+/).filter((fragment) => fragment.length >= 8),
+    );
+  }
+  return tokens;
 }
 
 export function agentTaskSecretTokens(

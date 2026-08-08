@@ -4,6 +4,7 @@ import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { register } from "#observability/metrics.ts";
 import type { AgentTaskInput } from "#shared/agent-task.ts";
+import { redactSecrets } from "#shared/redact.ts";
 import type { AgentTaskCommand } from "./agent-task-command.ts";
 import { createAgentTaskActivities } from "./agent-task.ts";
 import {
@@ -251,10 +252,13 @@ describe("agentTaskActivities", () => {
     await Bun.write(tokenPath, "mounted-service-account-token\n");
 
     try {
-      const mountedTokens = await readAgentTaskMountedSecretTokens(tokenPath);
+      const mountedTokens = await readAgentTaskMountedSecretTokens([tokenPath]);
       const tokens = agentTaskSecretTokens("github-token", {}, mountedTokens);
 
       expect(tokens).toContain("mounted-service-account-token");
+      expect(
+        redactSecrets("final prose: mounted-service-account-token", tokens),
+      ).toBe("final prose: ***");
     } finally {
       await rm(tokenPath);
     }
