@@ -38,14 +38,6 @@ describe("selectZfsCollectorPods", () => {
       selectZfsCollectorPods([
         readyPod("torvalds", "zfs-torvalds"),
         readyPod("liskov", "zfs-liskov"),
-        {
-          metadata: { name: "zfs-pending" },
-          spec: { nodeName: "ignored" },
-          status: {
-            phase: "Pending",
-            conditions: [{ type: "Ready", status: "False" }],
-          },
-        },
       ]),
     ).toEqual([
       { node: "liskov", pod: "zfs-liskov" },
@@ -66,6 +58,22 @@ describe("selectZfsCollectorPods", () => {
     expect(() => selectZfsCollectorPods([])).toThrow(
       "No Running and Ready zfs-zpool-collector pods",
     );
+  });
+
+  it("fails when a collector node has no Ready pod", () => {
+    expect(() =>
+      selectZfsCollectorPods([
+        readyPod("torvalds", "zfs-torvalds"),
+        {
+          metadata: { name: "zfs-pending" },
+          spec: { nodeName: "liskov" },
+          status: {
+            phase: "Pending",
+            conditions: [{ type: "Ready", status: "False" }],
+          },
+        },
+      ]),
+    ).toThrow("exactly one Running and Ready");
   });
 
   it("fails when a Ready collector lacks node identity", () => {
@@ -211,7 +219,10 @@ describe("runZfsMaintenanceWithDependencies", () => {
     );
 
     await expect(runZfsMaintenanceWithDependencies(deps)).rejects.toThrow(
-      "ZFS maintenance command failed: node=torvalds, pod=zfs-torvalds, pool=zfspv-pool-nvme, command=zpool set autotrim=on zfspv-pool-nvme",
+      [
+        "ZFS maintenance command failed: node=torvalds, pod=zfs-torvalds, ",
+        "pool=zfspv-pool-nvme, command=zpool set autotrim=on zfspv-pool-nvme",
+      ].join(""),
     );
   });
 });

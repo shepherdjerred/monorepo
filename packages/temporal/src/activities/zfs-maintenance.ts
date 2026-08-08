@@ -131,6 +131,7 @@ export function selectZfsCollectorPods(
     namespace: NAMESPACE,
     labelSelector: ZFS_COLLECTOR_LABEL,
     resourceDescription: "zfs-zpool-collector",
+    requireExactlyOneReadyPodPerNode: true,
   });
 }
 
@@ -204,11 +205,14 @@ async function runCommand(
   try {
     return await dependencies.execInPod(nodePod, command);
   } catch (error) {
-    throw new Error(
-      `ZFS maintenance command failed: node=${nodePod.node}, pod=${nodePod.pod}, pool=${pool ?? "unknown"}, command=${command}`,
-      {
-        cause: error,
-      },
-    );
+    const context = [
+      `node=${nodePod.node}`,
+      `pod=${nodePod.pod}`,
+      `pool=${pool ?? "unknown"}`,
+      `command=${command}`,
+    ].join(", ");
+    throw new Error(`ZFS maintenance command failed: ${context}`, {
+      cause: error,
+    });
   }
 }
