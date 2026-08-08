@@ -205,6 +205,20 @@ describe("just-in-time friend context", () => {
     expect(context.resolutions).toHaveLength(1);
   });
 
+  test("can require explicit references before resolving message aliases", () => {
+    const context = resolver.getFriendContext({
+      message: "How long will this take? Mark this down and google it.",
+      resolveMessageAliases: false,
+      characterBudget: 5000,
+    });
+
+    expect(context.people).toEqual([]);
+    expect(context.relationships).toEqual([]);
+    expect(context.contextText).not.toContain("Person: Long");
+    expect(context.contextText).not.toContain("Person: Mark");
+    expect(context.contextText).not.toContain("Person: Google");
+  });
+
   test("ranks the strongest lexical and person match first", () => {
     const context = resolver.getFriendContext({
       message: "What happened with NekoRyan at the downtown rink?",

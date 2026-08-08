@@ -275,6 +275,7 @@ export const FriendContextInputSchema = z.strictObject({
   message: z.string(),
   references: z.array(z.string().min(1)).default([]),
   mentionedDiscordUserIds: z.array(DiscordIdSchema).default([]),
+  resolveMessageAliases: z.boolean().default(true),
   characterBudget: z.number().int().nonnegative().max(48_000),
   maxLoreSections: z.number().int().positive().max(12).default(6),
 });

@@ -1410,7 +1410,7 @@ describe("scheduler AgentJob concurrency and shutdown", () => {
     }
   });
 
-  test("keeps a timed-out execution inside its concurrency slot", async () => {
+  test("does not let a timed-out execution block later jobs", async () => {
     Bun.env["SCHEDULER_MAX_CONCURRENT_JOBS"] = "1";
     resetConfig();
     let executionCount = 0;
@@ -1440,9 +1440,11 @@ describe("scheduler AgentJob concurrency and shutdown", () => {
       const tick = runAgentJobsJob();
       await waitForJobLastStatus(firstJobId, "timed_out");
       await Bun.sleep(20);
-      releaseFirstExecution?.();
+      expect(executionCount).toBe(2);
+      expect(await waitForActiveAgentJobs(10)).toBe(false);
       await tick;
       expect(executionCount).toBe(2);
+      releaseFirstExecution?.();
       expect(await waitForActiveAgentJobs(1000)).toBe(true);
     } finally {
       releaseFirstExecution?.();

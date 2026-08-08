@@ -130,19 +130,31 @@ function formatRelationship(
 
 function rankLoreSections(
   sections: readonly ParsedLoreSection[],
-  message: string,
-  references: readonly string[],
-  resolvedPeople: readonly ResolvedFriendContextPerson[],
+  options: {
+    message: string;
+    references: readonly string[];
+    resolvedPeople: readonly ResolvedFriendContextPerson[];
+    ignoredPersonTerms: readonly string[];
+  },
 ): RankedLoreSection[] {
-  const peopleTerms = resolvedPeople.map(({ person }) => ({
+  const peopleTerms = options.resolvedPeople.map(({ person }) => ({
     personId: person.id,
     terms: [person.id, person.displayName, ...person.aliases],
   }));
+  const allPersonTerms = [
+    ...peopleTerms,
+    ...options.ignoredPersonTerms.map((term) => ({
+      personId: term,
+      terms: [term],
+    })),
+  ];
   const personTokens = new Set(
-    peopleTerms.flatMap(({ terms }) => terms.flatMap((term) => tokenize(term))),
+    allPersonTerms.flatMap(({ terms }) =>
+      terms.flatMap((term) => tokenize(term)),
+    ),
   );
   const queryTokens = new Set(
-    tokenize(`${message}\n${references.join("\n")}`).filter(
+    tokenize(`${options.message}\n${options.references.join("\n")}`).filter(
       (token) => !personTokens.has(token),
     ),
   );
@@ -338,9 +350,11 @@ export function createFriendContextResolver(
       const mention = mentionMatch[0];
       addResolution(mention);
     }
-    for (const matcher of aliasMatchers) {
-      if (matcher.matches(input.message)) {
-        addResolvedPerson(matcher.person, matcher.alias);
+    if (input.resolveMessageAliases) {
+      for (const matcher of aliasMatchers) {
+        if (matcher.matches(input.message)) {
+          addResolvedPerson(matcher.person, matcher.alias);
+        }
       }
     }
 
@@ -375,12 +389,14 @@ export function createFriendContextResolver(
         return rightMatches - leftMatches || left.id.localeCompare(right.id);
       });
 
-    const rankedLoreSections = rankLoreSections(
-      loreSections,
-      input.message,
-      input.references,
+    const rankedLoreSections = rankLoreSections(loreSections, {
+      message: input.message,
+      references: input.references,
       resolvedPeople,
-    );
+      ignoredPersonTerms: input.resolveMessageAliases
+        ? []
+        : aliasMatchers.map(({ alias }) => alias),
+    });
     const eligibleLoreSections = rankedLoreSections.slice(
       0,
       input.maxLoreSections,

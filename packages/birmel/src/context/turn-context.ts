@@ -107,6 +107,7 @@ async function assembleContextForTurn(
     message: "",
     references: mentioned,
     mentionedDiscordUserIds: mentioned,
+    resolveMessageAliases: false,
     characterBudget: CONTEXT_BUDGETS.loreAndMemory,
     maxLoreSections: 6,
   });
