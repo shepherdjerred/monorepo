@@ -9,10 +9,7 @@ import { createPlaneApp, createPlaneInfrastructureApp } from "./plane.ts";
 const PlaneApplicationSchema = z.object({
   kind: z.literal("Application"),
   metadata: z.object({
-    name: z.literal("plane"),
-    annotations: z.object({
-      "argocd.argoproj.io/sync-wave": z.literal("0"),
-    }),
+    name: z.literal("plane-enterprise"),
   }),
   spec: z.object({
     source: z.object({
@@ -71,10 +68,7 @@ const PlaneApplicationSchema = z.object({
 const PlaneInfrastructureApplicationSchema = z.object({
   kind: z.literal("Application"),
   metadata: z.object({
-    name: z.literal("plane-infrastructure"),
-    annotations: z.object({
-      "argocd.argoproj.io/sync-wave": z.literal("-1"),
-    }),
+    name: z.literal("plane"),
   }),
   spec: z.object({
     source: z.object({
@@ -168,9 +162,8 @@ describe("Plane Commercial deployment", () => {
     expect(manifest.data.spec.syncPolicy.syncOptions).toEqual([
       "CreateNamespace=true",
     ]);
-    expect(infrastructure.data.metadata.annotations).toEqual({
-      "argocd.argoproj.io/sync-wave": "-1",
-    });
+    expect(manifest.data.metadata.name).toBe("plane-enterprise");
+    expect(infrastructure.data.metadata.name).toBe("plane");
   });
 
   it("creates the secret bridge and Tailscale-only route map", () => {

@@ -5,10 +5,10 @@ import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/
 
 const PLANE_NAMESPACE = "plane";
 const PLANE_RELEASE = "plane";
+const PLANE_VENDOR_APPLICATION = "plane-enterprise";
+const PLANE_INFRASTRUCTURE_APPLICATION = "plane";
 const PLANE_URL = "https://plane.tailnet-1a49.ts.net";
 const PLANE_SECRET_NAME = "plane-secrets";
-const PLANE_INFRASTRUCTURE_SYNC_WAVE = "-1";
-const PLANE_SYNC_WAVE = "0";
 
 export function createPlaneApp(chart: Chart) {
   const planeValues: HelmValuesForChart<"plane-enterprise"> = {
@@ -72,10 +72,7 @@ export function createPlaneApp(chart: Chart) {
 
   return new Application(chart, "plane-app", {
     metadata: {
-      name: PLANE_RELEASE,
-      annotations: {
-        "argocd.argoproj.io/sync-wave": PLANE_SYNC_WAVE,
-      },
+      name: PLANE_VENDOR_APPLICATION,
     },
     spec: {
       revisionHistoryLimit: 5,
@@ -104,10 +101,11 @@ export function createPlaneApp(chart: Chart) {
 export function createPlaneInfrastructureApp(chart: Chart) {
   return new Application(chart, "plane-infrastructure-app", {
     metadata: {
-      name: "plane-infrastructure",
-      annotations: {
-        "argocd.argoproj.io/sync-wave": PLANE_INFRASTRUCTURE_SYNC_WAVE,
-      },
+      // Keep the repository chart Application name aligned with the chart
+      // release inventory. The release controller explicitly syncs this
+      // local chart; a sync wave here would make the root app wait for the
+      // intentionally manual child Application before that controller runs.
+      name: PLANE_INFRASTRUCTURE_APPLICATION,
     },
     spec: {
       revisionHistoryLimit: 5,
