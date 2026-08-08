@@ -91,20 +91,19 @@ export const haEventBridgeConnected = new Gauge({
   registers: [register],
 });
 
-// Kubernetes-backed maintenance is scheduled by Temporal but executes in a
-// short-lived, node-pinned Job so it can mount CI PVCs or run in the media
-// namespace. Keep a last-success gauge because Kubernetes Jobs are TTL-cleaned
-// after completion and therefore cannot provide a durable stale-run signal.
-export const kubernetesMaintenanceLastSuccessTimestampSeconds = new Gauge({
+// Maintenance runs execute as direct subprocesses in the persistent Temporal
+// maintenance worker. Keep a last-success gauge so stale-run alerts survive
+// worker restarts and do not depend on short-lived Kubernetes resources.
+export const maintenanceLastSuccessTimestampSeconds = new Gauge({
   name: "kubernetes_maintenance_last_success_timestamp_seconds",
-  help: "Unix timestamp of the last successful Temporal Kubernetes maintenance job, by job",
+  help: "Unix timestamp of the last successful Temporal maintenance activity, by job",
   labelNames: ["job"] as const,
   registers: [register],
 });
 
-export const kubernetesMaintenanceRunsTotal = new Counter({
+export const maintenanceRunsTotal = new Counter({
   name: "kubernetes_maintenance_runs_total",
-  help: "Temporal Kubernetes maintenance job runs, by job and outcome",
+  help: "Temporal maintenance activity runs, by job and outcome",
   labelNames: ["job", "outcome"] as const,
   registers: [register],
 });

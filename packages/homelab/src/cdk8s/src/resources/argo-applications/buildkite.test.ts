@@ -103,6 +103,72 @@ function synthBuildkiteResources() {
   };
 }
 
+function maintenanceDeployment(resources: readonly unknown[]) {
+  const deployment = resources.find((manifest) => {
+    const result = z
+      .object({
+        kind: z.literal("Deployment"),
+        metadata: z.object({
+          name: z.literal("temporal-maintenance-worker"),
+          namespace: z.literal("buildkite"),
+        }),
+      })
+      .safeParse(manifest);
+    return result.success;
+  });
+  return z
+    .object({
+      kind: z.literal("Deployment"),
+      metadata: z.object({
+        name: z.literal("temporal-maintenance-worker"),
+        namespace: z.literal("buildkite"),
+      }),
+      spec: z.object({
+        replicas: z.literal(1),
+        strategy: z.object({ type: z.literal("Recreate") }),
+        template: z.object({
+          metadata: z.object({
+            labels: z.object({ app: z.literal("temporal-maintenance-worker") }),
+          }),
+          spec: z.object({
+            automountServiceAccountToken: z.literal(false),
+            affinity: z.object({
+              nodeAffinity: z.object({
+                requiredDuringSchedulingIgnoredDuringExecution: z.object({
+                  nodeSelectorTerms: z.array(
+                    z.object({
+                      matchExpressions: z.array(
+                        z.object({
+                          key: z.literal("kubernetes.io/hostname"),
+                          values: z.tuple([z.literal("liskov")]),
+                        }),
+                      ),
+                    }),
+                  ),
+                }),
+              }),
+            }),
+            tolerations: z.array(
+              z.object({
+                key: z.literal("ci"),
+                value: z.literal("only"),
+                effect: z.literal("NoSchedule"),
+              }),
+            ),
+            containers: z.array(
+              z.object({
+                env: z.array(z.unknown()),
+                volumeMounts: z.array(z.object({ mountPath: z.string() })),
+              }),
+            ),
+            volumes: z.array(z.object({ name: z.string() }).loose()),
+          }),
+        }),
+      }),
+    })
+    .parse(deployment);
+}
+
 describe("Buildkite application", () => {
   it("accounts for the tmpfs checkout on the checkout container", () => {
     const { application } = synthBuildkiteResources();
@@ -194,6 +260,79 @@ describe("Buildkite application", () => {
     );
     expect(bunCacheGcConfigMap.data["bun-cache-gc.sh"]).toContain(
       'find "$CACHE_DIR" -mindepth 1 -depth -delete',
+    );
+  });
+
+  it("deploys one serial maintenance worker with all maintenance mounts", () => {
+    const { resources } = synthBuildkiteResources();
+    const deployment = maintenanceDeployment(resources);
+    const container = deployment.spec.template.spec.containers[0];
+    if (container === undefined) {
+      throw new Error("maintenance worker container is missing");
+    }
+    const envNames = container.env.flatMap((entry) => {
+      const parsed = z.object({ name: z.string() }).safeParse(entry);
+      return parsed.success ? [parsed.data.name] : [];
+    });
+    expect(envNames).toContain("TEMPORAL_WORKER_ROLE");
+    expect(envNames).toContain("KOMETA_PLEXTOKEN");
+    expect(envNames).toContain("KOMETA_TMDBAPIKEY");
+    expect(container.volumeMounts.map((mount) => mount.mountPath)).toEqual(
+      expect.arrayContaining([
+        "/buildkite/bun-cache",
+        "/buildkite/bun-cache-control",
+        "/buildkite/uv-cache",
+        "/buildkite/trivy-db",
+        "/buildkite/maintenance",
+        "/etc/kometa/config.yml",
+      ]),
+    );
+    expect(
+      deployment.spec.template.spec.volumes.map((volume) => volume.name),
+    ).toEqual(
+      expect.arrayContaining([
+        "pvc-buildkite-bun-cache",
+        "pvc-buildkite-bun-cache-control",
+        "pvc-buildkite-uv-cache",
+        "pvc-buildkite-trivy-db",
+        "configmap-buildkite-bun-cache-gc",
+        "configmap-temporal-maintenance-kometa-config",
+      ]),
+    );
+
+    const serviceNames = resources.flatMap((manifest) => {
+      const parsed = z
+        .object({
+          kind: z.literal("Service"),
+          metadata: z.object({ name: z.string(), namespace: z.string() }),
+        })
+        .safeParse(manifest);
+      return parsed.success && parsed.data.metadata.namespace === "buildkite"
+        ? [parsed.data.metadata.name]
+        : [];
+    });
+    expect(serviceNames).toEqual(
+      expect.arrayContaining([
+        "temporal-maintenance-worker-metrics",
+        "temporal-maintenance-worker-app-metrics",
+      ]),
+    );
+    const serviceMonitorNames = resources.flatMap((manifest) => {
+      const parsed = z
+        .object({
+          kind: z.literal("ServiceMonitor"),
+          metadata: z.object({ name: z.string(), namespace: z.string() }),
+        })
+        .safeParse(manifest);
+      return parsed.success && parsed.data.metadata.namespace === "buildkite"
+        ? [parsed.data.metadata.name]
+        : [];
+    });
+    expect(serviceMonitorNames).toEqual(
+      expect.arrayContaining([
+        "temporal-maintenance-worker-metrics-service-monitor",
+        "temporal-maintenance-worker-app-metrics-service-monitor",
+      ]),
     );
   });
 });

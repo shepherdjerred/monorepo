@@ -19,6 +19,7 @@ import {
   BUN_CACHE_MOUNT_PATH,
   createBuildkiteBunCache,
 } from "./buildkite-bun-cache.ts";
+import { createBuildkiteMaintenanceWorker } from "./buildkite-maintenance-worker.ts";
 
 // The sole cluster-wide cap on concurrently-scheduled CI jobs (the
 // agent-stack controller stops creating Jobs beyond it). Kueue and its
@@ -59,6 +60,7 @@ sleep 20
 export function createBuildkiteApp(chart: Chart) {
   createBuildkiteNamespace(chart);
   createBuildkiteBunCache(chart);
+  createBuildkiteMaintenanceWorker(chart);
 
   new OnePasswordItem(chart, "buildkite-agent-token", {
     spec: {

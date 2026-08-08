@@ -26,7 +26,7 @@ import { glitterCorpusActivities } from "./glitter-corpus.ts";
 import { glitterContextRefreshActivities } from "./glitter-context-refresh.ts";
 import { weatherActivities } from "./weather.ts";
 import { workflowFailureWatchActivities } from "./workflow-failure-watch.ts";
-import { kubernetesMaintenanceActivities } from "./kubernetes-maintenance.ts";
+import { maintenanceActivities } from "./maintenance.ts";
 
 export const activities = {
   ...fetcherActivities,
@@ -57,5 +57,5 @@ export const activities = {
   ...glitterContextRefreshActivities,
   ...weatherActivities,
   ...workflowFailureWatchActivities,
-  ...kubernetesMaintenanceActivities,
+  ...maintenanceActivities,
 };

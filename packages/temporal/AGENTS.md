@@ -36,12 +36,13 @@ src/
 - **Activities** do the real work (HTTP calls, DB queries, file I/O). They run outside the sandbox.
 - **Schedules** replace K8s CronJobs — managed by Temporal, visible in the UI.
 
-Containerized maintenance that needs Kubernetes locality follows the same
-boundary: Temporal owns the schedule, then the activity creates and waits for a
-short-lived Kubernetes `Job`. The current Kometa and Buildkite cache jobs use
-this pattern; the worker has narrowly scoped `jobs` RBAC in `media` and
-`buildkite`, and the image references are injected as
-`TEMPORAL_MAINTENANCE_*_IMAGE` environment variables by homelab cdk8s.
+The Kometa and Buildkite cache maintenance schedules use the `maintenance` task
+queue. A single `temporal-maintenance-worker` Deployment in the `buildkite`
+namespace runs them as direct `Bun.spawn` activities, with one activity slot so
+cache and database writers never overlap. The Deployment mounts the existing
+Buildkite PVCs and has no Kubernetes API token or Job RBAC; Kometa reaches Plex
+over the cluster network with credentials projected from namespace-local
+OnePassword resources.
 
 ## Schedules (`src/schedules/register-schedules.ts`, `src/schedules/schedule-definitions.ts`)
 

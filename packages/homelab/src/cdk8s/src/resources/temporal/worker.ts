@@ -31,8 +31,6 @@ import { createTemporalWorkerCrdReaderRbac } from "./crd-rbac.ts";
 import { glitterCorpusEnv } from "./glitter-corpus-env.ts";
 import { createTemporalGlitterWorker } from "./glitter-worker.ts";
 import { temporalWorkerHealthProbes } from "./worker-health.ts";
-import { createTemporalWorkerMaintenanceJobRbac } from "./maintenance-jobs-rbac.ts";
-import { temporalMaintenanceEnvironment } from "./maintenance-jobs-env.ts";
 import { createTemporalWorkerHttpServices } from "./worker-http-services.ts";
 
 export type CreateTemporalWorkerDeploymentProps = {
@@ -299,7 +297,6 @@ export function createTemporalWorkerDeployment(
   const serviceAccount = createTemporalWorkerServiceAccount(chart);
 
   createTemporalWorkerMaintenanceRbac(chart, serviceAccount);
-  createTemporalWorkerMaintenanceJobRbac(chart, serviceAccount);
 
   // Cluster-wide read-only RBAC for the homelab-audit-daily workflow. See
   // ./audit-rbac.ts for the full rule set.
@@ -373,7 +370,6 @@ export function createTemporalWorkerDeployment(
         TEMPORAL_ADDRESS: EnvValue.fromValue(`${props.serverServiceName}:7233`),
         TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
         TEMPORAL_WORKER_ROLE: EnvValue.fromValue("core"),
-        ...temporalMaintenanceEnvironment(),
         ENVIRONMENT: EnvValue.fromValue("production"),
         // Keep headless Claude subprocesses from starting optional traffic or updates.
         CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: EnvValue.fromValue("1"),

@@ -91,7 +91,7 @@ import {
   runBunCacheGcWorkflow as _runBunCacheGcWorkflow,
   runUvCachePruneWorkflow as _runUvCachePruneWorkflow,
   runTrivyDbRefreshWorkflow as _runTrivyDbRefreshWorkflow,
-} from "./kubernetes-maintenance.ts";
+} from "./maintenance.ts";
 
 export async function fetchSkillCappedManifest(): Promise<void> {
   return _fetchSkillCappedManifest();

@@ -23,8 +23,10 @@ import {
   parseWorkerRole,
   workerRoleRunsCore,
   workerRoleRunsGlitter,
+  workerRoleRunsMaintenance,
   type WorkerRole,
 } from "./shared/worker-role.ts";
+import { maintenanceActivities } from "./activities/maintenance.ts";
 
 const DEFAULT_ADDRESS = "temporal-server.temporal.svc.cluster.local:7233";
 const DEFAULT_METRICS_ADDRESS = "0.0.0.0:9464";
@@ -287,6 +289,22 @@ async function main(): Promise<void> {
     workers.push(glitterContextWorker);
     jsonLog("info", "Worker created", {
       taskQueue: TASK_QUEUES.GLITTER_CONTEXT,
+      maxConcurrentActivityTaskExecutions: 1,
+      maxConcurrentWorkflowTaskExecutions: 2,
+    });
+  }
+
+  if (workerRoleRunsMaintenance(role)) {
+    const maintenanceWorker = await Worker.create({
+      ...commonWorkerOptions,
+      activities: maintenanceActivities,
+      taskQueue: TASK_QUEUES.MAINTENANCE,
+      maxConcurrentActivityTaskExecutions: 1,
+      maxConcurrentWorkflowTaskExecutions: 2,
+    });
+    workers.push(maintenanceWorker);
+    jsonLog("info", "Worker created", {
+      taskQueue: TASK_QUEUES.MAINTENANCE,
       maxConcurrentActivityTaskExecutions: 1,
       maxConcurrentWorkflowTaskExecutions: 2,
     });

@@ -10,7 +10,8 @@
 # github-mcp-server (pr-agent's MCP GitHub backend), talosctl / tofu / argocd /
 # velero / bk / temporal / toolkit (homelab-audit-daily runbook + preflight —
 # see src/activities/homelab-audit-preflight.ts REQUIRED_AUDIT_BINARIES), and
-# cog (readme-refresh-weekly regenerates the README project-listing tables).
+# cog (readme-refresh-weekly regenerates the README project-listing tables),
+# and the direct maintenance runtimes Kometa, uv, and Trivy.
 # scripts/smoke.ts asserts every one of these boots + is on PATH.
 #
 # Multi-stage: deps does a full (dev-inclusive) install to feed shared-package
@@ -112,6 +113,12 @@ ARG BUILDKITE_CLI_VERSION=3.48.0
 ARG TEMPORAL_CLI_VERSION=1.7.3
 # renovate: datasource=pypi depName=cogapp
 ARG COGAPP_VERSION=3.6.0
+# renovate: datasource=pypi depName=uv
+ARG UV_VERSION=0.12.3
+# renovate: datasource=github-releases depName=aquasecurity/trivy
+ARG TRIVY_VERSION=0.72.0
+# renovate: datasource=github-releases depName=Kometa-Team/Kometa
+ARG KOMETA_VERSION=2.4.5
 
 # --- Base system deps: ca-certificates, curl, git (gh/claude open PRs) ---
 RUN set -e; \
@@ -260,10 +267,44 @@ RUN set -e; \
 # tables. cog's `-v` (not `--version`) prints the version and exits 0.
 RUN set -e; \
     apt-get update -qq; \
-    apt-get install -y -qq --no-install-recommends python3 python3-pip; \
+    apt-get install -y -qq --no-install-recommends python3 python3-pip python3-venv; \
     rm -rf /var/lib/apt/lists/*; \
     pip3 install --no-cache-dir --break-system-packages "cogapp==${COGAPP_VERSION}"; \
     cog -v
+
+# --- uv (pinned PyPI release) ---
+RUN pip3 install --no-cache-dir --break-system-packages "uv==${UV_VERSION}" && uv --version
+
+# --- Trivy (per-arch release tarball, SHA256-verified) ---
+RUN set -e; \
+    arch="$(dpkg --print-architecture)"; \
+    case "$arch" in amd64) trivyarch=64bit ;; arm64) trivyarch=ARM64 ;; \
+      *) echo "unsupported architecture: $arch" >&2; exit 1 ;; esac; \
+    base="https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}"; \
+    tarball="trivy_${TRIVY_VERSION}_Linux-${trivyarch}.tar.gz"; \
+    curl -fsSL "$base/$tarball" -o /tmp/trivy.tar.gz; \
+    curl -fsSL "$base/trivy_${TRIVY_VERSION}_checksums.txt" -o /tmp/trivy.checksums.txt; \
+    expected="$(grep " $tarball$" /tmp/trivy.checksums.txt | awk '{print $1}')"; \
+    [ -n "$expected" ] || { echo "no checksum entry for $tarball" >&2; exit 1; }; \
+    actual="$(sha256sum /tmp/trivy.tar.gz | awk '{print $1}')"; \
+    [ "$expected" = "$actual" ] || { echo "trivy checksum mismatch (expected $expected, got $actual)" >&2; exit 1; }; \
+    tar -xzf /tmp/trivy.tar.gz -C /usr/local/bin trivy; \
+    chmod +x /usr/local/bin/trivy; \
+    rm /tmp/trivy.tar.gz /tmp/trivy.checksums.txt; \
+    trivy version
+
+# --- Kometa (pinned source release, direct command-line install) ---
+# Kometa's supported local installation is the repository's requirements.txt
+# plus `python kometa.py`; keeping that layout in a venv preserves the exact
+# direct CLI behavior while the Temporal activity supplies config/credentials.
+RUN set -e; \
+    git clone --depth 1 --branch "v${KOMETA_VERSION}" "https://github.com/Kometa-Team/Kometa.git" /opt/kometa; \
+    python3 -m venv /opt/kometa/venv; \
+    /opt/kometa/venv/bin/python -m pip install --no-cache-dir --upgrade pip; \
+    /opt/kometa/venv/bin/pip install --no-cache-dir -r /opt/kometa/requirements.txt; \
+    printf '%s\n' '#!/bin/sh' 'exec /opt/kometa/venv/bin/python /opt/kometa/kometa.py "$@"' > /usr/local/bin/kometa; \
+    chmod +x /usr/local/bin/kometa; \
+    kometa --help >/dev/null
 
 # Production node_modules + workspace manifests. The isolated-linker tree uses
 # relative symlinks (store at node_modules/.bun), so copying the whole install

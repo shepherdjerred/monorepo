@@ -8,15 +8,6 @@ import { NVME_STORAGE_CLASS_LZ4 } from "@shepherdjerred/homelab/cdk8s/src/misc/s
 
 export const BUN_CACHE_MOUNT_PATH = "/buildkite/bun-cache";
 
-const CI_BASE_DIGEST_CONTENT = await Bun.file(
-  new URL("ci-base.DIGEST", import.meta.url),
-).text();
-const CI_BASE_DIGEST = CI_BASE_DIGEST_CONTENT.trim();
-if (!/^sha256:[\da-f]{64}$/.test(CI_BASE_DIGEST)) {
-  throw new Error("ci-base.DIGEST must contain a canonical sha256 digest");
-}
-export const CI_BASE_IMAGE = `ghcr.io/shepherdjerred/ci-base@${CI_BASE_DIGEST}`;
-
 const BUN_CACHE_GC_SCRIPT = await Bun.file(
   new URL("buildkite-bun-cache-gc.sh", import.meta.url),
 ).text();

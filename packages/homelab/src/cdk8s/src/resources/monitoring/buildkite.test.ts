@@ -6,7 +6,7 @@ import {
   createBuildkiteMonitoring,
 } from "./buildkite.ts";
 import {
-  BUILDKITE_BUN_CACHE_GC_JOB,
+  BUILDKITE_BUN_CACHE_GC_ACTIVITY,
   BUILDKITE_BUN_CACHE_PVC,
 } from "./monitoring/rules/buildkite.ts";
 
@@ -188,14 +188,14 @@ describe("Buildkite monitoring manifests", () => {
       },
     });
     expect(String(collectorStale?.["expr"])).toContain(
-      `job="${BUILDKITE_BUN_CACHE_GC_JOB}"`,
+      `job="${BUILDKITE_BUN_CACHE_GC_ACTIVITY}"`,
     );
     expect(String(collectorStale?.["expr"])).toContain(
       "kubernetes_maintenance_last_success_timestamp_seconds",
     );
     expect(String(collectorStale?.["expr"])).toContain("> 1200");
     expect(String(collectorStale?.["expr"])).toContain(
-      `absent(\n  kubernetes_maintenance_last_success_timestamp_seconds{\n    job="${BUILDKITE_BUN_CACHE_GC_JOB}"\n  }\n)`,
+      `absent(\n  kubernetes_maintenance_last_success_timestamp_seconds{\n    job="${BUILDKITE_BUN_CACHE_GC_ACTIVITY}"\n  }\n)`,
     );
   });
 });

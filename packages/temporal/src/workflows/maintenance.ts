@@ -1,8 +1,8 @@
 import { proxyActivities } from "@temporalio/workflow";
-import type { KubernetesMaintenanceActivities } from "#activities/kubernetes-maintenance.ts";
+import type { MaintenanceActivities } from "#activities/maintenance.ts";
 
 const { runKometa, runBunCacheGc, runUvCachePrune, runTrivyDbRefresh } =
-  proxyActivities<KubernetesMaintenanceActivities>({
+  proxyActivities<MaintenanceActivities>({
     startToCloseTimeout: "30 minutes",
     heartbeatTimeout: "90 seconds",
     retry: {
