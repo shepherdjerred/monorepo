@@ -23,4 +23,5 @@ export * from "./velero.types.ts";
 export * from "./postgres-operator.types.ts";
 export * from "./redis.types.ts";
 export * from "./seaweedfs.types.ts";
+export * from "./plane-enterprise.types.ts";
 export * from "./mariadb.types.ts";

@@ -93,6 +93,16 @@ resource "aws_s3_bucket" "relay_docs" {
   }
 }
 
+# Plane Commercial issue attachments. The bucket is private and the Plane API
+# proxies browser uploads, so clients never need direct S3 access.
+resource "aws_s3_bucket" "plane_attachments" {
+  bucket = "plane-attachments"
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
 # Expire old content-hashed assets 90 days after they were last written. The
 # (now-removed) CI site deploy uploaded these prefixes with a 1-year `immutable`
 # Cache-Control and WITHOUT `--delete`, so a deploy never 404s a hashed chunk

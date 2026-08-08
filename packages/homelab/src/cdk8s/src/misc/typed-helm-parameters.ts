@@ -87,6 +87,7 @@ import type { TailscaleoperatorHelmValues } from "@shepherdjerred/homelab/cdk8s/
 import type { VeleroHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/velero.types";
 import type { RedisHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/redis.types";
 import type { SeaweedfsHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/seaweedfs.types";
+import type { PlaneenterpriseHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/plane-enterprise.types";
 import type { PrometheusblackboxexporterHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/prometheus-blackbox-exporter.types";
 import type { McrouterHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/mc-router.types";
 import type { AlloyHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/alloy.types";
@@ -113,6 +114,7 @@ type HelmChartValuesMap = {
   velero: VeleroHelmValues;
   redis: RedisHelmValues;
   seaweedfs: SeaweedfsHelmValues;
+  "plane-enterprise": PlaneenterpriseHelmValues;
   "prometheus-blackbox-exporter": PrometheusblackboxexporterHelmValues;
   "mc-router": McrouterHelmValues;
   alloy: AlloyHelmValues;
