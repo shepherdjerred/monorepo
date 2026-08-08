@@ -350,6 +350,31 @@ describe("retry classification", () => {
 });
 
 describe("recurring completion captures the tapped day", () => {
+  test("offline completion advances the projected schedule", async () => {
+    const harness = makeHarness();
+    harness.clock.set(new Date("2026-08-03T12:00:00.000Z").getTime());
+    await harness.store.restore();
+    const recurring = makeTask({
+      recurrence: "FREQ=WEEKLY",
+      scheduled: "2026-08-01",
+    });
+    harness.server.seed(recurring);
+    await harness.engine.syncNow();
+
+    await harness.store.dispatch({
+      type: "set_instance_complete",
+      taskId: recurring.id,
+      date: "2026-08-01",
+      completed: true,
+    });
+    const result = await harness.engine.syncNow();
+
+    expect(result.ok).toBe(true);
+    expect(harness.server.tasks.get(recurring.id)?.scheduled).toBe(
+      "2026-08-08",
+    );
+  });
+
   test("a 23:59 tap replayed after midnight still completes the tapped date", async () => {
     const tappedAt = new Date("2026-07-01T23:59:00").getTime();
     const harness = makeHarness();

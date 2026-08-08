@@ -1,4 +1,7 @@
-import type { CompleteInstanceRequest } from "tasknotes-types/v2";
+import {
+  updateToNextScheduledOccurrence,
+  type CompleteInstanceRequest,
+} from "tasknotes-types/v2";
 
 import type { Task } from "../../../domain/types";
 
@@ -32,6 +35,36 @@ export function applyFakeRecurringCompletion(
       ? existing.skippedInstances.filter((date) => date !== targetDate)
       : existing.skippedInstances,
   };
+  if (completed) {
+    const recurrence = existing.recurrence;
+    if (recurrence === undefined) {
+      throw new Error("recurring completion fake requires a recurrence");
+    }
+    const next = updateToNextScheduledOccurrence(
+      {
+        title: existing.title,
+        recurrence,
+        scheduled: existing.scheduled,
+        due: existing.due,
+        dateCreated: existing.dateCreated,
+        recurrence_anchor: existing.recurrenceAnchor,
+        complete_instances: updated.completeInstances,
+        skipped_instances: updated.skippedInstances,
+      },
+      true,
+      { today: localDay(timestamp) },
+    );
+    if (next.scheduled === null) {
+      Reflect.deleteProperty(updated, "scheduled");
+    } else {
+      updated.scheduled = next.scheduled;
+    }
+    if (next.due === null) {
+      Reflect.deleteProperty(updated, "due");
+    } else {
+      updated.due = next.due;
+    }
+  }
   const restore = instance?.restore;
   if (restore === undefined) return updated;
 

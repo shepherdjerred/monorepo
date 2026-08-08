@@ -212,6 +212,37 @@ tags:
     expect(updated.complete_instances).toEqual(["2026-07-01"]);
   });
 
+  test("explicit completion date anchors the next occurrence", async () => {
+    const edgeNow = new Date("2026-08-03T12:00:00.000Z");
+    await seed(
+      "TaskNotes/weekly.md",
+      `---
+title: Weekly review
+status: open
+priority: normal
+scheduled: 2026-08-01
+recurrence: FREQ=WEEKLY
+tags:
+  - task
+---
+`,
+    );
+    const edgeRepo = new TaskRepository(
+      vault,
+      "TaskNotes",
+      resolveModelConfig(),
+      () => edgeNow,
+    );
+    await edgeRepo.scan();
+
+    const updated = await edgeRepo.completeInstance("TaskNotes/weekly.md", {
+      date: "2026-08-01",
+      completed: true,
+    });
+
+    expect(updated.scheduled).toBe("2026-08-08");
+  });
+
   test("set-semantics: matching state is a no-op, not a toggle", async () => {
     await seed("TaskNotes/water.md", RECURRING);
     await repo.scan();

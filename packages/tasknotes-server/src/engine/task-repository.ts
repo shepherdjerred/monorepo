@@ -357,7 +357,7 @@ export class TaskRepository {
     useDeterministicRecurringSchedule(
       plan,
       fresh.task,
-      ymd(now),
+      options.date === undefined ? ymd(now) : dateStr,
       maintainDueDateOffset,
     );
     const patch = recurringCompletePlanToFrontmatterPatch(
