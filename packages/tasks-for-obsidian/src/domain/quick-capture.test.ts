@@ -370,6 +370,21 @@ describe("capture autocomplete", () => {
     );
   });
 
+  test("resolves a bare project to its only existing qualified identity", () => {
+    expect(resolveProjectIdentity("Work", ["[[Projects/Work]]"])).toBe(
+      "[[Projects/Work]]",
+    );
+    expect(
+      resolveProjectIdentity("Work", ["[[Projects/Work]]", "[[Areas/Work]]"]),
+    ).toBeUndefined();
+    expect(
+      resolveProjectIdentity("Projects/Work", [
+        "[[Projects/Work]]",
+        "[[Areas/Work]]",
+      ]),
+    ).toBe("[[Projects/Work]]");
+  });
+
   test("completes single and multiword projects plus context and tag tokens", () => {
     expect(
       buildCaptureSuggestions(
