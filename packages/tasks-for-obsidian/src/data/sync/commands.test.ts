@@ -318,6 +318,65 @@ describe("applyCommand — idempotent absolute-state semantics", () => {
   });
 });
 
+test("replaying a completed command with restore metadata is idempotent", () => {
+  const id = taskId("TaskNotes/a.md");
+  const original = makeTask({
+    recurrence: "FREQ=DAILY",
+    completeInstances: ["2026-07-03"],
+  });
+  const command: Command = {
+    id: "replay-complete",
+    createdAt: 0,
+    type: "set_instance_complete",
+    taskId: id,
+    date: "2026-07-03",
+    completed: true,
+    restore: {
+      recurrence: "FREQ=DAILY",
+      scheduled: null,
+      due: null,
+      skipped: false,
+    },
+  };
+
+  expect(applyCommand(command, new Map([[id, original]])).get(id)).toBe(
+    original,
+  );
+});
+
+test("forward completion clears a skipped instance even with restore metadata", () => {
+  const id = taskId("TaskNotes/a.md");
+  const command: Command = {
+    id: "complete-skipped",
+    createdAt: 0,
+    type: "set_instance_complete",
+    taskId: id,
+    date: "2026-07-03",
+    completed: true,
+    restore: {
+      recurrence: "FREQ=DAILY",
+      scheduled: null,
+      due: null,
+      skipped: true,
+    },
+  };
+
+  const applied = applyCommand(
+    command,
+    new Map([
+      [
+        id,
+        makeTask({
+          recurrence: "FREQ=DAILY",
+          skippedInstances: ["2026-07-03"],
+        }),
+      ],
+    ]),
+  ).get(id);
+  expect(applied?.completeInstances).toEqual(["2026-07-03"]);
+  expect(applied?.skippedInstances).toEqual([]);
+});
+
 test("uncompleting without restore preserves a skipped instance", () => {
   const id = taskId("TaskNotes/a.md");
   const tasks = new Map<TaskId, Task>([

@@ -276,7 +276,8 @@ function applyInstanceCompletion(
   cmd: SetInstanceCompleteCommand,
 ): Task {
   const has = existing.completeInstances.includes(cmd.date);
-  if (cmd.completed === has && cmd.restore === undefined) return existing;
+  if (has && cmd.completed) return existing;
+  if (!has && !cmd.completed && cmd.restore === undefined) return existing;
 
   const completeInstances = cmd.completed
     ? [...existing.completeInstances, cmd.date]
@@ -287,12 +288,12 @@ function applyInstanceCompletion(
   const updated: Task = {
     ...existing,
     completeInstances,
-    skippedInstances: cmd.restore
-      ? cmd.restore.skipped
-        ? [...withoutSkippedTarget, cmd.date]
-        : withoutSkippedTarget
-      : cmd.completed
-        ? withoutSkippedTarget
+    skippedInstances: cmd.completed
+      ? withoutSkippedTarget
+      : cmd.restore
+        ? cmd.restore.skipped
+          ? [...withoutSkippedTarget, cmd.date]
+          : withoutSkippedTarget
         : existing.skippedInstances,
   };
   if (cmd.restore === undefined || cmd.completed) return updated;
