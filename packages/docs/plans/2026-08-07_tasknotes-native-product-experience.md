@@ -306,81 +306,64 @@ verify the corresponding Markdown in the vault.
 - Pixel parity across Android in this wave; shared logic and functional fallback
   remain required.
 
+## Completed
+
+- Spike native bottom tabs and reject the experimental host after reproducible
+  iOS 27 runtime crashes.
+- Define and test task presentation, agenda/date precedence, capture seed,
+  display configuration, and saved-view schemas.
+- Ship the stable tab shell, native sheets, shared task rows, direct task-detail
+  editing, keyboard-first capture, reversible parser chips, and shared capture
+  routing.
+- Replace Zeego's remaining call sites and add semantic System/Light/Dark
+  appearance colors.
+- Correct Today/Upcoming grouping, add overdue rescheduling, the week strip,
+  and recurrence-aware day-load indicators.
+- Persist editable saved views, rebuild Browse, bind the Job Search board to its
+  saved-view query, and add saved-view/completed-search flows.
+
 ## Remaining
 
 ### Phase 0 — Native feasibility and contracts
 
 - [ ] Record seeded before-state screenshots and performance/accessibility
       baselines for Inbox, Today, Upcoming, Browse, Quick Add, and task detail.
-- [x] Spike native bottom tabs and record the adopt/reject result: reject the
-      experimental host for this wave after reproducible iOS 27 runtime crashes;
-      ship one stable tab navigator on every supported OS version.
 - [ ] Validate native stack form sheets against restoration, accessibility,
       keyboard behavior, and an older runtime compatible with the deployment
       target.
-- [x] Define and test `TaskPresentation`, agenda/date precedence, capture seed,
-      display configuration, and versioned saved-view schemas.
 - [ ] Define the semantic color, Dynamic Type, spacing, motion, and haptic tokens.
 
 ### Phase 1 — Native shell
 
-- [x] Give the single stable tab shell real SF Symbol icons, per-tab titles,
-      contextual toolbar actions, native Quick Add/task-detail sheets, and the
-      existing deep-link contract.
 - [ ] Introduce per-tab native stacks and finish large-title behavior without
       creating a second runtime navigation implementation.
 - [ ] Convert display/sort/filter and overflow actions to native sheets/menus.
-- [x] Replace Zeego's remaining task/project call sites, remove its patches and
-      dependency, and archive the RN 0.85 context-menu TODO.
-- [x] Add System/Light/Dark appearance and semantic platform colors.
 
 ### Phase 2 — Tasks and details
 
-- [x] Ship the shared task-row presentation and section-header behavior across
-      every current task collection.
-- [x] Replace the read/edit detail screen with the task-detail sheet and direct,
-      offline-safe field editing.
 - [ ] Add configurable swipe actions and keep menu, swipe, and bulk semantics in
       sync.
 
 ### Phase 3 — Capture
 
-- [x] Ship the keyboard-first capture sheet, contextual seeds, structured
-      project selection, Create Another, and optimistic dismissal.
 - [ ] Add structured planned-date, deadline, and priority controls to the
       capture action row; keep the deterministic text path available.
-- [x] Make parser chips editable and reversible, with complete autocomplete and
-      accessibility coverage.
-- [x] Route in-app, deep-link, Home Screen, Siri/Shortcuts, and widget capture
-      through the same seed and creation command.
 - [ ] Hold the explicit AI product checkpoint; proceed without AI unless the
       user chooses a separately evaluated capture use case.
 
 ### Phase 4 — Daily planning
 
-- [x] Correct Today and Upcoming inclusion/grouping around scheduled versus due,
-      recurrence, overdue state, and deduplication.
-- [x] Add explicit overdue bulk rescheduling through the shared scheduling
-      sheet.
 - [ ] Add the deterministic Plan My Day sheet.
-- [x] Add Upcoming's selectable week strip and recurrence-aware reusable
-      day-load indicators.
 - [ ] Make the week strip collapsible, then add the expandable month calendar
       and list-scroll synchronization.
 
 ### Phase 5 — Views and organization
 
-- [x] Persist and migrate editable saved views with query and sort choices.
 - [ ] Add the remaining per-view layout, grouping, density, visibility, and
       date-range choices.
-- [x] Rebuild Browse around favorites, saved views, organizational dimensions,
-      completed history, reports, and settings.
 - [ ] Persist user-defined Browse section ordering.
 - [ ] Replace the hard-coded Job Search board with generic list, board, and
       calendar collection renderers.
-- [x] Bind the transitional Job Search board to its editable saved-view query,
-      shared task presentation, and explicit safe move actions.
-- [x] Add saved-view lifecycle and completed search/uncomplete flows.
 - [ ] Add distinct completed-history filter controls.
 
 ### Phase 6 — Acceptance and closeout

@@ -91,10 +91,19 @@ const SimListSchema = z.object({
 });
 type SimDevice = z.infer<typeof SimDeviceSchema>;
 
-function runSimctl(args: string[]): string {
+function runSimctl(args: string[], allowAlreadyStopped = false): string {
   const proc = spawnSync("xcrun", ["simctl", ...args], { encoding: "utf8" });
   if (proc.status !== 0) {
-    fail(`xcrun simctl ${args.join(" ")} failed:\n${proc.stderr}`);
+    const stderr = proc.stderr.trim();
+    if (
+      allowAlreadyStopped &&
+      (stderr.includes("No such process") ||
+        /application .* is not running/i.test(stderr))
+    ) {
+      log(`${APP_ID} was already stopped`);
+      return "";
+    }
+    fail(`xcrun simctl ${args.join(" ")} failed:\n${stderr}`);
   }
   return proc.stdout;
 }
@@ -413,7 +422,7 @@ function launchApp(simulator: SimDevice): void {
 
 function restartApp(simulator: SimDevice, flow: string): void {
   log(`restarting ${APP_ID} before ${flow}`);
-  runSimctl(["terminate", simulator.udid, APP_ID]);
+  runSimctl(["terminate", simulator.udid, APP_ID], true);
   launchApp(simulator);
 }
 
