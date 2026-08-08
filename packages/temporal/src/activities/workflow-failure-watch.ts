@@ -219,6 +219,7 @@ async function inspectTimeoutHistory(
         activityScheduled: false,
         activityStarted: false,
         activityScheduledButNotStarted: false,
+        activityScheduleToStartTimedOut: false,
       },
       historyError: error instanceof Error ? error.message : String(error),
     };
@@ -256,7 +257,7 @@ function timeoutFailureFields(
   const activityScheduleToStartTimeout =
     timeoutClassification === "activity" &&
     timeoutType === TimeoutType.SCHEDULE_TO_START &&
-    classification?.activityScheduledButNotStarted === true;
+    classification?.activityScheduleToStartTimedOut === true;
   const workerTaskQueueReason =
     classification === undefined ||
     workflowType !== "agentTaskWorkflow" ||
@@ -264,7 +265,9 @@ function timeoutFailureFields(
       timeoutClassification !== "execution" &&
       !activityScheduleToStartTimeout)
       ? undefined
-      : workerTaskQueueUnavailableReason(classification);
+      : activityScheduleToStartTimeout
+        ? "a scheduled activity has not started"
+        : workerTaskQueueUnavailableReason(classification);
   return {
     ...(classification === undefined
       ? {}

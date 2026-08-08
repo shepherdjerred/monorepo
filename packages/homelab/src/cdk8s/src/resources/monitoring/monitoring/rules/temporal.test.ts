@@ -68,6 +68,9 @@ describe("Temporal workflow outcome rules", () => {
     expect(pollerUnavailable.expr.value).toContain(
       "temporal_worker_num_pollers",
     );
+    expect(pollerUnavailable.expr.value).toContain(
+      'namespace="temporal",exported_namespace="default"',
+    );
     expect(pollerUnavailable.for).toBe("5m");
 
     const scheduleToStartHigh = failuresGroup.rules.find(
@@ -81,6 +84,9 @@ describe("Temporal workflow outcome rules", () => {
     }
     expect(scheduleToStartHigh.expr.value).toContain(
       "temporal_worker_workflow_task_schedule_to_start_latency_seconds_bucket",
+    );
+    expect(scheduleToStartHigh.expr.value).toContain(
+      'namespace="temporal",exported_namespace="default"',
     );
     expect(scheduleToStartHigh.for).toBe("5m");
 

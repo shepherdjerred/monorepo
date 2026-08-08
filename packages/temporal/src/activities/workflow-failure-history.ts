@@ -14,6 +14,7 @@ export type WorkflowTimeoutHistoryClassification = {
   activityScheduled: boolean;
   activityStarted: boolean;
   activityScheduledButNotStarted: boolean;
+  activityScheduleToStartTimedOut: boolean;
 };
 
 const ProtobufLongSchema = z.object({
@@ -148,6 +149,30 @@ function timedOutActivityTaskScheduledEventId(
       );
 }
 
+function isScheduleToStartTimeout(value: unknown): boolean {
+  if (typeof value === "string") {
+    return value.toUpperCase().includes("SCHEDULE_TO_START");
+  }
+  return value === 2;
+}
+
+function activityTaskTimedOutAsScheduleToStart(event: unknown): boolean {
+  const record = eventRecord(event);
+  if (record === undefined) {
+    return false;
+  }
+  const attributes =
+    record["activityTaskTimedOutEventAttributes"] ??
+    record["activity_task_timed_out_event_attributes"];
+  const attributesRecord = eventRecord(attributes);
+  return (
+    attributesRecord !== undefined &&
+    isScheduleToStartTimeout(
+      attributesRecord["timeoutType"] ?? attributesRecord["timeout_type"],
+    )
+  );
+}
+
 function markRecoveredActivitySchedules(
   activityId: string,
   timedOutScheduleIds: ReadonlySet<string>,
@@ -214,6 +239,7 @@ export function classifyWorkflowTimeoutHistory(
   let workflowTaskStarted = false;
   let activityScheduled = false;
   let activityStarted = false;
+  let activityScheduleToStartTimedOut = false;
   const scheduledWorkflowTaskEventIds = new Set<string>();
   const handledWorkflowTaskScheduledEventIds = new Set<string>();
   const scheduledActivityEventIds = new Set<string>();
@@ -282,6 +308,9 @@ export function classifyWorkflowTimeoutHistory(
           if (scheduledId !== undefined) {
             timedOutActivityScheduledEventIds.add(scheduledId);
           }
+          activityScheduleToStartTimedOut =
+            activityScheduleToStartTimedOut ||
+            activityTaskTimedOutAsScheduleToStart(event);
         }
         latestTimeout = "activity";
         break;
@@ -303,7 +332,9 @@ export function classifyWorkflowTimeoutHistory(
     activityScheduledButNotStarted: [...scheduledActivityEventIds].some(
       (id) =>
         !startedActivityScheduledEventIds.has(id) &&
+        !timedOutActivityScheduledEventIds.has(id) &&
         !recoveredActivityScheduledEventIds.has(id),
     ),
+    activityScheduleToStartTimedOut,
   };
 }

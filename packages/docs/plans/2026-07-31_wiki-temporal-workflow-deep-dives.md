@@ -65,8 +65,6 @@ New directory `packages/docs/wiki/src/content/docs/temporal/workflows/`:
 | `homelab-maintenance.md` | zfs-maintenance, bugsink-housekeeping, velero-orphan-audit, dns-audit, golink-sync                                                               |
 | `home-automation.md`     | Event wiring + presence/debounce model (once) + good-morning ×3, vacuum, welcome-home, leaving-home, reconcile-lock, good-night                  |
 | `pr-bots.md`             | Webhook ingress cross-cutting + pr-summary, merge-conflict check, buildkite-cancel, reaction listener, observe-review-signals                    |
-| `pr-review.md`           | Dedicated: the 5-specialist × 3-pass review pipeline                                                                                             |
-| `pr-babysit.md`          | Dedicated: the durable get-this-green loop                                                                                                       |
 
 Edits to existing pages (from PR #1869):
 
@@ -275,41 +273,8 @@ bun run build && bun run test:e2e`.
   the CI review-gate; NDJSON to S3 keyed by Temporal run id (retry
   overwrites); metrics only after upload.
 
-### pr-review.md (dedicated)
-
-5 specialists × 3 passes: correctness/security/perf on claude-opus-5 (high
-effort), convention/deps on claude-sonnet-5 (medium). Stages: lifecycle
-status → bootstrap (file list, AGENTS.md hierarchy, tree-sitter workdir; skip
-
-> 200 files) → deterministic signals (versions.ts image-tag HEAD checks) ∥
-> specialist fan-out → consensus (site-key clustering `path|line/7`; keep iff
-> ≥2/3 passes in one specialist OR ≥2 specialist kinds OR verifier-backed
-> ≥0.9) → empirical verify (each finding declares a verifier —
-> typecheck/eslint/grep/test/container-image; contradicted → dropped, verifier
-> error → kept unverified: never hide a bug) → embedding dedupe vs dismissed
-> findings (Redis + Voyage, fails open) → post (inline review; gated by
-> `PR_REVIEW_POST_ENABLED`, default OFF → dry-run) → metrics/track. Id includes
-> commitSha, REJECT_DUPLICATE. Prompt-caching: frozen system block +
-> per-(specialist,pass) file permutation. Stops fan-out on provider-limit
-> errors. The why: consensus + empirical verification are the false-positive
-> reducers; deterministic signals catch what LLMs can't (registry HEAD checks).
-
-### pr-babysit.md (dedicated)
-
-One durable workflow per PR (`signalWithStart` + USE_EXISTING), started by
-commenting `@temporal-worker …` (authz by owner-association; silent ignore
-otherwise; fork PRs refused). Loop: deterministic DoD assess (gh pr checks
-with soft-failure allowlist, real local `git merge-tree`, unresolved review
-threads ≥P3; fails closed if required contexts unknowable) → decide
-(done/wait/act/standdown/closed) → act = one mutating `claude -p` iteration
-(edits+commits locally; the activity pushes — origin is the only durable
-handoff; agent self-report advisory only) → wait on webhook signals
-(ciCompleted, branchPushed, reviewActivity, mainAdvanced, guidance, stop) —
-no polling. Guidance question blocks up to 24h. continue-as-new every 20
-iterations carrying budget state. Budget: 12 iterations / 360 min / $20 /
-stuck-signature standdown after 3 repeats / max 3 consecutive failures.
-Subprocess env is an allowlist; `ANTHROPIC_API_KEY` never forwarded
-(prompt-injection exfiltration defense). `PR_BABYSIT_ENABLED` default off.
+The previously planned `pr-review.md` and `pr-babysit.md` pages were removed
+with the corresponding workflows; they are not part of this inventory.
 
 ### agent-tasks.md additions
 

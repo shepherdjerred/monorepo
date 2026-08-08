@@ -2,7 +2,10 @@ import { rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "bun:test";
-import { createAgentTaskSecretTokenState } from "./agent-task-env.ts";
+import {
+  agentTaskSecretTokens,
+  createAgentTaskSecretTokenState,
+} from "./agent-task-env.ts";
 
 describe("agent-task secret token state", () => {
   it("refreshes rotated mounted credentials in place", async () => {
@@ -24,5 +27,14 @@ describe("agent-task secret token state", () => {
     } finally {
       await rm(tokenPath);
     }
+  });
+
+  it("tokenizes multiline environment credentials for redaction", () => {
+    const pemBodyLine = "multiline-private-key-body-line";
+    const tokens = agentTaskSecretTokens(undefined, {
+      GITHUB_APP_PRIVATE_KEY: `-----BEGIN PRIVATE KEY-----\n${pemBodyLine}\n-----END PRIVATE KEY-----`,
+    });
+
+    expect(tokens).toContain(pemBodyLine);
   });
 });

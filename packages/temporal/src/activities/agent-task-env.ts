@@ -5,11 +5,15 @@ const MOUNTED_SECRET_PATHS = [
   "/etc/talos/config",
 ] as const;
 
+function whitespaceSecretTokens(value: string): readonly string[] {
+  return value.split(/\s+/u).filter((fragment) => fragment.length >= 8);
+}
+
 // envForProvider deliberately forwards the full worker env, so scrub every
 // forwarded value rather than maintaining a partial credential-name list. This
 // also covers credentials embedded in values such as DATABASE_URL.
 function compositeSecretTokens(value: string): readonly string[] {
-  const tokens = [value];
+  const tokens = [value, ...whitespaceSecretTokens(value)];
   try {
     const url = new URL(value);
     for (const component of [url.username, url.password]) {

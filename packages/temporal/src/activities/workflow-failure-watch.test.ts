@@ -161,6 +161,7 @@ describe("workflow timeout history classification", () => {
       activityScheduled: false,
       activityStarted: false,
       activityScheduledButNotStarted: false,
+      activityScheduleToStartTimedOut: false,
     });
   });
 
@@ -265,6 +266,7 @@ describe("workflow timeout history edge cases", () => {
           eventType: "EVENT_TYPE_ACTIVITY_TASK_TIMED_OUT",
           activity_task_timed_out_event_attributes: {
             scheduled_event_id: protobufLong("5"),
+            timeout_type: "TIMEOUT_TYPE_SCHEDULE_TO_START",
           },
         },
         {
@@ -582,6 +584,7 @@ describe("failed execution timeout diagnostics", () => {
               eventType: "EVENT_TYPE_ACTIVITY_TASK_TIMED_OUT",
               activity_task_timed_out_event_attributes: {
                 scheduled_event_id: protobufLong("5"),
+                timeout_type: "TIMEOUT_TYPE_SCHEDULE_TO_START",
               },
             },
           ],
@@ -602,6 +605,70 @@ describe("failed execution timeout diagnostics", () => {
       "diagnosis worker/task-queue availability failure",
     );
     expect(description).toContain("a scheduled activity has not started");
+  });
+
+  it("does not diagnose a terminal schedule-to-start timeout as pending work", async () => {
+    const client = fakeClient(
+      [
+        {
+          workflowId: "wf-caught-activity-timeout",
+          runId: "run-1",
+          type: "agentTaskWorkflow",
+          taskQueue: "agent-task",
+          closeTime: new Date("2026-07-30T17:50:00.000Z"),
+          status: { name: "TIMED_OUT" },
+        },
+      ],
+      {
+        "wf-caught-activity-timeout/run-1": rejectWithApplicationFailure(
+          "execution timed out",
+        ),
+      },
+      {
+        "wf-caught-activity-timeout/run-1": {
+          events: [
+            {
+              event_id: protobufLong("5"),
+              eventType: "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
+              activity_task_scheduled_event_attributes: {
+                activity_id: "run-agent-task",
+              },
+            },
+            {
+              eventType: "EVENT_TYPE_ACTIVITY_TASK_TIMED_OUT",
+              activity_task_timed_out_event_attributes: {
+                scheduled_event_id: protobufLong("5"),
+                timeout_type: "TIMEOUT_TYPE_SCHEDULE_TO_START",
+              },
+            },
+            {
+              event_id: protobufLong("8"),
+              eventType: "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
+            },
+            {
+              eventType: "EVENT_TYPE_ACTIVITY_TASK_STARTED",
+              activity_task_started_event_attributes: {
+                scheduled_event_id: protobufLong("8"),
+              },
+            },
+            { eventType: "EVENT_TYPE_WORKFLOW_EXECUTION_TIMED_OUT" },
+          ],
+        },
+      },
+    );
+    const { poster, calls } = capturingPoster();
+
+    await pollWorkflowFailuresOnce(client, poster, {
+      now: NOW,
+      lookbackMs: LOOKBACK_MS,
+      ttlMs: TTL_MS,
+    });
+
+    const description = calls[0]?.alerts[0]?.annotations["description"];
+    expect(description).toContain("timeoutClassification execution");
+    expect(description).not.toContain(
+      "diagnosis worker/task-queue availability failure",
+    );
   });
 });
 
