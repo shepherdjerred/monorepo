@@ -1446,12 +1446,19 @@ steps:
       # The CI secret uses the argocd CLI's canonical ARGOCD_AUTH_TOKEN name;
       # argocd.ts reads ARGOCD_TOKEN (build 5648).
       export ARGOCD_TOKEN="$$ARGOCD_AUTH_TOKEN"
+      buildkite-agent artifact download "helm-release-plan.json" . --step helm-push
       buildkite-agent artifact download "argocd-release-expected.json" . --step helm-push
-      bun --no-install packages/homelab/scripts/argocd.ts reconcile-release argocd-release-expected.json --timeout 300
+      defer_discord_apps=false
+      if jq -e '[.selected[] | select(.name == "pokemon" or .name == "mario-kart")] | length > 0' helm-release-plan.json >/dev/null; then
+        defer_discord_apps=true
+      fi
+      bun --no-install packages/homelab/scripts/argocd.ts reconcile-release argocd-release-expected.json --defer-apps pokemon,mario-kart --skip-health-wait --timeout 300
       apps_revision=$$(jq -er '.[] | select(.name == "apps") | .revision' argocd-release-expected.json)
       bun --no-install packages/homelab/scripts/argocd.ts sync apps --revision "$$apps_revision" --prune
-      bun --no-install packages/homelab/scripts/argocd.ts release-health-wait argocd-release-expected.json --timeout 300
-      bun --no-install packages/homelab/scripts/argocd.ts tree-health-wait apps --timeout 300
+      if ! $$defer_discord_apps; then
+        bun --no-install packages/homelab/scripts/argocd.ts release-health-wait argocd-release-expected.json --timeout 300
+        bun --no-install packages/homelab/scripts/argocd.ts tree-health-wait apps --timeout 300
+      fi
     retry: *retry
     plugins:
       - kubernetes:
@@ -1467,7 +1474,7 @@ steps:
   - label: ":test_tube: scout beta release"
     key: scout-beta-release
     if: build.branch == pipeline.default_branch
-    depends_on: [images, argocd-sync, tofu-cloudflare]
+    depends_on: [images, argocd-sync, tofu-cloudflare, discord-tracker-apps]
     concurrency: 1
     concurrency_group: monorepo/site-deploys
     command: |
@@ -1598,6 +1605,38 @@ steps:
             labels:
               ci.sjer.red/step-key: tofu-cloudflare
 
+  # Discord frontend assets embed the Matomo tracker. Their Argo Applications
+  # are deliberately manual and are synced only after public Matomo readiness
+  # is verified, so the migration cannot publish dead tracking URLs.
+  - label: ":video_game: release Discord tracker apps"
+    key: discord-tracker-apps
+    if: build.branch == pipeline.default_branch
+    depends_on: [argocd-sync, tofu-cloudflare]
+    concurrency: 1
+    concurrency_group: monorepo/homelab-release
+    command: |
+      buildkite-agent artifact download "helm-release-plan.json" . --step helm-push
+      if ! jq -e '[.selected[] | select(.name == "pokemon" or .name == "mario-kart")] | length > 0' helm-release-plan.json >/dev/null; then exit 0; fi
+      bun --no-install packages/homelab/scripts/wait-for-matomo.ts
+      . .buildkite/scripts/toolchain.sh
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --filter '@homelab/cdk8s' --production
+      export ARGOCD_TOKEN="$$ARGOCD_AUTH_TOKEN"
+      buildkite-agent artifact download "argocd-release-expected.json" . --step helm-push
+      for app in pokemon mario-kart; do
+        if ! jq -e --arg app "$$app" '.selected[] | select(.name == $$app)' helm-release-plan.json >/dev/null; then continue; fi
+        revision=$$(jq -er --arg app "$$app" '.[] | select(.name == $$app) | .revision' argocd-release-expected.json)
+        bun --no-install packages/homelab/scripts/argocd.ts sync "$$app" --revision "$$revision" --timeout 300
+      done
+      bun --no-install packages/homelab/scripts/argocd.ts release-health-wait argocd-release-expected.json --timeout 300
+      bun --no-install packages/homelab/scripts/argocd.ts tree-health-wait apps --timeout 300
+    retry: *retry
+    plugins:
+      - kubernetes:
+          <<: *pod_light_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: discord-tracker-apps
+
   # ── Main-only: release automation ─────────────────────────────────────────
   # Gates on verify only: release-please consumes no image or site artifact
   # (build 5644: gating on [images, sites] parked it behind the 52-min images
@@ -1709,6 +1748,7 @@ steps:
       - tofu-apply
       - tofu-github
       - argocd-sync
+      - discord-tracker-apps
       - scout-beta-release
       - publish
       - scout-tag-release

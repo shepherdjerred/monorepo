@@ -18,9 +18,10 @@ export function createMarioKartApp(chart: Chart) {
         server: "https://kubernetes.default.svc",
         namespace: "mario-kart",
       },
-      syncPolicy: {
-        automated: {},
-      },
+      // The image embeds the Matomo tracker. CI explicitly syncs this app
+      // after the public Matomo readiness gate; automatic sync would deploy it
+      // during the preceding apps release.
+      syncPolicy: {},
     },
   });
 }

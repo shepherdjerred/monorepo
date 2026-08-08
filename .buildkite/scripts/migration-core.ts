@@ -176,6 +176,7 @@ export const summarySteps = [
   "tofu-apply",
   "tofu-github",
   "argocd-sync",
+  "discord-tracker-apps",
   "scout-beta-release",
   "publish",
   "scout-tag-release",

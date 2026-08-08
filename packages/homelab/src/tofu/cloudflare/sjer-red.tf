@@ -136,6 +136,17 @@ resource "cloudflare_dns_record" "sjer_red_cname_matomo" {
   proxied = true
 }
 
+# Keep the legacy endpoint reachable while the Plausible migration hold is
+# active. Remove this record with the hold after Matomo cutover smoke tests.
+resource "cloudflare_dns_record" "sjer_red_cname_plausible" {
+  zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
+  name    = "plausible"
+  type    = "CNAME"
+  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
+  proxied = true
+}
+
 resource "cloudflare_dns_record" "sjer_red_cname_plex" {
   zone_id = cloudflare_zone.sjer_red.id
   ttl     = 1

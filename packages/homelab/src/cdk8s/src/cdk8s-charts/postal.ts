@@ -46,6 +46,12 @@ export function createPostalChart(app: App) {
               },
             },
             {
+              // Retained until the Plausible migration hold is removed.
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "plausible" },
+              },
+            },
+            {
               namespaceSelector: {
                 matchLabels: { "kubernetes.io/metadata.name": "birmel" },
               },
