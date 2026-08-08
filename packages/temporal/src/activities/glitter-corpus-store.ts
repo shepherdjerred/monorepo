@@ -20,6 +20,26 @@ const S3ErrorShapeSchema = z.object({
   $metadata: z.object({ httpStatusCode: z.number().optional() }).optional(),
 });
 
+const TRANSIENT_STORAGE_ERROR_PATTERN =
+  /\b(?:ECONNREFUSED|ECONNRESET|ETIMEDOUT|EAI_AGAIN|ENOTFOUND)\b/i;
+
+export function isTransientCorpusStorageError(error: unknown): boolean {
+  const parsed = S3ErrorShapeSchema.safeParse(error);
+  const statusCode = parsed.success
+    ? parsed.data.$metadata?.httpStatusCode
+    : undefined;
+  if (
+    statusCode !== undefined &&
+    (statusCode === 408 || statusCode === 429 || statusCode >= 500)
+  ) {
+    return true;
+  }
+  return (
+    error instanceof Error &&
+    TRANSIENT_STORAGE_ERROR_PATTERN.test(`${error.name} ${error.message}`)
+  );
+}
+
 export function isNotFoundError(error: unknown): boolean {
   const parsed = S3ErrorShapeSchema.safeParse(error);
   if (!parsed.success) {

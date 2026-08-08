@@ -3,7 +3,10 @@ import { describe, expect, spyOn, test } from "bun:test";
 import { glitterCorpusStorageIntegrityFailuresTotal } from "#observability/metrics-glitter.ts";
 import { StoredObjectSchema } from "#shared/glitter-corpus.ts";
 import { discordRequestLeaseDelayMs } from "./glitter-corpus-rate-limit.ts";
-import type { CorpusStore } from "./glitter-corpus-store.ts";
+import {
+  isTransientCorpusStorageError,
+  type CorpusStore,
+} from "./glitter-corpus-store.ts";
 import {
   LatestSnapshotPointerSchema,
   latestSnapshotPointerNeedsUpdate,
@@ -54,6 +57,41 @@ describe("Glitter corpus latest snapshot pointer", () => {
     expect(() => latestSnapshotPointerNeedsUpdate(first, second)).toThrow(
       "conflicting",
     );
+  });
+});
+
+describe("Glitter corpus transient storage errors", () => {
+  test("recognizes transient connection failures", () => {
+    for (const code of [
+      "ECONNREFUSED",
+      "ECONNRESET",
+      "ETIMEDOUT",
+      "EAI_AGAIN",
+      "ENOTFOUND",
+    ]) {
+      expect(isTransientCorpusStorageError(new Error(code))).toBe(true);
+    }
+  });
+
+  test("recognizes retryable HTTP responses", () => {
+    for (const statusCode of [408, 429, 500, 503]) {
+      const error = Object.assign(new Error(`HTTP ${String(statusCode)}`), {
+        $metadata: { httpStatusCode: statusCode },
+      });
+      expect(isTransientCorpusStorageError(error)).toBe(true);
+    }
+  });
+
+  test("does not retry permanent storage failures", () => {
+    for (const statusCode of [401, 403, 404]) {
+      const error = Object.assign(new Error(`HTTP ${String(statusCode)}`), {
+        $metadata: { httpStatusCode: statusCode },
+      });
+      expect(isTransientCorpusStorageError(error)).toBe(false);
+    }
+    expect(
+      isTransientCorpusStorageError(new Error("invalid snapshot JSON")),
+    ).toBe(false);
   });
 });
 
