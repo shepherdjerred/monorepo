@@ -24,7 +24,9 @@ data:
     TrackpadRightClick: true
     TrackpadRotate: 1
     TrackpadScroll: true
-    TrackpadThreeFingerDrag: true
+    # Off: three-finger drag makes macOS synthesize a left click on every
+    # three-finger touch, which preempts Middle's three-finger middle click.
+    TrackpadThreeFingerDrag: false
     TrackpadThreeFingerHorizSwipeGesture: 2
     TrackpadThreeFingerTapGesture: 0
     TrackpadThreeFingerVertSwipeGesture: 2

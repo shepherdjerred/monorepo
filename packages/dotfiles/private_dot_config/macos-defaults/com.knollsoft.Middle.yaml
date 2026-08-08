@@ -7,6 +7,6 @@ data:
     launchOnLogin: true
     mouseThreeClick: false
     mouseThreeTap: true
-    trackpadThreeClick: false
+    trackpadThreeClick: true
     trackpadThreeTap: true
     wideOneCenterClick: 1

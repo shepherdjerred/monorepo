@@ -16,7 +16,8 @@ data:
     com.apple.trackpad.pinchGesture: true
     com.apple.trackpad.rotateGesture: true
     com.apple.trackpad.scrollBehavior: 2
-    com.apple.trackpad.threeFingerDragGesture: true
+    # Off — see com.apple.AppleMultitouchTrackpad.yaml (conflicts with Middle).
+    com.apple.trackpad.threeFingerDragGesture: false
     com.apple.trackpad.threeFingerHorizSwipeGesture: 2
     com.apple.trackpad.threeFingerTapGesture: 0
     com.apple.trackpad.threeFingerVertSwipeGesture: 2
