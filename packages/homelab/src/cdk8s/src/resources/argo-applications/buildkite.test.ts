@@ -124,7 +124,7 @@ function maintenanceDeployment(resources: readonly unknown[]) {
         namespace: z.literal("buildkite"),
       }),
       spec: z.object({
-        replicas: z.literal(1),
+        replicas: z.union([z.literal(0), z.literal(1)]),
         strategy: z.object({ type: z.literal("Recreate") }),
         template: z.object({
           metadata: z.object({
@@ -286,6 +286,7 @@ describe("Buildkite application", () => {
     if (container === undefined) {
       throw new Error("maintenance worker container is missing");
     }
+    expect(deployment.spec.replicas).toBe(0);
     const envNames = container.env.flatMap((entry) => {
       const parsed = z.object({ name: z.string() }).safeParse(entry);
       return parsed.success ? [parsed.data.name] : [];

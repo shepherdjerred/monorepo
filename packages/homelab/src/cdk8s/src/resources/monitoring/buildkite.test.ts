@@ -206,5 +206,8 @@ describe("Buildkite monitoring manifests", () => {
     expect(String(collectorStale?.["expr"])).toContain(
       'kube_deployment_status_replicas_available{\n        namespace="buildkite",\n        deployment="temporal-maintenance-worker"\n      }',
     );
+    expect(String(collectorStale?.["expr"])).toContain(
+      'up{\n        namespace="buildkite",\n        service="temporal-maintenance-worker-app-metrics"\n      }',
+    );
   });
 });

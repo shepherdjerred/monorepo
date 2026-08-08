@@ -31,9 +31,17 @@ import {
 const NAMESPACE = "buildkite";
 const WORKER_NAME = "temporal-maintenance-worker";
 const WORKER_LABELS = { app: WORKER_NAME };
+// The image pin is updated by the main-branch image pipeline in a follow-up
+// commit. Keep this Deployment scaled down while the committed pin still
+// points at the pre-maintenance worker; otherwise ArgoCD would remove the old
+// schedulers and start a worker that cannot parse TEMPORAL_WORKER_ROLE=maintenance.
+const PRE_MAINTENANCE_WORKER_IMAGE =
+  "2.0.0-8036@sha256:47a1d29da71b5571ffa9465797b75aa79f12276af8633e69d4be9068decea291";
 const WORKER_IMAGE =
   "ghcr.io/shepherdjerred/temporal-worker:" +
   versions["shepherdjerred/temporal-worker"];
+const MAINTENANCE_IMAGE_READY =
+  versions["shepherdjerred/temporal-worker"] !== PRE_MAINTENANCE_WORKER_IMAGE;
 
 const KOMETA_CONFIG = `libraries:
   Movies:
@@ -127,7 +135,7 @@ export function createBuildkiteMaintenanceWorker(chart: Chart): void {
   const config = createKometaConfig(chart);
   const secrets = createKometaSecrets(chart);
   const deployment = new Deployment(chart, WORKER_NAME, {
-    replicas: 1,
+    replicas: MAINTENANCE_IMAGE_READY ? 1 : 0,
     strategy: DeploymentStrategy.recreate(),
     automountServiceAccountToken: false,
     metadata: {

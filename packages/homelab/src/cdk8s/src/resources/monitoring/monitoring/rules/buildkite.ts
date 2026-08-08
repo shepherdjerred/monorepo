@@ -362,6 +362,12 @@ or (
         deployment="temporal-maintenance-worker"
       }
     ) == 0
+    or on() absent(
+      up{
+        namespace="buildkite",
+        service="temporal-maintenance-worker-app-metrics"
+      }
+    )
   )
 )`),
           for: "1m",
