@@ -286,7 +286,7 @@ function reasonsForUpcoming(
     currentOccurrenceProcessed =
       task.completeInstances.includes(day) ||
       task.skippedInstances.includes(day);
-    if (day > today && !currentOccurrenceProcessed) {
+    if (!currentOccurrenceProcessed && day > today) {
       addReason(reasons, { kind: "planned", day, recurring });
     }
   }
@@ -297,7 +297,7 @@ function reasonsForUpcoming(
       task.completeInstances.includes(day) ||
       task.skippedInstances.includes(day);
     currentOccurrenceProcessed ||= processed;
-    if (day > today && !processed) {
+    if (!processed && day > today) {
       addReason(reasons, { kind: "deadline", day, recurring: false });
     }
   }
