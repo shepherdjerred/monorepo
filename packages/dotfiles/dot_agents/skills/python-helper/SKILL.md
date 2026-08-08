@@ -1,565 +1,178 @@
 ---
 name: python-helper
-description: |
-  Python development with modern patterns, type hints, testing, and tooling
-  When user works with .py files, mentions Python, pip, pytest, ruff, uv, or encounters Python errors
+description: Current Python development guidance for versions, uv and pip, packaging, typing, asyncio, pytest, Ruff, security, and runtime boundaries. Use when writing or reviewing Python, pyproject.toml, Python CI, tests, dependency workflows, or Python upgrades.
 ---
 
-# Python Helper Agent
+# Python Helper
 
-## What's New in Python (2023-2026)
+Follow the project's declared Python version and dependency workflow. Validate runtime data, make async ownership explicit, and distinguish read-only checks, local mutations, and external publication.
 
-- **Python 3.14** (Oct 2025): Template strings `t"Hello {name}"` (PEP 750), deferred annotation evaluation (PEP 649), bracketless `except TimeoutError, OSError:` (PEP 758), `concurrent.interpreters` module (PEP 734), `compression.zstd` module (PEP 784), free-threaded mode officially supported (PEP 779), zero-overhead external debugger (PEP 768), `pathlib.Path.copy()/move()`, remote pdb attach `python -m pdb -p PID`, `python -c` auto-dedent, incremental GC with reduced pause times
-- **Python 3.13** (Oct 2024): New interactive REPL with multiline editing and color, experimental free-threaded mode (no GIL, `python3.13t`), experimental JIT compiler (PEP 744), `locals()` defined semantics (PEP 667), type parameter defaults `TypeVar('T', default=int)`, `TypeIs` for type narrowing (PEP 742), `ReadOnly` TypedDict fields (PEP 705), `copy.replace()`, `dbm.sqlite3` default backend, `warnings.deprecated()` decorator (PEP 702), iOS/Android tier 3 support, 19 dead-battery modules removed (cgi, telnetlib, etc.)
-- **Python 3.12** (Oct 2023): Type parameter syntax `def max[T](args)` (PEP 695), `type` statement for aliases, f-string lifting (nested f-strings, quote reuse, backslashes, comments) (PEP 701), `@override` decorator (PEP 698), `TypedDict` for `**kwargs` via `Unpack` (PEP 692), per-interpreter GIL (PEP 684), comprehension inlining 2x faster (PEP 709), `sys.monitoring` low-impact API, `pathlib.Path.walk()`, `itertools.batched()`, `distutils` removed
-- **Current stable**: Python 3.14.2 (Feb 2026)
-- **Supported**: 3.10 (security), 3.11 (security), 3.12 (bugfix), 3.13 (bugfix), 3.14 (active)
+## Current baseline
 
-## Overview
+Verified 2026-08-03:
 
-This skill covers Python development using modern patterns (3.10+ features), type hints, dataclasses, structural pattern matching, async/await, and the modern tooling ecosystem: uv (package/project manager), ruff (linter+formatter), pytest (testing), mypy/pyright (type checking), and pyproject.toml-based project configuration.
+| Line | Status |
+| --- | --- |
+| Python 3.14.6 | Current stable; 3.14 and 3.13 are bugfix branches |
+| Python 3.12, 3.11, 3.10 | Security-only branches |
+| Python 3.15.0b4 | Prerelease; RC1 was scheduled for 2026-08-04 and final for 2026-10-01 |
 
-## CLI Commands
-
-### Auto-Approved Safe Commands
+Python 3.14.7 was scheduled for the day after this verification. Check live status before repeating a patch number:
 
 ```bash
-# Version and environment info
 python --version
-python -c "import sys; print(sys.version)"
-pip list
-pip show <package>
+uv --version
+```
 
-# uv commands (fast pip replacement)
-uv version
+The project's `requires-python` is the syntax and standard-library ceiling. Do not use a current interpreter to justify APIs outside that declared range.
+
+Read [references/releases.md](references/releases.md) for the 48-page research ledger and 3.14/3.15 features. Read [references/tooling-and-packaging.md](references/tooling-and-packaging.md) for uv, pip, publishing, Ruff, and type-checkers. Read [references/testing-and-concurrency.md](references/testing-and-concurrency.md) for pytest, asyncio, TaskGroup, interpreters, and free threading. Read [references/types-and-security.md](references/types-and-security.md) for typed boundaries, deferred annotations, subprocesses, archives, and secrets.
+
+## Command authority
+
+Read-only or check-oriented commands:
+
+```bash
+python --version
+uv --version
 uv python list
-uv pip list
-uv pip show <package>
 uv tree
-
-# Ruff (linter + formatter)
 ruff check .
-ruff check --fix .
 ruff format --check .
-ruff format .
-
-# Pytest
-pytest
-pytest -v
-pytest --co  # collect-only, list tests
-pytest -x    # stop on first failure
-
-# Type checking
+pytest --collect-only
 mypy .
-pyright .
+pyright
 ```
 
-### Project Management with uv
+Local mutations include `uv add`, `uv sync`, `uv python install`, `uv python pin`, `ruff check --fix`, and `ruff format`. Ruff unsafe fixes can change runtime behavior or remove comments; require an explicit diff review and focused tests.
+
+`uv publish` mutates an external registry. Require explicit artifacts, registry, credentials, and publication authorization.
+
+## uv projects
+
+Use uv's project interface for a uv-managed application or package:
 
 ```bash
-# Create new project
-uv init my-project
-uv init --lib my-library
-
-# Add dependencies
-uv add requests httpx
-uv add --dev pytest ruff mypy
-
-# Lock and sync
-uv lock
-uv sync
-
-# Run commands in project env
-uv run python script.py
+uv sync --locked
 uv run pytest
-uv run ruff check .
-
-# Python version management
-uv python install 3.14
-uv python pin 3.14
-
-# Run tools without installing
-uvx ruff check .
-uvx black --check .
-
-# Build and publish
-uv build
-uv publish
+uv add httpx
+uv add --dev pytest ruff
 ```
 
-### Virtual Environments
+- Commit `uv.lock`; it is a universal exact-resolution lockfile.
+- `--locked` checks that project metadata and lock agree.
+- `--frozen` uses the lock without checking whether project metadata changed; it is not the stricter CI option.
+- Development tools belong in `[dependency-groups].dev`.
+- `[project.optional-dependencies]` defines consumer-installable extras.
+- `uv pip` is the lower-level environment interface, not the default project/lock workflow.
+- `uv --version` reports the uv binary. `uv version` reads or can update the project version.
+
+## pip boundaries
+
+Use `python -m pip` inside a verified virtual environment when a project uses pip. `pip freeze` is an environment snapshot, not a portable lock or secure supply-chain workflow. `pip lock` remains experimental and its `pylock.toml` is specific to the current Python/platform.
+
+Secure requirements installs need complete hashes and may disallow source distributions:
 
 ```bash
-# Create venv (stdlib)
-python -m venv .venv
-source .venv/bin/activate  # macOS/Linux
-.venv/Scripts/activate     # Windows
-
-# Create venv (uv, faster)
-uv venv
-uv venv --python 3.14
-
-# pip in venv
-pip install -r requirements.txt
-pip install -e ".[dev]"
-pip freeze > requirements.txt
+python -m pip install --require-hashes --only-binary :all: -r requirements.txt
 ```
 
-### Ruff Configuration
+## Type and validate boundaries
 
-```bash
-# Lint with specific rules
-ruff check --select E,F,I,B,UP .
-ruff check --fix --unsafe-fixes .
-
-# Format
-ruff format .
-ruff format --diff .
-
-# Show rule explanation
-ruff rule E501
-```
-
-Configure in `pyproject.toml`:
-
-```toml
-[tool.ruff]
-target-version = "py312"
-line-length = 88
-
-[tool.ruff.lint]
-select = ["E", "F", "I", "B", "UP", "N", "SIM", "RUF"]
-ignore = ["E501"]
-
-[tool.ruff.lint.isort]
-known-first-party = ["mypackage"]
-
-[tool.ruff.format]
-quote-style = "double"
-indent-style = "space"
-```
-
-### Pytest Commands
-
-```bash
-# Run all tests
-pytest
-
-# Verbose with output capture disabled
-pytest -v -s
-
-# Run specific test file/function
-pytest tests/test_api.py
-pytest tests/test_api.py::test_create_user
-
-# Run by marker
-pytest -m "not slow"
-pytest -m "integration"
-
-# Parallel execution (pytest-xdist)
-pytest -n auto
-
-# Coverage
-pytest --cov=src --cov-report=term-missing
-
-# Show local variables on failure
-pytest -l
-
-# Re-run failed tests
-pytest --lf
-pytest --ff  # failed first, then rest
-```
-
-### Type Checking
-
-```bash
-# mypy
-mypy src/
-mypy --strict src/
-mypy --ignore-missing-imports src/
-
-# pyright (faster, VS Code default)
-pyright src/
-pyright --pythonversion 3.14
-```
-
-## Essential Patterns Quick Reference
-
-### Type Hints (Modern Syntax)
+Avoid bare `dict` and `list[dict]`; they introduce imprecise values. Use dataclasses, `TypedDict`, Pydantic models, or precise mappings according to whether runtime validation is needed.
 
 ```python
-# Union types (3.10+)
-def process(value: int | str) -> None: ...
+from pydantic import BaseModel, TypeAdapter
 
-# Optional (3.10+)
-def find(name: str) -> User | None: ...
 
-# Generic functions (3.12+)
-def first[T](items: list[T]) -> T:
-    return items[0]
+class User(BaseModel):
+    id: int
+    email: str
 
-# Type aliases (3.12+)
-type Vector = list[float]
-type Result[T] = T | None
-type Handler[**P] = Callable[P, Awaitable[None]]
+
+Users = TypeAdapter(list[User])
+users = Users.validate_python(response.json())
 ```
 
-### Dataclasses
+Check HTTP status before parsing. A type annotation does not validate JSON, environment variables, database results, cache values, or deserialized files.
 
-```python
-from dataclasses import dataclass, field
+Use `Any` only where disabling checking is intentional and isolated. Prefer `object` or `unknown`-equivalent validation patterns at boundaries. Use `Never` for exhaustiveness.
 
-@dataclass(frozen=True, slots=True)
-class Point:
-    x: float
-    y: float
-    label: str = "origin"
-    tags: list[str] = field(default_factory=list)
-```
+`TypeIs` narrows both branches and requires the narrowed type to be a subtype. `TypeGuard` remains necessary for some invariant-container or otherwise non-subtype narrowing. Neither is universally preferred.
 
-### Structural Pattern Matching (3.10+)
+## Async and concurrency
 
-```python
-match command:
-    case {"action": "move", "x": x, "y": y}:
-        move_to(x, y)
-    case {"action": "quit"}:
-        quit_game()
-    case str() as text if text.startswith("/"):
-        handle_command(text)
-    case _:
-        print("Unknown command")
-```
+Use `TaskGroup` when sibling cancellation and grouped failures are the intended semantics. `asyncio.gather()` does not cancel sibling awaitables merely because one fails. `return_exceptions=True` turns exceptions into results and must not silently normalize failure.
 
-### Async/Await
+Reuse clients so connection pooling works:
 
 ```python
 import asyncio
+
+import httpx
+
 
 async def fetch_all(urls: list[str]) -> list[str]:
     async with httpx.AsyncClient() as client:
-        tasks = [client.get(url) for url in urls]
-        responses = await asyncio.gather(*tasks)
-        return [r.text for r in responses]
+        async with asyncio.TaskGroup() as group:
+            tasks = [group.create_task(fetch_text(client, url)) for url in urls]
+    return [task.result() for task in tasks]
 
-asyncio.run(fetch_all(["https://example.com"]))
+
+async def fetch_text(client: httpx.AsyncClient, url: str) -> str:
+    response = await client.get(url)
+    response.raise_for_status()
+    return response.text
 ```
 
-### Error Handling
-
-```python
-# Exception groups (3.11+)
-try:
-    async with asyncio.TaskGroup() as tg:
-        tg.create_task(risky_op())
-except* ValueError as eg:
-    for exc in eg.exceptions:
-        print(f"ValueError: {exc}")
-except* TypeError as eg:
-    handle_type_errors(eg)
-
-# Custom exceptions
-class AppError(Exception):
-    def __init__(self, message: str, code: int = 500):
-        super().__init__(message)
-        self.code = code
-```
-
-## pyproject.toml Quick Reference
-
-```toml
-[project]
-name = "my-package"
-version = "0.1.0"
-description = "My Python package"
-requires-python = ">=3.12"
-dependencies = [
-    "httpx>=0.27",
-    "pydantic>=2.0",
-]
-
-[project.optional-dependencies]
-dev = ["pytest>=8.0", "ruff>=0.8", "mypy>=1.13"]
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-addopts = "-ra -q"
-markers = [
-    "slow: marks tests as slow",
-    "integration: marks integration tests",
-]
-
-[tool.mypy]
-python_version = "3.14"
-strict = true
-warn_return_any = true
-
-[tool.ruff]
-target-version = "py312"
-line-length = 88
-
-[tool.ruff.lint]
-select = ["E", "F", "I", "B", "UP"]
-```
-
-## Common Error Patterns and Solutions
-
-### ModuleNotFoundError
-
-```python
-# Usually: wrong venv or missing dependency
-# Check: which python, pip list
-# Fix: uv add <package> or pip install <package>
-# If script name shadows stdlib: rename your file (e.g., random.py -> my_random.py)
-```
-
-### ImportError with Circular Imports
-
-```python
-# Move import inside function, or use TYPE_CHECKING guard
-from __future__ import annotations  # Defers all annotation evaluation (pre-3.14)
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from myapp.models import User  # Only imported during type checking
-
-def process(user: User) -> None:  # Works at runtime due to deferred eval
-    ...
-```
-
-### TypeError: unhashable type
-
-```python
-# Mutable types (list, dict, set) can't be dict keys or set members
-# Fix: use tuple instead of list, frozenset instead of set
-# Or for dataclasses: @dataclass(frozen=True)
-```
-
-### asyncio.run() Cannot Be Called from Running Event Loop
-
-```python
-# In Jupyter notebooks or nested async contexts:
-import asyncio
-import nest_asyncio
-nest_asyncio.apply()  # Allows nested event loops
-
-# Or use await directly in Jupyter/IPython:
-result = await fetch_data()
-```
-
-### Common Type Hint Mistakes
-
-```python
-# Wrong: mutable default in function signature
-def bad(items: list[int] = []) -> None: ...
-
-# Right: use None sentinel
-def good(items: list[int] | None = None) -> None:
-    if items is None:
-        items = []
-
-# Wrong: using dict where TypedDict is better
-def process(config: dict) -> None: ...  # No type safety on keys
-
-# Right: TypedDict for structured dicts
-class Config(TypedDict):
-    host: str
-    port: int
-
-def process(config: Config) -> None: ...
-```
-
-## Popular Packages by Domain
-
-### Web Frameworks
-
-- **FastAPI** - Async API framework with automatic OpenAPI docs, Pydantic validation
-- **Django** - Full-stack framework with ORM, admin, auth, migrations
-- **Flask** - Lightweight WSGI micro-framework
-- **Starlette** - Async ASGI framework (FastAPI is built on it)
-
-### HTTP Clients
-
-- **httpx** - Modern async/sync HTTP client (recommended, replaces requests for new code)
-- **requests** - Simple sync HTTP client (most popular, sync-only)
-- **aiohttp** - Async HTTP client/server
-
-### Data Validation
-
-- **Pydantic** (v2) - Data validation with Python type hints, used by FastAPI
-- **attrs** - Classes without boilerplate (alternative to dataclasses, more features)
-- **msgspec** - Fast serialization/validation
-
-### Data Science / ML
-
-- **pandas** - DataFrames and data analysis
-- **polars** - Fast DataFrame library (Rust-based, often 10x faster than pandas)
-- **numpy** - Numerical computing
-- **scikit-learn** - Machine learning
-
-### Database
-
-- **SQLAlchemy** (v2) - SQL toolkit and ORM
-- **SQLModel** - SQLAlchemy + Pydantic (by FastAPI creator)
-- **asyncpg** - Fast async PostgreSQL driver
-- **alembic** - Database migrations (SQLAlchemy)
-
-### CLI
-
-- **click** - Composable CLI framework
-- **typer** - CLI framework built on click with type hints
-- **argparse** - Standard library CLI parsing
-- **rich** - Rich text, tables, progress bars in terminal
-
-### Testing
-
-- **pytest** - Testing framework (de facto standard)
-- **hypothesis** - Property-based testing
-- **pytest-asyncio** - Async test support
-- **respx** / **pytest-httpx** - Mock httpx requests
-- **factory-boy** - Test fixture factories
-
-## Project Structure Patterns
-
-### Application (Flat Layout)
-
-```
-my-app/
-  my_app/
-    __init__.py
-    main.py
-    config.py
-    models.py
-    services/
-      __init__.py
-      user.py
-  tests/
-    conftest.py
-    test_main.py
-    test_services/
-      test_user.py
-  pyproject.toml
-  .python-version
-```
-
-### Library (src Layout)
-
-```
-my-lib/
-  src/
-    my_lib/
-      __init__.py
-      py.typed          # Marks package as typed (PEP 561)
-      core.py
-      _internal.py      # Private module (underscore prefix)
-  tests/
-    conftest.py
-    test_core.py
-  pyproject.toml
-  .python-version
-```
-
-### FastAPI Application
-
-```
-my-api/
-  src/
-    my_api/
-      __init__.py
-      main.py           # FastAPI app instance
-      config.py          # Settings via pydantic-settings
-      models/            # Pydantic models
-      routes/            # API route handlers
-      services/          # Business logic
-      db/                # Database models and migrations
-  tests/
-    conftest.py          # TestClient fixture
-    test_routes/
-  pyproject.toml
-  alembic.ini
-```
-
-## Performance Tips
-
-```bash
-# Profile first, optimize second
-python -m cProfile -s cumulative script.py
-python -m cProfile -o profile.pstats script.py
-
-# Line-by-line profiling
-pip install line-profiler
-kernprof -l -v script.py
-
-# Memory profiling
-pip install memray
-memray run script.py
-memray flamegraph memray-output.bin
-```
-
-```python
-# Use generators for large datasets
-def process_large_file(path: str):
-    with open(path) as f:
-        for line in f:  # Lazy iteration, constant memory
-            yield transform(line)
-
-# Use __slots__ for many instances
-class Point:
-    __slots__ = ("x", "y")
-    def __init__(self, x: float, y: float) -> None:
-        self.x = x
-        self.y = y
-
-# Use collections for specialized data structures
-from collections import defaultdict, Counter, deque
-counts = Counter(words)
-graph = defaultdict(list)
-queue = deque(maxlen=100)
-
-# functools.cache for memoization
-from functools import cache
-
-@cache
-def fibonacci(n: int) -> int:
-    if n < 2:
-        return n
-    return fibonacci(n - 1) + fibonacci(n - 2)
-```
-
-## Reference Links
-
-- [Python Docs](https://docs.python.org/3/) - Official documentation
-- [What's New in Python 3.14](https://docs.python.org/3/whatsnew/3.14.html)
-- [What's New in Python 3.13](https://docs.python.org/3/whatsnew/3.13.html)
-- [What's New in Python 3.12](https://docs.python.org/3/whatsnew/3.12.html)
-- [typing module](https://docs.python.org/3/library/typing.html) - Type hints reference
-- [uv docs](https://docs.astral.sh/uv/) - Package/project manager
-- [Ruff docs](https://docs.astral.sh/ruff/) - Linter and formatter
-- [pytest docs](https://docs.pytest.org/) - Testing framework
-- [mypy docs](https://mypy.readthedocs.io/) - Type checker
-- [Pydantic docs](https://docs.pydantic.dev/) - Data validation
-- [FastAPI docs](https://fastapi.tiangolo.com/) - API framework
-- [Real Python](https://realpython.com/) - Tutorials and guides
-
-## When to Ask for Help
-
-Ask the user for clarification when:
-
-- Choice between sync and async is unclear
-- Dependency management strategy (uv vs poetry vs pip) needs deciding
-- Type annotation complexity (Protocol vs ABC vs duck typing)
-- Testing strategy (unit vs integration vs property-based)
-- Project structure decisions (src layout vs flat, monorepo vs separate)
-- Performance optimization approach (profiling first)
-
----
-
-See `references/` for detailed guides:
-
-- `modern-python.md` - Type hints, dataclasses, match statements, async/await, protocols, f-strings
-- `tooling-packaging.md` - uv, ruff, pip, poetry, venv, pyproject.toml, mypy vs pyright, build backends
-- `testing-patterns.md` - pytest fixtures, parametrize, markers, conftest, mocking, coverage, hypothesis
+Own the event loop at the application boundary. Do not monkey-patch it with archived `nest_asyncio`; use top-level `await` in notebooks or refactor nested `asyncio.run()` calls.
+
+Subinterpreters have separate execution contexts and GILs but are not security boundaries. Free-threaded Python is supported in 3.14, yet extensions can re-enable the GIL and shared state still requires synchronization.
+
+## Tests
+
+Current pytest documentation is 9.1.1. Avoid embedding volatile minimum-version pins unless compatibility requires them.
+
+- Use exact state, value, status, body, and side-effect assertions.
+- Do not skip “not implemented” behavior or xfail known bugs to make the suite green.
+- Use controlled servers or HTTP fakes instead of `example.com`.
+- Prefer `--import-mode=importlib` for new projects and a src layout where appropriate.
+- Use pytest-asyncio `auto` only when asyncio is the suite's sole async framework; use strict mode for plugin coexistence.
+- `-n auto` is pytest-xdist, and coverage flags are pytest-cov, not core pytest.
+
+## Ruff and type-checkers
+
+Let Ruff infer `target-version` from `requires-python` or set the true minimum. Formatting is best-effort against line length; E501 can still report a formatted line. Use safe fixes by default and note that Ruff is pre-1.0, so minor releases can contain breaking changes.
+
+Choose mypy or Pyright from the repository's existing configuration, plugin needs, editor integration, and intended strictness. Do not suppress missing imports globally or claim one checker is categorically the “CI” or “fast” choice.
+
+## Security
+
+- Use `secrets`, not `random`, for tokens and credential material.
+- Pass subprocess argument sequences; avoid `shell=True` with untrusted input.
+- Never unpickle untrusted data.
+- Keep tarfile's safer `data` filter and inspect untrusted archives even on Python 3.14.
+- Audit with `uv run --with pip-audit pip-audit`, not the nonexistent
+  `pip audit` / `uv pip audit` commands. Use `uv run --with`, not `uvx`: `uvx
+  pip-audit` runs pip-audit in its own isolated tool environment and audits
+  pip-audit's dependencies, not the project's; `uv run --with pip-audit`
+  layers pip-audit onto the project's synced environment so it inspects the
+  project's actual installed packages. `uv audit` remains a preview-only
+  subcommand (behind `--preview`) and is absent entirely in older uv releases,
+  so don't rely on it as a stable, version-independent option.
+- Fail on missing required environment configuration; do not silently switch databases.
+- Prefer trusted publishing and pinned container artifacts over static tokens and `latest` tags.
+- Open text files with an explicit encoding while Python 3.14 remains platform-sensitive by default.
+
+## Review checklist
+
+- Verify Python, uv, and the project's `requires-python` range.
+- Separate read-only checks, local mutations, and external publication.
+- Commit and enforce the lock with `--locked` in CI.
+- Validate external data before returning domain types.
+- Keep async failure and cancellation semantics explicit.
+- Reuse network clients and check response status.
+- Use exact tests without skips, weak assertions, or real public-network dependencies.
+- Keep Ruff fixes safe unless an unsafe fix is explicitly reviewed.
+- Avoid archived monkey patches and unqualified performance claims.
+- Check security-sensitive serialization, subprocess, archive, secret, and publishing boundaries.
