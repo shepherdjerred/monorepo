@@ -68,7 +68,7 @@ const PrometheusRuleSchema = z
   .loose();
 
 function normalizePromql(value: string): string {
-  return value.replace(/\s+/g, " ").trim();
+  return value.replaceAll(/\s+/g, " ").trim();
 }
 
 function synthBuildkiteMonitoring(): unknown[] {
