@@ -14,7 +14,7 @@ export const BUILDKITE_POD_LIFETIME_WRITES_SEEN_24H_METRIC =
 export const BUILDKITE_POD_PARENT_FS_WRITES_BYTES_BY_JOB_METRIC =
   "buildkite:pod_parent_fs_writes_bytes_by_job_total";
 export const BUILDKITE_BUN_CACHE_PVC = "buildkite-bun-cache";
-export const BUILDKITE_BUN_CACHE_GC_CRONJOB = "buildkite-bun-cache-gc";
+export const BUILDKITE_BUN_CACHE_GC_ACTIVITY = "buildkite-bun-cache-gc";
 
 const POD_LABEL_METADATA = [
   "label_buildkite_com_job_uuid",
@@ -322,34 +322,47 @@ and on ()
           alert: "BuildkiteBunCacheCollectorStale",
           annotations: {
             summary:
-              "Buildkite Bun cache collector is missing or has not succeeded",
+              "Buildkite Bun cache maintenance activity is missing or has not succeeded",
             description:
-              "The five-minute Buildkite Bun cache collector is missing (its CronJob was deleted or never created) or has not completed successfully in the last 20 minutes.",
+              "The five-minute Buildkite Bun cache maintenance activity has not completed successfully in the last 20 minutes.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(`(
-  time() - kube_cronjob_status_last_successful_time{
-    namespace="buildkite",
-    cronjob="${BUILDKITE_BUN_CACHE_GC_CRONJOB}"
+  time() - kubernetes_maintenance_last_success_timestamp_seconds{
+    job="${BUILDKITE_BUN_CACHE_GC_ACTIVITY}"
   } > 1200
 )
-or
-(
-  time() - kube_cronjob_created{
-    namespace="buildkite",
-    cronjob="${BUILDKITE_BUN_CACHE_GC_CRONJOB}"
-  } > 1200
-  unless on (namespace, cronjob)
-  kube_cronjob_status_last_successful_time{
-    namespace="buildkite",
-    cronjob="${BUILDKITE_BUN_CACHE_GC_CRONJOB}"
-  }
-)
-or
-absent(
-  kube_cronjob_created{
-    namespace="buildkite",
-    cronjob="${BUILDKITE_BUN_CACHE_GC_CRONJOB}"
-  }
+or (
+  absent(
+    kubernetes_maintenance_last_success_timestamp_seconds{
+      job="${BUILDKITE_BUN_CACHE_GC_ACTIVITY}"
+    }
+  )
+  and on() (
+    time() - max(
+      temporal_worker_app_process_start_time_seconds{
+        namespace="buildkite",
+        pod=~"temporal-maintenance-worker-.*"
+      }
+    ) > 1200
+    or time() - max(
+      kube_pod_start_time{
+        namespace="buildkite",
+        pod=~"temporal-maintenance-worker-.*"
+      }
+    ) > 1200
+    or on() absent(
+      kube_deployment_status_replicas_available{
+        namespace="buildkite",
+        deployment="temporal-maintenance-worker"
+      }
+    )
+    or on() max(
+      kube_deployment_status_replicas_available{
+        namespace="buildkite",
+        deployment="temporal-maintenance-worker"
+      }
+    ) == 0
+  )
 )`),
           for: "1m",
           labels: {

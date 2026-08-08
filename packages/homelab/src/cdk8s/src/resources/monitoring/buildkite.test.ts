@@ -6,7 +6,7 @@ import {
   createBuildkiteMonitoring,
 } from "./buildkite.ts";
 import {
-  BUILDKITE_BUN_CACHE_GC_CRONJOB,
+  BUILDKITE_BUN_CACHE_GC_ACTIVITY,
   BUILDKITE_BUN_CACHE_PVC,
 } from "./monitoring/rules/buildkite.ts";
 
@@ -188,18 +188,23 @@ describe("Buildkite monitoring manifests", () => {
       },
     });
     expect(String(collectorStale?.["expr"])).toContain(
-      `cronjob="${BUILDKITE_BUN_CACHE_GC_CRONJOB}"`,
+      `job="${BUILDKITE_BUN_CACHE_GC_ACTIVITY}"`,
     );
     expect(String(collectorStale?.["expr"])).toContain(
-      "kube_cronjob_status_last_successful_time",
+      "kubernetes_maintenance_last_success_timestamp_seconds",
     );
-    expect(String(collectorStale?.["expr"])).toContain("kube_cronjob_created");
     expect(String(collectorStale?.["expr"])).toContain("> 1200");
-    // A deleted/never-created CronJob leaves both counter series absent, so the
-    // time()-based branches evaluate to empty vectors. The explicit absent()
-    // branch keeps the alert firing when the collector itself is missing.
     expect(String(collectorStale?.["expr"])).toContain(
-      `absent(\n  kube_cronjob_created{\n    namespace="buildkite",\n    cronjob="${BUILDKITE_BUN_CACHE_GC_CRONJOB}"\n  }\n)`,
+      `absent(\n    kubernetes_maintenance_last_success_timestamp_seconds{\n      job="${BUILDKITE_BUN_CACHE_GC_ACTIVITY}"\n    }\n  )`,
+    );
+    expect(String(collectorStale?.["expr"])).toContain(
+      'temporal_worker_app_process_start_time_seconds{\n        namespace="buildkite",\n        pod=~"temporal-maintenance-worker-.*"\n      }',
+    );
+    expect(String(collectorStale?.["expr"])).toContain(
+      'kube_pod_start_time{\n        namespace="buildkite",\n        pod=~"temporal-maintenance-worker-.*"\n      }',
+    );
+    expect(String(collectorStale?.["expr"])).toContain(
+      'kube_deployment_status_replicas_available{\n        namespace="buildkite",\n        deployment="temporal-maintenance-worker"\n      }',
     );
   });
 });

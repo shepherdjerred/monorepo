@@ -1,16 +1,36 @@
 ---
 title: Homelab maintenance workflows
-description: Five nightly janitors plus a continuous workflow-failure pager — ZFS scrubs, error-DB housekeeping, backup-orphan detection, DNS audits, golink sync, and PagerDuty alerts — each with namespace-scoped RBAC.
+description: Scheduled live maintenance — ZFS scrubs, error-DB housekeeping, backup-orphan detection, DNS audits, golink sync, Kometa, Buildkite cache maintenance, and PagerDuty alerts.
 ---
 
-Six workflows keep the cluster healthy — five nightly janitors plus a
-continuous workflow-failure pager. Access is **namespace-scoped**: each
-`kubectl exec` job gets its own `Role` (not a `ClusterRole`), bound only in the
-single namespace it works in — `prometheus`, `bugsink`, or `openebs` — so its
-blast radius stops at that namespace boundary. The Role grants `pods/exec` on
-any pod in that namespace rather than a single named workload, so the guarantee
-is per-namespace, not per-pod. The one workflow that touches backups is
+The maintenance fleet includes the cluster janitors, the serial Buildkite
+cache/database activities, Kometa Plex synchronization, and a continuous
+workflow-failure pager. The four Buildkite/Kometa workflows are direct
+subprocess activities on the `maintenance` task queue. They run in one
+persistent `temporal-maintenance-worker` Deployment in the `buildkite`
+namespace, which mounts the existing Buildkite PVCs and has no Kubernetes Job
+RBAC. Kometa reaches Plex over the cluster network; its config and credentials
+are owned by the Buildkite chart. The one workflow that touches backups is
 detection-only by explicit decision.
+
+The remaining namespace-scoped `kubectl exec` RBAC belongs only to the older
+ZFS, Bugsink, and Velero activities described below; it is unrelated to the
+maintenance worker.
+
+## Direct maintenance activities
+
+- `kometa-daily` runs Kometa with the mounted `config.yml` and injected Plex/TMDB
+  credentials.
+- `buildkite-bun-cache-gc` runs the shared lock-aware Bun GC script against the
+  Bun data and control PVCs.
+- `buildkite-uv-cache-prune-weekly` runs `uv cache prune --ci` against the UV
+  cache PVC.
+- `buildkite-trivy-db-refresh` runs `trivy image --download-db-only` against
+  the Trivy database PVC.
+
+Temporal schedules retain their existing IDs and workflow names while routing
+these activities to the serial `maintenance` queue. A failed subprocess is
+retried by Temporal; no maintenance Kubernetes `Job` or `CronJob` is created.
 
 ## ZFS maintenance (`zfs-maintenance`)
 

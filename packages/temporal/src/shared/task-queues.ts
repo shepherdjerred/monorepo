@@ -1,5 +1,7 @@
 export const TASK_QUEUES = {
   DEFAULT: "default",
+  /** Serial direct subprocess maintenance against the Buildkite PVCs. */
+  MAINTENANCE: "maintenance",
   SCOUT: "scout",
   /**
    * Delayed and recurring report-only agent tasks. Kept off DEFAULT so

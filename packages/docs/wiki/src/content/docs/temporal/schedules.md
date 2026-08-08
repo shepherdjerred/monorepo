@@ -31,7 +31,8 @@ Each category has a deep-dive page; the
   showcase images / queue windows.
 - **[Homelab maintenance](/temporal/workflows/homelab-maintenance/)** — ZFS
   scrub, Bugsink housekeeping, S3 image GC, Velero orphan-snapshot audit,
-  DNS audit, golink sync, review-signal collection.
+  DNS audit, golink sync, review-signal collection, plus Kometa and the
+  Buildkite Bun/UV/Trivy maintenance activities.
 - **Scheduled reports** — weekly dependency summary and the daily homelab
   audit (a report-only [agent task](/temporal/agent-tasks/)).
 - **[Glitter corpus](/temporal/workflows/glitter/)** — daily Discord capture
@@ -69,8 +70,11 @@ Schedules fall into three groups by what they touch:
   `readme-refresh` can call Codex for a new package's summary before opening
   its PR.
 - **Live-maintenance jobs** act directly on running systems, not the repo: ZFS
-  scrub/trim, Bugsink event pruning, S3 image GC, and the Home Assistant
-  routines all mutate live state in place, with no PR in the loop.
+  scrub/trim, Bugsink event pruning, S3 image GC, Kometa Plex synchronization,
+  Buildkite cache/database maintenance, and the Home Assistant routines all
+  mutate live state in place, with no PR in the loop. The four Buildkite/Kometa
+  activities run on the serial `maintenance` task queue in one persistent
+  worker; they do not create Kubernetes Jobs.
 - **Report-only agent tasks** can only email their findings — they never write
   the repo or the cluster. Details: [Agent tasks](/temporal/agent-tasks/).
 

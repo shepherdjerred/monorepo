@@ -26,13 +26,14 @@ headroom alone would only delay another incident.
   per-pod caching instead of bypassing the lock.
 - Route every Buildkite dependency install through one explicit helper that
   holds a shared `flock` for the duration of `bun install`.
-- Run a five-minute Kubernetes CronJob with a 15-minute deadline. It acquires
+- Run the five-minute Temporal `buildkite-bun-cache-gc` schedule on the serial
+  maintenance worker with a 15-minute activity deadline. It acquires
   the exclusive lock, rechecks volume utilization, and directly deletes every
   entry below the managed data directory only at or above the 60% high-water
   mark.
 - Alert on the Bun PVC alone at 75% for 10 minutes and 90% for 5 minutes using
   persistent ZFS telemetry joined to kube-state-metrics. Alert when the
-  collector has not succeeded for 20 minutes.
+  maintenance activity has not succeeded for 20 minutes.
 - Apply PVC admission-policy changes one Argo sync wave before PVC changes so a
   newly classified claim can be created in the same release.
 - Validate the synthesized Kubernetes resources, the static pipeline

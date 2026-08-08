@@ -1,4 +1,4 @@
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect, it } from "bun:test";
 import type { Duration } from "@temporalio/common";
 import { DataDragonWorkflowInputSchema } from "#activities/data-dragon.ts";
 import { DYNAMIC_AGENT_TASK_MEMO_KEY } from "#shared/agent-task.ts";
@@ -9,6 +9,7 @@ import {
 import { SCHEDULES } from "./schedule-definitions.ts";
 import { isOrphanSchedule } from "./orphan-detection.ts";
 import { buildScheduleState } from "./schedule-state.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const DYNAMIC_AGENT_TASK_MEMO = {
   [DYNAMIC_AGENT_TASK_MEMO_KEY]: true,
@@ -21,6 +22,26 @@ function findScheduleById(id: string) {
   }
   return schedule;
 }
+
+describe("direct maintenance schedules", () => {
+  const definitions = [
+    ["buildkite-bun-cache-gc", "runBunCacheGcWorkflow", "1 hour"],
+    ["kometa-daily", "runKometaWorkflow", "2 hours"],
+    ["buildkite-uv-cache-prune-weekly", "runUvCachePruneWorkflow", "2 hours"],
+    ["buildkite-trivy-db-refresh", "runTrivyDbRefreshWorkflow", "2 hours"],
+  ] as const;
+
+  it.each(definitions)(
+    "%s keeps its workflow identity while using the maintenance queue",
+    (id, workflowType, workflowExecutionTimeout) => {
+      const schedule = findScheduleById(id);
+      expect(schedule.workflowType).toBe(workflowType);
+      expect(schedule.taskQueue).toBe(TASK_QUEUES.MAINTENANCE);
+      expect(schedule.requiredEnvironment).toBeUndefined();
+      expect(schedule.workflowExecutionTimeout).toBe(workflowExecutionTimeout);
+    },
+  );
+});
 
 function configuredEnvironment(
   schedule: ReturnType<typeof findScheduleById>,
@@ -61,6 +82,12 @@ const WORKFLOW_MAX_SLEEP_MS: Record<string, number> = {
 
 const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "fetchSkillCappedManifest",
+  // These workflows await one direct maintenance activity; the activity
+  // timeout and retry policy are the relevant execution budget.
+  "runBunCacheGcWorkflow",
+  "runKometaWorkflow",
+  "runUvCachePruneWorkflow",
+  "runTrivyDbRefreshWorkflow",
   "generateDependencySummary",
   "runDnsAudit",
   "runHomelabAuditWorkflow",

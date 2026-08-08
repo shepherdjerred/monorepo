@@ -75,6 +75,17 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Fetch Better Skill Capped manifest from Firestore and upload to S3 (daily at 05:00 PT)",
   },
   {
+    id: "buildkite-bun-cache-gc",
+    workflowType: "runBunCacheGcWorkflow",
+    args: [],
+    cronExpression: "*/5 * * * *",
+    taskQueue: TASK_QUEUES.MAINTENANCE,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    // Three 15-minute attempts plus exponential backoff and workflow overhead.
+    workflowExecutionTimeout: "1 hour",
+    memo: "Every-five-minute Buildkite Bun cache GC on the CI node",
+  },
+  {
     id: "deps-summary-weekly",
     workflowType: "generateDependencySummary",
     args: [7],
@@ -133,6 +144,17 @@ export const SCHEDULES: ScheduleDefinition[] = [
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "50 minutes",
     memo: "Bounded daily homelab health check email via generic report-only agent task (Claude -> Postal)",
+  },
+  {
+    id: "kometa-daily",
+    workflowType: "runKometaWorkflow",
+    args: [],
+    cronExpression: "30 4 * * *",
+    taskQueue: TASK_QUEUES.MAINTENANCE,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    // Three 30-minute attempts plus exponential backoff and workflow overhead.
+    workflowExecutionTimeout: "2 hours",
+    memo: "Daily Kometa Plex metadata and collection synchronization",
   },
   {
     id: "scout-data-dragon-version-check",
@@ -238,6 +260,28 @@ export const SCHEDULES: ScheduleDefinition[] = [
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "30 minutes",
     memo: "Weekly ZFS pool scrub + autotrim (zfspv-pool-nvme, zfspv-pool-hdd)",
+  },
+  {
+    id: "buildkite-uv-cache-prune-weekly",
+    workflowType: "runUvCachePruneWorkflow",
+    args: [],
+    cronExpression: "15 3 * * 0",
+    taskQueue: TASK_QUEUES.MAINTENANCE,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    // Three 30-minute attempts plus exponential backoff and workflow overhead.
+    workflowExecutionTimeout: "2 hours",
+    memo: "Weekly Buildkite uv cache prune on the CI node",
+  },
+  {
+    id: "buildkite-trivy-db-refresh",
+    workflowType: "runTrivyDbRefreshWorkflow",
+    args: [],
+    cronExpression: "30 */6 * * *",
+    taskQueue: TASK_QUEUES.MAINTENANCE,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    // Three 30-minute attempts plus exponential backoff and workflow overhead.
+    workflowExecutionTimeout: "2 hours",
+    memo: "Buildkite Trivy vulnerability database refresh every six hours",
   },
   {
     id: "bugsink-housekeeping",

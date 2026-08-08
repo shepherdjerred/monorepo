@@ -3,6 +3,7 @@ import {
   parseWorkerRole,
   workerRoleRunsCore,
   workerRoleRunsGlitter,
+  workerRoleRunsMaintenance,
 } from "./worker-role.ts";
 
 describe("Temporal worker role", () => {
@@ -10,9 +11,12 @@ describe("Temporal worker role", () => {
     expect(parseWorkerRole(undefined)).toBe("all");
   });
 
-  it.each(["all", "core", "glitter"])("accepts the %s role", (role) => {
-    expect(parseWorkerRole(role)).toBe(role);
-  });
+  it.each(["all", "core", "glitter", "maintenance"])(
+    "accepts the %s role",
+    (role) => {
+      expect(parseWorkerRole(role)).toBe(role);
+    },
+  );
 
   it("fails fast for an unknown role", () => {
     expect(() => parseWorkerRole("unknown")).toThrow();
@@ -25,5 +29,9 @@ describe("Temporal worker role", () => {
     expect(workerRoleRunsGlitter("core")).toBe(false);
     expect(workerRoleRunsCore("glitter")).toBe(false);
     expect(workerRoleRunsGlitter("glitter")).toBe(true);
+    expect(workerRoleRunsMaintenance("all")).toBe(true);
+    expect(workerRoleRunsMaintenance("maintenance")).toBe(true);
+    expect(workerRoleRunsMaintenance("core")).toBe(false);
+    expect(workerRoleRunsMaintenance("glitter")).toBe(false);
   });
 });

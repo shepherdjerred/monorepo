@@ -28,14 +28,10 @@ import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-ar
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createTemporalWorkerAuditRbac } from "./audit-rbac.ts";
 import { createTemporalWorkerCrdReaderRbac } from "./crd-rbac.ts";
-import {
-  createAgentTaskApiService,
-  createTemporalWorkerGithubWebhookService,
-  createXcodeCloudWebhookService,
-} from "./http-services.ts";
 import { glitterCorpusEnv } from "./glitter-corpus-env.ts";
 import { createTemporalGlitterWorker } from "./glitter-worker.ts";
 import { temporalWorkerHealthProbes } from "./worker-health.ts";
+import { createTemporalWorkerHttpServices } from "./worker-http-services.ts";
 
 export type CreateTemporalWorkerDeploymentProps = {
   serverServiceName: string;
@@ -369,11 +365,7 @@ export function createTemporalWorkerDeployment(
         TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
         TEMPORAL_WORKER_ROLE: EnvValue.fromValue("core"),
         ENVIRONMENT: EnvValue.fromValue("production"),
-        // Headless hygiene for the `claude -p` agent subprocesses: don't let
-        // startup block on statsig/telemetry fetches or an auto-update check.
-        // Defensive only — the historical 30-min hang was the `--json-schema`
-        // CLI flag (now removed), not these; keep them off for a clean headless
-        // run regardless.
+        // Keep headless Claude subprocesses from starting optional traffic or updates.
         CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: EnvValue.fromValue("1"),
         DISABLE_AUTOUPDATER: EnvValue.fromValue("1"),
         // OpenTelemetry tracing → Tempo. initializeTracing() in worker.ts
@@ -390,13 +382,7 @@ export function createTemporalWorkerDeployment(
         GIT_COMMITTER_EMAIL: EnvValue.fromValue(
           "temporal-worker@homelab.local",
         ),
-        // Make the cluster CA globally trusted. @kubernetes/client-node hands
-        // its `ca` to node-fetch via an https.Agent; Bun's node-fetch polyfill
-        // doesn't reliably honor per-agent CA bundles, which surfaced as
-        // "unable to verify the first certificate" from listTailscaleIngresses.
-        // NODE_EXTRA_CA_CERTS is read once at process startup (by both Node
-        // and Bun) and appended to the default root set, so every TLS call
-        // — fetch, https, undici — trusts it.
+        // Trust the in-cluster CA for Bun and @kubernetes/client-node TLS calls.
         NODE_EXTRA_CA_CERTS: EnvValue.fromValue(
           "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
         ),
@@ -598,9 +584,7 @@ export function createTemporalWorkerDeployment(
     matchLabels: { app: "temporal-worker-app-metrics" },
   });
 
-  createTemporalWorkerGithubWebhookService(chart, deployment);
-  createAgentTaskApiService(chart, deployment);
-  createXcodeCloudWebhookService(chart, deployment);
+  createTemporalWorkerHttpServices(chart, deployment);
 
   return { deployment, glitterDeployment };
 }
