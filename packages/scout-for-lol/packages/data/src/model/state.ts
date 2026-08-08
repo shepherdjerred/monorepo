@@ -144,9 +144,6 @@ export function resolveQueueTypeFromGame(
   if (isCustomGameType(gameType)) {
     return "custom";
   }
-  if (gameMode === "CLASSIC") {
-    return "classic";
-  }
   return undefined;
 }
 

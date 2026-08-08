@@ -146,8 +146,10 @@ describe("custom games with unmapped queue IDs", () => {
     );
   });
 
-  test("resolves an unknown queue with the explicit CLASSIC mode", () => {
-    expect(resolveQueueTypeFromGame(3110, "CLASSIC")).toBe("classic");
+  test("does not classify an unknown matched CLASSIC queue as Classic", () => {
+    expect(resolveQueueTypeFromGame(3110, "CLASSIC", "MATCHED")).toBe(
+      undefined,
+    );
   });
 
   test("does not mislabel an unmapped non-custom queue as custom", () => {
