@@ -3,7 +3,7 @@ id: plan-tracker-tracker-2026-08-08
 type: plan
 status: awaiting-human
 board: true
-verification: agent
+verification: human
 disposition: active
 ---
 
