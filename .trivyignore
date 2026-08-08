@@ -1,3 +1,9 @@
 # ip@2.0.1 is pulled through the Discord video streaming stack. Trivy reports
 # no fixed version for this finding as of 2026-06-13.
 CVE-2024-29415
+
+# image-size@2.0.2 is pulled through Metro and happy-dom. Trivy reports no
+# fixed version for these findings as of 2026-08-08; 2.0.2 is the latest npm
+# release.
+CVE-2025-71329
+CVE-2025-71330

@@ -19,7 +19,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.115.0",
     "@shepherdjerred/llm-models": "workspace:*",
-    "pdfjs-dist": "^6.1.200",
+    "pdfjs-dist": "^6.2.108",
     "playwright": "1.62.0",
     "zod": "^4.4.3"
   },

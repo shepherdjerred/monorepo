@@ -137,6 +137,7 @@ LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorep
 # unmigrated database, resolves the verified baseline, and runs migrate deploy
 # before starting Discord.
 WORKDIR /app/packages/birmel
+USER 1000:1000
 CMD ["bun", "scripts/start.ts"]
 
 FROM runtime AS smoke

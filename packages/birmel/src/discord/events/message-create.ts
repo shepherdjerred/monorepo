@@ -27,6 +27,32 @@ import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 
 const CLASSIFIER_TRANSCRIPT_LIMIT = 15;
 const logger = loggers.discord.child("message-create");
+const ASCII_WORD_CHARACTER = /\w/u;
+
+function containsWakeWord(content: string, wakeWord: string): boolean {
+  const normalizedContent = content
+    .normalize("NFKC")
+    .toLocaleLowerCase("en-US");
+  const normalizedWakeWord = wakeWord
+    .normalize("NFKC")
+    .toLocaleLowerCase("en-US");
+  let index = normalizedContent.indexOf(normalizedWakeWord);
+  while (index !== -1) {
+    const before = normalizedContent[index - 1];
+    const after = normalizedContent[index + normalizedWakeWord.length];
+    if (
+      (before === undefined || !ASCII_WORD_CHARACTER.test(before)) &&
+      (after === undefined || !ASCII_WORD_CHARACTER.test(after))
+    ) {
+      return true;
+    }
+    index = normalizedContent.indexOf(
+      normalizedWakeWord,
+      index + normalizedWakeWord.length,
+    );
+  }
+  return false;
+}
 
 export type MessageContext = {
   message: Message;
@@ -68,8 +94,7 @@ async function admissionDecision(
 
   const owner = await getOrCreateGuildOwner(guildId);
   const wakeWord = generateWakeWord(owner.currentOwner);
-  const pattern = new RegExp(String.raw`\b${wakeWord}\b`, "i");
-  if (pattern.test(message.content)) {
+  if (containsWakeWord(message.content, wakeWord)) {
     markEngaged(message.channel.id);
     return { triggerKind: "wake-word" };
   }

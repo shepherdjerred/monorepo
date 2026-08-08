@@ -25,7 +25,7 @@ type RankedLoreSection = FriendContextLoreSection & {
 type AliasMatcher = {
   alias: string;
   person: Person;
-  pattern: RegExp;
+  matches: (text: string) => boolean;
 };
 
 type ContextCandidate =
@@ -76,15 +76,22 @@ function normalize(value: string): string {
   return value.normalize("NFKC").trim().toLocaleLowerCase("en-US");
 }
 
-function escapeRegExp(value: string): string {
-  return value.replaceAll(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`);
-}
-
-function phrasePattern(value: string): RegExp {
-  return new RegExp(
-    String.raw`(?<![\p{L}\p{N}])${escapeRegExp(normalize(value))}(?![\p{L}\p{N}])`,
-    "iu",
-  );
+function containsPhrase(text: string, phrase: string): boolean {
+  const normalizedText = normalize(text);
+  const normalizedPhrase = normalize(phrase);
+  let index = normalizedText.indexOf(normalizedPhrase);
+  while (index !== -1) {
+    const before = normalizedText.slice(0, index);
+    const after = normalizedText.slice(index + normalizedPhrase.length);
+    if (!/[\p{L}\p{N}]$/u.test(before) && !/^[\p{L}\p{N}]/u.test(after)) {
+      return true;
+    }
+    index = normalizedText.indexOf(
+      normalizedPhrase,
+      index + normalizedPhrase.length,
+    );
+  }
+  return false;
 }
 
 function tokenize(value: string): string[] {
@@ -147,7 +154,7 @@ function rankLoreSections(
 
       for (const { personId, terms } of peopleTerms) {
         for (const term of terms) {
-          if (phrasePattern(term).test(section.searchableText)) {
+          if (containsPhrase(section.searchableText, term)) {
             matchedPersonIds.add(personId);
             matchedTerms.add(normalize(term));
           }
@@ -205,7 +212,7 @@ export function createFriendContextResolver(
       aliasMatchers.push({
         alias,
         person,
-        pattern: phrasePattern(alias),
+        matches: (text) => containsPhrase(text, alias),
       });
     }
     for (const userId of person.discordUserIds) {
@@ -332,7 +339,7 @@ export function createFriendContextResolver(
       addResolution(mention);
     }
     for (const matcher of aliasMatchers) {
-      if (matcher.pattern.test(input.message)) {
+      if (matcher.matches(input.message)) {
         addResolvedPerson(matcher.person, matcher.alias);
       }
     }
