@@ -1189,16 +1189,10 @@ steps:
     if: build.branch == pipeline.default_branch
     # Static-site buckets are owned by the SeaweedFS tofu stack. Waiting for
     # tofu-apply is a no-op when infra is unchanged, and guarantees a new
-    # bucket exists before its first deployment sync.
-    depends_on:
-      [
-        verify,
-        playwright-e2e-main,
-        resume-build-main,
-        tofu-apply,
-        argocd-sync,
-        tofu-cloudflare,
-      ]
+    # bucket exists before its first deployment sync. Matomo-consuming sites
+    # independently wait for the public tracker below; unrelated site releases
+    # do not inherit the homelab release gates.
+    depends_on: [verify, playwright-e2e-main, resume-build-main, tofu-apply]
     cancel_on_build_failing: true
     concurrency: 1
     concurrency_group: monorepo/site-deploys
@@ -1454,7 +1448,11 @@ steps:
       if jq -e '[.selected[] | select(.name == "pokemon" or .name == "mario-kart")] | length > 0' helm-release-plan.json >/dev/null; then
         defer_discord_apps=true
       fi
-      bun --no-install packages/homelab/scripts/argocd.ts reconcile-release argocd-release-expected.json --defer-apps pokemon,mario-kart --skip-health-wait --timeout 300
+      if $$defer_discord_apps; then
+        bun --no-install packages/homelab/scripts/argocd.ts reconcile-release argocd-release-expected.json --defer-apps pokemon,mario-kart --skip-health-wait --timeout 300
+      else
+        bun --no-install packages/homelab/scripts/argocd.ts reconcile-release argocd-release-expected.json --timeout 300
+      fi
       apps_revision=$$(jq -er '.[] | select(.name == "apps") | .revision' argocd-release-expected.json)
       bun --no-install packages/homelab/scripts/argocd.ts sync apps --revision "$$apps_revision" --prune
       if ! $$defer_discord_apps; then
