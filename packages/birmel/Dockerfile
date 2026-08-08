@@ -116,6 +116,12 @@ COPY --parents \
   packages/birmel \
   packages/llm-observability \
   ./
+# Bake Prisma's migration engines into the production dependency tree. Bun's
+# production install omits lifecycle scripts, so the CLI otherwise downloads
+# engines on first use. Runtime and smoke execute as uid 1000 over root-owned
+# node_modules, which correctly prevents that startup write. Generate once as
+# root during the image build so migrate deploy is read-only at runtime.
+RUN cd packages/birmel && bunx --trust prisma generate
 COPY --from=build /app/packages/birmel/generated packages/birmel/generated
 COPY --from=build /app/packages/glitter-context/dist packages/glitter-context/dist
 
