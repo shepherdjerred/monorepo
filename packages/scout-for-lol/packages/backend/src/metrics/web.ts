@@ -129,3 +129,11 @@ export const discordUserGuildsFailures = new Counter({
   labelNames: ["reason"] as const,
   registers: [registry],
 });
+
+/** Feedback submissions from the web dashboard, split by whether a rating was given. */
+export const feedbackSubmittedTotal = new Counter({
+  name: "scout_feedback_submitted_total",
+  help: "Feedback submissions received from the web dashboard",
+  labelNames: ["rated"] as const,
+  registers: [registry],
+});

@@ -461,6 +461,23 @@ model GuildInstall {
   @@index([installedAt])
 }
 
+/// Free-text feedback submitted from the web dashboard.
+///
+/// Exists because every prior feedback path was a one-way DM ending in "reply
+/// to a human" — there was nowhere for an answer to land, so nothing was ever
+/// captured. Append-only.
+model Feedback {
+  id        Int      @id @default(autoincrement())
+  discordId String // Submitting web user
+  serverId  String? // Guild in context when submitted, when known
+  rating    Int? // Optional 1-5 sentiment
+  body      String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([discordId, createdAt])
+}
+
 model BotState {
   id                   Int       @id @default(1)
   lastSuccessfulPollAt DateTime?
