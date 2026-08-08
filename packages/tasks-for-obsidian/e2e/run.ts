@@ -544,7 +544,16 @@ async function main(): Promise<void> {
     // (7) vault-state assertions. Focused runs still verify the selected
     // flow's authoritative Markdown mutation, rather than relying only on
     // optimistic UI state.
-    await assertVaultState(vaultDir, log, focusedFlow);
+    const simulatorToday = runSimctl([
+      "spawn",
+      simulator.udid,
+      "date",
+      "+%Y-%m-%d",
+    ]).trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(simulatorToday)) {
+      fail(`simulator returned an invalid date: ${simulatorToday}`);
+    }
+    await assertVaultState(vaultDir, log, focusedFlow, simulatorToday);
 
     log("e2e suite passed");
     passed = true;

@@ -6,7 +6,14 @@ const TASKS_DIR = "TaskNotes";
 type VaultAssertion = {
   readonly name: string;
   readonly flow: string;
-  readonly check: (files: Map<string, string>) => boolean;
+  readonly check: (
+    files: Map<string, string>,
+    context: VaultAssertionContext,
+  ) => boolean;
+};
+
+export type VaultAssertionContext = {
+  readonly today: string;
 };
 
 function fileWithTitle(
@@ -17,15 +24,6 @@ function fileWithTitle(
     if (content.includes(`title: ${title}`)) return content;
   }
   return undefined;
-}
-
-function localTodayYmd(): string {
-  const now = new Date();
-  return [
-    String(now.getFullYear()),
-    String(now.getMonth() + 1).padStart(2, "0"),
-    String(now.getDate()).padStart(2, "0"),
-  ].join("-");
 }
 
 function scheduledDate(content: string): string | undefined {
@@ -56,6 +54,7 @@ async function readVaultFiles(
 async function waitForVaultAssertions(
   vaultDir: string,
   assertions: readonly VaultAssertion[],
+  context: VaultAssertionContext,
 ): Promise<Map<string, string>> {
   const deadline = Date.now() + 30_000;
   for (;;) {
@@ -67,7 +66,9 @@ async function waitForVaultAssertions(
       await new Promise((resolve) => setTimeout(resolve, 250));
       continue;
     }
-    const failures = assertions.filter((assertion) => !assertion.check(files));
+    const failures = assertions.filter(
+      (assertion) => !assertion.check(files, context),
+    );
     if (failures.length === 0) return files;
     if (Date.now() >= deadline) {
       throw new Error(`${String(failures.length)} vault assertion(s) failed`);
@@ -117,21 +118,17 @@ const VAULT_ASSERTIONS: readonly VaultAssertion[] = [
   {
     name: '"Context capture alpha" is persisted with a scheduled date (08-contextual-quick-capture)',
     flow: "08-contextual-quick-capture.yaml",
-    check: (files) => {
+    check: (files, context) => {
       const content = fileWithTitle(files, "Context capture alpha");
-      return (
-        content !== undefined && scheduledDate(content) === localTodayYmd()
-      );
+      return content !== undefined && scheduledDate(content) === context.today;
     },
   },
   {
     name: '"Context capture beta" is persisted with a scheduled date (08-contextual-quick-capture)',
     flow: "08-contextual-quick-capture.yaml",
-    check: (files) => {
+    check: (files, context) => {
       const content = fileWithTitle(files, "Context capture beta");
-      return (
-        content !== undefined && scheduledDate(content) === localTodayYmd()
-      );
+      return content !== undefined && scheduledDate(content) === context.today;
     },
   },
   {
@@ -164,6 +161,7 @@ export async function assertVaultState(
   vaultDir: string,
   log: (message: string) => void,
   focusedFlow: string | null = null,
+  today: string,
 ): Promise<void> {
   const assertions =
     focusedFlow === null
@@ -182,7 +180,7 @@ export async function assertVaultState(
     );
   }
 
-  const files = await waitForVaultAssertions(vaultDir, assertions);
+  const files = await waitForVaultAssertions(vaultDir, assertions, { today });
   log(
     `vault contains ${String(files.size)} task file(s): ${[...files.keys()].join(", ")}`,
   );
