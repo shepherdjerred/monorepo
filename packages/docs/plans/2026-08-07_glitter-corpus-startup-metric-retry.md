@@ -18,9 +18,13 @@ genuinely missing, invalid, or inaccessible snapshots.
 
 - Add an injectable startup retry helper with equal-jitter exponential backoff:
   10-second initial ceiling, doubling per attempt, capped at five minutes.
-- Retry only transient SeaweedFS connection and 408/429/5xx failures. Do not
-  retry missing pointers, authorization failures, malformed data, checksum
-  failures, or schema violations.
+- Retry only transient SeaweedFS connection and 408/429/5xx failures. Classify
+  from the structured `code` and `$metadata` as well as the rendered name and
+  message, walking the `.cause` chain — Bun's AWS SDK reports a mid-request
+  socket close as `TimeoutError` with ECONNRESET only on `code`, and a wrapping
+  handler can bury both a level down. Do not retry missing pointers,
+  authorization failures, malformed data, checksum failures, or schema
+  violations.
 - Stop retrying when worker shutdown begins, log every retry, and emit one
   Sentry warning after ten consecutive transient failures.
 - Keep the existing Prometheus alert expression, schedule timing, and

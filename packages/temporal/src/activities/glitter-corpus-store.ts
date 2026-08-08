@@ -17,27 +17,51 @@ export type CorpusStore = {
 
 const S3ErrorShapeSchema = z.object({
   name: z.string().optional(),
+  code: z.string().optional(),
   $metadata: z.object({ httpStatusCode: z.number().optional() }).optional(),
 });
 
 const TRANSIENT_STORAGE_ERROR_PATTERN =
   /\b(?:ECONNREFUSED|ECONNRESET|ETIMEDOUT|EAI_AGAIN|ENOTFOUND)\b/i;
 
-export function isTransientCorpusStorageError(error: unknown): boolean {
+function isTransientStorageFailure(error: unknown): boolean {
   const parsed = S3ErrorShapeSchema.safeParse(error);
-  const statusCode = parsed.success
-    ? parsed.data.$metadata?.httpStatusCode
-    : undefined;
+  if (!parsed.success) {
+    return false;
+  }
+  const statusCode = parsed.data.$metadata?.httpStatusCode;
   if (
     statusCode !== undefined &&
     (statusCode === 408 || statusCode === 429 || statusCode >= 500)
   ) {
     return true;
   }
-  return (
-    error instanceof Error &&
-    TRANSIENT_STORAGE_ERROR_PATTERN.test(`${error.name} ${error.message}`)
+  // The structured `code` is the only reliable carrier: Bun's AWS SDK reports a
+  // mid-request socket close as `TimeoutError` / "The socket connection was
+  // closed unexpectedly", with ECONNRESET only on `code`.
+  const code = parsed.data.code ?? "";
+  return TRANSIENT_STORAGE_ERROR_PATTERN.test(
+    error instanceof Error ? `${code} ${error.name} ${error.message}` : code,
   );
+}
+
+/**
+ * Walks the error and its `.cause` chain (the same traversal
+ * `collectErrorMessages` uses for activity failures) because an HTTP handler
+ * may wrap the connection failure: the transport code and `$metadata` can live
+ * one or more levels below a generic outer error.
+ */
+export function isTransientCorpusStorageError(error: unknown): boolean {
+  const seen = new Set<unknown>();
+  let current: unknown = error;
+  while (current !== undefined && current !== null && !seen.has(current)) {
+    seen.add(current);
+    if (isTransientStorageFailure(current)) {
+      return true;
+    }
+    current = current instanceof Error ? current.cause : undefined;
+  }
+  return false;
 }
 
 export function isNotFoundError(error: unknown): boolean {
