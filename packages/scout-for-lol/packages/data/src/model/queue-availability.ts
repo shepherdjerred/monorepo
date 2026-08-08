@@ -71,6 +71,7 @@ export const QUEUE_AVAILABILITY: Record<QueueType, QueueAvailability> = {
   swiftplay: PERMANENT,
   arena: limitedFromJson("arena"),
   classic: limitedFromJson("classic"),
+  "classic aram mayhem": limitedFromJson("classic aram mayhem"),
   brawl: limitedFromJson("brawl"),
   "aram mayhem": limitedFromJson("aram mayhem"),
   "draft pick": PERMANENT,

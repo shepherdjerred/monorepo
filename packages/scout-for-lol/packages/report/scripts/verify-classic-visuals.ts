@@ -30,12 +30,10 @@ async function writeVisual(
 const fullPrematch = classicLoadingScreenFixture();
 const partialPrematch = classicLoadingScreenFixture(3, 2);
 const postmatch = classicMatchFixture();
-const partialPostmatch = classicMatchFixture(
-  3,
-  2,
-  "Surrender",
-  "A Classic Summoner Name Long Enough To Require Safe Truncation",
-);
+const partialPostmatch = classicMatchFixture(3, 2, "Surrender", {
+  heroGameName:
+    "A Classic Summoner Name Long Enough To Require Safe Truncation",
+});
 
 const fullSvg = await loadingScreenToSvg(fullPrematch);
 const fullSvgRepeat = await loadingScreenToSvg(fullPrematch);

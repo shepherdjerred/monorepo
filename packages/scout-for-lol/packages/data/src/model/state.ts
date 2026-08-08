@@ -15,6 +15,7 @@ export const QueueTypeSchema = z.enum([
   "swiftplay",
   "arena",
   "classic",
+  "classic aram mayhem",
   "brawl",
   "aram mayhem",
   "draft pick",
@@ -26,6 +27,21 @@ export const QueueTypeSchema = z.enum([
 
 const ARENA_QUEUE_ID = 1700;
 const ARENA_GAME_MODE = "CHERRY";
+
+export type ClassicQueueType = Extract<
+  QueueType,
+  "classic" | "classic aram mayhem"
+>;
+const CLASSIC_QUEUE_TYPES: readonly ClassicQueueType[] = [
+  "classic",
+  "classic aram mayhem",
+];
+
+export function isClassicQueueType(
+  queueType: QueueType | undefined,
+): queueType is ClassicQueueType {
+  return CLASSIC_QUEUE_TYPES.some((candidate) => candidate === queueType);
+}
 
 // Most queue IDs come from Riot's queues.json. Some are absent from that file
 // but show up in live Spectator payloads: 3200/3220 for ARAM: Mayhem on Howling
@@ -56,12 +72,15 @@ export function parseQueueType(input: number): QueueType | undefined {
       .with(1740, () => "arena")
       .with(1750, () => "arena")
       .with(2300, () => "brawl")
+      .with(3260, () => "classic")
+      .with(3262, () => "classic")
       .with(4310, () => "classic")
       .with(2400, () => "aram mayhem")
-      .with(2450, () => "aram mayhem")
+      .with(2450, () => "classic aram mayhem")
       .with(3200, () => "aram mayhem")
       .with(3220, () => "aram mayhem")
       .with(3270, () => "aram mayhem")
+      .with(3280, () => "classic aram mayhem")
       .with(3100, () => "custom")
       // 3130 was previously mapped to easy doom bots, but every lake match with
       // this id is a custom lobby (gameType CUSTOM_GAME, gameMode CLASSIC).
@@ -111,6 +130,12 @@ export function resolveQueueTypeFromGame(
   if (gameMode === "JADE") {
     return "classic";
   }
+  if (gameMode === "KIWI_JADE") {
+    return "classic aram mayhem";
+  }
+  if (gameMode === "CLASSIC ARAM MAYHEM") {
+    return "classic aram mayhem";
+  }
   if (isArenaQueueOrMode(queueId, gameMode)) {
     return "arena";
   }
@@ -123,6 +148,9 @@ export function resolveQueueTypeFromGame(
   // behavior for callers that don't pass gameType).
   if (isCustomGameType(gameType)) {
     return "custom";
+  }
+  if (gameMode === "CLASSIC") {
+    return "classic";
   }
   return undefined;
 }
@@ -140,6 +168,7 @@ export function queueTypeToDisplayString(queueType: QueueType): string {
     .with("urf", () => "URF")
     .with("arena", () => "arena")
     .with("classic", () => "League Classic")
+    .with("classic aram mayhem", () => "ARAM: Mayhem Classic-ish")
     .with("brawl", () => "brawl")
     .with("aram mayhem", () => "ARAM: Mayhem")
     .with("easy doom bots", () => "Easy Doom Bots")

@@ -12,6 +12,7 @@ import {
   findParticipant,
   getOutcome,
   getTeams,
+  isClassicQueueType,
   participantToChampion,
 } from "@scout-for-lol/data";
 import { strict as assert } from "node:assert";
@@ -42,9 +43,10 @@ export function toMatch(
   const queueType = resolveQueueTypeFromGame(
     rawMatch.info.queueId,
     rawMatch.info.gameMode,
+    rawMatch.info.gameType,
   );
 
-  if (queueType === "arena" || queueType === "classic") {
+  if (queueType === "arena" || isClassicQueueType(queueType)) {
     throw new Error(`${queueType} matches are not supported`);
   }
 

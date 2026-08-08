@@ -246,6 +246,7 @@ function processMatch(
   const queueType = resolveQueueTypeFromGame(
     match.info.queueId,
     match.info.gameMode,
+    match.info.gameType,
   );
   if (!queueType || !allowedQueueTypes.includes(queueType)) {
     return {

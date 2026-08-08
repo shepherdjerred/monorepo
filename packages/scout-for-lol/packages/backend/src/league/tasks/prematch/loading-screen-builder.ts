@@ -409,7 +409,7 @@ export async function buildLoadingScreenData(
     );
     return LoadingScreenDataSchema.parse({
       gameId: GameIdSchema.parse(gameInfo.gameId),
-      queueType: "classic",
+      queueType,
       queueDisplayName,
       layout: "classic",
       mapName,

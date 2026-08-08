@@ -8,6 +8,7 @@ import {
   parseTeam,
   participantToChampion,
   resolveQueueTypeFromGame,
+  isClassicQueueType,
   type CompletedMatch,
   type PlayerConfigEntry,
   type RawMatch,
@@ -21,8 +22,13 @@ export function buildCompletedMatch(
   const queueType = resolveQueueTypeFromGame(
     rawMatch.info.queueId,
     rawMatch.info.gameMode,
+    rawMatch.info.gameType,
   );
-  if (queueType === undefined || queueType === "arena") {
+  if (
+    queueType === undefined ||
+    queueType === "arena" ||
+    isClassicQueueType(queueType)
+  ) {
     throw new Error(`Unsupported eval queue: ${queueType ?? "unknown"}`);
   }
   const teams = getTeams(rawMatch.info.participants, participantToChampion);

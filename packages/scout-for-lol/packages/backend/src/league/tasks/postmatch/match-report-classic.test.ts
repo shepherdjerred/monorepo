@@ -13,7 +13,13 @@ const fixtureUrl = new URL(
   import.meta.url,
 );
 
-async function classicMatchFixture(): Promise<RawMatch> {
+async function classicMatchFixture(
+  options: {
+    queueId?: number;
+    gameMode?: string;
+    mapId?: number;
+  } = {},
+): Promise<RawMatch> {
   const input: unknown = await Bun.file(fixtureUrl).json();
   const base = RawMatchSchema.parse(input);
   const classicChampionIds = [
@@ -24,9 +30,9 @@ async function classicMatchFixture(): Promise<RawMatch> {
     ...base,
     info: {
       ...base.info,
-      queueId: 4310,
-      gameMode: "JADE",
-      mapId: 453,
+      queueId: options.queueId ?? 4310,
+      gameMode: options.gameMode ?? "JADE",
+      mapId: options.mapId ?? 453,
       participants: base.info.participants.map((participant, index) => ({
         ...participant,
         championId: classicChampionIds[index],
@@ -133,6 +139,49 @@ describe("buildClassicMatch identity normalization", () => {
 });
 
 describe("buildClassicMatch", () => {
+  test.each([
+    [4310, "CLASSIC", "Classic Rift"],
+    [2450, "CLASSIC ARAM MAYHEM", "The Bandlewood"],
+    [3280, "CLASSIC ARAM MAYHEM", "The Bandlewood"],
+    [2450, "KIWI_JADE", "The Bandlewood"],
+  ] as const)(
+    "builds the %s Classic report model for %s",
+    async (queueId, gameMode, mapName) => {
+      const rawMatch = await classicMatchFixture({
+        queueId,
+        gameMode,
+        mapId: mapName === "Classic Rift" ? 453 : 35,
+      });
+      const trackedParticipant = rawMatch.info.participants[0];
+      if (trackedParticipant === undefined) {
+        throw new Error("Classic fixture is missing its tracked participant");
+      }
+      const trackedPlayer = PlayerConfigEntrySchema.parse({
+        alias: "Scout Classic",
+        league: {
+          leagueAccount: {
+            puuid: trackedParticipant.puuid,
+            region: "AMERICA_NORTH",
+          },
+        },
+      });
+
+      const result = buildClassicMatch(rawMatch, [trackedPlayer]);
+      if (result === undefined) {
+        throw new Error(
+          "Classic match unexpectedly omitted its tracked player",
+        );
+      }
+
+      expect(result.queueType).toBe(
+        mapName === "Classic Rift" ? "classic" : "classic aram mayhem",
+      );
+      expect(result.mapName).toBe(mapName);
+      expect(result.teams.blue[0]?.championName).toStartWith("Jade_");
+      expect(result.teams.blue[0]?.spells).toEqual([74, 714]);
+    },
+  );
+
   test("groups full rosters by team ID and keeps the narrow Classic model", async () => {
     const rawMatch = await classicMatchFixture();
     const trackedParticipant = rawMatch.info.participants[6];

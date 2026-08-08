@@ -68,6 +68,29 @@ describe("ClassicMatchSchema", () => {
   });
 
   test.each([
+    ["classic", "Classic Rift"],
+    ["classic aram mayhem", "The Bandlewood"],
+  ] as const)("accepts %s with its dedicated map", (queueType, mapName) => {
+    const parsed = ClassicMatchSchema.parse({
+      ...classicMatch(1, 1),
+      queueType,
+      mapName,
+    });
+    expect(parsed.queueType).toBe(queueType);
+    expect(parsed.mapName).toBe(mapName);
+  });
+
+  test("rejects a Classic queue/map mismatch", () => {
+    expect(() =>
+      ClassicMatchSchema.parse({
+        ...classicMatch(1, 1),
+        queueType: "classic aram mayhem",
+        mapName: "Classic Rift",
+      }),
+    ).toThrow();
+  });
+
+  test.each([
     [0, 1],
     [1, 0],
     [6, 1],

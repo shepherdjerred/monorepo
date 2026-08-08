@@ -156,6 +156,36 @@ afterAll(async () => {
 });
 
 describe("flatten", () => {
+  test("keeps Classic and Classic ARAM Mayhem queue values distinct", async () => {
+    const match = await loadMatchFixture();
+    const variants = [
+      { queueId: 4310, gameMode: "CLASSIC", expected: "classic" },
+      {
+        queueId: 2450,
+        gameMode: "CLASSIC ARAM MAYHEM",
+        expected: "classic aram mayhem",
+      },
+    ] as const;
+
+    for (const variant of variants) {
+      const rows = flattenMatch(
+        RawMatchSchema.parse({
+          ...match,
+          info: {
+            ...match.info,
+            queueId: variant.queueId,
+            gameMode: variant.gameMode,
+            mapId: variant.expected === "classic" ? 453 : 35,
+          },
+        }),
+      );
+      expect(rows.length).toBeGreaterThan(0);
+      expect(new Set(rows.map((row) => row.queue))).toEqual(
+        new Set([variant.expected]),
+      );
+    }
+  });
+
   test("flattenMatch produces one row per participant with store.ts derivations", async () => {
     const match = await loadMatchFixture();
     const rows = flattenMatch(match);

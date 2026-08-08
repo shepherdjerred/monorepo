@@ -55,7 +55,7 @@ function playerLabel(participant: RawParticipant): string {
   );
 }
 
-function includeMatchForReportGraph(
+export function includeMatchForReportGraph(
   match: RawMatch,
   queueFilter: QueueType[] | undefined,
 ): boolean {
@@ -65,6 +65,7 @@ function includeMatchForReportGraph(
   const queue = resolveQueueTypeFromGame(
     match.info.queueId,
     match.info.gameMode,
+    match.info.gameType,
   );
   return queue === undefined ? false : queueFilter.includes(queue);
 }

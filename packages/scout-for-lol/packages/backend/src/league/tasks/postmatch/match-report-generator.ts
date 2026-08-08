@@ -16,6 +16,7 @@ import {
   queueTypeToDisplayString,
   resolveQueueTypeFromGame,
   isArenaQueueOrMode,
+  isClassicQueueType,
 } from "@scout-for-lol/data/index.ts";
 import configuration from "#src/configuration.ts";
 import { getPlayer } from "#src/league/model/player.ts";
@@ -99,7 +100,10 @@ async function createMatchImage(
   let svgData: string;
   if (matchToRender.queueType === "arena") {
     svgData = await arenaMatchToSvg(matchToRender);
-  } else if (matchToRender.queueType === "classic") {
+  } else if ("mapName" in matchToRender) {
+    if (!isClassicQueueType(matchToRender.queueType)) {
+      throw new Error("Classic report model has a non-Classic queue type");
+    }
     svgData = await classicMatchToSvg(matchToRender);
   } else {
     svgData = await matchToSvg(matchToRender, {
@@ -162,7 +166,7 @@ async function processClassicMatch(
   return {
     content: formatGameCompletionMessage(
       classicMatch.players.map((player) => player.playerConfig.alias),
-      "classic",
+      classicMatch.queueType,
     ),
     files: [attachment],
     embeds: [embed],
@@ -238,6 +242,7 @@ async function processStandardMatch(
   const queueType = resolveQueueTypeFromGame(
     matchData.info.queueId,
     matchData.info.gameMode,
+    matchData.info.gameType,
   );
   const queue =
     queueType === "solo" || queueType === "flex" ? queueType : undefined;
@@ -411,8 +416,9 @@ export async function generateMatchReport(
     const queueType = resolveQueueTypeFromGame(
       matchData.info.queueId,
       matchData.info.gameMode,
+      matchData.info.gameType,
     );
-    if (queueType === "classic") {
+    if (isClassicQueueType(queueType)) {
       const result = await dependencies.processClassicMatch(
         matchData,
         matchId,
@@ -421,7 +427,7 @@ export async function generateMatchReport(
       if (result === undefined) {
         return undefined;
       }
-      reportsGeneratedTotal.inc({ queue_type: queueType });
+      reportsGeneratedTotal.inc({ queue_type: String(queueType) });
       return result;
     }
 
@@ -467,6 +473,7 @@ export async function generateMatchReport(
       resolveQueueTypeFromGame(
         matchData.info.queueId,
         matchData.info.gameMode,
+        matchData.info.gameType,
       ) ?? "unknown";
     reportsGeneratedTotal.inc({ queue_type: generatedQueueType });
 
@@ -476,6 +483,7 @@ export async function generateMatchReport(
       resolveQueueTypeFromGame(
         matchData.info.queueId,
         matchData.info.gameMode,
+        matchData.info.gameType,
       ) ?? "unknown";
     reportsFailedTotal.inc({ queue_type: queueType });
     logErrorDetails(error, matchId, matchData, trackedPlayers);

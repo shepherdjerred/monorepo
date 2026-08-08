@@ -54,6 +54,18 @@ describe("Classic report renders with committed fonts", () => {
     expect(svg).toContain('width="1920" height="1200"');
   });
 
+  test.each(["classic", "classic aram mayhem"] as const)(
+    "%s postmatch uses the deterministic Classic renderer",
+    async (queueType) => {
+      const match = classicMatchFixture(5, 5, "Victory", { queueType });
+      const svg = await classicMatchToSvg(match);
+      const repeat = await classicMatchToSvg(match);
+
+      expect(svg).toBe(repeat);
+      expect(svg).toContain('width="1920" height="1200"');
+    },
+  );
+
   test("Victory, Defeat, and Surrender produce distinct reports", async () => {
     const outcomes = ["Victory", "Defeat", "Surrender"] as const;
     const svgs = await Promise.all(
