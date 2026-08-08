@@ -16,7 +16,10 @@ describe("ZfsScrubOverdue", () => {
     }
 
     expect(alert.expr.value).toBe(
-      "time() - zfs_zpool_last_scrub_completion_timestamp > 777600",
+      [
+        "(time() - zfs_zpool_last_scrub_completion_timestamp > 777600) and ",
+        "on(zpool_name) (zfs_zpool_scan_state != 1)",
+      ].join(""),
     );
   });
 });

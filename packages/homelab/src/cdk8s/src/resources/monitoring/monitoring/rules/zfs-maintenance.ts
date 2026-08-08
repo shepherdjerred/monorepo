@@ -2,6 +2,11 @@ import type { PrometheusRuleSpecGroups } from "@shepherdjerred/homelab/cdk8s/gen
 import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { escapePrometheusTemplate } from "./shared.ts";
 
+const zfsScrubOverdueExpression = [
+  "(time() - zfs_zpool_last_scrub_completion_timestamp > 777600) and ",
+  "on(zpool_name) (zfs_zpool_scan_state != 1)",
+].join("");
+
 export function getZfsMaintenanceRuleGroups(): PrometheusRuleSpecGroups[] {
   return [
     {
@@ -60,7 +65,7 @@ export function getZfsMaintenanceRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "time() - zfs_zpool_last_scrub_completion_timestamp > 777600",
+            zfsScrubOverdueExpression,
           ),
           for: "1h",
           labels: {
