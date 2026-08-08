@@ -46,6 +46,7 @@ describe("Tracker Tracker chart", () => {
 
     expect(names).toEqual(
       new Set([
+        "Namespace/tracker-tracker",
         "postgresql/tracker-tracker-postgresql",
         "OnePasswordItem/tracker-tracker-tracker-tracker-secrets",
         "PersistentVolumeClaim/tracker-tracker-data-pvc",
