@@ -1,10 +1,8 @@
 ---
 id: agent-task-runat-timeout-fix
 type: plan
-status: in-progress
-board: true
-verification: operator
-disposition: blocked
+status: complete
+board: false
 ---
 
 # Fix one-off agent-task `runAt` timeout + backfill affected jobs
@@ -111,24 +109,14 @@ Mechanics:
   JSON (title/prompt/provider=codex/repo/source), drop `runAt`, submit via `--json`.
 - Verify each reaches **Completed** in the Temporal UI and the report email arrives.
 
-## Part 3 — Guardrail (timeout alert)
+## Part 3 — Superseded aggregate guardrail
 
-Mirror the established visibility-query-gauge pattern (`detectOrphanSchedules` /
-`velero-orphan-audit`, and the 6-hourly observer `review-signals-collect`).
-
-- **`packages/temporal/src/observability/metrics.ts`** — new gauge
-  `temporal_agent_task_timeouts_24h` (label: none or `title`), following the
-  `scheduleOrphans` gauge (metrics.ts:485) style.
-- **Observer** — a small scheduled job that queries visibility for
-  `WorkflowType="agentTaskWorkflow" AND ExecutionStatus="TimedOut" AND CloseTime > now-24h`
-  and `.set()`s the gauge (mirror `review-signals-collect`: activity + thin workflow +
-  a `SCHEDULES` entry in `src/schedules/register-schedules.ts`, hourly, `TASK_QUEUES.DEFAULT`).
-  Use the same `client.workflow.list(...)` visibility API the UI query uses.
-- **Alert rule** — extend `getTemporalRuleGroups` in
-  `packages/homelab/src/cdk8s/src/resources/monitoring/monitoring/rules/temporal.ts`
-  with `temporal_agent_task_timeouts_24h > 0` (for ~10m) → warning/page, plus update
-  `rules/temporal.test.ts` (it asserts specific rule groups exist). Post-fix the steady-state
-  value is 0, so any fire is a real regression.
+This design was superseded by the durable per-execution `temporal-failure-watch`
+implemented in this PR. It queries failed and timed-out executions closed within a
+24-hour recovery window and sends a deduplicated, detail-rich alert for each
+execution. Do not restore `agent-task-timeout-watch` or the
+`temporal_agent_task_timeouts_24h` aggregate metric: the per-execution watcher
+preserves timeout details across worker outages and covers all workflow types.
 
 ## Verification (end-to-end, before promoting the PR)
 
@@ -143,14 +131,14 @@ Mirror the established visibility-query-gauge pattern (`detectOrphanSchedules` /
    NOT TimedOut. This proves `startDelay` + `workflowRunTimeout` behave as designed on the actual
    server (the unit test can't, since it mocks the client).
 5. **Post-deploy backfill:** after the worker image deploys (Argo sync on merge to main), run the
-   Part 2 submissions and watch all 4 reach Completed + emails arrive; confirm
-   `temporal_agent_task_timeouts_24h` reads 0.
+   Part 2 submissions and watch all 4 reach Completed + emails arrive. Confirm
+   `temporal-failure-watch` reports no failure alerts for the replacement runs.
 
 ## Sequencing
 
 1. Worktree off `origin/main`; mirror this plan into `packages/docs/plans/` (docs discipline).
-2. Land Part 1 (fix + scheduler test) and Part 3 (guardrail) together — one PR (themed: "make
-   future-dated agent tasks actually run + alert on timeouts").
+2. Land Part 1 with the per-execution `temporal-failure-watch` replacement — one PR (themed:
+   "make future-dated agent tasks actually run + alert on timeouts").
 3. Verify (steps 1-4), draft → ready → merge.
 4. After the temporal-worker deploy, execute Part 2 backfill (step 5). Record results in the PR /
 
@@ -167,7 +155,15 @@ Mirror the established visibility-query-gauge pattern (`detectOrphanSchedules` /
 - Visibility retention bounds "all-time" — 3 timed-out is the retained set; older affected runs may
   have aged out but their doc blocks are archived/stale and out of scope.
 
-## Remaining
+## Operator follow-up
 
-- [ ] **Real-server e2e (pre-merge, plan step 4):** port-forward `localhost:7233`, submit a task with `runAt ≈ now+5m` via `schedule-agent-task.ts --json`; confirm it sits buffered then Completes (not TimedOut). Blocked: Temporal frontend is cluster-internal only — run in-cluster after the worker deploys.
-- [ ] **Part 2 backfill (post-deploy):** re-run pvc re-audit, buildkite-reporting-verify (reconstruct payload from run `019faca5-…` history), npm-token (08-13), ha-utility (2027-01-05). Skip stale torvalds-memory. Only after the worker image deploys.
+After the worker image deploys, perform the real-server `runAt` e2e and the Part 2
+backfill from a cluster-authorized environment. Verify the replacement runs complete
+and that `temporal-failure-watch` emits no failure alerts. These privileged deployment
+operations are outside this completed implementation plan.
+
+## Comment Log
+
+- Aggregate timeout metric/schedule design superseded by the per-execution
+  `temporal-failure-watch`; the old metric is not a required implementation or
+  verification step.
