@@ -34,6 +34,7 @@ test("site-scout excludes global CI inputs and uses exact release libraries", ()
   expect(paths).toBeDefined();
   expect(paths?.filter((path) => globalPathSet.has(path))).toEqual([]);
   expect(paths).not.toContain("scripts/lib");
+  expect(paths).toContain("config/analytics-sites.json");
   expect(paths?.filter((path) => path.startsWith("scripts/lib/"))).toEqual([
     "scripts/lib/pin-candidates.ts",
     "scripts/lib/run.ts",
