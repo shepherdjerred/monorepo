@@ -966,6 +966,7 @@ steps:
         - "packages/homelab/scripts/helm-release-core.ts"
         - "packages/homelab/scripts/helm-push.ts"
         - "packages/homelab/scripts/argocd.ts"
+        - "packages/homelab/scripts/wait-for-matomo.ts"
         - "packages/homelab/src/cdk8s/**"
         - "packages/homelab/src/helm-types/**"
         # Inputs of the npm, cooklang, and scout-image main lanes — mirrored
@@ -987,6 +988,7 @@ steps:
         - "packages/glitter/**"
         - "packages/glitter-context/**"
         - "packages/scout-for-lol/**"
+        - "config/analytics-sites.json"
     depends_on: verify
     cancel_on_build_failing: true
     command: |
