@@ -138,6 +138,40 @@ describe("Argo CD prune safety", () => {
   });
 });
 
+test("Argo CD root pruning requires an exact revision", async () => {
+  const process = Bun.spawn(
+    [
+      "bun",
+      "--no-install",
+      "scripts/argocd.ts",
+      "sync",
+      "apps",
+      "--prune",
+      "--timeout",
+      "1",
+    ],
+    {
+      cwd: path.resolve(import.meta.dir, "../../.."),
+      env: {
+        ...Bun.env,
+        ARGOCD_SERVER_URL: "http://127.0.0.1:1",
+        ARGOCD_TOKEN: "test-token",
+      },
+      stderr: "pipe",
+      stdout: "pipe",
+    },
+  );
+  const [exitCode, stderr] = await Promise.all([
+    process.exited,
+    new Response(process.stderr).text(),
+  ]);
+
+  expect(exitCode).not.toBe(0);
+  expect(stderr).toContain(
+    "Root Application pruning requires an exact --revision",
+  );
+});
+
 describe("Argo CD root prune safety", () => {
   test("blocks root pruning when a pruning child lacks the cascade finalizer", async () => {
     let syncPosts = 0;
@@ -149,6 +183,12 @@ describe("Argo CD root prune safety", () => {
         if (request.method === "POST") {
           syncPosts++;
           return Response.json({});
+        }
+        if (
+          url.pathname === "/api/v1/applications/apps/manifests" &&
+          url.searchParams.get("revision") === "2.0.0-42"
+        ) {
+          return Response.json({ manifests: [] });
         }
         if (url.pathname === "/api/v1/applications/apps") {
           return Response.json({
@@ -186,6 +226,8 @@ describe("Argo CD root prune safety", () => {
           "scripts/argocd.ts",
           "sync",
           "apps",
+          "--revision",
+          "2.0.0-42",
           "--prune",
           "--timeout",
           "1",
@@ -214,7 +256,7 @@ describe("Argo CD root prune safety", () => {
     }
   });
 
-  test("ignores out-of-sync retained children when checking root pruning", async () => {
+  test("ignores stale prune signals for children present in the exact root revision", async () => {
     let syncPosts = 0;
     const server = Bun.serve({
       hostname: "127.0.0.1",
@@ -228,6 +270,27 @@ describe("Argo CD root prune safety", () => {
           syncPosts++;
           return Response.json({ operation: {} });
         }
+        if (
+          url.pathname === "/api/v1/applications/apps/manifests" &&
+          url.searchParams.get("revision") === "2.0.0-42"
+        ) {
+          return Response.json({
+            manifests: [
+              JSON.stringify({
+                apiVersion: "argoproj.io/v1alpha1",
+                kind: "Application",
+                metadata: { name: "argocd" },
+                spec: {
+                  source: {
+                    repoURL: "https://argoproj.github.io/argo-helm/",
+                    chart: "argo-cd",
+                    targetRevision: "9.0.0",
+                  },
+                },
+              }),
+            ],
+          });
+        }
         if (url.pathname === "/api/v1/applications/apps") {
           return Response.json({
             status: {
@@ -236,7 +299,7 @@ describe("Argo CD root prune safety", () => {
                   kind: "Application",
                   name: "argocd",
                   status: "OutOfSync",
-                  requiresPruning: false,
+                  requiresPruning: true,
                 },
               ],
             },
@@ -254,6 +317,8 @@ describe("Argo CD root prune safety", () => {
           "scripts/argocd.ts",
           "sync",
           "apps",
+          "--revision",
+          "2.0.0-42",
           "--prune",
           "--async",
           "--timeout",
