@@ -200,20 +200,18 @@ type FileEditToolDeps = {
   signal: AbortSignal;
 };
 
-function acquireWriteLease(store: FleetStore, pr: PrState): void {
+async function prepareFileMutation(deps: FileEditToolDeps): Promise<void> {
+  const { store, pr } = deps;
   if (store.operatorRequests.has(pr.identity.number)) {
     throw new Error("PR is waiting for operator input");
   }
-  if (
-    store.stackWriteOwners.get(pr.stackId) !== pr.identity.number &&
-    !store.requestLease(pr, "stack-write")
-  ) {
+  const alreadyOwnsStack =
+    store.stackWriteOwners.get(pr.stackId) === pr.identity.number;
+  const hasWriteAuthority =
+    alreadyOwnsStack || store.requestLease(pr, "stack-write");
+  if (!hasWriteAuthority) {
     throw new Error("Stack write lease is not available");
   }
-}
-
-async function prepareFileMutation(deps: FileEditToolDeps): Promise<void> {
-  acquireWriteLease(deps.store, deps.pr);
   await requireCurrentInheritedWipInspection(deps);
 }
 

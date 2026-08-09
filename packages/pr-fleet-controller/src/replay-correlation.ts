@@ -308,6 +308,20 @@ function closeFailedTickDrainLane(
   }
 }
 
+function closeTickLifecycle(
+  event: RecordedRunEvent,
+  activeTickIds: Set<string>,
+  failedTickDrainLanes: Map<string, Set<string>>,
+): void {
+  if (event.kind !== "tick.completed" && event.kind !== "tick.failed") return;
+  const closedTickId = event.correlation.tickId;
+  if (closedTickId === undefined) return;
+  if (event.kind === "tick.completed") {
+    failedTickDrainLanes.delete(closedTickId);
+  }
+  activeTickIds.delete(closedTickId);
+}
+
 function closeTerminalEvent(
   event: RecordedRunEvent,
   active: ActiveCorrelations,
@@ -315,15 +329,7 @@ function closeTerminalEvent(
   failedTickDrainLanes: Map<string, Set<string>>,
 ): void {
   closeFailedTickDrainLane(event, activeTickIds, failedTickDrainLanes);
-  if (event.kind === "tick.completed" || event.kind === "tick.failed") {
-    const tickId = event.correlation.tickId;
-    if (tickId !== undefined) {
-      if (event.kind === "tick.completed") {
-        failedTickDrainLanes.delete(tickId);
-      }
-      activeTickIds.delete(tickId);
-    }
-  }
+  closeTickLifecycle(event, activeTickIds, failedTickDrainLanes);
   if (event.kind === "command.completed" || event.kind === "command.failed") {
     closeCorrelatedLifecycle(
       active.commands,
