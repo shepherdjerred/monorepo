@@ -409,7 +409,10 @@ mod tests {
 
     use serde_json::{Value, json};
 
-    use super::{DEFAULT_REQUEST_TIMEOUT_MILLIS, MUTATION_ID_HEADER, TaskNotesClient, strip_bom};
+    use super::{
+        DEFAULT_REQUEST_TIMEOUT_MILLIS, IDEMPOTENT_REPLAY_HEADER, MUTATION_ID_HEADER,
+        TaskNotesClient, strip_bom,
+    };
     use crate::{
         ErrorKind,
         domain::{
@@ -736,6 +739,29 @@ mod tests {
                 "a transport cannot invent an HTTP status"
             );
         }
+    }
+
+    #[test]
+    fn a_replayed_mutation_is_indistinguishable_from_a_fresh_one_but_visible() {
+        // The server sets this when it answered from its idempotency store
+        // instead of applying the mutation again. Nothing branches on it — a
+        // replay and a fresh application are the same outcome to the engine,
+        // which is the point of an absolute command. What changed in Phase 4.5
+        // is that the core can *see* it at all: both shells were dropping it,
+        // and neither could have surfaced it without another round of shell
+        // work.
+        let mut response = Recorder::ok(&wire_task());
+        response
+            .headers
+            .push(HttpHeader::new(IDEMPOTENT_REPLAY_HEADER, "true"));
+        let recorder = Recorder::new(vec![Ok(response)]);
+        let task = client(&recorder)
+            .create_task(
+                &CreateTaskRequest::new(TaskTitle::parse("Replayed").unwrap()),
+                Some("cmd-1"),
+            )
+            .unwrap();
+        assert_eq!(task.id.as_str(), "TaskNotes/a.md");
     }
 
     #[test]
