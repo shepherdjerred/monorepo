@@ -1,0 +1,111 @@
+---
+title: Competition reference
+description: Criteria types, queue values, visibility, and participant states.
+sidebar:
+  order: 10
+---
+
+import DataTable from "../../../components/DataTable.astro";
+import {
+  CompetitionQueueTypeSchema,
+  CompetitionVisibilitySchema,
+  ParticipantStatusSchema,
+} from "@scout-for-lol/data/model/competition.ts";
+
+## Criteria
+
+| Criteria             | Ranks by                             | Queue                           |
+| -------------------- | ------------------------------------ | ------------------------------- |
+| `MOST_GAMES_PLAYED`  | Games played                         | any competition queue           |
+| `MOST_WINS_PLAYER`   | Wins                                 | any competition queue           |
+| `MOST_WINS_CHAMPION` | Wins on one champion                 | optional; all queues if omitted |
+| `HIGHEST_WIN_RATE`   | Win rate, above a minimum game count | any competition queue           |
+| `HIGHEST_RANK`       | Peak rank reached                    | `SOLO` or `FLEX` only           |
+| `MOST_RANK_CLIMB`    | LP gained across the window          | `SOLO` or `FLEX` only           |
+
+`HIGHEST_WIN_RATE` takes a minimum game count, defaulting to **10**. Rank-based
+criteria are restricted to ranked queues because there is no rank to measure in
+other queues.
+
+## Competition queues
+
+<DataTable
+  columns={[
+    {
+      header: "Value",
+      values: CompetitionQueueTypeSchema.options.map((value) => value),
+      code: true,
+    },
+  ]}
+/>
+
+`RANKED_ANY` covers solo and flex together; `ALL` counts every queue.
+
+These are competition-level values and are spelled differently from the
+lowercase queue values used by subscription filters and reports — see [Queues
+and regions](/docs/reference/queues-and-regions/).
+
+## Visibility
+
+<DataTable
+  columns={[
+    {
+      header: "Value",
+      values: CompetitionVisibilitySchema.options.map((value) => value),
+      code: true,
+    },
+    {
+      header: "Who participates",
+      values: [
+        "Anyone in the server can join it themselves.",
+        "Only people you invite are participants.",
+        "Every tracked player in the server, automatically.",
+      ],
+    },
+  ]}
+/>
+
+## Participant states
+
+<DataTable
+  columns={[
+    {
+      header: "Status",
+      values: ParticipantStatusSchema.options.map((value) => value),
+      code: true,
+    },
+    {
+      header: "Meaning",
+      values: [
+        "Invited, has not joined yet.",
+        "Participating and accruing results.",
+        "Left the competition and stopped accruing.",
+      ],
+    },
+  ]}
+/>
+
+## Window
+
+A competition runs on either an explicit start and end date, or a League season.
+Status — upcoming, running, finished — is derived from those dates rather than
+stored, so correcting a date immediately corrects the status.
+
+## Lifecycle
+
+Scout checks competitions every **15 minutes** and, from that check, announces
+starts, posts standings updates, and posts final standings when the window ends.
+
+## Other fields
+
+| Field                | Notes                                          |
+| -------------------- | ---------------------------------------------- |
+| Title                | Required                                       |
+| Description          | Optional                                       |
+| Announcement channel | Required; needs Send Messages and Attach Files |
+| Max participants     | Optional cap on the field                      |
+
+## Related
+
+- [Run and manage competitions](/docs/how-to/run-competitions/)
+- [Run your first competition](/docs/tutorials/first-competition/)

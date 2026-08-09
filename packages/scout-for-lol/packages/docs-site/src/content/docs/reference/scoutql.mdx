@@ -1,0 +1,156 @@
+---
+title: ScoutQL
+description: The report query language — clause order, keywords, functions, limits, and worked examples.
+sidebar:
+  order: 4
+---
+
+import DataTable from "../../../components/DataTable.astro";
+import {
+  REPORT_KEYWORDS,
+  REPORT_FUNCTIONS,
+} from "@scout-for-lol/data/model/report-query-registry.ts";
+import { REPORT_COMMON_PRESETS } from "@scout-for-lol/data/model/report-query-presets.ts";
+import {
+  REPORT_QUERY_MAX_LENGTH,
+  REPORT_DEFAULT_LOOKBACK_DAYS,
+  REPORT_MAX_LOOKBACK_DAYS,
+  REPORT_DEFAULT_MAX_ROWS,
+  REPORT_MAX_ROWS_LIMIT,
+} from "@scout-for-lol/data/model/report.ts";
+
+ScoutQL is the query language used by reports. It is SQL-shaped but not SQL:
+the clauses, sources, and outputs are a fixed vocabulary, and a query compiles
+to a validated plan rather than to arbitrary SQL.
+
+Keywords are case-insensitive.
+
+## Clause order
+
+```sql
+SELECT   <output> [, <output> …]        -- 1 to 20 outputs
+FROM     <source>
+[WHERE   <clause> [AND <clause> …]]
+GROUP BY <dimension> [, <dimension>]    -- 1 or 2
+[HAVING  <clause> [AND <clause> …]]
+[ORDER BY <output|label> [ASC|DESC]]
+[LIMIT   <n>]
+[RENDER  <kind> [WITH (<option> = <value>, …)]]
+```
+
+`SELECT`, `FROM`, and `GROUP BY` are required. Omitting `RENDER` produces a
+table.
+
+## Keywords
+
+<DataTable
+  columns={[
+    {
+      header: "Keyword",
+      values: REPORT_KEYWORDS.map((keyword) => keyword.keyword),
+      code: true,
+    },
+    {
+      header: "Meaning",
+      values: REPORT_KEYWORDS.map((keyword) => keyword.description),
+    },
+  ]}
+/>
+
+## Functions
+
+Use these in `SELECT` to compute a value, and name the result with `AS`.
+
+<DataTable
+  columns={[
+    {
+      header: "Syntax",
+      values: REPORT_FUNCTIONS.map((fn) => fn.syntax),
+      code: true,
+    },
+    {
+      header: "Description",
+      values: REPORT_FUNCTIONS.map((fn) => fn.description),
+    },
+  ]}
+/>
+
+```sql
+select per_minute(damage_to_champions) as dpm, games
+from match_participants
+group by player
+having games >= 10
+order by dpm desc
+render bar_chart with (y = dpm)
+```
+
+`HAVING` filters on aggregated outputs, including aliases you define with `AS`.
+`WHERE` filters raw rows before aggregation. Filtering on `games` requires
+`HAVING` or the aggregate `games >= <n>` form, because a raw row is a single
+game.
+
+## Limits
+
+<DataTable
+  columns={[
+    {
+      header: "Limit",
+      values: [
+        "Query text length",
+        "Outputs per SELECT",
+        "Grouping dimensions",
+        "Default lookback",
+        "Maximum lookback",
+        "Default row limit",
+        "Maximum rows returned",
+        "Chart series",
+      ],
+    },
+    {
+      header: "Value",
+      values: [
+        `${REPORT_QUERY_MAX_LENGTH.toString()} characters`,
+        "1–20",
+        "1–2",
+        `${REPORT_DEFAULT_LOOKBACK_DAYS.toString()} days`,
+        `${REPORT_MAX_LOOKBACK_DAYS.toString()} days`,
+        REPORT_DEFAULT_MAX_ROWS.toString(),
+        REPORT_MAX_ROWS_LIMIT.toString(),
+        "1–8",
+      ],
+    },
+  ]}
+/>
+
+Lookback and maximum rows are **report settings**, not query syntax — set them
+on the report form alongside the schedule. A `LIMIT` larger than the maximum is
+capped at execution.
+
+## Vocabulary
+
+Each part of the language has its own page:
+
+- [Sources and dimensions](/docs/reference/scoutql-sources/) — what `FROM` and
+  `GROUP BY` accept.
+- [Metrics](/docs/reference/scoutql-metrics/) — what `SELECT` accepts.
+- [Filters](/docs/reference/scoutql-filters/) — what `WHERE` accepts.
+- [Render kinds and options](/docs/reference/scoutql-render/) — what `RENDER`
+  and `WITH` accept.
+
+## Worked examples
+
+These are the presets built into the report editor.
+
+{REPORT_COMMON_PRESETS.map((preset) => (
+
+  <div>
+    <h3>{preset.title}</h3>
+    <p>{preset.description}</p>
+    <pre><code>{preset.query}</code></pre>
+  </div>
+))}
+
+## Related
+
+- [Build your first scheduled report](/docs/tutorials/first-report/)
+- [Turn a report into a chart](/docs/how-to/chart-reports/)

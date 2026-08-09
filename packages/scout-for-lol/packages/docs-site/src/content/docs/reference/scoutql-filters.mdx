@@ -1,0 +1,96 @@
+---
+title: ScoutQL filters
+description: Every field a report can filter on in WHERE, with its syntax.
+sidebar:
+  order: 7
+---
+
+import DataTable from "../../../components/DataTable.astro";
+import { REPORT_FILTERS } from "@scout-for-lol/data/model/report-query-registry.ts";
+
+`WHERE` clauses are joined with `AND` and applied to raw rows before
+aggregation. `HAVING` applies after aggregation, to selected outputs and
+aliases.
+
+## Operators
+
+| Operator          | Use                  |
+| ----------------- | -------------------- |
+| `=`               | equality             |
+| `IN`              | membership in a list |
+| `>` `>=` `<` `<=` | numeric comparison   |
+
+## Filter fields
+
+<DataTable
+  columns={[
+    { header: "Field", values: REPORT_FILTERS.map((f) => f.id), code: true },
+    {
+      header: "Syntax",
+      values: REPORT_FILTERS.map((f) => f.syntax),
+      code: true,
+    },
+    {
+      header: "Restricts to",
+      values: REPORT_FILTERS.map((f) => f.description),
+    },
+  ]}
+/>
+
+## Examples
+
+Ranked games only:
+
+```sql
+where queue in (solo, flex)
+```
+
+Only games the player won, on one champion:
+
+```sql
+where win = true and champion_id = 350
+```
+
+Exclude very short games, which distort per-minute metrics:
+
+```sql
+where game_duration_seconds >= 900
+```
+
+Require a minimum sample before ranking by a rate:
+
+```sql
+select games, win_rate
+from match_participants
+where queue in (solo)
+and games >= 10
+group by player
+order by win_rate desc
+```
+
+`games >= <n>` is an aggregate floor, not a raw-row filter — it is the guard
+that stops a 1-0 record topping a win-rate leaderboard.
+
+Scope to a competition's participants and window:
+
+```sql
+select score
+from competition_rank
+where competition_id = 42
+group by player
+order by score desc
+render leaderboard
+```
+
+## Notes
+
+- Queue values are the ones listed in [Queues and
+  regions](/docs/reference/queues-and-regions/).
+- `player = "<alias>"` matches the alias your server uses, not the in-game name.
+- `placement` applies to Arena.
+- Values with spaces must be quoted.
+
+## Related
+
+- [ScoutQL](/docs/reference/scoutql/)
+- [Metrics](/docs/reference/scoutql-metrics/)

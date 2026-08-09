@@ -1,0 +1,26 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    /**
+     * Renders one sample per ScoutQL RENDER kind, plus the competition
+     * leaderboard, using Scout's real report renderer. `build` depends on it so
+     * the images in the docs are re-derived from the current renderer on every
+     * build and cannot drift; the committed output is just a cache.
+     */
+    "generate": {
+      "dependsOn": ["^build"],
+      "outputs": ["src/assets/generated/**"]
+    },
+    "build": {
+      "dependsOn": ["generate", "^build"],
+      "outputs": ["dist/**"]
+    },
+    "test": {
+      "dependsOn": ["build", "^build", "generate"]
+    },
+    "test:ci": {
+      "dependsOn": ["build", "^build", "generate"]
+    }
+  }
+}

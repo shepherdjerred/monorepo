@@ -1,0 +1,84 @@
+---
+title: Schedules and limits
+description: How often Scout does each thing, and what it caps.
+sidebar:
+  order: 11
+---
+
+import DataTable from "../../../components/DataTable.astro";
+import { CronPresets } from "@scout-for-lol/data/model/competition-cron.ts";
+
+## How often Scout runs each job
+
+| Job                          | Frequency        |
+| ---------------------------- | ---------------- |
+| Pre-match detection          | every 30 seconds |
+| Post-match polling           | every minute     |
+| Scheduled report dispatch    | every minute     |
+| Competition lifecycle        | every 15 minutes |
+| Report data fold             | every 15 minutes |
+| Channel and guild validation | hourly           |
+| Match-time refresh           | every 6 hours    |
+| Full report data rebuild     | daily, 02:00 UTC |
+| Orphaned player pruning      | daily, 03:00 UTC |
+| Removed-guild cleanup        | daily, 04:00 UTC |
+
+Practical consequences:
+
+- A pre-match card lands within about 30 seconds of a game starting.
+- A recap lands within about a minute of a game **ending**.
+- A game finished moments ago may not appear in a report for up to 15 minutes.
+  Notifications do not wait for this.
+
+## Report schedule presets
+
+<DataTable
+  columns={[
+    { header: "Preset", values: CronPresets.map((preset) => preset.label) },
+    {
+      header: "Cron",
+      values: CronPresets.map((preset) => preset.value),
+      code: true,
+    },
+  ]}
+/>
+
+Any valid five-field cron expression can be entered instead. Schedules fire in
+the timezone set on the report, not UTC and not the reader's timezone.
+
+## Query and report limits
+
+| Limit                | Value                        |
+| -------------------- | ---------------------------- |
+| Query text           | 4000 characters              |
+| Outputs per `SELECT` | 1–20                         |
+| Grouping dimensions  | 1–2                          |
+| Lookback window      | up to 31 days, 30 by default |
+| Rows returned        | up to 25, 10 by default      |
+| Chart series         | 1–8                          |
+| Report title         | 100 characters               |
+| Report description   | 500 characters               |
+
+## Per-server limits
+
+Scout caps, per Discord server:
+
+- tracked players with subscriptions,
+- Riot accounts,
+- saved reports, and reports owned by any one person.
+
+The exact values are configured per server and may be unlimited. Scout warns as
+you approach a cap — within five remaining slots — and tells you the current
+count and maximum when you hit one.
+
+## Discord command limits
+
+| Limit                          | Value            |
+| ------------------------------ | ---------------- |
+| Subscriptions shown by `/list` | 25               |
+| Player alias length (`/track`) | 1–100 characters |
+
+## Related
+
+- [Schedule reports and deliver them](/docs/how-to/schedule-reports/)
+- [How Scout finds and reports matches](/docs/explanation/how-scout-works/)

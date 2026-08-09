@@ -1,0 +1,79 @@
+---
+title: Permissions and roles
+description: Every permission Scout defines, and the role presets that bundle them.
+sidebar:
+  order: 3
+---
+
+import DataTable from "../../../components/DataTable.astro";
+import { PERMISSION_CATALOG } from "@scout-for-lol/data/model/permissions/catalog.ts";
+import { ROLES } from "@scout-for-lol/data/model/permissions/roles.ts";
+
+export const resources = Object.entries(PERMISSION_CATALOG);
+export const permissionRows = resources.flatMap(([resource, entry]) =>
+  entry.actions.map((action) => ({
+    key: `${resource}:${action.name}`,
+    resource: entry.label,
+    label: action.label,
+  })),
+);
+
+A permission is a `resource:action` pair. A grant stores one row per permission,
+so access can be a named role preset or any hand-picked set.
+
+## Roles
+
+Roles are presets, not stored containers. A permission set that exactly matches
+a preset displays as that role; anything else displays as **custom**.
+
+<DataTable
+  columns={[
+    { header: "Role", values: ROLES.map((role) => role.label) },
+    { header: "Description", values: ROLES.map((role) => role.description) },
+    {
+      header: "Permissions",
+      values: ROLES.map((role) => role.permissions.length.toString()),
+    },
+  ]}
+/>
+
+Discord server administrators and the server owner always have full access
+regardless of grants, and always display as **Admin**.
+
+You cannot grant a permission you do not hold yourself, so a Manager cannot
+create an Admin.
+
+## Every permission
+
+<DataTable
+  columns={[
+    {
+      header: "Permission",
+      values: permissionRows.map((row) => row.key),
+      code: true,
+    },
+    { header: "Resource", values: permissionRows.map((row) => row.resource) },
+    { header: "Allows", values: permissionRows.map((row) => row.label) },
+  ]}
+/>
+
+## Role contents
+
+<DataTable
+  columns={[
+    { header: "Role", values: ROLES.map((role) => role.label) },
+    {
+      header: "Includes",
+      values: ROLES.map((role) =>
+        role.permissions
+          .map((permission) => `${permission.resource}:${permission.action}`)
+          .join(", "),
+      ),
+    },
+  ]}
+/>
+
+## Related
+
+- [Grant dashboard access without Discord admin](/docs/how-to/grant-access/)
+- [About Scout's access model](/docs/explanation/access-model/)
