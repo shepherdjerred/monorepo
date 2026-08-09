@@ -7,6 +7,7 @@ describe("report fonts", () => {
   test("renders CJK player names in both SVG and PNG output", async () => {
     const playerName = "한국어 中文 日本語";
     expect(containsCjkText(playerName)).toBe(true);
+    expect(containsCjkText("ㄅㄆㄇ")).toBe(true);
     expect(containsCjkText("Summoner One")).toBe(false);
 
     const fonts = await bunReportFonts(containsCjkText(playerName));

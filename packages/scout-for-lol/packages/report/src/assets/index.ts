@@ -176,7 +176,7 @@ export const bunCjkFonts: () => Promise<Font[]> = () => {
 };
 
 const cjkCharacterPattern =
-  /[\p{Script=Han}\p{Script=Hangul}\p{Script=Hiragana}\p{Script=Katakana}]/u;
+  /[\p{Script=Han}\p{Script=Hangul}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Bopomofo}]/u;
 
 export function containsCjkText(value: unknown): boolean {
   if (typeof value === "string") {
