@@ -55,6 +55,15 @@ type RunOptions = {
   readonly stdin?: string;
   /** Capture stdout and return it instead of streaming it to the terminal. */
   readonly capture?: boolean;
+  /**
+   * Return stderr appended to stdout.
+   *
+   * For the tools that report on the wrong stream. `codesign --display` writes
+   * its signature summary — including the `flags=...(runtime)` this lane
+   * checks — entirely to stderr and leaves stdout empty, so a caller parsing
+   * stdout alone silently sees nothing and concludes the flag is absent.
+   */
+  readonly includeStderr?: boolean;
 };
 
 /**
@@ -88,7 +97,7 @@ async function run(
       `${command.join(" ")} exited ${status.toString()}${detail}`,
     );
   }
-  return stdout;
+  return options.includeStderr === true ? `${stdout}${stderr}` : stdout;
 }
 
 /** Whether a tool resolves at all, so a missing one is named rather than guessed at. */
@@ -552,6 +561,28 @@ async function verifyUpdaterConfiguration(
     );
   }
 
+  // ⚠️ Hardened runtime is asserted rather than assumed, because it is now
+  // supplied on the archive command line instead of by `project.yml` — see the
+  // comment there. A setting that lives in one invocation is a setting that can
+  // be dropped by an edit to that invocation, and the consequence would be an
+  // app that notarization rejects after a four-minute archive and an upload.
+  //
+  // `codesign --display --verbose` prints `flags=0x10000(runtime)` when it is
+  // on. Its absence here means the archive was built without it.
+  const signature = await run(["codesign", "--display", "--verbose=2", app], {
+    capture: true,
+    includeStderr: true,
+  });
+  if (!signature.includes("runtime")) {
+    fail(
+      "the exported app is not built with the hardened runtime, which notarization " +
+        "requires. It is passed as ENABLE_HARDENED_RUNTIME=YES on the archive command " +
+        "rather than set in project.yml — deliberately, because it makes an ad-hoc " +
+        "local Release build unlaunchable — so check that the archive step still " +
+        "passes it.",
+    );
+  }
+
   const entitlementsPath = join(releaseDirectory, "exported.entitlements");
   await run([
     "codesign",
@@ -704,6 +735,15 @@ async function main(): Promise<void> {
     archivePath,
     "-derivedDataPath",
     join(packageRoot, ".build", "xcode"),
+    // ⚠️ Enabled here rather than in `project.yml`, and the two halves of that
+    // decision have to stay together. Hardened runtime enforces library
+    // validation, which requires every loaded library to share the main
+    // executable's Team ID — satisfiable once this archive is signed with a
+    // Developer ID, and *not* satisfiable for an ad-hoc local build, where it
+    // makes the app die at launch unable to load its own embedded
+    // `TaskNotesCore.framework`. Notarization requires it, so it belongs on the
+    // notarized path and nowhere else.
+    "ENABLE_HARDENED_RUNTIME=YES",
   ]);
 
   announce("collecting debug symbols");

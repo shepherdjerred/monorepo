@@ -140,8 +140,26 @@ targets:
         CODE_SIGN_STYLE: Manual
         CODE_SIGN_IDENTITY: "-"
         DEVELOPMENT_TEAM: ""
-        # Required for notarization later, and free now.
-        ENABLE_HARDENED_RUNTIME: YES
+        # ⚠️ **Off here, and turned on by the release lane.** It was set to YES
+        # with the comment "required for notarization later, and free now". It
+        # is required, and it is not free: hardened runtime enforces **library
+        # validation**, which demands that every loaded library share the main
+        # executable's Team ID. Ad-hoc signing has no Team ID, so a locally
+        # built Release bundle refuses to load its own embedded
+        # `TaskNotesCore.framework` and dies at launch with *"different Team
+        # IDs"*.
+        #
+        # Debug hides this: Xcode adds `com.apple.security.get-task-allow` for
+        # debugging, and that entitlement disables library validation as a side
+        # effect. So Debug launched, Release crashed, and `xcodebuild` reported
+        # BUILD SUCCEEDED for both — a bundle that cannot start is still a
+        # bundle that built.
+        #
+        # `bun run mac:release` passes `ENABLE_HARDENED_RUNTIME=YES` on the
+        # archive, where the Developer ID identity that makes library validation
+        # satisfiable is also supplied. The two belong together; separating them
+        # is what produced an unlaunchable app.
+        ENABLE_HARDENED_RUNTIME: NO
 
         COMBINE_HIDPI_IMAGES: YES
         LD_RUNPATH_SEARCH_PATHS:
