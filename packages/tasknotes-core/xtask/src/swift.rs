@@ -380,6 +380,105 @@ pub fn build_xcframework(profile: &str, platforms: &[Platform]) -> Result<String
     ))
 }
 
+/// Fail if the built XCFramework is older than the committed bindings.
+///
+/// ## The failure this exists to name
+///
+/// `bindings/Sources` and `bindings/ffi` are **generated source** and are
+/// committed; `bindings/artifacts/` is a **gitignored build artifact**. Nothing
+/// couples them, because [`generate_bindings`] deliberately runs on any host —
+/// that is what makes [`check_bindings`] a Linux per-PR gate — while
+/// [`build_xcframework`] needs `xcodebuild` and `lipo`. So regenerating without
+/// rebuilding leaves the Swift package declaring symbols the static library does
+/// not export.
+///
+/// That presents as a wall of `Undefined symbol: _uniffi_…` at link time, which
+/// reads as somebody else's half-finished edit rather than as a stale artifact.
+/// On 2026-08-09 it cost four separate contributors a debugging detour, twice in
+/// one session for one of them. The cost is not the rebuild; it is the minutes
+/// spent misattributing the failure. This turns it into one line naming the
+/// command.
+///
+/// ## Why modification time rather than a content hash
+///
+/// The question is not "do these agree" but "was one produced after the other",
+/// and mtime answers exactly that with no stamp file to keep honest. It is
+/// deliberately biased toward false positives: checking out a branch with older
+/// bindings marks the artifact stale even though its contents may match. The
+/// remedy in that case is the same command, so a spurious failure costs one
+/// rebuild, while a missed one costs a debugging session. A missing artifact —
+/// the fresh-clone case — is stale by definition.
+///
+/// # Errors
+///
+/// Returns a message when the artifact is missing or older than the generated
+/// Swift, or when a path cannot be read.
+pub fn check_xcframework() -> Result<String, String> {
+    let root = workspace_root()?;
+    let artifact = root
+        .join("bindings")
+        .join("artifacts")
+        .join(XCFRAMEWORK_NAME);
+
+    let rebuild = "cd packages/tasknotes-core && cargo xtask build-xcframework";
+
+    if !artifact.exists() {
+        return Err(format!(
+            "bindings/artifacts/{XCFRAMEWORK_NAME} does not exist.\n\
+             It is a gitignored build artifact, so a fresh clone never has one.\n\
+             Build it with:\n    {rebuild}"
+        ));
+    }
+
+    let generated = root
+        .join("bindings")
+        .join("Sources")
+        .join(SWIFT_MODULE)
+        .join(format!("{SWIFT_MODULE}.swift"));
+
+    let artifact_time = modified_at(&artifact)?;
+    let generated_time = modified_at(&generated)?;
+
+    if artifact_time < generated_time {
+        return Err(format!(
+            "bindings/artifacts/{XCFRAMEWORK_NAME} is older than the committed \
+             bindings.\n\
+             The generated Swift declares symbols the built library may not \
+             export yet, which surfaces as `Undefined symbol: _uniffi_…` at link \
+             time rather than as a stale artifact.\n\
+             Rebuild it with:\n    {rebuild}"
+        ));
+    }
+
+    Ok(format!(
+        "check-xcframework: bindings/artifacts/{XCFRAMEWORK_NAME} is newer than \
+         the committed bindings\n"
+    ))
+}
+
+/// The modification time of `path`, as a duration since the Unix epoch.
+///
+/// Returns the raw `SystemTime` comparison's inputs rather than the times
+/// themselves so that a clock before 1970 — which would make `duration_since`
+/// fail — is reported as the unreadable path it effectively is.
+fn modified_at(path: &Path) -> Result<std::time::Duration, String> {
+    fs::metadata(path)
+        .and_then(|metadata| metadata.modified())
+        .map_err(|error| {
+            format!(
+                "cannot read the modification time of {}: {error}",
+                path.display()
+            )
+        })?
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_err(|error| {
+            format!(
+                "{} has a modification time before the Unix epoch: {error}",
+                path.display()
+            )
+        })
+}
+
 /// Build the XCFramework, then compile and run Swift against it.
 ///
 /// A pipeline that produces artifacts nobody compiled is not verified. This
@@ -1305,8 +1404,27 @@ fn recreate_directory(path: &Path) -> Result<(), String> {
 }
 
 /// Copy a file, failing with both paths named.
+///
+/// **A copy of identical bytes is skipped, and that is load-bearing rather than
+/// an optimisation.** [`check_bindings`] regenerates on every run — it is gate 7,
+/// and it runs inside the package's `lint` script — so an unconditional copy
+/// would rewrite the committed bindings, and bump their modification time, every
+/// time anyone linted. [`check_xcframework`] reads exactly that timestamp, so it
+/// would then report the XCFramework stale after a lint that changed nothing.
+///
+/// A guard that fires when nothing is wrong gets ignored, which is the failure
+/// mode this whole area already suffers from. Skipping the no-op copy makes the
+/// mtime mean "the generated bytes actually changed", which is the question
+/// being asked.
 fn copy(from: &Path, to: &Path) -> Result<(), String> {
-    fs::copy(from, to).map(|_| ()).map_err(|error| {
+    let source =
+        fs::read(from).map_err(|error| format!("could not read {}: {error}", from.display()))?;
+    if let Ok(existing) = fs::read(to)
+        && existing == source
+    {
+        return Ok(());
+    }
+    fs::write(to, &source).map_err(|error| {
         format!(
             "could not copy {} to {}: {error}",
             from.display(),

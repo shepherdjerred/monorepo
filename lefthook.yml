@@ -53,6 +53,7 @@ pre-commit:
             glob: "packages/tasknotes-macos/**/*.swift"
             run: |
               cd packages/tasknotes-macos
+              bun run mac:preflight
               swift build
               swift test
               swiftlint lint --strict

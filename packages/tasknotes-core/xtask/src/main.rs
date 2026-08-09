@@ -28,6 +28,7 @@ COMMANDS:
     generate-bindings   Regenerate the committed Swift bindings in bindings/
     check-bindings      Regenerate them, then fail if the committed copy moved
     build-xcframework   Build the Apple static libraries and package them
+    check-xcframework   Fail if the built XCFramework predates the bindings
     verify-swift        Compile and run a Swift smoke test against the package
     help                Print this message
 
@@ -40,6 +41,8 @@ OPTIONS:
 NOTES:
     generate-bindings and check-bindings run on any host, Linux included.
     build-xcframework and verify-swift require macOS.
+    check-xcframework only compares timestamps, so it runs anywhere — but it
+    can only pass where build-xcframework has run.
 ";
 
 fn main() -> ExitCode {
@@ -66,6 +69,7 @@ fn dispatch(arguments: &[String]) -> Result<String, String> {
         Command::BuildXcframework { profile, platforms } => {
             swift::build_xcframework(&profile, &platforms)
         }
+        Command::CheckXcframework => swift::check_xcframework(),
         Command::VerifySwift { profile, platforms } => swift::verify_swift(&profile, &platforms),
     }
 }
@@ -113,6 +117,8 @@ enum Command {
         /// The platform slices to include.
         platforms: Vec<swift::Platform>,
     },
+    /// Fail if the built XCFramework predates the committed bindings.
+    CheckXcframework,
     /// Build the package and run a Swift smoke test against it.
     VerifySwift {
         /// The cargo profile to build with.
@@ -149,6 +155,15 @@ fn parse(arguments: &[String]) -> Result<Command, String> {
                 profile: options.profile,
                 platforms: options.platforms,
             })
+        }
+        "check-xcframework" => {
+            if rest.is_empty() {
+                Ok(Command::CheckXcframework)
+            } else {
+                Err(format!(
+                    "check-xcframework takes no arguments, got {rest:?}"
+                ))
+            }
         }
         "verify-swift" => {
             let options = parse_options(rest, true, DEFAULT_PACKAGE_PROFILE)?;
@@ -252,6 +267,22 @@ mod tests {
     fn extra_arguments_to_help_are_rejected() {
         let error = parse(&arguments(&["help", "swift"])).unwrap_err();
         assert_eq!(error, "help takes no arguments, got [\"swift\"]");
+    }
+
+    #[test]
+    fn the_xcframework_check_takes_no_options() {
+        assert_eq!(
+            parse(&arguments(&["check-xcframework"])).unwrap(),
+            Command::CheckXcframework
+        );
+        // Rejected rather than ignored: it compares two paths this crate already
+        // knows, so a `--profile` or `--platform` here means the caller expects
+        // it to check a slice it will not check.
+        let error = parse(&arguments(&["check-xcframework", "--platform", "ios"])).unwrap_err();
+        assert_eq!(
+            error,
+            "check-xcframework takes no arguments, got [\"--platform\", \"ios\"]"
+        );
     }
 
     #[test]
