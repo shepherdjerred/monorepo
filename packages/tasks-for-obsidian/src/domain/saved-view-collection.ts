@@ -11,7 +11,7 @@ import type {
   SavedViewSortSchema,
 } from "./saved-views";
 import type { z } from "zod";
-import { parseLocalDate, toISODate } from "../lib/dates";
+import { compareDateValues, parseLocalDate, toISODate } from "../lib/dates";
 
 type SavedViewSort = z.infer<typeof SavedViewSortSchema>;
 type SavedViewGroup = z.infer<typeof SavedViewGroupSchema>;
@@ -172,7 +172,7 @@ function compareOptionalStrings(
   if (a === undefined && b === undefined) return 0;
   if (a === undefined) return 1;
   if (b === undefined) return -1;
-  return a.localeCompare(b);
+  return compareDateValues(a, b);
 }
 
 function compareBySortField(a: Task, b: Task, sort: SavedViewSort): number {

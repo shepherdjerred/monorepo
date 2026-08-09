@@ -1,5 +1,6 @@
 import { projectMatches } from "tasknotes-types/v2";
 
+import { compareDateValues } from "../lib/dates";
 import type { Task } from "./types";
 import type { TaskStatus } from "./status";
 import type { Priority } from "./priority";
@@ -136,7 +137,7 @@ function compareOptionalText(
   if (left === undefined && right === undefined) return 0;
   if (left === undefined) return 1;
   if (right === undefined) return -1;
-  return direction * left.localeCompare(right);
+  return direction * compareDateValues(left, right);
 }
 
 export const EMPTY_FILTER: FilterConfig = {};

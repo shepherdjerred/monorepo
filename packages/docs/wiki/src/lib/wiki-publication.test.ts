@@ -12,10 +12,14 @@ describe("public working document allowlist", () => {
     expect(
       publicWorkingDocumentPaths([
         "plans/2026-07-28_human-wiki-scaffold.md",
+        "guides/2026-07-22_todoist-feature-comparison.md",
         "archive/completed/homekit-secure-video.md",
         "plans/private-infrastructure.md",
       ]),
-    ).toEqual(["plans/2026-07-28_human-wiki-scaffold.md"]);
+    ).toEqual([
+      "guides/2026-07-22_todoist-feature-comparison.md",
+      "plans/2026-07-28_human-wiki-scaffold.md",
+    ]);
   });
 
   test("rejects every stale publication path", () => {
@@ -40,6 +44,7 @@ describe("public working document allowlist", () => {
     }).toThrow(
       [
         "Public working document allowlist contains paths that were not discovered:",
+        "- guides/2026-07-22_todoist-feature-comparison.md",
         "- plans/2026-07-28_human-wiki-scaffold.md",
       ].join("\n"),
     );
@@ -48,6 +53,11 @@ describe("public working document allowlist", () => {
   test("recognizes only published documents and their generated directories", () => {
     expect(
       isPublicWorkingDocumentPath("plans/2026-07-28_human-wiki-scaffold.md"),
+    ).toBe(true);
+    expect(
+      isPublicWorkingDocumentPath(
+        "guides/2026-07-22_todoist-feature-comparison.md",
+      ),
     ).toBe(true);
     expect(isPublicWorkingDocumentPath("plans/private.md")).toBe(false);
     expect(isPublicWorkingDirectoryPath("plans")).toBe(true);

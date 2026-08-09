@@ -252,6 +252,28 @@ describe("applySort", () => {
     expect(sorted[2]!.title).toBe("Cherry"); // no due date still last
   });
 
+  test("sorts timestamp offsets chronologically", () => {
+    const sorted = applySort(
+      [
+        makeTask({
+          id: taskId("later-spelling"),
+          title: "Later instant",
+          due: "2026-08-10T00:00:00-07:00",
+        }),
+        makeTask({
+          id: taskId("earlier-spelling"),
+          title: "Earlier instant",
+          due: "2026-08-10T06:00:00Z",
+        }),
+      ],
+      { field: "dueDate", direction: "asc" },
+    );
+    expect(sorted.map((task) => task.title)).toEqual([
+      "Earlier instant",
+      "Later instant",
+    ]);
+  });
+
   test("sorts by priority ascending (highest first)", () => {
     const sorted = applySort(tasks, { field: "priority", direction: "asc" });
     expect(sorted[0]!.priority).toBe("high");

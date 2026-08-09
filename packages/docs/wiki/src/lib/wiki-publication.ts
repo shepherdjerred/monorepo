@@ -1,5 +1,6 @@
 const PUBLIC_WORKING_DOCUMENT_PATHS: ReadonlySet<string> = new Set([
   "plans/2026-07-28_human-wiki-scaffold.md",
+  "guides/2026-07-22_todoist-feature-comparison.md",
 ]);
 
 export function assertPublicWorkingDocumentPathsExist(

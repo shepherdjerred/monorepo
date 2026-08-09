@@ -187,6 +187,21 @@ describe("saved-view presentation", () => {
     ]);
   });
 
+  test("sorts timestamp offsets chronologically", () => {
+    const tasks = [
+      makeTask("later-spelling", {
+        due: "2026-08-10T00:00:00-07:00",
+      }),
+      makeTask("earlier-spelling", {
+        due: "2026-08-10T06:00:00Z",
+      }),
+    ];
+
+    expect(
+      deriveSavedViewTasks(tasks, view(), "2026-08-08").map((task) => task.id),
+    ).toEqual([taskId("earlier-spelling"), taskId("later-spelling")]);
+  });
+
   test("uses explicit planned and deadline group labels", () => {
     const task = makeTask("dated", {
       projects: [projectName("[[Work]]")],

@@ -23,6 +23,19 @@ export function parseLocalDate(dateStr: string): Date {
   return new Date(dateStr);
 }
 
+/** Compare task date values by their parsed instant, not their raw spelling. */
+export function compareDateValues(left: string, right: string): number {
+  const leftDate = parseLocalDate(left);
+  const rightDate = parseLocalDate(right);
+  if (!Number.isFinite(leftDate.getTime())) {
+    throw new TypeError(`Invalid date: ${left}`);
+  }
+  if (!Number.isFinite(rightDate.getTime())) {
+    throw new TypeError(`Invalid date: ${right}`);
+  }
+  return leftDate.getTime() - rightDate.getTime();
+}
+
 function parseDate(dateStr: string): Date {
   return parseLocalDate(dateStr);
 }
