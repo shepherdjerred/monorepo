@@ -1,7 +1,7 @@
 ---
 id: recurrence-local-utc-off-by-one
 type: todo
-status: planned
+status: awaiting-human
 board: true
 verification: human
 disposition: active
@@ -60,19 +60,33 @@ CI (which runs UTC). Only users east of Greenwich see it.
 
 ## Remaining
 
-- [ ] Decide the fix: make `localDate()` construct a UTC midnight (`Date.UTC(...)`)
-      to match what the model reads, **or** stop round-tripping through `Date` at
-      the boundary entirely and pass the `YYYY-MM-DD` string through.
-- [ ] Audit the other `new Date(y, m-1, d)` / `getFullYear`-style call sites in
-      `recurrence.ts` and `lib/dates.ts` for the same local-vs-UTC mismatch.
-      `localTodayYmd()` (`recurrence.ts:39`) is _intentionally_ local — the
-      distinction is that it means "the user's today", not "a date on the rrule
-      timeline". Confirm which callers want which.
-- [ ] Add a regression test that runs the recurrence suite under at least one
-      UTC-positive timezone (`TZ=Asia/Tokyo`). CI currently runs UTC only, which
-      is why no existing test catches this.
-- [ ] Verify against a real vault before shipping — the corpus asserts the _model's_
-      UTC contract, not the app's current shifted behaviour.
+- [x] Fixed by constructing UTC midnight. The model's public signature takes a
+      `Date`, so the string cannot be passed straight through; the conversion is
+      now a single audited pair, `naiveDate` / `naiveYmd`, both UTC.
+- [x] Audited the neighbouring call sites. `localTodayYmd()` stays local and is
+      documented as "the user's today". `nextOccurrenceAfter` was the one real
+      misuse — it formatted a constructed `Date` with `localTodayYmd`, so its
+      day walk is now UTC millisecond arithmetic. Everything in `lib/dates.ts`
+      and `lib/calendar.ts` parses local and formats local against the device's
+      own calendar and is correct as written.
+- [x] Added `src/domain/recurrence-timezone.test.ts`, which sets `Bun.env.TZ`
+      itself across UTC, US Pacific, Tokyo and Kiritimati and asserts the
+      offset it actually got, so the guard holds under UTC CI.
+- [x] Differentially verified against the corpus, which asserts the _model's_
+      UTC contract rather than the app's shifted behaviour. Real-vault
+      confirmation is the acceptance step below.
+
+## Human Verification
+
+1. Set an iOS device or simulator to a UTC-positive timezone (Tokyo is enough;
+   Kiritimati is the extreme) and point the app at a real vault holding a
+   recurring task whose next occurrence is today.
+2. Open Today. **Expected:** the task appears on its own occurrence day, not the
+   day after, and tapping its checkbox leaves it checked on that same day.
+3. Set the device back to US Pacific and confirm nothing regressed there.
+
+Accept if both zones agree on the occurrence day; reject if either shows the
+task a day off.
 
 ## Notes for the Rust port
 
@@ -89,3 +103,10 @@ this bug, not a parity failure.
   across four timezones. Not fixed inline because it is outside the macOS port's
   scope and touches shipping iOS behaviour that deserves its own change and its own
   verification.
+- 2026-08-08: Fixed in `packages/tasks-for-obsidian/src/domain/recurrence.ts`.
+  Differentially checked the app's `occursOn` against every case in
+  `packages/tasknotes-fixtures/recurrence/corpus.jsonl` (18,766 probes per zone)
+  under UTC, `America/Los_Angeles`, `Asia/Tokyo` and `Pacific/Kiritimati`:
+  10,783 mismatches per UTC-positive zone before the fix, zero after, in all four.
+  The fix moves the app **toward** the corpus, as the corpus predicted. The unit
+  suite is green under `TZ=UTC`, `TZ=Asia/Tokyo` and `TZ=Pacific/Kiritimati`.

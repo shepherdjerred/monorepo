@@ -10,9 +10,9 @@ import {
   type Command,
   type CommandInput,
   applyCommand,
+  commandId,
   commandTarget,
-  makeCommandIdFactory,
-  makeTempId,
+  tempTaskId,
 } from "../sync/commands";
 import { localTodayYmd } from "../../domain/recurrence";
 import {
@@ -53,6 +53,8 @@ export type TaskStoreStorage = {
   setIdAliases: (data: string) => Promise<void>;
   getAcknowledgedCompletionRestores: () => Promise<string | null>;
   setAcknowledgedCompletionRestores: (data: string) => Promise<void>;
+  getIdCounters: () => Promise<string | null>;
+  setIdCounters: (data: string) => Promise<void>;
   getLastSyncTime: () => Promise<number | null>;
   setLastSyncTime: (time: number) => Promise<void>;
 };
@@ -66,11 +68,22 @@ const defaultStorage: TaskStoreStorage = {
     TypedStorage.getAcknowledgedCompletionRestores(),
   setAcknowledgedCompletionRestores: (data) =>
     TypedStorage.setAcknowledgedCompletionRestores(data),
+  getIdCounters: () => TypedStorage.getIdCounters(),
+  setIdCounters: (data) => TypedStorage.setIdCounters(data),
   getLastSyncTime: () => TypedStorage.getLastSyncTime(),
   setLastSyncTime: (time) => TypedStorage.setLastSyncTime(time),
 };
 
 const AliasesSchema = z.record(z.string(), z.string());
+
+const IdCountersSchema = z.object({
+  command: z.number().int().nonnegative(),
+  temp: z.number().int().nonnegative(),
+});
+
+type IdCounters = z.infer<typeof IdCountersSchema>;
+
+const ZERO_COUNTERS: IdCounters = { command: 0, temp: 0 };
 
 export class TaskStore {
   private base = new Map<TaskId, Task>();
@@ -82,9 +95,9 @@ export class TaskStore {
   private lastSyncTime: number | null = null;
   private snapshot: TaskStoreSnapshot;
   private readonly listeners = new Set<() => void>();
-  private readonly nextCommandId: () => string;
   private operationLocked = false;
   private readonly operationWaiters: (() => void)[] = [];
+  private counters: IdCounters = ZERO_COUNTERS;
 
   /** Wired to SyncEngine.requestSync — fired after every dispatch. */
   onDispatch: (() => void) | null = null;
@@ -160,19 +173,25 @@ export class TaskStore {
     private readonly queue: CommandQueue,
     private readonly storage: TaskStoreStorage = defaultStorage,
     private readonly clock: Clock = Date.now,
+    /** Injectable so the id encoding is reproducible in the simulation harness. */
+    private readonly random: () => number = Math.random,
   ) {
-    this.nextCommandId = makeCommandIdFactory(clock);
     this.snapshot = this.buildSnapshot();
   }
-  /** Load queue + cached base + aliases. Call once at startup, after migrations. */
+
+  /**
+   * Load queue + cached base + aliases + id counters. Call once at startup,
+   * after migrations.
+   */
   async restore(): Promise<void> {
     await this.enqueueOperation(async () => {
       await this.queue.restore();
-      const [tasks, rawAliases, rawAcknowledgedRestores, lastSync] =
+      const [tasks, rawAliases, rawAcknowledgedRestores, rawCounters, lastSync] =
         await Promise.all([
           this.storage.getTasks(),
           this.storage.getIdAliases(),
           this.storage.getAcknowledgedCompletionRestores(),
+          this.storage.getIdCounters(),
           this.storage.getLastSyncTime(),
         ]);
       this.base = new Map(tasks.map((t) => [t.id, t]));
@@ -188,6 +207,7 @@ export class TaskStore {
         ),
       );
       this.acknowledgedCompletionRestores = nextAcknowledgedCompletionRestores;
+      this.counters = parseIdCounters(rawCounters);
       this.lastSyncTime = lastSync;
       this.recompute();
     });
@@ -221,6 +241,11 @@ export class TaskStore {
         if (!this.snapshot.tasks.has(target)) return;
       }
       const command = this.buildCommand(input);
+      // Counters first, queue second, and never the other way round: the id has
+      // to be durably spent before the command carrying it can reach the wire.
+      // Crashing after this write only burns id values, which is free; crashing
+      // between the enqueue and this write would hand the id back out.
+      await this.persistIdCounters();
       await this.queue.enqueue(command);
       let nextAcknowledgedCompletionRestores =
         this.acknowledgedCompletionRestores;
@@ -400,11 +425,16 @@ export class TaskStore {
     });
   }
 
+  /**
+   * The only place in the stack a command id or a temp id is minted, so the
+   * two counters cannot drift out of step with what gets persisted.
+   */
   private buildCommand(input: CommandInput): Command {
-    const base = { id: this.nextCommandId(), createdAt: this.clock() };
+    const createdAt = this.clock();
+    const base = { id: this.nextCommandId(createdAt), createdAt };
     switch (input.type) {
       case "create":
-        return { ...base, ...input, tempId: makeTempId(this.clock) };
+        return { ...base, ...input, tempId: this.nextTempId(createdAt) };
       case "update":
       case "delete":
       case "set_status":
@@ -433,6 +463,45 @@ export class TaskStore {
           completed: false,
           ...(input.restore === undefined ? {} : { restore: input.restore }),
         };
+      }
+    }
+  }
+
+  /**
+   * Mint a command id no durable command already carries.
+   *
+   * The persisted counter is what actually removes the collision class — it
+   * never restarts, so the same `(millis, counter)` pair is never offered
+   * twice. The check is the backstop for the two states the counter cannot
+   * describe: the first launch after upgrading from a build that did not
+   * persist it (counter 0, queue non-empty), and a counter blob that failed to
+   * parse. Without one of the two, an app killed and reopened inside a single
+   * clock millisecond re-mints a live `X-Mutation-Id`, and the server answers
+   * the second command from the first one's stored response — silent data
+   * loss, found by generated-sequence testing in the Rust port.
+   *
+   * The loop terminates: the counter strictly increases, and no id in the
+   * finite durable set encodes a counter above every value already seen.
+   */
+  private nextCommandId(createdAt: number): string {
+    for (;;) {
+      this.counters = { ...this.counters, command: this.counters.command + 1 };
+      const candidate = commandId(
+        createdAt,
+        this.counters.command,
+        this.random(),
+      );
+      if (!this.queue.hasCommandId(candidate)) return candidate;
+    }
+  }
+
+  /** Mint a temp id neither the cached base nor any durable command claims. */
+  private nextTempId(createdAt: number): TaskId {
+    for (;;) {
+      this.counters = { ...this.counters, temp: this.counters.temp + 1 };
+      const candidate = tempTaskId(createdAt, this.counters.temp);
+      if (!this.base.has(candidate) && !this.queue.hasTarget(candidate)) {
+        return candidate;
       }
     }
   }
@@ -500,6 +569,26 @@ export class TaskStore {
       return;
     }
     next();
+  }
+
+  private async persistIdCounters(): Promise<void> {
+    await this.storage.setIdCounters(JSON.stringify(this.counters));
+  }
+}
+
+/**
+ * Absent or unreadable counters mean "start at zero" — a fresh install, and
+ * also every install that predates the key. Neither needs a schema migration:
+ * `nextCommandId` / `nextTempId` refuse to hand back an id the restored queue
+ * already holds, so a carried-over queue is safe on that first launch too.
+ */
+function parseIdCounters(raw: string | null): IdCounters {
+  if (!raw) return ZERO_COUNTERS;
+  try {
+    const parsed = IdCountersSchema.safeParse(JSON.parse(raw));
+    return parsed.success ? parsed.data : ZERO_COUNTERS;
+  } catch {
+    return ZERO_COUNTERS;
   }
 }
 

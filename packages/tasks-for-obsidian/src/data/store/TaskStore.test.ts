@@ -4,13 +4,13 @@ import { ApiError } from "../../domain/errors";
 import type { Task, TaskId } from "../../domain/types";
 import { taskId } from "../../domain/types";
 import { CommandQueue } from "../sync/CommandQueue";
+import { makeTask } from "../sync/__tests__/harness";
 import {
   type MemoryQueueStorage,
   type MemoryStoreStorage,
-  makeTask,
   memoryQueueStorage,
   memoryStoreStorage,
-} from "../sync/__tests__/harness";
+} from "../sync/__tests__/harness-storage";
 import { TaskStore } from "./TaskStore";
 
 let now = 1_750_000_000_000;
@@ -19,6 +19,9 @@ const clock = () => now;
 function makeStore(
   queueStorage = memoryQueueStorage(),
   storeStorage = memoryStoreStorage(),
+  // Pinned by default. `Math.random()` in the id suffix would hide an id
+  // collision behind luck; the id-collision tests below need it deterministic.
+  random: () => number = () => 0.5,
 ): {
   store: TaskStore;
   queueStorage: MemoryQueueStorage;
@@ -26,8 +29,18 @@ function makeStore(
   queue: CommandQueue;
 } {
   const queue = new CommandQueue(queueStorage, clock);
-  const store = new TaskStore(queue, storeStorage, clock);
+  const store = new TaskStore(queue, storeStorage, clock, random);
   return { store, queueStorage, storeStorage, queue };
+}
+
+function commandIds(queue: CommandQueue): string[] {
+  return queue.pending.map((c) => c.id);
+}
+
+function tempIds(queue: CommandQueue): string[] {
+  return queue.pending.flatMap((c) =>
+    c.type === "create" ? [String(c.tempId)] : [],
+  );
 }
 
 beforeEach(() => {
@@ -1143,5 +1156,84 @@ describe("TaskStore crash recovery", () => {
     );
     await reborn.restore();
     expect(reborn.resolveTaskId(optimistic.id)).toBe(real.id);
+  });
+});
+
+describe("TaskStore id minting", () => {
+  test("the counters are durable, and dispatch persists them before enqueuing", async () => {
+    const { store, storeStorage, queueStorage } = makeStore();
+    await store.restore();
+    await store.dispatch({ type: "create", payload: { title: "One" } });
+
+    expect(JSON.parse((await storeStorage.getIdCounters()) ?? "null")).toEqual({
+      command: 1,
+      temp: 1,
+    });
+    // Ordering matters: a crash between the two writes must lose the command,
+    // never resurrect its id. The queue write is the later of the two.
+    expect(await queueStorage.readQueue()).not.toBeNull();
+  });
+
+  test("a relaunch inside one clock millisecond mints fresh ids", async () => {
+    // No clock advance anywhere in this test — that is the whole point. The
+    // command id doubles as X-Mutation-Id, so re-minting a live one makes the
+    // server answer the second command from the first one's stored response.
+    const { store, queueStorage, storeStorage } = makeStore();
+    await store.restore();
+    await store.dispatch({ type: "create", payload: { title: "Before" } });
+
+    const { store: reborn, queue: rebornQueue } = makeStore(
+      queueStorage.clone(),
+      storeStorage.clone(),
+    );
+    await reborn.restore();
+    await reborn.dispatch({ type: "create", payload: { title: "After" } });
+
+    expect(rebornQueue.pending).toHaveLength(2);
+    expect(new Set(commandIds(rebornQueue)).size).toBe(2);
+    expect(new Set(tempIds(rebornQueue)).size).toBe(2);
+  });
+
+  test("an install with no persisted counters still cannot re-mint a queued id", async () => {
+    // The upgrade path: durable queue carried over from a build that never
+    // wrote `id_counters`, so the counters restore as zero. No schema
+    // migration covers this — the mint-and-check loop does.
+    const { store, queueStorage } = makeStore();
+    await store.restore();
+    await store.dispatch({ type: "create", payload: { title: "Before" } });
+
+    const { store: reborn, queue: rebornQueue } = makeStore(
+      queueStorage.clone(),
+      memoryStoreStorage(), // no counters key at all
+    );
+    await reborn.restore();
+    await reborn.dispatch({ type: "create", payload: { title: "After" } });
+
+    expect(new Set(commandIds(rebornQueue)).size).toBe(2);
+    expect(new Set(tempIds(rebornQueue)).size).toBe(2);
+  });
+
+  test("a dead-lettered command still reserves its id", async () => {
+    const { store, queue, queueStorage } = makeStore();
+    await store.restore();
+    await store.dispatch({ type: "create", payload: { title: "Parked" } });
+    const parked = queue.head();
+    if (parked === undefined) throw new Error("expected a queued command");
+    await store.deadLetterCommand(parked.id, new ApiError("bad request", 422));
+    expect(queue.deadLetters).toHaveLength(1);
+
+    // Relaunch with the counters wiped: the only thing standing between the
+    // new command and the parked one's id is the dead-letter check. A parked
+    // command can still be retried, so its id is still live server-side.
+    const { store: reborn, queue: rebornQueue } = makeStore(
+      queueStorage.clone(),
+      memoryStoreStorage(),
+    );
+    await reborn.restore();
+    await reborn.dispatch({ type: "create", payload: { title: "Fresh" } });
+
+    const fresh = rebornQueue.head();
+    if (fresh === undefined) throw new Error("expected a queued command");
+    expect(fresh.id).not.toBe(parked.id);
   });
 });

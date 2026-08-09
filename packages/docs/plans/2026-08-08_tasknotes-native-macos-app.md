@@ -509,9 +509,14 @@ Phases 0–6 are complete and verified: 325 Rust tests, 328 TypeScript tests, ze
 - [ ] **Phase 8** — Today screen end to end against a real server. **Quality gate: do not proceed
       to Phase 9 until it feels right.**
 - [ ] **Phase 9** — the remaining 14 screens.
-- [ ] Fix `recurrence-local-utc-off-by-one` in the TypeScript app (small; real users affected).
-- [ ] Decide on `sync-command-id-collision-after-relaunch` for TypeScript — persisting the id
-      counter is likely the better fix than mirroring Rust's collision check.
+- [ ] **Converge the Rust core on persisted id counters.** Both production bugs are now fixed in
+      TypeScript. For the collision bug the TS fix chose _persisting the counters_ and kept Rust's
+      mint-and-check loop only as a backstop — and the reasoning is sound enough that Rust should
+      follow: the durable-set check can only see ids the client **still holds**, but an id already
+      acked and dequeued is gone locally while still live in the server's idempotency store. A
+      monotonic persisted counter covers that case; the check cannot. `tasknotes-core`'s
+      check-and-retry is correct but strictly weaker. The shared scenario passes under either, so
+      this is hardening rather than a parity break.
 - [ ] Add `cargo-deny` to `.mise.toml` so it can join the `lint` script; it passes locally but
       cannot run in CI until the toolchain pins it.
 - [ ] Add `tasknotes-core` and `tasknotes-fixtures` to the root `AGENTS.md` Structure list and

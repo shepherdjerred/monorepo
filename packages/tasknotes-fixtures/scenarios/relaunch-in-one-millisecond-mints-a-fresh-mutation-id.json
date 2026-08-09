@@ -1,0 +1,144 @@
+{
+  "id": "relaunch-in-one-millisecond-mints-a-fresh-mutation-id",
+  "source": "src/data/sync/__tests__/offline-scenarios.test.ts",
+  "describe": "relaunch inside one clock millisecond",
+  "name": "the reopened app cannot re-mint an id its restored queue already holds",
+  "doc": "There is deliberately NO clock_set between the two dispatches: the relaunch happens inside a single clock millisecond, which is the condition that made the id counter's reset to zero observable. The command id is the server's X-Mutation-Id, so a repeat makes the server answer the second create from the first one's stored response — the second task is silently never created. Found by proptest-state-machine during the Rust port as create/relaunch/create. Both implementations pin the store's randomness, so a duplicate id here is deterministic rather than a one-in-sixteen-million accident.",
+  "setup": {},
+  "actions": [
+    {
+      "kind": "store_restore"
+    },
+    {
+      "kind": "dispatch",
+      "as": "first",
+      "input": {
+        "type": "create",
+        "payload": {
+          "title": "Before the crash"
+        }
+      }
+    },
+    {
+      "kind": "snapshot",
+      "as": "beforeCrash"
+    },
+    {
+      "kind": "relaunch",
+      "from": "beforeCrash"
+    },
+    {
+      "kind": "store_restore"
+    },
+    {
+      "kind": "dispatch",
+      "as": "second",
+      "input": {
+        "type": "create",
+        "payload": {
+          "title": "After the crash"
+        }
+      }
+    },
+    {
+      "kind": "snapshot",
+      "as": "beforeSync"
+    },
+    {
+      "kind": "sync_now",
+      "as": "result"
+    }
+  ],
+  "assertions": [
+    {
+      "kind": "pending_count",
+      "at": "beforeSync",
+      "equals": {
+        "kind": "literal",
+        "value": 2
+      }
+    },
+    {
+      "kind": "task_count",
+      "at": "beforeSync",
+      "source": "store",
+      "equals": {
+        "kind": "literal",
+        "value": 2
+      }
+    },
+    {
+      "kind": "task_id_is_temp",
+      "task": {
+        "by": "ref",
+        "value": "first"
+      },
+      "equals": true
+    },
+    {
+      "kind": "task_id_is_temp",
+      "task": {
+        "by": "ref",
+        "value": "second"
+      },
+      "equals": true
+    },
+    {
+      "kind": "result",
+      "ref": "result",
+      "ok": true
+    },
+    {
+      "kind": "call_count",
+      "method": "createTask",
+      "equals": 2
+    },
+    {
+      "kind": "call_count",
+      "method": "createTask",
+      "applied": true,
+      "equals": 2
+    },
+    {
+      "kind": "task_count",
+      "source": "server",
+      "equals": {
+        "kind": "literal",
+        "value": 2
+      }
+    },
+    {
+      "kind": "task_exists",
+      "source": "server",
+      "task": {
+        "by": "title",
+        "value": "Before the crash"
+      },
+      "exists": true
+    },
+    {
+      "kind": "task_exists",
+      "source": "server",
+      "task": {
+        "by": "title",
+        "value": "After the crash"
+      },
+      "exists": true
+    },
+    {
+      "kind": "pending_count",
+      "equals": {
+        "kind": "literal",
+        "value": 0
+      }
+    },
+    {
+      "kind": "task_count",
+      "source": "store",
+      "equals": {
+        "kind": "literal",
+        "value": 2
+      }
+    }
+  ]
+}

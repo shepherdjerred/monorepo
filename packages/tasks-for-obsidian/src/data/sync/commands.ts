@@ -160,24 +160,41 @@ export const CommandSchema = z.union([
   }),
 ]);
 
-/** Generates a command id / idempotency key that is unique across restarts. */
-export function makeCommandIdFactory(clock: Clock): () => string {
-  let counter = 0;
-  return () => {
-    counter += 1;
-    // A random suffix guards against collisions when two app instances (or a
-    // relaunch that resets the counter) generate ids at the same clock tick.
-    const rand = Math.floor(Math.random() * 0xff_ff_ff)
-      .toString(36)
-      .padStart(4, "0");
-    return `${String(clock())}-${String(counter)}-${rand}`;
-  };
+/**
+ * The command id / `X-Mutation-Id` encoding: `{millis}-{counter}-{suffix}`.
+ *
+ * Pure on purpose. The counter is NOT a closure variable here because it has
+ * to be durable — a counter that restarts at zero on every launch is what let
+ * an app killed and reopened inside one clock millisecond mint an id its own
+ * restored queue already held, and the server then answered the second command
+ * from the first one's stored response. `TaskStore` owns and persists the
+ * counter; this function only encodes it.
+ *
+ * `unit` is a `Math.random()`-shaped value in `[0, 1)`. The random tail is not
+ * decoration and is not the uniqueness mechanism: it separates ids minted by
+ * two DIFFERENT installs sharing one server, which no local counter can see.
+ */
+export function commandId(
+  nowMs: number,
+  counter: number,
+  unit: number,
+): string {
+  const bounded = Math.min(Math.max(unit, 0), 1);
+  const suffix = Math.floor(bounded * 0xff_ff_ff)
+    .toString(36)
+    .padStart(4, "0");
+  return `${String(nowMs)}-${String(counter)}-${suffix}`;
 }
 
-let tempCounter = 0;
-export function makeTempId(clock: Clock): TaskId {
-  tempCounter += 1;
-  return taskId(`${TEMP_ID_PREFIX}${String(clock())}-${String(tempCounter)}`);
+/**
+ * The optimistic-task id encoding: `tmp-{millis}-{counter}`.
+ *
+ * Same durability requirement as `commandId`, with a different consequence: a
+ * temp id colliding with an unsent create's merges two optimistic tasks, and
+ * acking either then remaps both.
+ */
+export function tempTaskId(nowMs: number, counter: number): TaskId {
+  return taskId(`${TEMP_ID_PREFIX}${String(nowMs)}-${String(counter)}`);
 }
 
 /**

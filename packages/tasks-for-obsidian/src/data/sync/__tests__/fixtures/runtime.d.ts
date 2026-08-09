@@ -25,6 +25,11 @@ declare module "node:path" {
 /** Directory of the current module. Bun defines it in ES modules too. */
 declare const __dirname: string;
 
+/**
+ * `env` is MUTABLE, matching `process.env`: `recurrence-timezone.test.ts`
+ * assigns `Bun.env.TZ` to run the recurrence boundary under UTC-positive zones
+ * that CI (UTC) would otherwise never exercise.
+ */
 declare const Bun: {
-  readonly env: Readonly<Record<string, string | undefined>>;
+  readonly env: Record<string, string | undefined>;
 };

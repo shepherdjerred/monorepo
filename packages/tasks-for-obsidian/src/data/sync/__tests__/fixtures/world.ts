@@ -10,12 +10,11 @@ import {
 import type { DeadLetterEntry } from "../../CommandQueue";
 import type { Command } from "../../commands";
 import type { SyncState } from "../../SyncEngine";
+import type { CallLogEntry, Harness } from "../harness";
 import type {
-  CallLogEntry,
-  Harness,
   MemoryQueueStorage,
   MemoryStoreStorage,
-} from "../harness";
+} from "../harness-storage";
 import type { CountExpr, FixtureTime, TaskFields, TaskRef } from "./schema";
 
 /**

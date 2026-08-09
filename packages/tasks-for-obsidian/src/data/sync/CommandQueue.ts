@@ -119,6 +119,27 @@ export class CommandQueue {
     return this.queue[0];
   }
 
+  /**
+   * Whether any DURABLE command already carries this id — pending or
+   * dead-lettered. The dead-letter half matters: a parked command can still be
+   * retried, so its id is still live as far as the server's idempotency store
+   * is concerned.
+   */
+  hasCommandId(id: string): boolean {
+    return (
+      this.queue.some((c) => c.id === id) ||
+      this.dead.some((entry) => entry.command.id === id)
+    );
+  }
+
+  /** Whether any durable command targets this task id (creates count by temp id). */
+  hasTarget(id: TaskId): boolean {
+    return (
+      this.queue.some((c) => commandTarget(c) === id) ||
+      this.dead.some((entry) => commandTarget(entry.command) === id)
+    );
+  }
+
   async enqueue(command: Command): Promise<void> {
     // Squash: a delete of a still-pending offline-created task (temp id) means
     // the task was created and destroyed before ever reaching the server —
