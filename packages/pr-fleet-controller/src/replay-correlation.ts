@@ -5,6 +5,11 @@ const RefreshedEvidencePayloadSchema = z.object({
   operation: z.literal("refreshEvidence"),
 });
 
+const EVIDENCE_TERMINAL_KINDS = new Set([
+  "environment.result",
+  "environment.failed",
+]);
+
 const PARENT_CORRELATION_FIELDS = [
   "traceId",
   "tickId",
@@ -141,10 +146,7 @@ function verifyTickCausation(
   activeTickIds: Set<string>,
   failedTickDrainLanes: Map<string, Set<string>>,
 ): void {
-  if (
-    event.kind === "environment.result" ||
-    event.kind === "environment.failed"
-  ) {
+  if (EVIDENCE_TERMINAL_KINDS.has(event.kind)) {
     const tickId = event.correlation.tickId;
     const lane = tickDrainLane(event);
     const draining =
@@ -294,12 +296,7 @@ function closeFailedTickDrainLane(
   activeTickIds: Set<string>,
   failedTickDrainLanes: Map<string, Set<string>>,
 ): void {
-  if (
-    event.kind !== "environment.result" &&
-    event.kind !== "environment.failed"
-  ) {
-    return;
-  }
+  if (!EVIDENCE_TERMINAL_KINDS.has(event.kind)) return;
   const tickId = event.correlation.tickId;
   const lane = tickDrainLane(event);
   if (
