@@ -40,7 +40,8 @@ ${competition.description}
 
 The competition has officially begun! All participants' starting stats have been captured.
 
-Players can still join from the Scout dashboard.
+Ask a server admin to add you if you are not in yet — Scout has no
+self-service join.
 
 Good luck! 🍀`;
 
