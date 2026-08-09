@@ -347,3 +347,19 @@ Attach screenshots to each PR — these are all user-visible Discord surfaces.
   Variable amounts shipped as the closed 1/2/3 enum. 97 unit tests; a populated
   database survives all three migrations with total karma 640, matching the
   source year totals (494 + 106 + 15 + 25) exactly.
+- 2026-08-08: CI review gate caught two genuine P1 defects on #2038, both fixed
+  and both with the underlying premise verified rather than taken on faith:
+  - **Failed imports were not rolled back.** The transaction committed before
+    the totals/row-count validation ran, so a mismatch would leave bad rows in
+    place — and because a non-empty target makes the startup import skip, the
+    next boot would silently serve unverified data. Regression introduced when
+    the import became automatic. Validation now runs inside an interactive
+    transaction; rollback confirmed empirically through the libSQL adapter.
+  - **Fatal handlers created zombies.** Installing `unhandledRejection` /
+    `uncaughtException` listeners suppresses the runtime default; verified in
+    Bun that a log-only handler leaves the process alive and exits 0. That
+    would have kept `/live` at 200 on a dead process — the exact failure the
+    probes in this change exist to catch. Handlers now flush Sentry and exit 1.
+    Semgrep additionally blocked four interpolated `console.error` format strings
+    across both branches (log-forging rule); all now use constant format strings
+    with the values passed as separate arguments.

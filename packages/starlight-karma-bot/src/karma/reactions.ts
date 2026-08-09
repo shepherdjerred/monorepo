@@ -105,7 +105,7 @@ export function guarded<A extends unknown[]>(
       try {
         await handler(...args);
       } catch (error) {
-        console.error(`[Karma Reaction] ${name} failed:`, error);
+        console.error("[Karma Reaction] handler failed:", name, error);
         Sentry.captureException(error, { tags: { source: name } });
       }
     })();

@@ -141,7 +141,7 @@ export async function runDueRecaps(now: Date = new Date()): Promise<void> {
         await postRecap(config.guildId, recapChannelId);
       }
     } catch (error) {
-      console.error(`[Recap] Failed for guild ${config.guildId}:`, error);
+      console.error("[Recap] Failed for guild:", config.guildId, error);
       Sentry.captureException(error, { tags: { source: "karma-recap" } });
     } finally {
       // Advance even on failure. Otherwise a deleted channel or a revoked
