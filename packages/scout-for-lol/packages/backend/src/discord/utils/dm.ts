@@ -15,6 +15,7 @@ import {
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
 import { truncateDiscordMessage } from "#src/discord/utils/message.ts";
+import { readOutreachState } from "#src/discord/utils/outreach-state.ts";
 import {
   BUDGETED_DM_KINDS,
   messageBudgetFooter,
@@ -79,7 +80,22 @@ export type DmBudget = {
   guildId: DiscordGuildId;
   /** Human-readable name, used in the transparency footer. */
   serverName: string;
+  /** Install time — the boundary that scopes state to this installation. */
+  installedAt: Date;
+  /** Ladder rung this message represents, persisted on the audit row. */
+  ladderStage?: number;
 };
+
+/**
+ * Kinds that are product output rather than outreach. These are what the user
+ * asked for, so they are never budgeted and never carry the footer.
+ */
+const CORE_DM_KINDS: ReadonlySet<string> = new Set([
+  "permission_error",
+  "competition_invite",
+  "prune_notice",
+  "data_validation",
+]);
 
 export type SendDmOptions = {
   client: Client;
@@ -113,6 +129,7 @@ async function recordDmAudit(
     kind: DmKind;
     content: string;
     status: DmStatus;
+    ladderStage?: number | undefined;
     errorMessage?: string | undefined;
   },
 ): Promise<void> {
@@ -125,6 +142,7 @@ async function recordDmAudit(
         kind: row.kind,
         content: row.content,
         deliveryStatus: row.status,
+        ladderStage: row.ladderStage ?? null,
         errorMessage: row.errorMessage ?? null,
       },
     });
@@ -132,26 +150,6 @@ async function recordDmAudit(
     logger.error(
       `[DM] Failed to write DmAuditLog row for user ${row.recipientId}:`,
       getErrorMessage(auditError),
-    );
-  }
-}
-
-/** Advance the server's delivered-message counter. Called only after a send. */
-async function consumeBudget(
-  db: ExtendedPrismaClient,
-  budget: DmBudget,
-): Promise<void> {
-  try {
-    await db.guildInstall.updateMany({
-      where: { serverId: budget.guildId },
-      data: { outreachStage: { increment: 1 }, lastOutreachAt: new Date() },
-    });
-  } catch (error) {
-    // A bookkeeping failure must not be mistaken for a send failure, but it
-    // does risk a duplicate later, so it is logged loudly rather than ignored.
-    logger.error(
-      `[DM] Failed to advance message budget for guild ${budget.guildId}:`,
-      getErrorMessage(error),
     );
   }
 }
@@ -173,11 +171,11 @@ async function evaluateBudget(
   budget: DmBudget,
   recipientId: DiscordAccountId,
 ): Promise<BudgetDecision> {
-  const install = await db.guildInstall.findUnique({
-    where: { serverId: budget.guildId },
-    select: { outreachStage: true },
-  });
-  const spent = install?.outreachStage ?? 0;
+  const { spent } = await readOutreachState(
+    db,
+    budget.guildId,
+    budget.installedAt,
+  );
   if (spent >= NON_CORE_MESSAGE_BUDGET) {
     return { kind: "budget_exhausted" };
   }
@@ -215,6 +213,24 @@ export async function sendDM(options: SendDmOptions): Promise<DmStatus> {
 
   let message = options.message;
 
+  // A non-core message without a budget would sit outside the cap and the
+  // footer entirely — which is how the removal-time feedback DM could have
+  // become a fourth message. Refuse rather than quietly over-send.
+  if (options.budget === undefined && !CORE_DM_KINDS.has(kind)) {
+    logger.error(
+      `[DM] Refusing unbudgeted non-core ${kind} DM to ${userId} — pass a budget`,
+    );
+    await recordDmAudit(db, {
+      recipientId: userId,
+      recipientTag: options.recipientTag,
+      guildId,
+      kind,
+      content: message,
+      status: "budget_exhausted",
+    });
+    return "budget_exhausted";
+  }
+
   // Budget gate. Deliberately before any Discord call: a refusal must not look
   // like a delivery attempt, and must not consume budget.
   if (options.budget !== undefined) {
@@ -230,6 +246,7 @@ export async function sendDM(options: SendDmOptions): Promise<DmStatus> {
         kind,
         content: message,
         status: decision.kind,
+        ladderStage: options.budget.ladderStage,
       });
       return decision.kind;
     }
@@ -255,12 +272,10 @@ export async function sendDM(options: SendDmOptions): Promise<DmStatus> {
       kind,
       content: message,
       status: "sent",
+      ladderStage: options.budget?.ladderStage,
     });
-    // Budget is consumed only on actual delivery. Charging for a bounced DM is
-    // what silently exhausted guilds that never received anything.
-    if (options.budget !== undefined) {
-      await consumeBudget(db, options.budget);
-    }
+    // Nothing to increment: the audit row written above IS the ledger, so a
+    // delivery and its accounting can never disagree.
     return "sent";
   } catch (error) {
     const dmDisabled =
@@ -286,6 +301,7 @@ export async function sendDM(options: SendDmOptions): Promise<DmStatus> {
       kind,
       content: message,
       status,
+      ladderStage: options.budget?.ladderStage,
       errorMessage: errorMsg,
     });
     return status;

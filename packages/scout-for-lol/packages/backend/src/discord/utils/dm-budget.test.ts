@@ -61,7 +61,14 @@ function clientThatCannotDm() {
   });
 }
 
-async function seedInstall(outreachStage = 0): Promise<void> {
+const INSTALLED_AT = new Date("2026-01-01T00:00:00.000Z");
+
+/**
+ * Seed an install plus `delivered` prior deliveries. Spend lives in the audit
+ * log now, so "already spent N" means N recorded sent rows — the same rows the
+ * gate reads.
+ */
+async function seedInstall(delivered = 0): Promise<void> {
   await prisma.guildInstall.create({
     data: {
       serverId: SERVER_ID,
@@ -69,18 +76,34 @@ async function seedInstall(outreachStage = 0): Promise<void> {
       ownerDiscordId: RECIPIENT,
       addedByDiscordId: RECIPIENT,
       memberCount: 5,
-      installedAt: new Date("2026-01-01T00:00:00.000Z"),
-      outreachStage,
+      installedAt: INSTALLED_AT,
     },
   });
+  for (let i = 0; i < delivered; i += 1) {
+    await prisma.dmAuditLog.create({
+      data: {
+        // A different recipient, so these don't trip the per-recipient cooldown.
+        recipientId: testAccountId("99"),
+        guildId: SERVER_ID,
+        kind: "outreach_nudge",
+        content: "prior",
+        deliveryStatus: "sent",
+        ladderStage: i + 1,
+      },
+    });
+  }
 }
 
-async function stage(): Promise<number> {
-  const row = await prisma.guildInstall.findUnique({
-    where: { serverId: SERVER_ID },
-    select: { outreachStage: true },
+async function spent(): Promise<number> {
+  return prisma.dmAuditLog.count({
+    where: {
+      guildId: SERVER_ID,
+      deliveryStatus: "sent",
+      kind: {
+        in: ["outreach_nudge", "outreach_last_call", "feedback_request"],
+      },
+    },
   });
-  return row?.outreachStage ?? -1;
 }
 
 function budgeted(client: Client, message = "hello") {
@@ -91,7 +114,11 @@ function budgeted(client: Client, message = "hello") {
     kind: "outreach_nudge" as const,
     guildId: SERVER_ID,
     prisma,
-    budget: { guildId: SERVER_ID, serverName: "Budget Server" },
+    budget: {
+      guildId: SERVER_ID,
+      serverName: "Budget Server",
+      installedAt: INSTALLED_AT,
+    },
   };
 }
 
@@ -143,16 +170,19 @@ describe("sendDM message budget", () => {
     const send = makeSendMock();
     const client = clientThatSends(send);
 
-    // Cooldown is per-recipient; clear the audit log between sends so this
-    // test exercises the budget rather than the cooldown.
+    // Reassign delivered rows to another recipient between sends. The cooldown
+    // is per-recipient and the budget is per-guild, so this clears the cooldown
+    // while leaving the ledger intact — backdating them instead would push them
+    // outside the install window and hide them from the budget entirely.
     for (let i = 0; i < 10; i += 1) {
       await sendDM(budgeted(client));
-      await prisma.dmAuditLog.deleteMany({
-        where: { deliveryStatus: "sent" },
+      await prisma.dmAuditLog.updateMany({
+        where: { recipientId: RECIPIENT, deliveryStatus: "sent" },
+        data: { recipientId: testAccountId("98") },
       });
     }
 
-    expect(await stage()).toBe(NON_CORE_MESSAGE_BUDGET);
+    expect(await spent()).toBe(NON_CORE_MESSAGE_BUDGET);
     expect(send.mock.calls.length).toBe(NON_CORE_MESSAGE_BUDGET);
   });
 
@@ -164,7 +194,7 @@ describe("sendDM message budget", () => {
     expect(status).toBe("dm_disabled");
     // The bug this replaces: the old code marked the stage regardless of the
     // outcome, burning guilds that never received anything.
-    expect(await stage()).toBe(0);
+    expect(await spent()).toBe(0);
   });
 
   it("defers a second message to the same recipient within the cooldown", async () => {
@@ -178,7 +208,7 @@ describe("sendDM message budget", () => {
     expect(second).toBe("deferred");
     // Deferred, not dropped, and not charged: the guild can still be messaged
     // on a later run.
-    expect(await stage()).toBe(1);
+    expect(await spent()).toBe(1);
     expect(send.mock.calls.length).toBe(1);
   });
 
@@ -206,10 +236,9 @@ describe("sendDM message budget", () => {
     await sendDM(budgeted(clientThatSends(makeSendMock())));
 
     const rows = await prisma.dmAuditLog.findMany({
-      where: { guildId: SERVER_ID },
+      where: { guildId: SERVER_ID, deliveryStatus: "budget_exhausted" },
     });
     expect(rows).toHaveLength(1);
-    expect(rows[0]?.deliveryStatus).toBe("budget_exhausted");
   });
 
   it("leaves unbudgeted (core) messages untouched", async () => {

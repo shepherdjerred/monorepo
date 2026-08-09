@@ -35,6 +35,7 @@ import {
   type DiscordGuildId,
 } from "@scout-for-lol/data/index.ts";
 import { prisma } from "#src/database/index.ts";
+import { readOutreachState } from "#src/discord/utils/outreach-state.ts";
 import { sendDM, type DmKind } from "#src/discord/utils/dm.ts";
 import { NON_CORE_MESSAGE_BUDGET } from "#src/discord/utils/message-budget.ts";
 import { truncateDiscordMessage } from "#src/discord/utils/message.ts";
@@ -145,7 +146,7 @@ export function planOutreach(params: {
   outreachStage: number;
   /** Highest rung already delivered, so a rung is never repeated. */
   lastLadderStage: number;
-  feedbackRequestedAt: Date | null;
+  feedbackRequested: boolean;
   state: GuildState;
   now: Date;
 }): Plan {
@@ -175,7 +176,7 @@ export function planOutreach(params: {
     if (stage === 1) {
       return { action: "skip", stage, reason: "configured" };
     }
-    if (params.feedbackRequestedAt !== null) {
+    if (params.feedbackRequested) {
       return { action: "skip", stage, reason: "already_asked" };
     }
     return {
@@ -235,13 +236,29 @@ export async function runOutreach(
 
   for (const install of installs) {
     const guildId = DiscordGuildIdSchema.parse(install.serverId);
+
+    // Authoritative membership check. GuildInstall rows outlive a removal (the
+    // cleanup deliberately keeps them), and rows predating `removedAt` carry no
+    // removal stamp at all, so without this a former installer could be DM'd
+    // about a server Scout is no longer in.
+    if (!client.guilds.cache.has(guildId)) {
+      skipped += 1;
+      outreachSkippedTotal.inc({ stage: "0", reason: "not_a_member" });
+      continue;
+    }
+
     const state = await readGuildState(guildId);
+    const outreach = await readOutreachState(
+      prisma,
+      guildId,
+      install.installedAt,
+    );
     const plan = planOutreach({
       serverName: install.serverName,
       installedAt: install.installedAt,
-      outreachStage: install.outreachStage,
-      lastLadderStage: install.lastLadderStage,
-      feedbackRequestedAt: install.feedbackRequestedAt,
+      outreachStage: outreach.spent,
+      lastLadderStage: outreach.lastLadderStage,
+      feedbackRequested: outreach.feedbackRequested,
       state,
       now,
     });
@@ -271,7 +288,12 @@ export async function runOutreach(
       message: plan.message,
       kind: plan.kind,
       guildId,
-      budget: { guildId, serverName: install.serverName },
+      budget: {
+        guildId,
+        serverName: install.serverName,
+        installedAt: install.installedAt,
+        ladderStage: plan.stage,
+      },
     });
 
     outreachMessagesTotal.inc({ stage: plan.stage.toString(), status });
@@ -281,17 +303,6 @@ export async function runOutreach(
 
     if (status === "sent") {
       sent += 1;
-      // Record the rung so it is never repeated. (sendDM owns the budget
-      // counter; this is the ladder position, which is a different thing.)
-      await prisma.guildInstall.update({
-        where: { id: install.id },
-        data: {
-          lastLadderStage: plan.stage,
-          ...(plan.kind === "feedback_request"
-            ? { feedbackRequestedAt: new Date() }
-            : {}),
-        },
-      });
     }
   }
 

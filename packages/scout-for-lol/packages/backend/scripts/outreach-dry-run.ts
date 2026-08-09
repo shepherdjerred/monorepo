@@ -12,6 +12,7 @@
 
 import { prisma } from "#src/database/index.ts";
 import { planOutreach } from "#src/league/tasks/outreach/index.ts";
+import { readOutreachState } from "#src/discord/utils/outreach-state.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("outreach-dry-run");
@@ -32,12 +33,18 @@ for (const install of installs) {
     }),
   ]);
 
+  const outreach = await readOutreachState(
+    prisma,
+    install.serverId,
+    install.installedAt,
+  );
+
   const plan = planOutreach({
     serverName: install.serverName,
     installedAt: install.installedAt,
-    outreachStage: install.outreachStage,
-    lastLadderStage: install.lastLadderStage,
-    feedbackRequestedAt: install.feedbackRequestedAt,
+    outreachStage: outreach.spent,
+    lastLadderStage: outreach.lastLadderStage,
+    feedbackRequested: outreach.feedbackRequested,
     state: { subscriptions, competitions },
     now,
   });
@@ -53,7 +60,7 @@ for (const install of installs) {
   );
   logger.info(
     `${install.serverName.padEnd(34).slice(0, 34)} age=${ageDays.toString().padStart(4)}d ` +
-      `spent=${install.outreachStage.toString()} rung=${install.lastLadderStage.toString()} subs=${subscriptions.toString()} comps=${competitions.toString()} → ${outcome}`,
+      `spent=${outreach.spent.toString()} rung=${outreach.lastLadderStage.toString()} subs=${subscriptions.toString()} comps=${competitions.toString()} → ${outcome}`,
   );
 }
 

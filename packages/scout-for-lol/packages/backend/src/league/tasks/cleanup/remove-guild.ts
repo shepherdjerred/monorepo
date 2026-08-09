@@ -45,6 +45,16 @@ export async function cleanupRemovedGuild(
 
   const summary = await db.$transaction(
     async (tx): Promise<RemovedGuildCleanupSummary> => {
+      // Stamp the removal here, inside the one function every confirmed-removal
+      // path calls (guildDelete AND the reconcile sweep). Stamping it only in
+      // the event handler left reconcile-discovered removals unmarked, so the
+      // outreach ladder would still treat those guilds as live installs and
+      // could DM a former installer.
+      await tx.guildInstall.updateMany({
+        where: { serverId },
+        data: { removedAt: new Date() },
+      });
+
       const playerRows = await tx.player.findMany({
         where: { serverId },
         select: { id: true },

@@ -44,22 +44,6 @@ export async function handleGuildDelete(guild: Guild): Promise<void> {
 
   guildsLeftTotal.inc();
 
-  // Stamp the removal so a later guildCreate can be recognised as a genuine
-  // re-install rather than a replayed event. `cleanupRemovedGuild` keeps the
-  // GuildInstall row, so without this there is no way to tell them apart.
-  // Best-effort: never block cleanup on it.
-  try {
-    await prisma.guildInstall.updateMany({
-      where: { serverId },
-      data: { removedAt: new Date() },
-    });
-  } catch (error) {
-    logger.error(
-      `[Guild Delete] Failed to stamp removedAt for guild ${guild.id}:`,
-      getErrorMessage(error),
-    );
-  }
-
   try {
     const summary = await cleanupRemovedGuild(prisma, serverId);
     logger.info(
@@ -75,18 +59,31 @@ export async function handleGuildDelete(guild: Guild): Promise<void> {
     });
   }
 
-  // Best-effort feedback request. After removal the bot usually no longer shares
-  // a guild with the owner, so this often cannot be delivered - the attempt and
-  // its outcome are recorded in DmAuditLog regardless.
+  // Best-effort feedback request. Budgeted like every other non-core message:
+  // a guild that already received its three ladder messages must not get a
+  // fourth just because Scout was removed. After removal the bot usually no
+  // longer shares a guild with the owner, so this often cannot be delivered
+  // anyway — the attempt and its outcome are recorded in DmAuditLog regardless.
   try {
-    const ownerId = DiscordAccountIdSchema.parse(guild.ownerId);
-    await sendDM({
-      client: guild.client,
-      userId: ownerId,
-      message: buildFeedbackRequestMessage(guild.name),
-      kind: "feedback_request",
-      guildId: serverId,
+    const install = await prisma.guildInstall.findUnique({
+      where: { serverId },
+      select: { installedAt: true, serverName: true },
     });
+    if (install !== null) {
+      const ownerId = DiscordAccountIdSchema.parse(guild.ownerId);
+      await sendDM({
+        client: guild.client,
+        userId: ownerId,
+        message: buildFeedbackRequestMessage(guild.name),
+        kind: "feedback_request",
+        guildId: serverId,
+        budget: {
+          guildId: serverId,
+          serverName: install.serverName,
+          installedAt: install.installedAt,
+        },
+      });
+    }
   } catch (error) {
     logger.warn(
       `[Guild Delete] Could not send feedback request for guild ${guild.id}: ${getErrorMessage(error)}`,

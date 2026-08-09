@@ -12,6 +12,7 @@ import { ChannelType } from "discord.js";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { mockGuild, mockTextChannel } from "#src/testing/discord-mocks.ts";
 import { testGuildId, testAccountId } from "#src/testing/test-ids.ts";
+import { readOutreachState } from "#src/discord/utils/outreach-state.ts";
 
 const { prisma } = createTestDatabase("guild-create-install-test");
 
@@ -128,11 +129,11 @@ describe("handleGuildCreate — GuildInstall bookkeeping", () => {
     );
   });
 
-  it("clears the active ladder fields on re-install, not just the legacy ones", async () => {
-    // The ladder reads outreachStage / lastLadderStage / feedbackRequestedAt.
-    // Resetting only the legacy timestamps left a re-installed server
-    // permanently budget-exhausted and already-asked — onboarding never
-    // actually restarted.
+  it("restarts the ladder on re-install by moving installedAt forward", async () => {
+    // Outreach state is derived from audit rows created after `installedAt`,
+    // so advancing that timestamp resets budget, rung, and feedback status at
+    // once. The previous model needed each counter cleared by hand, and missing
+    // one left a re-installed server permanently budget-exhausted.
     await prisma.guildInstall.create({
       data: {
         serverId: SERVER_ID,
@@ -141,25 +142,39 @@ describe("handleGuildCreate — GuildInstall bookkeeping", () => {
         addedByDiscordId: testAccountId("77"),
         memberCount: 10,
         installedAt: new Date("2026-01-01T00:00:00.000Z"),
-        outreachStage: 3,
-        lastLadderStage: 3,
-        feedbackRequestedAt: new Date("2026-01-15T00:00:00.000Z"),
-        lastOutreachAt: new Date("2026-01-15T00:00:00.000Z"),
         emailNudgeSentAt: new Date("2026-01-20T00:00:00.000Z"),
         removedAt: new Date("2026-02-01T00:00:00.000Z"),
       },
     });
+    // Three deliveries under the PREVIOUS installation.
+    for (let i = 0; i < 3; i += 1) {
+      await prisma.dmAuditLog.create({
+        data: {
+          recipientId: testAccountId("77"),
+          guildId: SERVER_ID,
+          kind: "outreach_nudge",
+          content: "prior",
+          deliveryStatus: "sent",
+          ladderStage: i + 1,
+          createdAt: new Date("2026-01-10T00:00:00.000Z"),
+        },
+      });
+    }
 
     await handleGuildCreate(guildFixture());
 
     const row = await prisma.guildInstall.findUnique({
       where: { serverId: SERVER_ID },
     });
-    expect(row?.outreachStage).toBe(0);
-    expect(row?.lastLadderStage).toBe(0);
-    expect(row?.feedbackRequestedAt).toBeNull();
-    expect(row?.lastOutreachAt).toBeNull();
     expect(row?.emailNudgeSentAt).toBeNull();
+    const state = await readOutreachState(
+      prisma,
+      SERVER_ID,
+      row?.installedAt ?? new Date(),
+    );
+    expect(state.spent).toBe(0);
+    expect(state.lastLadderStage).toBe(0);
+    expect(state.feedbackRequested).toBe(false);
   });
 
   it("does not touch the install row when the guild is unavailable", async () => {

@@ -324,7 +324,13 @@ model DmAuditLog {
   guildId        String? // Guild this DM relates to, when applicable
   kind           String // Category, e.g. "permission_error" | "abandonment" | "feedback_request" | "competition_invite" | "prune_notice"
   content        String // The message body that was (attempted to be) sent
-  deliveryStatus String // "sent" | "dm_disabled" | "failed"
+  deliveryStatus String // "sent" | "dm_disabled" | "failed" | "budget_exhausted" | "deferred"
+  // Ladder rung this message represented, for budgeted outreach only.
+  // Persisted because the Nth delivered message is NOT necessarily rung N:
+  // a bounced rung-1 DM followed by a delivered rung-2 DM would otherwise be
+  // reconstructed as rung 1, mis-attributing conversions and letting a former
+  // installer receive a repeat of a rung they already got.
+  ladderStage    Int?
   errorMessage   String? // Failure detail when delivery != "sent"
   createdAt      DateTime @default(now())
 
@@ -434,28 +440,19 @@ model GuildInstall {
   memberCount       Int
   installedAt       DateTime
   // Legacy one-shot markers, kept for one release so a rollback can still read
-  // them. `outreachStage` is the source of truth; these are no longer written.
+  // them. No longer written; DmAuditLog is the source of truth.
   outreach3dSentAt  DateTime?
   outreach14dSentAt DateTime?
   outreach30dSentAt DateTime?
 
-  // Non-core messages actually DELIVERED to this guild's installer, 0..3.
+  // Outreach budget, ladder position, and "have we asked for feedback?" are
+  // NOT stored here. They are derived from DmAuditLog rows created after
+  // `installedAt` — the durable record of what was actually delivered.
   //
-  // Counting deliveries rather than attempts is the whole fix: the old columns
-  // were stamped whether or not anything was sent, which permanently burned 33
-  // of 37 guilds out of the 14-day feedback ask without ever messaging them.
-  outreachStage       Int       @default(0)
-  // Highest ladder rung whose message was actually delivered (0..3).
-  //
-  // Kept separate from `outreachStage` because they answer different questions:
-  // this is "which rung have we said?", while `outreachStage` is "how much of
-  // the budget is spent?". Conflating them meant a guild that configured before
-  // its first message never left rung 1 — nothing was ever delivered, so the
-  // counter never moved — and so never reached the day-14 feedback ask.
-  lastLadderStage     Int       @default(0)
-  lastOutreachAt      DateTime?
-  // Set once a feedback ask has been delivered, so we never ask twice.
-  feedbackRequestedAt DateTime?
+  // A derived counter cannot drift from reality when a write fails, cannot
+  // disagree with the "Message N of 3" text it produces, and makes a re-install
+  // reset the whole ladder for free by simply moving `installedAt` forward.
+
   // Set once the one-time email nudge has been sent (see the email channel).
   emailNudgeSentAt    DateTime?
 

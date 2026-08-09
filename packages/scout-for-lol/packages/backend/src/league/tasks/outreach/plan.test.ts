@@ -18,7 +18,7 @@ function plan(overrides: Partial<Parameters<typeof planOutreach>[0]> = {}) {
     installedAt: INSTALLED,
     outreachStage: 0,
     lastLadderStage: 0,
-    feedbackRequestedAt: null,
+    feedbackRequested: false,
     state: { subscriptions: 0, competitions: 0 },
     now: day(3),
     ...overrides,
@@ -157,7 +157,7 @@ describe("planOutreach — content adapts to actual state", () => {
     expect(
       plan({
         outreachStage: 2,
-        feedbackRequestedAt: day(14),
+        feedbackRequested: true,
         state: { subscriptions: 5, competitions: 0 },
         now: day(30),
       }),
@@ -216,7 +216,7 @@ describe("planOutreach — ladder position is independent of budget", () => {
         ...configured,
         outreachStage: 1,
         lastLadderStage: 2,
-        feedbackRequestedAt: day(14),
+        feedbackRequested: true,
         now: day(30),
       }),
     ).toMatchObject({ action: "skip", reason: "already_asked" });
@@ -249,7 +249,7 @@ describe("planOutreach — late configuration", () => {
 
     const third = plan({
       outreachStage: 2,
-      feedbackRequestedAt: day(14),
+      feedbackRequested: true,
       state: { subscriptions: 2, competitions: 0 },
       now: day(30),
     });

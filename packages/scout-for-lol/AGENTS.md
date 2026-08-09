@@ -695,27 +695,35 @@ drift from reality. Treat this as an invariant:
 - **Route every non-core message through `sendDM` with a `budget`.** Enforcement
   lives in `discord/utils/dm.ts`, the audit chokepoint, precisely so no caller
   can forget the check. Do not add a second send path.
-- **Budget is consumed only on delivery.** A DM that bounced (`dm_disabled`,
-  `failed`) must not advance `GuildInstall.outreachStage` — the user received
-  nothing. Charging for attempts is what previously burned 33 of 37 guilds out
-  of the feedback ask without ever messaging them.
+- **`DmAuditLog` is the ledger.** Budget spend, ladder rung, and "have we asked
+  for feedback?" are derived from audit rows created after `installedAt`, never
+  stored as counters. A counter updated after a send goes stale if that write
+  fails, and the "Message N of 3" text then contradicts the gate that produced
+  it. Only delivered rows count, so a bounced DM charges nothing.
 - **Core product output is not budgeted.** Match reports, competition invites,
-  and permission errors are what the user asked for; never gate them on this.
+  permission errors, and prune notices are what the user asked for. Everything
+  else is non-core and `sendDM` refuses to send it without a budget — that is
+  what stops a fourth message slipping out on a path nobody thought about.
 - **A new channel shares the budget.** If email or any other channel is added,
   it consumes the same allowance (`emailNudgeSentAt` exists for this) — a fourth
   message arriving by another route would make the printed count a lie.
-- **Ladder position and budget are separate numbers.** `lastLadderStage` is
-  "which rung have we said?" and comes from install age; `outreachStage` is "how
-  much budget is spent?" and only moves on delivery. Deriving the rung from the
-  spent budget strands any guild that is legitimately skipped — a configured
-  guild delivers nothing at rung 1, so the counter never moves, so it can never
-  reach the rung-2 feedback ask. A skip must never record a rung.
-- **Never re-arm outreach without an observed removal.** `handleGuildCreate`
-  restarts the ladder only when `GuildInstall.removedAt` is set; a replayed
-  `guildCreate` for a guild we never left must not re-post the welcome message
-  or re-send DMs. A genuine re-install must clear the **active** ladder fields
-  (`outreachStage`, `lastLadderStage`, `feedbackRequestedAt`, …), not just the
-  legacy timestamp columns.
+- **Rung is recorded, not counted.** `DmAuditLog.ladderStage` stores which rung
+  a message was. The Nth delivery is not rung N: a bounced day-3 DM followed by
+  a delivered day-14 DM is rung 2, and legacy history contains lone
+  `outreach_30d` rows. Reconstructing from position repeats rungs and
+  mis-attributes conversions.
+- **Ladder position comes from the calendar, budget from deliveries.** Deriving
+  the rung from spend strands any guild that is legitimately skipped — a
+  configured guild delivers nothing at rung 1, so a spend-derived rung never
+  advances and the rung-2 feedback ask becomes unreachable. A skip records
+  nothing.
+- **Never message a guild Scout is not in.** `GuildInstall` rows outlive a
+  removal by design, and rows predating `removedAt` carry no stamp, so the
+  ladder checks live guild membership before sending. `cleanupRemovedGuild`
+  stamps `removedAt` for every confirmed-removal path.
+- **Re-install resets by moving `installedAt`.** Because state is scoped to rows
+  after that timestamp, there is no list of counters to remember to clear —
+  which is exactly what previously left a re-installed server exhausted.
 
 Validate ladder changes with `bun run scripts/outreach-dry-run.ts` against a
 copy of production before the first real fire — the failure mode here is
