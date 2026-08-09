@@ -52,6 +52,12 @@ Consequences applied:
 - agent-tasks.md gains startDelay + per-execution failure-watch/queue-health +
   schema-dialect notes.
 
+The aggregate `agent-task-timeout-watch` design mentioned above is historical
+and superseded by the 2026-08-08 Temporal agent-task execution hardening plan.
+Future edits to this deep-dive must describe `temporal-failure-watch` and the
+worker queue-health signals; they must not restore the retired aggregate
+watcher.
+
 ## Page inventory
 
 New directory `packages/docs/wiki/src/content/docs/temporal/workflows/`:

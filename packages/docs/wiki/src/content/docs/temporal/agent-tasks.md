@@ -104,6 +104,9 @@ WebFetch`, on claude-opus-5. **Codex tasks** run `codex exec` with
   timeout before any activity is explicitly reported as worker/task-queue
   availability. SDK metrics alert after five minutes for missing agent-task
   workflow pollers, high schedule-to-start latency, or worker scrape loss.
+- The workflow-deep-dive plan's former aggregate timeout-watch design is
+  superseded. Do not restore `agent-task-timeout-watch`; use the per-execution
+  history classification and the worker queue-health alerts above.
 - **Production canary**: after deploying the image, operators run
   `bun run canary:agent-task` from `packages/temporal`. It uses the real
   `agent-task` queue, OAuth token, parser, and a tagged report-only email; the

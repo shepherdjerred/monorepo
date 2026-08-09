@@ -15,6 +15,7 @@ import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import { buildAgentTaskCommand } from "#activities/agent-task-command.ts";
 import {
   createAgentTaskSecretTokenState,
+  AgentTaskSecretRedactionController,
   envForProvider,
   refreshAgentTaskSecretTokenStateInBackground,
 } from "#activities/agent-task-env.ts";
@@ -39,7 +40,6 @@ import {
   scheduleFollowUp,
   sendEmail,
 } from "./agent-task-side-activities.ts";
-
 const COMPONENT = "agent-task";
 const HEARTBEAT_INTERVAL_MS = 10_000;
 const MOUNTED_SECRET_REFRESH_INTERVAL_MS = 10_000;
@@ -48,22 +48,18 @@ const DEFAULT_WORKFLOW_TYPE = "agentTaskWorkflow";
 export type PrepareAgentTaskWorkdirInput = {
   input: AgentTaskInput;
 };
-
 export type PrepareAgentTaskWorkdirResult = {
   workdir: string;
 };
-
 export type RunAgentTaskInput = {
   input: AgentTaskInput;
   workdir: string;
 };
-
 export type RunAgentTaskResult = AgentTaskResultPayload & {
   provider: AgentTaskProvider;
   model: string;
   durationMs: number;
 };
-
 function jsonLog(
   level: "info" | "warning" | "error",
   message: string,
@@ -82,7 +78,6 @@ function jsonLog(
   }
   console.warn(JSON.stringify(base));
 }
-
 function activityInfoOrUndefined(): Record<string, unknown> | undefined {
   try {
     const info = Context.current().info;
@@ -96,7 +91,6 @@ function activityInfoOrUndefined(): Record<string, unknown> | undefined {
     return undefined;
   }
 }
-
 function captureWithContext(
   error: unknown,
   extra: Record<string, unknown> = {},
@@ -112,7 +106,6 @@ function captureWithContext(
     Sentry.captureException(error);
   });
 }
-
 function safeHeartbeat(payload: Record<string, unknown>): void {
   try {
     Context.current().heartbeat(payload);
@@ -120,7 +113,6 @@ function safeHeartbeat(payload: Record<string, unknown>): void {
     // Local scripts can call activities directly; outside Temporal this is a no-op.
   }
 }
-
 function activityCancellationSignalOrUndefined(): AbortSignal | undefined {
   try {
     return Context.current().cancellationSignal;
@@ -128,7 +120,6 @@ function activityCancellationSignalOrUndefined(): AbortSignal | undefined {
     return undefined;
   }
 }
-
 function currentWorkflowType(): string {
   try {
     return Context.current().info.workflowType ?? DEFAULT_WORKFLOW_TYPE;
@@ -136,7 +127,6 @@ function currentWorkflowType(): string {
     return DEFAULT_WORKFLOW_TYPE;
   }
 }
-
 function startToCloseTimeoutMsOrUndefined(): number | undefined {
   try {
     return Context.current().info.startToCloseTimeoutMs;
@@ -144,7 +134,6 @@ function startToCloseTimeoutMsOrUndefined(): number | undefined {
     return undefined;
   }
 }
-
 function workflowId(): string {
   try {
     return (
@@ -155,7 +144,6 @@ function workflowId(): string {
     return `agent-task-local-${crypto.randomUUID()}`;
   }
 }
-
 function splitRepo(fullName: string): { owner: string; repo: string } {
   const [owner, repo, extra] = fullName.split("/");
   if (owner === undefined || repo === undefined || extra !== undefined) {
@@ -163,7 +151,6 @@ function splitRepo(fullName: string): { owner: string; repo: string } {
   }
   return { owner, repo };
 }
-
 async function runAgent(
   input: RunAgentTaskInput,
   commandBuilder: typeof buildAgentTaskCommand,
@@ -172,7 +159,6 @@ async function runAgent(
   const provider = parsed.provider;
   const command = await commandBuilder(parsed, input.workdir);
   const workflowType = currentWorkflowType();
-
   return withSpan(
     "agent-task.run-agent",
     {
@@ -193,21 +179,29 @@ async function runAgent(
         agentTimeoutMinutes: parsed.agentTimeoutMinutes,
         maxTurns: parsed.maxTurns,
       });
-
       const githubTokenResult = await createGitHubAppInstallationToken();
       const secretTokenState = await createAgentTaskSecretTokenState(
         githubTokenResult.token,
       );
       const secretTokens = secretTokenState.tokens;
-      const redactionFailureController = new AbortController();
+      const redactionFailureController = new AgentTaskSecretRedactionController(
+        jsonLog.bind(
+          null,
+          "error",
+          "Unable to refresh mounted agent-task secrets",
+          {
+            phase: "secret-redaction",
+          },
+        ),
+      );
       const activityCancellationSignal =
         activityCancellationSignalOrUndefined();
       const cancellationSignal =
         activityCancellationSignal === undefined
-          ? redactionFailureController.signal
+          ? redactionFailureController.abortController.signal
           : AbortSignal.any([
               activityCancellationSignal,
-              redactionFailureController.signal,
+              redactionFailureController.abortController.signal,
             ]);
       const llmStartMs = Date.now();
       const llmTrace = startAgentTaskLlmTrace({
@@ -227,15 +221,11 @@ async function runAgent(
       const mountedSecretRefreshTimer = setInterval(() => {
         void refreshAgentTaskSecretTokenStateInBackground(
           secretTokenState,
-          () => {
-            jsonLog("error", "Unable to refresh mounted agent-task secrets", {
-              phase: "secret-redaction",
-            });
-            redactionFailureController.abort();
+          (error) => {
+            redactionFailureController.record(error);
           },
         );
       }, MOUNTED_SECRET_REFRESH_INTERVAL_MS);
-
       let result: TrackedAgentResult;
       try {
         result = await runTrackedAgentSubprocess(
@@ -323,7 +313,11 @@ async function runAgent(
         llmTrace.close();
       }
 
-      await secretTokenState.refresh();
+      try {
+        await secretTokenState.refresh();
+      } catch (error: unknown) {
+        redactionFailureController.record(error);
+      }
 
       // Post-hoc claude span — before the cancelled/exit-code checks so
       // failed runs are traced too (they still spent tokens).
@@ -333,6 +327,17 @@ async function runAgent(
         startTimeMs: llmStartMs,
         durationMs: result.durationMs,
       });
+
+      if (redactionFailureController.failure !== undefined) {
+        agentTaskRunsTotal.inc({ provider, outcome: "redaction_failed" });
+        captureWithContext(redactionFailureController.failure, {
+          provider,
+          durationMs: result.durationMs,
+          phase: "secret-redaction",
+          signal: result.signal,
+        });
+        throw redactionFailureController.failure;
+      }
 
       const cancelled = result.signal === "SIGTERM";
       agentSubprocessIdleSeconds.observe(

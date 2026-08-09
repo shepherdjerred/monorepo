@@ -5,6 +5,7 @@ import { describe, expect, it } from "bun:test";
 import {
   agentTaskSecretTokens,
   createAgentTaskSecretTokenState,
+  refreshAgentTaskSecretTokenStateInBackground,
 } from "./agent-task-env.ts";
 
 describe("agent-task secret token state", () => {
@@ -36,5 +37,19 @@ describe("agent-task secret token state", () => {
     });
 
     expect(tokens).toContain(pemBodyLine);
+  });
+
+  it("forwards refresh failures so the activity can fail closed with the cause", async () => {
+    const refreshError = new Error("mounted secret read failed");
+    let observed: unknown;
+
+    await refreshAgentTaskSecretTokenStateInBackground(
+      { tokens: [], refresh: () => Promise.reject(refreshError) },
+      (error) => {
+        observed = error;
+      },
+    );
+
+    expect(observed).toBe(refreshError);
   });
 });

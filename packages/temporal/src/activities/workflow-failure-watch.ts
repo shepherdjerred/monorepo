@@ -157,18 +157,6 @@ function innermostTemporalFailure(failure: TemporalFailure): TemporalFailure {
   return current;
 }
 
-function containsTimeoutFailure(failure: TemporalFailure): boolean {
-  let current: TemporalFailure | undefined = failure;
-  while (current !== undefined) {
-    if (current instanceof TimeoutFailure) {
-      return true;
-    }
-    const nestedCause: Error | undefined = current.cause;
-    current = nestedCause instanceof TemporalFailure ? nestedCause : undefined;
-  }
-  return false;
-}
-
 /**
  * The failure "type" the Temporal UI shows. For an `ApplicationFailure` that is
  * its custom `type` (e.g. `BilledGenerationFinalizationError`), not the generic
@@ -340,9 +328,13 @@ async function fetchFailureDetail(
     if (error instanceof WorkflowFailedError) {
       const temporalCause =
         error.cause instanceof TemporalFailure ? error.cause : undefined;
+      const terminalCause =
+        temporalCause === undefined
+          ? undefined
+          : innermostTemporalFailure(temporalCause);
       const shouldInspectTimeout =
         execution.status === "TIMED_OUT" ||
-        (temporalCause !== undefined && containsTimeoutFailure(temporalCause));
+        terminalCause instanceof TimeoutFailure;
       const inspection = shouldInspectTimeout
         ? await inspectTimeoutHistory(handle)
         : { classification: undefined, historyError: undefined };

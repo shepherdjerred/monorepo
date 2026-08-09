@@ -348,12 +348,16 @@ alert annotations `timeoutClassification` and, when present,
 
 - `no activity reached execution` means inspect worker readiness, Temporal
   connectivity, and the `agent-task` queue for an initial poller outage.
-- `a scheduled activity has not started` means an earlier activity may have
-  completed, but the current activity remains pending; inspect activity-poller
-  availability and the `agent-task` queue.
+- `a scheduled activity has not started` means the current activity remains
+  pending; inspect activity-poller availability and the `agent-task` queue.
+  When `timeoutDispatchState pre-dispatch` is also present, no worker ever
+  received that activity. Without it, an earlier activity may have completed
+  and the current activity was dispatched before timing out.
 - `a scheduled workflow task has not started` means the workflow needs another
   workflow-task poll; inspect workflow-task poller availability and the queue.
-- `activity` means an activity was scheduled and timed out after dispatch.
+- `activity` with `timeoutDispatchState pre-dispatch` means an activity timed
+  out in schedule-to-start before a worker received it. Otherwise, it means an
+  activity was scheduled and timed out after dispatch.
 - `execution` means the workflow execution timeout fired without a more
   specific task timeout event.
 - `unknown` means history was unavailable or had no recognized timeout event.

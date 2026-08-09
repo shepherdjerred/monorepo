@@ -74,6 +74,29 @@ export type AgentTaskSecretTokenState = {
   refresh: () => Promise<void>;
 };
 
+export class AgentTaskSecretRedactionError extends Error {
+  constructor(cause: unknown) {
+    super("agent-task secret redaction refresh failed", { cause });
+    this.name = "AgentTaskSecretRedactionError";
+  }
+}
+
+export class AgentTaskSecretRedactionController {
+  readonly abortController = new AbortController();
+  failure: AgentTaskSecretRedactionError | undefined;
+
+  constructor(private readonly onFailure: () => void) {}
+
+  record(cause: unknown): void {
+    if (this.failure !== undefined) {
+      return;
+    }
+    this.failure = new AgentTaskSecretRedactionError(cause);
+    this.onFailure();
+    this.abortController.abort(this.failure);
+  }
+}
+
 export async function createAgentTaskSecretTokenState(
   githubAppToken: string,
   env: Readonly<Record<string, string | undefined>> = Bun.env,
@@ -117,12 +140,12 @@ export async function createAgentTaskSecretTokenState(
 
 export async function refreshAgentTaskSecretTokenStateInBackground(
   state: AgentTaskSecretTokenState,
-  onError: () => void,
+  onError: (error: unknown) => void,
 ): Promise<void> {
   try {
     await state.refresh();
-  } catch {
-    onError();
+  } catch (error: unknown) {
+    onError(error);
   }
 }
 
