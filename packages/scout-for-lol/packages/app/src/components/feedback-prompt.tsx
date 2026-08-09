@@ -64,7 +64,24 @@ export function FeedbackPrompt() {
     }),
   );
 
-  const dismissMutation = useMutation(trpc.feedback.dismiss.mutationOptions());
+  const dismissMutation = useMutation(
+    trpc.feedback.dismiss.mutationOptions({
+      retry: 2,
+      onSuccess: () => {
+        // Only remember locally once the server has it. Recording the dismissal
+        // in localStorage regardless meant a failed write left the account
+        // eligible forever while THIS browser never asked again — so another
+        // device kept showing the supposedly one-time prompt.
+        if (user !== null) markFeedbackDismissed(user.discordId);
+      },
+      onError: () => {
+        // Surface it again rather than silently losing the dismissal; the next
+        // attempt (or the next page load) retries against a still-eligible
+        // account, keeping every device consistent.
+        setHidden(false);
+      },
+    }),
+  );
 
   // Only ask people who have actually used Scout — i.e. created a subscription.
   // Merely being able to manage a guild where Scout is installed proves
@@ -92,9 +109,8 @@ export function FeedbackPrompt() {
   if (accountAgeDays < MIN_ACCOUNT_AGE_DAYS) return null;
 
   const dismiss = () => {
-    // localStorage keeps the prompt from flashing back before the mutation
-    // lands; the server record is what makes "once" hold across devices.
-    markFeedbackDismissed(user.discordId);
+    // Hide optimistically for responsiveness; the local flag and the permanent
+    // hide are only committed once the server write succeeds.
     track("feedback_dismissed");
     setHidden(true);
     dismissMutation.mutate();

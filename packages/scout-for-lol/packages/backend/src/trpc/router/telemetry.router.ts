@@ -52,11 +52,18 @@ function withinRateLimit(callerKey: string): boolean {
     eventsByCaller.clear();
   }
 
-  eventsInWindow += 1;
-  if (eventsInWindow > GLOBAL_MAX_EVENTS) return false;
-
+  // Per-caller FIRST, and charge the global counter only for events that pass
+  // it. Charging before this check let a single rejected caller burn the
+  // process-wide budget — ~2000 requests in a minute and every legitimate
+  // caller got `recorded: false`, which is the starvation the per-caller limit
+  // was added to prevent.
   const forCaller = (eventsByCaller.get(callerKey) ?? 0) + 1;
   if (forCaller > PER_CALLER_MAX_EVENTS) return false;
+  if (eventsInWindow + 1 > GLOBAL_MAX_EVENTS) return false;
+
+  eventsInWindow += 1;
+  // Only track a new key while there is room, so a spray of forged callers
+  // cannot grow the map without bound.
   if (forCaller > 1 || eventsByCaller.size < MAX_TRACKED_CALLERS) {
     eventsByCaller.set(callerKey, forCaller);
   }

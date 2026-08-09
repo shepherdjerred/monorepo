@@ -111,3 +111,23 @@ describe("telemetry router", () => {
     expect(await stepCount("install")).toBe(settled);
   });
 });
+
+describe("telemetry limiter isolation", () => {
+  beforeEach(() => {
+    resetTelemetryRateLimitForTests();
+  });
+
+  it("does not let a rejected caller drain the global budget", async () => {
+    // Over-limit requests used to advance the process-wide counter before the
+    // per-caller check, so one caller spamming past its own allowance could
+    // still exhaust the aggregate cap and shed everyone else.
+    const noisy = trpc.anonCaller();
+    for (let i = 0; i < 500; i += 1) {
+      await noisy.telemetry.onboardingStep({ step: "install" });
+    }
+
+    const other = trpc.authedCaller();
+    const result = await other.telemetry.onboardingStep({ step: "done" });
+    expect(result.recorded).toBe(true);
+  });
+});
