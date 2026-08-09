@@ -14,6 +14,7 @@ import { buildAgentTaskCommand } from "#activities/agent-task-command.ts";
 import {
   createAgentTaskSecretTokenState,
   AgentTaskSecretRedactionController,
+  type AgentTaskSecretRedactionError,
   envForProvider,
   refreshAgentTaskSecretTokenStateInBackground,
 } from "#activities/agent-task-env.ts";
@@ -29,7 +30,10 @@ import {
   type AgentTaskResultPayload,
 } from "#shared/agent-task.ts";
 import { redactSecrets } from "#shared/redact.ts";
-import { startAgentTaskLlmTrace } from "#activities/agent-task-llm-trace.ts";
+import {
+  startAgentTaskLlmTrace,
+  type AgentTaskLlmTrace,
+} from "#activities/agent-task-llm-trace.ts";
 import type { TrackedAgentResult } from "#shared/agent-subprocess.ts";
 import {
   activityCancellationSignalOrUndefined,
@@ -72,6 +76,28 @@ function splitRepo(fullName: string): { owner: string; repo: string } {
   }
   return { owner, repo };
 }
+
+function enforceAgentTaskSecretRedactionHealth(input: {
+  llmTrace: Pick<AgentTaskLlmTrace, "recordMetadataOnly">;
+  failure: AgentTaskSecretRedactionError | undefined;
+  result: Pick<TrackedAgentResult, "exitCode" | "durationMs" | "signal">;
+  provider: string;
+  startTimeMs: number;
+}): void {
+  if (input.failure !== undefined) {
+    input.llmTrace.recordMetadataOnly({
+      exitCode: input.result.exitCode,
+      startTimeMs: input.startTimeMs,
+      durationMs: input.result.durationMs,
+    });
+  }
+  throwIfAgentTaskSecretRedactionFailed(input.failure, {
+    provider: input.provider,
+    durationMs: input.result.durationMs,
+    signal: input.result.signal,
+  });
+}
+
 async function runAgent(
   input: RunAgentTaskInput,
   commandBuilder: typeof buildAgentTaskCommand,
@@ -253,21 +279,13 @@ async function runAgent(
         redactionFailureController.record(error);
       }
 
-      if (redactionFailureController.failure !== undefined) {
-        llmTrace.recordMetadataOnly({
-          exitCode: result.exitCode,
-          startTimeMs: llmStartMs,
-          durationMs: result.durationMs,
-        });
-      }
-      throwIfAgentTaskSecretRedactionFailed(
-        redactionFailureController.failure,
-        {
-          provider,
-          durationMs: result.durationMs,
-          signal: result.signal,
-        },
-      );
+      enforceAgentTaskSecretRedactionHealth({
+        llmTrace,
+        failure: redactionFailureController.failure,
+        result,
+        provider,
+        startTimeMs: llmStartMs,
+      });
 
       // Post-hoc Claude spans retain raw stdout in the LLM archive. Check the
       // final redaction state first so a refresh failure can never archive a
