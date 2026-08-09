@@ -1,8 +1,10 @@
 ---
 id: tasknotes-completion-undo-ui-fixes
 type: plan
-status: in-progress
-board: false
+status: awaiting-human
+board: true
+verification: human
+disposition: active
 ---
 
 # TaskNotes iOS UI and completion Undo fixes
@@ -40,8 +42,18 @@ board: false
 - Run focused typecheck, lint, unit, contract, release-bundle, and simulator E2E
   checks. Capture a screenshot for the corrected row/header and a short motion
   recording.
-- Treat the next physical iOS 27 beta/TestFlight build as human acceptance; it
-  is not evidence supplied by the local simulator run.
+
+## Human Verification
+
+- On the next physical iPhone build using the iOS 27 beta, confirm task titles
+  and metadata remain visible in normal mode and the Search and Settings header
+  actions are aligned and tappable.
+- Complete tasks from the list, detail, swipe, and bulk surfaces. Confirm Undo
+  stays visible for about five seconds, restores each task in LIFO order, and
+  enters and exits without repeated vertical bouncing with Reduce Motion both
+  off and on.
+- Accept the change only if those behaviors match the simulator evidence; on
+  failure, record the device model, iOS build, app build, and affected surface.
 
 ## Assumptions
 
