@@ -128,10 +128,10 @@ bun pm trust <package>
 Filtered finite scripts honor workspace dependency order; independent packages can overlap. Keep local builds focused:
 
 ```bash
-bun run --filter '<workspace>' build
+bunx turbo run build --filter=<workspace>
 ```
 
-At this monorepo's root, use `bunx turbo run build` for a repo-wide build. Never use `bun run --filter '*' build` here: bypassing the bounded Turbo task graph can launch thousands of processes and exhaust the machine.
+At this monorepo's root, use `bunx turbo run build` for repo-wide and focused builds so dependencies run in task-graph order. Never use `bun run --filter '*' build` here: bypassing the bounded Turbo task graph can launch thousands of processes and exhaust the machine.
 
 Long-running dev servers block dependents under dependency ordering. Start only the intended independent servers. Run each selected workspace in its own terminal, or use the repository's bounded dev orchestrator:
 

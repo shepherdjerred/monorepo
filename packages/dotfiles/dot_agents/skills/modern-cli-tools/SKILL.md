@@ -64,7 +64,7 @@ fd --type d --type empty --exec rmdir -- {}
 ```
 
 - `-p` means match against the full path, not print an absolute path; use `-a` / `--absolute-path` for output.
-- `-S +1m` means greater than or equal to one decimal megabyte (1,000,000 bytes); use `+1mi` for one MiB (1,048,576 bytes) — `m`/`mi` are separate decimal/binary units, not aliases.
+- `-S +1m` selects files at least one decimal megabyte in size, including exactly 1,000,000 bytes; use `+1mi` for one MiB (1,048,576 bytes) — `m`/`mi` are separate decimal/binary units, not aliases.
 - `-c` is color control; use `--changed-within` and `--changed-before` for time filters.
 - Native exec preserves argv and avoids shell injection.
 

@@ -8,7 +8,7 @@ Retain defaults and selectively unbind unless the configuration defines every us
 
 ## Session behavior
 
-`mirror_session` synchronizes attached-client cursor/view state. Use the active-sync-tab action to send input to multiple panes.
+`mirror_session` synchronizes attached-client cursor/view state. Use `zellij action toggle-active-sync-tab` to send input to multiple panes.
 
 The web port is configurable; current default is 8082. A sample 8080 is a custom value, not the default.
 

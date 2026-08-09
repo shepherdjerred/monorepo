@@ -97,7 +97,7 @@ Relative `cwd` values compose through pane, tab, global layout, and invocation d
 
 Do not combine `clear-defaults=true` with an incomplete map. It removes omitted bindings across modes and can trap users in rename/search/move/tmux modes. Retain defaults and selectively unbind, or define every used mode and escape path.
 
-`mirror_session` controls whether clients attached to one session share cursor/view state; it does not synchronize pane input. Pane input synchronization is the active-sync-tab action.
+`mirror_session` controls whether clients attached to one session share cursor/view state; it does not synchronize pane input. Synchronize pane input with `zellij action toggle-active-sync-tab`.
 
 Current nested session-name hiding:
 
