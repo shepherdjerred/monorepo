@@ -1,27 +1,32 @@
 import {
   type ChatInputCommandInteraction,
   Client,
-  EmbedBuilder,
   Events,
   GatewayIntentBits,
-  type MessageCreateOptions,
+  type Guild,
+  type Message,
+  type MessageComponentInteraction,
   MessageFlags,
-  REST,
-  Routes,
-  type VoiceState,
+  type User,
 } from "discord.js";
-import { countRealViewers } from "@shepherdjerred/discord-stream-lifecycle/viewer-presence";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
-import type { Announcement } from "@shepherdjerred/streambot/discord/status-reporter.ts";
+import { CommandHandler } from "@shepherdjerred/streambot/discord/command-handler.ts";
 import {
-  CommandHandler,
-  type CommandInteraction,
-} from "@shepherdjerred/streambot/discord/command-handler.ts";
-import { sendPaginatedReply } from "@shepherdjerred/streambot/discord/pagination.ts";
-import { sendSubtitleMenu } from "@shepherdjerred/streambot/discord/subtitle-menu.ts";
-import { commandJson } from "@shepherdjerred/streambot/discord/commands.ts";
+  adaptCardInteraction,
+  adaptCommandInteraction,
+} from "@shepherdjerred/streambot/discord/interaction-adapters.ts";
+import { registerGlobalCommands } from "@shepherdjerred/streambot/discord/command-registration.ts";
+import { VoiceTopologyWatcher } from "@shepherdjerred/streambot/discord/voice-topology.ts";
+import { PlayerCardMessenger } from "@shepherdjerred/streambot/discord/player-card-message.ts";
+import {
+  PlayerCardRouter,
+  safeHandleCardInteraction,
+} from "@shepherdjerred/streambot/discord/player-card-router.ts";
 import type { SessionManager } from "@shepherdjerred/streambot/session/session-manager.ts";
-import { EMPTY_HANDLE } from "@shepherdjerred/streambot/session/session-types.ts";
+import {
+  EMPTY_HANDLE,
+  type SessionHandle,
+} from "@shepherdjerred/streambot/session/session-types.ts";
 import type { LibraryEntry } from "@shepherdjerred/streambot/sources/library.ts";
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
 import type { PlaylistItem } from "@shepherdjerred/streambot/sources/ytdlp.ts";
@@ -29,9 +34,7 @@ import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts"
 import {
   ChannelIdSchema,
   GuildIdSchema,
-  toUserId,
   type ChannelId,
-  type GuildId,
 } from "@shepherdjerred/streambot/types/ids.ts";
 import {
   getErrorMessage,
@@ -45,10 +48,6 @@ import {
 } from "@shepherdjerred/streambot/discord/client-events.ts";
 
 const log = logger.child("command-bot");
-// Grace period before leaving an empty voice channel, so a brief solo moment or a reconnect
-// blip doesn't drop playback (and an unattended e2e can stream to an empty channel).
-const ALONE_GRACE_MS = 30_000;
-
 /** Subcommands that start (or join) a session in the issuer's current voice channel. */
 const PLAY_SUBCOMMANDS = new Set(["play", "playnext"]);
 /** Subcommands answerable without a playback session (library/yt-dlp lookups + static help). */
@@ -71,32 +70,6 @@ export type CommandBotDeps = {
   ) => Promise<ResolvedSource>;
 };
 
-/** Render a neutral {@link Announcement} into discord.js message options (text, optional poster embed). */
-function toMessageOptions(message: Announcement): MessageCreateOptions {
-  if (typeof message === "string") {
-    return { content: message };
-  }
-  if (message.embed === undefined) {
-    return { content: message.content };
-  }
-  const embed = new EmbedBuilder();
-  if (message.embed.title !== undefined) {
-    embed.setTitle(message.embed.title);
-  }
-  if (message.embed.imageUrl !== undefined) {
-    embed.setImage(message.embed.imageUrl);
-  }
-  return { content: message.content, embeds: [embed] };
-}
-
-function parseVoiceChannelId(raw: string | null): ChannelId | null {
-  if (raw === null) {
-    return null;
-  }
-  const parsed = ChannelIdSchema.safeParse(raw);
-  return parsed.success ? parsed.data : null;
-}
-
 /**
  * The discord.js (bot-token) command bot. Registers global slash commands and routes each
  * interaction to the right per-`(guild, voice channel)` session via the {@link SessionManager}.
@@ -104,18 +77,47 @@ function parseVoiceChannelId(raw: string | null): ChannelId | null {
 export class CommandBot {
   private readonly client: Client;
   private readonly deps: CommandBotDeps;
-  /** Pending "leave empty VC" timers, keyed by `guildId:channelId`. */
-  private readonly aloneTimers = new Map<
-    string,
-    ReturnType<typeof setTimeout>
-  >();
+  /** Player-card Discord effects + the message → session routing table. Handed to SessionManager. */
+  readonly cards: PlayerCardMessenger;
+  private readonly cardRouter: PlayerCardRouter;
+  /** Streamer-move / empty-channel handling for `voiceStateUpdate`. */
+  private readonly voiceTopology: VoiceTopologyWatcher;
   /** Resolves once the bot is logged in and its slash commands are registered; rejects on failure. */
   readonly ready: Promise<void>;
 
   constructor(deps: CommandBotDeps) {
     this.deps = deps;
     this.client = new Client({
-      intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
+      intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildVoiceStates,
+        // Non-privileged, and message *content* is deliberately not requested: the player card only
+        // needs to know that messages are arriving beneath it, so it can re-post before the controls
+        // scroll out of reach.
+        GatewayIntentBits.GuildMessages,
+      ],
+    });
+    this.cards = new PlayerCardMessenger(this.client);
+    this.cardRouter = new PlayerCardRouter({
+      config: deps.config,
+      messenger: this.cards,
+      sessionFor: (owner) =>
+        this.deps
+          .getSessions()
+          .getExisting(owner.guildId, owner.voiceChannelId),
+      refreshCard: (owner) => {
+        this.deps
+          .getSessions()
+          .refreshCard(owner.guildId, owner.voiceChannelId);
+      },
+      voiceChannelOf: (interaction) =>
+        this.voiceChannelOf(interaction.guild, interaction.user),
+      openSubtitlePicker: (interaction, handle) =>
+        this.openSubtitlePicker(interaction, handle),
+    });
+    this.voiceTopology = new VoiceTopologyWatcher({
+      getSessions: () => this.deps.getSessions(),
+      peerUserbotIds: deps.config.discord.peerUserbotIds,
     });
     this.ready = new Promise<void>((resolve, reject) => {
       this.client.once(Events.ClientReady, (ready) => {
@@ -125,10 +127,19 @@ export class CommandBot {
     this.client.on(Events.InteractionCreate, (interaction) => {
       if (interaction.isChatInputCommand()) {
         void this.safeHandle(interaction);
+        return;
+      }
+      // Player-card controls. Ids outside the `sb:` namespace (pagination, the subtitle picker) are
+      // driven by their own message-scoped collectors and are left untouched by the router.
+      if (interaction.isMessageComponent()) {
+        void safeHandleCardInteraction(this.cardRouter, interaction);
       }
     });
+    this.client.on(Events.MessageCreate, (message: Message) => {
+      this.onChannelMessage(message);
+    });
     this.client.on(Events.VoiceStateUpdate, (oldState, newState) => {
-      this.onVoiceStateUpdate(oldState, newState);
+      this.voiceTopology.handle(oldState, newState);
     });
     registerTopologyListeners(this.client, () => this.deps.getSessions());
     registerGatewayHealthListeners(this.client);
@@ -142,29 +153,45 @@ export class CommandBot {
   }
 
   async destroy(): Promise<void> {
-    for (const timer of this.aloneTimers.values()) {
-      clearTimeout(timer);
-    }
-    this.aloneTimers.clear();
+    this.voiceTopology.clearAll();
     await this.client.destroy();
   }
 
-  /** Post a world-readable announcement to a text channel (now-playing, shaming, resume). No-op if null. */
-  async announce(
-    channelId: ChannelId | null,
-    message: Announcement,
-  ): Promise<void> {
+  /** Post a world-readable notice to a text channel (shaming, crash, resume). No-op if null. */
+  async announce(channelId: ChannelId | null, message: string): Promise<void> {
     if (channelId === null) {
       return;
     }
     try {
       const channel = await this.client.channels.fetch(channelId);
       if (channel?.isSendable() === true) {
-        await channel.send(toMessageOptions(message));
+        await channel.send({ content: message });
       }
     } catch (error) {
       log.warn("announce failed", { error: getErrorMessage(error) });
     }
+  }
+
+  /**
+   * Feed status-channel traffic to the player cards so they can re-post before scrolling out of
+   * reach. Only the message id and channel are used — the bot does not request message content.
+   */
+  private onChannelMessage(message: Message): void {
+    const channelId = ChannelIdSchema.safeParse(message.channelId);
+    if (!channelId.success) {
+      return;
+    }
+    // Never let a player card count as traffic burying another player card. Sessions sharing a
+    // status channel each see every other session's card post, so counting them would let N cards
+    // feed each other's thresholds into a self-sustaining delete/re-post loop (six cards at the
+    // default threshold of 5; two at a threshold of 1). Ordinary bot notices — crash, stop reason —
+    // do genuinely push cards down the channel, so those still count.
+    if (this.cards.ownerOf(message.id) !== null) {
+      return;
+    }
+    this.deps
+      .getSessions()
+      .notifyStatusChannelMessage(channelId.data, message.id);
   }
 
   private async registerThenSettle(
@@ -173,7 +200,11 @@ export class CommandBot {
     reject: (error: Error) => void,
   ): Promise<void> {
     try {
-      await this.register(applicationId);
+      await registerGlobalCommands(
+        this.client,
+        this.deps.config.discord.botToken,
+        applicationId,
+      );
       resolve();
     } catch (error) {
       reject(
@@ -182,39 +213,24 @@ export class CommandBot {
     }
   }
 
-  private async register(applicationId: string): Promise<void> {
-    const rest = new REST().setToken(this.deps.config.discord.botToken);
-    // Global registration: the commands work in every server the bot is invited to (the pool decides
-    // which of those it can actually stream into).
-    await rest.put(Routes.applicationCommands(applicationId), {
-      body: commandJson,
-    });
-    log.info("slash commands registered", { count: commandJson.length });
-    // Pre-pool deploys registered guild-scoped commands. Discord stores guild and global commands
-    // in separate buckets and a PUT to one never clears the other, so a leftover guild-scoped copy
-    // shows up as a duplicate /stream in the picker. Empty every guild bucket the bot can see.
-    for (const guildId of this.client.guilds.cache.keys()) {
-      await rest.put(Routes.applicationGuildCommands(applicationId, guildId), {
-        body: [],
-      });
-    }
-    log.info("stale guild-scoped commands cleared", {
-      guilds: this.client.guilds.cache.size,
-    });
-  }
-
-  /** Voice channel the issuer is currently in (for joining / addressing their session), or null. */
-  private issuerVoiceChannel(
-    interaction: ChatInputCommandInteraction,
-  ): ChannelId | null {
-    const channelId = interaction.guild?.voiceStates.cache.get(
-      interaction.user.id,
-    )?.channelId;
+  /**
+   * Voice channel a user is currently in (for joining / addressing their session), or null. Shared
+   * by slash routing and the player card's "are you actually in the channel" permission gate.
+   */
+  private voiceChannelOf(guild: Guild | null, user: User): ChannelId | null {
+    const channelId = guild?.voiceStates.cache.get(user.id)?.channelId;
     if (channelId === null || channelId === undefined) {
       return null;
     }
     const parsed = ChannelIdSchema.safeParse(channelId);
     return parsed.success ? parsed.data : null;
+  }
+
+  /** Voice channel the slash-command issuer is currently in, or null. */
+  private issuerVoiceChannel(
+    interaction: ChatInputCommandInteraction,
+  ): ChannelId | null {
+    return this.voiceChannelOf(interaction.guild, interaction.user);
   }
 
   private async route(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -276,7 +292,16 @@ export class CommandBot {
       }
     }
 
-    const handler = new CommandHandler({
+    await this.buildHandler(handle, announceChannel).run(
+      adaptCommandInteraction(interaction),
+    );
+  }
+
+  private buildHandler(
+    handle: SessionHandle,
+    announceChannel: ChannelId | null,
+  ): CommandHandler {
+    return new CommandHandler({
       config: this.deps.config,
       dispatch: handle.dispatch,
       view: handle.view,
@@ -293,190 +318,21 @@ export class CommandBot {
       claimSubtitleMenu: handle.claimSubtitleMenu,
       releaseSubtitleMenu: handle.releaseSubtitleMenu,
     });
-    await handler.run(this.adapt(interaction));
   }
 
-  private onVoiceStateUpdate(oldState: VoiceState, newState: VoiceState): void {
-    const guildId = GuildIdSchema.safeParse(newState.guild.id);
-    if (!guildId.success) {
-      return;
-    }
-    const oldChannelId = parseVoiceChannelId(oldState.channelId);
-    const newChannelId = parseVoiceChannelId(newState.channelId);
-    if (
-      this.handleStreamerVoiceTopology(
-        guildId.data,
-        newState.id,
-        oldChannelId,
-        newChannelId,
-      )
-    ) {
-      return;
-    }
-
-    const candidates = new Set<ChannelId>();
-    if (oldChannelId !== null) {
-      candidates.add(oldChannelId);
-    }
-    if (newChannelId !== null) {
-      candidates.add(newChannelId);
-    }
-    for (const channelId of candidates) {
-      const meta = this.deps
-        .getSessions()
-        .activeSessionByChannel(guildId.data, channelId);
-      if (meta === null) {
-        continue;
-      }
-      this.evaluateChannelOccupancy(
-        guildId.data,
-        channelId,
-        newState,
-        meta.userId,
-      );
-    }
-  }
-
-  private handleStreamerVoiceTopology(
-    guildId: GuildId,
-    userId: string,
-    oldChannelId: ChannelId | null,
-    newChannelId: ChannelId | null,
-  ): boolean {
-    const sessions = this.deps.getSessions();
-    const oldMeta =
-      oldChannelId === null
-        ? null
-        : sessions.activeSessionByChannel(guildId, oldChannelId);
-    const newMeta =
-      newChannelId === null
-        ? null
-        : sessions.activeSessionByChannel(guildId, newChannelId);
-    if (oldMeta?.userId !== userId && newMeta?.userId !== userId) {
-      return false;
-    }
-
-    if (
-      oldChannelId !== null &&
-      newChannelId !== null &&
-      oldChannelId !== newChannelId
-    ) {
-      // Clearing the source timer is always safe: this session is leaving oldChannelId (and on a
-      // collision it gets torn down). The destination timer must only be cleared on a SUCCESSFUL
-      // move — if moveSession returns false because newChannelId already hosts a different session,
-      // clearing its timer would strand that surviving session (alone but never leaving).
-      this.clearAloneTimer(`${guildId}:${oldChannelId}`);
-      const moved = sessions.moveSession({
-        guildId,
-        fromChannelId: oldChannelId,
-        toChannelId: newChannelId,
-      });
-      if (moved) {
-        this.clearAloneTimer(`${guildId}:${newChannelId}`);
-      }
-      return true;
-    }
-
-    if (oldChannelId !== null && newChannelId === null) {
-      this.clearAloneTimer(`${guildId}:${oldChannelId}`);
-      log.warn("streamer voice state went null — notifying session manager", {
-        guildId,
-        channelId: oldChannelId,
-      });
-      // The session manager classifies the loss (kick vs transient) via the voice ws close code
-      // and decides whether to stay down or reconnect-with-resume.
-      sessions.notifyStreamerDetached({ guildId, channelId: oldChannelId });
-      return true;
-    }
-
-    if (newChannelId !== null) {
-      this.clearAloneTimer(`${guildId}:${newChannelId}`);
-    }
-    return true;
-  }
-
-  private evaluateChannelOccupancy(
-    guildId: GuildId,
-    channelId: ChannelId,
-    state: VoiceState,
-    streamerId: string | null,
-  ): void {
-    const channel = state.guild.channels.cache.get(channelId);
-    if (channel?.isVoiceBased() !== true) {
-      return;
-    }
-    const voiceStates = channel.guild.voiceStates.cache;
-    const humanCount = countRealViewers(
-      channel.members.map((member) => {
-        const memberState = voiceStates.get(member.id);
-        return {
-          id: member.id,
-          isBot: member.user.bot,
-          streaming: memberState?.streaming ?? false,
-          selfDeaf: memberState?.selfDeaf ?? false,
-          selfMute: memberState?.selfMute ?? false,
-        };
-      }),
-      {
-        selfUserId: streamerId,
-        peerUserbotIds: this.deps.config.discord.peerUserbotIds,
-      },
+  /**
+   * The card's 💬 Subtitles button, served by running the *real* `/stream subtitles` handler over
+   * an adapted component interaction. Reusing the handler keeps the single-flight guard and the
+   * "playback moved on while you were choosing" re-check in one place instead of forking them.
+   */
+  private async openSubtitlePicker(
+    interaction: MessageComponentInteraction,
+    handle: SessionHandle,
+  ): Promise<void> {
+    const invoked = ChannelIdSchema.safeParse(interaction.channelId);
+    await this.buildHandler(handle, invoked.success ? invoked.data : null).run(
+      adaptCardInteraction(interaction, "subtitles"),
     );
-    const key = `${guildId}:${channelId}`;
-    if (humanCount > 0) {
-      this.clearAloneTimer(key);
-      return;
-    }
-    if (this.aloneTimers.has(key)) {
-      return;
-    }
-    // Alone in the VC. Leave after a grace period (cancelled if a human (re)joins), rather than
-    // dropping playback the instant the channel empties.
-    const timer = setTimeout(() => {
-      this.aloneTimers.delete(key);
-      log.info("voice channel empty for grace period — stopping", {
-        guildId,
-        channelId,
-      });
-      this.deps
-        .getSessions()
-        .getExisting(guildId, channelId)
-        ?.dispatch({ type: "STOP" });
-    }, ALONE_GRACE_MS);
-    this.aloneTimers.set(key, timer);
-  }
-
-  private clearAloneTimer(key: string): void {
-    const timer = this.aloneTimers.get(key);
-    if (timer !== undefined) {
-      clearTimeout(timer);
-      this.aloneTimers.delete(key);
-    }
-  }
-
-  /** Adapt a discord.js interaction to the handler's minimal, testable surface. */
-  private adapt(interaction: ChatInputCommandInteraction): CommandInteraction {
-    return {
-      userId: toUserId(interaction.user.id),
-      subcommand: () => interaction.options.getSubcommand(),
-      getString: (name) => interaction.options.getString(name),
-      getStringRequired: (name) => interaction.options.getString(name, true),
-      getIntegerRequired: (name) => interaction.options.getInteger(name, true),
-      reply: async (content) => {
-        await interaction.reply({ content, flags: MessageFlags.Ephemeral });
-      },
-      defer: async () => {
-        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-      },
-      editReply: async (content) => {
-        await interaction.editReply(content);
-      },
-      replyPaginated: async (payload) => {
-        await sendPaginatedReply(interaction, payload);
-      },
-      replySelectMenu: (candidates) =>
-        sendSubtitleMenu(interaction, candidates),
-    };
   }
 
   private async safeHandle(

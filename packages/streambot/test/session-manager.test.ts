@@ -10,8 +10,11 @@ import type {
   UserbotProvider,
 } from "@shepherdjerred/streambot/pool/userbot-pool.ts";
 import type { StreamerLike } from "@shepherdjerred/streambot/streamer/streamer-types.ts";
+import type {
+  CardOwner,
+  PlayerCardPort,
+} from "@shepherdjerred/streambot/discord/player-card-manager.ts";
 import type { VoiceCloseInfo } from "@shepherdjerred/streambot/streamer/voice-close-source.ts";
-import type { Announcement } from "@shepherdjerred/streambot/discord/status-reporter.ts";
 import type {
   ResolvedSource,
   RunStreamInput,
@@ -213,23 +216,48 @@ async function waitForAsync(
   }
 }
 
-/** Flatten an Announcement (string | {content,...}) to its text for assertions. */
-function announcementText(message: Announcement): string {
-  return typeof message === "string" ? message : message.content;
+/** Records player-card posts so tests can assert a card reached the right channel. */
+function recordingCardPort(): {
+  port: PlayerCardPort;
+  posts: { channelId: string; owner: CardOwner | null }[];
+} {
+  const posts: { channelId: string; owner: CardOwner | null }[] = [];
+  let nextId = 0;
+  return {
+    posts,
+    port: {
+      post: (channelId, _payload, owner) => {
+        posts.push({ channelId, owner });
+        nextId += 1;
+        return Promise.resolve(`card-${String(nextId)}`);
+      },
+      edit: () => Promise.resolve("ok"),
+      strip: () => Promise.resolve(),
+      remove: () => Promise.resolve(),
+      register: () => {
+        /* routing is not exercised here */
+      },
+      unregister: () => {
+        /* see register */
+      },
+    },
+  };
 }
 
 function makeManager(config: Config, pool: UserbotProvider) {
-  const announced: { channelId: string | null; message: Announcement }[] = [];
+  const announced: { channelId: string | null; message: string }[] = [];
+  const cards = recordingCardPort();
   const manager = new SessionManager({
     config,
     pool,
+    cards: cards.port,
     resolveSource: () => Promise.resolve(RESOLVED),
     announce: (channelId, message) => {
       announced.push({ channelId, message });
       return Promise.resolve();
     },
   });
-  return { manager, announced };
+  return { manager, announced, cards };
 }
 
 describe("SessionManager", () => {
@@ -245,10 +273,10 @@ describe("SessionManager", () => {
     expect(handle).toBeNull();
   });
 
-  test("a play starts a session that announces now-playing", async () => {
+  test("a play starts a session that posts a player card", async () => {
     const config = await makeConfig();
     const pool = fakePool(1);
-    const { manager, announced } = makeManager(config, pool.provider);
+    const { manager, cards } = makeManager(config, pool.provider);
 
     const handle = manager.ensureForPlay({
       guildId: GUILD,
@@ -262,15 +290,12 @@ describe("SessionManager", () => {
       requesterId: USER,
     });
 
-    await waitUntil(() =>
-      announced.some((a) =>
-        announcementText(a.message).includes("Now playing"),
-      ),
-    );
-    const nowPlaying = announced.find((a) =>
-      announcementText(a.message).includes("Now playing"),
-    );
-    expect(nowPlaying?.channelId).toBe(STATUS);
+    await waitUntil(() => cards.posts.length > 0);
+    expect(cards.posts[0]?.channelId).toBe(STATUS);
+    expect(cards.posts[0]?.owner).toEqual({
+      guildId: GUILD,
+      voiceChannelId: CHANNEL_A,
+    });
     expect(pool.acquireCount()).toBe(1);
 
     await manager.destroyAll();
@@ -515,10 +540,10 @@ async function makeReconnectConfig(
   };
 }
 
-/** Start a session in CHANNEL_A and wait until it is streaming (Now playing announced). */
+/** Start a session in CHANNEL_A and wait until it is streaming (its player card is posted). */
 async function startStreaming(
   manager: SessionManager,
-  announced: { channelId: string | null; message: Announcement }[],
+  cards: { posts: { channelId: string; owner: CardOwner | null }[] },
 ): Promise<void> {
   const handle = manager.ensureForPlay({
     guildId: GUILD,
@@ -531,17 +556,15 @@ async function startStreaming(
     source: { kind: "file", path: "/clip.mkv", title: "Clip" },
     requesterId: USER,
   });
-  await waitUntil(() =>
-    announced.some((a) => announcementText(a.message).includes("Now playing")),
-  );
+  await waitUntil(() => cards.posts.length > 0);
 }
 
 describe("SessionManager voice-loss recovery", () => {
   test("transient close: state survives teardown and the session auto-resumes at position", async () => {
     const config = await makeReconnectConfig();
     const pool = fakePool(1);
-    const { manager, announced } = makeManager(config, pool.provider);
-    await startStreaming(manager, announced);
+    const { manager, announced, cards } = makeManager(config, pool.provider);
+    await startStreaming(manager, cards);
 
     const streamer = pool.streamers[0];
     if (streamer === undefined) throw new Error("missing fake streamer");
@@ -558,7 +581,7 @@ describe("SessionManager voice-loss recovery", () => {
     expect(await Bun.file(file).exists()).toBe(true);
     await waitUntil(() =>
       announced.some((a) =>
-        announcementText(a.message).includes(
+        a.message.includes(
           "voice connection dropped (close code 4006) — reconnecting shortly",
         ),
       ),
@@ -577,8 +600,8 @@ describe("SessionManager voice-loss recovery", () => {
   test("deliberate close (fresh 4014): stays down, deletes state, announces the kick", async () => {
     const config = await makeReconnectConfig();
     const pool = fakePool(1);
-    const { manager, announced } = makeManager(config, pool.provider);
-    await startStreaming(manager, announced);
+    const { manager, announced, cards } = makeManager(config, pool.provider);
+    await startStreaming(manager, cards);
 
     pool.streamers[0]?.triggerVoiceClose({
       code: 4014,
@@ -589,7 +612,7 @@ describe("SessionManager voice-loss recovery", () => {
     await waitUntil(() => manager.getExisting(GUILD, CHANNEL_A) === null);
     await waitUntil(() =>
       announced.some((a) =>
-        announcementText(a.message).includes(
+        a.message.includes(
           "streamer was disconnected from voice (close code 4014)",
         ),
       ),
@@ -608,8 +631,8 @@ describe("SessionManager voice-loss recovery", () => {
   test("a late 4014 reclassifies a gateway-first detach before reconnect", async () => {
     const config = await makeReconnectConfig();
     const pool = fakePool(1);
-    const { manager, announced } = makeManager(config, pool.provider);
-    await startStreaming(manager, announced);
+    const { manager, announced, cards } = makeManager(config, pool.provider);
+    await startStreaming(manager, cards);
 
     const streamer = pool.streamers[0];
     if (streamer === undefined) throw new Error("missing fake streamer");
@@ -634,7 +657,7 @@ describe("SessionManager voice-loss recovery", () => {
     await waitUntil(
       () =>
         announced.some((a) =>
-          announcementText(a.message).includes(
+          a.message.includes(
             "streamer was disconnected from voice (close code 4014) — staying disconnected",
           ),
         ),
@@ -653,8 +676,8 @@ describe("SessionManager incident-scoped voice recovery", () => {
   test("a late 4014 stays bound to its incident after the userbot is reused", async () => {
     const config = await makeReconnectConfig();
     const pool = fakePool(1);
-    const { manager, announced } = makeManager(config, pool.provider);
-    await startStreaming(manager, announced);
+    const { manager, announced, cards } = makeManager(config, pool.provider);
+    await startStreaming(manager, cards);
 
     manager.notifyStreamerDetached({
       guildId: GUILD,
@@ -688,7 +711,7 @@ describe("SessionManager incident-scoped voice recovery", () => {
     await waitUntil(
       () =>
         announced.some((announcement) =>
-          announcementText(announcement.message).includes(
+          announcement.message.includes(
             "streamer was disconnected from voice (close code 4014) — staying disconnected",
           ),
         ),
@@ -708,8 +731,8 @@ describe("SessionManager voice recovery policy", () => {
   test("reconnect disabled: transient close stays down like today, but announces the reason", async () => {
     const config = await makeReconnectConfig({ enabled: false });
     const pool = fakePool(1);
-    const { manager, announced } = makeManager(config, pool.provider);
-    await startStreaming(manager, announced);
+    const { manager, announced, cards } = makeManager(config, pool.provider);
+    await startStreaming(manager, cards);
 
     pool.streamers[0]?.triggerVoiceClose({
       code: 4006,
@@ -719,14 +742,10 @@ describe("SessionManager voice recovery policy", () => {
 
     await waitUntil(() => manager.getExisting(GUILD, CHANNEL_A) === null);
     const stopped = announced.find((a) =>
-      announcementText(a.message).includes(
-        "voice connection dropped (close code 4006)",
-      ),
+      a.message.includes("voice connection dropped (close code 4006)"),
     );
     expect(stopped).toBeDefined();
-    expect(
-      announcementText(stopped?.message ?? "").includes("reconnecting"),
-    ).toBe(false);
+    expect((stopped?.message ?? "").includes("reconnecting")).toBe(false);
     const file = stateFilePath(config.state.dir, GUILD, CHANNEL_A);
     await waitForAsync(async () => !(await Bun.file(file).exists()));
 
@@ -740,8 +759,8 @@ describe("SessionManager voice recovery policy", () => {
   test("manual re-play during the reconnect window wins; the timer no-ops", async () => {
     const config = await makeReconnectConfig();
     const pool = fakePool(1);
-    const { manager, announced } = makeManager(config, pool.provider);
-    await startStreaming(manager, announced);
+    const { manager, cards } = makeManager(config, pool.provider);
+    await startStreaming(manager, cards);
 
     pool.streamers[0]?.triggerVoiceClose({
       code: 4006,
@@ -774,8 +793,8 @@ describe("SessionManager voice recovery policy", () => {
   test("saturated pool: waits (without burning the reconnect budget) then resumes when a userbot frees", async () => {
     const config = await makeReconnectConfig({ maxAttempts: 2 });
     const pool = fakePool(1);
-    const { manager, announced } = makeManager(config, pool.provider);
-    await startStreaming(manager, announced);
+    const { manager, announced, cards } = makeManager(config, pool.provider);
+    await startStreaming(manager, cards);
 
     pool.streamers[0]?.triggerVoiceClose({
       code: 4006,
@@ -793,9 +812,7 @@ describe("SessionManager voice recovery policy", () => {
     // announcement, and the state file is preserved so the movie isn't lost.
     await sleep(3500);
     expect(
-      announced.some((a) =>
-        announcementText(a.message).includes("Couldn't reconnect"),
-      ),
+      announced.some((a) => a.message.includes("Couldn't reconnect")),
     ).toBe(false);
     const file = stateFilePath(config.state.dir, GUILD, CHANNEL_A);
     expect(await Bun.file(file).exists()).toBe(true);

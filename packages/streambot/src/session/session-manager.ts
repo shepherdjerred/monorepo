@@ -1,9 +1,6 @@
 import { createActor } from "xstate";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
-import {
-  StatusReporter,
-  type Announcement,
-} from "@shepherdjerred/streambot/discord/status-reporter.ts";
+import { StatusReporter } from "@shepherdjerred/streambot/discord/status-reporter.ts";
 import { describeSnapshot } from "@shepherdjerred/streambot/session/status-snapshot.ts";
 import {
   createPosterFetcher,
@@ -18,8 +15,10 @@ import type {
   ResolveSourceInput,
 } from "@shepherdjerred/streambot/machine/types.ts";
 import { buildPlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
-import { sourceIdentity } from "@shepherdjerred/streambot/sources/source.ts";
-import { listSubtitleCandidatesForSource } from "@shepherdjerred/streambot/sources/subtitle-candidates.ts";
+import {
+  PlayerCardManager,
+  type PlayerCardPort,
+} from "@shepherdjerred/streambot/discord/player-card-manager.ts";
 import {
   playbackPositionSeconds,
   queueLength,
@@ -38,6 +37,7 @@ import {
   resumeKeyFor,
 } from "@shepherdjerred/streambot/state/resume.ts";
 import { moveSessionRecord } from "@shepherdjerred/streambot/session/session-move.ts";
+import { buildSessionHandle } from "@shepherdjerred/streambot/session/session-handle.ts";
 import {
   resumeSession,
   type ResumeRunnerDeps,
@@ -69,11 +69,13 @@ export type SessionManagerDeps = {
     input: ResolveSourceInput,
     signal: AbortSignal,
   ) => Promise<ResolvedSource>;
-  /** Post a world-readable announcement to a channel (no-op when the channel is null/unknown). */
+  /** Post a world-readable notice to a channel (no-op when the channel is null/unknown). */
   readonly announce: (
     channelId: ChannelId | null,
-    message: Announcement,
+    message: string,
   ) => Promise<void>;
+  /** Discord effects for the player card, plus its message → session routing table. */
+  readonly cards: PlayerCardPort;
 };
 
 // Re-exported for existing consumers (command-bot) — the canonical home is session-types.ts.
@@ -126,7 +128,7 @@ export class SessionManager {
       keyOf(params.guildId, params.voiceChannelId),
     );
     if (existing !== undefined) {
-      return this.handleFor(existing);
+      return buildSessionHandle(this.deps.config, existing);
     }
     const entry = this.deps.pool.acquire(params.guildId);
     if (entry === null) {
@@ -145,13 +147,15 @@ export class SessionManager {
       resumeKey: null,
       resumeAttempts: 0,
     });
-    return this.handleFor(session);
+    return buildSessionHandle(this.deps.config, session);
   }
 
   /** Handle for an already-running session at `(guildId, channelId)`, or null if there is none. */
   getExisting(guildId: GuildId, channelId: ChannelId): SessionHandle | null {
     const session = this.sessions.get(keyOf(guildId, channelId));
-    return session === undefined ? null : this.handleFor(session);
+    return session === undefined
+      ? null
+      : buildSessionHandle(this.deps.config, session);
   }
 
   /** Metadata for the voice-state auto-stop check, or null when no session owns that channel. */
@@ -169,13 +173,34 @@ export class SessionManager {
     };
   }
 
+  /**
+   * Re-render the player card for `(guildId, channelId)` now. Used after a card button applies an
+   * effect that doesn't pass through the machine (a live seek), so the channel sees it immediately
+   * instead of at the next tick.
+   */
+  refreshCard(guildId: GuildId, channelId: ChannelId): void {
+    this.sessions.get(keyOf(guildId, channelId))?.card.refresh();
+  }
+
+  /**
+   * A message was posted to a text channel. Every session using it as its status channel counts it
+   * toward re-posting its card, so controls don't scroll out of reach in a chatty channel.
+   */
+  notifyStatusChannelMessage(channelId: ChannelId, messageId: string): void {
+    for (const session of this.sessions.values()) {
+      if (session.statusChannelId === channelId) {
+        session.card.onChannelMessage(messageId);
+      }
+    }
+  }
+
   /** Re-key a live session when Discord moves the streamer account to another voice channel. */
   moveSession(params: {
     guildId: GuildId;
     fromChannelId: ChannelId;
     toChannelId: ChannelId;
   }): boolean {
-    return moveSessionRecord({
+    const moved = moveSessionRecord({
       stateDir: this.deps.config.state.dir,
       ...params,
       getSession: (key) => this.sessions.get(key),
@@ -193,6 +218,13 @@ export class SessionManager {
         log.warn(message, metadata);
       },
     });
+    if (moved) {
+      // The card's click routing is keyed by voice channel, which just changed.
+      this.sessions
+        .get(keyOf(params.guildId, params.toChannelId))
+        ?.card.reown(params.toChannelId);
+    }
+    return moved;
   }
 
   /**
@@ -237,6 +269,9 @@ export class SessionManager {
         clearInterval(session.checkpointTimer);
         session.checkpointTimer = null;
       }
+      // Await the final card edit: a shutdown calls process.exit() right after, which would
+      // otherwise cut the REST call off and leave live buttons on a dead session.
+      await session.card.finalize();
       // Persist final position BEFORE stopping — getPosition() goes null once the stream stops.
       await this.saveSnapshot(session);
       session.unsubscribe();
@@ -290,10 +325,27 @@ export class SessionManager {
         keyOf(params.guildId, params.voiceChannelId),
       ),
     });
-    const reporter = new StatusReporter(
-      (message) => this.deps.announce(params.statusChannelId, message),
-      this.fetchPoster === undefined ? {} : { fetchPoster: this.fetchPoster },
+    const reporter = new StatusReporter((message) =>
+      this.deps.announce(params.statusChannelId, message),
     );
+    // Built before the session record so its `view()` can close over the actor and userbot directly
+    // (the same projection `handleFor` exposes) without a mutable back-reference.
+    const card = new PlayerCardManager({
+      owner: {
+        guildId: params.guildId,
+        voiceChannelId: params.voiceChannelId,
+      },
+      statusChannelId: params.statusChannelId,
+      port: this.deps.cards,
+      view: () =>
+        buildPlaybackView(actor.getSnapshot(), entry.userbot.getPosition()),
+      enabled: this.deps.config.playerCard.enabled,
+      tickMs: this.deps.config.playerCard.tickMs,
+      repostAfterMessages: this.deps.config.playerCard.repostAfterMessages,
+      ...(this.fetchPoster === undefined
+        ? {}
+        : { fetchPoster: this.fetchPoster }),
+    });
 
     const session: Session = {
       key: keyOf(params.guildId, params.voiceChannelId),
@@ -303,6 +355,7 @@ export class SessionManager {
       entry,
       actor,
       reporter,
+      card,
       unsubscribe: () => {
         /* replaced once the actor subscription is created below */
       },
@@ -340,6 +393,7 @@ export class SessionManager {
     const subscription = actor.subscribe((snapshot) => {
       const { stateName, snap } = describeSnapshot(snapshot);
       reporter.handle(snap);
+      card.refresh();
       // Metrics are process-global (unlabeled) gauges inherited from the single-session design:
       // playback state is last-writer across sessions and queue length is the pool-wide total.
       // (Per-(guild,channel) labels are a follow-up if multi-session observability matters.)
@@ -363,43 +417,6 @@ export class SessionManager {
     return session;
   }
 
-  private handleFor(session: Session): SessionHandle {
-    return {
-      dispatch: (event) => {
-        session.actor.send(event);
-      },
-      view: () =>
-        buildPlaybackView(
-          session.actor.getSnapshot(),
-          session.entry.userbot.getPosition(),
-        ),
-      setVolume: (percent) => session.entry.userbot.setVolume(percent),
-      seek: (seconds) => session.entry.userbot.seek(seconds),
-      listSubtitleCandidates: (signal) => {
-        const current = session.actor.getSnapshot().context.current;
-        if (current === null) return Promise.resolve([]);
-        return listSubtitleCandidatesForSource(
-          this.deps.config,
-          current.source,
-          signal,
-        );
-      },
-      currentSourceId: () => {
-        const current = session.actor.getSnapshot().context.current;
-        return current === null ? null : sourceIdentity(current.source);
-      },
-      hasPendingSubtitleMenu: () => session.pendingSubtitleMenu,
-      claimSubtitleMenu: () => {
-        if (session.pendingSubtitleMenu) return false;
-        session.pendingSubtitleMenu = true;
-        return true;
-      },
-      releaseSubtitleMenu: () => {
-        session.pendingSubtitleMenu = false;
-      },
-    };
-  }
-
   /**
    * Session end: nothing playing + empty queue (a natural finish, an external stop, or a failed
    * item on a dead voice connection). Releases the userbot; deletes the state file unless a
@@ -418,6 +435,9 @@ export class SessionManager {
     // end (external stop, failed rejoin) from a true natural finish.
     const lastError = session.actor.getSnapshot().context.lastError;
     session.torndown = true;
+    // Retire the card while the actor is still readable, so the final render reflects the real
+    // end state rather than a stopped actor's snapshot.
+    void session.card.finalize();
     session.unsubscribe();
     session.actor.stop();
     session.entry.userbot.setVoiceCloseListener(null);

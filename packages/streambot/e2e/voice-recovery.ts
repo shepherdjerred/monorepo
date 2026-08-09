@@ -5,13 +5,13 @@ import { Client as ModeratorClient } from "discord.js-selfbot-v13";
 import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import { SessionManager } from "@shepherdjerred/streambot/session/session-manager.ts";
+import { NOOP_CARD_PORT } from "@shepherdjerred/streambot/discord/player-card-manager.ts";
 import { resolveSource } from "@shepherdjerred/streambot/sources/resolve.ts";
 import { StreambotStreamer } from "@shepherdjerred/streambot/streamer/streamer.ts";
 import type {
   UserbotEntry,
   UserbotProvider,
 } from "@shepherdjerred/streambot/pool/userbot-pool.ts";
-import type { Announcement } from "@shepherdjerred/streambot/discord/status-reporter.ts";
 import {
   ChannelIdSchema,
   GuildIdSchema,
@@ -124,10 +124,6 @@ async function loginModerator(token: string): Promise<ModeratorClient> {
   return moderator;
 }
 
-function announcementText(announcement: Announcement): string {
-  return typeof announcement === "string" ? announcement : announcement.content;
-}
-
 async function main(): Promise<void> {
   const baseConfig = loadConfig();
   const guildId = GuildIdSchema.parse(Bun.env["E2E_GUILD_ID"]);
@@ -166,8 +162,9 @@ async function main(): Promise<void> {
     pool: pool.provider,
     resolveSource: (input, signal) =>
       resolveSource(config, input.source, signal),
+    cards: NOOP_CARD_PORT,
     announce: (_statusChannelId, announcement) => {
-      const content = announcementText(announcement);
+      const content = announcement;
       announcements.push(content);
       process.stdout.write(`${content}\n`);
       return Promise.resolve();

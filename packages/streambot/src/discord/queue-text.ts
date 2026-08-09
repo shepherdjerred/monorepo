@@ -8,6 +8,7 @@ import {
   type Chapter,
 } from "@shepherdjerred/streambot/sources/chapters.ts";
 import { formatTimecode } from "@shepherdjerred/streambot/discord/timecode.ts";
+import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
 import type { UserId } from "@shepherdjerred/streambot/types/ids.ts";
 
 /** How many queue entries `/stream queue` renders before truncating with a "…and N more" line. */
@@ -18,6 +19,21 @@ export type QueueItemView = {
   readonly requesterId: UserId;
   /** Chapter markers of this item (only populated for the currently-playing item). */
   readonly chapters: readonly Chapter[];
+  /** Source kind — the player card only looks up TMDB posters for local files. */
+  readonly kind: Source["kind"];
+  /**
+   * Stable identity of the underlying source (`file:<path>` / `url:<url>` / `search:<query>`). The
+   * player card keys its lifecycle on this rather than the display title, so two different files
+   * that happen to share a title get their own cards, and a title that changes as a source resolves
+   * doesn't look like a new track.
+   */
+  readonly sourceId: string;
+  /**
+   * Media duration in seconds from the resolve-time ffprobe, or null when unknown (live streams,
+   * probe failure) or for a not-yet-resolved queue entry. Drives the player card's progress bar,
+   * which falls back to an elapsed-only readout when this is null.
+   */
+  readonly durationSeconds: number | null;
 };
 
 export type PlaybackView = {

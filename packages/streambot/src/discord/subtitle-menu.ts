@@ -12,6 +12,7 @@ import {
   StringSelectMenuBuilder,
   type ChatInputCommandInteraction,
   type MessageActionRowComponentBuilder,
+  type MessageComponentInteraction,
 } from "discord.js";
 import {
   SubtitleTrackRefSchema,
@@ -22,6 +23,16 @@ import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 
 const log = logger.child("subtitle-menu");
+
+/**
+ * Interactions the picker can run on: the `/stream subtitles` slash command, and the player card's
+ * 💬 Subtitles button (which reuses the same command handler). Both expose the deferred-reply
+ * surface this needs; `RepliableInteraction` is not usable here because it excludes the
+ * `MessageComponentInteraction` base type the card router passes through.
+ */
+export type SubtitleMenuInteraction =
+  | ChatInputCommandInteraction
+  | MessageComponentInteraction;
 
 // How long the user has to pick before the menu is abandoned.
 const MENU_TIMEOUT_MS = 2 * 60 * 1000;
@@ -166,7 +177,7 @@ export function buildMenuOptions(
  * (potentially long) values.
  */
 export async function sendSubtitleMenu(
-  interaction: ChatInputCommandInteraction,
+  interaction: SubtitleMenuInteraction,
   candidates: readonly SubtitleCandidate[],
 ): Promise<string | null> {
   const { options, encodedRefs, hiddenCount } = buildMenuOptions(candidates);
@@ -207,7 +218,7 @@ export async function sendSubtitleMenu(
 }
 
 async function clearSubtitleMenu(
-  interaction: ChatInputCommandInteraction,
+  interaction: SubtitleMenuInteraction,
 ): Promise<void> {
   try {
     await interaction.editReply({ components: [] });

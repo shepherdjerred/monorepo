@@ -96,6 +96,7 @@ async function main(): Promise<void> {
     resolveSource: (input, signal) =>
       resolveSource(config, input.source, signal, input.preResolved),
     announce: (channelId, message) => commandBot.announce(channelId, message),
+    cards: commandBot.cards,
   });
   refs.sessions = sessions;
 

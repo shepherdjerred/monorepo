@@ -114,6 +114,29 @@ export const ConfigSchema = z.strictObject({
     .default({ enabled: true, delaySeconds: 5, maxAttempts: 3 }),
   /** Optional TMDB integration for movie/TV poster art on the now-playing embed (local files). */
   tmdb: z.strictObject({ apiKey: z.string().min(1) }).optional(),
+  /**
+   * The player card: the now-playing message rendered as a live embed with a progress bar and
+   * button rows (skip/seek/volume/loop/shuffle/queue/subtitles/chapters). Disabling it restores
+   * the plain one-shot `▶️ Now playing …` announcement with no components.
+   */
+  playerCard: z
+    .strictObject({
+      /** Master switch. `false` → plain-text now-playing announcements, no buttons. */
+      enabled: z.boolean().default(true),
+      /**
+       * How often the card is re-rendered so the progress bar and elapsed timecode advance. Each
+       * tick is at most one message edit per session, and the edit is skipped when the rendered
+       * payload is unchanged. `0` disables ticking (the card still re-renders on state changes and
+       * button presses).
+       */
+      tickMs: z.number().int().nonnegative().default(10_000),
+      /**
+       * Re-post the card once this many messages have been posted to the status channel beneath it,
+       * so the controls don't scroll out of reach in a chatty channel. `0` disables re-posting.
+       */
+      repostAfterMessages: z.number().int().nonnegative().default(5),
+    })
+    .default({ enabled: true, tickMs: 10_000, repostAfterMessages: 5 }),
   /** Leave the voice channel after this many idle seconds. */
   idleTimeoutSeconds: z.number().int().positive().default(300),
   /** Maximum number of items to enqueue when expanding a playlist URL. */
