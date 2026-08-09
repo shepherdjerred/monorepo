@@ -92,13 +92,14 @@ describe("prematch message IDs", () => {
     await expect(getPrematchMessageIds(123)).resolves.toEqual(new Map());
   });
 
-  test("ignores malformed optional records", async () => {
+  test("propagates malformed records", async () => {
     storedPrematchMessageIds = "not-json";
+    storedPrematchMatchId = "NA1_123";
 
     await expect(getPrematchMessageIds(123)).rejects.toThrow();
     await expect(
       getPrematchMessageIdsForMatchIdOrEmpty(MatchIdSchema.parse("NA1_123")),
-    ).resolves.toEqual(new Map());
+    ).rejects.toThrow();
   });
 
   test("resolves the numeric game ID from a match ID", async () => {

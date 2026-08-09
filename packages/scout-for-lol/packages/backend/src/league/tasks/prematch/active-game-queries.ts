@@ -153,18 +153,28 @@ export async function getPrematchMessageIds(
   return new Map(Object.entries(parsed));
 }
 
+async function findPrematchMessageIdsRowForMatchId(
+  matchId: MatchId,
+  prismaClient: ExtendedPrismaClient,
+): Promise<{
+  prematchMessageIds: string | null;
+  prematchMatchId: string | null;
+} | null> {
+  const suffix = matchId.split("_").at(-1);
+  if (suffix === undefined || !/^\d+$/.test(suffix)) {
+    return null;
+  }
+  return prismaClient.activeGame.findUnique({
+    where: { gameId: BigInt(suffix) },
+    select: { prematchMessageIds: true, prematchMatchId: true },
+  });
+}
+
 export async function getPrematchMessageIdsForMatchId(
   matchId: MatchId,
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<Map<string, string>> {
-  const suffix = matchId.split("_").at(-1);
-  if (suffix === undefined || !/^\d+$/.test(suffix)) {
-    return new Map();
-  }
-  const row = await prismaClient.activeGame.findUnique({
-    where: { gameId: BigInt(suffix) },
-    select: { prematchMessageIds: true, prematchMatchId: true },
-  });
+  const row = await findPrematchMessageIdsRowForMatchId(matchId, prismaClient);
   if (row?.prematchMatchId !== matchId) {
     return new Map();
   }
@@ -182,8 +192,9 @@ export async function getPrematchMessageIdsForMatchIdOrEmpty(
   matchId: MatchId,
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<Map<string, string>> {
+  let row: Awaited<ReturnType<typeof findPrematchMessageIdsRowForMatchId>>;
   try {
-    return await getPrematchMessageIdsForMatchId(matchId, prismaClient);
+    row = await findPrematchMessageIdsRowForMatchId(matchId, prismaClient);
   } catch (error) {
     logger.error(
       `⚠️ Could not retrieve prematch reply references for ${matchId}:`,
@@ -194,6 +205,12 @@ export async function getPrematchMessageIdsForMatchIdOrEmpty(
     });
     return new Map();
   }
+  if (row?.prematchMatchId !== matchId) {
+    return new Map();
+  }
+  return new Map(
+    Object.entries(parsePrematchMessageIds(row.prematchMessageIds)),
+  );
 }
 
 /**
