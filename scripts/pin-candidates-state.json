@@ -2,9 +2,9 @@
   "schema": "pin-candidates-state/v1",
   "pins": {
     "shepherdjerred/birmel": {
-      "buildNumber": 8589,
-      "version": "2.0.0-8589",
-      "digest": "sha256:f46821df2fe45100f380bba0e98089e07929527c2ad172f9337d53328904fd0e"
+      "buildNumber": 8602,
+      "version": "2.0.0-8602",
+      "digest": "sha256:bb1b079d7b3941566beb177037894835f26d757af955f70ef843b9d68077a742"
     },
     "shepherdjerred/discord-plays-mario-kart": {
       "version": "2.0.0-8584",
