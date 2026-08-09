@@ -1,10 +1,12 @@
 import { describe, expect, test } from "bun:test";
 import {
+  ALLOWED_KARMA_AMOUNTS,
   formatLeaderboardLine,
+  InvalidKarmaAmountError,
   karmaAmountFor,
   KARMA_GIVE_AMOUNT,
+  parseKarmaAmount,
   rankLeaderboard,
-  SELF_KARMA_PENALTY,
   type KarmaCount,
 } from "./scoring.ts";
 
@@ -14,9 +16,46 @@ describe("karmaAmountFor", () => {
     expect(karmaAmountFor("giver", "receiver")).toBe(1);
   });
 
-  test("penalizes giving karma to yourself", () => {
-    expect(karmaAmountFor("same", "same")).toBe(SELF_KARMA_PENALTY);
+  test("awards the requested amount", () => {
+    expect(karmaAmountFor("giver", "receiver", 2)).toBe(2);
+    expect(karmaAmountFor("giver", "receiver", 3)).toBe(3);
+  });
+
+  test("penalizes giving karma to yourself by the amount requested", () => {
+    // Asking for 3 is a bigger stunt than asking for 1, so it stings more.
     expect(karmaAmountFor("same", "same")).toBe(-1);
+    expect(karmaAmountFor("same", "same", 3)).toBe(-3);
+  });
+
+  test("rejects an out-of-range amount rather than clamping it", () => {
+    expect(() => karmaAmountFor("giver", "receiver", 42)).toThrow(
+      InvalidKarmaAmountError,
+    );
+  });
+});
+
+describe("parseKarmaAmount", () => {
+  test.each([...ALLOWED_KARMA_AMOUNTS])("accepts %i", (amount) => {
+    expect(parseKarmaAmount(amount)).toBe(amount);
+  });
+
+  test("accepts the string form a modal text input produces", () => {
+    expect(parseKarmaAmount("2")).toBe(2);
+    expect(parseKarmaAmount("  3  ")).toBe(3);
+  });
+
+  test.each([
+    [0, "zero"],
+    [4, "above the ceiling"],
+    [-1, "negative"],
+    [1.5, "fractional"],
+    ["", "empty string"],
+    ["two", "spelled out"],
+    [null, "null"],
+    [undefined, "undefined"],
+    [Number.NaN, "NaN"],
+  ])("rejects %p (%s)", (value) => {
+    expect(() => parseKarmaAmount(value)).toThrow(InvalidKarmaAmountError);
   });
 });
 

@@ -37,12 +37,21 @@ model Karma {
   receiverId String
   giverId    String
 
+  /// Set when this karma came from reacting to a message, so the reaction can
+  /// be undone and the award can link back to what earned it. Null for slash
+  /// command and context-menu gives.
+  sourceMessageId String?
+
   receiver Person @relation("KarmaReceiver", fields: [receiverId], references: [id])
   giver    Person @relation("KarmaGiver", fields: [giverId], references: [id])
 
   @@index([guildId, receiverId])
   @@index([guildId, giverId])
-  // Supports the time-scoped leaderboards added in the follow-up PR.
+  // Supports the time-scoped leaderboards.
   @@index([guildId, datetime])
+  // One reaction award per giver per message: removing and re-adding a
+  // reaction must not stack. SQL treats NULLs as distinct, so this does not
+  // constrain the (far more common) non-reaction gives.
+  @@unique([giverId, sourceMessageId])
   @@map("karma")
 }

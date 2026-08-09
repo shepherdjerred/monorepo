@@ -2,16 +2,59 @@
  *  command handlers so the behavior can be unit-tested without a live client
  *  or database. The command layer (commands.ts) composes these with I/O. */
 
-/** Amount of karma applied when a user gives karma to someone else. */
+/** Amount of karma applied when a giver does not ask for a specific amount. */
 export const KARMA_GIVE_AMOUNT = 1;
 
-/** Penalty applied when a user tries to give karma to themselves. */
-export const SELF_KARMA_PENALTY = -1;
+/** The complete set of amounts a giver may award.
+ *
+ *  Closed deliberately. An open-ended amount would need a giving budget to stay
+ *  meaningful — with no ceiling, amounts drift upward through ordinary social
+ *  escalation (not abuse) until the number carries no information. Capping at
+ *  3x gets that protection for one validation rule instead of a
+ *  balance-tracking subsystem. */
+export const ALLOWED_KARMA_AMOUNTS = [1, 2, 3] as const;
+
+export type KarmaAmount = (typeof ALLOWED_KARMA_AMOUNTS)[number];
+
+/** Thrown when a requested amount is outside {@link ALLOWED_KARMA_AMOUNTS}.
+ *  Distinguished from a programming error so the command layer can answer the
+ *  user rather than reporting to Sentry — a mistyped amount is boundary input,
+ *  not a broken contract. */
+export class InvalidKarmaAmountError extends Error {
+  constructor(readonly received: string) {
+    super(
+      `Karma amount must be one of ${ALLOWED_KARMA_AMOUNTS.join(", ")} — got ${received}`,
+    );
+    this.name = "InvalidKarmaAmountError";
+  }
+}
+
+/** Validate a requested amount. Every entry point (slash command, context
+ *  menu, reactions) funnels through here so the bound cannot be bypassed by
+ *  adding a new surface. */
+export function parseKarmaAmount(requested: unknown): KarmaAmount {
+  const value =
+    typeof requested === "string" ? Number(requested.trim()) : requested;
+  // `find` over the literal tuple both validates and narrows, so no type
+  // assertion is needed. Non-numeric input simply matches nothing.
+  const matched = ALLOWED_KARMA_AMOUNTS.find((allowed) => allowed === value);
+  if (matched === undefined) {
+    throw new InvalidKarmaAmountError(JSON.stringify(requested));
+  }
+  return matched;
+}
 
 /** Decide how much karma a give-interaction should apply.
- *  Giving to yourself is penalized; giving to anyone else awards a point. */
-export function karmaAmountFor(giverId: string, receiverId: string): number {
-  return giverId === receiverId ? SELF_KARMA_PENALTY : KARMA_GIVE_AMOUNT;
+ *
+ *  Giving to yourself costs you the amount you asked for: requesting 3 is a
+ *  bigger stunt than requesting 1, so it should sting proportionally. */
+export function karmaAmountFor(
+  giverId: string,
+  receiverId: string,
+  requested: unknown = KARMA_GIVE_AMOUNT,
+): number {
+  const amount = parseKarmaAmount(requested);
+  return giverId === receiverId ? -amount : amount;
 }
 
 /** A single leaderboard input row: a user id and their summed karma. */

@@ -9,10 +9,13 @@ import {
 import { prisma } from "#src/db/index.ts";
 import client from "#src/discord/client.ts";
 import {
+  ALLOWED_KARMA_AMOUNTS,
   formatLeaderboardLine,
   karmaAmountFor,
+  KARMA_GIVE_AMOUNT,
   rankLeaderboard,
 } from "#src/karma/scoring.ts";
+import { getReceivedKarma, recordKarma } from "#src/karma/store.ts";
 
 /** Discord caps message content at 2000 characters; leave headroom so the
  *  truncation footer always fits. Production already renders 45 ranked entries
@@ -37,6 +40,22 @@ const karmaCommand = new SlashCommandBuilder()
           .setName("reason")
           .setDescription("An optional reason about why they deserve karma")
           .setMaxLength(200),
+      )
+      .addIntegerOption((option) =>
+        option
+          .setName("amount")
+          .setDescription(
+            `How much karma to give (default ${String(KARMA_GIVE_AMOUNT)})`,
+          )
+          // A closed choice list, so Discord itself rejects anything else and
+          // the amount cannot inflate. `scoring.ts` re-validates because the
+          // context menu and any future surface do not get this for free.
+          .addChoices(
+            ...ALLOWED_KARMA_AMOUNTS.map((amount) => ({
+              name: String(amount),
+              value: amount,
+            })),
+          ),
       ),
   )
   .addSubcommand((subcommand) =>
@@ -55,50 +74,6 @@ const karmaCommand = new SlashCommandBuilder()
           .setRequired(true),
       ),
   );
-
-/** Ensure a `person` row exists so the karma foreign keys resolve. */
-async function ensurePerson(id: string): Promise<void> {
-  await prisma.person.upsert({
-    where: { id },
-    create: { id },
-    update: {},
-  });
-}
-
-async function modifyKarma(params: {
-  giverId: string;
-  receiverId: string;
-  amount: number;
-  guildId: string;
-  reason?: string | undefined;
-}) {
-  await ensurePerson(params.giverId);
-  if (params.receiverId !== params.giverId) {
-    await ensurePerson(params.receiverId);
-  }
-
-  console.warn(
-    `[Karma DB] Saving karma: ${params.giverId} -> ${params.receiverId}, amount: ${params.amount.toString()}, guild: ${params.guildId}${params.reason !== undefined && params.reason !== "" ? `, reason: "${params.reason}"` : ""}`,
-  );
-  await prisma.karma.create({
-    data: {
-      amount: params.amount,
-      datetime: new Date(),
-      reason: params.reason ?? null,
-      guildId: params.guildId,
-      giverId: params.giverId,
-      receiverId: params.receiverId,
-    },
-  });
-}
-
-async function getKarma(id: string, guildId: string): Promise<number> {
-  const { _sum } = await prisma.karma.aggregate({
-    _sum: { amount: true },
-    where: { receiverId: id, guildId },
-  });
-  return _sum.amount ?? 0;
-}
 
 async function handleKarmaGive(interaction: ChatInputCommandInteraction) {
   const giverUser = interaction.user;
@@ -126,19 +101,27 @@ async function handleKarmaGive(interaction: ChatInputCommandInteraction) {
     return;
   }
 
+  const requested =
+    interaction.options.getInteger("amount") ?? KARMA_GIVE_AMOUNT;
+
   if (receiverUser.id === giverUser.id) {
+    // Self-gives cost the amount asked for: requesting 3 is a bigger stunt
+    // than requesting 1, so it should sting proportionally.
+    const penalty = karmaAmountFor(giverUser.id, receiverUser.id, requested);
     console.warn(
-      `[Karma Give] ${giverUser.tag} (${giverUser.id}) attempted self-karma - applying penalty (-1)`,
+      `[Karma Give] ${giverUser.tag} (${giverUser.id}) attempted self-karma - applying penalty (${penalty.toString()})`,
     );
-    const penalty = karmaAmountFor(giverUser.id, receiverUser.id);
-    await modifyKarma({
+    await recordKarma({
       giverId: giverUser.id,
       receiverId: receiverUser.id,
       amount: penalty,
       guildId: interaction.guildId,
       reason: "tried altering their own karma",
     });
-    const newKarma = await getKarma(receiverUser.id, interaction.guildId);
+    const newKarma = await getReceivedKarma(
+      receiverUser.id,
+      interaction.guildId,
+    );
     console.warn(
       `[Karma Give] Penalty applied to ${giverUser.tag} (${giverUser.id}), new karma: ${newKarma.toString()}`,
     );
@@ -151,28 +134,29 @@ async function handleKarmaGive(interaction: ChatInputCommandInteraction) {
   }
 
   const reason = interaction.options.getString("reason") ?? undefined;
+  const amount = karmaAmountFor(giverUser.id, receiverUser.id, requested);
   console.warn(
-    `[Karma Give] ${giverUser.tag} (${giverUser.id}) giving karma to ${receiverUser.tag} (${receiverUser.id})${reason !== undefined && reason !== "" ? ` - reason: "${reason}"` : ""}`,
+    `[Karma Give] ${giverUser.tag} (${giverUser.id}) giving ${amount.toString()} karma to ${receiverUser.tag} (${receiverUser.id})${reason !== undefined && reason !== "" ? ` - reason: "${reason}"` : ""}`,
   );
-  await modifyKarma({
+  await recordKarma({
     giverId: giverUser.id,
     receiverId: receiverUser.id,
-    amount: karmaAmountFor(giverUser.id, receiverUser.id),
+    amount,
     guildId: interaction.guildId,
     reason,
   });
-  const newReceiverKarma = await getKarma(receiverUser.id, interaction.guildId);
+  const newReceiverKarma = await getReceivedKarma(
+    receiverUser.id,
+    interaction.guildId,
+  );
   console.warn(
     `[Karma Give] Success! ${receiverUser.tag} (${receiverUser.id}) now has ${newReceiverKarma.toString()} karma`,
   );
+  const gave = `${userMention(giverUser.id)} gave ${bold(amount.toString())} karma to ${userMention(receiverUser.id)}`;
   await interaction.reply(
     reason !== undefined && reason !== ""
-      ? `${userMention(giverUser.id)} gave karma to ${userMention(
-          receiverUser.id,
-        )} because ${inlineCode(reason)}. They now have ${bold(newReceiverKarma.toString())} karma.`
-      : `${userMention(giverUser.id)} gave karma to ${userMention(
-          receiverUser.id,
-        )}. They now have ${bold(newReceiverKarma.toString())} karma.`,
+      ? `${gave} because ${inlineCode(reason)}. They now have ${bold(newReceiverKarma.toString())} karma.`
+      : `${gave}. They now have ${bold(newReceiverKarma.toString())} karma.`,
   );
 }
 
