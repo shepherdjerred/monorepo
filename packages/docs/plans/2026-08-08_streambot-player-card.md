@@ -133,3 +133,20 @@ all fixed with regression tests:
 - **Disabled-mode posters dropped.** Moving now-playing off `StatusReporter` meant
   posters could never reach the legacy announcement, which is never edited. That
   path now awaits the lookup before posting, matching the old behavior.
+
+A second review pass then found three races in the serialized effect chain, all
+stemming from reading or mutating `messageId` outside the tail:
+
+- **A failed post was never retried**, leaving that track permanently card-less
+  because `trackKey` stayed set and every later refresh took the edit path. A
+  failed post now clears `trackKey` so the next refresh re-enters `beginTrack`.
+- **Rapid track changes could orphan a card.** `beginTrack` captured the outgoing
+  message id synchronously, which reads `null` while the previous post is in
+  flight, so the old card was never stripped. The capture moved into the queued
+  task, which also bails when a newer track has superseded it, and a new
+  `cardTrackKey` gates edits on the live card actually representing the current
+  item.
+- **`finalize()` skipped in-flight posts**, so a card could be published — with
+  working controls and a routing entry — for an already-torn-down session. It now
+  enqueues its retire step behind the tail, and `postCard` refuses to publish once
+  finished.

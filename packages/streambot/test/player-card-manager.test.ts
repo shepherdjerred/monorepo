@@ -21,9 +21,11 @@ const REQUESTER = UserIdSchema.parse("100000000000000002");
 
 const OWNER: CardOwner = { guildId: GUILD, voiceChannelId: VOICE };
 
-/** Let the manager's serialized Discord-effect chain settle. */
-function flush(): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, 0));
+/** Let the manager's serialized Discord-effect chain settle (several awaits deep). */
+async function flush(): Promise<void> {
+  for (let i = 0; i < 5; i += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
 }
 
 function streaming(
@@ -69,6 +71,10 @@ type Recorder = {
   removed: string[];
   registered: { messageId: string; owner: CardOwner }[];
   unregistered: string[];
+  /** Make the next `post` fail (a transient Discord error / unsendable channel). */
+  failNextPost: () => void;
+  /** Make the next `post` hang until the returned deferred is resolved. */
+  holdNextPost: () => { release: (messageId: string | null) => void };
   /** Make the next `edit` report the message as gone (deleted). */
   nextEditGone: () => void;
   /** Make every `edit` report a transient, retryable failure until cleared. */
@@ -85,6 +91,8 @@ function recorder(): Recorder {
   let nextId = 0;
   let editGone = false;
   let editsFailing = false;
+  let postFails = false;
+  let heldPost: PromiseWithResolvers<string | null> | null = null;
   return {
     posts,
     edits,
@@ -92,6 +100,14 @@ function recorder(): Recorder {
     removed,
     registered,
     unregistered,
+    failNextPost: () => {
+      postFails = true;
+    },
+    holdNextPost: () => {
+      const deferred = Promise.withResolvers<string | null>();
+      heldPost = deferred;
+      return { release: deferred.resolve };
+    },
     nextEditGone: () => {
       editGone = true;
     },
@@ -99,14 +115,25 @@ function recorder(): Recorder {
       editsFailing = failing;
     },
     port: {
-      post: (channelId, payload, owner) => {
+      post: async (channelId, payload, owner) => {
+        if (postFails) {
+          postFails = false;
+          return null;
+        }
         nextId += 1;
         const messageId = `card-${String(nextId)}`;
         posts.push({ channelId, payload, owner });
         if (owner !== null) {
           registered.push({ messageId, owner });
         }
-        return Promise.resolve(messageId);
+        const held = heldPost;
+        if (held !== null) {
+          heldPost = null;
+          // The caller decides when this send lands, so tests can interleave other work with a
+          // post that is still in flight.
+          await held.promise;
+        }
+        return messageId;
       },
       edit: (_channelId, messageId, payload) => {
         if (editGone) {
@@ -355,6 +382,82 @@ describe("keeping one card per track", () => {
     h.manager.refresh();
     await flush();
     expect(h.rec.posts).toHaveLength(2);
+  });
+});
+
+describe("in-flight posts", () => {
+  test("a failed post is retried on the next refresh", async () => {
+    const h = harness();
+    h.rec.failNextPost();
+    h.manager.refresh();
+    await flush();
+    expect(h.rec.posts).toEqual([]);
+
+    // Without forgetting the track, every later refresh would take the edit path — which has no
+    // message to edit — and this track would silently never get a card.
+    h.manager.refresh();
+    await flush();
+    expect(h.rec.posts).toHaveLength(1);
+    expect(h.rec.posts[0]?.payload.embed?.title).toBe("▶️ Heat (1995)");
+  });
+
+  test("rapid track changes leave exactly one live card", async () => {
+    const h = harness();
+    const held = h.rec.holdNextPost();
+    h.manager.refresh();
+    await flush(); // A's send is now in flight, not yet landed
+
+    h.setView(streaming("Sneakers (1992)"));
+    h.manager.refresh(); // B: superseded before it runs
+    h.setView(streaming("Ronin (1998)"));
+    h.manager.refresh(); // C: the one that should win
+
+    held.release("card-1");
+    await flush();
+
+    // B's queued post bails (a newer track won); C strips A's card and posts its own. Without the
+    // in-tail read, both B and C would have captured a null previous id and left A's card up with
+    // working controls and nobody tracking it.
+    expect(h.rec.posts).toHaveLength(2);
+    expect(h.rec.posts[1]?.payload.embed?.title).toBe("▶️ Ronin (1998)");
+    expect(h.rec.stripped).toEqual(["card-1"]);
+  });
+
+  test("finalize drains a post that is still in flight and retires its card", async () => {
+    const h = harness();
+    const held = h.rec.holdNextPost();
+    h.manager.refresh();
+    await flush(); // the send is in flight
+
+    // Teardown lands while the send is in flight: `messageId` is null right now, but the post will
+    // produce a real card moments later. Finalization has to wait for it.
+    const finalized = h.manager.finalize();
+    held.release("card-1");
+    await finalized;
+
+    expect(h.rec.edits.at(-1)?.payload.embed?.description).toContain(
+      "⏹️ Stopped.",
+    );
+    expect(h.rec.edits.at(-1)?.payload.rows).toEqual([]);
+    expect(h.rec.unregistered).toEqual(["card-1"]);
+  });
+
+  test("a post queued behind finalize is never published", async () => {
+    const h = harness();
+    const held = h.rec.holdNextPost();
+    h.manager.refresh();
+    await flush(); // first card in flight
+    h.setView(streaming("Sneakers (1992)"));
+    h.manager.refresh(); // a second card queued behind it
+
+    const finalized = h.manager.finalize();
+    held.release("card-1");
+    await finalized;
+
+    // The queued second post must not put a controls-bearing card into the channel for a session
+    // that has already ended — and the first card loses its controls and its routing entry.
+    expect(h.rec.posts).toHaveLength(1);
+    expect(h.rec.stripped).toEqual(["card-1"]);
   });
 });
 
