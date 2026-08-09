@@ -85,21 +85,6 @@ let package = Package(
         // Accessibility. A task app that demands "control your computer" on
         // first launch to give you a text field is not shipping.
         .package(url: "https://github.com/sindresorhus/KeyboardShortcuts.git", from: "1.10.0"),
-
-        // In-app updates. The app is distributed directly with Developer ID
-        // rather than through the App Store, so nothing else ships a new build
-        // to an existing user.
-        //
-        // ⚠️ **The floor is a security floor, not a feature floor.** 2.9.2 and
-        // 2.9.5 are both symlink-traversal fixes in the delta-update installer
-        // (2.9.5 completes the fix 2.9.2 started), and 2.9.2 additionally
-        // requires the installer connection to be validated before it accepts
-        // appcast item data. `from:` gives `>= 2.9.5, < 3.0.0`, so a resolver
-        // cannot pick a version below the fix; `Package.resolved` pins the
-        // exact one that was built and tested. 2.9.5 was also the newest
-        // release at the time of writing (2026-08-02), so this floor is not
-        // holding the package back from anything.
-        .package(url: "https://github.com/sparkle-project/Sparkle", from: "2.9.5"),
     ],
     targets: [
         // ── Generated code is exempt; authored code is maximal. ────────────
@@ -172,10 +157,6 @@ let package = Package(
                 // never reach `TaskNotesKit` without breaking the
                 // no-UI-imports rule `ci/no-suppressions.sh` enforces.
                 .product(name: "KeyboardShortcuts", package: "KeyboardShortcuts"),
-                // Same rule, same reason: Sparkle is an AppKit framework and
-                // its updater drives a window, so it belongs on the SwiftUI
-                // side of the no-UI-imports line and nowhere else.
-                .product(name: "Sparkle", package: "Sparkle"),
             ],
             swiftSettings: authoredSwiftSettings + [.defaultIsolation(MainActor.self)]
         ),

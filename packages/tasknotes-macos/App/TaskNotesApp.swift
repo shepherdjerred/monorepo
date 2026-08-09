@@ -57,10 +57,6 @@ struct TaskNotesApp: App {
             // by reading the running app's menu bar — an explicit pair produced
             // `Pomodoro, Time Report, Pomodoro, Time Report`.
             QuickAddCommands(environment: environment)
-            // App > Check for Updates…, directly under About. Sparkle is only
-            // named inside `TaskNotesMac`; this line is scene composition, the
-            // same as the two conformers above it.
-            UpdateCommands(updater: environment.updater)
         }
 
         // Contributes the standard "Settings…" item at `⌘,` in the app menu,

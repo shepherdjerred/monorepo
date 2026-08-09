@@ -87,16 +87,6 @@ public final class AppEnvironment {
     /// saying stop.
     let pomodoro: PomodoroTimer
 
-    /// Sparkle, and the App-menu item that drives it.
-    ///
-    /// Here for the same reason the hotkey is: the scheduled background check
-    /// has to keep running with no window open. Unlike the hotkey this is safe
-    /// to build from *both* initializers — a bundle with no `SUFeedURL` (a test
-    /// runner, a preview host) constructs no `SPUStandardUpdaterController` at
-    /// all, so a test process cannot start an updater or reach the network. See
-    /// ``UpdaterController``.
-    public let updater: UpdaterController
-
     private let defaults: UserDefaults
 
     /// Where the bearer token is kept. Injected so a test never touches the
@@ -113,7 +103,6 @@ public final class AppEnvironment {
         self.store = container
         self.quickAdd = QuickAddPanelController(store: container)
         self.pomodoro = PomodoroTimer()
-        self.updater = UpdaterController()
         self.savedViews = SavedViewStore(defaults: defaults)
         self.defaults = defaults
         self.tokenStore = tokenStore
@@ -138,7 +127,6 @@ public final class AppEnvironment {
         self.store = store
         self.quickAdd = QuickAddPanelController(store: store)
         self.pomodoro = PomodoroTimer()
-        self.updater = UpdaterController()
         self.savedViews = SavedViewStore(defaults: defaults)
         self.defaults = defaults
         self.tokenStore = tokenStore

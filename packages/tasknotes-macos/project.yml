@@ -189,45 +189,6 @@ targets:
             CFBundleURLSchemes:
               - tasknotes
 
-        # ─── Sparkle ────────────────────────────────────────────────────────
-        #
-        # Required for a sandboxed app, and only for a sandboxed app: it tells
-        # Sparkle to install updates through `Installer.xpc` inside
-        # `Sparkle.framework` instead of from this process, which cannot write
-        # outside its container. Its partner is the
-        # `com.apple.security.temporary-exception.mach-lookup.global-name` pair
-        # in `App/TaskNotes.entitlements`; neither half works without the other.
-        #
-        # ⚠️ Sparkle validates this at startup: with the key set to `YES` and
-        # `Installer.xpc` missing from the embedded framework,
-        # `-[SPUUpdater startUpdater:]` fails and the standard controller runs a
-        # modal alert a second into launch. `bun run mac:release` therefore
-        # checks the service is present in the exported bundle rather than
-        # trusting Xcode's embedding.
-        SUEnableInstallerLauncherService: true
-        #
-        # ⚠️ **Two keys are deliberately absent, and the app is designed around
-        # their absence.**
-        #
-        #     SUFeedURL: https://<host>/tasknotes/mac/appcast.xml
-        #     SUPublicEDKey: <base64 ed25519 public key from ./bin/generate_keys>
-        #
-        # Neither is a secret — the public key is the *public* half and the feed
-        # URL is a public URL — so both belong here, in the reviewable source of
-        # truth, as soon as they exist. They do not exist yet: nobody has
-        # generated the EdDSA key pair, and the appcast host is an open decision
-        # (see `AGENTS.md` › Releasing). Until then:
-        #
-        #   * `UpdaterController` builds **no** `SPUStandardUpdaterController`,
-        #     so the App-menu item is present and disabled — never hidden — and
-        #     no launch-time modal appears;
-        #   * `bun run mac:release` refuses to archive, naming both keys.
-        #
-        # A placeholder would be strictly worse than an absence: an **empty**
-        # `SUPublicEDKey` is `SUSigningInputStatusInvalid` to Sparkle and a hard
-        # start failure, and a wrong-but-valid feed URL baked into a shipped
-        # binary cannot be corrected for anyone who already installed it.
-
   # ─── End-to-end UI tests ────────────────────────────────────────────────────
   #
   # XCUITest cannot run from SwiftPM — it needs a test *bundle* hosted by a real

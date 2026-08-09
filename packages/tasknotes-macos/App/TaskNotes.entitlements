@@ -26,32 +26,5 @@
 	-->
 	<key>com.apple.security.network.client</key>
 	<true/>
-
-	<!--
-	  Sparkle, in a sandbox.
-
-	  An update has to replace the application bundle, which is outside the
-	  sandbox by definition, so Sparkle does the install from an XPC service
-	  (`Installer.xpc`, shipped inside `Sparkle.framework`) rather than from
-	  this process. These two Mach service names are how the app talks to that
-	  service and to the installer it launches; without them the connection is
-	  refused by the sandbox and every update fails at the last step.
-
-	  `$(PRODUCT_BUNDLE_IDENTIFIER)` is substituted by Xcode when it processes
-	  the entitlements file, so these resolve to
-	  `red.sjer.tasknotes.mac-spks` and `red.sjer.tasknotes.mac-spki`.
-
-	  ⚠️ There is deliberately **no** Downloader XPC service and no
-	  `SUEnableDownloaderService`. Sparkle's own guidance is that the
-	  downloader service exists only for sandboxed apps that will not take
-	  `com.apple.security.network.client` — this app already has it, three
-	  entries above, because it syncs — and enabling it anyway would drag in a
-	  deprecated WebKit1 view for release notes.
-	-->
-	<key>com.apple.security.temporary-exception.mach-lookup.global-name</key>
-	<array>
-		<string>$(PRODUCT_BUNDLE_IDENTIFIER)-spks</string>
-		<string>$(PRODUCT_BUNDLE_IDENTIFIER)-spki</string>
-	</array>
 </dict>
 </plist>
