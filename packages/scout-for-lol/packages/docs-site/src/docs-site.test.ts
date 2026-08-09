@@ -151,6 +151,21 @@ const renderSampleManifest: {
 );
 
 describe("generated render samples", () => {
+  test("the committed samples match a fresh render", async () => {
+    // `build` depends on `generate`, so by the time this suite runs the assets
+    // have just been re-derived from the current renderer. Anything committed
+    // that no longer matches shows up as a dirty worktree. This is the drift
+    // gate: the release path calls `astro build` directly and would otherwise
+    // happily ship stale PNGs.
+    const status = await new Response(
+      Bun.spawn(
+        ["git", "status", "--porcelain", "--", "src/assets/generated"],
+        { cwd: new URL("..", import.meta.url).pathname, stdout: "pipe" },
+      ).stdout,
+    ).text();
+    expect(status.trim()).toBe("");
+  });
+
   test("every render kind in the registry has a generated sample", () => {
     const covered = new Set(renderSampleManifest.map((entry) => entry.kind));
     expect(
