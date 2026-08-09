@@ -37,6 +37,22 @@ const OUTREACH_KINDS = [
   "outreach_30d",
 ];
 
+async function persistConversion(
+  db: ExtendedPrismaClient,
+  serverId: DiscordGuildId,
+  installedAt: Date,
+  ladderStage: number,
+): Promise<void> {
+  await db.outreachConversion.upsert({
+    where: { serverId_installedAt: { serverId, installedAt } },
+    create: { serverId, installedAt, ladderStage },
+    // Conversion rows are immutable historical facts. The no-op update makes
+    // concurrent cleanup and nightly writers idempotent without rewriting the
+    // stage or convertedAt timestamp selected by the first writer.
+    update: {},
+  });
+}
+
 /**
  * Record a conversion for one guild if its first subscription of the current
  * installation landed inside the attribution window after a delivered message.
@@ -83,9 +99,7 @@ export async function recordConversionIfAny(
       firstSub.createdTime > row.createdAt &&
       firstSub.createdTime.getTime() < row.createdAt.getTime() + WINDOW_MS
     ) {
-      await db.outreachConversion.create({
-        data: { serverId, installedAt, ladderStage: stage },
-      });
+      await persistConversion(db, serverId, installedAt, stage);
       return true;
     }
   }
@@ -161,13 +175,12 @@ export async function updateOutreachConversionMetrics(): Promise<void> {
     }
 
     alreadyRecorded.add(key);
-    await prisma.outreachConversion.create({
-      data: {
-        serverId: DiscordGuildIdSchema.parse(guildId),
-        installedAt,
-        ladderStage: stage,
-      },
-    });
+    await persistConversion(
+      prisma,
+      DiscordGuildIdSchema.parse(guildId),
+      installedAt,
+      stage,
+    );
   }
 
   const recorded = await prisma.outreachConversion.groupBy({
