@@ -3,7 +3,7 @@
  *  `rest.ts` needs only the payload, and the handlers pull in the Discord
  *  client (which logs in at import time). Splitting them means the command
  *  definition can be built and inspected without a live connection. */
-import { SlashCommandBuilder } from "discord.js";
+import { ChannelType, SlashCommandBuilder } from "discord.js";
 import {
   ALLOWED_KARMA_AMOUNTS,
   KARMA_GIVE_AMOUNT,
@@ -119,6 +119,26 @@ export const karmaCommand = new SlashCommandBuilder()
     subcommand
       .setName("undo")
       .setDescription("Take back the karma you just gave"),
+  )
+  .addSubcommand((subcommand) =>
+    subcommand
+      .setName("config")
+      .setDescription("Configure the scheduled karma recap (Manage Server)")
+      .addChannelOption((option) =>
+        option
+          .setName("channel")
+          .setDescription("Where to post the recap")
+          .addChannelTypes(ChannelType.GuildText),
+      )
+      .addBooleanOption((option) =>
+        option.setName("enabled").setDescription("Turn the recap on or off"),
+      )
+      .addStringOption((option) =>
+        option
+          .setName("cron")
+          .setDescription("CRON schedule in UTC (default: Fridays 17:00)")
+          .setMaxLength(100),
+      ),
   )
   .addSubcommand((subcommand) =>
     subcommand

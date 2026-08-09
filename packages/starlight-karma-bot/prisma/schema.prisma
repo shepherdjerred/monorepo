@@ -55,3 +55,21 @@ model Karma {
   @@unique([giverId, sourceMessageId])
   @@map("karma")
 }
+
+/// Per-guild settings for the scheduled recap. Absent rows mean "not
+/// configured" — the dispatcher only ever considers rows that are both enabled
+/// and have a channel.
+model GuildConfig {
+  guildId        String  @id
+  recapChannelId String?
+  /// CRON expression evaluated in UTC. Default: Fridays at 17:00 UTC.
+  recapCron      String  @default("0 17 * * 5")
+  /// When the dispatcher should next post. Null is a self-heal path: a row
+  /// that never had a time computed is treated as due.
+  nextRecapAt    DateTime?
+  lastRecapAt    DateTime?
+  enabled        Boolean @default(false)
+
+  @@index([enabled, nextRecapAt])
+  @@map("guild_config")
+}

@@ -1,8 +1,10 @@
 import {
   bold,
+  ChannelType,
   type ChatInputCommandInteraction,
   inlineCode,
   MessageFlags,
+  PermissionFlagsBits,
   time,
   userMention,
 } from "discord.js";
@@ -19,6 +21,12 @@ import {
   searchReasons,
 } from "#src/karma/queries.ts";
 import { getReceivedKarma, recordKarma } from "#src/karma/store.ts";
+import { crossedMilestone } from "#src/karma/milestones.ts";
+import {
+  computeNextRecapAt,
+  DEFAULT_RECAP_CRON,
+  isValidCron,
+} from "#src/karma/recap-schedule.ts";
 
 /** How long after giving karma you can take it back. Long enough to catch a
  *  mis-click, short enough that it cannot be used to quietly rewrite history. */
@@ -37,6 +45,20 @@ async function requireGuild(
     flags: MessageFlags.Ephemeral,
   });
   return null;
+}
+
+/** A congratulations line when a give pushes someone past a threshold.
+ *  Appended to the same reply rather than posted to a separate channel: it
+ *  needs no configuration and lands where the moment actually happened. */
+function milestoneSuffix(
+  receiverId: string,
+  before: number,
+  after: number,
+): string {
+  const milestone = crossedMilestone(before, after);
+  return milestone === null
+    ? ""
+    : `\n\u{1F389} ${userMention(receiverId)} just passed ${bold(milestone.toString())} karma!`;
 }
 
 function formatReasonRow(row: ReasonRow): string {
@@ -90,19 +112,21 @@ async function handleKarmaGive(interaction: ChatInputCommandInteraction) {
 
   const reason = interaction.options.getString("reason") ?? undefined;
   const amount = karmaAmountFor(giverUser.id, receiverUser.id, requested);
-  await recordKarma({
+  const totals = await recordKarma({
     giverId: giverUser.id,
     receiverId: receiverUser.id,
     amount,
     guildId,
     reason,
   });
-  const newReceiverKarma = await getReceivedKarma(receiverUser.id, guildId);
+  const newReceiverKarma = totals.receiverTotalAfter;
   const gave = `${userMention(giverUser.id)} gave ${bold(amount.toString())} karma to ${userMention(receiverUser.id)}`;
-  await interaction.reply(
+  const body =
     reason !== undefined && reason !== ""
       ? `${gave} because ${inlineCode(reason)}. They now have ${bold(newReceiverKarma.toString())} karma.`
-      : `${gave}. They now have ${bold(newReceiverKarma.toString())} karma.`,
+      : `${gave}. They now have ${bold(newReceiverKarma.toString())} karma.`;
+  await interaction.reply(
+    `${body}${milestoneSuffix(receiverUser.id, totals.receiverTotalBefore, totals.receiverTotalAfter)}`,
   );
 }
 
@@ -231,6 +255,73 @@ async function handleKarmaUndo(interaction: ChatInputCommandInteraction) {
   });
 }
 
+async function handleKarmaConfig(interaction: ChatInputCommandInteraction) {
+  const guildId = await requireGuild(interaction, "Karma config");
+  if (guildId === null) {
+    return;
+  }
+  if (
+    interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild) !== true
+  ) {
+    await interaction.reply({
+      content: "You need the Manage Server permission to change karma config.",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  const channel = interaction.options.getChannel("channel");
+  const enabled = interaction.options.getBoolean("enabled");
+  const cron = interaction.options.getString("cron");
+
+  if (cron !== null && !isValidCron(cron)) {
+    // Boundary input: answer the user instead of storing a schedule that
+    // would silently never fire.
+    await interaction.reply({
+      content: `${inlineCode(cron)} is not a valid CRON expression.`,
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+  if (channel !== null && channel.type !== ChannelType.GuildText) {
+    await interaction.reply({
+      content: "The recap channel must be a text channel.",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  const existing = await prisma.guildConfig.findUnique({ where: { guildId } });
+  const nextCron = cron ?? existing?.recapCron ?? DEFAULT_RECAP_CRON;
+  const data = {
+    ...(channel === null ? {} : { recapChannelId: channel.id }),
+    ...(enabled === null ? {} : { enabled }),
+    recapCron: nextCron,
+    // Recompute on every change so a new schedule takes effect immediately
+    // rather than after the previously scheduled fire.
+    nextRecapAt: computeNextRecapAt(nextCron, new Date()),
+  };
+  const config = await prisma.guildConfig.upsert({
+    where: { guildId },
+    create: { guildId, ...data },
+    update: data,
+  });
+
+  await interaction.reply({
+    content: [
+      `Recap ${config.enabled ? "enabled" : "disabled"}.`,
+      `Channel: ${config.recapChannelId === null ? "not set" : `<#${config.recapChannelId}>`}`,
+      `Schedule: ${inlineCode(config.recapCron)} (UTC)`,
+      config.nextRecapAt === null
+        ? ""
+        : `Next: ${time(config.nextRecapAt, "F")}`,
+    ]
+      .filter((line) => line !== "")
+      .join("\n"),
+    flags: MessageFlags.Ephemeral,
+  });
+}
+
 async function handleKarmaHistory(interaction: ChatInputCommandInteraction) {
   const target = interaction.options.getUser("target", true);
   const guildId = await requireGuild(interaction, "Karma history");
@@ -301,6 +392,9 @@ async function handleKarma(interaction: ChatInputCommandInteraction) {
       break;
     case "undo":
       await handleKarmaUndo(interaction);
+      break;
+    case "config":
+      await handleKarmaConfig(interaction);
       break;
     case "history":
       await handleKarmaHistory(interaction);

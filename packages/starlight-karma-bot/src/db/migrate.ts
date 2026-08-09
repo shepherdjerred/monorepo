@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 export const REQUIRED_MIGRATIONS = [
   "20260809012953_init",
   "20260809020000_add_source_message_id",
+  "20260809030000_add_guild_config",
 ] as const;
 
 /**

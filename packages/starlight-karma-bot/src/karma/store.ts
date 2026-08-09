@@ -27,7 +27,14 @@ export type RecordKarmaParams = {
  * second add is a no-op rather than a duplicate or a thrown constraint error.
  * Non-reaction gives always insert, since repeat gives are legitimate.
  */
-export async function recordKarma(params: RecordKarmaParams): Promise<void> {
+export type RecordKarmaResult = {
+  receiverTotalBefore: number;
+  receiverTotalAfter: number;
+};
+
+export async function recordKarma(
+  params: RecordKarmaParams,
+): Promise<RecordKarmaResult> {
   await ensurePerson(params.giverId);
   if (params.receiverId !== params.giverId) {
     await ensurePerson(params.receiverId);
@@ -47,21 +54,33 @@ export async function recordKarma(params: RecordKarmaParams): Promise<void> {
     `[Karma DB] Saving karma: ${params.giverId} -> ${params.receiverId}, amount: ${params.amount.toString()}, guild: ${params.guildId}${params.sourceMessageId === undefined ? "" : `, message: ${params.sourceMessageId}`}`,
   );
 
+  const receiverTotalBefore = await getReceivedKarma(
+    params.receiverId,
+    params.guildId,
+  );
+
   if (params.sourceMessageId === undefined) {
     await prisma.karma.create({ data });
-    return;
+  } else {
+    await prisma.karma.upsert({
+      where: {
+        giverId_sourceMessageId: {
+          giverId: params.giverId,
+          sourceMessageId: params.sourceMessageId,
+        },
+      },
+      create: data,
+      update: {},
+    });
   }
 
-  await prisma.karma.upsert({
-    where: {
-      giverId_sourceMessageId: {
-        giverId: params.giverId,
-        sourceMessageId: params.sourceMessageId,
-      },
-    },
-    create: data,
-    update: {},
-  });
+  return {
+    receiverTotalBefore,
+    receiverTotalAfter: await getReceivedKarma(
+      params.receiverId,
+      params.guildId,
+    ),
+  };
 }
 
 /** Remove the karma a giver awarded via a reaction on a specific message.

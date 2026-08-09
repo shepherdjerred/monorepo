@@ -21,7 +21,8 @@ import {
   KARMA_GIVE_AMOUNT,
 } from "#src/karma/scoring.ts";
 import { decodeModalId, encodeModalId } from "#src/karma/rules.ts";
-import { getReceivedKarma, recordKarma } from "#src/karma/store.ts";
+import { recordKarma } from "#src/karma/store.ts";
+import { crossedMilestone } from "#src/karma/milestones.ts";
 
 export const GIVE_KARMA_CONTEXT_COMMAND = "Give Karma";
 
@@ -120,7 +121,7 @@ export async function handleGiveKarmaModal(
     throw error;
   }
 
-  await recordKarma({
+  const totals = await recordKarma({
     giverId,
     receiverId: target.authorId,
     amount,
@@ -129,13 +130,22 @@ export async function handleGiveKarmaModal(
     sourceMessageId: target.messageId,
   });
 
-  const total = await getReceivedKarma(target.authorId, interaction.guildId);
+  const total = totals.receiverTotalAfter;
+  const milestone = crossedMilestone(
+    totals.receiverTotalBefore,
+    totals.receiverTotalAfter,
+  );
   const headline =
     giverId === target.authorId
       ? `${userMention(giverId)} tried altering their karma. SMH my head. ${bold(amount.toString())} karma.`
       : `${userMention(giverId)} gave ${bold(amount.toString())} karma to ${userMention(target.authorId)}${reason === undefined ? "" : ` because ${inlineCode(reason)}`}.`;
 
+  const celebration =
+    milestone === null
+      ? ""
+      : `\n\u{1F389} ${userMention(target.authorId)} just passed ${bold(milestone.toString())} karma!`;
+
   await interaction.reply({
-    content: `${headline} They now have ${bold(total.toString())} karma.`,
+    content: `${headline} They now have ${bold(total.toString())} karma.${celebration}`,
   });
 }
