@@ -76,6 +76,34 @@ describe("buildVisualizationSnapshot", () => {
     ).toThrow("at most eight series");
   });
 
+  test("rejects projected bucket expansion above the point limit", () => {
+    const plan = parseAndCompile(
+      "SELECT games, wins, kills, deaths, assists, creep_score FROM match_participants GROUP BY all ANALYZE BETWEEN '2026-01-01' AND '2026-12-31' BUCKET BY DAY IN TIME ZONE 'UTC' ORDER BY label ASC RENDER line_chart WITH (y = (games, wins, kills, deaths, assists, creep_score))",
+    );
+
+    expect(() =>
+      buildVisualizationSnapshot(
+        {
+          plan,
+          columns: [
+            "label",
+            "games",
+            "wins",
+            "kills",
+            "deaths",
+            "assists",
+            "creep_score",
+          ],
+          rows: [],
+          rowsScanned: 0,
+        },
+        new Date("2026-12-31T23:59:59.999Z"),
+      ),
+    ).toThrow("would plot 2190");
+  });
+});
+
+describe("temporal visualization buckets", () => {
   test("fills leading and trailing buckets across the requested window", () => {
     const plan = parseAndCompile(
       "SELECT games FROM match_participants GROUP BY all ANALYZE BETWEEN '2026-08-01' AND '2026-08-03' BUCKET BY DAY IN TIME ZONE 'UTC' ORDER BY games DESC RENDER line_chart WITH (y = games)",

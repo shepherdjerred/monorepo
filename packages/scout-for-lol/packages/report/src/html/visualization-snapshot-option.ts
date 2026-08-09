@@ -4,6 +4,7 @@ import type {
 } from "@scout-for-lol/data";
 import type * as echarts from "echarts";
 import { format as echartsFormat } from "echarts";
+import { calendarTooltipText } from "#src/html/visualization-calendar-tooltip.ts";
 import {
   donutOption,
   heatmapOption,
@@ -399,12 +400,7 @@ function calendarOption(
       textStyle: { color: "#c8aa6e", fontSize: 28 },
     },
     tooltip: {
-      formatter: (input) => {
-        if (!("data" in input)) return "";
-        const data = input.data;
-        if (!Array.isArray(data)) return "";
-        return `${echartsFormat.encodeHTML(String(data[0]))}: ${echartsFormat.encodeHTML(String(data[1]))}`;
-      },
+      formatter: (input) => calendarTooltipText(snapshot, input),
     },
     visualMap: {
       min: Math.min(...values, 0),
@@ -435,7 +431,18 @@ function calendarOption(
         type: "heatmap",
         coordinateSystem: "calendar",
         data: points.flatMap((point) =>
-          point.value === null ? [] : [[point.label, point.value]],
+          point.value === null
+            ? []
+            : [
+                [
+                  point.label,
+                  point.value,
+                  point.comparisonValue ?? null,
+                  point.absoluteDelta ?? null,
+                  point.percentageDelta ?? null,
+                  point.evidence.sampleSize,
+                ],
+              ],
         ),
       },
     ],

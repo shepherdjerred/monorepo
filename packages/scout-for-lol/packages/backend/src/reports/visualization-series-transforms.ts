@@ -21,7 +21,23 @@ export function normalizePercentStack(
     points: item.points.map((point) => {
       const total = totals.get(point.key) ?? 0;
       const value = total === 0 ? null : (point.value ?? 0) / total;
-      if (point.comparisonValue === undefined) return { ...point, value };
+      const normalizedEvidence = {
+        evidence: { ...point.evidence, confidenceInterval: null },
+        ...(point.comparisonEvidence === undefined
+          ? {}
+          : {
+              comparisonEvidence:
+                point.comparisonEvidence === null
+                  ? null
+                  : {
+                      ...point.comparisonEvidence,
+                      confidenceInterval: null,
+                    },
+            }),
+      };
+      if (point.comparisonValue === undefined) {
+        return { ...point, ...normalizedEvidence, value };
+      }
       const comparisonTotal = comparisonTotals.get(point.key) ?? 0;
       const comparisonValue =
         comparisonTotal === 0
@@ -30,6 +46,7 @@ export function normalizePercentStack(
       const deltas = comparisonDeltas(value, comparisonValue);
       return {
         ...point,
+        ...normalizedEvidence,
         value,
         comparisonValue,
         absoluteDelta: deltas.absolute,

@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { VisualizationSnapshotSchema } from "@scout-for-lol/data";
+import { calendarTooltipText } from "#src/html/visualization-calendar-tooltip.ts";
 import {
   tooltipText,
   visualizationSnapshotToOption,
@@ -163,7 +164,9 @@ describe("visualizationSnapshotToOption", () => {
     expect(tooltip).toContain("&lt;script&gt;");
     expect(tooltip).toContain("&lt;img src=x onerror=&quot;alert(1)&quot;&gt;");
   });
+});
 
+describe("calendar visualization options", () => {
   test("uses the archived temporal range for an empty calendar", () => {
     const snapshot = VisualizationSnapshotSchema.parse({
       version: 1,
@@ -197,5 +200,41 @@ describe("visualizationSnapshotToOption", () => {
     expect(
       JSON.stringify(visualizationSnapshotToOption(snapshot, "static")),
     ).toContain('"range":["2026-01-01","2026-12-31"]');
+  });
+
+  test("shows calendar baselines and deltas in comparison tooltips", () => {
+    const snapshot = VisualizationSnapshotSchema.parse({
+      version: 1,
+      generatedAt: "2026-08-08T00:00:00.000Z",
+      kind: "CALENDAR_HEATMAP",
+      title: null,
+      temporal: {
+        window: { kind: "relative", days: 30 },
+        bucket: "day",
+        comparison: { kind: "previous_period" },
+        timezone: "UTC",
+      },
+      bucket: "day",
+      display: {
+        theme: null,
+        palette: null,
+        smooth: false,
+        stack: "none",
+        rollingWindow: null,
+        cumulative: false,
+        sparkline: false,
+      },
+      series: [],
+      annotations: [],
+      trends: [],
+    });
+
+    const tooltip = calendarTooltipText(snapshot, {
+      data: ["2026-08-08", 0.6, 0.4, 0.2, 0.5, 10],
+    });
+    expect(tooltip).toContain("0.6 (n=10)");
+    expect(tooltip).toContain("Baseline: 0.4");
+    expect(tooltip).toContain("Δ 0.2");
+    expect(tooltip).toContain("50.0%");
   });
 });

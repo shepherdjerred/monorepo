@@ -24,10 +24,11 @@ import {
   localDateStart,
   resolveTemporalRanges,
 } from "#src/reports/temporal-range.ts";
+import { comparePatchLabels } from "#src/reports/temporal-labels.ts";
 import {
-  comparePatchLabels,
-  localCalendarDate,
-} from "#src/reports/temporal-labels.ts";
+  assertProjectedPointCount,
+  visualizationBucketLabels,
+} from "#src/reports/visualization-buckets.ts";
 import { normalizePercentStack } from "#src/reports/visualization-series-transforms.ts";
 import { resolveHeatmapAxes } from "#src/reports/heatmap-axes.ts";
 
@@ -203,6 +204,14 @@ function buildSeries(context: SeriesBuildContext): TemporalSeries[] {
   if (bucket !== null && grouped.size === 0 && plan.groupBys.length === 1) {
     grouped.set("All", []);
   }
+  assertProjectedPointCount({
+    rowCount: rows.length,
+    columnCount: columns.length,
+    seriesGroupCount: grouped.size,
+    bucket,
+    plan,
+    generatedAt,
+  });
   const evidenceByRow = new Map(
     result.rows.map((row, index) => [row, result.evidence?.[index]]),
   );
@@ -422,21 +431,8 @@ function fillMissingBuckets({
   if (bucket === null || bucket === "patch") return points;
   const byLabel = new Map(points.map((point) => [point.label, point]));
   if (plan.analysis === undefined) return points;
-  const range = resolveTemporalRanges(plan.analysis, generatedAt).current;
   const result: TemporalSeriesPoint[] = [];
-  let cursor = bucketCursor(
-    localCalendarDate(range.startDate, plan.analysis.timezone),
-    bucket,
-  );
-  const end = bucketCursor(
-    localCalendarDate(range.endDate, plan.analysis.timezone),
-    bucket,
-  );
-  while (cursor <= end) {
-    const label =
-      bucket === "month"
-        ? formatISO(cursor, { representation: "date" }).slice(0, 7)
-        : formatISO(cursor, { representation: "date" });
+  for (const label of visualizationBucketLabels(plan, generatedAt, bucket)) {
     const existing = byLabel.get(label);
     if (existing === undefined) {
       const bounds = pointBounds({
@@ -469,24 +465,8 @@ function fillMissingBuckets({
     } else {
       result.push(existing);
     }
-    cursor =
-      bucket === "day"
-        ? addDays(cursor, 1)
-        : bucket === "week"
-          ? addWeeks(cursor, 1)
-          : addMonths(cursor, 1);
   }
   return result;
-}
-
-function bucketCursor(
-  date: string,
-  bucket: Exclude<ResolvedTemporalBucket, "patch">,
-): Date {
-  const monthDate = bucket === "month" ? `${date.slice(0, 7)}-01` : date;
-  const parsed = parseISO(monthDate);
-  if (bucket !== "week") return parsed;
-  return addDays(parsed, -((parsed.getDay() + 6) % 7));
 }
 
 function isAdditiveColumn(plan: ReportQueryPlan, column: string): boolean {
