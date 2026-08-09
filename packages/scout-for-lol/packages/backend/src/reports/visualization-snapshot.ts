@@ -29,6 +29,7 @@ import {
   localCalendarDate,
 } from "#src/reports/temporal-labels.ts";
 import { normalizePercentStack } from "#src/reports/visualization-series-transforms.ts";
+import { resolveHeatmapAxes } from "#src/reports/heatmap-axes.ts";
 
 export function buildVisualizationSnapshot(
   result: ReportQueryResult,
@@ -183,12 +184,16 @@ type SeriesBuildContext = {
 function buildSeries(context: SeriesBuildContext): TemporalSeries[] {
   const { result, plan, columns, bucket, generatedAt } = context;
   const rows = result.rows;
+  const heatmapAxes =
+    plan.render.kind === "HEATMAP"
+      ? resolveHeatmapAxes(plan.groupBys, plan.render.encoding)
+      : undefined;
   const grouped = new Map<string, ReportResultRow[]>();
   for (const row of rows) {
     const seriesLabel =
       bucket === null
         ? plan.groupBys.length > 1
-          ? (row.dimensions[0] ?? "All")
+          ? (row.dimensions[heatmapAxes?.xDim ?? 0] ?? "All")
           : "All"
         : row.dimensions.slice(0, -1).join(" • ") || "All";
     const group = grouped.get(seriesLabel) ?? [];
@@ -215,13 +220,19 @@ function buildSeries(context: SeriesBuildContext): TemporalSeries[] {
             plan,
             generatedAt,
             index,
+            pointDimensionIndex: heatmapAxes?.yDim,
             evidence: evidenceByRow.get(row),
           }),
         )
         .toSorted((left, right) => left.start.localeCompare(right.start));
       return {
         id: `${seriesLabel}:${column}`,
-        label: seriesLabel === "All" ? column : `${seriesLabel} — ${column}`,
+        label:
+          plan.render.kind === "HEATMAP"
+            ? seriesLabel
+            : seriesLabel === "All"
+              ? column
+              : `${seriesLabel} — ${column}`,
         metric: column,
         additive,
         points: fillMissingBuckets({
@@ -257,16 +268,28 @@ type PointBuildContext = Omit<SeriesBuildContext, "columns" | "result"> & {
   row: ReportResultRow;
   column: string;
   index: number;
+  pointDimensionIndex: number | undefined;
   evidence: NonNullable<ReportQueryResult["evidence"]>[number] | undefined;
 };
 
 function pointFromRow(context: PointBuildContext): TemporalSeriesPoint {
-  const { row, column, bucket, plan, generatedAt, index, evidence } = context;
+  const {
+    row,
+    column,
+    bucket,
+    plan,
+    generatedAt,
+    index,
+    pointDimensionIndex,
+    evidence,
+  } = context;
   const value = requireValue(row, column);
   const label =
-    bucket === null && plan.groupBys.length <= 1
-      ? row.label
-      : (row.dimensions.at(-1) ?? row.label);
+    bucket === null && pointDimensionIndex !== undefined
+      ? (row.dimensions[pointDimensionIndex] ?? row.label)
+      : bucket === null && plan.groupBys.length <= 1
+        ? row.label
+        : (row.dimensions.at(-1) ?? row.label);
   const bounds = pointBounds({ label, bucket, plan, generatedAt, index });
   const metricEvidence = evidence?.values.find(
     (candidate) => candidate.column === column,

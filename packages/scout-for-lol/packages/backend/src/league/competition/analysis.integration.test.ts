@@ -421,6 +421,10 @@ async function runRankAnalysis(criteria: CompetitionCriteria) {
       [beta.id, "Beta", 1200, 1],
     ]),
     leaderboard(competition.id, "2026-05-21T00:00:00.000Z", [
+      [alpha.id, "Alpha", 1800, 1],
+      [beta.id, "Beta", 1300, 2],
+    ]),
+    leaderboard(competition.id, "2026-05-20T00:00:00.000Z", [
       [alpha.id, "Alpha", 1400, 1],
       [beta.id, "Beta", 1250, 2],
     ]),

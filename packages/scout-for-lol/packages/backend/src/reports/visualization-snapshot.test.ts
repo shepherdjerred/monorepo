@@ -118,6 +118,40 @@ describe("buildVisualizationSnapshot", () => {
     expect(flex?.points[0]?.comparisonValue).toBeCloseTo(0.7);
     expect(flex?.points[0]?.absoluteDelta).toBeCloseTo(-0.3);
   });
+
+  test("orients heatmap snapshots using the configured dimensions", () => {
+    const plan = parseAndCompile(
+      "SELECT games FROM match_participants GROUP BY champion, queue RENDER heatmap WITH (x = queue, series = champion, value = games)",
+    );
+    const rows: ReportResultRow[] = [
+      {
+        label: "Ahri • solo",
+        dimensions: ["Ahri", "solo"],
+        mentionIdentity: null,
+        values: [{ column: "games", value: 3 }],
+      },
+      {
+        label: "Garen • flex",
+        dimensions: ["Garen", "flex"],
+        mentionIdentity: null,
+        values: [{ column: "games", value: 2 }],
+      },
+    ];
+
+    const snapshot = buildVisualizationSnapshot(
+      { plan, columns: ["label", "games"], rows, rowsScanned: 5 },
+      new Date("2026-08-08T00:00:00.000Z"),
+    );
+
+    expect(snapshot.series.map((series) => series.label)).toEqual([
+      "solo",
+      "flex",
+    ]);
+    expect(snapshot.series.map((series) => series.points[0]?.label)).toEqual([
+      "Ahri",
+      "Garen",
+    ]);
+  });
 });
 
 function patchRow(label: string, games: number): ReportResultRow {

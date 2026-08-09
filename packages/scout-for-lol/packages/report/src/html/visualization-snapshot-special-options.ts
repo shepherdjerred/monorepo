@@ -4,7 +4,6 @@ import type * as echarts from "echarts";
 export function donutOption(
   snapshot: VisualizationSnapshot,
 ): echarts.EChartsOption {
-  const series = snapshot.series[0];
   return {
     ...baseOption(snapshot),
     tooltip: { trigger: "item" },
@@ -20,12 +19,22 @@ export function donutOption(
         type: "pie",
         radius: ["42%", "70%"],
         center: ["42%", "55%"],
-        data:
-          series?.points.flatMap((point) =>
+        data: snapshot.series.flatMap((series) =>
+          series.points.flatMap((point) =>
             point.value === null
               ? []
-              : [{ name: point.label, value: point.value }],
-          ) ?? [],
+              : [
+                  {
+                    name: donutPointLabel(
+                      series.label,
+                      series.metric,
+                      point.label,
+                    ),
+                    value: point.value,
+                  },
+                ],
+          ),
+        ),
         label: { color: "#f0e6d2" },
       },
     ],
@@ -85,21 +94,15 @@ export function heatmapOption(
 export function radarOption(
   snapshot: VisualizationSnapshot,
 ): echarts.EChartsOption {
-  const categories = [
+  const entities = [
     ...new Set(
       snapshot.series.flatMap((series) =>
         series.points.map((point) => point.label),
       ),
     ),
   ];
-  const maxima = categories.map((category) =>
-    Math.max(
-      1,
-      ...snapshot.series.map(
-        (series) =>
-          series.points.find((point) => point.label === category)?.value ?? 0,
-      ),
-    ),
+  const maxima = snapshot.series.map((series) =>
+    Math.max(1, ...series.points.map((point) => point.value ?? 0)),
   );
   return {
     ...baseOption(snapshot),
@@ -108,8 +111,8 @@ export function radarOption(
     radar: {
       center: ["50%", "57%"],
       radius: "62%",
-      indicator: categories.map((name, index) => ({
-        name,
+      indicator: snapshot.series.map((series, index) => ({
+        name: series.metric,
         max: maxima[index] ?? 1,
       })),
       axisName: { color: "#f0e6d2" },
@@ -118,17 +121,29 @@ export function radarOption(
     series: [
       {
         type: "radar",
-        data: snapshot.series.map((series) => ({
-          name: series.label,
-          value: categories.map(
-            (category) =>
-              series.points.find((point) => point.label === category)?.value ??
-              0,
+        data: entities.map((entity) => ({
+          name: entity,
+          value: snapshot.series.map(
+            (series) =>
+              series.points.find((point) => point.label === entity)?.value ?? 0,
           ),
         })),
       },
     ],
   };
+}
+
+function donutPointLabel(
+  seriesLabel: string,
+  metric: string,
+  pointLabel: string,
+): string {
+  if (seriesLabel === metric) return pointLabel;
+  const metricSuffix = ` — ${metric}`;
+  const groupLabel = seriesLabel.endsWith(metricSuffix)
+    ? seriesLabel.slice(0, -metricSuffix.length)
+    : seriesLabel;
+  return `${groupLabel} • ${pointLabel}`;
 }
 
 function baseOption(snapshot: VisualizationSnapshot): echarts.EChartsOption {

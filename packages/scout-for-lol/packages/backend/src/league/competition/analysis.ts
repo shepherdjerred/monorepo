@@ -306,13 +306,13 @@ function historyAroundRange(
   const before = sorted.findLast(
     (snapshot) => new Date(snapshot.calculatedAt) <= range.startDate,
   );
-  const after = sorted.find(
-    (snapshot) => new Date(snapshot.calculatedAt) >= range.endDate,
+  const endBoundary = sorted.findLast(
+    (snapshot) => new Date(snapshot.calculatedAt) <= range.endDate,
   );
   return [
     ...(before === undefined ? [] : [before]),
     ...inside,
-    ...(after === undefined ? [] : [after]),
+    ...(endBoundary === undefined ? [] : [endBoundary]),
   ]
     .filter(
       (snapshot, index, candidates) =>
