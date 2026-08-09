@@ -132,7 +132,7 @@ async function recordDmAudit(
     ladderStage?: number | undefined;
     errorMessage?: string | undefined;
   },
-): Promise<void> {
+): Promise<boolean> {
   try {
     await db.dmAuditLog.create({
       data: {
@@ -146,11 +146,13 @@ async function recordDmAudit(
         errorMessage: row.errorMessage ?? null,
       },
     });
+    return true;
   } catch (auditError) {
     logger.error(
       `[DM] Failed to write DmAuditLog row for user ${row.recipientId}:`,
       getErrorMessage(auditError),
     );
+    return false;
   }
 }
 
@@ -181,6 +183,77 @@ async function runExclusively<T>(task: () => Promise<T>): Promise<T> {
   } finally {
     // Always release, so one failed send cannot wedge the queue forever.
     gate.resolve(null);
+  }
+}
+
+/**
+ * Reserve the ledger row for a budgeted send, as `sent`, before contacting
+ * Discord. Returns the row id, or null if the write failed (in which case the
+ * caller must not send — an unrecorded delivery could be repeated).
+ */
+async function reserveDeliveryRow(
+  db: ExtendedPrismaClient,
+  row: {
+    recipientId: string;
+    recipientTag: string | undefined;
+    guildId: string | undefined;
+    kind: DmKind;
+    content: string;
+    ladderStage: number | undefined;
+  },
+): Promise<number | null> {
+  try {
+    const created = await db.dmAuditLog.create({
+      data: {
+        recipientId: row.recipientId,
+        recipientTag: row.recipientTag ?? null,
+        guildId: row.guildId ?? null,
+        kind: row.kind,
+        content: row.content,
+        deliveryStatus: "sent",
+        ladderStage: row.ladderStage ?? null,
+      },
+      select: { id: true },
+    });
+    return created.id;
+  } catch (error) {
+    logger.error(
+      `[DM] Failed to reserve a ledger row for ${row.recipientId}:`,
+      getErrorMessage(error),
+    );
+    return null;
+  }
+}
+
+/**
+ * Settle a reserved row to its real outcome. A failure here leaves the row as
+ * `sent`, which over-charges the budget rather than permitting a re-send — the
+ * safe direction when the alternative is breaking the printed message cap.
+ */
+async function finalizeDeliveryRow(
+  db: ExtendedPrismaClient,
+  outcome: {
+    id: number;
+    status: DmStatus;
+    recipientTag: string | undefined;
+    errorMessage?: string | undefined;
+  },
+): Promise<void> {
+  const { id, status, recipientTag, errorMessage } = outcome;
+  try {
+    await db.dmAuditLog.update({
+      where: { id },
+      data: {
+        deliveryStatus: status,
+        recipientTag: recipientTag ?? null,
+        errorMessage: errorMessage ?? null,
+      },
+    });
+  } catch (error) {
+    logger.error(
+      `[DM] Failed to settle ledger row ${id.toString()} to ${status}:`,
+      getErrorMessage(error),
+    );
   }
 }
 
@@ -298,22 +371,56 @@ async function sendDmUnsynchronized(options: SendDmOptions): Promise<DmStatus> {
   }
 
   let recipientTag = options.recipientTag;
-  try {
-    const user = await client.users.fetch(userId);
-    recipientTag = recipientTag ?? user.tag;
-    await user.send(message);
-    logger.info(`[DM] Successfully sent ${kind} DM to user ${userId}`);
-    await recordDmAudit(db, {
+
+  // Budgeted sends reserve their ledger row BEFORE contacting Discord.
+  //
+  // The audit row is the sole record of spend, and `recordDmAudit` is
+  // best-effort — so writing it after a successful send left a window where
+  // Discord delivered the message but the ledger had no row, and the same rung
+  // and message number could be delivered again. Reserving first closes that:
+  // if the write fails we never send at all, and if the send fails we downgrade
+  // the row. A crash between the two over-charges the budget (the user gets one
+  // FEWER message) rather than over-sending, which is the safe direction for a
+  // promise printed in the message body.
+  let reservedRowId: number | null = null;
+  if (options.budget !== undefined) {
+    reservedRowId = await reserveDeliveryRow(db, {
       recipientId: userId,
       recipientTag,
       guildId,
       kind,
       content: message,
-      status: "sent",
-      ladderStage: options.budget?.ladderStage,
+      ladderStage: options.budget.ladderStage,
     });
-    // Nothing to increment: the audit row written above IS the ledger, so a
-    // delivery and its accounting can never disagree.
+    if (reservedRowId === null) {
+      logger.error(
+        `[DM] Refusing ${kind} DM to ${userId}: could not reserve a ledger row`,
+      );
+      return "failed";
+    }
+  }
+
+  try {
+    const user = await client.users.fetch(userId);
+    recipientTag = recipientTag ?? user.tag;
+    await user.send(message);
+    logger.info(`[DM] Successfully sent ${kind} DM to user ${userId}`);
+    if (reservedRowId === null) {
+      await recordDmAudit(db, {
+        recipientId: userId,
+        recipientTag,
+        guildId,
+        kind,
+        content: message,
+        status: "sent",
+      });
+    } else {
+      await finalizeDeliveryRow(db, {
+        id: reservedRowId,
+        status: "sent",
+        recipientTag,
+      });
+    }
     return "sent";
   } catch (error) {
     const dmDisabled =
@@ -332,16 +439,25 @@ async function sendDmUnsynchronized(options: SendDmOptions): Promise<DmStatus> {
     }
 
     const status: DmStatus = dmDisabled ? "dm_disabled" : "failed";
-    await recordDmAudit(db, {
-      recipientId: userId,
-      recipientTag,
-      guildId,
-      kind,
-      content: message,
-      status,
-      ladderStage: options.budget?.ladderStage,
-      errorMessage: errorMsg,
-    });
+    if (reservedRowId === null) {
+      await recordDmAudit(db, {
+        recipientId: userId,
+        recipientTag,
+        guildId,
+        kind,
+        content: message,
+        status,
+        errorMessage: errorMsg,
+      });
+    } else {
+      // Release the reservation so a bounced DM charges nothing.
+      await finalizeDeliveryRow(db, {
+        id: reservedRowId,
+        status,
+        recipientTag,
+        errorMessage: errorMsg,
+      });
+    }
     return status;
   }
 }

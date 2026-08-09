@@ -64,6 +64,8 @@ export function FeedbackPrompt() {
     }),
   );
 
+  const dismissMutation = useMutation(trpc.feedback.dismiss.mutationOptions());
+
   // Only ask people who have actually used Scout — i.e. created a subscription.
   // Merely being able to manage a guild where Scout is installed proves
   // nothing: that person may never have configured it, and asking them would
@@ -83,16 +85,19 @@ export function FeedbackPrompt() {
 
   if (user === null || hidden) return null;
   if (isFeedbackDismissed(user.discordId)) return null;
-  if (eligibility.data?.hasUsedScout !== true) return null;
+  if (eligibility.data?.shouldAsk !== true) return null;
 
   const accountAgeDays =
     (Date.now() - new Date(user.createdAt).getTime()) / 86_400_000;
   if (accountAgeDays < MIN_ACCOUNT_AGE_DAYS) return null;
 
   const dismiss = () => {
+    // localStorage keeps the prompt from flashing back before the mutation
+    // lands; the server record is what makes "once" hold across devices.
     markFeedbackDismissed(user.discordId);
     track("feedback_dismissed");
     setHidden(true);
+    dismissMutation.mutate();
   };
 
   return (

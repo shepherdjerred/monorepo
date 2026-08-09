@@ -249,6 +249,34 @@ describe("sendDM message budget", () => {
     expect(send.mock.calls.length).toBe(1);
   });
 
+  it("never leaves a delivered message unaccounted", async () => {
+    await seedInstall(0);
+    const send = makeSendMock();
+
+    await sendDM(budgeted(clientThatSends(send)));
+
+    // The ledger row is reserved BEFORE Discord is contacted, so there is no
+    // window where a message is delivered but unrecorded — which would let the
+    // same rung and message number go out again.
+    expect(await spent()).toBe(1);
+    expect(send.mock.calls.length).toBe(1);
+  });
+
+  it("releases the reservation when delivery bounces", async () => {
+    await seedInstall(0);
+
+    const status = await sendDM(budgeted(clientThatCannotDm()));
+
+    expect(status).toBe("dm_disabled");
+    // Reserved then downgraded: a bounced DM must charge nothing.
+    expect(await spent()).toBe(0);
+    const rows = await prisma.dmAuditLog.findMany({
+      where: { guildId: SERVER_ID },
+    });
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.deliveryStatus).toBe("dm_disabled");
+  });
+
   it("records every refusal in the audit log", async () => {
     await seedInstall(NON_CORE_MESSAGE_BUDGET);
 

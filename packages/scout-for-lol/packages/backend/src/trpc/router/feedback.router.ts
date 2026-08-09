@@ -29,10 +29,29 @@ export const feedbackRouter = router({
    * `creatorDiscordId` is a direct usage signal and needs no Discord round-trip.
    */
   eligibility: webProcedure.query(async ({ ctx }) => {
-    const created = await prisma.subscription.count({
-      where: { creatorDiscordId: ctx.user.discordId },
+    const [created, promptState] = await Promise.all([
+      prisma.subscription.count({
+        where: { creatorDiscordId: ctx.user.discordId },
+      }),
+      prisma.feedbackPromptState.findUnique({
+        where: { discordId: ctx.user.discordId },
+      }),
+    ]);
+    return {
+      // Both conditions are checked server-side. localStorage alone re-prompted
+      // the same account on another device or after clearing site data.
+      shouldAsk: created > 0 && promptState === null,
+    };
+  }),
+
+  /** Record that the user dismissed the prompt without answering. */
+  dismiss: webMutationProcedure.mutation(async ({ ctx }) => {
+    await prisma.feedbackPromptState.upsert({
+      where: { discordId: ctx.user.discordId },
+      create: { discordId: ctx.user.discordId, submitted: false },
+      update: {},
     });
-    return { hasUsedScout: created > 0 };
+    return { dismissed: true };
   }),
 
   submit: webMutationProcedure
@@ -53,6 +72,12 @@ export const feedbackRouter = router({
           body: input.body,
         },
         select: { id: true },
+      });
+
+      await prisma.feedbackPromptState.upsert({
+        where: { discordId: ctx.user.discordId },
+        create: { discordId: ctx.user.discordId, submitted: true },
+        update: { submitted: true },
       });
 
       feedbackSubmittedTotal.inc({

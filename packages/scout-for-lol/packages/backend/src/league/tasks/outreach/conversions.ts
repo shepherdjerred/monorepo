@@ -49,42 +49,82 @@ export async function updateOutreachConversionMetrics(): Promise<void> {
     orderBy: { createdAt: "asc" },
   });
 
-  const messagedGuilds = new Set<string>();
-  const conversionsByStage = new Map<number, number>();
-  const credited = new Set<string>();
+  const installs = await prisma.guildInstall.findMany({
+    select: { serverId: true, installedAt: true },
+  });
+  // Plain-string keys: DmAuditLog.guildId is unbranded.
+  const installedAtByGuild = new Map<string, Date>(
+    installs.map((install) => [String(install.serverId), install.installedAt]),
+  );
+
+  // Detect NEW conversions and record them. Existing rows are never revisited:
+  // the evidence (a subscription) can be deleted by cleanup when the guild
+  // churns, so recomputing would make a historical result shrink over time.
+  const recordedRows = await prisma.outreachConversion.findMany({
+    select: { serverId: true, installedAt: true },
+  });
+  const alreadyRecorded = new Set(
+    recordedRows.map(
+      (row) => `${row.serverId}@${row.installedAt.toISOString()}`,
+    ),
+  );
 
   for (const row of delivered) {
     const guildId = row.guildId;
     // The rung is read from the row, never reconstructed from position: a
     // bounced day-3 DM followed by a delivered day-14 DM is rung 2, and the
-    // legacy ladder could deliver a lone `outreach_30d`. Counting position
-    // would report conversions under the wrong message variant.
+    // legacy ladder could deliver a lone `outreach_30d`.
     const stage = row.ladderStage;
     if (guildId === null || stage === null) continue;
-    messagedGuilds.add(guildId);
 
-    // Credit a guild to at most one stage — the first that plausibly caused the
-    // subscription — so one conversion can't be counted three times.
-    if (credited.has(guildId)) continue;
+    const installedAt = installedAtByGuild.get(guildId);
+    // Only messages belonging to the CURRENT installation can be credited.
+    if (installedAt === undefined || row.createdAt < installedAt) continue;
 
-    // Activation means the guild's FIRST subscription, not merely another one:
-    // the legacy day-3 DM went to guilds that already had one or two, so "a
-    // subscription appeared afterwards" would score an already-active guild as
-    // a conversion.
+    const key = `${guildId}@${installedAt.toISOString()}`;
+    if (alreadyRecorded.has(key)) continue;
+
+    // Activation means the guild's FIRST subscription of this installation, not
+    // merely another one: the legacy day-3 DM went to guilds that already had
+    // one or two, so "a subscription appeared afterwards" would score an
+    // already-active guild as a conversion.
     const firstSub = await prisma.subscription.findFirst({
-      where: { serverId: DiscordGuildIdSchema.parse(guildId) },
+      where: {
+        serverId: DiscordGuildIdSchema.parse(guildId),
+        createdTime: { gte: installedAt },
+      },
       select: { createdTime: true },
       orderBy: { createdTime: "asc" },
     });
     if (
-      firstSub !== null &&
-      firstSub.createdTime > row.createdAt &&
-      firstSub.createdTime.getTime() < row.createdAt.getTime() + WINDOW_MS
+      firstSub === null ||
+      firstSub.createdTime <= row.createdAt ||
+      firstSub.createdTime.getTime() >= row.createdAt.getTime() + WINDOW_MS
     ) {
-      credited.add(guildId);
-      conversionsByStage.set(stage, (conversionsByStage.get(stage) ?? 0) + 1);
+      continue;
     }
+
+    alreadyRecorded.add(key);
+    await prisma.outreachConversion.create({
+      data: {
+        serverId: DiscordGuildIdSchema.parse(guildId),
+        installedAt,
+        ladderStage: stage,
+      },
+    });
   }
+
+  const recorded = await prisma.outreachConversion.groupBy({
+    by: ["ladderStage"],
+    _count: { _all: true },
+  });
+  const conversionsByStage = new Map(
+    recorded.map((entry) => [entry.ladderStage, entry._count._all]),
+  );
+  const credited = alreadyRecorded;
+  const messagedGuilds = new Set(
+    delivered.flatMap((row) => (row.guildId === null ? [] : [row.guildId])),
+  );
 
   outreachConversionsTotal.reset();
   for (let stage = 1; stage <= NON_CORE_MESSAGE_BUDGET; stage += 1) {
@@ -95,16 +135,12 @@ export async function updateOutreachConversionMetrics(): Promise<void> {
   }
 
   // Ladder distribution, derived per guild from the same audit rows.
-  const installs = await prisma.guildInstall.findMany({
-    where: { removedAt: null },
-    select: { serverId: true, installedAt: true },
-  });
   const guildsAtStage = new Map<number, number>();
   let exhausted = 0;
   for (const install of installs) {
     const state = await readOutreachState(
       prisma,
-      DiscordGuildIdSchema.parse(install.serverId),
+      install.serverId,
       install.installedAt,
     );
     guildsAtStage.set(

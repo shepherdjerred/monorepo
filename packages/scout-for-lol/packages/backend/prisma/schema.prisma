@@ -483,6 +483,38 @@ model Feedback {
   @@index([discordId, createdAt])
 }
 
+/// A recorded outreach conversion: a guild whose FIRST subscription appeared
+/// within the attribution window after a delivered outreach message.
+///
+/// Written once, never recomputed. Deriving it from live subscriptions made a
+/// historical experiment result *decrease* as converted guilds churned —
+/// `cleanupRemovedGuild` deletes their subscriptions, so the evidence vanished
+/// and the next recompute subtracted them. Scoped to the installation so a
+/// quick re-install cannot attribute a new subscription to the old one.
+/// Records that a user has answered — or dismissed — the one-time in-app
+/// feedback prompt. Server-side because localStorage is per-browser: the same
+/// account was otherwise re-prompted on another device, in a private window, or
+/// after clearing site data, contradicting the "we'll only ask you once"
+/// promise the dialog makes.
+model FeedbackPromptState {
+  discordId   String   @id
+  dismissedAt DateTime @default(now())
+  submitted   Boolean  @default(false)
+}
+
+model OutreachConversion {
+  id          Int      @id @default(autoincrement())
+  serverId    String
+  /// Install this conversion belongs to, so re-installs are distinct.
+  installedAt DateTime
+  /// Ladder rung of the message credited with the conversion.
+  ladderStage Int
+  convertedAt DateTime @default(now())
+
+  @@unique([serverId, installedAt])
+  @@index([ladderStage])
+}
+
 model BotState {
   id                   Int       @id @default(1)
   lastSuccessfulPollAt DateTime?

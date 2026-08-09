@@ -314,6 +314,7 @@ export async function handleDiscordCallback(
   }
 
   if (code === null || code.length === 0) {
+    webSigninTotal.inc({ result: "callback_error" });
     return new Response("Missing OAuth code", { status: 400 });
   }
 
@@ -335,6 +336,7 @@ export async function handleDiscordCallback(
 
   if (configuration.discordClientSecret === undefined) {
     logger.error("DISCORD_CLIENT_SECRET not configured");
+    webSigninTotal.inc({ result: "callback_error" });
     return new Response("Server misconfigured: OAuth disabled", {
       status: 500,
     });
@@ -359,6 +361,7 @@ export async function handleDiscordCallback(
       status: tokenResponse.status,
       text,
     });
+    webSigninTotal.inc({ result: "failed" });
     return new Response("Discord rejected the authorization code", {
       status: 400,
     });
@@ -373,6 +376,7 @@ export async function handleDiscordCallback(
   });
   if (!userResponse.ok) {
     logger.error("Failed to fetch Discord user");
+    webSigninTotal.inc({ result: "failed" });
     return new Response("Failed to fetch user info", { status: 502 });
   }
   const userJson: unknown = await userResponse.json();
@@ -510,6 +514,10 @@ export async function handleAuthRoutes(
     try {
       return await handleDiscordCallback(request);
     } catch (error) {
+      // The catch-all terminal path: without this, a thrown callback error left
+      // the sign-in failure rate flat during exactly the outage it exists to
+      // detect.
+      webSigninTotal.inc({ result: "callback_error" });
       logger.error("❌ OAuth callback error:", error);
       Sentry.captureException(error, {
         tags: { source: "auth-web-callback" },
