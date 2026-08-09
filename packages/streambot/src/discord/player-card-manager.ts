@@ -128,14 +128,26 @@ export class PlayerCardManager {
   private owner: CardOwner;
   /** Message id of the live card, or null when none has been posted yet. */
   private messageId: string | null = null;
-  /** Title of the track the live card is for — the new-card trigger. */
+  /**
+   * `sourceId` of the item the session is currently playing — the new-card trigger. Set
+   * synchronously the moment a new item starts streaming, which is *before* its card exists.
+   */
   private trackKey: string | null = null;
+  /**
+   * `sourceId` the card at {@link messageId} actually represents, assigned only once a post has
+   * succeeded. It lags {@link trackKey} across the async gap between "a new track started" and "its
+   * card is up", and editing is gated on the two agreeing — otherwise a queued edit could write the
+   * new track's view into the previous track's message.
+   */
+  private cardTrackKey: string | null = null;
   /** Poster for {@link trackKey}, once the (async) lookup returns. */
   private posterUrl: string | null = null;
   /** Serialized JSON of the last payload sent, so an unchanged render skips the REST edit. */
   private lastPayloadJson: string | null = null;
   /** Messages posted to the status channel since the card was last (re-)posted. */
   private messagesSinceCard = 0;
+  /** Teardown was requested, so queued work must stop before mutating the live card. */
+  private finalizing = false;
   private finished = false;
   private cancelTick: (() => void) | null = null;
   /**
@@ -161,7 +173,11 @@ export class PlayerCardManager {
    * (state changed) and from the tick (position advanced).
    */
   refresh(): void {
-    if (this.finished || this.deps.statusChannelId === null) {
+    if (
+      this.finalizing ||
+      this.finished ||
+      this.deps.statusChannelId === null
+    ) {
       return;
     }
     const view = this.deps.view();
@@ -206,6 +222,7 @@ export class PlayerCardManager {
    */
   onChannelMessage(messageId: string): void {
     if (
+      this.finalizing ||
       this.finished ||
       this.messageId === null ||
       messageId === this.messageId ||
@@ -225,23 +242,31 @@ export class PlayerCardManager {
    * reality instead of offering buttons that would answer "That stream has ended."
    */
   async finalize(): Promise<void> {
-    if (this.finished) {
+    if (this.finalizing) {
+      await this.tail;
       return;
     }
-    this.finished = true;
+    // Block new work immediately. `finished` flips inside the tail so an operation that already
+    // started can finish producing its replacement card before the final retire edit runs, while
+    // queued operations observe `finalizing` and stop before stripping or deleting anything.
+    this.finalizing = true;
     if (this.cancelTick !== null) {
       this.cancelTick();
       this.cancelTick = null;
     }
     const channelId = this.deps.statusChannelId;
-    const messageId = this.messageId;
-    if (channelId === null || messageId === null) {
-      return;
-    }
-    const payload = this.render(this.deps.view());
     this.enqueue(async () => {
+      this.finished = true;
+      if (channelId === null) {
+        return;
+      }
+      const messageId = this.messageId;
+      if (messageId === null) {
+        return;
+      }
       // The finished payload already carries no components, so this single edit both retires the
       // controls and states the outcome. Routing is dropped either way — the message stays as history.
+      const payload = this.render(this.deps.view());
       const result = await this.deps.port.edit(channelId, messageId, payload);
       if (result === "failed") {
         // The full edit didn't land and there is no session left to retry it, which would leave
@@ -260,11 +285,8 @@ export class PlayerCardManager {
     title: string,
     view: PlaybackView,
   ): void {
-    const previousMessageId = this.messageId;
     this.trackKey = sourceId;
     this.posterUrl = null;
-    this.lastPayloadJson = null;
-    this.messageId = null;
     this.messagesSinceCard = 0;
 
     const channelId = this.deps.statusChannelId;
@@ -278,21 +300,35 @@ export class PlayerCardManager {
       // mode has no message to perform. This mirrors the pre-card `StatusReporter` behavior.
       this.enqueue(async () => {
         const posterUrl = await this.lookupPoster(sourceId, title, view);
-        if (this.trackKey !== sourceId) {
+        if (this.finalizing || this.trackKey !== sourceId) {
           return;
         }
         this.posterUrl = posterUrl;
-        await this.postCard(channelId, view);
+        await this.postCard(channelId, view, sourceId);
       });
       return;
     }
 
     this.startPosterLookup(sourceId, title, view);
     this.enqueue(async () => {
+      // Bail if a later track superseded this one while we were queued: without this, two rapid
+      // track changes each post a card for the newer track and the first is never stripped, leaving
+      // a message with working controls that nothing tracks.
+      if (this.finalizing || this.trackKey !== sourceId) {
+        return;
+      }
+      // Read the outgoing card here rather than at call time. `messageId` is only ever assigned
+      // inside this serialized chain, so by now it is the genuinely live card — capturing it
+      // synchronously would read `null` whenever the previous track's post was still in flight and
+      // leave that card up with live controls forever.
+      const previousMessageId = this.messageId;
+      this.messageId = null;
+      this.cardTrackKey = null;
+      this.lastPayloadJson = null;
       if (previousMessageId !== null) {
         await this.deps.port.strip(channelId, previousMessageId);
       }
-      await this.postCard(channelId, this.deps.view());
+      await this.postCard(channelId, this.deps.view(), sourceId);
     });
   }
 
@@ -335,7 +371,12 @@ export class PlayerCardManager {
   ): void {
     void (async () => {
       const posterUrl = await this.lookupPoster(sourceId, title, view);
-      if (posterUrl === null || this.trackKey !== sourceId || this.finished) {
+      if (
+        posterUrl === null ||
+        this.trackKey !== sourceId ||
+        this.finalizing ||
+        this.finished
+      ) {
         return;
       }
       this.posterUrl = posterUrl;
@@ -355,7 +396,13 @@ export class PlayerCardManager {
   private async postCard(
     channelId: ChannelId,
     view: PlaybackView,
+    sourceId: string,
   ): Promise<void> {
+    // The session ended while this post sat in the queue. Publishing now would put a card with
+    // live-looking controls (and a routing entry) into the channel for a session that is gone.
+    if (this.finished) {
+      return;
+    }
     const payload = this.render(view);
     // A disabled card is a one-shot announcement with no controls: post it unowned so the routing
     // table doesn't collect entries that nothing will ever clean up, and don't track it for edits.
@@ -364,18 +411,39 @@ export class PlayerCardManager {
       payload,
       this.deps.enabled ? this.owner : null,
     );
+    if (posted === null) {
+      // The send failed (transient Discord error, or the channel is unsendable). Forget the track
+      // so the next refresh re-enters `beginTrack` and tries again — leaving `trackKey` set would
+      // route every later refresh into the edit path, which has no message to edit, and this track
+      // would silently never get a card.
+      if (this.trackKey === sourceId) {
+        this.trackKey = null;
+      }
+      return;
+    }
     if (!this.deps.enabled) {
       return;
     }
     this.messageId = posted;
-    this.lastPayloadJson = posted === null ? null : JSON.stringify(payload);
+    this.cardTrackKey = sourceId;
+    this.lastPayloadJson = JSON.stringify(payload);
   }
 
   /** Re-render the live card, skipping the REST call when nothing visible changed. */
   private async renderExisting(view: PlaybackView): Promise<void> {
     const channelId = this.deps.statusChannelId;
     const messageId = this.messageId;
-    if (channelId === null || messageId === null || !this.deps.enabled) {
+    if (
+      channelId === null ||
+      messageId === null ||
+      this.finalizing ||
+      !this.deps.enabled
+    ) {
+      return;
+    }
+    // The live card belongs to a track the session has already moved past (its replacement is still
+    // queued). Editing it now would write the new track's view into the old track's message.
+    if (this.cardTrackKey !== this.trackKey) {
       return;
     }
     const payload = this.render(view);
@@ -396,22 +464,38 @@ export class PlayerCardManager {
     }
     // The card was deleted out from under us; put a fresh one back so controls stay reachable.
     log.info("player card vanished — re-posting", { channelId });
+    const trackKey = this.trackKey;
     this.messageId = null;
+    this.cardTrackKey = null;
     this.lastPayloadJson = null;
-    await this.postCard(channelId, view);
+    if (trackKey !== null) {
+      await this.postCard(channelId, view, trackKey);
+    }
   }
 
   /** Chat has buried the card: delete it and post the same card at the bottom of the channel. */
   private async repost(view: PlaybackView): Promise<void> {
     const channelId = this.deps.statusChannelId;
     const messageId = this.messageId;
-    if (channelId === null || messageId === null || !this.deps.enabled) {
+    const trackKey = this.trackKey;
+    if (
+      channelId === null ||
+      messageId === null ||
+      trackKey === null ||
+      this.finalizing ||
+      !this.deps.enabled ||
+      // A queued repost must still belong to the current item. `trackKey` can advance while this
+      // card is waiting in the serialized tail; re-posting then would delete the old card and post
+      // the new view, after which `beginTrack` would post that new card a second time.
+      this.cardTrackKey !== trackKey
+    ) {
       return;
     }
     this.messageId = null;
+    this.cardTrackKey = null;
     this.lastPayloadJson = null;
     await this.deps.port.remove(channelId, messageId);
-    await this.postCard(channelId, view);
+    await this.postCard(channelId, view, trackKey);
   }
 
   /**

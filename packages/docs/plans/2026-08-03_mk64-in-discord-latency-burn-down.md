@@ -16,7 +16,14 @@ disposition: active
 
 ## Constraints (user-set 2026-08-03)
 
-- Discord stays the only video path (no in-page driver feed for now).
+- ~~Discord stays the only video path (no in-page driver feed for now).~~
+  **Reversed 2026-08-08** — see
+  [`2026-08-08_mk64-driver-feed.md`](2026-08-08_mk64-driver-feed.md). Drivers now
+  additionally decode an H.264 feed in the controller page while spectators keep
+  the Go-Live stream unchanged. The reversal follows directly from this
+  document's own finding that the Discord client's playout buffer is the largest
+  remaining term: it is not reducible from our side, so the only way past it is
+  to not traverse it. Everything below still governs the Discord path itself.
 - Single-player first; 4-player deferred until 1P is right.
 - No UI-echo tricks (players watch the game); no run-ahead (needs 2× headroom
   that 4P lacks).

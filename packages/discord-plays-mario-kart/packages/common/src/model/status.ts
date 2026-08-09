@@ -4,6 +4,7 @@ import { PlayerSchema } from "./player.ts";
 export type Status = z.infer<typeof StatusSchema>;
 export const StatusSchema = z.strictObject({
   playerList: z.array(PlayerSchema),
+  driverFeedEnabled: z.boolean(),
 });
 
 export type StatusRequest = z.infer<typeof StatusRequestSchema>;

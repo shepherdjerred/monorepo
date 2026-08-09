@@ -171,6 +171,54 @@ export const streamSendIntervalMs = new Histogram({
   registers: [registry],
 });
 
+// ---- driver feed (in-browser low-latency video for seated players) ----
+
+export const driverFeedEncoderRunning = new Gauge({
+  name: "driver_feed_encoder_running",
+  help: "1 while the driver-feed ffmpeg process is alive, else 0. Independent of the Go-Live encoder — the driver feed can be off while the stream is healthy",
+  registers: [registry],
+});
+
+export const driverFeedClients = new Gauge({
+  name: "driver_feed_clients",
+  help: "WebSocket clients currently subscribed to the driver feed. Each one costs a full copy of the encoded stream on the uplink",
+  registers: [registry],
+});
+
+export const driverFeedFramesEvictedTotal = new Counter({
+  name: "driver_feed_frames_evicted_total",
+  help: "Raw frames evicted from the driver-feed sink because its ffmpeg could not keep up. Mirrors stream_frames_dropped_total for the second encoder; sustained growth here with a healthy Go-Live path means the driver feed alone is over budget",
+  registers: [registry],
+});
+
+export const driverFeedAccessUnitBytes = new Histogram({
+  name: "driver_feed_access_unit_bytes",
+  help: "Size of each encoded H.264 access unit handed to the hub, in bytes. The long tail is keyframes; a rising delta-unit floor means the encoder is fighting the bitrate cap",
+  buckets: [
+    512, 1024, 2048, 4096, 8192, 16_384, 32_768, 65_536, 131_072, 262_144,
+  ],
+  registers: [registry],
+});
+
+export const driverFeedUnitsSentTotal = new Counter({
+  name: "driver_feed_units_sent_total",
+  help: "Access units written to a client socket, summed across clients",
+  registers: [registry],
+});
+
+export const driverFeedUnitsDroppedTotal = new Counter({
+  name: "driver_feed_units_dropped_total",
+  help: "Access units withheld from a client. reason=backpressure means its socket backlog exceeded the ceiling; reason=awaiting_keyframe means it is mid-resync and cannot use deltas yet. Both are per-client and self-healing at the next keyframe",
+  labelNames: ["reason"],
+  registers: [registry],
+});
+
+export const driverFeedClientBufferBytes = new Gauge({
+  name: "driver_feed_client_buffer_bytes",
+  help: "Largest unflushed WebSocket backlog across driver-feed clients, in bytes. The early-warning signal for a slow viewer, the same role sinkBufferBytes plays on the Go-Live path",
+  registers: [registry],
+});
+
 export const eventLoopLagMs = new Histogram({
   name: "event_loop_lag_ms",
   help: "Excess delay of a 20ms interval timer beyond its schedule, per thread, in ms; sustained >33 stalls the frame pipeline. Manual sampler — Bun's monitorEventLoopDelay does not detect synchronous blocks (verified 2026-08-03)",
