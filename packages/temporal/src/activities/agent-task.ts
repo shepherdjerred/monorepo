@@ -1,163 +1,101 @@
-import { Context } from "@temporalio/activity";
-import * as Sentry from "@sentry/bun";
 import { agentSubprocessFailure } from "#activities/agent-task-failures.ts";
 import {
   agentSubprocessIdleSeconds,
   agentSubprocessSoftKillsTotal,
+  agentTaskOutputContractFailuresTotal,
   agentTaskRunsTotal,
   agentTaskSubprocessDurationSeconds,
   agentTaskSubprocessExitTotal,
 } from "#observability/metrics.ts";
-import { getTraceContext, withSpan } from "#observability/tracing.ts";
+import { withSpan } from "#observability/tracing.ts";
 import { provisionWorkdir } from "#lib/pr-review-workdir.ts";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import { buildAgentTaskCommand } from "#activities/agent-task-command.ts";
 import {
-  agentTaskSecretTokens,
+  createAgentTaskSecretTokenState,
+  AgentTaskSecretRedactionController,
+  type AgentTaskSecretRedactionError,
   envForProvider,
+  refreshAgentTaskSecretTokenStateInBackground,
 } from "#activities/agent-task-env.ts";
-import { workflowExecutionContext } from "#activities/temporal-context.ts";
 import { runTrackedAgentSubprocess } from "#shared/agent-subprocess.ts";
 import { summarizeClaudeStreamLine } from "#shared/claude-result.ts";
 import {
   AgentTaskInputSchema,
   parseAgentTaskResultPayload,
   parseClaudeAgentTaskResult,
+  AgentTaskOutputContractError,
   type AgentTaskInput,
   type AgentTaskProvider,
   type AgentTaskResultPayload,
 } from "#shared/agent-task.ts";
 import { redactSecrets } from "#shared/redact.ts";
-import { startAgentTaskLlmTrace } from "#activities/agent-task-llm-trace.ts";
+import {
+  startAgentTaskLlmTrace,
+  type AgentTaskLlmTrace,
+} from "#activities/agent-task-llm-trace.ts";
 import type { TrackedAgentResult } from "#shared/agent-subprocess.ts";
+import {
+  activityCancellationSignalOrUndefined,
+  captureWithContext,
+  currentWorkflowType,
+  jsonLog,
+  safeHeartbeat,
+  startToCloseTimeoutMsOrUndefined,
+  throwIfAgentTaskSecretRedactionFailed,
+  workflowId,
+} from "#activities/agent-task-runtime.ts";
 import {
   cleanup,
   pauseSchedule,
   scheduleFollowUp,
   sendEmail,
 } from "./agent-task-side-activities.ts";
-
-const COMPONENT = "agent-task";
 const HEARTBEAT_INTERVAL_MS = 10_000;
-const DEFAULT_WORKFLOW_TYPE = "agentTaskWorkflow";
+const MOUNTED_SECRET_REFRESH_INTERVAL_MS = 10_000;
 
 export type PrepareAgentTaskWorkdirInput = {
   input: AgentTaskInput;
 };
-
 export type PrepareAgentTaskWorkdirResult = {
   workdir: string;
 };
-
 export type RunAgentTaskInput = {
   input: AgentTaskInput;
   workdir: string;
 };
-
 export type RunAgentTaskResult = AgentTaskResultPayload & {
   provider: AgentTaskProvider;
   model: string;
   durationMs: number;
 };
-
-function jsonLog(
-  level: "info" | "warning" | "error",
-  message: string,
-  fields: Record<string, unknown> = {},
-): void {
-  const info = activityInfoOrUndefined();
-  const base: Record<string, unknown> = {
-    level,
-    msg: message,
-    component: COMPONENT,
-    ...getTraceContext(),
-    ...fields,
-  };
-  if (info !== undefined) {
-    Object.assign(base, info);
-  }
-  console.warn(JSON.stringify(base));
-}
-
-function activityInfoOrUndefined(): Record<string, unknown> | undefined {
-  try {
-    const info = Context.current().info;
-    return {
-      workflow: info.workflowType,
-      ...workflowExecutionContext(info),
-      activity: info.activityType,
-      attempt: info.attempt,
-    };
-  } catch {
-    return undefined;
-  }
-}
-
-function captureWithContext(
-  error: unknown,
-  extra: Record<string, unknown> = {},
-): void {
-  Sentry.withScope((scope) => {
-    scope.setTag("component", COMPONENT);
-    const info = activityInfoOrUndefined();
-    if (info !== undefined) {
-      scope.setTag("workflow", String(info["workflow"]));
-      scope.setTag("activity", String(info["activity"]));
-    }
-    scope.setContext("agentTask", { ...info, ...extra });
-    Sentry.captureException(error);
-  });
-}
-
-function safeHeartbeat(payload: Record<string, unknown>): void {
-  try {
-    Context.current().heartbeat(payload);
-  } catch {
-    // Local scripts can call activities directly; outside Temporal this is a no-op.
-  }
-}
-
-function activityCancellationSignalOrUndefined(): AbortSignal | undefined {
-  try {
-    return Context.current().cancellationSignal;
-  } catch {
-    return undefined;
-  }
-}
-
-function currentWorkflowType(): string {
-  try {
-    return Context.current().info.workflowType ?? DEFAULT_WORKFLOW_TYPE;
-  } catch {
-    return DEFAULT_WORKFLOW_TYPE;
-  }
-}
-
-function startToCloseTimeoutMsOrUndefined(): number | undefined {
-  try {
-    return Context.current().info.startToCloseTimeoutMs;
-  } catch {
-    return undefined;
-  }
-}
-
-function workflowId(): string {
-  try {
-    return (
-      Context.current().info.workflowExecution?.workflowId ??
-      `agent-task-local-${crypto.randomUUID()}`
-    );
-  } catch {
-    return `agent-task-local-${crypto.randomUUID()}`;
-  }
-}
-
 function splitRepo(fullName: string): { owner: string; repo: string } {
   const [owner, repo, extra] = fullName.split("/");
   if (owner === undefined || repo === undefined || extra !== undefined) {
     throw new Error(`Invalid repo fullName: ${fullName}`);
   }
   return { owner, repo };
+}
+
+function enforceAgentTaskSecretRedactionHealth(input: {
+  llmTrace: Pick<AgentTaskLlmTrace, "recordMetadataOnly">;
+  failure: AgentTaskSecretRedactionError | undefined;
+  result: Pick<TrackedAgentResult, "exitCode" | "durationMs" | "signal">;
+  provider: string;
+  startTimeMs: number;
+}): void {
+  if (input.failure !== undefined) {
+    input.llmTrace.recordMetadataOnly({
+      exitCode: input.result.exitCode,
+      startTimeMs: input.startTimeMs,
+      durationMs: input.result.durationMs,
+    });
+  }
+  throwIfAgentTaskSecretRedactionFailed(input.failure, {
+    provider: input.provider,
+    durationMs: input.result.durationMs,
+    signal: input.result.signal,
+  });
 }
 
 async function runAgent(
@@ -168,7 +106,6 @@ async function runAgent(
   const provider = parsed.provider;
   const command = await commandBuilder(parsed, input.workdir);
   const workflowType = currentWorkflowType();
-
   return withSpan(
     "agent-task.run-agent",
     {
@@ -189,9 +126,30 @@ async function runAgent(
         agentTimeoutMinutes: parsed.agentTimeoutMinutes,
         maxTurns: parsed.maxTurns,
       });
-
       const githubTokenResult = await createGitHubAppInstallationToken();
-
+      const secretTokenState = await createAgentTaskSecretTokenState(
+        githubTokenResult.token,
+      );
+      const secretTokens = secretTokenState.tokens;
+      const redactionFailureController = new AgentTaskSecretRedactionController(
+        jsonLog.bind(
+          null,
+          "error",
+          "Unable to refresh mounted agent-task secrets",
+          {
+            phase: "secret-redaction",
+          },
+        ),
+      );
+      const activityCancellationSignal =
+        activityCancellationSignalOrUndefined();
+      const cancellationSignal =
+        activityCancellationSignal === undefined
+          ? redactionFailureController.abortController.signal
+          : AbortSignal.any([
+              activityCancellationSignal,
+              redactionFailureController.abortController.signal,
+            ]);
       const llmStartMs = Date.now();
       const llmTrace = startAgentTaskLlmTrace({
         provider,
@@ -207,7 +165,27 @@ async function runAgent(
           jsonLog("warning", message, { phase: "llm-trace" });
         },
       });
-
+      const refreshSecretsInBackground = (): void => {
+        void refreshAgentTaskSecretTokenStateInBackground(
+          secretTokenState,
+          (error) => {
+            redactionFailureController.record(error);
+          },
+        );
+      };
+      const mountedSecretRefreshTimer = setInterval(
+        refreshSecretsInBackground,
+        MOUNTED_SECRET_REFRESH_INTERVAL_MS,
+      );
+      const refreshSecretsBeforeOutput = async (): Promise<boolean> => {
+        // Refresh immediately before every stdout chunk. The periodic refresh
+        // is only a liveness aid; this boundary closes the rotation-to-output
+        // race before a diagnostic excerpt is retained.
+        if (redactionFailureController.failure !== undefined) {
+          return false;
+        }
+        return redactionFailureController.refreshBeforeOutput(secretTokenState);
+      };
       let result: TrackedAgentResult;
       try {
         result = await runTrackedAgentSubprocess(
@@ -215,9 +193,10 @@ async function runAgent(
             command: command.args,
             cwd: input.workdir,
             env: envForProvider(provider, githubTokenResult.token),
-            redactTokens: agentTaskSecretTokens(githubTokenResult.token),
+            redactTokens: secretTokens,
+            beforeOutput: refreshSecretsBeforeOutput,
             startToCloseTimeoutMs: startToCloseTimeoutMsOrUndefined(),
-            cancellationSignal: activityCancellationSignalOrUndefined(),
+            cancellationSignal,
             heartbeatIntervalMs: HEARTBEAT_INTERVAL_MS,
             onHeartbeat: (beat) => {
               safeHeartbeat({ phase: "agent", provider, ...beat });
@@ -289,15 +268,34 @@ async function runAgent(
           redactSecrets,
         );
       } finally {
+        clearInterval(mountedSecretRefreshTimer);
         // Close codex spans on every exit path (incl. spawn failure) so a
         // crashed run still shows up in Tempo with whatever turns completed.
         llmTrace.close();
       }
+      try {
+        await secretTokenState.refresh();
+      } catch (error: unknown) {
+        redactionFailureController.record(error);
+      }
 
-      // Post-hoc claude span — before the cancelled/exit-code checks so
-      // failed runs are traced too (they still spent tokens).
+      enforceAgentTaskSecretRedactionHealth({
+        llmTrace,
+        failure: redactionFailureController.failure,
+        result,
+        provider,
+        startTimeMs: llmStartMs,
+      });
+
+      // Post-hoc Claude spans retain raw stdout in the LLM archive. Check the
+      // final redaction state first so a refresh failure can never archive a
+      // newly rotated credential from that raw buffer. Keep the raw stdout for
+      // contract parsing below, but pass a token-redacted copy to the archive
+      // so credentials that are not covered by the observability package's
+      // generic patterns cannot be persisted. Other failed runs are still
+      // traced because their stdout is safe to retain.
       llmTrace.record({
-        stdout: result.stdout,
+        stdout: redactSecrets(result.stdout, secretTokens),
         exitCode: result.exitCode,
         startTimeMs: llmStartMs,
         durationMs: result.durationMs,
@@ -368,7 +366,9 @@ async function runAgent(
       let payload: AgentTaskResultPayload;
       try {
         if (provider === "claude") {
-          payload = parseClaudeAgentTaskResult(result.stdout);
+          payload = parseClaudeAgentTaskResult(result.stdout, (excerpt) =>
+            redactSecrets(excerpt, secretTokens),
+          );
         } else {
           if (command.outputPath === undefined) {
             throw new Error(
@@ -382,10 +382,33 @@ async function runAgent(
         }
       } catch (error: unknown) {
         agentTaskRunsTotal.inc({ provider, outcome: "parse_failed" });
+        const contractDiagnostics =
+          error instanceof AgentTaskOutputContractError
+            ? error.diagnostics
+            : undefined;
+        if (error instanceof AgentTaskOutputContractError) {
+          agentTaskOutputContractFailuresTotal.inc({
+            provider,
+            reason: error.reason,
+          });
+          jsonLog("warning", "Agent task output contract failed", {
+            provider,
+            outputContractReason: error.reason,
+            ...error.diagnostics,
+          });
+        }
         captureWithContext(error, {
           provider,
           durationMs: result.durationMs,
           phase: "parse-output",
+          schemaFingerprint: contractDiagnostics?.schemaFingerprint,
+          outputContractReason:
+            error instanceof AgentTaskOutputContractError
+              ? error.reason
+              : undefined,
+          resultSubtype: contractDiagnostics?.resultSubtype,
+          resultMessageKeys: contractDiagnostics?.resultMessageKeys,
+          finalTextExcerpt: contractDiagnostics?.finalTextExcerpt,
         });
         throw error;
       }

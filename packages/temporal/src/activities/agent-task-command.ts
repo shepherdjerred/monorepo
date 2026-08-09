@@ -10,6 +10,12 @@ const DEFAULT_CODEX_MODEL = "gpt-5.6-sol";
 const DEFAULT_MAX_TURNS = 80;
 const CLAUDE_ALLOWED_TOOLS = "Bash,Read,Grep,Glob,WebFetch";
 
+// Claude Code versions before 2.1.205 could silently return an unstructured
+// result when structured-output schema validation failed. Keep this contract
+// next to the command construction so the image pin and tests share one floor.
+export const CLAUDE_CODE_MINIMUM_VERSION = "2.1.205";
+export const CLAUDE_CODE_PINNED_VERSION = "2.1.220";
+
 export type AgentTaskCommand = {
   args: string[];
   model: string;

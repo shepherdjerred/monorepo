@@ -175,6 +175,18 @@ TEMPORAL_ADDRESS=localhost:7233 bun run scripts/schedule-agent-task.ts --from-do
 
 Do not expose general-purpose Temporal scheduling as a public ingress path. Public creation must go through the authenticated `/agent-tasks` HTTP API with `Authorization: Bearer $AGENT_TASK_API_TOKEN`. A narrowly scoped, separately authenticated webhook may start a fixed workflow when its route, input schema, workflow ID, and authorization token are dedicated to that automation and covered by equivalent tests.
 
+For the deployed Claude structured-output contract, run the production-only
+canary from `packages/temporal` after the worker image is live:
+
+```bash
+TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443 TEMPORAL_TLS=true \
+  bun run canary:agent-task
+```
+
+It uses the real `agent-task` queue and deployed OAuth authentication, and the
+tagged report-only email must arrive before the production-verification TODO
+can be closed. A local dry run is not equivalent.
+
 ## Automation Code — Banned Patterns
 
 These patterns are banned in automation code (`scripts/`, `.buildkite/`, deploy/build scripts). `scripts/check-suppressions.ts` scans the staged diff for them (`|| true`, `2>/dev/null`, `|| bun install`, `x-access-token`, `git add -A`, `--no-exit-code`) and runs in the `pre-commit` hook (`lefthook.yml`) plus the `//#check-suppressions` turbo task under `bun run verify`. Do not write them.

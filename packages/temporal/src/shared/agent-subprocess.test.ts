@@ -10,6 +10,7 @@ import {
   type AgentSoftKill,
   type TrackedAgentInput,
 } from "./agent-subprocess.ts";
+import { redactSecrets } from "./redact.ts";
 
 const noRedact = (line: string): string => line;
 
@@ -142,6 +143,44 @@ describe("runTrackedAgentSubprocess", () => {
     expect(result.firstOutputLatencyMs).toBeTypeOf("number");
     expect(result.sigkillEscalated).toBe(false);
     expect(result.softKillFired).toBe(false);
+  });
+
+  it("uses updated token contents when the shared redaction list changes", async () => {
+    const redactionTokens = ["first-mounted-token"];
+    const script = [
+      "console.log('first-mounted-token');",
+      "await Bun.sleep(50);",
+      "console.log('second-mounted-token');",
+    ].join(" ");
+    const { input, stdoutLines } = harness(["bun", "-e", script], {
+      redactTokens: redactionTokens,
+    });
+    setTimeout(() => {
+      redactionTokens.splice(0, redactionTokens.length, "second-mounted-token");
+    }, 25);
+
+    await runTrackedAgentSubprocess(input, redactSecrets);
+
+    expect(stdoutLines).toEqual(["***", "***"]);
+  });
+
+  it("refreshes redaction state before forwarding output", async () => {
+    const redactionTokens: string[] = [];
+    let refreshes = 0;
+    const script = "console.log('rotated-mounted-token');";
+    const { input, stdoutLines } = harness(["bun", "-e", script], {
+      redactTokens: redactionTokens,
+      beforeOutput: async () => {
+        refreshes += 1;
+        redactionTokens.push("rotated-mounted-token");
+        return true;
+      },
+    });
+
+    await runTrackedAgentSubprocess(input, redactSecrets);
+
+    expect(refreshes).toBeGreaterThan(0);
+    expect(stdoutLines).toEqual(["***"]);
   });
 
   it("reports firstOutputLatencyMs=undefined and maxIdleMs≈duration for a silent run", async () => {
