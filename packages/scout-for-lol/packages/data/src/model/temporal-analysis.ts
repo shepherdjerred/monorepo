@@ -1,6 +1,11 @@
 import { differenceInCalendarDays, parseISO } from "date-fns";
 import { z } from "zod";
 import { ReportScheduleTimezoneSchema } from "#src/model/competition-cron.ts";
+import {
+  ReportChartOptionsSchema,
+  ReportChartPaletteSchema,
+  ReportChartThemeSchema,
+} from "#src/model/report.ts";
 
 export const REPORT_MAX_TEMPORAL_WINDOW_DAYS = 365;
 export const VISUALIZATION_MAX_SERIES = 8;
@@ -293,13 +298,14 @@ export const VisualizationSnapshotSchema = z
     bucket: ResolvedTemporalBucketSchema.nullable(),
     display: z
       .object({
-        theme: z.string().min(1).nullable(),
-        palette: z.string().min(1).nullable(),
+        theme: ReportChartThemeSchema.nullable(),
+        palette: ReportChartPaletteSchema.nullable(),
         smooth: z.boolean(),
         stack: z.enum(["none", "normal", "percent"]),
         rollingWindow: z.number().int().min(2).max(52).nullable(),
         cumulative: z.boolean(),
         sparkline: z.boolean(),
+        options: ReportChartOptionsSchema.nullable().optional(),
       })
       .strict(),
     series: z.array(TemporalSeriesSchema).max(VISUALIZATION_MAX_SERIES),

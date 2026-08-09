@@ -10,19 +10,24 @@ export function ReportQueryPreview(props: {
   guildId: string;
   queryText: string;
   title: string;
+  sourceCompetitionId: number | null;
 }) {
-  const { guildId, queryText, title } = props;
+  const { guildId, queryText, title, sourceCompetitionId } = props;
   const trpc = useTRPC();
-  const [debounced, setDebounced] = useState({ queryText, title });
+  const [debounced, setDebounced] = useState({
+    queryText,
+    title,
+    sourceCompetitionId,
+  });
 
   useEffect(() => {
     const handle = setTimeout(() => {
-      setDebounced({ queryText, title });
+      setDebounced({ queryText, title, sourceCompetitionId });
     }, DEBOUNCE_MS);
     return () => {
       clearTimeout(handle);
     };
-  }, [queryText, title]);
+  }, [queryText, sourceCompetitionId, title]);
 
   // Re-run whenever the debounced query/title change. The display format comes
   // from the query's RENDER clause, parsed server-side. keepPreviousData keeps
@@ -34,6 +39,7 @@ export function ReportQueryPreview(props: {
         guildId,
         queryText: debounced.queryText,
         title: debounced.title,
+        sourceCompetitionId: debounced.sourceCompetitionId,
       },
       {
         enabled: hasQuery,

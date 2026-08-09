@@ -3,7 +3,7 @@ import type {
   VisualizationSnapshot,
 } from "@scout-for-lol/data";
 import type * as echarts from "echarts";
-import { calendarTooltipText } from "#src/html/visualization-calendar-tooltip.ts";
+import { calendarOption } from "#src/html/visualization-snapshot-calendar-option.ts";
 import {
   donutOption,
   heatmapOption,
@@ -20,6 +20,13 @@ import {
   scatterTooltipText,
 } from "#src/html/visualization-tooltip.ts";
 import { alignedTrendValues } from "#src/html/visualization-trend-values.ts";
+import {
+  visualizationSnapshotAxis,
+  visualizationSnapshotBaseOption,
+  visualizationSnapshotLabels,
+  visualizationSnapshotLegend,
+  visualizationSnapshotPresentation,
+} from "#src/html/visualization-snapshot-style.ts";
 
 export type VisualizationOptionMode = "interactive" | "static";
 
@@ -42,6 +49,10 @@ export function visualizationSnapshotToOption(
   if (snapshot.kind === "RADAR_CHART") {
     return radarOption(snapshot);
   }
+  const presentation = visualizationSnapshotPresentation(snapshot);
+  const horizontal =
+    presentation.options.orientation === "horizontal" &&
+    (snapshot.kind === "BAR_CHART" || snapshot.kind === "STACKED_BAR");
   const categories = categoryPoints(snapshot).map((point) => point.label);
   const tooltip: echarts.TooltipComponentOption = {
     trigger: snapshot.kind === "SCATTER_CHART" ? "item" : "axis",
@@ -50,14 +61,16 @@ export function visualizationSnapshotToOption(
   };
   const points = categoryPoints(snapshot);
   const annotations = snapshot.annotations.flatMap((annotation) => {
-    const point =
-      points.find((candidate) => candidate.start >= annotation.timestamp) ??
-      points.at(-1);
+    const point = points.find(
+      (candidate) =>
+        candidate.start <= annotation.timestamp &&
+        candidate.end >= annotation.timestamp,
+    );
     return point === undefined
       ? []
       : [
           {
-            xAxis: point.label,
+            ...(horizontal ? { yAxis: point.label } : { xAxis: point.label }),
             name: annotation.label,
             label: { formatter: annotation.label },
           },
@@ -71,6 +84,7 @@ export function visualizationSnapshotToOption(
         index,
         categories,
         annotations,
+        horizontal,
       }),
     ),
     ...evidenceOverlaySeries(snapshot, categories),
@@ -86,51 +100,65 @@ export function visualizationSnapshotToOption(
     ),
   ];
   return {
-    backgroundColor: "#091428",
-    animation: false,
-    title: {
-      text: snapshot.title ?? "Scout analysis",
-      left: 28,
-      top: 18,
-      textStyle: { color: "#c8aa6e", fontSize: 28 },
-    },
-    color: ["#c8aa6e", "#0ac8b9", "#785a28", "#0397ab", "#a09b8c"],
-    textStyle: { color: "#f0e6d2" },
+    ...visualizationSnapshotBaseOption(snapshot, "Scout analysis"),
     tooltip,
-    legend: {
-      type: "scroll",
-      top: 62,
-      textStyle: { color: "#a09b8c" },
-    },
+    legend: visualizationSnapshotLegend(presentation),
     grid: {
       left: 68,
-      right: 36,
+      right: presentation.options.legend === "right" ? 220 : 36,
       top: 105,
       bottom: mode === "interactive" ? 92 : 58,
+      containLabel: true,
     },
-    xAxis:
-      snapshot.kind === "SCATTER_CHART"
+    xAxis: horizontal
+      ? {
+          type: "value",
+          ...visualizationSnapshotAxis(
+            presentation.theme,
+            presentation.options.xAxisLabel,
+          ),
+        }
+      : snapshot.kind === "SCATTER_CHART"
         ? {
             type: "value",
-            axisLabel: { color: "#a09b8c" },
-            axisLine: { lineStyle: { color: "#3c3c41" } },
+            ...visualizationSnapshotAxis(
+              presentation.theme,
+              presentation.options.xAxisLabel,
+            ),
           }
         : {
             type: "category",
             data: categories,
-            axisLabel: { color: "#a09b8c" },
-            axisLine: { lineStyle: { color: "#3c3c41" } },
+            ...visualizationSnapshotAxis(
+              presentation.theme,
+              presentation.options.xAxisLabel,
+            ),
           },
-    yAxis: {
-      type: "value",
-      inverse: snapshot.kind === "BUMP_CHART",
-      ...(snapshot.kind === "BUMP_CHART" ? { min: 1, minInterval: 1 } : {}),
-      axisLabel: {
-        color: "#a09b8c",
-        ...(usesPercentageAxis(snapshot) ? { formatter: formatPercent } : {}),
-      },
-      splitLine: { lineStyle: { color: "#1e282d" } },
-    },
+    yAxis: horizontal
+      ? {
+          type: "category",
+          data: categories,
+          ...visualizationSnapshotAxis(
+            presentation.theme,
+            presentation.options.yAxisLabel,
+          ),
+        }
+      : {
+          type: "value",
+          inverse: snapshot.kind === "BUMP_CHART",
+          ...(snapshot.kind === "BUMP_CHART" ? { min: 1, minInterval: 1 } : {}),
+          ...visualizationSnapshotAxis(
+            presentation.theme,
+            presentation.options.yAxisLabel,
+          ),
+          axisLabel: {
+            color: presentation.theme.muted,
+            ...(usesPercentageAxis(snapshot)
+              ? { formatter: formatPercent }
+              : {}),
+          },
+          splitLine: { lineStyle: { color: presentation.theme.grid } },
+        },
     ...(mode === "interactive"
       ? {
           dataZoom: [{ type: "inside" }, { type: "slider", bottom: 20 }],
@@ -200,15 +228,9 @@ function kpiOption(
 ): echarts.EChartsOption {
   const categories = categoryPoints(snapshot).map((point) => point.label);
   const columns = Math.min(4, Math.max(1, snapshot.series.length));
+  const presentation = visualizationSnapshotPresentation(snapshot);
   return {
-    backgroundColor: "#091428",
-    animation: false,
-    title: {
-      text: snapshot.title ?? "Scout KPIs",
-      left: 28,
-      top: 18,
-      textStyle: { color: "#c8aa6e", fontSize: 28 },
-    },
+    ...visualizationSnapshotBaseOption(snapshot, "Scout KPIs"),
     tooltip: {
       trigger: "axis",
       axisPointer: { type: "cross" },
@@ -226,7 +248,11 @@ function kpiOption(
           {
             type: "rect",
             shape: { width: 180, height: 72, r: 6 },
-            style: { fill: "#111c2e", stroke: "#3c3c41", lineWidth: 1 },
+            style: {
+              fill: presentation.theme.panel,
+              stroke: presentation.theme.border,
+              lineWidth: 1,
+            },
           },
           {
             type: "text",
@@ -234,7 +260,7 @@ function kpiOption(
             top: 9,
             style: {
               text: series.label,
-              fill: "#a09b8c",
+              fill: presentation.theme.muted,
               font: "13px sans-serif",
             },
           },
@@ -244,7 +270,7 @@ function kpiOption(
             top: 29,
             style: {
               text: `${formatSeriesValue(snapshot, series, latest?.value ?? null)}  n=${(latest?.evidence.sampleSize ?? 0).toString()}`,
-              fill: "#f0e6d2",
+              fill: presentation.theme.text,
               font: "bold 18px sans-serif",
             },
           },
@@ -257,7 +283,7 @@ function kpiOption(
                 delta === undefined
                   ? ""
                   : `Δ ${formatSeriesAbsoluteDelta(snapshot, series, delta ?? null)} · ${formatPercent(percent ?? null)}`,
-              fill: "#0ac8b9",
+              fill: presentation.theme.accent,
               font: "11px sans-serif",
             },
           },
@@ -296,12 +322,15 @@ function snapshotSeriesOption(context: {
   index: number;
   categories: string[];
   annotations: {
-    xAxis: string;
+    xAxis?: string;
+    yAxis?: string;
     name: string;
     label: { formatter: string };
   }[];
+  horizontal: boolean;
 }): echarts.SeriesOption {
-  const { snapshot, item, index, categories, annotations } = context;
+  const { snapshot, item, index, categories, annotations, horizontal } =
+    context;
   if (snapshot.kind === "SCATTER_CHART") {
     return {
       id: item.id,
@@ -329,6 +358,10 @@ function snapshotSeriesOption(context: {
         item.points.find((point) => point.label === category)?.value ?? null,
     ),
     ...(snapshot.display.stack === "none" ? {} : { stack: "total" }),
+    label: visualizationSnapshotLabels(
+      snapshot.display.options ?? {},
+      horizontal,
+    ),
     ...(index === 0 && annotations.length > 0
       ? { markLine: { symbol: "none", data: annotations } }
       : {}),
@@ -351,8 +384,28 @@ function categoryPoints(
   for (const series of snapshot.series) {
     for (const point of series.points) points.set(point.label, point);
   }
-  return [...points.values()].toSorted((left, right) =>
+  const ordered = [...points.values()].toSorted((left, right) =>
     left.start.localeCompare(right.start),
+  );
+  const sort = snapshot.display.options?.sort;
+  if (sort === undefined || sort === "query" || snapshot.bucket !== null) {
+    return ordered;
+  }
+  const direction = sort === "asc" ? 1 : -1;
+  return ordered.toSorted(
+    (left, right) =>
+      direction *
+      (categoryValue(snapshot, left.label) -
+        categoryValue(snapshot, right.label)),
+  );
+}
+
+function categoryValue(snapshot: VisualizationSnapshot, label: string): number {
+  return snapshot.series.reduce(
+    (total, series) =>
+      total +
+      (series.points.find((point) => point.label === label)?.value ?? 0),
+    0,
   );
 }
 
@@ -373,109 +426,4 @@ export function tooltipText(
   const point = categoryPoints(snapshot)[dataIndexValue];
   if (point === undefined) return "";
   return pointTooltipText(snapshot, point, snapshot.series);
-}
-
-function calendarOption(
-  snapshot: VisualizationSnapshot,
-  mode: VisualizationOptionMode,
-): echarts.EChartsOption {
-  const series = snapshot.series[0];
-  const points = series?.points ?? [];
-  const values = points.flatMap((point) =>
-    point.value === null ? [] : [point.value],
-  );
-  return {
-    backgroundColor: "#091428",
-    animation: false,
-    title: {
-      text: snapshot.title ?? "Scout calendar",
-      left: 28,
-      top: 18,
-      textStyle: { color: "#c8aa6e", fontSize: 28 },
-    },
-    tooltip: {
-      formatter: (input) => calendarTooltipText(snapshot, input),
-    },
-    visualMap: {
-      min: Math.min(...values, 0),
-      max: Math.max(...values, 1),
-      calculable: mode === "interactive",
-      orient: "horizontal",
-      left: "center",
-      bottom: 18,
-      textStyle: { color: "#a09b8c" },
-      inRange: { color: ["#1e282d", "#0ac8b9", "#c8aa6e"] },
-    },
-    calendar: {
-      top: 90,
-      left: 48,
-      right: 36,
-      bottom: 78,
-      range:
-        points.length === 0
-          ? emptyCalendarRange(snapshot)
-          : [points[0]?.label ?? "", points.at(-1)?.label ?? ""],
-      itemStyle: { color: "#1e282d", borderColor: "#091428", borderWidth: 3 },
-      dayLabel: { color: "#a09b8c" },
-      monthLabel: { color: "#f0e6d2" },
-      yearLabel: { show: false },
-    },
-    series: [
-      {
-        type: "heatmap",
-        coordinateSystem: "calendar",
-        data: points.flatMap((point) =>
-          point.value === null
-            ? []
-            : [
-                [
-                  point.label,
-                  point.value,
-                  point.comparisonValue ?? null,
-                  point.absoluteDelta ?? null,
-                  point.percentageDelta ?? null,
-                  point.evidence.sampleSize,
-                ],
-              ],
-        ),
-      },
-    ],
-  };
-}
-
-function emptyCalendarRange(
-  snapshot: VisualizationSnapshot,
-): string | [string, string] {
-  const temporal = snapshot.temporal;
-  if (temporal?.window.kind === "calendar") {
-    return [temporal.window.startDate, temporal.window.endDate];
-  }
-  const generatedAt = new Date(snapshot.generatedAt);
-  if (temporal?.window.kind === "relative") {
-    return [
-      calendarDateInTimezone(
-        new Date(generatedAt.getTime() - temporal.window.days * 86_400_000),
-        temporal.timezone,
-      ),
-      calendarDateInTimezone(generatedAt, temporal.timezone),
-    ];
-  }
-  return generatedAt.getUTCFullYear().toString();
-}
-
-function calendarDateInTimezone(date: Date, timezone: string): string {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: timezone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(date);
-  const values = new Map(parts.map((part) => [part.type, part.value]));
-  const year = values.get("year");
-  const month = values.get("month");
-  const day = values.get("day");
-  if (year === undefined || month === undefined || day === undefined) {
-    throw new Error(`Could not format calendar range in ${timezone}.`);
-  }
-  return `${year}-${month}-${day}`;
 }

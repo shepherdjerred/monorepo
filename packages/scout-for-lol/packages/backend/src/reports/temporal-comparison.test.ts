@@ -81,4 +81,62 @@ describe("attachTemporalComparison", () => {
       comparisonSampleSize: 5,
     });
   });
+
+  test("aligns sparse patch series against period-wide patch positions", () => {
+    const plan = parseAndCompile(
+      "SELECT games FROM match_participants GROUP BY player ANALYZE LAST 90 DAYS BUCKET BY PATCH COMPARE TO PREVIOUS PERIOD IN TIME ZONE 'UTC' RENDER line_chart WITH (y = games)",
+    );
+    const currentRows = [
+      groupedRow("Alpha", "26.10", 10),
+      groupedRow("Beta", "26.9", 20),
+    ];
+    const comparisonRows = [
+      groupedRow("Alpha", "25.9", 1),
+      groupedRow("Beta", "25.10", 2),
+    ];
+
+    const result = attachTemporalComparison({
+      currentRows,
+      comparisonRows,
+      comparisonEvidence: comparisonRows.map((baselineRow) => ({
+        label: baselineRow.label,
+        values: [{ column: "games", sampleSize: 1 }],
+      })),
+      plan,
+      ranges: {
+        current: {
+          startDate: new Date("2026-05-01T00:00:00.000Z"),
+          endDate: new Date("2026-07-29T23:59:59.999Z"),
+        },
+        comparison: {
+          startDate: new Date("2026-01-31T00:00:00.000Z"),
+          endDate: new Date("2026-04-30T23:59:59.999Z"),
+        },
+      },
+    });
+
+    const alpha = result.rows.filter((item) => item.dimensions[0] === "Alpha");
+    expect(alpha.map((item) => item.dimensions[1])).toEqual(["26.10", "26.9"]);
+    expect(alpha[0]?.values[0]).toMatchObject({
+      value: 10,
+      comparisonValue: 0,
+    });
+    expect(alpha[1]?.values[0]).toMatchObject({
+      value: 0,
+      comparisonValue: 1,
+    });
+  });
 });
+
+function groupedRow(
+  player: string,
+  patch: string,
+  games: number,
+): ReportResultRow {
+  return {
+    label: `${player} • ${patch}`,
+    dimensions: [player, patch],
+    mentionIdentity: null,
+    values: [{ column: "games", value: games }],
+  };
+}

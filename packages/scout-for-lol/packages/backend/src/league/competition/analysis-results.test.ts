@@ -33,6 +33,18 @@ describe("competition analysis results", () => {
     expect(merged[2]).toEqual(authoritative);
   });
 
+  test("replaces a stale lake day with an empty authoritative snapshot", () => {
+    const staleLake = snapshot("2026-05-03T12:00:00.000Z", 30);
+    const authoritative = {
+      ...snapshot("2026-05-03T13:00:00.000Z", 3),
+      entries: [],
+    };
+
+    expect(mergeCompetitionRankHistory([staleLake], [authoritative])).toEqual([
+      authoritative,
+    ]);
+  });
+
   test("rejects standings rows without player identities", () => {
     const result: ReportQueryResult = {
       plan: parseAndCompile(

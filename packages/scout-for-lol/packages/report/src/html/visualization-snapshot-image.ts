@@ -4,7 +4,7 @@ import {
   ANALYTICS_CHART_HEIGHT,
   ANALYTICS_CHART_WIDTH,
   ANALYTICS_FONT_FILE_PATHS,
-} from "#src/html/analytics-chart-theme.ts";
+} from "#src/html/analytics-chart-render-constants.ts";
 import {
   echartsOptionToSvg,
   echartsSvgToImage,

@@ -30,7 +30,8 @@ import {
   visualizationBucketLabels,
 } from "#src/reports/visualization-buckets.ts";
 import { normalizePercentStack } from "#src/reports/visualization-series-transforms.ts";
-import { resolveHeatmapAxes } from "#src/reports/heatmap-axes.ts";
+import { rankBumpSeries } from "#src/reports/visualization-bump-ranks.ts";
+import { resolveVisualizationAxes } from "#src/reports/heatmap-axes.ts";
 
 export function buildVisualizationSnapshot(
   result: ReportQueryResult,
@@ -93,6 +94,9 @@ function transformSeries(
   if (chartOptions.stack === "percent") {
     series = normalizePercentStack(series);
   }
+  if (plan.render.kind === "BUMP_CHART") {
+    series = rankBumpSeries(series);
+  }
   return series;
 }
 
@@ -138,6 +142,7 @@ function snapshotDisplay(plan: ReportQueryPlan, sparkline: boolean) {
     rollingWindow: options?.rolling?.window ?? null,
     cumulative: options?.cumulative ?? false,
     sparkline,
+    options: options ?? null,
   };
 }
 
@@ -185,18 +190,15 @@ type SeriesBuildContext = {
 function buildSeries(context: SeriesBuildContext): TemporalSeries[] {
   const { result, plan, columns, bucket, generatedAt } = context;
   const rows = result.rows;
-  const heatmapAxes =
-    plan.render.kind === "HEATMAP"
-      ? resolveHeatmapAxes(plan.groupBys, plan.render.encoding)
-      : undefined;
+  const axes = resolveVisualizationAxes(
+    plan.groupBys,
+    plan.render.kind,
+    "encoding" in plan.render ? plan.render.encoding : undefined,
+    bucket !== null,
+  );
   const grouped = new Map<string, ReportResultRow[]>();
   for (const row of rows) {
-    const seriesLabel =
-      bucket === null
-        ? plan.groupBys.length > 1
-          ? (row.dimensions[heatmapAxes?.xDim ?? 0] ?? "All")
-          : "All"
-        : row.dimensions.slice(0, -1).join(" • ") || "All";
+    const seriesLabel = visualizationSeriesLabel(row, plan, bucket, axes);
     const group = grouped.get(seriesLabel) ?? [];
     group.push(row);
     grouped.set(seriesLabel, group);
@@ -229,7 +231,7 @@ function buildSeries(context: SeriesBuildContext): TemporalSeries[] {
             plan,
             generatedAt,
             index,
-            pointDimensionIndex: heatmapAxes?.yDim,
+            pointDimensionIndex: axes?.pointDim,
             evidence: evidenceByRow.get(row),
           }),
         )
@@ -261,6 +263,19 @@ function buildSeries(context: SeriesBuildContext): TemporalSeries[] {
     return series.slice(0, 8);
   }
   return series;
+}
+
+function visualizationSeriesLabel(
+  row: ReportResultRow,
+  plan: ReportQueryPlan,
+  bucket: ResolvedTemporalBucket | null,
+  axes: { seriesDim: number; pointDim: number } | undefined,
+): string {
+  if (bucket !== null) {
+    return row.dimensions.slice(0, -1).join(" • ") || "All";
+  }
+  if (plan.groupBys.length <= 1) return "All";
+  return row.dimensions[axes?.seriesDim ?? 0] ?? "All";
 }
 
 function comparePatchRows(

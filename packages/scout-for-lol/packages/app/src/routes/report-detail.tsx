@@ -142,6 +142,7 @@ function ReportExploration(props: {
   title: string;
   queryText: string;
   scheduleTimezone: string;
+  sourceCompetitionId: number | null;
   canEdit: boolean;
 }) {
   const [queryText, setQueryText] = useState(props.queryText);
@@ -184,6 +185,7 @@ function ReportExploration(props: {
           guildId={props.guildId}
           queryText={queryText}
           title={`${props.title} exploration`}
+          sourceCompetitionId={props.sourceCompetitionId}
         />
       </CardContent>
     </Card>
@@ -280,6 +282,7 @@ export function ReportDetail() {
           title={report.title}
           queryText={report.queryText}
           scheduleTimezone={report.scheduleTimezone}
+          sourceCompetitionId={report.sourceCompetitionId}
           canEdit={!systemManaged && perms.can("reports", "update")}
         />
       )}

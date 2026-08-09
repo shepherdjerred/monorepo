@@ -262,6 +262,116 @@ describe("temporal chart rendering", () => {
     expect(tooltip).toContain("Δ 10.0 pp");
     expect(usesPercentageAxis(snapshot)).toBe(true);
   });
+
+  test("places annotations only in the bucket containing their timestamp", () => {
+    const snapshot = VisualizationSnapshotSchema.parse({
+      version: 1,
+      generatedAt: "2026-08-08T00:00:00.000Z",
+      kind: "LINE_CHART",
+      title: null,
+      temporal: {
+        window: { kind: "relative", days: 2 },
+        bucket: "day",
+        timezone: "UTC",
+      },
+      bucket: "day",
+      display: {
+        theme: null,
+        palette: null,
+        smooth: false,
+        stack: "none",
+        rollingWindow: null,
+        cumulative: false,
+        sparkline: false,
+      },
+      series: [
+        {
+          id: "games",
+          label: "Games",
+          metric: "games",
+          additive: true,
+          points: [dayPoint("2026-08-01", 1), dayPoint("2026-08-02", 2)],
+        },
+      ],
+      annotations: [
+        {
+          id: "inside",
+          kind: "competition_start",
+          timestamp: "2026-08-01T12:00:00.000Z",
+          label: "Inside first day",
+        },
+        {
+          id: "future",
+          kind: "competition_end",
+          timestamp: "2026-08-03T12:00:00.000Z",
+          label: "Outside range",
+        },
+      ],
+      trends: [],
+    });
+
+    const option = JSON.stringify(
+      visualizationSnapshotToOption(snapshot, "static"),
+    );
+    expect(option).toContain('"xAxis":"2026-08-01","name":"Inside first day"');
+    expect(option).not.toContain("Outside range");
+  });
+});
+
+describe("archived chart presentation", () => {
+  test("replays preserved theme, labels, legend, orientation, axes, and sort", () => {
+    const snapshot = VisualizationSnapshotSchema.parse({
+      version: 1,
+      generatedAt: "2026-08-08T00:00:00.000Z",
+      kind: "BAR_CHART",
+      title: "Configured title",
+      temporal: null,
+      bucket: null,
+      display: {
+        theme: "minimal_light",
+        palette: "team",
+        smooth: false,
+        stack: "none",
+        rollingWindow: null,
+        cumulative: false,
+        sparkline: false,
+        options: {
+          subtitle: "Configured subtitle",
+          xAxisLabel: "Games played",
+          yAxisLabel: "Champion",
+          theme: "minimal_light",
+          palette: "team",
+          orientation: "horizontal",
+          labels: "value",
+          legend: "none",
+          sort: "asc",
+        },
+      },
+      series: [
+        {
+          id: "games",
+          label: "Games",
+          metric: "games",
+          additive: true,
+          points: [dayPoint("Alpha", 3), dayPoint("Beta", 1)],
+        },
+      ],
+      annotations: [],
+      trends: [],
+    });
+
+    const option = JSON.stringify(
+      visualizationSnapshotToOption(snapshot, "static"),
+    );
+    expect(option).toContain('"backgroundColor":"#f8fafc"');
+    expect(option).toContain('"subtext":"Configured subtitle"');
+    expect(option).toContain('"legend":{"show":false');
+    expect(option).toContain('"xAxis":{"type":"value","name":"Games played"');
+    expect(option).toContain(
+      '"yAxis":{"type":"category","data":["Beta","Alpha"],"name":"Champion"',
+    );
+    expect(option).toContain('"label":{"show":true,"position":"right"}');
+  });
 });
 
 describe("scatter chart rendering", () => {
@@ -368,6 +478,18 @@ function scatterPoint(label: string, value: number, xValue?: number | null) {
     value,
     ...(xValue === undefined ? {} : { xValue }),
     evidence: { sampleSize: 1, confidenceInterval: null },
+  };
+}
+
+function dayPoint(label: string, value: number) {
+  const temporal = /^\d{4}-\d{2}-\d{2}$/u.test(label);
+  return {
+    key: label,
+    label,
+    start: temporal ? `${label}T00:00:00.000Z` : "2026-08-08T00:00:00.000Z",
+    end: temporal ? `${label}T23:59:59.999Z` : "2026-08-08T00:00:00.000Z",
+    value,
+    evidence: { sampleSize: value, confidenceInterval: null },
   };
 }
 

@@ -101,6 +101,30 @@ describe("buildVisualizationSnapshot", () => {
       ),
     ).toThrow("would plot 2190");
   });
+
+  test("archives the complete chart option set", () => {
+    const plan = parseAndCompile(
+      'SELECT games FROM match_participants GROUP BY champion RENDER bar_chart WITH (y = games, subtitle = "By champion", x_axis = "Champion", y_axis = "Games", theme = minimal_light, palette = team, colors = (#112233, #abcdef), orientation = horizontal, labels = value, legend = none, sort = asc)',
+    );
+
+    const snapshot = buildVisualizationSnapshot(
+      { plan, columns: ["label", "games"], rows: [], rowsScanned: 0 },
+      new Date("2026-08-08T00:00:00.000Z"),
+    );
+
+    expect(snapshot.display.options).toEqual({
+      subtitle: "By champion",
+      xAxisLabel: "Champion",
+      yAxisLabel: "Games",
+      theme: "minimal_light",
+      palette: "team",
+      colors: ["#112233", "#abcdef"],
+      orientation: "horizontal",
+      labels: "value",
+      legend: "none",
+      sort: "asc",
+    });
+  });
 });
 
 describe("temporal visualization buckets", () => {
@@ -229,7 +253,85 @@ describe("temporal visualization buckets", () => {
       "Garen",
     ]);
   });
+
+  test("applies x and series encodings to categorical snapshots", () => {
+    const plan = parseAndCompile(
+      "SELECT games FROM match_participants GROUP BY champion, queue RENDER bar_chart WITH (x = champion, series = queue, y = games)",
+    );
+    const rows: ReportResultRow[] = [
+      categoricalRow("Ahri", "solo", 3),
+      categoricalRow("Garen", "flex", 2),
+    ];
+
+    const snapshot = buildVisualizationSnapshot(
+      { plan, columns: ["label", "games"], rows, rowsScanned: 5 },
+      new Date("2026-08-08T00:00:00.000Z"),
+    );
+
+    expect(snapshot.series.map((series) => series.label)).toEqual([
+      "solo — games",
+      "flex — games",
+    ]);
+    expect(snapshot.series.map((series) => series.points[0]?.label)).toEqual([
+      "Ahri",
+      "Garen",
+    ]);
+  });
+
+  test("ranks bump chart values within each temporal bucket", () => {
+    const plan = parseAndCompile(
+      "SELECT games FROM match_participants GROUP BY player ANALYZE BETWEEN '2026-08-01' AND '2026-08-02' BUCKET BY DAY RENDER bump_chart WITH (y = games)",
+    );
+    const rows: ReportResultRow[] = [
+      temporalPlayerRow("Alpha", "2026-08-01", 8),
+      temporalPlayerRow("Beta", "2026-08-01", 4),
+      temporalPlayerRow("Alpha", "2026-08-02", 3),
+      temporalPlayerRow("Beta", "2026-08-02", 9),
+    ];
+
+    const snapshot = buildVisualizationSnapshot(
+      { plan, columns: ["label", "games"], rows, rowsScanned: 24 },
+      new Date("2026-08-08T00:00:00.000Z"),
+    );
+
+    expect(
+      snapshot.series
+        .find((series) => series.label.startsWith("Alpha"))
+        ?.points.map((point) => point.value),
+    ).toEqual([1, 2]);
+    expect(
+      snapshot.series
+        .find((series) => series.label.startsWith("Beta"))
+        ?.points.map((point) => point.value),
+    ).toEqual([2, 1]);
+  });
 });
+
+function categoricalRow(
+  champion: string,
+  queue: string,
+  games: number,
+): ReportResultRow {
+  return {
+    label: `${champion} • ${queue}`,
+    dimensions: [champion, queue],
+    mentionIdentity: null,
+    values: [{ column: "games", value: games }],
+  };
+}
+
+function temporalPlayerRow(
+  player: string,
+  day: string,
+  games: number,
+): ReportResultRow {
+  return {
+    label: `${player} • ${day}`,
+    dimensions: [player, day],
+    mentionIdentity: null,
+    values: [{ column: "games", value: games }],
+  };
+}
 
 function patchRow(label: string, games: number): ReportResultRow {
   return {

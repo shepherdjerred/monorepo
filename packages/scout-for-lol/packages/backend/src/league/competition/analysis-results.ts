@@ -9,15 +9,27 @@ export function mergeCompetitionRankHistory(
   lakeHistory: CachedLeaderboard[],
   authoritativeHistory: CachedLeaderboard[],
 ): CachedLeaderboard[] {
-  const byCalculatedAt = new Map(
-    lakeHistory.map((snapshot) => [snapshot.calculatedAt, snapshot]),
-  );
-  for (const snapshot of authoritativeHistory) {
-    byCalculatedAt.set(snapshot.calculatedAt, snapshot);
+  const bySnapshotDate = new Map<string, CachedLeaderboard>();
+  for (const snapshot of lakeHistory.toSorted(compareSnapshots)) {
+    bySnapshotDate.set(snapshotDate(snapshot), snapshot);
   }
-  return [...byCalculatedAt.values()].toSorted((left, right) =>
+  for (const snapshot of authoritativeHistory.toSorted(compareSnapshots)) {
+    bySnapshotDate.set(snapshotDate(snapshot), snapshot);
+  }
+  return [...bySnapshotDate.values()].toSorted((left, right) =>
     left.calculatedAt.localeCompare(right.calculatedAt),
   );
+}
+
+function snapshotDate(snapshot: CachedLeaderboard): string {
+  return snapshot.calculatedAt.slice(0, 10);
+}
+
+function compareSnapshots(
+  left: CachedLeaderboard,
+  right: CachedLeaderboard,
+): number {
+  return left.calculatedAt.localeCompare(right.calculatedAt);
 }
 
 export function standingsFromResult(

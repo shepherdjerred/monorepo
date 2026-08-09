@@ -97,6 +97,18 @@ describe("parseAndCompile", () => {
     expect(plan.limit).toBe(10);
   });
 
+  test("only raises the default temporal limit for visualizations", () => {
+    const table = parseAndCompile(
+      "SELECT games FROM match_participants GROUP BY all ANALYZE LAST 30 DAYS BUCKET BY DAY RENDER table",
+    );
+    const chart = parseAndCompile(
+      "SELECT games FROM match_participants GROUP BY all ANALYZE LAST 30 DAYS BUCKET BY DAY RENDER line_chart WITH (y = games)",
+    );
+
+    expect(table.limit).toBe(10);
+    expect(chart.limit).toBe(2000);
+  });
+
   test("parses typed row filters", () => {
     const plan = parseAndCompile(
       "SELECT player, games FROM match_participants WHERE kills > 5 AND role IN ('solo', 'support') GROUP BY player",

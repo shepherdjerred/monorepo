@@ -10,6 +10,7 @@ import {
 } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
+import { competitionAnalysisDateInput } from "#src/lib/competition-analysis-date.ts";
 import { formatDate } from "#src/lib/format.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { Button } from "#src/components/ui/button.tsx";
@@ -53,8 +54,12 @@ export function CompetitionLeaderboardPanel(props: {
   const [mode, setMode] = useState<"official" | "selected_period">("official");
   const [preset, setPreset] =
     useState<CompetitionAnalysisPreset>("criterion_score");
-  const [startDate, setStartDate] = useState(dateInput(props.startDate));
-  const [endDate, setEndDate] = useState(dateInput(props.endDate));
+  const [startDate, setStartDate] = useState(
+    competitionAnalysisDateInput(props.startDate, props.analysisTimezone),
+  );
+  const [endDate, setEndDate] = useState(
+    competitionAnalysisDateInput(props.endDate, props.analysisTimezone),
+  );
   const [timezone, setTimezone] = useState(props.analysisTimezone);
 
   const leaderboardKey = trpc.competition.leaderboard.queryKey({
@@ -364,11 +369,6 @@ function PeriodAnalysis(props: {
       </p>
     </>
   );
-}
-
-function dateInput(value: Date | string | null): string {
-  if (value === null) return "";
-  return new Date(value).toISOString().slice(0, 10);
 }
 
 function parsePreset(value: string): CompetitionAnalysisPreset {

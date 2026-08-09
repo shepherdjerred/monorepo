@@ -139,13 +139,6 @@ export function compileReportQuery(ast: ReportQueryAst): ReportQueryPlan {
     labelNames,
     outputKeys,
   );
-  const limit =
-    ast.limit === undefined
-      ? analysis === undefined
-        ? undefined
-        : 2000
-      : PositiveIntSchema.parse(ast.limit.value);
-
   const having = compileReportHaving(ast.having?.value, outputKeys);
   const render = parseRenderClause(
     ast.render?.value,
@@ -154,6 +147,12 @@ export function compileReportQuery(ast: ReportQueryAst): ReportQueryPlan {
     requestedGroupBys,
   );
   validateTemporalRender(render, selectItems, analysis, bucket);
+  const limit =
+    ast.limit === undefined
+      ? analysis !== undefined && "encoding" in render
+        ? 2000
+        : undefined
+      : PositiveIntSchema.parse(ast.limit.value);
 
   return ReportQueryPlanSchema.parse({
     source,

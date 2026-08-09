@@ -1,19 +1,21 @@
 import type { VisualizationSnapshot } from "@scout-for-lol/data";
 import type * as echarts from "echarts";
+import {
+  visualizationSnapshotAxis,
+  visualizationSnapshotBaseOption,
+  visualizationSnapshotLabels,
+  visualizationSnapshotLegend,
+  visualizationSnapshotPresentation,
+} from "#src/html/visualization-snapshot-style.ts";
 
 export function donutOption(
   snapshot: VisualizationSnapshot,
 ): echarts.EChartsOption {
+  const presentation = visualizationSnapshotPresentation(snapshot);
   return {
-    ...baseOption(snapshot),
+    ...visualizationSnapshotBaseOption(snapshot, "Scout analysis"),
     tooltip: { trigger: "item" },
-    legend: {
-      type: "scroll",
-      orient: "vertical",
-      right: 24,
-      top: 72,
-      textStyle: { color: "#a09b8c" },
-    },
+    legend: visualizationSnapshotLegend(presentation, "right"),
     series: [
       {
         type: "pie",
@@ -35,7 +37,13 @@ export function donutOption(
                 ],
           ),
         ),
-        label: { color: "#f0e6d2" },
+        label: {
+          ...visualizationSnapshotLabels(presentation.options, false, true),
+          color: presentation.theme.text,
+          ...(presentation.options.labels === "percent"
+            ? { formatter: "{b}: {d}%" }
+            : {}),
+        },
       },
     ],
   };
@@ -61,21 +69,28 @@ export function heatmapOption(
     ),
   );
   const values = cells.map((cell) => cell[2] ?? 0);
+  const presentation = visualizationSnapshotPresentation(snapshot);
   return {
-    ...baseOption(snapshot),
+    ...visualizationSnapshotBaseOption(snapshot, "Scout analysis"),
     tooltip: { position: "top" },
     grid: { left: 90, right: 48, top: 90, bottom: 86 },
     xAxis: {
       type: "category",
       data: xCategories,
       splitArea: { show: true },
-      axisLabel: { color: "#a09b8c" },
+      ...visualizationSnapshotAxis(
+        presentation.theme,
+        presentation.options.xAxisLabel,
+      ),
     },
     yAxis: {
       type: "category",
       data: yCategories,
       splitArea: { show: true },
-      axisLabel: { color: "#a09b8c" },
+      ...visualizationSnapshotAxis(
+        presentation.theme,
+        presentation.options.yAxisLabel,
+      ),
     },
     visualMap: {
       min: Math.min(...values, 0),
@@ -84,10 +99,16 @@ export function heatmapOption(
       orient: "horizontal",
       left: "center",
       bottom: 18,
-      textStyle: { color: "#a09b8c" },
-      inRange: { color: ["#1e282d", "#0ac8b9", "#c8aa6e"] },
+      textStyle: { color: presentation.theme.muted },
+      inRange: { color: presentation.colors },
     },
-    series: [{ type: "heatmap", data: cells, label: { show: true } }],
+    series: [
+      {
+        type: "heatmap",
+        data: cells,
+        label: visualizationSnapshotLabels(presentation.options, false, true),
+      },
+    ],
   };
 }
 
@@ -104,10 +125,11 @@ export function radarOption(
   const maxima = snapshot.series.map((series) =>
     Math.max(1, ...series.points.map((point) => point.value ?? 0)),
   );
+  const presentation = visualizationSnapshotPresentation(snapshot);
   return {
-    ...baseOption(snapshot),
+    ...visualizationSnapshotBaseOption(snapshot, "Scout analysis"),
     tooltip: {},
-    legend: { top: 64, textStyle: { color: "#a09b8c" } },
+    legend: visualizationSnapshotLegend(presentation),
     radar: {
       center: ["50%", "57%"],
       radius: "62%",
@@ -115,8 +137,8 @@ export function radarOption(
         name: series.metric,
         max: maxima[index] ?? 1,
       })),
-      axisName: { color: "#f0e6d2" },
-      splitLine: { lineStyle: { color: "#3c3c41" } },
+      axisName: { color: presentation.theme.text },
+      splitLine: { lineStyle: { color: presentation.theme.border } },
     },
     series: [
       {
@@ -144,19 +166,4 @@ function donutPointLabel(
     ? seriesLabel.slice(0, -metricSuffix.length)
     : seriesLabel;
   return `${groupLabel} • ${pointLabel}`;
-}
-
-function baseOption(snapshot: VisualizationSnapshot): echarts.EChartsOption {
-  return {
-    backgroundColor: "#091428",
-    animation: false,
-    color: ["#c8aa6e", "#0ac8b9", "#785a28", "#0397ab", "#a09b8c"],
-    textStyle: { color: "#f0e6d2" },
-    title: {
-      text: snapshot.title ?? "Scout analysis",
-      left: 28,
-      top: 18,
-      textStyle: { color: "#c8aa6e", fontSize: 28 },
-    },
-  };
 }

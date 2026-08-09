@@ -43,6 +43,16 @@ export function attachTemporalComparison({
     analysis.bucket,
     temporalWindowDays(analysis.window),
   );
+  const currentPatchBuckets =
+    bucket === "patch" ? orderedPatchBuckets(currentRows) : [];
+  const comparisonPatchBuckets =
+    bucket === "patch" ? orderedPatchBuckets(comparisonRows) : [];
+  const currentPatchOffsets = new Map(
+    currentPatchBuckets.map((label, index) => [label, index]),
+  );
+  const comparisonPatchOffsets = new Map(
+    comparisonPatchBuckets.map((label, index) => [label, index]),
+  );
   const currentGroups = groupTemporalRows(currentRows);
   const comparisonGroups = groupTemporalRows(comparisonRows);
   const comparisonEvidenceByRow = new Map(
@@ -62,25 +72,25 @@ export function attachTemporalComparison({
     const sortedCurrent = currentGroup.toSorted(compareRows);
     const sortedBaseline = baselineGroup.toSorted(compareRows);
     const baselineByOffset = new Map(
-      sortedBaseline.map((row, index) => [
+      sortedBaseline.map((row) => [
         temporalBucketOffset({
           row,
           range: comparisonRange,
           bucket,
           timezone: analysis.timezone,
-          patchIndex: index,
+          patchOffset: patchOffsetForRow(bucket, comparisonPatchOffsets, row),
         }),
         row,
       ]),
     );
     const currentByOffset = new Map(
-      sortedCurrent.map((row, index) => [
+      sortedCurrent.map((row) => [
         temporalBucketOffset({
           row,
           range: ranges.current,
           bucket,
           timezone: analysis.timezone,
-          patchIndex: index,
+          patchOffset: patchOffsetForRow(bucket, currentPatchOffsets, row),
         }),
         row,
       ]),
@@ -89,6 +99,8 @@ export function attachTemporalComparison({
       if (currentByOffset.has(offset)) continue;
       const baseline = baselineByOffset.get(offset);
       if (baseline === undefined) continue;
+      const currentPatchLabel = currentPatchBuckets[offset];
+      if (bucket === "patch" && currentPatchLabel === undefined) continue;
       const row = materializeMissingCurrentRow({
         baseline,
         plan,
@@ -96,6 +108,7 @@ export function attachTemporalComparison({
         bucket,
         timezone: analysis.timezone,
         offset,
+        currentPatchLabel,
       });
       currentByOffset.set(offset, row);
       mergedRows.push(row);
@@ -164,6 +177,7 @@ type MissingCurrentRowInput = {
   bucket: "day" | "week" | "month" | "patch";
   timezone: string;
   offset: number;
+  currentPatchLabel: string | undefined;
 };
 
 function materializeMissingCurrentRow(
@@ -184,10 +198,10 @@ function materializeMissingCurrentRow(
 
 function currentBucketLabel(input: MissingCurrentRowInput): string {
   if (input.bucket === "patch") {
-    const label = input.baseline.dimensions.at(-1);
-    if (label === undefined)
-      throw new Error("Patch baseline is missing its label.");
-    return label;
+    if (input.currentPatchLabel === undefined) {
+      throw new Error("Current period is missing its patch bucket label.");
+    }
+    return input.currentPatchLabel;
   }
   const startLabel = localCalendarDate(input.range.startDate, input.timezone);
   const start = parseISO(
@@ -211,7 +225,7 @@ type TemporalBucketOffsetInput = {
   range: TemporalRange;
   bucket: "day" | "week" | "month" | "patch";
   timezone: string;
-  patchIndex: number;
+  patchOffset: number | undefined;
 };
 
 function temporalBucketOffset({
@@ -219,9 +233,14 @@ function temporalBucketOffset({
   range,
   bucket,
   timezone,
-  patchIndex,
+  patchOffset,
 }: TemporalBucketOffsetInput): number {
-  if (bucket === "patch") return patchIndex;
+  if (bucket === "patch") {
+    if (patchOffset === undefined) {
+      throw new Error("Temporal patch row is missing its period-wide offset.");
+    }
+    return patchOffset;
+  }
   const label = row.dimensions.at(-1);
   if (label === undefined) {
     throw new Error("Temporal comparison row is missing its bucket label.");
@@ -250,6 +269,23 @@ function temporalBucketOffset({
     (labelDate.getTime() - rangeDate.getTime()) / 86_400_000,
   );
   return bucket === "day" ? days : Math.floor(days / 7);
+}
+
+function orderedPatchBuckets(rows: ReportResultRow[]): string[] {
+  const labels = new Set(
+    rows.map((row) => requirePatchLabel(row.dimensions.at(-1))),
+  );
+  return [...labels].toSorted(comparePatchLabels);
+}
+
+function patchOffsetForRow(
+  bucket: "day" | "week" | "month" | "patch",
+  offsets: ReadonlyMap<string, number>,
+  row: ReportResultRow,
+): number | undefined {
+  return bucket === "patch"
+    ? offsets.get(requirePatchLabel(row.dimensions.at(-1)))
+    : undefined;
 }
 
 function isAdditiveOutput(plan: ReportQueryPlan, column: string): boolean {
