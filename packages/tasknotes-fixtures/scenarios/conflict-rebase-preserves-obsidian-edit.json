@@ -1,0 +1,81 @@
+{
+  "id": "conflict-rebase-preserves-obsidian-edit",
+  "source": "src/data/sync/__tests__/offline-scenarios.test.ts",
+  "describe": "conflict rebase (concurrent Obsidian edit)",
+  "name": "a field edited in Obsidian survives an offline edit to another field",
+  "setup": {},
+  "actions": [
+    {
+      "kind": "store_restore"
+    },
+    {
+      "kind": "server_seed",
+      "tasks": [
+        {
+          "title": "Original",
+          "priority": "normal"
+        }
+      ]
+    },
+    {
+      "kind": "server_offline"
+    },
+    {
+      "kind": "dispatch",
+      "input": {
+        "type": "update",
+        "task": {
+          "by": "id",
+          "value": "TaskNotes/test.md"
+        },
+        "payload": {
+          "title": "Renamed on phone"
+        }
+      }
+    },
+    {
+      "kind": "server_inject_edit",
+      "task": {
+        "by": "id",
+        "value": "TaskNotes/test.md"
+      },
+      "patch": {
+        "priority": "high"
+      }
+    },
+    {
+      "kind": "server_online"
+    },
+    {
+      "kind": "sync_now",
+      "as": "result"
+    }
+  ],
+  "assertions": [
+    {
+      "kind": "result",
+      "ref": "result",
+      "ok": true
+    },
+    {
+      "kind": "task_field",
+      "source": "store",
+      "task": {
+        "by": "id",
+        "value": "TaskNotes/test.md"
+      },
+      "path": "title",
+      "equals": "Renamed on phone"
+    },
+    {
+      "kind": "task_field",
+      "source": "store",
+      "task": {
+        "by": "id",
+        "value": "TaskNotes/test.md"
+      },
+      "path": "priority",
+      "equals": "high"
+    }
+  ]
+}

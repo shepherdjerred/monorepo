@@ -1,0 +1,63 @@
+{
+  "id": "fake-server-offline-fails-every-call",
+  "source": "src/data/sync/__tests__/harness.test.ts",
+  "describe": "FakeServer",
+  "name": "offline mode fails every call with ConnectionError",
+  "doc": "Offline is a total outage: every wire call fails with a connection error, and going back online restores service.",
+  "setup": {},
+  "actions": [
+    {
+      "kind": "server_seed",
+      "tasks": [{}]
+    },
+    {
+      "kind": "server_offline"
+    },
+    {
+      "kind": "client_call",
+      "as": "list",
+      "call": {
+        "method": "listTasks"
+      }
+    },
+    {
+      "kind": "client_call",
+      "as": "create",
+      "call": {
+        "method": "createTask",
+        "request": {
+          "title": "x"
+        }
+      }
+    },
+    {
+      "kind": "server_online"
+    },
+    {
+      "kind": "client_call",
+      "as": "listAgain",
+      "call": {
+        "method": "listTasks"
+      }
+    }
+  ],
+  "assertions": [
+    {
+      "kind": "result",
+      "ref": "list",
+      "ok": false,
+      "errorKind": "connection"
+    },
+    {
+      "kind": "result",
+      "ref": "create",
+      "ok": false,
+      "errorKind": "connection"
+    },
+    {
+      "kind": "result",
+      "ref": "listAgain",
+      "ok": true
+    }
+  ]
+}

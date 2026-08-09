@@ -1,0 +1,71 @@
+{
+  "id": "fake-server-complete-recurring-legacy-toggle",
+  "source": "src/data/sync/__tests__/harness.test.ts",
+  "describe": "FakeServer",
+  "name": "completeRecurringInstance without a body toggles clock-today (legacy contract)",
+  "doc": "The no-body branch derives 'today' from the device-local calendar, which is why the clock is pinned to a local wall-clock noon rather than an absolute instant.",
+  "setup": {
+    "clock": {
+      "kind": "local_naive",
+      "value": "2026-07-03T12:00:00"
+    }
+  },
+  "actions": [
+    {
+      "kind": "server_seed",
+      "tasks": [
+        {
+          "recurrence": "FREQ=DAILY"
+        }
+      ]
+    },
+    {
+      "kind": "client_call",
+      "as": "first",
+      "call": {
+        "method": "completeRecurringInstance",
+        "task": {
+          "by": "id",
+          "value": "TaskNotes/test.md"
+        },
+        "instance": null
+      }
+    },
+    {
+      "kind": "client_call",
+      "as": "second",
+      "call": {
+        "method": "completeRecurringInstance",
+        "task": {
+          "by": "id",
+          "value": "TaskNotes/test.md"
+        },
+        "instance": null
+      }
+    }
+  ],
+  "assertions": [
+    {
+      "kind": "result",
+      "ref": "first",
+      "ok": true
+    },
+    {
+      "kind": "result_field",
+      "ref": "first",
+      "path": "value.completeInstances",
+      "equals": ["2026-07-03"]
+    },
+    {
+      "kind": "result",
+      "ref": "second",
+      "ok": true
+    },
+    {
+      "kind": "result_field",
+      "ref": "second",
+      "path": "value.completeInstances",
+      "equals": []
+    }
+  ]
+}

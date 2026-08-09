@@ -1,0 +1,90 @@
+{
+  "id": "retry-permanent-422-dead-letters",
+  "source": "src/data/sync/__tests__/offline-scenarios.test.ts",
+  "describe": "retry classification",
+  "name": "permanent 422 dead-letters the command and keeps draining",
+  "setup": {},
+  "actions": [
+    {
+      "kind": "store_restore"
+    },
+    {
+      "kind": "server_seed",
+      "tasks": [{}]
+    },
+    {
+      "kind": "dispatch",
+      "input": {
+        "type": "update",
+        "task": {
+          "by": "id",
+          "value": "TaskNotes/test.md"
+        },
+        "payload": {
+          "title": "Rejected"
+        }
+      }
+    },
+    {
+      "kind": "dispatch",
+      "input": {
+        "type": "set_status",
+        "task": {
+          "by": "id",
+          "value": "TaskNotes/test.md"
+        },
+        "status": "done"
+      }
+    },
+    {
+      "kind": "server_fail_next",
+      "method": "updateTask",
+      "error": {
+        "kind": "api",
+        "message": "invalid",
+        "status": 422
+      }
+    },
+    {
+      "kind": "sync_now",
+      "as": "result"
+    }
+  ],
+  "assertions": [
+    {
+      "kind": "result",
+      "ref": "result",
+      "ok": true
+    },
+    {
+      "kind": "dead_letter_count",
+      "equals": 1
+    },
+    {
+      "kind": "dead_letter_field",
+      "index": 0,
+      "path": "error.status",
+      "equals": 422
+    },
+    {
+      "kind": "task_field",
+      "source": "store",
+      "task": {
+        "by": "id",
+        "value": "TaskNotes/test.md"
+      },
+      "path": "title",
+      "equals": "Test"
+    },
+    {
+      "kind": "task_field",
+      "source": "store",
+      "task": {
+        "by": "id",
+        "value": "TaskNotes/test.md"
+      },
+      "path": "status",
+      "equals": "done"
+    }
+  ]
+}

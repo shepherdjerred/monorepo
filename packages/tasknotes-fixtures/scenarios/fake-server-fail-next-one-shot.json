@@ -1,0 +1,80 @@
+{
+  "id": "fake-server-fail-next-one-shot",
+  "source": "src/data/sync/__tests__/harness.test.ts",
+  "describe": "FakeServer",
+  "name": "failNext injects a one-shot failure for the matched method only",
+  "doc": "An injected failure consumes itself and never touches a different method.",
+  "setup": {},
+  "actions": [
+    {
+      "kind": "server_seed",
+      "tasks": [{}]
+    },
+    {
+      "kind": "server_fail_next",
+      "method": "updateTask",
+      "error": {
+        "kind": "network",
+        "message": "boom"
+      }
+    },
+    {
+      "kind": "client_call",
+      "as": "list",
+      "call": {
+        "method": "listTasks"
+      }
+    },
+    {
+      "kind": "client_call",
+      "as": "first",
+      "call": {
+        "method": "updateTask",
+        "task": {
+          "by": "id",
+          "value": "TaskNotes/test.md"
+        },
+        "request": {
+          "title": "New"
+        }
+      }
+    },
+    {
+      "kind": "client_call",
+      "as": "second",
+      "call": {
+        "method": "updateTask",
+        "task": {
+          "by": "id",
+          "value": "TaskNotes/test.md"
+        },
+        "request": {
+          "title": "New"
+        }
+      }
+    }
+  ],
+  "assertions": [
+    {
+      "kind": "result",
+      "ref": "list",
+      "ok": true
+    },
+    {
+      "kind": "result",
+      "ref": "first",
+      "ok": false
+    },
+    {
+      "kind": "result",
+      "ref": "second",
+      "ok": true
+    },
+    {
+      "kind": "result_field",
+      "ref": "second",
+      "path": "value.title",
+      "equals": "New"
+    }
+  ]
+}

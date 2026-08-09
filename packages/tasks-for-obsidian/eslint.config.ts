@@ -23,8 +23,13 @@ const config = [
       "ios/",
       // Config file is not in tsconfig
       "eslint.config.ts",
-      // Ambient type declarations
+      // Ambient type declarations. These describe globals another runtime
+      // provides (`__dirname`, `ImportMeta`), which the naming-convention and
+      // consistent-type-definitions rules cannot express — a declaration
+      // merge has to be an `interface`, and a runtime global keeps its own
+      // name.
       "react-native.d.ts",
+      "src/data/sync/__tests__/fixtures/runtime.d.ts",
     ],
     customRules: { reactRules: true },
   }),

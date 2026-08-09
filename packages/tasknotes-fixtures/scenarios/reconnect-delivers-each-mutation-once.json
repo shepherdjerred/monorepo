@@ -1,0 +1,82 @@
+{
+  "id": "reconnect-delivers-each-mutation-once",
+  "source": "src/data/sync/__tests__/offline-scenarios.test.ts",
+  "describe": "reconnect delivers each mutation exactly once",
+  "name": "multiple triggers cannot double-execute a queued command",
+  "doc": "On reconnect the retry timer, a foreground trigger, and a manual sync land at once — the exact pile-up that used to replay the whole queue.",
+  "setup": {
+    "autoSync": true
+  },
+  "actions": [
+    {
+      "kind": "store_restore"
+    },
+    {
+      "kind": "server_seed",
+      "tasks": [{}]
+    },
+    {
+      "kind": "server_offline"
+    },
+    {
+      "kind": "dispatch",
+      "input": {
+        "type": "set_status",
+        "task": {
+          "by": "id",
+          "value": "TaskNotes/test.md"
+        },
+        "status": "done"
+      }
+    },
+    {
+      "kind": "sync_now"
+    },
+    {
+      "kind": "snapshot",
+      "as": "whileOffline"
+    },
+    {
+      "kind": "server_online"
+    },
+    {
+      "kind": "scheduler_fire_next"
+    },
+    {
+      "kind": "request_sync"
+    },
+    {
+      "kind": "sync_now"
+    }
+  ],
+  "assertions": [
+    {
+      "kind": "engine_state",
+      "at": "whileOffline",
+      "equals": "backoff"
+    },
+    {
+      "kind": "call_count",
+      "method": "toggleTaskStatus",
+      "applied": true,
+      "equals": 1
+    },
+    {
+      "kind": "pending_count",
+      "equals": {
+        "kind": "literal",
+        "value": 0
+      }
+    },
+    {
+      "kind": "task_field",
+      "source": "server",
+      "task": {
+        "by": "id",
+        "value": "TaskNotes/test.md"
+      },
+      "path": "status",
+      "equals": "done"
+    }
+  ]
+}

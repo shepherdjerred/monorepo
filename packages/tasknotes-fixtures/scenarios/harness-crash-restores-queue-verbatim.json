@@ -1,0 +1,56 @@
+{
+  "id": "harness-crash-restores-queue-verbatim",
+  "source": "src/data/sync/__tests__/harness.test.ts",
+  "describe": "crash simulation via storage snapshot",
+  "name": "queue rebuilt from cloned storage restores pending commands verbatim",
+  "doc": "Only durable state survives a crash; the rebuilt queue must hold the identical commands.",
+  "setup": {},
+  "actions": [
+    {
+      "kind": "store_restore"
+    },
+    {
+      "kind": "server_offline"
+    },
+    {
+      "kind": "dispatch",
+      "input": {
+        "type": "update",
+        "task": {
+          "by": "id",
+          "value": "TaskNotes/a.md"
+        },
+        "payload": {
+          "title": "Renamed offline"
+        }
+      }
+    },
+    {
+      "kind": "dispatch",
+      "input": {
+        "type": "delete",
+        "task": {
+          "by": "id",
+          "value": "TaskNotes/b.md"
+        }
+      }
+    },
+    {
+      "kind": "snapshot",
+      "as": "beforeCrash"
+    },
+    {
+      "kind": "relaunch",
+      "from": "beforeCrash"
+    },
+    {
+      "kind": "store_restore"
+    }
+  ],
+  "assertions": [
+    {
+      "kind": "queue_pending_equals",
+      "at": "beforeCrash"
+    }
+  ]
+}

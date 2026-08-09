@@ -1,0 +1,16 @@
+{
+  "anchorDate": "2026-01-01",
+  "caseCount": 338,
+  "corpusSha256": "f879684b628fa1cc172a75022ec7ffd87daadce532d65a449bfa6bec5a803e75",
+  "edgeCaseCount": 39,
+  "failOpenCaseCount": 15,
+  "failOpenProbeDate": "2019-01-01",
+  "generatedBy": "packages/tasks-for-obsidian/scripts/build-recurrence-corpus.ts",
+  "generatedCaseCount": 293,
+  "harvestedCaseCount": 6,
+  "modelEntryPoint": "tasknotes-types/v2 -> @tasknotes/model",
+  "occurrenceDateCount": 69017,
+  "windowDays": 3652,
+  "windowEnd": "2030-12-31",
+  "windowStart": "2021-01-01"
+}

@@ -1,0 +1,72 @@
+{
+  "id": "recurring-completion-captures-tapped-day",
+  "source": "src/data/sync/__tests__/offline-scenarios.test.ts",
+  "describe": "recurring completion captures the tapped day",
+  "name": "a 23:59 tap replayed after midnight still completes the tapped date",
+  "doc": "The completion date comes from the device-local tap time carried in the command, not from whenever the phone happens to reconnect.",
+  "setup": {
+    "clock": {
+      "kind": "local_naive",
+      "value": "2026-07-01T23:59:00"
+    }
+  },
+  "actions": [
+    {
+      "kind": "store_restore"
+    },
+    {
+      "kind": "server_seed",
+      "tasks": [
+        {
+          "recurrence": "FREQ=DAILY"
+        }
+      ]
+    },
+    {
+      "kind": "server_offline"
+    },
+    {
+      "kind": "dispatch",
+      "input": {
+        "type": "set_instance_complete",
+        "task": {
+          "by": "id",
+          "value": "TaskNotes/test.md"
+        },
+        "date": "2026-07-01",
+        "completed": true
+      }
+    },
+    {
+      "kind": "clock_set",
+      "at": {
+        "kind": "local_naive",
+        "value": "2026-07-02T08:00:00"
+      }
+    },
+    {
+      "kind": "server_online"
+    },
+    {
+      "kind": "sync_now",
+      "as": "result"
+    }
+  ],
+  "assertions": [
+    {
+      "kind": "result",
+      "ref": "result",
+      "ok": true
+    },
+    {
+      "kind": "task_field",
+      "source": "server",
+      "task": {
+        "by": "id",
+        "value": "TaskNotes/test.md"
+      },
+      "path": "completeInstances",
+      "equals": ["2026-07-01"]
+    }
+  ]
+}

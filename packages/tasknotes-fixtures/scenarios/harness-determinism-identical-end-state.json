@@ -1,0 +1,45 @@
+{
+  "id": "harness-determinism-identical-end-state",
+  "source": "src/data/sync/__tests__/harness.test.ts",
+  "describe": "harness determinism",
+  "name": "the same scenario converges to the identical end state",
+  "doc": "The simulation itself must be reproducible; this is the property a second implementation has to match before any other fixture means anything.",
+  "setup": {},
+  "actions": [
+    {
+      "kind": "store_restore"
+    },
+    {
+      "kind": "server_seed",
+      "tasks": [{}]
+    },
+    {
+      "kind": "dispatch",
+      "input": {
+        "type": "create",
+        "payload": {
+          "title": "A"
+        }
+      }
+    },
+    {
+      "kind": "dispatch",
+      "input": {
+        "type": "set_status",
+        "task": {
+          "by": "id",
+          "value": "TaskNotes/test.md"
+        },
+        "status": "done"
+      }
+    },
+    {
+      "kind": "sync_now"
+    }
+  ],
+  "assertions": [
+    {
+      "kind": "deterministic_end_state"
+    }
+  ]
+}
