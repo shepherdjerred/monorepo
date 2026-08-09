@@ -75,6 +75,7 @@ export const CurrentTimestamp = keyword(
 );
 export const Interval = keyword("Interval", "interval");
 export const Having = keyword("Having", "having");
+export const Analyze = keyword("Analyze", "analyze");
 
 // Order matters: multi-char operators before single, keywords before Identifier.
 export const reportQueryTokenTypes: TokenType[] = [
@@ -111,6 +112,7 @@ export const reportQueryTokenTypes: TokenType[] = [
   Render,
   With,
   Having,
+  Analyze,
   Identifier,
 ];
 

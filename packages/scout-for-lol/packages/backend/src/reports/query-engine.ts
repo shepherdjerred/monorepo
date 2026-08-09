@@ -3,6 +3,7 @@ import {
   CompetitionIdSchema,
   REPORT_MAX_ROWS_LIMIT,
   RankSchema,
+  type VisualizationSnapshot,
   parseAndCompile,
   parseCompetition,
   rankToString,
@@ -20,10 +21,39 @@ import {
   rowsFromAggregates,
   sortedAggregates,
 } from "#src/reports/query-aggregates.ts";
+import {
+  clampTemporalRange,
+  resolveTemporalRanges,
+  type ResolvedTemporalRanges,
+  type TemporalRange,
+} from "#src/reports/temporal-range.ts";
+import { attachTemporalComparison } from "#src/reports/temporal-comparison.ts";
+import { buildVisualizationSnapshot } from "#src/reports/visualization-snapshot.ts";
 
 export type ReportResultValue = {
   column: string;
   value: number | string | null;
+  comparisonValue?: number | string | null;
+  absoluteDelta?: number | null;
+  percentageDelta?: number | null;
+  comparisonSampleSize?: number;
+  comparisonSuccesses?: number;
+  comparisonNumerator?: number;
+  comparisonDenominator?: number;
+  comparisonConfidenceInterval?: {
+    level: 0.95;
+    lower: number;
+    upper: number;
+  } | null;
+  sampleSize?: number;
+  successes?: number;
+  numerator?: number;
+  denominator?: number;
+  confidenceInterval?: {
+    level: 0.95;
+    lower: number;
+    upper: number;
+  } | null;
 };
 
 export type ReportMentionIdentity =
@@ -50,16 +80,38 @@ export type ReportQueryResult = {
   columns: string[];
   rows: ReportResultRow[];
   rowsScanned: number;
+  comparisonRows?: ReportResultRow[];
+  visualization?: VisualizationSnapshot;
+  evidence?: {
+    label: string;
+    values: {
+      column: string;
+      sampleSize: number;
+      successes?: number;
+      numerator?: number;
+      denominator?: number;
+      confidenceInterval?: {
+        level: 0.95;
+        lower: number;
+        upper: number;
+      } | null;
+    }[];
+  }[];
 };
 
-type ExecuteReportQueryParams = {
+export type ExecuteReportQueryParams = {
   prisma: ExtendedPrismaClient;
   serverId: DiscordGuildId;
   queryText: string;
   sourceCompetitionId?: number | null;
   now?: Date;
   onPlan?: ((plan: ReportQueryPlan) => void) | undefined;
+  rangeOverride?: TemporalRange;
 };
+type ReportExecutionParams = Omit<
+  ExecuteReportQueryParams,
+  "queryText" | "onPlan"
+>;
 
 /**
  * Execute a ScoutQL report query.
@@ -83,16 +135,31 @@ export async function executeReportQuery(
     source = plan.source;
     params.onPlan?.(plan);
     const result = await runReportQueryPlan(params, plan);
+    const visualization = buildVisualizationSnapshot(
+      result,
+      params.now ?? new Date(),
+    );
     recordReportQueryMetrics(source, "success", startedAt);
-    return result;
+    return { ...result, visualization };
   } catch (error) {
     recordReportQueryMetrics(source, "error", startedAt);
     throw error;
   }
 }
 
+export async function executeCompiledReportQuery(
+  params: Omit<ExecuteReportQueryParams, "queryText" | "onPlan">,
+  plan: ReportQueryPlan,
+): Promise<ReportQueryResult> {
+  const result = await runReportQueryPlan(params, plan);
+  return {
+    ...result,
+    visualization: buildVisualizationSnapshot(result, params.now ?? new Date()),
+  };
+}
+
 async function runReportQueryPlan(
-  params: ExecuteReportQueryParams,
+  params: ReportExecutionParams,
   plan: ReportQueryPlan,
 ): Promise<ReportQueryResult> {
   if (plan.source === "competition_rank" || plan.source === "rank_current") {
@@ -108,19 +175,43 @@ async function runReportQueryPlan(
     throw new Error("player_groups reports must GROUP BY group(...).");
   }
 
-  const { startDate, endDate } = lookbackRange(plan, params.now);
+  const ranges = queryRanges(plan, params.now, params.rangeOverride);
   const result = await runLakeAggregation({
     plan,
     serverId: params.serverId,
-    startDate,
-    endDate,
+    startDate: ranges.current.startDate,
+    endDate: ranges.current.endDate,
   });
-  return rowsFromAggregates(
+  const current = rowsFromAggregates(
     plan,
     sortedAggregates(plan, result.aggregates),
     result.rowsScanned,
-    REPORT_MAX_ROWS_LIMIT,
+    plan.analysis === undefined ? REPORT_MAX_ROWS_LIMIT : 2000,
   );
+  if (ranges.comparison === null) return current;
+  const comparison = await runLakeAggregation({
+    plan,
+    serverId: params.serverId,
+    startDate: ranges.comparison.startDate,
+    endDate: ranges.comparison.endDate,
+  });
+  const comparisonResult = rowsFromAggregates(
+    plan,
+    sortedAggregates(plan, comparison.aggregates),
+    comparison.rowsScanned,
+    2000,
+  );
+  return {
+    ...current,
+    rowsScanned: current.rowsScanned + comparison.rowsScanned,
+    ...attachTemporalComparison({
+      currentRows: current.rows,
+      comparisonRows: comparisonResult.rows,
+      comparisonEvidence: comparisonResult.evidence,
+      plan,
+      ranges,
+    }),
+  };
 }
 
 function recordReportQueryMetrics(
@@ -136,7 +227,7 @@ function recordReportQueryMetrics(
 }
 
 async function executeCompetitionMatchParticipantReport(
-  params: ExecuteReportQueryParams,
+  params: ReportExecutionParams,
   plan: ReportQueryPlan,
 ): Promise<ReportQueryResult> {
   const competitionId = resolveCompetitionId(params, plan);
@@ -157,28 +248,54 @@ async function executeCompetitionMatchParticipantReport(
     },
     select: { playerId: true },
   });
-  const { startDate, endDate } = competitionRange(
+  const ranges = competitionQueryRanges(
     competition,
     plan,
     params.now,
+    params.rangeOverride,
   );
   const result = await runLakeAggregation({
     plan,
     serverId: params.serverId,
-    startDate,
-    endDate,
+    startDate: ranges.current.startDate,
+    endDate: ranges.current.endDate,
     playerIds: participantRows.map((row) => row.playerId),
   });
-  return rowsFromAggregates(
+  const current = rowsFromAggregates(
     plan,
     sortedAggregates(plan, result.aggregates),
     result.rowsScanned,
-    REPORT_MAX_ROWS_LIMIT,
+    plan.analysis === undefined ? REPORT_MAX_ROWS_LIMIT : 2000,
   );
+  if (ranges.comparison === null) return current;
+  const comparison = await runLakeAggregation({
+    plan,
+    serverId: params.serverId,
+    startDate: ranges.comparison.startDate,
+    endDate: ranges.comparison.endDate,
+    playerIds: participantRows.map((row) => row.playerId),
+  });
+  const comparisonResult = rowsFromAggregates(
+    plan,
+    sortedAggregates(plan, comparison.aggregates),
+    comparison.rowsScanned,
+    2000,
+  );
+  return {
+    ...current,
+    rowsScanned: current.rowsScanned + comparison.rowsScanned,
+    ...attachTemporalComparison({
+      currentRows: current.rows,
+      comparisonRows: comparisonResult.rows,
+      comparisonEvidence: comparisonResult.evidence,
+      plan,
+      ranges: ranges.alignment,
+    }),
+  };
 }
 
 async function executeCompetitionRankReport(
-  params: ExecuteReportQueryParams,
+  params: ReportExecutionParams,
   plan: ReportQueryPlan,
 ): Promise<ReportQueryResult> {
   const competitionId = resolveCompetitionId(params, plan);
@@ -247,6 +364,55 @@ function lookbackRange(
   };
 }
 
+function queryRanges(
+  plan: ReportQueryPlan,
+  nowInput: Date | undefined,
+  rangeOverride: TemporalRange | undefined,
+): { current: TemporalRange; comparison: TemporalRange | null } {
+  const now = nowInput ?? new Date();
+  if (rangeOverride !== undefined) {
+    return { current: rangeOverride, comparison: null };
+  }
+  if (plan.analysis === undefined) {
+    return { current: lookbackRange(plan, now), comparison: null };
+  }
+  return resolveTemporalRanges(plan.analysis, now);
+}
+
+export function competitionQueryRanges(
+  competition: { startDate: Date | null; endDate: Date | null },
+  plan: ReportQueryPlan,
+  nowInput: Date | undefined,
+  rangeOverride: TemporalRange | undefined,
+): ResolvedTemporalRanges & { alignment: ResolvedTemporalRanges } {
+  const now = nowInput ?? new Date();
+  if (rangeOverride !== undefined) {
+    const current = clampTemporalRange(rangeOverride, competition, now);
+    return {
+      current,
+      comparison: null,
+      alignment: { current, comparison: null },
+    };
+  }
+  if (plan.analysis === undefined) {
+    const current = competitionRange(competition, plan, now);
+    return {
+      current,
+      comparison: null,
+      alignment: { current, comparison: null },
+    };
+  }
+  const requested = resolveTemporalRanges(plan.analysis, now);
+  return {
+    current: clampTemporalRange(requested.current, competition, now),
+    comparison:
+      requested.comparison === null
+        ? null
+        : clampTemporalRange(requested.comparison, competition, now),
+    alignment: requested,
+  };
+}
+
 function competitionRange(
   competition: { startDate: Date | null; endDate: Date | null },
   plan: ReportQueryPlan,
@@ -262,7 +428,7 @@ function competitionRange(
 }
 
 function resolveCompetitionId(
-  params: ExecuteReportQueryParams,
+  params: ReportExecutionParams,
   plan: ReportQueryPlan,
 ): number {
   const sourceCompetitionId = params.sourceCompetitionId ?? undefined;

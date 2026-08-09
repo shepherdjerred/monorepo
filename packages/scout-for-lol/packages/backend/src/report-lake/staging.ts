@@ -1,10 +1,19 @@
 import { readdir, unlink } from "node:fs/promises";
 import path from "node:path";
-import type { RawCurrentGameInfo, RawMatch } from "@scout-for-lol/data";
+import type {
+  CachedLeaderboard,
+  RawCurrentGameInfo,
+  RawMatch,
+} from "@scout-for-lol/data";
 import { createLogger } from "#src/logger.ts";
 import { reportLakeStagingWritesTotal } from "#src/metrics/report-lake.ts";
-import { flattenMatch, flattenPrematch } from "#src/report-lake/flatten.ts";
 import {
+  flattenCompetitionRankHistory,
+  flattenMatch,
+  flattenPrematch,
+} from "#src/report-lake/flatten.ts";
+import {
+  competitionRankHistoryStagingDir,
   ensureLakeScaffold,
   matchesStagingDir,
   prematchStagingDir,
@@ -13,21 +22,27 @@ import {
 const logger = createLogger("report-lake-staging");
 
 /**
- * Ingest-time staging: one NDJSON file per match / prematch observation,
+ * Ingest-time staging: one NDJSON file per match, prematch observation, or
+ * daily competition leaderboard,
  * named by its natural id so re-ingest is an idempotent whole-file overwrite
  * (Bun.write) — no append races, no torn lines. The DuckDB engine unions
  * these files with the published parquet build (deduped, parquet preferred)
  * so a match is queryable seconds after ingest instead of after the next
  * compaction; compaction folds them into parquet and deletes them.
  *
- * Staging writes MUST never fail ingest — they are redundant with the next
- * compaction run, which reads the same data back out of the Stored* tables.
+ * Staging writes MUST never fail ingest — they are redundant with the nightly
+ * rebuild, which reads the same authoritative data back out of S3.
  * Callers get a boolean and a metric, not an exception.
  */
 
 function sanitizeFileStem(stem: string): string {
   return stem.replaceAll(/[^\w.-]/g, "_");
 }
+
+export type ReportLakeStagingTable =
+  | "matches"
+  | "prematch"
+  | "competition_rank_history";
 
 export function matchStagingFilePath(lakeDir: string, matchId: string): string {
   return path.join(
@@ -43,6 +58,17 @@ export function prematchStagingFilePath(
   return path.join(
     prematchStagingDir(lakeDir),
     `${sanitizeFileStem(dedupeKey)}.jsonl`,
+  );
+}
+
+export function competitionRankHistoryStagingFilePath(
+  lakeDir: string,
+  leaderboard: CachedLeaderboard,
+): string {
+  const date = new Date(leaderboard.calculatedAt).toISOString().slice(0, 10);
+  return path.join(
+    competitionRankHistoryStagingDir(lakeDir),
+    `${stagingIdForCompetitionRankHistory(leaderboard.competitionId, date)}.jsonl`,
   );
 }
 
@@ -101,15 +127,45 @@ export async function writePrematchStagingFile(
   }
 }
 
+export async function writeCompetitionRankHistoryStagingFile(
+  lakeDir: string,
+  leaderboard: CachedLeaderboard,
+): Promise<boolean> {
+  try {
+    await ensureLakeScaffold(lakeDir);
+    await Bun.write(
+      competitionRankHistoryStagingFilePath(lakeDir, leaderboard),
+      toNdjson(flattenCompetitionRankHistory(leaderboard)),
+    );
+    reportLakeStagingWritesTotal.inc({
+      table: "competition_rank_history",
+      status: "success",
+    });
+    return true;
+  } catch (error) {
+    logger.warn(
+      `Failed to write rank-history staging file for competition ${leaderboard.competitionId.toString()}`,
+      { error },
+    );
+    reportLakeStagingWritesTotal.inc({
+      table: "competition_rank_history",
+      status: "failed",
+    });
+    return false;
+  }
+}
+
 /** List absolute paths of all staging files for a table. */
 export async function listStagingFiles(
   lakeDir: string,
-  table: "matches" | "prematch",
+  table: ReportLakeStagingTable,
 ): Promise<string[]> {
   const dir =
     table === "matches"
       ? matchesStagingDir(lakeDir)
-      : prematchStagingDir(lakeDir);
+      : table === "prematch"
+        ? prematchStagingDir(lakeDir)
+        : competitionRankHistoryStagingDir(lakeDir);
   let names: string[];
   try {
     names = await readdir(dir);
@@ -131,7 +187,7 @@ export async function listStagingFiles(
  */
 export async function removeFoldedStagingFiles(
   lakeDir: string,
-  table: "matches" | "prematch",
+  table: ReportLakeStagingTable,
   foldedIds: Set<string>,
 ): Promise<number> {
   const files = await listStagingFiles(lakeDir, table);
@@ -156,4 +212,11 @@ export function stagingIdForMatch(matchId: string): string {
 
 export function stagingIdForPrematch(dedupeKey: string): string {
   return sanitizeFileStem(dedupeKey);
+}
+
+export function stagingIdForCompetitionRankHistory(
+  competitionId: number,
+  date: string,
+): string {
+  return sanitizeFileStem(`${competitionId.toString()}_${date}`);
 }

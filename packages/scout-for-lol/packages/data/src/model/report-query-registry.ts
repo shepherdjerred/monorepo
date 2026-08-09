@@ -156,6 +156,10 @@ const KEYWORD_DATA: [string, string][] = [
   ["AS", "Name a calculated SELECT output."],
   ["GROUP BY", "Aggregate by one or two dimensions."],
   ["HAVING", "Filter aggregated rows by a SELECT output or alias."],
+  ["ANALYZE", "Select a relative or inclusive calendar analysis window."],
+  ["BUCKET BY", "Bucket temporal results by auto, day, week, month, or patch."],
+  ["COMPARE TO", "Compare against a previous or custom equal-length period."],
+  ["IN TIME ZONE", "Interpret temporal buckets in an IANA timezone."],
   ["ORDER BY", "Sort by an output or label."],
   ["LIMIT", "Cap the number of rows returned."],
   ["AND", "Combine multiple WHERE or HAVING clauses."],
@@ -264,6 +268,36 @@ export const REPORT_RENDER_OPTIONS: ReportRenderOptionInfo[] = [
     description: "Smooth line and area curves.",
   },
   {
+    id: "rolling",
+    syntax: "rolling = <2-52>",
+    description: "Denominator-aware trailing rolling window.",
+  },
+  {
+    id: "cumulative",
+    syntax: "cumulative = true|false",
+    description: "Running total for additive metrics only.",
+  },
+  {
+    id: "stack",
+    syntax: "stack = none|normal|percent",
+    description: "Normal or percentage-normalized stacking.",
+  },
+  {
+    id: "trend",
+    syntax: "trend = true|false",
+    description: "Linear trend with slope and R-squared; never forecasts.",
+  },
+  {
+    id: "annotations",
+    syntax: "annotations = true|false",
+    description: "Show patch, season, and competition boundary markers.",
+  },
+  {
+    id: "sparkline",
+    syntax: "sparkline = true|false",
+    description: "Request compact temporal series in cards and tables.",
+  },
+  {
     id: "mentions",
     syntax: "mentions = <n>|all",
     description:
@@ -297,6 +331,13 @@ const RENDER_KIND_DATA: [string, string, string, boolean][] = [
     "kpi_card",
     "KPI card",
     "One aggregate row displayed as metric cards.",
+    true,
+  ],
+  ["bump_chart", "Bump chart", "Rank-position movement over time.", true],
+  [
+    "calendar_heatmap",
+    "Calendar heatmap",
+    "Daily activity or performance on a calendar grid.",
     true,
   ],
 ];

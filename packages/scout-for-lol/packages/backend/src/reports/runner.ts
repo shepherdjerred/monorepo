@@ -28,7 +28,10 @@ import {
   type RenderedReportOutput,
 } from "#src/reports/output.ts";
 import { loadPlayerDiscordIds } from "#src/reports/alias-mentions.ts";
-import { saveReportRunImage } from "#src/storage/s3-report-run.ts";
+import {
+  saveReportRunImage,
+  saveReportRunVisualization,
+} from "#src/storage/s3-report-run.ts";
 
 export type ReportRunResult = {
   output: RenderedReportOutput;
@@ -59,6 +62,7 @@ export async function runReport(
       trigger,
       status: "RUNNING",
       startedAt,
+      querySnapshot: params.report.queryText,
     },
   });
   let renderKind: ReportMetricLabel = "UNKNOWN";
@@ -93,13 +97,22 @@ export async function runReport(
     const durationMs = completedAt.getTime() - startedAt.getTime();
 
     // Archive the rendered output so the web "view posted reports" history is
-    // faithful. The PNG (chart formats only) goes to S3; the text body and the
-    // S3 key are persisted on the run row. Both are best-effort — a missing
-    // image never fails the run.
+    // faithful. The PNG remains best-effort, while a configured visualization
+    // archive is required so a successful run remains reproducible.
     const imageS3Key =
       output.image === null
         ? null
         : await saveReportRunImage(params.report.id, run.id, output.image.data);
+    if (result.visualization === undefined) {
+      throw new Error(
+        "Successful report execution is missing its visualization snapshot.",
+      );
+    }
+    const visualizationArtifact = await saveReportRunVisualization(
+      params.report.id,
+      run.id,
+      result.visualization,
+    );
 
     await params.prisma.reportRun.update({
       where: { id: run.id },
@@ -112,6 +125,8 @@ export async function runReport(
         renderedContent: output.content,
         imageS3Key,
         imageByteSize: output.image?.data.length ?? null,
+        visualizationS3Key: visualizationArtifact?.key ?? null,
+        visualizationByteSize: visualizationArtifact?.size ?? null,
       },
     });
     await params.prisma.report.update({

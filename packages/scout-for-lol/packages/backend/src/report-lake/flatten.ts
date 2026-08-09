@@ -1,12 +1,17 @@
 import type {
+  CachedLeaderboard,
   RawCurrentGameInfo,
   RawMatch,
   RawParticipant,
 } from "@scout-for-lol/data";
-import { resolveQueueTypeFromGame } from "@scout-for-lol/data";
+import {
+  rankToLeaguePoints,
+  resolveQueueTypeFromGame,
+} from "@scout-for-lol/data";
 import type { Prisma } from "#generated/prisma/client/index.js";
 import type {
   AccountLakeRow,
+  CompetitionRankHistoryLakeRow,
   MatchLakeRow,
   PrematchLakeRow,
 } from "#src/report-lake/schema.ts";
@@ -194,4 +199,22 @@ export function accountToLakeRow(account: AccountWithPlayer): AccountLakeRow {
     player_alias: account.player.alias,
     discord_id: account.player.discordId,
   };
+}
+
+export function flattenCompetitionRankHistory(
+  leaderboard: CachedLeaderboard,
+): CompetitionRankHistoryLakeRow[] {
+  const calculatedAt = new Date(leaderboard.calculatedAt);
+  return leaderboard.entries.map((entry) => ({
+    competition_id: leaderboard.competitionId,
+    calculated_at: lakeTimestamp(calculatedAt.getTime()),
+    month: lakeMonth(calculatedAt.getTime()),
+    player_id: entry.playerId,
+    player_name: entry.playerName,
+    score:
+      typeof entry.score === "number"
+        ? entry.score
+        : rankToLeaguePoints(entry.score),
+    rank: entry.rank,
+  }));
 }

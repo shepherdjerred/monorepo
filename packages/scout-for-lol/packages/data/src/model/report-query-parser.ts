@@ -10,6 +10,7 @@ import type {
 } from "#src/model/report-query-spec.ts";
 import {
   And,
+  Analyze,
   Comma,
   CurrentTimestamp,
   Equals,
@@ -71,6 +72,7 @@ function locateClauses(tokens: IToken[]): {
   havingIdx: number;
   limitIdx: number;
   renderIdx: number;
+  analyzeIdx: number;
 } {
   const fromIdx = indexOfType(tokens, From, 0);
   const groupIdx = indexOfGroupBy(tokens, 0);
@@ -86,6 +88,7 @@ function locateClauses(tokens: IToken[]): {
     havingIdx: afterGroup(Having),
     limitIdx: afterGroup(Limit),
     renderIdx: afterGroup(Render),
+    analyzeIdx: afterGroup(Analyze),
   };
 }
 
@@ -103,6 +106,7 @@ export function parseReportQuery(text: string): ReportParseResult {
     havingIdx,
     limitIdx,
     renderIdx,
+    analyzeIdx,
   } = locateClauses(tokens);
   const structurallyValid =
     selectIdx === 0 && fromIdx !== -1 && groupIdx !== -1 && groupIdx > fromIdx;
@@ -142,18 +146,27 @@ export function parseReportQuery(text: string): ReportParseResult {
     : [];
 
   const groupByEnd = firstPositive(
-    [havingIdx, orderIdx, limitIdx, renderIdx],
+    [havingIdx, analyzeIdx, orderIdx, limitIdx, renderIdx],
     tokens.length,
   );
   const groupBy =
     groupIdx === -1 ? undefined : joinItem(tokens, groupIdx + 2, groupByEnd);
 
   const havingEnd = firstPositive(
-    [orderIdx, limitIdx, renderIdx],
+    [analyzeIdx, orderIdx, limitIdx, renderIdx],
     tokens.length,
   );
   const having =
     havingIdx === -1 ? undefined : joinItem(tokens, havingIdx + 1, havingEnd);
+
+  const analysisEnd = firstPositive(
+    [orderIdx, limitIdx, renderIdx],
+    tokens.length,
+  );
+  const analysis =
+    analyzeIdx === -1
+      ? undefined
+      : parseAnalysisItem(text, tokens, analyzeIdx, analysisEnd);
 
   const orderByEnd = firstPositive([limitIdx, renderIdx], tokens.length);
   const orderBy = parseOrderBy(tokens, orderIdx, orderByEnd);
@@ -166,11 +179,34 @@ export function parseReportQuery(text: string): ReportParseResult {
     where,
     groupBy,
     having,
+    analysis,
     orderBy,
     limit,
     render,
   };
   return { ast, diagnostics };
+}
+
+function parseAnalysisItem(
+  text: string,
+  tokens: IToken[],
+  analyzeIdx: number,
+  analysisEnd: number,
+): ReportQueryItem | undefined {
+  const analyzeToken = tokens[analyzeIdx];
+  const last = tokens[analysisEnd - 1];
+  if (analyzeToken === undefined || last === undefined) return undefined;
+  const clauseStart = (analyzeToken.endOffset ?? analyzeToken.startOffset) + 1;
+  return {
+    value: text
+      .slice(clauseStart, tokenSpan(last).end)
+      .trim()
+      .replaceAll(/\s+/gu, " "),
+    span: {
+      start: analyzeToken.startOffset,
+      end: tokenSpan(last).end,
+    },
+  };
 }
 
 // Captures the raw `RENDER` clause tail (the text after the `RENDER` keyword)

@@ -14,6 +14,8 @@ const FILES: LakeFiles = {
   prematchParquet: ["/lake/builds/b1/prematch/month=2026-07/data_0.parquet"],
   prematchStaging: [],
   accountsParquet: "/lake/builds/b1/accounts/accounts.parquet",
+  competitionRankHistoryParquet: [],
+  competitionRankHistoryStaging: [],
 };
 
 function input(queryText: string, playerIds?: number[]): LakeQueryInput {
@@ -155,6 +157,19 @@ describe("compile", () => {
     expect(compiled.aggregateSql).toContain("HAVING COUNT(*) > 0");
   });
 
+  test("prematch temporal grouping retains the observation timestamp", () => {
+    const compiled = compilePrematchQuery(
+      input(
+        "SELECT prematches FROM prematch_participants GROUP BY all ANALYZE LAST 30 DAYS BUCKET BY DAY IN TIME ZONE 'UTC'",
+      ),
+    );
+    if (compiled === undefined) {
+      throw new Error("expected compiled query");
+    }
+    expect(compiled.aggregateSql).toContain("p.observed_at FROM");
+    expect(compiled.aggregateSql).toContain("date_trunc('day', observed_at)");
+  });
+
   test("match rowsScanned parity: champion filter in BOTH statements", () => {
     const compiled = compileMatchQuery(
       input(
@@ -206,6 +221,8 @@ describe("compile", () => {
       prematchParquet: [],
       prematchStaging: [],
       accountsParquet: undefined,
+      competitionRankHistoryParquet: [],
+      competitionRankHistoryStaging: [],
     };
     const compiled = compileMatchQuery({
       ...input("SELECT player, games FROM match_participants GROUP BY player"),

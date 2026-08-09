@@ -1,4 +1,10 @@
-import { REPORT_MAX_ROWS_LIMIT } from "@scout-for-lol/data";
+import {
+  REPORT_MAX_ROWS_LIMIT,
+  REPORT_METRICS,
+  collectExpressionMetrics,
+  isAdditiveReportExpression,
+  wilsonInterval95,
+} from "@scout-for-lol/data";
 import type {
   ReportExpression,
   ReportMetric,
@@ -71,10 +77,11 @@ export function rowsFromAggregates(
   maxRows: number,
 ): ReportQueryResult {
   const limit = cappedLimit(plan, maxRows);
+  const selectedRows = rows.slice(0, limit);
   return {
     plan,
     columns: ["label", ...plan.selectItems.map((item) => item.key)],
-    rows: rows.slice(0, limit).map((row) => ({
+    rows: selectedRows.map((row) => ({
       label: row.label,
       dimensions: row.label.split(" • "),
       mentionIdentity:
@@ -94,6 +101,13 @@ export function rowsFromAggregates(
       })),
     })),
     rowsScanned,
+    evidence: selectedRows.map((row) => ({
+      label: row.label,
+      values: plan.selectItems.map((item) => ({
+        column: item.key,
+        ...metricEvidence(row, item.expression),
+      })),
+    })),
   };
 }
 
@@ -110,7 +124,131 @@ function groupMentionIdentity(
 }
 
 export function cappedLimit(plan: ReportQueryPlan, maxRows: number): number {
-  return Math.min(plan.limit, maxRows, REPORT_MAX_ROWS_LIMIT);
+  return Math.min(
+    plan.limit,
+    maxRows,
+    plan.analysis === undefined ? REPORT_MAX_ROWS_LIMIT : 2000,
+  );
+}
+
+function metricEvidence(
+  row: AggregateRow,
+  expression: ReportExpression,
+): {
+  sampleSize: number;
+  successes?: number;
+  numerator?: number;
+  denominator?: number;
+  confidenceInterval?: ReturnType<typeof wilsonInterval95>;
+} {
+  const metrics = collectExpressionMetrics(expression);
+  const metric = metrics.length === 1 ? metrics[0] : undefined;
+  const directMetric =
+    expression.kind === "metric" ? expression.metric : undefined;
+  const sampleSize =
+    metric === "average_placement" ||
+    metric === "top_two_rate" ||
+    metric === "first_place_rate"
+      ? row.arenaRows
+      : metric === "avg_champion_level" || metric === "avg_champion_experience"
+        ? row.participantRows
+        : row.games;
+  const successes =
+    directMetric === "win_rate"
+      ? row.wins
+      : directMetric === "surrender_rate"
+        ? row.surrenders
+        : directMetric === "early_surrender_rate"
+          ? row.earlySurrenders
+          : directMetric === "first_blood_rate"
+            ? row.firstBloods
+            : directMetric === "top_two_rate"
+              ? row.topTwoPlacements
+              : directMetric === "first_place_rate"
+                ? row.firstPlaceFinishes
+                : undefined;
+  const kind = REPORT_METRICS.find(
+    (candidate) => candidate.id === directMetric,
+  )?.kind;
+  if (kind === "rate" && successes !== undefined) {
+    return {
+      sampleSize,
+      successes,
+      confidenceInterval: wilsonInterval95(successes, sampleSize),
+    };
+  }
+  const ratio =
+    ratioMetricEvidence(row, directMetric) ??
+    calculatedRatioEvidence(row, expression);
+  return { sampleSize, ...ratio };
+}
+
+function ratioMetricEvidence(
+  row: AggregateRow,
+  metric: ReportMetric | undefined,
+): { numerator: number; denominator: number } | undefined {
+  if (metric === "kda") {
+    return { numerator: row.kills + row.assists, denominator: row.deaths };
+  }
+  if (metric === "avg_game_duration") {
+    return { numerator: row.durationSeconds / 60, denominator: row.games };
+  }
+  if (metric === "cs_per_minute") {
+    return {
+      numerator: row.creepScore,
+      denominator: row.timePlayedSeconds / 60,
+    };
+  }
+  if (metric === "avg_champion_level") {
+    return {
+      numerator: row.championLevelTotal,
+      denominator: row.participantRows,
+    };
+  }
+  if (metric === "avg_champion_experience") {
+    return {
+      numerator: row.championExperienceTotal,
+      denominator: row.participantRows,
+    };
+  }
+  if (metric === "average_placement") {
+    return { numerator: row.placementSum, denominator: row.arenaRows };
+  }
+  return undefined;
+}
+
+function calculatedRatioEvidence(
+  row: AggregateRow,
+  expression: ReportExpression,
+): { numerator: number; denominator: number } | Record<string, never> {
+  const candidate =
+    expression.kind === "function" && expression.name === "round"
+      ? expression.arguments[0]
+      : expression;
+  if (
+    candidate?.kind === "function" &&
+    (candidate.name === "per_game" || candidate.name === "per_minute")
+  ) {
+    const source = candidate.arguments[0];
+    if (source === undefined || !isAdditiveReportExpression(source)) return {};
+    const numerator = evaluateExpression(row, source);
+    const denominator =
+      candidate.name === "per_game" ? row.games : row.timePlayedSeconds / 60;
+    return numerator === null ? {} : { numerator, denominator };
+  }
+  if (
+    candidate?.kind !== "binary" ||
+    candidate.operator !== "/" ||
+    !isAdditiveReportExpression(candidate.left) ||
+    !isAdditiveReportExpression(candidate.right)
+  ) {
+    return {};
+  }
+  const numerator = evaluateExpression(row, candidate.left);
+  const denominator = evaluateExpression(row, candidate.right);
+  return numerator === null || denominator === null
+    ? {}
+    : { numerator, denominator };
 }
 
 export function sortedAggregates(

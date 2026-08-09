@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { resolveHeatmapAxes } from "#src/reports/output.ts";
+import { resolveHeatmapAxes } from "#src/reports/heatmap-axes.ts";
 
 describe("resolveHeatmapAxes", () => {
   const groupBys = ["champion", "team_position"];

@@ -155,6 +155,20 @@ export const AccountLakeRowSchema = z.object({
 
 export type AccountLakeRow = z.infer<typeof AccountLakeRowSchema>;
 
+export const CompetitionRankHistoryLakeRowSchema = z.object({
+  competition_id: z.number().int().positive(),
+  calculated_at: z.string(),
+  month: z.string(),
+  player_id: z.number().int().positive(),
+  player_name: z.string(),
+  score: z.number(),
+  rank: z.number().int().positive(),
+});
+
+export type CompetitionRankHistoryLakeRow = z.infer<
+  typeof CompetitionRankHistoryLakeRowSchema
+>;
+
 type DuckDbColumnType =
   | "VARCHAR"
   | "INTEGER"
@@ -280,6 +294,19 @@ export const ACCOUNT_LAKE_COLUMNS: Record<
   discord_id: "VARCHAR",
 };
 
+export const COMPETITION_RANK_HISTORY_LAKE_COLUMNS: Record<
+  keyof CompetitionRankHistoryLakeRow,
+  DuckDbColumnType
+> = {
+  competition_id: "INTEGER",
+  calculated_at: "TIMESTAMP",
+  month: "VARCHAR",
+  player_id: "INTEGER",
+  player_name: "VARCHAR",
+  score: "DOUBLE",
+  rank: "INTEGER",
+};
+
 /**
  * Render a column-type map as the `columns={...}` argument for read_json.
  * Column names come from our own literals above (never user input), so
@@ -292,4 +319,13 @@ export function duckDbColumnsSpec(
     .map(([name, type]) => `${name}: '${type}'`)
     .join(", ");
   return `{${entries}}`;
+}
+
+/** Build a typed empty relation for materializing a schema-only Parquet file. */
+export function duckDbEmptySelect(
+  columns: Record<string, DuckDbColumnType>,
+): string {
+  return `SELECT ${Object.entries(columns)
+    .map(([name, type]) => `CAST(NULL AS ${type}) AS ${name}`)
+    .join(", ")} WHERE FALSE`;
 }

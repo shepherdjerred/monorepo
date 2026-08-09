@@ -1,11 +1,7 @@
-import { match } from "ts-pattern";
 import { z } from "zod";
 import {
   ReportMetricSchema,
   ReportGroupBySchema,
-  ReportFilterFieldSchema,
-  ReportFilterOperatorSchema,
-  ReportFilterValueSchema,
   ReportHavingOperatorSchema,
   ReportOrderBySchema,
   ReportOrderDirectionSchema,
@@ -18,30 +14,26 @@ import {
   type ReportFilter,
   type ReportQueryAst,
   type ReportQueryPlan,
-  type ReportWhereClause,
+  type ReportSelectItem,
 } from "#src/model/report-query-spec.ts";
 import {
   collectExpressionMetrics,
+  isAdditiveReportExpression,
   parseReportSelectItem,
 } from "#src/model/report-query-expression.ts";
 import { parseRenderClause } from "#src/model/report-query-render.ts";
 import {
   INVALID_QUERY_MESSAGE,
   parseReportQuery,
-  UNSUPPORTED_WHERE_MESSAGE,
 } from "#src/model/report-query-parser.ts";
-import { requireReportChampion } from "#src/model/report-query-champions.ts";
+import { compileReportWhere } from "#src/model/report-query-where.ts";
+import {
+  parseTemporalAnalysisClause,
+  resolveTemporalBucket,
+  temporalWindowDays,
+} from "#src/model/temporal-analysis.ts";
 
 const PositiveIntSchema = z.coerce.number().int().positive();
-
-type WhereFilters = {
-  queueFilter?: string[];
-  championId?: number;
-  minGames?: number;
-  competitionId?: number;
-  lookbackDays?: number;
-  filters: ReportFilter[];
-};
 
 // The parsed `GROUP BY` clause value: the grouping field plus, for teammate
 // groups, the requested size. `pair` is the legacy alias for `group(2)`.
@@ -121,12 +113,139 @@ export function compileReportQuery(ast: ReportQueryAst): ReportQueryPlan {
   }
   const groupByClause = groupByClauses[0];
   if (groupByClause === undefined) throw new Error(INVALID_GROUP_BY_MESSAGE);
-  const { groupBy, groupSize } = groupByClause;
-  const groupBys = groupByClauses.map((clause) => clause.groupBy);
-  validateSourceDimensions(source, groupBys);
+  const { groupBy: requestedGroupBy, groupSize } = groupByClause;
+  const requestedGroupBys = groupByClauses.map((clause) => clause.groupBy);
+  validateGroupByCombination(requestedGroupBys);
+  validateSourceDimensions(source, requestedGroupBys);
+  const { analysis, bucket, groupBy, groupBys } = resolveTemporalGrouping(
+    ast,
+    source,
+    requestedGroupBy,
+    requestedGroupBys,
+  );
   const labelNames = new Set(
     groupBys.flatMap((dimension) => [...groupingColumnNames(dimension)]),
   );
+  const { metrics, outputKeys, selectItems } = compileSelection(
+    ast,
+    labelNames,
+  );
+  validateSourceMetrics(source, metrics);
+
+  const filters = compileReportWhere(ast.where, source);
+  validateSourceFilters(source, filters.filters);
+
+  const { orderBy, orderDirection } = compileOrdering(
+    ast,
+    labelNames,
+    outputKeys,
+  );
+  const having = compileReportHaving(ast.having?.value, outputKeys);
+  const render = parseRenderClause(
+    ast.render?.value,
+    outputKeys,
+    groupBys,
+    requestedGroupBys,
+  );
+  validateTemporalRender(render, selectItems, analysis, bucket);
+  const limit =
+    ast.limit === undefined
+      ? analysis !== undefined && "encoding" in render
+        ? 2000
+        : undefined
+      : PositiveIntSchema.parse(ast.limit.value);
+
+  return ReportQueryPlanSchema.parse({
+    source,
+    groupBy,
+    groupBys,
+    groupSize,
+    metrics,
+    selectItems,
+    queueFilter: filters.queueFilter,
+    championId: filters.championId,
+    minGames: filters.minGames,
+    competitionId: filters.competitionId,
+    lookbackDays: filters.lookbackDays,
+    analysis,
+    filters: filters.filters,
+    orderBy,
+    orderDirection,
+    having,
+    limit,
+    render,
+  });
+}
+
+function validateGroupByCombination(groupBys: ReportGroupBy[]): void {
+  if (groupBys.includes("all") && groupBys.length !== 1) {
+    throw new Error("GROUP BY all cannot be combined with another dimension.");
+  }
+}
+
+function resolveTemporalGrouping(
+  ast: ReportQueryAst,
+  source: ReportQueryPlan["source"],
+  requestedGroupBy: ReportGroupBy,
+  requestedGroupBys: ReportGroupBy[],
+): Pick<ReportQueryPlan, "analysis" | "groupBy" | "groupBys"> & {
+  bucket: ReportGroupBy | undefined;
+} {
+  const analysis =
+    ast.analysis === undefined
+      ? undefined
+      : parseTemporalAnalysisClause(ast.analysis.value);
+  validateTemporalCompatibility(ast, requestedGroupBys, analysis);
+  if (
+    analysis !== undefined &&
+    (source === "rank_current" || source === "competition_rank")
+  ) {
+    throw new Error(
+      `ANALYZE is not available for ${source}; use competition rank history analysis instead.`,
+    );
+  }
+  if (
+    analysis !== undefined &&
+    (source === "player_groups" || source === "player_pairs")
+  ) {
+    throw new Error(
+      `ANALYZE is not available for ${source}; group facts do not retain match timestamps.`,
+    );
+  }
+  if (analysis === undefined) {
+    return {
+      analysis,
+      bucket: undefined,
+      groupBy: requestedGroupBy,
+      groupBys: requestedGroupBys,
+    };
+  }
+
+  const bucket = resolveTemporalBucket(
+    analysis.bucket,
+    temporalWindowDays(analysis.window),
+  );
+  if (source === "prematch_participants" && bucket === "patch") {
+    throw new Error(
+      "BUCKET BY PATCH is not available for prematch_participants because prematch observations do not contain a game version.",
+    );
+  }
+  return {
+    analysis,
+    bucket,
+    groupBy: requestedGroupBy === "all" ? bucket : requestedGroupBy,
+    groupBys: requestedGroupBys.includes("all")
+      ? [bucket]
+      : [...requestedGroupBys, bucket],
+  };
+}
+
+function compileSelection(
+  ast: ReportQueryAst,
+  labelNames: Set<string>,
+): Pick<ReportQueryPlan, "metrics" | "selectItems"> & {
+  outputKeys: string[];
+} {
   const selectItems = ast.select
     .filter((item) => !labelNames.has(item.value))
     .map((item) => parseReportSelectItem(item.value));
@@ -147,20 +266,19 @@ export function compileReportQuery(ast: ReportQueryAst): ReportQueryPlan {
         ),
       ),
     ]);
-  validateSourceMetrics(source, metrics);
+  return { metrics, outputKeys, selectItems };
+}
 
-  const filters = compileWhere(ast.where, source);
-  validateSourceFilters(source, filters.filters);
-
+function compileOrdering(
+  ast: ReportQueryAst,
+  labelNames: Set<string>,
+  outputKeys: string[],
+): Pick<ReportQueryPlan, "orderBy" | "orderDirection"> {
+  // Group dimensions canonicalize to `label`, matching SELECT and RENDER x.
   const orderBy =
     ast.orderBy === undefined
       ? "games"
-      : // The grouping column can be referenced by any of its names (`group` /
-        // `pair` alias for group queries, or the groupBy field name) — all
-        // canonicalize to `label`, the same column those names select. This
-        // matches SELECT and RENDER x, which already accept these via
-        // `groupingColumnNames`.
-        labelNames.has(ast.orderBy.metric.value)
+      : labelNames.has(ast.orderBy.metric.value)
         ? "label"
         : ReportOrderBySchema.parse(ast.orderBy.metric.value);
   if (
@@ -174,33 +292,77 @@ export function compileReportQuery(ast: ReportQueryAst): ReportQueryPlan {
     ast.orderBy?.direction === undefined
       ? "desc"
       : ReportOrderDirectionSchema.parse(ast.orderBy.direction.value);
-  const limit =
-    ast.limit === undefined
-      ? undefined
-      : PositiveIntSchema.parse(ast.limit.value);
+  return { orderBy, orderDirection };
+}
 
-  const having = compileReportHaving(ast.having?.value, outputKeys);
-  const render = parseRenderClause(ast.render?.value, outputKeys, groupBys);
+const LEGACY_TEMPORAL_GROUPS = new Set<ReportGroupBy>([
+  "day",
+  "week",
+  "month",
+  "patch",
+]);
 
-  return ReportQueryPlanSchema.parse({
-    source,
-    groupBy,
-    groupBys,
-    groupSize,
-    metrics,
-    selectItems,
-    queueFilter: filters.queueFilter,
-    championId: filters.championId,
-    minGames: filters.minGames,
-    competitionId: filters.competitionId,
-    lookbackDays: filters.lookbackDays,
-    filters: filters.filters,
-    orderBy,
-    orderDirection,
-    having,
-    limit,
-    render,
-  });
+function validateTemporalCompatibility(
+  ast: ReportQueryAst,
+  groupBys: ReportGroupBy[],
+  analysis: ReportQueryPlan["analysis"],
+): void {
+  if (analysis === undefined) return;
+  if (ast.where.some((clause) => clause.kind === "lookback")) {
+    throw new Error(
+      "Do not combine ANALYZE with a legacy timestamp lookback predicate.",
+    );
+  }
+  if (groupBys.some((groupBy) => LEGACY_TEMPORAL_GROUPS.has(groupBy))) {
+    throw new Error(
+      "Do not combine ANALYZE with a temporal GROUP BY dimension; use BUCKET BY instead.",
+    );
+  }
+  if (groupBys.length + (groupBys.includes("all") ? 0 : 1) > 3) {
+    throw new Error("Temporal queries support at most two series dimensions.");
+  }
+}
+
+function validateTemporalRender(
+  render: ReportQueryPlan["render"],
+  selectItems: ReportSelectItem[],
+  analysis: ReportQueryPlan["analysis"],
+  bucket: ReportGroupBy | undefined,
+): void {
+  if (!("options" in render) || !("encoding" in render)) return;
+  if (render.options.cumulative === true) {
+    const y = render.encoding.y;
+    const yColumns = typeof y === "string" ? [y] : (y ?? []);
+    if (yColumns.length === 0) {
+      throw new Error(
+        "Cumulative transforms require at least one additive output expression.",
+      );
+    }
+    const invalidColumn = yColumns.find((column) => {
+      const item = selectItems.find((candidate) => candidate.key === column);
+      return item === undefined || !isAdditiveReportExpression(item.expression);
+    });
+    if (invalidColumn !== undefined) {
+      throw new Error(
+        `Cumulative transforms require additive output expressions; ${invalidColumn} is not additive.`,
+      );
+    }
+  }
+  if (
+    render.options.stack === "percent" &&
+    render.kind !== "STACKED_BAR" &&
+    render.kind !== "AREA_CHART"
+  ) {
+    throw new Error(
+      "Percentage stacking is only available for stacked bar and area charts.",
+    );
+  }
+  if (analysis === undefined && render.kind === "BUMP_CHART") {
+    throw new Error("Bump charts require an ANALYZE clause.");
+  }
+  if (bucket !== "day" && render.kind === "CALENDAR_HEATMAP") {
+    throw new Error("Calendar heatmaps require BUCKET BY DAY.");
+  }
 }
 
 function validateSourceDimensions(
@@ -311,102 +473,6 @@ function splitTopLevel(value: string): string[] {
   }
   parts.push(value.slice(start).trim());
   return parts.filter((part) => part.length > 0);
-}
-
-function compileWhere(
-  clauses: ReportWhereClause[],
-  source: ReportQueryPlan["source"],
-): WhereFilters {
-  const filters: WhereFilters = { filters: [] };
-  for (const clause of clauses) {
-    match(clause)
-      .with({ kind: "unsupported" }, () => {
-        throw new Error(UNSUPPORTED_WHERE_MESSAGE);
-      })
-      .with({ kind: "queue" }, (c) => {
-        filters.queueFilter = c.values;
-      })
-      .with({ kind: "champion_id" }, (c) => {
-        filters.championId = PositiveIntSchema.parse(c.value);
-      })
-      .with({ kind: "champion" }, (c) => {
-        filters.championId = requireReportChampion(c.name).id;
-      })
-      .with({ kind: "lookback" }, (c) => {
-        const expectedField =
-          source === "prematch_participants"
-            ? "observed_at"
-            : "game_creation_at";
-        if (c.field !== expectedField) {
-          throw new Error(
-            `Source "${source}" uses ${expectedField} for lookback filters, not ${c.field}.`,
-          );
-        }
-        filters.lookbackDays = c.days;
-      })
-      .with({ kind: "min_games" }, (c) => {
-        filters.minGames = PositiveIntSchema.parse(c.value);
-      })
-      .with({ kind: "competition_id" }, (c) => {
-        filters.competitionId = PositiveIntSchema.parse(c.value);
-      })
-      .with({ kind: "field" }, (c) => {
-        const filter: ReportFilter = {
-          field: ReportFilterFieldSchema.parse(c.field),
-          operator: ReportFilterOperatorSchema.parse(c.operator),
-          values: c.values.map((value) => ReportFilterValueSchema.parse(value)),
-        };
-        validateFilter(filter);
-        filters.filters.push(filter);
-      })
-      .exhaustive();
-  }
-  return filters;
-}
-
-const STRING_FILTERS = new Set([
-  "player",
-  "queue",
-  "team_position",
-  "individual_position",
-  "lane",
-  "role",
-  "game_mode",
-  "game_type",
-  "game_version",
-]);
-const BOOLEAN_FILTERS = new Set([
-  "win",
-  "surrendered",
-  "early_surrendered",
-  "first_blood_kill",
-]);
-
-function validateFilter(filter: ReportFilter): void {
-  if (filter.values.length === 0) {
-    throw new Error(`Filter ${filter.field} requires at least one value.`);
-  }
-  const supportsOrdering =
-    !STRING_FILTERS.has(filter.field) && !BOOLEAN_FILTERS.has(filter.field);
-  if (
-    !supportsOrdering &&
-    filter.operator !== "=" &&
-    filter.operator !== "!=" &&
-    filter.operator !== "in"
-  ) {
-    throw new Error(`Filter ${filter.field} only supports =, !=, and IN.`);
-  }
-  const expected = STRING_FILTERS.has(filter.field)
-    ? "string"
-    : BOOLEAN_FILTERS.has(filter.field)
-      ? "boolean"
-      : "number";
-  if (filter.values.some((value) => typeof value !== expected)) {
-    throw new Error(`Filter ${filter.field} requires ${expected} values.`);
-  }
-  if (filter.operator !== "in" && filter.values.length !== 1) {
-    throw new Error(`Filter ${filter.field} requires exactly one value.`);
-  }
 }
 
 // Parse + compile in one step. Throws on the first structural/unsupported

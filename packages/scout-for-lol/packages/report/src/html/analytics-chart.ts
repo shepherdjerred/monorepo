@@ -12,6 +12,8 @@ import {
   ANALYTICS_CHART_WIDTH as WIDTH,
   ANALYTICS_FONT_FILE_PATHS as FONT_FILE_PATHS,
   ANALYTICS_TITLE_FONT as TITLE_FONT,
+} from "#src/html/analytics-chart-render-constants.ts";
+import {
   analyticsChartColors as chartColors,
   analyticsChartTheme as chartTheme,
   type AnalyticsChartStyle,
