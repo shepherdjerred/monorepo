@@ -123,15 +123,19 @@ function recorder(): Recorder {
         nextId += 1;
         const messageId = `card-${String(nextId)}`;
         posts.push({ channelId, payload, owner });
-        if (owner !== null) {
-          registered.push({ messageId, owner });
-        }
         const held = heldPost;
         if (held !== null) {
           heldPost = null;
           // The caller decides when this send lands, so tests can interleave other work with a
           // post that is still in flight.
-          await held.promise;
+          const heldMessageId = await held.promise;
+          if (heldMessageId !== null && owner !== null) {
+            registered.push({ messageId: heldMessageId, owner });
+          }
+          return heldMessageId;
+        }
+        if (owner !== null) {
+          registered.push({ messageId, owner });
         }
         return messageId;
       },
@@ -401,6 +405,25 @@ describe("in-flight posts", () => {
     expect(h.rec.posts[0]?.payload.embed?.title).toBe("▶️ Heat (1995)");
   });
 
+  test("a stale failed post does not cancel the newer track", async () => {
+    const h = harness();
+    const held = h.rec.holdNextPost();
+    h.manager.refresh();
+    await flush(); // A's send is now in flight
+
+    h.setView(streaming("Sneakers (1992)"));
+    h.manager.refresh(); // B records its track key while A is still sending
+
+    held.release(null);
+    await flush();
+
+    // A's failure must only clear A's key. Clobbering B's newer key makes B's queued task bail and
+    // leaves it permanently cardless when ticking is disabled.
+    expect(h.rec.posts).toHaveLength(2);
+    expect(h.rec.posts[1]?.payload.embed?.title).toBe("▶️ Sneakers (1992)");
+    expect(h.rec.registered).toEqual([{ messageId: "card-2", owner: OWNER }]);
+  });
+
   test("rapid track changes leave exactly one live card", async () => {
     const h = harness();
     const held = h.rec.holdNextPost();
@@ -442,7 +465,7 @@ describe("in-flight posts", () => {
     expect(h.rec.unregistered).toEqual(["card-1"]);
   });
 
-  test("a post queued behind finalize is never published", async () => {
+  test("a track change queued behind finalize cannot retire the last card", async () => {
     const h = harness();
     const held = h.rec.holdNextPost();
     h.manager.refresh();
@@ -454,10 +477,13 @@ describe("in-flight posts", () => {
     held.release("card-1");
     await finalized;
 
-    // The queued second post must not put a controls-bearing card into the channel for a session
-    // that has already ended — and the first card loses its controls and its routing entry.
+    // The queued second post must not strip the first card and then discover that teardown blocks
+    // its replacement. Finalization owns the last edit and leaves the original as stopped history.
     expect(h.rec.posts).toHaveLength(1);
-    expect(h.rec.stripped).toEqual(["card-1"]);
+    expect(h.rec.stripped).toEqual([]);
+    expect(h.rec.edits).toHaveLength(1);
+    expect(h.rec.edits[0]?.payload.embed?.description).toContain("⏹️ Stopped.");
+    expect(h.rec.unregistered).toEqual(["card-1"]);
   });
 });
 
@@ -513,6 +539,20 @@ describe("re-posting when chat buries the card", () => {
     }
     await flush();
     expect(h.rec.posts).toHaveLength(1);
+  });
+
+  test("a re-post queued behind finalize cannot delete the last card", async () => {
+    const h = harness({ repostAfterMessages: 1 });
+    h.manager.refresh();
+    await flush();
+
+    h.manager.onChannelMessage("msg-1");
+    await h.manager.finalize();
+
+    expect(h.rec.removed).toEqual([]);
+    expect(h.rec.posts).toHaveLength(1);
+    expect(h.rec.edits).toHaveLength(1);
+    expect(h.rec.edits[0]?.payload.embed?.description).toContain("⏹️ Stopped.");
   });
 });
 
@@ -619,6 +659,19 @@ describe("finalize", () => {
     await flush();
     expect(h.rec.edits).toHaveLength(editsAfterFinalize);
     expect(h.rec.posts).toHaveLength(1);
+  });
+
+  test("a queued render cannot preempt the final edit", async () => {
+    const h = harness();
+    h.manager.refresh();
+    await flush();
+    h.setView(streaming("Heat (1995)", { positionSeconds: 90 }));
+
+    h.manager.refresh();
+    await h.manager.finalize();
+
+    expect(h.rec.edits).toHaveLength(1);
+    expect(h.rec.edits[0]?.payload.embed?.description).toContain("⏹️ Stopped.");
   });
 
   test("falls back to stripping controls when the final edit fails", async () => {

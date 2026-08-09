@@ -146,6 +146,8 @@ export class PlayerCardManager {
   private lastPayloadJson: string | null = null;
   /** Messages posted to the status channel since the card was last (re-)posted. */
   private messagesSinceCard = 0;
+  /** Teardown was requested, so queued work must stop before mutating the live card. */
+  private finalizing = false;
   private finished = false;
   private cancelTick: (() => void) | null = null;
   /**
@@ -171,7 +173,11 @@ export class PlayerCardManager {
    * (state changed) and from the tick (position advanced).
    */
   refresh(): void {
-    if (this.finished || this.deps.statusChannelId === null) {
+    if (
+      this.finalizing ||
+      this.finished ||
+      this.deps.statusChannelId === null
+    ) {
       return;
     }
     const view = this.deps.view();
@@ -216,6 +222,7 @@ export class PlayerCardManager {
    */
   onChannelMessage(messageId: string): void {
     if (
+      this.finalizing ||
       this.finished ||
       this.messageId === null ||
       messageId === this.messageId ||
@@ -235,24 +242,24 @@ export class PlayerCardManager {
    * reality instead of offering buttons that would answer "That stream has ended."
    */
   async finalize(): Promise<void> {
-    if (this.finished) {
+    if (this.finalizing) {
+      await this.tail;
       return;
     }
-    this.finished = true;
+    // Block new work immediately. `finished` flips inside the tail so an operation that already
+    // started can finish producing its replacement card before the final retire edit runs, while
+    // queued operations observe `finalizing` and stop before stripping or deleting anything.
+    this.finalizing = true;
     if (this.cancelTick !== null) {
       this.cancelTick();
       this.cancelTick = null;
     }
     const channelId = this.deps.statusChannelId;
-    if (channelId === null) {
-      await this.tail;
-      return;
-    }
-    // Enqueue rather than act now: a post may still be in flight, in which case `messageId` is
-    // null at this instant but will name a real card by the time this task runs. `postCard` also
-    // checks `finished`, so a post that hasn't started yet is skipped entirely — between them, no
-    // card outlives the session with live controls or a dangling routing entry.
     this.enqueue(async () => {
+      this.finished = true;
+      if (channelId === null) {
+        return;
+      }
       const messageId = this.messageId;
       if (messageId === null) {
         return;
@@ -293,7 +300,7 @@ export class PlayerCardManager {
       // mode has no message to perform. This mirrors the pre-card `StatusReporter` behavior.
       this.enqueue(async () => {
         const posterUrl = await this.lookupPoster(sourceId, title, view);
-        if (this.trackKey !== sourceId) {
+        if (this.finalizing || this.trackKey !== sourceId) {
           return;
         }
         this.posterUrl = posterUrl;
@@ -307,7 +314,7 @@ export class PlayerCardManager {
       // Bail if a later track superseded this one while we were queued: without this, two rapid
       // track changes each post a card for the newer track and the first is never stripped, leaving
       // a message with working controls that nothing tracks.
-      if (this.trackKey !== sourceId) {
+      if (this.finalizing || this.trackKey !== sourceId) {
         return;
       }
       // Read the outgoing card here rather than at call time. `messageId` is only ever assigned
@@ -364,7 +371,12 @@ export class PlayerCardManager {
   ): void {
     void (async () => {
       const posterUrl = await this.lookupPoster(sourceId, title, view);
-      if (posterUrl === null || this.trackKey !== sourceId || this.finished) {
+      if (
+        posterUrl === null ||
+        this.trackKey !== sourceId ||
+        this.finalizing ||
+        this.finished
+      ) {
         return;
       }
       this.posterUrl = posterUrl;
@@ -404,7 +416,9 @@ export class PlayerCardManager {
       // so the next refresh re-enters `beginTrack` and tries again — leaving `trackKey` set would
       // route every later refresh into the edit path, which has no message to edit, and this track
       // would silently never get a card.
-      this.trackKey = null;
+      if (this.trackKey === sourceId) {
+        this.trackKey = null;
+      }
       return;
     }
     if (!this.deps.enabled) {
@@ -419,7 +433,12 @@ export class PlayerCardManager {
   private async renderExisting(view: PlaybackView): Promise<void> {
     const channelId = this.deps.statusChannelId;
     const messageId = this.messageId;
-    if (channelId === null || messageId === null || !this.deps.enabled) {
+    if (
+      channelId === null ||
+      messageId === null ||
+      this.finalizing ||
+      !this.deps.enabled
+    ) {
       return;
     }
     // The live card belongs to a track the session has already moved past (its replacement is still
@@ -463,6 +482,7 @@ export class PlayerCardManager {
       channelId === null ||
       messageId === null ||
       trackKey === null ||
+      this.finalizing ||
       !this.deps.enabled
     ) {
       return;

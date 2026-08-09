@@ -123,10 +123,11 @@ verification).
   - `cardTrackKey` records which item the posted card actually represents. It lags `trackKey` across
     the post, and editing requires the two to agree — otherwise a queued edit writes the new track's
     view into the previous track's message.
-- **`finalize()` drains the tail.** It enqueues its retire step rather than reading `messageId`
-  synchronously, so a post still in flight is awaited and its card retired; `postCard` additionally
-  refuses to publish once `finished`, so a post that hasn't started is dropped. Between them, no
-  card outlives its session with live controls or a dangling routing entry.
+- **`finalize()` drains the tail in two phases.** `finalizing` synchronously blocks new work and
+  makes queued work stop before stripping or deleting the live card; work already in flight is
+  allowed to finish its replacement. The final serialized task then sets `finished` and retires the
+  card that remains. Between them, no card outlives its session with live controls or a dangling
+  routing entry, and teardown cannot remove the last card without leaving stopped history.
 - **Click routing** is a message-id → `(guild, voice channel)` table in `PlayerCardMessenger`, not
   ids baked into the `customId`: a card outlives every interaction token, so a click hours later
   carries only `interaction.message.id`. Unknown message → "That player card is no longer active."
