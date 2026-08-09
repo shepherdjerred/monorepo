@@ -71,6 +71,14 @@ export default defineConfig({
         {
           items: [
             {
+              label: "Alerts and incident history",
+              link: "/homelab/alerts/",
+            },
+            {
+              label: "Release pipeline",
+              link: "/homelab/releases/",
+            },
+            {
               label: "Plane issue tracker",
               link: "/homelab/plane/",
             },

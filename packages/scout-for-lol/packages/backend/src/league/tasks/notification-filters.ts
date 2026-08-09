@@ -5,8 +5,13 @@ import {
   type QueueType,
 } from "@scout-for-lol/data/index.ts";
 import type { SubscribedChannel } from "#src/database/index.ts";
-import { send, ChannelSendError } from "#src/league/discord/channel.ts";
+import {
+  send,
+  ChannelSendError,
+  isReplyPermissionError,
+} from "#src/league/discord/channel.ts";
 import { createLogger } from "#src/logger.ts";
+import type { MessageCreateOptions } from "discord.js";
 
 const logger = createLogger("notification-dispatch");
 
@@ -35,14 +40,44 @@ export function channelsPassingQueueFilter(
  * to Sentry, so one bad channel never blocks the rest.
  */
 export async function deliverToChannels(params: {
-  message: Parameters<typeof send>[0];
+  message: MessageCreateOptions;
   channels: { channel: SubscribedChannel["channel"]; serverId: string }[];
   logPrefix: string;
   sentryTags: Record<string, string>;
+  replyToMessageIds?: ReadonlyMap<string, string>;
 }): Promise<void> {
   for (const { channel, serverId } of params.channels) {
     try {
-      await send(params.message, channel, DiscordGuildIdSchema.parse(serverId));
+      const replyToMessageId = params.replyToMessageIds?.get(channel);
+      const message: MessageCreateOptions =
+        replyToMessageId === undefined
+          ? params.message
+          : {
+              ...params.message,
+              reply: {
+                messageReference: replyToMessageId,
+                // If the prematch message was deleted, still deliver the
+                // postmatch report as a normal message.
+                failIfNotExists: false,
+              },
+            };
+      const guildId = DiscordGuildIdSchema.parse(serverId);
+      try {
+        await send(message, channel, guildId);
+      } catch (error) {
+        if (
+          replyToMessageId !== undefined &&
+          error instanceof ChannelSendError &&
+          isReplyPermissionError(error)
+        ) {
+          // A reply requires Read Message History. Retry as a normal message
+          // when that permission is missing; the post-match report itself is
+          // still deliverable in channels where sending is allowed.
+          await send(params.message, channel, guildId);
+          continue;
+        }
+        throw error;
+      }
     } catch (error) {
       if (error instanceof ChannelSendError && error.permissionError) {
         logger.warn(

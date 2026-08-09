@@ -130,6 +130,16 @@ syncPolicy: {
 }
 ```
 
+### Root Application Prune Safety
+
+The homelab CI reconcile script requires an exact root `apps` chart revision
+and renders that revision before using prune. It compares the root's tracked
+`Application` resources to the exact desired manifest set. Every live child
+absent from that set must have the `ci.sjer.red/application-lifecycle: cascade`
+annotation and Argo's resources finalizer. Do not classify candidates from
+`OutOfSync` or `requiresPruning` alone: the selective manifest-override sync
+temporarily marks unselected retained children as requiring prune.
+
 ### Server-Side Apply (Large Configs)
 
 ```typescript

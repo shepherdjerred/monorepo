@@ -44,6 +44,7 @@ describe("parseCompetition", () => {
     criteriaType: "MOST_GAMES_PLAYED",
     criteriaConfig: JSON.stringify({ queue: "SOLO" }),
     maxParticipants: 50,
+    analysisTimezone: "UTC",
     startDate: new Date("2025-01-01"),
     endDate: new Date("2025-01-31"),
     seasonId: null,

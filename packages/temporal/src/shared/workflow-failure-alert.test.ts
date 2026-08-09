@@ -17,6 +17,7 @@ function makeExecution(
     runId: "run-abc-123",
     workflowType: "syncGolinks",
     taskQueue: "default",
+    startTime: new Date("2026-07-30T17:45:00.000Z"),
     closeTime: new Date("2026-07-30T17:55:00.000Z"),
     status: "FAILED",
     ...overrides,
@@ -75,7 +76,7 @@ describe("buildWorkflowFailureAlert", () => {
       "https://temporal-ui.tailnet-1a49.ts.net/namespaces/default/workflows/golink-sync-2026-07-30/run-abc-123/history",
     );
     expect(alert.startsAt).toBe("2026-07-30T18:00:00.000Z");
-    expect(alert.endsAt).toBe("2026-07-31T00:00:00.000Z");
+    expect(alert.endsAt).toBe("2026-07-30T23:55:00.000Z");
   });
 
   it("labels a TimedOut execution distinctly and reflects it in the description", () => {

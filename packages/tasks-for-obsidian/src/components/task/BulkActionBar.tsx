@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { MenuView, type MenuAction } from "@react-native-menu/menu";
+import { Platform, View, Text, Pressable, StyleSheet } from "react-native";
 import Animated, {
   FadeIn,
   FadeOut,
@@ -7,7 +8,6 @@ import Animated, {
   SlideOutDown,
   useReducedMotion,
 } from "react-native-reanimated";
-import * as DropdownMenu from "zeego/dropdown-menu";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { FeatherIconName } from "@react-native-vector-icons/feather";
 import { AppIcon } from "../common/AppIcon";
@@ -16,6 +16,10 @@ import { ALL_PRIORITIES, PRIORITY_LABELS } from "../../domain/priority";
 import { useSettings } from "../../hooks/use-settings";
 import { typography } from "../../styles/typography";
 import { ScheduleSheet, type ScheduleField } from "../input/ScheduleSheet";
+
+function actionImage(image: string): Pick<MenuAction, "image"> {
+  return Platform.OS === "ios" ? { image } : {};
+}
 
 type Props = {
   count: number;
@@ -54,7 +58,20 @@ function BarButton({
       </Text>
     </>
   );
-  if (!onPress) return <View style={styles.barButton}>{content}</View>;
+  if (!onPress) {
+    return (
+      <View
+        style={styles.barButton}
+        accessible
+        accessibilityRole="button"
+        accessibilityLabel={label}
+        accessibilityState={{ disabled: disabled ?? false }}
+        testID={testID}
+      >
+        {content}
+      </View>
+    );
+  }
   return (
     <Pressable
       style={styles.barButton}
@@ -89,6 +106,11 @@ export function BulkActionBar({
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const none = count === 0;
+  const priorityActions: MenuAction[] = ALL_PRIORITIES.map((priority) => ({
+    id: priority,
+    title: PRIORITY_LABELS[priority],
+    ...actionImage("flag"),
+  }));
 
   return (
     <Animated.View
@@ -135,30 +157,39 @@ export function BulkActionBar({
           }}
           testID="bulk-schedule"
         />
-        <DropdownMenu.Root>
-          <DropdownMenu.Trigger>
+        {none ? (
+          <BarButton
+            icon="flag"
+            label="Priority"
+            color={colors.text}
+            disabled
+            testID="bulk-priority"
+          />
+        ) : (
+          <MenuView
+            title="Set priority"
+            actions={priorityActions}
+            onPressAction={({ nativeEvent }) => {
+              const priority = ALL_PRIORITIES.find(
+                (candidate) => candidate === nativeEvent.event,
+              );
+              if (priority === undefined) {
+                throw new Error(
+                  `Unknown bulk priority action: ${nativeEvent.event}`,
+                );
+              }
+              onSetPriority(priority);
+            }}
+            testID="bulk-priority-menu"
+          >
             <BarButton
               icon="flag"
               label="Priority"
               color={colors.text}
-              disabled={none}
+              testID="bulk-priority"
             />
-          </DropdownMenu.Trigger>
-          <DropdownMenu.Content>
-            {ALL_PRIORITIES.map((p) => (
-              <DropdownMenu.Item
-                key={p}
-                onSelect={() => {
-                  onSetPriority(p);
-                }}
-              >
-                <DropdownMenu.ItemTitle>
-                  {PRIORITY_LABELS[p]}
-                </DropdownMenu.ItemTitle>
-              </DropdownMenu.Item>
-            ))}
-          </DropdownMenu.Content>
-        </DropdownMenu.Root>
+          </MenuView>
+        )}
         <BarButton
           icon="check"
           label="Complete"

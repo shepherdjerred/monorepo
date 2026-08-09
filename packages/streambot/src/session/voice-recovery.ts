@@ -1,4 +1,3 @@
-import type { Announcement } from "@shepherdjerred/streambot/discord/status-reporter.ts";
 import type { PlaybackEvent } from "@shepherdjerred/streambot/machine/types.ts";
 import {
   voiceDisconnectsTotal,
@@ -120,7 +119,7 @@ export type VoiceRecoveryCoordinatorDeps<TSession extends RecoverableSession> =
     readonly stateDir: string;
     readonly announce: (
       channelId: ChannelId | null,
-      message: Announcement,
+      message: string,
     ) => Promise<void>;
     /** Persist the session's live position (before the machine clears the queue). */
     readonly saveSnapshot: (session: TSession) => Promise<void>;

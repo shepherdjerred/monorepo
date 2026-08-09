@@ -22,3 +22,11 @@ export function findRegion(value: string): RegionValue | null {
   const match = REGIONS.find((region) => region.value === value);
   return match?.value ?? null;
 }
+
+/**
+ * Short display label for a region (e.g. `EU_WEST` → `EUW`), falling back to
+ * the raw value so an unrecognised region is still shown rather than hidden.
+ */
+export function regionLabel(value: string): string {
+  return REGIONS.find((region) => region.value === value)?.label ?? value;
+}

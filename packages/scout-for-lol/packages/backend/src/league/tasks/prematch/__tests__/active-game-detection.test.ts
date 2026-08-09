@@ -8,6 +8,7 @@ import {
   PlayerConfigEntrySchema,
   RawCurrentGameInfoSchema,
   LeaguePuuidSchema,
+  MatchIdSchema,
 } from "@scout-for-lol/data/index.ts";
 import type { ActiveGameRecord } from "#src/league/tasks/prematch/active-game-queries.ts";
 import type { PlayerAccountWithState } from "#src/database/index.ts";
@@ -107,12 +108,17 @@ await mock.module("#src/database/index.ts", () => ({
 
 await mock.module("#src/league/tasks/prematch/active-game-queries.ts", () => ({
   getActiveGames: () => Promise.resolve(mockActiveGames),
-  upsertActiveGame: (gameId: number, puuids: LeaguePuuid[]) => {
+  upsertActiveGame: (
+    _matchId: string,
+    gameId: number,
+    puuids: LeaguePuuid[],
+  ) => {
     upsertCalls.push({ gameId, puuids });
     return Promise.resolve();
   },
   deleteExpiredActiveGames: () => Promise.resolve(0),
   getActiveGameCount: () => Promise.resolve(mockActiveGames.length),
+  recordPrematchMessageIds: () => Promise.resolve(),
 }));
 
 await mock.module("#src/league/api/spectator.ts", () => ({
@@ -133,7 +139,7 @@ await mock.module(
       trackedPlayers: PlayerConfigEntry[],
     ) => {
       notificationCalls.push({ gameId: gameInfo.gameId, trackedPlayers });
-      return Promise.resolve();
+      return Promise.resolve(new Map<string, string>());
     },
   }),
 );
@@ -178,7 +184,9 @@ describe("checkActiveGames — subsequent-match polling", () => {
     mockActiveGames = [
       {
         gameId: G1,
+        matchId: null,
         trackedPuuids: [P1],
+        prematchMessageIds: {},
         detectedAt: new Date(),
         expiresAt,
       },
@@ -301,7 +309,9 @@ describe("checkActiveGames — subsequent-match polling", () => {
     mockActiveGames = [
       {
         gameId: G1,
+        matchId: null,
         trackedPuuids: [P1],
+        prematchMessageIds: {},
         detectedAt: new Date(),
         expiresAt,
       },
@@ -319,5 +329,29 @@ describe("checkActiveGames — subsequent-match polling", () => {
     expect(upsertCalls).toHaveLength(0);
     expect(reportStoreCalls).toHaveLength(0);
     expect(notificationCalls).toHaveLength(0);
+  });
+
+  test("does not dedupe the same numeric game ID across platforms", async () => {
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+    mockActiveGames = [
+      {
+        gameId: G1,
+        matchId: MatchIdSchema.parse(`EUW1_${G1.toString()}`),
+        trackedPuuids: [P1],
+        prematchMessageIds: {},
+        detectedAt: new Date(),
+        expiresAt,
+      },
+    ];
+    mockAccounts = [mkAccount(P1)];
+    mockSpectatorResponses.set(P1, {
+      game: mkGameInfo(G1, P1),
+      upstreamError: false,
+    });
+
+    await checkActiveGames();
+
+    expect(upsertCalls).toHaveLength(1);
+    expect(notificationCalls).toHaveLength(1);
   });
 });

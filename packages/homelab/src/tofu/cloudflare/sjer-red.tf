@@ -798,6 +798,17 @@ resource "cloudflare_zone_setting" "sjer_red_min_tls_version" {
   value      = "1.2"
 }
 
+# WebSockets are on by default for every Cloudflare plan, but mariokart.sjer.red's
+# driver feed depends on them: it serves H.264 over a raw WebSocket with no
+# polling fallback, so a dashboard toggle here would silently break in-browser
+# video while the rest of the site kept working. Pinned so the dependency is
+# explicit rather than inherited.
+resource "cloudflare_zone_setting" "sjer_red_websockets" {
+  zone_id    = cloudflare_zone.sjer_red.id
+  setting_id = "websockets"
+  value      = "on"
+}
+
 resource "cloudflare_zone_setting" "sjer_red_security_header" {
   zone_id    = cloudflare_zone.sjer_red.id
   setting_id = "security_header"

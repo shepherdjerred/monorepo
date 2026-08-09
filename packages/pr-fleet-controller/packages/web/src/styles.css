@@ -213,6 +213,10 @@ body {
 .pr-card-meta .conflict {
   color: var(--bad);
 }
+.pr-card-meta .answer-needed {
+  color: var(--warn);
+  font-weight: 600;
+}
 .badge {
   font-size: 10.5px;
   padding: 1px 7px;
@@ -230,7 +234,8 @@ body {
   border-color: var(--bad);
 }
 .status-pending,
-.status-queued {
+.status-queued,
+.status-waiting-for-answer {
   color: var(--warn);
   border-color: var(--warn);
 }
@@ -487,4 +492,88 @@ body {
 .empty {
   color: var(--text-dim);
   font-style: italic;
+}
+
+/* Operator questions */
+.operator-request {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid var(--warn);
+  border-radius: 8px;
+  background: rgba(210, 153, 34, 0.08);
+}
+.operator-request-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+.operator-request h3 {
+  margin: 0;
+  color: var(--warn);
+}
+.operator-request p {
+  margin: 6px 0;
+}
+.operator-request fieldset {
+  margin: 14px 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+}
+.operator-request legend {
+  padding: 0 6px;
+  font-weight: 600;
+}
+.operator-options {
+  display: grid;
+  gap: 7px;
+}
+.operator-options label {
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 6px;
+  background: var(--bg-panel);
+}
+.operator-options span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.operator-options small {
+  color: var(--text-dim);
+}
+.operator-notes {
+  display: grid;
+  gap: 5px;
+  margin-top: 10px;
+  color: var(--text-dim);
+  font-size: 12px;
+}
+.operator-notes textarea {
+  min-height: 70px;
+  resize: vertical;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  padding: 8px;
+  font: inherit;
+}
+.operator-request button {
+  border: 1px solid var(--warn);
+  border-radius: 6px;
+  padding: 7px 12px;
+  background: var(--warn);
+  color: var(--bg);
+  font-weight: 600;
+}
+.operator-request button:disabled {
+  opacity: 0.5;
+}
+.operator-error {
+  color: var(--bad);
+}
+.operator-success {
+  color: var(--ok);
 }

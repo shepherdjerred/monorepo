@@ -23,6 +23,27 @@ export function parseLocalDate(dateStr: string): Date {
   return new Date(dateStr);
 }
 
+/** Compare task date values by their parsed instant, not their raw spelling. */
+export function compareDateValues(left: string, right: string): number {
+  const leftDate = parseComparableDate(left);
+  const rightDate = parseComparableDate(right);
+  return leftDate.getTime() - rightDate.getTime();
+}
+
+function parseComparableDate(value: string): Date {
+  const date = parseLocalDate(value);
+  const dateOnlyMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  const validCalendarDate =
+    dateOnlyMatch === null ||
+    (date.getFullYear() === Number(dateOnlyMatch[1]) &&
+      date.getMonth() + 1 === Number(dateOnlyMatch[2]) &&
+      date.getDate() === Number(dateOnlyMatch[3]));
+  if (!validCalendarDate || !Number.isFinite(date.getTime())) {
+    throw new TypeError(`Invalid date: ${value}`);
+  }
+  return date;
+}
+
 function parseDate(dateStr: string): Date {
   return parseLocalDate(dateStr);
 }
@@ -95,9 +116,39 @@ export function getDateGroup(dateStr: string): string {
   return formatDate(dateStr);
 }
 
-export function formatRelativeDate(dateStr: string): string {
+/**
+ * An exact, calendar-oriented heading for agenda sections. Relative wording is
+ * additive so two different future days can never collapse into one group.
+ */
+export function formatAgendaDayHeading(
+  dateStr: string,
+  referenceDate: Date = new Date(),
+): string {
   const date = toStartOfDay(parseDate(dateStr));
-  const today = toStartOfDay(new Date());
+  const reference = toStartOfDay(referenceDate);
+  const diffDays = Math.round(
+    (date.getTime() - reference.getTime()) / (1000 * 60 * 60 * 24),
+  );
+  const absolute = date.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+    ...(date.getFullYear() === reference.getFullYear()
+      ? {}
+      : { year: "numeric" }),
+  });
+
+  if (diffDays === 0) return `Today · ${absolute}`;
+  if (diffDays === 1) return `Tomorrow · ${absolute}`;
+  return absolute;
+}
+
+export function formatRelativeDate(
+  dateStr: string,
+  referenceDate: Date = new Date(),
+): string {
+  const date = toStartOfDay(parseDate(dateStr));
+  const today = toStartOfDay(referenceDate);
   const diffMs = date.getTime() - today.getTime();
   const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
 

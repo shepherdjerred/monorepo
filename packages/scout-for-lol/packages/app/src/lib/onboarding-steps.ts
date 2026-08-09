@@ -1,21 +1,16 @@
 import { match } from "ts-pattern";
+import type { OnboardingStepKind } from "@scout-for-lol/data";
 
 /**
  * The guided new-user wizard is a linear flow with one optional branch at
  * the end (report vs competition). Steps + transitions are modelled as a
  * discriminated union driven by a reducer so the logic is pure and
  * unit-testable, with no `as` casts.
+ *
+ * `OnboardingStepKind` lives in `@scout-for-lol/data` because these values are
+ * also Prometheus label values reported to the backend's telemetry procedure —
+ * one source of truth keeps the funnel and the UI in lockstep.
  */
-export type OnboardingStepKind =
-  | "install"
-  | "pick-guild"
-  | "concepts"
-  | "subscribe-self"
-  | "subscribe-more"
-  | "done"
-  | "choose-extra"
-  | "build-report"
-  | "build-competition";
 
 export type ExtraChoice = "report" | "competition";
 

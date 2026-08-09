@@ -1,5 +1,5 @@
 import type { FleetEnvironment } from "./ports.ts";
-import type { PrIdentity, PrState } from "./schemas.ts";
+import type { PrIdentity, PrState, WorktreeContext } from "./schemas.ts";
 import {
   currentCommandCorrelation,
   withCommandCorrelation,
@@ -34,7 +34,7 @@ export async function assignFleetWorktree(
   environment: FleetEnvironment,
   states: Iterable<PrState>,
   candidate: PrState,
-): Promise<string> {
+): Promise<{ worktree: string; context: WorktreeContext }> {
   return withPrCommandCorrelation(candidate.identity, async () => {
     const siblingBranches = [...states]
       .filter((pr) => pr.stackId === candidate.stackId)
@@ -49,7 +49,10 @@ export async function assignFleetWorktree(
         candidate.identity,
         candidate.stackId,
       ));
-    await environment.assignWorktreeBranch(worktree, candidate.identity);
-    return worktree;
+    const context = await environment.assignWorktreeBranch(
+      worktree,
+      candidate.identity,
+    );
+    return { worktree, context };
   });
 }

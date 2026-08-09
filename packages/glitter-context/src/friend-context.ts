@@ -346,7 +346,8 @@ export function createFriendContextResolver(
     for (const userId of input.mentionedDiscordUserIds) {
       addResolution(userId);
     }
-    for (const mentionMatch of input.message.matchAll(/<@!?(\d{17,20})>/gu)) {
+    // No group at all: only the whole match is read below.
+    for (const mentionMatch of input.message.matchAll(/<@!?\d{17,20}>/gu)) {
       const mention = mentionMatch[0];
       addResolution(mention);
     }

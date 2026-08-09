@@ -11,6 +11,8 @@
 // /private/tmp and /private/var/folders, whose contents would be exfiltrated
 // through tool output — the process's own TMPDIR is granted separately below.
 // Everything else is denied by default (an allowlist, not a credential denylist).
+import path from "node:path";
+
 const READABLE_SYSTEM_ROOTS = [
   "/usr",
   "/bin",
@@ -175,8 +177,8 @@ function ancestorReads(worktree: string): string[] {
 }
 
 // Sandbox policy for `setup_worktree`, which runs PR-controlled dependency and
-// generation scripts (`mise install`, `bun install`, `turbo run generate`,
-// `lefthook install`). Unlike the validation profile — whose command stdout is
+// generation scripts (`mise install`, `bun install`, `turbo run generate`).
+// Unlike the validation profile — whose command stdout is
 // returned to the model, forcing a strict deny-by-default read allowlist —
 // setup output is NOT surfaced to the model; its threat is a PR script reading
 // the operator's credentials and exfiltrating them over the network it
@@ -187,8 +189,9 @@ function ancestorReads(worktree: string): string[] {
 // of $HOME plus the local password-hash store, re-allowing only the toolchain
 // caches, the checkout/worktree, the worktree's git directories, and
 // metadata/listing of the worktree's ancestors. Writes are confined to the
-// worktree, the git directories (linked-worktree hook/index store), the turbo
-// caches at the checkout root, and the toolchain stores under $HOME.
+// worktree, turbo caches at the checkout root, invocation-scoped temp storage,
+// and narrow toolchain caches under $HOME. Setup does not install hooks or
+// mutate shared Git metadata.
 export function setupSandboxProfile(
   worktree: string,
   directories: SetupDirectories,
@@ -227,8 +230,6 @@ export function setupSandboxProfile(
 
   const writes = [
     `(allow file-write* (subpath "${worktree}"))`,
-    `(allow file-write* (subpath "${directories.gitCommonDir}"))`,
-    `(allow file-write* (subpath "${directories.gitDir}"))`,
     // Turbo's cache lives at the outer checkout root (the worktrees are nested
     // inside it). Scoped to the cache dirs so a PR script cannot rewrite the
     // operator's main-checkout source.
@@ -286,15 +287,22 @@ export function sanitizedEnvironment(
 
 // Environment for `setup_worktree` commands: credential env vars scrubbed, plus
 // the operator's global/system git config neutralized. Setup runs `git` (via
-// turbo's content hashing and `lefthook install`) but performs no commits, so it
+// turbo's content hashing) but performs no commits, so it
 // needs no user identity; pointing the global/system config at /dev/null stops
 // git from chasing machine-specific config `include`s under the sandbox-denied
 // $HOME.
 export function setupEnvironment(
   extraSecretNames: readonly string[],
   miseConfigPath: string,
+  miseScratchDirectory: string,
 ): Record<string, string | undefined> {
   const environment = sanitizedEnvironment(extraSecretNames);
+  // Bun.spawn changes the process cwd but preserves an explicitly supplied
+  // PWD. Sanitized controller environments therefore need this reset or Bun
+  // package scripts can resolve the controller checkout instead of the assigned
+  // worktree and hit the sandbox boundary.
+  environment["PWD"] = path.dirname(miseConfigPath);
+  delete environment["OLDPWD"];
   environment["GIT_CONFIG_GLOBAL"] = "/dev/null";
   environment["GIT_CONFIG_SYSTEM"] = "/dev/null";
   // The setup command intentionally evaluates this PR's tool configuration
@@ -303,5 +311,16 @@ export function setupEnvironment(
   // worktree trust. No `mise trust` mutation reaches the operator's machine.
   environment["MISE_PARANOID"] = "1";
   environment["MISE_TRUSTED_CONFIG_PATHS"] = miseConfigPath;
+  // Mise may refresh caches and rebuild shims even when every pinned tool is
+  // already installed. Redirect those writes into an invocation-owned temp
+  // directory while leaving MISE_DATA_DIR unchanged so installed runtimes stay
+  // readable but immutable to PR-controlled setup.
+  environment["MISE_CACHE_DIR"] = `${miseScratchDirectory}/cache`;
+  environment["MISE_STATE_DIR"] = `${miseScratchDirectory}/state`;
+  environment["MISE_SHIMS_DIR"] = `${miseScratchDirectory}/shims`;
+  // Prisma writes downloaded engine metadata beneath XDG_CACHE_HOME. Keep that
+  // cache invocation-scoped too: setup may populate it without granting a
+  // PR-controlled script write access to the operator's persistent ~/.cache.
+  environment["XDG_CACHE_HOME"] = `${miseScratchDirectory}/xdg-cache`;
   return environment;
 }

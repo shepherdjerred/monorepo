@@ -6,6 +6,7 @@ import {
   ReportLookbackDaysSchema,
   ReportRenderSpecSchema,
 } from "#src/model/report.ts";
+import { TemporalAnalysisSpecSchema } from "#src/model/temporal-analysis.ts";
 
 // ── Report query language: schema enums + query plan ─────────────────────────
 // Single source of truth for the bespoke SQL-like report query language. Shared
@@ -213,7 +214,7 @@ export const ReportQueryPlanSchema = z
   .object({
     source: ReportSourceSchema,
     groupBy: ReportGroupBySchema,
-    groupBys: z.array(ReportGroupBySchema).min(1).max(2),
+    groupBys: z.array(ReportGroupBySchema).min(1).max(3),
     // Required iff groupBy === "group" (enforced by the superRefine below).
     groupSize: ReportGroupSizeSchema.optional(),
     metrics: z.array(ReportMetricSchema).min(1),
@@ -227,6 +228,7 @@ export const ReportQueryPlanSchema = z
     lookbackDays: ReportLookbackDaysSchema.default(
       REPORT_DEFAULT_LOOKBACK_DAYS,
     ),
+    analysis: TemporalAnalysisSpecSchema.optional(),
     filters: z.array(z.custom<ReportFilter>()).default([]),
     orderBy: z.string().min(1).default("games"),
     orderDirection: ReportOrderDirectionSchema.default("desc"),
@@ -264,7 +266,17 @@ export const ReportQueryPlanSchema = z
         message: "GROUP BY all cannot be combined with another dimension.",
       });
     }
-    if (plan.groupBy === "group" && plan.groupBys.length !== 1) {
+    if (
+      plan.groupBy === "group" &&
+      plan.groupBys.some(
+        (dimension) =>
+          dimension !== "group" &&
+          dimension !== "day" &&
+          dimension !== "week" &&
+          dimension !== "month" &&
+          dimension !== "patch",
+      )
+    ) {
       ctx.addIssue({
         code: "custom",
         path: ["groupBys"],
@@ -335,6 +347,9 @@ export type ReportQueryAst = {
   where: ReportWhereClause[];
   groupBy?: ReportQueryItem | undefined;
   having?: ReportQueryItem | undefined;
+  // Raw canonical temporal clauses, starting after ANALYZE and ending before
+  // ORDER BY / LIMIT / RENDER. The strict compiler produces TemporalAnalysisSpec.
+  analysis?: ReportQueryItem | undefined;
   orderBy?: ReportQueryOrderBy | undefined;
   limit?: ReportQueryItem | undefined;
   // Raw text of the trailing RENDER clause (the part after the `RENDER` keyword,

@@ -629,6 +629,21 @@ describe("Xcode Cloud alert routing guard", () => {
       }),
     ).toBe("pagerduty");
   });
+
+  it("does not page removed aggregate agent-task timeout alerts", () => {
+    expect(
+      resolveReceiver(route, {
+        alertname: "TemporalAgentTaskTimingOut",
+        severity: "warning",
+      }),
+    ).toBe("null");
+    expect(
+      resolveReceiver(route, {
+        alertname: "TemporalAgentTaskTimeoutScanFailed",
+        severity: "warning",
+      }),
+    ).toBe("null");
+  });
 });
 
 describe("Buildkite CI job failure routing guard", () => {

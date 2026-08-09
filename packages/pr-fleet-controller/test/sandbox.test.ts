@@ -5,7 +5,7 @@ import {
   setupEnvironment,
   setupSandboxProfile,
 } from "@shepherdjerred/pr-fleet-controller/src/sandbox.ts";
-import { SETUP_COMMANDS } from "@shepherdjerred/pr-fleet-controller/src/tools.ts";
+import { SETUP_COMMANDS } from "@shepherdjerred/pr-fleet-controller/src/worker-setup-tool.ts";
 
 describe("validation sandbox profile", () => {
   const worktree = "/tmp/pr-fleet-worktree";
@@ -67,11 +67,20 @@ describe("credential env scrubbing", () => {
     // Passing the configured name removes it from validation and setup envs.
     expect(sanitizedEnvironment(["LLM_ACCESS"])["LLM_ACCESS"]).toBeUndefined();
     const miseConfig = "/tmp/pr-fleet-worktree/.mise.toml";
-    const setup = setupEnvironment(["LLM_ACCESS"], miseConfig);
+    const setup = setupEnvironment(
+      ["LLM_ACCESS"],
+      miseConfig,
+      "/tmp/pr-fleet-mise",
+    );
     expect(setup["LLM_ACCESS"]).toBeUndefined();
     expect(setup["GIT_CONFIG_GLOBAL"]).toBe("/dev/null");
     expect(setup["MISE_PARANOID"]).toBe("1");
     expect(setup["MISE_TRUSTED_CONFIG_PATHS"]).toBe(miseConfig);
+    expect(setup["MISE_CACHE_DIR"]).toBe("/tmp/pr-fleet-mise/cache");
+    expect(setup["MISE_STATE_DIR"]).toBe("/tmp/pr-fleet-mise/state");
+    expect(setup["MISE_SHIMS_DIR"]).toBe("/tmp/pr-fleet-mise/shims");
+    expect(setup["PWD"]).toBe("/tmp/pr-fleet-worktree");
+    expect(setup["OLDPWD"]).toBeUndefined();
   });
 });
 
@@ -112,5 +121,21 @@ describe("setup sandbox write scope", () => {
           command.executable === "mise" && command.args.includes("trust"),
       ),
     ).toBe(false);
+  });
+
+  test("redirects dependency engine caches into invocation scratch space", () => {
+    const environment = setupEnvironment(
+      [],
+      "/tmp/worktree/.mise.toml",
+      "/tmp/pr-fleet-mise",
+    );
+    expect(environment["XDG_CACHE_HOME"]).toBe("/tmp/pr-fleet-mise/xdg-cache");
+    expect(
+      SETUP_COMMANDS.some(
+        (command) =>
+          command.executable === "bunx" &&
+          command.args.includes("--env-mode=loose"),
+      ),
+    ).toBe(true);
   });
 });

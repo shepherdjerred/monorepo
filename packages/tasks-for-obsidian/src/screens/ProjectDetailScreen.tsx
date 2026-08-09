@@ -2,17 +2,21 @@ import React, { useMemo, useState } from "react";
 import { View, StyleSheet } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../navigation/types";
+import { createCaptureSeed } from "../domain/quick-capture-seed";
 import {
   EMPTY_FILTER,
   DEFAULT_SORT,
   applyFilter,
   applySort,
 } from "../domain/filters";
-import { projectDisplayName, projectMatches } from "tasknotes-types/v2";
+import { projectDisplayName } from "tasknotes-types/v2";
+import { resolveProjectIdentity } from "../domain/project-options";
 
 import { useTaskListScreen } from "../hooks/use-task-list-screen";
 import { TaskList } from "../components/task/TaskList";
 import { FilterSortBar } from "../components/input/FilterSortBar";
+import { Fab } from "../components/common/Fab";
+import { activeTasksForDimension } from "../components/saved-view/browse-model";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ProjectDetail">;
 
@@ -24,6 +28,7 @@ export function ProjectDetailScreen({ route, navigation }: Props) {
     contextNames,
     tagNames,
     dayCounts,
+    pendingTaskIds,
     handlePress,
     handleToggle,
     handleDelete,
@@ -33,16 +38,17 @@ export function ProjectDetailScreen({ route, navigation }: Props) {
   const [sort, setSort] = useState(DEFAULT_SORT);
 
   const projectTasks = useMemo(
-    () =>
-      taskList.filter((t) =>
-        t.projects.some((p) => projectMatches(String(p), String(projectName))),
-      ),
+    () => activeTasksForDimension(taskList, "project", String(projectName)),
     [taskList, projectName],
   );
 
   const displayTasks = useMemo(
     () => applySort(applyFilter(projectTasks, filter), sort),
     [projectTasks, filter, sort],
+  );
+  const captureProject = useMemo(
+    () => resolveProjectIdentity(String(projectName), projectNames),
+    [projectName, projectNames],
   );
 
   React.useEffect(() => {
@@ -67,8 +73,19 @@ export function ProjectDetailScreen({ route, navigation }: Props) {
         onTaskDelete={handleDelete}
         onTaskSchedule={handleSchedule}
         dayCounts={dayCounts}
+        pendingIds={pendingTaskIds}
         emptyTitle="No tasks in this project"
       />
+      {captureProject === null ? null : (
+        <Fab
+          onPress={() => {
+            navigation.navigate(
+              "QuickAdd",
+              createCaptureSeed({ project: captureProject }),
+            );
+          }}
+        />
+      )}
     </View>
   );
 }

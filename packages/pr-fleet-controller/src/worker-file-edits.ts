@@ -2,6 +2,11 @@ import { lstat, realpath } from "node:fs/promises";
 import path from "node:path";
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
+import {
+  invalidateInheritedWipInspection,
+  requireCurrentInheritedWipInspection,
+} from "./inherited-wip.ts";
+import type { FleetEnvironment } from "./ports.ts";
 import type { PrState } from "./schemas.ts";
 import type { FleetStore } from "./state.ts";
 
@@ -17,6 +22,28 @@ async function isSymlink(candidate: string): Promise<boolean> {
       return false;
     }
     throw error;
+  }
+}
+
+function isMissingPath(error: unknown): boolean {
+  return error instanceof Error && "code" in error && error.code === "ENOENT";
+}
+
+async function nearestExistingAncestor(candidate: string): Promise<string> {
+  try {
+    await lstat(candidate);
+    return candidate;
+  } catch (error) {
+    if (!isMissingPath(error)) {
+      throw error;
+    }
+    const parent = path.dirname(candidate);
+    if (parent === candidate) {
+      throw new Error(`No existing ancestor for path: ${candidate}`, {
+        cause: error,
+      });
+    }
+    return nearestExistingAncestor(parent);
   }
 }
 
@@ -44,7 +71,15 @@ export async function containedPath(
   }
   const canonicalRoot = await realpath(root);
   const absolute = path.resolve(canonicalRoot, requestedPath);
-  const targetExists = await Bun.file(absolute).exists();
+  let targetExists = true;
+  try {
+    await lstat(absolute);
+  } catch (error) {
+    if (!isMissingPath(error)) {
+      throw error;
+    }
+    targetExists = false;
+  }
   // Reject only a DANGLING symlink at the target (its link resolves to nothing).
   // Such a link can't be canonicalized — `exists()` is false, so the branch
   // below would resolve only the in-tree parent and let the link pass, then
@@ -53,14 +88,22 @@ export async function containedPath(
   // and `.git` checks below resolve its real target and reject it only if it
   // escapes the tree or reaches Git metadata, so a safe in-tree link (e.g. this
   // repo's `CLAUDE.md` -> `AGENTS.md`) can still be read and edited.
-  if (!targetExists && (await isSymlink(absolute))) {
-    throw new Error(
-      `Refusing to write through a dangling symlink: ${requestedPath}`,
+  let canonicalTarget: string;
+  try {
+    canonicalTarget = await realpath(
+      targetExists
+        ? absolute
+        : await nearestExistingAncestor(path.dirname(absolute)),
     );
+  } catch (error) {
+    if (targetExists && isMissingPath(error) && (await isSymlink(absolute))) {
+      throw new Error(
+        `Refusing to write through a dangling symlink: ${requestedPath}`,
+        { cause: error },
+      );
+    }
+    throw error;
   }
-  const canonicalTarget = await realpath(
-    targetExists ? absolute : path.dirname(absolute),
-  );
   const fromRoot = path.relative(canonicalRoot, canonicalTarget);
   if (fromRoot.startsWith("..") || path.isAbsolute(fromRoot)) {
     throw new Error(`Path escapes assigned worktree: ${requestedPath}`);
@@ -153,12 +196,24 @@ type FileEditToolDeps = {
   store: FleetStore;
   pr: PrState;
   record: RecordTool;
+  environment: FleetEnvironment;
+  signal: AbortSignal;
 };
 
-function holdsWriteLease(store: FleetStore, pr: PrState): void {
-  if (store.stackWriteOwners.get(pr.stackId) !== pr.identity.number) {
-    throw new Error("Worker does not hold the stack write lease");
+async function prepareFileMutation(deps: FileEditToolDeps): Promise<void> {
+  const { store, pr } = deps;
+  if (store.operatorRequests.has(pr.identity.number)) {
+    throw new Error("PR is waiting for operator input");
   }
+  const alreadyOwnsStack =
+    store.stackWriteOwners.get(pr.stackId) === pr.identity.number;
+  const hasWriteAuthority =
+    alreadyOwnsStack || store.requestLease(pr, "stack-write");
+  if (!hasWriteAuthority) {
+    throw new Error("Stack write lease is not available");
+  }
+  await requireCurrentInheritedWipInspection(deps);
+  invalidateInheritedWipInspection({ store: deps.store, pr: deps.pr });
 }
 
 // The reliable worker edit surface: exact-match `str_replace` and full-file
@@ -166,7 +221,7 @@ function holdsWriteLease(store: FleetStore, pr: PrState): void {
 // hand-authored unified diff for `apply_patch` frequently fails format or
 // whitespace checks and burns the whole cycle.
 export function createFileEditTools(deps: FileEditToolDeps) {
-  const { worktree, store, pr, record } = deps;
+  const { worktree, record, environment, signal } = deps;
   return {
     str_replace: createTool({
       id: "str_replace",
@@ -184,7 +239,7 @@ export function createFileEditTools(deps: FileEditToolDeps) {
       }),
       execute: (input) =>
         record("str_replace", input, async () => {
-          holdsWriteLease(store, pr);
+          await prepareFileMutation(deps);
           return applyStrReplace(worktree, input);
         }),
     }),
@@ -199,8 +254,41 @@ export function createFileEditTools(deps: FileEditToolDeps) {
       outputSchema: z.object({ path: z.string(), bytes: z.number().int() }),
       execute: (input) =>
         record("write_file", input, async () => {
-          holdsWriteLease(store, pr);
+          await prepareFileMutation(deps);
           return writeWorktreeFile(worktree, input);
+        }),
+    }),
+    format_paths: createTool({
+      id: "format_paths",
+      description:
+        "Run Prettier in write mode on explicit files beneath the assigned worktree. Use this when a staged-files formatting hook reports an exact path; directories and broad pathspecs are rejected.",
+      inputSchema: z.object({
+        paths: z.array(z.string().min(1)).min(1).max(100),
+      }),
+      outputSchema: z.object({ paths: z.array(z.string()) }),
+      execute: (input) =>
+        record("format_paths", input, async () => {
+          await prepareFileMutation(deps);
+          for (const requestedPath of input.paths) {
+            const absolute = await containedPath(worktree, requestedPath);
+            const stats = await lstat(absolute);
+            if (!stats.isFile()) {
+              throw new Error(
+                `Formatting path is not a specific file: ${requestedPath}`,
+              );
+            }
+          }
+          const result = await environment.runLocalCommand({
+            executable: "bunx",
+            args: ["prettier", "--write", "--", ...input.paths],
+            cwd: worktree,
+            timeoutMs: 120_000,
+            signal,
+          });
+          if (result.exitCode !== 0) {
+            throw new Error(`Prettier failed: ${result.stderr.trim()}`);
+          }
+          return { paths: input.paths };
         }),
     }),
   };

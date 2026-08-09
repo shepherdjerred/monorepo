@@ -1,0 +1,52 @@
+# Find a seeded completed task, uncomplete it from the row's native menu, and
+# confirm it returns to the Today agenda.
+appId: org.reactjs.native.example.TasksForObsidian
+---
+- runFlow: 00-setup.yaml
+- tapOn:
+    id: "tab-browse"
+- scrollUntilVisible:
+    element:
+      id: "browse-completed"
+    direction: DOWN
+    timeout: 15000
+    speed: 40
+    visibilityPercentage: 90
+- tapOn:
+    id: "browse-completed"
+- extendedWaitUntil:
+    visible:
+      id: "completed-tasks-search"
+    timeout: 10000
+- tapOn:
+    id: "completed-tasks-search"
+- inputText: "Seeded done task"
+- extendedWaitUntil:
+    visible:
+      id: "task-row-TaskNotes/seeded-done-task-2b3c4d5e.md"
+    timeout: 10000
+# Scroll resolution is explicit before the row's native actions menu.
+- scrollUntilVisible:
+    element:
+      id: "task-row-menu-TaskNotes/seeded-done-task-2b3c4d5e.md"
+    direction: DOWN
+    timeout: 10000
+    speed: 40
+    visibilityPercentage: 90
+- tapOn:
+    id: "task-row-menu-TaskNotes/seeded-done-task-2b3c4d5e.md"
+- tapOn:
+    text: "Uncomplete"
+- extendedWaitUntil:
+    notVisible:
+      id: "task-row-TaskNotes/seeded-done-task-2b3c4d5e.md"
+    timeout: 15000
+- assertVisible: "No results"
+- tapOn:
+    id: "completed-tasks-close"
+- tapOn:
+    id: "tab-today"
+- extendedWaitUntil:
+    visible:
+      id: "task-row-TaskNotes/seeded-done-task-2b3c4d5e.md"
+    timeout: 15000

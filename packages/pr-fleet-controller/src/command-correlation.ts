@@ -12,6 +12,12 @@ export function withCommandCorrelation<T>(
   return commandCorrelation.run(correlation, run);
 }
 
+export function withoutCommandCorrelation<T>(
+  run: () => Promise<T>,
+): Promise<T> {
+  return commandCorrelation.run({}, run);
+}
+
 export function currentCommandCorrelation(): RunEventCorrelation {
   return commandCorrelation.getStore() ?? {};
 }

@@ -13,13 +13,14 @@ origin: log-2026-07-27-homelab-cleanup-floor-heat
 PR #1747 removed Jellyfin and the five modded Minecraft servers
 (allthemons, stoneblock4, bettermc, allofcreate, ftbskies2) from cdk8s and
 OpenTofu. Auto-deletion on merge covers only the DNS records (CI `tofu apply`)
-and any remaining app-of-apps resources (`argocd.ts sync apps --prune`). The
-Minecraft Applications, workloads, PVCs, secrets, and ZFS datasets were
-deleted live on 2026-07-28. The merge-time app-of-apps prune removed the five
-empty namespaces. The five remaining `Released` PV API objects were deleted
-later that day; no retired Minecraft storage objects remain in Kubernetes.
-The Jellyfin workload, Service, ingress/proxy, binding, and PVC objects are also
-gone. Two Released PV records and their Ready OpenEBS ZFSVolume datasets remain.
+and any remaining app-of-apps resources
+(`argocd.ts sync apps --revision <exact-build-revision> --prune`). The Minecraft
+Applications, workloads, PVCs, secrets, and ZFS datasets were deleted live on
+2026-07-28. The merge-time app-of-apps prune removed the five empty namespaces.
+The five remaining `Released` PV API objects were deleted later that day; no
+retired Minecraft storage objects remain in Kubernetes. The Jellyfin workload,
+Service, ingress/proxy, binding, and PVC objects are also gone. Two Released PV
+records and their Ready OpenEBS ZFSVolume datasets remain.
 
 ## Remaining
 

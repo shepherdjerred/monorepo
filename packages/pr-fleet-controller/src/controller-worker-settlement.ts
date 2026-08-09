@@ -26,6 +26,37 @@ export function settleWorkerResult(settlement: WorkerSettlement): boolean {
   if (current === undefined) {
     return false;
   }
+  const operatorRequest = store.operatorRequests.get(prNumber);
+  if (operatorRequest !== undefined) {
+    if (
+      result.operatorRequestId != null &&
+      result.operatorRequestId !== operatorRequest.id
+    ) {
+      throw new Error(
+        `Worker returned operator request ${result.operatorRequestId}, but ${operatorRequest.id} is pending`,
+      );
+    }
+    store.prs.set(prNumber, {
+      ...current,
+      runtimeAgent: null,
+      status: "waiting-for-answer",
+      classification: "waiting-for-answer",
+      lastAgentReportAt: currentTimestamp(),
+      lastProgressAt: currentTimestamp(),
+      noProgressTicks: 0,
+      escalation: null,
+      operatorRequest,
+    });
+    observer.onChange(
+      `worker for PR #${String(prNumber)} is waiting for operator request ${operatorRequest.id}`,
+    );
+    return true;
+  }
+  if (result.state === "waiting-for-answer") {
+    throw new Error(
+      `Worker returned waiting-for-answer without registering an operator request`,
+    );
+  }
   const needsLease =
     result.state === "needs-setup-lease" ||
     result.state === "needs-heavy-lease" ||
@@ -93,6 +124,27 @@ export function settleWorkerFailure(
   store.activeWorkers.delete(prNumber);
   store.workerControllers.delete(prNumber);
   store.releaseLeases(prNumber);
+  const operatorRequest = store.operatorRequests.get(prNumber);
+  if (operatorRequest !== undefined) {
+    const current = store.prs.get(prNumber);
+    if (current !== undefined) {
+      store.prs.set(prNumber, {
+        ...current,
+        runtimeAgent: null,
+        status: "waiting-for-answer",
+        classification: "waiting-for-answer",
+        lastAgentReportAt: currentTimestamp(),
+        lastProgressAt: currentTimestamp(),
+        noProgressTicks: 0,
+        escalation: null,
+        operatorRequest,
+      });
+    }
+    observer.onChange(
+      `worker for PR #${String(prNumber)} stopped after requesting operator input`,
+    );
+    return true;
+  }
   const message = error instanceof Error ? error.message : String(error);
   if (deliberatelyCancelled) {
     observer.onChange(

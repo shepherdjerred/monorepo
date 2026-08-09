@@ -83,6 +83,11 @@ export function loadConfig(env: EnvLookup = Bun.env): Config {
       env["TMDB_API_KEY"] === undefined
         ? undefined
         : { apiKey: env["TMDB_API_KEY"] },
+    playerCard: {
+      enabled: bool(env["PLAYER_CARD_ENABLED"]),
+      tickMs: num(env["PLAYER_CARD_TICK_MS"]),
+      repostAfterMessages: num(env["PLAYER_CARD_REPOST_AFTER_MESSAGES"]),
+    },
     idleTimeoutSeconds: num(env["IDLE_TIMEOUT_SECONDS"]),
     playlistLimit: num(env["PLAYLIST_LIMIT"]),
     ytDlpPath: env["YT_DLP_PATH"],

@@ -3,7 +3,7 @@ import {
   type ArenaChampion,
 } from "@scout-for-lol/data";
 import { palette } from "#src/assets/colors.ts";
-import { font } from "#src/assets/index.ts";
+import { font, fontForText } from "#src/assets/index.ts";
 import { getChampionLoadingImage } from "#src/dataDragon/image-cache.ts";
 import { Damage } from "#src/html/arena/damage.tsx";
 import { ItemsRow } from "#src/html/arena/items-row.tsx";
@@ -119,7 +119,7 @@ export function PlayerColumn({
           <div
             style={{
               display: "flex",
-              fontFamily: font.title,
+              fontFamily: fontForText("title", player.riotIdGameName),
               fontSize: 16,
               fontWeight: 700,
               lineHeight: 1,

@@ -12,16 +12,32 @@ export type FailedWorkflowExecution = {
   runId: string;
   workflowType: string;
   taskQueue: string;
+  /** Temporal visibility's stable descending pagination key. */
+  startTime: Date;
   closeTime: Date;
   /** Only the terminal statuses this watcher pages on — deliberate exclusion excludes cancel/terminate. */
   status: "FAILED" | "TIMED_OUT";
 };
+
+export type WorkerTaskQueueUnavailableReason =
+  | "no activity reached execution"
+  | "a scheduled activity has not started"
+  | "a scheduled workflow task has not started";
 
 export type WorkflowFailureDetail = {
   /** e.g. `ApplicationFailure`, `ActivityFailure`, `TimeoutFailure` — the TemporalFailure subclass name. */
   failureType: string;
   message: string;
   stack: string | undefined;
+  timeoutClassification?:
+    | "workflow-task"
+    | "activity"
+    | "execution"
+    | "unknown";
+  timeoutDispatchState?: "pre-dispatch" | "post-dispatch";
+  workerTaskQueueUnavailable?: boolean;
+  workerTaskQueueUnavailableReason?: WorkerTaskQueueUnavailableReason;
+  historyError?: string;
 };
 
 function truncate(value: string, maxChars: number): string {
@@ -77,10 +93,33 @@ export function buildWorkflowFailureAlert(
       `stack ${truncate(failure.stack, MAX_STACK_EXCERPT_CHARS)}`,
     );
   }
+  if (failure.timeoutClassification !== undefined) {
+    descriptionParts.push(
+      `timeoutClassification ${failure.timeoutClassification}`,
+    );
+  }
+  if (failure.timeoutDispatchState !== undefined) {
+    descriptionParts.push(
+      `timeoutDispatchState ${failure.timeoutDispatchState}`,
+    );
+  }
+  if (failure.workerTaskQueueUnavailable === true) {
+    descriptionParts.push(
+      `diagnosis worker/task-queue availability failure: ${failure.workerTaskQueueUnavailableReason ?? "no activity reached execution"}`,
+    );
+  }
+  if (failure.historyError !== undefined) {
+    descriptionParts.push(
+      `historyError ${truncate(failure.historyError, 240)}`,
+    );
+  }
   const description = descriptionParts.join("\n");
 
   const startsAt = now.toISOString();
-  const endsAt = new Date(now.getTime() + ttlMs).toISOString();
+  // Keep the alert lifecycle tied to the execution rather than to the last
+  // poll. Re-observing a failure during the lookback must not extend its
+  // PagerDuty repeat/resolution window indefinitely.
+  const endsAt = new Date(execution.closeTime.getTime() + ttlMs).toISOString();
 
   return {
     labels,

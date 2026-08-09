@@ -12,15 +12,18 @@ import { SectionSkeleton } from "#src/components/section-skeleton.tsx";
 export function RequireSession() {
   const trpc = useTRPC();
   const location = useLocation();
+  // sessionState answers `{ user: null }` when signed out instead of throwing,
+  // so a normal anonymous visit no longer manufactures a server-side error.
   const { data, isLoading, isError } = useQuery(
-    trpc.auth.meWeb.queryOptions(undefined, { retry: false }),
+    trpc.auth.sessionState.queryOptions(undefined, { retry: false }),
   );
 
   if (isLoading) {
     return <div style={{ padding: "2rem" }}>Loading…</div>;
   }
 
-  if (isError || data === undefined) {
+  const user = data?.user ?? null;
+  if (isError || user === null) {
     // location.pathname is relative to the BrowserRouter basename (/app),
     // so we re-prefix it before handing to the server. Without the
     // prefix, the backend's safeReturnTo guard rejects the value and the
@@ -49,7 +52,7 @@ export function RequireSession() {
               Guilds
             </Link>
           </div>
-          <UserMenu username={data.username} />
+          <UserMenu username={user.username} />
         </div>
       </header>
       <main className="flex-1">

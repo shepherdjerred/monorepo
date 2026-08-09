@@ -20,10 +20,22 @@ Fully headless — no browser, no emulator UI, no GPU, no desktop:
   of
   [`@dank074/discord-video-stream`](https://github.com/dank074/Discord-video-stream))
   using a self-bot, so viewers watch in the voice channel.
+- **Driver feed** — the people driving don't have to watch Discord. The same
+  frames are encoded a second time and pushed over a WebSocket straight into the
+  controller page, where the browser decodes them with WebCodecs onto a canvas.
+  That skips Discord's voice pipeline and its client-side de-jitter buffer, which
+  is the single largest chunk of the input-to-picture delay. Spectators keep
+  watching the Go-Live stream, which is unaffected. Off by default; enable
+  `[driver_feed]` in `config.toml`.
 - **Input** — the web UI exposes up to **four virtual controllers** (seats
   P1–P4). Players claim a seat and drive with WASD/arrows in real time; inputs
   are sent over Socket.IO and applied per-player each frame. Players navigate the
   in-game menus themselves (character/track/mode select, including 4-player VS).
+
+> **Stay in the voice channel while you play.** The session ends 30 seconds after
+> the last human leaves voice — the bot counts voice membership, not stream
+> viewers, so watching the driver feed instead of the Discord stream is fine but
+> disconnecting from voice is not.
 
 ### Controls
 

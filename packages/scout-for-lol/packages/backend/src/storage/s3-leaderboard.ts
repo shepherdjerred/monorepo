@@ -19,6 +19,8 @@ import {
 } from "#src/metrics/index.ts";
 import { z } from "zod";
 import { validateS3Metadata } from "#src/storage/s3-metadata.ts";
+import { resolveLakeDir } from "#src/report-lake/paths.ts";
+import { writeCompetitionRankHistoryStagingFile } from "#src/report-lake/staging.ts";
 
 // Schema for AWS S3 "not found" errors
 const AwsS3NotFoundErrorSchema = z.object({
@@ -139,6 +141,7 @@ export async function saveCachedLeaderboard(
     });
 
     await client.send(snapshotCommand);
+    await writeCompetitionRankHistoryStagingFile(resolveLakeDir(), leaderboard);
 
     const uploadTime = Date.now() - startTime;
     logger.info(

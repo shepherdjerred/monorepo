@@ -9,11 +9,14 @@
  * timeouts are preserved.
  *
  * Usage:
- *   bun packages/homelab/scripts/argocd.ts sync <app> [--prune] [--timeout <s>] [--dry-run]
+ *   bun packages/homelab/scripts/argocd.ts sync <app> [--revision <v>]
+ *       [--prune] [--async] [--timeout <s>] [--dry-run]
  *   bun packages/homelab/scripts/argocd.ts delete-application <app> \
  *       --project <project> [--timeout <s>] [--dry-run]
  *   bun packages/homelab/scripts/argocd.ts health-wait <app> [--timeout <s>] [--dry-run]
  *   bun packages/homelab/scripts/argocd.ts tree-health-wait <app> [--timeout <s>] [--dry-run]
+ *   bun packages/homelab/scripts/argocd.ts suspend-auto-sync <root-app> \
+ *       [--revision <v>] [--timeout <s>] [--dry-run]
  *   bun packages/homelab/scripts/argocd.ts wait-deletion <app> \
  *       --group <g> --version <v> --kind <k> --namespace <ns> \
  *       [--timeout <s>] [--dry-run]
@@ -24,6 +27,7 @@
  */
 
 import { requireEnv, optionalEnv } from "../../../scripts/lib/run.ts";
+import { TransientError } from "../../../scripts/lib/transient-error.ts";
 import { runMain } from "../../../scripts/lib/transient.ts";
 import {
   applicationReadiness,
@@ -51,11 +55,16 @@ const DEFAULT_HEALTH_TIMEOUT_S = 300;
 const DEFAULT_SYNC_TIMEOUT_S = 300;
 const DEFAULT_DELETION_TIMEOUT_S = 120;
 const POLL_INTERVAL_MS = 10_000;
+const CHARTMUSEUM_MAX_ATTEMPTS = 3;
+const CHARTMUSEUM_REQUEST_TIMEOUT_MS = 10_000;
+const CHARTMUSEUM_RETRY_BASE_DELAY_MS = 100;
+
+const BuildRevisionSchema = z.string().regex(/^2\.0\.0-\d+$/);
 
 const ExpectedApplicationsSchema = z.array(
   z.object({
     name: z.string().min(1),
-    revision: z.string().regex(/^2\.0\.0-\d+$/),
+    revision: BuildRevisionSchema,
     prune: z.boolean().default(false),
   }),
 );
@@ -108,6 +117,12 @@ const ReconcileApplicationSchema = z.object({
         .object({
           status: z.string(),
           revision: z.string().optional(),
+        })
+        .optional(),
+      operationState: z
+        .object({
+          phase: z.string(),
+          syncResult: z.object({ revision: z.string().optional() }).optional(),
         })
         .optional(),
     })
@@ -171,47 +186,63 @@ async function getApplications(token: string): Promise<unknown> {
   return response.json();
 }
 
+async function getApplicationManifests(
+  appName: string,
+  revision: string,
+  token: string,
+): Promise<readonly string[]> {
+  const manifestsUrl = new URL(
+    `/api/v1/applications/${encodeURIComponent(appName)}/manifests`,
+    serverUrl(),
+  );
+  manifestsUrl.searchParams.set("revision", revision);
+  const response = await fetch(manifestsUrl, {
+    headers: { Authorization: `Bearer ${token}` },
+    redirect: "follow",
+  });
+  if (!response.ok) {
+    const body = (await response.text()).slice(0, 1024);
+    throw new Error(
+      `Could not render ${appName} from ${manifestsUrl.toString()}: ` +
+        `HTTP ${response.status.toString()}\n${body}`,
+    );
+  }
+  return ManifestResponseSchema.parse(await response.json()).manifests;
+}
+
 async function suspendRepositoryAutoSync(
   rootAppName: string,
   timeoutSeconds: number,
   dryRun: boolean,
+  revision: string | undefined,
 ): Promise<void> {
+  const exactRevision =
+    revision === undefined ? undefined : BuildRevisionSchema.parse(revision);
   console.log(
     `--- argocd suspend-auto-sync: repository Applications under ${rootAppName}${dryRun ? " (dry run)" : ""}`,
   );
   if (dryRun) {
     return;
   }
+  if (exactRevision !== undefined) {
+    await assertExpectedAppsRevisionIsLatest(exactRevision, timeoutSeconds);
+  }
   const token = requireEnv("ARGOCD_TOKEN");
-  const rootApplication = RootDeploymentHistorySchema.parse(
-    await getApplication(rootAppName, token),
+  const renderedRevision =
+    exactRevision === undefined
+      ? latestSuccessfulRevision(
+          rootAppName,
+          RootDeploymentHistorySchema.parse(
+            await getApplication(rootAppName, token),
+          ),
+        )
+      : exactRevision;
+  const manifests = await getApplicationManifests(
+    rootAppName,
+    renderedRevision,
+    token,
   );
-  const [firstDeployment, ...remainingDeployments] =
-    rootApplication.status.history;
-  if (firstDeployment === undefined) {
-    throw new Error(`${rootAppName} has no successful deployment history`);
-  }
-  const latestDeployment = remainingDeployments.reduce(
-    (latest, candidate) => (candidate.id > latest.id ? candidate : latest),
-    firstDeployment,
-  );
-  const manifestsUrl = new URL(
-    `/api/v1/applications/${encodeURIComponent(rootAppName)}/manifests`,
-    serverUrl(),
-  );
-  manifestsUrl.searchParams.set("revision", latestDeployment.revision);
-  const manifestsResponse = await fetch(manifestsUrl, {
-    headers: { Authorization: `Bearer ${token}` },
-    redirect: "follow",
-  });
-  if (!manifestsResponse.ok) {
-    const body = (await manifestsResponse.text()).slice(0, 1024);
-    throw new Error(
-      `Could not render ${rootAppName} from ${manifestsUrl.toString()}: HTTP ${manifestsResponse.status.toString()}\n${body}`,
-    );
-  }
-  const rendered = ManifestResponseSchema.parse(await manifestsResponse.json());
-  const suspended = rendered.manifests.flatMap((manifestSource) => {
+  const suspended = manifests.flatMap((manifestSource) => {
     const parsed = RenderedObjectSchema.parse(JSON.parse(manifestSource));
     if (parsed.kind !== "Application") {
       return [];
@@ -261,17 +292,27 @@ async function suspendRepositoryAutoSync(
   }
 }
 
+function latestSuccessfulRevision(
+  rootAppName: string,
+  rootApplication: z.infer<typeof RootDeploymentHistorySchema>,
+): string {
+  const [firstDeployment, ...remainingDeployments] =
+    rootApplication.status.history;
+  if (firstDeployment === undefined) {
+    throw new Error(`${rootAppName} has no successful deployment history`);
+  }
+  return remainingDeployments.reduce(
+    (latest, candidate) => (candidate.id > latest.id ? candidate : latest),
+    firstDeployment,
+  ).revision;
+}
+
 async function assertExpectedAppsRevisionIsLatest(
   expectedRevision: string,
+  timeoutSeconds: number,
 ): Promise<void> {
   const url = `${chartMuseumOrigin()}/api/charts/apps`;
-  const response = await fetch(url);
-  if (!response.ok) {
-    const body = (await response.text()).slice(0, 1024);
-    throw new Error(
-      `ChartMuseum inventory failed for apps: HTTP ${response.status.toString()}\n${body}`,
-    );
-  }
+  const response = await fetchChartMuseumInventory(url, timeoutSeconds);
   const latest = latestPublishedVersion(await response.json());
   if (latest === undefined) {
     throw new Error("ChartMuseum has no published apps release");
@@ -283,7 +324,76 @@ async function assertExpectedAppsRevisionIsLatest(
   }
 }
 
-async function assertRootPruneSafe(token: string): Promise<void> {
+async function fetchChartMuseumInventory(
+  url: string,
+  timeoutSeconds: number,
+): Promise<Response> {
+  const deadline = Date.now() + timeoutSeconds * 1000;
+  let lastFailure = "request deadline expired";
+  let lastCause: unknown;
+  for (let attempt = 1; attempt <= CHARTMUSEUM_MAX_ATTEMPTS; attempt += 1) {
+    const remainingMs = deadline - Date.now();
+    if (remainingMs <= 0) {
+      break;
+    }
+    let response: Response | undefined;
+    try {
+      response = await fetch(url, {
+        signal: AbortSignal.timeout(
+          Math.min(CHARTMUSEUM_REQUEST_TIMEOUT_MS, remainingMs),
+        ),
+      });
+    } catch (error) {
+      lastCause = error;
+      lastFailure = error instanceof Error ? error.message : String(error);
+    }
+    if (response !== undefined) {
+      if (response.ok) {
+        return response;
+      }
+      const body = (await response.text()).slice(0, 1024);
+      lastFailure = `HTTP ${response.status.toString()}\n${body}`;
+      if (response.status !== 429 && response.status < 500) {
+        throw new Error(
+          `ChartMuseum inventory failed for apps: ${lastFailure}`,
+        );
+      }
+    }
+    if (attempt < CHARTMUSEUM_MAX_ATTEMPTS) {
+      const delayMs = Math.min(
+        CHARTMUSEUM_RETRY_BASE_DELAY_MS * 2 ** (attempt - 1),
+        Math.max(0, deadline - Date.now()),
+      );
+      if (delayMs > 0) {
+        console.warn(
+          `ChartMuseum inventory attempt ${attempt.toString()} failed; retrying in ${delayMs.toString()}ms`,
+        );
+        await Bun.sleep(delayMs);
+      }
+    }
+  }
+  throw new TransientError(
+    `ChartMuseum inventory failed for apps after ${CHARTMUSEUM_MAX_ATTEMPTS.toString()} attempts: ${lastFailure}`,
+    { cause: lastCause },
+  );
+}
+
+async function assertRootPruneSafe(
+  token: string,
+  revision: string,
+): Promise<void> {
+  const exactRevision = BuildRevisionSchema.parse(revision);
+  const desiredChildren = new Set(
+    (await getApplicationManifests("apps", exactRevision, token)).flatMap(
+      (manifestSource) => {
+        const parsed = RenderedObjectSchema.parse(JSON.parse(manifestSource));
+        if (parsed.kind !== "Application") {
+          return [];
+        }
+        return [RenderedApplicationSchema.parse(parsed).metadata.name];
+      },
+    ),
+  );
   const root = await getApplication("apps", token);
   const status = isRecord(root["status"]) ? root["status"] : {};
   const resources = Array.isArray(status["resources"])
@@ -293,9 +403,9 @@ async function assertRootPruneSafe(token: string): Promise<void> {
     if (
       !isRecord(resource) ||
       resource["kind"] !== "Application" ||
-      resource["status"] !== "OutOfSync" ||
       typeof resource["name"] !== "string" ||
-      resource["name"] === "apps"
+      resource["name"] === "apps" ||
+      desiredChildren.has(resource["name"])
     ) {
       return [];
     }
@@ -338,6 +448,7 @@ async function assertRootPruneSafe(token: string): Promise<void> {
  */
 type SyncOptions = {
   prune: boolean;
+  waitForCompletion?: boolean;
   revision?: string;
   manifests?: readonly string[];
   resources?: readonly SyncOperationResource[];
@@ -360,7 +471,12 @@ async function sync(
   }
   const token = requireEnv("ARGOCD_TOKEN");
   if (appName === "apps" && options.prune) {
-    await assertRootPruneSafe(token);
+    if (options.revision === undefined) {
+      throw new Error(
+        "Root Application pruning requires an exact --revision so prune candidates can be verified against the rendered source",
+      );
+    }
+    await assertRootPruneSafe(token, options.revision);
   }
   const requestId = crypto.randomUUID();
   const url = `${serverUrl()}/api/v1/applications/${appName}/sync`;
@@ -390,6 +506,9 @@ async function sync(
   }
   const operationIdentity = requestedOperationIdentity(await res.json());
   console.log(`sync operation started: ${appName}`);
+  if (options.waitForCompletion === false) {
+    return;
+  }
 
   const deadline = Date.now() + timeoutSeconds * 1000;
   let elapsed = 0;
@@ -423,6 +542,168 @@ async function sync(
   );
 }
 
+function operationState(app: Record<string, unknown>): Record<string, unknown> {
+  const status = isRecord(app["status"]) ? app["status"] : {};
+  return isRecord(status["operationState"]) ? status["operationState"] : {};
+}
+
+function operationRevision(
+  operation: Record<string, unknown>,
+): string | undefined {
+  const sync = isRecord(operation["sync"]) ? operation["sync"] : {};
+  const revision = sync["revision"];
+  return typeof revision === "string" ? revision : undefined;
+}
+
+function syncResultRevision(
+  operationStateValue: Record<string, unknown>,
+): string | undefined {
+  const syncResult = isRecord(operationStateValue["syncResult"])
+    ? operationStateValue["syncResult"]
+    : {};
+  const revision = syncResult["revision"];
+  return typeof revision === "string" ? revision : undefined;
+}
+
+function syncResultApplied(
+  operationStateValue: Record<string, unknown>,
+  revision: string,
+): boolean {
+  if (syncResultRevision(operationStateValue) !== revision) {
+    return false;
+  }
+  const syncResult = isRecord(operationStateValue["syncResult"])
+    ? operationStateValue["syncResult"]
+    : {};
+  const resources = syncResult["resources"];
+  if (!Array.isArray(resources) || resources.length === 0) {
+    return false;
+  }
+  return resources.every((resource: unknown) => {
+    if (!isRecord(resource)) {
+      return false;
+    }
+    const status = resource["status"];
+    const hookPhase = resource["hookPhase"];
+    return (
+      (status === "Synced" || status === "Pruned" || status === "Skipped") &&
+      hookPhase !== "Failed" &&
+      hookPhase !== "Error"
+    );
+  });
+}
+
+/**
+ * Finish a root sync started with `--async` after its manifests are applied.
+ *
+ * ArgoCD's async flag only changes client-side waiting: the controller keeps
+ * the operation Running until every resource is Healthy. The root app owns
+ * Applications that are intentionally deferred or independently unhealthy, so
+ * that health wait can outlive the release. Before terminating, require the
+ * exact requested revision and a complete successful sync result; a failed or
+ * mismatched operation remains a hard failure instead of being hidden.
+ */
+async function finalizeAsyncSync(
+  appName: string,
+  revision: string,
+  timeoutSeconds: number,
+  dryRun: boolean,
+): Promise<void> {
+  const exactRevision = BuildRevisionSchema.parse(revision);
+  console.log(
+    `--- argocd finalize-async-sync: ${appName} at ${exactRevision}${dryRun ? " (dry run)" : ""}`,
+  );
+  if (dryRun) {
+    console.log(
+      `DRYRUN: would terminate the applied Running operation for ${appName} at ${exactRevision}`,
+    );
+    return;
+  }
+
+  const token = requireEnv("ARGOCD_TOKEN");
+  const deadline = Date.now() + timeoutSeconds * 1000;
+  let elapsed = 0;
+  while (Date.now() < deadline) {
+    const app = await getApplication(appName, token);
+    const currentOperation = operationState(app);
+    const phase = currentOperation["phase"];
+    const operation = isRecord(currentOperation["operation"])
+      ? currentOperation["operation"]
+      : undefined;
+    if (operation === undefined) {
+      console.log(`no Running operation to finalize: ${appName}`);
+      return;
+    }
+    const currentRevision = operationRevision(operation);
+    if (currentRevision !== exactRevision) {
+      throw new Error(
+        `Refusing to terminate ${appName} operation at ${currentRevision ?? "unknown revision"}; expected ${exactRevision}`,
+      );
+    }
+    if (phase === "Failed" || phase === "Error") {
+      const message =
+        typeof currentOperation["message"] === "string"
+          ? currentOperation["message"]
+          : "";
+      throw new Error(
+        `Async sync operation ${phase} for ${appName} at ${exactRevision}: ${message.slice(0, 1024)}`,
+      );
+    }
+    if (phase !== "Running" && phase !== "Terminating") {
+      console.log(`async sync operation already finalized: ${appName}`);
+      return;
+    }
+    console.log(
+      `Operation: ${String(phase)}; applied=${syncResultApplied(currentOperation, exactRevision).toString()} ` +
+        `(${elapsed.toString()}/${timeoutSeconds.toString()}s)`,
+    );
+    if (
+      phase === "Running" &&
+      syncResultApplied(currentOperation, exactRevision)
+    ) {
+      break;
+    }
+    await Bun.sleep(POLL_INTERVAL_MS);
+    elapsed += POLL_INTERVAL_MS / 1000;
+  }
+  if (Date.now() >= deadline) {
+    throw new Error(
+      `Timeout: ${appName} operation at ${exactRevision} was not fully applied within ${timeoutSeconds.toString()}s`,
+    );
+  }
+
+  const url = new URL(
+    `/api/v1/applications/${encodeURIComponent(appName)}/operation`,
+    serverUrl(),
+  );
+  const response = await fetch(url, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+  if (!response.ok) {
+    const body = (await response.text()).slice(0, 1024);
+    throw new Error(
+      `Async sync termination failed: HTTP ${response.status.toString()} ${response.statusText}\n${body}`,
+    );
+  }
+  console.log(`terminated applied async sync operation: ${appName}`);
+
+  while (Date.now() < deadline) {
+    const current = operationState(await getApplication(appName, token));
+    const phase = current["phase"];
+    if (phase !== "Running" && phase !== "Terminating") {
+      return;
+    }
+    await Bun.sleep(POLL_INTERVAL_MS);
+  }
+  throw new Error(
+    `Timeout: terminated ${appName} operation did not leave Running/Terminating state within ${timeoutSeconds.toString()}s`,
+  );
+}
+
 async function reconcileRelease(
   expectedPath: string,
   timeoutSeconds: number,
@@ -448,20 +729,13 @@ async function reconcileRelease(
   if (appsRelease === undefined) {
     throw new Error("Expected release inventory is missing the apps revision");
   }
-  await assertExpectedAppsRevisionIsLatest(appsRelease.revision);
-  const token = requireEnv("ARGOCD_TOKEN");
-  const root = ReconcileApplicationSchema.parse(
-    await getApplication("apps", token),
+  await assertExpectedAppsRevisionIsLatest(
+    appsRelease.revision,
+    timeoutSeconds,
   );
-  if (
-    root.status?.sync?.status !== "Synced" ||
-    root.status.sync.revision !== appsRelease.revision
-  ) {
-    await sync("apps", timeoutSeconds, false, {
-      prune: false,
-      revision: appsRelease.revision,
-    });
-  }
+  const token = requireEnv("ARGOCD_TOKEN");
+  // The release step submits the root Application sync asynchronously. Waiting
+  // here would make every release depend on unrelated child Application health.
   for (const wanted of expected) {
     if (wanted.name === "apps" || deferredApps.has(wanted.name)) {
       continue;
@@ -471,9 +745,16 @@ async function reconcileRelease(
     );
     const syncStatus = current.status?.sync?.status;
     const revision = current.status?.sync?.revision;
+    const operationPhase = current.status?.operationState?.phase;
+    const operationRevision =
+      current.status?.operationState?.syncResult?.revision;
+    const failedCurrentOperation =
+      (operationPhase === "Failed" || operationPhase === "Error") &&
+      (operationRevision === undefined || operationRevision === revision);
     if (
       syncStatus === "Synced" &&
-      (wanted.revision === undefined || revision === wanted.revision)
+      (wanted.revision === undefined || revision === wanted.revision) &&
+      !failedCurrentOperation
     ) {
       continue;
     }
@@ -749,7 +1030,7 @@ function usage(): never {
   console.error(
     "Usage:\n" +
       "  bun packages/homelab/scripts/argocd.ts sync <app> " +
-      "[--prune] [--timeout <s>] [--dry-run]\n" +
+      "[--revision <v>] [--prune] [--async] [--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts delete-application <app> " +
       "--project <project> [--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts health-wait <app> " +
@@ -761,8 +1042,10 @@ function usage(): never {
       "  bun packages/homelab/scripts/argocd.ts reconcile-release <expected.json> " +
       "[--defer-apps <app,...>] [--skip-health-wait] " +
       "[--timeout <s>] [--dry-run]\n" +
+      "  bun packages/homelab/scripts/argocd.ts finalize-async-sync <app> " +
+      "--revision <v> [--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts suspend-auto-sync <root-app> " +
-      "[--dry-run]\n" +
+      "[--revision <v>] [--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts wait-deletion <app> " +
       "--group <g> --version <v> --kind <k> --namespace <ns> " +
       "[--timeout <s>] [--dry-run]",
@@ -822,6 +1105,7 @@ async function main(): Promise<void> {
       const revision = flag(argv, "revision");
       await sync(app, timeoutOverride ?? DEFAULT_SYNC_TIMEOUT_S, dryRun, {
         prune: argv.includes("--prune"),
+        waitForCompletion: !argv.includes("--async"),
         ...(revision === undefined ? {} : { revision }),
       });
       return;
@@ -872,11 +1156,26 @@ async function main(): Promise<void> {
         !argv.includes("--skip-health-wait"),
       );
       return;
+    case "finalize-async-sync": {
+      const revision = flag(argv, "revision");
+      if (revision === undefined) {
+        console.error("--revision is required for finalize-async-sync.");
+        usage();
+      }
+      await finalizeAsyncSync(
+        app,
+        revision,
+        timeoutOverride ?? DEFAULT_SYNC_TIMEOUT_S,
+        dryRun,
+      );
+      return;
+    }
     case "suspend-auto-sync":
       await suspendRepositoryAutoSync(
         app,
         timeoutOverride ?? DEFAULT_SYNC_TIMEOUT_S,
         dryRun,
+        flag(argv, "revision"),
       );
       return;
     case "wait-deletion": {

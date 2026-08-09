@@ -70,6 +70,12 @@ export function Header({
             <span className="mono">
               {manifest.controllerCommit.slice(0, 8)}
             </span>
+            {manifest.author === null ? null : (
+              <>
+                <span className="sep">·</span>
+                <span className="mono">author:{manifest.author}</span>
+              </>
+            )}
           </>
         )}
       </div>
@@ -80,6 +86,7 @@ export function Header({
           <Count label="active" value={fleet.active} />
           <Count label="queued" value={fleet.queued} />
           <Count label="pending" value={fleet.pending} />
+          <Count label="waiting" value={fleet.waiting} />
           <Count label="paused" value={fleet.paused} />
         </div>
       )}

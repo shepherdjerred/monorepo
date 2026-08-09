@@ -97,6 +97,18 @@ describe("parseAndCompile", () => {
     expect(plan.limit).toBe(10);
   });
 
+  test("only raises the default temporal limit for visualizations", () => {
+    const table = parseAndCompile(
+      "SELECT games FROM match_participants GROUP BY all ANALYZE LAST 30 DAYS BUCKET BY DAY RENDER table",
+    );
+    const chart = parseAndCompile(
+      "SELECT games FROM match_participants GROUP BY all ANALYZE LAST 30 DAYS BUCKET BY DAY RENDER line_chart WITH (y = games)",
+    );
+
+    expect(table.limit).toBe(10);
+    expect(chart.limit).toBe(2000);
+  });
+
   test("parses typed row filters", () => {
     const plan = parseAndCompile(
       "SELECT player, games FROM match_participants WHERE kills > 5 AND role IN ('solo', 'support') GROUP BY player",
@@ -288,6 +300,11 @@ describe("RENDER clause", () => {
         "SELECT games FROM match_participants GROUP BY champion RENDER heatmap WITH (value = games)",
       ),
     ).toThrow("exactly two GROUP BY");
+    expect(() =>
+      parseAndCompile(
+        "SELECT games, wins, losses FROM match_participants GROUP BY champion, queue RENDER radar_chart WITH (y = (games, wins, losses))",
+      ),
+    ).toThrow("exactly one GROUP BY");
   });
 
   test("parses a text render kind without a WITH clause", () => {
@@ -402,12 +419,12 @@ describe("RENDER clause", () => {
     ).toThrow('RENDER y = "win_rate" is not a SELECTed metric');
   });
 
-  test("rejects a WITH clause on a text render kind", () => {
+  test("rejects unsupported WITH options on a table", () => {
     expect(() =>
       parseAndCompile(
         "SELECT player, games FROM match_participants GROUP BY player RENDER table WITH (y = games)",
       ),
-    ).toThrow("does not take a WITH clause");
+    ).toThrow("only supports the sparkline option");
   });
 
   test("lints an unknown render kind with a positioned error", () => {

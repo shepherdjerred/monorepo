@@ -45,6 +45,7 @@ import {
   wireNlpParseSchema,
 } from "../../domain/wire";
 import { PATHS } from "./endpoints";
+import type { CompleteInstanceRequest } from "tasknotes-types/v2";
 
 export type TaskNotesClientConfig = {
   baseUrl: string;
@@ -230,7 +231,7 @@ export class TaskNotesClient {
    */
   async completeRecurringInstance(
     id: TaskId,
-    instance?: { date: string; completed: boolean },
+    instance?: CompleteInstanceRequest,
     options?: MutationOptions,
   ): Promise<Result<Task, AppError>> {
     return this.request(

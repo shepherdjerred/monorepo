@@ -1,205 +1,357 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
-  View,
-  Text,
-  FlatList,
+  ActivityIndicator,
+  Alert,
   Pressable,
-  ScrollView,
-  StyleSheet,
+  SectionList,
+  Text,
+  View,
 } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { useFocusEffect } from "@react-navigation/native";
 import type { CompositeScreenProps } from "@react-navigation/native";
-import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
+
+import { AppIcon } from "../components/common/AppIcon";
+import { Fab } from "../components/common/Fab";
+import { BrowseRow } from "../components/saved-view/BrowseRow";
+import type {
+  BrowseItem,
+  BrowseSection,
+  DestinationItem,
+  DimensionItem,
+} from "../components/saved-view/browse-model";
+import {
+  buildBrowseSections,
+  deriveBrowseProjects,
+} from "../components/saved-view/browse-model";
+import { CompletedTasksModal } from "../components/saved-view/CompletedTasksModal";
+import { SavedViewEditorModal } from "../components/saved-view/SavedViewEditorModal";
+import { deriveSavedViewTasks } from "../domain/saved-view-collection";
+import { createCaptureSeed } from "../domain/quick-capture-seed";
+import { sortSavedViews } from "../domain/saved-view-actions";
+import type { SavedViewDefinition } from "../domain/saved-view-actions";
+import type { SavedView } from "../domain/saved-views";
+import { isActiveStatus, isCompletedStatus } from "../domain/status";
 import { contextName, projectName, tagName } from "../domain/types";
-import { DEFAULT_SAVED_VIEWS } from "../domain/saved-views";
-import { applyFilter } from "../domain/filters";
-import { isActiveStatus } from "../domain/status";
-import type { RootStackParamList, MainTabParamList } from "../navigation/types";
-import { useTasks } from "../hooks/use-tasks";
+import { localTodayYmd } from "../domain/recurrence";
+import { useSavedViews } from "../hooks/use-saved-views";
 import { useSettings } from "../hooks/use-settings";
+import { useTaskListScreen } from "../hooks/use-task-list-screen";
+import type { RootStackParamList } from "../navigation/types";
+import type { MainTabScreenProps } from "../navigation/main-tabs";
 import { typography } from "../styles/typography";
-import { EmptyState } from "../components/common/EmptyState";
-import { SavedViewCard } from "../components/common/SavedViewCard";
+import { styles } from "./BrowseScreen.styles";
 
 type Props = CompositeScreenProps<
-  BottomTabScreenProps<MainTabParamList, "Browse">,
+  MainTabScreenProps<"Browse">,
   NativeStackScreenProps<RootStackParamList>
 >;
 
-type Segment = "projects" | "labels" | "contexts";
-
 export function BrowseScreen({ navigation }: Props) {
   const { colors } = useSettings();
-  const { taskList, projectNames, tagNames, contextNames } = useTasks();
-  const [segment, setSegment] = useState<Segment>("projects");
+  const {
+    taskList,
+    projectNames,
+    contextNames,
+    tagNames,
+    pendingTaskIds,
+    handlePress,
+    handleStatusToggle,
+    handleDelete,
+  } = useTaskListScreen(navigation);
+  const {
+    preferences,
+    views,
+    error,
+    isLoading,
+    isSaving,
+    reload,
+    createView,
+    editView,
+    copyView,
+    removeView,
+    reorderView,
+    favoriteView,
+  } = useSavedViews();
+  const [editorVisible, setEditorVisible] = useState(false);
+  const [editingView, setEditingView] = useState<SavedView | null>(null);
+  const [completedVisible, setCompletedVisible] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      void reload();
+    }, [reload]),
+  );
 
   const activeTasks = useMemo(
-    () => taskList.filter((t) => isActiveStatus(t.status)),
+    () => taskList.filter((task) => isActiveStatus(task.status)),
     [taskList],
   );
-
+  const completedTasks = useMemo(
+    () => taskList.filter((task) => isCompletedStatus(task.status)),
+    [taskList],
+  );
+  const projects = useMemo(() => deriveBrowseProjects(taskList), [taskList]);
+  const orderedViews = useMemo(() => sortSavedViews(views), [views]);
   const savedViewCounts = useMemo(() => {
     const counts = new Map<string, number>();
-    for (const view of DEFAULT_SAVED_VIEWS) {
-      counts.set(view.id, applyFilter(activeTasks, view.filter).length);
+    const referenceDay = localTodayYmd();
+    for (const view of orderedViews) {
+      counts.set(
+        view.id,
+        deriveSavedViewTasks(taskList, view, referenceDay).length,
+      );
     }
     return counts;
-  }, [activeTasks]);
+  }, [orderedViews, taskList]);
+  const sections = useMemo(
+    () =>
+      buildBrowseSections({
+        views: orderedViews,
+        viewCounts: savedViewCounts,
+        activeTasks,
+        completedCount: completedTasks.length,
+        projects,
+        contextNames,
+        tagNames,
+      }),
+    [
+      activeTasks,
+      completedTasks.length,
+      contextNames,
+      orderedViews,
+      projects,
+      savedViewCounts,
+      tagNames,
+    ],
+  );
 
-  const items =
-    segment === "projects"
-      ? projectNames
-      : segment === "labels"
-        ? tagNames
-        : contextNames;
-
-  const handlePress = useCallback(
-    (name: string) => {
-      if (segment === "projects") {
-        navigation.navigate("ProjectDetail", {
-          projectName: projectName(name),
-        });
-      } else if (segment === "labels") {
-        navigation.navigate("TagDetail", { tagName: tagName(name) });
-      } else {
-        navigation.navigate("ContextDetail", {
-          contextName: contextName(name),
-        });
+  const openEditor = useCallback((view: SavedView | null) => {
+    setEditingView(view);
+    setEditorVisible(true);
+  }, []);
+  const confirmDelete = useCallback(
+    (view: SavedView) => {
+      Alert.alert(
+        `Delete “${view.name}”?`,
+        "This removes the saved view from this device. Your tasks are not changed.",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Delete",
+            style: "destructive",
+            onPress: () => {
+              void removeView(view.id);
+            },
+          },
+        ],
+      );
+    },
+    [removeView],
+  );
+  const handleSavedViewAction = useCallback(
+    (view: SavedView, action: string) => {
+      switch (action) {
+        case "edit":
+          openEditor(view);
+          return;
+        case "favorite":
+          void favoriteView(view.id, !view.favorite);
+          return;
+        case "duplicate":
+          void copyView(view.id);
+          return;
+        case "move-up":
+          void reorderView(view.id, "up");
+          return;
+        case "move-down":
+          void reorderView(view.id, "down");
+          return;
+        case "delete":
+          confirmDelete(view);
+          return;
       }
     },
-    [navigation, segment],
+    [confirmDelete, copyView, favoriteView, openEditor, reorderView],
   );
-
-  const emptyState =
-    segment === "projects"
-      ? {
-          title: "No projects",
-          subtitle: "Create tasks with a project to see them here",
-        }
-      : segment === "labels"
-        ? { title: "No labels", subtitle: "Add tags to tasks to see them here" }
-        : {
-            title: "No contexts",
-            subtitle: "Add contexts to tasks to see them here",
-          };
-
+  const openDimension = useCallback(
+    (dimension: DimensionItem["dimension"], value: string) => {
+      switch (dimension) {
+        case "project":
+          navigation.navigate("ProjectDetail", {
+            projectName: projectName(value),
+          });
+          return;
+        case "context":
+          navigation.navigate("ContextDetail", {
+            contextName: contextName(value),
+          });
+          return;
+        case "tag":
+          navigation.navigate("TagDetail", { tagName: tagName(value) });
+          return;
+      }
+    },
+    [navigation],
+  );
+  const openDestination = useCallback(
+    (destination: DestinationItem["destination"]) => {
+      switch (destination) {
+        case "search":
+          navigation.navigate("Search");
+          return;
+        case "completed":
+          setCompletedVisible(true);
+          return;
+        case "reports":
+          navigation.navigate("TimeReport");
+          return;
+        case "settings":
+          navigation.navigate("Settings");
+          return;
+      }
+    },
+    [navigation],
+  );
   const renderItem = useCallback(
-    ({ item }: { item: string }) => (
-      <Pressable
-        style={[styles.item, { borderBottomColor: colors.borderLight }]}
-        onPress={() => {
-          handlePress(item);
+    ({ item }: { item: BrowseItem }) => (
+      <BrowseRow
+        item={item}
+        views={orderedViews}
+        isSaving={isSaving}
+        onOpenSavedView={(id) => {
+          navigation.navigate("SavedView", { viewId: id });
         }}
-      >
-        <Text style={[typography.body, { color: colors.text }]}>
-          {segment === "labels"
-            ? `#${item}`
-            : segment === "contexts"
-              ? `@${item}`
-              : item}
-        </Text>
-      </Pressable>
+        onSavedViewAction={handleSavedViewAction}
+        onCreateView={() => {
+          openEditor(null);
+        }}
+        onOpenDimension={openDimension}
+        onOpenDestination={openDestination}
+      />
     ),
-    [colors, handlePress, segment],
+    [
+      handleSavedViewAction,
+      isSaving,
+      navigation,
+      openDestination,
+      openDimension,
+      openEditor,
+      orderedViews,
+    ],
+  );
+  const renderSectionHeader = useCallback(
+    ({ section }: { section: BrowseSection }) => (
+      <View
+        style={[styles.sectionHeader, { backgroundColor: colors.background }]}
+      >
+        <Text style={[typography.label, { color: colors.textSecondary }]}>
+          {section.title}
+        </Text>
+      </View>
+    ),
+    [colors],
+  );
+  const saveEditor = useCallback(
+    async (definition: SavedViewDefinition): Promise<boolean> => {
+      const saved =
+        editingView === null
+          ? await createView(definition)
+          : await editView(editingView.id, definition);
+      return saved !== null;
+    },
+    [createView, editView, editingView],
   );
 
-  const renderSegmentTab = useCallback(
-    (key: Segment, label: string) => (
-      <Pressable
-        key={key}
-        style={[
-          styles.segment,
-          segment === key && {
-            borderBottomColor: colors.primary,
-            borderBottomWidth: 2,
-          },
-        ]}
-        onPress={() => {
-          setSegment(key);
-        }}
-      >
-        <Text
-          style={[
-            typography.subheading,
-            { color: segment === key ? colors.primary : colors.textSecondary },
-          ]}
-        >
-          {label}
+  if (isLoading && preferences === null) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator color={colors.primary} />
+        <Text style={[typography.bodySmall, { color: colors.textSecondary }]}>
+          Loading views…
         </Text>
-      </Pressable>
-    ),
-    [colors, segment],
-  );
+      </View>
+    );
+  }
+  if (error !== null && preferences === null) {
+    return (
+      <View style={styles.centered}>
+        <AppIcon name="alert-circle" size={32} color={colors.error} />
+        <Text style={[typography.subheading, { color: colors.text }]}>
+          Saved views could not load
+        </Text>
+        <Text style={[styles.errorCopy, { color: colors.textSecondary }]}>
+          {error.message}
+        </Text>
+        <Pressable
+          style={[styles.retryButton, { backgroundColor: colors.primary }]}
+          onPress={() => {
+            void reload();
+          }}
+          accessibilityRole="button"
+        >
+          <Text style={styles.retryText}>Try Again</Text>
+        </Pressable>
+      </View>
+    );
+  }
 
   return (
-    <View style={styles.container}>
-      <ScrollView
-        style={styles.savedViewsRow}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.savedViewsContent}
-      >
-        {DEFAULT_SAVED_VIEWS.map((view) => (
-          <View key={view.id} style={styles.savedViewCardWrapper}>
-            <SavedViewCard
-              name={view.name}
-              icon={view.icon}
-              count={savedViewCounts.get(view.id) ?? 0}
-              color={view.color}
-              onPress={() => {
-                navigation.navigate("SavedView", { viewId: view.id });
-              }}
-            />
-          </View>
-        ))}
-      </ScrollView>
-      <View
-        style={[styles.segmentContainer, { borderBottomColor: colors.border }]}
-      >
-        {renderSegmentTab("projects", "Projects")}
-        {renderSegmentTab("labels", "Labels")}
-        {renderSegmentTab("contexts", "Contexts")}
-      </View>
-      {items.length === 0 ? (
-        <EmptyState title={emptyState.title} subtitle={emptyState.subtitle} />
-      ) : (
-        <FlatList
-          data={items}
-          keyExtractor={(item) => item}
-          renderItem={renderItem}
-        />
-      )}
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <SectionList
+        sections={sections}
+        keyExtractor={(item) => item.key}
+        renderItem={renderItem}
+        renderSectionHeader={renderSectionHeader}
+        stickySectionHeadersEnabled={false}
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={styles.listContent}
+        ListHeaderComponent={
+          error ? (
+            <View
+              style={[
+                styles.inlineError,
+                { backgroundColor: colors.surface, borderColor: colors.border },
+              ]}
+              accessibilityRole="alert"
+            >
+              <AppIcon name="alert-circle" size={18} color={colors.error} />
+              <Text style={[styles.inlineErrorText, { color: colors.error }]}>
+                {error.message}
+              </Text>
+            </View>
+          ) : null
+        }
+      />
+      <Fab
+        onPress={() => {
+          navigation.navigate("QuickAdd", createCaptureSeed());
+        }}
+      />
+      <SavedViewEditorModal
+        visible={editorVisible}
+        view={editingView}
+        availableProjects={projectNames}
+        availableContexts={contextNames}
+        availableTags={tagNames}
+        isSaving={isSaving}
+        errorMessage={error?.message}
+        onClose={() => {
+          setEditorVisible(false);
+        }}
+        onSave={saveEditor}
+      />
+      <CompletedTasksModal
+        visible={completedVisible}
+        tasks={completedTasks}
+        pendingIds={pendingTaskIds}
+        onClose={() => {
+          setCompletedVisible(false);
+        }}
+        onTaskPress={handlePress}
+        onTaskToggle={handleStatusToggle}
+        onTaskDelete={handleDelete}
+      />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  savedViewsRow: {
-    flexGrow: 0,
-  },
-  savedViewsContent: {
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    gap: 10,
-  },
-  savedViewCardWrapper: {
-    width: 140,
-  },
-  segmentContainer: {
-    flexDirection: "row",
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  segment: {
-    flex: 1,
-    alignItems: "center",
-    paddingVertical: 12,
-  },
-  item: {
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-});

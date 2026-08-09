@@ -13,6 +13,8 @@
 import type { DiscordGuildId } from "@scout-for-lol/data";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { guildDataCleanupTotal } from "#src/metrics/index.ts";
+import { getErrorMessage } from "#src/utils/errors.ts";
+import { recordConversionIfAny } from "#src/league/tasks/outreach/conversions.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("cleanup-removed-guild");
@@ -42,6 +44,38 @@ export async function cleanupRemovedGuild(
   serverId: DiscordGuildId,
 ): Promise<RemovedGuildCleanupSummary> {
   logger.info(`[RemoveGuild] Cleaning up all data for guild ${serverId}`);
+
+  // Stamp the removal BEFORE the cleanup transaction, and outside it.
+  //
+  // This is the one function every confirmed-removal path calls (guildDelete
+  // and the reconcile sweep), so it is the right place — but it must not share
+  // the transaction: any later delete failing would roll the stamp back too,
+  // and a re-install before the next reconcile would then see removedAt = null,
+  // keep its old installedAt, and inherit the previous installation's spent
+  // budget. The removal is a confirmed fact; the deletions are best-effort.
+  await db.guildInstall.updateMany({
+    where: { serverId },
+    data: { removedAt: new Date() },
+  });
+
+  // Materialize any pending conversion before the deletions below destroy the
+  // evidence. The nightly job only polls once a day, so a guild that converted
+  // and then removed Scout the same day would otherwise vanish from the
+  // experiment entirely. Best-effort: cleanup must not be blocked by analytics.
+  try {
+    const install = await db.guildInstall.findUnique({
+      where: { serverId },
+      select: { installedAt: true },
+    });
+    if (install !== null) {
+      await recordConversionIfAny(db, serverId, install.installedAt);
+    }
+  } catch (error) {
+    logger.error(
+      `[RemoveGuild] Failed to materialize conversion for ${serverId}:`,
+      getErrorMessage(error),
+    );
+  }
 
   const summary = await db.$transaction(
     async (tx): Promise<RemovedGuildCleanupSummary> => {

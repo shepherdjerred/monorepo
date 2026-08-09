@@ -126,7 +126,8 @@ function buildFallbackPrematchEmbed(
 export async function sendPrematchNotification(
   gameInfo: RawCurrentGameInfo,
   trackedPlayers: PlayerConfigEntry[],
-): Promise<void> {
+): Promise<Map<string, string>> {
+  const sentMessageIds = new Map<string, string>();
   const gameId = gameInfo.gameId.toString();
   const aliases = trackedPlayers.map((p) => p.alias);
   logger.info(
@@ -146,7 +147,7 @@ export async function sendPrematchNotification(
     logger.info(
       `[sendPrematchNotification] ⚠️  No channels subscribed for game ${gameId}`,
     );
-    return;
+    return sentMessageIds;
   }
 
   // Apply per-subscription notification filters (queue type, etc.).
@@ -160,7 +161,7 @@ export async function sendPrematchNotification(
     logger.info(
       `[sendPrematchNotification] 🔕 Game ${gameId} filtered out for all channels (queue ${queueType ?? "unknown"})`,
     );
-    return;
+    return sentMessageIds;
   }
 
   const targetGuildIds: DiscordGuildId[] = uniqueBy(
@@ -297,7 +298,12 @@ export async function sendPrematchNotification(
               embeds: [loadingScreenEmbed],
             }
           : { embeds: [buildFallbackPrematchEmbed(gameInfo, trackedPlayers)] };
-      await send(message, channel, DiscordGuildIdSchema.parse(serverId));
+      const sentMessage = await send(
+        message,
+        channel,
+        DiscordGuildIdSchema.parse(serverId),
+      );
+      sentMessageIds.set(channel, sentMessage.id);
     } catch (error) {
       if (error instanceof ChannelSendError && error.permissionError) {
         logger.warn(
@@ -318,4 +324,5 @@ export async function sendPrematchNotification(
   logger.info(
     `[sendPrematchNotification] ✅ Notifications sent for game ${gameId}`,
   );
+  return sentMessageIds;
 }

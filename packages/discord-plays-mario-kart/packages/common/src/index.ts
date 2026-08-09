@@ -6,3 +6,6 @@ export * from "./model/status.ts";
 export * from "./model/input.ts";
 export * from "./model/screenshot.ts";
 export * from "./model/leaderboard.ts";
+export * from "./model/driver-feed.ts";
+export * from "./model/hud-font.ts";
+export * from "./model/hud-decode.ts";

@@ -45,6 +45,12 @@ export function helpText(): string {
     "**Library & chapters**",
     "• `/stream list [filter]` · `search <query>` · `chapters` · `chapter <n>`",
     "",
+    "**Player card** — the now-playing message carries live controls, so most of the above needs no " +
+      "typing: ⏪/⏩ jump 30s, ⏭ skips, ⏹ stops _(admin)_, 🔁 cycles loop, 🔉/🔊 change volume, " +
+      "🔀 shuffles, 📜 shows the queue, 💬 picks subtitles, and a chapter menu appears when the video " +
+      "has chapters. You must be in the voice channel to use them; skipping and subtitles are limited " +
+      "to whoever queued the video (or an admin).",
+    "",
     "**Subtitles** — add `subtitles:on|off` and `sublang:<lang>` (e.g. `en`, `en.forced`) to `play`/`playnext`, " +
       "or run `/stream subtitles` mid-playback to pick from the actual available tracks (brief restart).",
     "",

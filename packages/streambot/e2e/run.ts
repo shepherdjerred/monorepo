@@ -14,6 +14,7 @@ import {
 import { StreambotStreamer } from "@shepherdjerred/streambot/streamer/streamer.ts";
 import { CommandBot } from "@shepherdjerred/streambot/discord/command-bot.ts";
 import { SessionManager } from "@shepherdjerred/streambot/session/session-manager.ts";
+import { NOOP_CARD_PORT } from "@shepherdjerred/streambot/discord/player-card-manager.ts";
 import {
   loadState,
   saveState,
@@ -135,6 +136,7 @@ function buildSession(config: Config, input: PlaybackInput): Session {
   });
   refs.sessions = new SessionManager({
     config,
+    cards: NOOP_CARD_PORT,
     pool: {
       acquire: () => null,
       release: () => {

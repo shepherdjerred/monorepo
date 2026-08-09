@@ -1,47 +1,67 @@
-import { Context } from "@temporalio/activity";
-import * as Sentry from "@sentry/bun";
-import { WorkflowFailedError } from "@temporalio/client";
-import { ApplicationFailure, TemporalFailure } from "@temporalio/common";
-import { createTemporalClient } from "#client";
-import {
-  type AlertmanagerAlert,
-  type AlertPoster,
-  createAlertmanagerPoster,
-} from "#lib/alertmanager.ts";
-import {
-  buildWorkflowFailureAlert,
-  type FailedWorkflowExecution,
-  type WorkflowFailureDetail,
-} from "#shared/workflow-failure-alert.ts";
+import { type AlertmanagerAlert, type AlertPoster } from "#lib/alertmanager.ts";
+import type { FailedWorkflowExecution } from "#shared/workflow-failure-alert.ts";
 import { temporalFailureWatcherAlertsTotal } from "#observability/metrics.ts";
+import {
+  checkpointForExecution,
+  workflowExecutionKey,
+  type WorkflowFailureWatchCheckpoint,
+} from "./workflow-failure-watch-checkpoint.ts";
+import { buildFailureAlertForExecution } from "./workflow-failure-watch-detail.ts";
 
 /**
  * Polls the Temporal visibility API for workflow executions that closed as
  * Failed/TimedOut in the lookback window, extracts each execution's
  * structured failure via `handle.result()`, and posts one detail-rich alert
  * per execution to Alertmanager (which already routes to PagerDuty — see
- * `packages/homelab/.../argo-applications/prometheus.ts`). Stateless: no
- * checkpoint is persisted between polls, matching `observe-review-signals.ts`.
- * Safe to overlap polls because Alertmanager dedups by label set (identity =
- * alertname + workflowType + taskQueue + workflowId + runId).
+ * `packages/homelab/.../argo-applications/prometheus.ts`). Each successful
+ * detail batch heartbeats its last item. A retry scans the full lookback and
+ * applies a conservative in-memory checkpoint because the public visibility
+ * iterator does not expose a precision-safe page token. Safe to overlap
+ * polls because Alertmanager dedups by label set
+ * (identity = alertname + workflowType + taskQueue + workflowId + runId).
  */
 
 const COMPONENT = "temporal-failure-watch";
-const HEARTBEAT_INTERVAL_MS = 10_000;
-
-// 3x the schedule's 5-minute cron, so a single missed tick or worker restart
-// can't create a gap. Overlap across polls is safe — see module doc above.
-const DEFAULT_LOOKBACK_MS = 15 * 60 * 1000;
+// Keep a full day of terminal executions queryable so a worker outage can be
+// recovered by the next poll. The alert TTL covers this window plus delivery
+// margin, preventing a recovered poll from re-paging an execution that was
+// already observed while leaving Alertmanager time to notify PagerDuty.
+export const DEFAULT_LOOKBACK_MS = 24 * 60 * 60 * 1000;
+// The activity may consume all three attempts before it can finish the
+// visibility scan. Keep the original close-time boundary alive through that
+// retry budget, then leave a separate margin for Alertmanager grouping and
+// notification.
+const ACTIVITY_START_TO_CLOSE_TIMEOUT_MS = 2 * 60 * 1000;
+const ACTIVITY_MAX_ATTEMPTS = 3;
+const ACTIVITY_RETRY_BACKOFF_MS = (10 + 20) * 1000;
+const ACTIVITY_RETRY_BUDGET_MS =
+  ACTIVITY_MAX_ATTEMPTS * ACTIVITY_START_TO_CLOSE_TIMEOUT_MS +
+  ACTIVITY_RETRY_BACKOFF_MS;
+const ALERT_DELIVERY_MARGIN_MS = 5 * 60 * 1000;
 
 // Matches XCODE_CLOUD_ALERT_TTL_SECONDS's rationale (xcode-cloud-webhook.ts):
-// keeps a failure visible across a workday without lingering forever if
-// polling stops re-observing it (there's no "next success" signal to resolve
-// a specific past failure early, unlike the Xcode Cloud build-outcome case).
-const DEFAULT_ALERT_TTL_SECONDS = 6 * 60 * 60;
+// keeps a failure visible across the recovery window without lingering forever
+// if polling stops re-observing it (there's no "next success" signal to
+// resolve a specific past failure early, unlike the Xcode Cloud build-outcome
+// case).
+const DEFAULT_ALERT_TTL_SECONDS =
+  (DEFAULT_LOOKBACK_MS + ACTIVITY_RETRY_BUDGET_MS + ALERT_DELIVERY_MARGIN_MS) /
+  1000;
+
+// Bound recovery work so the 24-hour visibility window cannot turn into one
+// serial activity that exhausts its deadline before posting any alerts.
+const FAILURE_DETAIL_CONCURRENCY = 16;
+const ALERT_BATCH_SIZE = 25;
+const VISIBILITY_PAGE_SIZE = 100;
 
 const FAILURE_STATUS_NAMES = ["FAILED", "TIMED_OUT"] as const;
 type FailureStatusName = (typeof FAILURE_STATUS_NAMES)[number];
 
+// Temporal visibility pages are newest-first. The SDK exposes timestamps as
+// millisecond-precision Dates, so the checkpoint treats each close-time
+// millisecond as a cohort and records the completed execution keys within it.
+// This is conservative for the server's nanosecond ordering while still
+// advancing past a cohort across retries.
 export type PollWorkflowFailuresResult = {
   scanned: number;
   alerted: number;
@@ -51,11 +71,12 @@ export type PollWorkflowFailuresResult = {
 /** Narrow structural slice of `Client["workflow"]` — real client and test fakes both satisfy it. */
 export type WorkflowVisibilityClient = {
   workflow: {
-    list: (options: { query: string }) => AsyncIterable<{
+    list: (options: { query: string; pageSize?: number }) => AsyncIterable<{
       workflowId: string;
       runId: string;
       type: string;
       taskQueue: string;
+      startTime: Date;
       closeTime?: Date;
       status: { name: string };
     }>;
@@ -64,6 +85,7 @@ export type WorkflowVisibilityClient = {
       runId: string,
     ) => {
       result: () => Promise<unknown>;
+      fetchHistory: () => Promise<unknown>;
     };
   };
 };
@@ -78,7 +100,7 @@ function jsonLog(
   );
 }
 
-function requiredEnv(name: string): string {
+export function requiredEnv(name: string): string {
   const value = Bun.env[name];
   if (value === undefined || value === "") {
     throw new Error(`${name} is required`);
@@ -86,18 +108,29 @@ function requiredEnv(name: string): string {
   return value;
 }
 
-function readTtlMs(): number {
-  const raw = Bun.env["TEMPORAL_FAILURE_ALERT_TTL_SECONDS"];
+export function parseAlertTtlMs(raw: string | undefined): number {
   if (raw === undefined || raw === "") {
     return DEFAULT_ALERT_TTL_SECONDS * 1000;
   }
-  const parsed = Number.parseInt(raw, 10);
-  if (Number.isNaN(parsed) || parsed <= 0) {
+  const parsed = Number(raw);
+  if (!Number.isSafeInteger(parsed) || parsed <= 0) {
     throw new Error(
       `TEMPORAL_FAILURE_ALERT_TTL_SECONDS must be a positive integer, got ${raw}`,
     );
   }
-  return parsed * 1000;
+  const ttlMs = parsed * 1000;
+  const minimumTtlMs =
+    DEFAULT_LOOKBACK_MS + ACTIVITY_RETRY_BUDGET_MS + ALERT_DELIVERY_MARGIN_MS;
+  if (ttlMs < minimumTtlMs) {
+    throw new Error(
+      `TEMPORAL_FAILURE_ALERT_TTL_SECONDS must be at least ${String(minimumTtlMs / 1000)} to cover the recovery lookback, activity retry budget, and alert delivery margin, got ${raw}`,
+    );
+  }
+  return ttlMs;
+}
+
+export function readTtlMs(): number {
+  return parseAlertTtlMs(Bun.env["TEMPORAL_FAILURE_ALERT_TTL_SECONDS"]);
 }
 
 function toFailureStatusName(name: string): FailureStatusName | undefined {
@@ -105,92 +138,248 @@ function toFailureStatusName(name: string): FailureStatusName | undefined {
 }
 
 export function buildVisibilityQuery(since: Date): string {
-  return `ExecutionStatus IN ("Failed", "TimedOut") AND CloseTime > "${since.toISOString()}"`;
+  return [
+    'ExecutionStatus IN ("Failed", "TimedOut")',
+    `CloseTime > "${since.toISOString()}"`,
+  ].join(" AND ");
 }
 
-/**
- * Walks the Temporal failure chain to its innermost `TemporalFailure`. When a
- * workflow fails because a proxied activity threw, `WorkflowFailedError.cause`
- * is an `ActivityFailure` whose message is only a generic "Activity task
- * failed"; the specific `ApplicationFailure` that actually explains the failure
- * is nested at `.cause.cause` (see `workflows/glitter-context-refresh.test.ts`).
- * Descending to the deepest TemporalFailure yields the real type/message/stack
- * the Temporal UI shows, for every workflow — not just those that fail inline.
- */
-function innermostTemporalFailure(failure: TemporalFailure): TemporalFailure {
-  let current = failure;
-  while (current.cause instanceof TemporalFailure) {
-    current = current.cause;
+function pollVisibilityBoundary(
+  options: Pick<
+    PollWorkflowFailuresOptions,
+    "now" | "lookbackMs" | "lookbackSince" | "checkpoint"
+  >,
+): { since: Date; query: string } {
+  const since =
+    options.lookbackSince ??
+    options.checkpoint?.lookbackSince ??
+    new Date(options.now.getTime() - options.lookbackMs);
+  return { since, query: buildVisibilityQuery(since) };
+}
+
+function isAfterVisibilityCursor(
+  execution: Pick<
+    FailedWorkflowExecution,
+    "workflowId" | "closeTime" | "runId"
+  >,
+  checkpoint: WorkflowFailureWatchCheckpoint,
+): boolean {
+  const executionCloseTimeMs = execution.closeTime.getTime();
+  const checkpointCloseTimeMs = checkpoint.closeTime.getTime();
+  if (executionCloseTimeMs < checkpointCloseTimeMs) {
+    return true;
   }
-  return current;
+  if (executionCloseTimeMs > checkpointCloseTimeMs) {
+    return false;
+  }
+  // The SDK's Date cannot represent protobuf nanoseconds. An older heartbeat
+  // has no completed-key set, so replay its entire close-millisecond cohort;
+  // new heartbeats skip only IDs already posted in that cohort.
+  const processedExecutionKeys = checkpoint.processedExecutionKeys ?? [];
+  return !processedExecutionKeys.includes(
+    workflowExecutionKey(execution.workflowId, execution.runId),
+  );
 }
 
-/**
- * The failure "type" the Temporal UI shows. For an `ApplicationFailure` that is
- * its custom `type` (e.g. `BilledGenerationFinalizationError`), not the generic
- * class name `ApplicationFailure`; every other TemporalFailure subclass uses its
- * class name (`TimeoutFailure`, `ActivityFailure`, ...).
- */
-function failureTypeName(failure: TemporalFailure): string {
-  if (
-    failure instanceof ApplicationFailure &&
-    failure.type !== undefined &&
-    failure.type !== null &&
-    failure.type !== ""
+type FailureDetailResult = {
+  alerted: number;
+  errored: number;
+};
+
+type FailureBatchResult = FailureDetailResult & {
+  checkpointBlocked: boolean;
+  checkpoint: WorkflowFailureWatchCheckpoint | undefined;
+};
+
+type CheckpointProgressOptions = {
+  checkpointBlocked: boolean;
+  checkpoint: WorkflowFailureWatchCheckpoint | undefined;
+  lookbackSince: Date;
+  onCheckpoint:
+    | ((checkpoint: WorkflowFailureWatchCheckpoint) => void)
+    | undefined;
+};
+
+type PostFailureBatchOptions = {
+  client: WorkflowVisibilityClient;
+  poster: AlertPoster;
+  executions: readonly FailedWorkflowExecution[];
+  options: PollWorkflowFailuresOptions;
+  checkpointProgress: CheckpointProgressOptions;
+};
+
+type PostFailureBatchInput = {
+  client: WorkflowVisibilityClient;
+  poster: AlertPoster;
+  executions: readonly FailedWorkflowExecution[];
+  pollOptions: PollWorkflowFailuresOptions;
+  checkpointBlocked: boolean;
+  lookbackSince: Date;
+};
+
+function postFailureBatchOptions(
+  input: PostFailureBatchInput,
+): PostFailureBatchOptions {
+  return {
+    client: input.client,
+    poster: input.poster,
+    executions: input.executions,
+    options: input.pollOptions,
+    checkpointProgress: {
+      checkpointBlocked: input.checkpointBlocked,
+      checkpoint: input.pollOptions.checkpoint,
+      lookbackSince: input.lookbackSince,
+      onCheckpoint: input.pollOptions.onCheckpoint,
+    },
+  };
+}
+
+function pollOptionsWithCheckpoint(
+  options: PollWorkflowFailuresOptions,
+  checkpoint: WorkflowFailureWatchCheckpoint | undefined,
+): PollWorkflowFailuresOptions {
+  return checkpoint === undefined ? options : { ...options, checkpoint };
+}
+
+async function postFailureBatch(
+  batchOptions: PostFailureBatchOptions,
+): Promise<FailureBatchResult> {
+  const { client, poster, executions, options, checkpointProgress } =
+    batchOptions;
+  const { now, ttlMs } = options;
+  const alerts: AlertmanagerAlert[] = [];
+  let errored = 0;
+  let checkpointBlocked = checkpointProgress.checkpointBlocked;
+  let checkpoint = checkpointProgress.checkpoint;
+  for (
+    let chunkStart = 0;
+    chunkStart < executions.length;
+    chunkStart += FAILURE_DETAIL_CONCURRENCY
   ) {
-    return failure.type;
+    const chunk = executions.slice(
+      chunkStart,
+      chunkStart + FAILURE_DETAIL_CONCURRENCY,
+    );
+    let chunkErrored = 0;
+    const chunkAlerts = await Promise.all(
+      chunk.map((execution) =>
+        buildFailureAlertForExecution(client, execution, now, ttlMs),
+      ),
+    );
+    const postedAlerts: AlertmanagerAlert[] = [];
+    for (const alert of chunkAlerts) {
+      if (alert === undefined) {
+        chunkErrored += 1;
+        errored += 1;
+      } else {
+        alerts.push(alert);
+        postedAlerts.push(alert);
+      }
+    }
+
+    if (postedAlerts.length > 0) {
+      await poster(postedAlerts);
+      // Recorded after the poster succeeds, mirroring observe-review-signals.ts
+      // — an activity retry after a failed post re-alerts (safe: Alertmanager
+      // dedups by label) but this counter is informational only, not exactly-once.
+      for (const alert of postedAlerts) {
+        temporalFailureWatcherAlertsTotal.inc({
+          workflowType: alert.labels["workflowType"] ?? "unknown",
+        });
+      }
+    }
+
+    // Persist progress after each successfully posted detail chunk, rather
+    // than waiting for the whole visibility batch. If a later detail RPC or
+    // the visibility iterator exhausts this activity attempt, the retry can
+    // resume below this cursor instead of replaying only the prefix forever.
+    const chunkResult = {
+      alerted: chunkAlerts.length - chunkErrored,
+      errored: chunkErrored,
+    };
+    const checkpointProgressResult = advanceRecoveryCheckpoint({
+      result: chunkResult,
+      executions: chunk,
+      checkpointBlocked,
+      checkpoint,
+      onCheckpoint: checkpointProgress.onCheckpoint,
+      lookbackSince: checkpointProgress.lookbackSince,
+    });
+    checkpointBlocked = checkpointProgressResult.checkpointBlocked;
+    checkpoint = checkpointProgressResult.checkpoint;
   }
-  return failure.name;
+
+  return {
+    alerted: alerts.length,
+    errored,
+    checkpointBlocked,
+    checkpoint,
+  };
 }
 
-/**
- * Extracts the structured failure from a closed Failed/TimedOut execution.
- * `handle.result()` on an already-closed execution rejects immediately (no
- * blocking) with `WorkflowFailedError`, whose `.cause` is the TemporalFailure
- * subclass (ApplicationFailure/ActivityFailure/TimeoutFailure/...) carrying
- * the same type/message/stack the Temporal UI shows.
- */
-async function fetchFailureDetail(
-  client: WorkflowVisibilityClient,
-  workflowId: string,
-  runId: string,
-): Promise<WorkflowFailureDetail> {
-  try {
-    await client.workflow.getHandle(workflowId, runId).result();
-    // The visibility query already filtered to Failed/TimedOut, so a
-    // resolved result() here means the execution's terminal state changed
-    // between list() and this call (or the query matched unexpectedly) —
-    // surface it as a detail-extraction failure rather than silently
-    // skipping, so it's visible in Sentry.
-    throw new Error(
-      `workflow ${workflowId}/${runId} unexpectedly resolved while polling failures`,
-    );
-  } catch (error) {
-    if (error instanceof WorkflowFailedError) {
-      const outerCause = error.cause;
-      if (outerCause instanceof TemporalFailure) {
-        const cause = innermostTemporalFailure(outerCause);
-        return {
-          failureType: failureTypeName(cause),
-          message: cause.message === "" ? error.message : cause.message,
-          stack: cause.stack,
-        };
-      }
-      // No TemporalFailure cause (unusual) — fall back to the outer error.
-      return {
-        failureType: outerCause?.name ?? "UnknownFailure",
-        message: outerCause?.message ?? error.message,
-        stack: outerCause?.stack,
-      };
-    }
-    throw error;
+type RecoveryCheckpointProgress = {
+  checkpointBlocked: boolean;
+  checkpoint: WorkflowFailureWatchCheckpoint | undefined;
+};
+
+type AdvanceRecoveryCheckpointInput = {
+  result: FailureDetailResult;
+  executions: readonly FailedWorkflowExecution[];
+  checkpointBlocked: boolean;
+  checkpoint: WorkflowFailureWatchCheckpoint | undefined;
+  onCheckpoint:
+    | ((checkpoint: WorkflowFailureWatchCheckpoint) => void)
+    | undefined;
+  lookbackSince: Date;
+};
+
+function advanceRecoveryCheckpoint(
+  input: AdvanceRecoveryCheckpointInput,
+): RecoveryCheckpointProgress {
+  if (input.result.errored !== 0) {
+    return { checkpointBlocked: true, checkpoint: input.checkpoint };
   }
+  if (input.checkpointBlocked || input.onCheckpoint === undefined) {
+    return {
+      checkpointBlocked: input.checkpointBlocked,
+      checkpoint: input.checkpoint,
+    };
+  }
+  const lastExecution = input.executions.at(-1);
+  if (lastExecution === undefined) {
+    return {
+      checkpointBlocked: input.checkpointBlocked,
+      checkpoint: input.checkpoint,
+    };
+  }
+  const closeTimeMs = lastExecution.closeTime.getTime();
+  const processedExecutionKeys = new Set(
+    input.checkpoint?.closeTime.getTime() === closeTimeMs
+      ? (input.checkpoint.processedExecutionKeys ?? [])
+      : [],
+  );
+  for (const execution of input.executions) {
+    if (execution.closeTime.getTime() === closeTimeMs) {
+      processedExecutionKeys.add(
+        workflowExecutionKey(execution.workflowId, execution.runId),
+      );
+    }
+  }
+  const nextCheckpoint = {
+    ...checkpointForExecution(lastExecution, input.lookbackSince),
+    processedExecutionKeys: [...processedExecutionKeys],
+  } satisfies WorkflowFailureWatchCheckpoint;
+  input.onCheckpoint(nextCheckpoint);
+  return { checkpointBlocked: false, checkpoint: nextCheckpoint };
 }
 
 export type PollWorkflowFailuresOptions = {
   now: Date;
   lookbackMs: number;
   ttlMs: number;
+  lookbackSince?: Date;
+  checkpoint?: WorkflowFailureWatchCheckpoint;
+  onCheckpoint?: (checkpoint: WorkflowFailureWatchCheckpoint) => void;
 };
 
 /**
@@ -203,59 +392,95 @@ export async function pollWorkflowFailuresOnce(
   poster: AlertPoster,
   options: PollWorkflowFailuresOptions,
 ): Promise<PollWorkflowFailuresResult> {
-  const { now, lookbackMs, ttlMs } = options;
-  const since = new Date(now.getTime() - lookbackMs);
-  const query = buildVisibilityQuery(since);
+  const { checkpoint } = options;
+  const { since, query } = pollVisibilityBoundary(options);
 
-  const executions: FailedWorkflowExecution[] = [];
-  for await (const info of client.workflow.list({ query })) {
-    const status = toFailureStatusName(info.status.name);
-    if (status === undefined || info.closeTime === undefined) {
-      continue;
+  const pendingExecutions: FailedWorkflowExecution[] = [];
+  let scanned = 0;
+  let errored = 0;
+  let alerted = 0;
+  let listingFailed = false;
+  let listingError: unknown;
+  let processingBatch = false;
+  let checkpointBlocked = false;
+  let recoveryCheckpoint = checkpoint;
+  try {
+    for await (const info of client.workflow.list({
+      query,
+      pageSize: VISIBILITY_PAGE_SIZE,
+    })) {
+      const status = toFailureStatusName(info.status.name);
+      if (status === undefined || info.closeTime === undefined) {
+        continue;
+      }
+      if (
+        checkpoint !== undefined &&
+        !isAfterVisibilityCursor(
+          {
+            workflowId: info.workflowId,
+            closeTime: info.closeTime,
+            runId: info.runId,
+          },
+          checkpoint,
+        )
+      ) {
+        continue;
+      }
+      pendingExecutions.push({
+        workflowId: info.workflowId,
+        runId: info.runId,
+        workflowType: info.type,
+        taskQueue: info.taskQueue,
+        startTime: info.startTime,
+        closeTime: info.closeTime,
+        status,
+      });
+      scanned += 1;
+      if (pendingExecutions.length === ALERT_BATCH_SIZE) {
+        processingBatch = true;
+        const result = await postFailureBatch(
+          postFailureBatchOptions({
+            client,
+            poster,
+            executions: pendingExecutions,
+            pollOptions: pollOptionsWithCheckpoint(options, recoveryCheckpoint),
+            checkpointBlocked,
+            lookbackSince: since,
+          }),
+        );
+        checkpointBlocked = result.checkpointBlocked;
+        recoveryCheckpoint = result.checkpoint;
+        processingBatch = false;
+        alerted += result.alerted;
+        errored += result.errored;
+        pendingExecutions.length = 0;
+      }
     }
-    executions.push({
-      workflowId: info.workflowId,
-      runId: info.runId,
-      workflowType: info.type,
-      taskQueue: info.taskQueue,
-      closeTime: info.closeTime,
-      status,
-    });
+  } catch (error) {
+    if (processingBatch) {
+      throw error;
+    }
+    listingFailed = true;
+    listingError = error;
   }
 
-  const alerts: AlertmanagerAlert[] = [];
-  let errored = 0;
-  for (const execution of executions) {
-    try {
-      const failure = await fetchFailureDetail(
+  if (pendingExecutions.length > 0) {
+    const result = await postFailureBatch(
+      postFailureBatchOptions({
         client,
-        execution.workflowId,
-        execution.runId,
-      );
-      alerts.push(buildWorkflowFailureAlert(execution, failure, now, ttlMs));
-    } catch (error) {
-      errored += 1;
-      const message = error instanceof Error ? error.message : String(error);
-      Sentry.withScope((scope) => {
-        scope.setTag("component", COMPONENT);
-        scope.setContext("workflowFailureWatch", {
-          workflowId: execution.workflowId,
-          runId: execution.runId,
-          workflowType: execution.workflowType,
-        });
-        Sentry.captureException(error);
-      });
-      jsonLog(
-        "warning",
-        "failed to extract failure detail for execution; skipping",
-        {
-          workflowId: execution.workflowId,
-          runId: execution.runId,
-          workflowType: execution.workflowType,
-          error: message,
-        },
-      );
-    }
+        poster,
+        executions: pendingExecutions,
+        pollOptions: pollOptionsWithCheckpoint(options, recoveryCheckpoint),
+        checkpointBlocked,
+        lookbackSince: since,
+      }),
+    );
+    alerted += result.alerted;
+    errored += result.errored;
+  }
+
+  if (listingFailed) {
+    throw listingError;
   }
 
   // Isolated per-execution detail-extraction failures are tolerated, but if
@@ -263,59 +488,17 @@ export async function pollWorkflowFailuresOnce(
   // (e.g. the Temporal server rejected result() calls broadly) — throw so
   // Temporal retries instead of silently reporting a clean poll that alerted
   // on nothing.
-  if (executions.length > 0 && alerts.length === 0) {
+  if (alerted === 0 && scanned > 0) {
     throw new Error(
-      `workflow-failure-watch found ${String(executions.length)} failed execution(s) but could not extract detail for any of them (${String(errored)} errored); treating as a systematic failure so Temporal retries.`,
+      `workflow-failure-watch found ${String(scanned)} failed execution(s) but could not extract detail for any of them (${String(errored)} errored); treating as a systematic failure so Temporal retries.`,
     );
   }
 
-  if (alerts.length > 0) {
-    await poster(alerts);
-    // Recorded after the poster succeeds, mirroring observe-review-signals.ts —
-    // an activity retry after a failed post re-alerts (safe: Alertmanager
-    // dedups by label) but this counter is informational only, not exactly-once.
-    for (const alert of alerts) {
-      temporalFailureWatcherAlertsTotal.inc({
-        workflowType: alert.labels["workflowType"] ?? "unknown",
-      });
-    }
-  }
-
   jsonLog("info", "workflow-failure-watch poll complete", {
-    scanned: executions.length,
-    alerted: alerts.length,
+    scanned,
+    alerted,
     errored,
   });
 
-  return { scanned: executions.length, alerted: alerts.length, errored };
+  return { scanned, alerted, errored };
 }
-
-async function runPollWorkflowFailuresImpl(): Promise<PollWorkflowFailuresResult> {
-  const client = await createTemporalClient();
-  const poster = createAlertmanagerPoster(requiredEnv("ALERTMANAGER_URL"));
-  return pollWorkflowFailuresOnce(client, poster, {
-    now: new Date(),
-    lookbackMs: DEFAULT_LOOKBACK_MS,
-    ttlMs: readTtlMs(),
-  });
-}
-
-export type WorkflowFailureWatchActivities =
-  typeof workflowFailureWatchActivities;
-
-export const workflowFailureWatchActivities = {
-  async pollWorkflowFailures(): Promise<PollWorkflowFailuresResult> {
-    const start = Date.now();
-    const heartbeat = setInterval(() => {
-      Context.current().heartbeat({
-        phase: "pollWorkflowFailures",
-        elapsedMs: Date.now() - start,
-      });
-    }, HEARTBEAT_INTERVAL_MS);
-    try {
-      return await runPollWorkflowFailuresImpl();
-    } finally {
-      clearInterval(heartbeat);
-    }
-  },
-};

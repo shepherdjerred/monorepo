@@ -16,6 +16,7 @@ import {
   populateMatchesFromS3,
   populatePrematchFromS3,
 } from "#src/report-lake/rebuild-sources.ts";
+import { writeCompetitionRankHistoryParquet } from "#src/report-lake/rank-history-compaction.ts";
 import {
   buildDirPath,
   ensureLakeScaffold,
@@ -27,6 +28,8 @@ import {
 } from "#src/report-lake/paths.ts";
 import {
   ACCOUNT_LAKE_COLUMNS,
+  COMPETITION_RANK_HISTORY_LAKE_COLUMNS,
+  CompetitionRankHistoryLakeRowSchema,
   MATCH_LAKE_COLUMNS,
   MatchLakeRowSchema,
   PREMATCH_LAKE_COLUMNS,
@@ -36,6 +39,7 @@ import {
 import {
   listStagingFiles,
   removeFoldedStagingFiles,
+  type ReportLakeStagingTable,
 } from "#src/report-lake/staging.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 
@@ -52,8 +56,10 @@ export type CompactionSummary = {
   matchRows: number;
   prematchRows: number;
   accountRows: number;
+  competitionRankHistoryRows: number;
   skippedMatches: number;
   skippedPrematches: number;
+  skippedCompetitionRankHistory: number;
   durationMs: number;
 };
 
@@ -165,6 +171,10 @@ function publishMetrics(summary: Omit<CompactionSummary, "durationMs">): void {
     { table: "accounts", tier: summary.tier },
     summary.accountRows,
   );
+  reportLakeCompactionRowsTotal.inc(
+    { table: "competition_rank_history", tier: summary.tier },
+    summary.competitionRankHistoryRows,
+  );
   reportLakeLastPublishTimestamp.set({ tier: summary.tier }, Date.now() / 1000);
 }
 
@@ -177,10 +187,14 @@ type StagingParseResult = {
 
 async function readStagingRows(
   lakeDir: string,
-  table: "matches" | "prematch",
+  table: ReportLakeStagingTable,
 ): Promise<StagingParseResult> {
   const schema =
-    table === "matches" ? MatchLakeRowSchema : PrematchLakeRowSchema;
+    table === "matches"
+      ? MatchLakeRowSchema
+      : table === "prematch"
+        ? PrematchLakeRowSchema
+        : CompetitionRankHistoryLakeRowSchema;
   const rowsByMonth = new Map<string, object[]>();
   const foldedIds = new Set<string>();
   let rows = 0;
@@ -239,11 +253,15 @@ async function readStagingRows(
 async function writeFoldParquet(
   buildDir: string,
   buildId: string,
-  table: "matches" | "prematch",
+  table: ReportLakeStagingTable,
   staged: StagingParseResult,
 ): Promise<void> {
   const columns =
-    table === "matches" ? MATCH_LAKE_COLUMNS : PREMATCH_LAKE_COLUMNS;
+    table === "matches"
+      ? MATCH_LAKE_COLUMNS
+      : table === "prematch"
+        ? PREMATCH_LAKE_COLUMNS
+        : COMPETITION_RANK_HISTORY_LAKE_COLUMNS;
   for (const [month, rows] of staged.rowsByMonth) {
     const monthDir = path.join(buildDir, table, `month=${month}`);
     await mkdir(monthDir, { recursive: true });
@@ -304,8 +322,18 @@ export async function runReportLakeFold(
 
     const stagedMatches = await readStagingRows(lakeDir, "matches");
     const stagedPrematches = await readStagingRows(lakeDir, "prematch");
+    const stagedRankHistory = await readStagingRows(
+      lakeDir,
+      "competition_rank_history",
+    );
     await writeFoldParquet(buildDir, buildId, "matches", stagedMatches);
     await writeFoldParquet(buildDir, buildId, "prematch", stagedPrematches);
+    await writeFoldParquet(
+      buildDir,
+      buildId,
+      "competition_rank_history",
+      stagedRankHistory,
+    );
     const accountRows = await writeAccountsParquet(prisma, buildDir);
 
     const summary = {
@@ -314,8 +342,10 @@ export async function runReportLakeFold(
       matchRows: stagedMatches.rows,
       prematchRows: stagedPrematches.rows,
       accountRows,
+      competitionRankHistoryRows: stagedRankHistory.rows,
       skippedMatches: stagedMatches.skipped,
       skippedPrematches: stagedPrematches.skipped,
+      skippedCompetitionRankHistory: stagedRankHistory.skipped,
     };
     await writeManifest(buildDir, summary);
     await publishBuild(lakeDir, buildId);
@@ -326,11 +356,16 @@ export async function runReportLakeFold(
       "prematch",
       stagedPrematches.foldedIds,
     );
+    await removeFoldedStagingFiles(
+      lakeDir,
+      "competition_rank_history",
+      stagedRankHistory.foldedIds,
+    );
     await gcOldBuilds(lakeDir, GC_KEEP_BUILDS);
 
     const durationMs = Date.now() - startedAt;
     logger.info(
-      `Fold published build ${buildId} (+${stagedMatches.rows.toString()} match rows, +${stagedPrematches.rows.toString()} prematch rows) in ${durationMs.toString()}ms`,
+      `Fold published build ${buildId} (+${stagedMatches.rows.toString()} match rows, +${stagedPrematches.rows.toString()} prematch rows, +${stagedRankHistory.rows.toString()} rank-history rows) in ${durationMs.toString()}ms`,
     );
     return { ...summary, durationMs };
   });
@@ -367,6 +402,7 @@ async function rebuildLocked(
   const prematchTmp = path.join(buildDir, "prematch.ndjson.tmp");
   const prematchWriter = new NdjsonFileWriter(prematchTmp);
   const foldedPrematchIds = new Set<string>();
+  const foldedRankHistoryIds = new Set<string>();
 
   const bucket = configuration.s3BucketName;
   if (bucket === undefined) {
@@ -415,6 +451,10 @@ async function rebuildLocked(
   }
 
   const accountRows = await writeAccountsParquet(prisma, buildDir);
+  const rankHistory = await writeCompetitionRankHistoryParquet(
+    buildDir,
+    foldedRankHistoryIds,
+  );
 
   const summary = {
     buildId,
@@ -422,14 +462,21 @@ async function rebuildLocked(
     matchRows: matchWriter.rows,
     prematchRows: prematchWriter.rows,
     accountRows,
+    competitionRankHistoryRows: rankHistory.rows,
     skippedMatches,
     skippedPrematches,
+    skippedCompetitionRankHistory: rankHistory.skipped,
   };
   await writeManifest(buildDir, summary);
   await publishBuild(lakeDir, buildId);
   publishMetrics(summary);
   await removeFoldedStagingFiles(lakeDir, "matches", foldedMatchIds);
   await removeFoldedStagingFiles(lakeDir, "prematch", foldedPrematchIds);
+  await removeFoldedStagingFiles(
+    lakeDir,
+    "competition_rank_history",
+    foldedRankHistoryIds,
+  );
   await gcOldBuilds(lakeDir, GC_KEEP_BUILDS);
 
   const durationMs = Date.now() - startedAt;

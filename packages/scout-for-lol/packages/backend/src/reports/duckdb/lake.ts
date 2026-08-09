@@ -1,6 +1,7 @@
 import path from "node:path";
 import { readCurrentBuildDir } from "#src/report-lake/paths.ts";
 import {
+  COMPETITION_RANK_HISTORY_LAKE_COLUMNS,
   MATCH_LAKE_COLUMNS,
   PREMATCH_LAKE_COLUMNS,
   duckDbColumnsSpec,
@@ -13,7 +14,8 @@ import { listStagingFiles } from "#src/report-lake/staging.ts";
  *
  * A "relation" here is a SQL fragment reading the published parquet build
  * UNION ALL BY NAME the NDJSON staging files, deduped on the row's natural
- * key preferring parquet. Two invariants from the design/POC:
+ * key. Immutable match facts prefer parquet; replaceable daily leaderboard
+ * snapshots prefer the newest observation. Two invariants from the design/POC:
  *
  * - Filters MUST be pushed into each union branch BEFORE the dedupe window
  *   function (12x faster at scale; semantics-preserving because duplicated
@@ -46,6 +48,8 @@ export type LakeFiles = {
   prematchParquet: string[];
   prematchStaging: string[];
   accountsParquet: string | undefined;
+  competitionRankHistoryParquet: string[];
+  competitionRankHistoryStaging: string[];
 };
 
 async function globParquet(root: string, table: string): Promise<string[]> {
@@ -59,10 +63,12 @@ async function globParquet(root: string, table: string): Promise<string[]> {
 
 export async function resolveLakeFiles(lakeDir: string): Promise<LakeFiles> {
   const buildDir = await readCurrentBuildDir(lakeDir);
-  const [matchesStaging, prematchStaging] = await Promise.all([
-    listStagingFiles(lakeDir, "matches"),
-    listStagingFiles(lakeDir, "prematch"),
-  ]);
+  const [matchesStaging, prematchStaging, competitionRankHistoryStaging] =
+    await Promise.all([
+      listStagingFiles(lakeDir, "matches"),
+      listStagingFiles(lakeDir, "prematch"),
+      listStagingFiles(lakeDir, "competition_rank_history"),
+    ]);
   if (buildDir === undefined) {
     return {
       matchesParquet: [],
@@ -70,12 +76,16 @@ export async function resolveLakeFiles(lakeDir: string): Promise<LakeFiles> {
       prematchParquet: [],
       prematchStaging,
       accountsParquet: undefined,
+      competitionRankHistoryParquet: [],
+      competitionRankHistoryStaging,
     };
   }
-  const [matchesParquet, prematchParquet] = await Promise.all([
-    globParquet(buildDir, "matches"),
-    globParquet(buildDir, "prematch"),
-  ]);
+  const [matchesParquet, prematchParquet, competitionRankHistoryParquet] =
+    await Promise.all([
+      globParquet(buildDir, "matches"),
+      globParquet(buildDir, "prematch"),
+      globParquet(buildDir, "competition_rank_history"),
+    ]);
   const accountsPath = path.join(buildDir, "accounts", "accounts.parquet");
   const accountsParquet = (await Bun.file(accountsPath).exists())
     ? accountsPath
@@ -86,6 +96,8 @@ export async function resolveLakeFiles(lakeDir: string): Promise<LakeFiles> {
     prematchParquet,
     prematchStaging,
     accountsParquet,
+    competitionRankHistoryParquet,
+    competitionRankHistoryStaging,
   };
 }
 
@@ -101,8 +113,7 @@ type UnionSourceInput = {
     string,
     "VARCHAR" | "INTEGER" | "BIGINT" | "DOUBLE" | "BOOLEAN" | "TIMESTAMP"
   >;
-  /** Natural-key columns for the parquet-vs-staging dedupe. */
-  dedupeKeyColumns: string[];
+  dedupe: "matches" | "prematch" | "competition-rank-daily-snapshot";
   /** WHERE predicate pushed into BOTH branches (empty sql = no filter). */
   predicate: SqlFragment;
 };
@@ -135,7 +146,14 @@ export function buildUnionSource(
   }
 
   const unioned = branches.join(" UNION ALL BY NAME ");
-  const partition = input.dedupeKeyColumns.join(", ");
+  if (input.dedupe === "competition-rank-daily-snapshot") {
+    return {
+      sql: `WITH candidates AS (${unioned}), latest_snapshots AS (SELECT competition_id, CAST(calculated_at AS DATE) AS snapshot_date, MAX(calculated_at) AS latest_snapshot_at FROM candidates GROUP BY competition_id, snapshot_date), latest_candidates AS (SELECT candidates.*, latest_snapshots.snapshot_date FROM candidates INNER JOIN latest_snapshots ON candidates.competition_id = latest_snapshots.competition_id AND candidates.calculated_at = latest_snapshots.latest_snapshot_at) SELECT * EXCLUDE (snapshot_date) FROM latest_candidates QUALIFY row_number() OVER (PARTITION BY competition_id, CAST(calculated_at AS DATE), player_id ORDER BY src DESC) = 1`,
+      params,
+    };
+  }
+  const partition =
+    input.dedupe === "matches" ? "match_id, puuid" : "dedupe_key, puuid";
   return {
     sql: `SELECT * FROM (${unioned}) QUALIFY row_number() OVER (PARTITION BY ${partition} ORDER BY src) = 1`,
     params,
@@ -150,7 +168,7 @@ export function buildMatchesSource(
     parquetFiles: files.matchesParquet,
     stagingFiles: files.matchesStaging,
     columns: MATCH_LAKE_COLUMNS,
-    dedupeKeyColumns: ["match_id", "puuid"],
+    dedupe: "matches",
     predicate,
   });
 }
@@ -163,7 +181,20 @@ export function buildPrematchSource(
     parquetFiles: files.prematchParquet,
     stagingFiles: files.prematchStaging,
     columns: PREMATCH_LAKE_COLUMNS,
-    dedupeKeyColumns: ["dedupe_key", "puuid"],
+    dedupe: "prematch",
+    predicate,
+  });
+}
+
+export function buildCompetitionRankHistorySource(
+  files: LakeFiles,
+  predicate: SqlFragment,
+): SqlFragment | undefined {
+  return buildUnionSource({
+    parquetFiles: files.competitionRankHistoryParquet,
+    stagingFiles: files.competitionRankHistoryStaging,
+    columns: COMPETITION_RANK_HISTORY_LAKE_COLUMNS,
+    dedupe: "competition-rank-daily-snapshot",
     predicate,
   });
 }

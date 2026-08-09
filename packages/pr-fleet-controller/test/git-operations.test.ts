@@ -17,18 +17,49 @@ function makePr(crossRepository = false): PrState {
   const id = identity(42, { crossRepository });
   const base = buildPrState(
     { identity: id, evidence: evidence(id), stackId: "pr-42" },
-    undefined,
-    undefined,
-    "openai/gpt-5",
+    {
+      previous: undefined,
+      pausedReason: undefined,
+      model: "openai/gpt-5",
+    },
   ).state;
-  return { ...base, worktree: "/tmp/pr-fleet-wt-42" };
+  return {
+    ...base,
+    worktree: "/tmp/pr-fleet-wt-42",
+    worktreeContext: {
+      ownership: "operator",
+      remoteHeadSha: id.headSha,
+      localHeadSha: id.headSha,
+      relation: "exact",
+      dirty: false,
+      stagedPaths: [],
+      unstagedPaths: [],
+    },
+  };
+}
+
+function aheadPr(): PrState {
+  const pr = makePr();
+  if (pr.worktreeContext === null) {
+    throw new Error("Expected test PR worktree context");
+  }
+  return {
+    ...pr,
+    worktreeContext: {
+      ...pr.worktreeContext,
+      localHeadSha: "b".repeat(40),
+      relation: "ahead",
+    },
+  };
 }
 
 // `trackedExit === 0` simulates a git-spice-tracked branch (the state ref has a
 // `branches/<name>` entry); non-zero simulates a native / unstacked branch.
 function fakeGit(trackedExit: number) {
   const mustCalls: string[][] = [];
+  const runCalls: CommandRequest[] = [];
   const run = (request: CommandRequest): Promise<CommandResult> => {
+    runCalls.push(request);
     if (request.executable === "git" && request.args[0] === "cat-file") {
       return Promise.resolve({
         exitCode: trackedExit,
@@ -51,7 +82,7 @@ function fakeGit(trackedExit: number) {
     }
     return Promise.resolve("");
   };
-  return { run, mustRun, mustCalls };
+  return { run, mustRun, mustCalls, runCalls };
 }
 
 function prAt(dir: string): PrState {
@@ -110,12 +141,68 @@ describe("stack ownership routing", () => {
     expect(fake.mustCalls.some((call) => call[0] === "git-spice")).toBe(false);
   });
 
-  test("refuses to restack a non-git-spice branch instead of misapplying git-spice", async () => {
-    const fake = fakeGit(1);
-    await expect(operations(fake).startRestack(makePr())).rejects.toThrow(
-      /not git-spice-owned/,
+  test("blocks generic publication from an ahead operator worktree", async () => {
+    const fake = fakeGit(0);
+    await expect(operations(fake).publishRestack(aheadPr())).rejects.toThrow(
+      /unvalidated ahead worktree context/,
     );
-    expect(fake.mustCalls.some((call) => call[0] === "git-spice")).toBe(false);
+    expect(fake.mustCalls).toEqual([]);
+    expect(fake.runCalls).toEqual([]);
+  });
+
+  test("allows the dedicated inherited-commit path for an ahead worktree", async () => {
+    const fake = fakeGit(0);
+    const result = await operations(fake).publishRestack(
+      aheadPr(),
+      undefined,
+      "inherited-commits",
+    );
+    expect(result.headSha).toBe("a".repeat(40));
+    expect(
+      fake.mustCalls.some(
+        (call) => call[0] === "git-spice" && call.includes("submit"),
+      ),
+    ).toBe(true);
+  });
+
+  test("rebases a native branch onto its current remote base", async () => {
+    const fake = fakeGit(1);
+    const result = await operations(fake).startRestack(makePr());
+    expect(result.exitCode).toBe(0);
+    expect(fake.mustCalls).toContainEqual([
+      "git",
+      "fetch",
+      "origin",
+      "+refs/heads/main:refs/remotes/origin/main",
+    ]);
+    expect(
+      fake.runCalls.some(
+        (request) =>
+          request.executable === "git" &&
+          request.args.join(" ") === "rebase refs/remotes/origin/main",
+      ),
+    ).toBe(true);
+    expect(
+      fake.runCalls.some((request) => request.executable === "git-spice"),
+    ).toBe(false);
+  });
+
+  test("continues a native rebase without invoking an editor", async () => {
+    const fake = fakeGit(1);
+    const worktree = await mkdtemp(path.join(tmpdir(), "pr-fleet-native-"));
+    try {
+      await writeFile(path.join(worktree, "file.ts"), "resolved\n");
+      await operations(fake).continueRestack(prAt(worktree), ["file.ts"]);
+      expect(
+        fake.runCalls.some(
+          (request) =>
+            request.executable === "git" &&
+            request.args.join(" ") === "-c core.editor=true rebase --continue",
+        ),
+      ).toBe(true);
+    } finally {
+      await rm(worktree, { recursive: true, force: true });
+    }
   });
 
   test("restacks a git-spice branch through git-spice", async () => {
@@ -150,6 +237,19 @@ describe("validatePaths rejects directory pathspecs", () => {
           call[0] === "git" && call[1] === "add" && call.includes("file.ts"),
       ),
     ).toBe(true);
+  });
+
+  test("blocks publishFix from an ahead operator worktree", async () => {
+    const fake = fakeGit(0);
+    await expect(
+      operations(fake).publishFix(
+        { ...aheadPr(), worktree },
+        ["file.ts"],
+        "fix(pr-fleet): safe publication",
+      ),
+    ).rejects.toThrow(/unvalidated ahead worktree context/);
+    expect(fake.mustCalls).toEqual([]);
+    expect(fake.runCalls).toEqual([]);
   });
 
   test("does not mutate the index after command capture fails", async () => {
@@ -218,5 +318,15 @@ describe("validatePaths rejects directory pathspecs", () => {
     await expect(
       operations(fake).continueRestack(prAt(worktree), ["."]),
     ).rejects.toThrow();
+  });
+
+  test("rejects Git metadata pathspecs", async () => {
+    const fake = fakeGit(0);
+    await expect(
+      operations(fake).continueRestack(prAt(worktree), [".git/config"]),
+    ).rejects.toThrow(/Unsafe publication path/);
+    expect(
+      fake.mustCalls.some((call) => call[0] === "git" && call[1] === "add"),
+    ).toBe(false);
   });
 });

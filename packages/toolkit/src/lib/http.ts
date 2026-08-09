@@ -3,7 +3,8 @@ import type { z } from "zod";
 /**
  * Shared HTTP client for toolkit's fetch-based service clients.
  *
- * Every service client (Grafana, PagerDuty, Bugsink) followed the same shape:
+ * Every service client (Grafana, Alerts, PagerDuty, Bugsink) follows the same
+ * shape:
  * build a URL from a base + endpoint, attach an auth header, fetch, and on a
  * non-2xx response return a `{ success: false, error }` envelope carrying the
  * response body. On success the body is parsed with a Zod schema. Any thrown
@@ -30,7 +31,8 @@ export type HttpResult<T> = {
  * Authentication descriptor. `scheme` is the exact prefix written before the
  * token in the `Authorization` header:
  *
- * - `Bearer` produces `Authorization: Bearer <token>` (Grafana, Bugsink).
+ * - `Bearer` produces `Authorization: Bearer <token>` (Alerts, Grafana,
+ *   Bugsink).
  * - `Token token=` produces `Authorization: Token token=<token>` (PagerDuty).
  */
 export type HttpAuth =

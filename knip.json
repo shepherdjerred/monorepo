@@ -25,6 +25,30 @@
       "project": ["src/**/*.{ts,tsx}", "vite.config.ts"],
       "ignoreDependencies": ["shadcn"]
     },
+    "packages/alert-dashboard": {
+      "entry": [
+        "src/client/main.tsx",
+        "src/server/index.ts",
+        "src/dev.ts",
+        "src/**/*.test.ts",
+        "integration/**/*.ts",
+        "e2e/**/*.ts",
+        "architecture-fixtures/**/*.ts",
+        "dependency-cruiser.config.cjs",
+        "dependency-cruiser.negative.config.cjs",
+        "playwright.config.ts",
+        "prisma.config.ts",
+        "vite.config.ts"
+      ],
+      "project": [
+        "src/**/*.{ts,tsx}",
+        "integration/**/*.ts",
+        "e2e/**/*.ts",
+        "architecture-fixtures/**/*.ts",
+        "*.{ts,cjs}"
+      ],
+      "ignoreDependencies": ["shadcn"]
+    },
     "packages/discord-plays-core": {
       "entry": ["src/index.ts", "src/entry.ts"],
       "project": ["src/**/*.ts"]
@@ -113,7 +137,8 @@
     },
     "packages/discord-plays-mario-kart/packages/backend": {
       "entry": ["src/index.ts", "src/**/*.test.ts", "scripts/**/*.ts"],
-      "project": ["src/**/*.ts", "scripts/**/*.ts"]
+      "project": ["src/**/*.ts", "scripts/**/*.ts"],
+      "ignoreDependencies": ["ws", "@types/ws"]
     },
     "packages/discord-plays-mario-kart/packages/common": {
       "entry": ["src/index.ts"],

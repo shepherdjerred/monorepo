@@ -136,6 +136,30 @@ describe("handleGuildCreate", () => {
     await expect(handleGuildCreate(guild)).resolves.toBeUndefined();
   });
 
+  it("does nothing when the guild is unavailable (Discord outage replay)", async () => {
+    const sendMock = mock((_msg: unknown) => Promise.resolve({}));
+
+    const guild = mockGuild({
+      name: "Long-standing Server",
+      id: testGuildId("202"),
+      available: false,
+      systemChannel: mockTextChannel({
+        type: ChannelType.GuildText,
+        name: "general",
+        permissionsFor: mock(() => ({ has: mock(() => true) })),
+        send: sendMock,
+      }),
+      channels: { fetch: mock(() => Promise.resolve(new Map())) },
+      members: { me: { id: testAccountId("999") } },
+      client: { user: { id: testAccountId("999") } },
+    });
+
+    await expect(handleGuildCreate(guild)).resolves.toBeUndefined();
+    // Re-welcoming a server that has had Scout for months is exactly the spam
+    // this guard exists to prevent.
+    expect(sendMock).not.toHaveBeenCalled();
+  });
+
   it("should handle errors gracefully when sending message fails", async () => {
     const sendMock = mock(() => Promise.reject(new Error("Permission denied")));
 

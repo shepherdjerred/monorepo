@@ -7,7 +7,9 @@ import {
 import { z } from "zod";
 
 import {
+  CompleteInstanceRequestSchema,
   PriorityConfigV2Schema,
+  RecurringCompletionRestoreSchema,
   StatusConfigV2Schema,
   TaskInfoV2Schema,
   projectDisplayName,
@@ -111,6 +113,36 @@ describe("v2 wire schemas mirror @tasknotes/model", () => {
   });
 });
 
+describe("complete-instance request", () => {
+  const restore = {
+    scheduled: "2026-08-01",
+    due: null,
+    recurrence: "FREQ=WEEKLY",
+    skipped: false,
+  };
+
+  test("accepts a recurring completion snapshot only while uncompleting", () => {
+    expect(RecurringCompletionRestoreSchema.parse(restore)).toEqual(restore);
+    expect(
+      CompleteInstanceRequestSchema.parse({
+        date: "2026-08-01",
+        completed: false,
+        restore,
+      }),
+    ).toEqual({ date: "2026-08-01", completed: false, restore });
+  });
+
+  test("rejects restore for completion or legacy toggle requests", () => {
+    expect(
+      CompleteInstanceRequestSchema.safeParse({ completed: true, restore })
+        .success,
+    ).toBe(false);
+    expect(CompleteInstanceRequestSchema.safeParse({ restore }).success).toBe(
+      false,
+    );
+  });
+});
+
 describe("wikilink project helpers", () => {
   test("projectPath and projectDisplayName cover all spellings", () => {
     expect(projectPath("[[Projects/Big Launch|Launch]]")).toBe(
@@ -132,5 +164,11 @@ describe("wikilink project helpers", () => {
     expect(projectMatches(link, "Other")).toBe(false);
     expect(projectMatches("Foo", "Foo")).toBe(true);
     expect(projectMatches("Foo", "Bar")).toBe(false);
+  });
+
+  test("projectMatches preserves distinct qualified paths with one basename", () => {
+    expect(projectMatches("[[Areas/Work]]", "[[Projects/Work]]")).toBe(false);
+    expect(projectMatches("Areas/Work", "Projects/Work")).toBe(false);
+    expect(projectMatches("[[Areas/Work]]", "Work")).toBe(true);
   });
 });

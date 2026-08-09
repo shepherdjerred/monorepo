@@ -111,7 +111,7 @@ export const REPORT_COMMON_PRESETS: ReportCommonPresetInfo[] = [
     lookbackDays: 30,
     maxRows: 31,
     query:
-      'select games from match_participants group by day order by label asc render area_chart with (y = games, title = "Daily games", palette = gold, smooth = true)',
+      "select games from match_participants group by all analyze last 30 days bucket by day in time zone 'UTC' order by label asc render area_chart with (y = games, title = \"Daily games\", palette = gold, smooth = true, trend = true, sparkline = true)",
   },
   {
     id: "weekly-results",
@@ -121,7 +121,7 @@ export const REPORT_COMMON_PRESETS: ReportCommonPresetInfo[] = [
     lookbackDays: 90,
     maxRows: 16,
     query:
-      "select wins, losses from match_participants group by week order by label asc render stacked_bar with (y = (wins, losses), palette = team, labels = value)",
+      "select wins, losses from match_participants group by all analyze last 90 days bucket by week compare to previous period in time zone 'UTC' order by label asc render stacked_bar with (y = (wins, losses), palette = team, labels = value)",
   },
   {
     id: "outcome-share",
@@ -193,7 +193,7 @@ export const REPORT_COMMON_PRESETS: ReportCommonPresetInfo[] = [
     lookbackDays: 90,
     maxRows: 16,
     query:
-      "select per_game(vision_score) as vision_per_game, per_game(wards_placed) as wards_per_game, per_game(wards_killed) as wards_killed_per_game from match_participants group by week order by label asc render line_chart with (y = (vision_per_game, wards_per_game, wards_killed_per_game), palette = colorblind, legend = bottom, smooth = true)",
+      "select per_game(vision_score) as vision_per_game, per_game(wards_placed) as wards_per_game, per_game(wards_killed) as wards_killed_per_game from match_participants group by all analyze last 90 days bucket by week in time zone 'UTC' order by label asc render line_chart with (y = (vision_per_game, wards_per_game, wards_killed_per_game), palette = colorblind, legend = bottom, smooth = true, rolling = 3)",
   },
   {
     id: "arena-placement-share",
@@ -234,7 +234,7 @@ export const REPORT_COMMON_PRESETS: ReportCommonPresetInfo[] = [
     lookbackDays: 120,
     maxRows: 20,
     query:
-      'select avg_game_duration from match_participants group by week order by label asc render line_chart with (y = avg_game_duration, title = "Average game length", y_axis = "Minutes", smooth = true)',
+      'select avg_game_duration from match_participants group by all analyze last 120 days bucket by week in time zone \'UTC\' order by label asc render line_chart with (y = avg_game_duration, title = "Average game length", y_axis = "Minutes", smooth = true, trend = true)',
   },
   {
     id: "surrender-trend",
@@ -244,7 +244,7 @@ export const REPORT_COMMON_PRESETS: ReportCommonPresetInfo[] = [
     lookbackDays: 120,
     maxRows: 20,
     query:
-      "select surrender_rate, early_surrender_rate from match_participants group by week order by label asc render area_chart with (y = (surrender_rate, early_surrender_rate), palette = colorblind, labels = hide, smooth = true)",
+      "select surrender_rate, early_surrender_rate from match_participants group by all analyze last 120 days bucket by week compare to previous period in time zone 'UTC' order by label asc render area_chart with (y = (surrender_rate, early_surrender_rate), palette = colorblind, labels = hide, smooth = true, rolling = 3)",
   },
 ];
 

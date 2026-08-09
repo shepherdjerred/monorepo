@@ -15,6 +15,18 @@ export function isStaleInteractionError(error: unknown): boolean {
   );
 }
 
+/**
+ * True when a Discord call failed because the target message no longer exists (10008) — a
+ * moderator deleted it, or a channel purge caught it. Callers treat this as "the message is gone"
+ * and re-post rather than erroring.
+ */
+export function isUnknownMessageError(error: unknown): boolean {
+  return (
+    error instanceof DiscordAPIError &&
+    error.code === RESTJSONErrorCodes.UnknownMessage
+  );
+}
+
 /** Normalize an unknown thrown value to a readable message (never throws). */
 export function getErrorMessage(error: unknown): string {
   if (error instanceof Error) {

@@ -1,5 +1,11 @@
 import satori from "satori";
-import { font, bunSpiegelFonts } from "#src/assets/index.ts";
+import {
+  bunCjkFonts,
+  bunSpiegelFonts,
+  containsCjkText,
+  font,
+  fontForText,
+} from "#src/assets/index.ts";
 import { svgToPng } from "#src/html/index.tsx";
 
 const CANVAS_WIDTH = 1280;
@@ -213,6 +219,7 @@ function ChatMessageRow(props: { message: DiscordChatMessage }) {
             fontWeight: 700,
             lineHeight: 1.2,
             whiteSpace: "nowrap",
+            fontFamily: fontForText("body", props.message.author),
           }}
         >
           {props.message.author}
@@ -224,6 +231,7 @@ function ChatMessageRow(props: { message: DiscordChatMessage }) {
             fontSize: 28,
             lineHeight: 1.2,
             whiteSpace: "nowrap",
+            fontFamily: fontForText("body", props.message.content),
           }}
         >
           {props.message.content}
@@ -300,6 +308,7 @@ function BotMessageRow(props: {
               fontWeight: 700,
               lineHeight: 1,
               whiteSpace: "nowrap",
+              fontFamily: fontForText("body", props.appName),
             }}
           >
             {props.appName}
@@ -313,6 +322,7 @@ function BotMessageRow(props: {
                 fontWeight: 400,
                 lineHeight: 1,
                 whiteSpace: "nowrap",
+                fontFamily: fontForText("body", props.botMessage),
               }}
             >
               {props.botMessage}
@@ -404,7 +414,10 @@ export async function discordScreenshotToSvg(
     options.embedImageWidth ?? DEFAULT_EMBED_IMAGE_WIDTH,
   );
   const embeddedImageDataUri = pngDataUri(options.embeddedImageBytes);
-  const fonts = await bunSpiegelFonts();
+  const fonts = [
+    ...(await bunSpiegelFonts()),
+    ...(containsCjkText(options) ? await bunCjkFonts(options) : []),
+  ];
 
   return await satori(
     <DiscordScreenshot

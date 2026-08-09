@@ -1,12 +1,17 @@
-import { mkdtemp } from "node:fs/promises";
+import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { register } from "#observability/metrics.ts";
 import type { AgentTaskInput } from "#shared/agent-task.ts";
+import { redactSecrets } from "#shared/redact.ts";
 import type { AgentTaskCommand } from "./agent-task-command.ts";
 import { createAgentTaskActivities } from "./agent-task.ts";
-import { agentTaskSecretTokens, envForProvider } from "./agent-task-env.ts";
+import {
+  agentTaskSecretTokens,
+  envForProvider,
+  readAgentTaskMountedSecretTokens,
+} from "./agent-task-env.ts";
 
 const originalFetch = globalThis.fetch;
 const originalGitHubAppId = Bun.env["GITHUB_APP_ID"];
@@ -217,9 +222,46 @@ describe("agentTaskActivities", () => {
     const tokens = agentTaskSecretTokens("github-token", {
       CODEX_API_KEY: codexApiKey,
       OPENAI_API_KEY: "openai-distinct-secret",
+      HA_TOKEN: "ha-distinct-secret",
+      AWS_SECRET_ACCESS_KEY: "aws-distinct-secret",
+      AGENT_TASK_API_TOKEN: "agent-task-distinct-secret",
+      GITHUB_WEBHOOK_SECRET: "github-webhook-secret",
+      XCODE_CLOUD_WEBHOOK_TOKEN: "xcode-distinct-secret",
+      DATABASE_URL: "postgres://user:database-secret@example",
+      SENTRY_DSN:
+        "https://sentry-public@sentry.example/42?token=sentry-query-secret",
     });
 
     expect(tokens).toContain(codexApiKey);
+    expect(tokens).toContain("ha-distinct-secret");
+    expect(tokens).toContain("aws-distinct-secret");
+    expect(tokens).toContain("agent-task-distinct-secret");
+    expect(tokens).toContain("github-webhook-secret");
+    expect(tokens).toContain("xcode-distinct-secret");
+    expect(tokens).toContain("postgres://user:database-secret@example");
+    expect(tokens).toContain("database-secret");
+    expect(tokens).toContain("sentry-public");
+    expect(tokens).toContain("sentry-query-secret");
+  });
+
+  it("includes mounted service-account credentials in diagnostic redaction", async () => {
+    const tokenPath = path.join(
+      os.tmpdir(),
+      `agent-task-service-account-${crypto.randomUUID()}`,
+    );
+    await Bun.write(tokenPath, "mounted-service-account-token\n");
+
+    try {
+      const mountedTokens = await readAgentTaskMountedSecretTokens([tokenPath]);
+      const tokens = agentTaskSecretTokens("github-token", {}, mountedTokens);
+
+      expect(tokens).toContain("mounted-service-account-token");
+      expect(
+        redactSecrets("final prose: mounted-service-account-token", tokens),
+      ).toBe("final prose: ***");
+    } finally {
+      await rm(tokenPath);
+    }
   });
 
   it("aliases OPENAI_API_KEY for Codex without overriding an explicit key", async () => {

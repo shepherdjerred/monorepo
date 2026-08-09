@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MatchIdSchema, type MatchId } from "@scout-for-lol/data/index.ts";
 import { prisma } from "#src/database/index.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
@@ -6,13 +7,25 @@ import * as Sentry from "@sentry/bun";
 
 const logger = createLogger("prematch-active-game-queries");
 
-const ACTIVE_GAME_TTL_MS = 2 * 60 * 60 * 1000; // 2 hours
+// Keep reply metadata through the full postmatch alert window, which is three
+// hours from match creation.
+const ACTIVE_GAME_TTL_MS = 3 * 60 * 60 * 1000;
 
 const TrackedPuuidsSchema = z.array(z.string());
+const PrematchMessageIdsSchema = z.record(z.string(), z.string());
+
+function parsePrematchMessageIds(raw: string | null): Record<string, string> {
+  if (raw === null) {
+    return {};
+  }
+  return PrematchMessageIdsSchema.parse(JSON.parse(raw));
+}
 
 export type ActiveGameRecord = {
   gameId: number;
+  matchId: MatchId | null;
   trackedPuuids: string[];
+  prematchMessageIds: Record<string, string>;
   detectedAt: Date;
   expiresAt: Date;
 };
@@ -27,7 +40,12 @@ export async function getActiveGames(
     const rows = await prismaClient.activeGame.findMany();
     return rows.map((row) => ({
       gameId: Number(row.gameId),
+      matchId:
+        row.prematchMatchId === null
+          ? null
+          : MatchIdSchema.parse(row.prematchMatchId),
       trackedPuuids: TrackedPuuidsSchema.parse(JSON.parse(row.trackedPuuids)),
+      prematchMessageIds: parsePrematchMessageIds(row.prematchMessageIds),
       detectedAt: row.detectedAt,
       expiresAt: row.expiresAt,
     }));
@@ -43,10 +61,12 @@ export async function getActiveGames(
 /**
  * Insert a new active game record.
  *
+ * @param matchId - Platform-qualified Riot match ID
  * @param gameId - Riot game ID from the spectator API
  * @param trackedPuuids - Array of tracked player PUUIDs detected in this game
  */
 export async function upsertActiveGame(
+  matchId: MatchId,
   gameId: number,
   trackedPuuids: string[],
   prismaClient: ExtendedPrismaClient = prisma,
@@ -58,30 +78,148 @@ export async function upsertActiveGame(
   try {
     const gameIdBigInt = BigInt(gameId);
     await prismaClient.activeGame.upsert({
-      where: { gameId: gameIdBigInt },
+      where: { prematchMatchId: matchId },
       create: {
         gameId: gameIdBigInt,
+        prematchMatchId: matchId,
         trackedPuuids: puuidsJson,
         detectedAt: now,
         expiresAt,
       },
       update: {
+        gameId: gameIdBigInt,
         trackedPuuids: puuidsJson,
       },
     });
     logger.info(
-      `📝 Tracked active game ${gameId.toString()} with ${trackedPuuids.length.toString()} player(s)`,
+      `📝 Tracked active match ${matchId} with ${trackedPuuids.length.toString()} player(s)`,
     );
   } catch (error) {
-    logger.error(`❌ Error upserting active game ${gameId.toString()}:`, error);
+    logger.error(`❌ Error upserting active match ${matchId}:`, error);
     Sentry.captureException(error, {
       tags: {
         source: "prematch-upsert-active-game",
         gameId: gameId.toString(),
+        matchId,
       },
     });
     throw error;
   }
+}
+
+/**
+ * Persist the Discord message IDs produced by the prematch notification.
+ * Message IDs are stored per channel because one game can be delivered to
+ * several subscribed channels, and the postmatch report must reply in each
+ * channel to its own corresponding prematch message.
+ */
+export async function recordPrematchMessageIds(
+  matchId: MatchId,
+  messageIds: ReadonlyMap<string, string>,
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<void> {
+  const suffix = matchId.split("_").at(-1);
+  if (suffix === undefined || !/^\d+$/.test(suffix)) {
+    throw new Error(`Invalid numeric game ID in match ID ${matchId}`);
+  }
+  const serialized = Object.fromEntries(messageIds.entries());
+  try {
+    await prismaClient.activeGame.update({
+      where: { prematchMatchId: matchId },
+      data: {
+        prematchMessageIds: JSON.stringify(serialized),
+        prematchMatchId: matchId,
+      },
+    });
+  } catch (error) {
+    logger.error(
+      `❌ Error recording prematch message IDs for match ${matchId}:`,
+      error,
+    );
+    Sentry.captureException(error, {
+      tags: {
+        source: "prematch-record-message-ids",
+        matchId,
+      },
+    });
+    throw error;
+  }
+}
+
+/** Return the prematch Discord message IDs for a game, keyed by channel ID. */
+export async function getPrematchMessageIds(
+  matchId: MatchId,
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<Map<string, string>> {
+  const row = await prismaClient.activeGame.findUnique({
+    where: { prematchMatchId: matchId },
+    select: { prematchMessageIds: true, prematchMatchId: true },
+  });
+  if (row === null) {
+    return new Map();
+  }
+  const parsed = parsePrematchMessageIds(row.prematchMessageIds);
+  return new Map(Object.entries(parsed));
+}
+
+async function findPrematchMessageIdsRowForMatchId(
+  matchId: MatchId,
+  prismaClient: ExtendedPrismaClient,
+): Promise<{
+  prematchMessageIds: string | null;
+  prematchMatchId: string | null;
+} | null> {
+  const suffix = matchId.split("_").at(-1);
+  if (suffix === undefined || !/^\d+$/.test(suffix)) {
+    return null;
+  }
+  return prismaClient.activeGame.findUnique({
+    where: { prematchMatchId: matchId },
+    select: { prematchMessageIds: true, prematchMatchId: true },
+  });
+}
+
+export async function getPrematchMessageIdsForMatchId(
+  matchId: MatchId,
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<Map<string, string>> {
+  const row = await findPrematchMessageIdsRowForMatchId(matchId, prismaClient);
+  if (row?.prematchMatchId !== matchId) {
+    return new Map();
+  }
+  return new Map(
+    Object.entries(parsePrematchMessageIds(row.prematchMessageIds)),
+  );
+}
+
+/**
+ * Retrieve reply references at the postmatch delivery boundary. A database
+ * lookup failure must not prevent the report from being sent as a normal
+ * message, but the underlying query remains strict for polling callers.
+ */
+export async function getPrematchMessageIdsForMatchIdOrEmpty(
+  matchId: MatchId,
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<Map<string, string>> {
+  let row: Awaited<ReturnType<typeof findPrematchMessageIdsRowForMatchId>>;
+  try {
+    row = await findPrematchMessageIdsRowForMatchId(matchId, prismaClient);
+  } catch (error) {
+    logger.error(
+      `⚠️ Could not retrieve prematch reply references for ${matchId}:`,
+      error,
+    );
+    Sentry.captureException(error, {
+      tags: { source: "postmatch-prematch-reply-lookup", matchId },
+    });
+    return new Map();
+  }
+  if (row?.prematchMatchId !== matchId) {
+    return new Map();
+  }
+  return new Map(
+    Object.entries(parsePrematchMessageIds(row.prematchMessageIds)),
+  );
 }
 
 /**

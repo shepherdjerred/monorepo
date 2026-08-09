@@ -62,9 +62,15 @@ type Grouping = {
   labelExpr: string;
   discordExpr: string;
   groupExprs: string[];
+  labelParams?: BoundParam[];
+  groupParams?: BoundParam[];
 };
 
-function singleMatchGrouping(groupBy: ReportGroupBy): Grouping {
+function singleMatchGrouping(
+  groupBy: ReportGroupBy,
+  timezone: string,
+  timeColumn: "game_creation_at" | "observed_at" = "game_creation_at",
+): Grouping {
   return match(groupBy)
     .with("player", () => ({
       labelExpr: "any_value(player_alias)",
@@ -113,9 +119,9 @@ function singleMatchGrouping(groupBy: ReportGroupBy): Grouping {
       discordExpr: "NULL::VARCHAR",
       groupExprs: ["placement"],
     }))
-    .with("day", () => timeGrouping("day", "%Y-%m-%d"))
-    .with("week", () => timeGrouping("week", "%Y-%m-%d"))
-    .with("month", () => timeGrouping("month", "%Y-%m"))
+    .with("day", () => timeGrouping("day", "%Y-%m-%d", timezone, timeColumn))
+    .with("week", () => timeGrouping("week", "%Y-%m-%d", timezone, timeColumn))
+    .with("month", () => timeGrouping("month", "%Y-%m", timezone, timeColumn))
     .with("all", () => ({
       labelExpr: "'All'",
       discordExpr: "NULL::VARCHAR",
@@ -139,17 +145,35 @@ function textGrouping(column: string): Grouping {
 function timeGrouping(
   unit: "day" | "week" | "month",
   format: string,
+  timezone: string,
+  timeColumn: "game_creation_at" | "observed_at",
 ): Grouping {
-  const expression = `date_trunc('${unit}', game_creation_at)`;
+  const expression =
+    timezone === "UTC"
+      ? `date_trunc('${unit}', ${timeColumn})`
+      : `date_trunc('${unit}', timezone(?, timezone('UTC', ${timeColumn})))`;
+  const params = timezone === "UTC" ? [] : [scalarParam(timezone)];
   return {
     labelExpr: `strftime(any_value(${expression}), '${format}')`,
     discordExpr: "NULL::VARCHAR",
     groupExprs: [expression],
+    labelParams: params,
+    groupParams: params,
   };
 }
 
-function matchGrouping(groupBys: ReportGroupBy[]): Grouping {
-  const groupings = groupBys.map((groupBy) => singleMatchGrouping(groupBy));
+function matchGrouping(
+  groupBys: ReportGroupBy[],
+  timezone: string,
+  timeColumn: "game_creation_at" | "observed_at" = "game_creation_at",
+  prematch = false,
+): Grouping {
+  const groupings = groupBys.map((groupBy) => {
+    const grouping = singleMatchGrouping(groupBy, timezone, timeColumn);
+    return prematch && groupBy === "champion"
+      ? { ...grouping, labelExpr: "any_value(champion_id::VARCHAR)" }
+      : grouping;
+  });
   const labels = groupings.map((grouping) => grouping.labelExpr);
   return {
     labelExpr:
@@ -160,16 +184,9 @@ function matchGrouping(groupBys: ReportGroupBy[]): Grouping {
       ? "any_value(discord_id)"
       : "NULL::VARCHAR",
     groupExprs: groupings.flatMap((grouping) => grouping.groupExprs),
+    labelParams: groupings.flatMap((grouping) => grouping.labelParams ?? []),
+    groupParams: groupings.flatMap((grouping) => grouping.groupParams ?? []),
   };
-}
-
-/** Prematch rows have no champion_name column; label by id, like the fact engine. */
-function prematchGrouping(groupBy: ReportGroupBy): Grouping {
-  const base = singleMatchGrouping(groupBy);
-  if (groupBy === "champion") {
-    return { ...base, labelExpr: "any_value(champion_id::VARCHAR)" };
-  }
-  return base;
 }
 
 function timePredicate(
@@ -369,7 +386,10 @@ export function compileMatchQuery(
     return undefined;
   }
   const facts = buildMatchFactsCte(input, matchesSource);
-  const grouping = matchGrouping(input.plan.groupBys);
+  const grouping = matchGrouping(
+    input.plan.groupBys,
+    input.plan.analysis?.timezone ?? "UTC",
+  );
   const groupBySql =
     grouping.groupExprs.length === 0
       ? " HAVING COUNT(*) > 0"
@@ -380,7 +400,11 @@ export function compileMatchQuery(
       `${grouping.groupExprs.includes("player_id") ? "any_value(player_id)" : "NULL::BIGINT"} AS player_id, ` +
       `${grouping.discordExpr} AS discord_id, ${matchAggregateSelect()} ` +
       `FROM facts${groupBySql}`,
-    aggregateParams: facts.params,
+    aggregateParams: [
+      ...facts.params,
+      ...(grouping.labelParams ?? []),
+      ...(grouping.groupParams ?? []),
+    ],
     ...scannedStatement(facts),
   };
 }
@@ -454,14 +478,19 @@ export function compilePrematchQuery(
   const factsSql =
     `WITH accounts AS (${accounts.sql}), ` +
     `facts AS (SELECT a.player_id, a.player_alias, a.discord_id, ` +
-    `p.champion_id, p.queue FROM (${prematchSource.sql}) p ` +
+    `p.champion_id, p.queue, p.observed_at FROM (${prematchSource.sql}) p ` +
     `JOIN accounts a ON a.puuid = p.puuid)`;
   const factsParams = [...accounts.params, ...prematchSource.params];
 
   const champion = championPredicate(input.plan.championId);
   const aggregateWhere =
     champion.sql.length > 0 ? ` WHERE ${champion.sql}` : "";
-  const grouping = prematchGrouping(input.plan.groupBy);
+  const grouping = matchGrouping(
+    input.plan.groupBys,
+    input.plan.analysis?.timezone ?? "UTC",
+    "observed_at",
+    true,
+  );
   const groupBySql =
     grouping.groupExprs.length === 0
       ? " HAVING COUNT(*) > 0"
@@ -472,7 +501,12 @@ export function compilePrematchQuery(
       `${grouping.groupExprs.includes("player_id") ? "any_value(player_id)" : "NULL::BIGINT"} AS player_id, ` +
       `${grouping.discordExpr} AS discord_id, ${prematchAggregateSelect()} ` +
       `FROM facts${aggregateWhere}${groupBySql}`,
-    aggregateParams: [...factsParams, ...champion.params],
+    aggregateParams: [
+      ...factsParams,
+      ...(grouping.labelParams ?? []),
+      ...champion.params,
+      ...(grouping.groupParams ?? []),
+    ],
     scannedSql: `${factsSql} SELECT COUNT(*)::BIGINT AS scanned FROM facts`,
     scannedParams: factsParams,
   };

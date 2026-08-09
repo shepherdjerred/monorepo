@@ -51,14 +51,14 @@ export function GuildPicker() {
   const trpc = useTRPC();
   const navigate = useNavigate();
   const meQuery = useQuery(
-    trpc.auth.meWeb.queryOptions(undefined, { retry: false }),
+    trpc.auth.sessionState.queryOptions(undefined, { retry: false }),
   );
   const { data } = useSuspenseQuery(
     trpc.guild.listManageable.queryOptions(undefined, {
       staleTime: STALE_TIME_SLOW_LIST,
     }),
   );
-  const discordId = meQuery.data?.discordId ?? null;
+  const discordId = meQuery.data?.user?.discordId ?? null;
   const [bannerDismissed, setBannerDismissed] = useState(false);
 
   // First sign-in for this user: send them through the guided setup once.

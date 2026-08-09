@@ -8,6 +8,10 @@ import { addPreMatchRow } from "./scout-dashboard-prematch-panels.ts";
 import { addApiAndCompetitionRows } from "./scout-dashboard-api-competition-rows.ts";
 import { addScheduledReportRows } from "./scout-dashboard-scheduled-report-panels.ts";
 import { addGuildHealthRows } from "./scout-dashboard-health-panels.ts";
+import {
+  addAdoptionFunnelRows,
+  addWebSurfaceRows,
+} from "./scout-dashboard-web-panels.ts";
 
 // Helper function to build filter expression
 function buildFilter() {
@@ -328,6 +332,11 @@ export function createScoutDashboard() {
   // Row 8: Guild health — servers the bot can't deliver to + unhealthy
   // competitions.
   addGuildHealthRows(builder, prometheusDatasource);
+
+  // Web surface + adoption funnel: HTTP/tRPC health and install → first
+  // subscription conversion.
+  addWebSurfaceRows(builder, prometheusDatasource);
+  addAdoptionFunnelRows(builder, prometheusDatasource);
 
   return builder.build();
 }

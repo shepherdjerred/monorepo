@@ -168,15 +168,39 @@ export type TaskUpdateRequest = z.infer<typeof TaskUpdateRequestSchema>;
  * POST /api/tasks/:id/complete-instance — upstream takes `{date?}` and
  * TOGGLES that instance. `completed` is this server's set-semantics
  * extension (P1): when present, the instance is set absolutely, which is
- * what makes the app's offline replay idempotent.
+ * what makes the app's offline replay idempotent. `restore` is accepted only
+ * while clearing a completed instance and restores the recurring schedule
+ * snapshot that existed before completion advanced it.
  */
-export const CompleteInstanceRequestSchema = z.object({
-  // z.iso.date() rejects malformed dates (e.g. "not-a-date") at the schema
-  // boundary with a 400, instead of letting `new Date(...)` produce an
-  // Invalid Date that later throws RangeError out of `ymd(...).toISOString()`.
-  date: z.iso.date().optional(),
-  completed: z.boolean().optional(),
+export const RecurringCompletionRestoreSchema = z.object({
+  scheduled: z.string().nullable(),
+  due: z.string().nullable(),
+  recurrence: z.string(),
+  skipped: z.boolean(),
 });
+
+export type RecurringCompletionRestore = z.infer<
+  typeof RecurringCompletionRestoreSchema
+>;
+
+export const CompleteInstanceRequestSchema = z
+  .object({
+    // z.iso.date() rejects malformed dates (e.g. "not-a-date") at the schema
+    // boundary with a 400, instead of letting `new Date(...)` produce an
+    // Invalid Date that later throws RangeError out of `ymd(...).toISOString()`.
+    date: z.iso.date().optional(),
+    completed: z.boolean().optional(),
+    restore: RecurringCompletionRestoreSchema.optional(),
+  })
+  .superRefine((request, context) => {
+    if (request.restore !== undefined && request.completed !== false) {
+      context.addIssue({
+        code: "custom",
+        path: ["restore"],
+        message: "restore is allowed only when completed is false",
+      });
+    }
+  });
 
 export type CompleteInstanceRequest = z.infer<
   typeof CompleteInstanceRequestSchema
@@ -399,8 +423,9 @@ export function projectDisplayName(value: string): string {
 
 /**
  * Whether two project values refer to the same project, tolerant of the
- * wikilink/bare-name duality: full paths, basenames, and aliases all count
- * (case-insensitive).
+ * wikilink/bare-name duality. Two path-qualified values only match when their
+ * canonical vault paths match; this keeps projects such as `Areas/Work` and
+ * `Projects/Work` distinct even though they share a display basename.
  */
 function projectKeys(value: string): Set<string> {
   const path = projectPath(value).toLowerCase();
@@ -414,6 +439,11 @@ function projectKeys(value: string): Set<string> {
 }
 
 export function projectMatches(a: string, b: string): boolean {
+  const pathA = projectPath(a).toLowerCase();
+  const pathB = projectPath(b).toLowerCase();
+  if (pathA === pathB) return true;
+  if (pathA.includes("/") && pathB.includes("/")) return false;
+
   const ka = projectKeys(a);
   return [...projectKeys(b)].some((k) => ka.has(k));
 }

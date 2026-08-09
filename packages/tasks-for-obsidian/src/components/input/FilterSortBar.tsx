@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Pressable, Text, StyleSheet } from "react-native";
+import { Platform, View, Pressable, Text, StyleSheet } from "react-native";
 import { AppIcon } from "../common/AppIcon";
 import { useSettings } from "../../hooks/use-settings";
 import {
@@ -7,12 +7,13 @@ import {
   type SortConfig,
   countActiveFilters,
 } from "../../domain/filters";
-import { showSortPicker } from "./SortPicker";
+import { showSortPicker, SortPickerModal } from "./SortPicker";
 import { FilterModal } from "./FilterModal";
 
 type Props = {
   filter: FilterConfig;
-  sort: SortConfig;
+  /** Null means the collection's semantic order is still active. */
+  sort: SortConfig | null;
   onFilterChange: (filter: FilterConfig) => void;
   onSortChange: (sort: SortConfig) => void;
   availableProjects: readonly string[];
@@ -36,6 +37,7 @@ export function FilterSortBar({
 }: Props) {
   const { colors } = useSettings();
   const [showFilter, setShowFilter] = useState(false);
+  const [showSort, setShowSort] = useState(false);
   const activeCount = countActiveFilters(filter);
 
   return (
@@ -47,7 +49,11 @@ export function FilterSortBar({
             { backgroundColor: colors.surface, borderColor: colors.border },
           ]}
           onPress={() => {
-            showSortPicker(sort, onSortChange);
+            if (Platform.OS === "ios") {
+              showSortPicker(sort, onSortChange);
+            } else {
+              setShowSort(true);
+            }
           }}
           accessibilityRole="button"
           accessibilityLabel="Sort options"
@@ -139,6 +145,14 @@ export function FilterSortBar({
         availableProjects={availableProjects}
         availableContexts={availableContexts}
         availableTags={availableTags}
+      />
+      <SortPickerModal
+        visible={showSort}
+        sort={sort}
+        onSortChange={onSortChange}
+        onClose={() => {
+          setShowSort(false);
+        }}
       />
     </>
   );

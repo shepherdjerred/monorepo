@@ -4,7 +4,7 @@ import {
   type CompletedMatch,
 } from "@scout-for-lol/data";
 import { palette } from "#src/assets/colors.ts";
-import { font } from "#src/assets/index.ts";
+import { font, fontForText } from "#src/assets/index.ts";
 import { Splash } from "#src/html/shared/splash.tsx";
 import { TierPill } from "#src/html/shared/tier-pill.tsx";
 import { GradeDiamond } from "#src/html/shared/grade-diamond.tsx";
@@ -234,7 +234,14 @@ export function RankedBannerReport({ match }: { match: CompletedMatch }) {
                 style={{
                   fontSize: "2.5rem",
                   color: palette.grey[1],
-                  fontFamily: font.body,
+                  fontFamily: fontForText(
+                    "body",
+                    `${hero.lane ?? "—"} · ${
+                      isSolo
+                        ? hero.champion.riotIdGameName
+                        : `${match.players.length.toString()} tracked`
+                    }`,
+                  ),
                   display: "flex",
                 }}
               >

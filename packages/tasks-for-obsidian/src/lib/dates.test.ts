@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
 import {
+  formatAgendaDayHeading,
   formatDate,
   formatRelativeDate,
   getDateGroup,
@@ -12,6 +13,28 @@ import {
   parseLocalDate,
   toISODate,
 } from "./dates";
+
+describe("formatAgendaDayHeading", () => {
+  const referenceDate = new Date(2026, 7, 8, 12);
+
+  test("keeps relative headings tied to an exact calendar date", () => {
+    expect(formatAgendaDayHeading("2026-08-08", referenceDate)).toBe(
+      "Today · Saturday, Aug 8",
+    );
+    expect(formatAgendaDayHeading("2026-08-09", referenceDate)).toBe(
+      "Tomorrow · Sunday, Aug 9",
+    );
+    expect(formatAgendaDayHeading("2026-08-10", referenceDate)).toBe(
+      "Monday, Aug 10",
+    );
+  });
+
+  test("includes the year when it differs from the reference year", () => {
+    expect(formatAgendaDayHeading("2027-01-02", referenceDate)).toBe(
+      "Saturday, Jan 2, 2027",
+    );
+  });
+});
 
 // Helper: format a Date as YYYY-MM-DD
 function toISO(date: Date): string {
@@ -117,6 +140,12 @@ describe("formatDate", () => {
 });
 
 describe("formatRelativeDate", () => {
+  test("uses an explicit reference clock when supplied", () => {
+    const referenceDate = new Date(2026, 7, 8, 18);
+    expect(formatRelativeDate("2026-08-09", referenceDate)).toBe("Tomorrow");
+    expect(formatRelativeDate("2026-08-07", referenceDate)).toBe("Yesterday");
+  });
+
   test("returns 'Today' for today's date", () => {
     expect(formatRelativeDate(toISO(new Date()))).toBe("Today");
   });

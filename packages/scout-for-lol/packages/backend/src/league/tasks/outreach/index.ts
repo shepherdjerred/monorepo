@@ -1,12 +1,31 @@
 /**
- * Automated Outreach Task
+ * Automated Outreach
  *
- * Sends lifecycle DMs to guild installers:
- * - 3-day nudge: Only for guilds that haven't completed setup
- * - 14-day feedback: Only for guilds that have completed setup (3+ subs)
+ * A three-message ladder, capped for life by the non-core message budget:
  *
- * Scout is set-and-forget — post-setup silence is the happy path.
- * We only nudge users who haven't set up, and solicit feedback from those who have.
+ * | Stage | Earliest | Sent when                | Content                     |
+ * | ----- | -------- | ------------------------ | --------------------------- |
+ * | 1     | day 3    | nothing configured       | onboarding nudge            |
+ * | 2     | day 14   | always (content adapts)  | feedback ask, or 2nd nudge  |
+ * | 3     | day 30   | always (content adapts)  | final feedback ask, or last call |
+ *
+ * Three deliberate departures from the version this replaces, each fixing a
+ * measured failure in prod:
+ *
+ * 1. **Budget is consumed only on delivery.** The old passes stamped their
+ *    column "regardless" of the send outcome, which permanently burned 33 of 37
+ *    guilds out of the feedback ask without ever messaging them.
+ * 2. **Eligibility is re-evaluated, not marked once.** A guild that configures
+ *    late, or becomes reachable late, still gets its message. The old one-shot
+ *    gate meant a guild's state at one instant decided its fate forever.
+ * 3. **The feedback bar is one subscription, not three.** With a median of ~4
+ *    subscriptions per server, a three-sub gate excluded most of the people
+ *    actually using the product — which is why only four feedback DMs were ever
+ *    attempted.
+ *
+ * The feedback ask lives here rather than on the removal path because a DM sent
+ * after the bot is kicked usually cannot be delivered at all (no mutual guild):
+ * that route managed 1 delivery out of 15 attempts.
  */
 
 import { type Client } from "discord.js";
@@ -16,230 +35,278 @@ import {
   type DiscordGuildId,
 } from "@scout-for-lol/data/index.ts";
 import { prisma } from "#src/database/index.ts";
-import { sendDM } from "#src/discord/utils/dm.ts";
+import { readOutreachState } from "#src/discord/utils/outreach-state.ts";
+import { sendDM, type DmKind } from "#src/discord/utils/dm.ts";
+import { NON_CORE_MESSAGE_BUDGET } from "#src/discord/utils/message-budget.ts";
 import { truncateDiscordMessage } from "#src/discord/utils/message.ts";
+import { getFeedbackUrl } from "#src/discord/utils/feedback.ts";
+import {
+  outreachMessagesTotal,
+  outreachSkippedTotal,
+} from "#src/metrics/outreach.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("outreach");
 
 const SUPPORT_USER = "<@160509172704739328>";
-const DM_FOOTER =
-  "\n\n**Note:** Replies to this bot cannot be read. " +
-  "If you need help with setup, troubleshooting, or have any feedback, " +
-  "please DM " +
-  SUPPORT_USER +
-  " directly -- happy to help!";
 const GETTING_STARTED = "https://scout-for-lol.com/getting-started/";
 const DASHBOARD = "https://scout-for-lol.com/app/";
-const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
-const FOURTEEN_DAYS_MS = 14 * 24 * 60 * 60 * 1000;
-const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
-
-async function getSubscriptionCount(serverId: DiscordGuildId): Promise<number> {
-  return prisma.subscription.count({ where: { serverId } });
-}
-
-async function getCompetitionCount(serverId: DiscordGuildId): Promise<number> {
-  return prisma.competition.count({
-    where: { serverId, isCancelled: false },
-  });
-}
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
- * 3-day nudge: Only send if the guild hasn't completed setup
+ * Ladder rungs by install age. The rung decides WHAT to say; the budget decides
+ * WHETHER we may say it. These are deliberately independent — see
+ * {@link ladderStageFor}.
  */
-async function runThreeDayOutreach(client: Client): Promise<void> {
-  const cutoff = new Date(Date.now() - THREE_DAYS_MS);
+const STAGE_AGE_DAYS: readonly { stage: number; days: number }[] = [
+  { stage: 3, days: 30 },
+  { stage: 2, days: 14 },
+  { stage: 1, days: 3 },
+];
 
-  const guilds = await prisma.guildInstall.findMany({
-    where: {
-      installedAt: { lte: cutoff },
-      outreach3dSentAt: null,
-    },
-  });
+/**
+ * The rung a guild has reached, from install age alone.
+ *
+ * Derived from the calendar rather than from messages sent, because a guild
+ * that needs no message still advances through the ladder. Tying the rung to
+ * the delivered-message count stranded configured guilds on rung 1 forever:
+ * they were skipped (correctly) at day 3, which delivered nothing, which left
+ * the counter at zero, which meant day 14 re-evaluated as rung 1 again and the
+ * feedback ask was never reachable.
+ */
+export function ladderStageFor(ageDays: number): number {
+  return STAGE_AGE_DAYS.find((rung) => ageDays >= rung.days)?.stage ?? 0;
+}
 
-  logger.info(
-    `[Outreach] 3-day check: ${guilds.length.toString()} guild(s) eligible`,
+/** A guild's current configuration, which decides the message content. */
+type GuildState = {
+  subscriptions: number;
+  competitions: number;
+};
+
+type Plan =
+  | { action: "send"; stage: number; kind: DmKind; message: string }
+  | { action: "skip"; stage: number; reason: string };
+
+function helpLine(): string {
+  return (
+    `\n\nNeed a hand? DM ${SUPPORT_USER} directly, or tell us how it's going: ` +
+    getFeedbackUrl()
   );
-
-  for (const guild of guilds) {
-    const guildId = DiscordGuildIdSchema.parse(guild.serverId);
-    const subCount = await getSubscriptionCount(guildId);
-
-    let message: string | undefined;
-
-    if (subCount === 0) {
-      message = truncateDiscordMessage(
-        `👋 Hey there! Thanks for adding Scout for LoL to **${guild.serverName}**. ` +
-          `Add your first player from the dashboard at ${DASHBOARD} ` +
-          `(or with \`/subscription add\` in Discord). New here? ${GETTING_STARTED}` +
-          DM_FOOTER,
-      );
-    } else if (subCount <= 2) {
-      message = truncateDiscordMessage(
-        `👋 Hey there! You've started setting up Scout for LoL on **${guild.serverName}**, nice! ` +
-          `You can add more players from the dashboard at ${DASHBOARD} or with \`/subscription add\`.` +
-          DM_FOOTER,
-      );
-    }
-    // 3+ subs = they're set up, skip the nudge
-
-    if (message === undefined) {
-      logger.info(
-        `[Outreach] 3-day skip for ${guild.serverName}: ${subCount.toString()} subs (already set up)`,
-      );
-    } else {
-      const userId = DiscordAccountIdSchema.parse(guild.addedByDiscordId);
-      const status = await sendDM({
-        client,
-        userId,
-        message,
-        kind: "outreach_3d",
-        guildId: DiscordGuildIdSchema.parse(guild.serverId),
-      });
-      logger.info(
-        `[Outreach] 3-day DM to ${guild.addedByDiscordId} for ${guild.serverName}: ${status}`,
-      );
-    }
-
-    // Mark as sent regardless (don't retry)
-    await prisma.guildInstall.update({
-      where: { id: guild.id },
-      data: { outreach3dSentAt: new Date() },
-    });
-  }
 }
 
-/**
- * 14-day feedback: Only send if the guild HAS completed setup (3+ subs)
- */
-async function runFourteenDayOutreach(client: Client): Promise<void> {
-  const cutoff = new Date(Date.now() - FOURTEEN_DAYS_MS);
-
-  const guilds = await prisma.guildInstall.findMany({
-    where: {
-      installedAt: { lte: cutoff },
-      outreach14dSentAt: null,
-    },
-  });
-
-  logger.info(
-    `[Outreach] 14-day check: ${guilds.length.toString()} guild(s) eligible`,
+function onboardingNudge(serverName: string, state: GuildState): string {
+  if (state.subscriptions === 0) {
+    return (
+      `👋 Thanks for adding Scout to **${serverName}**! It isn't tracking anyone yet, ` +
+      `so it won't post anything.\n\nAdd your first player from the dashboard: ${DASHBOARD}\n` +
+      `Step-by-step guide: ${GETTING_STARTED}` +
+      helpLine()
+    );
+  }
+  return (
+    `👋 You've made a start on Scout in **${serverName}** — nice.\n\n` +
+    `Add more players from the dashboard (${DASHBOARD}) and Scout will post a report ` +
+    `after each of their games.` +
+    helpLine()
   );
-
-  for (const guild of guilds) {
-    const guildId = DiscordGuildIdSchema.parse(guild.serverId);
-    const subCount = await getSubscriptionCount(guildId);
-
-    if (subCount >= 3) {
-      const compCount = await getCompetitionCount(guildId);
-      const compMention = compCount > 0 ? " and running competitions" : "";
-
-      const message = truncateDiscordMessage(
-        `👋 Hey there! You've been using Scout for LoL on **${guild.serverName}** for a couple weeks now${compMention}. ` +
-          `How's it going? Any bugs or feature suggestions?` +
-          DM_FOOTER,
-      );
-
-      const userId = DiscordAccountIdSchema.parse(guild.addedByDiscordId);
-      const status = await sendDM({
-        client,
-        userId,
-        message,
-        kind: "outreach_14d",
-        guildId,
-      });
-      logger.info(
-        `[Outreach] 14-day DM to ${guild.addedByDiscordId} for ${guild.serverName}: ${status}`,
-      );
-    } else {
-      logger.info(
-        `[Outreach] 14-day skip for ${guild.serverName}: ${subCount.toString()} subs (not enough setup for feedback request)`,
-      );
-    }
-
-    // Mark as sent regardless
-    await prisma.guildInstall.update({
-      where: { id: guild.id },
-      data: { outreach14dSentAt: new Date() },
-    });
-  }
 }
 
-/**
- * 30-day "still not configured" nudge: a guild that has had the bot for a month
- * but has zero subscriptions AND zero active competitions never posts anything.
- * One-time nudge so the owner knows it isn't working (or can remove it).
- */
-async function runThirtyDayOutreach(client: Client): Promise<void> {
-  const cutoff = new Date(Date.now() - THIRTY_DAYS_MS);
-
-  const guilds = await prisma.guildInstall.findMany({
-    where: {
-      installedAt: { lte: cutoff },
-      outreach30dSentAt: null,
-    },
-  });
-
-  logger.info(
-    `[Outreach] 30-day check: ${guilds.length.toString()} guild(s) eligible`,
+function feedbackAsk(serverName: string, state: GuildState): string {
+  const extra = state.competitions > 0 ? " and running competitions" : "";
+  return (
+    `👋 You've been using Scout in **${serverName}**${extra} for a couple of weeks now. ` +
+    `How's it going?\n\nAnything broken, confusing, or missing? We read every reply here: ` +
+    getFeedbackUrl() +
+    `\n\nOr DM ${SUPPORT_USER} directly.`
   );
+}
 
-  for (const guild of guilds) {
-    const guildId = DiscordGuildIdSchema.parse(guild.serverId);
-    const [subCount, compCount] = await Promise.all([
-      getSubscriptionCount(guildId),
-      getCompetitionCount(guildId),
-    ]);
-
-    // Only nudge guilds that have configured nothing at all.
-    if (subCount === 0 && compCount === 0) {
-      const message = truncateDiscordMessage(
-        `👋 It's been about a month since Scout for LoL was added to **${guild.serverName}**, ` +
-          `but nothing is set up yet — so it isn't posting anything. ` +
-          `Track a player with \`/subscription add\` (guide: ${GETTING_STARTED}). ` +
-          `If Scout isn't what you're after, no worries — you can remove it any time.` +
-          DM_FOOTER,
-      );
-
-      const userId = DiscordAccountIdSchema.parse(guild.addedByDiscordId);
-      const status = await sendDM({
-        client,
-        userId,
-        message,
-        kind: "outreach_30d",
-        guildId,
-      });
-      logger.info(
-        `[Outreach] 30-day DM to ${guild.addedByDiscordId} for ${guild.serverName}: ${status}`,
-      );
-    } else {
-      logger.info(
-        `[Outreach] 30-day skip for ${guild.serverName}: ${subCount.toString()} subs / ${compCount.toString()} comps (configured)`,
-      );
-    }
-
-    // Mark as sent regardless (don't retry).
-    await prisma.guildInstall.update({
-      where: { id: guild.id },
-      data: { outreach30dSentAt: new Date() },
-    });
-  }
+function lastCall(serverName: string): string {
+  return (
+    `👋 Scout has been in **${serverName}** for a month but still isn't set up, ` +
+    `so it hasn't posted anything.\n\n` +
+    `If you'd like to finish: ${DASHBOARD} (guide: ${GETTING_STARTED}).\n` +
+    `If Scout isn't what you were after, no hard feelings — you can remove it any time, ` +
+    `and we'd genuinely like to know why: ${getFeedbackUrl()}`
+  );
 }
 
 /**
- * Main outreach task — runs all passes
+ * Decide what, if anything, to send to a guild right now.
+ *
+ * Pure given its inputs so the ladder is unit-testable without Discord or a
+ * clock — the failure mode here is messaging real users, so the decision logic
+ * deserves to be tested directly.
  */
-export async function runOutreach(client: Client): Promise<void> {
-  logger.info("[Outreach] Starting outreach check");
+export function planOutreach(params: {
+  serverName: string;
+  installedAt: Date;
+  /** Non-core messages already DELIVERED — the spent budget. */
+  outreachStage: number;
+  /** Highest rung already delivered, so a rung is never repeated. */
+  lastLadderStage: number;
+  feedbackRequested: boolean;
+  state: GuildState;
+  now: Date;
+}): Plan {
+  const ageDays =
+    (params.now.getTime() - params.installedAt.getTime()) / DAY_MS;
+  const stage = ladderStageFor(ageDays);
+
+  if (stage === 0) {
+    return { action: "skip", stage: 1, reason: "too_soon" };
+  }
+  // A rung is said at most once. Without this, an unconfigured guild past day
+  // 30 would re-send the last call every single day until the budget drained.
+  if (stage <= params.lastLadderStage) {
+    return { action: "skip", stage, reason: "stage_already_sent" };
+  }
+  if (params.outreachStage >= NON_CORE_MESSAGE_BUDGET) {
+    return { action: "skip", stage, reason: "budget_exhausted" };
+  }
+
+  const configured =
+    params.state.subscriptions > 0 || params.state.competitions > 0;
+
+  if (configured) {
+    // Rung 1 is purely a setup nudge, and a configured guild has nothing to be
+    // nudged about. Skipping WITHOUT recording the rung is deliberate: the
+    // guild stays eligible, so it still reaches the feedback ask at rung 2.
+    if (stage === 1) {
+      return { action: "skip", stage, reason: "configured" };
+    }
+    if (params.feedbackRequested) {
+      return { action: "skip", stage, reason: "already_asked" };
+    }
+    return {
+      action: "send",
+      stage,
+      kind: "feedback_request",
+      message: truncateDiscordMessage(
+        feedbackAsk(params.serverName, params.state),
+      ),
+    };
+  }
+
+  return {
+    action: "send",
+    stage,
+    kind: stage >= 3 ? "outreach_last_call" : "outreach_nudge",
+    message: truncateDiscordMessage(
+      stage >= 3
+        ? lastCall(params.serverName)
+        : onboardingNudge(params.serverName, params.state),
+    ),
+  };
+}
+
+async function readGuildState(serverId: DiscordGuildId): Promise<GuildState> {
+  const [subscriptions, competitions] = await Promise.all([
+    prisma.subscription.count({ where: { serverId } }),
+    prisma.competition.count({ where: { serverId, isCancelled: false } }),
+  ]);
+  return { subscriptions, competitions };
+}
+
+/**
+ * Run the ladder over every install.
+ *
+ * @param dryRun when true, plan and log but send nothing and write nothing —
+ *   used to validate the ladder against a copy of production before the first
+ *   real fire, because the failure mode is messaging real people.
+ */
+export async function runOutreach(
+  client: Client,
+  options: { dryRun?: boolean } = {},
+): Promise<void> {
+  const dryRun = options.dryRun ?? false;
+  logger.info(
+    `[Outreach] Starting outreach check${dryRun ? " (DRY RUN — nothing will be sent)" : ""}`,
+  );
   const startTime = Date.now();
+  const now = new Date();
 
-  await runThreeDayOutreach(client);
-  await runFourteenDayOutreach(client);
-  await runThirtyDayOutreach(client);
+  const installs = await prisma.guildInstall.findMany({
+    where: { removedAt: null },
+  });
 
-  const duration = Date.now() - startTime;
+  let sent = 0;
+  let skipped = 0;
+
+  for (const install of installs) {
+    const guildId = DiscordGuildIdSchema.parse(install.serverId);
+
+    // Authoritative membership check. GuildInstall rows outlive a removal (the
+    // cleanup deliberately keeps them), and rows predating `removedAt` carry no
+    // removal stamp at all, so without this a former installer could be DM'd
+    // about a server Scout is no longer in.
+    if (!client.guilds.cache.has(guildId)) {
+      skipped += 1;
+      outreachSkippedTotal.inc({ stage: "0", reason: "not_a_member" });
+      continue;
+    }
+
+    const state = await readGuildState(guildId);
+    const outreach = await readOutreachState(
+      prisma,
+      guildId,
+      install.installedAt,
+    );
+    const plan = planOutreach({
+      serverName: install.serverName,
+      installedAt: install.installedAt,
+      outreachStage: outreach.spent,
+      lastLadderStage: outreach.lastLadderStage,
+      feedbackRequested: outreach.feedbackRequested,
+      state,
+      now,
+    });
+
+    if (plan.action === "skip") {
+      skipped += 1;
+      outreachSkippedTotal.inc({
+        stage: plan.stage.toString(),
+        reason: plan.reason,
+      });
+      logger.debug(
+        `[Outreach] ${install.serverName}: stage ${plan.stage.toString()} skipped (${plan.reason})`,
+      );
+      continue;
+    }
+
+    if (dryRun) {
+      logger.info(
+        `[Outreach] DRY RUN would send stage ${plan.stage.toString()} (${plan.kind}) to ${install.addedByDiscordId} for ${install.serverName}`,
+      );
+      continue;
+    }
+
+    const status = await sendDM({
+      client,
+      userId: DiscordAccountIdSchema.parse(install.addedByDiscordId),
+      message: plan.message,
+      kind: plan.kind,
+      guildId,
+      budget: {
+        guildId,
+        serverName: install.serverName,
+        installedAt: install.installedAt,
+        ladderStage: plan.stage,
+      },
+    });
+
+    outreachMessagesTotal.inc({ stage: plan.stage.toString(), status });
+    logger.info(
+      `[Outreach] Stage ${plan.stage.toString()} (${plan.kind}) to ${install.addedByDiscordId} for ${install.serverName}: ${status}`,
+    );
+
+    if (status === "sent") {
+      sent += 1;
+    }
+  }
+
   logger.info(
-    `[Outreach] ✅ Outreach check completed in ${duration.toString()}ms`,
+    `[Outreach] ✅ Completed in ${(Date.now() - startTime).toString()}ms — ${installs.length.toString()} guild(s) evaluated, ${sent.toString()} sent, ${skipped.toString()} skipped`,
   );
 }

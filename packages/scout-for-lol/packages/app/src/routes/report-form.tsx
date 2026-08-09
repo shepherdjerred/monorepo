@@ -184,6 +184,7 @@ export function ReportForm() {
           guildId={guildId}
           queryText={state.queryText}
           title={previewTitle(state.title)}
+          sourceCompetitionId={existing?.sourceCompetitionId ?? null}
         />
       </form>
       <ReportDataExplorer

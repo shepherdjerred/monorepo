@@ -1,6 +1,11 @@
 import { describe, expect, test } from "bun:test";
 
-import { parseTaskInput } from "./nlp";
+import {
+  parseTaskInput,
+  projectInputToken,
+  projectNameFromInputToken,
+  tokenizeTaskInput,
+} from "./nlp";
 
 function toISO(date: Date): string {
   const y = date.getFullYear();
@@ -107,6 +112,35 @@ describe("parseTaskInput", () => {
     test("parses multiple projects", () => {
       const result = parseTaskInput("Task p:Alpha p:Beta");
       expect(result.projects).toEqual(["Alpha", "Beta"]);
+    });
+
+    test("parses quoted multiword projects as one reversible token", () => {
+      const result = parseTaskInput(
+        'Prepare brief p:"Launch Planning" tomorrow',
+        new Date(2026, 7, 8),
+      );
+      expect(result.projects).toEqual(["Launch Planning"]);
+      expect(result.title).toBe("Prepare brief");
+      expect(result.due).toBe("2026-08-09");
+      expect(
+        tokenizeTaskInput('Prepare brief p:"Launch Planning"').map(
+          (token) => token.text,
+        ),
+      ).toEqual(["Prepare", "brief", 'p:"Launch Planning"']);
+    });
+
+    test("round-trips quotes and backslashes in project names", () => {
+      const project = String.raw`Client "A" \ Planning`;
+      const token = projectInputToken(project);
+      expect(token).toBe(String.raw`p:"Client \"A\" \\ Planning"`);
+      expect(projectNameFromInputToken(token)).toBe(project);
+      expect(parseTaskInput(`Prepare ${token}`).projects).toEqual([project]);
+    });
+
+    test("leaves an unfinished quoted project in the title", () => {
+      const result = parseTaskInput('Discuss p:"Launch Planning');
+      expect(result.projects).toBeUndefined();
+      expect(result.title).toBe('Discuss p:"Launch Planning');
     });
 
     test("ignores bare p: with no name", () => {
@@ -282,5 +316,35 @@ describe("parseTaskInput — combined parsing", () => {
   test("only includes defined fields in result", () => {
     const result = parseTaskInput("Simple task");
     expect(Object.keys(result)).toEqual(["title"]);
+  });
+});
+
+describe("parseTaskInput — recurrence", () => {
+  test("parses common deterministic recurrence phrases", () => {
+    expect(parseTaskInput("Water plants every day")).toEqual({
+      title: "Water plants",
+      recurrence: "FREQ=DAILY",
+    });
+    expect(parseTaskInput("Review pipeline every weekday").recurrence).toBe(
+      "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR",
+    );
+    expect(parseTaskInput("Plan sprint every week").recurrence).toBe(
+      "FREQ=WEEKLY",
+    );
+    expect(parseTaskInput("Pay rent every month").recurrence).toBe(
+      "FREQ=MONTHLY",
+    );
+    expect(parseTaskInput("Renew policy every year").recurrence).toBe(
+      "FREQ=YEARLY",
+    );
+  });
+
+  test("parses a named weekday and leaves unknown every phrases literal", () => {
+    expect(parseTaskInput("Send report every friday").recurrence).toBe(
+      "FREQ=WEEKLY;BYDAY=FR",
+    );
+    expect(parseTaskInput("Remember every so often")).toEqual({
+      title: "Remember every so often",
+    });
   });
 });

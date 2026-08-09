@@ -12,7 +12,7 @@ bun run ios --simulator="iPhone 16 Pro"  # Specific simulator
 bun run start                        # Start Metro bundler (separate terminal)
 bun run typecheck                    # Type check
 bunx eslint . --max-warnings=0       # Lint
-bun run test                         # Unit tests (src + scripts only)
+bun run test                         # Unit tests (src, scripts, and deterministic E2E date tests)
 bun run test:contract                # Wire-contract suite vs a real spawned tasknotes-server
 bun run e2e                          # Maestro e2e (simulator + real server + chaos proxy)
 ```

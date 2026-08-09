@@ -3,7 +3,7 @@ id: 1a2b3c4d
 title: Seeded open task
 status: open
 priority: normal
-due: "2026-07-10"
+due: "2099-07-10"
 tags:
   - seeded
   - task

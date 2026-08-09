@@ -44,6 +44,8 @@ import { renderReportOutput } from "#src/reports/output.ts";
 import { runReport } from "#src/reports/runner.ts";
 import { send as sendChannelMessage } from "#src/league/discord/channel.ts";
 import { getReportAiEditStatus } from "#src/reports/ai/status.ts";
+import { loadReportRunVisualization } from "#src/storage/s3-report-run.ts";
+import { mapInBatches } from "#src/utils/map-in-batches.ts";
 import {
   browseReportData,
   reportDataExplorerSchema,
@@ -159,21 +161,28 @@ export const reportRouter = router({
         orderBy: { startedAt: "desc" },
         take: input.runLimit,
       });
+      const runHistory = await mapInBatches(runs, 5, async (run) => ({
+        id: run.id,
+        trigger: run.trigger,
+        status: run.status,
+        startedAt: run.startedAt,
+        completedAt: run.completedAt,
+        durationMs: run.durationMs,
+        rowsReturned: run.rowsReturned,
+        rowsScanned: run.rowsScanned,
+        errorMessage: run.errorMessage,
+        renderedContent: run.renderedContent,
+        hasImage: run.imageS3Key !== null,
+        hasVisualization: run.visualizationS3Key !== null,
+        querySnapshot: run.querySnapshot,
+        visualization:
+          run.visualizationS3Key === null
+            ? null
+            : await loadReportRunVisualization(run.visualizationS3Key),
+      }));
       return {
         report,
-        runs: runs.map((run) => ({
-          id: run.id,
-          trigger: run.trigger,
-          status: run.status,
-          startedAt: run.startedAt,
-          completedAt: run.completedAt,
-          durationMs: run.durationMs,
-          rowsReturned: run.rowsReturned,
-          rowsScanned: run.rowsScanned,
-          errorMessage: run.errorMessage,
-          renderedContent: run.renderedContent,
-          hasImage: run.imageS3Key !== null,
-        })),
+        runs: runHistory,
       };
     }),
 
@@ -353,7 +362,7 @@ export const reportRouter = router({
       };
     }),
 
-  previewQuery: guildProcedure("reports", "read")
+  previewQuery: guildProcedure("reports", "run")
     .input(
       GuildInput.extend({
         queryText: ReportQueryTextSchema,
@@ -378,7 +387,7 @@ export const reportRouter = router({
         // kinds (table/list/leaderboard) preview as the data table on the client.
         const render = result.plan.render;
         const output =
-          render.kind === "BAR_CHART" || render.kind === "LINE_CHART"
+          "encoding" in render
             ? await renderReportOutput({
                 title: input.title,
                 result,
@@ -392,6 +401,8 @@ export const reportRouter = router({
           rowsScanned: result.rowsScanned,
           renderKind: render.kind,
           imageBase64: image === null ? null : image.data.toString("base64"),
+          visualization: result.visualization ?? null,
+          evidence: result.evidence ?? [],
         };
       } catch (error) {
         asBadRequest(error);

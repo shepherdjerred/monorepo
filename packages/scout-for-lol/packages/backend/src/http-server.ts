@@ -11,6 +11,12 @@ import { prisma } from "#src/database/index.ts";
 import { handleImageRoute } from "#src/trpc/image-routes.ts";
 import { handleReportAiRoute } from "#src/reports/ai/http-route.ts";
 import { handleVersion } from "#src/http/version.ts";
+import {
+  classifyMethod,
+  classifyRoute,
+  statusClass,
+} from "#src/http/route-label.ts";
+import { httpRequestDuration, httpRequestsTotal } from "#src/metrics/web.ts";
 
 const logger = createLogger("http-server");
 
@@ -151,6 +157,42 @@ function handleHealthz(request: Request): Response {
 }
 
 /**
+ * Record a served request. Route labels are normalized to a bounded set (see
+ * `classifyRoute`) so scanner traffic can't mint unbounded series.
+ *
+ * `/metrics` is deliberately not timed: `getMetrics()` sweeps the DB on every
+ * scrape, so its latency describes our own scrape cost, not user-facing
+ * latency. It is still counted, which is what makes scrape failures visible.
+ */
+async function withHttpMetrics(
+  request: Request,
+  url: URL,
+  handle: () => Promise<Response>,
+): Promise<Response> {
+  const route = classifyRoute(url.pathname);
+  const start = performance.now();
+  let status = 500;
+  try {
+    const response = await handle();
+    status = response.status;
+    return response;
+  } finally {
+    httpRequestsTotal.inc({
+      route,
+      method: classifyMethod(request.method),
+      status: status.toString(),
+      status_class: statusClass(status),
+    });
+    if (url.pathname !== "/metrics") {
+      httpRequestDuration.observe(
+        { route },
+        (performance.now() - start) / 1000,
+      );
+    }
+  }
+}
+
+/**
  * HTTP server for health checks, metrics, and tRPC API using Bun's native server
  */
 const server = Bun.serve({
@@ -163,163 +205,7 @@ const server = Bun.serve({
   hostname: configuration.enableDevLogin ? "127.0.0.1" : "0.0.0.0",
   async fetch(request) {
     const url = new URL(request.url);
-
-    // Handle CORS preflight requests
-    if (request.method === "OPTIONS") {
-      return new Response(null, {
-        status: 204,
-        headers: corsHeadersFor(request),
-      });
-    }
-
-    // Startup probe - simple process alive check
-    if (url.pathname === "/ping") {
-      return new Response("pong", {
-        status: 200,
-        headers: {
-          "Content-Type": "text/plain",
-          ...corsHeadersFor(request),
-        },
-      });
-    }
-
-    // Liveness probe - restarts pod on sustained API failure
-    if (url.pathname === "/livez") {
-      return handleLivez(request);
-    }
-
-    // Readiness probe - checks Riot API health
-    if (url.pathname === "/healthz") {
-      return handleHealthz(request);
-    }
-
-    // Build/deploy identity: version, git SHA, tRPC contract hash
-    if (url.pathname === "/api/version") {
-      return handleVersion(request, corsHeadersFor(request));
-    }
-
-    // Metrics endpoint for Prometheus
-    if (url.pathname === "/metrics") {
-      try {
-        const metrics = await getMetrics();
-        return new Response(metrics, {
-          status: 200,
-          headers: {
-            "Content-Type": "text/plain; version=0.0.4; charset=utf-8",
-          },
-        });
-      } catch (error) {
-        logger.error("❌ Error generating metrics:", error);
-        Sentry.captureException(error, {
-          tags: { source: "http-server-metrics" },
-        });
-        return new Response("Internal Server Error", {
-          status: 500,
-          headers: {
-            "Content-Type": "text/plain",
-          },
-        });
-      }
-    }
-
-    // Web auth: Discord OAuth start/install/callback/logout — see
-    // handleAuthRoutes for the individual routes and their error handling.
-    const authResponse = await handleAuthRoutes(request, url);
-    if (authResponse !== null) {
-      return authResponse;
-    }
-
-    // Dev-only instant sign-in (no Discord OAuth round-trip). Gated on BOTH
-    // environment=dev AND the explicit, default-off ENABLE_DEV_LOGIN flag, so a
-    // beta/prod deploy that omits ENVIRONMENT (which defaults to "dev") still
-    // fails closed rather than exposing an unauthenticated session-minting
-    // endpoint. Set only by scripts/dev-web.ts.
-    if (
-      configuration.environment === "dev" &&
-      configuration.enableDevLogin &&
-      url.pathname === "/api/dev/login"
-    ) {
-      return await handleDevLogin(request, prisma);
-    }
-
-    const reportAiResponse = await handleReportAiRoute(
-      request,
-      url,
-      corsHeadersFor(request),
-    );
-    if (reportAiResponse !== null) {
-      return reportAiResponse;
-    }
-
-    // Generated chart PNGs for the web app (<img src>), cookie-authorized.
-    const imageResponse = await handleImageRoute(
-      request,
-      url,
-      corsHeadersFor(request),
-    );
-    if (imageResponse !== null) {
-      return imageResponse;
-    }
-
-    // tRPC API endpoint
-    if (url.pathname.startsWith("/trpc")) {
-      try {
-        const response = await fetchRequestHandler({
-          endpoint: "/trpc",
-          req: request,
-          router: appRouter,
-          // Allow the client to send read queries over POST (methodOverride) so
-          // large inputs — e.g. the report preview's up-to-4,000-char ScoutQL —
-          // travel in the request body instead of a GET URL that Cloudflare/Caddy
-          // could reject for length. Mutations already POST.
-          allowMethodOverride: true,
-          createContext: () => createContext(request),
-          onError({ error, path }) {
-            logger.error(`tRPC error on ${path ?? "unknown"}:`, error);
-            // Only report genuine server faults; expected client errors (bad
-            // input, auth, not-found, rate limits) are not bugs.
-            if (!EXPECTED_CLIENT_ERROR_CODES.has(error.code)) {
-              Sentry.captureException(error, {
-                tags: { source: "trpc", path },
-              });
-            }
-          },
-        });
-
-        // Add CORS headers to tRPC response
-        const headers = new Headers(response.headers);
-        Object.entries(corsHeadersFor(request)).forEach(([key, value]) => {
-          headers.set(key, value);
-        });
-
-        return new Response(response.body, {
-          status: response.status,
-          statusText: response.statusText,
-          headers,
-        });
-      } catch (error) {
-        logger.error("❌ tRPC request error:", error);
-        Sentry.captureException(error, {
-          tags: { source: "http-server-trpc" },
-        });
-        return new Response("Internal Server Error", {
-          status: 500,
-          headers: {
-            "Content-Type": "text/plain",
-            ...corsHeadersFor(request),
-          },
-        });
-      }
-    }
-
-    // 404 for all other routes
-    return new Response("Not Found", {
-      status: 404,
-      headers: {
-        "Content-Type": "text/plain",
-        ...corsHeadersFor(request),
-      },
-    });
+    return await withHttpMetrics(request, url, () => dispatch(request, url));
   },
   error(error) {
     logger.error("❌ HTTP server error:", error);
@@ -332,6 +218,175 @@ const server = Bun.serve({
     });
   },
 });
+
+/**
+ * Route dispatch. Extracted from `fetch` so every response flows through
+ * {@link withHttpMetrics}, including the 404 fallback and error paths.
+ */
+async function dispatch(request: Request, url: URL): Promise<Response> {
+  // Handle CORS preflight requests
+  if (request.method === "OPTIONS") {
+    return new Response(null, {
+      status: 204,
+      headers: corsHeadersFor(request),
+    });
+  }
+
+  // Startup probe - simple process alive check
+  if (url.pathname === "/ping") {
+    return new Response("pong", {
+      status: 200,
+      headers: {
+        "Content-Type": "text/plain",
+        ...corsHeadersFor(request),
+      },
+    });
+  }
+
+  // Liveness probe - restarts pod on sustained API failure
+  if (url.pathname === "/livez") {
+    return handleLivez(request);
+  }
+
+  // Readiness probe - checks Riot API health
+  if (url.pathname === "/healthz") {
+    return handleHealthz(request);
+  }
+
+  // Build/deploy identity: version, git SHA, tRPC contract hash
+  if (url.pathname === "/api/version") {
+    return handleVersion(request, corsHeadersFor(request));
+  }
+
+  // Metrics endpoint for Prometheus
+  if (url.pathname === "/metrics") {
+    try {
+      const metrics = await getMetrics();
+      return new Response(metrics, {
+        status: 200,
+        headers: {
+          "Content-Type": "text/plain; version=0.0.4; charset=utf-8",
+        },
+      });
+    } catch (error) {
+      logger.error("❌ Error generating metrics:", error);
+      Sentry.captureException(error, {
+        tags: { source: "http-server-metrics" },
+      });
+      return new Response("Internal Server Error", {
+        status: 500,
+        headers: {
+          "Content-Type": "text/plain",
+        },
+      });
+    }
+  }
+
+  // Web auth: Discord OAuth start/install/callback/logout — see
+  // handleAuthRoutes for the individual routes and their error handling.
+  const authResponse = await handleAuthRoutes(request, url);
+  if (authResponse !== null) {
+    return authResponse;
+  }
+
+  // Dev-only instant sign-in (no Discord OAuth round-trip). Gated on BOTH
+  // environment=dev AND the explicit, default-off ENABLE_DEV_LOGIN flag, so a
+  // beta/prod deploy that omits ENVIRONMENT (which defaults to "dev") still
+  // fails closed rather than exposing an unauthenticated session-minting
+  // endpoint. Set only by scripts/dev-web.ts.
+  if (
+    configuration.environment === "dev" &&
+    configuration.enableDevLogin &&
+    url.pathname === "/api/dev/login"
+  ) {
+    return await handleDevLogin(request, prisma);
+  }
+
+  const reportAiResponse = await handleReportAiRoute(
+    request,
+    url,
+    corsHeadersFor(request),
+  );
+  if (reportAiResponse !== null) {
+    return reportAiResponse;
+  }
+
+  // Generated chart PNGs for the web app (<img src>), cookie-authorized.
+  const imageResponse = await handleImageRoute(
+    request,
+    url,
+    corsHeadersFor(request),
+  );
+  if (imageResponse !== null) {
+    return imageResponse;
+  }
+
+  // tRPC API endpoint
+  if (url.pathname.startsWith("/trpc")) {
+    try {
+      const response = await fetchRequestHandler({
+        endpoint: "/trpc",
+        req: request,
+        router: appRouter,
+        // Allow the client to send read queries over POST (methodOverride) so
+        // large inputs — e.g. the report preview's up-to-4,000-char ScoutQL —
+        // travel in the request body instead of a GET URL that Cloudflare/Caddy
+        // could reject for length. Mutations already POST.
+        allowMethodOverride: true,
+        createContext: () => createContext(request),
+        onError({ error, path }) {
+          // Log expected client faults at info: they are normal traffic (an
+          // anonymous page load, a stale guild) and logging them at error
+          // buried the genuine faults in noise. Only real server bugs are
+          // logged at error and shipped to Sentry.
+          const expected = EXPECTED_CLIENT_ERROR_CODES.has(error.code);
+          const description = `tRPC ${error.code} on ${path ?? "unknown"}:`;
+          if (expected) {
+            logger.info(description, error.message);
+          } else {
+            logger.error(description, error);
+            Sentry.captureException(error, {
+              tags: { source: "trpc", path },
+            });
+          }
+        },
+      });
+
+      // Add CORS headers to tRPC response
+      const headers = new Headers(response.headers);
+      Object.entries(corsHeadersFor(request)).forEach(([key, value]) => {
+        headers.set(key, value);
+      });
+
+      return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers,
+      });
+    } catch (error) {
+      logger.error("❌ tRPC request error:", error);
+      Sentry.captureException(error, {
+        tags: { source: "http-server-trpc" },
+      });
+      return new Response("Internal Server Error", {
+        status: 500,
+        headers: {
+          "Content-Type": "text/plain",
+          ...corsHeadersFor(request),
+        },
+      });
+    }
+  }
+
+  // 404 for all other routes
+  return new Response("Not Found", {
+    status: 404,
+    headers: {
+      "Content-Type": "text/plain",
+      ...corsHeadersFor(request),
+    },
+  });
+}
 
 const port = server.port?.toString() ?? "unknown";
 logger.info(`✅ HTTP server started on http://0.0.0.0:${port}`);

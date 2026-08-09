@@ -1,10 +1,41 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, mock, test } from "bun:test";
 import { DiscordChannelIdSchema } from "@scout-for-lol/data";
-import { channelsPassingQueueFilter } from "#src/league/tasks/notification-filters.ts";
+import type { MessageCreateOptions } from "discord.js";
 import type {
   SubscribedChannel,
   SubscribedChannelSubscription,
 } from "#src/database/index.ts";
+
+const sentMessages: MessageCreateOptions[] = [];
+let failReplyOnce = false;
+class MockChannelSendError extends Error {
+  permissionError: boolean;
+
+  constructor(message: string, permissionError: boolean) {
+    super(message);
+    this.permissionError = permissionError;
+    this.replyPermissionError = true;
+  }
+
+  replyPermissionError: boolean;
+}
+
+await mock.module("#src/league/discord/channel.ts", () => ({
+  ChannelSendError: MockChannelSendError,
+  isReplyPermissionError: (error: MockChannelSendError) =>
+    error.replyPermissionError,
+  send: (message: MessageCreateOptions) => {
+    if (failReplyOnce && message.reply !== undefined) {
+      failReplyOnce = false;
+      throw new MockChannelSendError("missing Read Message History", true);
+    }
+    sentMessages.push(message);
+    return Promise.resolve({ id: "sent-message" });
+  },
+}));
+
+const { channelsPassingQueueFilter, deliverToChannels } =
+  await import("#src/league/tasks/notification-filters.ts");
 
 function subscription(
   overrides: Partial<SubscribedChannelSubscription>,
@@ -51,8 +82,6 @@ describe("channelsPassingQueueFilter — mute", () => {
   });
 
   test("a muted subscription cannot satisfy the queue filter for the channel", () => {
-    // The muted subscription has notify-all filters; the unmuted one is
-    // filtered to arena only. For a solo match, nothing qualifies.
     const kept = channelsPassingQueueFilter(
       [
         channel([
@@ -78,5 +107,51 @@ describe("channelsPassingQueueFilter — mute", () => {
       "solo",
     );
     expect(kept).toHaveLength(1);
+  });
+});
+
+describe("deliverToChannels", () => {
+  test("replies to the matching prematch message per channel", async () => {
+    sentMessages.length = 0;
+    const firstChannel = DiscordChannelIdSchema.parse("123456789012345678");
+    const secondChannel = DiscordChannelIdSchema.parse("123456789012345679");
+
+    await deliverToChannels({
+      message: { content: "Game finished" },
+      channels: [
+        { channel: firstChannel, serverId: "123456789012345680" },
+        { channel: secondChannel, serverId: "123456789012345680" },
+      ],
+      logPrefix: "[test]",
+      sentryTags: {},
+      replyToMessageIds: new Map([[firstChannel, "prematch-first"]]),
+    });
+
+    expect(sentMessages).toEqual([
+      {
+        content: "Game finished",
+        reply: {
+          messageReference: "prematch-first",
+          failIfNotExists: false,
+        },
+      },
+      { content: "Game finished" },
+    ]);
+  });
+
+  test("retries as a normal message when the reply permission is missing", async () => {
+    sentMessages.length = 0;
+    failReplyOnce = true;
+    const channelId = DiscordChannelIdSchema.parse("123456789012345678");
+
+    await deliverToChannels({
+      message: { content: "Game finished" },
+      channels: [{ channel: channelId, serverId: "123456789012345680" }],
+      logPrefix: "[test]",
+      sentryTags: {},
+      replyToMessageIds: new Map([[channelId, "prematch-message"]]),
+    });
+
+    expect(sentMessages).toEqual([{ content: "Game finished" }]);
   });
 });

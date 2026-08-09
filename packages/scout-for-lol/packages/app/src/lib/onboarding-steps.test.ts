@@ -4,8 +4,8 @@ import {
   onboardingReducer,
   progressStep,
   type OnboardingState,
-  type OnboardingStepKind,
 } from "#src/lib/onboarding-steps.ts";
+import type { OnboardingStepKind } from "@scout-for-lol/data";
 
 function state(
   step: OnboardingStepKind,

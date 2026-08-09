@@ -4,12 +4,16 @@ import type {
   ReportChartOrientation,
 } from "@scout-for-lol/data";
 import type * as echarts from "echarts";
+import { fileURLToPath } from "node:url";
+import { cjkFontFileNames, containsCjkText } from "#src/assets/index.ts";
 import {
   ANALYTICS_BODY_FONT as BODY_FONT,
   ANALYTICS_CHART_HEIGHT as HEIGHT,
   ANALYTICS_CHART_WIDTH as WIDTH,
   ANALYTICS_FONT_FILE_PATHS as FONT_FILE_PATHS,
   ANALYTICS_TITLE_FONT as TITLE_FONT,
+} from "#src/html/analytics-chart-render-constants.ts";
+import {
   analyticsChartColors as chartColors,
   analyticsChartTheme as chartTheme,
   type AnalyticsChartStyle,
@@ -425,9 +429,15 @@ export function analyticsChartToSvg(props: AnalyticsChartProps): string {
 }
 
 export function analyticsChartToImage(props: AnalyticsChartProps): Buffer {
-  return echartsSvgToImage(
-    analyticsChartToSvg(props),
-    FONT_FILE_PATHS,
-    BODY_FONT,
-  );
+  const fontFiles = containsCjkText(props)
+    ? [
+        ...FONT_FILE_PATHS,
+        ...cjkFontFileNames.map((name) =>
+          fileURLToPath(
+            new URL(`../assets/fonts/NotoSansCJK/${name}`, import.meta.url),
+          ),
+        ),
+      ]
+    : FONT_FILE_PATHS;
+  return echartsSvgToImage(analyticsChartToSvg(props), fontFiles, BODY_FONT);
 }

@@ -72,6 +72,7 @@ function competitionWith(
     isCancelled: false,
     visibility: "OPEN",
     maxParticipants: 50,
+    analysisTimezone: "UTC",
     startDate: START,
     endDate: END,
     seasonId: null,

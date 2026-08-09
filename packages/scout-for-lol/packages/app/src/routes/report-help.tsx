@@ -19,8 +19,9 @@ export function ReportHelp() {
       </div>
       <p className="text-sm text-muted-foreground">
         The report query language is a small SQL-like dialect. Pick a source,
-        select metrics, group, filter, and sort. Everything below is also
-        available as autocomplete and hover help in the editor.
+        select metrics, group, filter, analyze time windows, and choose a
+        visualization. Everything below is also available as autocomplete and
+        hover help in the editor.
       </p>
       <ReportQueryDocs />
     </div>

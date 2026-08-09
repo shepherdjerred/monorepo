@@ -18,6 +18,7 @@ import { cleanupRemovedGuild } from "#src/league/tasks/cleanup/remove-guild.ts";
 import { sendDM } from "#src/discord/utils/dm.ts";
 import { buildFeedbackRequestMessage } from "#src/discord/utils/feedback.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
+import { guildsLeftTotal } from "#src/metrics/web.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("guild-delete");
@@ -41,6 +42,8 @@ export async function handleGuildDelete(guild: Guild): Promise<void> {
 
   const serverId = DiscordGuildIdSchema.parse(guild.id);
 
+  guildsLeftTotal.inc();
+
   try {
     const summary = await cleanupRemovedGuild(prisma, serverId);
     logger.info(
@@ -56,18 +59,31 @@ export async function handleGuildDelete(guild: Guild): Promise<void> {
     });
   }
 
-  // Best-effort feedback request. After removal the bot usually no longer shares
-  // a guild with the owner, so this often cannot be delivered - the attempt and
-  // its outcome are recorded in DmAuditLog regardless.
+  // Best-effort feedback request. Budgeted like every other non-core message:
+  // a guild that already received its three ladder messages must not get a
+  // fourth just because Scout was removed. After removal the bot usually no
+  // longer shares a guild with the owner, so this often cannot be delivered
+  // anyway — the attempt and its outcome are recorded in DmAuditLog regardless.
   try {
-    const ownerId = DiscordAccountIdSchema.parse(guild.ownerId);
-    await sendDM({
-      client: guild.client,
-      userId: ownerId,
-      message: buildFeedbackRequestMessage(guild.name),
-      kind: "feedback_request",
-      guildId: serverId,
+    const install = await prisma.guildInstall.findUnique({
+      where: { serverId },
+      select: { installedAt: true, serverName: true },
     });
+    if (install !== null) {
+      const ownerId = DiscordAccountIdSchema.parse(guild.ownerId);
+      await sendDM({
+        client: guild.client,
+        userId: ownerId,
+        message: buildFeedbackRequestMessage(guild.name),
+        kind: "feedback_request",
+        guildId: serverId,
+        budget: {
+          guildId: serverId,
+          serverName: install.serverName,
+          installedAt: install.installedAt,
+        },
+      });
+    }
   } catch (error) {
     logger.warn(
       `[Guild Delete] Could not send feedback request for guild ${guild.id}: ${getErrorMessage(error)}`,

@@ -11,6 +11,7 @@ import {
   classicPalette,
   classicTypography,
 } from "#src/assets/classic-style.ts";
+import { fontFamilyForText } from "#src/assets/index.ts";
 
 const CARD_WIDTH = 320;
 const CARD_HEIGHT = 560;
@@ -82,7 +83,7 @@ function ClassicCard({
           backgroundColor: team.deep,
           color: team.highlight,
           borderTop: `2px solid ${team.accent}`,
-          fontFamily: classicTypography.family.display,
+          fontFamily: classicTypography.stack.display,
           fontSize: 28,
           lineHeight: "32px",
           fontWeight: 700,
@@ -104,7 +105,10 @@ function ClassicCard({
           color: classicPalette.text.primary,
           backgroundColor: classicPalette.canvas,
           borderTop: `2px solid ${team.accent}`,
-          fontFamily: classicTypography.family.body,
+          fontFamily: fontFamilyForText(
+            classicTypography.stack.body,
+            participant.summonerName,
+          ),
           fontSize: 22,
           lineHeight: "28px",
           overflow: "hidden",
@@ -135,7 +139,7 @@ function ClassicCard({
             style={{
               display: "flex",
               color: classicPalette.gold.highlight,
-              fontFamily: classicTypography.family.body,
+              fontFamily: classicTypography.stack.body,
               fontWeight: 700,
               fontSize: 16,
               lineHeight: "20px",
@@ -241,7 +245,7 @@ export function ClassicLoadingScreen({
           alignItems: "center",
           justifyContent: "center",
           color: classicPalette.gold.highlight,
-          fontFamily: classicTypography.family.display,
+          fontFamily: classicTypography.stack.display,
           fontSize: 64,
           lineHeight: "64px",
           fontWeight: 700,

@@ -28,7 +28,8 @@ import {
   resolveGuildPermissions,
 } from "#src/trpc/guild-permission.ts";
 import { client as discordClient } from "#src/discord/client.ts";
-import { fetchUserGuilds, hasAdministrator } from "#src/lib/discord-rest.ts";
+import { hasAdministrator } from "#src/lib/discord-rest.ts";
+import { fetchUserGuildsForRequest } from "#src/trpc/discord-upstream.ts";
 import { prisma } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 
@@ -41,7 +42,7 @@ export const guildRouter = router({
    * else gets their granted set. Guilds with no access are omitted.
    */
   listManageable: webProcedure.query(async ({ ctx }) => {
-    const userGuilds = await fetchUserGuilds(ctx.user);
+    const userGuilds = await fetchUserGuildsForRequest(ctx.user);
     const botGuildIds = new Set(discordClient.guilds.cache.map((g) => g.id));
     const present = userGuilds.filter((g) => botGuildIds.has(g.id));
 

@@ -2,15 +2,18 @@ import { describe, expect, test } from "bun:test";
 import { buildPrState } from "@shepherdjerred/pr-fleet-controller/src/fleet-logic.ts";
 import { FleetStore } from "@shepherdjerred/pr-fleet-controller/src/state.ts";
 import { validateWorkerCommand } from "@shepherdjerred/pr-fleet-controller/src/command-policy.ts";
+import { busyStackIds } from "@shepherdjerred/pr-fleet-controller/src/controller-dispatch.ts";
 import { evidence, identity } from "./fixtures.ts";
 
 function state(number: number, stackId = `pr-${String(number)}`) {
   const pr = identity(number);
   return buildPrState(
     { identity: pr, evidence: evidence(pr), stackId },
-    undefined,
-    undefined,
-    "openai/gpt-5",
+    {
+      previous: undefined,
+      pausedReason: undefined,
+      model: "openai/gpt-5",
+    },
   ).state;
 }
 
@@ -32,6 +35,17 @@ describe("controller leases", () => {
     const store = new FleetStore(1);
     expect(store.requestLease(state(1), "heavy")).toBe(true);
     expect(store.requestLease(state(2), "heavy")).toBe(false);
+  });
+
+  test("reserves a stack while one PR waits for operator input", () => {
+    const store = new FleetStore(2);
+    const waiting = state(1, "shared-stack");
+    store.prs.set(waiting.identity.number, {
+      ...waiting,
+      status: "waiting-for-answer",
+      classification: "waiting-for-answer",
+    });
+    expect(busyStackIds(store)).toEqual(new Set(["shared-stack"]));
   });
 });
 

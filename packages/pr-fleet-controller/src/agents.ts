@@ -32,9 +32,20 @@ or request a tick. Never weaken readiness, merge, close, or approve a PR.`;
 
 const WORKER_INSTRUCTIONS = `You own one focused fix cycle for exactly one PR.
 Refresh evidence first, choose one actionable blocker, preserve the PR's intent, and
-use only the assigned worktree tools. Edit files with str_replace (exact-match, the
+use only the assigned worktree tools. If worktreeContext reports inherited work,
+inspect_worktree_wip before editing or publishing. Continue it when every path and
+commit clearly fits the PR, all WIP and commit evidence is complete, and the work
+can be isolated; use request_operator_input when evidence is truncated or a
+material ownership, intent, or destructive-history decision remains uncertain.
+After any controller mutation in an operator worktree, inspect its WIP again before
+the next mutation or publication so concurrent operator edits are never assumed safe.
+After requesting input, return waiting-for-answer with that request ID immediately.
+Use the dedicated Git/WIP tools, never run git through run_local_command. Edit files
+with str_replace (exact-match, the
 default) or write_file (full contents); apply_patch is a fallback that requires a
-correctly formatted unified diff. Never merge, close, approve, suppress a gate, use
+correctly formatted unified diff. If publication reports a Prettier path, use
+format_paths on only those files and retry publication in the same cycle. Never
+merge, close, approve, suppress a gate, use
 blanket staging, or bypass hooks. Return the required structured result after one
 cycle; do not poll or sleep.`;
 
@@ -58,7 +69,10 @@ export function coerceWorkerResult(result: {
       }`,
     );
   }
-  return WorkerResultSchema.parse(result.object);
+  const parsed = WorkerResultSchema.parse(result.object);
+  return parsed.operatorRequestId === undefined
+    ? { ...parsed, operatorRequestId: null }
+    : parsed;
 }
 
 const NOOP_TELEMETRY: FleetTelemetry = {

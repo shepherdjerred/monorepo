@@ -71,10 +71,16 @@ describe("worktree reassignment preserves unpushed work", () => {
     const pr = identity(7);
     const localHead = "c".repeat(40); // strictly ahead of the remote PR head
     const script = scriptWorktree(pr, localHead, 0);
-    await script.manager.assignWorktreeBranch("/tmp/pr-fleet/stack-7", pr);
-    // Reset to the LOCAL head (drop only working-tree edits, keep the commit),
-    // NEVER to the remote head, which would delete the fix.
-    expect(script.resets).toEqual([localHead]);
+    const context = await script.manager.assignWorktreeBranch(
+      "/tmp/pr-fleet/stack-7",
+      pr,
+    );
+    expect(script.resets).toEqual([]);
+    expect(context).toMatchObject({
+      ownership: "fleet",
+      relation: "ahead",
+      localHeadSha: localHead,
+    });
     expect(script.getMergeBaseArgs()).toEqual([
       "merge-base",
       "--is-ancestor",
@@ -83,23 +89,30 @@ describe("worktree reassignment preserves unpushed work", () => {
     ]);
   });
 
-  test("resets to the remote head when there is no unpushed commit", async () => {
+  test("adopts the exact remote head without resetting", async () => {
     const pr = identity(8);
     const script = scriptWorktree(pr, pr.headSha, 0);
-    await script.manager.assignWorktreeBranch("/tmp/pr-fleet/stack-8", pr);
-    // local HEAD already equals the remote head: no merge-base check, reset to it.
-    expect(script.resets).toEqual([pr.headSha]);
+    const context = await script.manager.assignWorktreeBranch(
+      "/tmp/pr-fleet/stack-8",
+      pr,
+    );
+    expect(script.resets).toEqual([]);
     expect(script.getMergeBaseArgs()).toBeNull();
+    expect(context.relation).toBe("exact");
   });
 
-  test("aligns to the remote head when the local branch diverged", async () => {
+  test("reports divergence without discarding inherited commits", async () => {
     const pr = identity(9);
     const localHead = "d".repeat(40);
     // merge-base --is-ancestor returns non-zero: the remote head is not an
     // ancestor of local HEAD, so local is behind/diverged, not a preserved fix.
     const script = scriptWorktree(pr, localHead, 1);
-    await script.manager.assignWorktreeBranch("/tmp/pr-fleet/stack-9", pr);
-    expect(script.resets).toEqual([pr.headSha]);
+    const context = await script.manager.assignWorktreeBranch(
+      "/tmp/pr-fleet/stack-9",
+      pr,
+    );
+    expect(script.resets).toEqual([]);
+    expect(context.relation).toBe("diverged");
   });
 });
 
@@ -257,8 +270,27 @@ function scriptOperatorWorktree(pr: PrIdentity, porcelainStatus: string) {
         return Promise.resolve(`${pr.headSha}\n`);
       }
     }
-    if (executable === "git" && args[0] === "status") {
-      return Promise.resolve(porcelainStatus);
+    const statusEntries = porcelainStatus
+      .trimEnd()
+      .split("\n")
+      .filter((line) => line.length > 0);
+    if (executable === "git" && args[0] === "diff") {
+      const staged = args.includes("--cached");
+      const paths = statusEntries
+        .filter((line) => {
+          const code = line.slice(0, 2);
+          return staged
+            ? !code.startsWith(" ") && !code.startsWith("?")
+            : !code.endsWith(" ") && !code.endsWith("?");
+        })
+        .map((line) => line.slice(3));
+      return Promise.resolve(paths.length === 0 ? "" : `${paths.join("\n")}\n`);
+    }
+    if (executable === "git" && args[0] === "ls-files") {
+      const paths = statusEntries
+        .filter((line) => line.startsWith("??"))
+        .map((line) => line.slice(3));
+      return Promise.resolve(paths.length === 0 ? "" : `${paths.join("\n")}\n`);
     }
     if (executable === "git" && args[0] === "reset") {
       resets.push(args[2] ?? "");
@@ -274,16 +306,22 @@ function scriptOperatorWorktree(pr: PrIdentity, porcelainStatus: string) {
   return { manager, resets };
 }
 
-describe("assignWorktreeBranch guards operator worktree reuse", () => {
-  test("refuses a dirty operator worktree instead of discarding its edits", async () => {
+describe("assignWorktreeBranch adopts matching operator worktrees", () => {
+  test("inventories dirty operator work without discarding it", async () => {
     const pr = identity(14);
     const script = scriptOperatorWorktree(pr, " M packages/x/file.ts\n");
-    await expect(
-      // Operator worktree lives outside the fleet root.
-      script.manager.assignWorktreeBranch("/home/user/monorepo", pr),
-    ).rejects.toThrow(/uncommitted changes; refusing to reuse/);
-    // Never touch the working tree while it is dirty.
+    const context = await script.manager.assignWorktreeBranch(
+      "/home/user/monorepo",
+      pr,
+    );
     expect(script.resets).toEqual([]);
+    expect(context).toMatchObject({
+      ownership: "operator",
+      relation: "exact",
+      dirty: true,
+      stagedPaths: [],
+      unstagedPaths: ["packages/x/file.ts"],
+    });
   });
 
   test("reuses a clean operator worktree without resetting it", async () => {
@@ -296,7 +334,33 @@ describe("assignWorktreeBranch guards operator worktree reuse", () => {
     expect(script.resets).toEqual([]);
   });
 
-  test("refuses a clean operator worktree whose HEAD holds unpushed commits", async () => {
+  test("inventories staged, unstaged, and unrelated untracked paths separately", async () => {
+    const pr = identity(17);
+    const script = scriptOperatorWorktree(
+      pr,
+      [
+        "M  packages/pr-fleet-controller/src/controller.ts",
+        " M packages/pr-fleet-controller/src/state.ts",
+        "?? unrelated-notes.txt",
+        "",
+      ].join("\n"),
+    );
+    const context = await script.manager.assignWorktreeBranch(
+      "/home/user/monorepo",
+      pr,
+    );
+    expect(context.stagedPaths).toEqual([
+      "packages/pr-fleet-controller/src/controller.ts",
+    ]);
+    expect(context.unstagedPaths).toEqual([
+      "packages/pr-fleet-controller/src/state.ts",
+      "unrelated-notes.txt",
+    ]);
+    expect(context.dirty).toBe(true);
+    expect(script.resets).toEqual([]);
+  });
+
+  test("inventories a clean operator worktree with unpushed commits", async () => {
     const pr = identity(16);
     // Clean working tree, but the operator's local HEAD is ahead of the PR head
     // with committed-but-unpushed work. Reusing it would let #submitBranch
@@ -330,11 +394,17 @@ describe("assignWorktreeBranch guards operator worktree reuse", () => {
       run: okRun,
       mustRun,
     });
-    await expect(
-      manager.assignWorktreeBranch("/home/user/monorepo", pr),
-    ).rejects.toThrow(/refusing to reuse it because publishing would/);
-    // Never reset an operator worktree we are refusing to reuse.
+    const context = await manager.assignWorktreeBranch(
+      "/home/user/monorepo",
+      pr,
+    );
     expect(resets).toEqual([]);
+    expect(context).toMatchObject({
+      ownership: "operator",
+      relation: "ahead",
+      localHeadSha: localHead,
+      dirty: false,
+    });
   });
 });
 

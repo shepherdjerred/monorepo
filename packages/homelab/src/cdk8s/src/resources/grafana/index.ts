@@ -13,6 +13,7 @@ import { exportTemporalDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafa
 import { exportStreambotDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/streambot-dashboard.ts";
 import { exportStaticSiteProbesDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/static-site-probes-dashboard.ts";
 import { exportDiscordPlaysDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/discord-plays-dashboard.ts";
+import { exportAlertDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/alert-dashboard.ts";
 
 /**
  * Dashboard configuration for creating Grafana dashboard ConfigMaps
@@ -147,6 +148,12 @@ const DISCORD_PLAYS_DASHBOARD: DashboardConfig = {
 };
 
 const ALL_DASHBOARDS: DashboardConfig[] = [
+  {
+    id: "alert-dashboard-configmap",
+    name: "alert-dashboard",
+    jsonFilename: "alert-dashboard.json",
+    exportFn: exportAlertDashboardJson,
+  },
   AI_PROVIDER_DASHBOARD,
   BUILDKITD_DASHBOARD,
   BUILDKITE_DASHBOARD,

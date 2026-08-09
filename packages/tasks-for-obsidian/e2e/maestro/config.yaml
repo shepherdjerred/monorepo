@@ -5,7 +5,6 @@
 # 02 completes the seeded open task). Without flowsOrder, Maestro picks its
 # own order and any state-sensitive assertion becomes a coin flip.
 executionOrder:
-  continueOnFailure: true
   flowsOrder:
     - 00-setup
     - 01-create-task
@@ -15,3 +14,6 @@ executionOrder:
     - 05-offline-queue
     - 06-offline-crash-replay
     - 07-swipe-actions
+    - 08-contextual-quick-capture
+    - 09-saved-view-lifecycle
+    - 10-completed-search-uncomplete

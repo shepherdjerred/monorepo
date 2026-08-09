@@ -1,10 +1,10 @@
 import { describe, expect, it } from "bun:test";
+import { formatUtcTimestamp } from "@discord-plays-mario-kart/common";
 import {
   drawHudOverlay,
   drawTextOverlay,
   drawTimestampOverlay,
   formatSeatFlags,
-  formatUtcTimestamp,
 } from "./overlay.ts";
 
 const WIDTH = 640;

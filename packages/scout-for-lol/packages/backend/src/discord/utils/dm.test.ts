@@ -40,7 +40,9 @@ describe("sendDM", () => {
       client,
       userId: recipientId,
       message: "hello there",
-      kind: "feedback_request",
+      // A core kind: non-core kinds now require a budget at this chokepoint,
+      // so that they cannot slip past the lifetime cap or the footer.
+      kind: "prune_notice",
       guildId,
       prisma,
     });
@@ -51,7 +53,7 @@ describe("sendDM", () => {
     expect(rows).toHaveLength(1);
     const row = rows[0];
     expect(row?.deliveryStatus).toBe("sent");
-    expect(row?.kind).toBe("feedback_request");
+    expect(row?.kind).toBe("prune_notice");
     expect(row?.recipientId).toBe(recipientId);
     expect(row?.recipientTag).toBe("Recipient#1234");
     expect(row?.guildId).toBe(guildId);

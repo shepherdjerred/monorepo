@@ -1,6 +1,6 @@
 import type { ResourceSettlement } from "./terminal-loop.ts";
 import { settleRunResources } from "./terminal-loop.ts";
-import { combineFailures } from "./cli-failures.ts";
+import { combineFailures, normalizeFailure } from "./cli-failures.ts";
 import { ControllerStopError } from "./controller-stop-error.ts";
 import type { FleetSnapshot } from "./schemas.ts";
 
@@ -12,13 +12,20 @@ type ControllerResource = {
 type RuntimeResource = { shutdown: () => Promise<void> };
 
 export async function settleCliResources(options: {
+  closeOperatorControl: () => Promise<void>;
   input: () => InputResource | undefined;
   master: () => MasterResource | undefined;
   controller: () => ControllerResource | undefined;
   runtime: () => Promise<RuntimeResource> | undefined;
   observeSnapshot: (snapshot: FleetSnapshot) => void;
 }): Promise<ResourceSettlement<FleetSnapshot>> {
+  let operatorControlFailure: Error | undefined;
   let controllerFailure: Error | undefined;
+  try {
+    await options.closeOperatorControl();
+  } catch (error) {
+    operatorControlFailure = normalizeFailure(error);
+  }
   const settlement = await settleRunResources({
     closeInput: () => {
       options.input()?.close();
@@ -46,11 +53,12 @@ export async function settleCliResources(options: {
       await runtime?.shutdown();
     },
   });
-  return {
-    snapshot: settlement.snapshot,
-    failure:
-      controllerFailure === undefined
-        ? settlement.failure
-        : combineFailures(settlement.failure, controllerFailure),
-  };
+  let failure = settlement.failure;
+  if (operatorControlFailure !== undefined) {
+    failure = combineFailures(failure, operatorControlFailure);
+  }
+  if (controllerFailure !== undefined) {
+    failure = combineFailures(failure, controllerFailure);
+  }
+  return { snapshot: settlement.snapshot, failure };
 }

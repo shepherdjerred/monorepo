@@ -1,4 +1,3 @@
-import { fileURLToPath } from "node:url";
 import type { ReportChartPalette, ReportChartTheme } from "@scout-for-lol/data";
 import chroma from "chroma-js";
 import { palette } from "#src/assets/colors.ts";
@@ -18,21 +17,6 @@ export type AnalyticsChartTheme = {
   grid: string;
   border: string;
 };
-
-export const ANALYTICS_CHART_WIDTH = 1600;
-export const ANALYTICS_CHART_HEIGHT = 900;
-export const ANALYTICS_TITLE_FONT = "Beaufort for LOL";
-export const ANALYTICS_BODY_FONT = "Spiegel";
-export const ANALYTICS_FONT_FILE_PATHS = [
-  "Spiegel-TTF/Spiegel_TT_Regular.ttf",
-  "Spiegel-TTF/Spiegel_TT_SemiBold.ttf",
-  "Spiegel-TTF/Spiegel_TT_Bold.ttf",
-  "BeaufortForLoL-TTF/BeaufortforLOL-Regular.ttf",
-  "BeaufortForLoL-TTF/BeaufortforLOL-Bold.ttf",
-  "BeaufortForLoL-TTF/BeaufortforLOL-Heavy.ttf",
-].map((name) =>
-  fileURLToPath(new URL(`../assets/fonts/${name}`, import.meta.url)),
-);
 
 const DARK_GRADIENT = {
   type: "linear" as const,

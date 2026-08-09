@@ -14,8 +14,7 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSettings } from "../../hooks/use-settings";
 import { typography } from "../../styles/typography";
-
-export const UNDO_TOAST_MS = 5000;
+import { UNDO_TOAST_MS } from "../../domain/task-toggle";
 
 type Props = {
   visible: boolean;
@@ -80,6 +79,7 @@ export function UndoToast({ visible, message, onUndo, onDismiss }: Props) {
         <Text
           style={[typography.body, styles.message, { color: colors.text }]}
           numberOfLines={1}
+          testID="undo-toast-message"
         >
           {message}
         </Text>

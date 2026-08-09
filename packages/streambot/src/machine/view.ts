@@ -1,7 +1,10 @@
 import type { SnapshotFrom } from "xstate";
 import type { PlaybackView } from "@shepherdjerred/streambot/discord/queue-text.ts";
 import type { createPlaybackMachine } from "@shepherdjerred/streambot/machine/playback-machine.ts";
-import { sourceLabel } from "@shepherdjerred/streambot/sources/source.ts";
+import {
+  sourceIdentity,
+  sourceLabel,
+} from "@shepherdjerred/streambot/sources/source.ts";
 
 type PlaybackSnapshot = SnapshotFrom<ReturnType<typeof createPlaybackMachine>>;
 
@@ -29,11 +32,17 @@ export function buildPlaybackView(
               context.resolved?.title ?? sourceLabel(context.current.source),
             requesterId: context.current.requesterId,
             chapters: context.resolved?.chapters ?? [],
+            kind: context.current.source.kind,
+            sourceId: sourceIdentity(context.current.source),
+            durationSeconds: context.resolved?.durationSeconds ?? null,
           },
     queue: context.queue.map((entry) => ({
       title: sourceLabel(entry.source),
       requesterId: entry.requesterId,
       chapters: [],
+      kind: entry.source.kind,
+      sourceId: sourceIdentity(entry.source),
+      durationSeconds: null,
     })),
     loop: context.loop,
     volume: context.volume,

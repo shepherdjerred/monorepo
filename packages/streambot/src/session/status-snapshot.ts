@@ -19,8 +19,6 @@ export function describeSnapshot(snapshot: {
     stateName,
     snap: {
       state: stateName,
-      currentTitle: snapshot.context.resolved?.title ?? null,
-      currentRequester: snapshot.context.current?.requesterId ?? null,
       currentKind: currentSource?.kind ?? null,
       // Available during `resolving` (before a title is known) so the "preparing…" notice can name it.
       currentSourceLabel:

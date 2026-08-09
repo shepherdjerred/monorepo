@@ -2,6 +2,7 @@ import { type ReactElement } from "react";
 import type { PrState } from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
 import type { TimelineItem } from "#lib/fold";
 import { EvidencePanel } from "./evidence-panel.tsx";
+import { OperatorRequest } from "./operator-request.tsx";
 import { Transcript } from "./transcript.tsx";
 
 export function FleetDetail({
@@ -26,10 +27,12 @@ export function PrDetail({
   prNumber,
   state,
   items,
+  interactive,
 }: {
   prNumber: number;
   state: PrState | null;
   items: readonly TimelineItem[];
+  interactive: boolean;
 }): ReactElement {
   return (
     <section className="detail">
@@ -52,6 +55,14 @@ export function PrDetail({
         )}
       </header>
       {state === null ? null : <EvidencePanel pr={state} />}
+      {state?.operatorRequest === null ||
+      state?.operatorRequest === undefined ? null : (
+        <OperatorRequest
+          key={state.operatorRequest.id}
+          request={state.operatorRequest}
+          interactive={interactive}
+        />
+      )}
       <h3 className="transcript-heading">Transcript</h3>
       <Transcript items={items} />
     </section>

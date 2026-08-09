@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import { FleetController } from "@shepherdjerred/pr-fleet-controller/src/controller.ts";
 import { ControllerStopError } from "@shepherdjerred/pr-fleet-controller/src/controller-stop-error.ts";
 import { TelemetryCaptureError } from "@shepherdjerred/pr-fleet-controller/src/controller-telemetry.ts";
+import { PrHeadChangedDuringRefreshError } from "@shepherdjerred/pr-fleet-controller/src/controller-evidence-refresh.ts";
 import { currentCommandCorrelation } from "@shepherdjerred/pr-fleet-controller/src/command-correlation.ts";
 import type {
   CommandRequest,
@@ -21,10 +22,24 @@ import type {
   PrIdentity,
   PrState,
   ReadinessEvidence,
+  WorktreeContext,
   WorkerResult,
 } from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
+import { OperatorInputRequestSchema } from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
 import { FleetStore } from "@shepherdjerred/pr-fleet-controller/src/state.ts";
 import { evidence, identity } from "./fixtures.ts";
+
+function cleanWorktreeContext(pr: PrIdentity): WorktreeContext {
+  return {
+    ownership: "fleet",
+    remoteHeadSha: pr.headSha,
+    localHeadSha: pr.headSha,
+    relation: "exact",
+    dirty: false,
+    stagedPaths: [],
+    unstagedPaths: [],
+  };
+}
 
 class FakeEnvironment implements FleetEnvironment {
   readonly prs: PrIdentity[];
@@ -55,8 +70,11 @@ class FakeEnvironment implements FleetEnvironment {
     return Promise.resolve("/tmp/pr-fleet-fake");
   }
 
-  assignWorktreeBranch(): Promise<void> {
-    return Promise.resolve();
+  assignWorktreeBranch(
+    _worktree: string,
+    pr: PrIdentity,
+  ): Promise<WorktreeContext> {
+    return Promise.resolve(cleanWorktreeContext(pr));
   }
 
   runLocalCommand(_request: CommandRequest): Promise<CommandResult> {
@@ -275,8 +293,11 @@ class MutableEnvironment implements FleetEnvironment {
     return Promise.resolve("/tmp/pr-fleet-fake");
   }
 
-  assignWorktreeBranch(): Promise<void> {
-    return Promise.resolve();
+  assignWorktreeBranch(
+    _worktree: string,
+    pr: PrIdentity,
+  ): Promise<WorktreeContext> {
+    return Promise.resolve(cleanWorktreeContext(pr));
   }
 
   runLocalCommand(_request: CommandRequest): Promise<CommandResult> {
@@ -387,6 +408,24 @@ class OneFailureEnvironment extends FakeEnvironment {
   }
 }
 
+class OneHeadChangeEnvironment extends FakeEnvironment {
+  refreshes = 0;
+
+  override refreshEvidence(pr: PrIdentity): Promise<ReadinessEvidence> {
+    this.refreshes += 1;
+    if (this.refreshes === 1) {
+      return Promise.reject(
+        new PrHeadChangedDuringRefreshError(
+          pr.number,
+          pr.headSha,
+          "b".repeat(40),
+        ),
+      );
+    }
+    return super.refreshEvidence(pr);
+  }
+}
+
 class DeferredListEnvironment extends FakeEnvironment {
   readonly started = Promise.withResolvers<undefined>();
   readonly release = Promise.withResolvers<undefined>();
@@ -410,7 +449,7 @@ class DeferredWorktreeEnvironment extends FakeEnvironment {
 }
 
 class WorktreeCaptureFailingEnvironment extends FakeEnvironment {
-  override assignWorktreeBranch(): Promise<void> {
+  override assignWorktreeBranch(): Promise<WorktreeContext> {
     return Promise.reject(
       new TelemetryCaptureError(
         "command.completed",
@@ -448,9 +487,12 @@ class CorrelationEnvironment extends FakeEnvironment {
     return super.findWorktree();
   }
 
-  override assignWorktreeBranch(): Promise<void> {
+  override assignWorktreeBranch(
+    worktree: string,
+    pr: PrIdentity,
+  ): Promise<WorktreeContext> {
     this.#capture("assign-worktree");
-    return super.assignWorktreeBranch();
+    return super.assignWorktreeBranch(worktree, pr);
   }
 }
 
@@ -491,6 +533,36 @@ test("a fleet tick classifies every PR and queues excess actionable work", async
   expect(report.snapshot.active).toBe(1);
   expect(report.snapshot.queued).toBe(1);
   expect(observer.snapshots).toHaveLength(1);
+  await controller.stop(Promise.resolve());
+});
+
+test("a PR head move defers only that PR and schedules immediate refresh", async () => {
+  const pr = identity(1);
+  const environment = new OneHeadChangeEnvironment(
+    [pr],
+    new Map([[pr.number, evidence(pr)]]),
+  );
+  const observer = new RecordingObserver();
+  const controller = new FleetController({
+    config: {
+      model: "openai/gpt-5",
+      repo: "shepherdjerred/monorepo",
+      checkout: "/tmp/repo",
+      worktreeRoot: "/tmp/worktrees",
+      maxWorkers: 1,
+    },
+    environment,
+    workerRunner: new BlockingRunner(),
+    observer,
+    store: new FleetStore(1),
+  });
+
+  const first = await controller.tick("startup");
+  expect(first.snapshot.open).toBe(0);
+  expect(first.changes[0]).toContain("head changed during evidence refresh");
+  await flushMicrotasks();
+  expect(environment.refreshes).toBe(2);
+  expect(controller.snapshot().open).toBe(1);
   await controller.stop(Promise.resolve());
 });
 
@@ -1195,5 +1267,227 @@ test("keeps a closed PR's leases until its worker settles", async () => {
   await flushMicrotasks();
   expect(store.stackWriteOwners.has(dispatched.stackId)).toBe(false);
   expect(store.activeWorkers.has(1)).toBe(false);
+  await controller.stop(Promise.resolve());
+});
+
+test("an operator question parks only its PR, releases leases, and resumes on answer", async () => {
+  const failedCheck = {
+    name: "verify",
+    state: "FAILURE",
+    bucket: "fail",
+    link: null,
+    softFail: false,
+  };
+  const pr = identity(71);
+  const environment = new MutableEnvironment(
+    [pr],
+    new Map([[pr.number, evidence(pr, { checks: [failedCheck] })]]),
+  );
+  const runner = new DeferredSuccessfulRunner();
+  const store = new FleetStore(1);
+  const telemetry = new RecordingTelemetry();
+  const controller = new FleetController({
+    config: {
+      model: "openai/gpt-5",
+      repo: "shepherdjerred/monorepo",
+      checkout: "/tmp/repo",
+      worktreeRoot: "/tmp/worktrees",
+      maxWorkers: 1,
+    },
+    environment,
+    workerRunner: runner,
+    observer: new RecordingObserver(),
+    store,
+    telemetry,
+  });
+
+  await controller.tick("startup");
+  const dispatched = store.prs.get(pr.number);
+  expect(dispatched).toBeDefined();
+  if (dispatched === undefined) throw new Error("unreachable");
+  const request = OperatorInputRequestSchema.parse({
+    id: "question-71",
+    pr: pr.number,
+    headSha: pr.headSha,
+    generation: dispatched.agentGeneration,
+    context: "The inherited commit has two valid ownership interpretations.",
+    questions: [
+      {
+        id: "ownership",
+        header: "Ownership",
+        question: "Should this commit ship with PR #71?",
+        options: [
+          {
+            id: "include",
+            label: "Include it",
+            description: "The changed paths match this PR's stated scope.",
+            recommended: true,
+          },
+          {
+            id: "leave",
+            label: "Leave it local",
+            description: "The commit belongs to separate operator work.",
+            recommended: false,
+          },
+        ],
+      },
+    ],
+    createdAt: "2026-08-08T20:00:00.000Z",
+  });
+  store.operatorRequests.set(pr.number, request);
+  expect(store.requestLease(dispatched, "setup")).toBe(true);
+  expect(store.requestLease(dispatched, "heavy")).toBe(true);
+  expect(store.requestLease(dispatched, "stack-write")).toBe(true);
+  runner.result.resolve({
+    pr: pr.number,
+    state: "waiting-for-answer",
+    headShaBefore: pr.headSha,
+    headShaAfter: null,
+    hardFailures: ["verify"],
+    reviewFindings: [],
+    conflict: false,
+    validation: [],
+    lastAction: "requested operator input",
+    blockers: [],
+    operatorRequestId: request.id,
+    worktree: dispatched.worktree,
+    worktreeDirty: true,
+    setupLeaseReleased: true,
+    heavyLeaseReleased: true,
+    writeLeaseReleased: true,
+  });
+  await flushMicrotasks();
+
+  expect(controller.snapshot().waiting).toBe(1);
+  expect(store.prs.get(pr.number)?.status).toBe("waiting-for-answer");
+  expect(store.setupOwner).toBeNull();
+  expect(store.heavyOwners.size).toBe(0);
+  expect(store.stackWriteOwners.size).toBe(0);
+
+  environment.evidenceByPr.set(pr.number, evidence(pr));
+  await controller.answerOperatorQuestion({
+    requestId: request.id,
+    answers: [
+      {
+        questionId: "ownership",
+        optionId: "include",
+        freeText: "The paths are all part of this PR.",
+      },
+    ],
+  });
+  await flushMicrotasks();
+  expect(controller.snapshot().green).toBe(1);
+  expect(controller.questions()).toEqual([]);
+  expect(store.workerGuidance.get(pr.number)?.join("\n")).toContain(
+    "Selected: Include it",
+  );
+  expect(
+    telemetry.events.some(
+      (event) => event.kind === "operator.question.answered",
+    ),
+  ).toBe(true);
+  await controller.stop(Promise.resolve());
+});
+
+test("a head change supersedes an unanswered operator request", async () => {
+  const before = identity(72);
+  const pendingCheck = {
+    name: "verify",
+    state: "PENDING",
+    bucket: "pending",
+    link: null,
+    softFail: false,
+  };
+  const environment = new MutableEnvironment(
+    [before],
+    new Map([
+      [
+        before.number,
+        evidence(before, {
+          checks: [pendingCheck],
+          buildkiteCurrentHead: false,
+          hostedReviewComplete: false,
+        }),
+      ],
+    ]),
+  );
+  const store = new FleetStore(1);
+  const telemetry = new RecordingTelemetry();
+  const controller = new FleetController({
+    config: {
+      model: "openai/gpt-5",
+      repo: "shepherdjerred/monorepo",
+      checkout: "/tmp/repo",
+      worktreeRoot: "/tmp/worktrees",
+      maxWorkers: 1,
+    },
+    environment,
+    workerRunner: new BlockingRunner(),
+    observer: new RecordingObserver(),
+    store,
+    telemetry,
+  });
+  await controller.tick("startup");
+  const state = store.prs.get(before.number);
+  expect(state).toBeDefined();
+  if (state === undefined) throw new Error("unreachable");
+  const request = OperatorInputRequestSchema.parse({
+    id: "question-72",
+    pr: before.number,
+    headSha: before.headSha,
+    generation: state.agentGeneration,
+    context: "The old head needs an ownership decision.",
+    questions: [
+      {
+        id: "ownership",
+        header: "Ownership",
+        question: "Should the old-head change be included?",
+        options: [
+          {
+            id: "include",
+            label: "Include it",
+            description: "It matches the old PR head.",
+            recommended: true,
+          },
+          {
+            id: "exclude",
+            label: "Exclude it",
+            description: "It belongs elsewhere.",
+            recommended: false,
+          },
+        ],
+      },
+    ],
+    createdAt: "2026-08-08T20:00:00.000Z",
+  });
+  store.operatorRequests.set(before.number, request);
+  store.prs.set(before.number, {
+    ...state,
+    status: "waiting-for-answer",
+    classification: "waiting-for-answer",
+    operatorRequest: request,
+  });
+
+  const after = identity(72, { headSha: "f".repeat(40) });
+  environment.prs = [after];
+  environment.evidenceByPr = new Map([
+    [
+      after.number,
+      evidence(after, {
+        checks: [pendingCheck],
+        buildkiteCurrentHead: false,
+        hostedReviewComplete: false,
+      }),
+    ],
+  ]);
+  await controller.tick("user");
+
+  expect(controller.questions()).toEqual([]);
+  expect(store.prs.get(after.number)?.operatorRequest).toBeNull();
+  expect(
+    telemetry.events.some(
+      (event) => event.kind === "operator.question.superseded",
+    ),
+  ).toBe(true);
   await controller.stop(Promise.resolve());
 });

@@ -388,20 +388,6 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Durable review-signal collector — scans recent PRs, computes each PR's code-review signal via @shepherdjerred/code-review, records Prometheus metrics, and appends NDJSON to S3 (what the review bot did and when)",
   },
   {
-    id: "agent-task-timeout-watch",
-    workflowType: "observeAgentTaskTimeoutsWorkflow",
-    args: [],
-    // Hourly — timeouts are rare (steady state 0) and only matter as a
-    // regression signal, so an hourly scan is ample and cheap.
-    cronExpression: "0 * * * *",
-    taskQueue: TASK_QUEUES.DEFAULT,
-    overlap: ScheduleOverlapPolicy.SKIP,
-    // Covers the activity's full retry budget: 3 attempts × 2m startToClose +
-    // ~30s backoff.
-    workflowExecutionTimeout: "8 minutes",
-    memo: "Guardrail: counts agentTaskWorkflow TimedOut runs in the last 24h onto temporal_agent_task_timeouts_24h (alert >0). Steady state 0 after the future-runAt startDelay fix.",
-  },
-  {
     id: "golink-sync",
     workflowType: "syncGolinks",
     args: [],
@@ -528,9 +514,9 @@ export const SCHEDULES: ScheduleDefinition[] = [
     id: "temporal-failure-watch",
     workflowType: "pollWorkflowFailuresWorkflow",
     args: [],
-    // Every 5 minutes. The activity looks back 15 minutes (3x the cadence),
-    // so a single missed tick or worker restart can't create a gap — see
-    // src/activities/workflow-failure-watch.ts for why overlap is safe.
+    // Every 5 minutes. The activity looks back 24 hours so a worker outage can
+    // be recovered by the next poll; the matching alert TTL prevents duplicate
+    // pages for executions observed again after recovery.
     cronExpression: "*/5 * * * *",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,

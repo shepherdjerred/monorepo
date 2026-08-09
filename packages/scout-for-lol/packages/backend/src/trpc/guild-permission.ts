@@ -26,7 +26,8 @@ import {
 import type { User } from "#generated/prisma/client/index.js";
 import { prisma } from "#src/database/index.ts";
 import { client as discordClient } from "#src/discord/client.ts";
-import { fetchUserGuilds, hasAdministrator } from "#src/lib/discord-rest.ts";
+import { hasAdministrator } from "#src/lib/discord-rest.ts";
+import { fetchUserGuildsForRequest } from "#src/trpc/discord-upstream.ts";
 import { webMutationProcedure, webProcedure } from "#src/trpc/trpc.ts";
 
 const GuildIdInput = z.object({ guildId: DiscordGuildIdSchema });
@@ -43,12 +44,15 @@ const GuildIdInput = z.object({ guildId: DiscordGuildIdSchema });
  * Grants are read per request (no cache) so a revoke takes effect immediately;
  * only the membership/admin branch lags up to the 5-minute `fetchUserGuilds`
  * cache — the same behaviour the old `assertGuildAdmin` had.
+ *
+ * If Discord itself can't be reached this throws UNAUTHORIZED or
+ * SERVICE_UNAVAILABLE, never FORBIDDEN — an outage is not a permission answer.
  */
 export async function resolveGuildPermissions(
   user: User,
   guildId: DiscordGuildId,
 ): Promise<PermissionSet> {
-  const guilds = await fetchUserGuilds(user);
+  const guilds = await fetchUserGuildsForRequest(user);
   const match = guilds.find((g) => g.id === guildId);
   if (match === undefined) {
     throw new TRPCError({

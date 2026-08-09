@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { ReportResultTable } from "#src/components/report-result-table.tsx";
+import { InteractiveVisualization } from "#src/components/interactive-visualization.tsx";
 
 const DEBOUNCE_MS = 500;
 
@@ -9,19 +10,24 @@ export function ReportQueryPreview(props: {
   guildId: string;
   queryText: string;
   title: string;
+  sourceCompetitionId: number | null;
 }) {
-  const { guildId, queryText, title } = props;
+  const { guildId, queryText, title, sourceCompetitionId } = props;
   const trpc = useTRPC();
-  const [debounced, setDebounced] = useState({ queryText, title });
+  const [debounced, setDebounced] = useState({
+    queryText,
+    title,
+    sourceCompetitionId,
+  });
 
   useEffect(() => {
     const handle = setTimeout(() => {
-      setDebounced({ queryText, title });
+      setDebounced({ queryText, title, sourceCompetitionId });
     }, DEBOUNCE_MS);
     return () => {
       clearTimeout(handle);
     };
-  }, [queryText, title]);
+  }, [queryText, sourceCompetitionId, title]);
 
   // Re-run whenever the debounced query/title change. The display format comes
   // from the query's RENDER clause, parsed server-side. keepPreviousData keeps
@@ -33,6 +39,7 @@ export function ReportQueryPreview(props: {
         guildId,
         queryText: debounced.queryText,
         title: debounced.title,
+        sourceCompetitionId: debounced.sourceCompetitionId,
       },
       {
         enabled: hasQuery,
@@ -74,14 +81,24 @@ export function ReportQueryPreview(props: {
           {previewQuery.isFetching && (
             <p className="text-xs text-muted-foreground">Updating…</p>
           )}
-          {result.imageBase64 !== null && (
+          {result.visualization !== null &&
+          result.renderKind !== "TABLE" &&
+          result.renderKind !== "LIST" &&
+          result.renderKind !== "LEADERBOARD" ? (
+            <InteractiveVisualization snapshot={result.visualization} />
+          ) : result.imageBase64 === null ? null : (
             <img
               className="w-full rounded-md border border-border"
               src={`data:image/png;base64,${result.imageBase64}`}
               alt={`${result.renderKind} preview`}
             />
           )}
-          <ReportResultTable columns={result.columns} rows={result.rows} />
+          <ReportResultTable
+            columns={result.columns}
+            rows={result.rows}
+            visualization={result.visualization}
+            evidence={result.evidence}
+          />
           <p className="text-xs text-muted-foreground">
             {result.rows.length} row(s) · {result.rowsScanned} fact row(s)
             scanned

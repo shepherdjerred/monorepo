@@ -4,6 +4,7 @@ import {
   ReportMetricSchema,
   type ReportSelectItem,
 } from "#src/model/report-query-spec.ts";
+import { REPORT_METRICS } from "#src/model/report-query-metrics.ts";
 
 type Token =
   | { kind: "number"; value: string }
@@ -15,6 +16,10 @@ type Token =
 
 const ALIAS_PATTERN = /^[a-z_][a-z0-9_]{0,63}$/u;
 const FUNCTION_NAMES = new Set(["round", "coalesce", "per_game", "per_minute"]);
+const NON_ADDITIVE_COUNT_METRICS = new Set<ReportMetric>([
+  "largest_multikill",
+  "longest_life_seconds",
+]);
 
 export function parseReportSelectItem(text: string): ReportSelectItem {
   const { expressionText, alias } = splitAlias(text.trim());
@@ -44,6 +49,39 @@ export function collectExpressionMetrics(
   }
   return expression.arguments.flatMap((argument) =>
     collectExpressionMetrics(argument),
+  );
+}
+
+export function isAdditiveReportExpression(
+  expression: ReportExpression,
+): boolean {
+  if (expression.kind === "metric") {
+    return (
+      !NON_ADDITIVE_COUNT_METRICS.has(expression.metric) &&
+      REPORT_METRICS.some(
+        (metric) => metric.id === expression.metric && metric.kind === "count",
+      )
+    );
+  }
+  if (expression.kind !== "binary") return false;
+  if (expression.operator === "+" || expression.operator === "-") {
+    return (
+      isAdditiveReportExpression(expression.left) &&
+      isAdditiveReportExpression(expression.right)
+    );
+  }
+  if (expression.operator === "*") {
+    return (
+      (isAdditiveReportExpression(expression.left) &&
+        expression.right.kind === "number") ||
+      (expression.left.kind === "number" &&
+        isAdditiveReportExpression(expression.right))
+    );
+  }
+  return (
+    isAdditiveReportExpression(expression.left) &&
+    expression.right.kind === "number" &&
+    expression.right.value !== 0
   );
 }
 
