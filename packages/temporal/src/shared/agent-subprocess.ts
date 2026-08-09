@@ -178,6 +178,9 @@ export type TrackedAgentInput = {
   /** Tokens (env values, app tokens, etc.) to redact from every output
    * line before it's surfaced to the caller / logged. */
   redactTokens: readonly (string | undefined)[];
+  /** Refresh redaction state immediately before forwarding each output line.
+   * Returning false drops that line and lets the caller fail closed. */
+  beforeOutput?: () => Promise<boolean>;
   /** Resolved via `Context.current().info.startToCloseTimeoutMs` by the
    * caller. `undefined` for local-script drivers where the soft-kill
    * step is skipped. */
@@ -221,17 +224,21 @@ export type TrackedAgentInput = {
 async function pumpStreamToCallback(args: {
   stream: ReadableStream<Uint8Array>;
   redactTokens: readonly (string | undefined)[];
+  beforeOutput: (() => Promise<boolean>) | undefined;
   state: OutputState;
   onLine: (line: string) => void;
   redact: (line: string, tokens: readonly (string | undefined)[]) => string;
 }): Promise<string> {
-  const { stream, redactTokens, state, onLine, redact } = args;
+  const { stream, redactTokens, beforeOutput, state, onLine, redact } = args;
   const reader = stream.getReader();
   const decoder = new TextDecoder();
   let buf = "";
   let raw = "";
-  const flush = (line: string): void => {
+  const flush = async (line: string): Promise<void> => {
     if (line.length === 0) {
+      return;
+    }
+    if (beforeOutput !== undefined && !(await beforeOutput())) {
       return;
     }
     const redacted = redact(line, redactTokens);
@@ -250,11 +257,11 @@ async function pumpStreamToCallback(args: {
       const lines = buf.split("\n");
       buf = lines.pop() ?? "";
       for (const line of lines) {
-        flush(line);
+        await flush(line);
       }
     }
   } finally {
-    flush(buf);
+    await flush(buf);
   }
   return raw;
 }
@@ -345,6 +352,7 @@ export async function runTrackedAgentSubprocess(
       pumpStreamToCallback({
         stream: proc.stdout,
         redactTokens: input.redactTokens,
+        beforeOutput: input.beforeOutput,
         state: outputState,
         onLine: input.onStdoutLine,
         redact: redactSecrets,
@@ -352,6 +360,7 @@ export async function runTrackedAgentSubprocess(
       pumpStreamToCallback({
         stream: proc.stderr,
         redactTokens: input.redactTokens,
+        beforeOutput: input.beforeOutput,
         state: outputState,
         onLine: input.onStderrLine,
         redact: redactSecrets,

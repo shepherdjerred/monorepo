@@ -95,6 +95,18 @@ export class AgentTaskSecretRedactionController {
     this.onFailure();
     this.abortController.abort(this.failure);
   }
+
+  async refreshBeforeOutput(
+    state: AgentTaskSecretTokenState,
+  ): Promise<boolean> {
+    try {
+      await state.refresh();
+      return true;
+    } catch (error: unknown) {
+      this.record(error);
+      return false;
+    }
+  }
 }
 
 export async function createAgentTaskSecretTokenState(

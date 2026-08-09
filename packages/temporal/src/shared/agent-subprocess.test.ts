@@ -164,6 +164,25 @@ describe("runTrackedAgentSubprocess", () => {
     expect(stdoutLines).toEqual(["***", "***"]);
   });
 
+  it("refreshes redaction state before forwarding output", async () => {
+    const redactionTokens: string[] = [];
+    let refreshes = 0;
+    const script = "console.log('rotated-mounted-token');";
+    const { input, stdoutLines } = harness(["bun", "-e", script], {
+      redactTokens: redactionTokens,
+      beforeOutput: async () => {
+        refreshes += 1;
+        redactionTokens.push("rotated-mounted-token");
+        return true;
+      },
+    });
+
+    await runTrackedAgentSubprocess(input, redactSecrets);
+
+    expect(refreshes).toBeGreaterThan(0);
+    expect(stdoutLines).toEqual(["***"]);
+  });
+
   it("reports firstOutputLatencyMs=undefined and maxIdleMs≈duration for a silent run", async () => {
     const { input, stdoutLines } = harness([
       "bun",

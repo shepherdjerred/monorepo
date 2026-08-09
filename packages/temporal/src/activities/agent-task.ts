@@ -234,6 +234,8 @@ async function runAgent(
             cwd: input.workdir,
             env: envForProvider(provider, githubTokenResult.token),
             redactTokens: secretTokens,
+            beforeOutput: () =>
+              redactionFailureController.refreshBeforeOutput(secretTokenState),
             startToCloseTimeoutMs: startToCloseTimeoutMsOrUndefined(),
             cancellationSignal,
             heartbeatIntervalMs: HEARTBEAT_INTERVAL_MS,
@@ -312,7 +314,6 @@ async function runAgent(
         // crashed run still shows up in Tempo with whatever turns completed.
         llmTrace.close();
       }
-
       try {
         await secretTokenState.refresh();
       } catch (error: unknown) {
@@ -327,7 +328,6 @@ async function runAgent(
         startTimeMs: llmStartMs,
         durationMs: result.durationMs,
       });
-
       if (redactionFailureController.failure !== undefined) {
         agentTaskRunsTotal.inc({ provider, outcome: "redaction_failed" });
         captureWithContext(redactionFailureController.failure, {
