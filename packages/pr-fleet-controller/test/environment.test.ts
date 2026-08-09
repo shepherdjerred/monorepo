@@ -102,6 +102,7 @@ class RestackPublishingEnvironment extends CommandFleetEnvironment {
   startResult: CommandResult | null = null;
   continueResult: CommandResult = commandResult(0, "");
   rebaseInProgress = false;
+  rebaseHeadExists = false;
   published = false;
   continued = false;
 
@@ -110,6 +111,18 @@ class RestackPublishingEnvironment extends CommandFleetEnvironment {
       request.executable === "git" &&
       request.args.join("\0") ===
         ["rev-parse", "--verify", "--quiet", "REBASE_HEAD"].join("\0")
+    ) {
+      return Promise.resolve({
+        exitCode: this.rebaseHeadExists ? 0 : 1,
+        stdout: "",
+        stderr: "",
+        termination: "exit",
+      });
+    }
+    if (
+      request.executable === "test" &&
+      request.args[0] === "-d" &&
+      request.args[1]?.endsWith("rebase-merge")
     ) {
       return Promise.resolve({
         exitCode: this.rebaseInProgress ? 0 : 1,
@@ -558,6 +571,7 @@ test("restack lifecycle cleans startup failures and revalidates publication", as
 
     environment.startResult = commandResult(1, "CONFLICT in tracked.txt");
     environment.rebaseInProgress = true;
+    environment.rebaseHeadExists = true;
     await expect(startRestack({}, { observe: noopObserve })).resolves.toEqual({
       completed: false,
       output: "CONFLICT in tracked.txt",
@@ -623,7 +637,11 @@ test("restack lifecycle cleans startup failures and revalidates publication", as
     await Bun.write(path.join(directory, "tracked.txt"), "base\n");
     environment.continueResult = commandResult(0, "");
     environment.rebaseInProgress = false;
-    await continueRestack({ paths: ["tracked.txt"] }, { observe: noopObserve });
+    // Git can retain REBASE_HEAD after the control directory is removed.
+    environment.rebaseHeadExists = true;
+    await expect(
+      continueRestack({ paths: ["tracked.txt"] }, { observe: noopObserve }),
+    ).resolves.toEqual({ completed: true, output: "" });
     expect(environment.continued).toBe(true);
     expect(store.activeRestacks.has(pr.identity.number)).toBe(false);
 

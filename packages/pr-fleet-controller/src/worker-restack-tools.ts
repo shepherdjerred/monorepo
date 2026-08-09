@@ -62,17 +62,42 @@ async function recordCompletedRestack(
 async function isRebaseInProgress(
   options: RestackToolOptions,
 ): Promise<boolean> {
-  const result = await options.environment.runLocalCommand({
-    executable: "git",
-    args: ["rev-parse", "--verify", "--quiet", "REBASE_HEAD"],
-    cwd: options.worktree,
-    timeoutMs: 30_000,
-    signal: options.signal,
-    maxOutputBytes: 1024,
-  });
-  if (result.exitCode === 0) return true;
-  if (result.exitCode === 1) return false;
-  throw new Error(`Failed to inspect active rebase state: ${result.stderr}`);
+  for (const controlDirectory of ["rebase-merge", "rebase-apply"]) {
+    const pathResult = await options.environment.runLocalCommand({
+      executable: "git",
+      args: ["rev-parse", "--git-path", controlDirectory],
+      cwd: options.worktree,
+      timeoutMs: 30_000,
+      signal: options.signal,
+      maxOutputBytes: 1024,
+    });
+    if (pathResult.exitCode !== 0 || pathResult.stdoutTruncated === true) {
+      throw new Error(
+        `Failed to resolve ${controlDirectory} rebase control path: ${pathResult.stderr}`,
+      );
+    }
+    const controlPath = pathResult.stdout.trim();
+    if (controlPath.length === 0) {
+      throw new Error(
+        `Git returned an empty ${controlDirectory} rebase control path`,
+      );
+    }
+    const directoryResult = await options.environment.runLocalCommand({
+      executable: "test",
+      args: ["-d", controlPath],
+      cwd: options.worktree,
+      timeoutMs: 30_000,
+      signal: options.signal,
+      maxOutputBytes: 1024,
+    });
+    if (directoryResult.exitCode === 0) return true;
+    if (directoryResult.exitCode !== 1) {
+      throw new Error(
+        `Failed to inspect ${controlDirectory} rebase control state: ${directoryResult.stderr}`,
+      );
+    }
+  }
+  return false;
 }
 
 async function requireCurrentCompletedRestack(
