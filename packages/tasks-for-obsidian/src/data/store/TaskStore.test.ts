@@ -469,6 +469,45 @@ describe("TaskStore restore ordering", () => {
       store.getPendingCompletionRestore(task.id, "2026-08-08"),
     ).resolves.toEqual(restore);
   });
+
+  test("classifies later edits against the state at completion", async () => {
+    const task = makeTask({
+      recurrence: "FREQ=WEEKLY",
+      scheduled: "2026-08-08",
+    });
+    const { store } = makeStore(
+      memoryQueueStorage(),
+      memoryStoreStorage({ tasks: [task] }),
+    );
+    await store.restore();
+    const restore = {
+      scheduled: "2026-08-15",
+      due: null,
+      recurrence: "FREQ=WEEKLY",
+      skipped: false,
+    };
+    await store.dispatch({
+      type: "update",
+      taskId: task.id,
+      payload: { scheduled: "2026-08-15" },
+    });
+    await store.dispatch({
+      type: "set_instance_complete",
+      taskId: task.id,
+      date: "2026-08-08",
+      completed: true,
+      restore,
+    });
+    await store.dispatch({
+      type: "update",
+      taskId: task.id,
+      payload: { title: "Renamed", scheduled: "2026-08-15" },
+    });
+
+    await expect(
+      store.getPendingCompletionRestore(task.id, "2026-08-08"),
+    ).resolves.toEqual(restore);
+  });
 });
 
 describe("TaskStore restore retention", () => {

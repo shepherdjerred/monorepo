@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { taskId, type Task, type TaskId } from "../../domain/types";
 import type { RecurringCompletionRestore } from "tasknotes-types/v2";
-import type { Command } from "../sync/commands";
+import { applyCommand, type Command } from "../sync/commands";
 
 const CompletionRestoreSchema = z.object({
   scheduled: z.string().nullable(),
@@ -57,6 +57,18 @@ export function serializeAcknowledgedCompletionRestores(
 
 export function completionRestoreKey(id: TaskId, date: string): string {
   return `${String(id)}\u{0}${date}`;
+}
+
+export function taskAfterCommands(
+  base: ReadonlyMap<TaskId, Task>,
+  commands: readonly Command[],
+  endExclusive: number,
+  target: TaskId,
+): Task | undefined {
+  return commands
+    .slice(0, endExclusive)
+    .reduce((tasks, command) => applyCommand(command, tasks), new Map(base))
+    .get(target);
 }
 
 function sameOptionalString(

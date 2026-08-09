@@ -137,6 +137,34 @@ describe("FakeServer", () => {
     expect(server.tasks.get(recurring.id)?.due).toBe("2026-08-17");
   });
 
+  test("already-restored recurring state is idempotent", async () => {
+    const server = new FakeServer(makeClock());
+    const recurring = makeTask({
+      recurrence: "DTSTART:20260801;FREQ=WEEKLY",
+      scheduled: "2026-08-08",
+      due: "2026-08-10",
+    });
+    server.seed(recurring);
+
+    const result = await server.completeRecurringInstance(recurring.id, {
+      date: "2026-08-01",
+      completed: false,
+      restore: {
+        recurrence: "DTSTART:20260801;FREQ=WEEKLY",
+        scheduled: "2026-08-08",
+        due: "2026-08-10",
+        skipped: false,
+      },
+    });
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.scheduled).toBe("2026-08-08");
+      expect(result.value.due).toBe("2026-08-10");
+      expect(result.value.completeInstances).toEqual([]);
+    }
+  });
+
   test("a replayed X-Mutation-Id returns the stored response without re-applying", async () => {
     const server = new FakeServer(makeClock());
     const first = await server.createTask(

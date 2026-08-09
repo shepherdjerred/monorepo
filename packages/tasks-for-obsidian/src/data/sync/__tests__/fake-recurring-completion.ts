@@ -57,11 +57,27 @@ function advanceSchedule(
   }
 }
 
+function fakeRestoredStateMatchesCurrent(
+  task: Task,
+  restore: RecurringCompletionRestore,
+  date: string,
+): boolean {
+  return (
+    !task.completeInstances.includes(date) &&
+    task.recurrence === restore.recurrence &&
+    task.scheduled === (restore.scheduled ?? undefined) &&
+    task.due === (restore.due ?? undefined) &&
+    task.skippedInstances.includes(date) === restore.skipped
+  );
+}
+
 export function fakeRecurringRestoreMatchesCurrent(
   task: Task,
   restore: RecurringCompletionRestore,
   date: string,
 ): boolean {
+  if (fakeRestoredStateMatchesCurrent(task, restore, date)) return true;
+
   const scheduleSource = {
     title: task.title,
     recurrence: restore.recurrence,

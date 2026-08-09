@@ -30,6 +30,7 @@ import {
   parseAcknowledgedCompletionRestores,
   pruneCompletionRestores,
   serializeAcknowledgedCompletionRestores,
+  taskAfterCommands,
 } from "./acknowledged-completion-restores";
 
 /**
@@ -119,7 +120,6 @@ export class TaskStore {
 
   /** Wired to SyncEngine.requestSync — fired after every dispatch. */
   onDispatch: (() => void) | null = null;
-
   getPendingCompletionRestore(
     id: TaskId,
     date: string,
@@ -145,11 +145,17 @@ export class TaskStore {
         }
       }
       if (pendingRestore !== undefined) {
+        const taskAtCompletion = taskAfterCommands(
+          this.base,
+          pending,
+          completionIndex,
+          target,
+        );
         if (
           pending
             .slice(completionIndex + 1)
             .some((command) =>
-              isTaskOccurrenceEdit(command, target, this.base.get(target)),
+              isTaskOccurrenceEdit(command, target, taskAtCompletion),
             )
         ) {
           return;
@@ -182,7 +188,6 @@ export class TaskStore {
       return stored.restore;
     });
   }
-
   constructor(
     private readonly queue: CommandQueue,
     private readonly storage: TaskStoreStorage = defaultStorage,
@@ -191,7 +196,6 @@ export class TaskStore {
     this.nextCommandId = makeCommandIdFactory(clock);
     this.snapshot = this.buildSnapshot();
   }
-
   /** Load queue + cached base + aliases. Call once at startup, after migrations. */
   async restore(): Promise<void> {
     await this.enqueueOperation(async () => {
@@ -220,18 +224,15 @@ export class TaskStore {
       this.recompute();
     });
   }
-
   subscribe(listener: () => void): () => void {
     this.listeners.add(listener);
     return () => {
       this.listeners.delete(listener);
     };
   }
-
   getSnapshot(): TaskStoreSnapshot {
     return this.snapshot;
   }
-
   /**
    * Record a mutation and return the optimistic result immediately. The
    * enqueue is the only await — never the network. Returns the task as the
