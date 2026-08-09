@@ -1,10 +1,39 @@
 import { describe, expect, test } from "bun:test";
 import {
   decideReactionAward,
+  decodeLeaderboardButtonId,
   decodeModalId,
   emojiMatchesKarma,
+  encodeLeaderboardButtonId,
   encodeModalId,
 } from "./rules.ts";
+
+describe("leaderboard button id round-trip", () => {
+  test("carries the whole view through the custom id", () => {
+    // Buttons hold no other state, so kind, period, and page must survive.
+    const id = encodeLeaderboardButtonId({
+      kind: "given",
+      period: "month",
+      page: 2,
+    });
+    expect(decodeLeaderboardButtonId(id)).toEqual({
+      kind: "given",
+      period: "month",
+      page: 2,
+    });
+  });
+
+  test.each([
+    ["karma-lb:received:all", "missing the page"],
+    ["karma-give:1:2:3", "a different component's id"],
+    ["karma-lb:received:all:-1", "a negative page"],
+    ["karma-lb:received:all:abc", "a non-numeric page"],
+    ["karma-lb::all:0", "an empty kind"],
+    ["karma-lb:received::0", "an empty period"],
+  ])("rejects %s (%s)", (customId) => {
+    expect(decodeLeaderboardButtonId(customId)).toBeNull();
+  });
+});
 
 describe("emojiMatchesKarma", () => {
   test("matches a unicode emoji by name", () => {

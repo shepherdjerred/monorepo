@@ -5,7 +5,7 @@
 import { prisma } from "#src/db/index.ts";
 
 /** Ensure a `person` row exists so the karma foreign keys resolve. */
-export async function ensurePerson(id: string): Promise<void> {
+async function ensurePerson(id: string): Promise<void> {
   await prisma.person.upsert({ where: { id }, create: { id }, update: {} });
 }
 

@@ -88,6 +88,57 @@ export function rankLeaderboard(counts: readonly KarmaCount[]): RankedEntry[] {
   return ranked;
 }
 
+/** Leaderboard time windows. All-time is the historical default, but it is
+ *  permanently dominated by 2023 (216 of 362 events), so the bounded windows
+ *  are what make a current board readable. */
+export const LEADERBOARD_PERIODS = ["all", "year", "month"] as const;
+export type LeaderboardPeriod = (typeof LEADERBOARD_PERIODS)[number];
+
+/** Inclusive lower bound for a period, or undefined for all-time.
+ *  Pure, with `now` injected, so the boundaries are testable. */
+export function periodStart(
+  period: LeaderboardPeriod,
+  now: Date,
+): Date | undefined {
+  if (period === "all") {
+    return undefined;
+  }
+  if (period === "year") {
+    return new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
+  }
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+}
+
+/** How many entries fit on one leaderboard page.
+ *  Discord caps message content at 2000 characters; 15 entries of even the
+ *  longest plausible names stays comfortably inside that with room for the
+ *  header and footer. */
+const LEADERBOARD_PAGE_SIZE = 15;
+
+export type Page<T> = {
+  items: T[];
+  /** Zero-based. */
+  page: number;
+  totalPages: number;
+};
+
+/** Clamp a requested page into range and slice it out.
+ *  Clamping rather than erroring keeps a stale pagination button harmless
+ *  after entries are removed. */
+export function paginate<T>(
+  items: readonly T[],
+  requestedPage: number,
+  pageSize: number = LEADERBOARD_PAGE_SIZE,
+): Page<T> {
+  const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
+  const page = Math.min(Math.max(0, Math.trunc(requestedPage)), totalPages - 1);
+  return {
+    items: items.slice(page * pageSize, page * pageSize + pageSize),
+    page,
+    totalPages,
+  };
+}
+
 /** Format a single leaderboard line. Top-3 ranks are emphasized by the caller
  *  via `emphasizeRank`; `displayName` is the already-resolved user label. */
 export function formatLeaderboardLine(

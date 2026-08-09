@@ -1,6 +1,6 @@
 import { REST, Routes } from "discord.js";
 import Configuration from "#src/configuration.ts";
-import { karmaCommand } from "#src/karma/commands.ts";
+import { karmaCommand } from "#src/karma/command-definitions.ts";
 import { giveKarmaContextCommand } from "#src/karma/context-menu.ts";
 
 const rest = new REST({ version: "10" }).setToken(Configuration.discordToken);

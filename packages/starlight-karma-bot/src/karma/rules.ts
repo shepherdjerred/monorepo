@@ -49,6 +49,46 @@ export function decideReactionAward(params: {
   return { action: "award", receiverId: params.authorId };
 }
 
+const LEADERBOARD_PREFIX = "karma-lb";
+
+export type LeaderboardButtonTarget = {
+  kind: string;
+  period: string;
+  page: number;
+};
+
+/** Encode leaderboard pagination state into a button custom id. Buttons carry
+ *  no other state, so the whole view must round-trip through the id. */
+export function encodeLeaderboardButtonId(
+  target: LeaderboardButtonTarget,
+): string {
+  return `${LEADERBOARD_PREFIX}:${target.kind}:${target.period}:${String(target.page)}`;
+}
+
+export function decodeLeaderboardButtonId(
+  customId: string,
+): LeaderboardButtonTarget | null {
+  const parts = customId.split(":");
+  if (parts.length !== 4) {
+    return null;
+  }
+  const [prefix, kind, period, rawPage] = parts;
+  if (prefix !== LEADERBOARD_PREFIX) {
+    return null;
+  }
+  if (kind === undefined || kind === "") {
+    return null;
+  }
+  if (period === undefined || period === "") {
+    return null;
+  }
+  const page = Number(rawPage);
+  if (!Number.isInteger(page) || page < 0) {
+    return null;
+  }
+  return { kind, period, page };
+}
+
 const MODAL_PREFIX = "karma-give";
 
 /** Encode the context-menu target into the modal's custom id.

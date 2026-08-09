@@ -11,6 +11,7 @@ import {
   handleReactionAdd,
   handleReactionRemove,
 } from "#src/karma/reactions.ts";
+import { handleLeaderboardButton } from "#src/karma/leaderboard.ts";
 import "./rest.ts";
 import client from "./client.ts";
 
@@ -59,6 +60,10 @@ client.on(Events.InteractionCreate, (interaction) => {
       }
       if (interaction.isModalSubmit()) {
         await handleGiveKarmaModal(interaction);
+        return;
+      }
+      if (interaction.isButton()) {
+        await handleLeaderboardButton(interaction);
         return;
       }
       if (!interaction.isChatInputCommand()) {

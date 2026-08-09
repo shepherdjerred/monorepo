@@ -5,10 +5,56 @@ import {
   InvalidKarmaAmountError,
   karmaAmountFor,
   KARMA_GIVE_AMOUNT,
+  paginate,
   parseKarmaAmount,
+  periodStart,
   rankLeaderboard,
   type KarmaCount,
 } from "./scoring.ts";
+
+describe("periodStart", () => {
+  const now = new Date("2026-08-08T12:34:56.000Z");
+
+  test("all-time has no lower bound", () => {
+    expect(periodStart("all", now)).toBeUndefined();
+  });
+
+  test("year starts at January 1 UTC", () => {
+    expect(periodStart("year", now)?.toISOString()).toBe(
+      "2026-01-01T00:00:00.000Z",
+    );
+  });
+
+  test("month starts at the 1st UTC", () => {
+    expect(periodStart("month", now)?.toISOString()).toBe(
+      "2026-08-01T00:00:00.000Z",
+    );
+  });
+});
+
+describe("paginate", () => {
+  const items = Array.from({ length: 45 }, (_, index) => index);
+
+  test("slices the requested page", () => {
+    expect(paginate(items, 0, 15).items).toEqual(items.slice(0, 15));
+    expect(paginate(items, 2, 15).items).toEqual(items.slice(30, 45));
+  });
+
+  test("reports the total page count", () => {
+    expect(paginate(items, 0, 15).totalPages).toBe(3);
+    expect(paginate(items, 0, 20).totalPages).toBe(3);
+  });
+
+  test("clamps an out-of-range page instead of erroring", () => {
+    // A stale pagination button must stay harmless after entries are removed.
+    expect(paginate(items, 99, 15).page).toBe(2);
+    expect(paginate(items, -5, 15).page).toBe(0);
+  });
+
+  test("an empty list still has one page", () => {
+    expect(paginate([], 0, 15)).toEqual({ items: [], page: 0, totalPages: 1 });
+  });
+});
 
 describe("karmaAmountFor", () => {
   test("awards a point when giving to someone else", () => {
