@@ -154,22 +154,31 @@ function pollVisibilityBoundary(
   return { since, query: buildVisibilityQuery(since) };
 }
 
-function isAfterCheckpoint(
-  closeTime: Date,
+function isAfterVisibilityCursor(
+  execution: Pick<FailedWorkflowExecution, "closeTime" | "startTime" | "runId">,
   checkpoint: WorkflowFailureWatchCheckpoint,
 ): boolean {
-  if (closeTime.getTime() < checkpoint.closeTime.getTime()) {
+  if (execution.closeTime.getTime() < checkpoint.closeTime.getTime()) {
     return true;
   }
-  if (closeTime.getTime() > checkpoint.closeTime.getTime()) {
+  if (execution.closeTime.getTime() > checkpoint.closeTime.getTime()) {
     return false;
   }
-  // Temporal's public AsyncIterable does not expose its visibility page token,
-  // and WorkflowExecutionInfo dates are only millisecond precision. Keep the
-  // full lookback query and conservatively retain every execution in the same
-  // millisecond as the checkpoint; duplicate Alertmanager labels are harmless,
-  // while skipping one would lose a production page.
-  return true;
+  // Older heartbeats do not have the start-time/run-id tie-breakers. Retain
+  // their entire close-time cohort rather than guessing and losing a page.
+  if (checkpoint.startTime === undefined) {
+    return true;
+  }
+  if (execution.startTime.getTime() < checkpoint.startTime.getTime()) {
+    return true;
+  }
+  if (execution.startTime.getTime() > checkpoint.startTime.getTime()) {
+    return false;
+  }
+  // Temporal visibility pages are newest-first by CloseTime DESC, then
+  // StartTime DESC, then RunId ASC. The retry resumes after the stored cursor,
+  // so equal-time rows with a greater run ID are the unprocessed suffix.
+  return execution.runId > checkpoint.runId;
 }
 
 type FailureDetailResult = {
@@ -355,7 +364,14 @@ export async function pollWorkflowFailuresOnce(
       }
       if (
         checkpoint !== undefined &&
-        !isAfterCheckpoint(info.closeTime, checkpoint)
+        !isAfterVisibilityCursor(
+          {
+            closeTime: info.closeTime,
+            startTime: info.startTime,
+            runId: info.runId,
+          },
+          checkpoint,
+        )
       ) {
         continue;
       }

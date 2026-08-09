@@ -38,6 +38,7 @@ import {
   jsonLog,
   safeHeartbeat,
   startToCloseTimeoutMsOrUndefined,
+  throwIfAgentTaskSecretRedactionFailed,
   workflowId,
 } from "#activities/agent-task-runtime.ts";
 import {
@@ -252,16 +253,14 @@ async function runAgent(
         redactionFailureController.record(error);
       }
 
-      if (redactionFailureController.failure !== undefined) {
-        agentTaskRunsTotal.inc({ provider, outcome: "redaction_failed" });
-        captureWithContext(redactionFailureController.failure, {
+      throwIfAgentTaskSecretRedactionFailed(
+        redactionFailureController.failure,
+        {
           provider,
           durationMs: result.durationMs,
-          phase: "secret-redaction",
           signal: result.signal,
-        });
-        throw redactionFailureController.failure;
-      }
+        },
+      );
 
       // Post-hoc Claude spans retain raw stdout in the LLM archive. Check the
       // final redaction state first so a refresh failure can never archive a

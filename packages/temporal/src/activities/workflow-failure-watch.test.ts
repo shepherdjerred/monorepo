@@ -817,6 +817,52 @@ describe("workflow failure watch checkpoints", () => {
       runId: "run-old",
     });
   });
+
+  it("advances within a same-millisecond visibility cohort", async () => {
+    const closeTime = new Date("2026-07-30T17:40:00.000Z");
+    const startTime = new Date("2026-07-30T17:35:00.000Z");
+    const executions = Array.from({ length: 25 }, (_, index) => ({
+      workflowId: `wf-cohort-${String(index)}`,
+      runId: `run-${String(index).padStart(2, "0")}`,
+      type: "syncGolinks",
+      taskQueue: "default",
+      startTime,
+      closeTime,
+      status: { name: "FAILED" },
+    }));
+    const checkpoint: WorkflowFailureWatchCheckpoint = {
+      closeTime,
+      startTime,
+      workflowId: "wf-cohort-15",
+      runId: "run-15",
+    };
+    const client = fakeClient(
+      executions,
+      Object.fromEntries(
+        executions.map((execution) => [
+          `${execution.workflowId}/${execution.runId}`,
+          rejectWithApplicationFailure("recovery failure"),
+        ]),
+      ),
+    );
+    const { poster, calls } = capturingPoster();
+
+    const result = await pollWorkflowFailuresOnce(client, poster, {
+      now: NOW,
+      lookbackMs: LOOKBACK_MS,
+      lookbackSince: new Date("2026-07-29T17:00:00.000Z"),
+      ttlMs: TTL_MS,
+      checkpoint,
+    });
+
+    expect(result).toEqual({ scanned: 9, alerted: 9, errored: 0 });
+    expect(calls[0]?.alerts.map((alert) => alert.labels["runId"])).toEqual(
+      Array.from(
+        { length: 9 },
+        (_, index) => `run-${String(index + 16).padStart(2, "0")}`,
+      ),
+    );
+  });
 });
 
 describe("pollWorkflowFailuresOnce", () => {

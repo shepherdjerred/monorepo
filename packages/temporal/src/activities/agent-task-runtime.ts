@@ -1,5 +1,7 @@
 import { Context } from "@temporalio/activity";
 import * as Sentry from "@sentry/bun";
+import { agentTaskRunsTotal } from "#observability/metrics.ts";
+import type { AgentTaskSecretRedactionError } from "#activities/agent-task-env.ts";
 import { getTraceContext } from "#observability/tracing.ts";
 import { workflowExecutionContext } from "#activities/temporal-context.ts";
 
@@ -53,6 +55,26 @@ export function captureWithContext(
     scope.setContext("agentTask", { ...info, ...extra });
     Sentry.captureException(error);
   });
+}
+
+export function throwIfAgentTaskSecretRedactionFailed(
+  failure: AgentTaskSecretRedactionError | undefined,
+  context: { provider: string; durationMs: number; signal: string },
+): void {
+  if (failure === undefined) {
+    return;
+  }
+  agentTaskRunsTotal.inc({
+    provider: context.provider,
+    outcome: "redaction_failed",
+  });
+  captureWithContext(failure, {
+    provider: context.provider,
+    durationMs: context.durationMs,
+    phase: "secret-redaction",
+    signal: context.signal,
+  });
+  throw failure;
 }
 
 export function safeHeartbeat(payload: Record<string, unknown>): void {
