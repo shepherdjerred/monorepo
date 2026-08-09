@@ -8,6 +8,19 @@
 //! enforced: an unrecognised core variant becomes a loud
 //! [`CoreError::Invariant`] carrying the thing it could not classify, not a
 //! `todo!()` and not a silently dropped error.
+//!
+//! ## The mirror runs in both directions
+//!
+//! Phase 6.5 exports the sync stack's host traits as UniFFI *foreign* traits, so
+//! a Swift storage or HTTP implementation now fails **inward**: the host returns
+//! a [`CoreError`] and the core's [`TaskApi`](tasknotes_core::sync::TaskApi)
+//! signature wants a [`tasknotes_core::Error`]. [`From<CoreError> for Error`]
+//! closes that direction, and it must be lossless — the sync engine's retry
+//! classifier branches on exactly `kind()` and `status()`, so a host's 503
+//! arriving as anything other than `Api { status: 503 }` would silently turn a
+//! transient failure into a dead-lettered command.
+//!
+//! [`From<CoreError> for Error`]: CoreError
 
 use tasknotes_core::{Error, ErrorKind};
 
@@ -99,6 +112,29 @@ impl From<&Error> for CoreError {
     }
 }
 
+impl From<CoreError> for Error {
+    /// Lift a host-reported failure back into the core's error type.
+    ///
+    /// The inverse of [`From<Error> for CoreError`](CoreError::from), and
+    /// exact: `kind()` and `status()` survive the round trip in both
+    /// directions, which is what the retry classifier reads. `NotFound` is
+    /// built by naming the variant rather than through
+    /// [`Error::not_found`](tasknotes_core::Error::not_found), because that
+    /// constructor *renders* `"<resource> not found: <id>"` and the message
+    /// coming back from the host is already rendered — re-rendering it would
+    /// nest the prefix.
+    fn from(error: CoreError) -> Self {
+        match error {
+            CoreError::Invariant { message } => Self::Invariant { message },
+            CoreError::Network { message } => Self::Network { message },
+            CoreError::Api { message, status } => Self::Api { message, status },
+            CoreError::Validation { message } => Self::Validation { message },
+            CoreError::NotFound { message } => Self::NotFound { message },
+            CoreError::Connection { message } => Self::Connection { message },
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use tasknotes_core::Error;
@@ -144,6 +180,35 @@ mod tests {
                 message: "Unable to connect to TaskNotes server".to_owned()
             }
         );
+    }
+
+    #[test]
+    fn the_mirror_round_trips_every_variant_without_losing_kind_or_status() {
+        // The engine's retry classifier reads exactly `kind()` and `status()`,
+        // so a host failure that changes either on the way in would silently
+        // reclassify a transient failure as a permanent one.
+        for error in [
+            Error::invariant("bug"),
+            Error::network("offline"),
+            Error::api("boom", 503),
+            Error::api("envelope said no", 0),
+            Error::validation("bad"),
+            Error::not_found("Task", "Tasks/gone.md"),
+            Error::connection(),
+        ] {
+            let lifted = Error::from(CoreError::from(&error));
+            assert_eq!(lifted, error);
+            assert_eq!(lifted.kind(), error.kind());
+            assert_eq!(lifted.status(), error.status());
+        }
+    }
+
+    #[test]
+    fn a_not_found_message_is_not_re_rendered_on_the_way_back_in() {
+        let lifted = Error::from(CoreError::NotFound {
+            message: "Task not found: Tasks/gone.md".to_owned(),
+        });
+        assert_eq!(lifted.message(), "Task not found: Tasks/gone.md");
     }
 
     #[test]

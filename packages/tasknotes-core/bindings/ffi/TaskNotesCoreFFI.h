@@ -243,6 +243,598 @@ typedef void (*UniffiForeignFutureCompleteVoid)(uint64_t, UniffiForeignFutureRes
     );
 
 #endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_CLOCK_METHOD0
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_CLOCK_METHOD0
+typedef void (*UniffiCallbackInterfaceClockMethod0)(uint64_t, int64_t* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_CLOCK_METHOD1
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_CLOCK_METHOD1
+typedef void (*UniffiCallbackInterfaceClockMethod1)(uint64_t, int64_t, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_MIGRATION_STORAGE_METHOD0
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_MIGRATION_STORAGE_METHOD0
+typedef void (*UniffiCallbackInterfaceMigrationStorageMethod0)(uint64_t, uint32_t* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_MIGRATION_STORAGE_METHOD1
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_MIGRATION_STORAGE_METHOD1
+typedef void (*UniffiCallbackInterfaceMigrationStorageMethod1)(uint64_t, uint32_t, void* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_MIGRATION_STORAGE_METHOD2
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_MIGRATION_STORAGE_METHOD2
+typedef void (*UniffiCallbackInterfaceMigrationStorageMethod2)(uint64_t, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_MIGRATION_STORAGE_METHOD3
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_MIGRATION_STORAGE_METHOD3
+typedef void (*UniffiCallbackInterfaceMigrationStorageMethod3)(uint64_t, void* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_MIGRATION_STORAGE_METHOD4
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_MIGRATION_STORAGE_METHOD4
+typedef void (*UniffiCallbackInterfaceMigrationStorageMethod4)(uint64_t, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_MIGRATION_STORAGE_METHOD5
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_MIGRATION_STORAGE_METHOD5
+typedef void (*UniffiCallbackInterfaceMigrationStorageMethod5)(uint64_t, RustBuffer, void* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_QUEUE_STORAGE_METHOD0
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_QUEUE_STORAGE_METHOD0
+typedef void (*UniffiCallbackInterfaceQueueStorageMethod0)(uint64_t, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_QUEUE_STORAGE_METHOD1
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_QUEUE_STORAGE_METHOD1
+typedef void (*UniffiCallbackInterfaceQueueStorageMethod1)(uint64_t, RustBuffer, void* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_QUEUE_STORAGE_METHOD2
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_QUEUE_STORAGE_METHOD2
+typedef void (*UniffiCallbackInterfaceQueueStorageMethod2)(uint64_t, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_QUEUE_STORAGE_METHOD3
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_QUEUE_STORAGE_METHOD3
+typedef void (*UniffiCallbackInterfaceQueueStorageMethod3)(uint64_t, RustBuffer, void* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_RANDOMNESS_METHOD0
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_RANDOMNESS_METHOD0
+typedef void (*UniffiCallbackInterfaceRandomnessMethod0)(uint64_t, uint32_t* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_RETRY_SCHEDULER_METHOD0
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_RETRY_SCHEDULER_METHOD0
+typedef void (*UniffiCallbackInterfaceRetrySchedulerMethod0)(uint64_t, int64_t, uint64_t* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_RETRY_SCHEDULER_METHOD1
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_RETRY_SCHEDULER_METHOD1
+typedef void (*UniffiCallbackInterfaceRetrySchedulerMethod1)(uint64_t, uint64_t, void* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TASK_API_METHOD0
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TASK_API_METHOD0
+typedef void (*UniffiCallbackInterfaceTaskApiMethod0)(uint64_t, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TASK_API_METHOD1
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TASK_API_METHOD1
+typedef void (*UniffiCallbackInterfaceTaskApiMethod1)(uint64_t, RustBuffer, RustBuffer, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TASK_API_METHOD2
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TASK_API_METHOD2
+typedef void (*UniffiCallbackInterfaceTaskApiMethod2)(uint64_t, RustBuffer, RustBuffer, RustBuffer, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TASK_API_METHOD3
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TASK_API_METHOD3
+typedef void (*UniffiCallbackInterfaceTaskApiMethod3)(uint64_t, RustBuffer, RustBuffer, void* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TASK_API_METHOD4
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TASK_API_METHOD4
+typedef void (*UniffiCallbackInterfaceTaskApiMethod4)(uint64_t, RustBuffer, RustBuffer, RustBuffer, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TASK_API_METHOD5
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TASK_API_METHOD5
+typedef void (*UniffiCallbackInterfaceTaskApiMethod5)(uint64_t, RustBuffer, RustBuffer, RustBuffer, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TASK_CACHE_STORAGE_METHOD0
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TASK_CACHE_STORAGE_METHOD0
+typedef void (*UniffiCallbackInterfaceTaskCacheStorageMethod0)(uint64_t, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TASK_CACHE_STORAGE_METHOD1
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TASK_CACHE_STORAGE_METHOD1
+typedef void (*UniffiCallbackInterfaceTaskCacheStorageMethod1)(uint64_t, RustBuffer, void* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TASK_CACHE_STORAGE_METHOD2
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TASK_CACHE_STORAGE_METHOD2
+typedef void (*UniffiCallbackInterfaceTaskCacheStorageMethod2)(uint64_t, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TASK_CACHE_STORAGE_METHOD3
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TASK_CACHE_STORAGE_METHOD3
+typedef void (*UniffiCallbackInterfaceTaskCacheStorageMethod3)(uint64_t, RustBuffer, void* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TASK_CACHE_STORAGE_METHOD4
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TASK_CACHE_STORAGE_METHOD4
+typedef void (*UniffiCallbackInterfaceTaskCacheStorageMethod4)(uint64_t, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TASK_CACHE_STORAGE_METHOD5
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TASK_CACHE_STORAGE_METHOD5
+typedef void (*UniffiCallbackInterfaceTaskCacheStorageMethod5)(uint64_t, int64_t, void* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_CLOCK
+#define UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_CLOCK
+typedef struct UniffiVTableCallbackInterfaceClock {
+    UniffiCallbackInterfaceFree _Nonnull uniffiFree;
+    UniffiCallbackInterfaceClone _Nonnull uniffiClone;
+    UniffiCallbackInterfaceClockMethod0 _Nonnull nowMillis;
+    UniffiCallbackInterfaceClockMethod1 _Nonnull localYmd;
+} UniffiVTableCallbackInterfaceClock;
+
+#endif
+#ifndef UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_MIGRATION_STORAGE
+#define UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_MIGRATION_STORAGE
+typedef struct UniffiVTableCallbackInterfaceMigrationStorage {
+    UniffiCallbackInterfaceFree _Nonnull uniffiFree;
+    UniffiCallbackInterfaceClone _Nonnull uniffiClone;
+    UniffiCallbackInterfaceMigrationStorageMethod0 _Nonnull readSchemaVersion;
+    UniffiCallbackInterfaceMigrationStorageMethod1 _Nonnull writeSchemaVersion;
+    UniffiCallbackInterfaceMigrationStorageMethod2 _Nonnull readLegacyQueue;
+    UniffiCallbackInterfaceMigrationStorageMethod3 _Nonnull removeLegacyQueue;
+    UniffiCallbackInterfaceMigrationStorageMethod4 _Nonnull readQueue;
+    UniffiCallbackInterfaceMigrationStorageMethod5 _Nonnull writeQueue;
+} UniffiVTableCallbackInterfaceMigrationStorage;
+
+#endif
+#ifndef UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_QUEUE_STORAGE
+#define UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_QUEUE_STORAGE
+typedef struct UniffiVTableCallbackInterfaceQueueStorage {
+    UniffiCallbackInterfaceFree _Nonnull uniffiFree;
+    UniffiCallbackInterfaceClone _Nonnull uniffiClone;
+    UniffiCallbackInterfaceQueueStorageMethod0 _Nonnull readQueue;
+    UniffiCallbackInterfaceQueueStorageMethod1 _Nonnull writeQueue;
+    UniffiCallbackInterfaceQueueStorageMethod2 _Nonnull readDeadLetter;
+    UniffiCallbackInterfaceQueueStorageMethod3 _Nonnull writeDeadLetter;
+} UniffiVTableCallbackInterfaceQueueStorage;
+
+#endif
+#ifndef UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_RANDOMNESS
+#define UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_RANDOMNESS
+typedef struct UniffiVTableCallbackInterfaceRandomness {
+    UniffiCallbackInterfaceFree _Nonnull uniffiFree;
+    UniffiCallbackInterfaceClone _Nonnull uniffiClone;
+    UniffiCallbackInterfaceRandomnessMethod0 _Nonnull nextUnitPpm;
+} UniffiVTableCallbackInterfaceRandomness;
+
+#endif
+#ifndef UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_RETRY_SCHEDULER
+#define UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_RETRY_SCHEDULER
+typedef struct UniffiVTableCallbackInterfaceRetryScheduler {
+    UniffiCallbackInterfaceFree _Nonnull uniffiFree;
+    UniffiCallbackInterfaceClone _Nonnull uniffiClone;
+    UniffiCallbackInterfaceRetrySchedulerMethod0 _Nonnull arm;
+    UniffiCallbackInterfaceRetrySchedulerMethod1 _Nonnull cancel;
+} UniffiVTableCallbackInterfaceRetryScheduler;
+
+#endif
+#ifndef UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_TASK_API
+#define UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_TASK_API
+typedef struct UniffiVTableCallbackInterfaceTaskApi {
+    UniffiCallbackInterfaceFree _Nonnull uniffiFree;
+    UniffiCallbackInterfaceClone _Nonnull uniffiClone;
+    UniffiCallbackInterfaceTaskApiMethod0 _Nonnull listTasks;
+    UniffiCallbackInterfaceTaskApiMethod1 _Nonnull createTask;
+    UniffiCallbackInterfaceTaskApiMethod2 _Nonnull updateTask;
+    UniffiCallbackInterfaceTaskApiMethod3 _Nonnull deleteTask;
+    UniffiCallbackInterfaceTaskApiMethod4 _Nonnull toggleTaskStatus;
+    UniffiCallbackInterfaceTaskApiMethod5 _Nonnull completeRecurringInstance;
+} UniffiVTableCallbackInterfaceTaskApi;
+
+#endif
+#ifndef UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_TASK_CACHE_STORAGE
+#define UNIFFI_FFIDEF_V_TABLE_CALLBACK_INTERFACE_TASK_CACHE_STORAGE
+typedef struct UniffiVTableCallbackInterfaceTaskCacheStorage {
+    UniffiCallbackInterfaceFree _Nonnull uniffiFree;
+    UniffiCallbackInterfaceClone _Nonnull uniffiClone;
+    UniffiCallbackInterfaceTaskCacheStorageMethod0 _Nonnull readTasks;
+    UniffiCallbackInterfaceTaskCacheStorageMethod1 _Nonnull writeTasks;
+    UniffiCallbackInterfaceTaskCacheStorageMethod2 _Nonnull readIdAliases;
+    UniffiCallbackInterfaceTaskCacheStorageMethod3 _Nonnull writeIdAliases;
+    UniffiCallbackInterfaceTaskCacheStorageMethod4 _Nonnull readLastSyncTime;
+    UniffiCallbackInterfaceTaskCacheStorageMethod5 _Nonnull writeLastSyncTime;
+} UniffiVTableCallbackInterfaceTaskCacheStorage;
+
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_CLONE_FFISYNCENGINE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_CLONE_FFISYNCENGINE
+uint64_t uniffi_tasknotes_core_ffi_fn_clone_ffisyncengine(uint64_t handle, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FREE_FFISYNCENGINE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FREE_FFISYNCENGINE
+void uniffi_tasknotes_core_ffi_fn_free_ffisyncengine(uint64_t handle, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_CONSTRUCTOR_FFISYNCENGINE_NEW
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_CONSTRUCTOR_FFISYNCENGINE_NEW
+uint64_t uniffi_tasknotes_core_ffi_fn_constructor_ffisyncengine_new(RustBuffer api, uint64_t queue_storage, uint64_t cache_storage, uint64_t clock, uint64_t scheduler, uint64_t random, int8_t auto_sync, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_FFISYNCENGINE_DISCARD_DEAD_LETTER
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_FFISYNCENGINE_DISCARD_DEAD_LETTER
+void uniffi_tasknotes_core_ffi_fn_method_ffisyncengine_discard_dead_letter(uint64_t ptr, RustBuffer id, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_FFISYNCENGINE_DISPATCH
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_FFISYNCENGINE_DISPATCH
+RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffisyncengine_dispatch(uint64_t ptr, RustBuffer input, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_FFISYNCENGINE_DISPOSE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_FFISYNCENGINE_DISPOSE
+void uniffi_tasknotes_core_ffi_fn_method_ffisyncengine_dispose(uint64_t ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_FFISYNCENGINE_IS_DISPOSED
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_FFISYNCENGINE_IS_DISPOSED
+int8_t uniffi_tasknotes_core_ffi_fn_method_ffisyncengine_is_disposed(uint64_t ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_FFISYNCENGINE_IS_SYNC_REQUESTED
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_FFISYNCENGINE_IS_SYNC_REQUESTED
+int8_t uniffi_tasknotes_core_ffi_fn_method_ffisyncengine_is_sync_requested(uint64_t ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_FFISYNCENGINE_REQUEST_SYNC
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_FFISYNCENGINE_REQUEST_SYNC
+void uniffi_tasknotes_core_ffi_fn_method_ffisyncengine_request_sync(uint64_t ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_FFISYNCENGINE_RESOLVE_TASK_ID
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_FFISYNCENGINE_RESOLVE_TASK_ID
+RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffisyncengine_resolve_task_id(uint64_t ptr, RustBuffer id, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_FFISYNCENGINE_RESTORE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_FFISYNCENGINE_RESTORE
+void uniffi_tasknotes_core_ffi_fn_method_ffisyncengine_restore(uint64_t ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_FFISYNCENGINE_RETRY_DEAD_LETTER
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_FFISYNCENGINE_RETRY_DEAD_LETTER
+void uniffi_tasknotes_core_ffi_fn_method_ffisyncengine_retry_dead_letter(uint64_t ptr, RustBuffer id, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_FFISYNCENGINE_SETTLE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_FFISYNCENGINE_SETTLE
+void uniffi_tasknotes_core_ffi_fn_method_ffisyncengine_settle(uint64_t ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_FFISYNCENGINE_SNAPSHOT
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_FFISYNCENGINE_SNAPSHOT
+RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffisyncengine_snapshot(uint64_t ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_FFISYNCENGINE_STATUS
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_FFISYNCENGINE_STATUS
+RustBuffer uniffi_tasknotes_core_ffi_fn_method_ffisyncengine_status(uint64_t ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_FFISYNCENGINE_SYNC_NOW
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_FFISYNCENGINE_SYNC_NOW
+void uniffi_tasknotes_core_ffi_fn_method_ffisyncengine_sync_now(uint64_t ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_CLONE_CLOCK
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_CLONE_CLOCK
+uint64_t uniffi_tasknotes_core_ffi_fn_clone_clock(uint64_t handle, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FREE_CLOCK
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FREE_CLOCK
+void uniffi_tasknotes_core_ffi_fn_free_clock(uint64_t handle, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_INIT_CALLBACK_VTABLE_CLOCK
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_INIT_CALLBACK_VTABLE_CLOCK
+void uniffi_tasknotes_core_ffi_fn_init_callback_vtable_clock(const UniffiVTableCallbackInterfaceClock* _Nonnull vtable
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_CLOCK_NOW_MILLIS
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_CLOCK_NOW_MILLIS
+int64_t uniffi_tasknotes_core_ffi_fn_method_clock_now_millis(uint64_t ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_CLOCK_LOCAL_YMD
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_CLOCK_LOCAL_YMD
+RustBuffer uniffi_tasknotes_core_ffi_fn_method_clock_local_ymd(uint64_t ptr, int64_t millis, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_CLONE_MIGRATIONSTORAGE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_CLONE_MIGRATIONSTORAGE
+uint64_t uniffi_tasknotes_core_ffi_fn_clone_migrationstorage(uint64_t handle, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FREE_MIGRATIONSTORAGE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FREE_MIGRATIONSTORAGE
+void uniffi_tasknotes_core_ffi_fn_free_migrationstorage(uint64_t handle, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_INIT_CALLBACK_VTABLE_MIGRATIONSTORAGE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_INIT_CALLBACK_VTABLE_MIGRATIONSTORAGE
+void uniffi_tasknotes_core_ffi_fn_init_callback_vtable_migrationstorage(const UniffiVTableCallbackInterfaceMigrationStorage* _Nonnull vtable
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_MIGRATIONSTORAGE_READ_SCHEMA_VERSION
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_MIGRATIONSTORAGE_READ_SCHEMA_VERSION
+uint32_t uniffi_tasknotes_core_ffi_fn_method_migrationstorage_read_schema_version(uint64_t ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_MIGRATIONSTORAGE_WRITE_SCHEMA_VERSION
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_MIGRATIONSTORAGE_WRITE_SCHEMA_VERSION
+void uniffi_tasknotes_core_ffi_fn_method_migrationstorage_write_schema_version(uint64_t ptr, uint32_t version, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_MIGRATIONSTORAGE_READ_LEGACY_QUEUE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_MIGRATIONSTORAGE_READ_LEGACY_QUEUE
+RustBuffer uniffi_tasknotes_core_ffi_fn_method_migrationstorage_read_legacy_queue(uint64_t ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_MIGRATIONSTORAGE_REMOVE_LEGACY_QUEUE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_MIGRATIONSTORAGE_REMOVE_LEGACY_QUEUE
+void uniffi_tasknotes_core_ffi_fn_method_migrationstorage_remove_legacy_queue(uint64_t ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_MIGRATIONSTORAGE_READ_QUEUE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_MIGRATIONSTORAGE_READ_QUEUE
+RustBuffer uniffi_tasknotes_core_ffi_fn_method_migrationstorage_read_queue(uint64_t ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_MIGRATIONSTORAGE_WRITE_QUEUE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_MIGRATIONSTORAGE_WRITE_QUEUE
+void uniffi_tasknotes_core_ffi_fn_method_migrationstorage_write_queue(uint64_t ptr, RustBuffer data, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_CLONE_QUEUESTORAGE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_CLONE_QUEUESTORAGE
+uint64_t uniffi_tasknotes_core_ffi_fn_clone_queuestorage(uint64_t handle, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FREE_QUEUESTORAGE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FREE_QUEUESTORAGE
+void uniffi_tasknotes_core_ffi_fn_free_queuestorage(uint64_t handle, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_INIT_CALLBACK_VTABLE_QUEUESTORAGE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_INIT_CALLBACK_VTABLE_QUEUESTORAGE
+void uniffi_tasknotes_core_ffi_fn_init_callback_vtable_queuestorage(const UniffiVTableCallbackInterfaceQueueStorage* _Nonnull vtable
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_QUEUESTORAGE_READ_QUEUE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_QUEUESTORAGE_READ_QUEUE
+RustBuffer uniffi_tasknotes_core_ffi_fn_method_queuestorage_read_queue(uint64_t ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_QUEUESTORAGE_WRITE_QUEUE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_QUEUESTORAGE_WRITE_QUEUE
+void uniffi_tasknotes_core_ffi_fn_method_queuestorage_write_queue(uint64_t ptr, RustBuffer data, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_QUEUESTORAGE_READ_DEAD_LETTER
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_QUEUESTORAGE_READ_DEAD_LETTER
+RustBuffer uniffi_tasknotes_core_ffi_fn_method_queuestorage_read_dead_letter(uint64_t ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_QUEUESTORAGE_WRITE_DEAD_LETTER
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_QUEUESTORAGE_WRITE_DEAD_LETTER
+void uniffi_tasknotes_core_ffi_fn_method_queuestorage_write_dead_letter(uint64_t ptr, RustBuffer data, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_CLONE_RANDOMNESS
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_CLONE_RANDOMNESS
+uint64_t uniffi_tasknotes_core_ffi_fn_clone_randomness(uint64_t handle, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FREE_RANDOMNESS
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FREE_RANDOMNESS
+void uniffi_tasknotes_core_ffi_fn_free_randomness(uint64_t handle, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_INIT_CALLBACK_VTABLE_RANDOMNESS
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_INIT_CALLBACK_VTABLE_RANDOMNESS
+void uniffi_tasknotes_core_ffi_fn_init_callback_vtable_randomness(const UniffiVTableCallbackInterfaceRandomness* _Nonnull vtable
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_RANDOMNESS_NEXT_UNIT_PPM
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_RANDOMNESS_NEXT_UNIT_PPM
+uint32_t uniffi_tasknotes_core_ffi_fn_method_randomness_next_unit_ppm(uint64_t ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_CLONE_RETRYSCHEDULER
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_CLONE_RETRYSCHEDULER
+uint64_t uniffi_tasknotes_core_ffi_fn_clone_retryscheduler(uint64_t handle, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FREE_RETRYSCHEDULER
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FREE_RETRYSCHEDULER
+void uniffi_tasknotes_core_ffi_fn_free_retryscheduler(uint64_t handle, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_INIT_CALLBACK_VTABLE_RETRYSCHEDULER
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_INIT_CALLBACK_VTABLE_RETRYSCHEDULER
+void uniffi_tasknotes_core_ffi_fn_init_callback_vtable_retryscheduler(const UniffiVTableCallbackInterfaceRetryScheduler* _Nonnull vtable
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_RETRYSCHEDULER_ARM
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_RETRYSCHEDULER_ARM
+uint64_t uniffi_tasknotes_core_ffi_fn_method_retryscheduler_arm(uint64_t ptr, int64_t delay_millis, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_RETRYSCHEDULER_CANCEL
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_RETRYSCHEDULER_CANCEL
+void uniffi_tasknotes_core_ffi_fn_method_retryscheduler_cancel(uint64_t ptr, uint64_t timer, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_CLONE_TASKAPI
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_CLONE_TASKAPI
+uint64_t uniffi_tasknotes_core_ffi_fn_clone_taskapi(uint64_t handle, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FREE_TASKAPI
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FREE_TASKAPI
+void uniffi_tasknotes_core_ffi_fn_free_taskapi(uint64_t handle, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_INIT_CALLBACK_VTABLE_TASKAPI
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_INIT_CALLBACK_VTABLE_TASKAPI
+void uniffi_tasknotes_core_ffi_fn_init_callback_vtable_taskapi(const UniffiVTableCallbackInterfaceTaskApi* _Nonnull vtable
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_TASKAPI_LIST_TASKS
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_TASKAPI_LIST_TASKS
+RustBuffer uniffi_tasknotes_core_ffi_fn_method_taskapi_list_tasks(uint64_t ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_TASKAPI_CREATE_TASK
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_TASKAPI_CREATE_TASK
+RustBuffer uniffi_tasknotes_core_ffi_fn_method_taskapi_create_task(uint64_t ptr, RustBuffer request, RustBuffer mutation_id, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_TASKAPI_UPDATE_TASK
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_TASKAPI_UPDATE_TASK
+RustBuffer uniffi_tasknotes_core_ffi_fn_method_taskapi_update_task(uint64_t ptr, RustBuffer id, RustBuffer request, RustBuffer mutation_id, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_TASKAPI_DELETE_TASK
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_TASKAPI_DELETE_TASK
+void uniffi_tasknotes_core_ffi_fn_method_taskapi_delete_task(uint64_t ptr, RustBuffer id, RustBuffer mutation_id, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_TASKAPI_TOGGLE_TASK_STATUS
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_TASKAPI_TOGGLE_TASK_STATUS
+RustBuffer uniffi_tasknotes_core_ffi_fn_method_taskapi_toggle_task_status(uint64_t ptr, RustBuffer id, RustBuffer status, RustBuffer mutation_id, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_TASKAPI_COMPLETE_RECURRING_INSTANCE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_TASKAPI_COMPLETE_RECURRING_INSTANCE
+RustBuffer uniffi_tasknotes_core_ffi_fn_method_taskapi_complete_recurring_instance(uint64_t ptr, RustBuffer id, RustBuffer instance, RustBuffer mutation_id, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_CLONE_TASKCACHESTORAGE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_CLONE_TASKCACHESTORAGE
+uint64_t uniffi_tasknotes_core_ffi_fn_clone_taskcachestorage(uint64_t handle, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FREE_TASKCACHESTORAGE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FREE_TASKCACHESTORAGE
+void uniffi_tasknotes_core_ffi_fn_free_taskcachestorage(uint64_t handle, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_INIT_CALLBACK_VTABLE_TASKCACHESTORAGE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_INIT_CALLBACK_VTABLE_TASKCACHESTORAGE
+void uniffi_tasknotes_core_ffi_fn_init_callback_vtable_taskcachestorage(const UniffiVTableCallbackInterfaceTaskCacheStorage* _Nonnull vtable
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_TASKCACHESTORAGE_READ_TASKS
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_TASKCACHESTORAGE_READ_TASKS
+RustBuffer uniffi_tasknotes_core_ffi_fn_method_taskcachestorage_read_tasks(uint64_t ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_TASKCACHESTORAGE_WRITE_TASKS
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_TASKCACHESTORAGE_WRITE_TASKS
+void uniffi_tasknotes_core_ffi_fn_method_taskcachestorage_write_tasks(uint64_t ptr, RustBuffer tasks, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_TASKCACHESTORAGE_READ_ID_ALIASES
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_TASKCACHESTORAGE_READ_ID_ALIASES
+RustBuffer uniffi_tasknotes_core_ffi_fn_method_taskcachestorage_read_id_aliases(uint64_t ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_TASKCACHESTORAGE_WRITE_ID_ALIASES
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_TASKCACHESTORAGE_WRITE_ID_ALIASES
+void uniffi_tasknotes_core_ffi_fn_method_taskcachestorage_write_id_aliases(uint64_t ptr, RustBuffer data, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_TASKCACHESTORAGE_READ_LAST_SYNC_TIME
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_TASKCACHESTORAGE_READ_LAST_SYNC_TIME
+RustBuffer uniffi_tasknotes_core_ffi_fn_method_taskcachestorage_read_last_sync_time(uint64_t ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_TASKCACHESTORAGE_WRITE_LAST_SYNC_TIME
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_TASKCACHESTORAGE_WRITE_LAST_SYNC_TIME
+void uniffi_tasknotes_core_ffi_fn_method_taskcachestorage_write_last_sync_time(uint64_t ptr, int64_t millis, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_CORE_VERSION
 #define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_CORE_VERSION
 RustBuffer uniffi_tasknotes_core_ffi_fn_func_core_version(RustCallStatus *_Nonnull out_status
@@ -359,6 +951,161 @@ RustBuffer uniffi_tasknotes_core_ffi_fn_func_update_task_request_from_json(RustB
 #ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_UPDATE_TASK_REQUEST_TO_JSON
 #define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_UPDATE_TASK_REQUEST_TO_JSON
 RustBuffer uniffi_tasknotes_core_ffi_fn_func_update_task_request_to_json(RustBuffer request, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_CALENDAR_MAX_YEAR
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_CALENDAR_MAX_YEAR
+int32_t uniffi_tasknotes_core_ffi_fn_func_calendar_max_year(RustCallStatus *_Nonnull out_status
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_CALENDAR_MIN_YEAR
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_CALENDAR_MIN_YEAR
+int32_t uniffi_tasknotes_core_ffi_fn_func_calendar_min_year(RustCallStatus *_Nonnull out_status
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_CALENDAR_MONTH_ADD
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_CALENDAR_MONTH_ADD
+RustBuffer uniffi_tasknotes_core_ffi_fn_func_calendar_month_add(RustBuffer month, int32_t delta, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_CALENDAR_MONTH_DAY_COUNT
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_CALENDAR_MONTH_DAY_COUNT
+uint8_t uniffi_tasknotes_core_ffi_fn_func_calendar_month_day_count(RustBuffer month, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_CALENDAR_MONTH_FIRST_DAY
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_CALENDAR_MONTH_FIRST_DAY
+RustBuffer uniffi_tasknotes_core_ffi_fn_func_calendar_month_first_day(RustBuffer month, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_CALENDAR_MONTH_GRID
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_CALENDAR_MONTH_GRID
+RustBuffer uniffi_tasknotes_core_ffi_fn_func_calendar_month_grid(RustBuffer month, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_CALENDAR_MONTH_OF
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_CALENDAR_MONTH_OF
+RustBuffer uniffi_tasknotes_core_ffi_fn_func_calendar_month_of(RustBuffer date, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_CALENDAR_MONTH_TITLE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_CALENDAR_MONTH_TITLE
+RustBuffer uniffi_tasknotes_core_ffi_fn_func_calendar_month_title(RustBuffer month, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_CALENDAR_WEEKDAYS
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_CALENDAR_WEEKDAYS
+RustBuffer uniffi_tasknotes_core_ffi_fn_func_calendar_weekdays(RustCallStatus *_Nonnull out_status
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_DATE_DEFAULT_UPCOMING_DAYS
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_DATE_DEFAULT_UPCOMING_DAYS
+uint32_t uniffi_tasknotes_core_ffi_fn_func_date_default_upcoming_days(RustCallStatus *_Nonnull out_status
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_DATE_GROUP
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_DATE_GROUP
+RustBuffer uniffi_tasknotes_core_ffi_fn_func_date_group(RustBuffer date, RustBuffer today, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_DATE_GROUP_HEADING
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_DATE_GROUP_HEADING
+RustBuffer uniffi_tasknotes_core_ffi_fn_func_date_group_heading(RustBuffer group, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_DATE_IS_OVERDUE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_DATE_IS_OVERDUE
+int8_t uniffi_tasknotes_core_ffi_fn_func_date_is_overdue(RustBuffer date, RustBuffer today, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_DATE_IS_TODAY
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_DATE_IS_TODAY
+int8_t uniffi_tasknotes_core_ffi_fn_func_date_is_today(RustBuffer date, RustBuffer today, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_DATE_IS_UPCOMING
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_DATE_IS_UPCOMING
+int8_t uniffi_tasknotes_core_ffi_fn_func_date_is_upcoming(RustBuffer date, RustBuffer today, RustBuffer horizon, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_DATE_NEXT_MONDAY
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_DATE_NEXT_MONDAY
+RustBuffer uniffi_tasknotes_core_ffi_fn_func_date_next_monday(RustBuffer from, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_DATE_NEXT_SATURDAY
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_DATE_NEXT_SATURDAY
+RustBuffer uniffi_tasknotes_core_ffi_fn_func_date_next_saturday(RustBuffer from, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_DATE_NEXT_WEEKDAY
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_DATE_NEXT_WEEKDAY
+RustBuffer uniffi_tasknotes_core_ffi_fn_func_date_next_weekday(RustBuffer from, RustBuffer weekday, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_DATE_PARSE_LOCAL
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_DATE_PARSE_LOCAL
+RustBuffer uniffi_tasknotes_core_ffi_fn_func_date_parse_local(RustBuffer raw, int32_t viewer_utc_offset_seconds, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_ELAPSED_FORMAT
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_ELAPSED_FORMAT
+RustBuffer uniffi_tasknotes_core_ffi_fn_func_elapsed_format(uint64_t seconds, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_ELAPSED_SECONDS_SINCE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_ELAPSED_SECONDS_SINCE
+uint64_t uniffi_tasknotes_core_ffi_fn_func_elapsed_seconds_since(RustBuffer start, RustBuffer now, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_MIGRATION_CURRENT_SCHEMA_VERSION
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_MIGRATION_CURRENT_SCHEMA_VERSION
+uint32_t uniffi_tasknotes_core_ffi_fn_func_migration_current_schema_version(RustCallStatus *_Nonnull out_status
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_RUN_MIGRATIONS
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_RUN_MIGRATIONS
+void uniffi_tasknotes_core_ffi_fn_func_run_migrations(uint64_t storage, uint64_t clock, uint64_t random, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_PARSE_TASK_INPUT
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_PARSE_TASK_INPUT
+RustBuffer uniffi_tasknotes_core_ffi_fn_func_parse_task_input(RustBuffer input, RustBuffer today, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_RECURRENCE_FINITE_INSTANCE_COUNT
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_RECURRENCE_FINITE_INSTANCE_COUNT
+RustBuffer uniffi_tasknotes_core_ffi_fn_func_recurrence_finite_instance_count(RustBuffer text, RustBuffer scheduled, RustBuffer date_created, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_RECURRENCE_FREQUENCY
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_RECURRENCE_FREQUENCY
+RustBuffer uniffi_tasknotes_core_ffi_fn_func_recurrence_frequency(RustBuffer text, RustBuffer scheduled, RustBuffer date_created, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_RECURRENCE_IS_EXPANDABLE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_RECURRENCE_IS_EXPANDABLE
+int8_t uniffi_tasknotes_core_ffi_fn_func_recurrence_is_expandable(RustBuffer text, RustBuffer scheduled, RustBuffer date_created, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_RECURRENCE_NEXT_UNCOMPLETED_OCCURRENCE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_RECURRENCE_NEXT_UNCOMPLETED_OCCURRENCE
+RustBuffer uniffi_tasknotes_core_ffi_fn_func_recurrence_next_uncompleted_occurrence(RustBuffer text, RustBuffer scheduled, RustBuffer date_created, RustBuffer today, RustBuffer anchor, RustBuffer complete_instances, RustBuffer skipped_instances, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_RECURRENCE_OCCURRENCES
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_RECURRENCE_OCCURRENCES
+RustBuffer uniffi_tasknotes_core_ffi_fn_func_recurrence_occurrences(RustBuffer text, RustBuffer scheduled, RustBuffer date_created, RustBuffer start, RustBuffer end, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_RECURRENCE_OCCURS_ON
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_RECURRENCE_OCCURS_ON
+int8_t uniffi_tasknotes_core_ffi_fn_func_recurrence_occurs_on(RustBuffer text, RustBuffer scheduled, RustBuffer date_created, RustBuffer date, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_FFI_TASKNOTES_CORE_FFI_RUSTBUFFER_ALLOC
@@ -756,6 +1503,432 @@ uint16_t uniffi_tasknotes_core_ffi_checksum_func_update_task_request_from_json(v
 #ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_UPDATE_TASK_REQUEST_TO_JSON
 #define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_UPDATE_TASK_REQUEST_TO_JSON
 uint16_t uniffi_tasknotes_core_ffi_checksum_func_update_task_request_to_json(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_CALENDAR_MAX_YEAR
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_CALENDAR_MAX_YEAR
+uint16_t uniffi_tasknotes_core_ffi_checksum_func_calendar_max_year(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_CALENDAR_MIN_YEAR
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_CALENDAR_MIN_YEAR
+uint16_t uniffi_tasknotes_core_ffi_checksum_func_calendar_min_year(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_CALENDAR_MONTH_ADD
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_CALENDAR_MONTH_ADD
+uint16_t uniffi_tasknotes_core_ffi_checksum_func_calendar_month_add(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_CALENDAR_MONTH_DAY_COUNT
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_CALENDAR_MONTH_DAY_COUNT
+uint16_t uniffi_tasknotes_core_ffi_checksum_func_calendar_month_day_count(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_CALENDAR_MONTH_FIRST_DAY
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_CALENDAR_MONTH_FIRST_DAY
+uint16_t uniffi_tasknotes_core_ffi_checksum_func_calendar_month_first_day(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_CALENDAR_MONTH_GRID
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_CALENDAR_MONTH_GRID
+uint16_t uniffi_tasknotes_core_ffi_checksum_func_calendar_month_grid(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_CALENDAR_MONTH_OF
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_CALENDAR_MONTH_OF
+uint16_t uniffi_tasknotes_core_ffi_checksum_func_calendar_month_of(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_CALENDAR_MONTH_TITLE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_CALENDAR_MONTH_TITLE
+uint16_t uniffi_tasknotes_core_ffi_checksum_func_calendar_month_title(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_CALENDAR_WEEKDAYS
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_CALENDAR_WEEKDAYS
+uint16_t uniffi_tasknotes_core_ffi_checksum_func_calendar_weekdays(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_DATE_DEFAULT_UPCOMING_DAYS
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_DATE_DEFAULT_UPCOMING_DAYS
+uint16_t uniffi_tasknotes_core_ffi_checksum_func_date_default_upcoming_days(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_DATE_GROUP
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_DATE_GROUP
+uint16_t uniffi_tasknotes_core_ffi_checksum_func_date_group(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_DATE_GROUP_HEADING
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_DATE_GROUP_HEADING
+uint16_t uniffi_tasknotes_core_ffi_checksum_func_date_group_heading(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_DATE_IS_OVERDUE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_DATE_IS_OVERDUE
+uint16_t uniffi_tasknotes_core_ffi_checksum_func_date_is_overdue(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_DATE_IS_TODAY
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_DATE_IS_TODAY
+uint16_t uniffi_tasknotes_core_ffi_checksum_func_date_is_today(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_DATE_IS_UPCOMING
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_DATE_IS_UPCOMING
+uint16_t uniffi_tasknotes_core_ffi_checksum_func_date_is_upcoming(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_DATE_NEXT_MONDAY
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_DATE_NEXT_MONDAY
+uint16_t uniffi_tasknotes_core_ffi_checksum_func_date_next_monday(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_DATE_NEXT_SATURDAY
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_DATE_NEXT_SATURDAY
+uint16_t uniffi_tasknotes_core_ffi_checksum_func_date_next_saturday(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_DATE_NEXT_WEEKDAY
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_DATE_NEXT_WEEKDAY
+uint16_t uniffi_tasknotes_core_ffi_checksum_func_date_next_weekday(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_DATE_PARSE_LOCAL
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_DATE_PARSE_LOCAL
+uint16_t uniffi_tasknotes_core_ffi_checksum_func_date_parse_local(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_ELAPSED_FORMAT
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_ELAPSED_FORMAT
+uint16_t uniffi_tasknotes_core_ffi_checksum_func_elapsed_format(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_ELAPSED_SECONDS_SINCE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_ELAPSED_SECONDS_SINCE
+uint16_t uniffi_tasknotes_core_ffi_checksum_func_elapsed_seconds_since(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_MIGRATION_CURRENT_SCHEMA_VERSION
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_MIGRATION_CURRENT_SCHEMA_VERSION
+uint16_t uniffi_tasknotes_core_ffi_checksum_func_migration_current_schema_version(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_RUN_MIGRATIONS
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_RUN_MIGRATIONS
+uint16_t uniffi_tasknotes_core_ffi_checksum_func_run_migrations(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_PARSE_TASK_INPUT
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_PARSE_TASK_INPUT
+uint16_t uniffi_tasknotes_core_ffi_checksum_func_parse_task_input(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_RECURRENCE_FINITE_INSTANCE_COUNT
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_RECURRENCE_FINITE_INSTANCE_COUNT
+uint16_t uniffi_tasknotes_core_ffi_checksum_func_recurrence_finite_instance_count(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_RECURRENCE_FREQUENCY
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_RECURRENCE_FREQUENCY
+uint16_t uniffi_tasknotes_core_ffi_checksum_func_recurrence_frequency(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_RECURRENCE_IS_EXPANDABLE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_RECURRENCE_IS_EXPANDABLE
+uint16_t uniffi_tasknotes_core_ffi_checksum_func_recurrence_is_expandable(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_RECURRENCE_NEXT_UNCOMPLETED_OCCURRENCE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_RECURRENCE_NEXT_UNCOMPLETED_OCCURRENCE
+uint16_t uniffi_tasknotes_core_ffi_checksum_func_recurrence_next_uncompleted_occurrence(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_RECURRENCE_OCCURRENCES
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_RECURRENCE_OCCURRENCES
+uint16_t uniffi_tasknotes_core_ffi_checksum_func_recurrence_occurrences(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_RECURRENCE_OCCURS_ON
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_RECURRENCE_OCCURS_ON
+uint16_t uniffi_tasknotes_core_ffi_checksum_func_recurrence_occurs_on(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_FFISYNCENGINE_DISCARD_DEAD_LETTER
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_FFISYNCENGINE_DISCARD_DEAD_LETTER
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_discard_dead_letter(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_FFISYNCENGINE_DISPATCH
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_FFISYNCENGINE_DISPATCH
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_dispatch(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_FFISYNCENGINE_DISPOSE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_FFISYNCENGINE_DISPOSE
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_dispose(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_FFISYNCENGINE_IS_DISPOSED
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_FFISYNCENGINE_IS_DISPOSED
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_is_disposed(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_FFISYNCENGINE_IS_SYNC_REQUESTED
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_FFISYNCENGINE_IS_SYNC_REQUESTED
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_is_sync_requested(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_FFISYNCENGINE_REQUEST_SYNC
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_FFISYNCENGINE_REQUEST_SYNC
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_request_sync(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_FFISYNCENGINE_RESOLVE_TASK_ID
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_FFISYNCENGINE_RESOLVE_TASK_ID
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_resolve_task_id(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_FFISYNCENGINE_RESTORE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_FFISYNCENGINE_RESTORE
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_restore(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_FFISYNCENGINE_RETRY_DEAD_LETTER
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_FFISYNCENGINE_RETRY_DEAD_LETTER
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_retry_dead_letter(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_FFISYNCENGINE_SETTLE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_FFISYNCENGINE_SETTLE
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_settle(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_FFISYNCENGINE_SNAPSHOT
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_FFISYNCENGINE_SNAPSHOT
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_snapshot(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_FFISYNCENGINE_STATUS
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_FFISYNCENGINE_STATUS
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_status(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_FFISYNCENGINE_SYNC_NOW
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_FFISYNCENGINE_SYNC_NOW
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_sync_now(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_CLOCK_NOW_MILLIS
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_CLOCK_NOW_MILLIS
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_clock_now_millis(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_CLOCK_LOCAL_YMD
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_CLOCK_LOCAL_YMD
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_clock_local_ymd(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_MIGRATIONSTORAGE_READ_SCHEMA_VERSION
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_MIGRATIONSTORAGE_READ_SCHEMA_VERSION
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_migrationstorage_read_schema_version(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_MIGRATIONSTORAGE_WRITE_SCHEMA_VERSION
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_MIGRATIONSTORAGE_WRITE_SCHEMA_VERSION
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_migrationstorage_write_schema_version(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_MIGRATIONSTORAGE_READ_LEGACY_QUEUE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_MIGRATIONSTORAGE_READ_LEGACY_QUEUE
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_migrationstorage_read_legacy_queue(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_MIGRATIONSTORAGE_REMOVE_LEGACY_QUEUE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_MIGRATIONSTORAGE_REMOVE_LEGACY_QUEUE
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_migrationstorage_remove_legacy_queue(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_MIGRATIONSTORAGE_READ_QUEUE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_MIGRATIONSTORAGE_READ_QUEUE
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_migrationstorage_read_queue(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_MIGRATIONSTORAGE_WRITE_QUEUE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_MIGRATIONSTORAGE_WRITE_QUEUE
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_migrationstorage_write_queue(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_QUEUESTORAGE_READ_QUEUE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_QUEUESTORAGE_READ_QUEUE
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_queuestorage_read_queue(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_QUEUESTORAGE_WRITE_QUEUE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_QUEUESTORAGE_WRITE_QUEUE
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_queuestorage_write_queue(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_QUEUESTORAGE_READ_DEAD_LETTER
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_QUEUESTORAGE_READ_DEAD_LETTER
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_queuestorage_read_dead_letter(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_QUEUESTORAGE_WRITE_DEAD_LETTER
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_QUEUESTORAGE_WRITE_DEAD_LETTER
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_queuestorage_write_dead_letter(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_RANDOMNESS_NEXT_UNIT_PPM
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_RANDOMNESS_NEXT_UNIT_PPM
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_randomness_next_unit_ppm(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_RETRYSCHEDULER_ARM
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_RETRYSCHEDULER_ARM
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_retryscheduler_arm(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_RETRYSCHEDULER_CANCEL
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_RETRYSCHEDULER_CANCEL
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_retryscheduler_cancel(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_TASKAPI_LIST_TASKS
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_TASKAPI_LIST_TASKS
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_taskapi_list_tasks(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_TASKAPI_CREATE_TASK
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_TASKAPI_CREATE_TASK
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_taskapi_create_task(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_TASKAPI_UPDATE_TASK
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_TASKAPI_UPDATE_TASK
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_taskapi_update_task(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_TASKAPI_DELETE_TASK
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_TASKAPI_DELETE_TASK
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_taskapi_delete_task(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_TASKAPI_TOGGLE_TASK_STATUS
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_TASKAPI_TOGGLE_TASK_STATUS
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_taskapi_toggle_task_status(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_TASKAPI_COMPLETE_RECURRING_INSTANCE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_TASKAPI_COMPLETE_RECURRING_INSTANCE
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_taskapi_complete_recurring_instance(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_TASKCACHESTORAGE_READ_TASKS
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_TASKCACHESTORAGE_READ_TASKS
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_read_tasks(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_TASKCACHESTORAGE_WRITE_TASKS
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_TASKCACHESTORAGE_WRITE_TASKS
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_tasks(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_TASKCACHESTORAGE_READ_ID_ALIASES
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_TASKCACHESTORAGE_READ_ID_ALIASES
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_read_id_aliases(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_TASKCACHESTORAGE_WRITE_ID_ALIASES
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_TASKCACHESTORAGE_WRITE_ID_ALIASES
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_id_aliases(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_TASKCACHESTORAGE_READ_LAST_SYNC_TIME
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_TASKCACHESTORAGE_READ_LAST_SYNC_TIME
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_read_last_sync_time(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_TASKCACHESTORAGE_WRITE_LAST_SYNC_TIME
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_TASKCACHESTORAGE_WRITE_LAST_SYNC_TIME
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_last_sync_time(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_CONSTRUCTOR_FFISYNCENGINE_NEW
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_CONSTRUCTOR_FFISYNCENGINE_NEW
+uint16_t uniffi_tasknotes_core_ffi_checksum_constructor_ffisyncengine_new(void
     
 );
 #endif

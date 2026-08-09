@@ -5,10 +5,11 @@
 //! second thought, that thought belongs in the pure crate where it can be
 //! property-tested, mutation-tested, and run under miri.
 //!
-//! The surface is deliberately limited to the Phase 3 domain layer: recurrence
-//! (Phase 2), the sync stack (Phase 4), and the pure lib helpers (Phase 5) get
-//! their own exports once their Rust APIs exist. Adding them later is additive
-//! and shows up in the committed bindings diff.
+//! This module covers the Phase 3 domain layer only. The rest of the exported
+//! surface lives beside the layer it projects: recurrence in
+//! [`crate::recurrence`], the sync stack in [`crate::host`] and
+//! [`crate::engine`], and the pure lib helpers in [`crate::dates`],
+//! [`crate::calendar`], [`crate::nlp`] and [`crate::elapsed`].
 //!
 //! Naming is `<subject>_<verb>` rather than `<verb>_<subject>` so the generated
 //! Swift free functions group by subject at a call site — `taskStatusLabel`,

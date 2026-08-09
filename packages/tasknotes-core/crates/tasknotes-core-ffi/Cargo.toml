@@ -33,6 +33,10 @@ path = "src/bin/uniffi-bindgen-swift.rs"
 required-features = ["cli"]
 
 [dependencies]
+# Naive dates cross this boundary as ISO `YYYY-MM-DD` strings, so the FFI layer
+# has to parse and render them to call the core's `NaiveDate` APIs. Same
+# workspace pin as the core; no new dependency enters the lockfile.
+chrono = { workspace = true }
 serde_json = { workspace = true }
 tasknotes-core = { path = "../tasknotes-core" }
 thiserror = { workspace = true }

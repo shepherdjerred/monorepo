@@ -26,10 +26,12 @@
 //!
 //! | mechanism | used for | module |
 //! |---|---|---|
-//! | `uniffi::custom_type!` | the validated string newtypes and `ExtraFields` | [`convert`] |
+//! | `uniffi::custom_type!` | the validated string newtypes, `ExtraFields`, `TimerId` | [`convert`] |
 //! | `#[uniffi::remote(...)]` | core enums and records that are already exportable | [`types`] |
-//! | hand-written mirrors | only where UniFFI cannot express the core type | [`update`], [`error`] |
-//! | `#[uniffi::export]` | the callable surface | [`api`] |
+//! | hand-written mirrors | only where UniFFI cannot express the core type | [`update`], [`error`], [`command`], [`engine`] |
+//! | `#[uniffi::export(with_foreign)]` | the traits the *host* implements | [`host`] |
+//! | `#[derive(uniffi::Object)]` | the one stateful handle, the sync engine | [`engine`] |
+//! | `#[uniffi::export]` | the callable surface | [`api`], [`engine`], [`recurrence`], [`dates`], [`calendar`], [`nlp`], [`elapsed`] |
 //!
 //! Preferring `#[uniffi::remote(...)]` over mirrored structs is deliberate: a
 //! remote derive re-states the core type's fields *in this crate*, so the ABI
@@ -54,11 +56,24 @@
 uniffi::setup_scaffolding!("TaskNotesCore");
 
 pub mod api;
+pub mod calendar;
+pub mod command;
 pub mod convert;
+pub mod dates;
+pub mod elapsed;
+pub mod engine;
 pub mod error;
+pub mod host;
+pub mod nlp;
+pub mod recurrence;
 pub mod types;
 pub mod update;
 
 pub use api::core_version;
+pub use command::{Command, CommandInput, DeadLetterEntry};
+pub use engine::{FfiSyncEngine, SyncStatus, TaskStoreSnapshot, run_migrations};
 pub use error::CoreError;
+pub use host::{
+    Clock, MigrationStorage, QueueStorage, Randomness, RetryScheduler, TaskApi, TaskCacheStorage,
+};
 pub use update::{MinutesUpdate, RecurrenceAnchorUpdate, TextUpdate, UpdateTaskRequest};

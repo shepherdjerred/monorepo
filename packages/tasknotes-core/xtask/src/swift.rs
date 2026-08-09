@@ -254,16 +254,33 @@ pub fn check_bindings(profile: &str) -> Result<String, String> {
     // ends up gitignored, everything here passes vacuously and the only
     // mechanical guard against `Record` reordering goes quiet — the same
     // failure mode `ci/no-suppressions.sh` exists to prevent for the lints.
-    let mut check_ignore = vec!["check-ignore", "-q", "--"];
-    check_ignore.extend(GENERATED_PATHSPECS);
-    let ignored = process::succeeded("git", &check_ignore, &root)?;
-    if ignored {
-        return Err(
-            "the generated bindings are gitignored, so the drift check cannot see them. \
-                    Only bindings/artifacts/ may be ignored; bindings/Sources/ and bindings/ffi/ \
-                    are committed on purpose."
-                .to_owned(),
-        );
+    //
+    // Two flags are load-bearing, and the first was wrong until Phase 6.5.
+    //
+    // ⚠️ **One pathspec per invocation.** `git check-ignore -q` rejects more
+    // than one with *"--quiet is only valid with a single pathname"* and exits
+    // non-zero — which reads as "not ignored" and made this check itself pass
+    // vacuously. Found by watching the command fail while `check-bindings`
+    // still reported success: exactly the inert-gate failure the comment above
+    // is about, inside the guard against it.
+    //
+    // ⚠️ **`--no-index`.** Without it git skips a path that is currently
+    // tracked, so the check would only fire once the damage was already done.
+    // The subject here is the ignore *rules*, not today's index state: a
+    // tracked-and-ignored `bindings/ffi` works right up until regeneration adds
+    // a new file there, which then silently never gets committed.
+    for pathspec in GENERATED_PATHSPECS {
+        if process::succeeded(
+            "git",
+            &["check-ignore", "-q", "--no-index", "--", pathspec],
+            &root,
+        )? {
+            return Err(format!(
+                "{pathspec} is gitignored, so the drift check cannot see it. Only \
+                 bindings/artifacts/ may be ignored; bindings/Sources/ and bindings/ffi/ are \
+                 committed on purpose."
+            ));
+        }
     }
 
     let mut ls_files = vec!["ls-files", "--others", "--exclude-standard", "--"];
@@ -397,6 +414,7 @@ pub fn verify_swift(profile: &str, platforms: &[Platform]) -> Result<String, Str
         &smoke.join("Package.swift"),
         &smoke_manifest(&bindings.to_string_lossy(), &identity),
     )?;
+    write(&sources.join("Hosts.swift"), HOSTS_SOURCE)?;
     write(&sources.join("main.swift"), SMOKE_SOURCE)?;
 
     process::run(
@@ -440,12 +458,184 @@ let package = Package(
     )
 }
 
+/// Swift implementations of the seven exported host traits.
+///
+/// This file is the point of [`verify_swift`]. Everything else it checks could
+/// in principle be inferred from the generated Swift; a **foreign trait** cannot
+/// be, because it only works if the vtable UniFFI generates is registered, the
+/// handle map round-trips, and a Swift `throws` becomes a Rust `Err` rather than
+/// a trap. Every storage method below throws, which is exactly the shape that
+/// reproduces uniffi-rs#2818 — so if the mitigation regressed, this file stops
+/// compiling.
+///
+/// The implementations are deliberately minimal but not fake: an in-memory
+/// store, a fixed clock, a recording scheduler, and an API that is always
+/// offline. That last one is what lets the smoke test observe the retry
+/// classifier reading an error a *Swift* method raised.
+const HOSTS_SOURCE: &str = r#"import Synchronization
+import TaskNotesCore
+
+/// Every mutable byte the host owns, in one place so the classes below can be
+/// `Sendable` without an unchecked escape hatch. The exported protocols require
+/// `Sendable`, and honouring it properly is part of what this proves.
+struct HostState {
+    var queue: String?
+    var deadLetter: String?
+    var tasks: [TaskNotesCore.Task] = []
+    var idAliases: String?
+    var lastSyncTime: Int64?
+    var schemaVersion: UInt32 = 0
+    var legacyQueue: String?
+    var armedDelays: [Int64] = []
+    var cancelledTimers: [TimerId] = []
+    var nextTimer: UInt64 = 0
+    /// Makes the next write fail, so a Swift-side storage failure can be
+    /// observed arriving in Rust as a typed error rather than as a crash.
+    var writesFail = false
+}
+
+/// An in-memory vault: the queue, the dead-letter list, the base task cache,
+/// the alias map, the migration keys, and the retry timer.
+///
+/// One object implements four of the seven traits because a real shell will
+/// too — they are all backed by the same store, and `QueueStorage.readQueue`
+/// and `MigrationStorage.readQueue` are deliberately the same key.
+final class MemoryHost: QueueStorage, TaskCacheStorage, MigrationStorage, RetryScheduler {
+    let state = Mutex(HostState())
+
+    private func guardWrites() throws {
+        if state.withLock({ $0.writesFail }) {
+            throw CoreError.Validation(message: "the smoke host was told to fail this write")
+        }
+    }
+
+    // QueueStorage, and readQueue/writeQueue for MigrationStorage.
+    func readQueue() throws -> String? { state.withLock { $0.queue } }
+    func writeQueue(data: String) throws {
+        try guardWrites()
+        state.withLock { $0.queue = data }
+    }
+    func readDeadLetter() throws -> String? { state.withLock { $0.deadLetter } }
+    func writeDeadLetter(data: String) throws {
+        try guardWrites()
+        state.withLock { $0.deadLetter = data }
+    }
+
+    // TaskCacheStorage.
+    func readTasks() throws -> [TaskNotesCore.Task] { state.withLock { $0.tasks } }
+    func writeTasks(tasks: [TaskNotesCore.Task]) throws {
+        try guardWrites()
+        state.withLock { $0.tasks = tasks }
+    }
+    func readIdAliases() throws -> String? { state.withLock { $0.idAliases } }
+    func writeIdAliases(data: String) throws {
+        try guardWrites()
+        state.withLock { $0.idAliases = data }
+    }
+    func readLastSyncTime() throws -> Int64? { state.withLock { $0.lastSyncTime } }
+    func writeLastSyncTime(millis: Int64) throws {
+        try guardWrites()
+        state.withLock { $0.lastSyncTime = millis }
+    }
+
+    // MigrationStorage.
+    func readSchemaVersion() throws -> UInt32 { state.withLock { $0.schemaVersion } }
+    func writeSchemaVersion(version: UInt32) throws {
+        try guardWrites()
+        state.withLock { $0.schemaVersion = version }
+    }
+    func readLegacyQueue() throws -> String? { state.withLock { $0.legacyQueue } }
+    func removeLegacyQueue() throws { state.withLock { $0.legacyQueue = nil } }
+
+    // RetryScheduler. Neither method throws or calls back into Rust: the host
+    // fires a timer by calling `requestSync()` and then `settle()`.
+    func arm(delayMillis: Int64) -> TimerId {
+        state.withLock { host in
+            host.armedDelays.append(delayMillis)
+            let timer = host.nextTimer
+            host.nextTimer += 1
+            return timer
+        }
+    }
+    func cancel(timer: TimerId) {
+        state.withLock { $0.cancelledTimers.append(timer) }
+    }
+}
+
+/// A clock frozen at 2025-06-15T15:06:40Z, so every optimistic timestamp the
+/// core mints is reproducible.
+final class FixedClock: Clock {
+    static let millis: Int64 = 1_750_000_000_000
+    func nowMillis() -> Int64 { Self.millis }
+    func localYmd(millis: Int64) -> String { "2025-06-15" }
+}
+
+/// Exactly half a unit, which is the parts-per-million spelling of the `0.5`
+/// the shared scenario fixtures inject — so the backoff comes out as the bare
+/// `[1000, 2000, …]` schedule with no jitter.
+final class HalfUnit: Randomness {
+    func nextUnitPpm() -> UInt32 { 500_000 }
+}
+
+/// A `TaskApi` that is always offline.
+///
+/// The point is the *class* of the error, not the failure: a `.Connection`
+/// raised here has to reach the Rust classifier as **transient**, so the drain
+/// backs off and keeps the command instead of dead-lettering it. That is the
+/// whole `CoreError` ↔ `tasknotes_core::Error` mirror, exercised end to end.
+final class OfflineApi: TaskApi {
+    private static let offline = CoreError.Connection(message: "the smoke host is offline")
+
+    func listTasks() throws -> [TaskNotesCore.Task] { throw Self.offline }
+    func createTask(request: CreateTaskRequest, mutationId: String?) throws -> TaskNotesCore.Task {
+        throw Self.offline
+    }
+    func updateTask(
+        id: TaskId, request: UpdateTaskRequest, mutationId: String?
+    ) throws -> TaskNotesCore.Task {
+        throw Self.offline
+    }
+    func deleteTask(id: TaskId, mutationId: String?) throws { throw Self.offline }
+    func toggleTaskStatus(
+        id: TaskId, status: TaskStatus, mutationId: String?
+    ) throws -> TaskNotesCore.Task {
+        throw Self.offline
+    }
+    func completeRecurringInstance(
+        id: TaskId, instance: InstanceCompletion?, mutationId: String?
+    ) throws -> TaskNotesCore.Task {
+        throw Self.offline
+    }
+}
+
+/// A create payload with only a title, spelled out because UniFFI records have
+/// no default arguments.
+func titleOnlyCreate(_ title: TaskTitle) -> CreateTaskRequest {
+    CreateTaskRequest(
+        title: title,
+        details: nil,
+        status: nil,
+        priority: nil,
+        due: nil,
+        scheduled: nil,
+        contexts: nil,
+        projects: nil,
+        tags: nil,
+        recurrence: nil,
+        recurrenceAnchor: nil,
+        timeEstimate: nil,
+        extraFields: nil
+    )
+}
+"#;
+
 /// The smoke test itself.
 ///
-/// Exercises one function of each shape that can break independently: a plain
+/// Exercises one call of each shape that can break independently: a plain
 /// return, a record round trip through the FFI buffer (which is where a field
-/// reorder would show up), a throwing call that must succeed, and a throwing
-/// call that must fail with a typed error.
+/// reorder would show up), a throwing call that must succeed, a throwing call
+/// that must fail with a typed error, and — in [`smokeSync`] — a full engine
+/// driven entirely through Swift implementations of the exported host traits.
 const SMOKE_SOURCE: &str = r##"import TaskNotesCore
 
 /// Exercises one call of each shape that can break independently.
@@ -493,6 +683,186 @@ func smoke() throws -> String {
     return version
 }
 
+/// The Phase 2 and Phase 5 surfaces, over their ISO-string boundary.
+///
+/// Cheap to check and worth checking: a binding that generates but was never
+/// called is not verified.
+func smokePureHelpers() throws {
+    let monday = "2026-08-03"
+
+    let occurrences = try recurrenceOccurrences(
+        text: "FREQ=WEEKLY;BYDAY=MO", scheduled: monday, dateCreated: nil,
+        start: monday, end: "2026-08-17"
+    )
+    guard occurrences == [monday, "2026-08-10", "2026-08-17"] else {
+        throw Failure("recurrenceOccurrences is not inclusive on both ends: \(occurrences)")
+    }
+    guard recurrenceFrequency(text: "FREQ=WEEKLY;BYDAY=MO", scheduled: monday, dateCreated: nil) == .weekly else {
+        throw Failure("recurrenceFrequency disagrees with the core")
+    }
+    // Fail open: an empty rule shows the task rather than hiding it.
+    guard try recurrenceOccursOn(text: "", scheduled: monday, dateCreated: nil, date: "2026-08-11") else {
+        throw Failure("an empty recurrence rule must fail open")
+    }
+    let next = try recurrenceNextUncompletedOccurrence(
+        text: "FREQ=WEEKLY;BYDAY=MO", scheduled: monday, dateCreated: nil,
+        today: "2026-08-10", anchor: .scheduled,
+        completeInstances: ["2026-08-10"], skippedInstances: []
+    )
+    guard next == "2026-08-17" else {
+        throw Failure("the next occurrence ignored a completed instance: \(String(describing: next))")
+    }
+
+    let quick = try parseTaskInput(input: "Ship the core !high p:TaskNotes tomorrow", today: "2026-08-08")
+    guard quick.title == "Ship the core", quick.priority == .high, quick.due == "2026-08-09" else {
+        throw Failure("parseTaskInput disagrees with the core: \(quick)")
+    }
+    guard quick.projects == ["TaskNotes"] else {
+        throw Failure("parseTaskInput lost the project: \(String(describing: quick.projects))")
+    }
+
+    guard try dateGroup(date: "2026-08-08", today: "2026-08-08") == .today else {
+        throw Failure("dateGroup disagrees with the core")
+    }
+    guard dateGroupHeading(group: .overdue) == "Overdue", dateGroupHeading(group: .later) == nil else {
+        throw Failure("Later's heading is the shell's to format, and must be nil here")
+    }
+    guard try dateIsUpcoming(date: "2026-08-10", today: "2026-08-08", horizon: .days(7)) else {
+        throw Failure("dateIsUpcoming disagrees with the core")
+    }
+    guard try dateNextSaturday(from: "2026-08-08") == "2026-08-08" else {
+        throw Failure("this weekend on a Saturday is today")
+    }
+    // A bare date must not be read as UTC midnight and shifted west.
+    guard try dateParseLocal(raw: "2026-07-10", viewerUtcOffsetSeconds: -8 * 3600) == "2026-07-10" else {
+        throw Failure("dateParseLocal shifted a bare civil date")
+    }
+
+    let july = CalendarMonthRef(year: 2026, month: 7)
+    guard try calendarMonthTitle(month: july) == "July 2026" else {
+        throw Failure("calendarMonthTitle disagrees with the core")
+    }
+    let grid = try calendarMonthGrid(month: july)
+    guard grid.allSatisfy({ $0.cells.count == 7 }) else {
+        throw Failure("a calendar row crossed the boundary without seven cells")
+    }
+    guard calendarWeekdays().count == 7 else { throw Failure("wrong number of weekday headers") }
+
+    guard elapsedFormat(seconds: 3661) == "1:01:01", elapsedFormat(seconds: 59) == "00:59" else {
+        throw Failure("elapsedFormat disagrees with the core")
+    }
+    guard try elapsedSecondsSince(start: "2026-08-08T10:00:00Z", now: "2026-08-08T10:01:30Z") == 90 else {
+        throw Failure("elapsedSecondsSince disagrees with the core")
+    }
+}
+
+/// The whole sync stack, driven through Swift implementations of the exported
+/// host traits.
+///
+/// This is the part that cannot be inferred from reading the generated Swift.
+/// Every call here re-enters Swift through a `with_foreign` vtable, and every
+/// storage method throws.
+func smokeSync() throws -> TaskStoreSnapshot {
+    let host = MemoryHost()
+    let clock = FixedClock()
+    let random = HalfUnit()
+
+    // 1. The migration, which touches only MigrationStorage. A v1 relative
+    //    mutation must become a replayable absolute command.
+    host.state.withLock {
+        $0.legacyQueue = #"[{"id":"m1","timestamp":30,"type":"delete","taskId":"Tasks/b.md"}]"#
+    }
+    try runMigrations(storage: host, clock: clock, random: random)
+    let (stamped, legacy) = host.state.withLock { ($0.schemaVersion, $0.legacyQueue) }
+    guard stamped == migrationCurrentSchemaVersion() else {
+        throw Failure("the migration did not stamp the schema version: \(stamped)")
+    }
+    guard legacy == nil else { throw Failure("the legacy queue survived the migration") }
+
+    // 2. The engine, over five Swift-implemented traits at once.
+    let engine = FfiSyncEngine(
+        api: OfflineApi(),
+        queueStorage: host,
+        cacheStorage: host,
+        clock: clock,
+        scheduler: host,
+        random: random,
+        autoSync: false
+    )
+    try engine.restore()
+    guard try engine.snapshot().pendingCount == 1 else {
+        throw Failure("the migrated v1 delete was not restored onto the queue")
+    }
+
+    // 3. One dispatch, answered optimistically without touching the network.
+    guard let optimistic = try engine.dispatch(input: .create(payload: titleOnlyCreate("Written on the Mac")))
+    else {
+        throw Failure("a create dispatch answered no optimistic task")
+    }
+    guard optimistic.title == "Written on the Mac" else {
+        throw Failure("the optimistic task lost its title: \(optimistic.title)")
+    }
+    guard optimistic.dateCreated == "2025-06-15T15:06:40.000Z" else {
+        throw Failure("the Swift Clock did not reach the core: \(String(describing: optimistic.dateCreated))")
+    }
+
+    // 4. The snapshot, read back through the IndexMap → ordered-Vec projection.
+    let snapshot = try engine.snapshot()
+    guard snapshot.pendingCount == 2 else {
+        throw Failure("wrong pending count: \(snapshot.pendingCount)")
+    }
+    guard snapshot.tasks.count == 1, snapshot.tasks[0].id == optimistic.id else {
+        throw Failure("the optimistic task is not visible in the snapshot")
+    }
+    guard snapshot.pendingTaskIds.contains(optimistic.id) else {
+        throw Failure("the optimistic task is missing its unsynced marker")
+    }
+    guard snapshot.deadLetters.isEmpty else { throw Failure("nothing should be parked yet") }
+
+    // 5. A Swift `throws` failing *inward*. A `.Connection` raised in Swift has
+    //    to reach the Rust classifier as transient: back off, arm one timer,
+    //    keep the command, park nothing.
+    do {
+        try engine.syncNow()
+        throw Failure("syncNow succeeded against an always-offline API")
+    } catch let error as CoreError {
+        guard case .Connection = error else { throw Failure("unexpected sync error: \(error)") }
+    }
+    let status = try engine.status()
+    guard status.state == .backoff else { throw Failure("wrong sync state: \(status.state)") }
+    guard case .Connection? = status.lastError else {
+        throw Failure("the status lost the host's error: \(String(describing: status.lastError))")
+    }
+    let delays = host.state.withLock { $0.armedDelays }
+    guard delays == [1000] else {
+        throw Failure("the Swift scheduler saw the wrong backoff: \(delays)")
+    }
+    let afterFailure = try engine.snapshot()
+    guard afterFailure.pendingCount == 2, afterFailure.deadLetters.isEmpty else {
+        throw Failure("a transient failure must keep the queue intact")
+    }
+
+    // 6. A Swift storage failure, which must arrive as a typed error rather
+    //    than as a panic that aborts the host process.
+    host.state.withLock { $0.writesFail = true }
+    do {
+        _ = try engine.dispatch(input: .delete(taskId: optimistic.id))
+        throw Failure("a failing QueueStorage.writeQueue was not reported")
+    } catch let error as CoreError {
+        guard case .Validation = error else { throw Failure("unexpected storage error: \(error)") }
+    }
+    host.state.withLock { $0.writesFail = false }
+
+    // 7. Disposal cancels the armed timer through the Swift scheduler.
+    try engine.dispose()
+    guard try engine.isDisposed() else { throw Failure("dispose() did not take") }
+    guard host.state.withLock({ !$0.cancelledTimers.isEmpty }) else {
+        throw Failure("dispose() did not cancel the armed retry timer")
+    }
+
+    return snapshot
+}
+
 /// A local error so the smoke test never force-unwraps or traps blind.
 struct Failure: Error, CustomStringConvertible {
     let description: String
@@ -501,7 +871,11 @@ struct Failure: Error, CustomStringConvertible {
 
 do {
     let version = try smoke()
+    try smokePureHelpers()
+    let snapshot = try smokeSync()
     print("smoke: TaskNotesCore \(version), \(taskStatusAll().count) statuses, \(priorityAll().count) priorities")
+    print("smoke: sync engine round trip — \(snapshot.tasks.count) task(s), \(snapshot.pendingCount) pending, "
+        + "through 7 Swift-implemented host traits")
 } catch {
     fatalError("smoke failed: \(error)")
 }
@@ -663,8 +1037,8 @@ fn write(path: &Path, contents: &str) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::{
-        FFI_MODULE, Platform, SMOKE_SOURCE, SWIFT_MODULE, profile_directory, smoke_manifest,
-        workspace_root,
+        FFI_MODULE, HOSTS_SOURCE, Platform, SMOKE_SOURCE, SWIFT_MODULE, profile_directory,
+        smoke_manifest, workspace_root,
     };
 
     #[test]
@@ -747,5 +1121,41 @@ mod tests {
         assert!(manifest.contains("swift-tools-version: 6.2"));
         assert!(SMOKE_SOURCE.contains("import TaskNotesCore"));
         assert!(SMOKE_SOURCE.contains("coreVersion()"));
+    }
+
+    #[test]
+    fn the_smoke_test_implements_every_exported_host_trait_in_swift() {
+        // A generated binding that is never called is not verified, and a
+        // *foreign* trait is the one shape whose correctness cannot be read off
+        // the generated Swift: it works only if the vtable is registered, the
+        // handle map round-trips, and a Swift `throws` becomes a Rust `Err`.
+        // Losing one of these conformances would silently shrink what
+        // `verify-swift` proves, so the list is pinned here.
+        for host in [
+            "Clock",
+            "Randomness",
+            "RetryScheduler",
+            "TaskApi",
+            "QueueStorage",
+            "TaskCacheStorage",
+            "MigrationStorage",
+        ] {
+            assert!(
+                HOSTS_SOURCE.contains(host),
+                "the smoke test no longer implements {host}"
+            );
+        }
+        // The engine has to actually be driven, not merely constructed.
+        for call in [
+            "FfiSyncEngine(",
+            "engine.restore()",
+            "engine.dispatch(",
+            "engine.snapshot()",
+        ] {
+            assert!(
+                SMOKE_SOURCE.contains(call),
+                "the smoke test no longer exercises {call}"
+            );
+        }
     }
 }

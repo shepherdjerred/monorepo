@@ -19,7 +19,10 @@
 //! to this crate's `UniFfiTag`, which is the local type that makes it legal.
 
 use serde_json::{Map, Value};
-use tasknotes_core::domain::{ContextName, ExtraFields, ProjectName, TagName, TaskId, TaskTitle};
+use tasknotes_core::{
+    domain::{ContextName, ExtraFields, ProjectName, TagName, TaskId, TaskTitle},
+    sync::TimerId,
+};
 
 /// Render preserved frontmatter keys as a compact JSON object string.
 ///
@@ -77,6 +80,20 @@ uniffi::custom_type!(TaskTitle, String, {
     remote,
     lower: |value| value.into_string(),
     try_lift: |value| Ok(TaskTitle::parse(value)?),
+});
+
+// `TimerId` — the host's own retry-timer handle, round-tripped untouched.
+//
+// A `custom_type!` rather than a plain `u64` at the boundary so the two
+// directions cannot be transposed at a call site: Swift sees a
+// `typealias TimerId = UInt64`, and the Rust side keeps a type the core cannot
+// confuse with a delay or a millisecond count. Deliberately *total* in both
+// directions — every `u64` is a valid handle, because the core never inspects
+// one, it only hands it back to `RetryScheduler::cancel`.
+uniffi::custom_type!(TimerId, u64, {
+    remote,
+    lower: |value| value.get(),
+    try_lift: |value| Ok(TimerId::new(value)),
 });
 
 #[cfg(test)]

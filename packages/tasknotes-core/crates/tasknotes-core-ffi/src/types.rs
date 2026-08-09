@@ -23,13 +23,19 @@
 //!
 //! [`Priority`]: tasknotes_core::domain::Priority
 
-use tasknotes_core::domain::{
-    BlockedByEntry, CalendarEvent, ContextName, CreateTaskRequest, ExtraFields, FilterConfig,
-    FilterOptions, HealthState, HealthStatus, InlineTimeEntry, NlpParseResult, Pagination,
-    PomodoroPhase, PomodoroStatus, Priority, ProjectName, QueryResponse, RecurrenceAnchor,
-    Reminder, ReminderKind, SortConfig, SortDirection, SortField, TagName, Task, TaskId, TaskList,
-    TaskQueryFilter, TaskStats, TaskStatus, TaskTime, TaskTitle, TimeEntry, TimeSummary, TopTask,
-    VaultInfo,
+use chrono::Weekday;
+use tasknotes_core::{
+    dates::{DateGroup, UpcomingHorizon},
+    domain::{
+        BlockedByEntry, CalendarEvent, ContextName, CreateTaskRequest, ExtraFields, FilterConfig,
+        FilterOptions, HealthState, HealthStatus, InlineTimeEntry, NlpParseResult, Pagination,
+        PomodoroPhase, PomodoroStatus, Priority, ProjectName, QueryResponse, RecurrenceAnchor,
+        Reminder, ReminderKind, SortConfig, SortDirection, SortField, TagName, Task, TaskId,
+        TaskList, TaskQueryFilter, TaskStats, TaskStatus, TaskTime, TaskTitle, TimeEntry,
+        TimeSummary, TopTask, VaultInfo,
+    },
+    recurrence::Frequency,
+    sync::{DeadLetterError, InstanceCompletion, SyncState},
 };
 
 // ── Enums ──────────────────────────────────────────────────────────────────
@@ -491,4 +497,117 @@ pub struct TaskTime {
     pub total_time: u32,
     /// Whether a session is running right now.
     pub has_active_session: bool,
+}
+
+// ── Sync stack ─────────────────────────────────────────────────────────────
+//
+// Only the pieces UniFFI can express verbatim live here. `Command`,
+// `CommandInput` and `DeadLetterEntry` carry an `UpdateTaskRequest`, which is
+// generic in the core and therefore mirrored in [`crate::command`];
+// `TaskStoreSnapshot` and `SyncStatus` carry `IndexMap`/`IndexSet`/`Error` and
+// are projected in [`crate::engine`].
+
+/// See [`tasknotes_core::sync::SyncState`].
+#[uniffi::remote(Enum)]
+pub enum SyncState {
+    /// Nothing to do; the last pass succeeded.
+    Idle,
+    /// A pass is running.
+    Syncing,
+    /// The last pass failed transiently and a retry is armed.
+    Backoff,
+    /// The server rejected the credentials, and **no retry is armed**.
+    AuthError,
+    /// No API client is configured yet.
+    Unconfigured,
+}
+
+/// See [`tasknotes_core::sync::InstanceCompletion`].
+#[uniffi::remote(Record)]
+pub struct InstanceCompletion {
+    /// The occurrence's date, as `YYYY-MM-DD`.
+    pub date: String,
+    /// The state to set it to.
+    pub completed: bool,
+}
+
+/// See [`tasknotes_core::sync::DeadLetterError`].
+///
+/// The field is `name`, not `kind`: the on-disk dead-letter format stores the
+/// TypeScript `Error.name` string so a queue written by either client stays
+/// readable by the other. Nothing branches on it.
+#[uniffi::remote(Record)]
+pub struct DeadLetterError {
+    /// The failing error's class name.
+    pub name: String,
+    /// The human-readable message.
+    pub message: String,
+    /// The HTTP status, present only for the two variants that carry one.
+    pub status: Option<u16>,
+}
+
+// ── Recurrence ─────────────────────────────────────────────────────────────
+
+/// See [`tasknotes_core::recurrence::Frequency`].
+#[uniffi::remote(Enum)]
+pub enum Frequency {
+    /// Once a year.
+    Yearly,
+    /// Once a month.
+    Monthly,
+    /// Once a week.
+    Weekly,
+    /// Once a day.
+    Daily,
+    /// Once an hour.
+    Hourly,
+    /// Once a minute.
+    Minutely,
+    /// Once a second.
+    Secondly,
+}
+
+// ── Date helpers ───────────────────────────────────────────────────────────
+
+/// See [`tasknotes_core::dates::UpcomingHorizon`].
+#[uniffi::remote(Enum)]
+pub enum UpcomingHorizon {
+    /// Anything strictly after today and no more than this many days out.
+    Days(u32),
+    /// Anything strictly after today, however far out.
+    Unbounded,
+}
+
+/// See [`tasknotes_core::dates::DateGroup`].
+#[uniffi::remote(Enum)]
+pub enum DateGroup {
+    /// Strictly before the viewer's today.
+    Overdue,
+    /// The viewer's today.
+    Today,
+    /// The day after the viewer's today.
+    Tomorrow,
+    /// Later than tomorrow, but no later than the coming Sunday.
+    ThisWeek,
+    /// Beyond the current week; the shell formats the heading itself.
+    Later,
+}
+
+/// See [`chrono::Weekday`]. Monday first, matching chrono's declaration order.
+#[uniffi::remote(Enum)]
+pub enum Weekday {
+    /// Monday.
+    Mon,
+    /// Tuesday.
+    Tue,
+    /// Wednesday.
+    Wed,
+    /// Thursday.
+    Thu,
+    /// Friday.
+    Fri,
+    /// Saturday.
+    Sat,
+    /// Sunday.
+    Sun,
 }
