@@ -1,6 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import {
   parseWorkflowFailureWatchCheckpoint,
+  parseWorkflowFailureWatchLookbackSince,
   serializedCheckpoint,
 } from "./workflow-failure-watch-checkpoint.ts";
 
@@ -14,10 +15,20 @@ describe("workflow failure watch heartbeat checkpoints", () => {
     ).toBeUndefined();
   });
 
+  it("preserves a lookback boundary before the first batch checkpoint", () => {
+    expect(
+      parseWorkflowFailureWatchLookbackSince({
+        phase: "pollWorkflowFailures",
+        lookbackSince: "2026-07-29T18:00:00.000Z",
+      }),
+    ).toEqual(new Date("2026-07-29T18:00:00.000Z"));
+  });
+
   it("serializes and parses a checkpoint with an ISO close time", () => {
     const serialized = serializedCheckpoint({
       closeTime: new Date("2026-07-30T17:40:00.000Z"),
       startTime: new Date("2026-07-30T17:35:00.000Z"),
+      lookbackSince: new Date("2026-07-29T18:00:00.000Z"),
       workflowId: "wf-new",
       runId: "run-new",
     });
@@ -27,6 +38,7 @@ describe("workflow failure watch heartbeat checkpoints", () => {
     ).toEqual({
       closeTime: new Date("2026-07-30T17:40:00.000Z"),
       startTime: new Date("2026-07-30T17:35:00.000Z"),
+      lookbackSince: new Date("2026-07-29T18:00:00.000Z"),
       workflowId: "wf-new",
       runId: "run-new",
     });

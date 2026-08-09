@@ -796,12 +796,13 @@ describe("workflow failure watch checkpoints", () => {
       now: NOW,
       lookbackMs: LOOKBACK_MS,
       ttlMs: TTL_MS,
+      lookbackSince: new Date("2026-07-29T17:00:00.000Z"),
       checkpoint,
       onCheckpoint: (nextCheckpoint) => checkpoints.push(nextCheckpoint),
     });
 
     expect(result).toEqual({ scanned: 2, alerted: 2, errored: 0 });
-    expect(query).toContain('CloseTime > "2026-07-29T18:00:00.000Z"');
+    expect(query).toContain('CloseTime > "2026-07-29T17:00:00.000Z"');
     expect(query).not.toContain("StartTime");
     expect(query).not.toContain("RunId");
     expect(pageSize).toBe(100);
@@ -811,6 +812,7 @@ describe("workflow failure watch checkpoints", () => {
     expect(checkpoints.at(-1)).toEqual({
       closeTime: new Date("2026-07-30T17:00:00.000Z"),
       startTime: new Date("2026-07-30T16:55:00.000Z"),
+      lookbackSince: new Date("2026-07-29T17:00:00.000Z"),
       workflowId: "wf-old",
       runId: "run-old",
     });

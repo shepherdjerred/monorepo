@@ -201,23 +201,28 @@ async function postFailureBatch(
   return { alerted: alerts.length, errored };
 }
 
-function recordBatchCheckpoint(
+function advanceRecoveryCheckpoint(
   result: FailureBatchResult,
   executions: readonly FailedWorkflowExecution[],
-  onCheckpoint:
-    | ((checkpoint: WorkflowFailureWatchCheckpoint) => void)
-    | undefined,
   checkpointBlocked: boolean,
+  checkpointOptions: {
+    onCheckpoint:
+      | ((checkpoint: WorkflowFailureWatchCheckpoint) => void)
+      | undefined;
+    lookbackSince: Date;
+  },
 ): boolean {
   if (result.errored !== 0) {
     return true;
   }
-  if (checkpointBlocked || onCheckpoint === undefined) {
+  if (checkpointBlocked || checkpointOptions.onCheckpoint === undefined) {
     return checkpointBlocked;
   }
   const lastExecution = executions.at(-1);
   if (lastExecution !== undefined) {
-    onCheckpoint(checkpointForExecution(lastExecution));
+    checkpointOptions.onCheckpoint(
+      checkpointForExecution(lastExecution, checkpointOptions.lookbackSince),
+    );
   }
   return false;
 }
@@ -226,6 +231,7 @@ export type PollWorkflowFailuresOptions = {
   now: Date;
   lookbackMs: number;
   ttlMs: number;
+  lookbackSince?: Date;
   checkpoint?: WorkflowFailureWatchCheckpoint;
   onCheckpoint?: (checkpoint: WorkflowFailureWatchCheckpoint) => void;
 };
@@ -241,8 +247,10 @@ export async function pollWorkflowFailuresOnce(
   options: PollWorkflowFailuresOptions,
 ): Promise<PollWorkflowFailuresResult> {
   const { now, lookbackMs, checkpoint } = options;
-  const lookbackSince = now.getTime() - lookbackMs;
-  const since = new Date(lookbackSince);
+  const since =
+    options.lookbackSince ??
+    checkpoint?.lookbackSince ??
+    new Date(now.getTime() - lookbackMs);
   const query = buildVisibilityQuery(since);
 
   const pendingExecutions: FailedWorkflowExecution[] = [];
@@ -286,11 +294,14 @@ export async function pollWorkflowFailuresOnce(
           pendingExecutions,
           options,
         );
-        checkpointBlocked = recordBatchCheckpoint(
+        checkpointBlocked = advanceRecoveryCheckpoint(
           result,
           pendingExecutions,
-          options.onCheckpoint,
           checkpointBlocked,
+          {
+            onCheckpoint: options.onCheckpoint,
+            lookbackSince: since,
+          },
         );
         processingBatch = false;
         alerted += result.alerted;
@@ -313,12 +324,10 @@ export async function pollWorkflowFailuresOnce(
       pendingExecutions,
       options,
     );
-    recordBatchCheckpoint(
-      result,
-      pendingExecutions,
-      options.onCheckpoint,
-      checkpointBlocked,
-    );
+    advanceRecoveryCheckpoint(result, pendingExecutions, checkpointBlocked, {
+      onCheckpoint: options.onCheckpoint,
+      lookbackSince: since,
+    });
     alerted += result.alerted;
     errored += result.errored;
   }

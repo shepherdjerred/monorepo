@@ -6,6 +6,7 @@ const WorkflowFailureWatchCheckpointSchema = z.object({
   // Optional for heartbeats written before the stable visibility cursor was
   // introduced. New checkpoints always include it.
   startTime: z.iso.datetime({ offset: true }).optional(),
+  lookbackSince: z.iso.datetime({ offset: true }).optional(),
   workflowId: z.string().min(1),
   runId: z.string().min(1),
 });
@@ -13,6 +14,7 @@ const WorkflowFailureWatchCheckpointSchema = z.object({
 export type WorkflowFailureWatchCheckpoint = {
   closeTime: Date;
   startTime: Date | undefined;
+  lookbackSince?: Date;
   workflowId: string;
   runId: string;
 };
@@ -39,9 +41,26 @@ export function parseWorkflowFailureWatchCheckpoint(
     closeTime: new Date(parsed.closeTime),
     startTime:
       parsed.startTime === undefined ? undefined : new Date(parsed.startTime),
+    ...(parsed.lookbackSince === undefined
+      ? {}
+      : { lookbackSince: new Date(parsed.lookbackSince) }),
     workflowId: parsed.workflowId,
     runId: parsed.runId,
   };
+}
+
+export function parseWorkflowFailureWatchLookbackSince(
+  details: unknown,
+): Date | undefined {
+  if (details === undefined) {
+    return undefined;
+  }
+  const detailsRecord = z.record(z.string(), z.unknown()).parse(details);
+  const lookbackSince = detailsRecord["lookbackSince"];
+  if (lookbackSince === undefined) {
+    return undefined;
+  }
+  return new Date(z.iso.datetime({ offset: true }).parse(lookbackSince));
 }
 
 export function serializedCheckpoint(
@@ -54,6 +73,9 @@ export function serializedCheckpoint(
         ...(checkpoint.startTime === undefined
           ? {}
           : { startTime: checkpoint.startTime.toISOString() }),
+        ...(checkpoint.lookbackSince === undefined
+          ? {}
+          : { lookbackSince: checkpoint.lookbackSince.toISOString() }),
         workflowId: checkpoint.workflowId,
         runId: checkpoint.runId,
       };
@@ -61,10 +83,12 @@ export function serializedCheckpoint(
 
 export function checkpointForExecution(
   execution: FailedWorkflowExecution,
+  lookbackSince?: Date,
 ): WorkflowFailureWatchCheckpoint {
   return {
     closeTime: execution.closeTime,
     startTime: execution.startTime,
+    ...(lookbackSince === undefined ? {} : { lookbackSince }),
     workflowId: execution.workflowId,
     runId: execution.runId,
   };
