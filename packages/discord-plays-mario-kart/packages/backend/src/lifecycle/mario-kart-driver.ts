@@ -21,6 +21,7 @@ import {
 import { RaceTracker } from "#src/leaderboard/race-tracker.ts";
 import { NameOverlay } from "#src/overlay/name-overlay.ts";
 import { createLabelRenderer } from "#src/overlay/label-renderer.ts";
+import type { DriverFeedService } from "#src/driver-feed/index.ts";
 import type { Config } from "#src/config/schema.ts";
 import { logger } from "#src/logger.ts";
 import type { LeaderboardResponse } from "@discord-plays-mario-kart/common";
@@ -58,11 +59,17 @@ function fallbackScreenMode(seats: number): ScreenMode {
 export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
   readonly name = "Mario Kart 64";
   private readonly config: Config;
+  /** Undefined when [driver_feed] is disabled; every call site is optional-chained. */
+  private readonly driverFeed: DriverFeedService | undefined;
   private botClient: BotClient | null = null;
   private active: ActiveSessionRuntime | null = null;
 
-  constructor(params: { config: Config }) {
+  constructor(params: {
+    config: Config;
+    driverFeed?: DriverFeedService | undefined;
+  }) {
     this.config = params.config;
+    this.driverFeed = params.driverFeed;
   }
 
   /** Wire the bot client after createGameBot constructs it. Must be called before /play. */
@@ -137,6 +144,9 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
       videoPlayoutDelayMaxMs: config.stream.video.video_playout_delay_max_ms,
       onEncoderStarted: () => {
         emulator.start();
+        // The driver feed encodes the same frames the stream does, so it only
+        // has work once the emulator is producing them.
+        this.driverFeed?.startSession();
         logger.info("emulator running", { guildId: session.guildId });
       },
       onSessionEnded: () => {
@@ -176,7 +186,18 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
       nameOverlay,
     });
 
-    // Per-frame pipeline: overlay → stream. Race decoding happens in the Worker.
+    // Per-frame pipeline: overlay → stream → driver feed. Race decoding happens
+    // in the Worker.
+    //
+    // The tee sits after the overlay so drivers see byte-identical pixels to the
+    // Go-Live stream — including the burned-in HUD clock, which lets the browser
+    // measure its own glass-to-glass latency off its own canvas.
+    //
+    // The frame is a dedicated Buffer transferred zero-copy out of the emulator
+    // Worker and nothing mutates it after applyStreamOverlays returns, so both
+    // sinks can hold the same reference. Go-Live is pushed first: it is the path
+    // spectators depend on, and it stays ahead of any fault in the newer one
+    // (the shared onFrame callback is wrapped in the Worker facade's safeInvoke).
     emulator.onFrame((frame) => {
       applyStreamOverlays(frame.rgba, frame.height, overlayContext());
       streamer.pushFrame(frame.rgba, {
@@ -185,6 +206,7 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
           ? {}
           : { inputReceivedAtMs: frame.inputReceivedAtMs }),
       });
+      this.driverFeed?.pushFrame(frame.rgba);
     });
     emulator.onAudio((pcm, contentEndMs) => {
       streamer.pushAudio(pcm, contentEndMs);
@@ -220,6 +242,14 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
     });
     const runtime = this.active;
     this.active = null;
+    // Stop encoding for the browser before the stream teardown: the emulator is
+    // about to go away, and a client holding a half-decoded GOP on its canvas
+    // after `/stop` would be worse than a disconnect.
+    try {
+      this.driverFeed?.stopSession();
+    } catch (error) {
+      logger.error("driver feed stop failed", error);
+    }
     if (runtime === null) {
       return;
     }

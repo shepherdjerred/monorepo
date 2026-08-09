@@ -154,4 +154,42 @@ export const ConfigSchema = z.strictObject({
     // prefault (not default): run `{}` through the schema so the inner field
     // defaults apply when the whole [leaderboard] block is omitted.
     .prefault({}),
+  // Low-latency in-browser video for the people actually driving. Spectators keep
+  // watching the Discord Go-Live stream unchanged; drivers additionally receive
+  // H.264 access units over a WebSocket and decode them in the controller page,
+  // skipping Discord's voice leg and its ~85 ms client de-jitter buffer — the
+  // largest remaining term in the press-to-glass budget as of 2026-08-03.
+  //
+  // Same `.prefault({})` treatment as [leaderboard], and for the same reason: the
+  // live config.toml is a 1Password secret, so a required section would crash-loop
+  // the pod until someone edits the vault.
+  driver_feed: z
+    .strictObject({
+      // Off by default — turning it on starts a second ffmpeg process. Opt in per
+      // deployment once the uplink has been measured against `bitrate_kbps`.
+      enabled: z.boolean().default(false),
+      // Height of the square-pixel image sent to the browser; the anamorphic
+      // 640x240 framebuffer is scaled to 4:3 at this height (480 -> 640x480), so
+      // the client can paint it without correcting the aspect itself.
+      height: z.number().int().min(120).max(1080).default(480),
+      bitrate_kbps: z.number().int().positive().default(2500),
+      bitrate_max_kbps: z.number().int().positive().default(4000),
+      // Keyframe cadence in frames. Every IDR costs a bitrate spike on a TCP
+      // socket, but it is also the only resync point for a client the hub had to
+      // drop delta units from. 30 frames = ~1 s at the default output rate.
+      keyframe_interval_frames: z.number().int().min(1).max(600).default(30),
+      // Per-client socket backlog ceiling. Past this the hub drops delta units and
+      // resyncs that client at the next keyframe instead of queueing without
+      // bound — the failure mode that reached 3.47 GB against a 4 GiB pod limit on
+      // the Go-Live path (archive/completed/2026-06-19_mk64-stream-backpressure.md).
+      max_client_buffer_bytes: z
+        .number()
+        .int()
+        .min(64 * 1024)
+        .default(2 * 1024 * 1024),
+      // Concurrent viewers. Each one costs a full copy of the stream on the
+      // uplink, so this is a bandwidth guard, not a memory one.
+      max_clients: z.number().int().min(1).max(32).default(8),
+    })
+    .prefault({}),
 });

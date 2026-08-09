@@ -71,3 +71,19 @@ enabled = true                      # race-result recording + the leaderboard AP
 db_path = "data/leaderboard.db"     # overridden by DATABASE_PATH / DATABASE_URL env
 overlay_enabled = true              # burn player names into the stream per viewport
 poll_every_n_frames = 10            # RDRAM race-state poll cadence (~3 Hz at 30fps)
+
+[driver_feed]
+# Low-latency in-browser video for seated players, served as H.264 access units
+# over the /video WebSocket. Additive: spectators keep watching the Go-Live
+# stream, which is unaffected. Costs a second ffmpeg encode and one copy of the
+# stream on the uplink per connected driver, so measure your upstream bandwidth
+# against bitrate_kbps * max_clients before raising either.
+# Reuses [stream.video]'s hardware_acceleration, vaapi_device and
+# encoder_async_depth — same GPU, same latency knob.
+enabled = false
+height = 480                        # square-pixel output height (4:3 -> 640x480)
+bitrate_kbps = 2500
+bitrate_max_kbps = 4000
+keyframe_interval_frames = 30       # ~1s at 30fps; also the client resync cadence
+max_client_buffer_bytes = 2097152   # per-client socket backlog before deltas are dropped
+max_clients = 8

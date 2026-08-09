@@ -256,6 +256,7 @@
         "socket.io": "^4.8.1",
         "ts-pattern": "^5.7.0",
         "winston": "^3.17.0",
+        "ws": "^8.18.3",
         "zod": "^4.4.3",
       },
       "devDependencies": {
@@ -265,6 +266,7 @@
         "@types/express": "^5.0.1",
         "@types/lodash": "^4.17.16",
         "@types/node": "^26.1.1",
+        "@types/ws": "^8.18.1",
         "@typescript-eslint/eslint-plugin": "^8.65.0",
         "@typescript-eslint/parser": "^8.65.0",
         "@typescript/native": "npm:typescript@7.0.2",
@@ -326,6 +328,7 @@
         "@svgr/plugin-jsx": "^8.1.0",
         "@tailwindcss/forms": "^0.5.10",
         "@tanstack/eslint-plugin-query": "^5.68.0",
+        "@types/dom-webcodecs": "^0.1.18",
         "@types/lodash": "^4.17.16",
         "@types/react": "^19.2.17",
         "@types/react-dom": "^19.2.3",
@@ -3811,6 +3814,8 @@
     "@types/debug": ["@types/debug@4.1.13", "", { "dependencies": { "@types/ms": "*" } }, "sha512-KSVgmQmzMwPlmtljOomayoR89W4FynCAi3E8PPs7vmDVPe84hT+vGPKkJfThkmXs0x0jAaa9U8uW8bbfyS2fWw=="],
 
     "@types/deep-eql": ["@types/deep-eql@4.0.2", "", {}, "sha512-c9h9dVVMigMPc4bwTvC5dxqtqJZwQPePsWjPlpSOnojbor6pGqdk541lfA7AqFQr5pB1BRdq0juY9db81BwyFw=="],
+
+    "@types/dom-webcodecs": ["@types/dom-webcodecs@0.1.18", "", {}, "sha512-vAvE8C9DGWR+tkb19xyjk1TSUlJ7RUzzp4a9Anu7mwBT+fpyePWK1UxmH14tMO5zHmrnrRIMg5NutnnDztLxgg=="],
 
     "@types/eslint-plugin-jsx-a11y": ["@types/eslint-plugin-jsx-a11y@6.10.1", "", { "dependencies": { "eslint": "^9" } }, "sha512-5RtuPVe0xz8BAhrkn2oww6Uw885atf962Q4fqZo48QdO3EQA7oCEDSXa6optgJ1ZMds3HD9ITK5bfm4AWuoXFQ=="],
 

@@ -1,6 +1,7 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { useInterval } from "react-use";
 import { Container } from "./stories/container.tsx";
+import { GameView } from "./game-view.tsx";
 import { socket } from "./socket.ts";
 import {
   type InputRequest,
@@ -259,6 +260,8 @@ export function App() {
               onRelease={releaseSeat}
             />
           </header>
+
+          <GameView />
 
           <section className="grid gap-4 xl:grid-cols-[1fr_320px]">
             <div className="overflow-hidden rounded-[2rem] border border-zinc-800 bg-zinc-950/80 p-3 shadow-2xl shadow-black/40 sm:p-5">

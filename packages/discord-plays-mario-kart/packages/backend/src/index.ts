@@ -3,6 +3,8 @@ import { buildMarioKartExtraCommands } from "./discord/slashCommands/index.ts";
 import { MarioKartGameDriver } from "./lifecycle/mario-kart-driver.ts";
 import { SeatManager } from "./input/seat-manager.ts";
 import { createWebServer } from "./webserver/index.ts";
+import { DriverFeedService } from "./driver-feed/index.ts";
+import { resolveDriverFeedConfig } from "./driver-feed/config.ts";
 import { handleRequest, type LeaderboardDeps } from "./webserver/dispatch.ts";
 import { logger } from "./logger.ts";
 import { getConfig } from "./config/index.ts";
@@ -22,10 +24,31 @@ startEventLoopLagSampler((lagMs) => {
 
 const config = getConfig();
 
+// Low-latency in-browser video for seated players, alongside (never instead of)
+// the Go-Live stream spectators watch. Constructed before the driver so sessions
+// can drive it, but its WebSocket route is mounted once the HTTP server exists.
+// Env overrides win over the 1Password config.toml so the feed can be enabled
+// and its bandwidth dialled without a vault edit.
+const driverFeedConfig = resolveDriverFeedConfig(config.driver_feed, Bun.env);
+const driverFeed = driverFeedConfig.enabled
+  ? new DriverFeedService({
+      config: driverFeedConfig,
+      video: {
+        hardware_acceleration:
+          Bun.env["STREAM_HARDWARE_ACCELERATION"] === "true" ||
+          config.stream.video.hardware_acceleration,
+        vaapi_device:
+          Bun.env["VAAPI_DEVICE"] ?? config.stream.video.vaapi_device,
+        encoder_async_depth: config.stream.video.encoder_async_depth,
+      },
+      frameRate: config.stream.video.frame_rate,
+    })
+  : undefined;
+
 // One userbot, one emulator, one game at a time. The "pool" in the shared lib is
 // general-purpose (Streambot uses it for many concurrent streams); for this single-slot
 // game-bot we just feed it the single configured userbot token.
-const driver = new MarioKartGameDriver({ config });
+const driver = new MarioKartGameDriver({ config, driverFeed });
 
 const runtime = bootGameBot({
   serviceName: "discord-plays-mario-kart",
@@ -59,12 +82,15 @@ await runtime.start();
 
 // ---- web server: the up-to-4 virtual controllers + leaderboard broadcasts ----
 if (config.web.enabled) {
-  const { socket } = createWebServer({
+  const { socket, server } = createWebServer({
     port: config.web.port,
     webAssetsPath: config.web.assets,
     isApiEnabled: config.web.api.enabled,
     isCorsEnabled: config.web.cors,
   });
+  // Shares the HTTP server with Socket.IO but takes its own upgrade path, so
+  // video bytes never queue behind a controller input on one TCP connection.
+  driverFeed?.attach(server);
   if (socket) {
     socket.events.subscribe((event) => {
       const active = driver.getActiveRuntime();
