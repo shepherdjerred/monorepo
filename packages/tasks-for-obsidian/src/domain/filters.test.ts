@@ -274,6 +274,21 @@ describe("applySort", () => {
     ]);
   });
 
+  test("rejects impossible date-only values", () => {
+    expect(() =>
+      applySort(
+        [
+          makeTask({ id: taskId("invalid"), due: "2026-02-30" }),
+          makeTask({ id: taskId("valid"), due: "2026-03-01" }),
+        ],
+        {
+          field: "dueDate",
+          direction: "asc",
+        },
+      ),
+    ).toThrow("Invalid date");
+  });
+
   test("sorts by priority ascending (highest first)", () => {
     const sorted = applySort(tasks, { field: "priority", direction: "asc" });
     expect(sorted[0]!.priority).toBe("high");

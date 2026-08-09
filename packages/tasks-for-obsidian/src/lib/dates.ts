@@ -25,15 +25,23 @@ export function parseLocalDate(dateStr: string): Date {
 
 /** Compare task date values by their parsed instant, not their raw spelling. */
 export function compareDateValues(left: string, right: string): number {
-  const leftDate = parseLocalDate(left);
-  const rightDate = parseLocalDate(right);
-  if (!Number.isFinite(leftDate.getTime())) {
-    throw new TypeError(`Invalid date: ${left}`);
-  }
-  if (!Number.isFinite(rightDate.getTime())) {
-    throw new TypeError(`Invalid date: ${right}`);
-  }
+  const leftDate = parseComparableDate(left);
+  const rightDate = parseComparableDate(right);
   return leftDate.getTime() - rightDate.getTime();
+}
+
+function parseComparableDate(value: string): Date {
+  const date = parseLocalDate(value);
+  const dateOnlyMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  const validCalendarDate =
+    dateOnlyMatch === null ||
+    (date.getFullYear() === Number(dateOnlyMatch[1]) &&
+      date.getMonth() + 1 === Number(dateOnlyMatch[2]) &&
+      date.getDate() === Number(dateOnlyMatch[3]));
+  if (!validCalendarDate || !Number.isFinite(date.getTime())) {
+    throw new TypeError(`Invalid date: ${value}`);
+  }
+  return date;
 }
 
 function parseDate(dateStr: string): Date {
