@@ -16,6 +16,7 @@
     "mac:analyze": "xcodebuild -project TaskNotes.xcodeproj -scheme TaskNotes -configuration Debug -derivedDataPath .build/xcode clean build > .build/xcodebuild.log && swiftlint analyze --strict --quiet --config .swiftlint-analyzer.yml --compiler-log-path .build/xcodebuild.log",
     "mac:app": "xcodebuild -project TaskNotes.xcodeproj -scheme TaskNotes -configuration Debug -derivedDataPath .build/xcode build",
     "mac:app:release": "xcodebuild -project TaskNotes.xcodeproj -scheme TaskNotes -configuration Release -derivedDataPath .build/xcode build",
+    "mac:e2e": "bun run mac:generate && xcodebuild test -project TaskNotes.xcodeproj -scheme TaskNotes -configuration Debug -derivedDataPath .build/xcode -destination 'platform=macOS' -only-testing:TaskNotesUITests",
     "mac:run": "bun run mac:app && open .build/xcode/Build/Products/Debug/TaskNotes.app",
     "mac:release": "bun run scripts/release.ts",
     "mac:verify": "bun run mac:generate && bun run mac:build && bun run mac:test && bun run lint && bun run mac:format:check && bun run mac:app"

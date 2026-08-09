@@ -210,6 +210,49 @@ targets:
         # start failure, and a wrong-but-valid feed URL baked into a shipped
         # binary cannot be corrected for anyone who already installed it.
 
+  # ─── End-to-end UI tests ────────────────────────────────────────────────────
+  #
+  # XCUITest cannot run from SwiftPM — it needs a test *bundle* hosted by a real
+  # application, which only an Xcode project can express. That is the whole
+  # reason this target lives here and not in `Package.swift`.
+  #
+  # It links `TaskNotesKit` for one reason: `AccessibilityIdentifier`. The UI
+  # test looks elements up by identifier, and a renamed identifier has to be a
+  # compile error here rather than a query that silently matches nothing and
+  # then silently asserts nothing. Duplicating the strings would defeat the
+  # entire point of that module.
+  TaskNotesUITests:
+    type: bundle.ui-testing
+    platform: macOS
+    sources:
+      - path: UITests
+    dependencies:
+      - target: TaskNotes
+      - package: TaskNotesPackage
+        product: TaskNotesKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: red.sjer.tasknotes.mac.uitests
+        # ⚠️ Inherits the project's `nonisolated` default, and must.
+        # `XCTestCase` is a nonisolated Objective-C class, so defaulting this
+        # target to `MainActor` makes every override — `setUp()`, and all three
+        # inherited initialisers — a "different actor isolation from nonisolated
+        # overridden declaration" error. Measured, not assumed: it was set to
+        # MainActor first and produced exactly that, seven times.
+        # ⚠️ The runner is deliberately **not** sandboxed. It spawns a real
+        # `tasknotes-server` over a temporary vault so a flow can assert on the
+        # markdown bytes a user would open in Obsidian, and it inspects
+        # `NSWorkspace.frontmostApplication` to prove the quick-add panel does
+        # not steal activation. Both are outside what the shipped app's own
+        # entitlements permit — correctly, since neither is something the app
+        # does.
+        CODE_SIGN_ENTITLEMENTS: ""
+    info:
+      path: UITests/Info.plist
+      properties:
+        CFBundleName: TaskNotesUITests
+        CFBundlePackageType: BNDL
+
 schemes:
   TaskNotes:
     build:
@@ -217,6 +260,14 @@ schemes:
         TaskNotes: all
     run:
       config: Debug
+    test:
+      config: Debug
+      targets:
+        - TaskNotesUITests
+      # A UI test that needs a retry to pass is a UI test that is lying about
+      # something. The plan's cap of 6–10 flows exists so each one can be made
+      # deterministic rather than tolerated.
+      gatherCoverageData: false
     profile:
       config: Release
     analyze:

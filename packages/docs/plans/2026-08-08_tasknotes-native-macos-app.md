@@ -701,7 +701,22 @@ and renders. **No shell writes core logic and no shell spells a core value any m
       no `SUFeedURL`/`SUPublicEDKey`, the menu item stays disabled, and the release lane
       refuses to archive. **Unproven without credentials:** the Developer ID export, the
       notarization round trip, stapling, and the Gatekeeper assessment.
-- [ ] **Phase 11** — 6–10 XCUITest flows with `performAccessibilityAudit()`, local-only gate.
+- [ ] **Phase 11** — XCUITest flows, `bun run mac:e2e`. **Harness built and four flows green,
+      2026-08-09.** Three findings, each bigger than the flows themselves: - ✅ **`automationmodetool` is not needed** for launching, querying, clicking or typing —
+      the plan's flagged folklore risk does not apply to a local `xcodebuild test`. Measured,
+      with automation mode reporting _disabled_ throughout. - 🔴 **But `AXIsProcessTrusted()` is `false` for the runner**, so posting a _system-level_
+      event is silently dropped — and that is exactly what a Carbon `RegisterEventHotKey`
+      observes. So **the global hotkey and the panel's non-activating behaviour still cannot
+      be proven automatically** on an unprivileged machine. `QuickAddPanelUITests` is written
+      and correct; it needs a one-time Accessibility grant to the test runner. ⚠️ Do not
+      conclude from this that key events do not work — ordinary `typeKey` does; ⌘F was used
+      to prove it, after a first attempt used two unreliable oracles and drew the wrong
+      conclusion. - 🔴 **The audit found 19 issues on the Inbox screen alone**, and
+      `AccessibilityIdentifier.detail(_:)` turns out never to reach the accessibility tree.
+      Both are recorded in `packages/docs/todos/macos-accessibility-audit.md`; the audit calls
+      are deliberately not in the committed flows until they are fixed, because a suite that
+      is red on arrival gets ignored and a filtered audit is worse than none. - Still to write once the above are settled: drag-and-drop, create-a-task-and-assert-the-
+      vault-bytes, a `tasknotes://` deep link, and window-state restoration.
 - [x] ~~**Decide the `discouraged_optional_collection` question.**~~ **Resolved 2026-08-09 by
       removing the conflict rather than the rule or the feature.** See the Comment Log.
 - [x] ~~Add `cargo-deny` to `.mise.toml` so it can join the `lint` script.~~ **Done 2026-08-09** —
