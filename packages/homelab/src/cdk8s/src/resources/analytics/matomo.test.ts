@@ -1,8 +1,16 @@
-import { describe, expect, it } from "bun:test";
+import { beforeEach, describe, expect, it } from "bun:test";
 import { App } from "cdk8s";
 import { parseAllDocuments } from "yaml";
 import { z } from "zod";
 import { createMatomoChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/matomo.ts";
+import {
+  getRegisteredPublicProbes,
+  resetProbeRegistry,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/probe-registry.ts";
+
+beforeEach(() => {
+  resetProbeRegistry();
+});
 
 const MatomoDeploymentSchema = z.object({
   kind: z.literal("Deployment"),
@@ -95,5 +103,12 @@ describe("Matomo deployment", () => {
     ]) {
       expect(nginxConfig).toContain(temporaryPath);
     }
+    expect(getRegisteredPublicProbes()).toContainEqual({
+      namespace: "matomo",
+      serviceName: "matomo-matomo-public-service",
+      fqdn: "matomo.sjer.red",
+      module: "http_2xx",
+      path: "/matomo.php?idsite=1&rec=0",
+    });
   });
 });

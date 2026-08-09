@@ -1,7 +1,8 @@
 const timeoutMs = 300_000;
 const retryDelayMs = 5000;
-const endpoint =
-  "https://matomo.sjer.red/matomo.php?module=API&method=API.getMatomoVersion&format=json";
+// matomo.php is the public tracking endpoint; rec=0 returns its pixel without
+// recording a pageview. The API front controller is index.php and requires auth.
+const endpoint = "https://matomo.sjer.red/matomo.php?idsite=1&rec=0";
 const deadline = Date.now() + timeoutMs;
 let lastStatus = "no response";
 let ready = false;

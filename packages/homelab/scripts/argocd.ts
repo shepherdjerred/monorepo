@@ -542,6 +542,168 @@ async function sync(
   );
 }
 
+function operationState(app: Record<string, unknown>): Record<string, unknown> {
+  const status = isRecord(app["status"]) ? app["status"] : {};
+  return isRecord(status["operationState"]) ? status["operationState"] : {};
+}
+
+function operationRevision(
+  operation: Record<string, unknown>,
+): string | undefined {
+  const sync = isRecord(operation["sync"]) ? operation["sync"] : {};
+  const revision = sync["revision"];
+  return typeof revision === "string" ? revision : undefined;
+}
+
+function syncResultRevision(
+  operationStateValue: Record<string, unknown>,
+): string | undefined {
+  const syncResult = isRecord(operationStateValue["syncResult"])
+    ? operationStateValue["syncResult"]
+    : {};
+  const revision = syncResult["revision"];
+  return typeof revision === "string" ? revision : undefined;
+}
+
+function syncResultApplied(
+  operationStateValue: Record<string, unknown>,
+  revision: string,
+): boolean {
+  if (syncResultRevision(operationStateValue) !== revision) {
+    return false;
+  }
+  const syncResult = isRecord(operationStateValue["syncResult"])
+    ? operationStateValue["syncResult"]
+    : {};
+  const resources = syncResult["resources"];
+  if (!Array.isArray(resources) || resources.length === 0) {
+    return false;
+  }
+  return resources.every((resource: unknown) => {
+    if (!isRecord(resource)) {
+      return false;
+    }
+    const status = resource["status"];
+    const hookPhase = resource["hookPhase"];
+    return (
+      (status === "Synced" || status === "Pruned" || status === "Skipped") &&
+      hookPhase !== "Failed" &&
+      hookPhase !== "Error"
+    );
+  });
+}
+
+/**
+ * Finish a root sync started with `--async` after its manifests are applied.
+ *
+ * ArgoCD's async flag only changes client-side waiting: the controller keeps
+ * the operation Running until every resource is Healthy. The root app owns
+ * Applications that are intentionally deferred or independently unhealthy, so
+ * that health wait can outlive the release. Before terminating, require the
+ * exact requested revision and a complete successful sync result; a failed or
+ * mismatched operation remains a hard failure instead of being hidden.
+ */
+async function finalizeAsyncSync(
+  appName: string,
+  revision: string,
+  timeoutSeconds: number,
+  dryRun: boolean,
+): Promise<void> {
+  const exactRevision = BuildRevisionSchema.parse(revision);
+  console.log(
+    `--- argocd finalize-async-sync: ${appName} at ${exactRevision}${dryRun ? " (dry run)" : ""}`,
+  );
+  if (dryRun) {
+    console.log(
+      `DRYRUN: would terminate the applied Running operation for ${appName} at ${exactRevision}`,
+    );
+    return;
+  }
+
+  const token = requireEnv("ARGOCD_TOKEN");
+  const deadline = Date.now() + timeoutSeconds * 1000;
+  let elapsed = 0;
+  while (Date.now() < deadline) {
+    const app = await getApplication(appName, token);
+    const currentOperation = operationState(app);
+    const phase = currentOperation["phase"];
+    const operation = isRecord(currentOperation["operation"])
+      ? currentOperation["operation"]
+      : undefined;
+    if (operation === undefined) {
+      console.log(`no Running operation to finalize: ${appName}`);
+      return;
+    }
+    const currentRevision = operationRevision(operation);
+    if (currentRevision !== exactRevision) {
+      throw new Error(
+        `Refusing to terminate ${appName} operation at ${currentRevision ?? "unknown revision"}; expected ${exactRevision}`,
+      );
+    }
+    if (phase === "Failed" || phase === "Error") {
+      const message =
+        typeof currentOperation["message"] === "string"
+          ? currentOperation["message"]
+          : "";
+      throw new Error(
+        `Async sync operation ${phase} for ${appName} at ${exactRevision}: ${message.slice(0, 1024)}`,
+      );
+    }
+    if (phase !== "Running" && phase !== "Terminating") {
+      console.log(`async sync operation already finalized: ${appName}`);
+      return;
+    }
+    console.log(
+      `Operation: ${String(phase)}; applied=${syncResultApplied(currentOperation, exactRevision).toString()} ` +
+        `(${elapsed.toString()}/${timeoutSeconds.toString()}s)`,
+    );
+    if (
+      phase === "Running" &&
+      syncResultApplied(currentOperation, exactRevision)
+    ) {
+      break;
+    }
+    await Bun.sleep(POLL_INTERVAL_MS);
+    elapsed += POLL_INTERVAL_MS / 1000;
+  }
+  if (Date.now() >= deadline) {
+    throw new Error(
+      `Timeout: ${appName} operation at ${exactRevision} was not fully applied within ${timeoutSeconds.toString()}s`,
+    );
+  }
+
+  const url = new URL(
+    `/api/v1/applications/${encodeURIComponent(appName)}/operation`,
+    serverUrl(),
+  );
+  const response = await fetch(url, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+  if (!response.ok) {
+    const body = (await response.text()).slice(0, 1024);
+    throw new Error(
+      `Async sync termination failed: HTTP ${response.status.toString()} ${response.statusText}\n${body}`,
+    );
+  }
+  console.log(`terminated applied async sync operation: ${appName}`);
+
+  while (Date.now() < deadline) {
+    const current = operationState(await getApplication(appName, token));
+    const phase = current["phase"];
+    if (phase !== "Running" && phase !== "Terminating") {
+      return;
+    }
+    await Bun.sleep(POLL_INTERVAL_MS);
+  }
+  throw new Error(
+    `Timeout: terminated ${appName} operation did not leave Running/Terminating state within ${timeoutSeconds.toString()}s`,
+  );
+}
+
 async function reconcileRelease(
   expectedPath: string,
   timeoutSeconds: number,
@@ -880,6 +1042,8 @@ function usage(): never {
       "  bun packages/homelab/scripts/argocd.ts reconcile-release <expected.json> " +
       "[--defer-apps <app,...>] [--skip-health-wait] " +
       "[--timeout <s>] [--dry-run]\n" +
+      "  bun packages/homelab/scripts/argocd.ts finalize-async-sync <app> " +
+      "--revision <v> [--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts suspend-auto-sync <root-app> " +
       "[--revision <v>] [--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts wait-deletion <app> " +
@@ -992,6 +1156,20 @@ async function main(): Promise<void> {
         !argv.includes("--skip-health-wait"),
       );
       return;
+    case "finalize-async-sync": {
+      const revision = flag(argv, "revision");
+      if (revision === undefined) {
+        console.error("--revision is required for finalize-async-sync.");
+        usage();
+      }
+      await finalizeAsyncSync(
+        app,
+        revision,
+        timeoutOverride ?? DEFAULT_SYNC_TIMEOUT_S,
+        dryRun,
+      );
+      return;
+    }
     case "suspend-auto-sync":
       await suspendRepositoryAutoSync(
         app,
