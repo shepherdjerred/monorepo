@@ -3,6 +3,23 @@
 All examples use `git-spice` (agent/script-safe). Interactively, `gs` is the
 abbreviation. Run them from the checkout that manages the stack.
 
+## Metadata gate
+
+Before submitting a branch, inspect the complete `base...branch` diff and
+answer these questions:
+
+- Does every commit subject name a concrete behavior or result rather than an
+  activity or placeholder?
+- Does the primary commit explain `Why`, `What`, and `Verification`?
+- Does the PR title describe the complete branch outcome?
+- Does the PR body explain `Why`, `What`, and `Verification`, with exact checks
+  and explicit live-test boundaries?
+- Are required screenshots or recordings attached for user-visible changes?
+
+`git-spice --fill` can provide a draft or comparison point, but it is not final
+metadata. Compose the final title and body from the complete branch diff and
+submit them explicitly.
+
 ## 0. One-time per clone
 
 ```bash
@@ -17,9 +34,14 @@ This is the common case and matches the pre-git-spice flow.
 ```bash
 # Start on feature/<slug> off origin/main.
 git add packages/foo/…
-git-spice commit create -m "fix(foo): correct the thing"
+git-spice commit create -m "fix(foo): reject invalid match data"
 bun run verify -- --affected
-git-spice branch submit --fill        # opens ONE PR targeting main
+git-spice branch submit --dry-run \
+  --title "fix(foo): reject invalid match data" \
+  --body "Why: ... What: ... Verification: ..."
+git-spice branch submit \
+  --title "fix(foo): reject invalid match data" \
+  --body "Why: ... What: ... Verification: ..."
 ```
 
 ## 2. Build and submit a stack
@@ -27,18 +49,19 @@ git-spice branch submit --fill        # opens ONE PR targeting main
 ```bash
 # Bottom branch (feature/<slug>) already exists.
 git add packages/scout/schema/…
-git-spice commit create -m "feat(scout-for-lol): auth schema"
+git-spice commit create -m "feat(scout-for-lol): add authenticated report schema"
 
 git-spice branch create feature/auth-api      # no commit (commit=false), name required
 git add packages/scout/api/…
-git-spice commit create -m "feat(scout-for-lol): auth api"
+git-spice commit create -m "feat(scout-for-lol): expose authenticated report API"
 
 git-spice branch create feature/auth-ui
 git add packages/scout/web/…
-git-spice commit create -m "feat(scout-for-lol): auth ui"
+git-spice commit create -m "feat(scout-for-lol): render authenticated report controls"
 
 git-spice log short          # visualise: main → auth-schema → auth-api → auth-ui
-git-spice stack submit --fill   # 3 PRs; each targets the one below; nav comment added
+# Repeat the explicit dry-run and submit commands from the single-PR workflow
+# for each branch, using that branch's complete base...branch diff.
 ```
 
 ## 3. Review loop — amend a lower branch, propagate up
@@ -47,10 +70,10 @@ git-spice stack submit --fill   # 3 PRs; each targets the one below; nav comment
 git-spice down                       # or: git-spice branch checkout feature/auth-api
 git add packages/scout/api/…         # apply reviewer's fix
 git-spice commit amend               # auto-restacks auth-ui onto the new auth-api
-# (git-spice commit create -m "fix(scout-for-lol): review nits" also works and keeps
-#  the feedback as its own commit — often nicer for reviewers)
+# (git-spice commit create -m "fix(scout-for-lol): reject expired auth sessions"
+#  also works and keeps the feedback as its own meaningful commit)
 bun run verify -- --affected
-git-spice stack submit --update-only # force-pushes updates to the existing PRs
+git-spice stack submit --update-only # force-pushes updates without --fill
 ```
 
 ## 4. Land the stack bottom-up

@@ -84,13 +84,16 @@ Global flags on every command: `-h/--help`, `--version`, `-v/--verbose`,
 
 ## Submit flags (branch/stack/upstack/downstack submit)
 
-`-n/--dry-run` · `-c/--fill` (title+body from commits) · `--[no-]draft` ·
+`-n/--dry-run` · `-c/--fill` (optional title/body draft from commits) · `--[no-]draft` ·
 `--[no-]publish` (`--no-publish` = push without opening a PR) · `-w/--web` ·
 `--nav-comment=true|false|multiple` · `--force` · `--no-verify` ·
 `-u/--[no-]update-only` (only update existing PRs) · `-l/--label=…` ·
 `-r/--reviewer=…` (`user` or `org/team`) · `-a/--assign=…`.
 
 Submission is idempotent — creates the PR if absent, updates it if present.
+For this repository, inspect the complete branch diff and provide final
+metadata explicitly with `--title` and `--body`; do not treat `--fill` as an
+unreviewed final.
 
 ## Auth
 

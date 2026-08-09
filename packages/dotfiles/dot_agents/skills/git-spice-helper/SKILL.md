@@ -63,6 +63,39 @@ originals even across force-pushes. Squash-merging each PR still yields a clean,
 atomic trunk history. Do **not** try to make one PR per commit — that's a
 different tool's model.
 
+## Commit and PR metadata contract
+
+The commit hook checks Conventional Commit shape and scope, but it cannot judge
+whether a message explains the change. Agents must do that review before
+submitting:
+
+- Every commit subject uses `type(scope): outcome`, describes behavior or a
+  result, and avoids placeholders such as `update`, `changes`, `fix stuff`,
+  `WIP`, or an unexplained `address feedback`.
+- The primary commit for each branch carries the branch narrative in a body with
+  `Why`, `What`, and `Verification` sections. Verification lists exact commands
+  and clearly labels live or production checks that were not run.
+- A branch may contain multiple meaningful commits. The PR title and body are
+  authored from the complete `base...branch` diff, not copied from whichever
+  commit happens to be first or latest.
+- PR bodies contain `Why`, `What`, and `Verification`; add rollout notes when
+  they affect acceptance. User-visible changes include the appropriate media
+  evidence.
+- `--fill` is an optional draft or diagnostic. It is never a substitute for
+  reviewing the full diff and composing final PR metadata explicitly.
+
+Good metadata describes the outcome:
+
+```text
+fix(homelab): keep Buildkite agents awake during host idle periods
+```
+
+Weak metadata describes activity without an outcome:
+
+```text
+chore(root): update stuff
+```
+
 ## This repo's setup (shepherdjerred/monorepo)
 
 | Thing | Value |
@@ -106,11 +139,11 @@ checks staged files only; Buildkite runs the exhaustive whole-repo gate.
 # To add a branch ON TOP of the current one:
 git-spice branch create feature/auth-api      # no commit (commit=false); name required
 git add packages/…                            # stage the change
-git-spice commit create -m "feat(scout): auth api"   # commit + auto-restack upstack
+git-spice commit create -m "feat(scout): expose authenticated report API"   # commit + auto-restack upstack
 # repeat to keep stacking:
 git-spice branch create feature/auth-ui
 git add …
-git-spice commit create -m "feat(scout): auth ui"
+git-spice commit create -m "feat(scout): render authenticated report controls"
 ```
 
 `git-spice log short` (`gs ls`) shows the stack; add `-a` for every tracked branch.
@@ -126,22 +159,37 @@ git-spice branch checkout feature/auth-api   # jump to a specific branch
 ### 3. Submit the stack of PRs
 
 ```bash
-git-spice stack submit --fill        # open/update a PR per branch; titles/bodies from commits
+# Review each complete base...branch diff and compose its final title/body.
+git-spice branch submit --dry-run \
+  --title "feat(scout): add authenticated match reports" \
+  --body "Why: ... What: ... Verification: ..."
+git-spice branch submit \
+  --title "feat(scout): add authenticated match reports" \
+  --body "Why: ... What: ... Verification: ..."
+
+# For an existing, already-described stack, update branches without replacing
+# their narrative bodies from commit messages.
+git-spice stack submit --update-only
 # scope variants: git-spice branch submit | upstack submit | downstack submit
 ```
 
 Each PR targets its parent branch as base; git-spice posts a navigation comment
 showing the stack. Use `--dry-run` first to preview, `--draft` for drafts,
-`-r user,org/team` for reviewers.
+`-r user,org/team` for reviewers. `--fill` may be useful to draft or compare
+metadata, but do not publish it without checking the complete branch diff.
 
 ### 4. Address review feedback
 
 ```bash
 git-spice down                       # go to the branch under review
 git add …                            # make the fix
-git-spice commit amend               # or: git-spice commit create -m "…"  — both auto-restack the upstack
-git-spice stack submit --update-only # force-push updates to existing PRs only
+git-spice commit amend               # or: git-spice commit create -m "fix(scout): reject expired sessions"
+git-spice stack submit --update-only # force-push updates; preserves PR narratives
 ```
+
+Review-fix commits still need specific subjects. Do not replace the PR body
+with `--fill` after review; update the code and commits while keeping the
+branch-level `Why`/`What`/`Verification` narrative accurate.
 
 ### 5. Sync after a PR merges
 
@@ -185,9 +233,12 @@ git-spice rebase abort               # (gs rba) revert to the pre-rebase state
   own `buildkite/monorepo/pr` run, and every restack re-pushes → re-runs CI on
   the affected PRs. The **root of the stack must be independently landable**;
   feature-flag anything that would break a lower PR's CI on its own.
-- **Verify before every submit:** run focused package checks and commit through
-  the staged-file pre-commit hook. Do not run the root verification graph
-  locally by default; Buildkite runs it exhaustively for every PR.
+- **Verify before every submit:** inspect the complete base-to-branch diff,
+  confirm every commit has a meaningful subject, confirm the primary commit
+  body and PR body have `Why`/`What`/`Verification`, run focused package checks,
+  and commit through the staged-file pre-commit hook. Do not run the root
+  verification graph locally by default; Buildkite runs it exhaustively for
+  every PR.
 - **`repo sync` / `repo restack` are repo-global.** They act on all tracked
   branches; know what other stacks exist before running them.
 - **Stack state is local and never pushed.** A fresh clone / CI / a teammate has

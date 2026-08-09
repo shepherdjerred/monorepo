@@ -103,6 +103,31 @@ Buildkite step). They apply repo-wide; per-package `AGENTS.md` files add more.
 - **Severity discipline.** Only flag genuine issues (P0–P2); skip nits and anything
   a linter would catch. A clean diff should get a clean review.
 
+## Commit and PR Metadata
+
+Before creating or updating a feature PR, apply this checklist to the complete
+branch diff:
+
+- Every commit subject uses `type(scope): outcome`, names the behavior or result,
+  and avoids placeholders such as `update`, `changes`, `fix stuff`, `WIP`, or
+  `address feedback` without saying what changed.
+- The primary commit for a branch has a useful body with `Why`, `What`, and
+  `Verification` sections. Verification names exact commands and states any
+  live or production checks that were not run.
+- A PR title describes the complete branch outcome, not merely its first file,
+  commit, or implementation step.
+- A PR body is synthesized from the complete `base...branch` diff and contains
+  `Why`, `What`, and `Verification`. Add rollout notes or follow-up boundaries
+  when they affect reviewer acceptance.
+- Use `git-spice --fill` only as an optional draft or diagnostic. Inspect the
+  full branch diff and submit reviewed metadata explicitly with
+  `git-spice branch submit --title ... --body ...`.
+- After review changes, keep the PR narrative stable and use
+  `git-spice ... submit --update-only`; do not regenerate it blindly from
+  follow-up commits.
+- For user-visible changes, attach the required screenshot, GIF, video, or
+  other lightest artifact that proves the behavior.
+
 ## Documentation Discipline
 
 Do not create per-session journals or append session summaries to repository
