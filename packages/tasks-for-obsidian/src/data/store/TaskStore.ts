@@ -391,8 +391,6 @@ export class TaskStore {
       for (const [tempId, realId] of nextAliases) {
         if (!nextBase.has(realId)) nextAliases.delete(tempId);
       }
-      await this.persistBase(nextBase);
-      await this.persistAliases(nextAliases);
       const prunedAcknowledgedCompletionRestores = pruneCompletionRestores(
         this.acknowledgedCompletionRestores,
         localTodayYmd(new Date(this.clock())),
@@ -409,6 +407,8 @@ export class TaskStore {
           nextAcknowledgedCompletionRestores,
         ),
       );
+      await this.persistBase(nextBase);
+      await this.persistAliases(nextAliases);
       await this.storage.setLastSyncTime(syncedAt);
 
       this.base = nextBase;

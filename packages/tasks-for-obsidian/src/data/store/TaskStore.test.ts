@@ -327,6 +327,68 @@ describe("TaskStore full pulls", () => {
       store.getPendingCompletionRestore(task.id, "2026-08-08"),
     ).resolves.toEqual(undefined);
   });
+
+  test("persists restore invalidation before a pulled base write", async () => {
+    const task = makeTask({
+      recurrence: "FREQ=WEEKLY",
+      scheduled: "2026-08-08",
+    });
+    const backingStorage = memoryStoreStorage({ tasks: [task] });
+    let failBaseWrite = false;
+    const storeStorage = {
+      ...backingStorage,
+      setTasks: async (tasks: Task[]) => {
+        if (failBaseWrite) throw new Error("base pull interrupted");
+        await backingStorage.setTasks(tasks);
+      },
+    };
+    const { store, queue } = makeStore(memoryQueueStorage(), storeStorage);
+    await store.restore();
+    const restore = {
+      scheduled: "2026-08-08",
+      due: null,
+      recurrence: "FREQ=WEEKLY",
+      skipped: false,
+    };
+    await store.dispatch({
+      type: "set_instance_complete",
+      taskId: task.id,
+      date: "2026-08-08",
+      completed: true,
+      restore,
+    });
+    const command = queue.head();
+    if (command?.type !== "set_instance_complete") {
+      throw new Error("expected completion command");
+    }
+    await store.applyServerAck(command, {
+      ...task,
+      completeInstances: ["2026-08-08"],
+    });
+
+    failBaseWrite = true;
+    await expect(
+      store.replaceBase(
+        [
+          {
+            ...task,
+            recurrence: "FREQ=MONTHLY",
+            completeInstances: ["2026-08-08"],
+          },
+        ],
+        now,
+      ),
+    ).rejects.toThrow("base pull interrupted");
+
+    const relaunched = makeStore(
+      memoryQueueStorage(),
+      backingStorage.clone(),
+    ).store;
+    await relaunched.restore();
+    await expect(
+      relaunched.getPendingCompletionRestore(task.id, "2026-08-08"),
+    ).resolves.toEqual(undefined);
+  });
 });
 
 describe("TaskStore restore validation", () => {
