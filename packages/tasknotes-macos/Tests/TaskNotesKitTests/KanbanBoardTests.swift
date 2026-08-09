@@ -164,6 +164,39 @@ struct KanbanBoardTests {
         #expect(!column.isTerminal)
     }
 
+    /// ⚠️ **The mirror case: a retired task whose rule still fires.**
+    ///
+    /// `TaskRowState.isCompleted` is occurrence-level for a recurring task — it
+    /// reads `completeInstances` and never `status` — so a cancelled or done
+    /// recurring task reports `isCompleted == false` while being entirely
+    /// finished. Anything keyed on `isCompleted` alone therefore draws it as
+    /// live work.
+    ///
+    /// **The board is the only surface that can show this**, which is why it
+    /// went unnoticed: Today and Upcoming filter terminal tasks out, so a
+    /// screen built against them structurally cannot reveal it. Browse can, and
+    /// a Cancelled column makes it unmissable.
+    ///
+    /// The model's job is only to file the card correctly, which it does by
+    /// `status`. The drawing is `KanbanCardView`'s, and it keys the
+    /// strikethrough on the task and the checkbox on the occurrence precisely
+    /// so that this row comes out struck through with an **empty** box.
+    @Test("a retired task whose rule still fires is filed by status, not occurrence")
+    func retiredRecurringIsFiledByStatus() throws {
+        let board = try build()
+        let column = try #require(board.column(holding: "Tasks/Weekly review.md"))
+        #expect(column.status == .cancelled)
+        #expect(column.isTerminal)
+
+        let card = try #require(board.card("Tasks/Weekly review.md"))
+        // Occurrence-level says "not done"…
+        #expect(!card.isCompleted)
+        // …while the task is finished. A view keyed on the first alone would
+        // draw this as live work.
+        #expect(!taskStatusIsActive(status: card.task.status))
+        #expect(card.isRecurring)
+    }
+
     /// The board narrows through the same query surface as a list, and its
     /// count says so.
     @Test("filtering the board narrows the cards and states the narrowing")
@@ -266,5 +299,11 @@ struct KanbanBoardTests {
             id: "Tasks/Take vitamins.md", title: "Take vitamins",
             scheduled: "2026-07-22", recurrence: "FREQ=DAILY",
             completeInstances: ["2026-07-22"]),
+        // Retired, but its rule still fires and no occurrence was ever ticked.
+        // The mirror image of the row above, and the case that can only surface
+        // on a board.
+        coreTask(
+            id: "Tasks/Weekly review.md", title: "Weekly review", status: .cancelled,
+            scheduled: "2026-07-24", recurrence: "FREQ=WEEKLY;BYDAY=FR"),
     ]
 }

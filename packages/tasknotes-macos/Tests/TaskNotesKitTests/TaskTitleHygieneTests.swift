@@ -51,20 +51,3 @@ struct TaskTitleHygieneTests {
         }
     }
 }
-
-/// Probe: how does a *cancelled recurring* task read?
-@Suite("Probe")
-struct ProbeTests {
-    @Test("probe")
-    func probe() throws {
-        let row = try TaskRowState(
-            task: coreTask(
-                id: "dead.md", status: .cancelled, scheduled: "2026-07-22",
-                recurrence: "FREQ=DAILY"),
-            isPending: false,
-            calendar: fixedCalendar(),
-            text: fixedText())
-        Issue.record(
-            "isCompleted=\(row.isCompleted) statusActive=\(taskStatusIsActive(status: row.task.status))")
-    }
-}

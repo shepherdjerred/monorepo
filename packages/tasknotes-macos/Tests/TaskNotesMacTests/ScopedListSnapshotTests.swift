@@ -99,6 +99,76 @@ struct ScopedListSnapshotTests {
         )
     }
 
+    /// A recurring task that is globally finished, beside one that is not.
+    ///
+    /// ⚠️ **The case Browse is the only screen that can show.**
+    /// `TaskRowState.isCompleted` is *occurrence*-level for a recurring task —
+    /// it reads `completeInstances`, never `status` — so a cancelled or done
+    /// recurring task used to draw exactly like a live one. Today and Upcoming
+    /// filter terminal tasks out, so neither could ever have revealed it.
+    ///
+    /// What to look at, top to bottom: **cancelled** and **done** recurring
+    /// tasks are struck through with dimmed marks and an *empty* checkbox — the
+    /// task is retired, this occurrence was never ticked. The third is live and
+    /// its occurrence is ticked: not struck, filled box. The fourth is live and
+    /// untouched.
+    ///
+    /// The two channels answer **different** questions, and the third row is
+    /// what proves it: strikethrough says *this row is not live work right
+    /// now* — true whether the task retired or merely today's occurrence was
+    /// ticked — while the box says only *this occurrence is done*. Rows 1 and 2
+    /// are struck with an empty box, row 3 is struck with a full one, and the
+    /// pair that used to be indistinguishable from row 4 no longer is.
+    ///
+    /// Cancelled and done deliberately draw alike: a list row spends one
+    /// channel on "retired", the status filter is what separates the two
+    /// reasons, and the spoken label names whichever applies.
+    @Test(
+        "a retired recurring task does not draw as live work",
+        arguments: SnapshotAppearance.allCases
+    )
+    func retiredRecurringTasksReadAsRetired(appearance: SnapshotAppearance) throws {
+        func row(_ status: TaskStatus, done: Bool) throws -> TaskRowState {
+            try TaskRowState(
+                task: coreTask(
+                    id: "Tasks/\(status)-\(done).md",
+                    title: "Water the ferns",
+                    status: status,
+                    priority: .high,
+                    scheduled: SnapshotFixtures.today,
+                    recurrence: "FREQ=DAILY",
+                    completeInstances: done ? [SnapshotFixtures.today] : [],
+                    contexts: ["home"]
+                ),
+                isPending: false,
+                calendar: SnapshotFixtures.calendar,
+                text: TaskDateText(locale: Locale(identifier: "en_US"))
+            )
+        }
+
+        let rows = [
+            try row(.cancelled, done: false),
+            try row(.done, done: false),
+            try row(.open, done: true),
+            try row(.open, done: false),
+        ]
+        try record(
+            List(rows) { each in
+                TaskRowView(
+                    row: each,
+                    onToggle: {},
+                    onDelete: {},
+                    onSchedule: { _ in },
+                    onScheduleDate: { _ in }
+                )
+            }
+            .listStyle(.inset),
+            named: "row-retired-recurring",
+            size: Self.rowsSize,
+            appearance: appearance
+        )
+    }
+
     private static let screenSize = CGSize(width: 780, height: 560)
     private static let rowsSize = CGSize(width: 560, height: 320)
 }

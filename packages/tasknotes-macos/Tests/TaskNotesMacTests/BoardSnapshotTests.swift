@@ -387,6 +387,12 @@ enum BoardFixtures {
             coreTask(
                 id: "Tasks/Quarterly review.md", title: "Quarterly review",
                 status: .cancelled, priority: .low),
+            // Retired but still repeating — see `cardStates` for why this case
+            // has to appear on a board and can appear nowhere else.
+            coreTask(
+                id: "Tasks/Weekly review.md", title: "Weekly review",
+                status: .done, priority: .medium,
+                scheduled: "2026-07-24", recurrence: "FREQ=WEEKLY;BYDAY=FR"),
         ]
     }
 
@@ -413,6 +419,21 @@ enum BoardFixtures {
                 completeInstances: [SnapshotFixtures.today]),
             coreTask(id: "Tasks/Sync me.md", title: "Waiting to sync", priority: .high),
             coreTask(id: "Tasks/Bare.md", title: "No metadata at all"),
+            // ⚠️ A **retired recurring** task: cancelled, but with a rule that
+            // still fires and no entry in `completeInstances`. This is the case
+            // `list-screens` found drawing identically to a live task on the
+            // list row, and the board is the only surface that can show it —
+            // Today and Upcoming filter terminal tasks out, so the bug was
+            // structurally invisible there.
+            //
+            // On a card the two channels have to disagree here: struck through
+            // and dimmed, because the *task* is retired, and an **empty** box,
+            // because the occurrence was never ticked. A card that looked live
+            // would be the same defect one screen over.
+            coreTask(
+                id: "Tasks/Weekly review.md", title: "Weekly review",
+                status: .cancelled, priority: .medium,
+                scheduled: "2026-07-24", recurrence: "FREQ=WEEKLY;BYDAY=FR"),
         ]
     }
 }

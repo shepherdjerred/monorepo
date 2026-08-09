@@ -125,13 +125,12 @@ struct TaskRowView: View {
                     // stays put so the completion is felt, which is the whole
                     // reason the Today filter keeps a checked recurring
                     // occurrence visible.
-                    .strikethrough(row.isCompleted, color: .secondary)
-                    .foregroundStyle(row.isCompleted ? .secondary : .primary)
+                    .strikethrough(isRetired, color: .secondary)
+                    .foregroundStyle(isRetired ? .secondary : .primary)
 
-                PriorityMarker(priority: row.task.priority, isDimmed: row.isCompleted)
+                PriorityMarker(priority: row.task.priority, isDimmed: isRetired)
                 if row.isRecurring {
-                    RecurrenceMarker(
-                        occurrence: row.occurrence?.text, isDimmed: row.isCompleted)
+                    RecurrenceMarker(occurrence: row.occurrence?.text, isDimmed: isRetired)
                 }
             }
             .layoutPriority(2)
@@ -192,14 +191,38 @@ struct TaskRowView: View {
         .accessibilityLabel(accessibilityLabel)
     }
 
+    /// Whether this row is no longer live work — for either of the two
+    /// unrelated reasons it can stop being so.
+    ///
+    /// ⚠️ **Two facts, and reading only one of them was a bug.** A row can be
+    /// finished because *the occurrence shown* was ticked
+    /// (``TaskRowState/isCompleted``, which for a recurring task is the state
+    /// of the occurrence a click would target), or because *the task itself* is
+    /// in a terminal status. For a plain task the two coincide. For a recurring
+    /// one they are independent — `isCompleted` reads `completeInstances` and
+    /// never `status` — so a **cancelled or done recurring task drew exactly
+    /// like a live one**, struck through nowhere, on the only screen that shows
+    /// terminal tasks at all. Browse found it; Today and Upcoming cannot,
+    /// because both filter terminal tasks out.
+    ///
+    /// The Kanban card deliberately does *not* combine them: a board's column
+    /// already states the status, so spending the strikethrough on it would be
+    /// the same redundancy as printing a project's name on every row of its own
+    /// screen. A list has no column, so here the strikethrough is the only
+    /// channel "not live work" has, and it carries both reasons. The checkbox
+    /// stays occurrence-level on both, because the gesture is.
+    private var isRetired: Bool {
+        row.isCompleted || !taskStatusIsActive(status: row.task.status)
+    }
+
     /// The date's colour, and the one place red appears on a row.
     ///
-    /// **Red means exactly one thing: late.** A completed task cannot be late,
-    /// so a completed row's date is never red however far in the past it is —
-    /// which is the same reasoning that dims the priority and repeat marks on a
-    /// completed row, applied to the channel that carries the most weight.
+    /// **Red means exactly one thing: late.** A finished task cannot be late,
+    /// so a retired row's date is never red however far in the past it is —
+    /// the same reasoning that dims the priority and repeat marks, applied to
+    /// the channel that carries the most weight.
     private func dateTint(_ date: DateBadge) -> AnyShapeStyle {
-        guard date.isOverdue, !row.isCompleted else { return AnyShapeStyle(.secondary) }
+        guard date.isOverdue, !isRetired else { return AnyShapeStyle(.secondary) }
         return AnyShapeStyle(.red)
     }
 
@@ -294,10 +317,19 @@ struct TaskRowView: View {
     /// there, so nothing should be said.
     private var accessibilityLabel: String {
         var parts = ["Task: \(row.task.title)"]
-        if row.isCompleted { parts.append("completed") }
+        // The two reasons split, because they are different news and the eye
+        // gets them from different channels: the strikethrough says the task is
+        // finished, the tick says this occurrence is. The core's own status
+        // label supplies the word, so a cancelled task is not announced as a
+        // completed one.
+        if !taskStatusIsActive(status: row.task.status) {
+            parts.append(taskStatusLabel(status: row.task.status).lowercased())
+        } else if row.isCompleted {
+            parts.append("this occurrence is done")
+        }
         if let priority = PriorityMarker.spoken(row.task.priority) { parts.append(priority) }
         if row.isRecurring { parts.append("repeats") }
-        if !row.isCompleted, row.displayDate?.isOverdue == true { parts.append("overdue") }
+        if !isRetired, row.displayDate?.isOverdue == true { parts.append("overdue") }
         if let date = row.displayDate {
             parts.append(row.isRecurring ? "occurrence of \(date.text)" : "due \(date.text)")
         }
