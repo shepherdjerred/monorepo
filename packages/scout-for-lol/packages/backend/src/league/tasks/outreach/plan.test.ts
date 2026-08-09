@@ -17,6 +17,7 @@ function plan(overrides: Partial<Parameters<typeof planOutreach>[0]> = {}) {
     serverName: "Test Server",
     installedAt: INSTALLED,
     outreachStage: 0,
+    lastLadderStage: 0,
     feedbackRequestedAt: null,
     state: { subscriptions: 0, competitions: 0 },
     now: day(3),
@@ -40,26 +41,38 @@ describe("planOutreach — timing", () => {
     });
   });
 
-  it("holds stage 2 until day 14", () => {
-    expect(plan({ outreachStage: 1, now: day(13) })).toMatchObject({
+  it("holds rung 2 until day 14", () => {
+    const sentRung1 = { outreachStage: 1, lastLadderStage: 1 };
+    expect(plan({ ...sentRung1, now: day(13) })).toMatchObject({
       action: "skip",
-      reason: "too_soon",
+      reason: "stage_already_sent",
     });
-    expect(plan({ outreachStage: 1, now: day(14) })).toMatchObject({
+    expect(plan({ ...sentRung1, now: day(14) })).toMatchObject({
       action: "send",
       stage: 2,
     });
   });
 
-  it("holds stage 3 until day 30", () => {
-    expect(plan({ outreachStage: 2, now: day(29) })).toMatchObject({
+  it("holds rung 3 until day 30", () => {
+    const sentRung2 = { outreachStage: 2, lastLadderStage: 2 };
+    expect(plan({ ...sentRung2, now: day(29) })).toMatchObject({
       action: "skip",
-      reason: "too_soon",
+      reason: "stage_already_sent",
     });
-    expect(plan({ outreachStage: 2, now: day(30) })).toMatchObject({
+    expect(plan({ ...sentRung2, now: day(30) })).toMatchObject({
       action: "send",
       stage: 3,
     });
+  });
+
+  it("never repeats a rung once delivered", () => {
+    // Without this, an unconfigured guild past day 30 would re-send the last
+    // call every single day until the budget drained.
+    for (const days of [30, 31, 60, 400]) {
+      expect(
+        plan({ outreachStage: 1, lastLadderStage: 3, now: day(days) }),
+      ).toMatchObject({ action: "skip", reason: "stage_already_sent" });
+    }
   });
 });
 
@@ -146,6 +159,64 @@ describe("planOutreach — content adapts to actual state", () => {
         outreachStage: 2,
         feedbackRequestedAt: day(14),
         state: { subscriptions: 5, competitions: 0 },
+        now: day(30),
+      }),
+    ).toMatchObject({ action: "skip", reason: "already_asked" });
+  });
+});
+
+describe("planOutreach — ladder position is independent of budget", () => {
+  it("reaches the feedback ask for a guild configured before its first message", () => {
+    // The regression this guards: ladder position used to be derived from the
+    // delivered-message count. A guild configured before day 3 was skipped
+    // (correctly), which delivered nothing, which left the counter at zero,
+    // which meant day 14 re-evaluated as rung 1 forever — so the feedback ask
+    // was unreachable for exactly the guilds most worth asking.
+    const configuredEarly = {
+      outreachStage: 0,
+      lastLadderStage: 0,
+      state: { subscriptions: 2, competitions: 0 },
+    };
+
+    expect(plan({ ...configuredEarly, now: day(3) })).toMatchObject({
+      action: "skip",
+      reason: "configured",
+    });
+    expect(plan({ ...configuredEarly, now: day(14) })).toMatchObject({
+      action: "send",
+      stage: 2,
+      kind: "feedback_request",
+    });
+  });
+
+  it("keeps a skipped guild eligible rather than burning its rung", () => {
+    // Skipping must not record the rung, or the guild would be stranded again.
+    expect(
+      plan({
+        outreachStage: 0,
+        lastLadderStage: 0,
+        state: { subscriptions: 1, competitions: 0 },
+        now: day(30),
+      }),
+    ).toMatchObject({ action: "send", kind: "feedback_request" });
+  });
+
+  it("spends no budget on a guild that never needed a message", () => {
+    // Configured throughout: one feedback ask, and nothing else, ever.
+    const configured = { state: { subscriptions: 3, competitions: 1 } };
+    expect(plan({ ...configured, now: day(3) })).toMatchObject({
+      action: "skip",
+    });
+    expect(plan({ ...configured, now: day(14) })).toMatchObject({
+      action: "send",
+      kind: "feedback_request",
+    });
+    expect(
+      plan({
+        ...configured,
+        outreachStage: 1,
+        lastLadderStage: 2,
+        feedbackRequestedAt: day(14),
         now: day(30),
       }),
     ).toMatchObject({ action: "skip", reason: "already_asked" });

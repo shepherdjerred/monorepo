@@ -704,10 +704,18 @@ drift from reality. Treat this as an invariant:
 - **A new channel shares the budget.** If email or any other channel is added,
   it consumes the same allowance (`emailNudgeSentAt` exists for this) — a fourth
   message arriving by another route would make the printed count a lie.
+- **Ladder position and budget are separate numbers.** `lastLadderStage` is
+  "which rung have we said?" and comes from install age; `outreachStage` is "how
+  much budget is spent?" and only moves on delivery. Deriving the rung from the
+  spent budget strands any guild that is legitimately skipped — a configured
+  guild delivers nothing at rung 1, so the counter never moves, so it can never
+  reach the rung-2 feedback ask. A skip must never record a rung.
 - **Never re-arm outreach without an observed removal.** `handleGuildCreate`
   restarts the ladder only when `GuildInstall.removedAt` is set; a replayed
   `guildCreate` for a guild we never left must not re-post the welcome message
-  or re-send DMs.
+  or re-send DMs. A genuine re-install must clear the **active** ladder fields
+  (`outreachStage`, `lastLadderStage`, `feedbackRequestedAt`, …), not just the
+  legacy timestamp columns.
 
 Validate ladder changes with `bun run scripts/outreach-dry-run.ts` against a
 copy of production before the first real fire — the failure mode here is

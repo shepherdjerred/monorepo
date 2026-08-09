@@ -52,8 +52,30 @@ const GETTING_STARTED = "https://scout-for-lol.com/getting-started/";
 const DASHBOARD = "https://scout-for-lol.com/app/";
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-/** Earliest age, in days, at which each ladder stage may fire. */
-const STAGE_AGE_DAYS: Record<number, number> = { 1: 3, 2: 14, 3: 30 };
+/**
+ * Ladder rungs by install age. The rung decides WHAT to say; the budget decides
+ * WHETHER we may say it. These are deliberately independent — see
+ * {@link ladderStageFor}.
+ */
+const STAGE_AGE_DAYS: readonly { stage: number; days: number }[] = [
+  { stage: 3, days: 30 },
+  { stage: 2, days: 14 },
+  { stage: 1, days: 3 },
+];
+
+/**
+ * The rung a guild has reached, from install age alone.
+ *
+ * Derived from the calendar rather than from messages sent, because a guild
+ * that needs no message still advances through the ladder. Tying the rung to
+ * the delivered-message count stranded configured guilds on rung 1 forever:
+ * they were skipped (correctly) at day 3, which delivered nothing, which left
+ * the counter at zero, which meant day 14 re-evaluated as rung 1 again and the
+ * feedback ask was never reachable.
+ */
+export function ladderStageFor(ageDays: number): number {
+  return STAGE_AGE_DAYS.find((rung) => ageDays >= rung.days)?.stage ?? 0;
+}
 
 /** A guild's current configuration, which decides the message content. */
 type GuildState = {
@@ -119,42 +141,46 @@ function lastCall(serverName: string): string {
 export function planOutreach(params: {
   serverName: string;
   installedAt: Date;
+  /** Non-core messages already DELIVERED — the spent budget. */
   outreachStage: number;
+  /** Highest rung already delivered, so a rung is never repeated. */
+  lastLadderStage: number;
   feedbackRequestedAt: Date | null;
   state: GuildState;
   now: Date;
 }): Plan {
-  const nextStage = params.outreachStage + 1;
-  if (nextStage > NON_CORE_MESSAGE_BUDGET) {
-    return { action: "skip", stage: nextStage, reason: "budget_exhausted" };
-  }
-
-  const requiredDays = STAGE_AGE_DAYS[nextStage];
-  if (requiredDays === undefined) {
-    return { action: "skip", stage: nextStage, reason: "budget_exhausted" };
-  }
   const ageDays =
     (params.now.getTime() - params.installedAt.getTime()) / DAY_MS;
-  if (ageDays < requiredDays) {
-    return { action: "skip", stage: nextStage, reason: "too_soon" };
+  const stage = ladderStageFor(ageDays);
+
+  if (stage === 0) {
+    return { action: "skip", stage: 1, reason: "too_soon" };
+  }
+  // A rung is said at most once. Without this, an unconfigured guild past day
+  // 30 would re-send the last call every single day until the budget drained.
+  if (stage <= params.lastLadderStage) {
+    return { action: "skip", stage, reason: "stage_already_sent" };
+  }
+  if (params.outreachStage >= NON_CORE_MESSAGE_BUDGET) {
+    return { action: "skip", stage, reason: "budget_exhausted" };
   }
 
   const configured =
     params.state.subscriptions > 0 || params.state.competitions > 0;
 
-  // Stage 1 is purely a setup nudge: a guild that is already configured has
-  // nothing to be nudged about, and must NOT spend a message on it.
-  if (nextStage === 1 && configured) {
-    return { action: "skip", stage: nextStage, reason: "configured" };
-  }
-
   if (configured) {
+    // Rung 1 is purely a setup nudge, and a configured guild has nothing to be
+    // nudged about. Skipping WITHOUT recording the rung is deliberate: the
+    // guild stays eligible, so it still reaches the feedback ask at rung 2.
+    if (stage === 1) {
+      return { action: "skip", stage, reason: "configured" };
+    }
     if (params.feedbackRequestedAt !== null) {
-      return { action: "skip", stage: nextStage, reason: "already_asked" };
+      return { action: "skip", stage, reason: "already_asked" };
     }
     return {
       action: "send",
-      stage: nextStage,
+      stage,
       kind: "feedback_request",
       message: truncateDiscordMessage(
         feedbackAsk(params.serverName, params.state),
@@ -164,10 +190,10 @@ export function planOutreach(params: {
 
   return {
     action: "send",
-    stage: nextStage,
-    kind: nextStage >= 3 ? "outreach_last_call" : "outreach_nudge",
+    stage,
+    kind: stage >= 3 ? "outreach_last_call" : "outreach_nudge",
     message: truncateDiscordMessage(
-      nextStage >= 3
+      stage >= 3
         ? lastCall(params.serverName)
         : onboardingNudge(params.serverName, params.state),
     ),
@@ -214,6 +240,7 @@ export async function runOutreach(
       serverName: install.serverName,
       installedAt: install.installedAt,
       outreachStage: install.outreachStage,
+      lastLadderStage: install.lastLadderStage,
       feedbackRequestedAt: install.feedbackRequestedAt,
       state,
       now,
@@ -254,13 +281,17 @@ export async function runOutreach(
 
     if (status === "sent") {
       sent += 1;
-      if (plan.kind === "feedback_request") {
-        // Record the ask so a later stage doesn't repeat it.
-        await prisma.guildInstall.update({
-          where: { id: install.id },
-          data: { feedbackRequestedAt: new Date() },
-        });
-      }
+      // Record the rung so it is never repeated. (sendDM owns the budget
+      // counter; this is the ladder position, which is a different thing.)
+      await prisma.guildInstall.update({
+        where: { id: install.id },
+        data: {
+          lastLadderStage: plan.stage,
+          ...(plan.kind === "feedback_request"
+            ? { feedbackRequestedAt: new Date() }
+            : {}),
+        },
+      });
     }
   }
 

@@ -16,6 +16,7 @@ import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
 import { truncateDiscordMessage } from "#src/discord/utils/message.ts";
 import {
+  BUDGETED_DM_KINDS,
   messageBudgetFooter,
   NON_CORE_MESSAGE_BUDGET,
   RECIPIENT_COOLDOWN_MS,
@@ -186,7 +187,10 @@ async function evaluateBudget(
     where: {
       recipientId,
       deliveryStatus: "sent",
-      kind: { startsWith: "outreach" },
+      // Every budgeted kind, not just the `outreach`-prefixed ones — the ladder
+      // sends `feedback_request` to configured guilds, and an installer with
+      // several of those would otherwise be DM'd about all of them at once.
+      kind: { in: [...BUDGETED_DM_KINDS] },
       createdAt: { gt: cutoff },
     },
     select: { id: true },

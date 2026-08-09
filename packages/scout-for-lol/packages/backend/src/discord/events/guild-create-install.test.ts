@@ -128,6 +128,40 @@ describe("handleGuildCreate — GuildInstall bookkeeping", () => {
     );
   });
 
+  it("clears the active ladder fields on re-install, not just the legacy ones", async () => {
+    // The ladder reads outreachStage / lastLadderStage / feedbackRequestedAt.
+    // Resetting only the legacy timestamps left a re-installed server
+    // permanently budget-exhausted and already-asked — onboarding never
+    // actually restarted.
+    await prisma.guildInstall.create({
+      data: {
+        serverId: SERVER_ID,
+        serverName: "Fixture Server",
+        ownerDiscordId: testAccountId("77"),
+        addedByDiscordId: testAccountId("77"),
+        memberCount: 10,
+        installedAt: new Date("2026-01-01T00:00:00.000Z"),
+        outreachStage: 3,
+        lastLadderStage: 3,
+        feedbackRequestedAt: new Date("2026-01-15T00:00:00.000Z"),
+        lastOutreachAt: new Date("2026-01-15T00:00:00.000Z"),
+        emailNudgeSentAt: new Date("2026-01-20T00:00:00.000Z"),
+        removedAt: new Date("2026-02-01T00:00:00.000Z"),
+      },
+    });
+
+    await handleGuildCreate(guildFixture());
+
+    const row = await prisma.guildInstall.findUnique({
+      where: { serverId: SERVER_ID },
+    });
+    expect(row?.outreachStage).toBe(0);
+    expect(row?.lastLadderStage).toBe(0);
+    expect(row?.feedbackRequestedAt).toBeNull();
+    expect(row?.lastOutreachAt).toBeNull();
+    expect(row?.emailNudgeSentAt).toBeNull();
+  });
+
   it("does not touch the install row when the guild is unavailable", async () => {
     const installedAt = new Date("2026-01-01T00:00:00.000Z");
     await prisma.guildInstall.create({

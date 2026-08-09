@@ -24,6 +24,26 @@
 export const NON_CORE_MESSAGE_BUDGET = 3;
 
 /**
+ * Every DM kind that can be sent as a budgeted, non-core message.
+ *
+ * The recipient cooldown must consider all of them, not just the
+ * `outreach`-prefixed ones: the ladder sends `feedback_request` to configured
+ * guilds, so matching on the prefix alone let one installer with several
+ * configured servers receive multiple DMs in the same run — exactly the burst
+ * the 72-hour spacing exists to prevent.
+ */
+export const BUDGETED_DM_KINDS = [
+  "outreach_nudge",
+  "outreach_last_call",
+  "feedback_request",
+  // Legacy kinds, still present in DmAuditLog history.
+  "outreach_3d",
+  "outreach_14d",
+  "outreach_30d",
+  "outreach_manual",
+] as const;
+
+/**
  * Minimum gap between non-core DMs to the same recipient, across all their
  * servers. Someone who installed Scout in three guilds on the same day should
  * not receive three DMs at once; the later ones are deferred, not dropped.

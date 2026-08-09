@@ -64,18 +64,26 @@ export function FeedbackPrompt() {
     }),
   );
 
-  // Only ask people who have actually used Scout: at least one tracked
-  // subscription somewhere. Asking someone who never configured anything
-  // produces noise, not signal — that population gets the onboarding ladder.
-  const guilds = useQuery(
-    trpc.guild.listManageable.queryOptions(undefined, {
+  // Only ask people who have actually used Scout — i.e. created a subscription.
+  // Merely being able to manage a guild where Scout is installed proves
+  // nothing: that person may never have configured it, and asking them would
+  // both pollute the sample and burn their one-time prompt. That population
+  // gets the onboarding ladder instead.
+  //
+  // `enabled` matters: this component is mounted globally, including on
+  // /login, so an unconditional authenticated query would manufacture exactly
+  // the UNAUTHORIZED errors `sessionState` exists to eliminate.
+  const eligibility = useQuery(
+    trpc.feedback.eligibility.queryOptions(undefined, {
+      enabled: user !== null,
+      retry: false,
       staleTime: STALE_TIME_SLOW_LIST,
     }),
   );
 
   if (user === null || hidden) return null;
   if (isFeedbackDismissed(user.discordId)) return null;
-  if ((guilds.data ?? []).length === 0) return null;
+  if (eligibility.data?.hasUsedScout !== true) return null;
 
   const accountAgeDays =
     (Date.now() - new Date(user.createdAt).getTime()) / 86_400_000;

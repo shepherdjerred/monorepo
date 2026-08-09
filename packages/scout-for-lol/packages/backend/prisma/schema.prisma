@@ -445,6 +445,14 @@ model GuildInstall {
   // were stamped whether or not anything was sent, which permanently burned 33
   // of 37 guilds out of the 14-day feedback ask without ever messaging them.
   outreachStage       Int       @default(0)
+  // Highest ladder rung whose message was actually delivered (0..3).
+  //
+  // Kept separate from `outreachStage` because they answer different questions:
+  // this is "which rung have we said?", while `outreachStage` is "how much of
+  // the budget is spent?". Conflating them meant a guild that configured before
+  // its first message never left rung 1 — nothing was ever delivered, so the
+  // counter never moved — and so never reached the day-14 feedback ask.
+  lastLadderStage     Int       @default(0)
   lastOutreachAt      DateTime?
   // Set once a feedback ask has been delivered, so we never ask twice.
   feedbackRequestedAt DateTime?

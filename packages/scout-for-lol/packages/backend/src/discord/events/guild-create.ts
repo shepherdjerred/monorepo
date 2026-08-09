@@ -156,9 +156,18 @@ async function saveGuildInstall(
         ...identity,
         // A guild we never left keeps its original install date and outreach
         // progress; only a real re-install restarts the clock.
+        // Clear the ACTIVE ladder fields, not just the legacy columns: the
+        // ladder reads outreachStage / lastLadderStage / feedbackRequestedAt,
+        // so resetting only the old timestamps would leave a re-installed guild
+        // permanently budget-exhausted and already-asked.
         ...(restartOnboarding
           ? {
               installedAt: new Date(),
+              outreachStage: 0,
+              lastLadderStage: 0,
+              feedbackRequestedAt: null,
+              lastOutreachAt: null,
+              emailNudgeSentAt: null,
               outreach3dSentAt: null,
               outreach14dSentAt: null,
               outreach30dSentAt: null,

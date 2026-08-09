@@ -36,6 +36,7 @@ for (const install of installs) {
     serverName: install.serverName,
     installedAt: install.installedAt,
     outreachStage: install.outreachStage,
+    lastLadderStage: install.lastLadderStage,
     feedbackRequestedAt: install.feedbackRequestedAt,
     state: { subscriptions, competitions },
     now,
@@ -52,7 +53,7 @@ for (const install of installs) {
   );
   logger.info(
     `${install.serverName.padEnd(34).slice(0, 34)} age=${ageDays.toString().padStart(4)}d ` +
-      `stage=${install.outreachStage.toString()} subs=${subscriptions.toString()} comps=${competitions.toString()} → ${outcome}`,
+      `spent=${install.outreachStage.toString()} rung=${install.lastLadderStage.toString()} subs=${subscriptions.toString()} comps=${competitions.toString()} → ${outcome}`,
   );
 }
 

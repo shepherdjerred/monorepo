@@ -10,7 +10,7 @@
 
 import { z } from "zod";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
-import { router, webMutationProcedure } from "#src/trpc/trpc.ts";
+import { router, webMutationProcedure, webProcedure } from "#src/trpc/trpc.ts";
 import { prisma } from "#src/database/index.ts";
 import { feedbackSubmittedTotal } from "#src/metrics/web.ts";
 import { createLogger } from "#src/logger.ts";
@@ -18,6 +18,23 @@ import { createLogger } from "#src/logger.ts";
 const logger = createLogger("feedback-router");
 
 export const feedbackRouter = router({
+  /**
+   * Whether this user has actually used Scout, i.e. created at least one
+   * subscription anywhere.
+   *
+   * Being able to *manage* a guild is not evidence of use: someone who is an
+   * admin of a server where Scout is installed but unconfigured would otherwise
+   * be asked for product feedback about a product they have never seen, and
+   * could permanently dismiss the one-time prompt before ever using it.
+   * `creatorDiscordId` is a direct usage signal and needs no Discord round-trip.
+   */
+  eligibility: webProcedure.query(async ({ ctx }) => {
+    const created = await prisma.subscription.count({
+      where: { creatorDiscordId: ctx.user.discordId },
+    });
+    return { hasUsedScout: created > 0 };
+  }),
+
   submit: webMutationProcedure
     .input(
       z.object({

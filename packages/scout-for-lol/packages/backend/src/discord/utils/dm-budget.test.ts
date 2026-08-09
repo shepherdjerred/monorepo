@@ -182,6 +182,24 @@ describe("sendDM message budget", () => {
     expect(send.mock.calls.length).toBe(1);
   });
 
+  it("defers across kinds, not just outreach-prefixed ones", async () => {
+    await seedInstall(0);
+    const send = makeSendMock();
+    const client = clientThatSends(send);
+
+    // An installer with several configured servers gets `feedback_request` for
+    // each. Matching the cooldown on the `outreach` prefix alone let all of
+    // them go out at once — the exact burst the 72h spacing prevents.
+    await sendDM({ ...budgeted(client), kind: "feedback_request" as const });
+    const second = await sendDM({
+      ...budgeted(client),
+      kind: "feedback_request" as const,
+    });
+
+    expect(second).toBe("deferred");
+    expect(send.mock.calls.length).toBe(1);
+  });
+
   it("records every refusal in the audit log", async () => {
     await seedInstall(NON_CORE_MESSAGE_BUDGET);
 
