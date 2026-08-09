@@ -164,10 +164,12 @@ function isAfterVisibilityCursor(
   >,
   checkpoint: WorkflowFailureWatchCheckpoint,
 ): boolean {
-  if (execution.closeTime.getTime() < checkpoint.closeTime.getTime()) {
+  const executionCloseTimeMs = execution.closeTime.getTime();
+  const checkpointCloseTimeMs = checkpoint.closeTime.getTime();
+  if (executionCloseTimeMs < checkpointCloseTimeMs) {
     return true;
   }
-  if (execution.closeTime.getTime() > checkpoint.closeTime.getTime()) {
+  if (executionCloseTimeMs > checkpointCloseTimeMs) {
     return false;
   }
   // The SDK's Date cannot represent protobuf nanoseconds. An older heartbeat
