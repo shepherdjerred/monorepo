@@ -140,6 +140,11 @@ design choices, or future implementation needs a decision-complete handoff.
 Architecture, decisions, guides, and TODOs remain appropriate when the content
 belongs to those durable categories independently of the current session.
 
+The human wiki (`packages/docs/wiki/`) is structured on
+[Diátaxis](https://diataxis.fr/): every page is exactly one of a tutorial,
+how-to guide, reference, or explanation, and never a blend. Load the `diataxis`
+skill before authoring there.
+
 ### Plans and durable context
 
 - The primary artifact for a code-changing session is a pull request. Create a
