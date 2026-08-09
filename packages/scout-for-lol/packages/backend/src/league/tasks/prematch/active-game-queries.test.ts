@@ -2,12 +2,12 @@ import { beforeEach, describe, expect, test, mock } from "bun:test";
 import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
 
 type ActiveGameUpdateArgs = {
-  where: { gameId: bigint };
+  where: { prematchMatchId: string };
   data: { prematchMessageIds: string; prematchMatchId: string };
 };
 
 type ActiveGameFindUniqueArgs = {
-  where: { gameId: bigint };
+  where: { prematchMatchId: string };
   select: { prematchMessageIds: true; prematchMatchId: true };
 };
 
@@ -67,7 +67,7 @@ describe("prematch message IDs", () => {
     );
 
     expect(lastUpdate).toEqual({
-      where: { gameId: 123n },
+      where: { prematchMatchId: "NA1_123" },
       data: {
         prematchMessageIds: JSON.stringify({
           "channel-one": "message-one",
@@ -76,7 +76,9 @@ describe("prematch message IDs", () => {
         prematchMatchId: "NA1_123",
       },
     });
-    await expect(getPrematchMessageIds(123)).resolves.toEqual(
+    await expect(
+      getPrematchMessageIds(MatchIdSchema.parse("NA1_123")),
+    ).resolves.toEqual(
       new Map([
         ["channel-one", "message-one"],
         ["channel-two", "message-two"],
@@ -85,18 +87,24 @@ describe("prematch message IDs", () => {
   });
 
   test("returns no reply targets for a null or empty record", async () => {
-    await expect(getPrematchMessageIds(123)).resolves.toEqual(new Map());
+    await expect(
+      getPrematchMessageIds(MatchIdSchema.parse("NA1_123")),
+    ).resolves.toEqual(new Map());
 
     await recordPrematchMessageIds(MatchIdSchema.parse("NA1_123"), new Map());
 
-    await expect(getPrematchMessageIds(123)).resolves.toEqual(new Map());
+    await expect(
+      getPrematchMessageIds(MatchIdSchema.parse("NA1_123")),
+    ).resolves.toEqual(new Map());
   });
 
   test("propagates malformed records", async () => {
     storedPrematchMessageIds = "not-json";
     storedPrematchMatchId = "NA1_123";
 
-    await expect(getPrematchMessageIds(123)).rejects.toThrow();
+    await expect(
+      getPrematchMessageIds(MatchIdSchema.parse("NA1_123")),
+    ).rejects.toThrow();
     await expect(
       getPrematchMessageIdsForMatchIdOrEmpty(MatchIdSchema.parse("NA1_123")),
     ).rejects.toThrow();

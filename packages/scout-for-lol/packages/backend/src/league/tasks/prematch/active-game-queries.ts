@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { MatchId } from "@scout-for-lol/data/index.ts";
+import { MatchIdSchema, type MatchId } from "@scout-for-lol/data/index.ts";
 import { prisma } from "#src/database/index.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
@@ -23,6 +23,7 @@ function parsePrematchMessageIds(raw: string | null): Record<string, string> {
 
 export type ActiveGameRecord = {
   gameId: number;
+  matchId: MatchId | null;
   trackedPuuids: string[];
   prematchMessageIds: Record<string, string>;
   detectedAt: Date;
@@ -39,6 +40,10 @@ export async function getActiveGames(
     const rows = await prismaClient.activeGame.findMany();
     return rows.map((row) => ({
       gameId: Number(row.gameId),
+      matchId:
+        row.prematchMatchId === null
+          ? null
+          : MatchIdSchema.parse(row.prematchMatchId),
       trackedPuuids: TrackedPuuidsSchema.parse(JSON.parse(row.trackedPuuids)),
       prematchMessageIds: parsePrematchMessageIds(row.prematchMessageIds),
       detectedAt: row.detectedAt,
@@ -56,10 +61,12 @@ export async function getActiveGames(
 /**
  * Insert a new active game record.
  *
+ * @param matchId - Platform-qualified Riot match ID
  * @param gameId - Riot game ID from the spectator API
  * @param trackedPuuids - Array of tracked player PUUIDs detected in this game
  */
 export async function upsertActiveGame(
+  matchId: MatchId,
   gameId: number,
   trackedPuuids: string[],
   prismaClient: ExtendedPrismaClient = prisma,
@@ -71,26 +78,29 @@ export async function upsertActiveGame(
   try {
     const gameIdBigInt = BigInt(gameId);
     await prismaClient.activeGame.upsert({
-      where: { gameId: gameIdBigInt },
+      where: { prematchMatchId: matchId },
       create: {
         gameId: gameIdBigInt,
+        prematchMatchId: matchId,
         trackedPuuids: puuidsJson,
         detectedAt: now,
         expiresAt,
       },
       update: {
+        gameId: gameIdBigInt,
         trackedPuuids: puuidsJson,
       },
     });
     logger.info(
-      `📝 Tracked active game ${gameId.toString()} with ${trackedPuuids.length.toString()} player(s)`,
+      `📝 Tracked active match ${matchId} with ${trackedPuuids.length.toString()} player(s)`,
     );
   } catch (error) {
-    logger.error(`❌ Error upserting active game ${gameId.toString()}:`, error);
+    logger.error(`❌ Error upserting active match ${matchId}:`, error);
     Sentry.captureException(error, {
       tags: {
         source: "prematch-upsert-active-game",
         gameId: gameId.toString(),
+        matchId,
       },
     });
     throw error;
@@ -115,7 +125,7 @@ export async function recordPrematchMessageIds(
   const serialized = Object.fromEntries(messageIds.entries());
   try {
     await prismaClient.activeGame.update({
-      where: { gameId: BigInt(suffix) },
+      where: { prematchMatchId: matchId },
       data: {
         prematchMessageIds: JSON.stringify(serialized),
         prematchMatchId: matchId,
@@ -138,12 +148,11 @@ export async function recordPrematchMessageIds(
 
 /** Return the prematch Discord message IDs for a game, keyed by channel ID. */
 export async function getPrematchMessageIds(
-  gameId: number | bigint,
+  matchId: MatchId,
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<Map<string, string>> {
-  const gameIdBigInt = typeof gameId === "bigint" ? gameId : BigInt(gameId);
   const row = await prismaClient.activeGame.findUnique({
-    where: { gameId: gameIdBigInt },
+    where: { prematchMatchId: matchId },
     select: { prematchMessageIds: true, prematchMatchId: true },
   });
   if (row === null) {
@@ -165,7 +174,7 @@ async function findPrematchMessageIdsRowForMatchId(
     return null;
   }
   return prismaClient.activeGame.findUnique({
-    where: { gameId: BigInt(suffix) },
+    where: { prematchMatchId: matchId },
     select: { prematchMessageIds: true, prematchMatchId: true },
   });
 }
