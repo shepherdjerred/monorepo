@@ -36,8 +36,10 @@ and #7033, #7035, #7040, #7047, #7050, and #7058:
   any activity is called out as a worker/task-queue availability failure.
 - Recovery polls heartbeat the last fully delivered execution in Temporal's
   stable newest-first visibility order (`CloseTime`, `StartTime`, `RunId`) and
-  resumes from that cursor on activity retry; detail-extraction errors do not
-  advance the checkpoint, and Alertmanager identity deduplicates overlap.
+  resumes from that cursor on activity retry. Each bounded detail-concurrency
+  chunk is posted and checkpointed before the next chunk starts; detail-
+  extraction errors do not advance the checkpoint, and Alertmanager identity
+  deduplicates overlap.
 - Prometheus warns after five minutes for missing agent-task workflow pollers,
   high workflow-task schedule-to-start latency, and worker metrics scrape loss.
   Replica and concurrency changes remain out of scope until these signals show

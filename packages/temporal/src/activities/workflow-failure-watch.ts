@@ -26,8 +26,16 @@ const COMPONENT = "temporal-failure-watch";
 // margin, preventing a recovered poll from re-paging an execution that was
 // already observed while leaving Alertmanager time to notify PagerDuty.
 export const DEFAULT_LOOKBACK_MS = 24 * 60 * 60 * 1000;
-// Leave enough time for Alertmanager's grouping and notification delays after
-// the final recovery poll can still observe the oldest execution.
+// The activity may consume all three attempts before it can finish the
+// visibility scan. Keep the original close-time boundary alive through that
+// retry budget, then leave a separate margin for Alertmanager grouping and
+// notification.
+const ACTIVITY_START_TO_CLOSE_TIMEOUT_MS = 2 * 60 * 1000;
+const ACTIVITY_MAX_ATTEMPTS = 3;
+const ACTIVITY_RETRY_BACKOFF_MS = (10 + 20) * 1000;
+const ACTIVITY_RETRY_BUDGET_MS =
+  ACTIVITY_MAX_ATTEMPTS * ACTIVITY_START_TO_CLOSE_TIMEOUT_MS +
+  ACTIVITY_RETRY_BACKOFF_MS;
 const ALERT_DELIVERY_MARGIN_MS = 5 * 60 * 1000;
 
 // Matches XCODE_CLOUD_ALERT_TTL_SECONDS's rationale (xcode-cloud-webhook.ts):
@@ -36,7 +44,8 @@ const ALERT_DELIVERY_MARGIN_MS = 5 * 60 * 1000;
 // resolve a specific past failure early, unlike the Xcode Cloud build-outcome
 // case).
 const DEFAULT_ALERT_TTL_SECONDS =
-  (DEFAULT_LOOKBACK_MS + ALERT_DELIVERY_MARGIN_MS) / 1000;
+  (DEFAULT_LOOKBACK_MS + ACTIVITY_RETRY_BUDGET_MS + ALERT_DELIVERY_MARGIN_MS) /
+  1000;
 
 // Bound recovery work so the 24-hour visibility window cannot turn into one
 // serial activity that exhausts its deadline before posting any alerts.
@@ -107,10 +116,11 @@ export function parseAlertTtlMs(raw: string | undefined): number {
     );
   }
   const ttlMs = parsed * 1000;
-  const minimumTtlMs = DEFAULT_LOOKBACK_MS + ALERT_DELIVERY_MARGIN_MS;
+  const minimumTtlMs =
+    DEFAULT_LOOKBACK_MS + ACTIVITY_RETRY_BUDGET_MS + ALERT_DELIVERY_MARGIN_MS;
   if (ttlMs < minimumTtlMs) {
     throw new Error(
-      `TEMPORAL_FAILURE_ALERT_TTL_SECONDS must be at least ${String(minimumTtlMs / 1000)} to cover the recovery lookback and alert delivery margin, got ${raw}`,
+      `TEMPORAL_FAILURE_ALERT_TTL_SECONDS must be at least ${String(minimumTtlMs / 1000)} to cover the recovery lookback, activity retry budget, and alert delivery margin, got ${raw}`,
     );
   }
   return ttlMs;
@@ -149,20 +159,40 @@ function isAfterCheckpoint(
   return true;
 }
 
-type FailureBatchResult = {
+type FailureDetailResult = {
   alerted: number;
   errored: number;
 };
 
+type FailureBatchResult = FailureDetailResult & {
+  checkpointBlocked: boolean;
+};
+
+type CheckpointProgressOptions = {
+  checkpointBlocked: boolean;
+  lookbackSince: Date;
+  onCheckpoint:
+    | ((checkpoint: WorkflowFailureWatchCheckpoint) => void)
+    | undefined;
+};
+
+type PostFailureBatchOptions = {
+  client: WorkflowVisibilityClient;
+  poster: AlertPoster;
+  executions: readonly FailedWorkflowExecution[];
+  options: PollWorkflowFailuresOptions;
+  checkpointProgress: CheckpointProgressOptions;
+};
+
 async function postFailureBatch(
-  client: WorkflowVisibilityClient,
-  poster: AlertPoster,
-  executions: readonly FailedWorkflowExecution[],
-  options: PollWorkflowFailuresOptions,
+  batchOptions: PostFailureBatchOptions,
 ): Promise<FailureBatchResult> {
+  const { client, poster, executions, options, checkpointProgress } =
+    batchOptions;
   const { now, ttlMs } = options;
   const alerts: AlertmanagerAlert[] = [];
   let errored = 0;
+  let checkpointBlocked = checkpointProgress.checkpointBlocked;
   for (
     let chunkStart = 0;
     chunkStart < executions.length;
@@ -172,37 +202,56 @@ async function postFailureBatch(
       chunkStart,
       chunkStart + FAILURE_DETAIL_CONCURRENCY,
     );
+    let chunkErrored = 0;
     const chunkAlerts = await Promise.all(
       chunk.map((execution) =>
         buildFailureAlertForExecution(client, execution, now, ttlMs),
       ),
     );
+    const postedAlerts: AlertmanagerAlert[] = [];
     for (const alert of chunkAlerts) {
       if (alert === undefined) {
+        chunkErrored += 1;
         errored += 1;
       } else {
         alerts.push(alert);
+        postedAlerts.push(alert);
       }
     }
-  }
 
-  if (alerts.length > 0) {
-    await poster(alerts);
-    // Recorded after the poster succeeds, mirroring observe-review-signals.ts —
-    // an activity retry after a failed post re-alerts (safe: Alertmanager
-    // dedups by label) but this counter is informational only, not exactly-once.
-    for (const alert of alerts) {
-      temporalFailureWatcherAlertsTotal.inc({
-        workflowType: alert.labels["workflowType"] ?? "unknown",
-      });
+    if (postedAlerts.length > 0) {
+      await poster(postedAlerts);
+      // Recorded after the poster succeeds, mirroring observe-review-signals.ts
+      // — an activity retry after a failed post re-alerts (safe: Alertmanager
+      // dedups by label) but this counter is informational only, not exactly-once.
+      for (const alert of postedAlerts) {
+        temporalFailureWatcherAlertsTotal.inc({
+          workflowType: alert.labels["workflowType"] ?? "unknown",
+        });
+      }
     }
+
+    // Persist progress after each successfully posted detail chunk, rather
+    // than waiting for the whole visibility batch. If a later detail RPC or
+    // the visibility iterator exhausts this activity attempt, the retry can
+    // resume below this cursor instead of replaying only the prefix forever.
+    const chunkResult = {
+      alerted: chunkAlerts.length - chunkErrored,
+      errored: chunkErrored,
+    };
+    checkpointBlocked = advanceRecoveryCheckpoint(
+      chunkResult,
+      chunk,
+      checkpointBlocked,
+      checkpointProgress,
+    );
   }
 
-  return { alerted: alerts.length, errored };
+  return { alerted: alerts.length, errored, checkpointBlocked };
 }
 
 function advanceRecoveryCheckpoint(
-  result: FailureBatchResult,
+  result: FailureDetailResult,
   executions: readonly FailedWorkflowExecution[],
   checkpointBlocked: boolean,
   checkpointOptions: {
@@ -288,21 +337,18 @@ export async function pollWorkflowFailuresOnce(
       scanned += 1;
       if (pendingExecutions.length === ALERT_BATCH_SIZE) {
         processingBatch = true;
-        const result = await postFailureBatch(
+        const result = await postFailureBatch({
           client,
           poster,
-          pendingExecutions,
+          executions: pendingExecutions,
           options,
-        );
-        checkpointBlocked = advanceRecoveryCheckpoint(
-          result,
-          pendingExecutions,
-          checkpointBlocked,
-          {
-            onCheckpoint: options.onCheckpoint,
+          checkpointProgress: {
+            checkpointBlocked,
             lookbackSince: since,
+            onCheckpoint: options.onCheckpoint,
           },
-        );
+        });
+        checkpointBlocked = result.checkpointBlocked;
         processingBatch = false;
         alerted += result.alerted;
         errored += result.errored;
@@ -318,15 +364,16 @@ export async function pollWorkflowFailuresOnce(
   }
 
   if (pendingExecutions.length > 0) {
-    const result = await postFailureBatch(
+    const result = await postFailureBatch({
       client,
       poster,
-      pendingExecutions,
+      executions: pendingExecutions,
       options,
-    );
-    advanceRecoveryCheckpoint(result, pendingExecutions, checkpointBlocked, {
-      onCheckpoint: options.onCheckpoint,
-      lookbackSince: since,
+      checkpointProgress: {
+        checkpointBlocked,
+        lookbackSince: since,
+        onCheckpoint: options.onCheckpoint,
+      },
     });
     alerted += result.alerted;
     errored += result.errored;

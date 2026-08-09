@@ -21,9 +21,10 @@ export type AgentTaskLlmTrace = {
    */
   close: () => void;
   /**
-   * Emit the post-hoc claude span from the finished process's stdout. Call
-   * before any failure checks — failed runs are traced too (they still spent
-   * tokens). No-op for codex (its spans streamed live).
+   * Emit the post-hoc Claude span from the finished process's stdout. Call
+   * after the caller has confirmed redaction is healthy, but before ordinary
+   * cancellation/exit-code checks so safe failed runs are traced too. No-op
+   * for Codex (its spans streamed live).
    */
   record: (outcome: {
     stdout: string;

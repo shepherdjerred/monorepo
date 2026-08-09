@@ -18,7 +18,7 @@ import type { WorkflowFailureWatchCheckpoint } from "./workflow-failure-watch-ch
 
 const NOW = new Date("2026-07-30T18:00:00.000Z");
 const LOOKBACK_MS = 24 * 60 * 60 * 1000;
-const TTL_MS = LOOKBACK_MS + 5 * 60 * 1000;
+const TTL_MS = LOOKBACK_MS + 6 * 60 * 1000 + 30 * 1000 + 5 * 60 * 1000;
 
 function protobufLong(value: string) {
   return {
@@ -1059,8 +1059,7 @@ describe("bounded workflow failure recovery", () => {
       }),
     ).rejects.toThrow("next visibility page timed out");
 
-    expect(calls.length).toBe(1);
-    expect(calls[0]?.alerts.length).toBe(25);
+    expect(calls.map((call) => call.alerts.length)).toEqual([16, 9]);
   });
 
   it("posts a partial batch before propagating a visibility scan error", async () => {
@@ -1135,16 +1134,52 @@ describe("bounded workflow failure recovery", () => {
     });
 
     expect(result).toEqual({ scanned: 26, alerted: 25, errored: 1 });
-    expect(calls.length).toBe(2);
+    expect(calls.map((call) => call.alerts.length)).toEqual([15, 9, 1]);
     expect(checkpoints).toHaveLength(0);
+  });
+
+  it("checkpoints each posted detail chunk before continuing the scan", async () => {
+    const executions = Array.from({ length: 25 }, (_, index) => ({
+      workflowId: `wf-chunk-${String(index)}`,
+      runId: `run-chunk-${String(index)}`,
+      type: "syncGolinks",
+      taskQueue: "default",
+      closeTime: new Date(NOW.getTime() - index * 1000),
+      status: { name: "FAILED" },
+    }));
+    const client = fakeClient(
+      executions,
+      Object.fromEntries(
+        executions.map((execution, index) => [
+          `${execution.workflowId}/${execution.runId}`,
+          index === 20
+            ? () => Promise.reject(new Error("detail extraction failed"))
+            : rejectWithApplicationFailure("recovery failure"),
+        ]),
+      ),
+    );
+    const { poster, calls } = capturingPoster();
+    const checkpoints: WorkflowFailureWatchCheckpoint[] = [];
+
+    const result = await pollWorkflowFailuresOnce(client, poster, {
+      now: NOW,
+      lookbackMs: LOOKBACK_MS,
+      ttlMs: TTL_MS,
+      onCheckpoint: (checkpoint) => checkpoints.push(checkpoint),
+    });
+
+    expect(result).toEqual({ scanned: 25, alerted: 24, errored: 1 });
+    expect(calls.map((call) => call.alerts.length)).toEqual([16, 8]);
+    expect(checkpoints).toHaveLength(1);
+    expect(checkpoints[0]?.workflowId).toBe("wf-chunk-15");
   });
 });
 
 describe("parseAlertTtlMs", () => {
   it("requires the alert TTL to cover recovery and delivery", () => {
     expect(parseAlertTtlMs(undefined)).toBe(TTL_MS);
-    expect(parseAlertTtlMs("86700")).toBe(TTL_MS);
-    expect(() => parseAlertTtlMs("86699")).toThrow("must be at least 86700");
+    expect(parseAlertTtlMs("87090")).toBe(TTL_MS);
+    expect(() => parseAlertTtlMs("87089")).toThrow("must be at least 87090");
     expect(() => parseAlertTtlMs("86400seconds")).toThrow(
       "must be a positive integer",
     );

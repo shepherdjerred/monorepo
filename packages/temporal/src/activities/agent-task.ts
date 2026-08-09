@@ -252,14 +252,6 @@ async function runAgent(
         redactionFailureController.record(error);
       }
 
-      // Post-hoc claude span — before the cancelled/exit-code checks so
-      // failed runs are traced too (they still spent tokens).
-      llmTrace.record({
-        stdout: result.stdout,
-        exitCode: result.exitCode,
-        startTimeMs: llmStartMs,
-        durationMs: result.durationMs,
-      });
       if (redactionFailureController.failure !== undefined) {
         agentTaskRunsTotal.inc({ provider, outcome: "redaction_failed" });
         captureWithContext(redactionFailureController.failure, {
@@ -270,6 +262,17 @@ async function runAgent(
         });
         throw redactionFailureController.failure;
       }
+
+      // Post-hoc Claude spans retain raw stdout in the LLM archive. Check the
+      // final redaction state first so a refresh failure can never archive a
+      // newly rotated credential from that raw buffer. Other failed runs are
+      // still traced because their stdout is safe to retain.
+      llmTrace.record({
+        stdout: result.stdout,
+        exitCode: result.exitCode,
+        startTimeMs: llmStartMs,
+        durationMs: result.durationMs,
+      });
 
       const cancelled = result.signal === "SIGTERM";
       agentSubprocessIdleSeconds.observe(
