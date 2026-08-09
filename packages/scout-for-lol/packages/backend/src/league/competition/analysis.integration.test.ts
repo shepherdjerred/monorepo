@@ -100,7 +100,9 @@ describe("competition selected-period analysis", () => {
     expect(climb.standings[0]?.playerName).toBe("Alpha");
     expect(climb.standings[0]?.score).toBe(400);
   });
+});
 
+describe("competition preset date bounds", () => {
   test("uses match facts for non-rank presets in rank competitions", async () => {
     const { alpha, beta, competition } = await setupCompetition({
       type: "HIGHEST_RANK",
@@ -112,11 +114,29 @@ describe("competition selected-period analysis", () => {
         fact({
           playerId: alpha.id,
           playerAlias: "Alpha",
+          matchId: "rank-before-competition",
+          queue: "solo",
+          win: true,
+          championId: targetChampionId,
+          date: "2026-04-30",
+        }),
+        fact({
+          playerId: alpha.id,
+          playerAlias: "Alpha",
           matchId: "rank-competition-match",
           queue: "solo",
           win: true,
           championId: targetChampionId,
           date: "2026-05-12",
+        }),
+        fact({
+          playerId: alpha.id,
+          playerAlias: "Alpha",
+          matchId: "rank-after-competition",
+          queue: "solo",
+          win: true,
+          championId: targetChampionId,
+          date: "2026-06-01",
         }),
       ],
     });
@@ -136,8 +156,8 @@ describe("competition selected-period analysis", () => {
       competition,
       mode: "selected_period",
       preset: "games_wins",
-      startDate: "2026-05-10",
-      endDate: "2026-05-20",
+      startDate: "2026-04-20",
+      endDate: "2026-06-10",
       history,
       official: null,
       now,
@@ -149,8 +169,83 @@ describe("competition selected-period analysis", () => {
     expect(result.visualization?.series.map((series) => series.metric)).toEqual(
       ["games", "wins"],
     );
+    expect(
+      result.visualization?.series
+        .find((series) => series.metric === "games")
+        ?.points.reduce((total, point) => total + (point.value ?? 0), 0),
+    ).toBe(1);
+    expect(result.visualization?.temporal?.window).toEqual({
+      kind: "calendar",
+      startDate: "2026-05-01",
+      endDate: "2026-05-31",
+    });
   });
 
+  test("clamps match-criterion presets to competition dates", async () => {
+    const { alpha, competition } = await setupCompetition({
+      type: "MOST_GAMES_PLAYED",
+      queue: "SOLO",
+    });
+    await writeTestLake(lakeDir, {
+      serverId,
+      matchFacts: [
+        fact({
+          playerId: alpha.id,
+          playerAlias: "Alpha",
+          matchId: "match-before-competition",
+          queue: "solo",
+          win: true,
+          championId: targetChampionId,
+          date: "2026-04-30",
+        }),
+        fact({
+          playerId: alpha.id,
+          playerAlias: "Alpha",
+          matchId: "match-in-competition",
+          queue: "solo",
+          win: true,
+          championId: targetChampionId,
+          date: "2026-05-12",
+        }),
+        fact({
+          playerId: alpha.id,
+          playerAlias: "Alpha",
+          matchId: "match-after-competition",
+          queue: "solo",
+          win: true,
+          championId: targetChampionId,
+          date: "2026-06-01",
+        }),
+      ],
+    });
+
+    const result = await analyzeCompetition({
+      prisma,
+      competition,
+      mode: "selected_period",
+      preset: "games_wins",
+      startDate: "2026-04-20",
+      endDate: "2026-06-10",
+      history: [],
+      official: null,
+      now,
+    });
+
+    expect(result.standings[0]?.score).toBe(1);
+    expect(
+      result.visualization?.series
+        .find((series) => series.metric === "games")
+        ?.points.reduce((total, point) => total + (point.value ?? 0), 0),
+    ).toBe(1);
+    expect(result.visualization?.temporal?.window).toEqual({
+      kind: "calendar",
+      startDate: "2026-05-01",
+      endDate: "2026-05-31",
+    });
+  });
+});
+
+describe("competition analysis behavior", () => {
   test("ignores selected dates in official mode", async () => {
     const { alpha, beta, competition } = await setupCompetition({
       type: "HIGHEST_RANK",

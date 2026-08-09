@@ -3,7 +3,6 @@ import {
   CompetitionAnalysisPresetSchema,
   ReportQueryPlanSchema,
   PlayerIdSchema,
-  TemporalAnalysisSpecSchema,
   VisualizationSnapshotSchema,
   parseAndCompile,
   rankToLeaguePoints,
@@ -17,11 +16,17 @@ import {
   type CompetitionWithCriteria,
   type ReportQueryPlan,
   type TemporalAnalysisSpec,
-  type VisualizationAnnotation,
   type VisualizationSnapshot,
 } from "@scout-for-lol/data";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
-import { resolveCompetitionAnalysisDates } from "#src/league/competition/analysis-dates.ts";
+import {
+  competitionAnnotations,
+  withCompetitionAnnotations,
+} from "#src/league/competition/analysis-annotations.ts";
+import {
+  competitionAnalysisSpec,
+  resolveCompetitionAnalysisDates,
+} from "#src/league/competition/analysis-dates.ts";
 import {
   executeCompiledReportQuery,
   type ReportQueryResult,
@@ -70,20 +75,19 @@ export async function analyzeCompetition(params: {
     };
   }
   const dates = resolveCompetitionAnalysisDates(params);
-  const analysis = TemporalAnalysisSpecSchema.parse({
-    window: {
-      kind: "calendar",
-      startDate: dates.startDate,
-      endDate: dates.endDate,
-    },
-    bucket: "auto",
+  const requestedAnalysis = competitionAnalysisSpec({
+    ...dates,
     timezone: params.competition.analysisTimezone,
   });
   const range = clampTemporalRange(
-    resolveTemporalRanges(analysis, params.now).current,
+    resolveTemporalRanges(requestedAnalysis, params.now).current,
     params.competition,
     params.now,
   );
+  const analysis = competitionAnalysisSpec({
+    ...range,
+    timezone: params.competition.analysisTimezone,
+  });
   const officialStandings = params.official?.entries ?? [];
   if (preset === "rank_position") {
     const filtered = historyAroundRange(params.history, range);
@@ -123,6 +127,7 @@ export async function analyzeCompetition(params: {
           serverId: params.competition.serverId,
           sourceCompetitionId: params.competition.id,
           now: params.now,
+          rangeOverride: range,
         },
         temporalPresetPlan(preset, analysis),
       );
@@ -182,6 +187,7 @@ export async function analyzeCompetition(params: {
             serverId: params.competition.serverId,
             sourceCompetitionId: params.competition.id,
             now: params.now,
+            rangeOverride: range,
           },
           temporalPresetPlan(preset, analysis),
         );
@@ -438,63 +444,4 @@ function rankHistoryVisualization(
     annotations: competitionAnnotations(competition),
     trends: [],
   });
-}
-
-function withCompetitionAnnotations(
-  snapshot: VisualizationSnapshot | null,
-  competition: CompetitionWithCriteria,
-): VisualizationSnapshot | null {
-  return snapshot === null
-    ? null
-    : VisualizationSnapshotSchema.parse({
-        ...snapshot,
-        annotations: competitionAnnotations(competition),
-      });
-}
-
-function competitionAnnotations(
-  competition: CompetitionWithCriteria,
-): VisualizationAnnotation[] {
-  return [
-    ...(competition.seasonId === null || competition.startDate === null
-      ? []
-      : [
-          {
-            id: "season-start",
-            kind: "season_boundary" as const,
-            timestamp: competition.startDate.toISOString(),
-            label: "Season start",
-          },
-        ]),
-    ...(competition.startDate === null
-      ? []
-      : [
-          {
-            id: "competition-start",
-            kind: "competition_start" as const,
-            timestamp: competition.startDate.toISOString(),
-            label: "Competition start",
-          },
-        ]),
-    ...(competition.endDate === null
-      ? []
-      : [
-          {
-            id: "competition-end",
-            kind: "competition_end" as const,
-            timestamp: competition.endDate.toISOString(),
-            label: "Competition end",
-          },
-        ]),
-    ...(competition.seasonId === null || competition.endDate === null
-      ? []
-      : [
-          {
-            id: "season-end",
-            kind: "season_boundary" as const,
-            timestamp: competition.endDate.toISOString(),
-            label: "Season end",
-          },
-        ]),
-  ];
 }
