@@ -111,7 +111,23 @@ verification).
   skips the REST call; `gone` (10008) re-posts; `failed` (rate limit, 5xx) must **not** be cached —
   caching an undelivered payload makes the next identical render a no-op and strands the card
   showing stale state forever. `finalize()` falls back to `strip()` on `failed` so a dead session
-  never keeps live-looking buttons.
+  never keeps live-looking buttons. A failed **post** clears `trackKey`, so the next refresh retries
+  via `beginTrack` instead of routing forever into an edit path with no message to edit.
+- **Everything that touches `messageId` runs inside the serialized `tail`.** Three rules make the
+  async gaps safe, and all three have regression tests:
+  - `beginTrack`'s queued task re-reads `this.messageId` **when it runs**, not when it was queued —
+    capturing it synchronously reads `null` whenever the previous track's post is still in flight,
+    which would leave that card up with working controls and nothing tracking it.
+  - That task bails when `this.trackKey` has moved on, so rapid track changes collapse to one card
+    instead of each queued task posting the newest track.
+  - `cardTrackKey` records which item the posted card actually represents. It lags `trackKey` across
+    the post, and editing requires the two to agree — otherwise a queued edit writes the new track's
+    view into the previous track's message.
+- **`finalize()` drains the tail in two phases.** `finalizing` synchronously blocks new work and
+  makes queued work stop before stripping or deleting the live card; work already in flight is
+  allowed to finish its replacement. The final serialized task then sets `finished` and retires the
+  card that remains. Between them, no card outlives its session with live controls or a dangling
+  routing entry, and teardown cannot remove the last card without leaving stopped history.
 - **Click routing** is a message-id → `(guild, voice channel)` table in `PlayerCardMessenger`, not
   ids baked into the `customId`: a card outlives every interaction token, so a click hours later
   carries only `interaction.message.id`. Unknown message → "That player card is no longer active."
