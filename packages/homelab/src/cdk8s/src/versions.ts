@@ -157,7 +157,7 @@ const versions = {
   openebs: "4.5.1",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/scout-for-lol/beta":
-    "2.0.0-8503@sha256:1b2c73161289c5319392d42d5e1e5b42e66af78201bb117a7aef98f1d2e6a3f1",
+    "2.0.0-8550@sha256:3add112f8aaf72a8ab4dcaebdfe66d78984651100e65b8390184b4370aad250f",
   // Prod promotion = merging the Renovate PR for this pin. Each 2.0.0-<n>
   // tag is minted by the scout-tag-release CI step only after site version
   // <n> is archived, pointing at the backend digest beta serves it against —
@@ -176,7 +176,7 @@ const versions = {
     "2.0.0-7909@sha256:7e904d0538a6e0456271b50fe58c520e18159440f3b68b6073a307d7862c4972",
   // not managed by renovate
   "shepherdjerred/birmel":
-    "2.0.0-8503@sha256:32a9edbf830b77424f0507b6db6076082ba3290c6dce5b7dacdca242697fe806",
+    "2.0.0-8550@sha256:171de77add04fa7f53e04f6230ed6a18d3b840a9e24b5c71cefb5bcd38f23667",
   // not managed by renovate — placeholder digest; CI version-commit-back fills
   // the real digest after the first successful scout-evals image push.
   "shepherdjerred/scout-evals":
@@ -339,7 +339,7 @@ const versions = {
   // Custom tasknotes-server image - TaskNotes API server for mobile app
   // not managed by renovate
   "shepherdjerred/tasknotes-server":
-    "2.0.0-8503@sha256:6c0ef85f20409f4dcec6b7381ed2d0506657d9c04607df781cc02479a76f1fe4",
+    "2.0.0-8550@sha256:1fa39000ad1760794dedd58ad9738ea29ee50888ad5c68b100a654aa3afca495",
   // Custom obsidian-headless image - Official Obsidian Headless CLI for vault sync
   // not managed by renovate
   "shepherdjerred/obsidian-headless":
