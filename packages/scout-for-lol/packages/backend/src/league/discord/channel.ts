@@ -58,7 +58,9 @@ export function isReplyPermissionError(error: ChannelSendError): boolean {
   return replyPermissionErrors.has(error);
 }
 
-const MessageWithReplySchema = z.object({ reply: z.unknown() });
+const MessageWithReplySchema = z.object({
+  reply: z.unknown().refine((value) => value !== undefined),
+});
 
 function hasMessageReply(
   options: string | MessagePayload | MessageCreateOptions,
