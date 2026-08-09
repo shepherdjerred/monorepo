@@ -10,15 +10,61 @@ Bundle identifier: **`red.sjer.tasknotes.mac`**. Deployment target: **macOS 15**
 ## Layout
 
 ```text
-App/                     @main entry point, entitlements, generated Info.plist
-Sources/TaskNotesUniFFI/ re-export of the generated bindings — lint-exempt
-Sources/TaskNotesKit/    portable logic — no SwiftUI, no AppKit
-Sources/TaskNotesMac/    SwiftUI views, scenes, commands — MainActor
-Tests/TaskNotesKitTests/ Swift Testing
-ci/no-suppressions.sh    the three gates SwiftLint cannot enforce
-project.yml              XcodeGen spec; the .xcodeproj is generated + gitignored
-Package.swift            SwiftPM manifest; owns every library target's settings
+App/                          @main entry point, entitlements, generated Info.plist
+Sources/TaskNotesUniFFI/      re-export of the generated bindings — lint-exempt
+Sources/TaskNotesKit/         portable logic — no SwiftUI, no AppKit
+  Host/                       the core's host traits, implemented
+  Store/                      the @Observable store over FfiSyncEngine
+Sources/TaskNotesMac/         SwiftUI views, scenes, commands — MainActor
+Tests/TaskNotesKitTests/      Swift Testing
+  Support/                    the spawned-server harness and shared fixtures
+ci/no-suppressions.sh         the three gates SwiftLint cannot enforce
+project.yml                   XcodeGen spec; the .xcodeproj is generated + gitignored
+Package.swift                 SwiftPM manifest; owns every library target's settings
 ```
+
+## The host layer
+
+The core is sans-I/O: it reads no clock, opens no socket and touches no file.
+`Sources/TaskNotesKit/Host/` is the other half of that contract — seven traits
+declared in `tasknotes-core/src/sync/host.rs` and `src/store/migrations.rs`,
+implemented once each.
+
+| Generated protocol    | Implementation           | Where its state lives                      |
+| --------------------- | ------------------------ | ------------------------------------------ |
+| `Clock` (`CoreClock`) | `SystemClock`            | none; injectable instant + timezone        |
+| `Randomness`          | `SystemRandomness`       | none                                       |
+| `RetryScheduler`      | `DispatchRetryScheduler` | `Mutex<Set<TimerId>>` + a serial queue     |
+| `TaskApi`             | `URLSessionTaskApi`      | none; `URLSession`                         |
+| `QueueStorage`        | `FileHostStorage`        | `queue.json`, `dead-letter.json`           |
+| `TaskCacheStorage`    | `FileHostStorage`        | `tasks.json`, `id-aliases.json`, …         |
+| `MigrationStorage`    | `FileHostStorage`        | `schema-version.json`, `legacy-queue.json` |
+
+Three rules that are not obvious from the signatures:
+
+- **The engine must never be driven from the main thread.** The core's `TaskApi`
+  is synchronous, so `URLSessionTaskApi` blocks its caller. It refuses a
+  main-thread call with `CoreError.Invariant` rather than freezing the UI, and
+  `TaskNotesStore` reaches the global executor with `@concurrent` — which is
+  load-bearing, because `NonisolatedNonsendingByDefault` makes a plain
+  `nonisolated async` function inherit its caller's isolation.
+- **Cancellation is never propagated, only called.** UniFFI 0.31 has no async
+  cancellation at all. `DispatchRetryScheduler` treats an armed timer as an id
+  in a set and cancellation as its removal, checked at fire time under the same
+  lock — no `Task` to cancel, no `DispatchWorkItem` race, and `cancel` on an
+  already-fired timer is a no-op by construction.
+- **Storage is the app container, never the vault.** The app is sandboxed with
+  no broad filesystem entitlement. `FileHostStorage.containerDefault()` resolves
+  through `FileManager`, which returns the redirected container path inside the
+  sandbox and the real one outside, so the same call is correct in the app and
+  in a test bundle. Vault access is a separate capability needing a system open
+  panel plus a security-scoped bookmark.
+
+`Sources/TaskNotesKit/Host/WireBridge.swift` is **temporary and marked so**: the
+`/v2` rename table, path-as-id, and envelope unwrapping already exist in
+`tasknotes-core/src/domain/wire.rs` but are not exported, because `TaskApi` is a
+domain-level trait rather than a transport-level one. Do not grow it; it has a
+demolition date.
 
 ## Prerequisites
 
@@ -88,7 +134,21 @@ Consequence to design around: **push correctness below the SwiftUI line.** The
 
 - The core exports a record named `Task`, which collides with
   `_Concurrency.Task`. Authored code uses the `CoreTask` alias from
-  `TaskNotesUniFFI`.
+  `TaskNotesUniFFI`. **The same trap catches `Task { … }` and `Task.detached`** —
+  in any file importing the bindings, a bare `Task` is the record, so structured
+  concurrency has to be spelled `_Concurrency.Task`.
+- The core also exports a foreign trait named `Clock`, which collides with
+  `Swift.Clock` — the standard-library protocol behind `Task.sleep(for:)`. Same
+  fix, same place: use the `CoreClock` alias.
+- **A typed-throws function cannot have a non-exhaustive `catch`**, and the only
+  exhaustive form is an untyped `catch`, which `untyped_error_in_catch` rejects.
+  Use `Result(catching:)` instead — `CoreErrors` wraps the three cases that come
+  up. ⚠️ Do not reach for `catch let error as NSError` inside a
+  `throws(CoreError)` function: it crashes the Swift 6.4 compiler outright
+  (`SILBuilder.h:2244`, `FormalConcreteType->isBridgeableObjectType()`).
+- The generated bindings declare plain `throws`, never typed throws, even for a
+  Rust function whose only failure type is `CoreError`. The error arriving is
+  already a `CoreError`; recover it rather than flattening it.
 - UniFFI error cases keep Rust's PascalCase (`CoreError.Invariant`) while plain
   enums get lowerCamelCase (`TaskStatus.inProgress`). Upstream; do not "fix" it.
 - `.accessibilityIdentifier()` on a container pushes the identifier onto child

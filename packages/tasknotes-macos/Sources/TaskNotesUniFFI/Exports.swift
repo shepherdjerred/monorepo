@@ -25,3 +25,11 @@
 /// ambiguity the repository's principles exist to prevent. Authored code spells
 /// it `CoreTask`.
 public typealias CoreTask = TaskNotesCore.Task
+
+/// The core's wall-clock capability.
+///
+/// Same problem as `CoreTask`, same fix. UniFFI names the host trait `Clock`,
+/// which collides with `Swift.Clock` — the standard-library protocol behind
+/// `Task.sleep(for:)` and `ContinuousClock`. Both are always in scope, so a
+/// bare `Clock` in authored code is ambiguous rather than merely confusing.
+public typealias CoreClock = TaskNotesCore.Clock

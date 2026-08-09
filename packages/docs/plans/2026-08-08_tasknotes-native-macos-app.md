@@ -93,6 +93,73 @@ by running them on a crate with no FFI noise.
 sidesteps UniFFI's worst gap: **async has no cancellation support at all**. Design `cancel()`-style
 APIs from day one.
 
+### 🔴 `TaskApi` is at the wrong level — architecture defect, found Phase 7b
+
+`sync::host::TaskApi` is **domain-level**: `create_task(&CreateTaskRequest) -> Result<Task>`,
+`list_tasks() -> Result<Vec<Task>>`. So the host is responsible not just for HTTP but for the
+**entire wire boundary** — URL construction, the four-entry rename table, path-as-id, envelope
+unwrapping, and HTTP-status → error mapping.
+
+**This defeats the premise of the whole project.** The justification for a shared core is that with
+three native targets, wire logic written three times produces exactly what 1Password shipped:
+_"different search results in a different order."_ Under the current trait, TypeScript has that
+logic, Swift has now had to transcribe it (~180 LOC, marked TEMPORARY), and C# would need it next.
+Three implementations of the one layer the core exists to own.
+
+**It is also a live correctness hazard, not just duplication.** `classify()` branches on exactly
+`Error::kind()` and `status()`. Phase 6.5 noted that _"a host's 503 arriving as anything but
+`Api { status: 503 }` would silently turn a transient failure into a dead-lettered command."_ So
+today, **correct retry behaviour depends on every shell mapping HTTP status codes identically** —
+by convention, with nothing mechanical enforcing it. Put differently: the retry classifier's input
+is currently partly a _shell policy decision_.
+
+**And it already mangles user data. This is the argument that settles it.** `serde_json` is built
+with `preserve_order` and the core keeps unmodelled frontmatter in an `IndexMap`, so vault key
+order round-trips exactly. Foundation's `JSONSerialization` **has no ordered dictionary**, so any
+task carrying `customProperties` has its keys scrambled inbound _and_ outbound. The server writes
+YAML frontmatter from those keys — so **a client that reads a task and later writes it back
+reorders the user's frontmatter.** Invisible in the UI, plainly visible in `git diff`, and vaults
+are commonly in git. It is **unfixable inside Swift**: Foundation simply has no ordered JSON type.
+Only moving the boundary back into the core fixes it.
+
+Second, softer: the Rust `wire.rs` is validated against `@tasknotes/fixtures`; the Swift copy is
+validated against examples someone wrote by reading the Rust. **There is no shared oracle over it**
+— which is the 1Password failure mode exactly, one layer down.
+
+**The fix: make `TaskApi` a transport.** The host sends bytes and returns bytes; the core owns
+everything above that:
+
+```rust
+pub trait Transport: Send + Sync {
+    fn send(&self, request: HttpRequest) -> Result<HttpResponse>;
+}
+// HttpRequest  { method, path, query, headers (incl. X-Mutation-Id), body: Option<String> }
+// HttpResponse { status: u16, body: String }
+```
+
+The wire code this needs **already exists and is tested** in `domain/wire.rs` — `to_wire_task_fields`,
+`create_task_body`, `update_task_body`, `unwrap_envelope`, `WireTask`. Nothing new has to be
+written; the trait boundary is simply in the wrong place, so the core cannot reach its own wire
+layer on the host's behalf. Status→error mapping moves in alongside it, which is where `classify()`
+already lives.
+
+**Seven design constraints, each learned from something Phase 7b actually hit:**
+
+1. **The error type must be transport-only** — `TransportError { kind: Timeout | Offline | Tls | Other, message }`. Status→error mapping is core policy, not shell policy.
+2. **The core builds the absolute URL.** `CharacterSet.urlPathAllowed` permits `/`, which is wrong for a single path component and cost a test to find. C# would rediscover it.
+3. **Body is `Vec<u8>`, never `String`.** `FfiConverterString` strips a leading BOM — one of the very fixes the `=0.31.2` pin exists for — so a response carrying a BOM would be silently altered. Bytes make the question disappear.
+4. **Headers are `Vec<HttpHeader>`, not a map.** Order and duplicates are real, `HashMap` is banned in anything crossing, and it makes `X-Idempotent-Replay` — which the server sets and _both_ clients currently ignore — available to the core for free.
+5. **Design cancellation in now.** `URLSessionTaskApi` today has _no_ cancel path: quit mid-request and the thread blocks until the 15 s timeout. Bytes-in/bytes-out lets the host own session lifetime, but the core still needs an explicit `cancelAll()`-shaped hook per the day-one rule.
+6. **Do not model streaming.** The largest `/v2` payload is a 200-task page; a chunk-callback shape is something UniFFI expresses badly.
+7. **The completeness check is a `grep`.** Afterwards the Swift host layer should mention `HttpRequest`/`HttpResponse`/`TransportError` and **no** domain type — no `TaskId`, `CreateTaskRequest`, `TaskStatus`, `InstanceCompletion`. It matches 2 files today.
+
+Auth stays in the shell's constructor rather than a header the core invents blind — the token comes
+from the platform keychain, and passing it at engine construction matches "reconfigure ⇒ new engine".
+
+Net effect on the shells: `WireBridge.swift` is **deleted**, `URLSessionTaskApi` shrinks to a bytes
+transport, and a future C# shell inherits correct wire handling and correct retry classification for
+free. Sequenced after Phase 7b so it deletes Swift code rather than reworking it.
+
 **Pin `uniffi = "=0.31.2"`.** `UNIFFI_CONTRACT_VERSION` is 30 across all 0.31.x; .1/.2 fix an iOS
 ASAN crash, a Swift async memory leak, a strict-concurrency warning, and `FfiConverterString`
 stripping a leading BOM. ⚠️ `uniffi-bindgen-react-native` pins `=0.31.0` exactly — same contract
@@ -544,6 +611,11 @@ Phases 0–6 are complete and verified: 325 Rust tests, 328 TypeScript tests, ze
 - [ ] **Phase 8** — Today screen end to end against a real server. **Quality gate: do not proceed
       to Phase 9 until it feels right.**
 - [ ] **Phase 9** — the remaining 14 screens.
+- [ ] **🔴 Phase 4.5 — make `TaskApi` a transport.** See the architecture section above. This is
+      the highest-priority remaining item: it is the difference between the shared core actually
+      owning the wire boundary and every shell reimplementing it. Sequenced right after Phase 7b so
+      it **deletes** `WireBridge.swift` rather than reworking it. Touches `sync/host.rs`, the client,
+      and the FFI exports together, then regenerates bindings.
 - [ ] **Converge the Rust core on persisted id counters.** Both production bugs are now fixed in
       TypeScript. For the collision bug the TS fix chose _persisting the counters_ and kept Rust's
       mint-and-check loop only as a backstop — and the reasoning is sound enough that Rust should

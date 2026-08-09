@@ -1,0 +1,112 @@
+import Foundation
+import TaskNotesKit
+import TaskNotesUniFFI
+
+/// Run blocking work off the main thread.
+///
+/// Not a convenience. `URLSessionTaskApi` refuses a main-thread call outright,
+/// because the core's `TaskApi` is synchronous and blocking the main thread
+/// would freeze the UI for a network round trip. Swift Testing does not promise
+/// which thread a test body runs on, and with
+/// `NonisolatedNonsendingByDefault` enabled a plain `nonisolated async` helper
+/// would inherit its caller's isolation — so a `@MainActor` test calling one
+/// would still be on the main thread. `Task.detached` is what actually
+/// guarantees the global executor.
+///
+/// Spelled `_Concurrency.Task` because the core exports a record named `Task`
+/// and this file imports it; a bare `Task` here resolves to the record.
+func offMainThread<T: Sendable>(_ body: @escaping @Sendable () throws -> T) async throws -> T {
+    try await _Concurrency.Task.detached(priority: .userInitiated, operation: body).value
+}
+
+/// A scratch directory that removes itself.
+final class TemporaryDirectory {
+    let url: URL
+
+    init() throws {
+        url = FileManager.default.temporaryDirectory
+            .appending(path: "tasknotes-test-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+    }
+
+    deinit {
+        // Explicitly discarded rather than `try?`, which is banned for hiding
+        // the error: `deinit` cannot propagate and a leftover `/tmp` directory
+        // is not a test failure.
+        _ = Result { try FileManager.default.removeItem(at: url) }
+    }
+}
+
+/// A create request carrying nothing but a title.
+///
+/// The generated memberwise initializer takes all thirteen fields, because
+/// UniFFI does not emit defaults. Restating that at every call site would bury
+/// the one field a test actually cares about.
+func createRequest(title: String, status: TaskStatus? = nil) -> CreateTaskRequest {
+    CreateTaskRequest(
+        title: title,
+        details: nil,
+        status: status,
+        priority: nil,
+        due: nil,
+        scheduled: nil,
+        contexts: nil,
+        projects: nil,
+        tags: nil,
+        recurrence: nil,
+        recurrenceAnchor: nil,
+        timeEstimate: nil,
+        extraFields: nil
+    )
+}
+
+/// A full host environment over a scratch directory and a real server.
+///
+/// Assembles the same six capabilities the app does, so an integration test
+/// exercises the production implementations rather than a parallel set built
+/// for testing.
+struct HostFixture {
+    let storage: FileHostStorage
+    let clock: SystemClock
+    let randomness: FixedRandomness
+    let scheduler: DispatchRetryScheduler
+    let api: URLSessionTaskApi
+
+    /// - Parameters:
+    ///   - directory: where durable client state goes.
+    ///   - baseURL: the server to talk to.
+    ///   - onFire: what a fired retry timer should do. Defaults to nothing, so
+    ///     a test that never wants a background drain does not get one.
+    /// - Throws: `CoreError` when the storage directory cannot be created.
+    init(
+        directory: URL,
+        baseURL: URL,
+        onFire: @escaping @Sendable (TimerId) -> Void = { _ in }
+    ) throws {
+        storage = try FileHostStorage(directory: directory)
+        clock = SystemClock()
+        // Pinned to the parts-per-million spelling of 0.5, which is what the
+        // shared scenario corpus injects — it makes the backoff jitter factor
+        // exactly 1.0, so any delay a test observes is the bare schedule.
+        // Force-unwrapped deliberately, and only legal here: `Tests/.swiftlint.yml`
+        // relaxes `force_unwrapping` because in a test a trap *is* the
+        // assertion. `UnitPpm.half` is in range by construction, so a `nil`
+        // means the constant moved and the suite should stop loudly.
+        randomness = FixedRandomness(ppm: UnitPpm.half)!
+        scheduler = DispatchRetryScheduler(onFire: onFire)
+        api = URLSessionTaskApi(baseURL: baseURL)
+    }
+
+    /// An engine wired over this fixture.
+    func engine(autoSync: Bool = true) -> FfiSyncEngine {
+        FfiSyncEngine(
+            api: api,
+            queueStorage: storage,
+            cacheStorage: storage,
+            clock: clock,
+            scheduler: scheduler,
+            random: randomness,
+            autoSync: autoSync
+        )
+    }
+}

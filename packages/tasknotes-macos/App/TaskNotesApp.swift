@@ -14,20 +14,24 @@ import TaskNotesMac
 /// Xcode.
 @main
 struct TaskNotesApp: App {
-    /// Window-scoped navigation. `@State` is the correct owner for an
-    /// `@Observable` reference type at the app root — it gives the object the
-    /// app's lifetime without the `@StateObject`/`ObservableObject` machinery
-    /// that Observation replaced.
-    @State private var navigation = NavigationState()
+    /// Navigation and the task store, assembled in `TaskNotesMac`.
+    ///
+    /// `@State` is the correct owner for an `@Observable` reference type at the
+    /// app root — it gives the object the app's lifetime without the
+    /// `@StateObject`/`ObservableObject` machinery that Observation replaced.
+    /// The assembly itself lives in the library rather than here, so this file
+    /// stays at entry-point scope and the application target keeps its single
+    /// product dependency.
+    @State private var environment = AppEnvironment()
 
     var body: some Scene {
         WindowGroup {
-            RootView(navigation: navigation)
+            RootView(environment: environment)
                 // `tasknotes://…`. The URL is parsed in `TaskNotesKit`, so an
                 // unhandled link is rejected there rather than being routed to
                 // some arbitrary default here.
                 .onOpenURL { url in
-                    navigation.open(url)
+                    environment.navigation.open(url)
                 }
                 // Without this pair, a `tasknotes://` link opens a *second*
                 // window rather than retargeting the one already on screen —
@@ -42,13 +46,13 @@ struct TaskNotesApp: App {
         // by the definition of done, and one line.
         .defaultSize(width: 1100, height: 720)
         .commands {
-            TaskNotesCommands(navigation: navigation)
+            TaskNotesCommands(navigation: environment.navigation)
         }
 
         // Contributes the standard "Settings…" item at `⌘,` in the app menu,
         // in the correct position. Never declare that shortcut by hand.
         Settings {
-            SettingsView()
+            SettingsView(store: environment.store)
         }
     }
 }

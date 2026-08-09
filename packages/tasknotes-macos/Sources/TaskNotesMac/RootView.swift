@@ -11,9 +11,11 @@ internal import TaskNotesKit
 /// would have.
 public struct RootView: View {
     @Bindable private var navigation: NavigationState
+    private let environment: AppEnvironment
 
-    public init(navigation: NavigationState) {
-        self.navigation = navigation
+    public init(environment: AppEnvironment) {
+        self.environment = environment
+        self.navigation = environment.navigation
     }
 
     public var body: some View {
@@ -38,5 +40,8 @@ public struct RootView: View {
         // No `.navigationTitle` on the split view itself: the detail pane owns
         // the title so the window title tracks the visible content, which is
         // what the proxy icon and window menu expect.
+        .task {
+            environment.start()
+        }
     }
 }
