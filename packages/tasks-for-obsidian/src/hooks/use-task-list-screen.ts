@@ -10,6 +10,7 @@ import {
   isRecurring,
   localTodayYmd,
 } from "../domain/recurrence";
+import { isCompletedStatus } from "../domain/status";
 import { useTasks } from "./use-tasks";
 import { showResultError } from "../lib/errors";
 import { feedbackTaskComplete, feedbackTaskDelete } from "../lib/feedback";
@@ -45,14 +46,18 @@ export function useTaskListScreen(navigation: NavigateFn) {
   const handleToggle = useCallback(
     (id: TaskId, occurrenceDate?: string) => {
       void (async () => {
-        const result =
-          occurrenceDate === undefined
+        const task = tasks.getTask(id);
+        const globallyCompletedRecurring =
+          task !== null && isRecurring(task) && isCompletedStatus(task.status);
+        const result = globallyCompletedRecurring
+          ? await tasks.toggleTask(id, { scope: "task-status" })
+          : occurrenceDate === undefined
             ? await tasks.toggleTask(id)
             : await tasks.toggleTask(id, { occurrenceDate });
         showResultError(result, "Toggle Failed");
       })();
     },
-    [tasks.toggleTask],
+    [tasks.getTask, tasks.toggleTask],
   );
 
   const handleStatusToggle = useCallback(
