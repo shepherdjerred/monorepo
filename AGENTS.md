@@ -71,12 +71,14 @@ sandbox/                        # Personal scratch (not shipped, excluded from m
 
 ### ArgoCD root prune safety
 
-The homelab CI reconcile script must validate every root `apps` child that
-ArgoCD reports with `requiresPruning: true` before running a pruned sync. The
-child must use the `ci.sjer.red/application-lifecycle: cascade` annotation and
-the Argo resources finalizer. An `OutOfSync` child without
-`requiresPruning: true` may be retained intentionally and is not itself a
-prune candidate.
+The homelab CI reconcile script must require an exact root `apps` chart
+revision and render that revision before running a pruned sync. Compare the
+root's tracked `Application` resources to that rendered source; every live
+child absent from the exact desired revision is a prune candidate and must use
+the `ci.sjer.red/application-lifecycle: cascade` annotation plus the Argo
+resources finalizer. Do not classify candidates from `OutOfSync` or
+`requiresPruning` alone: the selective manifest-override sync temporarily
+marks unselected retained children as requiring prune.
 
 ## Code Review Rules
 

@@ -9,7 +9,8 @@
  * timeouts are preserved.
  *
  * Usage:
- *   bun packages/homelab/scripts/argocd.ts sync <app> [--prune] [--async] [--timeout <s>] [--dry-run]
+ *   bun packages/homelab/scripts/argocd.ts sync <app> [--revision <v>]
+ *       [--prune] [--async] [--timeout <s>] [--dry-run]
  *   bun packages/homelab/scripts/argocd.ts delete-application <app> \
  *       --project <project> [--timeout <s>] [--dry-run]
  *   bun packages/homelab/scripts/argocd.ts health-wait <app> [--timeout <s>] [--dry-run]
@@ -52,10 +53,12 @@ const DEFAULT_SYNC_TIMEOUT_S = 300;
 const DEFAULT_DELETION_TIMEOUT_S = 120;
 const POLL_INTERVAL_MS = 10_000;
 
+const BuildRevisionSchema = z.string().regex(/^2\.0\.0-\d+$/);
+
 const ExpectedApplicationsSchema = z.array(
   z.object({
     name: z.string().min(1),
-    revision: z.string().regex(/^2\.0\.0-\d+$/),
+    revision: BuildRevisionSchema,
     prune: z.boolean().default(false),
   }),
 );
@@ -171,6 +174,30 @@ async function getApplications(token: string): Promise<unknown> {
   return response.json();
 }
 
+async function getApplicationManifests(
+  appName: string,
+  revision: string,
+  token: string,
+): Promise<readonly string[]> {
+  const manifestsUrl = new URL(
+    `/api/v1/applications/${encodeURIComponent(appName)}/manifests`,
+    serverUrl(),
+  );
+  manifestsUrl.searchParams.set("revision", revision);
+  const response = await fetch(manifestsUrl, {
+    headers: { Authorization: `Bearer ${token}` },
+    redirect: "follow",
+  });
+  if (!response.ok) {
+    const body = (await response.text()).slice(0, 1024);
+    throw new Error(
+      `Could not render ${appName} from ${manifestsUrl.toString()}: ` +
+        `HTTP ${response.status.toString()}\n${body}`,
+    );
+  }
+  return ManifestResponseSchema.parse(await response.json()).manifests;
+}
+
 async function suspendRepositoryAutoSync(
   rootAppName: string,
   timeoutSeconds: number,
@@ -195,23 +222,12 @@ async function suspendRepositoryAutoSync(
     (latest, candidate) => (candidate.id > latest.id ? candidate : latest),
     firstDeployment,
   );
-  const manifestsUrl = new URL(
-    `/api/v1/applications/${encodeURIComponent(rootAppName)}/manifests`,
-    serverUrl(),
+  const manifests = await getApplicationManifests(
+    rootAppName,
+    latestDeployment.revision,
+    token,
   );
-  manifestsUrl.searchParams.set("revision", latestDeployment.revision);
-  const manifestsResponse = await fetch(manifestsUrl, {
-    headers: { Authorization: `Bearer ${token}` },
-    redirect: "follow",
-  });
-  if (!manifestsResponse.ok) {
-    const body = (await manifestsResponse.text()).slice(0, 1024);
-    throw new Error(
-      `Could not render ${rootAppName} from ${manifestsUrl.toString()}: HTTP ${manifestsResponse.status.toString()}\n${body}`,
-    );
-  }
-  const rendered = ManifestResponseSchema.parse(await manifestsResponse.json());
-  const suspended = rendered.manifests.flatMap((manifestSource) => {
+  const suspended = manifests.flatMap((manifestSource) => {
     const parsed = RenderedObjectSchema.parse(JSON.parse(manifestSource));
     if (parsed.kind !== "Application") {
       return [];
@@ -283,7 +299,22 @@ async function assertExpectedAppsRevisionIsLatest(
   }
 }
 
-async function assertRootPruneSafe(token: string): Promise<void> {
+async function assertRootPruneSafe(
+  token: string,
+  revision: string,
+): Promise<void> {
+  const exactRevision = BuildRevisionSchema.parse(revision);
+  const desiredChildren = new Set(
+    (await getApplicationManifests("apps", exactRevision, token)).flatMap(
+      (manifestSource) => {
+        const parsed = RenderedObjectSchema.parse(JSON.parse(manifestSource));
+        if (parsed.kind !== "Application") {
+          return [];
+        }
+        return [RenderedApplicationSchema.parse(parsed).metadata.name];
+      },
+    ),
+  );
   const root = await getApplication("apps", token);
   const status = isRecord(root["status"]) ? root["status"] : {};
   const resources = Array.isArray(status["resources"])
@@ -293,9 +324,9 @@ async function assertRootPruneSafe(token: string): Promise<void> {
     if (
       !isRecord(resource) ||
       resource["kind"] !== "Application" ||
-      resource["requiresPruning"] !== true ||
       typeof resource["name"] !== "string" ||
-      resource["name"] === "apps"
+      resource["name"] === "apps" ||
+      desiredChildren.has(resource["name"])
     ) {
       return [];
     }
@@ -361,7 +392,12 @@ async function sync(
   }
   const token = requireEnv("ARGOCD_TOKEN");
   if (appName === "apps" && options.prune) {
-    await assertRootPruneSafe(token);
+    if (options.revision === undefined) {
+      throw new Error(
+        "Root Application pruning requires an exact --revision so prune candidates can be verified against the rendered source",
+      );
+    }
+    await assertRootPruneSafe(token, options.revision);
   }
   const requestId = crypto.randomUUID();
   const url = `${serverUrl()}/api/v1/applications/${appName}/sync`;
@@ -743,7 +779,7 @@ function usage(): never {
   console.error(
     "Usage:\n" +
       "  bun packages/homelab/scripts/argocd.ts sync <app> " +
-      "[--prune] [--async] [--timeout <s>] [--dry-run]\n" +
+      "[--revision <v>] [--prune] [--async] [--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts delete-application <app> " +
       "--project <project> [--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts health-wait <app> " +
