@@ -7,10 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.9.0](https://github.com/shepherdjerred/monorepo/compare/webring-v1.8.0...webring-v1.9.0) (2026-08-09)
 
+No library behavior changes. The shipped code is identical to `1.8.0`; this release exists only because of repo-level housekeeping that release-please picked up.
 
-### Features
-
-* **homelab:** migrate Plausible to self-hosted Matomo ([#2011](https://github.com/shepherdjerred/monorepo/issues/2011)) ([dfaa014](https://github.com/shepherdjerred/monorepo/commit/dfaa014c7bb14f42f10b58c435c4bc8e0a53c742))
+- The analytics snippet injected into the generated TypeDoc site moved from Plausible to a self-hosted, cookie-less Matomo instance ([dfaa014](https://github.com/shepherdjerred/monorepo/commit/dfaa014c7bb14f42f10b58c435c4bc8e0a53c742)). Only `typedoc.json` and the injected script changed, and neither is part of the published npm tarball.
+- No changes to `src/`, runtime dependencies, `README.md`, or published `package.json` metadata.
 
 ## [1.8.0](https://github.com/shepherdjerred/monorepo/compare/webring-v1.7.2...webring-v1.8.0) (2026-08-03)
 
