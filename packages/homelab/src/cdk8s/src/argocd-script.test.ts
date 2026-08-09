@@ -530,6 +530,109 @@ describe("Argo CD release gating", () => {
 });
 
 describe("Argo CD stale release protection", () => {
+  test("retries a failed operation recorded for an otherwise current app", async () => {
+    let requestedOperation: Record<string, unknown> | undefined;
+    let syncPosts = 0;
+    const server = Bun.serve({
+      hostname: "127.0.0.1",
+      port: 0,
+      async fetch(request) {
+        const url = new URL(request.url);
+        if (url.pathname === "/api/charts/apps") {
+          return Response.json([
+            {
+              version: "2.0.0-42",
+              urls: ["charts/apps-2.0.0-42.tgz"],
+              digest: "a".repeat(64),
+            },
+          ]);
+        }
+        if (
+          request.method === "POST" &&
+          url.pathname === "/api/v1/applications/worker/sync"
+        ) {
+          syncPosts += 1;
+          requestedOperation = z
+            .record(z.string(), z.unknown())
+            .parse(await request.json());
+          return Response.json({ operation: requestedOperation });
+        }
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/v1/applications/worker"
+        ) {
+          return Response.json({
+            status: {
+              sync: { status: "Synced", revision: "2.0.0-42" },
+              health: { status: "Healthy" },
+              operationState:
+                requestedOperation === undefined
+                  ? {
+                      phase: "Failed",
+                      syncResult: { revision: "2.0.0-42" },
+                    }
+                  : {
+                      phase: "Succeeded",
+                      operation: requestedOperation,
+                      syncResult: { revision: "2.0.0-42" },
+                    },
+            },
+          });
+        }
+        return new Response("not found", { status: 404 });
+      },
+    });
+    const directory = await mkdtemp(path.join(tmpdir(), "argocd-release-"));
+    const expectedPath = path.join(directory, "expected.json");
+    await Bun.write(
+      expectedPath,
+      JSON.stringify([
+        { name: "apps", revision: "2.0.0-42" },
+        { name: "worker", revision: "2.0.0-42" },
+      ]),
+    );
+
+    try {
+      const process = Bun.spawn(
+        [
+          "bun",
+          "--no-install",
+          "scripts/argocd.ts",
+          "reconcile-release",
+          expectedPath,
+          "--skip-health-wait",
+          "--timeout",
+          "1",
+        ],
+        {
+          cwd: path.resolve(import.meta.dir, "../../.."),
+          env: {
+            ...Bun.env,
+            ARGOCD_SERVER_URL: server.url.origin,
+            ARGOCD_TOKEN: "test-token",
+            CHARTMUSEUM_ORIGIN: server.url.origin,
+          },
+          stderr: "pipe",
+          stdout: "pipe",
+        },
+      );
+      const [exitCode, stdout, stderr] = await Promise.all([
+        process.exited,
+        new Response(process.stdout).text(),
+        new Response(process.stderr).text(),
+      ]);
+
+      expect(exitCode).toBe(0);
+      expect(stderr).toBe("");
+      expect(stdout).toContain("sync operation started: worker");
+      expect(stdout).toContain("synced: worker");
+      expect(syncPosts).toBe(1);
+    } finally {
+      await server.stop(true);
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
   test("rejects an Argo reconcile after a newer apps chart is published", async () => {
     let argoRequests = 0;
     const server = Bun.serve({

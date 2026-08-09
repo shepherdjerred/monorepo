@@ -3,7 +3,7 @@ import {
   annotate,
   ensureBuilder,
   execute,
-  lastGreenCommit,
+  lastSuccessfulImageReleaseCommit,
   manifestDigest,
   pushImages,
   runSmoke,
@@ -26,6 +26,7 @@ import {
   knownImageTargets,
   parseBakeArguments,
   parseBuildkiteCommits,
+  parseLastPassedStepsCommit,
   parseImageSelection,
   parseStringArray,
 } from "./migration-core.ts";
@@ -173,6 +174,33 @@ test("validates external JSON arrays", () => {
   );
   expect(() => parseBuildkiteCommits({})).toThrow("array");
   expect(() => parseBuildkiteCommits([{}])).toThrow("contain a commit");
+  expect(
+    parseLastPassedStepsCommit(
+      [
+        {
+          commit: "current",
+          jobs: [
+            { step_key: "images", state: "passed" },
+            { step_key: "version-commit-back", state: "running" },
+          ],
+        },
+        {
+          commit: "previous",
+          jobs: [
+            { step_key: "images", state: "passed" },
+            { step_key: "version-commit-back", state: "passed" },
+          ],
+        },
+      ],
+      ["images", "version-commit-back"],
+    ),
+  ).toBe("previous");
+  expect(
+    parseLastPassedStepsCommit([{ commit: "current", jobs: [] }], ["images"]),
+  ).toBeUndefined();
+  expect(() =>
+    parseLastPassedStepsCommit([{ commit: "current" }], ["images"]),
+  ).toThrow("contain jobs");
 });
 
 test("fails open when image selection output is malformed", () => {
@@ -222,9 +250,28 @@ test("annotates with the expected report arguments", async () => {
   ]);
 });
 
-test("resolves the newest green Buildkite commit, including the current head", async () => {
+test("resolves the newest main commit whose image release jobs passed", async () => {
   const fetcher = Object.assign(
-    async () => Response.json([{ commit: "green-commit" }], { status: 200 }),
+    async () =>
+      Response.json(
+        [
+          {
+            commit: "current",
+            jobs: [
+              { step_key: "images", state: "passed" },
+              { step_key: "version-commit-back", state: "running" },
+            ],
+          },
+          {
+            commit: "image-green-commit",
+            jobs: [
+              { step_key: "images", state: "passed" },
+              { step_key: "version-commit-back", state: "passed" },
+            ],
+          },
+        ],
+        { status: 200 },
+      ),
     { preconnect: fetch.preconnect },
   );
   const commands: string[][] = [];
@@ -234,21 +281,17 @@ test("resolves the newest green Buildkite commit, including the current head", a
   };
 
   expect(
-    await lastGreenCommit("current", fetcher, executor, {
+    await lastSuccessfulImageReleaseCommit("current", fetcher, executor, {
       BUILDKITE_API_TOKEN: "token",
     }),
-  ).toBe("green-commit");
+  ).toBe("image-green-commit");
   expect(commands).toEqual([
-    ["git", "cat-file", "-e", "green-commit^{commit}"],
+    ["git", "cat-file", "-e", "image-green-commit^{commit}"],
+    ["git", "merge-base", "--is-ancestor", "image-green-commit", "current"],
   ]);
   expect(
-    await lastGreenCommit("current", fetcher, executor, {}),
+    await lastSuccessfulImageReleaseCommit("current", fetcher, executor, {}),
   ).toBeUndefined();
-  expect(
-    await lastGreenCommit("green-commit", fetcher, executor, {
-      BUILDKITE_API_TOKEN: "token",
-    }),
-  ).toBe("green-commit");
 });
 
 test("selects affected image targets from the merge base", async () => {
@@ -301,7 +344,7 @@ test("falls back to all images when target selection fails", async () => {
   });
 });
 
-test("uses the last green commit for scoped pushes", async () => {
+test("uses the last completed image-release commit for scoped pushes", async () => {
   expect(
     await selectedTargets(
       { affected: false, push: true },

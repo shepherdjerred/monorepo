@@ -1161,7 +1161,7 @@ steps:
         # (should-never-happen) case that write didn't happen.
         jq -n '[]' > image-push-outcomes.json
         if [ ! -f image-selection-report.json ]; then
-          jq -n '{base: null, changedPaths: [], mode: "selected", globalReason: "no image-owning packages changed since last green main build", targets: {}}' > image-selection-report.json
+          jq -n '{base: null, changedPaths: [], mode: "selected", globalReason: "no image-owning packages changed since last completed main image release", targets: {}}' > image-selection-report.json
         fi
         if ! bun --no-install .buildkite/scripts/annotate-image-summary.ts --report image-selection-report.json --outcomes image-push-outcomes.json; then
           echo "WARN: image summary annotation failed (non-fatal)" >&2

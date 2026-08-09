@@ -165,6 +165,37 @@ export function parseBuildkiteCommits(value: unknown): string[] {
   return commits;
 }
 
+export function parseLastPassedStepsCommit(
+  value: unknown,
+  stepKeys: readonly string[],
+): string | undefined {
+  if (!Array.isArray(value)) {
+    throw new TypeError("Buildkite response must be an array");
+  }
+  for (const item of value) {
+    const build = asRecord(item);
+    const commit = build?.["commit"];
+    const jobs = build?.["jobs"];
+    if (typeof commit !== "string" || commit.length === 0) {
+      throw new TypeError("Buildkite build must contain a commit");
+    }
+    if (!Array.isArray(jobs)) {
+      throw new TypeError("Buildkite build must contain jobs");
+    }
+    const passedStepKeys = new Set(
+      jobs.flatMap((job) => {
+        const record = asRecord(job);
+        const stepKey = record?.["step_key"];
+        return typeof stepKey === "string" && record?.["state"] === "passed"
+          ? [stepKey]
+          : [];
+      }),
+    );
+    if (stepKeys.every((stepKey) => passedStepKeys.has(stepKey))) return commit;
+  }
+  return undefined;
+}
+
 export const summarySteps = [
   "verify",
   "playwright-e2e-main",

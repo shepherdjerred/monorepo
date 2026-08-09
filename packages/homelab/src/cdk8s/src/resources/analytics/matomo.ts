@@ -27,7 +27,7 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 const archiveCommand = [
   "set -e;",
-  "until test -f /var/www/html/config/config.ini.php; do sleep 30; done;",
+  "until test -f /var/www/html/config/config.ini.php && grep -Fqx '[database]' /var/www/html/config/config.ini.php; do sleep 30; done;",
   "php /var/www/html/console config:set",
   "'General.enable_browser_archiving_triggering=0'",
   "'General.browser_archiving_disabled_enforce=1'",

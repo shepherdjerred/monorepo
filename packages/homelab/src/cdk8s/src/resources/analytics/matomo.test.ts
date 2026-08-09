@@ -18,6 +18,8 @@ const MatomoDeploymentSchema = z.object({
         containers: z.array(
           z.object({
             name: z.string(),
+            command: z.array(z.string()).optional(),
+            args: z.array(z.string()).optional(),
             securityContext: z.object({
               runAsNonRoot: z.boolean(),
               runAsUser: z.number().optional(),
@@ -73,6 +75,15 @@ describe("Matomo deployment", () => {
         allowPrivilegeEscalation: false,
       },
     });
+    const archiveContainer = deployment.data.spec.template.spec.containers.find(
+      (container) => container.name === "matomo-archive",
+    );
+    if (archiveContainer?.args === undefined) {
+      throw new Error("Matomo archive container command was not synthesized");
+    }
+    expect(archiveContainer.args.join(" ")).toContain(
+      "grep -Fqx '[database]' /var/www/html/config/config.ini.php",
+    );
     const nginxConfig = config.data.data["nginx.conf"];
     expect(nginxConfig).toStartWith("pid /tmp/nginx.pid;");
     for (const temporaryPath of [
