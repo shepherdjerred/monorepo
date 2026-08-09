@@ -15,6 +15,16 @@ const TRPC_NON_FAULT_CODES = [
   "BAD_REQUEST",
 ];
 
+/**
+ * Threshold note for the `scout-web` group.
+ *
+ * Scout's web surface is LOW VOLUME — roughly 21 sign-ins and ~90 anonymous app
+ * loads per month in production. Per-second rate thresholds borrowed from
+ * high-traffic services are therefore unreachable: `rate(...) > 0.05` needs ~45
+ * events inside the window, so a total outage would pass unnoticed by the very
+ * alert meant to catch it. These rules use absolute counts over a window
+ * instead, sized to what "obviously wrong" looks like at this scale.
+ */
 export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
   return [
     {
@@ -316,11 +326,11 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
           annotations: {
             summary: "Scout web backend is returning server errors",
             message: escapePrometheusTemplate(
-              "Scout {{ $labels.environment }} is serving {{ $value | humanize }} 5xx responses/sec on route {{ $labels.route }}. These are backend faults, not client mistakes.",
+              "Scout {{ $labels.environment }} is serving {{ $value | humanize }} 5xx responses in 15m on route {{ $labels.route }}. These are backend faults, not client mistakes.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'sum by (environment, route) (rate(scout_http_requests_total{status_class="5xx"}[5m])) > 0.05',
+            'sum by (environment, route) (increase(scout_http_requests_total{status_class="5xx"}[15m])) > 5',
           ),
           for: "10m",
           labels: {
@@ -335,11 +345,11 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
           annotations: {
             summary: "Scout cannot reach Discord to resolve user guilds",
             message: escapePrometheusTemplate(
-              "Scout {{ $labels.environment }} is failing to fetch user guilds from Discord ({{ $labels.reason }}) at {{ $value | humanize }}/sec. Web users will see 'Couldn't reach Discord' and cannot manage their servers.",
+              "Scout {{ $labels.environment }} is failing to fetch user guilds from Discord ({{ $labels.reason }}) saw {{ $value | humanize }} failures in 15m. Web users will see 'Couldn't reach Discord' and cannot manage their servers.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'sum by (environment, reason) (rate(scout_discord_user_guilds_failures_total{reason!="token_refresh_failed"}[15m])) > 0.05',
+            'sum by (environment, reason) (increase(scout_discord_user_guilds_failures_total{reason!="token_refresh_failed"}[15m])) > 3',
           ),
           for: "15m",
           labels: {
@@ -354,11 +364,11 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
           annotations: {
             summary: "Scout tRPC procedures are failing",
             message: escapePrometheusTemplate(
-              "Scout {{ $labels.environment }} procedure {{ $labels.procedure }} is returning {{ $labels.code }} at {{ $value | humanize }}/sec.",
+              "Scout {{ $labels.environment }} procedure {{ $labels.procedure }} returned {{ $labels.code }} {{ $value | humanize }} times in 30m.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            `sum by (environment, procedure, code) (rate(scout_trpc_calls_total{code!~"${TRPC_NON_FAULT_CODES.join("|")}"}[10m])) > 0.05`,
+            `sum by (environment, procedure, code) (increase(scout_trpc_calls_total{code!~"${TRPC_NON_FAULT_CODES.join("|")}"}[30m])) > 5`,
           ),
           for: "15m",
           labels: {
@@ -373,11 +383,11 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
           annotations: {
             summary: "Scout web sign-ins are failing",
             message: escapePrometheusTemplate(
-              "Scout {{ $labels.environment }} sign-in failures are {{ $value | humanizePercentage }} of attempts over the last hour. Users cannot get into the dashboard.",
+              "Scout {{ $labels.environment }} sign-in failures are {{ $value | humanizePercentage }} of attempts over the last 6h. Users cannot get into the dashboard.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'sum by (environment) (rate(scout_web_signin_total{result=~"failed|callback_error"}[1h])) / sum by (environment) (rate(scout_web_signin_total{result="started"}[1h])) > 0.5 and sum by (environment) (rate(scout_web_signin_total{result="started"}[1h])) > 0.001',
+            'sum by (environment) (increase(scout_web_signin_total{result=~"failed|callback_error"}[6h])) / sum by (environment) (increase(scout_web_signin_total{result="started"}[6h])) > 0.5 and sum by (environment) (increase(scout_web_signin_total{result="started"}[6h])) >= 3',
           ),
           for: "30m",
           labels: {

@@ -145,3 +145,35 @@ describe("Scout web alert rules", () => {
     expect(expression).toContain(String.raw`result=\"started\"`);
   });
 });
+
+describe("Scout web alert thresholds suit production volume", () => {
+  const web = getScoutRuleGroups().find((group) => group.name === "scout-web");
+
+  // Production sees ~21 sign-ins and ~90 anonymous app loads per MONTH. A
+  // per-second rate threshold (`rate(...) > 0.05` needs ~45 events in-window)
+  // is unreachable at that volume, so the alert would stay green through the
+  // very outage it exists to detect. These rules must use absolute counts.
+  test.each([
+    "ScoutWeb5xxRateHigh",
+    "ScoutDiscordUpstreamFailures",
+    "ScoutTrpcErrorRateHigh",
+    "ScoutWebSigninFailureRate",
+  ])("%s counts events rather than a per-second rate", (alertName) => {
+    const rule = web?.rules?.find((candidate) => candidate.alert === alertName);
+    if (rule === undefined) {
+      throw new Error(`Missing ${alertName} rule`);
+    }
+    const expression = JSON.stringify(rule.expr);
+    expect(expression).toContain("increase(");
+    expect(expression).not.toContain("rate(scout_");
+  });
+
+  test("the sign-in ratio needs a countable number of attempts", () => {
+    const rule = web?.rules?.find(
+      (candidate) => candidate.alert === "ScoutWebSigninFailureRate",
+    );
+    const expression = JSON.stringify(rule?.expr);
+    // A fractional per-second floor could never be met at this volume.
+    expect(expression).toContain(">= 3");
+  });
+});

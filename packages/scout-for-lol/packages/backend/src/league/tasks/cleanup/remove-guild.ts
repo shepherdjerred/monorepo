@@ -43,18 +43,21 @@ export async function cleanupRemovedGuild(
 ): Promise<RemovedGuildCleanupSummary> {
   logger.info(`[RemoveGuild] Cleaning up all data for guild ${serverId}`);
 
+  // Stamp the removal BEFORE the cleanup transaction, and outside it.
+  //
+  // This is the one function every confirmed-removal path calls (guildDelete
+  // and the reconcile sweep), so it is the right place — but it must not share
+  // the transaction: any later delete failing would roll the stamp back too,
+  // and a re-install before the next reconcile would then see removedAt = null,
+  // keep its old installedAt, and inherit the previous installation's spent
+  // budget. The removal is a confirmed fact; the deletions are best-effort.
+  await db.guildInstall.updateMany({
+    where: { serverId },
+    data: { removedAt: new Date() },
+  });
+
   const summary = await db.$transaction(
     async (tx): Promise<RemovedGuildCleanupSummary> => {
-      // Stamp the removal here, inside the one function every confirmed-removal
-      // path calls (guildDelete AND the reconcile sweep). Stamping it only in
-      // the event handler left reconcile-discovered removals unmarked, so the
-      // outreach ladder would still treat those guilds as live installs and
-      // could DM a former installer.
-      await tx.guildInstall.updateMany({
-        where: { serverId },
-        data: { removedAt: new Date() },
-      });
-
       const playerRows = await tx.player.findMany({
         where: { serverId },
         select: { id: true },

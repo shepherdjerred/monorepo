@@ -64,20 +64,25 @@ export const feedbackRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const created = await prisma.feedback.create({
-        data: {
-          discordId: ctx.user.discordId,
-          serverId: input.serverId ?? null,
-          rating: input.rating ?? null,
-          body: input.body,
-        },
-        select: { id: true },
-      });
-
-      await prisma.feedbackPromptState.upsert({
-        where: { discordId: ctx.user.discordId },
-        create: { discordId: ctx.user.discordId, submitted: true },
-        update: { submitted: true },
+      // One transaction: a feedback row committed without its prompt-state row
+      // would leave the account still eligible, so a retry would duplicate the
+      // feedback while another device kept showing the one-time prompt.
+      const created = await prisma.$transaction(async (tx) => {
+        const row = await tx.feedback.create({
+          data: {
+            discordId: ctx.user.discordId,
+            serverId: input.serverId ?? null,
+            rating: input.rating ?? null,
+            body: input.body,
+          },
+          select: { id: true },
+        });
+        await tx.feedbackPromptState.upsert({
+          where: { discordId: ctx.user.discordId },
+          create: { discordId: ctx.user.discordId, submitted: true },
+          update: { submitted: true },
+        });
+        return row;
       });
 
       feedbackSubmittedTotal.inc({
