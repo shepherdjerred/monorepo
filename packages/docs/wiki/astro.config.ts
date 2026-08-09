@@ -56,6 +56,10 @@ export default defineConfig({
           label: "Wiki",
         },
         {
+          items: [{ autogenerate: { directory: "reference" } }],
+          label: "Reference",
+        },
+        {
           items: [
             {
               label: "PR Fleet Controller",

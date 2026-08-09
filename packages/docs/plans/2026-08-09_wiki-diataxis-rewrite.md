@@ -303,7 +303,17 @@ The current "What belongs here / What does not" meta-content moves into
 | `/reference/home-automation-routines/` | → `temporal/workflows/home-automation.md`                             |
 | `/reference/pr-fleet-cli/`             | → `pr-fleet-controller.md` (commands, flags, slash commands)          |
 | `/reference/pr-fleet-run-bundle/`      | → `pr-fleet-controller.md` (paths, modes, contents)                   |
-| `/reference/homelab-services/`         | NEW — the service inventory that does not exist                       |
+| `/reference/homelab-services/`         | NEW — deferred to phase 6; see the note below                         |
+
+**Note on `homelab-services`.** This one must be _generated_, not transcribed.
+The ArgoCD application definitions in
+`packages/homelab/src/cdk8s/src/resources/argo-applications/` are not uniformly
+literal: most inline `namespace: "…"`, but some (Plane, for example) build the
+value from module constants, and a few do not call `new Application()` directly
+at all. A regex sweep over that directory recovered 62 applications and silently
+missed Plane — so any hand-written or pattern-scraped inventory would read as
+complete while being wrong. Derive it from synthesized cdk8s output instead,
+which is also the #2036 generate-don't-transcribe pattern.
 
 ### `/explanation/` — 17 pages, nested one level by subject
 
