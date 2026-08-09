@@ -414,6 +414,24 @@ describe("TaskStore restore validation", () => {
 
     await expect(store.restore()).rejects.toThrow();
   });
+
+  test("surfaces malformed persisted restore keys", async () => {
+    const storeStorage = memoryStoreStorage({
+      acknowledgedCompletionRestores: JSON.stringify({
+        "TaskNotes/test.md": {
+          restore: {
+            scheduled: "2026-08-08",
+            due: null,
+            recurrence: "FREQ=WEEKLY",
+            skipped: false,
+          },
+        },
+      }),
+    });
+    const { store } = makeStore(memoryQueueStorage(), storeStorage);
+
+    await expect(store.restore()).rejects.toThrow();
+  });
 });
 
 describe("TaskStore restore ordering", () => {

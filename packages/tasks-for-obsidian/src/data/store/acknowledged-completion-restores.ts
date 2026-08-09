@@ -13,8 +13,22 @@ const CompletionRestoreSchema = z.object({
 const StoredCompletionRestoreSchema = z.object({
   restore: CompletionRestoreSchema,
 });
+const CompletionRestoreKeySchema = z.string().superRefine((key, context) => {
+  const separator = key.indexOf("\u{0}");
+  const date = key.slice(separator + 1);
+  if (
+    separator <= 0 ||
+    key.includes("\u{0}", separator + 1) ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(date)
+  ) {
+    context.addIssue({
+      code: "custom",
+      message: "Expected a task ID and ISO date separated by NUL",
+    });
+  }
+});
 const AcknowledgedCompletionRestoresSchema = z.record(
-  z.string(),
+  CompletionRestoreKeySchema,
   StoredCompletionRestoreSchema,
 );
 
