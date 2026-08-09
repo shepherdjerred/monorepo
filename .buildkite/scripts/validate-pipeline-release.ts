@@ -66,8 +66,7 @@ function validateReleaseSteps({
         "concurrency_group: monorepo/homelab-release",
         'artifact download "argocd-release-expected.json"',
         "reconcile-release argocd-release-expected.json",
-        'sync apps --revision "$$apps_revision" --prune',
-        "tree-health-wait apps",
+        'sync apps --revision "$$apps_revision" --prune --async',
       ],
     ],
     [

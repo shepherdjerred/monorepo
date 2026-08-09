@@ -1484,10 +1484,12 @@ steps:
         bun --no-install packages/homelab/scripts/argocd.ts reconcile-release argocd-release-expected.json --timeout 300
       fi
       apps_revision=$$(jq -er '.[] | select(.name == "apps") | .revision' argocd-release-expected.json)
-      bun --no-install packages/homelab/scripts/argocd.ts sync apps --revision "$$apps_revision" --prune
+      # The root app owns every repository Application, so Argo's synchronous
+      # health wait would block on unrelated stale children. The scoped
+      # release-health-wait above is the authoritative gate for this release.
+      bun --no-install packages/homelab/scripts/argocd.ts sync apps --revision "$$apps_revision" --prune --async
       if [ -z "$$deferred_discord_apps" ]; then
         bun --no-install packages/homelab/scripts/argocd.ts release-health-wait argocd-release-expected.json --timeout 300
-        bun --no-install packages/homelab/scripts/argocd.ts tree-health-wait apps --timeout 300
       fi
     retry: *retry
     plugins:
@@ -1658,7 +1660,6 @@ steps:
         bun --no-install packages/homelab/scripts/argocd.ts sync "$$app" --revision "$$revision" --timeout 300
       done
       bun --no-install packages/homelab/scripts/argocd.ts release-health-wait argocd-release-expected.json --timeout 300
-      bun --no-install packages/homelab/scripts/argocd.ts tree-health-wait apps --timeout 300
     retry: *retry
     plugins:
       - kubernetes:

@@ -9,7 +9,7 @@
  * timeouts are preserved.
  *
  * Usage:
- *   bun packages/homelab/scripts/argocd.ts sync <app> [--prune] [--timeout <s>] [--dry-run]
+ *   bun packages/homelab/scripts/argocd.ts sync <app> [--prune] [--async] [--timeout <s>] [--dry-run]
  *   bun packages/homelab/scripts/argocd.ts delete-application <app> \
  *       --project <project> [--timeout <s>] [--dry-run]
  *   bun packages/homelab/scripts/argocd.ts health-wait <app> [--timeout <s>] [--dry-run]
@@ -338,6 +338,7 @@ async function assertRootPruneSafe(token: string): Promise<void> {
  */
 type SyncOptions = {
   prune: boolean;
+  waitForCompletion?: boolean;
   revision?: string;
   manifests?: readonly string[];
   resources?: readonly SyncOperationResource[];
@@ -390,6 +391,9 @@ async function sync(
   }
   const operationIdentity = requestedOperationIdentity(await res.json());
   console.log(`sync operation started: ${appName}`);
+  if (options.waitForCompletion === false) {
+    return;
+  }
 
   const deadline = Date.now() + timeoutSeconds * 1000;
   let elapsed = 0;
@@ -450,18 +454,8 @@ async function reconcileRelease(
   }
   await assertExpectedAppsRevisionIsLatest(appsRelease.revision);
   const token = requireEnv("ARGOCD_TOKEN");
-  const root = ReconcileApplicationSchema.parse(
-    await getApplication("apps", token),
-  );
-  if (
-    root.status?.sync?.status !== "Synced" ||
-    root.status.sync.revision !== appsRelease.revision
-  ) {
-    await sync("apps", timeoutSeconds, false, {
-      prune: false,
-      revision: appsRelease.revision,
-    });
-  }
+  // The release step submits the root Application sync asynchronously. Waiting
+  // here would make every release depend on unrelated child Application health.
   for (const wanted of expected) {
     if (wanted.name === "apps" || deferredApps.has(wanted.name)) {
       continue;
@@ -749,7 +743,7 @@ function usage(): never {
   console.error(
     "Usage:\n" +
       "  bun packages/homelab/scripts/argocd.ts sync <app> " +
-      "[--prune] [--timeout <s>] [--dry-run]\n" +
+      "[--prune] [--async] [--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts delete-application <app> " +
       "--project <project> [--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts health-wait <app> " +
@@ -822,6 +816,7 @@ async function main(): Promise<void> {
       const revision = flag(argv, "revision");
       await sync(app, timeoutOverride ?? DEFAULT_SYNC_TIMEOUT_S, dryRun, {
         prune: argv.includes("--prune"),
+        waitForCompletion: !argv.includes("--async"),
         ...(revision === undefined ? {} : { revision }),
       });
       return;
