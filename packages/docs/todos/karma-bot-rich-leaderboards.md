@@ -22,8 +22,10 @@ Current state:
   #2043.
 - Storage: SQLite via **Prisma** (`packages/starlight-karma-bot/prisma/schema.prisma`,
   client in `src/db/index.ts`, database at `DATABASE_PATH`), per-guild per-user.
-  The TypeORM/`glitter.sqlite` layer was removed in #2038; read queries now live
-  in `src/karma/queries.ts` and pure ranking in `src/karma/scoring.ts`.
+  The TypeORM/`glitter.sqlite` layer was removed in #2038; aggregate reads live
+  in `src/karma/commands.ts` (`getReceivedKarma`, `handleKarmaLeaderboard`) and
+  pure ranking in `src/karma/scoring.ts`. #2043 moves the reads into a
+  dedicated `src/karma/queries.ts`.
 - **No image/graph/leaderboard rendering.** The package does now have tests
   (the `"true"` placeholder script is gone).
 
@@ -37,7 +39,7 @@ attachment. Scout's `competition-chart` color/palette logic is a good reference.
 ## Remaining
 
 - [ ] Extract and test deterministic leaderboard/history view models from the
-      Prisma query results in `src/karma/queries.ts`, including ties, empty
+      Prisma aggregate reads in `src/karma/commands.ts`, including ties, empty
       guilds, and long names. Dense ranking is already covered by
       `src/karma/scoring.test.ts`.
 - [ ] Render leaderboard and karma-over-time images with the established
