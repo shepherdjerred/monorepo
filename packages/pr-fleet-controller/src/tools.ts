@@ -10,7 +10,10 @@ import { LeaseKindSchema, PrStateSchema, type PrState } from "./schemas.ts";
 import type { FleetStore } from "./state.ts";
 import { containedPath, createFileEditTools } from "./worker-file-edits.ts";
 import { createSetupWorktreeTool } from "./worker-setup-tool.ts";
-import { createWorkerWipTools } from "./worker-wip-tools.ts";
+import {
+  createWorkerWipTools,
+  requireCompleteInheritedWipInspection,
+} from "./worker-wip-tools.ts";
 
 export const ConventionalCommitMessageSchema = z
   .string()
@@ -381,6 +384,7 @@ export function createWorkerTools(
       execute: (input) =>
         runRecordedTool("publish_fix", input, toolContext, async () => {
           assertNotWaitingForAnswer();
+          requireCompleteInheritedWipInspection(store, pr);
           if (!store.requestLease(pr, "stack-write")) {
             throw new Error("Stack write lease is not available");
           }

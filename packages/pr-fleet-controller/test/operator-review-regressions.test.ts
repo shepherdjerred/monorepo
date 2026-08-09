@@ -19,7 +19,12 @@ import {
   type FleetSnapshot,
   type PrIdentity,
 } from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
+import { FleetStore } from "@shepherdjerred/pr-fleet-controller/src/state.ts";
 import { WorktreeManager } from "@shepherdjerred/pr-fleet-controller/src/worktree.ts";
+import {
+  boundedInheritedWipEvidence,
+  requireCompleteInheritedWipInspection,
+} from "@shepherdjerred/pr-fleet-controller/src/worker-wip-tools.ts";
 import { evidence, identity } from "./fixtures.ts";
 
 const temporaryDirectories: string[] = [];
@@ -98,6 +103,68 @@ describe("operator question schema regressions", () => {
       prs: [],
     });
     expect(parsed.waiting).toBe(0);
+  });
+});
+
+describe("inherited WIP evidence regressions", () => {
+  test("reports truncation instead of silently slicing inherited evidence", () => {
+    const bounded = boundedInheritedWipEvidence(
+      "x".repeat(110_000),
+      "staged inherited diff",
+    );
+    expect(bounded.complete).toBe(false);
+    expect(bounded.evidence).toContain("TRUNCATED");
+    expect(bounded.evidence).toContain("publication is disabled");
+  });
+
+  test("blocks publication until all inherited WIP evidence is complete", () => {
+    const prIdentity = identity(41);
+    const pr = PrStateSchema.parse({
+      identity: prIdentity,
+      logicalOwner: "pr-41",
+      runtimeAgent: "pr-41-g1",
+      agentGeneration: 1,
+      model: "openai/gpt-5.6-terra",
+      status: "diagnosing",
+      classification: "actionable-red",
+      stackId: "pr-41",
+      worktree: "/tmp/worktrees/pr-41",
+      worktreeContext: {
+        ownership: "operator",
+        remoteHeadSha: prIdentity.headSha,
+        localHeadSha: prIdentity.headSha,
+        relation: "exact",
+        dirty: true,
+        stagedPaths: ["packages/example.ts"],
+        unstagedPaths: [],
+      },
+      setupComplete: true,
+      evidence: evidence(prIdentity),
+      lastAgentReportAt: null,
+      lastProgressAt: "2026-08-08T20:00:00.000Z",
+      noProgressTicks: 0,
+      prodSentAt: null,
+      escalation: null,
+      priority: 0,
+    });
+    const store = new FleetStore(1);
+    store.inheritedWipInspections.set(prIdentity.number, {
+      remoteHeadSha: prIdentity.headSha,
+      localHeadSha: prIdentity.headSha,
+      complete: false,
+    });
+    expect(() => requireCompleteInheritedWipInspection(store, pr)).toThrow(
+      /must be complete/,
+    );
+
+    store.inheritedWipInspections.set(prIdentity.number, {
+      remoteHeadSha: prIdentity.headSha,
+      localHeadSha: prIdentity.headSha,
+      complete: true,
+    });
+    expect(() =>
+      requireCompleteInheritedWipInspection(store, pr),
+    ).not.toThrow();
   });
 });
 

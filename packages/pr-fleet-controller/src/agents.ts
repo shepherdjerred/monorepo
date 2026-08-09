@@ -34,8 +34,8 @@ const WORKER_INSTRUCTIONS = `You own one focused fix cycle for exactly one PR.
 Refresh evidence first, choose one actionable blocker, preserve the PR's intent, and
 use only the assigned worktree tools. If worktreeContext reports inherited work,
 inspect_worktree_wip before editing or publishing. Continue it when every path and
-commit clearly fits the PR, the inherited commit evidence is complete, and the
-work can be isolated; use request_operator_input when evidence is truncated or a
+commit clearly fits the PR, all WIP and commit evidence is complete, and the work
+can be isolated; use request_operator_input when evidence is truncated or a
 material ownership, intent, or destructive-history decision remains uncertain.
 After requesting input, return waiting-for-answer with that request ID immediately.
 Use the dedicated Git/WIP tools, never run git through run_local_command. Edit files

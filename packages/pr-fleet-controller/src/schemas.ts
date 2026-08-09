@@ -113,47 +113,37 @@ export const OperatorQuestionSchema = z
     }
   });
 
+const OperatorQuestionsSchema = z
+  .array(OperatorQuestionSchema)
+  .min(1)
+  .max(3)
+  .superRefine((questions, context) => {
+    const questionIds = new Set(questions.map((question) => question.id));
+    if (questionIds.size !== questions.length) {
+      context.addIssue({
+        code: "custom",
+        message: "Operator-question IDs must be unique",
+      });
+    }
+  });
+
 const OperatorInputRequestDraftFields = {
   context: z.string().min(1).max(4000),
-  questions: z.array(OperatorQuestionSchema).min(1).max(3),
+  questions: OperatorQuestionsSchema,
 };
 
-export const OperatorInputRequestDraftSchema = z
-  .object(OperatorInputRequestDraftFields)
-  .superRefine((request, context) => {
-    const questionIds = new Set(
-      request.questions.map((question) => question.id),
-    );
-    if (questionIds.size !== request.questions.length) {
-      context.addIssue({
-        code: "custom",
-        message: "Operator-question IDs must be unique",
-        path: ["questions"],
-      });
-    }
-  });
+export const OperatorInputRequestDraftSchema = z.object(
+  OperatorInputRequestDraftFields,
+);
 
-export const OperatorInputRequestSchema = z
-  .object({
-    id: z.string().min(1),
-    pr: z.number().int().positive(),
-    headSha: z.string().regex(/^[0-9a-f]{40}$/),
-    generation: z.number().int().nonnegative(),
-    ...OperatorInputRequestDraftFields,
-    createdAt: z.iso.datetime(),
-  })
-  .superRefine((request, context) => {
-    const questionIds = new Set(
-      request.questions.map((question) => question.id),
-    );
-    if (questionIds.size !== request.questions.length) {
-      context.addIssue({
-        code: "custom",
-        message: "Operator-question IDs must be unique",
-        path: ["questions"],
-      });
-    }
-  });
+export const OperatorInputRequestSchema = z.object({
+  id: z.string().min(1),
+  pr: z.number().int().positive(),
+  headSha: z.string().regex(/^[0-9a-f]{40}$/),
+  generation: z.number().int().nonnegative(),
+  ...OperatorInputRequestDraftFields,
+  createdAt: z.iso.datetime(),
+});
 
 export const OperatorQuestionAnswerSchema = z
   .object({

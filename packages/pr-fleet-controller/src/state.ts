@@ -38,6 +38,14 @@ export class FleetStore {
       complete: boolean;
     }
   >();
+  readonly inheritedWipInspections = new Map<
+    number,
+    {
+      remoteHeadSha: string;
+      localHeadSha: string;
+      complete: boolean;
+    }
+  >();
   readonly stackWriteOwners = new Map<string, number>();
   setupOwner: number | null = null;
   readonly heavyOwners = new Set<number>();

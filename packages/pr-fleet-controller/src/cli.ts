@@ -215,8 +215,16 @@ async function main(): Promise<void> {
   let runFailure: Error | undefined;
   let finalizationPromise: Promise<void> | undefined;
   const observer = new TerminalObserver();
+  const closeOperatorControl = async (): Promise<void> => {
+    const activeControl = operatorControl;
+    await activeControl?.stop();
+    if (operatorControl === activeControl) {
+      operatorControl = undefined;
+    }
+  };
   const settleResources = createSharedShutdown(() =>
     settleCliResources({
+      closeOperatorControl,
       input: () => terminal,
       master: () => master,
       controller: () => controller,
@@ -227,6 +235,7 @@ async function main(): Promise<void> {
     }),
   );
   const finalizeRun = (outcome?: TerminalOutcome): Promise<void> => {
+    shutdownRequested = true;
     if (outcome?.status === "failed") {
       runFailure = combineFailures(runFailure, outcome.error);
     }
@@ -251,7 +260,7 @@ async function main(): Promise<void> {
           runFailure ?? null,
         );
       } finally {
-        await operatorControl?.stop();
+        await closeOperatorControl();
         // Always tear the dashboard down — even if finalize throws — so it can't
         // be orphaned; stopWatcher drains a bounded window first so the live view
         // renders the terminal snapshot and outcome before disconnecting.
@@ -417,7 +426,12 @@ async function main(): Promise<void> {
     });
     operatorControl = await startOperatorControlServer({
       socketPath: recorder.paths.controlSocket,
-      answer: (answer) => activeController.answerOperatorQuestion(answer),
+      answer: (answer) => {
+        if (shutdownRequested) {
+          throw new Error("Controller is shutting down");
+        }
+        return activeController.answerOperatorQuestion(answer);
+      },
     });
     terminal = createInterface({
       input: process.stdin,
