@@ -20,7 +20,7 @@ Compact object headers are a product feature in JDK 25 but remain disabled by de
 
 ## jlink
 
-JDK 25 uses numeric compression levels such as `--compress=2`. JDK 26 adds `zip-0` through `zip-9`. Measure runtime-image size for the selected modules, platform, compression, and debug-symbol policy.
+JDK 25 accepts `zip-0` through `zip-9` and defaults to `--compress=zip-6`; the numeric `0`, `1`, and `2` forms are deprecated. Measure runtime-image size for the selected modules, platform, compression, and debug-symbol policy.
 
 ## jpackage
 

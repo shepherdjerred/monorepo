@@ -25,12 +25,12 @@ Use exported global variables in version-controlled config for child-process env
 
 ```fish
 set -gx EDITOR nvim
-fish_add_path $HOME/.local/bin
+fish_add_path --global $HOME/.local/bin
 ```
 
 Universal variables remain supported, but Fish 4.3 stopped creating several user-facing defaults as universal values. Use universal state only when cross-session persistence is intentional. `set -U EDITOR vim` is not exported; `set -Ux` is persistent and exported but can create hidden machine state.
 
-Use `fish_add_path` for idempotent path changes. Do not replace `PATH` with a short hard-coded list or prepend the same directory every time config is sourced.
+Use `fish_add_path --global` for idempotent, version-controlled path changes. Do not replace `PATH` with a short hard-coded list or prepend the same directory every time config is sourced.
 
 Fish supports command-scoped environment overrides:
 
@@ -132,7 +132,7 @@ Fish searches user `conf.d`, system configuration, and user/vendor data director
 Put environment and path setup needed by noninteractive Fish before an interactive-only guard:
 
 ```fish
-fish_add_path $HOME/.local/bin
+fish_add_path --global $HOME/.local/bin
 set -gx EDITOR nvim
 
 status is-interactive
@@ -180,7 +180,7 @@ Use `$version` or compatibility variable `$FISH_VERSION`; `$fish_version` does n
 ## Review checklist
 
 - Verify Fish 4.8.1 behavior and the project's minimum version.
-- Use exported globals and `fish_add_path` for version-controlled environment setup.
+- Use exported globals and `fish_add_path --global` for version-controlled environment setup.
 - Preserve argv and avoid `eval`.
 - Propagate failures through functions and cleanup.
 - Read complete files with a loop or explicit splitting.

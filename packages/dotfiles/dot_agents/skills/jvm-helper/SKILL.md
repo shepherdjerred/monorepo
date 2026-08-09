@@ -126,8 +126,7 @@ Heap dumps can contain secrets. Write them only to a private, access-controlled,
 
 ## Packaging
 
-- JDK 25 `jlink` uses numeric compression such as `--compress=2`.
-- JDK 26 supports `--compress=zip-6` and related named levels.
+- JDK 25 and later support named `jlink` compression such as `--compress=zip-6`; use it instead of deprecated numeric levels.
 - `jpackage` does not cross-compile; build each package format on its target platform.
 - Native Image uses closed-world analysis. Tracing-agent output covers only exercised behavior; prefer framework plugins and reachability metadata, then test representative paths.
 - Remove obsolete canonical `--no-fallback` guidance and measure artifact/runtime size rather than promising fixed megabytes.
