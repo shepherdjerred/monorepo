@@ -98,18 +98,22 @@ export function createWorkerRestackTools(options: RestackToolOptions) {
           invalidateInheritedWipInspection(options);
           store.completedRestacks.delete(pr.identity.number);
           store.activeRestacks.add(pr.identity.number);
-          const result = await environment.startRestack(pr, signal);
-          const output = `${result.stdout}\n${result.stderr}`.trim();
-          if (result.exitCode !== 0 && !/conflict/i.test(output)) {
+          try {
+            const result = await environment.startRestack(pr, signal);
+            const output = `${result.stdout}\n${result.stderr}`.trim();
+            if (result.exitCode !== 0 && !/conflict/i.test(output)) {
+              throw new Error(`git-spice restack failed: ${output}`);
+            }
+            if (result.exitCode === 0) {
+              store.activeRestacks.delete(pr.identity.number);
+              await recordCompletedRestack(options);
+            }
+            return { completed: result.exitCode === 0, output };
+          } catch (error) {
             store.activeRestacks.delete(pr.identity.number);
             store.releaseLease(pr.identity.number, "stack-write", pr.stackId);
-            throw new Error(`git-spice restack failed: ${output}`);
+            throw error;
           }
-          if (result.exitCode === 0) {
-            store.activeRestacks.delete(pr.identity.number);
-            await recordCompletedRestack(options);
-          }
-          return { completed: result.exitCode === 0, output };
         }),
     }),
     continue_restack: createTool({

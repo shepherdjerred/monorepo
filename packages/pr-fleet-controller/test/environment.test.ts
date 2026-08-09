@@ -97,8 +97,13 @@ class CapturingCommandFleetEnvironment extends StubCommandFleetEnvironment {
 }
 
 class RestackPublishingEnvironment extends CommandFleetEnvironment {
+  readonly startFailure = new Error("restack startup failed");
   published = false;
   continued = false;
+
+  override startRestack(): Promise<never> {
+    return Promise.reject(this.startFailure);
+  }
 
   override continueRestack(): Promise<{
     exitCode: number;
@@ -417,7 +422,7 @@ test("inherited WIP keeps untracked contents out of evidence and bounds diffs", 
   }
 });
 
-test("restack publication revalidates its captured head and clean worktree", async () => {
+test("restack lifecycle cleans startup failures and revalidates publication", async () => {
   const directory = await mkdtemp(path.join(tmpdir(), "pr-fleet-restack-"));
   const runGit = async (args: string[]): Promise<string> => {
     const process = Bun.spawn(["git", ...args], {
@@ -490,8 +495,12 @@ test("restack publication revalidates its captured head and clean worktree", asy
       record: (_tool, _input, run) => run(),
       assertNotWaitingForAnswer: () => null,
     });
+    const startRestack = tools.start_restack.execute;
     const publishRestack = tools.publish_restack.execute;
     const continueRestack = tools.continue_restack.execute;
+    if (startRestack === undefined) {
+      throw new Error("start restack tool has no executor");
+    }
     if (publishRestack === undefined) {
       throw new Error("publish restack tool has no executor");
     }
@@ -505,6 +514,12 @@ test("restack publication revalidates its captured head and clean worktree", asy
         localHeadSha: headSha,
       });
     };
+
+    await expect(startRestack({}, { observe: noopObserve })).rejects.toBe(
+      environment.startFailure,
+    );
+    expect(store.activeRestacks.has(pr.identity.number)).toBe(false);
+    expect(store.stackWriteOwners.has(pr.stackId)).toBe(false);
 
     store.requestLease(pr, "stack-write");
     store.activeRestacks.add(pr.identity.number);
