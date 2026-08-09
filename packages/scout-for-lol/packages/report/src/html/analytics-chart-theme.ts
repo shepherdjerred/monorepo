@@ -33,7 +33,6 @@ export const ANALYTICS_FONT_FILE_PATHS = [
 ].map((name) =>
   fileURLToPath(new URL(`../assets/fonts/${name}`, import.meta.url)),
 );
-
 const DARK_GRADIENT = {
   type: "linear" as const,
   x: 0,

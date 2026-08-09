@@ -6,7 +6,7 @@ import {
   divisionToString,
 } from "@scout-for-lol/data";
 import { palette } from "#src/assets/colors.ts";
-import { font } from "#src/assets/index.ts";
+import { font, fontForText } from "#src/assets/index.ts";
 import {
   getChampionLoadingImage,
   getSpellImage,
@@ -293,7 +293,7 @@ export function PlayerCard({
             <span
               style={{
                 fontSize: `${sizing.playerFontSize.toString()}px`,
-                fontFamily: font.title,
+                fontFamily: fontForText("title", participant.summonerName),
                 fontWeight: 700,
                 color: participant.isTrackedPlayer
                   ? palette.gold.bright

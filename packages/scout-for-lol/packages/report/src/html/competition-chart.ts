@@ -1,6 +1,7 @@
 import type * as echarts from "echarts";
 import { fileURLToPath } from "node:url";
 import { palette } from "#src/assets/colors.ts";
+import { cjkFontFileNames, containsCjkText } from "#src/assets/index.ts";
 import { generateSeriesPalette } from "#src/html/competition-chart-palette.ts";
 import {
   echartsOptionToSvg,
@@ -90,7 +91,6 @@ const BEAUFORT_FONT_FILES = [
 const FONT_FILE_PATHS = [...SPIEGEL_FONT_FILES, ...BEAUFORT_FONT_FILES].map(
   (name) => fileURLToPath(new URL(`../assets/fonts/${name}`, import.meta.url)),
 );
-
 const DAY_MS = 86_400_000;
 
 function pickXAxisInterval(startDate: Date, endDate: Date): number {
@@ -383,7 +383,17 @@ export function competitionChartToSvg(props: CompetitionChartProps): string {
 export function competitionChartToImage(
   props: CompetitionChartProps,
 ): Promise<Buffer> {
+  const fontFiles = containsCjkText(props)
+    ? [
+        ...FONT_FILE_PATHS,
+        ...cjkFontFileNames.map((name) =>
+          fileURLToPath(
+            new URL(`../assets/fonts/NotoSansCJK/${name}`, import.meta.url),
+          ),
+        ),
+      ]
+    : FONT_FILE_PATHS;
   return Promise.resolve(
-    echartsSvgToImage(competitionChartToSvg(props), FONT_FILE_PATHS, BODY_FONT),
+    echartsSvgToImage(competitionChartToSvg(props), fontFiles, BODY_FONT),
   );
 }

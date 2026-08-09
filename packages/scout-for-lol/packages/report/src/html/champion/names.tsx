@@ -1,4 +1,5 @@
 import { palette } from "#src/assets/colors.ts";
+import { fontForText } from "#src/assets/index.ts";
 import { getChampionImage } from "#src/dataDragon/image-cache.ts";
 import { championNameToDisplayName } from "@scout-for-lol/data";
 
@@ -50,6 +51,7 @@ export function Names({
         <span
           style={{
             fontWeight: 700,
+            fontFamily: fontForText("title", summonerName),
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",

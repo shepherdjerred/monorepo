@@ -1,6 +1,6 @@
 import { getChampionImage } from "#src/dataDragon/image-cache.ts";
 import { palette } from "#src/assets/colors.ts";
-import { font } from "#src/assets/index.ts";
+import { font, fontForText } from "#src/assets/index.ts";
 import { GradeDiamond } from "#src/html/shared/grade-diamond.tsx";
 import {
   computeKda,
@@ -82,6 +82,7 @@ export function SquadRow({
               color: palette.gold[1],
               fontWeight: 600,
               display: "flex",
+              fontFamily: fontForText("title", riotIdGameName),
             }}
           >
             {riotIdGameName}

@@ -5,7 +5,7 @@ import {
 } from "@scout-for-lol/data";
 import type { CompletedMatch } from "@scout-for-lol/data";
 import { palette } from "#src/assets/colors.ts";
-import { font } from "#src/assets/index.ts";
+import { font, fontForText } from "#src/assets/index.ts";
 import { Splash } from "#src/html/shared/splash.tsx";
 import { GradeDiamond } from "#src/html/shared/grade-diamond.tsx";
 import { PlayerCard } from "#src/html/ranked-square/player-card.tsx";
@@ -79,6 +79,7 @@ function HeroCard({
             color: palette.gold[1],
             fontWeight: 500,
             display: "flex",
+            fontFamily: fontForText("title", riotIdGameName),
           }}
         >
           {riotIdGameName}

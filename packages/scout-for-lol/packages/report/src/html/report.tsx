@@ -4,7 +4,7 @@ import { palette } from "#src/assets/colors.ts";
 import { RankedBadge } from "#src/html/ranked/index.tsx";
 import { renderTeam } from "#src/html/team.tsx";
 import { round } from "remeda";
-import { font } from "#src/assets/index.ts";
+import { font, fontForText } from "#src/assets/index.ts";
 
 export function Report({ match }: { match: CompletedMatch }) {
   const minutes = round(match.durationInSeconds / 60, 0);
@@ -157,6 +157,10 @@ export function Report({ match }: { match: CompletedMatch }) {
                           color: palette.gold[1],
                           textAlign: "center",
                           marginBottom: "-2rem",
+                          fontFamily: fontForText(
+                            "title",
+                            player.champion.riotIdGameName,
+                          ),
                         }}
                       >
                         {player.champion.riotIdGameName}

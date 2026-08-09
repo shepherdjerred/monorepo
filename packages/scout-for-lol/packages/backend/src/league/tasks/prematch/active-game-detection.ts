@@ -3,7 +3,10 @@ import type {
   PlayerConfigEntry,
   RawCurrentGameInfo,
 } from "@scout-for-lol/data/index.ts";
-import { isArenaQueueOrMode } from "@scout-for-lol/data/index.ts";
+import {
+  isArenaQueueOrMode,
+  MatchIdSchema,
+} from "@scout-for-lol/data/index.ts";
 import { getAccountsWithState, prisma } from "#src/database/index.ts";
 import { getActiveServerIds } from "#src/discord/utils/guild-membership.ts";
 import { getActiveGame } from "#src/league/api/spectator.ts";
@@ -12,6 +15,7 @@ import {
   upsertActiveGame,
   deleteExpiredActiveGames,
   getActiveGameCount,
+  recordPrematchMessageIds,
 } from "#src/league/tasks/prematch/active-game-queries.ts";
 import { sendPrematchNotification } from "#src/league/tasks/prematch/prematch-notification.ts";
 import { MAX_PLAYERS_PER_RUN } from "@scout-for-lol/data/polling-config.ts";
@@ -198,7 +202,16 @@ export async function checkActiveGames(
     // pure Spectator API call saver — it would then accurately mean "this
     // player is mid-match, don't waste an API call".
     const activeGames = await getActiveGames();
-    const trackedGameIds = new Set(activeGames.map((game) => game.gameId));
+    const trackedMatchIds = new Set(
+      activeGames.flatMap((game) =>
+        game.matchId === null ? [] : [game.matchId],
+      ),
+    );
+    const trackedLegacyGameIds = new Set(
+      activeGames
+        .filter((game) => game.matchId === null)
+        .map((game) => game.gameId),
+    );
     const priorGameIdByPuuid = new Map<string, number>();
     for (const game of activeGames) {
       for (const puuid of game.trackedPuuids) {
@@ -304,8 +317,17 @@ export async function checkActiveGames(
           continue;
         }
 
-        // Check if this game is already tracked
-        if (trackedGameIds.has(gameInfo.gameId)) {
+        const matchId = MatchIdSchema.parse(
+          `${gameInfo.platformId}_${gameInfo.gameId.toString()}`,
+        );
+
+        // Check if this platform-qualified match is already tracked. Legacy
+        // rows without a match ID retain numeric deduplication until they
+        // expire, avoiding duplicate notifications during the migration.
+        if (
+          trackedMatchIds.has(matchId) ||
+          trackedLegacyGameIds.has(gameInfo.gameId)
+        ) {
           prematchDetectionsTotal.inc({ status: "already_tracked" });
           continue;
         }
@@ -357,13 +379,13 @@ export async function checkActiveGames(
           prematchSubsequentMatchDetectedTotal.inc(subsequentForPuuids.length);
         }
 
-        // Persist to DB (gameId is unique; upsert is safe under concurrent
-        // detection of the same game from different polled players)
-        await upsertActiveGame(gameInfo.gameId, trackedPuuidsInGame);
+        // Persist to DB (the platform-qualified match ID is unique; upsert is
+        // safe under concurrent detection from different polled players)
+        await upsertActiveGame(matchId, gameInfo.gameId, trackedPuuidsInGame);
 
         // Mark this game as tracked for the rest of this run so subsequent
         // players in the same lobby don't re-detect it
-        trackedGameIds.add(gameInfo.gameId);
+        trackedMatchIds.add(matchId);
         for (const p of trackedPuuidsInGame) {
           priorGameIdByPuuid.set(p, gameInfo.gameId);
         }
@@ -379,7 +401,11 @@ export async function checkActiveGames(
         });
 
         // Send notification
-        await sendPrematchNotification(gameInfo, trackedPlayersInGame);
+        const prematchMessageIds = await sendPrematchNotification(
+          gameInfo,
+          trackedPlayersInGame,
+        );
+        await recordPrematchMessageIds(matchId, prematchMessageIds);
 
         prematchDetectionsTotal.inc({ status: "detected" });
         gamesDetected++;
