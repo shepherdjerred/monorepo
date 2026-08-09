@@ -196,10 +196,11 @@ type FileEditToolDeps = {
   signal: AbortSignal;
 };
 
-function ensureWriteLease(store: FleetStore, pr: PrState): void {
+export function ensureWriteLease(store: FleetStore, pr: PrState): void {
   if (store.operatorRequests.has(pr.identity.number)) {
     throw new Error("PR is waiting for operator input");
   }
+  store.requireCompleteInheritedWipInspection(pr);
   if (
     store.stackWriteOwners.get(pr.stackId) !== pr.identity.number &&
     !store.requestLease(pr, "stack-write")

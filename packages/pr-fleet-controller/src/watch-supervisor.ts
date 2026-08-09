@@ -13,16 +13,15 @@ export function spawnWatcher(
   runDirectory: string,
   options: { uiPort?: string; open: boolean; controlSocket?: string },
 ): WatcherProcess | undefined {
+  const watcherEntrypoint =
+    options.controlSocket === undefined ? "watch-cli.ts" : "live-watch-cli.ts";
   const watcherArgs = [
     "bun",
     "run",
-    path.join(import.meta.dir, "watch-cli.ts"),
+    path.join(import.meta.dir, watcherEntrypoint),
     "--run",
     runDirectory,
     ...(options.uiPort === undefined ? [] : ["--port", options.uiPort]),
-    ...(options.controlSocket === undefined
-      ? []
-      : ["--control-socket", options.controlSocket]),
     ...(options.open ? [] : ["--no-open"]),
   ];
   try {
@@ -31,6 +30,13 @@ export function spawnWatcher(
       stdout: "inherit",
       stderr: "inherit",
       detached: true,
+      env:
+        options.controlSocket === undefined
+          ? Bun.env
+          : {
+              ...Bun.env,
+              PR_FLEET_CONTROLLER_CONTROL_SOCKET: options.controlSocket,
+            },
     });
   } catch (error) {
     process.stderr.write(

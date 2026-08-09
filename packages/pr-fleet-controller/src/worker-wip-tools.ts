@@ -77,21 +77,7 @@ export function requireCompleteInheritedWipInspection(
   store: FleetStore,
   pr: PrState,
 ): void {
-  const context = pr.worktreeContext;
-  if (context?.dirty !== true) {
-    return;
-  }
-  const inspection = store.inheritedWipInspections.get(pr.identity.number);
-  if (
-    inspection === undefined ||
-    !inspection.complete ||
-    inspection.remoteHeadSha !== context.remoteHeadSha ||
-    inspection.localHeadSha !== context.localHeadSha
-  ) {
-    throw new Error(
-      "Inherited staged, unstaged, status, and untracked evidence must be complete for the captured heads before publication",
-    );
-  }
+  store.requireCompleteInheritedWipInspection(pr);
 }
 
 export function abortWorkerForOperatorInput(

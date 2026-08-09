@@ -6,17 +6,18 @@ import { resolveStateDirectory } from "./state-directory.ts";
 import { startWatchServer } from "./watch-server.ts";
 import { resolveLatestRunDirectory } from "./watch-tail.ts";
 
-const parsed = parseArgs({
-  args: Bun.argv.slice(2),
-  options: {
-    run: { type: "string" },
-    "state-dir": { type: "string" },
-    port: { type: "string" },
-    "control-socket": { type: "string" },
-    "no-open": { type: "boolean", default: false },
-  },
-  strict: true,
-});
+export function parseWatchArgs(args: string[]) {
+  return parseArgs({
+    args,
+    options: {
+      run: { type: "string" },
+      "state-dir": { type: "string" },
+      port: { type: "string" },
+      "no-open": { type: "boolean", default: false },
+    },
+    strict: true,
+  });
+}
 
 function parsePort(value: string | undefined): number | undefined {
   if (value === undefined) {
@@ -29,12 +30,14 @@ function parsePort(value: string | undefined): number | undefined {
   return port;
 }
 
-async function resolveTarget(): Promise<string> {
-  const run = parsed.values.run;
+async function resolveTarget(
+  run: string | undefined,
+  stateDirectory: string | undefined,
+): Promise<string> {
   if (run !== undefined) {
-    return resolveRunDirectory(run, parsed.values["state-dir"]);
+    return resolveRunDirectory(run, stateDirectory);
   }
-  const stateRoot = resolveStateDirectory(parsed.values["state-dir"]);
+  const stateRoot = resolveStateDirectory(stateDirectory);
   const latest = await resolveLatestRunDirectory(stateRoot);
   if (latest === null) {
     throw new Error(
@@ -54,27 +57,38 @@ function openBrowser(url: string): void {
   }
 }
 
-const runDirectory = await resolveTarget();
-const server = startWatchServer({
-  runDirectory,
-  ...(parsed.values["control-socket"] === undefined
-    ? {}
-    : { controlSocket: parsed.values["control-socket"] }),
-  ...((): { port?: number } => {
-    const port = parsePort(parsed.values.port);
-    return port === undefined ? {} : { port };
-  })(),
-});
+export async function runWatchCli(
+  args: string[],
+  controllerControlSocket?: string,
+): Promise<void> {
+  const parsed = parseWatchArgs(args);
+  const runDirectory = await resolveTarget(
+    parsed.values.run,
+    parsed.values["state-dir"],
+  );
+  const port = parsePort(parsed.values.port);
+  const server = startWatchServer({
+    runDirectory,
+    ...(controllerControlSocket === undefined
+      ? {}
+      : { controlSocket: controllerControlSocket }),
+    ...(port === undefined ? {} : { port }),
+  });
 
-process.stdout.write(`PR fleet dashboard: ${server.url}\n`);
-process.stdout.write(`Watching run: ${runDirectory}\n`);
-if (!parsed.values["no-open"]) {
-  openBrowser(server.url);
+  process.stdout.write(`PR fleet dashboard: ${server.url}\n`);
+  process.stdout.write(`Watching run: ${runDirectory}\n`);
+  if (!parsed.values["no-open"]) {
+    openBrowser(server.url);
+  }
+
+  const shutdown = (): void => {
+    server.stop();
+    process.exit(0);
+  };
+  process.once("SIGINT", shutdown);
+  process.once("SIGTERM", shutdown);
 }
 
-const shutdown = (): void => {
-  server.stop();
-  process.exit(0);
-};
-process.once("SIGINT", shutdown);
-process.once("SIGTERM", shutdown);
+if (import.meta.main) {
+  await runWatchCli(Bun.argv.slice(2));
+}

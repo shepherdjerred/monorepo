@@ -138,6 +138,7 @@ export function createSetupWorktreeTool(options: {
         if (store.setupWorktrees.get(worktree) === headSha) {
           return { commands: ["already complete"] };
         }
+        store.requireCompleteInheritedWipInspection(pr);
         if (!store.requestLease(pr, "setup")) {
           throw new Error("Setup lease is not available");
         }

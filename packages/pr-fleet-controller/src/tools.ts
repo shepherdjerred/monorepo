@@ -184,6 +184,7 @@ export function createWorkerTools(
       execute: (input) =>
         runRecordedTool("apply_patch", input, toolContext, async () => {
           assertNotWaitingForAnswer();
+          store.requireCompleteInheritedWipInspection(pr);
           if (store.stackWriteOwners.get(pr.stackId) !== pr.identity.number) {
             throw new Error("Worker does not hold the stack write lease");
           }
@@ -260,6 +261,7 @@ export function createWorkerTools(
       execute: (input) =>
         runRecordedTool("start_restack", input, toolContext, async () => {
           assertNotWaitingForAnswer();
+          store.requireCompleteInheritedWipInspection(pr);
           if (!store.requestLease(pr, "stack-write")) {
             throw new Error("Stack write lease is not available");
           }

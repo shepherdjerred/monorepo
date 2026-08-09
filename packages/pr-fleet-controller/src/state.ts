@@ -78,6 +78,24 @@ export class FleetStore {
     };
   }
 
+  requireCompleteInheritedWipInspection(pr: PrState): void {
+    const context = pr.worktreeContext;
+    if (context?.dirty !== true) {
+      return;
+    }
+    const inspection = this.inheritedWipInspections.get(pr.identity.number);
+    if (
+      inspection === undefined ||
+      !inspection.complete ||
+      inspection.remoteHeadSha !== context.remoteHeadSha ||
+      inspection.localHeadSha !== context.localHeadSha
+    ) {
+      throw new Error(
+        "Inherited staged, unstaged, status, and untracked evidence must be complete for the captured heads before mutation or publication",
+      );
+    }
+  }
+
   requestLease(pr: PrState, kind: LeaseKind): boolean {
     if (kind === "setup") {
       if (this.setupOwner !== null && this.setupOwner !== pr.identity.number) {

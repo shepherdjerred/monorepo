@@ -21,6 +21,8 @@ import {
 } from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
 import { FleetStore } from "@shepherdjerred/pr-fleet-controller/src/state.ts";
 import { WorktreeManager } from "@shepherdjerred/pr-fleet-controller/src/worktree.ts";
+import { parseWatchArgs } from "@shepherdjerred/pr-fleet-controller/src/watch-cli.ts";
+import { ensureWriteLease } from "@shepherdjerred/pr-fleet-controller/src/worker-file-edits.ts";
 import {
   boundedInheritedWipEvidence,
   requireCompleteInheritedWipInspection,
@@ -106,6 +108,12 @@ describe("operator question schema regressions", () => {
   });
 });
 
+test("standalone dashboard CLI rejects control-socket injection", () => {
+  expect(() =>
+    parseWatchArgs(["--run", "latest", "--control-socket", "/tmp/control"]),
+  ).toThrow(/control-socket/);
+});
+
 describe("inherited WIP evidence regressions", () => {
   test("reports truncation instead of silently slicing inherited evidence", () => {
     const bounded = boundedInheritedWipEvidence(
@@ -156,6 +164,8 @@ describe("inherited WIP evidence regressions", () => {
     expect(() => requireCompleteInheritedWipInspection(store, pr)).toThrow(
       /must be complete/,
     );
+    expect(() => ensureWriteLease(store, pr)).toThrow(/must be complete/);
+    expect(store.stackWriteOwners.size).toBe(0);
 
     store.inheritedWipInspections.set(prIdentity.number, {
       remoteHeadSha: prIdentity.headSha,
@@ -165,6 +175,8 @@ describe("inherited WIP evidence regressions", () => {
     expect(() =>
       requireCompleteInheritedWipInspection(store, pr),
     ).not.toThrow();
+    expect(() => ensureWriteLease(store, pr)).not.toThrow();
+    expect(store.stackWriteOwners.get(pr.stackId)).toBe(pr.identity.number);
   });
 });
 
