@@ -4,6 +4,7 @@ import path from "node:path";
 import { tmpdir } from "node:os";
 import {
   activeArgoApplicationNames,
+  activeArgoRepositoryChartNames,
   assertReleaseNotStale,
   discoverChartInputs,
   fingerprintChart,
@@ -27,6 +28,10 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: worker
+spec:
+  source:
+    repoURL: https://chartmuseum.sjer.red
+    chart: worker
 ---
 apiVersion: v1
 kind: Service
@@ -36,12 +41,41 @@ metadata:
     ).toEqual(new Set(["worker"]));
   });
 
+  test("extracts repository charts from List manifests and skips empty documents", () => {
+    expect(
+      activeArgoRepositoryChartNames(`
+---
+kind: List
+items:
+  - kind: Application
+    metadata:
+      name: plausible
+    spec:
+      source:
+        repoURL: https://chartmuseum.tailnet-1a49.ts.net
+        chart: plausible
+---
+---
+kind: Application
+metadata:
+  name: external
+spec:
+  source:
+    repoURL: https://example.com/charts
+    chart: external
+`),
+    ).toEqual(new Set(["plausible"]));
+  });
+
   test("rejects an Application without metadata.name", () => {
     expect(() =>
       activeArgoApplicationNames(`
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata: {}
+spec:
+  source:
+    repoURL: https://chartmuseum.sjer.red
 `),
     ).toThrow("missing metadata.name");
   });

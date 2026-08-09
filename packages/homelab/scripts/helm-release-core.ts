@@ -6,6 +6,10 @@ import { canonicalJson } from "./canonical-json.ts";
 
 const BUILD_VERSION_RE = /^2\.0\.0-(\d+)$/;
 const CONTENT_FINGERPRINT_ANNOTATION = "ci.sjer.red/content-fingerprint";
+const REPOSITORY_CHART_URLS = new Set([
+  "https://chartmuseum.tailnet-1a49.ts.net",
+  "https://chartmuseum.sjer.red",
+]);
 
 const ChartMuseumEntrySchema = z.object({
   version: z.string(),
@@ -51,10 +55,24 @@ const KubernetesResourceSchema = z.looseObject({
   metadata: z.looseObject({ name: z.string().min(1).optional() }).optional(),
 });
 
-export function activeArgoApplicationNames(
-  manifest: string,
-): ReadonlySet<string> {
-  const names = new Set<string>();
+const ArgoApplicationSchema = z.looseObject({
+  kind: z.literal("Application"),
+  metadata: z.looseObject({ name: z.string().min(1) }),
+  spec: z.looseObject({
+    source: z.looseObject({
+      repoURL: z.string().min(1),
+      chart: z.string().min(1).optional(),
+    }),
+  }),
+});
+
+const KubernetesListSchema = z.looseObject({
+  kind: z.literal("List"),
+  items: z.array(z.unknown()).optional(),
+});
+
+function applicationObjects(manifest: string): unknown[] {
+  const applications: unknown[] = [];
   for (const [index, document] of parseAllDocuments(manifest).entries()) {
     if (document.errors.length > 0) {
       throw new Error(
@@ -63,16 +81,38 @@ export function activeArgoApplicationNames(
           .join("; ")}`,
       );
     }
-    const resource = KubernetesResourceSchema.parse(document.toJSON());
-    if (resource.kind !== "Application") {
+    const json = document.toJSON() as unknown;
+    if (json === null || typeof json !== "object" || Array.isArray(json)) {
       continue;
     }
-    const name = resource.metadata?.name;
-    if (name === undefined) {
-      throw new Error(
-        `Argo Application in synthesized manifest document ${index.toString()} is missing metadata.name`,
-      );
+    const resource = KubernetesResourceSchema.parse(json);
+    const resources =
+      resource.kind === "List"
+        ? (KubernetesListSchema.parse(json).items ?? [])
+        : [json];
+    for (const item of resources) {
+      if (item === null || typeof item !== "object" || Array.isArray(item)) {
+        continue;
+      }
+      const itemResource = KubernetesResourceSchema.parse(item);
+      if (itemResource.kind === "Application") {
+        if (itemResource.metadata?.name === undefined) {
+          throw new Error("Argo Application is missing metadata.name");
+        }
+        applications.push(item);
+      }
     }
+  }
+  return applications;
+}
+
+function parsedApplications(manifest: string) {
+  const applications = applicationObjects(manifest).map((value) =>
+    ArgoApplicationSchema.parse(value),
+  );
+  const names = new Set<string>();
+  for (const application of applications) {
+    const name = application.metadata.name;
     if (names.has(name)) {
       throw new Error(
         `Duplicate Argo Application ${name} in synthesized manifest`,
@@ -80,7 +120,30 @@ export function activeArgoApplicationNames(
     }
     names.add(name);
   }
-  return names;
+  return applications;
+}
+
+export function activeArgoApplicationNames(
+  manifest: string,
+): ReadonlySet<string> {
+  return new Set(
+    parsedApplications(manifest).map(
+      (application) => application.metadata.name,
+    ),
+  );
+}
+
+export function activeArgoRepositoryChartNames(
+  manifest: string,
+): ReadonlySet<string> {
+  return new Set(
+    parsedApplications(manifest).flatMap((application) => {
+      const { repoURL, chart } = application.spec.source;
+      return chart !== undefined && REPOSITORY_CHART_URLS.has(repoURL)
+        ? [chart]
+        : [];
+    }),
+  );
 }
 
 async function regularFiles(directory: string): Promise<string[]> {
