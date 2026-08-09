@@ -16,10 +16,13 @@ Sources/TaskNotesKit/         portable logic — no SwiftUI, no AppKit
   Host/                       the core's host traits, implemented
   Store/                      the @Observable store over FfiSyncEngine
 Sources/TaskNotesMac/         SwiftUI views, scenes, commands — MainActor
+  Updates/                    Sparkle: the updater object and its App-menu item
 Tests/TaskNotesKitTests/      Swift Testing
   Support/                    the spawned-server harness and shared fixtures
 Tests/TaskNotesMacTests/      image snapshots — the only test target that sees SwiftUI
 ci/no-suppressions.sh         the three gates SwiftLint cannot enforce
+scripts/release.ts            the operator-run release lane (see Releasing)
+scripts/stage-frameworks.sh   makes Sparkle.framework reachable from `swift test`
 project.yml                   XcodeGen spec; the .xcodeproj is generated + gitignored
 Package.swift                 SwiftPM manifest; owns every library target's settings
 ```
@@ -90,6 +93,7 @@ bun run mac:format    # xcrun swift-format, in place
 bun run mac:analyze   # SwiftLint analyzer rules (needs a full compiler log)
 bun run mac:run       # xcodebuild + launch the .app
 bun run mac:verify    # the full local pre-merge gate
+bun run mac:release   # the release lane; --dry-run for the credential-free half
 ```
 
 `bun run mac:verify` is the pre-merge gate for this package. **Run it, and
@@ -207,6 +211,151 @@ Two conventions worth keeping: the countdown uses the core's `elapsedFormat`
 (`MM:SS`, a ticking clock — exactly right there), and the report deliberately
 does **not**, because `1:30:00` reads as a video length rather than as an hour and
 a half of work. Durations in the report go through `Duration.UnitsFormatStyle`.
+
+## Releasing
+
+Direct download with Developer ID signing, notarization, and Sparkle. There is
+no App Store build and no CI lane: `bun run mac:release` is an **operator
+command on a Mac**, following the same rule as everything else here.
+
+`bun run mac:release --dry-run` runs every step that needs no credential —
+preflight, XcodeGen, the Release archive, the structural checks against the
+archived app, dSYM collection — and prints the commands the credentialed half
+would run. Use it to check a change before asking for a real release.
+
+### One-time operator setup
+
+Both of these are per-machine, and neither produces a file in this repository.
+
+```bash
+# 1. Notarization. Stores an app-specific password in the login keychain under
+#    a profile name; nothing is ever written to disk by this repo.
+xcrun notarytool store-credentials tasknotes-mac \
+  --apple-id <apple-id> --team-id <TEAMID>
+
+# 2. Sparkle's EdDSA signing key. Generates a keypair, stores the *private*
+#    half in the login keychain, and prints the public half.
+.build/artifacts/sparkle/Sparkle/bin/generate_keys
+```
+
+⚠️ **The private key is the one thing that cannot be replaced.** Losing it means
+every installed copy stops trusting new updates, and the only recovery is
+Sparkle's key rotation, which needs an unbroken Developer ID chain. Back it up
+**out of band, once**:
+
+```bash
+# Export to a file, put the file's contents in 1Password, delete the file.
+.build/artifacts/sparkle/Sparkle/bin/generate_keys -x /tmp/sparkle-ed-key
+op document create /tmp/sparkle-ed-key --title 'TaskNotes macOS Sparkle EdDSA private key'
+rm -f /tmp/sparkle-ed-key
+```
+
+The exported file is the base64 of a 32-byte ed25519 **seed** — the same string
+as the keychain item's password. It is never committed, and nothing in this
+repository reads it from a file: `scripts/release.ts` either lets
+`generate_appcast` read the keychain, or pipes the key in on **stdin** from
+`TASKNOTES_MAC_SPARKLE_ED_PRIVATE_KEY` so it is neither an argument (visible in
+`ps`) nor a file.
+
+The **public** half is not a secret and belongs in `project.yml` as
+`SUPublicEDKey`, beside `SUFeedURL`, where it is reviewable.
+
+### Environment
+
+```bash
+TASKNOTES_MAC_TEAM_ID                    # 10-character Apple Developer team id
+TASKNOTES_MAC_NOTARY_PROFILE             # the notarytool profile name above
+TASKNOTES_MAC_UPDATES_DIR                # persistent dir: every archive + appcast.xml
+TASKNOTES_MAC_DOWNLOAD_URL_PREFIX        # public URL prefix the archives are served from
+TASKNOTES_MAC_SPARKLE_ED_PRIVATE_KEY     # optional; otherwise the login keychain
+```
+
+`TASKNOTES_MAC_UPDATES_DIR` is **accumulated state, not a build directory**.
+`generate_appcast` reads the whole directory to build delta updates and to keep
+older entries in the feed; pointing it at a fresh empty directory silently
+publishes a one-entry feed with no deltas.
+
+### 🔴 Two decisions are still open, and the app ships disabled until they are made
+
+`SUFeedURL` and `SUPublicEDKey` are deliberately **absent** from `project.yml`.
+Until both are set, `UpdaterController` constructs no updater, the App-menu
+_Check for Updates…_ item is present and **disabled**, and `mac:release` refuses
+to archive. See the long comment in `project.yml` for why a placeholder would be
+worse than an absence.
+
+**Where the appcast is hosted is the decision that cannot be taken back.** The
+feed URL is compiled into every shipped binary, so anyone who installs a build
+is pinned to that URL forever — a bad host choice is not a migration, it is an
+abandoned install base. `public.sjer.red` (SeaweedFS) is the obvious candidate
+and `toolkit pr asset` shows the upload shape, but the bucket's `pr/assets/`
+prefix **expires objects after 365 days**, which for an update feed means every
+installed copy silently stops finding updates a year later. A different prefix
+with no expiry, or a different host entirely, has to be chosen and confirmed
+before the first release.
+
+### What the lane does
+
+Archive → Developer ID export → `notarytool submit --wait` → `stapler staple`
+→ `stapler validate` + `spctl --assess` + `codesign --verify --deep --strict`
+→ re-zip the stapled app → `generate_appcast` → collect dSYMs.
+
+Three things are worth knowing:
+
+- **`--deep` is right on `codesign --verify` and wrong on `codesign --sign`.**
+  Verification with `--deep` is what walks into `Sparkle.framework` and checks
+  its XPC services; signing with `--deep` flattens per-item entitlements across
+  nested code and is the documented cause of Sparkle sandbox failures. Same
+  flag, opposite advice, and the script only ever uses the first.
+- **Notarize the zip, staple the app, then zip again.** The ticket has to live
+  inside the bundle so a first launch works offline, and stapling mutates the
+  `.app` after the archive that was submitted.
+- **Ship every dSYM, and know which one matters.** ⚠️ `TaskNotes.app.dSYM`
+  contains **zero** `tasknotes_core` symbols — the Rust archive links into
+  `TaskNotesCore.framework`, so `TaskNotesCore.framework.dSYM` is what makes a
+  Rust frame in a crash report readable. The archive also carries Sparkle's
+  five. The script copies all of them and hard-fails if the three load-bearing
+  ones are absent.
+
+## Sparkle
+
+Pinned `from: "2.9.5"` — a **security** floor. 2.9.2 and 2.9.5 are both
+symlink-traversal fixes in the delta installer (2.9.5 completes the fix 2.9.2
+started) and 2.9.2 additionally makes the installer validate its connection
+before accepting appcast data. `from:` means `>= 2.9.5, < 3.0.0`, so no
+resolution can land below the fix.
+
+**Sandboxing is the part that bites, and it bites at install time rather than
+at build time.** The app is sandboxed, so Sparkle cannot replace the app bundle
+from inside this process; it does the install from `Installer.xpc`, which ships
+inside `Sparkle.framework`. That needs three things to line up:
+
+| Where                        | What                                                                  |
+| ---------------------------- | --------------------------------------------------------------------- |
+| `project.yml` Info.plist     | `SUEnableInstallerLauncherService: true`                              |
+| `App/TaskNotes.entitlements` | `mach-lookup.global-name` = `<bundle-id>-spks` and `<bundle-id>-spki` |
+| the built bundle             | `Sparkle.framework/Versions/B/XPCServices/Installer.xpc` present      |
+
+Sparkle validates the third at startup and refuses to start without it, which
+`SPUStandardUpdaterController` answers with a modal alert a second into launch —
+so `scripts/release.ts` checks all three against the exported app.
+
+⚠️ **No Downloader XPC service.** It exists only for sandboxed apps that will
+not take `com.apple.security.network.client`; this app already has it, and
+enabling the service would move release notes onto a deprecated WebKit1 view.
+The service is still _embedded_ (it comes with the framework) and is simply
+never launched; Sparkle documents a build-phase script to strip it, which is not
+worth a run script that re-signs nested code under `ENABLE_USER_SCRIPT_SANDBOXING`.
+
+Two more, both verified rather than reasoned about:
+
+- **`swift test` cannot load `Sparkle.framework` without help.** It is the only
+  dynamic framework here, and SwiftPM's current build system puts it in the
+  products directory while giving the test bundle an rpath of
+  `<products>/PackageFrameworks`. `scripts/stage-frameworks.sh` bridges the two
+  with a symlink; `DYLD_FRAMEWORK_PATH` does not work, because the test helper
+  inside Xcode is restricted and dyld strips it.
+- **Do not add `SUFeedURL` to `UserDefaults`.** Sparkle logs a deprecation error
+  if it finds one there and may keep using it in preference to the Info.plist.
 
 ## Things that will bite
 

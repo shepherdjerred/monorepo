@@ -7,8 +7,9 @@
     "mac:generate": "xcodegen generate",
     "mac:preflight": "cd ../tasknotes-core && cargo run --quiet --package xtask -- check-xcframework",
     "mac:build": "bun run mac:preflight && swift build",
-    "mac:test": "bun run mac:preflight && swift test",
-    "mac:snapshots": "bun run mac:preflight && swift test --filter TaskNotesMacTests",
+    "mac:stage-frameworks": "swift build --build-tests && ./scripts/stage-frameworks.sh",
+    "mac:test": "bun run mac:preflight && bun run mac:stage-frameworks && swift test",
+    "mac:snapshots": "bun run mac:preflight && bun run mac:stage-frameworks && swift test --filter TaskNotesMacTests",
     "mac:typecheck": "bun run mac:preflight && swift build --build-tests",
     "mac:format": "xcrun swift-format format --in-place --parallel --recursive Sources Tests App Package.swift",
     "mac:format:check": "xcrun swift-format lint --strict --parallel --recursive Sources Tests App Package.swift",
@@ -16,6 +17,7 @@
     "mac:app": "xcodebuild -project TaskNotes.xcodeproj -scheme TaskNotes -configuration Debug -derivedDataPath .build/xcode build",
     "mac:app:release": "xcodebuild -project TaskNotes.xcodeproj -scheme TaskNotes -configuration Release -derivedDataPath .build/xcode build",
     "mac:run": "bun run mac:app && open .build/xcode/Build/Products/Debug/TaskNotes.app",
+    "mac:release": "bun run scripts/release.ts",
     "mac:verify": "bun run mac:generate && bun run mac:build && bun run mac:test && bun run lint && bun run mac:format:check && bun run mac:app"
   }
 }

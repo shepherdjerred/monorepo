@@ -49,13 +49,19 @@ pre-commit:
           # xcodebuild. This is build + test + lint + format-check, ~5s, which is
           # proportionate for a hook. `mac:verify` (which adds xcodegen and the
           # app build) stays the pre-PR command.
+          #
+          # ⚠️ The steps below go through `bun run` rather than calling `swift`
+          # directly. That is load-bearing, not tidiness: `mac:test` also stages
+          # `Sparkle.framework` where the test bundle's rpath can find it, and a
+          # bare `swift test` here would fail to load `TaskNotesMacTests` while
+          # the package's own command succeeded. A hook that disagrees with the
+          # command it is enforcing is worse than no hook.
           - name: swift-verify
             glob: "packages/tasknotes-macos/**/*.swift"
             run: |
               cd packages/tasknotes-macos
-              bun run mac:preflight
-              swift build
-              swift test
+              bun run mac:build
+              bun run mac:test
               swiftlint lint --strict
               xcrun swift-format lint --strict --parallel --recursive Sources Tests App Package.swift
               ./ci/no-suppressions.sh

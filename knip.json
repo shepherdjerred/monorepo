@@ -265,6 +265,10 @@
       "entry": ["src/**/*.ts"],
       "project": ["src/**/*.ts"]
     },
+    "packages/tasknotes-macos": {
+      "entry": ["scripts/*.ts"],
+      "project": ["scripts/**/*.ts"]
+    },
     "packages/tasknotes-server": {
       "entry": ["src/index.ts"],
       "project": ["src/**/*.ts"]

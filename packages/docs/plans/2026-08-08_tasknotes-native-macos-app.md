@@ -691,6 +691,16 @@ and renders. **No shell writes core logic and no shell spells a core value any m
       `FilterConfig` is not in `@tasknotes/fixtures`, so no oracle caught it and nothing is broken
       today — but the TypeScript type needs the field whenever the RN app adopts the core.
 - [ ] **Phase 10** — release: Sparkle ≥ 2.9.5, Developer ID signing, notarization, ship both dSYMs.
+      **Built and verified as far as a machine with no certificate can go, 2026-08-09.** Sparkle
+      2.9.5 is wired with the sandbox XPC path proven at runtime, the App-menu item is
+      present-and-disabled/enabled exactly as the definition of done requires, and
+      `bun run mac:release` runs archive → export → notarize → staple → verify → appcast →
+      dSYMs. **Two things block a first release and neither is code:** the appcast host is
+      undecided (see the Comment Log — a feed URL cannot be changed for anyone who already
+      installed), and nobody has generated the EdDSA key pair. Until both exist the app ships
+      no `SUFeedURL`/`SUPublicEDKey`, the menu item stays disabled, and the release lane
+      refuses to archive. **Unproven without credentials:** the Developer ID export, the
+      notarization round trip, stapling, and the Gatekeeper assessment.
 - [ ] **Phase 11** — 6–10 XCUITest flows with `performAccessibilityAudit()`, local-only gate.
 - [x] ~~**Decide the `discouraged_optional_collection` question.**~~ **Resolved 2026-08-09 by
       removing the conflict rather than the rule or the feature.** See the Comment Log.
@@ -717,6 +727,96 @@ and renders. **No shell writes core logic and no shell spells a core value any m
       `verify` does invoke.)_
 
 ## Comment Log
+
+- 2026-08-09: 🔴 **The appcast host is an open decision, and it is the one decision in this
+  plan that cannot be revised.** `SUFeedURL` is compiled into every shipped binary, so whoever
+  installs a build is pinned to that URL for the life of that install; a bad choice is not a
+  migration, it is an abandoned install base. `public.sjer.red` (SeaweedFS) is the obvious
+  candidate and `toolkit pr asset` shows the upload shape — but the root `AGENTS.md` records
+  that objects under `pr/assets/` **expire after 365 days**, which for an update feed means
+  every installed copy silently stops finding updates a year later, with no error the user
+  would ever see. That prefix is therefore disqualified outright. The remaining options are a
+  non-expiring prefix on the same bucket (needs the lifecycle rule confirmed, not assumed, and
+  it still ties updates to the homelab being reachable), or a host with an independent
+  availability story. **Flagged rather than chosen.** Until it is chosen the app ships with no
+  feed URL at all, which is why `UpdaterController` is built to render a _disabled_ menu item
+  rather than to assume a channel exists.
+
+- 2026-08-09: **Sparkle's nested signed code turned out to be a non-event, and the reason is
+  worth writing down because the plan predicted the opposite.** Phase 6 chose a **static** Rust
+  library specifically so the app "never [ships] a nested signed item, so the notarization
+  failure class doesn't apply" — and then Phase 10 adds Sparkle, which ships
+  `XPCServices/Installer.xpc`, `XPCServices/Downloader.xpc`, `Autoupdate`, and `Updater.app`
+  inside its framework. The two are not in tension: the hazard that argument was avoiding is
+  _hand-rolled_ nested signing, and Sparkle's own documentation says that `xcodebuild archive`
+  - `-exportArchive` re-signs every helper, preserves the Hardened Runtime, and strips
+    `get-task-allow` — which is exactly the lane this phase builds. What is **not** safe is
+    `codesign --deep --sign`, which flattens per-item entitlements across nested code and is the
+    documented cause of Sparkle sandbox failures. ⚠️ The same flag on _verification_ —
+    `codesign --verify --deep --strict` — is correct and is what walks into the XPC services;
+    the script uses it there and nowhere else.
+
+  What sandboxing actually costs is three facts that must agree, none of which any compiler
+  checks: `SUEnableInstallerLauncherService: true` in `Info.plist`, the
+  `mach-lookup.global-name` pair `<bundle-id>-spks` / `-spki` in the entitlements, and
+  `Installer.xpc` physically present in the embedded framework. Sparkle validates the third at
+  startup and answers a failure with a modal alert one second into launch, so all three are
+  checked against the exported bundle by `scripts/release.ts`. **Verified end to end without
+  any certificate**: an ad-hoc-signed sandboxed build with those three in place started the
+  updater, fetched an appcast from a local server, and recorded `SULastCheckTime` in its
+  container. The Downloader service is deliberately embedded-but-never-enabled — it exists only
+  for sandboxed apps that refuse `network.client`, which this app needs anyway for sync.
+
+- 2026-08-09: ⚠️ **`TaskNotes.app.dSYM` is not the dSYM that makes a Rust frame readable, and
+  the phrasing "ship both dSYMs" invites shipping the wrong pair.** Re-measured on a real
+  Release archive: of the seven dSYMs Xcode produces, `TaskNotes.app.dSYM` contains **zero**
+  `tasknotes_core` symbols and `TaskNotesCore.framework.dSYM` contains 2,421 — the Phase 7a
+  finding, unchanged, because the bindings product is `type: .dynamic` so the Rust archive
+  links into the framework rather than into the executable. Sparkle contributes five more for
+  free (framework, `Autoupdate`, `Updater.app`, and both XPC services) because they ride along
+  in its SwiftPM artifact. The release lane copies all seven and hard-fails if
+  `TaskNotes.app.dSYM`, `TaskNotesCore.framework.dSYM`, or `Sparkle.framework.dSYM` is absent;
+  asserting on the _count_ would have been the weaker check, since the interesting failure is
+  losing the one nobody thinks about.
+
+- 2026-08-09: **A placeholder would have been worse than an absence, and Sparkle's source says
+  why.** The tempting move for an unreleased app is to put an empty `SUPublicEDKey`/`SUFeedURL`
+  in `project.yml` so the shape is visible. `-[SPUUpdater startUpdater:]` classifies an
+  **empty** key as `SUSigningInputStatusInvalid` and refuses to start, and
+  `SPUStandardUpdaterController` answers a failed start by running a modal _"Unable to Check
+  For Updates"_ alert — so every developer would meet a modal on every launch. Absent **both**
+  keys it does the opposite and starts successfully (a code-signed bundle with no key is a
+  tolerated legacy configuration), leaving `canCheckForUpdates` true and an enabled menu item
+  over a check that can only fail. Neither is acceptable, so the gate is explicit: no updater
+  object is constructed unless both keys are non-empty, and the gate is a pure function tested
+  over the full 3×3 cross product of absent/empty/present — because per this file's own
+  characteristic-bug entry, the two failures above are _mixed_ rows that a one-axis-at-a-time
+  test would sail past.
+
+- 2026-08-09: **The release lane lives in the package, not in root `scripts/`, and the deciding
+  reason is a gate rather than taste.** Root `scripts/` is a bun workspace under
+  `check-script-coverage.ts`, which fails the build below 90% aggregate function/line coverage.
+  A file whose body is `xcodebuild`, `notarytool`, `codesign` and `spctl` invocations cannot be
+  covered by Bun tests on a Linux agent, so putting it there would have forced either
+  manufactured coverage or an exclusion — both of which the repository bans elsewhere. It also
+  cannot ever run in CI, its inputs (`project.yml`, the entitlements, the archive, Sparkle's
+  SwiftPM tools) are all here, and root `scripts/release.ts` already means release-please.
+
+- 2026-08-09: **Sparkle is the first dynamic framework in this package, and it broke `swift
+test` in a way that only shows up at load time.** SwiftPM's current build system puts
+  `Sparkle.framework` in the products directory but gives the test bundle an rpath of
+  `<products>/PackageFrameworks`, so `TaskNotesMacTests` died with `Library not loaded:
+@rpath/Sparkle.framework/…` before a single test ran. `DYLD_FRAMEWORK_PATH` cannot fix it —
+  `swiftpm-testing-helper` lives inside Xcode and is restricted, so dyld strips it, verified
+  rather than assumed. The legacy `--build-system native` path has no such problem (it emits an
+  `@loader_path/../../../` rpath that lands on the framework), but running tests under a second
+  build system would double the build and split the diagnostics. Resolution: one idempotent
+  symlink from a directory that _is_ on the rpath, staged before every test run. ⚠️ It is wired
+  through `bun run mac:test`, and `lefthook.yml`'s `swift-verify` job was changed to call the
+  package scripts instead of bare `swift build`/`swift test` for exactly that reason — a hook
+  that disagrees with the command it enforces is worse than no hook. Proven from a wiped
+  `.build`: 336 tests green with no prior artifact, so the staging step cannot break the
+  ordinary loop on a machine that has never run a release.
 
 - 2026-08-09: **The XCFramework staleness guard, and the two wrong versions of it.** The first
   design folded `build-xcframework` into `generate-bindings` so the pair could not drift. That is
