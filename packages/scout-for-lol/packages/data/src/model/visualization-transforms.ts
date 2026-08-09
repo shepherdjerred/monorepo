@@ -113,24 +113,29 @@ function rollingMeasure(
   kind: "additive" | "rate" | "average",
   comparison: boolean,
 ): Measure {
-  const values = points.map((point) =>
-    comparison ? (point.comparisonValue ?? null) : point.value,
+  const samples = points
+    .map((point) => ({
+      value: comparison ? (point.comparisonValue ?? null) : point.value,
+      evidence: comparison
+        ? (point.comparisonEvidence ?? emptyMeasure().evidence)
+        : point.evidence,
+    }))
+    .filter(
+      (sample) => !(sample.value === null && sample.evidence.sampleSize === 0),
+    );
+  if (samples.length === 0 || samples.some((sample) => sample.value === null)) {
+    return emptyMeasure();
+  }
+  const numericValues = samples.flatMap((sample) =>
+    sample.value === null ? [] : [sample.value],
   );
-  const evidence = points.map((point) =>
-    comparison
-      ? (point.comparisonEvidence ?? emptyMeasure().evidence)
-      : point.evidence,
-  );
-  if (values.includes(null)) return emptyMeasure();
-  const numericValues = values.flatMap((value) =>
-    value === null ? [] : [value],
-  );
+  const evidence = samples.map((sample) => sample.evidence);
   const combinedEvidence = combineEvidence(evidence, kind === "rate");
   if (kind === "additive") {
     return {
       value:
         numericValues.reduce((total, value) => total + value, 0) /
-        points.length,
+        samples.length,
       evidence: combinedEvidence,
     };
   }

@@ -53,6 +53,14 @@ function comparedRatePoint(
   };
 }
 
+function comparedGapPoint(): TemporalSeriesPoint {
+  return {
+    ...point(null, 0),
+    comparisonValue: null,
+    comparisonEvidence: { sampleSize: 0, confidenceInterval: null },
+  };
+}
+
 function comparedRatioPoint(
   current: { numerator: number; denominator: number; sampleSize: number },
   comparison: { numerator: number; denominator: number; sampleSize: number },
@@ -159,30 +167,66 @@ describe("visualization transforms", () => {
     expect(rolled[1]?.percentageDelta).toBeCloseTo(0.5);
   });
 
-  test("recomputes rolling ratios from their true denominators", () => {
+  test("ignores zero-sample gaps in rolling rate evidence", () => {
+    const rolled = rollingSeries(
+      [
+        comparedRatePoint(1, 2, 1, 4),
+        comparedGapPoint(),
+        comparedRatePoint(3, 6, 2, 4),
+      ],
+      3,
+      "rate",
+      true,
+    );
+    expect(rolled[2]).toMatchObject({
+      value: 0.5,
+      comparisonValue: 0.375,
+      evidence: { sampleSize: 8, successes: 4 },
+      comparisonEvidence: { sampleSize: 8, successes: 3 },
+    });
+    expect(rolled[2]?.absoluteDelta).toBeCloseTo(0.125);
+    expect(rolled[2]?.percentageDelta).toBeCloseTo(1 / 3);
+  });
+
+  test("keeps evidenced null values unknown in rolling windows", () => {
+    const rolled = rollingSeries(
+      [point(0.5, 2), point(null, 1), point(1, 2)],
+      3,
+      "rate",
+    );
+
+    expect(rolled[2]?.value).toBeNull();
+    expect(rolled[2]?.evidence).toEqual({
+      sampleSize: 0,
+      confidenceInterval: null,
+    });
+  });
+
+  test("recomputes rolling ratios across zero-sample gaps", () => {
     const rolled = rollingSeries(
       [
         comparedRatioPoint(
           { numerator: 8, denominator: 2, sampleSize: 1 },
           { numerator: 6, denominator: 3, sampleSize: 10 },
         ),
+        comparedGapPoint(),
         comparedRatioPoint(
           { numerator: 6, denominator: 6, sampleSize: 20 },
           { numerator: 8, denominator: 1, sampleSize: 1 },
         ),
       ],
-      2,
+      3,
       "average",
       true,
     );
-    expect(rolled[1]?.value).toBeCloseTo(14 / 8);
-    expect(rolled[1]?.comparisonValue).toBeCloseTo(14 / 4);
-    expect(rolled[1]?.evidence).toMatchObject({
+    expect(rolled[2]?.value).toBeCloseTo(14 / 8);
+    expect(rolled[2]?.comparisonValue).toBeCloseTo(14 / 4);
+    expect(rolled[2]?.evidence).toMatchObject({
       sampleSize: 21,
       numerator: 14,
       denominator: 8,
     });
-    expect(rolled[1]?.comparisonEvidence).toMatchObject({
+    expect(rolled[2]?.comparisonEvidence).toMatchObject({
       sampleSize: 11,
       numerator: 14,
       denominator: 4,
