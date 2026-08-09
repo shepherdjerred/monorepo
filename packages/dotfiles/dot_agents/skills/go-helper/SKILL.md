@@ -109,7 +109,7 @@ Fuzz failures are stored at `testdata/fuzz/FuzzName/<hash>`. Keep them as regres
 - `math/rand/v2` is non-cryptographic randomness.
 - `os.Root` confines supported file operations against symlink path escapes.
 - `runtime/trace.FlightRecorder` provides bounded recent trace data; check `Start` and `WriteTo` errors and call `Stop`.
-- `crypto/hpke` implements RFC 9180, including hybrid post-quantum KEMs; use protocol-specific expertise before designing cryptography.
+- `crypto/hpke` implements the RFC 9180 DHKEM suites. Hybrid post-quantum KEMs require a separate specification; use protocol-specific expertise before designing cryptography.
 
 ## HTTP and profiling
 
@@ -124,7 +124,7 @@ Representative production CPU profiles can drive PGO through `default.pgo`. A pr
 - Use `crypto/rand` for secrets; `math/rand/v2` is for non-security randomness.
 - Use `os.Root` or equivalent confinement for untrusted relative paths.
 - Keep private module configuration in `GOPRIVATE`, `GONOPROXY`, and `GONOSUMDB` as appropriate. `GONOSUMCHECK` does not exist.
-- Run `govulncheck` for known vulnerabilities reachable from application call paths.
+- In source mode, run `govulncheck` for known vulnerabilities reachable from application call paths. Binary mode reports vulnerable symbols but does not reconstruct those call paths.
 - Treat imported pprof handlers, cgo, templates, archive extraction, and subprocess arguments as security boundaries.
 - Use structured `log/slog` fields and never log secrets.
 

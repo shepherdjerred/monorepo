@@ -31,7 +31,7 @@ Scoped Values finalized in JDK 25. Bind with `ScopedValue.where(key, value).run(
 
 - Foreign Function and Memory finalized in JDK 22.
 - Module import declarations, compact source files, and flexible constructor bodies finalized in JDK 25.
-- Compact object headers are default-enabled in JDK 25 with workload-dependent memory effects.
+- Compact object headers are disabled by default in JDK 25; enable them with `-XX:+UseCompactObjectHeaders` before measuring their workload-dependent memory effects.
 - Non-generational ZGC and `ZGenerational` were removed/obsoleted; use current `UseZGC` behavior.
 
 ## Kotlin language
