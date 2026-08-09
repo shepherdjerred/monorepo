@@ -49,6 +49,22 @@ function dueDate(content: string): string | undefined {
   return /^due:\s*(\d{4}-\d{2}-\d{2})\s*$/m.exec(content)?.[1];
 }
 
+function completeInstanceDates(content: string): readonly string[] {
+  const lines = content.split(/\r?\n/);
+  const headerIndex = lines.findIndex(
+    (line) => line.trim() === "complete_instances:",
+  );
+  if (headerIndex === -1) return [];
+  const dates: string[] = [];
+  for (const line of lines.slice(headerIndex + 1)) {
+    if (!line.trimStart().startsWith("- ")) break;
+    dates.push(
+      line.trim().slice(2).trim().replaceAll('"', "").replaceAll("'", ""),
+    );
+  }
+  return dates;
+}
+
 function isMissingFileError(error: unknown): boolean {
   return error instanceof Error && "code" in error && error.code === "ENOENT";
 }
@@ -172,7 +188,7 @@ const VAULT_ASSERTIONS: readonly VaultAssertion[] = [
       if (content === undefined) return false;
       return (
         content.includes("status: open") &&
-        /complete_instances:\n\s+- /.test(content)
+        completeInstanceDates(content).includes("2026-07-01")
       );
     },
   },

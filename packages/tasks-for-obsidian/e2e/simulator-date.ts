@@ -5,3 +5,16 @@ export function parseSimulatorToday(output: string): string {
   }
   return today;
 }
+
+export function captureFlowToday(
+  flow: string,
+  readToday: () => string,
+): string {
+  if (
+    flow !== "01-create-task.yaml" &&
+    flow !== "08-contextual-quick-capture.yaml"
+  ) {
+    return "";
+  }
+  return parseSimulatorToday(readToday());
+}

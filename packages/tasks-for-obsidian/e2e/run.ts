@@ -23,7 +23,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
 
-import { parseSimulatorToday } from "./simulator-date";
+import { captureFlowToday } from "./simulator-date";
 import { assertVaultState } from "./vault-assertions";
 
 const SERVER_PORT = 18_901;
@@ -464,12 +464,13 @@ async function runMaestro(
     } catch {
       fail(`requested Maestro flow does not exist: ${target}`);
     }
-    if (
-      flow === "01-create-task.yaml" ||
-      flow === "08-contextual-quick-capture.yaml"
-    ) {
-      const today = runSimctl(["spawn", simulator.udid, "date", "+%Y-%m-%d"]);
-      todayByFlow.set(flow, parseSimulatorToday(today));
+    // Freeze dated flows at their boundary so UI and vault assertions cannot
+    // cross midnight while the simulator exercises one scenario.
+    const today = captureFlowToday(flow, () =>
+      runSimctl(["spawn", simulator.udid, "date", "+%Y-%m-%d"]),
+    );
+    if (today !== "") {
+      todayByFlow.set(flow, today);
     }
 
     log(`Maestro flow ${String(index + 1)}/${String(flows.length)}: ${flow}`);
@@ -486,6 +487,8 @@ async function runMaestro(
         `APP_URL=http://127.0.0.1:${String(CHAOS_PORT)}`,
         "--env",
         `AUTH_TOKEN=${AUTH_TOKEN}`,
+        "--env",
+        `E2E_TODAY=${today}`,
       ],
       { cwd: packageDir, stdio: "inherit" },
     );

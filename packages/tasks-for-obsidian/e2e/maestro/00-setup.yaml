@@ -2,7 +2,9 @@
 # __DEV__-only e2e-config deep link, and wait for the seeded vault to sync in.
 # The orchestrator installs one clean data container and launches once before
 # the suite; nested setup calls retain it so flows do not tear down Metro.
-# Requires --env APP_URL and --env AUTH_TOKEN (provided by e2e/run.ts).
+# Requires --env APP_URL, --env AUTH_TOKEN, and --env E2E_TODAY (provided by
+# e2e/run.ts). E2E_TODAY freezes date parsing for the whole flow so a
+# midnight boundary cannot make the UI and vault assertion disagree.
 appId: org.reactjs.native.example.TasksForObsidian
 ---
 # Self-healing: force the chaos proxy back online before every flow. If an
@@ -21,7 +23,7 @@ appId: org.reactjs.native.example.TasksForObsidian
     visible:
       id: "header-search"
     timeout: 60000
-- openLink: "tasknotes://e2e-config?apiUrl=${APP_URL}&token=${AUTH_TOKEN}&tips=off&nonce=${MAESTRO_FILENAME}"
+- openLink: "tasknotes://e2e-config?apiUrl=${APP_URL}&token=${AUTH_TOKEN}&today=${E2E_TODAY}&tips=off&nonce=${MAESTRO_FILENAME}"
 # If SpringBoard shows an "Open in <app>?" confirmation for the custom scheme,
 # dismiss it. runFlow's `when` only taps if the button is actually present, so
 # the common direct-delivery path (app already frontmost) is unaffected.
