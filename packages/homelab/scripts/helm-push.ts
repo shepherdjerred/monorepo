@@ -13,6 +13,7 @@ import path from "node:path";
 import { tmpdir } from "node:os";
 import {
   assertReleaseNotStale,
+  activeArgoApplicationNames,
   discoverChartInputs,
   fingerprintChart,
   latestPublishedVersion,
@@ -221,10 +222,11 @@ function exactRevisionInventory(
   inputs: readonly ChartInput[],
   plan: ReturnType<typeof planCharts>,
   version: string,
+  activeApplications: ReadonlySet<string>,
 ): Record<string, string> {
   const revisions: Record<string, string> = {};
   for (const input of inputs) {
-    if (input.name === "apps") {
+    if (input.name === "apps" || !activeApplications.has(input.name)) {
       continue;
     }
     const entry =
@@ -312,7 +314,19 @@ async function main(): Promise<void> {
     );
     assertReleaseNotStale(Number.parseInt(buildNumber, 10), published);
     const candidatePlan = planCharts(inputs, published);
-    const revisions = exactRevisionInventory(inputs, candidatePlan, version);
+    const appsInput = inputs.find((input) => input.name === "apps");
+    if (appsInput === undefined) {
+      throw new Error("Release inputs are missing the apps chart");
+    }
+    const activeApplications = activeArgoApplicationNames(
+      await Bun.file(appsInput.manifestPath).text(),
+    );
+    const revisions = exactRevisionInventory(
+      inputs,
+      candidatePlan,
+      version,
+      activeApplications,
+    );
     Bun.env["HOMELAB_CHART_REVISIONS_JSON"] = JSON.stringify(revisions);
     await runCommand(["bun", "--no-install", "run", "build"], {
       cwd: path.join(root, "src/cdk8s"),

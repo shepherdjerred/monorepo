@@ -3,6 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import path from "node:path";
 import { tmpdir } from "node:os";
 import {
+  activeArgoApplicationNames,
   assertReleaseNotStale,
   discoverChartInputs,
   fingerprintChart,
@@ -12,6 +13,39 @@ import {
   verifyArchiveDigest,
   type ChartInput,
 } from "./helm-release-core.ts";
+
+describe("activeArgoApplicationNames", () => {
+  test("returns only active Argo Applications from a multi-document manifest", () => {
+    expect(
+      activeArgoApplicationNames(`
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: example
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: worker
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: worker
+`),
+    ).toEqual(new Set(["worker"]));
+  });
+
+  test("rejects an Application without metadata.name", () => {
+    expect(() =>
+      activeArgoApplicationNames(`
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata: {}
+`),
+    ).toThrow("missing metadata.name");
+  });
+});
 
 async function fixture(): Promise<string> {
   const directory = await mkdtemp(path.join(tmpdir(), "helm-release-"));

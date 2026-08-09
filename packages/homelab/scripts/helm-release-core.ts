@@ -1,6 +1,6 @@
 import path from "node:path";
 import { Glob } from "bun";
-import { parse as parseYaml } from "yaml";
+import { parse as parseYaml, parseAllDocuments } from "yaml";
 import { z } from "zod";
 import { canonicalJson } from "./canonical-json.ts";
 
@@ -45,6 +45,43 @@ export type HelmReleasePlan = {
   readonly skipped: readonly ChartPlanEntry[];
   readonly publishOrder: readonly string[];
 };
+
+const KubernetesResourceSchema = z.looseObject({
+  kind: z.string().optional(),
+  metadata: z.looseObject({ name: z.string().min(1).optional() }).optional(),
+});
+
+export function activeArgoApplicationNames(
+  manifest: string,
+): ReadonlySet<string> {
+  const names = new Set<string>();
+  for (const [index, document] of parseAllDocuments(manifest).entries()) {
+    if (document.errors.length > 0) {
+      throw new Error(
+        `Unable to parse synthesized manifest document ${index.toString()}: ${document.errors
+          .map((error) => error.message)
+          .join("; ")}`,
+      );
+    }
+    const resource = KubernetesResourceSchema.parse(document.toJSON());
+    if (resource.kind !== "Application") {
+      continue;
+    }
+    const name = resource.metadata?.name;
+    if (name === undefined) {
+      throw new Error(
+        `Argo Application in synthesized manifest document ${index.toString()} is missing metadata.name`,
+      );
+    }
+    if (names.has(name)) {
+      throw new Error(
+        `Duplicate Argo Application ${name} in synthesized manifest`,
+      );
+    }
+    names.add(name);
+  }
+  return names;
+}
 
 async function regularFiles(directory: string): Promise<string[]> {
   const files: string[] = [];
