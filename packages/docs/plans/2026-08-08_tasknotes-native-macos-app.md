@@ -499,6 +499,31 @@ divergent on accents and punctuation. Options when it matters are an ICU4X colla
 weight on a mobile core) or moving sort into the shell, where each platform's native collation is
 _more_ correct than either implementation. Not user-visible until iOS shares the core.
 
+## Remaining
+
+Phases 0–6 are complete and verified: 325 Rust tests, 328 TypeScript tests, zero suppressions,
+338/338 recurrence corpus, 25/25 sync scenarios, and the generated Swift compiles, links and runs.
+
+- [ ] **Phase 7** — macOS app shell: XcodeGen project, `NavigationSplitView`, Settings scene,
+      `tasknotes://` URL type, `@Observable` store over the core. Bundle id prefix `red.sjer`.
+- [ ] **Phase 8** — Today screen end to end against a real server. **Quality gate: do not proceed
+      to Phase 9 until it feels right.**
+- [ ] **Phase 9** — the remaining 14 screens.
+- [ ] Fix `recurrence-local-utc-off-by-one` in the TypeScript app (small; real users affected).
+- [ ] Decide on `sync-command-id-collision-after-relaunch` for TypeScript — persisting the id
+      counter is likely the better fix than mirroring Rust's collision check.
+- [ ] Add `cargo-deny` to `.mise.toml` so it can join the `lint` script; it passes locally but
+      cannot run in CI until the toolchain pins it.
+- [ ] Add `tasknotes-core` and `tasknotes-fixtures` to the root `AGENTS.md` Structure list and
+      Package Notes.
+- [ ] **Verify the generated Swift compiles under swift-corelibs-foundation on Linux.** The plan
+      puts Swift unit and snapshot tests on Buildkite Linux; that claim is still unverified because
+      no Linux Swift toolchain was available locally. If it fails, those layers move to local-only
+      and the Linux gate shrinks to Rust plus bindings-drift.
+- [ ] Unrelated pre-existing gap spotted during Phase 1: `src-tauri`'s `clippy` turbo task is not
+      referenced by `bun run verify` or `.buildkite/pipeline.yml`, so src-tauri clippy has never
+      run in CI.
+
 ## Comment Log
 
 - 2026-08-08: Plan created after a researched architecture review
