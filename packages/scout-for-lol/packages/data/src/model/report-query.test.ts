@@ -288,6 +288,11 @@ describe("RENDER clause", () => {
         "SELECT games FROM match_participants GROUP BY champion RENDER heatmap WITH (value = games)",
       ),
     ).toThrow("exactly two GROUP BY");
+    expect(() =>
+      parseAndCompile(
+        "SELECT games, wins, losses FROM match_participants GROUP BY champion, queue RENDER radar_chart WITH (y = (games, wins, losses))",
+      ),
+    ).toThrow("exactly one GROUP BY");
   });
 
   test("parses a text render kind without a WITH clause", () => {

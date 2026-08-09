@@ -218,7 +218,7 @@ export const TemporalMetricEvidenceSchema = z
   .object({
     sampleSize: z.number().int().nonnegative(),
     successes: z.number().int().nonnegative().optional(),
-    numerator: z.number().nonnegative().optional(),
+    numerator: z.number().optional(),
     denominator: z.number().nonnegative().optional(),
     confidenceInterval: ConfidenceIntervalSchema.nullable().default(null),
   })

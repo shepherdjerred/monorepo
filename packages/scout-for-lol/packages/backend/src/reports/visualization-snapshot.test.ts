@@ -54,6 +54,28 @@ describe("buildVisualizationSnapshot", () => {
     expect(snapshot.series).toHaveLength(8);
   });
 
+  test("rejects charts that exceed the plotted series limit", () => {
+    const plan = parseAndCompile(
+      "SELECT games FROM match_participants GROUP BY champion, queue RENDER donut_chart WITH (y = games)",
+    );
+    const rows = Array.from(
+      { length: 9 },
+      (_, index): ReportResultRow => ({
+        label: `Champion ${index.toString()} • solo`,
+        dimensions: [`Champion ${index.toString()}`, "solo"],
+        mentionIdentity: null,
+        values: [{ column: "games", value: index + 1 }],
+      }),
+    );
+
+    expect(() =>
+      buildVisualizationSnapshot(
+        { plan, columns: ["label", "games"], rows, rowsScanned: 9 },
+        new Date("2026-08-08T00:00:00.000Z"),
+      ),
+    ).toThrow("at most eight series");
+  });
+
   test("fills leading and trailing buckets across the requested window", () => {
     const plan = parseAndCompile(
       "SELECT games FROM match_participants GROUP BY all ANALYZE BETWEEN '2026-08-01' AND '2026-08-03' BUCKET BY DAY IN TIME ZONE 'UTC' ORDER BY games DESC RENDER line_chart WITH (y = games)",

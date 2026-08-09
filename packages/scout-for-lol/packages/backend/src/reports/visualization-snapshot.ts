@@ -246,7 +246,7 @@ function buildSeries(context: SeriesBuildContext): TemporalSeries[] {
     }),
   );
   if (series.length > 8) {
-    if (bucket !== null) {
+    if ("encoding" in plan.render) {
       throw new Error("A visualization may plot at most eight series.");
     }
     return series.slice(0, 8);

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { validateRenderShape } from "#src/model/report-query-render-validation.ts";
 import type { ReportGroupBy } from "#src/model/report-query-spec.ts";
 import {
   DEFAULT_RENDER_SPEC,
@@ -184,72 +185,6 @@ function parseLeaderboardRenderWith(
     options.mentions = parsed;
   }
   return options;
-}
-
-function validateRenderShape(
-  render: Extract<ReportRenderSpec, { encoding: ReportRenderChannel }>,
-  outputColumns: string[],
-  groupBys: ReportGroupBy[],
-  logicalGroupBys: ReportGroupBy[],
-): void {
-  const y = render.encoding.y;
-  const yColumns = y === undefined ? [] : Array.isArray(y) ? y : [y];
-  if (render.kind === "SCATTER_CHART") {
-    if (render.encoding.x === undefined || yColumns.length !== 1) {
-      throw new Error("Scatter charts require one x output and one y output.");
-    }
-    if (!outputColumns.includes(render.encoding.x)) {
-      throw new Error(
-        "Scatter chart x must reference a numeric SELECT output.",
-      );
-    }
-  }
-  if (render.kind === "HEATMAP" && groupBys.length !== 2) {
-    throw new Error("Heatmaps require exactly two GROUP BY dimensions.");
-  }
-  if (render.kind === "BUMP_CHART" && groupBys.length < 2) {
-    throw new Error(
-      "Bump charts require a time bucket and a player dimension.",
-    );
-  }
-  if (render.kind === "CALENDAR_HEATMAP") {
-    validateCalendarHeatmap(
-      groupBys,
-      logicalGroupBys,
-      y === undefined ? 1 : yColumns.length,
-    );
-  }
-  if (
-    render.kind === "RADAR_CHART" &&
-    (yColumns.length < 3 || yColumns.length > 8)
-  ) {
-    throw new Error("Radar charts require between three and eight y outputs.");
-  }
-  if (render.kind === "DONUT_CHART" && yColumns.length > 1) {
-    throw new Error("Donut charts accept exactly one y output.");
-  }
-  if (
-    render.kind === "KPI_CARD" &&
-    logicalGroupBys.some((groupBy) => groupBy !== "all")
-  ) {
-    throw new Error("KPI cards require GROUP BY all.");
-  }
-}
-
-function validateCalendarHeatmap(
-  groupBys: ReportGroupBy[],
-  logicalGroupBys: ReportGroupBy[],
-  yOutputCount: number,
-): void {
-  if (!groupBys.includes("day")) {
-    throw new Error("Calendar heatmaps require daily temporal buckets.");
-  }
-  if (logicalGroupBys.some((groupBy) => groupBy !== "all")) {
-    throw new Error("Calendar heatmaps require GROUP BY all.");
-  }
-  if (yOutputCount !== 1) {
-    throw new Error("Calendar heatmaps require exactly one y output.");
-  }
 }
 
 function parseRenderWith(

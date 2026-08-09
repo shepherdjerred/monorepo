@@ -226,6 +226,17 @@ function calculatedRatioEvidence(
       ? expression.arguments[0]
       : expression;
   if (
+    candidate?.kind === "function" &&
+    (candidate.name === "per_game" || candidate.name === "per_minute")
+  ) {
+    const source = candidate.arguments[0];
+    if (source === undefined || !isAdditiveReportExpression(source)) return {};
+    const numerator = evaluateExpression(row, source);
+    const denominator =
+      candidate.name === "per_game" ? row.games : row.timePlayedSeconds / 60;
+    return numerator === null ? {} : { numerator, denominator };
+  }
+  if (
     candidate?.kind !== "binary" ||
     candidate.operator !== "/" ||
     !isAdditiveReportExpression(candidate.left) ||

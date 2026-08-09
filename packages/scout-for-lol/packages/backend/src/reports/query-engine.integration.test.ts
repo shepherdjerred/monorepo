@@ -390,6 +390,69 @@ describe("executeReportQuery temporal comparisons", () => {
       evidence: { sampleSize: 2, numerator: 20, denominator: 11 },
     });
   });
+
+  test("rolls per-minute expressions using time played", async () => {
+    await writeTestLake(lakeDir, {
+      serverId,
+      matchFacts: [
+        {
+          ...temporalMatch(
+            "NA1_per_minute_1",
+            "2026-05-16T12:00:00.000Z",
+            true,
+          ),
+          kills: 10,
+          gameDurationSeconds: 600,
+          timePlayedSeconds: 600,
+        },
+        {
+          ...temporalMatch(
+            "NA1_per_minute_2",
+            "2026-05-17T12:00:00.000Z",
+            false,
+          ),
+          kills: 10,
+          gameDurationSeconds: 3600,
+          timePlayedSeconds: 3600,
+        },
+      ],
+    });
+
+    const result = await executeReportQuery({
+      prisma,
+      serverId,
+      queryText:
+        "SELECT per_minute(kills) AS kpm FROM match_participants GROUP BY all ANALYZE BETWEEN '2026-05-16' AND '2026-05-17' BUCKET BY DAY IN TIME ZONE 'UTC' ORDER BY label ASC RENDER line_chart WITH (y = kpm, rolling = 2)",
+      now,
+    });
+
+    expect(result.visualization?.series[0]?.points[1]).toMatchObject({
+      value: 20 / 70,
+      evidence: { sampleSize: 2, numerator: 20, denominator: 70 },
+    });
+  });
+
+  test("preserves signed evidence for calculated ratios", async () => {
+    await writeTestLake(lakeDir, {
+      serverId,
+      matchFacts: [
+        temporalMatch("NA1_signed_ratio", "2026-05-16T12:00:00.000Z", false),
+      ],
+    });
+
+    const result = await executeReportQuery({
+      prisma,
+      serverId,
+      queryText:
+        "SELECT (kills - deaths) / games AS differential FROM match_participants GROUP BY all ANALYZE BETWEEN '2026-05-16' AND '2026-05-16' BUCKET BY DAY IN TIME ZONE 'UTC' ORDER BY label ASC RENDER line_chart WITH (y = differential)",
+      now,
+    });
+
+    expect(result.visualization?.series[0]?.points[0]).toMatchObject({
+      value: -3,
+      evidence: { sampleSize: 1, numerator: -3, denominator: 1 },
+    });
+  });
 });
 
 describe("executeReportQuery player groups", () => {
