@@ -557,6 +557,35 @@ describe("Argo CD stale release protection", () => {
             .parse(await request.json());
           return Response.json({ operation: requestedOperation });
         }
+        // reconcile-release always ends in a release-health-wait, which lists
+        // every Application in one request.
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/v1/applications"
+        ) {
+          return Response.json({
+            items: [
+              {
+                metadata: { name: "apps" },
+                status: {
+                  sync: { status: "Synced", revision: "2.0.0-42" },
+                  health: { status: "Healthy" },
+                },
+              },
+              {
+                metadata: { name: "worker" },
+                status: {
+                  sync: { status: "Synced", revision: "2.0.0-42" },
+                  health: { status: "Healthy" },
+                  operationState: {
+                    phase: "Succeeded",
+                    syncResult: { revision: "2.0.0-42" },
+                  },
+                },
+              },
+            ],
+          });
+        }
         if (
           request.method === "GET" &&
           url.pathname === "/api/v1/applications/worker"
@@ -600,7 +629,6 @@ describe("Argo CD stale release protection", () => {
           "scripts/argocd.ts",
           "reconcile-release",
           expectedPath,
-          "--skip-health-wait",
           "--timeout",
           "1",
         ],
@@ -626,6 +654,9 @@ describe("Argo CD stale release protection", () => {
       expect(stderr).toBe("");
       expect(stdout).toContain("sync operation started: worker");
       expect(stdout).toContain("synced: worker");
+      expect(stdout).toContain(
+        "release tree is Synced/Healthy on expected revisions",
+      );
       expect(syncPosts).toBe(1);
     } finally {
       await server.stop(true);

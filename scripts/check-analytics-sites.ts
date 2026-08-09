@@ -26,11 +26,11 @@ const staticTrackers = [
   },
   {
     path: "packages/discord-plays-mario-kart/packages/frontend/index.html",
-    hostname: "discord-plays-mario-kart.com",
+    hostname: "mariokart.sjer.red",
   },
   {
     path: "packages/discord-plays-pokemon/packages/frontend/index.html",
-    hostname: "discord-plays-pokemon.com",
+    hostname: "pokebot.sjer.red",
   },
 ] as const;
 

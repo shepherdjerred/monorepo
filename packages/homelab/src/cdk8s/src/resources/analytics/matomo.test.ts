@@ -33,12 +33,6 @@ const MatomoDeploymentSchema = z.object({
   }),
 });
 
-const PublicGateConfigSchema = z.object({
-  kind: z.literal("ConfigMap"),
-  metadata: z.object({ name: z.literal("matomo-matomo-public-gate-config") }),
-  data: z.object({ "nginx.conf": z.string() }),
-});
-
 describe("Matomo deployment", () => {
   it("uses image-compatible identities without allowing privilege escalation", () => {
     const app = new App();
@@ -49,10 +43,7 @@ describe("Matomo deployment", () => {
     const deployment = documents
       .map((document) => MatomoDeploymentSchema.safeParse(document))
       .find((result) => result.success);
-    const config = documents
-      .map((document) => PublicGateConfigSchema.safeParse(document))
-      .find((result) => result.success);
-    if (!deployment?.success || !config?.success) {
+    if (!deployment?.success) {
       throw new Error("Matomo resources were not synthesized");
     }
 
@@ -68,12 +59,6 @@ describe("Matomo deployment", () => {
         runAsNonRoot: false,
         allowPrivilegeEscalation: false,
       },
-      "matomo-public-gate": {
-        runAsNonRoot: true,
-        runAsUser: 101,
-        runAsGroup: 101,
-        allowPrivilegeEscalation: false,
-      },
     });
     const archiveContainer = deployment.data.spec.template.spec.containers.find(
       (container) => container.name === "matomo-archive",
@@ -84,16 +69,5 @@ describe("Matomo deployment", () => {
     expect(archiveContainer.args.join(" ")).toContain(
       "grep -Fqx '[database]' /var/www/html/config/config.ini.php",
     );
-    const nginxConfig = config.data.data["nginx.conf"];
-    expect(nginxConfig).toStartWith("pid /tmp/nginx.pid;");
-    for (const temporaryPath of [
-      "client_body_temp_path /tmp/client-body;",
-      "proxy_temp_path /tmp/proxy;",
-      "fastcgi_temp_path /tmp/fastcgi;",
-      "uwsgi_temp_path /tmp/uwsgi;",
-      "scgi_temp_path /tmp/scgi;",
-    ]) {
-      expect(nginxConfig).toContain(temporaryPath);
-    }
   });
 });

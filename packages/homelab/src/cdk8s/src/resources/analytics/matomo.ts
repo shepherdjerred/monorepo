@@ -1,7 +1,6 @@
 import { Duration, Size } from "cdk8s";
 import type { Chart } from "cdk8s";
 import {
-  ConfigMap,
   Cpu,
   Deployment,
   DeploymentStrategy,
@@ -49,8 +48,6 @@ const archiveCommand = [
   "sleep 300;",
   "done",
 ].join(" ");
-
-const publicReadyMarker = "/var/www/html/.matomo-public-ready";
 
 export type MatomoDeploymentProps = {
   mariadb: MatomoMariaDB;
@@ -106,39 +103,6 @@ export function createMatomoDeployment(
     "matomo-data-volume",
     matomoVolume.claim,
   );
-  const publicGateConfig = new ConfigMap(chart, "matomo-public-gate-config", {
-    data: {
-      "nginx.conf": `pid /tmp/nginx.pid;
-events {}
-http {
-  client_body_temp_path /tmp/client-body;
-  proxy_temp_path /tmp/proxy;
-  fastcgi_temp_path /tmp/fastcgi;
-  uwsgi_temp_path /tmp/uwsgi;
-  scgi_temp_path /tmp/scgi;
-  server {
-    listen 8080;
-    location / {
-      if (!-f ${publicReadyMarker}) { return 503; }
-      proxy_set_header Host $host;
-      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-      proxy_set_header X-Forwarded-Host $host;
-      proxy_set_header X-Forwarded-Proto $scheme;
-      proxy_set_header X-Real-IP $remote_addr;
-      proxy_set_header CF-Connecting-IP $http_cf_connecting_ip;
-      proxy_pass http://127.0.0.1:80;
-    }
-  }
-}
-`,
-    },
-  });
-  const publicGateConfigVolume = Volume.fromConfigMap(
-    chart,
-    "matomo-public-gate-config-volume",
-    publicGateConfig,
-  );
-
   deployment.addContainer(
     withCommonProps({
       name: "matomo",
@@ -208,59 +172,15 @@ http {
     }),
   );
 
-  // Keep the Matomo process healthy and available through Tailscale during
-  // first-run setup, but make the Cloudflare-facing port fail closed until
-  // the operator creates the marker after the installer and privacy settings
-  // are complete. This decouples Argo health from the manual cutover gate.
-  deployment.addContainer(
-    withCommonProps({
-      name: "matomo-public-gate",
-      image: `nginx:${versions["library/nginx"]}`,
-      command: ["nginx"],
-      args: ["-g", "daemon off;", "-c", "/etc/nginx/nginx.conf"],
-      ports: [{ name: "public-http", number: 8080 }],
-      volumeMounts: [
-        { path: "/etc/nginx", volume: publicGateConfigVolume },
-        { path: "/var/www/html", volume: dataVolume, readOnly: true },
-      ],
-      securityContext: {
-        user: 101,
-        group: 101,
-        ensureNonRoot: true,
-        readOnlyRootFilesystem: false,
-        allowPrivilegeEscalation: false,
-      },
-      resources: {
-        cpu: {
-          request: Cpu.millis(10),
-          limit: Cpu.millis(100),
-        },
-        memory: {
-          request: Size.mebibytes(16),
-          limit: Size.mebibytes(64),
-        },
-      },
-    }),
-  );
-
   setRevisionHistoryLimit(deployment);
 
-  // Matomo's process Service remains available through Tailscale for setup.
-  // The public Service targets the fail-closed nginx gate instead of the
-  // installer, and only proxies after the operator creates publicReadyMarker.
+  // One Service serves both the Tailscale ingress and the Cloudflare tunnel.
   const service = new Service(chart, "matomo-service", {
     selector: deployment,
     metadata: {
       labels: { app: "matomo" },
     },
     ports: [{ port: 80, name: "http" }],
-  });
-  const publicService = new Service(chart, "matomo-public-service", {
-    selector: deployment,
-    metadata: {
-      labels: { app: "matomo" },
-    },
-    ports: [{ port: 80, targetPort: 8080, name: "http" }],
   });
 
   new TailscaleIngress(chart, "matomo-tailscale-ingress", {
@@ -269,11 +189,14 @@ http {
   });
 
   createCloudflareTunnelBinding(chart, "matomo-cf-tunnel", {
-    serviceName: publicService.name,
+    serviceName: service.name,
     subdomain: "matomo",
     port: 80,
-    publicProbePath:
-      "/matomo.php?module=API&method=API.getMatomoVersion&format=json",
+    // `matomo.php` is the tracker entry point and returns 200 with a non-empty
+    // body. It does NOT implement `module=API` — `API.getMatomoVersion` lives
+    // in core/API/Request.php, served only by index.php, and probing it here
+    // returned 400 on every request.
+    publicProbePath: "/matomo.php",
   });
 
   new KubeNetworkPolicy(chart, "matomo-netpol", {
@@ -302,7 +225,7 @@ http {
               },
             },
           ],
-          ports: [{ port: IntOrString.fromNumber(8080), protocol: "TCP" }],
+          ports: [{ port: IntOrString.fromNumber(80), protocol: "TCP" }],
         },
         {
           from: [
@@ -312,10 +235,7 @@ http {
               },
             },
           ],
-          ports: [
-            { port: IntOrString.fromNumber(80), protocol: "TCP" },
-            { port: IntOrString.fromNumber(8080), protocol: "TCP" },
-          ],
+          ports: [{ port: IntOrString.fromNumber(80), protocol: "TCP" }],
         },
       ],
       egress: [

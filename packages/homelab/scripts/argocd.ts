@@ -546,18 +546,13 @@ async function reconcileRelease(
   expectedPath: string,
   timeoutSeconds: number,
   dryRun: boolean,
-  deferredApps: ReadonlySet<string>,
-  waitForHealth: boolean,
 ): Promise<void> {
   const expected = ExpectedApplicationsSchema.parse(
     JSON.parse(await Bun.file(expectedPath).text()),
   );
   if (dryRun) {
     console.log(
-      `DRYRUN: would reconcile ${expected.length.toString()} expected Application(s)` +
-        (deferredApps.size === 0
-          ? ""
-          : `; defer ${[...deferredApps].join(", ")}`),
+      `DRYRUN: would reconcile ${expected.length.toString()} expected Application(s)`,
     );
     return;
   }
@@ -575,7 +570,7 @@ async function reconcileRelease(
   // The release step submits the root Application sync asynchronously. Waiting
   // here would make every release depend on unrelated child Application health.
   for (const wanted of expected) {
-    if (wanted.name === "apps" || deferredApps.has(wanted.name)) {
+    if (wanted.name === "apps") {
       continue;
     }
     const current = ReconcileApplicationSchema.parse(
@@ -601,9 +596,7 @@ async function reconcileRelease(
       revision: wanted.revision,
     });
   }
-  if (waitForHealth) {
-    await releaseHealthWait(expectedPath, timeoutSeconds, false);
-  }
+  await releaseHealthWait(expectedPath, timeoutSeconds, false);
 }
 
 async function releaseHealthWait(
@@ -878,7 +871,6 @@ function usage(): never {
       "  bun packages/homelab/scripts/argocd.ts release-health-wait <expected.json> " +
       "[--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts reconcile-release <expected.json> " +
-      "[--defer-apps <app,...>] [--skip-health-wait] " +
       "[--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts suspend-auto-sync <root-app> " +
       "[--revision <v>] [--timeout <s>] [--dry-run]\n" +
@@ -901,18 +893,6 @@ function flag(argv: string[], name: string): string | undefined {
     usage();
   }
   return v;
-}
-
-function appList(raw: string | undefined): ReadonlySet<string> {
-  if (raw === undefined) {
-    return new Set();
-  }
-  const apps = raw.split(",").map((app) => app.trim());
-  if (apps.some((app) => app.length === 0)) {
-    console.error("--defer-apps must contain only comma-separated names");
-    usage();
-  }
-  return new Set(apps);
 }
 
 async function main(): Promise<void> {
@@ -988,8 +968,6 @@ async function main(): Promise<void> {
         app,
         timeoutOverride ?? DEFAULT_SYNC_TIMEOUT_S,
         dryRun,
-        appList(flag(argv, "defer-apps")),
-        !argv.includes("--skip-health-wait"),
       );
       return;
     case "suspend-auto-sync":
