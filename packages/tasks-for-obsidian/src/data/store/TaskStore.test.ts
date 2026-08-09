@@ -525,6 +525,52 @@ describe("TaskStore restore retention", () => {
     ).resolves.toEqual(restore);
   });
 
+  test("treats null and undefined schedule fields as unchanged", async () => {
+    const task = makeTask({ recurrence: "FREQ=WEEKLY" });
+    const { store, queue } = makeStore(
+      memoryQueueStorage(),
+      memoryStoreStorage({ tasks: [task] }),
+    );
+    await store.restore();
+    const restore = {
+      scheduled: null,
+      due: null,
+      recurrence: "FREQ=WEEKLY",
+      skipped: false,
+    };
+    await store.dispatch({
+      type: "set_instance_complete",
+      taskId: task.id,
+      date: "2026-08-08",
+      completed: true,
+      restore,
+    });
+    const completion = queue.head();
+    if (completion?.type !== "set_instance_complete") {
+      throw new Error("expected completion command");
+    }
+    await store.applyServerAck(completion, {
+      ...task,
+      completeInstances: ["2026-08-08"],
+    });
+
+    await store.dispatch({
+      type: "update",
+      taskId: task.id,
+      payload: { title: "Renamed", due: null, scheduled: null },
+    });
+    await expect(
+      store.getPendingCompletionRestore(task.id, "2026-08-08"),
+    ).resolves.toEqual(restore);
+
+    const edit = queue.head();
+    if (edit?.type !== "update") throw new Error("expected edit command");
+    await store.applyServerAck(edit, { ...task, title: "Renamed" });
+    await expect(
+      store.getPendingCompletionRestore(task.id, "2026-08-08"),
+    ).resolves.toEqual(restore);
+  });
+
   test("retains a restore when a later occurrence edit is dead-lettered", async () => {
     const task = makeTask({
       recurrence: "FREQ=WEEKLY",
