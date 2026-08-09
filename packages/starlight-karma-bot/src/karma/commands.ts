@@ -226,9 +226,15 @@ async function handleKarmaLeaderboard(
         : fetchedUser.username;
     const line = formatLeaderboardLine(entry, displayName);
 
+    // Reserve room for the truncation footer only when one would actually be
+    // needed — i.e. when this is not the last entry. Reserving unconditionally
+    // dropped entries from boards that would have fit whole.
     const remaining = ranked.length - lines.length;
-    const footer = `\n…and ${remaining.toString()} more`;
-    if (used + 1 + line.length + footer.length > MAX_LEADERBOARD_CONTENT) {
+    const isLast = remaining === 1;
+    const footerCost = isLast
+      ? 0
+      : `\n…and ${remaining.toString()} more`.length;
+    if (used + 1 + line.length + footerCost > MAX_LEADERBOARD_CONTENT) {
       lines.push(`…and ${remaining.toString()} more`);
       break;
     }

@@ -11,12 +11,17 @@
  * skipping — running it by hand is an explicit request to import.
  */
 import { importLegacyDatabase } from "#src/db/import-legacy.ts";
+import { deployDatabaseMigrations } from "#src/db/migrate.ts";
 import { disconnectPrisma } from "#src/db/index.ts";
 
 const sourcePath =
   Bun.argv[2] ?? Bun.env["LEGACY_DATABASE_PATH"] ?? "./data/glitter.sqlite";
 
 try {
+  // A rehearsal usually points at a fresh DATABASE_PATH, where the karma table
+  // does not exist yet; without this the import fails on a missing table
+  // instead of running. `scripts/start.ts` does the same for the automatic path.
+  await deployDatabaseMigrations();
   await importLegacyDatabase(sourcePath);
   console.warn("[Import] Complete");
 } finally {

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { decideLegacyImport, parseLegacyDatetime } from "./import-legacy.ts";
+import { decideLegacyImport, parseLegacyDatetime } from "./legacy-rules.ts";
 
 describe("parseLegacyDatetime", () => {
   test("parses the millisecond form this bot wrote", () => {

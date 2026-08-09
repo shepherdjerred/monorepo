@@ -48,7 +48,17 @@ client.on(Events.Error, (error) => {
   Sentry.captureException(error, { tags: { source: "discord-client" } });
 });
 
-console.warn("[Discord] Logging in to Discord...");
-await client.login(Configuration.discordToken);
+/** Connect to the gateway.
+ *
+ *  Deliberately NOT called at module scope. Login is the slowest and most
+ *  rate-limit-prone step of startup, and importing this module used to block
+ *  on it — which meant the health server could not bind until Discord was up,
+ *  so probes got connection-refused during exactly the window the startup
+ *  budget exists to cover. `src/index.ts` binds the health port first, then
+ *  calls this. */
+export async function loginDiscord(): Promise<void> {
+  console.warn("[Discord] Logging in to Discord...");
+  await client.login(Configuration.discordToken);
+}
 
 export default client;
