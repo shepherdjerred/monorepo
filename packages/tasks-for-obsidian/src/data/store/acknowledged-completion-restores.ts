@@ -59,21 +59,29 @@ export function completionRestoreKey(id: TaskId, date: string): string {
   return `${String(id)}\u{0}${date}`;
 }
 
-export function isOccurrenceEdit(command: Command): boolean {
+export function isOccurrenceEdit(
+  command: Command,
+  currentTask: Task | undefined,
+): boolean {
   return (
     command.type === "update" &&
-    (command.payload.recurrence !== undefined ||
-      command.payload.scheduled !== undefined ||
-      command.payload.due !== undefined)
+    (currentTask === undefined ||
+      (command.payload.recurrence !== undefined &&
+        command.payload.recurrence !== currentTask.recurrence) ||
+      (command.payload.scheduled !== undefined &&
+        command.payload.scheduled !== currentTask.scheduled) ||
+      (command.payload.due !== undefined &&
+        command.payload.due !== currentTask.due))
   );
 }
 
 export function isTaskOccurrenceEdit(
   command: Command,
   targetId: TaskId,
+  currentTask: Task | undefined,
 ): boolean {
   return (
-    isOccurrenceEdit(command) &&
+    isOccurrenceEdit(command, currentTask) &&
     command.type === "update" &&
     command.taskId === targetId
   );

@@ -148,13 +148,19 @@ export class TaskStore {
         if (
           pending
             .slice(completionIndex + 1)
-            .some((command) => isTaskOccurrenceEdit(command, target))
+            .some((command) =>
+              isTaskOccurrenceEdit(command, target, this.base.get(target)),
+            )
         ) {
           return;
         }
         return pendingRestore;
       }
-      if (pending.some((command) => isTaskOccurrenceEdit(command, target))) {
+      if (
+        pending.some((command) =>
+          isTaskOccurrenceEdit(command, target, this.base.get(target)),
+        )
+      ) {
         return;
       }
       const key = completionRestoreKey(target, date);
@@ -312,7 +318,10 @@ export class TaskStore {
         localTodayYmd(new Date(this.clock())),
         nextBase,
       );
-      if (isOccurrenceEdit(command) && command.type === "update") {
+      if (
+        command.type === "update" &&
+        isOccurrenceEdit(command, this.base.get(command.taskId))
+      ) {
         nextAcknowledgedCompletionRestores = invalidateCompletionRestores(
           nextAcknowledgedCompletionRestores,
           command.taskId,
