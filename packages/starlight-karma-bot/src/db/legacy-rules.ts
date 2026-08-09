@@ -28,17 +28,45 @@ export function parseLegacyDatetime(value: string): Date {
     );
   }
   const [, year, month, day, hour, minute, second, millisecond] = match;
-  return new Date(
+  const fields = {
+    year: Number(year),
+    month: Number(month),
+    day: Number(day),
+    hour: Number(hour),
+    minute: Number(minute),
+    second: Number(second),
+    millisecond: millisecond === undefined ? 0 : Number(millisecond),
+  };
+  const parsed = new Date(
     Date.UTC(
-      Number(year),
-      Number(month) - 1,
-      Number(day),
-      Number(hour),
-      Number(minute),
-      Number(second),
-      millisecond === undefined ? 0 : Number(millisecond),
+      fields.year,
+      fields.month - 1,
+      fields.day,
+      fields.hour,
+      fields.minute,
+      fields.second,
+      fields.millisecond,
     ),
   );
+
+  // `Date.UTC` silently normalizes impossible dates — `2026-02-31` becomes
+  // March 3 rather than throwing. Round-tripping the components catches that,
+  // so malformed source data fails the import transaction instead of being
+  // rewritten to a different instant behind the parse-and-reject contract.
+  if (
+    parsed.getUTCFullYear() !== fields.year ||
+    parsed.getUTCMonth() !== fields.month - 1 ||
+    parsed.getUTCDate() !== fields.day ||
+    parsed.getUTCHours() !== fields.hour ||
+    parsed.getUTCMinutes() !== fields.minute ||
+    parsed.getUTCSeconds() !== fields.second ||
+    parsed.getUTCMilliseconds() !== fields.millisecond
+  ) {
+    throw new Error(
+      `Legacy datetime ${JSON.stringify(value)} is not a real instant (it normalizes to ${parsed.toISOString()})`,
+    );
+  }
+  return parsed;
 }
 
 export type LegacyImportDecision =

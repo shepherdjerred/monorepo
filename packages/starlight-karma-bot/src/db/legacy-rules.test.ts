@@ -26,6 +26,25 @@ describe("parseLegacyDatetime", () => {
   });
 
   test.each([
+    ["2026-02-31 01:00:00", "a day that does not exist in that month"],
+    ["2026-13-01 01:00:00", "month 13"],
+    ["2026-08-00 01:00:00", "day zero"],
+    ["2026-08-07 25:00:00", "hour 25"],
+    ["2026-08-07 01:60:00", "minute 60"],
+  ])("rejects %s (%s)", (value) => {
+    // `Date.UTC` would silently normalize these into a different instant.
+    expect(() => parseLegacyDatetime(value)).toThrow(
+      /is not a real instant|does not match the expected/,
+    );
+  });
+
+  test("still accepts a real leap day", () => {
+    expect(parseLegacyDatetime("2024-02-29 12:00:00").toISOString()).toBe(
+      "2024-02-29T12:00:00.000Z",
+    );
+  });
+
+  test.each([
     ["2026-08-07T01:44:39.717Z", "ISO form with T and Z"],
     ["2026-08-07 01:44:39.7", "one-digit milliseconds"],
     ["2026-08-07 01:44", "missing seconds"],
