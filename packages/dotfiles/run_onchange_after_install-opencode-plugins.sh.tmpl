@@ -1,0 +1,92 @@
+{{- if eq .chezmoi.os "darwin" -}}
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# Keep the subscription plugins reproducible without storing credentials or
+# generated node_modules in the dotfiles repository.
+source_dir={{ .chezmoi.sourceDir | quote }}
+git_root="$HOME/git"
+kimi_root="$git_root/opencode-kimi-full"
+quota_root="$git_root/opencode-quota"
+kimi_ref="5934bfacb039136a504234a62cdd3e39b6a24b92"
+quota_ref="c356aef4326669e9e90db15fabd50a691c667116"
+
+clone_pinned_repo() {
+  local repo_url="$1"
+  local repo_root="$2"
+  local commit="$3"
+
+  mkdir -p "$git_root"
+  if [ ! -e "$repo_root" ]; then
+    git clone --no-checkout "$repo_url" "$repo_root"
+    git -C "$repo_root" fetch --depth=1 origin "$commit"
+    git -C "$repo_root" checkout --detach "$commit"
+    return
+  fi
+
+  if [ ! -d "$repo_root/.git" ]; then
+    printf 'OpenCode plugin path exists but is not a Git checkout: %s\n' "$repo_root" >&2
+    exit 1
+  fi
+
+  if [ -n "$(git -C "$repo_root" status --porcelain)" ]; then
+    printf 'Refusing to use a dirty OpenCode plugin checkout: %s\n' "$repo_root" >&2
+    exit 1
+  fi
+
+  local actual_commit
+  actual_commit="$(git -C "$repo_root" rev-parse HEAD)"
+  if [ "$actual_commit" != "$commit" ]; then
+    printf 'OpenCode plugin checkout %s is at %s; expected pinned commit %s\n' \
+      "$repo_root" "$actual_commit" "$commit" >&2
+    printf 'Update the checkout or change the pin in %s.\n' "$source_dir" >&2
+    exit 1
+  fi
+}
+
+clone_pinned_repo \
+  "https://github.com/shepherdjerred/opencode-kimi-full.git" \
+  "$kimi_root" \
+  "$kimi_ref"
+clone_pinned_repo \
+  "https://github.com/shepherdjerred/opencode-quota.git" \
+  "$quota_root" \
+  "$quota_ref"
+
+(
+  cd "$kimi_root"
+  bun install --frozen-lockfile
+  bun run build
+)
+
+(
+  cd "$quota_root"
+  bun install --no-save
+  bun run build
+)
+
+# opencode-quota resolves the Kimi quota client as a package. Keep this local
+# link outside Git while making the two checked-out repositories work together.
+companion_parent="$quota_root/node_modules/@shepherdjerred"
+companion_link="$companion_parent/opencode-kimi-full"
+mkdir -p "$companion_parent"
+if [ -L "$companion_link" ]; then
+  actual_target="$(readlink "$companion_link")"
+  if [ "$actual_target" != "$kimi_root" ]; then
+    printf 'Unexpected Kimi companion link target: %s\n' "$actual_target" >&2
+    exit 1
+  fi
+elif [ -e "$companion_link" ]; then
+  printf 'Kimi companion path is occupied by a non-symlink: %s\n' "$companion_link" >&2
+  exit 1
+else
+  ln -s "$kimi_root" "$companion_link"
+fi
+
+# The plugin entries are conditional on these checkouts existing. Re-render
+# them now that the bootstrap has created and built the repositories.
+chezmoi --source "$source_dir" apply --force \
+  ~/.config/opencode/opencode.jsonc \
+  ~/.config/opencode/tui.jsonc
+{{- end -}}

@@ -22,6 +22,8 @@ brew "bash"
 brew "bat"
 # Resource monitor. C++ version and continuation of bashtop and bpytop
 brew "btop"
+# JavaScript runtime, bundler, test runner, and package manager
+brew "bun"
 # Define k8s native apps and abstractions using object-oriented programming
 brew "cdk8s"
 # Manage your dotfiles across multiple diverse machines, securely
