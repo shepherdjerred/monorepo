@@ -119,6 +119,12 @@ const ReconcileApplicationSchema = z.object({
           revision: z.string().optional(),
         })
         .optional(),
+      operationState: z
+        .object({
+          phase: z.string(),
+          syncResult: z.object({ revision: z.string().optional() }).optional(),
+        })
+        .optional(),
     })
     .optional(),
 });
@@ -577,9 +583,16 @@ async function reconcileRelease(
     );
     const syncStatus = current.status?.sync?.status;
     const revision = current.status?.sync?.revision;
+    const operationPhase = current.status?.operationState?.phase;
+    const operationRevision =
+      current.status?.operationState?.syncResult?.revision;
+    const failedCurrentOperation =
+      (operationPhase === "Failed" || operationPhase === "Error") &&
+      (operationRevision === undefined || operationRevision === revision);
     if (
       syncStatus === "Synced" &&
-      (wanted.revision === undefined || revision === wanted.revision)
+      (wanted.revision === undefined || revision === wanted.revision) &&
+      !failedCurrentOperation
     ) {
       continue;
     }

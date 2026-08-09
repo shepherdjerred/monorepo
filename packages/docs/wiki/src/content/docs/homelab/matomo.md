@@ -23,12 +23,13 @@ Only after that marker exists does the public gate proxy requests to Matomo.
 Verify `https://matomo.sjer.red/matomo.js` and the API endpoint before allowing
 the site-release lane to deploy tracker changes.
 
-The archive sidecar disables browser-triggered archiving, configures the
-Cloudflare client-IP header, and runs `core:archive` every five minutes. A
-failed archive exits the sidecar so Kubernetes reports the pod as unhealthy.
-The official Matomo image keeps its root entrypoint so it can initialize the
-shared application volume, with privilege escalation disabled; the nginx
-public gate runs as its numeric non-root user.
+The archive sidecar waits for the installer to write the database section,
+then disables browser-triggered archiving, configures the Cloudflare client-IP
+header, and runs `core:archive` every five minutes. A failed archive exits the
+sidecar so Kubernetes reports the pod as unhealthy. The official Matomo image
+keeps its root entrypoint so it can initialize the shared application volume,
+with privilege escalation disabled; the nginx public gate runs as its numeric
+non-root user.
 
 ## Audit checks
 
