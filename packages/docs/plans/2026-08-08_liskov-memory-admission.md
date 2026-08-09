@@ -19,9 +19,10 @@ retaining the 16GiB ZFS ARC allowance and the existing eviction armor.
 - Restore Buildkite-only Kueue admission with a `ClusterQueue` of 24 CPU,
   80Gi memory, 20 pods, and 100Gi ephemeral storage.
 - Keep Buildkite `max-in-flight=20`; Kueue supplies the request-weighted gate.
-- Alert on liskov below 8Gi available memory for 10 minutes, below 4Gi or
-  Kubernetes `MemoryPressure` for 5 minutes, and a 30-minute Buildkite Kueue
-  backlog.
+- Alert on liskov below 8Gi available memory for 1 minute, below 4Gi or
+  Kubernetes `MemoryPressure` for 1 minute, and a 30-minute Buildkite Kueue
+  backlog. The one-minute memory windows fire before kubelet's eviction grace
+  period can elapse.
 
 ## Rollout
 
