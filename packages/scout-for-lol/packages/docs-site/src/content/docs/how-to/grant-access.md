@@ -59,9 +59,15 @@ delegate to.
 **Access** lists everyone with a grant and what they hold. Review it when
 someone changes role in the server, and when a project ends.
 
-Discord administrators and the server owner always appear as full admins. Their
-access comes from Discord, so removing it means changing their Discord
+:::caution
+**Access lists explicit Scout grants only.** Discord administrators and the
+server owner already have full access without a grant, and they are deliberately
+_not_ shown on this page. Treating it as a complete list of who can change
+things will miss them — check the server's Discord roles as well.
+
+Their access comes from Discord, so removing it means changing their Discord
 permissions, not their Scout grant.
+:::
 
 ## Revoke access
 

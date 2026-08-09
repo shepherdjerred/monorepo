@@ -34,6 +34,13 @@ const isNoindexPath = (/** @type {string} */ page) =>
 export default defineConfig({
   compressHTML: true,
   site: "https://scout-for-lol.com",
+  // /commands and /docs were marketing pages before the documentation site
+  // existed. Keep inbound links and bookmarks working by pointing them at
+  // their replacements instead of 404ing.
+  redirects: {
+    "/commands": "/docs/reference/discord-commands/",
+    "/commands/": "/docs/reference/discord-commands/",
+  },
   env: {
     schema: {
       PUBLIC_PINTEREST_TAG_ID: envField.string({

@@ -25,11 +25,35 @@ const PROD_BUCKET = "scout-frontend";
 const BETA_BUCKET = "scout-frontend-beta";
 const MARKER_KEY = ".release-version";
 const IMMUTABLE_PREFIXES = ["_astro/", "app/assets/", "docs/_astro/"];
+/** Every entrypoint a bundle built from the current tree must contain. */
 const RELEASE_ENTRYPOINTS = [
   "index.html",
   "app/index.html",
   "docs/index.html",
 ] as const;
+
+/**
+ * The entrypoints present in an already-materialized archive.
+ *
+ * Releases minted before the docs site have no `docs/index.html`, so verifying
+ * or reconciling one against {@link RELEASE_ENTRYPOINTS} would read a source
+ * file that does not exist and throw before the release marker advances —
+ * blocking rollback to any pre-docs release. Deriving the list from the archive
+ * keeps the check as strict as the bundle allows without inventing files.
+ */
+type ReleaseEntrypoint = (typeof RELEASE_ENTRYPOINTS)[number];
+
+async function archiveEntrypoints(
+  directory: string,
+): Promise<ReleaseEntrypoint[]> {
+  const present: ReleaseEntrypoint[] = [];
+  for (const path of RELEASE_ENTRYPOINTS) {
+    if (await Bun.file(`${directory}/${path}`).exists()) {
+      present.push(path);
+    }
+  }
+  return present;
+}
 
 function root(): string {
   return new URL("../..", import.meta.url).pathname.replace(/\/$/, "");
@@ -373,10 +397,11 @@ export async function deployScoutBeta(
   try {
     await assertScoutArchived(state, "beta");
     await downloadAndVerifyArchiveBytes(state, "beta", `${scratch}/site`);
+    const entrypoints = await archiveEntrypoints(`${scratch}/site`);
     const mismatch = await firstS3ObjectMismatch({
       sourceDir: `${scratch}/site`,
       bucket: BETA_BUCKET,
-      paths: RELEASE_ENTRYPOINTS,
+      paths: entrypoints,
       scratchDir: scratch,
       endpoint: SEAWEEDFS_ENDPOINT,
       env: SEAWEEDFS_AWS_ENV,
@@ -399,7 +424,7 @@ export async function deployScoutBeta(
     await assertS3ObjectsMatchSource({
       sourceDir: `${scratch}/site`,
       bucket: BETA_BUCKET,
-      paths: RELEASE_ENTRYPOINTS,
+      paths: entrypoints,
       scratchDir: scratch,
       endpoint: SEAWEEDFS_ENDPOINT,
       env: SEAWEEDFS_AWS_ENV,
@@ -429,6 +454,7 @@ export async function reconcileScoutProd(
   try {
     await assertScoutArchived(state, "prod");
     await downloadAndVerifyArchiveBytes(state, "prod", `${scratch}/site`);
+    const entrypoints = await archiveEntrypoints(`${scratch}/site`);
     const markerContent = await readOptionalBucketObject(
       PROD_BUCKET,
       MARKER_KEY,
@@ -437,7 +463,7 @@ export async function reconcileScoutProd(
     const mismatch = await firstS3ObjectMismatch({
       sourceDir: `${scratch}/site`,
       bucket: PROD_BUCKET,
-      paths: RELEASE_ENTRYPOINTS,
+      paths: entrypoints,
       scratchDir: scratch,
       endpoint: SEAWEEDFS_ENDPOINT,
       env: SEAWEEDFS_AWS_ENV,
@@ -460,7 +486,7 @@ export async function reconcileScoutProd(
     await assertS3ObjectsMatchSource({
       sourceDir: `${scratch}/site`,
       bucket: PROD_BUCKET,
-      paths: RELEASE_ENTRYPOINTS,
+      paths: entrypoints,
       scratchDir: scratch,
       endpoint: SEAWEEDFS_ENDPOINT,
       env: SEAWEEDFS_AWS_ENV,
