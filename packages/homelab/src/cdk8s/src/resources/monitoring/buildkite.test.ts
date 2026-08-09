@@ -87,10 +87,8 @@ function expectExpressionContains(
   }
 }
 
-function assertCollectorStaleExpression(
-  rule: Record<string, unknown> | undefined,
-): void {
-  const expression = String(rule?.["expr"]);
+function assertCollectorStaleExpression(rule: Record<string, unknown>): void {
+  const expression = String(rule["expr"]);
   expectExpressionContains(expression, ["> 1200"]);
   if (MAINTENANCE_IMAGE_READY) {
     expectExpressionContains(expression, [
@@ -99,10 +97,8 @@ function assertCollectorStaleExpression(
       `absent(\n    kubernetes_maintenance_last_success_timestamp_seconds{\n      job="${BUILDKITE_BUN_CACHE_GC_ACTIVITY}"\n    }\n  )`,
       'temporal_worker_app_process_start_time_seconds{\n        namespace="buildkite",\n        pod=~"temporal-maintenance-worker-.*"\n      }',
       'kube_pod_start_time{\n        namespace="buildkite",\n        pod=~"temporal-maintenance-worker-.*"\n      }',
-      "kube_deployment_status_replicas_available",
-      'deployment="temporal-maintenance-worker"',
-      "up{",
-      'service="temporal-maintenance-worker-app-metrics"',
+      'kube_deployment_status_replicas_available{\n        namespace="buildkite",\n        deployment="temporal-maintenance-worker"\n      }',
+      'up{\n        namespace="buildkite",\n        service="temporal-maintenance-worker-app-metrics"\n      }',
       'condition="Progressing",\n        status="false"',
       'reason="NewReplicaSetAvailable"',
     ]);
@@ -112,6 +108,17 @@ function assertCollectorStaleExpression(
     "kube_cronjob_status_last_successful_time",
     "kube_cronjob_created",
   ]);
+}
+
+function requireAlert(
+  rules: readonly Record<string, unknown>[],
+  alertName: string,
+): Record<string, unknown> {
+  const alert = rules.find((rule) => rule["alert"] === alertName);
+  if (alert === undefined) {
+    throw new Error(`Missing Buildkite alert: ${alertName}`);
+  }
+  return alert;
 }
 
 describe("Buildkite monitoring manifests", () => {
@@ -178,18 +185,17 @@ describe("Buildkite monitoring manifests", () => {
     if (alertGroup === undefined) {
       throw new Error("Missing Buildkite alert group");
     }
-    const alerts = alertGroup.rules.flatMap((rule) => {
-      const alert = rule["alert"];
-      return typeof alert === "string" ? [rule] : [];
-    });
-    const bunCacheWarning = alerts.find(
-      (rule) => rule["alert"] === "BuildkiteBunCacheUsageHigh",
+    const bunCacheWarning = requireAlert(
+      alertGroup.rules,
+      "BuildkiteBunCacheUsageHigh",
     );
-    const bunCacheCritical = alerts.find(
-      (rule) => rule["alert"] === "BuildkiteBunCacheUsageCritical",
+    const bunCacheCritical = requireAlert(
+      alertGroup.rules,
+      "BuildkiteBunCacheUsageCritical",
     );
-    const collectorStale = alerts.find(
-      (rule) => rule["alert"] === "BuildkiteBunCacheCollectorStale",
+    const collectorStale = requireAlert(
+      alertGroup.rules,
+      "BuildkiteBunCacheCollectorStale",
     );
 
     expect(bunCacheWarning).toMatchObject({
@@ -200,14 +206,12 @@ describe("Buildkite monitoring manifests", () => {
         namespace: "buildkite",
       },
     });
-    expect(String(bunCacheWarning?.["expr"])).toContain(
+    expect(String(bunCacheWarning["expr"])).toContain(
       `persistentvolumeclaim="${BUILDKITE_BUN_CACHE_PVC}"`,
     );
-    expect(String(bunCacheWarning?.["expr"])).toContain("> 0.75");
-    expect(String(bunCacheWarning?.["expr"])).toContain(
-      "zfs_dataset_used_bytes",
-    );
-    expect(String(bunCacheWarning?.["expr"])).toContain(
+    expect(String(bunCacheWarning["expr"])).toContain("> 0.75");
+    expect(String(bunCacheWarning["expr"])).toContain("zfs_dataset_used_bytes");
+    expect(String(bunCacheWarning["expr"])).toContain(
       "kube_persistentvolumeclaim_info",
     );
 
@@ -219,7 +223,7 @@ describe("Buildkite monitoring manifests", () => {
         namespace: "buildkite",
       },
     });
-    expect(String(bunCacheCritical?.["expr"])).toContain("> 0.9");
+    expect(String(bunCacheCritical["expr"])).toContain("> 0.9");
 
     expect(collectorStale).toMatchObject({
       for: "1m",
