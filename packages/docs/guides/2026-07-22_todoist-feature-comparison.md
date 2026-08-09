@@ -17,11 +17,20 @@ Goal frame (from `plans/2026-07-03_tasknotes-first-in-class.md`): the app =
 Todoist ergonomics (instant capture, trustworthy today view, full offline);
 Obsidian = power interface. Collaboration/assignee features are out of scope.
 
-> **Snapshot note:** the "Our app" column describes the app **before** the
-> ergonomics wave (PR #1611), which was planned from this comparison and
-> closed gap-list items 1–5 and 7 (reschedule sheet with correct semantics,
-> `scheduled`+`due` editing, org editing, NLP expansion + autocomplete,
-> recurring-completion undo, bulk edit). Rows below are the pre-wave state.
+> **Snapshot note:** the comparison began before the ergonomics wave. The
+> current implementation also includes user-defined saved views, post-creation
+> task organization, bulk actions, and the native capture/detail surfaces from
+> the follow-on product work. Keep the current-state notes below in sync when
+> adding another product wave.
+
+## Current implementation update (2026-08-08)
+
+The native product wave now closes the organization and saved-view gaps called
+out below: users can create, rename, reorder, favorite, and delete saved views;
+task detail can edit project, tags, and contexts; and task lists expose bulk
+actions for selected tasks. The E2E suite covers saved-view lifecycle,
+contextual capture, completed-task search/uncomplete, and persistence after
+restart.
 
 ## Scheduling & rescheduling
 
@@ -51,15 +60,15 @@ is confirmed.
 
 ## Organization
 
-| Capability           | Todoist                                                                                                                    | Our app                                                                                                               |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| Projects             | 3-level nesting, favorites, archive, 300 tasks/project cap                                                                 | Flat wikilink projects (Obsidian notes); no in-app hierarchy                                                          |
-| Sections             | 20/project; become board columns                                                                                           | None (no format equivalent used)                                                                                      |
-| Subtasks             | 4 indent levels; scheduled subtasks appear in Today                                                                        | None (not in TaskNotes model)                                                                                         |
-| Labels               | 500 cap, colors, favorites, rename/delete cascades                                                                         | Tags + contexts (two axes — Todoist has no contexts)                                                                  |
-| Post-creation re-org | Move project/section from task view, `#` re-type, multi-select Move-to; labels editable everywhere                         | **Not possible** — TaskDetail edits title/priority/due/details only                                                   |
-| Filters              | Full query language (`&`, `\|`, `!`, `##`, `date before:`, `search:`…), saved filters (3 free / 150 Pro), AI Filter Assist | Ad-hoc per-screen filter bar (project/context/tag/status/priority); 2 hardcoded saved views (`domain/saved-views.ts`) |
-| Bulk edit            | Multi-select (all platforms): schedule, deadline, move, labels, priority, complete, delete, duplicate                      | None (observed cost: 2026-07-21 session = 28 tasks rescheduled one-by-one, 29 sequential PUTs)                        |
+| Capability           | Todoist                                                                                                                    | Our app                                                                                                                |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Projects             | 3-level nesting, favorites, archive, 300 tasks/project cap                                                                 | Flat wikilink projects (Obsidian notes); no in-app hierarchy                                                           |
+| Sections             | 20/project; become board columns                                                                                           | None (no format equivalent used)                                                                                       |
+| Subtasks             | 4 indent levels; scheduled subtasks appear in Today                                                                        | None (not in TaskNotes model)                                                                                          |
+| Labels               | 500 cap, colors, favorites, rename/delete cascades                                                                         | Tags + contexts (two axes — Todoist has no contexts)                                                                   |
+| Post-creation re-org | Move project/section from task view, `#` re-type, multi-select Move-to; labels editable everywhere                         | TaskDetail edits project, tags, contexts, title, priority, dates, and details; list actions support multi-select moves |
+| Filters              | Full query language (`&`, `\|`, `!`, `##`, `date before:`, `search:`…), saved filters (3 free / 150 Pro), AI Filter Assist | Ad-hoc per-screen filter bar plus user-defined saved views with ordering, icons, tint, and sort                        |
+| Bulk edit            | Multi-select (all platforms): schedule, deadline, move, labels, priority, complete, delete, duplicate                      | Multi-select actions for completion, deletion, priority, dates, project, tags, contexts, and status                    |
 
 ## Views & interaction
 
@@ -104,15 +113,10 @@ is confirmed.
    next-Monday "next week", Saturday "this weekend") + expose `scheduled` vs
    `due` (model already has both ≈ Todoist Date/Deadline) + a Schedule swipe
    action. Reuse from TaskDetail, swipe, and context menu.
-2. **Multi-select bulk edit** — schedule / complete / delete / move / priority.
-3. **Post-creation organization editing** in TaskDetail (project, tags,
-   contexts).
-4. **NLP expansion + autocomplete** — `jan 27`, `in N days`, `this weekend`,
+2. **NLP expansion + autocomplete** — `jan 27`, `in N days`, `this weekend`,
    month-day formats; autocomplete existing projects/tags/contexts; tap-to-
    unparse.
-5. **Undo for recurring completion** (transient toast, matches Todoist).
-6. **User-defined saved views** (subsumes the hardcoded job-search/school
-   views; a per-view board layout would generalize JobSearchKanban).
-7. Completed-history view + un-complete.
+3. **Undo for recurring completion** (transient toast, matches Todoist).
+4. Completed-history view + un-complete.
    Deferred (unchanged from plan): reminders/notifications + due times;
    subtasks/sections (format-level questions, not UI).

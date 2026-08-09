@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 
@@ -32,6 +32,7 @@ import {
   quickAddCaptureKey,
   quickAddDismissTarget,
 } from "../navigation/quick-add-navigation";
+import { e2eNow } from "../navigation/e2e-config";
 
 type Props = NativeStackScreenProps<RootStackParamList, "QuickAdd">;
 
@@ -79,13 +80,20 @@ function QuickAddCaptureScreen({
   navigation,
 }: QuickAddCaptureScreenProps) {
   const [session, setSession] = useState(() => captureSessionFromSeed(seed));
-  const [referenceDate, setReferenceDate] = useState(() => new Date());
+  const [referenceDate, setReferenceDate] = useState(() => e2eNow());
   const [saving, setSaving] = useState(false);
   const [focusRequestKey, setFocusRequestKey] = useState(0);
   const [saveError, setSaveError] = useState<string | undefined>();
   const { createTask, projectOptions, contextNames, tagNames } = useTasks();
   const { colors } = useSettings();
   const nlpTip = useTip("natural-language");
+
+  useEffect(() => {
+    navigation.setOptions({ gestureEnabled: !saving });
+    return () => {
+      navigation.setOptions({ gestureEnabled: true });
+    };
+  }, [navigation, saving]);
 
   const draft = useMemo(
     () =>
@@ -121,7 +129,7 @@ function QuickAddCaptureScreen({
           return;
         }
         setSession((current) => resetCaptureSessionForAnother(current));
-        setReferenceDate(new Date());
+        setReferenceDate(e2eNow());
         setSaving(false);
         setFocusRequestKey((current) => current + 1);
       })();

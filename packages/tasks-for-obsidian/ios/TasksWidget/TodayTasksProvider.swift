@@ -39,7 +39,13 @@ struct TodayTasksProvider: TimelineProvider {
       }
       let entryDate = offset == 0 ? now : day
       guard let data = envelope.projection(for: day, calendar: calendar) else {
-        entries.append(TodayTasksEntry(date: entryDate, data: .empty, isStale: true))
+        let entry = TodayTasksEntry(date: entryDate, data: .empty, isStale: true)
+        if offset == 0 {
+          let nextUpdate = calendar.date(byAdding: .minute, value: 15, to: now) ?? now
+          completion(Timeline(entries: [entry], policy: .after(nextUpdate)))
+          return
+        }
+        entries.append(entry)
         break
       }
       entries.append(TodayTasksEntry(date: entryDate, data: data, isStale: false))

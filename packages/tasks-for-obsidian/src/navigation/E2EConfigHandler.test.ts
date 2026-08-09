@@ -12,7 +12,22 @@ describe("e2e config URL", () => {
       apiUrl: "http://127.0.0.1:18902",
       token: "secret",
       nonce: "03-recurring-complete",
+      today: null,
       tipsOff: true,
+    });
+  });
+
+  test("accepts a frozen flow date", () => {
+    expect(
+      parseE2EConfigUrl(
+        "tasknotes://e2e-config?apiUrl=http://localhost&token=secret&today=2026-08-08",
+      ),
+    ).toEqual({
+      apiUrl: "http://localhost",
+      token: "secret",
+      nonce: null,
+      today: "2026-08-08",
+      tipsOff: false,
     });
   });
 

@@ -4,7 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { TIPS_DISABLED_KEY } from "../hooks/use-tip";
 import { useSettingsContext } from "../state/SettingsContext";
-import { parseE2EConfigUrl } from "./e2e-config";
+import { parseE2EConfigUrl, setE2EToday } from "./e2e-config";
 import { navigationRef } from "./navigation-ref";
 
 /**
@@ -30,6 +30,7 @@ export function E2EConfigHandler() {
       const config = parseE2EConfigUrl(url);
       if (config === null) return;
       setReadyNonce(null);
+      setE2EToday(config.today);
       if (config.tipsOff) {
         await AsyncStorage.setItem(TIPS_DISABLED_KEY, "true");
       }
