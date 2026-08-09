@@ -41,9 +41,9 @@ use std::sync::Arc;
 
 use super::{
     commands::{Command, FailureClass, classify},
-    host::{Clock, Randomness, RetryScheduler, TaskApi, TimerId, UNIT_PPM},
+    host::{Clock, Randomness, RetryScheduler, TimerId, UNIT_PPM},
 };
-use crate::{Error, Result, domain::Task, store::TaskStore};
+use crate::{Error, Result, domain::Task, net::TaskApi, store::TaskStore};
 
 /// The first backoff delay, and the base of the doubling schedule.
 pub const BACKOFF_BASE_MS: i64 = 1_000;
@@ -487,10 +487,11 @@ mod tests {
     use crate::{
         Error, Result,
         domain::{CreateTaskRequest, Task, TaskId, TaskStatus, UpdateTaskRequest},
+        net::{InstanceCompletion, TaskApi},
         store::TaskStore,
         sync::{
-            Clock, CommandInput, InstanceCompletion, QueueStorage, Randomness, RetryScheduler,
-            TaskApi, TaskCacheStorage, TimerId,
+            Clock, CommandInput, QueueStorage, Randomness, RetryScheduler, TaskCacheStorage,
+            TimerId,
         },
     };
 

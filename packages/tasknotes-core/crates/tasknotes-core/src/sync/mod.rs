@@ -5,14 +5,16 @@
 //!
 //! | module | role |
 //! |---|---|
-//! | [`host`] | every trait the stack needs from the outside world |
+//! | [`host`] | time, randomness, timers and storage, as host traits |
 //! | [`commands`] | the algebra: absolute commands, the rebase step, the retry classifier |
 //! | [`queue`] | the durable FIFO queue and its dead-letter list |
 //! | [`engine`] | the single-flight drain, the backoff, the failure policy |
 //!
 //! The rebasing projection lives one module over, in
 //! [`crate::store`], because it is what the UI reads rather than part of the
-//! sync protocol.
+//! sync protocol. The network lives in [`crate::net`]: the engine talks to
+//! [`crate::net::TaskApi`], which the core itself implements over a host
+//! byte-transport, so no shell owns any part of the wire boundary.
 //!
 //! ## The three invariants worth stating once
 //!
@@ -42,7 +44,7 @@ pub use commands::{
 };
 pub use engine::{BACKOFF_BASE_MS, BACKOFF_MAX_MS, SyncEngine, SyncState, SyncStatus};
 pub use host::{
-    Clock, HALF_UNIT_PPM, InstanceCompletion, QueueStorage, Randomness, RetryScheduler, TaskApi,
-    TaskCacheStorage, TimerId, UNIT_PPM,
+    Clock, HALF_UNIT_PPM, QueueStorage, Randomness, RetryScheduler, TaskCacheStorage, TimerId,
+    UNIT_PPM,
 };
 pub use queue::{CommandQueue, DeadLetterEntry, DeadLetterError};

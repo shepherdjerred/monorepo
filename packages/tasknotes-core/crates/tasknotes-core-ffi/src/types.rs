@@ -34,8 +34,9 @@ use tasknotes_core::{
         TaskList, TaskQueryFilter, TaskStats, TaskStatus, TaskTime, TaskTitle, TimeEntry,
         TimeSummary, TopTask, VaultInfo,
     },
+    net::InstanceCompletion,
     recurrence::Frequency,
-    sync::{DeadLetterError, InstanceCompletion, SyncState},
+    sync::{DeadLetterError, SyncState},
 };
 
 // ── Enums ──────────────────────────────────────────────────────────────────
@@ -522,7 +523,7 @@ pub enum SyncState {
     Unconfigured,
 }
 
-/// See [`tasknotes_core::sync::InstanceCompletion`].
+/// See [`tasknotes_core::net::InstanceCompletion`].
 #[uniffi::remote(Record)]
 pub struct InstanceCompletion {
     /// The occurrence's date, as `YYYY-MM-DD`.

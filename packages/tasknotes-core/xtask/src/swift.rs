@@ -458,7 +458,7 @@ let package = Package(
     )
 }
 
-/// Swift implementations of the seven exported host traits.
+/// Swift implementations of every exported host trait.
 ///
 /// This file is the point of [`verify_swift`]. Everything else it checks could
 /// in principle be inferred from the generated Swift; a **foreign trait** cannot
@@ -469,10 +469,14 @@ let package = Package(
 /// compiling.
 ///
 /// The implementations are deliberately minimal but not fake: an in-memory
-/// store, a fixed clock, a recording scheduler, and an API that is always
-/// offline. That last one is what lets the smoke test observe the retry
-/// classifier reading an error a *Swift* method raised.
-const HOSTS_SOURCE: &str = r#"import Synchronization
+/// store, a fixed clock, a recording scheduler, and — since Phase 4.5 — a whole
+/// in-memory TaskNotes server sitting behind the *byte* transport a shell now
+/// implements. That last one is what proves the moved boundary round-trips: the
+/// Swift side never names a task, and the core builds the URL, escapes the vault
+/// path, renames the wire fields, unwraps the envelope and decides what a 503
+/// means.
+const HOSTS_SOURCE: &str = r##"import Foundation
+import Synchronization
 import TaskNotesCore
 
 /// Every mutable byte the host owns, in one place so the classes below can be
@@ -577,34 +581,92 @@ final class HalfUnit: Randomness {
     func nextUnitPpm() -> UInt32 { 500_000 }
 }
 
-/// A `TaskApi` that is always offline.
+/// A whole TaskNotes server, in memory, behind the byte transport the shell
+/// actually implements.
 ///
-/// The point is the *class* of the error, not the failure: a `.Connection`
-/// raised here has to reach the Rust classifier as **transient**, so the drain
-/// backs off and keeps the command instead of dead-lettering it. That is the
-/// whole `CoreError` ↔ `tasknotes_core::Error` mirror, exercised end to end.
-final class OfflineApi: TaskApi {
-    private static let offline = CoreError.Connection(message: "the smoke host is offline")
+/// This is the point of Phase 4.5, made executable. The class below knows
+/// nothing about tasks: it sees a method, an absolute URL, headers and bytes,
+/// and it answers with a status and bytes. Every part of the wire boundary that
+/// used to live in Swift — the URL, the percent-escaping of a vault path, the
+/// `customProperties` rename, the response envelope, and the HTTP-status →
+/// error mapping the retry classifier reads — is exercised here from the *core*
+/// side, and the assertions in `smokeSync` check the core got each one right.
+final class SmokeServer: HttpClient {
+    /// What the next request gets.
+    enum Mode {
+        /// A transport failure. Must reach the Rust classifier as transient.
+        case offline
+        /// A 503. Must *also* reach it as transient — and that decision is now
+        /// the core's, which is the retry hazard this phase closed.
+        case failing
+        /// A real answer.
+        case serving
+    }
 
-    func listTasks() throws -> [TaskNotesCore.Task] { throw Self.offline }
-    func createTask(request: CreateTaskRequest, mutationId: String?) throws -> TaskNotesCore.Task {
-        throw Self.offline
+    struct State {
+        var mode: Mode = .offline
+        var requests: [HttpRequest] = []
+        var cancels = 0
     }
-    func updateTask(
-        id: TaskId, request: UpdateTaskRequest, mutationId: String?
-    ) throws -> TaskNotesCore.Task {
-        throw Self.offline
+
+    /// One task, with its unmodelled frontmatter keys in vault order.
+    ///
+    /// `zebra` before `apple` before `mango` is deliberately not alphabetical:
+    /// Foundation has no ordered JSON type, so while the wire boundary lived in
+    /// Swift these keys were reordered in both directions — and the server
+    /// writes YAML frontmatter from them, so a read-then-write rewrote the
+    /// user's file. `smokeSync` asserts the order survives.
+    static let taskJSON = #"{"path":"TaskNotes/pulled.md","title":"Pulled from the server","status":"open","priority":"normal","customProperties":{"zebra":1,"apple":2,"mango":3}}"#
+
+    let state = Mutex(State())
+
+    func send(request: HttpRequest) throws -> HttpResponse {
+        let mode = state.withLock { host -> Mode in
+            host.requests.append(request)
+            return host.mode
+        }
+        switch mode {
+        case .offline:
+            // A transport failure carries no status, by construction: the enum
+            // cannot express one. Turning this into a transient `Connection` is
+            // core policy now, not shell policy.
+            throw TransportError.Offline(message: "the smoke server is unplugged")
+        case .failing:
+            return Self.response(status: 503, json: "upstream is restarting")
+        case .serving:
+            return Self.answer(request)
+        }
     }
-    func deleteTask(id: TaskId, mutationId: String?) throws { throw Self.offline }
-    func toggleTaskStatus(
-        id: TaskId, status: TaskStatus, mutationId: String?
-    ) throws -> TaskNotesCore.Task {
-        throw Self.offline
+
+    func cancelAll() {
+        state.withLock { $0.cancels += 1 }
     }
-    func completeRecurringInstance(
-        id: TaskId, instance: InstanceCompletion?, mutationId: String?
-    ) throws -> TaskNotesCore.Task {
-        throw Self.offline
+
+    /// Route on the method alone: the engine only ever sends one shape of each.
+    private static func answer(_ request: HttpRequest) -> HttpResponse {
+        switch request.method {
+        case .get:
+            // Envelope-wrapped, so the core's `unwrap_envelope` is exercised.
+            return response(
+                status: 200,
+                json: #"{"success":true,"data":{"tasks":[\#(taskJSON)],"pagination":{"total":1,"offset":0,"limit":200,"hasMore":false}}}"#
+            )
+        case .delete:
+            // Upstream answers `{ message }`, not `{ success }`.
+            return response(status: 200, json: #"{"message":"deleted"}"#)
+        case .post, .put:
+            return response(status: 200, json: taskJSON)
+        }
+    }
+
+    private static func response(status: UInt16, json: String) -> HttpResponse {
+        HttpResponse(
+            status: status,
+            // The header both clients used to drop on the floor. Nothing acts
+            // on it; it is here because the core can now see it at all.
+            headers: [HttpHeader(name: "X-Idempotent-Replay", value: "false")],
+            body: Data(json.utf8)
+        )
     }
 }
 
@@ -627,7 +689,7 @@ func titleOnlyCreate(_ title: TaskTitle) -> CreateTaskRequest {
         extraFields: nil
     )
 }
-"#;
+"##;
 
 /// The smoke test itself.
 ///
@@ -757,20 +819,27 @@ func smokePureHelpers() throws {
 }
 
 /// The whole sync stack, driven through Swift implementations of the exported
-/// host traits.
+/// host traits — including the byte transport the wire boundary now sits on.
 ///
 /// This is the part that cannot be inferred from reading the generated Swift.
-/// Every call here re-enters Swift through a `with_foreign` vtable, and every
-/// storage method throws.
+/// Every call here re-enters Swift through a `with_foreign` vtable, every
+/// storage method throws, and — since Phase 4.5 — every HTTP request is built by
+/// the *core* and handed to Swift as bytes. The assertions below are therefore
+/// assertions about the core's wire layer, observed from the far side of the
+/// FFI: the absolute URL, the percent-escaped vault path, the `X-Mutation-Id`
+/// header, the outbound rename table, the response envelope, and the
+/// status → retry-class decision.
 func smokeSync() throws -> TaskStoreSnapshot {
     let host = MemoryHost()
     let clock = FixedClock()
     let random = HalfUnit()
+    let server = SmokeServer()
 
     // 1. The migration, which touches only MigrationStorage. A v1 relative
-    //    mutation must become a replayable absolute command.
+    //    mutation must become a replayable absolute command. The id carries a
+    //    space and a slash on purpose: escaping it is the core's job now.
     host.state.withLock {
-        $0.legacyQueue = #"[{"id":"m1","timestamp":30,"type":"delete","taskId":"Tasks/b.md"}]"#
+        $0.legacyQueue = #"[{"id":"m1","timestamp":30,"type":"delete","taskId":"TaskNotes/b c.md"}]"#
     }
     try runMigrations(storage: host, clock: clock, random: random)
     let (stamped, legacy) = host.state.withLock { ($0.schemaVersion, $0.legacyQueue) }
@@ -779,9 +848,20 @@ func smokeSync() throws -> TaskStoreSnapshot {
     }
     guard legacy == nil else { throw Failure("the legacy queue survived the migration") }
 
-    // 2. The engine, over five Swift-implemented traits at once.
+    // 2. The core's own API client, over the Swift transport. The shell hands
+    //    over an address and a socket; everything above that is the core's.
+    let api = try TaskNotesApi(
+        transport: server,
+        baseUrl: "http://vault.test:8080/",
+        requestTimeoutMillis: apiDefaultTimeoutMillis()
+    )
+    guard api.baseUrl() == "http://vault.test:8080" else {
+        throw Failure("the trailing slash was not trimmed: \(api.baseUrl())")
+    }
+
+    // 3. The engine, over six Swift-implemented traits at once.
     let engine = FfiSyncEngine(
-        api: OfflineApi(),
+        api: api,
         queueStorage: host,
         cacheStorage: host,
         clock: clock,
@@ -794,7 +874,7 @@ func smokeSync() throws -> TaskStoreSnapshot {
         throw Failure("the migrated v1 delete was not restored onto the queue")
     }
 
-    // 3. One dispatch, answered optimistically without touching the network.
+    // 4. One dispatch, answered optimistically without touching the network.
     guard let optimistic = try engine.dispatch(input: .create(payload: titleOnlyCreate("Written on the Mac")))
     else {
         throw Failure("a create dispatch answered no optimistic task")
@@ -806,7 +886,7 @@ func smokeSync() throws -> TaskStoreSnapshot {
         throw Failure("the Swift Clock did not reach the core: \(String(describing: optimistic.dateCreated))")
     }
 
-    // 4. The snapshot, read back through the IndexMap → ordered-Vec projection.
+    // 5. The snapshot, read back through the IndexMap → ordered-Vec projection.
     let snapshot = try engine.snapshot()
     guard snapshot.pendingCount == 2 else {
         throw Failure("wrong pending count: \(snapshot.pendingCount)")
@@ -819,48 +899,141 @@ func smokeSync() throws -> TaskStoreSnapshot {
     }
     guard snapshot.deadLetters.isEmpty else { throw Failure("nothing should be parked yet") }
 
-    // 5. A Swift `throws` failing *inward*. A `.Connection` raised in Swift has
-    //    to reach the Rust classifier as transient: back off, arm one timer,
-    //    keep the command, park nothing.
-    do {
-        try engine.syncNow()
-        throw Failure("syncNow succeeded against an always-offline API")
-    } catch let error as CoreError {
-        guard case .Connection = error else { throw Failure("unexpected sync error: \(error)") }
-    }
-    let status = try engine.status()
-    guard status.state == .backoff else { throw Failure("wrong sync state: \(status.state)") }
-    guard case .Connection? = status.lastError else {
-        throw Failure("the status lost the host's error: \(String(describing: status.lastError))")
-    }
-    let delays = host.state.withLock { $0.armedDelays }
-    guard delays == [1000] else {
-        throw Failure("the Swift scheduler saw the wrong backoff: \(delays)")
-    }
-    let afterFailure = try engine.snapshot()
-    guard afterFailure.pendingCount == 2, afterFailure.deadLetters.isEmpty else {
-        throw Failure("a transient failure must keep the queue intact")
+    // 6. A Swift `throws` failing *inward*, from the transport. A
+    //    `TransportError.Offline` carries no status — the enum cannot express
+    //    one — so turning it into a transient failure is the core's decision.
+    //    Back off, arm one timer, keep the command, park nothing.
+    try expectTransient(engine, host, expecting: [1000], describing: "a transport failure")
+
+    // 7. The same, from an HTTP status. This is the hazard Phase 4.5 closed:
+    //    while each shell mapped statuses itself, a 503 arriving as anything but
+    //    `Api { status: 503 }` silently dead-lettered the user's work. The shell
+    //    below returns a number; the core decides what it means.
+    server.state.withLock { $0.mode = .failing }
+    try expectTransient(engine, host, expecting: [1000, 2000], describing: "an HTTP 503")
+
+    // 8. A successful drain, all the way through the core's wire layer.
+    server.state.withLock { $0.mode = .serving }
+    try engine.syncNow()
+    let drained = try engine.snapshot()
+    guard drained.pendingCount == 0, drained.deadLetters.isEmpty else {
+        throw Failure("the queue did not drain: \(drained.pendingCount) pending")
     }
 
-    // 6. A Swift storage failure, which must arrive as a typed error rather
-    //    than as a panic that aborts the host process.
+    // 9. What the transport actually saw. Every one of these was built in Rust.
+    let served = Array(server.state.withLock { $0.requests }.suffix(3))
+    guard served.count == 3 else { throw Failure("expected three served requests, got \(served.count)") }
+
+    guard served[0].method == .delete,
+        served[0].url == "http://vault.test:8080/api/tasks/TaskNotes%2Fb%20c.md"
+    else {
+        throw Failure("the core did not escape the vault path as one component: \(served[0].url)")
+    }
+    guard served[0].body == nil else { throw Failure("a delete must carry no body") }
+
+    guard served[1].method == .post, served[1].url == "http://vault.test:8080/api/tasks" else {
+        throw Failure("wrong create request: \(served[1].method) \(served[1].url)")
+    }
+    guard let createBody = served[1].body else { throw Failure("the create carried no body") }
+    let createJSON = String(decoding: createBody, as: UTF8.self)
+    guard createJSON == #"{"title":"Written on the Mac"}"# else {
+        throw Failure("the core built the wrong create body: \(createJSON)")
+    }
+    guard served[1].headers.contains(where: { $0.name == "Content-Type" && $0.value == "application/json" }) else {
+        throw Failure("the create lost its content type: \(served[1].headers)")
+    }
+    // The idempotency key is what makes a crash between server-ack and client
+    // dequeue safe, and it is the core that knows the command's id.
+    guard served[1].headers.contains(where: { $0.name == "X-Mutation-Id" && !$0.value.isEmpty }) else {
+        throw Failure("the create lost its idempotency key: \(served[1].headers)")
+    }
+
+    guard served[2].method == .get,
+        served[2].url == "http://vault.test:8080/api/tasks?limit=200&offset=0"
+    else {
+        throw Failure("wrong pull request: \(served[2].method) \(served[2].url)")
+    }
+
+    // 10. The argument that settled the refactor. The server answered with
+    //     `customProperties` in vault order inside a `{ success, data }`
+    //     envelope; the core unwrapped it, renamed the field, and kept the key
+    //     order. Foundation has no ordered JSON type, so this assertion could
+    //     not have held while the boundary lived in Swift.
+    guard drained.tasks.count == 1 else {
+        throw Failure("the pull did not replace the base: \(drained.tasks.count) task(s)")
+    }
+    let pulled = drained.tasks[0]
+    guard pulled.id == "TaskNotes/pulled.md", pulled.title == "Pulled from the server" else {
+        throw Failure("the pulled task did not survive the wire boundary: \(pulled.id)")
+    }
+    guard pulled.extraFields == #"{"zebra":1,"apple":2,"mango":3}"# else {
+        throw Failure("unmodelled frontmatter lost its vault order: \(pulled.extraFields)")
+    }
+
+    // 11. A Swift storage failure, which must arrive as a typed error rather
+    //     than as a panic that aborts the host process.
     host.state.withLock { $0.writesFail = true }
     do {
-        _ = try engine.dispatch(input: .delete(taskId: optimistic.id))
+        _ = try engine.dispatch(input: .delete(taskId: pulled.id))
         throw Failure("a failing QueueStorage.writeQueue was not reported")
     } catch let error as CoreError {
         guard case .Validation = error else { throw Failure("unexpected storage error: \(error)") }
     }
     host.state.withLock { $0.writesFail = false }
 
-    // 7. Disposal cancels the armed timer through the Swift scheduler.
+    // 12. Cancellation, which UniFFI's async story cannot provide: an explicit
+    //     hook, reaching the Swift transport, taking no engine lock.
+    engine.cancelAll()
+    guard server.state.withLock({ $0.cancels }) == 1 else {
+        throw Failure("cancelAll() did not reach the Swift transport")
+    }
+
+    // 13. Disposal cancels the armed timer through the Swift scheduler, and
+    //     abandons anything still in flight before it takes the lock.
     try engine.dispose()
     guard try engine.isDisposed() else { throw Failure("dispose() did not take") }
     guard host.state.withLock({ !$0.cancelledTimers.isEmpty }) else {
         throw Failure("dispose() did not cancel the armed retry timer")
     }
+    guard server.state.withLock({ $0.cancels }) == 2 else {
+        throw Failure("dispose() did not abandon in-flight requests")
+    }
 
     return snapshot
+}
+
+/// Drive one failed pass and require the transient policy: back off on the
+/// documented schedule, keep the queue, park nothing.
+func expectTransient(
+    _ engine: FfiSyncEngine,
+    _ host: MemoryHost,
+    expecting delays: [Int64],
+    describing what: String
+) throws {
+    do {
+        try engine.syncNow()
+        throw Failure("syncNow succeeded despite \(what)")
+    } catch let error as CoreError {
+        // A transport failure and a 503 are different core variants, and both
+        // must classify as transient. Asserting the *outcome* is the point: the
+        // shell no longer gets a vote in which one it is.
+        switch error {
+        case .Connection, .Api: break
+        default: throw Failure("\(what) surfaced as \(error)")
+        }
+    }
+    let status = try engine.status()
+    guard status.state == .backoff else {
+        throw Failure("\(what) left the engine in \(status.state), not backoff")
+    }
+    let armed = host.state.withLock { $0.armedDelays }
+    guard armed == delays else {
+        throw Failure("\(what) armed \(armed), expected \(delays)")
+    }
+    let snapshot = try engine.snapshot()
+    guard snapshot.pendingCount == 2, snapshot.deadLetters.isEmpty else {
+        throw Failure("\(what) must keep the queue intact, saw \(snapshot.pendingCount) pending")
+    }
 }
 
 /// A local error so the smoke test never force-unwraps or traps blind.
@@ -1135,7 +1308,7 @@ mod tests {
             "Clock",
             "Randomness",
             "RetryScheduler",
-            "TaskApi",
+            "HttpClient",
             "QueueStorage",
             "TaskCacheStorage",
             "MigrationStorage",
@@ -1151,10 +1324,74 @@ mod tests {
             "engine.restore()",
             "engine.dispatch(",
             "engine.snapshot()",
+            "engine.syncNow()",
+            "engine.cancelAll()",
         ] {
             assert!(
                 SMOKE_SOURCE.contains(call),
                 "the smoke test no longer exercises {call}"
+            );
+        }
+    }
+
+    #[test]
+    fn the_smoke_test_proves_the_core_owns_the_wire_boundary() {
+        // Phase 4.5 moved the wire boundary out of the shells and into the
+        // core. `verify-swift` is where that is proven end to end rather than
+        // asserted: the Swift side implements a byte transport and nothing
+        // else, and the core has to produce every one of these itself. Losing
+        // one of these assertions would quietly shrink the proof back to
+        // "the bindings compile".
+        for evidence in [
+            // The absolute URL, built in Rust.
+            "http://vault.test:8080/api/tasks?limit=200&offset=0",
+            // A vault path escaped as ONE path component — the mistake
+            // `CharacterSet.urlPathAllowed` invites, and that every further
+            // shell would rediscover.
+            "http://vault.test:8080/api/tasks/TaskNotes%2Fb%20c.md",
+            // The idempotency key, which only the core knows.
+            "X-Mutation-Id",
+            // Unmodelled frontmatter in vault order. Unrepresentable in
+            // Foundation, which has no ordered JSON type.
+            r#"{"zebra":1,"apple":2,"mango":3}"#,
+            // Cancellation, designed in rather than added later.
+            "engine.cancelAll()",
+        ] {
+            assert!(
+                SMOKE_SOURCE.contains(evidence),
+                "the smoke test no longer proves: {evidence}"
+            );
+        }
+        // The transport must answer a status and let the core classify it,
+        // never classify it itself.
+        assert!(
+            HOSTS_SOURCE.contains("status: 503"),
+            "the smoke transport no longer exercises the status → error mapping"
+        );
+        // And the transport itself must name no domain type at all. This is the
+        // same grep the Swift `Host/` layer is held to: after Phase 4.5 a shell
+        // that touches the network mentions `HttpRequest`, `HttpResponse` and
+        // `TransportError`, and nothing from the domain.
+        let transport = HOSTS_SOURCE
+            .split_once("final class SmokeServer")
+            .and_then(|(_, rest)| rest.split_once("\n/// A create payload"))
+            .map(|(class, _)| class)
+            .unwrap();
+        for domain in [
+            "TaskId",
+            "CreateTaskRequest",
+            "TaskStatus",
+            "InstanceCompletion",
+        ] {
+            assert!(
+                !transport.contains(domain),
+                "the smoke transport names the domain type {domain}; it should only move bytes"
+            );
+        }
+        for shape in ["HttpRequest", "HttpResponse", "TransportError"] {
+            assert!(
+                transport.contains(shape),
+                "the smoke transport no longer speaks {shape}"
             );
         }
     }

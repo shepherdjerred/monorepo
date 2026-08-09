@@ -48,8 +48,9 @@ use crate::{
     host::{
         Clock, ClockAdapter, MigrationStorage, MigrationStorageAdapter, QueueStorage,
         QueueStorageAdapter, Randomness, RandomnessAdapter, RetryScheduler, RetrySchedulerAdapter,
-        TaskApi, TaskApiAdapter, TaskCacheStorage, TaskCacheStorageAdapter,
+        TaskCacheStorage, TaskCacheStorageAdapter,
     },
+    net::TaskNotesApi,
 };
 
 /// Everything the UI reads, frozen at one instant.
@@ -136,6 +137,13 @@ fn project(
 #[derive(uniffi::Object)]
 pub struct FfiSyncEngine {
     inner: Mutex<sync::SyncEngine>,
+    /// The configured API, held **outside** the lock.
+    ///
+    /// Not a duplicate of what the engine already owns: it is the only way
+    /// [`FfiSyncEngine::cancel_all`] can do anything useful. The lock is held
+    /// for the whole of a blocking drain, so a cancel that had to take it could
+    /// only ever run after the request it meant to cancel had returned.
+    api: Option<Arc<TaskNotesApi>>,
 }
 
 impl FfiSyncEngine {
@@ -156,7 +164,9 @@ impl FfiSyncEngine {
     ///
     /// `api` is `None` until the user has configured a server, which is the
     /// [`SyncState::Unconfigured`] state — deliberately not an error, and
-    /// deliberately not a state a retry timer can fix.
+    /// deliberately not a state a retry timer can fix. When it is present it is
+    /// a [`TaskNotesApi`], which is the *core's* client over a host transport;
+    /// the shell supplies bytes, not a wire implementation.
     ///
     /// `auto_sync` mirrors the app's dispatch → trigger wiring: with it on,
     /// every [`FfiSyncEngine::dispatch`] *arms* a pass without running it, so
@@ -168,7 +178,7 @@ impl FfiSyncEngine {
     #[uniffi::constructor]
     #[must_use]
     pub fn new(
-        api: Option<Arc<dyn TaskApi>>,
+        api: Option<Arc<TaskNotesApi>>,
         queue_storage: Arc<dyn QueueStorage>,
         cache_storage: Arc<dyn TaskCacheStorage>,
         clock: Arc<dyn Clock>,
@@ -185,8 +195,9 @@ impl FfiSyncEngine {
             Arc::clone(&core_clock),
             Arc::clone(&core_random),
         );
-        let client: Option<Arc<dyn tasknotes_core::sync::TaskApi>> = api
-            .map(|api| -> Arc<dyn tasknotes_core::sync::TaskApi> { Arc::new(TaskApiAdapter(api)) });
+        let client: Option<Arc<dyn tasknotes_core::net::TaskApi>> = api
+            .as_ref()
+            .map(|api| -> Arc<dyn tasknotes_core::net::TaskApi> { api.client() });
         Self {
             inner: Mutex::new(sync::SyncEngine::new(
                 client,
@@ -196,6 +207,23 @@ impl FfiSyncEngine {
                 core_random,
                 auto_sync,
             )),
+            api,
+        }
+    }
+
+    /// Abandon every request currently in flight.
+    ///
+    /// **Takes no lock**, deliberately: the engine's lock is held for the whole
+    /// of a blocking drain, so anything that had to acquire it could only run
+    /// once the request it meant to cancel had already returned. This is the
+    /// path that works while the app is quitting mid-request, and it is why the
+    /// transport carries an explicit cancel rather than relying on a dropped
+    /// future — UniFFI async has no cancellation at all.
+    ///
+    /// A no-op on an unconfigured engine, and safe to call any number of times.
+    pub fn cancel_all(&self) {
+        if let Some(ref api) = self.api {
+            api.cancel_all();
         }
     }
 
@@ -267,10 +295,16 @@ impl FfiSyncEngine {
     /// Cancels the armed retry timer and arms no new one, so a failure already
     /// in flight cannot resurrect a replaced engine.
     ///
+    /// In-flight requests are abandoned **before** the lock is taken. That
+    /// ordering is the whole reason cancellation is a transport capability:
+    /// were it done after, a shell replacing its server mid-drain would block
+    /// here for the length of a network timeout.
+    ///
     /// # Errors
     ///
     /// Reports a poisoned lock.
     pub fn dispose(&self) -> Result<(), CoreError> {
+        self.cancel_all();
         self.locked()?.dispose();
         Ok(())
     }
@@ -392,8 +426,9 @@ mod tests {
     };
 
     use tasknotes_core::{
-        domain::{CreateTaskRequest, Task, TaskId, TaskStatus, TaskTitle},
-        sync::{InstanceCompletion, TimerId},
+        domain::{CreateTaskRequest, Task, TaskId, TaskTitle},
+        net::{HttpRequest, HttpResponse},
+        sync::TimerId,
     };
 
     use super::{FfiSyncEngine, run_migrations};
@@ -401,10 +436,9 @@ mod tests {
         command::CommandInput,
         error::CoreError,
         host::{
-            Clock, MigrationStorage, QueueStorage, Randomness, RetryScheduler, TaskApi,
-            TaskCacheStorage,
+            Clock, MigrationStorage, QueueStorage, Randomness, RetryScheduler, TaskCacheStorage,
         },
-        update::UpdateTaskRequest,
+        net::{HttpClient, TaskNotesApi, TransportError},
     };
 
     /// The in-memory host a Swift shell will implement against a real store.
@@ -515,62 +549,34 @@ mod tests {
         fn cancel(&self, _timer: TimerId) {}
     }
 
-    /// Fails every call, so a drain reaches the retry policy.
+    /// A transport that is always offline, so a drain reaches the retry policy.
+    ///
+    /// The shape a shell actually implements now: bytes in, a transport failure
+    /// out, and no opinion about what the failure *means*. Turning
+    /// `TransportErrorKind::Offline` into a transient `Connection` is the
+    /// core's decision, and this test is what proves it still happens.
     struct Offline;
 
-    impl TaskApi for Offline {
-        fn list_tasks(&self) -> Result<Vec<Task>, CoreError> {
-            Err(CoreError::Connection {
-                message: "offline".to_owned(),
+    impl HttpClient for Offline {
+        fn send(&self, _request: HttpRequest) -> Result<HttpResponse, TransportError> {
+            Err(TransportError::Offline {
+                message: "the test host is offline".to_owned(),
             })
         }
-        fn create_task(
-            &self,
-            _request: CreateTaskRequest,
-            _mutation_id: Option<String>,
-        ) -> Result<Task, CoreError> {
-            Err(CoreError::Connection {
-                message: "offline".to_owned(),
-            })
-        }
-        fn update_task(
-            &self,
-            _id: TaskId,
-            _request: UpdateTaskRequest,
-            _mutation_id: Option<String>,
-        ) -> Result<Task, CoreError> {
-            Err(CoreError::Connection {
-                message: "offline".to_owned(),
-            })
-        }
-        fn delete_task(&self, _id: TaskId, _mutation_id: Option<String>) -> Result<(), CoreError> {
-            Err(CoreError::Connection {
-                message: "offline".to_owned(),
-            })
-        }
-        fn toggle_task_status(
-            &self,
-            _id: TaskId,
-            _status: TaskStatus,
-            _mutation_id: Option<String>,
-        ) -> Result<Task, CoreError> {
-            Err(CoreError::Connection {
-                message: "offline".to_owned(),
-            })
-        }
-        fn complete_recurring_instance(
-            &self,
-            _id: TaskId,
-            _instance: Option<InstanceCompletion>,
-            _mutation_id: Option<String>,
-        ) -> Result<Task, CoreError> {
-            Err(CoreError::Connection {
-                message: "offline".to_owned(),
-            })
-        }
+
+        fn cancel_all(&self) {}
     }
 
-    fn build(memory: &Arc<Memory>, api: Option<Arc<dyn TaskApi>>) -> (FfiSyncEngine, Arc<Timers>) {
+    /// A [`TaskNotesApi`] over an always-offline transport.
+    fn offline_api() -> Arc<TaskNotesApi> {
+        let transport: Arc<dyn HttpClient> = Arc::new(Offline);
+        Arc::new(
+            TaskNotesApi::new(transport, "http://vault.test:8080", 1_000)
+                .expect("a literal base url"),
+        )
+    }
+
+    fn build(memory: &Arc<Memory>, api: Option<Arc<TaskNotesApi>>) -> (FfiSyncEngine, Arc<Timers>) {
         let timers = Arc::new(Timers::default());
         let queue: Arc<dyn QueueStorage> = Arc::<Memory>::clone(memory);
         let cache: Arc<dyn TaskCacheStorage> = Arc::<Memory>::clone(memory);
@@ -650,7 +656,7 @@ mod tests {
         // failure raised in Swift must reach the classifier as *transient*, so
         // the command backs off instead of dead-lettering.
         let memory = Arc::new(Memory::default());
-        let (engine, timers) = build(&memory, Some(Arc::new(Offline)));
+        let (engine, timers) = build(&memory, Some(offline_api()));
         engine.restore().unwrap();
         engine
             .dispatch(CommandInput::Delete {
@@ -678,7 +684,7 @@ mod tests {
     #[test]
     fn a_disposed_engine_stops_initiating_work() {
         let memory = Arc::new(Memory::default());
-        let (engine, _) = build(&memory, Some(Arc::new(Offline)));
+        let (engine, _) = build(&memory, Some(offline_api()));
         engine.restore().unwrap();
         engine.dispose().unwrap();
         assert!(engine.is_disposed().unwrap());

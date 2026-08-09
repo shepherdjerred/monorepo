@@ -14,10 +14,10 @@
 
 use indexmap::IndexMap;
 
-use super::host::InstanceCompletion;
 use crate::{
     Error, ErrorKind,
     domain::{CreateTaskRequest, Priority, Task, TaskId, TaskStatus, UpdateTaskRequest},
+    net::InstanceCompletion,
 };
 
 /// The recorded form of one user mutation.

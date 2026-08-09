@@ -13,10 +13,11 @@ use serde_json::{Value, json};
 use tasknotes_core::{
     Error,
     domain::{Task, TaskId},
+    net::{InstanceCompletion, TaskApi},
     store::TaskStore,
     sync::{
-        Clock, Command, CommandInput, DeadLetterEntry, InstanceCompletion, QueueStorage,
-        Randomness, RetryScheduler, SyncEngine, SyncState, TaskApi, TaskCacheStorage,
+        Clock, Command, CommandInput, DeadLetterEntry, QueueStorage, Randomness, RetryScheduler,
+        SyncEngine, SyncState, TaskCacheStorage,
     },
 };
 

@@ -29,9 +29,9 @@
 //! | `uniffi::custom_type!` | the validated string newtypes, `ExtraFields`, `TimerId` | [`convert`] |
 //! | `#[uniffi::remote(...)]` | core enums and records that are already exportable | [`types`] |
 //! | hand-written mirrors | only where UniFFI cannot express the core type | [`update`], [`error`], [`command`], [`engine`] |
-//! | `#[uniffi::export(with_foreign)]` | the traits the *host* implements | [`host`] |
+//! | `#[uniffi::export(with_foreign)]` | the traits the *host* implements | [`host`], [`net`] |
 //! | `#[derive(uniffi::Object)]` | the one stateful handle, the sync engine | [`engine`] |
-//! | `#[uniffi::export]` | the callable surface | [`api`], [`engine`], [`recurrence`], [`dates`], [`calendar`], [`nlp`], [`elapsed`] |
+//! | `#[uniffi::export]` | the callable surface | [`api`], [`engine`], [`net`], [`recurrence`], [`dates`], [`calendar`], [`nlp`], [`elapsed`] |
 //!
 //! Preferring `#[uniffi::remote(...)]` over mirrored structs is deliberate: a
 //! remote derive re-states the core type's fields *in this crate*, so the ABI
@@ -64,6 +64,7 @@ pub mod elapsed;
 pub mod engine;
 pub mod error;
 pub mod host;
+pub mod net;
 pub mod nlp;
 pub mod recurrence;
 pub mod types;
@@ -74,6 +75,7 @@ pub use command::{Command, CommandInput, DeadLetterEntry};
 pub use engine::{FfiSyncEngine, SyncStatus, TaskStoreSnapshot, run_migrations};
 pub use error::CoreError;
 pub use host::{
-    Clock, MigrationStorage, QueueStorage, Randomness, RetryScheduler, TaskApi, TaskCacheStorage,
+    Clock, MigrationStorage, QueueStorage, Randomness, RetryScheduler, TaskCacheStorage,
 };
+pub use net::{HttpClient, TaskNotesApi, TransportError};
 pub use update::{MinutesUpdate, RecurrenceAnchorUpdate, TextUpdate, UpdateTaskRequest};

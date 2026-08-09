@@ -5,6 +5,13 @@
 //! host shell implements, which keeps `URLSession` on Apple, keeps this crate
 //! testable on Linux, and sidesteps UniFFI's total lack of async cancellation.
 //!
+//! The HTTP trait is a **transport** — [`net::HttpClient`], bytes out and bytes
+//! in — not a domain API. Everything above the socket, including URL
+//! construction and escaping, the wire rename table, the response envelope and
+//! the HTTP-status → [`Error`] mapping the retry classifier reads, is owned
+//! here in [`net::client`] so that no shell has to reimplement it and no two
+//! shells can disagree about it.
+//!
 //! This crate deliberately has **no** `uniffi` dependency, and
 //! `tasknotes-core-ffi` exists as a separate crate. Note that the reason is
 //! *not* that the two cannot coexist: UniFFI scaffolding does expand to
@@ -23,6 +30,7 @@ pub mod calendar;
 pub mod dates;
 pub mod domain;
 pub mod elapsed;
+pub mod net;
 pub mod nlp;
 pub mod recurrence;
 pub mod store;

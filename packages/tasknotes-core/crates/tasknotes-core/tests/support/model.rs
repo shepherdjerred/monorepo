@@ -9,7 +9,7 @@ use serde_json::Value;
 use tasknotes_core::{
     SerializedError,
     domain::{CreateTaskRequest, Priority, TaskStatus, UpdateTaskRequest},
-    sync::InstanceCompletion,
+    net::InstanceCompletion,
 };
 
 use super::fake_server::MutationMethod;

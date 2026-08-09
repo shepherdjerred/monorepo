@@ -2,29 +2,32 @@
 //!
 //! This module is where "sans-I/O" is actually spelled out. The core reads no
 //! clock, opens no socket, touches no file and arms no timer: time,
-//! randomness, scheduling, HTTP and persistence all arrive through the six
-//! traits declared here, and a host shell — Swift on macOS, C# on Windows,
-//! a test harness on Linux — supplies them.
+//! randomness, scheduling and persistence all arrive through the traits
+//! declared here, and a host shell — Swift on macOS, C# on Windows, a test
+//! harness on Linux — supplies them.
 //!
-//! Three consequences are deliberate:
+//! **The network is not here.** It is [`crate::net::HttpClient`], a byte-level
+//! transport, and it is deliberately the only network capability a shell
+//! implements: everything above the socket — the URL, the escaping, the wire
+//! rename table, the envelope, and the HTTP-status → error mapping the retry
+//! classifier reads — is core policy in [`crate::net::client`]. A domain-level
+//! network trait lived here until Phase 4.5 and cost three shells three
+//! implementations of one layer, one of which reordered the user's frontmatter.
 //!
-//! * **`URLSession` stays on Apple.** [`TaskApi`] is the whole network
-//!   surface, so the platform's own HTTP stack (with its proxy, ATS and
-//!   background-transfer behaviour) is what actually makes the request.
+//! Two consequences are deliberate:
+//!
 //! * **UniFFI's missing async cancellation stops mattering.** UniFFI 0.31 has
 //!   no cancellation support for async calls at all, so the core exposes
 //!   synchronous, host-driven entry points instead: [`RetryScheduler::cancel`]
-//!   is an ordinary method, not a dropped future.
+//!   and [`crate::net::HttpClient::cancel_all`] are ordinary methods, not
+//!   dropped futures.
 //! * **Every gate stays testable on Linux.** The scenario corpus drives these
 //!   traits with a manual clock, a manual scheduler and an in-memory server.
 //!
 //! Every trait is `Send + Sync` because the FFI layer wraps the engine in a
 //! `Mutex` and hands it to a host that will call it from more than one thread.
 
-use crate::{
-    Result,
-    domain::{CreateTaskRequest, Task, TaskId, TaskStatus, UpdateTaskRequest},
-};
+use crate::{Result, domain::Task};
 
 /// Wall-clock time, and the device's calendar.
 ///
@@ -118,94 +121,6 @@ pub trait RetryScheduler: Send + Sync {
 
     /// Cancel a previously armed timer. A no-op if it already fired.
     fn cancel(&self, timer: TimerId);
-}
-
-/// The absolute completion state of one occurrence of a recurring task.
-///
-/// Absolute, never a toggle: replaying "the 1st of July is complete" twice
-/// leaves the same state, which is what makes a queued command safe to re-send
-/// after a crash.
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct InstanceCompletion {
-    /// The occurrence's date, as `YYYY-MM-DD`.
-    pub date: String,
-    /// The state to set it to.
-    pub completed: bool,
-}
-
-/// The mutating half of the TaskNotes HTTP API.
-///
-/// Every mutation takes an optional idempotency key, which the host sends as
-/// the `X-Mutation-Id` header. The server's idempotency middleware stores the
-/// response against that key and replays it instead of re-applying, which is
-/// exactly what makes a crash between server-ack and client-dequeue safe: the
-/// queue survives holding a command the server already applied, and re-sending
-/// it is a no-op.
-///
-/// The key is always the command's own id, so it is stable across restarts.
-pub trait TaskApi: Send + Sync {
-    /// Pull every task.
-    ///
-    /// # Errors
-    ///
-    /// Any transport or server failure, as the classifier's input.
-    fn list_tasks(&self) -> Result<Vec<Task>>;
-
-    /// Create a task.
-    ///
-    /// # Errors
-    ///
-    /// Any transport or server failure, as the classifier's input.
-    fn create_task(&self, request: &CreateTaskRequest, mutation_id: Option<&str>) -> Result<Task>;
-
-    /// Apply a partial update to a task.
-    ///
-    /// # Errors
-    ///
-    /// Any transport or server failure, as the classifier's input.
-    fn update_task(
-        &self,
-        id: &TaskId,
-        request: &UpdateTaskRequest,
-        mutation_id: Option<&str>,
-    ) -> Result<Task>;
-
-    /// Delete a task.
-    ///
-    /// # Errors
-    ///
-    /// Any transport or server failure, as the classifier's input. A
-    /// [`crate::Error::NotFound`] here is treated as success by the engine.
-    fn delete_task(&self, id: &TaskId, mutation_id: Option<&str>) -> Result<()>;
-
-    /// Set a task's status to an absolute value.
-    ///
-    /// # Errors
-    ///
-    /// Any transport or server failure, as the classifier's input.
-    fn toggle_task_status(
-        &self,
-        id: &TaskId,
-        status: TaskStatus,
-        mutation_id: Option<&str>,
-    ) -> Result<Task>;
-
-    /// Set one occurrence of a recurring task to an absolute completion state.
-    ///
-    /// `instance` is `None` only on the legacy no-body path, which makes the
-    /// server toggle its own idea of "today". The engine never takes that
-    /// path; it exists so the contract tests can exercise it.
-    ///
-    /// # Errors
-    ///
-    /// Any transport or server failure, as the classifier's input.
-    fn complete_recurring_instance(
-        &self,
-        id: &TaskId,
-        instance: Option<&InstanceCompletion>,
-        mutation_id: Option<&str>,
-    ) -> Result<Task>;
 }
 
 /// Durable storage for the command queue and its dead-letter list.

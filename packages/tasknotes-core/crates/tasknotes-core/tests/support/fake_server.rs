@@ -23,7 +23,7 @@ use tasknotes_core::{
     domain::{
         CreateTaskRequest, ExtraFields, Priority, Task, TaskId, TaskStatus, UpdateTaskRequest,
     },
-    sync::{InstanceCompletion, TaskApi},
+    net::{InstanceCompletion, TaskApi},
 };
 
 use super::harness::{ManualClock, local_ymd};

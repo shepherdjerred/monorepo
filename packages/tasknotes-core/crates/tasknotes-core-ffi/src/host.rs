@@ -1,12 +1,17 @@
-//! The seven host capabilities, as UniFFI foreign traits.
+//! The non-network host capabilities, as UniFFI foreign traits.
 //!
 //! `tasknotes-core` is sans-I/O: it reads no clock, opens no socket, touches no
-//! file and arms no timer. Everything it needs from the outside world arrives
-//! through the traits in [`tasknotes_core::sync::host`] plus
+//! file and arms no timer. Time, randomness, timers and storage arrive through
+//! the traits in [`tasknotes_core::sync::host`] plus
 //! [`tasknotes_core::store::migrations::MigrationStorage`], and this module is
 //! where a *Swift* (or, later, C#) implementation of each becomes possible:
 //! `#[uniffi::export(with_foreign)]` generates the vtable that lets foreign
 //! code implement a Rust trait, not merely call one.
+//!
+//! **The network is not here.** It is [`crate::net::HttpClient`], a byte-level
+//! transport, and it is deliberately the only network capability a shell
+//! implements: everything above the socket is core policy. See [`crate::net`]
+//! for what that bought and what it cost while it was not true.
 //!
 //! ## Why these are declarations and not re-exports
 //!
@@ -16,7 +21,7 @@
 //! | difference | why |
 //! |---|---|
 //! | `Result<T, CoreError>` instead of `Result<T, tasknotes_core::Error>` | the core error is `#[non_exhaustive]` and not a UniFFI type; [`CoreError`] is its ABI mirror, and [`crate::error`] closes the conversion in both directions |
-//! | owned parameters instead of `&CreateTaskRequest` / `&TaskId` / `&str` | UniFFI lifts a value out of the FFI buffer, so there is no borrow to hand across; the adapter clones at the boundary and the core keeps its allocation-free internal signatures |
+//! | owned parameters instead of `&[Task]` / `&str` | UniFFI lifts a value out of the FFI buffer, so there is no borrow to hand across; the adapter clones at the boundary and the core keeps its allocation-free internal signatures |
 //!
 //! The adapters are the only place either translation happens, and every one of
 //! them is a one-line forward. Nothing branches, nothing decides.
@@ -42,16 +47,15 @@ use std::sync::Arc;
 
 use tasknotes_core::{
     Result as CoreResult,
-    domain::{CreateTaskRequest, Task, TaskId, TaskStatus},
+    domain::Task,
     store::migrations::MigrationStorage as CoreMigrationStorage,
     sync::{
-        Clock as CoreClock, InstanceCompletion, QueueStorage as CoreQueueStorage,
-        Randomness as CoreRandomness, RetryScheduler as CoreRetryScheduler, TaskApi as CoreTaskApi,
-        TaskCacheStorage as CoreTaskCacheStorage, TimerId,
+        Clock as CoreClock, QueueStorage as CoreQueueStorage, Randomness as CoreRandomness,
+        RetryScheduler as CoreRetryScheduler, TaskCacheStorage as CoreTaskCacheStorage, TimerId,
     },
 };
 
-use crate::{error::CoreError, update::UpdateTaskRequest};
+use crate::error::CoreError;
 
 // ── Time, randomness and timers ────────────────────────────────────────────
 
@@ -102,86 +106,6 @@ pub trait RetryScheduler: Send + Sync {
 
     /// Cancel a previously armed timer. A no-op if it already fired.
     fn cancel(&self, timer: TimerId);
-}
-
-// ── The network ────────────────────────────────────────────────────────────
-
-/// The mutating half of the TaskNotes HTTP API.
-///
-/// See [`tasknotes_core::sync::TaskApi`]. This is the whole network surface, so
-/// the platform's own HTTP stack — `URLSession` on Apple, with its proxy, ATS
-/// and background-transfer behaviour — is what actually makes the request.
-///
-/// `mutation_id` is sent as the `X-Mutation-Id` header. The server stores its
-/// response against that key and replays it instead of re-applying, which is
-/// what makes a crash between server-ack and client-dequeue safe.
-#[uniffi::export(with_foreign)]
-pub trait TaskApi: Send + Sync {
-    /// Pull every task.
-    ///
-    /// # Errors
-    ///
-    /// Any transport or server failure, as the classifier's input.
-    fn list_tasks(&self) -> Result<Vec<Task>, CoreError>;
-
-    /// Create a task.
-    ///
-    /// # Errors
-    ///
-    /// Any transport or server failure, as the classifier's input.
-    fn create_task(
-        &self,
-        request: CreateTaskRequest,
-        mutation_id: Option<String>,
-    ) -> Result<Task, CoreError>;
-
-    /// Apply a partial update to a task.
-    ///
-    /// # Errors
-    ///
-    /// Any transport or server failure, as the classifier's input.
-    fn update_task(
-        &self,
-        id: TaskId,
-        request: UpdateTaskRequest,
-        mutation_id: Option<String>,
-    ) -> Result<Task, CoreError>;
-
-    /// Delete a task.
-    ///
-    /// # Errors
-    ///
-    /// Any transport or server failure, as the classifier's input. A
-    /// [`CoreError::NotFound`] here is treated as *success* by the engine: the
-    /// task reaching "gone" is the goal state regardless of who removed it.
-    fn delete_task(&self, id: TaskId, mutation_id: Option<String>) -> Result<(), CoreError>;
-
-    /// Set a task's status to an absolute value.
-    ///
-    /// # Errors
-    ///
-    /// Any transport or server failure, as the classifier's input.
-    fn toggle_task_status(
-        &self,
-        id: TaskId,
-        status: TaskStatus,
-        mutation_id: Option<String>,
-    ) -> Result<Task, CoreError>;
-
-    /// Set one occurrence of a recurring task to an absolute completion state.
-    ///
-    /// `instance` is `None` only on the legacy no-body path, which makes the
-    /// server toggle its own idea of "today". The engine never takes it.
-    ///
-    /// # Errors
-    ///
-    /// Any transport or server failure, as the classifier's input.
-    fn complete_recurring_instance(
-        &self,
-        id: TaskId,
-        instance: Option<InstanceCompletion>,
-        mutation_id: Option<String>,
-    ) -> Result<Task, CoreError>;
 }
 
 // ── Persistence ────────────────────────────────────────────────────────────
@@ -363,72 +287,6 @@ impl CoreRetryScheduler for RetrySchedulerAdapter {
 
     fn cancel(&self, timer: TimerId) {
         self.0.cancel(timer);
-    }
-}
-
-/// Adapts a host [`TaskApi`] onto [`tasknotes_core::sync::TaskApi`].
-pub(crate) struct TaskApiAdapter(pub(crate) Arc<dyn TaskApi>);
-
-impl CoreTaskApi for TaskApiAdapter {
-    fn list_tasks(&self) -> CoreResult<Vec<Task>> {
-        self.0.list_tasks().map_err(Into::into)
-    }
-
-    fn create_task(
-        &self,
-        request: &CreateTaskRequest,
-        mutation_id: Option<&str>,
-    ) -> CoreResult<Task> {
-        self.0
-            .create_task(request.clone(), mutation_id.map(str::to_owned))
-            .map_err(Into::into)
-    }
-
-    fn update_task(
-        &self,
-        id: &TaskId,
-        request: &tasknotes_core::domain::UpdateTaskRequest,
-        mutation_id: Option<&str>,
-    ) -> CoreResult<Task> {
-        self.0
-            .update_task(
-                id.clone(),
-                UpdateTaskRequest::from(request.clone()),
-                mutation_id.map(str::to_owned),
-            )
-            .map_err(Into::into)
-    }
-
-    fn delete_task(&self, id: &TaskId, mutation_id: Option<&str>) -> CoreResult<()> {
-        self.0
-            .delete_task(id.clone(), mutation_id.map(str::to_owned))
-            .map_err(Into::into)
-    }
-
-    fn toggle_task_status(
-        &self,
-        id: &TaskId,
-        status: TaskStatus,
-        mutation_id: Option<&str>,
-    ) -> CoreResult<Task> {
-        self.0
-            .toggle_task_status(id.clone(), status, mutation_id.map(str::to_owned))
-            .map_err(Into::into)
-    }
-
-    fn complete_recurring_instance(
-        &self,
-        id: &TaskId,
-        instance: Option<&InstanceCompletion>,
-        mutation_id: Option<&str>,
-    ) -> CoreResult<Task> {
-        self.0
-            .complete_recurring_instance(
-                id.clone(),
-                instance.cloned(),
-                mutation_id.map(str::to_owned),
-            )
-            .map_err(Into::into)
     }
 }
 
