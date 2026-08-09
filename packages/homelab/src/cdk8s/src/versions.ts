@@ -176,7 +176,7 @@ const versions = {
     "2.0.0-8732@sha256:6b9b0b321e0d5a3ffe310f11262cf80cfb6421d6c1a5a57a156f6e7d092f096d",
   // not managed by renovate
   "shepherdjerred/birmel":
-    "2.0.0-8772@sha256:b694c40e007fabbc5a831c7da409e9d7c81e34de743494a1a5cbd9ba89cec03a",
+    "2.0.0-8792@sha256:f43e8366408eca22229b4e3bbc71fb456ee9e9667a23366def5beeb344983bf1",
   // not managed by renovate — CI version-commit-back replaces this after the
   // first image push. The Argo CD Application and Alertmanager cutover remain
   // intentionally unregistered until the real digest is pinned and public.
