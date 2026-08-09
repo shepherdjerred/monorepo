@@ -134,7 +134,7 @@ export async function loadingScreenToSvg(
       bunClassicFonts(),
       getClassicBackgroundBase64(),
     ]);
-    const cjkFonts = containsCjkText(data) ? await bunCjkFonts() : [];
+    const cjkFonts = containsCjkText(data) ? await bunCjkFonts(data) : [];
     return satori(
       <ClassicLoadingScreen data={data} background={background} />,
       {
@@ -145,7 +145,7 @@ export async function loadingScreenToSvg(
     );
   }
 
-  const fonts = await bunReportFonts(containsCjkText(data));
+  const fonts = await bunReportFonts(containsCjkText(data), data);
   const svg = await satori(<LoadingScreen data={data} />, {
     width,
     height,

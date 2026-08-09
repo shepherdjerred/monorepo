@@ -33,13 +33,6 @@ export const ANALYTICS_FONT_FILE_PATHS = [
 ].map((name) =>
   fileURLToPath(new URL(`../assets/fonts/${name}`, import.meta.url)),
 );
-export const ANALYTICS_CJK_FONT_FILE_PATH = fileURLToPath(
-  new URL(
-    "../assets/fonts/NotoSansCJK/NotoSansCJKsc-Regular.otf",
-    import.meta.url,
-  ),
-);
-
 const DARK_GRADIENT = {
   type: "linear" as const,
   x: 0,

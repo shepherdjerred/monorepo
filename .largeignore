@@ -24,3 +24,6 @@ packages/homelab/src/cdk8s/generated/imports/monitoring.coreos.com.ts
 # Scout report fallback font — licensed full CJK coverage is intentionally
 # larger than the repository's general 5MB source-file limit.
 packages/scout-for-lol/packages/report/src/assets/fonts/NotoSansCJK/NotoSansCJKsc-Regular.otf
+packages/scout-for-lol/packages/report/src/assets/fonts/NotoSansCJK/NotoSansCJKjp-Regular.otf
+packages/scout-for-lol/packages/report/src/assets/fonts/NotoSansCJK/NotoSansCJKkr-Regular.otf
+packages/scout-for-lol/packages/report/src/assets/fonts/NotoSansCJK/NotoSansCJKtc-Regular.otf

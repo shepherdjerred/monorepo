@@ -56,7 +56,7 @@ export async function matchToSvg(
     ...match.teams.red.map((champion) => champion.championName),
   ]);
 
-  const fonts = await bunReportFonts(containsCjkText(match));
+  const fonts = await bunReportFonts(containsCjkText(match), match);
 
   const rankedDesignsEnabled = options.enableRankedDesigns ?? true;
   if (

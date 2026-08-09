@@ -62,7 +62,7 @@ export async function arenaMatchToSvg(match: ArenaMatch) {
     preloadAugmentIcons(augmentIconPaths),
   ]);
 
-  const fonts = await bunReportFonts(containsCjkText(match));
+  const fonts = await bunReportFonts(containsCjkText(match), match);
   const { width, height } = getCanvasDimensions(match);
   const svg = await satori(<ArenaReport match={match} />, {
     width,

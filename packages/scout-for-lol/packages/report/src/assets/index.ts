@@ -122,14 +122,38 @@ const baseSpiegelFonts = generateFonts(
 // original visual typography and SVG output remain unchanged for Latin text.
 const cjkFont = {
   name: "Noto Sans CJK",
-  src: `${fontPath}/NotoSansCJK/NotoSansCJKsc-Regular.otf`,
   weight: 400 as const,
   style: "normal" as const,
 };
 
-const baseCjkFonts = [cjkFont] satisfies (Omit<Font, "data"> & {
-  src: string;
-})[];
+type CjkFontLocale = "jp" | "kr" | "sc" | "tc";
+
+const baseCjkFontsByLocale = {
+  jp: [
+    {
+      ...cjkFont,
+      src: `${fontPath}/NotoSansCJK/NotoSansCJKjp-Regular.otf`,
+    },
+  ],
+  kr: [
+    {
+      ...cjkFont,
+      src: `${fontPath}/NotoSansCJK/NotoSansCJKkr-Regular.otf`,
+    },
+  ],
+  sc: [
+    {
+      ...cjkFont,
+      src: `${fontPath}/NotoSansCJK/NotoSansCJKsc-Regular.otf`,
+    },
+  ],
+  tc: [
+    {
+      ...cjkFont,
+      src: `${fontPath}/NotoSansCJK/NotoSansCJKtc-Regular.otf`,
+    },
+  ],
+} satisfies Record<CjkFontLocale, (Omit<Font, "data"> & { src: string })[]>;
 
 /**
  * These fonts are used by satori.
@@ -159,11 +183,54 @@ export const bunSpiegelFonts: () => Promise<Font[]> = () =>
     ),
   );
 
-let cjkFontsPromise: Promise<Font[]> | undefined;
+const cjkFontsPromises = new Map<CjkFontLocale, Promise<Font[]>>();
 
-export const bunCjkFonts: () => Promise<Font[]> = () => {
-  cjkFontsPromise ??= Promise.all(
-    baseCjkFonts.map(
+function containsTextMatching(value: unknown, pattern: RegExp): boolean {
+  if (typeof value === "string") {
+    return pattern.test(value);
+  }
+  if (Array.isArray(value)) {
+    return value.some((entry) => containsTextMatching(entry, pattern));
+  }
+  if (
+    value === null ||
+    typeof value !== "object" ||
+    ArrayBuffer.isView(value)
+  ) {
+    return false;
+  }
+  return Object.values(value).some((entry) =>
+    containsTextMatching(entry, pattern),
+  );
+}
+
+function cjkFontLocale(value: unknown): CjkFontLocale {
+  if (containsTextMatching(value, /\p{Script=Hangul}/u)) {
+    return "kr";
+  }
+  if (containsTextMatching(value, /\p{Script=Bopomofo}/u)) {
+    return "tc";
+  }
+  if (
+    containsTextMatching(value, /[\p{Script=Hiragana}\p{Script=Katakana}]/u)
+  ) {
+    return "jp";
+  }
+  return "sc";
+}
+
+export function cjkFontFileName(value: unknown): string {
+  return `NotoSansCJK${cjkFontLocale(value)}-Regular.otf`;
+}
+
+export const bunCjkFonts = (value: unknown = ""): Promise<Font[]> => {
+  const locale = cjkFontLocale(value);
+  const existingPromise = cjkFontsPromises.get(locale);
+  if (existingPromise !== undefined) {
+    return existingPromise;
+  }
+  const promise = Promise.all(
+    baseCjkFontsByLocale[locale].map(
       async (baseFont): Promise<Font> => ({
         ...baseFont,
         data: await Bun.file(
@@ -172,7 +239,8 @@ export const bunCjkFonts: () => Promise<Font[]> = () => {
       }),
     ),
   );
-  return cjkFontsPromise;
+  cjkFontsPromises.set(locale, promise);
+  return promise;
 };
 
 const cjkCharacterPattern =
@@ -197,10 +265,11 @@ export function containsCjkText(value: unknown): boolean {
 
 export async function bunReportFonts(
   includeCjkFallback = false,
+  cjkText: unknown = "",
 ): Promise<Font[]> {
   const fonts = [...(await bunBeaufortFonts()), ...(await bunSpiegelFonts())];
   if (includeCjkFallback) {
-    fonts.push(...(await bunCjkFonts()));
+    fonts.push(...(await bunCjkFonts(cjkText)));
   }
   return fonts;
 }

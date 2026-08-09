@@ -411,7 +411,7 @@ export async function discordScreenshotToSvg(
   const embeddedImageDataUri = pngDataUri(options.embeddedImageBytes);
   const fonts = [
     ...(await bunSpiegelFonts()),
-    ...(containsCjkText(options) ? await bunCjkFonts() : []),
+    ...(containsCjkText(options) ? await bunCjkFonts(options) : []),
   ];
 
   return await satori(

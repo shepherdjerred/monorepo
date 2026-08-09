@@ -28,7 +28,7 @@ export async function classicMatchToSvg(match: ClassicMatch): Promise<string> {
   ]);
   const fonts = [
     ...(await bunClassicFonts()),
-    ...(containsCjkText(match) ? await bunCjkFonts() : []),
+    ...(containsCjkText(match) ? await bunCjkFonts(match) : []),
   ];
   return satori(<ClassicMatchReport match={match} />, {
     width: CLASSIC_MATCH_WIDTH,

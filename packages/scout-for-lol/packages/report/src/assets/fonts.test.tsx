@@ -1,6 +1,11 @@
 import { describe, expect, test } from "bun:test";
 import satori from "satori";
-import { bunReportFonts, containsCjkText, font } from "#src/assets/index.ts";
+import {
+  bunReportFonts,
+  cjkFontFileName,
+  containsCjkText,
+  font,
+} from "#src/assets/index.ts";
 import { svgToPng } from "#src/html/index.tsx";
 
 describe("report fonts", () => {
@@ -9,8 +14,12 @@ describe("report fonts", () => {
     expect(containsCjkText(playerName)).toBe(true);
     expect(containsCjkText("ㄅㄆㄇ")).toBe(true);
     expect(containsCjkText("Summoner One")).toBe(false);
+    expect(cjkFontFileName("한국어")).toBe("NotoSansCJKkr-Regular.otf");
+    expect(cjkFontFileName("日本語かな")).toBe("NotoSansCJKjp-Regular.otf");
+    expect(cjkFontFileName("ㄅㄆㄇ")).toBe("NotoSansCJKtc-Regular.otf");
+    expect(cjkFontFileName("中文")).toBe("NotoSansCJKsc-Regular.otf");
 
-    const fonts = await bunReportFonts(containsCjkText(playerName));
+    const fonts = await bunReportFonts(containsCjkText(playerName), playerName);
 
     expect(fonts.some((entry) => entry.name === "Noto Sans CJK")).toBe(true);
 
