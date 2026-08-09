@@ -6,32 +6,39 @@ Read this when configuring a workspace, toolchain, MSRV, dependency, Cargo confi
 
 Resolver 3 is the Rust 2024 default. Specify it in a virtual workspace. `rust-version` declares MSRV and affects compatible dependency selection.
 
-Run these diagnostics in order. In each command block, `cargo test
---future-incompat-report` must complete before `cargo report
-future-incompatibilities`: the test command generates the report, while the
-report command only reads it. If the test command succeeds without announcing
-a generated report, no future-incompatibility warnings were found; do not run
-the reader, because Cargo exits with `no reports are currently available` in
-that clean state. Any other reader failure requires investigation. Add `--locked` to
-dependency-resolving commands when the project commits `Cargo.lock`; omit it
-for libraries that intentionally do not commit a lockfile. Do not create or
-commit a lockfile solely to run these inspections.
+Run these diagnostics in order. `cargo test --future-incompat-report` must
+complete before `cargo report future-incompatibilities`: the test command
+generates the report, while the report command only reads it. Cargo reports
+`0 dependencies had future-incompatible warnings` when the result is clean but
+does not create a report in that case, so treat that successful result as
+complete and skip the reader. Any other reader failure requires investigation.
+Add `--locked` to dependency-resolving commands when the project commits
+`Cargo.lock`; omit it for libraries that intentionally do not commit a
+lockfile. Do not create or commit a lockfile solely to run these inspections.
 
 For a project that commits `Cargo.lock`, use:
 
 ```bash
 cargo tree --locked -d
 cargo tree --locked -e features
-cargo test --locked --future-incompat-report
-# Run only when the preceding command announces a generated report:
-cargo report future-incompatibilities
+future_incompat_output="$(mktemp)"
+trap 'rm -f "$future_incompat_output"' EXIT
+if cargo test --locked --future-incompat-report >"$future_incompat_output" 2>&1; then
+  cat "$future_incompat_output"
+  if ! rg -Fq '0 dependencies had future-incompatible warnings' "$future_incompat_output"; then
+    cargo report future-incompatibilities --locked
+  fi
+else
+  cat "$future_incompat_output"
+  exit 1
+fi
 ```
 
 For a library that intentionally does not commit `Cargo.lock`, copy the current
 working tree to an isolated disposable directory and run the diagnostics there.
 Do not use `git clone`: it copies `HEAD` and omits uncommitted or untracked
-source and manifest changes. Cargo can create a temporary lockfile while
-resolving dependencies without dirtying the source checkout:
+source and manifest changes. The disposable copy contains the temporary
+`Cargo.lock`, so the source checkout remains lockfile-free:
 
 ```bash
 diagnostics_dir="$(mktemp -d)"
@@ -40,9 +47,17 @@ rsync -a --exclude '.git' --exclude 'target' --exclude 'Cargo.lock' ./ "$diagnos
   cd "$diagnostics_dir"
   cargo tree -d
   cargo tree -e features
-  cargo test --future-incompat-report
-  # Run only when the preceding command announces a generated report:
-  cargo report future-incompatibilities
+  future_incompat_output="$(mktemp)"
+  trap 'rm -f "$future_incompat_output"' EXIT
+  if cargo test --future-incompat-report >"$future_incompat_output" 2>&1; then
+    cat "$future_incompat_output"
+    if ! rg -Fq '0 dependencies had future-incompatible warnings' "$future_incompat_output"; then
+      cargo report future-incompatibilities
+    fi
+  else
+    cat "$future_incompat_output"
+    exit 1
+  fi
 )
 ```
 
@@ -54,16 +69,16 @@ Avoid a static catalog of “best crates” and pinned example versions in a gen
 
 ## Publishing
 
-Use workspace publishing only when `cargo publish --help` lists `--workspace` as stable. Perform a dry run and review the exact package set:
+Use workspace publishing only when `cargo publish --help` lists `--workspace` as stable. For a project that commits `Cargo.lock`, pass `--locked` so dependency drift fails instead of rewriting the lockfile. Perform a dry run and review the exact package set:
 
 ```bash
-cargo publish --workspace --dry-run
+cargo publish --workspace --locked --dry-run
 ```
 
 On Cargo versions where `--workspace` is absent or marked unstable, inspect the workspace members with `cargo metadata --no-deps --format-version 1`, exclude packages whose manifests disable publishing, order the remaining packages by their workspace dependency relationships, and dry-run each package explicitly:
 
 ```bash
-cargo publish --package <package-name> --dry-run
+cargo publish --package <package-name> --locked --dry-run
 ```
 
 Publishing is an external mutation; do not remove `--dry-run` without explicit authorization and release ownership.
