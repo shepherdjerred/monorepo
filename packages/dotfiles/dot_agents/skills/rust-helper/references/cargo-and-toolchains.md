@@ -6,6 +6,11 @@ Read this when configuring a workspace, toolchain, MSRV, dependency, Cargo confi
 
 Resolver 3 is the Rust 2024 default. Specify it in a virtual workspace. `rust-version` declares MSRV and affects compatible dependency selection.
 
+Use `--locked` on dependency diagnostics when the project commits
+`Cargo.lock`; omit it for libraries that intentionally do not commit a
+lockfile. Do not create or commit a lockfile solely to run these inspections.
+The commands below show the committed-lockfile form.
+
 Use these diagnostics before changing dependency constraints:
 
 ```bash

@@ -36,6 +36,9 @@ Optional external tools include cargo-nextest, Bacon, cargo-outdated, cargo-expa
 ## Focused verification
 
 Adapt features and targets to the project, but keep each result meaningful:
+Use `--locked` on dependency-resolving checks when the project commits
+`Cargo.lock`; omit it for libraries that intentionally do not commit a
+lockfile. The commands below show the committed-lockfile form.
 
 ```bash
 cargo check --locked --workspace --all-targets --all-features

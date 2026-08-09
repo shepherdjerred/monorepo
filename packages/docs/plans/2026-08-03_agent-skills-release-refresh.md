@@ -20,8 +20,8 @@ non-obvious guidance.
 
 Treat one top-level directory under `packages/dotfiles/dot_agents/skills/` as
 one researched item. Require at least 30 distinct, successfully fetched
-documentation pages for each of the 65 current skills. This produces a minimum
-of 1,950 fetched sources before follow-up research or newly added skills.
+documentation pages for each of the 64 current skills. This produces a minimum
+of 1,920 fetched sources before follow-up research or newly added skills.
 
 Commands, libraries, and features mentioned inside a skill are covered by that
 skill's 30-source set rather than treated as independent 30-source units.
@@ -151,3 +151,6 @@ skill's 30-source set rather than treated as independent 30-source units.
   reconciling the branch's actual tracking with the corrected Execution
   Model. The branch is git-spice-tracked going forward; no `gh stack` state
   remains authoritative for this work.
+- 2026-08-09: Recounted the live source tree as 64 top-level skill directories,
+  each containing `SKILL.md`, correcting the 65-skill inventory above. At 30
+  sources per skill, the current minimum is 1,920 sources.
