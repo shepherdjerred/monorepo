@@ -22,11 +22,11 @@ import {
 import { FleetStore } from "@shepherdjerred/pr-fleet-controller/src/state.ts";
 import { WorktreeManager } from "@shepherdjerred/pr-fleet-controller/src/worktree.ts";
 import { parseWatchArgs } from "@shepherdjerred/pr-fleet-controller/src/watch-cli.ts";
-import { ensureWriteLease } from "@shepherdjerred/pr-fleet-controller/src/worker-file-edits.ts";
 import {
-  boundedInheritedWipEvidence,
-  requireCompleteInheritedWipInspection,
-} from "@shepherdjerred/pr-fleet-controller/src/worker-wip-tools.ts";
+  requireMatchingInheritedWipInspection,
+  type InheritedWipEvidence,
+} from "@shepherdjerred/pr-fleet-controller/src/inherited-wip.ts";
+import { boundedInheritedWipEvidence } from "@shepherdjerred/pr-fleet-controller/src/worker-wip-tools.ts";
 import { evidence, identity } from "./fixtures.ts";
 
 const temporaryDirectories: string[] = [];
@@ -125,7 +125,7 @@ describe("inherited WIP evidence regressions", () => {
     expect(bounded.evidence).toContain("publication is disabled");
   });
 
-  test("blocks publication until all inherited WIP evidence is complete", () => {
+  test("requires a complete inspection matching the live inherited WIP", () => {
     const prIdentity = identity(41);
     const pr = PrStateSchema.parse({
       identity: prIdentity,
@@ -156,27 +156,95 @@ describe("inherited WIP evidence regressions", () => {
       priority: 0,
     });
     const store = new FleetStore(1);
+    const inspectedEvidence: InheritedWipEvidence = {
+      localHeadSha: prIdentity.headSha,
+      status: "M  packages/example.ts\n",
+      stagedDiff: "staged patch",
+      unstagedDiff: "",
+      untrackedDiff: "",
+      hasWip: true,
+      fingerprint: "fingerprint-a",
+    };
     store.inheritedWipInspections.set(prIdentity.number, {
       remoteHeadSha: prIdentity.headSha,
       localHeadSha: prIdentity.headSha,
+      fingerprint: inspectedEvidence.fingerprint,
       complete: false,
     });
-    expect(() => requireCompleteInheritedWipInspection(store, pr)).toThrow(
-      /must be complete/,
-    );
-    expect(() => ensureWriteLease(store, pr)).toThrow(/must be complete/);
-    expect(store.stackWriteOwners.size).toBe(0);
+    expect(() =>
+      requireMatchingInheritedWipInspection(store, pr, inspectedEvidence),
+    ).toThrow(/differs from the complete inspection/);
 
     store.inheritedWipInspections.set(prIdentity.number, {
       remoteHeadSha: prIdentity.headSha,
       localHeadSha: prIdentity.headSha,
+      fingerprint: inspectedEvidence.fingerprint,
       complete: true,
     });
     expect(() =>
-      requireCompleteInheritedWipInspection(store, pr),
+      requireMatchingInheritedWipInspection(store, pr, inspectedEvidence),
     ).not.toThrow();
-    expect(() => ensureWriteLease(store, pr)).not.toThrow();
-    expect(store.stackWriteOwners.get(pr.stackId)).toBe(pr.identity.number);
+    expect(() =>
+      requireMatchingInheritedWipInspection(store, pr, {
+        ...inspectedEvidence,
+        fingerprint: "fingerprint-b",
+      }),
+    ).toThrow(/differs from the complete inspection/);
+  });
+
+  test("permits a captured-clean operator worktree only while it stays clean", () => {
+    const prIdentity = identity(43);
+    const pr = PrStateSchema.parse({
+      identity: prIdentity,
+      logicalOwner: "pr-43",
+      runtimeAgent: "pr-43-g1",
+      agentGeneration: 1,
+      model: "openai/gpt-5.6-terra",
+      status: "diagnosing",
+      classification: "actionable-red",
+      stackId: "pr-43",
+      worktree: "/tmp/worktrees/pr-43",
+      worktreeContext: {
+        ownership: "operator",
+        remoteHeadSha: prIdentity.headSha,
+        localHeadSha: prIdentity.headSha,
+        relation: "exact",
+        dirty: false,
+        stagedPaths: [],
+        unstagedPaths: [],
+      },
+      setupComplete: true,
+      evidence: evidence(prIdentity),
+      lastAgentReportAt: null,
+      lastProgressAt: "2026-08-08T20:00:00.000Z",
+      noProgressTicks: 0,
+      prodSentAt: null,
+      escalation: null,
+      priority: 0,
+    });
+    const store = new FleetStore(1);
+    const cleanEvidence: InheritedWipEvidence = {
+      localHeadSha: prIdentity.headSha,
+      status: "",
+      stagedDiff: "",
+      unstagedDiff: "",
+      untrackedDiff: "",
+      hasWip: false,
+      fingerprint: "clean",
+    };
+
+    expect(() =>
+      requireMatchingInheritedWipInspection(store, pr, cleanEvidence),
+    ).not.toThrow();
+    expect(() =>
+      requireMatchingInheritedWipInspection(store, pr, {
+        ...cleanEvidence,
+        status: "?? packages/new.ts\n",
+        untrackedDiff: "new file patch",
+        hasWip: true,
+        fingerprint: "dirty",
+      }),
+    ).toThrow(/differs from the complete inspection/);
   });
 });
 

@@ -2,6 +2,10 @@ import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import { validateWorkerCommand } from "./command-policy.ts";
 import { captureTelemetryOperation } from "./controller-telemetry.ts";
+import {
+  recordAuthorizedWipState,
+  requireCurrentInheritedWipInspection,
+} from "./inherited-wip.ts";
 import type { FleetEnvironment, FleetTelemetry } from "./ports.ts";
 import { runRecordedToolOperation } from "./recorded-tool.ts";
 import type { RunEventCorrelation } from "./run-events.ts";
@@ -10,10 +14,7 @@ import { LeaseKindSchema, PrStateSchema, type PrState } from "./schemas.ts";
 import type { FleetStore } from "./state.ts";
 import { containedPath, createFileEditTools } from "./worker-file-edits.ts";
 import { createSetupWorktreeTool } from "./worker-setup-tool.ts";
-import {
-  createWorkerWipTools,
-  requireCompleteInheritedWipInspection,
-} from "./worker-wip-tools.ts";
+import { createWorkerWipTools } from "./worker-wip-tools.ts";
 
 export const ConventionalCommitMessageSchema = z
   .string()
@@ -184,10 +185,16 @@ export function createWorkerTools(
       execute: (input) =>
         runRecordedTool("apply_patch", input, toolContext, async () => {
           assertNotWaitingForAnswer();
-          store.requireCompleteInheritedWipInspection(pr);
           if (store.stackWriteOwners.get(pr.stackId) !== pr.identity.number) {
             throw new Error("Worker does not hold the stack write lease");
           }
+          await requireCurrentInheritedWipInspection({
+            store,
+            pr,
+            environment,
+            worktree,
+            signal,
+          });
           const paths = input.patch
             .split("\n")
             .filter(
@@ -212,6 +219,13 @@ export function createWorkerTools(
           if (result.exitCode !== 0) {
             throw new Error(`Patch failed: ${result.stderr.trim()}`);
           }
+          await recordAuthorizedWipState({
+            store,
+            pr,
+            environment,
+            worktree,
+            signal,
+          });
           return { applied: true, stderr: result.stderr };
         }),
     }),
@@ -261,10 +275,16 @@ export function createWorkerTools(
       execute: (input) =>
         runRecordedTool("start_restack", input, toolContext, async () => {
           assertNotWaitingForAnswer();
-          store.requireCompleteInheritedWipInspection(pr);
           if (!store.requestLease(pr, "stack-write")) {
             throw new Error("Stack write lease is not available");
           }
+          await requireCurrentInheritedWipInspection({
+            store,
+            pr,
+            environment,
+            worktree,
+            signal,
+          });
           const result = await environment.startRestack(pr, signal);
           const output = `${result.stdout}\n${result.stderr}`.trim();
           if (result.exitCode !== 0 && !/conflict/i.test(output)) {
@@ -386,11 +406,17 @@ export function createWorkerTools(
       execute: (input) =>
         runRecordedTool("publish_fix", input, toolContext, async () => {
           assertNotWaitingForAnswer();
-          requireCompleteInheritedWipInspection(store, pr);
           if (!store.requestLease(pr, "stack-write")) {
             throw new Error("Stack write lease is not available");
           }
           try {
+            await requireCurrentInheritedWipInspection({
+              store,
+              pr,
+              environment,
+              worktree,
+              signal,
+            });
             return await environment.publishFix(
               pr,
               input.paths,

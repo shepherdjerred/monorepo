@@ -2,6 +2,11 @@ import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import { captureTelemetryOperation } from "./controller-telemetry.ts";
 import { currentTimestamp } from "./fleet-logic.ts";
+import {
+  collectInheritedWipEvidence,
+  recordAuthorizedWipState,
+  requireCurrentInheritedWipInspection,
+} from "./inherited-wip.ts";
 import type { FleetEnvironment, FleetTelemetry } from "./ports.ts";
 import type { RunEventCorrelation } from "./run-events.ts";
 import {
@@ -73,13 +78,6 @@ export function requireCompleteInheritedCommitInspection(
   }
 }
 
-export function requireCompleteInheritedWipInspection(
-  store: FleetStore,
-  pr: PrState,
-): void {
-  store.requireCompleteInheritedWipInspection(pr);
-}
-
 export function abortWorkerForOperatorInput(
   store: FleetStore,
   prNumber: number,
@@ -105,38 +103,6 @@ async function runGit(
     throw new Error(`git ${args.join(" ")} failed: ${result.stderr}`);
   }
   return result.stdout;
-}
-
-async function untrackedDiff(
-  environment: FleetEnvironment,
-  worktree: string,
-  signal: AbortSignal,
-  paths: string[],
-): Promise<string> {
-  const patches: string[] = [];
-  for (const untrackedPath of paths) {
-    const result = await environment.runLocalCommand({
-      executable: "git",
-      args: [
-        "diff",
-        "--no-index",
-        "--binary",
-        "--",
-        "/dev/null",
-        untrackedPath,
-      ],
-      cwd: worktree,
-      timeoutMs: 30_000,
-      signal,
-    });
-    if (result.exitCode !== 0 && result.exitCode !== 1) {
-      throw new Error(
-        `git diff for untracked path ${untrackedPath} failed: ${result.stderr}`,
-      );
-    }
-    patches.push(result.stdout);
-  }
-  return patches.join("\n");
 }
 
 export function createWorkerWipTools(options: {
@@ -183,34 +149,11 @@ export function createWorkerWipTools(options: {
       }),
       execute: (input) =>
         record("inspect_worktree_wip", input, async () => {
-          const status = await runGit(environment, worktree, signal, [
-            "status",
-            "--short",
-          ]);
-          const stagedDiff = await runGit(environment, worktree, signal, [
-            "diff",
-            "--cached",
-            "--",
-          ]);
-          const unstagedDiff = await runGit(environment, worktree, signal, [
-            "diff",
-            "--",
-          ]);
-          const untrackedPathsOutput = await runGit(
+          const wip = await collectInheritedWipEvidence({
             environment,
             worktree,
             signal,
-            ["ls-files", "-z", "--others", "--exclude-standard"],
-          );
-          const untrackedPaths = untrackedPathsOutput
-            .split("\0")
-            .filter((value) => value.length > 0);
-          const untrackedPatch = await untrackedDiff(
-            environment,
-            worktree,
-            signal,
-            untrackedPaths,
-          );
+          });
           let remainingWipEvidenceBytes = MAX_INHERITED_EVIDENCE_BYTES;
           const boundWipSection = (evidence: string, label: string) => {
             const bounded = boundedInheritedWipEvidence(
@@ -224,17 +167,17 @@ export function createWorkerWipTools(options: {
             );
             return bounded;
           };
-          const boundedStatus = boundWipSection(status, "worktree status");
+          const boundedStatus = boundWipSection(wip.status, "worktree status");
           const boundedStaged = boundWipSection(
-            stagedDiff,
+            wip.stagedDiff,
             "staged inherited diff",
           );
           const boundedUnstaged = boundWipSection(
-            unstagedDiff,
+            wip.unstagedDiff,
             "unstaged inherited diff",
           );
           const boundedUntracked = boundWipSection(
-            untrackedPatch,
+            wip.untrackedDiff,
             "untracked inherited diff",
           );
           const wipEvidenceComplete = [
@@ -246,19 +189,12 @@ export function createWorkerWipTools(options: {
           let localCommits = "No ahead-of-remote inherited commits.";
           let localCommitEvidenceComplete = true;
           const context = pr.worktreeContext;
-          if (context?.relation === "ahead") {
-            const localHeadOutput = await runGit(
-              environment,
-              worktree,
-              signal,
-              ["rev-parse", "HEAD"],
+          if (context !== null && wip.localHeadSha !== context.localHeadSha) {
+            throw new Error(
+              "Local HEAD changed after inherited work was captured; inspect again",
             );
-            const localHeadSha = localHeadOutput.trim();
-            if (localHeadSha !== context.localHeadSha) {
-              throw new Error(
-                "Local HEAD changed after inherited work was captured; inspect again",
-              );
-            }
+          }
+          if (context?.relation === "ahead") {
             const inheritedRange = `${pr.identity.headSha}..HEAD`;
             const commitLog = await runGit(environment, worktree, signal, [
               "log",
@@ -281,16 +217,17 @@ export function createWorkerWipTools(options: {
             localCommitEvidenceComplete = bounded.complete;
             store.inheritedCommitInspections.set(pr.identity.number, {
               remoteHeadSha: pr.identity.headSha,
-              localHeadSha,
+              localHeadSha: wip.localHeadSha,
               complete: bounded.complete,
             });
           } else {
             store.inheritedCommitInspections.delete(pr.identity.number);
           }
-          if (context?.dirty === true) {
+          if (context?.ownership === "operator") {
             store.inheritedWipInspections.set(pr.identity.number, {
               remoteHeadSha: context.remoteHeadSha,
-              localHeadSha: context.localHeadSha,
+              localHeadSha: wip.localHeadSha,
+              fingerprint: wip.fingerprint,
               complete: wipEvidenceComplete,
             });
           } else {
@@ -375,10 +312,16 @@ export function createWorkerWipTools(options: {
       execute: (input) =>
         record("unstage_paths", input, async () => {
           assertNotWaitingForAnswer();
-          requireCompleteInheritedWipInspection(store, pr);
           if (!store.requestLease(pr, "stack-write")) {
             throw new Error("Stack write lease is not available");
           }
+          await requireCurrentInheritedWipInspection({
+            store,
+            pr,
+            environment,
+            worktree,
+            signal,
+          });
           for (const requestedPath of input.paths) {
             await containedPath(worktree, requestedPath);
           }
@@ -392,6 +335,13 @@ export function createWorkerWipTools(options: {
           if (result.exitCode !== 0) {
             throw new Error(`Failed to unstage paths: ${result.stderr.trim()}`);
           }
+          await recordAuthorizedWipState({
+            store,
+            pr,
+            environment,
+            worktree,
+            signal,
+          });
           return { paths: input.paths };
         }),
     }),

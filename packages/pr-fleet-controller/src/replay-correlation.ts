@@ -1,14 +1,8 @@
 import type { RecordedRunEvent } from "./run-events.ts";
 import { z } from "zod";
 
-const ListedPrsPayloadSchema = z.object({
-  operation: z.literal("listOpenPrs"),
-  prs: z.array(
-    z.object({
-      number: z.number().int().positive(),
-      headSha: z.string().min(1),
-    }),
-  ),
+const RefreshedEvidencePayloadSchema = z.object({
+  operation: z.literal("refreshEvidence"),
 });
 
 const PARENT_CORRELATION_FIELDS = [
@@ -142,22 +136,6 @@ function tickDrainLane(event: RecordedRunEvent): string | null {
     : `${String(prNumber)}:${headSha}`;
 }
 
-function recordListedPrLanes(
-  event: RecordedRunEvent,
-  activeTickIds: Set<string>,
-  tickLanes: Map<string, Set<string>>,
-): void {
-  if (event.kind !== "environment.result") return;
-  const tickId = event.correlation.tickId;
-  if (tickId === undefined || !activeTickIds.has(tickId)) return;
-  const parsed = ListedPrsPayloadSchema.safeParse(event.payload);
-  if (!parsed.success) return;
-  const lanes = tickLanes.get(tickId);
-  for (const pr of parsed.data.prs) {
-    lanes?.add(`${String(pr.number)}:${pr.headSha}`);
-  }
-}
-
 function verifyTickCausation(
   event: RecordedRunEvent,
   activeTickIds: Set<string>,
@@ -246,7 +224,6 @@ function trackStartedEvent(
   failedTickDrainLanes: Map<string, Set<string>>,
 ): void {
   verifyTickCausation(event, activeTickIds, failedTickDrainLanes);
-  recordListedPrLanes(event, activeTickIds, failedTickDrainLanes);
   if (event.kind === "tick.started") {
     const tickId = event.correlation.tickId;
     if (tickId === undefined) {
@@ -309,12 +286,35 @@ function trackStartedEvent(
   }
 }
 
+function closeFailedTickDrainLane(
+  event: RecordedRunEvent,
+  activeTickIds: Set<string>,
+  failedTickDrainLanes: Map<string, Set<string>>,
+): void {
+  if (event.kind !== "environment.result") return;
+  const tickId = event.correlation.tickId;
+  const lane = tickDrainLane(event);
+  if (
+    tickId === undefined ||
+    lane === null ||
+    !RefreshedEvidencePayloadSchema.safeParse(event.payload).success
+  ) {
+    return;
+  }
+  const lanes = failedTickDrainLanes.get(tickId);
+  lanes?.delete(lane);
+  if (lanes?.size === 0 && !activeTickIds.has(tickId)) {
+    failedTickDrainLanes.delete(tickId);
+  }
+}
+
 function closeTerminalEvent(
   event: RecordedRunEvent,
   active: ActiveCorrelations,
   activeTickIds: Set<string>,
   failedTickDrainLanes: Map<string, Set<string>>,
 ): void {
+  closeFailedTickDrainLane(event, activeTickIds, failedTickDrainLanes);
   if (event.kind === "tick.completed" || event.kind === "tick.failed") {
     const tickId = event.correlation.tickId;
     if (tickId !== undefined) {

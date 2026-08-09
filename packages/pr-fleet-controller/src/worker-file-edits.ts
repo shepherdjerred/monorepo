@@ -2,6 +2,10 @@ import { lstat, realpath } from "node:fs/promises";
 import path from "node:path";
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
+import {
+  recordAuthorizedWipState,
+  requireCurrentInheritedWipInspection,
+} from "./inherited-wip.ts";
 import type { FleetEnvironment } from "./ports.ts";
 import type { PrState } from "./schemas.ts";
 import type { FleetStore } from "./state.ts";
@@ -196,11 +200,10 @@ type FileEditToolDeps = {
   signal: AbortSignal;
 };
 
-export function ensureWriteLease(store: FleetStore, pr: PrState): void {
+function acquireWriteLease(store: FleetStore, pr: PrState): void {
   if (store.operatorRequests.has(pr.identity.number)) {
     throw new Error("PR is waiting for operator input");
   }
-  store.requireCompleteInheritedWipInspection(pr);
   if (
     store.stackWriteOwners.get(pr.stackId) !== pr.identity.number &&
     !store.requestLease(pr, "stack-write")
@@ -209,12 +212,21 @@ export function ensureWriteLease(store: FleetStore, pr: PrState): void {
   }
 }
 
+async function prepareFileMutation(deps: FileEditToolDeps): Promise<void> {
+  acquireWriteLease(deps.store, deps.pr);
+  await requireCurrentInheritedWipInspection(deps);
+}
+
+async function recordFileMutation(deps: FileEditToolDeps): Promise<void> {
+  await recordAuthorizedWipState(deps);
+}
+
 // The reliable worker edit surface: exact-match `str_replace` and full-file
 // `write_file`. A capable model produces these consistently, where a
 // hand-authored unified diff for `apply_patch` frequently fails format or
 // whitespace checks and burns the whole cycle.
 export function createFileEditTools(deps: FileEditToolDeps) {
-  const { worktree, store, pr, record, environment, signal } = deps;
+  const { worktree, record, environment, signal } = deps;
   return {
     str_replace: createTool({
       id: "str_replace",
@@ -232,8 +244,10 @@ export function createFileEditTools(deps: FileEditToolDeps) {
       }),
       execute: (input) =>
         record("str_replace", input, async () => {
-          ensureWriteLease(store, pr);
-          return applyStrReplace(worktree, input);
+          await prepareFileMutation(deps);
+          const result = await applyStrReplace(worktree, input);
+          await recordFileMutation(deps);
+          return result;
         }),
     }),
     write_file: createTool({
@@ -247,8 +261,10 @@ export function createFileEditTools(deps: FileEditToolDeps) {
       outputSchema: z.object({ path: z.string(), bytes: z.number().int() }),
       execute: (input) =>
         record("write_file", input, async () => {
-          ensureWriteLease(store, pr);
-          return writeWorktreeFile(worktree, input);
+          await prepareFileMutation(deps);
+          const result = await writeWorktreeFile(worktree, input);
+          await recordFileMutation(deps);
+          return result;
         }),
     }),
     format_paths: createTool({
@@ -261,7 +277,7 @@ export function createFileEditTools(deps: FileEditToolDeps) {
       outputSchema: z.object({ paths: z.array(z.string()) }),
       execute: (input) =>
         record("format_paths", input, async () => {
-          ensureWriteLease(store, pr);
+          await prepareFileMutation(deps);
           for (const requestedPath of input.paths) {
             const absolute = await containedPath(worktree, requestedPath);
             const stats = await lstat(absolute);
@@ -281,6 +297,7 @@ export function createFileEditTools(deps: FileEditToolDeps) {
           if (result.exitCode !== 0) {
             throw new Error(`Prettier failed: ${result.stderr.trim()}`);
           }
+          await recordFileMutation(deps);
           return { paths: input.paths };
         }),
     }),

@@ -3,6 +3,10 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
+import {
+  recordAuthorizedWipState,
+  requireCurrentInheritedWipInspection,
+} from "./inherited-wip.ts";
 import type { FleetEnvironment } from "./ports.ts";
 import {
   setupEnvironment,
@@ -57,6 +61,7 @@ export async function releaseSetupResources(options: {
     cleanupFailed = true;
     cleanupError = error;
   } finally {
+    store.releaseLease(pr.identity.number, "stack-write", pr.stackId);
     store.releaseLease(pr.identity.number, "heavy", pr.stackId);
     store.releaseLease(pr.identity.number, "setup", pr.stackId);
   }
@@ -138,11 +143,15 @@ export function createSetupWorktreeTool(options: {
         if (store.setupWorktrees.get(worktree) === headSha) {
           return { commands: ["already complete"] };
         }
-        store.requireCompleteInheritedWipInspection(pr);
+        if (!store.requestLease(pr, "stack-write")) {
+          throw new Error("Stack write lease is not available for setup");
+        }
         if (!store.requestLease(pr, "setup")) {
+          store.releaseLease(pr.identity.number, "stack-write", pr.stackId);
           throw new Error("Setup lease is not available");
         }
         if (!store.requestLease(pr, "heavy")) {
+          store.releaseLease(pr.identity.number, "stack-write", pr.stackId);
           store.releaseLease(pr.identity.number, "setup", pr.stackId);
           throw new Error("Heavy lease is not available for generation");
         }
@@ -150,6 +159,13 @@ export function createSetupWorktreeTool(options: {
         let miseScratchDirectory: string | undefined;
         let setupFailed = false;
         try {
+          await requireCurrentInheritedWipInspection({
+            store,
+            pr,
+            environment,
+            worktree,
+            signal,
+          });
           const directories = await resolveSetupDirectories(
             worktree,
             environment,
@@ -180,6 +196,13 @@ export function createSetupWorktreeTool(options: {
             }
             completed.push([command.executable, ...command.args].join(" "));
           }
+          await recordAuthorizedWipState({
+            store,
+            pr,
+            environment,
+            worktree,
+            signal,
+          });
           store.setupWorktrees.set(worktree, headSha);
           for (const [number, state] of store.prs) {
             if (
