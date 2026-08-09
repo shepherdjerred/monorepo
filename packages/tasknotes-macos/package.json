@@ -7,6 +7,7 @@
     "mac:generate": "xcodegen generate",
     "mac:build": "swift build",
     "mac:test": "swift test",
+    "mac:snapshots": "swift test --filter TaskNotesMacTests",
     "mac:typecheck": "swift build --build-tests",
     "mac:format": "xcrun swift-format format --in-place --parallel --recursive Sources Tests App Package.swift",
     "mac:format:check": "xcrun swift-format lint --strict --parallel --recursive Sources Tests App Package.swift",

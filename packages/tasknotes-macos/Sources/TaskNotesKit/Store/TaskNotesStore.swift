@@ -74,7 +74,7 @@ public final class TaskNotesStore {
     public private(set) var lastStoreError: CoreError?
 
     private let storage: FileHostStorage
-    private let clock: any CoreClock
+    private let clock: any CoreClock & ViewerCalendarSource
     private let randomness: any Randomness
     private let scheduler: DispatchRetryScheduler
     private let engineBox: EngineBox
@@ -88,7 +88,7 @@ public final class TaskNotesStore {
     /// would force every test through the real container.
     public init(
         storage: FileHostStorage,
-        clock: any CoreClock = SystemClock(),
+        clock: any CoreClock & ViewerCalendarSource = SystemClock(),
         randomness: any Randomness = SystemRandomness()
     ) {
         self.storage = storage
@@ -229,6 +229,16 @@ public final class TaskNotesStore {
         }
     }
 
+    /// Where and when the viewer is, read now.
+    ///
+    /// Every date-dependent derivation takes one of these rather than reading
+    /// the clock itself, so a whole screen is derived against a single instant.
+    /// Around midnight that is the difference between a coherent list and one
+    /// where a task is simultaneously overdue and due today.
+    public func viewerCalendar() -> ViewerCalendar {
+        clock.viewerCalendar()
+    }
+
     /// Follow a temp id through the alias map recorded when its create was
     /// acked, or answer the id unchanged.
     ///
@@ -293,6 +303,23 @@ public final class TaskNotesStore {
     public func settle() async {
         _ = await Self.runSettle(engineBox)
         refresh()
+    }
+
+    /// Record a failure the shell hit while preparing a command.
+    ///
+    /// Parsing a quick-add line and resolving a named schedule date both run in
+    /// the shell and both call into the core, so both can fail before anything
+    /// is dispatched. They go into the same channel as a storage failure
+    /// because they are the same kind of thing — something this Mac could not
+    /// do — and not into `status.lastError`, which is the engine's account of
+    /// the network and must not be polluted by a local problem.
+    public func report(_ error: CoreError) {
+        lastStoreError = error
+    }
+
+    /// Clear the local failure, once the user has seen it.
+    public func clearReportedError() {
+        lastStoreError = nil
     }
 
     /// Move a parked command back onto the queue.
@@ -363,26 +390,6 @@ public final class TaskNotesStore {
     private struct Observed {
         let snapshot: TaskStoreSnapshot
         let status: SyncStatus
-    }
-}
-
-extension TaskNotesStore {
-    /// Assemble a store over the sandbox container.
-    ///
-    /// Returns the failure instead of throwing, because the only caller is a
-    /// SwiftUI `@State` initialiser, which cannot `try`. Trapping instead would
-    /// turn "Application Support is unwritable" into a launch crash with no
-    /// explanation; a `Result` lets the shell say what went wrong.
-    public static func containerDefault(
-        clock: any CoreClock = SystemClock(),
-        randomness: any Randomness = SystemRandomness()
-    ) -> Result<TaskNotesStore, CoreError> {
-        do {
-            let storage = try FileHostStorage.containerDefault()
-            return .success(TaskNotesStore(storage: storage, clock: clock, randomness: randomness))
-        } catch {
-            return .failure(error)
-        }
     }
 }
 

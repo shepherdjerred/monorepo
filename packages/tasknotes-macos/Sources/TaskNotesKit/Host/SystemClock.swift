@@ -23,12 +23,17 @@ public final class SystemClock: CoreClock {
     /// `DateFormatter` only is once someone remembers `en_US_POSIX`.
     private let ymd: Date.ISO8601FormatStyle
 
+    /// The zone the viewer is in. Retained separately from ``ymd`` because the
+    /// UTC offset cannot be read back out of a format style.
+    private let timeZone: TimeZone
+
     /// A clock over the given timezone, reading the given instant source.
     public init(
         timeZone: TimeZone = .current,
         instant: @escaping @Sendable () -> Date = { Date() }
     ) {
         self.instant = instant
+        self.timeZone = timeZone
         self.ymd = Date.ISO8601FormatStyle(timeZone: timeZone).year().month().day()
     }
 
@@ -53,5 +58,26 @@ public final class SystemClock: CoreClock {
 
     private static func date(fromMillis millis: Int64) -> Date {
         Date(timeIntervalSince1970: Double(millis) / 1000)
+    }
+}
+
+extension SystemClock: ViewerCalendarSource {
+    /// The viewer's day and UTC offset, read at the same instant.
+    ///
+    /// One `instant()` call for both fields rather than two, so the pair cannot
+    /// straddle a DST transition or a midnight and describe two different
+    /// moments.
+    ///
+    /// The `Int32` conversion traps rather than clamping or truncating, which
+    /// is the intended behaviour: `secondsFromGMT` is bounded well inside
+    /// `Int32` by the tz database, so a value outside it means the platform
+    /// broke a contract, and a clamped offset would silently move dates by a
+    /// day rather than saying so.
+    public func viewerCalendar() -> ViewerCalendar {
+        let now = instant()
+        return ViewerCalendar(
+            today: ymd.format(now),
+            utcOffsetSeconds: Int32(timeZone.secondsFromGMT(for: now))
+        )
     }
 }

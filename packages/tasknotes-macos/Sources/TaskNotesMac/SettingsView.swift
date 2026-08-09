@@ -4,27 +4,64 @@ public import TaskNotesUniFFI
 
 /// The `Settings` scene's content, reached at `⌘,`.
 ///
-/// A `TabView` with `.tabViewStyle(.grouped)`-free defaults is the macOS
-/// settings idiom; a single tab is used here because Phase 7 has exactly one
-/// thing worth showing. Additional panes (Vault, Sync, Appearance) land with
-/// the features that need them.
+/// A `TabView` is the macOS settings idiom. Two panes now: the server the app
+/// talks to, and what it is running over. More arrive with the features that
+/// need them.
 ///
 /// Note what is *not* here and will not be: an in-app appearance toggle. The
 /// app follows the system appearance, which is the platform contract.
 public struct SettingsView: View {
-    private let store: Result<TaskNotesStore, CoreError>
+    private let environment: AppEnvironment
 
-    public init(store: Result<TaskNotesStore, CoreError>) {
-        self.store = store
+    public init(environment: AppEnvironment) {
+        self.environment = environment
     }
 
     public var body: some View {
         TabView {
-            GeneralSettingsView(store: store)
+            ServerSettingsView(environment: environment)
+                .tabItem { Label("Server", systemImage: "network") }
+            GeneralSettingsView(store: environment.store)
                 .tabItem { Label("General", systemImage: "gearshape") }
         }
         .accessibilityIdentifier(AccessibilityIdentifier.settings)
-        .frame(width: 460, height: 220)
+        .frame(width: 480, height: 240)
+    }
+}
+
+private struct ServerSettingsView: View {
+    @Bindable var environment: AppEnvironment
+
+    var body: some View {
+        Form {
+            TextField("Address", text: $environment.serverAddress, prompt: Text("http://…"))
+                .textContentType(.URL)
+                .accessibilityIdentifier(AccessibilityIdentifier.settingsServerURL)
+                // Applied on commit rather than per keystroke: reconfiguring
+                // builds a whole new engine, and doing that once per character
+                // typed would dispose an engine mid-request seven times while
+                // someone types a hostname.
+                .onSubmit { environment.applyServerAddress() }
+            LabeledContent("Status", value: statusDescription)
+            Button("Connect") { environment.applyServerAddress() }
+        }
+        .formStyle(.grouped)
+    }
+
+    /// The engine's own state, spelled for a human.
+    ///
+    /// Exhaustive over `SyncState`: `default:` is banned here precisely so a
+    /// new state in the Rust enum becomes a compile error rather than silently
+    /// rendering as one of the old ones.
+    private var statusDescription: String {
+        guard case .success(let store) = environment.store else { return "Unavailable" }
+        switch store.status.state {
+        case .idle: return "Connected"
+        case .syncing: return "Syncing"
+        case .backoff: return "Waiting to retry"
+        case .authError: return "Authentication failed"
+        case .unconfigured: return "No server configured"
+        }
     }
 }
 
@@ -38,32 +75,15 @@ private struct GeneralSettingsView: View {
             // link against the bindings' header and still be missing the static
             // archive; showing the version means a broken link is visible the
             // first time anyone opens Settings.
-            LabeledContent("Sync", value: syncDescription)
             LabeledContent("Storage", value: storageDescription)
         }
         .formStyle(.grouped)
     }
 
-    /// The engine's own state, spelled for a human.
-    ///
-    /// Exhaustive over `SyncState`: `default:` is banned here precisely so a
-    /// new state in the Rust enum becomes a compile error rather than silently
-    /// rendering as one of the old ones.
-    private var syncDescription: String {
-        guard case .success(let store) = store else { return "Unavailable" }
-        switch store.status.state {
-        case .idle: return "Idle"
-        case .syncing: return "Syncing"
-        case .backoff: return "Waiting to retry"
-        case .authError: return "Authentication failed"
-        case .unconfigured: return "No server configured"
-        }
-    }
-
     private var storageDescription: String {
         switch store {
         case .success(let store): return store.storageDescription
-        case .failure(let error): return String(describing: error)
+        case .failure(let error): return error.userMessage
         }
     }
 }

@@ -1,24 +1,52 @@
-public import SwiftUI
+internal import SwiftUI
 internal import TaskNotesKit
+internal import TaskNotesUniFFI
 
 /// The detail pane.
 ///
-/// Deliberately empty in Phase 7. Each destination gets a real view later —
-/// Today first, as the Phase 8 quality gate; Inbox, Upcoming and Browse are
-/// parameterizations of it in Phase 9 rather than three near-identical
-/// triplets.
-///
-/// `ContentUnavailableView` rather than a hand-rolled placeholder: it is the
-/// platform's empty state, so it already tracks system appearance, dynamic
-/// type, and the de-emphasized styling an inactive window should have.
+/// Today is real as of Phase 8. Inbox, Upcoming and Browse are
+/// parameterizations of the same screen rather than three near-identical
+/// triplets, and they land in Phase 9 — until then they are honest placeholders
+/// rather than half-built lists.
 struct SectionDetailView: View {
     let section: SidebarSection
+    let store: Result<TaskNotesStore, CoreError>
 
     var body: some View {
+        switch store {
+        case .failure(let error):
+            unavailable(
+                title: "TaskNotes cannot store its data",
+                description: error.userMessage,
+                symbol: "externaldrive.badge.exclamationmark"
+            )
+        case .success(let store):
+            switch section {
+            case .today:
+                TodayView(store: store)
+            case .inbox, .upcoming, .browse:
+                unavailable(
+                    title: section.title,
+                    description: "This list arrives with the remaining screens.",
+                    symbol: section.systemImage
+                )
+            }
+        }
+    }
+
+    /// `ContentUnavailableView` rather than a hand-rolled placeholder: it is
+    /// the platform's empty state, so it already tracks system appearance,
+    /// dynamic type, and the de-emphasized styling an inactive window should
+    /// have.
+    private func unavailable(
+        title: String,
+        description: String,
+        symbol: String
+    ) -> some View {
         ContentUnavailableView {
-            Label(section.title, systemImage: section.systemImage)
+            Label(title, systemImage: symbol)
         } description: {
-            Text("Nothing here yet.")
+            Text(description)
         }
         .accessibilityIdentifier(AccessibilityIdentifier.detail(section))
         .navigationTitle(section.title)

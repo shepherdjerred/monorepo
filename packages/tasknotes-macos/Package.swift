@@ -149,5 +149,25 @@ let package = Package(
             dependencies: ["TaskNotesKit", "TaskNotesUniFFI"],
             swiftSettings: authoredSwiftSettings + [.defaultIsolation(nil)]
         ),
+
+        // ── The image-snapshot layer. ──────────────────────────────────────
+        //
+        // The one test target that is allowed to touch SwiftUI, because it
+        // renders it. `TaskNotesKit` has no UI imports by design and
+        // `ci/no-suppressions.sh` enforces that, so a test that puts a view on
+        // screen cannot live in `TaskNotesKitTests`; it belongs beside the
+        // views instead.
+        //
+        // `MainActor` default isolation, matching `TaskNotesMac`: every type
+        // under test is main-actor-isolated, and so is `NSHostingView`.
+        //
+        // The plan's testing table places this row at "local + Xcode Cloud"
+        // rather than in the Linux gate, and the package's `lint` task is still
+        // the only thing `bun run verify` runs. Nothing here changes that.
+        .testTarget(
+            name: "TaskNotesMacTests",
+            dependencies: ["TaskNotesMac", "TaskNotesKit", "TaskNotesUniFFI"],
+            swiftSettings: authoredSwiftSettings + [.defaultIsolation(MainActor.self)]
+        ),
     ]
 )

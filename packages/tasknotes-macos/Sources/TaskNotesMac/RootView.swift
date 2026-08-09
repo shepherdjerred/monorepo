@@ -35,7 +35,7 @@ public struct RootView: View {
             .accessibilityIdentifier(AccessibilityIdentifier.sidebar)
             .navigationSplitViewColumnWidth(min: 180, ideal: 220, max: 320)
         } detail: {
-            SectionDetailView(section: navigation.selection)
+            SectionDetailView(section: navigation.selection, store: environment.store)
         }
         // No `.navigationTitle` on the split view itself: the detail pane owns
         // the title so the window title tracks the visible content, which is

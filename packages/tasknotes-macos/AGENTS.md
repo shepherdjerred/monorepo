@@ -18,6 +18,7 @@ Sources/TaskNotesKit/         portable logic — no SwiftUI, no AppKit
 Sources/TaskNotesMac/         SwiftUI views, scenes, commands — MainActor
 Tests/TaskNotesKitTests/      Swift Testing
   Support/                    the spawned-server harness and shared fixtures
+Tests/TaskNotesMacTests/      image snapshots — the only test target that sees SwiftUI
 ci/no-suppressions.sh         the three gates SwiftLint cannot enforce
 project.yml                   XcodeGen spec; the .xcodeproj is generated + gitignored
 Package.swift                 SwiftPM manifest; owns every library target's settings
@@ -84,6 +85,7 @@ bun run lint          # SwiftLint --strict + ci/no-suppressions.sh  (runs in CI)
 bun run mac:generate  # xcodegen generate
 bun run mac:build     # swift build
 bun run mac:test      # swift test
+bun run mac:snapshots # render the screens to .build/snapshots as PNGs
 bun run mac:format    # xcrun swift-format, in place
 bun run mac:analyze   # SwiftLint analyzer rules (needs a full compiler log)
 bun run mac:run       # xcodebuild + launch the .app
@@ -94,6 +96,34 @@ bun run mac:verify    # the full local pre-merge gate
 actually launch the app.** A shell that compiles but was never run is not
 verified — every UI regression found here so far (a deep link opening a second
 window, for one) was invisible to the compiler and to the tests.
+
+## Image snapshots
+
+`bun run mac:snapshots` renders the Today screen, its rows, and the sync banner
+to PNGs in `.build/snapshots/` (gitignored) and prints their absolute paths. It
+is the plan's "Image snapshot — SwiftUI — `.image` via `NSHostingView`" row, and
+it lives in `Tests/TaskNotesMacTests` because `TaskNotesKit` has no UI imports
+by design and `ci/no-suppressions.sh` enforces that.
+
+Three rules hold it in place:
+
+- **It renders offscreen, and that is a hard requirement rather than a
+  preference.** These run on a Mac somebody is using. `NSApplication`'s
+  activation policy is set to `.prohibited` before any window exists, the
+  window is created (so `NSTableView` has a hierarchy to lay out in) but never
+  ordered in, and pixels come from `cacheDisplay(in:to:)` rather than from the
+  framebuffer. Nothing here may reach for `screencapture`, `osascript`,
+  `open -a`, or `ImageRenderer` — the last of which cannot render `List` at all,
+  which is why a window is involved.
+- **Every input is pinned:** size, `2×` scale, instant, timezone, locale, and
+  appearance. Both appearances are always rendered, because the definition of
+  done forbids an in-app appearance toggle, so half the app is only ever visible
+  in one of them.
+- **There are no golden files yet, deliberately.** The assertions are that the
+  image is the right size, has more than one colour, and is a plausible size — a
+  blank render is the silent failure mode. Committing binaries before a human
+  has agreed the screens look right would freeze an unreviewed design; that gate
+  comes after review, not before.
 
 ## What runs where, and why
 

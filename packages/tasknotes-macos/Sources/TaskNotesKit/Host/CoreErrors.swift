@@ -1,5 +1,5 @@
 internal import Foundation
-internal import TaskNotesUniFFI
+public import TaskNotesUniFFI
 
 /// Turning an untyped Swift failure into the core's typed `CoreError`.
 ///
@@ -26,7 +26,28 @@ internal import TaskNotesUniFFI
 /// combination inside a typed-throws function crashes the Swift 6.4 compiler
 /// outright — `SILBuilder.h:2244`,
 /// `assertion failed: FormalConcreteType->isBridgeableObjectType()`.
-internal enum CoreErrors {
+public enum CoreErrors {
+    /// Turn a typed-throwing call into a `Result` without losing the type.
+    ///
+    /// `Result.init(catching:)` is still `where Failure == any Error`, so it
+    /// flattens a `throws(CoreError)` call back to an existential and every
+    /// caller then has to re-narrow it. This does not.
+    ///
+    /// The bare `catch` is exhaustive *because* the body's throw type is
+    /// `CoreError`, which is what makes it legal here and illegal inside a
+    /// `throws(CoreError)` function. `untyped_error_in_catch` bans
+    /// `catch let error`, not this — the error is already typed, and nothing is
+    /// being erased.
+    public static func capturing<T>(
+        _ body: () throws(CoreError) -> T
+    ) -> Result<T, CoreError> {
+        do {
+            return .success(try body())
+        } catch {
+            return .failure(error)
+        }
+    }
+
     /// Run a call into the generated bindings, preserving the `CoreError` it
     /// actually threw.
     ///

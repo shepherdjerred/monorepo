@@ -52,7 +52,7 @@ struct TaskNotesApp: App {
         // Contributes the standard "Settings…" item at `⌘,` in the app menu,
         // in the correct position. Never declare that shortcut by hand.
         Settings {
-            SettingsView(store: environment.store)
+            SettingsView(environment: environment)
         }
     }
 }

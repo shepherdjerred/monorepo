@@ -93,6 +93,18 @@ opt_in_rules:
 # stale suppressions cannot accumulate. It pairs with `banned_disable_comment`
 # below, which bans them outright.
 
+# `file_length` and `type_body_length` are about bounding *complexity*, and
+# prose is not complexity. This package documents the reasoning behind decisions
+# in the source rather than in a wiki that goes stale, so several files are more
+# than half comment — `TaskNotesStore.swift` is 405 lines of which 405-code is
+# documentation. Counting that against a code-length budget makes the rule
+# punish the thing it should reward, so it measures code only.
+#
+# `type_body_length` already excludes comments and whitespace by construction,
+# so it needs no equivalent and is left at its default.
+file_length:
+  ignore_comment_only_lines: true
+
 implicitly_unwrapped_optional:
   # `weakExceptIBOutlets` (the default) exists for Interface Builder, which this
   # app does not use. An IUO is an unchecked promise the compiler stops

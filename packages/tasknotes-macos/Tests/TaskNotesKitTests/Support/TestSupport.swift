@@ -114,3 +114,101 @@ struct HostFixture {
         )
     }
 }
+
+/// A task carrying only the fields a test cares about.
+///
+/// The generated memberwise initializer takes twenty-eight, because UniFFI
+/// emits no defaults. Restating those at every call site would bury the one or
+/// two that carry the assertion.
+func coreTask(
+    id: String,
+    title: String? = nil,
+    status: TaskStatus = .open,
+    priority: Priority = .normal,
+    due: String? = nil,
+    scheduled: String? = nil,
+    recurrence: String? = nil,
+    recurrenceAnchor: RecurrenceAnchor? = nil,
+    completeInstances: [String] = [],
+    archived: Bool = false,
+    projects: [ProjectName] = [],
+    contexts: [ContextName] = []
+) -> CoreTask {
+    CoreTask(
+        id: id,
+        path: id,
+        title: title ?? id,
+        status: status,
+        priority: priority,
+        due: due,
+        scheduled: scheduled,
+        contexts: contexts,
+        projects: projects,
+        tags: [],
+        recurrence: recurrence,
+        recurrenceAnchor: recurrenceAnchor,
+        completeInstances: completeInstances,
+        skippedInstances: [],
+        completedDate: nil,
+        dateCreated: nil,
+        dateModified: nil,
+        timeEstimate: nil,
+        timeEntries: [],
+        blockedBy: [],
+        reminders: [],
+        archived: archived,
+        totalTrackedTime: 0,
+        isBlocked: false,
+        isBlocking: false,
+        extraFields: "{}",
+        details: nil
+    )
+}
+
+/// A viewer standing in a fixed place at a fixed time.
+///
+/// Both halves are pinned because both change answers: the day decides which
+/// tasks are overdue, and the offset decides which civil day a zoned `due`
+/// falls on. A test that read either from the machine would pass in California
+/// and fail in Berlin.
+func fixedCalendar(
+    today: String = "2026-07-22",
+    utcOffsetSeconds: Int32 = -25_200
+) -> ViewerCalendar {
+    ViewerCalendar(today: today, utcOffsetSeconds: utcOffsetSeconds)
+}
+
+/// The formatter every list test uses, pinned to one locale.
+///
+/// `en_US_POSIX` rather than the machine's: month and weekday names are what
+/// these assertions read, and they are locale-dependent by design.
+func fixedText() -> TaskDateText {
+    TaskDateText(locale: Locale(identifier: "en_US_POSIX"))
+}
+
+/// A create request for a recurring task.
+///
+/// `scheduled` matters here in a way it does not elsewhere: it is what the
+/// completion target resolves to, and what the server advances as each
+/// occurrence is completed.
+func recurringRequest(
+    title: String,
+    scheduled: String,
+    recurrence: String
+) -> CreateTaskRequest {
+    CreateTaskRequest(
+        title: title,
+        details: nil,
+        status: nil,
+        priority: nil,
+        due: nil,
+        scheduled: scheduled,
+        contexts: nil,
+        projects: nil,
+        tags: nil,
+        recurrence: recurrence,
+        recurrenceAnchor: nil,
+        timeEstimate: nil,
+        extraFields: nil
+    )
+}
