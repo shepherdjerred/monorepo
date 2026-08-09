@@ -226,6 +226,8 @@ function viewWithCurrent(requesterId: string): PlaybackView {
       title: "Current Song",
       requesterId: uid(requesterId),
       chapters: [],
+      kind: "search",
+      durationSeconds: null,
     },
   };
 }
@@ -427,6 +429,8 @@ describe("CommandHandler routing + acks", () => {
       current: {
         title: "Current Movie",
         requesterId: uid(REQUESTER),
+        kind: "file",
+        durationSeconds: null,
         chapters: [
           { index: 1, title: "Intro", startSeconds: 30, endSeconds: 90 },
         ],
@@ -522,7 +526,15 @@ describe("CommandHandler permissions", () => {
   test("remove honours requester/admin and bounds-checks the index", async () => {
     const view: PlaybackView = {
       ...EMPTY_VIEW,
-      queue: [{ title: "Item A", requesterId: uid(OTHER), chapters: [] }],
+      queue: [
+        {
+          title: "Item A",
+          requesterId: uid(OTHER),
+          chapters: [],
+          kind: "search",
+          durationSeconds: null,
+        },
+      ],
     };
     const denied = makeHandler({ view });
     const r1 = fakeInteraction({
@@ -675,6 +687,8 @@ function viewWithChapters(requesterId: string): PlaybackView {
     current: {
       title: "Current Movie",
       requesterId: uid(requesterId),
+      kind: "file",
+      durationSeconds: null,
       chapters: [
         { index: 1, title: "Intro", startSeconds: 0, endSeconds: 90 },
         { index: 2, title: "The Heist", startSeconds: 90, endSeconds: 3723 },

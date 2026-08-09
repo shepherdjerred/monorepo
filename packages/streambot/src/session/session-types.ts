@@ -5,6 +5,7 @@ import type {
   PlaybackInput,
 } from "@shepherdjerred/streambot/machine/types.ts";
 import type { PlaybackView } from "@shepherdjerred/streambot/discord/queue-text.ts";
+import type { PlayerCardManager } from "@shepherdjerred/streambot/discord/player-card-manager.ts";
 import type { StatusReporter } from "@shepherdjerred/streambot/discord/status-reporter.ts";
 import type { UserbotEntry } from "@shepherdjerred/streambot/pool/userbot-pool.ts";
 import type { SubtitleCandidate } from "@shepherdjerred/streambot/sources/subtitles.ts";
@@ -56,6 +57,8 @@ export type Session = {
   readonly entry: UserbotEntry;
   readonly actor: PlaybackActor;
   readonly reporter: StatusReporter;
+  /** The live now-playing card with playback controls, posted to `statusChannelId`. */
+  readonly card: PlayerCardManager;
   unsubscribe: () => void;
   /** True once the machine has left `idle` at least once, so we don't tear down on the boot snapshot. */
   hasStarted: boolean;

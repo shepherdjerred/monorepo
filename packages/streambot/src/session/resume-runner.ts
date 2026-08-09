@@ -1,5 +1,4 @@
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
-import type { Announcement } from "@shepherdjerred/streambot/discord/status-reporter.ts";
 import type { PlaybackInput } from "@shepherdjerred/streambot/machine/types.ts";
 import type { UserbotProvider } from "@shepherdjerred/streambot/pool/userbot-pool.ts";
 import {
@@ -30,7 +29,7 @@ export type ResumeRunnerDeps = {
   readonly pool: UserbotProvider;
   readonly announce: (
     channelId: ChannelId | null,
-    message: Announcement,
+    message: string,
   ) => Promise<void>;
   readonly spawn: (params: SpawnParams) => Session;
 };

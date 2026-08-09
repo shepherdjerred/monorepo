@@ -1,27 +1,12 @@
 import { shameMessage } from "@shepherdjerred/streambot/moderation/adult-block.ts";
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
-import { parseTitleYear } from "@shepherdjerred/streambot/sources/normalize.ts";
-import type { PosterFetcher } from "@shepherdjerred/streambot/metadata/tmdb.ts";
 import type { CrashNotice } from "@shepherdjerred/streambot/machine/types.ts";
 import type { UserId } from "@shepherdjerred/streambot/types/ids.ts";
-
-/**
- * A world-readable announcement: either plain text, or text plus an embed (used to attach a movie/TV
- * poster to the now-playing line). Kept discord.js-free here; `command-bot.ts` renders the embed.
- */
-export type Announcement =
-  | string
-  | {
-      readonly content: string;
-      readonly embed?: { readonly title?: string; readonly imageUrl?: string };
-    };
 
 /** Minimal projection of the machine snapshot the reporter needs. */
 export type StatusSnapshot = {
   readonly state: string;
-  readonly currentTitle: string | null;
-  readonly currentRequester: UserId | null;
-  /** Kind of the currently-playing source — posters are only fetched for local files. */
+  /** Kind of the source being resolved — only local files get the slow-extraction notice. */
   readonly currentKind: Source["kind"] | null;
   /**
    * Label of the source currently being resolved, available before it resolves to a title (the
@@ -66,8 +51,6 @@ const defaultScheduler: NoticeScheduler = (fn, ms) => {
 
 export type StatusReporterOptions = {
   readonly initialNonce?: number;
-  /** Optional poster lookup; when set, local-file now-playing lines get a poster embed. */
-  readonly fetchPoster?: PosterFetcher;
   /**
    * How long a local file may sit in `resolving` before a "preparing…" notice is posted. The notice
    * is cancelled if resolving finishes first, so fast paths (sidecar/cache hit) stay silent and only
@@ -80,17 +63,18 @@ export type StatusReporterOptions = {
 };
 
 /**
- * Turns machine transitions into world-readable announcements in the status channel: "now playing"
- * when a stream starts (with a movie/TV poster for local files when a poster fetcher is configured),
- * and the cheeky shaming when an adult source is blocked. De-duped so a re-rendered snapshot doesn't
- * spam. Wire `handle` into `actor.subscribe(...)`.
+ * Turns machine transitions into world-readable *notices* in the status channel: a slow file being
+ * prepared, a crash being retried, why a stream stopped, and the cheeky shaming when an adult source
+ * is blocked. Each is de-duped so a re-rendered snapshot doesn't spam. Wire `handle` into
+ * `actor.subscribe(...)`.
+ *
+ * The "now playing" line is deliberately **not** here: it is the player card, a live message with
+ * controls owned by `player-card-manager.ts`. This reporter only emits one-shot text.
  */
 export class StatusReporter {
-  private readonly announce: (message: Announcement) => Promise<void>;
-  private readonly fetchPoster: PosterFetcher | undefined;
+  private readonly announce: (message: string) => Promise<void>;
   private readonly schedule: NoticeScheduler;
   private readonly resolvingNoticeDelayMs: number;
-  private lastNowKey: string | null = null;
   private lastNonce: number;
   /** State seen on the previous snapshot — detects the active→idle edge for stop announcements. */
   private lastState: string | null = null;
@@ -104,11 +88,10 @@ export class StatusReporter {
   private noticeKey: string | null = null;
 
   constructor(
-    announce: (message: Announcement) => Promise<void>,
+    announce: (message: string) => Promise<void>,
     options: StatusReporterOptions = {},
   ) {
     this.announce = announce;
-    this.fetchPoster = options.fetchPoster;
     this.lastNonce = options.initialNonce ?? 0;
     this.schedule = options.schedule ?? defaultScheduler;
     this.resolvingNoticeDelayMs =
@@ -126,48 +109,6 @@ export class StatusReporter {
     this.announceCrashNotice(snapshot);
     this.announceStopReason(snapshot);
     this.updateResolvingNotice(snapshot);
-
-    const nowKey =
-      snapshot.state === "streaming" && snapshot.currentTitle !== null
-        ? snapshot.currentTitle
-        : null;
-    if (nowKey === null) {
-      // Reset between songs so a looped/repeated track re-announces when it starts again.
-      this.lastNowKey = null;
-      return;
-    }
-    if (nowKey === this.lastNowKey) {
-      return;
-    }
-    // Set the dedup key before the (async) poster fetch so a re-rendered snapshot can't double-post.
-    this.lastNowKey = nowKey;
-
-    const who =
-      snapshot.currentRequester === null
-        ? ""
-        : ` (requested by <@${snapshot.currentRequester}>)`;
-    const content = `▶️ Now playing **${nowKey}**${who}`;
-
-    if (snapshot.currentKind === "file" && this.fetchPoster !== undefined) {
-      const fetchPoster = this.fetchPoster;
-      void (async () => {
-        const { title, year } = parseTitleYear(nowKey);
-        const poster = await fetchPoster(title, year);
-        // The track may have changed while the poster fetch was in flight; don't post a stale
-        // announcement out of order behind the newer track's message.
-        if (this.lastNowKey !== nowKey) {
-          return;
-        }
-        await this.announce(
-          poster === null
-            ? content
-            : { content, embed: { title: nowKey, imageUrl: poster.posterUrl } },
-        );
-      })();
-      return;
-    }
-
-    void this.announce(content);
   }
 
   /**

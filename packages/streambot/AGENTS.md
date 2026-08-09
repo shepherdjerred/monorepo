@@ -54,10 +54,11 @@ stream files/URLs directly with ffmpeg instead of automating a browser.
   (chapter markers: `ffprobe` for files, yt-dlp `chapters` for URLs; best-effort, never throws),
   `subtitles.ts` (pure subtitle helpers), `subtitle-io.ts` (ffprobe/ffmpeg/yt-dlp glue that stages
   a track).
-- `src/metadata/` — `tmdb.ts`: optional TMDB poster lookup for the now-playing embed (local files).
-  Best-effort + in-process cache; disabled unless `TMDB_API_KEY` is set.
-- `src/discord/` — command bot client + commands + routing. `status-reporter.ts` posts the
-  now-playing line (with a TMDB poster embed for local files when configured). `/stream chapters`
+- `src/metadata/` — `tmdb.ts`: optional TMDB poster lookup for the player card's thumbnail (local
+  files). Best-effort + in-process cache; disabled unless `TMDB_API_KEY` is set.
+- `src/discord/` — command bot client + commands + routing, plus the player card (see below).
+  `status-reporter.ts` posts only one-shot notices (preparing, crash/retry, stop reason, shaming) —
+  now-playing belongs to the card. `/stream chapters`
   lists chapters; `/stream chapter <n>` seeks to one (reuses the live seek side-channel).
   `/stream help` (`helpText()` in `command-handler.ts`) prints the command reference + a
   "supported sources" note; a command-handler test asserts every registered subcommand appears in it.
@@ -75,6 +76,53 @@ stream files/URLs directly with ffmpeg instead of automating a browser.
   ffmpeg/ffprobe (e.g. inside the streambot image), never part of the plain `bun test`. They
   are not wired into a turbo task, so `bun run verify` and CI don't run them — run them
   manually against real ffmpeg when touching the ffmpeg pipeline.
+
+## Player card
+
+The public "now playing" message is a **live card**, not a one-shot line: an embed with a progress
+bar, a poster thumbnail, and control rows, re-rendered as playback advances. It is the primary UI —
+there is no web dashboard, and Discord Activities are ruled out (the app wouldn't pass Discord
+verification).
+
+- **Rendering** is split the way `subtitle-menu.ts` splits its own: `discord/player-card.ts` is pure
+  (bar math, embed body, button/menu descriptors) and `discord/player-card-message.ts` is the
+  discord.js edge (descriptors → `EmbedBuilder` + `ActionRowBuilder`). Classic embeds, deliberately
+  **not** Components V2 — V2 forbids `embeds`, which the TMDB poster path uses.
+- **Controls**: `⏪/⏩ 30s`, `⏭ Skip`, `⏹ Stop`, `🔁 Loop` (cycles off→track→queue), `🔉/🔊`,
+  `🔀 Shuffle`, `📜 Queue`, `💬 Subtitles`, plus a chapter jump menu when the item has chapters
+  (first 25). `💬 Subtitles` runs the **real** `/stream subtitles` handler over an adapted component
+  interaction (`discord/interaction-adapters.ts`), so the single-flight guard and the
+  playback-moved-on re-check are shared rather than forked.
+- **Permissions** live in `discord/player-controls.ts` (pure, exhaustively tested). Anyone **in the
+  voice channel**: seek, volume, loop, shuffle, queue. Requester-or-admin: skip, subtitles.
+  Admin-only: stop. Seek/volume are intentionally looser here than `/stream seek` — pressing a
+  button while sitting in the channel is more visible than typing a command from anywhere in the
+  server. The slash gates are unchanged; don't "fix" the asymmetry without deciding which way.
+- **Lifecycle** (`discord/player-card-manager.ts`): a new card is posted when a _different_ title
+  reaches `streaming`; the old one keeps its text but loses its controls. Non-streaming states
+  (joining, a crash retry, a subtitle-change restart) re-render the same card rather than replacing
+  it. An edit is skipped when the rendered payload is byte-identical. Teardown calls `finalize()`,
+  which renders a control-less final card.
+- **Click routing** is a message-id → `(guild, voice channel)` table in `PlayerCardMessenger`, not
+  ids baked into the `customId`: a card outlives every interaction token, so a click hours later
+  carries only `interaction.message.id`. Unknown message → "That player card is no longer active."
+  `moveSession` calls `card.reown()` so a moderator dragging the streamer doesn't strand the buttons.
+  Ids are namespaced `sb:v1:` so the router leaves `pagination.ts`'s `page_*` collectors alone.
+- **Re-posting**: the bot holds the non-privileged `GuildMessages` intent (message _content_ is not
+  requested) purely to count messages landing beneath the card; past the threshold the card is
+  deleted and re-posted at the bottom so controls stay reachable in a chatty channel.
+- **Config**: `PLAYER_CARD_ENABLED` (default true; false restores the plain `▶️ Now playing …`
+  announcement with no components), `PLAYER_CARD_TICK_MS` (default `10000`, `0` disables ticking),
+  `PLAYER_CARD_REPOST_AFTER_MESSAGES` (default `5`, `0` disables re-posting). Defaults are baked in,
+  so the homelab chart needs no new env wiring.
+
+`StatusReporter` no longer announces now-playing — it is strictly one-shot notices (preparing,
+crash/retry, stop reason, adult shaming). Don't reintroduce a now-playing line there; it would
+double up with the card.
+
+**No pause button.** The dvs fork's `Player` has no pause and `streamer/elapsed.ts` depends on
+wall-clock elapsed tracking media position. Adding one means killing ffmpeg, restarting at position
+through the seek machinery, and a paused state in both the machine and the elapsed tracker.
 
 ## Subtitles
 

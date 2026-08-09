@@ -1,27 +1,33 @@
 import {
   type ChatInputCommandInteraction,
   Client,
-  EmbedBuilder,
   Events,
   GatewayIntentBits,
-  type MessageCreateOptions,
+  type Guild,
+  type Message,
+  type MessageComponentInteraction,
   MessageFlags,
-  REST,
-  Routes,
+  type User,
   type VoiceState,
 } from "discord.js";
 import { countRealViewers } from "@shepherdjerred/discord-stream-lifecycle/viewer-presence";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
-import type { Announcement } from "@shepherdjerred/streambot/discord/status-reporter.ts";
+import { CommandHandler } from "@shepherdjerred/streambot/discord/command-handler.ts";
 import {
-  CommandHandler,
-  type CommandInteraction,
-} from "@shepherdjerred/streambot/discord/command-handler.ts";
-import { sendPaginatedReply } from "@shepherdjerred/streambot/discord/pagination.ts";
-import { sendSubtitleMenu } from "@shepherdjerred/streambot/discord/subtitle-menu.ts";
-import { commandJson } from "@shepherdjerred/streambot/discord/commands.ts";
+  adaptCardInteraction,
+  adaptCommandInteraction,
+} from "@shepherdjerred/streambot/discord/interaction-adapters.ts";
+import { registerGlobalCommands } from "@shepherdjerred/streambot/discord/command-registration.ts";
+import { PlayerCardMessenger } from "@shepherdjerred/streambot/discord/player-card-message.ts";
+import {
+  PlayerCardRouter,
+  safeHandleCardInteraction,
+} from "@shepherdjerred/streambot/discord/player-card-router.ts";
 import type { SessionManager } from "@shepherdjerred/streambot/session/session-manager.ts";
-import { EMPTY_HANDLE } from "@shepherdjerred/streambot/session/session-types.ts";
+import {
+  EMPTY_HANDLE,
+  type SessionHandle,
+} from "@shepherdjerred/streambot/session/session-types.ts";
 import type { LibraryEntry } from "@shepherdjerred/streambot/sources/library.ts";
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
 import type { PlaylistItem } from "@shepherdjerred/streambot/sources/ytdlp.ts";
@@ -29,7 +35,6 @@ import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts"
 import {
   ChannelIdSchema,
   GuildIdSchema,
-  toUserId,
   type ChannelId,
   type GuildId,
 } from "@shepherdjerred/streambot/types/ids.ts";
@@ -71,24 +76,6 @@ export type CommandBotDeps = {
   ) => Promise<ResolvedSource>;
 };
 
-/** Render a neutral {@link Announcement} into discord.js message options (text, optional poster embed). */
-function toMessageOptions(message: Announcement): MessageCreateOptions {
-  if (typeof message === "string") {
-    return { content: message };
-  }
-  if (message.embed === undefined) {
-    return { content: message.content };
-  }
-  const embed = new EmbedBuilder();
-  if (message.embed.title !== undefined) {
-    embed.setTitle(message.embed.title);
-  }
-  if (message.embed.imageUrl !== undefined) {
-    embed.setImage(message.embed.imageUrl);
-  }
-  return { content: message.content, embeds: [embed] };
-}
-
 function parseVoiceChannelId(raw: string | null): ChannelId | null {
   if (raw === null) {
     return null;
@@ -104,6 +91,9 @@ function parseVoiceChannelId(raw: string | null): ChannelId | null {
 export class CommandBot {
   private readonly client: Client;
   private readonly deps: CommandBotDeps;
+  /** Player-card Discord effects + the message → session routing table. Handed to SessionManager. */
+  readonly cards: PlayerCardMessenger;
+  private readonly cardRouter: PlayerCardRouter;
   /** Pending "leave empty VC" timers, keyed by `guildId:channelId`. */
   private readonly aloneTimers = new Map<
     string,
@@ -115,7 +105,32 @@ export class CommandBot {
   constructor(deps: CommandBotDeps) {
     this.deps = deps;
     this.client = new Client({
-      intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
+      intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildVoiceStates,
+        // Non-privileged, and message *content* is deliberately not requested: the player card only
+        // needs to know that messages are arriving beneath it, so it can re-post before the controls
+        // scroll out of reach.
+        GatewayIntentBits.GuildMessages,
+      ],
+    });
+    this.cards = new PlayerCardMessenger(this.client);
+    this.cardRouter = new PlayerCardRouter({
+      config: deps.config,
+      messenger: this.cards,
+      sessionFor: (owner) =>
+        this.deps
+          .getSessions()
+          .getExisting(owner.guildId, owner.voiceChannelId),
+      refreshCard: (owner) => {
+        this.deps
+          .getSessions()
+          .refreshCard(owner.guildId, owner.voiceChannelId);
+      },
+      voiceChannelOf: (interaction) =>
+        this.voiceChannelOf(interaction.guild, interaction.user),
+      openSubtitlePicker: (interaction, handle) =>
+        this.openSubtitlePicker(interaction, handle),
     });
     this.ready = new Promise<void>((resolve, reject) => {
       this.client.once(Events.ClientReady, (ready) => {
@@ -125,7 +140,16 @@ export class CommandBot {
     this.client.on(Events.InteractionCreate, (interaction) => {
       if (interaction.isChatInputCommand()) {
         void this.safeHandle(interaction);
+        return;
       }
+      // Player-card controls. Ids outside the `sb:` namespace (pagination, the subtitle picker) are
+      // driven by their own message-scoped collectors and are left untouched by the router.
+      if (interaction.isMessageComponent()) {
+        void safeHandleCardInteraction(this.cardRouter, interaction);
+      }
+    });
+    this.client.on(Events.MessageCreate, (message: Message) => {
+      this.onChannelMessage(message);
     });
     this.client.on(Events.VoiceStateUpdate, (oldState, newState) => {
       this.onVoiceStateUpdate(oldState, newState);
@@ -149,22 +173,33 @@ export class CommandBot {
     await this.client.destroy();
   }
 
-  /** Post a world-readable announcement to a text channel (now-playing, shaming, resume). No-op if null. */
-  async announce(
-    channelId: ChannelId | null,
-    message: Announcement,
-  ): Promise<void> {
+  /** Post a world-readable notice to a text channel (shaming, crash, resume). No-op if null. */
+  async announce(channelId: ChannelId | null, message: string): Promise<void> {
     if (channelId === null) {
       return;
     }
     try {
       const channel = await this.client.channels.fetch(channelId);
       if (channel?.isSendable() === true) {
-        await channel.send(toMessageOptions(message));
+        await channel.send({ content: message });
       }
     } catch (error) {
       log.warn("announce failed", { error: getErrorMessage(error) });
     }
+  }
+
+  /**
+   * Feed status-channel traffic to the player cards so they can re-post before scrolling out of
+   * reach. Only the message id and channel are used — the bot does not request message content.
+   */
+  private onChannelMessage(message: Message): void {
+    const channelId = ChannelIdSchema.safeParse(message.channelId);
+    if (!channelId.success) {
+      return;
+    }
+    this.deps
+      .getSessions()
+      .notifyStatusChannelMessage(channelId.data, message.id);
   }
 
   private async registerThenSettle(
@@ -173,7 +208,11 @@ export class CommandBot {
     reject: (error: Error) => void,
   ): Promise<void> {
     try {
-      await this.register(applicationId);
+      await registerGlobalCommands(
+        this.client,
+        this.deps.config.discord.botToken,
+        applicationId,
+      );
       resolve();
     } catch (error) {
       reject(
@@ -182,39 +221,24 @@ export class CommandBot {
     }
   }
 
-  private async register(applicationId: string): Promise<void> {
-    const rest = new REST().setToken(this.deps.config.discord.botToken);
-    // Global registration: the commands work in every server the bot is invited to (the pool decides
-    // which of those it can actually stream into).
-    await rest.put(Routes.applicationCommands(applicationId), {
-      body: commandJson,
-    });
-    log.info("slash commands registered", { count: commandJson.length });
-    // Pre-pool deploys registered guild-scoped commands. Discord stores guild and global commands
-    // in separate buckets and a PUT to one never clears the other, so a leftover guild-scoped copy
-    // shows up as a duplicate /stream in the picker. Empty every guild bucket the bot can see.
-    for (const guildId of this.client.guilds.cache.keys()) {
-      await rest.put(Routes.applicationGuildCommands(applicationId, guildId), {
-        body: [],
-      });
-    }
-    log.info("stale guild-scoped commands cleared", {
-      guilds: this.client.guilds.cache.size,
-    });
-  }
-
-  /** Voice channel the issuer is currently in (for joining / addressing their session), or null. */
-  private issuerVoiceChannel(
-    interaction: ChatInputCommandInteraction,
-  ): ChannelId | null {
-    const channelId = interaction.guild?.voiceStates.cache.get(
-      interaction.user.id,
-    )?.channelId;
+  /**
+   * Voice channel a user is currently in (for joining / addressing their session), or null. Shared
+   * by slash routing and the player card's "are you actually in the channel" permission gate.
+   */
+  private voiceChannelOf(guild: Guild | null, user: User): ChannelId | null {
+    const channelId = guild?.voiceStates.cache.get(user.id)?.channelId;
     if (channelId === null || channelId === undefined) {
       return null;
     }
     const parsed = ChannelIdSchema.safeParse(channelId);
     return parsed.success ? parsed.data : null;
+  }
+
+  /** Voice channel the slash-command issuer is currently in, or null. */
+  private issuerVoiceChannel(
+    interaction: ChatInputCommandInteraction,
+  ): ChannelId | null {
+    return this.voiceChannelOf(interaction.guild, interaction.user);
   }
 
   private async route(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -276,7 +300,16 @@ export class CommandBot {
       }
     }
 
-    const handler = new CommandHandler({
+    await this.buildHandler(handle, announceChannel).run(
+      adaptCommandInteraction(interaction),
+    );
+  }
+
+  private buildHandler(
+    handle: SessionHandle,
+    announceChannel: ChannelId | null,
+  ): CommandHandler {
+    return new CommandHandler({
       config: this.deps.config,
       dispatch: handle.dispatch,
       view: handle.view,
@@ -293,7 +326,21 @@ export class CommandBot {
       claimSubtitleMenu: handle.claimSubtitleMenu,
       releaseSubtitleMenu: handle.releaseSubtitleMenu,
     });
-    await handler.run(this.adapt(interaction));
+  }
+
+  /**
+   * The card's 💬 Subtitles button, served by running the *real* `/stream subtitles` handler over
+   * an adapted component interaction. Reusing the handler keeps the single-flight guard and the
+   * "playback moved on while you were choosing" re-check in one place instead of forking them.
+   */
+  private async openSubtitlePicker(
+    interaction: MessageComponentInteraction,
+    handle: SessionHandle,
+  ): Promise<void> {
+    const invoked = ChannelIdSchema.safeParse(interaction.channelId);
+    await this.buildHandler(handle, invoked.success ? invoked.data : null).run(
+      adaptCardInteraction(interaction, "subtitles"),
+    );
   }
 
   private onVoiceStateUpdate(oldState: VoiceState, newState: VoiceState): void {
@@ -452,31 +499,6 @@ export class CommandBot {
       clearTimeout(timer);
       this.aloneTimers.delete(key);
     }
-  }
-
-  /** Adapt a discord.js interaction to the handler's minimal, testable surface. */
-  private adapt(interaction: ChatInputCommandInteraction): CommandInteraction {
-    return {
-      userId: toUserId(interaction.user.id),
-      subcommand: () => interaction.options.getSubcommand(),
-      getString: (name) => interaction.options.getString(name),
-      getStringRequired: (name) => interaction.options.getString(name, true),
-      getIntegerRequired: (name) => interaction.options.getInteger(name, true),
-      reply: async (content) => {
-        await interaction.reply({ content, flags: MessageFlags.Ephemeral });
-      },
-      defer: async () => {
-        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-      },
-      editReply: async (content) => {
-        await interaction.editReply(content);
-      },
-      replyPaginated: async (payload) => {
-        await sendPaginatedReply(interaction, payload);
-      },
-      replySelectMenu: (candidates) =>
-        sendSubtitleMenu(interaction, candidates),
-    };
   }
 
   private async safeHandle(
