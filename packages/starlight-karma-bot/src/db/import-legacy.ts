@@ -210,8 +210,15 @@ function sourceTotals(
   return new Map(rows.map((row) => [row.id, row.total]));
 }
 
-async function targetTotals(column: "giverId" | "receiverId"): Promise<Totals> {
-  const rows = await prisma.karma.groupBy({
+/** The subset of the client the import needs, so the same helpers work
+ *  against either the client or an interactive transaction handle. */
+type KarmaReader = Pick<typeof prisma, "karma" | "person">;
+
+async function targetTotals(
+  tx: KarmaReader,
+  column: "giverId" | "receiverId",
+): Promise<Totals> {
+  const rows = await tx.karma.groupBy({
     by: [column],
     _sum: { amount: true },
   });
@@ -291,25 +298,41 @@ export async function importLegacyDatabase(sourcePath: string): Promise<void> {
       guildId: row.guildId,
     }));
 
-    await prisma.$transaction([
-      prisma.person.createMany({ data: persons }),
-      prisma.karma.createMany({ data: karmaRows }),
-    ]);
-    console.warn("[Import] ✓ Rows written");
+    // Validation runs INSIDE the transaction so a mismatch rolls the import
+    // back. If it committed first, a failed check would leave the bad rows in
+    // place — and because a non-empty target makes the startup import skip,
+    // the next boot would silently serve data that failed verification.
+    await prisma.$transaction(
+      async (tx) => {
+        await tx.person.createMany({ data: persons });
+        await tx.karma.createMany({ data: karmaRows });
 
-    compareTotals("Given", sourceGiven, await targetTotals("giverId"));
-    compareTotals("Received", sourceReceived, await targetTotals("receiverId"));
+        compareTotals("Given", sourceGiven, await targetTotals(tx, "giverId"));
+        compareTotals(
+          "Received",
+          sourceReceived,
+          await targetTotals(tx, "receiverId"),
+        );
 
-    const importedPersons = await prisma.person.count();
-    const importedKarma = await prisma.karma.count();
-    if (importedPersons !== persons.length || importedKarma !== karma.length) {
-      throw new Error(
-        `Row counts do not match: person ${String(importedPersons)}/${String(persons.length)}, karma ${String(importedKarma)}/${String(karma.length)}`,
-      );
-    }
-    console.warn(
-      `[Import] ✓ Imported ${String(importedPersons)} person and ${String(importedKarma)} karma rows`,
+        const importedPersons = await tx.person.count();
+        const importedKarma = await tx.karma.count();
+        if (
+          importedPersons !== persons.length ||
+          importedKarma !== karma.length
+        ) {
+          throw new Error(
+            `Row counts do not match: person ${String(importedPersons)}/${String(persons.length)}, karma ${String(importedKarma)}/${String(karma.length)}`,
+          );
+        }
+        console.warn(
+          `[Import] ✓ Verified ${String(importedPersons)} person and ${String(importedKarma)} karma rows`,
+        );
+      },
+      // The default interactive-transaction timeout is 5s; the import is small
+      // but the verification adds several round trips, so allow headroom.
+      { timeout: 60_000 },
     );
+    console.warn("[Import] ✓ Committed");
   } finally {
     source.close();
   }

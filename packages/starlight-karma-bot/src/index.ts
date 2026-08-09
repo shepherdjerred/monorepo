@@ -14,16 +14,36 @@ Sentry.init({
 });
 console.warn("[App] Sentry initialized");
 
-// Reported here rather than in a subsystem so the handlers are armed before
-// anything that could reject is imported.
+// Armed here, before anything that could reject is imported.
+//
+// These MUST exit. Installing a listener suppresses the runtime's default
+// fatal behavior — verified in Bun: with a log-only handler, an unhandled
+// rejection leaves the process alive and it still exits 0. Reporting and
+// returning would therefore leave the bot running in an undefined state while
+// the still-connected gateway keeps `/live` answering 200, so Kubernetes would
+// never recycle it. That is exactly the zombie the probes in this change exist
+// to catch, and a swallowing handler would quietly defeat them.
+function exitOnFatal(source: string, error: unknown): void {
+  console.error(`[App] ${source}:`, error);
+  Sentry.captureException(error, { tags: { source } });
+  void (async () => {
+    try {
+      // Best-effort flush; the report is lost if the process dies first.
+      await Sentry.close(2000);
+    } catch (flushError) {
+      console.error("[App] Failed to flush Sentry before exit:", flushError);
+    } finally {
+      process.exit(1);
+    }
+  })();
+}
+
 process.on("unhandledRejection", (reason: unknown) => {
-  console.error("[App] Unhandled promise rejection:", reason);
-  Sentry.captureException(reason, { tags: { source: "unhandledRejection" } });
+  exitOnFatal("unhandledRejection", reason);
 });
 
 process.on("uncaughtException", (error: unknown) => {
-  console.error("[App] Uncaught exception:", error);
-  Sentry.captureException(error, { tags: { source: "uncaughtException" } });
+  exitOnFatal("uncaughtException", error);
 });
 
 // Dynamic imports, deliberately: static `import` declarations are hoisted and
