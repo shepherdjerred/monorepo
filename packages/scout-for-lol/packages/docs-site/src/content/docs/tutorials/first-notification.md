@@ -21,8 +21,9 @@ When the tracked player finishes a game, this arrives in your channel:
 
 ## 1. Add Scout to your server
 
-You need the **Manage Server** permission in the Discord server you are setting
-up.
+You need the **Administrator** permission in the Discord server you are setting
+up. Scout gates both `/track` and per-guild dashboard access on it, so Manage
+Server alone is not enough to finish this tutorial.
 
 1. Open the [Scout dashboard](/app/).
 2. Choose **Sign in with Discord** and approve the sign-in.

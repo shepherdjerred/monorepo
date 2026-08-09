@@ -165,6 +165,17 @@ export async function executeTrack(
 
     await interaction.editReply({ content: formatTrackResult(result) });
 
+    // addSubscription swallows database failures and reports them as
+    // `internal-error` rather than throwing, so without this the dispatcher
+    // would count a database outage as a successful command. The other
+    // non-created outcomes (already tracked, quota reached, unknown Riot ID)
+    // are ordinary user-facing answers and stay successes.
+    if (result.kind === "internal-error") {
+      throw new Error(
+        `/track failed for ${args.data.alias}: ${result.message}`,
+      );
+    }
+
     if (result.kind === "created") {
       void runBackfillAfterCommit({
         alias: args.data.alias,
