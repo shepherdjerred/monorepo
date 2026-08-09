@@ -264,6 +264,113 @@ describe("temporal chart rendering", () => {
   });
 });
 
+describe("scatter chart rendering", () => {
+  test("omits points whose configured x output is null or missing", () => {
+    const snapshot = VisualizationSnapshotSchema.parse({
+      version: 1,
+      generatedAt: "2026-08-08T00:00:00.000Z",
+      kind: "SCATTER_CHART",
+      title: null,
+      temporal: null,
+      bucket: null,
+      display: {
+        theme: null,
+        palette: null,
+        smooth: false,
+        stack: "none",
+        rollingWindow: null,
+        cumulative: false,
+        sparkline: false,
+      },
+      series: [
+        {
+          id: "damage",
+          label: "Damage",
+          metric: "damage_per_game",
+          additive: false,
+          points: [
+            scatterPoint("missing-x", 7),
+            scatterPoint("null-x", 8, null),
+            scatterPoint("valid-x", 9, 42),
+          ],
+        },
+      ],
+      annotations: [],
+      trends: [],
+    });
+
+    const option = JSON.stringify(
+      visualizationSnapshotToOption(snapshot, "static"),
+    );
+    expect(option).not.toContain('"name":"missing-x"');
+    expect(option).not.toContain('"name":"null-x"');
+    expect(option).toContain('"name":"valid-x","value":[42,9]');
+  });
+
+  test("resolves tooltips through the hovered series data order", () => {
+    const snapshot = VisualizationSnapshotSchema.parse({
+      version: 1,
+      generatedAt: "2026-08-08T00:00:00.000Z",
+      kind: "SCATTER_CHART",
+      title: null,
+      temporal: null,
+      bucket: null,
+      display: {
+        theme: null,
+        palette: null,
+        smooth: false,
+        stack: "none",
+        rollingWindow: null,
+        cumulative: false,
+        sparkline: false,
+      },
+      series: [
+        {
+          id: "alpha",
+          label: "Alpha",
+          metric: "games",
+          additive: true,
+          points: [scatterPoint("alpha-point", 10, 1)],
+        },
+        {
+          id: "beta",
+          label: "Beta",
+          metric: "games",
+          additive: true,
+          points: [
+            scatterPoint("beta-hidden", 20, null),
+            scatterPoint("beta-visible", 30, 3),
+          ],
+        },
+      ],
+      annotations: [],
+      trends: [],
+    });
+
+    const tooltip = tooltipText(snapshot, {
+      seriesId: "beta",
+      seriesName: "Beta",
+      dataIndex: 0,
+    });
+    expect(tooltip).toContain("beta-visible");
+    expect(tooltip).toContain("Beta: 30");
+    expect(tooltip).not.toContain("alpha-point");
+    expect(tooltip).not.toContain("Alpha:");
+  });
+});
+
+function scatterPoint(label: string, value: number, xValue?: number | null) {
+  return {
+    key: label,
+    label,
+    start: "2026-08-08T00:00:00.000Z",
+    end: "2026-08-08T00:00:00.000Z",
+    value,
+    ...(xValue === undefined ? {} : { xValue }),
+    evidence: { sampleSize: 1, confidenceInterval: null },
+  };
+}
+
 function patchSeries(id: string, labels: string[]) {
   return {
     id,

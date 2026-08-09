@@ -3,7 +3,6 @@ import type {
   VisualizationSnapshot,
 } from "@scout-for-lol/data";
 import type * as echarts from "echarts";
-import { format as echartsFormat } from "echarts";
 import { calendarTooltipText } from "#src/html/visualization-calendar-tooltip.ts";
 import {
   donutOption,
@@ -16,6 +15,10 @@ import {
   formatSeriesValue,
   usesPercentageAxis,
 } from "#src/html/visualization-value-format.ts";
+import {
+  pointTooltipText,
+  scatterTooltipText,
+} from "#src/html/visualization-tooltip.ts";
 import { alignedTrendValues } from "#src/html/visualization-trend-values.ts";
 
 export type VisualizationOptionMode = "interactive" | "static";
@@ -41,7 +44,7 @@ export function visualizationSnapshotToOption(
   }
   const categories = categoryPoints(snapshot).map((point) => point.label);
   const tooltip: echarts.TooltipComponentOption = {
-    trigger: "axis",
+    trigger: snapshot.kind === "SCATTER_CHART" ? "item" : "axis",
     axisPointer: { type: "cross" },
     formatter: (input) => tooltipText(snapshot, input),
   };
@@ -304,10 +307,18 @@ function snapshotSeriesOption(context: {
       id: item.id,
       name: item.label,
       type: "scatter",
-      data: item.points.map((point, pointIndex) => ({
-        value: [point.xValue ?? pointIndex, point.value],
-        symbolSize: Math.max(6, Math.min(36, point.sizeValue ?? 10)),
-      })),
+      data: item.points.flatMap((point) => {
+        const xValue = point.xValue;
+        return xValue === undefined || xValue === null
+          ? []
+          : [
+              {
+                name: point.label,
+                value: [xValue, point.value],
+                symbolSize: Math.max(6, Math.min(36, point.sizeValue ?? 10)),
+              },
+            ];
+      }),
     };
   }
   const common = {
@@ -356,29 +367,12 @@ export function tooltipText(
   }
   const dataIndexValue = first.dataIndex;
   if (typeof dataIndexValue !== "number") return "";
+  if (snapshot.kind === "SCATTER_CHART") {
+    return scatterTooltipText(snapshot, first, dataIndexValue);
+  }
   const point = categoryPoints(snapshot)[dataIndexValue];
   if (point === undefined) return "";
-  const lines = [`<strong>${echartsFormat.encodeHTML(point.label)}</strong>`];
-  for (const series of snapshot.series) {
-    const value = series.points.find(
-      (candidate) => candidate.label === point.label,
-    );
-    if (value === undefined) continue;
-    lines.push(
-      `${echartsFormat.encodeHTML(series.label)}: ${formatSeriesValue(snapshot, series, value.value)} (n=${value.evidence.sampleSize.toString()})`,
-    );
-    if (snapshot.temporal?.comparison !== undefined) {
-      lines.push(
-        `Baseline: ${formatSeriesValue(snapshot, series, value.comparisonValue ?? null)} · Δ ${formatSeriesAbsoluteDelta(snapshot, series, value.absoluteDelta ?? null)} · ${formatPercent(value.percentageDelta ?? null)}`,
-      );
-    }
-    if (value.evidence.confidenceInterval !== null) {
-      lines.push(
-        `95% CI ${formatPercent(value.evidence.confidenceInterval.lower)}–${formatPercent(value.evidence.confidenceInterval.upper)}`,
-      );
-    }
-  }
-  return lines.join("<br/>");
+  return pointTooltipText(snapshot, point, snapshot.series);
 }
 
 function calendarOption(
