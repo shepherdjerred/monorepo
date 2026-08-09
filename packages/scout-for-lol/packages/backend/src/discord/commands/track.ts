@@ -160,21 +160,22 @@ export async function executeTrack(
           tx,
         );
       }
+      // addSubscription catches database failures and reports them as
+      // `internal-error` instead of throwing. Returning here would let Prisma
+      // commit whatever it managed first — typically a Player and Account with
+      // no Subscription, which consumes the server's quota and makes every
+      // retry answer `account-already-subscribed`. Throwing rolls that back,
+      // and the catch below turns it into the user reply plus an `error` on
+      // the command metric.
+      if (created.kind === "internal-error") {
+        throw new Error(
+          `/track failed for ${args.data.alias}: ${created.message}`,
+        );
+      }
       return created;
     });
 
     await interaction.editReply({ content: formatTrackResult(result) });
-
-    // addSubscription swallows database failures and reports them as
-    // `internal-error` rather than throwing, so without this the dispatcher
-    // would count a database outage as a successful command. The other
-    // non-created outcomes (already tracked, quota reached, unknown Riot ID)
-    // are ordinary user-facing answers and stay successes.
-    if (result.kind === "internal-error") {
-      throw new Error(
-        `/track failed for ${args.data.alias}: ${result.message}`,
-      );
-    }
 
     if (result.kind === "created") {
       void runBackfillAfterCommit({
