@@ -141,6 +141,19 @@ export function buildVisibilityQuery(since: Date): string {
   ].join(" AND ");
 }
 
+function pollVisibilityBoundary(
+  options: Pick<
+    PollWorkflowFailuresOptions,
+    "now" | "lookbackMs" | "lookbackSince" | "checkpoint"
+  >,
+): { since: Date; query: string } {
+  const since =
+    options.lookbackSince ??
+    options.checkpoint?.lookbackSince ??
+    new Date(options.now.getTime() - options.lookbackMs);
+  return { since, query: buildVisibilityQuery(since) };
+}
+
 function isAfterCheckpoint(
   closeTime: Date,
   checkpoint: WorkflowFailureWatchCheckpoint,
@@ -183,6 +196,31 @@ type PostFailureBatchOptions = {
   options: PollWorkflowFailuresOptions;
   checkpointProgress: CheckpointProgressOptions;
 };
+
+type PostFailureBatchInput = {
+  client: WorkflowVisibilityClient;
+  poster: AlertPoster;
+  executions: readonly FailedWorkflowExecution[];
+  pollOptions: PollWorkflowFailuresOptions;
+  checkpointBlocked: boolean;
+  lookbackSince: Date;
+};
+
+function postFailureBatchOptions(
+  input: PostFailureBatchInput,
+): PostFailureBatchOptions {
+  return {
+    client: input.client,
+    poster: input.poster,
+    executions: input.executions,
+    options: input.pollOptions,
+    checkpointProgress: {
+      checkpointBlocked: input.checkpointBlocked,
+      lookbackSince: input.lookbackSince,
+      onCheckpoint: input.pollOptions.onCheckpoint,
+    },
+  };
+}
 
 async function postFailureBatch(
   batchOptions: PostFailureBatchOptions,
@@ -295,12 +333,8 @@ export async function pollWorkflowFailuresOnce(
   poster: AlertPoster,
   options: PollWorkflowFailuresOptions,
 ): Promise<PollWorkflowFailuresResult> {
-  const { now, lookbackMs, checkpoint } = options;
-  const since =
-    options.lookbackSince ??
-    checkpoint?.lookbackSince ??
-    new Date(now.getTime() - lookbackMs);
-  const query = buildVisibilityQuery(since);
+  const { checkpoint } = options;
+  const { since, query } = pollVisibilityBoundary(options);
 
   const pendingExecutions: FailedWorkflowExecution[] = [];
   let scanned = 0;
@@ -337,17 +371,16 @@ export async function pollWorkflowFailuresOnce(
       scanned += 1;
       if (pendingExecutions.length === ALERT_BATCH_SIZE) {
         processingBatch = true;
-        const result = await postFailureBatch({
-          client,
-          poster,
-          executions: pendingExecutions,
-          options,
-          checkpointProgress: {
+        const result = await postFailureBatch(
+          postFailureBatchOptions({
+            client,
+            poster,
+            executions: pendingExecutions,
+            pollOptions: options,
             checkpointBlocked,
             lookbackSince: since,
-            onCheckpoint: options.onCheckpoint,
-          },
-        });
+          }),
+        );
         checkpointBlocked = result.checkpointBlocked;
         processingBatch = false;
         alerted += result.alerted;
@@ -364,17 +397,16 @@ export async function pollWorkflowFailuresOnce(
   }
 
   if (pendingExecutions.length > 0) {
-    const result = await postFailureBatch({
-      client,
-      poster,
-      executions: pendingExecutions,
-      options,
-      checkpointProgress: {
+    const result = await postFailureBatch(
+      postFailureBatchOptions({
+        client,
+        poster,
+        executions: pendingExecutions,
+        pollOptions: options,
         checkpointBlocked,
         lookbackSince: since,
-        onCheckpoint: options.onCheckpoint,
-      },
-    });
+      }),
+    );
     alerted += result.alerted;
     errored += result.errored;
   }

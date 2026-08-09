@@ -4,6 +4,11 @@ import {
   parseClaudeResultMessage,
   type ClaudeResultMessage,
 } from "./claude-result.ts";
+import {
+  claudeDiagnostics,
+  contractErrorMessage,
+  malformedClaudeDiagnostics,
+} from "./agent-task-claude-diagnostics.ts";
 
 export const AgentTaskProviderSchema = z.enum(["claude", "codex"]);
 export const AgentTaskModeSchema = z.enum(["report-only"]);
@@ -148,6 +153,7 @@ export const AGENT_TASK_CLAUDE_SCHEMA_VERSION = "draft-07-v1";
 export type AgentTaskOutputContractFailureReason =
   | "is-error"
   | "missing-structured-output"
+  | "invalid-result-envelope"
   | "invalid-structured-output";
 
 export type ClaudeOutputContractDiagnostics = {
@@ -299,48 +305,6 @@ export function parseAgentTaskResultPayload(
   }
 }
 
-// Parses a claude -p subprocess's raw stdout into the canonical payload,
-// surfacing a distinct is_error=true diagnostic (e.g. --max-turns exhaustion)
-// instead of letting it collapse into the generic "no structured output"
-// message thrown by parseAgentTaskResultPayload.
-function boundedFinalTextExcerpt(
-  result: string | undefined,
-  redact: (value: string) => string,
-): string | undefined {
-  if (result === undefined) {
-    return undefined;
-  }
-  const normalized = redact(result).replaceAll(/\s+/g, " ").trim();
-  return normalized.length <= 240 ? normalized : `${normalized.slice(0, 240)}…`;
-}
-
-function claudeDiagnostics(
-  resultMessage: ClaudeResultMessage,
-  redact: (value: string) => string,
-): ClaudeOutputContractDiagnostics {
-  return {
-    resultSubtype: resultMessage.subtype,
-    resultMessageKeys: Object.keys(resultMessage).toSorted(),
-    schemaFingerprint: AGENT_TASK_CLAUDE_SCHEMA_FINGERPRINT,
-    finalTextExcerpt: boundedFinalTextExcerpt(resultMessage.result, redact),
-  };
-}
-
-function contractErrorMessage(
-  reason: AgentTaskOutputContractFailureReason,
-  diagnostics: ClaudeOutputContractDiagnostics,
-): string {
-  const excerpt = diagnostics.finalTextExcerpt ?? "(none)";
-  const reasonDescription = reason === "is-error" ? "is_error=true" : reason;
-  return [
-    `claude structured-output contract failure: ${reasonDescription}`,
-    `subtype=${diagnostics.resultSubtype ?? "(none)"}`,
-    `resultMessageKeys=${diagnostics.resultMessageKeys.join(",")}`,
-    `schemaFingerprint=${diagnostics.schemaFingerprint}`,
-    `finalTextExcerpt=${excerpt}`,
-  ].join(" ");
-}
-
 function structuredOutputFromClaudeResult(
   resultMessage: ClaudeResultMessage,
 ): unknown {
@@ -358,8 +322,27 @@ function parseClaudeContractInput(
   diagnostics: ClaudeOutputContractDiagnostics;
   structuredOutput: unknown;
 } {
-  const resultMessage = parseClaudeResultMessage(stdout);
-  const diagnostics = claudeDiagnostics(resultMessage, redactExcerpt);
+  let resultMessage: ClaudeResultMessage;
+  try {
+    resultMessage = parseClaudeResultMessage(stdout);
+  } catch (error: unknown) {
+    const diagnostics = malformedClaudeDiagnostics(
+      stdout,
+      AGENT_TASK_CLAUDE_SCHEMA_FINGERPRINT,
+      redactExcerpt,
+    );
+    throw new AgentTaskOutputContractError(
+      "invalid-result-envelope",
+      diagnostics,
+      `${contractErrorMessage("invalid-result-envelope", diagnostics)}: ${error instanceof Error ? error.message : String(error)}`,
+      { cause: error },
+    );
+  }
+  const diagnostics = claudeDiagnostics(
+    resultMessage,
+    AGENT_TASK_CLAUDE_SCHEMA_FINGERPRINT,
+    redactExcerpt,
+  );
   return {
     resultMessage,
     diagnostics,

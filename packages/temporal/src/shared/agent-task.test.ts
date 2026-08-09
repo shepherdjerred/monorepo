@@ -199,6 +199,35 @@ describe("Claude structured output contract", () => {
     ).toThrow(AgentTaskOutputContractError);
   });
 
+  it("wraps malformed Claude result envelopes in contract diagnostics", () => {
+    try {
+      parseClaudeAgentTaskResult(
+        JSON.stringify({
+          type: "result",
+          subtype: 42,
+          is_error: "false",
+          result: "provider envelope was malformed",
+        }),
+      );
+      throw new Error("Expected Claude contract failure");
+    } catch (error: unknown) {
+      expect(error).toBeInstanceOf(AgentTaskOutputContractError);
+      if (!(error instanceof AgentTaskOutputContractError)) {
+        throw error;
+      }
+      expect(error.reason).toBe("invalid-result-envelope");
+      expect(error.diagnostics.resultMessageKeys).toEqual([
+        "is_error",
+        "result",
+        "subtype",
+        "type",
+      ]);
+      expect(error.diagnostics.finalTextExcerpt).toBe(
+        "provider envelope was malformed",
+      );
+    }
+  });
+
   it("rejects semantically invalid structured_output without prose fallback", () => {
     try {
       parseClaudeAgentTaskResult(
