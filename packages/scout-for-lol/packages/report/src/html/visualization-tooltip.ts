@@ -30,8 +30,26 @@ export function scatterTooltipText(
         candidate.label === seriesName),
   );
   if (series === undefined) return "";
-  const point = renderedScatterPoints(series)[dataIndex];
+  const pointKey = scatterPointKey(input);
+  const point =
+    (pointKey === undefined
+      ? undefined
+      : series.points.find((candidate) => candidate.key === pointKey)) ??
+    renderedScatterPoints(series)[dataIndex];
   return point === undefined ? "" : pointTooltipText(snapshot, point, [series]);
+}
+
+function scatterPointKey(input: object): string | undefined {
+  if (
+    !("data" in input) ||
+    typeof input.data !== "object" ||
+    input.data === null
+  ) {
+    return undefined;
+  }
+  return "id" in input.data && typeof input.data.id === "string"
+    ? input.data.id
+    : undefined;
 }
 
 function renderedScatterPoints(
@@ -63,7 +81,7 @@ export function pointTooltipText(
     }
     if (value.evidence.confidenceInterval !== null) {
       lines.push(
-        `95% CI ${formatPercent(value.evidence.confidenceInterval.lower)}–${formatPercent(value.evidence.confidenceInterval.upper)}`,
+        `95% CI ${formatSeriesValue(snapshot, series, value.evidence.confidenceInterval.lower)}–${formatSeriesValue(snapshot, series, value.evidence.confidenceInterval.upper)}`,
       );
     }
   }

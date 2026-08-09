@@ -140,12 +140,13 @@ function ReportExploration(props: {
   guildId: string;
   reportId: ReportId;
   title: string;
-  queryText: string;
-  scheduleTimezone: string;
-  sourceCompetitionId: number | null;
+  report: Pick<
+    ReportRow,
+    "queryText" | "scheduleTimezone" | "sourceCompetitionId"
+  >;
   canEdit: boolean;
 }) {
-  const [queryText, setQueryText] = useState(props.queryText);
+  const [queryText, setQueryText] = useState(props.report.queryText);
   return (
     <Card>
       <CardHeader>
@@ -158,7 +159,7 @@ function ReportExploration(props: {
         </p>
         <ReportTemporalControls
           queryText={queryText}
-          scheduleTimezone={props.scheduleTimezone}
+          scheduleTimezone={props.report.scheduleTimezone}
           onChange={setQueryText}
         />
         <div className="flex gap-2">
@@ -166,7 +167,7 @@ function ReportExploration(props: {
             type="button"
             variant="outline"
             onClick={() => {
-              setQueryText(props.queryText);
+              setQueryText(props.report.queryText);
             }}
           >
             Reset
@@ -185,7 +186,7 @@ function ReportExploration(props: {
           guildId={props.guildId}
           queryText={queryText}
           title={`${props.title} exploration`}
-          sourceCompetitionId={props.sourceCompetitionId}
+          sourceCompetitionId={props.report.sourceCompetitionId}
         />
       </CardContent>
     </Card>
@@ -280,9 +281,7 @@ export function ReportDetail() {
           guildId={guildId}
           reportId={reportId}
           title={report.title}
-          queryText={report.queryText}
-          scheduleTimezone={report.scheduleTimezone}
-          sourceCompetitionId={report.sourceCompetitionId}
+          report={report}
           canEdit={!systemManaged && perms.can("reports", "update")}
         />
       )}

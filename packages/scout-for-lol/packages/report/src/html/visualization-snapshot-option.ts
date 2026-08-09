@@ -11,9 +11,9 @@ import {
 } from "#src/html/visualization-snapshot-special-options.ts";
 import {
   formatPercent,
+  formatSnapshotAxisValue,
   formatSeriesAbsoluteDelta,
   formatSeriesValue,
-  usesPercentageAxis,
 } from "#src/html/visualization-value-format.ts";
 import {
   pointTooltipText,
@@ -117,6 +117,11 @@ export function visualizationSnapshotToOption(
             presentation.theme,
             presentation.options.xAxisLabel,
           ),
+          axisLabel: {
+            color: presentation.theme.muted,
+            formatter: (value: number) =>
+              formatSnapshotAxisValue(snapshot, value),
+          },
         }
       : snapshot.kind === "SCATTER_CHART"
         ? {
@@ -153,9 +158,8 @@ export function visualizationSnapshotToOption(
           ),
           axisLabel: {
             color: presentation.theme.muted,
-            ...(usesPercentageAxis(snapshot)
-              ? { formatter: formatPercent }
-              : {}),
+            formatter: (value: number) =>
+              formatSnapshotAxisValue(snapshot, value),
           },
           splitLine: { lineStyle: { color: presentation.theme.grid } },
         },
@@ -342,6 +346,7 @@ function snapshotSeriesOption(context: {
           ? []
           : [
               {
+                id: point.key,
                 name: point.label,
                 value: [xValue, point.value],
                 symbolSize: Math.max(6, Math.min(36, point.sizeValue ?? 10)),
@@ -361,6 +366,8 @@ function snapshotSeriesOption(context: {
     label: visualizationSnapshotLabels(
       snapshot.display.options ?? {},
       horizontal,
+      false,
+      (input) => snapshotSeriesLabel(snapshot, item, input),
     ),
     ...(index === 0 && annotations.length > 0
       ? { markLine: { symbol: "none", data: annotations } }
@@ -385,7 +392,9 @@ function categoryPoints(
     for (const point of series.points) points.set(point.label, point);
   }
   const ordered = [...points.values()].toSorted((left, right) =>
-    left.start.localeCompare(right.start),
+    snapshot.bucket === "patch"
+      ? left.label.localeCompare(right.label, "en-US", { numeric: true })
+      : left.start.localeCompare(right.start),
   );
   const sort = snapshot.display.options?.sort;
   if (sort === undefined || sort === "query" || snapshot.bucket !== null) {
@@ -398,6 +407,19 @@ function categoryPoints(
       (categoryValue(snapshot, left.label) -
         categoryValue(snapshot, right.label)),
   );
+}
+
+function snapshotSeriesLabel(
+  snapshot: VisualizationSnapshot,
+  series: VisualizationSnapshot["series"][number],
+  input: unknown,
+): string {
+  if (typeof input !== "object" || input === null || !("value" in input)) {
+    return "";
+  }
+  return typeof input.value === "number"
+    ? formatSeriesValue(snapshot, series, input.value)
+    : "";
 }
 
 function categoryValue(snapshot: VisualizationSnapshot, label: string): number {

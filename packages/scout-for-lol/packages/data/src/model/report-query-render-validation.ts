@@ -25,10 +25,17 @@ export function validateRenderShape(
   if (render.kind === "HEATMAP" && groupBys.length !== 2) {
     throw new Error("Heatmaps require exactly two GROUP BY dimensions.");
   }
-  if (render.kind === "BUMP_CHART" && groupBys.length < 2) {
-    throw new Error(
-      "Bump charts require a time bucket and a player dimension.",
-    );
+  if (render.kind === "BUMP_CHART") {
+    if (groupBys.length < 2) {
+      throw new Error(
+        "Bump charts require a time bucket and a player dimension.",
+      );
+    }
+    if (yColumns.length !== 1) {
+      throw new Error(
+        "Bump charts require exactly one y output to rank within each bucket.",
+      );
+    }
   }
   if (render.kind === "CALENDAR_HEATMAP") {
     validateCalendarHeatmap(

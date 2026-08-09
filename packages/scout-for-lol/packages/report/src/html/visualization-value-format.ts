@@ -4,6 +4,10 @@ import {
   type VisualizationSnapshot,
 } from "@scout-for-lol/data";
 
+const VALUE_FORMATTER = new Intl.NumberFormat("en-US", {
+  maximumFractionDigits: 3,
+});
+
 export function formatSeriesValue(
   snapshot: VisualizationSnapshot,
   series: TemporalSeries,
@@ -30,6 +34,15 @@ export function usesPercentageAxis(snapshot: VisualizationSnapshot): boolean {
   );
 }
 
+export function formatSnapshotAxisValue(
+  snapshot: VisualizationSnapshot,
+  value: number,
+): string {
+  return usesPercentageAxis(snapshot)
+    ? formatPercent(value)
+    : formatValue(value);
+}
+
 export function isPercentageSeries(
   snapshot: VisualizationSnapshot,
   series: TemporalSeries,
@@ -42,9 +55,7 @@ export function isPercentageSeries(
 }
 
 export function formatValue(value: number | null): string {
-  return value === null
-    ? "Unknown"
-    : value.toLocaleString(undefined, { maximumFractionDigits: 3 });
+  return value === null ? "Unknown" : VALUE_FORMATTER.format(value);
 }
 
 export function formatPercent(value: number | null): string {

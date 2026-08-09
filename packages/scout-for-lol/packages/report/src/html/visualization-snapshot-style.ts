@@ -102,6 +102,7 @@ export function visualizationSnapshotLabels(
   options: ReportChartOptions,
   horizontal: boolean,
   defaultShow = false,
+  valueFormatter?: (input: unknown) => string,
 ): object {
   return {
     show:
@@ -111,7 +112,11 @@ export function visualizationSnapshotLabels(
           options.labels === "value" ||
           options.labels === "percent",
     position: horizontal ? "right" : "top",
-    ...(options.labels === "percent" ? { formatter: percentLabel } : {}),
+    ...(options.labels === "percent"
+      ? { formatter: percentLabel }
+      : valueFormatter !== undefined && options.labels === "value"
+        ? { formatter: valueFormatter }
+        : {}),
   };
 }
 

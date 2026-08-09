@@ -2,6 +2,7 @@ import {
   formatReportDisplayValue,
   reportResultColumns,
   type ReportRenderSpec,
+  type VisualizationSnapshot,
 } from "@scout-for-lol/data";
 import {
   analyticsChartToImage,
@@ -101,18 +102,37 @@ function renderSnapshotOutput(
   }
   if ("encoding" in render && params.result.visualization !== undefined) {
     const title = render.options.title ?? params.title;
+    const snapshot = snapshotWithRenderOptions(
+      params.result.visualization,
+      render,
+    );
     return {
       content: `**${title}**`,
       image: {
         filename: `report-${render.kind.toLowerCase().replaceAll("_", "-")}.png`,
         data: visualizationSnapshotToImage({
-          ...params.result.visualization,
+          ...snapshot,
           title,
         }),
       },
     };
   }
   return null;
+}
+
+function snapshotWithRenderOptions(
+  snapshot: VisualizationSnapshot,
+  render: ChartRender,
+): VisualizationSnapshot {
+  return {
+    ...snapshot,
+    display: {
+      ...snapshot.display,
+      theme: render.options.theme ?? snapshot.display.theme,
+      palette: render.options.palette ?? snapshot.display.palette,
+      options: render.options,
+    },
+  };
 }
 
 function renderTextOutput(

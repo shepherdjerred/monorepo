@@ -5,7 +5,10 @@ import {
   tooltipText,
   visualizationSnapshotToOption,
 } from "#src/html/visualization-snapshot-option.ts";
-import { usesPercentageAxis } from "#src/html/visualization-value-format.ts";
+import {
+  formatSnapshotAxisValue,
+  usesPercentageAxis,
+} from "#src/html/visualization-value-format.ts";
 
 describe("visualizationSnapshotToOption", () => {
   test("does not add a baseline series without a comparison", () => {
@@ -144,8 +147,8 @@ describe("temporal chart rendering", () => {
         sparkline: false,
       },
       series: [
-        patchSeries("alpha", ["26.1", "26.2", "26.3"]),
-        patchSeries("beta", ["26.2", "26.3", "26.4"]),
+        patchSeries("beta", ["26.2", "26.4"]),
+        patchSeries("alpha", ["26.1", "26.3"]),
       ],
       annotations: [],
       trends: [
@@ -153,14 +156,16 @@ describe("temporal chart rendering", () => {
           seriesId: "beta",
           slope: 1,
           rSquared: 1,
-          values: [2, 3, 4],
+          values: [2, 4],
         },
       ],
     });
 
-    expect(
-      JSON.stringify(visualizationSnapshotToOption(snapshot, "static")),
-    ).toContain('"data":[null,2,3,4]');
+    const option = JSON.stringify(
+      visualizationSnapshotToOption(snapshot, "static"),
+    );
+    expect(option).toContain('"data":["26.1","26.2","26.3","26.4"]');
+    expect(option).toContain('"data":[null,2,null,4]');
   });
 
   test("escapes report labels in interactive HTML tooltips", () => {
@@ -247,7 +252,10 @@ describe("temporal chart rendering", () => {
               comparisonValue: 0.4,
               absoluteDelta: 0.1,
               percentageDelta: 0.25,
-              evidence: { sampleSize: 10, confidenceInterval: null },
+              evidence: {
+                sampleSize: 10,
+                confidenceInterval: { level: 0.95, lower: 0.4, upper: 0.6 },
+              },
             },
           ],
         },
@@ -260,7 +268,9 @@ describe("temporal chart rendering", () => {
     expect(tooltip).toContain("Win rate: 50.0%");
     expect(tooltip).toContain("Baseline: 40.0%");
     expect(tooltip).toContain("Δ 10.0 pp");
+    expect(tooltip).toContain("95% CI 40.0%–60.0%");
     expect(usesPercentageAxis(snapshot)).toBe(true);
+    expect(formatSnapshotAxisValue(snapshot, 0.5)).toBe("50.0%");
   });
 
   test("places annotations only in the bucket containing their timestamp", () => {
@@ -414,7 +424,7 @@ describe("scatter chart rendering", () => {
     );
     expect(option).not.toContain('"name":"missing-x"');
     expect(option).not.toContain('"name":"null-x"');
-    expect(option).toContain('"name":"valid-x","value":[42,9]');
+    expect(option).toContain('"id":"valid-x","name":"valid-x","value":[42,9]');
   });
 
   test("resolves tooltips through the hovered series data order", () => {
@@ -460,7 +470,8 @@ describe("scatter chart rendering", () => {
     const tooltip = tooltipText(snapshot, {
       seriesId: "beta",
       seriesName: "Beta",
-      dataIndex: 0,
+      dataIndex: 99,
+      data: { id: "beta-visible" },
     });
     expect(tooltip).toContain("beta-visible");
     expect(tooltip).toContain("Beta: 30");

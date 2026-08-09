@@ -123,7 +123,7 @@ export const ReportAiPreviewSummarySchema = z
               z
                 .object({
                   column: z.string(),
-                  value: z.union([z.string(), z.number()]),
+                  value: z.union([z.string(), z.number(), z.null()]),
                 })
                 .strict(),
             ),

@@ -163,6 +163,27 @@ describe("canonical ScoutQL temporal analysis", () => {
     expect(plan.render.kind).toBe("KPI_CARD");
   });
 
+  test.each(["GROUP BY all, player", "GROUP BY player, all"])(
+    "rejects mixed aggregate-all grouping before temporal rewrite: %s",
+    (grouping) => {
+      expect(() =>
+        parseAndCompile(
+          `SELECT games FROM match_participants ${grouping} ANALYZE LAST 30 DAYS BUCKET BY DAY RENDER line_chart WITH (y = games)`,
+        ),
+      ).toThrow("GROUP BY all cannot be combined with another dimension.");
+    },
+  );
+
+  test("requires one ranked output for bump charts", () => {
+    expect(() =>
+      parseAndCompile(
+        "SELECT games, wins FROM match_participants GROUP BY player ANALYZE LAST 30 DAYS BUCKET BY DAY RENDER bump_chart WITH (y = (games, wins))",
+      ),
+    ).toThrow(
+      "Bump charts require exactly one y output to rank within each bucket.",
+    );
+  });
+
   test("enforces the total visualization point ceiling", () => {
     const point = {
       key: "2026-01-01",

@@ -11,7 +11,6 @@ import {
   REPORT_AI_MAX_PREVIEW_CALLS,
   REPORT_AI_MAX_STEPS,
   REPORT_AI_MAX_TOOL_CALLS,
-  REPORT_AI_PREVIEW_MAX_ROWS,
   REPORT_COMMON_PRESETS,
   REPORT_FILTERS,
   REPORT_FUNCTIONS,
@@ -20,7 +19,6 @@ import {
   REPORT_RENDER_KINDS,
   REPORT_RENDER_OPTIONS,
   REPORT_SOURCES,
-  reportResultColumns,
   ReportAiFinalDraftSchema,
   ReportAiPreviewSummarySchema,
   ReportQueryTextSchema,
@@ -39,6 +37,7 @@ import {
   scoutReportAiTokensUsedTotal,
 } from "#src/metrics/report-ai.ts";
 import { emitReportAgentStreamChunk } from "#src/reports/ai/report-query-agent-stream.ts";
+import { reportQueryPreviewSummary } from "#src/reports/ai/report-query-preview-summary.ts";
 import { executeReportQuery } from "#src/reports/query-engine.ts";
 
 export type ReportQueryAgentParams = {
@@ -294,15 +293,7 @@ function createReportQueryTools(params: ReportQueryAgentParams) {
           sourceCompetitionId:
             inputData.sourceCompetitionId ?? params.input.sourceCompetitionId,
         });
-        const preview = ReportAiPreviewSummarySchema.parse({
-          columns: reportResultColumns(result.plan, result.columns),
-          rows: result.rows.slice(0, REPORT_AI_PREVIEW_MAX_ROWS).map((row) => ({
-            label: row.label,
-            values: row.values,
-          })),
-          rowsScanned: result.rowsScanned,
-          renderKind: result.plan.render.kind,
-        });
+        const preview = reportQueryPreviewSummary(result);
 
         await params.emit({ type: "preview", preview });
         return {
@@ -435,15 +426,7 @@ async function emitPreview(
     queryText,
     sourceCompetitionId: params.input.sourceCompetitionId,
   });
-  const preview = ReportAiPreviewSummarySchema.parse({
-    columns: reportResultColumns(result.plan, result.columns),
-    rows: result.rows.slice(0, REPORT_AI_PREVIEW_MAX_ROWS).map((row) => ({
-      label: row.label,
-      values: row.values,
-    })),
-    rowsScanned: result.rowsScanned,
-    renderKind: result.plan.render.kind,
-  });
+  const preview = reportQueryPreviewSummary(result);
   await params.emit({ type: "preview", preview });
 }
 

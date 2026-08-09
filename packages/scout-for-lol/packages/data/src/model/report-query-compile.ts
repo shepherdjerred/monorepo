@@ -115,6 +115,7 @@ export function compileReportQuery(ast: ReportQueryAst): ReportQueryPlan {
   if (groupByClause === undefined) throw new Error(INVALID_GROUP_BY_MESSAGE);
   const { groupBy: requestedGroupBy, groupSize } = groupByClause;
   const requestedGroupBys = groupByClauses.map((clause) => clause.groupBy);
+  validateGroupByCombination(requestedGroupBys);
   validateSourceDimensions(source, requestedGroupBys);
   const { analysis, bucket, groupBy, groupBys } = resolveTemporalGrouping(
     ast,
@@ -174,6 +175,12 @@ export function compileReportQuery(ast: ReportQueryAst): ReportQueryPlan {
     limit,
     render,
   });
+}
+
+function validateGroupByCombination(groupBys: ReportGroupBy[]): void {
+  if (groupBys.includes("all") && groupBys.length !== 1) {
+    throw new Error("GROUP BY all cannot be combined with another dimension.");
+  }
 }
 
 function resolveTemporalGrouping(

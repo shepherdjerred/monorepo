@@ -113,13 +113,7 @@ type UnionSourceInput = {
     string,
     "VARCHAR" | "INTEGER" | "BIGINT" | "DOUBLE" | "BOOLEAN" | "TIMESTAMP"
   >;
-  /** Natural-key columns for the parquet-vs-staging dedupe. */
-  dedupeKeyColumns: string[];
-  dedupeOrderSql?: string;
-  latestDailySnapshot?: {
-    scopeColumn: string;
-    timestampColumn: string;
-  };
+  dedupe: "matches" | "prematch" | "competition-rank-daily-snapshot";
   /** WHERE predicate pushed into BOTH branches (empty sql = no filter). */
   predicate: SqlFragment;
 };
@@ -152,17 +146,16 @@ export function buildUnionSource(
   }
 
   const unioned = branches.join(" UNION ALL BY NAME ");
-  const partition = input.dedupeKeyColumns.join(", ");
-  const order = input.dedupeOrderSql ?? "src";
-  if (input.latestDailySnapshot !== undefined) {
-    const { scopeColumn, timestampColumn } = input.latestDailySnapshot;
+  if (input.dedupe === "competition-rank-daily-snapshot") {
     return {
-      sql: `WITH candidates AS (${unioned}), latest_snapshots AS (SELECT ${scopeColumn}, CAST(${timestampColumn} AS DATE) AS snapshot_date, MAX(${timestampColumn}) AS latest_snapshot_at FROM candidates GROUP BY ${scopeColumn}, snapshot_date), latest_candidates AS (SELECT candidates.*, latest_snapshots.snapshot_date, latest_snapshots.latest_snapshot_at FROM candidates INNER JOIN latest_snapshots ON candidates.${scopeColumn} = latest_snapshots.${scopeColumn} AND candidates.${timestampColumn} = latest_snapshots.latest_snapshot_at) SELECT * EXCLUDE (snapshot_date, latest_snapshot_at) FROM latest_candidates QUALIFY row_number() OVER (PARTITION BY ${partition} ORDER BY ${order}) = 1`,
+      sql: `WITH candidates AS (${unioned}), latest_snapshots AS (SELECT competition_id, CAST(calculated_at AS DATE) AS snapshot_date, MAX(calculated_at) AS latest_snapshot_at FROM candidates GROUP BY competition_id, snapshot_date), latest_candidates AS (SELECT candidates.*, latest_snapshots.snapshot_date FROM candidates INNER JOIN latest_snapshots ON candidates.competition_id = latest_snapshots.competition_id AND candidates.calculated_at = latest_snapshots.latest_snapshot_at) SELECT * EXCLUDE (snapshot_date) FROM latest_candidates QUALIFY row_number() OVER (PARTITION BY competition_id, CAST(calculated_at AS DATE), player_id ORDER BY src DESC) = 1`,
       params,
     };
   }
+  const partition =
+    input.dedupe === "matches" ? "match_id, puuid" : "dedupe_key, puuid";
   return {
-    sql: `SELECT * FROM (${unioned}) QUALIFY row_number() OVER (PARTITION BY ${partition} ORDER BY ${order}) = 1`,
+    sql: `SELECT * FROM (${unioned}) QUALIFY row_number() OVER (PARTITION BY ${partition} ORDER BY src) = 1`,
     params,
   };
 }
@@ -175,7 +168,7 @@ export function buildMatchesSource(
     parquetFiles: files.matchesParquet,
     stagingFiles: files.matchesStaging,
     columns: MATCH_LAKE_COLUMNS,
-    dedupeKeyColumns: ["match_id", "puuid"],
+    dedupe: "matches",
     predicate,
   });
 }
@@ -188,7 +181,7 @@ export function buildPrematchSource(
     parquetFiles: files.prematchParquet,
     stagingFiles: files.prematchStaging,
     columns: PREMATCH_LAKE_COLUMNS,
-    dedupeKeyColumns: ["dedupe_key", "puuid"],
+    dedupe: "prematch",
     predicate,
   });
 }
@@ -201,16 +194,7 @@ export function buildCompetitionRankHistorySource(
     parquetFiles: files.competitionRankHistoryParquet,
     stagingFiles: files.competitionRankHistoryStaging,
     columns: COMPETITION_RANK_HISTORY_LAKE_COLUMNS,
-    dedupeKeyColumns: [
-      "competition_id",
-      "CAST(calculated_at AS DATE)",
-      "player_id",
-    ],
-    dedupeOrderSql: "calculated_at DESC, src DESC",
-    latestDailySnapshot: {
-      scopeColumn: "competition_id",
-      timestampColumn: "calculated_at",
-    },
+    dedupe: "competition-rank-daily-snapshot",
     predicate,
   });
 }
