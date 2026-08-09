@@ -172,6 +172,21 @@ test("Argo CD root pruning requires an exact revision", async () => {
   );
 });
 
+test("Argo CD CLI usage documents the root prune revision", async () => {
+  const process = Bun.spawn(["bun", "--no-install", "scripts/argocd.ts"], {
+    cwd: path.resolve(import.meta.dir, "../../.."),
+    stderr: "pipe",
+    stdout: "pipe",
+  });
+  const [exitCode, stderr] = await Promise.all([
+    process.exited,
+    new Response(process.stderr).text(),
+  ]);
+
+  expect(exitCode).not.toBe(0);
+  expect(stderr).toContain("sync <app> [--revision <v>] [--prune] [--async]");
+});
+
 describe("Argo CD root prune safety", () => {
   test("blocks root pruning when a pruning child lacks the cascade finalizer", async () => {
     let syncPosts = 0;

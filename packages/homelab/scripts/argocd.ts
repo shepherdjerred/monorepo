@@ -9,7 +9,8 @@
  * timeouts are preserved.
  *
  * Usage:
- *   bun packages/homelab/scripts/argocd.ts sync <app> [--revision <v>] [--prune] [--async] [--timeout <s>] [--dry-run]
+ *   bun packages/homelab/scripts/argocd.ts sync <app> [--revision <v>]
+ *       [--prune] [--async] [--timeout <s>] [--dry-run]
  *   bun packages/homelab/scripts/argocd.ts delete-application <app> \
  *       --project <project> [--timeout <s>] [--dry-run]
  *   bun packages/homelab/scripts/argocd.ts health-wait <app> [--timeout <s>] [--dry-run]
@@ -190,7 +191,8 @@ async function getApplicationManifests(
   if (!response.ok) {
     const body = (await response.text()).slice(0, 1024);
     throw new Error(
-      `Could not render ${appName} from ${manifestsUrl.toString()}: HTTP ${response.status.toString()}\n${body}`,
+      `Could not render ${appName} from ${manifestsUrl.toString()}: ` +
+        `HTTP ${response.status.toString()}\n${body}`,
     );
   }
   return ManifestResponseSchema.parse(await response.json()).manifests;
@@ -777,7 +779,7 @@ function usage(): never {
   console.error(
     "Usage:\n" +
       "  bun packages/homelab/scripts/argocd.ts sync <app> " +
-      "[--prune] [--async] [--timeout <s>] [--dry-run]\n" +
+      "[--revision <v>] [--prune] [--async] [--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts delete-application <app> " +
       "--project <project> [--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts health-wait <app> " +
