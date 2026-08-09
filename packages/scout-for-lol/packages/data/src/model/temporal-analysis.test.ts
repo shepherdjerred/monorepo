@@ -55,6 +55,16 @@ describe("canonical ScoutQL temporal analysis", () => {
     ).toThrow("Calendar heatmaps require GROUP BY all");
   });
 
+  test("rejects multi-metric calendar heatmaps that would omit outputs", () => {
+    expect(() =>
+      parseAndCompile(`SELECT games, wins FROM match_participants GROUP BY all
+        ANALYZE LAST 30 DAYS
+        BUCKET BY DAY
+        IN TIME ZONE 'UTC'
+        RENDER calendar_heatmap WITH (y = (games, wins))`),
+    ).toThrow("Calendar heatmaps require exactly one y output");
+  });
+
   test("rejects report windows above 365 days", () => {
     expect(() =>
       parseAndCompile(`${BASE} ANALYZE LAST 366 DAYS IN TIME ZONE 'UTC'`),

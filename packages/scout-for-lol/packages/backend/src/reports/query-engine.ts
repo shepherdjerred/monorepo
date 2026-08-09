@@ -24,6 +24,7 @@ import {
 import {
   clampTemporalRange,
   resolveTemporalRanges,
+  type ResolvedTemporalRanges,
   type TemporalRange,
 } from "#src/reports/temporal-range.ts";
 import { attachTemporalComparison } from "#src/reports/temporal-comparison.ts";
@@ -288,7 +289,7 @@ async function executeCompetitionMatchParticipantReport(
       comparisonRows: comparisonResult.rows,
       comparisonEvidence: comparisonResult.evidence,
       plan,
-      ranges,
+      ranges: ranges.alignment,
     }),
   };
 }
@@ -378,32 +379,37 @@ function queryRanges(
   return resolveTemporalRanges(plan.analysis, now);
 }
 
-function competitionQueryRanges(
+export function competitionQueryRanges(
   competition: { startDate: Date | null; endDate: Date | null },
   plan: ReportQueryPlan,
   nowInput: Date | undefined,
   rangeOverride: TemporalRange | undefined,
-): { current: TemporalRange; comparison: TemporalRange | null } {
+): ResolvedTemporalRanges & { alignment: ResolvedTemporalRanges } {
   const now = nowInput ?? new Date();
   if (rangeOverride !== undefined) {
+    const current = clampTemporalRange(rangeOverride, competition, now);
     return {
-      current: clampTemporalRange(rangeOverride, competition, now),
+      current,
       comparison: null,
+      alignment: { current, comparison: null },
     };
   }
   if (plan.analysis === undefined) {
+    const current = competitionRange(competition, plan, now);
     return {
-      current: competitionRange(competition, plan, now),
+      current,
       comparison: null,
+      alignment: { current, comparison: null },
     };
   }
-  const ranges = resolveTemporalRanges(plan.analysis, now);
+  const requested = resolveTemporalRanges(plan.analysis, now);
   return {
-    current: clampTemporalRange(ranges.current, competition, now),
+    current: clampTemporalRange(requested.current, competition, now),
     comparison:
-      ranges.comparison === null
+      requested.comparison === null
         ? null
-        : clampTemporalRange(ranges.comparison, competition, now),
+        : clampTemporalRange(requested.comparison, competition, now),
+    alignment: requested,
   };
 }
 

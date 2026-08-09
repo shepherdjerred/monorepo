@@ -62,6 +62,7 @@ export async function runReport(
       trigger,
       status: "RUNNING",
       startedAt,
+      querySnapshot: params.report.queryText,
     },
   });
   let renderKind: ReportMetricLabel = "UNKNOWN";
@@ -124,7 +125,6 @@ export async function runReport(
         renderedContent: output.content,
         imageS3Key,
         imageByteSize: output.image?.data.length ?? null,
-        querySnapshot: params.report.queryText,
         visualizationS3Key: visualizationArtifact?.key ?? null,
         visualizationByteSize: visualizationArtifact?.size ?? null,
       },

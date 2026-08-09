@@ -2,6 +2,7 @@ import {
   REPORT_MAX_ROWS_LIMIT,
   REPORT_METRICS,
   collectExpressionMetrics,
+  isAdditiveReportExpression,
   wilsonInterval95,
 } from "@scout-for-lol/data";
 import type {
@@ -176,14 +177,16 @@ function metricEvidence(
       confidenceInterval: wilsonInterval95(successes, sampleSize),
     };
   }
-  const ratio = ratioEvidence(row, directMetric);
+  const ratio =
+    ratioMetricEvidence(row, directMetric) ??
+    calculatedRatioEvidence(row, expression);
   return { sampleSize, ...ratio };
 }
 
-function ratioEvidence(
+function ratioMetricEvidence(
   row: AggregateRow,
   metric: ReportMetric | undefined,
-): { numerator: number; denominator: number } | Record<string, never> {
+): { numerator: number; denominator: number } | undefined {
   if (metric === "kda") {
     return { numerator: row.kills + row.assists, denominator: row.deaths };
   }
@@ -211,7 +214,30 @@ function ratioEvidence(
   if (metric === "average_placement") {
     return { numerator: row.placementSum, denominator: row.arenaRows };
   }
-  return {};
+  return undefined;
+}
+
+function calculatedRatioEvidence(
+  row: AggregateRow,
+  expression: ReportExpression,
+): { numerator: number; denominator: number } | Record<string, never> {
+  const candidate =
+    expression.kind === "function" && expression.name === "round"
+      ? expression.arguments[0]
+      : expression;
+  if (
+    candidate?.kind !== "binary" ||
+    candidate.operator !== "/" ||
+    !isAdditiveReportExpression(candidate.left) ||
+    !isAdditiveReportExpression(candidate.right)
+  ) {
+    return {};
+  }
+  const numerator = evaluateExpression(row, candidate.left);
+  const denominator = evaluateExpression(row, candidate.right);
+  return numerator === null || denominator === null
+    ? {}
+    : { numerator, denominator };
 }
 
 export function sortedAggregates(

@@ -213,7 +213,11 @@ function validateRenderShape(
     );
   }
   if (render.kind === "CALENDAR_HEATMAP") {
-    validateCalendarHeatmap(groupBys, logicalGroupBys);
+    validateCalendarHeatmap(
+      groupBys,
+      logicalGroupBys,
+      y === undefined ? 1 : yColumns.length,
+    );
   }
   if (
     render.kind === "RADAR_CHART" &&
@@ -235,12 +239,16 @@ function validateRenderShape(
 function validateCalendarHeatmap(
   groupBys: ReportGroupBy[],
   logicalGroupBys: ReportGroupBy[],
+  yOutputCount: number,
 ): void {
   if (!groupBys.includes("day")) {
     throw new Error("Calendar heatmaps require daily temporal buckets.");
   }
   if (logicalGroupBys.some((groupBy) => groupBy !== "all")) {
     throw new Error("Calendar heatmaps require GROUP BY all.");
+  }
+  if (yOutputCount !== 1) {
+    throw new Error("Calendar heatmaps require exactly one y output.");
   }
 }
 

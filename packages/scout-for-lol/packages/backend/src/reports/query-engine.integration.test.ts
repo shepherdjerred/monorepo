@@ -351,6 +351,45 @@ describe("executeReportQuery temporal comparisons", () => {
       evidence: { sampleSize: 2, numerator: 15, denominator: 5 },
     });
   });
+
+  test("rolls calculated ratios using their expression denominators", async () => {
+    await writeTestLake(lakeDir, {
+      serverId,
+      matchFacts: [
+        {
+          ...temporalMatch(
+            "NA1_calculated_ratio_1",
+            "2026-05-16T12:00:00.000Z",
+            true,
+          ),
+          kills: 10,
+          deaths: 1,
+        },
+        {
+          ...temporalMatch(
+            "NA1_calculated_ratio_2",
+            "2026-05-17T12:00:00.000Z",
+            false,
+          ),
+          kills: 10,
+          deaths: 10,
+        },
+      ],
+    });
+
+    const result = await executeReportQuery({
+      prisma,
+      serverId,
+      queryText:
+        "SELECT kills / deaths AS kd FROM match_participants GROUP BY all ANALYZE BETWEEN '2026-05-16' AND '2026-05-17' BUCKET BY DAY IN TIME ZONE 'UTC' ORDER BY label ASC RENDER line_chart WITH (y = kd, rolling = 2)",
+      now,
+    });
+
+    expect(result.visualization?.series[0]?.points[1]).toMatchObject({
+      value: 20 / 11,
+      evidence: { sampleSize: 2, numerator: 20, denominator: 11 },
+    });
+  });
 });
 
 describe("executeReportQuery player groups", () => {

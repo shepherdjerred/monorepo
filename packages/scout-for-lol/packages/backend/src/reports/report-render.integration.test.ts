@@ -705,6 +705,7 @@ describe("RENDER clause — full runner pipeline", () => {
     });
     expect(run.status).toBe("FAILED");
     expect(run.errorMessage).not.toBeNull();
+    expect(run.querySnapshot).toBe(report.queryText);
   });
 });
 
