@@ -16,7 +16,7 @@ Remote JMX provides control and inspection. Never expose it without authenticati
 
 Collect JFR, GC logs, native-memory tracking, thread state, allocation, and system/container evidence. Change one supported flag, load test, and keep only a measured improvement.
 
-Compact object headers are default-enabled in JDK 25; memory savings are workload-dependent. Current ZGC is generational by default, and `-XX:+ZGenerational` is obsolete.
+Compact object headers are a product feature in JDK 25 but remain disabled by default; enable them explicitly with `-XX:+UseCompactObjectHeaders` before measuring their workload-dependent memory savings. Current ZGC is generational by default, and `-XX:+ZGenerational` is obsolete.
 
 ## jlink
 

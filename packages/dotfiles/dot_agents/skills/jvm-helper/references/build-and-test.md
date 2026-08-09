@@ -13,15 +13,16 @@ Kotlin DSL became the default generated DSL for `gradle init` in Gradle 8.2, not
 Cacheable tasks need complete declared inputs and outputs:
 
 ```kotlin
+val versionText = version.toString()
+
 val generateVersion by tasks.registering {
-    val versionText = providers.provider { project.version.toString() }
     inputs.property("version", versionText)
     val output = layout.buildDirectory.file("generated/version.txt")
     outputs.file(output)
     doLast {
         val target = output.get().asFile.toPath()
         java.nio.file.Files.createDirectories(target.parent)
-        java.nio.file.Files.writeString(target, versionText.get())
+        java.nio.file.Files.writeString(target, versionText)
     }
 }
 ```

@@ -32,7 +32,7 @@ Use `crypto/rand` for secrets. `math/rand/v2` is non-cryptographic. `crypto/hpke
 
 ## Vulnerabilities
 
-`govulncheck` reports known vulnerabilities reachable from application call paths. It can scan source or binaries. Treat results as actionable dependency/code evidence while still reviewing deployment reachability and remediation.
+In source mode, `govulncheck` reports known vulnerabilities reachable from application call paths. Binary mode reports vulnerable symbols present in the compiled binary but cannot reconstruct source-mode call stacks, so symbol presence alone does not prove application call-path reachability. Treat either result as actionable dependency/code evidence while still reviewing deployment reachability and remediation.
 
 ## Current package corrections
 

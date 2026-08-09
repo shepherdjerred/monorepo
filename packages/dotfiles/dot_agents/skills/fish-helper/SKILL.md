@@ -46,7 +46,7 @@ Accept commands as the remaining arguments and invoke them directly:
 
 ```fish
 function retry --description 'Retry a command with exact arguments'
-    argparse 'n/max-attempts=' -- $argv
+    argparse --stop-nonopt 'n/max-attempts=' -- $argv
     or return
 
     set -l max_attempts 3
