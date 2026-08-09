@@ -2,11 +2,12 @@ import {
   Deployment,
   DeploymentStrategy,
   EnvValue,
+  Probe,
   Secret,
   Volume,
 } from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
-import { Size } from "cdk8s";
+import { Duration, Size } from "cdk8s";
 import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
@@ -75,6 +76,30 @@ export function createStarlightKarmaBotDeployment(chart: Chart, stage: Stage) {
         readOnlyRootFilesystem: false,
         ensureNonRoot: false,
       },
+      ports: [{ number: 8000, name: "health" }],
+      // The bot has always served a health endpoint, but nothing ever called
+      // it: the Dockerfile HEALTHCHECK is inert under Kubernetes, so a process
+      // whose Discord gateway died stayed "healthy" indefinitely.
+      //
+      // `/live` reports 503 only after the gateway has been down for more than
+      // five minutes, so ordinary discord.js reconnects never recycle the pod
+      // but a wedged one does. The generous startup budget (24 x 5s = 120s)
+      // covers `prisma migrate deploy` running before the Discord login.
+      startup: Probe.fromHttpGet("/live", {
+        port: 8000,
+        periodSeconds: Duration.seconds(5),
+        failureThreshold: 24,
+      }),
+      liveness: Probe.fromHttpGet("/live", {
+        port: 8000,
+        periodSeconds: Duration.seconds(30),
+        failureThreshold: 3,
+      }),
+      readiness: Probe.fromHttpGet("/ready", {
+        port: 8000,
+        periodSeconds: Duration.seconds(10),
+        failureThreshold: 3,
+      }),
       volumeMounts: [
         {
           path: "/data",
@@ -96,6 +121,10 @@ export function createStarlightKarmaBotDeployment(chart: Chart, stage: Stage) {
         }),
         APPLICATION_ID: EnvValue.fromValue(applicationId),
         DATA_DIR: EnvValue.fromValue("/data"),
+        // Prisma-native database, created by the one-shot import from the
+        // legacy TypeORM `glitter.sqlite` (which stays on the volume as the
+        // rollback artifact and is no longer read or written).
+        DATABASE_PATH: EnvValue.fromValue("/data/karma.db"),
         ENVIRONMENT: EnvValue.fromValue(stage),
         PORT: EnvValue.fromValue("8000"),
         SENTRY_DSN: EnvValue.fromSecretValue({

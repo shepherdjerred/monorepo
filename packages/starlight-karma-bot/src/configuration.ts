@@ -14,5 +14,9 @@ export default {
   port: env.get("PORT").default("8000").asPortNumber(),
   discordToken: env.get("DISCORD_TOKEN").required().asString(),
   applicationId: env.get("APPLICATION_ID").required().asString(),
-  dataDir: env.get("DATA_DIR").required().asString(),
+  // NOTE: `DATA_DIR` is deliberately absent. It located the sql.js database and
+  // the static file root, both of which are gone; the database path now comes
+  // from `DATABASE_PATH` (see src/db/index.ts). The deployment still sets
+  // DATA_DIR because the pre-Prisma image requires it, and dropping it here
+  // means a rollback does not depend on this file.
 };

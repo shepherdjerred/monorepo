@@ -1,6 +1,3 @@
-import { Karma } from "#src/db/karma.ts";
-import { KarmaReceived } from "#src/db/karma-received.ts";
-import { Person } from "#src/db/person.ts";
 import {
   bold,
   type ChatInputCommandInteraction,
@@ -9,14 +6,18 @@ import {
   time,
   userMention,
 } from "discord.js";
-import { dataSource } from "#src/db/index.ts";
-import _ from "lodash";
+import { prisma } from "#src/db/index.ts";
 import client from "#src/discord/client.ts";
 import {
   formatLeaderboardLine,
   karmaAmountFor,
   rankLeaderboard,
 } from "#src/karma/scoring.ts";
+
+/** Discord caps message content at 2000 characters; leave headroom so the
+ *  truncation footer always fits. Production already renders 45 ranked entries
+ *  at ~1420 characters, so this bound is close to binding today. */
+const MAX_LEADERBOARD_CONTENT = 1900;
 
 const karmaCommand = new SlashCommandBuilder()
   .setName("karma")
@@ -55,25 +56,13 @@ const karmaCommand = new SlashCommandBuilder()
       ),
   );
 
-async function getOrCreate(id: string): Promise<Person> {
-  let person = await dataSource.getRepository(Person).findOne({
-    where: {
-      id,
-    },
-    relations: {
-      received: { receiver: true, giver: true },
-      given: { receiver: true, giver: true },
-    },
+/** Ensure a `person` row exists so the karma foreign keys resolve. */
+async function ensurePerson(id: string): Promise<void> {
+  await prisma.person.upsert({
+    where: { id },
+    create: { id },
+    update: {},
   });
-  if (person === null) {
-    console.warn(`[Karma DB] Creating new person record for user ID: ${id}`);
-    person = new Person();
-    person.given = [];
-    person.id = id;
-    person.received = [];
-    await dataSource.getRepository(Person).insert(person);
-  }
-  return person;
 }
 
 async function modifyKarma(params: {
@@ -81,31 +70,34 @@ async function modifyKarma(params: {
   receiverId: string;
   amount: number;
   guildId: string;
-  reason?: string;
+  reason?: string | undefined;
 }) {
-  const giver = await getOrCreate(params.giverId);
-  const receiver = await getOrCreate(params.receiverId);
-
-  const karma = new Karma();
-  karma.amount = params.amount;
-  karma.datetime = new Date();
-  karma.giver = giver;
-  karma.reason = params.reason;
-  karma.receiver = receiver;
-  karma.guildId = params.guildId;
+  await ensurePerson(params.giverId);
+  if (params.receiverId !== params.giverId) {
+    await ensurePerson(params.receiverId);
+  }
 
   console.warn(
     `[Karma DB] Saving karma: ${params.giverId} -> ${params.receiverId}, amount: ${params.amount.toString()}, guild: ${params.guildId}${params.reason !== undefined && params.reason !== "" ? `, reason: "${params.reason}"` : ""}`,
   );
-  await dataSource.manager.save(karma);
+  await prisma.karma.create({
+    data: {
+      amount: params.amount,
+      datetime: new Date(),
+      reason: params.reason ?? null,
+      guildId: params.guildId,
+      giverId: params.giverId,
+      receiverId: params.receiverId,
+    },
+  });
 }
 
 async function getKarma(id: string, guildId: string): Promise<number> {
-  const karmaCounts = await dataSource.getRepository(KarmaReceived).findOneBy({
-    id,
-    guildId,
+  const { _sum } = await prisma.karma.aggregate({
+    _sum: { amount: true },
+    where: { receiverId: id, guildId },
   });
-  return karmaCounts === null ? 0 : karmaCounts.karmaReceived;
+  return _sum.amount ?? 0;
 }
 
 async function handleKarmaGive(interaction: ChatInputCommandInteraction) {
@@ -158,8 +150,7 @@ async function handleKarmaGive(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  const reasonValue = interaction.options.get("reason", false)?.value;
-  const reason = typeof reasonValue === "string" ? reasonValue : undefined;
+  const reason = interaction.options.getString("reason") ?? undefined;
   console.warn(
     `[Karma Give] ${giverUser.tag} (${giverUser.id}) giving karma to ${receiverUser.tag} (${receiverUser.id})${reason !== undefined && reason !== "" ? ` - reason: "${reason}"` : ""}`,
   );
@@ -201,39 +192,55 @@ async function handleKarmaLeaderboard(
     return;
   }
 
-  const karmaCounts = await dataSource.getRepository(KarmaReceived).find({
-    select: {
-      id: true,
-      karmaReceived: true,
-    },
-    where: {
-      guildId: interaction.guildId,
-    },
+  const totals = await prisma.karma.groupBy({
+    by: ["receiverId"],
+    where: { guildId: interaction.guildId },
+    _sum: { amount: true },
+    orderBy: { _sum: { amount: "desc" } },
   });
 
   console.warn(
-    `[Karma Leaderboard] Retrieved ${karmaCounts.length.toString()} entries for guild ${interaction.guildId}`,
+    `[Karma Leaderboard] Retrieved ${totals.length.toString()} entries for guild ${interaction.guildId}`,
   );
 
-  const ranked = rankLeaderboard(karmaCounts);
-  const leaderboardEntries = await Promise.all(
-    _.map(ranked, async (entry) => {
-      // mention the user who called the leaderboard command
-      const fetchedUser = await client.users.fetch(entry.id, { cache: true });
-      const displayName =
-        interaction.user.id === entry.id
-          ? userMention(interaction.user.id)
-          : fetchedUser.username;
-
-      return formatLeaderboardLine(entry, displayName);
-    }),
+  const ranked = rankLeaderboard(
+    totals.map((row) => ({
+      id: row.receiverId,
+      karmaReceived: row._sum.amount ?? 0,
+    })),
   );
-  const leaderboard = leaderboardEntries.join("\n");
+
+  // Accumulate against a character budget rather than rendering every entry:
+  // the full board is already at ~71% of Discord's limit, and long usernames
+  // would push it over. Resolving names lazily also avoids fetching users we
+  // are not going to show.
+  const header = "Karma Leaderboard:";
+  const lines: string[] = [];
+  let used = header.length;
+
+  for (const entry of ranked) {
+    const fetchedUser = await client.users.fetch(entry.id, { cache: true });
+    const displayName =
+      interaction.user.id === entry.id
+        ? userMention(interaction.user.id)
+        : fetchedUser.username;
+    const line = formatLeaderboardLine(entry, displayName);
+
+    const remaining = ranked.length - lines.length;
+    const footer = `\n…and ${remaining.toString()} more`;
+    if (used + 1 + line.length + footer.length > MAX_LEADERBOARD_CONTENT) {
+      lines.push(`…and ${remaining.toString()} more`);
+      break;
+    }
+    used += 1 + line.length;
+    lines.push(line);
+  }
+
   console.warn(
     `[Karma Leaderboard] Leaderboard generated and sent to ${interaction.user.tag} (${interaction.user.id})`,
   );
   await interaction.editReply({
-    content: `Karma Leaderboard:\n${leaderboard}`,
+    content: `${header}\n${lines.join("\n")}`,
   });
 }
 
@@ -252,17 +259,12 @@ async function handleKarmaHistory(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  await getOrCreate(target.id);
-
-  // Fetch karma records for this user in this guild
-  // Note: guildId can be null for legacy data from before multi-server support
-  const karmaRecords = await dataSource.getRepository(Karma).find({
-    where: [
-      { giver: { id: target.id }, guildId: interaction.guildId },
-      { receiver: { id: target.id }, guildId: interaction.guildId },
-    ],
-    relations: { giver: true, receiver: true },
-    order: { datetime: "DESC" },
+  const karmaRecords = await prisma.karma.findMany({
+    where: {
+      guildId: interaction.guildId,
+      OR: [{ giverId: target.id }, { receiverId: target.id }],
+    },
+    orderBy: { datetime: "desc" },
     take: 10,
   });
 
@@ -283,25 +285,15 @@ async function handleKarmaHistory(interaction: ChatInputCommandInteraction) {
 
   const str = karmaRecords
     .map((item) => {
-      if (target.id === item.giver.id) {
-        let message = `${time(item.datetime)} Gave ${bold(
-          item.amount.toString(),
-        )} karma to ${userMention(item.receiver.id)}`;
-        if (item.reason !== undefined && item.reason !== "") {
-          message += ` for ${inlineCode(item.reason)}`;
-        }
-        return message;
+      const gave = item.giverId === target.id;
+      const counterparty = gave ? item.receiverId : item.giverId;
+      let message = `${time(item.datetime)} ${gave ? "Gave" : "Received"} ${bold(
+        item.amount.toString(),
+      )} karma ${gave ? "to" : "from"} ${userMention(counterparty)}`;
+      if (item.reason !== null && item.reason !== "") {
+        message += ` for ${inlineCode(item.reason)}`;
       }
-      if (target.id === item.receiver.id) {
-        let message = `${time(item.datetime)} Received ${bold(
-          item.amount.toString(),
-        )} karma from ${userMention(item.giver.id)}`;
-        if (item.reason !== undefined && item.reason !== "") {
-          message += ` for ${inlineCode(item.reason)}`;
-        }
-        return message;
-      }
-      return "Unknown";
+      return message;
     })
     .join("\n");
   console.warn(

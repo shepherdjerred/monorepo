@@ -33,9 +33,6 @@
     "noErrorTruncation": true,
     // Performance - enable incremental compilation
     "incremental": true,
-    // TypeORM decorators
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
     "types": ["bun-types"]
   },
   "exclude": ["node_modules", "dist", "data"]

@@ -3,7 +3,10 @@ node_modules
 bun.lockb
 *.sqlite
 *.sqlite-journal
+*.db
+*.db-journal
 data/
+generated/
 .eslintcache
 *.tsbuildinfo
 .idea

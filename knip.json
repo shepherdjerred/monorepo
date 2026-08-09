@@ -69,8 +69,8 @@
       "project": ["src/**/*.ts", "test/**/*.ts"]
     },
     "packages/starlight-karma-bot": {
-      "entry": ["src/index.ts"],
-      "project": ["src/**/*.ts"]
+      "entry": ["src/index.ts", "scripts/*.ts"],
+      "project": ["src/**/*.ts", "scripts/**/*.ts"]
     },
     "packages/homelab/src/cdk8s": {
       "entry": ["src/app.ts", "src/**/*.ts", "scripts/**/*.ts"],

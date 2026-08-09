@@ -54,13 +54,17 @@ async function main(): Promise<void> {
     "APPLICATION_ID=000000000000000000",
     "-e",
     "DATA_DIR=/tmp/smoke-data",
+    "-e",
+    "DATABASE_PATH=/tmp/smoke-data/karma.db",
     "--entrypoint",
     "sh",
     IMAGE,
     "-c",
-    // Run from the package dir (the image's WORKDIR) so Bun uses this package's
-    // tsconfig — TypeORM entities need emitDecoratorMetadata.
-    "mkdir -p /tmp/smoke-data && cd /app/packages/starlight-karma-bot && exec bun src/index.ts",
+    // Run from the package dir (the image's WORKDIR) so Bun resolves this
+    // package's imports map. `scripts/start.ts` applies migrations before the
+    // Discord login, so reaching the auth error also proves the image can
+    // create its schema on an empty volume.
+    "mkdir -p /tmp/smoke-data && cd /app/packages/starlight-karma-bot && exec bun scripts/start.ts",
   ]);
   if (run.code !== 0) {
     throw new Error(
