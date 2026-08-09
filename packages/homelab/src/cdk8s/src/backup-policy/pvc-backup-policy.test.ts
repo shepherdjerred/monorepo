@@ -54,13 +54,6 @@ const ValidatingAdmissionPolicySchema = z.object({
   }),
 });
 
-const PLANE_RUNTIME_PVC_NAMES = [
-  "pvc-plane-monitor-vol-plane-monitor-wl-0",
-  "pvc-plane-pgdb-vol-plane-pgdb-wl-0",
-  "pvc-plane-rabbitmq-vol-plane-rabbitmq-wl-0",
-  "pvc-plane-redis-vol-plane-redis-wl-0",
-] as const;
-
 const tempDirectories: string[] = [];
 
 afterEach(async () => {
@@ -72,48 +65,18 @@ afterEach(async () => {
 });
 
 describe("PVC backup policy", () => {
-  it("classifies 54 included and 23 excluded PVCs without duplicates", () => {
+  it("classifies 50 included and 23 excluded PVCs without duplicates", () => {
     const keys = PVC_BACKUP_POLICY.map((entry) =>
       pvcBackupPolicyKey(entry.namespace, entry.name),
     );
-    expect(keys).toHaveLength(77);
-    expect(new Set(keys).size).toBe(77);
+    expect(keys).toHaveLength(73);
+    expect(new Set(keys).size).toBe(73);
     expect(
       PVC_BACKUP_POLICY.filter((entry) => entry.backup === "enabled"),
-    ).toHaveLength(54);
+    ).toHaveLength(50);
     expect(
       PVC_BACKUP_POLICY.filter((entry) => entry.backup === "disabled"),
     ).toHaveLength(23);
-  });
-
-  it("classifies Plane vendor StatefulSet PVCs in the admission policy", () => {
-    for (const name of PLANE_RUNTIME_PVC_NAMES) {
-      expect(getPvcBackupPolicy("plane", name)).toMatchObject({
-        backup: "enabled",
-      });
-    }
-
-    const app = new App();
-    const chart = new Chart(app, "pvc-backup-admission");
-    createPvcBackupAdmissionPolicies(chart);
-    const validatingPolicy = parseAllDocuments(app.synthYaml())
-      .map((document) => document.toJS())
-      .find((document) => {
-        const parsed = ManifestSchema.safeParse(document);
-        return (
-          parsed.success && parsed.data.kind === "ValidatingAdmissionPolicy"
-        );
-      });
-    if (validatingPolicy === undefined) {
-      throw new Error(
-        "PVC backup ValidatingAdmissionPolicy was not synthesized",
-      );
-    }
-
-    const serialized = JSON.stringify(validatingPolicy);
-    for (const name of PLANE_RUNTIME_PVC_NAMES) {
-      expect(serialized).toContain(`plane/${name}`);
-    }
   });
 
   it("classifies and labels every synthesized PVC", async () => {
