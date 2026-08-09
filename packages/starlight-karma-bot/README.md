@@ -27,7 +27,7 @@ SENTRY_DSN=https://fb2f07bfb3544bd2bd279a1ce5f1e247@bugsink.sjer.red/5
 PORT=8000
 DISCORD_TOKEN=your_discord_token_here
 APPLICATION_ID=your_application_id_here
-DATA_DIR=./data
+DATABASE_PATH=./data/karma.db
 ```
 
 1. Create the data directory:
@@ -37,24 +37,6 @@ mkdir -p ./data
 ```
 
 ## Development
-
-Using mise (recommended):
-
-```bash
-# Run all checks
-mise run check
-
-# Type check
-mise run typecheck
-
-# Lint
-mise run lint
-
-# Format check
-mise run format
-```
-
-Using npm scripts:
 
 ```bash
 # Type check
@@ -102,7 +84,7 @@ docker run -d \
   --name karma-bot \
   -e DISCORD_TOKEN=your_token_here \
   -e APPLICATION_ID=your_app_id_here \
-  -e DATA_DIR=/app/data \
+  -e DATABASE_PATH=/app/data/karma.db \
   -e ENVIRONMENT=prod \
   -v $(pwd)/data:/app/data \
   -p 8000:8000 \
@@ -113,13 +95,17 @@ Required runtime environment variables:
 
 - `DISCORD_TOKEN`: Your Discord bot token
 - `APPLICATION_ID`: Your Discord application ID
-- `DATA_DIR`: Data directory path (e.g., `/app/data`)
+- `DATABASE_PATH`: SQLite database file. **Must point inside the mounted
+  volume** (e.g. `/app/data/karma.db`), otherwise karma is written to the
+  container filesystem and lost when the container is replaced.
 - `ENVIRONMENT`: Environment name (`dev`, `beta`, or `prod`)
 
 Optional environment variables:
 
 - `SENTRY_DSN`: Sentry DSN for error tracking
 - `PORT`: Server port (default: 8000)
+- `LEGACY_DATABASE_PATH`: **upgrades only** — see below. Leave it unset on a
+  fresh install.
 
 ## Features
 
@@ -129,16 +115,40 @@ Optional environment variables:
 - **Multi-server support** - karma is tracked separately for each Discord server
 - **Automatic migration** - legacy karma is automatically migrated on startup
 - Persistent SQLite database
-- Static file serving from data directory
-- Health check endpoint at `/ping`
+- Automatic one-shot import from the legacy TypeORM database on first boot
+- Health endpoints at `/live` and `/ready` (used by the Kubernetes probes)
 
 ## Tech Stack
 
 - **Runtime:** Bun
 - **Discord:** discord.js v14
-- **Database:** TypeORM with sqlite
+- **Database:** Prisma with SQLite (libSQL adapter)
 - **Monitoring:** Sentry
 - **Linting:** ESLint with strict TypeScript rules
 - **Formatting:** Prettier
-- **CI/CD:** GitHub Actions with Docker builds
+- **CI/CD:** Buildkite with Docker builds
 - **Container Registry:** GitHub Container Registry (GHCR)
+
+## Migrating from the legacy TypeORM database
+
+Only relevant when upgrading an existing deployment that still has a
+`glitter.sqlite` on its volume. **Leave `LEGACY_DATABASE_PATH` unset on a fresh
+install** — a set-but-missing path deliberately fails startup, because silently
+starting on an empty database is indistinguishable from total karma loss.
+
+Point it at the legacy file and the bot imports it once, before logging in:
+
+```env
+LEGACY_DATABASE_PATH=/app/data/glitter.sqlite
+```
+
+The import verifies per-person totals inside the write transaction, so a
+mismatch rolls back rather than committing unverified data. It is idempotent —
+once the target has rows it is skipped — so the variable can stay set. The
+legacy file is only ever read and remains the rollback artifact.
+
+To rehearse against a copy first:
+
+```bash
+DATABASE_PATH=./data/karma.db bun scripts/import-legacy.ts ./data/glitter.sqlite
+```

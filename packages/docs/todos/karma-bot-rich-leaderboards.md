@@ -18,11 +18,16 @@ leaderboard and history are plain text today.
 Current state:
 
 - Commands: `/karma give`, `/karma leaderboard` (text, bold for top 3),
-  `/karma history` (last ~10 transactions).
-- Storage: SQLite via TypeORM (`packages/starlight-karma-bot/src/db/index.ts`,
-  `glitter.sqlite`), per-guild per-user.
-- **No image/graph/leaderboard rendering**, and **no tests** (the test script is
-  `"true"`).
+  `/karma history` (last ~10 transactions), plus the query surface added in
+  #2043.
+- Storage: SQLite via **Prisma** (`packages/starlight-karma-bot/prisma/schema.prisma`,
+  client in `src/db/index.ts`, database at `DATABASE_PATH`), per-guild per-user.
+  The TypeORM/`glitter.sqlite` layer was removed in #2038; aggregate reads live
+  in `src/karma/commands.ts` (`getReceivedKarma`, `handleKarmaLeaderboard`) and
+  pure ranking in `src/karma/scoring.ts`. #2043 moves the reads into a
+  dedicated `src/karma/queries.ts`.
+- **No image/graph/leaderboard rendering.** The package does now have tests
+  (the `"true"` placeholder script is gone).
 
 ## Approach
 
@@ -34,11 +39,13 @@ attachment. Scout's `competition-chart` color/palette logic is a good reference.
 ## Remaining
 
 - [ ] Extract and test deterministic leaderboard/history view models from the
-      TypeORM query results, including ties, empty guilds, and long names.
+      Prisma aggregate reads in `src/karma/commands.ts`, including ties, empty
+      guilds, and long names. Dense ranking is already covered by
+      `src/karma/scoring.test.ts`.
 - [ ] Render leaderboard and karma-over-time images with the established
       Satori/resvg stack and send them as bounded Discord attachments.
-- [ ] Replace the placeholder `"true"` test script with database tally,
-      rendering, and command-response coverage.
+- [ ] Add rendering and command-response coverage on top of the existing unit
+      tests.
 
 ## Comment Log
 
@@ -46,3 +53,9 @@ attachment. Scout's `competition-chart` color/palette logic is a good reference.
 
 - Retained as active. The current commands remain text-only and the package
   still lacks executable tests for either tallying or rendering.
+
+### 2026-08-08 — Prisma migration
+
+- Updated the storage references: the package moved from TypeORM to Prisma in
+  #2038, so the previous pointers to `glitter.sqlite` and TypeORM query results
+  would have led future work toward removed APIs.
