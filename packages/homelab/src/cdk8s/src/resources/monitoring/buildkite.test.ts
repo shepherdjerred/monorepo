@@ -87,9 +87,7 @@ function expectExpressionContains(
   }
 }
 
-function assertCollectorStaleExpression(
-  rule: Record<string, unknown>,
-): void {
+function assertCollectorStaleExpression(rule: Record<string, unknown>): void {
   const expression = String(rule["expr"]);
   expectExpressionContains(expression, ["> 1200"]);
   if (MAINTENANCE_IMAGE_READY) {

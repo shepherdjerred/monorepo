@@ -56,7 +56,7 @@ Use uv's project interface for a uv-managed application or package:
 
 ```bash
 uv sync --locked
-uv run pytest
+uv run --locked pytest
 uv add httpx
 uv add --dev pytest ruff
 ```
@@ -98,7 +98,9 @@ users = Users.validate_python(response.json())
 
 Check HTTP status before parsing. A type annotation does not validate JSON, environment variables, database results, cache values, or deserialized files.
 
-Use `Any` only where disabling checking is intentional and isolated. Prefer `object` or `unknown`-equivalent validation patterns at boundaries. Use `Never` for exhaustiveness.
+`Any` disables static checking and is not an escape hatch for repository code.
+Use precise protocols, generics, or `object` plus boundary validation instead.
+Use `Never` for exhaustiveness.
 
 `TypeIs` narrows both branches and requires the narrowed type to be a subtype. `TypeGuard` remains necessary for some invariant-container or otherwise non-subtype narrowing. Neither is universally preferred.
 

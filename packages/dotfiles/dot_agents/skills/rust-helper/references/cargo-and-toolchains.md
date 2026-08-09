@@ -12,12 +12,22 @@ to dependency-resolving commands when the project commits `Cargo.lock`; omit
 it for libraries that intentionally do not commit a lockfile. Do not create or
 commit a lockfile solely to run these inspections.
 
-Use these diagnostics before changing dependency constraints:
+For a project that commits `Cargo.lock`, use:
+
+```bash
+cargo tree --locked -d
+cargo tree --locked -e features
+cargo test --locked --future-incompat-report
+cargo report future-incompatibilities
+```
+
+For a library that intentionally does not commit `Cargo.lock`, use the
+lockfile-free form:
 
 ```bash
 cargo tree -d
 cargo tree -e features
-cargo test --locked --future-incompat-report
+cargo test --future-incompat-report
 cargo report future-incompatibilities
 ```
 
