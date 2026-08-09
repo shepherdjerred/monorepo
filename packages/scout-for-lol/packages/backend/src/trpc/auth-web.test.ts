@@ -84,13 +84,13 @@ describe("handleDiscordInstall", () => {
     const target = new URL(response.headers.get("Location") ?? "");
     expect(target.host).toBe("discord.com");
     expect(target.pathname).toBe("/api/oauth2/authorize");
-    // The bot-install URL carries the install scopes + permission bits and
-    // points the post-install redirect at the SPA's landing route.
+    // The bot-install URL carries the install scopes + permission bits. The
+    // post-install redirect is only sent for the beta application, which is
+    // the only one with /app/installed registered — see install-url.ts. This
+    // suite runs with APPLICATION_ID=test, so no redirect_uri is expected.
     expect(target.searchParams.get("scope")).toBe("bot applications.commands");
     expect(target.searchParams.get("permissions")).not.toBeNull();
-    expect(target.searchParams.get("redirect_uri")).toBe(
-      `${TEST_APP_ORIGIN}/app/installed`,
-    );
+    expect(target.searchParams.get("redirect_uri")).toBeNull();
     // No response_type=code: this is a pure bot install, not a token grant.
     expect(target.searchParams.get("response_type")).toBeNull();
   });

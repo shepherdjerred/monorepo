@@ -29,6 +29,9 @@ jscpd-report/
 !packages/frontend/public/generated/scout-showcase/*.png
 !packages/frontend/src/data/generated/
 !packages/frontend/src/data/generated/scout-showcase-assets.json
+!packages/docs-site/src/assets/generated/
+!packages/docs-site/src/assets/generated/*.png
+!packages/docs-site/src/assets/generated/*.json
 
 settings.local.json
 

@@ -18,6 +18,7 @@ import {
   runBackfillAfterCommit,
 } from "#src/lib/subscription/add.ts";
 import { replyError } from "#src/discord/commands/define-command.ts";
+import { recordAudit } from "#src/lib/audit/index.ts";
 import type {
   CommandEditReply,
   CommandReply,
@@ -108,22 +109,54 @@ export async function executeTrack(
     return;
   }
 
+  // Seed the stored Riot ID from Riot's canonical casing rather than what the
+  // user typed, matching subscriptionRouter.add — otherwise the same account
+  // is stored differently depending on which surface created it.
+  const canonicalRiotId = {
+    game_name: puuidResult.gameName,
+    tag_line: puuidResult.tagLine,
+  };
+
   try {
-    const result = await prisma.$transaction((tx) =>
-      addSubscription(
+    const result = await prisma.$transaction(async (tx) => {
+      const created = await addSubscription(
         {
           guildId: args.data.guildId,
           channelId: args.data.channelId,
           region: args.data.region,
-          riotId: args.data.riotId,
+          riotId: canonicalRiotId,
           alias: args.data.alias,
           creatorDiscordId: args.data.creatorDiscordId,
           filters: null,
         },
         LeaguePuuidSchema.parse(puuidResult.puuid),
         tx,
-      ),
-    );
+      );
+      // The audit log is documented as covering Discord commands too, so the
+      // row goes in the same transaction as the mutation — exactly as the web
+      // path does via runAuditedMutation.
+      if (created.kind === "created") {
+        await recordAudit(
+          {
+            action: "SUBSCRIPTION_ADD",
+            actorDiscordId: args.data.creatorDiscordId,
+            serverId: args.data.guildId,
+            targetChannelId: args.data.channelId,
+            targetPlayerId: created.player.id,
+            targetAccountId: created.account.id,
+            payload: {
+              riotId: args.data.riotId,
+              region: args.data.region,
+              alias: args.data.alias,
+              isAddingToExistingPlayer: created.isAddingToExistingPlayer,
+              source: "discord:/track",
+            },
+          },
+          tx,
+        );
+      }
+      return created;
+    });
 
     await interaction.editReply({ content: formatTrackResult(result) });
 

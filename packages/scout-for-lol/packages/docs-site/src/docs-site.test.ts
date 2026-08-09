@@ -216,6 +216,30 @@ describe("cross-package facts the prose depends on", () => {
     );
   });
 
+  test("docs URLs referenced from Scout source resolve to real pages", async () => {
+    // The outreach DMs and Discord replies link into /docs/ from outside this
+    // package, so renaming a page here can 404 a link the docs tests never see.
+    const scoutRoot = new URL("../../..", import.meta.url).pathname;
+    const sources = [
+      ...new Bun.Glob(
+        "packages/{backend,app,frontend}/src/**/*.{ts,tsx,astro}",
+      ).scanSync({ cwd: scoutRoot, onlyFiles: true }),
+    ];
+    const broken: string[] = [];
+    for (const rel of sources) {
+      const text = await Bun.file(path.join(scoutRoot, rel)).text();
+      for (const match of text.matchAll(
+        /https:\/\/(?:beta\.)?scout-for-lol\.com(\/docs\/[^"'`\s)]*)/g,
+      )) {
+        const route = match[1] ?? "";
+        if (!pages.has(route) && !distFiles.has(route.slice(BASE.length))) {
+          broken.push(`${rel} -> ${route}`);
+        }
+      }
+    }
+    expect(broken).toEqual([]);
+  });
+
   test("documented dashboard sections still match the app's nav", async () => {
     // The dashboard reference and every dashboard screenshot assume this exact
     // set of tabs. A rename here (the old marketing shots said "Admin") should

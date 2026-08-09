@@ -254,11 +254,12 @@ async function downloadAndVerifyArchiveBytes(
     ],
     { env: SEAWEEDFS_AWS_ENV },
   );
-  await assertStaticSiteComplete(
-    destination,
-    `verify-${flavor}-archive`,
-    RELEASE_ENTRYPOINTS,
-  );
+  // Deliberately the default entrypoints, not RELEASE_ENTRYPOINTS: archives
+  // minted before the docs site existed legitimately have no `docs/index.html`,
+  // and requiring it here would make rolling back to one impossible. Byte
+  // fidelity of whatever the archive does contain is still guaranteed by the
+  // digest comparison below.
+  await assertStaticSiteComplete(destination, `verify-${flavor}-archive`);
   const actual = await hashSiteArchive(destination);
   if (actual !== expected) {
     throw new Error(
