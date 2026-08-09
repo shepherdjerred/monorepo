@@ -36,12 +36,14 @@ Set **Visibility** when you create it:
 
 - **SERVER_WIDE** — every tracked player is in automatically. No admin work, and
   nobody can opt out.
-- **OPEN** — players choose to join. Use when taking part should be deliberate.
+- **OPEN** — marked open to the server. Scout has no self-service join action
+  yet, so an admin still adds participants.
 - **INVITE_ONLY** — you pick the participants. Use for a subset, like one team.
 
 For `INVITE_ONLY`, open the competition and manage its participants directly.
-Invited players sit at `INVITED` until they join, then become `JOINED`; someone
-who drops out is `LEFT` and stops accruing.
+Rows you add are `JOINED` straight away. `INVITED` and `LEFT` exist in the data
+model but there is currently no member-facing way to accept an invitation or
+leave, so use **Add all members** or add people individually.
 
 You can also cap the field with **Max participants**.
 
@@ -60,8 +62,10 @@ dates for anything shorter.
 Scout checks competitions every fifteen minutes and, from that check:
 
 - announces the start when the start date arrives,
-- posts standings updates to the announcement channel while it runs,
 - posts final standings and closes it when the end date passes.
+
+Intermediate standings posts are not dispatched today. For a running scoreboard
+in the channel, schedule a report instead.
 
 Status is derived from the dates rather than stored, so correcting a date
 immediately corrects whether the competition is upcoming, running, or finished.

@@ -56,7 +56,8 @@ Set **Visibility** to **SERVER_WIDE**.
 Scout has three visibilities:
 
 - `SERVER_WIDE` — every tracked player in the server is a participant.
-- `OPEN` — players can join it themselves.
+- `OPEN` — marked open to the server, but participants are still added by an
+  admin; there is no self-service join yet.
 - `INVITE_ONLY` — only people you invite are participants.
 
 `SERVER_WIDE` is the one that needs no further work, which is what you want for
@@ -81,8 +82,9 @@ Scout checks competition lifecycle every fifteen minutes. When your end date
 arrives, it closes the competition and posts the final standings to the
 announcement channel you chose — nobody has to remember to do it.
 
-While it runs, the competition also posts scheduled updates to that channel, so
-the server sees the race rather than just the result.
+Interim standings are not posted automatically today, so check the competition
+page while it runs — or build a [scheduled report](/docs/tutorials/first-report/)
+if you want the race in the channel.
 
 ## 9. Confirm in the audit log
 

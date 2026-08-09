@@ -1,5 +1,6 @@
 import {
   type ChatInputCommandInteraction,
+  PermissionFlagsBits,
   SlashCommandBuilder,
 } from "discord.js";
 import { z } from "zod";
@@ -28,6 +29,10 @@ import { getDashboardUrl } from "#src/discord/commands/links.ts";
 export const trackCommand = new SlashCommandBuilder()
   .setName("track")
   .setDescription("Track one League player in this Discord channel")
+  // Same gate the replaced `/subscription add` carried. Tracking a player
+  // consumes the server's account and subscription quotas and creates
+  // recurring posts in a channel, so it stays an administrator action.
+  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
   .addStringOption((option) =>
     option
       .setName("riot-id")
@@ -170,6 +175,10 @@ export async function executeTrack(
     }
   } catch (error) {
     await replyError(interaction, "tracking that player", error);
+    // The user already has a friendly reply; rethrow so the dispatcher records
+    // status="error" on discordCommandsTotal instead of counting this as a
+    // success. It skips its own reply because the interaction is answered.
+    throw error;
   }
 }
 

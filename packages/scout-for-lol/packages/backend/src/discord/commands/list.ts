@@ -72,5 +72,9 @@ export async function executeList(
     });
   } catch (error) {
     await replyError(interaction, "listing tracked players", error);
+    // The user already has a friendly reply; rethrow so the dispatcher records
+    // status="error" on discordCommandsTotal instead of counting this as a
+    // success. It skips its own reply because the interaction is answered.
+    throw error;
   }
 }

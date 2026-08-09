@@ -34,6 +34,10 @@ the command was run in**.
 | `region`  | choice | yes      | League region, picked from a dropdown of every supported region |
 | `alias`   | string | yes      | Short display name for the player, 1–100 characters             |
 
+Requires the Discord **Administrator** permission, like the `/subscription add`
+command it replaces — tracking a player consumes the server's quotas and creates
+recurring posts in a channel.
+
 The new subscription is created with **no queue filter**, so it posts every
 queue. It cannot set filters, additional channels, or a Discord link; use the
 dashboard for those.

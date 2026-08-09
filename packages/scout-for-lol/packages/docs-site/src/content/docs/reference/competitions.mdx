@@ -57,7 +57,7 @@ and regions](/docs/reference/queues-and-regions/).
     {
       header: "Who participates",
       values: [
-        "Anyone in the server can join it themselves.",
+        "Marked as open to the server. Note that Scout currently has no self-service join action, so participants still have to be added by someone with the invite permission.",
         "Only people you invite are participants.",
         "Every tracked player in the server, automatically.",
       ],
@@ -94,7 +94,11 @@ stored, so correcting a date immediately corrects the status.
 ## Lifecycle
 
 Scout checks competitions every **15 minutes** and, from that check, announces
-starts, posts standings updates, and posts final standings when the window ends.
+starts and posts final standings when the window ends. Intermediate standings
+posts are not currently dispatched — the scheduled-update path exists but is not
+wired into the cron, so a running competition announces only its start and its
+result. Use the competition page or a scheduled report for standings in
+between.
 
 ## Other fields
 
