@@ -27,6 +27,44 @@ struct SavedViewTests {
         #expect(store.lastError == nil)
     }
 
+    /// An unreadable document is reported **once**, not on every launch.
+    ///
+    /// ⚠️ Reported from real use: after the stored format changed shape, the app
+    /// opened complaining about a corrupt view *every single time*. The old code
+    /// backed the bytes up and set `lastError`, but left the undecodable bytes
+    /// under the primary key — so the next launch read them, failed identically,
+    /// and showed the same banner with no action that could clear it.
+    ///
+    /// Both halves are asserted, and the second is the regression: the failure
+    /// is surfaced on the launch that hits it, and a *relaunch over the same
+    /// defaults* comes up clean with the bytes still parked under the backup key.
+    @Test("an unreadable document is reported once and does not nag on relaunch")
+    func unreadableRecoversAfterReporting() throws {
+        let suite = SavedViewFixtures.defaults()
+        let garbage = Data("this is not a saved-view document".utf8)
+        suite.set(garbage, forKey: "red.sjer.tasknotes.savedViews")
+
+        let first = SavedViewStore(defaults: suite)
+        #expect(first.lastError != nil, "a corrupt document has to be reported")
+        #expect(
+            suite.data(forKey: "red.sjer.tasknotes.savedViews.unreadable") == garbage,
+            "the original bytes must be recoverable by hand"
+        )
+
+        // The regression. Under the old behaviour this second store found the
+        // same garbage and reported the same error, forever.
+        let relaunched = SavedViewStore(defaults: suite)
+        #expect(
+            relaunched.lastError == nil,
+            "the same corrupt document was reported a second time"
+        )
+        #expect(relaunched.views.map(\.name) == ["Job Search", "School"])
+        #expect(
+            suite.data(forKey: "red.sjer.tasknotes.savedViews.unreadable") == garbage,
+            "recovering must not destroy the backed-up bytes"
+        )
+    }
+
     /// Seeding happens for an **absent** key, never for an empty list.
     ///
     /// Deleting your last saved view has to stay deleted. "Absent" and "empty"

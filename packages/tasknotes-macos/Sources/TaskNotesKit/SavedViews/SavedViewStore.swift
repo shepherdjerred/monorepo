@@ -24,12 +24,17 @@ public import class Foundation.UserDefaults
 ///
 /// ## Corrupt data is reported, never quietly discarded
 ///
-/// If the stored document does not decode, this does **not** reset to the
-/// defaults and carry on: somebody's views would vanish with no explanation,
-/// which is the silent-fallback-on-bad-data pattern the repository bans. The
-/// failure is published on ``lastError`` for the UI to show, the list comes up
-/// empty, and the unreadable bytes are copied to a backup key first — so a
-/// later write cannot destroy them and they can be recovered by hand.
+/// If the stored document does not decode, the failure is published on
+/// ``lastError`` for the UI to show and the unreadable bytes are copied to a
+/// backup key — so a later write cannot destroy them and they can be recovered
+/// by hand. What it must not do is fail *silently*, which is the
+/// fallback-on-bad-data pattern the repository bans.
+///
+/// ⚠️ It must equally not fail **permanently**. Leaving undecodable bytes under
+/// the primary key makes every subsequent launch read them, fail again, and show
+/// the same banner with nothing the user can do about it. The store therefore
+/// recovers to the defaults after backing the bytes up: reported once, seen
+/// once, still recoverable.
 @MainActor
 @Observable
 public final class SavedViewStore {
@@ -136,7 +141,27 @@ public final class SavedViewStore {
             // key; this copy is what makes that recoverable.
             defaults.set(data, forKey: Self.backupKey)
             lastError = error
-            views = []
+
+            // ⚠️ Report **once**, not on every launch.
+            //
+            // Leaving the primary key holding bytes that cannot decode looked
+            // like the careful choice — nothing is destroyed — but it means the
+            // next launch reads the same bytes, fails the same way, and shows
+            // the same error, forever, with no action available that clears it.
+            // Observed in real use after the saved-view format changed shape:
+            // the app opened complaining about a corrupt view every single time.
+            //
+            // A permanent error state is not "reporting" — it is nagging, and a
+            // message that appears unconditionally stops being read, which is
+            // the same reason a lint rule that cries wolf gets ignored.
+            //
+            // So the store is left *usable*: the unreadable bytes are already
+            // parked under `backupKey` above, and the primary key is replaced
+            // with the defaults. `lastError` still fires the banner for this
+            // session, so the failure is seen exactly once and the data behind
+            // it is still recoverable by hand.
+            views = SavedView.defaults
+            persist()
         }
     }
 

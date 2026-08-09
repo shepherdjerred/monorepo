@@ -31,7 +31,12 @@ struct SavedViewRecordTests {
         suite.set(garbage, forKey: "red.sjer.tasknotes.savedViews")
 
         let store = SavedViewStore(defaults: suite)
-        #expect(store.views.isEmpty)
+        // Recovered to the defaults rather than left empty. The invariant
+        // these cases exist for is *reported and preserved* — `lastError`
+        // below, and the backup key — not the recovery strategy. Leaving the
+        // undecodable bytes in place made the app nag on every launch; see
+        // `SavedViewStore.load`.
+        #expect(store.views.map(\.name) == ["Job Search", "School"])
         #expect(store.lastError != nil)
         #expect(suite.data(forKey: "red.sjer.tasknotes.savedViews.unreadable") == garbage)
     }
@@ -50,7 +55,12 @@ struct SavedViewRecordTests {
             forKey: "red.sjer.tasknotes.savedViews")
 
         let store = SavedViewStore(defaults: suite)
-        #expect(store.views.isEmpty)
+        // Recovered to the defaults rather than left empty. The invariant
+        // these cases exist for is *reported and preserved* — `lastError`
+        // below, and the backup key — not the recovery strategy. Leaving the
+        // undecodable bytes in place made the app nag on every launch; see
+        // `SavedViewStore.load`.
+        #expect(store.views.map(\.name) == ["Job Search", "School"])
         #expect(store.lastError != nil)
     }
 
@@ -67,7 +77,12 @@ struct SavedViewRecordTests {
             forKey: "red.sjer.tasknotes.savedViews")
 
         let store = SavedViewStore(defaults: suite)
-        #expect(store.views.isEmpty)
+        // Recovered to the defaults rather than left empty. The invariant
+        // these cases exist for is *reported and preserved* — `lastError`
+        // below, and the backup key — not the recovery strategy. Leaving the
+        // undecodable bytes in place made the app nag on every launch; see
+        // `SavedViewStore.load`.
+        #expect(store.views.map(\.name) == ["Job Search", "School"])
         #expect(store.lastError != nil)
     }
 
@@ -93,7 +108,12 @@ struct SavedViewRecordTests {
             forKey: "red.sjer.tasknotes.savedViews")
 
         let store = SavedViewStore(defaults: suite)
-        #expect(store.views.isEmpty)
+        // Recovered to the defaults rather than left empty. The invariant
+        // these cases exist for is *reported and preserved* — `lastError`
+        // below, and the backup key — not the recovery strategy. Leaving the
+        // undecodable bytes in place made the app nag on every launch; see
+        // `SavedViewStore.load`.
+        #expect(store.views.map(\.name) == ["Job Search", "School"])
         #expect(store.lastError != nil)
     }
 
