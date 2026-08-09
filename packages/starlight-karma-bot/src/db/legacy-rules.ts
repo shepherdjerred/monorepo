@@ -91,16 +91,24 @@ export function decideLegacyImport(params: {
   legacyPath: string | undefined;
   legacyFileExists: boolean;
   targetKarmaRows: number;
+  targetPersonRows: number;
 }): LegacyImportDecision {
-  const { legacyPath, legacyFileExists, targetKarmaRows } = params;
+  const { legacyPath, legacyFileExists, targetKarmaRows, targetPersonRows } =
+    params;
 
   if (legacyPath === undefined || legacyPath === "") {
     return { action: "skip", reason: "LEGACY_DATABASE_PATH is not set" };
   }
-  if (targetKarmaRows > 0) {
+  // Either table being populated means the import already committed. Karma
+  // alone is not a sufficient signal: the legacy `/karma history` handler
+  // created `person` rows without any karma, so a source with people but no
+  // karma would import once, still report zero karma on the next boot, and
+  // crash-loop on duplicate person primary keys.
+  const imported = targetKarmaRows + targetPersonRows;
+  if (imported > 0) {
     return {
       action: "skip",
-      reason: `target already has ${String(targetKarmaRows)} karma row(s); the import already ran`,
+      reason: `target already has ${String(targetKarmaRows)} karma and ${String(targetPersonRows)} person row(s); the import already ran`,
     };
   }
   if (!legacyFileExists) {

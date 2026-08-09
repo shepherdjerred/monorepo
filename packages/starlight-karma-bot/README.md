@@ -28,7 +28,6 @@ PORT=8000
 DISCORD_TOKEN=your_discord_token_here
 APPLICATION_ID=your_application_id_here
 DATABASE_PATH=./data/karma.db
-LEGACY_DATABASE_PATH=./data/glitter.sqlite
 ```
 
 1. Create the data directory:
@@ -105,10 +104,8 @@ Optional environment variables:
 
 - `SENTRY_DSN`: Sentry DSN for error tracking
 - `PORT`: Server port (default: 8000)
-- `LEGACY_DATABASE_PATH`: legacy TypeORM database to import on first boot. The
-  import is idempotent (skipped once the target has karma), but startup fails
-  if this is set and the file is missing — silently starting empty is
-  indistinguishable from total karma loss.
+- `LEGACY_DATABASE_PATH`: **upgrades only** — see below. Leave it unset on a
+  fresh install.
 
 ## Features
 
@@ -131,3 +128,27 @@ Optional environment variables:
 - **Formatting:** Prettier
 - **CI/CD:** Buildkite with Docker builds
 - **Container Registry:** GitHub Container Registry (GHCR)
+
+## Migrating from the legacy TypeORM database
+
+Only relevant when upgrading an existing deployment that still has a
+`glitter.sqlite` on its volume. **Leave `LEGACY_DATABASE_PATH` unset on a fresh
+install** — a set-but-missing path deliberately fails startup, because silently
+starting on an empty database is indistinguishable from total karma loss.
+
+Point it at the legacy file and the bot imports it once, before logging in:
+
+```env
+LEGACY_DATABASE_PATH=/app/data/glitter.sqlite
+```
+
+The import verifies per-person totals inside the write transaction, so a
+mismatch rolls back rather than committing unverified data. It is idempotent —
+once the target has rows it is skipped — so the variable can stay set. The
+legacy file is only ever read and remains the rollback artifact.
+
+To rehearse against a copy first:
+
+```bash
+DATABASE_PATH=./data/karma.db bun scripts/import-legacy.ts ./data/glitter.sqlite
+```

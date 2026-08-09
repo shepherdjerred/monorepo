@@ -64,6 +64,7 @@ describe("decideLegacyImport", () => {
         legacyPath: undefined,
         legacyFileExists: false,
         targetKarmaRows: 0,
+        targetPersonRows: 0,
       }),
     ).toEqual({ action: "skip", reason: "LEGACY_DATABASE_PATH is not set" });
   });
@@ -74,6 +75,7 @@ describe("decideLegacyImport", () => {
         legacyPath: "",
         legacyFileExists: false,
         targetKarmaRows: 0,
+        targetPersonRows: 0,
       }).action,
     ).toBe("skip");
   });
@@ -84,6 +86,7 @@ describe("decideLegacyImport", () => {
         legacyPath: "/data/glitter.sqlite",
         legacyFileExists: true,
         targetKarmaRows: 0,
+        targetPersonRows: 0,
       }),
     ).toEqual({ action: "import", sourcePath: "/data/glitter.sqlite" });
   });
@@ -96,11 +99,27 @@ describe("decideLegacyImport", () => {
         legacyPath: "/data/glitter.sqlite",
         legacyFileExists: true,
         targetKarmaRows: 362,
+        targetPersonRows: 47,
       }),
     ).toEqual({
       action: "skip",
-      reason: "target already has 362 karma row(s); the import already ran",
+      reason:
+        "target already has 362 karma and 47 person row(s); the import already ran",
     });
+  });
+
+  test("skips when only person rows were imported", () => {
+    // The legacy `/karma history` handler created `person` rows with no karma,
+    // so a karma-only completion signal would re-run the import and crash-loop
+    // on duplicate person primary keys.
+    expect(
+      decideLegacyImport({
+        legacyPath: "/data/glitter.sqlite",
+        legacyFileExists: true,
+        targetKarmaRows: 0,
+        targetPersonRows: 12,
+      }).action,
+    ).toBe("skip");
   });
 
   test("throws when the configured legacy file is missing", () => {
@@ -111,6 +130,7 @@ describe("decideLegacyImport", () => {
         legacyPath: "/data/typo.sqlite",
         legacyFileExists: false,
         targetKarmaRows: 0,
+        targetPersonRows: 0,
       }),
     ).toThrow(/no file exists there/);
   });
@@ -123,6 +143,7 @@ describe("decideLegacyImport", () => {
         legacyPath: "/data/glitter.sqlite",
         legacyFileExists: false,
         targetKarmaRows: 362,
+        targetPersonRows: 0,
       }).action,
     ).toBe("skip");
   });

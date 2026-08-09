@@ -277,6 +277,7 @@ export async function runLegacyImportIfNeeded(
         ? false
         : await Bun.file(legacyPath).exists(),
     targetKarmaRows: await prisma.karma.count(),
+    targetPersonRows: await prisma.person.count(),
   });
 
   if (decision.action === "skip") {
