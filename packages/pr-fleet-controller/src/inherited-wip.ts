@@ -185,27 +185,10 @@ export function requireMatchingInheritedWipInspection(
   }
 }
 
-export async function recordAuthorizedWipState(options: {
+export function invalidateInheritedWipInspection(options: {
   store: FleetStore;
   pr: PrState;
-  environment: FleetEnvironment;
-  worktree: string;
-  signal: AbortSignal;
-}): Promise<void> {
-  const { store, pr, environment, worktree, signal } = options;
-  const context = pr.worktreeContext;
-  if (context?.ownership !== "operator") {
-    return;
-  }
-  const live = await collectInheritedWipEvidence({
-    environment,
-    worktree,
-    signal,
-  });
-  store.inheritedWipInspections.set(pr.identity.number, {
-    remoteHeadSha: context.remoteHeadSha,
-    localHeadSha: live.localHeadSha,
-    fingerprint: live.fingerprint,
-    complete: true,
-  });
+}): void {
+  if (options.pr.worktreeContext?.ownership !== "operator") return;
+  options.store.inheritedWipInspections.delete(options.pr.identity.number);
 }

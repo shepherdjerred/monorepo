@@ -4,6 +4,9 @@ import { z } from "zod";
 const RefreshedEvidencePayloadSchema = z.object({
   operation: z.literal("refreshEvidence"),
 });
+const ListedPrsPayloadSchema = z.object({
+  operation: z.literal("listOpenPrs"),
+});
 
 const EVIDENCE_TERMINAL_KINDS = new Set([
   "environment.result",
@@ -133,6 +136,12 @@ type ActiveCorrelations = {
   commands: Map<string, RecordedRunEvent>;
 };
 
+type TickCorrelations = {
+  activeIds: Set<string>;
+  failedDrainLanes: Map<string, Set<string>>;
+  activeOperatorQuestionLanes: Set<string>;
+};
+
 function tickDrainLane(event: RecordedRunEvent): string | null {
   const prNumber = event.correlation.prNumber;
   const headSha = event.correlation.headSha;
@@ -141,10 +150,26 @@ function tickDrainLane(event: RecordedRunEvent): string | null {
     : `${String(prNumber)}:${headSha}`;
 }
 
+function trackOperatorQuestionLane(
+  event: RecordedRunEvent,
+  activeOperatorQuestionLanes: Set<string>,
+): void {
+  const lane = tickDrainLane(event);
+  if (lane === null) return;
+  if (event.kind === "operator.question.asked") {
+    activeOperatorQuestionLanes.add(lane);
+  }
+  if (
+    event.kind === "operator.question.answered" ||
+    event.kind === "operator.question.superseded"
+  ) {
+    activeOperatorQuestionLanes.delete(lane);
+  }
+}
+
 function verifyTickCausation(
   event: RecordedRunEvent,
-  activeTickIds: Set<string>,
-  failedTickDrainLanes: Map<string, Set<string>>,
+  ticks: TickCorrelations,
 ): void {
   if (EVIDENCE_TERMINAL_KINDS.has(event.kind)) {
     const tickId = event.correlation.tickId;
@@ -152,8 +177,14 @@ function verifyTickCausation(
     const draining =
       tickId !== undefined &&
       lane !== null &&
-      failedTickDrainLanes.get(tickId)?.has(lane) === true;
-    if (tickId === undefined || (!draining && !activeTickIds.has(tickId))) {
+      ticks.failedDrainLanes.get(tickId)?.has(lane) === true;
+    const operatorHeadLookup =
+      tickId === undefined &&
+      lane !== null &&
+      ticks.activeOperatorQuestionLanes.has(lane) &&
+      ListedPrsPayloadSchema.safeParse(event.payload).success;
+    if (operatorHeadLookup) return;
+    if (tickId === undefined || (!draining && !ticks.activeIds.has(tickId))) {
       throw new Error(
         `${event.kind} references a nonexistent or inactive tick: ${tickId ?? "missing"}`,
       );
@@ -166,7 +197,7 @@ function verifyTickCausation(
   const correlationField =
     event.kind === "fleet.change" ? "tickId" : "causationId";
   const tickId = event.correlation[correlationField];
-  if (tickId === undefined || !activeTickIds.has(tickId)) {
+  if (tickId === undefined || !ticks.activeIds.has(tickId)) {
     throw new Error(
       `${event.kind} references a nonexistent or inactive tick: ${tickId ?? "missing"}`,
     );
@@ -225,24 +256,23 @@ function trackCommandStarted(
 function trackStartedEvent(
   event: RecordedRunEvent,
   active: ActiveCorrelations,
-  activeTickIds: Set<string>,
-  failedTickDrainLanes: Map<string, Set<string>>,
+  ticks: TickCorrelations,
 ): void {
-  verifyTickCausation(event, activeTickIds, failedTickDrainLanes);
+  verifyTickCausation(event, ticks);
   if (event.kind === "tick.started") {
     const tickId = event.correlation.tickId;
     if (tickId === undefined) {
       throw new Error("tick.started is missing its tick correlation");
     }
-    activeTickIds.add(tickId);
-    failedTickDrainLanes.set(tickId, new Set());
+    ticks.activeIds.add(tickId);
+    ticks.failedDrainLanes.set(tickId, new Set());
   }
   if (event.kind === "worker.started") {
     const tickId = event.correlation.tickId;
     if (tickId === undefined) {
       throw new Error("worker.started is missing its tick correlation");
     }
-    if (!activeTickIds.has(tickId)) {
+    if (!ticks.activeIds.has(tickId)) {
       throw new Error(
         `worker.started references a nonexistent or inactive tick: ${tickId}`,
       );
@@ -287,7 +317,7 @@ function trackStartedEvent(
     active.tools.set(requireLifecycleKey(event, "tools"), event);
   }
   if (event.kind === "command.started") {
-    trackCommandStarted(event, active, activeTickIds, failedTickDrainLanes);
+    trackCommandStarted(event, active, ticks.activeIds, ticks.failedDrainLanes);
   }
 }
 
@@ -408,8 +438,11 @@ function closeTerminalEvent(
 }
 
 export function verifyCorrelationGraph(events: RecordedRunEvent[]): void {
-  const activeTickIds = new Set<string>();
-  const failedTickDrainLanes = new Map<string, Set<string>>();
+  const ticks: TickCorrelations = {
+    activeIds: new Set(),
+    failedDrainLanes: new Map(),
+    activeOperatorQuestionLanes: new Set(),
+  };
   const active: ActiveCorrelations = {
     workers: new Map(),
     modelTurns: new Map(),
@@ -417,7 +450,8 @@ export function verifyCorrelationGraph(events: RecordedRunEvent[]): void {
     commands: new Map(),
   };
   for (const event of events) {
-    trackStartedEvent(event, active, activeTickIds, failedTickDrainLanes);
-    closeTerminalEvent(event, active, activeTickIds, failedTickDrainLanes);
+    trackStartedEvent(event, active, ticks);
+    closeTerminalEvent(event, active, ticks.activeIds, ticks.failedDrainLanes);
+    trackOperatorQuestionLane(event, ticks.activeOperatorQuestionLanes);
   }
 }

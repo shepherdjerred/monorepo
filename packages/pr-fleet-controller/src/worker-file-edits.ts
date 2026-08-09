@@ -3,7 +3,7 @@ import path from "node:path";
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import {
-  recordAuthorizedWipState,
+  invalidateInheritedWipInspection,
   requireCurrentInheritedWipInspection,
 } from "./inherited-wip.ts";
 import type { FleetEnvironment } from "./ports.ts";
@@ -213,10 +213,7 @@ async function prepareFileMutation(deps: FileEditToolDeps): Promise<void> {
     throw new Error("Stack write lease is not available");
   }
   await requireCurrentInheritedWipInspection(deps);
-}
-
-async function recordFileMutation(deps: FileEditToolDeps): Promise<void> {
-  await recordAuthorizedWipState(deps);
+  invalidateInheritedWipInspection({ store: deps.store, pr: deps.pr });
 }
 
 // The reliable worker edit surface: exact-match `str_replace` and full-file
@@ -243,9 +240,7 @@ export function createFileEditTools(deps: FileEditToolDeps) {
       execute: (input) =>
         record("str_replace", input, async () => {
           await prepareFileMutation(deps);
-          const result = await applyStrReplace(worktree, input);
-          await recordFileMutation(deps);
-          return result;
+          return applyStrReplace(worktree, input);
         }),
     }),
     write_file: createTool({
@@ -260,9 +255,7 @@ export function createFileEditTools(deps: FileEditToolDeps) {
       execute: (input) =>
         record("write_file", input, async () => {
           await prepareFileMutation(deps);
-          const result = await writeWorktreeFile(worktree, input);
-          await recordFileMutation(deps);
-          return result;
+          return writeWorktreeFile(worktree, input);
         }),
     }),
     format_paths: createTool({
@@ -295,7 +288,6 @@ export function createFileEditTools(deps: FileEditToolDeps) {
           if (result.exitCode !== 0) {
             throw new Error(`Prettier failed: ${result.stderr.trim()}`);
           }
-          await recordFileMutation(deps);
           return { paths: input.paths };
         }),
     }),

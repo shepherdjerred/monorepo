@@ -37,6 +37,8 @@ inspect_worktree_wip before editing or publishing. Continue it when every path a
 commit clearly fits the PR, all WIP and commit evidence is complete, and the work
 can be isolated; use request_operator_input when evidence is truncated or a
 material ownership, intent, or destructive-history decision remains uncertain.
+After any controller mutation in an operator worktree, inspect its WIP again before
+the next mutation or publication so concurrent operator edits are never assumed safe.
 After requesting input, return waiting-for-answer with that request ID immediately.
 Use the dedicated Git/WIP tools, never run git through run_local_command. Edit files
 with str_replace (exact-match, the

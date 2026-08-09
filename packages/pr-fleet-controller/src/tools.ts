@@ -3,7 +3,7 @@ import { z } from "zod";
 import { validateWorkerCommand } from "./command-policy.ts";
 import { captureTelemetryOperation } from "./controller-telemetry.ts";
 import {
-  recordAuthorizedWipState,
+  invalidateInheritedWipInspection,
   requireCurrentInheritedWipInspection,
 } from "./inherited-wip.ts";
 import type { FleetEnvironment, FleetTelemetry } from "./ports.ts";
@@ -208,6 +208,7 @@ export function createWorkerTools(
           for (const changedPath of paths) {
             await containedPath(worktree, changedPath);
           }
+          invalidateInheritedWipInspection({ store, pr });
           const result = await environment.runLocalCommand({
             executable: "git",
             args: ["apply", "--whitespace=error-all", "-"],
@@ -219,13 +220,6 @@ export function createWorkerTools(
           if (result.exitCode !== 0) {
             throw new Error(`Patch failed: ${result.stderr.trim()}`);
           }
-          await recordAuthorizedWipState({
-            store,
-            pr,
-            environment,
-            worktree,
-            signal,
-          });
           return { applied: true, stderr: result.stderr };
         }),
     }),

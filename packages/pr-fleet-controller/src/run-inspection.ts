@@ -17,7 +17,7 @@ import {
 } from "./run-recorder.ts";
 import { verifyCorrelationGraph } from "./replay-correlation.ts";
 import {
-  verifyOperatorQuestionLifecycle,
+  verifyOperatorQuestionState,
   type OperatorQuestionReplay,
 } from "./operator-question-replay.ts";
 import type { FleetSnapshot } from "./schemas.ts";
@@ -401,7 +401,7 @@ export function replayRunBundle(
     completed: "master.turn.completed",
     failed: "master.turn.failed",
   });
-  const operatorQuestions = verifyOperatorQuestionLifecycle(events);
+  const operatorQuestions = verifyOperatorQuestionState(events, finalSnapshot);
   if (summary.status === "completed") {
     const openLifecycles = Object.entries({
       run,

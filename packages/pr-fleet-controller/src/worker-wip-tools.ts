@@ -4,7 +4,7 @@ import { captureTelemetryOperation } from "./controller-telemetry.ts";
 import { currentTimestamp } from "./fleet-logic.ts";
 import {
   collectInheritedWipEvidence,
-  recordAuthorizedWipState,
+  invalidateInheritedWipInspection,
   requireCurrentInheritedWipInspection,
 } from "./inherited-wip.ts";
 import type { FleetEnvironment, FleetTelemetry } from "./ports.ts";
@@ -131,7 +131,7 @@ export function createWorkerWipTools(options: {
     inspect_worktree_wip: createTool({
       id: "inspect_worktree_wip",
       description:
-        "Inspect inherited work in the assigned checkout: complete/truncated status and staged, unstaged, untracked, and local-commit patches plus the local/remote relation. Publication remains disabled when required evidence is truncated. Use this before deciding whether existing operator work clearly belongs to the PR or requires operator guidance.",
+        "Inspect inherited work in the assigned checkout: complete/truncated status and staged, unstaged, untracked, and local-commit patches plus the local/remote relation. Publication remains disabled when required evidence is truncated. Use this before deciding whether existing operator work clearly belongs to the PR or requires operator guidance, and repeat it after every controller mutation in an operator worktree before another mutation or publication.",
       inputSchema: z.object({}),
       outputSchema: z.object({
         context: PrStateSchema.shape.worktreeContext,
@@ -325,6 +325,7 @@ export function createWorkerWipTools(options: {
           for (const requestedPath of input.paths) {
             await containedPath(worktree, requestedPath);
           }
+          invalidateInheritedWipInspection({ store, pr });
           const result = await environment.runLocalCommand({
             executable: "git",
             args: ["reset", "HEAD", "--", ...input.paths],
@@ -335,13 +336,6 @@ export function createWorkerWipTools(options: {
           if (result.exitCode !== 0) {
             throw new Error(`Failed to unstage paths: ${result.stderr.trim()}`);
           }
-          await recordAuthorizedWipState({
-            store,
-            pr,
-            environment,
-            worktree,
-            signal,
-          });
           return { paths: input.paths };
         }),
     }),

@@ -23,6 +23,7 @@ import { FleetStore } from "@shepherdjerred/pr-fleet-controller/src/state.ts";
 import { WorktreeManager } from "@shepherdjerred/pr-fleet-controller/src/worktree.ts";
 import { parseWatchArgs } from "@shepherdjerred/pr-fleet-controller/src/watch-cli.ts";
 import {
+  invalidateInheritedWipInspection,
   requireMatchingInheritedWipInspection,
   type InheritedWipEvidence,
 } from "@shepherdjerred/pr-fleet-controller/src/inherited-wip.ts";
@@ -184,6 +185,16 @@ describe("inherited WIP evidence regressions", () => {
     expect(() =>
       requireMatchingInheritedWipInspection(store, pr, inspectedEvidence),
     ).not.toThrow();
+    invalidateInheritedWipInspection({ store, pr });
+    expect(() =>
+      requireMatchingInheritedWipInspection(store, pr, inspectedEvidence),
+    ).toThrow(/differs from the complete inspection/);
+    store.inheritedWipInspections.set(prIdentity.number, {
+      remoteHeadSha: prIdentity.headSha,
+      localHeadSha: prIdentity.headSha,
+      fingerprint: inspectedEvidence.fingerprint,
+      complete: true,
+    });
     expect(() =>
       requireMatchingInheritedWipInspection(store, pr, {
         ...inspectedEvidence,

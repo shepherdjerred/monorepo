@@ -4,7 +4,7 @@ import path from "node:path";
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import {
-  recordAuthorizedWipState,
+  invalidateInheritedWipInspection,
   requireCurrentInheritedWipInspection,
 } from "./inherited-wip.ts";
 import type { FleetEnvironment } from "./ports.ts";
@@ -172,6 +172,7 @@ export function createSetupWorktreeTool(options: {
             worktree,
             signal,
           });
+          invalidateInheritedWipInspection({ store, pr });
           const directories = await resolveSetupDirectories(
             worktree,
             environment,
@@ -202,13 +203,6 @@ export function createSetupWorktreeTool(options: {
             }
             completed.push([command.executable, ...command.args].join(" "));
           }
-          await recordAuthorizedWipState({
-            store,
-            pr,
-            environment,
-            worktree,
-            signal,
-          });
           store.setupWorktrees.set(worktree, headSha);
           for (const [number, state] of store.prs) {
             if (

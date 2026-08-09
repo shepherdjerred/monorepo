@@ -3,6 +3,7 @@ import type { RecordedRunEvent } from "./run-events.ts";
 import {
   OperatorInputAnswerSchema,
   OperatorInputRequestSchema,
+  type FleetSnapshot,
   type OperatorInputRequest,
 } from "./schemas.ts";
 
@@ -67,7 +68,7 @@ function verifyAnswer(
   }
 }
 
-export function verifyOperatorQuestionLifecycle(
+function verifyOperatorQuestionLifecycle(
   events: RecordedRunEvent[],
 ): OperatorQuestionReplay {
   const requests = new Map<
@@ -123,4 +124,53 @@ export function verifyOperatorQuestionLifecycle(
       .map(([id]) => id)
       .sort(),
   };
+}
+
+function verifyOpenQuestionsMatchSnapshot(
+  replay: OperatorQuestionReplay,
+  finalSnapshot: FleetSnapshot | null,
+): void {
+  const snapshotRequestIds: string[] = [];
+  for (const pr of finalSnapshot?.prs ?? []) {
+    const request = pr.operatorRequest;
+    const waiting =
+      pr.status === "waiting-for-answer" &&
+      pr.classification === "waiting-for-answer";
+    if (waiting !== (request !== null)) {
+      throw new Error(
+        `Final snapshot PR #${String(pr.identity.number)} has inconsistent operator waiting state`,
+      );
+    }
+    if (request !== null) {
+      if (
+        request.pr !== pr.identity.number ||
+        request.headSha !== pr.identity.headSha
+      ) {
+        throw new Error(
+          `Final snapshot operator request ${request.id} does not match its PR/head`,
+        );
+      }
+      snapshotRequestIds.push(request.id);
+    }
+  }
+  snapshotRequestIds.sort();
+  if (
+    replay.open.length !== snapshotRequestIds.length ||
+    replay.open.some(
+      (requestId, index) => requestId !== snapshotRequestIds[index],
+    )
+  ) {
+    throw new Error(
+      "Open operator question lifecycles do not match the final fleet snapshot",
+    );
+  }
+}
+
+export function verifyOperatorQuestionState(
+  events: RecordedRunEvent[],
+  finalSnapshot: FleetSnapshot | null,
+): OperatorQuestionReplay {
+  const replay = verifyOperatorQuestionLifecycle(events);
+  verifyOpenQuestionsMatchSnapshot(replay, finalSnapshot);
+  return replay;
 }

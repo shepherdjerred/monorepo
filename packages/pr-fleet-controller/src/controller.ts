@@ -129,8 +129,8 @@ export class FleetController implements MasterControllerTools {
       store: this.store,
       telemetry: this.#telemetry,
       observer: this.#observer,
-      currentPrHead: (prNumber: number) =>
-        lookupCurrentPrHead(this.#environment, prNumber),
+      currentPrHead: (prNumber: number, expectedHeadSha: string) =>
+        lookupCurrentPrHead(this.#environment, prNumber, expectedHeadSha),
       queueReconciliation: () => {
         queueMicrotask(() => {
           void this.#runTickSafely("user", "operator-answer tick");

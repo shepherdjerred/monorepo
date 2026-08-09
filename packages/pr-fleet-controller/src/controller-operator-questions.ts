@@ -1,4 +1,5 @@
 import type { ControllerTelemetry } from "./controller-telemetry.ts";
+import { withCommandCorrelation } from "./command-correlation.ts";
 import type { FleetEnvironment, FleetObserver } from "./ports.ts";
 import {
   OperatorInputAnswerSchema,
@@ -12,15 +13,22 @@ type OperatorQuestionDependencies = {
   store: FleetStore;
   telemetry: ControllerTelemetry;
   observer: FleetObserver;
-  currentPrHead: (prNumber: number) => Promise<string | null>;
+  currentPrHead: (
+    prNumber: number,
+    expectedHeadSha: string,
+  ) => Promise<string | null>;
   queueReconciliation: () => void;
 };
 
 export async function lookupCurrentPrHead(
   environment: FleetEnvironment,
   prNumber: number,
+  expectedHeadSha: string,
 ): Promise<string | null> {
-  const identities = await environment.listOpenPrs();
+  const identities = await withCommandCorrelation(
+    { prNumber, headSha: expectedHeadSha },
+    () => environment.listOpenPrs(),
+  );
   return (
     identities.find((identity) => identity.number === prNumber)?.headSha ?? null
   );
@@ -91,7 +99,7 @@ export async function acceptOperatorAnswer(
       `Unknown or already-resolved operator request: ${answer.requestId}`,
     );
   }
-  const remoteHead = await currentPrHead(request.pr);
+  const remoteHead = await currentPrHead(request.pr, request.headSha);
   const currentRequest = store.operatorRequests.get(request.pr);
   const currentState = store.prs.get(request.pr);
   if (
