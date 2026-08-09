@@ -25,7 +25,7 @@ import {
   guildProcedure,
 } from "#src/trpc/guild-permission.ts";
 
-const CompetitionAnalysisInput = z.object({
+const CompetitionAnalysisInputSchema = z.object({
   guildId: DiscordGuildIdSchema,
   competitionId: CompetitionIdSchema,
   mode: z.enum(["official", "selected_period"]).default("official"),
@@ -34,7 +34,7 @@ const CompetitionAnalysisInput = z.object({
   endDate: z.iso.date().optional(),
 });
 
-const CompetitionTimezoneInput = z.object({
+const CompetitionTimezoneInputSchema = z.object({
   guildId: DiscordGuildIdSchema,
   competitionId: CompetitionIdSchema,
   timezone: ReportScheduleTimezoneSchema,
@@ -42,7 +42,7 @@ const CompetitionTimezoneInput = z.object({
 
 export const competitionAnalysisProcedures = {
   analysis: guildProcedure("competitions", "read")
-    .input(CompetitionAnalysisInput)
+    .input(CompetitionAnalysisInputSchema)
     .query(async ({ input }) => {
       const competition = await loadCompetitionOr404(
         input.competitionId,
@@ -95,7 +95,7 @@ export const competitionAnalysisProcedures = {
     }),
 
   setAnalysisTimezone: guildMutationProcedure("competitions", "update")
-    .input(CompetitionTimezoneInput)
+    .input(CompetitionTimezoneInputSchema)
     .mutation(async ({ input }) => {
       await loadCompetitionOr404(input.competitionId, input.guildId);
       return prisma.competition.update({

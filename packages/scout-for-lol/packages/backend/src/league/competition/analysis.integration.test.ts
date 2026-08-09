@@ -164,6 +164,12 @@ describe("competition selected-period analysis", () => {
         queue: "ALL",
       }),
     ).toContain("WHERE champion_id = 99 GROUP BY");
+    expect(
+      competitionCriterionQuery({
+        type: "MOST_GAMES_PLAYED",
+        queue: "DRAFT_PICK",
+      }),
+    ).toContain("queue IN ('draft pick')");
   });
 
   test("bounds concurrent competition analysis work", async () => {

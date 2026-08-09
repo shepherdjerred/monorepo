@@ -1,4 +1,5 @@
 import {
+  COMPETITION_QUEUE_TO_QUEUE_TYPES,
   CompetitionAnalysisPresetSchema,
   ReportQueryPlanSchema,
   PlayerIdSchema,
@@ -238,7 +239,9 @@ function competitionQueueCondition(queue: CompetitionQueueType): string | null {
   const values =
     queue === "RANKED_ANY"
       ? ["solo", "flex"]
-      : [queue.toLocaleLowerCase("en-US")];
+      : queue === "CUSTOM"
+        ? ["custom"]
+        : COMPETITION_QUEUE_TO_QUEUE_TYPES[queue];
   return `queue IN (${values.map((value) => `'${value}'`).join(", ")})`;
 }
 

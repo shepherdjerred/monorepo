@@ -45,6 +45,7 @@ import { runReport } from "#src/reports/runner.ts";
 import { send as sendChannelMessage } from "#src/league/discord/channel.ts";
 import { getReportAiEditStatus } from "#src/reports/ai/status.ts";
 import { loadReportRunVisualization } from "#src/storage/s3-report-run.ts";
+import { mapInBatches } from "#src/utils/map-in-batches.ts";
 import {
   browseReportData,
   reportDataExplorerSchema,
@@ -160,27 +161,25 @@ export const reportRouter = router({
         orderBy: { startedAt: "desc" },
         take: input.runLimit,
       });
-      const runHistory = await Promise.all(
-        runs.map(async (run) => ({
-          id: run.id,
-          trigger: run.trigger,
-          status: run.status,
-          startedAt: run.startedAt,
-          completedAt: run.completedAt,
-          durationMs: run.durationMs,
-          rowsReturned: run.rowsReturned,
-          rowsScanned: run.rowsScanned,
-          errorMessage: run.errorMessage,
-          renderedContent: run.renderedContent,
-          hasImage: run.imageS3Key !== null,
-          hasVisualization: run.visualizationS3Key !== null,
-          querySnapshot: run.querySnapshot,
-          visualization:
-            run.visualizationS3Key === null
-              ? null
-              : await loadReportRunVisualization(report.id, run.id),
-        })),
-      );
+      const runHistory = await mapInBatches(runs, 5, async (run) => ({
+        id: run.id,
+        trigger: run.trigger,
+        status: run.status,
+        startedAt: run.startedAt,
+        completedAt: run.completedAt,
+        durationMs: run.durationMs,
+        rowsReturned: run.rowsReturned,
+        rowsScanned: run.rowsScanned,
+        errorMessage: run.errorMessage,
+        renderedContent: run.renderedContent,
+        hasImage: run.imageS3Key !== null,
+        hasVisualization: run.visualizationS3Key !== null,
+        querySnapshot: run.querySnapshot,
+        visualization:
+          run.visualizationS3Key === null
+            ? null
+            : await loadReportRunVisualization(report.id, run.id),
+      }));
       return {
         report,
         runs: runHistory,

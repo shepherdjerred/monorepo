@@ -76,7 +76,7 @@ export function ReportResultTable(props: {
                       column.key === "label" ? "font-medium" : undefined
                     }
                   >
-                    {formatCell(column, row, props.evidence ?? [])}
+                    {formatCell(column, row, props.evidence?.[rowIndex])}
                   </TableCell>
                 ))}
               </TableRow>
@@ -138,16 +138,16 @@ function sparklinePoints(values: number[]): string {
 function formatCell(
   column: ReportResultColumn,
   row: PreviewRow,
-  evidenceRows: PreviewEvidence[],
+  evidenceRow: PreviewEvidence | undefined,
 ): string {
   if (column.key === "label") {
     return row.label;
   }
   const result = row.values.find((entry) => entry.column === column.key);
   if (result?.value === undefined || result.value === null) return "—";
-  const evidence = evidenceRows
-    .find((entry) => entry.label === row.label)
-    ?.values.find((entry) => entry.column === column.key);
+  const evidence = evidenceRow?.values.find(
+    (entry) => entry.column === column.key,
+  );
   const details: string[] = [];
   if (evidence !== undefined) {
     details.push(`n=${evidence.sampleSize.toString()}`);

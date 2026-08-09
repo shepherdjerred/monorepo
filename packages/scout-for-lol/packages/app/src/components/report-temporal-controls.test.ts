@@ -1,8 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import { TemporalAnalysisSpecSchema } from "@scout-for-lol/data";
 import {
+  comparisonFor,
   withCalendarComparisonBoundary,
   withCalendarWindowBoundary,
+  withRange,
 } from "#src/components/report-temporal-controls.tsx";
 
 const analysis = TemporalAnalysisSpecSchema.parse({
@@ -57,5 +59,25 @@ describe("report temporal date controls", () => {
       endDate: "2026-07-15",
     });
     expect(() => TemporalAnalysisSpecSchema.parse(updated)).not.toThrow();
+  });
+
+  test("creates calendar defaults in the selected analysis timezone", () => {
+    const relative = TemporalAnalysisSpecSchema.parse({
+      window: { kind: "relative", days: 30 },
+      bucket: "day",
+      timezone: "America/Los_Angeles",
+    });
+    const now = new Date("2026-01-01T01:30:00.000Z");
+
+    expect(withRange(relative, "custom", now).window).toEqual({
+      kind: "calendar",
+      startDate: "2025-12-02",
+      endDate: "2025-12-31",
+    });
+    expect(comparisonFor(relative, "calendar", now)).toEqual({
+      kind: "calendar",
+      startDate: "2025-11-02",
+      endDate: "2025-12-01",
+    });
   });
 });

@@ -214,33 +214,29 @@ function timezoneOptions(current: string): string[] {
   ];
 }
 
-function comparisonFor(
+export function comparisonFor(
   analysis: TemporalAnalysisSpec,
   value: string,
+  now: Date = new Date(),
 ): TemporalAnalysisSpec["comparison"] {
   if (value === "none") return undefined;
   if (value === "previous_period") return { kind: "previous_period" };
   if (value !== "calendar") {
     throw new Error(`Unknown temporal comparison ${value}.`);
   }
-  const days =
-    analysis.window.kind === "relative"
-      ? analysis.window.days
-      : Math.round(
-          (Date.parse(analysis.window.endDate) -
-            Date.parse(analysis.window.startDate)) /
-            86_400_000,
-        ) + 1;
+  const days = temporalWindowDays(analysis);
   const currentStart =
     analysis.window.kind === "calendar"
-      ? Date.parse(analysis.window.startDate)
-      : Date.now() - (days - 1) * 86_400_000;
-  const end = new Date(currentStart - 86_400_000);
-  const start = new Date(end.getTime() - (days - 1) * 86_400_000);
+      ? analysis.window.startDate
+      : shiftCalendarDate(
+          calendarDateInTimezone(now, analysis.timezone),
+          1 - days,
+        );
+  const end = shiftCalendarDate(currentStart, -1);
   return {
     kind: "calendar",
-    startDate: start.toISOString().slice(0, 10),
-    endDate: end.toISOString().slice(0, 10),
+    startDate: shiftCalendarDate(end, 1 - days),
+    endDate: end,
   };
 }
 
@@ -258,9 +254,10 @@ function rangeChoice(analysis: TemporalAnalysisSpec): RangeChoice {
   return days === "30" || days === "90" || days === "365" ? days : "custom";
 }
 
-function withRange(
+export function withRange(
   analysis: TemporalAnalysisSpec,
   range: RangeChoice,
+  now: Date = new Date(),
 ): TemporalAnalysisSpec {
   if (range !== "custom") {
     return withTemporalWindow(analysis, {
@@ -268,10 +265,8 @@ function withRange(
       days: Number(range),
     });
   }
-  const today = new Date().toISOString().slice(0, 10);
-  const start = new Date(Date.now() - 29 * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .slice(0, 10);
+  const today = calendarDateInTimezone(now, analysis.timezone);
+  const start = shiftCalendarDate(today, -29);
   return withTemporalWindow(analysis, {
     kind: "calendar",
     startDate: start,
@@ -363,6 +358,23 @@ function shiftCalendarDate(date: string, days: number): string {
   const shifted = new Date(`${date}T00:00:00.000Z`);
   shifted.setUTCDate(shifted.getUTCDate() + days);
   return shifted.toISOString().slice(0, 10);
+}
+
+function calendarDateInTimezone(date: Date, timezone: string): string {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+  const values = new Map(parts.map((part) => [part.type, part.value]));
+  const year = values.get("year");
+  const month = values.get("month");
+  const day = values.get("day");
+  if (year === undefined || month === undefined || day === undefined) {
+    throw new Error(`Could not format temporal controls in ${timezone}.`);
+  }
+  return `${year}-${month}-${day}`;
 }
 
 function parseRangeChoice(value: string): RangeChoice {
