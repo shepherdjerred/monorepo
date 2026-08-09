@@ -13,6 +13,7 @@ import path from "node:path";
 import { tmpdir } from "node:os";
 import {
   assertReleaseNotStale,
+  activeArgoRepositoryChartNames,
   discoverChartInputs,
   fingerprintChart,
   latestPublishedVersion,
@@ -102,6 +103,26 @@ async function fetchPublishedChart(
     path.join(chartDirectory, "templates", `${input.name}.k8s.yaml`),
   );
   return { version: latest.version, fingerprint: actualFingerprint };
+}
+
+async function fetchLatestPublishedRevision(
+  chartName: string,
+): Promise<string> {
+  const response = await fetch(
+    `${CHARTMUSEUM_API}/${encodeURIComponent(chartName)}`,
+  );
+  if (!response.ok) {
+    throw new Error(
+      `ChartMuseum inventory failed for ${chartName}: HTTP ${response.status.toString()}`,
+    );
+  }
+  const latest = latestPublishedVersion(await response.json());
+  if (latest === undefined) {
+    throw new Error(
+      `ChartMuseum has no published build revision for ${chartName}`,
+    );
+  }
+  return latest.version;
 }
 
 async function stageChart(
@@ -217,14 +238,23 @@ async function publishedInventory(
   return published;
 }
 
+type RevisionInventoryOptions = {
+  readonly activeRepositoryCharts: ReadonlySet<string>;
+  readonly retainedRevisions: ReadonlyMap<string, string>;
+};
+
 function exactRevisionInventory(
   inputs: readonly ChartInput[],
   plan: ReturnType<typeof planCharts>,
   version: string,
+  options: RevisionInventoryOptions,
 ): Record<string, string> {
   const revisions: Record<string, string> = {};
   for (const input of inputs) {
-    if (input.name === "apps") {
+    if (
+      input.name === "apps" ||
+      !options.activeRepositoryCharts.has(input.name)
+    ) {
       continue;
     }
     const entry =
@@ -238,6 +268,9 @@ function exactRevisionInventory(
       throw new Error(`No exact chart revision available for ${input.name}`);
     }
     revisions[input.name] = revision;
+  }
+  for (const [chart, revision] of options.retainedRevisions) {
+    revisions[chart] = revision;
   }
   return revisions;
 }
@@ -312,7 +345,29 @@ async function main(): Promise<void> {
     );
     assertReleaseNotStale(Number.parseInt(buildNumber, 10), published);
     const candidatePlan = planCharts(inputs, published);
-    const revisions = exactRevisionInventory(inputs, candidatePlan, version);
+    const appsInput = inputs.find((input) => input.name === "apps");
+    if (appsInput === undefined) {
+      throw new Error("Release inputs are missing the apps chart");
+    }
+    const activeRepositoryCharts = activeArgoRepositoryChartNames(
+      await Bun.file(appsInput.manifestPath).text(),
+    );
+    const localChartNames = new Set(inputs.map((input) => input.name));
+    const retainedCharts = [...activeRepositoryCharts].filter(
+      (chart) => !localChartNames.has(chart),
+    );
+    const retainedRevisions = new Map(
+      await Promise.all(
+        retainedCharts.map(
+          async (chart) =>
+            [chart, await fetchLatestPublishedRevision(chart)] as const,
+        ),
+      ),
+    );
+    const revisions = exactRevisionInventory(inputs, candidatePlan, version, {
+      activeRepositoryCharts,
+      retainedRevisions,
+    });
     Bun.env["HOMELAB_CHART_REVISIONS_JSON"] = JSON.stringify(revisions);
     await runCommand(["bun", "--no-install", "run", "build"], {
       cwd: path.join(root, "src/cdk8s"),

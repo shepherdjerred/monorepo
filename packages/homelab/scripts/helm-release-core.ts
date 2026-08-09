@@ -1,11 +1,15 @@
 import path from "node:path";
 import { Glob } from "bun";
-import { parse as parseYaml } from "yaml";
+import { parse as parseYaml, parseAllDocuments } from "yaml";
 import { z } from "zod";
 import { canonicalJson } from "./canonical-json.ts";
 
 const BUILD_VERSION_RE = /^2\.0\.0-(\d+)$/;
 const CONTENT_FINGERPRINT_ANNOTATION = "ci.sjer.red/content-fingerprint";
+const REPOSITORY_CHART_URLS = new Set([
+  "https://chartmuseum.tailnet-1a49.ts.net",
+  "https://chartmuseum.sjer.red",
+]);
 
 const ChartMuseumEntrySchema = z.object({
   version: z.string(),
@@ -45,6 +49,102 @@ export type HelmReleasePlan = {
   readonly skipped: readonly ChartPlanEntry[];
   readonly publishOrder: readonly string[];
 };
+
+const KubernetesResourceSchema = z.looseObject({
+  kind: z.string().optional(),
+  metadata: z.looseObject({ name: z.string().min(1).optional() }).optional(),
+});
+
+const ArgoApplicationSchema = z.looseObject({
+  kind: z.literal("Application"),
+  metadata: z.looseObject({ name: z.string().min(1) }),
+  spec: z.looseObject({
+    source: z.looseObject({
+      repoURL: z.string().min(1),
+      chart: z.string().min(1).optional(),
+    }),
+  }),
+});
+
+const KubernetesListSchema = z.looseObject({
+  kind: z.literal("List"),
+  items: z.array(z.unknown()).optional(),
+});
+
+function applicationObjects(manifest: string): unknown[] {
+  const applications: unknown[] = [];
+  for (const [index, document] of parseAllDocuments(manifest).entries()) {
+    if (document.errors.length > 0) {
+      throw new Error(
+        `Unable to parse synthesized manifest document ${index.toString()}: ${document.errors
+          .map((error) => error.message)
+          .join("; ")}`,
+      );
+    }
+    const json = document.toJSON() as unknown;
+    if (json === null || typeof json !== "object" || Array.isArray(json)) {
+      continue;
+    }
+    const resource = KubernetesResourceSchema.parse(json);
+    const resources =
+      resource.kind === "List"
+        ? (KubernetesListSchema.parse(json).items ?? [])
+        : [json];
+    for (const item of resources) {
+      if (item === null || typeof item !== "object" || Array.isArray(item)) {
+        continue;
+      }
+      const itemResource = KubernetesResourceSchema.parse(item);
+      if (itemResource.kind === "Application") {
+        if (itemResource.metadata?.name === undefined) {
+          throw new Error("Argo Application is missing metadata.name");
+        }
+        applications.push(item);
+      }
+    }
+  }
+  return applications;
+}
+
+function parsedApplications(manifest: string) {
+  const applications = applicationObjects(manifest).map((value) =>
+    ArgoApplicationSchema.parse(value),
+  );
+  const names = new Set<string>();
+  for (const application of applications) {
+    const name = application.metadata.name;
+    if (names.has(name)) {
+      throw new Error(
+        `Duplicate Argo Application ${name} in synthesized manifest`,
+      );
+    }
+    names.add(name);
+  }
+  return applications;
+}
+
+export function activeArgoApplicationNames(
+  manifest: string,
+): ReadonlySet<string> {
+  return new Set(
+    parsedApplications(manifest).map(
+      (application) => application.metadata.name,
+    ),
+  );
+}
+
+export function activeArgoRepositoryChartNames(
+  manifest: string,
+): ReadonlySet<string> {
+  return new Set(
+    parsedApplications(manifest).flatMap((application) => {
+      const { repoURL, chart } = application.spec.source;
+      return chart !== undefined && REPOSITORY_CHART_URLS.has(repoURL)
+        ? [chart]
+        : [];
+    }),
+  );
+}
 
 async function regularFiles(directory: string): Promise<string[]> {
   const files: string[] = [];
