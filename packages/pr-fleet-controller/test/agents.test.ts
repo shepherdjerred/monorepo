@@ -21,6 +21,7 @@ const snapshot: FleetSnapshot = {
   active: 0,
   queued: 0,
   pending: 0,
+  waiting: 0,
   paused: 0,
   prs: [],
 };
@@ -192,7 +193,10 @@ describe("coerceWorkerResult", () => {
   };
 
   test("returns the validated object when present", () => {
-    expect(coerceWorkerResult({ object: validResult })).toEqual(validResult);
+    expect(coerceWorkerResult({ object: validResult })).toEqual({
+      ...validResult,
+      operatorRequestId: null,
+    });
   });
 
   test("throws a legible error (not a raw Zod dump) when object is undefined", () => {

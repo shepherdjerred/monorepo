@@ -11,12 +11,14 @@ type WatcherProcess = ReturnType<typeof Bun.spawn>;
  */
 export function spawnWatcher(
   runDirectory: string,
-  options: { uiPort?: string; open: boolean },
+  options: { uiPort?: string; open: boolean; controlSocket?: string },
 ): WatcherProcess | undefined {
+  const watcherEntrypoint =
+    options.controlSocket === undefined ? "watch-cli.ts" : "live-watch-cli.ts";
   const watcherArgs = [
     "bun",
     "run",
-    path.join(import.meta.dir, "watch-cli.ts"),
+    path.join(import.meta.dir, watcherEntrypoint),
     "--run",
     runDirectory,
     ...(options.uiPort === undefined ? [] : ["--port", options.uiPort]),
@@ -28,6 +30,13 @@ export function spawnWatcher(
       stdout: "inherit",
       stderr: "inherit",
       detached: true,
+      env:
+        options.controlSocket === undefined
+          ? Bun.env
+          : {
+              ...Bun.env,
+              PR_FLEET_CONTROLLER_CONTROL_SOCKET: options.controlSocket,
+            },
     });
   } catch (error) {
     process.stderr.write(
@@ -35,6 +44,23 @@ export function spawnWatcher(
     );
     return undefined;
   }
+}
+
+export function spawnCliWatcher(
+  runDirectory: string,
+  controlSocket: string,
+  args: readonly string[],
+): WatcherProcess | undefined {
+  if (args.includes("--no-ui")) {
+    return undefined;
+  }
+  const portIndex = args.indexOf("--ui-port");
+  const uiPort = portIndex === -1 ? undefined : args[portIndex + 1];
+  return spawnWatcher(runDirectory, {
+    ...(uiPort === undefined ? {} : { uiPort }),
+    open: !args.includes("--no-open"),
+    controlSocket,
+  });
 }
 
 // The dashboard tails the run bundle on a fixed poll interval and has no

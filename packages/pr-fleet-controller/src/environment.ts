@@ -15,6 +15,10 @@ import { GitOperations } from "./git-operations.ts";
 import { captureTelemetryOperation } from "./controller-telemetry.ts";
 import { currentCommandCorrelation } from "./command-correlation.ts";
 import { resolveHostedReviewCompletion } from "./hosted-review.ts";
+import {
+  recordEvidenceRefresh,
+  settleEvidenceParts,
+} from "./environment-refresh.ts";
 import type {
   CommandRequest,
   CommandResult,
@@ -28,8 +32,10 @@ import type {
   PrState,
   ReadinessEvidence,
   ReviewFinding,
+  WorktreeContext,
 } from "./schemas.ts";
 import { WorktreeManager } from "./worktree.ts";
+import { PrHeadChangedDuringRefreshError } from "./controller-evidence-refresh.ts";
 
 export type CommandFleetEnvironmentOptions = {
   repo: string;
@@ -37,12 +43,14 @@ export type CommandFleetEnvironmentOptions = {
   worktreeRoot: string;
   provider: ReviewProvider;
   telemetry?: FleetTelemetry;
+  author?: string | null;
 };
 
 export class CommandFleetEnvironment implements FleetEnvironment {
   readonly #repo: string;
   readonly #checkout: string;
   readonly #provider: ReviewProvider;
+  readonly #author: string | null;
   readonly #gitOperations: GitOperations;
   readonly #worktreeManager: WorktreeManager;
   readonly #telemetry: FleetTelemetry | undefined;
@@ -51,6 +59,7 @@ export class CommandFleetEnvironment implements FleetEnvironment {
     this.#repo = options.repo;
     this.#checkout = options.checkout;
     this.#provider = options.provider;
+    this.#author = options.author ?? null;
     this.#telemetry = options.telemetry;
     const run = (request: CommandRequest) => this.runLocalCommand(request);
     const mustRun = (
@@ -156,6 +165,7 @@ export class CommandFleetEnvironment implements FleetEnvironment {
       "200",
       "--json",
       "number,title,url,isDraft,author,labels,headRefName,headRefOid,baseRefName,isCrossRepository,maintainerCanModify",
+      ...(this.#author === null ? [] : ["--author", this.#author]),
     ]);
     const prs = parsePrList(output);
     captureTelemetryOperation("environment.result", () => {
@@ -293,7 +303,7 @@ export class CommandFleetEnvironment implements FleetEnvironment {
         // that local ref, finds no matching remote ref, and prunes the
         // destination ("- [deleted] (none)") while still exiting 0 — the next
         // `rev-parse` then fails and the whole tick aborts.
-        `refs/pull/${String(pr.number)}/head:refs/remotes/pull/${String(pr.number)}/head`,
+        `+refs/pull/${String(pr.number)}/head:refs/remotes/pull/${String(pr.number)}/head`,
       ]);
       const fetchedHeadOutput = await this.#mustRun("git", [
         "rev-parse",
@@ -301,8 +311,10 @@ export class CommandFleetEnvironment implements FleetEnvironment {
       ]);
       const fetchedHead = fetchedHeadOutput.trim();
       if (fetchedHead !== pr.headSha) {
-        throw new Error(
-          `PR #${String(pr.number)} changed during conflict inspection (${pr.headSha} -> ${fetchedHead})`,
+        throw new PrHeadChangedDuringRefreshError(
+          pr.number,
+          pr.headSha,
+          fetchedHead,
         );
       }
       const result = await this.runLocalCommand({
@@ -431,11 +443,17 @@ export class CommandFleetEnvironment implements FleetEnvironment {
   }
 
   async refreshEvidence(pr: PrIdentity): Promise<ReadinessEvidence> {
-    const [rawChecks, reviews, conflict] = await Promise.all([
+    return recordEvidenceRefresh(this.#telemetry, pr, () =>
+      this.#collectEvidence(pr),
+    );
+  }
+
+  async #collectEvidence(pr: PrIdentity): Promise<ReadinessEvidence> {
+    const [rawChecks, reviews, conflict] = await settleEvidenceParts(
       this.#checks(pr),
       this.#reviews(pr),
       this.#conflict(pr),
-    ]);
+    );
     // Resolve each check's soft-failure status against the Buildkite build's
     // per-job metadata BEFORE computing hard failures, so a soft Semgrep/Trivy
     // finding is not counted as blocking and a hard scanner failure is not
@@ -465,17 +483,6 @@ export class CommandFleetEnvironment implements FleetEnvironment {
       hardFailureFingerprint: fingerprint(hardFailures),
       reviewFingerprint: fingerprint(blockingReviews),
     };
-    captureTelemetryOperation("environment.result", () => {
-      this.#telemetry?.record(
-        "environment.result",
-        { operation: "refreshEvidence", evidence },
-        {
-          ...currentCommandCorrelation(),
-          prNumber: pr.number,
-          headSha: pr.headSha,
-        },
-      );
-    });
     return evidence;
   }
 
@@ -491,7 +498,10 @@ export class CommandFleetEnvironment implements FleetEnvironment {
     );
   }
 
-  assignWorktreeBranch(worktree: string, pr: PrIdentity): Promise<void> {
+  assignWorktreeBranch(
+    worktree: string,
+    pr: PrIdentity,
+  ): Promise<WorktreeContext> {
     return this.#worktreeManager.assignWorktreeBranch(worktree, pr);
   }
 
@@ -519,11 +529,11 @@ export class CommandFleetEnvironment implements FleetEnvironment {
   ): Promise<{ headSha: string }> {
     return this.#gitOperations.publishFix(pr, paths, message, signal);
   }
-
   publishRestack(
     pr: PrState,
     signal?: AbortSignal,
+    intent?: "restack" | "inherited-commits",
   ): Promise<{ headSha: string }> {
-    return this.#gitOperations.publishRestack(pr, signal);
+    return this.#gitOperations.publishRestack(pr, signal, intent);
   }
 }

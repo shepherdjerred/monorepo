@@ -8,7 +8,6 @@ import {
   rename,
   unlink,
 } from "node:fs/promises";
-import { homedir } from "node:os";
 import path from "node:path";
 import { redactSecrets } from "@shepherdjerred/llm-observability";
 import type { FleetTelemetry } from "./ports.ts";
@@ -42,6 +41,7 @@ import {
   redactFleetSnapshot,
   redactSummaryError,
 } from "./run-summary-redaction.ts";
+import { resolveStateDirectory } from "./state-directory.ts";
 
 const PRIVATE_DIRECTORY_MODE = 0o700;
 const PRIVATE_FILE_MODE = 0o600;
@@ -58,6 +58,7 @@ export type RunPaths = {
   // Best-effort live-reasoning mirror. Not a manifest file and not hash-chained;
   // see SpanJsonlExporter. DuckDB observability remains the authoritative store.
   spans: string;
+  controlSocket: string;
 };
 
 export type CreateRunRecorderOptions = {
@@ -72,6 +73,7 @@ export type CreateRunRecorderOptions = {
   checkout: string;
   worktreeRoot: string;
   maxWorkers: number;
+  author?: string | null;
   now?: () => Date;
   randomId?: () => string;
   secretValues?: readonly string[];
@@ -86,19 +88,6 @@ type RunRecorderConstructorOptions = {
   eventsFile: SynchronousEventFile;
   writeEvent: SynchronousFileSinkWriter;
 };
-
-function defaultStateDirectory(): string {
-  const xdgState = Bun.env["XDG_STATE_HOME"];
-  const stateBase =
-    xdgState === undefined || xdgState.length === 0
-      ? path.join(homedir(), ".local", "state")
-      : xdgState;
-  return path.join(stateBase, "pr-fleet-controller");
-}
-
-export function resolveStateDirectory(stateDirectory?: string): string {
-  return path.resolve(stateDirectory ?? defaultStateDirectory());
-}
 
 async function assertPrivateDirectory(
   directory: string,
@@ -227,6 +216,7 @@ export class RunRecorder implements FleetTelemetry {
       mastra: path.join(runDirectory, "mastra.db"),
       observability: path.join(runDirectory, "observability.duckdb"),
       spans: path.join(runDirectory, "spans.jsonl"),
+      controlSocket: path.join(runDirectory, "control.sock"),
     };
     const manifest = RunManifestSchema.parse({
       schemaVersion: RUN_BUNDLE_SCHEMA_VERSION,
@@ -242,6 +232,7 @@ export class RunRecorder implements FleetTelemetry {
       checkout: options.checkout,
       worktreeRoot: options.worktreeRoot,
       maxWorkers: options.maxWorkers,
+      author: options.author ?? null,
       files: {
         events: "events.jsonl",
         summary: "summary.json",
@@ -288,6 +279,7 @@ export class RunRecorder implements FleetTelemetry {
     checkout: string;
     worktreeRoot: string;
     maxWorkers: number;
+    author: string | null;
   }): Promise<void> {
     if (this.manifest.controllerSourceResolved) {
       throw new Error("Controller source provenance is already resolved");

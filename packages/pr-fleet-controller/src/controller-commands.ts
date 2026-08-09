@@ -23,6 +23,33 @@ export function resumePr(store: FleetStore, prNumber: number): void {
   store.pausedReasons.delete(prNumber);
 }
 
+export function pausePr(
+  store: FleetStore,
+  prNumber: number,
+  reason: string,
+): void {
+  const state = store.prs.get(prNumber);
+  if (state === undefined) {
+    throw new Error(`Unknown PR #${String(prNumber)}`);
+  }
+  store.pausedReasons.set(prNumber, reason);
+  if (store.activeWorkers.has(prNumber)) {
+    store.cancelledWorkers.add(prNumber);
+    store.workerControllers.get(prNumber)?.abort();
+  } else {
+    store.workerControllers.get(prNumber)?.abort();
+    store.workerControllers.delete(prNumber);
+    store.releaseLeases(prNumber);
+  }
+  store.prs.set(prNumber, {
+    ...state,
+    runtimeAgent: null,
+    classification: "paused",
+    status: "paused",
+    escalation: reason,
+  });
+}
+
 export function guidePr(
   store: FleetStore,
   prNumber: number,

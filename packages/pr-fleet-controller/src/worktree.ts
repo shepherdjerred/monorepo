@@ -1,7 +1,7 @@
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import type { CommandRequest, CommandResult } from "./ports.ts";
-import type { PrIdentity } from "./schemas.ts";
+import type { PrIdentity, WorktreeContext } from "./schemas.ts";
 
 type WorktreeManagerDependencies = {
   checkout: string;
@@ -37,9 +37,8 @@ export class WorktreeManager {
   // The operator may have the same PR branch checked out in their own normal
   // worktree elsewhere; `findWorktree` prefers a fleet worktree but falls back
   // to reusing an operator worktree in place (see its note), and
-  // `assignWorktreeBranch` guards that reuse so the operator's uncommitted work
-  // is never `reset --hard`-ed away and their committed-but-unpushed work is
-  // never force-pushed under the fleet's PR.
+  // `assignWorktreeBranch` adopts matching-branch inherited work without a
+  // reset and reports its provenance so the worker can validate or question it.
   #isFleetWorktree(worktreePath: string): boolean {
     const relative = path.relative(this.#worktreeRoot, worktreePath);
     return (
@@ -64,8 +63,9 @@ export class WorktreeManager {
   // deleting committed-but-unpushed work on the sibling, whose divergence the
   // assign-time guard cannot catch because that guard only runs when the worktree
   // was already on the candidate branch. On the candidate branch itself,
-  // `assignWorktreeBranch` still refuses reuse while the worktree is dirty or its
-  // HEAD has diverged, so operator edits are never lost or force-pushed.
+  // `assignWorktreeBranch` adopts and inventories inherited work on the exact
+  // branch, so operator edits are never lost and ambiguous work can be parked
+  // for an answer before publication.
   //
   // `allowOperatorFallback` is false for cross-repository (fork) PRs: the fleet
   // can never publish a fork branch, so reusing an operator's fork checkout would
@@ -153,7 +153,76 @@ export class WorktreeManager {
     }
   }
 
-  async assignWorktreeBranch(worktree: string, pr: PrIdentity): Promise<void> {
+  async #worktreeContext(
+    worktree: string,
+    remoteHeadSha: string,
+  ): Promise<WorktreeContext> {
+    const localHeadOutput = await this.#mustRun(
+      "git",
+      ["rev-parse", "HEAD"],
+      worktree,
+    );
+    const localHeadSha = localHeadOutput.trim();
+    let relation: WorktreeContext["relation"] = "exact";
+    if (localHeadSha !== remoteHeadSha) {
+      const remoteIsAncestor = await this.#run({
+        executable: "git",
+        args: ["merge-base", "--is-ancestor", remoteHeadSha, localHeadSha],
+        cwd: worktree,
+        timeoutMs: 30_000,
+      });
+      if (remoteIsAncestor.exitCode === 0) {
+        relation = "ahead";
+      } else {
+        const localIsAncestor = await this.#run({
+          executable: "git",
+          args: ["merge-base", "--is-ancestor", localHeadSha, remoteHeadSha],
+          cwd: worktree,
+          timeoutMs: 30_000,
+        });
+        relation = localIsAncestor.exitCode === 0 ? "behind" : "diverged";
+      }
+    }
+    const stagedOutput = await this.#mustRun(
+      "git",
+      ["diff", "--cached", "--name-only", "--"],
+      worktree,
+    );
+    const stagedPaths = stagedOutput
+      .split("\n")
+      .filter((value) => value.length > 0);
+    const unstagedOutput = await this.#mustRun(
+      "git",
+      ["diff", "--name-only", "--"],
+      worktree,
+    );
+    const unstagedTracked = unstagedOutput
+      .split("\n")
+      .filter((value) => value.length > 0);
+    const untrackedOutput = await this.#mustRun(
+      "git",
+      ["ls-files", "--others", "--exclude-standard"],
+      worktree,
+    );
+    const untracked = untrackedOutput
+      .split("\n")
+      .filter((value) => value.length > 0);
+    const unstagedPaths = [...new Set([...unstagedTracked, ...untracked])];
+    return {
+      ownership: this.#isFleetWorktree(worktree) ? "fleet" : "operator",
+      remoteHeadSha,
+      localHeadSha,
+      relation,
+      dirty: stagedPaths.length > 0 || unstagedPaths.length > 0,
+      stagedPaths,
+      unstagedPaths,
+    };
+  }
+
+  async assignWorktreeBranch(
+    worktree: string,
+    pr: PrIdentity,
+  ): Promise<WorktreeContext> {
     const n = String(pr.number);
     const branch = pr.headRefName;
     const currentBranchOutput = await this.#mustRun(
@@ -162,32 +231,11 @@ export class WorktreeManager {
       worktree,
     );
     const onBranch = currentBranchOutput.trim() === branch;
-    // Reusing an operator-owned worktree in place: `findWorktree` falls back to
-    // the operator's own checkout when they already hold this PR's branch (git
-    // forbids the same branch in two worktrees, so the fleet cannot provision
-    // its own). That checkout is `onBranch` by definition, so the switch guard
-    // below never fires for it — yet the sync further down `reset --hard`s the
-    // working tree. Refuse while the operator worktree carries uncommitted work
-    // so their edits are never discarded; the PR pauses with an actionable
-    // message instead of silently losing local changes.
-    if (!this.#isFleetWorktree(worktree)) {
-      const dirtyOutput = await this.#mustRun(
-        "git",
-        ["status", "--porcelain"],
-        worktree,
-      );
-      if (dirtyOutput.trim().length > 0) {
-        throw new Error(
-          `Operator worktree ${worktree} has uncommitted changes; refusing to reuse it for PR #${n}. Commit or stash them, or remove the worktree, to let the fleet work this PR.`,
-        );
-      }
-    }
-    // Refuse to carry another PR's uncommitted work across a branch switch. A
-    // prior worker that ended blocked/failed on a DIFFERENT branch may have left
-    // dirty edits; `git checkout` preserves non-conflicting modifications, so
-    // those edits would ride onto — and could be published under — this PR. (A
-    // dirty worktree already ON this PR's branch is this PR's own prior attempt
-    // and is discarded by the hard-reset below, not carried over.)
+    // A worktree on another branch may contain that branch's work, so it remains
+    // ineligible for reassignment while dirty. A worktree already on THIS PR's
+    // branch is adopted best-effort: inherited changes and local commits are
+    // preserved for the worker to inspect, validate, and either continue or ask
+    // the operator about.
     if (!onBranch) {
       const dirtyOutput = await this.#mustRun(
         "git",
@@ -213,7 +261,7 @@ export class WorktreeManager {
       // `pull/N/head` resolves to the existing local `pullRef` once it exists,
       // so git prunes the destination ("- [deleted] (none)") at exit 0 and the
       // following rev-parse fails. See the matching note in environment.ts.
-      `refs/pull/${n}/head:${pullRef}`,
+      `+refs/pull/${n}/head:${pullRef}`,
     ]);
     const fetchedOutput = await this.#mustRun(
       "git",
@@ -231,64 +279,23 @@ export class WorktreeManager {
       // of this PR; align it to the fetched head.
       await this.#mustRun("git", ["checkout", branch], worktree);
       await this.#mustRun("git", ["reset", "--hard", fetchedHead], worktree);
-      return;
+      return this.#worktreeContext(worktree, fetchedHead);
     }
-    // Reuse of THIS PR's own branch. A prior worker may have committed a fix
-    // locally whose publication (git-spice submit / push) then failed before it
-    // reached the remote — the remote PR head is therefore unchanged
-    // (== fetchedHead) while the local branch is one or more commits AHEAD.
-    // Hard-resetting to fetchedHead would silently delete that completed fix, so
-    // preserve local commits that sit on top of the fetched head (publication
-    // can then be retried) and discard only the uncommitted working-tree edits.
-    const localHeadOutput = await this.#mustRun(
-      "git",
-      ["rev-parse", "HEAD"],
-      worktree,
-    );
-    const localHead = localHeadOutput.trim();
-    if (localHead !== fetchedHead) {
-      // An operator-owned worktree must sit exactly at the fetched PR head.
-      // Working-tree cleanliness is not enough: a clean checkout can still hold
-      // committed-but-unpushed operator work (WIP, an unrelated branch tip), and
-      // the ahead-of-remote branch below would preserve that local HEAD, which
-      // `GitOperations.#submitBranch` later force-pushes — silently publishing
-      // the operator's commits under this PR. Only a fleet-owned worktree may
-      // carry an unpublished fix forward (it authored the commit); refuse an
-      // operator worktree that has diverged so the PR pauses with an actionable
-      // message instead.
-      if (!this.#isFleetWorktree(worktree)) {
-        throw new Error(
-          `Operator worktree ${worktree} is at ${localHead}, not PR #${n} head ${fetchedHead}; refusing to reuse it because publishing would force-push the operator's local commits. Push or remove them, or remove the worktree, to let the fleet work this PR.`,
-        );
-      }
-      const aheadOfRemote = await this.#run({
-        executable: "git",
-        args: ["merge-base", "--is-ancestor", fetchedHead, localHead],
-        cwd: worktree,
-        timeoutMs: 30_000,
-      });
-      if (aheadOfRemote.exitCode === 0) {
-        // fetchedHead is an ancestor of the local head: the local branch holds a
-        // completed-but-unpublished fix. Keep the commit(s); reset only clears
-        // the uncommitted working-tree edits.
-        await this.#mustRun("git", ["reset", "--hard", localHead], worktree);
-        return;
-      }
+    const context = await this.#worktreeContext(worktree, fetchedHead);
+    if (
+      context.ownership === "fleet" &&
+      !context.dirty &&
+      context.relation === "behind"
+    ) {
+      // A clean fleet checkout has no local work to preserve when remote merely
+      // advanced. Align the disposable branch so the worker receives an exact
+      // publication context instead of an unrecoverable behind state.
+      await this.#mustRun("git", ["reset", "--hard", fetchedHead], worktree);
+      return this.#worktreeContext(worktree, fetchedHead);
     }
-    // Operator worktree that reached here is, by the guards above, clean and
-    // already exactly at the fetched PR head (a non-fleet worktree whose local
-    // head differs threw above). There is nothing to sync, so DON'T `reset
-    // --hard`: the cleanliness check and the reset are not atomic, and a live
-    // operator edit landing in that window would be silently destroyed by the
-    // reset. Skipping it means the fleet never runs a destructive Git command
-    // against an operator's own checkout — it only reads and then hands it to the
-    // worker. (Fleet worktrees are disposable and still get aligned below.)
-    if (!this.#isFleetWorktree(worktree)) {
-      return;
-    }
-    // Local ref is at, behind, or diverged from the confirmed PR head: align to
-    // the remote head, discarding prior failed-attempt working-tree edits.
-    await this.#mustRun("git", ["reset", "--hard", fetchedHead], worktree);
+    // Preserve matching operator WIP and fleet-owned ahead/diverged attempts;
+    // their explicit context lets the worker inspect, continue, or ask.
+    return context;
   }
 
   async provisionWorktree(pr: PrIdentity, stackId: string): Promise<string> {

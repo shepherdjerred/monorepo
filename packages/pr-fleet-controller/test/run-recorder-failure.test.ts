@@ -16,6 +16,7 @@ const snapshot = {
   active: 0,
   queued: 0,
   pending: 0,
+  waiting: 0,
   paused: 0,
   prs: [],
 };
@@ -66,6 +67,7 @@ test("initialization capture failure restores replayable bootstrap provenance", 
       checkout: "/repo",
       worktreeRoot: "/repo/worktrees",
       maxWorkers: 2,
+      author: null,
     }),
   ).rejects.toThrow("controller initialization capture failed");
   await recorder.finalize(

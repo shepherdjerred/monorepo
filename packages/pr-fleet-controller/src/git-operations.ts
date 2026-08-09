@@ -20,6 +20,7 @@ type GitOperationsDependencies = {
 };
 
 const SystemErrorSchema = z.object({ code: z.string() });
+type PublicationIntent = "fix" | "restack" | "inherited-commits";
 
 function isMissingPath(error: unknown): boolean {
   const parsed = SystemErrorSchema.safeParse(error);
@@ -59,13 +60,31 @@ export class GitOperations {
     this.#mustRun = dependencies.mustRun;
   }
 
+  #assertPublicationContext(pr: PrState, intent: PublicationIntent): void {
+    const context = pr.worktreeContext;
+    const relation =
+      context?.remoteHeadSha === pr.identity.headSha
+        ? context.relation
+        : undefined;
+    if (
+      intent === "inherited-commits"
+        ? relation !== "ahead"
+        : relation !== "exact"
+    ) {
+      throw new Error(
+        `Cannot publish ${intent} from an unvalidated ${relation ?? "unknown"} worktree context; inspect inherited work or ask the operator`,
+      );
+    }
+  }
+
   async #validatePaths(worktree: string, paths: string[]): Promise<string[]> {
     const canonicalRoot = await realpath(worktree);
     const validated: string[] = [];
     for (const requestedPath of paths) {
       if (
         path.isAbsolute(requestedPath) ||
-        requestedPath.split("/").includes("..")
+        requestedPath.split("/").includes("..") ||
+        requestedPath.split("/").includes(".git")
       ) {
         throw new Error(`Unsafe publication path: ${requestedPath}`);
       }
@@ -141,13 +160,25 @@ export class GitOperations {
   ): Promise<CommandResult> {
     const worktree = this.#worktree(pr);
     const owner = await this.#stackOwner(pr, worktree, signal);
-    if (owner !== "git-spice") {
-      // The controller only implements git-spice's stack-aware restack. A native
-      // (gh-stack) or fork branch must be rebased by its owning tool; refuse
-      // rather than corrupt its stack state by running git-spice against it.
-      throw new Error(
-        `Cannot restack PR #${String(pr.identity.number)}: branch ${pr.identity.headRefName} is not git-spice-owned; its native/fork stack tool must perform the restack`,
+    if (owner === "native") {
+      const remoteBase = `refs/remotes/origin/${pr.identity.baseRefName}`;
+      await this.#mustRun(
+        "git",
+        [
+          "fetch",
+          "origin",
+          `+refs/heads/${pr.identity.baseRefName}:${remoteBase}`,
+        ],
+        worktree,
+        { timeoutMs: 120_000, signal },
       );
+      return this.#run({
+        executable: "git",
+        args: ["rebase", remoteBase],
+        cwd: worktree,
+        timeoutMs: 600_000,
+        signal,
+      });
     }
     return this.#run({
       executable: "git-spice",
@@ -177,9 +208,13 @@ export class GitOperations {
     await this.#mustRun("git", ["add", "--", ...validated], worktree, {
       signal,
     });
+    const owner = await this.#stackOwner(pr, worktree, signal);
     return this.#run({
-      executable: "git-spice",
-      args: ["--no-prompt", "rebase", "continue"],
+      executable: owner === "git-spice" ? "git-spice" : "git",
+      args:
+        owner === "git-spice"
+          ? ["--no-prompt", "rebase", "continue"]
+          : ["-c", "core.editor=true", "rebase", "--continue"],
       cwd: worktree,
       timeoutMs: 600_000,
       signal,
@@ -192,6 +227,7 @@ export class GitOperations {
     message: string,
     signal?: AbortSignal,
   ): Promise<{ headSha: string }> {
+    this.#assertPublicationContext(pr, "fix");
     const worktree = this.#worktree(pr);
     const validated = await this.#validatePaths(worktree, paths);
     if (validated.length === 0) {
@@ -246,7 +282,9 @@ export class GitOperations {
   async publishRestack(
     pr: PrState,
     signal?: AbortSignal,
+    intent: "restack" | "inherited-commits" = "restack",
   ): Promise<{ headSha: string }> {
+    this.#assertPublicationContext(pr, intent);
     return this.#submitBranch(pr, signal);
   }
 

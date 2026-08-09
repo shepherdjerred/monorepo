@@ -3,13 +3,12 @@
 import { createInterface } from "node:readline/promises";
 import path from "node:path";
 import { parseArgs } from "node:util";
-import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
-import type { MastraModelConfig } from "@mastra/core/llm";
 import { resolveProvider } from "@shepherdjerred/code-review";
 import { z } from "zod";
 import { MastraMaster, MastraWorkerRunner } from "./agents.ts";
 import { combineFailures, normalizeFailure } from "./cli-failures.ts";
 import { HELP } from "./cli-help.ts";
+import { createTerminalLineHandler } from "./cli-terminal.ts";
 import { settleCliResources } from "./cli-shutdown.ts";
 import { FleetController } from "./controller.ts";
 import {
@@ -21,11 +20,17 @@ import {
   createFleetMastraRuntime,
   type FleetMastraRuntime,
 } from "./mastra-runtime.ts";
+import { resolveFleetModel } from "./model-resolution.ts";
 import type { FleetObserver } from "./ports.ts";
+import {
+  startOperatorControlServer,
+  type OperatorControlServer,
+} from "./operator-control.ts";
 import { runRecordedCommand } from "./recorded-command.ts";
-import { resolveStateDirectory, RunRecorder } from "./run-recorder.ts";
+import { RunRecorder } from "./run-recorder.ts";
 import { FleetControllerConfigSchema, type FleetSnapshot } from "./schemas.ts";
-import { spawnWatcher, stopWatcher } from "./watch-supervisor.ts";
+import { resolveStateDirectory } from "./state-directory.ts";
+import { spawnCliWatcher, stopWatcher } from "./watch-supervisor.ts";
 import { FleetStore } from "./state.ts";
 import { consumeTerminalLines, createSharedShutdown } from "./terminal-loop.ts";
 import type { TerminalOutcome } from "./terminal-loop.ts";
@@ -39,6 +44,7 @@ const EMPTY_SNAPSHOT: FleetSnapshot = {
   active: 0,
   queued: 0,
   pending: 0,
+  waiting: 0,
   paused: 0,
   prs: [],
 };
@@ -51,6 +57,7 @@ class TerminalObserver implements FleetObserver {
       `active=${String(snapshot.active)}`,
       `queued=${String(snapshot.queued)}`,
       `pending=${String(snapshot.pending)}`,
+      `waiting=${String(snapshot.waiting)}`,
       `paused=${String(snapshot.paused)}`,
     ].join(" ");
     process.stdout.write(`\n${counts}\n`);
@@ -82,38 +89,6 @@ function requireTools(): void {
   }
 }
 
-function resolveModel(
-  model: string,
-  baseUrl: string | undefined,
-  apiKeyEnvironment: string | undefined,
-): MastraModelConfig {
-  if (!model.startsWith("openai-compatible/")) {
-    if (baseUrl !== undefined || apiKeyEnvironment !== undefined) {
-      throw new Error(
-        "--base-url and --api-key-env are only valid with openai-compatible/<model>",
-      );
-    }
-    return model;
-  }
-  if (baseUrl === undefined || apiKeyEnvironment === undefined) {
-    throw new Error(
-      "openai-compatible models require --base-url and --api-key-env",
-    );
-  }
-  const apiKey = Bun.env[apiKeyEnvironment];
-  if (apiKey === undefined || apiKey.length === 0) {
-    throw new Error(
-      `API key environment variable is empty: ${apiKeyEnvironment}`,
-    );
-  }
-  const modelId = model.slice("openai-compatible/".length);
-  return createOpenAICompatible({
-    baseURL: baseUrl,
-    name: "pr-fleet-compatible",
-    apiKey,
-  }).chatModel(modelId);
-}
-
 function bootstrapWorkerLimit(value: string): number {
   const parsed = Number(value);
   return Number.isInteger(parsed) && parsed >= 1 && parsed <= 5 ? parsed : 1;
@@ -132,6 +107,7 @@ function parseCliArgs(args: string[]) {
       checkout: { type: "string" },
       "worktree-root": { type: "string" },
       "max-workers": { type: "string", default: "5" },
+      author: { type: "string" },
       "base-url": { type: "string" },
       "api-key-env": { type: "string" },
       "review-provider": { type: "string" },
@@ -196,6 +172,7 @@ async function createBootstrapRecorder(
     checkout: bootstrapCheckout,
     worktreeRoot: bootstrapWorktreeRoot,
     maxWorkers: bootstrapWorkerLimit(bootstrapMaxWorkers),
+    author: rawOptionValue(args, "author") ?? null,
   });
   recorder.record("run.started", {
     phase: "preflight",
@@ -204,6 +181,7 @@ async function createBootstrapRecorder(
     checkout: bootstrapCheckout,
     worktreeRoot: bootstrapWorktreeRoot,
     maxWorkers: bootstrapMaxWorkers,
+    author: rawOptionValue(args, "author") ?? null,
     reviewProvider: rawOptionValue(args, "review-provider") ?? "codex",
   });
   process.stdout.write(`Run bundle: ${recorder.paths.runDirectory}\n`);
@@ -221,25 +199,32 @@ async function main(): Promise<void> {
     await Bun.file(path.join(import.meta.dir, "..", "package.json")).json(),
   );
   const recorder = await createBootstrapRecorder(args, packageMetadata.version);
-  const uiPort = rawOptionValue(args, "ui-port");
-  const watcher = args.includes("--no-ui")
-    ? undefined
-    : spawnWatcher(recorder.paths.runDirectory, {
-        ...(uiPort === undefined ? {} : { uiPort }),
-        open: !args.includes("--no-open"),
-      });
+  const watcher = spawnCliWatcher(
+    recorder.paths.runDirectory,
+    recorder.paths.controlSocket,
+    args,
+  );
   let runtime: FleetMastraRuntime | undefined;
   let runtimeInitialization: Promise<FleetMastraRuntime> | undefined;
   let controller: FleetController | undefined;
   let master: MastraMaster | undefined;
   let terminal: ReturnType<typeof createInterface> | undefined;
+  let operatorControl: OperatorControlServer | undefined;
   let shutdownRequested = false;
   let preflightInProgress = true;
   let runFailure: Error | undefined;
   let finalizationPromise: Promise<void> | undefined;
   const observer = new TerminalObserver();
+  const closeOperatorControl = async (): Promise<void> => {
+    const activeControl = operatorControl;
+    await activeControl?.stop();
+    if (operatorControl === activeControl) {
+      operatorControl = undefined;
+    }
+  };
   const settleResources = createSharedShutdown(() =>
     settleCliResources({
+      closeOperatorControl,
       input: () => terminal,
       master: () => master,
       controller: () => controller,
@@ -250,6 +235,7 @@ async function main(): Promise<void> {
     }),
   );
   const finalizeRun = (outcome?: TerminalOutcome): Promise<void> => {
+    shutdownRequested = true;
     if (outcome?.status === "failed") {
       runFailure = combineFailures(runFailure, outcome.error);
     }
@@ -274,6 +260,7 @@ async function main(): Promise<void> {
           runFailure ?? null,
         );
       } finally {
+        await closeOperatorControl();
         // Always tear the dashboard down — even if finalize throws — so it can't
         // be orphaned; stopWatcher drains a bounded window first so the live view
         // renders the terminal snapshot and outcome before disconnecting.
@@ -355,6 +342,7 @@ async function main(): Promise<void> {
         parsed.values["worktree-root"] ??
         path.join(checkout, ".claude", "worktrees", "pr-fleet"),
       maxWorkers: Number(parsed.values["max-workers"]),
+      author: parsed.values.author ?? null,
     });
     const controllerSource = await resolveControllerSource({
       stateRoot: recorder.paths.root,
@@ -373,9 +361,10 @@ async function main(): Promise<void> {
       checkout: config.checkout,
       worktreeRoot: config.worktreeRoot,
       maxWorkers: config.maxWorkers,
+      author: config.author ?? null,
     });
     recorder.configureSecretValues(configuredSecretValues(configuredSecret));
-    const model = resolveModel(
+    const model = resolveFleetModel(
       config.model,
       parsed.values["base-url"],
       apiKeyEnvironment,
@@ -398,6 +387,7 @@ async function main(): Promise<void> {
       worktreeRoot: config.worktreeRoot,
       provider: reviewProvider,
       telemetry: recorder,
+      author: config.author ?? null,
     });
     // The configured model key-env var (if any) is scrubbed from every worker
     // validation/setup subprocess in addition to the credential-name heuristic.
@@ -434,6 +424,15 @@ async function main(): Promise<void> {
         void stopAfterRequest();
       },
     });
+    operatorControl = await startOperatorControlServer({
+      socketPath: recorder.paths.controlSocket,
+      answer: (answer) => {
+        if (shutdownRequested) {
+          throw new Error("Controller is shutting down");
+        }
+        return activeController.answerOperatorQuestion(answer);
+      },
+    });
     terminal = createInterface({
       input: process.stdin,
       output: process.stdout,
@@ -448,40 +447,21 @@ async function main(): Promise<void> {
     }
     terminal.setPrompt("fleet> ");
     terminal.prompt();
+    const handleTerminalLine = createTerminalLineHandler({
+      controller: activeController,
+      observer,
+      recorder,
+      sendSteering: (text) => {
+        master?.send(text);
+      },
+      isStopping: () => shutdownRequested,
+    });
     await consumeTerminalLines(
       terminal,
       async (rawLine) => {
-        if (shutdownRequested) {
-          return "stop";
-        }
-        const line = rawLine.trim();
-        recorder.record("operator.input", { line });
-        if (line === "/stop") {
-          return "stop";
-        }
-        switch (line) {
-          case "/status": {
-            observer.onSnapshot(controller?.snapshot() ?? store.snapshot());
-
-            break;
-          }
-          case "/tick": {
-            await controller?.tick("user");
-
-            break;
-          }
-          case "/help": {
-            process.stdout.write(`${HELP}\n`);
-
-            break;
-          }
-          default:
-            if (line.length > 0) {
-              master?.send(line);
-            }
-        }
+        const result = await handleTerminalLine(rawLine);
         terminal?.prompt();
-        return "continue";
+        return result;
       },
       finalizeRun,
     );

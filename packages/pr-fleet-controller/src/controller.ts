@@ -10,16 +10,12 @@ import {
   isTelemetryCaptureError,
 } from "./controller-telemetry.ts";
 import {
-  buildPrState,
-  computeStackIds,
-  mapBounded,
-  type RefreshedPr,
-} from "./fleet-logic.ts";
-import {
   FleetTickReportSchema,
   type FleetControllerConfig,
   type FleetSnapshot,
   type FleetTickReport,
+  type OperatorInputAnswer,
+  type OperatorInputRequest,
   type PrState,
   type TickTrigger,
   type WorkerResult,
@@ -30,7 +26,6 @@ import { createFleetTickWorkflow } from "./workflow.ts";
 import { defaultFleetScheduler } from "./scheduler.ts";
 import {
   assignFleetWorktree,
-  withPrCommandCorrelation,
   withTickCommandCorrelation,
 } from "./controller-correlation.ts";
 import {
@@ -40,6 +35,7 @@ import {
 import { startWorkerObservation } from "./controller-worker-observer.ts";
 import {
   guidePr,
+  pausePr,
   prioritizePr,
   resumePr,
   updateWorkerLimit,
@@ -48,6 +44,22 @@ import {
   abortFleetWorkers,
   settleControllerShutdown,
 } from "./controller-shutdown.ts";
+import { busyStackIds } from "./controller-dispatch.ts";
+import {
+  acceptOperatorAnswer,
+  acceptOperatorTextAnswer,
+  listOperatorQuestions,
+  lookupCurrentPrHead,
+} from "./controller-operator-questions.ts";
+import {
+  closeMissingPrStates,
+  reconcilePrStates,
+} from "./controller-reconciliation.ts";
+import {
+  deferPrAfterHeadChange,
+  refreshFleetEvidence,
+} from "./controller-evidence-refresh.ts";
+import { withoutCommandCorrelation } from "./command-correlation.ts";
 
 export class FleetController implements MasterControllerTools {
   readonly #config: FleetControllerConfig;
@@ -86,6 +98,45 @@ export class FleetController implements MasterControllerTools {
 
   snapshot(): FleetSnapshot {
     return this.store.snapshot();
+  }
+
+  questions(): OperatorInputRequest[] {
+    return listOperatorQuestions(this.store);
+  }
+
+  answerOperatorQuestion(
+    rawAnswer: OperatorInputAnswer,
+  ): Promise<FleetTickReport> {
+    return acceptOperatorAnswer(
+      rawAnswer,
+      this.#operatorQuestionDependencies(),
+    );
+  }
+
+  answerOperatorQuestionWithText(
+    requestId: string,
+    text: string,
+  ): Promise<FleetTickReport> {
+    return acceptOperatorTextAnswer(
+      requestId,
+      text,
+      this.#operatorQuestionDependencies(),
+    );
+  }
+
+  #operatorQuestionDependencies() {
+    return {
+      store: this.store,
+      telemetry: this.#telemetry,
+      observer: this.#observer,
+      currentPrHead: (prNumber: number, expectedHeadSha: string) =>
+        lookupCurrentPrHead(this.#environment, prNumber, expectedHeadSha),
+      queueReconciliation: () => {
+        queueMicrotask(() => {
+          void this.#runTickSafely("user", "operator-answer tick");
+        });
+      },
+    };
   }
 
   async start(): Promise<void> {
@@ -130,9 +181,6 @@ export class FleetController implements MasterControllerTools {
         this.#telemetry.tickFailed(tickId, error);
         throw error;
       }
-      // Persist the reconciled state outside the workflow's operational error
-      // boundary. Capture failures must never be relabeled as tick failures or
-      // retried as though GitHub reconciliation itself had failed.
       this.#telemetry.snapshot(tickId, report.snapshot);
       for (const change of report.changes) {
         this.#telemetry.change(tickId, change);
@@ -169,36 +217,25 @@ export class FleetController implements MasterControllerTools {
     const changes: string[] = [];
     const identities = await this.#environment.listOpenPrs();
     const openNumbers = new Set(identities.map((pr) => pr.number));
-    for (const [number, previous] of this.store.prs) {
-      if (!openNumbers.has(number) && previous.status !== "closed") {
-        this.store.prs.set(number, {
-          ...previous,
-          status: "closed",
-          runtimeAgent: null,
-        });
-        if (this.store.activeWorkers.has(number)) {
-          // Abort the closed PR's worker, but retain leases until settlement so
-          // no replacement overlaps its in-flight setup, Git, or publication.
-          this.store.cancelledWorkers.add(number);
-          this.store.workerControllers.get(number)?.abort();
-        } else {
-          this.store.releaseLeases(number);
-          this.store.workerControllers.delete(number);
-        }
-        changes.push(`PR #${String(number)} closed or merged`);
-      }
-    }
+    closeMissingPrStates(openNumbers, changes, {
+      store: this.store,
+      telemetry: this.#telemetry,
+    });
 
-    const stackIds = computeStackIds(identities);
-    const refreshed = await mapBounded(identities, 5, (identity) =>
-      withPrCommandCorrelation(identity, async () => ({
-        identity,
-        evidence: await this.#environment.refreshEvidence(identity),
-        stackId:
-          stackIds.get(identity.number) ?? `pr-${String(identity.number)}`,
-      })),
-    );
-    this.#reconcileStates(refreshed, changes);
+    const refreshed = await refreshFleetEvidence({
+      identities,
+      environment: this.#environment,
+      changes,
+      onHeadChanged: (error) => {
+        deferPrAfterHeadChange(this.store, error);
+        this.#tickDue = true;
+      },
+    });
+    reconcilePrStates(refreshed, changes, {
+      store: this.store,
+      telemetry: this.#telemetry,
+      model: this.#config.model,
+    });
     await this.#dispatch(changes);
 
     const snapshot = this.snapshot();
@@ -213,34 +250,6 @@ export class FleetController implements MasterControllerTools {
       nextHeartbeatSeconds:
         snapshot.open === snapshot.green && snapshot.active === 0 ? 600 : 300,
     };
-  }
-
-  #reconcileStates(refreshed: RefreshedPr[], changes: string[]): void {
-    for (const item of refreshed) {
-      const previous = this.store.prs.get(item.identity.number);
-      const reconciled = buildPrState(
-        item,
-        previous,
-        this.store.pausedReasons.get(item.identity.number),
-        this.#config.model,
-      );
-      this.store.prs.set(item.identity.number, reconciled.state);
-      const headChanged =
-        previous !== undefined &&
-        previous.identity.headSha !== reconciled.state.identity.headSha;
-      if (
-        (headChanged || reconciled.state.classification === "green") &&
-        this.store.activeWorkers.has(item.identity.number)
-      ) {
-        // Cancel stale/resolved work deliberately: green stays done and a moved
-        // head can redispatch without being converted into a failure pause.
-        this.store.cancelledWorkers.add(item.identity.number);
-        this.store.workerControllers.get(item.identity.number)?.abort();
-      }
-      if (reconciled.change !== null) {
-        changes.push(reconciled.change);
-      }
-    }
   }
 
   async #dispatch(changes: string[]): Promise<void> {
@@ -260,13 +269,7 @@ export class FleetController implements MasterControllerTools {
           left.identity.number - right.identity.number,
       );
 
-    const busyStacks = new Set<string>();
-    for (const active of this.store.activeWorkers.keys()) {
-      const state = this.store.prs.get(active);
-      if (state !== undefined) {
-        busyStacks.add(state.stackId);
-      }
-    }
+    const busyStacks = busyStackIds(this.store);
 
     for (const candidate of candidates) {
       if (this.store.activeWorkers.size >= this.store.workerLimit) {
@@ -278,9 +281,6 @@ export class FleetController implements MasterControllerTools {
         continue;
       }
       if (busyStacks.has(candidate.stackId)) {
-        // Only one worker per stack may hold the shared worktree/branch at a
-        // time. A sibling PR waits until the active same-stack worker finishes
-        // rather than racing it on the same checkout.
         this.store.prs.set(candidate.identity.number, {
           ...candidate,
           classification: "queued",
@@ -288,9 +288,9 @@ export class FleetController implements MasterControllerTools {
         });
         continue;
       }
-      let worktree: string;
+      let assignment: Awaited<ReturnType<typeof assignFleetWorktree>>;
       try {
-        worktree = await assignFleetWorktree(
+        assignment = await assignFleetWorktree(
           this.#environment,
           this.store.prs.values(),
           candidate,
@@ -306,13 +306,13 @@ export class FleetController implements MasterControllerTools {
         );
         continue;
       }
+      const { worktree, context: worktreeContext } = assignment;
       const generation = candidate.agentGeneration + 1;
       const prNumber = String(candidate.identity.number);
       const assigned: PrState = {
         ...candidate,
         worktree,
-        // Setup is only current when it ran for this exact head; a reused
-        // worktree at a different head must re-run it.
+        worktreeContext,
         setupComplete:
           this.store.setupWorktrees.get(worktree) ===
           candidate.identity.headSha,
@@ -422,22 +422,24 @@ export class FleetController implements MasterControllerTools {
   }
 
   async #runTickSafely(trigger: TickTrigger, label: string): Promise<void> {
-    try {
-      await this.tick(trigger);
-    } catch (error) {
-      if (isTelemetryCaptureError(error)) {
-        this.#reportFatalError(error);
-        return;
+    await withoutCommandCorrelation(async () => {
+      try {
+        await this.tick(trigger);
+      } catch (error) {
+        if (isTelemetryCaptureError(error)) {
+          this.#reportFatalError(error);
+          return;
+        }
+        const message = error instanceof Error ? error.message : String(error);
+        this.#observer.onChange(`${label} failed: ${message}`);
+        // A heartbeat clears its handle before starting the tick. If that tick
+        // fails, rearm it so one transient external outage does not permanently
+        // stop fleet reconciliation. Other tick triggers retain their timer.
+        if (!this.store.stopping && this.#heartbeat === null) {
+          this.#armHeartbeat(300);
+        }
       }
-      const message = error instanceof Error ? error.message : String(error);
-      this.#observer.onChange(`${label} failed: ${message}`);
-      // A heartbeat clears its handle before starting the tick. If that tick
-      // fails, rearm it so one transient external outage does not permanently
-      // stop fleet reconciliation. Other tick triggers retain their timer.
-      if (!this.store.stopping && this.#heartbeat === null) {
-        this.#armHeartbeat(300);
-      }
-    }
+    });
   }
 
   #reportFatalError(error: unknown): void {
@@ -459,29 +461,7 @@ export class FleetController implements MasterControllerTools {
   }
 
   pause(prNumber: number, reason: string): void {
-    const state = this.store.prs.get(prNumber);
-    if (state === undefined) {
-      throw new Error(`Unknown PR #${String(prNumber)}`);
-    }
-    this.store.pausedReasons.set(prNumber, reason);
-    // Abort model/publication work, retaining leases until actual settlement so
-    // a sibling cannot acquire the shared checkout mid-cancellation.
-    if (this.store.activeWorkers.has(prNumber)) {
-      this.store.cancelledWorkers.add(prNumber);
-      this.store.workerControllers.get(prNumber)?.abort();
-    } else {
-      // No in-flight worker will settle, so release directly.
-      this.store.workerControllers.get(prNumber)?.abort();
-      this.store.workerControllers.delete(prNumber);
-      this.store.releaseLeases(prNumber);
-    }
-    this.store.prs.set(prNumber, {
-      ...state,
-      runtimeAgent: null,
-      classification: "paused",
-      status: "paused",
-      escalation: reason,
-    });
+    pausePr(this.store, prNumber, reason);
   }
 
   resume(prNumber: number): void {

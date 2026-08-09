@@ -8,6 +8,7 @@ import {
 } from "./run-events.ts";
 
 const PRIVATE_FILE_MODE = 0o600;
+const LIVE_CONTROL_SOCKET = "control.sock";
 
 async function artifactExists(file: string): Promise<boolean> {
   try {
@@ -92,6 +93,9 @@ export async function secureRunArtifactFiles(
   const entries = await readdir(runDirectory, { withFileTypes: true });
   for (const entry of entries) {
     const artifact = path.join(runDirectory, entry.name);
+    if (entry.name === LIVE_CONTROL_SOCKET && entry.isSocket()) {
+      continue;
+    }
     if (!entry.isFile() || entry.isSymbolicLink()) {
       throw new Error(`Unexpected non-file run artifact: ${artifact}`);
     }

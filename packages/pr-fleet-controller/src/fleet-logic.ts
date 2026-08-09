@@ -1,5 +1,6 @@
 import type {
   Classification,
+  OperatorInputRequest,
   PrIdentity,
   PrState,
   ReadinessEvidence,
@@ -19,9 +20,13 @@ export function classify(
   identity: PrIdentity,
   evidence: ReadinessEvidence,
   paused: boolean,
+  waitingForAnswer = false,
 ): Classification {
   if (paused) {
     return "paused";
+  }
+  if (waitingForAnswer) {
+    return "waiting-for-answer";
   }
   if (evidence.conflict) {
     return "conflict";
@@ -63,6 +68,7 @@ function statusFor(classification: Classification): PrState["status"] {
   const statuses: Partial<Record<Classification, PrState["status"]>> = {
     green: "green",
     pending: "waiting-ci",
+    "waiting-for-answer": "waiting-for-answer",
     paused: "paused",
     queued: "queued",
   };
@@ -113,14 +119,23 @@ export function computeStackIds(prs: PrIdentity[]): Map<number, string> {
 
 export function buildPrState(
   item: RefreshedPr,
-  previous: PrState | undefined,
-  pausedReason: string | undefined,
-  model: string,
+  options: {
+    previous: PrState | undefined;
+    pausedReason: string | undefined;
+    model: string;
+    operatorRequest?: OperatorInputRequest | null;
+  },
 ): { state: PrState; change: string | null } {
+  const { previous, pausedReason, model } = options;
+  const operatorRequest =
+    options.operatorRequest === undefined
+      ? (previous?.operatorRequest ?? null)
+      : options.operatorRequest;
   const classification = classify(
     item.identity,
     item.evidence,
     pausedReason !== undefined,
+    operatorRequest !== null,
   );
   const changedHead =
     previous !== undefined &&
@@ -144,6 +159,7 @@ export function buildPrState(
     stackId: item.stackId,
     evidence: item.evidence,
     escalation: pausedReason ?? retained.escalation,
+    operatorRequest,
   };
   return { state, change: describeStateChange(previous, item, classification) };
 }
@@ -157,12 +173,14 @@ function retainedPrState(
   | "runtimeAgent"
   | "agentGeneration"
   | "worktree"
+  | "worktreeContext"
   | "setupComplete"
   | "lastAgentReportAt"
   | "lastProgressAt"
   | "noProgressTicks"
   | "prodSentAt"
   | "escalation"
+  | "operatorRequest"
   | "priority"
 > {
   if (previous === undefined) {
@@ -170,12 +188,14 @@ function retainedPrState(
       runtimeAgent: null,
       agentGeneration: 0,
       worktree: null,
+      worktreeContext: null,
       setupComplete: false,
       lastAgentReportAt: null,
       lastProgressAt: timestamp,
       noProgressTicks: 0,
       prodSentAt: null,
       escalation: null,
+      operatorRequest: null,
       priority: 0,
     };
   }
@@ -183,12 +203,14 @@ function retainedPrState(
     runtimeAgent: previous.runtimeAgent,
     agentGeneration: previous.agentGeneration,
     worktree: previous.worktree,
+    worktreeContext: previous.worktreeContext,
     setupComplete: previous.setupComplete,
     lastAgentReportAt: previous.lastAgentReportAt,
     lastProgressAt: madeProgress ? timestamp : previous.lastProgressAt,
     noProgressTicks: madeProgress ? 0 : previous.noProgressTicks + 1,
     prodSentAt: previous.prodSentAt,
     escalation: previous.escalation,
+    operatorRequest: previous.operatorRequest,
     priority: previous.priority,
   };
 }

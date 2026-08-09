@@ -53,6 +53,9 @@ function Card({
           {state.evidence.conflict ? (
             <span className="conflict">conflict</span>
           ) : null}
+          {state.operatorRequest === null ? null : (
+            <span className="answer-needed">answer needed</span>
+          )}
         </div>
       )}
     </button>
