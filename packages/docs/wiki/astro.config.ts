@@ -48,85 +48,24 @@ export default defineConfig({
       pagefind: true,
       sidebar: [
         {
-          items: [
-            { label: "Start here", link: "/" },
-            { label: "How this wiki works", link: "/how-this-wiki-works/" },
-            { label: "Working material", link: "/working/" },
-          ],
-          label: "Wiki",
+          items: [{ autogenerate: { directory: "tutorials" } }],
+          label: "Tutorials",
+        },
+        {
+          items: [{ autogenerate: { directory: "how-to" } }],
+          label: "How-to guides",
         },
         {
           items: [{ autogenerate: { directory: "reference" } }],
           label: "Reference",
         },
         {
-          items: [
-            {
-              label: "PR Fleet Controller",
-              link: "/pr-fleet-controller/",
-            },
-          ],
-          label: "Tooling",
+          items: [{ autogenerate: { directory: "explanation" } }],
+          label: "Concepts",
         },
         {
-          items: [{ label: "Birmel 3.0", link: "/birmel/" }],
-          label: "Applications",
-        },
-        {
-          items: [
-            {
-              label: "Alerts and incident history",
-              link: "/homelab/alerts/",
-            },
-            {
-              label: "Release pipeline",
-              link: "/homelab/releases/",
-            },
-            {
-              label: "Plane issue tracker",
-              link: "/homelab/plane/",
-            },
-            {
-              label: "qBittorrent VPN webseed relay",
-              link: "/homelab/qbittorrent-vpn-webseed-relay/",
-            },
-            {
-              label: "Scout evals tailnet boundary",
-              link: "/homelab/scout-evals-tailnet-boundary/",
-            },
-          ],
-          label: "Homelab",
-        },
-        {
-          items: [
-            { label: "Overview", link: "/temporal/" },
-            { label: "Scheduled automations", link: "/temporal/schedules/" },
-            { label: "Agent tasks", link: "/temporal/agent-tasks/" },
-            { label: "Event-driven surfaces", link: "/temporal/events/" },
-            {
-              collapsed: true,
-              items: [
-                { label: "Inventory", link: "/temporal/workflows/" },
-                {
-                  label: "Repo upkeep",
-                  link: "/temporal/workflows/repo-upkeep/",
-                },
-                { label: "Scout", link: "/temporal/workflows/scout/" },
-                { label: "Glitter", link: "/temporal/workflows/glitter/" },
-                {
-                  label: "Homelab maintenance",
-                  link: "/temporal/workflows/homelab-maintenance/",
-                },
-                {
-                  label: "Home automation",
-                  link: "/temporal/workflows/home-automation/",
-                },
-                { label: "GitHub PRs", link: "/temporal/workflows/pr-bots/" },
-              ],
-              label: "Workflows",
-            },
-          ],
-          label: "Temporal",
+          items: [{ label: "Working material", link: "/working/" }],
+          label: "Provenance",
         },
       ],
       social: [
@@ -145,6 +84,39 @@ export default defineConfig({
     }),
   },
   output: "static",
+  // Every route below was published before the wiki was restructured on
+  // Diátaxis. They are linked from pull requests and possibly bookmarked, so
+  // they redirect rather than 404.
+  redirects: {
+    "/birmel": "/explanation/birmel/",
+    "/homelab/buildkite-admission": "/explanation/homelab/buildkite-admission/",
+    "/homelab/matomo": "/how-to/initialize-matomo/",
+    "/homelab/plane": "/explanation/homelab/plane/",
+    "/homelab/qbittorrent-vpn-webseed-relay":
+      "/explanation/homelab/qbittorrent-webseed-relay/",
+    "/homelab/releases": "/explanation/homelab/release-safety/",
+    "/homelab/scout-evals-tailnet-boundary":
+      "/explanation/homelab/scout-evals-trust-boundary/",
+    "/homelab/tracker-tracker": "/explanation/homelab/tracker-tracker/",
+    "/how-this-wiki-works": "/explanation/how-this-wiki-works/",
+    "/pr-fleet-controller": "/explanation/pr-fleet-authority-boundary/",
+    "/scout-analysis": "/explanation/scout-temporal-analysis/",
+    "/tasks-for-obsidian": "/explanation/tasks-for-obsidian/",
+    "/temporal": "/explanation/temporal/overview/",
+    "/temporal/agent-tasks": "/explanation/temporal/agent-task-boundary/",
+    "/temporal/events": "/explanation/temporal/event-surfaces/",
+    "/temporal/schedules": "/reference/temporal-schedules/",
+    "/temporal/workflows": "/reference/temporal-workflows/",
+    "/temporal/workflows/glitter": "/explanation/temporal/workflow-families/",
+    "/temporal/workflows/home-automation":
+      "/reference/home-automation-routines/",
+    "/temporal/workflows/homelab-maintenance":
+      "/explanation/temporal/workflow-families/",
+    "/temporal/workflows/pr-bots": "/explanation/temporal/event-surfaces/",
+    "/temporal/workflows/repo-upkeep":
+      "/explanation/temporal/workflow-families/",
+    "/temporal/workflows/scout": "/explanation/temporal/workflow-families/",
+  },
   prefetch: {
     defaultStrategy: "hover",
     prefetchAll: true,

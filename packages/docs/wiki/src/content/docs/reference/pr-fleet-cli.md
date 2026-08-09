@@ -94,4 +94,4 @@ Command forms that would execute an arbitrary nested program are rejected.
 
 - [Run bundle reference](/reference/pr-fleet-run-bundle/)
 - [How to run the fleet](/how-to/run-the-pr-fleet/)
-- [The fleet's authority boundary](/explanation/pr-fleet/authority-boundary/)
+- [The fleet's authority boundary](/explanation/pr-fleet-authority-boundary/)

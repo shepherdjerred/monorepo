@@ -1,0 +1,81 @@
+---
+title: About the monorepo
+description: Why everything lives in one Bun workspace, what that buys, and what it costs.
+sidebar:
+  order: 1
+---
+
+Everything is one repository: a Discord bot, a Kubernetes homelab, a League of
+Legends analysis pipeline, an Obsidian plugin, dotfiles, and about twenty other
+things. One `bun.lock`, one root workspace, one CI pipeline.
+
+That is a deliberate choice, and an unusual one for a personal project.
+
+## Why one repo
+
+The packages are not independent. Scout's report renderer feeds a Discord bot.
+The homelab deploys the Temporal worker, which opens PRs against the repo that
+defines it, which CI then builds into the image the worker runs as. Splitting
+these apart would mean version-coordinating a cycle.
+
+A single workspace makes that cycle a non-issue. Internal dependencies are
+`workspace:*` — live symlinks, so there is no publish step, no version bump, and
+no copy staleness between a change and its consumer.
+
+## The isolated linker
+
+The root `bunfig.toml` sets Bun's **isolated linker**. Every package resolves
+its own dependencies and peers strictly, rather than reaching into a hoisted
+top-level `node_modules`.
+
+This costs a little disk and buys a category of bug never happening: a package
+importing something it did not declare, working locally because a sibling
+happened to install it, and failing in a container that installs a different
+set. Phantom dependencies and hoisting split-brain are not possible.
+
+One root `bun install` covers every package. There is no per-package install and
+no setup script.
+
+## Turbo, and why local and CI verification differ
+
+`bunx turbo run <task> --filter=<pkg>` is the normal loop. Turbo caches by task
+inputs, so an unchanged package is near-instant.
+
+Local and CI verification deliberately have different scopes:
+
+- The **pre-commit hook** checks staged files only — secrets, formatting, line
+  endings, and the banned automation patterns. It is fast enough to not be
+  resented.
+- **Buildkite** runs the exhaustive root `bun run verify` graph on every PR.
+  That is the real gate.
+
+Running the full graph locally is for reproducing a CI failure or changing the
+verification machinery, not for everyday work. There is no pre-push hook.
+
+## CI is Buildkite, not GitHub Actions
+
+The pipeline is static, in `.buildkite/pipeline.yml`. There is no generator.
+
+This matters mostly because it breaks a common assumption: `gh run` is not the
+source of truth for CI here, and never will be. Buildkite tooling or the PR's
+status checks are.
+
+CI itself runs on the homelab — a dedicated `liskov` worker under
+[Kueue admission](/explanation/homelab/buildkite-admission/). The homelab is
+therefore in the path of merging, which is a real coupling and an accepted one.
+
+## What the strictness is for
+
+The engineering rules in `AGENTS.md` — no type assertions, no silent fallbacks,
+no suppressed errors, no `|| true` in automation — read as severe for a personal
+repo. They exist because most of this code runs unattended.
+
+A scheduled workflow that swallows an error does not page anyone; it just
+quietly stops doing its job, and you find out months later. Failing loudly is
+the only feedback channel an unattended system has.
+
+## Related
+
+- [About the homelab](/explanation/homelab/overview/) — where most of it runs
+- [Why Temporal](/explanation/temporal/overview/) — where the automation lives
+- [How this wiki works](/explanation/how-this-wiki-works/)
