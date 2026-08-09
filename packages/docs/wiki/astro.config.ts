@@ -71,6 +71,10 @@ export default defineConfig({
         {
           items: [
             {
+              label: "Release pipeline",
+              link: "/homelab/releases/",
+            },
+            {
               label: "Plane issue tracker",
               link: "/homelab/plane/",
             },

@@ -27,7 +27,9 @@ flowchart LR
 
 - **Tailnet-only access.** The vendor chart's own ingress stays disabled because
   the cluster's Tailscale ingress supplies the private access boundary. It
-  routes Plane's path-based services without creating a public endpoint.
+  routes Plane's path-based services without creating a public endpoint. The
+  vendor services are headless, so the local chart provides narrow ClusterIP
+  adapters for the Tailscale operator rather than changing the vendor chart.
 - **State has two recovery paths.** PostgreSQL, Redis, RabbitMQ, and monitor
   state live on ZFS persistent volumes and are explicitly included in the
   Velero inventory. Attachments instead live in the private `plane-attachments`
