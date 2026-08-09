@@ -90,6 +90,13 @@ export class DriverFeedHub {
     }
   }
 
+  /** Require every connected client to cold-start at the next stream entry point. */
+  resetAllToKeyframe(): void {
+    for (const state of this.clients.values()) {
+      state.needsKeyframe = true;
+    }
+  }
+
   /** Offer one access unit to every client that can currently use it. */
   broadcast(unit: AccessUnit): void {
     if (this.clients.size === 0) return;

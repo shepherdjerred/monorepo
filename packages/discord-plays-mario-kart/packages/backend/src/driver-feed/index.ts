@@ -5,8 +5,10 @@
 // sit connected across `/play` and `/stop` (the controller page is long-lived),
 // while the encoder only exists while there are frames to encode.
 
-import type { Server as HttpServer } from "node:http";
-import type { IncomingMessage } from "node:http";
+// This must share the existing Node HTTP server with Socket.IO; Bun.serve cannot
+// mount on that server or preserve Engine.IO's upgrade behaviour. `ws` provides
+// the noServer upgrade path that lets both protocols safely coexist.
+import type { Server as HttpServer, IncomingMessage } from "node:http";
 import { WebSocketServer, WebSocket } from "ws";
 import {
   DRIVER_FEED_PATH,
@@ -42,7 +44,9 @@ export type DriverFeedServiceOptions = {
 export class DriverFeedService {
   private readonly options: DriverFeedServiceOptions;
   private readonly hub: DriverFeedHub;
+  private readonly activeClients = new Map<FeedClient, string>();
   private encoder: DriverFeedEncoder | undefined;
+  private isActiveDriver: (socketId: string) => boolean = () => false;
 
   constructor(options: DriverFeedServiceOptions) {
     this.options = options;
@@ -50,6 +54,14 @@ export class DriverFeedService {
       maxClients: options.config.max_clients,
       maxClientBufferBytes: options.config.max_client_buffer_bytes,
     });
+  }
+
+  /**
+   * The controller's Socket.IO seat is the authority for the capped feed. This
+   * is wired after the game driver exists because its SeatManager is per-session.
+   */
+  setDriverAdmission(isActiveDriver: (socketId: string) => boolean): void {
+    this.isActiveDriver = isActiveDriver;
   }
 
   /**
@@ -76,8 +88,8 @@ export class DriverFeedService {
         wss.emit("connection", ws, request);
       });
     });
-    wss.on("connection", (ws: WebSocket) => {
-      this.onConnection(ws);
+    wss.on("connection", (ws: WebSocket, request: IncomingMessage) => {
+      this.onConnection(ws, request);
     });
     logger.info("driver feed websocket attached", { path: DRIVER_FEED_PATH });
   }
@@ -95,6 +107,7 @@ export class DriverFeedService {
       logger.info("driver feed restarting encoder for a new stream session");
       this.encoder.stop();
       this.encoder = undefined;
+      this.hub.resetAllToKeyframe();
     }
     const encoder = new DriverFeedEncoder(
       {
@@ -109,6 +122,7 @@ export class DriverFeedService {
       },
       {
         onAccessUnit: (unit) => {
+          this.removeInactiveClients();
           this.hub.broadcast(unit);
         },
       },
@@ -130,10 +144,23 @@ export class DriverFeedService {
     this.encoder?.stop();
     this.encoder = undefined;
     this.hub.closeAll("session ended");
+    this.activeClients.clear();
     resetDriverFeedGauges();
   }
 
-  private onConnection(ws: WebSocket): void {
+  private onConnection(ws: WebSocket, request: IncomingMessage): void {
+    this.removeInactiveClients();
+    const socketId = requestUrl(request)?.searchParams.get("driverSocketId");
+    if (socketId === null || socketId === undefined) {
+      logger.warn("driver feed rejected a client without an active seat");
+      ws.close(1008, "an active driver seat is required");
+      return;
+    }
+    if (!this.isActiveDriver(socketId)) {
+      logger.warn("driver feed rejected a client without an active seat");
+      ws.close(1008, "an active driver seat is required");
+      return;
+    }
     const out = driverFeedOutputSize(this.options.config.height);
     const init: DriverFeedInit = {
       kind: "init",
@@ -165,14 +192,28 @@ export class DriverFeedService {
       ws.close(1013, "driver feed is full");
       return;
     }
+    this.activeClients.set(client, socketId);
 
     ws.on("close", () => {
-      this.hub.remove(client);
+      this.removeClient(client);
     });
     ws.on("error", (error) => {
       logger.warn("driver feed client socket error", error);
-      this.hub.remove(client);
+      this.removeClient(client);
     });
+  }
+
+  private removeClient(client: FeedClient): void {
+    this.activeClients.delete(client);
+    this.hub.remove(client);
+  }
+
+  private removeInactiveClients(): void {
+    for (const [client, socketId] of this.activeClients) {
+      if (this.isActiveDriver(socketId)) continue;
+      client.close("driver seat released");
+      this.removeClient(client);
+    }
   }
 }
 
@@ -183,10 +224,13 @@ export function resetDriverFeedGauges(): void {
   driverFeedClientBufferBytes.set(0);
 }
 
-function requestPath(request: IncomingMessage): string | undefined {
+function requestUrl(request: IncomingMessage): URL | undefined {
   const url = request.url;
   if (url === undefined) return undefined;
-  // A relative request-target needs a base to parse; the host is irrelevant
-  // because only the path is compared.
-  return URL.parse(url, "http://localhost")?.pathname;
+  // A relative request-target needs a base; this only serves its path and query.
+  return URL.parse(url, "http://localhost") ?? undefined;
+}
+
+function requestPath(request: IncomingMessage): string | undefined {
+  return requestUrl(request)?.pathname;
 }

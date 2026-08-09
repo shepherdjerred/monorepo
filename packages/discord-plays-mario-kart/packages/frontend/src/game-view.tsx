@@ -19,7 +19,7 @@ const LATENCY_FAILURE_TOLERANCE = 8;
  * still comes from Discord, so what you see here runs slightly ahead of what
  * you hear.
  */
-export function GameView() {
+export function GameView({ driverSocketId }: { driverSocketId: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [status, setStatus] = useState<DriverFeedStatus>({
     kind: "connecting",
@@ -33,52 +33,55 @@ export function GameView() {
     let lastSampleAt = 0;
     let consecutiveFailures = 0;
 
-    return connectDriverFeed({
-      onStatus: setStatus,
-      paint: (frame) => {
-        const canvas = canvasRef.current;
-        if (canvas === null) return;
-        if (canvas.width !== frame.displayWidth) {
-          canvas.width = frame.displayWidth;
-          canvas.height = frame.displayHeight;
-          context = null;
-        }
-        context ??= canvas.getContext("2d", { willReadFrequently: true });
-        if (context === null) return;
-        context.drawImage(frame, 0, 0);
-
-        const now = Date.now();
-        if (now - lastSampleAt < LATENCY_SAMPLE_INTERVAL_MS) return;
-        lastSampleAt = now;
-
-        // The backend burns the capture-time UTC clock into every frame and the
-        // driver feed tees after that overlay, so these pixels carry the instant
-        // they were produced. Reading them back measures capture-to-paint with
-        // no extra protocol.
-        const region = hudClockRegion(canvas.width, canvas.height);
-        const pixels = context.getImageData(
-          region.x,
-          region.y,
-          region.width,
-          region.height,
-        );
-        const captured = decodeHudClock(
-          samplerForImageData(pixels, region, canvas.width, canvas.height),
-        );
-        if (captured === undefined) {
-          consecutiveFailures++;
-          // A smeared frame is normal; a persistently unreadable badge is not,
-          // and showing a frozen number would be worse than showing none.
-          if (consecutiveFailures >= LATENCY_FAILURE_TOLERANCE) {
-            setLatencyMs(undefined);
+    return connectDriverFeed(
+      {
+        onStatus: setStatus,
+        paint: (frame) => {
+          const canvas = canvasRef.current;
+          if (canvas === null) return;
+          if (canvas.width !== frame.displayWidth) {
+            canvas.width = frame.displayWidth;
+            canvas.height = frame.displayHeight;
+            context = null;
           }
-          return;
-        }
-        consecutiveFailures = 0;
-        setLatencyMs(latencyMsFromClock(captured, now));
+          context ??= canvas.getContext("2d", { willReadFrequently: true });
+          if (context === null) return;
+          context.drawImage(frame, 0, 0);
+
+          const now = Date.now();
+          if (now - lastSampleAt < LATENCY_SAMPLE_INTERVAL_MS) return;
+          lastSampleAt = now;
+
+          // The backend burns the capture-time UTC clock into every frame and the
+          // driver feed tees after that overlay, so these pixels carry the instant
+          // they were produced. Reading them back measures capture-to-paint with
+          // no extra protocol.
+          const region = hudClockRegion(canvas.width, canvas.height);
+          const pixels = context.getImageData(
+            region.x,
+            region.y,
+            region.width,
+            region.height,
+          );
+          const captured = decodeHudClock(
+            samplerForImageData(pixels, region, canvas.width, canvas.height),
+          );
+          if (captured === undefined) {
+            consecutiveFailures++;
+            // A smeared frame is normal; a persistently unreadable badge is not,
+            // and showing a frozen number would be worse than showing none.
+            if (consecutiveFailures >= LATENCY_FAILURE_TOLERANCE) {
+              setLatencyMs(undefined);
+            }
+            return;
+          }
+          consecutiveFailures = 0;
+          setLatencyMs(latencyMsFromClock(captured, now));
+        },
       },
-    });
-  }, []);
+      driverSocketId,
+    );
+  }, [driverSocketId]);
 
   return (
     <div className="overflow-hidden rounded-[2rem] border border-zinc-800 bg-zinc-950/80 p-3 shadow-2xl shadow-black/40 sm:p-5">
@@ -115,8 +118,8 @@ function StatusMessage({ status }: { status: DriverFeedStatus }) {
     case "unsupported":
       return (
         <span>
-          This browser has no WebCodecs support, so the in-page feed can&apos;t
-          run. Watch the stream in Discord instead.
+          This browser can&apos;t decode the in-page feed. Watch the stream in
+          Discord instead.
         </span>
       );
     case "connecting":

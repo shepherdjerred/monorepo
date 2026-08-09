@@ -261,7 +261,9 @@ export function App() {
             />
           </header>
 
-          <GameView />
+          {hasSeat && socket.id !== undefined && (
+            <GameView driverSocketId={socket.id} />
+          )}
 
           <section className="grid gap-4 xl:grid-cols-[1fr_320px]">
             <div className="overflow-hidden rounded-[2rem] border border-zinc-800 bg-zinc-950/80 p-3 shadow-2xl shadow-black/40 sm:p-5">

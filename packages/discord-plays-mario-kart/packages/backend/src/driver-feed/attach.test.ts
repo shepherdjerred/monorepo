@@ -43,6 +43,7 @@ async function startHarness(): Promise<Harness> {
     },
     frameRate: 30,
   });
+  service.setDriverAdmission((socketId) => socketId === "active-driver");
   service.attach(server);
 
   await new Promise<void>((resolve) => {
@@ -57,8 +58,11 @@ async function startHarness(): Promise<Harness> {
   return harness;
 }
 
-function openFeed(port: number): WebSocket {
-  return new WebSocket(`ws://127.0.0.1:${String(port)}${DRIVER_FEED_PATH}`);
+function openFeed(port: number, socketId = "active-driver"): WebSocket {
+  const query = new URLSearchParams({ driverSocketId: socketId });
+  return new WebSocket(
+    `ws://127.0.0.1:${String(port)}${DRIVER_FEED_PATH}?${query.toString()}`,
+  );
 }
 
 /** First message on a feed socket, which is always the JSON handshake. */
@@ -175,6 +179,17 @@ describe("driver feed HTTP attachment", () => {
     expect(closeCode).toBe(1013);
     first.close();
     second.close();
+  });
+
+  it("rejects a controller that does not hold an active seat", async () => {
+    const { port } = await startHarness();
+    const socket = openFeed(port, "idle-controller");
+    const closeCode = await new Promise<number>((resolve, reject) => {
+      socket.once("close", resolve);
+      socket.once("error", reject);
+    });
+
+    expect(closeCode).toBe(1008);
   });
 
   it("does not claim upgrades on unrelated paths", async () => {

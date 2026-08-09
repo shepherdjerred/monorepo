@@ -3,8 +3,9 @@
 // The live config.toml is a 1Password item, so anything an operator might need
 // to change during an incident must be reachable from the Deployment instead.
 // Two things qualify: the master switch, and the bandwidth knobs — the homelab's
-// upstream capacity is undocumented and unmeasured, so "turn it down now" has to
-// be a `kubectl set env` rather than a vault edit and a redeploy.
+// upstream capacity is undocumented and unmeasured, so these values are declared
+// in GitOps rather than buried in the vault. Change the Deployment source and let
+// ArgoCD reconcile it; never mutate the live Deployment during an incident.
 //
 // Mirrors how the Go-Live path already takes STREAM_HARDWARE_ACCELERATION and
 // VAAPI_DEVICE from the environment at the consumption site.

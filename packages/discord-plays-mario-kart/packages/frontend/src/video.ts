@@ -37,9 +37,10 @@ export type DriverFeedCallbacks = {
 const RECONNECT_BASE_MS = 500;
 const RECONNECT_MAX_MS = 5000;
 
-function feedUrl(): string {
+function feedUrl(driverSocketId: string): string {
   const protocol = globalThis.location.protocol === "https:" ? "wss:" : "ws:";
-  return `${protocol}//${globalThis.location.host}${DRIVER_FEED_PATH}`;
+  const query = new URLSearchParams({ driverSocketId });
+  return `${protocol}//${globalThis.location.host}${DRIVER_FEED_PATH}?${query.toString()}`;
 }
 
 /**
@@ -48,7 +49,10 @@ function feedUrl(): string {
  * Reconnects with backoff: the controller page outlives any single game session,
  * so a `/stop` (which drops every client) must not leave a dead canvas behind.
  */
-export function connectDriverFeed(callbacks: DriverFeedCallbacks): () => void {
+export function connectDriverFeed(
+  callbacks: DriverFeedCallbacks,
+  driverSocketId: string,
+): () => void {
   if (!("VideoDecoder" in globalThis)) {
     callbacks.onStatus({ kind: "unsupported" });
     return () => {
@@ -61,6 +65,7 @@ export function connectDriverFeed(callbacks: DriverFeedCallbacks): () => void {
   let decoder: VideoDecoder | undefined;
   let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
   let attempt = 0;
+  let unsupported = false;
   // Monotonic, synthesised locally: the decoder only needs increasing
   // timestamps to order chunks, and a client that missed units during a resync
   // must not rewind its own clock.
@@ -75,7 +80,7 @@ export function connectDriverFeed(callbacks: DriverFeedCallbacks): () => void {
   };
 
   const scheduleReconnect = () => {
-    if (disposed || reconnectTimer !== undefined) return;
+    if (disposed || unsupported || reconnectTimer !== undefined) return;
     const delay = Math.min(RECONNECT_BASE_MS * 2 ** attempt, RECONNECT_MAX_MS);
     attempt += 1;
     reconnectTimer = setTimeout(() => {
@@ -84,11 +89,15 @@ export function connectDriverFeed(callbacks: DriverFeedCallbacks): () => void {
     }, delay);
   };
 
-  const configure = (init: DriverFeedInit) => {
+  const configure = async (
+    init: DriverFeedInit,
+    ws: WebSocket,
+  ): Promise<void> => {
     closeDecoder();
     started = false;
     const created = new VideoDecoder({
       output: (frame) => {
+        attempt = 0;
         try {
           callbacks.paint(frame);
         } finally {
@@ -102,14 +111,35 @@ export function connectDriverFeed(callbacks: DriverFeedCallbacks): () => void {
         socket?.close();
       },
     });
-    created.configure({
+    const config: VideoDecoderConfig = {
       codec: init.codec,
       codedWidth: init.width,
       codedHeight: init.height,
       // No `description`: per the W3C AVC registration, omitting it selects
       // Annex-B, which is what the server sends.
       optimizeForLatency: true,
-    });
+    };
+    try {
+      const support = await VideoDecoder.isConfigSupported(config);
+      if (disposed || socket !== ws || ws.readyState !== WebSocket.OPEN) {
+        created.close();
+        return;
+      }
+      if (support.supported !== true) {
+        unsupported = true;
+        created.close();
+        callbacks.onStatus({ kind: "unsupported" });
+        ws.close();
+        return;
+      }
+      created.configure(config);
+    } catch {
+      unsupported = true;
+      created.close();
+      callbacks.onStatus({ kind: "unsupported" });
+      ws.close();
+      return;
+    }
     decoder = created;
     callbacks.onStatus({ kind: "waiting" });
   };
@@ -143,17 +173,25 @@ export function connectDriverFeed(callbacks: DriverFeedCallbacks): () => void {
   function open(): void {
     if (disposed) return;
     callbacks.onStatus({ kind: "connecting" });
-    const ws = new WebSocket(feedUrl());
+    const ws = new WebSocket(feedUrl(driverSocketId));
     ws.binaryType = "arraybuffer";
     socket = ws;
 
-    ws.addEventListener("open", () => {
-      attempt = 0;
-    });
     ws.addEventListener("message", (event: MessageEvent<unknown>) => {
       const data = event.data;
       if (typeof data === "string") {
-        const parsed = DriverFeedInitSchema.safeParse(JSON.parse(data));
+        let handshake: unknown;
+        try {
+          handshake = JSON.parse(data);
+        } catch {
+          callbacks.onStatus({
+            kind: "error",
+            message: "driver feed sent malformed handshake data",
+          });
+          ws.close();
+          return;
+        }
+        const parsed = DriverFeedInitSchema.safeParse(handshake);
         if (!parsed.success) {
           callbacks.onStatus({
             kind: "error",
@@ -162,7 +200,7 @@ export function connectDriverFeed(callbacks: DriverFeedCallbacks): () => void {
           ws.close();
           return;
         }
-        configure(parsed.data);
+        void configure(parsed.data, ws);
         return;
       }
       if (data instanceof ArrayBuffer) decodeMessage(data);

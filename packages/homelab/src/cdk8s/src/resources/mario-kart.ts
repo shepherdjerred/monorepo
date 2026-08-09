@@ -121,8 +121,10 @@ export function createMarioKartDeployment(chart: Chart) {
         // Low-latency in-browser video for seated players, served as H.264 over
         // the /video WebSocket on the same port as the web UI. Additive: the
         // Go-Live stream spectators watch is unchanged. Enabled here rather than
-        // in the 1Password config.toml so the switch and the bandwidth knobs are
-        // reachable with `kubectl set env` during an incident.
+        // in the 1Password config.toml so the switch and bandwidth knobs remain
+        // GitOps-managed incident controls. To respond to an uplink incident,
+        // change these declared values in a committed source change and let
+        // ArgoCD reconcile the Deployment; never mutate the live Deployment.
         //
         // Capped at the four seats deliberately: the feed exists for the people
         // driving, and each viewer costs a full copy of the stream on an uplink

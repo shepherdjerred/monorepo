@@ -132,6 +132,19 @@ describe("DriverFeedHub", () => {
     expect(fast.sent).toHaveLength(3);
   });
 
+  it("requires existing clients to resync at a decoder entry point after restart", () => {
+    const feed = hub();
+    const client = new FakeClient();
+    feed.add(client);
+    feed.broadcast(ENTRY);
+
+    feed.resetAllToKeyframe();
+    feed.broadcast(DELTA);
+    feed.broadcast(ENTRY);
+
+    expect(client.sent).toEqual([framed(ENTRY), framed(ENTRY)]);
+  });
+
   it("refuses clients past the cap and keeps serving the existing ones", () => {
     const feed = hub({ maxClients: 2 });
     const first = new FakeClient();
