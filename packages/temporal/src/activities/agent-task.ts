@@ -253,6 +253,13 @@ async function runAgent(
         redactionFailureController.record(error);
       }
 
+      if (redactionFailureController.failure !== undefined) {
+        llmTrace.recordMetadataOnly({
+          exitCode: result.exitCode,
+          startTimeMs: llmStartMs,
+          durationMs: result.durationMs,
+        });
+      }
       throwIfAgentTaskSecretRedactionFailed(
         redactionFailureController.failure,
         {

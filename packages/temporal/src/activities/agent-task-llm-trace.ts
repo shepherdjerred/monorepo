@@ -32,6 +32,15 @@ export type AgentTaskLlmTrace = {
     startTimeMs: number;
     durationMs: number;
   }) => void;
+  /**
+   * Emit a bodyless Claude span when stdout cannot be retained safely after a
+   * secret-redaction failure. No-op for Codex.
+   */
+  recordMetadataOnly: (outcome: {
+    exitCode: number;
+    startTimeMs: number;
+    durationMs: number;
+  }) => void;
 };
 
 export function startAgentTaskLlmTrace(args: {
@@ -79,6 +88,27 @@ export function startAgentTaskLlmTrace(args: {
         },
         {
           stdout: outcome.stdout,
+          exitCode: outcome.exitCode,
+          startTimeMs: outcome.startTimeMs,
+          endTimeMs: outcome.startTimeMs + outcome.durationMs,
+        },
+        logger,
+      );
+    },
+    recordMetadataOnly(outcome): void {
+      if (args.provider !== "claude") return;
+      traceClaudeCli(
+        {
+          service: "temporal",
+          callSite: args.callSite,
+          request: {
+            model: args.model,
+            prompt: "[redacted: secret refresh failed]",
+            options: { redactionFailed: true },
+          },
+        },
+        {
+          stdout: "",
           exitCode: outcome.exitCode,
           startTimeMs: outcome.startTimeMs,
           endTimeMs: outcome.startTimeMs + outcome.durationMs,
