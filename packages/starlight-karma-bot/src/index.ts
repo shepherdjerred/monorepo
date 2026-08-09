@@ -24,7 +24,7 @@ console.warn("[App] Sentry initialized");
 // never recycle it. That is exactly the zombie the probes in this change exist
 // to catch, and a swallowing handler would quietly defeat them.
 function exitOnFatal(source: string, error: unknown): void {
-  console.error(`[App] ${source}:`, error);
+  console.error("[App] fatal error:", source, error);
   Sentry.captureException(error, { tags: { source } });
   void (async () => {
     try {

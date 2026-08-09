@@ -37,7 +37,7 @@ client.on(Events.ShardDisconnect, (event, shardId) => {
 });
 
 client.on(Events.ShardError, (error, shardId) => {
-  console.error(`[Discord] Shard ${shardId.toString()} error:`, error);
+  console.error("[Discord] Shard error:", shardId, error);
   Sentry.captureException(error, {
     tags: { source: "discord-shard", shardId: shardId.toString() },
   });
