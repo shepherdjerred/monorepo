@@ -6,8 +6,11 @@ sidebar:
 ---
 
 All recurring automation is a single `SCHEDULES` array in
-[`register-schedules.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/schedules/register-schedules.ts).
+[`schedule-definitions.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/schedules/schedule-definitions.ts).
 Every worker boot upserts the whole fleet — currently about 30 schedules.
+
+[`register-schedules.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/schedules/register-schedules.ts)
+owns reconciliation and the explicit `DELETED_SCHEDULE_IDS` allowlist.
 
 For the list of what runs and when, see
 [Temporal workflow inventory](/reference/temporal-workflows/).

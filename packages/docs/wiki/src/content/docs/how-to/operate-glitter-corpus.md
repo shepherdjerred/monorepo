@@ -9,16 +9,20 @@ Glitter's Discord corpus is operator-gated on purpose. A full backfill costs
 real Discord rate-limit budget, so nothing backfills until you approve the exact
 scope.
 
-All operator runs go through one command:
-
-```bash
-bun run glitter:operate
-```
+Run every action from `packages/temporal`. Set `TEMPORAL_ADDRESS` to the
+operator-reachable TLS endpoint from private configuration; do not publish that
+hostname. External connections also require `TEMPORAL_TLS=true`.
 
 ## 1. Take an inventory
 
 Run the inventory action. It lists channels and scope decisions and writes them
 as an immutable object.
+
+```bash
+cd packages/temporal
+TEMPORAL_ADDRESS=<private-temporal-host>:443 TEMPORAL_TLS=true \
+  bun run glitter:operate inventory
+```
 
 Read it. This is the moment to decide what is in and out of the corpus — after
 backfill it is captured.
@@ -31,11 +35,34 @@ says now.
 
 Only after approval may the full backfill run.
 
+To prove one channel first, use the canary action with the approved guild and
+channel identifiers:
+
+```bash
+cd packages/temporal
+TEMPORAL_ADDRESS=<private-temporal-host>:443 TEMPORAL_TLS=true \
+  bun run glitter:operate canary \
+  --guild-id=<guild-id> \
+  --guild-slug=<guild-slug> \
+  --channel-id=<channel-id>
+```
+
 ## 3. Backfill
 
 Run the backfill action. Each channel is traversed backward and forward
 independently, and the two traversals are checked against each other for
 completeness.
+
+Use the exact key and SHA-256 printed by the inventory action:
+
+```bash
+cd packages/temporal
+TEMPORAL_ADDRESS=<private-temporal-host>:443 TEMPORAL_TLS=true \
+  bun run glitter:operate backfill \
+  --inventory-key=<inventory-key> \
+  --inventory-sha=<inventory-sha256> \
+  --wait=true
+```
 
 Everything is written content-addressed under its sha256, once. Retries re-read
 rather than corrupt, and nothing is ever overwritten.
@@ -43,9 +70,6 @@ rather than corrupt, and nothing is ever overwritten.
 Discord access is serialized to one request per second globally by a
 compare-and-swap lease object in S3, so a backfill will not starve other
 workflows.
-
-Use the channel-backfill canary first if you want to prove the path on a single
-channel before committing to the whole guild.
 
 ## 4. Let the daily capture take over
 

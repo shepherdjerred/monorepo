@@ -51,14 +51,18 @@ Only corpus capture and context-refresh are scheduled.
 
 ## Homelab maintenance
 
-| Workflow               | Trigger     | Brain         | Output           |
-| ---------------------- | ----------- | ------------- | ---------------- |
-| zfs-maintenance        | Sun 03:00   | deterministic | scrub + autotrim |
-| bugsink-housekeeping   | daily 03:00 | deterministic | DB cleanup       |
-| velero-orphan-audit    | daily 03:30 | deterministic | metrics only     |
-| dns-audit              | daily 06:00 | deterministic | logs             |
-| golink-sync            | daily 05:00 | deterministic | golink reconcile |
-| temporal-failure-watch | every 5 min | deterministic | PagerDuty page   |
+| Workflow                        | Trigger       | Brain         | Output                 |
+| ------------------------------- | ------------- | ------------- | ---------------------- |
+| zfs-maintenance                 | Sun 03:00     | deterministic | scrub + autotrim       |
+| buildkite-uv-cache-prune-weekly | Sun 03:15     | deterministic | uv cache prune         |
+| bugsink-housekeeping            | daily 03:00   | deterministic | DB cleanup             |
+| velero-orphan-audit             | daily 03:30   | deterministic | metrics only           |
+| kometa-daily                    | daily 04:30   | deterministic | Plex metadata sync     |
+| buildkite-bun-cache-gc          | every 5 min   | deterministic | Bun cache GC           |
+| buildkite-trivy-db-refresh      | every 6 hours | deterministic | Trivy database refresh |
+| dns-audit                       | daily 06:00   | deterministic | logs                   |
+| golink-sync                     | daily 05:00   | deterministic | golink reconcile       |
+| temporal-failure-watch          | every 5 min   | deterministic | PagerDuty page         |
 
 ## Home automation
 

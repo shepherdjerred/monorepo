@@ -22,11 +22,19 @@ Commands for the PR fleet controller. Package:
 | Flag                      | Value                                                  |
 | ------------------------- | ------------------------------------------------------ |
 | `--model <provider>/<id>` | required; powers both the master and every worker      |
+| `--repo <owner/name>`     | repository; defaults to `shepherdjerred/monorepo`      |
+| `--checkout <path>`       | main checkout; defaults to the current Git root        |
+| `--worktree-root <path>`  | fleet worktree root                                    |
+| `--max-workers <1..5>`    | worker limit; defaults to `5`                          |
 | `--author <login>`        | include that login's drafts; excludes bot-authored PRs |
+| `--base-url <url>`        | endpoint required by `openai-compatible/<model>`       |
+| `--api-key-env <name>`    | API-key environment variable for a compatible endpoint |
+| `--review-provider <id>`  | hosted review provider; defaults to `codex`            |
 | `--state-dir <path>`      | override the run-bundle location                       |
 | `--no-ui`                 | do not build or spawn the web dashboard                |
 | `--ui-port <port>`        | pin the dashboard port                                 |
 | `--no-open`               | start the dashboard without opening a browser          |
+| `--help`                  | print usage, flags, and interactive commands           |
 
 One selected API model powers both the conversational master and every bounded
 worker, so the controller is provider-neutral.
@@ -45,9 +53,12 @@ worker, so the controller is provider-neutral.
 
 ## `pr:fleet:watch`
 
-| Flag                | Value                                   |
-| ------------------- | --------------------------------------- |
-| `--run <id \| dir>` | run to open; defaults to the newest run |
+| Flag                 | Value                                   |
+| -------------------- | --------------------------------------- |
+| `--run <id \| dir>`  | run to open; defaults to the newest run |
+| `--state-dir <path>` | override the run-bundle location        |
+| `--port <port>`      | dashboard port; `0` selects a free port |
+| `--no-open`          | do not open a browser                   |
 
 Standalone and historical dashboards are read-only. A live dashboard's only
 mutation is answering an active, head-bound question inside that PR's detail
@@ -55,20 +66,24 @@ view.
 
 ## `pr:fleet:inspect`
 
-| Flag                | Value                               |
-| ------------------- | ----------------------------------- |
-| `--run <id \| dir>` | required                            |
-| `--show-bodies`     | reveal payload bodies; local opt-in |
-| `--json`            | machine-readable output             |
+| Flag                 | Value                               |
+| -------------------- | ----------------------------------- |
+| `--run <id \| dir>`  | required                            |
+| `--state-dir <path>` | override the run-bundle location    |
+| `--pr <number>`      | include events correlated to one PR |
+| `--show-bodies`      | reveal payload bodies; local opt-in |
+| `--json`             | emit machine-readable output        |
 
 Bodies are hidden by default.
 
 ## `pr:fleet:replay`
 
-| Flag                | Value                   |
-| ------------------- | ----------------------- |
-| `--run <id \| dir>` | required                |
-| `--json`            | machine-readable output |
+| Flag                       | Value                                     |
+| -------------------------- | ----------------------------------------- |
+| `--run <id \| dir>`        | required                                  |
+| `--state-dir <path>`       | override the run-bundle location          |
+| `--allow-version-mismatch` | audit with a different controller version |
+| `--json`                   | emit machine-readable output              |
 
 Replay audits event integrity, lifecycle correlations, question PR and head
 binding, single-answer lifecycle, tick snapshots, aggregate counts, and final

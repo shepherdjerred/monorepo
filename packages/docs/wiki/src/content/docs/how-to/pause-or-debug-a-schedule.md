@@ -58,13 +58,15 @@ still been executing.
 
 ## Change or remove a schedule
 
-Schedules live in the `SCHEDULES` array in `register-schedules.ts` and are
-upserted on every worker boot. The code is the inventory and a PR is the change
-process.
+Schedules live in the `SCHEDULES` array in
+[`src/schedules/schedule-definitions.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/schedules/schedule-definitions.ts)
+and are upserted on every worker boot. The code is the inventory and a PR is the
+change process.
 
-Deleting the code is not enough. Removing a workflow means **adding its schedule
-ID to the deletion list**, which boot then acts on. Until you do, the schedule
-keeps running on the server.
+Deleting the definition is not enough. Removing a workflow means **adding its
+schedule ID to `DELETED_SCHEDULE_IDS` in
+[`register-schedules.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/schedules/register-schedules.ts)**,
+which boot then acts on. Until you do, the schedule keeps running on the server.
 
 An orphan detector exports a metric for any server-side schedule that code no
 longer defines, so this drift alerts rather than lingering quietly.

@@ -15,9 +15,13 @@ A local dry run is not equivalent and does not satisfy the production check.
 
 ```bash
 cd packages/temporal
-TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443 TEMPORAL_TLS=true \
+TEMPORAL_ADDRESS=<private-temporal-host>:443 TEMPORAL_TLS=true \
   bun run canary:agent-task
 ```
+
+Replace `<private-temporal-host>` with the operator-reachable TLS endpoint from
+private configuration. The hostname is deliberately not published in this
+public wiki.
 
 ## 2. Wait for the email
 

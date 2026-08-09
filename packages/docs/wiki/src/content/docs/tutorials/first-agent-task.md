@@ -16,11 +16,12 @@ loop — not to get an answer.
 
 ## 1. Open a scratch document
 
-Agent tasks live next to the context that motivated them. For this first one we
-just need somewhere to put the block, so open any document under
-`packages/docs/guides/`.
+Agent tasks normally live next to the context that motivated them. For this
+tutorial, create a dedicated scratch file at
+`packages/docs/guides/agent-task-tutorial-scratch.md`.
 
-We will remove the block at the end, so it does not matter much which.
+Start with a new, block-free file. Do not reuse an existing guide: the operator
+CLI reads the first `temporal-agent-task` block it finds.
 
 ## 2. Write the task block
 
@@ -53,7 +54,7 @@ Port-forward Temporal, then run the scheduler against your document:
 ```bash
 cd packages/temporal
 TEMPORAL_ADDRESS=localhost:7233 \
-  bun run scripts/schedule-agent-task.ts --from-doc ../../packages/docs/guides/<your-doc>.md
+  bun run scripts/schedule-agent-task.ts --from-doc ../../packages/docs/guides/agent-task-tutorial-scratch.md
 ```
 
 The CLI reads the block, normalizes the input, and starts a one-off workflow
@@ -94,8 +95,8 @@ scheduled follow-up cannot quietly double-fire.
 
 ## 7. Clean up
 
-Delete the block from your document. A one-off task that has already run leaves
-nothing behind, so there is nothing else to remove.
+Delete `packages/docs/guides/agent-task-tutorial-scratch.md`. A one-off task
+that has already run leaves nothing behind, so there is nothing else to remove.
 
 ## What you did
 

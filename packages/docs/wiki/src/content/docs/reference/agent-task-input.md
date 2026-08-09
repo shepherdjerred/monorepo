@@ -14,20 +14,21 @@ Schema and dispatcher:
 
 ## Task fields
 
-| Field             | Required  | Value                                                            |
-| ----------------- | --------- | ---------------------------------------------------------------- |
-| `title`           | yes       | human label; also part of the workflow ID                        |
-| `provider`        | yes       | `claude` or `codex`                                              |
-| `mode`            | yes       | `report-only`                                                    |
-| `prompt`          | yes       | the task instruction                                             |
-| `repo`            | yes       | `{ fullName, ref }`                                              |
-| `runAt`           | one of    | ISO timestamp for a one-off run                                  |
-| `cron`            | one of    | cron expression for a recurring run; needs a stable `scheduleId` |
-| `scheduleId`      | with cron | stable identifier for the Temporal schedule                      |
-| `source`          | no        | `{ docPath }` — the document that motivated the task             |
-| `allowSelfCancel` | no        | permits the task to pause its own cron                           |
+| Field             | Required | Value                                                                |
+| ----------------- | -------- | -------------------------------------------------------------------- |
+| `title`           | yes      | human label; also part of the workflow ID                            |
+| `provider`        | yes      | `claude` or `codex`                                                  |
+| `mode`            | no       | defaults to `report-only`; that is the only accepted value           |
+| `prompt`          | yes      | the task instruction                                                 |
+| `repo`            | yes      | `{ fullName, ref }`                                                  |
+| `runAt`           | no       | ISO timestamp for a deferred one-off run                             |
+| `cron`            | no       | cron expression for a recurring run                                  |
+| `scheduleId`      | no       | recurring schedule ID; generated from task content when omitted      |
+| `source`          | no       | `{ docPath }` — the document that motivated the task                 |
+| `allowSelfCancel` | no       | defaults to `false`; permits the task to pause its own recurring run |
 
-Cron expressions are evaluated in `America/Los_Angeles`.
+Set at most one of `runAt` and `cron`. Omitting both starts a one-off workflow
+immediately. Cron expressions are evaluated in `America/Los_Angeles`.
 
 ## Doc block form
 
