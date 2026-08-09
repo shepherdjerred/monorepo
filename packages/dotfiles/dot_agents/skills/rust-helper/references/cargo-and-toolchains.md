@@ -9,7 +9,10 @@ Resolver 3 is the Rust 2024 default. Specify it in a virtual workspace. `rust-ve
 Run these diagnostics in order. In each command block, `cargo test
 --future-incompat-report` must complete before `cargo report
 future-incompatibilities`: the test command generates the report, while the
-report command only reads it and fails when none exists. Add `--locked` to
+report command only reads it. If the test command succeeds without announcing
+a generated report, no future-incompatibility warnings were found; do not run
+the reader, because Cargo exits with `no reports are currently available` in
+that clean state. Any other reader failure requires investigation. Add `--locked` to
 dependency-resolving commands when the project commits `Cargo.lock`; omit it
 for libraries that intentionally do not commit a lockfile. Do not create or
 commit a lockfile solely to run these inspections.
@@ -20,22 +23,25 @@ For a project that commits `Cargo.lock`, use:
 cargo tree --locked -d
 cargo tree --locked -e features
 cargo test --locked --future-incompat-report
+# Run only when the preceding command announces a generated report:
 cargo report future-incompatibilities
 ```
 
-For a library that intentionally does not commit `Cargo.lock`, clone the
-current checkout to an isolated disposable directory and run the diagnostics
-there. Cargo can create a temporary lockfile while resolving dependencies
-without dirtying the source checkout:
+For a library that intentionally does not commit `Cargo.lock`, copy the current
+working tree to an isolated disposable directory and run the diagnostics there.
+Do not use `git clone`: it copies `HEAD` and omits uncommitted or untracked
+source and manifest changes. Cargo can create a temporary lockfile while
+resolving dependencies without dirtying the source checkout:
 
 ```bash
 diagnostics_dir="$(mktemp -d)"
-git clone --quiet --no-local . "$diagnostics_dir"
+rsync -a --exclude '.git' --exclude 'target' --exclude 'Cargo.lock' ./ "$diagnostics_dir/"
 (
   cd "$diagnostics_dir"
   cargo tree -d
   cargo tree -e features
   cargo test --future-incompat-report
+  # Run only when the preceding command announces a generated report:
   cargo report future-incompatibilities
 )
 ```
