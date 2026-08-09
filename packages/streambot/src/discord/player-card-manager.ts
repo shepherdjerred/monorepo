@@ -483,7 +483,11 @@ export class PlayerCardManager {
       messageId === null ||
       trackKey === null ||
       this.finalizing ||
-      !this.deps.enabled
+      !this.deps.enabled ||
+      // A queued repost must still belong to the current item. `trackKey` can advance while this
+      // card is waiting in the serialized tail; re-posting then would delete the old card and post
+      // the new view, after which `beginTrack` would post that new card a second time.
+      this.cardTrackKey !== trackKey
     ) {
       return;
     }

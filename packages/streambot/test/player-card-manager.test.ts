@@ -541,6 +541,24 @@ describe("re-posting when chat buries the card", () => {
     expect(h.rec.posts).toHaveLength(1);
   });
 
+  test("does not re-post a card after playback has advanced to another track", async () => {
+    const h = harness({ repostAfterMessages: 1 });
+    h.manager.refresh();
+    await flush();
+
+    // The queued repost still targets A's message, but `refresh()` moves the current track to B
+    // before that queued task runs. Only B's normal begin-track task may replace A's card.
+    h.manager.onChannelMessage("msg-1");
+    h.setView(streaming("Sneakers (1992)"));
+    h.manager.refresh();
+    await flush();
+
+    expect(h.rec.removed).toEqual([]);
+    expect(h.rec.posts).toHaveLength(2);
+    expect(h.rec.posts[1]?.payload.embed?.title).toBe("▶️ Sneakers (1992)");
+    expect(h.rec.stripped).toEqual(["card-1"]);
+  });
+
   test("a re-post queued behind finalize cannot delete the last card", async () => {
     const h = harness({ repostAfterMessages: 1 });
     h.manager.refresh();
