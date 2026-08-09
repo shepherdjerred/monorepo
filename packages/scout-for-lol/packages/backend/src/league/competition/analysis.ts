@@ -57,7 +57,7 @@ export function clearCompetitionAnalysisCache(): void {
   cachedCompetitionAnalysis.clear();
 }
 
-export async function analyzeCompetition(params: {
+type AnalyzeCompetitionParams = {
   prisma: ExtendedPrismaClient;
   competition: CompetitionWithCriteria;
   mode: "official" | "selected_period";
@@ -67,7 +67,11 @@ export async function analyzeCompetition(params: {
   history: CachedLeaderboard[];
   official: CachedLeaderboard | null;
   now: Date;
-}): Promise<CompetitionAnalysisResult> {
+};
+
+export async function analyzeCompetition(
+  params: AnalyzeCompetitionParams,
+): Promise<CompetitionAnalysisResult> {
   const preset = CompetitionAnalysisPresetSchema.parse(params.preset);
   if (preset === "criterion_score" && params.mode === "official") {
     return {
@@ -93,32 +97,17 @@ export async function analyzeCompetition(params: {
     timezone: params.competition.analysisTimezone,
   });
   const officialStandings = params.official?.entries ?? [];
+  const rankCriterion = competitionUsesRankHistory(params.competition.criteria);
   if (preset === "rank_position") {
-    const filtered = historyAroundRange(params.history, range);
-    return {
-      preset,
-      mode: params.mode,
-      standings:
-        params.mode === "official"
-          ? officialStandings
-          : rankPeriodStandings(params.competition, filtered),
-      visualization: rankHistoryVisualization(
-        params.competition,
-        analysis,
-        filtered,
-        params.now,
-      ),
-      rowsScanned: filtered.reduce(
-        (total, snapshot) => total + snapshot.entries.length,
-        0,
-      ),
-    };
+    return await analyzeRankPosition({
+      params,
+      analysis,
+      range,
+      officialStandings,
+      rankCriterion,
+    });
   }
-  if (
-    ["HIGHEST_RANK", "MOST_RANK_CLIMB"].includes(
-      params.competition.criteria.type,
-    )
-  ) {
+  if (rankCriterion) {
     const filtered = historyAroundRange(params.history, range);
     const standings =
       params.mode === "official"
@@ -212,6 +201,58 @@ export async function analyzeCompetition(params: {
         ? 0
         : visualizationResult.rowsScanned),
   };
+}
+
+async function analyzeRankPosition(input: {
+  params: AnalyzeCompetitionParams;
+  analysis: TemporalAnalysisSpec;
+  range: { startDate: Date; endDate: Date };
+  officialStandings: CachedLeaderboardEntry[];
+  rankCriterion: boolean;
+}): Promise<CompetitionAnalysisResult> {
+  const { params, analysis, range, officialStandings, rankCriterion } = input;
+  const filtered = historyAroundRange(params.history, range);
+  const standingsResult =
+    !rankCriterion && params.mode === "selected_period"
+      ? await executeCompiledReportQuery(
+          {
+            prisma: params.prisma,
+            serverId: params.competition.serverId,
+            sourceCompetitionId: params.competition.id,
+            now: params.now,
+            rangeOverride: range,
+          },
+          parseAndCompile(
+            competitionCriterionQuery(params.competition.criteria),
+          ),
+        )
+      : null;
+  return {
+    preset: "rank_position",
+    mode: params.mode,
+    standings:
+      params.mode === "official"
+        ? officialStandings
+        : rankCriterion
+          ? rankPeriodStandings(params.competition, filtered)
+          : standingsFromResult(requireStandingsResult(standingsResult)),
+    visualization: rankHistoryVisualization(
+      params.competition,
+      analysis,
+      filtered,
+      params.now,
+    ),
+    rowsScanned: filtered.reduce(
+      (total, snapshot) => total + snapshot.entries.length,
+      standingsResult?.rowsScanned ?? 0,
+    ),
+  };
+}
+
+function competitionUsesRankHistory(criteria: CompetitionCriteria): boolean {
+  return (
+    criteria.type === "HIGHEST_RANK" || criteria.type === "MOST_RANK_CLIMB"
+  );
 }
 
 function requireStandingsResult(

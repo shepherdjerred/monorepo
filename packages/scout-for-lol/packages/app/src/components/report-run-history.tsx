@@ -61,6 +61,17 @@ export function ReportRunHistory(props: {
                 <p className="text-sm text-destructive">{run.errorMessage}</p>
               )}
 
+              {run.querySnapshot !== null && (
+                <details className="rounded-md border border-border">
+                  <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-muted-foreground">
+                    ScoutQL snapshot
+                  </summary>
+                  <pre className="max-h-[360px] overflow-auto whitespace-pre-wrap break-words border-t border-border bg-muted/50 p-3 font-mono text-xs leading-5">
+                    {run.querySnapshot}
+                  </pre>
+                </details>
+              )}
+
               {run.renderedContent !== null && (
                 <pre className="overflow-auto whitespace-pre-wrap rounded-md border border-border bg-muted/50 p-3 text-xs">
                   {run.renderedContent}

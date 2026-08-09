@@ -446,16 +446,25 @@ function fillMissingBuckets({
         generatedAt,
         index: result.length,
       });
+      const hasComparison = plan.analysis.comparison !== undefined;
       result.push({
         key: label,
         label,
         start: bounds.start.toISOString(),
         end: bounds.end.toISOString(),
         value: additive ? 0 : null,
-        comparisonValue: null,
-        absoluteDelta: null,
+        comparisonValue: additive && hasComparison ? 0 : null,
+        absoluteDelta: additive && hasComparison ? 0 : null,
         percentageDelta: null,
         evidence: { sampleSize: 0, confidenceInterval: null },
+        ...(hasComparison
+          ? {
+              comparisonEvidence: {
+                sampleSize: 0,
+                confidenceInterval: null,
+              },
+            }
+          : {}),
       });
     } else {
       result.push(existing);

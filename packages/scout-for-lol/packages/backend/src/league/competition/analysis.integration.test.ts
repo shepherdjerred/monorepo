@@ -100,6 +100,44 @@ describe("competition selected-period analysis", () => {
     expect(climb.standings[0]?.playerName).toBe("Alpha");
     expect(climb.standings[0]?.score).toBe(400);
   });
+
+  test("recomputes match standings for selected-period rank-position views", async () => {
+    const { alpha, competition } = await setupCompetition({
+      type: "MOST_GAMES_PLAYED",
+      queue: "SOLO",
+    });
+    await writeTestLake(lakeDir, {
+      serverId,
+      matchFacts: [
+        fact({
+          playerId: alpha.id,
+          playerAlias: "Alpha",
+          matchId: "rank-position-selected-match",
+          queue: "solo",
+          win: true,
+          championId: targetChampionId,
+          date: "2026-05-15",
+        }),
+      ],
+    });
+
+    const result = await analyzeCompetition({
+      prisma,
+      competition,
+      mode: "selected_period",
+      preset: "rank_position",
+      startDate: "2026-05-10",
+      endDate: "2026-05-20",
+      history: [],
+      official: null,
+      now,
+    });
+
+    expect(result.standings[0]?.playerName).toBe("Alpha");
+    expect(result.standings[0]?.score).toBe(1);
+    expect(result.visualization).toBeNull();
+    expect(result.rowsScanned).toBe(1);
+  });
 });
 
 describe("competition preset date bounds", () => {

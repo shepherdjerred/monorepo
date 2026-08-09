@@ -57,6 +57,67 @@ describe("visualizationSnapshotToOption", () => {
     ).not.toContain("baseline");
   });
 
+  test("adds one baseline overlay for every compared series", () => {
+    const point = {
+      key: "2026-08-08",
+      label: "2026-08-08",
+      start: "2026-08-08T00:00:00.000Z",
+      end: "2026-08-08T23:59:59.999Z",
+      value: 2,
+      comparisonValue: 1,
+      absoluteDelta: 1,
+      percentageDelta: 1,
+      evidence: { sampleSize: 2, confidenceInterval: null },
+      comparisonEvidence: { sampleSize: 1, confidenceInterval: null },
+    };
+    const snapshot = VisualizationSnapshotSchema.parse({
+      version: 1,
+      generatedAt: "2026-08-08T00:00:00.000Z",
+      kind: "LINE_CHART",
+      title: null,
+      temporal: {
+        window: { kind: "relative", days: 30 },
+        bucket: "day",
+        comparison: { kind: "previous_period" },
+        timezone: "UTC",
+      },
+      bucket: "day",
+      display: {
+        theme: null,
+        palette: null,
+        smooth: false,
+        stack: "none",
+        rollingWindow: null,
+        cumulative: false,
+        sparkline: false,
+      },
+      series: [
+        {
+          id: "games",
+          label: "Games",
+          metric: "games",
+          additive: true,
+          points: [point],
+        },
+        {
+          id: "wins",
+          label: "Wins",
+          metric: "wins",
+          additive: true,
+          points: [point],
+        },
+      ],
+      annotations: [],
+      trends: [],
+    });
+
+    const option = JSON.stringify(
+      visualizationSnapshotToOption(snapshot, "static"),
+    );
+    expect(option).toContain('"name":"Games baseline"');
+    expect(option).toContain('"name":"Wins baseline"');
+  });
+
   test("escapes report labels in interactive HTML tooltips", () => {
     const snapshot = VisualizationSnapshotSchema.parse({
       version: 1,

@@ -139,43 +139,43 @@ function evidenceOverlaySeries(
   snapshot: VisualizationSnapshot,
   categories: string[],
 ): echarts.SeriesOption[] {
-  const item = snapshot.series.length === 1 ? snapshot.series[0] : undefined;
-  if (item === undefined || snapshot.kind === "SCATTER_CHART") return [];
+  if (snapshot.kind === "SCATTER_CHART") return [];
   const comparison =
     snapshot.temporal?.comparison === undefined
       ? []
-      : [
-          {
+      : snapshot.series.map(
+          (item): echarts.SeriesOption => ({
             name: `${item.label} baseline`,
-            type: "line" as const,
+            type: "line",
             data: categories.map(
               (category) =>
                 item.points.find((point) => point.label === category)
                   ?.comparisonValue ?? null,
             ),
             symbol: "none",
-            lineStyle: { type: "dotted" as const, width: 2, opacity: 0.65 },
-          },
-        ];
-  const hasConfidence = item.points.some(
-    (point) => point.evidence.confidenceInterval !== null,
-  );
-  if (!hasConfidence) return comparison;
+            lineStyle: { type: "dotted", width: 2, opacity: 0.65 },
+          }),
+        );
   return [
     ...comparison,
-    ...(["lower", "upper"] as const).map(
-      (bound): echarts.SeriesOption => ({
-        name: `${item.label} 95% CI ${bound}`,
-        type: "line",
-        data: categories.map((category) => {
-          const interval = item.points.find((point) => point.label === category)
-            ?.evidence.confidenceInterval;
-          return interval?.[bound] ?? null;
-        }),
-        symbol: "none",
-        lineStyle: { type: "dashed", width: 1, opacity: 0.35 },
-        tooltip: { show: false },
-      }),
+    ...snapshot.series.flatMap((item) =>
+      item.points.some((point) => point.evidence.confidenceInterval !== null)
+        ? (["lower", "upper"] as const).map(
+            (bound): echarts.SeriesOption => ({
+              name: `${item.label} 95% CI ${bound}`,
+              type: "line",
+              data: categories.map((category) => {
+                const interval = item.points.find(
+                  (point) => point.label === category,
+                )?.evidence.confidenceInterval;
+                return interval?.[bound] ?? null;
+              }),
+              symbol: "none",
+              lineStyle: { type: "dashed", width: 1, opacity: 0.35 },
+              tooltip: { show: false },
+            }),
+          )
+        : [],
     ),
   ];
 }

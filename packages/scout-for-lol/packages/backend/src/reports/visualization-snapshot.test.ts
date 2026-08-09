@@ -112,6 +112,33 @@ describe("buildVisualizationSnapshot", () => {
     ]);
   });
 
+  test("zero-fills both sides of missing additive comparison buckets", () => {
+    const plan = parseAndCompile(
+      "SELECT games FROM match_participants GROUP BY all ANALYZE BETWEEN '2026-08-01' AND '2026-08-03' BUCKET BY DAY COMPARE TO BETWEEN '2026-07-29' AND '2026-07-31' IN TIME ZONE 'UTC' ORDER BY label ASC RENDER line_chart WITH (y = games)",
+    );
+
+    const snapshot = buildVisualizationSnapshot(
+      { plan, columns: ["label", "games"], rows: [], rowsScanned: 0 },
+      new Date("2026-08-08T00:00:00.000Z"),
+    );
+
+    expect(snapshot.series[0]?.points).toEqual(
+      ["2026-08-01", "2026-08-02", "2026-08-03"].map((label) =>
+        expect.objectContaining({
+          label,
+          value: 0,
+          comparisonValue: 0,
+          absoluteDelta: 0,
+          percentageDelta: null,
+          comparisonEvidence: {
+            sampleSize: 0,
+            confidenceInterval: null,
+          },
+        }),
+      ),
+    );
+  });
+
   test("normalizes comparison values and deltas in percentage stacks", () => {
     const plan = parseAndCompile(
       "SELECT queue, games FROM match_participants GROUP BY queue ANALYZE BETWEEN '2026-08-01' AND '2026-08-01' BUCKET BY DAY COMPARE TO BETWEEN '2026-07-31' AND '2026-07-31' IN TIME ZONE 'UTC' RENDER area_chart WITH (y = games, stack = percent)",
