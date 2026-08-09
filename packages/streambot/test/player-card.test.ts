@@ -26,6 +26,7 @@ function view(over: Partial<PlaybackView> = {}): PlaybackView {
       requesterId: REQUESTER,
       chapters: CHAPTERS,
       kind: "file",
+      sourceId: "file:Heat (1995)",
       durationSeconds: 600,
     },
     queue: [],
@@ -106,6 +107,7 @@ describe("player card body", () => {
           requesterId: REQUESTER,
           chapters: [],
           kind: "url",
+          sourceId: "url:Live Stream",
           durationSeconds: null,
         },
       }).embed?.description ?? "";
@@ -122,6 +124,7 @@ describe("player card body", () => {
           requesterId: REQUESTER,
           chapters: [],
           kind: "search",
+          sourceId: "search:Next Up",
           durationSeconds: null,
         },
       ],
@@ -213,6 +216,7 @@ describe("chapter menu", () => {
         requesterId: REQUESTER,
         chapters: [],
         kind: "file",
+        sourceId: "file:Heat (1995)",
         durationSeconds: 600,
       },
     });
@@ -241,6 +245,7 @@ describe("chapter menu", () => {
         requesterId: REQUESTER,
         chapters: many,
         kind: "file",
+        sourceId: "file:Long Movie",
         durationSeconds: 2400,
       },
     });

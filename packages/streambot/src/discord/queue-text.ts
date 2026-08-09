@@ -22,6 +22,13 @@ export type QueueItemView = {
   /** Source kind — the player card only looks up TMDB posters for local files. */
   readonly kind: Source["kind"];
   /**
+   * Stable identity of the underlying source (`file:<path>` / `url:<url>` / `search:<query>`). The
+   * player card keys its lifecycle on this rather than the display title, so two different files
+   * that happen to share a title get their own cards, and a title that changes as a source resolves
+   * doesn't look like a new track.
+   */
+  readonly sourceId: string;
+  /**
    * Media duration in seconds from the resolve-time ffprobe, or null when unknown (live streams,
    * probe failure) or for a not-yet-resolved queue entry. Drives the player card's progress bar,
    * which falls back to an elapsed-only readout when this is null.

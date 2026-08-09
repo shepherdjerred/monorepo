@@ -32,6 +32,7 @@ function view(over: Partial<PlaybackView> = {}): PlaybackView {
       requesterId: REQUESTER,
       chapters: CHAPTERS,
       kind: "file",
+      sourceId: "file:Heat (1995)",
       durationSeconds: 600,
     },
     queue: [],
@@ -219,6 +220,7 @@ describe("relative seek", () => {
         requesterId: REQUESTER,
         chapters: [],
         kind: "url",
+        sourceId: "url:Live Stream",
         durationSeconds: null,
       },
     });
@@ -271,6 +273,7 @@ describe("queue button", () => {
           requesterId: REQUESTER,
           chapters: [],
           kind: "search",
+          sourceId: "search:Item A",
           durationSeconds: null,
         },
       ],

@@ -227,6 +227,7 @@ function viewWithCurrent(requesterId: string): PlaybackView {
       requesterId: uid(requesterId),
       chapters: [],
       kind: "search",
+      sourceId: "search:Current Song",
       durationSeconds: null,
     },
   };
@@ -430,6 +431,7 @@ describe("CommandHandler routing + acks", () => {
         title: "Current Movie",
         requesterId: uid(REQUESTER),
         kind: "file",
+        sourceId: "file:Current Movie",
         durationSeconds: null,
         chapters: [
           { index: 1, title: "Intro", startSeconds: 30, endSeconds: 90 },
@@ -532,6 +534,7 @@ describe("CommandHandler permissions", () => {
           requesterId: uid(OTHER),
           chapters: [],
           kind: "search",
+          sourceId: "search:Item A",
           durationSeconds: null,
         },
       ],
@@ -688,6 +691,7 @@ function viewWithChapters(requesterId: string): PlaybackView {
       title: "Current Movie",
       requesterId: uid(requesterId),
       kind: "file",
+      sourceId: "file:Current Movie",
       durationSeconds: null,
       chapters: [
         { index: 1, title: "Intro", startSeconds: 0, endSeconds: 90 },

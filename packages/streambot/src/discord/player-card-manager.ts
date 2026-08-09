@@ -38,23 +38,31 @@ export type CardOwner = {
   readonly voiceChannelId: ChannelId;
 };
 
+/**
+ * Outcome of editing a card. The three cases need different handling, which is why this isn't a
+ * boolean: `gone` means re-post, while `failed` (a transient 5xx, a rate limit) must NOT be cached
+ * as delivered or an unchanged later render would skip the retry and strand a stale card.
+ */
+export type CardEditResult = "ok" | "gone" | "failed";
+
 /** The Discord side-effects the manager needs. Implemented by `player-card-message.ts`. */
 export type PlayerCardPort = {
   /**
-   * Post a card and register `owner` against the new message id for click routing. Resolves with
-   * the message id, or null when the channel is missing or unsendable.
+   * Post a card. A non-null `owner` registers the new message id for click routing; `null` posts a
+   * message with no controls to route (the legacy announcement used when the card is disabled), so
+   * the routing table doesn't accumulate entries nothing will ever clean up. Resolves with the
+   * message id, or null when the channel is missing or unsendable.
    */
   post: (
     channelId: ChannelId,
     payload: PlayerCardPayload,
-    owner: CardOwner,
+    owner: CardOwner | null,
   ) => Promise<string | null>;
-  /** Edit a card in place. Resolves false when the message is gone (deleted by a moderator). */
   edit: (
     channelId: ChannelId,
     messageId: string,
     payload: PlayerCardPayload,
-  ) => Promise<boolean>;
+  ) => Promise<CardEditResult>;
   /** Drop a card's components and unregister it, leaving the message as history. */
   strip: (channelId: ChannelId, messageId: string) => Promise<void>;
   /** Delete a card outright and unregister it. */
@@ -74,7 +82,7 @@ export type PlayerCardPort = {
  */
 export const NOOP_CARD_PORT: PlayerCardPort = {
   post: () => Promise.resolve(null),
-  edit: () => Promise.resolve(false),
+  edit: () => Promise.resolve("gone"),
   strip: () => Promise.resolve(),
   remove: () => Promise.resolve(),
   register: () => {
@@ -157,17 +165,24 @@ export class PlayerCardManager {
       return;
     }
     const view = this.deps.view();
-    const nowKey =
-      view.state === "streaming" && view.current !== null
-        ? view.current.title
-        : null;
+    const streaming =
+      view.state === "streaming" && view.current !== null ? view.current : null;
 
-    if (nowKey !== null && nowKey !== this.trackKey) {
-      this.beginTrack(nowKey, view);
+    if (streaming !== null && streaming.sourceId !== this.trackKey) {
+      this.beginTrack(streaming.sourceId, streaming.title, view);
       return;
     }
     if (this.trackKey === null) {
       // Nothing has started streaming yet — there is no card to keep up to date.
+      return;
+    }
+    // Playback has moved on to the NEXT item but it hasn't started streaming yet (the machine
+    // exposes it as `current` while resolving). Re-rendering now would rewrite this card with the
+    // next track's title, and `beginTrack` would then strip that rewritten card and post another —
+    // leaving two cards for the new track and none for the old. Leave the card alone until the new
+    // item actually starts. `current === null` (waiting/idle/leaving) still renders, so the card
+    // reflects the session going quiet.
+    if (view.current !== null && view.current.sourceId !== this.trackKey) {
       return;
     }
     this.enqueue(() => this.renderExisting(this.deps.view()));
@@ -226,27 +241,53 @@ export class PlayerCardManager {
     const payload = this.render(this.deps.view());
     this.enqueue(async () => {
       // The finished payload already carries no components, so this single edit both retires the
-      // controls and states the outcome. Routing is dropped separately — the message stays as history.
-      await this.deps.port.edit(channelId, messageId, payload);
+      // controls and states the outcome. Routing is dropped either way — the message stays as history.
+      const result = await this.deps.port.edit(channelId, messageId, payload);
+      if (result === "failed") {
+        // The full edit didn't land and there is no session left to retry it, which would leave
+        // live-looking buttons on a dead card. Fall back to the smaller components-only edit.
+        await this.deps.port.strip(channelId, messageId);
+        return;
+      }
       this.deps.port.unregister(messageId);
     });
     await this.tail;
   }
 
-  /** A brand-new title started streaming: retire the old card and post a fresh one. */
-  private beginTrack(nowKey: string, view: PlaybackView): void {
+  /** A brand-new item started streaming: retire the old card and post a fresh one. */
+  private beginTrack(
+    sourceId: string,
+    title: string,
+    view: PlaybackView,
+  ): void {
     const previousMessageId = this.messageId;
-    this.trackKey = nowKey;
+    this.trackKey = sourceId;
     this.posterUrl = null;
     this.lastPayloadJson = null;
     this.messageId = null;
     this.messagesSinceCard = 0;
-    this.startPosterLookup(nowKey, view);
 
     const channelId = this.deps.statusChannelId;
     if (channelId === null) {
       return;
     }
+
+    if (!this.deps.enabled) {
+      // Legacy announcement: exactly one message per track, never edited. The poster therefore has
+      // to be in hand *before* posting — the card path attaches it with a later edit, which this
+      // mode has no message to perform. This mirrors the pre-card `StatusReporter` behavior.
+      this.enqueue(async () => {
+        const posterUrl = await this.lookupPoster(sourceId, title, view);
+        if (this.trackKey !== sourceId) {
+          return;
+        }
+        this.posterUrl = posterUrl;
+        await this.postCard(channelId, view);
+      });
+      return;
+    }
+
+    this.startPosterLookup(sourceId, title, view);
     this.enqueue(async () => {
       if (previousMessageId !== null) {
         await this.deps.port.strip(channelId, previousMessageId);
@@ -256,27 +297,49 @@ export class PlayerCardManager {
   }
 
   /**
-   * Best-effort TMDB poster for a local file. The lookup outlives the track when playback moves on,
-   * so the result is discarded unless the track it was requested for is still the live one —
-   * otherwise a slow lookup would paste the previous movie's poster onto the current card.
+   * Best-effort TMDB poster for a local file, or null when none applies. Never throws — a missing
+   * poster is cosmetic and must not break the card.
    */
-  private startPosterLookup(nowKey: string, view: PlaybackView): void {
+  private async lookupPoster(
+    sourceId: string,
+    trackTitle: string,
+    view: PlaybackView,
+  ): Promise<string | null> {
     const fetchPoster = this.deps.fetchPoster;
     if (fetchPoster === undefined || view.current?.kind !== "file") {
-      return;
+      return null;
     }
+    const { title, year } = parseTitleYear(trackTitle);
+    try {
+      const poster = await fetchPoster(title, year);
+      return this.trackKey === sourceId ? (poster?.posterUrl ?? null) : null;
+    } catch (error) {
+      log.warn("poster lookup failed", {
+        sourceId,
+        error: getErrorMessage(error),
+      });
+      return null;
+    }
+  }
+
+  /**
+   * Kick off the poster lookup for the live card and fold the result in when it lands. The lookup
+   * outlives the track when playback moves on, so the result is discarded unless the item it was
+   * requested for is still the live one — otherwise a slow lookup would paste the previous movie's
+   * poster onto the current card.
+   */
+  private startPosterLookup(
+    sourceId: string,
+    title: string,
+    view: PlaybackView,
+  ): void {
     void (async () => {
-      const { title, year } = parseTitleYear(nowKey);
-      try {
-        const poster = await fetchPoster(title, year);
-        if (poster === null || this.trackKey !== nowKey || this.finished) {
-          return;
-        }
-        this.posterUrl = poster.posterUrl;
-        this.refresh();
-      } catch (error) {
-        log.warn("poster lookup failed", { error: getErrorMessage(error) });
+      const posterUrl = await this.lookupPoster(sourceId, title, view);
+      if (posterUrl === null || this.trackKey !== sourceId || this.finished) {
+        return;
       }
+      this.posterUrl = posterUrl;
+      this.refresh();
     })();
   }
 
@@ -294,8 +357,13 @@ export class PlayerCardManager {
     view: PlaybackView,
   ): Promise<void> {
     const payload = this.render(view);
-    const posted = await this.deps.port.post(channelId, payload, this.owner);
-    // With the card disabled these are one-shot plain announcements — nothing to edit or track.
+    // A disabled card is a one-shot announcement with no controls: post it unowned so the routing
+    // table doesn't collect entries that nothing will ever clean up, and don't track it for edits.
+    const posted = await this.deps.port.post(
+      channelId,
+      payload,
+      this.deps.enabled ? this.owner : null,
+    );
     if (!this.deps.enabled) {
       return;
     }
@@ -315,9 +383,15 @@ export class PlayerCardManager {
     if (json === this.lastPayloadJson) {
       return;
     }
-    const edited = await this.deps.port.edit(channelId, messageId, payload);
-    if (edited) {
+    const result = await this.deps.port.edit(channelId, messageId, payload);
+    if (result === "ok") {
       this.lastPayloadJson = json;
+      return;
+    }
+    if (result === "failed") {
+      // Transient (rate limit / 5xx). Deliberately do NOT cache `json`: caching an undelivered
+      // payload would make the next identical render a no-op and strand the card showing stale
+      // state forever — which is exactly what happens with ticking off or a stationary view.
       return;
     }
     // The card was deleted out from under us; put a fresh one back so controls stay reachable.

@@ -27,6 +27,7 @@ import type {
   SelectSpec,
 } from "@shepherdjerred/streambot/discord/player-card.ts";
 import type {
+  CardEditResult,
   CardOwner,
   PlayerCardPort,
 } from "@shepherdjerred/streambot/discord/player-card-manager.ts";
@@ -147,7 +148,7 @@ export class PlayerCardMessenger implements PlayerCardPort {
   async post(
     channelId: ChannelId,
     payload: PlayerCardPayload,
-    owner: CardOwner,
+    owner: CardOwner | null,
   ): Promise<string | null> {
     try {
       const channel = await this.client.channels.fetch(channelId);
@@ -155,7 +156,11 @@ export class PlayerCardMessenger implements PlayerCardPort {
         return null;
       }
       const message = await channel.send(toMessagePayload(payload));
-      this.register(message.id, owner);
+      // A null owner means the message carries no controls (the legacy announcement), so there is
+      // nothing to route and registering it would leak an entry nothing ever removes.
+      if (owner !== null) {
+        this.register(message.id, owner);
+      }
       return message.id;
     } catch (error) {
       log.warn("posting player card failed", {
@@ -170,26 +175,26 @@ export class PlayerCardMessenger implements PlayerCardPort {
     channelId: ChannelId,
     messageId: string,
     payload: PlayerCardPayload,
-  ): Promise<boolean> {
+  ): Promise<CardEditResult> {
     try {
       const message = await this.fetchMessage(channelId, messageId);
       if (message === null) {
-        return false;
+        return "gone";
       }
       await message.edit(toMessagePayload(payload));
-      return true;
+      return "ok";
     } catch (error) {
       if (isUnknownMessageError(error)) {
         this.owners.delete(messageId);
-        return false;
+        return "gone";
       }
       log.warn("editing player card failed", {
         channelId,
         error: getErrorMessage(error),
       });
-      // Not a "message is gone" failure (rate limit, transient 5xx) — keep the card and retry on
-      // the next tick rather than orphaning it with a re-post.
-      return true;
+      // A rate limit or transient 5xx: the card still exists, so don't orphan it with a re-post —
+      // but report the failure so the caller retries instead of caching an undelivered payload.
+      return "failed";
     }
   }
 

@@ -219,9 +219,9 @@ async function waitForAsync(
 /** Records player-card posts so tests can assert a card reached the right channel. */
 function recordingCardPort(): {
   port: PlayerCardPort;
-  posts: { channelId: string; owner: CardOwner }[];
+  posts: { channelId: string; owner: CardOwner | null }[];
 } {
-  const posts: { channelId: string; owner: CardOwner }[] = [];
+  const posts: { channelId: string; owner: CardOwner | null }[] = [];
   let nextId = 0;
   return {
     posts,
@@ -231,7 +231,7 @@ function recordingCardPort(): {
         nextId += 1;
         return Promise.resolve(`card-${String(nextId)}`);
       },
-      edit: () => Promise.resolve(true),
+      edit: () => Promise.resolve("ok"),
       strip: () => Promise.resolve(),
       remove: () => Promise.resolve(),
       register: () => {
@@ -543,7 +543,7 @@ async function makeReconnectConfig(
 /** Start a session in CHANNEL_A and wait until it is streaming (its player card is posted). */
 async function startStreaming(
   manager: SessionManager,
-  cards: { posts: { channelId: string; owner: CardOwner }[] },
+  cards: { posts: { channelId: string; owner: CardOwner | null }[] },
 ): Promise<void> {
   const handle = manager.ensureForPlay({
     guildId: GUILD,

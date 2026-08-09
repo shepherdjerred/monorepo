@@ -8,9 +8,7 @@ import {
   type MessageComponentInteraction,
   MessageFlags,
   type User,
-  type VoiceState,
 } from "discord.js";
-import { countRealViewers } from "@shepherdjerred/discord-stream-lifecycle/viewer-presence";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import { CommandHandler } from "@shepherdjerred/streambot/discord/command-handler.ts";
 import {
@@ -18,6 +16,7 @@ import {
   adaptCommandInteraction,
 } from "@shepherdjerred/streambot/discord/interaction-adapters.ts";
 import { registerGlobalCommands } from "@shepherdjerred/streambot/discord/command-registration.ts";
+import { VoiceTopologyWatcher } from "@shepherdjerred/streambot/discord/voice-topology.ts";
 import { PlayerCardMessenger } from "@shepherdjerred/streambot/discord/player-card-message.ts";
 import {
   PlayerCardRouter,
@@ -36,7 +35,6 @@ import {
   ChannelIdSchema,
   GuildIdSchema,
   type ChannelId,
-  type GuildId,
 } from "@shepherdjerred/streambot/types/ids.ts";
 import {
   getErrorMessage,
@@ -50,10 +48,6 @@ import {
 } from "@shepherdjerred/streambot/discord/client-events.ts";
 
 const log = logger.child("command-bot");
-// Grace period before leaving an empty voice channel, so a brief solo moment or a reconnect
-// blip doesn't drop playback (and an unattended e2e can stream to an empty channel).
-const ALONE_GRACE_MS = 30_000;
-
 /** Subcommands that start (or join) a session in the issuer's current voice channel. */
 const PLAY_SUBCOMMANDS = new Set(["play", "playnext"]);
 /** Subcommands answerable without a playback session (library/yt-dlp lookups + static help). */
@@ -76,14 +70,6 @@ export type CommandBotDeps = {
   ) => Promise<ResolvedSource>;
 };
 
-function parseVoiceChannelId(raw: string | null): ChannelId | null {
-  if (raw === null) {
-    return null;
-  }
-  const parsed = ChannelIdSchema.safeParse(raw);
-  return parsed.success ? parsed.data : null;
-}
-
 /**
  * The discord.js (bot-token) command bot. Registers global slash commands and routes each
  * interaction to the right per-`(guild, voice channel)` session via the {@link SessionManager}.
@@ -94,11 +80,8 @@ export class CommandBot {
   /** Player-card Discord effects + the message → session routing table. Handed to SessionManager. */
   readonly cards: PlayerCardMessenger;
   private readonly cardRouter: PlayerCardRouter;
-  /** Pending "leave empty VC" timers, keyed by `guildId:channelId`. */
-  private readonly aloneTimers = new Map<
-    string,
-    ReturnType<typeof setTimeout>
-  >();
+  /** Streamer-move / empty-channel handling for `voiceStateUpdate`. */
+  private readonly voiceTopology: VoiceTopologyWatcher;
   /** Resolves once the bot is logged in and its slash commands are registered; rejects on failure. */
   readonly ready: Promise<void>;
 
@@ -132,6 +115,10 @@ export class CommandBot {
       openSubtitlePicker: (interaction, handle) =>
         this.openSubtitlePicker(interaction, handle),
     });
+    this.voiceTopology = new VoiceTopologyWatcher({
+      getSessions: () => this.deps.getSessions(),
+      peerUserbotIds: deps.config.discord.peerUserbotIds,
+    });
     this.ready = new Promise<void>((resolve, reject) => {
       this.client.once(Events.ClientReady, (ready) => {
         void this.registerThenSettle(ready.application.id, resolve, reject);
@@ -152,7 +139,7 @@ export class CommandBot {
       this.onChannelMessage(message);
     });
     this.client.on(Events.VoiceStateUpdate, (oldState, newState) => {
-      this.onVoiceStateUpdate(oldState, newState);
+      this.voiceTopology.handle(oldState, newState);
     });
     registerTopologyListeners(this.client, () => this.deps.getSessions());
     registerGatewayHealthListeners(this.client);
@@ -166,10 +153,7 @@ export class CommandBot {
   }
 
   async destroy(): Promise<void> {
-    for (const timer of this.aloneTimers.values()) {
-      clearTimeout(timer);
-    }
-    this.aloneTimers.clear();
+    this.voiceTopology.clearAll();
     await this.client.destroy();
   }
 
@@ -195,6 +179,14 @@ export class CommandBot {
   private onChannelMessage(message: Message): void {
     const channelId = ChannelIdSchema.safeParse(message.channelId);
     if (!channelId.success) {
+      return;
+    }
+    // Never let a player card count as traffic burying another player card. Sessions sharing a
+    // status channel each see every other session's card post, so counting them would let N cards
+    // feed each other's thresholds into a self-sustaining delete/re-post loop (six cards at the
+    // default threshold of 5; two at a threshold of 1). Ordinary bot notices — crash, stop reason —
+    // do genuinely push cards down the channel, so those still count.
+    if (this.cards.ownerOf(message.id) !== null) {
       return;
     }
     this.deps
@@ -341,164 +333,6 @@ export class CommandBot {
     await this.buildHandler(handle, invoked.success ? invoked.data : null).run(
       adaptCardInteraction(interaction, "subtitles"),
     );
-  }
-
-  private onVoiceStateUpdate(oldState: VoiceState, newState: VoiceState): void {
-    const guildId = GuildIdSchema.safeParse(newState.guild.id);
-    if (!guildId.success) {
-      return;
-    }
-    const oldChannelId = parseVoiceChannelId(oldState.channelId);
-    const newChannelId = parseVoiceChannelId(newState.channelId);
-    if (
-      this.handleStreamerVoiceTopology(
-        guildId.data,
-        newState.id,
-        oldChannelId,
-        newChannelId,
-      )
-    ) {
-      return;
-    }
-
-    const candidates = new Set<ChannelId>();
-    if (oldChannelId !== null) {
-      candidates.add(oldChannelId);
-    }
-    if (newChannelId !== null) {
-      candidates.add(newChannelId);
-    }
-    for (const channelId of candidates) {
-      const meta = this.deps
-        .getSessions()
-        .activeSessionByChannel(guildId.data, channelId);
-      if (meta === null) {
-        continue;
-      }
-      this.evaluateChannelOccupancy(
-        guildId.data,
-        channelId,
-        newState,
-        meta.userId,
-      );
-    }
-  }
-
-  private handleStreamerVoiceTopology(
-    guildId: GuildId,
-    userId: string,
-    oldChannelId: ChannelId | null,
-    newChannelId: ChannelId | null,
-  ): boolean {
-    const sessions = this.deps.getSessions();
-    const oldMeta =
-      oldChannelId === null
-        ? null
-        : sessions.activeSessionByChannel(guildId, oldChannelId);
-    const newMeta =
-      newChannelId === null
-        ? null
-        : sessions.activeSessionByChannel(guildId, newChannelId);
-    if (oldMeta?.userId !== userId && newMeta?.userId !== userId) {
-      return false;
-    }
-
-    if (
-      oldChannelId !== null &&
-      newChannelId !== null &&
-      oldChannelId !== newChannelId
-    ) {
-      // Clearing the source timer is always safe: this session is leaving oldChannelId (and on a
-      // collision it gets torn down). The destination timer must only be cleared on a SUCCESSFUL
-      // move — if moveSession returns false because newChannelId already hosts a different session,
-      // clearing its timer would strand that surviving session (alone but never leaving).
-      this.clearAloneTimer(`${guildId}:${oldChannelId}`);
-      const moved = sessions.moveSession({
-        guildId,
-        fromChannelId: oldChannelId,
-        toChannelId: newChannelId,
-      });
-      if (moved) {
-        this.clearAloneTimer(`${guildId}:${newChannelId}`);
-      }
-      return true;
-    }
-
-    if (oldChannelId !== null && newChannelId === null) {
-      this.clearAloneTimer(`${guildId}:${oldChannelId}`);
-      log.warn("streamer voice state went null — notifying session manager", {
-        guildId,
-        channelId: oldChannelId,
-      });
-      // The session manager classifies the loss (kick vs transient) via the voice ws close code
-      // and decides whether to stay down or reconnect-with-resume.
-      sessions.notifyStreamerDetached({ guildId, channelId: oldChannelId });
-      return true;
-    }
-
-    if (newChannelId !== null) {
-      this.clearAloneTimer(`${guildId}:${newChannelId}`);
-    }
-    return true;
-  }
-
-  private evaluateChannelOccupancy(
-    guildId: GuildId,
-    channelId: ChannelId,
-    state: VoiceState,
-    streamerId: string | null,
-  ): void {
-    const channel = state.guild.channels.cache.get(channelId);
-    if (channel?.isVoiceBased() !== true) {
-      return;
-    }
-    const voiceStates = channel.guild.voiceStates.cache;
-    const humanCount = countRealViewers(
-      channel.members.map((member) => {
-        const memberState = voiceStates.get(member.id);
-        return {
-          id: member.id,
-          isBot: member.user.bot,
-          streaming: memberState?.streaming ?? false,
-          selfDeaf: memberState?.selfDeaf ?? false,
-          selfMute: memberState?.selfMute ?? false,
-        };
-      }),
-      {
-        selfUserId: streamerId,
-        peerUserbotIds: this.deps.config.discord.peerUserbotIds,
-      },
-    );
-    const key = `${guildId}:${channelId}`;
-    if (humanCount > 0) {
-      this.clearAloneTimer(key);
-      return;
-    }
-    if (this.aloneTimers.has(key)) {
-      return;
-    }
-    // Alone in the VC. Leave after a grace period (cancelled if a human (re)joins), rather than
-    // dropping playback the instant the channel empties.
-    const timer = setTimeout(() => {
-      this.aloneTimers.delete(key);
-      log.info("voice channel empty for grace period — stopping", {
-        guildId,
-        channelId,
-      });
-      this.deps
-        .getSessions()
-        .getExisting(guildId, channelId)
-        ?.dispatch({ type: "STOP" });
-    }, ALONE_GRACE_MS);
-    this.aloneTimers.set(key, timer);
-  }
-
-  private clearAloneTimer(key: string): void {
-    const timer = this.aloneTimers.get(key);
-    if (timer !== undefined) {
-      clearTimeout(timer);
-      this.aloneTimers.delete(key);
-    }
   }
 
   private async safeHandle(

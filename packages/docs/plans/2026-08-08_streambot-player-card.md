@@ -76,9 +76,10 @@ drags the streamer to another voice channel.
 
 Notable modifications:
 
-- `machine/view.ts` + `discord/queue-text.ts` — `QueueItemView` gains `kind` and
-  `durationSeconds` (the latter from `context.resolved`), needed for the
-  progress bar and for gating poster lookups to local files.
+- `machine/view.ts` + `discord/queue-text.ts` — `QueueItemView` gains `kind`,
+  `sourceId`, and `durationSeconds`: the progress bar needs the duration, poster
+  lookups are gated to local files by kind, and the card's lifecycle keys on the
+  source identity rather than the display title.
 - `discord/status-reporter.ts` — the now-playing branch and its poster fetch
   moved to the card. The reporter keeps only one-shot notices (preparing,
   crash/retry, stop reason, adult-source shaming). `Announcement` collapsed to
@@ -108,3 +109,27 @@ asserting the reporter no longer announces playback at all.
 
 Live verification runs against the dedicated test guild described in
 `packages/streambot/AGENTS.md`, never the production `streambot-config` guild.
+
+## Review findings folded in
+
+The first CI review pass surfaced six real defects in the initial implementation,
+all fixed with regression tests:
+
+- **Card re-post feedback loop (P1).** Sessions sharing a status channel each saw
+  the others' card posts and counted them as burying traffic, so N cards could
+  drive a self-sustaining delete/re-post cycle. `command-bot.ts` now excludes any
+  message that is itself a registered card.
+- **Old card rewritten with the next track's title (P2).** The machine exposes the
+  next item as `current` while resolving, which made the card render the new title
+  into the old card and then post a second card for it. The lifecycle now keys on
+  `sourceId` and leaves the card alone until the new item actually streams. This
+  also gives two same-titled files their own cards.
+- **Transient edit failures cached as delivered (P2).** `edit` returned a boolean,
+  so a rate limit or 5xx looked like success and the undelivered payload was
+  cached — permanently stranding a stale card. `CardEditResult` now distinguishes
+  `ok` / `gone` / `failed`, and `finalize()` falls back to `strip()` on `failed`.
+- **Disabled-mode routing leak.** Legacy announcements were registered for click
+  routing and never unregistered. They now post unowned.
+- **Disabled-mode posters dropped.** Moving now-playing off `StatusReporter` meant
+  posters could never reach the legacy announcement, which is never edited. That
+  path now awaits the lookup before posting, matching the old behavior.

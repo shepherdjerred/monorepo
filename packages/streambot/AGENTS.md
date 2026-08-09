@@ -98,11 +98,20 @@ verification).
   Admin-only: stop. Seek/volume are intentionally looser here than `/stream seek` — pressing a
   button while sitting in the channel is more visible than typing a command from anywhere in the
   server. The slash gates are unchanged; don't "fix" the asymmetry without deciding which way.
-- **Lifecycle** (`discord/player-card-manager.ts`): a new card is posted when a _different_ title
-  reaches `streaming`; the old one keeps its text but loses its controls. Non-streaming states
-  (joining, a crash retry, a subtitle-change restart) re-render the same card rather than replacing
-  it. An edit is skipped when the rendered payload is byte-identical. Teardown calls `finalize()`,
-  which renders a control-less final card.
+- **Lifecycle** (`discord/player-card-manager.ts`) keys on `QueueItemView.sourceId`
+  (`sourceIdentity()`), **not** the display title. A new card is posted when a _different source_
+  reaches `streaming`; the old one keeps its text but loses its controls. Two files sharing a title
+  therefore get their own cards, and a title that changes as a source resolves doesn't look like a
+  new track. Non-streaming states for the _same_ source (a crash retry, a subtitle-change restart)
+  re-render the existing card. When the machine has moved on to the **next** item but it hasn't
+  started streaming, the card is left untouched — re-rendering there would rewrite the old card with
+  the new title and then post a second card for it, leaving two cards for one track and none for the
+  other. Teardown calls `finalize()`, which renders a control-less final card.
+- **Edits are three-valued** (`CardEditResult`): `ok` caches the payload so an identical re-render
+  skips the REST call; `gone` (10008) re-posts; `failed` (rate limit, 5xx) must **not** be cached —
+  caching an undelivered payload makes the next identical render a no-op and strands the card
+  showing stale state forever. `finalize()` falls back to `strip()` on `failed` so a dead session
+  never keeps live-looking buttons.
 - **Click routing** is a message-id → `(guild, voice channel)` table in `PlayerCardMessenger`, not
   ids baked into the `customId`: a card outlives every interaction token, so a click hours later
   carries only `interaction.message.id`. Unknown message → "That player card is no longer active."
@@ -110,11 +119,16 @@ verification).
   Ids are namespaced `sb:v1:` so the router leaves `pagination.ts`'s `page_*` collectors alone.
 - **Re-posting**: the bot holds the non-privileged `GuildMessages` intent (message _content_ is not
   requested) purely to count messages landing beneath the card; past the threshold the card is
-  deleted and re-posted at the bottom so controls stay reachable in a chatty channel.
+  deleted and re-posted at the bottom so controls stay reachable in a chatty channel. `command-bot.ts`
+  excludes any message that is itself a registered card (`cards.ownerOf(id) !== null`) — sessions
+  sharing a status channel see each other's card posts, and counting them lets N cards feed each
+  other's thresholds into a self-sustaining delete/re-post loop. Ordinary bot notices still count.
 - **Config**: `PLAYER_CARD_ENABLED` (default true; false restores the plain `▶️ Now playing …`
   announcement with no components), `PLAYER_CARD_TICK_MS` (default `10000`, `0` disables ticking),
   `PLAYER_CARD_REPOST_AFTER_MESSAGES` (default `5`, `0` disables re-posting). Defaults are baked in,
-  so the homelab chart needs no new env wiring.
+  so the homelab chart needs no new env wiring. With the card disabled the manager posts **unowned**
+  (nothing to route, so the table can't leak) and **awaits the TMDB lookup before posting**, because
+  that mode never edits and so has no second chance to attach the poster.
 
 `StatusReporter` no longer announces now-playing — it is strictly one-shot notices (preparing,
 crash/retry, stop reason, adult shaming). Don't reintroduce a now-playing line there; it would
