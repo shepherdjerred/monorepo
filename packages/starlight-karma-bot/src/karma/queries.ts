@@ -7,9 +7,21 @@ import {
   type KarmaCount,
   type LeaderboardPeriod,
   periodStart,
+  rankGiverTotals,
   rankLeaderboard,
   type RankedEntry,
 } from "#src/karma/scoring.ts";
+
+const SYNTHETIC_LEGACY_REASON = "legacy karma";
+
+/** Ledger rows that represent a person deliberately giving someone else
+ * karma. Synthetic import balances preserve received totals but are not gifts. */
+function actualGiveFilter() {
+  return {
+    amount: { gt: 0 },
+    OR: [{ reason: null }, { reason: { not: SYNTHETIC_LEGACY_REASON } }],
+  };
+}
 
 function windowFilter(period: LeaderboardPeriod, now: Date) {
   const since = periodStart(period, now);
@@ -30,18 +42,33 @@ export async function getLeaderboard(params: {
   now?: Date;
 }): Promise<RankedEntry[]> {
   const now = params.now ?? new Date();
-  const column = params.kind === "received" ? "receiverId" : "giverId";
+  const window = windowFilter(params.period, now);
+  if (params.kind === "received") {
+    const rows = await prisma.karma.groupBy({
+      by: ["receiverId"],
+      where: { guildId: params.guildId, ...window },
+      _sum: { amount: true },
+      orderBy: { _sum: { amount: "desc" } },
+    });
+    const counts: KarmaCount[] = rows.map((row) => ({
+      id: row.receiverId,
+      karmaReceived: row._sum.amount ?? 0,
+    }));
+    return rankLeaderboard(counts);
+  }
+
   const rows = await prisma.karma.groupBy({
-    by: [column],
-    where: { guildId: params.guildId, ...windowFilter(params.period, now) },
+    by: ["giverId", "receiverId"],
+    where: { guildId: params.guildId, ...window, ...actualGiveFilter() },
     _sum: { amount: true },
-    orderBy: { _sum: { amount: "desc" } },
   });
-  const counts: KarmaCount[] = rows.map((row) => ({
-    id: row[column],
-    karmaReceived: row._sum.amount ?? 0,
-  }));
-  return rankLeaderboard(counts);
+  return rankGiverTotals(
+    rows.map((row) => ({
+      giverId: row.giverId,
+      receiverId: row.receiverId,
+      total: row._sum.amount ?? 0,
+    })),
+  );
 }
 
 export type PersonStats = {
@@ -66,7 +93,12 @@ export async function getPersonStats(
     }),
     prisma.karma.aggregate({
       _sum: { amount: true },
-      where: { guildId, giverId: userId },
+      where: {
+        guildId,
+        giverId: userId,
+        NOT: { receiverId: userId },
+        ...actualGiveFilter(),
+      },
     }),
     prisma.karma.findFirst({
       where: { guildId, receiverId: userId },
@@ -75,7 +107,12 @@ export async function getPersonStats(
     }),
     prisma.karma.groupBy({
       by: ["giverId"],
-      where: { guildId, receiverId: userId, NOT: { giverId: userId } },
+      where: {
+        guildId,
+        receiverId: userId,
+        NOT: { giverId: userId },
+        ...actualGiveFilter(),
+      },
       _sum: { amount: true },
       orderBy: { _sum: { amount: "desc" } },
       take: 1,
@@ -108,11 +145,21 @@ export async function getPairwiseExchange(
   const [viewerGave, otherGave] = await Promise.all([
     prisma.karma.aggregate({
       _sum: { amount: true },
-      where: { guildId, giverId: viewerId, receiverId: otherId },
+      where: {
+        guildId,
+        giverId: viewerId,
+        receiverId: otherId,
+        ...actualGiveFilter(),
+      },
     }),
     prisma.karma.aggregate({
       _sum: { amount: true },
-      where: { guildId, giverId: otherId, receiverId: viewerId },
+      where: {
+        guildId,
+        giverId: otherId,
+        receiverId: viewerId,
+        ...actualGiveFilter(),
+      },
     }),
   ]);
   return {
@@ -200,6 +247,7 @@ export async function findUndoableGive(params: {
       guildId: params.guildId,
       giverId: params.giverId,
       amount: { gt: 0 },
+      sourceMessageId: null,
       NOT: { receiverId: params.giverId },
       datetime: { gte: new Date(now.getTime() - params.withinMs) },
     },

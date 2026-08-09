@@ -127,7 +127,6 @@ export async function handleGiveKarmaModal(
     amount,
     guildId: interaction.guildId,
     reason,
-    sourceMessageId: target.messageId,
   });
 
   const total = totals.receiverTotalAfter;

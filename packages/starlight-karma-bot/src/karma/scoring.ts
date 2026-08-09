@@ -94,6 +94,44 @@ export function rankLeaderboard(counts: readonly KarmaCount[]): RankedEntry[] {
 export const LEADERBOARD_PERIODS = ["all", "year", "month"] as const;
 export type LeaderboardPeriod = (typeof LEADERBOARD_PERIODS)[number];
 
+export function parseLeaderboardPeriod(
+  value: string,
+): LeaderboardPeriod | null {
+  return LEADERBOARD_PERIODS.find((period) => period === value) ?? null;
+}
+
+export type GiverPairTotal = {
+  giverId: string;
+  receiverId: string;
+  total: number;
+};
+
+/** Merge positive giver/receiver groups into a deterministic generosity board.
+ * Self-awards are not generosity, even if malformed historical data contains a
+ * positive one. The query layer separately excludes synthetic legacy balances
+ * before passing its grouped rows here. */
+export function rankGiverTotals(
+  groups: readonly GiverPairTotal[],
+): RankedEntry[] {
+  const totals = new Map<string, number>();
+  for (const group of groups) {
+    if (group.giverId === group.receiverId || group.total <= 0) {
+      continue;
+    }
+    totals.set(group.giverId, (totals.get(group.giverId) ?? 0) + group.total);
+  }
+
+  const counts: KarmaCount[] = Array.from(totals, ([id, karmaReceived]) => ({
+    id,
+    karmaReceived,
+  })).sort(
+    (left, right) =>
+      right.karmaReceived - left.karmaReceived ||
+      left.id.localeCompare(right.id),
+  );
+  return rankLeaderboard(counts);
+}
+
 /** Inclusive lower bound for a period, or undefined for all-time.
  *  Pure, with `now` injected, so the boundaries are testable. */
 export function periodStart(

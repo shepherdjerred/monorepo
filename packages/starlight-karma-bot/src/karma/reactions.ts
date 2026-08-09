@@ -20,8 +20,18 @@ import * as Sentry from "@sentry/bun";
 import configuration from "#src/configuration.ts";
 import { KARMA_GIVE_AMOUNT } from "#src/karma/scoring.ts";
 import { crossedMilestone } from "#src/karma/milestones.ts";
+import { ReactionOperationQueue } from "#src/karma/reaction-operation-queue.ts";
 import { decideReactionAward, emojiMatchesKarma } from "#src/karma/rules.ts";
 import { recordKarma, revokeReactionKarma } from "#src/karma/store.ts";
+
+const reactionOperations = new ReactionOperationQueue();
+
+function reactionOperationKey(
+  reaction: MessageReaction | PartialMessageReaction,
+  user: User | PartialUser,
+): string {
+  return `${user.id}:${reaction.message.id}`;
+}
 
 /** Resolve the partials an *add* event may arrive with. Returns null when the
  *  reaction is not a karma reaction or cannot be resolved. */
@@ -38,7 +48,7 @@ async function resolveAdd(
   return full;
 }
 
-export async function handleReactionAdd(
+async function applyReactionAdd(
   reaction: MessageReaction | PartialMessageReaction,
   user: User | PartialUser,
 ): Promise<void> {
@@ -52,6 +62,7 @@ export async function handleReactionAdd(
     emojiMatches: true,
     guildId,
     reactorId: user.id,
+    reactorIsBot: user.bot,
     authorId: full.message.author?.id,
     authorIsBot: full.message.author?.bot ?? false,
   });
@@ -92,7 +103,16 @@ export async function handleReactionAdd(
   }
 }
 
-export async function handleReactionRemove(
+export async function handleReactionAdd(
+  reaction: MessageReaction | PartialMessageReaction,
+  user: User | PartialUser,
+): Promise<void> {
+  await reactionOperations.run(reactionOperationKey(reaction, user), () =>
+    applyReactionAdd(reaction, user),
+  );
+}
+
+async function applyReactionRemove(
   reaction: MessageReaction | PartialMessageReaction,
   user: User | PartialUser,
 ): Promise<void> {
@@ -111,6 +131,15 @@ export async function handleReactionRemove(
       `[Karma Reaction] ${user.id} revoked ${removed.toString()} karma award(s) on message ${reaction.message.id}`,
     );
   }
+}
+
+export async function handleReactionRemove(
+  reaction: MessageReaction | PartialMessageReaction,
+  user: User | PartialUser,
+): Promise<void> {
+  await reactionOperations.run(reactionOperationKey(reaction, user), () =>
+    applyReactionRemove(reaction, user),
+  );
 }
 
 /** Wrap a handler so a failure is reported rather than becoming an unhandled

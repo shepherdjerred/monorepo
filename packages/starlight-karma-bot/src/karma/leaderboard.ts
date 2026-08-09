@@ -16,7 +16,7 @@ import client from "#src/discord/client.ts";
 import { getLeaderboard } from "#src/karma/queries.ts";
 import {
   type LeaderboardKind,
-  LEADERBOARD_KINDS,
+  parseLeaderboardKind,
 } from "#src/karma/leaderboard-kinds.ts";
 import {
   decodeLeaderboardButtonId,
@@ -24,7 +24,7 @@ import {
 } from "#src/karma/rules.ts";
 import {
   formatLeaderboardLine,
-  LEADERBOARD_PERIODS,
+  parseLeaderboardPeriod,
   type LeaderboardPeriod,
   paginate,
   type RankedEntry,
@@ -35,14 +35,6 @@ const PERIOD_LABEL: Record<LeaderboardPeriod, string> = {
   year: "this year",
   month: "this month",
 };
-
-function parseKind(value: string): LeaderboardKind {
-  return LEADERBOARD_KINDS.find((kind) => kind === value) ?? "received";
-}
-
-function parsePeriod(value: string): LeaderboardPeriod {
-  return LEADERBOARD_PERIODS.find((period) => period === value) ?? "all";
-}
 
 async function displayNameFor(
   entry: RankedEntry,
@@ -155,8 +147,19 @@ export async function handleKarmaLeaderboard(
     return;
   }
 
-  const kind = parseKind(interaction.options.getString("type") ?? "received");
-  const period = parsePeriod(interaction.options.getString("period") ?? "all");
+  const kind = parseLeaderboardKind(
+    interaction.options.getString("type") ?? "received",
+  );
+  const period = parseLeaderboardPeriod(
+    interaction.options.getString("period") ?? "all",
+  );
+  if (kind === null || period === null) {
+    await interaction.editReply({
+      content:
+        "That leaderboard view is not valid. Run /karma leaderboard again.",
+    });
+    return;
+  }
 
   const view = await render({
     guildId: interaction.guildId,
@@ -180,12 +183,23 @@ export async function handleLeaderboardButton(
     return true;
   }
 
+  const kind = parseLeaderboardKind(target.kind);
+  const period = parseLeaderboardPeriod(target.period);
+  if (kind === null || period === null) {
+    await interaction.reply({
+      content:
+        "That leaderboard button is no longer valid. Run /karma leaderboard again.",
+      flags: MessageFlags.Ephemeral,
+    });
+    return true;
+  }
+
   await interaction.deferUpdate();
   const view = await render({
     guildId: interaction.guildId,
     viewerId: interaction.user.id,
-    kind: parseKind(target.kind),
-    period: parsePeriod(target.period),
+    kind,
+    period,
     page: target.page,
   });
   await interaction.editReply(view);

@@ -7,7 +7,9 @@ import {
   KARMA_GIVE_AMOUNT,
   paginate,
   parseKarmaAmount,
+  parseLeaderboardPeriod,
   periodStart,
+  rankGiverTotals,
   rankLeaderboard,
   type KarmaCount,
 } from "./scoring.ts";
@@ -29,6 +31,16 @@ describe("periodStart", () => {
     expect(periodStart("month", now)?.toISOString()).toBe(
       "2026-08-01T00:00:00.000Z",
     );
+  });
+});
+
+describe("parseLeaderboardPeriod", () => {
+  test.each(["all", "year", "month"])("accepts %s", (period) => {
+    expect(parseLeaderboardPeriod(period)).toBe(period);
+  });
+
+  test.each(["", "weekly", "ALL"])("rejects %p", (period) => {
+    expect(parseLeaderboardPeriod(period)).toBeNull();
   });
 });
 
@@ -156,6 +168,35 @@ describe("rankLeaderboard", () => {
     ];
 
     expect(rankLeaderboard(counts).map((e) => e.rank)).toEqual([1, 1, 2]);
+  });
+});
+
+describe("rankGiverTotals", () => {
+  test("combines real gifts while excluding self entries and penalties", () => {
+    expect(
+      rankGiverTotals([
+        { giverId: "alice", receiverId: "bob", total: 2 },
+        { giverId: "alice", receiverId: "carol", total: 3 },
+        { giverId: "alice", receiverId: "alice", total: 9 },
+        { giverId: "bob", receiverId: "bob", total: -3 },
+        { giverId: "bob", receiverId: "alice", total: 4 },
+      ]),
+    ).toEqual([
+      { id: "alice", karmaReceived: 5, rank: 1 },
+      { id: "bob", karmaReceived: 4, rank: 2 },
+    ]);
+  });
+
+  test("orders tied totals deterministically by giver id", () => {
+    expect(
+      rankGiverTotals([
+        { giverId: "zeta", receiverId: "one", total: 2 },
+        { giverId: "alpha", receiverId: "two", total: 2 },
+      ]),
+    ).toEqual([
+      { id: "alpha", karmaReceived: 2, rank: 1 },
+      { id: "zeta", karmaReceived: 2, rank: 1 },
+    ]);
   });
 });
 

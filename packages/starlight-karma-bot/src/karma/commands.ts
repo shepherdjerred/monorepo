@@ -255,21 +255,9 @@ async function handleKarmaUndo(interaction: ChatInputCommandInteraction) {
   });
 }
 
-async function handleKarmaConfig(interaction: ChatInputCommandInteraction) {
-  const guildId = await requireGuild(interaction, "Karma config");
-  if (guildId === null) {
-    return;
-  }
-  if (
-    interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild) !== true
-  ) {
-    await interaction.reply({
-      content: "You need the Manage Server permission to change karma config.",
-      flags: MessageFlags.Ephemeral,
-    });
-    return;
-  }
-
+async function readRecapConfigOptions(
+  interaction: ChatInputCommandInteraction,
+) {
   const channel = interaction.options.getChannel("channel");
   const enabled = interaction.options.getBoolean("enabled");
   const cron = interaction.options.getString("cron");
@@ -281,17 +269,39 @@ async function handleKarmaConfig(interaction: ChatInputCommandInteraction) {
       content: `${inlineCode(cron)} is not a valid CRON expression.`,
       flags: MessageFlags.Ephemeral,
     });
-    return;
+    return null;
   }
   if (channel !== null && channel.type !== ChannelType.GuildText) {
     await interaction.reply({
       content: "The recap channel must be a text channel.",
       flags: MessageFlags.Ephemeral,
     });
+    return null;
+  }
+  return { channel, enabled, cron };
+}
+
+async function updateKarmaConfig(
+  interaction: ChatInputCommandInteraction,
+  guildId: string,
+): Promise<void> {
+  const options = await readRecapConfigOptions(interaction);
+  if (options === null) {
+    return;
+  }
+  const { channel, enabled, cron } = options;
+
+  const existing = await prisma.guildConfig.findUnique({ where: { guildId } });
+  const nextChannelId = channel?.id ?? existing?.recapChannelId ?? null;
+  const nextEnabled = enabled ?? existing?.enabled ?? false;
+  if (nextEnabled && nextChannelId === null) {
+    await interaction.reply({
+      content: "Set a recap channel before enabling recaps.",
+      flags: MessageFlags.Ephemeral,
+    });
     return;
   }
 
-  const existing = await prisma.guildConfig.findUnique({ where: { guildId } });
   const nextCron = cron ?? existing?.recapCron ?? DEFAULT_RECAP_CRON;
   const data = {
     ...(channel === null ? {} : { recapChannelId: channel.id }),
@@ -320,6 +330,24 @@ async function handleKarmaConfig(interaction: ChatInputCommandInteraction) {
       .join("\n"),
     flags: MessageFlags.Ephemeral,
   });
+}
+
+async function handleKarmaConfig(interaction: ChatInputCommandInteraction) {
+  const guildId = await requireGuild(interaction, "Karma config");
+  if (guildId === null) {
+    return;
+  }
+  if (
+    interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild) !== true
+  ) {
+    await interaction.reply({
+      content: "You need the Manage Server permission to change karma config.",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  await updateKarmaConfig(interaction, guildId);
 }
 
 async function handleKarmaHistory(interaction: ChatInputCommandInteraction) {

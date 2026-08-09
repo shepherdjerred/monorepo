@@ -5,3 +5,7 @@
 export const LEADERBOARD_KINDS = ["received", "given"] as const;
 
 export type LeaderboardKind = (typeof LEADERBOARD_KINDS)[number];
+
+export function parseLeaderboardKind(value: string): LeaderboardKind | null {
+  return LEADERBOARD_KINDS.find((kind) => kind === value) ?? null;
+}

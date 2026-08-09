@@ -7,6 +7,17 @@ import {
   encodeLeaderboardButtonId,
   encodeModalId,
 } from "./rules.ts";
+import { parseLeaderboardKind } from "./leaderboard-kinds.ts";
+
+describe("parseLeaderboardKind", () => {
+  test.each(["received", "given"])("accepts %s", (kind) => {
+    expect(parseLeaderboardKind(kind)).toBe(kind);
+  });
+
+  test.each(["", "generous", "RECEIVED"])("rejects %p", (kind) => {
+    expect(parseLeaderboardKind(kind)).toBeNull();
+  });
+});
 
 describe("leaderboard button id round-trip", () => {
   test("carries the whole view through the custom id", () => {
@@ -61,6 +72,7 @@ describe("decideReactionAward", () => {
     emojiMatches: true,
     guildId: "guild",
     reactorId: "reactor",
+    reactorIsBot: false,
     authorId: "author",
     authorIsBot: false,
   };
@@ -75,6 +87,7 @@ describe("decideReactionAward", () => {
   test.each([
     [{ emojiMatches: false }, "not the karma emoji"],
     [{ guildId: null }, "not in a guild"],
+    [{ reactorIsBot: true }, "reactor is a bot"],
     [{ authorId: undefined }, "message author is unknown"],
     [{ authorIsBot: true }, "message author is a bot"],
     // Ignored rather than penalized: the slash command deliberately penalizes

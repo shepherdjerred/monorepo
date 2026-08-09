@@ -25,6 +25,7 @@ export function decideReactionAward(params: {
   emojiMatches: boolean;
   guildId: string | null;
   reactorId: string;
+  reactorIsBot: boolean;
   authorId: string | undefined;
   authorIsBot: boolean;
 }): ReactionAward {
@@ -33,6 +34,9 @@ export function decideReactionAward(params: {
   }
   if (params.guildId === null) {
     return { action: "ignore", reason: "not in a guild" };
+  }
+  if (params.reactorIsBot) {
+    return { action: "ignore", reason: "reactor is a bot" };
   }
   if (params.authorId === undefined) {
     return { action: "ignore", reason: "message author is unknown" };
