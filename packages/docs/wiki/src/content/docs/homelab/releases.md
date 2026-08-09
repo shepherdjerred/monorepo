@@ -22,6 +22,7 @@ sequenceDiagram
   BK->>Root: apply exact child specs, still suspended
   BK->>Child: reconcile exact chart revisions
   BK->>Root: sync exact revision with verified pruning
+  BK->>Root: finalize applied async operation
   BK->>Child: require Synced and Healthy
 ```
 
@@ -40,6 +41,14 @@ the override rather than the published tree. The release script renders the
 exact `apps` revision and treats only live child Applications absent from that
 rendered set as prune candidates; each candidate must still opt into cascading
 deletion and carry the Argo resources finalizer.
+
+The final root sync is intentionally asynchronous because the root app also
+tracks child Applications that may be deferred or independently unhealthy. The
+controller still applies the exact revision before waiting on those health
+states. `finalize-async-sync` verifies that the requested operation's sync
+result is fully applied, refuses failed or mismatched operations, and then
+terminates the health wait so a permanently Running root operation cannot block
+the next ordered release.
 
 Application image selection uses the newest main commit whose `images` and
 `version-commit-back` jobs both passed as its comparison base. A later

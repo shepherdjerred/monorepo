@@ -138,6 +138,161 @@ describe("Argo CD prune safety", () => {
   });
 });
 
+describe("Argo CD async root operation finalization", () => {
+  test("finalizes an applied async root operation at the exact revision", async () => {
+    let terminated = false;
+    let deleteRequests = 0;
+    const server = Bun.serve({
+      hostname: "127.0.0.1",
+      port: 0,
+      fetch(request) {
+        const url = new URL(request.url);
+        if (
+          request.method === "DELETE" &&
+          url.pathname === "/api/v1/applications/apps/operation"
+        ) {
+          deleteRequests += 1;
+          terminated = true;
+          return new Response(null, { status: 204 });
+        }
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/v1/applications/apps"
+        ) {
+          if (terminated) {
+            return Response.json({ status: {} });
+          }
+          return Response.json({
+            status: {
+              operationState: {
+                phase: "Running",
+                operation: { sync: { revision: "2.0.0-42" } },
+                syncResult: {
+                  revision: "2.0.0-42",
+                  // Argo reports child Application health waits as
+                  // status=Synced/hookPhase=Running even though their
+                  // manifests are already applied.
+                  resources: [{ status: "Synced", hookPhase: "Running" }],
+                },
+              },
+            },
+          });
+        }
+        return new Response("not found", { status: 404 });
+      },
+    });
+
+    try {
+      const process = Bun.spawn(
+        [
+          "bun",
+          "--no-install",
+          "scripts/argocd.ts",
+          "finalize-async-sync",
+          "apps",
+          "--revision",
+          "2.0.0-42",
+          "--timeout",
+          "1",
+        ],
+        {
+          cwd: path.resolve(import.meta.dir, "../../.."),
+          env: {
+            ...Bun.env,
+            ARGOCD_SERVER_URL: server.url.origin,
+            ARGOCD_TOKEN: "test-token",
+          },
+          stderr: "pipe",
+          stdout: "pipe",
+        },
+      );
+      const [exitCode, stdout, stderr] = await Promise.all([
+        process.exited,
+        new Response(process.stdout).text(),
+        new Response(process.stderr).text(),
+      ]);
+
+      expect(exitCode).toBe(0);
+      expect(stderr).toBe("");
+      expect(stdout).toContain("terminated applied async sync operation: apps");
+      expect(deleteRequests).toBe(1);
+    } finally {
+      await server.stop(true);
+    }
+  });
+
+  test("does not terminate an async operation at another revision", async () => {
+    let deleteRequests = 0;
+    const server = Bun.serve({
+      hostname: "127.0.0.1",
+      port: 0,
+      fetch(request) {
+        const url = new URL(request.url);
+        if (request.method === "DELETE") {
+          deleteRequests += 1;
+          return new Response(null, { status: 204 });
+        }
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/v1/applications/apps"
+        ) {
+          return Response.json({
+            status: {
+              operationState: {
+                phase: "Running",
+                operation: { sync: { revision: "2.0.0-41" } },
+                syncResult: {
+                  revision: "2.0.0-41",
+                  resources: [{ status: "Synced" }],
+                },
+              },
+            },
+          });
+        }
+        return new Response("not found", { status: 404 });
+      },
+    });
+
+    try {
+      const process = Bun.spawn(
+        [
+          "bun",
+          "--no-install",
+          "scripts/argocd.ts",
+          "finalize-async-sync",
+          "apps",
+          "--revision",
+          "2.0.0-42",
+          "--timeout",
+          "1",
+        ],
+        {
+          cwd: path.resolve(import.meta.dir, "../../.."),
+          env: {
+            ...Bun.env,
+            ARGOCD_SERVER_URL: server.url.origin,
+            ARGOCD_TOKEN: "test-token",
+          },
+          stderr: "pipe",
+          stdout: "pipe",
+        },
+      );
+      const [exitCode, stderr] = await Promise.all([
+        process.exited,
+        new Response(process.stderr).text(),
+      ]);
+
+      expect(exitCode).not.toBe(0);
+      expect(stderr).toContain(
+        "Refusing to terminate apps operation at 2.0.0-41",
+      );
+      expect(deleteRequests).toBe(0);
+    } finally {
+      await server.stop(true);
+    }
+  });
+});
+
 test("Argo CD root pruning requires an exact revision", async () => {
   const process = Bun.spawn(
     [
@@ -187,6 +342,9 @@ test("Argo CD CLI usage documents the root prune revision", async () => {
   expect(stderr).toContain("sync <app> [--revision <v>] [--prune] [--async]");
   expect(stderr).toContain(
     "suspend-auto-sync <root-app> [--revision <v>] [--timeout <s>]",
+  );
+  expect(stderr).toContain(
+    "finalize-async-sync <app> --revision <v> [--timeout <s>]",
   );
 });
 

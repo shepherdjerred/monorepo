@@ -272,8 +272,7 @@ http {
     serviceName: publicService.name,
     subdomain: "matomo",
     port: 80,
-    publicProbePath:
-      "/matomo.php?module=API&method=API.getMatomoVersion&format=json",
+    publicProbePath: "/matomo.php?idsite=1&rec=0",
   });
 
   new KubeNetworkPolicy(chart, "matomo-netpol", {

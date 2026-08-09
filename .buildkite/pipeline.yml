@@ -1493,6 +1493,10 @@ steps:
       # health wait would block on unrelated stale children. The scoped
       # release-health-wait above is the authoritative gate for this release.
       bun --no-install packages/homelab/scripts/argocd.ts sync apps --revision "$$apps_revision" --prune --async
+      # The expected release set includes the root app itself. Finalize its
+      # applied async operation before the health gate so the root cannot wait
+      # on its own deferred child health forever.
+      bun --no-install packages/homelab/scripts/argocd.ts finalize-async-sync apps --revision "$$apps_revision" --timeout 300
       if [ -z "$$deferred_discord_apps" ]; then
         bun --no-install packages/homelab/scripts/argocd.ts release-health-wait argocd-release-expected.json --timeout 300
       fi
