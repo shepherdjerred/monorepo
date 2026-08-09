@@ -219,7 +219,7 @@ kubectl exec pod/shell -n maintenance -- \
 ### Upgrade Talos
 
 ```bash {"interpreter":"/opt/homebrew/bin/bash"}
-VERSION=v1.13.7
+VERSION=v1.13.8
 # Upgrade the CI worker first. The short MagicDNS name is a direct worker
 # endpoint; a worker cannot proxy its own Talos request. Use the Torvalds
 # Tailscale FQDN for all control-plane operations.
