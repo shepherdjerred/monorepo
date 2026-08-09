@@ -10,6 +10,13 @@ import {
   heatmapOption,
   radarOption,
 } from "#src/html/visualization-snapshot-special-options.ts";
+import {
+  formatPercent,
+  formatSeriesAbsoluteDelta,
+  formatSeriesValue,
+  usesPercentageAxis,
+} from "#src/html/visualization-value-format.ts";
+import { alignedTrendValues } from "#src/html/visualization-trend-values.ts";
 
 export type VisualizationOptionMode = "interactive" | "static";
 
@@ -68,7 +75,7 @@ export function visualizationSnapshotToOption(
       (trend): echarts.SeriesOption => ({
         name: `${trend.seriesId} trend (slope ${trend.slope.toFixed(3)}, R² ${trend.rSquared.toFixed(2)})`,
         type: "line",
-        data: trend.values,
+        data: alignedTrendValues(snapshot, trend, categories),
         symbol: "none",
         lineStyle: { type: "dashed", width: 2, opacity: 0.8 },
         tooltip: { show: false },
@@ -115,7 +122,10 @@ export function visualizationSnapshotToOption(
       type: "value",
       inverse: snapshot.kind === "BUMP_CHART",
       ...(snapshot.kind === "BUMP_CHART" ? { min: 1, minInterval: 1 } : {}),
-      axisLabel: { color: "#a09b8c" },
+      axisLabel: {
+        color: "#a09b8c",
+        ...(usesPercentageAxis(snapshot) ? { formatter: formatPercent } : {}),
+      },
       splitLine: { lineStyle: { color: "#1e282d" } },
     },
     ...(mode === "interactive"
@@ -230,7 +240,7 @@ function kpiOption(
             left: 12,
             top: 29,
             style: {
-              text: `${formatValue(latest?.value ?? null)}  n=${(latest?.evidence.sampleSize ?? 0).toString()}`,
+              text: `${formatSeriesValue(snapshot, series, latest?.value ?? null)}  n=${(latest?.evidence.sampleSize ?? 0).toString()}`,
               fill: "#f0e6d2",
               font: "bold 18px sans-serif",
             },
@@ -243,7 +253,7 @@ function kpiOption(
               text:
                 delta === undefined
                   ? ""
-                  : `Δ ${formatValue(delta ?? null)} · ${formatPercent(percent ?? null)}`,
+                  : `Δ ${formatSeriesAbsoluteDelta(snapshot, series, delta ?? null)} · ${formatPercent(percent ?? null)}`,
               fill: "#0ac8b9",
               font: "11px sans-serif",
             },
@@ -355,11 +365,11 @@ export function tooltipText(
     );
     if (value === undefined) continue;
     lines.push(
-      `${echartsFormat.encodeHTML(series.label)}: ${formatValue(value.value)} (n=${value.evidence.sampleSize.toString()})`,
+      `${echartsFormat.encodeHTML(series.label)}: ${formatSeriesValue(snapshot, series, value.value)} (n=${value.evidence.sampleSize.toString()})`,
     );
     if (snapshot.temporal?.comparison !== undefined) {
       lines.push(
-        `Baseline: ${formatValue(value.comparisonValue ?? null)} · Δ ${formatValue(value.absoluteDelta ?? null)} · ${formatPercent(value.percentageDelta ?? null)}`,
+        `Baseline: ${formatSeriesValue(snapshot, series, value.comparisonValue ?? null)} · Δ ${formatSeriesAbsoluteDelta(snapshot, series, value.absoluteDelta ?? null)} · ${formatPercent(value.percentageDelta ?? null)}`,
       );
     }
     if (value.evidence.confidenceInterval !== null) {
@@ -369,16 +379,6 @@ export function tooltipText(
     }
   }
   return lines.join("<br/>");
-}
-
-function formatValue(value: number | null): string {
-  return value === null
-    ? "Unknown"
-    : value.toLocaleString(undefined, { maximumFractionDigits: 3 });
-}
-
-function formatPercent(value: number | null): string {
-  return value === null ? "Unknown" : `${(value * 100).toFixed(1)}%`;
 }
 
 function calendarOption(

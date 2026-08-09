@@ -484,6 +484,45 @@ describe("compactor", () => {
       await rm(lakeDir, { recursive: true, force: true });
     }
   });
+});
+
+describe("compactor rank replacement and invalid input", () => {
+  test("a newer daily rank snapshot atomically replaces every prior entry", async () => {
+    const competitionId = CompetitionIdSchema.parse(78);
+    const lakeDir = await makeLakeDir();
+    try {
+      await runReportLakeRebuild({ prisma, lakeDir });
+      const original = CachedLeaderboardSchema.parse({
+        version: "v1",
+        competitionId,
+        calculatedAt: "2026-08-08T12:00:00.000Z",
+        entries: [
+          { playerId: 1, playerName: "Astra", score: 2400, rank: 1 },
+          { playerId: 2, playerName: "Dragon", score: 2300, rank: 2 },
+        ],
+      });
+      const replacement = CachedLeaderboardSchema.parse({
+        version: "v1",
+        competitionId,
+        calculatedAt: "2026-08-08T13:00:00.000Z",
+        entries: [{ playerId: 1, playerName: "Astra", score: 2500, rank: 1 }],
+      });
+      expect(
+        await writeCompetitionRankHistoryStagingFile(lakeDir, original),
+      ).toBe(true);
+      await runReportLakeFold({ prisma, lakeDir });
+      expect(
+        await writeCompetitionRankHistoryStagingFile(lakeDir, replacement),
+      ).toBe(true);
+      await runReportLakeFold({ prisma, lakeDir });
+
+      expect(
+        await fetchCompetitionRankHistory({ competitionId, lakeDir }),
+      ).toEqual([replacement]);
+    } finally {
+      await rm(lakeDir, { recursive: true, force: true });
+    }
+  });
 
   test("fold skips malformed staging JSON and records skipped manifest counts", async () => {
     const match = await loadMatchFixture();
