@@ -14,8 +14,7 @@ final class SmokeUITests: XCTestCase {
     }
 
     func testTheAppLaunchesAndShowsItsSidebar() {
-        let app = XCUIApplication()
-        app.launch()
+        let app = TestApp.launch { addTeardownBlock($0) }
 
         // Looked up by the identifier the app itself uses. If someone renames
         // `AccessibilityIdentifier.sidebar`, this file stops compiling — which

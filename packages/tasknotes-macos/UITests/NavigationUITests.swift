@@ -18,24 +18,13 @@ final class NavigationUITests: XCTestCase {
         continueAfterFailure = false
     }
 
-    /// Launch the app and make sure it is torn down with the test.
+    /// Launch the app pointed at nothing, and tear it down with the test.
     ///
-    /// A function rather than a stored property: `XCUIApplication()` is
-    /// MainActor-isolated, so it cannot be a stored-property default in a
-    /// nonisolated `XCTestCase`, and the usual workaround — an implicitly
-    /// unwrapped optional assigned in `setUp` — is banned here. Constructing it
-    /// where it is used needs neither, and `addTeardownBlock` keeps the cleanup
-    /// next to the setup instead of in a method that has to guess whether the
-    /// test got that far.
+    /// Goes through ``TestApp`` rather than `XCUIApplication().launch()` so the
+    /// app cannot inherit the developer's real server address or Keychain
+    /// token — see the note there; this suite once pulled a live vault.
     private func launchedApp() -> XCUIApplication {
-        let app = XCUIApplication()
-        app.launch()
-        XCTAssertTrue(
-            app.wait(for: .runningForeground, timeout: 20),
-            "the app never reached the foreground"
-        )
-        addTeardownBlock { app.terminate() }
-        return app
+        TestApp.launch { addTeardownBlock($0) }
     }
 
     /// Every sidebar section is reachable and swaps the detail pane.

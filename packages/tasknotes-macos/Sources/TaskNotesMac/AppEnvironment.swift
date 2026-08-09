@@ -93,11 +93,31 @@ public final class AppEnvironment {
     /// real Keychain — see ``ServerTokenStore``.
     private let tokenStore: any ServerTokenStore
 
+    /// Whether this process was launched by a UI test that disowned credentials.
+    /// Whether a UI test asked this process to disown stored credentials.
+    ///
+    /// ⚠️ See ``UITesting`` for why. A test that forgets the flag still reaches
+    /// the real Keychain, which is why the UI tests funnel every launch through
+    /// one helper rather than calling `app.launch()` directly.
+    private nonisolated static var isUITesting: Bool {
+        CommandLine.arguments.contains(UITesting.flagArgument)
+    }
+
     /// Assemble over the sandbox container.
+    ///
+    /// The token store defaults to the Keychain, except under
+    /// ``uiTestingArgument`` — see the note there. A test that forgets the flag
+    /// still reaches the real Keychain, which is why the UI tests funnel every
+    /// launch through one helper rather than calling `app.launch()` directly.
     public init(
         defaults: UserDefaults = .standard,
-        tokenStore: any ServerTokenStore = KeychainTokenStore()
+        tokenStore: (any ServerTokenStore)? = nil
     ) {
+        // Named distinctly rather than shadowing the parameter: the whole
+        // point of this line is that the resolved store may differ from the
+        // one passed in, and shadowing would hide exactly that.
+        let resolvedTokenStore =
+            tokenStore ?? (Self.isUITesting ? InMemoryTokenStore() : KeychainTokenStore())
         let container = TaskNotesStore.containerDefault()
         self.navigation = NavigationState()
         self.store = container
@@ -105,9 +125,9 @@ public final class AppEnvironment {
         self.pomodoro = PomodoroTimer()
         self.savedViews = SavedViewStore(defaults: defaults)
         self.defaults = defaults
-        self.tokenStore = tokenStore
+        self.tokenStore = resolvedTokenStore
         self.serverAddress = defaults.string(forKey: Self.serverAddressKey) ?? ""
-        self.authToken = tokenStore.token() ?? ""
+        self.authToken = resolvedTokenStore.token() ?? ""
 
         // Claimed at launch, and **only** from this initializer. The other one
         // exists for previews and tests, and a test process that registered a
@@ -199,5 +219,7 @@ public final class AppEnvironment {
         return url
     }
 
-    private static let serverAddressKey = "red.sjer.tasknotes.serverAddress"
+    /// Shared with the UI tests so a launch-argument override cannot drift
+    /// from the key the app reads. See ``UITesting``.
+    private static let serverAddressKey = UITesting.serverAddressDefaultsKey
 }
