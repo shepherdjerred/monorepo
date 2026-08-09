@@ -76,7 +76,7 @@ Use current APIs:
 - `vim.hl.hl_op()` for yank highlighting.
 - `vim.diagnostic.jump({ count = 1 })` and negative count for navigation.
 - `vim.api.nvim_set_option_value(name, value, { buf = buffer })` for scoped options.
-- `vim.system({ program, argument }, { text = true }):wait()` for ordinary subprocesses, checking `code` and `stderr`.
+- `vim.system({ program, argument }, { text = true }):wait()` for ordinary subprocesses, checking `code`, `signal`, and `stderr`.
 
 Use `:trust` and `vim.secure` for project-local configuration. `exrc` executes project code and is a trust boundary.
 
