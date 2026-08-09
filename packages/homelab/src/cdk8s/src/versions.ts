@@ -176,7 +176,7 @@ const versions = {
     "2.0.0-7909@sha256:7e904d0538a6e0456271b50fe58c520e18159440f3b68b6073a307d7862c4972",
   // not managed by renovate
   "shepherdjerred/birmel":
-    "2.0.0-8618@sha256:09af29060a8b66bd079d131e292008e9e00453e59c9862e8df61f40834194770",
+    "2.0.0-8622@sha256:e12f63216e8076b3f224d99d4c454ddfea7573d27638740cf2b1d48344184a6c",
   // not managed by renovate — placeholder digest; CI version-commit-back fills
   // the real digest after the first successful scout-evals image push.
   "shepherdjerred/scout-evals":
