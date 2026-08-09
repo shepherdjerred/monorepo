@@ -11,10 +11,11 @@ Use these diagnostics before changing dependency constraints:
 ```bash
 cargo tree --locked -d
 cargo tree --locked -e features
+cargo test --locked --future-incompat-report
 cargo report future-incompatibilities
 ```
 
-`cargo report future-incompatibilities` identifies dependencies that future compilers will reject. It does not replace current tests.
+`cargo test --locked --future-incompat-report` generates the report without permitting lockfile changes. `cargo report future-incompatibilities` then identifies dependencies that future compilers will reject; neither command replaces the project's focused verification.
 
 Avoid a static catalog of “best crates” and pinned example versions in a generic skill. Select libraries from maintained official documentation, MSRV compatibility, security posture, API fit, and the repository's existing ecosystem.
 

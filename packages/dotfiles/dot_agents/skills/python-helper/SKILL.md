@@ -37,12 +37,14 @@ python --version
 uv --version
 uv python list
 uv tree --locked
-ruff check .
-ruff format --check .
-pytest --collect-only
-mypy .
-pyright
+uv run --locked ruff check .
+uv run --locked ruff format --check .
+uv run --locked pytest --collect-only
+uv run --locked mypy .
+uv run --locked pyright
 ```
+
+For a uv-managed project, run project-installed tools through `uv run --locked` so checks use the versions selected by `uv.lock` and fail on lock drift. For another dependency workflow, use its verified project environment rather than whichever global tool happens to be on `PATH`.
 
 Local mutations include `uv add`, `uv sync`, `uv python install`, `uv python pin`, `ruff check --fix`, and `ruff format`. Ruff unsafe fixes can change runtime behavior or remove comments; require an explicit diff review and focused tests.
 

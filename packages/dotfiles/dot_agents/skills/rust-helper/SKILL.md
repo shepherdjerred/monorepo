@@ -38,11 +38,11 @@ Optional external tools include cargo-nextest, Bacon, cargo-outdated, cargo-expa
 Adapt features and targets to the project, but keep each result meaningful:
 
 ```bash
-cargo check --workspace --all-targets --all-features
+cargo check --locked --workspace --all-targets --all-features
 cargo fmt --all -- --check
-cargo clippy --workspace --all-targets --all-features -- -D warnings
-cargo test --workspace --all-features
-cargo test --workspace --doc
+cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
+cargo test --locked --workspace --all-features
+cargo test --locked --workspace --doc
 ```
 
 `cargo fmt -- --emit diff` is not supported by current stable rustfmt. `cargo fmt --all -- --check` prints differences and exits non-zero.
