@@ -21,7 +21,6 @@ import {
   searchReasons,
 } from "#src/karma/queries.ts";
 import { getReceivedKarma, recordKarma } from "#src/karma/store.ts";
-import { crossedMilestone } from "#src/karma/milestones.ts";
 import {
   computeNextRecapAt,
   DEFAULT_RECAP_CRON,
@@ -50,12 +49,7 @@ async function requireGuild(
 /** A congratulations line when a give pushes someone past a threshold.
  *  Appended to the same reply rather than posted to a separate channel: it
  *  needs no configuration and lands where the moment actually happened. */
-function milestoneSuffix(
-  receiverId: string,
-  before: number,
-  after: number,
-): string {
-  const milestone = crossedMilestone(before, after);
+function milestoneSuffix(receiverId: string, milestone: number | null): string {
   return milestone === null
     ? ""
     : `\n\u{1F389} ${userMention(receiverId)} just passed ${bold(milestone.toString())} karma!`;
@@ -126,7 +120,7 @@ async function handleKarmaGive(interaction: ChatInputCommandInteraction) {
       ? `${gave} because ${inlineCode(reason)}. They now have ${bold(newReceiverKarma.toString())} karma.`
       : `${gave}. They now have ${bold(newReceiverKarma.toString())} karma.`;
   await interaction.reply(
-    `${body}${milestoneSuffix(receiverUser.id, totals.receiverTotalBefore, totals.receiverTotalAfter)}`,
+    `${body}${milestoneSuffix(receiverUser.id, totals.milestone)}`,
   );
 }
 

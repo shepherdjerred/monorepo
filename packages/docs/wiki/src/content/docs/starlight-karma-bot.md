@@ -4,8 +4,9 @@ description: A per-guild karma tracker on Prisma and SQLite, with low-friction g
 ---
 
 Karma is a per-guild recognition score: people award each other points, usually
-with a short written reason. The bot stores every award as one row and derives
-everything else — leaderboards, profiles, milestones — by summing that column.
+with a short written reason. The bot stores every award as one ledger row;
+leaderboards and profiles sum that column, while milestone announcements also
+consult a persisted per-guild high-water mark.
 
 ```mermaid
 flowchart LR
@@ -22,7 +23,7 @@ flowchart LR
   R[⭐ reaction] --> ST[karma/store]
   C[Apps → Give Karma] --> ST
   SC[/karma give/] --> ST
-  ST --> DB[(SQLite via Prisma)]
+  ST --> DB[(SQLite ledger + milestone high-water)]
   DB --> RC[Recap dispatcher] --> CH[Guild channel]
 ```
 
@@ -81,8 +82,16 @@ number stops carrying information, and the usual remedy — a giving budget —
 would cost a whole balance-tracking subsystem. A fixed ceiling buys the same
 protection for one validation rule.
 
-Reaction awards record the source message, so un-reacting revokes precisely and
-re-reacting cannot stack the award.
+Reaction awards record the source message, so un-reacting or a moderator's bulk
+reaction clear revokes precisely and re-reacting cannot stack the award. All
+reaction mutations for one message are serialized so a quick remove cannot
+race an in-flight add.
+
+Milestone state stores the highest threshold already announced for each person
+in each guild. The award and high-water update share one transaction, and the
+migration seeds historical high-water from running balances. An undo, reaction
+removal, or self-give penalty can therefore lower the current total without
+making the same milestone eligible again.
 
 ## The recap posts without being asked
 
@@ -94,6 +103,8 @@ CRON expression.
 
 It advances that timestamp **even when posting fails**. Otherwise a deleted
 channel or a revoked permission turns into a retry every single minute forever.
+The poller is single-flight: if one pass lasts longer than a minute, the next
+tick is skipped instead of reading and posting the same due row twice.
 
 ## Where to look next
 

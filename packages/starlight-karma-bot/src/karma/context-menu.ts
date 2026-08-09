@@ -22,7 +22,6 @@ import {
 } from "#src/karma/scoring.ts";
 import { decodeModalId, encodeModalId } from "#src/karma/rules.ts";
 import { recordKarma } from "#src/karma/store.ts";
-import { crossedMilestone } from "#src/karma/milestones.ts";
 
 export const GIVE_KARMA_CONTEXT_COMMAND = "Give Karma";
 
@@ -130,10 +129,7 @@ export async function handleGiveKarmaModal(
   });
 
   const total = totals.receiverTotalAfter;
-  const milestone = crossedMilestone(
-    totals.receiverTotalBefore,
-    totals.receiverTotalAfter,
-  );
+  const { milestone } = totals;
   const headline =
     giverId === target.authorId
       ? `${userMention(giverId)} tried altering their karma. SMH my head. ${bold(amount.toString())} karma.`

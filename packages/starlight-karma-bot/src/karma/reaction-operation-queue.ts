@@ -1,10 +1,12 @@
 /**
- * Serialize reaction mutations for one giver/message pair.
+ * Serialize reaction mutations for one message.
  *
  * Discord can deliver an add and a quick remove concurrently. Without a
  * per-reaction queue, the remove can observe no database row while the add is
  * still fetching a partial message, then the add commits after the reaction is
- * already gone. Different reactions remain independent.
+ * already gone. Message-level serialization also lets a bulk clear wait for
+ * every in-flight award on that message before deleting them. Different
+ * messages remain independent.
  */
 export class ReactionOperationQueue {
   private readonly busy = new Set<string>();

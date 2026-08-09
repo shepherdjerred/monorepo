@@ -7,6 +7,7 @@ export const REQUIRED_MIGRATIONS = [
   "20260809012953_init",
   "20260809020000_add_source_message_id",
   "20260809030000_add_guild_config",
+  "20260809090000_add_milestone_state",
 ] as const;
 
 /**

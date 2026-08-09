@@ -10,7 +10,9 @@
  *  need) is. */
 import {
   bold,
+  type Message,
   type MessageReaction,
+  type PartialMessage,
   type PartialMessageReaction,
   type PartialUser,
   userMention,
@@ -19,18 +21,20 @@ import {
 import * as Sentry from "@sentry/bun";
 import configuration from "#src/configuration.ts";
 import { KARMA_GIVE_AMOUNT } from "#src/karma/scoring.ts";
-import { crossedMilestone } from "#src/karma/milestones.ts";
 import { ReactionOperationQueue } from "#src/karma/reaction-operation-queue.ts";
 import { decideReactionAward, emojiMatchesKarma } from "#src/karma/rules.ts";
-import { recordKarma, revokeReactionKarma } from "#src/karma/store.ts";
+import {
+  recordKarma,
+  revokeMessageReactionKarma,
+  revokeReactionKarma,
+} from "#src/karma/store.ts";
 
 const reactionOperations = new ReactionOperationQueue();
 
 function reactionOperationKey(
   reaction: MessageReaction | PartialMessageReaction,
-  user: User | PartialUser,
 ): string {
-  return `${user.id}:${reaction.message.id}`;
+  return reaction.message.id;
 }
 
 /** Resolve the partials an *add* event may arrive with. Returns null when the
@@ -92,10 +96,7 @@ async function applyReactionAdd(
   // Reactions are the primary giving surface, so a milestone reached this way
   // must be announced like any other — otherwise the celebration only ever
   // fires for the paths people use least.
-  const milestone = crossedMilestone(
-    totals.receiverTotalBefore,
-    totals.receiverTotalAfter,
-  );
+  const { milestone } = totals;
   if (milestone !== null && full.message.channel.isSendable()) {
     await full.message.channel.send({
       content: `🎉 ${userMention(decision.receiverId)} just passed ${bold(milestone.toString())} karma!`,
@@ -107,7 +108,7 @@ export async function handleReactionAdd(
   reaction: MessageReaction | PartialMessageReaction,
   user: User | PartialUser,
 ): Promise<void> {
-  await reactionOperations.run(reactionOperationKey(reaction, user), () =>
+  await reactionOperations.run(reactionOperationKey(reaction), () =>
     applyReactionAdd(reaction, user),
   );
 }
@@ -137,8 +138,39 @@ export async function handleReactionRemove(
   reaction: MessageReaction | PartialMessageReaction,
   user: User | PartialUser,
 ): Promise<void> {
-  await reactionOperations.run(reactionOperationKey(reaction, user), () =>
+  await reactionOperations.run(reactionOperationKey(reaction), () =>
     applyReactionRemove(reaction, user),
+  );
+}
+
+async function revokeMessageAwards(
+  sourceMessageId: string,
+  event: string,
+): Promise<void> {
+  const removed = await revokeMessageReactionKarma(sourceMessageId);
+  if (removed > 0) {
+    console.warn(
+      `[Karma Reaction] ${event} revoked ${removed.toString()} karma award(s) on message ${sourceMessageId}`,
+    );
+  }
+}
+
+export async function handleReactionRemoveEmoji(
+  reaction: MessageReaction | PartialMessageReaction,
+): Promise<void> {
+  if (!emojiMatchesKarma(reaction.emoji, configuration.karmaEmoji)) {
+    return;
+  }
+  await reactionOperations.run(reactionOperationKey(reaction), () =>
+    revokeMessageAwards(reaction.message.id, "emoji removal"),
+  );
+}
+
+export async function handleReactionRemoveAll(
+  message: Message | PartialMessage,
+): Promise<void> {
+  await reactionOperations.run(message.id, () =>
+    revokeMessageAwards(message.id, "reaction clear"),
   );
 }
 

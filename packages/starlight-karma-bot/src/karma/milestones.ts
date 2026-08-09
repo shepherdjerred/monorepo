@@ -1,24 +1,31 @@
-/** Milestone detection.
- *
- *  Pure and table-free on purpose: a crossing is derived by comparing the
- *  receiver's total before and after a single write, so there is no
- *  "already announced" state to keep in sync. Karma can go down (self-give
- *  penalties, undo), and this only fires on an upward crossing, so a total
- *  that oscillates around a threshold announces once per genuine crossing
- *  rather than repeatedly. */
+/** Pure milestone decisions. Persistence lives in `store.ts`, where the karma
+ * write and high-water update share one transaction. */
 
 export const KARMA_MILESTONES = [10, 25, 50, 100, 250, 500] as const;
 
-/** The highest milestone crossed by moving from `before` to `after`, or null.
+/** The highest milestone reached at a total, or zero when none was reached. */
+export function highestReachedMilestone(total: number): number {
+  return KARMA_MILESTONES.findLast((milestone) => total >= milestone) ?? 0;
+}
+
+/** The highest not-yet-announced milestone crossed by this write, or null.
  *
  *  Returns the highest rather than the first so a single large give that
  *  vaults past two thresholds announces the more impressive one. */
-export function crossedMilestone(before: number, after: number): number | null {
+export function crossedUnannouncedMilestone(
+  before: number,
+  after: number,
+  highestAnnounced: number,
+): number | null {
   if (after <= before) {
     return null;
   }
-  const crossed = KARMA_MILESTONES.filter(
-    (milestone) => before < milestone && after >= milestone,
+  return (
+    KARMA_MILESTONES.findLast(
+      (milestone) =>
+        milestone > highestAnnounced &&
+        before < milestone &&
+        after >= milestone,
+    ) ?? null
   );
-  return crossed.at(-1) ?? null;
 }

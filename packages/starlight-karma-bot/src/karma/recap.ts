@@ -15,6 +15,7 @@ import client from "#src/discord/client.ts";
 import { prisma } from "#src/db/index.ts";
 import { getLeaderboard } from "#src/karma/queries.ts";
 import { computeNextRecapAt } from "#src/karma/recap-schedule.ts";
+import { SingleFlight } from "#src/karma/single-flight.ts";
 
 const POLL_INTERVAL_MS = 60_000;
 const RECAP_TOP_N = 5;
@@ -158,22 +159,30 @@ export async function runDueRecaps(now: Date = new Date()): Promise<void> {
 }
 
 let timer: ReturnType<typeof setInterval> | null = null;
+const recapPasses = new SingleFlight();
+
+async function runRecapDispatcherPass(): Promise<void> {
+  try {
+    const started = await recapPasses.run(async () => {
+      await runDueRecaps();
+    });
+    if (!started) {
+      console.warn("[Recap] Skipped overlapping dispatcher pass");
+    }
+  } catch (error) {
+    console.error("[Recap] Dispatcher pass failed:", error);
+    Sentry.captureException(error, {
+      tags: { source: "karma-recap-poll" },
+    });
+  }
+}
 
 export function startRecapDispatcher(): void {
   if (timer !== null) {
     throw new Error("Recap dispatcher is already running");
   }
   timer = setInterval(() => {
-    void (async () => {
-      try {
-        await runDueRecaps();
-      } catch (error) {
-        console.error("[Recap] Dispatcher pass failed:", error);
-        Sentry.captureException(error, {
-          tags: { source: "karma-recap-poll" },
-        });
-      }
-    })();
+    void runRecapDispatcherPass();
   }, POLL_INTERVAL_MS);
   // Do not hold the process open solely for the dispatcher.
   timer.unref();

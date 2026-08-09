@@ -3,6 +3,10 @@
  *  writes in one place means new surfaces cannot drift from the scoring rules
  *  or forget to create the `person` rows the foreign keys need. */
 import { prisma } from "#src/db/index.ts";
+import {
+  crossedUnannouncedMilestone,
+  highestReachedMilestone,
+} from "#src/karma/milestones.ts";
 
 /** Ensure a `person` row exists so the karma foreign keys resolve. */
 async function ensurePerson(id: string): Promise<void> {
@@ -30,6 +34,7 @@ export type RecordKarmaParams = {
 export type RecordKarmaResult = {
   receiverTotalBefore: number;
   receiverTotalAfter: number;
+  milestone: number | null;
 };
 
 export async function recordKarma(
@@ -84,9 +89,52 @@ export async function recordKarma(
       where: { receiverId: params.receiverId, guildId: params.guildId },
     });
 
+    const receiverTotalBefore = before._sum.amount ?? 0;
+    const receiverTotalAfter = after._sum.amount ?? 0;
+    const state = await tx.milestoneState.findUnique({
+      where: {
+        guildId_receiverId: {
+          guildId: params.guildId,
+          receiverId: params.receiverId,
+        },
+      },
+      select: { highestAnnounced: true },
+    });
+
+    // A missing state row can occur for a person who had karma before this
+    // table existed. Seed from the balance before this write so deployment
+    // never turns an old total into a retroactive milestone announcement.
+    const highestAnnounced = Math.max(
+      state?.highestAnnounced ?? 0,
+      highestReachedMilestone(receiverTotalBefore),
+    );
+    const milestone = crossedUnannouncedMilestone(
+      receiverTotalBefore,
+      receiverTotalAfter,
+      highestAnnounced,
+    );
+    const nextHighestAnnounced = milestone ?? highestAnnounced;
+    if (nextHighestAnnounced > (state?.highestAnnounced ?? 0)) {
+      await tx.milestoneState.upsert({
+        where: {
+          guildId_receiverId: {
+            guildId: params.guildId,
+            receiverId: params.receiverId,
+          },
+        },
+        create: {
+          guildId: params.guildId,
+          receiverId: params.receiverId,
+          highestAnnounced: nextHighestAnnounced,
+        },
+        update: { highestAnnounced: nextHighestAnnounced },
+      });
+    }
+
     return {
-      receiverTotalBefore: before._sum.amount ?? 0,
-      receiverTotalAfter: after._sum.amount ?? 0,
+      receiverTotalBefore,
+      receiverTotalAfter,
+      milestone,
     };
   });
 }
@@ -99,6 +147,18 @@ export async function revokeReactionKarma(
 ): Promise<number> {
   const { count } = await prisma.karma.deleteMany({
     where: { giverId, sourceMessageId },
+  });
+  return count;
+}
+
+/** Remove every reaction award linked to a message. Discord emits bulk events
+ * when a moderator clears all reactions or removes one emoji entirely, rather
+ * than one remove event per giver. */
+export async function revokeMessageReactionKarma(
+  sourceMessageId: string,
+): Promise<number> {
+  const { count } = await prisma.karma.deleteMany({
+    where: { sourceMessageId },
   });
   return count;
 }

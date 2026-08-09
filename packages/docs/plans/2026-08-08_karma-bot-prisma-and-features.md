@@ -239,9 +239,9 @@ select rows where `nextRecapAt <= now` **or is null** (self-heal), post, advance
 from the cron expression, and **advance even when posting fails** so a broken
 channel is not hammered every minute. Adds `cron` + `cron-parser`.
 
-Content: periodic recap, milestone announcements (computed at give-time by
-comparing totals before/after in the same transaction — no extra table), and
-"on this day" over the 2023-onward archive.
+Content: periodic recap, milestone announcements computed at give-time from
+before/after totals plus a per-guild/person high-water row updated in the same
+transaction, and "on this day" over the 2023-onward archive.
 
 ## Cross-package: Scout
 

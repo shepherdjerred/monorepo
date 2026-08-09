@@ -9,6 +9,8 @@ import {
 import {
   guarded,
   handleReactionAdd,
+  handleReactionRemoveAll,
+  handleReactionRemoveEmoji,
   handleReactionRemove,
 } from "#src/karma/reactions.ts";
 import { handleLeaderboardButton } from "#src/karma/leaderboard.ts";
@@ -44,6 +46,14 @@ client.on(
 client.on(
   Events.MessageReactionRemove,
   guarded("reaction-remove", handleReactionRemove),
+);
+client.on(
+  Events.MessageReactionRemoveAll,
+  guarded("reaction-remove-all", handleReactionRemoveAll),
+);
+client.on(
+  Events.MessageReactionRemoveEmoji,
+  guarded("reaction-remove-emoji", handleReactionRemoveEmoji),
 );
 
 client.on(Events.InteractionCreate, (interaction) => {
