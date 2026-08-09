@@ -105,7 +105,7 @@ Players are automatically pruned when:
 
 **Note:** Players who left competitions or had pending invites but never joined are eligible for cleanup. Players actively participating in competitions are always kept.
 
-If you want to track these players again, simply re-subscribe to them using \`/subscription add\`.
+If you want to track these players again, add them from the Scout dashboard or use \`/track\` for a simple current-channel subscription.
 
 *This is an automated cleanup to keep the database efficient.*`,
       kind: "prune_notice",

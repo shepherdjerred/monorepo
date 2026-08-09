@@ -327,7 +327,7 @@ ${competitionList}
 The ${competitions.length > 1 ? "channels may" : "channel may"} have been deleted.
 
 **What should you do?**
-• If any competition is still active, you may want to cancel it with \`/competition cancel\`
+• If any competition is still active, manage it from the Scout dashboard
 • The competition data is preserved in the database
 
 If you have any questions, feel free to reach out for support.`;

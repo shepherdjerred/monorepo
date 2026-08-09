@@ -160,7 +160,7 @@ export const changelog: ChangelogEntry[] = [
     banner: (
       <>
         <strong>Lane-sorted prematch</strong>, Arena teams of 3, and scheduled{" "}
-        <strong>/report</strong> posts
+        scheduled report posts
       </>
     ),
     text: (
@@ -193,7 +193,7 @@ export const changelog: ChangelogEntry[] = [
           color="yellow"
           className="mt-6"
           items={[
-            "New /report commands can schedule recurring Discord posts from stored match history",
+            "Scheduled reports can post recurring updates from stored match history",
             "Servers can build recurring tables and leaderboards for surrender trends, champion stats, pairing performance, and rank snapshots",
           ]}
         />
@@ -257,10 +257,8 @@ export const changelog: ChangelogEntry[] = [
           color="green"
           className="mt-6"
           items={[
-            "/me — Look up your own or any player's connected accounts (no admin required)",
-            "/admin player-list — List all tracked players in your server",
-            "/subscription add-channel — Add a player to an additional channel",
-            "/subscription move — Move a subscription between channels",
+            "The web dashboard now manages players, channels, and report settings",
+            "Discord keeps a small onboarding surface with /track and /list",
           ]}
         />
       </>

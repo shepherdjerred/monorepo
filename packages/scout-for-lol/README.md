@@ -42,31 +42,18 @@ Track players across all League of Legends regions: NA, EUW, EUNE, KR, BR, LAN, 
 
 ## Getting Started
 
-### 1. Add Scout to Your Server
+### 1. Install and configure Scout
 
-[**Click here to add Scout to Discord**](https://discord.com/oauth2/authorize?client_id=1182800769188110366)
+Open the [Scout dashboard](https://scout-for-lol.com/app/), sign in with
+Discord, add Scout to your server, and configure players and channels there.
+The dashboard is the canonical place for setup, filters, queues, competitions,
+reports, permissions, and audit history.
 
-You'll need Administrator permissions to add the bot to your server.
+### 2. Try the lightweight Discord path
 
-### 2. Subscribe to Players
-
-Use the `/subscription add` command to start tracking players:
-
-```text
-/subscription add channel:#general region:na1 riot-id:PlayerName#TAG alias:FriendlyName
-```
-
-**Parameters:**
-
-- `channel`: Discord channel where notifications will be posted
-- `region`: League of Legends region (na1, euw1, kr, etc.)
-- `riot-id`: Player's Riot ID in format "GameName#TagLine"
-- `alias`: Friendly display name for notifications
-
-**Limits:**
-
-- Up to 50 unique Riot accounts per server
-- Up to 75 total subscriptions per server (same account can be tracked in multiple channels)
+If you prefer to stay in Discord for a simple first test, run `/track` in the
+notification channel with a Riot ID, region, and alias. `/list` shows the
+current tracked players. Use the dashboard for anything beyond that happy path.
 
 ### 3. Enjoy Automatic Updates
 
@@ -75,36 +62,15 @@ Scout automatically checks for matches every minute and posts:
 - Notifications when tracked players start matches
 - Detailed reports when games end (2-5 minutes after completion)
 
-## Commands Overview
+## Lightweight Discord commands
 
-### Basic Commands
-
-- `/subscription add` - Track a League player in your server
-- `/subscription delete` - Stop tracking a player
-- `/subscription list` - View all tracked players
-
-### Competitions
-
-- `/competition create` - Create a new competition with custom criteria
-- `/competition edit` - Modify competition details
-- `/competition list` - View all competitions (with optional filters)
-- `/competition view` - See competition details and leaderboard
-- `/competition join` - Join an open competition
-- `/competition leave` - Leave a competition
-- `/competition cancel` - Cancel a competition (owner only)
-- `/competition invite` - Invite users to private competitions
-
-### Admin Commands (Administrator Only)
-
-- `/admin player-edit` - Change a player's display name
-- `/admin account-delete` - Remove a Riot account from a player
-- `/admin account-add` - Add a Riot account to a player
-- `/admin account-transfer` - Transfer an account between players
-- `/admin player-merge` - Merge two players into one
-- `/admin player-delete` - Permanently delete a player
-- `/admin player-link-discord` - Link a Discord user to a player
-- `/admin player-unlink-discord` - Unlink a Discord user from a player
-- `/admin player-view` - View detailed player information
+- `/help` - Show the web-first workflow
+- `/setup` - Open the recommended setup path
+- `/status` - Check Scout's connection
+- `/invite` - Add Scout to another server
+- `/docs` - Open the documentation
+- `/track` - Track one player in the current channel
+- `/list` - List tracked players (read-only)
 
 ## Technical Details
 
@@ -147,9 +113,9 @@ The bot requires API tokens for Discord and Riot Games. In test mode (`NODE_ENV=
 ## Links
 
 - **Website**: [scout-for-lol.com](https://scout-for-lol.com)
-- **Documentation**: [scout-for-lol.com/docs](https://scout-for-lol.com/docs)
+- **Documentation**: [scout-for-lol.com/docs](https://scout-for-lol.com/docs/)
 - **What's New**: [scout-for-lol.com/whatsnew](https://scout-for-lol.com/whatsnew)
-- **Add to Discord**: [Install Scout](https://discord.com/oauth2/authorize?client_id=1182800769188110366)
+- **Add to Discord**: [Install Scout](https://discord.com/oauth2/authorize?client_id=1182800769188110366&scope=bot%20applications.commands&permissions=2148352)
 - **GitHub**: [monorepo package](https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol)
 - **Support**: [GitHub Issues](https://github.com/shepherdjerred/monorepo/issues)
 

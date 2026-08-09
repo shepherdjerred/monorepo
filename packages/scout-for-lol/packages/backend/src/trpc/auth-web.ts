@@ -26,6 +26,7 @@ import { signSession, verifySession } from "#src/trpc/jwt.ts";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 import { createLogger } from "#src/logger.ts";
 import configuration from "#src/configuration.ts";
+import { buildDiscordInstallUrl } from "#src/lib/discord/install-url.ts";
 
 const logger = createLogger("auth-web");
 const DISCORD_API_BASE = "https://discord.com/api/v10";
@@ -45,12 +46,6 @@ const OAUTH_STATE_COOKIE = "scout_oauth_state";
  *   Embed Links     1 << 14   (rich match-report embeds)
  *   Attach Files    1 << 15   (post-match report images)
  */
-const BOT_INSTALL_PERMISSIONS = (
-  (1n << 10n) |
-  (1n << 11n) |
-  (1n << 14n) |
-  (1n << 15n)
-).toString();
 
 const DiscordTokenResponseSchema = z.object({
   access_token: z.string(),
@@ -256,18 +251,8 @@ export async function handleDiscordInstall(
     return new Response(null, { status: 302, headers });
   }
 
-  const params = new URLSearchParams({
-    client_id: configuration.applicationId,
-    scope: ["bot", "applications.commands"].join(" "),
-    permissions: BOT_INSTALL_PERMISSIONS,
-    redirect_uri: `${appOrigin}/app/installed`,
-  });
-
   const headers = new Headers();
-  headers.set(
-    "Location",
-    `https://discord.com/api/oauth2/authorize?${params.toString()}`,
-  );
+  headers.set("Location", buildDiscordInstallUrl());
 
   return new Response(null, { status: 302, headers });
 }

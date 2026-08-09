@@ -14,7 +14,7 @@ import type {
   AddSubscriptionInput,
   AddSubscriptionResult,
 } from "#src/lib/subscription/types.ts";
-import { resolveRiotIdToPuuid } from "#src/lib/subscription/resolve.ts";
+import { resolveRiotIdToPuuid } from "#src/lib/riot/resolve-puuid.ts";
 import { checkSubscriptionAndAccountLimits } from "#src/lib/subscription/limits.ts";
 
 const logger = createLogger("subscription-add");

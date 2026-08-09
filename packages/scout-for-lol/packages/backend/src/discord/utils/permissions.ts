@@ -269,7 +269,7 @@ If Scout isn't a fit, no hard feelings — you can remove me, and I'd love to he
 
 const CHANNEL_MISSING_FIX = `**To fix this:**
 • Re-create the channel, or
-• Point Scout at a channel I can post in by setting things up again (e.g. \`/subscription add\`).`;
+• Point Scout at a channel I can post in by setting things up again (e.g. \`/setup\` or the web dashboard).`;
 
 /**
  * Build the stage-appropriate DM body for a channel that's gone / unreachable

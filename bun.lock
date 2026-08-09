@@ -1167,6 +1167,28 @@
     "packages/scout-for-lol/packages/desktop/src-tauri": {
       "name": "@scout-for-lol/desktop-rust",
     },
+    "packages/scout-for-lol/packages/docs-site": {
+      "name": "@scout-for-lol/docs-site",
+      "version": "0.0.1",
+      "dependencies": {
+        "@astrojs/mdx": "^7.0.5",
+        "@astrojs/sitemap": "^3.7.3",
+        "@astrojs/starlight": "^0.41.5",
+        "@scout-for-lol/data": "workspace:*",
+        "astro": "^7.1.5",
+        "sharp": "^0.35.0",
+      },
+      "devDependencies": {
+        "@astrojs/check": "^0.9.10",
+        "@scout-for-lol/backend": "workspace:*",
+        "@scout-for-lol/report": "workspace:*",
+        "@shepherdjerred/eslint-config": "workspace:*",
+        "@types/bun": "^1.3.13",
+        "@typescript/native": "npm:typescript@7.0.2",
+        "eslint": "^10.3.0",
+        "typescript": "^6.0.3",
+      },
+    },
     "packages/scout-for-lol/packages/evals": {
       "name": "@scout-for-lol/evals",
       "version": "0.0.1",
@@ -3356,6 +3378,8 @@
     "@scout-for-lol/desktop": ["@scout-for-lol/desktop@workspace:packages/scout-for-lol/packages/desktop"],
 
     "@scout-for-lol/desktop-rust": ["@scout-for-lol/desktop-rust@workspace:packages/scout-for-lol/packages/desktop/src-tauri"],
+
+    "@scout-for-lol/docs-site": ["@scout-for-lol/docs-site@workspace:packages/scout-for-lol/packages/docs-site"],
 
     "@scout-for-lol/evals": ["@scout-for-lol/evals@workspace:packages/scout-for-lol/packages/evals"],
 

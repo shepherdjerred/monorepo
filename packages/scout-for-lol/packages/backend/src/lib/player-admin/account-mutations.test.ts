@@ -34,7 +34,7 @@ void mock.module("#src/trpc/guild-guard.ts", () => ({
 void mock.module("#src/league/api/backfill-match-history.ts", () => ({
   backfillLastMatchTime: () => Promise.resolve(),
 }));
-void mock.module("#src/discord/commands/admin/utils/riot-api.ts", () => ({
+void mock.module("#src/lib/riot/resolve-puuid.ts", () => ({
   resolvePuuidFromRiotId: (riotId: RiotId, _region: Region) =>
     Promise.resolve({
       success: true,

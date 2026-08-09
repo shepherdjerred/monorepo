@@ -48,11 +48,11 @@ describe("handleGuildCreate", () => {
     }
     const { content } = result.data;
     expect(content).toContain("Thanks for adding Scout");
-    // Leads with the web dashboard; slash commands are the optional path.
+    // Leads with the web dashboard; lightweight commands are the optional path.
     expect(content).toContain("https://scout-for-lol.com/app/");
-    expect(content).toContain("https://scout-for-lol.com/getting-started");
+    expect(content).toContain("https://scout-for-lol.com/docs/");
     expect(content).toContain("/help");
-    expect(content).toContain("/subscription add");
+    expect(content).toContain("/track");
   });
 
   it("should find first available text channel if system channel unavailable", async () => {

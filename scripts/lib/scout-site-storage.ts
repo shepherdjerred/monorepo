@@ -24,8 +24,12 @@ export const SCOUT_RELEASE_WORK_DIR = ".scout-release";
 const PROD_BUCKET = "scout-frontend";
 const BETA_BUCKET = "scout-frontend-beta";
 const MARKER_KEY = ".release-version";
-const IMMUTABLE_PREFIXES = ["_astro/", "app/assets/"];
-const RELEASE_ENTRYPOINTS = ["index.html", "app/index.html"] as const;
+const IMMUTABLE_PREFIXES = ["_astro/", "app/assets/", "docs/_astro/"];
+const RELEASE_ENTRYPOINTS = [
+  "index.html",
+  "app/index.html",
+  "docs/index.html",
+] as const;
 
 function root(): string {
   return new URL("../..", import.meta.url).pathname.replace(/\/$/, "");
@@ -250,7 +254,11 @@ async function downloadAndVerifyArchiveBytes(
     ],
     { env: SEAWEEDFS_AWS_ENV },
   );
-  await assertStaticSiteComplete(destination, `verify-${flavor}-archive`);
+  await assertStaticSiteComplete(
+    destination,
+    `verify-${flavor}-archive`,
+    RELEASE_ENTRYPOINTS,
+  );
   const actual = await hashSiteArchive(destination);
   if (actual !== expected) {
     throw new Error(
@@ -295,7 +303,11 @@ async function archiveFlavor(
     assertArchiveRecordMatchesState(existing, state, flavor);
     return;
   }
-  await assertStaticSiteComplete(source, `archive-${flavor}`);
+  await assertStaticSiteComplete(
+    source,
+    `archive-${flavor}`,
+    RELEASE_ENTRYPOINTS,
+  );
   const actual = await hashSiteArchive(source);
   if (actual !== expected) {
     throw new Error(

@@ -1,426 +1,96 @@
-import {
-  type Client,
-  PermissionFlagsBits,
-  PermissionsBitField,
-} from "discord.js";
-import { z } from "zod";
+import type { Client, Interaction } from "discord.js";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data/index.ts";
-import { getFlag } from "#src/configuration/flags.ts";
-import { match } from "ts-pattern";
 import { createLogger } from "#src/logger.ts";
+import {
+  discordCommandDuration,
+  discordCommandsTotal,
+} from "#src/metrics/index.ts";
+import {
+  executeDocs,
+  executeInvite,
+  executeSetup,
+  executeStatus,
+} from "#src/discord/commands/onboarding.ts";
+import { executeHelp } from "#src/discord/commands/help.ts";
+import { executeList } from "#src/discord/commands/list.ts";
+import { executeTrack } from "#src/discord/commands/track.ts";
 
 const logger = createLogger("discord-commands");
 
-import { executeHelp } from "#src/discord/commands/help.ts";
-import { executeCompetitionCreate } from "#src/discord/commands/competition/create.ts";
-import { executeCompetitionEdit } from "#src/discord/commands/competition/edit.ts";
-import { executeCompetitionUpdateSchedule } from "#src/discord/commands/competition/update-schedule.ts";
-import { CronPresets } from "@scout-for-lol/data/model/competition-cron.ts";
-import { executeCompetitionCancel } from "#src/discord/commands/competition/cancel.ts";
-import { executeGrantPermission } from "#src/discord/commands/competition/grant-permission.ts";
-import { executeCompetitionJoin } from "#src/discord/commands/competition/join.ts";
-import { executeCompetitionInvite } from "#src/discord/commands/competition/invite.ts";
-import { executeCompetitionLeave } from "#src/discord/commands/competition/leave.ts";
-import { executeCompetitionView } from "#src/discord/commands/competition/view.ts";
-import { executeCompetitionList } from "#src/discord/commands/competition/list.ts";
-import { executeReportCreate } from "#src/discord/commands/report/create.ts";
-import {
-  executeReportDelete,
-  executeReportDisable,
-} from "#src/discord/commands/report/delete.ts";
-import { executeReportList } from "#src/discord/commands/report/list.ts";
-import { executeReportRun } from "#src/discord/commands/report/run.ts";
-import { executeReportUpdate } from "#src/discord/commands/report/update.ts";
-import { executeReportView } from "#src/discord/commands/report/view.ts";
+export function handleCommands(client: Client): void {
+  logger.info("⚡ Setting up lightweight Discord command handlers");
 
-import {
-  executeDebugDatabase,
-  executeDebugPolling,
-} from "#src/discord/commands/debug.ts";
-import { executeDebugServerInfo } from "#src/discord/commands/debug/server-info.ts";
-import {
-  discordCommandsTotal,
-  discordCommandDuration,
-} from "#src/metrics/index.ts";
-import { searchChampions } from "#src/utils/champion.ts";
-import { executeAccountAdd } from "#src/discord/commands/admin/account-add.ts";
-import { executeAccountDelete } from "#src/discord/commands/admin/account-delete.ts";
-import { executeAccountTransfer } from "#src/discord/commands/admin/account-transfer.ts";
-import { executePlayerDelete } from "#src/discord/commands/admin/player-delete.ts";
-import { executePlayerEdit } from "#src/discord/commands/admin/player-edit.ts";
-import { executePlayerLinkDiscord } from "#src/discord/commands/admin/player-link-discord.ts";
-import { executePlayerMerge } from "#src/discord/commands/admin/player-merge.ts";
-import { executePlayerUnlinkDiscord } from "#src/discord/commands/admin/player-unlink-discord.ts";
-import { executePlayerView } from "#src/discord/commands/admin/player-view.ts";
-import { executeDebugForceLeaderboardUpdate } from "#src/discord/commands/debug/force-leaderboard-update.ts";
-import { executeDebugForceSnapshot } from "#src/discord/commands/debug/force-snapshot.ts";
-import { executeDebugManageParticipant } from "#src/discord/commands/debug/manage-participant.ts";
-import { executeDebugForcePairingUpdate } from "#src/discord/commands/debug/force-pairing-update.ts";
-import { executeSubscriptionAdd } from "#src/discord/commands/subscription/add.ts";
-import { executeSubscriptionDelete } from "#src/discord/commands/subscription/delete.ts";
-import { executeSubscriptionList } from "#src/discord/commands/subscription/list.ts";
-import { executeSubscriptionAddChannel } from "#src/discord/commands/subscription/add-channel.ts";
-import { executeSubscriptionMove } from "#src/discord/commands/subscription/move.ts";
-import { executeSubscriptionEditFilters } from "#src/discord/commands/subscription/edit-filters.ts";
-import { suggestQueueCompletions } from "#src/discord/commands/subscription/queue-filter-arg.ts";
-import { suggestSeasonCompletions } from "#src/discord/commands/competition/season-arg.ts";
-import { executeMe } from "#src/discord/commands/me.ts";
-import { executePlayerList } from "#src/discord/commands/admin/player-list.ts";
-
-export function handleCommands(client: Client) {
-  logger.info("⚡ Setting up Discord command handlers");
-
-  // Handle autocomplete interactions
   client.on("interactionCreate", (interaction) => {
-    void (async () => {
-      if (interaction.isAutocomplete()) {
-        const commandName = interaction.commandName;
-        const focusedOption = interaction.options.getFocused(true);
-
-        if (commandName === "competition" && focusedOption.name === "season") {
-          await interaction.respond(
-            suggestSeasonCompletions(focusedOption.value),
-          );
-          return;
-        }
-
-        // Handle champion autocomplete for competition create command
-        if (
-          commandName === "competition" &&
-          focusedOption.name === "champion"
-        ) {
-          const query = focusedOption.value;
-          const results = searchChampions(query);
-
-          await interaction.respond(
-            results.map((champion) => ({
-              name: champion.name,
-              value: champion.id.toString(), // Store ID as string value
-            })),
-          );
-          return;
-        }
-
-        // CRON preset suggestions for /competition create + update-schedule.
-        // Users can still type a custom value; the value is validated on submit.
-        if (
-          (commandName === "competition" &&
-            focusedOption.name === "update-cron") ||
-          (commandName === "report" && focusedOption.name === "schedule-cron")
-        ) {
-          const query = focusedOption.value.toLowerCase();
-          const matchingPresets = query
-            ? CronPresets.filter(
-                (preset) =>
-                  preset.label.toLowerCase().includes(query) ||
-                  preset.value.includes(query),
-              )
-            : CronPresets;
-          await interaction.respond(
-            matchingPresets
-              .slice(0, 25)
-              .map((preset) => ({ name: preset.label, value: preset.value })),
-          );
-          return;
-        }
-
-        // Queue-filter autocomplete for /subscription add + edit-filters.
-        // Suggests remaining queues appended to the comma-separated list.
-        if (commandName === "subscription" && focusedOption.name === "queues") {
-          await interaction.respond(
-            suggestQueueCompletions(focusedOption.value),
-          );
-          return;
-        }
-
-        // No autocomplete for this option
-        await interaction.respond([]);
-        return;
-      }
-    })();
+    void handleInteraction(interaction);
   });
+}
 
-  // Handle command interactions
-  client.on("interactionCreate", (interaction) => {
-    void (async () => {
-      if (!interaction.isChatInputCommand()) {
-        return;
-      }
+async function handleInteraction(interaction: Interaction): Promise<void> {
+  if (!interaction.isChatInputCommand()) {
+    return;
+  }
 
-      const startTime = Date.now();
-      const commandName = interaction.commandName;
-      const userId = DiscordAccountIdSchema.parse(interaction.user.id);
-      const username = interaction.user.username;
-      const guildId = interaction.guildId;
-      const channelId = interaction.channelId;
+  const startTime = Date.now();
+  const commandName = interaction.commandName;
+  const userId = DiscordAccountIdSchema.parse(interaction.user.id);
 
-      logger.info(
-        `📥 Command received: ${commandName} from ${username} (${userId}) in guild ${guildId ?? "DM"} channel ${channelId}`,
-      );
+  logger.info(
+    `📥 Command received: ${commandName} from ${interaction.user.username} (${userId}) in guild ${interaction.guildId ?? "DM"} channel ${interaction.channelId}`,
+  );
 
-      // Log command options if any
-      if (interaction.options.data.length > 0) {
-        logger.info(
-          `📝 Command options:`,
-          interaction.options.data
-            .map((opt) => `${opt.name}: ${String(opt.value)}`)
-            .join(", "),
-        );
-      }
+  try {
+    switch (commandName) {
+      case "help":
+        await executeHelp(interaction);
+        break;
+      case "setup":
+        await executeSetup(interaction);
+        break;
+      case "status":
+        await executeStatus(interaction);
+        break;
+      case "invite":
+        await executeInvite(interaction);
+        break;
+      case "docs":
+        await executeDocs(interaction);
+        break;
+      case "track":
+        await executeTrack(interaction);
+        break;
+      case "list":
+        await executeList(interaction);
+        break;
+      default:
+        await interaction.reply({
+          content:
+            "Scout's detailed management tools are in the web dashboard. Use `/help` to get started.",
+          ephemeral: true,
+        });
+        break;
+    }
 
-      try {
-        switch (commandName) {
-          case "subscription": {
-            const subcommandName = interaction.options.getSubcommand();
-            logger.info(`🔔 Executing subscription ${subcommandName} command`);
+    discordCommandsTotal.inc({ command: commandName, status: "success" });
+  } catch (error) {
+    logger.error(`❌ Error executing /${commandName}:`, error);
+    discordCommandsTotal.inc({ command: commandName, status: "error" });
 
-            await match(subcommandName)
-              .with("add", () => executeSubscriptionAdd(interaction))
-              .with("delete", () => executeSubscriptionDelete(interaction))
-              .with("list", () => executeSubscriptionList(interaction))
-              .with("add-channel", () =>
-                executeSubscriptionAddChannel(interaction),
-              )
-              .with("move", () => executeSubscriptionMove(interaction))
-              .with("edit-filters", () =>
-                executeSubscriptionEditFilters(interaction),
-              )
-              .otherwise(() => {
-                logger.warn(
-                  `⚠️  Unknown subscription subcommand: ${subcommandName}`,
-                );
-                return interaction.reply({
-                  content: "Unknown subscription subcommand",
-                  ephemeral: true,
-                });
-              });
-
-            break;
-          }
-          case "competition": {
-            const subcommandName = interaction.options.getSubcommand();
-            logger.info(`🏆 Executing competition ${subcommandName} command`);
-
-            await match(subcommandName)
-              .with("create", async () => executeCompetitionCreate(interaction))
-              .with("edit", async () => executeCompetitionEdit(interaction))
-              .with("update-schedule", async () =>
-                executeCompetitionUpdateSchedule(interaction),
-              )
-              .with("cancel", async () => executeCompetitionCancel(interaction))
-              .with("grant-permission", async () =>
-                executeGrantPermission(interaction),
-              )
-              .with("join", async () => executeCompetitionJoin(interaction))
-              .with("invite", async () => executeCompetitionInvite(interaction))
-              .with("leave", async () => executeCompetitionLeave(interaction))
-              .with("view", async () => executeCompetitionView(interaction))
-              .with("list", async () => executeCompetitionList(interaction))
-              .otherwise(async () => {
-                logger.warn(
-                  `⚠️  Unknown competition subcommand: ${subcommandName}`,
-                );
-                await interaction.reply({
-                  content: "Unknown competition subcommand",
-                  ephemeral: true,
-                });
-              });
-
-            break;
-          }
-          case "report": {
-            const subcommandName = interaction.options.getSubcommand();
-            logger.info(`📊 Executing report ${subcommandName} command`);
-
-            await match(subcommandName)
-              .with("create", async () => executeReportCreate(interaction))
-              .with("update", async () => executeReportUpdate(interaction))
-              .with("run", async () => executeReportRun(interaction))
-              .with("run-now", async () => executeReportRun(interaction))
-              .with("view", async () => executeReportView(interaction))
-              .with("disable", async () => executeReportDisable(interaction))
-              .with("delete", async () => executeReportDelete(interaction))
-              .with("list", async () => executeReportList(interaction))
-              .otherwise(async () => {
-                logger.warn(`⚠️  Unknown report subcommand: ${subcommandName}`);
-                await interaction.reply({
-                  content: "Unknown report subcommand",
-                  ephemeral: true,
-                });
-              });
-
-            break;
-          }
-          case "admin": {
-            // Check if user has Administrator permissions (applies to all admin subcommands)
-            const member = interaction.member;
-            const PermissionSchema = z
-              .object({ permissions: z.instanceof(PermissionsBitField) })
-              .loose();
-            const permissionResult = PermissionSchema.safeParse(member);
-            const hasAdminPermission =
-              permissionResult.success &&
-              permissionResult.data.permissions.has(
-                PermissionFlagsBits.Administrator,
-              );
-
-            if (!hasAdminPermission) {
-              logger.warn(
-                `⚠️  Unauthorized admin command access attempt by ${username} (${userId})`,
-              );
-              await interaction.reply({
-                content:
-                  "❌ Admin commands require Administrator permissions in this server.",
-                ephemeral: true,
-              });
-              return;
-            }
-
-            const subcommandName = interaction.options.getSubcommand();
-            logger.info(
-              `🔧 Executing admin ${subcommandName} command (authorized: ${username})`,
-            );
-
-            await match(subcommandName)
-              .with("player-edit", () => executePlayerEdit(interaction))
-              .with("account-delete", () => executeAccountDelete(interaction))
-              .with("account-add", () => executeAccountAdd(interaction))
-              .with("account-transfer", () =>
-                executeAccountTransfer(interaction),
-              )
-              .with("player-merge", () => executePlayerMerge(interaction))
-              .with("player-delete", () => executePlayerDelete(interaction))
-              .with("player-link-discord", () =>
-                executePlayerLinkDiscord(interaction),
-              )
-              .with("player-unlink-discord", () =>
-                executePlayerUnlinkDiscord(interaction),
-              )
-              .with("player-view", () => executePlayerView(interaction))
-              .with("player-list", () => executePlayerList(interaction))
-              .otherwise(() => {
-                logger.warn(`⚠️  Unknown admin subcommand: ${subcommandName}`);
-                return interaction.reply({
-                  content: "Unknown admin subcommand",
-                  ephemeral: true,
-                });
-              });
-
-            break;
-          }
-          case "debug": {
-            // Check if user has debug access (applies to all debug subcommands)
-            if (!getFlag("debug", { user: userId })) {
-              logger.warn(
-                `⚠️  Unauthorized debug command access attempt by ${username} (${userId})`,
-              );
-              await interaction.reply({
-                content:
-                  "❌ Debug commands are only available to authorized users.",
-                ephemeral: true,
-              });
-              return;
-            }
-
-            const subcommandName = interaction.options.getSubcommand();
-            logger.info(
-              `🐛 Executing debug ${subcommandName} command (authorized: ${username})`,
-            );
-
-            await match(subcommandName)
-              .with("database", async () => executeDebugDatabase(interaction))
-              .with("polling", async () => executeDebugPolling(interaction))
-              .with("server-info", async () =>
-                executeDebugServerInfo(interaction),
-              )
-              .with("force-snapshot", async () =>
-                executeDebugForceSnapshot(interaction),
-              )
-              .with("force-leaderboard-update", async () =>
-                executeDebugForceLeaderboardUpdate(interaction),
-              )
-              .with("manage-participant", async () =>
-                executeDebugManageParticipant(interaction),
-              )
-              .with("force-pairing-update", async () =>
-                executeDebugForcePairingUpdate(interaction),
-              )
-              .otherwise(async () => {
-                logger.warn(`⚠️  Unknown debug subcommand: ${subcommandName}`);
-                await interaction.reply({
-                  content: "Unknown debug subcommand",
-                  ephemeral: true,
-                });
-              });
-
-            break;
-          }
-          case "me": {
-            logger.info("👤 Executing me command");
-            await executeMe(interaction);
-
-            break;
-          }
-          case "help": {
-            logger.info("❓ Executing help command");
-            await executeHelp(interaction);
-
-            break;
-          }
-          default: {
-            logger.warn(`⚠️  Unknown command received: ${commandName}`);
-            await interaction.reply("Unknown command");
-          }
-        }
-
-        const executionTime = Date.now() - startTime;
-        const executionTimeSeconds = executionTime / 1000;
-        logger.info(
-          `✅ Command ${commandName} completed successfully in ${executionTime.toString()}ms`,
-        );
-
-        // Record successful command metrics
-        discordCommandsTotal.inc({ command: commandName, status: "success" });
-        discordCommandDuration.observe(
-          { command: commandName },
-          executionTimeSeconds,
-        );
-      } catch (error) {
-        const executionTime = Date.now() - startTime;
-        const executionTimeSeconds = executionTime / 1000;
-        logger.error(
-          `❌ Command ${commandName} failed after ${executionTime.toString()}ms:`,
-          error,
-        );
-
-        // Record failed command metrics
-        discordCommandsTotal.inc({ command: commandName, status: "error" });
-        discordCommandDuration.observe(
-          { command: commandName },
-          executionTimeSeconds,
-        );
-        logger.error(
-          `❌ Error details - User: ${username} (${userId}), Guild: ${String(guildId)}, Channel: ${channelId}`,
-        );
-
-        const errorMessage =
-          "❌ **There was an error while executing this command!**\n\n" +
-          "If this issue persists, please report it:\n" +
-          "• Open an issue on GitHub: https://github.com/shepherdjerred/monorepo/issues\n" +
-          "• Join our Discord server for support: https://discord.gg/qmRewyHXFE";
-
-        await (interaction.replied || interaction.deferred
-          ? interaction.followUp({
-              content: errorMessage,
-              ephemeral: true,
-            })
-          : interaction.reply({
-              content: errorMessage,
-              ephemeral: true,
-            }));
-      }
-    })();
-  });
-
-  logger.info("✅ Discord command handlers configured");
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.reply({
+        content:
+          "Scout could not complete that command. Open `/docs` for help or use the web dashboard.",
+        ephemeral: true,
+      });
+    } else if (interaction.deferred && !interaction.replied) {
+      await interaction.editReply({
+        content:
+          "Scout could not complete that command. Open `/docs` for help or use the web dashboard.",
+      });
+    }
+  } finally {
+    discordCommandDuration.observe(
+      { command: commandName },
+      (Date.now() - startTime) / 1000,
+    );
+  }
 }

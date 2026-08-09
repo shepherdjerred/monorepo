@@ -1,7 +1,8 @@
 /**
  * Shared check for "the signed-in web user is an Administrator of the
  * target guild AND Scout is installed there." Mirrors the Discord-side
- * `setDefaultMemberPermissions(Administrator)` gate on /subscription *.
+ * Discord command access is intentionally lightweight; management permissions
+ * are enforced by the web UI's guild procedures.
  */
 
 import { TRPCError } from "@trpc/server";

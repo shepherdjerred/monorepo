@@ -261,6 +261,10 @@ async function buildSite(
     PUBLIC_POSTHOG_SITE_KEY: posthogSite.key,
     PUBLIC_POSTHOG_SITE_DOMAIN: posthogSite.domain,
     PUBLIC_POSTHOG_SESSION_REPLAY: String(posthogSite.sessionReplay),
+    PUBLIC_DOCS_SITE_ORIGIN:
+      flavor === "prod"
+        ? "https://scout-for-lol.com"
+        : "https://beta.scout-for-lol.com",
   };
   if (flavor === "prod") {
     env["PUBLIC_PINTEREST_TAG_ID"] = requireEnv("PUBLIC_PINTEREST_TAG_ID");

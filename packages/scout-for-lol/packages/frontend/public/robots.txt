@@ -4,3 +4,4 @@ Disallow: /app/
 Disallow: /dev/
 
 Sitemap: https://scout-for-lol.com/sitemap-index.xml
+Sitemap: https://scout-for-lol.com/docs/sitemap-index.xml

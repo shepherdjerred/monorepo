@@ -1,107 +1,47 @@
-/**
- * Help Command
- *
- * Provides users with helpful resources and command overview
- */
-
-import {
-  type ChatInputCommandInteraction,
-  SlashCommandBuilder,
-  EmbedBuilder,
-  Colors,
-} from "discord.js";
+import { EmbedBuilder, Colors, SlashCommandBuilder } from "discord.js";
 import { createLogger } from "#src/logger.ts";
+import { getDocsUrl, getDashboardUrl } from "#src/discord/commands/links.ts";
+import type { CommandReply } from "#src/discord/commands/define-command.ts";
 
 const logger = createLogger("commands-help");
+type HelpInteraction = { reply: CommandReply };
 
 export const helpCommand = new SlashCommandBuilder()
   .setName("help")
-  .setDescription("Get help and view available commands");
+  .setDescription("Get help and view Scout's lightweight commands");
 
-export async function executeHelp(
-  interaction: ChatInputCommandInteraction,
-): Promise<void> {
-  logger.info("❓ Executing help command");
-
+export async function executeHelp(interaction: HelpInteraction): Promise<void> {
+  const dashboardUrl = getDashboardUrl();
+  const docsUrl = getDocsUrl();
   const embed = new EmbedBuilder()
-    .setTitle("🤖 Scout for League of Legends - Help")
+    .setTitle("Scout for League of Legends")
     .setDescription(
-      "Scout automatically tracks your friends' League of Legends matches and provides beautiful post-match reports in Discord.",
+      "Scout watches tracked League matches and posts notifications and reports in Discord. Use the web dashboard for full setup and management.",
     )
     .setColor(Colors.Blue)
     .addFields(
       {
-        name: "📚 Getting Started",
-        value:
-          "New to Scout? Check out our step-by-step guide:\n**https://scout-for-lol.com/getting-started**\n\nFull documentation available at:\n**https://scout-for-lol.com/docs**",
-        inline: false,
+        name: "Start here",
+        value: `**Dashboard:** ${dashboardUrl}\n**Documentation:** ${docsUrl}`,
       },
       {
-        name: "🔔 Basic Commands",
+        name: "Lightweight commands",
         value:
-          "• `/me` - Look up your own or any player's accounts\n" +
-          "• `/subscription add` - Track a League player's matches\n" +
-          "• `/subscription delete` - Stop tracking a player\n" +
-          "• `/subscription list` - View all subscriptions\n" +
-          "• `/subscription add-channel` - Add a player to another channel\n" +
-          "• `/subscription move` - Move a subscription between channels",
-        inline: false,
+          "`/setup` — See the recommended web setup flow\n" +
+          "`/track` — Track one player in this channel\n" +
+          "`/list` — List tracked players\n" +
+          "`/status` — Check Scout's status\n" +
+          "`/invite` — Add Scout to another server\n" +
+          "`/docs` — Open the documentation",
       },
       {
-        name: "🐛 Debug Commands",
+        name: "Use the dashboard for",
         value:
-          "• `/debug server-info` - View server statistics\n" +
-          "• `/debug database` - Download database file (owner only)\n" +
-          "• `/debug polling` - Show polling intervals (owner only)",
-        inline: false,
-      },
-      {
-        name: "🏆 Competition Commands",
-        value:
-          "• `/competition create` - Create a new competition\n" +
-          "• `/competition join` - Join a competition\n" +
-          "• `/competition view` - View competition leaderboard\n" +
-          "• `/competition list` - List all competitions",
-        inline: false,
-      },
-      {
-        name: "🔧 Admin Commands",
-        value:
-          "• `/admin player-edit` - Edit a player's alias\n" +
-          "• `/admin account-delete` - Remove a Riot account\n" +
-          "• `/admin account-add` - Add a Riot account to a player\n" +
-          "• `/admin account-transfer` - Transfer account between players\n" +
-          "• `/admin player-merge` - Merge two players\n" +
-          "• `/admin player-delete` - Permanently delete a player\n" +
-          "• `/admin player-link-discord` - Link Discord user to player\n" +
-          "• `/admin player-unlink-discord` - Unlink Discord user\n" +
-          "• `/admin player-view` - View player details\n" +
-          "• `/admin player-list` - List all players in the server",
-        inline: false,
-      },
-      {
-        name: "💡 Quick Start",
-        value:
-          "1. Use `/subscription add` to track your first player\n" +
-          "2. Scout will notify your channel when they start a match\n" +
-          "3. Get detailed post-match reports automatically!",
-        inline: false,
-      },
-      {
-        name: "🆘 Need Support?",
-        value:
-          "• GitHub Issues: https://github.com/shepherdjerred/monorepo/issues\n" +
-          "• Discord Server: https://discord.gg/qmRewyHXFE",
-        inline: false,
+          "Channels, filters, queues, competitions, scheduled reports, roles, permissions, audit history, and complete player/account management.",
       },
     )
-    .setFooter({ text: "Scout for LoL • Built for the League community" })
-    .setTimestamp();
+    .setFooter({ text: "Scout for LoL • Web-first setup" });
 
-  await interaction.reply({
-    embeds: [embed],
-    ephemeral: true,
-  });
-
+  await interaction.reply({ embeds: [embed], ephemeral: true });
   logger.info("✅ Help command completed successfully");
 }

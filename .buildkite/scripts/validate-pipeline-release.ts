@@ -32,6 +32,7 @@ function validateReleaseSteps({
   for (const required of [
     "--filter '@scout-for-lol/frontend'",
     "--filter '@scout-for-lol/app'",
+    "--filter '@scout-for-lol/docs-site'",
     "--filter astro-opengraph-images",
     "--filter '@shepherdjerred/llm-models'",
     "--filter '@shepherdjerred/glitter-context'",

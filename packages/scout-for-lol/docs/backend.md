@@ -50,37 +50,20 @@ flowchart TB
 
 ### Command Structure
 
-Commands are organized by category in `src/discord/commands/`:
+The Discord surface is intentionally limited to onboarding and read-only/simple
+tracking helpers. The full configuration surface lives in the web UI:
 
 ```text
 commands/
-├── admin/           # Server admin commands
-│   ├── account-add.ts
-│   ├── account-delete.ts
-│   ├── account-transfer.ts
-│   ├── player-add.ts
-│   ├── player-delete.ts
-│   └── player-list.ts
-├── competition/     # Competition management
-│   ├── create.ts
-│   ├── cancel.ts
-│   ├── edit.ts
-│   ├── invite.ts
-│   ├── join.ts
-│   ├── leave.ts
-│   ├── list.ts
-│   └── view.ts
-├── subscription/    # Match notifications
-│   ├── subscribe.ts
-│   ├── delete.ts
-│   ├── list.ts
-│   └── welcome-match.ts
-└── debug/           # Debug utilities
-    ├── force-snapshot.ts
-    └── force-leaderboard.ts
+├── help.ts          # Web-first command overview
+├── onboarding.ts    # setup/status/invite/docs
+├── track.ts         # Minimal current-channel subscription
+├── list.ts          # Read-only subscription overview
+├── links.ts         # Stage-aware dashboard/docs links
+└── index.ts         # Dispatcher and metrics
 ```
 
-### Command Registration Flow
+### Lightweight Discord command flow
 
 ```mermaid
 sequenceDiagram
@@ -99,26 +82,11 @@ sequenceDiagram
     Handler->>Discord: Reply to interaction
 ```
 
-### Command Implementation Pattern
-
-Each command exports:
-
-- `data`: SlashCommandBuilder definition
-- `execute`: Async handler function
-
-```typescript
-// Example: src/discord/commands/subscription/subscribe.ts
-export const data = new SlashCommandBuilder()
-  .setName("subscribe")
-  .setDescription("Subscribe to match notifications")
-  .addUserOption(/* ... */);
-
-export async function execute(interaction: ChatInputCommandInteraction) {
-  // Validate input with Zod
-  // Query/mutate database
-  // Reply to interaction
-}
-```
+Discord registration intentionally exposes only `/help`, `/setup`, `/status`,
+`/invite`, `/docs`, `/track`, and `/list`. The dispatcher has no autocomplete
+path and no command-specific management tree. `/track` and `/list` call the
+shared subscription domain services; all advanced management is implemented in
+the web UI and its tRPC router.
 
 ## Cron Job System
 

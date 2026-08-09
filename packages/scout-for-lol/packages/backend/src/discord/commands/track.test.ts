@@ -1,0 +1,76 @@
+import { describe, expect, mock, test } from "bun:test";
+import type { ChatInputCommandInteraction } from "discord.js";
+import type { AddSubscriptionResult } from "#src/lib/subscription/types.ts";
+import {
+  executeTrack,
+  formatTrackResult,
+} from "#src/discord/commands/track.ts";
+
+type TrackInteraction = Parameters<typeof executeTrack>[0];
+
+describe("/track", () => {
+  test("rejects direct messages and invalid command input", async () => {
+    const replyMock = mock(
+      (payload: Parameters<ChatInputCommandInteraction["reply"]>[0]) =>
+        Promise.resolve(payload),
+    );
+    const deferReplyMock = mock(
+      (options: Parameters<ChatInputCommandInteraction["deferReply"]>[0]) =>
+        Promise.resolve(options),
+    );
+    const editReplyMock = mock(
+      (options: Parameters<ChatInputCommandInteraction["editReply"]>[0]) =>
+        Promise.resolve(options),
+    );
+    const interaction: TrackInteraction = {
+      guildId: null,
+      channelId: "312300000000000001",
+      user: { id: "312300000000000002" },
+      options: { getString: () => "Faker#KR1" },
+      reply: replyMock,
+      deferReply: deferReplyMock,
+      editReply: editReplyMock,
+      replied: false,
+      deferred: false,
+    };
+
+    await executeTrack(interaction);
+
+    expect(replyMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ephemeral: true,
+        content: expect.stringContaining("can only be used in a server"),
+      }),
+    );
+  });
+
+  test("formats the happy path with a dashboard escalation", () => {
+    const result: AddSubscriptionResult = {
+      kind: "created",
+      subscription: { id: 1 },
+      account: { id: 2, puuid: "p", region: "na1", alias: "Faker" },
+      player: { id: 3, alias: "faker", accounts: [] },
+      isAddingToExistingPlayer: false,
+      isFirstSubscription: true,
+      warnings: [],
+    };
+
+    const message = formatTrackResult(result);
+    expect(message).toContain("Now tracking");
+    expect(message).toContain("/app/");
+  });
+
+  test("formats duplicate and domain-error responses", () => {
+    expect(
+      formatTrackResult({
+        kind: "subscription-already-exists",
+        playerAlias: "faker",
+        addedToExistingPlayer: false,
+        accounts: [],
+      }),
+    ).toContain("already tracked");
+    expect(
+      formatTrackResult({ kind: "riot-id-not-found", message: "not found" }),
+    ).toContain("not found");
+  });
+});

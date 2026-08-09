@@ -2,28 +2,14 @@ import { REST, Routes } from "discord.js";
 import { z } from "zod";
 import * as Sentry from "@sentry/bun";
 import configuration from "#src/configuration.ts";
-import { debugCommand } from "#src/discord/commands/debug.ts";
-import { competitionCommand } from "#src/discord/commands/competition/index.ts";
-import { reportCommand } from "#src/discord/commands/report/index.ts";
-import { adminCommand } from "#src/discord/commands/admin/index.ts";
-import { subscriptionCommand } from "#src/discord/commands/subscription/index.ts";
-import { helpCommand } from "#src/discord/commands/help.ts";
-import { meCommand } from "#src/discord/commands/me.ts";
+import { commandPayload } from "#src/discord/commands/definitions.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("discord-rest");
 
 logger.info("🔄 Preparing Discord slash commands for registration");
 
-const commands = [
-  subscriptionCommand.toJSON(),
-  debugCommand.toJSON(),
-  competitionCommand.toJSON(),
-  reportCommand.toJSON(),
-  adminCommand.toJSON(),
-  helpCommand.toJSON(),
-  meCommand.toJSON(),
-];
+const commands = commandPayload;
 
 logger.info("📋 Commands to register:");
 commands.forEach((command, index) => {

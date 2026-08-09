@@ -9,7 +9,7 @@ import {
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
 import { recordAudit } from "#src/lib/audit/index.ts";
-import { resolvePuuidFromRiotId } from "#src/discord/commands/admin/utils/riot-api.ts";
+import { resolvePuuidFromRiotId } from "#src/lib/riot/resolve-puuid.ts";
 import { backfillLastMatchTime } from "#src/league/api/backfill-match-history.ts";
 import { getRiotIdByPuuid } from "#src/lib/riot/account-riot-id.ts";
 import {

@@ -38,7 +38,7 @@ import {
   guildMutationProcedure,
 } from "#src/trpc/guild-permission.ts";
 import { prisma } from "#src/database/index.ts";
-import { canCreateAnotherUserReport } from "#src/discord/commands/report/authorization.ts";
+import { canCreateAnotherUserReport } from "#src/lib/reports/authorization.ts";
 import { executeReportQuery } from "#src/reports/query-engine.ts";
 import { renderReportOutput } from "#src/reports/output.ts";
 import { runReport } from "#src/reports/runner.ts";
