@@ -293,7 +293,7 @@ async function assertRootPruneSafe(token: string): Promise<void> {
     if (
       !isRecord(resource) ||
       resource["kind"] !== "Application" ||
-      resource["status"] !== "OutOfSync" ||
+      resource["requiresPruning"] !== true ||
       typeof resource["name"] !== "string" ||
       resource["name"] === "apps"
     ) {

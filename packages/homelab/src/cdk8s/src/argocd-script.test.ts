@@ -136,8 +136,10 @@ describe("Argo CD prune safety", () => {
       await server.stop(true);
     }
   });
+});
 
-  test("blocks root pruning when a removed child lacks the cascade finalizer", async () => {
+describe("Argo CD root prune safety", () => {
+  test("blocks root pruning when a pruning child lacks the cascade finalizer", async () => {
     let syncPosts = 0;
     const server = Bun.serve({
       hostname: "127.0.0.1",
@@ -156,6 +158,7 @@ describe("Argo CD prune safety", () => {
                   kind: "Application",
                   name: "unsafe-child",
                   status: "OutOfSync",
+                  requiresPruning: true,
                 },
               ],
             },
@@ -206,6 +209,77 @@ describe("Argo CD prune safety", () => {
       expect(exitCode).not.toBe(0);
       expect(stderr).toContain("cascading resources finalizer is missing");
       expect(syncPosts).toBe(0);
+    } finally {
+      await server.stop(true);
+    }
+  });
+
+  test("ignores out-of-sync retained children when checking root pruning", async () => {
+    let syncPosts = 0;
+    const server = Bun.serve({
+      hostname: "127.0.0.1",
+      port: 0,
+      fetch(request) {
+        const url = new URL(request.url);
+        if (
+          request.method === "POST" &&
+          url.pathname === "/api/v1/applications/apps/sync"
+        ) {
+          syncPosts++;
+          return Response.json({ operation: {} });
+        }
+        if (url.pathname === "/api/v1/applications/apps") {
+          return Response.json({
+            status: {
+              resources: [
+                {
+                  kind: "Application",
+                  name: "argocd",
+                  status: "OutOfSync",
+                  requiresPruning: false,
+                },
+              ],
+            },
+          });
+        }
+        return new Response("not found", { status: 404 });
+      },
+    });
+
+    try {
+      const process = Bun.spawn(
+        [
+          "bun",
+          "--no-install",
+          "scripts/argocd.ts",
+          "sync",
+          "apps",
+          "--prune",
+          "--async",
+          "--timeout",
+          "1",
+        ],
+        {
+          cwd: path.resolve(import.meta.dir, "../../.."),
+          env: {
+            ...Bun.env,
+            ARGOCD_SERVER_URL: server.url.origin,
+            ARGOCD_TOKEN: "test-token",
+          },
+          stderr: "pipe",
+          stdout: "pipe",
+        },
+      );
+      const [exitCode, stdout, stderr] = await Promise.all([
+        process.exited,
+        new Response(process.stdout).text(),
+        new Response(process.stderr).text(),
+      ]);
+
+      expect(exitCode).toBe(0);
+      expect(stderr).toBe("");
+      expect(stdout).toContain("sync operation started: apps");
+      expect(syncPosts).toBe(1);
     } finally {
       await server.stop(true);
     }

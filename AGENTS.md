@@ -69,6 +69,15 @@ sandbox/                        # Personal scratch (not shipped, excluded from m
 - **Update docs with code** — When adding a CLI command or feature, update CLAUDE.md and the relevant skills in the same phase, not a later "polish" pass, so the integration points are usable as soon as the feature works. When a change alters a meaningful architecture boundary, operator workflow, or system rationale, also update the nearest human page under `packages/docs/wiki/src/content/docs/`.
 - **Shared data is language-neutral** — Cross-package shared data (catalogs, config) belongs in a language-neutral source of truth (JSON + JSON Schema), validated per-language (Zod in TS, Pydantic in Python). The repo has Bun and Python consumers; don't ship a TS-only module. If TS needs it browser- and node-safe, ship a built package with inlined JSON + `.d.ts`, not a `node:fs` read or a source-only JSON import.
 
+### ArgoCD root prune safety
+
+The homelab CI reconcile script must validate every root `apps` child that
+ArgoCD reports with `requiresPruning: true` before running a pruned sync. The
+child must use the `ci.sjer.red/application-lifecycle: cascade` annotation and
+the Argo resources finalizer. An `OutOfSync` child without
+`requiresPruning: true` may be retained intentionally and is not itself a
+prune candidate.
+
 ## Code Review Rules
 
 These rules steer the automated PR code-review provider (Codex by default; the
