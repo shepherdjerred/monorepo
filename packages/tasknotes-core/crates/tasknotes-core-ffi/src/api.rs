@@ -17,7 +17,7 @@
 
 use tasknotes_core::domain::{self, FilterConfig, Priority, SortConfig, Task, TaskStatus};
 
-use crate::{error::CoreError, update::UpdateTaskRequest};
+use crate::{dates::parse_iso_date, error::CoreError, update::UpdateTaskRequest};
 
 /// The version of the core this binary was built from.
 ///
@@ -168,13 +168,64 @@ pub fn task_filter_is_active(filter: &FilterConfig) -> bool {
     filter.is_active()
 }
 
+/// How many dimensions are filtered, for the `filters (3)` badge.
+///
+/// Exported so the badge shows a *number* rather than a filled-or-hollow glyph.
+/// Counting the dimensions in the shell instead would put a second opinion
+/// about what "filtered" means next to [`task_filter_is_active`], and the two
+/// would drift the first time a dimension was added — which is exactly what
+/// adding `query` just did.
+#[uniffi::export]
+#[must_use]
+pub fn task_filter_active_count(filter: &FilterConfig) -> u32 {
+    filter.active_count()
+}
+
+/// Whether one task matches a free-text query.
+///
+/// The same predicate [`FilterConfig::query`] runs, exported on its own for a
+/// live count or a "does this row still belong here?" check. See
+/// [`tasknotes_core::domain::search_matches`] for the exact semantics — which
+/// fields are searched, substring versus prefix, the case-folding rule, and why
+/// a query is one phrase rather than a bag of tokens. Every one of those is a
+/// product decision, and this export is what stops a second client answering
+/// them differently.
+#[uniffi::export]
+#[must_use]
+pub fn task_search_matches(task: &Task, query: &str) -> bool {
+    domain::search_matches(task, query)
+}
+
 /// Sort a list of tasks. The sort is stable, which is load-bearing: an
 /// unorderable due value compares equal to everything, and stability is what
 /// turns that into "leave it where it was" rather than "shuffle it".
-#[uniffi::export]
-#[must_use]
-pub fn task_sort_apply(tasks: &[Task], sort: SortConfig) -> Vec<Task> {
-    domain::apply_sort(tasks, sort)
+///
+/// `today` is the viewer's civil date as `YYYY-MM-DD`. It is read by exactly
+/// one leg of one key — the recurrence fallback of [`SortField::EffectiveDate`]
+/// — and ignored by every other field, so it is optional. Omitting it is a
+/// statement that the caller did not say what day it is, which makes that leg
+/// unanswerable and sorts a rule-only task as undated. **A shell offering
+/// `EffectiveDate` should always pass it.**
+///
+/// # Errors
+///
+/// Returns [`CoreError::Validation`] when `today` is present but is not a
+/// `YYYY-MM-DD` calendar date. Rejected rather than ignored: a silently
+/// discarded `today` would reorder the list with no way to notice.
+///
+/// [`SortField::EffectiveDate`]: tasknotes_core::domain::SortField::EffectiveDate
+#[uniffi::export(default(today = None))]
+pub fn task_sort_apply(
+    tasks: &[Task],
+    sort: SortConfig,
+    today: Option<String>,
+) -> Result<Vec<Task>, CoreError> {
+    // Consumed by value rather than borrowed because UniFFI lifts arguments
+    // *out of* the FFI buffer, so a `String` arrives owned and there is no
+    // borrow on the far side to hand across — the same reason the recurrence
+    // exports own their `DTSTART` fallbacks.
+    let today = today.map(|value| parse_iso_date(&value)).transpose()?;
+    Ok(domain::apply_sort(tasks, sort, today))
 }
 
 // ── JSON round trips ───────────────────────────────────────────────────────
@@ -256,10 +307,11 @@ mod tests {
     use super::{
         core_version, priority_all, priority_label, priority_parse, priority_rank,
         priority_wire_value, project_display_name, project_matches, project_path,
-        task_filter_apply, task_filter_is_active, task_filter_matches, task_from_json,
-        task_sort_apply, task_status_all, task_status_is_active, task_status_label,
-        task_status_next, task_status_parse, task_status_wire_value, task_to_json,
-        update_task_request_from_json, update_task_request_to_json,
+        task_filter_active_count, task_filter_apply, task_filter_is_active, task_filter_matches,
+        task_from_json, task_search_matches, task_sort_apply, task_status_all,
+        task_status_is_active, task_status_label, task_status_next, task_status_parse,
+        task_status_wire_value, task_to_json, update_task_request_from_json,
+        update_task_request_to_json,
     };
     use crate::error::CoreError;
 
@@ -330,17 +382,21 @@ mod tests {
         ];
 
         assert_eq!(
-            titles(&task_sort_apply(&tasks, SortConfig::default())),
+            titles(&task_sort_apply(&tasks, SortConfig::default(), None).unwrap()),
             ["sooner", "later", "undated"]
         );
         assert_eq!(
-            titles(&task_sort_apply(
-                &tasks,
-                SortConfig {
-                    field: SortField::Title,
-                    direction: SortDirection::Desc,
-                }
-            )),
+            titles(
+                &task_sort_apply(
+                    &tasks,
+                    SortConfig {
+                        field: SortField::Title,
+                        direction: SortDirection::Desc,
+                    },
+                    None
+                )
+                .unwrap()
+            ),
             ["undated", "sooner", "later"]
         );
 
@@ -349,13 +405,67 @@ mod tests {
             ..FilterConfig::default()
         };
         assert!(task_filter_is_active(&filter));
+        assert_eq!(task_filter_active_count(&filter), 1);
         assert!(!task_filter_is_active(&FilterConfig::default()));
+        assert_eq!(task_filter_active_count(&FilterConfig::default()), 0);
         assert_eq!(titles(&task_filter_apply(&tasks, &filter)), ["undated"]);
         assert!(task_filter_matches(&task("undated", None), &filter));
         assert!(!task_filter_matches(
             &task("later", Some("2026-08-09")),
             &filter
         ));
+    }
+
+    #[test]
+    fn search_crosses_as_a_filter_dimension_and_as_a_predicate() {
+        let tasks = [
+            task("undated", None),
+            task("later", Some("2026-08-09")),
+            task("sooner", Some("2026-08-08")),
+        ];
+
+        assert!(task_search_matches(&task("undated", None), "DATE"));
+        assert!(!task_search_matches(&task("undated", None), "mortgage"));
+        // An empty query narrows nothing, which is what lets a search field sit
+        // over a list the user is already looking at.
+        assert!(task_search_matches(&task("undated", None), "  "));
+
+        let searching = FilterConfig {
+            query: "er".to_owned(),
+            ..FilterConfig::default()
+        };
+        assert!(task_filter_is_active(&searching));
+        assert_eq!(task_filter_active_count(&searching), 1);
+        assert_eq!(
+            titles(&task_filter_apply(&tasks, &searching)),
+            ["later", "sooner"]
+        );
+    }
+
+    #[test]
+    fn the_effective_date_sort_reads_scheduled_and_rejects_a_malformed_today() {
+        let scheduled: Task =
+            task_from_json(r#"{"id":"Tasks/s.md","title":"scheduled","scheduled":"2026-08-04"}"#)
+                .unwrap();
+        let tasks = [task("later", Some("2026-08-31")), scheduled];
+        let sort = SortConfig {
+            field: SortField::EffectiveDate,
+            direction: SortDirection::Asc,
+        };
+
+        assert_eq!(
+            titles(&task_sort_apply(&tasks, sort, Some("2026-08-03".to_owned())).unwrap()),
+            ["scheduled", "later"],
+            "a scheduled-only task is dated, not undated"
+        );
+
+        // A `today` that is not a date is reported rather than discarded: a
+        // silently ignored one would reorder the list with nothing to notice.
+        let error = task_sort_apply(&tasks, sort, Some("08/03/2026".to_owned())).unwrap_err();
+        assert!(
+            matches!(error, CoreError::Validation { ref message } if message.contains("YYYY-MM-DD")),
+            "unexpected error: {error:?}"
+        );
     }
 
     #[test]

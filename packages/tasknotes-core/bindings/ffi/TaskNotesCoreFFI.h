@@ -886,6 +886,11 @@ int8_t uniffi_tasknotes_core_ffi_fn_func_project_matches(RustBuffer left, RustBu
 RustBuffer uniffi_tasknotes_core_ffi_fn_func_project_path(RustBuffer value, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_TASK_FILTER_ACTIVE_COUNT
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_TASK_FILTER_ACTIVE_COUNT
+uint32_t uniffi_tasknotes_core_ffi_fn_func_task_filter_active_count(RustBuffer filter, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_TASK_FILTER_APPLY
 #define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_TASK_FILTER_APPLY
 RustBuffer uniffi_tasknotes_core_ffi_fn_func_task_filter_apply(RustBuffer tasks, RustBuffer filter, RustCallStatus *_Nonnull out_status
@@ -906,9 +911,14 @@ int8_t uniffi_tasknotes_core_ffi_fn_func_task_filter_matches(RustBuffer task, Ru
 RustBuffer uniffi_tasknotes_core_ffi_fn_func_task_from_json(RustBuffer json, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_TASK_SEARCH_MATCHES
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_TASK_SEARCH_MATCHES
+int8_t uniffi_tasknotes_core_ffi_fn_func_task_search_matches(RustBuffer task, RustBuffer query, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_TASK_SORT_APPLY
 #define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_TASK_SORT_APPLY
-RustBuffer uniffi_tasknotes_core_ffi_fn_func_task_sort_apply(RustBuffer tasks, RustBuffer sort, RustCallStatus *_Nonnull out_status
+RustBuffer uniffi_tasknotes_core_ffi_fn_func_task_sort_apply(RustBuffer tasks, RustBuffer sort, RustBuffer today, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_TASK_STATUS_ALL
@@ -1003,6 +1013,11 @@ RustBuffer uniffi_tasknotes_core_ffi_fn_func_calendar_month_title(RustBuffer mon
 #define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_CALENDAR_WEEKDAYS
 RustBuffer uniffi_tasknotes_core_ffi_fn_func_calendar_weekdays(RustCallStatus *_Nonnull out_status
     
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_DATE_ADD_DAYS
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_DATE_ADD_DAYS
+RustBuffer uniffi_tasknotes_core_ffi_fn_func_date_add_days(RustBuffer from, int32_t days, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_DATE_DEFAULT_UPCOMING_DAYS
@@ -1121,6 +1136,11 @@ RustBuffer uniffi_tasknotes_core_ffi_fn_func_recurrence_occurrences(RustBuffer t
 #ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_RECURRENCE_OCCURS_ON
 #define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_RECURRENCE_OCCURS_ON
 int8_t uniffi_tasknotes_core_ffi_fn_func_recurrence_occurs_on(RustBuffer text, RustBuffer scheduled, RustBuffer date_created, RustBuffer date, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_RECURRENCE_SUMMARY
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_RECURRENCE_SUMMARY
+RustBuffer uniffi_tasknotes_core_ffi_fn_func_recurrence_summary(RustBuffer text, RustBuffer scheduled, RustBuffer date_created, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_FFI_TASKNOTES_CORE_FFI_RUSTBUFFER_ALLOC
@@ -1437,6 +1457,12 @@ uint16_t uniffi_tasknotes_core_ffi_checksum_func_project_path(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_TASK_FILTER_ACTIVE_COUNT
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_TASK_FILTER_ACTIVE_COUNT
+uint16_t uniffi_tasknotes_core_ffi_checksum_func_task_filter_active_count(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_TASK_FILTER_APPLY
 #define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_TASK_FILTER_APPLY
 uint16_t uniffi_tasknotes_core_ffi_checksum_func_task_filter_apply(void
@@ -1458,6 +1484,12 @@ uint16_t uniffi_tasknotes_core_ffi_checksum_func_task_filter_matches(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_TASK_FROM_JSON
 #define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_TASK_FROM_JSON
 uint16_t uniffi_tasknotes_core_ffi_checksum_func_task_from_json(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_TASK_SEARCH_MATCHES
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_TASK_SEARCH_MATCHES
+uint16_t uniffi_tasknotes_core_ffi_checksum_func_task_search_matches(void
     
 );
 #endif
@@ -1572,6 +1604,12 @@ uint16_t uniffi_tasknotes_core_ffi_checksum_func_calendar_month_title(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_CALENDAR_WEEKDAYS
 #define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_CALENDAR_WEEKDAYS
 uint16_t uniffi_tasknotes_core_ffi_checksum_func_calendar_weekdays(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_DATE_ADD_DAYS
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_DATE_ADD_DAYS
+uint16_t uniffi_tasknotes_core_ffi_checksum_func_date_add_days(void
     
 );
 #endif
@@ -1710,6 +1748,12 @@ uint16_t uniffi_tasknotes_core_ffi_checksum_func_recurrence_occurrences(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_RECURRENCE_OCCURS_ON
 #define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_RECURRENCE_OCCURS_ON
 uint16_t uniffi_tasknotes_core_ffi_checksum_func_recurrence_occurs_on(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_RECURRENCE_SUMMARY
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_RECURRENCE_SUMMARY
+uint16_t uniffi_tasknotes_core_ffi_checksum_func_recurrence_summary(void
     
 );
 #endif

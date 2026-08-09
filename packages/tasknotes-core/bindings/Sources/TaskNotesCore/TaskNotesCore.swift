@@ -4528,6 +4528,11 @@ public func FfiConverterTypeDeadLetterError_lower(_ value: DeadLetterError) -> R
 
 /**
  * See [`tasknotes_core::domain::FilterConfig`].
+ *
+ * ⚠️ `query` is **appended**. A `Record` field is positional in the FFI
+ * buffer, so inserting a seventh dimension anywhere above would have
+ * reinterpreted every field after it — with no checksum change and no header
+ * change to notice it by.
  */
 public struct FilterConfig: Equatable, Hashable {
     /**
@@ -4554,6 +4559,15 @@ public struct FilterConfig: Equatable, Hashable {
      * Keep only tasks with no due date.
      */
     public var hasNoDueDate: Bool
+    /**
+     * Keep only tasks matching this free-text query; empty means not
+     * searching.
+     *
+     * Defaulted so an unfiltered `FilterConfig` stays writable without
+     * restating it, and so adding the dimension did not break every existing
+     * construction site.
+     */
+    public var query: String
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
@@ -4575,13 +4589,22 @@ public struct FilterConfig: Equatable, Hashable {
          */priorities: [Priority], 
         /**
          * Keep only tasks with no due date.
-         */hasNoDueDate: Bool) {
+         */hasNoDueDate: Bool, 
+        /**
+         * Keep only tasks matching this free-text query; empty means not
+         * searching.
+         *
+         * Defaulted so an unfiltered `FilterConfig` stays writable without
+         * restating it, and so adding the dimension did not break every existing
+         * construction site.
+         */query: String = "") {
         self.projects = projects
         self.contexts = contexts
         self.tags = tags
         self.statuses = statuses
         self.priorities = priorities
         self.hasNoDueDate = hasNoDueDate
+        self.query = query
     }
 
     
@@ -4605,7 +4628,8 @@ public struct FfiConverterTypeFilterConfig: FfiConverterRustBuffer {
                 tags: FfiConverterSequenceString.read(from: &buf), 
                 statuses: FfiConverterSequenceTypeTaskStatus.read(from: &buf), 
                 priorities: FfiConverterSequenceTypePriority.read(from: &buf), 
-                hasNoDueDate: FfiConverterBool.read(from: &buf)
+                hasNoDueDate: FfiConverterBool.read(from: &buf), 
+                query: FfiConverterString.read(from: &buf)
         )
     }
 
@@ -4616,6 +4640,7 @@ public struct FfiConverterTypeFilterConfig: FfiConverterRustBuffer {
         FfiConverterSequenceTypeTaskStatus.write(value.statuses, into: &buf)
         FfiConverterSequenceTypePriority.write(value.priorities, into: &buf)
         FfiConverterBool.write(value.hasNoDueDate, into: &buf)
+        FfiConverterString.write(value.query, into: &buf)
     }
 }
 
@@ -8832,6 +8857,10 @@ public func FfiConverterTypeSortDirection_lower(_ value: SortDirection) -> RustB
 // See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
 /**
  * See [`tasknotes_core::domain::SortField`].
+ *
+ * ⚠️ `EffectiveDate` is **appended**, so the first three discriminants are
+ * unchanged. Inserting it would have renumbered them and silently reinterpreted
+ * every persisted or in-flight sort.
  */
 
 public enum SortField: Equatable, Hashable {
@@ -8848,6 +8877,10 @@ public enum SortField: Equatable, Hashable {
      * By title.
      */
     case title
+    /**
+     * By `due`, else `scheduled`, else the recurrence rule's next occurrence.
+     */
+    case effectiveDate
 
 
 
@@ -8875,6 +8908,8 @@ public struct FfiConverterTypeSortField: FfiConverterRustBuffer {
         
         case 3: return .title
         
+        case 4: return .effectiveDate
+        
         default: throw UniffiInternalError.unexpectedEnumCase
         }
     }
@@ -8893,6 +8928,10 @@ public struct FfiConverterTypeSortField: FfiConverterRustBuffer {
         
         case .title:
             writeInt(&buf, Int32(3))
+        
+        
+        case .effectiveDate:
+            writeInt(&buf, Int32(4))
         
         }
     }
@@ -11010,6 +11049,22 @@ public func projectPath(value: String) -> String  {
 })
 }
 /**
+ * How many dimensions are filtered, for the `filters (3)` badge.
+ *
+ * Exported so the badge shows a *number* rather than a filled-or-hollow glyph.
+ * Counting the dimensions in the shell instead would put a second opinion
+ * about what "filtered" means next to [`task_filter_is_active`], and the two
+ * would drift the first time a dimension was added — which is exactly what
+ * adding `query` just did.
+ */
+public func taskFilterActiveCount(filter: FilterConfig) -> UInt32  {
+    return try!  FfiConverterUInt32.lift(try! rustCall() {
+    uniffi_tasknotes_core_ffi_fn_func_task_filter_active_count(
+        FfiConverterTypeFilterConfig_lower(filter),$0
+    )
+})
+}
+/**
  * Keep only the tasks that pass every filtered dimension, in input order.
  */
 public func taskFilterApply(tasks: [Task], filter: FilterConfig) -> [Task]  {
@@ -11058,15 +11113,50 @@ public func taskFromJson(json: String)throws  -> Task  {
 })
 }
 /**
+ * Whether one task matches a free-text query.
+ *
+ * The same predicate [`FilterConfig::query`] runs, exported on its own for a
+ * live count or a "does this row still belong here?" check. See
+ * [`tasknotes_core::domain::search_matches`] for the exact semantics — which
+ * fields are searched, substring versus prefix, the case-folding rule, and why
+ * a query is one phrase rather than a bag of tokens. Every one of those is a
+ * product decision, and this export is what stops a second client answering
+ * them differently.
+ */
+public func taskSearchMatches(task: Task, query: String) -> Bool  {
+    return try!  FfiConverterBool.lift(try! rustCall() {
+    uniffi_tasknotes_core_ffi_fn_func_task_search_matches(
+        FfiConverterTypeTask_lower(task),
+        FfiConverterString.lower(query),$0
+    )
+})
+}
+/**
  * Sort a list of tasks. The sort is stable, which is load-bearing: an
  * unorderable due value compares equal to everything, and stability is what
  * turns that into "leave it where it was" rather than "shuffle it".
+ *
+ * `today` is the viewer's civil date as `YYYY-MM-DD`. It is read by exactly
+ * one leg of one key — the recurrence fallback of [`SortField::EffectiveDate`]
+ * — and ignored by every other field, so it is optional. Omitting it is a
+ * statement that the caller did not say what day it is, which makes that leg
+ * unanswerable and sorts a rule-only task as undated. **A shell offering
+ * `EffectiveDate` should always pass it.**
+ *
+ * # Errors
+ *
+ * Returns [`CoreError::Validation`] when `today` is present but is not a
+ * `YYYY-MM-DD` calendar date. Rejected rather than ignored: a silently
+ * discarded `today` would reorder the list with no way to notice.
+ *
+ * [`SortField::EffectiveDate`]: tasknotes_core::domain::SortField::EffectiveDate
  */
-public func taskSortApply(tasks: [Task], sort: SortConfig) -> [Task]  {
-    return try!  FfiConverterSequenceTypeTask.lift(try! rustCall() {
+public func taskSortApply(tasks: [Task], sort: SortConfig, today: String? = nil)throws  -> [Task]  {
+    return try  FfiConverterSequenceTypeTask.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
     uniffi_tasknotes_core_ffi_fn_func_task_sort_apply(
         FfiConverterSequenceTypeTask.lower(tasks),
-        FfiConverterTypeSortConfig_lower(sort),$0
+        FfiConverterTypeSortConfig_lower(sort),
+        FfiConverterOptionString.lower(today),$0
     )
 })
 }
@@ -11308,6 +11398,32 @@ public func calendarMonthTitle(month: CalendarMonthRef)throws  -> String  {
 public func calendarWeekdays() -> [WeekdayHeader]  {
     return try!  FfiConverterSequenceTypeWeekdayHeader.lift(try! rustCall() {
     uniffi_tasknotes_core_ffi_fn_func_calendar_weekdays($0
+    )
+})
+}
+/**
+ * `from` shifted by whole days, forward for a positive count and backward for
+ * a negative one — the core's answer to "tomorrow".
+ *
+ * Exported because a shell computing it itself is date arithmetic in a place
+ * with a clock and a timezone nearby, which is precisely how the off-by-one in
+ * `packages/docs/todos/recurrence-local-utc-off-by-one.md` happened: adding a
+ * day's worth of *milliseconds* to an instant is 23 or 25 hours across a DST
+ * boundary, and every host date API offers that shape first. Civil-date
+ * arithmetic has no instant in it, so there is no offset to get wrong.
+ *
+ * `None` when the result falls outside the representable calendar, matching
+ * [`date_next_saturday`] and [`date_next_monday`].
+ *
+ * # Errors
+ *
+ * Returns [`CoreError::Validation`] when `from` is not a `YYYY-MM-DD` date.
+ */
+public func dateAddDays(from: String, days: Int32)throws  -> String?  {
+    return try  FfiConverterOptionString.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+    uniffi_tasknotes_core_ffi_fn_func_date_add_days(
+        FfiConverterString.lower(from),
+        FfiConverterInt32.lower(days),$0
     )
 })
 }
@@ -11774,6 +11890,45 @@ public func recurrenceOccursOn(text: String, scheduled: String?, dateCreated: St
     )
 })
 }
+/**
+ * The rule as a sentence — `"Every 2 weeks on Mon, Wed"`.
+ *
+ * The one recurrence question a shell cannot answer for itself.
+ * [`recurrence_frequency`] carries `FREQ` and nothing else, so a sentence
+ * assembled from it drops `INTERVAL`, `BYDAY`, `BYMONTHDAY`, `BYMONTH`,
+ * `BYSETPOS`, `COUNT` and `UNTIL` — printing "Weekly" over a rule that fires
+ * every *other* Tuesday, which is a thing the reader would believe and then
+ * be wrong about. Restating the RFC 5545 grammar per platform is the
+ * duplication this core exists to delete.
+ *
+ * The sentence is read off the **normalised, expandable** rule rather than off
+ * the raw text, so it cannot disagree with the days
+ * [`recurrence_occurrences`] produces.
+ *
+ * `None` means "no honest sentence", and covers three situations a shell
+ * should render identically — by showing the raw `RRULE`:
+ *
+ * * the rule is empty, unparsable, or has no resolvable `DTSTART`, exactly as
+ * [`recurrence_is_expandable`] reports;
+ * * it uses a part with no unambiguous one-line reading — `BYWEEKNO`,
+ * `BYYEARDAY`, `BYEASTER`, an explicit `BYHOUR`/`BYMINUTE`/`BYSECOND`, or a
+ * weekday selector crossed with a day-of-month selector, which is an
+ * intersection that a comma-joined list would misread as a union;
+ * * it fires zero times.
+ *
+ * English and locale-independent, the same posture as
+ * [`crate::calendar::calendar_month_title`] and the weekday headers; embedded
+ * dates are ISO `YYYY-MM-DD`, like every other date on this boundary.
+ */
+public func recurrenceSummary(text: String, scheduled: String?, dateCreated: String?) -> String?  {
+    return try!  FfiConverterOptionString.lift(try! rustCall() {
+    uniffi_tasknotes_core_ffi_fn_func_recurrence_summary(
+        FfiConverterString.lower(text),
+        FfiConverterOptionString.lower(scheduled),
+        FfiConverterOptionString.lower(dateCreated),$0
+    )
+})
+}
 
 private enum InitializationResult {
     case ok
@@ -11817,6 +11972,9 @@ private let initializationResult: InitializationResult = {
     if (uniffi_tasknotes_core_ffi_checksum_func_project_path() != 27994) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_tasknotes_core_ffi_checksum_func_task_filter_active_count() != 56001) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_tasknotes_core_ffi_checksum_func_task_filter_apply() != 25841) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -11829,7 +11987,10 @@ private let initializationResult: InitializationResult = {
     if (uniffi_tasknotes_core_ffi_checksum_func_task_from_json() != 45575) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_task_sort_apply() != 27065) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_task_search_matches() != 25107) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_func_task_sort_apply() != 34754) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_tasknotes_core_ffi_checksum_func_task_status_all() != 58249) {
@@ -11884,6 +12045,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_tasknotes_core_ffi_checksum_func_calendar_weekdays() != 49245) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_func_date_add_days() != 34460) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_tasknotes_core_ffi_checksum_func_date_default_upcoming_days() != 37878) {
@@ -11953,6 +12117,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_occurs_on() != 52626) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_summary() != 21932) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_tasknotes_core_ffi_checksum_method_ffisyncengine_cancel_all() != 23149) {

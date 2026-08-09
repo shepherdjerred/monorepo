@@ -163,6 +163,35 @@ pub fn to_iso_date(date: NaiveDate) -> String {
     date.format("%Y-%m-%d").to_string()
 }
 
+/// `date` shifted by whole days, forward for a positive count and backward for
+/// a negative one.
+///
+/// ## Why the shell must not do this itself
+///
+/// "Tomorrow" is the smallest possible piece of date arithmetic, and it is
+/// exactly the size of mistake that shipped: `packages/docs/todos/
+/// recurrence-local-utc-off-by-one.md` records a whole class of recurring tasks
+/// arriving a day late because one side built a local-midnight `Date` and the
+/// other read it back with UTC getters. Adding `86_400_000` milliseconds to an
+/// instant is *not* adding a day — across a DST boundary it is 23 or 25 hours —
+/// and every host date API invites that shape. Civil-date arithmetic on a
+/// [`NaiveDate`] has no instants in it and therefore no offset to get wrong.
+///
+/// Returns `None` when the result falls outside the representable calendar,
+/// matching [`next_saturday`] and [`next_weekday`]: there is no honest date to
+/// answer with, and saturating would put a task on a day nobody asked for.
+#[must_use]
+pub fn add_days(date: NaiveDate, days: i32) -> Option<NaiveDate> {
+    // `unsigned_abs` rather than `-days`, because `i32::MIN` has no positive
+    // counterpart and negating it is the one input that would overflow.
+    let magnitude = Days::new(u64::from(days.unsigned_abs()));
+    if days < 0 {
+        date.checked_sub_days(magnitude)
+    } else {
+        date.checked_add_days(magnitude)
+    }
+}
+
 /// The upcoming Saturday — Todoist's "this weekend".
 ///
 /// On a Saturday this is *today*, which is how "this weekend" reads when you
@@ -291,8 +320,8 @@ mod tests {
     use chrono::{FixedOffset, NaiveDate};
 
     use super::{
-        DateGroup, UpcomingHorizon, date_group, is_overdue, is_today, is_upcoming, next_monday,
-        next_saturday, parse_local_date, to_iso_date,
+        DateGroup, UpcomingHorizon, add_days, date_group, is_overdue, is_today, is_upcoming,
+        next_monday, next_saturday, parse_local_date, to_iso_date,
     };
 
     /// Every date test in the TypeScript suite is written against "now" plus an
@@ -583,6 +612,31 @@ mod tests {
     fn to_iso_date_round_trips_through_parse_local_date() {
         let date = ymd(2026, 7, 22);
         assert_eq!(parse_local_date(&to_iso_date(date), utc()), Some(date));
+    }
+
+    // ── addDays ────────────────────────────────────────────────────────────
+
+    #[test]
+    fn add_days_walks_forward_and_backward_across_month_and_year_ends() {
+        assert_eq!(add_days(today(), 1), Some(ymd(2026, 7, 23)), "tomorrow");
+        assert_eq!(add_days(today(), -1), Some(ymd(2026, 7, 21)), "yesterday");
+        assert_eq!(add_days(today(), 0), Some(today()));
+        assert_eq!(add_days(ymd(2026, 7, 31), 1), Some(ymd(2026, 8, 1)));
+        assert_eq!(add_days(ymd(2026, 12, 31), 1), Some(ymd(2027, 1, 1)));
+        assert_eq!(add_days(ymd(2027, 1, 1), -1), Some(ymd(2026, 12, 31)));
+        // A leap day is reached by counting, not by month arithmetic.
+        assert_eq!(add_days(ymd(2028, 2, 28), 1), Some(ymd(2028, 2, 29)));
+        assert_eq!(add_days(ymd(2027, 2, 28), 1), Some(ymd(2027, 3, 1)));
+    }
+
+    #[test]
+    fn add_days_declines_to_run_off_the_end_of_the_calendar() {
+        assert_eq!(add_days(NaiveDate::MAX, 1), None);
+        assert_eq!(add_days(NaiveDate::MIN, -1), None);
+        // `i32::MIN` is the one magnitude that has no positive counterpart, so
+        // it is the input a naive negation would overflow on.
+        assert_eq!(add_days(today(), i32::MIN), None);
+        assert_eq!(add_days(today(), i32::MAX), None);
     }
 
     // ── nextSaturday ───────────────────────────────────────────────────────

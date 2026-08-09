@@ -735,7 +735,7 @@ func smoke() throws -> String {
     }
 
     // A sequence of records in and out.
-    let sorted = taskSortApply(tasks: [task], sort: SortConfig(field: .dueDate, direction: .asc))
+    let sorted = try taskSortApply(tasks: [task], sort: SortConfig(field: .dueDate, direction: .asc))
     guard sorted.count == 1, sorted[0].title == task.title else {
         throw Failure("taskSortApply did not round trip the list")
     }
@@ -749,6 +749,113 @@ func smoke() throws -> String {
     }
 
     return version
+}
+
+/// The list surface a screen actually drives: search, the filter badge, and the
+/// effective-date sort.
+///
+/// Every one of these was a decision a shell was making for itself. Search in
+/// particular had a whole Swift predicate behind it — which fields, substring
+/// or prefix, whose case folding, raw or display project matching — and each
+/// answer is now the core's, asserted here from the far side of the FFI so the
+/// boundary is proven rather than assumed.
+func smokeListSurface() throws {
+    let rent = try taskFromJson(
+        json: #"{"id":"Tasks/rent.md","title":"Pay the rent","projects":["[[Areas/Home|Home]]"],"tags":["finance"],"due":"2026-08-31"}"#
+    )
+    let water = try taskFromJson(
+        json: #"{"id":"Tasks/water.md","title":"Water the plants","scheduled":"2026-08-04","recurrence":"FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,WE"}"#
+    )
+    let tasks = [rent, water]
+
+    // 1. The search predicate, alone. Case-folded, substring, and reaching both
+    //    halves of a wikilink project — none of which a second client should
+    //    ever have had to guess at.
+    guard taskSearchMatches(task: rent, query: "RENT") else {
+        throw Failure("taskSearchMatches does not fold case")
+    }
+    guard taskSearchMatches(task: rent, query: "areas/"), taskSearchMatches(task: rent, query: "home")
+    else {
+        throw Failure("a project must be searchable by path and by display name")
+    }
+    guard taskSearchMatches(task: rent, query: "finance") else {
+        throw Failure("tags are searched")
+    }
+    // One phrase, not a bag of tokens.
+    guard !taskSearchMatches(task: rent, query: "rent pay") else {
+        throw Failure("a query is one phrase; reordering it is a miss")
+    }
+    // An empty query narrows nothing, so a search field can sit over a list.
+    guard taskSearchMatches(task: rent, query: "  ") else {
+        throw Failure("a blank query must match everything")
+    }
+
+    // 2. The same predicate as the seventh filter dimension, and the count
+    //    behind the `filters (3)` badge — a number, not a glyph.
+    var filter = FilterConfig(
+        projects: [], contexts: [], tags: [], statuses: [], priorities: [], hasNoDueDate: false)
+    guard !taskFilterIsActive(filter: filter), taskFilterActiveCount(filter: filter) == 0 else {
+        throw Failure("an empty filter is not active")
+    }
+    filter.query = "  PAY  "
+    guard taskFilterIsActive(filter: filter), taskFilterActiveCount(filter: filter) == 1 else {
+        throw Failure("a typed query is a filtered dimension")
+    }
+    guard taskFilterApply(tasks: tasks, filter: filter).map(\.id) == [rent.id] else {
+        throw Failure("the filter did not run the core's search")
+    }
+    filter.tags = ["finance"]
+    guard taskFilterActiveCount(filter: filter) == 2 else {
+        throw Failure("the badge count did not add the second dimension")
+    }
+
+    // 3. The effective-date sort. `water` is scheduled but not due, so under
+    //    `dueDate` it is "undated" and lands after the 31st while its own row
+    //    says Today — the defect visible in the list snapshot.
+    let byDue = try taskSortApply(
+        tasks: tasks, sort: SortConfig(field: .dueDate, direction: .asc))
+    guard byDue.map(\.id) == [rent.id, water.id] else {
+        throw Failure("the due-date sort changed: \(byDue.map(\.id))")
+    }
+    let byEffective = try taskSortApply(
+        tasks: tasks, sort: SortConfig(field: .effectiveDate, direction: .asc),
+        today: "2026-08-03")
+    guard byEffective.map(\.id) == [water.id, rent.id] else {
+        throw Failure("the effective-date sort ignored `scheduled`: \(byEffective.map(\.id))")
+    }
+    // A `today` that is not a date is reported, never discarded.
+    do {
+        _ = try taskSortApply(
+            tasks: tasks, sort: SortConfig(field: .effectiveDate, direction: .asc),
+            today: "08/03/2026")
+        throw Failure("a malformed today was accepted")
+    } catch let error as CoreError {
+        guard case .Validation = error else { throw Failure("unexpected error: \(error)") }
+    }
+
+    // 4. The rule as a sentence. Building this in Swift from `Frequency` alone
+    //    would have dropped INTERVAL and BYDAY and printed "Weekly".
+    guard
+        recurrenceSummary(
+            text: "FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,WE", scheduled: "2026-08-03", dateCreated: nil)
+            == "Every 2 weeks on Mon, Wed"
+    else {
+        throw Failure("recurrenceSummary disagrees with the core")
+    }
+    guard recurrenceSummary(text: "garbage", scheduled: nil, dateCreated: nil) == nil else {
+        throw Failure("a rule with no honest sentence must answer nil, not a guess")
+    }
+
+    // 5. Tomorrow, as whole civil days rather than 86,400,000 milliseconds.
+    guard try dateAddDays(from: "2026-08-08", days: 1) == "2026-08-09" else {
+        throw Failure("dateAddDays disagrees with the core")
+    }
+    guard try dateAddDays(from: "2028-02-28", days: 1) == "2028-02-29" else {
+        throw Failure("dateAddDays does not count across a leap day")
+    }
+    guard try dateAddDays(from: "2026-08-08", days: -1) == "2026-08-07" else {
+        throw Failure("dateAddDays does not walk backwards")
+    }
 }
 
 /// The Phase 2 and Phase 5 surfaces, over their ISO-string boundary.
@@ -1051,6 +1158,7 @@ struct Failure: Error, CustomStringConvertible {
 do {
     let version = try smoke()
     try smokePureHelpers()
+    try smokeListSurface()
     let snapshot = try smokeSync()
     print("smoke: TaskNotesCore \(version), \(taskStatusAll().count) statuses, \(priorityAll().count) priorities")
     print("smoke: sync engine round trip — \(snapshot.tasks.count) task(s), \(snapshot.pendingCount) pending, "
@@ -1336,6 +1444,51 @@ mod tests {
             assert!(
                 SMOKE_SOURCE.contains(call),
                 "the smoke test no longer exercises {call}"
+            );
+        }
+    }
+
+    #[test]
+    fn the_smoke_test_proves_the_core_owns_the_list_surface() {
+        // Five answers a shell was making up for itself until the core
+        // exported them. Each of these is here because losing the call would
+        // shrink `verify-swift` back to "the bindings compile" for a decision
+        // that has a *product* consequence, not just an ABI one.
+        for call in [
+            // Search: which fields, substring, whose case folding.
+            "taskSearchMatches(",
+            // The seventh filter dimension, composed by the core.
+            "filter.query =",
+            // The `filters (3)` badge as a number rather than a glyph.
+            "taskFilterActiveCount(",
+            // due → scheduled → the rule's next occurrence.
+            "field: .effectiveDate",
+            // The human-readable rule, which `Frequency` alone cannot build.
+            "recurrenceSummary(",
+            // Civil-day arithmetic, not milliseconds.
+            "dateAddDays(",
+        ] {
+            assert!(
+                SMOKE_SOURCE.contains(call),
+                "the smoke test no longer exercises {call}"
+            );
+        }
+        // And the answers themselves, so a semantic change has to be a
+        // deliberate edit here rather than a quiet drift.
+        for evidence in [
+            // A project is searchable by path *and* by display name — the
+            // decision `projectDisplayName` would have silently reversed.
+            r#"taskSearchMatches(task: rent, query: "areas/")"#,
+            // One phrase, not a bag of tokens.
+            r#"!taskSearchMatches(task: rent, query: "rent pay")"#,
+            // The sentence the inspector needs, in full.
+            "Every 2 weeks on Mon, Wed",
+            // A `today` the core cannot read is reported, never discarded.
+            r#"today: "08/03/2026""#,
+        ] {
+            assert!(
+                SMOKE_SOURCE.contains(evidence),
+                "the smoke test no longer proves: {evidence}"
             );
         }
     }

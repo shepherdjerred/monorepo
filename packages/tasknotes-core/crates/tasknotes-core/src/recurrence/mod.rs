@@ -57,6 +57,7 @@
 //! The corpus excludes the two hanging rules through its own guard, so there is
 //! no reference answer to diverge from.
 
+mod describe;
 mod expand;
 mod instant;
 mod options;
@@ -279,6 +280,21 @@ impl Recurrence {
     #[must_use]
     pub const fn is_expandable(&self) -> bool {
         matches!(self.behaviour, Behaviour::Rule(_))
+    }
+
+    /// The rule as a sentence — `"Every 2 weeks on Mon, Wed"`.
+    ///
+    /// `None` for a rule the engine cannot expand, and for one whose parts have
+    /// no unambiguous one-sentence reading; the shell shows the raw `RRULE`
+    /// there, because a wrong summary is worse than no summary. See
+    /// [`describe`] for the exact contract, the case-by-case reasoning, and why
+    /// this belongs in the core rather than in each shell.
+    #[must_use]
+    pub fn summary(&self) -> Option<String> {
+        match &self.behaviour {
+            Behaviour::Empty | Behaviour::Unparsed | Behaviour::Rootless => None,
+            Behaviour::Rule(options) => describe::describe(options),
+        }
     }
 
     /// How many instances the series has in total, when that is a finite and

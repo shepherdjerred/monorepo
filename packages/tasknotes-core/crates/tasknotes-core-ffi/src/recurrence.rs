@@ -143,6 +143,49 @@ pub fn recurrence_frequency(
     .frequency()
 }
 
+/// The rule as a sentence — `"Every 2 weeks on Mon, Wed"`.
+///
+/// The one recurrence question a shell cannot answer for itself.
+/// [`recurrence_frequency`] carries `FREQ` and nothing else, so a sentence
+/// assembled from it drops `INTERVAL`, `BYDAY`, `BYMONTHDAY`, `BYMONTH`,
+/// `BYSETPOS`, `COUNT` and `UNTIL` — printing "Weekly" over a rule that fires
+/// every *other* Tuesday, which is a thing the reader would believe and then
+/// be wrong about. Restating the RFC 5545 grammar per platform is the
+/// duplication this core exists to delete.
+///
+/// The sentence is read off the **normalised, expandable** rule rather than off
+/// the raw text, so it cannot disagree with the days
+/// [`recurrence_occurrences`] produces.
+///
+/// `None` means "no honest sentence", and covers three situations a shell
+/// should render identically — by showing the raw `RRULE`:
+///
+/// * the rule is empty, unparsable, or has no resolvable `DTSTART`, exactly as
+///   [`recurrence_is_expandable`] reports;
+/// * it uses a part with no unambiguous one-line reading — `BYWEEKNO`,
+///   `BYYEARDAY`, `BYEASTER`, an explicit `BYHOUR`/`BYMINUTE`/`BYSECOND`, or a
+///   weekday selector crossed with a day-of-month selector, which is an
+///   intersection that a comma-joined list would misread as a union;
+/// * it fires zero times.
+///
+/// English and locale-independent, the same posture as
+/// [`crate::calendar::calendar_month_title`] and the weekday headers; embedded
+/// dates are ISO `YYYY-MM-DD`, like every other date on this boundary.
+#[uniffi::export]
+#[must_use]
+pub fn recurrence_summary(
+    text: &str,
+    scheduled: Option<String>,
+    date_created: Option<String>,
+) -> Option<String> {
+    Fallbacks {
+        scheduled,
+        date_created,
+    }
+    .rule(text)
+    .summary()
+}
+
 /// Whether the rule is one the engine could expand at all.
 ///
 /// `false` covers both failure directions — an unparsable rule and one with no
@@ -305,7 +348,7 @@ mod tests {
     use super::{
         recurrence_completion_target_date, recurrence_finite_instance_count, recurrence_frequency,
         recurrence_is_expandable, recurrence_next_uncompleted_occurrence, recurrence_occurrences,
-        recurrence_occurs_on,
+        recurrence_occurs_on, recurrence_summary,
     };
     use crate::error::CoreError;
 
@@ -366,6 +409,34 @@ mod tests {
         assert!(!recurrence_occurs_on("garbage", None, None, "2026-08-11").unwrap());
         assert!(!recurrence_is_expandable("garbage", None, None));
         assert_eq!(recurrence_frequency("garbage", None, None), None);
+    }
+
+    #[test]
+    fn a_rule_crosses_as_a_sentence_or_as_nothing_at_all() {
+        assert_eq!(
+            recurrence_summary(
+                "FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,WE",
+                Some(scheduled()),
+                None
+            )
+            .as_deref(),
+            Some("Every 2 weeks on Mon, Wed"),
+            "the string the task inspector needs, and cannot build from Frequency alone"
+        );
+        assert_eq!(
+            recurrence_summary("FREQ=MONTHLY;BYDAY=-1FR;COUNT=6", Some(scheduled()), None)
+                .as_deref(),
+            Some("Every month on the last Friday, 6 times")
+        );
+        // Every failure the shell must render as the raw rule, in one shape.
+        assert_eq!(recurrence_summary("", Some(scheduled()), None), None);
+        assert_eq!(recurrence_summary("garbage", Some(scheduled()), None), None);
+        assert_eq!(recurrence_summary("FREQ=DAILY", None, None), None);
+        assert_eq!(
+            recurrence_summary("FREQ=YEARLY;BYWEEKNO=20", Some(scheduled()), None),
+            None,
+            "a part with no honest one-line reading declines rather than guessing"
+        );
     }
 
     #[test]

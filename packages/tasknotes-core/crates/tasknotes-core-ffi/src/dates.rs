@@ -180,6 +180,27 @@ pub fn date_group_heading(group: DateGroup) -> Option<String> {
     group.heading().map(str::to_owned)
 }
 
+/// `from` shifted by whole days, forward for a positive count and backward for
+/// a negative one — the core's answer to "tomorrow".
+///
+/// Exported because a shell computing it itself is date arithmetic in a place
+/// with a clock and a timezone nearby, which is precisely how the off-by-one in
+/// `packages/docs/todos/recurrence-local-utc-off-by-one.md` happened: adding a
+/// day's worth of *milliseconds* to an instant is 23 or 25 hours across a DST
+/// boundary, and every host date API offers that shape first. Civil-date
+/// arithmetic has no instant in it, so there is no offset to get wrong.
+///
+/// `None` when the result falls outside the representable calendar, matching
+/// [`date_next_saturday`] and [`date_next_monday`].
+///
+/// # Errors
+///
+/// Returns [`CoreError::Validation`] when `from` is not a `YYYY-MM-DD` date.
+#[uniffi::export]
+pub fn date_add_days(from: &str, days: i32) -> Result<Option<String>, CoreError> {
+    Ok(dates::add_days(parse_iso_date(from)?, days).map(render_iso_date))
+}
+
 /// The upcoming Saturday — Todoist's "this weekend".
 ///
 /// On a Saturday this is *today*, which is how "this weekend" reads when you
@@ -228,8 +249,9 @@ mod tests {
     use tasknotes_core::dates::{DateGroup, UpcomingHorizon};
 
     use super::{
-        date_group, date_group_heading, date_is_overdue, date_is_today, date_is_upcoming,
-        date_next_monday, date_next_saturday, date_next_weekday, date_parse_local, parse_iso_date,
+        date_add_days, date_group, date_group_heading, date_is_overdue, date_is_today,
+        date_is_upcoming, date_next_monday, date_next_saturday, date_next_weekday,
+        date_parse_local, parse_iso_date,
     };
     use crate::error::CoreError;
 
@@ -295,6 +317,43 @@ mod tests {
             Some("Overdue")
         );
         assert_eq!(date_group_heading(DateGroup::Later), None);
+    }
+
+    #[test]
+    fn tomorrow_and_yesterday_cross_as_whole_civil_days() {
+        assert_eq!(
+            date_add_days("2026-08-08", 1).unwrap().as_deref(),
+            Some("2026-08-09")
+        );
+        assert_eq!(
+            date_add_days("2026-08-08", -1).unwrap().as_deref(),
+            Some("2026-08-07")
+        );
+        assert_eq!(
+            date_add_days("2026-12-31", 1).unwrap().as_deref(),
+            Some("2027-01-01")
+        );
+        // 2028 is a leap year, so counting one day past 28 February lands on
+        // the 29th — which month arithmetic on an instant would have missed.
+        assert_eq!(
+            date_add_days("2028-02-28", 1).unwrap().as_deref(),
+            Some("2028-02-29")
+        );
+        assert_eq!(
+            date_add_days("2026-08-08", 0).unwrap().as_deref(),
+            Some("2026-08-08")
+        );
+        assert_eq!(
+            date_add_days("2026-08-08", i32::MIN).unwrap(),
+            None,
+            "off the end of the calendar has no honest answer"
+        );
+
+        let error = date_add_days("08/08/2026", 1).unwrap_err();
+        assert!(
+            matches!(error, CoreError::Validation { ref message } if message.contains("YYYY-MM-DD")),
+            "unexpected error: {error:?}"
+        );
     }
 
     #[test]

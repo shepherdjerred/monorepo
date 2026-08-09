@@ -94,6 +94,10 @@ pub enum ReminderKind {
 }
 
 /// See [`tasknotes_core::domain::SortField`].
+///
+/// ⚠️ `EffectiveDate` is **appended**, so the first three discriminants are
+/// unchanged. Inserting it would have renumbered them and silently reinterpreted
+/// every persisted or in-flight sort.
 #[uniffi::remote(Enum)]
 pub enum SortField {
     /// By due date, with undated tasks always last.
@@ -102,6 +106,8 @@ pub enum SortField {
     Priority,
     /// By title.
     Title,
+    /// By `due`, else `scheduled`, else the recurrence rule's next occurrence.
+    EffectiveDate,
 }
 
 /// See [`tasknotes_core::domain::SortDirection`].
@@ -308,6 +314,11 @@ pub struct FilterOptions {
 }
 
 /// See [`tasknotes_core::domain::FilterConfig`].
+///
+/// ⚠️ `query` is **appended**. A `Record` field is positional in the FFI
+/// buffer, so inserting a seventh dimension anywhere above would have
+/// reinterpreted every field after it — with no checksum change and no header
+/// change to notice it by.
 #[uniffi::remote(Record)]
 pub struct FilterConfig {
     /// Keep tasks in any of these projects, matched by wikilink equivalence.
@@ -322,6 +333,14 @@ pub struct FilterConfig {
     pub priorities: Vec<Priority>,
     /// Keep only tasks with no due date.
     pub has_no_due_date: bool,
+    /// Keep only tasks matching this free-text query; empty means not
+    /// searching.
+    ///
+    /// Defaulted so an unfiltered `FilterConfig` stays writable without
+    /// restating it, and so adding the dimension did not break every existing
+    /// construction site.
+    #[uniffi(default = "")]
+    pub query: String,
 }
 
 /// See [`tasknotes_core::domain::SortConfig`].

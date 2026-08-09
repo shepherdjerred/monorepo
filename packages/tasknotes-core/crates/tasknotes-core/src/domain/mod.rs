@@ -46,7 +46,9 @@ pub mod wire;
 
 mod serde_ext;
 
-pub use filters::{FilterConfig, SortConfig, SortDirection, SortField, apply_filter, apply_sort};
+pub use filters::{
+    FilterConfig, SortConfig, SortDirection, SortField, apply_filter, apply_sort, search_matches,
+};
 pub use ids::{ContextName, ProjectName, TEMP_ID_PREFIX, TagName, TaskId};
 pub use priority::{ALL_PRIORITIES, Priority};
 pub use project::{project_display_name, project_matches, project_path};

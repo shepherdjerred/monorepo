@@ -138,6 +138,15 @@ pub(super) struct Options {
     pub(super) minute: Vec<i64>,
     pub(super) second: Vec<i64>,
     pub(super) easter: Option<EasterOffset>,
+    /// Whether the rule text named `BYHOUR`, `BYMINUTE` or `BYSECOND` itself.
+    ///
+    /// Not derivable from the three fields above: below the matching frequency
+    /// they are *filled in from `DTSTART`*, so "present" and "inherited" are
+    /// indistinguishable by value. Only [`super::describe`] reads this, and it
+    /// needs the distinction because a time-of-day set changes how many
+    /// instances a `COUNT` covers without changing which days the rule fires
+    /// on — so a day-shaped sentence would silently misreport the length.
+    pub(super) time_parts_specified: bool,
 }
 
 /// `DTSTART` split into calendar fields.
@@ -226,6 +235,7 @@ pub(super) fn build(raw: &RawOptions, dtstart: i64) -> Result<Options, Unparsabl
             start.second,
         )?,
         easter: raw.easter,
+        time_parts_specified: raw.hour.is_some() || raw.minute.is_some() || raw.second.is_some(),
     })
 }
 
