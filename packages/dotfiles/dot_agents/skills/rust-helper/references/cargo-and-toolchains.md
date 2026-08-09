@@ -42,8 +42,9 @@ source and manifest changes. The disposable copy contains the temporary
 
 ```bash
 diagnostics_dir="$(mktemp -d)"
-rsync -a --exclude '.git' --exclude 'target' --exclude 'Cargo.lock' ./ "$diagnostics_dir/"
 (
+  trap 'rm -rf "$diagnostics_dir"' EXIT
+  rsync -a --exclude '.git' --exclude 'target' --exclude 'Cargo.lock' ./ "$diagnostics_dir/"
   cd "$diagnostics_dir"
   cargo tree -d
   cargo tree -e features
