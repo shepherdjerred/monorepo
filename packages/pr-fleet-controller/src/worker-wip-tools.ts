@@ -30,15 +30,19 @@ export function boundedInheritedWipEvidence(
   evidence: string,
   label: string,
   maxBytes = MAX_INHERITED_EVIDENCE_BYTES,
+  sourceComplete = true,
 ): { evidence: string; complete: boolean } {
-  if (Buffer.byteLength(evidence, "utf8") <= maxBytes) {
+  if (sourceComplete && Buffer.byteLength(evidence, "utf8") <= maxBytes) {
     return { evidence, complete: true };
   }
   const prefix = Buffer.from(evidence, "utf8")
     .subarray(0, maxBytes)
     .toString("utf8");
+  const reason = sourceComplete
+    ? `${label} exceeds the remaining inherited-WIP evidence budget`
+    : `${label} command output exceeded its subprocess capture limit`;
   return {
-    evidence: `${prefix}\n[TRUNCATED: ${label} exceeds the remaining inherited-WIP evidence budget; publication is disabled]`,
+    evidence: `${prefix}\n[TRUNCATED: ${reason}; publication is disabled]`,
     complete: false,
   };
 }
@@ -46,16 +50,23 @@ export function boundedInheritedWipEvidence(
 export function boundedInheritedCommitEvidence(
   commitLog: string,
   patch: string,
+  sourceComplete = true,
 ): { evidence: string; complete: boolean } {
   const evidence = `Commit metadata and changed paths:\n${commitLog}\nComplete patch:\n${patch}`;
-  if (Buffer.byteLength(evidence, "utf8") <= MAX_INHERITED_EVIDENCE_BYTES) {
+  if (
+    sourceComplete &&
+    Buffer.byteLength(evidence, "utf8") <= MAX_INHERITED_EVIDENCE_BYTES
+  ) {
     return { evidence, complete: true };
   }
   const prefix = Buffer.from(evidence, "utf8")
     .subarray(0, MAX_INHERITED_EVIDENCE_BYTES)
     .toString("utf8");
+  const reason = sourceComplete
+    ? `inherited commit evidence exceeds ${String(MAX_INHERITED_EVIDENCE_BYTES)} bytes`
+    : "inherited commit command output exceeded its subprocess capture limit";
   return {
-    evidence: `${prefix}\n[TRUNCATED: inherited commit evidence exceeds ${String(MAX_INHERITED_EVIDENCE_BYTES)} bytes; publication is disabled]`,
+    evidence: `${prefix}\n[TRUNCATED: ${reason}; publication is disabled]`,
     complete: false,
   };
 }
@@ -91,18 +102,24 @@ async function runGit(
   worktree: string,
   signal: AbortSignal,
   args: string[],
-): Promise<string> {
+): Promise<{ output: string; complete: boolean }> {
   const result = await environment.runLocalCommand({
     executable: "git",
     args,
     cwd: worktree,
     timeoutMs: 30_000,
     signal,
+    sensitiveOutput: true,
+    maxOutputBytes: MAX_INHERITED_EVIDENCE_BYTES,
   });
   if (result.exitCode !== 0) {
     throw new Error(`git ${args.join(" ")} failed: ${result.stderr}`);
   }
-  return result.stdout;
+  return {
+    output: result.stdout,
+    complete:
+      result.stdoutTruncated !== true && result.stderrTruncated !== true,
+  };
 }
 
 export function createWorkerWipTools(options: {
@@ -131,7 +148,7 @@ export function createWorkerWipTools(options: {
     inspect_worktree_wip: createTool({
       id: "inspect_worktree_wip",
       description:
-        "Inspect inherited work in the assigned checkout: complete/truncated status and staged, unstaged, untracked, and local-commit patches plus the local/remote relation. Publication remains disabled when required evidence is truncated. Use this before deciding whether existing operator work clearly belongs to the PR or requires operator guidance, and repeat it after every controller mutation in an operator worktree before another mutation or publication.",
+        "Inspect inherited work in the assigned checkout: complete/truncated status, staged and unstaged patches, metadata-only untracked paths, local-commit patches, and the local/remote relation. Publication remains disabled when required evidence is truncated. Use this before deciding whether existing operator work clearly belongs to the PR or requires operator guidance, and repeat it after every controller mutation in an operator worktree before another mutation or publication.",
       inputSchema: z.object({}),
       outputSchema: z.object({
         context: PrStateSchema.shape.worktreeContext,
@@ -141,8 +158,8 @@ export function createWorkerWipTools(options: {
         stagedDiffComplete: z.boolean(),
         unstagedDiff: z.string(),
         unstagedDiffComplete: z.boolean(),
-        untrackedDiff: z.string(),
-        untrackedDiffComplete: z.boolean(),
+        untrackedPaths: z.string(),
+        untrackedPathsComplete: z.boolean(),
         wipEvidenceComplete: z.boolean(),
         localCommits: z.string(),
         localCommitEvidenceComplete: z.boolean(),
@@ -155,11 +172,16 @@ export function createWorkerWipTools(options: {
             signal,
           });
           let remainingWipEvidenceBytes = MAX_INHERITED_EVIDENCE_BYTES;
-          const boundWipSection = (evidence: string, label: string) => {
+          const boundWipSection = (
+            evidence: string,
+            label: string,
+            sourceComplete: boolean,
+          ) => {
             const bounded = boundedInheritedWipEvidence(
               evidence,
               label,
               remainingWipEvidenceBytes,
+              sourceComplete,
             );
             remainingWipEvidenceBytes -= Math.min(
               Buffer.byteLength(evidence, "utf8"),
@@ -167,18 +189,25 @@ export function createWorkerWipTools(options: {
             );
             return bounded;
           };
-          const boundedStatus = boundWipSection(wip.status, "worktree status");
+          const boundedStatus = boundWipSection(
+            wip.status,
+            "worktree status",
+            wip.statusComplete,
+          );
           const boundedStaged = boundWipSection(
             wip.stagedDiff,
             "staged inherited diff",
+            wip.stagedDiffComplete,
           );
           const boundedUnstaged = boundWipSection(
             wip.unstagedDiff,
             "unstaged inherited diff",
+            wip.unstagedDiffComplete,
           );
           const boundedUntracked = boundWipSection(
-            wip.untrackedDiff,
-            "untracked inherited diff",
+            JSON.stringify(wip.untrackedPaths),
+            "untracked inherited paths",
+            wip.untrackedPathsComplete,
           );
           const wipEvidenceComplete = [
             boundedStatus,
@@ -212,7 +241,11 @@ export function createWorkerWipTools(options: {
               inheritedRange,
               "--",
             ]);
-            const bounded = boundedInheritedCommitEvidence(commitLog, patch);
+            const bounded = boundedInheritedCommitEvidence(
+              commitLog.output,
+              patch.output,
+              commitLog.complete && patch.complete,
+            );
             localCommits = bounded.evidence;
             localCommitEvidenceComplete = bounded.complete;
             store.inheritedCommitInspections.set(pr.identity.number, {
@@ -241,8 +274,8 @@ export function createWorkerWipTools(options: {
             stagedDiffComplete: boundedStaged.complete,
             unstagedDiff: boundedUnstaged.evidence,
             unstagedDiffComplete: boundedUnstaged.complete,
-            untrackedDiff: boundedUntracked.evidence,
-            untrackedDiffComplete: boundedUntracked.complete,
+            untrackedPaths: boundedUntracked.evidence,
+            untrackedPathsComplete: boundedUntracked.complete,
             wipEvidenceComplete,
             localCommits,
             localCommitEvidenceComplete,

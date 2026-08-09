@@ -25,7 +25,8 @@ bun run pr:fleet --model <provider>/<model-id> [--author <login>]
 ```
 
 The optional author scope includes that login's draft PRs and is recorded in
-the run manifest and dashboard. By default `pr:fleet` also builds and spawns a
+the run manifest and dashboard; use `--author shepherdjerred` for the operator's
+fleet without bot-authored PRs. By default `pr:fleet` also builds and spawns a
 live web dashboard that streams the run bundle over SSE on loopback — a fleet
 overview plus a per-PR transcript including model reasoning. Its only control
 is answering an active, head-bound operator question inside that PR's detail

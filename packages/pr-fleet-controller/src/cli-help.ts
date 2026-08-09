@@ -6,7 +6,7 @@ Options:
   --checkout <path>         Main checkout (default: current Git root)
   --worktree-root <path>    Fleet worktrees (default: .claude/worktrees/pr-fleet)
   --max-workers <1..5>      Worker limit (default: 5)
-  --author <login>          Include only PRs authored by this GitHub login
+  --author <login>          Scope to this author's PRs (drafts included)
   --base-url <url>          Required for openai-compatible/<model>
   --api-key-env <name>      API-key environment variable for a compatible endpoint
   --review-provider <id>    Hosted review provider to gate on (default: codex)

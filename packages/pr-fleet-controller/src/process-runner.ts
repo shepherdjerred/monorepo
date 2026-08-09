@@ -58,9 +58,47 @@ function throwAfterStdinFailure(
   throw error;
 }
 
+async function readBoundedText(
+  stream: ReadableStream<Uint8Array>,
+  maxOutputBytes: number | undefined,
+): Promise<{ text: string; truncated: boolean }> {
+  if (maxOutputBytes === undefined) {
+    return { text: await new Response(stream).text(), truncated: false };
+  }
+  const reader = stream.getReader();
+  const chunks: Uint8Array[] = [];
+  let retainedBytes = 0;
+  let truncated = false;
+  let streamComplete = false;
+  while (!streamComplete) {
+    const chunk = await reader.read();
+    streamComplete = chunk.done;
+    if (chunk.done) continue;
+    const value = chunk.value;
+    const remaining = maxOutputBytes - retainedBytes;
+    if (remaining > 0) {
+      const retained = value.subarray(0, remaining);
+      chunks.push(retained);
+      retainedBytes += retained.byteLength;
+    }
+    if (value.byteLength > remaining) truncated = true;
+  }
+  return {
+    text: Buffer.concat(chunks).toString("utf8"),
+    truncated,
+  };
+}
+
 export async function runCommand(
   request: CommandRequest,
 ): Promise<CommandResult> {
+  if (
+    request.maxOutputBytes !== undefined &&
+    (!Number.isSafeInteger(request.maxOutputBytes) ||
+      request.maxOutputBytes < 1)
+  ) {
+    throw new Error("maxOutputBytes must be a positive safe integer");
+  }
   if (signalIsAborted(request.signal)) {
     throw new Error(`Command aborted before start: ${request.executable}`);
   }
@@ -101,8 +139,8 @@ export async function runCommand(
   if (signalIsAborted(request.signal)) {
     abort();
   }
-  const stdout = new Response(subprocess.stdout).text();
-  const stderr = new Response(subprocess.stderr).text();
+  const stdout = readBoundedText(subprocess.stdout, request.maxOutputBytes);
+  const stderr = readBoundedText(subprocess.stderr, request.maxOutputBytes);
   const processSettlement = Promise.race([
     Promise.all([subprocess.exited, stdout, stderr]),
     terminationFailure.promise,
@@ -133,11 +171,13 @@ export async function runCommand(
         // expected consequence of the already-recorded timeout or abort.
       }
     }
-    const [exitCode, stdoutText, stderrText] = await processSettlement;
+    const [exitCode, stdoutResult, stderrResult] = await processSettlement;
     return {
       exitCode,
-      stdout: stdoutText,
-      stderr: stderrText,
+      stdout: stdoutResult.text,
+      stderr: stderrResult.text,
+      stdoutTruncated: stdoutResult.truncated,
+      stderrTruncated: stderrResult.truncated,
       termination,
     };
   } finally {

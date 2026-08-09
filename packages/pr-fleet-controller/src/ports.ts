@@ -20,6 +20,8 @@ export type CommandRequest = {
   stdin?: string;
   /** Return output to the caller but replace it in telemetry and errors. */
   sensitiveOutput?: boolean | undefined;
+  /** Retain at most this many bytes from each output stream while draining it. */
+  maxOutputBytes?: number | undefined;
   /**
    * Environment for the subprocess. Defaults to the controller's own
    * environment; model-driven worker commands pass a credential-scrubbed
@@ -32,6 +34,8 @@ export type CommandResult = {
   exitCode: number;
   stdout: string;
   stderr: string;
+  stdoutTruncated?: boolean | undefined;
+  stderrTruncated?: boolean | undefined;
   termination: "exit" | "timeout" | "abort";
 };
 

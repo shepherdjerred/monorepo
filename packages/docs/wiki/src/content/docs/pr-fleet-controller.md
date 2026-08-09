@@ -85,14 +85,16 @@ prompt instructions — the worker's tools simply do not expose those actions.
   your own worktree the fleet reuses that checkout in place — otherwise the PR
   would be parked for the whole run. An operator checkout is reused only when it
   holds the **exact** PR being worked, and a matching branch is never reset.
-  Instead the worker inventories staged and unstaged paths, untracked files,
-  local commits, and remote divergence. It can continue clearly related work,
-  unstage explicit paths without deleting their contents, and publish only
-  explicit paths or a captured local commit head. Ambiguous ownership, mixed
-  staged work, uncertain history rewrites, or meaningfully different valid fixes
-  become a dashboard question; unrelated unstaged files stay local. Worker file
-  edits cannot touch Git metadata (`.git`, config, hooks), even through a
-  symlink.
+  Instead the worker inventories staged and unstaged patches, metadata-only
+  untracked paths, local commits, and remote divergence. Untracked file contents
+  are never serialized; bounded subprocess capture marks oversized evidence
+  incomplete and blocks mutation or publication. It can continue clearly
+  related work, unstage explicit paths without deleting their contents, and
+  publish only explicit paths or a captured local commit head. Ambiguous
+  ownership, mixed staged work, uncertain history rewrites, or meaningfully
+  different valid fixes become a dashboard question; unrelated unstaged files
+  stay local. Worker file edits cannot touch Git metadata (`.git`, config,
+  hooks), even through a symlink.
 - **Leases** serialize the expensive/dangerous steps — setup (dependency
   install + codegen), heavy commands, and the stack-write that publishing needs.
   An operator question is persisted before its worker turn is aborted. Its

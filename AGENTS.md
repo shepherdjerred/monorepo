@@ -317,13 +317,16 @@ the verification machinery itself. There is no `pre-push` hook.
 
 ## PR Fleet Controller
 
-`bun run pr:fleet --model <provider>/<model-id>` starts the standalone Mastra
-controller in the foreground. One selected API model powers the conversational
-master and every bounded worker. Use `/status`, `/tick`, `/help`, `/stop`, or
-free-text steering. The controller may repair and publish PR branches but may
-never merge, close, or approve them. Its exact model tool boundary is documented
-in `packages/pr-fleet-controller/README.md`. Every run writes a private local
-bundle; use `bun run pr:fleet:inspect --run <run-id-or-directory>` for a
+`bun run pr:fleet --model <provider>/<model-id> [--author <login>]` starts the
+standalone Mastra controller in the foreground. The optional author scope
+includes that login's drafts and is recorded in the manifest and dashboard. One
+selected API model powers the conversational master and every bounded worker.
+Use `/status`, `/tick`, `/questions`, `/answer <request-id> <free-text>`,
+`/help`, `/stop`, or free-text steering. The controller may repair and publish
+PR branches but may never merge, close, or approve them. Its exact model tool
+boundary is documented in `packages/pr-fleet-controller/README.md`. Every run
+writes a private local bundle; use
+`bun run pr:fleet:inspect --run <run-id-or-directory>` for a
 body-masked view and `bun run pr:fleet:replay --run <run-id-or-directory>` for
 deterministic offline integrity and lifecycle verification. These commands
 collect and inspect evidence; they do not run evals.

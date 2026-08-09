@@ -5,62 +5,50 @@ import type { FleetStore } from "./state.ts";
 export type InheritedWipEvidence = {
   localHeadSha: string;
   status: string;
+  statusComplete: boolean;
   stagedDiff: string;
+  stagedDiffComplete: boolean;
   unstagedDiff: string;
-  untrackedDiff: string;
+  unstagedDiffComplete: boolean;
+  untrackedPaths: string[];
+  untrackedPathsComplete: boolean;
   hasWip: boolean;
   fingerprint: string;
 };
+
+const MAX_INHERITED_COMMAND_OUTPUT_BYTES = 100_000;
+
+type GitOutput = { output: string; complete: boolean };
 
 async function runGit(
   environment: FleetEnvironment,
   worktree: string,
   signal: AbortSignal,
   args: string[],
-): Promise<string> {
+): Promise<GitOutput> {
   const result = await environment.runLocalCommand({
     executable: "git",
     args,
     cwd: worktree,
     timeoutMs: 30_000,
     signal,
+    sensitiveOutput: true,
+    maxOutputBytes: MAX_INHERITED_COMMAND_OUTPUT_BYTES,
   });
   if (result.exitCode !== 0) {
     throw new Error(`git ${args.join(" ")} failed: ${result.stderr}`);
   }
-  return result.stdout;
+  return {
+    output: result.stdout,
+    complete:
+      result.stdoutTruncated !== true && result.stderrTruncated !== true,
+  };
 }
 
-async function collectUntrackedDiff(
-  environment: FleetEnvironment,
-  worktree: string,
-  signal: AbortSignal,
-  paths: string[],
-): Promise<string> {
-  const patches: string[] = [];
-  for (const untrackedPath of paths) {
-    const result = await environment.runLocalCommand({
-      executable: "git",
-      args: [
-        "diff",
-        "--no-index",
-        "--binary",
-        "--",
-        "/dev/null",
-        untrackedPath,
-      ],
-      cwd: worktree,
-      timeoutMs: 30_000,
-      signal,
-    });
-    if (result.exitCode !== 0 && result.exitCode !== 1) {
-      throw new Error(
-        `git diff for untracked path ${untrackedPath} failed: ${result.stderr}`,
-      );
-    }
-    patches.push(result.stdout);
-  }
-  return patches.join("\n");
+function parseUntrackedPaths(output: GitOutput): string[] {
+  const parts = output.output.split("\0");
+  if (!output.complete) parts.pop();
+  return parts.filter((value) => value.length > 0);
 }
 
 function fingerprint(parts: string[]): string {
@@ -82,7 +70,10 @@ export async function collectInheritedWipEvidence(options: {
     "rev-parse",
     "HEAD",
   ]);
-  const localHeadSha = localHeadOutput.trim();
+  if (!localHeadOutput.complete) {
+    throw new Error("Local HEAD output exceeded its command capture limit");
+  }
+  const localHeadSha = localHeadOutput.output.trim();
   const status = await runGit(environment, worktree, signal, [
     "status",
     "--short",
@@ -104,32 +95,30 @@ export async function collectInheritedWipEvidence(options: {
     "--others",
     "--exclude-standard",
   ]);
-  const untrackedPaths = untrackedPathsOutput
-    .split("\0")
-    .filter((value) => value.length > 0);
-  const untrackedDiff = await collectUntrackedDiff(
-    environment,
-    worktree,
-    signal,
-    untrackedPaths,
-  );
+  const untrackedPaths = parseUntrackedPaths(untrackedPathsOutput);
+  const untrackedPathEvidence = JSON.stringify(untrackedPaths);
   return {
     localHeadSha,
-    status,
-    stagedDiff,
-    unstagedDiff,
-    untrackedDiff,
+    status: status.output,
+    statusComplete: status.complete,
+    stagedDiff: stagedDiff.output,
+    stagedDiffComplete: stagedDiff.complete,
+    unstagedDiff: unstagedDiff.output,
+    unstagedDiffComplete: unstagedDiff.complete,
+    untrackedPaths,
+    untrackedPathsComplete: untrackedPathsOutput.complete,
     hasWip:
-      status.length > 0 ||
-      stagedDiff.length > 0 ||
-      unstagedDiff.length > 0 ||
-      untrackedDiff.length > 0,
+      status.output.length > 0 ||
+      stagedDiff.output.length > 0 ||
+      unstagedDiff.output.length > 0 ||
+      untrackedPaths.length > 0 ||
+      !untrackedPathsOutput.complete,
     fingerprint: fingerprint([
       localHeadSha,
-      status,
-      stagedDiff,
-      unstagedDiff,
-      untrackedDiff,
+      status.output,
+      stagedDiff.output,
+      unstagedDiff.output,
+      untrackedPathEvidence,
     ]),
   };
 }

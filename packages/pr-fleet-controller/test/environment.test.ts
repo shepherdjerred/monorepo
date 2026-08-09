@@ -10,6 +10,7 @@ import {
 } from "@shepherdjerred/pr-fleet-controller/src/command-correlation.ts";
 import { CommandFleetEnvironment } from "@shepherdjerred/pr-fleet-controller/src/environment.ts";
 import { settleEvidenceParts } from "@shepherdjerred/pr-fleet-controller/src/environment-refresh.ts";
+import { collectInheritedWipEvidence } from "@shepherdjerred/pr-fleet-controller/src/inherited-wip.ts";
 import type {
   CommandRequest,
   FleetTelemetry,
@@ -292,6 +293,82 @@ describe("command process-group termination", () => {
       clearTimeout(timer);
     }
   });
+
+  test("retains bounded output while draining both subprocess streams", async () => {
+    const result = await environment.runLocalCommand({
+      executable: process.execPath,
+      args: [
+        "-e",
+        'process.stdout.write("x".repeat(1000000)); process.stderr.write("y".repeat(1000000))',
+      ],
+      cwd: directory,
+      timeoutMs: 30_000,
+      maxOutputBytes: 1024,
+    });
+    expect(Buffer.byteLength(result.stdout)).toBe(1024);
+    expect(Buffer.byteLength(result.stderr)).toBe(1024);
+    expect(result.stdoutTruncated).toBe(true);
+    expect(result.stderrTruncated).toBe(true);
+  });
+});
+
+test("inherited WIP keeps untracked contents out of evidence and bounds diffs", async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), "pr-fleet-wip-"));
+  const runGit = async (args: string[]) => {
+    const process = Bun.spawn(["git", ...args], {
+      cwd: directory,
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    const [exitCode, stderr] = await Promise.all([
+      process.exited,
+      new Response(process.stderr).text(),
+    ]);
+    if (exitCode !== 0) throw new Error(stderr);
+  };
+  try {
+    await runGit(["init"]);
+    await Bun.write(path.join(directory, "tracked.txt"), "base\n");
+    await runGit(["add", "tracked.txt"]);
+    await runGit([
+      "-c",
+      "user.name=Test Operator",
+      "-c",
+      "user.email=operator@example.com",
+      "commit",
+      "-m",
+      "test: initialize fixture",
+    ]);
+    await Bun.write(path.join(directory, "tracked.txt"), "x".repeat(200_000));
+    await Bun.write(
+      path.join(directory, ".env.local"),
+      "SECRET=credential-value\n",
+    );
+    const telemetry = new RecordingTelemetry();
+    const environment = new CommandFleetEnvironment({
+      repo: "shepherdjerred/monorepo",
+      checkout: directory,
+      worktreeRoot: path.join(directory, "worktrees"),
+      provider: codexProvider,
+      telemetry,
+    });
+    const evidence = await collectInheritedWipEvidence({
+      environment,
+      worktree: directory,
+      signal: new AbortController().signal,
+    });
+
+    expect(evidence.untrackedPaths).toEqual([".env.local"]);
+    expect(evidence.unstagedDiffComplete).toBe(false);
+    expect(Buffer.byteLength(evidence.unstagedDiff)).toBeLessThanOrEqual(
+      100_000,
+    );
+    expect(JSON.stringify(evidence)).not.toContain("credential-value");
+    expect(JSON.stringify(telemetry.events)).not.toContain("credential-value");
+    expect(JSON.stringify(telemetry.events)).not.toContain("--no-index");
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 });
 
 test("command events inherit their worker tool and model correlation", async () => {

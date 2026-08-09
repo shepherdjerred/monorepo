@@ -124,6 +124,14 @@ describe("inherited WIP evidence regressions", () => {
     expect(bounded.complete).toBe(false);
     expect(bounded.evidence).toContain("TRUNCATED");
     expect(bounded.evidence).toContain("publication is disabled");
+    const subprocessTruncated = boundedInheritedWipEvidence(
+      "captured prefix",
+      "unstaged inherited diff",
+      100_000,
+      false,
+    );
+    expect(subprocessTruncated.complete).toBe(false);
+    expect(subprocessTruncated.evidence).toContain("subprocess capture limit");
   });
 
   test("requires a complete inspection matching the live inherited WIP", () => {
@@ -160,9 +168,13 @@ describe("inherited WIP evidence regressions", () => {
     const inspectedEvidence: InheritedWipEvidence = {
       localHeadSha: prIdentity.headSha,
       status: "M  packages/example.ts\n",
+      statusComplete: true,
       stagedDiff: "staged patch",
+      stagedDiffComplete: true,
       unstagedDiff: "",
-      untrackedDiff: "",
+      unstagedDiffComplete: true,
+      untrackedPaths: [],
+      untrackedPathsComplete: true,
       hasWip: true,
       fingerprint: "fingerprint-a",
     };
@@ -237,9 +249,13 @@ describe("inherited WIP evidence regressions", () => {
     const cleanEvidence: InheritedWipEvidence = {
       localHeadSha: prIdentity.headSha,
       status: "",
+      statusComplete: true,
       stagedDiff: "",
+      stagedDiffComplete: true,
       unstagedDiff: "",
-      untrackedDiff: "",
+      unstagedDiffComplete: true,
+      untrackedPaths: [],
+      untrackedPathsComplete: true,
       hasWip: false,
       fingerprint: "clean",
     };
@@ -251,7 +267,7 @@ describe("inherited WIP evidence regressions", () => {
       requireMatchingInheritedWipInspection(store, pr, {
         ...cleanEvidence,
         status: "?? packages/new.ts\n",
-        untrackedDiff: "new file patch",
+        untrackedPaths: ["packages/new.ts"],
         hasWip: true,
         fingerprint: "dirty",
       }),

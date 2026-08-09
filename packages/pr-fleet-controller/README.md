@@ -105,7 +105,8 @@ Each worker receives:
 
 - normalized current-head PR, Buildkite, merge-tree, and review evidence;
 - inherited-work inspection for staged and unstaged patches, untracked paths,
-  local commits, and local/remote divergence;
+  local commits, and local/remote divergence; untracked file contents are never
+  serialized, and subprocess capture limits fail closed before authorization;
 - a typed `request_operator_input` boundary for one to three evidence-backed
   questions, each with two or three choices and exactly one recommendation; a
   successful request is persisted before that worker turn is aborted, and its
