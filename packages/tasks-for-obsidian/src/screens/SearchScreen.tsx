@@ -21,6 +21,7 @@ export function SearchScreen({ navigation }: Props) {
   const {
     taskList,
     dayCounts,
+    pendingTaskIds,
     handlePress,
     handleToggle,
     handleDelete,
@@ -72,6 +73,7 @@ export function SearchScreen({ navigation }: Props) {
         onTaskDelete={handleDelete}
         onTaskSchedule={handleSchedule}
         dayCounts={dayCounts}
+        pendingIds={pendingTaskIds}
         emptyTitle={
           debouncedQuery.trim() ? "No results" : "Start typing to search"
         }

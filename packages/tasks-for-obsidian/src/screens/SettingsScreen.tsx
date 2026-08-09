@@ -14,9 +14,11 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { z } from "zod";
 import type { RootStackParamList } from "../navigation/types";
 import type { Command } from "../data/sync/commands";
+import { AppearancePicker } from "../components/settings/AppearancePicker";
 import { useSettings } from "../hooks/use-settings";
 import { useTaskContext } from "../state/TaskContext";
-import { typography } from "../styles/typography";
+import { controlSize, radii, separator, spacing } from "../styles/tokens";
+import { dynamicTypeRamps, typography } from "../styles/typography";
 
 function describeCommand(command: Command): string {
   switch (command.type) {
@@ -44,13 +46,13 @@ type Props = NativeStackScreenProps<RootStackParamList, "Settings">;
 export function SettingsScreen(_props: Props) {
   const {
     colors,
-    isDarkMode,
+    appearance,
     feedbackEnabled,
     apiUrl,
     authToken,
     setApiUrl,
     setAuthToken,
-    setIsDarkMode,
+    setAppearance,
     setFeedbackEnabled,
   } = useSettings();
   const {
@@ -93,7 +95,10 @@ export function SettingsScreen(_props: Props) {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={[typography.label, { color: colors.textSecondary }]}>
+        <Text
+          style={[typography.label, { color: colors.textSecondary }]}
+          dynamicTypeRamp={dynamicTypeRamps.label}
+        >
           API URL
         </Text>
         <TextInput
@@ -116,6 +121,7 @@ export function SettingsScreen(_props: Props) {
           keyboardType="url"
           testID="settings-api-url"
           accessibilityLabel="API URL"
+          allowFontScaling
         />
 
         <Text
@@ -124,6 +130,7 @@ export function SettingsScreen(_props: Props) {
             { color: colors.textSecondary },
             styles.sectionLabel,
           ]}
+          dynamicTypeRamp={dynamicTypeRamps.label}
         >
           Auth Token
         </Text>
@@ -147,21 +154,30 @@ export function SettingsScreen(_props: Props) {
           secureTextEntry
           testID="settings-auth-token"
           accessibilityLabel="Auth token"
+          allowFontScaling
+        />
+
+        <Text
+          style={[
+            typography.label,
+            { color: colors.textSecondary },
+            styles.sectionLabel,
+          ]}
+          dynamicTypeRamp={dynamicTypeRamps.label}
+        >
+          Appearance
+        </Text>
+        <AppearancePicker
+          appearance={appearance}
+          colors={colors}
+          onChange={setAppearance}
         />
 
         <View style={[styles.row, styles.sectionLabel]}>
-          <Text style={[typography.body, { color: colors.text }]}>
-            Dark Mode
-          </Text>
-          <Switch
-            value={isDarkMode}
-            onValueChange={setIsDarkMode}
-            accessibilityLabel="Dark mode"
-          />
-        </View>
-
-        <View style={[styles.row, styles.sectionLabel]}>
-          <Text style={[typography.body, { color: colors.text }]}>
+          <Text
+            style={[typography.body, { color: colors.text }]}
+            dynamicTypeRamp={dynamicTypeRamps.body}
+          >
             Haptics & Sounds
           </Text>
           <Switch
@@ -178,7 +194,12 @@ export function SettingsScreen(_props: Props) {
           accessibilityLabel="Test connection"
           testID="settings-save"
         >
-          <Text style={styles.buttonText}>Test Connection</Text>
+          <Text
+            style={[styles.buttonText, { color: colors.textInverse }]}
+            dynamicTypeRamp={dynamicTypeRamps.subheading}
+          >
+            Test Connection
+          </Text>
         </Pressable>
 
         {testStatus ? (
@@ -191,6 +212,7 @@ export function SettingsScreen(_props: Props) {
                   testStatus === "Connected" ? colors.success : colors.error,
               },
             ]}
+            dynamicTypeRamp={dynamicTypeRamps.bodySmall}
           >
             {testStatus}
           </Text>
@@ -202,6 +224,7 @@ export function SettingsScreen(_props: Props) {
             { color: colors.textSecondary },
             styles.sectionLabel,
           ]}
+          dynamicTypeRamp={dynamicTypeRamps.label}
         >
           Sync
         </Text>
@@ -211,6 +234,7 @@ export function SettingsScreen(_props: Props) {
             styles.syncInfo,
             { color: colors.text },
           ]}
+          dynamicTypeRamp={dynamicTypeRamps.bodySmall}
           testID="settings-pending-count"
         >
           {pendingMutationCount === 0
@@ -228,6 +252,7 @@ export function SettingsScreen(_props: Props) {
                 { color: colors.error },
                 styles.sectionLabel,
               ]}
+              dynamicTypeRamp={dynamicTypeRamps.label}
             >
               Failed Changes
             </Text>
@@ -242,7 +267,10 @@ export function SettingsScreen(_props: Props) {
                   },
                 ]}
               >
-                <Text style={[typography.body, { color: colors.text }]}>
+                <Text
+                  style={[typography.body, { color: colors.text }]}
+                  dynamicTypeRamp={dynamicTypeRamps.body}
+                >
                   {describeCommand(entry.command)}
                 </Text>
                 <Text
@@ -250,6 +278,7 @@ export function SettingsScreen(_props: Props) {
                     typography.bodySmall,
                     { color: colors.textSecondary },
                   ]}
+                  dynamicTypeRamp={dynamicTypeRamps.bodySmall}
                 >
                   {entry.error.message}
                 </Text>
@@ -266,7 +295,12 @@ export function SettingsScreen(_props: Props) {
                     accessibilityLabel="Retry failed change"
                     testID={`dead-letter-retry-${entry.command.id}`}
                   >
-                    <Text style={styles.buttonText}>Retry</Text>
+                    <Text
+                      style={[styles.buttonText, { color: colors.textInverse }]}
+                      dynamicTypeRamp={dynamicTypeRamps.subheading}
+                    >
+                      Retry
+                    </Text>
                   </Pressable>
                   <Pressable
                     style={[
@@ -280,7 +314,12 @@ export function SettingsScreen(_props: Props) {
                     accessibilityLabel="Discard failed change"
                     testID={`dead-letter-discard-${entry.command.id}`}
                   >
-                    <Text style={styles.buttonText}>Discard</Text>
+                    <Text
+                      style={[styles.buttonText, { color: colors.textInverse }]}
+                      dynamicTypeRamp={dynamicTypeRamps.subheading}
+                    >
+                      Discard
+                    </Text>
                   </Pressable>
                 </View>
               </View>
@@ -297,57 +336,64 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    padding: 16,
+    padding: spacing.lg,
+    paddingBottom: spacing.xxxl,
   },
   sectionLabel: {
-    marginTop: 20,
+    marginTop: spacing.xl,
   },
   input: {
     fontSize: 16,
-    padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    marginTop: 8,
+    minHeight: controlSize.minimumHitTarget,
+    padding: spacing.md,
+    borderRadius: radii.medium,
+    borderWidth: separator.hairline,
+    marginTop: spacing.sm,
   },
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    minHeight: controlSize.minimumHitTarget,
   },
   button: {
-    paddingVertical: 12,
-    borderRadius: 8,
+    minHeight: controlSize.minimumHitTarget,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radii.medium,
     alignItems: "center",
-    marginTop: 24,
+    justifyContent: "center",
+    marginTop: spacing.xxl,
   },
   buttonText: {
-    color: "#ffffff",
     fontSize: 16,
     fontWeight: "600",
   },
   status: {
     textAlign: "center",
-    marginTop: 12,
+    marginTop: spacing.md,
   },
   syncInfo: {
-    marginTop: 8,
+    marginTop: spacing.sm,
   },
   deadLetter: {
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 12,
-    marginTop: 8,
-    gap: 4,
+    borderWidth: separator.hairline,
+    borderRadius: radii.medium,
+    padding: spacing.md,
+    marginTop: spacing.sm,
+    gap: spacing.xs,
   },
   deadLetterActions: {
     flexDirection: "row",
-    gap: 8,
-    marginTop: 8,
+    gap: spacing.sm,
+    marginTop: spacing.sm,
   },
   smallButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
+    minHeight: controlSize.minimumHitTarget,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radii.medium,
     alignItems: "center",
+    justifyContent: "center",
   },
 });

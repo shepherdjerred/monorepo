@@ -1,98 +1,63 @@
-import React, { useState, useCallback } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  Pressable,
-  Alert,
-  StyleSheet,
-} from "react-native";
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import type { RootStackParamList } from "../navigation/types";
-import type { UpdateTaskRequest } from "../domain/types";
-import { PRIORITY_LABELS } from "../domain/priority";
-import { STATUS_LABELS } from "../domain/status";
-import { useTasks } from "../hooks/use-tasks";
+import { usePreventRemove } from "@react-navigation/native";
+
+import { TaskDetailEditor } from "../components/task-detail/TaskDetailEditor";
+import {
+  buildTaskDetailPatch,
+  createTaskDetailDraft,
+  rebaseTaskDetailDraft,
+  taskDetailDraftIsDirty,
+} from "../components/task-detail/task-detail-draft";
+import type { TaskDetailDraft } from "../components/task-detail/task-detail-draft";
+import {
+  shouldDismissMissingTask,
+  shouldPreventTaskDetailRemove,
+  type TaskDetailDismissRequest,
+} from "../components/task-detail/task-detail-dismissal";
+import type { Task } from "../domain/types";
+import { taskDetailCompletionAction } from "../components/task-detail/task-detail-completion";
 import { useSettings } from "../hooks/use-settings";
-import { typography } from "../styles/typography";
-import { formatRelativeDate } from "../lib/dates";
-import { showResultError } from "../lib/errors";
+import { useTasks } from "../hooks/use-tasks";
 import {
-  ScheduleSheet,
-  type ScheduleField,
-} from "../components/input/ScheduleSheet";
-import { TaskEditForm } from "../components/task/TaskEditForm";
-import { MarkdownView } from "../components/common/MarkdownView";
-import { AppIcon } from "../components/common/AppIcon";
-import { isCompletedStatus } from "../domain/status";
-import {
+  feedbackButtonPress,
   feedbackTaskComplete,
-  feedbackTaskUncomplete,
-  feedbackTaskCreate,
   feedbackTaskDelete,
+  feedbackTaskUncomplete,
 } from "../lib/feedback";
+import { showResultError } from "../lib/errors";
+import type { RootStackParamList } from "../navigation/types";
+import { useTimeTrackingContext } from "../state/TimeTrackingContext";
+import { UndoProvider } from "../state/UndoContext";
+import { typography } from "../styles/typography";
 
 type Props = NativeStackScreenProps<RootStackParamList, "TaskDetail">;
+type DismissAction = Parameters<Props["navigation"]["dispatch"]>[0];
 
 export function TaskDetailScreen({ route, navigation }: Props) {
   const { taskId } = route.params;
   const { colors } = useSettings();
-  const {
-    getTask,
-    updateTask,
-    deleteTask,
-    toggleTask,
-    dayCounts,
-    projectNames,
-    contextNames,
-    tagNames,
-  } = useTasks();
+  const { getTask } = useTasks();
   const task = getTask(taskId);
+  const taskWasResolvedRef = useRef(task !== null);
 
-  const [editing, setEditing] = useState(false);
-  const [sheetField, setSheetField] = useState<ScheduleField | null>(null);
-
-  const handleSave = useCallback(
-    (patch: UpdateTaskRequest) => {
-      feedbackTaskCreate();
-      void (async () => {
-        const result = await updateTask(taskId, patch);
-        showResultError(result, "Save Failed");
-      })();
-      setEditing(false);
-    },
-    [taskId, updateTask],
-  );
-
-  const handleDelete = useCallback(() => {
-    Alert.alert("Delete Task", "Are you sure?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: () => {
-          feedbackTaskDelete();
-          void deleteTask(taskId);
-          navigation.goBack();
-        },
-      },
-    ]);
-  }, [taskId, deleteTask, navigation]);
-
-  // Read-mode picks reschedule immediately — the fast path for
-  // "just push this out" without entering the edit form.
-  const handleSheetApply = useCallback(
-    (field: ScheduleField, value: string | null) => {
-      void (async () => {
-        const result = await updateTask(
-          taskId,
-          field === "due" ? { due: value } : { scheduled: value },
-        );
-        showResultError(result, "Reschedule Failed");
-      })();
-    },
-    [taskId, updateTask],
-  );
+  useEffect(() => {
+    if (task !== null) {
+      taskWasResolvedRef.current = true;
+      return;
+    }
+    if (shouldDismissMissingTask(taskWasResolvedRef.current, false)) {
+      navigation.goBack();
+    }
+  }, [navigation, task]);
 
   if (!task) {
     return (
@@ -104,238 +69,269 @@ export function TaskDetailScreen({ route, navigation }: Props) {
     );
   }
 
-  if (editing) {
-    return (
-      <TaskEditForm
-        task={task}
-        dayCounts={dayCounts}
-        availableProjects={projectNames}
-        availableContexts={contextNames}
-        availableTags={tagNames}
-        onSave={handleSave}
-        onCancel={() => {
-          setEditing(false);
-        }}
-      />
-    );
-  }
-
+  // Native form-sheet screens live above the root React Navigation surface.
+  // Scope the Undo host to this presentation so recurring-completion feedback
+  // and its action render inside the sheet instead of behind its dimming view.
   return (
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={[typography.heading, { color: colors.text }]}>
-          {task.title}
-        </Text>
-
-        <View style={styles.meta}>
-          <MetaRow
-            label="Status"
-            value={STATUS_LABELS[task.status]}
-            colors={colors}
-          />
-          <MetaRow
-            label="Priority"
-            value={PRIORITY_LABELS[task.priority]}
-            colors={colors}
-          />
-          <MetaRow
-            label="Due"
-            value={task.due ? formatRelativeDate(task.due) : "None"}
-            colors={colors}
-            onPress={() => {
-              setSheetField("due");
-            }}
-            testID="task-detail-due-meta"
-          />
-          <MetaRow
-            label="Scheduled"
-            value={task.scheduled ? formatRelativeDate(task.scheduled) : "None"}
-            colors={colors}
-            onPress={() => {
-              setSheetField("scheduled");
-            }}
-            testID="task-detail-scheduled-meta"
-          />
-          {task.recurrence ? (
-            <MetaRow
-              label="Recurrence"
-              value={task.recurrence}
-              colors={colors}
-            />
-          ) : null}
-          {task.projects.length > 0 ? (
-            <MetaRow
-              label="Projects"
-              value={task.projects.join(", ")}
-              colors={colors}
-            />
-          ) : null}
-          {task.contexts.length > 0 ? (
-            <MetaRow
-              label="Contexts"
-              value={task.contexts.join(", ")}
-              colors={colors}
-            />
-          ) : null}
-          {task.tags.length > 0 ? (
-            <MetaRow
-              label="Tags"
-              value={task.tags.join(", ")}
-              colors={colors}
-            />
-          ) : null}
-        </View>
-
-        {task.details && task.details.length > 0 ? (
-          <View style={styles.detailsSection}>
-            <Text style={[typography.label, { color: colors.textSecondary }]}>
-              Details
-            </Text>
-            <MarkdownView content={task.details} />
-          </View>
-        ) : null}
-
-        <View style={styles.actions}>
-          <Pressable
-            style={[styles.button, { backgroundColor: colors.primary }]}
-            onPress={() => {
-              if (isCompletedStatus(task.status)) {
-                feedbackTaskUncomplete();
-              } else {
-                feedbackTaskComplete();
-              }
-              void toggleTask(taskId, {
-                scope: isCompletedStatus(task.status)
-                  ? "task-status"
-                  : "occurrence",
-              });
-            }}
-            accessibilityRole="button"
-            accessibilityLabel={
-              isCompletedStatus(task.status)
-                ? "Mark as incomplete"
-                : "Mark as complete"
-            }
-            testID="task-detail-toggle"
-          >
-            <Text style={styles.buttonText}>Toggle Status</Text>
-          </Pressable>
-          <Pressable
-            style={[
-              styles.button,
-              {
-                backgroundColor: colors.surface,
-                borderColor: colors.border,
-                borderWidth: 1,
-              },
-            ]}
-            onPress={() => {
-              setEditing(true);
-            }}
-            accessibilityRole="button"
-            accessibilityLabel="Edit task"
-            testID="task-detail-edit"
-          >
-            <Text style={[styles.buttonText, { color: colors.text }]}>
-              Edit
-            </Text>
-          </Pressable>
-          <Pressable
-            style={[styles.button, { backgroundColor: colors.error }]}
-            onPress={handleDelete}
-            accessibilityRole="button"
-            accessibilityLabel="Delete task"
-            testID="task-detail-delete"
-          >
-            <Text style={styles.buttonText}>Delete</Text>
-          </Pressable>
-        </View>
-      </ScrollView>
-      <ScheduleSheet
-        visible={sheetField !== null}
-        initialField={sheetField ?? "due"}
-        due={task.due}
-        scheduled={task.scheduled}
-        dayCounts={dayCounts}
-        onClose={() => {
-          setSheetField(null);
-        }}
-        onApply={handleSheetApply}
-      />
-    </View>
+    <UndoProvider>
+      <TaskDetailRoute task={task} navigation={navigation} />
+    </UndoProvider>
   );
 }
 
-function MetaRow({
+function TaskDetailRoute({
+  task,
+  navigation,
+}: {
+  readonly task: Task;
+  readonly navigation: Props["navigation"];
+}) {
+  const { colors } = useSettings();
+  const {
+    updateTask,
+    deleteTask,
+    toggleTask,
+    dayCounts,
+    projectNames,
+    contextNames,
+    tagNames,
+  } = useTasks();
+  const { activeEntry, startTracking, stopTracking } = useTimeTrackingContext();
+  const [draft, setDraft] = useState<TaskDetailDraft>(() =>
+    createTaskDetailDraft(task),
+  );
+  const [draftBaseTask, setDraftBaseTask] = useState(task);
+  const [isWorking, setIsWorking] = useState(false);
+  const [dismissRequest, setDismissRequest] =
+    useState<TaskDetailDismissRequest<DismissAction> | null>(null);
+  const dismissalStartedRef = useRef(false);
+
+  const rebasedDraft = useMemo(
+    () => rebaseTaskDetailDraft(draftBaseTask, task, draft),
+    [draft, draftBaseTask, task],
+  );
+
+  const patchResult = useMemo(
+    () => buildTaskDetailPatch(task, rebasedDraft),
+    [task, rebasedDraft],
+  );
+  const dirty = useMemo(
+    () => taskDetailDraftIsDirty(task, rebasedDraft),
+    [task, rebasedDraft],
+  );
+  const validationField = patchResult.ok ? null : patchResult.field;
+  const validationMessage = patchResult.ok ? null : patchResult.message;
+  const isTracking = activeEntry?.taskId === task.id;
+
+  useEffect(() => {
+    if (draftBaseTask === task) return;
+    setDraft((current) => rebaseTaskDetailDraft(draftBaseTask, task, current));
+    setDraftBaseTask(task);
+  }, [draftBaseTask, task]);
+
+  const dismissAfterCommit = useCallback(() => {
+    setDismissRequest({ kind: "go-back" });
+  }, []);
+
+  const requestCancel = useCallback(() => {
+    navigation.goBack();
+  }, [navigation]);
+
+  const handleSave = useCallback(() => {
+    if (!patchResult.ok) {
+      Alert.alert("Can't Save", patchResult.message);
+      return;
+    }
+    if (Object.keys(patchResult.patch).length === 0) {
+      dismissAfterCommit();
+      return;
+    }
+
+    feedbackButtonPress();
+    setIsWorking(true);
+    void (async () => {
+      const result = await updateTask(task.id, patchResult.patch);
+      if (showResultError(result, "Save Failed")) {
+        setIsWorking(false);
+        return;
+      }
+      dismissAfterCommit();
+    })();
+  }, [dismissAfterCommit, patchResult, task.id, updateTask]);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: "Edit Task",
+      headerLeft: () => (
+        <HeaderButton
+          label="Cancel"
+          color={colors.primary}
+          disabled={isWorking}
+          onPress={requestCancel}
+          testID="task-detail-cancel"
+        />
+      ),
+      headerRight: () => (
+        <HeaderButton
+          label={isWorking ? "Saving…" : "Done"}
+          color={colors.primary}
+          emphasized
+          disabled={isWorking || validationMessage !== null}
+          onPress={handleSave}
+          testID="task-detail-save"
+        />
+      ),
+    });
+  }, [
+    colors.primary,
+    handleSave,
+    isWorking,
+    navigation,
+    requestCancel,
+    validationMessage,
+  ]);
+
+  usePreventRemove(
+    shouldPreventTaskDetailRemove(dirty, dismissRequest),
+    ({ data }) => {
+      Alert.alert("Discard Changes?", "Your edits haven't been saved.", [
+        { text: "Keep Editing", style: "cancel" },
+        {
+          text: "Discard",
+          style: "destructive",
+          onPress: () => {
+            setDismissRequest({ kind: "dispatch", action: data.action });
+          },
+        },
+      ]);
+    },
+  );
+
+  useEffect(() => {
+    if (dismissRequest === null || dismissalStartedRef.current) return;
+    dismissalStartedRef.current = true;
+    if (dismissRequest.kind === "go-back") {
+      navigation.goBack();
+      return;
+    }
+    navigation.dispatch(dismissRequest.action);
+  }, [dismissRequest, navigation]);
+
+  const handleToggleCompletion = useCallback(() => {
+    const completion = taskDetailCompletionAction(task);
+    if (completion.completed) feedbackTaskUncomplete();
+    else feedbackTaskComplete();
+
+    setIsWorking(true);
+    void (async () => {
+      const result = await toggleTask(task.id, { scope: completion.scope });
+      showResultError(
+        result,
+        completion.completed ? "Uncomplete Failed" : "Complete Failed",
+      );
+      setIsWorking(false);
+    })();
+  }, [task, toggleTask]);
+
+  const handleToggleTracking = useCallback(() => {
+    feedbackButtonPress();
+    setIsWorking(true);
+    void (async () => {
+      const result = isTracking
+        ? await stopTracking(task.id)
+        : await startTracking(task.id);
+      showResultError(
+        result,
+        isTracking ? "Stop Tracking Failed" : "Start Tracking Failed",
+      );
+      setIsWorking(false);
+    })();
+  }, [isTracking, startTracking, stopTracking, task.id]);
+
+  const handleDelete = useCallback(() => {
+    Alert.alert(
+      "Delete Task?",
+      `“${task.title}” will be permanently deleted.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            feedbackTaskDelete();
+            setIsWorking(true);
+            void (async () => {
+              const result = await deleteTask(task.id);
+              if (showResultError(result, "Delete Failed")) {
+                setIsWorking(false);
+                return;
+              }
+              dismissAfterCommit();
+            })();
+          },
+        },
+      ],
+    );
+  }, [deleteTask, dismissAfterCommit, task.id, task.title]);
+
+  return (
+    <TaskDetailEditor
+      task={task}
+      draft={rebasedDraft}
+      dayCounts={dayCounts}
+      availableProjects={projectNames}
+      availableContexts={contextNames}
+      availableTags={tagNames}
+      validationField={validationField}
+      validationMessage={validationMessage}
+      isWorking={isWorking}
+      isTracking={isTracking}
+      onChange={setDraft}
+      onToggleCompletion={handleToggleCompletion}
+      onToggleTracking={handleToggleTracking}
+      onDelete={handleDelete}
+    />
+  );
+}
+
+function HeaderButton({
   label,
-  value,
-  colors,
+  color,
+  emphasized = false,
+  disabled,
   onPress,
   testID,
 }: {
-  label: string;
-  value: string;
-  colors: {
-    textSecondary: string;
-    text: string;
-    borderLight: string;
-  };
-  onPress?: (() => void) | undefined;
-  testID?: string | undefined;
+  readonly label: string;
+  readonly color: string;
+  readonly emphasized?: boolean | undefined;
+  readonly disabled: boolean;
+  readonly onPress: () => void;
+  readonly testID: string;
 }) {
-  const content = (
-    <>
-      <Text style={[typography.caption, { color: colors.textSecondary }]}>
-        {label}
-      </Text>
-      <View style={metaStyles.value}>
-        <Text style={[typography.bodySmall, { color: colors.text }]}>
-          {value}
-        </Text>
-        {onPress ? (
-          <AppIcon
-            name="chevron-right"
-            size={14}
-            color={colors.textSecondary}
-          />
-        ) : null}
-      </View>
-    </>
-  );
-  if (!onPress) {
-    return (
-      <View style={[metaStyles.row, { borderBottomColor: colors.borderLight }]}>
-        {content}
-      </View>
-    );
-  }
   return (
     <Pressable
-      style={[metaStyles.row, { borderBottomColor: colors.borderLight }]}
+      style={({ pressed }) => ({
+        opacity: disabled ? 0.35 : pressed ? 0.55 : 1,
+      })}
+      disabled={disabled}
       onPress={onPress}
+      hitSlop={8}
       accessibilityRole="button"
-      accessibilityLabel={`${label}: ${value}. Opens schedule sheet`}
+      accessibilityLabel={label}
       testID={testID}
     >
-      {content}
+      <Text
+        style={[
+          typography.body,
+          { color, fontWeight: emphasized ? "600" : "400" },
+        ]}
+      >
+        {label}
+      </Text>
     </Pressable>
   );
 }
-
-const metaStyles = StyleSheet.create({
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  value: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-});
 
 const styles = StyleSheet.create({
   container: {
@@ -344,30 +340,5 @@ const styles = StyleSheet.create({
   center: {
     alignItems: "center",
     justifyContent: "center",
-  },
-  content: {
-    padding: 16,
-  },
-  meta: {
-    marginTop: 20,
-  },
-  detailsSection: {
-    marginTop: 20,
-    gap: 8,
-  },
-  actions: {
-    marginTop: 24,
-    gap: 12,
-  },
-  button: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  buttonText: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "600",
   },
 });

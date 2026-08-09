@@ -16,7 +16,7 @@ struct TaskShortcutsProvider: AppShortcutsProvider {
     AppShortcut(
       intent: ShowTodayIntent(),
       phrases: [
-        "What's due today in \(.applicationName)",
+        "What's on today in \(.applicationName)",
         "Show today's tasks in \(.applicationName)",
         "Today in \(.applicationName)"
       ],

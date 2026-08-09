@@ -8,6 +8,12 @@ import { useSettings } from "../../hooks/use-settings";
 import { typography } from "../../styles/typography";
 import { feedbackSelection } from "../../lib/feedback";
 import { AppIcon } from "../common/AppIcon";
+import {
+  applyCaptureSuggestion,
+  buildCaptureSuggestions,
+  type CaptureSuggestion,
+} from "../../domain/quick-capture-autocomplete";
+import { deriveProjectOptions } from "../../domain/project-options";
 
 type NaturalLanguageInputProps = {
   value: string;
@@ -20,54 +26,6 @@ type NaturalLanguageInputProps = {
 };
 
 type Badge = { key: string; icon: FeatherIconName; label: string };
-
-type Suggestion = { key: string; token: string; label: string };
-
-const MAX_SUGGESTIONS = 5;
-
-/**
- * Complete the trailing `p:`/`@`/`#` token against known names. Names with
- * spaces are skipped — the word-based grammar cannot parse them back.
- */
-function buildSuggestions(
-  value: string,
-  projects: readonly string[],
-  contexts: readonly string[],
-  tags: readonly string[],
-): Suggestion[] {
-  const lastToken = value.split(/\s+/).at(-1) ?? "";
-  const make = (
-    prefix: string,
-    names: readonly string[],
-    typed: string,
-  ): Suggestion[] => {
-    const lower = typed.toLowerCase();
-    return names
-      .filter(
-        (name) =>
-          !name.includes(" ") &&
-          name.toLowerCase().startsWith(lower) &&
-          name.toLowerCase() !== lower,
-      )
-      .slice(0, MAX_SUGGESTIONS)
-      .map((name) => ({
-        key: `${prefix}${name}`,
-        token: `${prefix}${name}`,
-        label: `${prefix}${name}`,
-      }));
-  };
-
-  if (lastToken.startsWith("p:") && lastToken.length > 2) {
-    return make("p:", projects, lastToken.slice(2));
-  }
-  if (lastToken.startsWith("@") && lastToken.length > 1) {
-    return make("@", contexts, lastToken.slice(1));
-  }
-  if (lastToken.startsWith("#") && lastToken.length > 1) {
-    return make("#", tags, lastToken.slice(1));
-  }
-  return [];
-}
 
 export function NaturalLanguageInput({
   value,
@@ -104,21 +62,18 @@ export function NaturalLanguageInput({
 
   const suggestions = useMemo(
     () =>
-      buildSuggestions(
+      buildCaptureSuggestions(
         value,
-        availableProjects ?? [],
+        deriveProjectOptions(availableProjects ?? []),
         availableContexts ?? [],
         availableTags ?? [],
       ),
     [value, availableProjects, availableContexts, availableTags],
   );
 
-  const applySuggestion = (suggestion: Suggestion): void => {
+  const applySuggestion = (suggestion: CaptureSuggestion): void => {
     feedbackSelection();
-    const lastToken = value.split(/\s+/).at(-1) ?? "";
-    onChange(
-      `${value.slice(0, value.length - lastToken.length)}${suggestion.token} `,
-    );
+    onChange(applyCaptureSuggestion(value, suggestion));
   };
 
   return (

@@ -11,6 +11,7 @@ import {
 import { useTaskListScreen } from "../hooks/use-task-list-screen";
 import { TaskList } from "../components/task/TaskList";
 import { FilterSortBar } from "../components/input/FilterSortBar";
+import { activeTasksForDimension } from "../components/saved-view/browse-model";
 
 type Props = NativeStackScreenProps<RootStackParamList, "TagDetail">;
 
@@ -22,6 +23,7 @@ export function TagDetailScreen({ route, navigation }: Props) {
     contextNames,
     tagNames,
     dayCounts,
+    pendingTaskIds,
     handlePress,
     handleToggle,
     handleDelete,
@@ -31,7 +33,7 @@ export function TagDetailScreen({ route, navigation }: Props) {
   const [sort, setSort] = useState(DEFAULT_SORT);
 
   const tagTasks = useMemo(
-    () => taskList.filter((t) => t.tags.includes(tagName)),
+    () => activeTasksForDimension(taskList, "tag", String(tagName)),
     [taskList, tagName],
   );
 
@@ -62,6 +64,7 @@ export function TagDetailScreen({ route, navigation }: Props) {
         onTaskDelete={handleDelete}
         onTaskSchedule={handleSchedule}
         dayCounts={dayCounts}
+        pendingIds={pendingTaskIds}
         emptyTitle="No tasks with this tag"
       />
     </View>

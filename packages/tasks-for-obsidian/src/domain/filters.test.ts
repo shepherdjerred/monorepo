@@ -5,6 +5,7 @@ import {
   EMPTY_FILTER,
   applyFilter,
   applySort,
+  applySortOverride,
   countActiveFilters,
   isFilterActive,
 } from "./filters";
@@ -251,6 +252,43 @@ describe("applySort", () => {
     expect(sorted[2]!.title).toBe("Cherry"); // no due date still last
   });
 
+  test("sorts timestamp offsets chronologically", () => {
+    const sorted = applySort(
+      [
+        makeTask({
+          id: taskId("later-spelling"),
+          title: "Later instant",
+          due: "2026-08-10T00:00:00-07:00",
+        }),
+        makeTask({
+          id: taskId("earlier-spelling"),
+          title: "Earlier instant",
+          due: "2026-08-10T06:00:00Z",
+        }),
+      ],
+      { field: "dueDate", direction: "asc" },
+    );
+    expect(sorted.map((task) => task.title)).toEqual([
+      "Earlier instant",
+      "Later instant",
+    ]);
+  });
+
+  test("rejects impossible date-only values", () => {
+    expect(() =>
+      applySort(
+        [
+          makeTask({ id: taskId("invalid"), due: "2026-02-30" }),
+          makeTask({ id: taskId("valid"), due: "2026-03-01" }),
+        ],
+        {
+          field: "dueDate",
+          direction: "asc",
+        },
+      ),
+    ).toThrow("Invalid date");
+  });
+
   test("sorts by priority ascending (highest first)", () => {
     const sorted = applySort(tasks, { field: "priority", direction: "asc" });
     expect(sorted[0]!.priority).toBe("high");
@@ -291,5 +329,35 @@ describe("applySort", () => {
       direction: "asc",
     });
     expect(sorted).toHaveLength(2);
+  });
+});
+
+describe("applySortOverride", () => {
+  const semanticOrder = [
+    makeTask({
+      id: taskId("planned"),
+      title: "Planned first",
+      scheduled: "2026-08-08",
+    }),
+    makeTask({
+      id: taskId("deadline"),
+      title: "Deadline second",
+      due: "2026-08-08",
+    }),
+  ];
+
+  test("preserves semantic collection order before a user selects a sort", () => {
+    expect(
+      applySortOverride(semanticOrder, null).map((task) => task.id),
+    ).toEqual([taskId("planned"), taskId("deadline")]);
+  });
+
+  test("applies a generic sort after the user explicitly selects one", () => {
+    expect(
+      applySortOverride(semanticOrder, {
+        field: "dueDate",
+        direction: "asc",
+      }).map((task) => task.id),
+    ).toEqual([taskId("deadline"), taskId("planned")]);
   });
 });

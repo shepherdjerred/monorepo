@@ -355,7 +355,7 @@ Each package has its own AGENTS.md with specific instructions:
 - `packages/scout-for-lol/AGENTS.md` - Match analysis pipeline
 - `packages/resume/AGENTS.md` - Resume site
 - `packages/toolkit/AGENTS.md` - CLI developer tools (pr, pd, bugsink, grafana)
-- `packages/tasks-for-obsidian/AGENTS.md` - React Native task app
+- `packages/tasks-for-obsidian/AGENTS.md` - React Native task app, including native capture/detail, saved views, and bulk task organization
 - `packages/docs/` - AI working docs plus `wiki/`, the human-first explanation layer (see `monorepo-docs` skill)
 
 ## PR Media & Demo Artifacts — `public.sjer.red`
