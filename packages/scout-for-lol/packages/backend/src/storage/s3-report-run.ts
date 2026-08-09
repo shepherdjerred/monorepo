@@ -5,6 +5,10 @@ import * as Sentry from "@sentry/bun";
 import { createLogger } from "#src/logger.ts";
 import { z } from "zod";
 import { validateS3Metadata } from "#src/storage/s3-metadata.ts";
+import {
+  VisualizationSnapshotSchema,
+  type VisualizationSnapshot,
+} from "@scout-for-lol/data";
 
 // Mirrors the not-found shape handled in s3-leaderboard.ts.
 const AwsS3NotFoundErrorSchema = z.object({
@@ -19,6 +23,82 @@ const logger = createLogger("storage-s3-report-run");
  */
 function generateReportRunImageKey(reportId: number, runId: number): string {
   return `reports/report-${reportId.toString()}/runs/${runId.toString()}.png`;
+}
+
+function generateReportRunVisualizationKey(
+  reportId: number,
+  runId: number,
+): string {
+  return `reports/report-${reportId.toString()}/runs/${runId.toString()}.visualization.json`;
+}
+
+export async function saveReportRunVisualization(
+  reportId: number,
+  runId: number,
+  snapshot: VisualizationSnapshot,
+): Promise<{ key: string; size: number } | null> {
+  const bucket = configuration.s3BucketName;
+  if (bucket === undefined) return null;
+  const key = generateReportRunVisualizationKey(reportId, runId);
+  const body = Buffer.from(
+    JSON.stringify(VisualizationSnapshotSchema.parse(snapshot)),
+  );
+  try {
+    await createS3Client().send(
+      new PutObjectCommand({
+        Bucket: bucket,
+        Key: key,
+        Body: body,
+        ContentType: "application/json",
+        Metadata: validateS3Metadata({
+          reportId: reportId.toString(),
+          runId: runId.toString(),
+          artifact: "visualization-snapshot-v1",
+          uploadedAt: new Date().toISOString(),
+        }),
+      }),
+    );
+    return { key, size: body.length };
+  } catch (error) {
+    logger.error(`[S3ReportRun] Failed to upload visualization ${key}:`, error);
+    Sentry.captureException(error, {
+      tags: {
+        source: "s3-report-run-visualization-upload",
+        reportId: reportId.toString(),
+        runId: runId.toString(),
+      },
+    });
+    return null;
+  }
+}
+
+export async function loadReportRunVisualization(
+  reportId: number,
+  runId: number,
+): Promise<VisualizationSnapshot | null> {
+  const bucket = configuration.s3BucketName;
+  if (bucket === undefined) return null;
+  const key = generateReportRunVisualizationKey(reportId, runId);
+  try {
+    const response = await createS3Client().send(
+      new GetObjectCommand({ Bucket: bucket, Key: key }),
+    );
+    if (!response.Body) return null;
+    return VisualizationSnapshotSchema.parse(
+      JSON.parse(await response.Body.transformToString()),
+    );
+  } catch (error) {
+    if (AwsS3NotFoundErrorSchema.safeParse(error).success) return null;
+    logger.error(`[S3ReportRun] Failed to load visualization ${key}:`, error);
+    Sentry.captureException(error, {
+      tags: {
+        source: "s3-report-run-visualization-load",
+        reportId: reportId.toString(),
+        runId: runId.toString(),
+      },
+    });
+    return null;
+  }
 }
 
 /**

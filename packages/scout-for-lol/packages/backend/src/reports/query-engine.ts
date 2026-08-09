@@ -3,6 +3,8 @@ import {
   CompetitionIdSchema,
   REPORT_MAX_ROWS_LIMIT,
   RankSchema,
+  comparisonDeltas,
+  type VisualizationSnapshot,
   parseAndCompile,
   parseCompetition,
   rankToString,
@@ -20,10 +22,26 @@ import {
   rowsFromAggregates,
   sortedAggregates,
 } from "#src/reports/query-aggregates.ts";
+import {
+  clampTemporalRange,
+  resolveTemporalRanges,
+  type TemporalRange,
+} from "#src/reports/temporal-range.ts";
+import { buildVisualizationSnapshot } from "#src/reports/visualization-snapshot.ts";
 
 export type ReportResultValue = {
   column: string;
   value: number | string | null;
+  comparisonValue?: number | string | null;
+  absoluteDelta?: number | null;
+  percentageDelta?: number | null;
+  sampleSize?: number;
+  successes?: number;
+  confidenceInterval?: {
+    level: 0.95;
+    lower: number;
+    upper: number;
+  } | null;
 };
 
 export type ReportMentionIdentity =
@@ -50,16 +68,36 @@ export type ReportQueryResult = {
   columns: string[];
   rows: ReportResultRow[];
   rowsScanned: number;
+  comparisonRows?: ReportResultRow[];
+  visualization?: VisualizationSnapshot;
+  evidence?: {
+    label: string;
+    values: {
+      column: string;
+      sampleSize: number;
+      successes?: number;
+      confidenceInterval?: {
+        level: 0.95;
+        lower: number;
+        upper: number;
+      } | null;
+    }[];
+  }[];
 };
 
-type ExecuteReportQueryParams = {
+export type ExecuteReportQueryParams = {
   prisma: ExtendedPrismaClient;
   serverId: DiscordGuildId;
   queryText: string;
   sourceCompetitionId?: number | null;
   now?: Date;
   onPlan?: ((plan: ReportQueryPlan) => void) | undefined;
+  rangeOverride?: TemporalRange;
 };
+type ReportExecutionParams = Omit<
+  ExecuteReportQueryParams,
+  "queryText" | "onPlan"
+>;
 
 /**
  * Execute a ScoutQL report query.
@@ -83,16 +121,31 @@ export async function executeReportQuery(
     source = plan.source;
     params.onPlan?.(plan);
     const result = await runReportQueryPlan(params, plan);
+    const visualization = buildVisualizationSnapshot(
+      result,
+      params.now ?? new Date(),
+    );
     recordReportQueryMetrics(source, "success", startedAt);
-    return result;
+    return { ...result, visualization };
   } catch (error) {
     recordReportQueryMetrics(source, "error", startedAt);
     throw error;
   }
 }
 
+export async function executeCompiledReportQuery(
+  params: Omit<ExecuteReportQueryParams, "queryText" | "onPlan">,
+  plan: ReportQueryPlan,
+): Promise<ReportQueryResult> {
+  const result = await runReportQueryPlan(params, plan);
+  return {
+    ...result,
+    visualization: buildVisualizationSnapshot(result, params.now ?? new Date()),
+  };
+}
+
 async function runReportQueryPlan(
-  params: ExecuteReportQueryParams,
+  params: ReportExecutionParams,
   plan: ReportQueryPlan,
 ): Promise<ReportQueryResult> {
   if (plan.source === "competition_rank" || plan.source === "rank_current") {
@@ -108,19 +161,39 @@ async function runReportQueryPlan(
     throw new Error("player_groups reports must GROUP BY group(...).");
   }
 
-  const { startDate, endDate } = lookbackRange(plan, params.now);
+  const ranges = queryRanges(plan, params.now, params.rangeOverride);
   const result = await runLakeAggregation({
     plan,
     serverId: params.serverId,
-    startDate,
-    endDate,
+    startDate: ranges.current.startDate,
+    endDate: ranges.current.endDate,
   });
-  return rowsFromAggregates(
+  const current = rowsFromAggregates(
     plan,
     sortedAggregates(plan, result.aggregates),
     result.rowsScanned,
-    REPORT_MAX_ROWS_LIMIT,
+    plan.analysis === undefined ? REPORT_MAX_ROWS_LIMIT : 2000,
   );
+  if (ranges.comparison === null) return current;
+  const comparison = await runLakeAggregation({
+    plan,
+    serverId: params.serverId,
+    startDate: ranges.comparison.startDate,
+    endDate: ranges.comparison.endDate,
+  });
+  return {
+    ...current,
+    rowsScanned: current.rowsScanned + comparison.rowsScanned,
+    ...attachComparison(
+      current.rows,
+      rowsFromAggregates(
+        plan,
+        sortedAggregates(plan, comparison.aggregates),
+        comparison.rowsScanned,
+        2000,
+      ).rows,
+    ),
+  };
 }
 
 function recordReportQueryMetrics(
@@ -136,7 +209,7 @@ function recordReportQueryMetrics(
 }
 
 async function executeCompetitionMatchParticipantReport(
-  params: ExecuteReportQueryParams,
+  params: ReportExecutionParams,
   plan: ReportQueryPlan,
 ): Promise<ReportQueryResult> {
   const competitionId = resolveCompetitionId(params, plan);
@@ -157,28 +230,50 @@ async function executeCompetitionMatchParticipantReport(
     },
     select: { playerId: true },
   });
-  const { startDate, endDate } = competitionRange(
+  const ranges = competitionQueryRanges(
     competition,
     plan,
     params.now,
+    params.rangeOverride,
   );
   const result = await runLakeAggregation({
     plan,
     serverId: params.serverId,
-    startDate,
-    endDate,
+    startDate: ranges.current.startDate,
+    endDate: ranges.current.endDate,
     playerIds: participantRows.map((row) => row.playerId),
   });
-  return rowsFromAggregates(
+  const current = rowsFromAggregates(
     plan,
     sortedAggregates(plan, result.aggregates),
     result.rowsScanned,
-    REPORT_MAX_ROWS_LIMIT,
+    plan.analysis === undefined ? REPORT_MAX_ROWS_LIMIT : 2000,
   );
+  if (ranges.comparison === null) return current;
+  const comparison = await runLakeAggregation({
+    plan,
+    serverId: params.serverId,
+    startDate: ranges.comparison.startDate,
+    endDate: ranges.comparison.endDate,
+    playerIds: participantRows.map((row) => row.playerId),
+  });
+  return {
+    ...current,
+    rowsScanned: current.rowsScanned + comparison.rowsScanned,
+    ...attachComparison(
+      current.rows,
+      rowsFromAggregates(
+        plan,
+        sortedAggregates(plan, comparison.aggregates),
+        comparison.rowsScanned,
+        2000,
+      ).rows,
+    ),
+  };
 }
 
 async function executeCompetitionRankReport(
-  params: ExecuteReportQueryParams,
+  params: ReportExecutionParams,
   plan: ReportQueryPlan,
 ): Promise<ReportQueryResult> {
   const competitionId = resolveCompetitionId(params, plan);
@@ -247,6 +342,50 @@ function lookbackRange(
   };
 }
 
+function queryRanges(
+  plan: ReportQueryPlan,
+  nowInput: Date | undefined,
+  rangeOverride: TemporalRange | undefined,
+): { current: TemporalRange; comparison: TemporalRange | null } {
+  const now = nowInput ?? new Date();
+  if (rangeOverride !== undefined) {
+    return { current: rangeOverride, comparison: null };
+  }
+  if (plan.analysis === undefined) {
+    return { current: lookbackRange(plan, now), comparison: null };
+  }
+  return resolveTemporalRanges(plan.analysis, now);
+}
+
+function competitionQueryRanges(
+  competition: { startDate: Date | null; endDate: Date | null },
+  plan: ReportQueryPlan,
+  nowInput: Date | undefined,
+  rangeOverride: TemporalRange | undefined,
+): { current: TemporalRange; comparison: TemporalRange | null } {
+  const now = nowInput ?? new Date();
+  if (rangeOverride !== undefined) {
+    return {
+      current: clampTemporalRange(rangeOverride, competition, now),
+      comparison: null,
+    };
+  }
+  if (plan.analysis === undefined) {
+    return {
+      current: competitionRange(competition, plan, now),
+      comparison: null,
+    };
+  }
+  const ranges = resolveTemporalRanges(plan.analysis, now);
+  return {
+    current: clampTemporalRange(ranges.current, competition, now),
+    comparison:
+      ranges.comparison === null
+        ? null
+        : clampTemporalRange(ranges.comparison, competition, now),
+  };
+}
+
 function competitionRange(
   competition: { startDate: Date | null; endDate: Date | null },
   plan: ReportQueryPlan,
@@ -262,7 +401,7 @@ function competitionRange(
 }
 
 function resolveCompetitionId(
-  params: ExecuteReportQueryParams,
+  params: ReportExecutionParams,
   plan: ReportQueryPlan,
 ): number {
   const sourceCompetitionId = params.sourceCompetitionId ?? undefined;
@@ -286,4 +425,66 @@ function scoreToNumber(score: unknown): number {
     return rankToLeaguePoints(rankResult.data);
   }
   return typeof score === "number" ? score : 0;
+}
+
+function attachComparison(
+  currentRows: ReportResultRow[],
+  comparisonRows: ReportResultRow[],
+): { rows: ReportResultRow[]; comparisonRows: ReportResultRow[] } {
+  const currentGroups = groupTemporalRows(currentRows);
+  const comparisonGroups = groupTemporalRows(comparisonRows);
+  const replacements = new Map<string, ReportResultRow>();
+  for (const [seriesKey, currentGroup] of currentGroups) {
+    const baselineGroup = comparisonGroups.get(seriesKey) ?? [];
+    const sortedCurrent = currentGroup.toSorted(compareTemporalRows);
+    const sortedBaseline = baselineGroup.toSorted(compareTemporalRows);
+    sortedCurrent.forEach((row, index) => {
+      const baseline = sortedBaseline[index];
+      replacements.set(row.label, {
+        ...row,
+        values: row.values.map((value) => {
+          const baselineValue = baseline?.values.find(
+            (candidate) => candidate.column === value.column,
+          )?.value;
+          const numericBaseline =
+            typeof baselineValue === "number" ? baselineValue : null;
+          const numericValue =
+            typeof value.value === "number" ? value.value : null;
+          const deltas = comparisonDeltas(numericValue, numericBaseline);
+          return {
+            ...value,
+            comparisonValue: baselineValue ?? null,
+            absoluteDelta: deltas.absolute,
+            percentageDelta: deltas.percentage,
+          };
+        }),
+      });
+    });
+  }
+  return {
+    rows: currentRows.map((row) => replacements.get(row.label) ?? row),
+    comparisonRows,
+  };
+}
+
+function groupTemporalRows(
+  rows: ReportResultRow[],
+): Map<string, ReportResultRow[]> {
+  const groups = new Map<string, ReportResultRow[]>();
+  for (const row of rows) {
+    const key = row.dimensions.slice(0, -1).join("\u{0}");
+    const group = groups.get(key) ?? [];
+    group.push(row);
+    groups.set(key, group);
+  }
+  return groups;
+}
+
+function compareTemporalRows(
+  left: ReportResultRow,
+  right: ReportResultRow,
+): number {
+  return (left.dimensions.at(-1) ?? "").localeCompare(
+    right.dimensions.at(-1) ?? "",
+  );
 }

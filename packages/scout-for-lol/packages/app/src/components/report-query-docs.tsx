@@ -17,7 +17,7 @@ import {
 } from "#src/components/ui/card.tsx";
 
 const GRAMMAR =
-  "SELECT <metric|expression [AS alias]>, … FROM <source> [WHERE <row filter> AND …] GROUP BY <field>[, <field>] [HAVING <output> <operator> <value>] [ORDER BY <output|label> ASC|DESC] [LIMIT <n>] [RENDER <kind> [WITH (<options>)]]";
+  "SELECT <metric|expression [AS alias]>, … FROM <source> [WHERE <row filter> AND …] GROUP BY <field>[, <field>] [HAVING <output> <operator> <value>] [ANALYZE LAST <days> DAYS | BETWEEN '<date>' AND '<date>'] [BUCKET BY AUTO|DAY|WEEK|MONTH|PATCH] [COMPARE TO PREVIOUS PERIOD | BETWEEN '<date>' AND '<date>'] [IN TIME ZONE '<IANA zone>'] [ORDER BY <output|label> ASC|DESC] [LIMIT <n>] [RENDER <kind> [WITH (<options>)]]";
 
 type DefinitionItem = { term: string; description: string };
 
@@ -65,7 +65,8 @@ export function ReportQueryDocs() {
             Keywords are case-insensitive. WHERE filters raw rows; HAVING
             filters aggregates and aliases. Arithmetic supports parentheses and
             <span className="font-mono"> + − × ÷</span>. Temporal grouping uses
-            UTC day, week, and month buckets.
+            canonical temporal clauses use saved IANA timezones and ISO Monday
+            weeks. Report and comparison windows are limited to 365 days.
           </p>
         </CardContent>
       </Card>

@@ -8,6 +8,7 @@ import {
   ReportChartPaletteSchema,
   ReportChartSortSchema,
   ReportChartThemeSchema,
+  ReportChartStackSchema,
   ReportHexColorSchema,
   ReportRenderSpecSchema,
   type ReportChartOptions,
@@ -15,6 +16,7 @@ import {
   type ReportOutputFormat,
   type ReportRenderChannel,
   type ReportRenderSpec,
+  type ReportTableOptions,
 } from "#src/model/report.ts";
 
 function normalizeToken(value: string): string {
@@ -31,6 +33,8 @@ const RENDER_KIND_BY_TOKEN: Record<string, ReportOutputFormat> = {
   heatmap: "HEATMAP",
   radar_chart: "RADAR_CHART",
   kpi_card: "KPI_CARD",
+  bump_chart: "BUMP_CHART",
+  calendar_heatmap: "CALENDAR_HEATMAP",
   table: "TABLE",
   list: "LIST",
   leaderboard: "LEADERBOARD",
@@ -46,6 +50,8 @@ const CHART_RENDER_KINDS = new Set<ReportOutputFormat>([
   "HEATMAP",
   "RADAR_CHART",
   "KPI_CARD",
+  "BUMP_CHART",
+  "CALENDAR_HEATMAP",
 ]);
 
 const RENDER_WITH_PATTERN = /^with\s*\((?<body>.*)\)$/iu;
@@ -79,6 +85,13 @@ export function parseRenderClause(
       const options = parseLeaderboardRenderWith(withText);
       return ReportRenderSpecSchema.parse({ kind, options });
     }
+    if (kind === "TABLE") {
+      const options = parseTableRenderWith(withText);
+      return ReportRenderSpecSchema.parse({
+        kind,
+        ...(options.sparkline === undefined ? {} : { options }),
+      });
+    }
     if (withText.length > 0) {
       throw new Error(
         `RENDER ${normalizeToken(kindToken)} does not take a WITH clause.`,
@@ -98,6 +111,28 @@ export function parseRenderClause(
   }
   validateRenderShape(spec, outputColumns, groupBys);
   return spec;
+}
+
+function parseTableRenderWith(withText: string): ReportTableOptions {
+  if (withText.length === 0) return {};
+  const withMatch = RENDER_WITH_PATTERN.exec(withText);
+  if (withMatch?.groups === undefined) {
+    throw new Error(
+      "Invalid table options. Expected: WITH (sparkline = true|false).",
+    );
+  }
+  const pairs = splitRenderPairs(withMatch.groups["body"] ?? "");
+  if (
+    pairs.length !== 1 ||
+    normalizeToken(pairs[0]?.key ?? "") !== "sparkline"
+  ) {
+    throw new Error("RENDER table only supports the sparkline option.");
+  }
+  const value = normalizeColumnRef(pairs[0]?.value ?? "");
+  if (value !== "true" && value !== "false") {
+    throw new Error("RENDER table sparkline must be true or false.");
+  }
+  return { sparkline: value === "true" };
 }
 
 function parseLeaderboardRenderWith(
@@ -169,6 +204,14 @@ function validateRenderShape(
   }
   if (render.kind === "HEATMAP" && groupBys.length !== 2) {
     throw new Error("Heatmaps require exactly two GROUP BY dimensions.");
+  }
+  if (render.kind === "BUMP_CHART" && groupBys.length < 2) {
+    throw new Error(
+      "Bump charts require a time bucket and a player dimension.",
+    );
+  }
+  if (render.kind === "CALENDAR_HEATMAP" && !groupBys.includes("day")) {
+    throw new Error("Calendar heatmaps require daily temporal buckets.");
   }
   if (
     render.kind === "RADAR_CHART" &&
@@ -256,6 +299,8 @@ function setRenderOption(
   value: string,
   options: ReportChartOptions,
 ): void {
+  if (setTransformRenderOption(normalizedKey, value, options)) return;
+
   switch (normalizedKey) {
     case "title":
     case "subtitle": {
@@ -305,18 +350,44 @@ function setRenderOption(
       options.sort = ReportChartSortSchema.parse(normalizeColumnRef(value));
       return;
     }
-    case "smooth": {
-      const normalized = normalizeColumnRef(value);
-      if (normalized !== "true" && normalized !== "false") {
-        throw new Error("RENDER smooth must be true or false.");
-      }
-      options.smooth = normalized === "true";
-      return;
-    }
     default: {
       throw new Error(`Unknown RENDER option "${originalKey}".`);
     }
   }
+}
+
+function setTransformRenderOption(
+  key: string,
+  value: string,
+  options: ReportChartOptions,
+): boolean {
+  if (key === "rolling") {
+    const window = Number(normalizeColumnRef(value));
+    if (!Number.isInteger(window) || window < 2 || window > 52) {
+      throw new Error("RENDER rolling must be an integer from 2 to 52.");
+    }
+    options.rolling = { window };
+    return true;
+  }
+  if (key === "stack") {
+    options.stack = ReportChartStackSchema.parse(normalizeColumnRef(value));
+    return true;
+  }
+  if (
+    key === "smooth" ||
+    key === "cumulative" ||
+    key === "trend" ||
+    key === "annotations" ||
+    key === "sparkline"
+  ) {
+    const normalized = normalizeColumnRef(value);
+    if (normalized !== "true" && normalized !== "false") {
+      throw new Error(`RENDER ${key} must be true or false.`);
+    }
+    options[key] = normalized === "true";
+    return true;
+  }
+  return false;
 }
 
 function assertRenderColumn(

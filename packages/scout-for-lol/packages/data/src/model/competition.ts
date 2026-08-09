@@ -7,6 +7,7 @@ import type {
 } from "#src/model/discord.ts";
 import { RankSchema } from "#src/model/rank.ts";
 import type { SeasonId } from "#src/seasons.ts";
+import { ReportScheduleTimezoneSchema } from "#src/model/competition-cron.ts";
 
 /**
  * Competition database row shape — mirrors backend/prisma/schema.prisma.
@@ -41,6 +42,9 @@ export type Competition = {
   criteriaType: string;
   criteriaConfig: string;
   maxParticipants: number;
+  // Optional only for compatibility with pre-migration serialized/test rows;
+  // parseCompetition always returns a validated, required value.
+  analysisTimezone?: string;
   startDate: Date | null;
   endDate: Date | null;
   seasonId: SeasonId | null;
@@ -244,6 +248,17 @@ export const CompetitionStatusSchema = z.enum([
   "CANCELLED",
 ]);
 
+export const CompetitionAnalysisPresetSchema = z.enum([
+  "criterion_score",
+  "rank_position",
+  "games_wins",
+  "performance",
+  "champion_queue_composition",
+]);
+export type CompetitionAnalysisPreset = z.infer<
+  typeof CompetitionAnalysisPresetSchema
+>;
+
 export type CompetitionStatus = z.infer<typeof CompetitionStatusSchema>;
 
 /**
@@ -397,9 +412,10 @@ export type CompetitionWithSeason = Competition & {
  */
 export type CompetitionWithCriteria = Omit<
   Competition,
-  "criteriaType" | "criteriaConfig"
+  "criteriaType" | "criteriaConfig" | "analysisTimezone"
 > & {
   criteria: CompetitionCriteria;
+  analysisTimezone: string;
 };
 
 /**
@@ -462,6 +478,9 @@ export function parseCompetition(
 
   return {
     ...rest,
+    analysisTimezone: ReportScheduleTimezoneSchema.parse(
+      raw.analysisTimezone ?? "UTC",
+    ),
     startDate,
     endDate,
     criteria: result.data,

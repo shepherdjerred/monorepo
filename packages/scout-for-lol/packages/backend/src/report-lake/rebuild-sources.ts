@@ -1,9 +1,15 @@
-import type { S3Client } from "@aws-sdk/client-s3";
-import { RawCurrentGameInfoSchema, RawMatchSchema } from "@scout-for-lol/data";
+import { ListObjectsV2Command, type S3Client } from "@aws-sdk/client-s3";
+import {
+  CachedLeaderboardSchema,
+  RawCurrentGameInfoSchema,
+  RawMatchSchema,
+  rankToLeaguePoints,
+} from "@scout-for-lol/data";
 import { createLogger } from "#src/logger.ts";
 import { reportLakeCompactionSkippedTotal } from "#src/metrics/report-lake.ts";
 import { flattenMatch, flattenPrematch } from "#src/report-lake/flatten.ts";
 import type { NdjsonFileWriter } from "#src/report-lake/ndjson-writer.ts";
+import { lakeMonth, lakeTimestamp } from "#src/report-lake/schema.ts";
 import {
   stagingIdForMatch,
   stagingIdForPrematch,
@@ -21,6 +27,7 @@ const logger = createLogger("report-lake-rebuild-sources");
 // Bounded in-flight S3 GETs during a rebuild. Fetch+parse+flatten runs
 // concurrently; writes are funnelled serially into the single NDJSON writer.
 const REBUILD_S3_CONCURRENCY = 16;
+const LEADERBOARD_PREFIX = "leaderboards/";
 
 // --- Rebuild source: S3 (canonical) ---
 
@@ -138,5 +145,99 @@ export async function populatePrematchFromS3(
   if (batch.length > 0) {
     await flush();
   }
+  return skipped;
+}
+
+/**
+ * Materialize the authoritative daily leaderboard snapshots into a
+ * language-neutral lake table. Current leaderboard objects and chart images
+ * are deliberately excluded; only versioned historical JSON is replayed.
+ */
+export async function populateCompetitionRankHistoryFromS3(
+  client: S3Client,
+  bucket: string,
+  writer: NdjsonFileWriter,
+): Promise<number> {
+  let continuationToken: string | undefined;
+  let skipped = 0;
+
+  do {
+    const response = await client.send(
+      new ListObjectsV2Command({
+        Bucket: bucket,
+        Prefix: LEADERBOARD_PREFIX,
+        ...(continuationToken === undefined
+          ? {}
+          : { ContinuationToken: continuationToken }),
+      }),
+    );
+    const keys = (response.Contents ?? [])
+      .flatMap((object) => (object.Key === undefined ? [] : [object.Key]))
+      .filter((key) =>
+        /^leaderboards\/competition-\d+\/snapshots\/\d{4}-\d{2}-\d{2}\.json$/.test(
+          key,
+        ),
+      );
+
+    for (
+      let offset = 0;
+      offset < keys.length;
+      offset += REBUILD_S3_CONCURRENCY
+    ) {
+      const chunk = keys.slice(offset, offset + REBUILD_S3_CONCURRENCY);
+      const snapshots = await Promise.all(
+        chunk.map(async (key) => {
+          const rawParsed: unknown = JSON.parse(
+            await readRawObjectText(client, bucket, key),
+          );
+          const parsed = CachedLeaderboardSchema.safeParse(rawParsed);
+          if (!parsed.success) {
+            logger.warn(
+              `Skipping S3 competition leaderboard ${key}: snapshot failed validation`,
+              { issue: parsed.error.issues[0] },
+            );
+            return null;
+          }
+          return parsed.data;
+        }),
+      );
+      for (const snapshot of snapshots) {
+        if (snapshot === null) {
+          skipped += 1;
+          reportLakeCompactionSkippedTotal.inc({
+            table: "competition_rank_history",
+          });
+          continue;
+        }
+        const calculatedAt = new Date(snapshot.calculatedAt);
+        for (const entry of snapshot.entries) {
+          writer.write({
+            competition_id: snapshot.competitionId,
+            calculated_at: lakeTimestamp(calculatedAt.getTime()),
+            month: lakeMonth(calculatedAt.getTime()),
+            player_id: entry.playerId,
+            player_name: entry.playerName,
+            score:
+              typeof entry.score === "number"
+                ? entry.score
+                : rankToLeaguePoints(entry.score),
+            rank: entry.rank,
+          });
+        }
+      }
+    }
+
+    if (response.IsTruncated === true) {
+      if (response.NextContinuationToken === undefined) {
+        throw new Error(
+          "S3 leaderboard listing was truncated without a continuation token.",
+        );
+      }
+      continuationToken = response.NextContinuationToken;
+    } else {
+      continuationToken = undefined;
+    }
+  } while (continuationToken !== undefined);
+
   return skipped;
 }

@@ -46,6 +46,7 @@ export type LakeFiles = {
   prematchParquet: string[];
   prematchStaging: string[];
   accountsParquet: string | undefined;
+  competitionRankHistoryParquet: string[];
 };
 
 async function globParquet(root: string, table: string): Promise<string[]> {
@@ -70,12 +71,15 @@ export async function resolveLakeFiles(lakeDir: string): Promise<LakeFiles> {
       prematchParquet: [],
       prematchStaging,
       accountsParquet: undefined,
+      competitionRankHistoryParquet: [],
     };
   }
-  const [matchesParquet, prematchParquet] = await Promise.all([
-    globParquet(buildDir, "matches"),
-    globParquet(buildDir, "prematch"),
-  ]);
+  const [matchesParquet, prematchParquet, competitionRankHistoryParquet] =
+    await Promise.all([
+      globParquet(buildDir, "matches"),
+      globParquet(buildDir, "prematch"),
+      globParquet(buildDir, "competition_rank_history"),
+    ]);
   const accountsPath = path.join(buildDir, "accounts", "accounts.parquet");
   const accountsParquet = (await Bun.file(accountsPath).exists())
     ? accountsPath
@@ -86,6 +90,7 @@ export async function resolveLakeFiles(lakeDir: string): Promise<LakeFiles> {
     prematchParquet,
     prematchStaging,
     accountsParquet,
+    competitionRankHistoryParquet,
   };
 }
 

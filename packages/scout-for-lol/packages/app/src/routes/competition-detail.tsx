@@ -172,6 +172,9 @@ export function CompetitionDetail() {
         guildId={guildId}
         competitionId={competitionId}
         status={competition.status}
+        startDate={competition.startDate}
+        endDate={competition.endDate}
+        analysisTimezone={competition.analysisTimezone}
       />
 
       <CompetitionParticipantsPanel

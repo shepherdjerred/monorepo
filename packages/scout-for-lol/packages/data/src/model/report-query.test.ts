@@ -402,12 +402,12 @@ describe("RENDER clause", () => {
     ).toThrow('RENDER y = "win_rate" is not a SELECTed metric');
   });
 
-  test("rejects a WITH clause on a text render kind", () => {
+  test("rejects unsupported WITH options on a table", () => {
     expect(() =>
       parseAndCompile(
         "SELECT player, games FROM match_participants GROUP BY player RENDER table WITH (y = games)",
       ),
-    ).toThrow("does not take a WITH clause");
+    ).toThrow("only supports the sparkline option");
   });
 
   test("lints an unknown render kind with a positioned error", () => {

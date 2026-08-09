@@ -14,6 +14,7 @@ const FILES: LakeFiles = {
   prematchParquet: ["/lake/builds/b1/prematch/month=2026-07/data_0.parquet"],
   prematchStaging: [],
   accountsParquet: "/lake/builds/b1/accounts/accounts.parquet",
+  competitionRankHistoryParquet: [],
 };
 
 function input(queryText: string, playerIds?: number[]): LakeQueryInput {
@@ -206,6 +207,7 @@ describe("compile", () => {
       prematchParquet: [],
       prematchStaging: [],
       accountsParquet: undefined,
+      competitionRankHistoryParquet: [],
     };
     const compiled = compileMatchQuery({
       ...input("SELECT player, games FROM match_participants GROUP BY player"),

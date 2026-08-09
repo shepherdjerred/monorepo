@@ -1,4 +1,9 @@
-import { REPORT_MAX_ROWS_LIMIT } from "@scout-for-lol/data";
+import {
+  REPORT_MAX_ROWS_LIMIT,
+  REPORT_METRICS,
+  collectExpressionMetrics,
+  wilsonInterval95,
+} from "@scout-for-lol/data";
 import type {
   ReportExpression,
   ReportMetric,
@@ -71,10 +76,11 @@ export function rowsFromAggregates(
   maxRows: number,
 ): ReportQueryResult {
   const limit = cappedLimit(plan, maxRows);
+  const selectedRows = rows.slice(0, limit);
   return {
     plan,
     columns: ["label", ...plan.selectItems.map((item) => item.key)],
-    rows: rows.slice(0, limit).map((row) => ({
+    rows: selectedRows.map((row) => ({
       label: row.label,
       dimensions: row.label.split(" • "),
       mentionIdentity:
@@ -94,6 +100,13 @@ export function rowsFromAggregates(
       })),
     })),
     rowsScanned,
+    evidence: selectedRows.map((row) => ({
+      label: row.label,
+      values: plan.selectItems.map((item) => ({
+        column: item.key,
+        ...metricEvidence(row, item.expression),
+      })),
+    })),
   };
 }
 
@@ -110,7 +123,56 @@ function groupMentionIdentity(
 }
 
 export function cappedLimit(plan: ReportQueryPlan, maxRows: number): number {
-  return Math.min(plan.limit, maxRows, REPORT_MAX_ROWS_LIMIT);
+  return Math.min(
+    plan.limit,
+    maxRows,
+    plan.analysis === undefined ? REPORT_MAX_ROWS_LIMIT : 2000,
+  );
+}
+
+function metricEvidence(
+  row: AggregateRow,
+  expression: ReportExpression,
+): {
+  sampleSize: number;
+  successes?: number;
+  confidenceInterval?: ReturnType<typeof wilsonInterval95>;
+} {
+  const metrics = collectExpressionMetrics(expression);
+  const metric = metrics.length === 1 ? metrics[0] : undefined;
+  const sampleSize =
+    metric === "average_placement" ||
+    metric === "top_two_rate" ||
+    metric === "first_place_rate"
+      ? row.arenaRows
+      : metric === "avg_champion_level" || metric === "avg_champion_experience"
+        ? row.participantRows
+        : row.games;
+  const successes =
+    metric === "win_rate"
+      ? row.wins
+      : metric === "surrender_rate"
+        ? row.surrenders
+        : metric === "early_surrender_rate"
+          ? row.earlySurrenders
+          : metric === "first_blood_rate"
+            ? row.firstBloods
+            : metric === "top_two_rate"
+              ? row.topTwoPlacements
+              : metric === "first_place_rate"
+                ? row.firstPlaceFinishes
+                : undefined;
+  const kind = REPORT_METRICS.find(
+    (candidate) => candidate.id === metric,
+  )?.kind;
+  if (kind === "rate" && successes !== undefined) {
+    return {
+      sampleSize,
+      successes,
+      confidenceInterval: wilsonInterval95(successes, sampleSize),
+    };
+  }
+  return { sampleSize };
 }
 
 export function sortedAggregates(

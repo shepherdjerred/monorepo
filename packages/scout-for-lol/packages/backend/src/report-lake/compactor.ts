@@ -13,6 +13,7 @@ import { NdjsonFileWriter } from "#src/report-lake/ndjson-writer.ts";
 import configuration from "#src/configuration.ts";
 import { createS3Client } from "#src/storage/s3-client.ts";
 import {
+  populateCompetitionRankHistoryFromS3,
   populateMatchesFromS3,
   populatePrematchFromS3,
 } from "#src/report-lake/rebuild-sources.ts";
@@ -27,6 +28,7 @@ import {
 } from "#src/report-lake/paths.ts";
 import {
   ACCOUNT_LAKE_COLUMNS,
+  COMPETITION_RANK_HISTORY_LAKE_COLUMNS,
   MATCH_LAKE_COLUMNS,
   MatchLakeRowSchema,
   PREMATCH_LAKE_COLUMNS,
@@ -52,8 +54,10 @@ export type CompactionSummary = {
   matchRows: number;
   prematchRows: number;
   accountRows: number;
+  competitionRankHistoryRows: number;
   skippedMatches: number;
   skippedPrematches: number;
+  skippedCompetitionRankHistory: number;
   durationMs: number;
 };
 
@@ -142,6 +146,50 @@ async function writeAccountsParquet(
   return accounts.length;
 }
 
+async function writeCompetitionRankHistoryParquet(
+  buildDir: string,
+): Promise<{ rows: number; skipped: number }> {
+  const bucket = configuration.s3BucketName;
+  if (bucket === undefined) {
+    throw new Error(
+      "S3_BUCKET_NAME not configured — cannot materialize competition rank history.",
+    );
+  }
+  const tmpPath = path.join(buildDir, "competition-rank-history.ndjson.tmp");
+  const writer = new NdjsonFileWriter(tmpPath);
+  const skipped = await populateCompetitionRankHistoryFromS3(
+    createS3Client(),
+    bucket,
+    writer,
+  );
+  await writer.close();
+
+  const outputDir = path.join(buildDir, "competition_rank_history");
+  await mkdir(outputDir, { recursive: true });
+  const parquetPath = path.join(outputDir, "history.parquet");
+  try {
+    await unlink(parquetPath);
+  } catch {
+    // A fresh build has no prior hardlink to replace.
+  }
+  try {
+    if (writer.rows > 0) {
+      await withDuckDBConnection(
+        async (session) => {
+          await session.run(
+            `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(COMPETITION_RANK_HISTORY_LAKE_COLUMNS)})) TO '${parquetPath}' (FORMAT PARQUET)`,
+            [tmpPath],
+          );
+        },
+        { timeoutMs: COMPACTION_TIMEOUT_MS },
+      );
+    }
+  } finally {
+    await unlink(tmpPath);
+  }
+  return { rows: writer.rows, skipped };
+}
+
 async function writeManifest(
   buildDir: string,
   summary: Omit<CompactionSummary, "durationMs">,
@@ -164,6 +212,10 @@ function publishMetrics(summary: Omit<CompactionSummary, "durationMs">): void {
   reportLakeCompactionRowsTotal.inc(
     { table: "accounts", tier: summary.tier },
     summary.accountRows,
+  );
+  reportLakeCompactionRowsTotal.inc(
+    { table: "competition_rank_history", tier: summary.tier },
+    summary.competitionRankHistoryRows,
   );
   reportLakeLastPublishTimestamp.set({ tier: summary.tier }, Date.now() / 1000);
 }
@@ -307,6 +359,7 @@ export async function runReportLakeFold(
     await writeFoldParquet(buildDir, buildId, "matches", stagedMatches);
     await writeFoldParquet(buildDir, buildId, "prematch", stagedPrematches);
     const accountRows = await writeAccountsParquet(prisma, buildDir);
+    const rankHistory = await writeCompetitionRankHistoryParquet(buildDir);
 
     const summary = {
       buildId,
@@ -314,8 +367,10 @@ export async function runReportLakeFold(
       matchRows: stagedMatches.rows,
       prematchRows: stagedPrematches.rows,
       accountRows,
+      competitionRankHistoryRows: rankHistory.rows,
       skippedMatches: stagedMatches.skipped,
       skippedPrematches: stagedPrematches.skipped,
+      skippedCompetitionRankHistory: rankHistory.skipped,
     };
     await writeManifest(buildDir, summary);
     await publishBuild(lakeDir, buildId);
@@ -415,6 +470,7 @@ async function rebuildLocked(
   }
 
   const accountRows = await writeAccountsParquet(prisma, buildDir);
+  const rankHistory = await writeCompetitionRankHistoryParquet(buildDir);
 
   const summary = {
     buildId,
@@ -422,8 +478,10 @@ async function rebuildLocked(
     matchRows: matchWriter.rows,
     prematchRows: prematchWriter.rows,
     accountRows,
+    competitionRankHistoryRows: rankHistory.rows,
     skippedMatches,
     skippedPrematches,
+    skippedCompetitionRankHistory: rankHistory.skipped,
   };
   await writeManifest(buildDir, summary);
   await publishBuild(lakeDir, buildId);

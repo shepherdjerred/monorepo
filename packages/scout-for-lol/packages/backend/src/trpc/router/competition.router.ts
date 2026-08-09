@@ -65,6 +65,7 @@ import {
   loadHistoricalLeaderboardSnapshots,
 } from "#src/storage/s3-leaderboard.ts";
 import { refreshAndCacheLeaderboard } from "#src/league/competition/refresh.ts";
+import { competitionAnalysisProcedures } from "#src/trpc/router/competition-analysis-procedures.ts";
 
 const GuildInput = z.object({ guildId: DiscordGuildIdSchema });
 const CompetitionIdInput = GuildInput.extend({
@@ -487,6 +488,8 @@ export const competitionRouter = router({
       await loadCompetitionOr404(input.competitionId, input.guildId);
       return loadHistoricalLeaderboardSnapshots(input.competitionId);
     }),
+
+  ...competitionAnalysisProcedures,
 
   refreshLeaderboard: guildMutationProcedure("competitions", "refresh")
     .input(CompetitionIdInput)

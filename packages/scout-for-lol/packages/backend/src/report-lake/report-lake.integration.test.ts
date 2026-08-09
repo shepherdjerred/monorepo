@@ -9,6 +9,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { mockClient } from "aws-sdk-client-mock";
 import {
+  CompetitionIdSchema,
   LeaguePuuidSchema,
   RawMatchSchema,
   type DiscordAccountId,
@@ -31,6 +32,7 @@ import {
 } from "#src/report-lake/staging.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 import { resetConfigurationForTests } from "#src/configuration.ts";
+import { fetchCompetitionRankHistory } from "#src/reports/duckdb/lake-reads.ts";
 
 const { prisma } = createTestDatabase("report-lake-test");
 const serverId = testGuildId("888");
@@ -65,11 +67,23 @@ function seedS3Matches(objects: { key: string; body: string }[]): void {
   s3Mock.on(ListObjectsV2Command, { Prefix: "prematch/" }).resolves({
     Contents: [],
   });
+  s3Mock.on(ListObjectsV2Command, { Prefix: "leaderboards/" }).resolves({
+    Contents: [],
+  });
   for (const object of objects) {
     s3Mock
       .on(GetObjectCommand, { Key: object.key })
       .callsFake(() => mockGetObjectResponse(object.body));
   }
+}
+
+function seedS3Leaderboard(key: string, body: string): void {
+  s3Mock.on(ListObjectsV2Command, { Prefix: "leaderboards/" }).resolves({
+    Contents: [{ Key: key }],
+  });
+  s3Mock
+    .on(GetObjectCommand, { Key: key })
+    .callsFake(() => mockGetObjectResponse(body));
 }
 
 const CountRowSchema = z.object({
@@ -144,6 +158,9 @@ beforeEach(async () => {
     Contents: [],
   });
   s3Mock.on(ListObjectsV2Command, { Prefix: "prematch/" }).resolves({
+    Contents: [],
+  });
+  s3Mock.on(ListObjectsV2Command, { Prefix: "leaderboards/" }).resolves({
     Contents: [],
   });
   await prisma.account.deleteMany();
@@ -264,6 +281,39 @@ describe("flatten", () => {
 });
 
 describe("compactor", () => {
+  test("rebuild materializes authoritative leaderboard snapshots", async () => {
+    const competitionId = CompetitionIdSchema.parse(42);
+    const key = "leaderboards/competition-42/snapshots/2026-08-01.json";
+    seedS3Leaderboard(
+      key,
+      JSON.stringify({
+        version: "v1",
+        competitionId,
+        calculatedAt: "2026-08-01T12:00:00.000Z",
+        entries: [
+          { playerId: 1, playerName: "Astra", score: 2400, rank: 1 },
+          { playerId: 2, playerName: "Dragon", score: 2300, rank: 2 },
+        ],
+      }),
+    );
+    const lakeDir = await makeLakeDir();
+    try {
+      const summary = await runReportLakeRebuild({ prisma, lakeDir });
+      expect(summary?.competitionRankHistoryRows).toBe(2);
+      const history = await fetchCompetitionRankHistory({
+        competitionId,
+        lakeDir,
+      });
+      expect(history).toHaveLength(1);
+      expect(history?.[0]?.entries.map((entry) => entry.playerName)).toEqual([
+        "Astra",
+        "Dragon",
+      ]);
+    } finally {
+      await rm(lakeDir, { recursive: true, force: true });
+    }
+  });
+
   test("rebuild publishes a build with parquet, accounts, and manifest", async () => {
     const match = await loadMatchFixture();
     const firstPuuid = match.metadata.participants[0];

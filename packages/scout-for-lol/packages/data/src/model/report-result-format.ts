@@ -2,7 +2,7 @@ import type { ReportQueryPlan } from "#src/model/report-query-spec.ts";
 import type {
   ReportResultColumn,
   ReportValueFormat,
-} from "#src/model/report.ts";
+} from "#src/model/report-ai.ts";
 import { reportColumnLabel } from "#src/model/report-query-registry.ts";
 import { REPORT_METRICS } from "#src/model/report-query-metrics.ts";
 

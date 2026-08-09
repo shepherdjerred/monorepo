@@ -155,6 +155,20 @@ export const AccountLakeRowSchema = z.object({
 
 export type AccountLakeRow = z.infer<typeof AccountLakeRowSchema>;
 
+export const CompetitionRankHistoryLakeRowSchema = z.object({
+  competition_id: z.number().int().positive(),
+  calculated_at: z.string(),
+  month: z.string(),
+  player_id: z.number().int().positive(),
+  player_name: z.string(),
+  score: z.number(),
+  rank: z.number().int().positive(),
+});
+
+export type CompetitionRankHistoryLakeRow = z.infer<
+  typeof CompetitionRankHistoryLakeRowSchema
+>;
+
 type DuckDbColumnType =
   | "VARCHAR"
   | "INTEGER"
@@ -278,6 +292,19 @@ export const ACCOUNT_LAKE_COLUMNS: Record<
   player_id: "INTEGER",
   player_alias: "VARCHAR",
   discord_id: "VARCHAR",
+};
+
+export const COMPETITION_RANK_HISTORY_LAKE_COLUMNS: Record<
+  keyof CompetitionRankHistoryLakeRow,
+  DuckDbColumnType
+> = {
+  competition_id: "INTEGER",
+  calculated_at: "TIMESTAMP",
+  month: "VARCHAR",
+  player_id: "INTEGER",
+  player_name: "VARCHAR",
+  score: "DOUBLE",
+  rank: "INTEGER",
 };
 
 /**

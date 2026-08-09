@@ -1,8 +1,9 @@
-import type { ReportId } from "@scout-for-lol/data";
+import type { ReportId, VisualizationSnapshot } from "@scout-for-lol/data";
 import { formatDate } from "#src/lib/format.ts";
 import { ChartImage } from "#src/components/chart-image.tsx";
 import { Section } from "#src/components/section.tsx";
 import { ReportRunStatusBadge } from "#src/components/status-badge.tsx";
+import { InteractiveVisualization } from "#src/components/interactive-visualization.tsx";
 
 type Run = {
   id: number;
@@ -15,6 +16,8 @@ type Run = {
   errorMessage: string | null;
   renderedContent: string | null;
   hasImage: boolean;
+  visualization: VisualizationSnapshot | null;
+  querySnapshot: string | null;
 };
 
 export function ReportRunHistory(props: {
@@ -64,16 +67,39 @@ export function ReportRunHistory(props: {
                 </pre>
               )}
 
-              {run.hasImage && (
-                <ChartImage
-                  src={`/api/report/${reportId.toString()}/runs/${run.id.toString()}.png`}
-                  alt="Report chart"
-                />
-              )}
+              <RunVisualization
+                reportId={reportId}
+                runId={run.id}
+                hasImage={run.hasImage}
+                visualization={run.visualization}
+              />
             </div>
           ))
         )}
       </div>
     </Section>
   );
+}
+
+function RunVisualization(props: {
+  reportId: ReportId;
+  runId: number;
+  hasImage: boolean;
+  visualization: VisualizationSnapshot | null;
+}) {
+  if (props.visualization !== null) {
+    const textKind =
+      props.visualization.kind === "TABLE" ||
+      props.visualization.kind === "LIST" ||
+      props.visualization.kind === "LEADERBOARD";
+    return textKind && !props.visualization.display.sparkline ? null : (
+      <InteractiveVisualization snapshot={props.visualization} />
+    );
+  }
+  return props.hasImage ? (
+    <ChartImage
+      src={`/api/report/${props.reportId.toString()}/runs/${props.runId.toString()}.png`}
+      alt="Report chart"
+    />
+  ) : null;
 }

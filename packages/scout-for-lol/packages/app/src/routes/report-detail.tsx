@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import {
   useMutation,
@@ -21,6 +22,8 @@ import {
 } from "#src/components/ui/card.tsx";
 import { ReportRunHistory } from "#src/components/report-run-history.tsx";
 import { ReportQueryViewer } from "#src/components/report-query-viewer.tsx";
+import { ReportTemporalControls } from "#src/components/report-temporal-controls.tsx";
+import { ReportQueryPreview } from "#src/components/report-query-preview.tsx";
 
 type ReportRow = {
   description: string | null;
@@ -133,6 +136,60 @@ function ReportDefinitionCards(props: {
   );
 }
 
+function ReportExploration(props: {
+  guildId: string;
+  reportId: ReportId;
+  title: string;
+  queryText: string;
+  scheduleTimezone: string;
+  canEdit: boolean;
+}) {
+  const [queryText, setQueryText] = useState(props.queryText);
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Explore over time</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-sm text-muted-foreground">
+          These controls run an ephemeral preview. The saved report is
+          unchanged.
+        </p>
+        <ReportTemporalControls
+          queryText={queryText}
+          scheduleTimezone={props.scheduleTimezone}
+          onChange={setQueryText}
+        />
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setQueryText(props.queryText);
+            }}
+          >
+            Reset
+          </Button>
+          {props.canEdit && (
+            <Button asChild type="button" variant="outline">
+              <Link
+                to={`/g/${props.guildId}/reports/${props.reportId.toString()}/edit`}
+              >
+                Apply through editor
+              </Link>
+            </Button>
+          )}
+        </div>
+        <ReportQueryPreview
+          guildId={props.guildId}
+          queryText={queryText}
+          title={`${props.title} exploration`}
+        />
+      </CardContent>
+    </Card>
+  );
+}
+
 export function ReportDetail() {
   const { guildId, reportId } = useReportParams();
   const trpc = useTRPC();
@@ -216,6 +273,16 @@ export function ReportDetail() {
         report={report}
         channels={channelsQuery.data}
       />
+      {perms.can("reports", "run") && (
+        <ReportExploration
+          guildId={guildId}
+          reportId={reportId}
+          title={report.title}
+          queryText={report.queryText}
+          scheduleTimezone={report.scheduleTimezone}
+          canEdit={!systemManaged && perms.can("reports", "update")}
+        />
+      )}
       <ReportRunHistory guildId={guildId} reportId={reportId} runs={runs} />
     </div>
   );

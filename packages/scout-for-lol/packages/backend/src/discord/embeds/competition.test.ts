@@ -37,6 +37,7 @@ function createTestCompetition(
     isCancelled: false,
     visibility: "OPEN",
     maxParticipants: 50,
+    analysisTimezone: "UTC",
     startDate: new Date("2025-01-01T00:00:00Z"),
     endDate: new Date("2025-01-31T23:59:59Z"),
     seasonId: null,

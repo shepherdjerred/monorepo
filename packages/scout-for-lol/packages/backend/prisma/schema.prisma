@@ -149,23 +149,26 @@ model Report {
 }
 
 model ReportRun {
-  id              Int       @id @default(autoincrement())
-  reportId        Int
-  serverId        String
-  trigger         String
-  status          String
-  startedAt       DateTime
-  completedAt     DateTime?
-  durationMs      Int?
-  rowsReturned    Int       @default(0)
-  rowsScanned     Int       @default(0)
-  errorMessage    String?
+  id                    Int       @id @default(autoincrement())
+  reportId              Int
+  serverId              String
+  trigger               String
+  status                String
+  startedAt             DateTime
+  completedAt           DateTime?
+  durationMs            Int?
+  rowsReturned          Int       @default(0)
+  rowsScanned           Int       @default(0)
+  errorMessage          String?
   // Faithful per-run archive of what was posted: the rendered text body and an
   // S3 key for the chart PNG (null for text-only formats or when S3 is off).
-  renderedContent String?
-  imageS3Key      String?
-  imageByteSize   Int?
-  createdAt       DateTime  @default(now())
+  renderedContent       String?
+  imageS3Key            String?
+  imageByteSize         Int?
+  querySnapshot         String?
+  visualizationS3Key    String?
+  visualizationByteSize Int?
+  createdAt             DateTime  @default(now())
 
   report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
 
@@ -185,17 +188,18 @@ model Season {
 }
 
 model Competition {
-  id              Int     @id @default(autoincrement())
-  serverId        String
-  ownerId         String // Discord user ID
-  title           String
-  description     String
-  channelId       String
-  isCancelled     Boolean @default(false)
-  visibility      String // OPEN, INVITE_ONLY, SERVER_WIDE
-  criteriaType    String // Enum stored as string
-  criteriaConfig  String // JSON stored as string
-  maxParticipants Int     @default(50)
+  id               Int     @id @default(autoincrement())
+  serverId         String
+  ownerId          String // Discord user ID
+  title            String
+  description      String
+  channelId        String
+  isCancelled      Boolean @default(false)
+  visibility       String // OPEN, INVITE_ONLY, SERVER_WIDE
+  criteriaType     String // Enum stored as string
+  criteriaConfig   String // JSON stored as string
+  maxParticipants  Int     @default(50)
+  analysisTimezone String  @default("UTC")
 
   // Time configuration (XOR: either fixed dates OR season)
   startDate DateTime?
