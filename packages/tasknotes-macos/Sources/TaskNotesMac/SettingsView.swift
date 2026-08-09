@@ -48,6 +48,15 @@ private struct ServerSettingsView: View {
                 // typed would dispose an engine mid-request seven times while
                 // someone types a hostname.
                 .onSubmit { environment.applyServerAddress() }
+            // A `SecureField`, because this is a credential and the pane is as
+            // likely to be open on a shared screen as anywhere else. It writes
+            // through to the Keychain on every keystroke — cheap, and it means
+            // there is no unsaved state to lose if the window is closed — but
+            // the engine is only rebuilt on commit, for the same reason the
+            // address is.
+            SecureField("Token", text: $environment.authToken, prompt: Text("optional"))
+                .accessibilityIdentifier(AccessibilityIdentifier.settingsServerToken)
+                .onSubmit { environment.applyServerAddress() }
             LabeledContent("Status", value: statusDescription)
             Button("Connect") { environment.applyServerAddress() }
         }

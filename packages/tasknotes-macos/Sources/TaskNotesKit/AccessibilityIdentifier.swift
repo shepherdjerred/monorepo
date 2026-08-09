@@ -69,6 +69,13 @@ public enum AccessibilityIdentifier {
     /// The Settings server-address field.
     public static let settingsServerURL = "\(namespace).settings.serverURL"
 
+    /// The bearer-token field in Settings ▸ Server.
+    ///
+    /// A `SecureField`, so a UI test can address it but cannot read the value
+    /// back — AppKit returns bullets for a secure field's value, which is the
+    /// behaviour we want and also the reason no test asserts on what is typed.
+    public static let settingsServerToken = "\(namespace).settings.serverToken"
+
     /// The task list screens — Today, Inbox, Upcoming and Browse, which are one
     /// parameterized view and therefore one set of identifiers.
     ///

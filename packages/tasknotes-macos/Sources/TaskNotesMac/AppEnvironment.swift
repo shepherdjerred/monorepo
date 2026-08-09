@@ -56,6 +56,21 @@ public final class AppEnvironment {
         didSet { defaults.set(serverAddress, forKey: Self.serverAddressKey) }
     }
 
+    /// The server's bearer token, as typed in Settings.
+    ///
+    /// ⚠️ Written straight through to the **Keychain**, not to `UserDefaults`.
+    /// Everything else this object persists is a preference; this is a
+    /// credential that grants full read/write access to the vault, and a
+    /// bearer token in a container plist is readable by anything that can read
+    /// the container and lands verbatim in an unencrypted backup.
+    ///
+    /// The property itself holds the value only so SwiftUI can bind a field to
+    /// it. Nothing reads it back out of here — `configure` takes it from the
+    /// store, so the Keychain stays the single source of truth.
+    public var authToken: String {
+        didSet { tokenStore.setToken(authToken) }
+    }
+
     /// The floating quick-add panel, and the global hotkey that opens it.
     ///
     /// Assembled here rather than in a scene because the requirement is that the
@@ -84,8 +99,15 @@ public final class AppEnvironment {
 
     private let defaults: UserDefaults
 
+    /// Where the bearer token is kept. Injected so a test never touches the
+    /// real Keychain — see ``ServerTokenStore``.
+    private let tokenStore: any ServerTokenStore
+
     /// Assemble over the sandbox container.
-    public init(defaults: UserDefaults = .standard) {
+    public init(
+        defaults: UserDefaults = .standard,
+        tokenStore: any ServerTokenStore = KeychainTokenStore()
+    ) {
         let container = TaskNotesStore.containerDefault()
         self.navigation = NavigationState()
         self.store = container
@@ -94,7 +116,9 @@ public final class AppEnvironment {
         self.updater = UpdaterController()
         self.savedViews = SavedViewStore(defaults: defaults)
         self.defaults = defaults
+        self.tokenStore = tokenStore
         self.serverAddress = defaults.string(forKey: Self.serverAddressKey) ?? ""
+        self.authToken = tokenStore.token() ?? ""
 
         // Claimed at launch, and **only** from this initializer. The other one
         // exists for previews and tests, and a test process that registered a
@@ -107,7 +131,8 @@ public final class AppEnvironment {
     public init(
         navigation: NavigationState,
         store: Result<TaskNotesStore, CoreError>,
-        defaults: UserDefaults = .standard
+        defaults: UserDefaults = .standard,
+        tokenStore: any ServerTokenStore = InMemoryTokenStore()
     ) {
         self.navigation = navigation
         self.store = store
@@ -116,7 +141,9 @@ public final class AppEnvironment {
         self.updater = UpdaterController()
         self.savedViews = SavedViewStore(defaults: defaults)
         self.defaults = defaults
+        self.tokenStore = tokenStore
         self.serverAddress = defaults.string(forKey: Self.serverAddressKey) ?? ""
+        self.authToken = tokenStore.token() ?? ""
     }
 
     /// Bring the engine up.
@@ -131,7 +158,7 @@ public final class AppEnvironment {
     public func start() {
         guard case .success(let store) = store else { return }
         store.migrate()
-        store.configure(serverURL: configuredServer)
+        store.configure(serverURL: configuredServer, authToken: tokenStore.token())
     }
 
     /// Apply a newly entered address, replacing the running engine.
@@ -142,17 +169,10 @@ public final class AppEnvironment {
     /// pointing at the old address is lost.
     public func applyServerAddress() {
         guard case .success(let store) = store else { return }
-        store.configure(serverURL: configuredServer)
+        store.configure(serverURL: configuredServer, authToken: tokenStore.token())
     }
 
     /// The address as a `URL`, or `nil` when there is not one yet.
-    ///
-    /// ⚠️ **No auth token.** The plan puts the token in the platform keychain
-    /// and passes it at engine construction; that pane is not built yet, so
-    /// this reaches only a server with authentication disabled. It is
-    /// deliberately *not* stashed in `UserDefaults` in the meantime — a
-    /// bearer token in a plist that every process on the machine can read is
-    /// worse than not having the feature.
     private var configuredServer: URL? {
         let trimmed = serverAddress.trimmingWhitespace()
         guard !trimmed.isEmpty, let url = URL(string: trimmed), url.scheme != nil else {
