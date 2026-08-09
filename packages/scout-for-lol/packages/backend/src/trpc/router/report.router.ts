@@ -178,7 +178,7 @@ export const reportRouter = router({
         visualization:
           run.visualizationS3Key === null
             ? null
-            : await loadReportRunVisualization(report.id, run.id),
+            : await loadReportRunVisualization(run.visualizationS3Key),
       }));
       return {
         report,

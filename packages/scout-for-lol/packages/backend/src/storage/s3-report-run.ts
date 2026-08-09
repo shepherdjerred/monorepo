@@ -73,12 +73,10 @@ export async function saveReportRunVisualization(
 }
 
 export async function loadReportRunVisualization(
-  reportId: number,
-  runId: number,
+  key: string,
 ): Promise<VisualizationSnapshot | null> {
   const bucket = configuration.s3BucketName;
   if (bucket === undefined) return null;
-  const key = generateReportRunVisualizationKey(reportId, runId);
   try {
     const response = await createS3Client().send(
       new GetObjectCommand({ Bucket: bucket, Key: key }),
@@ -93,8 +91,7 @@ export async function loadReportRunVisualization(
     Sentry.captureException(error, {
       tags: {
         source: "s3-report-run-visualization-load",
-        reportId: reportId.toString(),
-        runId: runId.toString(),
+        key,
       },
     });
     return null;

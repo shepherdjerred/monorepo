@@ -89,6 +89,35 @@ describe("buildVisualizationSnapshot", () => {
       ["2026-08-03", 0],
     ]);
   });
+
+  test("normalizes comparison values and deltas in percentage stacks", () => {
+    const plan = parseAndCompile(
+      "SELECT queue, games FROM match_participants GROUP BY queue ANALYZE BETWEEN '2026-08-01' AND '2026-08-01' BUCKET BY DAY COMPARE TO BETWEEN '2026-07-31' AND '2026-07-31' IN TIME ZONE 'UTC' RENDER area_chart WITH (y = games, stack = percent)",
+    );
+    const rows: ReportResultRow[] = [
+      comparisonRow("solo", 60, 30),
+      comparisonRow("flex", 40, 70),
+    ];
+
+    const snapshot = buildVisualizationSnapshot(
+      { plan, columns: ["label", "games"], rows, rowsScanned: 200 },
+      new Date("2026-08-08T00:00:00.000Z"),
+    );
+
+    const solo = snapshot.series.find((series) =>
+      series.label.includes("solo"),
+    );
+    const flex = snapshot.series.find((series) =>
+      series.label.includes("flex"),
+    );
+    expect(solo?.points[0]?.value).toBeCloseTo(0.6);
+    expect(solo?.points[0]?.comparisonValue).toBeCloseTo(0.3);
+    expect(solo?.points[0]?.absoluteDelta).toBeCloseTo(0.3);
+    expect(solo?.points[0]?.percentageDelta).toBeCloseTo(1);
+    expect(flex?.points[0]?.value).toBeCloseTo(0.4);
+    expect(flex?.points[0]?.comparisonValue).toBeCloseTo(0.7);
+    expect(flex?.points[0]?.absoluteDelta).toBeCloseTo(-0.3);
+  });
 });
 
 function patchRow(label: string, games: number): ReportResultRow {
@@ -97,5 +126,28 @@ function patchRow(label: string, games: number): ReportResultRow {
     dimensions: [label],
     mentionIdentity: null,
     values: [{ column: "games", value: games }],
+  };
+}
+
+function comparisonRow(
+  queue: string,
+  games: number,
+  comparisonGames: number,
+): ReportResultRow {
+  return {
+    label: `${queue} • 2026-08-01`,
+    dimensions: [queue, "2026-08-01"],
+    mentionIdentity: null,
+    values: [
+      {
+        column: "games",
+        value: games,
+        comparisonValue: comparisonGames,
+        absoluteDelta: games - comparisonGames,
+        percentageDelta: games / comparisonGames - 1,
+        comparisonSampleSize: comparisonGames,
+        comparisonConfidenceInterval: null,
+      },
+    ],
   };
 }

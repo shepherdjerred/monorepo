@@ -283,6 +283,22 @@ describe("flatten", () => {
 });
 
 describe("rank-history compaction", () => {
+  test("rebuild represents an empty supported rank-history source", async () => {
+    const lakeDir = await makeLakeDir();
+    try {
+      const summary = await runReportLakeRebuild({ prisma, lakeDir });
+      expect(summary?.competitionRankHistoryRows).toBe(0);
+      expect(
+        await fetchCompetitionRankHistory({
+          competitionId: CompetitionIdSchema.parse(42),
+          lakeDir,
+        }),
+      ).toEqual([]);
+    } finally {
+      await rm(lakeDir, { recursive: true, force: true });
+    }
+  });
+
   test("rebuild materializes authoritative leaderboard snapshots", async () => {
     const competitionId = CompetitionIdSchema.parse(42);
     const key = "leaderboards/competition-42/snapshots/2026-08-01.json";

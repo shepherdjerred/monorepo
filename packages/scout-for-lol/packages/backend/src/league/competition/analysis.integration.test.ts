@@ -101,6 +101,56 @@ describe("competition selected-period analysis", () => {
     expect(climb.standings[0]?.score).toBe(400);
   });
 
+  test("uses match facts for non-rank presets in rank competitions", async () => {
+    const { alpha, beta, competition } = await setupCompetition({
+      type: "HIGHEST_RANK",
+      queue: "SOLO",
+    });
+    await writeTestLake(lakeDir, {
+      serverId,
+      matchFacts: [
+        fact({
+          playerId: alpha.id,
+          playerAlias: "Alpha",
+          matchId: "rank-competition-match",
+          queue: "solo",
+          win: true,
+          championId: targetChampionId,
+          date: "2026-05-12",
+        }),
+      ],
+    });
+    const history: CachedLeaderboard[] = [
+      leaderboard(competition.id, "2026-05-09T00:00:00.000Z", [
+        [alpha.id, "Alpha", 1000, 2],
+        [beta.id, "Beta", 1200, 1],
+      ]),
+      leaderboard(competition.id, "2026-05-21T00:00:00.000Z", [
+        [alpha.id, "Alpha", 1400, 1],
+        [beta.id, "Beta", 1250, 2],
+      ]),
+    ];
+
+    const result = await analyzeCompetition({
+      prisma,
+      competition,
+      mode: "selected_period",
+      preset: "games_wins",
+      startDate: "2026-05-10",
+      endDate: "2026-05-20",
+      history,
+      official: null,
+      now,
+    });
+
+    expect(result.standings[0]?.playerName).toBe("Alpha");
+    expect(result.standings[0]?.score).toBe(1400);
+    expect(result.visualization?.kind).toBe("LINE_CHART");
+    expect(result.visualization?.series.map((series) => series.metric)).toEqual(
+      ["games", "wins"],
+    );
+  });
+
   test("ignores selected dates in official mode", async () => {
     const { alpha, beta, competition } = await setupCompetition({
       type: "HIGHEST_RANK",
@@ -148,6 +198,7 @@ describe("competition selected-period analysis", () => {
     });
     expect(rankPosition.visualization?.kind).toBe("BUMP_CHART");
     expect(rankPosition.rowsScanned).toBe(4);
+    expect(rankPosition.standings).toEqual(official.entries);
   });
 
   test("generates queue-aware ScoutQL for every match criterion", () => {

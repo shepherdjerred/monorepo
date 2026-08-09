@@ -4,6 +4,7 @@ import {
   type AnalyticsChartProps,
 } from "@scout-for-lol/report";
 import { format, getISODay, parseISO, startOfISOWeek } from "date-fns";
+import { match } from "ts-pattern";
 import type {
   ReportQueryResult,
   ReportResultRow,
@@ -66,25 +67,16 @@ export function renderLegacyAnalyticsImage(input: {
     display,
     rows,
   };
-  switch (input.render.kind) {
-    case "STACKED_BAR":
-    case "AREA_CHART":
-      return renderCartesianAnalytics(context);
-    case "DONUT_CHART":
-      return renderDonutAnalytics(context);
-    case "SCATTER_CHART":
-      return renderScatterAnalytics(context);
-    case "HEATMAP":
-      return renderHeatmapAnalytics(context);
-    case "RADAR_CHART":
-      return renderRadarAnalytics(context);
-    case "KPI_CARD":
-      return renderKpiAnalytics(context);
-    case "BUMP_CHART":
-      return renderBumpAnalytics(context);
-    case "CALENDAR_HEATMAP":
-      return renderCalendarHeatmapAnalytics(context);
-  }
+  return match(input.render.kind)
+    .with("STACKED_BAR", "AREA_CHART", () => renderCartesianAnalytics(context))
+    .with("DONUT_CHART", () => renderDonutAnalytics(context))
+    .with("SCATTER_CHART", () => renderScatterAnalytics(context))
+    .with("HEATMAP", () => renderHeatmapAnalytics(context))
+    .with("RADAR_CHART", () => renderRadarAnalytics(context))
+    .with("KPI_CARD", () => renderKpiAnalytics(context))
+    .with("BUMP_CHART", () => renderBumpAnalytics(context))
+    .with("CALENDAR_HEATMAP", () => renderCalendarHeatmapAnalytics(context))
+    .exhaustive();
 }
 
 function renderBumpAnalytics(context: AnalyticsRenderContext): Buffer {

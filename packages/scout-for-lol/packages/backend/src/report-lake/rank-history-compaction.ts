@@ -6,6 +6,7 @@ import { populateCompetitionRankHistoryFromS3 } from "#src/report-lake/rebuild-s
 import {
   COMPETITION_RANK_HISTORY_LAKE_COLUMNS,
   duckDbColumnsSpec,
+  duckDbEmptySelect,
 } from "#src/report-lake/schema.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 import { createS3Client } from "#src/storage/s3-client.ts";
@@ -41,17 +42,21 @@ export async function writeCompetitionRankHistoryParquet(
     // A fresh build has no prior hardlink to replace.
   }
   try {
-    if (writer.rows > 0) {
-      await withDuckDBConnection(
-        async (session) => {
+    await withDuckDBConnection(
+      async (session) => {
+        if (writer.rows === 0) {
           await session.run(
-            `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(COMPETITION_RANK_HISTORY_LAKE_COLUMNS)})) TO '${parquetPath}' (FORMAT PARQUET)`,
-            [tmpPath],
+            `COPY (${duckDbEmptySelect(COMPETITION_RANK_HISTORY_LAKE_COLUMNS)}) TO '${parquetPath}' (FORMAT PARQUET)`,
           );
-        },
-        { timeoutMs: REBUILD_TIMEOUT_MS },
-      );
-    }
+          return;
+        }
+        await session.run(
+          `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(COMPETITION_RANK_HISTORY_LAKE_COLUMNS)})) TO '${parquetPath}' (FORMAT PARQUET)`,
+          [tmpPath],
+        );
+      },
+      { timeoutMs: REBUILD_TIMEOUT_MS },
+    );
   } finally {
     await unlink(tmpPath);
   }

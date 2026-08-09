@@ -30,6 +30,7 @@ import {
   clampTemporalRange,
   resolveTemporalRanges,
 } from "#src/reports/temporal-range.ts";
+import { createBoundedAsyncCache } from "#src/utils/bounded-async-cache.ts";
 
 export type CompetitionAnalysisResult = {
   preset: CompetitionAnalysisPreset;
@@ -39,55 +40,13 @@ export type CompetitionAnalysisResult = {
   rowsScanned: number;
 };
 
-const COMPETITION_ANALYSIS_CACHE_MS = 60_000;
-const analysisCache = new Map<
-  string,
-  { expiresAt: number; result: CompetitionAnalysisResult }
->();
-const analysisInFlight = new Map<string, Promise<CompetitionAnalysisResult>>();
-const MAX_COMPETITION_ANALYSES = 2;
-let activeCompetitionAnalyses = 0;
-const competitionAnalysisWaiters: (() => void)[] = [];
-
-export async function cachedCompetitionAnalysis(
-  key: string,
-  load: () => Promise<CompetitionAnalysisResult>,
-): Promise<CompetitionAnalysisResult> {
-  const cached = analysisCache.get(key);
-  if (cached !== undefined && cached.expiresAt > Date.now()) {
-    return cached.result;
-  }
-  const running = analysisInFlight.get(key);
-  if (running !== undefined) return await running;
-  const promise = withCompetitionAnalysisSlot(load);
-  analysisInFlight.set(key, promise);
-  try {
-    const result = await promise;
-    analysisCache.set(key, {
-      expiresAt: Date.now() + COMPETITION_ANALYSIS_CACHE_MS,
-      result,
-    });
-    return result;
-  } finally {
-    analysisInFlight.delete(key);
-  }
-}
-
-async function withCompetitionAnalysisSlot<T>(load: () => Promise<T>) {
-  if (activeCompetitionAnalyses >= MAX_COMPETITION_ANALYSES) {
-    await new Promise<void>((resolve) => {
-      competitionAnalysisWaiters.push(resolve);
-    });
-  }
-  activeCompetitionAnalyses++;
-  try {
-    return await load();
-  } finally {
-    activeCompetitionAnalyses--;
-    const next = competitionAnalysisWaiters.shift();
-    if (next !== undefined) next();
-  }
-}
+export const cachedCompetitionAnalysis =
+  createBoundedAsyncCache<CompetitionAnalysisResult>({
+    ttlMs: 60_000,
+    maxEntries: 100,
+    maxConcurrent: 2,
+    now: Date.now,
+  });
 
 export async function analyzeCompetition(params: {
   prisma: ExtendedPrismaClient;
@@ -125,12 +84,16 @@ export async function analyzeCompetition(params: {
     params.competition,
     params.now,
   );
+  const officialStandings = params.official?.entries ?? [];
   if (preset === "rank_position") {
     const filtered = historyAroundRange(params.history, range);
     return {
       preset,
       mode: params.mode,
-      standings: rankPeriodStandings(params.competition, filtered),
+      standings:
+        params.mode === "official"
+          ? officialStandings
+          : rankPeriodStandings(params.competition, filtered),
       visualization: rankHistoryVisualization(
         params.competition,
         analysis,
@@ -144,37 +107,75 @@ export async function analyzeCompetition(params: {
     };
   }
   if (
-    params.competition.criteria.type === "HIGHEST_RANK" ||
-    params.competition.criteria.type === "MOST_RANK_CLIMB"
+    ["HIGHEST_RANK", "MOST_RANK_CLIMB"].includes(
+      params.competition.criteria.type,
+    )
   ) {
     const filtered = historyAroundRange(params.history, range);
+    const standings =
+      params.mode === "official"
+        ? officialStandings
+        : rankPeriodStandings(params.competition, filtered);
+    if (preset !== "criterion_score") {
+      const visualizationResult = await executeCompiledReportQuery(
+        {
+          prisma: params.prisma,
+          serverId: params.competition.serverId,
+          sourceCompetitionId: params.competition.id,
+          now: params.now,
+        },
+        temporalPresetPlan(preset, analysis),
+      );
+      return {
+        preset,
+        mode: params.mode,
+        standings,
+        visualization: withCompetitionAnnotations(
+          visualizationResult.visualization ?? null,
+          params.competition,
+        ),
+        rowsScanned:
+          filtered.reduce(
+            (total, snapshot) => total + snapshot.entries.length,
+            0,
+          ) + visualizationResult.rowsScanned,
+      };
+    }
     return {
       preset,
       mode: params.mode,
-      standings: rankPeriodStandings(params.competition, filtered),
+      standings,
       visualization: rankHistoryVisualization(
         params.competition,
         analysis,
         filtered,
         params.now,
       ),
-      rowsScanned: filtered.length,
+      rowsScanned: filtered.reduce(
+        (total, snapshot) => total + snapshot.entries.length,
+        0,
+      ),
     };
   }
 
-  const standingsResult = await executeCompiledReportQuery(
-    {
-      prisma: params.prisma,
-      serverId: params.competition.serverId,
-      sourceCompetitionId: params.competition.id,
-      now: params.now,
-      rangeOverride: range,
-    },
-    parseAndCompile(competitionCriterionQuery(params.competition.criteria)),
-  );
+  const standingsResult =
+    params.mode === "official"
+      ? null
+      : await executeCompiledReportQuery(
+          {
+            prisma: params.prisma,
+            serverId: params.competition.serverId,
+            sourceCompetitionId: params.competition.id,
+            now: params.now,
+            rangeOverride: range,
+          },
+          parseAndCompile(
+            competitionCriterionQuery(params.competition.criteria),
+          ),
+        );
   const visualizationResult =
     preset === "criterion_score"
-      ? standingsResult
+      ? requireStandingsResult(standingsResult)
       : await executeCompiledReportQuery(
           {
             prisma: params.prisma,
@@ -187,17 +188,29 @@ export async function analyzeCompetition(params: {
   return {
     preset,
     mode: params.mode,
-    standings: standingsFromResult(standingsResult),
+    standings:
+      params.mode === "official"
+        ? officialStandings
+        : standingsFromResult(requireStandingsResult(standingsResult)),
     visualization: withCompetitionAnnotations(
       visualizationResult.visualization ?? null,
       params.competition,
     ),
     rowsScanned:
-      standingsResult.rowsScanned +
+      (standingsResult?.rowsScanned ?? 0) +
       (visualizationResult === standingsResult
         ? 0
         : visualizationResult.rowsScanned),
   };
+}
+
+function requireStandingsResult(
+  result: ReportQueryResult | null,
+): ReportQueryResult {
+  if (result === null) {
+    throw new Error("Missing selected-period competition standings.");
+  }
+  return result;
 }
 
 export function competitionCriterionQuery(

@@ -320,3 +320,12 @@ export function duckDbColumnsSpec(
     .join(", ");
   return `{${entries}}`;
 }
+
+/** Build a typed empty relation for materializing a schema-only Parquet file. */
+export function duckDbEmptySelect(
+  columns: Record<string, DuckDbColumnType>,
+): string {
+  return `SELECT ${Object.entries(columns)
+    .map(([name, type]) => `CAST(NULL AS ${type}) AS ${name}`)
+    .join(", ")} WHERE FALSE`;
+}

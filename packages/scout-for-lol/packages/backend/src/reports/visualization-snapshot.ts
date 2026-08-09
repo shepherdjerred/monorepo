@@ -28,6 +28,7 @@ import {
   comparePatchLabels,
   localCalendarDate,
 } from "#src/reports/temporal-labels.ts";
+import { normalizePercentStack } from "#src/reports/visualization-series-transforms.ts";
 
 export function buildVisualizationSnapshot(
   result: ReportQueryResult,
@@ -469,23 +470,4 @@ function isAdditiveColumn(plan: ReportQueryPlan, column: string): boolean {
 function metricTransformKind(metric: string): "rate" | "average" {
   const info = REPORT_METRICS.find((candidate) => candidate.id === metric);
   return info?.kind === "rate" ? "rate" : "average";
-}
-
-function normalizePercentStack(series: TemporalSeries[]): TemporalSeries[] {
-  const totals = new Map<string, number>();
-  for (const item of series) {
-    for (const point of item.points) {
-      totals.set(point.key, (totals.get(point.key) ?? 0) + (point.value ?? 0));
-    }
-  }
-  return series.map((item) => ({
-    ...item,
-    points: item.points.map((point) => {
-      const total = totals.get(point.key) ?? 0;
-      return {
-        ...point,
-        value: total === 0 ? null : (point.value ?? 0) / total,
-      };
-    }),
-  }));
 }
