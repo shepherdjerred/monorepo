@@ -84,7 +84,7 @@ public enum ScheduleChoice: String, CaseIterable, Sendable, Hashable {
 
     /// ``date(on:)``, as a `Result`.
     ///
-    /// See `TodayList.of` for why the wrapping happens in this module rather
+    /// See `TaskListModel.of` for why the wrapping happens in this module rather
     /// than at the SwiftUI call site.
     public func resolving(on calendar: ViewerCalendar) -> Result<String?, CoreError> {
         CoreErrors.capturing { () throws(CoreError) -> String? in

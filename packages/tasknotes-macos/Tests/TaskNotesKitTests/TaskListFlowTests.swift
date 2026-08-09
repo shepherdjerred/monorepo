@@ -156,7 +156,8 @@ struct TodayFlowTests {
         #expect(occurrence == calendar.today)
 
         // On its own day the row is on Today and reads as open.
-        let before = try TodayList.build(
+        let before = try TaskListModel.build(
+            section: .today,
             tasks: store.tasks, pendingTaskIds: [], calendar: calendar, text: fixedText())
         let row = try #require(before.rows.first)
         #expect(row.completionTarget == occurrence)
@@ -165,7 +166,8 @@ struct TodayFlowTests {
         // Optimistically, the completion is immediately visible — which is the
         // feedback the touch app describes as "felt".
         store.dispatch(row.completionCommand)
-        let optimistic = try TodayList.build(
+        let optimistic = try TaskListModel.build(
+            section: .today,
             tasks: store.tasks, pendingTaskIds: store.pendingTaskIds, calendar: calendar,
             text: fixedText())
         #expect(optimistic.rows.first?.isCompleted == true)
@@ -175,7 +177,8 @@ struct TodayFlowTests {
 
         // After the round trip the row is still on Today, because the rule
         // still fires today — but it now describes tomorrow's occurrence.
-        let after = try TodayList.build(
+        let after = try TaskListModel.build(
+            section: .today,
             tasks: store.tasks, pendingTaskIds: [], calendar: calendar, text: fixedText())
         let settled = try #require(after.rows.first)
         #expect(settled.task.completeInstances == [occurrence])
@@ -203,7 +206,8 @@ struct TodayFlowTests {
 
             // Optimistic and immediate: the row is on screen before the network
             // is even attempted, and it is marked as not yet synced.
-            let list = try TodayList.build(
+            let list = try TaskListModel.build(
+                section: .today,
                 tasks: store.tasks,
                 pendingTaskIds: store.pendingTaskIds,
                 calendar: calendar,
@@ -270,7 +274,8 @@ struct TodayFlowTests {
         #expect(try server.contents(of: "Groceries.md").contains("2026-07-27"))
 
         // And it lands on the Today screen for that day, overdue-free.
-        let onTheDay = try TodayList.build(
+        let onTheDay = try TaskListModel.build(
+            section: .today,
             tasks: store.tasks,
             pendingTaskIds: [],
             calendar: fixedCalendar(today: "2026-07-27"),

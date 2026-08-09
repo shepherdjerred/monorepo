@@ -96,6 +96,22 @@ public struct TaskRowState: Sendable, Equatable, Identifiable {
 
     /// Derive a row from a task.
     ///
+    /// - Parameters:
+    ///   - task: the task, exactly as the core produced it.
+    ///   - isPending: whether an unacknowledged command is queued against it.
+    ///   - calendar: where and when the viewer is.
+    ///   - text: the locale formatter; injected so a test can pin a locale.
+    ///   - occurrence: the occurrence this row is **about**, for a recurring
+    ///     task, or `nil` to use the core's own completion target.
+    ///
+    ///     ⚠️ Not a convenience. Upcoming shows a recurring task at its *next*
+    ///     occurrence, and the row's date and its checkbox must agree about
+    ///     which occurrence that is — a row printing "Friday" whose checkbox
+    ///     completes last Tuesday is the exact drawn-versus-acted disagreement
+    ///     ``completionCommand`` exists to prevent. Supplying the date here
+    ///     routes the badge, the completion state and the command through one
+    ///     value, so they cannot come apart. It is ignored for a plain task,
+    ///     which has no occurrences to be about.
     /// - Throws: `CoreError` when the core rejects one of the task's own stored
     ///   values. That is a loud failure on purpose: the values reaching here
     ///   came out of the core's own snapshot, so a rejection means the vault
@@ -105,12 +121,13 @@ public struct TaskRowState: Sendable, Equatable, Identifiable {
         task: CoreTask,
         isPending: Bool,
         calendar: ViewerCalendar,
-        text: TaskDateText = TaskDateText()
+        text: TaskDateText = TaskDateText(),
+        about occurrence: String? = nil
     ) throws(CoreError) {
         self.task = task
         self.isPending = isPending
 
-        let rule = task.recurrence.flatMap { $0.isEmpty ? nil : $0 }
+        let rule = task.recurrenceRule
         self.isRecurring = rule != nil
 
         self.due = try DateBadge.of(stored: task.due, calendar: calendar, text: text)
@@ -124,15 +141,24 @@ public struct TaskRowState: Sendable, Equatable, Identifiable {
             // be.
             self.isCompleted = !taskStatusIsActive(status: task.status)
         } else {
-            let target = try CoreErrors.rethrowingCore(
-                "resolving the occurrence a completion on \(task.id) targets"
-            ) {
-                try recurrenceCompletionTargetDate(
-                    scheduled: task.scheduled,
-                    due: task.due,
-                    anchor: task.recurrenceAnchor,
-                    today: calendar.today
-                )
+            // Spelled out rather than `occurrence ?? try …`: a `??` whose
+            // right-hand side throws widens the expression's thrown type back
+            // to `any Error`, which no longer converts to this initializer's
+            // `throws(CoreError)`.
+            let target: String
+            if let occurrence {
+                target = occurrence
+            } else {
+                target = try CoreErrors.rethrowingCore(
+                    "resolving the occurrence a completion on \(task.id) targets"
+                ) {
+                    try recurrenceCompletionTargetDate(
+                        scheduled: task.scheduled,
+                        due: task.due,
+                        anchor: task.recurrenceAnchor,
+                        today: calendar.today
+                    )
+                }
             }
             self.completionTarget = target
             self.occurrence = try DateBadge.of(

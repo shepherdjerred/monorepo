@@ -6,12 +6,12 @@ import Testing
 
 /// The Today screen's derivation, which is where every date decision lands.
 ///
-/// These run headless because `TodayList` has no SwiftUI in it — which is the
+/// These run headless because `TaskListModel` has no SwiftUI in it — which is the
 /// whole reason the no-UI-imports rule on `TaskNotesKit` is load-bearing rather
 /// than tidy. The screen's correctness is asserted here; the screen's
 /// *appearance* is the only thing left needing a Mac.
 @Suite("Today list")
-struct TodayListTests {
+struct TaskListModelTests {
     /// The filter, clause by clause, against the React Native `todayTasks`
     /// specification.
     @Test("a task belongs on Today when it is due today, overdue, or recurs today")
@@ -35,7 +35,8 @@ struct TodayListTests {
                 recurrence: "FREQ=WEEKLY;BYDAY=MO"),
         ]
 
-        let list = try TodayList.build(
+        let list = try TaskListModel.build(
+            section: .today,
             tasks: tasks, pendingTaskIds: [], calendar: today, text: fixedText())
 
         #expect(list.rows.map(\.id) == ["due-today.md", "overdue.md", "daily.md"])
@@ -58,7 +59,8 @@ struct TodayListTests {
                 recurrence: "FREQ=DAILY"),
         ]
 
-        let list = try TodayList.build(
+        let list = try TaskListModel.build(
+            section: .today,
             tasks: tasks, pendingTaskIds: [], calendar: fixedCalendar(), text: fixedText())
 
         #expect(list.rows.map(\.id) == ["live.md"])
@@ -75,7 +77,8 @@ struct TodayListTests {
             coreTask(id: "\($0).md", title: $0, due: "2026-07-22")
         }
 
-        let list = try TodayList.build(
+        let list = try TaskListModel.build(
+            section: .today,
             tasks: tasks, pendingTaskIds: [], calendar: fixedCalendar(), text: fixedText())
 
         #expect(list.rows.map(\.task.title) == titles)
@@ -84,8 +87,9 @@ struct TodayListTests {
 
     @Test("the heading and count read the way the screen says them")
     func theHeadingAndCountAreTheReferenceWording() throws {
-        func list(_ tasks: [CoreTask]) throws -> TodayList {
-            try TodayList.build(
+        func list(_ tasks: [CoreTask]) throws -> TaskListModel {
+            try TaskListModel.build(
+                section: .today,
                 tasks: tasks, pendingTaskIds: [], calendar: fixedCalendar(), text: fixedText())
         }
 
@@ -102,7 +106,8 @@ struct TodayListTests {
 
     @Test("a queued command marks its task as pending")
     func pendingIdsReachTheRow() throws {
-        let list = try TodayList.build(
+        let list = try TaskListModel.build(
+            section: .today,
             tasks: [
                 coreTask(id: "queued.md", due: "2026-07-22"),
                 coreTask(id: "settled.md", due: "2026-07-22"),

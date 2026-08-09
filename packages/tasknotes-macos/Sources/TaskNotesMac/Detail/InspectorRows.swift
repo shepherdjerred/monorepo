@@ -1,0 +1,365 @@
+internal import SwiftUI
+internal import TaskNotesKit
+internal import TaskNotesUniFFI
+
+// The inspector's rows, one type each. Split out of `TaskInspectorForm` because
+// three of the four carry their own presentation state — a popover, an editing
+// mode — and a form that owned all of it would have five booleans whose only
+// relationship is that they happen to live in the same panel.
+
+/// The completion control, at the top of the panel.
+///
+/// It dispatches ``TaskRowState/completionCommand``, which is the *same* value
+/// the list row's checkbox uses. That sharing is the whole point rather than a
+/// convenience: for a recurring task, completing marks the **scheduled
+/// occurrence**, not the day of the click, and a rule that fires on the 1st
+/// completed on the 12th must record `…-01`. Rebuilding that here would be a
+/// second chance to get it wrong, and it was already a live bug once in the
+/// React Native app.
+struct CompletionRow: View {
+    let row: TaskRowState
+    let dispatch: (CommandInput) -> Void
+
+    var body: some View {
+        Button {
+            dispatch(row.completionCommand)
+        } label: {
+            Label {
+                Text(row.isCompleted ? "Completed" : "Mark as Completed")
+            } icon: {
+                // `.secondary` in both states, matching the list row's
+                // checkbox: the control is a control, and dimming it when the
+                // task is done makes the one thing you click to *undo* the
+                // completion look disabled.
+                Image(systemName: row.isCompleted ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(.secondary)
+                    .contentTransition(.symbolEffect(.replace.downUp))
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier(AccessibilityIdentifier.Inspector.toggle)
+        .accessibilityAddTraits(.isToggle)
+        .accessibilityValue(occurrenceDescription)
+    }
+
+    /// Which occurrence the control is talking about.
+    ///
+    /// The same words the panel prints, taken from the same badge, so the spoken
+    /// reading and the drawn one are one sentence about one date.
+    private var occurrenceDescription: String {
+        guard let occurrence = row.occurrence else { return "" }
+        return "occurrence of \(occurrence.text)"
+    }
+}
+
+/// One list of names — projects, contexts or tags — as a labelled row.
+///
+/// **Not a `LabeledContent`**, and that was measured rather than chosen: the
+/// trailing column of a labelled row in a ~340-point inspector is barely a
+/// hundred points wide, and a task with two projects rendered exactly one of
+/// them with no indication the other existed. A field that lies about a task's
+/// data is worse than one that is taller, so the label goes above and the tokens
+/// get the whole width to wrap into.
+///
+/// The ▾ menu is where the vault's existing names live. It replaces the React
+/// Native form's scrolling multi-select — same question, "what have I called
+/// things before" — and it exists here rather than as type-ahead for the reason
+/// recorded on ``TokenListField``.
+struct TokenListRow: View {
+    let label: String
+    let identifier: String
+
+    /// The task's current values, as stored.
+    let values: [String]
+
+    /// Every name the vault already uses.
+    let vocabulary: [String]
+
+    /// How a stored value is shown.
+    let display: (String) -> String
+
+    /// The token field's placeholder.
+    let prompt: String
+
+    /// The whole replacement list, when the field commits.
+    let onCommit: ([String]) -> Void
+
+    /// One name chosen from the menu. The caller decides what "already present"
+    /// means, because for a project only the core can answer that.
+    let onAdd: (String) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack {
+                Text(label)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .accessibilityHidden(true)
+                Spacer()
+                if !vocabulary.isEmpty {
+                    Menu {
+                        ForEach(vocabulary, id: \.self) { name in
+                            Button(display(name)) { onAdd(name) }
+                        }
+                    } label: {
+                        Image(systemName: "chevron.down")
+                    }
+                    .menuStyle(.borderlessButton)
+                    .menuIndicator(.hidden)
+                    .fixedSize()
+                    .help("Names already used in this vault")
+                    .accessibilityLabel("Add an existing \(label.lowercased())")
+                }
+            }
+            TokenListField(
+                tokens: values,
+                display: display,
+                onCommit: onCommit
+            )
+            // The prompt is drawn here rather than by the field: AppKit paints a
+            // token field's placeholder in the control colour, so it came out
+            // indistinguishable from a real token's text. `allowsHitTesting`
+            // false so a click still lands on the field it is inviting you to
+            // type into.
+            .overlay(alignment: .leading) {
+                if values.isEmpty {
+                    Text(prompt)
+                        .foregroundStyle(.tertiary)
+                        .allowsHitTesting(false)
+                        .accessibilityHidden(true)
+                }
+            }
+            .accessibilityIdentifier(identifier)
+            .accessibilityLabel(label)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+/// A date row — due or scheduled — over the shared scheduling popover.
+///
+/// The popover is the list's, reused verbatim rather than reimplemented: it
+/// already resolves "this weekend" and "next week" through the core, where the
+/// non-obvious readings live (this weekend is *today* when it is already
+/// Saturday), and a second copy here would be a second opinion on those.
+struct InspectorDateRow: View {
+    let label: String
+    let badge: DateBadge?
+    let calendar: ViewerCalendar
+    let identifier: String
+
+    /// A resolved date, or `nil` to delete the frontmatter key.
+    let onPick: (String?) -> Void
+
+    /// A choice the core refused to resolve.
+    let onFail: (CoreError) -> Void
+
+    @State private var isPresented = false
+
+    var body: some View {
+        LabeledContent(label) {
+            Button {
+                isPresented = true
+            } label: {
+                HStack(spacing: 6) {
+                    Text(badge?.text ?? "None")
+                        .monospacedDigit()
+                        // The panel's only red, and it means what it means
+                        // everywhere else in this app: late. An absent date is
+                        // tertiary rather than red — "no due date" is not a
+                        // problem, it is the common case.
+                        .foregroundStyle(tint)
+                    Image(systemName: "calendar")
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .buttonStyle(.borderless)
+            .accessibilityIdentifier(identifier)
+            .accessibilityLabel("\(label): \(badge?.text ?? "none")")
+            .popover(isPresented: $isPresented, arrowEdge: .bottom) {
+                SchedulePopover(
+                    current: badge?.date,
+                    onChoose: choose,
+                    onPick: { date in
+                        isPresented = false
+                        onPick(date)
+                    }
+                )
+            }
+        }
+    }
+
+    private var tint: AnyShapeStyle {
+        guard let badge else { return AnyShapeStyle(.tertiary) }
+        return badge.isOverdue ? AnyShapeStyle(.red) : AnyShapeStyle(.primary)
+    }
+
+    private func choose(_ choice: ScheduleChoice) {
+        isPresented = false
+        switch choice.resolving(on: calendar) {
+        case .success(let date): onPick(date)
+        case .failure(let error): onFail(error)
+        }
+    }
+}
+
+/// The recurrence row.
+///
+/// ## 🔴 Read-only, and the reason is a missing core function
+///
+/// The rule is printed **verbatim** and cannot be edited here. Everything else
+/// on the row is a number the core computed. See ``RecurrenceSummary`` for the
+/// argument in full; the short version is that `Frequency` carries `FREQ` and
+/// nothing else, so any sentence assembled from it in Swift would silently drop
+/// `INTERVAL`, `BYDAY`, `BYMONTHDAY`, `BYSETPOS` and `UNTIL` — printing
+/// "Weekly" over a rule that fires every other Tuesday, which is worse than
+/// printing nothing. Re-parsing RFC 5545 on this side is also exactly the
+/// duplication the shared core exists to prevent.
+///
+/// Two things are still editable, because neither needs a rule to be
+/// constructed: **stopping** the repetition (a `clear`, which deletes the key)
+/// and the **anchor** (a closed two-case enum the core exports).
+struct InspectorRecurrenceRow: View {
+    let summary: RecurrenceSummary?
+    let apply: (TaskFieldEdit) -> Void
+
+    var body: some View {
+        if let summary {
+            // A full-width row rather than a `LabeledContent`, for the same
+            // reason the token fields are: an `RRULE` does not fit in the
+            // trailing hundred points of a labelled row, and the wrapped
+            // remainder came out right-aligned against a left-aligned first
+            // line, which reads as a layout accident.
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Repeats")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Text(summary.rule)
+                    .font(.system(.caption, design: .monospaced))
+                    .textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Text(caption(summary))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                if !summary.isExpandable {
+                    // The engine fails open — an unreadable rule is treated as
+                    // firing, so the task keeps appearing rather than
+                    // vanishing. Without this line that looks like the rule
+                    // working.
+                    Label("This rule cannot be read", systemImage: "exclamationmark.triangle")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                // Deliberately **not** `role: .destructive`. Two reasons: the
+                // borderless destructive style renders dim grey here, which
+                // reads as disabled rather than as dangerous — and red in this
+                // app means exactly one thing, *late*, so spending it on a
+                // button would break the one colour convention every screen
+                // shares. A bordered button is the honest affordance: this is
+                // reversible, it is not a deletion, and it should look
+                // clickable.
+                Button("Stop Repeating") {
+                    apply(RecurrenceSummary.stopRepeating)
+                }
+                .accessibilityIdentifier(AccessibilityIdentifier.Inspector.stopRepeating)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier(AccessibilityIdentifier.Inspector.recurrence)
+            .help("Editing a recurrence rule needs a rule summary the core does not export yet.")
+
+            Picker("Measured From", selection: anchorBinding(summary)) {
+                Text("Scheduled Date").tag(RecurrenceAnchor.scheduled)
+                Text("Completion Date").tag(RecurrenceAnchor.completion)
+            }
+            .accessibilityIdentifier(AccessibilityIdentifier.Inspector.recurrenceAnchor)
+        } else {
+            LabeledContent("Repeats", value: "Never")
+                .accessibilityIdentifier(AccessibilityIdentifier.Inspector.recurrence)
+        }
+    }
+
+    /// The count and the next occurrence, in words.
+    ///
+    /// Both clauses restate something the core answered. "Repeats indefinitely"
+    /// is the honest rendering of a rule with no `COUNT` and no `UNTIL`, and
+    /// "Next: Today" uses the badge's own words rather than a raw `2026-07-22`,
+    /// so the panel and the list row say the same thing about the same date.
+    ///
+    /// `anchorIsImplied` is deliberately **not** shown. The picker directly
+    /// below already displays the effective anchor, so a sentence saying
+    /// "anchored to the scheduled date by default" restated the control beneath
+    /// it in twice the space — and the effective behaviour is identical whether
+    /// the key is stored or absent, so there is nothing for a reader to act on.
+    /// The flag stays on ``RecurrenceSummary`` because the *core's* reading of
+    /// an absent anchor is worth pinning in a test.
+    private func caption(_ summary: RecurrenceSummary) -> String {
+        var parts = [summary.occurrenceDescription]
+        if let next = summary.next {
+            parts.append("Next: \(next.text)")
+        }
+        return parts.joined(separator: " · ")
+    }
+
+    private func anchorBinding(_ summary: RecurrenceSummary) -> Binding<RecurrenceAnchor> {
+        Binding(get: { summary.anchor }, set: { apply(.recurrenceAnchor($0)) })
+    }
+}
+
+/// The note body: rendered markdown, or the source that produced it.
+///
+/// **Plain-text editing of markdown source, rendered read-only** — the same
+/// thing the React Native app does, and the reason macOS 15 costs nothing here.
+/// There is no WYSIWYG, so the rich `TextEditor` that would need macOS 26 buys
+/// nothing.
+///
+/// The two modes are an explicit toggle rather than click-to-edit. Click-to-edit
+/// reads well in Notes, where the rendered and edited forms look nearly the
+/// same; here they do not — clicking a heading would replace it with `## `, and
+/// a user who did not mean to edit has no idea what happened.
+struct InspectorDetailsSection: View {
+    let detail: TaskDetail
+    @Binding var source: String
+    @Binding var isEditing: Bool
+    let onCommit: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Spacer()
+                Button(isEditing ? "Done" : "Edit") {
+                    if isEditing { onCommit() }
+                    isEditing.toggle()
+                }
+                .buttonStyle(.borderless)
+                .font(.caption)
+                .accessibilityIdentifier(AccessibilityIdentifier.Inspector.detailsMode)
+            }
+
+            if isEditing {
+                MarkdownSourceEditor(text: $source, onCommit: onCommit)
+                    .frame(minHeight: 140)
+                    // A visible edge, because the editor draws its own
+                    // `textBackgroundColor` — which inside a grouped form
+                    // section is a white slab with no boundary, and reads as a
+                    // rendering glitch rather than as a field.
+                    .clipShape(.rect(cornerRadius: 6))
+                    .overlay(RoundedRectangle(cornerRadius: 6).stroke(.quaternary))
+                    .accessibilityIdentifier(AccessibilityIdentifier.Inspector.detailsSource)
+                    .accessibilityLabel("Note body, markdown source")
+            } else if detail.body.isEmpty {
+                Text("No details")
+                    .font(.callout)
+                    .foregroundStyle(.tertiary)
+                    .accessibilityIdentifier(AccessibilityIdentifier.Inspector.details)
+            } else {
+                MarkdownBodyView(detail.body)
+                    .accessibilityIdentifier(AccessibilityIdentifier.Inspector.details)
+                    .accessibilityLabel("Note body")
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}

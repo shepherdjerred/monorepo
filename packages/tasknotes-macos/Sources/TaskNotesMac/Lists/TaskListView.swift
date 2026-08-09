@@ -5,17 +5,18 @@ internal import TaskNotesUniFFI
 internal import struct Foundation.Date
 internal import struct Foundation.DateComponents
 
-/// The Today screen.
+/// A list screen. One view for Today, Inbox, Upcoming and Browse.
 ///
 /// ## What was translated, and what was deleted
 ///
-/// The React Native screen's *capabilities* are all here — today plus overdue,
-/// the day heading with a count, the "all clear" celebration that only appears
-/// after an interaction, completion, deletion, scheduling, priority, bulk
-/// actions, refresh, create. Its *interactions* are not: swipes, a floating
-/// action button, pull-to-refresh, a bottom sheet, an explicit selection mode
-/// and a bulk action bar are all touch scaffolding, and each has a desktop
-/// idiom that already exists and is better.
+/// The React Native screens' *capabilities* are all here — each screen's own
+/// membership rule, a heading with a count, the "all clear" celebration that
+/// only appears after an interaction, completion, deletion, scheduling,
+/// priority, bulk actions, filtering, sorting, search, refresh, create. Their
+/// *interactions* are not: swipes, a floating action button, pull-to-refresh, a
+/// bottom sheet, an explicit selection mode, a bulk action bar and a pushed
+/// search screen are all touch scaffolding, and each has a desktop idiom that
+/// already exists and is better.
 ///
 /// The one that changes the shape of the screen most is **multi-select**. The
 /// touch app needs a mode — tap to open, or tap to select, never both — so it
@@ -25,6 +26,16 @@ internal import struct Foundation.DateComponents
 /// menu to one row or to fifty. So the bulk action bar is not ported, it is
 /// deleted, and nothing is lost.
 ///
+/// ## One view, four configurations
+///
+/// The four screens are near-identical in the React Native app — the filter
+/// bar, the list, the FAB and the bulk bar are copied three times, differing in
+/// a predicate and two strings. Copying `TodayView` three times would have made
+/// every subsequent row change a four-file edit, and the row is the part of this
+/// app most likely to change. Everything that genuinely varies lives in
+/// ``SidebarSection``'s list extensions and in ``TaskListModel``; nothing in
+/// this file branches on which screen it is.
+///
 /// ## Scrolling is `List`'s, on purpose
 ///
 /// Momentum, rubber-banding, Page Up/Down, Home/End, live scroll bars, and the
@@ -32,12 +43,18 @@ internal import struct Foundation.DateComponents
 /// underneath. A hand-rolled `ScrollView` of rows loses every one of them
 /// silently, which is why this is a `List` even though the row content is
 /// custom.
-struct TodayView: View {
+struct TaskListView: View {
+    /// Which screen this is. Everything screen-specific is reached through it.
+    let section: SidebarSection
+
     let store: TaskNotesStore
 
     /// The viewer's day and offset, held rather than re-read per redraw so the
     /// heading, the buckets, and every completion target describe one instant.
     @State private var calendar: ViewerCalendar
+
+    /// What the user has typed, filtered to, and ordered by.
+    @State private var query: TaskListQuery
 
     @State private var selection: Set<TaskId> = []
     @State private var composeText = ""
@@ -47,31 +64,52 @@ struct TodayView: View {
     /// Whether anything has been completed on this screen in this session.
     ///
     /// The whole point of the "all clear" celebration is that it distinguishes
-    /// *you cleared the day* from *there was never anything here*, and only
-    /// this flag can tell those apart.
+    /// *you cleared this* from *there was never anything here*, and only this
+    /// flag can tell those apart.
     @State private var hasInteracted = false
 
     @FocusState private var isComposeFocused: Bool
+    @FocusState private var isSearchFocused: Bool
 
-    init(store: TaskNotesStore) {
+    /// A screen over a store.
+    ///
+    /// ⚠️ The caller must give this view an `.id(section)`. `@State` survives a
+    /// change of a view's stored properties, so without one, switching from
+    /// Today to Inbox would carry Today's selection, search text and sort
+    /// across — three pieces of state that mean nothing on the new screen.
+    /// - Parameters:
+    ///   - section: which screen this is.
+    ///   - store: the app's task state.
+    ///   - query: where the screen starts narrowed, which the app never
+    ///     supplies and a snapshot always does. A rendered image of a list
+    ///     narrowed to nothing is one of the states most worth reviewing and
+    ///     the only one that cannot be reached by seeding data.
+    init(
+        section: SidebarSection,
+        store: TaskNotesStore,
+        query: TaskListQuery? = nil
+    ) {
+        self.section = section
         self.store = store
         _calendar = State(initialValue: store.viewerCalendar())
+        _query = State(initialValue: query ?? TaskListQuery(section: section))
     }
 
     var body: some View {
         content
-            .navigationTitle("Today")
+            .navigationTitle(section.title)
             .navigationSubtitle(subtitle)
             .toolbar { toolbar }
             .focusedSceneValue(\.taskListActions, actions)
+            .focusedSceneValue(\.inspectorSubject, inspected)
             .task(id: calendar.today) { await rollOverAtMidnight() }
-            .accessibilityIdentifier(AccessibilityIdentifier.detail(.today))
+            .accessibilityIdentifier(AccessibilityIdentifier.detail(section))
     }
 
     @ViewBuilder
     private var content: some View {
         switch derived {
-        case .success(let list):
+        case .success(let model):
             VStack(spacing: 0) {
                 if let message = SyncMessage.of(
                     status: store.status,
@@ -81,7 +119,7 @@ struct TodayView: View {
                     SyncBannerView(message: message, onRetry: refresh)
                     Divider()
                 }
-                TodayHeader(list: list)
+                TaskListHeader(model: model)
                 Divider()
                 if isComposing {
                     TaskComposeRow(
@@ -92,10 +130,16 @@ struct TodayView: View {
                     )
                     Divider()
                 }
-                if list.isEmpty {
-                    TodayEmptyState(hasInteracted: hasInteracted, onNewTask: beginCompose)
+                if model.isEmpty {
+                    TaskListEmptyState(
+                        section: section,
+                        isNarrowed: model.isNarrowed,
+                        hasInteracted: hasInteracted,
+                        onNewTask: beginCompose,
+                        onClearFilters: { query.clearNarrowing() }
+                    )
                 } else {
-                    rows(list)
+                    rows(model)
                 }
             }
         case .failure(let error):
@@ -114,16 +158,25 @@ struct TodayView: View {
 
     // ── Pieces ─────────────────────────────────────────────────────────────
 
-    private func rows(_ list: TodayList) -> some View {
-        List(list.rows, selection: $selection) { row in
-            TaskRowView(
-                row: row,
-                onToggle: { toggle(row) },
-                onDelete: { delete([row.id]) },
-                onSchedule: { schedule([row.id], to: $0) },
-                onScheduleDate: { scheduleDate([row.id], to: $0) }
-            )
-            .tag(row.id)
+    /// The list, in one shape whether or not the screen groups.
+    ///
+    /// A `Section` with a header is only emitted when there is a heading to
+    /// put in it: an `EmptyView` header still reserves the inset style's header
+    /// metrics, so an ungrouped list would carry a band of empty space above
+    /// every one of its rows.
+    private func rows(_ model: TaskListModel) -> some View {
+        List(selection: $selection) {
+            ForEach(model.groups) { group in
+                if let heading = group.heading {
+                    Section {
+                        rowViews(group)
+                    } header: {
+                        TaskListGroupHeader(heading: heading)
+                    }
+                } else {
+                    rowViews(group)
+                }
+            }
         }
         .listStyle(.inset)
         .accessibilityIdentifier(AccessibilityIdentifier.TaskList.list)
@@ -135,7 +188,7 @@ struct TodayView: View {
         // reach a user.
         .contextMenu(forSelectionType: TaskId.self) { ids in
             TaskRowMenu(
-                targets: list.rows.filter { ids.contains($0.id) },
+                targets: model.rows.filter { ids.contains($0.id) },
                 onNewTask: beginCompose,
                 onToggle: { rows in for row in rows { toggle(row) } },
                 onSchedule: { schedule(ids, to: $0) },
@@ -148,8 +201,30 @@ struct TodayView: View {
         // is being taken away from the user here.
         .onKeyPress(.space) {
             guard !selection.isEmpty else { return .ignored }
-            completeSelection(in: list)
+            completeSelection(in: model)
             return .handled
+        }
+    }
+
+    /// One group's rows.
+    ///
+    /// The group is passed rather than its rows, because whether a row prints
+    /// its date depends on what the heading above it already says: under
+    /// "Tomorrow", every row's date *is* the word "Tomorrow", and repeating it
+    /// down the column buries the dates that do carry information — a "Friday"
+    /// under "This Week". The comparison lives here because only the list knows
+    /// its own headings.
+    private func rowViews(_ group: TaskListGroup) -> some View {
+        ForEach(group.rows) { row in
+            TaskRowView(
+                row: row,
+                onToggle: { toggle(row) },
+                onDelete: { delete([row.id]) },
+                onSchedule: { schedule([row.id], to: $0) },
+                onScheduleDate: { scheduleDate([row.id], to: $0) },
+                showsDate: row.displayDate?.text != group.heading
+            )
+            .tag(row.id)
         }
     }
 
@@ -170,32 +245,82 @@ struct TodayView: View {
                 .symbolEffect(.rotate, options: .repeating, isActive: isRefreshing)
                 .accessibilityIdentifier(AccessibilityIdentifier.TaskList.refresh)
         }
+        ToolbarItem(placement: .primaryAction) {
+            FilterMenu(query: $query, facets: facets)
+        }
+        ToolbarItem(placement: .primaryAction) {
+            SortMenu(query: $query)
+        }
+        ToolbarItem(placement: .primaryAction) {
+            SearchField(text: $query.search, prompt: "Search")
+                .frame(width: 180)
+                .focused($isSearchFocused)
+                .accessibilityIdentifier(AccessibilityIdentifier.TaskList.search)
+                .accessibilityLabel("Search this list")
+        }
     }
 
     // ── Derivation ─────────────────────────────────────────────────────────
 
-    private var derived: Result<TodayList, CoreError> {
-        TodayList.of(
+    private var derived: Result<TaskListModel, CoreError> {
+        TaskListModel.of(
+            section: section,
             tasks: store.tasks,
             pendingTaskIds: store.pendingTaskIds,
-            calendar: calendar
+            calendar: calendar,
+            query: query
         )
+    }
+
+    /// What the filter menu offers.
+    ///
+    /// Read from the derivation rather than recomputed: an empty list because
+    /// of a filter must still offer the filter values that would bring it back,
+    /// and both come from the same pass.
+    private var facets: TaskListFacets {
+        switch derived {
+        case .success(let model): return model.facets
+        // Nothing to offer over data the core would not accept. The screen is
+        // already showing the failure; a populated menu next to it would be
+        // asserting the list is fine.
+        case .failure: return .empty
+        }
+    }
+
+    /// The selection, as the inspector reads it.
+    private var inspected: InspectorSubject {
+        guard case .success(let model) = derived else { return InspectorSubject(rows: []) }
+        return InspectorSubject(rows: model.rows.filter { selection.contains($0.id) })
     }
 
     private var subtitle: String {
         store.pendingCount == 0 ? "TaskNotes" : "\(store.pendingCount) waiting to sync"
     }
+}
 
+// Everything a list screen *does*, in an extension rather than in the body
+// above.
+//
+// Not an arbitrary cut: the type had outgrown the linter's body limit, and the
+// limit was pointing at something real. What is above is a description of a
+// screen; everything below is a dispatch into the store and none of it renders
+// anything. Same file, because these are `private` to the screen and that is
+// the right visibility for them — an extension in a second file would have had
+// to widen every piece of the screen's state to internal just to be written.
+extension TaskListView {
     // ── Actions ────────────────────────────────────────────────────────────
 
     private var actions: TaskListActions {
         TaskListActions(
             newTask: beginCompose,
             refresh: refresh,
-            complete: { if case .success(let list) = derived { completeSelection(in: list) } },
+            complete: { if case .success(let model) = derived { completeSelection(in: model) } },
             delete: { delete(selection) },
+            find: { isSearchFocused = true },
+            clearFilters: { query.clearNarrowing() },
             hasSelection: !selection.isEmpty,
-            isRefreshing: isRefreshing
+            isRefreshing: isRefreshing,
+            isNarrowed: query.isNarrowing
         )
     }
 
@@ -237,8 +362,8 @@ struct TodayView: View {
         settle()
     }
 
-    private func completeSelection(in list: TodayList) {
-        for row in list.rows where selection.contains(row.id) {
+    private func completeSelection(in model: TaskListModel) {
+        for row in model.rows where selection.contains(row.id) {
             toggle(row)
         }
     }
@@ -297,9 +422,10 @@ struct TodayView: View {
     /// Re-read the viewer's day shortly after the next local midnight.
     ///
     /// Without this, a window left open overnight keeps showing yesterday —
-    /// the heading, the overdue colouring, and every completion target all stay
-    /// on the previous day, and nothing on screen suggests they are stale. The
-    /// `.task(id:)` re-arms because its identity is the day it is waiting past.
+    /// the heading, the overdue colouring, the day groups, and every completion
+    /// target all stay on the previous day, and nothing on screen suggests they
+    /// are stale. The `.task(id:)` re-arms because its identity is the day it
+    /// is waiting past.
     private func rollOverAtMidnight() async {
         guard let midnight = Self.nextMidnight() else { return }
         let seconds = midnight.timeIntervalSinceNow + 1

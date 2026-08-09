@@ -28,6 +28,11 @@ public struct TaskNotesCommands: Commands {
     /// The frontmost task list, or `nil` when there is not one.
     @FocusedValue(\.taskListActions) private var actions: TaskListActions?
 
+    /// The frontmost window's inspector, or `nil` when it has none — a Settings
+    /// window, for instance, which is exactly when the item should be dim
+    /// rather than missing.
+    @FocusedValue(\.inspectorPresentation) private var inspector: InspectorPresentation?
+
     public init(navigation: NavigationState) {
         self.navigation = navigation
     }
@@ -48,9 +53,38 @@ public struct TaskNotesCommands: Commands {
                 .disabled(actions?.hasSelection != true)
         }
 
+        // Find belongs below the pasteboard group in Edit, which is where every
+        // Mac app puts it. `.textEditing` is the group that already holds Select
+        // All, so `after:` lands Find under it.
+        CommandGroup(after: .textEditing) {
+            Divider()
+            Button("Find…") { actions?.find() }
+                .keyboardShortcut("f")
+                .disabled(actions == nil)
+            Button("Clear Filters") { actions?.clearFilters() }
+                .disabled(actions?.isNarrowed != true)
+        }
+
         // View > Toggle Sidebar, and View > Show/Customize Toolbar.
         SidebarCommands()
         ToolbarCommands()
+
+        // `⌥⌘I` is the platform's inspector shortcut — Xcode, Pages, Numbers,
+        // Keynote and Freeform all use it, so it already means this. SwiftUI's
+        // `.inspector` contributes no menu item of its own, unlike
+        // `SidebarCommands`, so the panel would otherwise be reachable only by
+        // a toolbar button and therefore invisible to the keyboard.
+        //
+        // The label states what the item will *do*, which is the macOS
+        // convention — Show Inspector when hidden, Hide Inspector when shown —
+        // rather than a checkmark on a static title.
+        CommandGroup(after: .sidebar) {
+            Button(inspector?.isPresented == true ? "Hide Inspector" : "Show Inspector") {
+                inspector?.toggle()
+            }
+            .keyboardShortcut("i", modifiers: [.option, .command])
+            .disabled(inspector == nil)
+        }
 
         CommandGroup(after: .sidebar) {
             Divider()

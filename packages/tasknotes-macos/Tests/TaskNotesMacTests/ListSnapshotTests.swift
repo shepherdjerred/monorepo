@@ -6,7 +6,7 @@ import Testing
 
 @testable import TaskNotesMac
 
-/// The Today screen and its pieces, rendered to PNG for human review.
+/// The four list screens and their pieces, rendered to PNG for human review.
 ///
 /// This is the plan's "Image snapshot — SwiftUI — `.image` via `NSHostingView`"
 /// row. It is deliberately **not** a regression gate yet: nothing is compared
@@ -23,32 +23,46 @@ import Testing
 /// `.serialized` because they all share one `NSApplication` and one main
 /// run loop, and because a render that has to spin the run loop cannot do so
 /// while another one is spinning it.
-@Suite("Today, rendered offscreen", .serialized)
+@Suite("The list screens, rendered offscreen", .serialized)
 @MainActor
-struct TodaySnapshotTests {
-    /// The whole screen with a day's worth of work on it.
-    @Test("the Today screen, populated", arguments: SnapshotAppearance.allCases)
-    func todayPopulated(appearance: SnapshotAppearance) throws {
+struct ListSnapshotTests {
+    /// Every screen, over one vault.
+    ///
+    /// Rendered from the **same** `SnapshotFixtures.tasks` on purpose. The four
+    /// screens are partitions of one corpus, so the thing most worth looking at
+    /// across the four images is not any one of them — it is whether each task
+    /// turned up on exactly the screen it should, and nowhere else. Four
+    /// separate fixtures would have made that unreviewable.
+    @Test(
+        "a populated list screen",
+        arguments: SidebarSection.allCases, SnapshotAppearance.allCases
+    )
+    func populated(section: SidebarSection, appearance: SnapshotAppearance) throws {
         let seeded = try SnapshotFixtures.populated()
         try record(
-            TodayView(store: seeded.store),
-            named: "today-populated",
+            TaskListView(section: section, store: seeded.store),
+            named: "list-\(section.rawValue)",
             size: Self.screenSize,
             appearance: appearance
         )
     }
 
-    /// The screen with nothing on it, in the reading a fresh launch gets.
+    /// Every screen with nothing on it, in the reading a fresh launch gets.
     ///
     /// "Nothing due today", not "All clear": the celebration is only honest
     /// after the viewer has actually finished something on this screen, and
-    /// `hasInteracted` is false for a store nobody has touched.
-    @Test("the Today screen, empty", arguments: SnapshotAppearance.allCases)
-    func todayEmpty(appearance: SnapshotAppearance) throws {
+    /// `hasInteracted` is false for a store nobody has touched. Each screen
+    /// says its own sentence, because "there is nothing to triage" and "nothing
+    /// is due today" are different pieces of news.
+    @Test(
+        "an empty list screen",
+        arguments: SidebarSection.allCases, SnapshotAppearance.allCases
+    )
+    func empty(section: SidebarSection, appearance: SnapshotAppearance) throws {
         let seeded = try SnapshotFixtures.empty()
         try record(
-            TodayView(store: seeded.store),
-            named: "today-empty",
+            TaskListView(section: section, store: seeded.store),
+            named: "empty-\(section.rawValue)",
             size: Self.screenSize,
             appearance: appearance
         )
@@ -83,6 +97,60 @@ struct TodaySnapshotTests {
         )
     }
 
+    /// The query surface, which no whole-screen snapshot can show.
+    ///
+    /// `.toolbar` content is drawn by the window's toolbar, and these images are
+    /// rendered from a bare `NSHostingView` with no toolbar to draw into — so
+    /// the filter, sort and search controls are invisible in every screen shot
+    /// above. Rendered here in a strip instead, in both states the filter glyph
+    /// has, because "is a filter on?" is the one thing the toolbar has to say at
+    /// a glance and a hollow-versus-filled circle is the whole of how it says
+    /// it.
+    @Test("the toolbar's query controls", arguments: SnapshotAppearance.allCases)
+    func queryControls(appearance: SnapshotAppearance) throws {
+        @MainActor
+        func strip(_ query: TaskListQuery) -> some View {
+            let binding = Binding.constant(query)
+            return HStack(spacing: 12) {
+                FilterMenu(query: binding, facets: Self.facets)
+                SortMenu(query: binding)
+                SearchField(text: .constant(query.search), prompt: "Search")
+                    .frame(width: 180)
+            }
+            .fixedSize()
+        }
+
+        try record(
+            VStack(alignment: .leading, spacing: 20) {
+                strip(TaskListQuery(section: .browse))
+                strip(Self.narrowed)
+                Spacer()
+            }
+            .padding(20),
+            named: "query-controls",
+            size: Self.toolbarSize,
+            appearance: appearance
+        )
+    }
+
+    /// A screen narrowed by a search that matches nothing.
+    ///
+    /// The most valuable empty state in the app and the one most easily got
+    /// wrong: there are eight tasks on this screen and the reader hid all of
+    /// them. A message reading "Inbox is empty" here would send somebody
+    /// looking for missing data, so this one says so and offers the only
+    /// remedy that works.
+    @Test("a list narrowed to nothing", arguments: SnapshotAppearance.allCases)
+    func narrowedToNothing(appearance: SnapshotAppearance) throws {
+        let seeded = try SnapshotFixtures.populated()
+        try record(
+            TaskListView(section: .browse, store: seeded.store, query: Self.unmatchable),
+            named: "list-no-matches",
+            size: Self.screenSize,
+            appearance: appearance
+        )
+    }
+
     /// The same screen in a window too narrow for its longest title.
     ///
     /// The row hangs two marks off the end of the title, so the question this
@@ -97,8 +165,8 @@ struct TodaySnapshotTests {
     func todayNarrow(appearance: SnapshotAppearance) throws {
         let seeded = try SnapshotFixtures.populated()
         try record(
-            TodayView(store: seeded.store),
-            named: "today-narrow",
+            TaskListView(section: .today, store: seeded.store),
+            named: "list-narrow",
             size: Self.narrowSize,
             appearance: appearance
         )
@@ -165,7 +233,35 @@ struct TodaySnapshotTests {
 
     /// A window-sized canvas. Wide enough that a long title truncates rather
     /// than wrapping the layout into a shape the app never has.
-    private static let screenSize = CGSize(width: 760, height: 460)
+    private static let screenSize = CGSize(width: 780, height: 560)
+
+    private static let toolbarSize = CGSize(width: 560, height: 140)
+
+    /// A search no fixture title, project, context or tag contains.
+    private static let unmatchable = TaskListQuery(search: "xyzzy")
+
+    /// A query with something set in every channel the toolbar reflects.
+    private static var narrowed: TaskListQuery {
+        var query = TaskListQuery(search: "release", sort: nil)
+        query.filter.toggleStatus(.open)
+        query.sort = SortConfig(field: .priority, direction: .desc)
+        return query
+    }
+
+    /// The values the filter menu would offer over the fixture vault.
+    private static var facets: TaskListFacets {
+        let derived = TaskListModel.of(
+            section: .browse,
+            tasks: SnapshotFixtures.tasks,
+            pendingTaskIds: [],
+            calendar: SnapshotFixtures.calendar,
+            text: TaskDateText(locale: Locale(identifier: "en_US"))
+        )
+        switch derived {
+        case .success(let model): return model.facets
+        case .failure: return .empty
+        }
+    }
 
     /// Narrow enough that the longest fixture title cannot fit.
     private static let narrowSize = CGSize(width: 420, height: 460)

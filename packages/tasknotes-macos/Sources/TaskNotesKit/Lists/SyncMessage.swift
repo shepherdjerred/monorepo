@@ -76,9 +76,20 @@ public struct SyncMessage: Sendable, Equatable {
     /// Distinct per tone, so the glyph is a second channel carrying the same
     /// ordering as the colour rather than a decoration repeated across all
     /// three.
+    ///
+    /// ⚠️ **Informational is a straight arrow, not a circular one, and that is
+    /// a fix rather than a preference.** Three near-identical two-arrow
+    /// circular glyphs used to coexist in this app — `repeat` on a recurring
+    /// row, `arrow.triangle.2.circlepath` on a queued row and on this banner,
+    /// and `exclamationmark.arrow.triangle.2.circlepath` for a failing pass —
+    /// so a recurring task waiting to sync drew two of them, at similar sizes
+    /// in similar greys, meaning unrelated things. Queued work is going **up**
+    /// to the server, which is a direction and not a loop; ``TaskRowView`` uses
+    /// the same glyph for the same fact. Circular arrows are now spent on the
+    /// one thing that genuinely goes round: retrying, and repeating.
     public var systemImage: String {
         switch tone {
-        case .informational: "arrow.triangle.2.circlepath"
+        case .informational: "arrow.up.circle"
         case .degraded: "exclamationmark.arrow.triangle.2.circlepath"
         case .attention: "exclamationmark.triangle.fill"
         }

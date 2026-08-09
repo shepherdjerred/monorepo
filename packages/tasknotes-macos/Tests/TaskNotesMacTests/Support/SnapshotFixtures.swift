@@ -61,16 +61,29 @@ enum SnapshotFixtures {
         try seeded(with: [])
     }
 
-    /// The rows the populated Today screen shows.
+    /// One vault, seen by all four screens.
     ///
-    /// Deliberately a mix rather than six of the same thing: two overdue at
-    /// different priorities, three due today across the priority range, one
-    /// recurring occurrence still open and one already checked off. Between
-    /// them they exercise every branch the row view has — strikethrough, the
-    /// red overdue badge, the priority tint, the project/context subtitle, and
-    /// a title long enough to truncate.
+    /// A single corpus rather than four, because the four screens are
+    /// *partitions of the same data* and reviewing them against different
+    /// fixtures would hide the thing most worth seeing — that a task lands on
+    /// exactly the screen it should. Reading down the list below, each task is
+    /// annotated with where it surfaces.
+    ///
+    /// It is deliberately a mix rather than a dozen of the same thing: overdue
+    /// and due-today at different priorities, a recurring occurrence still open
+    /// and one already checked off, tasks with no metadata at all, dated tasks
+    /// spread across tomorrow / this week / two separate later days, and two
+    /// finished tasks that only a Browse screen should ever show. Between them
+    /// they exercise every branch the row view has — strikethrough, the red
+    /// overdue date, the priority ramp, the repeat mark, the trailing metadata,
+    /// and a title long enough to truncate.
+    ///
+    /// ⚠️ 2026-07-22 is a **Wednesday**, so "this week" runs through Sunday the
+    /// 26th and anything from the 27th is its own day heading. The dates below
+    /// are chosen against that, not at random.
     static var tasks: [CoreTask] {
         [
+            // Today — overdue, top of the priority ramp.
             coreTask(
                 id: "Tasks/Renew passport.md",
                 title: "Renew passport",
@@ -78,12 +91,14 @@ enum SnapshotFixtures {
                 due: "2026-06-30",
                 projects: ["[[Admin]]"]
             ),
+            // Today — overdue, and long enough to truncate at narrow widths.
             coreTask(
                 id: "Tasks/Reply to the landlord about the boiler inspection window.md",
                 title: "Reply to the landlord about the boiler inspection window",
                 priority: .high,
                 due: "2026-07-19"
             ),
+            // Today — a rule that fires today, scheduled-only and undated.
             coreTask(
                 id: "Tasks/Stand-up.md",
                 title: "Stand-up",
@@ -92,14 +107,20 @@ enum SnapshotFixtures {
                 recurrence: "FREQ=DAILY",
                 contexts: ["work"]
             ),
+            // Today.
             coreTask(
                 id: "Tasks/Ship the release notes.md",
                 title: "Ship the release notes",
                 priority: .normal,
                 due: "2026-07-22",
                 projects: ["[[Website]]"],
-                contexts: ["work"]
+                contexts: ["work"],
+                tags: ["release"]
             ),
+            // Today, already checked off — and *also* Upcoming, under
+            // Tomorrow, because its next uncompleted occurrence is the 23rd.
+            // The one fixture that proves a task can be finished on one screen
+            // and still pending on another.
             coreTask(
                 id: "Tasks/Take vitamins.md",
                 title: "Take vitamins",
@@ -108,12 +129,88 @@ enum SnapshotFixtures {
                 recurrence: "FREQ=DAILY",
                 completeInstances: [today]
             ),
+            // Today.
             coreTask(
                 id: "Tasks/Water the plants.md",
                 title: "Water the plants",
                 priority: .low,
                 due: "2026-07-22",
                 contexts: ["home"]
+            ),
+            // Inbox — no project, no context, no date, no rule.
+            coreTask(
+                id: "Tasks/Draft the offsite agenda.md",
+                title: "Draft the offsite agenda"
+            ),
+            // Inbox, flagged. Priority alone is not organisation.
+            coreTask(
+                id: "Tasks/Find a dentist.md",
+                title: "Find a dentist",
+                priority: .high
+            ),
+            // Upcoming — Tomorrow.
+            coreTask(
+                id: "Tasks/Team retro.md",
+                title: "Team retro",
+                priority: .normal,
+                due: "2026-07-23",
+                projects: ["[[Website]]"],
+                contexts: ["work"]
+            ),
+            // Upcoming — This Week, and a recurring task shown at its *next*
+            // occurrence rather than at the core's completion target. This is
+            // the fixture behind the `about:` parameter on `TaskRowState`.
+            coreTask(
+                id: "Tasks/Water the ferns.md",
+                title: "Water the ferns",
+                priority: .low,
+                scheduled: "2026-07-24",
+                recurrence: "FREQ=WEEKLY;BYDAY=FR",
+                contexts: ["home"]
+            ),
+            // Upcoming — This Week.
+            coreTask(
+                id: "Tasks/Submit expenses.md",
+                title: "Submit expenses",
+                priority: .medium,
+                due: "2026-07-24",
+                contexts: ["work"],
+                tags: ["finance"]
+            ),
+            // Upcoming — its own day heading, beyond the current week.
+            coreTask(
+                id: "Tasks/Renew the domain.md",
+                title: "Renew the domain",
+                priority: .high,
+                due: "2026-08-14",
+                projects: ["[[Admin]]"],
+                tags: ["admin"]
+            ),
+            // Upcoming — a second later heading, so the grouping is visibly a
+            // run of days rather than one bucket called "Later".
+            coreTask(
+                id: "Tasks/Quarterly review.md",
+                title: "Quarterly review",
+                priority: .normal,
+                due: "2026-08-31",
+                projects: ["[[Work]]"]
+            ),
+            // Browse only — finished, so no other screen admits it.
+            coreTask(
+                id: "Tasks/Book the flights.md",
+                title: "Book the flights",
+                status: .done,
+                priority: .normal,
+                due: "2026-07-20",
+                projects: ["[[Travel]]"]
+            ),
+            // Browse only — cancelled and undated, which is *not* Inbox: Inbox
+            // is active work needing triage, and this is neither.
+            coreTask(
+                id: "Tasks/Rewrite the changelog script.md",
+                title: "Rewrite the changelog script",
+                status: .cancelled,
+                priority: .low
             ),
         ]
     }
@@ -183,7 +280,8 @@ func coreTask(
     recurrence: String? = nil,
     completeInstances: [String] = [],
     projects: [ProjectName] = [],
-    contexts: [ContextName] = []
+    contexts: [ContextName] = [],
+    tags: [TagName] = []
 ) -> CoreTask {
     CoreTask(
         id: id,
@@ -195,7 +293,7 @@ func coreTask(
         scheduled: scheduled,
         contexts: contexts,
         projects: projects,
-        tags: [],
+        tags: tags,
         recurrence: recurrence,
         recurrenceAnchor: nil,
         completeInstances: completeInstances,

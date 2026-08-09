@@ -56,6 +56,15 @@ internal import TaskNotesUniFFI
 struct PriorityMarker: View {
     let priority: Priority
 
+    /// Whether the row this sits on is already done.
+    ///
+    /// A completed task's priority is not actionable — there is nothing left to
+    /// prioritise — so a full-strength orange `!!!` on a struck-through title
+    /// draws the eye to the one row on the screen with no work left in it. The
+    /// mark stays, because "this *was* urgent" is still true and un-completing
+    /// is a click away; it just stops shouting.
+    var isDimmed: Bool = false
+
     var body: some View {
         if let mark {
             Image(systemName: mark.symbol)
@@ -81,14 +90,25 @@ struct PriorityMarker: View {
         "\(priorityLabel(priority: priority)) priority"
     }
 
+    /// The mark, and the hue it is drawn in at each of the two strengths.
+    ///
+    /// The dimmed elevated ranks stay *orange* rather than dropping to grey:
+    /// hue is what says "flagged", and turning it grey on completion would make
+    /// a done high-priority task indistinguishable from a done low-priority
+    /// one. `Color.orange.tertiary` is a hierarchical style over a semantic
+    /// colour, so it still tracks appearance and Increase Contrast.
     private var mark: (symbol: String, tint: AnyShapeStyle)? {
         switch priority {
-        case .highest: ("exclamationmark.3", AnyShapeStyle(.orange))
-        case .high: ("exclamationmark.2", AnyShapeStyle(.orange))
-        case .medium: ("exclamationmark", AnyShapeStyle(.orange))
+        case .highest: ("exclamationmark.3", elevated)
+        case .high: ("exclamationmark.2", elevated)
+        case .medium: ("exclamationmark", elevated)
         case .normal, .none: nil
-        case .low: ("arrow.down", AnyShapeStyle(.tertiary))
+        case .low: ("arrow.down", isDimmed ? AnyShapeStyle(.quaternary) : AnyShapeStyle(.tertiary))
         }
+    }
+
+    private var elevated: AnyShapeStyle {
+        isDimmed ? AnyShapeStyle(Color.orange.tertiary) : AnyShapeStyle(.orange)
     }
 }
 
@@ -109,10 +129,13 @@ struct RecurrenceMarker: View {
     /// The occurrence the checkbox targets, in the row's own words.
     let occurrence: String?
 
+    /// Whether the occurrence this row is about is already done.
+    var isDimmed: Bool = false
+
     var body: some View {
         Image(systemName: "repeat")
             .font(.caption2.weight(.semibold))
-            .foregroundStyle(.secondary)
+            .foregroundStyle(isDimmed ? AnyShapeStyle(.quaternary) : AnyShapeStyle(.secondary))
             .help(Self.spoken(occurrence))
             .accessibilityHidden(true)
     }

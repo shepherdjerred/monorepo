@@ -50,7 +50,7 @@ public enum QuickAdd {
 
     /// ``command(for:calendar:)``, as a `Result`.
     ///
-    /// See `TodayList.of` for why the wrapping happens in this module rather
+    /// See `TaskListModel.of` for why the wrapping happens in this module rather
     /// than at the SwiftUI call site.
     public static func parsing(
         _ input: String,
