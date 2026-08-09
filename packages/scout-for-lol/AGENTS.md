@@ -233,7 +233,6 @@ type DeepReadonly<T> = {
 
 ### Error Handling
 
-- Use `zod-validation-error` for user-friendly error messages
 - Handle errors at appropriate levels
 - Use Result patterns where appropriate
 - Proper async/await error handling (enforced by `custom-rules/prefer-async-await`)
@@ -324,18 +323,17 @@ Enforced by ESLint:
 
 ## Key Libraries
 
-| Library                | Purpose                                 |
-| ---------------------- | --------------------------------------- |
-| `remeda`               | Functional data transformations         |
-| `ts-pattern`           | Complex control flow / pattern matching |
-| `env-var`              | Type-safe environment configuration     |
-| `date-fns`             | Date operations                         |
-| `zod`                  | Runtime validation and schemas          |
-| `zod-validation-error` | User-friendly validation errors         |
-| `twisted`              | Riot Games API client                   |
-| `satori`               | JSX to SVG rendering                    |
-| `@resvg/resvg-js`      | SVG to PNG conversion                   |
-| `tslog`                | Structured logging (backend)            |
+| Library           | Purpose                                 |
+| ----------------- | --------------------------------------- |
+| `remeda`          | Functional data transformations         |
+| `ts-pattern`      | Complex control flow / pattern matching |
+| `env-var`         | Type-safe environment configuration     |
+| `date-fns`        | Date operations                         |
+| `zod`             | Runtime validation and schemas          |
+| `twisted`         | Riot Games API client                   |
+| `satori`          | JSX to SVG rendering                    |
+| `@resvg/resvg-js` | SVG to PNG conversion                   |
+| `tslog`           | Structured logging (backend)            |
 
 ---
 
