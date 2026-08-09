@@ -197,6 +197,58 @@ struct KanbanBoardTests {
         #expect(card.isRecurring)
     }
 
+    /// ⚠️ **The invariant the board's channel split rests on: a card is struck
+    /// through exactly when the column it sits in is terminal.**
+    ///
+    /// The card keys its strikethrough on `TaskRowState.isTerminal` and its
+    /// checkbox on `isCompleted`, so that a recurring task with today ticked
+    /// reads as *today is done, the task is not* rather than as a
+    /// contradiction. That only holds if the card's own idea of "terminal"
+    /// cannot drift from its column's — and it cannot, because both are the
+    /// core's `task_status_is_active` asked of the same status.
+    ///
+    /// ⚠️ **Being honest about what each half of this pins.** The equality
+    /// itself *follows* from the partition rule — cards are filed by status, so
+    /// a card's status is its column's — and asserting it does not catch a view
+    /// bug, because no view runs here. It is stated because it is the property
+    /// the card's drawing silently depends on, so that changing how the board
+    /// files cards breaks this by name instead of quietly changing what gets
+    /// struck through.
+    ///
+    /// The two expectations **below** it are the load-bearing ones: without a
+    /// card that is retired-but-not-terminal and one that is
+    /// terminal-but-not-completed, the equality would hold vacuously and
+    /// `isTerminal` could be defined as either of its neighbours undetected.
+    @Test("a card is terminal exactly when its column is")
+    func cardTerminalityMatchesItsColumn() throws {
+        let board = try build()
+        for column in board.columns {
+            for card in column.rows {
+                #expect(
+                    card.isTerminal == column.isTerminal,
+                    "\(card.id) and the \(column.title) column disagree about being terminal")
+            }
+        }
+
+        // And the two facts really are independent, or the equality above would
+        // be vacuous: the fixture holds a card that is retired without being
+        // terminal, and one that is terminal without being completed.
+        let vitamins = try #require(board.card("Tasks/Take vitamins.md"))
+        #expect(vitamins.isRetired && !vitamins.isTerminal)
+        let review = try #require(board.card("Tasks/Weekly review.md"))
+        #expect(review.isTerminal && !review.isCompleted)
+    }
+
+    /// `isRetired` is exactly the disjunction of the two facts, so neither view
+    /// has to maintain the relationship by hand.
+    @Test("retired is completed-or-terminal, for every card on the board")
+    func retiredIsTheDisjunction() throws {
+        let board = try build()
+        for card in board.cards {
+            #expect(card.isRetired == (card.isCompleted || card.isTerminal))
+        }
+    }
+
     /// The board narrows through the same query surface as a list, and its
     /// count says so.
     @Test("filtering the board narrows the cards and states the narrowing")
