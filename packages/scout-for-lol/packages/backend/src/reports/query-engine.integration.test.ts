@@ -233,6 +233,38 @@ describe("executeReportQuery", () => {
   });
 });
 
+describe("executeReportQuery temporal prematches", () => {
+  test("runs temporal prematch reports from the report lake", async () => {
+    await writeTestLake(lakeDir, {
+      serverId,
+      prematchFacts: [
+        {
+          playerId: 1,
+          playerAlias: "First Player",
+          dedupeKey: "NA1:temporal-prematch",
+          puuid: testPuuid("report-temporal-prematch"),
+          queue: "solo",
+          observedAt: now,
+        },
+      ],
+    });
+
+    const result = await executeReportQuery({
+      prisma,
+      serverId,
+      queryText:
+        "SELECT prematches FROM prematch_participants GROUP BY all ANALYZE LAST 30 DAYS BUCKET BY DAY IN TIME ZONE 'UTC' ORDER BY label ASC",
+      now,
+    });
+
+    expect(result.rows).toHaveLength(1);
+    expect(result.rows[0]?.values).toEqual([
+      { column: "prematches", value: 1 },
+    ]);
+    expect(result.visualization?.bucket).toBe("day");
+  });
+});
+
 describe("executeReportQuery player groups", () => {
   test("group(2) matches the legacy pair query on the same lake", async () => {
     const matchFacts = [

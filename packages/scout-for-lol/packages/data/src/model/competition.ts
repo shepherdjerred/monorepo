@@ -42,9 +42,7 @@ export type Competition = {
   criteriaType: string;
   criteriaConfig: string;
   maxParticipants: number;
-  // Optional only for compatibility with pre-migration serialized/test rows;
-  // parseCompetition always returns a validated, required value.
-  analysisTimezone?: string;
+  analysisTimezone: string;
   startDate: Date | null;
   endDate: Date | null;
   seasonId: SeasonId | null;
@@ -478,9 +476,7 @@ export function parseCompetition(
 
   return {
     ...rest,
-    analysisTimezone: ReportScheduleTimezoneSchema.parse(
-      raw.analysisTimezone ?? "UTC",
-    ),
+    analysisTimezone: ReportScheduleTimezoneSchema.parse(raw.analysisTimezone),
     startDate,
     endDate,
     criteria: result.data,

@@ -156,6 +156,19 @@ describe("compile", () => {
     expect(compiled.aggregateSql).toContain("HAVING COUNT(*) > 0");
   });
 
+  test("prematch temporal grouping retains the observation timestamp", () => {
+    const compiled = compilePrematchQuery(
+      input(
+        "SELECT prematches FROM prematch_participants GROUP BY all ANALYZE LAST 30 DAYS BUCKET BY DAY IN TIME ZONE 'UTC'",
+      ),
+    );
+    if (compiled === undefined) {
+      throw new Error("expected compiled query");
+    }
+    expect(compiled.aggregateSql).toContain("p.observed_at FROM");
+    expect(compiled.aggregateSql).toContain("date_trunc('day', observed_at)");
+  });
+
   test("match rowsScanned parity: champion filter in BOTH statements", () => {
     const compiled = compileMatchQuery(
       input(

@@ -71,10 +71,11 @@ function resolveComparison(
   if (comparison.kind === "calendar") {
     return calendarRange(comparison.startDate, comparison.endDate, timezone);
   }
-  const duration = current.endDate.getTime() - current.startDate.getTime();
+  const inclusiveSpan =
+    current.endDate.getTime() - current.startDate.getTime() + 1;
   return {
-    startDate: new Date(current.startDate.getTime() - duration),
-    endDate: new Date(current.startDate),
+    startDate: new Date(current.startDate.getTime() - inclusiveSpan),
+    endDate: new Date(current.startDate.getTime() - 1),
   };
 }
 

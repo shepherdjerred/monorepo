@@ -117,6 +117,7 @@ export function compileReportQuery(ast: ReportQueryAst): ReportQueryPlan {
   validateSourceDimensions(source, requestedGroupBys);
   const { analysis, bucket, groupBy, groupBys } = resolveTemporalGrouping(
     ast,
+    source,
     requestedGroupBy,
     requestedGroupBys,
   );
@@ -172,6 +173,7 @@ export function compileReportQuery(ast: ReportQueryAst): ReportQueryPlan {
 
 function resolveTemporalGrouping(
   ast: ReportQueryAst,
+  source: ReportQueryPlan["source"],
   requestedGroupBy: ReportGroupBy,
   requestedGroupBys: ReportGroupBy[],
 ): Pick<ReportQueryPlan, "analysis" | "groupBy" | "groupBys"> & {
@@ -182,6 +184,14 @@ function resolveTemporalGrouping(
       ? undefined
       : parseTemporalAnalysisClause(ast.analysis.value);
   validateTemporalCompatibility(ast, requestedGroupBys, analysis);
+  if (
+    analysis !== undefined &&
+    (source === "rank_current" || source === "competition_rank")
+  ) {
+    throw new Error(
+      `ANALYZE is not available for ${source}; use competition rank history analysis instead.`,
+    );
+  }
   if (analysis === undefined) {
     return {
       analysis,

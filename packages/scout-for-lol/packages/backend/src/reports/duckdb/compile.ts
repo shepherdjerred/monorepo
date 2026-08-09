@@ -478,7 +478,7 @@ export function compilePrematchQuery(
   const factsSql =
     `WITH accounts AS (${accounts.sql}), ` +
     `facts AS (SELECT a.player_id, a.player_alias, a.discord_id, ` +
-    `p.champion_id, p.queue FROM (${prematchSource.sql}) p ` +
+    `p.champion_id, p.queue, p.observed_at FROM (${prematchSource.sql}) p ` +
     `JOIN accounts a ON a.puuid = p.puuid)`;
   const factsParams = [...accounts.params, ...prematchSource.params];
 

@@ -42,7 +42,40 @@ describe("temporal range resolution", () => {
     expect(
       ranges.current.endDate.getTime() - ranges.current.startDate.getTime(),
     ).toBe(30 * 86_400_000);
-    expect(ranges.comparison?.endDate).toEqual(ranges.current.startDate);
+    expect(ranges.comparison?.endDate.getTime()).toBe(
+      ranges.current.startDate.getTime() - 1,
+    );
+    expect(
+      (ranges.comparison?.endDate.getTime() ?? 0) -
+        (ranges.comparison?.startDate.getTime() ?? 0),
+    ).toBe(
+      ranges.current.endDate.getTime() - ranges.current.startDate.getTime(),
+    );
+  });
+
+  test("keeps inclusive calendar comparisons disjoint and equal-length", () => {
+    const ranges = resolveTemporalRanges(
+      TemporalAnalysisSpecSchema.parse({
+        window: {
+          kind: "calendar",
+          startDate: "2026-03-08",
+          endDate: "2026-03-08",
+        },
+        bucket: "day",
+        comparison: { kind: "previous_period" },
+        timezone: "America/Los_Angeles",
+      }),
+      new Date("2026-04-01T00:00:00.000Z"),
+    );
+    expect(ranges.comparison?.endDate.toISOString()).toBe(
+      "2026-03-08T07:59:59.999Z",
+    );
+    expect(
+      (ranges.comparison?.endDate.getTime() ?? 0) -
+        (ranges.comparison?.startDate.getTime() ?? 0),
+    ).toBe(
+      ranges.current.endDate.getTime() - ranges.current.startDate.getTime(),
+    );
   });
 
   test("clamps selected periods to competition dates", () => {

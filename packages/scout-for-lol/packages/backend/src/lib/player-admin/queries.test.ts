@@ -45,6 +45,7 @@ function makeCompetition(
     updatedTime: new Date("2026-01-01T00:00:00Z"),
     season: null,
     ...overrides,
+    analysisTimezone: overrides.analysisTimezone ?? "UTC",
   };
 }
 

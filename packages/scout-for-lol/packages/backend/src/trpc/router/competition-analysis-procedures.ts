@@ -14,6 +14,7 @@ import {
   analyzeCompetition,
   cachedCompetitionAnalysis,
 } from "#src/league/competition/analysis.ts";
+import { resolveCompetitionAnalysisDates } from "#src/league/competition/analysis-dates.ts";
 import { fetchCompetitionRankHistory } from "#src/reports/duckdb/lake-reads.ts";
 import {
   loadCachedLeaderboard,
@@ -48,19 +49,15 @@ export const competitionAnalysisProcedures = {
         input.guildId,
       );
       const now = new Date();
-      const startDate =
-        input.startDate ??
-        (competition.startDate ?? new Date(now.getTime() - 30 * 86_400_000))
-          .toISOString()
-          .slice(0, 10);
-      const endDate =
-        input.endDate ??
-        (competition.endDate === null || competition.endDate > now
-          ? now
-          : competition.endDate
-        )
-          .toISOString()
-          .slice(0, 10);
+      const { startDate, endDate } = resolveCompetitionAnalysisDates({
+        competition,
+        mode: input.mode,
+        ...(input.startDate === undefined
+          ? {}
+          : { startDate: input.startDate }),
+        ...(input.endDate === undefined ? {} : { endDate: input.endDate }),
+        now,
+      });
       try {
         const cacheKey = [
           input.competitionId.toString(),

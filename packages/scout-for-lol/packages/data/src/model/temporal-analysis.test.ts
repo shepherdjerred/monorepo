@@ -50,6 +50,16 @@ describe("canonical ScoutQL temporal analysis", () => {
     ).toThrow("cannot exceed 365 days");
   });
 
+  test("rejects temporal clauses for current-rank sources", () => {
+    for (const source of ["rank_current", "competition_rank"]) {
+      expect(() =>
+        parseAndCompile(
+          `SELECT player, score FROM ${source} GROUP BY player ANALYZE LAST 30 DAYS IN TIME ZONE 'UTC'`,
+        ),
+      ).toThrow(`ANALYZE is not available for ${source}`);
+    }
+  });
+
   test("rejects ambiguous canonical and legacy temporal controls", () => {
     expect(() =>
       parseAndCompile(

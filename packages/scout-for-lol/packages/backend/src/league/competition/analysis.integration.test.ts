@@ -101,6 +101,55 @@ describe("competition selected-period analysis", () => {
     expect(climb.standings[0]?.score).toBe(400);
   });
 
+  test("ignores selected dates in official mode", async () => {
+    const { alpha, beta, competition } = await setupCompetition({
+      type: "HIGHEST_RANK",
+      queue: "SOLO",
+    });
+    const history: CachedLeaderboard[] = [
+      leaderboard(competition.id, "2026-05-01T00:00:00.000Z", [
+        [alpha.id, "Alpha", 1000, 2],
+        [beta.id, "Beta", 1200, 1],
+      ]),
+      leaderboard(competition.id, "2026-05-31T00:00:00.000Z", [
+        [alpha.id, "Alpha", 1400, 1],
+        [beta.id, "Beta", 1250, 2],
+      ]),
+    ];
+    const official: CachedLeaderboard = leaderboard(
+      competition.id,
+      "2026-05-31T00:00:00.000Z",
+      [[alpha.id, "Alpha", 1400, 1]],
+    );
+
+    const criterion = await analyzeCompetition({
+      prisma,
+      competition,
+      mode: "official",
+      preset: "criterion_score",
+      startDate: "1900-01-01",
+      endDate: "1900-01-02",
+      history,
+      official,
+      now,
+    });
+    expect(criterion.standings).toEqual(official.entries);
+
+    const rankPosition = await analyzeCompetition({
+      prisma,
+      competition,
+      mode: "official",
+      preset: "rank_position",
+      startDate: "1900-01-01",
+      endDate: "1900-01-02",
+      history,
+      official,
+      now,
+    });
+    expect(rankPosition.visualization?.kind).toBe("BUMP_CHART");
+    expect(rankPosition.rowsScanned).toBe(4);
+  });
+
   test("generates queue-aware ScoutQL for every match criterion", () => {
     expect(
       competitionCriterionQuery({

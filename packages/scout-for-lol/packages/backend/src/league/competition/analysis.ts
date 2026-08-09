@@ -20,6 +20,7 @@ import {
   type VisualizationSnapshot,
 } from "@scout-for-lol/data";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import { resolveCompetitionAnalysisDates } from "#src/league/competition/analysis-dates.ts";
 import {
   executeCompiledReportQuery,
   type ReportQueryResult,
@@ -99,11 +100,21 @@ export async function analyzeCompetition(params: {
   now: Date;
 }): Promise<CompetitionAnalysisResult> {
   const preset = CompetitionAnalysisPresetSchema.parse(params.preset);
+  if (preset === "criterion_score" && params.mode === "official") {
+    return {
+      preset,
+      mode: params.mode,
+      standings: params.official?.entries ?? [],
+      visualization: null,
+      rowsScanned: 0,
+    };
+  }
+  const dates = resolveCompetitionAnalysisDates(params);
   const analysis = TemporalAnalysisSpecSchema.parse({
     window: {
       kind: "calendar",
-      startDate: params.startDate,
-      endDate: params.endDate,
+      startDate: dates.startDate,
+      endDate: dates.endDate,
     },
     bucket: "auto",
     timezone: params.competition.analysisTimezone,
@@ -129,15 +140,6 @@ export async function analyzeCompetition(params: {
         (total, snapshot) => total + snapshot.entries.length,
         0,
       ),
-    };
-  }
-  if (preset === "criterion_score" && params.mode === "official") {
-    return {
-      preset,
-      mode: params.mode,
-      standings: params.official?.entries ?? [],
-      visualization: null,
-      rowsScanned: 0,
     };
   }
   if (
