@@ -10,11 +10,11 @@ function secretFragments(value: string): readonly string[] {
   // escaped newlines. Tokenize both representations so a multiline secret
   // cannot be reconstructed one line at a time in diagnostic output.
   const decodedWhitespace = value
-    .replaceAll(/\\n/gu, "\n")
-    .replaceAll(/\\r/gu, "\r")
-    .replaceAll(/\\t/gu, "\t");
+    .replaceAll(String.raw`\n`, "\n")
+    .replaceAll(String.raw`\r`, "\r")
+    .replaceAll(String.raw`\t`, "\t");
   return decodedWhitespace
-    .split(/[\s"'{}\[\],:=]+/u)
+    .split(/[\s"'{}\u{005B}\u{005D},:=]+/u)
     .filter((fragment) => fragment.length >= 8);
 }
 
@@ -111,7 +111,7 @@ export class AgentTaskSecretRedactionController {
   ): Promise<boolean> {
     try {
       await state.refresh();
-      return true;
+      return this.failure === undefined;
     } catch (error: unknown) {
       this.record(error);
       return false;

@@ -213,14 +213,11 @@ function eventType(event: unknown): unknown {
 }
 
 function isUnclosedScheduledEvent(
-  scheduledEventId: string,
+  scheduledId: string,
   startedEventIds: ReadonlySet<string>,
   closedEventIds: ReadonlySet<string>,
 ): boolean {
-  return (
-    !startedEventIds.has(scheduledEventId) &&
-    !closedEventIds.has(scheduledEventId)
-  );
+  return !startedEventIds.has(scheduledId) && !closedEventIds.has(scheduledId);
 }
 
 export function classifyWorkflowTimeoutHistory(

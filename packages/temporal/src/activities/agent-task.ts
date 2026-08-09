@@ -1,5 +1,3 @@
-import { Context } from "@temporalio/activity";
-import * as Sentry from "@sentry/bun";
 import { agentSubprocessFailure } from "#activities/agent-task-failures.ts";
 import {
   agentSubprocessIdleSeconds,
@@ -9,7 +7,7 @@ import {
   agentTaskSubprocessDurationSeconds,
   agentTaskSubprocessExitTotal,
 } from "#observability/metrics.ts";
-import { getTraceContext, withSpan } from "#observability/tracing.ts";
+import { withSpan } from "#observability/tracing.ts";
 import { provisionWorkdir } from "#lib/pr-review-workdir.ts";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import { buildAgentTaskCommand } from "#activities/agent-task-command.ts";
@@ -19,7 +17,6 @@ import {
   envForProvider,
   refreshAgentTaskSecretTokenStateInBackground,
 } from "#activities/agent-task-env.ts";
-import { workflowExecutionContext } from "#activities/temporal-context.ts";
 import { runTrackedAgentSubprocess } from "#shared/agent-subprocess.ts";
 import { summarizeClaudeStreamLine } from "#shared/claude-result.ts";
 import {
@@ -35,15 +32,22 @@ import { redactSecrets } from "#shared/redact.ts";
 import { startAgentTaskLlmTrace } from "#activities/agent-task-llm-trace.ts";
 import type { TrackedAgentResult } from "#shared/agent-subprocess.ts";
 import {
+  activityCancellationSignalOrUndefined,
+  captureWithContext,
+  currentWorkflowType,
+  jsonLog,
+  safeHeartbeat,
+  startToCloseTimeoutMsOrUndefined,
+  workflowId,
+} from "#activities/agent-task-runtime.ts";
+import {
   cleanup,
   pauseSchedule,
   scheduleFollowUp,
   sendEmail,
 } from "./agent-task-side-activities.ts";
-const COMPONENT = "agent-task";
 const HEARTBEAT_INTERVAL_MS = 10_000;
 const MOUNTED_SECRET_REFRESH_INTERVAL_MS = 10_000;
-const DEFAULT_WORKFLOW_TYPE = "agentTaskWorkflow";
 
 export type PrepareAgentTaskWorkdirInput = {
   input: AgentTaskInput;
@@ -60,90 +64,6 @@ export type RunAgentTaskResult = AgentTaskResultPayload & {
   model: string;
   durationMs: number;
 };
-function jsonLog(
-  level: "info" | "warning" | "error",
-  message: string,
-  fields: Record<string, unknown> = {},
-): void {
-  const info = activityInfoOrUndefined();
-  const base: Record<string, unknown> = {
-    level,
-    msg: message,
-    component: COMPONENT,
-    ...getTraceContext(),
-    ...fields,
-  };
-  if (info !== undefined) {
-    Object.assign(base, info);
-  }
-  console.warn(JSON.stringify(base));
-}
-function activityInfoOrUndefined(): Record<string, unknown> | undefined {
-  try {
-    const info = Context.current().info;
-    return {
-      workflow: info.workflowType,
-      ...workflowExecutionContext(info),
-      activity: info.activityType,
-      attempt: info.attempt,
-    };
-  } catch {
-    return undefined;
-  }
-}
-function captureWithContext(
-  error: unknown,
-  extra: Record<string, unknown> = {},
-): void {
-  Sentry.withScope((scope) => {
-    scope.setTag("component", COMPONENT);
-    const info = activityInfoOrUndefined();
-    if (info !== undefined) {
-      scope.setTag("workflow", String(info["workflow"]));
-      scope.setTag("activity", String(info["activity"]));
-    }
-    scope.setContext("agentTask", { ...info, ...extra });
-    Sentry.captureException(error);
-  });
-}
-function safeHeartbeat(payload: Record<string, unknown>): void {
-  try {
-    Context.current().heartbeat(payload);
-  } catch {
-    // Local scripts can call activities directly; outside Temporal this is a no-op.
-  }
-}
-function activityCancellationSignalOrUndefined(): AbortSignal | undefined {
-  try {
-    return Context.current().cancellationSignal;
-  } catch {
-    return undefined;
-  }
-}
-function currentWorkflowType(): string {
-  try {
-    return Context.current().info.workflowType ?? DEFAULT_WORKFLOW_TYPE;
-  } catch {
-    return DEFAULT_WORKFLOW_TYPE;
-  }
-}
-function startToCloseTimeoutMsOrUndefined(): number | undefined {
-  try {
-    return Context.current().info.startToCloseTimeoutMs;
-  } catch {
-    return undefined;
-  }
-}
-function workflowId(): string {
-  try {
-    return (
-      Context.current().info.workflowExecution?.workflowId ??
-      `agent-task-local-${crypto.randomUUID()}`
-    );
-  } catch {
-    return `agent-task-local-${crypto.randomUUID()}`;
-  }
-}
 function splitRepo(fullName: string): { owner: string; repo: string } {
   const [owner, repo, extra] = fullName.split("/");
   if (owner === undefined || repo === undefined || extra !== undefined) {
@@ -237,11 +157,7 @@ async function runAgent(
         if (redactionFailureController.failure !== undefined) {
           return false;
         }
-        const refreshed =
-          await redactionFailureController.refreshBeforeOutput(
-            secretTokenState,
-          );
-        return refreshed && redactionFailureController.failure === undefined;
+        return redactionFailureController.refreshBeforeOutput(secretTokenState);
       };
       let result: TrackedAgentResult;
       try {

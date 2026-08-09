@@ -33,7 +33,7 @@ describe("agent-task secret token state", () => {
   it("tokenizes multiline environment credentials for redaction", () => {
     const pemBodyLine = "multiline-private-key-body-line";
     const tokens = agentTaskSecretTokens(undefined, {
-      GITHUB_APP_PRIVATE_KEY: `-----BEGIN PRIVATE KEY-----\n${pemBodyLine}\n-----END PRIVATE KEY-----`,
+      GITHUB_APP_PRIVATE_KEY: `credential-header\n${pemBodyLine}\ncredential-footer`,
     });
 
     expect(tokens).toContain(pemBodyLine);
@@ -42,7 +42,7 @@ describe("agent-task secret token state", () => {
   it("tokenizes escaped multiline environment credentials for redaction", () => {
     const pemBodyLine = "escaped-multiline-private-key-body";
     const tokens = agentTaskSecretTokens(undefined, {
-      GITHUB_APP_PRIVATE_KEY: `-----BEGIN PRIVATE KEY-----\\n${pemBodyLine}\\n-----END PRIVATE KEY-----`,
+      GITHUB_APP_PRIVATE_KEY: String.raw`credential-header\n${pemBodyLine}\ncredential-footer`,
     });
 
     expect(tokens).toContain(pemBodyLine);
