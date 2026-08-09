@@ -26,6 +26,7 @@ import {
   invalidateChangedCompletionRestores,
   invalidateCompletionRestores,
   isOccurrenceEdit,
+  isTaskOccurrenceEdit,
   parseAcknowledgedCompletionRestores,
   pruneCompletionRestores,
   serializeAcknowledgedCompletionRestores,
@@ -125,18 +126,12 @@ export class TaskStore {
   ): Promise<RecurringCompletionRestore | undefined> {
     return this.enqueueOperation(async () => {
       const target = this.resolveTaskId(id);
-      if (
-        this.queue.pending.some(
-          (command) =>
-            isOccurrenceEdit(command) &&
-            command.type === "update" &&
-            command.taskId === target,
-        )
-      ) {
-        return;
-      }
+      const pending = this.queue.pending;
       let pendingRestore: RecurringCompletionRestore | undefined;
-      for (const command of [...this.queue.pending].reverse()) {
+      let completionIndex = -1;
+      for (let index = pending.length - 1; index >= 0; index -= 1) {
+        const command = pending[index];
+        if (command === undefined) continue;
         if (
           command.type === "set_instance_complete" &&
           command.taskId === target &&
@@ -145,11 +140,22 @@ export class TaskStore {
           command.restore !== undefined
         ) {
           pendingRestore = command.restore;
+          completionIndex = index;
           break;
         }
       }
       if (pendingRestore !== undefined) {
+        if (
+          pending
+            .slice(completionIndex + 1)
+            .some((command) => isTaskOccurrenceEdit(command, target))
+        ) {
+          return;
+        }
         return pendingRestore;
+      }
+      if (pending.some((command) => isTaskOccurrenceEdit(command, target))) {
+        return;
       }
       const key = completionRestoreKey(target, date);
       const stored = this.acknowledgedCompletionRestores.get(key);

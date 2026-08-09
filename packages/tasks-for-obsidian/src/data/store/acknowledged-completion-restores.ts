@@ -54,6 +54,17 @@ export function isOccurrenceEdit(command: Command): boolean {
   );
 }
 
+export function isTaskOccurrenceEdit(
+  command: Command,
+  targetId: TaskId,
+): boolean {
+  return (
+    isOccurrenceEdit(command) &&
+    command.type === "update" &&
+    command.taskId === targetId
+  );
+}
+
 export function invalidateCompletionRestores(
   restores: ReadonlyMap<string, StoredCompletionRestore>,
   id: TaskId,

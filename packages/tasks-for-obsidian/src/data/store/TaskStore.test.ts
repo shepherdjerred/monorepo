@@ -354,6 +354,43 @@ describe("TaskStore restore validation", () => {
   });
 });
 
+describe("TaskStore restore ordering", () => {
+  test("keeps a restore captured after an earlier queued occurrence edit", async () => {
+    const task = makeTask({
+      recurrence: "FREQ=WEEKLY",
+      scheduled: "2026-08-08",
+    });
+    const { store, queue } = makeStore(
+      memoryQueueStorage(),
+      memoryStoreStorage({ tasks: [task] }),
+    );
+    await store.restore();
+    const restore = {
+      scheduled: "2026-08-08",
+      due: null,
+      recurrence: "FREQ=MONTHLY",
+      skipped: false,
+    };
+    await store.dispatch({
+      type: "update",
+      taskId: task.id,
+      payload: { recurrence: "FREQ=MONTHLY" },
+    });
+    await store.dispatch({
+      type: "set_instance_complete",
+      taskId: task.id,
+      date: "2026-08-08",
+      completed: true,
+      restore,
+    });
+
+    expect(queue.pending).toHaveLength(2);
+    await expect(
+      store.getPendingCompletionRestore(task.id, "2026-08-08"),
+    ).resolves.toEqual(restore);
+  });
+});
+
 describe("TaskStore pending restores", () => {
   test("reads a pending restore after an in-flight create remaps its id", async () => {
     const backingStorage = memoryStoreStorage();
