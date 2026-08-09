@@ -3,7 +3,10 @@ import type {
   PlayerConfigEntry,
   RawCurrentGameInfo,
 } from "@scout-for-lol/data/index.ts";
-import { isArenaQueueOrMode } from "@scout-for-lol/data/index.ts";
+import {
+  isArenaQueueOrMode,
+  MatchIdSchema,
+} from "@scout-for-lol/data/index.ts";
 import { getAccountsWithState, prisma } from "#src/database/index.ts";
 import { getActiveServerIds } from "#src/discord/utils/guild-membership.ts";
 import { getActiveGame } from "#src/league/api/spectator.ts";
@@ -384,7 +387,12 @@ export async function checkActiveGames(
           gameInfo,
           trackedPlayersInGame,
         );
-        await recordPrematchMessageIds(gameInfo.gameId, prematchMessageIds);
+        await recordPrematchMessageIds(
+          MatchIdSchema.parse(
+            `${gameInfo.platformId}_${gameInfo.gameId.toString()}`,
+          ),
+          prematchMessageIds,
+        );
 
         prematchDetectionsTotal.inc({ status: "detected" });
         gamesDetected++;

@@ -3,15 +3,16 @@ import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
 
 type ActiveGameUpdateArgs = {
   where: { gameId: bigint };
-  data: { prematchMessageIds: string };
+  data: { prematchMessageIds: string; prematchMatchId: string };
 };
 
 type ActiveGameFindUniqueArgs = {
   where: { gameId: bigint };
-  select: { prematchMessageIds: true };
+  select: { prematchMessageIds: true; prematchMatchId: true };
 };
 
 let storedPrematchMessageIds: string | null = null;
+let storedPrematchMatchId: string | null = null;
 let lastUpdate: ActiveGameUpdateArgs | undefined;
 
 const fakePrisma = {
@@ -19,13 +20,17 @@ const fakePrisma = {
     update: mock(async (args: ActiveGameUpdateArgs) => {
       lastUpdate = args;
       storedPrematchMessageIds = args.data.prematchMessageIds;
+      storedPrematchMatchId = args.data.prematchMatchId;
       return {};
     }),
     findUnique: mock(async (_args: ActiveGameFindUniqueArgs) => {
       if (storedPrematchMessageIds === null) {
         return null;
       }
-      return { prematchMessageIds: storedPrematchMessageIds };
+      return {
+        prematchMessageIds: storedPrematchMessageIds,
+        prematchMatchId: storedPrematchMatchId,
+      };
     }),
   },
 };
@@ -46,6 +51,7 @@ const {
 describe("prematch message IDs", () => {
   beforeEach(() => {
     storedPrematchMessageIds = null;
+    storedPrematchMatchId = null;
     lastUpdate = undefined;
     fakePrisma.activeGame.update.mockClear();
     fakePrisma.activeGame.findUnique.mockClear();
@@ -53,7 +59,7 @@ describe("prematch message IDs", () => {
 
   test("persists and retrieves message IDs by channel", async () => {
     await recordPrematchMessageIds(
-      123,
+      MatchIdSchema.parse("NA1_123"),
       new Map([
         ["channel-one", "message-one"],
         ["channel-two", "message-two"],
@@ -67,6 +73,7 @@ describe("prematch message IDs", () => {
           "channel-one": "message-one",
           "channel-two": "message-two",
         }),
+        prematchMatchId: "NA1_123",
       },
     });
     await expect(getPrematchMessageIds(123)).resolves.toEqual(
@@ -80,7 +87,7 @@ describe("prematch message IDs", () => {
   test("returns no reply targets for a null or empty record", async () => {
     await expect(getPrematchMessageIds(123)).resolves.toEqual(new Map());
 
-    await recordPrematchMessageIds(123, new Map());
+    await recordPrematchMessageIds(MatchIdSchema.parse("NA1_123"), new Map());
 
     await expect(getPrematchMessageIds(123)).resolves.toEqual(new Map());
   });
@@ -96,7 +103,7 @@ describe("prematch message IDs", () => {
 
   test("resolves the numeric game ID from a match ID", async () => {
     await recordPrematchMessageIds(
-      123,
+      MatchIdSchema.parse("NA1_123"),
       new Map([["channel-one", "message-one"]]),
     );
 
@@ -105,6 +112,17 @@ describe("prematch message IDs", () => {
     ).resolves.toEqual(new Map([["channel-one", "message-one"]]));
     await expect(
       getPrematchMessageIdsForMatchId(MatchIdSchema.parse("NA1_not-a-game")),
+    ).resolves.toEqual(new Map());
+  });
+
+  test("does not reuse reply targets from another platform", async () => {
+    await recordPrematchMessageIds(
+      MatchIdSchema.parse("NA1_123"),
+      new Map([["channel-one", "message-one"]]),
+    );
+
+    await expect(
+      getPrematchMessageIdsForMatchId(MatchIdSchema.parse("EUW1_123")),
     ).resolves.toEqual(new Map());
   });
 });

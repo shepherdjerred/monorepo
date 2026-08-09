@@ -526,6 +526,7 @@ model ActiveGame {
   gameId             BigInt   @unique // Riot game ID (from Spectator V5 API)
   trackedPuuids      String // JSON array of tracked puuids detected in this game
   prematchMessageIds String? // JSON object: Discord channel ID -> prematch message ID
+  prematchMatchId    String? // Platform-qualified Riot match ID for reply-target validation
   detectedAt         DateTime // When we first detected this game
   expiresAt          DateTime // TTL: auto-cleanup after this time (detectedAt + 2 hours)
   updatedAt          DateTime @updatedAt

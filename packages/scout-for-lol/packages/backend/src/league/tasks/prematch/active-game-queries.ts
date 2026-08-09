@@ -104,25 +104,32 @@ export async function upsertActiveGame(
  * channel to its own corresponding prematch message.
  */
 export async function recordPrematchMessageIds(
-  gameId: number,
+  matchId: MatchId,
   messageIds: ReadonlyMap<string, string>,
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<void> {
+  const suffix = matchId.split("_").at(-1);
+  if (suffix === undefined || !/^\d+$/.test(suffix)) {
+    throw new Error(`Invalid numeric game ID in match ID ${matchId}`);
+  }
   const serialized = Object.fromEntries(messageIds.entries());
   try {
     await prismaClient.activeGame.update({
-      where: { gameId: BigInt(gameId) },
-      data: { prematchMessageIds: JSON.stringify(serialized) },
+      where: { gameId: BigInt(suffix) },
+      data: {
+        prematchMessageIds: JSON.stringify(serialized),
+        prematchMatchId: matchId,
+      },
     });
   } catch (error) {
     logger.error(
-      `❌ Error recording prematch message IDs for game ${gameId.toString()}:`,
+      `❌ Error recording prematch message IDs for match ${matchId}:`,
       error,
     );
     Sentry.captureException(error, {
       tags: {
         source: "prematch-record-message-ids",
-        gameId: gameId.toString(),
+        matchId,
       },
     });
     throw error;
@@ -137,7 +144,7 @@ export async function getPrematchMessageIds(
   const gameIdBigInt = typeof gameId === "bigint" ? gameId : BigInt(gameId);
   const row = await prismaClient.activeGame.findUnique({
     where: { gameId: gameIdBigInt },
-    select: { prematchMessageIds: true },
+    select: { prematchMessageIds: true, prematchMatchId: true },
   });
   if (row === null) {
     return new Map();
@@ -154,7 +161,16 @@ export async function getPrematchMessageIdsForMatchId(
   if (suffix === undefined || !/^\d+$/.test(suffix)) {
     return new Map();
   }
-  return getPrematchMessageIds(BigInt(suffix), prismaClient);
+  const row = await prismaClient.activeGame.findUnique({
+    where: { gameId: BigInt(suffix) },
+    select: { prematchMessageIds: true, prematchMatchId: true },
+  });
+  if (row?.prematchMatchId !== matchId) {
+    return new Map();
+  }
+  return new Map(
+    Object.entries(parsePrematchMessageIds(row.prematchMessageIds)),
+  );
 }
 
 /**
