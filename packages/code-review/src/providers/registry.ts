@@ -1,23 +1,22 @@
 import { z } from "zod";
 import type { ReviewProvider } from "../types.ts";
-import { codexProvider } from "./codex.ts";
-import { greptileProvider } from "./greptile.ts";
+import { qodoProvider } from "./qodo.ts";
 
 /** Every registered review provider, keyed by its stable id. */
 export const PROVIDERS = {
-  greptile: greptileProvider,
-  codex: codexProvider,
+  qodo: qodoProvider,
 } as const;
 
 // Keep these ids in sync with the keys of PROVIDERS above.
-export const ProviderIdSchema = z.enum(["greptile", "codex"]);
+export const ProviderIdSchema = z.enum(["qodo"]);
 export type ProviderId = z.infer<typeof ProviderIdSchema>;
 
 /**
- * The active provider when `REVIEW_PROVIDER` is unset. Codex is live after the
- * Greptile → Codex cutover; change this (or set the env var) to swap.
+ * The active provider when `REVIEW_PROVIDER` is unset. Qodo is the only active
+ * provider; the older provider modules remain exported for dormant consumers
+ * such as the PR-fleet fixtures, but cannot be selected by the CI gate.
  */
-export const DEFAULT_PROVIDER_ID: ProviderId = "codex";
+export const DEFAULT_PROVIDER_ID: ProviderId = "qodo";
 
 /**
  * Resolve a provider by id (defaulting to {@link DEFAULT_PROVIDER_ID}). Throws

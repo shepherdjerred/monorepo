@@ -33,15 +33,18 @@ import { validateImageMigrationContracts } from "./validate-image-migration.ts";
 import { validateReleasePipelineContracts } from "./validate-pipeline-release.ts";
 import { validatePlaywrightLanes } from "./validate-pipeline-playwright.ts";
 import { validatePipelineResourceContracts } from "./validate-pipeline-resources.ts";
+import { validatePipelineClarity } from "./validate-pipeline-clarity.ts";
 import { validateReportingPipeline } from "./validate-reporting-pipeline.ts";
 import { fixedCorpusMode, lanePaths, summarySteps } from "./migration-core.ts";
 
 const PIPELINE_PATH = ".buildkite/pipeline.yml";
 const GLOBAL_IF_CHANGED = [
   '".buildkite/pipeline.yml"',
+  '".buildkite/main-bootstrap.yml"',
   '".buildkite/scripts/ci-changed.ts"',
   '".buildkite/scripts/migration-core.ts"',
   '".buildkite/scripts/prepare-ci-changed-base.ts"',
+  '".buildkite/scripts/select-main-pipeline.ts"',
   '".buildkite/scripts/upload-pipeline.sh"',
 ];
 const PATH_GATED_PR_KEYS = new Set([
@@ -83,6 +86,12 @@ const { stepStarts, keys, stepBlocks } = collectStepBlocks(lines, {
 });
 
 validatePipelineResourceContracts(pipeline, stepBlocks);
+for (const [key, block] of stepBlocks) {
+  if (block.includes("command:") && !block.includes("timeout_in_minutes:")) {
+    fail(`command step ${key} must declare timeout_in_minutes`);
+  }
+}
+
 requireIncludes(
   stepBlocks.get("verify"),
   "write-coverage-summary.ts --allow-partial",
@@ -111,26 +120,19 @@ for (const step of summarySteps) {
   );
 }
 
-for (const key of [
-  "verify",
-  "playwright-e2e-main",
-  "resume-build-main",
-  "docker-e2e-main",
+const mainBootstrap = await Bun.file(".buildkite/main-bootstrap.yml").text();
+for (const required of [
+  "ci-selector-base",
+  "select-main-pipeline.ts",
+  "command: bun --no-install .buildkite/scripts/select-main-pipeline.ts",
+  "timeout_in_minutes: 5",
+  "soft_fail:",
+  'image: "${CI_BASE_IMAGE}"',
+  "name: buildkite-git-mirrors",
 ]) {
-  const block = stepBlocks.get(key);
-  requireIncludes(
-    block,
-    "depends_on: ci-selector-base",
-    `main selector consumer ${key} does not wait for ci-selector-base`,
-  );
-}
-const selectorStep = stepBlocks.get("ci-selector-base");
-if (
-  selectorStep === undefined ||
-  !selectorStep.includes("soft_fail: true") ||
-  !selectorStep.includes("prepare-ci-changed-base.ts")
-) {
-  fail("ci-selector-base must be a soft-fail metadata preparation step");
+  if (!mainBootstrap.includes(required)) {
+    fail(`main bootstrap is missing selector invariant ${required}`);
+  }
 }
 
 requireIncludes(
@@ -319,6 +321,8 @@ for (const caddyConfigInput of caddyConfigInputs) {
 }
 
 const trivy = stepBlocks.get("trivy");
+validatePipelineClarity(stepBlocks);
+
 for (const required of [
   '".trivyignore"',
   '"**/go.mod"',
@@ -397,9 +401,7 @@ for (const [stepKey, step] of [
 }
 
 await validateReleasePipelineContracts({
-  pipeline,
   prDryrun,
-  selectorStep,
   stepBlocks,
 });
 
@@ -415,10 +417,14 @@ await assertInstallFreeEntrypointsHaveNoBareImports(stepBlocks);
 // --no-install so a missing filtered dependency fails instead of populating
 // Bun's global cache.
 const bakeImages = await Bun.file(".buildkite/scripts/bake-images.ts").text();
+const mainSelector = await Bun.file(
+  ".buildkite/scripts/select-main-pipeline.ts",
+).text();
 assertNoImplicitBunRuntime([
   { path: PIPELINE_PATH, source: pipeline },
   { path: ".buildkite/scripts/ci-changed.ts", source: ciChanged },
   { path: ".buildkite/scripts/bake-images.ts", source: bakeImages },
+  { path: ".buildkite/scripts/select-main-pipeline.ts", source: mainSelector },
 ]);
 
 await assertNoNestedBunRuntime([
@@ -433,6 +439,7 @@ await assertNoNestedBunRuntime([
   "packages/homelab/scripts/smoke-images.ts",
   "packages/homelab/src/cdk8s/scripts/check-caddyfile.ts",
   "packages/homelab/src/cdk8s/scripts/generate-helm-types.ts",
+  ".buildkite/scripts/select-main-pipeline.ts",
 ]);
 
 await assertPackageTokens([

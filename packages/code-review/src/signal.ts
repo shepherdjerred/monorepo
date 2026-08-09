@@ -14,6 +14,7 @@ export const CompletionSignalSchema = z.enum([
   "check-run",
   "review-at-head",
   "thumbsup-reaction",
+  "issue-comment",
   "none",
 ]);
 export type CompletionSignal = z.infer<typeof CompletionSignalSchema>;
@@ -32,7 +33,7 @@ export const ReviewSignalEventSchema = z.object({
   schema: z.literal(REVIEW_SIGNAL_SCHEMA),
   /** ISO timestamp the observation was stamped (caller-provided). */
   ts: z.string(),
-  /** Provider id (`greptile` | `codex` | …). */
+  /** Active provider id (`qodo` in CI; dormant adapters remain testable). */
   provider: z.string(),
   pr: z.number().int().positive(),
   head_sha: z.string(),

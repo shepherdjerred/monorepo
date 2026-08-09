@@ -51,6 +51,13 @@ export type ReviewThread = {
   priority: number | null;
 };
 
+/** A provider-authored issue comment used as a review completion signal. */
+export type ReviewIssueComment = {
+  body: string;
+  updatedAt: string | null;
+  url: string | null;
+};
+
 /**
  * How the gate learns that a provider has finished reviewing the head commit.
  *
@@ -62,10 +69,14 @@ export type ReviewThread = {
  *   mode leave no artifact on a clean PR, so `cleanSignal` says how to detect
  *   "reviewed, nothing to flag" — currently a 👍 reaction from the provider
  *   (Codex).
+ * - `issue-comment`: the provider maintains a review issue comment and updates
+ *   it for each head. The provider binds the comment's `updated_at` to the
+ *   current head and may parse findings from the comment body (Qodo).
  */
 export type CompletionStrategy =
   | { kind: "check-run"; namePattern: RegExp }
-  | { kind: "review-at-head"; cleanSignal: "thumbsup-reaction" };
+  | { kind: "review-at-head"; cleanSignal: "thumbsup-reaction" }
+  | { kind: "issue-comment"; marker: string };
 
 /**
  * How a provider signals it deliberately skipped review (no reviewable files,
@@ -112,6 +123,8 @@ export type ReviewProvider = {
   authorLogins: readonly string[];
   /** Parse the severity level (0..3) from a review comment body, or null. */
   parseSeverity: (body: string | null) => number | null;
+  /** Parse provider findings from a persistent issue-level review comment. */
+  parseIssueComment?: (comment: ReviewIssueComment) => readonly ReviewThread[];
   /** How the gate detects the provider finished reviewing the head commit. */
   completion: CompletionStrategy;
   /** How the provider signals a deliberate skip, or null if it has none. */

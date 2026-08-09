@@ -12,9 +12,7 @@ import {
 } from "./update-ci-image-pin-core.ts";
 
 type ReleaseValidationOptions = {
-  readonly pipeline: string;
   readonly prDryrun: string | undefined;
-  readonly selectorStep: string | undefined;
   readonly stepBlocks: ReadonlyMap<string, string>;
 };
 
@@ -149,7 +147,7 @@ function validateReleaseSteps({
     [
       "helm-push",
       [
-        "buildkite-agent meta-data get image-digests",
+        "read-buildkite-handoff.ts image-digests images",
         "HOMELAB_IMAGE_DIGESTS_JSON",
         "--filter homelab --filter '@homelab/cdk8s'",
         "suspend-auto-sync apps",
@@ -160,7 +158,7 @@ function validateReleaseSteps({
     [
       "argocd-sync",
       [
-        "buildkite-agent meta-data get image-digests",
+        "read-buildkite-handoff.ts image-digests images",
         "--filter homelab --filter '@homelab/cdk8s'",
         "concurrency_group: monorepo/homelab-release",
         'artifact download "argocd-release-expected.json"',
@@ -276,18 +274,32 @@ function validatePublishing(stepBlocks: ReadonlyMap<string, string>): void {
   validateVersionCommitBackInstall(stepBlocks.get("version-commit-back"));
 }
 
-async function validateSelectorAndUpload({
-  pipeline,
-  selectorStep,
-}: Pick<ReleaseValidationOptions, "pipeline" | "selectorStep">): Promise<void> {
+async function validateSelectorAndUpload(): Promise<void> {
+  const pipeline = await Bun.file(".buildkite/pipeline.yml").text();
+  const bootstrapPipeline = await Bun.file(
+    ".buildkite/main-bootstrap.yml",
+  ).text();
   const selectorPreparation = await Bun.file(
     ".buildkite/scripts/prepare-ci-changed-base.ts",
   ).text();
   if (
     !selectorPreparation.includes("AbortSignal.timeout") ||
-    selectorStep?.includes("timeout_in_minutes: 2") !== true
+    !bootstrapPipeline.includes("timeout_in_minutes: 5") ||
+    !bootstrapPipeline.includes("select-main-pipeline.ts")
   ) {
-    fail("main selector API lookup is not time-bounded");
+    fail("main selector upload path is not time-bounded");
+  }
+  for (const required of [
+    'image: "${CI_BASE_IMAGE}"',
+    "imagePullPolicy: IfNotPresent",
+    "envFrom:",
+    "buildkite-ci-secrets",
+    "name: buildkite-git-mirrors",
+    "mountPath: /buildkite/git-mirrors",
+  ]) {
+    if (!bootstrapPipeline.includes(required)) {
+      fail(`main bootstrap is missing ${required}`);
+    }
   }
 
   const uploadPipeline = await Bun.file(
@@ -302,6 +314,7 @@ async function validateSelectorAndUpload({
   if (
     !uploadPipeline.includes("git diff --no-renames --name-only") ||
     !uploadPipeline.includes("--changed-files-path") ||
+    !uploadPipeline.includes("main-bootstrap.yml") ||
     !tofuPipeline.includes("sh .buildkite/scripts/upload-pipeline.sh")
   ) {
     fail("pipeline upload can omit the source side of renames");
@@ -418,8 +431,5 @@ export async function validateReleasePipelineContracts(
 ): Promise<void> {
   validateReleaseSteps(options);
   validatePublishing(options.stepBlocks);
-  await Promise.all([
-    validateSelectorAndUpload(options),
-    validatePlaywrightImage(),
-  ]);
+  await Promise.all([validateSelectorAndUpload(), validatePlaywrightImage()]);
 }

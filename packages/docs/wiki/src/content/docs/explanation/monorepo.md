@@ -76,6 +76,7 @@ the only feedback channel an unattended system has.
 
 ## Related
 
+- [Why the CI pipeline has so many steps](/explanation/ci-pipeline-shape/) — what each lane covers
 - [About the homelab](/explanation/homelab/overview/) — where most of it runs
 - [Why Temporal](/explanation/temporal/overview/) — where the automation lives
 - [How this wiki works](/explanation/how-this-wiki-works/)

@@ -14,6 +14,20 @@ SCRIPT_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 # shellcheck source=.buildkite/scripts/ci-image-refs.sh
 . "$SCRIPT_DIR/ci-image-refs.sh"
 
+if [ "${CI_IO_FIXED_CORPUS:-}" != "" ] && [ "${CI_IO_FIXED_CORPUS:-}" != true ]; then
+  echo 'CI_IO_FIXED_CORPUS must be exactly "true" when set' >&2
+  exit 1
+fi
+if [ "${CI_IO_FIXED_CORPUS:-}" = true ] && [ "${BUILDKITE_BRANCH:-}" != main ]; then
+  echo "CI_IO_FIXED_CORPUS is main-only; BUILDKITE_BRANCH was ${BUILDKITE_BRANCH:-unset}" >&2
+  exit 1
+fi
+
+if [ "${BUILDKITE_BRANCH:-}" = main ]; then
+  buildkite-agent pipeline upload .buildkite/main-bootstrap.yml
+  exit 0
+fi
+
 fail_open() {
   echo "WARN: $1; scheduling every path-gated lane" >&2
   printf '.buildkite/pipeline.yml\n' > "$changed_files"

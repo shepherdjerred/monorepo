@@ -265,7 +265,7 @@ test("pipeline selects Scout for a source change or exact beta candidate", async
   expect(beta).not.toContain("cancel_on_build_failing");
   const prodStart = pipeline.indexOf("key: scout-prod-reconcile");
   const prodEnd = pipeline.indexOf(
-    'label: ":terraform: tofu apply (cloudflare',
+    'label: ":terraform: OpenTofu apply — Cloudflare after tunnel gate',
     prodStart,
   );
   expect(pipeline.slice(tagStart, prodEnd)).not.toContain(

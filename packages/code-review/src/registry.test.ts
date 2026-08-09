@@ -2,21 +2,22 @@ import { describe, expect, test } from "bun:test";
 import { DEFAULT_PROVIDER_ID, resolveProvider } from "./providers/registry.ts";
 
 describe("resolveProvider", () => {
-  test("defaults to Codex", () => {
-    expect(DEFAULT_PROVIDER_ID).toBe("codex");
-    expect(resolveProvider().id).toBe("codex");
-    expect(resolveProvider(null).id).toBe("codex");
-    expect(resolveProvider("").id).toBe("codex");
-    expect(resolveProvider("  ").id).toBe("codex");
+  test("defaults to the required Qodo provider", () => {
+    expect(DEFAULT_PROVIDER_ID).toBe("qodo");
+    expect(resolveProvider().id).toBe("qodo");
+    expect(resolveProvider(null).id).toBe("qodo");
+    expect(resolveProvider("").id).toBe("qodo");
+    expect(resolveProvider("  ").id).toBe("qodo");
   });
 
-  test("resolves greptile (case-insensitive, trimmed)", () => {
-    expect(resolveProvider("greptile").id).toBe("greptile");
-    expect(resolveProvider("  GREPTILE ").id).toBe("greptile");
+  test("resolves Qodo (case-insensitive, trimmed)", () => {
+    expect(resolveProvider("qodo").id).toBe("qodo");
+    expect(resolveProvider("  QODO ").id).toBe("qodo");
   });
 
-  test("throws loudly on an unknown provider", () => {
-    expect(() => resolveProvider("coderabbit")).toThrow(
+  test("rejects retired providers", () => {
+    expect(() => resolveProvider("codex")).toThrow(/Unknown review provider/);
+    expect(() => resolveProvider("greptile")).toThrow(
       /Unknown review provider/,
     );
   });

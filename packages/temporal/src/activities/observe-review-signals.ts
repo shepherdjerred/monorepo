@@ -141,8 +141,8 @@ async function buildSignalEvent(input: {
 }): Promise<ReviewSignalEvent> {
   const { provider, repo, prNumber, head, token } = input;
 
-  // Head push time first — `resolveReviewState` needs it to bind a 👍 reaction
-  // to the current head. Then resolve completion state, and fetch threads
+  // Head push time first — `resolveReviewState` needs it to bind a provider's
+  // commit-less completion signal to the current head. Then resolve state, and fetch threads
   // strictly AFTER (never concurrently): a concurrent thread query can capture
   // the pre-review snapshot while the state query observes the completed review,
   // archiving a "reviewed" event that undercounts the newly-created findings and

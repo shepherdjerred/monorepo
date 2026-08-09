@@ -3,8 +3,8 @@
  * finished reviewing the PR head commit AND every provider review comment that
  * still applies to the latest revision has been resolved.
  *
- * Provider-neutral: the active provider (Greptile, Codex, …) is chosen by
- * `REVIEW_PROVIDER` (default `codex`). All provider-specific knowledge — how
+ * Provider-neutral: the active provider (Qodo in CI) is chosen by
+ * `REVIEW_PROVIDER` (default `qodo`). All provider-specific knowledge — how
  * completion is detected (a check-run vs a review-at-head + 👍 reaction), how
  * severity badges are parsed, how a deliberate skip is signalled — lives in
  * `@shepherdjerred/code-review`. This script only drives the poll loop and
@@ -381,11 +381,14 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
         return;
       }
 
-      // Only the review-at-head clean-👍 path binds by head-push time; a
-      // check-run provider (e.g. Greptile) never reads it, so don't make the
-      // Activity endpoint a gate prerequisite for it — an endpoint outage must
-      // not fail/timeout a gate that would otherwise pass on a valid check-run.
-      if (provider.completion.kind === "review-at-head") {
+      // Review-at-head and issue-comment providers bind their completion to the
+      // exact head push. A check-run provider (e.g. Greptile) never reads this
+      // timestamp, so don't make the Activity endpoint a prerequisite for a
+      // gate that can otherwise pass on a valid check-run.
+      if (
+        provider.completion.kind === "review-at-head" ||
+        provider.completion.kind === "issue-comment"
+      ) {
         headPushedAt ??= await fetchHeadPushedAt({
           repo,
           sha: head,

@@ -15,3 +15,4 @@ export {
 } from "./providers/registry.ts";
 export { greptileProvider } from "./providers/greptile.ts";
 export { codexProvider } from "./providers/codex.ts";
+export { qodoProvider } from "./providers/qodo.ts";

@@ -1,6 +1,6 @@
-# Static Buildkite pipeline — no generator. PR lanes use Buildkite's native
-# `if_changed`; main lanes use the fail-open, dependency-free ci-changed.ts
-# selector against the last green main commit before installing dependencies.
+# Canonical Buildkite pipeline. PR lanes use Buildkite's native `if_changed`;
+# main builds start from `.buildkite/main-bootstrap.yml`, whose selector emits
+# only the dependency-closed main graph needed for the current changes.
 #
 # Invariant (scope-creep guard): verify is the only full-root install. Other
 # lanes use filtered installs or no install, and validate-pipeline.ts enforces
@@ -279,23 +279,6 @@ steps:
   #   build.branch != "release-please--branches--main"
   #     || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true"
 
-  # Resolve the last green main commit once in a small toolchain pod. Main
-  # lanes consume the result through Buildkite metadata before they start any
-  # install or heavyweight runtime image. A lookup failure is intentionally a
-  # soft failure: the consumers then fail open and run instead of skipping.
-  - label: ":mag_right: select main CI work"
-    key: ci-selector-base
-    if: build.branch == pipeline.default_branch
-    soft_fail: true
-    timeout_in_minutes: 2
-    command: bun --no-install .buildkite/scripts/prepare-ci-changed-base.ts
-    plugins:
-      - kubernetes:
-          <<: *pod_light_kubernetes
-          metadata:
-            labels:
-              ci.sjer.red/step-key: ci-selector-base
-
   # ── Verify: the whole task graph + every repo check ──────────────────────
   # PRs and main both run the exhaustive root graph. Local hooks are
   # changed-file-only; CI is the full-repository correctness backstop, with
@@ -304,8 +287,8 @@ steps:
   # masking verify's exit code.
   - label: ":turborepo: verify"
     key: verify
+    timeout_in_minutes: 30
     if: (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
-    depends_on: ci-selector-base
     cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
@@ -362,6 +345,7 @@ steps:
 
   - label: ":sqlite: alert ledger integration"
     key: alert-dashboard-sqlite
+    timeout_in_minutes: 30
     if: (build.pull_request.id != null || build.branch == pipeline.default_branch) && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
     if_changed:
       include:
@@ -411,15 +395,18 @@ steps:
   # PR change filters include the global CI/toolchain closure. A selector
   # mistake can therefore only run extra work; it cannot hide changes to the
   # machinery that decides or executes a lane.
-  - label: ":performing_arts: playwright e2e (PR)"
+  - label: ":performing_arts: browser E2E — sjer.red + docs wiki + Scout evals (PR)"
     key: playwright-e2e-pr
+    timeout_in_minutes: 30
     if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
     if_changed:
       include:
         - ".buildkite/pipeline.yml"
+        - ".buildkite/main-bootstrap.yml"
         - ".buildkite/scripts/ci-changed.ts"
         - ".buildkite/scripts/migration-core.ts"
         - ".buildkite/scripts/prepare-ci-changed-base.ts"
+        - ".buildkite/scripts/select-main-pipeline.ts"
         - ".buildkite/scripts/upload-pipeline.sh"
         - ".buildkite/ci-playwright/**"
         - "bun.lock"
@@ -446,6 +433,7 @@ steps:
     command: |
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/alert-dashboard' --filter scout-for-lol --filter '@scout-for-lol/evals' --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'
       bun x --no-install turbo run build lint test test:e2e --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --filter='@shepherdjerred/alert-dashboard' --filter='@scout-for-lol/evals' --concurrency=2
+      echo "Browser E2E scope: sjer.red, docs wiki, and Scout evals; all shipped Playwright packages are covered here."
       bun --no-install scripts/namespace-playwright-reports.ts
       bun --no-install scripts/write-ci-report-index.ts
     artifact_paths:
@@ -486,15 +474,16 @@ steps:
                 envFrom:
                   - secretRef: { name: buildkite-ci-secrets }
 
-  - label: ":performing_arts: playwright e2e (main)"
+  - label: ":performing_arts: browser E2E — sjer.red + docs wiki + Scout evals (main)"
     key: playwright-e2e-main
+    timeout_in_minutes: 30
     if: build.branch == pipeline.default_branch
-    depends_on: ci-selector-base
     cancel_on_build_failing: true
     command: |
       if [ "$(buildkite-agent meta-data get ci-lane-run-playwright --default true)" != true ]; then exit 0; fi
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/alert-dashboard' --filter scout-for-lol --filter '@scout-for-lol/evals' --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'
       bun x --no-install turbo run build lint test test:e2e --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --filter='@shepherdjerred/alert-dashboard' --filter='@scout-for-lol/evals' --concurrency=2
+      echo "Browser E2E scope: sjer.red, docs wiki, and Scout evals; all shipped Playwright packages are covered here."
       if [ ! -s .ci-reports/junit/sjer.red/playwright.xml ]; then
         echo "playwright-e2e-main completed without a non-empty JUnit report" >&2
         exit 1
@@ -547,13 +536,16 @@ steps:
 
   - label: ":scroll: resume build (PR)"
     key: resume-build-pr
+    timeout_in_minutes: 20
     if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
     if_changed:
       include:
         - ".buildkite/pipeline.yml"
+        - ".buildkite/main-bootstrap.yml"
         - ".buildkite/scripts/ci-changed.ts"
         - ".buildkite/scripts/migration-core.ts"
         - ".buildkite/scripts/prepare-ci-changed-base.ts"
+        - ".buildkite/scripts/select-main-pipeline.ts"
         - ".buildkite/scripts/upload-pipeline.sh"
         - "packages/resume/**"
         # Main's resume lane also gates on the deploy consumers of its
@@ -597,8 +589,8 @@ steps:
 
   - label: ":scroll: resume build (main)"
     key: resume-build-main
+    timeout_in_minutes: 20
     if: build.branch == pipeline.default_branch
-    depends_on: ci-selector-base
     cancel_on_build_failing: true
     command: |
       if [ "$(buildkite-agent meta-data get ci-lane-run-resume --default true)" != true ]; then exit 0; fi
@@ -632,15 +624,18 @@ steps:
                 envFrom:
                   - secretRef: { name: buildkite-ci-secrets }
 
-  - label: ":test_tube: observability e2e (PR)"
+  - label: ":test_tube: llm-observability E2E — Tempo + MinIO (PR)"
     key: docker-e2e-pr
+    timeout_in_minutes: 30
     if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
     if_changed:
       include:
         - ".buildkite/pipeline.yml"
+        - ".buildkite/main-bootstrap.yml"
         - ".buildkite/scripts/ci-changed.ts"
         - ".buildkite/scripts/migration-core.ts"
         - ".buildkite/scripts/prepare-ci-changed-base.ts"
+        - ".buildkite/scripts/select-main-pipeline.ts"
         - ".buildkite/scripts/upload-pipeline.sh"
         - ".buildkite/scripts/toolchain.sh"
         - "bun.lock"
@@ -703,10 +698,10 @@ steps:
             labels:
               ci.sjer.red/step-key: docker-e2e-pr
 
-  - label: ":test_tube: observability e2e (main)"
+  - label: ":test_tube: llm-observability E2E — Tempo + MinIO (main)"
     key: docker-e2e-main
+    timeout_in_minutes: 30
     if: build.branch == pipeline.default_branch
-    depends_on: ci-selector-base
     cancel_on_build_failing: true
     command: |
       if ! bun --no-install .buildkite/scripts/ci-changed.ts docker-e2e; then exit 0; fi
@@ -761,19 +756,22 @@ steps:
             labels:
               ci.sjer.red/step-key: docker-e2e-main
 
-  # Findings are soft; scanner/runtime failures are hard. Both scanners are PR
-  # only and use native path filters so unchanged code never starts a pod.
-  - label: ":shield: trivy"
+  # These are optional security findings: a finding is soft, but scanner/runtime
+  # failures remain hard. Both scanners are PR-only and path-gated.
+  - label: ":shield: Trivy — optional, non-blocking findings"
     key: trivy
+    timeout_in_minutes: 20
     soft_fail:
       - exit_status: 7
     if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
     if_changed:
       include:
         - ".buildkite/pipeline.yml"
+        - ".buildkite/main-bootstrap.yml"
         - ".buildkite/scripts/ci-changed.ts"
         - ".buildkite/scripts/migration-core.ts"
         - ".buildkite/scripts/prepare-ci-changed-base.ts"
+        - ".buildkite/scripts/select-main-pipeline.ts"
         - ".buildkite/scripts/upload-pipeline.sh"
         - "bun.lock"
         - "**/bun.lock"
@@ -814,7 +812,18 @@ steps:
     # The trusted CronJob refreshes the shared database. PR scans mount that
     # database read-only and keep only scan results in memory, avoiding both
     # concurrent BoltDB writers and per-PR database downloads.
-    command: trivy fs --cache-backend memory --cache-dir /buildkite/trivy-db --skip-db-update --scanners vuln --severity HIGH,CRITICAL --exit-code 7 --skip-dirs node_modules --skip-dirs sandbox .
+    command: |
+      echo "OPTIONAL SECURITY SCAN: Trivy HIGH/CRITICAL findings do not block merge; scanner/runtime failures do."
+      set +e
+      trivy fs --cache-backend memory --cache-dir /buildkite/trivy-db --skip-db-update --scanners vuln --severity HIGH,CRITICAL --exit-code 7 --skip-dirs node_modules --skip-dirs sandbox .
+      trivy_status=$$?
+      set -e
+      if [ "$$trivy_status" -eq 7 ]; then
+        echo "Trivy reported findings only (exit 7); Buildkite will soft-fail this optional step."
+      elif [ "$$trivy_status" -ne 0 ]; then
+        echo "Trivy failed to run (exit $$trivy_status); this is a hard CI failure."
+      fi
+      exit "$$trivy_status"
     plugins:
       - kubernetes:
           metadata:
@@ -862,17 +871,20 @@ steps:
                 persistentVolumeClaim:
                   claimName: buildkite-trivy-db
 
-  - label: ":mag: semgrep"
+  - label: ":mag: Semgrep — optional, non-blocking findings"
     key: semgrep
+    timeout_in_minutes: 20
     soft_fail:
       - exit_status: 1
     if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
     if_changed:
       include:
         - ".buildkite/pipeline.yml"
+        - ".buildkite/main-bootstrap.yml"
         - ".buildkite/scripts/ci-changed.ts"
         - ".buildkite/scripts/migration-core.ts"
         - ".buildkite/scripts/prepare-ci-changed-base.ts"
+        - ".buildkite/scripts/select-main-pipeline.ts"
         - ".buildkite/scripts/upload-pipeline.sh"
         - "bun.lock"
         - "bunfig.toml"
@@ -944,6 +956,8 @@ steps:
     # apiKey). semgrep's generic-secret rule would otherwise re-print those
     # values into the log on every build. Real code stays fully scanned.
     command: |
+      echo "OPTIONAL SECURITY SCAN: Semgrep findings do not block merge; merge-base/config/runtime failures do."
+      set +e
       if ! base=$(git merge-base origin/main HEAD); then
         echo "semgrep could not resolve the PR merge-base" >&2
         exit 2
@@ -954,6 +968,14 @@ steps:
         --exclude server.properties \
         --exclude fetcher.ts \
         .
+      semgrep_status=$$?
+      set -e
+      if [ "$$semgrep_status" -eq 1 ]; then
+        echo "Semgrep reported findings only (exit 1); Buildkite will soft-fail this optional step."
+      elif [ "$$semgrep_status" -ne 0 ]; then
+        echo "Semgrep failed to run (exit $$semgrep_status); this is a hard CI failure."
+      fi
+      exit "$$semgrep_status"
     plugins:
       - kubernetes:
           metadata:
@@ -985,17 +1007,14 @@ steps:
                     mountPath: /buildkite/git-mirrors
                     readOnly: true
 
-  # Blocking (like the old pipeline's blockingGates review step, which fed the
-  # required check): every non-outdated review thread from the active code-review
-  # provider must be resolved before the aggregate buildkite/monorepo/pr required
-  # status can go green. The provider (Greptile, Codex, …) is chosen by
-  # REVIEW_PROVIDER (default codex); wait-for-review.ts polls only while the
-  # provider is still reviewing the head commit, then fails fast with the
-  # unresolved-thread list. GitHub bot-authored PRs keep this explicit required
-  # step. Providers declare whether they can review bot PRs; Codex currently
-  # passes those PRs immediately, while Greptile keeps its normal review gate.
-  - label: ":robot_face: review gate"
+  # Blocking required gate: Qodo must finish reviewing the exact PR head, and
+  # every unresolved Qodo finding at the configured severity must be addressed.
+  # Qodo is the only active provider in the registry; its persistent issue
+  # comment is bound to the head timestamp and its Action required/Remediation
+  # recommended findings are included in the same gate.
+  - label: ":robot_face: Qodo review gate (required)"
     key: review-gate
+    timeout_in_minutes: 30
     if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
     cancel_on_build_failing: true
     command: |
@@ -1014,16 +1033,18 @@ steps:
   # effects (the old pipeline's --dryrun plumbing). Replaces five micro-steps
   # (tofu-plan, sites-pr, helm-pr, release-pr, helm-types-drift-check), each
   # of which paid pod + checkout + install overhead for seconds of real work.
-  # Sections self-gate with ci-changed.ts against the PR merge-base
+  # Sections use ci-changed.ts against the PR merge-base
   # (CI_CHANGED_BASE override), so the two sections that do real work — the
   # tofu plans and the helm-types drift regen — still only run when their
   # inputs changed; the deploy rehearsals are print-only and always run.
   - label: ":microscope: pr dry-run (deploy paths + drift)"
     key: pr-dryrun
+    timeout_in_minutes: 30
     if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
     if_changed:
       include:
         - ".buildkite/pipeline.yml"
+        - ".buildkite/main-bootstrap.yml"
         - ".buildkite/scripts/bake-images.ts"
         - ".buildkite/scripts/bake-retry.ts"
         - ".buildkite/scripts/buildkit-env.ts"
@@ -1031,6 +1052,7 @@ steps:
         - ".buildkite/scripts/docker-source-label.ts"
         - ".buildkite/scripts/migration-core.ts"
         - ".buildkite/scripts/prepare-ci-changed-base.ts"
+        - ".buildkite/scripts/select-main-pipeline.ts"
         - ".buildkite/scripts/select-image-targets.ts"
         - ".buildkite/scripts/select-image-targets-lockfile.ts"
         - ".buildkite/scripts/select-image-targets-workspaces.ts"
@@ -1146,10 +1168,12 @@ steps:
 
   - label: ":docker: images — build + smoke (PR dry-run)"
     key: images-pr
+    timeout_in_minutes: 60
     if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
     if_changed:
       include:
         - ".buildkite/pipeline.yml"
+        - ".buildkite/main-bootstrap.yml"
         - ".buildkite/application-image-smoke.Dockerfile"
         - ".buildkite/scripts/application-image-runtime.ts"
         - ".buildkite/scripts/bake-images.ts"
@@ -1159,6 +1183,7 @@ steps:
         - ".buildkite/scripts/image-targets.ts"
         - ".buildkite/scripts/migration-core.ts"
         - ".buildkite/scripts/prepare-ci-changed-base.ts"
+        - ".buildkite/scripts/select-main-pipeline.ts"
         - ".buildkite/scripts/select-image-targets.ts"
         - ".buildkite/scripts/select-image-targets-lockfile.ts"
         - ".buildkite/scripts/select-image-targets-workspaces.ts"
@@ -1229,6 +1254,7 @@ steps:
   # ── Main-only: images (parallel bake + smoke + push) ─────────────────────
   - label: ":docker: images — build, smoke, push"
     key: images
+    timeout_in_minutes: 60
     if: build.branch == pipeline.default_branch
     depends_on: verify
     cancel_on_build_failing: true
@@ -1276,6 +1302,7 @@ steps:
   # ── Main-only: static sites ───────────────────────────────────────────────
   - label: ":rocket: deploy sites"
     key: sites
+    timeout_in_minutes: 30
     if: build.branch == pipeline.default_branch
     # Static-site buckets are owned by the SeaweedFS tofu stack. Waiting for
     # tofu-apply is a no-op when infra is unchanged, and guarantees a new
@@ -1381,6 +1408,7 @@ steps:
   # a finally, so a failed dev publish can't leak -dev.N into a later prod run).
   - label: ":npm: publish packages + cooklang plugin"
     key: publish
+    timeout_in_minutes: 45
     if: build.branch == pipeline.default_branch
     depends_on: verify
     cancel_on_build_failing: true
@@ -1424,6 +1452,7 @@ steps:
   # ── Main-only: homelab release track ─────────────────────────────────────
   - label: ":helm: helm push"
     key: helm-push
+    timeout_in_minutes: 45
     if: build.branch == pipeline.default_branch
     # Wait for this build's remote solves before suspending the currently
     # floating repository Applications and publishing their immutable charts.
@@ -1432,7 +1461,7 @@ steps:
     concurrency_group: monorepo/homelab-release
     concurrency_method: ordered
     command: |
-      image_digests=$$(buildkite-agent meta-data get image-digests --default '{}')
+      image_digests=$$(bun --no-install .buildkite/scripts/read-buildkite-handoff.ts image-digests images)
       release_requested=false
       if bun --no-install .buildkite/scripts/ci-changed.ts helm; then release_requested=true; fi
       if bun --no-install .buildkite/scripts/ci-changed.ts argocd; then release_requested=true; fi
@@ -1457,8 +1486,9 @@ steps:
             labels:
               ci.sjer.red/step-key: helm-push
 
-  - label: ":terraform: tofu apply (infra stacks)"
+  - label: ":terraform: OpenTofu apply — infra state stacks"
     key: tofu-apply
+    timeout_in_minutes: 45
     if: build.branch == pipeline.default_branch
     depends_on: [verify, helm-push]
     cancel_on_build_failing: true
@@ -1481,8 +1511,9 @@ steps:
             labels:
               ci.sjer.red/step-key: tofu-apply
 
-  - label: ":terraform: tofu apply (github)"
+  - label: ":terraform: OpenTofu apply — GitHub state"
     key: tofu-github
+    timeout_in_minutes: 45
     if: build.branch == pipeline.default_branch
     depends_on: verify
     cancel_on_build_failing: true
@@ -1508,13 +1539,14 @@ steps:
 
   - label: ":argo: sync + wait"
     key: argocd-sync
+    timeout_in_minutes: 45
     if: build.branch == pipeline.default_branch
     depends_on: [images, helm-push, tofu-apply]
     concurrency: 1
     concurrency_group: monorepo/homelab-release
     concurrency_method: ordered
     command: |
-      image_digests=$$(buildkite-agent meta-data get image-digests --default '{}')
+      image_digests=$$(bun --no-install .buildkite/scripts/read-buildkite-handoff.ts image-digests images)
       release_requested=false
       if bun --no-install .buildkite/scripts/ci-changed.ts helm; then release_requested=true; fi
       if bun --no-install .buildkite/scripts/ci-changed.ts argocd; then release_requested=true; fi
@@ -1552,14 +1584,15 @@ steps:
   # exact backend digest that Argo just made healthy, then deploy beta from
   # that archived state. This lane is separate from generic static sites so a
   # non-Scout image pin update cannot manufacture a Scout release.
-  - label: ":test_tube: scout beta release"
+  - label: ":test_tube: Scout release phase 1 — archive + beta deploy"
     key: scout-beta-release
+    timeout_in_minutes: 30
     if: build.branch == pipeline.default_branch
     depends_on: [images, argocd-sync]
     concurrency: 1
     concurrency_group: monorepo/site-deploys
     command: |
-      scout_candidate=$$(buildkite-agent meta-data get image-digests |
+      scout_candidate=$$(bun --no-install .buildkite/scripts/read-buildkite-handoff.ts image-digests images |
         jq -r '."shepherdjerred/scout-for-lol/beta" // empty')
       scout_source_changed=false
       if bun --no-install .buildkite/scripts/ci-changed.ts site-scout; then
@@ -1607,8 +1640,9 @@ steps:
   # Mint a promotable tag only after the exact beta release is deployed and
   # verified. The immutable state binds tag, backend digest, both site archives,
   # source commit, and release inputs.
-  - label: ":label: scout tag release"
+  - label: ":label: Scout release phase 2 — immutable tag promotion"
     key: scout-tag-release
+    timeout_in_minutes: 30
     if: build.branch == pipeline.default_branch
     depends_on: scout-beta-release
     command: |
@@ -1636,8 +1670,9 @@ steps:
   # transient mid-promotion mix is old-frontend/new-backend — the safe
   # direction (the reverse skew is what crashed the prod SPA). Shares the
   # site-deploys concurrency group so it never races a beta sync.
-  - label: ":rocket: scout prod reconcile"
+  - label: ":rocket: Scout release phase 3 — production pin reconcile"
     key: scout-prod-reconcile
+    timeout_in_minutes: 30
     if: build.branch == pipeline.default_branch
     depends_on: [argocd-sync, scout-beta-release]
     concurrency: 1
@@ -1659,8 +1694,9 @@ steps:
             labels:
               ci.sjer.red/step-key: scout-prod-reconcile
 
-  - label: ":terraform: tofu apply (cloudflare, after tunnel gate)"
+  - label: ":terraform: OpenTofu apply — Cloudflare after tunnel gate"
     key: tofu-cloudflare
+    timeout_in_minutes: 45
     if: build.branch == pipeline.default_branch
     depends_on: argocd-sync
     cancel_on_build_failing: true
@@ -1700,6 +1736,7 @@ steps:
   # pushed image digests — is its own step below, gated on images.
   - label: ":package: release-please"
     key: release-please
+    timeout_in_minutes: 45
     if: build.branch == pipeline.default_branch
     depends_on: verify
     cancel_on_build_failing: true
@@ -1725,6 +1762,7 @@ steps:
   # merge redeploys nothing.
   - label: ":package: version commit-back"
     key: version-commit-back
+    timeout_in_minutes: 45
     if: build.branch == pipeline.default_branch
     depends_on: images
     cancel_on_build_failing: true
@@ -1736,7 +1774,7 @@ steps:
       # With Bun's isolated linker, zod must be installed for that workspace;
       # the root-scripts copy cannot satisfy an import resolved from cdk8s.
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@homelab/cdk8s' --production
-      bun --no-install scripts/update-versions.ts --commit-back --candidates "$$(buildkite-agent meta-data get pin-candidates)"
+      bun --no-install scripts/update-versions.ts --commit-back --candidates "$$(bun --no-install .buildkite/scripts/read-buildkite-handoff.ts pin-candidates images)"
     # Safe to retry: the bump branch is force-updated and the PR lookup is
     # find-or-create; transient gh/git failures exit 34 via transient.ts.
     retry: *retry
@@ -1752,6 +1790,7 @@ steps:
   # digest, and PR CI consumes that digest before auto-merge.
   - label: ":docker: ci-base candidate"
     key: ci-base-refresh
+    timeout_in_minutes: 60
     if: build.branch == pipeline.default_branch
     depends_on: verify
     cancel_on_build_failing: true
@@ -1773,6 +1812,7 @@ steps:
 
   - label: ":performing_arts: ci-playwright candidate"
     key: ci-playwright-refresh
+    timeout_in_minutes: 60
     if: build.branch == pipeline.default_branch
     depends_on: verify
     cancel_on_build_failing: true
@@ -1795,6 +1835,7 @@ steps:
   # ── Main-only: build summary annotation (runs even when deploys fail) ─────
   - label: ":memo: build summary"
     key: build-summary
+    timeout_in_minutes: 10
     if: build.branch == pipeline.default_branch
     depends_on:
       - verify

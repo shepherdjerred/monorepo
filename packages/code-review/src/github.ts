@@ -21,6 +21,10 @@ import {
   stringField,
 } from "./github-http.ts";
 import { reactionBoundToHead } from "./head-pushed-at.ts";
+import {
+  fetchLatestProviderIssueComment,
+  resolveIssueCommentReview,
+} from "./github-issue-comments.ts";
 import { isProviderAuthor } from "./identity.ts";
 import type { CompletionSignal } from "./signal.ts";
 import type {
@@ -180,6 +184,20 @@ export async function fetchReviewThreads(input: {
     threads.push(...page.threads);
     if (!page.hasNextPage || page.endCursor === null) break;
     cursor = page.endCursor;
+  }
+  if (
+    input.provider.completion.kind === "issue-comment" &&
+    input.provider.parseIssueComment !== undefined
+  ) {
+    const comment = await fetchLatestProviderIssueComment({
+      repo: input.repo,
+      number: input.number,
+      token: input.token,
+      provider: input.provider,
+    });
+    if (comment !== null) {
+      threads.push(...input.provider.parseIssueComment(comment));
+    }
   }
   return { threads, headRefOid };
 }
@@ -433,6 +451,17 @@ export async function resolveReviewState(input: {
   headPushedAt: string | null;
 }): Promise<ReviewStateResult> {
   const { provider, repo, head, prNumber, token, headPushedAt } = input;
+
+  if (provider.completion.kind === "issue-comment") {
+    return resolveIssueCommentReview({
+      provider,
+      repo,
+      head,
+      prNumber,
+      token,
+      headPushedAt,
+    });
+  }
 
   if (provider.completion.kind === "check-run") {
     const { state, reviewedAt } = await fetchCheckRunState({

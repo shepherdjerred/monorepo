@@ -67,8 +67,8 @@ async function probePr(
   const provider = resolveProvider(Bun.env["REVIEW_PROVIDER"]);
   const head = await fetchHeadSha(repo, prNumber, token);
 
-  // Head push time first — `resolveReviewState` needs it to bind a 👍 reaction
-  // to the current head, so it cannot share a Promise.all with that call.
+  // Head push time first — `resolveReviewState` needs it to bind a provider's
+  // commit-less completion signal to the current head.
   const headPushedAt = await fetchHeadPushedAt({
     repo,
     sha: head,
