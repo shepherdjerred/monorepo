@@ -251,12 +251,14 @@ TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443 TEMPORAL_TLS=true \
   bun run canary:agent-task
 ```
 
-The command starts one real `agentTaskWorkflow` on the `agent-task` queue and
+This production-only contract check starts one real `agentTaskWorkflow` on the
+`agent-task` queue and
 must complete through the deployed Claude parser and deliver the tagged
 `[agent-task-canary]` report-only email. It does not accept or forward a local
 OAuth token; authentication is verified in the deployed worker. Keep
 `packages/docs/todos/homelab-audit-agent-task-production-verification.md` open
-until the canary and seven consecutive daily audit runs pass.
+until the canary and seven consecutive daily audit runs pass; a local dry run
+does not satisfy this verification.
 
 **Local dev loop (no Temporal, no cluster)** — see `scripts/run-homelab-audit-local.ts`:
 

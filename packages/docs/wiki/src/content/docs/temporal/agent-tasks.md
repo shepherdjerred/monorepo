@@ -107,6 +107,9 @@ WebFetch`, on claude-opus-5. **Codex tasks** run `codex exec` with
 - The workflow-deep-dive plan's former aggregate timeout-watch design is
   superseded. Do not restore `agent-task-timeout-watch`; use the per-execution
   history classification and the worker queue-health alerts above.
+- The historical deep-dive plan remains in progress for its documentation
+  inventory, but its retired timeout-watch entry is not an implementation TODO.
+  The hardening plan and this page are authoritative for the current watcher.
 - **Production canary**: after deploying the image, operators run
   `bun run canary:agent-task` from `packages/temporal`. It uses the real
   `agent-task` queue, OAuth token, parser, and a tagged report-only email; the

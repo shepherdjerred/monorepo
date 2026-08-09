@@ -361,11 +361,9 @@ export function parseClaudeAgentTaskResult(
       contractErrorMessage("missing-structured-output", diagnostics),
     );
   }
+  const structuredOutput: unknown = resultMessage.structured_output;
   try {
-    return parseAgentTaskResultPayload(
-      resultMessage.structured_output,
-      "claude",
-    );
+    return parseAgentTaskResultPayload(structuredOutput, "claude");
   } catch (error: unknown) {
     throw new AgentTaskOutputContractError(
       "invalid-structured-output",

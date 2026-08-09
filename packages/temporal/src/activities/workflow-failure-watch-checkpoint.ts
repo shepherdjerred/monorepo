@@ -3,12 +3,16 @@ import type { FailedWorkflowExecution } from "#shared/workflow-failure-alert.ts"
 
 const WorkflowFailureWatchCheckpointSchema = z.object({
   closeTime: z.iso.datetime({ offset: true }),
+  // Optional for heartbeats written before the stable visibility cursor was
+  // introduced. New checkpoints always include it.
+  startTime: z.iso.datetime({ offset: true }).optional(),
   workflowId: z.string().min(1),
   runId: z.string().min(1),
 });
 
 export type WorkflowFailureWatchCheckpoint = {
   closeTime: Date;
+  startTime: Date | undefined;
   workflowId: string;
   runId: string;
 };
@@ -33,6 +37,8 @@ export function parseWorkflowFailureWatchCheckpoint(
   const parsed = WorkflowFailureWatchCheckpointSchema.parse(checkpoint);
   return {
     closeTime: new Date(parsed.closeTime),
+    startTime:
+      parsed.startTime === undefined ? undefined : new Date(parsed.startTime),
     workflowId: parsed.workflowId,
     runId: parsed.runId,
   };
@@ -45,6 +51,9 @@ export function serializedCheckpoint(
     ? null
     : {
         closeTime: checkpoint.closeTime.toISOString(),
+        ...(checkpoint.startTime === undefined
+          ? {}
+          : { startTime: checkpoint.startTime.toISOString() }),
         workflowId: checkpoint.workflowId,
         runId: checkpoint.runId,
       };
@@ -55,6 +64,7 @@ export function checkpointForExecution(
 ): WorkflowFailureWatchCheckpoint {
   return {
     closeTime: execution.closeTime,
+    startTime: execution.startTime,
     workflowId: execution.workflowId,
     runId: execution.runId,
   };

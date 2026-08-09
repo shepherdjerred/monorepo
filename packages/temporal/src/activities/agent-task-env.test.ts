@@ -39,6 +39,15 @@ describe("agent-task secret token state", () => {
     expect(tokens).toContain(pemBodyLine);
   });
 
+  it("tokenizes escaped multiline environment credentials for redaction", () => {
+    const pemBodyLine = "escaped-multiline-private-key-body";
+    const tokens = agentTaskSecretTokens(undefined, {
+      GITHUB_APP_PRIVATE_KEY: `-----BEGIN PRIVATE KEY-----\\n${pemBodyLine}\\n-----END PRIVATE KEY-----`,
+    });
+
+    expect(tokens).toContain(pemBodyLine);
+  });
+
   it("forwards refresh failures so the activity can fail closed with the cause", async () => {
     const refreshError = new Error("mounted secret read failed");
     let observed: unknown;

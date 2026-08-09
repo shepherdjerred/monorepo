@@ -17,6 +17,7 @@ describe("workflow failure watch heartbeat checkpoints", () => {
   it("serializes and parses a checkpoint with an ISO close time", () => {
     const serialized = serializedCheckpoint({
       closeTime: new Date("2026-07-30T17:40:00.000Z"),
+      startTime: new Date("2026-07-30T17:35:00.000Z"),
       workflowId: "wf-new",
       runId: "run-new",
     });
@@ -25,6 +26,7 @@ describe("workflow failure watch heartbeat checkpoints", () => {
       parseWorkflowFailureWatchCheckpoint({ checkpoint: serialized }),
     ).toEqual({
       closeTime: new Date("2026-07-30T17:40:00.000Z"),
+      startTime: new Date("2026-07-30T17:35:00.000Z"),
       workflowId: "wf-new",
       runId: "run-new",
     });
@@ -35,6 +37,7 @@ describe("workflow failure watch heartbeat checkpoints", () => {
       parseWorkflowFailureWatchCheckpoint({
         checkpoint: {
           closeTime: "not-a-date",
+          startTime: "2026-07-30T17:35:00.000Z",
           workflowId: "wf-new",
           runId: "run-new",
         },

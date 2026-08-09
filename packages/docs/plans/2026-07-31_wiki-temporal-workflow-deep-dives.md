@@ -56,7 +56,8 @@ The aggregate `agent-task-timeout-watch` design mentioned above is historical
 and superseded by the 2026-08-08 Temporal agent-task execution hardening plan.
 Future edits to this deep-dive must describe `temporal-failure-watch` and the
 worker queue-health signals; they must not restore the retired aggregate
-watcher.
+watcher. The plan remains in progress only for its documentation inventory;
+the retired timeout-watch entry is not a remaining implementation task.
 
 ## Page inventory
 

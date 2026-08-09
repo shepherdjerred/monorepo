@@ -34,10 +34,10 @@ and #7033, #7035, #7040, #7047, #7050, and #7058:
   producer. Its `WorkflowHandle.fetchHistory()` classification distinguishes workflow-task,
   activity, execution, and unknown timeouts. A workflow-task timeout before
   any activity is called out as a worker/task-queue availability failure.
-- Recovery polls heartbeat the newest fully delivered close time and resume
-  from that checkpoint on activity retry; detail-extraction errors do not
-  advance the checkpoint, and Alertmanager identity deduplicates equal-time
-  replays.
+- Recovery polls heartbeat the last fully delivered execution in Temporal's
+  stable newest-first visibility order (`CloseTime`, `StartTime`, `RunId`) and
+  resumes from that cursor on activity retry; detail-extraction errors do not
+  advance the checkpoint, and Alertmanager identity deduplicates overlap.
 - Prometheus warns after five minutes for missing agent-task workflow pollers,
   high workflow-task schedule-to-start latency, and worker metrics scrape loss.
   Replica and concurrency changes remain out of scope until these signals show

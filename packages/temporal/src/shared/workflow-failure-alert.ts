@@ -12,6 +12,8 @@ export type FailedWorkflowExecution = {
   runId: string;
   workflowType: string;
   taskQueue: string;
+  /** Temporal visibility's stable descending pagination key. */
+  startTime: Date;
   closeTime: Date;
   /** Only the terminal statuses this watcher pages on — deliberate exclusion excludes cancel/terminate. */
   status: "FAILED" | "TIMED_OUT";

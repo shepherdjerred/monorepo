@@ -226,6 +226,19 @@ async function runAgent(
           },
         );
       }, MOUNTED_SECRET_REFRESH_INTERVAL_MS);
+      const refreshSecretsBeforeOutput = async (): Promise<boolean> => {
+        // Refresh immediately before every stdout chunk. The periodic refresh
+        // is only a liveness aid; this boundary closes the rotation-to-output
+        // race before a diagnostic excerpt is retained.
+        if (redactionFailureController.failure !== undefined) {
+          return false;
+        }
+        const refreshed =
+          await redactionFailureController.refreshBeforeOutput(
+            secretTokenState,
+          );
+        return refreshed && redactionFailureController.failure === undefined;
+      };
       let result: TrackedAgentResult;
       try {
         result = await runTrackedAgentSubprocess(
@@ -234,8 +247,7 @@ async function runAgent(
             cwd: input.workdir,
             env: envForProvider(provider, githubTokenResult.token),
             redactTokens: secretTokens,
-            beforeOutput: () =>
-              redactionFailureController.refreshBeforeOutput(secretTokenState),
+            beforeOutput: refreshSecretsBeforeOutput,
             startToCloseTimeoutMs: startToCloseTimeoutMsOrUndefined(),
             cancellationSignal,
             heartbeatIntervalMs: HEARTBEAT_INTERVAL_MS,

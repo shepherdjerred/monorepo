@@ -13,9 +13,10 @@ import { buildFailureAlertForExecution } from "./workflow-failure-watch-detail.t
  * structured failure via `handle.result()`, and posts one detail-rich alert
  * per execution to Alertmanager (which already routes to PagerDuty — see
  * `packages/homelab/.../argo-applications/prometheus.ts`). Each successful
- * detail batch heartbeats its newest close time so a timed-out activity retry
- * resumes near its last durable checkpoint instead of rescanning the whole
- * lookback. Safe to overlap polls because Alertmanager dedups by label set
+ * detail batch heartbeats its last item in Temporal visibility's stable
+ * newest-first order so a timed-out activity retry resumes after its last
+ * durable cursor instead of rescanning the newest prefix. Safe to overlap
+ * polls because Alertmanager dedups by label set
  * (identity = alertname + workflowType + taskQueue + workflowId + runId).
  */
 
@@ -60,6 +61,7 @@ export type WorkflowVisibilityClient = {
       runId: string;
       type: string;
       taskQueue: string;
+      startTime: Date;
       closeTime?: Date;
       status: { name: string };
     }>;
@@ -119,8 +121,62 @@ function toFailureStatusName(name: string): FailureStatusName | undefined {
   return FAILURE_STATUS_NAMES.find((candidate) => candidate === name);
 }
 
-export function buildVisibilityQuery(since: Date): string {
-  return `ExecutionStatus IN ("Failed", "TimedOut") AND CloseTime > "${since.toISOString()}"`;
+function escapedVisibilityValue(value: string): string {
+  return value.replaceAll("\\", "\\\\").replaceAll('"', '\\"');
+}
+
+function cursorQuery(checkpoint: WorkflowFailureWatchCheckpoint): string {
+  const closeTime = checkpoint.closeTime.toISOString();
+  if (checkpoint.startTime === undefined) {
+    return `CloseTime < "${closeTime}"`;
+  }
+  const startTime = checkpoint.startTime.toISOString();
+  const runId = escapedVisibilityValue(checkpoint.runId);
+  return [
+    `(CloseTime < "${closeTime}"`,
+    `OR (CloseTime = "${closeTime}" AND StartTime < "${startTime}")`,
+    `OR (CloseTime = "${closeTime}" AND StartTime = "${startTime}" AND RunId > "${runId}"))`,
+  ].join(" ");
+}
+
+export function buildVisibilityQuery(
+  since: Date,
+  checkpoint?: WorkflowFailureWatchCheckpoint,
+): string {
+  const clauses = [
+    'ExecutionStatus IN ("Failed", "TimedOut")',
+    `CloseTime > "${since.toISOString()}"`,
+  ];
+  if (checkpoint !== undefined) {
+    clauses.push(cursorQuery(checkpoint));
+  }
+  return clauses.join(" AND ");
+}
+
+function isAfterCheckpoint(
+  info: {
+    closeTime: Date;
+    startTime: Date;
+    runId: string;
+  },
+  checkpoint: WorkflowFailureWatchCheckpoint,
+): boolean {
+  if (info.closeTime.getTime() < checkpoint.closeTime.getTime()) {
+    return true;
+  }
+  if (info.closeTime.getTime() > checkpoint.closeTime.getTime()) {
+    return false;
+  }
+  if (checkpoint.startTime === undefined) {
+    return false;
+  }
+  if (info.startTime.getTime() < checkpoint.startTime.getTime()) {
+    return true;
+  }
+  if (info.startTime.getTime() > checkpoint.startTime.getTime()) {
+    return false;
+  }
+  return info.runId > checkpoint.runId;
 }
 
 type FailureBatchResult = {
@@ -211,12 +267,8 @@ export async function pollWorkflowFailuresOnce(
 ): Promise<PollWorkflowFailuresResult> {
   const { now, lookbackMs, checkpoint } = options;
   const lookbackSince = now.getTime() - lookbackMs;
-  const checkpointSince =
-    checkpoint === undefined
-      ? Number.NEGATIVE_INFINITY
-      : checkpoint.closeTime.getTime() - 1;
-  const since = new Date(Math.max(lookbackSince, checkpointSince));
-  const query = buildVisibilityQuery(since);
+  const since = new Date(lookbackSince);
+  const query = buildVisibilityQuery(since, checkpoint);
 
   const pendingExecutions: FailedWorkflowExecution[] = [];
   let scanned = 0;
@@ -236,7 +288,14 @@ export async function pollWorkflowFailuresOnce(
       }
       if (
         checkpoint !== undefined &&
-        info.closeTime.getTime() < checkpoint.closeTime.getTime()
+        !isAfterCheckpoint(
+          {
+            closeTime: info.closeTime,
+            startTime: info.startTime,
+            runId: info.runId,
+          },
+          checkpoint,
+        )
       ) {
         continue;
       }
@@ -245,6 +304,7 @@ export async function pollWorkflowFailuresOnce(
         runId: info.runId,
         workflowType: info.type,
         taskQueue: info.taskQueue,
+        startTime: info.startTime,
         closeTime: info.closeTime,
         status,
       });

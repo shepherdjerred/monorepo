@@ -33,6 +33,7 @@ type ExecutionInfo = {
   runId: string;
   type: string;
   taskQueue: string;
+  startTime?: Date;
   closeTime?: Date;
   status: { name: string };
 };
@@ -49,7 +50,11 @@ function fakeClient(
         return {
           async *[Symbol.asyncIterator]() {
             for (const execution of executions) {
-              yield execution;
+              yield {
+                ...execution,
+                startTime:
+                  execution.startTime ?? execution.closeTime ?? new Date(0),
+              };
             }
           },
         };
@@ -228,6 +233,32 @@ describe("workflow timeout history edge cases", () => {
     expect(classifyWorkflowTimeoutHistory({ events: [] }).classification).toBe(
       "unknown",
     );
+  });
+
+  it("reads schedule-to-start timeout type from the nested failure payload", () => {
+    const classification = classifyWorkflowTimeoutHistory({
+      events: [
+        {
+          event_id: protobufLong("5"),
+          eventType: "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
+        },
+        {
+          eventType: "EVENT_TYPE_ACTIVITY_TASK_TIMED_OUT",
+          activity_task_timed_out_event_attributes: {
+            scheduled_event_id: protobufLong("5"),
+            failure: {
+              timeout_failure_info: {
+                timeout_type: "TIMEOUT_TYPE_SCHEDULE_TO_START",
+              },
+            },
+          },
+        },
+        { eventType: "EVENT_TYPE_WORKFLOW_EXECUTION_TIMED_OUT" },
+      ],
+    });
+
+    expect(classification.activityScheduleToStartTimedOut).toBe(true);
+    expect(classification.activityScheduledButNotStarted).toBe(false);
   });
 
   it("does not treat a recovered workflow-task timeout as pending work", () => {
@@ -675,35 +706,39 @@ describe("failed execution timeout diagnostics", () => {
 });
 
 describe("workflow failure watch checkpoints", () => {
-  it("resumes after a heartbeat checkpoint without rescanning older executions", async () => {
+  it("resumes after a heartbeat checkpoint in the visibility iterator's newest-first order", async () => {
     const checkpoint: WorkflowFailureWatchCheckpoint = {
-      closeTime: new Date("2026-07-30T17:30:00.000Z"),
-      workflowId: "wf-checkpoint",
-      runId: "run-checkpoint",
+      closeTime: new Date("2026-07-30T17:40:00.000Z"),
+      startTime: new Date("2026-07-30T17:35:00.000Z"),
+      workflowId: "wf-newest",
+      runId: "run-newest",
     };
     const executions: ExecutionInfo[] = [
-      {
-        workflowId: "wf-old",
-        runId: "run-old",
-        type: "syncGolinks",
-        taskQueue: "default",
-        closeTime: new Date("2026-07-30T17:00:00.000Z"),
-        status: { name: "FAILED" },
-      },
       {
         workflowId: checkpoint.workflowId,
         runId: checkpoint.runId,
         type: "syncGolinks",
         taskQueue: "default",
+        startTime: new Date("2026-07-30T17:35:00.000Z"),
         closeTime: checkpoint.closeTime,
         status: { name: "FAILED" },
       },
       {
-        workflowId: "wf-new",
-        runId: "run-new",
+        workflowId: "wf-middle",
+        runId: "run-middle",
         type: "syncGolinks",
         taskQueue: "default",
-        closeTime: new Date("2026-07-30T17:40:00.000Z"),
+        startTime: new Date("2026-07-30T17:25:00.000Z"),
+        closeTime: new Date("2026-07-30T17:30:00.000Z"),
+        status: { name: "FAILED" },
+      },
+      {
+        workflowId: "wf-old",
+        runId: "run-old",
+        type: "syncGolinks",
+        taskQueue: "default",
+        startTime: new Date("2026-07-30T16:55:00.000Z"),
+        closeTime: new Date("2026-07-30T17:00:00.000Z"),
         status: { name: "FAILED" },
       },
     ];
@@ -736,15 +771,18 @@ describe("workflow failure watch checkpoints", () => {
     });
 
     expect(result).toEqual({ scanned: 2, alerted: 2, errored: 0 });
-    expect(query).toContain('CloseTime > "2026-07-30T17:29:59.999Z"');
+    expect(query).toContain('CloseTime > "2026-07-29T18:00:00.000Z"');
+    expect(query).toContain('CloseTime < "2026-07-30T17:40:00.000Z"');
+    expect(query).toContain('StartTime < "2026-07-30T17:35:00.000Z"');
     expect(pageSize).toBe(100);
     expect(calls[0]?.alerts.map((alert) => alert.labels["workflowId"])).toEqual(
-      ["wf-checkpoint", "wf-new"],
+      ["wf-middle", "wf-old"],
     );
     expect(checkpoints.at(-1)).toEqual({
-      closeTime: new Date("2026-07-30T17:40:00.000Z"),
-      workflowId: "wf-new",
-      runId: "run-new",
+      closeTime: new Date("2026-07-30T17:00:00.000Z"),
+      startTime: new Date("2026-07-30T16:55:00.000Z"),
+      workflowId: "wf-old",
+      runId: "run-old",
     });
   });
 });

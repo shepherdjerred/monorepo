@@ -6,7 +6,16 @@ const MOUNTED_SECRET_PATHS = [
 ] as const;
 
 function whitespaceSecretTokens(value: string): readonly string[] {
-  return value.split(/\s+/u).filter((fragment) => fragment.length >= 8);
+  // Kubernetes and PEM credentials are often passed through env files with
+  // escaped newlines. Tokenize both representations so a multiline secret
+  // cannot be reconstructed one line at a time in diagnostic output.
+  const decodedWhitespace = value
+    .replaceAll(/\\n/gu, "\n")
+    .replaceAll(/\\r/gu, "\r")
+    .replaceAll(/\\t/gu, "\t");
+  return decodedWhitespace
+    .split(/\s+/u)
+    .filter((fragment) => fragment.length >= 8);
 }
 
 // envForProvider deliberately forwards the full worker env, so scrub every
@@ -48,9 +57,7 @@ export async function readAgentTaskMountedSecretTokens(
       continue;
     }
     tokens.push(token);
-    tokens.push(
-      ...token.split(/\s+/).filter((fragment) => fragment.length >= 8),
-    );
+    tokens.push(...whitespaceSecretTokens(token));
   }
   return tokens;
 }

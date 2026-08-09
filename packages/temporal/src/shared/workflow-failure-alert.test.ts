@@ -17,6 +17,7 @@ function makeExecution(
     runId: "run-abc-123",
     workflowType: "syncGolinks",
     taskQueue: "default",
+    startTime: new Date("2026-07-30T17:45:00.000Z"),
     closeTime: new Date("2026-07-30T17:55:00.000Z"),
     status: "FAILED",
     ...overrides,
