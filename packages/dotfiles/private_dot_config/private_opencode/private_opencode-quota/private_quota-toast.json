@@ -5,10 +5,6 @@
   "percentDisplayMode": "remaining",
   "onlyCurrentModel": false,
   "showSessionTokens": true,
-  "pricingSnapshot": {
-    "source": "auto",
-    "autoRefresh": 1
-  },
   "tuiSidebarPanel": {
     "enabled": true,
     "formatStyle": "allWindows"

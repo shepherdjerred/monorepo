@@ -3,10 +3,9 @@
   "share": "disabled",
   "lsp": true,
   // The Kimi provider is loaded from a local checkout of the shepherdjerred
-  // fork of opencode-kimi-full (default `master` branch), templated via chezmoi
-  // so the home directory resolves per-machine. This assumes the fork is cloned
-  // at ~/git/opencode-kimi-full; switch to a published package reference once
-  // the fork's changes land upstream.
+  // fork of opencode-kimi-full, templated via chezmoi so the home directory
+  // resolves per-machine. The pinned checkout and quota companion are cloned
+  // and built by run_onchange_after_install-opencode-plugins.sh.tmpl.
   "plugin": [
 {{- if stat (joinPath .chezmoi.homeDir "git/opencode-kimi-full") }}
     {{ joinPath .chezmoi.homeDir "git/opencode-kimi-full" | toJson }},
@@ -89,7 +88,6 @@
       "models": {
         "kimi-for-coding": {
           "name": "K2.7 Coding",
-          "cost": { "input": 0.95, "output": 4, "cache_read": 0.19 },
           "attachment": true,
           "reasoning": true,
           "temperature": false,
@@ -101,7 +99,6 @@
         },
         "kimi-for-coding-highspeed": {
           "name": "K2.7 Coding Highspeed",
-          "cost": { "input": 1.9, "output": 8, "cache_read": 0.38 },
           "attachment": true,
           "reasoning": true,
           "temperature": false,
