@@ -89,6 +89,7 @@ export default defineConfig({
   // they redirect rather than 404.
   redirects: {
     "/birmel": "/explanation/birmel/",
+    "/homelab/alerts": "/explanation/homelab/alerts/",
     "/homelab/buildkite-admission": "/explanation/homelab/buildkite-admission/",
     "/homelab/matomo": "/how-to/initialize-matomo/",
     "/homelab/plane": "/explanation/homelab/plane/",
@@ -101,6 +102,7 @@ export default defineConfig({
     "/how-this-wiki-works": "/explanation/how-this-wiki-works/",
     "/pr-fleet-controller": "/explanation/pr-fleet-authority-boundary/",
     "/scout-analysis": "/explanation/scout-temporal-analysis/",
+    "/starlight-karma-bot": "/explanation/starlight-karma-bot/",
     "/tasks-for-obsidian": "/explanation/tasks-for-obsidian/",
     "/temporal": "/explanation/temporal/overview/",
     "/temporal/agent-tasks": "/explanation/temporal/agent-task-boundary/",

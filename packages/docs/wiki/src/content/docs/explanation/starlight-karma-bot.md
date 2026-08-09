@@ -113,4 +113,5 @@ tick is skipped instead of reading and posting the same due row twice.
   `src/karma/scoring.ts`, `src/karma/rules.ts`, `src/karma/milestones.ts`
 - Deployment, probes, and volume: the karma bot resource under
   `packages/homelab/src/cdk8s/src/resources/`
-- Sibling Discord bot with the same Prisma conventions: [Birmel](/birmel/)
+- Sibling Discord bot with the same Prisma conventions:
+  [Birmel](/explanation/birmel/)
