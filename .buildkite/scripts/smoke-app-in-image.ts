@@ -327,7 +327,16 @@ const commands: Record<
       String.raw`printf '%s\n' "$output"`,
       String.raw`[ "$status" -ne 124 ] && printf "%s\n" "$output" | grep -F "Connecting to Temporal server" && printf "%s\n" "$output" | grep -iE "connection refused|connect|econnrefused|transport error|failed to connect|tcp connect error|deadline"`,
     ].join("\n"),
-    env: { TEMPORAL_ADDRESS: "127.0.0.1:7233", SENTRY_DSN: "" },
+    env: {
+      TEMPORAL_ADDRESS: "127.0.0.1:7233",
+      // BuildKit may reuse the smoke network namespace while another image
+      // target is probing its worker. Ephemeral ports still exercise both
+      // exporters without making the image smoke depend on host port state;
+      // the deployed 9464/9465 service ports are asserted by homelab tests.
+      TEMPORAL_METRICS_ADDRESS: "127.0.0.1:0",
+      APP_METRICS_PORT: "0",
+      SENTRY_DSN: "",
+    },
   },
   "trmnl-dashboard": {
     command: [
