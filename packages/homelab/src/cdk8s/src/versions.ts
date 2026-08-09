@@ -157,7 +157,7 @@ const versions = {
   openebs: "4.5.1",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/scout-for-lol/beta":
-    "2.0.0-8286@sha256:7207b9622a2d2408b0f32b623dd62696fc513f850d5875f54509ef82401721b3",
+    "2.0.0-8437@sha256:880c49863129d6f2fa8746bf45bd70285c2e6ad697286597f1a1093e1ad31373",
   // Prod promotion = merging the Renovate PR for this pin. Each 2.0.0-<n>
   // tag is minted by the scout-tag-release CI step only after site version
   // <n> is archived, pointing at the backend digest beta serves it against —
@@ -176,11 +176,11 @@ const versions = {
     "2.0.0-7909@sha256:7e904d0538a6e0456271b50fe58c520e18159440f3b68b6073a307d7862c4972",
   // not managed by renovate
   "shepherdjerred/birmel":
-    "2.0.0-8311@sha256:d859a5124cbf003cd85fd201c36cfdcfd806294cabe0ef9002f3b147363b4275",
+    "2.0.0-8437@sha256:85529340423add05198cc2aed1e619b8877284640d3fc2ac467970f46a377276",
   // not managed by renovate — placeholder digest; CI version-commit-back fills
   // the real digest after the first successful scout-evals image push.
   "shepherdjerred/scout-evals":
-    "2.0.0-8286@sha256:2229709eb3cc4071115b9e0b8a897a4e008c31f2450004945979afd1ed43b1c6",
+    "2.0.0-8437@sha256:2c941aed68afd1ef738e9f2da2002127c599f5e8013bcb7237d491d6c7647fa4",
   // not managed by renovate
   "shepherdjerred/discord-plays-pokemon":
     "2.0.0-8286@sha256:6fca8ed159802a917a2e0d680ec7cdf9011692a52aff669c6c8827d4e1cb1d5b",

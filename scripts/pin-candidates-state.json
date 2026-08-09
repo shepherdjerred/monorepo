@@ -2,9 +2,9 @@
   "schema": "pin-candidates-state/v1",
   "pins": {
     "shepherdjerred/birmel": {
-      "buildNumber": 8311,
-      "version": "2.0.0-8311",
-      "digest": "sha256:d859a5124cbf003cd85fd201c36cfdcfd806294cabe0ef9002f3b147363b4275"
+      "buildNumber": 8437,
+      "version": "2.0.0-8437",
+      "digest": "sha256:85529340423add05198cc2aed1e619b8877284640d3fc2ac467970f46a377276"
     },
     "shepherdjerred/discord-plays-mario-kart": {
       "version": "2.0.0-8286",
@@ -17,14 +17,14 @@
       "buildNumber": 8286
     },
     "shepherdjerred/scout-evals": {
-      "version": "2.0.0-8286",
-      "digest": "sha256:2229709eb3cc4071115b9e0b8a897a4e008c31f2450004945979afd1ed43b1c6",
-      "buildNumber": 8286
+      "buildNumber": 8437,
+      "version": "2.0.0-8437",
+      "digest": "sha256:2c941aed68afd1ef738e9f2da2002127c599f5e8013bcb7237d491d6c7647fa4"
     },
     "shepherdjerred/scout-for-lol/beta": {
-      "version": "2.0.0-8286",
-      "digest": "sha256:7207b9622a2d2408b0f32b623dd62696fc513f850d5875f54509ef82401721b3",
-      "buildNumber": 8286
+      "buildNumber": 8437,
+      "version": "2.0.0-8437",
+      "digest": "sha256:880c49863129d6f2fa8746bf45bd70285c2e6ad697286597f1a1093e1ad31373"
     },
     "shepherdjerred/starlight-karma-bot/beta": {
       "version": "2.0.0-8286",
