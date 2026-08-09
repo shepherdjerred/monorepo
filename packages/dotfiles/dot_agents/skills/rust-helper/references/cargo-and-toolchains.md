@@ -6,13 +6,13 @@ Read this when configuring a workspace, toolchain, MSRV, dependency, Cargo confi
 
 Resolver 3 is the Rust 2024 default. Specify it in a virtual workspace. `rust-version` declares MSRV and affects compatible dependency selection.
 
-Run these diagnostics in order. Run the `cargo test --future-incompat-report`
-command in the same checkout before `cargo report future-incompatibilities`:
-the test command generates the report, and invoking the report command first
-fails when no report exists. Add `--locked` to dependency-resolving commands
-when the project commits `Cargo.lock`; omit it for libraries that intentionally
-do not commit a lockfile. Do not create or commit a lockfile solely to run
-these inspections.
+Run these diagnostics in order. In each command block, `cargo test
+--future-incompat-report` must complete before `cargo report
+future-incompatibilities`: the test command generates the report, while the
+report command only reads it and fails when none exists. Add `--locked` to
+dependency-resolving commands when the project commits `Cargo.lock`; omit it
+for libraries that intentionally do not commit a lockfile. Do not create or
+commit a lockfile solely to run these inspections.
 
 For a project that commits `Cargo.lock`, use:
 
@@ -23,16 +23,21 @@ cargo test --locked --future-incompat-report
 cargo report future-incompatibilities
 ```
 
-For a library that intentionally does not commit `Cargo.lock`, run these
-commands in an isolated disposable copy of the repository rather than the
-source checkout: Cargo will create a temporary lockfile while resolving
-dependencies.
+For a library that intentionally does not commit `Cargo.lock`, clone the
+current checkout to an isolated disposable directory and run the diagnostics
+there. Cargo can create a temporary lockfile while resolving dependencies
+without dirtying the source checkout:
 
 ```bash
-cargo tree -d
-cargo tree -e features
-cargo test --future-incompat-report
-cargo report future-incompatibilities
+diagnostics_dir="$(mktemp -d)"
+git clone --quiet --no-local . "$diagnostics_dir"
+(
+  cd "$diagnostics_dir"
+  cargo tree -d
+  cargo tree -e features
+  cargo test --future-incompat-report
+  cargo report future-incompatibilities
+)
 ```
 
 `cargo test --future-incompat-report` generates the report, and `cargo report
