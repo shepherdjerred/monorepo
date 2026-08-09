@@ -14,9 +14,11 @@ import {
   type ReportFilter,
   type ReportQueryAst,
   type ReportQueryPlan,
+  type ReportSelectItem,
 } from "#src/model/report-query-spec.ts";
 import {
   collectExpressionMetrics,
+  isAdditiveReportExpression,
   parseReportSelectItem,
 } from "#src/model/report-query-expression.ts";
 import { parseRenderClause } from "#src/model/report-query-render.ts";
@@ -30,7 +32,6 @@ import {
   resolveTemporalBucket,
   temporalWindowDays,
 } from "#src/model/temporal-analysis.ts";
-import { REPORT_METRICS } from "#src/model/report-query-metrics.ts";
 
 const PositiveIntSchema = z.coerce.number().int().positive();
 
@@ -152,7 +153,7 @@ export function compileReportQuery(ast: ReportQueryAst): ReportQueryPlan {
     groupBys,
     requestedGroupBys,
   );
-  validateTemporalRender(render, metrics, analysis, bucket);
+  validateTemporalRender(render, selectItems, analysis, bucket);
 
   return ReportQueryPlanSchema.parse({
     source,
@@ -318,19 +319,26 @@ function validateTemporalCompatibility(
 
 function validateTemporalRender(
   render: ReportQueryPlan["render"],
-  metrics: ReportMetric[],
+  selectItems: ReportSelectItem[],
   analysis: ReportQueryPlan["analysis"],
   bucket: ReportGroupBy | undefined,
 ): void {
   if (!("options" in render) || !("encoding" in render)) return;
   if (render.options.cumulative === true) {
-    const kinds = new Map(
-      REPORT_METRICS.map((metric) => [metric.id, metric.kind]),
-    );
-    const nonAdditive = metrics.find((metric) => kinds.get(metric) !== "count");
-    if (nonAdditive !== undefined) {
+    const y = render.encoding.y;
+    const yColumns = typeof y === "string" ? [y] : (y ?? []);
+    if (yColumns.length === 0) {
       throw new Error(
-        `Cumulative transforms require additive metrics; ${nonAdditive} is not additive.`,
+        "Cumulative transforms require at least one additive output expression.",
+      );
+    }
+    const invalidColumn = yColumns.find((column) => {
+      const item = selectItems.find((candidate) => candidate.key === column);
+      return item === undefined || !isAdditiveReportExpression(item.expression);
+    });
+    if (invalidColumn !== undefined) {
+      throw new Error(
+        `Cumulative transforms require additive output expressions; ${invalidColumn} is not additive.`,
       );
     }
   }

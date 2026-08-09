@@ -1,8 +1,8 @@
 import {
   REPORT_METRICS,
   VisualizationSnapshotSchema,
-  collectExpressionMetrics,
   cumulativeSeries,
+  isAdditiveReportExpression,
   linearTrend,
   resolveTemporalBucket,
   rollingSeries,
@@ -299,6 +299,8 @@ function pointMetricEvidence(
   return {
     sampleSize: evidence?.sampleSize ?? value.sampleSize ?? 0,
     successes: evidence?.successes ?? value.successes,
+    numerator: evidence?.numerator ?? value.numerator,
+    denominator: evidence?.denominator ?? value.denominator,
     confidenceInterval:
       evidence?.confidenceInterval ?? value.confidenceInterval ?? null,
   };
@@ -312,6 +314,8 @@ function pointComparisonEvidence(
   return {
     sampleSize: value.comparisonSampleSize ?? 0,
     successes: value.comparisonSuccesses,
+    numerator: value.comparisonNumerator,
+    denominator: value.comparisonDenominator,
     confidenceInterval: value.comparisonConfidenceInterval ?? null,
   };
 }
@@ -455,16 +459,7 @@ function bucketCursor(
 
 function isAdditiveColumn(plan: ReportQueryPlan, column: string): boolean {
   const item = plan.selectItems.find((candidate) => candidate.key === column);
-  if (item === undefined) return false;
-  const metrics = collectExpressionMetrics(item.expression);
-  return (
-    metrics.length > 0 &&
-    metrics.every((metric) =>
-      REPORT_METRICS.some(
-        (candidate) => candidate.id === metric && candidate.kind === "count",
-      ),
-    )
-  );
+  return item !== undefined && isAdditiveReportExpression(item.expression);
 }
 
 function metricTransformKind(metric: string): "rate" | "average" {

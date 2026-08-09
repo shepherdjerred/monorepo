@@ -136,10 +136,14 @@ function metricEvidence(
 ): {
   sampleSize: number;
   successes?: number;
+  numerator?: number;
+  denominator?: number;
   confidenceInterval?: ReturnType<typeof wilsonInterval95>;
 } {
   const metrics = collectExpressionMetrics(expression);
   const metric = metrics.length === 1 ? metrics[0] : undefined;
+  const directMetric =
+    expression.kind === "metric" ? expression.metric : undefined;
   const sampleSize =
     metric === "average_placement" ||
     metric === "top_two_rate" ||
@@ -149,21 +153,21 @@ function metricEvidence(
         ? row.participantRows
         : row.games;
   const successes =
-    metric === "win_rate"
+    directMetric === "win_rate"
       ? row.wins
-      : metric === "surrender_rate"
+      : directMetric === "surrender_rate"
         ? row.surrenders
-        : metric === "early_surrender_rate"
+        : directMetric === "early_surrender_rate"
           ? row.earlySurrenders
-          : metric === "first_blood_rate"
+          : directMetric === "first_blood_rate"
             ? row.firstBloods
-            : metric === "top_two_rate"
+            : directMetric === "top_two_rate"
               ? row.topTwoPlacements
-              : metric === "first_place_rate"
+              : directMetric === "first_place_rate"
                 ? row.firstPlaceFinishes
                 : undefined;
   const kind = REPORT_METRICS.find(
-    (candidate) => candidate.id === metric,
+    (candidate) => candidate.id === directMetric,
   )?.kind;
   if (kind === "rate" && successes !== undefined) {
     return {
@@ -172,7 +176,42 @@ function metricEvidence(
       confidenceInterval: wilsonInterval95(successes, sampleSize),
     };
   }
-  return { sampleSize };
+  const ratio = ratioEvidence(row, directMetric);
+  return { sampleSize, ...ratio };
+}
+
+function ratioEvidence(
+  row: AggregateRow,
+  metric: ReportMetric | undefined,
+): { numerator: number; denominator: number } | Record<string, never> {
+  if (metric === "kda") {
+    return { numerator: row.kills + row.assists, denominator: row.deaths };
+  }
+  if (metric === "avg_game_duration") {
+    return { numerator: row.durationSeconds / 60, denominator: row.games };
+  }
+  if (metric === "cs_per_minute") {
+    return {
+      numerator: row.creepScore,
+      denominator: row.timePlayedSeconds / 60,
+    };
+  }
+  if (metric === "avg_champion_level") {
+    return {
+      numerator: row.championLevelTotal,
+      denominator: row.participantRows,
+    };
+  }
+  if (metric === "avg_champion_experience") {
+    return {
+      numerator: row.championExperienceTotal,
+      denominator: row.participantRows,
+    };
+  }
+  if (metric === "average_placement") {
+    return { numerator: row.placementSum, denominator: row.arenaRows };
+  }
+  return {};
 }
 
 export function sortedAggregates(

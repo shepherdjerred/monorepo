@@ -101,6 +101,29 @@ describe("canonical ScoutQL temporal analysis", () => {
     expect(resolveTemporalBucket("auto", 366)).toBe("month");
   });
 
+  test("validates cumulative transforms against output expression semantics", () => {
+    expect(() =>
+      parseAndCompile(
+        "SELECT wins / games AS rate FROM match_participants GROUP BY all ANALYZE LAST 30 DAYS BUCKET BY DAY IN TIME ZONE 'UTC' RENDER line_chart WITH (y = rate, cumulative = true)",
+      ),
+    ).toThrow("rate is not additive");
+    expect(() =>
+      parseAndCompile(
+        "SELECT largest_multikill FROM match_participants GROUP BY all ANALYZE LAST 30 DAYS BUCKET BY DAY IN TIME ZONE 'UTC' RENDER line_chart WITH (y = largest_multikill, cumulative = true)",
+      ),
+    ).toThrow("largest_multikill is not additive");
+    expect(() =>
+      parseAndCompile(
+        "SELECT longest_life_seconds FROM match_participants GROUP BY all ANALYZE LAST 30 DAYS BUCKET BY DAY IN TIME ZONE 'UTC' RENDER line_chart WITH (y = longest_life_seconds, cumulative = true)",
+      ),
+    ).toThrow("longest_life_seconds is not additive");
+    expect(
+      parseAndCompile(
+        "SELECT kills + assists AS takedowns FROM match_participants GROUP BY all ANALYZE LAST 30 DAYS BUCKET BY DAY IN TIME ZONE 'UTC' RENDER line_chart WITH (y = takedowns, cumulative = true)",
+      ).render,
+    ).toMatchObject({ options: { cumulative: true } });
+  });
+
   test("supports requested table sparklines and static image parity", () => {
     const plan = parseAndCompile(
       `${BASE} ANALYZE LAST 30 DAYS BUCKET BY DAY IN TIME ZONE 'UTC' RENDER table WITH (sparkline = true)`,

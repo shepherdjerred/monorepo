@@ -1,6 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
-import { ReportResultTable } from "#src/components/report-result-table.tsx";
+import {
+  ReportResultTable,
+  sparklineSegments,
+} from "#src/components/report-result-table.tsx";
 
 describe("ReportResultTable", () => {
   test("keeps evidence aligned by row when labels repeat", () => {
@@ -29,5 +32,12 @@ describe("ReportResultTable", () => {
 
     expect(markup).toContain("1 (n=10)");
     expect(markup).toContain("2 (n=20)");
+  });
+
+  test("preserves missing buckets as gaps in sparklines", () => {
+    expect(sparklineSegments([0.5, null, 0.7])).toEqual([
+      "0.0,26.0 0.0,26.0",
+      "120.0,2.0 120.0,2.0",
+    ]);
   });
 });

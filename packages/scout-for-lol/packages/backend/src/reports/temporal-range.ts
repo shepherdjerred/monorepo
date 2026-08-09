@@ -3,6 +3,7 @@ import type {
   TemporalComparison,
   TemporalWindow,
 } from "@scout-for-lol/data";
+import { temporalWindowDays } from "@scout-for-lol/data";
 import { addDays, formatISO, parseISO } from "date-fns";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -20,6 +21,7 @@ export function resolveTemporalRanges(
   const current = resolveWindow(analysis.window, analysis.timezone, now);
   const comparison = resolveComparison(
     analysis.comparison,
+    analysis.window,
     analysis.timezone,
     current,
   );
@@ -64,12 +66,23 @@ function resolveWindow(
 
 function resolveComparison(
   comparison: TemporalComparison | undefined,
+  window: TemporalWindow,
   timezone: string,
   current: TemporalRange,
 ): TemporalRange | null {
   if (comparison === undefined) return null;
   if (comparison.kind === "calendar") {
     return calendarRange(comparison.startDate, comparison.endDate, timezone);
+  }
+  if (window.kind === "calendar") {
+    const previousEnd = formatISO(addDays(parseISO(window.startDate), -1), {
+      representation: "date",
+    });
+    const previousStart = formatISO(
+      addDays(parseISO(window.startDate), -temporalWindowDays(window)),
+      { representation: "date" },
+    );
+    return calendarRange(previousStart, previousEnd, timezone);
   }
   const inclusiveSpan =
     current.endDate.getTime() - current.startDate.getTime() + 1;

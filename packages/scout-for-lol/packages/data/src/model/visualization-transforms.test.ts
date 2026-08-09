@@ -53,6 +53,36 @@ function comparedRatePoint(
   };
 }
 
+function comparedRatioPoint(
+  current: { numerator: number; denominator: number; sampleSize: number },
+  comparison: { numerator: number; denominator: number; sampleSize: number },
+): TemporalSeriesPoint {
+  return {
+    ...point(
+      current.denominator === 0
+        ? current.numerator
+        : current.numerator / current.denominator,
+      current.sampleSize,
+    ),
+    comparisonValue:
+      comparison.denominator === 0
+        ? comparison.numerator
+        : comparison.numerator / comparison.denominator,
+    evidence: {
+      sampleSize: current.sampleSize,
+      numerator: current.numerator,
+      denominator: current.denominator,
+      confidenceInterval: null,
+    },
+    comparisonEvidence: {
+      sampleSize: comparison.sampleSize,
+      numerator: comparison.numerator,
+      denominator: comparison.denominator,
+      confidenceInterval: null,
+    },
+  };
+}
+
 describe("visualization transforms", () => {
   test("computes Wilson 95 percent intervals for binary rates", () => {
     const interval = wilsonInterval95(5, 10);
@@ -127,6 +157,36 @@ describe("visualization transforms", () => {
     });
     expect(rolled[1]?.absoluteDelta).toBeCloseTo(0.2);
     expect(rolled[1]?.percentageDelta).toBeCloseTo(0.5);
+  });
+
+  test("recomputes rolling ratios from their true denominators", () => {
+    const rolled = rollingSeries(
+      [
+        comparedRatioPoint(
+          { numerator: 8, denominator: 2, sampleSize: 1 },
+          { numerator: 6, denominator: 3, sampleSize: 10 },
+        ),
+        comparedRatioPoint(
+          { numerator: 6, denominator: 6, sampleSize: 20 },
+          { numerator: 8, denominator: 1, sampleSize: 1 },
+        ),
+      ],
+      2,
+      "average",
+      true,
+    );
+    expect(rolled[1]?.value).toBeCloseTo(14 / 8);
+    expect(rolled[1]?.comparisonValue).toBeCloseTo(14 / 4);
+    expect(rolled[1]?.evidence).toMatchObject({
+      sampleSize: 21,
+      numerator: 14,
+      denominator: 8,
+    });
+    expect(rolled[1]?.comparisonEvidence).toMatchObject({
+      sampleSize: 11,
+      numerator: 14,
+      denominator: 4,
+    });
   });
 
   test("restricts cumulative transforms to additive metrics", () => {

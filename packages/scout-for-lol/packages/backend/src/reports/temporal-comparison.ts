@@ -1,7 +1,6 @@
 import {
-  REPORT_METRICS,
-  collectExpressionMetrics,
   comparisonDeltas,
+  isAdditiveReportExpression,
   resolveTemporalBucket,
   temporalWindowDays,
   type ReportQueryPlan,
@@ -15,6 +14,7 @@ import {
   localCalendarDate,
 } from "#src/reports/temporal-labels.ts";
 import type { TemporalRange } from "#src/reports/temporal-range.ts";
+import { addDays, addMonths, formatISO, parseISO } from "date-fns";
 
 type TemporalComparisonInput = {
   currentRows: ReportResultRow[];
@@ -49,7 +49,13 @@ export function attachTemporalComparison({
     comparisonRows.map((row, index) => [row, comparisonEvidence?.[index]]),
   );
   const replacements = new Map<ReportResultRow, ReportResultRow>();
-  for (const [seriesKey, currentGroup] of currentGroups) {
+  const mergedRows = [...currentRows];
+  const seriesKeys = new Set([
+    ...currentGroups.keys(),
+    ...comparisonGroups.keys(),
+  ]);
+  for (const seriesKey of seriesKeys) {
+    const currentGroup = currentGroups.get(seriesKey) ?? [];
     const baselineGroup = comparisonGroups.get(seriesKey) ?? [];
     const compareRows =
       bucket === "patch" ? comparePatchTemporalRows : compareTemporalRows;
@@ -67,14 +73,34 @@ export function attachTemporalComparison({
         row,
       ]),
     );
-    sortedCurrent.forEach((row, index) => {
-      const offset = temporalBucketOffset({
+    const currentByOffset = new Map(
+      sortedCurrent.map((row, index) => [
+        temporalBucketOffset({
+          row,
+          range: ranges.current,
+          bucket,
+          timezone: analysis.timezone,
+          patchIndex: index,
+        }),
         row,
+      ]),
+    );
+    for (const offset of baselineByOffset.keys()) {
+      if (currentByOffset.has(offset)) continue;
+      const baseline = baselineByOffset.get(offset);
+      if (baseline === undefined) continue;
+      const row = materializeMissingCurrentRow({
+        baseline,
+        plan,
         range: ranges.current,
         bucket,
         timezone: analysis.timezone,
-        patchIndex: index,
+        offset,
       });
+      currentByOffset.set(offset, row);
+      mergedRows.push(row);
+    }
+    for (const [offset, row] of currentByOffset) {
       const baseline = baselineByOffset.get(offset);
       replacements.set(row, {
         ...row,
@@ -112,15 +138,72 @@ export function attachTemporalComparison({
             ...(matchedBaselineEvidence?.successes === undefined
               ? {}
               : { comparisonSuccesses: matchedBaselineEvidence.successes }),
+            ...(matchedBaselineEvidence?.numerator === undefined
+              ? {}
+              : { comparisonNumerator: matchedBaselineEvidence.numerator }),
+            ...(matchedBaselineEvidence?.denominator === undefined
+              ? {}
+              : {
+                  comparisonDenominator: matchedBaselineEvidence.denominator,
+                }),
           };
         }),
       });
-    });
+    }
   }
   return {
-    rows: currentRows.map((row) => replacements.get(row) ?? row),
+    rows: mergedRows.map((row) => replacements.get(row) ?? row),
     comparisonRows,
   };
+}
+
+type MissingCurrentRowInput = {
+  baseline: ReportResultRow;
+  plan: ReportQueryPlan;
+  range: TemporalRange;
+  bucket: "day" | "week" | "month" | "patch";
+  timezone: string;
+  offset: number;
+};
+
+function materializeMissingCurrentRow(
+  input: MissingCurrentRowInput,
+): ReportResultRow {
+  const label = currentBucketLabel(input);
+  const dimensions = [...input.baseline.dimensions.slice(0, -1), label];
+  return {
+    label: dimensions.join(" • "),
+    dimensions,
+    mentionIdentity: input.baseline.mentionIdentity,
+    values: input.baseline.values.map((value) => ({
+      column: value.column,
+      value: isAdditiveOutput(input.plan, value.column) ? 0 : null,
+    })),
+  };
+}
+
+function currentBucketLabel(input: MissingCurrentRowInput): string {
+  if (input.bucket === "patch") {
+    const label = input.baseline.dimensions.at(-1);
+    if (label === undefined)
+      throw new Error("Patch baseline is missing its label.");
+    return label;
+  }
+  const startLabel = localCalendarDate(input.range.startDate, input.timezone);
+  const start = parseISO(
+    input.bucket === "month" ? `${startLabel.slice(0, 7)}-01` : startLabel,
+  );
+  const aligned =
+    input.bucket === "week"
+      ? addDays(start, -((start.getDay() + 6) % 7))
+      : start;
+  const date =
+    input.bucket === "month"
+      ? addMonths(aligned, input.offset)
+      : addDays(aligned, input.offset * (input.bucket === "week" ? 7 : 1));
+  return formatISO(date, {
+    representation: "date",
+  }).slice(0, input.bucket === "month" ? 7 : 10);
 }
 
 type TemporalBucketOffsetInput = {
@@ -171,16 +254,7 @@ function temporalBucketOffset({
 
 function isAdditiveOutput(plan: ReportQueryPlan, column: string): boolean {
   const item = plan.selectItems.find((candidate) => candidate.key === column);
-  if (item === undefined) return false;
-  const metrics = collectExpressionMetrics(item.expression);
-  return (
-    metrics.length > 0 &&
-    metrics.every((metric) =>
-      REPORT_METRICS.some(
-        (candidate) => candidate.id === metric && candidate.kind === "count",
-      ),
-    )
-  );
+  return item !== undefined && isAdditiveReportExpression(item.expression);
 }
 
 function groupTemporalRows(

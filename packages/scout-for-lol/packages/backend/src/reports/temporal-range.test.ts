@@ -70,11 +70,8 @@ describe("temporal range resolution", () => {
     expect(ranges.comparison?.endDate.toISOString()).toBe(
       "2026-03-08T07:59:59.999Z",
     );
-    expect(
-      (ranges.comparison?.endDate.getTime() ?? 0) -
-        (ranges.comparison?.startDate.getTime() ?? 0),
-    ).toBe(
-      ranges.current.endDate.getTime() - ranges.current.startDate.getTime(),
+    expect(ranges.comparison?.startDate.toISOString()).toBe(
+      "2026-03-07T08:00:00.000Z",
     );
   });
 

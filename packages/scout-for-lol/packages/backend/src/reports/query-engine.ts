@@ -37,6 +37,8 @@ export type ReportResultValue = {
   percentageDelta?: number | null;
   comparisonSampleSize?: number;
   comparisonSuccesses?: number;
+  comparisonNumerator?: number;
+  comparisonDenominator?: number;
   comparisonConfidenceInterval?: {
     level: 0.95;
     lower: number;
@@ -44,6 +46,8 @@ export type ReportResultValue = {
   } | null;
   sampleSize?: number;
   successes?: number;
+  numerator?: number;
+  denominator?: number;
   confidenceInterval?: {
     level: 0.95;
     lower: number;
@@ -83,6 +87,8 @@ export type ReportQueryResult = {
       column: string;
       sampleSize: number;
       successes?: number;
+      numerator?: number;
+      denominator?: number;
       confidenceInterval?: {
         level: 0.95;
         lower: number;

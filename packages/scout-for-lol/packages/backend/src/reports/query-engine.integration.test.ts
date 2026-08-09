@@ -327,6 +327,30 @@ describe("executeReportQuery temporal comparisons", () => {
         ?.comparisonValue,
     ).toBe(1);
   });
+
+  test("rolls ratio metrics using their underlying denominators", async () => {
+    await writeTestLake(lakeDir, {
+      serverId,
+      matchFacts: [
+        temporalMatch("NA1_ratio_1", "2026-05-16T12:00:00.000Z", false),
+        temporalMatch("NA1_ratio_2", "2026-05-17T12:00:00.000Z", true),
+      ],
+    });
+
+    const result = await executeReportQuery({
+      prisma,
+      serverId,
+      queryText:
+        "SELECT kda FROM match_participants GROUP BY all ANALYZE BETWEEN '2026-05-16' AND '2026-05-17' BUCKET BY DAY IN TIME ZONE 'UTC' ORDER BY label ASC RENDER line_chart WITH (y = kda, rolling = 2)",
+      now,
+    });
+
+    expect(result.visualization?.series[0]?.points[0]?.value).toBeNull();
+    expect(result.visualization?.series[0]?.points[1]).toMatchObject({
+      value: 3,
+      evidence: { sampleSize: 2, numerator: 15, denominator: 5 },
+    });
+  });
 });
 
 describe("executeReportQuery player groups", () => {

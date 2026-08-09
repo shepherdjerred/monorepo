@@ -43,4 +43,42 @@ describe("attachTemporalComparison", () => {
     expect(result.rows[0]?.values[0]?.comparisonValue).toBe(2);
     expect(result.rows[1]?.values[0]?.comparisonValue).toBe(1);
   });
+
+  test("materializes a zero current row for a comparison-only bucket", () => {
+    const plan = parseAndCompile(
+      "SELECT games FROM match_participants GROUP BY all ANALYZE BETWEEN '2026-05-02' AND '2026-05-02' BUCKET BY DAY COMPARE TO BETWEEN '2026-05-01' AND '2026-05-01' IN TIME ZONE 'UTC' RENDER line_chart WITH (y = games)",
+    );
+    const baseline = row("2026-05-01", 5);
+    const result = attachTemporalComparison({
+      currentRows: [],
+      comparisonRows: [baseline],
+      comparisonEvidence: [
+        {
+          label: baseline.label,
+          values: [{ column: "games", sampleSize: 5 }],
+        },
+      ],
+      plan,
+      ranges: {
+        current: {
+          startDate: new Date("2026-05-02T00:00:00.000Z"),
+          endDate: new Date("2026-05-02T23:59:59.999Z"),
+        },
+        comparison: {
+          startDate: new Date("2026-05-01T00:00:00.000Z"),
+          endDate: new Date("2026-05-01T23:59:59.999Z"),
+        },
+      },
+    });
+
+    expect(result.rows).toHaveLength(1);
+    expect(result.rows[0]?.dimensions).toEqual(["2026-05-02"]);
+    expect(result.rows[0]?.values[0]).toMatchObject({
+      value: 0,
+      comparisonValue: 5,
+      absoluteDelta: -5,
+      percentageDelta: -1,
+      comparisonSampleSize: 5,
+    });
+  });
 });

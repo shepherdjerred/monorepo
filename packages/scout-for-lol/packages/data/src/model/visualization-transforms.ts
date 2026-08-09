@@ -144,6 +144,18 @@ function rollingMeasure(
       evidence: combinedEvidence,
     };
   }
+  if (
+    combinedEvidence.numerator !== undefined &&
+    combinedEvidence.denominator !== undefined
+  ) {
+    return {
+      value:
+        combinedEvidence.denominator === 0
+          ? combinedEvidence.numerator
+          : combinedEvidence.numerator / combinedEvidence.denominator,
+      evidence: combinedEvidence,
+    };
+  }
   if (combinedEvidence.sampleSize === 0) return emptyMeasure();
   const numerator = numericValues.reduce(
     (total, value, index) => total + value * (evidence[index]?.sampleSize ?? 0),
@@ -164,7 +176,24 @@ function combineEvidence(
     0,
   );
   const hasSuccesses = evidence.every((item) => item.successes !== undefined);
-  if (!hasSuccesses) return { sampleSize, confidenceInterval: null };
+  const hasRatio = evidence.every(
+    (item) => item.numerator !== undefined && item.denominator !== undefined,
+  );
+  const ratio = hasRatio
+    ? {
+        numerator: evidence.reduce(
+          (total, item) => total + (item.numerator ?? 0),
+          0,
+        ),
+        denominator: evidence.reduce(
+          (total, item) => total + (item.denominator ?? 0),
+          0,
+        ),
+      }
+    : {};
+  if (!hasSuccesses) {
+    return { sampleSize, ...ratio, confidenceInterval: null };
+  }
   const successes = evidence.reduce(
     (total, item) => total + (item.successes ?? 0),
     0,
@@ -172,6 +201,7 @@ function combineEvidence(
   return {
     sampleSize,
     successes,
+    ...ratio,
     confidenceInterval: confidence
       ? wilsonInterval95(successes, sampleSize)
       : null,
