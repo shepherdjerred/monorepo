@@ -27,6 +27,12 @@ import Testing
 @MainActor
 struct InspectorSnapshotTests {
     /// A task with something in every field.
+    ///
+    /// Its title is deliberately longer than a 340-point panel can hold on one
+    /// line, so this is also the picture of the **wrapping** title field. That
+    /// pairs with the compose row's snapshot, which covers the single-line path:
+    /// between them both of `PlainTextField`'s modes have visual coverage, and an
+    /// `NSViewRepresentable` that silently renders wrong is not a compiler error.
     @Test("the inspector, populated", arguments: SnapshotAppearance.allCases)
     func populated(appearance: SnapshotAppearance) throws {
         try record(

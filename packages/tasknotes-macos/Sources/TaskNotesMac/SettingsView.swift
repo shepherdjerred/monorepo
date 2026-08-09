@@ -21,6 +21,12 @@ public struct SettingsView: View {
         TabView {
             ServerSettingsView(environment: environment)
                 .tabItem { Label("Server", systemImage: "network") }
+            // The global hotkey has to be rebindable somewhere findable: it is
+            // claimed from the window server rather than from a menu, so it is
+            // the one binding in this app that can genuinely collide with
+            // something the user already has.
+            QuickAddSettingsView()
+                .tabItem { Label("Quick Add", systemImage: "plus.viewfinder") }
             GeneralSettingsView(store: environment.store)
                 .tabItem { Label("General", systemImage: "gearshape") }
         }

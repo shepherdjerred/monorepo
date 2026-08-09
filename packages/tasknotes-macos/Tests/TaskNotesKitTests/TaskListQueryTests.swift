@@ -166,7 +166,9 @@ struct TaskListQueryTests {
         #expect(try model(TaskListQuery()).rows.map(\.id) == ["zulu.md", "alpha.md", "mike.md"])
         // Browse is the one screen that starts sorted, matching the React
         // Native app's `DEFAULT_SORT`.
-        #expect(SidebarSection.browse.defaultSort == SortConfig(field: .dueDate, direction: .asc))
+        #expect(
+            SidebarSection.browse.defaultSort
+                == SortConfig(field: .effectiveDate, direction: .asc))
         #expect(SidebarSection.today.defaultSort == nil)
     }
 
@@ -187,7 +189,7 @@ struct TaskListQueryTests {
         #expect(byPriority.rows.first?.id == "alpha.md")
     }
 
-    @Test("search reads the title, the projects, the contexts and the tags")
+    @Test("search is the core's, and it is a filter dimension rather than a shell pass")
     func searchLooksWhereTheReferenceScreenLooks() throws {
         #expect(try model(TaskListQuery(search: "alph")).rows.map(\.id) == ["alpha.md"])
         #expect(try model(TaskListQuery(search: "OFFICE")).rows.map(\.id) == ["zulu.md"])
@@ -195,6 +197,13 @@ struct TaskListQueryTests {
         // `projectDisplayName` would have made the folder half unsearchable.
         #expect(try model(TaskListQuery(search: "areas")).rows.map(\.id) == ["zulu.md"])
         #expect(try model(TaskListQuery(search: "   ")).rows.count == 3, "blank narrows nothing")
+
+        // The search text lives *inside* the filter record rather than beside
+        // it, so there is no second copy to fall out of step.
+        #expect(TaskListQuery(search: "alph").filter.query == "alph")
+        var query = TaskListQuery(search: "alph")
+        query.clearNarrowing()
+        #expect(query.search.isEmpty)
     }
 
     @Test("filtering is the core's, wikilink equivalence included")
@@ -214,7 +223,8 @@ struct TaskListQueryTests {
         // Toggling twice is off again, which is what a menu checkmark means.
         byStatus.toggleStatus(.done)
         #expect(byStatus.statuses.isEmpty)
-        #expect(!TaskListQuery(filter: byStatus).isFiltered)
+        #expect(!TaskListQuery(filter: byStatus).isNarrowing)
+        #expect(TaskListQuery(filter: byStatus).activeFilterCount == 0)
     }
 
     @Test("the facet menu offers one entry per project, not one per spelling")
@@ -237,6 +247,38 @@ struct TaskListQueryTests {
         #expect(narrowed.rows.map(\.id) == ["mike.md"])
         #expect(narrowed.facets.projects == ["Work"])
         #expect(narrowed.facets.contexts == ["home", "office"])
+    }
+
+    @Test("reconstructing a query from a stored filter keeps its search")
+    func aStoredFilterRoundTripsWithItsSearch() {
+        // ⚠️ **A regression test for data loss, not a style point.** `search`
+        // writes through into `filter.query`, so while the parameter defaulted
+        // to `""` this initializer *erased* the dimension whenever a caller
+        // said nothing about it — and "say nothing about the search" is
+        // precisely what reconstructing a query from a stored `FilterConfig`
+        // does. A saved view holding a search round tripped as one holding
+        // none, silently, with no failure anywhere.
+        //
+        // The test lives here rather than only in the saved-view suite that
+        // found it, because the invariant belongs to this initializer: anything
+        // rebuilding a query from a persisted filter depends on it, and a saved
+        // view is only the first such caller.
+        var stored = FilterConfig.unfiltered
+        stored.query = "landlord"
+        stored.toggleStatus(.open)
+
+        #expect(TaskListQuery(filter: stored).search == "landlord")
+        #expect(TaskListQuery(filter: stored).activeFilterCount == 2)
+
+        // Saying nothing is different from saying "nothing".
+        #expect(TaskListQuery(search: "", filter: stored).search.isEmpty)
+        #expect(TaskListQuery(search: "boiler", filter: stored).search == "boiler")
+
+        // And the sort is orthogonal to both.
+        let ordered = TaskListQuery(
+            filter: stored, sort: SortConfig(field: .title, direction: .desc))
+        #expect(ordered.search == "landlord")
+        #expect(ordered.sort == SortConfig(field: .title, direction: .desc))
     }
 
     @Test("clearing drops the search and the filter but keeps the ordering")

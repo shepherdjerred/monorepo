@@ -643,31 +643,67 @@ _more_ correct than either implementation. Not user-visible until iOS shares the
 
 ## Remaining
 
-Phases 0–6 are complete and verified: 325 Rust tests, 328 TypeScript tests, zero suppressions,
-338/338 recurrence corpus, 25/25 sync scenarios, and the generated Swift compiles, links and runs.
+Phases 0–8, 4.5 and 6.5 are complete and verified, as are Phase 9a (the four list screens) and
+9b (the inspector): 325 Rust tests, 328 TypeScript tests, 167 Swift tests, zero suppressions,
+338/338 recurrence corpus, 26/26 sync scenarios, and the app builds, links, syncs and renders.
 
-- [ ] **Phase 7** — macOS app shell: XcodeGen project, `NavigationSplitView`, Settings scene,
-      `tasknotes://` URL type, `@Observable` store over the core. Bundle id prefix `red.sjer`.
-- [ ] **Phase 8** — Today screen end to end against a real server. **Quality gate: do not proceed
-      to Phase 9 until it feels right.**
-- [ ] **Phase 9** — the remaining 14 screens.
-- [ ] **🔴 Phase 4.5 — make `TaskApi` a transport.** See the architecture section above. This is
-      the highest-priority remaining item: it is the difference between the shared core actually
-      owning the wire boundary and every shell reimplementing it. Sequenced right after Phase 7b so
-      it **deletes** `WireBridge.swift` rather than reworking it. Touches `sync/host.rs`, the client,
-      and the FFI exports together, then regenerates bindings.
-- [ ] **Converge the Rust core on persisted id counters.** Both production bugs are now fixed in
-      TypeScript. For the collision bug the TS fix chose _persisting the counters_ and kept Rust's
-      mint-and-check loop only as a backstop — and the reasoning is sound enough that Rust should
-      follow: the durable-set check can only see ids the client **still holds**, but an id already
-      acked and dequeued is gone locally while still live in the server's idempotency store. A
-      monotonic persisted counter covers that case; the check cannot. `tasknotes-core`'s
-      check-and-retry is correct but strictly weaker. The shared scenario passes under either, so
-      this is hardening rather than a parity break.
-- [ ] Add `cargo-deny` to `.mise.toml` so it can join the `lint` script; it passes locally but
-      cannot run in CI until the toolchain pins it.
-- [ ] Add `tasknotes-core` and `tasknotes-fixtures` to the root `AGENTS.md` Structure list and
-      Package Notes.
+- [ ] **Phase 9c** — QuickAdd floating `NSPanel` on a global hotkey, Pomodoro, TimeReport.
+- [x] ~~**Phase 9d** — Kanban with drag-and-drop, SavedViews, Project/Context/Tag detail
+      screens.~~ **Done 2026-08-09.** Project/Context/Tag are not screens: `TaskEntity` produces a
+      `TaskListScope` and `SectionDetailView` renders it as `TaskListView(section: .browse, …)`.
+      Three RN screens → zero new views.
+- [ ] **🔴 Export sort wire values, or better `filter_config_to_json` / `sort_config_to_json`.**
+      Status and priority have wire values; `SortField` and `SortDirection` do not, so
+      `SortFieldName` in `SavedViewRecord.swift` is a shell **inventing a persisted vocabulary for
+      a core type**. That is the drift class this project exists to prevent, and it is the only
+      thing standing between a Windows client and a differently-spelled sort key.
+- [ ] **Export a `FilterConfig` conjunction** (`filter_config_and`, or accept a `Vec`). Without
+      one, "save this as a view" has to be disabled on an already-scoped screen. ⚠️ Note why
+      concatenation is not the answer: `FilterConfig` is _every dimension must pass, any value
+      within a dimension_, so merging two filters' `projects` turns an **and** into an **or**.
+- [ ] **Decide how a completed occurrence shows on the board.** A recurring task with today's
+      occurrence checked draws struck-through with a filled checkbox while its `status` is still
+      `open`, so the board files it under Open. Both halves are correct and the combination reads
+      as a contradiction. This is the real tension between per-occurrence completion and
+      status-as-column; it wants a decision, not a patch.
+- [ ] **Suppress metadata a heading already states.** Every row on a project screen prints the
+      project's own name — "Renew passport · Admin" under a heading reading _Admin_. RN does the
+      same; on a desktop it is noise. Symmetric with the existing `showsDate:` parameter.
+- [ ] **Align the menu-bar clear action.** The filter badge counts a non-empty search query, so
+      the filter menu and empty state now read "Clear Filters & Search"; `TaskNotesCommands.swift`
+      still says "Clear Filters".
+- [x] ~~**Close the core gaps the UI phases found.**~~ **Done 2026-08-09 in `8b8029cec`** — see the
+      Comment Log entry. `TaskSearch.swift` and the `CivilDate` helper are deleted; no core logic
+      is written in Swift any more.
+- [ ] **Adopt `recurrence_summary` in `Sources/TaskNotesKit/Detail/RecurrenceSummary.swift`** —
+      drop `needsCoreSummary` and the 🔴 block, read `description` from the core. `None` means
+      _show the raw RRULE_, matching `recurrence_frequency`. Note the file cannot be deleted and no
+      export would change that: `next: DateBadge` and `stopRepeating: TaskFieldEdit` are shell
+      types. It shrinks.
+- [ ] **Decide which of `recurrence_finite_instance_count` / `recurrence_summary` moves.** They
+      disagree, so the inspector can now show "Repeats indefinitely" beside "Every day, once". The
+      count reports _unbounded_ for `COUNT=abc` (which in fact fires exactly once) and for an
+      `UNTIL` series past the 10,000 ceiling. ⚠️ It is not a bug the Rust port introduced — it
+      faithfully reproduces the TypeScript reference, so **no fixture disagrees**, and whichever
+      side moves has to move `@tasknotes/fixtures` with it. The summary is the more accurate of
+      the two.
+- [ ] **`FilterConfig` now diverges from the RN app's `domain/filters.ts`**, which has no `query`.
+      `FilterConfig` is not in `@tasknotes/fixtures`, so no oracle caught it and nothing is broken
+      today — but the TypeScript type needs the field whenever the RN app adopts the core.
+- [ ] **Phase 10** — release: Sparkle ≥ 2.9.5, Developer ID signing, notarization, ship both dSYMs.
+- [ ] **Phase 11** — 6–10 XCUITest flows with `performAccessibilityAudit()`, local-only gate.
+- [x] ~~**Decide the `discouraged_optional_collection` question.**~~ **Resolved 2026-08-09 by
+      removing the conflict rather than the rule or the feature.** See the Comment Log.
+- [x] ~~Add `cargo-deny` to `.mise.toml` so it can join the `lint` script.~~ **Done 2026-08-09** —
+      pinned as `github:EmbarkStudios/cargo-deny` (no mise registry entry exists; the `github:`
+      backend fetches the release binary and verifies its artifact attestation and SLSA provenance,
+      where `cargo:` would compile it from source on every CI image bake) and appended to the
+      `lint` script. All four checks pass. ⚠️ Noted in `turbo.json`: licences, build scripts and
+      sources are pure functions of `Cargo.lock` and cache correctly, but `[advisories]` is
+      time-varying, so a new RustSec advisory against an unchanged dependency stays invisible until
+      an input moves.
+- [x] ~~Add `tasknotes-core` and `tasknotes-fixtures` to the root `AGENTS.md` Structure list and
+      Package Notes.~~ **Done 2026-08-08.**
 - [x] ~~Verify the generated Swift compiles under swift-corelibs-foundation on Linux.~~ **Done
       2026-08-08 — it works, and we are still not doing it.** See "Swift on Linux" below.
 - [ ] Unrelated pre-existing gap spotted during Phase 1: `src-tauri`'s `clippy` turbo task is not
@@ -687,3 +723,60 @@ Phases 0–6 are complete and verified: 325 Rust tests, 328 TypeScript tests, ze
   quality-tooling surveys. Supersedes an earlier draft of this file that recorded a
   "duplicate the core, don't build an FFI" conclusion — that reasoning was correct for two
   implementations and does not hold at three.
+- 2026-08-09: ⚠️ **A computed property that writes through into a stored one turns every defaulted
+  parameter into a silent write.** `TaskListQuery.search` reads and writes `filter.query`, and the
+  initializer defaulted it to `""` — so `TaskListQuery(filter: stored)`, a caller saying _nothing_
+  about search, silently erased the stored filter's free-text dimension. A saved view holding a
+  search round-tripped as one holding none, with no failure anywhere. `""` was not "no opinion",
+  it was "clear it"; `nil` is the only spelling a defaulted parameter has for the former. The
+  invariant belongs to `TaskListQuery.init`, not to saved views — window-state restoration and
+  `tasknotes://` deep links are the next callers to rebuild a query from a persisted
+  `FilterConfig`, and neither should have to rediscover it. Any future window onto a
+  `FilterConfig` dimension has the same trap.
+- 2026-08-09: **`NSTokenField` is unreachable under this lint posture, and the answer was to stop
+  using it.** Phase 9b reported `discouraged_optional_collection` as unsatisfiable against
+  `NSTokenFieldDelegate` and dropped inline type-ahead for a ▾ menu. Re-verified both legs: an
+  `[Any]?` return is a lint error, and an `[Any]` return is _"result has different optionality
+  than expected by protocol"_ — a **warning**, so "does not compile" was imprecise, but
+  `.treatAllWarnings(as: .error)` makes it a hard build failure regardless. The conclusion held.
+  The resolution was neither a suppression nor the degraded affordance but a **pure-SwiftUI token
+  control**: with no `@objc` protocol requirement there is no imposed `[Any]?`, so the conflict
+  disappears at its source. One deliberate exception to "pure" — the text entry stays an
+  `NSTextField`, because `control(_:textView:doCommandBy:)` is the only place ↑/↓ can be claimed
+  before the field editor consumes them, and **backspace-at-start-of-an-empty-field has no SwiftUI
+  spelling at all** (nothing changes, so there is no event to observe). `NSTextFieldDelegate`
+  returns `Bool`, so no lint conflict. The general lesson for the next AppKit delegate with a
+  nullable-collection return: prefer removing the bridge to exempting the rule.
+- 2026-08-09: ⚠️ **`.zIndex` does not work across grouped-`Form` rows.** A floating suggestion
+  overlay drew _under_ the following row. Proven not to be translucency by re-rendering with an
+  opaque background — the next row's label still sat on top. Cause: a grouped `Form` is
+  `NSTableView`-backed and each row is a separate cell, so there is no shared stacking context to
+  raise within. Any popover-like affordance inside a `Form` row must either take real layout space
+  or be hosted outside the form.
+- 2026-08-09: **Search became a seventh `FilterConfig` dimension, not a standalone predicate.**
+  A bare predicate leaves three decisions to each shell — the composition order, whether search
+  runs on the already-narrowed list, and whether a typed query counts as narrowing — which is
+  precisely the "different results in a different order" class. As a dimension there is one
+  predicate, one membership rule, and the badge count comes free. `task_search_matches` is also
+  exported for a live count, but it is literally the function the dimension calls, so the two
+  cannot drift. Semantics: title/projects/contexts/tags; substring, not prefix, not fuzzy;
+  projects matched **raw** so both halves of `[[Areas/Work|Work]]` are reachable; one phrase, not
+  tokens; empty matches everything; `details` excluded because it is frequently absent from a list
+  payload, so searching it would make a result set depend on _how the list was loaded_.
+  ⚠️ Two claims in the deleted `TaskSearch.swift` were wrong and should not be carried forward:
+  `lowercased()` is lowercase _mapping_, not Unicode full case folding (so `Straße`/`STRASSE`
+  never matched under Swift either), and Rust's `to_lowercase` does implement Final_Sigma, so the
+  sigma divergence it warned about does not exist. The core picked untailored Unicode lowercase
+  mapping and wrote down all three real consequences.
+- 2026-08-09: `task_filter_active_count` **counts a non-empty query as a dimension**, so a
+  search-narrowed list badges `1`, not `0` — a badge reading "(0)" over a list that search had
+  emptied answers the wrong question. `SortField::EffectiveDate` resolves due → scheduled → the
+  rule's next _uncompleted_ occurrence, using the same function the row badge uses so the sorted
+  date and the displayed date come from one place; a task with none of the three sorts last in
+  both directions, exactly like an undated task under `DueDate`. `SortField::Scheduled` was
+  deliberately **not** added — it only mirrors the defect, piling due-only tasks at the bottom.
+- 2026-08-09: The Rust core now converges on persisted id counters, matching the TypeScript fix
+  for the mutation-id collision bug. The mint-and-check loop stays as a backstop but is strictly
+  weaker on its own: the durable-set check can only see ids the client **still holds**, and an id
+  that has been acked and dequeued is gone locally while still live in the server's idempotency
+  store. Removed from `## Remaining` as shipped.

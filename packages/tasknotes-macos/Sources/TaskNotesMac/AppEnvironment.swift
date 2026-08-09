@@ -37,6 +37,16 @@ public final class AppEnvironment {
     /// launch with no explanation.
     public let store: Result<TaskNotesStore, CoreError>
 
+    /// The stored queries, and the only thing that persists them.
+    ///
+    /// A third object rather than a field on either of the two above, on the
+    /// same axis they are already split by: a saved view is neither a property
+    /// of a window (every window lists the same ones) nor a property of the
+    /// vault (the core has never heard of it). It is a preference, it lives in
+    /// `UserDefaults`, and giving it its own object is what keeps it out of a
+    /// store whose entire job is to be a projection of one core snapshot.
+    public let savedViews: SavedViewStore
+
     /// The server address, as typed in Settings.
     ///
     /// Kept as the raw string rather than a `URL` so a half-typed address is
@@ -46,14 +56,40 @@ public final class AppEnvironment {
         didSet { defaults.set(serverAddress, forKey: Self.serverAddressKey) }
     }
 
+    /// The floating quick-add panel, and the global hotkey that opens it.
+    ///
+    /// Assembled here rather than in a scene because the requirement is that the
+    /// hotkey works **with no windows open**. This object is the `@State` initial
+    /// value of the `App` struct, so it is built at launch before any scene
+    /// exists; a controller created by a view's `.task` would have tied a global
+    /// capability to the lifetime of a window the user is allowed to close.
+    let quickAdd: QuickAddPanelController
+
+    /// The one pomodoro interval the app is running, if any.
+    ///
+    /// Here rather than in the timer window for the same shape of reason: a
+    /// window is a *view* of a running interval, and closing it is not a way of
+    /// saying stop.
+    let pomodoro: PomodoroTimer
+
     private let defaults: UserDefaults
 
     /// Assemble over the sandbox container.
     public init(defaults: UserDefaults = .standard) {
+        let container = TaskNotesStore.containerDefault()
         self.navigation = NavigationState()
-        self.store = TaskNotesStore.containerDefault()
+        self.store = container
+        self.quickAdd = QuickAddPanelController(store: container)
+        self.pomodoro = PomodoroTimer()
+        self.savedViews = SavedViewStore(defaults: defaults)
         self.defaults = defaults
         self.serverAddress = defaults.string(forKey: Self.serverAddressKey) ?? ""
+
+        // Claimed at launch, and **only** from this initializer. The other one
+        // exists for previews and tests, and a test process that registered a
+        // system-wide hotkey would take a key combination off whoever is using
+        // the Mac for as long as the suite runs.
+        quickAdd.installHotkey()
     }
 
     /// Assemble over an explicit store, for previews and tests.
@@ -64,6 +100,9 @@ public final class AppEnvironment {
     ) {
         self.navigation = navigation
         self.store = store
+        self.quickAdd = QuickAddPanelController(store: store)
+        self.pomodoro = PomodoroTimer()
+        self.savedViews = SavedViewStore(defaults: defaults)
         self.defaults = defaults
         self.serverAddress = defaults.string(forKey: Self.serverAddressKey) ?? ""
     }

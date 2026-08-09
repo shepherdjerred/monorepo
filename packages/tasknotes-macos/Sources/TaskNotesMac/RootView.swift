@@ -33,41 +33,43 @@ public struct RootView: View {
 
     public var body: some View {
         NavigationSplitView {
-            // `selection:` is non-optional, matching `NavigationState`: there
-            // is no "nothing selected" state in this app.
-            List(SidebarSection.allCases, id: \.self, selection: $navigation.selection) { section in
-                Label(section.title, systemImage: section.systemImage)
-                    // A `Label` is a container; putting the identifier on it
-                    // without combining pushes the identifier down onto the
-                    // child text element and leaves the row unidentified. This
-                    // bites hardest on list rows, which is exactly what these
-                    // are.
-                    .accessibilityElement(children: .combine)
-                    .accessibilityIdentifier(AccessibilityIdentifier.sidebarItem(section))
-            }
-            .accessibilityIdentifier(AccessibilityIdentifier.sidebar)
+            // The source list is more than the four fixed screens now — it
+            // carries the board, the saved views, and the vault's own projects,
+            // contexts and tags — so it lives in its own view and its selection
+            // is a `TaskNotesDestination`. `selection:` stays non-optional,
+            // matching `NavigationState`: there is no "nothing selected" state
+            // in this app.
+            SidebarList(
+                navigation: navigation,
+                vocabulary: vocabulary,
+                savedViews: environment.savedViews
+            )
             .navigationSplitViewColumnWidth(min: 180, ideal: 220, max: 320)
         } detail: {
-            SectionDetailView(section: navigation.selection, store: environment.store)
-                // The inspector belongs to the **window**, not to a section, so
-                // it is attached here rather than inside `SectionDetailView`.
-                // Switching Today → Upcoming therefore keeps it open, which is
-                // what an attribute panel is supposed to do — and what a third
-                // `NavigationSplitView` column could not, since a trailing
-                // column cannot be collapsed at all.
-                .inspector(isPresented: $isInspectorPresented) {
-                    inspector
-                }
-                .toolbar {
-                    ToolbarItem(placement: .primaryAction) {
-                        Button("Inspector", systemImage: "sidebar.right") {
-                            isInspectorPresented.toggle()
-                        }
-                        .help("Show or hide the inspector (⌥⌘I)")
-                        .accessibilityIdentifier(AccessibilityIdentifier.Inspector.toggle)
+            SectionDetailView(
+                destination: navigation.selection,
+                store: environment.store,
+                savedViews: environment.savedViews
+            )
+            // The inspector belongs to the **window**, not to a section, so
+            // it is attached here rather than inside `SectionDetailView`.
+            // Switching Today → Upcoming therefore keeps it open, which is
+            // what an attribute panel is supposed to do — and what a third
+            // `NavigationSplitView` column could not, since a trailing
+            // column cannot be collapsed at all.
+            .inspector(isPresented: $isInspectorPresented) {
+                inspector
+            }
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button("Inspector", systemImage: "sidebar.right") {
+                        isInspectorPresented.toggle()
                     }
+                    .help("Show or hide the inspector (⌥⌘I)")
+                    .accessibilityIdentifier(AccessibilityIdentifier.Inspector.toggle)
                 }
-                .focusedSceneValue(\.inspectorPresentation, presentation)
+            }
+            .focusedSceneValue(\.inspectorPresentation, presentation)
         }
         // No `.navigationTitle` on the split view itself: the detail pane owns
         // the title so the window title tracks the visible content, which is
@@ -75,6 +77,17 @@ public struct RootView: View {
         .task {
             environment.start()
         }
+    }
+
+    /// The vault's projects, contexts and tags, for the sidebar's three groups.
+    ///
+    /// Derived from the store's own snapshot rather than kept as state, so a
+    /// project that appears on a task the moment a sync lands appears in the
+    /// sidebar in the same redraw. `TaskVocabulary.of` is a single pass over
+    /// the tasks with the core's `project_matches` doing the deduplication.
+    private var vocabulary: TaskVocabulary {
+        guard case .success(let store) = environment.store else { return .empty }
+        return TaskVocabulary.of(tasks: store.tasks)
     }
 
     /// The panel's content.

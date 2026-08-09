@@ -144,11 +144,19 @@ custom_rules:
       explicitly. `@unknown default:` is allowed, and only for non-frozen
       enums from system frameworks.
     severity: error
-    excluded_match_kinds:
-      - comment
-      - doccomment
-      - doccomment.field
-      - string
+    # `keyword` rather than an exclusion list. A regex alone cannot tell a
+    # `switch` case from the *argument label* `default:` — Phase 9c hit exactly
+    # that on `KeyboardShortcuts.Name(_:default:)`, where the library's one
+    # documented way to declare an initial binding tripped a rule about
+    # exhaustive switches, with no spelling available to dodge it.
+    # SourceKit does know the difference: it classifies the switch keyword as
+    # `keyword` and an argument label as `identifier`, wherever on the line it
+    # sits. Verified against both, plus `@unknown default:`, a one-line
+    # `default: return x`, and a line-leading argument label inside a
+    # multi-line call. This also subsumes the comment/doccomment/string
+    # exclusions this rule used to carry.
+    match_kinds:
+      - keyword
 
   # `print` is not logging: it is unstructured, unfiltered, invisible in a
   # release build's console, and impossible to correlate. Diagnostics go through

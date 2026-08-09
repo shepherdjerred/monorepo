@@ -91,25 +91,41 @@ struct FilterMenu: View {
 
             Divider()
 
-            Button("Clear Filters") { query.clearNarrowing() }
+            // Names both, because the badge counts both. A user who only
+            // typed in the search box still sees `Filter (1)` — search is a
+            // dimension of `FilterConfig` in the core, and the count is the
+            // core's — so the one control that undoes it has to say so, or the
+            // count looks like a bug and the remedy looks unrelated.
+            Button("Clear Filters & Search") { query.clearNarrowing() }
                 .disabled(!query.isNarrowing)
                 .accessibilityIdentifier(AccessibilityIdentifier.Query.clearFilters)
         } label: {
-            // A filled glyph rather than a badge with a number: the core has
-            // `FilterConfig::active_count`, documented in Rust as being for
-            // exactly that badge, but it is not exported across the FFI — and
-            // counting the dimensions again here would be a second opinion
-            // about what "filtered" means, sitting next to `taskFilterIsActive`.
-            // Fill says the one thing that is knowable without guessing.
+            // Filled *and* counted. `FilterConfig::active_count` is the core's
+            // own, so the number beside the funnel and the predicate that
+            // empties the list cannot disagree about what "filtered" means —
+            // and the fill is a second channel carrying the same fact, for
+            // anyone who reads a glyph faster than a digit.
             Label(
-                "Filter",
-                systemImage: query.isFiltered
+                label,
+                systemImage: query.isNarrowing
                     ? "line.3.horizontal.decrease.circle.fill"
                     : "line.3.horizontal.decrease.circle"
             )
         }
-        .help("Filter")
+        .help(label)
         .accessibilityIdentifier(AccessibilityIdentifier.Query.filterMenu)
+    }
+
+    /// `Filter`, or `Filter (3)` once something is set.
+    ///
+    /// The count is `FilterConfig::active_count`, which counts a non-empty
+    /// search as a dimension. That is the right question answered: the badge
+    /// exists to say *why this list is shorter than the vault*, and a `(0)`
+    /// over a list that a search had emptied would be answering a different
+    /// one. See the clear item for how the wording is kept honest.
+    private var label: String {
+        let count = query.activeFilterCount
+        return count == 0 ? "Filter" : "Filter (\(count))"
     }
 
     /// One facet dimension, present and empty rather than absent.
@@ -240,8 +256,10 @@ enum SortChoice: Hashable, Sendable {
     case synced
     case by(SortField)
 
-    /// The three the core actually sorts on, in the core's own order.
-    static let sorted: [SortChoice] = [.by(.dueDate), .by(.priority), .by(.title)]
+    /// The four the core sorts on, in the core's own order.
+    static let sorted: [SortChoice] = [
+        .by(.effectiveDate), .by(.dueDate), .by(.priority), .by(.title),
+    ]
 
     init(_ field: SortField?) {
         self = field.map(SortChoice.by) ?? .synced
@@ -263,6 +281,11 @@ enum SortChoice: Hashable, Sendable {
     var title: String {
         switch self {
         case .synced: "As Synced"
+        // Not "Effective Date", which names an implementation. What a reader
+        // wants is the date the row *shows* — the core's key consults `due`,
+        // `scheduled` and the recurrence rule precisely so that one column and
+        // one sort agree.
+        case .by(.effectiveDate): "Date"
         case .by(.dueDate): "Due Date"
         case .by(.priority): "Priority"
         case .by(.title): "Title"
@@ -272,6 +295,7 @@ enum SortChoice: Hashable, Sendable {
     var identifier: String {
         switch self {
         case .synced: "synced"
+        case .by(.effectiveDate): "effectiveDate"
         case .by(.dueDate): "dueDate"
         case .by(.priority): "priority"
         case .by(.title): "title"

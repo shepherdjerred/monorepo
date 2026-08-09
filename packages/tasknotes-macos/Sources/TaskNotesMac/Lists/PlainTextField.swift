@@ -169,7 +169,45 @@ struct PlainTextField: NSViewRepresentable {
 
         func controlTextDidChange(_ notification: Notification) {
             guard let field = notification.object as? NSTextField else { return }
-            parent.text = field.stringValue
+            parent.text = parent.wraps ? flattened(field) : field.stringValue
+        }
+
+        /// The field's value with every line break turned into a space.
+        ///
+        /// ⚠️ **This closes a hole that turning `wraps` on opened.** A
+        /// single-line field gets newline filtering for free from
+        /// `usesSingleLineMode`; a wrapping one does not, and intercepting
+        /// `insertNewline(_:)` only covers the *typed* Return — **paste, drag
+        /// and drop, and Services never go through that selector.** So a
+        /// pasted paragraph would put a literal `\n` into the value.
+        ///
+        /// That matters more than it looks. A task's id is its vault *path*,
+        /// and the core's `TaskTitle::parse` rejects only the empty string — a
+        /// title carrying a newline is non-empty by every test the core
+        /// applies, and then it is a filename.
+        ///
+        /// A space rather than a deletion, because that is what the core's own
+        /// `parse_task_input` does to the quick-add path: typing
+        /// `Pay rent⏎and call the landlord` into the compose row yields
+        /// `Pay rent and call the landlord`, not `Pay rentand call the
+        /// landlord`. The two entry points into a title now agree, which is the
+        /// whole reason this normalizes rather than strips.
+        ///
+        /// Rewriting `stringValue` mid-edit would normally move the caret, so
+        /// the selection is restored — and it can be restored exactly, because
+        /// one character is replaced by one character and every offset survives.
+        /// The rewrite only happens on the rare edit that actually contains a
+        /// line break, so the common keystroke path is untouched.
+        private func flattened(_ field: NSTextField) -> String {
+            let raw = field.stringValue
+            guard raw.contains(where: \.isNewline) else { return raw }
+            let flat = String(raw.map { $0.isNewline ? " " : $0 })
+            let selection = (field.currentEditor() as? NSTextView)?.selectedRange()
+            field.stringValue = flat
+            if let selection, let editor = field.currentEditor() as? NSTextView {
+                editor.setSelectedRange(selection)
+            }
+            return flat
         }
 
         @objc func submit(_ sender: NSTextField) {

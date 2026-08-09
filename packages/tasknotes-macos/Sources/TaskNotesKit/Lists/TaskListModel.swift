@@ -65,6 +65,20 @@ public struct TaskListModel: Sendable, Equatable {
     /// The query the rows were narrowed by.
     public let query: TaskListQuery
 
+    /// What narrowed the corpus *before* the reader's own query, when
+    /// something did.
+    ///
+    /// This is how the project, context, tag and saved-view screens exist
+    /// without being screens: they are this list, over a corpus one
+    /// `apply_filter` call smaller, under a different heading. Nothing else
+    /// about them differs, which is why adding them cost one optional
+    /// parameter rather than three near-copies of this file.
+    ///
+    /// It is applied at the very top of the pipeline — before membership,
+    /// before facets — so `admittedCount` counts within the scope and the
+    /// filter menu offers only values that exist inside it.
+    public let scope: TaskListScope?
+
     /// How many tasks the screen admitted before searching and filtering.
     ///
     /// The difference between this and `rows.count` is what makes an empty list
@@ -99,6 +113,10 @@ public struct TaskListModel: Sendable, Equatable {
     ///   - calendar: where and when the viewer is.
     ///   - query: the search, filter and sort the user has applied.
     ///   - text: the locale formatter; injected so a test can pin a locale.
+    ///   - scope: a narrowing applied *before* everything else, or `nil` for the
+    ///     section's whole corpus. This is what makes the project, context, tag
+    ///     and saved-view screens configurations of this list rather than
+    ///     screens of their own.
     /// - Returns: the screen, with its rows grouped and ordered as it draws
     ///   them.
     /// - Throws: `CoreError` when the core rejects the viewer's calendar or one
@@ -109,15 +127,24 @@ public struct TaskListModel: Sendable, Equatable {
         pendingTaskIds: [TaskId],
         calendar: ViewerCalendar,
         query: TaskListQuery = TaskListQuery(),
-        text: TaskDateText = TaskDateText()
+        text: TaskDateText = TaskDateText(),
+        scope: TaskListScope? = nil
     ) throws(CoreError) -> TaskListModel {
+        // Step zero, above membership: a scoped screen is this screen over a
+        // smaller corpus. Applied here rather than beside the reader's own
+        // filter so that `admittedCount` counts within the scope and the filter
+        // menu offers only values the scope actually contains — the same reason
+        // facets are taken from what the *screen* admitted rather than from the
+        // vault.
+        let corpus = scope?.narrow(tasks) ?? tasks
+
         var admitted: [CoreTask] = []
         // The occurrence each row is about, for the screens that answer that
         // question. Kept beside the list rather than inside it because the core
         // filter and sort take and return plain tasks, so anything travelling
         // with a task has to survive a round trip through them by id.
         var occurrences: [TaskId: String] = [:]
-        for task in tasks {
+        for task in corpus {
             switch try section.admits(task, calendar: calendar) {
             case .excluded:
                 continue
@@ -128,17 +155,92 @@ public struct TaskListModel: Sendable, Equatable {
         }
 
         let available = TaskListFacets(of: admitted)
-        let searched = TaskSearch.narrow(admitted, to: query.search)
+        let ordered = try narrowed(admitted, by: query, calendar: calendar)
+        let derived = try rows(
+            of: ordered,
+            pendingTaskIds: pendingTaskIds,
+            occurrences: occurrences,
+            calendar: calendar,
+            text: text
+        )
+        let grouped =
+            section.isGrouped ? try TaskListGroup.byDay(derived) : TaskListGroup.flat(derived)
+
+        // Spelled out rather than `scope?.title ?? try …`: a `??` whose
+        // right-hand side throws widens the whole expression's thrown type back
+        // to `any Error`, which no longer converts to this function's
+        // `throws(CoreError)`. Same trap, same fix, as `TaskRowState`'s
+        // occurrence branch.
+        let screenTitle: String
+        if let scoping = scope {
+            screenTitle = scoping.title
+        } else {
+            screenTitle = try section.heading(on: calendar, text: text)
+        }
+        return TaskListModel(
+            section: section,
+            calendar: calendar,
+            // A scope names the screen. "Website" rather than "Browse" is the
+            // whole visible difference between a project screen and the corpus
+            // it is a slice of, and putting it here keeps the model and the
+            // window title reading off one value.
+            heading: screenTitle,
+            groups: grouped,
+            // Flattened *from the groups*, not from the pass above: grouping
+            // reorders, and a selection or a menu-bar command built against
+            // one order acting on the other is how a "complete the selection"
+            // ends up completing the wrong rows.
+            rows: grouped.flatMap(\.rows),
+            facets: available,
+            query: query,
+            scope: scope,
+            admittedCount: admitted.count
+        )
+    }
+
+    /// Search, filter and sort, all of them the core's.
+    ///
+    /// Search and filter are **one** step, because the core made search a
+    /// dimension of `FilterConfig` rather than something a shell bolts on. The
+    /// Swift substring matcher this replaced was the one piece of genuine core
+    /// logic left in this target, and it is gone.
+    ///
+    /// - Throws: `CoreError` when the core refuses the sort.
+    private static func narrowed(
+        _ admitted: [CoreTask],
+        by query: TaskListQuery,
+        calendar: ViewerCalendar
+    ) throws(CoreError) -> [CoreTask] {
         // Skipped when nothing is filtered, because `taskFilterApply` copies
         // every task across the FFI and the common case is an inactive filter.
         // `taskFilterIsActive` is the core's own predicate, so "nothing is
         // filtered" is not a judgement made here.
         let filtered =
             taskFilterIsActive(filter: query.filter)
-            ? taskFilterApply(tasks: searched, filter: query.filter)
-            : searched
-        let ordered = query.sort.map { taskSortApply(tasks: filtered, sort: $0) } ?? filtered
+            ? taskFilterApply(tasks: admitted, filter: query.filter)
+            : admitted
+        guard let sort = query.sort else { return filtered }
+        // `today` is passed because `SortField.effectiveDate` consults it to
+        // expand a recurrence rule. The core is explicit that `nil` is not a
+        // fallback but a statement of fact — "nobody told this call what day it
+        // is" — under which a rule-only task sorts as undated. A screen that
+        // already holds a `ViewerCalendar` has no business saying that.
+        return try CoreErrors.rethrowingCore("sorting the list") {
+            try taskSortApply(tasks: filtered, sort: sort, today: calendar.today)
+        }
+    }
 
+    /// Derive a row per task, in the order given.
+    ///
+    /// - Throws: `CoreError` when the core rejects one of the tasks' own stored
+    ///   values.
+    private static func rows(
+        of ordered: [CoreTask],
+        pendingTaskIds: [TaskId],
+        occurrences: [TaskId: String],
+        calendar: ViewerCalendar,
+        text: TaskDateText
+    ) throws(CoreError) -> [TaskRowState] {
         // A set, because `pendingTaskIds` is scanned once per surviving task
         // and a linear search would make a large vault quadratic on every
         // keystroke that redraws the list.
@@ -156,23 +258,7 @@ public struct TaskListModel: Sendable, Equatable {
                 )
             )
         }
-
-        let grouped =
-            section.isGrouped ? try TaskListGroup.byDay(derived) : TaskListGroup.flat(derived)
-        return TaskListModel(
-            section: section,
-            calendar: calendar,
-            heading: try section.heading(on: calendar, text: text),
-            groups: grouped,
-            // Flattened *from the groups*, not from the pass above: grouping
-            // reorders, and a selection or a menu-bar command built against
-            // one order acting on the other is how a "complete the selection"
-            // ends up completing the wrong rows.
-            rows: grouped.flatMap(\.rows),
-            facets: available,
-            query: query,
-            admittedCount: admitted.count
-        )
+        return derived
     }
 
     /// ``build(section:tasks:pendingTaskIds:calendar:query:text:)``, as a
@@ -190,7 +276,8 @@ public struct TaskListModel: Sendable, Equatable {
         pendingTaskIds: [TaskId],
         calendar: ViewerCalendar,
         query: TaskListQuery = TaskListQuery(),
-        text: TaskDateText = TaskDateText()
+        text: TaskDateText = TaskDateText(),
+        scope: TaskListScope? = nil
     ) -> Result<TaskListModel, CoreError> {
         CoreErrors.capturing { () throws(CoreError) -> TaskListModel in
             try build(
@@ -199,7 +286,8 @@ public struct TaskListModel: Sendable, Equatable {
                 pendingTaskIds: pendingTaskIds,
                 calendar: calendar,
                 query: query,
-                text: text
+                text: text,
+                scope: scope
             )
         }
     }

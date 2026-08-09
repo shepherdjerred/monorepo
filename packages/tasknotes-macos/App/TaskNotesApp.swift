@@ -47,6 +47,16 @@ struct TaskNotesApp: App {
         .defaultSize(width: 1100, height: 720)
         .commands {
             TaskNotesCommands(navigation: environment.navigation)
+            // File > Quick Add…. A separate conformer rather than more cases
+            // inside `TaskNotesCommands`, because it belongs beside the panel
+            // it opens.
+            //
+            // There is deliberately **no** command for the two windows below:
+            // SwiftUI adds a Window-menu item for every `Window` scene on its
+            // own, from launch and before either has ever been opened. Verified
+            // by reading the running app's menu bar — an explicit pair produced
+            // `Pomodoro, Time Report, Pomodoro, Time Report`.
+            QuickAddCommands(environment: environment)
         }
 
         // Contributes the standard "Settings…" item at `⌘,` in the app menu,
@@ -54,5 +64,14 @@ struct TaskNotesApp: App {
         Settings {
             SettingsView(environment: environment)
         }
+
+        // The pomodoro timer and the time report, each a single `Window`.
+        //
+        // The quick-add panel is deliberately **not** here: it is an `NSPanel`
+        // built by hand, because SwiftUI exposes no way to make a scene's window
+        // non-activating, and appearing without pulling the application forward
+        // is the whole point of it. It is owned by `AppEnvironment` instead, so
+        // its hotkey is live from launch and survives every window closing.
+        TimingScenes(environment: environment)
     }
 }

@@ -14,10 +14,20 @@ public import TaskNotesUniFFI
 /// without a window.
 public struct TaskListQuery: Sendable, Equatable {
     /// What the search field holds. Empty means no search.
-    public var search: String
+    ///
+    /// A window onto `filter.query`, not a field of its own. Search **is** a
+    /// filter dimension — the core made it one — and keeping a second copy
+    /// beside the record it belongs to is how the two would drift the first
+    /// time something cleared one and not the other. The accessor exists only
+    /// so the search field has something plain to bind to.
+    public var search: String {
+        get { filter.query }
+        set { filter.query = newValue }
+    }
 
-    /// The core's on-device filter. `FilterConfig()` — every list empty, the
-    /// flag off — is the app's `EMPTY_FILTER` and matches everything.
+    /// The core's on-device filter, free-text query included.
+    /// ``FilterConfig/unfiltered`` — every list empty, the flag off, the query
+    /// blank — is the app's `EMPTY_FILTER` and matches everything.
     public var filter: FilterConfig
 
     /// How the list is ordered, or `nil` for the order the core produced.
@@ -32,39 +42,51 @@ public struct TaskListQuery: Sendable, Equatable {
         self.init(sort: section.defaultSort)
     }
 
+    /// - Parameters:
+    ///   - search: what the search field holds, or `nil` to take whatever
+    ///     `filter` already carries in its own free-text dimension.
+    ///
+    ///     ⚠️ **`nil` rather than `""`, and that is a data-loss fix rather than
+    ///     a nicety.** ``search`` writes through into `filter.query`, so with a
+    ///     `""` default `TaskListQuery(filter: stored)` silently *erased* the
+    ///     stored filter's free-text dimension — the caller said nothing about
+    ///     the search and got it cleared. A saved view holding a search round
+    ///     tripped as one holding none. `nil` is the only spelling of "I am not
+    ///     talking about the search" that a defaulted parameter has.
+    ///   - filter: the core's filter record, free-text dimension included.
+    ///   - sort: how the list is ordered, or `nil` for the core's own order.
     public init(
-        search: String = "",
+        search: String? = nil,
         filter: FilterConfig = .unfiltered,
         sort: SortConfig? = nil
     ) {
-        self.search = search
         self.filter = filter
         self.sort = sort
+        // After `filter`, because it writes through into it — and only when the
+        // caller actually named a search.
+        if let search { self.search = search }
     }
 
     /// Whether anything is being hidden.
     ///
-    /// Sorting is excluded deliberately: reordering a list removes nothing from
-    /// it, and this value's only job is to answer "is this list empty because
-    /// the vault is empty, or because I hid things?".
-    public var isNarrowing: Bool {
-        !search.trimmingWhitespace().isEmpty || taskFilterIsActive(filter: filter)
-    }
+    /// Sorting is excluded deliberately — by the core, not here: reordering a
+    /// list removes nothing from it, and this value's only job is to answer
+    /// "is this list empty because the vault is empty, or because I hid
+    /// things?".
+    public var isNarrowing: Bool { taskFilterIsActive(filter: filter) }
 
-    /// Whether the core considers any dimension filtered.
+    /// How many dimensions are filtered, for the toolbar's badge.
     ///
-    /// ⚠️ The toolbar shows *that* a filter is on, not **how many** dimensions
-    /// it covers. The core has `FilterConfig::active_count`, documented in Rust
-    /// as being *"for the `filters (3)` badge"* — but it is not in the FFI
-    /// surface, and counting the six dimensions again in Swift would put a
-    /// second opinion about what "filtered" means next to `taskFilterIsActive`,
-    /// which is the first thing that would drift. Exporting `active_count` is
-    /// on the list of things this phase is asking the core for.
-    public var isFiltered: Bool { taskFilterIsActive(filter: filter) }
+    /// The core's own `FilterConfig::active_count`, so the number beside the
+    /// funnel and the predicate that empties the list can never disagree about
+    /// what "filtered" means. Search counts as one of them, which is right:
+    /// it is a dimension of the same record and it hides rows the same way.
+    public var activeFilterCount: Int { Int(taskFilterActiveCount(filter: filter)) }
 
     /// Drop every filter and the search, keeping the ordering.
+    ///
+    /// One assignment, because the search lives inside the filter.
     public mutating func clearNarrowing() {
-        search = ""
         filter = .unfiltered
     }
 }
@@ -72,9 +94,9 @@ public struct TaskListQuery: Sendable, Equatable {
 extension FilterConfig {
     /// The filter that keeps everything — the app's `EMPTY_FILTER`.
     ///
-    /// Spelled once here because the generated memberwise initializer takes six
-    /// arguments and UniFFI emits no defaults, so every call site would
-    /// otherwise restate six empty values to say "no filter".
+    /// Spelled once here because the generated memberwise initializer takes
+    /// seven arguments and UniFFI emits no defaults for most of them, so every
+    /// call site would otherwise restate seven empty values to say "no filter".
     public static var unfiltered: FilterConfig {
         FilterConfig(
             projects: [],
@@ -82,7 +104,8 @@ extension FilterConfig {
             tags: [],
             statuses: [],
             priorities: [],
-            hasNoDueDate: false
+            hasNoDueDate: false,
+            query: ""
         )
     }
 

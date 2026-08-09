@@ -74,7 +74,17 @@ let package = Package(
         // The committed bindings package. `cargo xtask build-xcframework`
         // produces the XCFramework it wraps; the generated Swift itself is
         // committed and guarded by `cargo xtask check-bindings`.
-        .package(path: "../tasknotes-core/bindings")
+        .package(path: "../tasknotes-core/bindings"),
+
+        // The global hotkey that opens the quick-add panel.
+        //
+        // Named in the plan's dependency list, and the alternative is worse in
+        // a way that is not obvious: this wraps Carbon's `RegisterEventHotKey`,
+        // which needs **no** permission at all, while the only other way to see
+        // a keystroke the app did not receive is a `CGEventTap`, which needs
+        // Accessibility. A task app that demands "control your computer" on
+        // first launch to give you a text field is not shipping.
+        .package(url: "https://github.com/sindresorhus/KeyboardShortcuts.git", from: "1.10.0"),
     ],
     targets: [
         // ── Generated code is exempt; authored code is maximal. ────────────
@@ -140,7 +150,14 @@ let package = Package(
         // belongs to the Xcode application target.
         .target(
             name: "TaskNotesMac",
-            dependencies: ["TaskNotesKit", "TaskNotesUniFFI"],
+            dependencies: [
+                "TaskNotesKit",
+                "TaskNotesUniFFI",
+                // Only this target. The hotkey library imports Cocoa, so it can
+                // never reach `TaskNotesKit` without breaking the
+                // no-UI-imports rule `ci/no-suppressions.sh` enforces.
+                .product(name: "KeyboardShortcuts", package: "KeyboardShortcuts"),
+            ],
             swiftSettings: authoredSwiftSettings + [.defaultIsolation(MainActor.self)]
         ),
 

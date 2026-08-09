@@ -53,89 +53,13 @@ struct CompletionRow: View {
     }
 }
 
-/// One list of names — projects, contexts or tags — as a labelled row.
-///
-/// **Not a `LabeledContent`**, and that was measured rather than chosen: the
-/// trailing column of a labelled row in a ~340-point inspector is barely a
-/// hundred points wide, and a task with two projects rendered exactly one of
-/// them with no indication the other existed. A field that lies about a task's
-/// data is worse than one that is taller, so the label goes above and the tokens
-/// get the whole width to wrap into.
-///
-/// The ▾ menu is where the vault's existing names live. It replaces the React
-/// Native form's scrolling multi-select — same question, "what have I called
-/// things before" — and it exists here rather than as type-ahead for the reason
-/// recorded on ``TokenListField``.
-struct TokenListRow: View {
-    let label: String
-    let identifier: String
-
-    /// The task's current values, as stored.
-    let values: [String]
-
-    /// Every name the vault already uses.
-    let vocabulary: [String]
-
-    /// How a stored value is shown.
-    let display: (String) -> String
-
-    /// The token field's placeholder.
-    let prompt: String
-
-    /// The whole replacement list, when the field commits.
-    let onCommit: ([String]) -> Void
-
-    /// One name chosen from the menu. The caller decides what "already present"
-    /// means, because for a project only the core can answer that.
-    let onAdd: (String) -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            HStack {
-                Text(label)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .accessibilityHidden(true)
-                Spacer()
-                if !vocabulary.isEmpty {
-                    Menu {
-                        ForEach(vocabulary, id: \.self) { name in
-                            Button(display(name)) { onAdd(name) }
-                        }
-                    } label: {
-                        Image(systemName: "chevron.down")
-                    }
-                    .menuStyle(.borderlessButton)
-                    .menuIndicator(.hidden)
-                    .fixedSize()
-                    .help("Names already used in this vault")
-                    .accessibilityLabel("Add an existing \(label.lowercased())")
-                }
-            }
-            TokenListField(
-                tokens: values,
-                display: display,
-                onCommit: onCommit
-            )
-            // The prompt is drawn here rather than by the field: AppKit paints a
-            // token field's placeholder in the control colour, so it came out
-            // indistinguishable from a real token's text. `allowsHitTesting`
-            // false so a click still lands on the field it is inviting you to
-            // type into.
-            .overlay(alignment: .leading) {
-                if values.isEmpty {
-                    Text(prompt)
-                        .foregroundStyle(.tertiary)
-                        .allowsHitTesting(false)
-                        .accessibilityHidden(true)
-                }
-            }
-            .accessibilityIdentifier(identifier)
-            .accessibilityLabel(label)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-}
+// The three list-of-names rows are ``TokenListField``, which owns its own
+// caption. They are **not** `LabeledContent`, and that was measured rather than
+// chosen: the trailing column of a labelled row in a ~340-point inspector is
+// barely a hundred points wide, and a task with two projects rendered exactly
+// one of them with no indication the other existed. A field that lies about a
+// task's data is worse than one that is taller, so the label goes above and the
+// tokens get the whole width to wrap into.
 
 /// A date row — due or scheduled — over the shared scheduling popover.
 ///

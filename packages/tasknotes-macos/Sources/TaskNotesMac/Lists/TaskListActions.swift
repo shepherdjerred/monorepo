@@ -1,4 +1,5 @@
 internal import SwiftUI
+internal import TaskNotesKit
 
 /// What the menu bar can ask the frontmost task list to do.
 ///
@@ -47,6 +48,35 @@ struct TaskListActions {
 
     /// Whether anything is being hidden, which is what makes Clear applicable.
     let isNarrowed: Bool
+
+    /// The query this screen could be kept as a saved view, or `nil` when it
+    /// could not be.
+    ///
+    /// ## Why this travels on the focused value
+    ///
+    /// The control that keeps a view lives in the **sidebar**, next to the
+    /// views it would join, while the query lives in the **detail pane**.
+    /// `focusedSceneValue` is the seam that already connects those two for the
+    /// menu bar, so the sidebar reads the frontmost screen's query the same way
+    /// the Task menu reads its selection — rather than the window hoisting a
+    /// copy of every screen's query into shared state.
+    ///
+    /// ## 🔴 Why it is `nil` on a scoped screen, and what the core should export
+    ///
+    /// A saved view stores exactly one `FilterConfig`. On a screen that already
+    /// has a ``TaskListScope``, there are **two** in play — the scope's and the
+    /// reader's — applied in sequence, and the core's filter semantics are
+    /// *"every dimension must pass, any value within a dimension"*. So merging
+    /// them by concatenating each dimension turns an **and** into an **or**:
+    /// a Website screen narrowed to Admin would save as *"Website or Admin"*.
+    ///
+    /// There is no `FilterConfig` conjunction in the FFI surface, and inventing
+    /// one in Swift would be exactly the second query engine this phase exists
+    /// not to write. So the control is **disabled, never hidden**, and the
+    /// capability is not lost: narrow Browse to what you want and save from
+    /// there. Exporting `filter_config_and(a, b)` — or a `Vec<FilterConfig>`
+    /// conjunction — would remove the restriction outright.
+    let saveableQuery: TaskListQuery?
 }
 
 private struct TaskListActionsKey: FocusedValueKey {

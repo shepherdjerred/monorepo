@@ -44,4 +44,113 @@ struct TaskNotesURLTests {
         }
         #expect(Set(identifiers).count == identifiers.count)
     }
+
+    // ── The routes the phone already publishes ─────────────────────────────
+    //
+    // `project/:name`, `context/:name`, `tag/:name`, `view/:id` and `kanban`
+    // are `linking.ts`'s vocabulary. Keeping them byte-identical is what lets a
+    // bookmark, a Shortcuts action or a link inside a note work on both
+    // clients, which is the only reason the entity routes exist at all now that
+    // the Mac reaches those screens from a sidebar.
+
+    @Test(
+        "entity links round-trip, whatever the name contains",
+        arguments: [
+            "Website",
+            "[[Areas/Work|Work]]",
+            "a name with spaces",
+            "emoji 🎯 and — punctuation",
+            "100% done?",
+        ]
+    )
+    func entityRoundTrip(name: String) throws {
+        for kind in TaskEntity.Kind.allCases {
+            let entity = try #require(TaskEntity(kind: kind, name: name))
+            let link = TaskNotesURL.entity(entity)
+            #expect(TaskNotesURL(link.url) == link)
+        }
+    }
+
+    /// ⚠️ A slash inside a name must not become a path separator.
+    ///
+    /// `CharacterSet.urlPathAllowed` **permits `/`**, so the obvious encoding
+    /// emits `tasknotes://project/Areas/Work` — two components, which parses
+    /// back as something else or as nothing. The plan records this exact trap
+    /// costing a test to find on the wire layer; this is the same trap one
+    /// layer up, and this is that test.
+    @Test("a slash inside a name is encoded, not turned into a path separator")
+    func slashesAreEncoded() throws {
+        let entity = try #require(TaskEntity(kind: .project, name: "[[Areas/Work]]"))
+        let link = TaskNotesURL.entity(entity)
+        #expect(!link.url.absoluteString.hasSuffix("Areas/Work]]"))
+        #expect(TaskNotesURL(link.url) == link)
+    }
+
+    @Test("the board and a saved view round-trip")
+    func boardAndSavedViewRoundTrip() throws {
+        #expect(TaskNotesURL(TaskNotesURL.board.url) == .board)
+        #expect(TaskNotesURL.board.url.absoluteString == "tasknotes://kanban")
+
+        let view = TaskNotesURL.savedView(id: "job-search")
+        #expect(TaskNotesURL(view.url) == view)
+        #expect(view.url.absoluteString == "tasknotes://view/job-search")
+    }
+
+    /// A name is not lowercased on the way through, even though the host is.
+    ///
+    /// Folding a project's case would send `tasknotes://project/Website` to a
+    /// project called `website`, which may not exist — and the vault, not this
+    /// parser, decides what things are called.
+    @Test("a name keeps its case while the host does not")
+    func namesKeepTheirCase() throws {
+        let url = try #require(URL(string: "TASKNOTES://Project/Website"))
+        #expect(TaskNotesURL(url)?.destination == .entity(.project("Website")))
+    }
+
+    @Test(
+        "malformed entity and view links are rejected rather than defaulted",
+        arguments: [
+            "tasknotes://project",  // a kind with no name
+            "tasknotes://project/",  // an empty name
+            "tasknotes://project/a/b",  // two components is not one name
+            "tasknotes://view",  // a view with no id
+            "tasknotes://kanban/extra",  // the board takes no argument
+            "tasknotes://today/extra",  // nor does a section
+            "tasknotes://projects/Website",  // a kind that does not exist
+        ]
+    )
+    func rejectsMalformed(raw: String) throws {
+        let url = try #require(URL(string: raw))
+        #expect(TaskNotesURL(url) == nil)
+    }
+
+    /// The two `detail`/`sidebarItem` overloads must agree on the four
+    /// sections, or an existing UI test would quietly stop finding its element
+    /// while still passing.
+    @Test(
+        "the destination overloads produce the section identifiers unchanged",
+        arguments: SidebarSection.allCases
+    )
+    func destinationIdentifiersMatchSectionIdentifiers(section: SidebarSection) {
+        let destination = TaskNotesDestination.section(section)
+        #expect(
+            AccessibilityIdentifier.detail(destination) == AccessibilityIdentifier.detail(section))
+        #expect(
+            AccessibilityIdentifier.sidebarItem(destination)
+                == AccessibilityIdentifier.sidebarItem(section))
+    }
+
+    /// Every destination a window can hold has its own identity.
+    @Test("destination identities are unique across kinds")
+    func destinationIdentitiesAreUnique() throws {
+        var destinations: [TaskNotesDestination] = SidebarSection.allCases.map { .section($0) }
+        destinations.append(.board)
+        destinations.append(.savedView(id: "job-search"))
+        for kind in TaskEntity.Kind.allCases {
+            destinations.append(.entity(try #require(TaskEntity(kind: kind, name: "work"))))
+        }
+
+        let identities = destinations.map(\.identity)
+        #expect(Set(identities).count == identities.count)
+    }
 }

@@ -27,7 +27,40 @@ public enum AccessibilityIdentifier {
 
     /// The detail pane for a destination.
     public static func detail(_ section: SidebarSection) -> String {
-        "\(namespace).detail.\(section.rawValue)"
+        detail(identity: section.rawValue)
+    }
+
+    /// The detail pane, named by a raw identity.
+    ///
+    /// The one overload a scoped screen can use: ``TaskListView`` holds a
+    /// ``TaskListScope`` rather than a destination, and a scope's `identity` is
+    /// by construction the identity of the destination that produced it. All
+    /// three spellings funnel through here so they cannot drift.
+    public static func detail(identity: String) -> String {
+        "\(namespace).detail.\(identity)"
+    }
+
+    /// A source-list row for any destination — a section, a project, a context,
+    /// a tag, a saved view, or the board.
+    ///
+    /// A second overload rather than a replacement, and the two agree on the
+    /// four sections by construction: `TaskNotesDestination.section(.today)`
+    /// has identity `today`, so this produces exactly what the overload above
+    /// produces. That is a requirement, not a coincidence — these identifiers
+    /// are what a UI test looks elements up by, and quietly renaming one makes
+    /// a test find nothing while still reporting success.
+    public static func sidebarItem(_ destination: TaskNotesDestination) -> String {
+        "\(namespace).sidebar.\(destination.identity)"
+    }
+
+    /// The detail pane for any destination. Same agreement as above.
+    public static func detail(_ destination: TaskNotesDestination) -> String {
+        detail(identity: destination.identity)
+    }
+
+    /// A sidebar group header — `Projects`, `Contexts`, `Tags`, `Views`.
+    public static func sidebarGroup(_ name: String) -> String {
+        "\(namespace).sidebar.group.\(name)"
     }
 
     /// The Settings window's root.
@@ -200,6 +233,36 @@ public enum AccessibilityIdentifier {
         /// The tags token field.
         public static let tags = "\(namespace).inspector.tags"
 
+        /// One token inside a list field, keyed by the field and by the value's
+        /// **stored** spelling — which is what a test asserting on the vault's
+        /// frontmatter already knows, and which survives a display rule changing.
+        public static func token(field: String, value: String) -> String {
+            "\(field).token.\(value)"
+        }
+
+        /// A token's remove control.
+        public static func tokenRemove(field: String, value: String) -> String {
+            "\(field).token.\(value).remove"
+        }
+
+        /// The text entry inside a list field, where completion happens.
+        ///
+        /// Distinct from the field itself: the field is the whole control
+        /// including its tokens, and a test typing into it means this.
+        public static func tokenEntry(field: String) -> String {
+            "\(field).entry"
+        }
+
+        /// The completion list a list field floats below itself while editing.
+        public static func tokenSuggestions(field: String) -> String {
+            "\(field).suggestions"
+        }
+
+        /// One offered name inside that list.
+        public static func tokenSuggestion(field: String, value: String) -> String {
+            "\(field).suggestion.\(value)"
+        }
+
         /// The recurrence row. Read-only until the core can summarise a rule.
         public static let recurrence = "\(namespace).inspector.recurrence"
 
@@ -220,5 +283,161 @@ public enum AccessibilityIdentifier {
 
         /// The control that switches the note body between reading and editing.
         public static let detailsMode = "\(namespace).inspector.details.mode"
+    }
+
+    /// The floating quick-add panel.
+    ///
+    /// ⚠️ The panel is an `NSPanel` outside every scene, so a UI test reaches it
+    /// through the application element rather than through a window — which is
+    /// exactly why its identifiers have to be namespaced separately from the
+    /// list screens' compose row. The two look alike and are not the same
+    /// control: one lives in a window and keeps focus after a submit, the other
+    /// floats over another application and closes.
+    public enum QuickAdd {
+        /// The panel's root.
+        public static let panel = "\(namespace).quickAdd"
+
+        /// The natural-language entry field.
+        public static let field = "\(namespace).quickAdd.field"
+
+        /// The strip showing what the core understood.
+        public static let preview = "\(namespace).quickAdd.preview"
+
+        /// One recognised token. Keyed by what it says, which is what a test
+        /// looking for "Tomorrow" or "High" already knows.
+        public static func mark(_ text: String) -> String {
+            "\(namespace).quickAdd.preview.\(text)"
+        }
+
+        /// The line reading out the two keys the panel answers to.
+        public static let hint = "\(namespace).quickAdd.hint"
+
+        /// The Settings control that rebinds the global hotkey.
+        public static let shortcutRecorder = "\(namespace).quickAdd.shortcut"
+    }
+
+    /// The pomodoro timer and the time report, which are windows of their own.
+    public enum Timing {
+        /// The pomodoro window's root.
+        public static let pomodoro = "\(namespace).pomodoro"
+
+        /// The countdown itself.
+        public static let countdown = "\(namespace).pomodoro.countdown"
+
+        /// The window's primary control.
+        ///
+        /// One identifier rather than one per verb, because it is one button:
+        /// Start, Pause, Resume and Start Break are four states of the same
+        /// control, and a test that had to guess which identifier was present
+        /// would be asserting on the label it can already read.
+        public static let primary = "\(namespace).pomodoro.primary"
+
+        /// The control that abandons the interval.
+        public static let stop = "\(namespace).pomodoro.stop"
+
+        /// The picker naming the task the interval is against.
+        public static let subject = "\(namespace).pomodoro.subject"
+
+        /// The picker choosing between a focus and a rest interval.
+        public static let phase = "\(namespace).pomodoro.phase"
+
+        /// The time-report window's root.
+        public static let report = "\(namespace).timeReport"
+
+        /// The report's grand total.
+        public static let reportTotal = "\(namespace).timeReport.total"
+
+        /// One task's row in the report, keyed by task id for the same reason a
+        /// list row is.
+        public static func reportRow(_ taskId: String) -> String {
+            "\(namespace).timeReport.row.\(taskId)"
+        }
+
+        /// The report's empty state.
+        public static let reportEmpty = "\(namespace).timeReport.empty"
+    }
+
+    /// The Kanban board.
+    ///
+    /// ⚠️ **Every drag target below has a non-drag identifier beside it.** A
+    /// drop destination that only a pointer can reach is invisible to
+    /// VoiceOver and to `performAccessibilityAudit()`, and a UI test cannot
+    /// synthesize a drag at all — so the identifiers that matter most here are
+    /// the ones on the *menu items* that perform the same move.
+    public enum Board {
+        /// The scrolling row of columns.
+        public static let board = "\(namespace).board"
+
+        /// One column, keyed by the core's wire value for its status —
+        /// `open`, `in-progress`, `done` — so a test names the column it means
+        /// rather than a position that a reordered enum would shift.
+        public static func column(_ status: String) -> String {
+            "\(namespace).board.column.\(status)"
+        }
+
+        /// A column's heading and count.
+        public static func columnHeader(_ status: String) -> String {
+            "\(namespace).board.column.\(status).header"
+        }
+
+        /// A column with nothing in it, which is a state worth being able to
+        /// assert on: an empty column must still be a drop target.
+        public static func columnEmpty(_ status: String) -> String {
+            "\(namespace).board.column.\(status).empty"
+        }
+
+        /// One card, keyed by task id.
+        public static func card(_ taskId: String) -> String {
+            "\(namespace).board.card.\(taskId)"
+        }
+
+        // A card's completion control has **no identifier of its own**, on
+        // purpose: it is literally `TaskCheckbox`, the same view the list row
+        // uses, so it carries `TaskList.rowToggle`. Minting a second name for
+        // one control would let a UI test believe it had covered both.
+
+        /// The **keyboard and VoiceOver route to a move**: one item per target
+        /// column inside a card's context menu, keyed by the status it moves to.
+        public static func moveTo(_ status: String) -> String {
+            "\(namespace).board.moveTo.\(status)"
+        }
+
+        /// The board's empty state.
+        public static let empty = "\(namespace).board.empty"
+    }
+
+    /// Saved views — the stored queries, and the sheet that makes one.
+    public enum SavedViews {
+        // A saved view's sidebar row has **no identifier of its own**: it is
+        // `sidebarItem(.savedView(id:))`, the same function every other source
+        // list row uses, keyed by the view's stable id rather than by its
+        // renameable name. A second name for one row would let a UI test
+        // believe it had covered both.
+
+        /// The command that keeps the current query as a view.
+        public static let save = "\(namespace).savedView.save"
+
+        /// The editor sheet's root.
+        public static let editor = "\(namespace).savedView.editor"
+
+        /// The editor's name field.
+        public static let editorName = "\(namespace).savedView.editor.name"
+
+        /// One choice in the editor's symbol picker.
+        public static func editorSymbol(_ symbol: String) -> String {
+            "\(namespace).savedView.editor.symbol.\(symbol)"
+        }
+
+        /// The editor's confirm button.
+        public static let editorConfirm = "\(namespace).savedView.editor.confirm"
+
+        /// The control that deletes a saved view.
+        public static let delete = "\(namespace).savedView.delete"
+
+        /// The control that puts the shipped views back.
+        public static let restoreDefaults = "\(namespace).savedView.restoreDefaults"
+
+        /// The banner shown when the stored views could not be read.
+        public static let error = "\(namespace).savedView.error"
     }
 }

@@ -47,6 +47,16 @@ struct TaskListView: View {
     /// Which screen this is. Everything screen-specific is reached through it.
     let section: SidebarSection
 
+    /// A narrowing applied above everything else, or `nil` for the whole
+    /// screen.
+    ///
+    /// This is what makes a project, context, tag or saved-view screen a
+    /// *configuration* of this view rather than another copy of it: those
+    /// screens are Browse over a smaller corpus with a different name on top.
+    /// `TaskListModel` applies it before membership, so the count, the facets
+    /// and the empty state all describe the slice rather than the vault.
+    let scope: TaskListScope?
+
     let store: TaskNotesStore
 
     /// The viewer's day and offset, held rather than re-read per redraw so the
@@ -84,26 +94,34 @@ struct TaskListView: View {
     ///     supplies and a snapshot always does. A rendered image of a list
     ///     narrowed to nothing is one of the states most worth reviewing and
     ///     the only one that cannot be reached by seeding data.
+    ///   - scope: a narrowing above everything else — a project, context, tag
+    ///     or saved view — or `nil` for the unscoped screen.
     init(
         section: SidebarSection,
         store: TaskNotesStore,
-        query: TaskListQuery? = nil
+        query: TaskListQuery? = nil,
+        scope: TaskListScope? = nil
     ) {
         self.section = section
         self.store = store
+        self.scope = scope
         _calendar = State(initialValue: store.viewerCalendar())
         _query = State(initialValue: query ?? TaskListQuery(section: section))
     }
 
     var body: some View {
         content
-            .navigationTitle(section.title)
+            .navigationTitle(scope?.title ?? section.title)
             .navigationSubtitle(subtitle)
             .toolbar { toolbar }
             .focusedSceneValue(\.taskListActions, actions)
             .focusedSceneValue(\.inspectorSubject, inspected)
             .task(id: calendar.today) { await rollOverAtMidnight() }
-            .accessibilityIdentifier(AccessibilityIdentifier.detail(section))
+            // The scope's identity when there is one, so every project screen
+            // is not `…detail.browse`. A scope's identity is by construction
+            // its destination's, so this and `sidebarItem` name the same thing.
+            .accessibilityIdentifier(
+                AccessibilityIdentifier.detail(identity: scope?.identity ?? section.rawValue))
     }
 
     @ViewBuilder
@@ -133,6 +151,7 @@ struct TaskListView: View {
                 if model.isEmpty {
                     TaskListEmptyState(
                         section: section,
+                        scope: scope,
                         isNarrowed: model.isNarrowed,
                         hasInteracted: hasInteracted,
                         onNewTask: beginCompose,
@@ -222,7 +241,10 @@ struct TaskListView: View {
                 onDelete: { delete([row.id]) },
                 onSchedule: { schedule([row.id], to: $0) },
                 onScheduleDate: { scheduleDate([row.id], to: $0) },
-                showsDate: row.displayDate?.text != group.heading
+                showsDate: row.displayDate?.text != group.heading,
+                // The screen's own scope, so a project screen stops printing
+                // the project's name on every one of its rows.
+                omitting: scope?.baseFilter
             )
             .tag(row.id)
         }
@@ -268,7 +290,8 @@ struct TaskListView: View {
             tasks: store.tasks,
             pendingTaskIds: store.pendingTaskIds,
             calendar: calendar,
-            query: query
+            query: query,
+            scope: scope
         )
     }
 
@@ -320,7 +343,11 @@ extension TaskListView {
             clearFilters: { query.clearNarrowing() },
             hasSelection: !selection.isEmpty,
             isRefreshing: isRefreshing,
-            isNarrowed: query.isNarrowing
+            isNarrowed: query.isNarrowing,
+            // `nil` on a scoped screen: this screen's narrowing is two filters
+            // applied in sequence, and a saved view stores one. See the
+            // property's own note for why merging them would be wrong.
+            saveableQuery: scope == nil ? query : nil
         )
     }
 

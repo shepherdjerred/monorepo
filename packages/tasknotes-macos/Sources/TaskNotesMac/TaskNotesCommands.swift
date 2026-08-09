@@ -33,6 +33,9 @@ public struct TaskNotesCommands: Commands {
     /// rather than missing.
     @FocusedValue(\.inspectorPresentation) private var inspector: InspectorPresentation?
 
+    /// The frontmost board, or `nil` when the window in front is not one.
+    @FocusedValue(\.boardActions) private var board: BoardActions?
+
     public init(navigation: NavigationState) {
         self.navigation = navigation
     }
@@ -61,7 +64,11 @@ public struct TaskNotesCommands: Commands {
             Button("Find…") { actions?.find() }
                 .keyboardShortcut("f")
                 .disabled(actions == nil)
-            Button("Clear Filters") { actions?.clearFilters() }
+            // "& Search" because the filter badge counts a non-empty query as a
+            // dimension, so a `(1)` the user got by typing in the search box has
+            // to be undoable by something that says it clears search. The list's
+            // own filter menu and empty state use the same wording.
+            Button("Clear Filters & Search") { actions?.clearFilters() }
                 .disabled(actions?.isNarrowed != true)
         }
 
@@ -91,12 +98,23 @@ public struct TaskNotesCommands: Commands {
             // A `Picker` bound to the selection gives real menu-item state —
             // the current destination shows a checkmark — instead of four
             // buttons that all look identical regardless of where you are.
-            Picker("Go To", selection: $navigation.selection) {
+            // Bound to `selectedSection`, which is `nil` while a project, a
+            // saved view or the board is open — so the picker shows no
+            // checkmark there. That is the honest reading: those destinations
+            // have no `⌘n`, and a checkmark next to Browse because a project
+            // screen happens to be *built* out of Browse would be a lie the
+            // reader has no way to check.
+            Picker("Go To", selection: $navigation.selectedSection) {
                 ForEach(Array(SidebarSection.allCases.enumerated()), id: \.element) {
                     index, section in
                     Text(section.title)
                         .keyboardShortcut(shortcut(forIndex: index))
-                        .tag(section)
+                        // ⚠️ `Optional(section)`, not `section`. The selection
+                        // is now optional, and a non-optional tag against an
+                        // optional selection is the well-known SwiftUI failure
+                        // where every item is silently unselectable — the same
+                        // trap `SortChoice` exists to avoid on the sort menu.
+                        .tag(Optional(section))
                 }
             }
             .pickerStyle(.inline)
@@ -123,6 +141,30 @@ public struct TaskNotesCommands: Commands {
                 // handles, so composing is never interrupted by it.
                 .keyboardShortcut(".", modifiers: .command)
                 .disabled(actions?.hasSelection != true)
+
+            Divider()
+
+            // ⚠️ **The keyboard half of the board's drag-and-drop.** Dragging a
+            // card between columns is a pointer-only gesture — VoiceOver cannot
+            // perform one and XCUITest cannot synthesize one — so the move has
+            // to be reachable from here as well as from a card's context menu.
+            // All three routes dispatch the same `setStatus`.
+            //
+            // `⌃⌘` with an arrow because `⌘←/→` is line-start/line-end inside
+            // any text field on screen and `⌥⌘←/→` is tab switching nearly
+            // everywhere; `⌃⌘` plus an arrow is unclaimed and already reads as
+            // "move the thing" from Mission Control.
+            //
+            // Disabled, never hidden: on a list screen there is no board to
+            // move a card on, so these grey out rather than disappearing.
+            ForEach([KanbanDirection.previous, .next], id: \.self) { direction in
+                Button(direction.title) { board?.move(direction) }
+                    .keyboardShortcut(
+                        direction == .previous ? .leftArrow : .rightArrow,
+                        modifiers: [.control, .command]
+                    )
+                    .disabled(board?.canMove(direction) != true)
+            }
         }
 
         CommandGroup(replacing: .help) {

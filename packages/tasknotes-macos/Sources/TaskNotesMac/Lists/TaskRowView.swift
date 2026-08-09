@@ -69,6 +69,22 @@ struct TaskRowView: View {
     /// grouping rule.
     var showsDate: Bool = true
 
+    /// What the screen's own identity already says, so the row need not repeat
+    /// it.
+    ///
+    /// The scope's `baseFilter`, on a project, context or tag screen. Every row
+    /// on the Website screen is in Website, so printing "Website" down the
+    /// whole column is ink spent restating the heading — and worse, it buries
+    /// the metadata that *does* distinguish the rows, exactly the way a
+    /// repeated "Tomorrow" buried the one date worth reading under a day
+    /// heading. Same defect, same shape of fix as ``showsDate``.
+    ///
+    /// It suppresses **only the dimensions the scope actually names**, so a
+    /// task in both Website and Admin still shows Admin on the Website screen.
+    /// The scope's own filter record is the input rather than its title,
+    /// because a title is a display string and two projects can share one.
+    var omitting: FilterConfig?
+
     @State private var isHovering = false
     @State private var isSchedulePresented = false
 
@@ -237,9 +253,31 @@ struct TaskRowView: View {
     /// either a wikilink or a bare name and turning one into the other is a
     /// rule both clients have to share.
     private var metadata: String? {
-        var parts = row.task.projects.map { projectDisplayName(value: $0) }
-        parts.append(contentsOf: row.task.contexts.map { "@\($0)" })
+        var parts =
+            row.task.projects
+            .filter { !isImplied(project: $0) }
+            .map { projectDisplayName(value: $0) }
+        parts.append(
+            contentsOf: row.task.contexts.filter { !isImplied(context: $0) }.map { "@\($0)" })
         return parts.isEmpty ? nil : parts.joined(separator: " · ")
+    }
+
+    /// Whether the screen's own heading already says this project.
+    ///
+    /// `projectMatches` rather than string equality, for the same reason the
+    /// facet list deduplicates with it: `[[Areas/Work|Work]]` and `Work` are
+    /// one project, and a scope carrying either spelling has to suppress both
+    /// or the suppression works on some rows and not others.
+    private func isImplied(project: ProjectName) -> Bool {
+        guard let omitting else { return false }
+        return omitting.projects.contains { projectMatches(left: project, right: $0) }
+    }
+
+    private func isImplied(context: ContextName) -> Bool {
+        // Exact, because that is how `taskFilterApply` matches a context. A
+        // looser test here would hide a value the filter would not have
+        // selected on.
+        omitting?.contexts.contains(context) == true
     }
 
     /// The row's spoken description.
@@ -274,7 +312,11 @@ struct TaskRowView: View {
 /// The animation the plan asks to keep from the touch app, in its platform
 /// spelling: `.symbolEffect(.replace)` is the system's own symbol transition,
 /// so it matches Reminders and honours Reduce Motion without being asked.
-private struct TaskCheckbox: View {
+/// Internal rather than `private` so the Kanban card can use **this** control
+/// rather than a second one that looks like it. The completion gesture is the
+/// most-used thing in the app and its per-occurrence spoken value is subtle
+/// enough that two implementations would diverge; there is one, here.
+struct TaskCheckbox: View {
     let row: TaskRowState
     let action: () -> Void
 

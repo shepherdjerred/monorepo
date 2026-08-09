@@ -132,7 +132,8 @@ func coreTask(
     completeInstances: [String] = [],
     archived: Bool = false,
     projects: [ProjectName] = [],
-    contexts: [ContextName] = []
+    contexts: [ContextName] = [],
+    tags: [TagName] = []
 ) -> CoreTask {
     CoreTask(
         id: id,
@@ -144,7 +145,7 @@ func coreTask(
         scheduled: scheduled,
         contexts: contexts,
         projects: projects,
-        tags: [],
+        tags: tags,
         recurrence: recurrence,
         recurrenceAnchor: recurrenceAnchor,
         completeInstances: completeInstances,

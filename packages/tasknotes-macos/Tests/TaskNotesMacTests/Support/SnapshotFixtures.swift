@@ -215,7 +215,13 @@ enum SnapshotFixtures {
         ]
     }
 
-    private static func seeded(with tasks: [CoreTask]) throws -> SeededStore {
+    /// A settled store holding exactly these tasks.
+    ///
+    /// Internal rather than private so a suite whose subject is the *shape* of
+    /// the corpus — the board, whose columns are statuses the shared vault
+    /// barely uses — can seed its own without changing the vault every other
+    /// screen is reviewed against.
+    static func seeded(with tasks: [CoreTask]) throws -> SeededStore {
         let scratch = try ScratchDirectory()
         let storage = try FileHostStorage(directory: scratch.url)
         try storage.writeTasks(tasks: tasks)

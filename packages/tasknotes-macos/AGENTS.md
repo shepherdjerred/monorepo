@@ -160,6 +160,54 @@ Consequence to design around: **push correctness below the SwiftUI line.** The
   highest-leverage rule here: the compiler allows it and it then silently
   absorbs every enum case added later.
 
+## The quick-add panel
+
+`Sources/TaskNotesMac/QuickAdd/` is the only window in this app that SwiftUI does
+not own. It is an `NSPanel` built by hand, because the whole value of a global
+quick-add is that it appears **without pulling the application forward**, and
+SwiftUI's `Window`/`WindowGroup` expose no way to reach `NSWindow.styleMask`.
+
+Four properties do the work, and each one is deletable without changing how the
+panel looks: `.nonactivatingPanel` in the style mask, `canBecomeKey` overridden
+to `true` while `canBecomeMain` stays `false`, `isFloatingPanel` plus the
+`.floating` level, and `.canJoinAllSpaces`. `QuickAddPanelConfigurationTests`
+asserts all of them, because an image cannot.
+
+- **The hotkey is claimed by `AppEnvironment.init`**, not by a scene, so it is
+  live from launch and survives the last window closing. `KeyboardShortcuts`
+  wraps `RegisterEventHotKey`, which needs **no** permission; a `CGEventTap`
+  would need Accessibility and is not an option for a text field.
+- The initial `⇧⌘Space` binding is seeded **once**, under this app's own
+  `UserDefaults` flag, so clearing it in Settings sticks.
+- ⚠️ `KeyboardShortcuts.Name(_:default:)` is unusable here: its argument label is
+  literally `default:`, and the `banned_switch_default` custom rule matches
+  `default` followed by a colon anywhere outside a comment. **That is a rule
+  defect** — it cannot tell a `switch` case from an argument label — and it is
+  worked around rather than suppressed.
+
+## The pomodoro timer and the time report
+
+`Sources/TaskNotesMac/Timing/` are two `Window` scenes. **Do not add `Commands`
+for them**: SwiftUI contributes a Window-menu item for every `Window` scene by
+itself, from launch and before either has been opened. Verified by reading the
+running app's menu bar — an explicit pair produced `Pomodoro, Time Report,
+Pomodoro, Time Report`.
+
+🔴 **Both are placeholders over a gap in the core, and the gap is reported.** The
+core exports `PomodoroStatus`, `PomodoroPhase`, `TimeSummary`, `TopTask` and
+`TaskTime` as _records_ but no way to fetch or drive them — no engine method, no
+`/api/pomodoro/*` or `/api/time/summary` in `net/endpoints.rs`. So the timer runs
+locally (the core is sans-I/O and can never tick a clock anyway) and the report
+shows all-time totals re-projected from `CoreTask.totalTrackedTime`, which the
+_server_ computed. Neither writes a time entry. The wanted API is
+`pomodoro_{start,pause,stop,status}` and `time_summary(period:)` with `TimePeriod`
+a closed core enum. Do not grow a wire layer in Swift to close it.
+
+Two conventions worth keeping: the countdown uses the core's `elapsedFormat`
+(`MM:SS`, a ticking clock — exactly right there), and the report deliberately
+does **not**, because `1:30:00` reads as a video length rather than as an hour and
+a half of work. Durations in the report go through `Duration.UnitsFormatStyle`.
+
 ## Things that will bite
 
 - The core exports a record named `Task`, which collides with

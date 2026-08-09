@@ -63,7 +63,13 @@ extension SidebarSection {
     public var defaultSort: SortConfig? {
         switch self {
         case .today, .inbox, .upcoming: nil
-        case .browse: SortConfig(field: .dueDate, direction: .asc)
+        // `effectiveDate`, not `dueDate`. A due-date sort keys on `due` alone,
+        // so a recurring scheduled-only task — which has no `due` at all — piles
+        // up with the undated at the bottom while its row prints a date in the
+        // column right next to them. The core added a key that consults `due`,
+        // `scheduled` and the rule together for exactly that reason, and it is
+        // the one that makes the sort agree with what the list is showing.
+        case .browse: SortConfig(field: .effectiveDate, direction: .asc)
         }
     }
 

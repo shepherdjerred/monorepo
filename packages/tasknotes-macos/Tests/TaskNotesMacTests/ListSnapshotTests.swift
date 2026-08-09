@@ -68,6 +68,30 @@ struct ListSnapshotTests {
         )
     }
 
+    /// The inline compose row, empty and mid-typing.
+    ///
+    /// The one control on these screens with no visual coverage until now, and
+    /// the one most likely to break silently: it is an `NSTextField` reached
+    /// through `NSViewRepresentable`, so a sizing or presentation mistake
+    /// renders as a blank strip rather than as a compiler error. Both states are
+    /// drawn because the placeholder — which is where the natural-language
+    /// syntax is actually taught — only exists in one of them.
+    @Test("the compose row", arguments: SnapshotAppearance.allCases)
+    func composeRow(appearance: SnapshotAppearance) throws {
+        try record(
+            VStack(spacing: 0) {
+                ComposeRowHarness(text: "")
+                Divider()
+                ComposeRowHarness(text: "pay rent tomorrow !high #home")
+                Divider()
+                Spacer()
+            },
+            named: "compose-row",
+            size: Self.composeSize,
+            appearance: appearance
+        )
+    }
+
     /// One row per state the row view actually branches on.
     ///
     /// Rendered inside a `List` rather than bare, because the row's appearance
@@ -123,6 +147,13 @@ struct ListSnapshotTests {
         try record(
             VStack(alignment: .leading, spacing: 20) {
                 strip(TaskListQuery(section: .browse))
+                // Search only, no structured facet set. Reads `Filter (1)`,
+                // because the core counts a non-empty query as a dimension of
+                // `FilterConfig` — which is the right question answered: the
+                // badge says *why this list is shorter than the vault*, and a
+                // `(0)` over a list that a search had emptied would be
+                // answering a different one.
+                strip(Self.unmatchable)
                 strip(Self.narrowed)
                 Spacer()
             }
@@ -235,7 +266,8 @@ struct ListSnapshotTests {
     /// than wrapping the layout into a shape the app never has.
     private static let screenSize = CGSize(width: 780, height: 560)
 
-    private static let toolbarSize = CGSize(width: 560, height: 140)
+    private static let toolbarSize = CGSize(width: 560, height: 190)
+    private static let composeSize = CGSize(width: 560, height: 120)
 
     /// A search no fixture title, project, context or tag contains.
     private static let unmatchable = TaskListQuery(search: "xyzzy")
@@ -458,5 +490,31 @@ enum BannerVariant: String, CaseIterable, Sendable {
                 storeError: nil
             )
         }
+    }
+}
+
+/// A compose row with somewhere to put its focus.
+///
+/// `TaskComposeRow` takes a `FocusState<Bool>.Binding`, which only a `View` can
+/// vend — there is no way to construct one from a test function. This is the
+/// smallest wrapper that owns one, and it exists for that reason alone.
+private struct ComposeRowHarness: View {
+    let text: String
+
+    @State private var edited: String
+    @FocusState private var isFocused: Bool
+
+    init(text: String) {
+        self.text = text
+        _edited = State(initialValue: text)
+    }
+
+    var body: some View {
+        TaskComposeRow(
+            text: $edited,
+            focus: $isFocused,
+            onSubmit: {},
+            onCancel: {}
+        )
     }
 }

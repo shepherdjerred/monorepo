@@ -114,7 +114,7 @@ struct TaskInspectorForm: View {
             }
 
             Section("Organize") {
-                TokenListRow(
+                TokenListField(
                     label: "Projects",
                     identifier: AccessibilityIdentifier.Inspector.projects,
                     values: detail.task.projects,
@@ -123,35 +123,44 @@ struct TaskInspectorForm: View {
                     // wikilink or a bare name and turning one into the other is
                     // a rule both clients have to share.
                     display: { projectDisplayName(value: $0) },
+                    // `projectMatches` and not `contains`: a wikilink covers its
+                    // own display name, so plain equality would keep offering a
+                    // project that is already attached under its other spelling.
+                    isPresent: { name in
+                        detail.task.projects.contains {
+                            projectMatches(left: $0, right: name)
+                        }
+                    },
                     prompt: "Add project…",
-                    onCommit: { apply(.projects($0)) },
-                    // `TaskVocabulary.adding` and not `contains`: a selected
-                    // wikilink covers its own display name, so plain equality
-                    // would let one project be added twice under two spellings.
+                    // Same rule on the way in: `TaskVocabulary.adding` is what
+                    // stops one project being added twice under two spellings.
                     onAdd: {
                         apply(
                             .projects(TaskVocabulary.adding(project: $0, to: detail.task.projects)))
-                    }
+                    },
+                    onRemove: { apply(.projects($0)) }
                 )
-                TokenListRow(
+                TokenListField(
                     label: "Contexts",
                     identifier: AccessibilityIdentifier.Inspector.contexts,
                     values: detail.task.contexts,
                     vocabulary: vocabulary.contexts,
                     display: { "@\($0)" },
+                    isPresent: { detail.task.contexts.contains($0) },
                     prompt: "Add context…",
-                    onCommit: { apply(.contexts($0)) },
-                    onAdd: { apply(.contexts(appending($0, to: detail.task.contexts))) }
+                    onAdd: { apply(.contexts(appending($0, to: detail.task.contexts))) },
+                    onRemove: { apply(.contexts($0)) }
                 )
-                TokenListRow(
+                TokenListField(
                     label: "Tags",
                     identifier: AccessibilityIdentifier.Inspector.tags,
                     values: detail.task.tags,
                     vocabulary: vocabulary.tags,
                     display: { "#\($0)" },
+                    isPresent: { detail.task.tags.contains($0) },
                     prompt: "Add tag…",
-                    onCommit: { apply(.tags($0)) },
-                    onAdd: { apply(.tags(appending($0, to: detail.task.tags))) }
+                    onAdd: { apply(.tags(appending($0, to: detail.task.tags))) },
+                    onRemove: { apply(.tags($0)) }
                 )
             }
 
@@ -193,7 +202,17 @@ struct TaskInspectorForm: View {
             // Escape restores what is stored rather than committing. The field
             // is the one place in this panel where "never mind" has to mean
             // something, because it is the only field that can be made invalid.
-            onCancel: { title = detail.task.title }
+            onCancel: { title = detail.task.title },
+            // Wrapping, unlike the compose row. A ~340-point panel truncates a
+            // real task title well before its end — `Reply to the landlord
+            // about the boiler inspec…` hides the thing the reader opened the
+            // inspector to see, and there is no gesture that reveals the rest.
+            //
+            // Return still submits: the field intercepts `insertNewline(_:)` so
+            // "wraps" means the *display* wraps, not that this is a multi-line
+            // editor. A literal newline in a title is a value the wire layer
+            // carries happily and no list row can draw.
+            wraps: true
         )
         .font(.title3)
         .focused($focus, equals: .title)

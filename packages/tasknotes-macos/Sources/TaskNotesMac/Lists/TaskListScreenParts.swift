@@ -113,6 +113,16 @@ struct TaskComposeRow: View {
 /// saying nothing.
 struct TaskListEmptyState: View {
     let section: SidebarSection
+
+    /// The slice this screen is showing, when it is showing one.
+    ///
+    /// A scoped screen says what it is empty *of* — "No tasks in Website" —
+    /// because "Nothing due today" under a heading reading "Website" describes
+    /// the wrong thing. The words come from the scope rather than from a
+    /// format string here, so a project, a tag and a saved view can each say
+    /// what suits them.
+    var scope: TaskListScope?
+
     let isNarrowed: Bool
     let hasInteracted: Bool
     let onNewTask: () -> Void
@@ -127,7 +137,7 @@ struct TaskListEmptyState: View {
                 Text(description)
             } actions: {
                 if isNarrowed {
-                    Button("Clear Filters", action: onClearFilters)
+                    Button("Clear Filters & Search", action: onClearFilters)
                         .accessibilityIdentifier(AccessibilityIdentifier.Query.clearFilters)
                 } else {
                     Button("New Task", action: onNewTask)
@@ -141,13 +151,13 @@ struct TaskListEmptyState: View {
     private var title: String {
         if isNarrowed { return "No matches" }
         if hasInteracted { return cleared }
-        return empty
+        return scope?.emptyTitle ?? empty
     }
 
     private var symbol: String {
         if isNarrowed { return "line.3.horizontal.decrease.circle" }
         if hasInteracted { return "sun.max" }
-        return section.systemImage
+        return scope?.systemImage ?? section.systemImage
     }
 
     private var description: String {
@@ -155,7 +165,7 @@ struct TaskListEmptyState: View {
             return "No task on this screen matches the current search and filter."
         }
         if hasInteracted { return clearedDescription }
-        return emptyDescription
+        return scope?.emptyDescription ?? emptyDescription
     }
 
     /// What "you cleared it" says, per screen.
