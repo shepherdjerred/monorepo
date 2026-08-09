@@ -1,3 +1,5 @@
+import { lstat, readlink, realpath } from "node:fs/promises";
+import path from "node:path";
 import type { FleetEnvironment } from "./ports.ts";
 import type { PrState } from "./schemas.ts";
 import type { FleetStore } from "./state.ts";
@@ -17,6 +19,7 @@ export type InheritedWipEvidence = {
 };
 
 const MAX_INHERITED_COMMAND_OUTPUT_BYTES = 100_000;
+const MAX_UNTRACKED_HASH_BYTES = 10_000_000;
 
 type GitOutput = { output: string; complete: boolean };
 
@@ -49,6 +52,45 @@ function parseUntrackedPaths(output: GitOutput): string[] {
   const parts = output.output.split("\0");
   if (!output.complete) parts.pop();
   return parts.filter((value) => value.length > 0);
+}
+
+function isWithin(root: string, candidate: string): boolean {
+  return candidate === root || candidate.startsWith(`${root}${path.sep}`);
+}
+
+async function fingerprintUntrackedPaths(
+  worktree: string,
+  untrackedPaths: string[],
+): Promise<{ fingerprint: string; complete: boolean }> {
+  const root = await realpath(worktree);
+  const hasher = new Bun.CryptoHasher("sha256");
+  let remainingBytes = MAX_UNTRACKED_HASH_BYTES;
+  for (const untrackedPath of untrackedPaths) {
+    const absolute = path.resolve(worktree, untrackedPath);
+    const parent = await realpath(path.dirname(absolute));
+    if (!isWithin(root, parent)) {
+      return { fingerprint: hasher.digest("hex"), complete: false };
+    }
+    const stats = await lstat(absolute);
+    hasher.update(`${untrackedPath}\0${String(stats.mode)}\0`);
+    if (stats.isSymbolicLink()) {
+      hasher.update(`symlink\0${await readlink(absolute)}\0`);
+      continue;
+    }
+    if (!stats.isFile() || stats.size > remainingBytes) {
+      return { fingerprint: hasher.digest("hex"), complete: false };
+    }
+    const resolved = await realpath(absolute);
+    if (!isWithin(root, resolved)) {
+      return { fingerprint: hasher.digest("hex"), complete: false };
+    }
+    hasher.update(`file\0${String(stats.size)}\0`);
+    for await (const chunk of Bun.file(absolute).stream()) {
+      hasher.update(chunk);
+    }
+    remainingBytes -= stats.size;
+  }
+  return { fingerprint: hasher.digest("hex"), complete: true };
 }
 
 function fingerprint(parts: string[]): string {
@@ -96,7 +138,10 @@ export async function collectInheritedWipEvidence(options: {
     "--exclude-standard",
   ]);
   const untrackedPaths = parseUntrackedPaths(untrackedPathsOutput);
-  const untrackedPathEvidence = JSON.stringify(untrackedPaths);
+  const untrackedContent = await fingerprintUntrackedPaths(
+    worktree,
+    untrackedPaths,
+  );
   return {
     localHeadSha,
     status: status.output,
@@ -106,7 +151,8 @@ export async function collectInheritedWipEvidence(options: {
     unstagedDiff: unstagedDiff.output,
     unstagedDiffComplete: unstagedDiff.complete,
     untrackedPaths,
-    untrackedPathsComplete: untrackedPathsOutput.complete,
+    untrackedPathsComplete:
+      untrackedPathsOutput.complete && untrackedContent.complete,
     hasWip:
       status.output.length > 0 ||
       stagedDiff.output.length > 0 ||
@@ -118,7 +164,8 @@ export async function collectInheritedWipEvidence(options: {
       status.output,
       stagedDiff.output,
       unstagedDiff.output,
-      untrackedPathEvidence,
+      JSON.stringify(untrackedPaths),
+      untrackedContent.fingerprint,
     ]),
   };
 }

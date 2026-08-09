@@ -231,3 +231,84 @@ describe("operator question replay", () => {
     ).toThrow(/inactive tick/);
   });
 });
+
+test("replay rejects a snapshot request that differs from the asked request", async () => {
+  const headSha = "c".repeat(40);
+  const request = {
+    id: "operator-question-altered",
+    pr: 42,
+    headSha,
+    generation: 3,
+    context: "Original replay context.",
+    questions: [
+      {
+        id: "ownership",
+        header: "Ownership",
+        question: "Should this work ship here?",
+        options: [
+          {
+            id: "include",
+            label: "Include it",
+            description: "Its paths and intent match this PR.",
+            recommended: true,
+          },
+          {
+            id: "exclude",
+            label: "Exclude it",
+            description: "It belongs to separate work.",
+            recommended: false,
+          },
+        ],
+      },
+    ],
+    createdAt: "2026-08-08T20:00:00.000Z",
+  };
+  const prIdentity = identity(request.pr, { headSha });
+  const state = buildPrState(
+    {
+      identity: prIdentity,
+      evidence: evidence(prIdentity),
+      stackId: `pr-${String(request.pr)}`,
+    },
+    {
+      previous: undefined,
+      pausedReason: undefined,
+      model: "openai/gpt-5.6-terra",
+    },
+  ).state;
+  const alteredSnapshot: FleetSnapshot = {
+    open: 1,
+    green: 0,
+    active: 0,
+    queued: 0,
+    pending: 0,
+    waiting: 1,
+    paused: 0,
+    prs: [
+      {
+        ...state,
+        status: "waiting-for-answer",
+        classification: "waiting-for-answer",
+        operatorRequest: { ...request, context: "Altered replay context." },
+      },
+    ],
+  };
+  const recorder = await createRecorder();
+  recorder.record("run.started", { phase: "startup" });
+  recorder.record(
+    "operator.question.asked",
+    { request },
+    { prNumber: request.pr, headSha, generation: request.generation },
+  );
+  recorder.record("shutdown.started", { activeWorkers: 0 });
+  recorder.record("shutdown.completed", { snapshot: alteredSnapshot });
+  await recorder.finalize("completed", alteredSnapshot);
+
+  const bundle = await loadRunBundle(recorder.paths.runDirectory);
+  expect(() =>
+    replayRunBundle(bundle, {
+      currentControllerVersion: "0.1.0",
+      allowVersionMismatch: false,
+    }),
+  ).toThrow(/differs from the asked request/);
+});

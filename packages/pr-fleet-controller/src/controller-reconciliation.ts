@@ -20,6 +20,7 @@ export function closeMissingPrStates(
       telemetry.operatorQuestionSuperseded(request, "PR closed");
       store.operatorRequests.delete(number);
     }
+    store.completedRestacks.delete(number);
     store.prs.set(number, {
       ...previous,
       status: "closed",
@@ -73,6 +74,9 @@ export function reconcilePrStates(
     const headChanged =
       previous !== undefined &&
       previous.identity.headSha !== reconciled.state.identity.headSha;
+    if (headChanged || reconciled.state.classification === "green") {
+      store.completedRestacks.delete(item.identity.number);
+    }
     if (
       (headChanged || reconciled.state.classification === "green") &&
       store.activeWorkers.has(item.identity.number)

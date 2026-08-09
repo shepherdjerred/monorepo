@@ -13,6 +13,7 @@ import { sandboxProfile, sanitizedEnvironment } from "./sandbox.ts";
 import { LeaseKindSchema, PrStateSchema, type PrState } from "./schemas.ts";
 import type { FleetStore } from "./state.ts";
 import { containedPath, createFileEditTools } from "./worker-file-edits.ts";
+import { createWorkerRestackTools } from "./worker-restack-tools.ts";
 import { createSetupWorktreeTool } from "./worker-setup-tool.ts";
 import { createWorkerWipTools } from "./worker-wip-tools.ts";
 
@@ -257,84 +258,15 @@ export function createWorkerTools(
       record: (tool, input, run) =>
         runRecordedTool(tool, input, toolContext, run),
     }),
-    start_restack: createTool({
-      id: "start_restack",
-      description:
-        "Start a git-spice branch restack while retaining the stack write lease.",
-      inputSchema: z.object({}),
-      outputSchema: z.object({
-        completed: z.boolean(),
-        output: z.string(),
-      }),
-      execute: (input) =>
-        runRecordedTool("start_restack", input, toolContext, async () => {
-          assertNotWaitingForAnswer();
-          if (!store.requestLease(pr, "stack-write")) {
-            throw new Error("Stack write lease is not available");
-          }
-          await requireCurrentInheritedWipInspection({
-            store,
-            pr,
-            environment,
-            worktree,
-            signal,
-          });
-          const result = await environment.startRestack(pr, signal);
-          const output = `${result.stdout}\n${result.stderr}`.trim();
-          if (result.exitCode !== 0 && !/conflict/i.test(output)) {
-            store.releaseLease(pr.identity.number, "stack-write", pr.stackId);
-            throw new Error(`git-spice restack failed: ${output}`);
-          }
-          return { completed: result.exitCode === 0, output };
-        }),
-    }),
-    continue_restack: createTool({
-      id: "continue_restack",
-      description:
-        "Stage explicit resolved conflict paths and continue the git-spice rebase.",
-      inputSchema: z.object({
-        paths: z.array(z.string().min(1)).min(1).max(100),
-      }),
-      outputSchema: z.object({
-        completed: z.boolean(),
-        output: z.string(),
-      }),
-      execute: (input) =>
-        runRecordedTool("continue_restack", input, toolContext, async () => {
-          assertNotWaitingForAnswer();
-          if (store.stackWriteOwners.get(pr.stackId) !== pr.identity.number) {
-            throw new Error("Worker does not hold the stack write lease");
-          }
-          const result = await environment.continueRestack(
-            pr,
-            input.paths,
-            signal,
-          );
-          const output = `${result.stdout}\n${result.stderr}`.trim();
-          if (result.exitCode !== 0 && !/conflict/i.test(output)) {
-            throw new Error(`git-spice rebase continue failed: ${output}`);
-          }
-          return { completed: result.exitCode === 0, output };
-        }),
-    }),
-    publish_restack: createTool({
-      id: "publish_restack",
-      description:
-        "Publish a completed restack and request one current-head hosted review.",
-      inputSchema: z.object({}),
-      outputSchema: z.object({ headSha: z.string() }),
-      execute: (input) =>
-        runRecordedTool("publish_restack", input, toolContext, async () => {
-          assertNotWaitingForAnswer();
-          if (store.stackWriteOwners.get(pr.stackId) !== pr.identity.number) {
-            throw new Error("Worker does not hold the stack write lease");
-          }
-          try {
-            return await environment.publishRestack(pr, signal);
-          } finally {
-            store.releaseLease(pr.identity.number, "stack-write", pr.stackId);
-          }
-        }),
+    ...createWorkerRestackTools({
+      store,
+      pr,
+      environment,
+      worktree,
+      signal,
+      assertNotWaitingForAnswer,
+      record: (tool, input, run) =>
+        runRecordedTool(tool, input, toolContext, run),
     }),
     run_local_command: createTool({
       id: "run_local_command",

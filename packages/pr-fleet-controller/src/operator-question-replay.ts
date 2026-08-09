@@ -14,6 +14,34 @@ export type OperatorQuestionReplay = {
   open: string[];
 };
 
+type OperatorQuestionReplayState = {
+  report: OperatorQuestionReplay;
+  openRequests: Map<string, OperatorInputRequest>;
+};
+
+type SnapshotPrState = FleetSnapshot["prs"][number];
+
+function verifySnapshotRequest(
+  pr: SnapshotPrState,
+  request: OperatorInputRequest,
+  askedRequest: OperatorInputRequest | undefined,
+): void {
+  if (
+    askedRequest === undefined ||
+    request.pr !== pr.identity.number ||
+    request.headSha !== pr.identity.headSha
+  ) {
+    throw new Error(
+      `Final snapshot operator request ${request.id} does not match its PR/head`,
+    );
+  }
+  if (JSON.stringify(askedRequest) !== JSON.stringify(request)) {
+    throw new Error(
+      `Final snapshot operator request ${request.id} differs from the asked request`,
+    );
+  }
+}
+
 function assertCorrelation(
   event: RecordedRunEvent,
   request: OperatorInputRequest,
@@ -70,7 +98,7 @@ function verifyAnswer(
 
 function verifyOperatorQuestionLifecycle(
   events: RecordedRunEvent[],
-): OperatorQuestionReplay {
+): OperatorQuestionReplayState {
   const requests = new Map<
     string,
     { request: OperatorInputRequest; open: boolean }
@@ -115,19 +143,23 @@ function verifyOperatorQuestionLifecycle(
     }
     lifecycle.open = false;
   }
+  const openRequests = new Map<string, OperatorInputRequest>();
+  for (const [id, lifecycle] of requests) {
+    if (lifecycle.open) openRequests.set(id, lifecycle.request);
+  }
   return {
-    asked: requests.size,
-    answered,
-    superseded,
-    open: [...requests]
-      .filter(([, lifecycle]) => lifecycle.open)
-      .map(([id]) => id)
-      .sort(),
+    report: {
+      asked: requests.size,
+      answered,
+      superseded,
+      open: [...openRequests.keys()].sort(),
+    },
+    openRequests,
   };
 }
 
 function verifyOpenQuestionsMatchSnapshot(
-  replay: OperatorQuestionReplay,
+  replay: OperatorQuestionReplayState,
   finalSnapshot: FleetSnapshot | null,
 ): void {
   const snapshotRequestIds: string[] = [];
@@ -142,21 +174,14 @@ function verifyOpenQuestionsMatchSnapshot(
       );
     }
     if (request !== null) {
-      if (
-        request.pr !== pr.identity.number ||
-        request.headSha !== pr.identity.headSha
-      ) {
-        throw new Error(
-          `Final snapshot operator request ${request.id} does not match its PR/head`,
-        );
-      }
+      verifySnapshotRequest(pr, request, replay.openRequests.get(request.id));
       snapshotRequestIds.push(request.id);
     }
   }
   snapshotRequestIds.sort();
   if (
-    replay.open.length !== snapshotRequestIds.length ||
-    replay.open.some(
+    replay.report.open.length !== snapshotRequestIds.length ||
+    replay.report.open.some(
       (requestId, index) => requestId !== snapshotRequestIds[index],
     )
   ) {
@@ -172,5 +197,5 @@ export function verifyOperatorQuestionState(
 ): OperatorQuestionReplay {
   const replay = verifyOperatorQuestionLifecycle(events);
   verifyOpenQuestionsMatchSnapshot(replay, finalSnapshot);
-  return replay;
+  return replay.report;
 }

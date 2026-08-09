@@ -2,7 +2,9 @@ import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { noopObserve } from "@mastra/core/tools";
 import { codexProvider } from "@shepherdjerred/code-review";
+import { buildPrState } from "@shepherdjerred/pr-fleet-controller/src/fleet-logic.ts";
 import {
   currentCommandCorrelation,
   withCommandCorrelation,
@@ -19,7 +21,13 @@ import type {
   RunEventCorrelation,
   RunEventKind,
 } from "@shepherdjerred/pr-fleet-controller/src/run-events.ts";
-import { identity } from "./fixtures.ts";
+import {
+  PrStateSchema,
+  type PrState,
+} from "@shepherdjerred/pr-fleet-controller/src/schemas.ts";
+import { FleetStore } from "@shepherdjerred/pr-fleet-controller/src/state.ts";
+import { createWorkerRestackTools } from "@shepherdjerred/pr-fleet-controller/src/worker-restack-tools.ts";
+import { evidence, identity } from "./fixtures.ts";
 
 class RecordingTelemetry implements FleetTelemetry {
   readonly runId = "environment-test";
@@ -85,6 +93,15 @@ class CapturingCommandFleetEnvironment extends StubCommandFleetEnvironment {
   override runLocalCommand(request: CommandRequest) {
     this.request = request;
     return super.runLocalCommand(request);
+  }
+}
+
+class RestackPublishingEnvironment extends CommandFleetEnvironment {
+  published = false;
+
+  override publishRestack(pr: PrState): Promise<{ headSha: string }> {
+    this.published = true;
+    return Promise.resolve({ headSha: pr.identity.headSha });
   }
 }
 
@@ -352,20 +369,152 @@ test("inherited WIP keeps untracked contents out of evidence and bounds diffs", 
       provider: codexProvider,
       telemetry,
     });
-    const evidence = await collectInheritedWipEvidence({
+    const wipEvidence = await collectInheritedWipEvidence({
       environment,
       worktree: directory,
       signal: new AbortController().signal,
     });
 
-    expect(evidence.untrackedPaths).toEqual([".env.local"]);
-    expect(evidence.unstagedDiffComplete).toBe(false);
-    expect(Buffer.byteLength(evidence.unstagedDiff)).toBeLessThanOrEqual(
+    expect(wipEvidence.untrackedPaths).toEqual([".env.local"]);
+    expect(wipEvidence.unstagedDiffComplete).toBe(false);
+    expect(Buffer.byteLength(wipEvidence.unstagedDiff)).toBeLessThanOrEqual(
       100_000,
     );
-    expect(JSON.stringify(evidence)).not.toContain("credential-value");
+    expect(JSON.stringify(wipEvidence)).not.toContain("credential-value");
     expect(JSON.stringify(telemetry.events)).not.toContain("credential-value");
     expect(JSON.stringify(telemetry.events)).not.toContain("--no-index");
+    await Bun.write(
+      path.join(directory, ".env.local"),
+      "SECRET=changed-credential-value\n",
+    );
+    const changedEvidence = await collectInheritedWipEvidence({
+      environment,
+      worktree: directory,
+      signal: new AbortController().signal,
+    });
+    expect(changedEvidence.fingerprint).not.toBe(wipEvidence.fingerprint);
+    expect(JSON.stringify(changedEvidence)).not.toContain(
+      "changed-credential-value",
+    );
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("restack publication revalidates its captured head and clean worktree", async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), "pr-fleet-restack-"));
+  const runGit = async (args: string[]): Promise<string> => {
+    const process = Bun.spawn(["git", ...args], {
+      cwd: directory,
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    const [exitCode, stdout, stderr] = await Promise.all([
+      process.exited,
+      new Response(process.stdout).text(),
+      new Response(process.stderr).text(),
+    ]);
+    if (exitCode !== 0) throw new Error(stderr);
+    return stdout.trim();
+  };
+  try {
+    await runGit(["init"]);
+    await Bun.write(path.join(directory, "tracked.txt"), "base\n");
+    await runGit(["add", "tracked.txt"]);
+    await runGit([
+      "-c",
+      "user.name=Test Operator",
+      "-c",
+      "user.email=operator@example.com",
+      "commit",
+      "-m",
+      "test: initialize fixture",
+    ]);
+    const headSha = await runGit(["rev-parse", "HEAD"]);
+    const prIdentity = identity(88, { headSha });
+    const initial = buildPrState(
+      {
+        identity: prIdentity,
+        evidence: evidence(prIdentity),
+        stackId: "pr-88",
+      },
+      {
+        previous: undefined,
+        pausedReason: undefined,
+        model: "openai/gpt-5.6-terra",
+      },
+    ).state;
+    const pr = PrStateSchema.parse({
+      ...initial,
+      worktree: directory,
+      worktreeContext: {
+        ownership: "operator",
+        remoteHeadSha: headSha,
+        localHeadSha: headSha,
+        relation: "exact",
+        dirty: false,
+        stagedPaths: [],
+        unstagedPaths: [],
+      },
+      setupComplete: true,
+    });
+    const store = new FleetStore(1);
+    const environment = new RestackPublishingEnvironment({
+      repo: "shepherdjerred/monorepo",
+      checkout: directory,
+      worktreeRoot: path.join(directory, "worktrees"),
+      provider: codexProvider,
+    });
+    const tools = createWorkerRestackTools({
+      store,
+      pr,
+      environment,
+      worktree: directory,
+      signal: new AbortController().signal,
+      record: (_tool, _input, run) => run(),
+      assertNotWaitingForAnswer: () => null,
+    });
+    const publishRestack = tools.publish_restack.execute;
+    if (publishRestack === undefined) {
+      throw new Error("publish restack tool has no executor");
+    }
+    const armPublication = () => {
+      store.requestLease(pr, "stack-write");
+      store.completedRestacks.set(pr.identity.number, {
+        remoteHeadSha: headSha,
+        localHeadSha: headSha,
+      });
+    };
+
+    armPublication();
+    await publishRestack({}, { observe: noopObserve });
+    expect(environment.published).toBe(true);
+
+    environment.published = false;
+    await Bun.write(path.join(directory, "operator-note.txt"), "new work\n");
+    armPublication();
+    await expect(publishRestack({}, { observe: noopObserve })).rejects.toThrow(
+      /changed or incomplete worktree evidence/,
+    );
+    expect(environment.published).toBe(false);
+
+    await rm(path.join(directory, "operator-note.txt"));
+    await Bun.write(path.join(directory, "tracked.txt"), "operator commit\n");
+    await runGit(["add", "tracked.txt"]);
+    await runGit([
+      "-c",
+      "user.name=Test Operator",
+      "-c",
+      "user.email=operator@example.com",
+      "commit",
+      "-m",
+      "test: concurrent operator commit",
+    ]);
+    armPublication();
+    await expect(publishRestack({}, { observe: noopObserve })).rejects.toThrow(
+      /HEAD changed before publication/,
+    );
+    expect(environment.published).toBe(false);
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
