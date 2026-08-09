@@ -5,6 +5,7 @@ import type { CompositeScreenProps } from "@react-navigation/native";
 import type { Task, TaskId } from "../domain/types";
 import { createCaptureSeed } from "../domain/quick-capture-seed";
 import { localTodayYmd } from "../domain/recurrence";
+import { e2eNow } from "../navigation/e2e-config";
 import type { RootStackParamList } from "../navigation/types";
 import type { MainTabScreenProps } from "../navigation/main-tabs";
 import {
@@ -212,7 +213,7 @@ export function TodayScreen({ navigation }: Props) {
           onPress={() => {
             navigation.navigate(
               "QuickAdd",
-              createCaptureSeed({ scheduled: localTodayYmd() }),
+              createCaptureSeed({ scheduled: localTodayYmd(e2eNow()) }),
             );
           }}
         />
