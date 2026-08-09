@@ -177,3 +177,38 @@ describe("Scout web alert thresholds suit production volume", () => {
     expect(expression).toContain(">= 3");
   });
 });
+
+describe("Scout web alert holds are shorter than their lookback", () => {
+  const web = getScoutRuleGroups().find((group) => group.name === "scout-web");
+
+  // A `for` equal to the lookback can never fire on a burst: the oldest events
+  // age out of the window before the pending alert satisfies its hold. The hold
+  // must be a fraction of the observation window.
+  const holdSeconds: Record<string, number> = {
+    "5m": 300,
+    "15m": 900,
+    "30m": 1800,
+    "1h": 3600,
+    "6h": 21_600,
+  };
+
+  test.each([
+    "ScoutWeb5xxRateHigh",
+    "ScoutDiscordUpstreamFailures",
+    "ScoutTrpcErrorRateHigh",
+    "ScoutWebSigninFailureRate",
+  ])("%s holds for less than its lookback window", (alertName) => {
+    const rule = web?.rules?.find((candidate) => candidate.alert === alertName);
+    if (rule === undefined) {
+      throw new Error(`Missing ${alertName} rule`);
+    }
+    const expression = JSON.stringify(rule.expr);
+    const windows = [...expression.matchAll(/\[(\d+[mh])\]/g)].map(
+      (match) => holdSeconds[match[1] ?? ""] ?? 0,
+    );
+    const shortestWindow = Math.min(...windows);
+    const hold = holdSeconds[rule.for ?? ""] ?? 0;
+    expect(hold).toBeGreaterThan(0);
+    expect(hold).toBeLessThan(shortestWindow);
+  });
+});

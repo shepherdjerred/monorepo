@@ -326,13 +326,13 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
           annotations: {
             summary: "Scout web backend is returning server errors",
             message: escapePrometheusTemplate(
-              "Scout {{ $labels.environment }} is serving {{ $value | humanize }} 5xx responses in 15m on route {{ $labels.route }}. These are backend faults, not client mistakes.",
+              "Scout {{ $labels.environment }} is serving {{ $value | humanize }} 5xx responses in 30m on route {{ $labels.route }}. These are backend faults, not client mistakes.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'sum by (environment, route) (increase(scout_http_requests_total{status_class="5xx"}[15m])) > 5',
+            'sum by (environment, route) (increase(scout_http_requests_total{status_class="5xx"}[30m])) > 5',
           ),
-          for: "10m",
+          for: "5m",
           labels: {
             severity: "critical",
           },
@@ -345,13 +345,13 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
           annotations: {
             summary: "Scout cannot reach Discord to resolve user guilds",
             message: escapePrometheusTemplate(
-              "Scout {{ $labels.environment }} is failing to fetch user guilds from Discord ({{ $labels.reason }}) saw {{ $value | humanize }} failures in 15m. Web users will see 'Couldn't reach Discord' and cannot manage their servers.",
+              "Scout {{ $labels.environment }} is failing to fetch user guilds from Discord ({{ $labels.reason }}) saw {{ $value | humanize }} failures in 30m. Web users will see 'Couldn't reach Discord' and cannot manage their servers.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'sum by (environment, reason) (increase(scout_discord_user_guilds_failures_total{reason!="token_refresh_failed"}[15m])) > 3',
+            'sum by (environment, reason) (increase(scout_discord_user_guilds_failures_total{reason!="token_refresh_failed"}[30m])) > 3',
           ),
-          for: "15m",
+          for: "5m",
           labels: {
             severity: "warning",
           },
@@ -370,7 +370,7 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             `sum by (environment, procedure, code) (increase(scout_trpc_calls_total{code!~"${TRPC_NON_FAULT_CODES.join("|")}"}[30m])) > 5`,
           ),
-          for: "15m",
+          for: "5m",
           labels: {
             severity: "warning",
           },

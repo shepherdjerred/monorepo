@@ -13,7 +13,8 @@
  */
 
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
-import { prisma } from "#src/database/index.ts";
+import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
+import type { DiscordGuildId } from "@scout-for-lol/data";
 import { readOutreachState } from "#src/discord/utils/outreach-state.ts";
 import {
   outreachBudgetExhausted,
@@ -35,6 +36,61 @@ const OUTREACH_KINDS = [
   "outreach_14d",
   "outreach_30d",
 ];
+
+/**
+ * Record a conversion for one guild if its first subscription of the current
+ * installation landed inside the attribution window after a delivered message.
+ *
+ * Exported so `cleanupRemovedGuild` can materialize a pending conversion BEFORE
+ * deleting the guild's subscriptions. The nightly job alone was not enough: a
+ * guild that converted and then removed Scout the same day lost the evidence
+ * before the job ever looked, so short-lived activations vanished from the
+ * experiment.
+ */
+export async function recordConversionIfAny(
+  db: ExtendedPrismaClient,
+  serverId: DiscordGuildId,
+  installedAt: Date,
+): Promise<boolean> {
+  const existing = await db.outreachConversion.findUnique({
+    where: { serverId_installedAt: { serverId, installedAt } },
+  });
+  if (existing !== null) return false;
+
+  const delivered = await db.dmAuditLog.findMany({
+    where: {
+      guildId: serverId,
+      deliveryStatus: "sent",
+      kind: { in: OUTREACH_KINDS },
+      createdAt: { gte: installedAt },
+    },
+    select: { createdAt: true, ladderStage: true },
+    orderBy: { createdAt: "asc" },
+  });
+  if (delivered.length === 0) return false;
+
+  const firstSub = await db.subscription.findFirst({
+    where: { serverId, createdTime: { gte: installedAt } },
+    select: { createdTime: true },
+    orderBy: { createdTime: "asc" },
+  });
+  if (firstSub === null) return false;
+
+  for (const row of delivered) {
+    const stage = row.ladderStage;
+    if (stage === null) continue;
+    if (
+      firstSub.createdTime > row.createdAt &&
+      firstSub.createdTime.getTime() < row.createdAt.getTime() + WINDOW_MS
+    ) {
+      await db.outreachConversion.create({
+        data: { serverId, installedAt, ladderStage: stage },
+      });
+      return true;
+    }
+  }
+  return false;
+}
 
 /**
  * Recompute conversion and ladder-distribution gauges from the audit log.
