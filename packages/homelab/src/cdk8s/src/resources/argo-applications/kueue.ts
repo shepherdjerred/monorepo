@@ -106,10 +106,9 @@ export function createKueueApp(chart: Chart) {
     spec: {
       selector: {
         matchLabels: {
-          "app.kubernetes.io/name": "kueue",
-          "app.kubernetes.io/instance": "kueue",
           "control-plane": "controller-manager",
-          "app.kubernetes.io/component": "metrics-service",
+          "app.kubernetes.io/instance": "kueue",
+          "app.kubernetes.io/name": "kueue",
         },
       },
       endpoints: [

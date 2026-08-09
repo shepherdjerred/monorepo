@@ -161,6 +161,17 @@ describe("kueue-config", () => {
                 labels: z.object({ release: z.literal("prometheus") }).loose(),
               })
               .loose(),
+            spec: z
+              .object({
+                selector: z.object({
+                  matchLabels: z.object({
+                    "app.kubernetes.io/instance": z.literal("kueue"),
+                    "app.kubernetes.io/name": z.literal("kueue"),
+                    "control-plane": z.literal("controller-manager"),
+                  }),
+                }),
+              })
+              .loose(),
           })
           .loose()
           .safeParse(document).success,
