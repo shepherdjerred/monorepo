@@ -8,7 +8,7 @@ The project interface manages environments, lockfiles, synchronization, dependen
 
 ```bash
 uv sync --locked
-uv run pytest
+uv run --locked pytest
 uv add <dependency>
 uv add --dev <development-tool>
 ```
