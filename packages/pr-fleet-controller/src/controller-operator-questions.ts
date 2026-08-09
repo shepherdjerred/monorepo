@@ -6,6 +6,7 @@ import {
   type FleetTickReport,
   type OperatorInputAnswer,
   type OperatorInputRequest,
+  type PrState,
 } from "./schemas.ts";
 import type { FleetStore } from "./state.ts";
 
@@ -19,6 +20,28 @@ type OperatorQuestionDependencies = {
   ) => Promise<string | null>;
   queueReconciliation: () => void;
 };
+
+function requireCurrentAnswerState(
+  store: FleetStore,
+  request: OperatorInputRequest,
+  remoteHead: string | null,
+): PrState {
+  if (store.isStopping()) {
+    throw new Error("Controller is stopping; operator answer was not accepted");
+  }
+  const currentRequest = store.operatorRequests.get(request.pr);
+  const currentState = store.prs.get(request.pr);
+  if (
+    currentState === undefined ||
+    currentState.status === "closed" ||
+    currentRequest?.id !== request.id ||
+    remoteHead !== request.headSha ||
+    currentState.identity.headSha !== request.headSha
+  ) {
+    throw new Error(`Operator request ${request.id} is stale`);
+  }
+  return currentState;
+}
 
 export async function lookupCurrentPrHead(
   environment: FleetEnvironment,
@@ -100,17 +123,7 @@ export async function acceptOperatorAnswer(
     );
   }
   const remoteHead = await currentPrHead(request.pr, request.headSha);
-  const currentRequest = store.operatorRequests.get(request.pr);
-  const currentState = store.prs.get(request.pr);
-  if (
-    currentState === undefined ||
-    currentState.status === "closed" ||
-    currentRequest?.id !== request.id ||
-    remoteHead !== request.headSha ||
-    currentState.identity.headSha !== request.headSha
-  ) {
-    throw new Error(`Operator request ${request.id} is stale`);
-  }
+  const currentState = requireCurrentAnswerState(store, request, remoteHead);
   const guidance = answerGuidance(request, answer);
   telemetry.operatorQuestionAnswered(request, answer);
   store.operatorRequests.delete(request.pr);

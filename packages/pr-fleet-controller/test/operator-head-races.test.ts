@@ -44,6 +44,38 @@ function waitingState(prNumber: number) {
   return { pr, state };
 }
 
+function waitingRequest(prNumber: number, headSha: string, generation: number) {
+  return OperatorInputRequestSchema.parse({
+    id: `question-${String(prNumber)}`,
+    pr: prNumber,
+    headSha,
+    generation,
+    context: "The current head needs an ownership decision.",
+    questions: [
+      {
+        id: "ownership",
+        header: "Ownership",
+        question: "Should this change be included?",
+        options: [
+          {
+            id: "include",
+            label: "Include it",
+            description: "It matches the PR head.",
+            recommended: true,
+          },
+          {
+            id: "exclude",
+            label: "Exclude it",
+            description: "It belongs elsewhere.",
+            recommended: false,
+          },
+        ],
+      },
+    ],
+    createdAt: "2026-08-08T20:00:00.000Z",
+  });
+}
+
 test("a mid-refresh head move makes stale state non-dispatchable and cancels its worker", () => {
   const { pr, state } = waitingState(74);
   const actionable = {
@@ -74,35 +106,7 @@ test("a mid-refresh head move makes stale state non-dispatchable and cancels its
 
 test("an answer is rejected when the remote head moved before reconciliation", async () => {
   const { pr, state } = waitingState(75);
-  const request = OperatorInputRequestSchema.parse({
-    id: "question-75",
-    pr: pr.number,
-    headSha: pr.headSha,
-    generation: state.agentGeneration,
-    context: "The old head needs an ownership decision.",
-    questions: [
-      {
-        id: "ownership",
-        header: "Ownership",
-        question: "Should the old-head change be included?",
-        options: [
-          {
-            id: "include",
-            label: "Include it",
-            description: "It matches the old PR head.",
-            recommended: true,
-          },
-          {
-            id: "exclude",
-            label: "Exclude it",
-            description: "It belongs elsewhere.",
-            recommended: false,
-          },
-        ],
-      },
-    ],
-    createdAt: "2026-08-08T20:00:00.000Z",
-  });
+  const request = waitingRequest(pr.number, pr.headSha, state.agentGeneration);
   const store = new FleetStore(1);
   store.prs.set(pr.number, { ...state, operatorRequest: request });
   store.operatorRequests.set(pr.number, request);
@@ -134,5 +138,44 @@ test("an answer is rejected when the remote head moved before reconciliation", a
 
   expect(store.operatorRequests.get(pr.number)?.id).toBe(request.id);
   expect(store.workerGuidance.has(pr.number)).toBe(false);
+  expect(reconciliationQueued).toBe(false);
+});
+
+test("an answer finishing after shutdown begins cannot mutate operator state", async () => {
+  const { pr, state } = waitingState(76);
+  const request = waitingRequest(pr.number, pr.headSha, state.agentGeneration);
+  const store = new FleetStore(1);
+  store.prs.set(pr.number, { ...state, operatorRequest: request });
+  store.operatorRequests.set(pr.number, request);
+  const headLookup = Promise.withResolvers<string | null>();
+  let reconciliationQueued = false;
+  const acceptance = acceptOperatorAnswer(
+    {
+      requestId: request.id,
+      answers: [
+        {
+          questionId: "ownership",
+          optionId: "include",
+          freeText: null,
+        },
+      ],
+    },
+    {
+      store,
+      telemetry: new ControllerTelemetry(),
+      observer,
+      currentPrHead: () => headLookup.promise,
+      queueReconciliation: () => {
+        reconciliationQueued = true;
+      },
+    },
+  );
+  store.stopping = true;
+  headLookup.resolve(pr.headSha);
+
+  await expect(acceptance).rejects.toThrow(/stopping/);
+  expect(store.operatorRequests.get(pr.number)?.id).toBe(request.id);
+  expect(store.workerGuidance.has(pr.number)).toBe(false);
+  expect(store.prs.get(pr.number)?.operatorRequest?.id).toBe(request.id);
   expect(reconciliationQueued).toBe(false);
 });
