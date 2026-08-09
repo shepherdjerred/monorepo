@@ -736,7 +736,7 @@ describe("failed execution timeout diagnostics", () => {
 });
 
 describe("workflow failure watch checkpoints", () => {
-  it("resumes after a heartbeat checkpoint in the visibility iterator's newest-first order", async () => {
+  it("resumes after a heartbeat checkpoint without assuming iterator order", async () => {
     const checkpoint: WorkflowFailureWatchCheckpoint = {
       closeTime: new Date("2026-07-30T17:40:00.000Z"),
       startTime: new Date("2026-07-30T17:35:00.000Z"),
@@ -750,16 +750,16 @@ describe("workflow failure watch checkpoints", () => {
         type: "syncGolinks",
         taskQueue: "default",
         startTime: new Date("2026-07-30T17:35:00.000Z"),
-        closeTime: checkpoint.closeTime,
+        closeTime: new Date("2026-07-30T17:41:00.000Z"),
         status: { name: "FAILED" },
       },
       {
-        workflowId: "wf-middle",
-        runId: "run-middle",
+        workflowId: "wf-same-millisecond",
+        runId: "run-same-millisecond",
         type: "syncGolinks",
         taskQueue: "default",
-        startTime: new Date("2026-07-30T17:25:00.000Z"),
-        closeTime: new Date("2026-07-30T17:30:00.000Z"),
+        startTime: new Date("2026-07-30T17:20:00.000Z"),
+        closeTime: checkpoint.closeTime,
         status: { name: "FAILED" },
       },
       {
@@ -802,11 +802,11 @@ describe("workflow failure watch checkpoints", () => {
 
     expect(result).toEqual({ scanned: 2, alerted: 2, errored: 0 });
     expect(query).toContain('CloseTime > "2026-07-29T18:00:00.000Z"');
-    expect(query).toContain('CloseTime < "2026-07-30T17:40:00.000Z"');
-    expect(query).toContain('StartTime < "2026-07-30T17:35:00.000Z"');
+    expect(query).not.toContain("StartTime");
+    expect(query).not.toContain("RunId");
     expect(pageSize).toBe(100);
     expect(calls[0]?.alerts.map((alert) => alert.labels["workflowId"])).toEqual(
-      ["wf-middle", "wf-old"],
+      ["wf-same-millisecond", "wf-old"],
     );
     expect(checkpoints.at(-1)).toEqual({
       closeTime: new Date("2026-07-30T17:00:00.000Z"),
@@ -1100,6 +1100,41 @@ describe("bounded workflow failure recovery", () => {
 
     expect(calls.length).toBe(1);
     expect(calls[0]?.alerts.length).toBe(3);
+  });
+
+  it("does not checkpoint past an unresolved detail extraction", async () => {
+    const executions = Array.from({ length: 26 }, (_, index) => ({
+      workflowId: `wf-${String(index)}`,
+      runId: `run-${String(index)}`,
+      type: "syncGolinks",
+      taskQueue: "default",
+      closeTime: new Date(NOW.getTime() - index * 1000),
+      status: { name: "FAILED" },
+    }));
+    const client = fakeClient(
+      executions,
+      Object.fromEntries(
+        executions.map((execution, index) => [
+          `${execution.workflowId}/${execution.runId}`,
+          index === 0
+            ? () => Promise.reject(new Error("detail extraction failed"))
+            : rejectWithApplicationFailure("recovery failure"),
+        ]),
+      ),
+    );
+    const { poster, calls } = capturingPoster();
+    const checkpoints: WorkflowFailureWatchCheckpoint[] = [];
+
+    const result = await pollWorkflowFailuresOnce(client, poster, {
+      now: NOW,
+      lookbackMs: LOOKBACK_MS,
+      ttlMs: TTL_MS,
+      onCheckpoint: (checkpoint) => checkpoints.push(checkpoint),
+    });
+
+    expect(result).toEqual({ scanned: 26, alerted: 25, errored: 1 });
+    expect(calls.length).toBe(2);
+    expect(checkpoints).toHaveLength(0);
   });
 });
 

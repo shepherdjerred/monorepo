@@ -17,6 +17,19 @@ import {
 const DEFAULT_TEMPORAL_ADDRESS =
   "temporal-server.temporal.svc.cluster.local:7233";
 
+function requireProductionInvocation(): void {
+  if (!process.argv.slice(2).includes("--production-only")) {
+    throw new Error(
+      "The structured-output canary is production-only; run bun run canary:agent-task",
+    );
+  }
+  if (Bun.env["TEMPORAL_TLS"] !== "true") {
+    throw new Error(
+      "TEMPORAL_TLS=true is required for the production structured-output canary",
+    );
+  }
+}
+
 function workflowResultOrThrow(result: AgentTaskStartResult): {
   workflowId: string;
   runId: string;
@@ -28,6 +41,7 @@ function workflowResultOrThrow(result: AgentTaskStartResult): {
 }
 
 async function main(): Promise<void> {
+  requireProductionInvocation();
   const address = Bun.env["TEMPORAL_ADDRESS"] ?? DEFAULT_TEMPORAL_ADDRESS;
   const input = AgentTaskInputSchema.parse({
     title: "Agent-task structured-output canary",

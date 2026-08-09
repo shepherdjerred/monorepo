@@ -23,6 +23,14 @@ const ProtobufLongSchema = z.object({
   unsigned: z.boolean(),
 });
 
+const TIMEOUT_CLASSIFICATIONS: Readonly<
+  Record<string, WorkflowTimeoutClassification>
+> = {
+  EVENT_TYPE_WORKFLOW_TASK_TIMED_OUT: "workflow-task",
+  EVENT_TYPE_ACTIVITY_TASK_TIMED_OUT: "activity",
+  EVENT_TYPE_WORKFLOW_EXECUTION_TIMED_OUT: "execution",
+};
+
 function eventRecord(event: unknown): Record<string, unknown> | undefined {
   if (typeof event !== "object" || event === null) {
     return undefined;
@@ -241,6 +249,10 @@ export function classifyWorkflowTimeoutHistory(
     if (name === undefined) {
       continue;
     }
+    const timeoutClassification = TIMEOUT_CLASSIFICATIONS[name];
+    if (timeoutClassification !== undefined) {
+      latestTimeout = timeoutClassification;
+    }
     if (name === "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED") {
       workflowTaskScheduled = true;
       const id = scheduledEventId(event);
@@ -270,54 +282,55 @@ export function classifyWorkflowTimeoutHistory(
       }
     }
     switch (name) {
-      case "EVENT_TYPE_WORKFLOW_TASK_TIMED_OUT":
-        {
-          const scheduledId = timedOutWorkflowTaskScheduledEventId(event);
-          if (scheduledId !== undefined) {
-            timedOutWorkflowTaskScheduledEventIds.add(scheduledId);
-          }
+      case "EVENT_TYPE_WORKFLOW_TASK_TIMED_OUT": {
+        const scheduledId = timedOutWorkflowTaskScheduledEventId(event);
+        if (scheduledId !== undefined) {
+          timedOutWorkflowTaskScheduledEventIds.add(scheduledId);
         }
-        latestTimeout = "workflow-task";
         break;
-      case "EVENT_TYPE_ACTIVITY_TASK_TIMED_OUT":
-        {
-          const scheduledId = timedOutActivityTaskScheduledEventId(event);
-          if (scheduledId !== undefined) {
-            closedActivityScheduledEventIds.add(scheduledId);
-          }
-          activityScheduleToStartTimedOut =
-            activityScheduleToStartTimedOut ||
-            activityTaskTimedOutAsScheduleToStart(event);
+      }
+      case "EVENT_TYPE_ACTIVITY_TASK_TIMED_OUT": {
+        const scheduledId = timedOutActivityTaskScheduledEventId(event);
+        if (scheduledId !== undefined) {
+          closedActivityScheduledEventIds.add(scheduledId);
         }
-        latestTimeout = "activity";
+        activityScheduleToStartTimedOut =
+          activityScheduleToStartTimedOut ||
+          activityTaskTimedOutAsScheduleToStart(event);
         break;
-      case "EVENT_TYPE_WORKFLOW_EXECUTION_TIMED_OUT":
-        latestTimeout = "execution";
-        break;
+      }
     }
   }
+
+  const pendingWorkflowTaskEventIds = pendingScheduledEventIds(
+    scheduledWorkflowTaskEventIds,
+    startedWorkflowTaskScheduledEventIds,
+    timedOutWorkflowTaskScheduledEventIds,
+  );
+  const pendingActivityEventIds = pendingScheduledEventIds(
+    scheduledActivityEventIds,
+    startedActivityScheduledEventIds,
+    closedActivityScheduledEventIds,
+  );
 
   return {
     classification: latestTimeout ?? "unknown",
     workflowTaskScheduled,
     workflowTaskStarted,
-    workflowTaskScheduledButNotStarted: [...scheduledWorkflowTaskEventIds].some(
-      (id) =>
-        isUnclosedScheduledEvent(
-          id,
-          startedWorkflowTaskScheduledEventIds,
-          timedOutWorkflowTaskScheduledEventIds,
-        ),
-    ),
+    workflowTaskScheduledButNotStarted: pendingWorkflowTaskEventIds.length > 0,
     activityScheduled,
     activityStarted,
-    activityScheduledButNotStarted: [...scheduledActivityEventIds].some((id) =>
-      isUnclosedScheduledEvent(
-        id,
-        startedActivityScheduledEventIds,
-        closedActivityScheduledEventIds,
-      ),
-    ),
+    activityScheduledButNotStarted: pendingActivityEventIds.length > 0,
     activityScheduleToStartTimedOut,
   };
+}
+
+function pendingScheduledEventIds(
+  scheduledEventIds: ReadonlySet<string>,
+  startedEventIds: ReadonlySet<string>,
+  closedEventIds: ReadonlySet<string>,
+): readonly string[] {
+  return [...scheduledEventIds].filter((id) =>
+    isUnclosedScheduledEvent(id, startedEventIds, closedEventIds),
+  );
 }

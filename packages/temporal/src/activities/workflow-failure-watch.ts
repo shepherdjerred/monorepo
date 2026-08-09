@@ -13,9 +13,9 @@ import { buildFailureAlertForExecution } from "./workflow-failure-watch-detail.t
  * structured failure via `handle.result()`, and posts one detail-rich alert
  * per execution to Alertmanager (which already routes to PagerDuty — see
  * `packages/homelab/.../argo-applications/prometheus.ts`). Each successful
- * detail batch heartbeats its last item in Temporal visibility's stable
- * newest-first order so a timed-out activity retry resumes after its last
- * durable cursor instead of rescanning the newest prefix. Safe to overlap
+ * detail batch heartbeats its last item. A retry scans the full lookback and
+ * applies a conservative in-memory checkpoint because the public visibility
+ * iterator does not expose a precision-safe page token. Safe to overlap
  * polls because Alertmanager dedups by label set
  * (identity = alertname + workflowType + taskQueue + workflowId + runId).
  */
@@ -124,62 +124,29 @@ function toFailureStatusName(name: string): FailureStatusName | undefined {
   return FAILURE_STATUS_NAMES.find((candidate) => candidate === name);
 }
 
-function escapedVisibilityValue(value: string): string {
-  return value.replaceAll("\\", "\\\\").replaceAll('"', '\\"');
-}
-
-function cursorQuery(checkpoint: WorkflowFailureWatchCheckpoint): string {
-  const closeTime = checkpoint.closeTime.toISOString();
-  if (checkpoint.startTime === undefined) {
-    return `CloseTime < "${closeTime}"`;
-  }
-  const startTime = checkpoint.startTime.toISOString();
-  const runId = escapedVisibilityValue(checkpoint.runId);
+export function buildVisibilityQuery(since: Date): string {
   return [
-    `(CloseTime < "${closeTime}"`,
-    `OR (CloseTime = "${closeTime}" AND StartTime < "${startTime}")`,
-    `OR (CloseTime = "${closeTime}" AND StartTime = "${startTime}" AND RunId > "${runId}"))`,
-  ].join(" ");
-}
-
-export function buildVisibilityQuery(
-  since: Date,
-  checkpoint?: WorkflowFailureWatchCheckpoint,
-): string {
-  const clauses = [
     'ExecutionStatus IN ("Failed", "TimedOut")',
     `CloseTime > "${since.toISOString()}"`,
-  ];
-  if (checkpoint !== undefined) {
-    clauses.push(cursorQuery(checkpoint));
-  }
-  return clauses.join(" AND ");
+  ].join(" AND ");
 }
 
 function isAfterCheckpoint(
-  info: {
-    closeTime: Date;
-    startTime: Date;
-    runId: string;
-  },
+  closeTime: Date,
   checkpoint: WorkflowFailureWatchCheckpoint,
 ): boolean {
-  if (info.closeTime.getTime() < checkpoint.closeTime.getTime()) {
+  if (closeTime.getTime() < checkpoint.closeTime.getTime()) {
     return true;
   }
-  if (info.closeTime.getTime() > checkpoint.closeTime.getTime()) {
+  if (closeTime.getTime() > checkpoint.closeTime.getTime()) {
     return false;
   }
-  if (checkpoint.startTime === undefined) {
-    return false;
-  }
-  if (info.startTime.getTime() < checkpoint.startTime.getTime()) {
-    return true;
-  }
-  if (info.startTime.getTime() > checkpoint.startTime.getTime()) {
-    return false;
-  }
-  return info.runId > checkpoint.runId;
+  // Temporal's public AsyncIterable does not expose its visibility page token,
+  // and WorkflowExecutionInfo dates are only millisecond precision. Keep the
+  // full lookback query and conservatively retain every execution in the same
+  // millisecond as the checkpoint; duplicate Alertmanager labels are harmless,
+  // while skipping one would lose a production page.
+  return true;
 }
 
 type FailureBatchResult = {
@@ -240,14 +207,19 @@ function recordBatchCheckpoint(
   onCheckpoint:
     | ((checkpoint: WorkflowFailureWatchCheckpoint) => void)
     | undefined,
-): void {
-  if (onCheckpoint === undefined || result.errored !== 0) {
-    return;
+  checkpointBlocked: boolean,
+): boolean {
+  if (result.errored !== 0) {
+    return true;
+  }
+  if (checkpointBlocked || onCheckpoint === undefined) {
+    return checkpointBlocked;
   }
   const lastExecution = executions.at(-1);
   if (lastExecution !== undefined) {
     onCheckpoint(checkpointForExecution(lastExecution));
   }
+  return false;
 }
 
 export type PollWorkflowFailuresOptions = {
@@ -271,7 +243,7 @@ export async function pollWorkflowFailuresOnce(
   const { now, lookbackMs, checkpoint } = options;
   const lookbackSince = now.getTime() - lookbackMs;
   const since = new Date(lookbackSince);
-  const query = buildVisibilityQuery(since, checkpoint);
+  const query = buildVisibilityQuery(since);
 
   const pendingExecutions: FailedWorkflowExecution[] = [];
   let scanned = 0;
@@ -280,6 +252,7 @@ export async function pollWorkflowFailuresOnce(
   let listingFailed = false;
   let listingError: unknown;
   let processingBatch = false;
+  let checkpointBlocked = false;
   try {
     for await (const info of client.workflow.list({
       query,
@@ -291,14 +264,7 @@ export async function pollWorkflowFailuresOnce(
       }
       if (
         checkpoint !== undefined &&
-        !isAfterCheckpoint(
-          {
-            closeTime: info.closeTime,
-            startTime: info.startTime,
-            runId: info.runId,
-          },
-          checkpoint,
-        )
+        !isAfterCheckpoint(info.closeTime, checkpoint)
       ) {
         continue;
       }
@@ -320,7 +286,12 @@ export async function pollWorkflowFailuresOnce(
           pendingExecutions,
           options,
         );
-        recordBatchCheckpoint(result, pendingExecutions, options.onCheckpoint);
+        checkpointBlocked = recordBatchCheckpoint(
+          result,
+          pendingExecutions,
+          options.onCheckpoint,
+          checkpointBlocked,
+        );
         processingBatch = false;
         alerted += result.alerted;
         errored += result.errored;
@@ -342,7 +313,12 @@ export async function pollWorkflowFailuresOnce(
       pendingExecutions,
       options,
     );
-    recordBatchCheckpoint(result, pendingExecutions, options.onCheckpoint);
+    recordBatchCheckpoint(
+      result,
+      pendingExecutions,
+      options.onCheckpoint,
+      checkpointBlocked,
+    );
     alerted += result.alerted;
     errored += result.errored;
   }

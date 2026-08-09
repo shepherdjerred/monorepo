@@ -9,13 +9,17 @@ function secretFragments(value: string): readonly string[] {
   // Kubernetes and PEM credentials are often passed through env files with
   // escaped newlines. Tokenize both representations so a multiline secret
   // cannot be reconstructed one line at a time in diagnostic output.
-  const decodedWhitespace = value
-    .replaceAll(String.raw`\n`, "\n")
-    .replaceAll(String.raw`\r`, "\r")
-    .replaceAll(String.raw`\t`, "\t");
+  const decodedWhitespace = decodeEscapedWhitespace(value);
   return decodedWhitespace
     .split(/[\s"'{}\u{005B}\u{005D},:=]+/u)
     .filter((fragment) => fragment.length >= 8);
+}
+
+function decodeEscapedWhitespace(value: string): string {
+  return value
+    .replaceAll(String.raw`\n`, "\n")
+    .replaceAll(String.raw`\r`, "\r")
+    .replaceAll(String.raw`\t`, "\t");
 }
 
 // envForProvider deliberately forwards the full worker env, so scrub every
@@ -70,13 +74,15 @@ export function agentTaskSecretTokens(
   // Mounted service-account/Talos files are read into this same redaction set
   // by createAgentTaskSecretTokenState. Keeping them in the returned list is
   // what protects final-text excerpts when a provider violates its contract.
-  return [
-    ...Object.values(env).flatMap((value) =>
-      value === undefined ? [] : compositeSecretTokens(value),
-    ),
+  const environmentSecretTokens = Object.values(env).flatMap((value) =>
+    value === undefined ? [] : compositeSecretTokens(value),
+  );
+  const tokens: (string | undefined)[] = [
+    ...environmentSecretTokens,
     ...mountedSecretTokens,
-    githubAppToken,
   ];
+  tokens.push(githubAppToken);
+  return tokens;
 }
 
 export type AgentTaskSecretTokenState = {

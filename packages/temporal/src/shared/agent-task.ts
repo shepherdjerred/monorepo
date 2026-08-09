@@ -350,13 +350,29 @@ function structuredOutputFromClaudeResult(
   return resultMessage.structured_output;
 }
 
+function parseClaudeContractInput(
+  stdout: string,
+  redactExcerpt: (value: string) => string,
+): {
+  resultMessage: ClaudeResultMessage;
+  diagnostics: ClaudeOutputContractDiagnostics;
+  structuredOutput: unknown;
+} {
+  const resultMessage = parseClaudeResultMessage(stdout);
+  const diagnostics = claudeDiagnostics(resultMessage, redactExcerpt);
+  return {
+    resultMessage,
+    diagnostics,
+    structuredOutput: structuredOutputFromClaudeResult(resultMessage),
+  };
+}
+
 export function parseClaudeAgentTaskResult(
   stdout: string,
   redactExcerpt: (value: string) => string = (value) => value,
 ): AgentTaskResultPayload {
-  const resultMessage = parseClaudeResultMessage(stdout);
-  const diagnostics = claudeDiagnostics(resultMessage, redactExcerpt);
-  const structuredOutput = structuredOutputFromClaudeResult(resultMessage);
+  const { resultMessage, diagnostics, structuredOutput } =
+    parseClaudeContractInput(stdout, redactExcerpt);
   if (resultMessage.is_error === true) {
     throw new AgentTaskOutputContractError(
       "is-error",
