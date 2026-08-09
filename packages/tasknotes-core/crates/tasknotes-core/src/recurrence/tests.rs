@@ -7,7 +7,7 @@
 
 use chrono::NaiveDate;
 
-use super::{DateWindow, Frequency, Recurrence};
+use super::{DateWindow, Frequency, Recurrence, completion_target_date};
 use crate::domain::RecurrenceAnchor;
 
 /// The corpus's default `scheduled`, a Monday.
@@ -199,5 +199,84 @@ fn the_next_uncompleted_occurrence_skips_processed_instances() {
             &[ymd(2026, 1, 6)],
         ),
         Some(ymd(2026, 1, 7))
+    );
+}
+
+// ── completionTargetDate ───────────────────────────────────────────────────
+
+#[test]
+fn a_scheduled_anchored_completion_targets_the_scheduled_occurrence() {
+    // The rent case: the rule fires on the 1st and it is the 12th. Targeting
+    // the 12th would orphan the completion and the task would reappear.
+    assert_eq!(
+        completion_target_date(Some("2026-07-01"), None, None, ymd(2026, 7, 12)),
+        ymd(2026, 7, 1)
+    );
+    assert_eq!(
+        completion_target_date(
+            Some("2026-07-01"),
+            None,
+            Some(RecurrenceAnchor::Scheduled),
+            ymd(2026, 7, 12)
+        ),
+        ymd(2026, 7, 1)
+    );
+}
+
+#[test]
+fn a_completion_anchored_series_targets_today_instead() {
+    assert_eq!(
+        completion_target_date(
+            Some("2026-07-01"),
+            Some("2026-07-02"),
+            Some(RecurrenceAnchor::Completion),
+            ymd(2026, 7, 12)
+        ),
+        ymd(2026, 7, 12)
+    );
+}
+
+#[test]
+fn due_is_the_fallback_and_today_is_the_last_resort() {
+    assert_eq!(
+        completion_target_date(None, Some("2026-07-03"), None, ymd(2026, 7, 12)),
+        ymd(2026, 7, 3)
+    );
+    assert_eq!(
+        completion_target_date(None, None, None, ymd(2026, 7, 12)),
+        ymd(2026, 7, 12)
+    );
+    // A value that carries no usable date falls through to the next field
+    // rather than failing — the reference's `undefined` branch, not an error.
+    assert_eq!(
+        completion_target_date(Some("someday"), Some("2026-07-03"), None, ymd(2026, 7, 12)),
+        ymd(2026, 7, 3)
+    );
+    assert_eq!(
+        completion_target_date(Some(""), None, None, ymd(2026, 7, 12)),
+        ymd(2026, 7, 12)
+    );
+}
+
+#[test]
+fn a_datetime_target_is_the_day_it_writes_down() {
+    // Read as the written date, never shifted into a viewer's zone: the
+    // occurrence list the plugin matches against is keyed on the former.
+    assert_eq!(
+        completion_target_date(Some("2026-07-11T02:00:00Z"), None, None, ymd(2026, 7, 12)),
+        ymd(2026, 7, 11)
+    );
+    assert_eq!(
+        completion_target_date(Some("2026-07-10 15:30"), None, None, ymd(2026, 7, 12)),
+        ymd(2026, 7, 10)
+    );
+    // Unpadded and impossible dates are not usable date parts.
+    assert_eq!(
+        completion_target_date(Some("2026-7-1"), None, None, ymd(2026, 7, 12)),
+        ymd(2026, 7, 12)
+    );
+    assert_eq!(
+        completion_target_date(Some("2026-02-30"), None, None, ymd(2026, 7, 12)),
+        ymd(2026, 7, 12)
     );
 }

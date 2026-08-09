@@ -487,6 +487,7 @@ struct HostState {
     var deadLetter: String?
     var tasks: [TaskNotesCore.Task] = []
     var idAliases: String?
+    var idCounters: String?
     var lastSyncTime: Int64?
     var schemaVersion: UInt32 = 0
     var legacyQueue: String?
@@ -535,6 +536,11 @@ final class MemoryHost: QueueStorage, TaskCacheStorage, MigrationStorage, RetryS
     func writeIdAliases(data: String) throws {
         try guardWrites()
         state.withLock { $0.idAliases = data }
+    }
+    func readIdCounters() throws -> String? { state.withLock { $0.idCounters } }
+    func writeIdCounters(data: String) throws {
+        try guardWrites()
+        state.withLock { $0.idCounters = data }
     }
     func readLastSyncTime() throws -> Int64? { state.withLock { $0.lastSyncTime } }
     func writeLastSyncTime(millis: Int64) throws {

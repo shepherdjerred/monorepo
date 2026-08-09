@@ -3076,6 +3076,35 @@ public protocol TaskCacheStorage: AnyObject, Sendable {
     func writeIdAliases(data: String) throws 
     
     /**
+     * Read the persisted id counters as JSON, or `None`.
+     *
+     * `None` is the fresh-install path *and* the upgrade path, and neither is
+     * a failure — see
+     * [`tasknotes_core::sync::TaskCacheStorage::read_id_counters`].
+     *
+     * # Errors
+     *
+     * A storage-layer failure.
+     */
+    func readIdCounters() throws  -> String?
+    
+    /**
+     * Persist the id counters as JSON.
+     *
+     * A slot of its own rather than a field folded into the queue or the alias
+     * blob, because both of those are formats shared with the TypeScript
+     * client and both "simplifications" lose user data silently. The reasoning
+     * is on
+     * [`tasknotes_core::sync::TaskCacheStorage::write_id_counters`]; read it
+     * before consolidating these keys.
+     *
+     * # Errors
+     *
+     * A storage-layer failure.
+     */
+    func writeIdCounters(data: String) throws 
+    
+    /**
      * Read the last successful pull's timestamp.
      *
      * # Errors
@@ -3208,6 +3237,47 @@ open func readIdAliases()throws  -> String?  {
      */
 open func writeIdAliases(data: String)throws   {try rustCallWithError(FfiConverterTypeCoreError_lift) {
     uniffi_tasknotes_core_ffi_fn_method_taskcachestorage_write_id_aliases(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(data),$0
+    )
+}
+}
+    
+    /**
+     * Read the persisted id counters as JSON, or `None`.
+     *
+     * `None` is the fresh-install path *and* the upgrade path, and neither is
+     * a failure — see
+     * [`tasknotes_core::sync::TaskCacheStorage::read_id_counters`].
+     *
+     * # Errors
+     *
+     * A storage-layer failure.
+     */
+open func readIdCounters()throws  -> String?  {
+    return try  FfiConverterOptionString.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+    uniffi_tasknotes_core_ffi_fn_method_taskcachestorage_read_id_counters(
+            self.uniffiCloneHandle(),$0
+    )
+})
+}
+    
+    /**
+     * Persist the id counters as JSON.
+     *
+     * A slot of its own rather than a field folded into the queue or the alias
+     * blob, because both of those are formats shared with the TypeScript
+     * client and both "simplifications" lose user data silently. The reasoning
+     * is on
+     * [`tasknotes_core::sync::TaskCacheStorage::write_id_counters`]; read it
+     * before consolidating these keys.
+     *
+     * # Errors
+     *
+     * A storage-layer failure.
+     */
+open func writeIdCounters(data: String)throws   {try rustCallWithError(FfiConverterTypeCoreError_lift) {
+    uniffi_tasknotes_core_ffi_fn_method_taskcachestorage_write_id_counters(
             self.uniffiCloneHandle(),
         FfiConverterString.lower(data),$0
     )
@@ -3355,6 +3425,54 @@ fileprivate struct UniffiCallbackInterfaceTaskCacheStorage {
                     throw UniffiInternalError.unexpectedStaleHandle
                 }
                 return try uniffiObj.writeIdAliases(
+                     data: try FfiConverterString.lift(data)
+                )
+            }
+
+            
+            let writeReturn = { () }
+            uniffiTraitInterfaceCallWithError(
+                callStatus: uniffiCallStatus,
+                makeCall: makeCall,
+                writeReturn: writeReturn,
+                lowerError: FfiConverterTypeCoreError_lower
+            )
+        },
+        readIdCounters: { (
+            uniffiHandle: UInt64,
+            uniffiOutReturn: UnsafeMutablePointer<RustBuffer>,
+            uniffiCallStatus: UnsafeMutablePointer<RustCallStatus>
+        ) in
+            let makeCall = {
+                () throws -> String? in
+                guard let uniffiObj = try? FfiConverterTypeTaskCacheStorage.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return try uniffiObj.readIdCounters(
+                )
+            }
+
+            
+            let writeReturn = { uniffiOutReturn.pointee = FfiConverterOptionString.lower($0) }
+            uniffiTraitInterfaceCallWithError(
+                callStatus: uniffiCallStatus,
+                makeCall: makeCall,
+                writeReturn: writeReturn,
+                lowerError: FfiConverterTypeCoreError_lower
+            )
+        },
+        writeIdCounters: { (
+            uniffiHandle: UInt64,
+            data: RustBuffer,
+            uniffiOutReturn: UnsafeMutableRawPointer,
+            uniffiCallStatus: UnsafeMutablePointer<RustCallStatus>
+        ) in
+            let makeCall = {
+                () throws -> () in
+                guard let uniffiObj = try? FfiConverterTypeTaskCacheStorage.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return try uniffiObj.writeIdCounters(
                      data: try FfiConverterString.lift(data)
                 )
             }
@@ -11491,6 +11609,44 @@ public func parseTaskInput(input: String, today: String)throws  -> NlpParseResul
 })
 }
 /**
+ * The occurrence date a completion gesture on a **recurring** task targets.
+ *
+ * The single most consequential thing a task list can get wrong: a recurring
+ * task completes its *scheduled occurrence*, not the calendar day of the
+ * click. Completing a rule that fires on the 1st while it is the 12th must
+ * record `…-01`; recording `…-12` orphans the entry against a day the rule
+ * never fires on, so the occurrence still reads as open and the task reappears
+ * as if untouched.
+ *
+ * Exported because there is no honest way for a shell to compute it: it reads
+ * `scheduled`/`due` with the reference's own `getDatePart`, which is a
+ * *written-date* reading and diverges from [`crate::dates::date_parse_local`]
+ * for zoned values. Two shells reimplementing that divergence is the failure
+ * mode this core exists to remove.
+ *
+ * `anchor` is the task's, and `None` reads as
+ * [`RecurrenceAnchor::Scheduled`] — a completion-anchored series measures from
+ * when you finished, so its target is `today`. `today` is the host's, because
+ * only the host knows the device's calendar.
+ *
+ * Callers gate on the task actually being recurring; for a plain task the
+ * gesture sets `status`, and no date is involved.
+ *
+ * # Errors
+ *
+ * Returns [`CoreError::Validation`] when `today` is not a `YYYY-MM-DD` date.
+ */
+public func recurrenceCompletionTargetDate(scheduled: String?, due: String?, anchor: RecurrenceAnchor?, today: String)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+    uniffi_tasknotes_core_ffi_fn_func_recurrence_completion_target_date(
+        FfiConverterOptionString.lower(scheduled),
+        FfiConverterOptionString.lower(due),
+        FfiConverterOptionTypeRecurrenceAnchor.lower(anchor),
+        FfiConverterString.lower(today),$0
+    )
+})
+}
+/**
  * How many instances the series has in total, when that is finite and knowable.
  *
  * `None` covers three situations the reference also conflates: the rule is
@@ -11778,6 +11934,9 @@ private let initializationResult: InitializationResult = {
     if (uniffi_tasknotes_core_ffi_checksum_func_parse_task_input() != 23175) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_completion_target_date() != 7381) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_finite_instance_count() != 65092) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -11895,10 +12054,16 @@ private let initializationResult: InitializationResult = {
     if (uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_id_aliases() != 53591) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_read_last_sync_time() != 57869) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_read_id_counters() != 21846) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_last_sync_time() != 3293) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_id_counters() != 26948) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_read_last_sync_time() != 8447) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_last_sync_time() != 39475) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_tasknotes_core_ffi_checksum_method_httpclient_send() != 45508) {

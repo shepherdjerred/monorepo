@@ -160,7 +160,8 @@ pub trait QueueStorage: Send + Sync {
     fn write_dead_letter(&self, data: &str) -> Result<()>;
 }
 
-/// Durable storage for the base task cache and the temp-id alias map.
+/// Durable storage for the base task cache, the temp-id alias map and the id
+/// counters.
 ///
 /// The base cache is the last server snapshot, and the alias map remembers
 /// which temp id became which server path. Note what is *not* here: the
@@ -194,6 +195,48 @@ pub trait TaskCacheStorage: Send + Sync {
     ///
     /// A storage-layer failure.
     fn write_id_aliases(&self, data: &str) -> Result<()>;
+
+    /// Read the persisted id counters as JSON, or `None` when nothing was ever
+    /// written.
+    ///
+    /// **`None` is the normal case, not a failure.** It is a fresh install, and
+    /// it is equally every install carried over from a build that predates this
+    /// slot. Both mean "start at zero", which
+    /// [`TaskStore`](crate::store::TaskStore) handles without a schema bump
+    /// because it also refuses to mint an id the restored queue already holds.
+    ///
+    /// # Errors
+    ///
+    /// A storage-layer failure.
+    fn read_id_counters(&self) -> Result<Option<String>>;
+
+    /// Persist the id counters as JSON.
+    ///
+    /// ## Why this is its own slot and not folded into one of the others
+    ///
+    /// Both cheaper-looking homes are cross-implementation data-loss traps, and
+    /// neither is obvious from the Rust side alone:
+    ///
+    /// * **Not inside the queue blob.** Wrapping it as
+    ///   `{"commands": [...], "counters": {...}}` would make the TypeScript
+    ///   client's per-item salvage loop see a value that is not an array and
+    ///   **silently discard the user's entire offline queue**. A schema tweak
+    ///   on this side, total data loss on the other.
+    /// * **Not inside the alias blob.** A reserved entry there survives this
+    ///   crate's [`parse_aliases`](crate::store) — which drops anything that is
+    ///   not a `TaskId` pair — but the TypeScript client's `replaceBase` prunes
+    ///   aliases whose target is absent from the base, so the counters would
+    ///   vanish on the first successful pull. That surfaces months later as
+    ///   unexplained id reuse, not as a parse error.
+    ///
+    /// The queue and the alias map are formats shared with a *different
+    /// implementation*. This is a new key with no reader but this one, which is
+    /// exactly why it is safe to add without a migration.
+    ///
+    /// # Errors
+    ///
+    /// A storage-layer failure.
+    fn write_id_counters(&self, data: &str) -> Result<()>;
 
     /// Read the last successful pull's timestamp.
     ///

@@ -36,7 +36,7 @@
 
 use tasknotes_core::{
     domain::RecurrenceAnchor,
-    recurrence::{DateWindow, Frequency, Recurrence},
+    recurrence::{DateWindow, Frequency, Recurrence, completion_target_date},
 };
 
 use crate::{
@@ -242,6 +242,59 @@ pub fn recurrence_next_uncompleted_occurrence(
     .map(render_iso_date))
 }
 
+/// The occurrence date a completion gesture on a **recurring** task targets.
+///
+/// The single most consequential thing a task list can get wrong: a recurring
+/// task completes its *scheduled occurrence*, not the calendar day of the
+/// click. Completing a rule that fires on the 1st while it is the 12th must
+/// record `…-01`; recording `…-12` orphans the entry against a day the rule
+/// never fires on, so the occurrence still reads as open and the task reappears
+/// as if untouched.
+///
+/// Exported because there is no honest way for a shell to compute it: it reads
+/// `scheduled`/`due` with the reference's own `getDatePart`, which is a
+/// *written-date* reading and diverges from [`crate::dates::date_parse_local`]
+/// for zoned values. Two shells reimplementing that divergence is the failure
+/// mode this core exists to remove.
+///
+/// `anchor` is the task's, and `None` reads as
+/// [`RecurrenceAnchor::Scheduled`] — a completion-anchored series measures from
+/// when you finished, so its target is `today`. `today` is the host's, because
+/// only the host knows the device's calendar.
+///
+/// Callers gate on the task actually being recurring; for a plain task the
+/// gesture sets `status`, and no date is involved.
+///
+/// # Errors
+///
+/// Returns [`CoreError::Validation`] when `today` is not a `YYYY-MM-DD` date.
+#[uniffi::export]
+pub fn recurrence_completion_target_date(
+    scheduled: Option<String>,
+    due: Option<String>,
+    anchor: Option<RecurrenceAnchor>,
+    today: &str,
+) -> Result<String, CoreError> {
+    // Same shape and same reason as `Fallbacks` above: UniFFI lifts arguments
+    // out of the buffer owned, and the core wants `Option<&str>`, so the owned
+    // values need a named place to outlive the borrow.
+    let fields = TargetFields { scheduled, due };
+    Ok(render_iso_date(completion_target_date(
+        fields.scheduled.as_deref(),
+        fields.due.as_deref(),
+        anchor,
+        parse_iso_date(today)?,
+    )))
+}
+
+/// The two task fields a completion target is read from.
+struct TargetFields {
+    /// The task's `scheduled` field, exactly as stored.
+    scheduled: Option<String>,
+    /// The task's `due` field, exactly as stored.
+    due: Option<String>,
+}
+
 #[cfg(test)]
 mod tests {
     use tasknotes_core::{domain::RecurrenceAnchor, recurrence::Frequency};
@@ -250,8 +303,9 @@ mod tests {
     const SCHEDULED: &str = "2026-08-03";
 
     use super::{
-        recurrence_finite_instance_count, recurrence_frequency, recurrence_is_expandable,
-        recurrence_next_uncompleted_occurrence, recurrence_occurrences, recurrence_occurs_on,
+        recurrence_completion_target_date, recurrence_finite_instance_count, recurrence_frequency,
+        recurrence_is_expandable, recurrence_next_uncompleted_occurrence, recurrence_occurrences,
+        recurrence_occurs_on,
     };
     use crate::error::CoreError;
 
@@ -381,6 +435,57 @@ mod tests {
         .unwrap_err();
         assert!(
             matches!(error, CoreError::Invariant { ref message } if message.contains("date window")),
+            "unexpected error: {error:?}"
+        );
+    }
+
+    #[test]
+    fn a_completion_targets_the_scheduled_occurrence_and_not_the_day_of_the_click() {
+        // The rent case, end to end across the boundary: the rule fires on the
+        // 1st, it is the 12th, and the date recorded must be the 1st.
+        assert_eq!(
+            recurrence_completion_target_date(
+                Some("2026-07-01".to_owned()),
+                None,
+                None,
+                "2026-07-12"
+            )
+            .unwrap(),
+            "2026-07-01"
+        );
+        // A completion-anchored series measures from when you finished.
+        assert_eq!(
+            recurrence_completion_target_date(
+                Some("2026-07-01".to_owned()),
+                None,
+                Some(RecurrenceAnchor::Completion),
+                "2026-07-12"
+            )
+            .unwrap(),
+            "2026-07-12"
+        );
+        // `due` is the fallback; today is the last resort.
+        assert_eq!(
+            recurrence_completion_target_date(
+                None,
+                Some("2026-07-03".to_owned()),
+                None,
+                "2026-07-12"
+            )
+            .unwrap(),
+            "2026-07-03"
+        );
+        assert_eq!(
+            recurrence_completion_target_date(None, None, None, "2026-07-12").unwrap(),
+            "2026-07-12"
+        );
+    }
+
+    #[test]
+    fn a_malformed_today_is_a_validation_failure_rather_than_a_guess() {
+        let error = recurrence_completion_target_date(None, None, None, "07/12/2026").unwrap_err();
+        assert!(
+            matches!(error, CoreError::Validation { ref message } if message.contains("YYYY-MM-DD")),
             "unexpected error: {error:?}"
         );
     }

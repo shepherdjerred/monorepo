@@ -70,15 +70,33 @@ mint-and-check loop only as a backstop — see `## Remaining`.
       randomness (`() => 0.5` / `HalfUnitRandomness`), so the duplicate id is
       deterministic rather than a one-in-sixteen-million accident.
 
-## Notes for the Rust port
+## The Rust port (done)
 
-`TaskStore::next_command_id` / `next_temp_id` in `packages/tasknotes-core` should
-converge on the persisted counter. Their mint-and-check loop is correct but
-strictly weaker: it can only see ids the client still holds, so it cannot stop a
-re-mint of an id the client has already dequeued while the server's idempotency
-store still remembers it. The shared scenario passes under either mechanism, so
-this is a hardening follow-up, not a parity break, and it is deliberately not
-tracked as agent work here — that crate is out of this change's scope.
+`packages/tasknotes-core` now persists both counters too, so the two
+implementations use the same mechanism with the same fallback reasoning.
+
+- New `id_counters` slot on the `TaskCacheStorage` host trait, written **before**
+  the enqueue, exactly as in TypeScript. The macOS host stores it as
+  `id-counters.json` beside the other container files.
+- It had to be its own slot. Folding it into the queue blob would make the
+  TypeScript per-item salvage loop see a non-array and **silently discard the
+  whole offline queue**; folding it into the alias blob survives Rust's
+  `parse_aliases` but is pruned by the TypeScript `replaceBase` on the first
+  successful pull. Both reasons are recorded as doc comments on the trait so the
+  keys do not get "simplified" later.
+- The mint-and-check loop is kept, demoted to the documented backstop for the
+  upgrade and corrupt-blob paths.
+- No `CURRENT_SCHEMA_VERSION` bump, for the same reason as TypeScript: a missing
+  key is the fresh-install path, and there is no data to transform.
+
+The shared scenario passes under either mechanism **in Rust**, and that is worth
+recording: unlike TypeScript, this crate has had the durable-set check since it
+was written, and in the scenario the colliding command is still queued at the
+moment of the second mint — precisely the case the check does see. The case that
+separates the two mechanisms is an id that was already **acked and dequeued**
+while the server still remembers it, which is now pinned by
+`an_acked_commands_id_is_never_re_minted_after_a_relaunch` rather than by a
+fixture.
 
 ## Human Verification
 
@@ -102,3 +120,14 @@ the carried-over queue drains completely.
   each mechanism in turn: without persistence the new shared scenario reports one
   server task instead of two, and without the dead-letter half of the check the
   new `TaskStore` unit test re-mints a parked command's id.
+- 2026-08-08: Converged the Rust core on the same persisted counters, under a
+  new `id_counters` host storage slot; the mint-and-check loop stays as the
+  backstop. All 26 shared scenarios and all 338 recurrence cases still pass
+  unchanged, and no fixture was edited. Negative controls: disabling the
+  counter write fails the acked-id and write-ordering unit tests, and disabling
+  either dead-letter half of the durable-set check fails the parked-command
+  test. Noted that the shared relaunch scenario does **not** discriminate the
+  two mechanisms in Rust — it passes with persistence disabled, because this
+  crate always had the check and the colliding command is still queued there.
+  The discriminating case is an acked-and-dequeued id, now covered by a unit
+  test.

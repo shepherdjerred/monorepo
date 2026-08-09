@@ -448,6 +448,7 @@ mod tests {
         dead: Mutex<Option<String>>,
         tasks: Mutex<Vec<Task>>,
         aliases: Mutex<Option<String>>,
+        counters: Mutex<Option<String>>,
         last_sync: Mutex<Option<i64>>,
         version: Mutex<u32>,
         legacy: Mutex<Option<String>>,
@@ -483,6 +484,13 @@ mod tests {
         }
         fn write_id_aliases(&self, data: String) -> Result<(), CoreError> {
             *self.aliases.lock().unwrap() = Some(data);
+            Ok(())
+        }
+        fn read_id_counters(&self) -> Result<Option<String>, CoreError> {
+            Ok(self.counters.lock().unwrap().clone())
+        }
+        fn write_id_counters(&self, data: String) -> Result<(), CoreError> {
+            *self.counters.lock().unwrap() = Some(data);
             Ok(())
         }
         fn read_last_sync_time(&self) -> Result<Option<i64>, CoreError> {
@@ -627,6 +635,34 @@ mod tests {
         assert_eq!(
             restored.tasks.first().map(|task| task.id.clone()),
             Some(optimistic.id)
+        );
+    }
+
+    #[test]
+    fn a_dispatch_spends_the_id_counters_through_the_host_adapter() {
+        // The adapter is a one-line forward, but an un-forwarded storage method
+        // is invisible from the Rust side: the core would keep counting in
+        // memory and reset on every relaunch, which is exactly the bug the
+        // counters exist to close. Pin that the bytes reach the host.
+        let memory = Arc::new(Memory::default());
+        let (engine, _) = build(&memory, None);
+        engine.restore().unwrap();
+        assert_eq!(
+            memory.counters.lock().unwrap().clone(),
+            None,
+            "nothing is written before the first dispatch"
+        );
+
+        engine
+            .dispatch(CommandInput::Create {
+                payload: CreateTaskRequest::new(TaskTitle::parse("Written offline").unwrap()),
+            })
+            .unwrap();
+
+        assert_eq!(
+            memory.counters.lock().unwrap().clone(),
+            Some(r#"{"command":1,"temp":1}"#.to_owned()),
+            "a create spends one command id and one temp id"
         );
     }
 

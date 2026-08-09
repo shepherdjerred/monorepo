@@ -227,15 +227,22 @@ impl QueueStorage for MemoryQueueStorage {
 pub struct MemoryCacheStorage {
     tasks: Mutex<Vec<Task>>,
     aliases: Mutex<Option<String>>,
+    counters: Mutex<Option<String>>,
     last_sync: Mutex<Option<i64>>,
 }
 
 impl MemoryCacheStorage {
     /// An independent copy of the durable bytes as they stand right now.
+    ///
+    /// The id counters are carried like everything else, which is the whole
+    /// point: a relaunch that forgot them would be simulating a *different*
+    /// device than the one the scenario describes, and the persisted-counter
+    /// mechanism would be untestable here.
     pub fn snapshot(&self) -> Self {
         Self {
             tasks: Mutex::new(lock(&self.tasks).clone()),
             aliases: Mutex::new(lock(&self.aliases).clone()),
+            counters: Mutex::new(lock(&self.counters).clone()),
             last_sync: Mutex::new(*lock(&self.last_sync)),
         }
     }
@@ -257,6 +264,15 @@ impl TaskCacheStorage for MemoryCacheStorage {
 
     fn write_id_aliases(&self, data: &str) -> Result<()> {
         *lock(&self.aliases) = Some(data.to_owned());
+        Ok(())
+    }
+
+    fn read_id_counters(&self) -> Result<Option<String>> {
+        Ok(lock(&self.counters).clone())
+    }
+
+    fn write_id_counters(&self, data: &str) -> Result<()> {
+        *lock(&self.counters) = Some(data.to_owned());
         Ok(())
     }
 

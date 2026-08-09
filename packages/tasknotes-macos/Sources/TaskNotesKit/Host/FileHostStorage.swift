@@ -47,6 +47,7 @@ public final class FileHostStorage: QueueStorage, TaskCacheStorage, MigrationSto
         case deadLetter = "dead-letter.json"
         case tasks = "tasks.json"
         case idAliases = "id-aliases.json"
+        case idCounters = "id-counters.json"
         case lastSyncTime = "last-sync-time.json"
         case schemaVersion = "schema-version.json"
         case legacyQueue = "legacy-queue.json"
@@ -153,6 +154,29 @@ public final class FileHostStorage: QueueStorage, TaskCacheStorage, MigrationSto
 
     public func writeIdAliases(data: String) throws(CoreError) {
         try writeText(data, to: .idAliases)
+    }
+
+    /// The command-id and temp-id counters.
+    ///
+    /// Absent means "start at zero", which is the fresh-install path and also
+    /// every install carried over from a build that predates this file. The
+    /// core treats both as the same state and needs no schema bump for either.
+    public func readIdCounters() throws(CoreError) -> String? {
+        try readText(.idCounters)
+    }
+
+    /// Persist the id counters.
+    ///
+    /// A file of its own, deliberately, and not a field folded into
+    /// `queue.json` or `id-aliases.json`. Those two are storage formats shared
+    /// with the TypeScript client, and both "obvious" consolidations lose user
+    /// data silently on that side: an envelope around the queue makes its
+    /// per-item salvage loop see a non-array and discard the entire offline
+    /// queue, and a reserved entry in the alias map is pruned by its
+    /// `replaceBase` on the first successful pull. This file has exactly one
+    /// reader, which is why adding it needed no migration.
+    public func writeIdCounters(data: String) throws(CoreError) {
+        try writeText(data, to: .idCounters)
     }
 
     public func readLastSyncTime() throws(CoreError) -> Int64? {

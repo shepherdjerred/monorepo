@@ -385,7 +385,21 @@ typedef void (*UniffiCallbackInterfaceTaskCacheStorageMethod4)(uint64_t, RustBuf
 #endif
 #ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TASK_CACHE_STORAGE_METHOD5
 #define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TASK_CACHE_STORAGE_METHOD5
-typedef void (*UniffiCallbackInterfaceTaskCacheStorageMethod5)(uint64_t, int64_t, void* _Nonnull, 
+typedef void (*UniffiCallbackInterfaceTaskCacheStorageMethod5)(uint64_t, RustBuffer, void* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TASK_CACHE_STORAGE_METHOD6
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TASK_CACHE_STORAGE_METHOD6
+typedef void (*UniffiCallbackInterfaceTaskCacheStorageMethod6)(uint64_t, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TASK_CACHE_STORAGE_METHOD7
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TASK_CACHE_STORAGE_METHOD7
+typedef void (*UniffiCallbackInterfaceTaskCacheStorageMethod7)(uint64_t, int64_t, void* _Nonnull, 
         RustCallStatus *_Nonnull uniffiCallStatus
     );
 
@@ -468,8 +482,10 @@ typedef struct UniffiVTableCallbackInterfaceTaskCacheStorage {
     UniffiCallbackInterfaceTaskCacheStorageMethod1 _Nonnull writeTasks;
     UniffiCallbackInterfaceTaskCacheStorageMethod2 _Nonnull readIdAliases;
     UniffiCallbackInterfaceTaskCacheStorageMethod3 _Nonnull writeIdAliases;
-    UniffiCallbackInterfaceTaskCacheStorageMethod4 _Nonnull readLastSyncTime;
-    UniffiCallbackInterfaceTaskCacheStorageMethod5 _Nonnull writeLastSyncTime;
+    UniffiCallbackInterfaceTaskCacheStorageMethod4 _Nonnull readIdCounters;
+    UniffiCallbackInterfaceTaskCacheStorageMethod5 _Nonnull writeIdCounters;
+    UniffiCallbackInterfaceTaskCacheStorageMethod6 _Nonnull readLastSyncTime;
+    UniffiCallbackInterfaceTaskCacheStorageMethod7 _Nonnull writeLastSyncTime;
 } UniffiVTableCallbackInterfaceTaskCacheStorage;
 
 #endif
@@ -751,6 +767,16 @@ RustBuffer uniffi_tasknotes_core_ffi_fn_method_taskcachestorage_read_id_aliases(
 #ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_TASKCACHESTORAGE_WRITE_ID_ALIASES
 #define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_TASKCACHESTORAGE_WRITE_ID_ALIASES
 void uniffi_tasknotes_core_ffi_fn_method_taskcachestorage_write_id_aliases(uint64_t ptr, RustBuffer data, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_TASKCACHESTORAGE_READ_ID_COUNTERS
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_TASKCACHESTORAGE_READ_ID_COUNTERS
+RustBuffer uniffi_tasknotes_core_ffi_fn_method_taskcachestorage_read_id_counters(uint64_t ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_TASKCACHESTORAGE_WRITE_ID_COUNTERS
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_TASKCACHESTORAGE_WRITE_ID_COUNTERS
+void uniffi_tasknotes_core_ffi_fn_method_taskcachestorage_write_id_counters(uint64_t ptr, RustBuffer data, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_TASKCACHESTORAGE_READ_LAST_SYNC_TIME
@@ -1060,6 +1086,11 @@ uint32_t uniffi_tasknotes_core_ffi_fn_func_api_default_timeout_millis(RustCallSt
 #ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_PARSE_TASK_INPUT
 #define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_PARSE_TASK_INPUT
 RustBuffer uniffi_tasknotes_core_ffi_fn_func_parse_task_input(RustBuffer input, RustBuffer today, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_RECURRENCE_COMPLETION_TARGET_DATE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_RECURRENCE_COMPLETION_TARGET_DATE
+RustBuffer uniffi_tasknotes_core_ffi_fn_func_recurrence_completion_target_date(RustBuffer scheduled, RustBuffer due, RustBuffer anchor, RustBuffer today, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_RECURRENCE_FINITE_INSTANCE_COUNT
@@ -1640,6 +1671,12 @@ uint16_t uniffi_tasknotes_core_ffi_checksum_func_parse_task_input(void
     
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_RECURRENCE_COMPLETION_TARGET_DATE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_RECURRENCE_COMPLETION_TARGET_DATE
+uint16_t uniffi_tasknotes_core_ffi_checksum_func_recurrence_completion_target_date(void
+    
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_RECURRENCE_FINITE_INSTANCE_COUNT
 #define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_RECURRENCE_FINITE_INSTANCE_COUNT
 uint16_t uniffi_tasknotes_core_ffi_checksum_func_recurrence_finite_instance_count(void
@@ -1871,6 +1908,18 @@ uint16_t uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_read_id_alia
 #ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_TASKCACHESTORAGE_WRITE_ID_ALIASES
 #define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_TASKCACHESTORAGE_WRITE_ID_ALIASES
 uint16_t uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_id_aliases(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_TASKCACHESTORAGE_READ_ID_COUNTERS
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_TASKCACHESTORAGE_READ_ID_COUNTERS
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_read_id_counters(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_TASKCACHESTORAGE_WRITE_ID_COUNTERS
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_TASKCACHESTORAGE_WRITE_ID_COUNTERS
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_id_counters(void
     
 );
 #endif

@@ -3,9 +3,9 @@
 //! `base` is the last server snapshot. The visible task map is **always**
 //! `rebase(base, queue.pending)`, recomputed on every change and never
 //! persisted. That is the whole offline-first invariant in one sentence: the
-//! only durable writes are the command queue (on dispatch) and the base cache
-//! (on server acks and pulls), so no crash can capture a half-applied
-//! optimistic state.
+//! only durable writes are the id counters and the command queue (on dispatch,
+//! in that order) and the base cache (on server acks and pulls), so no crash
+//! can capture a half-applied optimistic state.
 //!
 //! The store never touches the network. Executing commands is
 //! [`SyncEngine`](crate::sync::SyncEngine)'s job; it reports results back
@@ -62,8 +62,22 @@ pub struct TaskStore {
     aliases: IndexMap<TaskId, TaskId>,
     last_sync_time: Option<i64>,
     snapshot: TaskStoreSnapshot,
-    command_counter: u64,
-    temp_counter: u64,
+    counters: IdCounters,
+}
+
+/// The two id counters, as they are persisted.
+///
+/// Field names are the storage format, shared with the TypeScript client's
+/// `id_counters` key. `u64` rather than the JSON-native float the other side
+/// uses: a counter that silently stops incrementing past 2^53 is the same bug
+/// this type exists to prevent, and the values are small enough that the
+/// representations never disagree in practice.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+struct IdCounters {
+    /// How many command ids have ever been minted on this install.
+    command: u64,
+    /// How many temp task ids have ever been minted on this install.
+    temp: u64,
 }
 
 impl core::fmt::Debug for TaskStore {
@@ -98,12 +112,12 @@ impl TaskStore {
             aliases: IndexMap::new(),
             last_sync_time: None,
             snapshot: TaskStoreSnapshot::default(),
-            command_counter: 0,
-            temp_counter: 0,
+            counters: IdCounters::default(),
         }
     }
 
-    /// Load the queue, the cached base, the alias map and the last sync time.
+    /// Load the queue, the cached base, the alias map, the id counters and the
+    /// last sync time.
     ///
     /// Call once at startup, **after** [`migrations::run_migrations`].
     ///
@@ -119,6 +133,7 @@ impl TaskStore {
             .map(|task| (task.id.clone(), task))
             .collect();
         self.aliases = parse_aliases(self.storage.read_id_aliases()?.as_deref());
+        self.counters = parse_id_counters(self.storage.read_id_counters()?.as_deref());
         self.last_sync_time = self.storage.read_last_sync_time()?;
         self.recompute();
         Ok(())
@@ -169,6 +184,12 @@ impl TaskStore {
     pub fn dispatch(&mut self, input: CommandInput) -> Result<Option<Task>> {
         let command = self.build_command(input)?;
         let target = command.target().clone();
+        // Counters first, queue second, and never the other way round: the id
+        // has to be durably spent before the command carrying it can reach the
+        // wire. Crashing after this write only burns id values, which is free;
+        // crashing between the enqueue and this write would hand the id back
+        // out — and that id is the server's `X-Mutation-Id`.
+        self.persist_id_counters()?;
         self.queue.enqueue(command)?;
         self.recompute();
         Ok(self.snapshot.tasks.get(&target).cloned())
@@ -319,28 +340,38 @@ impl TaskStore {
         })
     }
 
-    /// Mint a command id that no durable command already carries.
+    /// Mint a command id that has never been minted on this install.
     ///
-    /// The collision check is **not** paranoia, and it is where this port
-    /// deliberately diverges from the TypeScript original. There the counter is
-    /// a fresh `0` on every launch and a random suffix is the only thing
-    /// keeping two ids apart, so an app killed and reopened inside the same
-    /// clock millisecond can mint an id its own restored queue already holds.
-    /// That id is the server's `X-Mutation-Id`, so the collision does not
-    /// merely duplicate work — the server answers the *second* command from the
-    /// *first* one's stored response, silently. Generated-sequence testing found
-    /// this in three transitions: create, relaunch, create.
+    /// ## The counter is the fix; the check is the backstop
     ///
-    /// The loop terminates: the id is injective in the counter for a fixed
-    /// instant, and the durable set is finite.
+    /// The id is the server's `X-Mutation-Id`, so re-minting a live one does
+    /// not merely duplicate work — the server answers the *second* command from
+    /// the *first* one's stored response, and the second mutation is silently
+    /// never applied. Generated-sequence testing found this in three
+    /// transitions: create, relaunch, create.
+    ///
+    /// **The persisted counter is what removes the collision class.** It is
+    /// written before the enqueue and never restarts, so the same
+    /// `(millis, counter)` pair is never offered twice on this install.
+    ///
+    /// **The durable-set check cannot do that job**, which is why it is no
+    /// longer the primary mechanism: it only sees ids the client *still holds*.
+    /// An id that has already been acked and dequeued is gone locally while the
+    /// server's idempotency store still remembers it, so a re-mint of that id is
+    /// invisible here. The check remains for the two states a counter cannot
+    /// describe: the first launch after upgrading from a build that never wrote
+    /// the counters, and a counter blob that failed to parse.
+    ///
+    /// The loop terminates: the counter strictly increases, the id is injective
+    /// in the counter at a fixed instant, and the durable set is finite.
     fn next_command_id(&mut self, created_at: i64) -> Result<String> {
         loop {
-            self.command_counter = self.command_counter.checked_add(1).ok_or_else(|| {
+            self.counters.command = self.counters.command.checked_add(1).ok_or_else(|| {
                 Error::invariant("the command counter overflowed; the queue cannot mint an id")
             })?;
             let candidate = command_id(
                 created_at,
-                self.command_counter,
+                self.counters.command,
                 self.random.next_unit_ppm(),
             );
             if !self.queue.contains_command_id(&candidate) {
@@ -349,18 +380,18 @@ impl TaskStore {
         }
     }
 
-    /// Mint a temp id that neither the base nor any durable command claims.
+    /// Mint a temp id that has never been minted on this install.
     ///
-    /// The same relaunch-inside-one-millisecond hazard as
-    /// [`TaskStore::next_command_id`], with a different consequence: a temp id
-    /// that collides with an unsent create's would merge two optimistic tasks
-    /// into one, and acking either would remap both.
+    /// The same persisted-counter-plus-backstop structure as
+    /// [`TaskStore::next_command_id`], with a different consequence for a
+    /// collision: a temp id that lands on an unsent create's would merge two
+    /// optimistic tasks into one, and acking either would remap both.
     fn next_temp_id(&mut self, created_at: i64) -> Result<TaskId> {
         loop {
-            self.temp_counter = self.temp_counter.checked_add(1).ok_or_else(|| {
+            self.counters.temp = self.counters.temp.checked_add(1).ok_or_else(|| {
                 Error::invariant("the temp-id counter overflowed; the store cannot mint an id")
             })?;
-            let candidate = TaskId::temp(created_at, self.temp_counter);
+            let candidate = TaskId::temp(created_at, self.counters.temp);
             if !self.base.contains_key(&candidate) && !self.queue.targets(&candidate) {
                 return Ok(candidate);
             }
@@ -398,6 +429,29 @@ impl TaskStore {
         })?;
         self.storage.write_id_aliases(&data)
     }
+
+    fn persist_id_counters(&self) -> Result<()> {
+        let data = serde_json::to_string(&self.counters).map_err(|error| {
+            Error::invariant(format!("could not serialize the id counters: {error}"))
+        })?;
+        self.storage.write_id_counters(&data)
+    }
+}
+
+/// Parse the persisted id counters, treating anything unreadable as zero.
+///
+/// Absent **and** unreadable both mean "start at zero" — a fresh install, an
+/// install carried over from a build that predates this key, and a truncated
+/// blob all land here. None of the three needs a schema migration, because
+/// there is no data to transform and because
+/// [`TaskStore::next_command_id`] / [`TaskStore::next_temp_id`] still refuse to
+/// hand back an id the restored queue already holds. Refusing to start over a
+/// corrupt counter would strand every mutation the user is waiting on, which is
+/// a strictly worse failure than burning a few id values.
+fn parse_id_counters(raw: Option<&str>) -> IdCounters {
+    raw.filter(|value| !value.is_empty())
+        .and_then(|value| serde_json::from_str::<IdCounters>(value).ok())
+        .unwrap_or_default()
 }
 
 /// Parse the persisted alias map, keeping every entry that still parses.
@@ -425,9 +479,9 @@ fn parse_aliases(raw: Option<&str>) -> IndexMap<TaskId, TaskId> {
 mod tests {
     use std::sync::{Arc, Mutex};
 
-    use super::{TaskStore, parse_aliases};
+    use super::{IdCounters, TaskStore, parse_aliases, parse_id_counters};
     use crate::{
-        Result,
+        Error, Result,
         domain::{CreateTaskRequest, Task, TaskId, TaskStatus, TaskTitle, UpdateTaskRequest},
         sync::{Clock, Command, CommandInput, QueueStorage, Randomness, TaskCacheStorage},
     };
@@ -438,7 +492,29 @@ mod tests {
         dead: Mutex<Option<String>>,
         tasks: Mutex<Vec<Task>>,
         aliases: Mutex<Option<String>>,
+        counters: Mutex<Option<String>>,
         last_sync: Mutex<Option<i64>>,
+        /// Which durable slots were written, in order. The dispatch path's
+        /// crash-safety argument is entirely about this order.
+        writes: Mutex<Vec<&'static str>>,
+    }
+
+    impl Memory {
+        /// Forget the id counters while keeping every other durable byte.
+        ///
+        /// This is the upgrade path, exactly: a queue carried over from a build
+        /// that never wrote the counters.
+        fn forget_id_counters(&self) {
+            *self.counters.lock().unwrap() = None;
+        }
+
+        fn write_log(&self) -> Vec<&'static str> {
+            self.writes.lock().unwrap().clone()
+        }
+
+        fn record(&self, slot: &'static str) {
+            self.writes.lock().unwrap().push(slot);
+        }
     }
 
     impl QueueStorage for Memory {
@@ -446,6 +522,7 @@ mod tests {
             Ok(self.queue.lock().unwrap().clone())
         }
         fn write_queue(&self, data: &str) -> Result<()> {
+            self.record("queue");
             *self.queue.lock().unwrap() = Some(data.to_owned());
             Ok(())
         }
@@ -471,6 +548,14 @@ mod tests {
         }
         fn write_id_aliases(&self, data: &str) -> Result<()> {
             *self.aliases.lock().unwrap() = Some(data.to_owned());
+            Ok(())
+        }
+        fn read_id_counters(&self) -> Result<Option<String>> {
+            Ok(self.counters.lock().unwrap().clone())
+        }
+        fn write_id_counters(&self, data: &str) -> Result<()> {
+            self.record("id_counters");
+            *self.counters.lock().unwrap() = Some(data.to_owned());
             Ok(())
         }
         fn read_last_sync_time(&self) -> Result<Option<i64>> {
@@ -681,6 +766,177 @@ mod tests {
         );
         assert!(parse_aliases(Some("[]")).is_empty());
         assert!(parse_aliases(None).is_empty());
+    }
+
+    /// Rebuild the whole client from durable state alone, at the same instant.
+    ///
+    /// No clock advance anywhere: a relaunch inside one clock millisecond is
+    /// precisely the condition that made the counter's reset observable.
+    fn relaunch(memory: &Arc<Memory>) -> TaskStore {
+        let mut reborn = TaskStore::new(
+            memory.clone(),
+            memory.clone(),
+            Arc::new(FixedClock),
+            Arc::new(HalfUnit),
+        );
+        reborn.restore().expect("durable state must reload");
+        reborn
+    }
+
+    #[test]
+    fn an_acked_commands_id_is_never_re_minted_after_a_relaunch() {
+        // The case the durable-set check structurally cannot see, and therefore
+        // the case that makes persistence load-bearing rather than redundant.
+        // The command is acked and dequeued, so the client no longer holds its
+        // id — but the server's idempotency store still remembers it, and that
+        // id is `X-Mutation-Id`. Re-minting it makes the server answer the new
+        // mutation from the old one's stored response: silent data loss.
+        let (mut store, memory) = store();
+        store.restore().unwrap();
+        store
+            .dispatch(CommandInput::Create {
+                payload: CreateTaskRequest::new(TaskTitle::parse("Before").unwrap()),
+            })
+            .unwrap();
+        let acked = store.queue().head().cloned().unwrap();
+        store
+            .apply_server_ack(&acked, Some(&task("Tasks/Before.md")))
+            .unwrap();
+        assert!(
+            store.queue().pending().is_empty(),
+            "the id is now gone from every durable set the check can consult"
+        );
+
+        let mut reborn = relaunch(&memory);
+        reborn
+            .dispatch(CommandInput::Create {
+                payload: CreateTaskRequest::new(TaskTitle::parse("After").unwrap()),
+            })
+            .unwrap();
+
+        let fresh = reborn.queue().head().cloned().unwrap();
+        assert_ne!(
+            fresh.id(),
+            acked.id(),
+            "the persisted counter is the only thing standing between this \
+             command and the acked command's live idempotency key"
+        );
+        assert_ne!(
+            fresh.target(),
+            acked.target(),
+            "the same argument applies to the temp id, where a collision would \
+             instead merge two optimistic tasks into one"
+        );
+    }
+
+    #[test]
+    fn the_id_counters_are_durably_spent_before_the_command_that_carries_them() {
+        // Ordering is the whole crash-safety argument: a crash between the two
+        // writes must lose the command, never resurrect its id.
+        let (mut store, memory) = store();
+        store.restore().unwrap();
+        store
+            .dispatch(CommandInput::Delete {
+                task_id: TaskId::parse("Tasks/a.md").unwrap(),
+            })
+            .unwrap();
+
+        let log = memory.write_log();
+        let counters = log.iter().position(|slot| *slot == "id_counters");
+        let queue = log.iter().position(|slot| *slot == "queue");
+        assert!(
+            counters < queue,
+            "the counters must be written before the queue, got {log:?}"
+        );
+        assert_eq!(
+            memory.counters.lock().unwrap().clone(),
+            Some(r#"{"command":1,"temp":0}"#.to_owned()),
+            "a delete spends a command id and no temp id"
+        );
+    }
+
+    #[test]
+    fn an_install_with_no_persisted_counters_still_cannot_re_mint_a_queued_id() {
+        // The upgrade path: a durable queue carried over from a build that
+        // never wrote the counters, so they restore as zero. No schema
+        // migration covers this — the mint-and-check backstop does.
+        let (mut store, memory) = store();
+        store.restore().unwrap();
+        store
+            .dispatch(CommandInput::Create {
+                payload: CreateTaskRequest::new(TaskTitle::parse("Carried over").unwrap()),
+            })
+            .unwrap();
+        let carried = store.queue().head().cloned().unwrap();
+        memory.forget_id_counters();
+
+        let mut reborn = relaunch(&memory);
+        reborn
+            .dispatch(CommandInput::Create {
+                payload: CreateTaskRequest::new(TaskTitle::parse("Fresh").unwrap()),
+            })
+            .unwrap();
+
+        let ids: Vec<&str> = reborn.queue().pending().iter().map(Command::id).collect();
+        assert_eq!(ids.len(), 2);
+        assert_ne!(
+            ids.first(),
+            ids.get(1),
+            "the backstop must cover the launch the counter cannot describe"
+        );
+        assert_ne!(
+            reborn.queue().pending().get(1).map(Command::target),
+            Some(carried.target()),
+            "and the temp id too"
+        );
+    }
+
+    #[test]
+    fn a_dead_lettered_command_still_reserves_its_id() {
+        // A parked command can still be retried, so its id is still live
+        // server-side. With the counters wiped, the dead-letter half of the
+        // durable-set check is the only thing left holding the line.
+        let (mut store, memory) = store();
+        store.restore().unwrap();
+        store
+            .dispatch(CommandInput::Create {
+                payload: CreateTaskRequest::new(TaskTitle::parse("Parked").unwrap()),
+            })
+            .unwrap();
+        let parked = store.queue().head().cloned().unwrap();
+        store
+            .dead_letter_command(parked.id(), &Error::api("bad request", 422))
+            .unwrap();
+        assert_eq!(store.snapshot().dead_letters.len(), 1);
+        memory.forget_id_counters();
+
+        let mut reborn = relaunch(&memory);
+        reborn
+            .dispatch(CommandInput::Create {
+                payload: CreateTaskRequest::new(TaskTitle::parse("Fresh").unwrap()),
+            })
+            .unwrap();
+
+        let fresh = reborn.queue().head().cloned().unwrap();
+        assert_ne!(fresh.id(), parked.id());
+        assert_ne!(fresh.target(), parked.target());
+    }
+
+    #[test]
+    fn counters_survive_a_round_trip_and_junk_restarts_at_zero() {
+        assert_eq!(
+            parse_id_counters(Some(r#"{"command":7,"temp":3}"#)),
+            IdCounters {
+                command: 7,
+                temp: 3
+            }
+        );
+        // Absent, empty, unparseable and wrong-shaped all mean "start at zero",
+        // which the backstop makes safe. Refusing to start would strand every
+        // mutation the user is waiting on.
+        for junk in [None, Some(""), Some("not json"), Some("[]"), Some("{}")] {
+            assert_eq!(parse_id_counters(junk), IdCounters::default(), "{junk:?}");
+        }
     }
 
     #[test]

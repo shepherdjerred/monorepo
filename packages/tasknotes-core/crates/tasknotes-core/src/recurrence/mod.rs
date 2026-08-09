@@ -391,6 +391,71 @@ fn date_of(instant: i64) -> Option<NaiveDate> {
     instant::date_at(instant.div_euclid(MS_PER_DAY))
 }
 
+/// The occurrence a completion gesture targets on a **recurring** task.
+///
+/// ## This is correctness, not cosmetics
+///
+/// A recurring task completes its *scheduled occurrence*, never the calendar
+/// day the user happened to click. The TaskNotes plugin records completion as a
+/// date in `complete_instances` and reads an occurrence as done only when that
+/// occurrence's **own** date is in the list — so completing a rent task that
+/// recurs on the 1st while it is the 12th must write `…-01`. Writing `…-12`
+/// files the completion under a day the rule never fires on: the entry is
+/// orphaned, the occurrence still reads as open, and the task reappears as if
+/// untouched. That was a real bug in the TypeScript app, fixed by
+/// `completionTargetDate`, which this ports.
+///
+/// ## Why the anchor flips it
+///
+/// A completion-anchored series means "N days after each completion", so its
+/// next occurrence is computed from *when you completed it*. Today is then the
+/// correct and only meaningful target. A scheduled-anchored series keeps its
+/// cadence regardless of when you got to it, so the target is the occurrence
+/// the task is sitting on. `None` reads as [`RecurrenceAnchor::Scheduled`],
+/// matching the reference's `task.recurrence_anchor === "completion"` test.
+///
+/// ## The date is *written down*, not observed
+///
+/// `scheduled` and `due` are read with [`date_part`] — the calendar date the
+/// value spells — and deliberately **not** with
+/// [`crate::dates::parse_local_date`], which shifts a zoned instant into the
+/// viewer's offset. The plugin keys occurrences off the written date, so a
+/// viewer-shifted reading would target a neighbouring day for anyone east or
+/// west of whoever wrote the task, which is the same orphaned-completion bug
+/// arriving by a different route.
+///
+/// `today` is the caller's — only the host knows the device's calendar — and is
+/// the fallback when neither field carries a usable date.
+#[must_use]
+pub fn completion_target_date(
+    scheduled: Option<&str>,
+    due: Option<&str>,
+    anchor: Option<RecurrenceAnchor>,
+    today: NaiveDate,
+) -> NaiveDate {
+    if anchor == Some(RecurrenceAnchor::Completion) {
+        return today;
+    }
+    scheduled
+        .and_then(valid_date_part)
+        .or_else(|| due.and_then(valid_date_part))
+        .unwrap_or(today)
+}
+
+/// `extractValidDatePartOrUndefined`: [`date_part`] narrowed to values that are
+/// also real calendar dates.
+///
+/// The two halves are the reference's two calls — `getDatePart` then
+/// `validateDateString` — and reusing them rather than restating the rule is
+/// what keeps this in step with [`resolve_dtstart`], which reads the same
+/// fields through the same parser.
+fn valid_date_part(value: &str) -> Option<NaiveDate> {
+    date_part(value)
+        .ok()
+        .and_then(|head| parse_date_only(head).ok())
+        .and_then(date_of)
+}
+
 /// `getRRuleDtstart`: the embedded `DTSTART:`, then `scheduled`, then
 /// `dateCreated`.
 ///

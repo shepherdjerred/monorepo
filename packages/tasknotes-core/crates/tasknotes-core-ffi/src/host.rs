@@ -182,6 +182,31 @@ pub trait TaskCacheStorage: Send + Sync {
     /// A storage-layer failure.
     fn write_id_aliases(&self, data: String) -> Result<(), CoreError>;
 
+    /// Read the persisted id counters as JSON, or `None`.
+    ///
+    /// `None` is the fresh-install path *and* the upgrade path, and neither is
+    /// a failure — see
+    /// [`tasknotes_core::sync::TaskCacheStorage::read_id_counters`].
+    ///
+    /// # Errors
+    ///
+    /// A storage-layer failure.
+    fn read_id_counters(&self) -> Result<Option<String>, CoreError>;
+
+    /// Persist the id counters as JSON.
+    ///
+    /// A slot of its own rather than a field folded into the queue or the alias
+    /// blob, because both of those are formats shared with the TypeScript
+    /// client and both "simplifications" lose user data silently. The reasoning
+    /// is on
+    /// [`tasknotes_core::sync::TaskCacheStorage::write_id_counters`]; read it
+    /// before consolidating these keys.
+    ///
+    /// # Errors
+    ///
+    /// A storage-layer failure.
+    fn write_id_counters(&self, data: String) -> Result<(), CoreError>;
+
     /// Read the last successful pull's timestamp.
     ///
     /// # Errors
@@ -332,6 +357,16 @@ impl CoreTaskCacheStorage for TaskCacheStorageAdapter {
 
     fn write_id_aliases(&self, data: &str) -> CoreResult<()> {
         self.0.write_id_aliases(data.to_owned()).map_err(Into::into)
+    }
+
+    fn read_id_counters(&self) -> CoreResult<Option<String>> {
+        self.0.read_id_counters().map_err(Into::into)
+    }
+
+    fn write_id_counters(&self, data: &str) -> CoreResult<()> {
+        self.0
+            .write_id_counters(data.to_owned())
+            .map_err(Into::into)
     }
 
     fn read_last_sync_time(&self) -> CoreResult<Option<i64>> {
