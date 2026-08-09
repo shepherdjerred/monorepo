@@ -185,6 +185,9 @@ test("Argo CD CLI usage documents the root prune revision", async () => {
 
   expect(exitCode).not.toBe(0);
   expect(stderr).toContain("sync <app> [--revision <v>] [--prune] [--async]");
+  expect(stderr).toContain(
+    "suspend-auto-sync <root-app> [--revision <v>] [--timeout <s>]",
+  );
 });
 
 describe("Argo CD root prune safety", () => {
@@ -367,10 +370,11 @@ describe("Argo CD root prune safety", () => {
 });
 
 describe("Argo CD release gating", () => {
-  test("suspends repository auto-sync through an explicit root manifest sync", async () => {
+  test("suspends the exact published root revision before child reconciliation", async () => {
     const syncBodies: unknown[] = [];
     let requestedOperation: unknown;
     const renderedRevisions: (string | null)[] = [];
+    let chartMuseumRequests = 0;
     const repositoryApplication = JSON.stringify({
       apiVersion: "argoproj.io/v1alpha1",
       kind: "Application",
@@ -419,6 +423,19 @@ describe("Argo CD release gating", () => {
       port: 0,
       async fetch(request) {
         const url = new URL(request.url);
+        if (url.pathname === "/api/charts/apps") {
+          chartMuseumRequests += 1;
+          if (chartMuseumRequests < 3) {
+            return new Response("temporary upstream failure", { status: 503 });
+          }
+          return Response.json([
+            {
+              version: "2.0.0-43",
+              urls: ["charts/apps-2.0.0-43.tgz"],
+              digest: "a".repeat(64),
+            },
+          ]);
+        }
         if (
           request.method === "GET" &&
           url.pathname === "/api/v1/applications/apps/manifests"
@@ -471,6 +488,8 @@ describe("Argo CD release gating", () => {
           "scripts/argocd.ts",
           "suspend-auto-sync",
           "apps",
+          "--revision",
+          "2.0.0-43",
           "--timeout",
           "1",
         ],
@@ -480,6 +499,7 @@ describe("Argo CD release gating", () => {
             ...Bun.env,
             ARGOCD_SERVER_URL: server.url.origin,
             ARGOCD_TOKEN: "test-token",
+            CHARTMUSEUM_ORIGIN: server.url.origin,
           },
           stderr: "pipe",
           stdout: "pipe",
@@ -492,16 +512,24 @@ describe("Argo CD release gating", () => {
       ]);
 
       expect(exitCode).toBe(0);
-      expect(stderr).toBe("");
+      expect(stderr).toContain(
+        "ChartMuseum inventory attempt 1 failed; retrying in 100ms",
+      );
+      expect(stderr).toContain(
+        "ChartMuseum inventory attempt 2 failed; retrying in 200ms",
+      );
       expect(stdout).toContain("suspending auto-sync: worker");
-      expect(renderedRevisions).toEqual(["2.0.0-42"]);
+      expect(chartMuseumRequests).toBe(3);
+      expect(renderedRevisions).toEqual(["2.0.0-43"]);
       expect(syncBodies).toHaveLength(1);
       expectSuspendedWorkerRequest(syncBodies[0]);
     } finally {
       await server.stop(true);
     }
   });
+});
 
+describe("Argo CD stale release protection", () => {
   test("rejects an Argo reconcile after a newer apps chart is published", async () => {
     let argoRequests = 0;
     const server = Bun.serve({

@@ -26,11 +26,15 @@ the site-release lane to deploy tracker changes.
 The archive sidecar disables browser-triggered archiving, configures the
 Cloudflare client-IP header, and runs `core:archive` every five minutes. A
 failed archive exits the sidecar so Kubernetes reports the pod as unhealthy.
+The official Matomo image keeps its root entrypoint so it can initialize the
+shared application volume, with privilege escalation disabled; the nginx
+public gate runs as its numeric non-root user.
 
 ## Audit checks
 
 - `argocd app get matomo` is `Synced` and `Healthy`.
-- Both Matomo containers and MariaDB are ready, with no restart loop.
+- The Matomo process, archive sidecar, public gate, and MariaDB are ready, with
+  no restart loop.
 - `curl -fsS https://matomo.sjer.red/matomo.js` succeeds after the marker is created.
 - The archive sidecar logs successful `core:archive` runs.
 - Matomo privacy settings keep IP anonymization, DNT support, no User IDs,

@@ -15,6 +15,8 @@
  *       --project <project> [--timeout <s>] [--dry-run]
  *   bun packages/homelab/scripts/argocd.ts health-wait <app> [--timeout <s>] [--dry-run]
  *   bun packages/homelab/scripts/argocd.ts tree-health-wait <app> [--timeout <s>] [--dry-run]
+ *   bun packages/homelab/scripts/argocd.ts suspend-auto-sync <root-app> \
+ *       [--revision <v>] [--timeout <s>] [--dry-run]
  *   bun packages/homelab/scripts/argocd.ts wait-deletion <app> \
  *       --group <g> --version <v> --kind <k> --namespace <ns> \
  *       [--timeout <s>] [--dry-run]
@@ -25,6 +27,7 @@
  */
 
 import { requireEnv, optionalEnv } from "../../../scripts/lib/run.ts";
+import { TransientError } from "../../../scripts/lib/transient-error.ts";
 import { runMain } from "../../../scripts/lib/transient.ts";
 import {
   applicationReadiness,
@@ -52,6 +55,9 @@ const DEFAULT_HEALTH_TIMEOUT_S = 300;
 const DEFAULT_SYNC_TIMEOUT_S = 300;
 const DEFAULT_DELETION_TIMEOUT_S = 120;
 const POLL_INTERVAL_MS = 10_000;
+const CHARTMUSEUM_MAX_ATTEMPTS = 3;
+const CHARTMUSEUM_REQUEST_TIMEOUT_MS = 10_000;
+const CHARTMUSEUM_RETRY_BASE_DELAY_MS = 100;
 
 const BuildRevisionSchema = z.string().regex(/^2\.0\.0-\d+$/);
 
@@ -202,29 +208,32 @@ async function suspendRepositoryAutoSync(
   rootAppName: string,
   timeoutSeconds: number,
   dryRun: boolean,
+  revision: string | undefined,
 ): Promise<void> {
+  const exactRevision =
+    revision === undefined ? undefined : BuildRevisionSchema.parse(revision);
   console.log(
     `--- argocd suspend-auto-sync: repository Applications under ${rootAppName}${dryRun ? " (dry run)" : ""}`,
   );
   if (dryRun) {
     return;
   }
-  const token = requireEnv("ARGOCD_TOKEN");
-  const rootApplication = RootDeploymentHistorySchema.parse(
-    await getApplication(rootAppName, token),
-  );
-  const [firstDeployment, ...remainingDeployments] =
-    rootApplication.status.history;
-  if (firstDeployment === undefined) {
-    throw new Error(`${rootAppName} has no successful deployment history`);
+  if (exactRevision !== undefined) {
+    await assertExpectedAppsRevisionIsLatest(exactRevision, timeoutSeconds);
   }
-  const latestDeployment = remainingDeployments.reduce(
-    (latest, candidate) => (candidate.id > latest.id ? candidate : latest),
-    firstDeployment,
-  );
+  const token = requireEnv("ARGOCD_TOKEN");
+  const renderedRevision =
+    exactRevision === undefined
+      ? latestSuccessfulRevision(
+          rootAppName,
+          RootDeploymentHistorySchema.parse(
+            await getApplication(rootAppName, token),
+          ),
+        )
+      : exactRevision;
   const manifests = await getApplicationManifests(
     rootAppName,
-    latestDeployment.revision,
+    renderedRevision,
     token,
   );
   const suspended = manifests.flatMap((manifestSource) => {
@@ -277,17 +286,27 @@ async function suspendRepositoryAutoSync(
   }
 }
 
+function latestSuccessfulRevision(
+  rootAppName: string,
+  rootApplication: z.infer<typeof RootDeploymentHistorySchema>,
+): string {
+  const [firstDeployment, ...remainingDeployments] =
+    rootApplication.status.history;
+  if (firstDeployment === undefined) {
+    throw new Error(`${rootAppName} has no successful deployment history`);
+  }
+  return remainingDeployments.reduce(
+    (latest, candidate) => (candidate.id > latest.id ? candidate : latest),
+    firstDeployment,
+  ).revision;
+}
+
 async function assertExpectedAppsRevisionIsLatest(
   expectedRevision: string,
+  timeoutSeconds: number,
 ): Promise<void> {
   const url = `${chartMuseumOrigin()}/api/charts/apps`;
-  const response = await fetch(url);
-  if (!response.ok) {
-    const body = (await response.text()).slice(0, 1024);
-    throw new Error(
-      `ChartMuseum inventory failed for apps: HTTP ${response.status.toString()}\n${body}`,
-    );
-  }
+  const response = await fetchChartMuseumInventory(url, timeoutSeconds);
   const latest = latestPublishedVersion(await response.json());
   if (latest === undefined) {
     throw new Error("ChartMuseum has no published apps release");
@@ -297,6 +316,60 @@ async function assertExpectedAppsRevisionIsLatest(
       `Refusing stale Argo release ${expectedRevision}: newest published apps revision is ${latest.version}`,
     );
   }
+}
+
+async function fetchChartMuseumInventory(
+  url: string,
+  timeoutSeconds: number,
+): Promise<Response> {
+  const deadline = Date.now() + timeoutSeconds * 1000;
+  let lastFailure = "request deadline expired";
+  let lastCause: unknown;
+  for (let attempt = 1; attempt <= CHARTMUSEUM_MAX_ATTEMPTS; attempt += 1) {
+    const remainingMs = deadline - Date.now();
+    if (remainingMs <= 0) {
+      break;
+    }
+    let response: Response | undefined;
+    try {
+      response = await fetch(url, {
+        signal: AbortSignal.timeout(
+          Math.min(CHARTMUSEUM_REQUEST_TIMEOUT_MS, remainingMs),
+        ),
+      });
+    } catch (error) {
+      lastCause = error;
+      lastFailure = error instanceof Error ? error.message : String(error);
+    }
+    if (response !== undefined) {
+      if (response.ok) {
+        return response;
+      }
+      const body = (await response.text()).slice(0, 1024);
+      lastFailure = `HTTP ${response.status.toString()}\n${body}`;
+      if (response.status !== 429 && response.status < 500) {
+        throw new Error(
+          `ChartMuseum inventory failed for apps: ${lastFailure}`,
+        );
+      }
+    }
+    if (attempt < CHARTMUSEUM_MAX_ATTEMPTS) {
+      const delayMs = Math.min(
+        CHARTMUSEUM_RETRY_BASE_DELAY_MS * 2 ** (attempt - 1),
+        Math.max(0, deadline - Date.now()),
+      );
+      if (delayMs > 0) {
+        console.warn(
+          `ChartMuseum inventory attempt ${attempt.toString()} failed; retrying in ${delayMs.toString()}ms`,
+        );
+        await Bun.sleep(delayMs);
+      }
+    }
+  }
+  throw new TransientError(
+    `ChartMuseum inventory failed for apps after ${CHARTMUSEUM_MAX_ATTEMPTS.toString()} attempts: ${lastFailure}`,
+    { cause: lastCause },
+  );
 }
 
 async function assertRootPruneSafe(
@@ -488,7 +561,10 @@ async function reconcileRelease(
   if (appsRelease === undefined) {
     throw new Error("Expected release inventory is missing the apps revision");
   }
-  await assertExpectedAppsRevisionIsLatest(appsRelease.revision);
+  await assertExpectedAppsRevisionIsLatest(
+    appsRelease.revision,
+    timeoutSeconds,
+  );
   const token = requireEnv("ARGOCD_TOKEN");
   // The release step submits the root Application sync asynchronously. Waiting
   // here would make every release depend on unrelated child Application health.
@@ -792,7 +868,7 @@ function usage(): never {
       "[--defer-apps <app,...>] [--skip-health-wait] " +
       "[--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts suspend-auto-sync <root-app> " +
-      "[--dry-run]\n" +
+      "[--revision <v>] [--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts wait-deletion <app> " +
       "--group <g> --version <v> --kind <k> --namespace <ns> " +
       "[--timeout <s>] [--dry-run]",
@@ -908,6 +984,7 @@ async function main(): Promise<void> {
         app,
         timeoutOverride ?? DEFAULT_SYNC_TIMEOUT_S,
         dryRun,
+        flag(argv, "revision"),
       );
       return;
     case "wait-deletion": {

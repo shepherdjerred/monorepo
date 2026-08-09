@@ -77,6 +77,8 @@ export function createMatomoDeployment(
     },
     metadata: {
       annotations: {
+        "ignore-check.kube-linter.io/run-as-non-root":
+          "The official Matomo Apache image requires its root entrypoint to initialize the shared application volume",
         "ignore-check.kube-linter.io/no-read-only-root-fs":
           "Matomo requires a writable application volume for config and plugins",
       },
@@ -106,8 +108,14 @@ export function createMatomoDeployment(
   );
   const publicGateConfig = new ConfigMap(chart, "matomo-public-gate-config", {
     data: {
-      "nginx.conf": `events {}
+      "nginx.conf": `pid /tmp/nginx.pid;
+events {}
 http {
+  client_body_temp_path /tmp/client-body;
+  proxy_temp_path /tmp/proxy;
+  fastcgi_temp_path /tmp/fastcgi;
+  uwsgi_temp_path /tmp/uwsgi;
+  scgi_temp_path /tmp/scgi;
   server {
     listen 8080;
     location / {
@@ -138,6 +146,11 @@ http {
       ports: [{ name: "http", number: 80 }],
       envVariables: sharedEnv,
       volumeMounts: [{ path: "/var/www/html", volume: dataVolume }],
+      securityContext: {
+        ensureNonRoot: false,
+        readOnlyRootFilesystem: false,
+        allowPrivilegeEscalation: false,
+      },
       resources: {
         cpu: {
           request: Cpu.millis(100),
@@ -177,6 +190,11 @@ http {
       args: [archiveCommand],
       envVariables: sharedEnv,
       volumeMounts: [{ path: "/var/www/html", volume: dataVolume }],
+      securityContext: {
+        ensureNonRoot: false,
+        readOnlyRootFilesystem: false,
+        allowPrivilegeEscalation: false,
+      },
       resources: {
         cpu: {
           request: Cpu.millis(50),
@@ -205,6 +223,13 @@ http {
         { path: "/etc/nginx", volume: publicGateConfigVolume },
         { path: "/var/www/html", volume: dataVolume, readOnly: true },
       ],
+      securityContext: {
+        user: 101,
+        group: 101,
+        ensureNonRoot: true,
+        readOnlyRootFilesystem: false,
+        allowPrivilegeEscalation: false,
+      },
       resources: {
         cpu: {
           request: Cpu.millis(10),

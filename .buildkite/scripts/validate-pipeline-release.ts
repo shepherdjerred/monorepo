@@ -65,6 +65,7 @@ function validateReleaseSteps({
         "--filter homelab --filter '@homelab/cdk8s'",
         "concurrency_group: monorepo/homelab-release",
         'artifact download "argocd-release-expected.json"',
+        'suspend-auto-sync apps --revision "$$apps_revision"',
         "reconcile-release argocd-release-expected.json",
         'sync apps --revision "$$apps_revision" --prune --async',
       ],
