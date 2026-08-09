@@ -6,6 +6,7 @@ import {
   emojiMatchesKarma,
   encodeLeaderboardButtonId,
   encodeModalId,
+  shouldResolveReactionAdd,
 } from "./rules.ts";
 import { parseLeaderboardKind } from "./leaderboard-kinds.ts";
 
@@ -64,6 +65,38 @@ describe("emojiMatchesKarma", () => {
 
   test("does not match a different emoji", () => {
     expect(emojiMatchesKarma({ name: "🔥", id: null }, "⭐")).toBe(false);
+  });
+});
+
+describe("shouldResolveReactionAdd", () => {
+  test("resolves a human's configured karma reaction", () => {
+    expect(
+      shouldResolveReactionAdd({
+        emoji: { name: "⭐", id: null },
+        configuredEmoji: "⭐",
+        reactorIsBot: false,
+      }),
+    ).toBe(true);
+  });
+
+  test("rejects a different emoji before a partial fetch", () => {
+    expect(
+      shouldResolveReactionAdd({
+        emoji: { name: "🔥", id: null },
+        configuredEmoji: "⭐",
+        reactorIsBot: false,
+      }),
+    ).toBe(false);
+  });
+
+  test("rejects a bot reactor before a partial fetch", () => {
+    expect(
+      shouldResolveReactionAdd({
+        emoji: { name: "⭐", id: null },
+        configuredEmoji: "⭐",
+        reactorIsBot: true,
+      }),
+    ).toBe(false);
   });
 });
 

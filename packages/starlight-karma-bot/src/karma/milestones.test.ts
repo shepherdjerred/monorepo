@@ -3,6 +3,7 @@ import {
   crossedUnannouncedMilestone,
   highestReachedMilestone,
   KARMA_MILESTONES,
+  milestoneStateSeedsFromLedger,
 } from "./milestones.ts";
 
 describe("crossedUnannouncedMilestone", () => {
@@ -50,5 +51,44 @@ describe("highestReachedMilestone", () => {
     [900, 500],
   ])("maps %i karma to a %i high-water", (total, expected) => {
     expect(highestReachedMilestone(total)).toBe(expected);
+  });
+});
+
+describe("milestoneStateSeedsFromLedger", () => {
+  test("preserves an imported high-water after the balance falls", () => {
+    const later = new Date("2026-01-02T00:00:00.000Z");
+    const earlier = new Date("2026-01-01T00:00:00.000Z");
+
+    expect(
+      milestoneStateSeedsFromLedger([
+        {
+          id: 2,
+          amount: -6,
+          datetime: later,
+          guildId: "guild",
+          receiverId: "crossed-25",
+        },
+        {
+          id: 1,
+          amount: 30,
+          datetime: earlier,
+          guildId: "guild",
+          receiverId: "crossed-25",
+        },
+        {
+          id: 3,
+          amount: 9,
+          datetime: earlier,
+          guildId: "guild",
+          receiverId: "below-first-milestone",
+        },
+      ]),
+    ).toEqual([
+      {
+        guildId: "guild",
+        receiverId: "crossed-25",
+        highestAnnounced: 25,
+      },
+    ]);
   });
 });

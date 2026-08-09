@@ -15,7 +15,9 @@ try {
 
   // Import before Discord logs in, so the bot can never serve an empty
   // leaderboard or write new karma into a database that is about to be
-  // backfilled. Idempotent: a populated target short-circuits the import.
+  // backfilled. The import transaction also seeds milestone high-water state
+  // after writing the historical ledger; the migration itself runs too early
+  // to see those rows. Idempotent: a populated target short-circuits import.
   await runLegacyImportIfNeeded();
 } catch (error) {
   // Disconnect so a failed bootstrap exits rather than hanging on an open

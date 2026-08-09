@@ -1,5 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { computeNextRecapAt, isValidCron } from "./recap-schedule.ts";
+import {
+  canEnableRecap,
+  computeNextRecapAt,
+  isValidCron,
+} from "./recap-schedule.ts";
 
 describe("computeNextRecapAt", () => {
   test("advances to the next matching time in UTC", () => {
@@ -39,5 +43,19 @@ describe("isValidCron", () => {
 
   test.each(["", "not a cron", "99 99 * * *"])("rejects %p", (cron) => {
     expect(isValidCron(cron)).toBe(false);
+  });
+});
+
+describe("canEnableRecap", () => {
+  test("rejects enabling without a configured channel", () => {
+    expect(canEnableRecap(true, null)).toBe(false);
+  });
+
+  test("accepts enabling with a configured channel", () => {
+    expect(canEnableRecap(true, "channel")).toBe(true);
+  });
+
+  test("accepts disabling without a configured channel", () => {
+    expect(canEnableRecap(false, null)).toBe(true);
   });
 });

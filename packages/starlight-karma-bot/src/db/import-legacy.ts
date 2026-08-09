@@ -17,6 +17,7 @@ import {
   decideLegacyImport,
   parseLegacyDatetime,
 } from "#src/db/legacy-rules.ts";
+import { milestoneStateSeedsFromLedger } from "#src/karma/milestones.ts";
 
 /**
  * Expected legacy column shape, verified against both the production and beta
@@ -221,6 +222,7 @@ export async function importLegacyDatabase(sourcePath: string): Promise<void> {
       giverId: row.giverId,
       guildId: row.guildId,
     }));
+    const milestoneStates = milestoneStateSeedsFromLedger(karmaRows);
 
     // Validation runs INSIDE the transaction so a mismatch rolls the import
     // back. If it committed first, a failed check would leave the bad rows in
@@ -230,6 +232,9 @@ export async function importLegacyDatabase(sourcePath: string): Promise<void> {
       async (tx) => {
         await tx.person.createMany({ data: persons });
         await tx.karma.createMany({ data: karmaRows });
+        if (milestoneStates.length > 0) {
+          await tx.milestoneState.createMany({ data: milestoneStates });
+        }
 
         compareTotals("Given", sourceGiven, await targetTotals(tx, "giverId"));
         compareTotals(
@@ -240,16 +245,18 @@ export async function importLegacyDatabase(sourcePath: string): Promise<void> {
 
         const importedPersons = await tx.person.count();
         const importedKarma = await tx.karma.count();
+        const importedMilestoneStates = await tx.milestoneState.count();
         if (
           importedPersons !== persons.length ||
-          importedKarma !== karma.length
+          importedKarma !== karma.length ||
+          importedMilestoneStates !== milestoneStates.length
         ) {
           throw new Error(
-            `Row counts do not match: person ${String(importedPersons)}/${String(persons.length)}, karma ${String(importedKarma)}/${String(karma.length)}`,
+            `Row counts do not match: person ${String(importedPersons)}/${String(persons.length)}, karma ${String(importedKarma)}/${String(karma.length)}, milestone state ${String(importedMilestoneStates)}/${String(milestoneStates.length)}`,
           );
         }
         console.warn(
-          `[Import] ✓ Verified ${String(importedPersons)} person and ${String(importedKarma)} karma rows`,
+          `[Import] ✓ Verified ${String(importedPersons)} person, ${String(importedKarma)} karma, and ${String(importedMilestoneStates)} milestone state rows`,
         );
       },
       // The default interactive-transaction timeout is 5s; the import is small

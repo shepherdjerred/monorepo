@@ -28,3 +28,11 @@ export function isValidCron(cron: string): boolean {
     return false;
   }
 }
+
+/** A recap can only be enabled when its next dispatch has somewhere to go. */
+export function canEnableRecap(
+  enabled: boolean,
+  channelId: string | null,
+): boolean {
+  return !enabled || channelId !== null;
+}

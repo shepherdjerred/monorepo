@@ -22,7 +22,11 @@ import * as Sentry from "@sentry/bun";
 import configuration from "#src/configuration.ts";
 import { KARMA_GIVE_AMOUNT } from "#src/karma/scoring.ts";
 import { ReactionOperationQueue } from "#src/karma/reaction-operation-queue.ts";
-import { decideReactionAward, emojiMatchesKarma } from "#src/karma/rules.ts";
+import {
+  decideReactionAward,
+  emojiMatchesKarma,
+  shouldResolveReactionAdd,
+} from "#src/karma/rules.ts";
 import {
   recordKarma,
   revokeMessageReactionKarma,
@@ -41,11 +45,18 @@ function reactionOperationKey(
  *  reaction is not a karma reaction or cannot be resolved. */
 async function resolveAdd(
   reaction: MessageReaction | PartialMessageReaction,
+  user: User | PartialUser,
 ): Promise<MessageReaction | null> {
   // The event payload always carries the emoji, even for a partial reaction.
-  // Reject ordinary reactions before a REST fetch and before they enter the
-  // rest of the karma path.
-  if (!emojiMatchesKarma(reaction.emoji, configuration.karmaEmoji)) {
+  // Reject ordinary and bot reactions before a REST fetch and before they
+  // enter the rest of the karma path.
+  if (
+    !shouldResolveReactionAdd({
+      emoji: reaction.emoji,
+      configuredEmoji: configuration.karmaEmoji,
+      reactorIsBot: user.bot,
+    })
+  ) {
     return null;
   }
   const full = reaction.partial ? await reaction.fetch() : reaction;
@@ -59,12 +70,7 @@ async function applyReactionAdd(
   reaction: MessageReaction | PartialMessageReaction,
   user: User | PartialUser,
 ): Promise<void> {
-  // Bot reactions are never awards. Reject them before resolving partials so
-  // automation cannot create karma or spend Discord REST capacity.
-  if (user.bot) {
-    return;
-  }
-  const full = await resolveAdd(reaction);
+  const full = await resolveAdd(reaction, user);
   if (full === null) {
     return;
   }

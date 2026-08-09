@@ -22,6 +22,7 @@ import {
 } from "#src/karma/queries.ts";
 import { getReceivedKarma, recordKarma } from "#src/karma/store.ts";
 import {
+  canEnableRecap,
   computeNextRecapAt,
   DEFAULT_RECAP_CRON,
   isValidCron,
@@ -288,7 +289,7 @@ async function updateKarmaConfig(
   const existing = await prisma.guildConfig.findUnique({ where: { guildId } });
   const nextChannelId = channel?.id ?? existing?.recapChannelId ?? null;
   const nextEnabled = enabled ?? existing?.enabled ?? false;
-  if (nextEnabled && nextChannelId === null) {
+  if (!canEnableRecap(nextEnabled, nextChannelId)) {
     await interaction.reply({
       content: "Set a recap channel before enabling recaps.",
       flags: MessageFlags.Ephemeral,

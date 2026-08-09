@@ -10,6 +10,7 @@ import type {
   recordKarma as recordKarmaFunction,
   revokeMessageReactionKarma as revokeMessageReactionKarmaFunction,
 } from "./store.ts";
+import type { findUndoableGive as findUndoableGiveFunction } from "./queries.ts";
 
 let temporaryDirectory: string;
 let previousDatabaseUrl: string | undefined;
@@ -17,6 +18,7 @@ let prisma: typeof prismaClient;
 let disconnectPrisma: typeof disconnectPrismaFunction;
 let recordKarma: typeof recordKarmaFunction;
 let revokeMessageReactionKarma: typeof revokeMessageReactionKarmaFunction;
+let findUndoableGive: typeof findUndoableGiveFunction;
 
 beforeAll(async () => {
   temporaryDirectory = await mkdtemp(path.join(tmpdir(), "karma-store-test-"));
@@ -38,10 +40,12 @@ beforeAll(async () => {
 
   const database = await import("#src/db/index.ts");
   const store = await import("./store.ts");
+  const queries = await import("./queries.ts");
   prisma = database.prisma;
   disconnectPrisma = database.disconnectPrisma;
   recordKarma = store.recordKarma;
   revokeMessageReactionKarma = store.revokeMessageReactionKarma;
+  findUndoableGive = queries.findUndoableGive;
 });
 
 afterAll(async () => {
@@ -135,5 +139,25 @@ describe("bulk reaction revocation", () => {
     expect(remaining).toEqual([
       { giverId: "ordinary-giver", sourceMessageId: null },
     ]);
+  });
+});
+
+describe("undo candidates", () => {
+  test("excludes reaction awards while their visible reaction remains", async () => {
+    await recordKarma({
+      giverId: "undo-reaction-giver",
+      receiverId: "undo-reaction-receiver",
+      amount: 1,
+      guildId: "undo-reaction-guild",
+      sourceMessageId: "undo-reaction-message",
+    });
+
+    expect(
+      await findUndoableGive({
+        guildId: "undo-reaction-guild",
+        giverId: "undo-reaction-giver",
+        withinMs: 60_000,
+      }),
+    ).toBeNull();
   });
 });

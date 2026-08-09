@@ -16,6 +16,22 @@ export function emojiMatchesKarma(
   return emoji.name === configured || emoji.id === configured;
 }
 
+/** Whether an add event is worth resolving from Discord.
+ *
+ * The gateway payload already carries both the reacting user's bot flag and
+ * the emoji. Keeping this check ahead of any partial fetch prevents ordinary
+ * or automated reactions from spending REST capacity. */
+export function shouldResolveReactionAdd(params: {
+  emoji: { name: string | null; id: string | null };
+  configuredEmoji: string;
+  reactorIsBot: boolean;
+}): boolean {
+  return (
+    !params.reactorIsBot &&
+    emojiMatchesKarma(params.emoji, params.configuredEmoji)
+  );
+}
+
 export type ReactionAward =
   | { action: "ignore"; reason: string }
   | { action: "award"; receiverId: string };
