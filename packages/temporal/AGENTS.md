@@ -240,15 +240,21 @@ Inputs use `runAt` for one-off tasks or `cron` + stable `scheduleId` for recurri
 
 **Claude and Codex need different schema dialects — never share one constant.** `AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE` (`shared/agent-task.ts`) is a versioned draft-07 **plain** JSON Schema: optional fields simply absent from `required`, no nullable unions, with a logged schema fingerprint. `AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX` (generated via OpenAI's `zodResponseFormat()`) is OpenAI Structured-Outputs **strict mode**: every field in `required`, optional fields modeled as nullable. Codex's `--output-schema` needs strict mode; Claude's `--json-schema` gets the provider-specific plain contract. Contract failures log the CLI result subtype, result-message keys, fingerprint, and a bounded redacted final-text excerpt, while the metric labels remain low-cardinality.
 
-Run the post-deploy canary only after the image is live:
+Run the post-deploy canary only after the worker image containing the change is
+live and the production worker has its `CLAUDE_CODE_OAUTH_TOKEN` configured.
+From an operator machine, use the externally reachable Temporal TLS endpoint;
+the in-cluster service name is only resolvable inside Kubernetes:
 
 ```bash
 cd packages/temporal
-TEMPORAL_ADDRESS=... bun run canary:agent-task
+TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443 TEMPORAL_TLS=true \
+  bun run canary:agent-task
 ```
 
-It must complete on the real `agent-task` queue and deliver the tagged
-`[agent-task-canary]` report-only email. Keep
+The command starts one real `agentTaskWorkflow` on the `agent-task` queue and
+must complete through the deployed Claude parser and deliver the tagged
+`[agent-task-canary]` report-only email. It does not accept or forward a local
+OAuth token; authentication is verified in the deployed worker. Keep
 `packages/docs/todos/homelab-audit-agent-task-production-verification.md` open
 until the canary and seven consecutive daily audit runs pass.
 
