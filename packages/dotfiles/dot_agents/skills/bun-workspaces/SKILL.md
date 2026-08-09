@@ -133,10 +133,14 @@ bun run --filter '<workspace>' build
 
 At this monorepo's root, use `bunx turbo run build` for a repo-wide build. Never use `bun run --filter '*' build` here: bypassing the bounded Turbo task graph can launch thousands of processes and exhaust the machine.
 
-Long-running dev servers block dependents under dependency ordering. Run intended independent servers explicitly in parallel:
+Long-running dev servers block dependents under dependency ordering. Start only the intended independent servers. Run each selected workspace in its own terminal, or use the repository's bounded dev orchestrator:
 
 ```bash
-bun run --parallel --workspaces --if-present dev
+# terminal 1
+bun run --filter '<workspace-a>' dev
+
+# terminal 2
+bun run --filter '<workspace-b>' dev
 ```
 
 Focused execution remains the default during development. Do not apply blanket parallelism to builds whose order matters.

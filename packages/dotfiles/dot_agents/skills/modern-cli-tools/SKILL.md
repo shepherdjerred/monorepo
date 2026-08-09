@@ -60,7 +60,7 @@ rg --multiline --multiline-dotall 'start.*end'
 fd --absolute-path 'pattern' root
 fd --full-path 'src/.+\.ts$'
 fd --changed-within 2d
-fd --type d --empty --exec rmdir -- {}
+fd --type d --type empty --exec rmdir -- {}
 ```
 
 - `-p` means match against the full path, not print an absolute path; use `-a` / `--absolute-path` for output.
