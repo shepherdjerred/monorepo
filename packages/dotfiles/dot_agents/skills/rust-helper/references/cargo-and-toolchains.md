@@ -17,7 +17,7 @@ Use these diagnostics before changing dependency constraints:
 ```bash
 cargo tree -d
 cargo tree -e features
-cargo test --future-incompat-report
+cargo test --locked --future-incompat-report
 cargo report future-incompatibilities
 ```
 
