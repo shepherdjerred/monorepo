@@ -230,6 +230,25 @@ describe("sendDM message budget", () => {
     expect(send.mock.calls.length).toBe(1);
   });
 
+  it("holds the cap under concurrent sends", async () => {
+    await seedInstall(NON_CORE_MESSAGE_BUDGET - 1);
+    const send = makeSendMock();
+    const client = clientThatSends(send);
+
+    // The outreach cron and a guildDelete handler can run at once. Without
+    // serializing the read-decide-write sequence, both would observe two
+    // messages spent, both would be allowed, and both would deliver a
+    // "Message 3 of 3" — four in total, breaking the printed promise.
+    const results = await Promise.all([
+      sendDM({ ...budgeted(client), kind: "feedback_request" as const }),
+      sendDM({ ...budgeted(client), kind: "feedback_request" as const }),
+    ]);
+
+    expect(results.filter((r) => r === "sent")).toHaveLength(1);
+    expect(await spent()).toBe(NON_CORE_MESSAGE_BUDGET);
+    expect(send.mock.calls.length).toBe(1);
+  });
+
   it("records every refusal in the audit log", async () => {
     await seedInstall(NON_CORE_MESSAGE_BUDGET);
 

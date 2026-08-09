@@ -231,6 +231,7 @@ export async function createOfflineTrpcHarness(
         ipAddress: "127.0.0.1",
         userAgent: "offline-trpc-harness",
       },
+      clientIp: null,
       requestId: "offline-trpc-harness",
     });
 
@@ -239,6 +240,7 @@ export async function createOfflineTrpcHarness(
       user: null,
       apiToken: null,
       webSession: null,
+      clientIp: null,
       requestId: "offline-trpc-harness-anon",
     });
 

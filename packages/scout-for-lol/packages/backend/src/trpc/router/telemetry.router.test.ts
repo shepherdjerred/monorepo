@@ -80,12 +80,27 @@ describe("telemetry router", () => {
     }
   });
 
+  it("does not let one caller shed everyone else's events", async () => {
+    // A process-global counter let a single anonymous client spend the whole
+    // per-minute allowance at the top of every window, silently replacing the
+    // funnel signal with its own traffic.
+    const noisy = trpc.anonCaller();
+    for (let i = 0; i < 200; i += 1) {
+      await noisy.telemetry.onboardingStep({ step: "install" });
+    }
+
+    // A different caller (distinct session) must still be recorded.
+    const other = trpc.authedCaller();
+    const result = await other.telemetry.onboardingStep({ step: "concepts" });
+    expect(result.recorded).toBe(true);
+  });
+
   it("sheds events once the rate limit is exhausted", async () => {
     const caller = trpc.anonCaller();
     let lastRecorded = true;
     // Well past the per-window budget; the endpoint must degrade rather than
     // let an unauthenticated caller spin the counters freely.
-    for (let i = 0; i < 700; i += 1) {
+    for (let i = 0; i < 60; i += 1) {
       const result = await caller.telemetry.onboardingStep({ step: "install" });
       lastRecorded = result.recorded;
     }

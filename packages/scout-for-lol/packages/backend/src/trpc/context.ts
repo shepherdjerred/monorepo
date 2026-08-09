@@ -38,6 +38,12 @@ export type Context = {
   apiToken: ApiToken | null;
   /** The web session, if the request carried a valid scout_session cookie */
   webSession: WebSession | null;
+  /**
+   * Forwarded client IP, when the edge supplied one. Present for anonymous
+   * callers too, so public endpoints can rate-limit per caller. NEVER used for
+   * authorization — a client-supplied header is not an identity.
+   */
+  clientIp: string | null;
   /** Request ID for tracing */
   requestId: string;
 };
@@ -163,6 +169,9 @@ export async function createContext(request: Request): Promise<Context> {
     user,
     apiToken,
     webSession,
+    clientIp:
+      request.headers.get("CF-Connecting-IP") ??
+      request.headers.get("X-Forwarded-For"),
     requestId,
   };
 }

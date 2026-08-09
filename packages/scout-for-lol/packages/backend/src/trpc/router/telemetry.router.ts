@@ -18,35 +18,67 @@
 import { z } from "zod";
 import { ONBOARDING_STEP_KINDS } from "@scout-for-lol/data";
 import { router, publicProcedure } from "#src/trpc/trpc.ts";
+import type { Context } from "#src/trpc/context.ts";
 import {
   onboardingOutcomeTotal,
   onboardingStepTotal,
 } from "#src/metrics/web.ts";
 
 /**
- * Simple fixed-window limiter. The endpoint only feeds counters, so shedding
- * excess events costs a little funnel precision and nothing else — far
- * preferable to letting an unauthenticated caller spin the counters freely.
+ * Fixed-window limiter, applied **per caller** with a global safety cap on top.
+ *
+ * A single process-wide counter looked sufficient but was not: one anonymous
+ * client could spend the whole per-minute allowance at the top of every window
+ * and every other user's onboarding events would be shed for the rest of it —
+ * silently replacing the funnel signal with one caller's traffic. The per-caller
+ * limit is the primary control; the global cap only bounds total memory and
+ * counter churn.
  */
 const RATE_LIMIT_WINDOW_MS = 60_000;
-const RATE_LIMIT_MAX_EVENTS = 600;
+const PER_CALLER_MAX_EVENTS = 40;
+const GLOBAL_MAX_EVENTS = 2000;
+/** Bounds the key map even under a spray of distinct forged callers. */
+const MAX_TRACKED_CALLERS = 5000;
+
 let windowStartedAt = Date.now();
 let eventsInWindow = 0;
+const eventsByCaller = new Map<string, number>();
 
-function withinRateLimit(): boolean {
+function withinRateLimit(callerKey: string): boolean {
   const now = Date.now();
   if (now - windowStartedAt >= RATE_LIMIT_WINDOW_MS) {
     windowStartedAt = now;
     eventsInWindow = 0;
+    eventsByCaller.clear();
   }
+
   eventsInWindow += 1;
-  return eventsInWindow <= RATE_LIMIT_MAX_EVENTS;
+  if (eventsInWindow > GLOBAL_MAX_EVENTS) return false;
+
+  const forCaller = (eventsByCaller.get(callerKey) ?? 0) + 1;
+  if (forCaller > PER_CALLER_MAX_EVENTS) return false;
+  if (forCaller > 1 || eventsByCaller.size < MAX_TRACKED_CALLERS) {
+    eventsByCaller.set(callerKey, forCaller);
+  }
+  return true;
+}
+
+/**
+ * Identify the caller for rate-limiting. The session id is preferred; anonymous
+ * callers fall back to the forwarded client IP. Neither is trusted for
+ * authorization — this only decides whose bucket an event is charged to.
+ */
+function callerKeyFor(ctx: Context): string {
+  const sessionId = ctx.webSession?.discordId;
+  if (sessionId !== undefined) return `u:${sessionId}`;
+  return `ip:${ctx.clientIp ?? "unknown"}`;
 }
 
 /** Exposed for tests so the limiter can't leak state between cases. */
 export function resetTelemetryRateLimitForTests(): void {
   windowStartedAt = Date.now();
   eventsInWindow = 0;
+  eventsByCaller.clear();
 }
 
 const OnboardingStepSchema = z.enum(ONBOARDING_STEP_KINDS);
@@ -59,8 +91,8 @@ export const telemetryRouter = router({
    */
   onboardingStep: publicProcedure
     .input(z.object({ step: OnboardingStepSchema }))
-    .mutation(({ input }) => {
-      if (!withinRateLimit()) return { recorded: false };
+    .mutation(({ ctx, input }) => {
+      if (!withinRateLimit(callerKeyFor(ctx))) return { recorded: false };
       onboardingStepTotal.inc({ step: input.step });
       return { recorded: true };
     }),
@@ -72,8 +104,8 @@ export const telemetryRouter = router({
    */
   onboardingOutcome: publicProcedure
     .input(z.object({ outcome: OnboardingOutcomeSchema }))
-    .mutation(({ input }) => {
-      if (!withinRateLimit()) return { recorded: false };
+    .mutation(({ ctx, input }) => {
+      if (!withinRateLimit(callerKeyFor(ctx))) return { recorded: false };
       onboardingOutcomeTotal.inc({ outcome: input.outcome });
       return { recorded: true };
     }),

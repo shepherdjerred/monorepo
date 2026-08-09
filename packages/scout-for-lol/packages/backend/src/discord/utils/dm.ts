@@ -154,6 +154,36 @@ async function recordDmAudit(
   }
 }
 
+/**
+ * Serializes the read-decide-write sequence for budgeted sends.
+ *
+ * `evaluateBudget` reads the delivered-row count and `sendDM` writes the audit
+ * row afterwards, so two concurrent callers — the outreach cron and a
+ * `guildDelete` handler, say — could both observe two messages spent, both be
+ * allowed, and both deliver a "Message 3 of 3", leaving four. The same race
+ * bypasses the recipient cooldown for simultaneous removals.
+ *
+ * One global lock rather than a per-key one: budgeted traffic is a handful of
+ * messages per day, so there is nothing to gain from finer granularity and a
+ * single chain cannot miss a cross-guild cooldown interaction.
+ */
+let budgetedSendLock: Promise<null> = Promise.resolve(null);
+
+async function runExclusively<T>(task: () => Promise<T>): Promise<T> {
+  const previous = budgetedSendLock;
+  const gate = Promise.withResolvers<null>();
+  // Claim the lock synchronously, before the first await, so two callers
+  // entering together still queue behind one another.
+  budgetedSendLock = gate.promise;
+  await previous;
+  try {
+    return await task();
+  } finally {
+    // Always release, so one failed send cannot wedge the queue forever.
+    gate.resolve(null);
+  }
+}
+
 type BudgetDecision =
   | { kind: "allow"; messageNumber: number }
   | { kind: "budget_exhausted" }
@@ -208,6 +238,14 @@ async function evaluateBudget(
  *   `"failed"` (any other error). Never throws.
  */
 export async function sendDM(options: SendDmOptions): Promise<DmStatus> {
+  // Budgeted sends run one at a time so the budget read and the audit write
+  // that follows it cannot interleave with another send.
+  return options.budget === undefined
+    ? sendDmUnsynchronized(options)
+    : runExclusively(() => sendDmUnsynchronized(options));
+}
+
+async function sendDmUnsynchronized(options: SendDmOptions): Promise<DmStatus> {
   const { client, userId, kind, guildId } = options;
   const db = options.prisma ?? prisma;
 

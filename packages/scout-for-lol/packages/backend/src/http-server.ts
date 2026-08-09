@@ -11,7 +11,11 @@ import { prisma } from "#src/database/index.ts";
 import { handleImageRoute } from "#src/trpc/image-routes.ts";
 import { handleReportAiRoute } from "#src/reports/ai/http-route.ts";
 import { handleVersion } from "#src/http/version.ts";
-import { classifyRoute, statusClass } from "#src/http/route-label.ts";
+import {
+  classifyMethod,
+  classifyRoute,
+  statusClass,
+} from "#src/http/route-label.ts";
 import { httpRequestDuration, httpRequestsTotal } from "#src/metrics/web.ts";
 
 const logger = createLogger("http-server");
@@ -175,7 +179,7 @@ async function withHttpMetrics(
   } finally {
     httpRequestsTotal.inc({
       route,
-      method: request.method,
+      method: classifyMethod(request.method),
       status: status.toString(),
       status_class: statusClass(status),
     });

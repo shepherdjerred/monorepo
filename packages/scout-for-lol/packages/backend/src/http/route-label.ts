@@ -63,3 +63,25 @@ export function classifyRoute(pathname: string): string {
 export function statusClass(status: number): string {
   return `${Math.floor(status / 100).toString()}xx`;
 }
+
+/**
+ * Standard HTTP methods. `Request.method` is whatever the remote client sent —
+ * it is not restricted to these — so an internet client could otherwise mint a
+ * new Prometheus series per invented verb, defeating the bounded-cardinality
+ * design of the route label right next to it.
+ */
+const KNOWN_METHODS: ReadonlySet<string> = new Set([
+  "GET",
+  "HEAD",
+  "POST",
+  "PUT",
+  "PATCH",
+  "DELETE",
+  "OPTIONS",
+  "TRACE",
+  "CONNECT",
+]);
+
+export function classifyMethod(method: string): string {
+  return KNOWN_METHODS.has(method) ? method : OTHER_ROUTE_LABEL;
+}
