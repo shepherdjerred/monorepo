@@ -15,11 +15,6 @@
         "GRAFANA_URL": "http://prometheus-grafana.prometheus"
       }
     },
-    "pagerduty-mcp": {
-      "type": "stdio",
-      "command": "uvx",
-      "args": ["pagerduty-mcp"]
-    },
     "Home Assistant": {
       "command": "uvx",
       "args": [

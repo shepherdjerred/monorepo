@@ -45,6 +45,7 @@
     "turbo": "2.10.7"
   },
   "workspaces": [
+    "packages/alert-dashboard",
     "packages/astro-opengraph-images",
     "packages/better-skill-capped",
     "packages/birmel",

@@ -74,6 +74,7 @@ group "default" {
 # ── App images: repo-root context, VERSION/GIT_SHA args ─────────────────────
 group "app" {
   targets = [
+    "alert-dashboard",
     "birmel",
     "tasknotes-server",
     "starlight-karma-bot",
@@ -102,6 +103,14 @@ target "birmel" {
   tags       = imagetags("birmel")
   cache-from = cachefrom("birmel")
   cache-to   = cacheto("birmel")
+}
+
+target "alert-dashboard" {
+  inherits   = ["_app"]
+  dockerfile = "packages/alert-dashboard/Dockerfile"
+  tags       = imagetags("alert-dashboard")
+  cache-from = cachefrom("alert-dashboard")
+  cache-to   = cacheto("alert-dashboard")
 }
 
 target "tasknotes-server" {

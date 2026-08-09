@@ -88,7 +88,7 @@ function expectExpressionContains(
 }
 
 function assertCollectorStaleExpression(rule: Record<string, unknown>): void {
-  const expression = String(rule["expr"]);
+  const expression = ruleExpression(rule);
   expectExpressionContains(expression, ["> 1200"]);
   if (MAINTENANCE_IMAGE_READY) {
     expectExpressionContains(expression, [
@@ -108,6 +108,10 @@ function assertCollectorStaleExpression(rule: Record<string, unknown>): void {
     "kube_cronjob_status_last_successful_time",
     "kube_cronjob_created",
   ]);
+}
+
+function ruleExpression(rule: Record<string, unknown>): string {
+  return z.string().parse(rule["expr"]);
 }
 
 function requireAlert(
@@ -197,6 +201,8 @@ describe("Buildkite monitoring manifests", () => {
       alertGroup.rules,
       "BuildkiteBunCacheCollectorStale",
     );
+    const bunCacheWarningExpr = ruleExpression(bunCacheWarning);
+    const bunCacheCriticalExpr = ruleExpression(bunCacheCritical);
 
     expect(bunCacheWarning).toMatchObject({
       for: "10m",
@@ -206,14 +212,12 @@ describe("Buildkite monitoring manifests", () => {
         namespace: "buildkite",
       },
     });
-    expect(String(bunCacheWarning["expr"])).toContain(
+    expect(bunCacheWarningExpr).toContain(
       `persistentvolumeclaim="${BUILDKITE_BUN_CACHE_PVC}"`,
     );
-    expect(String(bunCacheWarning["expr"])).toContain("> 0.75");
-    expect(String(bunCacheWarning["expr"])).toContain("zfs_dataset_used_bytes");
-    expect(String(bunCacheWarning["expr"])).toContain(
-      "kube_persistentvolumeclaim_info",
-    );
+    expect(bunCacheWarningExpr).toContain("> 0.75");
+    expect(bunCacheWarningExpr).toContain("zfs_dataset_used_bytes");
+    expect(bunCacheWarningExpr).toContain("kube_persistentvolumeclaim_info");
 
     expect(bunCacheCritical).toMatchObject({
       for: "5m",
@@ -223,7 +227,7 @@ describe("Buildkite monitoring manifests", () => {
         namespace: "buildkite",
       },
     });
-    expect(String(bunCacheCritical["expr"])).toContain("> 0.9");
+    expect(bunCacheCriticalExpr).toContain("> 0.9");
 
     expect(collectorStale).toMatchObject({
       for: "1m",

@@ -179,8 +179,8 @@ export function getHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
 
     // Roborock Saros 10R fleet health (3 units — 1st/2nd/3rd floor). One rule
     // per condition, regex-matched across all three; the offending unit is named
-    // via friendly_name. severity:warning → PagerDuty (Alertmanager severity
-    // route). Metric names + the enum→binary bridges (*_vacuum_problem template
+    // via friendly_name. severity:warning reaches the Alerts webhook through
+    // Alertmanager's severity route. Metric names + the enum→binary bridges (*_vacuum_problem template
     // sensors) were verified live against HA's /api/prometheus.
     {
       name: "homeassistant-roborock",

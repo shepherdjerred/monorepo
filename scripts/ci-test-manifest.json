@@ -3,6 +3,18 @@
   "version": 1,
   "workspaces": [
     {
+      "package": "@shepherdjerred/alert-dashboard",
+      "directory": "packages/alert-dashboard",
+      "steps": [
+        {
+          "runner": "command",
+          "name": "generate",
+          "command": ["bun", "run", "generate"]
+        },
+        { "runner": "bun", "args": ["src"] }
+      ]
+    },
+    {
       "package": "astro-opengraph-images",
       "directory": "packages/astro-opengraph-images",
       "steps": [

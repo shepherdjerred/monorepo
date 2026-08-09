@@ -129,22 +129,35 @@ describe("createHttpClient auth headers", () => {
     );
   });
 
-  it("writes a Token token= authorization header and merges extra headers", async () => {
+  it("merges extra headers with bearer authorization", async () => {
     const { requests } = installFetchMock(Response.json({ value: 1 }));
     const client = createHttpClient({
       baseUrl: "https://api.example.test",
-      auth: { scheme: "Token token=", token: "abc" },
+      auth: { scheme: "Bearer", token: "abc" },
       errorLabel: "Example API",
       headers: { Accept: "application/vnd.example+json;version=2" },
     });
 
     await client.get("/items", { schema: BodySchema });
 
-    expect(headerValue(requests[0]!.init, "Authorization")).toBe(
-      "Token token=abc",
-    );
+    expect(headerValue(requests[0]!.init, "Authorization")).toBe("Bearer abc");
     expect(headerValue(requests[0]!.init, "Accept")).toBe(
       "application/vnd.example+json;version=2",
+    );
+  });
+
+  it("writes a PagerDuty token authorization header", async () => {
+    const { requests } = installFetchMock(Response.json({ value: 1 }));
+    const client = createHttpClient({
+      baseUrl: "https://api.pagerduty.com",
+      auth: { scheme: "Token token=", token: "pd-token" },
+      errorLabel: "PagerDuty API",
+    });
+
+    await client.get("/incidents", { schema: BodySchema });
+
+    expect(headerValue(requests[0]!.init, "Authorization")).toBe(
+      "Token token=pd-token",
     );
   });
 });

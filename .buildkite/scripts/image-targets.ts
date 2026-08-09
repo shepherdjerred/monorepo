@@ -1,4 +1,5 @@
 export const IMAGE_TARGET_OWNERS: Readonly<Record<string, string>> = {
+  "alert-dashboard": "@shepherdjerred/alert-dashboard",
   birmel: "@shepherdjerred/birmel",
   "tasknotes-server": "tasknotes-server",
   "starlight-karma-bot": "starlight-karma-bot",

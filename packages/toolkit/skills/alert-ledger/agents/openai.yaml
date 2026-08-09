@@ -1,0 +1,4 @@
+interface:
+  display_name: "Alert Ledger"
+  short_description: "Query active and historical Alerts ledger data"
+  default_prompt: "Use toolkit alerts to inspect active or historical Alerts ledger occurrences."

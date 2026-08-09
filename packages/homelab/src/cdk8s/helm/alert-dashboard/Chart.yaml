@@ -1,0 +1,6 @@
+apiVersion: v2
+name: alert-dashboard
+description: Durable Alertmanager ledger and dashboard
+type: application
+version: "$version"
+appVersion: "$appVersion"
