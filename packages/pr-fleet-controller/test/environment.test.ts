@@ -9,6 +9,7 @@ import {
   withoutCommandCorrelation,
 } from "@shepherdjerred/pr-fleet-controller/src/command-correlation.ts";
 import { CommandFleetEnvironment } from "@shepherdjerred/pr-fleet-controller/src/environment.ts";
+import { settleEvidenceParts } from "@shepherdjerred/pr-fleet-controller/src/environment-refresh.ts";
 import type {
   CommandRequest,
   FleetTelemetry,
@@ -149,6 +150,25 @@ test("failed evidence refreshes record a correlated terminal event", async () =>
       headSha: pr.headSha,
     },
   });
+});
+
+test("evidence refresh failure waits for concurrent siblings to settle", async () => {
+  const firstError = new Error("checks failed");
+  const events: string[] = [];
+  const delayedReviews = (async () => {
+    await Bun.sleep(20);
+    events.push("reviews settled");
+    return "reviews";
+  })();
+
+  await expect(
+    settleEvidenceParts(
+      Promise.reject(firstError),
+      delayedReviews,
+      Promise.resolve("conflict"),
+    ),
+  ).rejects.toBe(firstError);
+  expect(events).toEqual(["reviews settled"]);
 });
 
 test("autonomous work can clear inherited command correlation", async () => {

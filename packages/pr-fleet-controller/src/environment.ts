@@ -15,7 +15,10 @@ import { GitOperations } from "./git-operations.ts";
 import { captureTelemetryOperation } from "./controller-telemetry.ts";
 import { currentCommandCorrelation } from "./command-correlation.ts";
 import { resolveHostedReviewCompletion } from "./hosted-review.ts";
-import { recordEvidenceRefresh } from "./environment-refresh-telemetry.ts";
+import {
+  recordEvidenceRefresh,
+  settleEvidenceParts,
+} from "./environment-refresh.ts";
 import type {
   CommandRequest,
   CommandResult,
@@ -446,11 +449,11 @@ export class CommandFleetEnvironment implements FleetEnvironment {
   }
 
   async #collectEvidence(pr: PrIdentity): Promise<ReadinessEvidence> {
-    const [rawChecks, reviews, conflict] = await Promise.all([
+    const [rawChecks, reviews, conflict] = await settleEvidenceParts(
       this.#checks(pr),
       this.#reviews(pr),
       this.#conflict(pr),
-    ]);
+    );
     // Resolve each check's soft-failure status against the Buildkite build's
     // per-job metadata BEFORE computing hard failures, so a soft Semgrep/Trivy
     // finding is not counted as blocking and a hard scanner failure is not

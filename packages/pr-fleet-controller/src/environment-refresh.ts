@@ -11,6 +11,32 @@ function correlation(pr: PrIdentity) {
   };
 }
 
+function fulfilledValue<T>(result: PromiseSettledResult<T>): T {
+  if (result.status === "rejected") throw result.reason;
+  return result.value;
+}
+
+export async function settleEvidenceParts<Checks, Reviews, Conflict>(
+  checks: Promise<Checks>,
+  reviews: Promise<Reviews>,
+  conflict: Promise<Conflict>,
+): Promise<[Checks, Reviews, Conflict]> {
+  const results = await Promise.allSettled([checks, reviews, conflict]);
+  const failures: unknown[] = [];
+  for (const result of results) {
+    if (result.status === "rejected") failures.push(result.reason);
+  }
+  if (failures.length === 1) throw failures[0];
+  if (failures.length > 1) {
+    throw new AggregateError(failures, "Multiple evidence refreshes failed");
+  }
+  return [
+    fulfilledValue(results[0]),
+    fulfilledValue(results[1]),
+    fulfilledValue(results[2]),
+  ];
+}
+
 export async function recordEvidenceRefresh(
   telemetry: FleetTelemetry | undefined,
   pr: PrIdentity,
