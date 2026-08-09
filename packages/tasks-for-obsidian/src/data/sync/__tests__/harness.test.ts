@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { NetworkError } from "../../../domain/errors";
+import { ApiError, NetworkError } from "../../../domain/errors";
 import { taskId } from "../../../domain/types";
 import { CommandQueue } from "../CommandQueue";
 import { FakeServer, makeClock, makeHarness, makeTask } from "./harness";
@@ -101,6 +101,40 @@ describe("FakeServer", () => {
     });
     expect(unset.ok).toBe(true);
     if (unset.ok) expect(unset.value.completeInstances).toEqual([]);
+  });
+
+  test("stale recurring restores return a conflict without overwriting edits", async () => {
+    const server = new FakeServer(makeClock());
+    const recurring = makeTask({
+      recurrence: "DTSTART:20260801;FREQ=WEEKLY",
+      scheduled: "2026-08-08",
+      due: "2026-08-10",
+      completeInstances: ["2026-08-01"],
+    });
+    server.seed(recurring);
+    server.injectServerEdit(recurring.id, {
+      scheduled: "2026-08-15",
+      due: "2026-08-17",
+    });
+
+    const result = await server.completeRecurringInstance(recurring.id, {
+      date: "2026-08-01",
+      completed: false,
+      restore: {
+        recurrence: "DTSTART:20260801;FREQ=WEEKLY",
+        scheduled: "2026-08-08",
+        due: "2026-08-10",
+        skipped: false,
+      },
+    });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toBeInstanceOf(ApiError);
+    if (!result.ok && result.error instanceof ApiError) {
+      expect(result.error.statusCode).toBe(409);
+    }
+    expect(server.tasks.get(recurring.id)?.scheduled).toBe("2026-08-15");
+    expect(server.tasks.get(recurring.id)?.due).toBe("2026-08-17");
   });
 
   test("a replayed X-Mutation-Id returns the stored response without re-applying", async () => {

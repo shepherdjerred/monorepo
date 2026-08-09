@@ -1,11 +1,14 @@
 import {
+  addDTSTARTToRecurrenceRule,
   updateToNextScheduledOccurrence,
   type CompleteInstanceRequest,
+  type RecurringCompletionRestore,
 } from "tasknotes-types/v2";
 
 import type { Task } from "../../../domain/types";
+import { ApiError } from "../../../domain/errors";
 
-function localDay(timestamp: number): string {
+export function localDay(timestamp: number): string {
   const date = new Date(timestamp);
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
@@ -52,6 +55,61 @@ function advanceSchedule(
   } else {
     updated.due = due;
   }
+}
+
+export function fakeRecurringRestoreMatchesCurrent(
+  task: Task,
+  restore: RecurringCompletionRestore,
+  date: string,
+): boolean {
+  const scheduleSource = {
+    title: task.title,
+    recurrence: restore.recurrence,
+    ...(restore.scheduled === null ? {} : { scheduled: restore.scheduled }),
+    ...(restore.due === null ? {} : { due: restore.due }),
+    ...(task.dateCreated === undefined
+      ? {}
+      : { dateCreated: task.dateCreated }),
+    ...(task.recurrenceAnchor === undefined
+      ? {}
+      : { recurrence_anchor: task.recurrenceAnchor }),
+    complete_instances: task.completeInstances.includes(date)
+      ? task.completeInstances
+      : [...task.completeInstances, date],
+    skipped_instances: task.skippedInstances.filter((entry) => entry !== date),
+  };
+  const next = updateToNextScheduledOccurrence(scheduleSource, true, {
+    today: date,
+  });
+  const expectedScheduled = next.scheduled ?? restore.scheduled ?? undefined;
+  const expectedDue = next.due ?? restore.due ?? undefined;
+  const expectedRecurrence =
+    addDTSTARTToRecurrenceRule({
+      recurrence: restore.recurrence,
+      ...(restore.scheduled === null ? {} : { scheduled: restore.scheduled }),
+      ...(restore.due === null ? {} : { due: restore.due }),
+      ...(task.dateCreated === undefined
+        ? {}
+        : { dateCreated: task.dateCreated }),
+    }) ?? restore.recurrence;
+  return (
+    task.recurrence === expectedRecurrence &&
+    !task.skippedInstances.includes(date) &&
+    task.scheduled === expectedScheduled &&
+    (restore.due === null ? task.due === undefined : task.due === expectedDue)
+  );
+}
+
+export function restoreErrorFor(
+  task: Task,
+  instance: CompleteInstanceRequest | undefined,
+  timestamp: number,
+): ApiError | undefined {
+  if (instance?.restore === undefined) return undefined;
+  const date = instance.date ?? localDay(timestamp);
+  return fakeRecurringRestoreMatchesCurrent(task, instance.restore, date)
+    ? undefined
+    : new ApiError("Recurring restore is stale", 409);
 }
 
 export function applyFakeRecurringCompletion(

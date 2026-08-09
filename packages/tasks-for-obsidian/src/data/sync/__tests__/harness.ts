@@ -15,7 +15,10 @@ import type { CommandClient, MutationOptions, SyncStatus } from "../SyncEngine";
 import { SyncEngine } from "../SyncEngine";
 import { TaskStore, type TaskStoreStorage } from "../../store/TaskStore";
 import type { CompleteInstanceRequest } from "tasknotes-types/v2";
-import { applyFakeRecurringCompletion } from "./fake-recurring-completion";
+import {
+  applyFakeRecurringCompletion,
+  restoreErrorFor,
+} from "./fake-recurring-completion";
 
 /**
  * Deterministic simulation harness for the offline-first sync stack.
@@ -450,6 +453,8 @@ export class FakeServer implements CommandClient {
     if (existing === undefined) {
       return Promise.resolve(err(new NotFoundError("Task", String(id))));
     }
+    const restoreError = restoreErrorFor(existing, instance, this.clock.now());
+    if (restoreError !== undefined) return Promise.resolve(err(restoreError));
     const updated = applyFakeRecurringCompletion(
       existing,
       instance,

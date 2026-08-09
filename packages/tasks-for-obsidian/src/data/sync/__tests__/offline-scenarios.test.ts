@@ -408,7 +408,6 @@ describe("recurring completion captures the tapped day", () => {
     const recurring = makeTask({
       recurrence: "DTSTART:20260801;FREQ=WEEKLY",
       scheduled: "2026-08-08",
-      due: "2026-08-10",
       completeInstances: ["2026-08-01"],
     });
     harness.server.seed(recurring);
