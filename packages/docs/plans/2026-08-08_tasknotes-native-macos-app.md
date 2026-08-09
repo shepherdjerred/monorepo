@@ -634,7 +634,13 @@ Phases 0–6 are complete and verified: 325 Rust tests, 328 TypeScript tests, ze
       and the Linux gate shrinks to Rust plus bindings-drift.
 - [ ] Unrelated pre-existing gap spotted during Phase 1: `src-tauri`'s `clippy` turbo task is not
       referenced by `bun run verify` or `.buildkite/pipeline.yml`, so src-tauri clippy has never
-      run in CI.
+      run in CI. ⚠️ **Not a one-line fix** — investigated 2026-08-08: running it today fails before
+      reaching any lint, because Tauri's `frontendDist` points at `../dist`, which does not exist
+      until the frontend builds. Wiring `clippy` into `verify` therefore needs a turbo `dependsOn`
+      on the frontend build (and will lengthen the graph), not just an entry in the task list.
+      Belongs to whoever owns `scout-for-lol`.
+      _(Note `tasknotes-core` is unaffected — its clippy runs inside its `lint` script, which
+      `verify` does invoke.)_
 
 ## Comment Log
 

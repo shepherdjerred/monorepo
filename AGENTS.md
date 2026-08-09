@@ -35,6 +35,8 @@ packages/
 ├── sjer.red/                   # Personal website
 ├── starlight-karma-bot/        # Discord karma bot
 ├── stocks-sjer-red/            # Stocks static site
+├── tasknotes-core/             # Shared Rust core (domain, sync, recurrence) + UniFFI bindings
+├── tasknotes-fixtures/         # Language-neutral JSON oracles shared by the TS and Rust cores
 ├── tasknotes-macos/            # Native macOS TaskNotes app (SwiftUI over the Rust core)
 ├── tasknotes-server/           # TaskNotes sync server
 ├── tasknotes-types/            # TaskNotes shared types
@@ -412,6 +414,24 @@ Each package has its own AGENTS.md with specific instructions:
 - `packages/tasks-for-obsidian/AGENTS.md` - React Native task app, including native capture/detail, saved views, and bulk task organization
 - `packages/tasknotes-macos/AGENTS.md` - Native macOS app (Swift posture, macOS-only tasks)
 - `packages/docs/` - AI working docs plus `wiki/`, the human-first explanation layer (see `monorepo-docs` skill)
+
+### TaskNotes shared core
+
+`tasknotes-core` is the Rust core the macOS app runs on, and which iOS and a possible Windows
+client are meant to share. Three rules matter more than the rest:
+
+- **`crates/tasknotes-core` is pure and sans-I/O** — no clock, no filesystem, no network. HTTP and
+  storage arrive as host-implemented traits. `crates/tasknotes-core-ffi` holds the UniFFI
+  scaffolding and nothing else.
+- **`bindings/` is committed on purpose.** UniFFI `Record` field order is the ABI, and reordering
+  two same-typed fields leaves every API checksum _and_ the C header byte-identical — so
+  `cargo xtask check-bindings` (a plain `git diff`) is the **only** mechanical guard against that
+  silent data-corruption class. Never regenerate without committing the diff.
+- **`@tasknotes/fixtures` is the oracle, not test data.** The same JSON scenarios and recurrence
+  corpus are executed by both the TypeScript and Rust implementations; that is what keeps them from
+  drifting. A fixture that disagrees with an implementation is a finding, never a file to edit.
+
+Design and phase history live in `packages/docs/plans/2026-08-08_tasknotes-native-macos-app.md`.
 
 ## PR Media & Demo Artifacts — `public.sjer.red`
 
