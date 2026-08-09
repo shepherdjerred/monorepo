@@ -240,12 +240,6 @@ export class TaskStore {
       await this.queue.enqueue(command);
       let nextAcknowledgedCompletionRestores =
         this.acknowledgedCompletionRestores;
-      if (isOccurrenceEdit(command) && command.type === "update") {
-        nextAcknowledgedCompletionRestores = invalidateCompletionRestores(
-          nextAcknowledgedCompletionRestores,
-          command.taskId,
-        );
-      }
       if (
         command.type === "set_instance_complete" &&
         !command.completed &&
