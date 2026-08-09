@@ -7,6 +7,12 @@
 # renovate: datasource=github-releases depName=oven-sh/bun
 bun = "1.3.14"
 rust = "1.97.1"
+# tasknotes-core's `deny` script (supply-chain + license + build-script bans).
+# No mise registry entry exists, so this names the backend explicitly; `github:`
+# fetches the release binary and verifies its artifact attestation and SLSA
+# provenance, where `cargo:` would build it from source on every CI image bake.
+# renovate: datasource=github-releases depName=EmbarkStudios/cargo-deny
+"github:EmbarkStudios/cargo-deny" = "0.20.2"
 # renovate: datasource=github-releases depName=corretto/corretto-25 versioning=loose
 java = "corretto-25.0.4.7.1"
 # Repo-wide checks + git hooks (verify/pre-commit call these directly)

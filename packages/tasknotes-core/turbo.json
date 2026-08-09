@@ -45,6 +45,15 @@
     // is an input: a stale bindings/ must invalidate the cache, or the one
     // mechanical guard against UniFFI's silent Record reordering would be
     // replayed green from a cached log.
+    //
+    // It also runs `cargo deny` — gate 5. Its licence, build-script and source
+    // checks are pure functions of Cargo.lock, so they cache correctly. Its
+    // [advisories] check is not: the RustSec DB moves on its own, so a newly
+    // published advisory against an unchanged dependency stays invisible until
+    // something in these inputs changes (in practice, the next Renovate lock
+    // bump). Accepted deliberately — the alternative is an uncached task in the
+    // root `verify` list, which buys a faster advisory signal at the cost of a
+    // network fetch on every graph run.
     "lint": {
       "inputs": [
         "**/*.rs",
@@ -52,8 +61,10 @@
         "Cargo.lock",
         ".cargo/config.toml",
         "clippy.toml",
+        "deny.toml",
         "rustfmt.toml",
         "ci/no-suppressions.sh",
+        "ci/check-clippy-config.sh",
         "bindings/Sources/**",
         "bindings/ffi/**",
         "!target/**"
