@@ -1,8 +1,6 @@
 import { proxyActivities } from "@temporalio/workflow";
-import type {
-  PollWorkflowFailuresResult,
-  WorkflowFailureWatchActivities,
-} from "#activities/workflow-failure-watch.ts";
+import type { PollWorkflowFailuresResult } from "#activities/workflow-failure-watch.ts";
+import type { WorkflowFailureWatchActivities } from "#activities/workflow-failure-watch-activity.ts";
 
 const { pollWorkflowFailures } =
   proxyActivities<WorkflowFailureWatchActivities>({
@@ -20,7 +18,7 @@ const { pollWorkflowFailures } =
  * Polls the Temporal visibility API for workflow executions that failed or
  * timed out in the last 24 hours and pages PagerDuty (via Alertmanager) with
  * the specific error for each one. See
- * src/activities/workflow-failure-watch.ts.
+ * src/activities/workflow-failure-watch-activity.ts.
  */
 export async function pollWorkflowFailuresWorkflow(): Promise<PollWorkflowFailuresResult> {
   return pollWorkflowFailures();

@@ -14,6 +14,7 @@ import {
   pollWorkflowFailuresOnce,
   type WorkflowVisibilityClient,
 } from "./workflow-failure-watch.ts";
+import type { WorkflowFailureWatchCheckpoint } from "./workflow-failure-watch-checkpoint.ts";
 
 const NOW = new Date("2026-07-30T18:00:00.000Z");
 const LOOKBACK_MS = 24 * 60 * 60 * 1000;
@@ -670,6 +671,81 @@ describe("failed execution timeout diagnostics", () => {
     expect(description).not.toContain(
       "diagnosis worker/task-queue availability failure",
     );
+  });
+});
+
+describe("workflow failure watch checkpoints", () => {
+  it("resumes after a heartbeat checkpoint without rescanning older executions", async () => {
+    const checkpoint: WorkflowFailureWatchCheckpoint = {
+      closeTime: new Date("2026-07-30T17:30:00.000Z"),
+      workflowId: "wf-checkpoint",
+      runId: "run-checkpoint",
+    };
+    const executions: ExecutionInfo[] = [
+      {
+        workflowId: "wf-old",
+        runId: "run-old",
+        type: "syncGolinks",
+        taskQueue: "default",
+        closeTime: new Date("2026-07-30T17:00:00.000Z"),
+        status: { name: "FAILED" },
+      },
+      {
+        workflowId: checkpoint.workflowId,
+        runId: checkpoint.runId,
+        type: "syncGolinks",
+        taskQueue: "default",
+        closeTime: checkpoint.closeTime,
+        status: { name: "FAILED" },
+      },
+      {
+        workflowId: "wf-new",
+        runId: "run-new",
+        type: "syncGolinks",
+        taskQueue: "default",
+        closeTime: new Date("2026-07-30T17:40:00.000Z"),
+        status: { name: "FAILED" },
+      },
+    ];
+    let query: string | undefined;
+    let pageSize: number | undefined;
+    const client = fakeClient(
+      executions,
+      Object.fromEntries(
+        executions.map((execution) => [
+          `${execution.workflowId}/${execution.runId}`,
+          rejectWithApplicationFailure("recovery failure"),
+        ]),
+      ),
+    );
+    const originalList = client.workflow.list;
+    client.workflow.list = (options) => {
+      query = options.query;
+      pageSize = options.pageSize;
+      return originalList(options);
+    };
+    const { poster, calls } = capturingPoster();
+    const checkpoints: WorkflowFailureWatchCheckpoint[] = [];
+
+    const result = await pollWorkflowFailuresOnce(client, poster, {
+      now: NOW,
+      lookbackMs: LOOKBACK_MS,
+      ttlMs: TTL_MS,
+      checkpoint,
+      onCheckpoint: (nextCheckpoint) => checkpoints.push(nextCheckpoint),
+    });
+
+    expect(result).toEqual({ scanned: 2, alerted: 2, errored: 0 });
+    expect(query).toContain('CloseTime > "2026-07-30T17:29:59.999Z"');
+    expect(pageSize).toBe(100);
+    expect(calls[0]?.alerts.map((alert) => alert.labels["workflowId"])).toEqual(
+      ["wf-checkpoint", "wf-new"],
+    );
+    expect(checkpoints.at(-1)).toEqual({
+      closeTime: new Date("2026-07-30T17:40:00.000Z"),
+      workflowId: "wf-new",
+      runId: "run-new",
+    });
   });
 });
 

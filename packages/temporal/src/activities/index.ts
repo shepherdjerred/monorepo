@@ -24,7 +24,7 @@ import { observeReviewSignalsActivities } from "./observe-review-signals.ts";
 import { glitterCorpusActivities } from "./glitter-corpus.ts";
 import { glitterContextRefreshActivities } from "./glitter-context-refresh.ts";
 import { weatherActivities } from "./weather.ts";
-import { workflowFailureWatchActivities } from "./workflow-failure-watch.ts";
+import { workflowFailureWatchActivities } from "./workflow-failure-watch-activity.ts";
 import { maintenanceActivities } from "./maintenance.ts";
 
 export const activities = {
