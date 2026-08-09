@@ -14,6 +14,7 @@ import {
   classicPalette,
   classicTypography,
 } from "#src/assets/classic-style.ts";
+import { fontFamilyForText } from "#src/assets/index.ts";
 import { formatDuration } from "#src/html/shared/format.ts";
 
 export const CLASSIC_MATCH_WIDTH = 1920;
@@ -174,6 +175,10 @@ function PlayerRow({
               color: isTracked
                 ? classicPalette.gold.highlight
                 : classicPalette.text.strong,
+              fontFamily: fontFamilyForText(
+                classicTypography.stack.body,
+                champion.riotIdGameName,
+              ),
               fontWeight: 700,
               whiteSpace: "nowrap",
               overflow: "hidden",

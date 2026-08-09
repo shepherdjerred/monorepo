@@ -191,6 +191,13 @@ export const bunSpiegelFonts: () => Promise<Font[]> = () =>
 const cjkFontLocales = ["jp", "kr", "sc", "tc"] as const;
 let cjkFontsPromise: Promise<Font[]> | undefined;
 
+const cjkFontFamilyByLocale: Record<CjkFontLocale, string> = {
+  jp: "Noto Sans CJK JP",
+  kr: "Noto Sans CJK KR",
+  sc: "Noto Sans CJK SC",
+  tc: "Noto Sans CJK TC",
+};
+
 function containsTextMatching(value: unknown, pattern: RegExp): boolean {
   if (typeof value === "string") {
     return pattern.test(value);
@@ -223,6 +230,32 @@ function cjkFontLocale(value: unknown): CjkFontLocale {
     return "jp";
   }
   return "sc";
+}
+
+export function fontFamilyForText(
+  baseFontFamily: string,
+  value: unknown,
+): string {
+  if (!containsCjkText(value)) {
+    return baseFontFamily;
+  }
+
+  const locale = cjkFontLocale(value);
+  const orderedLocales = [
+    locale,
+    ...cjkFontLocales.filter((candidate) => candidate !== locale),
+  ];
+  return [
+    baseFontFamily,
+    ...orderedLocales.map((candidate) => cjkFontFamilyByLocale[candidate]),
+  ].join(", ");
+}
+
+export function fontForText(
+  fontKind: keyof typeof registeredFont,
+  value: unknown,
+): string {
+  return fontFamilyForText(registeredFont[fontKind], value);
 }
 
 export function cjkFontFileName(value: unknown): string {

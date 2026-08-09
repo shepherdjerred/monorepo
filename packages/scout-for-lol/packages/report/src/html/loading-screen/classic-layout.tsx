@@ -11,6 +11,7 @@ import {
   classicPalette,
   classicTypography,
 } from "#src/assets/classic-style.ts";
+import { fontFamilyForText } from "#src/assets/index.ts";
 
 const CARD_WIDTH = 320;
 const CARD_HEIGHT = 560;
@@ -104,7 +105,10 @@ function ClassicCard({
           color: classicPalette.text.primary,
           backgroundColor: classicPalette.canvas,
           borderTop: `2px solid ${team.accent}`,
-          fontFamily: classicTypography.stack.body,
+          fontFamily: fontFamilyForText(
+            classicTypography.stack.body,
+            participant.summonerName,
+          ),
           fontSize: 22,
           lineHeight: "28px",
           overflow: "hidden",

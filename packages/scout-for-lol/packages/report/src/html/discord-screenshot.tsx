@@ -4,6 +4,7 @@ import {
   bunSpiegelFonts,
   containsCjkText,
   font,
+  fontForText,
 } from "#src/assets/index.ts";
 import { svgToPng } from "#src/html/index.tsx";
 
@@ -218,6 +219,7 @@ function ChatMessageRow(props: { message: DiscordChatMessage }) {
             fontWeight: 700,
             lineHeight: 1.2,
             whiteSpace: "nowrap",
+            fontFamily: fontForText("body", props.message.author),
           }}
         >
           {props.message.author}
@@ -229,6 +231,7 @@ function ChatMessageRow(props: { message: DiscordChatMessage }) {
             fontSize: 28,
             lineHeight: 1.2,
             whiteSpace: "nowrap",
+            fontFamily: fontForText("body", props.message.content),
           }}
         >
           {props.message.content}
@@ -305,6 +308,7 @@ function BotMessageRow(props: {
               fontWeight: 700,
               lineHeight: 1,
               whiteSpace: "nowrap",
+              fontFamily: fontForText("body", props.appName),
             }}
           >
             {props.appName}
@@ -318,6 +322,7 @@ function BotMessageRow(props: {
                 fontWeight: 400,
                 lineHeight: 1,
                 whiteSpace: "nowrap",
+                fontFamily: fontForText("body", props.botMessage),
               }}
             >
               {props.botMessage}

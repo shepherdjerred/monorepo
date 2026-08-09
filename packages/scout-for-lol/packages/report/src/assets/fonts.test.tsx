@@ -5,6 +5,7 @@ import {
   cjkFontFileName,
   containsCjkText,
   font,
+  fontForText,
 } from "#src/assets/index.ts";
 import { svgToPng } from "#src/html/index.tsx";
 
@@ -18,6 +19,16 @@ describe("report fonts", () => {
     expect(cjkFontFileName("日本語かな")).toBe("NotoSansCJKjp-Regular.otf");
     expect(cjkFontFileName("ㄅㄆㄇ")).toBe("NotoSansCJKtc-Regular.otf");
     expect(cjkFontFileName("中文")).toBe("NotoSansCJKsc-Regular.otf");
+    expect(fontForText("body", "한국어")).toStartWith(
+      "Spiegel, Noto Sans CJK KR",
+    );
+    expect(fontForText("body", "日本語かな")).toStartWith(
+      "Spiegel, Noto Sans CJK JP",
+    );
+    expect(fontForText("body", "中文")).toStartWith(
+      "Spiegel, Noto Sans CJK SC",
+    );
+    expect(fontForText("body", "Summoner One")).toBe("Spiegel");
 
     const fonts = await bunReportFonts(containsCjkText(playerName), playerName);
 
