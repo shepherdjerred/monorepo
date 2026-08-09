@@ -212,6 +212,17 @@ function eventType(event: unknown): unknown {
   return record?.["eventType"] ?? record?.["event_type"];
 }
 
+function isUnclosedScheduledEvent(
+  scheduledEventId: string,
+  startedEventIds: ReadonlySet<string>,
+  closedEventIds: ReadonlySet<string>,
+): boolean {
+  return (
+    !startedEventIds.has(scheduledEventId) &&
+    !closedEventIds.has(scheduledEventId)
+  );
+}
+
 export function classifyWorkflowTimeoutHistory(
   history: unknown,
 ): WorkflowTimeoutHistoryClassification {
@@ -295,15 +306,20 @@ export function classifyWorkflowTimeoutHistory(
     workflowTaskStarted,
     workflowTaskScheduledButNotStarted: [...scheduledWorkflowTaskEventIds].some(
       (id) =>
-        !startedWorkflowTaskScheduledEventIds.has(id) &&
-        !timedOutWorkflowTaskScheduledEventIds.has(id),
+        isUnclosedScheduledEvent(
+          id,
+          startedWorkflowTaskScheduledEventIds,
+          timedOutWorkflowTaskScheduledEventIds,
+        ),
     ),
     activityScheduled,
     activityStarted,
-    activityScheduledButNotStarted: [...scheduledActivityEventIds].some(
-      (id) =>
-        !startedActivityScheduledEventIds.has(id) &&
-        !closedActivityScheduledEventIds.has(id),
+    activityScheduledButNotStarted: [...scheduledActivityEventIds].some((id) =>
+      isUnclosedScheduledEvent(
+        id,
+        startedActivityScheduledEventIds,
+        closedActivityScheduledEventIds,
+      ),
     ),
     activityScheduleToStartTimedOut,
   };

@@ -5,7 +5,7 @@ const MOUNTED_SECRET_PATHS = [
   "/etc/talos/config",
 ] as const;
 
-function whitespaceSecretTokens(value: string): readonly string[] {
+function secretFragments(value: string): readonly string[] {
   // Kubernetes and PEM credentials are often passed through env files with
   // escaped newlines. Tokenize both representations so a multiline secret
   // cannot be reconstructed one line at a time in diagnostic output.
@@ -14,7 +14,7 @@ function whitespaceSecretTokens(value: string): readonly string[] {
     .replaceAll(/\\r/gu, "\r")
     .replaceAll(/\\t/gu, "\t");
   return decodedWhitespace
-    .split(/\s+/u)
+    .split(/[\s"'{}\[\],:=]+/u)
     .filter((fragment) => fragment.length >= 8);
 }
 
@@ -22,7 +22,7 @@ function whitespaceSecretTokens(value: string): readonly string[] {
 // forwarded value rather than maintaining a partial credential-name list. This
 // also covers credentials embedded in values such as DATABASE_URL.
 function compositeSecretTokens(value: string): readonly string[] {
-  const tokens = [value, ...whitespaceSecretTokens(value)];
+  const tokens = [value, ...secretFragments(value)];
   try {
     const url = new URL(value);
     for (const component of [url.username, url.password]) {
@@ -57,7 +57,7 @@ export async function readAgentTaskMountedSecretTokens(
       continue;
     }
     tokens.push(token);
-    tokens.push(...whitespaceSecretTokens(token));
+    tokens.push(...secretFragments(token));
   }
   return tokens;
 }
@@ -67,6 +67,9 @@ export function agentTaskSecretTokens(
   env: Readonly<Record<string, string | undefined>> = Bun.env,
   mountedSecretTokens: readonly string[] = [],
 ): readonly (string | undefined)[] {
+  // Mounted service-account/Talos files are read into this same redaction set
+  // by createAgentTaskSecretTokenState. Keeping them in the returned list is
+  // what protects final-text excerpts when a provider violates its contract.
   return [
     ...Object.values(env).flatMap((value) =>
       value === undefined ? [] : compositeSecretTokens(value),

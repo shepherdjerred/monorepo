@@ -284,6 +284,36 @@ describe("workflow timeout history edge cases", () => {
     expect(classification.activityScheduled).toBe(false);
   });
 
+  it("does not retain a timed-out workflow-task schedule after its replacement starts", () => {
+    const classification = classifyWorkflowTimeoutHistory({
+      events: [
+        {
+          event_id: protobufLong("5"),
+          eventType: "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
+        },
+        {
+          eventType: "EVENT_TYPE_WORKFLOW_TASK_TIMED_OUT",
+          workflow_task_timed_out_event_attributes: {
+            scheduled_event_id: protobufLong("5"),
+          },
+        },
+        {
+          event_id: protobufLong("8"),
+          eventType: "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
+        },
+        {
+          eventType: "EVENT_TYPE_WORKFLOW_TASK_STARTED",
+          workflow_task_started_event_attributes: {
+            scheduled_event_id: protobufLong("8"),
+          },
+        },
+        { eventType: "EVENT_TYPE_WORKFLOW_EXECUTION_TIMED_OUT" },
+      ],
+    });
+
+    expect(classification.workflowTaskScheduledButNotStarted).toBe(false);
+  });
+
   it("does not treat a recovered schedule-to-start activity attempt as pending", () => {
     const classification = classifyWorkflowTimeoutHistory({
       events: [

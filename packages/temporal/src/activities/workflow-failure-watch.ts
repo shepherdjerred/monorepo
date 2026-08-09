@@ -47,6 +47,9 @@ const VISIBILITY_PAGE_SIZE = 100;
 const FAILURE_STATUS_NAMES = ["FAILED", "TIMED_OUT"] as const;
 type FailureStatusName = (typeof FAILURE_STATUS_NAMES)[number];
 
+// Temporal visibility pages are newest-first. The SQL store's page token uses
+// CloseTime DESC, StartTime DESC, RunId ASC as its continuation boundary; the
+// cursor query and in-memory comparator below intentionally mirror that order.
 export type PollWorkflowFailuresResult = {
   scanned: number;
   alerted: number;

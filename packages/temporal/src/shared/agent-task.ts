@@ -341,12 +341,22 @@ function contractErrorMessage(
   ].join(" ");
 }
 
+function structuredOutputFromClaudeResult(
+  resultMessage: ClaudeResultMessage,
+): unknown {
+  // Keep the provider boundary unknown all the way to the semantic validator;
+  // null, arrays, and scalar values must produce the same contract diagnostic
+  // as any other malformed structured output.
+  return resultMessage.structured_output;
+}
+
 export function parseClaudeAgentTaskResult(
   stdout: string,
   redactExcerpt: (value: string) => string = (value) => value,
 ): AgentTaskResultPayload {
   const resultMessage = parseClaudeResultMessage(stdout);
   const diagnostics = claudeDiagnostics(resultMessage, redactExcerpt);
+  const structuredOutput = structuredOutputFromClaudeResult(resultMessage);
   if (resultMessage.is_error === true) {
     throw new AgentTaskOutputContractError(
       "is-error",
@@ -354,14 +364,13 @@ export function parseClaudeAgentTaskResult(
       contractErrorMessage("is-error", diagnostics),
     );
   }
-  if (resultMessage.structured_output === undefined) {
+  if (structuredOutput === undefined) {
     throw new AgentTaskOutputContractError(
       "missing-structured-output",
       diagnostics,
       contractErrorMessage("missing-structured-output", diagnostics),
     );
   }
-  const structuredOutput: unknown = resultMessage.structured_output;
   try {
     return parseAgentTaskResultPayload(structuredOutput, "claude");
   } catch (error: unknown) {

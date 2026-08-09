@@ -48,6 +48,15 @@ describe("agent-task secret token state", () => {
     expect(tokens).toContain(pemBodyLine);
   });
 
+  it("tokenizes credential values embedded in structured environment text", () => {
+    const credentialFragment = "structured-secret-fragment";
+    const tokens = agentTaskSecretTokens(undefined, {
+      AGENT_CONFIG: JSON.stringify({ privateKey: credentialFragment }),
+    });
+
+    expect(tokens).toContain(credentialFragment);
+  });
+
   it("forwards refresh failures so the activity can fail closed with the cause", async () => {
     const refreshError = new Error("mounted secret read failed");
     let observed: unknown;
