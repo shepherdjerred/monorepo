@@ -132,6 +132,7 @@ if (config.web.enabled) {
       handleRequest(event, {
         seatManager: active?.seatManager ?? NULL_SEAT_MANAGER,
         emulator: active?.emulator,
+        driverFeedEnabled: driverFeed !== undefined,
         ...(leaderboardDeps === undefined
           ? {}
           : { leaderboard: leaderboardDeps }),

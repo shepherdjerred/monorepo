@@ -81,6 +81,7 @@ export function App() {
   const [occupied, setOccupied] = useState<boolean[]>([]);
   const [names, setNames] = useState<(string | null)[]>([]);
   const [latency, setLatency] = useState<number>();
+  const [driverFeedEnabled, setDriverFeedEnabled] = useState(false);
   const pressed = useRef<Set<string>>(new Set());
   const [pressedCodes, setPressedCodes] = useState<Set<string>>(
     () => new Set(),
@@ -150,11 +151,21 @@ export function App() {
   // Subscribe to server responses (seat assignment + occupancy).
   useEffect(() => {
     const onResponse = (response: Response) => {
-      if (response.kind === "seat") {
-        setSeat(response.value.seat);
-      } else if (response.kind === "seats") {
-        setOccupied(response.value.occupied);
-        setNames(response.value.names);
+      switch (response.kind) {
+        case "seat":
+          setSeat(response.value.seat);
+          break;
+        case "seats":
+          setOccupied(response.value.occupied);
+          setNames(response.value.names);
+          break;
+        case "status":
+          setDriverFeedEnabled(response.value.driverFeedEnabled);
+          break;
+        case "leaderboard":
+        case "login":
+        case "screenshot":
+          break;
       }
     };
     socket.on("response", onResponse);
@@ -261,7 +272,7 @@ export function App() {
             />
           </header>
 
-          {hasSeat && socket.id !== undefined && (
+          {hasSeat && driverFeedEnabled && socket.id !== undefined && (
             <GameView driverSocketId={socket.id} />
           )}
 

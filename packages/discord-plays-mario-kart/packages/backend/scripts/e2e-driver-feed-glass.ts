@@ -121,7 +121,11 @@ if (socket === undefined) {
 }
 const seatManager = new SeatManager(4);
 const requestSubscription = socket.events.subscribe((event) => {
-  handleRequest(event, { seatManager, emulator });
+  handleRequest(event, {
+    seatManager,
+    emulator,
+    driverFeedEnabled: true,
+  });
 });
 driverFeed.setDriverAdmission(
   (socketId) => seatManager.seatOf(socketId) !== null,

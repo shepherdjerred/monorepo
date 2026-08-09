@@ -64,6 +64,7 @@
     "socket.io": "^4.8.1",
     "ts-pattern": "^5.7.0",
     "winston": "^3.17.0",
+    "ws": "^8.18.3",
     "zod": "^4.4.3",
     "@shepherdjerred/discord-plays-core": "workspace:*"
   },
@@ -74,6 +75,7 @@
     "@types/express": "^5.0.1",
     "@types/lodash": "^4.17.16",
     "@types/node": "^26.1.1",
+    "@types/ws": "^8.18.1",
     "@typescript-eslint/eslint-plugin": "^8.65.0",
     "@typescript-eslint/parser": "^8.65.0",
     "eslint": "^10.3.0",

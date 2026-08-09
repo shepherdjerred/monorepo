@@ -205,7 +205,11 @@ async function startServer(emu: N64Emulator): Promise<{
     renderFrame: () => Promise.resolve(emu.renderFrame()),
   };
   const sub = obs.events.subscribe((event) => {
-    handleRequest(event, { seatManager, emulator });
+    handleRequest(event, {
+      seatManager,
+      emulator,
+      driverFeedEnabled: false,
+    });
   });
   await new Promise<void>((resolve) => {
     http.listen(0, resolve);

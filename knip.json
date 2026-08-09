@@ -113,8 +113,7 @@
     },
     "packages/discord-plays-mario-kart/packages/backend": {
       "entry": ["src/index.ts", "src/**/*.test.ts", "scripts/**/*.ts"],
-      "project": ["src/**/*.ts", "scripts/**/*.ts"],
-      "ignoreDependencies": ["ws"]
+      "project": ["src/**/*.ts", "scripts/**/*.ts"]
     },
     "packages/discord-plays-mario-kart/packages/common": {
       "entry": ["src/index.ts"],
