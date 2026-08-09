@@ -42,10 +42,13 @@ function reactionOperationKey(
 async function resolveAdd(
   reaction: MessageReaction | PartialMessageReaction,
 ): Promise<MessageReaction | null> {
-  const full = reaction.partial ? await reaction.fetch() : reaction;
-  if (!emojiMatchesKarma(full.emoji, configuration.karmaEmoji)) {
+  // The event payload always carries the emoji, even for a partial reaction.
+  // Reject ordinary reactions before a REST fetch and before they enter the
+  // rest of the karma path.
+  if (!emojiMatchesKarma(reaction.emoji, configuration.karmaEmoji)) {
     return null;
   }
+  const full = reaction.partial ? await reaction.fetch() : reaction;
   if (full.message.partial) {
     await full.message.fetch();
   }
@@ -56,6 +59,11 @@ async function applyReactionAdd(
   reaction: MessageReaction | PartialMessageReaction,
   user: User | PartialUser,
 ): Promise<void> {
+  // Bot reactions are never awards. Reject them before resolving partials so
+  // automation cannot create karma or spend Discord REST capacity.
+  if (user.bot) {
+    return;
+  }
   const full = await resolveAdd(reaction);
   if (full === null) {
     return;
@@ -89,7 +97,6 @@ async function applyReactionAdd(
     receiverId: decision.receiverId,
     amount: KARMA_GIVE_AMOUNT,
     guildId,
-    reason: `reacted with ${configuration.karmaEmoji}`,
     sourceMessageId: full.message.id,
   });
 

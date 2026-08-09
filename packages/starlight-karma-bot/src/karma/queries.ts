@@ -4,6 +4,10 @@
 import { prisma } from "#src/db/index.ts";
 import type { LeaderboardKind } from "#src/karma/leaderboard-kinds.ts";
 import {
+  humanReasonFilter,
+  SYNTHETIC_LEGACY_REASON,
+} from "#src/karma/reason-filters.ts";
+import {
   type KarmaCount,
   type LeaderboardPeriod,
   periodStart,
@@ -11,8 +15,6 @@ import {
   rankLeaderboard,
   type RankedEntry,
 } from "#src/karma/scoring.ts";
-
-const SYNTHETIC_LEGACY_REASON = "legacy karma";
 
 /** Ledger rows that represent a person deliberately giving someone else
  * karma. Synthetic import balances preserve received totals but are not gifts. */
@@ -190,8 +192,7 @@ export async function getRecentReasons(
     where: {
       guildId,
       receiverId: userId,
-      reason: { not: null },
-      amount: { gt: 0 },
+      ...humanReasonFilter(),
     },
     orderBy: { datetime: "desc" },
     take,
@@ -214,7 +215,11 @@ export async function searchReasons(
   take = 10,
 ): Promise<ReasonRow[]> {
   return prisma.karma.findMany({
-    where: { guildId, reason: { contains: query } },
+    where: {
+      guildId,
+      ...humanReasonFilter(),
+      AND: { reason: { contains: query } },
+    },
     orderBy: { datetime: "desc" },
     take,
     select: {

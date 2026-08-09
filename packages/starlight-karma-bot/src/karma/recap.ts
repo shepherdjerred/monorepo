@@ -14,6 +14,7 @@ import { bold, ChannelType, time, userMention } from "discord.js";
 import client from "#src/discord/client.ts";
 import { prisma } from "#src/db/index.ts";
 import { getLeaderboard } from "#src/karma/queries.ts";
+import { humanReasonFilter } from "#src/karma/reason-filters.ts";
 import { computeNextRecapAt } from "#src/karma/recap-schedule.ts";
 import { SingleFlight } from "#src/karma/single-flight.ts";
 
@@ -45,8 +46,7 @@ async function onThisDay(guildId: string, now: Date) {
   const rows = await prisma.karma.findMany({
     where: {
       guildId,
-      reason: { not: null },
-      amount: { gt: 0 },
+      ...humanReasonFilter(),
       datetime: { lt: new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000) },
     },
     orderBy: { datetime: "desc" },
