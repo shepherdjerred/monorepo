@@ -20,6 +20,22 @@ const serverId = testGuildId("919191");
 const now = new Date(Date.UTC(2026, 4, 17, 12, 0, 0));
 const lakeDir = resolveLakeDir();
 
+function temporalMatch(matchId: string, date: string, win: boolean) {
+  return {
+    playerId: 1,
+    playerAlias: "Temporal Player",
+    matchId,
+    puuid: testPuuid(`temporal-${matchId}`),
+    queue: "solo",
+    win,
+    surrendered: false,
+    kills: win ? 4 : 1,
+    deaths: win ? 1 : 4,
+    assists: 5,
+    gameCreationAt: new Date(date),
+  };
+}
+
 beforeEach(async () => {
   await cleanup();
   await resetTestLake(lakeDir);
@@ -262,6 +278,50 @@ describe("executeReportQuery temporal prematches", () => {
       { column: "prematches", value: 1 },
     ]);
     expect(result.visualization?.bucket).toBe("day");
+  });
+});
+
+describe("executeReportQuery temporal comparisons", () => {
+  test("aligns sparse baselines by relative bucket and fills additive gaps", async () => {
+    await writeTestLake(lakeDir, {
+      serverId,
+      matchFacts: [
+        temporalMatch("NA1_baseline", "2026-05-15T12:00:00.000Z", true),
+        temporalMatch("NA1_current_1", "2026-05-16T12:00:00.000Z", false),
+        temporalMatch("NA1_current_2", "2026-05-17T12:00:00.000Z", true),
+      ],
+    });
+
+    const result = await executeReportQuery({
+      prisma,
+      serverId,
+      queryText:
+        "SELECT games, win_rate FROM match_participants GROUP BY all ANALYZE BETWEEN '2026-05-16' AND '2026-05-17' BUCKET BY DAY COMPARE TO BETWEEN '2026-05-14' AND '2026-05-15' IN TIME ZONE 'UTC' ORDER BY label ASC",
+      now,
+    });
+
+    expect(result.rows[0]?.dimensions.at(-1)).toBe("2026-05-16");
+    expect(result.rows[0]?.values).toEqual([
+      {
+        column: "games",
+        value: 1,
+        comparisonValue: 0,
+        absoluteDelta: 1,
+        percentageDelta: null,
+      },
+      {
+        column: "win_rate",
+        value: 0,
+        comparisonValue: null,
+        absoluteDelta: null,
+        percentageDelta: null,
+      },
+    ]);
+    expect(result.rows[1]?.dimensions.at(-1)).toBe("2026-05-17");
+    expect(
+      result.rows[1]?.values.find((value) => value.column === "games")
+        ?.comparisonValue,
+    ).toBe(1);
   });
 });
 

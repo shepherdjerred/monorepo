@@ -20,7 +20,7 @@ const writtenFiles: string[] = [];
 await mkdir(OUTPUT_DIR, { recursive: true });
 
 afterAll(() => {
-  console.log(`Rendered temporal fixtures:\n${writtenFiles.join("\n")}`);
+  expect(writtenFiles).toHaveLength(4);
 });
 
 function point(

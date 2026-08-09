@@ -3,14 +3,17 @@ import {
   CachedLeaderboardSchema,
   RawCurrentGameInfoSchema,
   RawMatchSchema,
-  rankToLeaguePoints,
 } from "@scout-for-lol/data";
 import { createLogger } from "#src/logger.ts";
 import { reportLakeCompactionSkippedTotal } from "#src/metrics/report-lake.ts";
-import { flattenMatch, flattenPrematch } from "#src/report-lake/flatten.ts";
-import type { NdjsonFileWriter } from "#src/report-lake/ndjson-writer.ts";
-import { lakeMonth, lakeTimestamp } from "#src/report-lake/schema.ts";
 import {
+  flattenCompetitionRankHistory,
+  flattenMatch,
+  flattenPrematch,
+} from "#src/report-lake/flatten.ts";
+import type { NdjsonFileWriter } from "#src/report-lake/ndjson-writer.ts";
+import {
+  stagingIdForCompetitionRankHistory,
   stagingIdForMatch,
   stagingIdForPrematch,
 } from "#src/report-lake/staging.ts";
@@ -157,6 +160,7 @@ export async function populateCompetitionRankHistoryFromS3(
   client: S3Client,
   bucket: string,
   writer: NdjsonFileWriter,
+  foldedIds?: Set<string>,
 ): Promise<number> {
   let continuationToken: string | undefined;
   let skipped = 0;
@@ -209,21 +213,15 @@ export async function populateCompetitionRankHistoryFromS3(
           });
           continue;
         }
-        const calculatedAt = new Date(snapshot.calculatedAt);
-        for (const entry of snapshot.entries) {
-          writer.write({
-            competition_id: snapshot.competitionId,
-            calculated_at: lakeTimestamp(calculatedAt.getTime()),
-            month: lakeMonth(calculatedAt.getTime()),
-            player_id: entry.playerId,
-            player_name: entry.playerName,
-            score:
-              typeof entry.score === "number"
-                ? entry.score
-                : rankToLeaguePoints(entry.score),
-            rank: entry.rank,
-          });
+        for (const row of flattenCompetitionRankHistory(snapshot)) {
+          writer.write(row);
         }
+        foldedIds?.add(
+          stagingIdForCompetitionRankHistory(
+            snapshot.competitionId,
+            new Date(snapshot.calculatedAt).toISOString().slice(0, 10),
+          ),
+        );
       }
     }
 

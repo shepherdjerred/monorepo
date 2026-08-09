@@ -86,14 +86,13 @@ export function ReportTemporalControls(props: {
                   value={calendarWindow.startDate}
                   onChange={(event) => {
                     if (event.target.value === "") return;
-                    update({
-                      ...base,
-                      window: {
-                        kind: "calendar",
-                        startDate: event.target.value,
-                        endDate: calendarWindow.endDate,
-                      },
-                    });
+                    update(
+                      withCalendarWindowBoundary(
+                        base,
+                        "startDate",
+                        event.target.value,
+                      ),
+                    );
                   }}
                 />
               </div>
@@ -105,14 +104,13 @@ export function ReportTemporalControls(props: {
                   value={calendarWindow.endDate}
                   onChange={(event) => {
                     if (event.target.value === "") return;
-                    update({
-                      ...base,
-                      window: {
-                        kind: "calendar",
-                        startDate: calendarWindow.startDate,
-                        endDate: event.target.value,
-                      },
-                    });
+                    update(
+                      withCalendarWindowBoundary(
+                        base,
+                        "endDate",
+                        event.target.value,
+                      ),
+                    );
                   }}
                 />
               </div>
@@ -162,14 +160,13 @@ export function ReportTemporalControls(props: {
                   value={calendarComparison.startDate}
                   onChange={(event) => {
                     if (event.target.value === "") return;
-                    update({
-                      ...base,
-                      comparison: {
-                        kind: "calendar",
-                        startDate: event.target.value,
-                        endDate: calendarComparison.endDate,
-                      },
-                    });
+                    update(
+                      withCalendarComparisonBoundary(
+                        base,
+                        "startDate",
+                        event.target.value,
+                      ),
+                    );
                   }}
                 />
               </div>
@@ -181,14 +178,13 @@ export function ReportTemporalControls(props: {
                   value={calendarComparison.endDate}
                   onChange={(event) => {
                     if (event.target.value === "") return;
-                    update({
-                      ...base,
-                      comparison: {
-                        kind: "calendar",
-                        startDate: calendarComparison.startDate,
-                        endDate: event.target.value,
-                      },
-                    });
+                    update(
+                      withCalendarComparisonBoundary(
+                        base,
+                        "endDate",
+                        event.target.value,
+                      ),
+                    );
                   }}
                 />
               </div>
@@ -267,16 +263,106 @@ function withRange(
   range: RangeChoice,
 ): TemporalAnalysisSpec {
   if (range !== "custom") {
-    return { ...analysis, window: { kind: "relative", days: Number(range) } };
+    return withTemporalWindow(analysis, {
+      kind: "relative",
+      days: Number(range),
+    });
   }
   const today = new Date().toISOString().slice(0, 10);
   const start = new Date(Date.now() - 29 * 24 * 60 * 60 * 1000)
     .toISOString()
     .slice(0, 10);
+  return withTemporalWindow(analysis, {
+    kind: "calendar",
+    startDate: start,
+    endDate: today,
+  });
+}
+
+export function withCalendarWindowBoundary(
+  analysis: TemporalAnalysisSpec,
+  boundary: "startDate" | "endDate",
+  value: string,
+): TemporalAnalysisSpec {
+  if (analysis.window.kind !== "calendar") {
+    throw new Error("Calendar window controls require a calendar window.");
+  }
+  const window =
+    boundary === "startDate"
+      ? {
+          kind: "calendar" as const,
+          startDate: value,
+          endDate:
+            value > analysis.window.endDate ? value : analysis.window.endDate,
+        }
+      : {
+          kind: "calendar" as const,
+          startDate:
+            value < analysis.window.startDate
+              ? value
+              : analysis.window.startDate,
+          endDate: value,
+        };
+  return withTemporalWindow(analysis, window);
+}
+
+export function withCalendarComparisonBoundary(
+  analysis: TemporalAnalysisSpec,
+  boundary: "startDate" | "endDate",
+  value: string,
+): TemporalAnalysisSpec {
+  if (analysis.comparison?.kind !== "calendar") {
+    throw new Error("Calendar comparison controls require a custom baseline.");
+  }
+  const days = temporalWindowDays(analysis);
   return {
     ...analysis,
-    window: { kind: "calendar", startDate: start, endDate: today },
+    comparison:
+      boundary === "startDate"
+        ? {
+            kind: "calendar",
+            startDate: value,
+            endDate: shiftCalendarDate(value, days - 1),
+          }
+        : {
+            kind: "calendar",
+            startDate: shiftCalendarDate(value, 1 - days),
+            endDate: value,
+          },
   };
+}
+
+function withTemporalWindow(
+  analysis: TemporalAnalysisSpec,
+  window: TemporalAnalysisSpec["window"],
+): TemporalAnalysisSpec {
+  const next = { ...analysis, window };
+  if (analysis.comparison?.kind !== "calendar") return next;
+  const days = temporalWindowDays(next);
+  return {
+    ...next,
+    comparison: {
+      kind: "calendar",
+      startDate: analysis.comparison.startDate,
+      endDate: shiftCalendarDate(analysis.comparison.startDate, days - 1),
+    },
+  };
+}
+
+function temporalWindowDays(analysis: TemporalAnalysisSpec): number {
+  return analysis.window.kind === "relative"
+    ? analysis.window.days
+    : Math.round(
+        (Date.parse(analysis.window.endDate) -
+          Date.parse(analysis.window.startDate)) /
+          86_400_000,
+      ) + 1;
+}
+
+function shiftCalendarDate(date: string, days: number): string {
+  const shifted = new Date(`${date}T00:00:00.000Z`);
+  shifted.setUTCDate(shifted.getUTCDate() + days);
+  return shifted.toISOString().slice(0, 10);
 }
 
 function parseRangeChoice(value: string): RangeChoice {

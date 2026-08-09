@@ -140,23 +140,22 @@ function evidenceOverlaySeries(
 ): echarts.SeriesOption[] {
   const item = snapshot.series.length === 1 ? snapshot.series[0] : undefined;
   if (item === undefined || snapshot.kind === "SCATTER_CHART") return [];
-  const comparison = item.points.some(
-    (point) => point.comparisonValue !== undefined,
-  )
-    ? [
-        {
-          name: `${item.label} baseline`,
-          type: "line" as const,
-          data: categories.map(
-            (category) =>
-              item.points.find((point) => point.label === category)
-                ?.comparisonValue ?? null,
-          ),
-          symbol: "none",
-          lineStyle: { type: "dotted" as const, width: 2, opacity: 0.65 },
-        },
-      ]
-    : [];
+  const comparison =
+    snapshot.temporal?.comparison === undefined
+      ? []
+      : [
+          {
+            name: `${item.label} baseline`,
+            type: "line" as const,
+            data: categories.map(
+              (category) =>
+                item.points.find((point) => point.label === category)
+                  ?.comparisonValue ?? null,
+            ),
+            symbol: "none",
+            lineStyle: { type: "dotted" as const, width: 2, opacity: 0.65 },
+          },
+        ];
   const hasConfidence = item.points.some(
     (point) => point.evidence.confidenceInterval !== null,
   );
@@ -353,9 +352,9 @@ function tooltipText(snapshot: VisualizationSnapshot, input: unknown): string {
     lines.push(
       `${series.label}: ${formatValue(value.value)} (n=${value.evidence.sampleSize.toString()})`,
     );
-    if (value.comparisonValue !== undefined) {
+    if (snapshot.temporal?.comparison !== undefined) {
       lines.push(
-        `Baseline: ${formatValue(value.comparisonValue)} · Δ ${formatValue(value.absoluteDelta ?? null)} · ${formatPercent(value.percentageDelta ?? null)}`,
+        `Baseline: ${formatValue(value.comparisonValue ?? null)} · Δ ${formatValue(value.absoluteDelta ?? null)} · ${formatPercent(value.percentageDelta ?? null)}`,
       );
     }
     if (value.evidence.confidenceInterval !== null) {

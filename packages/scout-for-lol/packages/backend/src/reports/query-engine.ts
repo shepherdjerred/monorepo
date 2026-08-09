@@ -3,7 +3,6 @@ import {
   CompetitionIdSchema,
   REPORT_MAX_ROWS_LIMIT,
   RankSchema,
-  comparisonDeltas,
   type VisualizationSnapshot,
   parseAndCompile,
   parseCompetition,
@@ -27,6 +26,7 @@ import {
   resolveTemporalRanges,
   type TemporalRange,
 } from "#src/reports/temporal-range.ts";
+import { attachTemporalComparison } from "#src/reports/temporal-comparison.ts";
 import { buildVisualizationSnapshot } from "#src/reports/visualization-snapshot.ts";
 
 export type ReportResultValue = {
@@ -184,15 +184,17 @@ async function runReportQueryPlan(
   return {
     ...current,
     rowsScanned: current.rowsScanned + comparison.rowsScanned,
-    ...attachComparison(
-      current.rows,
-      rowsFromAggregates(
+    ...attachTemporalComparison({
+      currentRows: current.rows,
+      comparisonRows: rowsFromAggregates(
         plan,
         sortedAggregates(plan, comparison.aggregates),
         comparison.rowsScanned,
         2000,
       ).rows,
-    ),
+      plan,
+      ranges,
+    }),
   };
 }
 
@@ -260,15 +262,17 @@ async function executeCompetitionMatchParticipantReport(
   return {
     ...current,
     rowsScanned: current.rowsScanned + comparison.rowsScanned,
-    ...attachComparison(
-      current.rows,
-      rowsFromAggregates(
+    ...attachTemporalComparison({
+      currentRows: current.rows,
+      comparisonRows: rowsFromAggregates(
         plan,
         sortedAggregates(plan, comparison.aggregates),
         comparison.rowsScanned,
         2000,
       ).rows,
-    ),
+      plan,
+      ranges,
+    }),
   };
 }
 
@@ -425,66 +429,4 @@ function scoreToNumber(score: unknown): number {
     return rankToLeaguePoints(rankResult.data);
   }
   return typeof score === "number" ? score : 0;
-}
-
-function attachComparison(
-  currentRows: ReportResultRow[],
-  comparisonRows: ReportResultRow[],
-): { rows: ReportResultRow[]; comparisonRows: ReportResultRow[] } {
-  const currentGroups = groupTemporalRows(currentRows);
-  const comparisonGroups = groupTemporalRows(comparisonRows);
-  const replacements = new Map<string, ReportResultRow>();
-  for (const [seriesKey, currentGroup] of currentGroups) {
-    const baselineGroup = comparisonGroups.get(seriesKey) ?? [];
-    const sortedCurrent = currentGroup.toSorted(compareTemporalRows);
-    const sortedBaseline = baselineGroup.toSorted(compareTemporalRows);
-    sortedCurrent.forEach((row, index) => {
-      const baseline = sortedBaseline[index];
-      replacements.set(row.label, {
-        ...row,
-        values: row.values.map((value) => {
-          const baselineValue = baseline?.values.find(
-            (candidate) => candidate.column === value.column,
-          )?.value;
-          const numericBaseline =
-            typeof baselineValue === "number" ? baselineValue : null;
-          const numericValue =
-            typeof value.value === "number" ? value.value : null;
-          const deltas = comparisonDeltas(numericValue, numericBaseline);
-          return {
-            ...value,
-            comparisonValue: baselineValue ?? null,
-            absoluteDelta: deltas.absolute,
-            percentageDelta: deltas.percentage,
-          };
-        }),
-      });
-    });
-  }
-  return {
-    rows: currentRows.map((row) => replacements.get(row.label) ?? row),
-    comparisonRows,
-  };
-}
-
-function groupTemporalRows(
-  rows: ReportResultRow[],
-): Map<string, ReportResultRow[]> {
-  const groups = new Map<string, ReportResultRow[]>();
-  for (const row of rows) {
-    const key = row.dimensions.slice(0, -1).join("\u{0}");
-    const group = groups.get(key) ?? [];
-    group.push(row);
-    groups.set(key, group);
-  }
-  return groups;
-}
-
-function compareTemporalRows(
-  left: ReportResultRow,
-  right: ReportResultRow,
-): number {
-  return (left.dimensions.at(-1) ?? "").localeCompare(
-    right.dimensions.at(-1) ?? "",
-  );
 }

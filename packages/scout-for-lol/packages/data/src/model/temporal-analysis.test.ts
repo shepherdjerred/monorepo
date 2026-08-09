@@ -98,6 +98,14 @@ describe("canonical ScoutQL temporal analysis", () => {
     });
   });
 
+  test("allows KPI cards to retain the appended temporal bucket", () => {
+    const plan = parseAndCompile(
+      "SELECT games, win_rate FROM match_participants GROUP BY all ANALYZE LAST 30 DAYS BUCKET BY DAY IN TIME ZONE 'UTC' RENDER kpi_card WITH (y = (games, win_rate), sparkline = true)",
+    );
+    expect(plan.groupBys).toEqual(["day"]);
+    expect(plan.render.kind).toBe("KPI_CARD");
+  });
+
   test("enforces the total visualization point ceiling", () => {
     const point = {
       key: "2026-01-01",

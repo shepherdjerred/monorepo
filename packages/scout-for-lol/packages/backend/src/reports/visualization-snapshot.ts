@@ -188,7 +188,9 @@ function buildSeries(context: SeriesBuildContext): TemporalSeries[] {
   const series = [...grouped].flatMap(([seriesLabel, groupRows]) =>
     columns.map((column) => {
       const additive = isAdditiveColumn(plan, column);
-      const points = groupRows
+      const orderedRows =
+        bucket === "patch" ? groupRows.toSorted(comparePatchRows) : groupRows;
+      const points = orderedRows
         .map((row, index) =>
           pointFromRow({
             row,
@@ -211,9 +213,31 @@ function buildSeries(context: SeriesBuildContext): TemporalSeries[] {
     }),
   );
   if (series.length > 8) {
-    throw new Error("A visualization may plot at most eight series.");
+    if (bucket !== null) {
+      throw new Error("A visualization may plot at most eight series.");
+    }
+    return series.slice(0, 8);
   }
   return series;
+}
+
+function comparePatchRows(
+  left: ReportResultRow,
+  right: ReportResultRow,
+): number {
+  const leftPatch = parsePatchLabel(left.dimensions.at(-1) ?? left.label);
+  const rightPatch = parsePatchLabel(right.dimensions.at(-1) ?? right.label);
+  return (
+    leftPatch.major - rightPatch.major || leftPatch.minor - rightPatch.minor
+  );
+}
+
+function parsePatchLabel(label: string): { major: number; minor: number } {
+  const groups = /^(?<major>\d+)\.(?<minor>\d+)$/u.exec(label)?.groups;
+  if (groups === undefined) {
+    throw new Error(`Invalid patch bucket label ${label}.`);
+  }
+  return { major: Number(groups["major"]), minor: Number(groups["minor"]) };
 }
 
 type PointBuildContext = Omit<SeriesBuildContext, "columns"> & {

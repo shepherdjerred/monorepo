@@ -13,10 +13,10 @@ import { NdjsonFileWriter } from "#src/report-lake/ndjson-writer.ts";
 import configuration from "#src/configuration.ts";
 import { createS3Client } from "#src/storage/s3-client.ts";
 import {
-  populateCompetitionRankHistoryFromS3,
   populateMatchesFromS3,
   populatePrematchFromS3,
 } from "#src/report-lake/rebuild-sources.ts";
+import { writeCompetitionRankHistoryParquet } from "#src/report-lake/rank-history-compaction.ts";
 import {
   buildDirPath,
   ensureLakeScaffold,
@@ -29,6 +29,7 @@ import {
 import {
   ACCOUNT_LAKE_COLUMNS,
   COMPETITION_RANK_HISTORY_LAKE_COLUMNS,
+  CompetitionRankHistoryLakeRowSchema,
   MATCH_LAKE_COLUMNS,
   MatchLakeRowSchema,
   PREMATCH_LAKE_COLUMNS,
@@ -38,6 +39,7 @@ import {
 import {
   listStagingFiles,
   removeFoldedStagingFiles,
+  type ReportLakeStagingTable,
 } from "#src/report-lake/staging.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 
@@ -146,50 +148,6 @@ async function writeAccountsParquet(
   return accounts.length;
 }
 
-async function writeCompetitionRankHistoryParquet(
-  buildDir: string,
-): Promise<{ rows: number; skipped: number }> {
-  const bucket = configuration.s3BucketName;
-  if (bucket === undefined) {
-    throw new Error(
-      "S3_BUCKET_NAME not configured — cannot materialize competition rank history.",
-    );
-  }
-  const tmpPath = path.join(buildDir, "competition-rank-history.ndjson.tmp");
-  const writer = new NdjsonFileWriter(tmpPath);
-  const skipped = await populateCompetitionRankHistoryFromS3(
-    createS3Client(),
-    bucket,
-    writer,
-  );
-  await writer.close();
-
-  const outputDir = path.join(buildDir, "competition_rank_history");
-  await mkdir(outputDir, { recursive: true });
-  const parquetPath = path.join(outputDir, "history.parquet");
-  try {
-    await unlink(parquetPath);
-  } catch {
-    // A fresh build has no prior hardlink to replace.
-  }
-  try {
-    if (writer.rows > 0) {
-      await withDuckDBConnection(
-        async (session) => {
-          await session.run(
-            `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(COMPETITION_RANK_HISTORY_LAKE_COLUMNS)})) TO '${parquetPath}' (FORMAT PARQUET)`,
-            [tmpPath],
-          );
-        },
-        { timeoutMs: COMPACTION_TIMEOUT_MS },
-      );
-    }
-  } finally {
-    await unlink(tmpPath);
-  }
-  return { rows: writer.rows, skipped };
-}
-
 async function writeManifest(
   buildDir: string,
   summary: Omit<CompactionSummary, "durationMs">,
@@ -229,10 +187,14 @@ type StagingParseResult = {
 
 async function readStagingRows(
   lakeDir: string,
-  table: "matches" | "prematch",
+  table: ReportLakeStagingTable,
 ): Promise<StagingParseResult> {
   const schema =
-    table === "matches" ? MatchLakeRowSchema : PrematchLakeRowSchema;
+    table === "matches"
+      ? MatchLakeRowSchema
+      : table === "prematch"
+        ? PrematchLakeRowSchema
+        : CompetitionRankHistoryLakeRowSchema;
   const rowsByMonth = new Map<string, object[]>();
   const foldedIds = new Set<string>();
   let rows = 0;
@@ -291,11 +253,15 @@ async function readStagingRows(
 async function writeFoldParquet(
   buildDir: string,
   buildId: string,
-  table: "matches" | "prematch",
+  table: ReportLakeStagingTable,
   staged: StagingParseResult,
 ): Promise<void> {
   const columns =
-    table === "matches" ? MATCH_LAKE_COLUMNS : PREMATCH_LAKE_COLUMNS;
+    table === "matches"
+      ? MATCH_LAKE_COLUMNS
+      : table === "prematch"
+        ? PREMATCH_LAKE_COLUMNS
+        : COMPETITION_RANK_HISTORY_LAKE_COLUMNS;
   for (const [month, rows] of staged.rowsByMonth) {
     const monthDir = path.join(buildDir, table, `month=${month}`);
     await mkdir(monthDir, { recursive: true });
@@ -356,10 +322,19 @@ export async function runReportLakeFold(
 
     const stagedMatches = await readStagingRows(lakeDir, "matches");
     const stagedPrematches = await readStagingRows(lakeDir, "prematch");
+    const stagedRankHistory = await readStagingRows(
+      lakeDir,
+      "competition_rank_history",
+    );
     await writeFoldParquet(buildDir, buildId, "matches", stagedMatches);
     await writeFoldParquet(buildDir, buildId, "prematch", stagedPrematches);
+    await writeFoldParquet(
+      buildDir,
+      buildId,
+      "competition_rank_history",
+      stagedRankHistory,
+    );
     const accountRows = await writeAccountsParquet(prisma, buildDir);
-    const rankHistory = await writeCompetitionRankHistoryParquet(buildDir);
 
     const summary = {
       buildId,
@@ -367,10 +342,10 @@ export async function runReportLakeFold(
       matchRows: stagedMatches.rows,
       prematchRows: stagedPrematches.rows,
       accountRows,
-      competitionRankHistoryRows: rankHistory.rows,
+      competitionRankHistoryRows: stagedRankHistory.rows,
       skippedMatches: stagedMatches.skipped,
       skippedPrematches: stagedPrematches.skipped,
-      skippedCompetitionRankHistory: rankHistory.skipped,
+      skippedCompetitionRankHistory: stagedRankHistory.skipped,
     };
     await writeManifest(buildDir, summary);
     await publishBuild(lakeDir, buildId);
@@ -381,11 +356,16 @@ export async function runReportLakeFold(
       "prematch",
       stagedPrematches.foldedIds,
     );
+    await removeFoldedStagingFiles(
+      lakeDir,
+      "competition_rank_history",
+      stagedRankHistory.foldedIds,
+    );
     await gcOldBuilds(lakeDir, GC_KEEP_BUILDS);
 
     const durationMs = Date.now() - startedAt;
     logger.info(
-      `Fold published build ${buildId} (+${stagedMatches.rows.toString()} match rows, +${stagedPrematches.rows.toString()} prematch rows) in ${durationMs.toString()}ms`,
+      `Fold published build ${buildId} (+${stagedMatches.rows.toString()} match rows, +${stagedPrematches.rows.toString()} prematch rows, +${stagedRankHistory.rows.toString()} rank-history rows) in ${durationMs.toString()}ms`,
     );
     return { ...summary, durationMs };
   });
@@ -422,6 +402,7 @@ async function rebuildLocked(
   const prematchTmp = path.join(buildDir, "prematch.ndjson.tmp");
   const prematchWriter = new NdjsonFileWriter(prematchTmp);
   const foldedPrematchIds = new Set<string>();
+  const foldedRankHistoryIds = new Set<string>();
 
   const bucket = configuration.s3BucketName;
   if (bucket === undefined) {
@@ -470,7 +451,10 @@ async function rebuildLocked(
   }
 
   const accountRows = await writeAccountsParquet(prisma, buildDir);
-  const rankHistory = await writeCompetitionRankHistoryParquet(buildDir);
+  const rankHistory = await writeCompetitionRankHistoryParquet(
+    buildDir,
+    foldedRankHistoryIds,
+  );
 
   const summary = {
     buildId,
@@ -488,6 +472,11 @@ async function rebuildLocked(
   publishMetrics(summary);
   await removeFoldedStagingFiles(lakeDir, "matches", foldedMatchIds);
   await removeFoldedStagingFiles(lakeDir, "prematch", foldedPrematchIds);
+  await removeFoldedStagingFiles(
+    lakeDir,
+    "competition_rank_history",
+    foldedRankHistoryIds,
+  );
   await gcOldBuilds(lakeDir, GC_KEEP_BUILDS);
 
   const durationMs = Date.now() - startedAt;

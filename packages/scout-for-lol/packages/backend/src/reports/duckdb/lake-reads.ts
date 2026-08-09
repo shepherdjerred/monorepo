@@ -10,6 +10,7 @@ import {
   type DuckDBSession,
 } from "#src/reports/duckdb/instance.ts";
 import {
+  buildCompetitionRankHistorySource,
   buildMatchesSource,
   buildPrematchSource,
   listParam,
@@ -184,16 +185,17 @@ export async function fetchCompetitionRankHistory(options: {
 }): Promise<CachedLeaderboard[] | undefined> {
   const lakeDir = options.lakeDir ?? resolveLakeDir();
   const files = await resolveLakeFiles(lakeDir);
-  if (files.competitionRankHistoryParquet.length === 0) {
+  const source = buildCompetitionRankHistorySource(files, {
+    sql: "competition_id = ?",
+    params: [scalarParam(options.competitionId)],
+  });
+  if (source === undefined) {
     return undefined;
   }
   return await withDuckDBConnection(async (session) => {
     const rows = await session.run(
-      `SELECT epoch_ms(calculated_at)::BIGINT AS calculated_ms, player_id, player_name, score, rank FROM read_parquet(?) WHERE competition_id = ? ORDER BY calculated_at ASC, rank ASC`,
-      [
-        session.list(files.competitionRankHistoryParquet),
-        options.competitionId,
-      ],
+      `SELECT epoch_ms(calculated_at)::BIGINT AS calculated_ms, player_id, player_name, score, rank FROM (${source.sql}) ORDER BY calculated_at ASC, rank ASC`,
+      bindParams(session, source.params),
     );
     const snapshots = new Map<
       number,

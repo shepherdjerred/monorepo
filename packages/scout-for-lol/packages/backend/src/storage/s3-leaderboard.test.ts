@@ -1,4 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import {
   GetObjectCommand,
   PutObjectCommand,
@@ -322,13 +325,19 @@ describe("S3 Key Generation Logic", () => {
 // ============================================================================
 
 describe("S3 Leaderboard Storage", () => {
-  beforeEach(() => {
+  let lakeDir = "";
+
+  beforeEach(async () => {
+    lakeDir = await mkdtemp(path.join(tmpdir(), "leaderboard-lake-"));
     Bun.env["S3_BUCKET_NAME"] = "test-bucket";
+    Bun.env["REPORT_LAKE_DIR"] = lakeDir;
     resetConfigurationForTests();
     s3Mock.reset();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    await rm(lakeDir, { recursive: true, force: true });
+    delete Bun.env["REPORT_LAKE_DIR"];
     Bun.env["S3_BUCKET_NAME"] = "test-bucket";
     resetConfigurationForTests();
     s3Mock.reset();

@@ -146,7 +146,12 @@ export function compileReportQuery(ast: ReportQueryAst): ReportQueryPlan {
       : PositiveIntSchema.parse(ast.limit.value);
 
   const having = compileReportHaving(ast.having?.value, outputKeys);
-  const render = parseRenderClause(ast.render?.value, outputKeys, groupBys);
+  const render = parseRenderClause(
+    ast.render?.value,
+    outputKeys,
+    groupBys,
+    requestedGroupBys,
+  );
   validateTemporalRender(render, metrics, analysis, bucket);
 
   return ReportQueryPlanSchema.parse({

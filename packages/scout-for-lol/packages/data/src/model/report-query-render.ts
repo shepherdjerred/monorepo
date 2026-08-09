@@ -61,6 +61,7 @@ export function parseRenderClause(
   clauseText: string | undefined,
   outputColumns: string[],
   groupBys: ReportGroupBy[],
+  logicalGroupBys: ReportGroupBy[] = groupBys,
 ): ReportRenderSpec {
   if (clauseText === undefined || clauseText.length === 0) {
     return DEFAULT_RENDER_SPEC;
@@ -109,7 +110,7 @@ export function parseRenderClause(
   if (!("encoding" in spec)) {
     throw new Error(`RENDER ${normalizeToken(kindToken)} is not a chart kind.`);
   }
-  validateRenderShape(spec, outputColumns, groupBys);
+  validateRenderShape(spec, outputColumns, groupBys, logicalGroupBys);
   return spec;
 }
 
@@ -189,6 +190,7 @@ function validateRenderShape(
   render: Extract<ReportRenderSpec, { encoding: ReportRenderChannel }>,
   outputColumns: string[],
   groupBys: ReportGroupBy[],
+  logicalGroupBys: ReportGroupBy[],
 ): void {
   const y = render.encoding.y;
   const yColumns = y === undefined ? [] : Array.isArray(y) ? y : [y];
@@ -224,7 +226,7 @@ function validateRenderShape(
   }
   if (
     render.kind === "KPI_CARD" &&
-    groupBys.some((groupBy) => groupBy !== "all")
+    logicalGroupBys.some((groupBy) => groupBy !== "all")
   ) {
     throw new Error("KPI cards require GROUP BY all.");
   }

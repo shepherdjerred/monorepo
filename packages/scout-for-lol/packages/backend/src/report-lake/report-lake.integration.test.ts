@@ -9,6 +9,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { mockClient } from "aws-sdk-client-mock";
 import {
+  CachedLeaderboardSchema,
   CompetitionIdSchema,
   LeaguePuuidSchema,
   RawMatchSchema,
@@ -28,6 +29,7 @@ import { readCurrentBuildDir } from "#src/report-lake/paths.ts";
 import { matchObjectKey } from "#src/report-store/s3-raw-source.ts";
 import {
   listStagingFiles,
+  writeCompetitionRankHistoryStagingFile,
   writeMatchStagingFile,
 } from "#src/report-lake/staging.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
@@ -280,7 +282,7 @@ describe("flatten", () => {
   });
 });
 
-describe("compactor", () => {
+describe("rank-history compaction", () => {
   test("rebuild materializes authoritative leaderboard snapshots", async () => {
     const competitionId = CompetitionIdSchema.parse(42);
     const key = "leaderboards/competition-42/snapshots/2026-08-01.json";
@@ -313,7 +315,9 @@ describe("compactor", () => {
       await rm(lakeDir, { recursive: true, force: true });
     }
   });
+});
 
+describe("compactor", () => {
   test("rebuild publishes a build with parquet, accounts, and manifest", async () => {
     const match = await loadMatchFixture();
     const firstPuuid = match.metadata.participants[0];
@@ -418,6 +422,48 @@ describe("compactor", () => {
       await runReportLakeFold({ prisma, lakeDir });
       const builds = await readdir(path.join(lakeDir, "builds"));
       expect(builds.length).toBeLessThanOrEqual(2);
+    } finally {
+      await rm(lakeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("fold materializes only staged rank history without replaying S3", async () => {
+    const competitionId = CompetitionIdSchema.parse(77);
+    const lakeDir = await makeLakeDir();
+    try {
+      await runReportLakeRebuild({ prisma, lakeDir });
+      const leaderboard = CachedLeaderboardSchema.parse({
+        version: "v1",
+        competitionId,
+        calculatedAt: "2026-08-08T12:00:00.000Z",
+        entries: [
+          { playerId: 1, playerName: "Astra", score: 2400, rank: 1 },
+          { playerId: 2, playerName: "Dragon", score: 2300, rank: 2 },
+        ],
+      });
+      expect(
+        await writeCompetitionRankHistoryStagingFile(lakeDir, leaderboard),
+      ).toBe(true);
+      const listCallsBefore = s3Mock.commandCalls(ListObjectsV2Command, {
+        Prefix: "leaderboards/",
+      }).length;
+
+      const fold = await runReportLakeFold({ prisma, lakeDir });
+
+      expect(fold?.competitionRankHistoryRows).toBe(2);
+      expect(
+        s3Mock.commandCalls(ListObjectsV2Command, {
+          Prefix: "leaderboards/",
+        }),
+      ).toHaveLength(listCallsBefore);
+      expect(
+        await listStagingFiles(lakeDir, "competition_rank_history"),
+      ).toHaveLength(0);
+      const history = await fetchCompetitionRankHistory({
+        competitionId,
+        lakeDir,
+      });
+      expect(history).toEqual([leaderboard]);
     } finally {
       await rm(lakeDir, { recursive: true, force: true });
     }
