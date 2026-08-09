@@ -29,6 +29,14 @@ describe("resolveDriverFeedConfig", () => {
     expect(resolved.enabled).toBe(false);
   });
 
+  it("rejects a misspelled boolean override", () => {
+    expect(() =>
+      resolveDriverFeedConfig(fileDefaults(), {
+        DRIVER_FEED_ENABLED: "ture",
+      }),
+    ).toThrow(/DRIVER_FEED_ENABLED/);
+  });
+
   it("dials bandwidth down at runtime", () => {
     const resolved = resolveDriverFeedConfig(fileDefaults(), {
       DRIVER_FEED_BITRATE_KBPS: "800",

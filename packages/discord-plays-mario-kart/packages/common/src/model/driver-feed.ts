@@ -40,3 +40,13 @@ export const DriverFeedInitSchema = z.strictObject({
   height: z.number().int().positive(),
   frameRate: z.number().positive(),
 });
+
+/**
+ * Client acknowledgement sent only after WebCodecs has accepted the init
+ * configuration. The server does not admit the socket to the media hub before
+ * this arrives, so the first decoder entry point cannot race async setup.
+ */
+export type DriverFeedReady = z.infer<typeof DriverFeedReadySchema>;
+export const DriverFeedReadySchema = z.strictObject({
+  kind: z.literal("ready"),
+});

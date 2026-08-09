@@ -112,13 +112,9 @@
       "project": ["scripts/**/*.ts", "wasm-src/**/*.mjs"]
     },
     "packages/discord-plays-mario-kart/packages/backend": {
-      "entry": [
-        "src/index.ts",
-        "src/driver-feed/index.ts",
-        "src/**/*.test.ts",
-        "scripts/**/*.ts"
-      ],
-      "project": ["src/**/*.ts", "scripts/**/*.ts"]
+      "entry": ["src/index.ts", "src/**/*.test.ts", "scripts/**/*.ts"],
+      "project": ["src/**/*.ts", "scripts/**/*.ts"],
+      "ignoreDependencies": ["ws"]
     },
     "packages/discord-plays-mario-kart/packages/common": {
       "entry": ["src/index.ts"],

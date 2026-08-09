@@ -22,12 +22,23 @@ type DriverFeedConfig = Config["driver_feed"];
 export type DriverFeedEnv = Readonly<Record<string, string | undefined>>;
 
 /**
- * Booleans follow the existing convention: the string "true" enables, anything
- * else present disables. Unset leaves the file value alone, so an operator can
- * force the feed off without knowing what the config says.
+ * Booleans accept only their exact spellings. Unset leaves the file value
+ * alone; a misspelled incident override must fail fast instead of silently
+ * disabling or enabling the feed.
  */
-function overrideFlag(raw: string | undefined, fallback: boolean): boolean {
-  return raw === undefined ? fallback : raw === "true";
+function overrideFlag(
+  name: string,
+  raw: string | undefined,
+  fallback: boolean,
+): boolean {
+  if (raw === undefined) return fallback;
+  const parsed = z.enum(["true", "false"]).safeParse(raw);
+  if (!parsed.success) {
+    throw new Error(
+      `${name} must be "true" or "false", got ${JSON.stringify(raw)}`,
+    );
+  }
+  return parsed.data === "true";
 }
 
 /**
@@ -58,7 +69,11 @@ export function resolveDriverFeedConfig(
 ): DriverFeedConfig {
   return {
     ...fileConfig,
-    enabled: overrideFlag(env["DRIVER_FEED_ENABLED"], fileConfig.enabled),
+    enabled: overrideFlag(
+      "DRIVER_FEED_ENABLED",
+      env["DRIVER_FEED_ENABLED"],
+      fileConfig.enabled,
+    ),
     bitrate_kbps: overrideNumber(
       "DRIVER_FEED_BITRATE_KBPS",
       env["DRIVER_FEED_BITRATE_KBPS"],

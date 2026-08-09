@@ -207,14 +207,16 @@ Production therefore turns it on from the Deployment instead
 
 | Env                        | Value  | Why here rather than in config.toml                                                                                                                               |
 | -------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `DRIVER_FEED_ENABLED`      | `true` | The master switch has to be reachable with `kubectl set env` during an incident.                                                                                  |
-| `DRIVER_FEED_BITRATE_KBPS` | `2500` | Same — the uplink is unmeasured, so "turn it down now" must not need a vault edit and a redeploy.                                                                 |
+| `DRIVER_FEED_ENABLED`      | `true` | The master switch is changed in `resources/mario-kart.ts` and reconciled by ArgoCD, so Git remains the incident-control source of truth.                          |
+| `DRIVER_FEED_BITRATE_KBPS` | `2500` | Same — the uplink is unmeasured, so "turn it down now" needs a small GitOps change rather than a vault edit.                                                      |
 | `DRIVER_FEED_MAX_CLIENTS`  | `4`    | Capped at the four seats on purpose: the feed exists for the people driving, and each viewer costs a full copy of the stream. 4 × 2500 kbps ≈ 10 Mbps worst case. |
 
-`resolveDriverFeedConfig` applies these over the file config. Booleans follow the
-existing `STREAM_HARDWARE_ACCELERATION` convention; numbers **throw** on a bad
-value rather than falling back, because a typo'd bitrate that silently kept the
-old number would be discovered by watching the uplink saturate.
+`resolveDriverFeedConfig` applies these over the file config. Both boolean and
+numeric overrides **throw** on bad values, because a typo that silently changed
+or retained an incident setting would be discovered only after the uplink was
+already saturated. Operators commit the Deployment-source change and let
+ArgoCD reconcile it; direct `kubectl set env` mutations are intentionally not
+part of the runbook because self-heal would revert them.
 
 Everything else needed to deploy is already in place:
 
@@ -223,9 +225,9 @@ Everything else needed to deploy is already in place:
 - **Ingress** — `/video` is on the existing web port, so the Service, the
   `TailscaleIngress`, and the Cloudflare tunnel binding all already cover it. No
   new port, Service, or DNS record.
-- **Image** — `ws` is a runtime dependency, so the Dockerfile's
-  `--production --filter` install picks it up; the frontend `dist` is already
-  built and copied.
+- **Image** — the backend runs on Bun and uses Bun's built-in `ws`
+  compatibility module; no standalone npm runtime package is required. The
+  frontend `dist` is already built and copied.
 - **Metrics** — `driver_feed_*` live on the shared registry, so the existing
   `ServiceMonitor` scrapes them with no change.
 

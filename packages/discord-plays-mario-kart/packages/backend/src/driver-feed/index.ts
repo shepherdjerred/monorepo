@@ -9,10 +9,11 @@
 // mount on that server or preserve Engine.IO's upgrade behaviour. `ws` provides
 // the noServer upgrade path that lets both protocols safely coexist.
 import type { Server as HttpServer, IncomingMessage } from "node:http";
-import { WebSocketServer, WebSocket } from "ws";
+import { WebSocketServer, WebSocket, type RawData } from "ws";
 import {
   DRIVER_FEED_PATH,
   type DriverFeedInit,
+  DriverFeedReadySchema,
 } from "@discord-plays-mario-kart/common";
 import type { Config } from "#src/config/schema.ts";
 import { logger } from "#src/logger.ts";
@@ -150,6 +151,11 @@ export class DriverFeedService {
 
   private onConnection(ws: WebSocket, request: IncomingMessage): void {
     this.removeInactiveClients();
+    if (!requestHasSameOrigin(request)) {
+      logger.warn("driver feed rejected a cross-origin client");
+      ws.close(1008, "same-origin access is required");
+      return;
+    }
     const socketId = requestUrl(request)?.searchParams.get("driverSocketId");
     if (socketId === null || socketId === undefined) {
       logger.warn("driver feed rejected a client without an active seat");
@@ -185,21 +191,46 @@ export class DriverFeedService {
       },
     };
 
-    if (!this.hub.add(client)) {
-      logger.warn("driver feed rejected a client at capacity", {
-        maxClients: this.options.config.max_clients,
-      });
-      ws.close(1013, "driver feed is full");
-      return;
-    }
-    this.activeClients.set(client, socketId);
-
     ws.on("close", () => {
       this.removeClient(client);
     });
     ws.on("error", (error) => {
       logger.warn("driver feed client socket error", error);
       this.removeClient(client);
+    });
+    ws.once("message", (data, isBinary) => {
+      if (isBinary) {
+        ws.close(1008, "expected driver feed readiness acknowledgement");
+        return;
+      }
+      const text = rawDataText(data);
+      if (text === undefined) {
+        ws.close(1008, "malformed driver feed readiness acknowledgement");
+        return;
+      }
+      let message: unknown;
+      try {
+        message = JSON.parse(text);
+      } catch {
+        ws.close(1008, "malformed driver feed readiness acknowledgement");
+        return;
+      }
+      if (!DriverFeedReadySchema.safeParse(message).success) {
+        ws.close(1008, "unrecognised driver feed readiness acknowledgement");
+        return;
+      }
+      if (!this.isActiveDriver(socketId)) {
+        ws.close(1008, "driver seat released");
+        return;
+      }
+      if (!this.hub.add(client)) {
+        logger.warn("driver feed rejected a client at capacity", {
+          maxClients: this.options.config.max_clients,
+        });
+        ws.close(1013, "driver feed is full");
+        return;
+      }
+      this.activeClients.set(client, socketId);
     });
   }
 
@@ -233,4 +264,26 @@ function requestUrl(request: IncomingMessage): URL | undefined {
 
 function requestPath(request: IncomingMessage): string | undefined {
   return requestUrl(request)?.pathname;
+}
+
+function rawDataText(data: RawData): string | undefined {
+  if (Buffer.isBuffer(data)) return data.toString("utf8");
+  if (data instanceof ArrayBuffer) {
+    return Buffer.from(data).toString("utf8");
+  }
+  if (Array.isArray(data)) return Buffer.concat(data).toString("utf8");
+  return undefined;
+}
+
+/** Browser clients must originate from the host serving the controller page. */
+function requestHasSameOrigin(request: IncomingMessage): boolean {
+  const origin = request.headers.origin;
+  if (origin === undefined) return true;
+  const host = request.headers.host;
+  if (host === undefined) return false;
+  try {
+    return new URL(origin).host === host;
+  } catch {
+    return false;
+  }
 }

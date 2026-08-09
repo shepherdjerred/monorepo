@@ -185,6 +185,17 @@ export type DriverFeedEncoderCallbacks = {
   readonly onAccessUnit: (unit: AccessUnit) => void;
 };
 
+export type DriverFeedProcessFactory = (
+  executable: string,
+  args: string[],
+) => ChildProcessWithoutNullStreams;
+
+const spawnDriverFeedProcess: DriverFeedProcessFactory = (executable, args) =>
+  spawn(executable, args, {
+    stdio: ["pipe", "pipe", "pipe"],
+    windowsHide: true,
+  });
+
 /**
  * Owns the second ffmpeg process and the frame sink feeding it.
  *
@@ -195,6 +206,7 @@ export type DriverFeedEncoderCallbacks = {
 export class DriverFeedEncoder {
   private readonly options: DriverFeedEncoderOptions;
   private readonly callbacks: DriverFeedEncoderCallbacks;
+  private readonly processFactory: DriverFeedProcessFactory;
   private readonly splitter = new AnnexBSplitter();
   private sink: LatestFrameSink | undefined;
   private child: ChildProcessWithoutNullStreams | undefined;
@@ -206,9 +218,11 @@ export class DriverFeedEncoder {
   constructor(
     options: DriverFeedEncoderOptions,
     callbacks: DriverFeedEncoderCallbacks,
+    processFactory: DriverFeedProcessFactory = spawnDriverFeedProcess,
   ) {
     this.options = options;
     this.callbacks = callbacks;
+    this.processFactory = processFactory;
   }
 
   get running(): boolean {
@@ -234,10 +248,7 @@ export class DriverFeedEncoder {
       hardwareAcceleration: this.options.hardwareAcceleration,
     });
 
-    const child = spawn(executable, args, {
-      stdio: ["pipe", "pipe", "pipe"],
-      windowsHide: true,
-    });
+    const child = this.processFactory(executable, args);
     this.child = child;
     driverFeedEncoderRunning.set(1);
 
@@ -256,6 +267,9 @@ export class DriverFeedEncoder {
     sink.pipe(child.stdin);
 
     child.stdout.on("data", (chunk: unknown) => {
+      // A stopped process can still have data queued in Node's stream. Its
+      // output belongs to the old session and must never reach the new hub.
+      if (this.child !== child || this.stopping) return;
       if (!Buffer.isBuffer(chunk)) {
         throw new TypeError("ffmpeg stdout emitted a non-Buffer chunk");
       }
@@ -278,7 +292,7 @@ export class DriverFeedEncoder {
     child.on("error", (error) => {
       logger.error("driver feed ffmpeg failed to spawn", error);
       Sentry.captureException(error);
-      this.markStopped();
+      this.markStopped(child);
     });
     child.on("exit", (code, signal) => {
       if (!this.stopping) {
@@ -293,7 +307,7 @@ export class DriverFeedEncoder {
           ),
         );
       }
-      this.markStopped();
+      this.markStopped(child);
     });
   }
 
@@ -320,18 +334,23 @@ export class DriverFeedEncoder {
   }
 
   stop(): void {
-    if (this.child === undefined) return;
+    const child = this.child;
+    if (child === undefined) return;
     this.stopping = true;
     try {
       this.sink?.end();
     } catch (error) {
       logger.warn("driver feed sink end failed", error);
     }
-    this.child.kill("SIGTERM");
-    this.markStopped();
+    child.kill("SIGTERM");
+    this.markStopped(child);
   }
 
-  private markStopped(): void {
+  private markStopped(child: ChildProcessWithoutNullStreams): void {
+    // Ignore a late error/exit from a process that stop() already invalidated.
+    // In particular it must not zero the process-global running gauge after a
+    // replacement encoder has started.
+    if (this.child !== child) return;
     this.child = undefined;
     this.sink = undefined;
     driverFeedEncoderRunning.set(0);

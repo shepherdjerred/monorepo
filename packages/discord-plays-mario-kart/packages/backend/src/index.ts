@@ -49,10 +49,10 @@ const driverFeed = driverFeedConfig.enabled
 // general-purpose (Streambot uses it for many concurrent streams); for this single-slot
 // game-bot we just feed it the single configured userbot token.
 const driver = new MarioKartGameDriver({ config, driverFeed });
-driverFeed?.setDriverAdmission(
-  (socketId) =>
-    driver.getActiveRuntime()?.seatManager.seatOf(socketId) !== null,
-);
+driverFeed?.setDriverAdmission((socketId) => {
+  const active = driver.getActiveRuntime();
+  return active !== null && active.seatManager.seatOf(socketId) !== null;
+});
 
 const runtime = bootGameBot({
   serviceName: "discord-plays-mario-kart",

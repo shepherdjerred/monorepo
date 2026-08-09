@@ -65,6 +65,14 @@ function openFeed(port: number, socketId = "active-driver"): WebSocket {
   );
 }
 
+function openCrossOriginFeed(port: number): WebSocket {
+  const query = new URLSearchParams({ driverSocketId: "active-driver" });
+  return new WebSocket(
+    `ws://127.0.0.1:${String(port)}${DRIVER_FEED_PATH}?${query.toString()}`,
+    { headers: { Origin: "https://attacker.example" } },
+  );
+}
+
 /** First message on a feed socket, which is always the JSON handshake. */
 function firstMessage(socket: WebSocket): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -81,6 +89,12 @@ function firstMessage(socket: WebSocket): Promise<string> {
     // an unhandled second one aborts the test run.
     socket.on("error", reject);
   });
+}
+
+async function acknowledgeReady(socket: WebSocket): Promise<string> {
+  const init = await firstMessage(socket);
+  socket.send(JSON.stringify({ kind: "ready" }));
+  return init;
 }
 
 afterEach(async () => {
@@ -167,13 +181,16 @@ describe("driver feed HTTP attachment", () => {
     const { port } = await startHarness();
     const first = openFeed(port);
     const second = openFeed(port);
-    await Promise.all([firstMessage(first), firstMessage(second)]);
+    await Promise.all([acknowledgeReady(first), acknowledgeReady(second)]);
 
     const third = openFeed(port);
-    const closeCode = await new Promise<number>((resolve, reject) => {
+    const closed = new Promise<number>((resolve, reject) => {
       third.once("close", resolve);
       third.once("error", reject);
     });
+    await firstMessage(third);
+    third.send(JSON.stringify({ kind: "ready" }));
+    const closeCode = await closed;
 
     // 1013 "try again later" — the cap is a bandwidth guard, not a protocol error.
     expect(closeCode).toBe(1013);
@@ -184,6 +201,17 @@ describe("driver feed HTTP attachment", () => {
   it("rejects a controller that does not hold an active seat", async () => {
     const { port } = await startHarness();
     const socket = openFeed(port, "idle-controller");
+    const closeCode = await new Promise<number>((resolve, reject) => {
+      socket.once("close", resolve);
+      socket.once("error", reject);
+    });
+
+    expect(closeCode).toBe(1008);
+  });
+
+  it("rejects a cross-origin browser even when it presents an active socket id", async () => {
+    const { port } = await startHarness();
+    const socket = openCrossOriginFeed(port);
     const closeCode = await new Promise<number>((resolve, reject) => {
       socket.once("close", resolve);
       socket.once("error", reject);

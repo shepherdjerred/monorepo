@@ -20,8 +20,10 @@ import path from "node:path";
 import { z } from "zod";
 import { N64_FPS } from "#src/emulator/constants.ts";
 import { WorkerEmulator } from "#src/emulator/worker/worker-emulator.ts";
+import { SeatManager } from "#src/input/seat-manager.ts";
 import { applyStreamOverlays } from "#src/overlay/composite.ts";
 import { DriverFeedService } from "#src/driver-feed/index.ts";
+import { handleRequest } from "#src/webserver/dispatch.ts";
 import { createWebServer } from "#src/webserver/index.ts";
 import { resolveRom } from "./lib/harness.ts";
 
@@ -97,14 +99,6 @@ const driverFeed = new DriverFeedService({
   frameRate: N64_FPS,
 });
 
-const { server } = createWebServer({
-  port,
-  webAssetsPath: WEB_ASSETS,
-  isApiEnabled: true,
-  isCorsEnabled: true,
-});
-driverFeed.attach(server);
-
 const emulator = new WorkerEmulator({
   wasmDir: WASM_DIR,
   romPath,
@@ -115,6 +109,25 @@ const emulator = new WorkerEmulator({
   snapshotEveryNFrames: 10,
 });
 await emulator.init();
+
+const { server, socket } = createWebServer({
+  port,
+  webAssetsPath: WEB_ASSETS,
+  isApiEnabled: true,
+  isCorsEnabled: true,
+});
+if (socket === undefined) {
+  throw new Error("glass harness requires the Socket.IO controller channel");
+}
+const seatManager = new SeatManager(4);
+const requestSubscription = socket.events.subscribe((event) => {
+  handleRequest(event, { seatManager, emulator });
+});
+driverFeed.setDriverAdmission(
+  (socketId) => seatManager.seatOf(socketId) !== null,
+);
+driverFeed.attach(server);
+
 emulator.onFrame((frame) => {
   applyStreamOverlays(frame.rgba, frame.height, {
     epochMs: Date.now(),
@@ -147,6 +160,21 @@ const tabId = navOutput.trim();
 if (tabId.length === 0) throw new Error("pinchtab did not return a tab id");
 process.stdout.write(`browser tab ${tabId} navigated; sampling its readout\n`);
 await Bun.sleep(5000);
+
+const claimedSeat = await evalInTab(
+  tabId,
+  `(() => {
+    const button = [...document.querySelectorAll("button")].find(
+      (candidate) => candidate.textContent?.trim() === "P1",
+    );
+    if (!(button instanceof HTMLButtonElement)) return false;
+    button.click();
+    return true;
+  })()`,
+);
+if (claimedSeat !== true) {
+  throw new Error("glass harness could not claim controller seat P1");
+}
 
 // The shipped GameView renders "<n>ms to glass"; sample what it reports.
 await evalInTab(
@@ -191,9 +219,10 @@ emulator.onFrame(() => {
 });
 driverFeed.stopSession();
 await emulator.stop();
+requestSubscription.unsubscribe();
 await rm(savesDir, { recursive: true, force: true });
 server.close();
-await pinchtabCli(["tab", "close", "--tab", tabId]).catch(() => "");
+await pinchtabCli(["tab", "close", "--tab", tabId]);
 
 const payload = z
   .object({

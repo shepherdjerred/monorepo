@@ -1,9 +1,13 @@
 import { describe, expect, it } from "bun:test";
+import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
+import { once } from "node:events";
 import {
+  DriverFeedEncoder,
   H264_CODEC_STRING,
   buildDriverFeedArgs,
   driverFeedOutputSize,
   type DriverFeedEncoderOptions,
+  type DriverFeedProcessFactory,
 } from "./encoder.ts";
 
 const BASE: DriverFeedEncoderOptions = {
@@ -113,5 +117,52 @@ describe("buildDriverFeedArgs", () => {
 
   it("carries no audio input — drivers keep Discord for sound", () => {
     expect(buildDriverFeedArgs(BASE)).toContain("-an");
+  });
+});
+
+describe("DriverFeedEncoder lifecycle", () => {
+  it("ignores stdout queued by a process after stop invalidates its session", async () => {
+    const script = String.raw`
+      process.on("SIGTERM", () => {
+        process.stdout.write(Buffer.from([
+          0, 0, 0, 1, 9, 240,
+          0, 0, 0, 1, 101, 1,
+          0, 0, 0, 1, 9, 240,
+        ]));
+        setTimeout(() => process.exit(0), 10);
+      });
+      process.stderr.write("ready\n");
+      setInterval(() => {}, 1000);
+    `;
+    let spawned: ChildProcessWithoutNullStreams | undefined;
+    const processFactory: DriverFeedProcessFactory = () => {
+      const child = spawn(process.execPath, ["-e", script], {
+        stdio: ["pipe", "pipe", "pipe"],
+        windowsHide: true,
+      });
+      spawned = child;
+      return child;
+    };
+    const units: Buffer[] = [];
+    const encoder = new DriverFeedEncoder(
+      BASE,
+      {
+        onAccessUnit: (unit) => {
+          units.push(unit.bytes);
+        },
+      },
+      processFactory,
+    );
+
+    encoder.start();
+    const child = spawned;
+    if (child === undefined) throw new Error("test process was not spawned");
+    await once(child.stderr, "data");
+    const exited = once(child, "exit");
+    encoder.stop();
+    await exited;
+
+    expect(units).toHaveLength(0);
+    expect(encoder.running).toBe(false);
   });
 });

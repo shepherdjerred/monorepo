@@ -15,6 +15,7 @@ import {
   DRIVER_FEED_PATH,
   DriverFeedInitSchema,
   type DriverFeedInit,
+  type DriverFeedReady,
 } from "@discord-plays-mario-kart/common";
 
 export type DriverFeedStatus =
@@ -36,6 +37,32 @@ export type DriverFeedCallbacks = {
 
 const RECONNECT_BASE_MS = 500;
 const RECONNECT_MAX_MS = 5000;
+const MAX_DECODE_QUEUE_SIZE = 2;
+
+export type DriverFeedDecodeState = {
+  readonly started: boolean;
+  readonly isKeyframe: boolean;
+  readonly decodeQueueSize: number;
+};
+
+export type DriverFeedDecodeDecision = {
+  readonly reset: boolean;
+  readonly decode: boolean;
+  readonly nextStarted: boolean;
+};
+
+/** Keep queued decode work bounded; a reset must wait for a fresh entry point. */
+export function decideDriverFeedDecode(
+  state: DriverFeedDecodeState,
+): DriverFeedDecodeDecision {
+  const reset = state.decodeQueueSize >= MAX_DECODE_QUEUE_SIZE;
+  const decode = state.isKeyframe || (state.started && !reset);
+  return {
+    reset,
+    decode,
+    nextStarted: decode,
+  };
+}
 
 function feedUrl(driverSocketId: string): string {
   const protocol = globalThis.location.protocol === "https:" ? "wss:" : "ws:";
@@ -63,6 +90,7 @@ export function connectDriverFeed(
   let disposed = false;
   let socket: WebSocket | undefined;
   let decoder: VideoDecoder | undefined;
+  let decoderConfig: VideoDecoderConfig | undefined;
   let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
   let attempt = 0;
   let unsupported = false;
@@ -77,6 +105,7 @@ export function connectDriverFeed(
     // `close()` throws on an already-closed decoder; state is the documented guard.
     if (decoder.state !== "closed") decoder.close();
     decoder = undefined;
+    decoderConfig = undefined;
   };
 
   const scheduleReconnect = () => {
@@ -141,22 +170,34 @@ export function connectDriverFeed(
       return;
     }
     decoder = created;
+    decoderConfig = config;
     callbacks.onStatus({ kind: "waiting" });
+    const ready: DriverFeedReady = { kind: "ready" };
+    ws.send(JSON.stringify(ready));
   };
 
   const decodeMessage = (buffer: ArrayBuffer) => {
     const active = decoder;
-    if (active?.state !== "configured") return;
+    const config = decoderConfig;
+    if (config === undefined || active?.state !== "configured") return;
     if (buffer.byteLength <= DRIVER_FEED_HEADER_BYTES) return;
 
     const header = new Uint8Array(buffer, 0, DRIVER_FEED_HEADER_BYTES);
     const isKeyframe = (header[0] & DRIVER_FEED_KEYFRAME_FLAG) !== 0;
-    if (!started) {
-      // Feeding a delta to a fresh decoder throws and kills it. The server
-      // already withholds deltas until a keyframe, so this only guards against
-      // a mid-stream reconnect racing the hub's own bookkeeping.
-      if (!isKeyframe) return;
-      started = true;
+    const decision = decideDriverFeedDecode({
+      started,
+      isKeyframe,
+      decodeQueueSize: active.decodeQueueSize,
+    });
+    if (decision.reset) {
+      active.reset();
+      active.configure(config);
+      callbacks.onStatus({ kind: "waiting" });
+    }
+    const wasStarted = started;
+    started = decision.nextStarted;
+    if (!decision.decode) return;
+    if (!wasStarted || decision.reset) {
       callbacks.onStatus({ kind: "playing" });
     }
 
