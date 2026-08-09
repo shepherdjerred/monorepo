@@ -9,6 +9,52 @@ appId: org.reactjs.native.example.TasksForObsidian
     visible:
       id: "task-row-TaskNotes/seeded-open-task-1a2b3c4d.md"
     timeout: 15000
+# The stable normal-mode row target must open detail on its first tap even
+# though the same content owns a native long-press context menu.
+- tapOn:
+    id: "task-row-TaskNotes/seeded-open-task-1a2b3c4d.md"
+- extendedWaitUntil:
+    visible:
+      id: "task-detail-toggle"
+    timeout: 5000
+# Plain-task completion from detail is undoable through the sheet host, while
+# the stack itself survives navigation back to the root presentation.
+- tapOn:
+    id: "task-detail-toggle"
+- tapOn:
+    id: "undo-toast-action"
+- assertVisible:
+    id: "task-detail-toggle"
+    text: "Open"
+# A completion created by the sheet remains undoable after the sheet unmounts.
+- tapOn:
+    id: "task-detail-toggle"
+- tapOn:
+    id: "task-detail-cancel"
+- extendedWaitUntil:
+    notVisible:
+      id: "task-row-TaskNotes/seeded-open-task-1a2b3c4d.md"
+    timeout: 10000
+- tapOn:
+    id: "undo-toast-action"
+- extendedWaitUntil:
+    visible:
+      id: "task-row-TaskNotes/seeded-open-task-1a2b3c4d.md"
+    timeout: 10000
+# The list checkbox uses the root Undo host.
+- tapOn:
+    id: "task-checkbox-TaskNotes/seeded-open-task-1a2b3c4d.md"
+- extendedWaitUntil:
+    notVisible:
+      id: "task-row-TaskNotes/seeded-open-task-1a2b3c4d.md"
+    timeout: 15000
+- tapOn:
+    id: "undo-toast-action"
+- extendedWaitUntil:
+    visible:
+      id: "task-row-TaskNotes/seeded-open-task-1a2b3c4d.md"
+    timeout: 15000
+# Complete once more to preserve the suite's durable final-state assertion.
 - tapOn:
     id: "task-checkbox-TaskNotes/seeded-open-task-1a2b3c4d.md"
 - extendedWaitUntil:

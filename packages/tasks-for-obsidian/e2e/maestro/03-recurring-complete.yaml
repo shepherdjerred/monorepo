@@ -32,6 +32,17 @@ appId: org.reactjs.native.example.TasksForObsidian
       id: "undo-toast-message"
       text: "Completed.*"
     timeout: 10000
+- tapOn:
+    id: "undo-toast-action"
+# Complete the same occurrence again after its exact restore so the final vault
+# state continues to prove recurrence advancement.
+- tapOn:
+    id: "task-detail-toggle"
+- extendedWaitUntil:
+    visible:
+      id: "undo-toast-message"
+      text: "Completed.*"
+    timeout: 10000
 - assertVisible:
     id: "task-detail-toggle"
     text: "Open"

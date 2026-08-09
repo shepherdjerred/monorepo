@@ -234,6 +234,47 @@ describe("TaskStore server acks", () => {
 });
 
 describe("TaskStore full pulls", () => {
+  test("does not enqueue a required-task mutation after an in-flight pull deletes it", async () => {
+    const task = makeTask();
+    const backingStorage = memoryStoreStorage({ tasks: [task] });
+    const baseWriteStarted = Promise.withResolvers<null>();
+    const releaseBaseWrite = Promise.withResolvers<null>();
+    let pauseBaseWrite = false;
+    const storeStorage: MemoryStoreStorage = {
+      ...backingStorage,
+      setTasks: async (tasks) => {
+        if (pauseBaseWrite) {
+          pauseBaseWrite = false;
+          baseWriteStarted.resolve(null);
+          await releaseBaseWrite.promise;
+        }
+        await backingStorage.setTasks(tasks);
+      },
+    };
+    const { store, queue } = makeStore(memoryQueueStorage(), storeStorage);
+    await store.restore();
+    let syncRequested = 0;
+    store.onDispatch = () => {
+      syncRequested += 1;
+    };
+
+    pauseBaseWrite = true;
+    const pull = store.replaceBase([], now);
+    await baseWriteStarted.promise;
+    const dispatch = store.dispatchIfTaskExists({
+      type: "set_status",
+      taskId: task.id,
+      status: "open",
+    });
+
+    releaseBaseWrite.resolve(null);
+    await pull;
+    await expect(dispatch).resolves.toEqual(undefined);
+    expect(queue.pending).toEqual([]);
+    expect(store.getSnapshot().pendingCount).toBe(0);
+    expect(syncRequested).toBe(0);
+  });
+
   test("invalidates acknowledged restores after an external recurrence edit", async () => {
     const task = makeTask({
       recurrence: "FREQ=WEEKLY",

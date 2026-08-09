@@ -70,8 +70,8 @@ export function TaskDetailScreen({ route, navigation }: Props) {
   }
 
   // Native form-sheet screens live above the root React Navigation surface.
-  // Scope the Undo host to this presentation so recurring-completion feedback
-  // and its action render inside the sheet instead of behind its dimming view.
+  // The nested provider reuses the app-level stack while hosting its toast in
+  // this presentation, so navigation cannot discard a pending detail Undo.
   return (
     <UndoProvider>
       <TaskDetailRoute task={task} navigation={navigation} />

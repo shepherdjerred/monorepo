@@ -7,7 +7,6 @@ import {
 } from "@react-navigation/native-stack";
 
 import { useSettings } from "../hooks/use-settings";
-import { AppIcon } from "../components/common/AppIcon";
 import { linking } from "./linking";
 import { navigationRef } from "./navigation-ref";
 import { MainTabNavigator } from "./main-tabs";
@@ -34,6 +33,42 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 type MainTabsProps = NativeStackScreenProps<RootStackParamList, "Main">;
 
+function HeaderAction({
+  symbol,
+  fallback,
+  color,
+  label,
+  testID,
+  onPress,
+}: {
+  readonly symbol: string;
+  readonly fallback: "search" | "settings";
+  readonly color: string;
+  readonly label: string;
+  readonly testID: string;
+  readonly onPress: () => void;
+}) {
+  return (
+    <Pressable
+      style={({ pressed }) => [
+        styles.headerAction,
+        pressed && styles.headerActionPressed,
+      ]}
+      onPress={onPress}
+      testID={testID}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+    >
+      <PlatformSymbol
+        symbol={symbol}
+        fallback={fallback}
+        size={22}
+        color={color}
+      />
+    </Pressable>
+  );
+}
+
 function MainTabs({ navigation }: MainTabsProps) {
   const { colors } = useSettings();
 
@@ -55,28 +90,26 @@ function MainTabs({ navigation }: MainTabsProps) {
         ),
         headerRight: () => (
           <View style={styles.headerActions}>
-            <Pressable
+            <HeaderAction
+              symbol="magnifyingglass"
+              fallback="search"
+              color={colors.text}
+              label="Search"
+              testID="header-search"
               onPress={() => {
                 navigation.navigate("Search");
               }}
-              hitSlop={8}
-              testID="header-search"
-              accessibilityRole="button"
-              accessibilityLabel="Search"
-            >
-              <AppIcon name="search" size={22} color={colors.text} />
-            </Pressable>
-            <Pressable
+            />
+            <HeaderAction
+              symbol="gearshape"
+              fallback="settings"
+              color={colors.text}
+              label="Settings"
+              testID="tab-settings"
               onPress={() => {
                 navigation.navigate("Settings");
               }}
-              hitSlop={8}
-              testID="tab-settings"
-              accessibilityRole="button"
-              accessibilityLabel="Settings"
-            >
-              <AppIcon name="settings" size={22} color={colors.text} />
-            </Pressable>
+            />
           </View>
         ),
       })}
@@ -247,6 +280,15 @@ export const AppNavigator = React.memo(function AppNavigatorComponent() {
 const styles = StyleSheet.create({
   headerActions: {
     flexDirection: "row",
-    gap: 12,
+    marginRight: 4,
+  },
+  headerAction: {
+    width: 44,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  headerActionPressed: {
+    opacity: 0.5,
   },
 });

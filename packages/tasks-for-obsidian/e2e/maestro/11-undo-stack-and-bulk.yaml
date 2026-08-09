@@ -1,0 +1,136 @@
+# Verify header navigation, LIFO completion Undo, and one-entry bulk Undo.
+appId: org.reactjs.native.example.TasksForObsidian
+---
+- runFlow: 00-setup.yaml
+# The native toolbar actions retain stable accessibility/test identifiers.
+- tapOn:
+    id: "header-search"
+- extendedWaitUntil:
+    visible:
+      id: "search-input"
+    timeout: 10000
+- tapOn:
+    id: "BackButton"
+- extendedWaitUntil:
+    visible:
+      id: "header-search"
+    timeout: 10000
+- tapOn:
+    id: "tab-settings"
+- extendedWaitUntil:
+    visible:
+      id: "settings-api-url"
+    timeout: 10000
+- tapOn:
+    id: "BackButton"
+- extendedWaitUntil:
+    visible:
+      id: "header-search"
+    timeout: 10000
+- tapOn:
+    id: "tab-inbox"
+# Create two isolated tasks for stack and bulk completion behavior.
+- tapOn:
+    id: "fab-add-task"
+- extendedWaitUntil:
+    visible:
+      id: "quick-add-input"
+    timeout: 10000
+- tapOn:
+    id: "quick-add-input"
+- inputText: "Undo stack first"
+- tapOn:
+    id: "quick-add-submit"
+- extendedWaitUntil:
+    visible:
+      id: "task-row-TaskNotes/Undo stack first.md"
+    timeout: 15000
+- tapOn:
+    id: "fab-add-task"
+- extendedWaitUntil:
+    visible:
+      id: "quick-add-input"
+    timeout: 10000
+- tapOn:
+    id: "quick-add-input"
+- inputText: "Undo stack second"
+- tapOn:
+    id: "quick-add-submit"
+- extendedWaitUntil:
+    visible:
+      id: "task-row-TaskNotes/Undo stack second.md"
+    timeout: 15000
+# XCTest exposes virtualized offscreen rows as visible on iOS 27. Use the
+# product sort control to put the two newest tasks onscreen deterministically.
+- tapOn: "Sort options"
+- tapOn: "Created"
+- tapOn: "Sort options"
+- tapOn: "Created ↑"
+# Wait for each mutation before the next tap so stack order is deterministic.
+- tapOn:
+    id: "task-checkbox-TaskNotes/Undo stack first.md"
+- extendedWaitUntil:
+    notVisible:
+      id: "task-row-TaskNotes/Undo stack first.md"
+    timeout: 15000
+- tapOn:
+    id: "task-checkbox-TaskNotes/Undo stack second.md"
+- extendedWaitUntil:
+    notVisible:
+      id: "task-row-TaskNotes/Undo stack second.md"
+    timeout: 15000
+- extendedWaitUntil:
+    visible:
+      id: "undo-toast-action"
+      text: "Undo latest completion, 2 available"
+    timeout: 10000
+- tapOn:
+    id: "undo-toast-action"
+- extendedWaitUntil:
+    visible:
+      id: "task-row-TaskNotes/Undo stack second.md"
+    timeout: 15000
+- assertNotVisible:
+    id: "task-row-TaskNotes/Undo stack first.md"
+- tapOn:
+    id: "undo-toast-action"
+- extendedWaitUntil:
+    visible:
+      id: "task-row-TaskNotes/Undo stack first.md"
+    timeout: 15000
+# A bulk completion is one stack entry that restores both successful tasks.
+- tapOn:
+    id: "select-mode-toggle"
+- extendedWaitUntil:
+    visible:
+      id: "task-row-selection-unselected-TaskNotes/Undo stack first.md"
+    timeout: 10000
+- retry:
+    maxRetries: 2
+    commands:
+      - tapOn:
+          id: "task-row-TaskNotes/Undo stack first.md"
+      - assertVisible:
+          id: "task-row-selection-selected-TaskNotes/Undo stack first.md"
+- retry:
+    maxRetries: 2
+    commands:
+      - tapOn:
+          id: "task-row-TaskNotes/Undo stack second.md"
+      - assertVisible:
+          id: "task-row-selection-selected-TaskNotes/Undo stack second.md"
+- tapOn:
+    id: "bulk-complete"
+- extendedWaitUntil:
+    visible:
+      id: "undo-toast-message"
+      text: "Completed 2 tasks"
+    timeout: 10000
+- tapOn:
+    id: "undo-toast-action"
+- extendedWaitUntil:
+    visible:
+      id: "task-row-TaskNotes/Undo stack first.md"
+    timeout: 15000
+- assertVisible:
+    id: "task-row-TaskNotes/Undo stack second.md"

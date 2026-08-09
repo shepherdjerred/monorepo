@@ -1,6 +1,8 @@
 import { useCallback, useMemo, useState } from "react";
 
-import type { TaskId } from "../domain/types";
+import type { Task, TaskId } from "../domain/types";
+import type { AppError } from "../domain/errors";
+import type { Result } from "../domain/result";
 import { isActiveStatus } from "../domain/status";
 import {
   completionTargetDate,
@@ -13,13 +15,29 @@ import {
   deriveUpcomingAgenda,
 } from "../domain/agenda";
 import type { AgendaDateKind } from "../domain/agenda";
-import { executeTaskToggle } from "../domain/task-toggle";
+import {
+  executeTaskToggle,
+  successfulCompletionUndos,
+  type CompletionUndo,
+  type TaskToggleExecution,
+} from "../domain/task-toggle";
 import { findTaskByResolvedId } from "../domain/task-lookup";
 import { deriveProjectOptions } from "../domain/project-options";
 import { useUndo } from "../state/UndoContext";
 import { feedbackTaskUncomplete } from "../lib/feedback";
 import { formatDate } from "../lib/dates";
+import { showBulkResultErrors, showResultError } from "../lib/errors";
 import { useTaskContext } from "../state/TaskContext";
+
+type ToggleTaskOptions = {
+  readonly occurrenceDate?: string | undefined;
+  readonly scope?: "occurrence" | "task-status" | undefined;
+};
+
+type ToggleTaskOutcome = {
+  readonly task: Task | undefined;
+  readonly execution: TaskToggleExecution<Result<Task, AppError>>;
+};
 
 export function useTasks() {
   const ctx = useTaskContext();
@@ -177,15 +195,11 @@ export function useTasks() {
     [taskList, today],
   );
 
-  const toggleTask = useCallback(
+  const executeToggle = useCallback(
     async (
       id: TaskId,
-      options?: {
-        occurrenceDate?: string;
-        scope?: "occurrence" | "task-status";
-        suppressUndo?: boolean;
-      },
-    ) => {
+      options?: ToggleTaskOptions,
+    ): Promise<ToggleTaskOutcome> => {
       const task = findTaskByResolvedId(ctx.tasks, ctx.resolveTaskId, id);
       const execution = await executeTaskToggle(
         task ?? undefined,
@@ -204,27 +218,97 @@ export function useTasks() {
                 ),
         },
       );
-      const recurring = execution.recurring;
-      if (
-        recurring !== null &&
-        recurring.completed &&
-        recurring.restore !== null &&
-        execution.result.ok &&
-        options?.suppressUndo !== true
-      ) {
-        const restore = recurring.restore;
-        const next = task ? nextOccurrenceAfter(task, recurring.date) : null;
-        showUndo({
-          message: next ? `Completed · Next: ${formatDate(next)}` : "Completed",
-          onUndo: () => {
-            feedbackTaskUncomplete();
-            void ctx.setInstanceComplete(id, recurring.date, false, restore);
-          },
-        });
+      return { task: task ?? undefined, execution };
+    },
+    [ctx],
+  );
+
+  const restoreCompletion = useCallback(
+    (undo: CompletionUndo): Promise<Result<Task, AppError>> => {
+      switch (undo.kind) {
+        case "status":
+          return ctx.setStatus(undo.taskId, undo.previousStatus);
+        case "recurring-occurrence":
+          return ctx.setInstanceComplete(
+            undo.taskId,
+            undo.date,
+            false,
+            undo.restore,
+          );
+      }
+    },
+    [ctx],
+  );
+
+  const pushCompletionUndo = useCallback(
+    (message: string, undos: readonly CompletionUndo[]) => {
+      if (undos.length === 0) return;
+      showUndo({
+        message,
+        onUndo: async () => {
+          feedbackTaskUncomplete();
+          const results = await Promise.all(
+            undos.map((undo) => restoreCompletion(undo)),
+          );
+          if (results.length === 1) {
+            const result = results[0];
+            if (result === undefined) {
+              throw new TypeError("single completion undo requires one result");
+            }
+            return !showResultError(result, "Undo Failed");
+          }
+          return !showBulkResultErrors(results, undos.length, "Undo Failed");
+        },
+      });
+    },
+    [restoreCompletion, showUndo],
+  );
+
+  const toggleTask = useCallback(
+    async (id: TaskId, options?: ToggleTaskOptions) => {
+      const { task, execution } = await executeToggle(id, options);
+      const undo = execution.completionUndo;
+      if (undo !== null && execution.result.ok) {
+        const next =
+          task !== undefined && undo.kind === "recurring-occurrence"
+            ? nextOccurrenceAfter(task, undo.date)
+            : null;
+        pushCompletionUndo(
+          next ? `Completed · Next: ${formatDate(next)}` : "Completed",
+          [undo],
+        );
       }
       return execution.result;
     },
-    [ctx, showUndo],
+    [executeToggle, pushCompletionUndo],
+  );
+
+  const completeTasks = useCallback(
+    async (
+      ids: readonly TaskId[],
+      completionDateByTaskId?: ReadonlyMap<TaskId, string>,
+    ): Promise<readonly Result<Task, AppError>[]> => {
+      const outcomes = await Promise.all(
+        ids.map((id) => {
+          const occurrenceDate = completionDateByTaskId?.get(id);
+          return executeToggle(
+            id,
+            occurrenceDate === undefined ? undefined : { occurrenceDate },
+          );
+        }),
+      );
+      const successfulUndos = successfulCompletionUndos(
+        outcomes.map(({ execution }) => execution),
+      );
+      if (successfulUndos.length > 0) {
+        pushCompletionUndo(
+          `Completed ${String(successfulUndos.length)} task${successfulUndos.length === 1 ? "" : "s"}`,
+          successfulUndos,
+        );
+      }
+      return outcomes.map(({ execution }) => execution.result);
+    },
+    [executeToggle, pushCompletionUndo],
   );
 
   const getTask = useCallback(
@@ -261,6 +345,7 @@ export function useTasks() {
     contextNames,
     dayCounts,
     toggleTask,
+    completeTasks,
     getTask,
     refresh,
     refreshing,

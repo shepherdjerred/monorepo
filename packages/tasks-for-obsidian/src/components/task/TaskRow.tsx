@@ -106,7 +106,10 @@ export const TaskRow = React.memo(function TaskRowComponent({
         accessibilityLabel={accessibilityLabel}
         accessibilityHint="Double tap to toggle selection"
       >
-        <View style={styles.selectionTarget} testID="task-row-selection-mark">
+        <View
+          style={styles.selectionTarget}
+          testID={`task-row-selection-${selected ? "selected" : "unselected"}-${String(task.id)}`}
+        >
           <AppIcon
             name={selected ? "check-circle" : "circle"}
             size={22}
@@ -173,39 +176,29 @@ export const TaskRow = React.memo(function TaskRowComponent({
     }
   };
 
-  const renderOpenButton = (menuActions: MenuAction[]) => (
-    <MenuView
-      title={task.title}
-      actions={menuActions}
-      shouldOpenOnLongPress
-      onPressAction={handleMenuAction}
+  const renderOpenButton = () => (
+    <Pressable
+      style={styles.openButton}
+      onPress={onPress}
+      testID={`task-row-${String(task.id)}`}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      accessibilityHint="Double tap to view details"
     >
-      <Pressable
-        style={styles.openButton}
-        onPress={onPress}
-        testID={`task-row-${String(task.id)}`}
-        accessibilityRole="button"
-        accessibilityLabel={accessibilityLabel}
-        accessibilityHint="Double tap to view details"
-      >
-        <RowContent
-          presentation={presentation}
-          completed={completed}
-          colors={colors}
+      <RowContent
+        presentation={presentation}
+        completed={completed}
+        colors={colors}
+      />
+      {pending ? (
+        <View
+          style={[styles.pendingDot, { backgroundColor: colors.textTertiary }]}
+          testID="task-row-pending-dot"
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
         />
-        {pending ? (
-          <View
-            style={[
-              styles.pendingDot,
-              { backgroundColor: colors.textTertiary },
-            ]}
-            testID="task-row-pending-dot"
-            accessibilityElementsHidden
-            importantForAccessibility="no-hide-descendants"
-          />
-        ) : null}
-      </Pressable>
-    </MenuView>
+      ) : null}
+    </Pressable>
   );
 
   const actions: MenuAction[] = [
@@ -249,7 +242,7 @@ export const TaskRow = React.memo(function TaskRowComponent({
     });
   }
 
-  const openButton = renderOpenButton(actions);
+  const openButton = renderOpenButton();
 
   return (
     <View
@@ -421,6 +414,7 @@ const styles = StyleSheet.create({
   openButton: {
     minHeight: 44,
     flex: 1,
+    minWidth: 0,
     flexDirection: "row",
     alignItems: "center",
   },

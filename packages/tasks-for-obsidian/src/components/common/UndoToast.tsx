@@ -2,52 +2,79 @@ import React, { useEffect } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import Animated, {
   FadeIn,
+  FadeInDown,
   FadeOut,
-  SlideInDown,
-  SlideOutDown,
+  FadeOutDown,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
   withTiming,
+  cancelAnimation,
   Easing,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSettings } from "../../hooks/use-settings";
 import { typography } from "../../styles/typography";
 import { UNDO_TOAST_MS } from "../../domain/task-toggle";
+import { e2eUndoToastMs } from "../../navigation/e2e-config";
 
 type Props = {
   visible: boolean;
+  requestId: number | null;
+  depth: number;
   message: string;
+  undoInFlight: boolean;
   onUndo: () => void;
   onDismiss: () => void;
 };
 
 /**
  * Transient bottom toast with a single Undo action and a shrinking time
- * bar for its lifetime. Used for recurring-task completions — the one
- * mutation whose target (the occurrence date) is invisible in the UI.
+ * bar for its lifetime. The provider keeps this view mounted while the active
+ * LIFO entry changes, so rapid completions reset the timer without replaying
+ * the entrance motion.
  */
-export function UndoToast({ visible, message, onUndo, onDismiss }: Props) {
+export function UndoToast({
+  visible,
+  requestId,
+  depth,
+  message,
+  undoInFlight,
+  onUndo,
+  onDismiss,
+}: Props) {
   const { colors } = useSettings();
   const insets = useSafeAreaInsets();
   const reducedMotion = useReducedMotion();
   const progress = useSharedValue(1);
+  const duration = e2eUndoToastMs(UNDO_TOAST_MS);
 
   useEffect(() => {
     if (!visible) return;
+    if (undoInFlight) {
+      cancelAnimation(progress);
+      return;
+    }
     progress.value = 1;
     if (!reducedMotion) {
       progress.value = withTiming(0, {
-        duration: UNDO_TOAST_MS,
+        duration,
         easing: Easing.linear,
       });
     }
-    const timer = setTimeout(onDismiss, UNDO_TOAST_MS);
+    const timer = setTimeout(onDismiss, duration);
     return () => {
       clearTimeout(timer);
     };
-  }, [visible, onDismiss, progress, reducedMotion]);
+  }, [
+    duration,
+    visible,
+    requestId,
+    onDismiss,
+    progress,
+    reducedMotion,
+    undoInFlight,
+  ]);
 
   const barStyle = useAnimatedStyle(() => ({
     transform: [{ scaleX: progress.value }],
@@ -59,11 +86,13 @@ export function UndoToast({ visible, message, onUndo, onDismiss }: Props) {
     <Animated.View
       entering={
         reducedMotion
-          ? FadeIn.duration(150)
-          : SlideInDown.springify().damping(15)
+          ? FadeIn.duration(120)
+          : FadeInDown.duration(180).easing(Easing.out(Easing.cubic))
       }
       exiting={
-        reducedMotion ? FadeOut.duration(100) : SlideOutDown.duration(200)
+        reducedMotion
+          ? FadeOut.duration(100)
+          : FadeOutDown.duration(140).easing(Easing.in(Easing.cubic))
       }
       style={[
         styles.toast,
@@ -84,16 +113,26 @@ export function UndoToast({ visible, message, onUndo, onDismiss }: Props) {
           {message}
         </Text>
         <Pressable
+          style={styles.undoButton}
           onPress={onUndo}
+          disabled={undoInFlight}
           hitSlop={8}
           accessibilityRole="button"
-          accessibilityLabel="Undo"
+          accessibilityLabel={
+            depth > 1
+              ? `Undo latest completion, ${String(depth)} available`
+              : "Undo"
+          }
           testID="undo-toast-action"
         >
           <Text
-            style={[typography.body, styles.undo, { color: colors.primary }]}
+            style={[
+              typography.body,
+              styles.undo,
+              { color: colors.primary, opacity: undoInFlight ? 0.5 : 1 },
+            ]}
           >
-            Undo
+            {depth > 1 ? `Undo (${String(depth)})` : "Undo"}
           </Text>
         </Pressable>
       </View>
@@ -109,6 +148,7 @@ export function UndoToast({ visible, message, onUndo, onDismiss }: Props) {
 const styles = StyleSheet.create({
   toast: {
     position: "absolute",
+    zIndex: 1000,
     left: 16,
     right: 16,
     borderRadius: 12,
@@ -133,6 +173,10 @@ const styles = StyleSheet.create({
   },
   undo: {
     fontWeight: "700",
+  },
+  undoButton: {
+    minHeight: 44,
+    justifyContent: "center",
   },
   barTrack: {
     height: 3,

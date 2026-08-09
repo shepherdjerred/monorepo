@@ -8,6 +8,20 @@ export type E2EConfig = {
 };
 
 let configuredToday: string | null = null;
+let e2eConfigActive = false;
+
+export function markE2EConfigActive(): void {
+  e2eConfigActive = true;
+}
+
+/**
+ * iOS accessibility snapshots can take longer than the product's five-second
+ * Undo window. Debug E2E sessions stretch the same inactivity timer so Maestro
+ * can exercise the action; release builds never activate this override.
+ */
+export function e2eUndoToastMs(productDurationMs: number): number {
+  return e2eConfigActive ? 60_000 : productDurationMs;
+}
 
 export function setE2EToday(today: string | null): void {
   configuredToday = today;

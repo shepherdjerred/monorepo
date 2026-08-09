@@ -3,56 +3,111 @@ import React, {
   useCallback,
   useContext,
   useMemo,
+  useReducer,
   useRef,
   useState,
 } from "react";
+import { StyleSheet, View } from "react-native";
 import { UndoToast } from "../components/common/UndoToast";
+import { activeUndoEntry, undoStackReducer } from "../domain/undo-stack";
 
 type UndoRequest = {
   message: string;
-  onUndo: () => void;
+  onUndo: () => Promise<boolean>;
 };
 
 type UndoContextValue = {
-  /** Replaces any currently-showing toast. */
+  /** Pushes a request onto the transient completion-undo stack. */
   showUndo: (request: UndoRequest) => void;
+  active: ReturnType<typeof activeUndoEntry>;
+  depth: number;
+  undoInFlight: boolean;
+  dismiss: () => void;
+  handleUndo: () => void;
 };
 
 const UndoContext = createContext<UndoContextValue | null>(null);
 
 export function UndoProvider({ children }: { children: React.ReactNode }) {
-  const [active, setActive] = useState<UndoRequest | null>(null);
-  // A monotonically increasing key so a replacement toast restarts the
-  // UndoToast timer effect even when `visible` never flips false.
-  const generation = useRef(0);
+  const parent = useContext(UndoContext);
+  if (parent !== null) {
+    return <UndoHost value={parent}>{children}</UndoHost>;
+  }
+  return <UndoStateProvider>{children}</UndoStateProvider>;
+}
+
+function UndoStateProvider({ children }: { children: React.ReactNode }) {
+  const [stack, dispatch] = useReducer(undoStackReducer, []);
+  const [undoInFlight, setUndoInFlight] = useState(false);
+  const nextId = useRef(0);
+  const active = activeUndoEntry(stack);
 
   const showUndo = useCallback((request: UndoRequest) => {
-    generation.current += 1;
-    setActive(request);
+    nextId.current += 1;
+    dispatch({
+      type: "push",
+      entry: { id: nextId.current, ...request },
+    });
   }, []);
 
   const dismiss = useCallback(() => {
-    setActive(null);
+    dispatch({ type: "clear" });
   }, []);
 
   const handleUndo = useCallback(() => {
-    active?.onUndo();
-    setActive(null);
-  }, [active]);
+    if (active === null || undoInFlight) return;
+    const entry = active;
+    setUndoInFlight(true);
+    void (async () => {
+      try {
+        if (await entry.onUndo()) {
+          dispatch({ type: "remove", id: entry.id });
+        }
+      } finally {
+        setUndoInFlight(false);
+      }
+    })();
+  }, [active, undoInFlight]);
 
-  const value = useMemo(() => ({ showUndo }), [showUndo]);
+  const value = useMemo(
+    () => ({
+      showUndo,
+      active,
+      depth: stack.length,
+      undoInFlight,
+      dismiss,
+      handleUndo,
+    }),
+    [active, dismiss, handleUndo, showUndo, stack.length, undoInFlight],
+  );
 
   return (
     <UndoContext.Provider value={value}>
+      <UndoHost value={value}>{children}</UndoHost>
+    </UndoContext.Provider>
+  );
+}
+
+function UndoHost({
+  children,
+  value,
+}: {
+  readonly children: React.ReactNode;
+  readonly value: UndoContextValue;
+}) {
+  return (
+    <View style={styles.host}>
       {children}
       <UndoToast
-        key={generation.current}
-        visible={active !== null}
-        message={active?.message ?? ""}
-        onUndo={handleUndo}
-        onDismiss={dismiss}
+        visible={value.active !== null}
+        requestId={value.active?.id ?? null}
+        depth={value.depth}
+        message={value.active?.message ?? ""}
+        undoInFlight={value.undoInFlight}
+        onUndo={value.handleUndo}
+        onDismiss={value.dismiss}
       />
-    </UndoContext.Provider>
+    </View>
   );
 }
 
@@ -63,3 +118,9 @@ export function useUndo(): UndoContextValue {
   }
   return ctx;
 }
+
+const styles = StyleSheet.create({
+  host: {
+    flex: 1,
+  },
+});

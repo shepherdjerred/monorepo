@@ -467,7 +467,7 @@ async function runMaestro(
     // Freeze dated flows at their boundary so UI and vault assertions cannot
     // cross midnight while the simulator exercises one scenario.
     const today = captureFlowToday(flow, () =>
-      runSimctl(["spawn", simulator.udid, "date", "+%Y-%m-%d"]),
+      runSimctl(["spawn", simulator.udid, "/bin/date", "+%Y-%m-%d"]),
     );
     if (today !== "") {
       todayByFlow.set(flow, today);

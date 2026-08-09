@@ -62,6 +62,7 @@ export function SearchScreen({ navigation }: Props) {
           placeholderTextColor={colors.textTertiary}
           autoFocus
           returnKeyType="search"
+          testID="search-input"
           accessibilityLabel="Search tasks"
           accessibilityHint="Type to search by title, project, context, or tag"
         />

@@ -17,3 +17,4 @@ executionOrder:
     - 08-contextual-quick-capture
     - 09-saved-view-lifecycle
     - 10-completed-search-uncomplete
+    - 11-undo-stack-and-bulk

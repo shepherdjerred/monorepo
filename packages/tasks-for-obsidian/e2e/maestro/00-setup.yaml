@@ -1,7 +1,8 @@
 # Shared setup: point the running app at the local test stack via the
 # __DEV__-only e2e-config deep link, and wait for the seeded vault to sync in.
-# The orchestrator installs one clean data container and launches once before
-# the suite; nested setup calls retain it so flows do not tear down Metro.
+# The orchestrator installs one clean data container and relaunches the app
+# between flows without clearing storage. The ordered suite retains its shared
+# vault while transient provider state cannot leak between scenarios.
 # Requires --env APP_URL, --env AUTH_TOKEN, and --env E2E_TODAY (provided by
 # e2e/run.ts). E2E_TODAY freezes date parsing for the whole flow so a
 # midnight boundary cannot make the UI and vault assertion disagree.
@@ -15,9 +16,9 @@ appId: org.reactjs.native.example.TasksForObsidian
     env:
       CHAOS_BASE: ${APP_URL}
 # Wait for the app to finish booting (root header present) BEFORE openLink. The
-# orchestrator's cold launch is still initializing when the first flow starts;
+# runner's fresh launch is still initializing when each flow starts;
 # firing openLink immediately races app startup and the JS Linking listener misses
-# the url event (and it is not a launch URL, so getInitialURL is empty too) —
+# the URL event (and it is not a launch URL, so getInitialURL is empty too) —
 # the deep link is silently dropped and config never applies.
 - extendedWaitUntil:
     visible:

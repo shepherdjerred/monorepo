@@ -143,11 +143,12 @@ const VAULT_ASSERTIONS: readonly VaultAssertion[] = [
       true,
   },
   {
-    name: 'the seeded task file is renamed to "Edited by e2e" (04-edit-task)',
+    name: 'the seeded task title is changed to "Edited by e2e" (04-edit-task)',
     flow: "04-edit-task.yaml",
     check: (files) =>
-      files.get("Edited by e2e.md")?.includes("title: Edited by e2e") ===
-        true && !files.has("task-with-details-3c4d5e6f.md"),
+      files
+        .get("task-with-details-3c4d5e6f.md")
+        ?.includes("title: Edited by e2e") === true,
   },
   {
     name: '"Seeded done task" has status open (10-completed-search-uncomplete)',
@@ -203,6 +204,22 @@ const VAULT_ASSERTIONS: readonly VaultAssertion[] = [
     name: '"Swipe delete task" is absent (07-swipe-actions)',
     flow: "07-swipe-actions.yaml",
     check: (files) => fileWithTitle(files, "Swipe delete task") === undefined,
+  },
+  {
+    name: '"Undo stack first" returns to open (11-undo-stack-and-bulk)',
+    flow: "11-undo-stack-and-bulk.yaml",
+    check: (files) =>
+      fileWithExactTitle(files, "Undo stack first")?.includes(
+        "status: open",
+      ) === true,
+  },
+  {
+    name: '"Undo stack second" returns to open (11-undo-stack-and-bulk)',
+    flow: "11-undo-stack-and-bulk.yaml",
+    check: (files) =>
+      fileWithExactTitle(files, "Undo stack second")?.includes(
+        "status: open",
+      ) === true,
   },
 ];
 
