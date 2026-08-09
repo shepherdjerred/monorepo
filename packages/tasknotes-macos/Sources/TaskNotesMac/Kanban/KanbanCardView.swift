@@ -58,16 +58,17 @@ struct KanbanCardView: View {
                 TaskCheckbox(row: row, action: onToggle)
                 Text(row.task.title)
                     .lineLimit(2)
-                    // `isFinished`, not `row.isCompleted`. See the note on
-                    // that property: on a board the strikethrough answers the
-                    // question the *column* asks, and the checkbox answers the
-                    // question the *gesture* asks.
-                    .strikethrough(isFinished, color: .secondary)
-                    .foregroundStyle(isFinished ? .secondary : .primary)
+                    // `row.isTerminal`, not `row.isCompleted`, and not the
+                    // row's `isRetired`. On a board the strikethrough answers
+                    // the question the *column* asks, and the checkbox answers
+                    // the question the *gesture* asks. See the channel table
+                    // below.
+                    .strikethrough(row.isTerminal, color: .secondary)
+                    .foregroundStyle(row.isTerminal ? .secondary : .primary)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                PriorityMarker(priority: row.task.priority, isDimmed: isFinished)
+                PriorityMarker(priority: row.task.priority, isDimmed: row.isTerminal)
                 if row.isRecurring {
-                    RecurrenceMarker(occurrence: row.occurrence?.text, isDimmed: isFinished)
+                    RecurrenceMarker(occurrence: row.occurrence?.text, isDimmed: row.isTerminal)
                 }
                 if row.isPending {
                     // On the **title** line, beside the other two marks, and not
@@ -163,53 +164,53 @@ struct KanbanCardView: View {
         Button("Delete", systemImage: "trash", role: .destructive, action: onDelete)
     }
 
-    /// Whether the **task** is finished — which is what the column this card
-    /// sits in already claims.
-    ///
-    /// ## Why a card and a row disagree about the word "completed"
-    ///
-    /// ``TaskRowState/isCompleted`` is deliberately *occurrence*-level: for a
-    /// recurring task it is the state of the occurrence a click would target,
-    /// which is what makes the checkbox and the gesture incapable of
-    /// disagreeing. A list row is right to draw that — Today's whole subject is
-    /// today's work, so a struck-through row means "today's instance is done"
-    /// and the row staying put is what makes the completion feel like it
-    /// landed.
-    ///
-    /// **A board asks a different question.** A card's column *is* its
-    /// `status`, so a card makes a claim about the task as a whole simply by
-    /// being where it is. Borrowing the row's occurrence-level treatment put a
-    /// struck-through, dimmed card inside the **Open** column — two channels
-    /// contradicting each other, in the one layout where position is a
-    /// statement. Rendering it made that obvious; it is visible in
-    /// `board.{light,dark}.png` before this change, on *Take vitamins*.
-    ///
-    /// So the channels are split by what they are about:
-    ///
-    /// | channel | question | source |
-    /// |---|---|---|
-    /// | strikethrough, dimmed marks | is the **task** finished? | `task.status` |
-    /// | checkbox fill | is the **occurrence** done? | `row.isCompleted` |
-    ///
-    /// The checkbox keeps the occurrence, and it must: the gesture targets the
-    /// occurrence, and `TaskCheckbox` already speaks *"occurrence of …"* as its
-    /// value. A ticked checkbox on an un-struck card inside Open is then the
-    /// honest reading — *today is done, the task is not* — rather than a
-    /// contradiction.
-    ///
-    /// ⚠️ **The rejected alternative was to file such a card under Done**, and
-    /// it is worth recording why it is not merely a matter of taste. The board
-    /// dispatches `setStatus` on a drop, and `KanbanBoardTests` pins that every
-    /// card's column equals its status — there is no default column precisely
-    /// because the status is a closed enum. A card shown in Done whose status
-    /// is `open` would break that invariant, make dragging it out write a field
-    /// it never had, and — worst — the card would **move itself back to Open
-    /// overnight**, when the rule's next occurrence comes due and nobody
-    /// touched anything.
-    ///
-    /// `taskStatusIsActive` is the core's own predicate, negated; the six-way
-    /// membership is not restated here.
-    private var isFinished: Bool { !taskStatusIsActive(status: row.task.status) }
+    // ── Why this card reads `isTerminal` and the list row reads `isRetired`
+    //
+    // ## Why a card and a row disagree about the word "completed"
+    //
+    // ``TaskRowState/isCompleted`` is deliberately *occurrence*-level: for a
+    // recurring task it is the state of the occurrence a click would target,
+    // which is what makes the checkbox and the gesture incapable of
+    // disagreeing. A list row is right to draw that — Today's whole subject is
+    // today's work, so a struck-through row means "today's instance is done"
+    // and the row staying put is what makes the completion feel like it
+    // landed.
+    //
+    // **A board asks a different question.** A card's column *is* its
+    // `status`, so a card makes a claim about the task as a whole simply by
+    // being where it is. Borrowing the row's occurrence-level treatment put a
+    // struck-through, dimmed card inside the **Open** column — two channels
+    // contradicting each other, in the one layout where position is a
+    // statement. Rendering it made that obvious; it is visible in
+    // `board.{light,dark}.png` before this change, on *Take vitamins*.
+    //
+    // So the channels are split by what they are about:
+    //
+    // | channel | question | source |
+    // |---|---|---|
+    // | strikethrough, dimmed marks | is the **task** finished? | `task.status` |
+    // | checkbox fill | is the **occurrence** done? | `row.isCompleted` |
+    //
+    // The checkbox keeps the occurrence, and it must: the gesture targets the
+    // occurrence, and `TaskCheckbox` already speaks *"occurrence of …"* as its
+    // value. A ticked checkbox on an un-struck card inside Open is then the
+    // honest reading — *today is done, the task is not* — rather than a
+    // contradiction.
+    //
+    // ⚠️ **The rejected alternative was to file such a card under Done**, and
+    // it is worth recording why it is not merely a matter of taste. The board
+    // dispatches `setStatus` on a drop, and `KanbanBoardTests` pins that every
+    // card's column equals its status — there is no default column precisely
+    // because the status is a closed enum. A card shown in Done whose status
+    // is `open` would break that invariant, make dragging it out write a field
+    // it never had, and — worst — the card would **move itself back to Open
+    // overnight**, when the rule's next occurrence comes due and nobody
+    // touched anything.
+    //
+    // Both predicates now live on `TaskRowState`, below the SwiftUI line,
+    // where a headless test can pin them and their relationship. This comment
+    // records the *choice between them*, which is a property of this screen and
+    // belongs with the screen.
 
     /// The date's colour, and the one place red appears on a card.
     ///
@@ -218,7 +219,7 @@ struct KanbanCardView: View {
     /// strikethrough is: a recurring task whose current occurrence is done is
     /// still live, and its next occurrence can genuinely be overdue.
     private func dateTint(_ date: DateBadge) -> AnyShapeStyle {
-        guard date.isOverdue, !isFinished else { return AnyShapeStyle(.secondary) }
+        guard date.isOverdue, !row.isTerminal else { return AnyShapeStyle(.secondary) }
         return AnyShapeStyle(.red)
     }
 
@@ -241,14 +242,20 @@ struct KanbanCardView: View {
         // occurrence is done" is the checkbox, and has the tick. Saying only
         // "completed" for a live recurring task would tell a VoiceOver reader
         // the opposite of what the column beside it says.
-        if isFinished {
-            parts.append("completed")
+        if row.isTerminal {
+            // The core's own label, lowercased into the sentence — so a
+            // cancelled task is announced as "cancelled" rather than as
+            // "completed", which is what a hard-coded word got wrong. It is
+            // also one less piece of vocabulary this shell invents for a
+            // status the core already names, and it keeps the board and the
+            // list row saying the same words for the same state.
+            parts.append(taskStatusLabel(status: row.task.status).lowercased())
         } else if row.isCompleted {
             parts.append("this occurrence is done")
         }
         if let priority = PriorityMarker.spoken(row.task.priority) { parts.append(priority) }
         if row.isRecurring { parts.append("repeats") }
-        if !isFinished, row.displayDate?.isOverdue == true { parts.append("overdue") }
+        if !row.isTerminal, row.displayDate?.isOverdue == true { parts.append("overdue") }
         if let date = row.displayDate {
             parts.append(row.isRecurring ? "occurrence of \(date.text)" : "due \(date.text)")
         }

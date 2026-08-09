@@ -30,6 +30,68 @@ public struct TaskRowState: Sendable, Equatable, Identifiable {
     /// is the entire point of routing both through ``completionTarget``.
     public let isCompleted: Bool
 
+    /// Whether this row is no longer live work — for either of the two
+    /// unrelated reasons it can stop being so.
+    ///
+    /// ⚠️ **Two facts, and reading only one of them was a bug.** A row can be
+    /// finished because *the occurrence shown* was ticked (``isCompleted``,
+    /// which for a recurring task is the state of the occurrence a click would
+    /// target), or because *the task itself* is in a terminal status. For a
+    /// plain task the two coincide, which is what makes the divergence easy to
+    /// miss. For a recurring one they are independent — ``isCompleted`` reads
+    /// `completeInstances` and never `status` — so a **cancelled or done
+    /// recurring task drew exactly like a live one**, struck through nowhere.
+    ///
+    /// Only Browse can show it: Today and Upcoming filter terminal tasks out,
+    /// so neither screen the row was designed against could reveal it.
+    ///
+    /// ## Why this lives here rather than in the view that reads it
+    ///
+    /// It was a `private var` on `TaskRowView` first. That put it above the
+    /// SwiftUI line, where the only coverage available is an image snapshot a
+    /// human has to look at — and the plan is explicit that the Linux row is
+    /// the sole *enforced* gate, so correctness belongs below that line
+    /// wherever it can go. Here it is a pure function of a `CoreTask` and one
+    /// core call, and a headless test pins all four combinations.
+    ///
+    /// ## The Kanban card deliberately does not use this
+    ///
+    /// A board's column already states the status, so spending the
+    /// strikethrough on it too would be redundant. A list has no column, so
+    /// there the strikethrough is the only channel "not live work" has and it
+    /// carries both reasons. Same two facts, different channel budgets — the
+    /// divergence is deliberate and neither file should be "fixed" to match the
+    /// other. The checkbox stays occurrence-level on both, because the gesture
+    /// is.
+    public var isRetired: Bool {
+        isCompleted || isTerminal
+    }
+
+    /// Whether the **task itself** is in a terminal status — the second of the
+    /// two facts ``isRetired`` combines, on its own.
+    ///
+    /// This is what a Kanban card keys its strikethrough on, and it is here for
+    /// the reason ``isRetired`` is: it was a `private var` on `KanbanCardView`
+    /// first, which put it above the SwiftUI line where an image a human looks
+    /// at is the only coverage available. Both halves now sit below it, and the
+    /// relationship between them — `isRetired == isCompleted || isTerminal` —
+    /// is a property a headless test can state rather than a coincidence two
+    /// view files have to maintain separately.
+    ///
+    /// It is deliberately the *same word* ``KanbanColumn/isTerminal`` uses, and
+    /// the same core predicate behind it. A board's column **is** a status, so
+    /// "this task is terminal" and "this column is terminal" are one question
+    /// asked of two things — and a card is struck through exactly when the
+    /// column it sits in is terminal, which is the invariant the board's whole
+    /// channel split rests on.
+    ///
+    /// `taskStatusIsActive` negated, never a list of "finished-ish" statuses
+    /// restated here: which two of the six count as terminal is the core's
+    /// answer, and Rust is where it is given once.
+    public var isTerminal: Bool {
+        !taskStatusIsActive(status: task.status)
+    }
+
     /// The occurrence date a completion gesture targets, for a recurring task;
     /// `nil` for a plain one, whose gesture moves `status` and involves no date.
     ///
