@@ -15,6 +15,7 @@ import { GitOperations } from "./git-operations.ts";
 import { captureTelemetryOperation } from "./controller-telemetry.ts";
 import { currentCommandCorrelation } from "./command-correlation.ts";
 import { resolveHostedReviewCompletion } from "./hosted-review.ts";
+import { recordEvidenceRefresh } from "./environment-refresh-telemetry.ts";
 import type {
   CommandRequest,
   CommandResult,
@@ -439,6 +440,12 @@ export class CommandFleetEnvironment implements FleetEnvironment {
   }
 
   async refreshEvidence(pr: PrIdentity): Promise<ReadinessEvidence> {
+    return recordEvidenceRefresh(this.#telemetry, pr, () =>
+      this.#collectEvidence(pr),
+    );
+  }
+
+  async #collectEvidence(pr: PrIdentity): Promise<ReadinessEvidence> {
     const [rawChecks, reviews, conflict] = await Promise.all([
       this.#checks(pr),
       this.#reviews(pr),
@@ -473,17 +480,6 @@ export class CommandFleetEnvironment implements FleetEnvironment {
       hardFailureFingerprint: fingerprint(hardFailures),
       reviewFingerprint: fingerprint(blockingReviews),
     };
-    captureTelemetryOperation("environment.result", () => {
-      this.#telemetry?.record(
-        "environment.result",
-        { operation: "refreshEvidence", evidence },
-        {
-          ...currentCommandCorrelation(),
-          prNumber: pr.number,
-          headSha: pr.headSha,
-        },
-      );
-    });
     return evidence;
   }
 

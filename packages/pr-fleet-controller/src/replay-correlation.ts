@@ -141,7 +141,10 @@ function verifyTickCausation(
   activeTickIds: Set<string>,
   failedTickDrainLanes: Map<string, Set<string>>,
 ): void {
-  if (event.kind === "environment.result") {
+  if (
+    event.kind === "environment.result" ||
+    event.kind === "environment.failed"
+  ) {
     const tickId = event.correlation.tickId;
     const lane = tickDrainLane(event);
     const draining =
@@ -150,7 +153,7 @@ function verifyTickCausation(
       failedTickDrainLanes.get(tickId)?.has(lane) === true;
     if (tickId === undefined || (!draining && !activeTickIds.has(tickId))) {
       throw new Error(
-        `environment.result references a nonexistent or inactive tick: ${tickId ?? "missing"}`,
+        `${event.kind} references a nonexistent or inactive tick: ${tickId ?? "missing"}`,
       );
     }
     return;
@@ -291,7 +294,12 @@ function closeFailedTickDrainLane(
   activeTickIds: Set<string>,
   failedTickDrainLanes: Map<string, Set<string>>,
 ): void {
-  if (event.kind !== "environment.result") return;
+  if (
+    event.kind !== "environment.result" &&
+    event.kind !== "environment.failed"
+  ) {
+    return;
+  }
   const tickId = event.correlation.tickId;
   const lane = tickDrainLane(event);
   if (

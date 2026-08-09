@@ -28,7 +28,7 @@ test("scratch cleanup failure cannot leak setup or heavy leases", async () => {
       store,
       pr,
       miseScratchDirectory: "/tmp/pr-fleet-mise-test",
-      setupFailed: false,
+      setupFailure: null,
       removeScratchDirectory: () => Promise.reject(cleanupError),
     }),
   ).rejects.toBe(cleanupError);
@@ -37,22 +37,28 @@ test("scratch cleanup failure cannot leak setup or heavy leases", async () => {
   expect(store.heavyOwners.has(pr.identity.number)).toBe(false);
 });
 
-test("scratch cleanup failure does not mask the setup failure", async () => {
+test("scratch cleanup failure is preserved alongside the setup failure", async () => {
   const pr = setupState();
   const store = new FleetStore(1);
   store.requestLease(pr, "setup");
   store.requestLease(pr, "heavy");
+  const setupError = new Error("mise install failed");
+  const cleanupError = new Error("scratch volume unavailable");
 
-  await expect(
-    releaseSetupResources({
+  try {
+    await releaseSetupResources({
       store,
       pr,
       miseScratchDirectory: "/tmp/pr-fleet-mise-test",
-      setupFailed: true,
-      removeScratchDirectory: () =>
-        Promise.reject(new Error("scratch volume unavailable")),
-    }),
-  ).resolves.toBeUndefined();
+      setupFailure: { error: setupError },
+      removeScratchDirectory: () => Promise.reject(cleanupError),
+    });
+    throw new Error("Expected setup resource release to fail");
+  } catch (error) {
+    expect(error).toBeInstanceOf(AggregateError);
+    if (!(error instanceof AggregateError)) throw error;
+    expect(error.errors).toEqual([setupError, cleanupError]);
+  }
 
   expect(store.setupOwner).toBeNull();
   expect(store.heavyOwners.has(pr.identity.number)).toBe(false);

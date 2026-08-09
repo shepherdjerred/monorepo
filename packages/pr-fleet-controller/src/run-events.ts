@@ -37,6 +37,7 @@ export const RunEventKindSchema = z.enum([
   "command.completed",
   "command.failed",
   "environment.result",
+  "environment.failed",
   "shutdown.started",
   "shutdown.completed",
   "shutdown.failed",

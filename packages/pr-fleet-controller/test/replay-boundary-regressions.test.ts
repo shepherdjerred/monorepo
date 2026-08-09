@@ -323,6 +323,53 @@ test("replay rejects new failed-tick lane work after evidence refresh completes"
   );
 });
 
+test("replay rejects new failed-tick lane work after evidence refresh fails", async () => {
+  const recorder = await createRecorder();
+  const pr = identity(44);
+  const tickId = recorder.newId("tick");
+  const firstCommandId = recorder.newId("command");
+  const lateCommandId = recorder.newId("command");
+  const correlation = {
+    tickId,
+    prNumber: pr.number,
+    headSha: pr.headSha,
+  };
+  recorder.record("run.started", { scenario: "failed-refresh-drain" });
+  recorder.record("tick.started", { trigger: "heartbeat" }, { tickId });
+  recorder.record(
+    "command.started",
+    { executable: "git", args: ["fetch"] },
+    { ...correlation, commandId: firstCommandId },
+  );
+  recorder.record("tick.failed", { error: "another PR moved" }, { tickId });
+  recorder.record(
+    "command.failed",
+    { executable: "git", error: "fetch failed" },
+    { ...correlation, commandId: firstCommandId },
+  );
+  recorder.record(
+    "environment.failed",
+    { operation: "refreshEvidence", error: "fetch failed" },
+    correlation,
+  );
+  recorder.record(
+    "command.started",
+    { executable: "git", args: ["status", "--short"] },
+    { ...correlation, commandId: lateCommandId },
+  );
+  recorder.record(
+    "command.completed",
+    { executable: "git", exitCode: 0 },
+    { ...correlation, commandId: lateCommandId },
+  );
+  await recorder.finalize("failed", null, new Error("synthetic tick failure"));
+  const bundle = await loadRunBundle(recorder.paths.runDirectory);
+
+  expect(() => replayRunBundle(bundle, replayOptions)).toThrow(
+    `command.started references a nonexistent or inactive tick: ${tickId}`,
+  );
+});
+
 describe("completed tick command ancestry replay", () => {
   test("rejects a master tool command after its tick completes", async () => {
     const recorder = await createRecorder();

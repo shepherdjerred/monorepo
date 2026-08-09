@@ -38,14 +38,14 @@ export async function releaseSetupResources(options: {
   store: FleetStore;
   pr: PrState;
   miseScratchDirectory: string | undefined;
-  setupFailed: boolean;
+  setupFailure: { error: unknown } | null;
   removeScratchDirectory?: RemoveScratchDirectory;
 }): Promise<void> {
   const {
     store,
     pr,
     miseScratchDirectory,
-    setupFailed,
+    setupFailure,
     removeScratchDirectory = rm,
   } = options;
   let cleanupFailed = false;
@@ -65,7 +65,13 @@ export async function releaseSetupResources(options: {
     store.releaseLease(pr.identity.number, "heavy", pr.stackId);
     store.releaseLease(pr.identity.number, "setup", pr.stackId);
   }
-  if (cleanupFailed && !setupFailed) {
+  if (cleanupFailed && setupFailure !== null) {
+    throw new AggregateError(
+      [setupFailure.error, cleanupError],
+      "Worktree setup and scratch-directory cleanup both failed",
+    );
+  }
+  if (cleanupFailed) {
     throw cleanupError;
   }
 }
@@ -157,7 +163,7 @@ export function createSetupWorktreeTool(options: {
         }
         const completed: string[] = [];
         let miseScratchDirectory: string | undefined;
-        let setupFailed = false;
+        let setupFailure: { error: unknown } | null = null;
         try {
           await requireCurrentInheritedWipInspection({
             store,
@@ -214,14 +220,14 @@ export function createSetupWorktreeTool(options: {
           }
           return { commands: completed };
         } catch (error) {
-          setupFailed = true;
+          setupFailure = { error };
           throw error;
         } finally {
           await releaseSetupResources({
             store,
             pr,
             miseScratchDirectory,
-            setupFailed,
+            setupFailure,
           });
         }
       }),

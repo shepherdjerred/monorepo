@@ -17,6 +17,7 @@ import type {
   RunEventCorrelation,
   RunEventKind,
 } from "@shepherdjerred/pr-fleet-controller/src/run-events.ts";
+import { identity } from "./fixtures.ts";
 
 class RecordingTelemetry implements FleetTelemetry {
   readonly runId = "environment-test";
@@ -119,6 +120,35 @@ test("environment results inherit the active reconciliation tick", async () => {
     telemetry.events.find((event) => event.kind === "environment.result")
       ?.correlation,
   ).toEqual({ tickId: "tick-1" });
+});
+
+test("failed evidence refreshes record a correlated terminal event", async () => {
+  const telemetry = new RecordingTelemetry();
+  const environment = new StubCommandFleetEnvironment({
+    repo: "shepherdjerred/monorepo",
+    checkout: "/tmp/repo",
+    worktreeRoot: "/tmp/worktrees",
+    provider: codexProvider,
+    telemetry,
+  });
+  const pr = identity(42);
+
+  await expect(
+    withCommandCorrelation({ tickId: "tick-2" }, () =>
+      environment.refreshEvidence(pr),
+    ),
+  ).rejects.toBeInstanceOf(Error);
+
+  expect(
+    telemetry.events.find((event) => event.kind === "environment.failed"),
+  ).toMatchObject({
+    payload: { operation: "refreshEvidence" },
+    correlation: {
+      tickId: "tick-2",
+      prNumber: pr.number,
+      headSha: pr.headSha,
+    },
+  });
 });
 
 test("autonomous work can clear inherited command correlation", async () => {
