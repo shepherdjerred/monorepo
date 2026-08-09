@@ -92,6 +92,7 @@ export function CompetitionLeaderboardPanel(props: {
       meta: analyticsMeta("competition_leaderboard_refreshed"),
       onSuccess: () => {
         void queryClient.invalidateQueries({ queryKey: leaderboardKey });
+        void analysisQuery.refetch();
         setChartBust((prev) => prev + 1);
       },
     }),

@@ -34,4 +34,21 @@ describe("createBoundedAsyncCache", () => {
     await cached("c", load);
     expect(await cached("a", load)).toBe(4);
   });
+
+  test("clears retained and in-flight entries without allowing stale repopulation", async () => {
+    const first = Promise.withResolvers<number>();
+    const cached = createBoundedAsyncCache<number>({
+      ttlMs: 10,
+      maxEntries: 2,
+      maxConcurrent: 2,
+      now: () => 0,
+    });
+
+    const stale = cached("a", () => first.promise);
+    cached.clear();
+    expect(await cached("a", () => Promise.resolve(2))).toBe(2);
+    first.resolve(1);
+    expect(await stale).toBe(1);
+    expect(await cached("a", () => Promise.resolve(3))).toBe(2);
+  });
 });

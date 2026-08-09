@@ -65,6 +65,7 @@ import {
   loadHistoricalLeaderboardSnapshots,
 } from "#src/storage/s3-leaderboard.ts";
 import { refreshAndCacheLeaderboard } from "#src/league/competition/refresh.ts";
+import { clearCompetitionAnalysisCache } from "#src/league/competition/analysis.ts";
 import { competitionAnalysisProcedures } from "#src/trpc/router/competition-analysis-procedures.ts";
 
 const GuildInput = z.object({ guildId: DiscordGuildIdSchema });
@@ -500,6 +501,7 @@ export const competitionRouter = router({
       );
       try {
         const entries = await refreshAndCacheLeaderboard(competition);
+        clearCompetitionAnalysisCache();
         return { entries };
       } catch (error) {
         asBadRequest(error);

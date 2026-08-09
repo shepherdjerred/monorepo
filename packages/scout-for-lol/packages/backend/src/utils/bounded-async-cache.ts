@@ -5,13 +5,19 @@ type BoundedAsyncCacheOptions = {
   now: () => number;
 };
 
+export type BoundedAsyncCache<Result> = {
+  (key: string, load: () => Promise<Result>): Promise<Result>;
+  clear: () => void;
+};
+
 export function createBoundedAsyncCache<Result>(
   options: BoundedAsyncCacheOptions,
-): (key: string, load: () => Promise<Result>) => Promise<Result> {
+): BoundedAsyncCache<Result> {
   const cache = new Map<string, { expiresAt: number; result: Result }>();
   const inFlight = new Map<string, Promise<Result>>();
   const waiters: (() => void)[] = [];
   let active = 0;
+  let generation = 0;
 
   async function withSlot(load: () => Promise<Result>): Promise<Result> {
     if (active >= options.maxConcurrent) {
@@ -29,7 +35,7 @@ export function createBoundedAsyncCache<Result>(
     }
   }
 
-  return async (key, load) => {
+  const get = async (key: string, load: () => Promise<Result>) => {
     const now = options.now();
     for (const [cachedKey, value] of cache) {
       if (value.expiresAt <= now) cache.delete(cachedKey);
@@ -38,19 +44,30 @@ export function createBoundedAsyncCache<Result>(
     if (cached !== undefined) return cached.result;
     const running = inFlight.get(key);
     if (running !== undefined) return await running;
+    const loadGeneration = generation;
     const promise = withSlot(load);
     inFlight.set(key, promise);
     try {
       const result = await promise;
-      cache.set(key, { expiresAt: options.now() + options.ttlMs, result });
-      while (cache.size > options.maxEntries) {
-        const oldest = cache.keys().next().value;
-        if (oldest === undefined) break;
-        cache.delete(oldest);
+      if (loadGeneration === generation) {
+        cache.set(key, { expiresAt: options.now() + options.ttlMs, result });
+        while (cache.size > options.maxEntries) {
+          const oldest = cache.keys().next().value;
+          if (oldest === undefined) break;
+          cache.delete(oldest);
+        }
       }
       return result;
     } finally {
-      inFlight.delete(key);
+      if (inFlight.get(key) === promise) inFlight.delete(key);
     }
   };
+
+  return Object.assign(get, {
+    clear: () => {
+      generation++;
+      cache.clear();
+      inFlight.clear();
+    },
+  });
 }

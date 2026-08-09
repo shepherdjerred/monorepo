@@ -15,6 +15,7 @@ import {
   cachedCompetitionAnalysis,
 } from "#src/league/competition/analysis.ts";
 import { resolveCompetitionAnalysisDates } from "#src/league/competition/analysis-dates.ts";
+import { mergeCompetitionRankHistory } from "#src/league/competition/analysis-results.ts";
 import { fetchCompetitionRankHistory } from "#src/reports/duckdb/lake-reads.ts";
 import {
   loadCachedLeaderboard,
@@ -68,15 +69,18 @@ export const competitionAnalysisProcedures = {
           competition.analysisTimezone,
         ].join(":");
         return await cachedCompetitionAnalysis(cacheKey, async () => {
-          const [lakeHistory, official] = await Promise.all([
-            fetchCompetitionRankHistory({
-              competitionId: input.competitionId,
-            }),
-            loadCachedLeaderboard(input.competitionId),
-          ]);
-          const history =
-            lakeHistory ??
-            (await loadHistoricalLeaderboardSnapshots(input.competitionId));
+          const [lakeHistory, authoritativeHistory, official] =
+            await Promise.all([
+              fetchCompetitionRankHistory({
+                competitionId: input.competitionId,
+              }),
+              loadHistoricalLeaderboardSnapshots(input.competitionId),
+              loadCachedLeaderboard(input.competitionId),
+            ]);
+          const history = mergeCompetitionRankHistory(
+            lakeHistory ?? [],
+            authoritativeHistory,
+          );
           return await analyzeCompetition({
             prisma,
             competition,

@@ -2,7 +2,6 @@ import {
   COMPETITION_QUEUE_TO_QUEUE_TYPES,
   CompetitionAnalysisPresetSchema,
   ReportQueryPlanSchema,
-  PlayerIdSchema,
   VisualizationSnapshotSchema,
   parseAndCompile,
   rankToLeaguePoints,
@@ -27,6 +26,7 @@ import {
   competitionAnalysisSpec,
   resolveCompetitionAnalysisDates,
 } from "#src/league/competition/analysis-dates.ts";
+import { standingsFromResult } from "#src/league/competition/analysis-results.ts";
 import {
   executeCompiledReportQuery,
   type ReportQueryResult,
@@ -52,6 +52,10 @@ export const cachedCompetitionAnalysis =
     maxConcurrent: 2,
     now: Date.now,
   });
+
+export function clearCompetitionAnalysisCache(): void {
+  cachedCompetitionAnalysis.clear();
+}
 
 export async function analyzeCompetition(params: {
   prisma: ExtendedPrismaClient;
@@ -286,22 +290,6 @@ function temporalPresetPlan(
     analysis,
     limit: 2000,
   });
-}
-
-function standingsFromResult(
-  result: ReportQueryResult,
-): CachedLeaderboardEntry[] {
-  return result.rows.map((row, index) => ({
-    playerId: PlayerIdSchema.parse(
-      row.mentionIdentity?.kind === "player" &&
-        row.mentionIdentity.playerId !== null
-        ? row.mentionIdentity.playerId
-        : index + 1,
-    ),
-    playerName: row.label,
-    score: typeof row.values[0]?.value === "number" ? row.values[0].value : 0,
-    rank: index + 1,
-  }));
 }
 
 function historyAroundRange(

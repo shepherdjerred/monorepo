@@ -30,7 +30,8 @@ describe("canonical ScoutQL temporal analysis", () => {
   });
 
   test("formats inclusive dates and an equal-length custom baseline", () => {
-    const formatted = formatReportQuery(`${BASE}
+    const formatted =
+      formatReportQuery(`SELECT games FROM match_participants GROUP BY all
       analyze between '2026-03-01' and '2026-03-31'
       bucket by day
       compare to between '2026-02-01' and '2026-03-03'
@@ -42,6 +43,16 @@ describe("canonical ScoutQL temporal analysis", () => {
     expect(formatted).toContain(
       "COMPARE TO BETWEEN '2026-02-01' AND '2026-03-03'",
     );
+  });
+
+  test("rejects grouped calendar heatmaps that would omit series", () => {
+    expect(() =>
+      parseAndCompile(`${BASE}
+        ANALYZE LAST 30 DAYS
+        BUCKET BY DAY
+        IN TIME ZONE 'UTC'
+        RENDER calendar_heatmap WITH (y = games)`),
+    ).toThrow("Calendar heatmaps require GROUP BY all");
   });
 
   test("rejects report windows above 365 days", () => {

@@ -212,8 +212,8 @@ function validateRenderShape(
       "Bump charts require a time bucket and a player dimension.",
     );
   }
-  if (render.kind === "CALENDAR_HEATMAP" && !groupBys.includes("day")) {
-    throw new Error("Calendar heatmaps require daily temporal buckets.");
+  if (render.kind === "CALENDAR_HEATMAP") {
+    validateCalendarHeatmap(groupBys, logicalGroupBys);
   }
   if (
     render.kind === "RADAR_CHART" &&
@@ -229,6 +229,18 @@ function validateRenderShape(
     logicalGroupBys.some((groupBy) => groupBy !== "all")
   ) {
     throw new Error("KPI cards require GROUP BY all.");
+  }
+}
+
+function validateCalendarHeatmap(
+  groupBys: ReportGroupBy[],
+  logicalGroupBys: ReportGroupBy[],
+): void {
+  if (!groupBys.includes("day")) {
+    throw new Error("Calendar heatmaps require daily temporal buckets.");
+  }
+  if (logicalGroupBys.some((groupBy) => groupBy !== "all")) {
+    throw new Error("Calendar heatmaps require GROUP BY all.");
   }
 }
 
