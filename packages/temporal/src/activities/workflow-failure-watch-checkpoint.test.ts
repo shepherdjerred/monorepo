@@ -3,6 +3,7 @@ import {
   parseWorkflowFailureWatchCheckpoint,
   parseWorkflowFailureWatchLookbackSince,
   serializedCheckpoint,
+  workflowExecutionKey,
 } from "./workflow-failure-watch-checkpoint.ts";
 
 describe("workflow failure watch heartbeat checkpoints", () => {
@@ -31,6 +32,7 @@ describe("workflow failure watch heartbeat checkpoints", () => {
       lookbackSince: new Date("2026-07-29T18:00:00.000Z"),
       workflowId: "wf-new",
       runId: "run-new",
+      processedExecutionKeys: [workflowExecutionKey("wf-new", "run-new")],
     });
 
     expect(
@@ -41,6 +43,7 @@ describe("workflow failure watch heartbeat checkpoints", () => {
       lookbackSince: new Date("2026-07-29T18:00:00.000Z"),
       workflowId: "wf-new",
       runId: "run-new",
+      processedExecutionKeys: [workflowExecutionKey("wf-new", "run-new")],
     });
   });
 

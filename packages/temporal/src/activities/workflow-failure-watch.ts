@@ -3,6 +3,7 @@ import type { FailedWorkflowExecution } from "#shared/workflow-failure-alert.ts"
 import { temporalFailureWatcherAlertsTotal } from "#observability/metrics.ts";
 import {
   checkpointForExecution,
+  workflowExecutionKey,
   type WorkflowFailureWatchCheckpoint,
 } from "./workflow-failure-watch-checkpoint.ts";
 import { buildFailureAlertForExecution } from "./workflow-failure-watch-detail.ts";
@@ -56,9 +57,11 @@ const VISIBILITY_PAGE_SIZE = 100;
 const FAILURE_STATUS_NAMES = ["FAILED", "TIMED_OUT"] as const;
 type FailureStatusName = (typeof FAILURE_STATUS_NAMES)[number];
 
-// Temporal visibility pages are newest-first. The SQL store's page token uses
-// CloseTime DESC, StartTime DESC, RunId ASC as its continuation boundary; the
-// cursor query and in-memory comparator below intentionally mirror that order.
+// Temporal visibility pages are newest-first. The SDK exposes timestamps as
+// millisecond-precision Dates, so the checkpoint treats each close-time
+// millisecond as a cohort and records the completed execution keys within it.
+// This is conservative for the server's nanosecond ordering while still
+// advancing past a cohort across retries.
 export type PollWorkflowFailuresResult = {
   scanned: number;
   alerted: number;
@@ -155,7 +158,10 @@ function pollVisibilityBoundary(
 }
 
 function isAfterVisibilityCursor(
-  execution: Pick<FailedWorkflowExecution, "closeTime" | "startTime" | "runId">,
+  execution: Pick<
+    FailedWorkflowExecution,
+    "workflowId" | "closeTime" | "runId"
+  >,
   checkpoint: WorkflowFailureWatchCheckpoint,
 ): boolean {
   if (execution.closeTime.getTime() < checkpoint.closeTime.getTime()) {
@@ -164,21 +170,13 @@ function isAfterVisibilityCursor(
   if (execution.closeTime.getTime() > checkpoint.closeTime.getTime()) {
     return false;
   }
-  // Older heartbeats do not have the start-time/run-id tie-breakers. Retain
-  // their entire close-time cohort rather than guessing and losing a page.
-  if (checkpoint.startTime === undefined) {
-    return true;
-  }
-  if (execution.startTime.getTime() < checkpoint.startTime.getTime()) {
-    return true;
-  }
-  if (execution.startTime.getTime() > checkpoint.startTime.getTime()) {
-    return false;
-  }
-  // Temporal visibility pages are newest-first by CloseTime DESC, then
-  // StartTime DESC, then RunId ASC. The retry resumes after the stored cursor,
-  // so equal-time rows with a greater run ID are the unprocessed suffix.
-  return execution.runId > checkpoint.runId;
+  // The SDK's Date cannot represent protobuf nanoseconds. An older heartbeat
+  // has no completed-key set, so replay its entire close-millisecond cohort;
+  // new heartbeats skip only IDs already posted in that cohort.
+  const processedExecutionKeys = checkpoint.processedExecutionKeys ?? [];
+  return !processedExecutionKeys.includes(
+    workflowExecutionKey(execution.workflowId, execution.runId),
+  );
 }
 
 type FailureDetailResult = {
@@ -188,10 +186,12 @@ type FailureDetailResult = {
 
 type FailureBatchResult = FailureDetailResult & {
   checkpointBlocked: boolean;
+  checkpoint: WorkflowFailureWatchCheckpoint | undefined;
 };
 
 type CheckpointProgressOptions = {
   checkpointBlocked: boolean;
+  checkpoint: WorkflowFailureWatchCheckpoint | undefined;
   lookbackSince: Date;
   onCheckpoint:
     | ((checkpoint: WorkflowFailureWatchCheckpoint) => void)
@@ -225,10 +225,18 @@ function postFailureBatchOptions(
     options: input.pollOptions,
     checkpointProgress: {
       checkpointBlocked: input.checkpointBlocked,
+      checkpoint: input.pollOptions.checkpoint,
       lookbackSince: input.lookbackSince,
       onCheckpoint: input.pollOptions.onCheckpoint,
     },
   };
+}
+
+function pollOptionsWithCheckpoint(
+  options: PollWorkflowFailuresOptions,
+  checkpoint: WorkflowFailureWatchCheckpoint | undefined,
+): PollWorkflowFailuresOptions {
+  return checkpoint === undefined ? options : { ...options, checkpoint };
 }
 
 async function postFailureBatch(
@@ -240,6 +248,7 @@ async function postFailureBatch(
   const alerts: AlertmanagerAlert[] = [];
   let errored = 0;
   let checkpointBlocked = checkpointProgress.checkpointBlocked;
+  let checkpoint = checkpointProgress.checkpoint;
   for (
     let chunkStart = 0;
     chunkStart < executions.length;
@@ -286,41 +295,80 @@ async function postFailureBatch(
       alerted: chunkAlerts.length - chunkErrored,
       errored: chunkErrored,
     };
-    checkpointBlocked = advanceRecoveryCheckpoint(
-      chunkResult,
-      chunk,
+    const checkpointProgressResult = advanceRecoveryCheckpoint({
+      result: chunkResult,
+      executions: chunk,
       checkpointBlocked,
-      checkpointProgress,
-    );
+      checkpoint,
+      onCheckpoint: checkpointProgress.onCheckpoint,
+      lookbackSince: checkpointProgress.lookbackSince,
+    });
+    checkpointBlocked = checkpointProgressResult.checkpointBlocked;
+    checkpoint = checkpointProgressResult.checkpoint;
   }
 
-  return { alerted: alerts.length, errored, checkpointBlocked };
+  return {
+    alerted: alerts.length,
+    errored,
+    checkpointBlocked,
+    checkpoint,
+  };
 }
 
+type RecoveryCheckpointProgress = {
+  checkpointBlocked: boolean;
+  checkpoint: WorkflowFailureWatchCheckpoint | undefined;
+};
+
+type AdvanceRecoveryCheckpointInput = {
+  result: FailureDetailResult;
+  executions: readonly FailedWorkflowExecution[];
+  checkpointBlocked: boolean;
+  checkpoint: WorkflowFailureWatchCheckpoint | undefined;
+  onCheckpoint:
+    | ((checkpoint: WorkflowFailureWatchCheckpoint) => void)
+    | undefined;
+  lookbackSince: Date;
+};
+
 function advanceRecoveryCheckpoint(
-  result: FailureDetailResult,
-  executions: readonly FailedWorkflowExecution[],
-  checkpointBlocked: boolean,
-  checkpointOptions: {
-    onCheckpoint:
-      | ((checkpoint: WorkflowFailureWatchCheckpoint) => void)
-      | undefined;
-    lookbackSince: Date;
-  },
-): boolean {
-  if (result.errored !== 0) {
-    return true;
+  input: AdvanceRecoveryCheckpointInput,
+): RecoveryCheckpointProgress {
+  if (input.result.errored !== 0) {
+    return { checkpointBlocked: true, checkpoint: input.checkpoint };
   }
-  if (checkpointBlocked || checkpointOptions.onCheckpoint === undefined) {
-    return checkpointBlocked;
+  if (input.checkpointBlocked || input.onCheckpoint === undefined) {
+    return {
+      checkpointBlocked: input.checkpointBlocked,
+      checkpoint: input.checkpoint,
+    };
   }
-  const lastExecution = executions.at(-1);
-  if (lastExecution !== undefined) {
-    checkpointOptions.onCheckpoint(
-      checkpointForExecution(lastExecution, checkpointOptions.lookbackSince),
-    );
+  const lastExecution = input.executions.at(-1);
+  if (lastExecution === undefined) {
+    return {
+      checkpointBlocked: input.checkpointBlocked,
+      checkpoint: input.checkpoint,
+    };
   }
-  return false;
+  const closeTimeMs = lastExecution.closeTime.getTime();
+  const processedExecutionKeys = new Set(
+    input.checkpoint?.closeTime.getTime() === closeTimeMs
+      ? (input.checkpoint.processedExecutionKeys ?? [])
+      : [],
+  );
+  for (const execution of input.executions) {
+    if (execution.closeTime.getTime() === closeTimeMs) {
+      processedExecutionKeys.add(
+        workflowExecutionKey(execution.workflowId, execution.runId),
+      );
+    }
+  }
+  const nextCheckpoint = {
+    ...checkpointForExecution(lastExecution, input.lookbackSince),
+    processedExecutionKeys: [...processedExecutionKeys],
+  } satisfies WorkflowFailureWatchCheckpoint;
+  input.onCheckpoint(nextCheckpoint);
+  return { checkpointBlocked: false, checkpoint: nextCheckpoint };
 }
 
 export type PollWorkflowFailuresOptions = {
@@ -353,6 +401,7 @@ export async function pollWorkflowFailuresOnce(
   let listingError: unknown;
   let processingBatch = false;
   let checkpointBlocked = false;
+  let recoveryCheckpoint = checkpoint;
   try {
     for await (const info of client.workflow.list({
       query,
@@ -366,8 +415,8 @@ export async function pollWorkflowFailuresOnce(
         checkpoint !== undefined &&
         !isAfterVisibilityCursor(
           {
+            workflowId: info.workflowId,
             closeTime: info.closeTime,
-            startTime: info.startTime,
             runId: info.runId,
           },
           checkpoint,
@@ -392,12 +441,13 @@ export async function pollWorkflowFailuresOnce(
             client,
             poster,
             executions: pendingExecutions,
-            pollOptions: options,
+            pollOptions: pollOptionsWithCheckpoint(options, recoveryCheckpoint),
             checkpointBlocked,
             lookbackSince: since,
           }),
         );
         checkpointBlocked = result.checkpointBlocked;
+        recoveryCheckpoint = result.checkpoint;
         processingBatch = false;
         alerted += result.alerted;
         errored += result.errored;
@@ -418,7 +468,7 @@ export async function pollWorkflowFailuresOnce(
         client,
         poster,
         executions: pendingExecutions,
-        pollOptions: options,
+        pollOptions: pollOptionsWithCheckpoint(options, recoveryCheckpoint),
         checkpointBlocked,
         lookbackSince: since,
       }),

@@ -264,10 +264,13 @@ async function runAgent(
 
       // Post-hoc Claude spans retain raw stdout in the LLM archive. Check the
       // final redaction state first so a refresh failure can never archive a
-      // newly rotated credential from that raw buffer. Other failed runs are
-      // still traced because their stdout is safe to retain.
+      // newly rotated credential from that raw buffer. Keep the raw stdout for
+      // contract parsing below, but pass a token-redacted copy to the archive
+      // so credentials that are not covered by the observability package's
+      // generic patterns cannot be persisted. Other failed runs are still
+      // traced because their stdout is safe to retain.
       llmTrace.record({
-        stdout: result.stdout,
+        stdout: redactSecrets(result.stdout, secretTokens),
         exitCode: result.exitCode,
         startTimeMs: llmStartMs,
         durationMs: result.durationMs,

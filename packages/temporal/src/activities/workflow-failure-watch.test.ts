@@ -14,7 +14,10 @@ import {
   pollWorkflowFailuresOnce,
   type WorkflowVisibilityClient,
 } from "./workflow-failure-watch.ts";
-import type { WorkflowFailureWatchCheckpoint } from "./workflow-failure-watch-checkpoint.ts";
+import {
+  workflowExecutionKey,
+  type WorkflowFailureWatchCheckpoint,
+} from "./workflow-failure-watch-checkpoint.ts";
 
 const NOW = new Date("2026-07-30T18:00:00.000Z");
 const LOOKBACK_MS = 24 * 60 * 60 * 1000;
@@ -815,6 +818,7 @@ describe("workflow failure watch checkpoints", () => {
       lookbackSince: new Date("2026-07-29T17:00:00.000Z"),
       workflowId: "wf-old",
       runId: "run-old",
+      processedExecutionKeys: [workflowExecutionKey("wf-old", "run-old")],
     });
   });
 
@@ -835,6 +839,11 @@ describe("workflow failure watch checkpoints", () => {
       startTime,
       workflowId: "wf-cohort-15",
       runId: "run-15",
+      processedExecutionKeys: executions
+        .slice(0, 16)
+        .map((execution) =>
+          workflowExecutionKey(execution.workflowId, execution.runId),
+        ),
     };
     const client = fakeClient(
       executions,

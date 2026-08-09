@@ -9,6 +9,12 @@ const WorkflowFailureWatchCheckpointSchema = z.object({
   lookbackSince: z.iso.datetime({ offset: true }).optional(),
   workflowId: z.string().min(1),
   runId: z.string().min(1),
+  // The Temporal SDK exposes visibility timestamps as millisecond-precision
+  // Dates even when the server's protobuf timestamps have nanoseconds. Keep
+  // the exact IDs completed in the current close-millisecond cohort so a
+  // retry can replay unseen rows without skipping them or retrying the first
+  // batch forever.
+  processedExecutionKeys: z.array(z.string().min(1)).optional(),
 });
 
 export type WorkflowFailureWatchCheckpoint = {
@@ -17,7 +23,15 @@ export type WorkflowFailureWatchCheckpoint = {
   lookbackSince?: Date;
   workflowId: string;
   runId: string;
+  processedExecutionKeys?: string[];
 };
+
+export function workflowExecutionKey(
+  workflowId: string,
+  runId: string,
+): string {
+  return `${workflowId}\u{0000}${runId}`;
+}
 
 /**
  * Decode the last heartbeat from a retrying activity. Heartbeats from the
@@ -46,6 +60,9 @@ export function parseWorkflowFailureWatchCheckpoint(
       : { lookbackSince: new Date(parsed.lookbackSince) }),
     workflowId: parsed.workflowId,
     runId: parsed.runId,
+    ...(parsed.processedExecutionKeys === undefined
+      ? {}
+      : { processedExecutionKeys: parsed.processedExecutionKeys }),
   };
 }
 
@@ -65,7 +82,7 @@ export function parseWorkflowFailureWatchLookbackSince(
 
 export function serializedCheckpoint(
   checkpoint: WorkflowFailureWatchCheckpoint | undefined,
-): Record<string, string> | null {
+): Record<string, unknown> | null {
   return checkpoint === undefined
     ? null
     : {
@@ -78,6 +95,9 @@ export function serializedCheckpoint(
           : { lookbackSince: checkpoint.lookbackSince.toISOString() }),
         workflowId: checkpoint.workflowId,
         runId: checkpoint.runId,
+        ...(checkpoint.processedExecutionKeys === undefined
+          ? {}
+          : { processedExecutionKeys: checkpoint.processedExecutionKeys }),
       };
 }
 
@@ -91,5 +111,8 @@ export function checkpointForExecution(
     ...(lookbackSince === undefined ? {} : { lookbackSince }),
     workflowId: execution.workflowId,
     runId: execution.runId,
+    processedExecutionKeys: [
+      workflowExecutionKey(execution.workflowId, execution.runId),
+    ],
   };
 }
