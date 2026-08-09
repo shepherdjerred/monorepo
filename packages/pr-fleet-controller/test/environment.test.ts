@@ -98,6 +98,22 @@ class CapturingCommandFleetEnvironment extends StubCommandFleetEnvironment {
 
 class RestackPublishingEnvironment extends CommandFleetEnvironment {
   published = false;
+  continued = false;
+
+  override continueRestack(): Promise<{
+    exitCode: number;
+    stdout: string;
+    stderr: string;
+    termination: "exit";
+  }> {
+    this.continued = true;
+    return Promise.resolve({
+      exitCode: 0,
+      stdout: "",
+      stderr: "",
+      termination: "exit",
+    });
+  }
 
   override publishRestack(pr: PrState): Promise<{ headSha: string }> {
     this.published = true;
@@ -475,8 +491,12 @@ test("restack publication revalidates its captured head and clean worktree", asy
       assertNotWaitingForAnswer: () => null,
     });
     const publishRestack = tools.publish_restack.execute;
+    const continueRestack = tools.continue_restack.execute;
     if (publishRestack === undefined) {
       throw new Error("publish restack tool has no executor");
+    }
+    if (continueRestack === undefined) {
+      throw new Error("continue restack tool has no executor");
     }
     const armPublication = () => {
       store.requestLease(pr, "stack-write");
@@ -485,6 +505,33 @@ test("restack publication revalidates its captured head and clean worktree", asy
         localHeadSha: headSha,
       });
     };
+
+    store.requestLease(pr, "stack-write");
+    store.activeRestacks.add(pr.identity.number);
+    await expect(
+      continueRestack({ paths: ["tracked.txt"] }, { observe: noopObserve }),
+    ).rejects.toThrow(/inspect again/);
+    expect(environment.continued).toBe(false);
+    const inspected = await collectInheritedWipEvidence({
+      environment,
+      worktree: directory,
+      signal: new AbortController().signal,
+    });
+    store.inheritedWipInspections.set(pr.identity.number, {
+      remoteHeadSha: headSha,
+      localHeadSha: inspected.localHeadSha,
+      fingerprint: inspected.fingerprint,
+      complete: true,
+    });
+    await Bun.write(path.join(directory, "tracked.txt"), "late edit\n");
+    await expect(
+      continueRestack({ paths: ["tracked.txt"] }, { observe: noopObserve }),
+    ).rejects.toThrow(/differs from the complete inspection/);
+    expect(environment.continued).toBe(false);
+    await Bun.write(path.join(directory, "tracked.txt"), "base\n");
+    await continueRestack({ paths: ["tracked.txt"] }, { observe: noopObserve });
+    expect(environment.continued).toBe(true);
+    expect(store.activeRestacks.has(pr.identity.number)).toBe(false);
 
     armPublication();
     await publishRestack({}, { observe: noopObserve });

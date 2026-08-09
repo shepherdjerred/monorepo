@@ -199,7 +199,14 @@ export function requireMatchingInheritedWipInspection(
   if (context?.ownership !== "operator") {
     return;
   }
-  if (live.localHeadSha !== context.localHeadSha) {
+  const inspection = store.inheritedWipInspections.get(pr.identity.number);
+  const expectedLocalHead = store.activeRestacks.has(pr.identity.number)
+    ? inspection?.localHeadSha
+    : context.localHeadSha;
+  if (
+    expectedLocalHead === undefined ||
+    live.localHeadSha !== expectedLocalHead
+  ) {
     throw new Error(
       "Operator worktree HEAD changed after assignment; inspect again or ask the operator",
     );
@@ -207,7 +214,6 @@ export function requireMatchingInheritedWipInspection(
   if (!live.hasWip && !context.dirty) {
     return;
   }
-  const inspection = store.inheritedWipInspections.get(pr.identity.number);
   if (
     inspection === undefined ||
     !inspection.complete ||

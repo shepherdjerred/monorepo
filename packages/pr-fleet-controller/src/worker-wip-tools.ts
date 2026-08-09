@@ -218,12 +218,24 @@ export function createWorkerWipTools(options: {
           let localCommits = "No ahead-of-remote inherited commits.";
           let localCommitEvidenceComplete = true;
           const context = pr.worktreeContext;
-          if (context !== null && wip.localHeadSha !== context.localHeadSha) {
+          const restackInProgress = store.activeRestacks.has(
+            pr.identity.number,
+          );
+          if (
+            !restackInProgress &&
+            context !== null &&
+            wip.localHeadSha !== context.localHeadSha
+          ) {
             throw new Error(
               "Local HEAD changed after inherited work was captured; inspect again",
             );
           }
-          if (context?.relation === "ahead") {
+          if (restackInProgress) {
+            localCommits =
+              "Restack in progress; inherited commit publication is disabled until it completes.";
+            localCommitEvidenceComplete = false;
+            store.inheritedCommitInspections.delete(pr.identity.number);
+          } else if (context?.relation === "ahead") {
             const inheritedRange = `${pr.identity.headSha}..HEAD`;
             const commitLog = await runGit(environment, worktree, signal, [
               "log",
