@@ -104,9 +104,15 @@ async function renderFixture(
   );
   expect(svg).toContain("<svg");
   expect(image.length).toBeGreaterThan(4096);
-  expect(interactiveOption.series).toEqual(staticOption.series);
-  expect(interactiveOption.xAxis).toEqual(staticOption.xAxis);
-  expect(interactiveOption.yAxis).toEqual(staticOption.yAxis);
+  expect(JSON.stringify(interactiveOption.series)).toBe(
+    JSON.stringify(staticOption.series),
+  );
+  expect(JSON.stringify(interactiveOption.xAxis)).toBe(
+    JSON.stringify(staticOption.xAxis),
+  );
+  expect(JSON.stringify(interactiveOption.yAxis)).toBe(
+    JSON.stringify(staticOption.yAxis),
+  );
   const output = path.join(OUTPUT_DIR, filename);
   await Bun.write(output, image);
   writtenFiles.push(output);
