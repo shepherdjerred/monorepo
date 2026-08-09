@@ -21,6 +21,7 @@ import { z } from "zod";
 import * as Sentry from "@sentry/bun";
 import { prisma } from "#src/database/index.ts";
 import { CSRF_COOKIE, SESSION_COOKIE } from "#src/trpc/context.ts";
+import { webSigninTotal } from "#src/metrics/web.ts";
 import { signSession, verifySession } from "#src/trpc/jwt.ts";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 import { createLogger } from "#src/logger.ts";
@@ -158,6 +159,7 @@ export function generateCsrfToken(): string {
  * the same nonce in the state parameter. The callback compares the two.
  */
 export function handleDiscordStart(request: Request): Response {
+  webSigninTotal.inc({ result: "started" });
   const url = new URL(request.url);
   const returnTo = safeReturnTo(url.searchParams.get("returnTo"));
 
@@ -300,6 +302,7 @@ export async function handleDiscordCallback(
   const clearStateCookie = buildClearCookie(OAUTH_STATE_COOKIE, isHttps, "Lax");
 
   if (oauthError !== null) {
+    webSigninTotal.inc({ result: "failed" });
     logger.info(`OAuth denied or failed: ${oauthError}`);
     const headers = new Headers();
     headers.append("Set-Cookie", clearStateCookie);
@@ -311,6 +314,7 @@ export async function handleDiscordCallback(
   }
 
   if (code === null || code.length === 0) {
+    webSigninTotal.inc({ result: "callback_error" });
     return new Response("Missing OAuth code", { status: 400 });
   }
 
@@ -319,6 +323,7 @@ export async function handleDiscordCallback(
   // the null check out so TS can narrow `state` to string in the rest
   // of this function.
   if (state === null || !checkStateNonce(state, expectedNonce)) {
+    webSigninTotal.inc({ result: "callback_error" });
     logger.warn("OAuth state mismatch — possible CSRF or expired flow", {
       hasCookie: expectedNonce !== undefined,
       hasState: state !== null,
@@ -331,6 +336,7 @@ export async function handleDiscordCallback(
 
   if (configuration.discordClientSecret === undefined) {
     logger.error("DISCORD_CLIENT_SECRET not configured");
+    webSigninTotal.inc({ result: "callback_error" });
     return new Response("Server misconfigured: OAuth disabled", {
       status: 500,
     });
@@ -355,6 +361,7 @@ export async function handleDiscordCallback(
       status: tokenResponse.status,
       text,
     });
+    webSigninTotal.inc({ result: "failed" });
     return new Response("Discord rejected the authorization code", {
       status: 400,
     });
@@ -369,6 +376,7 @@ export async function handleDiscordCallback(
   });
   if (!userResponse.ok) {
     logger.error("Failed to fetch Discord user");
+    webSigninTotal.inc({ result: "failed" });
     return new Response("Failed to fetch user info", { status: 502 });
   }
   const userJson: unknown = await userResponse.json();
@@ -433,6 +441,7 @@ export async function handleDiscordCallback(
   );
   headers.set("Location", `${appOrigin}${returnTo}`);
 
+  webSigninTotal.inc({ result: "succeeded" });
   logger.info(
     `Web sign-in succeeded for ${discordUser.username} (${discordId})`,
   );
@@ -505,6 +514,10 @@ export async function handleAuthRoutes(
     try {
       return await handleDiscordCallback(request);
     } catch (error) {
+      // The catch-all terminal path: without this, a thrown callback error left
+      // the sign-in failure rate flat during exactly the outage it exists to
+      // detect.
+      webSigninTotal.inc({ result: "callback_error" });
       logger.error("❌ OAuth callback error:", error);
       Sentry.captureException(error, {
         tags: { source: "auth-web-callback" },

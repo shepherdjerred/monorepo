@@ -2,6 +2,29 @@ import type { PrometheusRuleSpecGroups } from "@shepherdjerred/homelab/cdk8s/gen
 import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { escapePrometheusTemplate } from "./shared.ts";
 
+/**
+ * tRPC result codes that are ordinary traffic on a public web surface rather
+ * than backend faults: anonymous page loads, permission denials, bad client
+ * input, and missing rows. Alerting on these would fire continuously.
+ */
+const TRPC_NON_FAULT_CODES = [
+  "OK",
+  "UNAUTHORIZED",
+  "FORBIDDEN",
+  "NOT_FOUND",
+  "BAD_REQUEST",
+];
+
+/**
+ * Threshold note for the `scout-web` group.
+ *
+ * Scout's web surface is LOW VOLUME — roughly 21 sign-ins and ~90 anonymous app
+ * loads per month in production. Per-second rate thresholds borrowed from
+ * high-traffic services are therefore unreachable: `rate(...) > 0.05` needs ~45
+ * events inside the window, so a total outage would pass unnoticed by the very
+ * alert meant to catch it. These rules use absolute counts over a window
+ * instead, sized to what "obviously wrong" looks like at this scale.
+ */
 export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
   return [
     {
@@ -289,6 +312,84 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
             "max by (environment) (guild_send_blocked_total) > 5",
           ),
           for: "2h",
+          labels: {
+            severity: "warning",
+          },
+        },
+      ],
+    },
+    {
+      name: "scout-web",
+      rules: [
+        {
+          alert: "ScoutWeb5xxRateHigh",
+          annotations: {
+            summary: "Scout web backend is returning server errors",
+            message: escapePrometheusTemplate(
+              "Scout {{ $labels.environment }} is serving {{ $value | humanize }} 5xx responses in 15m on route {{ $labels.route }}. These are backend faults, not client mistakes.",
+            ),
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'sum by (environment, route) (increase(scout_http_requests_total{status_class="5xx"}[15m])) > 5',
+          ),
+          for: "10m",
+          labels: {
+            severity: "critical",
+          },
+        },
+        {
+          // The failure class that used to reach users as "You are not a member
+          // of that guild" during a plain Discord outage. token_refresh_failed
+          // is excluded: that one genuinely means the user must sign in again.
+          alert: "ScoutDiscordUpstreamFailures",
+          annotations: {
+            summary: "Scout cannot reach Discord to resolve user guilds",
+            message: escapePrometheusTemplate(
+              "Scout {{ $labels.environment }} is failing to fetch user guilds from Discord ({{ $labels.reason }}) saw {{ $value | humanize }} failures in 15m. Web users will see 'Couldn't reach Discord' and cannot manage their servers.",
+            ),
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'sum by (environment, reason) (increase(scout_discord_user_guilds_failures_total{reason!="token_refresh_failed"}[15m])) > 3',
+          ),
+          for: "15m",
+          labels: {
+            severity: "warning",
+          },
+        },
+        {
+          // UNAUTHORIZED/FORBIDDEN are excluded deliberately: anonymous page
+          // loads and permission denials are ordinary traffic on a public web
+          // surface, and alerting on them would fire constantly.
+          alert: "ScoutTrpcErrorRateHigh",
+          annotations: {
+            summary: "Scout tRPC procedures are failing",
+            message: escapePrometheusTemplate(
+              "Scout {{ $labels.environment }} procedure {{ $labels.procedure }} returned {{ $labels.code }} {{ $value | humanize }} times in 30m.",
+            ),
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            `sum by (environment, procedure, code) (increase(scout_trpc_calls_total{code!~"${TRPC_NON_FAULT_CODES.join("|")}"}[30m])) > 5`,
+          ),
+          for: "15m",
+          labels: {
+            severity: "warning",
+          },
+        },
+        {
+          // Only meaningful once people are actually trying: the ratio is
+          // guarded by a minimum attempt rate so a single failed sign-in on a
+          // quiet night doesn't page.
+          alert: "ScoutWebSigninFailureRate",
+          annotations: {
+            summary: "Scout web sign-ins are failing",
+            message: escapePrometheusTemplate(
+              "Scout {{ $labels.environment }} sign-in failures are {{ $value | humanizePercentage }} of attempts over the last 6h. Users cannot get into the dashboard.",
+            ),
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'sum by (environment) (increase(scout_web_signin_total{result=~"failed|callback_error"}[6h])) / sum by (environment) (increase(scout_web_signin_total{result="started"}[6h])) > 0.5 and sum by (environment) (increase(scout_web_signin_total{result="started"}[6h])) >= 3',
+          ),
+          for: "30m",
           labels: {
             severity: "warning",
           },

@@ -324,7 +324,13 @@ model DmAuditLog {
   guildId        String? // Guild this DM relates to, when applicable
   kind           String // Category, e.g. "permission_error" | "abandonment" | "feedback_request" | "competition_invite" | "prune_notice"
   content        String // The message body that was (attempted to be) sent
-  deliveryStatus String // "sent" | "dm_disabled" | "failed"
+  deliveryStatus String // "sent" | "dm_disabled" | "failed" | "budget_exhausted" | "deferred"
+  // Ladder rung this message represented, for budgeted outreach only.
+  // Persisted because the Nth delivered message is NOT necessarily rung N:
+  // a bounced rung-1 DM followed by a delivered rung-2 DM would otherwise be
+  // reconstructed as rung 1, mis-attributing conversions and letting a former
+  // installer receive a repeat of a rung they already got.
+  ladderStage    Int?
   errorMessage   String? // Failure detail when delivery != "sent"
   createdAt      DateTime @default(now())
 
@@ -433,11 +439,80 @@ model GuildInstall {
   addedByDiscordId  String // Installer (from audit log), fallback to ownerId
   memberCount       Int
   installedAt       DateTime
-  outreach3dSentAt  DateTime? // null = not yet sent
-  outreach14dSentAt DateTime? // null = not yet sent
-  outreach30dSentAt DateTime? // 30-day "still not configured" nudge; null = not yet sent
+  // Legacy one-shot markers, kept for one release so a rollback can still read
+  // them. No longer written; DmAuditLog is the source of truth.
+  outreach3dSentAt  DateTime?
+  outreach14dSentAt DateTime?
+  outreach30dSentAt DateTime?
+
+  // Outreach budget, ladder position, and "have we asked for feedback?" are
+  // NOT stored here. They are derived from DmAuditLog rows created after
+  // `installedAt` — the durable record of what was actually delivered.
+  //
+  // A derived counter cannot drift from reality when a write fails, cannot
+  // disagree with the "Message N of 3" text it produces, and makes a re-install
+  // reset the whole ladder for free by simply moving `installedAt` forward.
+
+  // Set once the one-time email nudge has been sent (see the email channel).
+  emailNudgeSentAt    DateTime?
+
+  // Set when guildDelete confirms a removal; cleared on the next install.
+  // This is the ONLY signal that distinguishes a genuine re-install (which
+  // should restart onboarding) from a spurious `guildCreate` for a guild we
+  // never left. `cleanupRemovedGuild` deliberately keeps this row, so row
+  // existence alone cannot tell the two apart.
+  removedAt         DateTime?
 
   @@index([installedAt])
+}
+
+/// Free-text feedback submitted from the web dashboard.
+///
+/// Exists because every prior feedback path was a one-way DM ending in "reply
+/// to a human" — there was nowhere for an answer to land, so nothing was ever
+/// captured. Append-only.
+model Feedback {
+  id        Int      @id @default(autoincrement())
+  discordId String // Submitting web user
+  serverId  String? // Guild in context when submitted, when known
+  rating    Int? // Optional 1-5 sentiment
+  body      String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([discordId, createdAt])
+}
+
+/// A recorded outreach conversion: a guild whose FIRST subscription appeared
+/// within the attribution window after a delivered outreach message.
+///
+/// Written once, never recomputed. Deriving it from live subscriptions made a
+/// historical experiment result *decrease* as converted guilds churned —
+/// `cleanupRemovedGuild` deletes their subscriptions, so the evidence vanished
+/// and the next recompute subtracted them. Scoped to the installation so a
+/// quick re-install cannot attribute a new subscription to the old one.
+/// Records that a user has answered — or dismissed — the one-time in-app
+/// feedback prompt. Server-side because localStorage is per-browser: the same
+/// account was otherwise re-prompted on another device, in a private window, or
+/// after clearing site data, contradicting the "we'll only ask you once"
+/// promise the dialog makes.
+model FeedbackPromptState {
+  discordId   String   @id
+  dismissedAt DateTime @default(now())
+  submitted   Boolean  @default(false)
+}
+
+model OutreachConversion {
+  id          Int      @id @default(autoincrement())
+  serverId    String
+  /// Install this conversion belongs to, so re-installs are distinct.
+  installedAt DateTime
+  /// Ladder rung of the message credited with the conversion.
+  ladderStage Int
+  convertedAt DateTime @default(now())
+
+  @@unique([serverId, installedAt])
+  @@index([ladderStage])
 }
 
 model BotState {

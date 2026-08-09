@@ -106,24 +106,31 @@ function expectTimerDuration(
 }
 
 describe("sleep automation defaults", () => {
-  test("use the requested default durations", async () => {
-    expect(DEFAULT_SLEEP_MUSIC_DURATION_MINUTES).toBe(180);
-    expect(DEFAULT_SLEEP_AC_DURATION_MINUTES).toBe(120);
-    const musicTimes = await runWorker(
-      "sleepMusic",
-      undefined,
-      [],
-      `sleep-music-default-${crypto.randomUUID()}`,
-    );
-    expectTimerDuration(musicTimes, 2, DEFAULT_SLEEP_MUSIC_DURATION_MINUTES);
-    const acTimes = await runWorker(
-      "sleepAc",
-      undefined,
-      [],
-      `sleep-ac-default-${crypto.randomUUID()}`,
-    );
-    expectTimerDuration(acTimes, 0, DEFAULT_SLEEP_AC_DURATION_MINUTES);
-  });
+  // Spins up two Temporal test workers back to back — more work than any other
+  // test here — so it needs the same explicit budget as its siblings. On bun's
+  // 5s default it passes on an idle machine and times out under CI load.
+  test(
+    "use the requested default durations",
+    async () => {
+      expect(DEFAULT_SLEEP_MUSIC_DURATION_MINUTES).toBe(180);
+      expect(DEFAULT_SLEEP_AC_DURATION_MINUTES).toBe(120);
+      const musicTimes = await runWorker(
+        "sleepMusic",
+        undefined,
+        [],
+        `sleep-music-default-${crypto.randomUUID()}`,
+      );
+      expectTimerDuration(musicTimes, 2, DEFAULT_SLEEP_MUSIC_DURATION_MINUTES);
+      const acTimes = await runWorker(
+        "sleepAc",
+        undefined,
+        [],
+        `sleep-ac-default-${crypto.randomUUID()}`,
+      );
+      expectTimerDuration(acTimes, 0, DEFAULT_SLEEP_AC_DURATION_MINUTES);
+    },
+    WORKFLOW_TEST_TIMEOUT_MS,
+  );
 });
 
 describe("sleepMusic", () => {

@@ -684,3 +684,47 @@ running these yourself before pushing catches failures earlier:
 - Markdownlint on `.md` files
 - Per-package: typecheck, ESLint, and relevant tests
 - Rust formatting and Clippy for desktop/src-tauri
+
+## Non-core message budget — a promise to users, not a guideline
+
+Scout sends at most **3** onboarding/feedback messages per server, ever, and
+says so in the body of every one of them ("Message 2 of 3 for <server>").
+That text is generated from the same counter that gates sending, so it cannot
+drift from reality. Treat this as an invariant:
+
+- **Route every non-core message through `sendDM` with a `budget`.** Enforcement
+  lives in `discord/utils/dm.ts`, the audit chokepoint, precisely so no caller
+  can forget the check. Do not add a second send path.
+- **`DmAuditLog` is the ledger.** Budget spend, ladder rung, and "have we asked
+  for feedback?" are derived from audit rows created after `installedAt`, never
+  stored as counters. A counter updated after a send goes stale if that write
+  fails, and the "Message N of 3" text then contradicts the gate that produced
+  it. Only delivered rows count, so a bounced DM charges nothing.
+- **Core product output is not budgeted.** Match reports, competition invites,
+  permission errors, and prune notices are what the user asked for. Everything
+  else is non-core and `sendDM` refuses to send it without a budget — that is
+  what stops a fourth message slipping out on a path nobody thought about.
+- **A new channel shares the budget.** If email or any other channel is added,
+  it consumes the same allowance (`emailNudgeSentAt` exists for this) — a fourth
+  message arriving by another route would make the printed count a lie.
+- **Rung is recorded, not counted.** `DmAuditLog.ladderStage` stores which rung
+  a message was. The Nth delivery is not rung N: a bounced day-3 DM followed by
+  a delivered day-14 DM is rung 2, and legacy history contains lone
+  `outreach_30d` rows. Reconstructing from position repeats rungs and
+  mis-attributes conversions.
+- **Ladder position comes from the calendar, budget from deliveries.** Deriving
+  the rung from spend strands any guild that is legitimately skipped — a
+  configured guild delivers nothing at rung 1, so a spend-derived rung never
+  advances and the rung-2 feedback ask becomes unreachable. A skip records
+  nothing.
+- **Never message a guild Scout is not in.** `GuildInstall` rows outlive a
+  removal by design, and rows predating `removedAt` carry no stamp, so the
+  ladder checks live guild membership before sending. `cleanupRemovedGuild`
+  stamps `removedAt` for every confirmed-removal path.
+- **Re-install resets by moving `installedAt`.** Because state is scoped to rows
+  after that timestamp, there is no list of counters to remember to clear —
+  which is exactly what previously left a re-installed server exhausted.
+
+Validate ladder changes with `bun run scripts/outreach-dry-run.ts` against a
+copy of production before the first real fire — the failure mode here is
+messaging real people.

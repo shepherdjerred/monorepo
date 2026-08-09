@@ -43,7 +43,7 @@ import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import type { AppRouter } from "#src/trpc/router/index.ts";
 import type { PartialGuild } from "#src/lib/discord-rest.ts";
 import * as databaseModule from "#src/database/index.ts";
-import * as discordRestModule from "#src/lib/discord-rest.ts";
+import * as discordUpstreamModule from "#src/trpc/discord-upstream.ts";
 import configuration from "#src/configuration.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { testAccountId } from "#src/testing/test-ids.ts";
@@ -165,12 +165,17 @@ export async function createOfflineTrpcHarness(
     ...databaseModule,
     prisma,
   }));
-  // The RBAC guard resolves membership/admin via fetchUserGuilds + the bot's
-  // guild cache. Stub those two seams so the REAL resolveGuildPermissions runs
-  // against seeded ServerPermission rows.
-  void mock.module("#src/lib/discord-rest.ts", () => ({
-    ...discordRestModule,
-    fetchUserGuilds: () => Promise.resolve(toPartialGuilds()),
+  // The RBAC guard resolves membership/admin via fetchUserGuildsForRequest +
+  // the bot's guild cache. Stub those two seams so the REAL
+  // resolveGuildPermissions runs against seeded ServerPermission rows.
+  //
+  // Stub the request-layer seam, NOT `#src/lib/discord-rest.ts`: `mock.module`
+  // is process-global in Bun, so mocking the lower module would also replace
+  // `fetchUserGuilds` for its own unit tests (`src/lib/discord-rest.test.ts`)
+  // whenever they run in the same `bun test` process.
+  void mock.module("#src/trpc/discord-upstream.ts", () => ({
+    ...discordUpstreamModule,
+    fetchUserGuildsForRequest: () => Promise.resolve(toPartialGuilds()),
   }));
   void mock.module("#src/discord/client.ts", () => ({
     client: {
@@ -226,6 +231,7 @@ export async function createOfflineTrpcHarness(
         ipAddress: "127.0.0.1",
         userAgent: "offline-trpc-harness",
       },
+      clientIp: null,
       requestId: "offline-trpc-harness",
     });
 
@@ -234,6 +240,7 @@ export async function createOfflineTrpcHarness(
       user: null,
       apiToken: null,
       webSession: null,
+      clientIp: null,
       requestId: "offline-trpc-harness-anon",
     });
 

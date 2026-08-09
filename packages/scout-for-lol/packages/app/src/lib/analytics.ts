@@ -90,10 +90,18 @@ const SCOUT_ANALYTICS_EVENTS = [
   "access_revoked",
   // Funnel / entry
   "onboarding_step",
+  // Terminal onboarding events. Without these, finishing setup and hitting
+  // "Skip setup" look identical — both just stop emitting `onboarding_step`.
+  "onboarding_completed",
+  "onboarding_skipped",
   "bot_install_click",
   "login_click",
   "sign_out",
   "theme_changed",
+  // Feedback prompt
+  "feedback_shown",
+  "feedback_submitted",
+  "feedback_dismissed",
 ] as const;
 
 export type ScoutAnalyticsEvent = (typeof SCOUT_ANALYTICS_EVENTS)[number];

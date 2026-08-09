@@ -10,7 +10,12 @@
 
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { router, protectedProcedure, webProcedure } from "#src/trpc/trpc.ts";
+import {
+  router,
+  protectedProcedure,
+  publicProcedure,
+  webProcedure,
+} from "#src/trpc/trpc.ts";
 import { prisma } from "#src/database/index.ts";
 import { generateApiToken } from "#src/trpc/context.ts";
 import { createLogger } from "#src/logger.ts";
@@ -141,6 +146,30 @@ export const authRouter = router({
       username: ctx.user.discordUsername,
       avatar: ctx.user.discordAvatar,
       createdAt: ctx.user.createdAt,
+    };
+  }),
+
+  /**
+   * "Am I signed in?" — answers with `{ user: null }` when the caller has no
+   * session instead of throwing UNAUTHORIZED.
+   *
+   * The SPA asks this on every page load (route loaders, the guild picker, the
+   * onboarding wizard). Using `meWeb` for it meant each anonymous visit raised
+   * a pair of UNAUTHORIZED errors, which drowned the logs — 185 ERROR lines in
+   * 30 days against 21 real sign-ins — and made genuine auth faults impossible
+   * to spot. Not being signed in is a normal answer, not an error.
+   */
+  sessionState: publicProcedure.query(({ ctx }) => {
+    if (ctx.webSession === null || ctx.user === null) {
+      return { user: null };
+    }
+    return {
+      user: {
+        discordId: ctx.user.discordId,
+        username: ctx.user.discordUsername,
+        avatar: ctx.user.discordAvatar,
+        createdAt: ctx.user.createdAt,
+      },
     };
   }),
 });

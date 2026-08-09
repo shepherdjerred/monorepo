@@ -6,6 +6,7 @@ import { reconcileRemovedGuilds } from "#src/league/tasks/cleanup/reconcile-remo
 import { runDataValidation } from "#src/league/tasks/cleanup/validate-data.ts";
 import { refreshMatchTimes } from "#src/league/tasks/maintenance/refresh-match-times.ts";
 import { runOutreach } from "#src/league/tasks/outreach/index.ts";
+import { updateOutreachConversionMetrics } from "#src/league/tasks/outreach/conversions.ts";
 import { runScheduledReportDispatch } from "#src/reports/discord-dispatcher.ts";
 import { client } from "#src/discord/client.ts";
 import { createCronJob } from "#src/league/cron/helpers.ts";
@@ -153,6 +154,20 @@ export async function startCronJobs() {
     logMessage: "📬 Running outreach check",
     timezone: "UTC",
     runOnInit: false,
+  });
+
+  // Recomputed from the audit log rather than incremented in-line, so a missed
+  // run or a restart can't leave the conversion numbers permanently skewed.
+  logger.info(
+    "📅 Setting up outreach conversion metrics job (daily 10:30 UTC)",
+  );
+  createCronJob({
+    schedule: "0 30 10 * * *",
+    jobName: "outreach_conversions",
+    task: () => updateOutreachConversionMetrics(),
+    logMessage: "📈 Recomputing outreach conversion metrics",
+    timezone: "UTC",
+    runOnInit: true,
   });
 
   logger.info("✅ Cron jobs initialized successfully");

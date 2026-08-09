@@ -1,9 +1,13 @@
-import { useEffect, useReducer, type ReactElement } from "react";
+import { useEffect, useReducer, useRef, type ReactElement } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { match } from "ts-pattern";
 import { useTRPC } from "#src/lib/trpc.ts";
-import { track } from "#src/lib/analytics.ts";
+import type { OnboardingOutcome } from "@scout-for-lol/data";
+import {
+  reportOnboardingOutcome,
+  reportOnboardingStep,
+} from "#src/lib/funnel.ts";
 import { Button } from "#src/components/ui/button.tsx";
 import {
   initialOnboardingState,
@@ -43,15 +47,20 @@ export function OnboardingWizard() {
           },
   );
   const guildId = state.selectedGuildId;
+  // Whether the core flow was ever finished, for exit-outcome classification.
+  const reachedDone = useRef(false);
 
   // Funnel: record each onboarding step as it is reached (fires on the initial
   // step and every transition). `step` is a bounded enum — low cardinality.
   useEffect(() => {
-    track("onboarding_step", { step: state.step });
+    if (state.step === "done") {
+      reachedDone.current = true;
+    }
+    reportOnboardingStep(state.step);
   }, [state.step]);
 
   const meQuery = useQuery(
-    trpc.auth.meWeb.queryOptions(undefined, { retry: false }),
+    trpc.auth.sessionState.queryOptions(undefined, { retry: false }),
   );
   const guildsQuery = useQuery(trpc.guild.listManageable.queryOptions());
   const channelsQuery = useQuery(
@@ -73,18 +82,34 @@ export function OnboardingWizard() {
   // wizard only needs the first page's items for its "tracking so far" list.
   const subs = subsQuery.data?.items ?? [];
 
-  function complete(): void {
-    if (meQuery.data !== undefined) {
-      markOnboardingComplete(meQuery.data.discordId);
+  function complete(outcome: OnboardingOutcome): void {
+    const user = meQuery.data?.user ?? null;
+    if (user !== null) {
+      markOnboardingComplete(user.discordId);
     }
+    reportOnboardingOutcome(outcome);
   }
-  function finish(): void {
-    complete();
+
+  // Leaving from "Skip setup" only counts as abandonment if the user never got
+  // as far as the done step. The steps after `done` (report/competition) are
+  // optional extras, so skipping those is a finished setup, not a dropout.
+  function outcomeForExit(): OnboardingOutcome {
+    return reachedDone.current ? "completed" : "skipped";
+  }
+
+  function finish(outcome: OnboardingOutcome): void {
+    complete(outcome);
     void navigate(guildId === null ? "/" : `/g/${guildId}/subscriptions`);
   }
   function finishTo(path: string): void {
-    complete();
+    complete("completed");
     void navigate(path);
+  }
+  function skip(): void {
+    finish(outcomeForExit());
+  }
+  function finishCompleted(): void {
+    finish("completed");
   }
 
   function requireGuild(render: (gid: string) => ReactElement): ReactElement {
@@ -124,7 +149,7 @@ export function OnboardingWizard() {
             dispatch({ type: "goto", step: "pick-guild" });
           }
         }}
-        onSkip={finish}
+        onSkip={skip}
       />
     ))
     .with("pick-guild", () => (
@@ -136,7 +161,7 @@ export function OnboardingWizard() {
         onBack={() => {
           dispatch({ type: "back" });
         }}
-        onSkip={finish}
+        onSkip={skip}
       />
     ))
     .with("concepts", () => (
@@ -147,7 +172,7 @@ export function OnboardingWizard() {
         onBack={() => {
           dispatch({ type: "back" });
         }}
-        onSkip={finish}
+        onSkip={skip}
       />
     ))
     .with("subscribe-self", () =>
@@ -157,8 +182,8 @@ export function OnboardingWizard() {
           mode="self"
           guildId={gid}
           channels={channels}
-          username={meQuery.data?.username ?? ""}
-          discordId={meQuery.data?.discordId ?? ""}
+          username={meQuery.data?.user?.username ?? ""}
+          discordId={meQuery.data?.user?.discordId ?? ""}
           existingSubs={[]}
           onAdded={() => {
             void queryClient.invalidateQueries({
@@ -171,7 +196,7 @@ export function OnboardingWizard() {
           onBack={() => {
             dispatch({ type: "back" });
           }}
-          onSkip={finish}
+          onSkip={skip}
         />
       )),
     )
@@ -199,7 +224,7 @@ export function OnboardingWizard() {
           onBack={() => {
             dispatch({ type: "back" });
           }}
-          onSkip={finish}
+          onSkip={skip}
         />
       )),
     )
@@ -209,7 +234,7 @@ export function OnboardingWizard() {
         onMore={() => {
           dispatch({ type: "goto", step: "choose-extra" });
         }}
-        onFinish={finish}
+        onFinish={finishCompleted}
         onBack={() => {
           dispatch({ type: "back" });
         }}
@@ -223,7 +248,7 @@ export function OnboardingWizard() {
         onBack={() => {
           dispatch({ type: "back" });
         }}
-        onSkip={finish}
+        onSkip={skip}
       />
     ))
     .with("build-report", () =>
@@ -238,7 +263,7 @@ export function OnboardingWizard() {
           onBack={() => {
             dispatch({ type: "back" });
           }}
-          onSkip={finish}
+          onSkip={skip}
         />
       )),
     )
@@ -254,7 +279,7 @@ export function OnboardingWizard() {
           onBack={() => {
             dispatch({ type: "back" });
           }}
-          onSkip={finish}
+          onSkip={skip}
         />
       )),
     )
