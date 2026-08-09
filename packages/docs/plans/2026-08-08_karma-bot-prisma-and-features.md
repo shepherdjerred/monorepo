@@ -311,10 +311,9 @@ Attach screenshots to each PR — these are all user-visible Discord surfaces.
 
 ## Remaining
 
-- [ ] PR 1: run the import against the prod volume and cut over beta, then prod
-- [ ] PR 2 §A: reactions, context menu, variable amounts
-- [ ] PR 2 §B: query surface
-- [ ] PR 2 §C: scheduled visibility
+- [ ] Deploy PR 1 (#2038) to beta, confirm the automatic import, then prod
+- [ ] Deploy PR 2 (#2043) to beta and attach screenshots of the new surfaces
+- [ ] Decide on §B/§C value after watching activity following §A
 
 ## Comment Log
 
@@ -335,3 +334,16 @@ Attach screenshots to each PR — these are all user-visible Discord surfaces.
     failure class.
     Also corrected the rollback procedure — repinning the image alone would
     crash-loop the old image against the new probes.
+- 2026-08-08: Import made automatic on startup rather than an operator step, at
+  the owner's request. Gated on `LEGACY_DATABASE_PATH`, idempotent once the
+  target has rows, and fails startup when the path is set but the file is
+  missing — starting empty is indistinguishable from total karma loss. Beta's
+  legacy schema was inspected first and matches prod exactly, so the guard
+  passes on both stages.
+- 2026-08-08: PR 2 (#2043) complete — all of §A, §B, and §C. Two plan
+  corrections: discord.js 14.27 modals _do_ support select menus, so the amount
+  is a real dropdown rather than a typed number; and the action-row modal API is
+  deprecated, so the modal uses `addLabelComponents` in its callback form.
+  Variable amounts shipped as the closed 1/2/3 enum. 97 unit tests; a populated
+  database survives all three migrations with total karma 640, matching the
+  source year totals (494 + 106 + 15 + 25) exactly.
