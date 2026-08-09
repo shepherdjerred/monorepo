@@ -2,6 +2,7 @@
   "name": "@shepherdjerred/temporal",
   "version": "1.0.0",
   "private": true,
+  "description": "Temporal workflows, schedules, and agent-task worker",
   "type": "module",
   "imports": {
     "#client": "./src/client.ts",

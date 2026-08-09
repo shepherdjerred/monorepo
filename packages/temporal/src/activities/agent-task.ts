@@ -218,14 +218,18 @@ async function runAgent(
           jsonLog("warning", message, { phase: "llm-trace" });
         },
       });
-      const mountedSecretRefreshTimer = setInterval(() => {
+      const refreshSecretsInBackground = (): void => {
         void refreshAgentTaskSecretTokenStateInBackground(
           secretTokenState,
           (error) => {
             redactionFailureController.record(error);
           },
         );
-      }, MOUNTED_SECRET_REFRESH_INTERVAL_MS);
+      };
+      const mountedSecretRefreshTimer = setInterval(
+        refreshSecretsInBackground,
+        MOUNTED_SECRET_REFRESH_INTERVAL_MS,
+      );
       const refreshSecretsBeforeOutput = async (): Promise<boolean> => {
         // Refresh immediately before every stdout chunk. The periodic refresh
         // is only a liveness aid; this boundary closes the rotation-to-output
