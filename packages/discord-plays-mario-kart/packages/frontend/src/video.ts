@@ -55,13 +55,38 @@ export type DriverFeedDecodeDecision = {
 export function decideDriverFeedDecode(
   state: DriverFeedDecodeState,
 ): DriverFeedDecodeDecision {
-  const reset = state.decodeQueueSize >= MAX_DECODE_QUEUE_SIZE;
-  const decode = state.isKeyframe || (state.started && !reset);
+  // Reject the unit against the current decoder before calling decode(). A
+  // decoder at the limit is reset first; only an entry point may be accepted by
+  // the freshly configured decoder.
+  if (state.decodeQueueSize >= MAX_DECODE_QUEUE_SIZE) {
+    return {
+      reset: true,
+      decode: state.isKeyframe,
+      nextStarted: state.isKeyframe,
+    };
+  }
+
+  const decode = state.isKeyframe || state.started;
   return {
-    reset,
+    reset: false,
     decode,
     nextStarted: decode,
   };
+}
+
+/**
+ * Retain only the first usable decoder entry point while configuration is
+ * asynchronous. A later keyframe must not displace the earliest frame that can
+ * start the decoder, and deltas cannot start it at all.
+ */
+export function retainDriverFeedEntryPoint(
+  pending: ArrayBuffer | undefined,
+  incoming: ArrayBuffer,
+): ArrayBuffer | undefined {
+  if (pending !== undefined) return pending;
+  if (incoming.byteLength <= DRIVER_FEED_HEADER_BYTES) return undefined;
+  const header = new Uint8Array(incoming, 0, DRIVER_FEED_HEADER_BYTES);
+  return (header[0] & DRIVER_FEED_KEYFRAME_FLAG) === 0 ? undefined : incoming;
 }
 
 function feedUrl(driverSocketId: string): string {
@@ -99,6 +124,7 @@ export function connectDriverFeed(
   // must not rewind its own clock.
   let nextTimestampUs = 0;
   let started = false;
+  let pendingEntryPoint: ArrayBuffer | undefined;
 
   const closeDecoder = () => {
     if (decoder === undefined) return;
@@ -172,15 +198,21 @@ export function connectDriverFeed(
     decoder = created;
     decoderConfig = config;
     callbacks.onStatus({ kind: "waiting" });
+    const entryPoint = pendingEntryPoint;
+    pendingEntryPoint = undefined;
+    if (entryPoint !== undefined) decodeMessage(entryPoint);
     const ready: DriverFeedReady = { kind: "ready" };
     ws.send(JSON.stringify(ready));
   };
 
   const decodeMessage = (buffer: ArrayBuffer) => {
+    if (buffer.byteLength <= DRIVER_FEED_HEADER_BYTES) return;
     const active = decoder;
     const config = decoderConfig;
-    if (config === undefined || active?.state !== "configured") return;
-    if (buffer.byteLength <= DRIVER_FEED_HEADER_BYTES) return;
+    if (config === undefined || active?.state !== "configured") {
+      pendingEntryPoint = retainDriverFeedEntryPoint(pendingEntryPoint, buffer);
+      return;
+    }
 
     const header = new Uint8Array(buffer, 0, DRIVER_FEED_HEADER_BYTES);
     const isKeyframe = (header[0] & DRIVER_FEED_KEYFRAME_FLAG) !== 0;
@@ -213,6 +245,7 @@ export function connectDriverFeed(
 
   function open(): void {
     if (disposed) return;
+    pendingEntryPoint = undefined;
     callbacks.onStatus({ kind: "connecting" });
     const ws = new WebSocket(feedUrl(driverSocketId));
     ws.binaryType = "arraybuffer";
@@ -247,6 +280,7 @@ export function connectDriverFeed(
       if (data instanceof ArrayBuffer) decodeMessage(data);
     });
     ws.addEventListener("close", () => {
+      pendingEntryPoint = undefined;
       closeDecoder();
       scheduleReconnect();
     });

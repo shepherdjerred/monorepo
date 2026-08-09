@@ -79,6 +79,9 @@ COPY --parents \
 # as compiled JS from the nested backend, it must be built or the app crashes at
 # startup with `Cannot find module '@shepherdjerred/discord-stream-lifecycle'`.
 RUN cd packages/discord-stream-lifecycle && bun run build
+# The common package's browser-safe entry point is a bundle so its validated
+# HUD JSON catalog ships with both the backend and frontend consumers.
+RUN cd packages/discord-plays-mario-kart/packages/common && bun run build
 # Generate the Prisma client for the leaderboard DB (output is gitignored).
 RUN cd packages/discord-plays-mario-kart/packages/backend && bunx --trust prisma generate
 # Build the web UI served by the backend (web.assets). Expose the release to
@@ -148,6 +151,7 @@ RUN cd packages/discord-plays-mario-kart/packages/backend && bunx --trust prisma
 
 # Built artifacts from the build stage.
 COPY --from=build /app/packages/discord-stream-lifecycle/dist packages/discord-stream-lifecycle/dist
+COPY --from=build /app/packages/discord-plays-mario-kart/packages/common/dist packages/discord-plays-mario-kart/packages/common/dist
 COPY --from=build /app/packages/discord-plays-mario-kart/packages/backend/generated packages/discord-plays-mario-kart/packages/backend/generated
 COPY --from=build /app/packages/discord-plays-mario-kart/packages/frontend/dist packages/discord-plays-mario-kart/packages/frontend/dist
 

@@ -38,7 +38,7 @@
     "smoke": "bun scripts/smoke.ts",
     "test:ci": "bun ../../../../scripts/run-ci-test.ts",
     "test:report": "CI_TEST_COVERAGE=1 bun ../../../../scripts/run-ci-test.ts",
-    "e2e:driver-feed:glass": "bun run scripts/e2e-driver-feed-glass.ts"
+    "e2e:driver-feed:glass": "bun run --cwd ../common build && bun run --cwd ../frontend build && bun run scripts/e2e-driver-feed-glass.ts"
   },
   "dependencies": {
     "@discord-plays-mario-kart/common": "workspace:*",
