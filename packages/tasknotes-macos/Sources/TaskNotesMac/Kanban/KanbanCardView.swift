@@ -58,12 +58,16 @@ struct KanbanCardView: View {
                 TaskCheckbox(row: row, action: onToggle)
                 Text(row.task.title)
                     .lineLimit(2)
-                    .strikethrough(row.isCompleted, color: .secondary)
-                    .foregroundStyle(row.isCompleted ? .secondary : .primary)
+                    // `isFinished`, not `row.isCompleted`. See the note on
+                    // that property: on a board the strikethrough answers the
+                    // question the *column* asks, and the checkbox answers the
+                    // question the *gesture* asks.
+                    .strikethrough(isFinished, color: .secondary)
+                    .foregroundStyle(isFinished ? .secondary : .primary)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                PriorityMarker(priority: row.task.priority, isDimmed: row.isCompleted)
+                PriorityMarker(priority: row.task.priority, isDimmed: isFinished)
                 if row.isRecurring {
-                    RecurrenceMarker(occurrence: row.occurrence?.text, isDimmed: row.isCompleted)
+                    RecurrenceMarker(occurrence: row.occurrence?.text, isDimmed: isFinished)
                 }
                 if row.isPending {
                     // On the **title** line, beside the other two marks, and not
@@ -159,12 +163,62 @@ struct KanbanCardView: View {
         Button("Delete", systemImage: "trash", role: .destructive, action: onDelete)
     }
 
+    /// Whether the **task** is finished — which is what the column this card
+    /// sits in already claims.
+    ///
+    /// ## Why a card and a row disagree about the word "completed"
+    ///
+    /// ``TaskRowState/isCompleted`` is deliberately *occurrence*-level: for a
+    /// recurring task it is the state of the occurrence a click would target,
+    /// which is what makes the checkbox and the gesture incapable of
+    /// disagreeing. A list row is right to draw that — Today's whole subject is
+    /// today's work, so a struck-through row means "today's instance is done"
+    /// and the row staying put is what makes the completion feel like it
+    /// landed.
+    ///
+    /// **A board asks a different question.** A card's column *is* its
+    /// `status`, so a card makes a claim about the task as a whole simply by
+    /// being where it is. Borrowing the row's occurrence-level treatment put a
+    /// struck-through, dimmed card inside the **Open** column — two channels
+    /// contradicting each other, in the one layout where position is a
+    /// statement. Rendering it made that obvious; it is visible in
+    /// `board.{light,dark}.png` before this change, on *Take vitamins*.
+    ///
+    /// So the channels are split by what they are about:
+    ///
+    /// | channel | question | source |
+    /// |---|---|---|
+    /// | strikethrough, dimmed marks | is the **task** finished? | `task.status` |
+    /// | checkbox fill | is the **occurrence** done? | `row.isCompleted` |
+    ///
+    /// The checkbox keeps the occurrence, and it must: the gesture targets the
+    /// occurrence, and `TaskCheckbox` already speaks *"occurrence of …"* as its
+    /// value. A ticked checkbox on an un-struck card inside Open is then the
+    /// honest reading — *today is done, the task is not* — rather than a
+    /// contradiction.
+    ///
+    /// ⚠️ **The rejected alternative was to file such a card under Done**, and
+    /// it is worth recording why it is not merely a matter of taste. The board
+    /// dispatches `setStatus` on a drop, and `KanbanBoardTests` pins that every
+    /// card's column equals its status — there is no default column precisely
+    /// because the status is a closed enum. A card shown in Done whose status
+    /// is `open` would break that invariant, make dragging it out write a field
+    /// it never had, and — worst — the card would **move itself back to Open
+    /// overnight**, when the rule's next occurrence comes due and nobody
+    /// touched anything.
+    ///
+    /// `taskStatusIsActive` is the core's own predicate, negated; the six-way
+    /// membership is not restated here.
+    private var isFinished: Bool { !taskStatusIsActive(status: row.task.status) }
+
     /// The date's colour, and the one place red appears on a card.
     ///
-    /// A completed task cannot be late, so a completed card's date is never
-    /// red. Identical to the list row's rule, deliberately.
+    /// A finished task cannot be late, so its date is never red however far
+    /// past it is. Keyed on ``isFinished`` for the same reason the
+    /// strikethrough is: a recurring task whose current occurrence is done is
+    /// still live, and its next occurrence can genuinely be overdue.
     private func dateTint(_ date: DateBadge) -> AnyShapeStyle {
-        guard date.isOverdue, !row.isCompleted else { return AnyShapeStyle(.secondary) }
+        guard date.isOverdue, !isFinished else { return AnyShapeStyle(.secondary) }
         return AnyShapeStyle(.red)
     }
 
@@ -182,10 +236,19 @@ struct KanbanCardView: View {
     private var accessibilityLabel: String {
         var parts = ["Task: \(row.task.title)"]
         parts.append(columnTitle)
-        if row.isCompleted { parts.append("completed") }
+        // The same split the drawing makes, said in words. "Completed" is the
+        // task, and it has the strikethrough as its visible counterpart; "this
+        // occurrence is done" is the checkbox, and has the tick. Saying only
+        // "completed" for a live recurring task would tell a VoiceOver reader
+        // the opposite of what the column beside it says.
+        if isFinished {
+            parts.append("completed")
+        } else if row.isCompleted {
+            parts.append("this occurrence is done")
+        }
         if let priority = PriorityMarker.spoken(row.task.priority) { parts.append(priority) }
         if row.isRecurring { parts.append("repeats") }
-        if !row.isCompleted, row.displayDate?.isOverdue == true { parts.append("overdue") }
+        if !isFinished, row.displayDate?.isOverdue == true { parts.append("overdue") }
         if let date = row.displayDate {
             parts.append(row.isRecurring ? "occurrence of \(date.text)" : "due \(date.text)")
         }

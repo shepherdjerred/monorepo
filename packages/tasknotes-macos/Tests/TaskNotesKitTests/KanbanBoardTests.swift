@@ -135,6 +135,35 @@ struct KanbanBoardTests {
         #expect(board.column(.next, of: "Tasks/Delegated.md") == nil)
     }
 
+    /// ⚠️ **A recurring task whose current occurrence is done stays in the
+    /// column its `status` names, and that is load-bearing.**
+    ///
+    /// Ticking today's vitamins mutates `completeInstances`, never `status`, so
+    /// the task is still `open` and belongs under Open. Filing it under Done
+    /// because it "looks finished" would break three things at once: the
+    /// invariant that a card's column *is* its status (there is no default
+    /// column, because the status is a closed enum), dragging it out would then
+    /// `setStatus` a field it never had — and the card would **move itself back
+    /// to Open overnight**, when the rule's next occurrence comes due and
+    /// nobody touched anything.
+    ///
+    /// So the model keeps the two answers separate, and the card view draws
+    /// them on separate channels: the strikethrough follows `status`, the
+    /// checkbox follows the occurrence.
+    @Test("a recurring task with its occurrence done stays in its status column")
+    func completedOccurrenceStaysInItsStatusColumn() throws {
+        let board = try build()
+        let column = try #require(board.column(holding: "Tasks/Take vitamins.md"))
+        #expect(column.status == .open)
+
+        let card = try #require(board.card("Tasks/Take vitamins.md"))
+        // The occurrence is done…
+        #expect(card.isCompleted)
+        // …and the task is not. Both true at once is the whole point.
+        #expect(taskStatusIsActive(status: card.task.status))
+        #expect(!column.isTerminal)
+    }
+
     /// The board narrows through the same query surface as a list, and its
     /// count says so.
     @Test("filtering the board narrows the cards and states the narrowing")
@@ -231,5 +260,11 @@ struct KanbanBoardTests {
         coreTask(id: "Tasks/Finished.md", title: "Finished", status: .done),
         coreTask(id: "Tasks/Abandoned.md", title: "Abandoned", status: .cancelled),
         coreTask(id: "Tasks/Delegated.md", title: "Delegated", status: .delegated),
+        // Live, and its current occurrence is already ticked off. The one
+        // fixture where "is this done?" has two different right answers.
+        coreTask(
+            id: "Tasks/Take vitamins.md", title: "Take vitamins",
+            scheduled: "2026-07-22", recurrence: "FREQ=DAILY",
+            completeInstances: ["2026-07-22"]),
     ]
 }
