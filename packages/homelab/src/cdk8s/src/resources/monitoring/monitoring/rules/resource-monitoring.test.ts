@@ -80,7 +80,7 @@ describe("liskov memory and Buildkite admission alerts", () => {
       ?.rules?.find((rule) => rule.alert === "BuildkiteKueueWorkloadsWaiting");
     expect(memory?.expr.value).toContain("MemoryPressure");
     expect(memory?.expr.value).toContain("4294967296");
-    expect(memory?.for).toBe("1m");
+    expect(memory?.for).toBeUndefined();
     expect(admission?.expr.value).toContain('cluster_queue="buildkite"');
     expect(admission?.for).toBe("30m");
   });

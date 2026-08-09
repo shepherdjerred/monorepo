@@ -20,9 +20,10 @@ retaining the 16GiB ZFS ARC allowance and the existing eviction armor.
   80Gi memory, 20 pods, and 100Gi ephemeral storage.
 - Keep Buildkite `max-in-flight=20`; Kueue supplies the request-weighted gate.
 - Alert on liskov below 8Gi available memory for 1 minute, below 4Gi or
-  Kubernetes `MemoryPressure` for 1 minute, and a 30-minute Buildkite Kueue
-  backlog. The one-minute memory windows fire before kubelet's eviction grace
-  period can elapse.
+  Kubernetes `MemoryPressure` immediately, and a 30-minute Buildkite Kueue
+  backlog. The warning window fires before kubelet's eviction grace period;
+  the critical rule has no delay because the hard eviction threshold has no
+  grace period.
 
 ## Rollout
 

@@ -34,7 +34,6 @@ export function getLiskovResourceMonitoringRuleGroups(): PrometheusRuleSpecGroup
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             `(node_memory_MemAvailable_bytes{node="${CI_NODE_HOSTNAME}"} < 4294967296) or (kube_node_status_condition{node="${CI_NODE_HOSTNAME}", condition="MemoryPressure", status="true"} == 1)`,
           ),
-          for: "1m",
           labels: { severity: "critical" },
         },
       ],
