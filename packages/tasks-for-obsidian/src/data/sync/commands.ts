@@ -345,22 +345,19 @@ export type FailureClass = "transient" | "permanent" | "not_found" | "auth";
  * - permanent  → 400/422 / validation; dead-letter, keep draining
  */
 export function classify(error: AppError): FailureClass {
-  switch (error.name) {
-    case "ConnectionError":
-    case "NetworkError":
+  switch (error.kind) {
+    case "connection":
+    case "network":
       return "transient";
-    case "NotFoundError":
+    case "not_found":
       return "not_found";
-    case "ValidationError":
+    case "validation":
       return "permanent";
-    case "ApiError": {
-      const status = "statusCode" in error ? error.statusCode : 0;
-      if (status === 401 || status === 403) return "auth";
-      if (status === 404) return "not_found";
-      if (status === 429 || status >= 500) return "transient";
+    case "api": {
+      if (error.status === 401 || error.status === 403) return "auth";
+      if (error.status === 404) return "not_found";
+      if (error.status === 429 || error.status >= 500) return "transient";
       return "permanent";
     }
-    default:
-      return "permanent";
   }
 }

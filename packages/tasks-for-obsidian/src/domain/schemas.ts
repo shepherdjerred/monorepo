@@ -1,14 +1,11 @@
 import { z } from "zod";
 
 import type {
-  CalendarEvent,
-  FilterOptions,
   HealthStatus,
   NlpParseResult,
   PomodoroStatus,
   Task,
   TaskStats,
-  TimeEntry,
 } from "./types";
 import { contextName, projectName, tagName, taskId } from "./types";
 import {
@@ -19,7 +16,6 @@ import {
   ReminderSchema,
   InlineTimeEntrySchema,
   TaskStatsSchema as BaseTaskStatsSchema,
-  FilterOptionsSchema as BaseFilterOptionsSchema,
   NlpParseResultSchema as BaseNlpParseResultSchema,
 } from "./base-schemas";
 
@@ -67,48 +63,13 @@ export const TaskSchema = z
     }),
   );
 
-export const TaskListSchema = z.object({
-  tasks: z.array(TaskSchema),
-  pagination: z.object({
-    total: z.number(),
-    offset: z.number(),
-    limit: z.number(),
-    hasMore: z.boolean(),
-  }),
-  vault: z
-    .object({
-      name: z.string(),
-      path: z.string(),
-    })
-    .optional(),
-  note: z.string().optional(),
-});
-
 export const TaskStatsSchema = BaseTaskStatsSchema.transform(
   (raw): TaskStats => raw,
-);
-
-export const FilterOptionsSchema = BaseFilterOptionsSchema.transform(
-  (raw): FilterOptions => raw,
 );
 
 export const NlpParseResultSchema = BaseNlpParseResultSchema.transform(
   (raw): NlpParseResult => raw,
 );
-
-export const TimeEntrySchema = z
-  .object({
-    taskId: z.string(),
-    startTime: z.string(),
-    endTime: z.string().optional(),
-    duration: z.number().optional(),
-  })
-  .transform(
-    (raw): TimeEntry => ({
-      ...raw,
-      taskId: taskId(raw.taskId),
-    }),
-  );
 
 export const PomodoroStatusSchema = z
   .object({
@@ -123,24 +84,6 @@ export const PomodoroStatusSchema = z
       taskId: raw.taskId ? taskId(raw.taskId) : undefined,
     }),
   );
-
-export const CalendarEventSchema = z
-  .object({
-    id: z.string(),
-    title: z.string(),
-    date: z.string(),
-    taskId: z.string().optional(),
-  })
-  .transform(
-    (raw): CalendarEvent => ({
-      ...raw,
-      taskId: raw.taskId ? taskId(raw.taskId) : undefined,
-    }),
-  );
-
-export const CalendarEventsSchema = z.object({
-  events: z.array(CalendarEventSchema),
-});
 
 export const HealthStatusSchema = z
   .object({
@@ -157,12 +100,3 @@ export const ApiResponseSchema = <T extends z.ZodType>(dataSchema: T) =>
     data: dataSchema,
     error: z.string().optional(),
   });
-
-export const DeleteResponseSchema = z.object({
-  success: z.boolean(),
-});
-
-export const QueryResponseSchema = z.object({
-  tasks: z.array(TaskSchema),
-  total: z.number(),
-});

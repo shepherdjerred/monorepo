@@ -54,10 +54,15 @@ const DeadLetterSchema = z.object({
 
 function serializeError(error: AppError): DeadLetterEntry["error"] {
   const base = { name: error.name, message: error.message };
-  if ("statusCode" in error && typeof error.statusCode === "number") {
-    return { ...base, status: error.statusCode };
+  switch (error.kind) {
+    case "api":
+    case "not_found":
+      return { ...base, status: error.status };
+    case "network":
+    case "validation":
+    case "connection":
+      return base;
   }
-  return base;
 }
 
 export class CommandQueue {
