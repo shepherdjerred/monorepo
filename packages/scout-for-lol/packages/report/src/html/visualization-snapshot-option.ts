@@ -3,6 +3,7 @@ import type {
   VisualizationSnapshot,
 } from "@scout-for-lol/data";
 import type * as echarts from "echarts";
+import { format as echartsFormat } from "echarts";
 import {
   donutOption,
   heatmapOption,
@@ -346,14 +347,14 @@ export function tooltipText(
   if (typeof dataIndexValue !== "number") return "";
   const point = categoryPoints(snapshot)[dataIndexValue];
   if (point === undefined) return "";
-  const lines = [`<strong>${escapeHtml(point.label)}</strong>`];
+  const lines = [`<strong>${echartsFormat.encodeHTML(point.label)}</strong>`];
   for (const series of snapshot.series) {
     const value = series.points.find(
       (candidate) => candidate.label === point.label,
     );
     if (value === undefined) continue;
     lines.push(
-      `${escapeHtml(series.label)}: ${formatValue(value.value)} (n=${value.evidence.sampleSize.toString()})`,
+      `${echartsFormat.encodeHTML(series.label)}: ${formatValue(value.value)} (n=${value.evidence.sampleSize.toString()})`,
     );
     if (snapshot.temporal?.comparison !== undefined) {
       lines.push(
@@ -402,7 +403,7 @@ function calendarOption(
         if (!("data" in input)) return "";
         const data = input.data;
         if (!Array.isArray(data)) return "";
-        return `${escapeHtml(String(data[0]))}: ${escapeHtml(String(data[1]))}`;
+        return `${echartsFormat.encodeHTML(String(data[0]))}: ${echartsFormat.encodeHTML(String(data[1]))}`;
       },
     },
     visualMap: {
@@ -476,13 +477,4 @@ function calendarDateInTimezone(date: Date, timezone: string): string {
     throw new Error(`Could not format calendar range in ${timezone}.`);
   }
   return `${year}-${month}-${day}`;
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
 }
