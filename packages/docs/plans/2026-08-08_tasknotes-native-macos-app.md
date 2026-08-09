@@ -335,6 +335,46 @@ Consequence to design around: the Linux row is the only _enforced_ gate, so **pu
 correctness as possible below the SwiftUI line**. That is already the architecture's shape — it
 just means the `TaskNotesKit`-has-no-SwiftUI-imports rule is load-bearing rather than tidy.
 
+### Swift on Linux: verified working, deliberately not used
+
+_Measured 2026-08-08 in Docker on both arches, against `git archive HEAD`._ The earlier
+"⚠️ untested" caveat is resolved, and the answer is **not** the one the fallback assumed:
+
+- **`uniffi-bindgen` produces byte-identical Swift on Linux** — same SHA-256 as the macOS-committed
+  copy, on `aarch64` and `x86_64`. So `cargo xtask check-bindings` is a genuine Linux gate, not a
+  vacuous one.
+- **The generated Swift compiles, links against the Rust `.so`, and runs** under
+  swift-corelibs-foundation. The modulemap's `use "Darwin"` lines are inert there, same as on Apple.
+- **`TaskNotesKit`: 58 of 59 tests pass on Linux**, including the integration tests spawning a real
+  `tasknotes-server` and asserting on vault markdown — with every authored gate on
+  (`strictMemorySafety`, warnings-as-errors, `ExistentialAny`, `InternalImportsByDefault`). The
+  zero-SwiftUI-imports rule genuinely holds up. `swift-snapshot-testing` also works there.
+- The single failure is legitimate and permanent: on Linux the MainActor executor is **not** pinned
+  to the OS main thread, so `Thread.isMainThread` is not a proxy for MainActor isolation and the
+  "main thread is refused" test cannot hold. `#if !os(Linux)`.
+
+**So nothing is fundamental — and rows 4–5 stay local-only anyway, on cost:**
+
+1. **Permanent compiler skew.** Linux ships 6.3.3; the app builds on 6.4, and Swift Linux trails
+   Xcode by months _every_ release. Under warnings-as-errors across ~1,400 lines of authored Swift,
+   that is a standing source of "green locally, red in CI" for reasons unrelated to the change.
+2. **Two forked manifests and four `#if os(Linux)` regions** — one of which re-introduces exactly
+   the `unsafe` pointer spellings the code deliberately designed away, and one of which forces
+   `public import Observation`, widening the public surface `InternalImportsByDefault` exists to
+   keep narrow.
+3. **A third CI image** (~5 GB/arch) needing Swift + Rust + bun together, with its own promotion
+   lane and digest pin, for one test layer.
+
+**The Linux gate therefore contains** — all already passing — Rust `cargo test`/clippy/fmt,
+`check-bindings`, `swiftlint --strict`, and `ci/no-suppressions.sh` including the no-UI-imports
+check. That is the plan's own stated fallback, reached deliberately rather than by defeat.
+
+**The real gap this exposed is different and cheaper:** `bun run mac:verify` was a _local convention
+with nothing enforcing that it ran_. Closed by a `lefthook` pre-commit job gated on staged `.swift`
+files. Revisit the Linux lane only if a `ci-swift` image becomes justified for another reason, or if
+Swift Linux ever ships in lockstep with Xcode — the cost is now concrete (58/59, one `#if`, one
+image, ~60 lines of `#if`) rather than speculative.
+
 ⚠️ **Xcode Cloud caveat:** there are reports of macOS app _test_ actions specifically misbehaving
 there (iOS test actions are fine). Treat Xcode Cloud as the **release/notarization** path first and
 prove the test path before relying on it. If it doesn't work, XCUITest stays local-only, which is
@@ -628,10 +668,8 @@ Phases 0–6 are complete and verified: 325 Rust tests, 328 TypeScript tests, ze
       cannot run in CI until the toolchain pins it.
 - [ ] Add `tasknotes-core` and `tasknotes-fixtures` to the root `AGENTS.md` Structure list and
       Package Notes.
-- [ ] **Verify the generated Swift compiles under swift-corelibs-foundation on Linux.** The plan
-      puts Swift unit and snapshot tests on Buildkite Linux; that claim is still unverified because
-      no Linux Swift toolchain was available locally. If it fails, those layers move to local-only
-      and the Linux gate shrinks to Rust plus bindings-drift.
+- [x] ~~Verify the generated Swift compiles under swift-corelibs-foundation on Linux.~~ **Done
+      2026-08-08 — it works, and we are still not doing it.** See "Swift on Linux" below.
 - [ ] Unrelated pre-existing gap spotted during Phase 1: `src-tauri`'s `clippy` turbo task is not
       referenced by `bun run verify` or `.buildkite/pipeline.yml`, so src-tauri clippy has never
       run in CI. ⚠️ **Not a one-line fix** — investigated 2026-08-08: running it today fails before

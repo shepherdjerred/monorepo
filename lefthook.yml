@@ -39,6 +39,26 @@ pre-commit:
           - name: check-suppressions
             run: bun scripts/check-suppressions.ts
 
+          # Swift is the one language Buildkite cannot build: the CI image ships
+          # SwiftLint's static binary but no toolchain, and standing up a
+          # Swift+Rust+bun image for one test layer is not worth ~5GB/arch and a
+          # promotion lane (measured — see the macOS plan's "Swift on Linux").
+          # That leaves `bun run mac:verify` as the only real gate, and until now
+          # nothing enforced that anyone ran it. This is that enforcement.
+          # Deliberately the FAST subset, not `mac:verify` — that ends in a full
+          # xcodebuild. This is build + test + lint + format-check, ~5s, which is
+          # proportionate for a hook. `mac:verify` (which adds xcodegen and the
+          # app build) stays the pre-PR command.
+          - name: swift-verify
+            glob: "packages/tasknotes-macos/**/*.swift"
+            run: |
+              cd packages/tasknotes-macos
+              swift build
+              swift test
+              swiftlint lint --strict
+              xcrun swift-format lint --strict --parallel --recursive Sources Tests App Package.swift
+              ./ci/no-suppressions.sh
+
           - name: lockfile-check
             glob: "**/package.json"
             run: bun install --frozen-lockfile --dry-run
