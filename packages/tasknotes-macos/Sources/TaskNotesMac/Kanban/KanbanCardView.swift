@@ -215,7 +215,7 @@ struct KanbanCardView: View {
     /// The date's colour, and the one place red appears on a card.
     ///
     /// A finished task cannot be late, so its date is never red however far
-    /// past it is. Keyed on ``isFinished`` for the same reason the
+    /// past it is. Keyed on ``TaskRowState/isTerminal`` for the same reason the
     /// strikethrough is: a recurring task whose current occurrence is done is
     /// still live, and its next occurrence can genuinely be overdue.
     private func dateTint(_ date: DateBadge) -> AnyShapeStyle {

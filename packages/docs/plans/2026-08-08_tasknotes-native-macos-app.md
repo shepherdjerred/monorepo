@@ -648,7 +648,10 @@ Phases 0–8, 4.5 and 6.5 are complete and verified, as are Phase 9a (the four l
 suppressions, 338/338 recurrence corpus, 26/26 sync scenarios, and the app builds, links, syncs
 and renders. **No shell writes core logic and no shell spells a core value any more.**
 
-- [ ] **Phase 9c** — QuickAdd floating `NSPanel` on a global hotkey, Pomodoro, TimeReport.
+- [x] ~~**Phase 9c** — QuickAdd floating `NSPanel` on a global hotkey, Pomodoro, TimeReport.~~
+      **Done 2026-08-09.** ⚠️ Three behaviours could not be proven offscreen and still need
+      Phase 11: the hotkey actually firing, the panel appearing over another application without
+      activating TaskNotes, and Kanban's drag gesture with its targeting highlight and snap-back.
 - [x] ~~**Phase 9d** — Kanban with drag-and-drop, SavedViews, Project/Context/Tag detail
       screens.~~ **Done 2026-08-09.** Project/Context/Tag are not screens: `TaskEntity` produces a
       `TaskListScope` and `SectionDetailView` renders it as `TaskListView(section: .browse, …)`.
@@ -659,17 +662,20 @@ and renders. **No shell writes core logic and no shell spells a core value any m
       **Done 2026-08-09 as `FilterChain`**, a `Vec` and not a merge — `filter_config_and` was
       investigated and is **unimplementable**, which is a stronger statement than "would be wrong".
       See the Comment Log.
-- [ ] **Decide how a completed occurrence shows on the board.** A recurring task with today's
-      occurrence checked draws struck-through with a filled checkbox while its `status` is still
-      `open`, so the board files it under Open. Both halves are correct and the combination reads
-      as a contradiction. This is the real tension between per-occurrence completion and
-      status-as-column; it wants a decision, not a patch.
-- [ ] **Suppress metadata a heading already states.** Every row on a project screen prints the
-      project's own name — "Renew passport · Admin" under a heading reading _Admin_. RN does the
-      same; on a desktop it is noise. Symmetric with the existing `showsDate:` parameter.
-- [ ] **Align the menu-bar clear action.** The filter badge counts a non-empty search query, so
-      the filter menu and empty state now read "Clear Filters & Search"; `TaskNotesCommands.swift`
-      still says "Clear Filters".
+- [x] ~~**Decide how a completed occurrence shows on the board.**~~ **Resolved 2026-08-09 by
+      splitting the channels**, not by moving the card. See the Comment Log.
+- [x] ~~**Suppress metadata a heading already states.**~~ **Done 2026-08-09** — `TaskRowView`
+      takes `omitting: FilterChain?` fed by the scope's **`baseFilter`, not its title**, so a scope
+      spelled `[[Website]]` also suppresses a row storing bare `Website`.
+- [x] ~~**Align the menu-bar clear action.**~~ **Done 2026-08-09.**
+- [ ] **Make the XCFramework staleness impossible rather than remembered.** `bindings/` is
+      _generated source_ and `bindings/artifacts/*.xcframework` is a _gitignored build artifact_,
+      so regenerating one without rebuilding the other leaves the package linking against symbols
+      the committed Swift declares but the binary does not export. It presents as unresolved-symbol
+      errors that look like somebody else's broken code, and it caught **four** separate agents on
+      2026-08-09 alone. A fresh clone hits the same wall: `bun run mac:verify` fails until someone
+      runs `cargo xtask build-xcframework`. Options: fold the rebuild into `generate-bindings`, or
+      have the Swift build fail with a message naming the command.
 - [x] ~~**Close the core gaps the UI phases found.**~~ **Done 2026-08-09 in `8b8029cec`** — see the
       Comment Log entry. `TaskSearch.swift` and the `CivilDate` helper are deleted; no core logic
       is written in Swift any more.
@@ -710,6 +716,53 @@ and renders. **No shell writes core logic and no shell spells a core value any m
       `verify` does invoke.)_
 
 ## Comment Log
+
+- 2026-08-09: 🔴 **This codebase's characteristic bug is a missing _combination_, not a missing
+  case** — it appeared three times in one day, and each time every individual input was covered
+  while the cross product was not.
+  1. A cancelled or done **recurring** task drew pixel-identical to a live one. Both the list
+     fixtures and the board fixtures held terminal-and-plain and recurring-and-live; neither held
+     the intersection.
+  2. A test of `isTerminal` across every status used **plain** rows — and for a plain task
+     `isCompleted` already equals the negated status, so redefining `isTerminal` as `isCompleted`
+     satisfied every assertion and the suite stayed green.
+  3. Every `omitting` fixture was a **single-link** `FilterChain`, so nothing could distinguish
+     "checks every link" from "checks the first".
+
+  The cause is worth naming because it will recur: so many types here compose two independent
+  facts that **coincide in the common case**, which is exactly what makes the collapse invisible to
+  review. Writing the cross product is the only thing that finds it.
+
+  Two related lessons from the same day. First, **an assertion that restates the implementation can
+  never fail**: `isRetired == isCompleted || isTerminal` was written independently by two agents
+  against a property _defined_ as `isCompleted || isTerminal`, both watched it go green, and both
+  reported it to the other as coverage — while actively hunting that failure mode. The replacement
+  derives its expectation from the fixture's own inputs. Second, **mutation beat inspection**:
+  redefining `isTerminal` as `isCompleted` took one edit and moved the suite from **0 failures to
+  10**. Four rounds of reading had found nothing.
+
+- 2026-08-09: **The board and the list deliberately disagree about strikethrough, and both are
+  right.** `TaskRowState.isCompleted` is occurrence-level for a recurring task — the state of the
+  occurrence a click would target — which is what makes the checkbox and the gesture incapable of
+  disagreeing. A card's column _is_ its `status`, so a card already states the task-level fact by
+  where it sits; spending strikethrough on it too would be redundant, and borrowing the row's
+  occurrence-level treatment put a struck-through card inside **Open**. A list row has no column,
+  so strikethrough is the only channel "not live work" has and must carry both reasons. Hence
+  `isTerminal` on the card and `isRetired = isCompleted || isTerminal` on the row, noted at both
+  sites so neither is later "fixed" to match the other. ⚠️ Filing an occurrence-completed card
+  under Done was rejected as **unsafe rather than debatable**: every card's column equals its
+  status with no default column, so such a card would break that invariant, make dragging it out
+  write a field it never had, and move itself back to Open overnight when the rule's next
+  occurrence came due.
+
+- 2026-08-09: **Committing was centralised deliberately, and the cost showed.** Every subagent ran
+  under an explicit commit-nothing instruction so one owner could run each gate against a settled
+  tree. That prevented a regenerated `bindings/` diff being attached to the wrong commit — but it
+  also left `cargo xtask check-bindings` visibly red mid-session, which two agents independently
+  escalated after reasoning about ownership from scratch. The instruction was right; not stating
+  its _reason_ up front was the gap. Related and worse: a commit whose hook passed `swift test`
+  landed a throwaway probe suite that an agent wrote to disk **after** the hook ran, so the hook
+  validated a tree that no longer existed. Gate on a quiescent tree, not merely a green run.
 
 - 2026-08-08: Plan created after a researched architecture review
   (`~/.claude-extra/research/native-macos-windows-code-sharing.md`) plus library and

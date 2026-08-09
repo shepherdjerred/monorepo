@@ -37,7 +37,7 @@ struct KanbanBoardTests {
     @Test("every card is in exactly one column and none go missing")
     func partitionIsTotalAndDisjoint() throws {
         let board = try build()
-        #expect(board.cardCount == Self.vault.count)
+        #expect(board.cardCount == KanbanFixtures.vault.count)
 
         var seen: Set<TaskId> = []
         for column in board.columns {
@@ -46,7 +46,7 @@ struct KanbanBoardTests {
                 #expect(row.task.status == column.status)
             }
         }
-        #expect(seen.count == Self.vault.count)
+        #expect(seen.count == KanbanFixtures.vault.count)
     }
 
     /// A board over the fixture has both of the states worth looking at: a
@@ -307,7 +307,7 @@ struct KanbanBoardTests {
         let board = try build(query: query)
 
         #expect(board.isNarrowed)
-        #expect(board.admittedCount == Self.vault.count)
+        #expect(board.admittedCount == KanbanFixtures.vault.count)
         #expect(board.cardCount == 2)
         #expect(board.cards.allSatisfy { $0.task.contexts.contains("work") })
     }
@@ -339,6 +339,72 @@ struct KanbanBoardTests {
         #expect(board.columns.count == taskStatusAll().count)
     }
 
+    /// ⚠️ **The combination neither `filtering` nor `scopedBoard` covers: a
+    /// scoped board that the reader then narrows again.**
+    ///
+    /// Each of those two pins one input with the other absent, and a board that
+    /// dropped the scope the moment a filter was applied — or dropped the
+    /// filter the moment a scope was present — would pass both of them. Only
+    /// supplying both at once can tell "and" from "either one wins".
+    ///
+    /// The counts are chosen to be three-way distinguishable: the scope alone
+    /// admits 2, the filter alone admits 5, and the intersection admits 1. A
+    /// union would show 6.
+    @Test("a scoped board narrows again under the reader's filter")
+    func scopedBoardNarrowsAgain() throws {
+        let entity = try #require(TaskEntity(kind: .context, name: "work"))
+        var query = TaskListQuery()
+        query.filter.toggleStatus(.open)
+
+        let scopeOnly = try build(scope: entity.scope)
+        let filterOnly = try build(query: query)
+        let both = try build(query: query, scope: entity.scope)
+
+        #expect(scopeOnly.cardCount == 2)
+        #expect(filterOnly.cardCount == 5)
+        #expect(both.cardCount == 1)
+        #expect(both.cards.map(\.task.title) == ["Open one"])
+
+        // The scope survives the reader's filter: the count beside the heading
+        // still describes the slice, not the vault.
+        #expect(both.admittedCount == 2)
+    }
+
+    /// ⚠️ **A scope with more than one link, which every other scope fixture
+    /// here has exactly one of.**
+    ///
+    /// `TaskEntity` produces single-link chains, so nothing above could
+    /// distinguish `narrow` applying *every* link from applying only the first.
+    /// A saved view kept from a project screen carries two — the screen's scope
+    /// and the reader's filter, conjoined — so this is the shape real stored
+    /// views have, and it was untested.
+    ///
+    /// First link alone admits 2, second alone admits 5; the conjunction admits
+    /// 1, so applying only one of them is visible either way round.
+    @Test("a board scoped by a multi-link chain applies every link")
+    func multiLinkScope() throws {
+        var byContext = FilterConfig.unfiltered
+        byContext.contexts = ["work"]
+        var byStatus = FilterConfig.unfiltered
+        byStatus.statuses = [.open]
+
+        let scope = TaskListScope(
+            title: "Open work",
+            systemImage: "briefcase",
+            baseFilter: FilterChain.of(byContext).and(byStatus),
+            emptyTitle: "Nothing here",
+            emptyDescription: "",
+            identity: "view.open-work"
+        )
+        #expect(scope.baseFilter.filters.count == 2, "two links, not one merged record")
+
+        let board = try build(scope: scope)
+        #expect(board.cardCount == 1)
+        #expect(board.cards.map(\.task.title) == ["Open one"])
+        #expect(board.admittedCount == 1)
+        #expect(board.heading == "Open work")
+    }
+
     /// A board that is empty is empty, and still has all six columns to say so
     /// with.
     @Test("an empty vault still produces every column")
@@ -364,7 +430,7 @@ struct KanbanBoardTests {
         #expect(board.cards.filter(\.isPending).count == 1)
     }
 
-    // ── Fixture ────────────────────────────────────────────────────────────
+    // ── Fixture ───────────────────────────────────────────────────────────
 
     private func build(
         query: TaskListQuery = TaskListQuery(),
@@ -372,7 +438,7 @@ struct KanbanBoardTests {
         pending: [TaskId] = []
     ) throws -> KanbanBoard {
         try KanbanBoard.build(
-            tasks: Self.vault,
+            tasks: KanbanFixtures.vault,
             pendingTaskIds: pending,
             calendar: fixedCalendar(),
             query: query,
@@ -380,11 +446,18 @@ struct KanbanBoardTests {
             scope: scope
         )
     }
+}
 
+/// The vault the board cases run against.
+///
+/// At file scope rather than nested in the suite: the type had outgrown the
+/// linter's body-length limit, and the limit was pointing at something real — a
+/// test type should read as a list of what is being asserted, not as a vault.
+enum KanbanFixtures {
     /// A vault with four open tasks, one of each other live status, and none
     /// waiting or delegated — so the board has both an overflowing column and
     /// empty ones without any of it being contrived.
-    private static let vault: [CoreTask] = [
+    static let vault: [CoreTask] = [
         coreTask(id: "Tasks/Open one.md", title: "Open one", contexts: ["work"]),
         coreTask(id: "Tasks/Open two.md", title: "Open two", due: "2026-07-20"),
         coreTask(id: "Tasks/Open three.md", title: "Open three", priority: .highest),
