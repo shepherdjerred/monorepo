@@ -12,7 +12,7 @@
     "test": "bun test src",
     "test:ci": "bun ../../../../scripts/run-ci-test.ts",
     "test:report": "CI_TEST_COVERAGE=1 bun ../../../../scripts/run-ci-test.ts",
-    "lint": "eslint --cache",
+    "lint": "astro sync && eslint --cache",
     "generate": "bun run scripts/generate-render-samples.ts"
   },
   "dependencies": {
