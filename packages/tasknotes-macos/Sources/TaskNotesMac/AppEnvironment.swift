@@ -159,6 +159,7 @@ public final class AppEnvironment {
         guard case .success(let store) = store else { return }
         store.migrate()
         store.configure(serverURL: configuredServer, authToken: tokenStore.token())
+        pull(store)
     }
 
     /// Apply a newly entered address, replacing the running engine.
@@ -170,6 +171,35 @@ public final class AppEnvironment {
     public func applyServerAddress() {
         guard case .success(let store) = store else { return }
         store.configure(serverURL: configuredServer, authToken: tokenStore.token())
+        pull(store)
+    }
+
+    /// Fetch once, now.
+    ///
+    /// ⚠️ **Configuring an engine does not fetch anything**, and nothing else
+    /// was asking it to. `configure` calls `restore()`, which reads the *local
+    /// cache*, and `refresh()`, which re-reads the engine's in-memory snapshot;
+    /// neither touches the network. The engine's `autoSync` arms a pass **on
+    /// dispatch** — its own test is named "auto sync arms a pass on dispatch
+    /// without running it" — so a client that only ever reads would sit on an
+    /// empty cache indefinitely.
+    ///
+    /// The result was that a fresh install showed an empty list forever while
+    /// Settings reported "Connected", which is what being stuck looks like.
+    /// Reported from real use; no test caught it because every test either
+    /// seeds the cache or dispatches a mutation first.
+    ///
+    /// Both callers are the moments the app becomes configured: launch, and
+    /// committing a new address or token. Failure needs no handling here — a
+    /// sync records its own error on `status`, which the banner and the
+    /// Settings pane already read.
+    ///
+    /// ⚠️ `_Concurrency.Task`, spelled in full. `Task` alone resolves to the
+    /// core's own domain type here — the thing this app is a list of — and the
+    /// resulting error is 26 missing arguments rather than anything mentioning
+    /// concurrency.
+    private func pull(_ store: TaskNotesStore) {
+        _Concurrency.Task { await store.sync() }
     }
 
     /// The address as a `URL`, or `nil` when there is not one yet.

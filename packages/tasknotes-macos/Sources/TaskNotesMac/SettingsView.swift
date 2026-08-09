@@ -68,10 +68,20 @@ private struct ServerSettingsView: View {
     /// Exhaustive over `SyncState`: `default:` is banned here precisely so a
     /// new state in the Rust enum becomes a compile error rather than silently
     /// rendering as one of the old ones.
+    /// The engine's own state, spelled for a human.
+    ///
+    /// ⚠️ `.idle` is **not** "connected". It is also the state of an engine that
+    /// has never made a request — before a token was entered, before an address
+    /// was entered, and against a server refusing everything. Reporting it as
+    /// "Connected" meant the pane said the same reassuring word in all four
+    /// cases, and it is what hid a fresh install fetching nothing at all.
+    ///
+    /// `lastSyncTime` is the distinguishing fact: no successful sync yet means
+    /// there is nothing to be connected *about*, whatever the engine's state.
     private var statusDescription: String {
         guard case .success(let store) = environment.store else { return "Unavailable" }
         switch store.status.state {
-        case .idle: return "Connected"
+        case .idle: return store.lastSyncTime == nil ? "Not synced yet" : "Connected"
         case .syncing: return "Syncing"
         case .backoff: return "Waiting to retry"
         case .authError: return "Authentication failed"
