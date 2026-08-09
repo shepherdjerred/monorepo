@@ -15,6 +15,7 @@ import {
   CI_NODE_HOSTNAME,
   CI_NODE_TOLERATION,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
+import { BUILDKITE_MAX_IN_FLIGHT } from "@shepherdjerred/homelab/cdk8s/src/misc/buildkite.ts";
 import {
   BUN_CACHE_MOUNT_PATH,
   createLegacyBuildkiteBunCacheJob,
@@ -24,12 +25,6 @@ import { createLegacyBuildkiteMaintenanceJobs } from "./buildkite-legacy-mainten
 import { createBuildkiteMaintenanceWorker } from "./buildkite-maintenance-worker.ts";
 import { MAINTENANCE_IMAGE_READY } from "./maintenance-image-readiness.ts";
 
-// The sole cluster-wide cap on concurrently-scheduled CI jobs (the
-// agent-stack controller stops creating Jobs beyond it). Kueue and its
-// quota-based admission were removed once CI moved to the dedicated node —
-// liskov's own capacity (kubelet reservations, eviction, pids cap) is the
-// resource bulkhead now.
-export const BUILDKITE_MAX_IN_FLIGHT = 20;
 function createBuildkiteNamespace(chart: Chart): void {
   new Namespace(chart, "buildkite-namespace", {
     metadata: {
@@ -38,6 +33,7 @@ function createBuildkiteNamespace(chart: Chart): void {
         "pod-security.kubernetes.io/enforce": "privileged",
         "pod-security.kubernetes.io/audit": "privileged",
         "pod-security.kubernetes.io/warn": "privileged",
+        "kueue.x-k8s.io/managed-namespace": "true",
       },
     },
   });
@@ -267,6 +263,11 @@ overrides:
   new Application(chart, "buildkite-app", {
     metadata: {
       name: "buildkite",
+      // Start the agent stack only after the Kueue controller and queue
+      // resources have become Healthy in the parent ArgoCD application.
+      annotations: {
+        "argocd.argoproj.io/sync-wave": "3",
+      },
     },
     spec: {
       revisionHistoryLimit: 5,
@@ -297,9 +298,9 @@ overrides:
               // Cluster-wide cap on concurrently-scheduled CI jobs. Sized
               // during the 2026-07 incident response (see
               // the original investigation
-              // and 2026-07-05_torvalds-ci-freeze-investigation.md); since the
-              // Kueue removal this is the only concurrency cap — revisit its
-              // value from liskov soak data.
+              // and 2026-07-05_torvalds-ci-freeze-investigation.md). Kueue's
+              // pods quota mirrors this value; its CPU/memory quotas provide
+              // the weighted admission bound.
               "max-in-flight": BUILDKITE_MAX_IN_FLIGHT,
               "empty-job-grace-period": "5m",
               // Git mirrors: see the buildkite-git-mirrors PVC comment above —

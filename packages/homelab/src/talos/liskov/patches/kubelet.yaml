@@ -6,12 +6,11 @@
 # history. The CI fork-storm armor ports unchanged because the CI storm is
 # exactly the workload moving to this node; only the sizes differ:
 #
-# - systemReserved.memory 32Gi (torvalds: 40Gi) = 16 ARC + ~16 kernel/OS/slab
-#   burst. torvalds measured ZFS dnode/dbuf slab alone peaking at 30.3Gi under
-#   a full CI storm + dagger cache rebuild; liskov's pool holds a handful of
-#   large cache volumes (not 77 PVCs + snapshots), so its metadata slab should
-#   run far smaller. Right-size after a week of Prometheus data — if
-#   ZfsArcHitRateLow fires sustained, raise zfs_arc_max and this in lockstep.
+# - systemReserved.memory 24Gi (torvalds: 40Gi) = 16 ARC + ~8 kernel/OS/slab
+#   burst. Liskov's Prometheus soak showed its slab and ARC fit comfortably
+#   inside this budget while CI ran, so the reserved capacity can be returned
+#   to the CI scheduler. If ZfsArcHitRateLow fires sustained, raise zfs_arc_max
+#   and this in lockstep.
 # - kubeReserved.memory 4Gi (torvalds: 8Gi): no etcd on a worker; torvalds'
 #   /podruntime usage settled ~2.2Gi WITH etcd. Measure
 #   /sys/fs/cgroup/podruntime/memory.peak before resizing.
@@ -20,7 +19,7 @@ machine:
     extraConfig:
       systemReserved:
         cpu: "2"
-        memory: "32Gi"
+        memory: "24Gi"
       systemReservedCgroup: /system
       kubeReserved:
         cpu: "1"

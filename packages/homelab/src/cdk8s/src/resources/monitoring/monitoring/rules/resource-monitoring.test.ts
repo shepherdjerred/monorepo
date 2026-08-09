@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+import { CI_NODE_HOSTNAME } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 import { getResourceMonitoringRuleGroups } from "./resource-monitoring.ts";
 
 describe("CriticalSystemLoad alert", () => {
@@ -48,6 +49,40 @@ describe("CriticalSystemLoad alert", () => {
       throw new Error("expected UnusualSystemLoad alert to still exist");
     }
     expect(JSON.stringify(alert)).toContain("node_load15");
+  });
+});
+
+describe("liskov memory and Buildkite admission alerts", () => {
+  it("warns before the liskov eviction floor", () => {
+    const group = getResourceMonitoringRuleGroups().find(
+      (candidate) => candidate.name === "resource-liskov-memory-monitoring",
+    );
+    const alert = group?.rules?.find(
+      (rule) => rule.alert === "LiskovMemoryAvailableLow",
+    );
+    expect(alert?.expr.value).toContain(`node="${CI_NODE_HOSTNAME}"`);
+    expect(alert?.expr.value).toContain("8589934592");
+    expect(alert?.for).toBe("1m");
+  });
+
+  it("keeps a critical signal for memory pressure and Kueue backlog", () => {
+    const groups = getResourceMonitoringRuleGroups();
+    const memory = groups
+      .find(
+        (candidate) => candidate.name === "resource-liskov-memory-monitoring",
+      )
+      ?.rules?.find((rule) => rule.alert === "LiskovMemoryPressure");
+    const admission = groups
+      .find(
+        (candidate) =>
+          candidate.name === "resource-buildkite-admission-monitoring",
+      )
+      ?.rules?.find((rule) => rule.alert === "BuildkiteKueueWorkloadsWaiting");
+    expect(memory?.expr.value).toContain("MemoryPressure");
+    expect(memory?.expr.value).toContain("4294967296");
+    expect(memory?.for).toBeUndefined();
+    expect(admission?.expr.value).toContain('cluster_queue="buildkite"');
+    expect(admission?.for).toBe("30m");
   });
 });
 

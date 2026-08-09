@@ -96,14 +96,28 @@ Never write tokens to files or embed in URLs. Use `--token` flags or your CI sys
 | Medium  | 500m  | 1Gi    | birmel                 |
 | Default | 250m  | 512Mi  | Everything else        |
 
-### Admission control — Kueue removed (2026-07)
+### Admission control — Kueue
 
-This monorepo previously ran Kueue quota admission over the `buildkite`
-namespace (ClusterQueue + LocalQueue + namespace label). It was removed when
-CI moved to the dedicated `liskov` node: the node's own capacity plus
-`max-in-flight` is the concurrency control, and Kueue had caused several
-admission-freeze incidents. If a Job ever sits `suspend: true` with no pods,
-a Kueue-style webhook is the first suspect.
+The `buildkite` namespace is explicitly managed by Kueue. Buildkite's
+`max-in-flight=20` remains the count cap, while the Kueue `ClusterQueue`
+limits requests to `24 CPU / 80Gi memory / 20 pods / 100Gi ephemeral-storage`.
+New Jobs receive the `default` LocalQueue automatically. If requests do not
+fit, Kueue suspends the Job until quota is available; that is expected and is
+different from a rejected Job or a FailedCreate storm.
+
+When diagnosing CI admission, check the controller and queue first:
+
+```bash
+kubectl -n kueue-system get deployment,pods
+kubectl get clusterqueue buildkite
+kubectl -n buildkite get localqueue default
+kubectl -n buildkite get workloads.kueue.x-k8s.io
+```
+
+If a Job created before Kueue was enabled has no
+`kueue.x-k8s.io/queue-name` label, cancel/retry that Buildkite job. New Jobs
+should carry `kueue.x-k8s.io/queue-name: default`; oversized workloads should
+remain suspended until the queue has capacity.
 
 ## Helm Values (agent-stack-k8s)
 
