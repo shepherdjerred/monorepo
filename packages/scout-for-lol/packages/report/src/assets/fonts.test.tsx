@@ -21,7 +21,12 @@ describe("report fonts", () => {
 
     const fonts = await bunReportFonts(containsCjkText(playerName), playerName);
 
-    expect(fonts.some((entry) => entry.name === "Noto Sans CJK")).toBe(true);
+    expect(
+      fonts.some((entry) => entry.name === "Noto Sans CJK JP") &&
+        fonts.some((entry) => entry.name === "Noto Sans CJK KR") &&
+        fonts.some((entry) => entry.name === "Noto Sans CJK SC") &&
+        fonts.some((entry) => entry.name === "Noto Sans CJK TC"),
+    ).toBe(true);
 
     const svg = await satori(
       <div style={{ fontFamily: font.body }}>{playerName}</div>,

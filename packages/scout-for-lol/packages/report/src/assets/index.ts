@@ -4,8 +4,9 @@ const fontPath = "fonts";
 
 // https://brand.riotgames.com/en-us/league-of-legends/typography
 export const font = {
-  title: "Beaufort for LOL, Noto Sans CJK",
-  body: "Spiegel, Noto Sans CJK",
+  title:
+    "Beaufort for LOL, Noto Sans CJK KR, Noto Sans CJK JP, Noto Sans CJK TC, Noto Sans CJK SC",
+  body: "Spiegel, Noto Sans CJK KR, Noto Sans CJK JP, Noto Sans CJK TC, Noto Sans CJK SC",
 };
 
 const registeredFont = {
@@ -132,24 +133,28 @@ const baseCjkFontsByLocale = {
   jp: [
     {
       ...cjkFont,
+      name: "Noto Sans CJK JP",
       src: `${fontPath}/NotoSansCJK/NotoSansCJKjp-Regular.otf`,
     },
   ],
   kr: [
     {
       ...cjkFont,
+      name: "Noto Sans CJK KR",
       src: `${fontPath}/NotoSansCJK/NotoSansCJKkr-Regular.otf`,
     },
   ],
   sc: [
     {
       ...cjkFont,
+      name: "Noto Sans CJK SC",
       src: `${fontPath}/NotoSansCJK/NotoSansCJKsc-Regular.otf`,
     },
   ],
   tc: [
     {
       ...cjkFont,
+      name: "Noto Sans CJK TC",
       src: `${fontPath}/NotoSansCJK/NotoSansCJKtc-Regular.otf`,
     },
   ],
@@ -183,7 +188,8 @@ export const bunSpiegelFonts: () => Promise<Font[]> = () =>
     ),
   );
 
-const cjkFontsPromises = new Map<CjkFontLocale, Promise<Font[]>>();
+const cjkFontLocales = ["jp", "kr", "sc", "tc"] as const;
+let cjkFontsPromise: Promise<Font[]> | undefined;
 
 function containsTextMatching(value: unknown, pattern: RegExp): boolean {
   if (typeof value === "string") {
@@ -223,25 +229,25 @@ export function cjkFontFileName(value: unknown): string {
   return `NotoSansCJK${cjkFontLocale(value)}-Regular.otf`;
 }
 
-export const bunCjkFonts = (value: unknown = ""): Promise<Font[]> => {
-  const locale = cjkFontLocale(value);
-  const existingPromise = cjkFontsPromises.get(locale);
-  if (existingPromise !== undefined) {
-    return existingPromise;
-  }
-  const promise = Promise.all(
-    baseCjkFontsByLocale[locale].map(
-      async (baseFont): Promise<Font> => ({
-        ...baseFont,
-        data: await Bun.file(
-          new URL(baseFont.src, import.meta.url),
-        ).arrayBuffer(),
-      }),
+export const bunCjkFonts = (_value: unknown = ""): Promise<Font[]> => {
+  cjkFontsPromise ??= Promise.all(
+    cjkFontLocales.flatMap((locale) =>
+      baseCjkFontsByLocale[locale].map(
+        async (baseFont): Promise<Font> => ({
+          ...baseFont,
+          data: await Bun.file(
+            new URL(baseFont.src, import.meta.url),
+          ).arrayBuffer(),
+        }),
+      ),
     ),
   );
-  cjkFontsPromises.set(locale, promise);
-  return promise;
+  return cjkFontsPromise;
 };
+
+export const cjkFontFileNames = cjkFontLocales.map(
+  (locale) => `NotoSansCJK${locale}-Regular.otf`,
+);
 
 const cjkCharacterPattern =
   /[\p{Script=Han}\p{Script=Hangul}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Bopomofo}]/u;

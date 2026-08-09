@@ -5,7 +5,7 @@ import type {
 } from "@scout-for-lol/data";
 import type * as echarts from "echarts";
 import { fileURLToPath } from "node:url";
-import { cjkFontFileName, containsCjkText } from "#src/assets/index.ts";
+import { cjkFontFileNames, containsCjkText } from "#src/assets/index.ts";
 import {
   ANALYTICS_BODY_FONT as BODY_FONT,
   ANALYTICS_CHART_HEIGHT as HEIGHT,
@@ -430,10 +430,9 @@ export function analyticsChartToImage(props: AnalyticsChartProps): Buffer {
   const fontFiles = containsCjkText(props)
     ? [
         ...FONT_FILE_PATHS,
-        fileURLToPath(
-          new URL(
-            `../assets/fonts/NotoSansCJK/${cjkFontFileName(props)}`,
-            import.meta.url,
+        ...cjkFontFileNames.map((name) =>
+          fileURLToPath(
+            new URL(`../assets/fonts/NotoSansCJK/${name}`, import.meta.url),
           ),
         ),
       ]

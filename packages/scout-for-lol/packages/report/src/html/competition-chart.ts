@@ -1,7 +1,7 @@
 import type * as echarts from "echarts";
 import { fileURLToPath } from "node:url";
 import { palette } from "#src/assets/colors.ts";
-import { cjkFontFileName, containsCjkText } from "#src/assets/index.ts";
+import { cjkFontFileNames, containsCjkText } from "#src/assets/index.ts";
 import { generateSeriesPalette } from "#src/html/competition-chart-palette.ts";
 import {
   echartsOptionToSvg,
@@ -386,10 +386,9 @@ export function competitionChartToImage(
   const fontFiles = containsCjkText(props)
     ? [
         ...FONT_FILE_PATHS,
-        fileURLToPath(
-          new URL(
-            `../assets/fonts/NotoSansCJK/${cjkFontFileName(props)}`,
-            import.meta.url,
+        ...cjkFontFileNames.map((name) =>
+          fileURLToPath(
+            new URL(`../assets/fonts/NotoSansCJK/${name}`, import.meta.url),
           ),
         ),
       ]
