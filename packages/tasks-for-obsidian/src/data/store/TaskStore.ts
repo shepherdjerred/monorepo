@@ -9,6 +9,7 @@ import type {
 } from "../../domain/types";
 import { taskId } from "../../domain/types";
 import type { TaskStatus } from "../../domain/status";
+import type { RecurringCompletionRestore } from "tasknotes-types/v2";
 import type { CommandQueue, DeadLetterEntry } from "../sync/CommandQueue";
 import {
   type Clock,
@@ -18,6 +19,19 @@ import {
   makeCommandIdFactory,
   makeTempId,
 } from "../sync/commands";
+import { localTodayYmd } from "../../domain/recurrence";
+import {
+  type StoredCompletionRestore,
+  completionRestoreKey,
+  invalidateChangedCompletionRestores,
+  invalidateCompletionRestores,
+  isOccurrenceEdit,
+  isTaskOccurrenceEdit,
+  parseAcknowledgedCompletionRestores,
+  pruneCompletionRestores,
+  serializeAcknowledgedCompletionRestores,
+  taskAfterCommands,
+} from "./acknowledged-completion-restores";
 
 /**
  * The single source of truth the UI reads.
@@ -61,6 +75,7 @@ export type DispatchInput =
       readonly taskId: TaskId;
       readonly date: string;
       readonly completed: boolean;
+      readonly restore?: RecurringCompletionRestore | undefined;
     };
 
 export type TaskStoreStorage = {
@@ -68,6 +83,8 @@ export type TaskStoreStorage = {
   setTasks: (tasks: Task[]) => Promise<void>;
   getIdAliases: () => Promise<string | null>;
   setIdAliases: (data: string) => Promise<void>;
+  getAcknowledgedCompletionRestores: () => Promise<string | null>;
+  setAcknowledgedCompletionRestores: (data: string) => Promise<void>;
   getLastSyncTime: () => Promise<number | null>;
   setLastSyncTime: (time: number) => Promise<void>;
 };
@@ -77,6 +94,10 @@ const defaultStorage: TaskStoreStorage = {
   setTasks: (tasks) => TypedStorage.setTasks(tasks),
   getIdAliases: () => TypedStorage.getIdAliases(),
   setIdAliases: (data) => TypedStorage.setIdAliases(data),
+  getAcknowledgedCompletionRestores: () =>
+    TypedStorage.getAcknowledgedCompletionRestores(),
+  setAcknowledgedCompletionRestores: (data) =>
+    TypedStorage.setAcknowledgedCompletionRestores(data),
   getLastSyncTime: () => TypedStorage.getLastSyncTime(),
   setLastSyncTime: (time) => TypedStorage.setLastSyncTime(time),
 };
@@ -86,14 +107,87 @@ const AliasesSchema = z.record(z.string(), z.string());
 export class TaskStore {
   private base = new Map<TaskId, Task>();
   private aliases = new Map<TaskId, TaskId>();
+  private acknowledgedCompletionRestores = new Map<
+    string,
+    StoredCompletionRestore
+  >();
   private lastSyncTime: number | null = null;
   private snapshot: TaskStoreSnapshot;
   private readonly listeners = new Set<() => void>();
   private readonly nextCommandId: () => string;
+  private operationLocked = false;
+  private readonly operationWaiters: (() => void)[] = [];
 
   /** Wired to SyncEngine.requestSync — fired after every dispatch. */
   onDispatch: (() => void) | null = null;
-
+  getPendingCompletionRestore(
+    id: TaskId,
+    date: string,
+  ): Promise<RecurringCompletionRestore | undefined> {
+    return this.enqueueOperation(async () => {
+      const target = this.resolveTaskId(id);
+      const pending = this.queue.pending;
+      let pendingRestore: RecurringCompletionRestore | undefined;
+      let completionIndex = -1;
+      for (let index = pending.length - 1; index >= 0; index -= 1) {
+        const command = pending[index];
+        if (command === undefined) continue;
+        if (
+          command.type === "set_instance_complete" &&
+          command.taskId === target &&
+          command.date === date &&
+          command.completed &&
+          command.restore !== undefined
+        ) {
+          pendingRestore = command.restore;
+          completionIndex = index;
+          break;
+        }
+      }
+      if (pendingRestore !== undefined) {
+        const taskAtCompletion = taskAfterCommands(
+          this.base,
+          pending,
+          completionIndex,
+          target,
+        );
+        if (
+          pending
+            .slice(completionIndex + 1)
+            .some((command) =>
+              isTaskOccurrenceEdit(command, target, taskAtCompletion),
+            )
+        ) {
+          return;
+        }
+        return pendingRestore;
+      }
+      if (
+        pending.some((command) =>
+          isTaskOccurrenceEdit(command, target, this.base.get(target)),
+        )
+      ) {
+        return;
+      }
+      const key = completionRestoreKey(target, date);
+      const stored = this.acknowledgedCompletionRestores.get(key);
+      if (
+        stored === undefined ||
+        date < localTodayYmd(new Date(this.clock()))
+      ) {
+        if (stored !== undefined) {
+          const next = new Map(this.acknowledgedCompletionRestores);
+          next.delete(key);
+          await this.storage.setAcknowledgedCompletionRestores(
+            serializeAcknowledgedCompletionRestores(next),
+          );
+          this.acknowledgedCompletionRestores = next;
+        }
+        return;
+      }
+      return stored.restore;
+    });
+  }
   constructor(
     private readonly queue: CommandQueue,
     private readonly storage: TaskStoreStorage = defaultStorage,
@@ -102,44 +196,87 @@ export class TaskStore {
     this.nextCommandId = makeCommandIdFactory(clock);
     this.snapshot = this.buildSnapshot();
   }
-
   /** Load queue + cached base + aliases. Call once at startup, after migrations. */
   async restore(): Promise<void> {
-    await this.queue.restore();
-    const [tasks, rawAliases, lastSync] = await Promise.all([
-      this.storage.getTasks(),
-      this.storage.getIdAliases(),
-      this.storage.getLastSyncTime(),
-    ]);
-    this.base = new Map(tasks.map((t) => [t.id, t]));
-    this.aliases = parseAliases(rawAliases);
-    this.lastSyncTime = lastSync;
-    this.recompute();
+    await this.enqueueOperation(async () => {
+      await this.queue.restore();
+      const [tasks, rawAliases, rawAcknowledgedRestores, lastSync] =
+        await Promise.all([
+          this.storage.getTasks(),
+          this.storage.getIdAliases(),
+          this.storage.getAcknowledgedCompletionRestores(),
+          this.storage.getLastSyncTime(),
+        ]);
+      this.base = new Map(tasks.map((t) => [t.id, t]));
+      this.aliases = parseAliases(rawAliases);
+      const nextAcknowledgedCompletionRestores = pruneCompletionRestores(
+        parseAcknowledgedCompletionRestores(rawAcknowledgedRestores),
+        localTodayYmd(new Date(this.clock())),
+        this.base,
+      );
+      await this.storage.setAcknowledgedCompletionRestores(
+        serializeAcknowledgedCompletionRestores(
+          nextAcknowledgedCompletionRestores,
+        ),
+      );
+      this.acknowledgedCompletionRestores = nextAcknowledgedCompletionRestores;
+      this.lastSyncTime = lastSync;
+      this.recompute();
+    });
   }
-
   subscribe(listener: () => void): () => void {
     this.listeners.add(listener);
     return () => {
       this.listeners.delete(listener);
     };
   }
-
   getSnapshot(): TaskStoreSnapshot {
     return this.snapshot;
   }
-
   /**
    * Record a mutation and return the optimistic result immediately. The
    * enqueue is the only await — never the network. Returns the task as the
    * UI will now see it (undefined after a delete).
    */
   async dispatch(input: DispatchInput): Promise<Task | undefined> {
-    const command = this.buildCommand(input);
-    await this.queue.enqueue(command);
-    this.recompute();
-    this.onDispatch?.();
-    const target = command.type === "create" ? command.tempId : command.taskId;
-    return this.snapshot.tasks.get(target);
+    return this.enqueueOperation(async () => {
+      // Build inside the serialized operation so a stale temp id is resolved
+      // only after any in-flight create acknowledgement has committed its
+      // alias and snapshot together.
+      const command = this.buildCommand(input);
+      await this.queue.enqueue(command);
+      let nextAcknowledgedCompletionRestores =
+        this.acknowledgedCompletionRestores;
+      if (
+        command.type === "set_instance_complete" &&
+        !command.completed &&
+        command.restore !== undefined
+      ) {
+        nextAcknowledgedCompletionRestores = new Map(
+          nextAcknowledgedCompletionRestores,
+        );
+        nextAcknowledgedCompletionRestores.delete(
+          completionRestoreKey(command.taskId, command.date),
+        );
+      }
+      if (
+        nextAcknowledgedCompletionRestores !==
+        this.acknowledgedCompletionRestores
+      ) {
+        await this.storage.setAcknowledgedCompletionRestores(
+          serializeAcknowledgedCompletionRestores(
+            nextAcknowledgedCompletionRestores,
+          ),
+        );
+        this.acknowledgedCompletionRestores =
+          nextAcknowledgedCompletionRestores;
+      }
+      this.recompute();
+      this.onDispatch?.();
+      const target =
+        command.type === "create" ? command.tempId : command.taskId;
+      return this.snapshot.tasks.get(target);
+    });
   }
 
   /**
@@ -160,51 +297,130 @@ export class TaskStore {
     command: Command,
     serverTask: Task | null,
   ): Promise<void> {
-    if (serverTask !== null && command.type === "create") {
-      this.aliases.set(command.tempId, serverTask.id);
-      await this.queue.remapTaskId(command.tempId, serverTask.id);
-      await this.persistAliases();
-    }
-    if (command.type === "delete") {
-      this.base.delete(command.taskId);
-    } else if (serverTask !== null) {
-      this.base.set(serverTask.id, serverTask);
-    }
-    await this.queue.ack(command.id);
-    await this.persistBase();
-    this.recompute();
+    await this.enqueueOperation(async () => {
+      let nextAliases = this.aliases;
+      let nextAcknowledgedCompletionRestores =
+        this.acknowledgedCompletionRestores;
+      if (serverTask !== null && command.type === "create") {
+        nextAliases = new Map(this.aliases);
+        nextAliases.set(command.tempId, serverTask.id);
+        await this.queue.remapTaskId(command.tempId, serverTask.id);
+        await this.persistAliases(nextAliases);
+      }
+
+      const nextBase = new Map(this.base);
+      if (command.type === "delete") {
+        nextBase.delete(command.taskId);
+      } else if (serverTask !== null) {
+        nextBase.set(serverTask.id, serverTask);
+      }
+      nextAcknowledgedCompletionRestores = pruneCompletionRestores(
+        nextAcknowledgedCompletionRestores,
+        localTodayYmd(new Date(this.clock())),
+        nextBase,
+      );
+      if (
+        command.type === "update" &&
+        isOccurrenceEdit(command, this.base.get(command.taskId))
+      ) {
+        nextAcknowledgedCompletionRestores = invalidateCompletionRestores(
+          nextAcknowledgedCompletionRestores,
+          command.taskId,
+        );
+      }
+      if (
+        command.type === "set_instance_complete" &&
+        command.completed &&
+        command.restore !== undefined
+      ) {
+        nextAcknowledgedCompletionRestores = new Map(
+          nextAcknowledgedCompletionRestores,
+        );
+        nextAcknowledgedCompletionRestores.set(
+          completionRestoreKey(command.taskId, command.date),
+          { restore: command.restore },
+        );
+      }
+      // Persist the authoritative base before removing the durable command.
+      // If the process dies between these writes, idempotent mutation replay
+      // is safe; the reverse order could lose the accepted mutation offline.
+      await this.persistBase(nextBase);
+      await this.storage.setAcknowledgedCompletionRestores(
+        serializeAcknowledgedCompletionRestores(
+          nextAcknowledgedCompletionRestores,
+        ),
+      );
+      await this.queue.ack(command.id);
+
+      // Publish the alias/base/snapshot as one synchronous state transition.
+      // Readers can therefore never observe a real-id alias paired with the
+      // preceding temp-id snapshot while persistence is in flight.
+      this.aliases = nextAliases;
+      this.base = nextBase;
+      this.acknowledgedCompletionRestores = nextAcknowledgedCompletionRestores;
+      this.recompute();
+    });
   }
 
   /** A command failed permanently — park it and roll back its optimistic effect. */
   async deadLetterCommand(
     ...args: Parameters<CommandQueue["deadLetter"]>
   ): Promise<void> {
-    await this.queue.deadLetter(...args);
-    this.recompute();
+    await this.enqueueOperation(async () => {
+      await this.queue.deadLetter(...args);
+      this.recompute();
+    });
   }
 
   async retryDeadLetter(id: string): Promise<void> {
-    await this.queue.retryDeadLetter(id);
-    this.recompute();
-    this.onDispatch?.();
+    await this.enqueueOperation(async () => {
+      await this.queue.retryDeadLetter(id);
+      this.recompute();
+      this.onDispatch?.();
+    });
   }
 
   async discardDeadLetter(id: string): Promise<void> {
-    await this.queue.discardDeadLetter(id);
-    this.recompute();
+    await this.enqueueOperation(async () => {
+      await this.queue.discardDeadLetter(id);
+      this.recompute();
+    });
   }
 
   /** Replace the base with a fresh full pull and prune stale aliases. */
   async replaceBase(tasks: Task[], syncedAt: number): Promise<void> {
-    this.base = new Map(tasks.map((t) => [t.id, t]));
-    for (const [tempId, realId] of this.aliases) {
-      if (!this.base.has(realId)) this.aliases.delete(tempId);
-    }
-    this.lastSyncTime = syncedAt;
-    await this.persistBase();
-    await this.persistAliases();
-    await this.storage.setLastSyncTime(syncedAt);
-    this.recompute();
+    await this.enqueueOperation(async () => {
+      const nextBase = new Map(tasks.map((t) => [t.id, t]));
+      const nextAliases = new Map(this.aliases);
+      for (const [tempId, realId] of nextAliases) {
+        if (!nextBase.has(realId)) nextAliases.delete(tempId);
+      }
+      const prunedAcknowledgedCompletionRestores = pruneCompletionRestores(
+        this.acknowledgedCompletionRestores,
+        localTodayYmd(new Date(this.clock())),
+        nextBase,
+      );
+      const nextAcknowledgedCompletionRestores =
+        invalidateChangedCompletionRestores(
+          prunedAcknowledgedCompletionRestores,
+          this.base,
+          nextBase,
+        );
+      await this.storage.setAcknowledgedCompletionRestores(
+        serializeAcknowledgedCompletionRestores(
+          nextAcknowledgedCompletionRestores,
+        ),
+      );
+      await this.persistBase(nextBase);
+      await this.persistAliases(nextAliases);
+      await this.storage.setLastSyncTime(syncedAt);
+
+      this.base = nextBase;
+      this.aliases = nextAliases;
+      this.acknowledgedCompletionRestores = nextAcknowledgedCompletionRestores;
+      this.lastSyncTime = syncedAt;
+      this.recompute();
+    });
   }
 
   private buildCommand(input: DispatchInput): Command {
@@ -215,12 +431,32 @@ export class TaskStore {
       case "update":
       case "delete":
       case "set_status":
-      case "set_instance_complete":
         return {
           ...base,
           ...input,
           taskId: this.resolveTaskId(input.taskId),
         };
+      case "set_instance_complete": {
+        const resolvedTaskId = this.resolveTaskId(input.taskId);
+        if (input.completed) {
+          return {
+            ...base,
+            type: input.type,
+            taskId: resolvedTaskId,
+            date: input.date,
+            completed: true,
+            ...(input.restore === undefined ? {} : { restore: input.restore }),
+          };
+        }
+        return {
+          ...base,
+          type: input.type,
+          taskId: resolvedTaskId,
+          date: input.date,
+          completed: false,
+          ...(input.restore === undefined ? {} : { restore: input.restore }),
+        };
+      }
     }
   }
 
@@ -245,16 +481,48 @@ export class TaskStore {
     };
   }
 
-  private async persistBase(): Promise<void> {
-    await this.storage.setTasks([...this.base.values()]);
+  private async persistBase(base: ReadonlyMap<TaskId, Task>): Promise<void> {
+    await this.storage.setTasks([...base.values()]);
   }
 
-  private async persistAliases(): Promise<void> {
+  private async persistAliases(
+    aliases: ReadonlyMap<TaskId, TaskId>,
+  ): Promise<void> {
     const record: Record<string, string> = {};
-    for (const [from, to] of this.aliases) {
+    for (const [from, to] of aliases) {
       record[String(from)] = String(to);
     }
     await this.storage.setIdAliases(JSON.stringify(record));
+  }
+
+  private async enqueueOperation<Value>(
+    operation: () => Promise<Value>,
+  ): Promise<Value> {
+    await this.acquireOperationLock();
+    try {
+      return await operation();
+    } finally {
+      this.releaseOperationLock();
+    }
+  }
+
+  private async acquireOperationLock(): Promise<void> {
+    if (!this.operationLocked) {
+      this.operationLocked = true;
+      return;
+    }
+    await new Promise<void>((resolve) => {
+      this.operationWaiters.push(resolve);
+    });
+  }
+
+  private releaseOperationLock(): void {
+    const next = this.operationWaiters.shift();
+    if (next === undefined) {
+      this.operationLocked = false;
+      return;
+    }
+    next();
   }
 }
 

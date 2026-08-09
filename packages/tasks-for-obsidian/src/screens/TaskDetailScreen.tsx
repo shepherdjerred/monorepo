@@ -204,7 +204,11 @@ export function TaskDetailScreen({ route, navigation }: Props) {
               } else {
                 feedbackTaskComplete();
               }
-              void toggleTask(taskId);
+              void toggleTask(taskId, {
+                scope: isCompletedStatus(task.status)
+                  ? "task-status"
+                  : "occurrence",
+              });
             }}
             accessibilityRole="button"
             accessibilityLabel={

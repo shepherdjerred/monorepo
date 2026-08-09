@@ -9,6 +9,7 @@ import {
   nextOccurrenceAfter,
   occursOn,
 } from "../domain/recurrence";
+import { executeTaskToggle } from "../domain/task-toggle";
 import { useUndo } from "../state/UndoContext";
 import { feedbackTaskUncomplete } from "../lib/feedback";
 import { formatDate } from "../lib/dates";
@@ -134,34 +135,57 @@ export function useTasks() {
   // one toast per task would overwrite each other, leaving N-1 completions
   // silently un-undoable while implying otherwise.
   const toggleTask = useCallback(
-    async (id: TaskId, options?: { suppressUndo?: boolean }) => {
+    async (
+      id: TaskId,
+      options?: {
+        occurrenceDate?: string;
+        scope?: "occurrence" | "task-status";
+        suppressUndo?: boolean;
+      },
+    ) => {
       const task = ctx.tasks.get(ctx.resolveTaskId(id));
-      const date =
-        task !== undefined && isRecurring(task)
-          ? completionTargetDate(task)
-          : undefined;
-      const completing =
-        task !== undefined &&
-        date !== undefined &&
-        !task.completeInstances.includes(date);
-      const result = await ctx.toggleStatus(id);
+      const execution = await executeTaskToggle(
+        task,
+        options?.occurrenceDate,
+        options?.scope ?? "occurrence",
+        {
+          toggleStatus: () => ctx.toggleStatus(id),
+          setInstanceComplete: (date, completed, restore) =>
+            ctx.setInstanceComplete(id, date, completed, restore),
+          pendingRestore:
+            task?.recurrence === undefined
+              ? undefined
+              : ctx.getPendingCompletionRestore(
+                  id,
+                  options?.occurrenceDate ?? completionTargetDate(task),
+                ),
+        },
+      );
+      const recurring = execution.recurring;
       if (
-        task !== undefined &&
-        date !== undefined &&
-        completing &&
-        result.ok &&
+        recurring !== null &&
+        recurring.completed &&
+        recurring.restore !== null &&
+        execution.result.ok &&
         options?.suppressUndo !== true
       ) {
-        const next = nextOccurrenceAfter(task, date);
+        const next = task
+          ? nextOccurrenceAfter(task, recurring.date)
+          : undefined;
         showUndo({
           message: next ? `Completed · Next: ${formatDate(next)}` : "Completed",
           onUndo: () => {
             feedbackTaskUncomplete();
-            void ctx.setInstanceComplete(id, date, false);
+            void ctx.setInstanceComplete(
+              id,
+              recurring.date,
+              false,
+              recurring.restore ?? undefined,
+            );
           },
         });
       }
-      return result;
+      return execution.result;
     },
     [ctx, showUndo],
   );

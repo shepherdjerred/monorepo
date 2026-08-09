@@ -11,6 +11,7 @@ const KEYS = {
   QUEUE_V2: "mutation_queue_v2",
   DEAD_LETTER: "dead_letter",
   ID_ALIASES: "id_aliases",
+  ACKNOWLEDGED_COMPLETION_RESTORES: "acknowledged_completion_restores",
   SCHEMA_VERSION: "storage_schema_version",
   LAST_SYNC: "last_sync_time",
 } as const;
@@ -106,6 +107,14 @@ export const TypedStorage = {
 
   async setIdAliases(data: string): Promise<void> {
     await AsyncStorage.setItem(KEYS.ID_ALIASES, data);
+  },
+
+  async getAcknowledgedCompletionRestores(): Promise<string | null> {
+    return AsyncStorage.getItem(KEYS.ACKNOWLEDGED_COMPLETION_RESTORES);
+  },
+
+  async setAcknowledgedCompletionRestores(data: string): Promise<void> {
+    await AsyncStorage.setItem(KEYS.ACKNOWLEDGED_COMPLETION_RESTORES, data);
   },
 
   async getSchemaVersion(): Promise<number> {

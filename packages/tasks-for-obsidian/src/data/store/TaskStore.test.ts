@@ -181,6 +181,733 @@ describe("TaskStore server acks", () => {
     expect(store.getSnapshot().tasks.get(real.id)?.status).toBe("done");
   });
 
+  test("serializes a stale-id dispatch across an in-flight create ack", async () => {
+    const backingStorage = memoryStoreStorage();
+    const aliasWriteStarted = Promise.withResolvers<null>();
+    const releaseAliasWrite = Promise.withResolvers<null>();
+    let pauseAliasWrite = false;
+    const storeStorage: MemoryStoreStorage = {
+      ...backingStorage,
+      setIdAliases: async (data) => {
+        if (pauseAliasWrite) {
+          pauseAliasWrite = false;
+          aliasWriteStarted.resolve(null);
+          await releaseAliasWrite.promise;
+        }
+        await backingStorage.setIdAliases(data);
+      },
+    };
+    const { store, queue } = makeStore(memoryQueueStorage(), storeStorage);
+    await store.restore();
+    const optimistic = await store.dispatch({
+      type: "create",
+      payload: { title: "New" },
+    });
+    if (optimistic === undefined) throw new Error("expected optimistic task");
+    const createCmd = queue.head();
+    if (createCmd?.type !== "create") throw new Error("expected create head");
+    const real = makeTask({ id: taskId("TaskNotes/New.md"), title: "New" });
+
+    pauseAliasWrite = true;
+    const ack = store.applyServerAck(createCmd, real);
+    await aliasWriteStarted.promise;
+
+    // While persistence is paused, readers still observe the prior alias and
+    // snapshot together. The queued dispatch waits and resolves its stale id
+    // only after the acknowledgement publishes the real task.
+    expect(store.resolveTaskId(optimistic.id)).toBe(optimistic.id);
+    expect(store.getSnapshot().tasks.has(optimistic.id)).toBe(true);
+    const dispatch = store.dispatch({
+      type: "set_status",
+      taskId: optimistic.id,
+      status: "done",
+    });
+
+    releaseAliasWrite.resolve(null);
+    await ack;
+    const updated = await dispatch;
+    expect(updated?.id).toBe(real.id);
+    expect(updated?.status).toBe("done");
+    const pending = queue.head();
+    expect(pending?.type === "set_status" && pending.taskId).toBe(real.id);
+  });
+});
+
+describe("TaskStore full pulls", () => {
+  test("invalidates acknowledged restores after an external recurrence edit", async () => {
+    const task = makeTask({
+      recurrence: "FREQ=WEEKLY",
+      scheduled: "2026-08-08",
+    });
+    const { store, queue } = makeStore(
+      memoryQueueStorage(),
+      memoryStoreStorage({ tasks: [task] }),
+    );
+    await store.restore();
+    await store.dispatch({
+      type: "set_instance_complete",
+      taskId: task.id,
+      date: "2026-08-08",
+      completed: true,
+      restore: {
+        scheduled: "2026-08-08",
+        due: null,
+        recurrence: "FREQ=WEEKLY",
+        skipped: false,
+      },
+    });
+    const command = queue.head();
+    if (command?.type !== "set_instance_complete") {
+      throw new Error("expected completion command");
+    }
+    await store.applyServerAck(command, {
+      ...task,
+      completeInstances: ["2026-08-08"],
+    });
+
+    await store.replaceBase(
+      [
+        {
+          ...task,
+          recurrence: "FREQ=MONTHLY",
+          completeInstances: ["2026-08-08"],
+        },
+      ],
+      now,
+    );
+
+    await expect(
+      store.getPendingCompletionRestore(task.id, "2026-08-08"),
+    ).resolves.toEqual(undefined);
+  });
+
+  test("invalidates acknowledged restores after an external skip edit", async () => {
+    const task = makeTask({
+      recurrence: "FREQ=WEEKLY",
+      scheduled: "2026-08-08",
+    });
+    const { store, queue } = makeStore(
+      memoryQueueStorage(),
+      memoryStoreStorage({ tasks: [task] }),
+    );
+    await store.restore();
+    await store.dispatch({
+      type: "set_instance_complete",
+      taskId: task.id,
+      date: "2026-08-08",
+      completed: true,
+      restore: {
+        scheduled: "2026-08-08",
+        due: null,
+        recurrence: "FREQ=WEEKLY",
+        skipped: false,
+      },
+    });
+    const command = queue.head();
+    if (command?.type !== "set_instance_complete") {
+      throw new Error("expected completion command");
+    }
+    await store.applyServerAck(command, {
+      ...task,
+      completeInstances: ["2026-08-08"],
+    });
+
+    await store.replaceBase(
+      [
+        {
+          ...task,
+          completeInstances: ["2026-08-08"],
+          skippedInstances: ["2026-08-08"],
+        },
+      ],
+      now,
+    );
+
+    await expect(
+      store.getPendingCompletionRestore(task.id, "2026-08-08"),
+    ).resolves.toEqual(undefined);
+  });
+
+  test("persists restore invalidation before a pulled base write", async () => {
+    const task = makeTask({
+      recurrence: "FREQ=WEEKLY",
+      scheduled: "2026-08-08",
+    });
+    const backingStorage = memoryStoreStorage({ tasks: [task] });
+    let failBaseWrite = false;
+    const storeStorage = {
+      ...backingStorage,
+      setTasks: async (tasks: Task[]) => {
+        if (failBaseWrite) throw new Error("base pull interrupted");
+        await backingStorage.setTasks(tasks);
+      },
+    };
+    const { store, queue } = makeStore(memoryQueueStorage(), storeStorage);
+    await store.restore();
+    const restore = {
+      scheduled: "2026-08-08",
+      due: null,
+      recurrence: "FREQ=WEEKLY",
+      skipped: false,
+    };
+    await store.dispatch({
+      type: "set_instance_complete",
+      taskId: task.id,
+      date: "2026-08-08",
+      completed: true,
+      restore,
+    });
+    const command = queue.head();
+    if (command?.type !== "set_instance_complete") {
+      throw new Error("expected completion command");
+    }
+    await store.applyServerAck(command, {
+      ...task,
+      completeInstances: ["2026-08-08"],
+    });
+
+    failBaseWrite = true;
+    await expect(
+      store.replaceBase(
+        [
+          {
+            ...task,
+            recurrence: "FREQ=MONTHLY",
+            completeInstances: ["2026-08-08"],
+          },
+        ],
+        now,
+      ),
+    ).rejects.toThrow("base pull interrupted");
+
+    const relaunched = makeStore(
+      memoryQueueStorage(),
+      backingStorage.clone(),
+    ).store;
+    await relaunched.restore();
+    await expect(
+      relaunched.getPendingCompletionRestore(task.id, "2026-08-08"),
+    ).resolves.toEqual(undefined);
+  });
+});
+
+describe("TaskStore restore validation", () => {
+  test("surfaces malformed persisted restore JSON", async () => {
+    const storeStorage = memoryStoreStorage({
+      acknowledgedCompletionRestores: "not-json",
+    });
+    const { store } = makeStore(memoryQueueStorage(), storeStorage);
+
+    await expect(store.restore()).rejects.toThrow();
+    expect(await storeStorage.getAcknowledgedCompletionRestores()).toBe(
+      "not-json",
+    );
+  });
+
+  test("surfaces incompatible persisted restore shapes", async () => {
+    const storeStorage = memoryStoreStorage({
+      acknowledgedCompletionRestores: JSON.stringify({
+        "TaskNotes/test.md\u{0}2026-08-08": { restore: { recurrence: 42 } },
+      }),
+    });
+    const { store } = makeStore(memoryQueueStorage(), storeStorage);
+
+    await expect(store.restore()).rejects.toThrow();
+  });
+
+  test("surfaces malformed persisted restore keys", async () => {
+    const storeStorage = memoryStoreStorage({
+      acknowledgedCompletionRestores: JSON.stringify({
+        "TaskNotes/test.md": {
+          restore: {
+            scheduled: "2026-08-08",
+            due: null,
+            recurrence: "FREQ=WEEKLY",
+            skipped: false,
+          },
+        },
+      }),
+    });
+    const { store } = makeStore(memoryQueueStorage(), storeStorage);
+
+    await expect(store.restore()).rejects.toThrow();
+  });
+});
+
+describe("TaskStore restore ordering", () => {
+  test("keeps a restore captured after an earlier queued occurrence edit", async () => {
+    const task = makeTask({
+      recurrence: "FREQ=WEEKLY",
+      scheduled: "2026-08-08",
+    });
+    const { store, queue } = makeStore(
+      memoryQueueStorage(),
+      memoryStoreStorage({ tasks: [task] }),
+    );
+    await store.restore();
+    const restore = {
+      scheduled: "2026-08-08",
+      due: null,
+      recurrence: "FREQ=MONTHLY",
+      skipped: false,
+    };
+    await store.dispatch({
+      type: "update",
+      taskId: task.id,
+      payload: { recurrence: "FREQ=MONTHLY" },
+    });
+    await store.dispatch({
+      type: "set_instance_complete",
+      taskId: task.id,
+      date: "2026-08-08",
+      completed: true,
+      restore,
+    });
+
+    expect(queue.pending).toHaveLength(2);
+    await expect(
+      store.getPendingCompletionRestore(task.id, "2026-08-08"),
+    ).resolves.toEqual(restore);
+  });
+
+  test("classifies later edits against the state at completion", async () => {
+    const task = makeTask({
+      recurrence: "FREQ=WEEKLY",
+      scheduled: "2026-08-08",
+    });
+    const { store } = makeStore(
+      memoryQueueStorage(),
+      memoryStoreStorage({ tasks: [task] }),
+    );
+    await store.restore();
+    const restore = {
+      scheduled: "2026-08-15",
+      due: null,
+      recurrence: "FREQ=WEEKLY",
+      skipped: false,
+    };
+    await store.dispatch({
+      type: "update",
+      taskId: task.id,
+      payload: { scheduled: "2026-08-15" },
+    });
+    await store.dispatch({
+      type: "set_instance_complete",
+      taskId: task.id,
+      date: "2026-08-08",
+      completed: true,
+      restore,
+    });
+    await store.dispatch({
+      type: "update",
+      taskId: task.id,
+      payload: { title: "Renamed", scheduled: "2026-08-15" },
+    });
+
+    await expect(
+      store.getPendingCompletionRestore(task.id, "2026-08-08"),
+    ).resolves.toEqual(restore);
+  });
+});
+
+describe("TaskStore restore retention", () => {
+  test("retains a restore for an update with unchanged schedule fields", async () => {
+    const task = makeTask({
+      due: "2026-08-10",
+      recurrence: "FREQ=WEEKLY",
+      scheduled: "2026-08-08",
+    });
+    const { store, queue } = makeStore(
+      memoryQueueStorage(),
+      memoryStoreStorage({ tasks: [task] }),
+    );
+    await store.restore();
+    const scheduled = task.scheduled ?? null;
+    const due = task.due ?? null;
+    const recurrence = task.recurrence ?? "";
+    const restore = {
+      scheduled,
+      due,
+      recurrence,
+      skipped: false,
+    };
+    await store.dispatch({
+      type: "set_instance_complete",
+      taskId: task.id,
+      date: "2026-08-08",
+      completed: true,
+      restore,
+    });
+    const completion = queue.head();
+    if (completion?.type !== "set_instance_complete") {
+      throw new Error("expected completion command");
+    }
+    await store.applyServerAck(completion, {
+      ...task,
+      completeInstances: ["2026-08-08"],
+    });
+
+    await store.dispatch({
+      type: "update",
+      taskId: task.id,
+      payload: { title: "Renamed", due, scheduled },
+    });
+    await expect(
+      store.getPendingCompletionRestore(task.id, "2026-08-08"),
+    ).resolves.toEqual(restore);
+
+    const edit = queue.head();
+    if (edit?.type !== "update") throw new Error("expected edit command");
+    await store.applyServerAck(edit, { ...task, title: "Renamed" });
+    await expect(
+      store.getPendingCompletionRestore(task.id, "2026-08-08"),
+    ).resolves.toEqual(restore);
+  });
+
+  test("treats null and undefined schedule fields as unchanged", async () => {
+    const task = makeTask({ recurrence: "FREQ=WEEKLY" });
+    const { store, queue } = makeStore(
+      memoryQueueStorage(),
+      memoryStoreStorage({ tasks: [task] }),
+    );
+    await store.restore();
+    const restore = {
+      scheduled: null,
+      due: null,
+      recurrence: "FREQ=WEEKLY",
+      skipped: false,
+    };
+    await store.dispatch({
+      type: "set_instance_complete",
+      taskId: task.id,
+      date: "2026-08-08",
+      completed: true,
+      restore,
+    });
+    const completion = queue.head();
+    if (completion?.type !== "set_instance_complete") {
+      throw new Error("expected completion command");
+    }
+    await store.applyServerAck(completion, {
+      ...task,
+      completeInstances: ["2026-08-08"],
+    });
+
+    await store.dispatch({
+      type: "update",
+      taskId: task.id,
+      payload: { title: "Renamed", due: null, scheduled: null },
+    });
+    await expect(
+      store.getPendingCompletionRestore(task.id, "2026-08-08"),
+    ).resolves.toEqual(restore);
+
+    const edit = queue.head();
+    if (edit?.type !== "update") throw new Error("expected edit command");
+    await store.applyServerAck(edit, { ...task, title: "Renamed" });
+    await expect(
+      store.getPendingCompletionRestore(task.id, "2026-08-08"),
+    ).resolves.toEqual(restore);
+  });
+
+  test("retains a restore when a later occurrence edit is dead-lettered", async () => {
+    const task = makeTask({
+      recurrence: "FREQ=WEEKLY",
+      scheduled: "2026-08-08",
+    });
+    const { store, queue } = makeStore(
+      memoryQueueStorage(),
+      memoryStoreStorage({ tasks: [task] }),
+    );
+    await store.restore();
+    const restore = {
+      scheduled: "2026-08-08",
+      due: null,
+      recurrence: "FREQ=WEEKLY",
+      skipped: false,
+    };
+    await store.dispatch({
+      type: "set_instance_complete",
+      taskId: task.id,
+      date: "2026-08-08",
+      completed: true,
+      restore,
+    });
+    const completion = queue.head();
+    if (completion?.type !== "set_instance_complete") {
+      throw new Error("expected completion command");
+    }
+    await store.applyServerAck(completion, {
+      ...task,
+      completeInstances: ["2026-08-08"],
+    });
+
+    await store.dispatch({
+      type: "update",
+      taskId: task.id,
+      payload: { recurrence: "FREQ=MONTHLY" },
+    });
+    const edit = queue.head();
+    if (edit?.type !== "update") throw new Error("expected edit command");
+    await store.deadLetterCommand(edit.id, new ApiError("invalid", 422));
+
+    await expect(
+      store.getPendingCompletionRestore(task.id, "2026-08-08"),
+    ).resolves.toEqual(restore);
+  });
+});
+
+describe("TaskStore pending restores", () => {
+  test("reads a pending restore after an in-flight create remaps its id", async () => {
+    const backingStorage = memoryStoreStorage();
+    const aliasWriteStarted = Promise.withResolvers<null>();
+    const releaseAliasWrite = Promise.withResolvers<null>();
+    const storeStorage: MemoryStoreStorage = {
+      ...backingStorage,
+      setIdAliases: async (data) => {
+        aliasWriteStarted.resolve(null);
+        await releaseAliasWrite.promise;
+        await backingStorage.setIdAliases(data);
+      },
+    };
+    const { store, queue } = makeStore(memoryQueueStorage(), storeStorage);
+    await store.restore();
+    const optimistic = await store.dispatch({
+      type: "create",
+      payload: { title: "New" },
+    });
+    if (optimistic === undefined) throw new Error("expected optimistic task");
+    const restore = {
+      scheduled: "2026-08-08",
+      due: null,
+      recurrence: "FREQ=WEEKLY",
+      skipped: false,
+    };
+    await store.dispatch({
+      type: "set_instance_complete",
+      taskId: optimistic.id,
+      date: "2026-08-08",
+      completed: true,
+      restore,
+    });
+    const createCmd = queue.head();
+    if (createCmd?.type !== "create") throw new Error("expected create head");
+    const real = makeTask({ id: taskId("TaskNotes/New.md"), title: "New" });
+
+    const ack = store.applyServerAck(createCmd, real);
+    await aliasWriteStarted.promise;
+    const pendingRestore = store.getPendingCompletionRestore(
+      optimistic.id,
+      "2026-08-08",
+    );
+    releaseAliasWrite.resolve(null);
+
+    await ack;
+    await expect(pendingRestore).resolves.toEqual(restore);
+  });
+
+  test("retains a restore while its completion acknowledgement is settling", async () => {
+    const backingStorage = memoryStoreStorage();
+    const ackWriteStarted = Promise.withResolvers<null>();
+    const releaseAckWrite = Promise.withResolvers<null>();
+    let pauseAckWrite = false;
+    const storeStorage: MemoryStoreStorage = {
+      ...backingStorage,
+      setTasks: async (tasks) => {
+        if (pauseAckWrite) {
+          pauseAckWrite = false;
+          ackWriteStarted.resolve(null);
+          await releaseAckWrite.promise;
+        }
+        await backingStorage.setTasks(tasks);
+      },
+    };
+    const task = makeTask({
+      recurrence: "FREQ=WEEKLY",
+      scheduled: "2026-08-08",
+    });
+    const { queue } = makeStore(
+      memoryQueueStorage(),
+      memoryStoreStorage({ tasks: [task] }),
+    );
+    const storeWithPausedAck = new TaskStore(queue, storeStorage, clock);
+    await storeWithPausedAck.restore();
+    const restore = {
+      scheduled: "2026-08-08",
+      due: null,
+      recurrence: "FREQ=WEEKLY",
+      skipped: false,
+    };
+    await storeWithPausedAck.dispatch({
+      type: "set_instance_complete",
+      taskId: task.id,
+      date: "2026-08-08",
+      completed: true,
+      restore,
+    });
+    const command = queue.head();
+    if (command?.type !== "set_instance_complete") {
+      throw new Error("expected completion command");
+    }
+
+    pauseAckWrite = true;
+    const ack = storeWithPausedAck.applyServerAck(command, {
+      ...task,
+      completeInstances: ["2026-08-08"],
+    });
+    await ackWriteStarted.promise;
+    const pendingRestore = storeWithPausedAck.getPendingCompletionRestore(
+      task.id,
+      "2026-08-08",
+    );
+    releaseAckWrite.resolve(null);
+
+    await ack;
+    await expect(pendingRestore).resolves.toEqual(restore);
+  });
+
+  test("persists an acknowledged restore across relaunch", async () => {
+    const queueStorage = memoryQueueStorage();
+    const storeStorage = memoryStoreStorage();
+    const task = makeTask({
+      recurrence: "FREQ=WEEKLY",
+      scheduled: "2026-08-08",
+    });
+    const { store, queue } = makeStore(queueStorage, storeStorage);
+    await store.restore();
+    await store.replaceBase([task], now);
+    const restore = {
+      scheduled: "2026-08-08",
+      due: null,
+      recurrence: "FREQ=WEEKLY",
+      skipped: false,
+    };
+    await store.dispatch({
+      type: "set_instance_complete",
+      taskId: task.id,
+      date: "2026-08-08",
+      completed: true,
+      restore,
+    });
+    const command = queue.head();
+    if (command?.type !== "set_instance_complete") {
+      throw new Error("expected completion command");
+    }
+    await store.applyServerAck(command, {
+      ...task,
+      completeInstances: ["2026-08-08"],
+    });
+
+    const relaunchedQueue = new CommandQueue(queueStorage.clone(), clock);
+    const relaunched = new TaskStore(
+      relaunchedQueue,
+      storeStorage.clone(),
+      clock,
+    );
+    await relaunched.restore();
+    await expect(
+      relaunched.getPendingCompletionRestore(task.id, "2026-08-08"),
+    ).resolves.toEqual(restore);
+  });
+
+  test("invalidates an acknowledged restore after recurrence edits", async () => {
+    const task = makeTask({
+      recurrence: "FREQ=WEEKLY",
+      scheduled: "2026-08-08",
+    });
+    const { store, queue } = makeStore(
+      memoryQueueStorage(),
+      memoryStoreStorage({ tasks: [task] }),
+    );
+    await store.restore();
+    const restore = {
+      scheduled: "2026-08-08",
+      due: null,
+      recurrence: "FREQ=WEEKLY",
+      skipped: false,
+    };
+    await store.dispatch({
+      type: "set_instance_complete",
+      taskId: task.id,
+      date: "2026-08-08",
+      completed: true,
+      restore,
+    });
+    const completionCommand = queue.head();
+    if (completionCommand?.type !== "set_instance_complete") {
+      throw new Error("expected completion command");
+    }
+    await store.applyServerAck(completionCommand, {
+      ...task,
+      completeInstances: ["2026-08-08"],
+    });
+
+    await store.dispatch({
+      type: "update",
+      taskId: task.id,
+      payload: { recurrence: "FREQ=MONTHLY" },
+    });
+    await expect(
+      store.getPendingCompletionRestore(task.id, "2026-08-08"),
+    ).resolves.toEqual(undefined);
+    const updateCommand = queue.head();
+    if (updateCommand?.type !== "update") {
+      throw new Error("expected update command");
+    }
+    await store.applyServerAck(updateCommand, {
+      ...task,
+      recurrence: "FREQ=MONTHLY",
+      completeInstances: [],
+    });
+
+    await expect(
+      store.getPendingCompletionRestore(task.id, "2026-08-08"),
+    ).resolves.toEqual(undefined);
+  });
+});
+
+describe("TaskStore restore expiry", () => {
+  test("prunes acknowledged restores after their occurrence day", async () => {
+    const task = makeTask({
+      recurrence: "FREQ=WEEKLY",
+      scheduled: "2026-08-08",
+    });
+    const { store, queue, storeStorage } = makeStore(
+      memoryQueueStorage(),
+      memoryStoreStorage({ tasks: [task] }),
+    );
+    await store.restore();
+    const restore = {
+      scheduled: "2026-08-08",
+      due: null,
+      recurrence: "FREQ=WEEKLY",
+      skipped: false,
+    };
+    await store.dispatch({
+      type: "set_instance_complete",
+      taskId: task.id,
+      date: "2026-08-08",
+      completed: true,
+      restore,
+    });
+    const command = queue.head();
+    if (command?.type !== "set_instance_complete") {
+      throw new Error("expected completion command");
+    }
+    await store.applyServerAck(command, {
+      ...task,
+      completeInstances: ["2026-08-08"],
+    });
+    now = Date.parse("2026-08-09T12:00:00.000Z");
+
+    await expect(
+      store.getPendingCompletionRestore(task.id, "2026-08-08"),
+    ).resolves.toEqual(undefined);
+    expect(await storeStorage.getAcknowledgedCompletionRestores()).toBe("{}");
+  });
+});
+
+describe("TaskStore server acks", () => {
   test("delete ack removes from base; update ack merges the server task", async () => {
     const seeded = makeTask();
     const other = makeTask({
@@ -214,6 +941,40 @@ describe("TaskStore server acks", () => {
     await store.applyServerAck(deleteCmd, null);
     expect(store.getSnapshot().tasks.has(other.id)).toBe(false);
     expect(store.getSnapshot().pendingCount).toBe(0);
+  });
+
+  test("keeps an acknowledged command durable until its base write succeeds", async () => {
+    const seeded = makeTask();
+    const queueStorage = memoryQueueStorage();
+    const backingStorage = memoryStoreStorage({ tasks: [seeded] });
+    const storeStorage: MemoryStoreStorage = {
+      ...backingStorage,
+      setTasks: () => Promise.reject(new Error("base write interrupted")),
+    };
+    const { store, queue } = makeStore(queueStorage, storeStorage);
+    await store.restore();
+    await store.dispatch({
+      type: "update",
+      taskId: seeded.id,
+      payload: { title: "Durable rename" },
+    });
+    const command = queue.head();
+    if (command === undefined) throw new Error("expected queued update");
+
+    await expect(
+      store.applyServerAck(command, { ...seeded, title: "Durable rename" }),
+    ).rejects.toThrow("base write interrupted");
+    expect(queue.pending.map((pending) => pending.id)).toEqual([command.id]);
+
+    const relaunched = makeStore(
+      queueStorage.clone(),
+      backingStorage.clone(),
+    ).store;
+    await relaunched.restore();
+    expect(relaunched.getSnapshot().pendingCount).toBe(1);
+    expect(relaunched.getSnapshot().tasks.get(seeded.id)?.title).toBe(
+      "Durable rename",
+    );
   });
 });
 
