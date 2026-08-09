@@ -100,7 +100,12 @@ export type Command =
   | SetInstanceCompleteCommand;
 
 type WithoutCommandMetadata<CommandType> = CommandType extends Command
-  ? Omit<CommandType, "id" | "createdAt">
+  ? Omit<
+      CommandType,
+      | "id"
+      | "createdAt"
+      | (CommandType extends CreateCommand ? "tempId" : never)
+    >
   : never;
 
 export type CommandInput = WithoutCommandMetadata<Command>;

@@ -28,5 +28,5 @@ appId: org.reactjs.native.example.TasksForObsidian
     id: "task-detail-save"
 - extendedWaitUntil:
     visible:
-      id: "task-row-TaskNotes/Edited by e2e.md"
+      id: "task-row-TaskNotes/task-with-details-3c4d5e6f.md"
     timeout: 15000

@@ -12,22 +12,8 @@ import {
 } from "../domain/recurrence";
 import { isCompletedStatus } from "../domain/status";
 import { useTasks } from "./use-tasks";
-import { showResultError } from "../lib/errors";
+import { showBulkResultErrors, showResultError } from "../lib/errors";
 import { feedbackTaskComplete, feedbackTaskDelete } from "../lib/feedback";
-
-// One aggregated alert per bulk action — per-task alerts would stack N deep.
-function alertBulkFailures(
-  title: string,
-  results: readonly { ok: boolean }[],
-  total: number,
-): void {
-  const failed = results.filter((r) => !r.ok).length;
-  if (failed === 0) return;
-  Alert.alert(
-    title,
-    `${String(failed)} of ${String(total)} task${total === 1 ? "" : "s"} could not be updated. They may have been renamed or deleted in Obsidian.`,
-  );
-}
 
 type NavigateFn = {
   navigate: (screen: string, params?: Record<string, unknown>) => void;
@@ -126,21 +112,14 @@ export function useTaskListScreen(navigation: NavigateFn) {
             : localTodayYmd();
           return !isCompletedOn(task, day);
         });
-        const results = await Promise.all(
-          targets.map((id) => {
-            const occurrenceDate = completionDateByTaskId?.get(id);
-            return occurrenceDate === undefined
-              ? tasks.toggleTask(id, { suppressUndo: true })
-              : tasks.toggleTask(id, {
-                  occurrenceDate,
-                  suppressUndo: true,
-                });
-          }),
+        const results = await tasks.completeTasks(
+          targets,
+          completionDateByTaskId,
         );
-        alertBulkFailures("Complete Failed", results, targets.length);
+        showBulkResultErrors(results, targets.length, "Complete Failed");
       })();
     },
-    [tasks.getTask, tasks.toggleTask],
+    [tasks.completeTasks, tasks.getTask],
   );
 
   const handleBulkDelete = useCallback(
@@ -159,7 +138,7 @@ export function useTaskListScreen(navigation: NavigateFn) {
                 const results = await Promise.all(
                   ids.map((id) => tasks.deleteTask(id)),
                 );
-                alertBulkFailures("Delete Failed", results, ids.length);
+                showBulkResultErrors(results, ids.length, "Delete Failed");
               })();
               onDeleted?.();
             },
@@ -181,7 +160,7 @@ export function useTaskListScreen(navigation: NavigateFn) {
             ),
           ),
         );
-        alertBulkFailures("Reschedule Failed", results, ids.length);
+        showBulkResultErrors(results, ids.length, "Reschedule Failed");
       })();
     },
     [tasks.updateTask],
@@ -193,7 +172,7 @@ export function useTaskListScreen(navigation: NavigateFn) {
         const results = await Promise.all(
           ids.map((id) => tasks.updateTask(id, { priority })),
         );
-        alertBulkFailures("Priority Failed", results, ids.length);
+        showBulkResultErrors(results, ids.length, "Priority Failed");
       })();
     },
     [tasks.updateTask],

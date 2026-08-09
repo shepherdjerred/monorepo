@@ -26,6 +26,25 @@ appId: org.reactjs.native.example.TasksForObsidian
     notVisible:
       id: "task-row-TaskNotes/Swipe complete task.md"
     timeout: 15000
+- extendedWaitUntil:
+    visible:
+      id: "undo-toast-action"
+    timeout: 10000
+- tapOn:
+    id: "undo-toast-action"
+- extendedWaitUntil:
+    visible:
+      id: "task-row-TaskNotes/Swipe complete task.md"
+    timeout: 15000
+# Repeat the swipe so the suite's durable final-state assertion remains done.
+- swipe:
+    from:
+      id: "task-row-TaskNotes/Swipe complete task.md"
+    direction: RIGHT
+- extendedWaitUntil:
+    notVisible:
+      id: "task-row-TaskNotes/Swipe complete task.md"
+    timeout: 15000
 - tapOn:
     id: "tab-inbox"
 - extendedWaitUntil:

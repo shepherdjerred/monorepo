@@ -62,6 +62,7 @@ earlier mutations. "Water plants" remains the stable sync sentinel.
 | `08-contextual-quick-capture.yaml`    | Today seed + Save & Add Another capture                     |
 | `09-saved-view-lifecycle.yaml`        | create + rename + delete a device-local saved view          |
 | `10-completed-search-uncomplete.yaml` | search Completed + return a task to Today                   |
+| `11-undo-stack-and-bulk.yaml`         | header actions + LIFO and grouped bulk completion Undo      |
 
 The chaos proxy is toggled from flows via `runScript` (GraalJS `http.post`)
 against `/__chaos/offline` and `/__chaos/online` on the proxy port itself;
@@ -69,7 +70,7 @@ control endpoints keep working while "offline".
 
 ## Current status
 
-The harness is **functional end-to-end**. All 11 ordered flows and the final
+The harness is **functional end-to-end**. All 12 ordered flows and the final
 Markdown vault assertions pass on Xcode 27, the iOS 27 simulator, and Maestro
 2.8.0. The suite covers one clean install, per-flow process restarts, a true
 kill/relaunch, offline replay, gestures, contextual capture, saved views, and

@@ -1,6 +1,10 @@
 import { describe, expect, test } from "bun:test";
 
-import { executeTaskToggle, recurringCompletionRestore } from "./task-toggle";
+import {
+  executeTaskToggle,
+  recurringCompletionRestore,
+  successfulCompletionUndos,
+} from "./task-toggle";
 import { taskId } from "./types";
 import type { Task } from "./types";
 import type { RecurringCompletionRestore } from "tasknotes-types/v2";
@@ -48,9 +52,10 @@ describe("executeTaskToggle", () => {
 
     expect(execution).toEqual({
       result: "instance",
-      recurring: {
+      completionUndo: {
+        kind: "recurring-occurrence",
+        taskId: taskId("weekly"),
         date: "2026-08-15",
-        completed: true,
         restore: {
           scheduled: "2026-08-08",
           due: null,
@@ -79,7 +84,7 @@ describe("executeTaskToggle", () => {
 
     expect(execution).toEqual({
       result: "instance",
-      recurring: { date: "2026-08-15", completed: false, restore: null },
+      completionUndo: null,
     });
     expect(calls).toEqual([{ date: "2026-08-15", completed: false }]);
   });
@@ -107,7 +112,7 @@ describe("executeTaskToggle", () => {
     );
 
     expect(received).toEqual(restore);
-    expect(execution.recurring?.restore).toEqual(restore);
+    expect(execution.completionUndo).toBeNull();
   });
 
   test("captures the exact recurrence fields needed by atomic Undo", () => {
@@ -139,8 +144,47 @@ describe("executeTaskToggle", () => {
       setInstanceComplete: async () => "instance",
     });
 
-    expect(execution).toEqual({ result: "status", recurring: null });
+    expect(execution).toEqual({
+      result: "status",
+      completionUndo: {
+        kind: "status",
+        taskId: taskId("weekly"),
+        previousStatus: "open",
+      },
+    });
     expect(statusCalls).toBe(1);
+  });
+
+  test("captures the exact prior in-progress status for Undo", async () => {
+    const task = {
+      ...recurringTask([]),
+      recurrence: undefined,
+      status: "in-progress" as const,
+    };
+    const execution = await executeTaskToggle(task, undefined, "occurrence", {
+      toggleStatus: async () => "status",
+      setInstanceComplete: async () => "instance",
+    });
+
+    expect(execution.completionUndo).toEqual({
+      kind: "status",
+      taskId: taskId("weekly"),
+      previousStatus: "in-progress",
+    });
+  });
+
+  test("does not advertise Undo for a non-completing status transition", async () => {
+    const task = {
+      ...recurringTask([]),
+      recurrence: undefined,
+      status: "waiting" as const,
+    };
+    const execution = await executeTaskToggle(task, undefined, "occurrence", {
+      toggleStatus: async () => "status",
+      setInstanceComplete: async () => "instance",
+    });
+
+    expect(execution.completionUndo).toBeNull();
   });
 
   test("uses the parent status workflow for a completed recurring task", async () => {
@@ -158,8 +202,26 @@ describe("executeTaskToggle", () => {
       },
     });
 
-    expect(execution).toEqual({ result: "status", recurring: null });
+    expect(execution).toEqual({ result: "status", completionUndo: null });
     expect(statusCalls).toBe(1);
     expect(instanceCalls).toBe(0);
+  });
+});
+
+describe("successfulCompletionUndos", () => {
+  const undo = {
+    kind: "status",
+    taskId: taskId("plain"),
+    previousStatus: "open",
+  } as const;
+
+  test("groups only successful completion inverses", () => {
+    expect(
+      successfulCompletionUndos([
+        { result: { ok: true }, completionUndo: undo },
+        { result: { ok: false }, completionUndo: undo },
+        { result: { ok: true }, completionUndo: null },
+      ]),
+    ).toEqual([undo]);
   });
 });

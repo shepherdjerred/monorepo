@@ -14,6 +14,7 @@ import { NotFoundError } from "../domain/errors";
 import type { Result } from "../domain/result";
 import { OK_VOID, err, ok } from "../domain/result";
 import { getNextStatus } from "../domain/status";
+import type { TaskStatus } from "../domain/status";
 import type { RecurringCompletionRestore } from "tasknotes-types/v2";
 import type {
   CreateTaskRequest,
@@ -56,6 +57,10 @@ type TaskContextValue = {
     req: UpdateTaskRequest,
   ) => Promise<Result<Task, AppError>>;
   deleteTask: (id: TaskId) => Promise<Result<void, AppError>>;
+  setStatus: (
+    id: TaskId,
+    status: TaskStatus,
+  ) => Promise<Result<Task, AppError>>;
   toggleStatus: (id: TaskId) => Promise<Result<Task, AppError>>;
   setInstanceComplete: (
     id: TaskId,
@@ -153,13 +158,9 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       id: TaskId,
       req: UpdateTaskRequest,
     ): Promise<Result<Task, AppError>> => {
-      const target = store.resolveTaskId(id);
-      if (!store.getSnapshot().tasks.has(target)) {
-        return err(new NotFoundError("Task", String(id)));
-      }
-      const updated = await store.dispatch({
+      const updated = await store.dispatchIfTaskExists({
         type: "update",
-        taskId: target,
+        taskId: id,
         payload: req,
       });
       if (updated === undefined) {
@@ -178,17 +179,12 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     [store],
   );
 
-  const toggleStatus = useCallback(
-    async (id: TaskId): Promise<Result<Task, AppError>> => {
-      const target = store.resolveTaskId(id);
-      const existing = store.getSnapshot().tasks.get(target);
-      if (existing === undefined) {
-        return err(new NotFoundError("Task", String(id)));
-      }
-      const updated = await store.dispatch({
+  const setStatus = useCallback(
+    async (id: TaskId, status: TaskStatus): Promise<Result<Task, AppError>> => {
+      const updated = await store.dispatchIfTaskExists({
         type: "set_status",
-        taskId: target,
-        status: getNextStatus(existing.status),
+        taskId: id,
+        status,
       });
       if (updated === undefined) {
         return err(new NotFoundError("Task", String(id)));
@@ -196,6 +192,18 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       return ok(updated);
     },
     [store],
+  );
+
+  const toggleStatus = useCallback(
+    async (id: TaskId): Promise<Result<Task, AppError>> => {
+      const target = store.resolveTaskId(id);
+      const existing = store.getSnapshot().tasks.get(target);
+      if (existing === undefined) {
+        return err(new NotFoundError("Task", String(id)));
+      }
+      return setStatus(target, getNextStatus(existing.status));
+    },
+    [setStatus, store],
   );
 
   // Absolute per-instance completion — the undo path for a recurring
@@ -209,10 +217,9 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       completed: boolean,
       restore?: RecurringCompletionRestore,
     ): Promise<Result<Task, AppError>> => {
-      const target = store.resolveTaskId(id);
-      const updated = await store.dispatch({
+      const updated = await store.dispatchIfTaskExists({
         type: "set_instance_complete",
-        taskId: target,
+        taskId: id,
         date,
         completed,
         ...(restore === undefined ? {} : { restore }),
@@ -262,6 +269,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       createTask,
       updateTask,
       deleteTask,
+      setStatus,
       toggleStatus,
       setInstanceComplete,
       refreshTasks,
@@ -276,6 +284,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       createTask,
       updateTask,
       deleteTask,
+      setStatus,
       toggleStatus,
       setInstanceComplete,
       refreshTasks,

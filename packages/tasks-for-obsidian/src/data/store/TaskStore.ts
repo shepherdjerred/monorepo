@@ -1,19 +1,14 @@
 import { z } from "zod";
 
 import { TypedStorage } from "../cache/storage";
-import type {
-  CreateTaskRequest,
-  Task,
-  TaskId,
-  UpdateTaskRequest,
-} from "../../domain/types";
+import type { Task, TaskId } from "../../domain/types";
 import { taskId } from "../../domain/types";
-import type { TaskStatus } from "../../domain/status";
 import type { RecurringCompletionRestore } from "tasknotes-types/v2";
 import type { CommandQueue, DeadLetterEntry } from "../sync/CommandQueue";
 import {
   type Clock,
   type Command,
+  type CommandInput,
   applyCommand,
   commandTarget,
   makeCommandIdFactory,
@@ -36,15 +31,10 @@ import {
 /**
  * The single source of truth the UI reads.
  *
- * `base` is the last server snapshot; the visible task map is always
- * `rebase(base, queue.pending)` — recomputed on every change, never
- * persisted. That is the core offline-first invariant: the only durable
- * writes are the command queue (on dispatch) and the base cache (on server
- * acks/pulls), so no crash can ever capture a half-applied optimistic state.
- *
- * The store NEVER touches the network. Executing commands is the
- * SyncEngine's job; it reports results back through `applyServerAck` /
- * `replaceBase`.
+ * The visible map is `rebase(base, queue.pending)`, recomputed on every
+ * change. Only the command queue and server base are durable, so a crash
+ * cannot capture a half-applied optimistic state. The store never touches
+ * the network; SyncEngine reports results through acknowledgements or pulls.
  */
 
 export type TaskStoreSnapshot = {
@@ -55,28 +45,6 @@ export type TaskStoreSnapshot = {
   readonly deadLetters: readonly DeadLetterEntry[];
   readonly lastSyncTime: number | null;
 };
-
-/** Mutations as the UI expresses them — ids/timestamps are filled in here. */
-export type DispatchInput =
-  | { readonly type: "create"; readonly payload: CreateTaskRequest }
-  | {
-      readonly type: "update";
-      readonly taskId: TaskId;
-      readonly payload: UpdateTaskRequest;
-    }
-  | { readonly type: "delete"; readonly taskId: TaskId }
-  | {
-      readonly type: "set_status";
-      readonly taskId: TaskId;
-      readonly status: TaskStatus;
-    }
-  | {
-      readonly type: "set_instance_complete";
-      readonly taskId: TaskId;
-      readonly date: string;
-      readonly completed: boolean;
-      readonly restore?: RecurringCompletionRestore | undefined;
-    };
 
 export type TaskStoreStorage = {
   getTasks: () => Promise<Task[]>;
@@ -233,16 +201,25 @@ export class TaskStore {
   getSnapshot(): TaskStoreSnapshot {
     return this.snapshot;
   }
-  /**
-   * Record a mutation and return the optimistic result immediately. The
-   * enqueue is the only await — never the network. Returns the task as the
-   * UI will now see it (undefined after a delete).
-   */
-  async dispatch(input: DispatchInput): Promise<Task | undefined> {
+  /** Record a mutation and return its immediate optimistic result. */
+  async dispatch(input: CommandInput) {
+    return this.dispatchLocked(input, false);
+  }
+  async dispatchIfTaskExists(
+    input: Exclude<CommandInput, { readonly type: "create" }>,
+  ) {
+    return this.dispatchLocked(input, true);
+  }
+  private async dispatchLocked(
+    input: CommandInput,
+    requireExistingTask: boolean,
+  ) {
     return this.enqueueOperation(async () => {
-      // Build inside the serialized operation so a stale temp id is resolved
-      // only after any in-flight create acknowledgement has committed its
-      // alias and snapshot together.
+      // Resolve aliases and validate existence within the durable queue lock.
+      if (requireExistingTask && input.type !== "create") {
+        const target = this.resolveTaskId(input.taskId);
+        if (!this.snapshot.tasks.has(target)) return;
+      }
       const command = this.buildCommand(input);
       await this.queue.enqueue(command);
       let nextAcknowledgedCompletionRestores =
@@ -423,7 +400,7 @@ export class TaskStore {
     });
   }
 
-  private buildCommand(input: DispatchInput): Command {
+  private buildCommand(input: CommandInput): Command {
     const base = { id: this.nextCommandId(), createdAt: this.clock() };
     switch (input.type) {
       case "create":
