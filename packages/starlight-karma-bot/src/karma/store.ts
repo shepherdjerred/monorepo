@@ -54,33 +54,41 @@ export async function recordKarma(
     `[Karma DB] Saving karma: ${params.giverId} -> ${params.receiverId}, amount: ${params.amount.toString()}, guild: ${params.guildId}${params.sourceMessageId === undefined ? "" : `, message: ${params.sourceMessageId}`}`,
   );
 
-  const receiverTotalBefore = await getReceivedKarma(
-    params.receiverId,
-    params.guildId,
-  );
-
-  if (params.sourceMessageId === undefined) {
-    await prisma.karma.create({ data });
-  } else {
-    await prisma.karma.upsert({
-      where: {
-        giverId_sourceMessageId: {
-          giverId: params.giverId,
-          sourceMessageId: params.sourceMessageId,
-        },
-      },
-      create: data,
-      update: {},
+  // One serialized transaction around read-write-read. Run as independent
+  // statements, two concurrent awards near a threshold can both read 99 and
+  // both then observe 100 — announcing the same milestone twice and reporting
+  // a total that includes the other award.
+  return prisma.$transaction(async (tx) => {
+    const before = await tx.karma.aggregate({
+      _sum: { amount: true },
+      where: { receiverId: params.receiverId, guildId: params.guildId },
     });
-  }
 
-  return {
-    receiverTotalBefore,
-    receiverTotalAfter: await getReceivedKarma(
-      params.receiverId,
-      params.guildId,
-    ),
-  };
+    if (params.sourceMessageId === undefined) {
+      await tx.karma.create({ data });
+    } else {
+      await tx.karma.upsert({
+        where: {
+          giverId_sourceMessageId: {
+            giverId: params.giverId,
+            sourceMessageId: params.sourceMessageId,
+          },
+        },
+        create: data,
+        update: {},
+      });
+    }
+
+    const after = await tx.karma.aggregate({
+      _sum: { amount: true },
+      where: { receiverId: params.receiverId, guildId: params.guildId },
+    });
+
+    return {
+      receiverTotalBefore: before._sum.amount ?? 0,
+      receiverTotalAfter: after._sum.amount ?? 0,
+    };
+  });
 }
 
 /** Remove the karma a giver awarded via a reaction on a specific message.

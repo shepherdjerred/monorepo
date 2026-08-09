@@ -182,8 +182,12 @@ export async function searchReasons(
 }
 
 /** The caller's most recent give, if it is still within the undo window.
+ *
  *  Scoped to the caller so this can only ever retract your own give — it is a
- *  mis-click fix, not a moderation tool. */
+ *  mis-click fix, not a moderation tool. Restricted to positive awards to
+ *  someone else, because a self-give records a negative penalty: without this
+ *  filter, giving yourself karma and immediately undoing would delete the
+ *  penalty row and cancel the consequence entirely. */
 export async function findUndoableGive(params: {
   guildId: string;
   giverId: string;
@@ -195,6 +199,8 @@ export async function findUndoableGive(params: {
     where: {
       guildId: params.guildId,
       giverId: params.giverId,
+      amount: { gt: 0 },
+      NOT: { receiverId: params.giverId },
       datetime: { gte: new Date(now.getTime() - params.withinMs) },
     },
     orderBy: { datetime: "desc" },
