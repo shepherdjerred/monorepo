@@ -462,6 +462,11 @@
       "reason": "JSON scenario corpus plus its JSON Schema; no code and no dependencies, so the Rust core can consume it without the React Native package. The corpus is executed by tasks-for-obsidian and, later, tasknotes-core."
     },
     {
+      "package": "tasknotes-macos",
+      "directory": "packages/tasknotes-macos",
+      "reason": "The native macOS app has a Swift Testing suite, but running it needs a Swift toolchain and the Rust XCFramework, neither of which the Linux CI image has. It runs locally through `bun run mac:test`, the same way the iOS app's Maestro e2e suite is a local pre-merge gate. Only `lint` (SwiftLint's static Linux binary) participates in CI."
+    },
+    {
       "package": "stocks-sjer-red",
       "directory": "packages/stocks-sjer-red",
       "reason": "Static Astro site; no test files exist."

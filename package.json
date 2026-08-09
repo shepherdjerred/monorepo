@@ -97,6 +97,7 @@
     "packages/streambot",
     "packages/tasknotes-core",
     "packages/tasknotes-fixtures",
+    "packages/tasknotes-macos",
     "packages/tasknotes-server",
     "packages/tasknotes-types",
     "packages/tasks-for-obsidian",

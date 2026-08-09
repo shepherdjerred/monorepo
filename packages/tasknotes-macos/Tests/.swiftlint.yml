@@ -1,0 +1,22 @@
+# Nested configuration: applies to `Tests/` only, merged over the package's
+# root `.swiftlint.yml`.
+#
+# This is configuration, not a suppression. In production code `x!` is an
+# unchecked assertion the compiler stops checking — the exact shape the
+# repository's principles ban. In a test, `x!` *is* the assertion: the trap is
+# the failure being reported. The alternative the rule pushes you toward,
+# `guard let x else { return }`, is strictly worse here, because a test that
+# returns early has *passed* — a broken test that silently stops asserting is
+# the single worst failure mode a suite can have.
+#
+# The same argument covers `try!` and `as!`: in a test, a trap is a red test.
+#
+# Nothing else is relaxed. In particular `banned_disable_comment`,
+# `banned_switch_default`, `banned_print`, `banned_optional_try`, and
+# `banned_unsafe_escape` all still apply here — `try?` in a test swallows the
+# very error the test exists to observe.
+disabled_rules:
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+  - force_try
+  - force_cast

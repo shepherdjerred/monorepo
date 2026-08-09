@@ -335,6 +335,9 @@ packages/tasknotes-fixtures:build
 packages/tasknotes-fixtures:test
 packages/tasknotes-fixtures:lint
 packages/tasknotes-fixtures:typecheck
+packages/tasknotes-macos:build
+packages/tasknotes-macos:test
+packages/tasknotes-macos:typecheck
 packages/code-review:build
 packages/cooklang-rich-preview:test
 packages/stocks-sjer-red:test

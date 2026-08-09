@@ -35,6 +35,7 @@ packages/
 ├── sjer.red/                   # Personal website
 ├── starlight-karma-bot/        # Discord karma bot
 ├── stocks-sjer-red/            # Stocks static site
+├── tasknotes-macos/            # Native macOS TaskNotes app (SwiftUI over the Rust core)
 ├── tasknotes-server/           # TaskNotes sync server
 ├── tasknotes-types/            # TaskNotes shared types
 ├── tasks-for-obsidian/         # React Native task app
@@ -409,6 +410,7 @@ Each package has its own AGENTS.md with specific instructions:
 - `packages/resume/AGENTS.md` - Resume site
 - `packages/toolkit/AGENTS.md` - CLI developer tools (pr, pd, bugsink, grafana)
 - `packages/tasks-for-obsidian/AGENTS.md` - React Native task app, including native capture/detail, saved views, and bulk task organization
+- `packages/tasknotes-macos/AGENTS.md` - Native macOS app (Swift posture, macOS-only tasks)
 - `packages/docs/` - AI working docs plus `wiki/`, the human-first explanation layer (see `monorepo-docs` skill)
 
 ## PR Media & Demo Artifacts — `public.sjer.red`

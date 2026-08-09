@@ -1428,6 +1428,9 @@
       "name": "@tasknotes/fixtures",
       "version": "0.1.0",
     },
+    "packages/tasknotes-macos": {
+      "name": "tasknotes-macos",
+    },
     "packages/tasknotes-server": {
       "name": "tasknotes-server",
       "version": "0.1.0",
@@ -7127,6 +7130,8 @@
     "tar-stream": ["tar-stream@3.2.0", "", { "dependencies": { "b4a": "^1.6.4", "bare-fs": "^4.5.5", "fast-fifo": "^1.2.0", "streamx": "^2.15.0" } }, "sha512-ojzvCvVaNp6aOTFmG7jaRD0meowIAuPc3cMMhSgKiVWws1GyHbGd/xvnyuRKcKlMpt3qvxx6r0hreCNITP9hIg=="],
 
     "tasknotes-core": ["tasknotes-core@workspace:packages/tasknotes-core"],
+
+    "tasknotes-macos": ["tasknotes-macos@workspace:packages/tasknotes-macos"],
 
     "tasknotes-server": ["tasknotes-server@workspace:packages/tasknotes-server"],
 

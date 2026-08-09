@@ -427,6 +427,41 @@ XcodeGen. `NavigationSplitView` (RN tabs → sidebar). `Settings` scene at `⌘,
 `tasknotes://`. `@Observable` store — **plain Observation, not TCA**: the state machine lives in
 Rust, so a reducer layer would mostly forward to UniFFI calls at full cost.
 
+### ✅ Verified by building and launching it (Phase 7a, 2026-08-08)
+
+Bundle id **`red.sjer.tasknotes.mac`**, product `TaskNotes.app`, sandboxed from commit one
+(`app-sandbox` + `files.user-selected.read-write` + `network.client`). Vault access must therefore
+go through a system open panel and security-scoped bookmarks — there is deliberately no broad
+filesystem entitlement.
+
+Five corrections to the settings above, all found by compiling rather than reasoning:
+
+1. **`SWIFT_APPROACHABLE_CONCURRENCY` cannot be transcribed member-by-member into SwiftPM.** Three
+   of its members (`InferSendableFromCaptures`, `GlobalActorIsolatedTypesUsability`,
+   `DisableOutwardActorInference`) are already on in Swift 6 mode and emit _"upcoming feature
+   already enabled as of the Swift 6 language mode"_ — a **hard failure** under
+   `treatAllWarnings(as: .error)`. Only `NonisolatedNonsendingByDefault` and
+   `InferIsolatedConformances` belong in `Package.swift`. The Xcode umbrella setting handles this
+   correctly, so `project.yml` uses it verbatim.
+2. **`unused_import` is unusable here** — it cannot see through `@_exported import`, so every file
+   reaching the core through the shim is reported, and deleting the import fails the build. Dropped;
+   `unused_declaration` stays and is clean.
+3. **`dsymutil` output lands in two places, not one.** Because the bindings product is
+   `type: .dynamic`, the Rust archive links into `TaskNotesCore.framework`, **not** the app
+   executable: `TaskNotes.app.dSYM` contains **0** `tasknotes_core` references while
+   `TaskNotesCore.framework.dSYM` contains **204,506**. ⚠️ **Release and notarization must ship
+   both** or Rust frames will not symbolicate in crash reports.
+4. Two SwiftLint _default_ rules fight `swift-format` and are disabled with evidence attached:
+   `trailing_comma` and `closure_parameter_position`.
+5. A path dependency's `package:` identity is the **directory name**, not the manifest `name:`.
+
+**Launching it found a bug that compiling could not:** `tasknotes://browse` opened a _second_
+window instead of retargeting the existing one. Fixed with `.handlesExternalEvents(matching:)`.
+
+⚠️ **Fresh-clone prerequisite:** the XCFramework is a gitignored build artifact, so the Swift
+package will not link until `cd packages/tasknotes-core && cargo xtask build-xcframework` has run.
+`brew install xcodegen swiftlint` is also required.
+
 **Formatting the shell must supply** (deliberately left out of the core, because they are locale-
 bound): `formatDate`, `formatDayHeading`, and the date-fallback branch of `formatRelativeDate`.
 Note the last one is _partly_ pure — its "Today"/"Tomorrow"/"Yesterday"/"In Nd"/"Nd ago" branches
