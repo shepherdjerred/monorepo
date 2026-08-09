@@ -2,54 +2,54 @@
   "schema": "pin-candidates-state/v1",
   "pins": {
     "shepherdjerred/birmel": {
-      "buildNumber": 8584,
-      "version": "2.0.0-8584",
-      "digest": "sha256:5e541e62aef908210fd25656c31b694f9454f095f96e243a745831fe5e23efee"
+      "buildNumber": 8589,
+      "version": "2.0.0-8589",
+      "digest": "sha256:f46821df2fe45100f380bba0e98089e07929527c2ad172f9337d53328904fd0e"
     },
     "shepherdjerred/discord-plays-mario-kart": {
-      "buildNumber": 8584,
       "version": "2.0.0-8584",
-      "digest": "sha256:1799f38e35f76efb9b56be4b71e886b89a8e8ec6abe798c406ff8b51e3f2fc72"
+      "digest": "sha256:1799f38e35f76efb9b56be4b71e886b89a8e8ec6abe798c406ff8b51e3f2fc72",
+      "buildNumber": 8584
     },
     "shepherdjerred/discord-plays-pokemon": {
-      "buildNumber": 8584,
       "version": "2.0.0-8584",
-      "digest": "sha256:dd528d8d36dc486ad69e5495fab2e3c6e87a583c08913e8509cdfd26eff0209c"
+      "digest": "sha256:dd528d8d36dc486ad69e5495fab2e3c6e87a583c08913e8509cdfd26eff0209c",
+      "buildNumber": 8584
     },
     "shepherdjerred/scout-evals": {
-      "buildNumber": 8584,
       "version": "2.0.0-8584",
-      "digest": "sha256:8a8831582dddefdf60e450aae058d2e60f98b6c729e651052ff5f20f64031599"
+      "digest": "sha256:8a8831582dddefdf60e450aae058d2e60f98b6c729e651052ff5f20f64031599",
+      "buildNumber": 8584
     },
     "shepherdjerred/scout-for-lol/beta": {
-      "buildNumber": 8584,
       "version": "2.0.0-8584",
-      "digest": "sha256:f9598fe97da32f034bc513f0fea45d44e9dc37c0c3d1333b81d6c1effd6ca849"
+      "digest": "sha256:f9598fe97da32f034bc513f0fea45d44e9dc37c0c3d1333b81d6c1effd6ca849",
+      "buildNumber": 8584
     },
     "shepherdjerred/starlight-karma-bot/beta": {
-      "buildNumber": 8584,
       "version": "2.0.0-8584",
-      "digest": "sha256:d44fd27f08c2f468cedbd84ec3636be1297a08eef7fb2c7fe57e49ddc24f338d"
+      "digest": "sha256:d44fd27f08c2f468cedbd84ec3636be1297a08eef7fb2c7fe57e49ddc24f338d",
+      "buildNumber": 8584
     },
     "shepherdjerred/streambot": {
-      "buildNumber": 8584,
       "version": "2.0.0-8584",
-      "digest": "sha256:f1b38a2c8b69bd020111b7553479a59db66a5b766c9b372fdce9ee4aac6521e0"
+      "digest": "sha256:f1b38a2c8b69bd020111b7553479a59db66a5b766c9b372fdce9ee4aac6521e0",
+      "buildNumber": 8584
     },
     "shepherdjerred/tasknotes-server": {
-      "buildNumber": 8584,
       "version": "2.0.0-8584",
-      "digest": "sha256:f7940c2a7578baff6236cde28554b63ac2e811f4f47bac36fac900c5d706c105"
+      "digest": "sha256:f7940c2a7578baff6236cde28554b63ac2e811f4f47bac36fac900c5d706c105",
+      "buildNumber": 8584
     },
     "shepherdjerred/temporal-worker": {
-      "buildNumber": 8584,
       "version": "2.0.0-8584",
-      "digest": "sha256:0eb7732be30f302c0d630d5059c0cc607e1c09f7091cae8ba625006f59923cf7"
+      "digest": "sha256:0eb7732be30f302c0d630d5059c0cc607e1c09f7091cae8ba625006f59923cf7",
+      "buildNumber": 8584
     },
     "shepherdjerred/trmnl-dashboard": {
-      "buildNumber": 8584,
       "version": "2.0.0-8584",
-      "digest": "sha256:c71e91b0dcc214e8260b626080217843130e03f8f87b3a941de6afdcab16cece"
+      "digest": "sha256:c71e91b0dcc214e8260b626080217843130e03f8f87b3a941de6afdcab16cece",
+      "buildNumber": 8584
     }
   }
 }
