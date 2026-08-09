@@ -23,8 +23,10 @@ cargo test --locked --future-incompat-report
 cargo report future-incompatibilities
 ```
 
-For a library that intentionally does not commit `Cargo.lock`, use the
-lockfile-free form:
+For a library that intentionally does not commit `Cargo.lock`, run these
+commands in an isolated disposable copy of the repository rather than the
+source checkout: Cargo will create a temporary lockfile while resolving
+dependencies.
 
 ```bash
 cargo tree -d
