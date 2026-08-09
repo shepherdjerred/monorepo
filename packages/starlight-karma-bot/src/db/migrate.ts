@@ -3,7 +3,12 @@ import { fileURLToPath } from "node:url";
 /** Migrations that must be applied for the schema to match this build.
  *  The readiness probe checks these so a pod that started against a database
  *  missing a migration reports unready instead of failing queries at runtime. */
-export const REQUIRED_MIGRATIONS = ["20260809012953_init"] as const;
+export const REQUIRED_MIGRATIONS = [
+  "20260809012953_init",
+  "20260809020000_add_source_message_id",
+  "20260809030000_add_guild_config",
+  "20260809090000_add_milestone_state",
+] as const;
 
 /**
  * Apply pending Prisma migrations via the CLI.

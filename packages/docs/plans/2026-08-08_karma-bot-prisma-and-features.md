@@ -239,9 +239,9 @@ select rows where `nextRecapAt <= now` **or is null** (self-heal), post, advance
 from the cron expression, and **advance even when posting fails** so a broken
 channel is not hammered every minute. Adds `cron` + `cron-parser`.
 
-Content: periodic recap, milestone announcements (computed at give-time by
-comparing totals before/after in the same transaction — no extra table), and
-"on this day" over the 2023-onward archive.
+Content: periodic recap, milestone announcements computed at give-time from
+before/after totals plus a per-guild/person high-water row updated in the same
+transaction, and "on this day" over the 2023-onward archive.
 
 ## Cross-package: Scout
 
@@ -311,10 +311,9 @@ Attach screenshots to each PR — these are all user-visible Discord surfaces.
 
 ## Remaining
 
-- [ ] PR 1: run the import against the prod volume and cut over beta, then prod
-- [ ] PR 2 §A: reactions, context menu, variable amounts
-- [ ] PR 2 §B: query surface
-- [ ] PR 2 §C: scheduled visibility
+- [ ] Deploy PR 1 (#2038) to beta, confirm the automatic import, then prod
+- [ ] Deploy PR 2 (#2043) to beta and attach screenshots of the new surfaces
+- [ ] Decide on §B/§C value after watching activity following §A
 
 ## Comment Log
 
@@ -335,3 +334,32 @@ Attach screenshots to each PR — these are all user-visible Discord surfaces.
     failure class.
     Also corrected the rollback procedure — repinning the image alone would
     crash-loop the old image against the new probes.
+- 2026-08-08: Import made automatic on startup rather than an operator step, at
+  the owner's request. Gated on `LEGACY_DATABASE_PATH`, idempotent once the
+  target has rows, and fails startup when the path is set but the file is
+  missing — starting empty is indistinguishable from total karma loss. Beta's
+  legacy schema was inspected first and matches prod exactly, so the guard
+  passes on both stages.
+- 2026-08-08: PR 2 (#2043) complete — all of §A, §B, and §C. Two plan
+  corrections: discord.js 14.27 modals _do_ support select menus, so the amount
+  is a real dropdown rather than a typed number; and the action-row modal API is
+  deprecated, so the modal uses `addLabelComponents` in its callback form.
+  Variable amounts shipped as the closed 1/2/3 enum. 97 unit tests; a populated
+  database survives all three migrations with total karma 640, matching the
+  source year totals (494 + 106 + 15 + 25) exactly.
+- 2026-08-08: CI review gate caught two genuine P1 defects on #2038, both fixed
+  and both with the underlying premise verified rather than taken on faith:
+  - **Failed imports were not rolled back.** The transaction committed before
+    the totals/row-count validation ran, so a mismatch would leave bad rows in
+    place — and because a non-empty target makes the startup import skip, the
+    next boot would silently serve unverified data. Regression introduced when
+    the import became automatic. Validation now runs inside an interactive
+    transaction; rollback confirmed empirically through the libSQL adapter.
+  - **Fatal handlers created zombies.** Installing `unhandledRejection` /
+    `uncaughtException` listeners suppresses the runtime default; verified in
+    Bun that a log-only handler leaves the process alive and exits 0. That
+    would have kept `/live` at 200 on a dead process — the exact failure the
+    probes in this change exist to catch. Handlers now flush Sentry and exit 1.
+    Semgrep additionally blocked four interpolated `console.error` format strings
+    across both branches (log-forging rule); all now use constant format strings
+    with the values passed as separate arguments.

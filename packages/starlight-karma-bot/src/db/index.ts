@@ -33,7 +33,7 @@ function setGlobalPrisma(client: PrismaClient): void {
  * `DATABASE_URL` wins; `DATABASE_PATH` is accepted as a bare path for parity
  * with the deployment, which sets `DATABASE_PATH=/data/karma.db`.
  */
-export function databaseUrlFromEnvironment(
+function databaseUrlFromEnvironment(
   environment: Readonly<Record<string, string | undefined>> = Bun.env,
 ): string {
   const url = environment["DATABASE_URL"];

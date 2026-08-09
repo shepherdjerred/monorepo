@@ -27,6 +27,9 @@ await import("./discord/index.ts");
 const { loginDiscord } = await import("./discord/client.ts");
 await loginDiscord();
 
+const { startRecapDispatcher } = await import("./karma/recap.ts");
+startRecapDispatcher();
+
 console.warn("=".repeat(50));
 console.warn("[App] Starlight Karma Bot is now ready!");
 console.warn("=".repeat(50));

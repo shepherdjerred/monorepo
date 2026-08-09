@@ -1,6 +1,19 @@
 import { Events, MessageFlags, type Interaction } from "discord.js";
 import * as Sentry from "@sentry/bun";
 import { handleKarma } from "#src/karma/commands.ts";
+import {
+  GIVE_KARMA_CONTEXT_COMMAND,
+  handleGiveKarmaContext,
+  handleGiveKarmaModal,
+} from "#src/karma/context-menu.ts";
+import {
+  guarded,
+  handleReactionAdd,
+  handleReactionRemoveAll,
+  handleReactionRemoveEmoji,
+  handleReactionRemove,
+} from "#src/karma/reactions.ts";
+import { handleLeaderboardButton } from "#src/karma/leaderboard.ts";
 import "./rest.ts";
 import client from "./client.ts";
 
@@ -26,9 +39,43 @@ async function reportFailure(interaction: Interaction): Promise<void> {
   }
 }
 
+client.on(
+  Events.MessageReactionAdd,
+  guarded("reaction-add", handleReactionAdd),
+);
+client.on(
+  Events.MessageReactionRemove,
+  guarded("reaction-remove", handleReactionRemove),
+);
+client.on(
+  Events.MessageReactionRemoveAll,
+  guarded("reaction-remove-all", handleReactionRemoveAll),
+);
+client.on(
+  Events.MessageReactionRemoveEmoji,
+  guarded("reaction-remove-emoji", handleReactionRemoveEmoji),
+);
+
 client.on(Events.InteractionCreate, (interaction) => {
   void (async () => {
     try {
+      if (interaction.isMessageContextMenuCommand()) {
+        if (interaction.commandName === GIVE_KARMA_CONTEXT_COMMAND) {
+          console.warn(
+            `[Command] ${interaction.user.tag} (${interaction.user.id}) used the ${GIVE_KARMA_CONTEXT_COMMAND} context menu`,
+          );
+          await handleGiveKarmaContext(interaction);
+        }
+        return;
+      }
+      if (interaction.isModalSubmit()) {
+        await handleGiveKarmaModal(interaction);
+        return;
+      }
+      if (interaction.isButton()) {
+        await handleLeaderboardButton(interaction);
+        return;
+      }
       if (!interaction.isChatInputCommand()) {
         return;
       }

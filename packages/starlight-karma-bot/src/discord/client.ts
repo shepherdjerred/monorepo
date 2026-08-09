@@ -1,5 +1,5 @@
 import Configuration from "#src/configuration.ts";
-import { Client, Events, GatewayIntentBits } from "discord.js";
+import { Client, Events, GatewayIntentBits, Partials } from "discord.js";
 import * as Sentry from "@sentry/bun";
 import {
   markGatewayConnected,
@@ -7,7 +7,14 @@ import {
 } from "#src/discord/gateway-state.ts";
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
+  // `GuildMessageReactions` is NOT a privileged intent — only `MessageContent`,
+  // `GuildMembers`, and `GuildPresences` are. Reading message *text* (which a
+  // `@user ++` syntax would need) stays out of reach; reacting does not.
+  // `GuildVoiceStates` was requested but never used, so it is gone.
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessageReactions],
+  // Reactions on messages older than the client's cache arrive as partials and
+  // are silently dropped without these. Most karma-worthy messages are old.
+  partials: [Partials.Message, Partials.Reaction, Partials.User],
 });
 
 client.once(Events.ClientReady, (readyClient) => {

@@ -1,12 +1,72 @@
 import { describe, expect, test } from "bun:test";
 import {
+  ALLOWED_KARMA_AMOUNTS,
   formatLeaderboardLine,
+  InvalidKarmaAmountError,
   karmaAmountFor,
   KARMA_GIVE_AMOUNT,
+  paginate,
+  parseKarmaAmount,
+  parseLeaderboardPeriod,
+  periodStart,
+  rankGiverTotals,
   rankLeaderboard,
-  SELF_KARMA_PENALTY,
   type KarmaCount,
 } from "./scoring.ts";
+
+describe("periodStart", () => {
+  const now = new Date("2026-08-08T12:34:56.000Z");
+
+  test("all-time has no lower bound", () => {
+    expect(periodStart("all", now)).toBeUndefined();
+  });
+
+  test("year starts at January 1 UTC", () => {
+    expect(periodStart("year", now)?.toISOString()).toBe(
+      "2026-01-01T00:00:00.000Z",
+    );
+  });
+
+  test("month starts at the 1st UTC", () => {
+    expect(periodStart("month", now)?.toISOString()).toBe(
+      "2026-08-01T00:00:00.000Z",
+    );
+  });
+});
+
+describe("parseLeaderboardPeriod", () => {
+  test.each(["all", "year", "month"])("accepts %s", (period) => {
+    expect(parseLeaderboardPeriod(period)).toBe(period);
+  });
+
+  test.each(["", "weekly", "ALL"])("rejects %p", (period) => {
+    expect(parseLeaderboardPeriod(period)).toBeNull();
+  });
+});
+
+describe("paginate", () => {
+  const items = Array.from({ length: 45 }, (_, index) => index);
+
+  test("slices the requested page", () => {
+    expect(paginate(items, 0, 15).items).toEqual(items.slice(0, 15));
+    expect(paginate(items, 2, 15).items).toEqual(items.slice(30, 45));
+  });
+
+  test("reports the total page count", () => {
+    expect(paginate(items, 0, 15).totalPages).toBe(3);
+    expect(paginate(items, 0, 20).totalPages).toBe(3);
+  });
+
+  test("clamps an out-of-range page instead of erroring", () => {
+    // A stale pagination button must stay harmless after entries are removed.
+    expect(paginate(items, 99, 15).page).toBe(2);
+    expect(paginate(items, -5, 15).page).toBe(0);
+  });
+
+  test("an empty list still has one page", () => {
+    expect(paginate([], 0, 15)).toEqual({ items: [], page: 0, totalPages: 1 });
+  });
+});
 
 describe("karmaAmountFor", () => {
   test("awards a point when giving to someone else", () => {
@@ -14,9 +74,46 @@ describe("karmaAmountFor", () => {
     expect(karmaAmountFor("giver", "receiver")).toBe(1);
   });
 
-  test("penalizes giving karma to yourself", () => {
-    expect(karmaAmountFor("same", "same")).toBe(SELF_KARMA_PENALTY);
+  test("awards the requested amount", () => {
+    expect(karmaAmountFor("giver", "receiver", 2)).toBe(2);
+    expect(karmaAmountFor("giver", "receiver", 3)).toBe(3);
+  });
+
+  test("penalizes giving karma to yourself by the amount requested", () => {
+    // Asking for 3 is a bigger stunt than asking for 1, so it stings more.
     expect(karmaAmountFor("same", "same")).toBe(-1);
+    expect(karmaAmountFor("same", "same", 3)).toBe(-3);
+  });
+
+  test("rejects an out-of-range amount rather than clamping it", () => {
+    expect(() => karmaAmountFor("giver", "receiver", 42)).toThrow(
+      InvalidKarmaAmountError,
+    );
+  });
+});
+
+describe("parseKarmaAmount", () => {
+  test.each([...ALLOWED_KARMA_AMOUNTS])("accepts %i", (amount) => {
+    expect(parseKarmaAmount(amount)).toBe(amount);
+  });
+
+  test("accepts the string form a modal text input produces", () => {
+    expect(parseKarmaAmount("2")).toBe(2);
+    expect(parseKarmaAmount("  3  ")).toBe(3);
+  });
+
+  test.each([
+    [0, "zero"],
+    [4, "above the ceiling"],
+    [-1, "negative"],
+    [1.5, "fractional"],
+    ["", "empty string"],
+    ["two", "spelled out"],
+    [null, "null"],
+    [undefined, "undefined"],
+    [Number.NaN, "NaN"],
+  ])("rejects %p (%s)", (value) => {
+    expect(() => parseKarmaAmount(value)).toThrow(InvalidKarmaAmountError);
   });
 });
 
@@ -71,6 +168,35 @@ describe("rankLeaderboard", () => {
     ];
 
     expect(rankLeaderboard(counts).map((e) => e.rank)).toEqual([1, 1, 2]);
+  });
+});
+
+describe("rankGiverTotals", () => {
+  test("combines real gifts while excluding self entries and penalties", () => {
+    expect(
+      rankGiverTotals([
+        { giverId: "alice", receiverId: "bob", total: 2 },
+        { giverId: "alice", receiverId: "carol", total: 3 },
+        { giverId: "alice", receiverId: "alice", total: 9 },
+        { giverId: "bob", receiverId: "bob", total: -3 },
+        { giverId: "bob", receiverId: "alice", total: 4 },
+      ]),
+    ).toEqual([
+      { id: "alice", karmaReceived: 5, rank: 1 },
+      { id: "bob", karmaReceived: 4, rank: 2 },
+    ]);
+  });
+
+  test("orders tied totals deterministically by giver id", () => {
+    expect(
+      rankGiverTotals([
+        { giverId: "zeta", receiverId: "one", total: 2 },
+        { giverId: "alpha", receiverId: "two", total: 2 },
+      ]),
+    ).toEqual([
+      { id: "alpha", karmaReceived: 2, rank: 1 },
+      { id: "zeta", karmaReceived: 2, rank: 1 },
+    ]);
   });
 });
 

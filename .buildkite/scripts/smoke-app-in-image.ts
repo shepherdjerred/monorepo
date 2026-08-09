@@ -258,10 +258,10 @@ const commands: Record<
       // only far enough to fail Discord auth would not touch the database at
       // all, so an image that cannot create or query its schema used to pass.
       "bun scripts/migrate.ts",
-      `bun -e 'import { prisma, disconnectPrisma } from "#src/db/index.ts";` +
-        ` const n = await prisma.karma.count();` +
-        ` if (n !== 0) { throw new Error("expected an empty smoke database, got " + String(n)); }` +
-        ` console.log("smoke: prisma query ok"); await disconnectPrisma();'`,
+      String.raw`bun -e 'import { prisma, disconnectPrisma } from "#src/db/index.ts";` +
+        String.raw` const n = await prisma.karma.count();` +
+        String.raw` if (n !== 0) { throw new Error("expected an empty smoke database, got " + String(n)); }` +
+        String.raw` console.log("smoke: prisma query ok"); await disconnectPrisma();'`,
       "set +e",
       'output="$(timeout 30s bun scripts/start.ts 2>&1)"',
       "status=$?",

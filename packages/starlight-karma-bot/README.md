@@ -106,14 +106,16 @@ Optional environment variables:
 - `PORT`: Server port (default: 8000)
 - `LEGACY_DATABASE_PATH`: **upgrades only** — see below. Leave it unset on a
   fresh install.
+- `KARMA_EMOJI`: emoji that awards karma when reacted with (default `⭐`). A
+  unicode character matches by name; a custom guild emoji matches by its id.
 
 ## Features
 
-- Give karma to users with `/karma give @user [reason]`
+- Give karma by reacting with the karma emoji, via **Apps → Give Karma** on any
+  message, or with `/karma give @user [reason] [amount]` (1-3)
 - View karma leaderboard with `/karma leaderboard`
 - Check karma history with `/karma history @user`
 - **Multi-server support** - karma is tracked separately for each Discord server
-- **Automatic migration** - legacy karma is automatically migrated on startup
 - Persistent SQLite database
 - Automatic one-shot import from the legacy TypeORM database on first boot
 - Health endpoints at `/live` and `/ready` (used by the Kubernetes probes)
