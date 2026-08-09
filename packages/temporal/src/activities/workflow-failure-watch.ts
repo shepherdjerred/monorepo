@@ -454,31 +454,44 @@ export async function pollWorkflowFailuresOnce(
   let scanned = 0;
   let errored = 0;
   let alerted = 0;
-  for await (const info of client.workflow.list({ query })) {
-    const status = toFailureStatusName(info.status.name);
-    if (status === undefined || info.closeTime === undefined) {
-      continue;
+  let listingFailed = false;
+  let listingError: unknown;
+  let processingBatch = false;
+  try {
+    for await (const info of client.workflow.list({ query })) {
+      const status = toFailureStatusName(info.status.name);
+      if (status === undefined || info.closeTime === undefined) {
+        continue;
+      }
+      pendingExecutions.push({
+        workflowId: info.workflowId,
+        runId: info.runId,
+        workflowType: info.type,
+        taskQueue: info.taskQueue,
+        closeTime: info.closeTime,
+        status,
+      });
+      scanned += 1;
+      if (pendingExecutions.length === ALERT_BATCH_SIZE) {
+        processingBatch = true;
+        const result = await postFailureBatch(
+          client,
+          poster,
+          pendingExecutions,
+          options,
+        );
+        processingBatch = false;
+        alerted += result.alerted;
+        errored += result.errored;
+        pendingExecutions.length = 0;
+      }
     }
-    pendingExecutions.push({
-      workflowId: info.workflowId,
-      runId: info.runId,
-      workflowType: info.type,
-      taskQueue: info.taskQueue,
-      closeTime: info.closeTime,
-      status,
-    });
-    scanned += 1;
-    if (pendingExecutions.length === ALERT_BATCH_SIZE) {
-      const result = await postFailureBatch(
-        client,
-        poster,
-        pendingExecutions,
-        options,
-      );
-      alerted += result.alerted;
-      errored += result.errored;
-      pendingExecutions.length = 0;
+  } catch (error) {
+    if (processingBatch) {
+      throw error;
     }
+    listingFailed = true;
+    listingError = error;
   }
 
   if (pendingExecutions.length > 0) {
@@ -490,6 +503,10 @@ export async function pollWorkflowFailuresOnce(
     );
     alerted += result.alerted;
     errored += result.errored;
+  }
+
+  if (listingFailed) {
+    throw listingError;
   }
 
   // Isolated per-execution detail-extraction failures are tolerated, but if

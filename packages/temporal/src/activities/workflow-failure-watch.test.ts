@@ -916,6 +916,47 @@ describe("bounded workflow failure recovery", () => {
     expect(calls.length).toBe(1);
     expect(calls[0]?.alerts.length).toBe(25);
   });
+
+  it("posts a partial batch before propagating a visibility scan error", async () => {
+    const executions = Array.from({ length: 3 }, (_, index) => ({
+      workflowId: `wf-${String(index)}`,
+      runId: `run-${String(index)}`,
+      type: "syncGolinks",
+      taskQueue: "default",
+      closeTime: new Date(NOW.getTime() - index * 1000),
+      status: { name: "FAILED" },
+    }));
+    const client = fakeClient(
+      executions,
+      Object.fromEntries(
+        executions.map((execution) => [
+          `${execution.workflowId}/${execution.runId}`,
+          rejectWithApplicationFailure("recovery failure"),
+        ]),
+      ),
+    );
+    const originalList = client.workflow.list;
+    client.workflow.list = (options) => ({
+      async *[Symbol.asyncIterator]() {
+        for await (const execution of originalList(options)) {
+          yield execution;
+        }
+        throw new Error("next visibility page timed out");
+      },
+    });
+    const { poster, calls } = capturingPoster();
+
+    await expect(
+      pollWorkflowFailuresOnce(client, poster, {
+        now: NOW,
+        lookbackMs: LOOKBACK_MS,
+        ttlMs: TTL_MS,
+      }),
+    ).rejects.toThrow("next visibility page timed out");
+
+    expect(calls.length).toBe(1);
+    expect(calls[0]?.alerts.length).toBe(3);
+  });
 });
 
 describe("parseAlertTtlMs", () => {
