@@ -1,5 +1,6 @@
 import type {
   ConfidenceInterval,
+  TemporalMetricEvidence,
   TemporalSeriesPoint,
   VisualizationTrend,
 } from "#src/model/temporal-analysis.ts";
@@ -49,52 +50,159 @@ export function rollingSeries(
   points: TemporalSeriesPoint[],
   windowSize: number,
   kind: "additive" | "rate" | "average",
+  hasComparison = false,
 ): TemporalSeriesPoint[] {
   if (!Number.isInteger(windowSize) || windowSize < 2) {
     throw new Error("Rolling windows must contain at least two buckets.");
   }
   return points.map((point, index) => {
-    if (index + 1 < windowSize) return { ...point, value: null };
+    if (index + 1 < windowSize) {
+      return applyMeasures(
+        point,
+        emptyMeasure(),
+        hasComparison ? emptyMeasure() : null,
+      );
+    }
     const window = points.slice(index + 1 - windowSize, index + 1);
-    if (window.some((candidate) => candidate.value === null)) {
-      return { ...point, value: null };
-    }
-    if (kind === "additive") {
-      return {
-        ...point,
-        value:
-          window.reduce(
-            (total, candidate) => total + (candidate.value ?? 0),
-            0,
-          ) / windowSize,
-      };
-    }
-    const denominator = window.reduce(
-      (total, candidate) => total + candidate.evidence.sampleSize,
-      0,
+    return applyMeasures(
+      point,
+      rollingMeasure(window, kind, false),
+      hasComparison ? rollingMeasure(window, kind, true) : null,
     );
-    if (denominator === 0) return { ...point, value: null };
-    const numerator = window.reduce(
-      (total, candidate) =>
-        total + (candidate.value ?? 0) * candidate.evidence.sampleSize,
-      0,
-    );
-    return { ...point, value: numerator / denominator };
   });
 }
 
 export function cumulativeSeries(
   points: TemporalSeriesPoint[],
   additive: boolean,
+  hasComparison = false,
 ): TemporalSeriesPoint[] {
   if (!additive) {
     throw new Error("Cumulative transforms require an additive metric.");
   }
   let total = 0;
+  let comparisonTotal = 0;
+  const evidence: TemporalMetricEvidence[] = [];
+  const comparisonEvidence: TemporalMetricEvidence[] = [];
   return points.map((point) => {
     total += point.value ?? 0;
-    return { ...point, value: total };
+    evidence.push(point.evidence);
+    const current = {
+      value: total,
+      evidence: combineEvidence(evidence, false),
+    };
+    if (!hasComparison) return applyMeasures(point, current, null);
+    comparisonTotal += point.comparisonValue ?? 0;
+    comparisonEvidence.push(
+      point.comparisonEvidence ?? emptyMeasure().evidence,
+    );
+    return applyMeasures(point, current, {
+      value: comparisonTotal,
+      evidence: combineEvidence(comparisonEvidence, false),
+    });
   });
+}
+
+type Measure = {
+  value: number | null;
+  evidence: TemporalMetricEvidence;
+};
+
+function rollingMeasure(
+  points: TemporalSeriesPoint[],
+  kind: "additive" | "rate" | "average",
+  comparison: boolean,
+): Measure {
+  const values = points.map((point) =>
+    comparison ? (point.comparisonValue ?? null) : point.value,
+  );
+  const evidence = points.map((point) =>
+    comparison
+      ? (point.comparisonEvidence ?? emptyMeasure().evidence)
+      : point.evidence,
+  );
+  if (values.includes(null)) return emptyMeasure();
+  const numericValues = values.flatMap((value) =>
+    value === null ? [] : [value],
+  );
+  const combinedEvidence = combineEvidence(evidence, kind === "rate");
+  if (kind === "additive") {
+    return {
+      value:
+        numericValues.reduce((total, value) => total + value, 0) /
+        points.length,
+      evidence: combinedEvidence,
+    };
+  }
+  if (
+    kind === "rate" &&
+    combinedEvidence.successes !== undefined &&
+    combinedEvidence.sampleSize > 0
+  ) {
+    return {
+      value: combinedEvidence.successes / combinedEvidence.sampleSize,
+      evidence: combinedEvidence,
+    };
+  }
+  if (combinedEvidence.sampleSize === 0) return emptyMeasure();
+  const numerator = numericValues.reduce(
+    (total, value, index) => total + value * (evidence[index]?.sampleSize ?? 0),
+    0,
+  );
+  return {
+    value: numerator / combinedEvidence.sampleSize,
+    evidence: combinedEvidence,
+  };
+}
+
+function combineEvidence(
+  evidence: TemporalMetricEvidence[],
+  confidence: boolean,
+): TemporalMetricEvidence {
+  const sampleSize = evidence.reduce(
+    (total, item) => total + item.sampleSize,
+    0,
+  );
+  const hasSuccesses = evidence.every((item) => item.successes !== undefined);
+  if (!hasSuccesses) return { sampleSize, confidenceInterval: null };
+  const successes = evidence.reduce(
+    (total, item) => total + (item.successes ?? 0),
+    0,
+  );
+  return {
+    sampleSize,
+    successes,
+    confidenceInterval: confidence
+      ? wilsonInterval95(successes, sampleSize)
+      : null,
+  };
+}
+
+function emptyMeasure(): Measure {
+  return {
+    value: null,
+    evidence: { sampleSize: 0, confidenceInterval: null },
+  };
+}
+
+function applyMeasures(
+  point: TemporalSeriesPoint,
+  current: Measure,
+  comparison: Measure | null,
+): TemporalSeriesPoint {
+  if (comparison === null) {
+    return { ...point, value: current.value, evidence: current.evidence };
+  }
+  const deltas = comparisonDeltas(current.value, comparison.value);
+  return {
+    ...point,
+    value: current.value,
+    comparisonValue: comparison.value,
+    absoluteDelta: deltas.absolute,
+    percentageDelta: deltas.percentage,
+    evidence: current.evidence,
+    comparisonEvidence: comparison.evidence,
+  };
 }
 
 export function linearTrend(

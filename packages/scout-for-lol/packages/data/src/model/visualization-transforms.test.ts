@@ -19,6 +19,40 @@ function point(value: number | null, sampleSize: number): TemporalSeriesPoint {
   };
 }
 
+function comparedPoint(
+  value: number,
+  sampleSize: number,
+  comparisonValue: number,
+  comparisonSampleSize: number,
+): TemporalSeriesPoint {
+  return {
+    ...point(value, sampleSize),
+    comparisonValue,
+    comparisonEvidence: {
+      sampleSize: comparisonSampleSize,
+      confidenceInterval: null,
+    },
+  };
+}
+
+function comparedRatePoint(
+  successes: number,
+  sampleSize: number,
+  comparisonSuccesses: number,
+  comparisonSampleSize: number,
+): TemporalSeriesPoint {
+  return {
+    ...point(successes / sampleSize, sampleSize),
+    comparisonValue: comparisonSuccesses / comparisonSampleSize,
+    evidence: { sampleSize, successes, confidenceInterval: null },
+    comparisonEvidence: {
+      sampleSize: comparisonSampleSize,
+      successes: comparisonSuccesses,
+      confidenceInterval: null,
+    },
+  };
+}
+
 describe("visualization transforms", () => {
   test("computes Wilson 95 percent intervals for binary rates", () => {
     const interval = wilsonInterval95(5, 10);
@@ -54,6 +88,47 @@ describe("visualization transforms", () => {
     expect(rolled.map((item) => item.value)).toEqual([null, 3, 6.5]);
   });
 
+  test("rolls comparison values, evidence, and deltas together", () => {
+    const rolled = rollingSeries(
+      [comparedPoint(2, 2, 1, 1), comparedPoint(4, 4, 3, 3)],
+      2,
+      "additive",
+      true,
+    );
+    expect(rolled[0]).toMatchObject({
+      value: null,
+      comparisonValue: null,
+      absoluteDelta: null,
+      evidence: { sampleSize: 0 },
+      comparisonEvidence: { sampleSize: 0 },
+    });
+    expect(rolled[1]).toMatchObject({
+      value: 3,
+      comparisonValue: 2,
+      absoluteDelta: 1,
+      percentageDelta: 0.5,
+      evidence: { sampleSize: 6 },
+      comparisonEvidence: { sampleSize: 4 },
+    });
+  });
+
+  test("weights both sides of a rolling rate by their denominators", () => {
+    const rolled = rollingSeries(
+      [comparedRatePoint(1, 2, 1, 4), comparedRatePoint(5, 8, 3, 6)],
+      2,
+      "rate",
+      true,
+    );
+    expect(rolled[1]).toMatchObject({
+      value: 0.6,
+      comparisonValue: 0.4,
+      evidence: { sampleSize: 10, successes: 6 },
+      comparisonEvidence: { sampleSize: 10, successes: 4 },
+    });
+    expect(rolled[1]?.absoluteDelta).toBeCloseTo(0.2);
+    expect(rolled[1]?.percentageDelta).toBeCloseTo(0.5);
+  });
+
   test("restricts cumulative transforms to additive metrics", () => {
     expect(
       cumulativeSeries([point(2, 1), point(null, 0), point(3, 1)], true).map(
@@ -63,6 +138,22 @@ describe("visualization transforms", () => {
     expect(() => cumulativeSeries([point(0.5, 2)], false)).toThrow(
       "additive metric",
     );
+  });
+
+  test("cumulates comparison values and recomputes deltas", () => {
+    const cumulative = cumulativeSeries(
+      [comparedPoint(2, 2, 1, 1), comparedPoint(3, 3, 4, 4)],
+      true,
+      true,
+    );
+    expect(cumulative[1]).toMatchObject({
+      value: 5,
+      comparisonValue: 5,
+      absoluteDelta: 0,
+      percentageDelta: 0,
+      evidence: { sampleSize: 5 },
+      comparisonEvidence: { sampleSize: 5 },
+    });
   });
 
   test("fits a non-forecasting linear trend only with three points", () => {

@@ -197,6 +197,14 @@ function resolveTemporalGrouping(
       `ANALYZE is not available for ${source}; use competition rank history analysis instead.`,
     );
   }
+  if (
+    analysis !== undefined &&
+    (source === "player_groups" || source === "player_pairs")
+  ) {
+    throw new Error(
+      `ANALYZE is not available for ${source}; group facts do not retain match timestamps.`,
+    );
+  }
   if (analysis === undefined) {
     return {
       analysis,
@@ -210,6 +218,11 @@ function resolveTemporalGrouping(
     analysis.bucket,
     temporalWindowDays(analysis.window),
   );
+  if (source === "prematch_participants" && bucket === "patch") {
+    throw new Error(
+      "BUCKET BY PATCH is not available for prematch_participants because prematch observations do not contain a game version.",
+    );
+  }
   return {
     analysis,
     bucket,

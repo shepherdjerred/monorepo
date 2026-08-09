@@ -60,6 +60,19 @@ describe("canonical ScoutQL temporal analysis", () => {
     }
   });
 
+  test("rejects temporal sources that do not retain the required time dimension", () => {
+    expect(() =>
+      parseAndCompile(
+        "SELECT games FROM player_groups GROUP BY group(2) ANALYZE LAST 30 DAYS BUCKET BY DAY IN TIME ZONE 'UTC' ORDER BY games DESC",
+      ),
+    ).toThrow("group facts do not retain match timestamps");
+    expect(() =>
+      parseAndCompile(
+        "SELECT games FROM prematch_participants GROUP BY all ANALYZE LAST 30 DAYS BUCKET BY PATCH IN TIME ZONE 'UTC' ORDER BY games DESC",
+      ),
+    ).toThrow("prematch observations do not contain a game version");
+  });
+
   test("rejects ambiguous canonical and legacy temporal controls", () => {
     expect(() =>
       parseAndCompile(

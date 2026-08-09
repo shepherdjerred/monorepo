@@ -96,9 +96,8 @@ export async function runReport(
     const durationMs = completedAt.getTime() - startedAt.getTime();
 
     // Archive the rendered output so the web "view posted reports" history is
-    // faithful. The PNG (chart formats only) goes to S3; the text body and the
-    // S3 key are persisted on the run row. Both are best-effort — a missing
-    // image never fails the run.
+    // faithful. The PNG remains best-effort, while a configured visualization
+    // archive is required so a successful run remains reproducible.
     const imageS3Key =
       output.image === null
         ? null

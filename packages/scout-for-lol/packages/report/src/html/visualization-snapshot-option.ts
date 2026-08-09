@@ -333,7 +333,10 @@ function categoryPoints(
   );
 }
 
-function tooltipText(snapshot: VisualizationSnapshot, input: unknown): string {
+export function tooltipText(
+  snapshot: VisualizationSnapshot,
+  input: unknown,
+): string {
   const params = Array.isArray(input) ? input : [input];
   const first = params[0];
   if (typeof first !== "object" || first === null || !("dataIndex" in first)) {
@@ -343,14 +346,14 @@ function tooltipText(snapshot: VisualizationSnapshot, input: unknown): string {
   if (typeof dataIndexValue !== "number") return "";
   const point = categoryPoints(snapshot)[dataIndexValue];
   if (point === undefined) return "";
-  const lines = [`<strong>${point.label}</strong>`];
+  const lines = [`<strong>${escapeHtml(point.label)}</strong>`];
   for (const series of snapshot.series) {
     const value = series.points.find(
       (candidate) => candidate.label === point.label,
     );
     if (value === undefined) continue;
     lines.push(
-      `${series.label}: ${formatValue(value.value)} (n=${value.evidence.sampleSize.toString()})`,
+      `${escapeHtml(series.label)}: ${formatValue(value.value)} (n=${value.evidence.sampleSize.toString()})`,
     );
     if (snapshot.temporal?.comparison !== undefined) {
       lines.push(
@@ -399,7 +402,7 @@ function calendarOption(
         if (!("data" in input)) return "";
         const data = input.data;
         if (!Array.isArray(data)) return "";
-        return `${String(data[0])}: ${String(data[1])}`;
+        return `${escapeHtml(String(data[0]))}: ${escapeHtml(String(data[1]))}`;
       },
     },
     visualMap: {
@@ -419,7 +422,7 @@ function calendarOption(
       bottom: 78,
       range:
         points.length === 0
-          ? new Date().getUTCFullYear().toString()
+          ? emptyCalendarRange(snapshot)
           : [points[0]?.label ?? "", points.at(-1)?.label ?? ""],
       itemStyle: { color: "#1e282d", borderColor: "#091428", borderWidth: 3 },
       dayLabel: { color: "#a09b8c" },
@@ -436,4 +439,50 @@ function calendarOption(
       },
     ],
   };
+}
+
+function emptyCalendarRange(
+  snapshot: VisualizationSnapshot,
+): string | [string, string] {
+  const temporal = snapshot.temporal;
+  if (temporal?.window.kind === "calendar") {
+    return [temporal.window.startDate, temporal.window.endDate];
+  }
+  const generatedAt = new Date(snapshot.generatedAt);
+  if (temporal?.window.kind === "relative") {
+    return [
+      calendarDateInTimezone(
+        new Date(generatedAt.getTime() - temporal.window.days * 86_400_000),
+        temporal.timezone,
+      ),
+      calendarDateInTimezone(generatedAt, temporal.timezone),
+    ];
+  }
+  return generatedAt.getUTCFullYear().toString();
+}
+
+function calendarDateInTimezone(date: Date, timezone: string): string {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+  const values = new Map(parts.map((part) => [part.type, part.value]));
+  const year = values.get("year");
+  const month = values.get("month");
+  const day = values.get("day");
+  if (year === undefined || month === undefined || day === undefined) {
+    throw new Error(`Could not format calendar range in ${timezone}.`);
+  }
+  return `${year}-${month}-${day}`;
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 }

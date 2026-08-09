@@ -308,6 +308,8 @@ describe("executeReportQuery temporal comparisons", () => {
         comparisonValue: 0,
         absoluteDelta: 1,
         percentageDelta: null,
+        comparisonSampleSize: 0,
+        comparisonConfidenceInterval: null,
       },
       {
         column: "win_rate",
@@ -315,6 +317,8 @@ describe("executeReportQuery temporal comparisons", () => {
         comparisonValue: null,
         absoluteDelta: null,
         percentageDelta: null,
+        comparisonSampleSize: 0,
+        comparisonConfidenceInterval: null,
       },
     ]);
     expect(result.rows[1]?.dimensions.at(-1)).toBe("2026-05-17");

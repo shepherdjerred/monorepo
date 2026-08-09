@@ -24,6 +24,10 @@ import {
   localDateStart,
   resolveTemporalRanges,
 } from "#src/reports/temporal-range.ts";
+import {
+  comparePatchLabels,
+  localCalendarDate,
+} from "#src/reports/temporal-labels.ts";
 
 export function buildVisualizationSnapshot(
   result: ReportQueryResult,
@@ -69,13 +73,18 @@ function transformSeries(
         item.points,
         rolling.window,
         item.additive ? "additive" : metricTransformKind(item.metric),
+        plan.analysis?.comparison !== undefined,
       ),
     }));
   }
   if (chartOptions.cumulative === true) {
     series = series.map((item) => ({
       ...item,
-      points: cumulativeSeries(item.points, item.additive),
+      points: cumulativeSeries(
+        item.points,
+        item.additive,
+        plan.analysis?.comparison !== undefined,
+      ),
     }));
   }
   if (chartOptions.stack === "percent") {
@@ -185,6 +194,12 @@ function buildSeries(context: SeriesBuildContext): TemporalSeries[] {
     group.push(row);
     grouped.set(seriesLabel, group);
   }
+  if (bucket !== null && grouped.size === 0 && plan.groupBys.length === 1) {
+    grouped.set("All", []);
+  }
+  const evidenceByRow = new Map(
+    result.rows.map((row, index) => [row, result.evidence?.[index]]),
+  );
   const series = [...grouped].flatMap(([seriesLabel, groupRows]) =>
     columns.map((column) => {
       const additive = isAdditiveColumn(plan, column);
@@ -199,7 +214,7 @@ function buildSeries(context: SeriesBuildContext): TemporalSeries[] {
             plan,
             generatedAt,
             index,
-            result,
+            evidence: evidenceByRow.get(row),
           }),
         )
         .toSorted((left, right) => left.start.localeCompare(right.start));
@@ -208,7 +223,13 @@ function buildSeries(context: SeriesBuildContext): TemporalSeries[] {
         label: seriesLabel === "All" ? column : `${seriesLabel} — ${column}`,
         metric: column,
         additive,
-        points: fillMissingBuckets(points, bucket, additive, plan),
+        points: fillMissingBuckets({
+          points,
+          bucket,
+          additive,
+          plan,
+          generatedAt,
+        }),
       };
     }),
   );
@@ -225,38 +246,32 @@ function comparePatchRows(
   left: ReportResultRow,
   right: ReportResultRow,
 ): number {
-  const leftPatch = parsePatchLabel(left.dimensions.at(-1) ?? left.label);
-  const rightPatch = parsePatchLabel(right.dimensions.at(-1) ?? right.label);
-  return (
-    leftPatch.major - rightPatch.major || leftPatch.minor - rightPatch.minor
+  return comparePatchLabels(
+    left.dimensions.at(-1) ?? left.label,
+    right.dimensions.at(-1) ?? right.label,
   );
 }
 
-function parsePatchLabel(label: string): { major: number; minor: number } {
-  const groups = /^(?<major>\d+)\.(?<minor>\d+)$/u.exec(label)?.groups;
-  if (groups === undefined) {
-    throw new Error(`Invalid patch bucket label ${label}.`);
-  }
-  return { major: Number(groups["major"]), minor: Number(groups["minor"]) };
-}
-
-type PointBuildContext = Omit<SeriesBuildContext, "columns"> & {
+type PointBuildContext = Omit<SeriesBuildContext, "columns" | "result"> & {
   row: ReportResultRow;
   column: string;
   index: number;
+  evidence: NonNullable<ReportQueryResult["evidence"]>[number] | undefined;
 };
 
 function pointFromRow(context: PointBuildContext): TemporalSeriesPoint {
-  const { row, column, bucket, plan, generatedAt, index, result } = context;
+  const { row, column, bucket, plan, generatedAt, index, evidence } = context;
   const value = requireValue(row, column);
   const label =
     bucket === null && plan.groupBys.length <= 1
       ? row.label
       : (row.dimensions.at(-1) ?? row.label);
   const bounds = pointBounds({ label, bucket, plan, generatedAt, index });
-  const evidence = result.evidence
-    ?.find((rowEvidence) => rowEvidence.label === row.label)
-    ?.values.find((candidate) => candidate.column === column);
+  const metricEvidence = evidence?.values.find(
+    (candidate) => candidate.column === column,
+  );
+  const currentEvidence = pointMetricEvidence(value, metricEvidence);
+  const comparisonEvidence = pointComparisonEvidence(value, plan);
   return {
     key: label,
     label,
@@ -269,12 +284,34 @@ function pointFromRow(context: PointBuildContext): TemporalSeriesPoint {
       typeof value.comparisonValue === "number" ? value.comparisonValue : null,
     absoluteDelta: value.absoluteDelta ?? null,
     percentageDelta: value.percentageDelta ?? null,
-    evidence: {
-      sampleSize: evidence?.sampleSize ?? value.sampleSize ?? 0,
-      successes: evidence?.successes ?? value.successes,
-      confidenceInterval:
-        evidence?.confidenceInterval ?? value.confidenceInterval ?? null,
-    },
+    evidence: currentEvidence,
+    ...(comparisonEvidence === null ? {} : { comparisonEvidence }),
+  };
+}
+
+function pointMetricEvidence(
+  value: ReportResultValue,
+  evidence:
+    | NonNullable<ReportQueryResult["evidence"]>[number]["values"][number]
+    | undefined,
+) {
+  return {
+    sampleSize: evidence?.sampleSize ?? value.sampleSize ?? 0,
+    successes: evidence?.successes ?? value.successes,
+    confidenceInterval:
+      evidence?.confidenceInterval ?? value.confidenceInterval ?? null,
+  };
+}
+
+function pointComparisonEvidence(
+  value: ReportResultValue,
+  plan: ReportQueryPlan,
+) {
+  if (plan.analysis?.comparison === undefined) return null;
+  return {
+    sampleSize: value.comparisonSampleSize ?? 0,
+    successes: value.comparisonSuccesses,
+    confidenceInterval: value.comparisonConfidenceInterval ?? null,
   };
 }
 
@@ -339,26 +376,34 @@ function pointBounds(context: PointBoundsContext): { start: Date; end: Date } {
   return { start, end: new Date(next.getTime() - 1) };
 }
 
-function fillMissingBuckets(
-  points: TemporalSeriesPoint[],
-  bucket: ResolvedTemporalBucket | null,
-  additive: boolean,
-  plan: ReportQueryPlan,
-): TemporalSeriesPoint[] {
-  if (bucket === null || bucket === "patch" || points.length < 2) return points;
+type FillMissingBucketsContext = {
+  points: TemporalSeriesPoint[];
+  bucket: ResolvedTemporalBucket | null;
+  additive: boolean;
+  plan: ReportQueryPlan;
+  generatedAt: Date;
+};
+
+function fillMissingBuckets({
+  points,
+  bucket,
+  additive,
+  plan,
+  generatedAt,
+}: FillMissingBucketsContext): TemporalSeriesPoint[] {
+  if (bucket === null || bucket === "patch") return points;
   const byLabel = new Map(points.map((point) => [point.label, point]));
-  const first = points[0];
-  const last = points.at(-1);
-  if (
-    first === undefined ||
-    last === undefined ||
-    plan.analysis === undefined
-  ) {
-    return points;
-  }
+  if (plan.analysis === undefined) return points;
+  const range = resolveTemporalRanges(plan.analysis, generatedAt).current;
   const result: TemporalSeriesPoint[] = [];
-  let cursor = parseISO(bucket === "month" ? `${first.label}-01` : first.label);
-  const end = parseISO(bucket === "month" ? `${last.label}-01` : last.label);
+  let cursor = bucketCursor(
+    localCalendarDate(range.startDate, plan.analysis.timezone),
+    bucket,
+  );
+  const end = bucketCursor(
+    localCalendarDate(range.endDate, plan.analysis.timezone),
+    bucket,
+  );
   while (cursor <= end) {
     const label =
       bucket === "month"
@@ -370,7 +415,7 @@ function fillMissingBuckets(
         label,
         bucket,
         plan,
-        generatedAt: new Date(),
+        generatedAt,
         index: result.length,
       });
       result.push({
@@ -395,6 +440,16 @@ function fillMissingBuckets(
           : addMonths(cursor, 1);
   }
   return result;
+}
+
+function bucketCursor(
+  date: string,
+  bucket: Exclude<ResolvedTemporalBucket, "patch">,
+): Date {
+  const monthDate = bucket === "month" ? `${date.slice(0, 7)}-01` : date;
+  const parsed = parseISO(monthDate);
+  if (bucket !== "week") return parsed;
+  return addDays(parsed, -((parsed.getDay() + 6) % 7));
 }
 
 function isAdditiveColumn(plan: ReportQueryPlan, column: string): boolean {

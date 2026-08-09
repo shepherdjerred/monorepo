@@ -23,6 +23,10 @@ describe("attachTemporalComparison", () => {
     const result = attachTemporalComparison({
       currentRows,
       comparisonRows,
+      comparisonEvidence: comparisonRows.map((baselineRow) => ({
+        label: baselineRow.label,
+        values: [{ column: "games", sampleSize: 1 }],
+      })),
       plan,
       ranges: {
         current: {

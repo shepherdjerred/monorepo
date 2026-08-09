@@ -35,6 +35,13 @@ export type ReportResultValue = {
   comparisonValue?: number | string | null;
   absoluteDelta?: number | null;
   percentageDelta?: number | null;
+  comparisonSampleSize?: number;
+  comparisonSuccesses?: number;
+  comparisonConfidenceInterval?: {
+    level: 0.95;
+    lower: number;
+    upper: number;
+  } | null;
   sampleSize?: number;
   successes?: number;
   confidenceInterval?: {
@@ -181,17 +188,19 @@ async function runReportQueryPlan(
     startDate: ranges.comparison.startDate,
     endDate: ranges.comparison.endDate,
   });
+  const comparisonResult = rowsFromAggregates(
+    plan,
+    sortedAggregates(plan, comparison.aggregates),
+    comparison.rowsScanned,
+    2000,
+  );
   return {
     ...current,
     rowsScanned: current.rowsScanned + comparison.rowsScanned,
     ...attachTemporalComparison({
       currentRows: current.rows,
-      comparisonRows: rowsFromAggregates(
-        plan,
-        sortedAggregates(plan, comparison.aggregates),
-        comparison.rowsScanned,
-        2000,
-      ).rows,
+      comparisonRows: comparisonResult.rows,
+      comparisonEvidence: comparisonResult.evidence,
       plan,
       ranges,
     }),
@@ -259,17 +268,19 @@ async function executeCompetitionMatchParticipantReport(
     endDate: ranges.comparison.endDate,
     playerIds: participantRows.map((row) => row.playerId),
   });
+  const comparisonResult = rowsFromAggregates(
+    plan,
+    sortedAggregates(plan, comparison.aggregates),
+    comparison.rowsScanned,
+    2000,
+  );
   return {
     ...current,
     rowsScanned: current.rowsScanned + comparison.rowsScanned,
     ...attachTemporalComparison({
       currentRows: current.rows,
-      comparisonRows: rowsFromAggregates(
-        plan,
-        sortedAggregates(plan, comparison.aggregates),
-        comparison.rowsScanned,
-        2000,
-      ).rows,
+      comparisonRows: comparisonResult.rows,
+      comparisonEvidence: comparisonResult.evidence,
       plan,
       ranges,
     }),

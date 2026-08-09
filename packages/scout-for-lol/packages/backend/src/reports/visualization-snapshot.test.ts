@@ -53,6 +53,42 @@ describe("buildVisualizationSnapshot", () => {
 
     expect(snapshot.series).toHaveLength(8);
   });
+
+  test("fills leading and trailing buckets across the requested window", () => {
+    const plan = parseAndCompile(
+      "SELECT games FROM match_participants GROUP BY all ANALYZE BETWEEN '2026-08-01' AND '2026-08-03' BUCKET BY DAY IN TIME ZONE 'UTC' ORDER BY games DESC RENDER line_chart WITH (y = games)",
+    );
+    const row: ReportResultRow = {
+      label: "2026-08-02",
+      dimensions: ["2026-08-02"],
+      mentionIdentity: null,
+      values: [{ column: "games", value: 2 }],
+    };
+
+    const snapshot = buildVisualizationSnapshot(
+      {
+        plan,
+        columns: ["label", "games"],
+        rows: [row],
+        rowsScanned: 2,
+        evidence: [
+          {
+            label: row.label,
+            values: [{ column: "games", sampleSize: 2 }],
+          },
+        ],
+      },
+      new Date("2026-08-08T00:00:00.000Z"),
+    );
+
+    expect(
+      snapshot.series[0]?.points.map((point) => [point.label, point.value]),
+    ).toEqual([
+      ["2026-08-01", 0],
+      ["2026-08-02", 2],
+      ["2026-08-03", 0],
+    ]);
+  });
 });
 
 function patchRow(label: string, games: number): ReportResultRow {

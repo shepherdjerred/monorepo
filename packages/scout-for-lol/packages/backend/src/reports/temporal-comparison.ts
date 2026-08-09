@@ -6,12 +6,20 @@ import {
   temporalWindowDays,
   type ReportQueryPlan,
 } from "@scout-for-lol/data";
-import type { ReportResultRow } from "#src/reports/query-engine.ts";
+import type {
+  ReportQueryResult,
+  ReportResultRow,
+} from "#src/reports/query-engine.ts";
+import {
+  comparePatchLabels,
+  localCalendarDate,
+} from "#src/reports/temporal-labels.ts";
 import type { TemporalRange } from "#src/reports/temporal-range.ts";
 
 type TemporalComparisonInput = {
   currentRows: ReportResultRow[];
   comparisonRows: ReportResultRow[];
+  comparisonEvidence: ReportQueryResult["evidence"];
   plan: ReportQueryPlan;
   ranges: { current: TemporalRange; comparison: TemporalRange | null };
 };
@@ -19,6 +27,7 @@ type TemporalComparisonInput = {
 export function attachTemporalComparison({
   currentRows,
   comparisonRows,
+  comparisonEvidence,
   plan,
   ranges,
 }: TemporalComparisonInput): {
@@ -36,6 +45,9 @@ export function attachTemporalComparison({
   );
   const currentGroups = groupTemporalRows(currentRows);
   const comparisonGroups = groupTemporalRows(comparisonRows);
+  const comparisonEvidenceByRow = new Map(
+    comparisonRows.map((row, index) => [row, comparisonEvidence?.[index]]),
+  );
   const replacements = new Map<ReportResultRow, ReportResultRow>();
   for (const [seriesKey, currentGroup] of currentGroups) {
     const baselineGroup = comparisonGroups.get(seriesKey) ?? [];
@@ -70,6 +82,14 @@ export function attachTemporalComparison({
           const matchedBaseline = baseline?.values.find(
             (candidate) => candidate.column === value.column,
           );
+          const matchedBaselineEvidence =
+            baseline === undefined
+              ? undefined
+              : comparisonEvidenceByRow
+                  .get(baseline)
+                  ?.values.find(
+                    (candidate) => candidate.column === value.column,
+                  );
           const baselineValue =
             matchedBaseline === undefined
               ? isAdditiveOutput(plan, value.column)
@@ -86,6 +106,12 @@ export function attachTemporalComparison({
             comparisonValue: baselineValue ?? null,
             absoluteDelta: deltas.absolute,
             percentageDelta: deltas.percentage,
+            comparisonSampleSize: matchedBaselineEvidence?.sampleSize ?? 0,
+            comparisonConfidenceInterval:
+              matchedBaselineEvidence?.confidenceInterval ?? null,
+            ...(matchedBaselineEvidence?.successes === undefined
+              ? {}
+              : { comparisonSuccesses: matchedBaselineEvidence.successes }),
           };
         }),
       });
@@ -143,23 +169,6 @@ function temporalBucketOffset({
   return bucket === "day" ? days : Math.floor(days / 7);
 }
 
-function localCalendarDate(date: Date, timezone: string): string {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: timezone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(date);
-  const values = new Map(parts.map((part) => [part.type, part.value]));
-  const year = values.get("year");
-  const month = values.get("month");
-  const day = values.get("day");
-  if (year === undefined || month === undefined || day === undefined) {
-    throw new Error(`Could not format temporal range in ${timezone}.`);
-  }
-  return `${year}-${month}-${day}`;
-}
-
 function isAdditiveOutput(plan: ReportQueryPlan, column: string): boolean {
   const item = plan.selectItems.find((candidate) => candidate.key === column);
   if (item === undefined) return false;
@@ -200,23 +209,15 @@ function comparePatchTemporalRows(
   left: ReportResultRow,
   right: ReportResultRow,
 ): number {
-  const leftPatch = patchParts(left.dimensions.at(-1));
-  const rightPatch = patchParts(right.dimensions.at(-1));
-  return (
-    leftPatch.major - rightPatch.major || leftPatch.minor - rightPatch.minor
+  return comparePatchLabels(
+    requirePatchLabel(left.dimensions.at(-1)),
+    requirePatchLabel(right.dimensions.at(-1)),
   );
 }
 
-function patchParts(label: string | undefined): {
-  major: number;
-  minor: number;
-} {
-  const groups =
-    label === undefined
-      ? undefined
-      : /^(?<major>\d+)\.(?<minor>\d+)$/u.exec(label)?.groups;
-  if (groups === undefined) {
-    throw new Error(`Invalid temporal patch bucket ${label ?? "<missing>"}.`);
+function requirePatchLabel(label: string | undefined): string {
+  if (label === undefined) {
+    throw new Error("Temporal patch comparison row is missing its label.");
   }
-  return { major: Number(groups["major"]), minor: Number(groups["minor"]) };
+  return label;
 }

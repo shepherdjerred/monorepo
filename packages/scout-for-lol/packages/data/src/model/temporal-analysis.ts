@@ -238,6 +238,7 @@ export const TemporalSeriesPointSchema = z
     absoluteDelta: z.number().nullable().optional(),
     percentageDelta: z.number().nullable().optional(),
     evidence: TemporalMetricEvidenceSchema,
+    comparisonEvidence: TemporalMetricEvidenceSchema.nullable().optional(),
   })
   .strict();
 export type TemporalSeriesPoint = z.infer<typeof TemporalSeriesPointSchema>;

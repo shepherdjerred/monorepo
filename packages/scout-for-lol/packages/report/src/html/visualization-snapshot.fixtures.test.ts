@@ -50,6 +50,15 @@ function point(
           }
         : { confidenceInterval: null }),
     },
+    comparisonEvidence: {
+      sampleSize,
+      ...(value >= 0 && value <= 1
+        ? {
+            successes: Math.round((value - 0.05) * sampleSize),
+            confidenceInterval: null,
+          }
+        : { confidenceInterval: null }),
+    },
   };
 }
 

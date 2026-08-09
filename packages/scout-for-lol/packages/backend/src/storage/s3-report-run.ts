@@ -68,7 +68,7 @@ export async function saveReportRunVisualization(
         runId: runId.toString(),
       },
     });
-    return null;
+    throw error;
   }
 }
 
