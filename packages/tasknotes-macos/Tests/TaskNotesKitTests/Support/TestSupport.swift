@@ -4,8 +4,8 @@ import TaskNotesUniFFI
 
 /// Run blocking work off the main thread.
 ///
-/// Not a convenience. `URLSessionTaskApi` refuses a main-thread call outright,
-/// because the core's `TaskApi` is synchronous and blocking the main thread
+/// Not a convenience. `URLSessionTransport` refuses a main-thread call outright,
+/// because the core's `HttpClient` is synchronous and blocking the main thread
 /// would freeze the UI for a network round trip. Swift Testing does not promise
 /// which thread a test body runs on, and with
 /// `NonisolatedNonsendingByDefault` enabled a plain `nonisolated async` helper
@@ -70,7 +70,7 @@ struct HostFixture {
     let clock: SystemClock
     let randomness: FixedRandomness
     let scheduler: DispatchRetryScheduler
-    let api: URLSessionTaskApi
+    let api: TaskNotesApi
 
     /// - Parameters:
     ///   - directory: where durable client state goes.
@@ -94,7 +94,11 @@ struct HostFixture {
         // means the constant moved and the suite should stop loudly.
         randomness = FixedRandomness(ppm: UnitPpm.half)!
         scheduler = DispatchRetryScheduler(onFire: onFire)
-        api = URLSessionTaskApi(baseURL: baseURL)
+        api = try TaskNotesApi(
+            transport: URLSessionTransport(),
+            baseUrl: baseURL.absoluteString,
+            requestTimeoutMillis: apiDefaultTimeoutMillis()
+        )
     }
 
     /// An engine wired over this fixture.

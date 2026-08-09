@@ -44,7 +44,7 @@ public import struct Foundation.TimeInterval
 ///
 /// The closure runs on this scheduler's private serial queue, never the main
 /// thread. That is required rather than convenient: driving the engine calls
-/// the synchronous ``URLSessionTaskApi``, which blocks.
+/// the synchronous ``URLSessionTransport``, which blocks.
 public final class DispatchRetryScheduler: RetryScheduler {
     /// Everything mutable, behind one lock.
     private struct State {

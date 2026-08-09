@@ -10,7 +10,7 @@ import Testing
 /// because it is the only way to prove the store's other half works. Every
 /// blocking call inside the store has to reach the global executor on its own;
 /// if `@concurrent` were dropped from `TaskNotesStore.drain`, the request would
-/// run on the main thread, `URLSessionTaskApi` would refuse it, and these tests
+/// run on the main thread, `URLSessionTransport` would refuse it, and these tests
 /// would fail. That is deliberate: the isolation split is load-bearing, so it
 /// gets an assertion rather than a comment.
 @Suite("Task store", .serialized)

@@ -21,7 +21,7 @@ public import struct Foundation.URL
 /// ## The two isolation domains, and why the `Mutex` is not decoration
 ///
 /// The observable surface is `@MainActor`, because that is what a SwiftUI view
-/// reads. The engine is not, and must not be: the core's `TaskApi` is
+/// reads. The engine is not, and must not be: the core's `HttpClient` is
 /// synchronous, so `syncNow()` blocks its calling thread for the length of a
 /// network round trip. Every call that can block therefore runs on a
 /// `@concurrent` function, and `Mutex<Engine>` is what lets both domains hold
@@ -157,9 +157,14 @@ public final class TaskNotesStore {
     /// and deliberately not something a retry timer can fix. The queue still
     /// accepts dispatches in that state; they simply do not drain.
     public func configure(serverURL: URL?, authToken: String? = nil) {
-        let api: (any TaskApi)? = serverURL.map {
-            URLSessionTaskApi(baseURL: $0, authToken: authToken)
+        // A bad address is reported now, not fifteen seconds into the first sync.
+        let built = serverURL.map { url in
+            Result(catching: {
+                try TaskNotesApi.urlSession(serverURL: url, authToken: authToken)
+            })
         }
+        if case .failure(let error)? = built { absorb(.failure(error)) }
+        let api: TaskNotesApi? = if case .success(let ready)? = built { ready } else { nil }
         let replacement = FfiSyncEngine(
             api: api,
             queueStorage: storage,
@@ -327,7 +332,7 @@ public final class TaskNotesStore {
     /// `NonisolatedNonsendingByDefault` enabled — it is, in `Package.swift` — a
     /// plain `nonisolated async` function *inherits its caller's isolation*, so
     /// without this attribute the blocking HTTP request would run on the main
-    /// thread. ``URLSessionTaskApi`` refuses a main-thread call outright, so
+    /// thread. ``URLSessionTransport`` refuses a main-thread call outright, so
     /// getting this wrong is a loud test failure rather than a beachball.
     @concurrent
     private static func drain(_ box: EngineBox) async -> Result<Void, any Error> {

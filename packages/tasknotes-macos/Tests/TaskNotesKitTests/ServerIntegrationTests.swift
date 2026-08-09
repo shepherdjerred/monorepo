@@ -142,28 +142,45 @@ struct ServerIntegrationTests {
         // vault would end up with "Standup.md" *and* "Standup 1.md".
         let server = try TaskNotesServerProcess()
         defer { server.stop() }
-        let directory = try TemporaryDirectory()
-        let host = try HostFixture(directory: directory.url, baseURL: server.baseURL)
-
-        let request = createRequest(title: "Standup")
+        // Driven through the raw transport rather than a domain call, because
+        // the subject here is the *server's* middleware and the header name the
+        // core sends — and since Phase 4.5 the host owns no domain-level API at
+        // all. What the core builds for a real create is asserted in the core's
+        // own tests and in `cargo xtask verify-swift`.
+        let transport = URLSessionTransport()
+        let base = server.baseURL.absoluteString
         let key = "mutation-\(UUID().uuidString)"
-
-        let first = try await offMainThread {
-            try host.api.createTask(request: request, mutationId: key)
+        func create(withKey key: String) async throws -> HttpResponse {
+            try await offMainThread {
+                try transport.send(
+                    request: HttpRequest(
+                        method: .post,
+                        url: "\(base)/api/tasks",
+                        headers: [
+                            HttpHeader(name: "Content-Type", value: "application/json"),
+                            HttpHeader(name: "X-Mutation-Id", value: key),
+                        ],
+                        body: Data(#"{"title":"Standup"}"#.utf8),
+                        timeoutMillis: apiDefaultTimeoutMillis()
+                    )
+                )
+            }
         }
-        let replay = try await offMainThread {
-            try host.api.createTask(request: request, mutationId: key)
-        }
 
-        #expect(first.id == replay.id)
+        let first = try await create(withKey: key)
+        let replay = try await create(withKey: key)
+
+        // 201, not 200 — which is exactly why the core treats the whole 2xx
+        // range as success rather than pinning one code.
+        #expect((200..<300).contains(first.status))
+        #expect(first.status == replay.status)
+        #expect(first.body == replay.body, "a replay must answer the stored response")
         #expect(try server.markdownFiles() == ["Standup.md"])
 
         // A *different* key is a different mutation, and the server dedupes the
         // filename rather than the request — proving the first assertion was
         // the header working, not the server refusing duplicate titles.
-        _ = try await offMainThread {
-            try host.api.createTask(request: request, mutationId: "mutation-\(UUID().uuidString)")
-        }
+        _ = try await create(withKey: "mutation-\(UUID().uuidString)")
         #expect(try server.markdownFiles() == ["Standup 1.md", "Standup.md"])
     }
 
@@ -197,9 +214,10 @@ struct ServerIntegrationTests {
     @Test("a transport failure is classified as transient and arms the bare backoff")
     func aTransportFailureArmsTheDocumentedBackoff() async throws {
         // No server at all: `URLSession` reports connection refused, the Swift
-        // `TaskApi` raises `CoreError.Connection`, the Rust classifier calls it
-        // transient, and the Swift scheduler records the delay. Every hop in
-        // that sentence is a different language.
+        // transport raises `TransportError.Offline`, the *core* turns that into
+        // a `CoreError.Connection`, the Rust classifier calls it transient, and
+        // the Swift scheduler records the delay. Every hop in that sentence is a
+        // different language — and the middle one used to be Swift's decision.
         //
         // The delay is asserted exactly, not as a range, because the randomness
         // is pinned to the parts-per-million spelling of 0.5 — which makes the
@@ -212,7 +230,11 @@ struct ServerIntegrationTests {
         let randomness = try #require(FixedRandomness(ppm: UnitPpm.half))
 
         let engine = FfiSyncEngine(
-            api: URLSessionTaskApi(baseURL: unreachable, timeout: 2),
+            api: try TaskNotesApi(
+                transport: URLSessionTransport(),
+                baseUrl: unreachable.absoluteString,
+                requestTimeoutMillis: 2_000
+            ),
             queueStorage: storage,
             cacheStorage: storage,
             clock: SystemClock(),
@@ -245,19 +267,26 @@ struct ServerIntegrationTests {
     @Test("the main thread is refused rather than silently blocked")
     @MainActor
     func aMainThreadRequestIsRefused() async throws {
-        // The core's `TaskApi` is synchronous, so this call blocks its caller.
-        // On the main thread that is a frozen UI for the length of a network
-        // round trip, which is invisible to the compiler and easy to write by
-        // accident — especially with `NonisolatedNonsendingByDefault`, where a
-        // plain `nonisolated async` helper inherits its caller's isolation.
-        let unreachable = try #require(URL(string: "http://127.0.0.1:9"))
-        let api = URLSessionTaskApi(baseURL: unreachable, timeout: 1)
+        // The core's `HttpClient` is synchronous, so this call blocks its
+        // caller. On the main thread that is a frozen UI for the length of a
+        // network round trip, which is invisible to the compiler and easy to
+        // write by accident — especially with `NonisolatedNonsendingByDefault`,
+        // where a plain `nonisolated async` helper inherits its caller's
+        // isolation.
+        let transport = URLSessionTransport()
+        let request = HttpRequest(
+            method: .get,
+            url: "http://127.0.0.1:9/api/tasks",
+            headers: [],
+            body: nil,
+            timeoutMillis: 1_000
+        )
 
-        let thrown = #expect(throws: CoreError.self) {
-            _ = try api.listTasks()
+        let thrown = #expect(throws: TransportError.self) {
+            _ = try transport.send(request: request)
         }
-        guard case .Invariant(let message) = try #require(thrown) else {
-            Issue.record("expected an Invariant, got \(String(describing: thrown))")
+        guard case .Other(let message) = try #require(thrown) else {
+            Issue.record("expected an Other, got \(String(describing: thrown))")
             return
         }
         #expect(message.contains("main thread"))
