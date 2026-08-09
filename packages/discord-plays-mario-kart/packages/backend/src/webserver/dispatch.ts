@@ -40,6 +40,7 @@ export type LeaderboardDeps = {
 export type DispatchDeps = {
   seatManager: SeatManager;
   emulator: EmulatorControls | undefined;
+  driverFeedEnabled: boolean;
   leaderboard?: LeaderboardDeps;
   /** Per-screenshot overlay state. Absent → screenshots stay clean (kept for
    *  test ergonomics and for builds with the stream/overlay disabled). */
@@ -113,7 +114,13 @@ export function handleRequest(
   deps: DispatchDeps,
 ): void {
   const sock = event.socket;
-  const { seatManager, emulator, leaderboard, overlayContext } = deps;
+  const {
+    seatManager,
+    emulator,
+    driverFeedEnabled,
+    leaderboard,
+    overlayContext,
+  } = deps;
   match(event)
     .with({ request: { kind: "seat-claim" } }, (e) => {
       const seat = seatManager.claim(sock.id, e.request.seat);
@@ -176,7 +183,7 @@ export function handleRequest(
     .with({ request: { kind: "status" } }, (e) => {
       const response: StatusResponse = {
         kind: "status",
-        value: { playerList: [] },
+        value: { playerList: [], driverFeedEnabled },
       };
       e.socket.emit("response", response);
       broadcastSeats(e.socket, seatManager);

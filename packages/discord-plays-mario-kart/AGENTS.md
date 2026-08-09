@@ -4,6 +4,11 @@ Headless MK64 (N64Wasm: parallel-n64 + angrylion) streamed to Discord; up to 4
 people drive seats P1–P4 from a React web UI over Socket.IO. See `README.md` for
 the architecture; this file is the quick orientation for agents.
 
+**There are two video paths.** Spectators watch the Discord Go-Live stream;
+drivers additionally decode a low-latency H.264 feed in the controller page (see
+"Driver feed" below). The Go-Live path is unchanged by it and remains the
+default — the driver feed is off unless `[driver_feed] enabled` is set.
+
 The tracing/metrics wiring, loopback audio transport, Go-Live streamer base class,
 web server, and bot entrypoint are shared with discord-plays-pokemon in
 **`@shepherdjerred/discord-plays-core`** (`packages/discord-plays-core`,
@@ -17,13 +22,19 @@ StreamObserver, session summary, guarded client destroy).
 
 The MK64 ROM is **copyrighted** and the repo is **public** with a 5 MB
 per-file pre-commit limit, so it is never committed (not even encrypted). The
-canonical copy lives in Syncthing at **`~/syncthing/Sync/roms/mariokart64.z64`**
-(replicated across the owner's machines). Everything that needs it resolves the
-path the same way (`resolveRom()` in `packages/backend/scripts/lib/harness.ts`):
+canonical copy lives in Syncthing (replicated across the owner's machines).
+Everything that needs it resolves the path the same way (`resolveRom()` in
+`packages/backend/scripts/lib/harness.ts`):
 
 1. explicit `--rom <path>` / first positional arg
 2. `MK64_ROM` env var
-3. the Syncthing default above
+3. `~/syncthing/Sync/roms/mariokart64.z64`
+4. `~/Sync/Sync/roms/mariokart64.z64`
+
+Both Syncthing spellings are checked because the root differs by machine —
+`~/Sync` is what the macOS client creates by default, `~/syncthing` is the older
+layout. Before 2026-08-08 only the first was tried, so every ROM-gated harness
+failed on a default macOS install unless you passed `MK64_ROM`.
 
 Production gets the ROM via a one-time `kubectl cp` onto the ROM PVC (README →
 One-time provisioning); the deployed pod does not fetch it.
@@ -128,6 +139,74 @@ burst misses the 33 ms output budget. One core call per 30 fps output frame
 slows game time and 44.1 kHz PCM to 0.5×; ffmpeg then blocks on audio, queues
 video, and the frame gate drops roughly half the frames. The ROM-gated
 `e2e:audio --rom` duration assertion is the end-to-end guard.
+
+## Driver feed (`packages/backend/src/driver-feed/`)
+
+A second video path for the people actually driving: the same overlay-composited
+frames go to a second ffmpeg, out as Annex-B H.264, over the `/video` WebSocket,
+into a `VideoDecoder` on a canvas in the controller page. It skips Discord's
+voice leg and its ~85 ms client de-jitter buffer — the largest remaining term in
+the press-to-glass budget. Design and measurements:
+`packages/docs/plans/2026-08-08_mk64-driver-feed.md`.
+
+Load-bearing details:
+
+- **The frame tee is after `applyStreamOverlays`**, so drivers see byte-identical
+  pixels to the stream. That is deliberate: the burned-in HUD clock is what lets
+  a browser measure its own glass-to-glass latency off its own canvas. The frame
+  Buffer is transferred zero-copy out of the emulator Worker and nothing mutates
+  it after the overlay call, so both sinks share one reference safely.
+- **`-bsf:v h264_metadata=aud=insert` is not optional.** The splitter keys
+  entirely on Access Unit Delimiters; without it a raw H.264 pipe is undelimited
+  and access-unit boundaries are silently wrong rather than loudly broken.
+- **`-bf 0`**, so output order equals input order and the client never reorders.
+- **Profile and level are pinned** (`main`, `-level 40`) so `H264_CODEC_STRING`
+  handed to `VideoDecoder.configure` is exact. Spell the level `40`, not `4.0` —
+  `h264_vaapi` parses it as an integer `level_idc` and rejects the dotted form.
+- **No `description` is sent to the decoder.** Per the W3C AVC registration,
+  omitting it selects Annex-B, which is what a live stream with in-band SPS/PPS is.
+- **`ws` runs in `noServer` mode** with a path-guarded `upgrade` listener.
+  Attached mode destroys non-matching upgrades and would kill Socket.IO.
+- **Clients only ever start at a decoder entry point** (IDR + SPS + PPS), which
+  is also how a backlogged client resyncs. Do not "helpfully" send deltas earlier.
+- **Failures are contained, not propagated.** A dead driver-feed encoder must
+  never take down the Go-Live stream spectators are watching.
+
+`bun run e2e:driver-feed` verifies the whole chain against a real ffmpeg. It
+re-decodes its own output and asserts (a) a late join at a mid-stream entry point
+yields exactly the remaining frames — the property the hub's fan-out depends on —
+and (b) every decoded frame's HUD clock reads back as one of the timestamps that
+was stamped, which is what the browser's latency readout relies on.
+
+Two modes:
+
+- default: synthetic gradient frames, so it needs no ROM and no GPU
+- `--rom <path>`: drives the actual emulator through the real overlay pipeline
+  (add `--dump-frame <path.png>` to write out what a driver's canvas would show)
+
+`bun run e2e:driver-feed:glass` goes one step further: it boots the emulator and
+the feed on a local web server, serves the built frontend, drives a real Chrome
+tab via PinchTab, and reports the latency the shipped page measures for itself.
+
+Measured 2026-08-08 (Apple silicon, libx264, loopback):
+
+| Leg                         | p50   | p95   |
+| --------------------------- | ----- | ----- |
+| Capture → access unit ready | 34 ms | 36 ms |
+| Capture → painted on canvas | 36 ms | 64 ms |
+
+Correctness on the same run: 1348 access units at 29.96 fps, 45 entry points, all
+delivered, 1348/1348 HUD clocks read with zero mismatches.
+
+**34 ms is one frame interval, and it does not move with resolution** — the
+Go-Live output profile (`--golive-profile`, 960x720 @ 5 Mbps) measures the same
+34/36 ms. The encode leg is pacing-bound, not compute-bound, so shrinking the
+frame buys bandwidth rather than latency, and further wins have to come from the
+pacing itself.
+
+**Drivers must stay in the voice channel.** `AloneInVoiceWatcher` counts voice
+membership, not stream viewership, with a 30 s grace; everyone leaving VC to
+"just watch in the browser" ends the session and the feed with it.
 
 ## Conventions
 

@@ -9,55 +9,38 @@
 // The framebuffer is a horizontally-doubled 320x240 (see constants.ts), so
 // glyphs are drawn twice as wide as tall (GLYPH_SCALE_X = 2 * GLYPH_SCALE_Y)
 // to come out square once the 640x240 frame is displayed at 4:3.
+//
+// The font and geometry live in `@discord-plays-mario-kart/common` because the
+// driver-feed client reads this HUD back off its own canvas to measure
+// glass-to-glass latency; both sides must agree on it exactly.
 
-// Blank 5x7 glyph, also the fallback for characters outside the font.
-const SPACE_GLYPH: readonly number[] = [
-  0b0_0000, 0b0_0000, 0b0_0000, 0b0_0000, 0b0_0000, 0b0_0000, 0b0_0000,
-];
+import {
+  HUD_GLYPHS,
+  HUD_SPACE_GLYPH,
+  HUD_GLYPH_COLS,
+  HUD_GLYPH_ROWS,
+  HUD_CELL_COLS,
+  HUD_GLYPH_SCALE_X,
+  HUD_GLYPH_SCALE_Y,
+  HUD_PAD_X,
+  HUD_PAD_Y,
+  HUD_MARGIN_X,
+  HUD_MARGIN_Y,
+  formatUtcTimestamp,
+} from "@discord-plays-mario-kart/common";
 
-// 5x7 bitmap glyphs; 7 rows, bit 4 = leftmost column. Classic HD44780 shapes.
-const GLYPHS = new Map<string, readonly number[]>([
-  ["0", [0b0_1110, 0b1_0001, 0b1_0011, 0b1_0101, 0b1_1001, 0b1_0001, 0b0_1110]],
-  ["1", [0b0_0100, 0b0_1100, 0b0_0100, 0b0_0100, 0b0_0100, 0b0_0100, 0b0_1110]],
-  ["2", [0b0_1110, 0b1_0001, 0b0_0001, 0b0_0010, 0b0_0100, 0b0_1000, 0b1_1111]],
-  ["3", [0b1_1111, 0b0_0010, 0b0_0100, 0b0_0010, 0b0_0001, 0b1_0001, 0b0_1110]],
-  ["4", [0b0_0010, 0b0_0110, 0b0_1010, 0b1_0010, 0b1_1111, 0b0_0010, 0b0_0010]],
-  ["5", [0b1_1111, 0b1_0000, 0b1_1110, 0b0_0001, 0b0_0001, 0b1_0001, 0b0_1110]],
-  ["6", [0b0_0110, 0b0_1000, 0b1_0000, 0b1_1110, 0b1_0001, 0b1_0001, 0b0_1110]],
-  ["7", [0b1_1111, 0b0_0001, 0b0_0010, 0b0_0100, 0b0_1000, 0b0_1000, 0b0_1000]],
-  ["8", [0b0_1110, 0b1_0001, 0b1_0001, 0b0_1110, 0b1_0001, 0b1_0001, 0b0_1110]],
-  ["9", [0b0_1110, 0b1_0001, 0b1_0001, 0b0_1111, 0b0_0001, 0b0_0010, 0b0_1100]],
-  [":", [0b0_0000, 0b0_1100, 0b0_1100, 0b0_0000, 0b0_1100, 0b0_1100, 0b0_0000]],
-  [".", [0b0_0000, 0b0_0000, 0b0_0000, 0b0_0000, 0b0_0000, 0b0_1100, 0b0_1100]],
-]);
-
-const GLYPH_COLS = 5;
-const GLYPH_ROWS = 7;
-// One blank column between glyphs.
-const CELL_COLS = GLYPH_COLS + 1;
-// Glyph cell scale: 2:1 keeps each dot square once the 640x240 framebuffer is
-// displayed at 4:3. At the prior 4:2 the HUD was a banner covering ~84% of the
-// frame width; 2:1 lands it at ~17% — a small top-left corner badge.
-const GLYPH_SCALE_X = 2;
-const GLYPH_SCALE_Y = 1;
-const PAD_X = 2;
-const PAD_Y = 1;
-const MARGIN_X = 8;
-const MARGIN_Y = 4;
+const GLYPHS = HUD_GLYPHS;
+const SPACE_GLYPH = HUD_SPACE_GLYPH;
+const GLYPH_COLS = HUD_GLYPH_COLS;
+const GLYPH_ROWS = HUD_GLYPH_ROWS;
+const CELL_COLS = HUD_CELL_COLS;
+const GLYPH_SCALE_X = HUD_GLYPH_SCALE_X;
+const GLYPH_SCALE_Y = HUD_GLYPH_SCALE_Y;
+const PAD_X = HUD_PAD_X;
+const PAD_Y = HUD_PAD_Y;
+const MARGIN_X = HUD_MARGIN_X;
+const MARGIN_Y = HUD_MARGIN_Y;
 const BYTES_PER_PIXEL = 4;
-
-function pad2(n: number): string {
-  return String(n).padStart(2, "0");
-}
-
-/** "HH:MM:SS.mmm" (UTC) for an epoch-milliseconds value. The "UTC " prefix and
- *  its glyphs were dropped to shrink the HUD badge — the timestamp is still
- *  UTC, the colon-separated `HH:MM:SS.mmm` makes it self-evidently a clock. */
-export function formatUtcTimestamp(epochMs: number): string {
-  const d = new Date(epochMs);
-  const ms = String(d.getUTCMilliseconds()).padStart(3, "0");
-  return `${pad2(d.getUTCHours())}:${pad2(d.getUTCMinutes())}:${pad2(d.getUTCSeconds())}.${ms}`;
-}
 
 function writePixel(frame: Buffer, offset: number, value: number): void {
   frame[offset] = value;

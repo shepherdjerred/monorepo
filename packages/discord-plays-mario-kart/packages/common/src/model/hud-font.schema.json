@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hud-font.schema.json",
+  "title": "Mario Kart HUD font",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "glyphs", "geometry"],
+  "properties": {
+    "$schema": { "const": "./hud-font.schema.json" },
+    "glyphs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        " ",
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        ":",
+        "."
+      ],
+      "properties": {
+        " ": { "$ref": "#/$defs/glyph" },
+        "0": { "$ref": "#/$defs/glyph" },
+        "1": { "$ref": "#/$defs/glyph" },
+        "2": { "$ref": "#/$defs/glyph" },
+        "3": { "$ref": "#/$defs/glyph" },
+        "4": { "$ref": "#/$defs/glyph" },
+        "5": { "$ref": "#/$defs/glyph" },
+        "6": { "$ref": "#/$defs/glyph" },
+        "7": { "$ref": "#/$defs/glyph" },
+        "8": { "$ref": "#/$defs/glyph" },
+        "9": { "$ref": "#/$defs/glyph" },
+        ":": { "$ref": "#/$defs/glyph" },
+        ".": { "$ref": "#/$defs/glyph" }
+      }
+    },
+    "geometry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "glyphCols",
+        "glyphRows",
+        "glyphScaleX",
+        "glyphScaleY",
+        "padX",
+        "padY",
+        "marginX",
+        "marginY",
+        "clockLength"
+      ],
+      "properties": {
+        "glyphCols": { "type": "integer", "minimum": 1 },
+        "glyphRows": { "type": "integer", "minimum": 1 },
+        "glyphScaleX": { "type": "integer", "minimum": 1 },
+        "glyphScaleY": { "type": "integer", "minimum": 1 },
+        "padX": { "type": "integer", "minimum": 0 },
+        "padY": { "type": "integer", "minimum": 0 },
+        "marginX": { "type": "integer", "minimum": 0 },
+        "marginY": { "type": "integer", "minimum": 0 },
+        "clockLength": { "type": "integer", "minimum": 1 }
+      }
+    }
+  },
+  "$defs": {
+    "glyph": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": { "type": "integer", "minimum": 0, "maximum": 31 }
+    }
+  }
+}

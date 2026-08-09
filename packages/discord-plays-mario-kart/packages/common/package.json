@@ -3,9 +3,12 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
-    "build": "PATH=node_modules/@typescript/native/bin:$PATH tsc",
+    "build": "bun --no-install run build:runtime && PATH=node_modules/@typescript/native/bin:$PATH tsc -p tsconfig.build.json",
+    "build:runtime": "bun --no-install build src/index.ts --outdir dist --target browser --packages external",
     "watch": "PATH=node_modules/@typescript/native/bin:$PATH tsc --watch",
     "lint": "bun run lint:check",
     "lint:fix": "bun run lint:eslint:fix",
@@ -33,7 +36,9 @@
     "@typescript/native": "npm:typescript@7.0.2"
   },
   "exports": {
-    ".": "./src/index.ts",
-    "./*": "./src/*"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   }
 }
