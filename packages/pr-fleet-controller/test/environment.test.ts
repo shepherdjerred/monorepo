@@ -15,6 +15,7 @@ import { settleEvidenceParts } from "@shepherdjerred/pr-fleet-controller/src/env
 import { collectInheritedWipEvidence } from "@shepherdjerred/pr-fleet-controller/src/inherited-wip.ts";
 import type {
   CommandRequest,
+  CommandResult,
   FleetTelemetry,
 } from "@shepherdjerred/pr-fleet-controller/src/ports.ts";
 import type {
@@ -98,32 +99,66 @@ class CapturingCommandFleetEnvironment extends StubCommandFleetEnvironment {
 
 class RestackPublishingEnvironment extends CommandFleetEnvironment {
   readonly startFailure = new Error("restack startup failed");
+  startResult: CommandResult | null = null;
+  continueResult: CommandResult = commandResult(0, "");
+  rebaseInProgress = false;
   published = false;
   continued = false;
 
-  override startRestack(): Promise<never> {
-    return Promise.reject(this.startFailure);
+  override runLocalCommand(request: CommandRequest): Promise<CommandResult> {
+    if (
+      request.executable === "git" &&
+      request.args.join("\0") ===
+        ["rev-parse", "--verify", "--quiet", "REBASE_HEAD"].join("\0")
+    ) {
+      return Promise.resolve({
+        exitCode: this.rebaseInProgress ? 0 : 1,
+        stdout: "",
+        stderr: "",
+        termination: "exit",
+      });
+    }
+    return super.runLocalCommand(request);
   }
 
-  override continueRestack(): Promise<{
-    exitCode: number;
-    stdout: string;
-    stderr: string;
-    termination: "exit";
-  }> {
+  override startRestack(): Promise<CommandResult> {
+    return this.startResult === null
+      ? Promise.reject(this.startFailure)
+      : Promise.resolve(this.startResult);
+  }
+
+  override continueRestack(): Promise<CommandResult> {
     this.continued = true;
-    return Promise.resolve({
-      exitCode: 0,
-      stdout: "",
-      stderr: "",
-      termination: "exit",
-    });
+    return Promise.resolve(this.continueResult);
   }
 
   override publishRestack(pr: PrState): Promise<{ headSha: string }> {
     this.published = true;
     return Promise.resolve({ headSha: pr.identity.headSha });
   }
+}
+
+function commandResult(exitCode: number, stderr: string): CommandResult {
+  return { exitCode, stdout: "", stderr, termination: "exit" };
+}
+
+async function recordCompleteInheritedWipInspection(options: {
+  store: FleetStore;
+  pr: PrState;
+  environment: RestackPublishingEnvironment;
+  worktree: string;
+}): Promise<void> {
+  const inspected = await collectInheritedWipEvidence({
+    environment: options.environment,
+    worktree: options.worktree,
+    signal: new AbortController().signal,
+  });
+  options.store.inheritedWipInspections.set(options.pr.identity.number, {
+    remoteHeadSha: options.pr.identity.headSha,
+    localHeadSha: inspected.localHeadSha,
+    fingerprint: inspected.fingerprint,
+    complete: true,
+  });
 }
 
 test("environment result persistence failures use the fatal capture boundary", async () => {
@@ -521,22 +556,64 @@ test("restack lifecycle cleans startup failures and revalidates publication", as
     expect(store.activeRestacks.has(pr.identity.number)).toBe(false);
     expect(store.stackWriteOwners.has(pr.stackId)).toBe(false);
 
-    store.requestLease(pr, "stack-write");
-    store.activeRestacks.add(pr.identity.number);
+    environment.startResult = commandResult(1, "CONFLICT in tracked.txt");
+    environment.rebaseInProgress = true;
+    await expect(startRestack({}, { observe: noopObserve })).resolves.toEqual({
+      completed: false,
+      output: "CONFLICT in tracked.txt",
+    });
+    expect(store.activeRestacks.get(pr.identity.number)).toEqual({
+      remoteHeadSha: headSha,
+      localHeadSha: headSha,
+    });
+
+    await runGit([
+      "-c",
+      "user.name=Test Operator",
+      "-c",
+      "user.email=operator@example.com",
+      "commit",
+      "--allow-empty",
+      "-m",
+      "test: concurrent rebase head change",
+    ]);
+    await recordCompleteInheritedWipInspection({
+      store,
+      pr,
+      environment,
+      worktree: directory,
+    });
+    await expect(
+      continueRestack({ paths: ["tracked.txt"] }, { observe: noopObserve }),
+    ).rejects.toThrow(/HEAD changed after assignment/);
+    expect(environment.continued).toBe(false);
+
+    await runGit(["reset", "--hard", headSha]);
+    await recordCompleteInheritedWipInspection({
+      store,
+      pr,
+      environment,
+      worktree: directory,
+    });
+    environment.continueResult = commandResult(1, "commit hook failed");
+    await expect(
+      continueRestack({ paths: ["tracked.txt"] }, { observe: noopObserve }),
+    ).rejects.toThrow(/commit hook failed/);
+    expect(store.activeRestacks.get(pr.identity.number)).toEqual({
+      remoteHeadSha: headSha,
+      localHeadSha: headSha,
+    });
+
+    environment.continued = false;
     await expect(
       continueRestack({ paths: ["tracked.txt"] }, { observe: noopObserve }),
     ).rejects.toThrow(/inspect again/);
     expect(environment.continued).toBe(false);
-    const inspected = await collectInheritedWipEvidence({
+    await recordCompleteInheritedWipInspection({
+      store,
+      pr,
       environment,
       worktree: directory,
-      signal: new AbortController().signal,
-    });
-    store.inheritedWipInspections.set(pr.identity.number, {
-      remoteHeadSha: headSha,
-      localHeadSha: inspected.localHeadSha,
-      fingerprint: inspected.fingerprint,
-      complete: true,
     });
     await Bun.write(path.join(directory, "tracked.txt"), "late edit\n");
     await expect(
@@ -544,6 +621,8 @@ test("restack lifecycle cleans startup failures and revalidates publication", as
     ).rejects.toThrow(/differs from the complete inspection/);
     expect(environment.continued).toBe(false);
     await Bun.write(path.join(directory, "tracked.txt"), "base\n");
+    environment.continueResult = commandResult(0, "");
+    environment.rebaseInProgress = false;
     await continueRestack({ paths: ["tracked.txt"] }, { observe: noopObserve });
     expect(environment.continued).toBe(true);
     expect(store.activeRestacks.has(pr.identity.number)).toBe(false);

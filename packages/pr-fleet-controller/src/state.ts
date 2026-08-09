@@ -51,7 +51,10 @@ export class FleetStore {
     number,
     { remoteHeadSha: string; localHeadSha: string }
   >();
-  readonly activeRestacks = new Set<number>();
+  readonly activeRestacks = new Map<
+    number,
+    { remoteHeadSha: string; localHeadSha: string }
+  >();
   readonly stackWriteOwners = new Map<string, number>();
   setupOwner: number | null = null;
   readonly heavyOwners = new Set<number>();
