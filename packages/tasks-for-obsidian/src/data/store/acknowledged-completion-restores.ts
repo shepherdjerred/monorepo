@@ -26,16 +26,10 @@ export function parseAcknowledgedCompletionRestores(
   raw: string | null,
 ): Map<string, StoredCompletionRestore> {
   if (raw === null) return new Map();
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(raw);
-  } catch {
-    return new Map();
-  }
-  const result = AcknowledgedCompletionRestoresSchema.safeParse(parsed);
-  if (!result.success) return new Map();
+  const parsed: unknown = JSON.parse(raw);
+  const result = AcknowledgedCompletionRestoresSchema.parse(parsed);
   const restores = new Map<string, StoredCompletionRestore>();
-  for (const [key, value] of Object.entries(result.data)) {
+  for (const [key, value] of Object.entries(result)) {
     restores.set(key, value);
   }
   return restores;
@@ -97,6 +91,7 @@ export function invalidateChangedCompletionRestores(
     const separator = key.indexOf("\u{0}");
     if (separator === -1) continue;
     const id = taskId(key.slice(0, separator));
+    const date = key.slice(separator + 1);
     const previous = previousTasks.get(id);
     const current = nextTasks.get(id);
     if (
@@ -104,7 +99,9 @@ export function invalidateChangedCompletionRestores(
       current !== undefined &&
       (previous.recurrence !== current.recurrence ||
         previous.scheduled !== current.scheduled ||
-        previous.due !== current.due)
+        previous.due !== current.due ||
+        previous.skippedInstances.includes(date) !==
+          current.skippedInstances.includes(date))
     ) {
       next.delete(key);
     }

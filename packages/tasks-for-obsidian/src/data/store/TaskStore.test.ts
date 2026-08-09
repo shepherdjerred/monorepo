@@ -280,6 +280,78 @@ describe("TaskStore full pulls", () => {
       store.getPendingCompletionRestore(task.id, "2026-08-08"),
     ).resolves.toEqual(undefined);
   });
+
+  test("invalidates acknowledged restores after an external skip edit", async () => {
+    const task = makeTask({
+      recurrence: "FREQ=WEEKLY",
+      scheduled: "2026-08-08",
+    });
+    const { store, queue } = makeStore(
+      memoryQueueStorage(),
+      memoryStoreStorage({ tasks: [task] }),
+    );
+    await store.restore();
+    await store.dispatch({
+      type: "set_instance_complete",
+      taskId: task.id,
+      date: "2026-08-08",
+      completed: true,
+      restore: {
+        scheduled: "2026-08-08",
+        due: null,
+        recurrence: "FREQ=WEEKLY",
+        skipped: false,
+      },
+    });
+    const command = queue.head();
+    if (command?.type !== "set_instance_complete") {
+      throw new Error("expected completion command");
+    }
+    await store.applyServerAck(command, {
+      ...task,
+      completeInstances: ["2026-08-08"],
+    });
+
+    await store.replaceBase(
+      [
+        {
+          ...task,
+          completeInstances: ["2026-08-08"],
+          skippedInstances: ["2026-08-08"],
+        },
+      ],
+      now,
+    );
+
+    await expect(
+      store.getPendingCompletionRestore(task.id, "2026-08-08"),
+    ).resolves.toEqual(undefined);
+  });
+});
+
+describe("TaskStore restore validation", () => {
+  test("surfaces malformed persisted restore JSON", async () => {
+    const storeStorage = memoryStoreStorage({
+      acknowledgedCompletionRestores: "not-json",
+    });
+    const { store } = makeStore(memoryQueueStorage(), storeStorage);
+
+    await expect(store.restore()).rejects.toThrow();
+    expect(await storeStorage.getAcknowledgedCompletionRestores()).toBe(
+      "not-json",
+    );
+  });
+
+  test("surfaces incompatible persisted restore shapes", async () => {
+    const storeStorage = memoryStoreStorage({
+      acknowledgedCompletionRestores: JSON.stringify({
+        "TaskNotes/test.md\u{0}2026-08-08": { restore: { recurrence: 42 } },
+      }),
+    });
+    const { store } = makeStore(memoryQueueStorage(), storeStorage);
+
+    await expect(store.restore()).rejects.toThrow();
+  });
 });
 
 describe("TaskStore pending restores", () => {
