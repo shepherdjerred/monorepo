@@ -1,9 +1,8 @@
 ---
-id: 1a2b3c4d
-title: Seeded open task
+id: 5e6f7a8b
+title: Swipe delete task
 status: open
 priority: normal
-due: "2099-07-10"
 tags:
   - seeded
   - task

@@ -299,7 +299,12 @@
     {
       "package": "tasks-for-obsidian",
       "directory": "packages/tasks-for-obsidian",
-      "steps": [{ "runner": "bun", "args": ["src", "scripts"] }],
+      "steps": [
+        {
+          "runner": "bun",
+          "args": ["src", "scripts", "e2e/simulator-date.test.ts"]
+        }
+      ],
       "excludedSuites": [
         {
           "path": "contract-tests/contract.test.ts",

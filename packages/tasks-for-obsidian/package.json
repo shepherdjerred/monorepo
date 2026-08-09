@@ -6,7 +6,7 @@
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "start": "react-native start",
-    "test": "bun test src scripts",
+    "test": "bun test src scripts e2e/simulator-date.test.ts",
     "test:coverage": "bun test --coverage-reporter=text --coverage-reporter=lcov --coverage-dir=coverage --config ../../scripts/bunfig.coverage.toml --coverage scripts/clean-ios.test.ts scripts/ios-logs.test.ts",
     "test:contract": "bun test contract-tests --timeout 20000",
     "e2e": "bun run e2e/run.ts",

@@ -3,6 +3,8 @@ id: tasks-for-obsidian-context-menu-rn85
 type: todo
 status: complete
 board: false
+verification: agent
+disposition: active
 origin: packages/docs/archive/completed/2026-07-03_tasknotes-first-in-class.md
 source_marker: false
 ---
@@ -22,13 +24,13 @@ Task and card menus preserve long-press activation and nested actions; bulk
 priority remains a tap menu. The replacement supports Android's native popup
 menu and iOS's native `UIMenu` without the old compatibility packages.
 
-## Remaining
+## Completed
 
-- [x] Replace every Zeego context/dropdown menu call site.
-- [x] Remove `zeego`, `react-native-ios-context-menu`, and
-      `react-native-ios-utilities` from the app and Bun lockfile.
-- [x] Remove the obsolete Bun patch and Podfile deployment-target workaround.
-- [x] Regenerate the CocoaPods lockfile and verify native dependency discovery.
+- Replace every Zeego context/dropdown menu call site.
+- Remove `zeego`, `react-native-ios-context-menu`, and
+  `react-native-ios-utilities` from the app and Bun lockfile.
+- Remove the obsolete Bun patch and Podfile deployment-target workaround.
+- Regenerate the CocoaPods lockfile and verify native dependency discovery.
 
 ## Evidence
 

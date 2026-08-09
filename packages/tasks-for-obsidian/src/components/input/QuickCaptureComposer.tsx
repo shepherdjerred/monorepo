@@ -83,6 +83,7 @@ export function QuickCaptureComposer({
       keyboardDismissMode="interactive"
     >
       <View
+        testID={!saving && value.length === 0 ? "quick-add-ready" : undefined}
         style={[
           styles.composer,
           {
