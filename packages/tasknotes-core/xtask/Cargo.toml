@@ -1,0 +1,16 @@
+[package]
+name = "xtask"
+description = "Build orchestration for the TaskNotes core workspace (cargo xtask ...)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+# Deliberately dependency-free. This is a build tool that must run before
+# anything else is guaranteed to work; every dependency it grows is a
+# dependency the build cannot bootstrap without.
+[dependencies]
+
+[lints]
+workspace = true

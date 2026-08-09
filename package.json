@@ -95,6 +95,8 @@
     "packages/starlight-karma-bot",
     "packages/stocks-sjer-red",
     "packages/streambot",
+    "packages/tasknotes-core",
+    "packages/tasknotes-fixtures",
     "packages/tasknotes-server",
     "packages/tasknotes-types",
     "packages/tasks-for-obsidian",

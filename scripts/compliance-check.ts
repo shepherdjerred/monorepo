@@ -331,6 +331,10 @@ packages/trmnl-dashboard:build
 packages/tasks-for-obsidian:build
 packages/starlight-karma-bot:build
 packages/tasknotes-types:build
+packages/tasknotes-fixtures:build
+packages/tasknotes-fixtures:test
+packages/tasknotes-fixtures:lint
+packages/tasknotes-fixtures:typecheck
 packages/code-review:build
 packages/cooklang-rich-preview:test
 packages/stocks-sjer-red:test

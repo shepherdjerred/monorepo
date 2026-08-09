@@ -1,0 +1,59 @@
+# Determinism enforcement.
+#
+# `disallowed-methods` is the only *mechanical* determinism gate that exists in
+# the Rust toolchain. Ambient time and ambient randomness are how a shared core
+# starts producing different answers on two platforms, which is exactly the
+# failure this whole architecture exists to prevent. Time and randomness enter
+# the core as explicit parameters or as host-implemented traits — never by
+# reaching for a global.
+disallowed-methods = [
+  { path = "std::time::SystemTime::now", reason = "the core is sans-I/O and deterministic: take the instant as a parameter, or read it through a host-implemented Clock trait" },
+  { path = "std::time::Instant::now", reason = "the core is sans-I/O and deterministic: take the instant as a parameter, or read it through a host-implemented Clock trait" },
+  { path = "chrono::Local::now", reason = "the parity surface with @tasknotes/model is timezone-free and UTC-anchored; a local-time read makes results depend on the host's TZ" },
+  # ⚠️ Clippy silently ignores a `disallowed-methods` path it cannot resolve —
+  # it emits a *config* warning that `-D warnings` does NOT fail on, so a
+  # mistyped or stale ban looks identical to an enforced one. `ci/check-clippy-config.sh`
+  # exists to close that hole; do not add a path here without running it.
+  #
+  # ── Why there is no `rand` ban here ──────────────────────────────────────
+  # There used to be. It never worked, and `ci/check-clippy-config.sh` was
+  # written after discovering that. Three separate paths were tried and all
+  # three resolved to nothing while clippy stayed green:
+  #   - `rand::thread_rng`      — removed in rand 0.9
+  #   - `rand::rng`             — ambiguous; lib.rs has both a `rng` module and
+  #                               a `pub use` of the function, clippy binds the module
+  #   - `rand::rngs::ThreadRng` — unreachable when checking the lib target
+  #
+  # The last one is the real explanation: `rand` is a **dev-only** dependency
+  # (via proptest), so it is not in scope at all when clippy checks the lib, and
+  # no path can resolve. A ban that cannot resolve is strictly worse than no ban,
+  # because it reads as protection while enforcing nothing.
+  #
+  # The risk it was aimed at is covered elsewhere anyway: production code has no
+  # `rand` dependency to misuse, and test code seeds `rand_chacha::ChaCha8Rng`
+  # explicitly so a failing proptest case is replayable from its seed. If `rand`
+  # ever becomes a real dependency, add the ban back — and run the guard script
+  # to confirm it actually resolves.
+]
+
+# Proper nouns that `clippy::doc_markdown` would otherwise demand be wrapped in
+# backticks. `".."` extends clippy's default list rather than replacing it.
+# This is the supported way to teach the lint a vocabulary — the alternative is
+# an `#[allow]` per doc comment, which is banned.
+doc-valid-idents = [
+  "..",
+  "AppKit",
+  "SwiftPM",
+  "SwiftUI",
+  "TaskNotes",
+  "UniFFI",
+  "WinUI",
+  "XCFramework",
+]
+
+# Tests are allowed to panic. In a test an `unwrap` *is* the assertion, and
+# forcing `let ... else { return }` instead makes a broken test pass silently.
+allow-expect-in-tests = true
+allow-indexing-slicing-in-tests = true
+allow-panic-in-tests = true
+allow-unwrap-in-tests = true

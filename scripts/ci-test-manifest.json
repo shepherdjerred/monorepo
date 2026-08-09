@@ -299,6 +299,11 @@
       "steps": [{ "runner": "bun", "args": ["test/"] }]
     },
     {
+      "package": "tasknotes-core",
+      "directory": "packages/tasknotes-core",
+      "steps": [{ "runner": "cargo", "args": ["--workspace"] }]
+    },
+    {
       "package": "tasknotes-server",
       "directory": "packages/tasknotes-server",
       "steps": [{ "runner": "bun" }]
@@ -450,6 +455,11 @@
       "package": "@shepherdjerred/resume",
       "directory": "packages/resume",
       "reason": "LaTeX build artifact; no test files exist."
+    },
+    {
+      "package": "@tasknotes/fixtures",
+      "directory": "packages/tasknotes-fixtures",
+      "reason": "JSON scenario corpus plus its JSON Schema; no code and no dependencies, so the Rust core can consume it without the React Native package. The corpus is executed by tasks-for-obsidian and, later, tasknotes-core."
     },
     {
       "package": "stocks-sjer-red",

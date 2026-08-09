@@ -483,6 +483,11 @@
       ]
     },
     {
+      "source": "packages/tasknotes-core/ci/no-suppressions.sh",
+      "disposition": "retain",
+      "reason": "Cargo-workspace lint gate that must run from the Rust toolchain lane without a Bun dependency"
+    },
+    {
       "source": "packages/tasks-for-obsidian/ios/ci_scripts/ci_post_clone.sh",
       "disposition": "retain",
       "reason": "Required Xcode Cloud shell entrypoint installs Bun"

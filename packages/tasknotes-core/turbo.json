@@ -1,0 +1,74 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    // cargo keeps its own incremental artifacts in `target/`, which is
+    // gitignored — and explicit input globs hash gitignored files, so it is
+    // negated everywhere. No task declares outputs: turbo's win here is the
+    // cached log/exit replay keyed on source hash, not artifact restore. The
+    // root `build` task's "dist/**" output is overridden to [] for the same
+    // reason.
+    "build": {
+      "inputs": [
+        "**/*.rs",
+        "**/Cargo.toml",
+        "Cargo.lock",
+        ".cargo/config.toml",
+        "rustfmt.toml",
+        "!target/**"
+      ],
+      "outputs": []
+    },
+    "test": {
+      "inputs": [
+        "**/*.rs",
+        "**/Cargo.toml",
+        "Cargo.lock",
+        ".cargo/config.toml",
+        "!target/**"
+      ],
+      "outputs": []
+    },
+    "test:ci": {
+      "inputs": [
+        "**/*.rs",
+        "**/Cargo.toml",
+        "Cargo.lock",
+        ".cargo/config.toml",
+        "!target/**"
+      ],
+      "outputs": []
+    },
+    // `lint` also runs `cargo xtask check-bindings` — gate 7, the committed
+    // Swift bindings drift check. It regenerates bindings/ from the built
+    // library and `git diff --exit-code`s the result, so the committed Swift
+    // is an input: a stale bindings/ must invalidate the cache, or the one
+    // mechanical guard against UniFFI's silent Record reordering would be
+    // replayed green from a cached log.
+    "lint": {
+      "inputs": [
+        "**/*.rs",
+        "**/Cargo.toml",
+        "Cargo.lock",
+        ".cargo/config.toml",
+        "clippy.toml",
+        "rustfmt.toml",
+        "ci/no-suppressions.sh",
+        "bindings/Sources/**",
+        "bindings/ffi/**",
+        "!target/**"
+      ],
+      "outputs": []
+    },
+    "typecheck": {
+      "inputs": [
+        "**/*.rs",
+        "**/Cargo.toml",
+        "Cargo.lock",
+        ".cargo/config.toml",
+        "!target/**"
+      ],
+      "outputs": []
+    }
+  }
+}

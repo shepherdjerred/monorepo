@@ -1,0 +1,751 @@
+//! The Swift binding and packaging pipeline.
+//!
+//! Modelled on `matrix-rust-sdk/xtask/src/swift.rs` rather than `cargo-swift`,
+//! which has four open issues on exactly this path. The shape is:
+//!
+//! ```text
+//! cargo build (per Apple target)
+//!   → lipo, PER PLATFORM
+//!   → uniffi-bindgen-swift
+//!   → headers namespaced into headers/<Module>/
+//!   → xcodebuild -create-xcframework
+//! ```
+//!
+//! # Four things that are not optional
+//!
+//! 1. **`lipo` runs per platform, never across platforms.** `aarch64-apple-darwin`
+//!    and `aarch64-apple-ios-sim` are both `arm64`; `lipo` refuses to put two
+//!    slices of the same architecture in one fat file, and an XCFramework wants
+//!    them as separate slices anyway.
+//! 2. **`--module-name` is mandatory.** It defaults to the *library* basename,
+//!    but the generated Swift imports `<namespace>FFI`. Without it the module
+//!    the modulemap declares and the module the Swift imports have different
+//!    names, `canImport` goes false, and the build fails with 139 `cannot find
+//!    type 'RustBuffer' in scope` errors.
+//! 3. **`--xcframework` must NOT be passed.** It prepends the `framework`
+//!    keyword to the modulemap, which is only valid inside a real `.framework`
+//!    bundle. We deliberately ship a **static library** via `-library` +
+//!    `-headers`, which produces a plain `Headers/` slice; clang then silently
+//!    declines to build the module — `-fsyntax-only` still exits 0 — and the
+//!    import compiles out to the same 139 errors.
+//! 4. **Anything that ships is built with `reldbg`, never `dev`.**
+//!    matrix-rust-sdk hit `EXC_BAD_ACCESS` shipping dev-profile builds into an
+//!    Apple host. `reldbg` is release codegen with full DWARF retained inside
+//!    the archive's object files, which is what lets the *app's* link step
+//!    produce a symbolicated `.dSYM` later. Binding generation is the one
+//!    exception and defaults to `dev`: it never produces a shippable artifact,
+//!    only reads metadata that is identical at every optimisation level.
+//!
+//! # `dsymutil` is deliberately absent
+//!
+//! It cannot process a static archive — measured: `dsymutil libfoo.a` fails
+//! with *"The file was not recognized as a valid object file"*. `dsymutil`
+//! consumes a *linked* Mach-O image plus its debug map, which for a static
+//! library only exists once the host app links it. The plan's `dsymutil` step
+//! therefore belongs to Phase 7, on the app binary; what this pipeline owes it
+//! is the retained DWARF that `reldbg` provides.
+
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
+
+use crate::process;
+
+/// The crate whose scaffolding is exported.
+const FFI_CRATE: &str = "tasknotes-core-ffi";
+
+/// The static library cargo emits for [`FFI_CRATE`].
+const LIBRARY_FILE: &str = "libtasknotes_core_ffi.a";
+
+/// The UniFFI namespace, and so the high-level Swift module name.
+///
+/// Set by `uniffi::setup_scaffolding!("TaskNotesCore")`.
+const SWIFT_MODULE: &str = "TaskNotesCore";
+
+/// The low-level C module the generated Swift imports.
+///
+/// UniFFI derives this as `<namespace>FFI` and there is no way to observe it
+/// from the command line, which is exactly why `--module-name` has to be passed
+/// explicitly and has to be this value.
+const FFI_MODULE: &str = "TaskNotesCoreFFI";
+
+/// The generated C header's filename, derived by UniFFI from [`FFI_MODULE`].
+const HEADER_FILE: &str = "TaskNotesCoreFFI.h";
+
+/// The modulemap filename, forced with `--modulemap-filename`.
+///
+/// `module.modulemap` is the name clang looks for when a directory is added to
+/// the header search path; UniFFI would otherwise name it after the module.
+const MODULEMAP_FILE: &str = "module.modulemap";
+
+/// The XCFramework's name on disk.
+const XCFRAMEWORK_NAME: &str = "TaskNotesCoreFFI.xcframework";
+
+/// The git pathspecs that binding generation writes to.
+///
+/// Scoped to exactly the generated trees. `bindings/Package.swift` and
+/// `bindings/README.md` are authored, and an uncommitted edit to either is not
+/// a binding drift — folding them in would make gate 7 fire for the wrong
+/// reason, which is how a gate gets ignored.
+const GENERATED_PATHSPECS: [&str; 2] = ["bindings/Sources", "bindings/ffi"];
+
+/// One Apple platform slice of the XCFramework.
+///
+/// A slice is a *platform*, not an architecture: several architectures are
+/// `lipo`d into one static library per slice, and `xcodebuild` keys the slices
+/// on platform + variant.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Platform {
+    /// macOS, universal across Apple silicon and Intel.
+    MacOs,
+    /// iOS devices.
+    Ios,
+    /// The iOS Simulator, universal across Apple silicon and Intel hosts.
+    IosSimulator,
+}
+
+impl Platform {
+    /// Parse the `--platform` spelling.
+    ///
+    /// # Errors
+    ///
+    /// Returns a message naming the accepted values.
+    pub fn parse(raw: &str) -> Result<Self, String> {
+        match raw {
+            "macos" => Ok(Self::MacOs),
+            "ios" => Ok(Self::Ios),
+            "ios-sim" => Ok(Self::IosSimulator),
+            other => Err(format!(
+                "unknown platform {other:?}; expected one of macos, ios, ios-sim"
+            )),
+        }
+    }
+
+    /// The staging directory name, and the `--platform` spelling.
+    const fn name(self) -> &'static str {
+        match self {
+            Self::MacOs => "macos",
+            Self::Ios => "ios",
+            Self::IosSimulator => "ios-sim",
+        }
+    }
+
+    /// The rust targets `lipo`d into this slice.
+    const fn targets(self) -> &'static [&'static str] {
+        match self {
+            Self::MacOs => &["aarch64-apple-darwin", "x86_64-apple-darwin"],
+            Self::Ios => &["aarch64-apple-ios"],
+            Self::IosSimulator => &["aarch64-apple-ios-sim", "x86_64-apple-ios"],
+        }
+    }
+
+    /// The deployment-target environment for this slice.
+    ///
+    /// macOS 15 is the plan's deployment target and matches the SwiftPM
+    /// manifest; a mismatch here produces a link-time warning per object file
+    /// and, worse, a library usable on OS versions the app claims not to
+    /// support.
+    const fn deployment_environment(self) -> &'static [(&'static str, &'static str)] {
+        match self {
+            Self::MacOs => &[("MACOSX_DEPLOYMENT_TARGET", "15.0")],
+            Self::Ios | Self::IosSimulator => &[("IPHONEOS_DEPLOYMENT_TARGET", "18.0")],
+        }
+    }
+}
+
+/// Regenerate the committed Swift bindings.
+///
+/// Runs anywhere the workspace compiles — no Apple SDK, no `xcodebuild`, no
+/// Swift toolchain. UniFFI reads the exported metadata out of the built
+/// library's symbol table, and that metadata is host-independent, so a Linux
+/// CI run produces the same bytes a macOS developer commits. That is what makes
+/// [`check_bindings`] usable as a per-PR Linux gate.
+///
+/// # Errors
+///
+/// Returns a message when a build, the generator, or a filesystem operation
+/// fails.
+pub fn generate_bindings(profile: &str) -> Result<String, String> {
+    let root = workspace_root()?;
+
+    let generator = build_bindgen(&root, profile)?;
+    let library = build_library(&root, profile, None)?;
+
+    let staging = root.join("target").join("bindings-staging");
+    recreate_directory(&staging)?;
+
+    // The flag set here is load-bearing in both directions: `--module-name` and
+    // `--modulemap-filename` must be present, and `--xcframework` must not be.
+    // See the module docs for what each omission or addition breaks.
+    process::run(
+        &generator.to_string_lossy(),
+        &[
+            "--swift-sources",
+            "--headers",
+            "--modulemap",
+            "--module-name",
+            FFI_MODULE,
+            "--modulemap-filename",
+            MODULEMAP_FILE,
+            &library.to_string_lossy(),
+            &staging.to_string_lossy(),
+        ],
+        &root,
+    )?;
+
+    // Generate into staging and copy into place, so a failed generation leaves
+    // the committed bindings untouched rather than half-rewritten.
+    let sources = root.join("bindings").join("Sources").join(SWIFT_MODULE);
+    let ffi = root.join("bindings").join("ffi");
+    create_directory(&sources)?;
+    create_directory(&ffi)?;
+
+    let swift_file = format!("{SWIFT_MODULE}.swift");
+    copy(&staging.join(&swift_file), &sources.join(&swift_file))?;
+    copy(&staging.join(HEADER_FILE), &ffi.join(HEADER_FILE))?;
+    copy(&staging.join(MODULEMAP_FILE), &ffi.join(MODULEMAP_FILE))?;
+
+    Ok(format!(
+        "wrote bindings/Sources/{SWIFT_MODULE}/{swift_file}, bindings/ffi/{HEADER_FILE}, \
+         bindings/ffi/{MODULEMAP_FILE}\n"
+    ))
+}
+
+/// Gate 7: regenerate the bindings, then fail if the committed copy moved.
+///
+/// This is the **only** mechanical guard against UniFFI's silent
+/// `Record`-reordering corruption. Measured during the Phase 6 spike: swapping
+/// two same-typed record fields left all 16 API checksums identical *and* the
+/// generated C header byte-identical — only the Swift changed.
+/// `uniffiCheckApiChecksums()` does not detect it, no Rust lint detects it, and
+/// nothing else in the toolchain does either.
+///
+/// Deliberately rewrites the working tree rather than diffing a temporary
+/// directory: a developer who runs this locally and sees it fail already has
+/// the corrected files staged for review.
+///
+/// # Errors
+///
+/// Returns a message when generation fails, when `git` reports a difference, or
+/// when generation produced a file that is not tracked.
+pub fn check_bindings(profile: &str) -> Result<String, String> {
+    let root = workspace_root()?;
+    let generated = generate_bindings(profile)?;
+    print!("{generated}");
+
+    let mut diff = vec!["diff", "--exit-code", "--"];
+    diff.extend(GENERATED_PATHSPECS);
+    let clean = process::succeeded("git", &diff, &root)?;
+    if !clean {
+        return Err(format!(
+            "the committed Swift bindings are out of date (diff above).\n\
+             \n\
+             Run `cargo xtask generate-bindings` and commit bindings/.\n\
+             \n\
+             If the only change is the order of fields inside a generated `struct`, treat it as a \
+             data-corruption bug and not as churn: UniFFI writes {SWIFT_MODULE} record fields \
+             positionally into the FFI buffer, the runtime checksum does not detect a reorder, and \
+             this diff is the only thing that will."
+        ));
+    }
+
+    // A gate that cannot see its own subject is not a gate. If `bindings/` ever
+    // ends up gitignored, everything here passes vacuously and the only
+    // mechanical guard against `Record` reordering goes quiet — the same
+    // failure mode `ci/no-suppressions.sh` exists to prevent for the lints.
+    let mut check_ignore = vec!["check-ignore", "-q", "--"];
+    check_ignore.extend(GENERATED_PATHSPECS);
+    let ignored = process::succeeded("git", &check_ignore, &root)?;
+    if ignored {
+        return Err(
+            "the generated bindings are gitignored, so the drift check cannot see them. \
+                    Only bindings/artifacts/ may be ignored; bindings/Sources/ and bindings/ffi/ \
+                    are committed on purpose."
+                .to_owned(),
+        );
+    }
+
+    let mut ls_files = vec!["ls-files", "--others", "--exclude-standard", "--"];
+    ls_files.extend(GENERATED_PATHSPECS);
+    let untracked = process::capture("git", &ls_files, &root)?;
+    if !untracked.trim().is_empty() {
+        return Err(format!(
+            "binding generation produced files that are not tracked by git:\n{untracked}\n\
+             Add them so the drift check can see them."
+        ));
+    }
+
+    Ok("check-bindings: committed bindings match the generated bindings\n".to_owned())
+}
+
+/// Build the Apple static libraries and package them as an XCFramework.
+///
+/// macOS-only: needs `lipo` and `xcodebuild`.
+///
+/// # Errors
+///
+/// Returns a message when a build, `lipo`, `xcodebuild`, or a filesystem
+/// operation fails.
+pub fn build_xcframework(profile: &str, platforms: &[Platform]) -> Result<String, String> {
+    let root = workspace_root()?;
+
+    // Regenerate first, so the header and modulemap that go into the framework
+    // describe the library that goes in beside them.
+    print!("{}", generate_bindings(profile)?);
+
+    let staging = root.join("target").join("xcframework");
+    recreate_directory(&staging)?;
+
+    let mut libraries = Vec::new();
+    for platform in platforms {
+        let mut slices = Vec::new();
+        for target in platform.targets() {
+            slices.push(build_library_for_platform(
+                &root, profile, target, *platform,
+            )?);
+        }
+
+        let slice_directory = staging.join(platform.name());
+        create_directory(&slice_directory)?;
+        let fat = slice_directory.join(LIBRARY_FILE);
+
+        // One `lipo` per platform. Never one across platforms: macOS arm64 and
+        // iOS-Simulator arm64 are the same architecture, and `lipo` rejects a
+        // fat file with two slices of one architecture.
+        let mut arguments: Vec<String> = vec!["-create".to_owned()];
+        for slice in &slices {
+            arguments.push(slice.to_string_lossy().into_owned());
+        }
+        arguments.push("-output".to_owned());
+        arguments.push(fat.to_string_lossy().into_owned());
+        process::run("lipo", &arguments, &root)?;
+
+        libraries.push(fat);
+    }
+
+    // Headers are namespaced into `headers/<Module>/` so the slice's `Headers/`
+    // directory contains one directory per module rather than a flat pile —
+    // which is what lets more than one UniFFI component share an XCFramework
+    // later without their headers colliding.
+    let headers = staging.join("headers");
+    let module_headers = headers.join(FFI_MODULE);
+    create_directory(&module_headers)?;
+    let ffi = root.join("bindings").join("ffi");
+    copy(&ffi.join(HEADER_FILE), &module_headers.join(HEADER_FILE))?;
+    copy(
+        &ffi.join(MODULEMAP_FILE),
+        &module_headers.join(MODULEMAP_FILE),
+    )?;
+
+    let output = root
+        .join("bindings")
+        .join("artifacts")
+        .join(XCFRAMEWORK_NAME);
+    create_directory(&root.join("bindings").join("artifacts"))?;
+    remove_directory(&output)?;
+
+    let mut arguments: Vec<String> = vec!["-create-xcframework".to_owned()];
+    for library in &libraries {
+        arguments.push("-library".to_owned());
+        arguments.push(library.to_string_lossy().into_owned());
+        arguments.push("-headers".to_owned());
+        arguments.push(headers.to_string_lossy().into_owned());
+    }
+    arguments.push("-output".to_owned());
+    arguments.push(output.to_string_lossy().into_owned());
+    process::run("xcodebuild", &arguments, &root)?;
+
+    let names: Vec<&str> = platforms.iter().map(|platform| platform.name()).collect();
+    Ok(format!(
+        "built bindings/artifacts/{XCFRAMEWORK_NAME} with slices: {}\n",
+        names.join(", ")
+    ))
+}
+
+/// Build the XCFramework, then compile and run Swift against it.
+///
+/// A pipeline that produces artifacts nobody compiled is not verified. This
+/// generates a throwaway SwiftPM package under `target/`, has it depend on
+/// `bindings/` by path, and runs an executable that imports the module and
+/// calls exported functions — so a failure to compile the generated Swift, a
+/// broken modulemap, a missing symbol at link time, or a lifting bug at runtime
+/// all fail here rather than in Phase 7.
+///
+/// # Errors
+///
+/// Returns a message when packaging, `swift build`, or `swift run` fails.
+pub fn verify_swift(profile: &str, platforms: &[Platform]) -> Result<String, String> {
+    let root = workspace_root()?;
+    print!("{}", build_xcframework(profile, platforms)?);
+
+    let smoke = root.join("target").join("swift-smoke");
+    recreate_directory(&smoke)?;
+    let sources = smoke.join("Sources").join("Smoke");
+    create_directory(&sources)?;
+
+    let bindings = root.join("bindings");
+    // SwiftPM derives a path dependency's *identity* from its directory name,
+    // not from the `name:` in its manifest, and `.product(package:)` wants the
+    // identity. Deriving it here rather than hard-coding "bindings" keeps the
+    // smoke package working if the directory is ever moved or renamed.
+    let identity = bindings
+        .file_name()
+        .map(|name| name.to_string_lossy().to_lowercase())
+        .ok_or_else(|| format!("{} has no directory name", bindings.display()))?;
+    write(
+        &smoke.join("Package.swift"),
+        &smoke_manifest(&bindings.to_string_lossy(), &identity),
+    )?;
+    write(&sources.join("main.swift"), SMOKE_SOURCE)?;
+
+    process::run(
+        "swift",
+        &["run", "--package-path", &smoke.to_string_lossy()],
+        &root,
+    )?;
+
+    Ok("verify-swift: the generated Swift compiled, linked, and ran\n".to_owned())
+}
+
+/// The throwaway package manifest used by [`verify_swift`].
+fn smoke_manifest(bindings_path: &str, bindings_identity: &str) -> String {
+    format!(
+        r#"// swift-tools-version: 6.2
+// Generated by `cargo xtask verify-swift`. Not committed; not a dependency of
+// anything. Its only job is to prove the committed bindings compile, link, and
+// run against the XCFramework this pipeline just built.
+import PackageDescription
+
+let package = Package(
+    name: "Smoke",
+    platforms: [.macOS(.v15)],
+    dependencies: [.package(path: "{bindings_path}")],
+    targets: [
+        .executableTarget(
+            name: "Smoke",
+            dependencies: [.product(name: "{SWIFT_MODULE}", package: "{bindings_identity}")],
+            swiftSettings: [
+                .swiftLanguageMode(.v6),
+                // Authored code, so it gets the maximal posture the plan
+                // prescribes — and proves that unsafety does not leak out of
+                // the lint-exempt generated module.
+                .strictMemorySafety(),
+                .treatAllWarnings(as: .error),
+            ]
+        )
+    ]
+)
+"#
+    )
+}
+
+/// The smoke test itself.
+///
+/// Exercises one function of each shape that can break independently: a plain
+/// return, a record round trip through the FFI buffer (which is where a field
+/// reorder would show up), a throwing call that must succeed, and a throwing
+/// call that must fail with a typed error.
+const SMOKE_SOURCE: &str = r##"import TaskNotesCore
+
+/// Exercises one call of each shape that can break independently.
+func smoke() throws -> String {
+    let version = coreVersion()
+    guard !version.isEmpty else { throw Failure("coreVersion() returned an empty string") }
+
+    // A plain enum across the boundary, both directions.
+    guard taskStatusWireValue(status: .inProgress) == "in-progress" else {
+        throw Failure("taskStatusWireValue disagrees with the core")
+    }
+    let parsed = try taskStatusParse(raw: "delegated")
+    guard parsed == .delegated else { throw Failure("taskStatusParse disagrees with the core") }
+
+    // A record round trip. A reordered Record field would surface here as a
+    // value landing in the wrong property.
+    let task = try taskFromJson(
+        json: #"{"id":"Tasks/a.md","title":"Write the plan","due":"2026-08-08","extraFields":{"b":1,"a":2}}"#
+    )
+    guard task.id == "Tasks/a.md" else { throw Failure("wrong id: \(task.id)") }
+    guard task.title == "Write the plan" else { throw Failure("wrong title: \(task.title)") }
+    guard task.due == "2026-08-08" else { throw Failure("wrong due: \(String(describing: task.due))") }
+    guard task.status == .open, task.priority == .normal else {
+        throw Failure("schema defaults were not applied across the boundary")
+    }
+    // Preserved frontmatter keys cross as a JSON object string, in vault order.
+    guard task.extraFields == #"{"b":1,"a":2}"# else {
+        throw Failure("preserved frontmatter keys lost their order: \(task.extraFields)")
+    }
+
+    // A sequence of records in and out.
+    let sorted = taskSortApply(tasks: [task], sort: SortConfig(field: .dueDate, direction: .asc))
+    guard sorted.count == 1, sorted[0].title == task.title else {
+        throw Failure("taskSortApply did not round trip the list")
+    }
+
+    // A validated newtype rejected at the boundary, as a typed error.
+    do {
+        _ = try taskFromJson(json: #"{"id":"Tasks/a.txt","title":"t"}"#)
+        throw Failure("a non-markdown task id was accepted")
+    } catch let error as CoreError {
+        guard case .Validation = error else { throw Failure("unexpected error: \(error)") }
+    }
+
+    return version
+}
+
+/// A local error so the smoke test never force-unwraps or traps blind.
+struct Failure: Error, CustomStringConvertible {
+    let description: String
+    init(_ description: String) { self.description = description }
+}
+
+do {
+    let version = try smoke()
+    print("smoke: TaskNotesCore \(version), \(taskStatusAll().count) statuses, \(priorityAll().count) priorities")
+} catch {
+    fatalError("smoke failed: \(error)")
+}
+"##;
+
+// ── Build steps ────────────────────────────────────────────────────────────
+
+/// Build the pinned `uniffi-bindgen-swift` and return its path.
+fn build_bindgen(root: &Path, profile: &str) -> Result<PathBuf, String> {
+    process::run(
+        "cargo",
+        &[
+            "build",
+            "--package",
+            FFI_CRATE,
+            "--features",
+            "cli",
+            "--bin",
+            "uniffi-bindgen-swift",
+            "--profile",
+            profile,
+        ],
+        root,
+    )?;
+    Ok(root
+        .join("target")
+        .join(profile_directory(profile))
+        .join("uniffi-bindgen-swift"))
+}
+
+/// Build the host static library UniFFI reads metadata from.
+///
+/// Built *after* the generator on purpose. Both write
+/// `target/<profile>/libtasknotes_core_ffi.a`, and the generator's build turns
+/// the `cli` feature on for the library too; this second build restores the
+/// feature set the app actually ships. The metadata is identical either way,
+/// but leaving a `clap`-carrying archive lying around named as the shipping one
+/// invites someone to link it.
+fn build_library(root: &Path, profile: &str, target: Option<&str>) -> Result<PathBuf, String> {
+    let mut arguments = vec![
+        "build".to_owned(),
+        "--package".to_owned(),
+        FFI_CRATE.to_owned(),
+        "--lib".to_owned(),
+        "--profile".to_owned(),
+        profile.to_owned(),
+    ];
+    if let Some(target) = target {
+        arguments.push("--target".to_owned());
+        arguments.push(target.to_owned());
+    }
+    process::run("cargo", &arguments, root)?;
+
+    let mut path = root.join("target");
+    if let Some(target) = target {
+        path = path.join(target);
+    }
+    Ok(path.join(profile_directory(profile)).join(LIBRARY_FILE))
+}
+
+/// Build one architecture of one platform slice.
+fn build_library_for_platform(
+    root: &Path,
+    profile: &str,
+    target: &str,
+    platform: Platform,
+) -> Result<PathBuf, String> {
+    process::run_with_env(
+        "cargo",
+        &[
+            "build",
+            "--package",
+            FFI_CRATE,
+            "--lib",
+            "--profile",
+            profile,
+            "--target",
+            target,
+        ],
+        root,
+        platform.deployment_environment(),
+    )?;
+    Ok(root
+        .join("target")
+        .join(target)
+        .join(profile_directory(profile))
+        .join(LIBRARY_FILE))
+}
+
+// ── Paths and filesystem ───────────────────────────────────────────────────
+
+/// The workspace root, derived from this crate's manifest directory.
+///
+/// `xtask/` sits directly under the workspace root, so the parent is the root.
+/// Derived rather than read from the current directory because `cargo xtask`
+/// can be invoked from anywhere in the tree.
+fn workspace_root() -> Result<PathBuf, String> {
+    let manifest = Path::new(env!("CARGO_MANIFEST_DIR"));
+    manifest
+        .parent()
+        .map(Path::to_path_buf)
+        .ok_or_else(|| format!("{} has no parent directory", manifest.display()))
+}
+
+/// The `target/` subdirectory a cargo profile writes into.
+///
+/// Cargo maps its two built-in profiles onto directories that do not share
+/// their names; every custom profile, `reldbg` included, uses its own name.
+fn profile_directory(profile: &str) -> &str {
+    match profile {
+        "dev" | "test" => "debug",
+        "bench" => "release",
+        other => other,
+    }
+}
+
+/// Create a directory and every missing parent.
+fn create_directory(path: &Path) -> Result<(), String> {
+    fs::create_dir_all(path)
+        .map_err(|error| format!("could not create {}: {error}", path.display()))
+}
+
+/// Remove a directory tree, tolerating its absence but nothing else.
+fn remove_directory(path: &Path) -> Result<(), String> {
+    match fs::remove_dir_all(path) {
+        Ok(()) => Ok(()),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        Err(error) => Err(format!("could not remove {}: {error}", path.display())),
+    }
+}
+
+/// Remove a directory tree and recreate it empty.
+///
+/// Staging directories are rebuilt rather than written over so a stale artifact
+/// from a previous run — a slice for a platform no longer requested, a header
+/// for a module that was renamed — cannot survive into the new output.
+fn recreate_directory(path: &Path) -> Result<(), String> {
+    remove_directory(path)?;
+    create_directory(path)
+}
+
+/// Copy a file, failing with both paths named.
+fn copy(from: &Path, to: &Path) -> Result<(), String> {
+    fs::copy(from, to).map(|_| ()).map_err(|error| {
+        format!(
+            "could not copy {} to {}: {error}",
+            from.display(),
+            to.display()
+        )
+    })
+}
+
+/// Write a file, failing with the path named.
+fn write(path: &Path, contents: &str) -> Result<(), String> {
+    fs::write(path, contents)
+        .map_err(|error| format!("could not write {}: {error}", path.display()))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{
+        FFI_MODULE, Platform, SMOKE_SOURCE, SWIFT_MODULE, profile_directory, smoke_manifest,
+        workspace_root,
+    };
+
+    #[test]
+    fn platforms_round_trip_through_their_cli_spelling() {
+        for platform in [Platform::MacOs, Platform::Ios, Platform::IosSimulator] {
+            assert_eq!(Platform::parse(platform.name()).unwrap(), platform);
+        }
+        assert_eq!(
+            Platform::parse("watchos").unwrap_err(),
+            "unknown platform \"watchos\"; expected one of macos, ios, ios-sim"
+        );
+    }
+
+    #[test]
+    fn no_architecture_appears_in_two_slices_of_one_invocation() {
+        // The reason `lipo` runs per platform: macOS and the iOS Simulator both
+        // ship an `aarch64` target, so a single fat file across platforms is
+        // not merely wrong, it is rejected by `lipo`.
+        let macos = Platform::MacOs.targets();
+        let simulator = Platform::IosSimulator.targets();
+        assert!(macos.contains(&"aarch64-apple-darwin"));
+        assert!(simulator.contains(&"aarch64-apple-ios-sim"));
+        for platform in [Platform::MacOs, Platform::Ios, Platform::IosSimulator] {
+            let targets = platform.targets();
+            let mut architectures: Vec<&str> = targets
+                .iter()
+                .filter_map(|target| target.split('-').next())
+                .collect();
+            architectures.sort_unstable();
+            let count = architectures.len();
+            architectures.dedup();
+            assert_eq!(
+                architectures.len(),
+                count,
+                "{:?} would lipo two slices of one architecture",
+                platform.name()
+            );
+        }
+    }
+
+    #[test]
+    fn every_platform_pins_a_deployment_target() {
+        for platform in [Platform::MacOs, Platform::Ios, Platform::IosSimulator] {
+            assert!(
+                !platform.deployment_environment().is_empty(),
+                "{} has no deployment target",
+                platform.name()
+            );
+        }
+    }
+
+    #[test]
+    fn maps_cargo_profiles_onto_their_target_directories() {
+        assert_eq!(profile_directory("dev"), "debug");
+        assert_eq!(profile_directory("test"), "debug");
+        assert_eq!(profile_directory("bench"), "release");
+        assert_eq!(profile_directory("release"), "release");
+        assert_eq!(profile_directory("reldbg"), "reldbg");
+    }
+
+    #[test]
+    fn the_workspace_root_holds_the_workspace_manifest() {
+        let root = workspace_root().unwrap();
+        assert!(root.join("Cargo.toml").is_file(), "{}", root.display());
+        assert!(root.join("crates").is_dir(), "{}", root.display());
+    }
+
+    #[test]
+    fn the_ffi_module_is_the_swift_module_plus_the_uniffi_suffix() {
+        // Not decoration: `--module-name` has to be exactly what the generated
+        // Swift imports, and UniFFI derives that as `<namespace>FFI`.
+        assert_eq!(FFI_MODULE, format!("{SWIFT_MODULE}FFI"));
+    }
+
+    #[test]
+    fn the_smoke_package_consumes_the_bindings_by_path() {
+        let manifest = smoke_manifest("/somewhere/bindings", "bindings");
+        assert!(manifest.contains(r#".package(path: "/somewhere/bindings")"#));
+        assert!(manifest.contains(r#".product(name: "TaskNotesCore", package: "bindings")"#));
+        assert!(manifest.contains("swift-tools-version: 6.2"));
+        assert!(SMOKE_SOURCE.contains("import TaskNotesCore"));
+        assert!(SMOKE_SOURCE.contains("coreVersion()"));
+    }
+}
