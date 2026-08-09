@@ -227,7 +227,9 @@ export async function handleGuildCreate(guild: Guild): Promise<void> {
 
 Scout tracks your friends' League of Legends matches and delivers beautiful post-match reports right here in Discord.
 
-**Get started:** open the dashboard at **https://scout-for-lol.com/app/** to add the players you want to track, pick channels, and set up competitions. Read the guide at https://scout-for-lol.com/docs/
+**Get started:** open the dashboard at **https://scout-for-lol.com/app/** \
+to add the players you want to track, pick channels, and set up \
+competitions. Read the guide at https://scout-for-lol.com/docs/
 
 You can also try \`/track\` for a simple one-channel setup, or use \`/help\` to see the lightweight commands.
 
