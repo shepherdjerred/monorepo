@@ -165,7 +165,7 @@ public enum TaskEntity: Sendable, Equatable, Hashable, Codable {
         TaskListScope(
             title: title,
             systemImage: kind.systemImage,
-            baseFilter: baseFilter,
+            baseFilter: .of(baseFilter),
             emptyTitle: emptyTitle,
             emptyDescription: emptyDescription,
             identity: "\(kind.rawValue).\(storedValue)"

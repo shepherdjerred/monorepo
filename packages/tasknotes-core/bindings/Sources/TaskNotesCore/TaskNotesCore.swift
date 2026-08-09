@@ -4527,6 +4527,69 @@ public func FfiConverterTypeDeadLetterError_lower(_ value: DeadLetterError) -> R
 
 
 /**
+ * See [`tasknotes_core::domain::FilterChain`].
+ *
+ * A conjunction: a task belongs when it passes **every** member. Appended
+ * after [`FilterConfig`] rather than replacing it, because the two answer
+ * different questions — one narrowing versus a stack of them.
+ */
+public struct FilterChain: Equatable, Hashable {
+    /**
+     * The filters, all of which must pass. Empty admits everything.
+     */
+    public var filters: [FilterConfig]
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * The filters, all of which must pass. Empty admits everything.
+         */filters: [FilterConfig] = []) {
+        self.filters = filters
+    }
+
+    
+
+    
+}
+
+#if compiler(>=6)
+extension FilterChain: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeFilterChain: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> FilterChain {
+        return
+            try FilterChain(
+                filters: FfiConverterSequenceTypeFilterConfig.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: FilterChain, into buf: inout [UInt8]) {
+        FfiConverterSequenceTypeFilterConfig.write(value.filters, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeFilterChain_lift(_ buf: RustBuffer) throws -> FilterChain {
+    return try FfiConverterTypeFilterChain.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeFilterChain_lower(_ value: FilterChain) -> RustBuffer {
+    return FfiConverterTypeFilterChain.lower(value)
+}
+
+
+/**
  * See [`tasknotes_core::domain::FilterConfig`].
  *
  * ⚠️ `query` is **appended**. A `Record` field is positional in the FFI
@@ -10345,6 +10408,31 @@ fileprivate struct FfiConverterSequenceTypeDeadLetterEntry: FfiConverterRustBuff
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
+fileprivate struct FfiConverterSequenceTypeFilterConfig: FfiConverterRustBuffer {
+    typealias SwiftType = [FilterConfig]
+
+    public static func write(_ value: [FilterConfig], into buf: inout [UInt8]) {
+        let len = Int32(value.count)
+        writeInt(&buf, len)
+        for item in value {
+            FfiConverterTypeFilterConfig.write(item, into: &buf)
+        }
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> [FilterConfig] {
+        let len: Int32 = try readInt(&buf)
+        var seq = [FilterConfig]()
+        seq.reserveCapacity(Int(len))
+        for _ in 0 ..< len {
+            seq.append(try FfiConverterTypeFilterConfig.read(from: &buf))
+        }
+        return seq
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
 fileprivate struct FfiConverterSequenceTypeHttpHeader: FfiConverterRustBuffer {
     typealias SwiftType = [HttpHeader]
 
@@ -10962,6 +11050,66 @@ public func coreVersion() -> String  {
 })
 }
 /**
+ * Read a conjunction of filters back from the core's own persisted document.
+ *
+ * # Errors
+ *
+ * Returns [`CoreError::Validation`] when the document is not one this build
+ * understands.
+ */
+public func filterChainFromJson(json: String)throws  -> FilterChain  {
+    return try  FfiConverterTypeFilterChain_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+    uniffi_tasknotes_core_ffi_fn_func_filter_chain_from_json(
+        FfiConverterString.lower(json),$0
+    )
+})
+}
+/**
+ * Render a conjunction of filters as the core's own persisted document.
+ *
+ * # Errors
+ *
+ * Returns [`CoreError::Invariant`] when the chain cannot be rendered.
+ */
+public func filterChainToJson(chain: FilterChain)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+    uniffi_tasknotes_core_ffi_fn_func_filter_chain_to_json(
+        FfiConverterTypeFilterChain_lower(chain),$0
+    )
+})
+}
+/**
+ * Read a filter back from the core's own persisted document.
+ *
+ * # Errors
+ *
+ * Returns [`CoreError::Validation`] when the document is not one this build
+ * understands — including an unknown status, priority or key spelling.
+ */
+public func filterConfigFromJson(json: String)throws  -> FilterConfig  {
+    return try  FfiConverterTypeFilterConfig_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+    uniffi_tasknotes_core_ffi_fn_func_filter_config_from_json(
+        FfiConverterString.lower(json),$0
+    )
+})
+}
+/**
+ * Render a filter as the core's own persisted document.
+ *
+ * # Errors
+ *
+ * Returns [`CoreError::Invariant`]: for an already-constructed
+ * [`FilterConfig`] a serialization failure is a broken invariant, not bad
+ * input.
+ */
+public func filterConfigToJson(filter: FilterConfig)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+    uniffi_tasknotes_core_ffi_fn_func_filter_config_to_json(
+        FfiConverterTypeFilterConfig_lower(filter),$0
+    )
+})
+}
+/**
  * Every priority, most urgent first.
  */
 public func priorityAll() -> [Priority]  {
@@ -11049,6 +11197,41 @@ public func projectPath(value: String) -> String  {
 })
 }
 /**
+ * Read a sort specification back from the core's own persisted document.
+ *
+ * # Errors
+ *
+ * Returns [`CoreError::Validation`] for a sort key or direction this build does
+ * not know. Refused rather than defaulted: a list silently ordered by
+ * something other than what was stored looks like it worked.
+ */
+public func sortConfigFromJson(json: String)throws  -> SortConfig  {
+    return try  FfiConverterTypeSortConfig_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+    uniffi_tasknotes_core_ffi_fn_func_sort_config_from_json(
+        FfiConverterString.lower(json),$0
+    )
+})
+}
+/**
+ * Render a sort specification as the core's own persisted document.
+ *
+ * This is the export that closes the last place a host was inventing a
+ * persisted vocabulary for a core type: `SortField` and `SortDirection` have
+ * `serde` spellings in Rust, and until now nothing exposed them, so each shell
+ * wrote its own table of strings for a value the core owns.
+ *
+ * # Errors
+ *
+ * Returns [`CoreError::Invariant`] when the sort cannot be rendered.
+ */
+public func sortConfigToJson(sort: SortConfig)throws  -> String  {
+    return try  FfiConverterString.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+    uniffi_tasknotes_core_ffi_fn_func_sort_config_to_json(
+        FfiConverterTypeSortConfig_lower(sort),$0
+    )
+})
+}
+/**
  * How many dimensions are filtered, for the `filters (3)` badge.
  *
  * Exported so the badge shows a *number* rather than a filled-or-hollow glyph.
@@ -11072,6 +11255,50 @@ public func taskFilterApply(tasks: [Task], filter: FilterConfig) -> [Task]  {
     uniffi_tasknotes_core_ffi_fn_func_task_filter_apply(
         FfiConverterSequenceTypeTask.lower(tasks),
         FfiConverterTypeFilterConfig_lower(filter),$0
+    )
+})
+}
+/**
+ * Keep only the tasks that pass **every** filter in the chain, in input order.
+ *
+ * The composition rule lives here rather than in each shell, and the reason is
+ * concrete: a screen that carries a scope *and* a reader's filter cannot merge
+ * them into one [`FilterConfig`] — a list is a union within its dimension, an
+ * empty list already spells "unfiltered" so an empty intersection is
+ * unwritable, and `query` holds one phrase. See
+ * [`tasknotes_core::domain::FilterChain`] for all three worked through. A shell
+ * left to compose them itself gets to pick which of those it gets wrong.
+ */
+public func taskFilterChainApply(tasks: [Task], chain: FilterChain) -> [Task]  {
+    return try!  FfiConverterSequenceTypeTask.lift(try! rustCall() {
+    uniffi_tasknotes_core_ffi_fn_func_task_filter_chain_apply(
+        FfiConverterSequenceTypeTask.lower(tasks),
+        FfiConverterTypeFilterChain_lower(chain),$0
+    )
+})
+}
+/**
+ * Whether any member of the chain narrows anything at all.
+ *
+ * Exported for the same reason [`task_filter_is_active`] is: a host that knows
+ * the answer is "no" can skip copying every task across the boundary, and it
+ * must not decide that by counting non-empty lists itself.
+ */
+public func taskFilterChainIsActive(chain: FilterChain) -> Bool  {
+    return try!  FfiConverterBool.lift(try! rustCall() {
+    uniffi_tasknotes_core_ffi_fn_func_task_filter_chain_is_active(
+        FfiConverterTypeFilterChain_lower(chain),$0
+    )
+})
+}
+/**
+ * Whether one task passes every filter in the chain.
+ */
+public func taskFilterChainMatches(task: Task, chain: FilterChain) -> Bool  {
+    return try!  FfiConverterBool.lift(try! rustCall() {
+    uniffi_tasknotes_core_ffi_fn_func_task_filter_chain_matches(
+        FfiConverterTypeTask_lower(task),
+        FfiConverterTypeFilterChain_lower(chain),$0
     )
 })
 }
@@ -11765,9 +11992,34 @@ public func recurrenceCompletionTargetDate(scheduled: String?, due: String?, anc
 /**
  * How many instances the series has in total, when that is finite and knowable.
  *
- * `None` covers three situations the reference also conflates: the rule is
- * unbounded, its `UNTIL` precedes its `DTSTART`, or the series is longer than
- * the reference's own 10,000-instance ceiling.
+ * ## ⚠️ `None` means "no knowable number", **not** "repeats forever"
+ *
+ * This is the one place on this boundary where the obvious rendering of `None`
+ * is wrong, so it is stated rather than left to be inferred. `None` covers four
+ * situations the reference conflates, and only the first of them is "unbounded":
+ *
+ * 1. the rule has no `COUNT` and no `UNTIL`;
+ * 2. its `UNTIL` precedes its `DTSTART`, so the series is *empty* — the
+ * opposite of endless;
+ * 3. the series is longer than the reference's own 10,000-instance ceiling,
+ * which is a refusal to count, not a statement that counting is impossible;
+ * 4. `COUNT` is present but not a number — `COUNT=abc` — which this function
+ * reads with a digits-only regex and gives up on, while the expansion
+ * decrements it to `NaN` and stops after **exactly one** occurrence.
+ *
+ * A host that prints "Repeats indefinitely" for `None` therefore contradicts
+ * [`recurrence_summary`], which reads the *normalised* rule and answers "Every
+ * day, once" for case 4 and "until 2030-12-31" for case 3.
+ *
+ * **The summary is the authority on whether and when a rule stops; this
+ * function is a supplementary number, and it should be shown only when it is
+ * one.** The disagreement is not a porting defect and is deliberately not
+ * repaired here: `getFiniteRecurringInstanceCount` lives in `@tasknotes/model`,
+ * a third-party package this repository does not own, and
+ * `@tasknotes/fixtures` records its answers — case 4 is pinned by
+ * `0313-malformed-freq-daily-count-abc` as `finiteInstanceCount: null` beside
+ * `occurrenceCount: 1`. Moving this function would make the corpus disagree
+ * with the oracle that generates it.
  *
  * # Errors
  *
@@ -11948,6 +12200,18 @@ private let initializationResult: InitializationResult = {
     if (uniffi_tasknotes_core_ffi_checksum_func_core_version() != 34405) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_tasknotes_core_ffi_checksum_func_filter_chain_from_json() != 19415) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_func_filter_chain_to_json() != 12287) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_func_filter_config_from_json() != 9077) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_func_filter_config_to_json() != 12951) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_tasknotes_core_ffi_checksum_func_priority_all() != 30828) {
         return InitializationResult.apiChecksumMismatch
     }
@@ -11972,10 +12236,25 @@ private let initializationResult: InitializationResult = {
     if (uniffi_tasknotes_core_ffi_checksum_func_project_path() != 27994) {
         return InitializationResult.apiChecksumMismatch
     }
+    if (uniffi_tasknotes_core_ffi_checksum_func_sort_config_from_json() != 3755) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_func_sort_config_to_json() != 22573) {
+        return InitializationResult.apiChecksumMismatch
+    }
     if (uniffi_tasknotes_core_ffi_checksum_func_task_filter_active_count() != 56001) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_tasknotes_core_ffi_checksum_func_task_filter_apply() != 25841) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_func_task_filter_chain_apply() != 38320) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_func_task_filter_chain_is_active() != 31915) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_func_task_filter_chain_matches() != 24866) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_tasknotes_core_ffi_checksum_func_task_filter_is_active() != 21417) {
@@ -12101,7 +12380,7 @@ private let initializationResult: InitializationResult = {
     if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_completion_target_date() != 7381) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_finite_instance_count() != 65092) {
+    if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_finite_instance_count() != 14740) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_tasknotes_core_ffi_checksum_func_recurrence_frequency() != 13193) {

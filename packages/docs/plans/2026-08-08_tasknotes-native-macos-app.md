@@ -643,24 +643,22 @@ _more_ correct than either implementation. Not user-visible until iOS shares the
 
 ## Remaining
 
-Phases 0–8, 4.5 and 6.5 are complete and verified, as are Phase 9a (the four list screens) and
-9b (the inspector): 325 Rust tests, 328 TypeScript tests, 167 Swift tests, zero suppressions,
-338/338 recurrence corpus, 26/26 sync scenarios, and the app builds, links, syncs and renders.
+Phases 0–8, 4.5 and 6.5 are complete and verified, as are Phase 9a (the four list screens),
+9b (the inspector) and 9d: 443 Rust tests, 328 TypeScript tests, 328 Swift tests, zero
+suppressions, 338/338 recurrence corpus, 26/26 sync scenarios, and the app builds, links, syncs
+and renders. **No shell writes core logic and no shell spells a core value any more.**
 
 - [ ] **Phase 9c** — QuickAdd floating `NSPanel` on a global hotkey, Pomodoro, TimeReport.
 - [x] ~~**Phase 9d** — Kanban with drag-and-drop, SavedViews, Project/Context/Tag detail
       screens.~~ **Done 2026-08-09.** Project/Context/Tag are not screens: `TaskEntity` produces a
       `TaskListScope` and `SectionDetailView` renders it as `TaskListView(section: .browse, …)`.
       Three RN screens → zero new views.
-- [ ] **🔴 Export sort wire values, or better `filter_config_to_json` / `sort_config_to_json`.**
-      Status and priority have wire values; `SortField` and `SortDirection` do not, so
-      `SortFieldName` in `SavedViewRecord.swift` is a shell **inventing a persisted vocabulary for
-      a core type**. That is the drift class this project exists to prevent, and it is the only
-      thing standing between a Windows client and a differently-spelled sort key.
-- [ ] **Export a `FilterConfig` conjunction** (`filter_config_and`, or accept a `Vec`). Without
-      one, "save this as a view" has to be disabled on an already-scoped screen. ⚠️ Note why
-      concatenation is not the answer: `FilterConfig` is _every dimension must pass, any value
-      within a dimension_, so merging two filters' `projects` turns an **and** into an **or**.
+- [x] ~~**🔴 Export sort wire values, or better `filter_config_to_json` / `sort_config_to_json`.**~~
+      **Done 2026-08-09** — the whole-record codec, not per-field wire values. See the Comment Log.
+- [x] ~~**Export a `FilterConfig` conjunction** (`filter_config_and`, or accept a `Vec`).~~
+      **Done 2026-08-09 as `FilterChain`**, a `Vec` and not a merge — `filter_config_and` was
+      investigated and is **unimplementable**, which is a stronger statement than "would be wrong".
+      See the Comment Log.
 - [ ] **Decide how a completed occurrence shows on the board.** A recurring task with today's
       occurrence checked draws struck-through with a filled checkbox while its `status` is still
       `open`, so the board files it under Open. Both halves are correct and the combination reads
@@ -675,18 +673,13 @@ Phases 0–8, 4.5 and 6.5 are complete and verified, as are Phase 9a (the four l
 - [x] ~~**Close the core gaps the UI phases found.**~~ **Done 2026-08-09 in `8b8029cec`** — see the
       Comment Log entry. `TaskSearch.swift` and the `CivilDate` helper are deleted; no core logic
       is written in Swift any more.
-- [ ] **Adopt `recurrence_summary` in `Sources/TaskNotesKit/Detail/RecurrenceSummary.swift`** —
-      drop `needsCoreSummary` and the 🔴 block, read `description` from the core. `None` means
-      _show the raw RRULE_, matching `recurrence_frequency`. Note the file cannot be deleted and no
-      export would change that: `next: DateBadge` and `stopRepeating: TaskFieldEdit` are shell
-      types. It shrinks.
-- [ ] **Decide which of `recurrence_finite_instance_count` / `recurrence_summary` moves.** They
-      disagree, so the inspector can now show "Repeats indefinitely" beside "Every day, once". The
-      count reports _unbounded_ for `COUNT=abc` (which in fact fires exactly once) and for an
-      `UNTIL` series past the 10,000 ceiling. ⚠️ It is not a bug the Rust port introduced — it
-      faithfully reproduces the TypeScript reference, so **no fixture disagrees**, and whichever
-      side moves has to move `@tasknotes/fixtures` with it. The summary is the more accurate of
-      the two.
+- [x] ~~**Adopt `recurrence_summary` in `Sources/TaskNotesKit/Detail/RecurrenceSummary.swift`**~~
+      **Done 2026-08-09.** `needsCoreSummary` and the 🔴 block are gone; `description` is read from
+      the core and `nil` renders the raw `RRULE`, monospaced, exactly as `recurrence_frequency`
+      asks. The file shrank rather than disappearing, as predicted.
+- [x] ~~**Decide which of `recurrence_finite_instance_count` / `recurrence_summary` moves.**~~
+      **Resolved 2026-08-09: neither moves, and the inspector stopped asserting the thing that was
+      false.** See the Comment Log.
 - [ ] **`FilterConfig` now diverges from the RN app's `domain/filters.ts`**, which has no `query`.
       `FilterConfig` is not in `@tasknotes/fixtures`, so no oracle caught it and nothing is broken
       today — but the TypeScript type needs the field whenever the RN app adopts the core.
@@ -775,6 +768,65 @@ Phases 0–8, 4.5 and 6.5 are complete and verified, as are Phase 9a (the four l
   date and the displayed date come from one place; a task with none of the three sorts last in
   both directions, exactly like an undated task under `DueDate`. `SortField::Scheduled` was
   deliberately **not** added — it only mirrors the defect, piling due-only tasks at the bottom.
+- 2026-08-09: **The persisted query is a whole-record codec, not per-field wire values.** Both
+  shapes were on the table for `SortField`/`SortDirection`. Per-field
+  (`sort_field_wire_value`/`parse`, mirroring status and priority) is simpler and would have
+  deleted `SortFieldName` — but it leaves the shell **composing the record**: choosing the key
+  names, the container, and what happens when a dimension is added. That last cost is measured,
+  not hypothetical: when `query` landed hours earlier, `FilterRecord` had to be hand-edited to
+  match and **nothing would have failed if it had not been** — a saved search would have
+  round-tripped as a saved filter with no search. Per-field helpers make that hand-edit mandatory
+  forever, once per dimension per shell, with no oracle over any of it. So the export is
+  `filter_config_to_json`/`from_json`, `filter_chain_to_json`/`from_json` and
+  `sort_config_to_json`/`from_json`, and the host persists a string it cannot take apart. What
+  that costs, honestly: JSON inside JSON in the defaults blob (escaped, uglier by hand), and the
+  shell can no longer inspect or migrate a query — which is the point rather than a regression.
+  ⚠️ **Forward compatibility is now mechanical, in the core, not conventional.** Every
+  `FilterConfig`/`FilterChain` field is `#[serde(default)]`; both containers are JSON _objects_
+  so they can gain a key at all; `domain::filters` pins **frozen literal documents in both
+  directions**, so a rename, a retype, or a new field added without a default is a red test in the
+  core rather than a saved view that quietly lost a dimension; and `rename_all` — not an authored
+  table — supplies the spellings, so a `SortField` variant added tomorrow is spelled automatically
+  and identically on every platform. The asymmetry is deliberate: an **absent** key loads as
+  unfiltered (a statement from the past), an **unknown** value is refused (a statement this build
+  cannot honour) — a list quietly ordered by due date because the stored key was unrecognised
+  looks exactly like one that worked. JSON is what makes this safe beside the ABI rule: the FFI
+  buffer is positional, the document is keyed.
+- 2026-08-09: **`filter_config_and` is not merely wrong, it is unimplementable — so the export is
+  `FilterChain`, a `Vec`.** The plan already noted concatenation turns an **and** into an **or**.
+  Attempting the honest merge showed something stronger: **the conjunction of two `FilterConfig`s
+  is not in general expressible as a `FilterConfig`.** Three independent proofs, one per dimension
+  shape. (1) A list is a _union_ within its dimension, so "in Website **and** in Admin" — a real
+  question, since a task carries several projects — has no single-record form; concatenating gives
+  the union. (2) An empty list already spells _unfiltered_, so intersecting `[Open]` with `[Done]`
+  yields "matches nothing", which has **no spelling at all**. (3) `query` holds one phrase and
+  `search_matches` is deliberately a phrase scan, so two searches conjoined have no single-phrase
+  form. A merge function would therefore have to be fallible on its most common input, and the
+  motivating case — a Website screen narrowed to Admin — is exactly one of the unrepresentable
+  ones. `FilterChain { filters: Vec<FilterConfig> }` keeps each member's dimension semantics and
+  joins members by `and`, which is what the two sequential `apply_filter` calls already did
+  correctly; this gives that sequence a name, a serialized form and a place to be tested.
+  `TaskListScope.baseFilter` is a chain, `SavedViewDraft(scope:query:)` conjoins rather than
+  merges, and the sidebar's `+` is **enabled on every screen** — it now greys out for exactly one
+  reason, that there is no list in front of you.
+- 2026-08-09: **The count/summary contradiction was resolved by moving neither function.** The
+  fixture question was settled by provenance, not by taste: `getFiniteRecurringInstanceCount`
+  lives in **`@tasknotes/model` 0.2.1, a third-party npm package this repository does not own**,
+  and `packages/tasknotes-fixtures/recurrence/corpus.jsonl` is generated from it by
+  `build-recurrence-corpus.ts`. Case `0313-malformed-freq-daily-count-abc` already records the
+  disagreement in full — `finiteInstanceCount: null` beside `occurrenceCount: 1` — so the oracle
+  is not wrong, it is a faithful snapshot of a reference we cannot move. Hand-editing it would
+  have made the corpus disagree with the generator that produces it, and the next regeneration
+  would have silently reverted the edit. **No fixture was touched.** What was wrong was the
+  _shell_: `Option<u32>` conflates four states — unbounded, an `UNTIL` before the `DTSTART` (an
+  **empty** series), a count past the 10,000 ceiling, and a non-numeric `COUNT` that fires exactly
+  once — and Swift rendered `nil` as "Repeats indefinitely", which is right in one of them. So
+  `occurrenceDescription` became `String?` and draws **nothing** when the core has no number;
+  `recurrence_summary` is the authority on whether and when a rule stops, because it reads the
+  _normalised_ option set that also decides which days the engine emits, while the count reads the
+  raw text with a digits-only regex. Nothing is lost: an unbounded rule's sentence already says so
+  by ending without a bound clause. The FFI doc comment now states "`None` means no knowable
+  number, **not** repeats forever" so the next shell does not rediscover it.
 - 2026-08-09: The Rust core now converges on persisted id counters, matching the TypeScript fix
   for the mutation-id collision bug. The mint-and-check loop stays as a backstop but is strictly
   weaker on its own: the durable-set check can only see ids the client **still holds**, and an id

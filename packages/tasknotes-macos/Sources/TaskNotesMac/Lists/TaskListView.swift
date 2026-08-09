@@ -344,10 +344,10 @@ extension TaskListView {
             hasSelection: !selection.isEmpty,
             isRefreshing: isRefreshing,
             isNarrowed: query.isNarrowing,
-            // `nil` on a scoped screen: this screen's narrowing is two filters
-            // applied in sequence, and a saved view stores one. See the
-            // property's own note for why merging them would be wrong.
-            saveableQuery: scope == nil ? query : nil
+            // Available on every screen, scoped or not: the scope's filters and
+            // the reader's are conjoined by the core rather than merged, so
+            // "Website narrowed to Admin" keeps its **and**.
+            saveableView: SavedViewDraft(scope: scope, query: query)
         )
     }
 

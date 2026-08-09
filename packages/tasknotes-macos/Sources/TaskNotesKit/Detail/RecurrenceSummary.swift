@@ -2,48 +2,48 @@ public import TaskNotesUniFFI
 
 /// Everything the inspector can honestly say about a repeating task's rule.
 ///
-/// ## 🔴 The rule itself is shown verbatim, and that is a reported gap
+/// ## Every sentence here is the core's
 ///
-/// The core exports `recurrenceFrequency()`, `recurrenceFiniteInstanceCount()`,
-/// `recurrenceIsExpandable()` and `recurrenceNextUncompletedOccurrence()` —
-/// every one of which is a whole answer to a whole question — but it exports
-/// **no human-readable summary of the rule**.
+/// Nothing in this type describes a rule. `recurrenceSummary()` turns the
+/// normalised rule into "Every 2 weeks on Mon, Wed"; the rest of the properties
+/// are single answers to single questions the core also owns — whether it can
+/// expand the rule, when the next open occurrence falls, how long the series is
+/// when that is knowable, and which date it is measured from.
 ///
-/// Building "Every 2 weeks on Mon, Wed" in Swift from `Frequency` alone is not
-/// an option, and the reason is not effort. `Frequency` carries `FREQ` and
-/// nothing else, so a Swift sentence assembled from it would silently drop
-/// `INTERVAL`, `BYDAY`, `BYMONTHDAY`, `BYSETPOS` and `UNTIL` — printing
-/// "Weekly" over a rule that fires every *other* Tuesday. That is not a cosmetic
-/// error: a user reading it would believe something false about when their task
-/// repeats, and would only find out by missing it. Restating the RFC 5545
-/// grammar on the Swift side is also exactly the duplication the shared core
-/// exists to prevent — it is the 1Password failure mode, one layer down, and
-/// Windows would need a third copy.
-///
-/// So this type deliberately **does not describe the rule**. It shows the raw
-/// `RRULE` string, and around it only facts the core computed:
-/// how many occurrences remain if the rule is finite, whether the core can
-/// expand it at all, when the next open occurrence falls, and which date the
-/// rule is measured from. ``needsCoreSummary`` marks the hole so it is visible
-/// in the UI rather than only in this comment.
-///
-/// The ask is a `recurrence_summary(text, scheduled, date_created) -> String`
-/// in `tasknotes-core`, validated against `@tasknotes/fixtures`' recurrence
-/// corpus like every other recurrence answer. Until it lands, the rule row is
-/// read-only apart from stopping the repetition, which needs no rule
-/// construction at all.
+/// That division is not tidiness. `Frequency` carries `FREQ` and nothing else,
+/// so a sentence assembled in Swift would silently drop `INTERVAL`, `BYDAY`,
+/// `BYMONTHDAY`, `BYSETPOS` and `UNTIL` — printing "Weekly" over a rule that
+/// fires every *other* Tuesday. A user reading that believes something false
+/// about when their task repeats and finds out by missing it. Restating RFC 5545
+/// per platform is also the 1Password failure mode one layer down, with Windows
+/// needing a third copy.
 public struct RecurrenceSummary: Sendable, Equatable {
     /// The stored rule, exactly as the vault holds it.
     ///
-    /// Shown verbatim and monospaced. It is not friendly, and pretending
-    /// otherwise is what this type refuses to do.
+    /// Kept even when ``description`` is present, because they answer different
+    /// questions — one is what the vault says, the other is what it means — and
+    /// because it is what ``description``'s absence falls back to.
     public let rule: String
 
-    /// How many occurrences the rule produces in total, when it is finite.
+    /// The rule as a sentence, or `nil` when the core declines to write one.
     ///
-    /// `nil` means the rule never stops. Straight from
-    /// `recurrenceFiniteInstanceCount`, which reads `COUNT` and `UNTIL` — two of
-    /// the parts a Swift-side summary would have dropped.
+    /// Straight from `recurrenceSummary`. `nil` means **show ``rule``
+    /// verbatim**, matching what `recurrenceFrequency` already asks of a caller,
+    /// and it covers three situations a reader should see identically: the rule
+    /// is empty, unparsable or has no resolvable `DTSTART`; it uses a part with
+    /// no unambiguous one-line reading; or it fires zero times. The core
+    /// declining is deliberate — a wrong summary is strictly worse than none.
+    public let description: String?
+
+    /// How many occurrences the rule produces in total, when that is a knowable
+    /// number.
+    ///
+    /// ⚠️ **`nil` does not mean "never stops."** Straight from
+    /// `recurrenceFiniteInstanceCount`, whose own documentation lists four
+    /// situations it conflates — unbounded, an `UNTIL` before the `DTSTART`
+    /// (an *empty* series), a series past the reference's 10,000-instance
+    /// ceiling, and a `COUNT` that is not a number, which in fact fires exactly
+    /// once. See ``occurrenceDescription`` for what is drawn instead.
     public let finiteInstanceCount: UInt32?
 
     /// Whether the core can expand the rule.
@@ -74,14 +74,6 @@ public struct RecurrenceSummary: Sendable, Equatable {
     /// Whether the stored anchor was absent, and this is therefore the core's
     /// reading rather than the user's choice.
     public let anchorIsImplied: Bool
-
-    /// Always `true`, and it is a value rather than a comment so the gap is
-    /// visible in the running app.
-    ///
-    /// The inspector renders it as the note explaining why the rule cannot be
-    /// edited here. When `recurrence_summary()` lands this property and its
-    /// note go away together.
-    public var needsCoreSummary: Bool { true }
 
     /// Derive the summary for a task, or `nil` when it does not repeat.
     ///
@@ -117,6 +109,8 @@ public struct RecurrenceSummary: Sendable, Equatable {
 
         return RecurrenceSummary(
             rule: stored,
+            description: recurrenceSummary(
+                text: stored, scheduled: task.scheduled, dateCreated: task.dateCreated),
             finiteInstanceCount: count,
             isExpandable: recurrenceIsExpandable(
                 text: stored, scheduled: task.scheduled, dateCreated: task.dateCreated),
@@ -128,13 +122,38 @@ public struct RecurrenceSummary: Sendable, Equatable {
         )
     }
 
-    /// What the occurrence count says, in words.
+    /// What the occurrence count says, in words, or `nil` when there is nothing
+    /// to say.
     ///
-    /// Only ever restates the core's number. "Repeats indefinitely" is the
-    /// honest rendering of `nil`, which is what `COUNT`-less and `UNTIL`-less
-    /// rules produce.
-    public var occurrenceDescription: String {
-        guard let finiteInstanceCount else { return "Repeats indefinitely" }
+    /// ## Why `nil` is drawn as nothing rather than as "Repeats indefinitely"
+    ///
+    /// It used to say exactly that, and it was wrong in three of the four
+    /// situations `recurrenceFiniteInstanceCount` returns `nil` for. With
+    /// ``description`` now present the error became visible rather than merely
+    /// latent: a `FREQ=DAILY;COUNT=abc` task drew **"Repeats indefinitely"**
+    /// beside **"Every day, once"**, two lines of the same panel contradicting
+    /// each other about the same rule.
+    ///
+    /// The two functions are not equally reliable and the fix is to say so
+    /// rather than to average them. ``description`` is read off the *normalised*
+    /// rule — the same option set that decides which days the engine emits, so
+    /// it cannot disagree with the list. The count is read out of the raw text
+    /// with a digits-only regex, faithfully reproducing
+    /// `getFiniteRecurringInstanceCount` from `@tasknotes/model`, and it gives
+    /// up on inputs the expansion handles fine.
+    ///
+    /// So the **summary is the authority on whether and when a rule stops**, and
+    /// this is a supplementary number shown only when it is one. The count is
+    /// deliberately not "fixed" to agree: `@tasknotes/model` is a third-party
+    /// package this repository does not own, `@tasknotes/fixtures` records its
+    /// answers — `0313-malformed-freq-daily-count-abc` pins
+    /// `finiteInstanceCount: null` beside `occurrenceCount: 1` — and moving the
+    /// Rust would make the corpus disagree with the oracle that generates it.
+    ///
+    /// Nothing is lost by drawing nothing: an unbounded rule's sentence already
+    /// ends without a bound clause, which is how "Every day" says it forever.
+    public var occurrenceDescription: String? {
+        guard let finiteInstanceCount else { return nil }
         return finiteInstanceCount == 1 ? "1 occurrence" : "\(finiteInstanceCount) occurrences"
     }
 

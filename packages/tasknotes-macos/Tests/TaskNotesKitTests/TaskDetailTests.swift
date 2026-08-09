@@ -93,15 +93,15 @@ struct RecurrenceSummaryTests {
         #expect(try RecurrenceSummary.of(task: task, calendar: detailCalendar) == nil)
     }
 
-    /// 🔴 The rule is carried **verbatim**.
+    /// The rule is carried verbatim **and** described, and the sentence is the
+    /// core's.
     ///
-    /// This is the assertion that guards the reported gap. The core exports no
-    /// human-readable rule summary, and a sentence assembled in Swift from
-    /// `Frequency` alone would drop `INTERVAL` and `BYDAY` — printing "Weekly"
-    /// over a rule that fires every other Tuesday. Until `recurrence_summary()`
-    /// exists, the panel shows the rule and nothing else, and this test fails
-    /// the moment somebody starts paraphrasing it.
-    @Test("the rule is carried verbatim")
+    /// The literal here is the assertion that matters: `INTERVAL` and `BYDAY`
+    /// are exactly the parts a sentence assembled in Swift from `Frequency`
+    /// alone would have dropped, printing "Weekly" over a rule that fires every
+    /// other Tuesday. It fails the moment anything on this side starts
+    /// paraphrasing.
+    @Test("the rule is carried verbatim and described by the core")
     func ruleVerbatim() throws {
         let rule = "FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,WE"
         let task = detailTask(
@@ -109,17 +109,72 @@ struct RecurrenceSummaryTests {
         let summary = try #require(
             try RecurrenceSummary.of(task: task, calendar: detailCalendar))
         #expect(summary.rule == rule)
-        #expect(summary.needsCoreSummary)
+        #expect(summary.description == "Every 2 weeks on Mon, Wed")
     }
 
-    @Test("an endless rule says so")
+    /// A rule the core will not describe leaves ``RecurrenceSummary/description``
+    /// absent, which the panel draws as the raw `RRULE`.
+    ///
+    /// `nil` means *show the rule*, matching `recurrenceFrequency`, and a wrong
+    /// summary is strictly worse than none: `BYDAY` crossed with `BYMONTHDAY` is
+    /// an intersection — Friday the 13th — that a comma-joined list would
+    /// misread as a union.
+    @Test("a rule with no honest sentence falls back to the raw rule")
+    func undescribableRule() throws {
+        let rule = "FREQ=MONTHLY;BYDAY=FR;BYMONTHDAY=13"
+        let task = detailTask(
+            id: "Tasks/A.md", title: "A", scheduled: "2026-07-20", recurrence: rule)
+        let summary = try #require(
+            try RecurrenceSummary.of(task: task, calendar: detailCalendar))
+        #expect(summary.description == nil)
+        #expect(summary.rule == rule)
+    }
+
+    /// An endless rule says so **by omission**, in one place rather than two.
+    ///
+    /// ⚠️ This used to expect `"Repeats indefinitely"`, and that string was
+    /// wrong in three of the four situations `recurrenceFiniteInstanceCount`
+    /// answers `nil` for. Once the core's sentence arrived it became a visible
+    /// contradiction rather than a latent one — see
+    /// ``noCountBeatsTheSummary`` below.
+    @Test("an endless rule says so in its sentence, not in a second clause")
     func endlessRule() throws {
         let task = detailTask(
             id: "Tasks/A.md", title: "A", scheduled: "2026-07-20", recurrence: "FREQ=DAILY")
         let summary = try #require(
             try RecurrenceSummary.of(task: task, calendar: detailCalendar))
+        #expect(summary.description == "Every day")
         #expect(summary.finiteInstanceCount == nil)
-        #expect(summary.occurrenceDescription == "Repeats indefinitely")
+        #expect(summary.occurrenceDescription == nil)
+    }
+
+    /// The two core functions disagree, and the panel now sides with the
+    /// accurate one.
+    ///
+    /// `FREQ=DAILY;COUNT=abc` fires **exactly once** — the expansion decrements
+    /// a non-numeric `COUNT` to `NaN` and stops — while
+    /// `recurrenceFiniteInstanceCount` reads `COUNT` with a digits-only regex
+    /// and gives up. Both answers are the reference's, pinned by
+    /// `@tasknotes/fixtures` as `finiteInstanceCount: null` beside
+    /// `occurrenceCount: 1`, so neither is a porting defect and neither can be
+    /// moved without moving a third-party package. What the panel must not do
+    /// is print both readings at once, which is what "Repeats indefinitely"
+    /// beside "Every day, once" was.
+    @Test("where the count and the summary disagree, only the summary is drawn")
+    func noCountBeatsTheSummary() throws {
+        let task = detailTask(
+            id: "Tasks/A.md",
+            title: "A",
+            scheduled: "2026-07-20",
+            recurrence: "FREQ=DAILY;COUNT=abc"
+        )
+        let summary = try #require(
+            try RecurrenceSummary.of(task: task, calendar: detailCalendar))
+        #expect(summary.description == "Every day, once")
+        #expect(summary.finiteInstanceCount == nil, "the reference's answer, reproduced")
+        #expect(
+            summary.occurrenceDescription == nil,
+            "and drawn as nothing rather than as a contradiction")
     }
 
     /// A `COUNT` is one of the parts a Swift-side summary would have dropped,

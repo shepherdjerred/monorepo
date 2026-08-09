@@ -56,7 +56,15 @@ struct ScopedListSnapshotTests {
     ///
     /// What to look at, top to bottom: unscoped reads `Website · Admin ·
     /// @work`; scoped to Website it reads **`Admin · @work`**; scoped to a
-    /// context it reads `Website · Admin` and drops only `@work`.
+    /// context it reads `Website · Admin` and drops only `@work`; and the
+    /// **two-link chain** reads just `Admin`, having dropped one value from
+    /// each link.
+    ///
+    /// The fourth row is the case a scope gained when it became a `FilterChain`
+    /// rather than a single `FilterConfig`: a view kept from a project screen
+    /// carries the project in one link and the reader's own filter in another,
+    /// and the row must stop printing whichever link implies it. A single-link
+    /// fixture cannot tell "checks every link" from "checks the first".
     @Test("a scoped row drops only what the scope names", arguments: SnapshotAppearance.allCases)
     func scopedRowKeepsEverythingElse(appearance: SnapshotAppearance) throws {
         let task = coreTask(
@@ -80,6 +88,10 @@ struct ScopedListSnapshotTests {
                 scopedRow(row, omitting: nil)
                 scopedRow(row, omitting: byProject.scope.baseFilter)
                 scopedRow(row, omitting: byContext.scope.baseFilter)
+                scopedRow(
+                    row,
+                    omitting: byProject.scope.baseFilter.and(byContext.scope.baseFilter.filters[0])
+                )
             }
             .listStyle(.inset),
             named: "row-scoped",
@@ -88,7 +100,7 @@ struct ScopedListSnapshotTests {
         )
     }
 
-    private func scopedRow(_ row: TaskRowState, omitting: FilterConfig?) -> some View {
+    private func scopedRow(_ row: TaskRowState, omitting: FilterChain?) -> some View {
         TaskRowView(
             row: row,
             onToggle: {},

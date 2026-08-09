@@ -130,20 +130,20 @@ struct InspectorDateRow: View {
 
 /// The recurrence row.
 ///
-/// ## 🔴 Read-only, and the reason is a missing core function
+/// ## Read-only, and every word on it is the core's
 ///
-/// The rule is printed **verbatim** and cannot be edited here. Everything else
-/// on the row is a number the core computed. See ``RecurrenceSummary`` for the
-/// argument in full; the short version is that `Frequency` carries `FREQ` and
-/// nothing else, so any sentence assembled from it in Swift would silently drop
-/// `INTERVAL`, `BYDAY`, `BYMONTHDAY`, `BYSETPOS` and `UNTIL` — printing
-/// "Weekly" over a rule that fires every other Tuesday, which is worse than
-/// printing nothing. Re-parsing RFC 5545 on this side is also exactly the
-/// duplication the shared core exists to prevent.
+/// The rule reads as a sentence — "Every 2 weeks on Mon, Wed" — straight from
+/// `recurrenceSummary`, and falls back to the raw `RRULE` when the core
+/// declines to write one. Nothing here parses RFC 5545; see
+/// ``RecurrenceSummary`` for why a sentence assembled in Swift from `Frequency`
+/// would print "Weekly" over a rule that fires every *other* Tuesday.
 ///
-/// Two things are still editable, because neither needs a rule to be
-/// constructed: **stopping** the repetition (a `clear`, which deletes the key)
-/// and the **anchor** (a closed two-case enum the core exports).
+/// It is still not **editable**, which is a separate question: reading a rule
+/// needs a summary, writing one needs a builder, and there is no core export
+/// that constructs an `RRULE` from parts. Two things are editable because
+/// neither constructs anything: **stopping** the repetition (a `clear`, which
+/// deletes the key) and the **anchor** (a closed two-case enum the core
+/// exports).
 struct InspectorRecurrenceRow: View {
     let summary: RecurrenceSummary?
     let apply: (TaskFieldEdit) -> Void
@@ -159,14 +159,23 @@ struct InspectorRecurrenceRow: View {
                 Text("Repeats")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                Text(summary.rule)
-                    .font(.system(.caption, design: .monospaced))
+                // Monospaced only for the raw rule. A sentence set in a code
+                // face reads as something the reader is meant to edit, and this
+                // row is not editable; the fallback genuinely is a code string
+                // and should look like one.
+                Text(summary.description ?? summary.rule)
+                    .font(
+                        summary.description == nil
+                            ? .system(.caption, design: .monospaced) : .caption
+                    )
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                Text(caption(summary))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                if let caption = caption(summary) {
+                    Text(caption)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
                 if !summary.isExpandable {
                     // The engine fails open — an unreadable rule is treated as
                     // firing, so the task keeps appearing rather than
@@ -192,7 +201,7 @@ struct InspectorRecurrenceRow: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .accessibilityElement(children: .contain)
             .accessibilityIdentifier(AccessibilityIdentifier.Inspector.recurrence)
-            .help("Editing a recurrence rule needs a rule summary the core does not export yet.")
+            .help("A recurrence rule is edited in the vault; this panel can only stop it.")
 
             Picker("Measured From", selection: anchorBinding(summary)) {
                 Text("Scheduled Date").tag(RecurrenceAnchor.scheduled)
@@ -205,12 +214,18 @@ struct InspectorRecurrenceRow: View {
         }
     }
 
-    /// The count and the next occurrence, in words.
+    /// The count and the next occurrence, in words, or `nil` when the core
+    /// answered neither.
     ///
-    /// Both clauses restate something the core answered. "Repeats indefinitely"
-    /// is the honest rendering of a rule with no `COUNT` and no `UNTIL`, and
-    /// "Next: Today" uses the badge's own words rather than a raw `2026-07-22`,
-    /// so the panel and the list row say the same thing about the same date.
+    /// Both clauses restate something the core computed. "Next: Today" uses the
+    /// badge's own words rather than a raw `2026-07-22`, so the panel and the
+    /// list row say the same thing about the same date.
+    ///
+    /// The count is omitted entirely when the core has no number, rather than
+    /// rendered as "Repeats indefinitely" — which contradicted the sentence
+    /// directly above it for rules the summary can still describe. See
+    /// ``RecurrenceSummary/occurrenceDescription``. A rule with no bound already
+    /// says so by ending without a bound clause.
     ///
     /// `anchorIsImplied` is deliberately **not** shown. The picker directly
     /// below already displays the effective anchor, so a sentence saying
@@ -219,12 +234,15 @@ struct InspectorRecurrenceRow: View {
     /// the key is stored or absent, so there is nothing for a reader to act on.
     /// The flag stays on ``RecurrenceSummary`` because the *core's* reading of
     /// an absent anchor is worth pinning in a test.
-    private func caption(_ summary: RecurrenceSummary) -> String {
-        var parts = [summary.occurrenceDescription]
+    private func caption(_ summary: RecurrenceSummary) -> String? {
+        var parts: [String] = []
+        if let occurrences = summary.occurrenceDescription {
+            parts.append(occurrences)
+        }
         if let next = summary.next {
             parts.append("Next: \(next.text)")
         }
-        return parts.joined(separator: " · ")
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
 
     private func anchorBinding(_ summary: RecurrenceSummary) -> Binding<RecurrenceAnchor> {

@@ -15,10 +15,16 @@ public import TaskNotesUniFFI
 /// The core's semantics are *"every dimension must pass, any value within a
 /// dimension"* — so concatenating two filters' `projects` lists would turn an
 /// **and** into an **or**, and a saved view scoped to *Website* narrowed to
-/// *Admin* would start showing both. Two `apply_filter` calls compose
-/// correctly; one merged record does not. There is no `FilterConfig`
-/// conjunction in the FFI surface, and that absence is exactly why this type
-/// applies them one after the other rather than combining them.
+/// *Admin* would start showing both.
+///
+/// The narrowing this type carries is therefore a **`FilterChain`**, the core's
+/// own conjunction, rather than a single `FilterConfig`. That is what lets a
+/// scoped screen be kept as a saved view at all: the stored value is the whole
+/// stack, joined by the core's `and`, and no shell ever has to decide how two
+/// filters combine. `FilterChain`'s own documentation works through why the
+/// merge is not merely awkward but impossible — a union within a dimension, an
+/// empty intersection that has no spelling, and a `query` field that holds one
+/// phrase.
 ///
 /// ## One type, three producers
 ///
@@ -36,8 +42,12 @@ public struct TaskListScope: Sendable, Equatable {
     /// A name rather than an `Image`: this target has no SwiftUI, by design.
     public let systemImage: String
 
-    /// The narrowing itself, as the core's own filter record.
-    public let baseFilter: FilterConfig
+    /// The narrowing itself, as the core's own conjunction of filter records.
+    ///
+    /// Usually one filter — a project, a context, a tag. More than one when the
+    /// scope came from a saved view that was kept while another scope was
+    /// already in force.
+    public let baseFilter: FilterChain
 
     /// What an empty screen says it is empty *of*.
     public let emptyTitle: String
@@ -56,7 +66,7 @@ public struct TaskListScope: Sendable, Equatable {
     public init(
         title: String,
         systemImage: String,
-        baseFilter: FilterConfig,
+        baseFilter: FilterChain,
         emptyTitle: String,
         emptyDescription: String,
         identity: String
@@ -71,13 +81,35 @@ public struct TaskListScope: Sendable, Equatable {
 
     /// The tasks this scope admits, out of everything the store holds.
     ///
-    /// One call into `taskFilterApply`, guarded by the core's own
-    /// `taskFilterIsActive` — the same guard and the same order
+    /// One call into `taskFilterChainApply`, guarded by the core's own
+    /// `taskFilterChainIsActive` — the same guard and the same order
     /// ``TaskListModel`` already uses for the reader's filter, because copying
     /// every task across the FFI to apply a filter that filters nothing is the
     /// common case for a saved view that only sorts.
     public func narrow(_ tasks: [CoreTask]) -> [CoreTask] {
-        guard taskFilterIsActive(filter: baseFilter) else { return tasks }
-        return taskFilterApply(tasks: tasks, filter: baseFilter)
+        guard taskFilterChainIsActive(chain: baseFilter) else { return tasks }
+        return taskFilterChainApply(tasks: tasks, chain: baseFilter)
+    }
+}
+
+extension FilterChain {
+    /// A chain that narrows nothing.
+    public static var unfiltered: FilterChain { FilterChain(filters: []) }
+
+    /// The chain narrowing by exactly one filter.
+    public static func of(_ filter: FilterConfig) -> FilterChain {
+        FilterChain(filters: [filter])
+    }
+
+    /// This chain with `filter` conjoined, unless it narrows nothing.
+    ///
+    /// An inactive filter is dropped rather than appended: it would change no
+    /// answer and would make an otherwise-identical saved view compare unequal
+    /// and persist differently. The "does it narrow anything" question is the
+    /// core's, through `taskFilterIsActive`, so this cannot disagree with the
+    /// badge beside the filter menu.
+    public func and(_ filter: FilterConfig) -> FilterChain {
+        guard taskFilterIsActive(filter: filter) else { return self }
+        return FilterChain(filters: filters + [filter])
     }
 }

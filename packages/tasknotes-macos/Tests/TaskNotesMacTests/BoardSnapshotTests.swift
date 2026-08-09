@@ -218,8 +218,8 @@ struct BoardSnapshotTests {
             id: "focus",
             name: "Work Focus",
             symbol: .briefcase,
-            query: TaskListQuery(
-                filter: filter, sort: SortConfig(field: .effectiveDate, direction: .asc))
+            draft: SavedViewDraft(
+                base: .of(filter), sort: SortConfig(field: .effectiveDate, direction: .asc))
         )
         try record(
             TaskListView(
@@ -244,7 +244,7 @@ struct BoardSnapshotTests {
     func savedViewEditor(appearance: SnapshotAppearance) throws {
         let store = SavedViewStore(defaults: try Self.scratchDefaults())
         try record(
-            SavedViewEditor(mode: .create(TaskListQuery()), store: store),
+            SavedViewEditor(mode: .create(SavedViewDraft()), store: store),
             named: "saved-view-editor",
             size: Self.editorSize,
             appearance: appearance

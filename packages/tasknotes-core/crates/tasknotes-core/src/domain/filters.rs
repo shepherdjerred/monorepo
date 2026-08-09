@@ -11,11 +11,27 @@ use core::cmp::Ordering;
 use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime};
 
 use crate::recurrence::Recurrence;
+use crate::{Error, Result};
 
 use super::{
     priority::Priority, project::project_matches, status::TaskStatus, task::RecurrenceAnchor,
     task::Task,
 };
+
+/// Render a query value as the document a host persists.
+///
+/// See [`FilterConfig::to_json`] for why the host is handed a string it cannot
+/// take apart.
+fn to_document<Value: serde::Serialize>(value: &Value, subject: &str) -> Result<String> {
+    serde_json::to_string(value)
+        .map_err(|error| Error::invariant(format!("could not render {subject} as JSON: {error}")))
+}
+
+/// Read a query value back out of a persisted document.
+fn from_document<Value: serde::de::DeserializeOwned>(json: &str, subject: &str) -> Result<Value> {
+    serde_json::from_str(json)
+        .map_err(|error| Error::validation(format!("could not parse {subject}: {error}")))
+}
 
 /// Which key a list is sorted on.
 ///
@@ -341,6 +357,83 @@ impl FilterConfig {
         }
         true
     }
+
+    /// This filter as the document a host persists.
+    ///
+    /// ## Why a host is handed an opaque string
+    ///
+    /// A saved view, a restored window and a `tasknotes://` link all write a
+    /// filter down now and read it back later — possibly on another platform,
+    /// certainly after this record has changed again. A host that spelled the
+    /// document itself would be choosing the key names, the container shape,
+    /// and, the part that actually bites, what happens the day a dimension is
+    /// added. That day already came once: [`FilterConfig::query`] was appended,
+    /// and every hand-written host record had to be edited to match, with
+    /// nothing failing if it were not.
+    ///
+    /// Handing over a string the host cannot take apart removes the decision
+    /// instead of documenting it. There is no key to misspell and no dimension
+    /// to forget, so a second client reads the first's saved views correctly by
+    /// construction.
+    ///
+    /// ## How a document written today survives the next change
+    ///
+    /// Every field above is `#[serde(default)]` and the container is a JSON
+    /// object, so a document written before a dimension existed still loads
+    /// with that dimension unfiltered. The tests in this module pin frozen
+    /// literal documents in both directions, which is what turns that from a
+    /// convention into a failing test the moment a field is renamed, retyped,
+    /// or added without a default.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::Invariant`]: for an already-constructed value a
+    /// serialization failure is a broken invariant, not bad input.
+    pub fn to_json(&self) -> Result<String> {
+        to_document(self, "a filter")
+    }
+
+    /// Read a filter back out of [`FilterConfig::to_json`]'s output.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::Validation`] when the document is not one this build
+    /// understands — an unknown status or priority spelling included. Refused
+    /// rather than coerced, for the reason [`TaskStatus::parse`] gives.
+    pub fn from_json(json: &str) -> Result<Self> {
+        from_document(json, "a filter")
+    }
+}
+
+impl SortConfig {
+    /// This sort as the document a host persists.
+    ///
+    /// The spellings come from `serde`'s `rename_all`, never from an authored
+    /// table — which is the point. [`TaskStatus`] and [`Priority`] have
+    /// `as_str`/`parse` pairs because a host *shows* those values; a sort key is
+    /// not shown, it is stored, so exporting a per-variant vocabulary would
+    /// leave every host still composing the record and still owning a list that
+    /// can fall behind this enum. A derived whole-record codec cannot be
+    /// incomplete: a variant added here is spelled automatically, identically,
+    /// on every platform.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::Invariant`] when the sort cannot be rendered.
+    pub fn to_json(&self) -> Result<String> {
+        to_document(self, "a sort")
+    }
+
+    /// Read a sort back out of [`SortConfig::to_json`]'s output.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::Validation`] for a sort key or direction this build does
+    /// not know. Refused rather than defaulted: a list quietly ordered by
+    /// something other than what was stored looks exactly like one that worked.
+    pub fn from_json(json: &str) -> Result<Self> {
+        from_document(json, "a sort")
+    }
 }
 
 /// Keep only the tasks that pass every filtered dimension, in input order.
@@ -349,6 +442,117 @@ pub fn apply_filter(tasks: &[Task], filter: &FilterConfig) -> Vec<Task> {
     tasks
         .iter()
         .filter(|task| filter.matches(task))
+        .cloned()
+        .collect()
+}
+
+/// A conjunction of filters: a task belongs when it passes **every** one.
+///
+/// ## Why a list and not a merged [`FilterConfig`]
+///
+/// A screen can carry more than one narrowing at once — a project scope
+/// underneath, and whatever the reader then chose in the filter menu on top.
+/// Storing that as a saved view needs *one value*, and the obvious move is to
+/// merge the two records. It does not work, and the reason is not a rough edge
+/// that a careful merge would smooth over: **the conjunction of two
+/// [`FilterConfig`]s is not in general expressible as a [`FilterConfig`] at
+/// all.**
+///
+/// Three independent proofs, each from a different dimension:
+///
+/// * **Lists are unions within a dimension.** A scope of `projects: ["Website"]`
+///   and a reader filter of `projects: ["Admin"]` means *"in Website **and** in
+///   Admin"* — a task carries several projects, so that is a real and non-empty
+///   question. Concatenating gives `["Website", "Admin"]`, which the membership
+///   rule reads as *"Website **or** Admin"*: strictly more tasks, silently.
+/// * **An empty list means "unfiltered", so an empty intersection is
+///   unwritable.** Intersecting `statuses: [Open]` with `statuses: [Done]`
+///   yields the empty set, which means *nothing matches* — and the empty `Vec`
+///   already spells *everything matches*. There is no third spelling.
+/// * **[`FilterConfig::query`] holds one phrase.** Two searches conjoined —
+///   *"rent"* and *"pay"* — have no single-phrase form, because
+///   [`search_matches`] is deliberately a phrase scan rather than a token set.
+///
+/// So the composition rule is *this type*, not an arithmetic on records. Each
+/// member keeps its own dimension semantics and the members are joined by
+/// `and`, which is what the two sequential `apply_filter` calls already did
+/// correctly — this just gives that sequence a name, a serialized form, and a
+/// place to be tested.
+///
+/// ## Why a struct wrapping a `Vec` rather than a bare `Vec`
+///
+/// This is a **persisted document**: a saved view is written now and read back
+/// after the next core change. A JSON object can gain a key compatibly; a JSON
+/// array cannot gain anything at all. See [`FilterChain::filters`].
+#[derive(Debug, Clone, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FilterChain {
+    /// The filters, all of which must pass.
+    ///
+    /// Order is irrelevant to membership — `and` is commutative — but it is
+    /// preserved so a round trip is byte-stable and a reader can see which
+    /// narrowing came from the screen and which from the menu.
+    ///
+    /// An **empty** chain admits everything, matching an empty
+    /// [`FilterConfig`]: "no filters" and "a filter that filters nothing" are
+    /// the same statement, and giving them one meaning is what keeps
+    /// [`FilterChain::is_active`] answerable.
+    #[serde(default)]
+    pub filters: Vec<FilterConfig>,
+}
+
+impl FilterChain {
+    /// The chain narrowing by exactly one filter.
+    #[must_use]
+    pub fn of(filter: FilterConfig) -> Self {
+        Self {
+            filters: vec![filter],
+        }
+    }
+
+    /// Whether one task passes every member.
+    #[must_use]
+    pub fn matches(&self, task: &Task) -> bool {
+        self.filters.iter().all(|filter| filter.matches(task))
+    }
+
+    /// Whether any member narrows anything at all.
+    ///
+    /// A chain of inactive filters is inactive, so a caller can skip the whole
+    /// pass — which for a host is skipping a copy of every task across an FFI
+    /// boundary, the common case for a saved view that only sorts.
+    #[must_use]
+    pub fn is_active(&self) -> bool {
+        self.filters.iter().any(FilterConfig::is_active)
+    }
+
+    /// This chain as the document a host persists. See
+    /// [`FilterConfig::to_json`].
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::Invariant`] when the chain cannot be rendered.
+    pub fn to_json(&self) -> Result<String> {
+        to_document(self, "a filter chain")
+    }
+
+    /// Read a chain back out of [`FilterChain::to_json`]'s output.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::Validation`] when the document is not one this build
+    /// understands.
+    pub fn from_json(json: &str) -> Result<Self> {
+        from_document(json, "a filter chain")
+    }
+}
+
+/// Keep only the tasks that pass every filter in the chain, in input order.
+#[must_use]
+pub fn apply_filter_chain(tasks: &[Task], chain: &FilterChain) -> Vec<Task> {
+    tasks
+        .iter()
+        .filter(|task| chain.matches(task))
         .cloned()
         .collect()
 }
@@ -615,8 +819,8 @@ mod tests {
     use chrono::NaiveDate;
 
     use super::{
-        FilterConfig, SortConfig, SortDirection, SortField, apply_filter, apply_sort, compare_due,
-        compare_titles, search_matches,
+        FilterChain, FilterConfig, SortConfig, SortDirection, SortField, apply_filter,
+        apply_filter_chain, apply_sort, compare_due, compare_titles, search_matches,
     };
     use crate::domain::{priority::Priority, status::TaskStatus, task::Task};
 
@@ -1150,6 +1354,233 @@ mod tests {
         assert_eq!(
             serde_json::to_value(SortConfig::default()).unwrap(),
             json!({ "field": "dueDate", "direction": "asc" })
+        );
+    }
+
+    // ── The conjunction ────────────────────────────────────────────────────
+
+    fn in_projects(names: &[&str]) -> FilterConfig {
+        FilterConfig {
+            projects: names.iter().map(|name| (*name).to_owned()).collect(),
+            ..FilterConfig::default()
+        }
+    }
+
+    #[test]
+    fn a_chain_is_an_and_where_concatenating_the_records_would_have_been_an_or() {
+        let tasks = [
+            task("both", |task| {
+                task.projects = serde_json::from_value(json!(["Website", "Admin"])).unwrap();
+            }),
+            task("website only", |task| {
+                task.projects = serde_json::from_value(json!(["Website"])).unwrap();
+            }),
+            task("admin only", |task| {
+                task.projects = serde_json::from_value(json!(["Admin"])).unwrap();
+            }),
+        ];
+
+        let chain = FilterChain {
+            filters: vec![in_projects(&["Website"]), in_projects(&["Admin"])],
+        };
+        assert_eq!(titles(&apply_filter_chain(&tasks, &chain)), ["both"]);
+
+        // The merge that looks obvious and is wrong: one record holding both
+        // names is a *union*, so it admits all three rows.
+        let merged = in_projects(&["Website", "Admin"]);
+        assert_eq!(
+            titles(&apply_filter(&tasks, &merged)),
+            ["both", "website only", "admin only"],
+            "concatenation turns the and into an or"
+        );
+    }
+
+    #[test]
+    fn a_chain_can_express_an_empty_intersection_that_one_record_cannot() {
+        let tasks = [
+            task("open", |task| task.status = TaskStatus::Open),
+            task("done", |task| task.status = TaskStatus::Done),
+        ];
+        let statuses = |wanted: TaskStatus| FilterConfig {
+            statuses: vec![wanted],
+            ..FilterConfig::default()
+        };
+        let chain = FilterChain {
+            filters: vec![statuses(TaskStatus::Open), statuses(TaskStatus::Done)],
+        };
+        assert!(chain.is_active());
+        assert!(apply_filter_chain(&tasks, &chain).is_empty());
+    }
+
+    #[test]
+    fn two_searches_conjoin_although_one_query_field_could_not_hold_both() {
+        let tasks = [
+            task("Pay the rent", |_| {}),
+            task("Pay the phone bill", |_| {}),
+            task("Rent a van", |_| {}),
+        ];
+        let searching = |phrase: &str| FilterConfig {
+            query: phrase.to_owned(),
+            ..FilterConfig::default()
+        };
+        let chain = FilterChain {
+            filters: vec![searching("pay"), searching("rent")],
+        };
+        assert_eq!(
+            titles(&apply_filter_chain(&tasks, &chain)),
+            ["Pay the rent"]
+        );
+    }
+
+    #[test]
+    fn an_empty_chain_is_inactive_and_admits_everything() {
+        let tasks = [task("a", |_| {}), task("b", |_| {})];
+        let empty = FilterChain::default();
+        assert!(!empty.is_active());
+        assert_eq!(apply_filter_chain(&tasks, &empty).len(), 2);
+
+        // A chain of *unfiltered* filters is the same statement, and answers
+        // the same way rather than claiming to narrow.
+        let vacuous = FilterChain {
+            filters: vec![FilterConfig::default(), FilterConfig::default()],
+        };
+        assert!(!vacuous.is_active());
+        assert_eq!(apply_filter_chain(&tasks, &vacuous).len(), 2);
+    }
+
+    #[test]
+    fn a_one_filter_chain_is_the_filter() {
+        let tasks = [
+            task("dated", |task| task.due = Some("2026-08-08".to_owned())),
+            task("undated", |_| {}),
+        ];
+        let filter = FilterConfig {
+            has_no_due_date: true,
+            ..FilterConfig::default()
+        };
+        assert_eq!(
+            titles(&apply_filter_chain(
+                &tasks,
+                &FilterChain::of(filter.clone())
+            )),
+            titles(&apply_filter(&tasks, &filter))
+        );
+    }
+
+    // ── The persisted documents ────────────────────────────────────────────
+    //
+    // These four cases are the *mechanical* forward-compatibility guard for the
+    // saved-view format. The host persists exactly these bytes, so:
+    //
+    //   * the frozen literals below fail the moment a field is renamed, retyped
+    //     or reordered — a format change nobody reviewed becomes a red test;
+    //   * the historical documents fail the moment a newly added field is not
+    //     `#[serde(default)]`, which is what lets a view written today still
+    //     load after the next dimension lands.
+    //
+    // Both directions matter, and neither is a convention: a *rule* saying
+    // "remember to default new fields" is exactly what got forgotten when
+    // `query` was added to the shell's hand-written record.
+
+    #[test]
+    fn the_persisted_filter_document_is_frozen() {
+        let filter = FilterConfig {
+            projects: vec!["[[Areas/Work|Work]]".to_owned()],
+            contexts: vec!["home".to_owned()],
+            tags: vec!["release".to_owned()],
+            statuses: vec![TaskStatus::Open, TaskStatus::InProgress],
+            priorities: vec![Priority::Highest, Priority::Low],
+            has_no_due_date: true,
+            query: "invoice".to_owned(),
+        };
+        assert_eq!(
+            serde_json::to_string(&filter).unwrap(),
+            r#"{"projects":["[[Areas/Work|Work]]"],"contexts":["home"],"tags":["release"],"statuses":["open","in-progress"],"priorities":["highest","low"],"hasNoDueDate":true,"query":"invoice"}"#
+        );
+        // Round trip, so the frozen bytes are also known to be readable.
+        assert_eq!(
+            serde_json::from_str::<FilterConfig>(&serde_json::to_string(&filter).unwrap()).unwrap(),
+            filter
+        );
+    }
+
+    #[test]
+    fn a_filter_document_written_before_a_dimension_existed_still_loads() {
+        // Literally the pre-2026-08-09 shape: six dimensions, no `query`.
+        let historical = r#"{"projects":["Work"],"contexts":[],"tags":[],"statuses":["open"],"priorities":[],"hasNoDueDate":true}"#;
+        let filter: FilterConfig = serde_json::from_str(historical).unwrap();
+        assert_eq!(filter.projects, ["Work"]);
+        assert!(filter.has_no_due_date);
+        assert_eq!(filter.query, "", "an absent dimension reads as unfiltered");
+
+        // …and the emptiest document of all, which is what an unfiltered view
+        // written by a future build that dropped defaulted keys would look like.
+        assert_eq!(
+            serde_json::from_str::<FilterConfig>("{}").unwrap(),
+            FilterConfig::default()
+        );
+    }
+
+    #[test]
+    fn every_sort_key_and_direction_round_trips_through_its_document() {
+        // Authored here rather than exported as a constant, because the point is
+        // that there is *no* authored table anywhere in the persisted path: the
+        // spellings come from `rename_all`, so a new variant gets one for free.
+        // This case only pins the ones that exist today against a rename.
+        let expected = [
+            (SortField::DueDate, "dueDate"),
+            (SortField::Priority, "priority"),
+            (SortField::Title, "title"),
+            (SortField::EffectiveDate, "effectiveDate"),
+        ];
+        for (field, spelling) in expected {
+            for (direction, way) in [(SortDirection::Asc, "asc"), (SortDirection::Desc, "desc")] {
+                let sort = SortConfig { field, direction };
+                let document = serde_json::to_string(&sort).unwrap();
+                assert_eq!(
+                    document,
+                    format!(r#"{{"field":"{spelling}","direction":"{way}"}}"#)
+                );
+                assert_eq!(serde_json::from_str::<SortConfig>(&document).unwrap(), sort);
+            }
+        }
+    }
+
+    #[test]
+    fn an_unknown_sort_key_is_refused_rather_than_defaulted() {
+        // The failure that matters: a build reading a key it does not have must
+        // say so, not quietly sort by due date and look like it worked.
+        for document in [
+            r#"{"field":"scheduled","direction":"asc"}"#,
+            r#"{"field":"dueDate","direction":"descending"}"#,
+            r#"{"direction":"asc"}"#,
+        ] {
+            assert!(
+                serde_json::from_str::<SortConfig>(document).is_err(),
+                "{document} should not parse"
+            );
+        }
+    }
+
+    #[test]
+    fn the_persisted_chain_document_is_an_object_so_it_can_grow() {
+        let chain = FilterChain {
+            filters: vec![in_projects(&["Website"]), in_projects(&["Admin"])],
+        };
+        let document = serde_json::to_string(&chain).unwrap();
+        assert!(
+            document.starts_with(r#"{"filters":[{"#),
+            "an object, not a bare array: {document}"
+        );
+        assert_eq!(
+            serde_json::from_str::<FilterChain>(&document).unwrap(),
+            chain
+        );
+        // An absent list is an empty chain, so a document from before this key
+        // existed — or one a future build wrote without it — still loads.
+        assert_eq!(
+            serde_json::from_str::<FilterChain>("{}").unwrap(),
+            FilterChain::default()
         );
     }
 }

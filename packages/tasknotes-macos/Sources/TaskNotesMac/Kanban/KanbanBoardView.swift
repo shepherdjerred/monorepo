@@ -278,7 +278,7 @@ extension KanbanBoardView {
             hasSelection: selection != nil,
             isRefreshing: isRefreshing,
             isNarrowed: query.isNarrowing,
-            saveableQuery: scope == nil ? query : nil
+            saveableView: SavedViewDraft(scope: scope, query: query)
         )
     }
 

@@ -60,14 +60,14 @@ public final class SavedViewStore {
         views.first { $0.id == id }
     }
 
-    /// Keep a query as a new view, and return it.
+    /// Keep a screen's narrowing as a new view, and return it.
     ///
     /// - Parameters:
     ///   - name: what to call it. Trimmed; an empty name is refused rather than
     ///     stored, because a nameless row in the sidebar is unclickable in
     ///     practice.
     ///   - symbol: which of the closed set of symbols to draw.
-    ///   - query: the query to keep. Its filter becomes the view's base and its
+    ///   - draft: what to keep. Its filters become the view's base and its
     ///     search and sort become where the screen starts.
     ///   - id: the new view's identity. A parameter with a default so a test can
     ///     pin it; nothing else should pass one.
@@ -76,7 +76,7 @@ public final class SavedViewStore {
     public func save(
         name: String,
         symbol: SavedViewSymbol,
-        query: TaskListQuery,
+        draft: SavedViewDraft,
         id: SavedView.ID = UUID().uuidString
     ) -> SavedView? {
         let trimmed = name.trimmingWhitespace()
@@ -84,7 +84,7 @@ public final class SavedViewStore {
             lastError = .Validation(message: "a saved view needs a name")
             return nil
         }
-        let view = SavedView(id: id, name: trimmed, symbol: symbol, query: query)
+        let view = SavedView(id: id, name: trimmed, symbol: symbol, draft: draft)
         views.append(view)
         persist()
         return view

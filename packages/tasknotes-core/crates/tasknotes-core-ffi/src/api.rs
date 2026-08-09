@@ -15,7 +15,9 @@
 //! Swift free functions group by subject at a call site — `taskStatusLabel`,
 //! `taskStatusNext` — since UniFFI has no namespacing for free functions.
 
-use tasknotes_core::domain::{self, FilterConfig, Priority, SortConfig, Task, TaskStatus};
+use tasknotes_core::domain::{
+    self, FilterChain, FilterConfig, Priority, SortConfig, Task, TaskStatus,
+};
 
 use crate::{dates::parse_iso_date, error::CoreError, update::UpdateTaskRequest};
 
@@ -196,6 +198,41 @@ pub fn task_search_matches(task: &Task, query: &str) -> bool {
     domain::search_matches(task, query)
 }
 
+// ── Conjunctions of filters ────────────────────────────────────────────────
+
+/// Keep only the tasks that pass **every** filter in the chain, in input order.
+///
+/// The composition rule lives here rather than in each shell, and the reason is
+/// concrete: a screen that carries a scope *and* a reader's filter cannot merge
+/// them into one [`FilterConfig`] — a list is a union within its dimension, an
+/// empty list already spells "unfiltered" so an empty intersection is
+/// unwritable, and `query` holds one phrase. See
+/// [`tasknotes_core::domain::FilterChain`] for all three worked through. A shell
+/// left to compose them itself gets to pick which of those it gets wrong.
+#[uniffi::export]
+#[must_use]
+pub fn task_filter_chain_apply(tasks: &[Task], chain: &FilterChain) -> Vec<Task> {
+    domain::apply_filter_chain(tasks, chain)
+}
+
+/// Whether one task passes every filter in the chain.
+#[uniffi::export]
+#[must_use]
+pub fn task_filter_chain_matches(task: &Task, chain: &FilterChain) -> bool {
+    chain.matches(task)
+}
+
+/// Whether any member of the chain narrows anything at all.
+///
+/// Exported for the same reason [`task_filter_is_active`] is: a host that knows
+/// the answer is "no" can skip copying every task across the boundary, and it
+/// must not decide that by counting non-empty lists itself.
+#[uniffi::export]
+#[must_use]
+pub fn task_filter_chain_is_active(chain: &FilterChain) -> bool {
+    chain.is_active()
+}
+
 /// Sort a list of tasks. The sort is stable, which is load-bearing: an
 /// unorderable due value compares equal to everything, and stability is what
 /// turns that into "leave it where it was" rather than "shuffle it".
@@ -297,21 +334,141 @@ pub fn update_task_request_to_json(request: UpdateTaskRequest) -> Result<String,
     })
 }
 
+// ── Persisted query documents ──────────────────────────────────────────────
+//
+// A saved view, a restored window, a `tasknotes://` link: each one writes a
+// query down now and reads it back later, possibly on another platform and
+// certainly after the core has changed. These six functions are the whole of
+// that format.
+//
+// ## Why a whole-record codec rather than per-field wire values
+//
+// `task_status_wire_value` / `task_status_parse` exist because a *status* is a
+// value a host holds and shows. A `FilterConfig` is not: it is a record whose
+// shape is the core's, and a host that spells the record itself has to decide
+// the key names, the container, and — the part that actually bites — what
+// happens the day the core grows a dimension. That day already came: `query`
+// was appended, and every hand-written host record had to be edited to match,
+// with nothing failing if it were not.
+//
+// Handing the host an opaque string removes the decision instead of documenting
+// it. There is no key it can misspell, no dimension it can omit, and no second
+// implementation to keep in step — a Windows client reading a macOS saved view
+// gets the same answer by construction rather than by someone having read a
+// comment.
+//
+// ## How a document written today survives the next core change
+//
+// Mechanically, not by convention:
+//
+//   * every field of `FilterConfig` and `FilterChain` is `#[serde(default)]`,
+//     so a document written before a field existed still loads, with that field
+//     at its unfiltered value;
+//   * the *containers* are JSON objects, never arrays, so they can gain a key
+//     at all;
+//   * `domain::filters`' tests pin frozen literal documents in both directions
+//     — a rename, a retype or a non-defaulted new field turns into a failing
+//     test in the core rather than into a saved view that silently loses a
+//     dimension;
+//   * `SortField` and `SortDirection` get their spellings from `rename_all`,
+//     so a new variant is spelled automatically and identically everywhere,
+//     while an *unknown* spelling is refused rather than defaulted — a build
+//     that quietly sorted by due date because it did not recognise the stored
+//     key would look like it worked.
+//
+// JSON, not the FFI buffer, is what makes the last point safe: the record's
+// positional field order is the ABI *across the boundary*, but the persisted
+// document is keyed, so appending a field cannot reinterpret the ones before
+// it.
+
+/// Render a filter as the core's own persisted document.
+///
+/// # Errors
+///
+/// Returns [`CoreError::Invariant`]: for an already-constructed
+/// [`FilterConfig`] a serialization failure is a broken invariant, not bad
+/// input.
+#[uniffi::export]
+pub fn filter_config_to_json(filter: &FilterConfig) -> Result<String, CoreError> {
+    filter.to_json().map_err(CoreError::from)
+}
+
+/// Read a filter back from the core's own persisted document.
+///
+/// # Errors
+///
+/// Returns [`CoreError::Validation`] when the document is not one this build
+/// understands — including an unknown status, priority or key spelling.
+#[uniffi::export]
+pub fn filter_config_from_json(json: &str) -> Result<FilterConfig, CoreError> {
+    FilterConfig::from_json(json).map_err(CoreError::from)
+}
+
+/// Render a conjunction of filters as the core's own persisted document.
+///
+/// # Errors
+///
+/// Returns [`CoreError::Invariant`] when the chain cannot be rendered.
+#[uniffi::export]
+pub fn filter_chain_to_json(chain: &FilterChain) -> Result<String, CoreError> {
+    chain.to_json().map_err(CoreError::from)
+}
+
+/// Read a conjunction of filters back from the core's own persisted document.
+///
+/// # Errors
+///
+/// Returns [`CoreError::Validation`] when the document is not one this build
+/// understands.
+#[uniffi::export]
+pub fn filter_chain_from_json(json: &str) -> Result<FilterChain, CoreError> {
+    FilterChain::from_json(json).map_err(CoreError::from)
+}
+
+/// Render a sort specification as the core's own persisted document.
+///
+/// This is the export that closes the last place a host was inventing a
+/// persisted vocabulary for a core type: `SortField` and `SortDirection` have
+/// `serde` spellings in Rust, and until now nothing exposed them, so each shell
+/// wrote its own table of strings for a value the core owns.
+///
+/// # Errors
+///
+/// Returns [`CoreError::Invariant`] when the sort cannot be rendered.
+#[uniffi::export]
+pub fn sort_config_to_json(sort: SortConfig) -> Result<String, CoreError> {
+    sort.to_json().map_err(CoreError::from)
+}
+
+/// Read a sort specification back from the core's own persisted document.
+///
+/// # Errors
+///
+/// Returns [`CoreError::Validation`] for a sort key or direction this build does
+/// not know. Refused rather than defaulted: a list silently ordered by
+/// something other than what was stored looks like it worked.
+#[uniffi::export]
+pub fn sort_config_from_json(json: &str) -> Result<SortConfig, CoreError> {
+    SortConfig::from_json(json).map_err(CoreError::from)
+}
+
 #[cfg(test)]
 mod tests {
     use tasknotes_core::domain::{
-        ALL_PRIORITIES, ALL_STATUSES, FilterConfig, Priority, SortConfig, SortDirection, SortField,
-        Task, TaskStatus,
+        ALL_PRIORITIES, ALL_STATUSES, FilterChain, FilterConfig, Priority, SortConfig,
+        SortDirection, SortField, Task, TaskStatus,
     };
 
     use super::{
-        core_version, priority_all, priority_label, priority_parse, priority_rank,
+        core_version, filter_chain_from_json, filter_chain_to_json, filter_config_from_json,
+        filter_config_to_json, priority_all, priority_label, priority_parse, priority_rank,
         priority_wire_value, project_display_name, project_matches, project_path,
-        task_filter_active_count, task_filter_apply, task_filter_is_active, task_filter_matches,
-        task_from_json, task_search_matches, task_sort_apply, task_status_all,
-        task_status_is_active, task_status_label, task_status_next, task_status_parse,
-        task_status_wire_value, task_to_json, update_task_request_from_json,
-        update_task_request_to_json,
+        sort_config_from_json, sort_config_to_json, task_filter_active_count, task_filter_apply,
+        task_filter_chain_apply, task_filter_chain_is_active, task_filter_chain_matches,
+        task_filter_is_active, task_filter_matches, task_from_json, task_search_matches,
+        task_sort_apply, task_status_all, task_status_is_active, task_status_label,
+        task_status_next, task_status_parse, task_status_wire_value, task_to_json,
+        update_task_request_from_json, update_task_request_to_json,
     };
     use crate::error::CoreError;
 
@@ -481,6 +638,111 @@ mod tests {
         assert!(
             matches!(error, CoreError::Validation { ref message } if message.contains("markdown file")),
             "unexpected error: {error:?}"
+        );
+    }
+
+    #[test]
+    fn a_chain_composes_two_narrowings_as_an_and_across_the_boundary() {
+        let in_project = |name: &str| -> Task {
+            task_from_json(&format!(
+                r#"{{"id":"Tasks/{name}.md","title":"{name}","projects":["Website","Admin"]}}"#
+            ))
+            .unwrap()
+        };
+        let website_only =
+            task_from_json(r#"{"id":"Tasks/w.md","title":"w","projects":["Website"]}"#).unwrap();
+        let tasks = [in_project("both"), website_only];
+
+        let scoped = |name: &str| FilterConfig {
+            projects: vec![name.to_owned()],
+            ..FilterConfig::default()
+        };
+        let chain = FilterChain {
+            filters: vec![scoped("Website"), scoped("Admin")],
+        };
+
+        assert!(task_filter_chain_is_active(&chain));
+        assert!(task_filter_chain_matches(&tasks[0], &chain));
+        assert!(!task_filter_chain_matches(&tasks[1], &chain));
+        assert_eq!(titles(&task_filter_chain_apply(&tasks, &chain)), ["both"]);
+
+        // The merge a shell would have written instead is an *or*, and admits
+        // the row that is only in one of the two projects.
+        let merged = FilterConfig {
+            projects: vec!["Website".to_owned(), "Admin".to_owned()],
+            ..FilterConfig::default()
+        };
+        assert_eq!(titles(&task_filter_apply(&tasks, &merged)), ["both", "w"]);
+
+        // An empty chain narrows nothing, so a host can skip the whole pass.
+        assert!(!task_filter_chain_is_active(&FilterChain::default()));
+    }
+
+    #[test]
+    fn a_query_survives_the_persisted_document_round_trip() {
+        let filter = FilterConfig {
+            projects: vec!["[[Areas/Work|Work]]".to_owned()],
+            contexts: vec!["home".to_owned()],
+            tags: vec!["release".to_owned()],
+            statuses: vec![TaskStatus::InProgress],
+            priorities: vec![Priority::Highest],
+            has_no_due_date: true,
+            query: "invoice".to_owned(),
+        };
+        let document = filter_config_to_json(&filter).unwrap();
+        assert_eq!(filter_config_from_json(&document).unwrap(), filter);
+        // The vault's own words, so a second client needs no translation table.
+        assert!(document.contains(r#""in-progress""#));
+        assert!(document.contains(r#""highest""#));
+
+        let chain = FilterChain {
+            filters: vec![filter, FilterConfig::default()],
+        };
+        let document = filter_chain_to_json(&chain).unwrap();
+        assert_eq!(filter_chain_from_json(&document).unwrap(), chain);
+
+        for field in [
+            SortField::DueDate,
+            SortField::Priority,
+            SortField::Title,
+            SortField::EffectiveDate,
+        ] {
+            for direction in [SortDirection::Asc, SortDirection::Desc] {
+                let sort = SortConfig { field, direction };
+                let document = sort_config_to_json(sort).unwrap();
+                assert_eq!(sort_config_from_json(&document).unwrap(), sort);
+            }
+        }
+    }
+
+    #[test]
+    fn a_document_this_build_does_not_understand_is_refused_rather_than_defaulted() {
+        let error =
+            sort_config_from_json(r#"{"field":"scheduled","direction":"asc"}"#).unwrap_err();
+        assert!(
+            matches!(error, CoreError::Validation { ref message } if message.contains("a sort")),
+            "unexpected error: {error:?}"
+        );
+        let error = filter_config_from_json(r#"{"statuses":["procrastinating"]}"#).unwrap_err();
+        assert!(
+            matches!(error, CoreError::Validation { ref message } if message.contains("a filter")),
+            "unexpected error: {error:?}"
+        );
+
+        // …while a document missing a dimension this build *does* have loads,
+        // with that dimension unfiltered. That asymmetry is the compatibility
+        // rule: an absent key is a statement from the past, an unknown value is
+        // a statement this build cannot honour.
+        assert_eq!(
+            filter_config_from_json(r#"{"projects":["Work"]}"#).unwrap(),
+            FilterConfig {
+                projects: vec!["Work".to_owned()],
+                ..FilterConfig::default()
+            }
+        );
+        assert_eq!(
+            filter_chain_from_json("{}").unwrap(),
+            FilterChain::default()
         );
     }
 

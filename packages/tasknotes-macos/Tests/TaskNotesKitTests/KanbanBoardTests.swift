@@ -239,13 +239,62 @@ struct KanbanBoardTests {
         #expect(review.isTerminal && !review.isCompleted)
     }
 
-    /// `isRetired` is exactly the disjunction of the two facts, so neither view
-    /// has to maintain the relationship by hand.
-    @Test("retired is completed-or-terminal, for every card on the board")
-    func retiredIsTheDisjunction() throws {
+    /// The three questions a card can be asked about being finished, over the
+    /// fixture, as a table read off it **by hand**.
+    ///
+    /// ⚠️ **This replaces a test that could never fail.** It asserted
+    /// `isRetired == isCompleted || isTerminal` — which is the implementation
+    /// restated, so it passed for *any* definition of any of the three and read
+    /// as coverage while providing none. The only form that can disagree with
+    /// the code is one whose expectations come from the fixture's own inputs
+    /// rather than from the code's own composition, which is what the literals
+    /// below are.
+    ///
+    /// The table is also the clearest statement of why three properties exist:
+    /// **every column here differs from the other two on some row.** Take
+    /// vitamins is completed without being terminal; Weekly review is terminal
+    /// without being completed; Delegated is neither despite sounding final.
+    @Test("completed, terminal and retired are three different questions")
+    func theThreeQuestions() throws {
         let board = try build()
-        for card in board.cards {
-            #expect(card.isRetired == (card.isCompleted || card.isTerminal))
+        let expectations: [FinishedExpectation] = [
+            FinishedExpectation("Tasks/Open one.md", false, false, false),
+            FinishedExpectation("Tasks/Running.md", false, false, false),
+            // Delegated is a live status: only done and cancelled are terminal,
+            // and that is the core's answer, not a guess made here.
+            FinishedExpectation("Tasks/Delegated.md", false, false, false),
+            FinishedExpectation("Tasks/Finished.md", true, true, true),
+            FinishedExpectation("Tasks/Abandoned.md", true, true, true),
+            // Live, today ticked — retired without being terminal.
+            FinishedExpectation("Tasks/Take vitamins.md", true, false, true),
+            // Cancelled, nothing ever ticked — terminal without being completed.
+            FinishedExpectation("Tasks/Weekly review.md", false, true, true),
+        ]
+
+        for expectation in expectations {
+            let card = try #require(board.card(expectation.id))
+            #expect(card.isCompleted == expectation.completed, "\(expectation.id) isCompleted")
+            #expect(card.isTerminal == expectation.terminal, "\(expectation.id) isTerminal")
+            #expect(card.isRetired == expectation.retired, "\(expectation.id) isRetired")
+        }
+    }
+
+    /// One row of the table above.
+    ///
+    /// A named struct rather than a four-member tuple: `large_tuple` caps them
+    /// at two, and the cap is right here — four unlabelled `Bool`s at a call
+    /// site would be exactly the sort of thing that gets transposed silently.
+    private struct FinishedExpectation {
+        let id: TaskId
+        let completed: Bool
+        let terminal: Bool
+        let retired: Bool
+
+        init(_ id: TaskId, _ completed: Bool, _ terminal: Bool, _ retired: Bool) {
+            self.id = id
+            self.completed = completed
+            self.terminal = terminal
+            self.retired = retired
         }
     }
 

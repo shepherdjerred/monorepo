@@ -78,4 +78,57 @@ struct RetiredRowTests {
         #expect(try row(.cancelled, recurring: false, occurrenceDone: false).isRetired)
         #expect(try row(.waiting, recurring: false, occurrenceDone: false).isRetired == false)
     }
+
+    @Test("terminal is the core's answer about status, asked of every status there is")
+    func terminalTracksTheCoreAcrossTheWholeEnum() throws {
+        // ⚠️ **Recurring rows, and that is the whole point.** A first version of
+        // this test used plain ones and was *vacuous*: for a plain task
+        // `isCompleted` already equals the negated status, so `isTerminal`
+        // defined wrongly as `isCompleted` still satisfied every assertion. It
+        // was caught by redefining `isTerminal` and watching this test stay
+        // green. The same collapse that hid the original bug hides a test of
+        // it — a fixture has to make the two facts disagree before it can tell
+        // them apart.
+        for status in taskStatusAll() {
+            let each = try row(status, recurring: true, occurrenceDone: false)
+            #expect(each.isCompleted == false, "no occurrence is ticked, whatever the status")
+            #expect(
+                each.isTerminal == !taskStatusIsActive(status: status),
+                "\(status) must take its terminal reading from the core, not from a list here")
+        }
+        // And the membership itself, so a change to which statuses are terminal
+        // is a test failure somewhere rather than a silent re-drawing of every
+        // list in the app. Driven by `taskStatusAll()` rather than a literal
+        // list, so a seventh status added in Rust arrives here automatically
+        // instead of defaulting to "not terminal".
+        let terminal = try taskStatusAll().filter {
+            try row($0, recurring: true, occurrenceDone: false).isTerminal
+        }
+        #expect(terminal == [.done, .cancelled])
+    }
+
+    @Test("retired reads true in exactly the cases the fixtures describe")
+    func retiredMatchesAnIndependentReading() throws {
+        // ⚠️ **Not `isRetired == isCompleted || isTerminal`.** That was the
+        // first version and it is the implementation restated, so it passes for
+        // *any* definition of its two halves and can never fail — a test that
+        // reads as coverage and is not. The expectation here is derived from
+        // the fixture's own inputs instead, which is the only way it can
+        // disagree with the code.
+        for status in taskStatusAll() {
+            for recurring in [true, false] {
+                for occurrenceDone in [true, false] {
+                    let each = try row(
+                        status, recurring: recurring, occurrenceDone: occurrenceDone)
+                    let isActive = taskStatusIsActive(status: status)
+                    // A plain task has no occurrences, so ticking one is not a
+                    // thing that can have happened to it.
+                    let expected = recurring ? (occurrenceDone || !isActive) : !isActive
+                    #expect(
+                        each.isRetired == expected,
+                        "\(status) recurring=\(recurring) ticked=\(occurrenceDone)")
+                }
+            }
+        }
+    }
 }

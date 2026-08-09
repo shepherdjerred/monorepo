@@ -49,8 +49,7 @@ struct TaskListActions {
     /// Whether anything is being hidden, which is what makes Clear applicable.
     let isNarrowed: Bool
 
-    /// The query this screen could be kept as a saved view, or `nil` when it
-    /// could not be.
+    /// What this screen would be kept as, if the reader asked for it.
     ///
     /// ## Why this travels on the focused value
     ///
@@ -61,22 +60,22 @@ struct TaskListActions {
     /// the Task menu reads its selection — rather than the window hoisting a
     /// copy of every screen's query into shared state.
     ///
-    /// ## 🔴 Why it is `nil` on a scoped screen, and what the core should export
+    /// ## Why it is no longer optional
     ///
-    /// A saved view stores exactly one `FilterConfig`. On a screen that already
-    /// has a ``TaskListScope``, there are **two** in play — the scope's and the
-    /// reader's — applied in sequence, and the core's filter semantics are
-    /// *"every dimension must pass, any value within a dimension"*. So merging
-    /// them by concatenating each dimension turns an **and** into an **or**:
-    /// a Website screen narrowed to Admin would save as *"Website or Admin"*.
+    /// It used to be `nil` on any screen that already carried a
+    /// ``TaskListScope`` — a project, a context, a tag, another saved view —
+    /// and the sidebar's `+` greyed out there. The reason was real: a saved
+    /// view stored exactly one `FilterConfig`, two narrowings were in force,
+    /// and merging them by concatenating each dimension turns an **and** into
+    /// an **or** — a *Website* screen narrowed to *Admin* would have been kept
+    /// as *"Website or Admin"*.
     ///
-    /// There is no `FilterConfig` conjunction in the FFI surface, and inventing
-    /// one in Swift would be exactly the second query engine this phase exists
-    /// not to write. So the control is **disabled, never hidden**, and the
-    /// capability is not lost: narrow Browse to what you want and save from
-    /// there. Exporting `filter_config_and(a, b)` — or a `Vec<FilterConfig>`
-    /// conjunction — would remove the restriction outright.
-    let saveableQuery: TaskListQuery?
+    /// The core now exports `FilterChain`, so the stored value is the whole
+    /// stack joined by the core's own `and` and there is nothing left to merge.
+    /// The composition happens in ``SavedViewDraft/init(scope:query:)``, which
+    /// conjoins rather than combines, so every screen can be kept and the
+    /// affordance is simply enabled.
+    let saveableView: SavedViewDraft
 }
 
 private struct TaskListActionsKey: FocusedValueKey {

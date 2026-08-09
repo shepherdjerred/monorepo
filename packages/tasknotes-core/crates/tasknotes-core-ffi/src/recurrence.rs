@@ -209,9 +209,34 @@ pub fn recurrence_is_expandable(
 
 /// How many instances the series has in total, when that is finite and knowable.
 ///
-/// `None` covers three situations the reference also conflates: the rule is
-/// unbounded, its `UNTIL` precedes its `DTSTART`, or the series is longer than
-/// the reference's own 10,000-instance ceiling.
+/// ## ⚠️ `None` means "no knowable number", **not** "repeats forever"
+///
+/// This is the one place on this boundary where the obvious rendering of `None`
+/// is wrong, so it is stated rather than left to be inferred. `None` covers four
+/// situations the reference conflates, and only the first of them is "unbounded":
+///
+/// 1. the rule has no `COUNT` and no `UNTIL`;
+/// 2. its `UNTIL` precedes its `DTSTART`, so the series is *empty* — the
+///    opposite of endless;
+/// 3. the series is longer than the reference's own 10,000-instance ceiling,
+///    which is a refusal to count, not a statement that counting is impossible;
+/// 4. `COUNT` is present but not a number — `COUNT=abc` — which this function
+///    reads with a digits-only regex and gives up on, while the expansion
+///    decrements it to `NaN` and stops after **exactly one** occurrence.
+///
+/// A host that prints "Repeats indefinitely" for `None` therefore contradicts
+/// [`recurrence_summary`], which reads the *normalised* rule and answers "Every
+/// day, once" for case 4 and "until 2030-12-31" for case 3.
+///
+/// **The summary is the authority on whether and when a rule stops; this
+/// function is a supplementary number, and it should be shown only when it is
+/// one.** The disagreement is not a porting defect and is deliberately not
+/// repaired here: `getFiniteRecurringInstanceCount` lives in `@tasknotes/model`,
+/// a third-party package this repository does not own, and
+/// `@tasknotes/fixtures` records its answers — case 4 is pinned by
+/// `0313-malformed-freq-daily-count-abc` as `finiteInstanceCount: null` beside
+/// `occurrenceCount: 1`. Moving this function would make the corpus disagree
+/// with the oracle that generates it.
 ///
 /// # Errors
 ///
@@ -449,6 +474,44 @@ mod tests {
         assert_eq!(
             recurrence_finite_instance_count("FREQ=DAILY", Some(scheduled()), None).unwrap(),
             None
+        );
+    }
+
+    /// The count and the summary disagree, and the disagreement is pinned here
+    /// so no shell rediscovers it by drawing "Repeats indefinitely" beside
+    /// "Every day, once".
+    ///
+    /// `getFiniteRecurringInstanceCount` reads `COUNT` out of the raw text with
+    /// a digits-only regex; the expansion normalises `COUNT=abc` to `NaN` and
+    /// stops after one occurrence. `@tasknotes/fixtures` records the *reference's*
+    /// answer for both — `finiteInstanceCount: null` beside `occurrenceCount: 1`
+    /// in `0313-malformed-freq-daily-count-abc` — so this is parity, not a bug
+    /// the port introduced, and the summary is the accurate half.
+    #[test]
+    fn the_count_declines_where_the_summary_can_still_answer() {
+        assert_eq!(
+            recurrence_finite_instance_count("FREQ=DAILY;COUNT=abc", Some(scheduled()), None)
+                .unwrap(),
+            None,
+            "no knowable number — which is not the same as 'no end'"
+        );
+        assert_eq!(
+            recurrence_summary("FREQ=DAILY;COUNT=abc", Some(scheduled()), None).as_deref(),
+            Some("Every day, once"),
+            "…and the rule in fact fires exactly once"
+        );
+
+        // The same shape one ceiling up: a daily rule running to 3000 is far
+        // past the reference's 10,000-instance limit, so the count declines
+        // while the summary still names the end date.
+        assert_eq!(
+            recurrence_finite_instance_count("FREQ=DAILY;UNTIL=30000101", Some(scheduled()), None)
+                .unwrap(),
+            None
+        );
+        assert_eq!(
+            recurrence_summary("FREQ=DAILY;UNTIL=30000101", Some(scheduled()), None).as_deref(),
+            Some("Every day, until 3000-01-01")
         );
     }
 

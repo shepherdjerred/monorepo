@@ -103,24 +103,24 @@ struct SidebarList: View {
 
     /// The Views heading, and the control that keeps the current query.
     ///
-    /// **Disabled, never hidden.** On a screen that already *is* a saved slice
-    /// — a project, a tag, another saved view — `saveableQuery` is `nil` and
-    /// the button greys out, because two sequential filters cannot be stored as
-    /// the one `FilterConfig` a view holds. See ``TaskListActions/saveableQuery``
-    /// for the whole argument and for what the core would need to export to
-    /// remove the restriction.
+    /// **Disabled, never hidden**, and now disabled for exactly one reason:
+    /// there is no list in front of you. It used to grey out on any screen that
+    /// already carried a scope — a project, a tag, another saved view — because
+    /// two sequential filters could not be stored as the one `FilterConfig` a
+    /// view held. The core's `FilterChain` removed that restriction; see
+    /// ``TaskListActions/saveableView``.
     private var viewsHeader: some View {
         HStack {
             Text("Views")
             Spacer()
             Button {
-                guard let query = actions?.saveableQuery else { return }
-                editor = .create(query)
+                guard let draft = actions?.saveableView else { return }
+                editor = .create(draft)
             } label: {
                 Image(systemName: "plus")
             }
             .buttonStyle(.borderless)
-            .disabled(actions?.saveableQuery == nil)
+            .disabled(actions == nil)
             .help("Keep the current list as a saved view")
             .accessibilityLabel("New Saved View")
             .accessibilityIdentifier(AccessibilityIdentifier.SavedViews.save)

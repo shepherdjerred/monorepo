@@ -23,8 +23,8 @@ struct SavedViewEditor: View {
     /// beside a separate `@State` subject is the shape where the sheet opens
     /// one frame before the subject changes and renames the wrong view.
     enum Mode: Equatable, Identifiable {
-        /// Keep the query the frontmost screen is showing.
-        case create(TaskListQuery)
+        /// Keep the narrowing the frontmost screen is showing.
+        case create(SavedViewDraft)
         /// Rename or re-symbol one that already exists.
         case edit(SavedView)
 
@@ -143,8 +143,8 @@ struct SavedViewEditor: View {
     private func commit() {
         guard !name.trimmingWhitespace().isEmpty else { return }
         switch mode {
-        case .create(let query):
-            store.save(name: name, symbol: symbol, query: query)
+        case .create(let draft):
+            store.save(name: name, symbol: symbol, draft: draft)
         case .edit(let view):
             var updated = view
             updated.name = name.trimmingWhitespace()

@@ -27,12 +27,12 @@ use chrono::Weekday;
 use tasknotes_core::{
     dates::{DateGroup, UpcomingHorizon},
     domain::{
-        BlockedByEntry, CalendarEvent, ContextName, CreateTaskRequest, ExtraFields, FilterConfig,
-        FilterOptions, HealthState, HealthStatus, InlineTimeEntry, NlpParseResult, Pagination,
-        PomodoroPhase, PomodoroStatus, Priority, ProjectName, QueryResponse, RecurrenceAnchor,
-        Reminder, ReminderKind, SortConfig, SortDirection, SortField, TagName, Task, TaskId,
-        TaskList, TaskQueryFilter, TaskStats, TaskStatus, TaskTime, TaskTitle, TimeEntry,
-        TimeSummary, TopTask, VaultInfo,
+        BlockedByEntry, CalendarEvent, ContextName, CreateTaskRequest, ExtraFields, FilterChain,
+        FilterConfig, FilterOptions, HealthState, HealthStatus, InlineTimeEntry, NlpParseResult,
+        Pagination, PomodoroPhase, PomodoroStatus, Priority, ProjectName, QueryResponse,
+        RecurrenceAnchor, Reminder, ReminderKind, SortConfig, SortDirection, SortField, TagName,
+        Task, TaskId, TaskList, TaskQueryFilter, TaskStats, TaskStatus, TaskTime, TaskTitle,
+        TimeEntry, TimeSummary, TopTask, VaultInfo,
     },
     net::InstanceCompletion,
     recurrence::Frequency,
@@ -341,6 +341,18 @@ pub struct FilterConfig {
     /// construction site.
     #[uniffi(default = "")]
     pub query: String,
+}
+
+/// See [`tasknotes_core::domain::FilterChain`].
+///
+/// A conjunction: a task belongs when it passes **every** member. Appended
+/// after [`FilterConfig`] rather than replacing it, because the two answer
+/// different questions — one narrowing versus a stack of them.
+#[uniffi::remote(Record)]
+pub struct FilterChain {
+    /// The filters, all of which must pass. Empty admits everything.
+    #[uniffi(default = [])]
+    pub filters: Vec<FilterConfig>,
 }
 
 /// See [`tasknotes_core::domain::SortConfig`].

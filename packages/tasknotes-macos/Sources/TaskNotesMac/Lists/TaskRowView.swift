@@ -83,7 +83,7 @@ struct TaskRowView: View {
     /// task in both Website and Admin still shows Admin on the Website screen.
     /// The scope's own filter record is the input rather than its title,
     /// because a title is a display string and two projects can share one.
-    var omitting: FilterConfig?
+    var omitting: FilterChain?
 
     @State private var isHovering = false
     @State private var isSchedulePresented = false
@@ -267,16 +267,22 @@ struct TaskRowView: View {
     /// facet list deduplicates with it: `[[Areas/Work|Work]]` and `Work` are
     /// one project, and a scope carrying either spelling has to suppress both
     /// or the suppression works on some rows and not others.
+    /// Across **every** link in the chain, because a scope is now a
+    /// conjunction: a saved view kept from a project screen carries the
+    /// project in one link and the reader's own filter in another, and a row
+    /// should stop printing whichever of them the heading already implies.
     private func isImplied(project: ProjectName) -> Bool {
         guard let omitting else { return false }
-        return omitting.projects.contains { projectMatches(left: project, right: $0) }
+        return omitting.filters.contains { filter in
+            filter.projects.contains { projectMatches(left: project, right: $0) }
+        }
     }
 
     private func isImplied(context: ContextName) -> Bool {
         // Exact, because that is how `taskFilterApply` matches a context. A
         // looser test here would hide a value the filter would not have
         // selected on.
-        omitting?.contexts.contains(context) == true
+        omitting?.filters.contains { $0.contexts.contains(context) } == true
     }
 
     /// The row's spoken description.
