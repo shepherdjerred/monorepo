@@ -1,6 +1,10 @@
 import Configuration from "#src/configuration.ts";
 import { Client, Events, GatewayIntentBits } from "discord.js";
-import { autoMigrateLegacyKarma } from "#src/db/auto-migrate.ts";
+import * as Sentry from "@sentry/bun";
+import {
+  markGatewayConnected,
+  markGatewayDisconnected,
+} from "#src/discord/gateway-state.ts";
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
@@ -11,12 +15,50 @@ client.once(Events.ClientReady, (readyClient) => {
   console.warn(
     `[Discord] Connected to ${readyClient.guilds.cache.size.toString()} guild(s)`,
   );
-
-  // Auto-migrate legacy karma records if needed
-  void autoMigrateLegacyKarma();
 });
 
-console.warn("[Discord] Logging in to Discord...");
-await client.login(Configuration.discordToken);
+// Gateway lifecycle drives the liveness probe. discord.js reconnects on its
+// own, so these only record state — nothing here forces a restart directly.
+client.on(Events.ShardReady, (shardId) => {
+  console.warn(`[Discord] Shard ${shardId.toString()} ready`);
+  markGatewayConnected();
+});
+
+client.on(Events.ShardResume, (shardId) => {
+  console.warn(`[Discord] Shard ${shardId.toString()} resumed`);
+  markGatewayConnected();
+});
+
+client.on(Events.ShardDisconnect, (event, shardId) => {
+  console.error(
+    `[Discord] Shard ${shardId.toString()} disconnected (code ${String(event.code)})`,
+  );
+  markGatewayDisconnected();
+});
+
+client.on(Events.ShardError, (error, shardId) => {
+  console.error("[Discord] Shard error:", shardId, error);
+  Sentry.captureException(error, {
+    tags: { source: "discord-shard", shardId: shardId.toString() },
+  });
+});
+
+client.on(Events.Error, (error) => {
+  console.error("[Discord] Client error:", error);
+  Sentry.captureException(error, { tags: { source: "discord-client" } });
+});
+
+/** Connect to the gateway.
+ *
+ *  Deliberately NOT called at module scope. Login is the slowest and most
+ *  rate-limit-prone step of startup, and importing this module used to block
+ *  on it — which meant the health server could not bind until Discord was up,
+ *  so probes got connection-refused during exactly the window the startup
+ *  budget exists to cover. `src/index.ts` binds the health port first, then
+ *  calls this. */
+export async function loginDiscord(): Promise<void> {
+  console.warn("[Discord] Logging in to Discord...");
+  await client.login(Configuration.discordToken);
+}
 
 export default client;

@@ -40,6 +40,8 @@ export type TestLakeMatchFact = {
   kills: number;
   deaths: number;
   assists: number;
+  gameDurationSeconds?: number;
+  timePlayedSeconds?: number;
   teamId?: number;
   /** Arena subteam (1-8); leave unset for non-Arena queues. */
   playerSubteamId?: number;
@@ -64,6 +66,8 @@ let testBuildCounter = 0;
 
 function matchRowFromFact(fact: TestLakeMatchFact): MatchLakeRow {
   const created = fact.gameCreationAt.getTime();
+  const gameDurationSeconds = fact.gameDurationSeconds ?? 1800;
+  const timePlayedSeconds = fact.timePlayedSeconds ?? gameDurationSeconds;
   return {
     match_id: fact.matchId,
     game_id: fact.matchId.replaceAll(/\D/g, "") || "0",
@@ -71,8 +75,8 @@ function matchRowFromFact(fact: TestLakeMatchFact): MatchLakeRow {
     month: lakeMonth(created),
     game_creation_at: lakeTimestamp(created),
     game_start_at: lakeTimestamp(created),
-    game_end_at: lakeTimestamp(created + 1_800_000),
-    game_duration_seconds: 1800,
+    game_end_at: lakeTimestamp(created + gameDurationSeconds * 1000),
+    game_duration_seconds: gameDurationSeconds,
     queue_id: 420,
     queue: fact.queue,
     game_mode: "CLASSIC",
@@ -131,7 +135,7 @@ function matchRowFromFact(fact: TestLakeMatchFact): MatchLakeRow {
     first_blood_kill: false,
     champ_level: 16,
     champ_experience: 15_000,
-    time_played: 1800,
+    time_played: timePlayedSeconds,
     total_time_spent_dead: 120,
     longest_time_spent_living: 700,
     time_ccing_others: 25,

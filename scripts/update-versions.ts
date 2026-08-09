@@ -37,11 +37,11 @@ type ResetGitRunner = (args: string[]) => Promise<unknown>;
 /**
  * Reconstruct the generated bump branch from current main.
  *
- * Main image builds are scoped from the last green main build, and a failed
- * commit-back prevents that baseline from advancing. The current candidate
- * state therefore contains every still-pending image change. Starting from
- * main is both cumulative and immune to conflicts from a closed or superseded
- * generated PR.
+ * Main image builds are scoped from the last main commit whose image and
+ * version commit-back lanes both passed, while generated PRs may overlap or be
+ * superseded. The current candidate state therefore contains every
+ * still-pending image change. Starting from main is both cumulative and immune
+ * to conflicts from a closed or superseded generated PR.
  */
 export async function resetVersionBumpBranch(
   git: ResetGitRunner,

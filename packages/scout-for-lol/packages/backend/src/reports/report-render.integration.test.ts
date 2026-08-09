@@ -665,6 +665,9 @@ describe("RENDER clause — full runner pipeline", () => {
     });
     expect(run.status).toBe("SUCCESS");
     expect(run.rowsReturned).toBe(2);
+    expect(run.querySnapshot).toBe(report.queryText);
+    expect(run.visualizationS3Key).toEndWith(".visualization.json");
+    expect(run.visualizationByteSize).toBeGreaterThan(0);
     // 180s: the CI lint+typecheck+test bundle runs phases in parallel in one
     // CPU-limited container, so this satori/resvg render (2.7s on idle cores)
     // can be timeshared into minutes (5.0s in build 5027, >60s in 5028).
@@ -702,6 +705,7 @@ describe("RENDER clause — full runner pipeline", () => {
     });
     expect(run.status).toBe("FAILED");
     expect(run.errorMessage).not.toBeNull();
+    expect(run.querySnapshot).toBe(report.queryText);
   });
 });
 

@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+  // Stable in-repo output (gitignored) so codegen lands deterministically in a
+  // bun workspace — matches the birmel and scout-for-lol backend pattern.
+  output   = "../generated/prisma/client"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// A Discord user who has given or received karma. Rows are created on demand
+// the first time a user appears on either side of a karma event.
+model Person {
+  id       String  @id
+  given    Karma[] @relation("KarmaGiver")
+  received Karma[] @relation("KarmaReceiver")
+
+  @@map("person")
+}
+
+// One karma event: `giver` awarded `amount` to `receiver` in `guildId`.
+//
+// `amount` is a signed integer, not a flag: self-gives store a negative
+// penalty, and the 2023 rows imported from the predecessor bot carry
+// pre-aggregated balances up to +42. Every read sums this column.
+//
+// The legacy TypeORM schema left `guildId`, `giverId`, and `receiverId`
+// nullable. The import in `scripts/import-legacy.ts` asserts zero nulls across
+// all three before writing, so they are required here.
+model Karma {
+  id         Int      @id @default(autoincrement())
+  amount     Int
+  datetime   DateTime
+  reason     String?
+  guildId    String
+  receiverId String
+  giverId    String
+
+  receiver Person @relation("KarmaReceiver", fields: [receiverId], references: [id])
+  giver    Person @relation("KarmaGiver", fields: [giverId], references: [id])
+
+  @@index([guildId, receiverId])
+  @@index([guildId, giverId])
+  // Supports the time-scoped leaderboards added in the follow-up PR.
+  @@index([guildId, datetime])
+  @@map("karma")
+}

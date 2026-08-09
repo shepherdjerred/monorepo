@@ -5,6 +5,10 @@ import type {
   ReportQueryItem,
   ReportWhereClause,
 } from "#src/model/report-query-spec.ts";
+import {
+  formatTemporalAnalysis,
+  parseTemporalAnalysisClause,
+} from "#src/model/temporal-analysis.ts";
 
 export function formatReportQuery(queryText: string): string {
   const trimmed = queryText.trim();
@@ -31,12 +35,24 @@ function formatAst(ast: ReportQueryAst): string | null {
     formatWhere(ast.where),
     `GROUP BY ${ast.groupBy.value}`,
     formatHaving(ast.having),
+    formatAnalysis(ast.analysis),
     formatOrderBy(ast.orderBy),
     formatLimit(ast.limit),
     formatRender(ast.render),
   ];
 
   return clauses.filter((clause) => clause !== null).join("\n");
+}
+
+function formatAnalysis(analysis: ReportQueryItem | undefined): string | null {
+  if (analysis === undefined) return null;
+  try {
+    return formatTemporalAnalysis(
+      parseTemporalAnalysisClause(analysis.value),
+    ).join("\n");
+  } catch {
+    return `ANALYZE ${analysis.value}`;
+  }
 }
 
 function formatHaving(having: ReportQueryItem | undefined): string | null {

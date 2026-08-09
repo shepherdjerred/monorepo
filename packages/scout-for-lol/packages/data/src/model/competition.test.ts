@@ -36,9 +36,13 @@ const SCHEDULE_FIELDS = {
   updateCronExpression: null,
   nextScheduledUpdateAt: null,
   lastScheduledUpdateAt: null,
+  analysisTimezone: "UTC",
 } satisfies Pick<
   Competition,
-  "updateCronExpression" | "nextScheduledUpdateAt" | "lastScheduledUpdateAt"
+  | "updateCronExpression"
+  | "nextScheduledUpdateAt"
+  | "lastScheduledUpdateAt"
+  | "analysisTimezone"
 >;
 
 const DEFAULT_COMPETITION_NOTIFICATION_FIELDS = {

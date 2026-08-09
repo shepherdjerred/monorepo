@@ -115,6 +115,7 @@ const IngressSchema = z.object({
     tls: z.array(z.object({ hosts: z.array(z.literal("plane")) })),
     rules: z.array(
       z.object({
+        host: z.undefined().optional(),
         http: z.object({
           paths: z.array(
             z.object({
@@ -130,6 +131,26 @@ const IngressSchema = z.object({
         }),
       }),
     ),
+  }),
+});
+
+const PlaneIngressServiceSchema = z.object({
+  kind: z.literal("Service"),
+  metadata: z.object({
+    name: z.enum([
+      "plane-ingress-admin",
+      "plane-ingress-api",
+      "plane-ingress-live",
+      "plane-ingress-silo",
+      "plane-ingress-space",
+      "plane-ingress-web",
+    ]),
+    namespace: z.literal("plane"),
+  }),
+  spec: z.object({
+    clusterIP: z.undefined().optional(),
+    selector: z.object({ "app.name": z.string() }),
+    ports: z.array(z.object({ port: z.number() })).length(1),
   }),
 });
 
@@ -182,6 +203,10 @@ describe("Plane Commercial deployment", () => {
     const ingress = documents
       .map((document) => IngressSchema.safeParse(document))
       .find((result) => result.success);
+    const ingressServices = documents.flatMap((document) => {
+      const result = PlaneIngressServiceSchema.safeParse(document);
+      return result.success ? [result.data] : [];
+    });
     if (!secret?.success || !namespace?.success || !ingress?.success) {
       throw new Error("Plane infrastructure resources were not synthesized");
     }
@@ -192,6 +217,26 @@ describe("Plane Commercial deployment", () => {
       "pod-security.kubernetes.io/audit": "restricted",
       "pod-security.kubernetes.io/warn": "restricted",
     });
+    expect(ingressServices).toHaveLength(6);
+    expect(
+      Object.fromEntries(
+        ingressServices.map((service) => [
+          service.metadata.name,
+          {
+            selector: service.spec.selector["app.name"],
+            port: service.spec.ports[0]?.port,
+          },
+        ]),
+      ),
+    ).toEqual({
+      "plane-ingress-admin": { selector: "plane-plane-admin", port: 3000 },
+      "plane-ingress-api": { selector: "plane-plane-api", port: 8000 },
+      "plane-ingress-live": { selector: "plane-plane-live", port: 3000 },
+      "plane-ingress-silo": { selector: "plane-plane-silo", port: 3000 },
+      "plane-ingress-space": { selector: "plane-plane-space", port: 3000 },
+      "plane-ingress-web": { selector: "plane-plane-web", port: 3000 },
+    });
+    expect(ingress.data.spec.rules[0]?.host).toBeUndefined();
     expect(
       ingress.data.spec.rules[0]?.http.paths.map((path) => path.path),
     ).toEqual([
@@ -211,7 +256,7 @@ describe("Plane Commercial deployment", () => {
           path: "/api/",
           backend: expect.objectContaining({
             service: expect.objectContaining({
-              name: "plane-api",
+              name: "plane-ingress-api",
               port: { number: 8000 },
             }),
           }),
@@ -220,7 +265,7 @@ describe("Plane Commercial deployment", () => {
           path: "/",
           backend: expect.objectContaining({
             service: expect.objectContaining({
-              name: "plane-web",
+              name: "plane-ingress-web",
               port: { number: 3000 },
             }),
           }),

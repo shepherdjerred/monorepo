@@ -1,6 +1,7 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { useInterval } from "react-use";
 import { Container } from "./stories/container.tsx";
+import { GameView } from "./game-view.tsx";
 import { socket } from "./socket.ts";
 import {
   type InputRequest,
@@ -80,6 +81,7 @@ export function App() {
   const [occupied, setOccupied] = useState<boolean[]>([]);
   const [names, setNames] = useState<(string | null)[]>([]);
   const [latency, setLatency] = useState<number>();
+  const [driverFeedEnabled, setDriverFeedEnabled] = useState(false);
   const pressed = useRef<Set<string>>(new Set());
   const [pressedCodes, setPressedCodes] = useState<Set<string>>(
     () => new Set(),
@@ -149,11 +151,21 @@ export function App() {
   // Subscribe to server responses (seat assignment + occupancy).
   useEffect(() => {
     const onResponse = (response: Response) => {
-      if (response.kind === "seat") {
-        setSeat(response.value.seat);
-      } else if (response.kind === "seats") {
-        setOccupied(response.value.occupied);
-        setNames(response.value.names);
+      switch (response.kind) {
+        case "seat":
+          setSeat(response.value.seat);
+          break;
+        case "seats":
+          setOccupied(response.value.occupied);
+          setNames(response.value.names);
+          break;
+        case "status":
+          setDriverFeedEnabled(response.value.driverFeedEnabled);
+          break;
+        case "leaderboard":
+        case "login":
+        case "screenshot":
+          break;
       }
     };
     socket.on("response", onResponse);
@@ -259,6 +271,10 @@ export function App() {
               onRelease={releaseSeat}
             />
           </header>
+
+          {hasSeat && driverFeedEnabled && socket.id !== undefined && (
+            <GameView driverSocketId={socket.id} />
+          )}
 
           <section className="grid gap-4 xl:grid-cols-[1fr_320px]">
             <div className="overflow-hidden rounded-[2rem] border border-zinc-800 bg-zinc-950/80 p-3 shadow-2xl shadow-black/40 sm:p-5">

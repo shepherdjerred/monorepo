@@ -5,7 +5,7 @@ import {
   invalidateInheritedWipInspection,
   requireCurrentInheritedWipInspection,
 } from "./inherited-wip.ts";
-import type { FleetEnvironment } from "./ports.ts";
+import type { CommandResult, FleetEnvironment } from "./ports.ts";
 import type { PrState } from "./schemas.ts";
 import type { FleetStore } from "./state.ts";
 
@@ -25,9 +25,10 @@ type RestackToolOptions = {
   assertNotWaitingForAnswer: () => void;
 };
 
-async function recordCompletedRestack(
+async function captureLocalHead(
   options: RestackToolOptions,
-): Promise<void> {
+  purpose: string,
+): Promise<string> {
   const result = await options.environment.runLocalCommand({
     executable: "git",
     args: ["rev-parse", "HEAD"],
@@ -37,14 +38,66 @@ async function recordCompletedRestack(
     maxOutputBytes: 1024,
   });
   if (result.exitCode !== 0 || result.stdoutTruncated === true) {
-    throw new Error(
-      `Failed to capture completed restack HEAD: ${result.stderr}`,
-    );
+    throw new Error(`Failed to capture ${purpose} HEAD: ${result.stderr}`);
   }
+  return result.stdout.trim();
+}
+
+async function recordActiveRestack(options: RestackToolOptions): Promise<void> {
+  options.store.activeRestacks.set(options.pr.identity.number, {
+    remoteHeadSha: options.pr.identity.headSha,
+    localHeadSha: await captureLocalHead(options, "active restack"),
+  });
+}
+
+async function recordCompletedRestack(
+  options: RestackToolOptions,
+): Promise<void> {
   options.store.completedRestacks.set(options.pr.identity.number, {
     remoteHeadSha: options.pr.identity.headSha,
-    localHeadSha: result.stdout.trim(),
+    localHeadSha: await captureLocalHead(options, "completed restack"),
   });
+}
+
+async function isRebaseInProgress(
+  options: RestackToolOptions,
+): Promise<boolean> {
+  for (const controlDirectory of ["rebase-merge", "rebase-apply"]) {
+    const pathResult = await options.environment.runLocalCommand({
+      executable: "git",
+      args: ["rev-parse", "--git-path", controlDirectory],
+      cwd: options.worktree,
+      timeoutMs: 30_000,
+      signal: options.signal,
+      maxOutputBytes: 1024,
+    });
+    if (pathResult.exitCode !== 0 || pathResult.stdoutTruncated === true) {
+      throw new Error(
+        `Failed to resolve ${controlDirectory} rebase control path: ${pathResult.stderr}`,
+      );
+    }
+    const controlPath = pathResult.stdout.trim();
+    if (controlPath.length === 0) {
+      throw new Error(
+        `Git returned an empty ${controlDirectory} rebase control path`,
+      );
+    }
+    const directoryResult = await options.environment.runLocalCommand({
+      executable: "test",
+      args: ["-d", controlPath],
+      cwd: options.worktree,
+      timeoutMs: 30_000,
+      signal: options.signal,
+      maxOutputBytes: 1024,
+    });
+    if (directoryResult.exitCode === 0) return true;
+    if (directoryResult.exitCode !== 1) {
+      throw new Error(
+        `Failed to inspect ${controlDirectory} rebase control state: ${directoryResult.stderr}`,
+      );
+    }
+  }
+  return false;
 }
 
 async function requireCurrentCompletedRestack(
@@ -55,6 +108,7 @@ async function requireCurrentCompletedRestack(
   );
   const live = await collectInheritedWipEvidence(options);
   if (
+    options.store.activeRestacks.has(options.pr.identity.number) ||
     expected?.remoteHeadSha !== options.pr.identity.headSha ||
     expected.localHeadSha !== live.localHeadSha
   ) {
@@ -94,16 +148,32 @@ export function createWorkerRestackTools(options: RestackToolOptions) {
             throw new Error("Stack write lease is not available");
           }
           await requireCurrentInheritedWipInspection(options);
-          invalidateInheritedWipInspection({ store, pr });
+          invalidateInheritedWipInspection(options);
           store.completedRestacks.delete(pr.identity.number);
-          const result = await environment.startRestack(pr, signal);
+          await recordActiveRestack(options);
+          let result: CommandResult;
+          try {
+            result = await environment.startRestack(pr, signal);
+          } catch (error) {
+            store.activeRestacks.delete(pr.identity.number);
+            store.releaseLease(pr.identity.number, "stack-write", pr.stackId);
+            throw error;
+          }
           const output = `${result.stdout}\n${result.stderr}`.trim();
-          if (result.exitCode !== 0 && !/conflict/i.test(output)) {
+          if (await isRebaseInProgress(options)) {
+            await recordActiveRestack(options);
+            if (result.exitCode !== 0 && !/conflict/i.test(output)) {
+              throw new Error(`git-spice restack failed: ${output}`);
+            }
+            return { completed: false, output };
+          }
+          store.activeRestacks.delete(pr.identity.number);
+          if (result.exitCode !== 0) {
             store.releaseLease(pr.identity.number, "stack-write", pr.stackId);
             throw new Error(`git-spice restack failed: ${output}`);
           }
-          if (result.exitCode === 0) await recordCompletedRestack(options);
-          return { completed: result.exitCode === 0, output };
+          await recordCompletedRestack(options);
+          return { completed: true, output };
         }),
     }),
     continue_restack: createTool({
@@ -123,7 +193,8 @@ export function createWorkerRestackTools(options: RestackToolOptions) {
           if (store.stackWriteOwners.get(pr.stackId) !== pr.identity.number) {
             throw new Error("Worker does not hold the stack write lease");
           }
-          invalidateInheritedWipInspection({ store, pr });
+          await requireCurrentInheritedWipInspection(options);
+          invalidateInheritedWipInspection(options);
           store.completedRestacks.delete(pr.identity.number);
           const result = await environment.continueRestack(
             pr,
@@ -131,11 +202,19 @@ export function createWorkerRestackTools(options: RestackToolOptions) {
             signal,
           );
           const output = `${result.stdout}\n${result.stderr}`.trim();
-          if (result.exitCode !== 0 && !/conflict/i.test(output)) {
+          if (await isRebaseInProgress(options)) {
+            await recordActiveRestack(options);
+            if (result.exitCode !== 0 && !/conflict/i.test(output)) {
+              throw new Error(`git-spice rebase continue failed: ${output}`);
+            }
+            return { completed: false, output };
+          }
+          store.activeRestacks.delete(pr.identity.number);
+          if (result.exitCode !== 0) {
             throw new Error(`git-spice rebase continue failed: ${output}`);
           }
-          if (result.exitCode === 0) await recordCompletedRestack(options);
-          return { completed: result.exitCode === 0, output };
+          await recordCompletedRestack(options);
+          return { completed: true, output };
         }),
     }),
     publish_restack: createTool({

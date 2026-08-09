@@ -75,6 +75,10 @@ export default defineConfig({
               link: "/homelab/alerts/",
             },
             {
+              label: "Release pipeline",
+              link: "/homelab/releases/",
+            },
+            {
               label: "Plane issue tracker",
               link: "/homelab/plane/",
             },

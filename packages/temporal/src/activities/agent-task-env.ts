@@ -1,30 +1,180 @@
 import type { AgentTaskProvider } from "#shared/agent-task.ts";
 
-// Every secret value that might pass through an agent-task run, listed so the
-// subprocess output redactor can scrub them from logs/results. This is a
-// belt-and-suspenders redaction list for the process OUTPUT — it is independent
-// of what the subprocess env actually contains (envForProvider forwards the
-// full worker env; see the note there). Keeping the list explicit means a token
-// that does reach the child is still stripped from anything we capture/store.
+const MOUNTED_SECRET_PATHS = [
+  "/var/run/secrets/kubernetes.io/serviceaccount/token",
+  "/etc/talos/config",
+] as const;
+
+function secretFragments(value: string): readonly string[] {
+  // Kubernetes and PEM credentials are often passed through env files with
+  // escaped newlines. Tokenize both representations so a multiline secret
+  // cannot be reconstructed one line at a time in diagnostic output.
+  const decodedWhitespace = decodeEscapedWhitespace(value);
+  return decodedWhitespace
+    .split(/[\s"'{}\u{005B}\u{005D},:=]+/u)
+    .filter((fragment) => fragment.length >= 8);
+}
+
+function decodeEscapedWhitespace(value: string): string {
+  return value
+    .replaceAll(String.raw`\n`, "\n")
+    .replaceAll(String.raw`\r`, "\r")
+    .replaceAll(String.raw`\t`, "\t");
+}
+
+// envForProvider deliberately forwards the full worker env, so scrub every
+// forwarded value rather than maintaining a partial credential-name list. This
+// also covers credentials embedded in values such as DATABASE_URL.
+function compositeSecretTokens(value: string): readonly string[] {
+  const tokens = [value, ...secretFragments(value)];
+  try {
+    const url = new URL(value);
+    for (const component of [url.username, url.password]) {
+      if (component !== "") {
+        tokens.push(component);
+        tokens.push(decodeURIComponent(component));
+      }
+    }
+    for (const component of url.searchParams.values()) {
+      tokens.push(component);
+      tokens.push(decodeURIComponent(component));
+    }
+  } catch {
+    // Non-URL values are still covered by the complete-value token.
+  }
+  return tokens;
+}
+
+export async function readAgentTaskMountedSecretTokens(
+  paths: readonly string[] = MOUNTED_SECRET_PATHS,
+): Promise<readonly string[]> {
+  const tokens: string[] = [];
+  for (const path of paths) {
+    const file = Bun.file(path);
+    if (!(await file.exists())) {
+      continue;
+    }
+
+    const contents = await file.text();
+    const token = contents.trim();
+    if (token === "") {
+      continue;
+    }
+    tokens.push(token);
+    tokens.push(...secretFragments(token));
+  }
+  return tokens;
+}
+
 export function agentTaskSecretTokens(
   githubAppToken: string | undefined,
   env: Readonly<Record<string, string | undefined>> = Bun.env,
+  mountedSecretTokens: readonly string[] = [],
 ): readonly (string | undefined)[] {
-  return [
-    env["CLAUDE_CODE_OAUTH_TOKEN"],
-    env["ANTHROPIC_API_KEY"],
-    env["CODEX_API_KEY"],
-    env["OPENAI_API_KEY"],
-    env["GITHUB_PERSONAL_ACCESS_TOKEN"],
-    env["GITHUB_APP_PRIVATE_KEY"],
-    githubAppToken,
-    env["POSTAL_API_KEY"],
-    env["PAGERDUTY_TOKEN"],
-    env["BUGSINK_TOKEN"],
-    env["GRAFANA_API_KEY"],
-    env["ARGOCD_AUTH_TOKEN"],
-    env["CLOUDFLARE_API_TOKEN"],
+  // Mounted service-account/Talos files are read into this same redaction set
+  // by createAgentTaskSecretTokenState. Keeping them in the returned list is
+  // what protects final-text excerpts when a provider violates its contract.
+  const environmentSecretTokens = Object.values(env).flatMap((value) =>
+    value === undefined ? [] : compositeSecretTokens(value),
+  );
+  const tokens: (string | undefined)[] = [
+    ...environmentSecretTokens,
+    ...mountedSecretTokens,
   ];
+  tokens.push(githubAppToken);
+  return tokens;
+}
+
+export type AgentTaskSecretTokenState = {
+  tokens: (string | undefined)[];
+  refresh: () => Promise<void>;
+};
+
+export class AgentTaskSecretRedactionError extends Error {
+  constructor(cause: unknown) {
+    super("agent-task secret redaction refresh failed", { cause });
+    this.name = "AgentTaskSecretRedactionError";
+  }
+}
+
+export class AgentTaskSecretRedactionController {
+  readonly abortController = new AbortController();
+  failure: AgentTaskSecretRedactionError | undefined;
+
+  constructor(private readonly onFailure: () => void) {}
+
+  record(cause: unknown): void {
+    if (this.failure !== undefined) {
+      return;
+    }
+    this.failure = new AgentTaskSecretRedactionError(cause);
+    this.onFailure();
+    this.abortController.abort(this.failure);
+  }
+
+  async refreshBeforeOutput(
+    state: AgentTaskSecretTokenState,
+  ): Promise<boolean> {
+    try {
+      await state.refresh();
+      return this.failure === undefined;
+    } catch (error: unknown) {
+      this.record(error);
+      return false;
+    }
+  }
+}
+
+export async function createAgentTaskSecretTokenState(
+  githubAppToken: string,
+  env: Readonly<Record<string, string | undefined>> = Bun.env,
+  paths: readonly string[] = MOUNTED_SECRET_PATHS,
+): Promise<AgentTaskSecretTokenState> {
+  const tokens = [
+    ...agentTaskSecretTokens(
+      githubAppToken,
+      env,
+      await readAgentTaskMountedSecretTokens(paths),
+    ),
+  ];
+  let refreshInFlight: Promise<void> | undefined;
+  const refresh = (): Promise<void> => {
+    if (refreshInFlight !== undefined) {
+      return refreshInFlight;
+    }
+    const refreshRun = (async (): Promise<void> => {
+      const nextSecretTokens = agentTaskSecretTokens(
+        githubAppToken,
+        env,
+        await readAgentTaskMountedSecretTokens(paths),
+      );
+      for (const token of nextSecretTokens) {
+        if (!tokens.includes(token)) {
+          tokens.push(token);
+        }
+      }
+    })();
+    refreshInFlight = (async (): Promise<void> => {
+      try {
+        await refreshRun;
+      } finally {
+        refreshInFlight = undefined;
+      }
+    })();
+    return refreshInFlight;
+  };
+  return { tokens, refresh };
+}
+
+export async function refreshAgentTaskSecretTokenStateInBackground(
+  state: AgentTaskSecretTokenState,
+  onError: (error: unknown) => void,
+): Promise<void> {
+  try {
+    await state.refresh();
+  } catch (error: unknown) {
+    onError(error);
+  }
 }
 
 // Build the subprocess environment for an agent-task provider run.

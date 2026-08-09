@@ -76,6 +76,7 @@ beforeAll(async () => {
     cwd: serverDir,
     env: {
       ...process.env,
+      TZ: "UTC",
       VAULT_PATH: vaultDir,
       TASKS_DIR: "TaskNotes",
       AUTH_TOKEN,
@@ -203,15 +204,21 @@ describe("recurring completion (current contract: server-today TOGGLE)", () => {
         recurrence: "FREQ=DAILY",
       }),
     );
-    const today = localTodayYmd();
-
+    const beforeDate = new Date().toISOString().slice(0, 10);
     const first = unwrap(await client.completeRecurringInstance(recurring.id));
-    expect(first.completeInstances.map(String)).toContain(today);
+    const afterDate = new Date().toISOString().slice(0, 10);
+    const completedDates = first.completeInstances.map(String);
+    expect(completedDates).toHaveLength(1);
+    const completedDate = completedDates[0];
+    if (completedDate === undefined) {
+      throw new Error("Expected the server to select one completion date");
+    }
+    expect(new Set([beforeDate, afterDate])).toContain(completedDate);
 
     // Second call un-completes — this is the toggle behavior the P1 patch
     // extends with explicit {date, completed} set-semantics.
     const second = unwrap(await client.completeRecurringInstance(recurring.id));
-    expect(second.completeInstances.map(String)).not.toContain(today);
+    expect(second.completeInstances.map(String)).not.toContain(completedDate);
 
     await client.deleteTask(recurring.id);
   });

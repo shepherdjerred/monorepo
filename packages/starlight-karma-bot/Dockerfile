@@ -3,13 +3,34 @@
 # workspace, one root bun.lock, isolated linker). Built via `bun run docker:build`
 # in this package (which passes `-f Dockerfile ../..`).
 #
-# Multi-stage: prod-deps installs the production-only dependency closure from
-# the workspace manifests; runtime COPYs that tree plus the scoped source
-# closure and never runs `bun install`. Dev dependencies and the rest of the
+# Multi-stage: deps does a full (dev-inclusive) install to feed the in-image
+# prisma generate; prod-deps installs the production-only closure; runtime
+# COPYs the prod tree, the scoped source closure, and the generated Prisma
+# client — it never runs `bun install`. Dev dependencies and the rest of the
 # monorepo source never reach the final image, and the source layer only
 # invalidates when this package changes — not on every repo commit.
 FROM oven/bun:1.3.14@sha256:e10577f0db68676a7024391c6e5cb4b879ebd17188ab750cf10024a6d700e5c4 AS base
 WORKDIR /app
+
+# ── deps: full install (dev deps) — feeds the prisma generate below ─────────
+FROM base AS deps
+COPY --parents \
+  package.json bun.lock bunfig.toml patches/ scripts/package.json \
+  packages/*/package.json packages/*/packages/*/package.json \
+  packages/docs/wiki/package.json \
+  packages/homelab/src/cdk8s/package.json \
+  packages/homelab/src/helm-types/package.json \
+  packages/scout-for-lol/packages/desktop/src-tauri/package.json \
+  ./
+RUN bun install --frozen-lockfile --filter 'starlight-karma-bot'
+
+# ── build: generate the Prisma client (output is gitignored, produced here) ──
+FROM deps AS build
+COPY --parents \
+  tsconfig.base.json \
+  packages/starlight-karma-bot \
+  ./
+RUN cd packages/starlight-karma-bot && bun run generate
 
 # ── prod-deps: production-only node_modules, cached on manifests ────────────
 # `--frozen-lockfile` requires every workspace member's package.json present,
@@ -38,6 +59,14 @@ COPY --parents \
   tsconfig.base.json \
   packages/starlight-karma-bot \
   ./
+# Bake Prisma's engines into the production dependency tree. Bun's production
+# install omits lifecycle scripts, so the CLI would otherwise download engines
+# on first use — and both runtime and smoke execute as uid 1000 over root-owned
+# node_modules, which correctly prevents that startup write (the EACCES
+# crash-loop in #1682). Generating once as root here leaves `migrate deploy`
+# read-only at runtime.
+RUN cd packages/starlight-karma-bot && bunx --trust prisma generate
+COPY --from=build /app/packages/starlight-karma-bot/generated packages/starlight-karma-bot/generated
 
 # Version/revision metadata — starlight's config requires VERSION and GIT_SHA
 # at boot.
@@ -59,10 +88,11 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 # node_modules tree is root-owned but read-only at runtime.
 USER bun
 
-# Run from the package dir so Bun picks up this package's tsconfig
-# (experimentalDecorators + emitDecoratorMetadata, required by TypeORM entities).
+# Run from the package dir so Bun resolves this package's tsconfig and imports
+# map (the `#src/*` and `#generated/*` subpaths). The entrypoint applies pending
+# migrations before starting Discord.
 WORKDIR /app/packages/starlight-karma-bot
-CMD ["bun", "src/index.ts"]
+CMD ["bun", "scripts/start.ts"]
 
 FROM runtime AS smoke
 # The smoke harness ships in CI context only — the scoped source COPY

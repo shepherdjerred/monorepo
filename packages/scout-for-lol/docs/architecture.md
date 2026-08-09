@@ -161,6 +161,33 @@ stateDiagram-v2
     Ended --> [*]
 ```
 
+### Temporal Reports and Competition Analysis
+
+ScoutQL owns reproducible report time windows. Canonical `ANALYZE`, `BUCKET BY`,
+`COMPARE TO`, and `IN TIME ZONE` clauses compile to timezone-aware DuckDB
+aggregations over the report lake. Report windows are capped at 365 days;
+competition exploration is clamped to the competition lifespan instead.
+
+```mermaid
+flowchart LR
+    MATCHES[Match and prematch JSON in S3] --> LAKE[Disposable Parquet report lake]
+    LEADERBOARDS[Daily leaderboard snapshots in S3] --> RANKS[competition_rank_history]
+    RANKS --> LAKE
+    SCOUTQL[ScoutQL plus temporal spec] --> DUCKDB[DuckDB aggregation]
+    LAKE --> DUCKDB
+    DUCKDB --> SNAPSHOT[Versioned VisualizationSnapshot]
+    SNAPSHOT --> WEB[Interactive ECharts web view]
+    SNAPSHOT --> PNG[Deterministic SVG to PNG]
+    PNG --> DISCORD[Discord and archived image]
+    SNAPSHOT --> ARCHIVE[S3 report-run archive]
+```
+
+The database stores report definitions, run metadata, permissions, and the
+competition analysis timezone. S3 remains authoritative for raw match facts,
+leaderboard history, and archived visualization artifacts; every Parquet lake
+source can be rebuilt. Official competition standings remain competition-to-date.
+Selected-period analysis recomputes the criterion without mutating that cache.
+
 ## Component Responsibilities
 
 ### Backend Service

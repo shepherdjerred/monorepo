@@ -11,8 +11,11 @@ import {
 } from "@aws-sdk/client-s3";
 import { mockClient } from "aws-sdk-client-mock";
 import { z } from "zod";
+import { VisualizationSnapshotSchema } from "@scout-for-lol/data";
 import {
+  loadReportRunVisualization,
   loadReportRunImage,
+  saveReportRunVisualization,
   saveReportRunImage,
 } from "#src/storage/s3-report-run.ts";
 
@@ -69,5 +72,72 @@ describe("loadReportRunImage", () => {
     const result = await loadReportRunImage(7, 42);
 
     expect(result).toBeNull();
+  });
+});
+
+describe("saveReportRunVisualization", () => {
+  test("propagates a configured archive upload failure", async () => {
+    s3Mock.on(PutObjectCommand).rejects(new Error("S3 network error"));
+    const snapshot = VisualizationSnapshotSchema.parse({
+      version: 1,
+      generatedAt: "2026-08-08T00:00:00.000Z",
+      kind: "TABLE",
+      title: null,
+      temporal: null,
+      bucket: null,
+      display: {
+        theme: null,
+        palette: null,
+        smooth: false,
+        stack: "none",
+        rollingWindow: null,
+        cumulative: false,
+        sparkline: false,
+      },
+      series: [],
+      annotations: [],
+      trends: [],
+    });
+
+    await expect(saveReportRunVisualization(7, 42, snapshot)).rejects.toThrow(
+      "S3 network error",
+    );
+  });
+});
+
+describe("loadReportRunVisualization", () => {
+  test("loads the persisted artifact key instead of deriving one", async () => {
+    const snapshot = VisualizationSnapshotSchema.parse({
+      version: 1,
+      generatedAt: "2026-08-08T00:00:00.000Z",
+      kind: "TABLE",
+      title: null,
+      temporal: null,
+      bucket: null,
+      display: {
+        theme: null,
+        palette: null,
+        smooth: false,
+        stack: "none",
+        rollingWindow: null,
+        cumulative: false,
+        sparkline: false,
+      },
+      series: [],
+      annotations: [],
+      trends: [],
+    });
+    const key = "reports/version-2/custom-visualization.json";
+    s3Mock.on(GetObjectCommand).callsFake(() => ({
+      Body: {
+        transformToString: () => Promise.resolve(JSON.stringify(snapshot)),
+      },
+      $metadata: {},
+    }));
+
+    expect(await loadReportRunVisualization(key)).toEqual(snapshot);
+    expect(s3Mock.commandCall(0, GetObjectCommand)?.args[0].input.Key).toBe(
+      key,
+    );
   });
 });

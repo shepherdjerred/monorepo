@@ -16,7 +16,7 @@ import {
   findManagedImagePin,
   knownImageTargets,
   parseBakeArguments,
-  parseBuildkiteCommits,
+  parseLastPassedStepsCommit,
   parseImageSelection,
 } from "./migration-core.ts";
 import { APPLICATION_IMAGE_TARGETS } from "./image-targets.ts";
@@ -68,8 +68,14 @@ export async function annotate(
   }
 }
 
-export async function lastGreenCommit(
-  _currentCommit: string,
+/**
+ * Resolve the newest main commit with completed image and pin-handoff evidence.
+ * The overall build may be canceled after version commit-back advances main;
+ * these two passed jobs still prove that the selected closures were built,
+ * smoked, pushed, and handed to the durable pin workflow successfully.
+ */
+export async function lastSuccessfulImageReleaseCommit(
+  currentCommit: string,
   fetcher: typeof fetch = fetch,
   executor: CommandExecutor = execute,
   environment: Readonly<Record<string, string | undefined>> = Bun.env,
@@ -77,23 +83,26 @@ export async function lastGreenCommit(
   const token = environment["BUILDKITE_API_TOKEN"];
   if (token === undefined) return undefined;
   const response = await fetcher(
-    "https://api.buildkite.com/v2/organizations/sjerred/pipelines/monorepo/builds?branch=main&state=passed&per_page=1",
+    "https://api.buildkite.com/v2/organizations/sjerred/pipelines/monorepo/builds?branch=main&per_page=20&include_retried_jobs=true",
     {
       headers: { Authorization: `Bearer ${token}` },
       signal: AbortSignal.timeout(20_000),
     },
   ).catch(() => null);
   if (response?.ok !== true) return undefined;
-  const commits = parseBuildkiteCommits(await response.json());
-  const commit = commits[0];
-  if (commit === undefined) return undefined;
-  const exists = await executor([
-    "git",
-    "cat-file",
-    "-e",
-    `${commit}^{commit}`,
+  const commit = parseLastPassedStepsCommit(await response.json(), [
+    "images",
+    "version-commit-back",
   ]);
-  return exists.exitCode === 0 ? commit : undefined;
+  if (commit === undefined) return undefined;
+  for (const command of [
+    ["git", "cat-file", "-e", `${commit}^{commit}`],
+    ["git", "merge-base", "--is-ancestor", commit, currentCommit],
+  ]) {
+    const validation = await executor(command);
+    if (validation.exitCode !== 0) return undefined;
+  }
+  return commit;
 }
 
 export async function selectedTargets(
@@ -104,9 +113,9 @@ export async function selectedTargets(
   },
   commit: string,
   executor: CommandExecutor = execute,
-  greenCommit: (
+  imageBaseCommit: (
     currentCommit: string,
-  ) => Promise<string | undefined> = lastGreenCommit,
+  ) => Promise<string | undefined> = lastSuccessfulImageReleaseCommit,
 ): Promise<{ readonly targets: string[]; readonly fallbackReason: string }> {
   if (fixedCorpusMode(options.environment ?? Bun.env)) {
     return {
@@ -121,9 +130,9 @@ export async function selectedTargets(
     if (result.exitCode === 0) base = result.stdout.trim();
     else fallbackReason = "could not resolve merge-base with origin/main";
   } else if (options.push) {
-    base = await greenCommit(commit);
+    base = await imageBaseCommit(commit);
     if (base === undefined)
-      fallbackReason = "could not resolve last green main build";
+      fallbackReason = "could not resolve last completed main image release";
   }
   if (base === undefined) return { targets: knownImageTargets, fallbackReason };
 

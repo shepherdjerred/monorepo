@@ -13,6 +13,11 @@ export {
   type AnalyticsChartSeries,
 } from "./html/analytics-chart.ts";
 export {
+  visualizationSnapshotToImage,
+  visualizationSnapshotToSvg,
+} from "./html/visualization-snapshot-image.ts";
+export { visualizationSnapshotToOption } from "./html/visualization-snapshot-option.ts";
+export {
   discordScreenshotToImage,
   discordScreenshotToSvg,
   type DiscordChatMessage,

@@ -1,6 +1,7 @@
 import { match } from "ts-pattern";
 import type { IToken, TokenType } from "chevrotain";
 import {
+  Analyze,
   By,
   From,
   Group,
@@ -50,6 +51,7 @@ type Region =
   | "queueValues"
   | "groupBy"
   | "having"
+  | "analysis"
   | "orderBy"
   | "limit"
   | "render";
@@ -75,14 +77,17 @@ export function completeReportQuery(
     .with("groupBy", () => [
       ...fieldItems(),
       keywordItem("HAVING"),
+      keywordItem("ANALYZE"),
       keywordItem("ORDER BY"),
       keywordItem("RENDER"),
     ])
     .with("having", () => [
       ...metricItems(),
+      keywordItem("ANALYZE"),
       keywordItem("ORDER BY"),
       keywordItem("RENDER"),
     ])
+    .with("analysis", () => temporalItems())
     .with("orderBy", () => [
       ...metricItems(),
       labelItem(),
@@ -105,6 +110,7 @@ function currentRegion(tokens: IToken[], offset: number): Region {
     ["where", keywordEnd(tokens, Where)],
     ["groupBy", twoWordKeywordEnd(tokens, Group)],
     ["having", keywordEnd(tokens, Having)],
+    ["analysis", keywordEnd(tokens, Analyze)],
     ["orderBy", twoWordKeywordEnd(tokens, Order)],
     ["limit", keywordEnd(tokens, Limit)],
     ["render", keywordEnd(tokens, Render)],
@@ -117,6 +123,33 @@ function currentRegion(tokens: IToken[], offset: number): Region {
   return markers.reduce((best, marker) =>
     marker[1] >= best[1] ? marker : best,
   )[0];
+}
+
+function temporalItems(): ReportCompletionItem[] {
+  return [
+    {
+      label: "LAST 30 DAYS",
+      insertText: "LAST 30 DAYS\nBUCKET BY AUTO\nIN TIME ZONE 'UTC'",
+      detail: "Analyze a relative window with automatic bucketing.",
+      kind: "keyword",
+    },
+    {
+      label: "BETWEEN dates",
+      insertText:
+        "BETWEEN '2026-01-01' AND '2026-01-31'\nBUCKET BY DAY\nIN TIME ZONE 'UTC'",
+      detail: "Analyze inclusive local calendar dates.",
+      kind: "keyword",
+    },
+    {
+      label: "COMPARE TO PREVIOUS PERIOD",
+      insertText: "COMPARE TO PREVIOUS PERIOD",
+      detail: "Compare with the immediately preceding equal-length period.",
+      kind: "keyword",
+    },
+    keywordItem("ORDER BY"),
+    keywordItem("LIMIT"),
+    keywordItem("RENDER"),
+  ];
 }
 
 function keywordEnd(tokens: IToken[], type: TokenType): number {

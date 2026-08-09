@@ -19,6 +19,7 @@ import {
 } from "#src/components/ui/select.tsx";
 import { ReportQueryDocs } from "#src/components/report-query-docs.tsx";
 import { ReportScheduleFields } from "#src/components/report-schedule-fields.tsx";
+import { ReportTemporalControls } from "#src/components/report-temporal-controls.tsx";
 
 // Lazy so Monaco is split out of the main bundle and only loaded with this form.
 const ReportQueryEditor = lazy(
@@ -143,6 +144,14 @@ export function ReportFormFields(props: {
           </SelectContent>
         </Select>
       </div>
+
+      <ReportTemporalControls
+        queryText={state.queryText}
+        scheduleTimezone={state.scheduleTimezone}
+        onChange={(queryText) => {
+          setState((prev) => ({ ...prev, queryText }));
+        }}
+      />
 
       <Collapsible defaultOpen={queryExpanded} className="space-y-2">
         {!queryExpanded && (

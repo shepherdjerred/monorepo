@@ -20,6 +20,22 @@ const serverId = testGuildId("919191");
 const now = new Date(Date.UTC(2026, 4, 17, 12, 0, 0));
 const lakeDir = resolveLakeDir();
 
+function temporalMatch(matchId: string, date: string, win: boolean) {
+  return {
+    playerId: 1,
+    playerAlias: "Temporal Player",
+    matchId,
+    puuid: testPuuid(`temporal-${matchId}`),
+    queue: "solo",
+    win,
+    surrendered: false,
+    kills: win ? 4 : 1,
+    deaths: win ? 1 : 4,
+    assists: 5,
+    gameCreationAt: new Date(date),
+  };
+}
+
 beforeEach(async () => {
   await cleanup();
   await resetTestLake(lakeDir);
@@ -230,6 +246,212 @@ describe("executeReportQuery", () => {
     expect(result.rows[0]?.values).toEqual([
       { column: "prematches", value: 1 },
     ]);
+  });
+});
+
+describe("executeReportQuery temporal prematches", () => {
+  test("runs temporal prematch reports from the report lake", async () => {
+    await writeTestLake(lakeDir, {
+      serverId,
+      prematchFacts: [
+        {
+          playerId: 1,
+          playerAlias: "First Player",
+          dedupeKey: "NA1:temporal-prematch",
+          puuid: testPuuid("report-temporal-prematch"),
+          queue: "solo",
+          observedAt: now,
+        },
+      ],
+    });
+
+    const result = await executeReportQuery({
+      prisma,
+      serverId,
+      queryText:
+        "SELECT prematches FROM prematch_participants GROUP BY all ANALYZE LAST 30 DAYS BUCKET BY DAY IN TIME ZONE 'UTC' ORDER BY label ASC",
+      now,
+    });
+
+    expect(result.rows).toHaveLength(1);
+    expect(result.rows[0]?.values).toEqual([
+      { column: "prematches", value: 1 },
+    ]);
+    expect(result.visualization?.bucket).toBe("day");
+  });
+});
+
+describe("executeReportQuery temporal comparisons", () => {
+  test("aligns sparse baselines by relative bucket and fills additive gaps", async () => {
+    await writeTestLake(lakeDir, {
+      serverId,
+      matchFacts: [
+        temporalMatch("NA1_baseline", "2026-05-15T12:00:00.000Z", true),
+        temporalMatch("NA1_current_1", "2026-05-16T12:00:00.000Z", false),
+        temporalMatch("NA1_current_2", "2026-05-17T12:00:00.000Z", true),
+      ],
+    });
+
+    const result = await executeReportQuery({
+      prisma,
+      serverId,
+      queryText:
+        "SELECT games, win_rate FROM match_participants GROUP BY all ANALYZE BETWEEN '2026-05-16' AND '2026-05-17' BUCKET BY DAY COMPARE TO BETWEEN '2026-05-14' AND '2026-05-15' IN TIME ZONE 'UTC' ORDER BY label ASC",
+      now,
+    });
+
+    expect(result.rows[0]?.dimensions.at(-1)).toBe("2026-05-16");
+    expect(result.rows[0]?.values).toEqual([
+      {
+        column: "games",
+        value: 1,
+        comparisonValue: 0,
+        absoluteDelta: 1,
+        percentageDelta: null,
+        comparisonSampleSize: 0,
+        comparisonConfidenceInterval: null,
+      },
+      {
+        column: "win_rate",
+        value: 0,
+        comparisonValue: null,
+        absoluteDelta: null,
+        percentageDelta: null,
+        comparisonSampleSize: 0,
+        comparisonConfidenceInterval: null,
+      },
+    ]);
+    expect(result.rows[1]?.dimensions.at(-1)).toBe("2026-05-17");
+    expect(
+      result.rows[1]?.values.find((value) => value.column === "games")
+        ?.comparisonValue,
+    ).toBe(1);
+  });
+
+  test("rolls ratio metrics using their underlying denominators", async () => {
+    await writeTestLake(lakeDir, {
+      serverId,
+      matchFacts: [
+        temporalMatch("NA1_ratio_1", "2026-05-16T12:00:00.000Z", false),
+        temporalMatch("NA1_ratio_2", "2026-05-17T12:00:00.000Z", true),
+      ],
+    });
+
+    const result = await executeReportQuery({
+      prisma,
+      serverId,
+      queryText:
+        "SELECT kda FROM match_participants GROUP BY all ANALYZE BETWEEN '2026-05-16' AND '2026-05-17' BUCKET BY DAY IN TIME ZONE 'UTC' ORDER BY label ASC RENDER line_chart WITH (y = kda, rolling = 2)",
+      now,
+    });
+
+    expect(result.visualization?.series[0]?.points[0]?.value).toBeNull();
+    expect(result.visualization?.series[0]?.points[1]).toMatchObject({
+      value: 3,
+      evidence: { sampleSize: 2, numerator: 15, denominator: 5 },
+    });
+  });
+
+  test("rolls calculated ratios using their expression denominators", async () => {
+    await writeTestLake(lakeDir, {
+      serverId,
+      matchFacts: [
+        {
+          ...temporalMatch(
+            "NA1_calculated_ratio_1",
+            "2026-05-16T12:00:00.000Z",
+            true,
+          ),
+          kills: 10,
+          deaths: 1,
+        },
+        {
+          ...temporalMatch(
+            "NA1_calculated_ratio_2",
+            "2026-05-17T12:00:00.000Z",
+            false,
+          ),
+          kills: 10,
+          deaths: 10,
+        },
+      ],
+    });
+
+    const result = await executeReportQuery({
+      prisma,
+      serverId,
+      queryText:
+        "SELECT kills / deaths AS kd FROM match_participants GROUP BY all ANALYZE BETWEEN '2026-05-16' AND '2026-05-17' BUCKET BY DAY IN TIME ZONE 'UTC' ORDER BY label ASC RENDER line_chart WITH (y = kd, rolling = 2)",
+      now,
+    });
+
+    expect(result.visualization?.series[0]?.points[1]).toMatchObject({
+      value: 20 / 11,
+      evidence: { sampleSize: 2, numerator: 20, denominator: 11 },
+    });
+  });
+
+  test("rolls per-minute expressions using time played", async () => {
+    await writeTestLake(lakeDir, {
+      serverId,
+      matchFacts: [
+        {
+          ...temporalMatch(
+            "NA1_per_minute_1",
+            "2026-05-16T12:00:00.000Z",
+            true,
+          ),
+          kills: 10,
+          gameDurationSeconds: 600,
+          timePlayedSeconds: 600,
+        },
+        {
+          ...temporalMatch(
+            "NA1_per_minute_2",
+            "2026-05-17T12:00:00.000Z",
+            false,
+          ),
+          kills: 10,
+          gameDurationSeconds: 3600,
+          timePlayedSeconds: 3600,
+        },
+      ],
+    });
+
+    const result = await executeReportQuery({
+      prisma,
+      serverId,
+      queryText:
+        "SELECT per_minute(kills) AS kpm FROM match_participants GROUP BY all ANALYZE BETWEEN '2026-05-16' AND '2026-05-17' BUCKET BY DAY IN TIME ZONE 'UTC' ORDER BY label ASC RENDER line_chart WITH (y = kpm, rolling = 2)",
+      now,
+    });
+
+    expect(result.visualization?.series[0]?.points[1]).toMatchObject({
+      value: 20 / 70,
+      evidence: { sampleSize: 2, numerator: 20, denominator: 70 },
+    });
+  });
+
+  test("preserves signed evidence for calculated ratios", async () => {
+    await writeTestLake(lakeDir, {
+      serverId,
+      matchFacts: [
+        temporalMatch("NA1_signed_ratio", "2026-05-16T12:00:00.000Z", false),
+      ],
+    });
+
+    const result = await executeReportQuery({
+      prisma,
+      serverId,
+      queryText:
+        "SELECT (kills - deaths) / games AS differential FROM match_participants GROUP BY all ANALYZE BETWEEN '2026-05-16' AND '2026-05-16' BUCKET BY DAY IN TIME ZONE 'UTC' ORDER BY label ASC RENDER line_chart WITH (y = differential)",
+      now,
+    });
+
+    expect(result.visualization?.series[0]?.points[0]).toMatchObject({
+      value: -3,
+      evidence: { sampleSize: 1, numerator: -3, denominator: 1 },
+    });
   });
 });
 

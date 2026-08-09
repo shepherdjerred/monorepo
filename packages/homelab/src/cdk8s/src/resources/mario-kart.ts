@@ -118,6 +118,21 @@ export function createMarioKartDeployment(chart: Chart) {
         STREAM_HARDWARE_ACCELERATION: EnvValue.fromValue("true"),
         VAAPI_DEVICE: EnvValue.fromValue("/dev/dri/renderD128"),
         LIBVA_DRIVER_NAME: EnvValue.fromValue("iHD"),
+        // Low-latency in-browser video for seated players, served as H.264 over
+        // the /video WebSocket on the same port as the web UI. Additive: the
+        // Go-Live stream spectators watch is unchanged. Enabled here rather than
+        // in the 1Password config.toml so the switch and bandwidth knobs remain
+        // GitOps-managed incident controls. To respond to an uplink incident,
+        // change these declared values in a committed source change and let
+        // ArgoCD reconcile the Deployment; never mutate the live Deployment.
+        //
+        // Capped at the four seats deliberately: the feed exists for the people
+        // driving, and each viewer costs a full copy of the stream on an uplink
+        // whose capacity is undocumented (see the plan's Risks table). 4 x 2500
+        // kbps ~= 10 Mbps worst case. Measure before raising either.
+        DRIVER_FEED_ENABLED: EnvValue.fromValue("true"),
+        DRIVER_FEED_BITRATE_KBPS: EnvValue.fromValue("2500"),
+        DRIVER_FEED_MAX_CLIENTS: EnvValue.fromValue("4"),
         // OTLP traces → Tempo; frame metrics are scraped from /metrics.
         TELEMETRY_ENABLED: EnvValue.fromValue("true"),
         TELEMETRY_SERVICE_NAME: EnvValue.fromValue("discord-plays-mario-kart"),

@@ -1228,7 +1228,7 @@ steps:
         # (should-never-happen) case that write didn't happen.
         jq -n '[]' > image-push-outcomes.json
         if [ ! -f image-selection-report.json ]; then
-          jq -n '{base: null, changedPaths: [], mode: "selected", globalReason: "no image-owning packages changed since last green main build", targets: {}}' > image-selection-report.json
+          jq -n '{base: null, changedPaths: [], mode: "selected", globalReason: "no image-owning packages changed since last completed main image release", targets: {}}' > image-selection-report.json
         fi
         if ! bun --no-install .buildkite/scripts/annotate-image-summary.ts --report image-selection-report.json --outcomes image-push-outcomes.json; then
           echo "WARN: image summary annotation failed (non-fatal)" >&2
@@ -1545,16 +1545,25 @@ steps:
       buildkite-agent artifact download "helm-release-plan.json" . --step helm-push
       buildkite-agent artifact download "argocd-release-expected.json" . --step helm-push
       deferred_discord_apps=$$(jq -r '[.selected[] | select(.name == "pokemon" or .name == "mario-kart") | .name] | join(",")' helm-release-plan.json)
+      apps_revision=$$(jq -er '.[] | select(.name == "apps") | .revision' argocd-release-expected.json)
+      # Apply the exact published child Application specs while keeping their
+      # repository auto-sync disabled. This makes new sync options and diff
+      # rules effective before child charts are reconciled, without exposing
+      # children to a partially published release.
+      bun --no-install packages/homelab/scripts/argocd.ts suspend-auto-sync apps --revision "$$apps_revision" --timeout 300
       if [ -n "$$deferred_discord_apps" ]; then
         bun --no-install packages/homelab/scripts/argocd.ts reconcile-release argocd-release-expected.json --defer-apps "$$deferred_discord_apps" --skip-health-wait --timeout 300
       else
         bun --no-install packages/homelab/scripts/argocd.ts reconcile-release argocd-release-expected.json --timeout 300
       fi
-      apps_revision=$$(jq -er '.[] | select(.name == "apps") | .revision' argocd-release-expected.json)
       # The root app owns every repository Application, so Argo's synchronous
       # health wait would block on unrelated stale children. The scoped
       # release-health-wait above is the authoritative gate for this release.
       bun --no-install packages/homelab/scripts/argocd.ts sync apps --revision "$$apps_revision" --prune --async
+      # The expected release set includes the root app itself. Finalize its
+      # applied async operation before the health gate so the root cannot wait
+      # on its own deferred child health forever.
+      bun --no-install packages/homelab/scripts/argocd.ts finalize-async-sync apps --revision "$$apps_revision" --timeout 300
       if [ -z "$$deferred_discord_apps" ]; then
         bun --no-install packages/homelab/scripts/argocd.ts release-health-wait argocd-release-expected.json --timeout 300
       fi

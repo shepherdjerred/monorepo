@@ -199,15 +199,25 @@ export function requireMatchingInheritedWipInspection(
   if (context?.ownership !== "operator") {
     return;
   }
-  if (live.localHeadSha !== context.localHeadSha) {
+  const inspection = store.inheritedWipInspections.get(pr.identity.number);
+  const activeRestack = store.activeRestacks.get(pr.identity.number);
+  const expectedLocalHead =
+    activeRestack === undefined
+      ? context.localHeadSha
+      : activeRestack.remoteHeadSha === context.remoteHeadSha
+        ? activeRestack.localHeadSha
+        : undefined;
+  if (
+    expectedLocalHead === undefined ||
+    live.localHeadSha !== expectedLocalHead
+  ) {
     throw new Error(
       "Operator worktree HEAD changed after assignment; inspect again or ask the operator",
     );
   }
-  if (!live.hasWip && !context.dirty) {
+  if (activeRestack === undefined && !live.hasWip && !context.dirty) {
     return;
   }
-  const inspection = store.inheritedWipInspections.get(pr.identity.number);
   if (
     inspection === undefined ||
     !inspection.complete ||

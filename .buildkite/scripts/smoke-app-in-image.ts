@@ -252,8 +252,18 @@ const commands: Record<
       "set -eu",
       "mkdir -p /tmp/smoke-data",
       "cd /app/packages/starlight-karma-bot",
+      // Apply migrations against an empty volume, then run a real query. Both
+      // execute as uid 1000 over the root-owned node_modules tree, which is
+      // where the Prisma engines EACCES crash-loop (#1682) surfaced. Booting
+      // only far enough to fail Discord auth would not touch the database at
+      // all, so an image that cannot create or query its schema used to pass.
+      "bun scripts/migrate.ts",
+      `bun -e 'import { prisma, disconnectPrisma } from "#src/db/index.ts";` +
+        ` const n = await prisma.karma.count();` +
+        ` if (n !== 0) { throw new Error("expected an empty smoke database, got " + String(n)); }` +
+        ` console.log("smoke: prisma query ok"); await disconnectPrisma();'`,
       "set +e",
-      'output="$(timeout 30s bun src/index.ts 2>&1)"',
+      'output="$(timeout 30s bun scripts/start.ts 2>&1)"',
       "status=$?",
       String.raw`printf '%s\n' "$output"`,
       String.raw`[ "$status" -eq 0 ] || printf "%s\n" "$output" | grep -iE "` +
@@ -264,6 +274,7 @@ const commands: Record<
       DISCORD_TOKEN: "smoke-test-dummy",
       APPLICATION_ID: "000000000000000000",
       DATA_DIR: "/tmp/smoke-data",
+      DATABASE_PATH: "/tmp/smoke-data/karma.db",
     },
   },
   streambot: {
@@ -357,7 +368,16 @@ const commands: Record<
       String.raw`printf '%s\n' "$output"`,
       String.raw`[ "$status" -ne 124 ] && printf "%s\n" "$output" | grep -F "Connecting to Temporal server" && printf "%s\n" "$output" | grep -iE "connection refused|connect|econnrefused|transport error|failed to connect|tcp connect error|deadline"`,
     ].join("\n"),
-    env: { TEMPORAL_ADDRESS: "127.0.0.1:7233", SENTRY_DSN: "" },
+    env: {
+      TEMPORAL_ADDRESS: "127.0.0.1:7233",
+      // BuildKit may reuse the smoke network namespace while another image
+      // target is probing its worker. Ephemeral ports still exercise both
+      // exporters without making the image smoke depend on host port state;
+      // the deployed 9464/9465 service ports are asserted by homelab tests.
+      TEMPORAL_METRICS_ADDRESS: "127.0.0.1:0",
+      APP_METRICS_PORT: "0",
+      SENTRY_DSN: "",
+    },
   },
   "trmnl-dashboard": {
     command: [

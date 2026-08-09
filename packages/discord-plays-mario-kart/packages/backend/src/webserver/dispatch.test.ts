@@ -70,6 +70,7 @@ let http: HttpServer;
 let seatManager: SeatManager;
 let sub: Subscription;
 let port: number;
+let testDriverFeedEnabled = false;
 // Per-test overlay context. The subscribe handler reads this lazily on every
 // event, so tests can flip it before emitting a screenshot request.
 let testOverlayCtx: StreamOverlayContext | undefined;
@@ -83,6 +84,7 @@ beforeAll(async () => {
     handleRequest(event, {
       seatManager,
       emulator: fakeEmu,
+      driverFeedEnabled: testDriverFeedEnabled,
       leaderboard: fakeLeaderboard,
       overlayContext: captured === undefined ? undefined : () => captured,
     });
@@ -100,6 +102,7 @@ beforeEach(() => {
   // async disconnect handler from a previous test's closed socket.
   seatManager = new SeatManager(4);
   fakeFrame = { rgba: Buffer.alloc(0), width: 640, height: 0 };
+  testDriverFeedEnabled = false;
   testOverlayCtx = undefined;
 });
 
@@ -188,6 +191,29 @@ async function rttSampleCount(): Promise<number> {
   );
   return count?.value ?? 0;
 }
+
+describe("web controller status", () => {
+  it("reports the configured driver-feed availability", async () => {
+    const disabledClient = await connect();
+    const disabledResponse = nextResponse(disabledClient, "status");
+    disabledClient.emit("request", { kind: "status" });
+    expect(await disabledResponse).toEqual({
+      kind: "status",
+      value: { playerList: [], driverFeedEnabled: false },
+    });
+    disabledClient.close();
+
+    testDriverFeedEnabled = true;
+    const enabledClient = await connect();
+    const enabledResponse = nextResponse(enabledClient, "status");
+    enabledClient.emit("request", { kind: "status" });
+    expect(await enabledResponse).toEqual({
+      kind: "status",
+      value: { playerList: [], driverFeedEnabled: true },
+    });
+    enabledClient.close();
+  });
+});
 
 describe("web controller dispatch (socket -> handleRequest -> emulator)", () => {
   it("claims a seat and routes that seat's input to the emulator", async () => {
