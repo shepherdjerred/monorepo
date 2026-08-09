@@ -36,16 +36,17 @@ Optional external tools include cargo-nextest, Bacon, cargo-outdated, cargo-expa
 ## Focused verification
 
 Adapt features and targets to the project, but keep each result meaningful:
-Use `--locked` on dependency-resolving checks when the project commits
+Add `--locked` to dependency-resolving checks when the project commits
 `Cargo.lock`; omit it for libraries that intentionally do not commit a
-lockfile. The commands below show the committed-lockfile form.
+lockfile. The commands below work for both; retain `--locked` in a
+committed-lockfile project's CI.
 
 ```bash
-cargo check --locked --workspace --all-targets --all-features
+cargo check --workspace --all-targets --all-features
 cargo fmt --all -- --check
-cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
-cargo test --locked --workspace --all-features
-cargo test --locked --workspace --doc
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+cargo test --workspace --all-features
+cargo test --workspace --doc
 ```
 
 `cargo fmt -- --emit diff` is not supported by current stable rustfmt. `cargo fmt --all -- --check` prints differences and exits non-zero.

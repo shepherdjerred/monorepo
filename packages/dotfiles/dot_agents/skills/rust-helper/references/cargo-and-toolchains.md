@@ -6,21 +6,24 @@ Read this when configuring a workspace, toolchain, MSRV, dependency, Cargo confi
 
 Resolver 3 is the Rust 2024 default. Specify it in a virtual workspace. `rust-version` declares MSRV and affects compatible dependency selection.
 
-Use `--locked` on dependency diagnostics when the project commits
-`Cargo.lock`; omit it for libraries that intentionally do not commit a
-lockfile. Do not create or commit a lockfile solely to run these inspections.
-The commands below show the committed-lockfile form.
+Run these diagnostics in order: the test command generates the
+future-incompatibility report, and the final command reads it. Add `--locked`
+to dependency-resolving commands when the project commits `Cargo.lock`; omit
+it for libraries that intentionally do not commit a lockfile. Do not create or
+commit a lockfile solely to run these inspections.
 
 Use these diagnostics before changing dependency constraints:
 
 ```bash
-cargo tree --locked -d
-cargo tree --locked -e features
-cargo test --locked --future-incompat-report
+cargo tree -d
+cargo tree -e features
+cargo test --future-incompat-report
 cargo report future-incompatibilities
 ```
 
-`cargo test --locked --future-incompat-report` generates the report without permitting lockfile changes. `cargo report future-incompatibilities` then identifies dependencies that future compilers will reject; neither command replaces the project's focused verification.
+`cargo test --future-incompat-report` generates the report, and `cargo report
+future-incompatibilities` then identifies dependencies that future compilers
+will reject; neither command replaces the project's focused verification.
 
 Avoid a static catalog of “best crates” and pinned example versions in a generic skill. Select libraries from maintained official documentation, MSRV compatibility, security posture, API fit, and the repository's existing ecosystem.
 
