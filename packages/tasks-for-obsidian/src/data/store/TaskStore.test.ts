@@ -745,6 +745,92 @@ describe("TaskStore restore retention", () => {
   });
 });
 
+describe("TaskStore restore durability", () => {
+  test("persists an acked occurrence edit's invalidation before the base that makes it stale", async () => {
+    // Every other pair of writes in `applyServerAck` survives a crash between
+    // them because the command is still queued and the resend repairs it. This
+    // pair does not: whether an ack invalidates is decided by comparing its
+    // payload against the *durable* base, so once that base holds the edit the
+    // resent command reads as touching nothing, and the snapshot the edit made
+    // false lives on to rewind a schedule the user already replaced. So the
+    // interruption is the test — the restore write that follows the base write
+    // is refused, and the relaunch is asked what an undo would now send.
+    const task = makeTask({
+      recurrence: "FREQ=WEEKLY",
+      scheduled: "2026-08-08",
+    });
+    const backingStorage = memoryStoreStorage({ tasks: [task] });
+    let writes: string[] = [];
+    let refuseRestoresAfterBase = false;
+    const storeStorage: MemoryStoreStorage = {
+      ...backingStorage,
+      setTasks: async (tasks) => {
+        writes.push("tasks");
+        await backingStorage.setTasks(tasks);
+      },
+      setAcknowledgedCompletionRestores: async (data) => {
+        if (refuseRestoresAfterBase && writes.includes("tasks")) {
+          throw new Error("the acknowledged restores are not writable");
+        }
+        writes.push("restores");
+        await backingStorage.setAcknowledgedCompletionRestores(data);
+      },
+    };
+    const { store, queue, queueStorage } = makeStore(
+      memoryQueueStorage(),
+      storeStorage,
+    );
+    await store.restore();
+    const restore = {
+      scheduled: "2026-08-08",
+      due: null,
+      recurrence: "FREQ=WEEKLY",
+      skipped: false,
+    };
+    await store.dispatch({
+      type: "set_instance_complete",
+      taskId: task.id,
+      date: "2026-08-08",
+      completed: true,
+      restore,
+    });
+    const completion = queue.head();
+    if (completion?.type !== "set_instance_complete") {
+      throw new Error("expected completion command");
+    }
+    await store.applyServerAck(completion, {
+      ...task,
+      completeInstances: ["2026-08-08"],
+      scheduled: "2026-08-15",
+    });
+
+    await store.dispatch({
+      type: "update",
+      taskId: task.id,
+      payload: { scheduled: "2026-08-22" },
+    });
+    const edit = queue.head();
+    if (edit?.type !== "update") throw new Error("expected edit command");
+
+    writes = [];
+    refuseRestoresAfterBase = true;
+    await expect(
+      store.applyServerAck(edit, { ...task, scheduled: "2026-08-22" }),
+    ).rejects.toThrow("not writable");
+    expect(writes).toEqual(["restores", "tasks"]);
+
+    refuseRestoresAfterBase = false;
+    const { store: reborn } = makeStore(
+      queueStorage.clone(),
+      backingStorage.clone(),
+    );
+    await reborn.restore();
+    expect(
+      await reborn.getPendingCompletionRestore(task.id, "2026-08-08"),
+    ).toBeUndefined();
+  });
+});
+
 describe("TaskStore pending restores", () => {
   test("reads a pending restore after an in-flight create remaps its id", async () => {
     const backingStorage = memoryStoreStorage();

@@ -321,6 +321,20 @@ export class TaskStore {
           nextAcknowledgedCompletionRestores,
           command.taskId,
         );
+        // Invalidation first, base second — the ordering `replaceBase` uses,
+        // for the same reason: the write that invalidates a snapshot has to be
+        // durable before the write that makes it stale. Here a replay cannot
+        // repair the miss, which is what makes it its own write. Whether an ack
+        // invalidates is decided by comparing its payload against the durable
+        // base, so a crash after that base learned the edit leaves the resent
+        // command reading as touching nothing: the stale snapshot survives, and
+        // the next uncompletion asks the server to rewind to a schedule the
+        // user already replaced.
+        await this.storage.setAcknowledgedCompletionRestores(
+          serializeAcknowledgedCompletionRestores(
+            nextAcknowledgedCompletionRestores,
+          ),
+        );
       }
       if (
         command.type === "set_instance_complete" &&

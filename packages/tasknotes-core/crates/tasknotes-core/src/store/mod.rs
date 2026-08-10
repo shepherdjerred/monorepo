@@ -249,6 +249,19 @@ impl TaskStore {
             Command::Update { ref task_id, ref payload, .. }
                 if completion_restores::is_occurrence_edit(payload, self.base.get(task_id))
         );
+        // Invalidation first, base second — the ordering `replace_base` uses,
+        // for the same reason: the write that *invalidates* a snapshot has to
+        // be durable before the write that makes it stale. Here the argument is
+        // sharper, because a replay cannot repair the miss. `edited_occurrence`
+        // is decided by comparing the payload against the *durable* base, so a
+        // crash after that base learned the edit leaves a resent command
+        // reading as no edit at all: the stale snapshot survives, and the next
+        // uncompletion asks the server to rewind to a schedule the user already
+        // replaced. Its own write costs a replay at worst.
+        if edited_occurrence {
+            completion_restores::invalidate_task(&mut self.restores, command.target());
+            self.persist_restores()?;
+        }
         if let Some(server_task) = server_task
             && let Command::Create { temp_id, .. } = command
         {
@@ -286,9 +299,6 @@ impl TaskStore {
         self.persist_base()?;
         let today = self.today();
         completion_restores::prune(&mut self.restores, &today, &self.base);
-        if edited_occurrence {
-            completion_restores::invalidate_task(&mut self.restores, command.target());
-        }
         if let Some((key, restore)) = captured {
             self.restores
                 .insert(key, StoredCompletionRestore { restore });
@@ -753,7 +763,10 @@ fn parse_aliases(raw: Option<&str>) -> IndexMap<TaskId, TaskId> {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::{Arc, Mutex};
+    use std::sync::{
+        Arc, Mutex,
+        atomic::{AtomicBool, Ordering},
+    };
 
     use super::{IdCounters, TaskStore, parse_aliases, parse_id_counters};
     use crate::{
@@ -775,6 +788,12 @@ mod tests {
         /// Which durable slots were written, in order. The dispatch path's
         /// crash-safety argument is entirely about this order.
         writes: Mutex<Vec<&'static str>>,
+        /// Refuse any restore write that follows a base write, so a test can
+        /// interrupt an operation at exactly the point its ordering argument is
+        /// about. Judged against [`Memory::writes`], so a test arms it after
+        /// [`Memory::clear_write_log`] and the "follows" is about this
+        /// operation rather than the whole session.
+        refuse_restores_after_base: AtomicBool,
     }
 
     impl Memory {
@@ -798,6 +817,19 @@ mod tests {
 
         fn record(&self, slot: &'static str) {
             self.writes.lock().unwrap().push(slot);
+        }
+
+        /// Stop writing restores once the base has been written, and start
+        /// again.
+        fn refuse_restores_after_base(&self, refuse: bool) {
+            self.refuse_restores_after_base
+                .store(refuse, Ordering::SeqCst);
+        }
+
+        /// Whether this write is the one a test armed the refusal for.
+        fn refusing_restores(&self) -> bool {
+            self.refuse_restores_after_base.load(Ordering::SeqCst)
+                && self.writes.lock().unwrap().contains(&"tasks")
         }
     }
 
@@ -847,6 +879,9 @@ mod tests {
             Ok(self.restores.lock().unwrap().clone())
         }
         fn write_completion_restores(&self, data: &str) -> Result<()> {
+            if self.refusing_restores() {
+                return Err(Error::invariant("the completion restores are not writable"));
+            }
             self.record("completion_restores");
             *self.restores.lock().unwrap() = Some(data.to_owned());
             Ok(())
@@ -1121,6 +1156,61 @@ mod tests {
             undo(&mut store),
             None,
             "an unsent edit already contradicts the snapshot"
+        );
+    }
+
+    /// ⚠️ **The one window a replay cannot close.** Every other pair of writes
+    /// in `apply_server_ack` survives a crash between them because the command
+    /// is still queued and the resend repairs it. This pair does not: whether
+    /// the ack invalidates is decided by comparing its payload against the
+    /// *durable* base, so once that base holds the edit the resent command
+    /// reads as touching nothing, and the snapshot the edit made false lives on
+    /// to rewind a schedule the user already replaced.
+    ///
+    /// So the interruption is the test. The restore write that follows the base
+    /// write is refused, the store is thrown away, and the relaunch is asked
+    /// what an undo would now send.
+    #[test]
+    fn an_acknowledged_occurrence_edit_invalidates_before_the_base_makes_it_stale() {
+        let (mut store, memory) = completed_and_acked();
+        store
+            .dispatch(CommandInput::Update {
+                task_id: TaskId::parse("Tasks/plants.md").unwrap(),
+                payload: UpdateTaskRequest {
+                    scheduled: crate::domain::FieldUpdate::Set("2026-07-18".to_owned()),
+                    ..UpdateTaskRequest::default()
+                },
+            })
+            .unwrap();
+        let edit = store.queue().head().unwrap().clone();
+        let mut moved = recurring("Tasks/plants.md");
+        moved.complete_instances.push("2026-07-04".to_owned());
+        moved.scheduled = Some("2026-07-18".to_owned());
+        moved.due = Some("2026-07-12".to_owned());
+
+        memory.clear_write_log();
+        memory.refuse_restores_after_base(true);
+        assert!(
+            store.apply_server_ack(&edit, Some(&moved)).is_err(),
+            "the interruption has to land after the base write, or this test \
+             is about nothing"
+        );
+        let log = memory.write_log();
+        let restores = log.iter().position(|slot| *slot == "completion_restores");
+        let tasks = log.iter().position(|slot| *slot == "tasks");
+        assert!(
+            restores.is_some() && tasks.is_some() && restores < tasks,
+            "the invalidation must be durable before the base that makes it \
+             stale, got {log:?}"
+        );
+
+        memory.refuse_restores_after_base(false);
+        drop(store);
+        assert_eq!(
+            undo(&mut relaunch(&memory)),
+            None,
+            "the relaunch reads a base that already holds the edit, so nothing \
+             left can work out that the snapshot is stale"
         );
     }
 
