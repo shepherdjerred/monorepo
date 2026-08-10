@@ -202,6 +202,11 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
       at: directory,
       includingPropertiesForKeys: [.isRegularFileKey]
     )
+    // Only exclude entries that are structurally never credential files (hidden dotfiles like
+    // .DS_Store, the "mcp" subdirectory, non-regular files). A file that passes this filter is
+    // expected to be a real credential file, so a decode failure below must propagate rather
+    // than be swallowed here - masking genuine corruption as "not a credential file" can leave
+    // Brim reporting missing credentials, or worse, authenticating as the wrong account.
     .filter { url in
       guard !url.lastPathComponent.hasPrefix("."), url.lastPathComponent != "mcp" else {
         return false
@@ -211,16 +216,9 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
     }
     .sorted { $0.path < $1.path }
     for path in files {
-      // The directory can hold macOS/editor artifacts (.DS_Store, backup files) alongside real
-      // credential files; a file that isn't valid JSON is simply not a credential file, not a
-      // reason to abort discovery before later, genuinely valid account files are examined.
-      let file: KimiCredentialFile?
-      do {
-        file = try decodeFile(KimiCredentialFile.self, at: path, provider: .kimi)
-      } catch {
+      guard let file = try decodeFile(KimiCredentialFile.self, at: path, provider: .kimi) else {
         continue
       }
-      guard let file else { continue }
       for value in file.credentialCandidates {
         let credential = try makeCredential(value, source: path.path)
         guard !excludedTokens.contains(credential.accessToken) else { continue }

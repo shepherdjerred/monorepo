@@ -359,6 +359,20 @@ final class NetworkingTests: XCTestCase {
       XCTAssertEqual(error as? QuotaError, .invalidURL(.kimi))
     }
   }
+
+  func testEndpointRejectsPlainHTTPOverrideExceptLoopback() throws {
+    // The bearer token rides on every request to this URL, so a non-loopback http:// override
+    // must be rejected rather than silently transmitting the credential in cleartext.
+    XCTAssertThrowsError(
+      try ProviderEndpoints.live(
+        environment: ["QUOTABAR_KIMI_USAGE_URL": "http://api.kimi.com/coding/v1/usages"])
+    ) { error in
+      XCTAssertEqual(error as? QuotaError, .invalidURL(.kimi))
+    }
+    let loopback = try ProviderEndpoints.live(
+      environment: ["QUOTABAR_KIMI_USAGE_URL": "http://127.0.0.1:8080/usages"])
+    XCTAssertEqual(loopback.kimiUsage.host, "127.0.0.1")
+  }
 }
 
 private actor ExpiredCredentialStore: CredentialStore {

@@ -20,4 +20,23 @@ final class KimiDiscoveryTests: XCTestCase {
     let credential = try store.credential(for: .kimi, rejecting: nil)
     XCTAssertEqual(credential.accessToken, "current-token")
   }
+
+  func testMalformedKimiCredentialFilePropagatesInsteadOfBeingSkipped() throws {
+    let root = try temporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: root) }
+    // Not hidden, not "mcp", a regular file - looks like a real credential file, so a decode
+    // failure here must surface as corruption, not be treated as directory noise.
+    try write(
+      "truncated { not valid json",
+      to: root.appendingPathComponent(
+        ".kimi-code/credentials/account.json"))
+    let store = LocalCredentialStore(homeDirectory: root, claudeKeychain: FakeKeychain())
+
+    do {
+      _ = try store.credential(for: .kimi, rejecting: nil)
+      XCTFail("Expected malformedResponse for a corrupted credential file")
+    } catch {
+      XCTAssertEqual(error as? QuotaError, .malformedResponse(.kimi))
+    }
+  }
 }
