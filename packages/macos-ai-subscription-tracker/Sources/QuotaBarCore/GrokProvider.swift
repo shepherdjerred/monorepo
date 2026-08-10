@@ -121,16 +121,12 @@ public struct GrokProvider: UsageProvider {
     var warnings: [String] = []
     switch billing {
     case let .success(data):
-      do { windows += try parseBilling(data: data, now: now) } catch {
-        warnings.append("Monthly usage unavailable.")
-      }
+      windows += try parseBilling(data: data, now: now)
     case let .failure(message): warnings.append("Monthly usage: \(message)")
     }
     switch credits {
     case let .success(data):
-      do { windows += try parseCredits(data: data, now: now) } catch {
-        warnings.append("Credit usage unavailable.")
-      }
+      windows += try parseCredits(data: data, now: now)
     case let .failure(message): warnings.append("Credit usage: \(message)")
     }
     guard !windows.isEmpty else { throw QuotaError.unsupportedResponse(.grok) }

@@ -151,5 +151,21 @@ final class ProviderParsingTests: XCTestCase {
         now: now
       )
     )
+    XCTAssertThrowsError(
+      try GrokProvider.parse(
+        billing: .success(fixture("grok-invalid-monthly")),
+        credits: .success(fixture("grok-credits")),
+        accountLabel: nil,
+        now: now
+      )
+    )
+    XCTAssertThrowsError(
+      try GrokProvider.parse(
+        billing: .success(fixture("grok-billing")),
+        credits: .success(Data(#"{"config":{}}"#.utf8)),
+        accountLabel: nil,
+        now: now
+      )
+    )
   }
 }
