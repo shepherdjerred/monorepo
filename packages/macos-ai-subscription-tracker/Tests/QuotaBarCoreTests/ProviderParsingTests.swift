@@ -132,6 +132,39 @@ final class ProviderParsingTests: XCTestCase {
     XCTAssertEqual(credits.map(\.remainingPercent), [58, 82, 55, 90])
   }
 
+  func testGrokProductAliasesMustBeUnambiguous() throws {
+    let identicalAliases = try GrokProvider.parseCredits(
+      data: Data(
+        #"""
+        {
+          "config": {
+            "productUsage": {"chat": {"creditUsagePercent": 20}},
+            "productBreakdown": {"chat": {"creditUsagePercent": 20}}
+          }
+        }
+        """#.utf8
+      ),
+      now: now
+    )
+    XCTAssertEqual(identicalAliases.first?.remainingPercent, 80)
+
+    XCTAssertThrowsError(
+      try GrokProvider.parseCredits(
+        data: Data(
+          #"""
+          {
+            "config": {
+              "productUsage": {},
+              "productBreakdown": {"chat": {"creditUsagePercent": 20}}
+            }
+          }
+          """#.utf8
+        ),
+        now: now
+      )
+    )
+  }
+
   func testGrokUnknownUsageIsNotZeroAndPartialDataSurvives() throws {
     let unknown = try GrokProvider.parseCredits(data: fixture("grok-credits-unknown"), now: now)
     XCTAssertNil(unknown.first?.usedPercent)

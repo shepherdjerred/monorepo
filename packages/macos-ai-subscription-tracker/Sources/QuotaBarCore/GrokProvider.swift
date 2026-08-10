@@ -209,11 +209,18 @@ private struct GrokCreditsConfig: Decodable {
       ProviderDecoder.number(in: container, forKey: .creditUsagePercent)
     )
     self.currentPeriod = try container.decodeIfPresent(GrokPeriod.self, forKey: .currentPeriod)
-    self.productUsage =
-      try container.decodeIfPresent(
-        [String: GrokMetric].self,
-        forKey: .productUsage
-      ) ?? container.decodeIfPresent([String: GrokMetric].self, forKey: .productBreakdown) ?? [:]
+    let productUsage = try container.decodeIfPresent(
+      [String: GrokMetric].self,
+      forKey: .productUsage
+    )
+    let productBreakdown = try container.decodeIfPresent(
+      [String: GrokMetric].self,
+      forKey: .productBreakdown
+    )
+    if let productUsage, let productBreakdown, productUsage != productBreakdown {
+      throw QuotaValidationError.invalidPairedFields
+    }
+    self.productUsage = productUsage ?? productBreakdown ?? [:]
     self.extraCredits = try container.decodeIfPresent(GrokMetric.self, forKey: .extraCredits)
   }
 }
@@ -237,7 +244,7 @@ private struct GrokPeriod: Decodable {
   }
 }
 
-private struct GrokMetric: Decodable {
+private struct GrokMetric: Decodable, Equatable {
   let limit: Double?
   let used: Double?
   let remaining: Double?
