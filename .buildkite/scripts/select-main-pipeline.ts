@@ -80,14 +80,21 @@ export function parsePipeline(source: string): PipelineDocument {
   };
 }
 
+/**
+ * Buildkite treats the spacing in an `if:` expression as insignificant, so a
+ * step reformatted to `build.branch==pipeline.default_branch` still runs on
+ * main. Matching the exact substring would drop that step from `mainSteps()`,
+ * which hides it from `assertSelectionContract` and leaves it out of every
+ * upload — the step would silently stop running on main.
+ */
+const MAIN_BRANCH_CONDITION =
+  /\bbuild\.branch\s*==\s*pipeline\.default_branch\b/u;
+
 function isMainStep(step: PipelineStep): boolean {
   const key = step["key"];
   if (typeof key === "string" && ALWAYS_SELECTED.has(key)) return true;
   const condition = step["if"];
-  return (
-    typeof condition === "string" &&
-    condition.includes("build.branch == pipeline.default_branch")
-  );
+  return typeof condition === "string" && MAIN_BRANCH_CONDITION.test(condition);
 }
 
 function dependencyKeys(step: PipelineStep): string[] {

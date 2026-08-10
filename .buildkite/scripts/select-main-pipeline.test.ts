@@ -225,6 +225,26 @@ test("rejects duplicate main step keys", () => {
   );
 });
 
+test("recognizes a main condition however it is spaced", () => {
+  // Buildkite ignores the spacing, so a reformatted condition still runs on
+  // main. Missing it here would drop the step from the selection contract and
+  // from every upload, silently retiring it.
+  for (const condition of [
+    "build.branch==pipeline.default_branch",
+    "build.branch   ==   pipeline.default_branch",
+    "build.pull_request.id == null && build.branch==pipeline.default_branch",
+  ]) {
+    const reformatted = parsePipeline(
+      `steps:\n  - key: images\n    if: ${condition}\n`,
+    );
+    expect([...mainSteps(reformatted).keys()]).toEqual(["images"]);
+  }
+  const unrelated = parsePipeline(
+    `steps:\n  - key: images\n    if: build.branch == "release-please"\n`,
+  );
+  expect([...mainSteps(unrelated).keys()]).toEqual([]);
+});
+
 test("rejects malformed pipeline and dependency shapes", () => {
   expect(() => parsePipeline("null")).toThrow("pipeline must be an object");
   expect(() => mainSteps(parsePipeline("steps:\n  - key: ''\n"))).toThrow(

@@ -338,7 +338,7 @@ export const prMergeConflictCheckDurationSeconds = new Histogram({
 
 export const reviewCompletionLatencySeconds = new Histogram({
   name: "review_completion_latency_seconds",
-  help: "Seconds from PR head-commit push to the review provider's completion signal (review-at-head, check-run, or 👍 reaction), by provider. Only observed when the reviewed commit is confirmed to be the head.",
+  help: "Seconds from PR head-commit push to the review provider's completion signal (review-at-head, check-run, issue-comment, or 👍 reaction), by provider. Only observed when the reviewed commit is confirmed to be the head.",
   labelNames: ["provider"] as const,
   buckets: [30, 60, 120, 300, 600, 900, 1200, 1800, 3600],
   registers: [register],
@@ -361,7 +361,7 @@ export const reviewFindingsPerPr = new Histogram({
 
 export const reviewCompletionSignalTotal = new Counter({
   name: "review_completion_signal_total",
-  help: "Review-signal collector observations by provider and completion signal (check-run|review-at-head|thumbsup-reaction|none)",
+  help: "Review-signal collector observations by provider and completion signal (check-run|review-at-head|thumbsup-reaction|issue-comment|none)",
   labelNames: ["provider", "signal"] as const,
   registers: [register],
 });

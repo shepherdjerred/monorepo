@@ -10,16 +10,48 @@ import { isProviderAuthor } from "./identity.ts";
 import type { ReviewIssueComment, ReviewProvider } from "./types.ts";
 import type { ReviewStateResult } from "./github.ts";
 
-/** The latest persistent issue comment authored by an issue-comment provider. */
+/**
+ * The latest persistent issue comment authored by an issue-comment provider.
+ *
+ * `since` narrows the scan to comments updated at or after that instant. The
+ * result is unchanged whenever the narrowed scan finds anything: every comment
+ * it excludes is older than one it includes, so the newest match is the same
+ * either way. When it finds nothing the caller's window was simply too late,
+ * and the unfiltered scan below runs to answer the original question.
+ *
+ * GitHub returns issue comments oldest-first and, on this endpoint, ignores
+ * `sort`/`direction` — asking for newest-first silently yields creation order
+ * — so there is no way to stop early without a filter like this one.
+ */
 export async function fetchLatestProviderIssueComment(input: {
   repo: string;
   number: number;
   token: string;
   provider: ReviewProvider;
+  since?: string | undefined;
 }): Promise<ReviewIssueComment | null> {
   if (input.provider.completion.kind !== "issue-comment") return null;
+  if (input.since !== undefined) {
+    const recent = await scanProviderIssueComments(input, input.since);
+    if (recent !== null) return recent;
+  }
+  return scanProviderIssueComments(input, undefined);
+}
+
+async function scanProviderIssueComments(
+  input: {
+    repo: string;
+    number: number;
+    token: string;
+    provider: ReviewProvider;
+  },
+  since: string | undefined,
+): Promise<ReviewIssueComment | null> {
+  if (input.provider.completion.kind !== "issue-comment") return null;
+  const query = new URLSearchParams({ per_page: "100" });
+  if (since !== undefined) query.set("since", since);
   let url: string | null =
-    `${GITHUB_API_URL}/repos/${input.repo}/issues/${String(input.number)}/comments?per_page=100`;
+    `${GITHUB_API_URL}/repos/${input.repo}/issues/${String(input.number)}/comments?${query.toString()}`;
   let latest: ReviewIssueComment | null = null;
   let latestScore = Number.NEGATIVE_INFINITY;
   while (url !== null) {
@@ -109,6 +141,9 @@ export async function resolveIssueCommentReview(input: {
     number: input.prNumber,
     token: input.token,
     provider: input.provider,
+    // A review of this head cannot predate its push, so start from there and
+    // let the helper widen the scan if nothing has been touched since.
+    since: input.headPushedAt ?? undefined,
   });
   const reportsFindings =
     comment === null
