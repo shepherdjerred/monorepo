@@ -76,6 +76,8 @@ channel needs the **Attach Files** permission.
 | `heatmap`                  | `value`, `series`, two grouping dimensions |
 | `radar_chart`              | `y` with three to eight series             |
 | `kpi_card`                 | `y` (one or more), and `GROUP BY all`      |
+| `bump_chart`               | `y`, and an `ANALYZE` clause               |
+| `calendar_heatmap`         | `y` (exactly one), `GROUP BY all`, `BUCKET BY DAY` |
 | `leaderboard`              | optionally `mentions`                      |
 
 A name used in `WITH` must be one of the query's own outputs. Referring to a

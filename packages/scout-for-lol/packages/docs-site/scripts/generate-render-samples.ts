@@ -71,6 +71,25 @@ const QUEUES = [
 const POSITIONS = ["TOP", "JUNGLE", "MIDDLE", "BOTTOM", "UTILITY"];
 const CHAMPIONS = ["Ziggs", "TwistedFate", "Corki", "Kaisa", "Warwick"];
 
+const BUMP_WEEKS = ["2026-06-29", "2026-07-06", "2026-07-13", "2026-07-20"];
+/**
+ * Bump-chart rows carry the ranked position the engine derives from the metric,
+ * not the metric itself — the chart plots standings movement, so 1 is best.
+ */
+const BUMP_STANDINGS: Record<string, number[]> = {
+  Faker: [1, 1, 2, 1],
+  Caps: [2, 3, 1, 2],
+  Chovy: [3, 2, 3, 4],
+  Ruler: [4, 4, 4, 3],
+};
+
+const CALENDAR_START = new Date("2026-06-29T00:00:00Z");
+const calendarRows = Array.from({ length: 28 }, (_, offset) => {
+  const day = new Date(CALENDAR_START.getTime() + offset * 24 * 60 * 60 * 1000);
+  const date = day.toISOString().slice(0, 10);
+  return row(date, { games: 3 + ((offset * 5) % 11) });
+});
+
 /** Every sample: the query is shown verbatim in the docs beside its output. */
 const SAMPLES: {
   kind: string;
@@ -215,6 +234,26 @@ const SAMPLES: {
       }),
     ],
     columns: ["games", "win_rate", "kda", "avg_game_duration"],
+  },
+  {
+    kind: "bump_chart",
+    title: "Weekly standings",
+    query:
+      "select games\nfrom match_participants\ngroup by player\nanalyze last 28 days\nbucket by week\nin time zone 'UTC'\norder by label asc\nrender bump_chart with (y = games)",
+    rows: Object.entries(BUMP_STANDINGS).flatMap(([player, positions]) =>
+      positions.map((position, index) =>
+        row(player, { games: position }, [player, BUMP_WEEKS[index] ?? ""]),
+      ),
+    ),
+    columns: ["games"],
+  },
+  {
+    kind: "calendar_heatmap",
+    title: "Daily activity",
+    query:
+      "select games\nfrom match_participants\ngroup by all\nanalyze between '2026-06-29' and '2026-07-26'\nbucket by day\nin time zone 'UTC'\nrender calendar_heatmap with (y = games, palette = gold)",
+    rows: calendarRows,
+    columns: ["games"],
   },
 ];
 

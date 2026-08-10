@@ -82,5 +82,19 @@
     "query": "select games, win_rate, kda, avg_game_duration\nfrom match_participants\ngroup by all\nrender kpi_card with (y = (games, win_rate, kda, avg_game_duration))",
     "image": "render-kpi_card.png",
     "content": null
+  },
+  {
+    "kind": "bump_chart",
+    "title": "Weekly standings",
+    "query": "select games\nfrom match_participants\ngroup by player\nanalyze last 28 days\nbucket by week\nin time zone 'UTC'\norder by label asc\nrender bump_chart with (y = games)",
+    "image": "render-bump_chart.png",
+    "content": null
+  },
+  {
+    "kind": "calendar_heatmap",
+    "title": "Daily activity",
+    "query": "select games\nfrom match_participants\ngroup by all\nanalyze between '2026-06-29' and '2026-07-26'\nbucket by day\nin time zone 'UTC'\nrender calendar_heatmap with (y = games, palette = gold)",
+    "image": "render-calendar_heatmap.png",
+    "content": null
   }
 ]
