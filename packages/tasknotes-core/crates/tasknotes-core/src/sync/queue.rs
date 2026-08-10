@@ -18,7 +18,7 @@
 //!   retried and acked under a real path, a dead-lettered follower left pinned
 //!   to the dead temp id fails every retry forever.
 
-use std::sync::Arc;
+use std::{mem, sync::Arc};
 
 use serde_json::Value;
 
@@ -241,7 +241,14 @@ impl CommandQueue {
     /// write — leaves the command in *both* files rather than in neither:
     /// the dead-letter list gains it first, and only then does the queue lose
     /// it. The user sees a parked command that is also still queued, and the
-    /// re-send is a no-op because the id is the server's idempotency key.
+    /// next launch re-sends it.
+    ///
+    /// That re-send is **not** guaranteed to be a no-op. The server's
+    /// idempotency middleware only replays stored *2xx* responses, so a command
+    /// parked for a `400`/`422` re-executes on the server and fails again — and
+    /// then arrives back here for an id that is already parked. Completing the
+    /// interrupted move therefore means *replacing* that entry rather than
+    /// appending beside it.
     ///
     /// Writing the queue first would make the same interruption erase the
     /// command from both collections, which is a lost offline mutation with
@@ -263,16 +270,31 @@ impl CommandQueue {
         else {
             return Ok(());
         };
-        self.dead.push(DeadLetterEntry {
+        let entry = DeadLetterEntry {
             command,
             error: DeadLetterError::from(error),
             failed_at: self.clock.now_millis(),
-        });
+        };
+        // An interrupted earlier move already parked this id, and the command
+        // is queued again only because the queue write never landed. Finishing
+        // that move means replacing the entry, not appending a second one with
+        // the same id: two entries would be two rows in the parked list for one
+        // command, and discarding or retrying either would leave the other
+        // behind.
+        let mut candidate = self.dead.clone();
+        match candidate
+            .iter_mut()
+            .find(|parked| parked.command.id() == id)
+        {
+            Some(parked) => *parked = entry,
+            None => candidate.push(entry),
+        }
+        let previous = mem::replace(&mut self.dead, candidate);
         if let Err(failure) = self.persist_dead_letter() {
             // The queue still holds the command, in memory and on disk, so
             // undoing the half-made move is what keeps the two collections
             // agreeing with the bytes.
-            self.dead.pop();
+            self.dead = previous;
             return Err(failure);
         }
         self.queue.remove(position);
@@ -607,7 +629,50 @@ mod tests {
         assert_eq!(
             relaunched.pending().len(),
             1,
-            "and it survived as a replayable duplicate, which the idempotency key makes safe"
+            "and it survived as a replayable duplicate, which the next park resolves"
+        );
+    }
+
+    /// The other half of the interruption above: resolving the duplicate.
+    ///
+    /// The server's idempotency middleware only replays stored 2xx responses,
+    /// so the replayed command genuinely re-executes and can fail permanently
+    /// again. Parking it a second time must finish the interrupted move, not
+    /// leave the user two parked rows for one command.
+    #[test]
+    fn re_parking_a_half_moved_command_replaces_its_entry() {
+        let storage = Arc::new(HalfWritingStorage::default());
+        let mut queue = CommandQueue::new(storage.clone(), Arc::new(FixedClock));
+        queue.enqueue(create("c1", &temp("1-1"))).unwrap();
+
+        storage.refuse_queue.store(true, Ordering::SeqCst);
+        queue
+            .dead_letter("c1", &Error::api("nope", 422))
+            .expect_err("the dequeue write failed");
+        storage.refuse_queue.store(false, Ordering::SeqCst);
+
+        let mut relaunched = CommandQueue::new(storage, Arc::new(FixedClock));
+        relaunched.restore().unwrap();
+        relaunched
+            .dead_letter("c1", &Error::api("still nope", 400))
+            .unwrap();
+
+        assert_eq!(
+            relaunched.dead_letters().len(),
+            1,
+            "the move completed in place rather than appending a second row"
+        );
+        assert_eq!(
+            relaunched
+                .dead_letters()
+                .first()
+                .map(|entry| entry.error.message.as_str()),
+            Some("still nope"),
+            "and it carries the failure that actually parked it"
+        );
+        assert!(
+            relaunched.pending().is_empty(),
+            "the queue finally lost the command"
         );
     }
 

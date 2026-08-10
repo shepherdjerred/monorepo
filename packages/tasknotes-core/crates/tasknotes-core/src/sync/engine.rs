@@ -269,12 +269,23 @@ impl SyncEngine {
 
     /// Trigger a sync and run the loop to quiescence.
     ///
+    /// A disposed engine ignores it, exactly as [`SyncEngine::request_sync`] and
+    /// [`SyncEngine::settle`] do. The caller may be a host task that captured
+    /// this engine before a replacement took over the queue — a changed server
+    /// URL — and lost the race against [`SyncEngine::dispose`]. Draining the
+    /// shared durable queue against the address the user just replaced away
+    /// from is the failure this refusal exists to prevent, and it is a no-op
+    /// rather than an error because the host did nothing wrong.
+    ///
     /// # Errors
     ///
     /// The failure that stopped the drain or the pull. The queue is intact
     /// either way: a command is only removed once the server has acknowledged
     /// it or it has been parked.
     pub fn sync_now(&mut self) -> Result<()> {
+        if self.disposed {
+            return Ok(());
+        }
         self.pass_requested = true;
         self.run_loop()
     }
@@ -743,6 +754,16 @@ mod tests {
             client.calls.load(Ordering::Relaxed),
             1,
             "a disposed engine must not start new work"
+        );
+
+        // An explicit sync is the same refusal: a host task holding the
+        // superseded engine must not drain the shared queue against the server
+        // address the user replaced away from.
+        assert!(engine.sync_now().is_ok());
+        assert_eq!(
+            client.calls.load(Ordering::Relaxed),
+            1,
+            "a disposed engine must not run an explicit sync either"
         );
     }
 
