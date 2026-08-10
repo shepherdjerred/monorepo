@@ -25,15 +25,32 @@ export function requiredArgument(
   return value;
 }
 
+/**
+ * Read a handoff key, requiring the producing step to have written it.
+ *
+ * Defaulting the value would make a handoff that never happened — a producer
+ * regression, or a step that failed before publishing — indistinguishable from
+ * a producer that ran and had nothing to hand off. Consumers read that empty
+ * map as "no images to release", so `helm-push` and `argocd-sync` would skip
+ * the release and `version-commit-back` would no-op the pin, and the build
+ * would go green having deployed nothing. Every consumer of these keys
+ * `depends_on: images`, and that step writes them on both its build and its
+ * skip path, so an absent key means the contract broke and must fail loudly.
+ */
 async function metadata(key: string): Promise<string> {
-  const child = Bun.spawn(
-    ["buildkite-agent", "meta-data", "get", key, "--default", "{}"],
-    { stdout: "pipe", stderr: "inherit" },
-  );
+  const child = Bun.spawn(["buildkite-agent", "meta-data", "get", key], {
+    stdout: "pipe",
+    stderr: "inherit",
+  });
   const valueText = await new Response(child.stdout).text();
   const value = valueText.trim();
   const exitCode = await child.exited;
-  if (exitCode !== 0) throw new Error(`could not read metadata ${key}`);
+  if (exitCode !== 0) {
+    throw new Error(
+      `required Buildkite handoff metadata ${key} is missing (exit ${exitCode.toString()}); ` +
+        "the producing step did not publish it",
+    );
+  }
   return value;
 }
 

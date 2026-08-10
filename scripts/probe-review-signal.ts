@@ -75,9 +75,26 @@ async function probePr(
     prNumber,
     token,
   });
-  const [threadResult, state, latestReview, thumbsUp] = await Promise.all([
-    fetchReviewThreads({ repo, number: prNumber, token, provider }),
-    resolveReviewState({ provider, repo, head, prNumber, token, headPushedAt }),
+  // Resolve state before the rest so the thread fetch can reuse the issue
+  // comment it read. Fetching that comment twice would let one call see the
+  // provider's re-rendered comment and the other its previous revision, and
+  // the probe would report a state and a finding set that never coexisted.
+  const state = await resolveReviewState({
+    provider,
+    repo,
+    head,
+    prNumber,
+    token,
+    headPushedAt,
+  });
+  const [threadResult, latestReview, thumbsUp] = await Promise.all([
+    fetchReviewThreads({
+      repo,
+      number: prNumber,
+      token,
+      provider,
+      issueComment: state.issueComment,
+    }),
     fetchLatestProviderReview({ repo, number: prNumber, token, provider }),
     fetchProviderThumbsUp({ repo, number: prNumber, token, provider }),
   ]);
