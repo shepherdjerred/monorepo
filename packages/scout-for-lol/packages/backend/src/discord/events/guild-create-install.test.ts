@@ -22,6 +22,16 @@ void mock.module("#src/database/index.ts", () => ({
   prisma,
 }));
 
+// Stubbed so concurrent-install tests can assert call counts without
+// touching the real product analytics singleton (network/PostHog init).
+const guildLifecycleModule = await import("#src/analytics/guild-lifecycle.ts");
+const captureGuildInstalled =
+  mock<typeof guildLifecycleModule.captureGuildInstalled>();
+void mock.module("#src/analytics/guild-lifecycle.ts", () => ({
+  ...guildLifecycleModule,
+  captureGuildInstalled,
+}));
+
 const { handleGuildCreate } =
   await import("#src/discord/events/guild-create.ts");
 
@@ -45,15 +55,16 @@ function guildFixture(): ReturnType<typeof mockGuild> {
   });
 }
 
+beforeEach(async () => {
+  await prisma.guildInstall.deleteMany();
+  captureGuildInstalled.mockClear();
+});
+
+afterAll(async () => {
+  await prisma.$disconnect();
+});
+
 describe("handleGuildCreate — GuildInstall bookkeeping", () => {
-  beforeEach(async () => {
-    await prisma.guildInstall.deleteMany();
-  });
-
-  afterAll(async () => {
-    await prisma.$disconnect();
-  });
-
   it("records a first install with a fresh outreach slate", async () => {
     await handleGuildCreate(guildFixture());
 
@@ -204,7 +215,9 @@ describe("handleGuildCreate — GuildInstall bookkeeping", () => {
     expect(state.lastLadderStage).toBe(0);
     expect(state.feedbackRequested).toBe(false);
   });
+});
 
+describe("handleGuildCreate — availability guard and concurrent races", () => {
   it("does not touch the install row when the guild is unavailable", async () => {
     const installedAt = new Date("2026-01-01T00:00:00.000Z");
     await prisma.guildInstall.create({
@@ -228,5 +241,57 @@ describe("handleGuildCreate — GuildInstall bookkeeping", () => {
     });
     expect(row?.installedAt).toEqual(installedAt);
     expect(row?.removedAt).not.toBeNull();
+  });
+
+  it("claims exactly one installation identity across concurrent guildCreate callbacks for a new guild", async () => {
+    // Regression coverage for a race where two overlapping guildCreate
+    // callbacks for a never-before-seen guild both read no existing row and
+    // both believed they were making the first install, rotating
+    // analyticsInstallationId twice and double-counting the funnel.
+    await Promise.all([
+      handleGuildCreate(guildFixture()),
+      handleGuildCreate(guildFixture()),
+    ]);
+
+    const rows = await prisma.guildInstall.findMany({
+      where: { serverId: SERVER_ID },
+    });
+    expect(rows).toHaveLength(1);
+    expect(captureGuildInstalled).toHaveBeenCalledTimes(1);
+    expect(captureGuildInstalled.mock.calls[0]?.[1]).toBe("first");
+  });
+
+  it("claims exactly one reinstall identity across concurrent guildCreate callbacks for a removed guild", async () => {
+    await prisma.guildInstall.create({
+      data: {
+        serverId: SERVER_ID,
+        serverName: "Fixture Server",
+        ownerDiscordId: testAccountId("77"),
+        addedByDiscordId: testAccountId("77"),
+        memberCount: 10,
+        installedAt: new Date("2026-01-01T00:00:00.000Z"),
+        removedAt: new Date("2026-02-01T00:00:00.000Z"),
+      },
+    });
+    const originalRow = await prisma.guildInstall.findUnique({
+      where: { serverId: SERVER_ID },
+    });
+    const originalAnalyticsInstallationId =
+      originalRow?.analyticsInstallationId;
+
+    await Promise.all([
+      handleGuildCreate(guildFixture()),
+      handleGuildCreate(guildFixture()),
+    ]);
+
+    const row = await prisma.guildInstall.findUnique({
+      where: { serverId: SERVER_ID },
+    });
+    expect(row?.removedAt).toBeNull();
+    expect(row?.analyticsInstallationId).not.toBe(
+      originalAnalyticsInstallationId,
+    );
+    expect(captureGuildInstalled).toHaveBeenCalledTimes(1);
+    expect(captureGuildInstalled.mock.calls[0]?.[1]).toBe("reinstall");
   });
 });
