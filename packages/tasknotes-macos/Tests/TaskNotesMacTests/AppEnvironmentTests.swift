@@ -194,6 +194,39 @@ struct AppEnvironmentTests {
         #expect(store.credentialError == nil)
     }
 
+    /// ⚠️ **A successful read is not the event that makes a failed write
+    /// untrue, and this is the case where the two are simultaneously true.**
+    /// The Keychain refuses a replacement token, so the Settings field shows
+    /// one value while the Keychain still holds another. Pressing Connect
+    /// re-reads — successfully, because the old item was never touched — and
+    /// that read used to clear the warning *and* configure the engine with the
+    /// old credential. The app then reported a working connection over a token
+    /// the user believed they had replaced, with nothing left on screen saying
+    /// the field and the Keychain disagreed.
+    @Test("pressing Connect does not retire a refused credential write")
+    func aRefusedWriteIsNotRetiredByASuccessfulRead() async throws {
+        let tokens = RefusingTokenStore(stored: "the-token-already-in-the-keychain")
+        let fixture = try Fixture(address: "", tokenStore: tokens)
+        defer { fixture.tearDown() }
+        await fixture.environment.start().value
+        let store = try #require(fixture.store)
+
+        fixture.environment.authToken = "the-replacement"
+        #expect(store.credentialError == RefusingTokenStore.failure)
+
+        // Exactly what Connect does: migrate, read the credential, reconfigure.
+        await fixture.environment.applyServerAddress().value
+
+        #expect(
+            store.credentialError == RefusingTokenStore.failure,
+            "the Keychain still holds the old token, so the warning is still true")
+
+        // And the one event that does retire it.
+        tokens.startAccepting()
+        fixture.environment.authToken = "the-replacement"
+        #expect(store.credentialError == nil)
+    }
+
     // ── One environment, many windows ──────────────────────────────────────
 
     /// ⚠️ **Every window's `.task` calls `start()` on the one shared
@@ -229,6 +262,46 @@ struct AppEnvironmentTests {
         #expect(
             store.lastSyncTime == firstSync,
             "no further pull ran, so no further engine was built")
+    }
+
+    /// ⚠️ **The guard has to answer "is an engine installed", not "did I call
+    /// configure".** `configure` deliberately publishes no engine when the
+    /// replacement fails to `restore()` — an unreadable `id-counters.json` is
+    /// enough — and the launch guard used to be set before that call. Every
+    /// later window's `start()` then returned immediately over an empty slot,
+    /// so the app could neither fetch nor dispatch for the rest of the session
+    /// even once the storage fault was gone, unless the user happened to find
+    /// Connect in Settings.
+    ///
+    /// Nothing in this body presses Connect. Opening a window is the whole
+    /// remedy, which is the claim being made.
+    @Test("a launch that lost the engine to storage is retried by the next window")
+    func aFailedRestoreIsRetriedByTheNextWindow() async throws {
+        let server = try TaskNotesServerProcess()
+        defer { server.stop() }
+        try await seedVault(of: server, title: "Arrived on the retry")
+
+        let fixture = try Fixture(address: server.baseURL.absoluteString)
+        defer { fixture.tearDown() }
+        let counters = fixture.storageURL.appending(path: "id-counters.json")
+        try "{ this is not the counter file".write(
+            to: counters, atomically: true, encoding: .utf8)
+
+        await fixture.environment.start().value
+
+        let store = try #require(fixture.store)
+        #expect(!store.isEngineInstalled, "a half-restored engine is never published")
+        #expect(store.lastStoreError != nil, "and the refusal reaches the banner")
+        #expect(store.tasks.isEmpty)
+
+        // The fault clears — the file the banner complained about is gone — and
+        // the user opens another window.
+        try FileManager.default.removeItem(at: counters)
+        await fixture.environment.start().value
+
+        #expect(store.isEngineInstalled)
+        #expect(store.tasks.map(\.title) == ["Arrived on the retry"])
+        #expect(store.lastStoreError == nil)
     }
 
     /// The user asking for a different server is the case that *must* replace
@@ -389,28 +462,30 @@ struct AppEnvironmentTests {
             parkedCount: store.deadLetters.count
         )
     }
+}
 
-    /// A create request carrying nothing but a title.
-    ///
-    /// The generated memberwise initializer takes all thirteen fields, because
-    /// UniFFI emits no defaults.
-    private func createRequest(title: String) -> CreateTaskRequest {
-        CreateTaskRequest(
-            title: title,
-            details: nil,
-            status: nil,
-            priority: nil,
-            due: nil,
-            scheduled: nil,
-            contexts: nil,
-            projects: nil,
-            tags: nil,
-            recurrence: nil,
-            recurrenceAnchor: nil,
-            timeEstimate: nil,
-            extraFields: nil
-        )
-    }
+/// A create request carrying nothing but a title.
+///
+/// The generated memberwise initializer takes all thirteen fields, because
+/// UniFFI emits no defaults. At file scope rather than in the suite because it
+/// depends on nothing in it, and because thirteen `nil`s inside the type body
+/// count against the length budget that keeps the suite readable.
+private func createRequest(title: String) -> CreateTaskRequest {
+    CreateTaskRequest(
+        title: title,
+        details: nil,
+        status: nil,
+        priority: nil,
+        due: nil,
+        scheduled: nil,
+        contexts: nil,
+        projects: nil,
+        tags: nil,
+        recurrence: nil,
+        recurrenceAnchor: nil,
+        timeEstimate: nil,
+        extraFields: nil
+    )
 }
 
 /// A throwaway `UserDefaults` domain.
@@ -451,6 +526,9 @@ private struct Fixture {
 
     private let directory: TemporaryDirectory
     private let suite: DefaultsSuite
+
+    /// The scratch storage directory, for the cases that corrupt a file in it.
+    var storageURL: URL { directory.url }
 
     /// - Parameters:
     ///   - address: what to put in the address field, or `nil` to leave whatever
@@ -516,21 +594,35 @@ private struct UnreadableTokenStore: ServerTokenStore {
 ///
 /// `Mutex` rather than `@unchecked Sendable`, matching ``InMemoryTokenStore``:
 /// the protocol is `Sendable` and a promise to the compiler is not a fact.
+///
+/// Reads always succeed, and that asymmetry is the point of the type: a
+/// Keychain that refuses to *store* a replacement leaves the item already in it
+/// perfectly readable, so a failed write and a working read are simultaneously
+/// true.
 private final class RefusingTokenStore: ServerTokenStore {
     static let failure = CoreError.Invariant(
         message: "could not store the server token (Keychain status -25308)"
     )
 
+    private let stored: Mutex<String?>
     private let accepting = Mutex(false)
+
+    /// - Parameter stored: the credential already in the Keychain, which a
+    ///   refused write never replaces.
+    init(stored: String? = nil) {
+        self.stored = Mutex(stored)
+    }
 
     func startAccepting() {
         accepting.withLock { $0 = true }
     }
 
-    func token() -> Result<String?, CoreError> { .success(nil) }
+    func token() -> Result<String?, CoreError> { .success(stored.withLock { $0 }) }
 
     func setToken(_ token: String?) -> CoreError? {
-        accepting.withLock { $0 } ? nil : Self.failure
+        guard accepting.withLock({ $0 }) else { return Self.failure }
+        stored.withLock { $0 = token }
+        return nil
     }
 }
 

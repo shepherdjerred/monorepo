@@ -258,6 +258,18 @@ public final class TaskNotesStore {
         refresh()
     }
 
+    /// Whether an engine is installed and taking dispatches.
+    ///
+    /// ⚠️ **Not the same fact as "``configure(serverURL:authToken:)`` was
+    /// called".** That method deliberately publishes no engine when the
+    /// replacement's `restore()` fails, so a shell that recorded its own call
+    /// instead would believe an engine exists over an empty slot — and, because
+    /// that record is what makes launch idempotent across windows, would never
+    /// build one again for as long as the app ran. Asking the slot is what lets
+    /// a launch lost to a transient storage failure be retried by the next
+    /// window rather than needing the user to press Connect.
+    public var isEngineInstalled: Bool { engineBox.current != nil }
+
     /// Stop the engine and release every armed timer.
     public func shutdown() {
         let retired = engineBox.replace(with: nil)

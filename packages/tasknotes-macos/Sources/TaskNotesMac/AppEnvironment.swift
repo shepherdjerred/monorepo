@@ -175,10 +175,14 @@ public final class AppEnvironment {
     /// screen freezes until that HTTP call finishes. The user did nothing but
     /// press ⌘N.
     ///
-    /// The flag records that an engine is *installed*, not that `start()` was
-    /// called: a launch that stopped at the migration guard never built one, so
-    /// a later window may still try. ``applyServerAddress()`` deliberately does
-    /// not consult it — replacing the engine is exactly what the user asked for.
+    /// The guard asks whether an engine is *installed*, rather than remembering
+    /// that `start()` ran: a launch that stopped at the migration guard never
+    /// built one, and ``TaskNotesStore/configure(serverURL:authToken:)``
+    /// publishes none when the replacement fails to restore, so both of those
+    /// launches are retried by the next window instead of leaving the app
+    /// unable to fetch or dispatch until somebody presses Connect.
+    /// ``applyServerAddress()`` deliberately does not consult it — replacing the
+    /// engine is exactly what the user asked for.
     ///
     /// Returns the fetch it started. Production call sites discard it — the
     /// `@discardableResult` is what keeps them unchanged — but a test cannot
@@ -217,10 +221,15 @@ public final class AppEnvironment {
     private func bringUp() -> _Concurrency.Task<Void, Never> {
         guard case .success(let store) = store else { return alreadyFinished() }
         guard store.migrate() else { return alreadyFinished() }
-        isEngineInstalled = true
         switch tokenStore.token() {
         case .success(let token):
-            store.clearCredentialFailure()
+            // ⚠️ **A read that worked says nothing about the write that did
+            // not.** Clearing the credential channel here retired a warning
+            // about a *replacement* token the Keychain had refused, while this
+            // branch went on to configure the engine with the old one still in
+            // the Keychain — so Connect reported success, the field showed the
+            // rejected value, and nothing on screen said the two disagreed.
+            // Only ``applyCredentialWrite(_:)`` retires it.
             store.configure(serverURL: configuredServer, authToken: token)
             return pull(store)
         case .failure(let error):
@@ -237,11 +246,16 @@ public final class AppEnvironment {
         }
     }
 
-    /// Whether an engine has been built for this environment.
+    /// Whether an engine is installed for this environment.
     ///
     /// See ``start()`` — this is what keeps a second window from disposing the
-    /// first one's running engine.
-    private var isEngineInstalled = false
+    /// first one's running engine. Read from the store rather than recorded
+    /// here, so a `bringUp()` that reached `configure` but ended with an empty
+    /// slot is still answered honestly.
+    private var isEngineInstalled: Bool {
+        guard case .success(let store) = store else { return false }
+        return store.isEngineInstalled
+    }
 
     /// Publish the outcome of a credential write.
     ///
