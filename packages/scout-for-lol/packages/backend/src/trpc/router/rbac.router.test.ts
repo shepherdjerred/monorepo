@@ -234,10 +234,9 @@ describe("RBAC guild-permission gate", () => {
   test("legacy Discord grant (CREATE_COMPETITION) is honored by the RBAC reader", async () => {
     await reset();
     asMember();
-    // The `/competition grant-permission` Discord command persists the raw
-    // legacy PermissionType enum, not a canonical `competitions:create` key.
-    // The web RBAC reader must still surface it — otherwise a freshly-issued
-    // grant is dropped and access is silently denied.
+    // Historical Discord grants persist the raw PermissionType enum, not a
+    // canonical `competitions:create` key. The web RBAC reader still surfaces
+    // them so existing grants are not silently denied.
     await trpc.prisma.serverPermission.create({
       data: {
         serverId: guildId,

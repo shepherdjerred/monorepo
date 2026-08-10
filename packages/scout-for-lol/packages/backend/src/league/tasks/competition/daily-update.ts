@@ -297,9 +297,8 @@ export async function postLeaderboardUpdate(
 
 /**
  * Post leaderboard updates for every active competition, ignoring per-row
- * schedules. Used by the `/debug force-leaderboard-update` admin command and
- * exercised by integration tests; the scheduled per-minute cron uses
- * `runScheduledCompetitionUpdates` instead.
+ * schedules. Used by operational tooling and integration tests; the scheduled
+ * per-minute cron uses `runScheduledCompetitionUpdates` instead.
  */
 export async function runDailyLeaderboardUpdate(): Promise<void> {
   logger.info("[DailyLeaderboard] Running daily leaderboard update");

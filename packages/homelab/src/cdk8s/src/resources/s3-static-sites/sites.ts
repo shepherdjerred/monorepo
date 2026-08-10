@@ -1,8 +1,11 @@
 import type { StaticSiteConfig } from "@shepherdjerred/homelab/cdk8s/src/misc/s3-static-site.ts";
 
 /**
- * CSP for the scout-for-lol web UI (`/app/`).
+ * CSP for the Scout release bucket (`/`, `/app/`, and `/docs/`).
  *
+ * - Starlight's docs runtime uses inline theme bootstrap code and Pagefind's
+ *   WASM search worker, so the shared release policy also allows
+ *   `'unsafe-inline'` and `'wasm-unsafe-eval'`.
  * - `script-src` allows PostHog Cloud's US asset host for the marketing-site
  *   bootstrap and the SPA's session-replay worker.
  * - `connect-src` allows PostHog Cloud's US ingestion host for pageviews,
@@ -21,7 +24,7 @@ import type { StaticSiteConfig } from "@shepherdjerred/homelab/cdk8s/src/misc/s3
  */
 const scoutCsp = [
   "default-src 'self'",
-  "script-src 'self' https://us-assets.i.posthog.com",
+  "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://us-assets.i.posthog.com",
   "worker-src 'self' blob:",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' https://cdn.discordapp.com data: blob:",
@@ -86,6 +89,7 @@ export const staticSites: StaticSiteConfig[] = [
     ],
     probes: [
       { endpoint: "app", path: "/app/", module: "http_2xx" },
+      { endpoint: "docs", path: "/docs/", module: "http_2xx" },
       { endpoint: "healthz", path: "/api/healthz", module: "http_2xx" },
     ],
     spaFallbacks: [{ pathPrefix: "/app/*", fallbackPath: "/app/index.html" }],
@@ -111,6 +115,7 @@ export const staticSites: StaticSiteConfig[] = [
     ],
     probes: [
       { endpoint: "app", path: "/app/", module: "http_2xx" },
+      { endpoint: "docs", path: "/docs/", module: "http_2xx" },
       { endpoint: "healthz", path: "/api/healthz", module: "http_2xx" },
     ],
     spaFallbacks: [{ pathPrefix: "/app/*", fallbackPath: "/app/index.html" }],

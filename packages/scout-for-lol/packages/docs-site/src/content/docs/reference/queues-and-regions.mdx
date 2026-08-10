@@ -1,0 +1,61 @@
+---
+title: Queues and regions
+description: Every queue Scout recognizes and every region a Riot account can be registered in.
+sidebar:
+  order: 9
+---
+
+import DataTable from "../../../components/DataTable.astro";
+import { reportQueueValues } from "@scout-for-lol/data/model/report-query-registry.ts";
+import {
+  RegionSchema,
+  toReadableRegion,
+} from "@scout-for-lol/data/model/league-account.ts";
+
+export const queues = reportQueueValues();
+export const regions = RegionSchema.options;
+
+## Queues
+
+These values are what subscription filters allow, what `WHERE queue IN (…)`
+accepts in a report, and what `GROUP BY queue` produces.
+
+<DataTable
+  columns={[
+    { header: "Value", values: queues.map((queue) => queue.id), code: true },
+    { header: "Queue", values: queues.map((queue) => queue.label) },
+  ]}
+/>
+
+Limited-time queues are only offered in the subscription filter picker while
+they are actually live. Tick **Show unavailable queues** to select one ahead of
+time.
+
+:::caution
+A match whose queue Scout does not yet recognize does **not** pass a queue
+filter. When Riot adds a new queue, filtered subscriptions skip it until Scout
+adds the mapping; unfiltered subscriptions post it immediately.
+:::
+
+## Regions
+
+These are the values `/track` offers and the dashboard's region selector uses.
+
+<DataTable
+  columns={[
+    { header: "Value", values: regions.map((region) => region), code: true },
+    {
+      header: "Region",
+      values: regions.map((region) => toReadableRegion(region)),
+    },
+  ]}
+/>
+
+The region is where Riot can resolve the account's Riot ID. Pick the one the
+account actually plays on — a Riot ID that resolves in one region will not
+resolve in another.
+
+## Related
+
+- [Route notifications to the right channels](/docs/how-to/route-notifications/)
+- [ScoutQL filters](/docs/reference/scoutql-filters/)

@@ -21,12 +21,20 @@ export const SEAWEEDFS_AWS_ENV: Record<string, string> = {
   AWS_RESPONSE_CHECKSUM_VALIDATION: "WHEN_REQUIRED",
 };
 
-/** Refuse to sync a partial static site that would delete a live entrypoint. */
+/**
+ * Refuse to sync a partial static site that would delete a live entrypoint.
+ *
+ * `entrypoints` defaults to the two surfaces every archived Scout release has
+ * ever contained. Callers working with the current bundle pass the full list
+ * (which also includes `docs/index.html`); the legacy reconcile path keeps the
+ * default, because archives predating the docs site legitimately lack it.
+ */
 export async function assertStaticSiteComplete(
   dir: string,
   label: string,
+  entrypoints: readonly string[] = ["index.html", "app/index.html"],
 ): Promise<void> {
-  for (const path of ["index.html", "app/index.html"]) {
+  for (const path of entrypoints) {
     if (!(await Bun.file(`${dir}/${path}`).exists())) {
       throw new Error(`${label}: ${dir}/${path} is missing — refusing to sync`);
     }

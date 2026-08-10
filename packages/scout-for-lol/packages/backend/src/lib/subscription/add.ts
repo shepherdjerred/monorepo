@@ -14,7 +14,7 @@ import type {
   AddSubscriptionInput,
   AddSubscriptionResult,
 } from "#src/lib/subscription/types.ts";
-import { resolveRiotIdToPuuid } from "#src/lib/subscription/resolve.ts";
+import { resolveRiotIdToPuuid } from "#src/lib/riot/resolve-puuid.ts";
 import { checkSubscriptionAndAccountLimits } from "#src/lib/subscription/limits.ts";
 
 const logger = createLogger("subscription-add");
@@ -135,6 +135,8 @@ async function commitSubscription(params: {
       kind: "subscription-already-exists",
       playerAlias: playerAccount.player.alias,
       addedToExistingPlayer: isAddingToExistingPlayer,
+      playerId: playerAccount.player.id,
+      accountId: account.id,
       accounts: playerAccount.player.accounts.map((a) => ({
         alias: a.alias,
         region: a.region,

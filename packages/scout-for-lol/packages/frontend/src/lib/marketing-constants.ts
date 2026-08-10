@@ -15,3 +15,6 @@ export type GetStartedClickEvent = typeof GET_STARTED_CLICK_EVENT;
  * bot invite directly.
  */
 export const APP_DASHBOARD_URL = "/app/";
+
+/** The same-origin Starlight documentation site shipped with the Scout release. */
+export const DOCS_URL = "/docs/";

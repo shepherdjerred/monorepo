@@ -40,8 +40,8 @@ ${competition.description}
 
 The competition has officially begun! All participants' starting stats have been captured.
 
-Players can still join with:
-\`/competition join competition-id:${competition.id.toString()}\`
+Ask a server admin to add you if you are not in yet — Scout has no
+self-service join.
 
 Good luck! 🍀`;
 

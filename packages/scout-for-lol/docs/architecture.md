@@ -136,7 +136,7 @@ sequenceDiagram
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Created: /competition create
+    [*] --> Created: dashboard competition form
 
     Created --> Active: startDate reached
     note right of Created

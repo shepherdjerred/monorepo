@@ -2,376 +2,62 @@
 import Layout from "../layouts/Layout.astro";
 import Navbar from "../components/Navbar.astro";
 import Footer from "../components/Footer.astro";
-import PageHeader from "../components/PageHeader.astro";
-import ProcessStep from "../components/ProcessStep.astro";
-import InfoBox from "../components/InfoBox.astro";
-import CommandBox from "../components/CommandBox.astro";
-import GalleryItem from "../components/GalleryItem.astro";
-import { getGeneratedScoutShowcaseAssetSrc } from "../data/scout-showcase";
 import {
   APP_DASHBOARD_URL,
+  DOCS_URL,
   GET_STARTED_CLICK_EVENT,
 } from "#src/lib/marketing-constants.ts";
-
-const soloDiscordImg = getGeneratedScoutShowcaseAssetSrc("ranked-solo-discord");
-const leaderboardLpImg = getGeneratedScoutShowcaseAssetSrc("competition-graph");
 ---
 
 <Layout
   title="Getting Started · Scout for LoL"
-  description="Add Scout to your Discord server and start tracking your friends' League of Legends matches in minutes."
+  description="Install Scout and configure League match notifications from the web dashboard."
 >
   <div class="bg-white dark:bg-gray-900">
     <Navbar activePage="getting-started" />
-
-    <!-- Main Content -->
-    <div class="relative px-6 lg:px-8">
+    <main class="relative px-6 lg:px-8">
       <div class="mx-auto max-w-3xl py-32 sm:py-48 lg:py-56">
-        <PageHeader
-          title="Getting Started with Scout"
-          subtitle="Add Scout to your server and start tracking your friends' League matches in minutes."
-        />
-
-        <!-- Step 1: Sign in to the dashboard -->
-        <ProcessStep number={1} title="Sign in to the dashboard">
-          <div class="prose max-w-none mb-6 mt-6">
-            <p class="text-lg text-gray-700 dark:text-gray-300 mb-4">
-              Open the Scout dashboard and sign in with your Discord account —
-              Scout uses it to confirm which servers you manage. No password
-              required.
-            </p>
-          </div>
-
+        <p
+          class="text-sm font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-400"
+        >
+          Getting started
+        </p>
+        <h1
+          class="mt-4 text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-6xl"
+        >
+          Configure Scout in the browser.
+        </h1>
+        <p class="mt-6 text-lg leading-8 text-gray-600 dark:text-gray-300">
+          Sign in, add Scout to your Discord server, and choose the players and
+          channels you want to watch. Discord stays focused on notifications;
+          the dashboard handles the settings.
+        </p>
+        <div class="mt-10 flex flex-wrap gap-4">
           <a
             href={APP_DASHBOARD_URL}
             data-scout-conversion={GET_STARTED_CLICK_EVENT}
             data-scout-cta-location="getting-started"
-            class="inline-flex items-center rounded-md bg-indigo-600 px-6 py-3 text-base font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+            class="rounded-md bg-indigo-600 px-5 py-3 font-semibold text-white shadow-sm hover:bg-indigo-500"
+            >Open the dashboard</a
           >
-            Get Started
-            <svg
-              class="ml-2 -mr-1 h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke-width="1.5"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"></path>
-            </svg>
-          </a>
-        </ProcessStep>
-
-        <!-- Step 2: Add Scout to your server -->
-        <ProcessStep number={2} title="Add Scout to your server">
-          <InfoBox variant="info">
-            <p>
-              <strong>Note:</strong> You need Administrator permissions in the Discord
-              server you want to add Scout to.
-            </p>
-          </InfoBox>
-
-          <div class="prose max-w-none mb-6 mt-6">
-            <p class="text-lg text-gray-700 dark:text-gray-300 mb-4">
-              From the dashboard, click <strong>"Add Scout to a server"</strong>
-              and pick the server you want to track. Approve the permissions and Discord
-              sends you right back to the dashboard, ready to configure.
-            </p>
-            <ol
-              class="list-decimal list-inside space-y-3 text-gray-700 dark:text-gray-300"
-            >
-              <li>
-                Click <strong>"Add Scout to a server"</strong> in the dashboard
-              </li>
-              <li>Select the Discord server where you want to add Scout</li>
-              <li>Review and approve the requested permissions</li>
-              <li>You're returned to the dashboard for that server</li>
-            </ol>
-          </div>
-        </ProcessStep>
-
-        <!-- Step 3: Configure in the dashboard -->
-        <ProcessStep number={3} title="Configure in the dashboard">
-          <div class="prose max-w-none mb-6">
-            <p class="text-lg text-gray-700 dark:text-gray-300 mb-4">
-              From your server's dashboard you can:
-            </p>
-            <ul class="space-y-3 text-gray-700 dark:text-gray-300">
-              <li>
-                <strong class="text-indigo-600 dark:text-indigo-400"
-                  >Add players to track:</strong
-                > pick a channel, enter a Riot ID (<code
-                  class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-sm"
-                  >GameName#TagLine</code
-                >) and a friendly alias, and Scout starts watching their games.
-              </li>
-              <li>
-                <strong class="text-indigo-600 dark:text-indigo-400"
-                  >Manage subscriptions:</strong
-                > move players between channels, add them to more channels, or remove
-                them — all from a table.
-              </li>
-              <li>
-                <strong class="text-indigo-600 dark:text-indigo-400"
-                  >Set up competitions &amp; reports:</strong
-                > build leaderboards and scheduled reports with a guided form.
-              </li>
-            </ul>
-          </div>
-
-          <div class="space-y-10 my-8">
-            <GalleryItem
-              imageSrc="/dashboard-add-subscription.png"
-              imageAlt="Scout dashboard 'Add subscription' dialog with channel, region, Riot ID, and alias fields"
-              caption="Add a player to track from a simple form — pick a channel, paste a Riot ID, done."
-            />
-            <GalleryItem
-              imageSrc="/dashboard-subscriptions.png"
-              imageAlt="Scout dashboard subscriptions table listing tracked players and their channels"
-              caption="Manage every tracked player and channel from one table."
-            />
-          </div>
-
-          <InfoBox variant="warning" title="💡 Pro Tip: Finding Riot IDs">
-            <p>
-              You can find your Riot ID in the League client. It's displayed as <strong
-                >GameName#TagLine</strong
-              >. For example: <code
-                class="bg-yellow-100 dark:bg-yellow-800/50 px-2 py-1 rounded"
-                >Faker#KR1</code
-              >
-            </p>
-          </InfoBox>
-        </ProcessStep>
-
-        <!-- Step 4: Enjoy automatic updates -->
-        <ProcessStep number={4} title="Enjoy automatic updates">
-          <div class="prose max-w-none">
-            <p class="text-lg text-gray-700 dark:text-gray-300 mb-6">
-              That's it! Scout will now automatically:
-            </p>
-
-            <div class="space-y-4 mb-8">
-              <div
-                class="bg-teal-50 dark:bg-teal-900/30 border border-teal-200 dark:border-teal-700 rounded-lg p-6"
-              >
-                <h4
-                  class="font-semibold text-teal-900 dark:text-teal-300 mb-2 flex items-center"
-                >
-                  <svg
-                    class="h-5 w-5 mr-2"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"
-                    ></path>
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"></path>
-                  </svg>
-                  Pre-Match Alerts
-                </h4>
-                <p class="text-teal-700 dark:text-teal-300">
-                  Get notified the moment a tracked player starts a game, with
-                  champion picks and game mode
-                </p>
-              </div>
-
-              <div
-                class="bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700 rounded-lg p-6"
-              >
-                <h4
-                  class="font-semibold text-purple-900 dark:text-purple-300 mb-2 flex items-center"
-                >
-                  <svg
-                    class="h-5 w-5 mr-2"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5M9 11.25v1.5M12 9v3.75m3-6v6"
-                    ></path>
-                  </svg>
-                  Post-Match Reports
-                </h4>
-                <p class="text-purple-700 dark:text-purple-300">
-                  Receive beautiful reports with detailed stats, KDA, damage,
-                  gold, items, and more
-                </p>
-              </div>
-            </div>
-
-            <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 mb-6">
-              <h4
-                class="text-lg font-semibold text-gray-900 dark:text-white mb-4"
-              >
-                Here's what your match notifications will look like:
-              </h4>
-              <GalleryItem
-                imageSrc={soloDiscordImg}
-                imageAlt="Example of a Scout match notification in Discord showing player stats, KDA, and LP gains"
-                caption="Scout automatically posts detailed match reports right in your Discord channel"
-              />
-            </div>
-          </div>
-        </ProcessStep>
-
-        <!-- Slash commands -->
-        <section class="mb-16">
-          <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-3">
-            Slash commands
-          </h2>
-          <p class="text-gray-700 dark:text-gray-300 mb-6">
-            Every action is also available as a slash command in Discord. For
-            example, add a subscription with <code
-              class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-sm"
-              >/subscription add</code
-            >:
-          </p>
-
-          <CommandBox
-            command="/subscription add channel:#general region:na1 riot-id:PlayerName#1234 alias:MyFriend"
-            variant="dark"
-          />
-
-          <h3
-            class="text-xl font-semibold text-gray-900 dark:text-white mb-3 mt-6"
+          <a
+            href={DOCS_URL}
+            class="rounded-md border border-gray-300 px-5 py-3 font-semibold text-gray-900 hover:bg-gray-50 dark:border-gray-700 dark:text-white dark:hover:bg-gray-800"
+            >Read the documentation</a
           >
-            Command Parameters:
-          </h3>
-          <ul class="space-y-3 text-gray-700 dark:text-gray-300">
-            <li>
-              <strong class="text-indigo-600 dark:text-indigo-400"
-                >channel:</strong
-              > The Discord channel where notifications will be posted
-            </li>
-            <li>
-              <strong class="text-indigo-600 dark:text-indigo-400"
-                >region:</strong
-              > The League region (na1, euw1, eune1, kr, etc.)
-            </li>
-            <li>
-              <strong class="text-indigo-600 dark:text-indigo-400"
-                >riot-id:</strong
-              > The player's Riot ID in format "GameName#TagLine"
-            </li>
-            <li>
-              <strong class="text-indigo-600 dark:text-indigo-400"
-                >alias:</strong
-              > A friendly name to display in notifications
-            </li>
-          </ul>
-
-          <p class="text-gray-700 dark:text-gray-300 mt-6">
-            See the full <a
-              href="/commands"
-              class="font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300"
-              >slash command reference →</a
-            >.
-          </p>
-        </section>
-
-        <!-- Next Steps -->
-        <section class="mb-16">
-          <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-6">
-            What's Next?
+        </div>
+        <div class="mt-16 rounded-xl bg-gray-50 p-8 dark:bg-gray-800">
+          <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+            Prefer to try it from Discord?
           </h2>
-
-          <div class="space-y-6">
-            <div
-              class="border-l-4 border-indigo-600 bg-gray-50 dark:bg-gray-800 p-6"
-            >
-              <h3
-                class="text-xl font-semibold text-gray-900 dark:text-white mb-2"
-              >
-                🏆 Create Competitions
-              </h3>
-              <p class="text-gray-700 dark:text-gray-300 mb-3">
-                Set up custom leaderboards and challenges for your server
-                members from the <strong>Competitions</strong> tab in the dashboard
-                (or with the <code
-                  class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-sm"
-                  >/competition create</code
-                > command).
-              </p>
-              <div class="mt-4 mb-4">
-                <img
-                  src={leaderboardLpImg}
-                  alt="Example of a Scout competition progress chart tracking LP over time"
-                  class="w-full h-auto rounded-lg shadow-md ring-1 ring-gray-400/10 dark:ring-gray-600"
-                  loading="lazy"
-                />
-              </div>
-              <a
-                href="/docs#advanced-features"
-                class="inline-flex min-h-[44px] items-center text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 font-medium"
-                >Learn about competitions →</a
-              >
-            </div>
-
-            <div
-              class="border-l-4 border-indigo-600 bg-gray-50 dark:bg-gray-800 p-6"
-            >
-              <h3
-                class="text-xl font-semibold text-gray-900 dark:text-white mb-2"
-              >
-                📚 Read Full Documentation
-              </h3>
-              <p class="text-gray-700 dark:text-gray-300 mb-3">
-                Explore all features, commands, and advanced configuration
-                options in our comprehensive documentation.
-              </p>
-              <a
-                href="/docs"
-                class="inline-flex min-h-[44px] items-center text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 font-medium"
-                >View full docs →</a
-              >
-            </div>
-
-            <div
-              class="border-l-4 border-indigo-600 bg-gray-50 dark:bg-gray-800 p-6"
-            >
-              <h3
-                class="text-xl font-semibold text-gray-900 dark:text-white mb-2"
-              >
-                ❓ Get Help
-              </h3>
-              <p class="text-gray-700 dark:text-gray-300 mb-3">
-                Need help? Use the <code
-                  class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-sm"
-                  >/help</code
-                > command in Discord, or join our support server.
-              </p>
-              <div class="flex gap-4">
-                <a
-                  href="https://discord.gg/qmRewyHXFE"
-                  class="inline-flex min-h-[44px] items-center text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 font-medium"
-                  >Discord Support →</a
-                >
-                <a
-                  href="https://github.com/shepherdjerred/monorepo/issues"
-                  class="inline-flex min-h-[44px] items-center text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 font-medium"
-                  >GitHub Issues →</a
-                >
-              </div>
-            </div>
-          </div>
-        </section>
+          <p class="mt-3 text-gray-600 dark:text-gray-300">
+            Use <code>/track</code> for one player in the current channel, then return
+            to the dashboard for filters, queues, additional channels, competitions,
+            reports, and permissions.
+          </p>
+        </div>
       </div>
-    </div>
-
+    </main>
     <Footer />
   </div>
 </Layout>

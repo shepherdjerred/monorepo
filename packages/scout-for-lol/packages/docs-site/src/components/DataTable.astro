@@ -1,0 +1,63 @@
+---
+/**
+ * Renders a reference table from data supplied by `@scout-for-lol/data`.
+ *
+ * Reference pages use this instead of hand-written Markdown tables so the rows
+ * are the values Scout actually ships: if a metric, filter, permission, or
+ * render kind is added or renamed in the registry, this page changes with it
+ * and cannot silently go stale.
+ */
+interface Column {
+  /** Column heading. */
+  header: string;
+  /** Row values, one per row, aligned with every other column. */
+  values: string[];
+  /** Render values as inline code. */
+  code?: boolean;
+}
+
+interface Props {
+  columns: Column[];
+}
+
+const { columns } = Astro.props;
+
+const firstColumn = columns[0];
+if (firstColumn === undefined) {
+  throw new Error("DataTable requires at least one column");
+}
+const rowCount = firstColumn.values.length;
+for (const column of columns) {
+  if (column.values.length !== rowCount) {
+    throw new Error(
+      `DataTable column "${column.header}" has ${column.values.length.toString()} values but expected ${rowCount.toString()}`,
+    );
+  }
+}
+const rowIndexes = Array.from({ length: rowCount }, (_, index) => index);
+---
+
+<table>
+  <thead>
+    <tr>
+      {columns.map((column) => <th>{column.header}</th>)}
+    </tr>
+  </thead>
+  <tbody>
+    {
+      rowIndexes.map((rowIndex) => (
+        <tr>
+          {columns.map((column) => (
+            <td>
+              {column.code === true ? (
+                <code>{column.values[rowIndex]}</code>
+              ) : (
+                column.values[rowIndex]
+              )}
+            </td>
+          ))}
+        </tr>
+      ))
+    }
+  </tbody>
+</table>

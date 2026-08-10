@@ -284,6 +284,18 @@
       "steps": [{ "runner": "bun" }]
     },
     {
+      "package": "@scout-for-lol/docs-site",
+      "directory": "packages/scout-for-lol/packages/docs-site",
+      "steps": [
+        {
+          "runner": "command",
+          "name": "build",
+          "command": ["bun", "run", "build"]
+        },
+        { "runner": "bun", "args": ["src"] }
+      ]
+    },
+    {
       "package": "@scout-for-lol/report",
       "directory": "packages/scout-for-lol/packages/report",
       "steps": [{ "runner": "bun" }]

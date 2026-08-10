@@ -26,7 +26,7 @@ Scout was just removed from your server. We'd love to know why — your feedback
 **What could we have done better?** Let us know here:
 ${getFeedbackUrl()}
 
-If this was a mistake, you can re-invite Scout any time and set things back up with \`/subscription add\`. Thanks for giving it a try!
+If this was a mistake, you can re-invite Scout any time and set things back up with \`/setup\` or the web dashboard. Thanks for giving it a try!
 
 *This is an automated message. Replies to this DM aren't monitored.*`;
 }

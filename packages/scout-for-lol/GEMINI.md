@@ -124,10 +124,9 @@ type DeepReadonly<T> = {
 
 ### Command Structure
 
-Commands live in `packages/backend/src/discord/commands/`. Each command exports:
-
-- `SlashCommandBuilder` - Command definition
-- `execute` function - Command handler
+The Discord surface intentionally contains only `/help`, `/setup`, `/status`,
+`/invite`, `/docs`, `/track`, and `/list`. `/track` and `/list` call the
+shared subscription services; advanced management belongs in the web dashboard.
 
 ### Discord Error Handling
 

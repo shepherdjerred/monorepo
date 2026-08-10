@@ -31,9 +31,6 @@
     "packages/homelab/src/helm-types/src/type-converter.test.ts": 1,
     "packages/homelab/src/helm-types/src/yaml-preprocessing.test.ts": 1,
     "packages/scout-for-lol/packages/backend/src/database/competition.integration.test.ts": 5,
-    "packages/scout-for-lol/packages/backend/src/database/competition/queries.integration.test.ts": 2,
-    "packages/scout-for-lol/packages/backend/src/discord/commands/competition/create.integration.test.ts": 2,
-    "packages/scout-for-lol/packages/backend/src/discord/commands/competition/edit.integration.test.ts": 2,
-    "packages/scout-for-lol/packages/backend/src/discord/commands/competition/view-leaderboard-cache.test.ts": 1
+    "packages/scout-for-lol/packages/backend/src/database/competition/queries.integration.test.ts": 2
   }
 }

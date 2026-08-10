@@ -2,6 +2,7 @@ import { afterAll, beforeEach, describe, expect, test } from "bun:test";
 import { PermissionsBitField, PermissionFlagsBits } from "discord.js";
 import {
   canCreateCompetition,
+  canListSubscriptions,
   grantPermission,
   hasPermission,
   revokePermission,
@@ -416,5 +417,61 @@ describe("canCreateCompetition - rate limit", () => {
     );
 
     expect(result.reason).toMatch(/Try again in \d+ minute/);
+  });
+});
+
+describe("canListSubscriptions", () => {
+  const serverId = testGuildId("123456789012345678");
+  const userId = testAccountId("987654321098765432");
+  const member = new PermissionsBitField(PermissionFlagsBits.SendMessages);
+
+  test("an ordinary member without a grant cannot read tracked players", async () => {
+    const result = await canListSubscriptions(prisma, serverId, userId, member);
+
+    expect(result.allowed).toBe(false);
+    expect(result.reason).toContain("permission");
+  });
+
+  test("a Discord administrator is allowed", async () => {
+    const result = await canListSubscriptions(
+      prisma,
+      serverId,
+      userId,
+      new PermissionsBitField(PermissionFlagsBits.Administrator),
+    );
+
+    expect(result.allowed).toBe(true);
+  });
+
+  test("a subscriptions:read grant is allowed", async () => {
+    await prisma.serverPermission.create({
+      data: {
+        serverId,
+        discordUserId: userId,
+        permission: "subscriptions:read",
+        grantedBy: testAccountId("12300000000"),
+        grantedAt: new Date(),
+      },
+    });
+
+    const result = await canListSubscriptions(prisma, serverId, userId, member);
+
+    expect(result.allowed).toBe(true);
+  });
+
+  test("a grant in another server does not apply", async () => {
+    await prisma.serverPermission.create({
+      data: {
+        serverId: testGuildId("111111111111111111"),
+        discordUserId: userId,
+        permission: "subscriptions:read",
+        grantedBy: testAccountId("12300000000"),
+        grantedAt: new Date(),
+      },
+    });
+
+    const result = await canListSubscriptions(prisma, serverId, userId, member);
+
+    expect(result.allowed).toBe(false);
   });
 });

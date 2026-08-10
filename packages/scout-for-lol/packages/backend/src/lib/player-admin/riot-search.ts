@@ -7,7 +7,7 @@
 
 import type { z } from "zod";
 import { RegionSchema, RiotIdSchema } from "@scout-for-lol/data";
-import { resolveRiotIdToPuuid } from "#src/lib/subscription/resolve.ts";
+import { resolveRiotIdToPuuid } from "#src/lib/riot/resolve-puuid.ts";
 import { GuildIdInput } from "#src/lib/player-admin/shared.ts";
 
 export const ResolveRiotIdInput = GuildIdInput.extend({

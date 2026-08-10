@@ -49,7 +49,8 @@ import { createLogger } from "#src/logger.ts";
 const logger = createLogger("outreach");
 
 const SUPPORT_USER = "<@160509172704739328>";
-const GETTING_STARTED = "https://scout-for-lol.com/getting-started/";
+const GETTING_STARTED =
+  "https://scout-for-lol.com/docs/tutorials/first-notification/";
 const DASHBOARD = "https://scout-for-lol.com/app/";
 const DAY_MS = 24 * 60 * 60 * 1000;
 

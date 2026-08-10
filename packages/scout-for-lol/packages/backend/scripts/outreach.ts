@@ -228,7 +228,7 @@ async function buildOutreachGroups(): Promise<OutreachGroup[]> {
         discordId: id,
         message:
           `👋 Hey there! Thanks for trying out Scout for LoL! Need any help getting set up? ` +
-          `Use \`/subscription add\` to track more players, or check out the getting started guide: ` +
+          `Open the Scout dashboard to track more players, or check out the documentation: ` +
           `${GETTING_STARTED}` +
           DM_FOOTER,
         context: `${profile.subCount.toString()} sub(s), last ${daysSince(profile.lastSubDate).toString()}d ago`,
@@ -276,8 +276,8 @@ async function buildOutreachGroups(): Promise<OutreachGroup[]> {
         discordId: owner.id,
         message:
           `👋 Hey there! I noticed you added Scout for LoL to **${guild.name}** but haven't set anything up yet. ` +
-          `Use \`/subscription add\` to start tracking your friends' League matches! ` +
-          `Check out the getting started guide: ${GETTING_STARTED}` +
+          `Open the Scout dashboard to start tracking your friends' League matches! ` +
+          `Check out the documentation: ${GETTING_STARTED}` +
           DM_FOOTER,
         context: `Ghost guild: ${guild.name} (${guild.memberCount.toString()} members)`,
       });

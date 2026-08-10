@@ -1,0 +1,68 @@
+---
+import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
+import { Code } from "@astrojs/starlight/components";
+import samples from "../assets/generated/render-samples.json";
+
+/**
+ * Shows one worked sample per ScoutQL `RENDER` kind.
+ *
+ * Both the query and its output come from `src/assets/generated/`, which
+ * `bun run generate` rebuilds by driving Scout's real report renderer. Nothing
+ * here is hand-drawn, so a change to the renderer or to a render kind shows up
+ * in these images the next time the generator runs (and CI fails if the
+ * committed output no longer matches).
+ */
+interface Props {
+  /** Render only these kinds, in this order. Omit for all of them. */
+  kinds?: string[];
+}
+
+const { kinds } = Astro.props;
+
+// Eager glob so Astro processes each PNG through the image pipeline; the
+// manifest only carries file names.
+const images = import.meta.glob<{ default: ImageMetadata }>(
+  "../assets/generated/render-*.png",
+  { eager: true },
+);
+
+const shown =
+  kinds === undefined
+    ? samples
+    : kinds.flatMap((kind) => samples.filter((entry) => entry.kind === kind));
+
+function imageFor(fileName: string): ImageMetadata {
+  const match = images[`../assets/generated/${fileName}`];
+  if (match === undefined) {
+    throw new Error(
+      `Generated render sample ${fileName} is missing. Run \`bun run generate\`.`,
+    );
+  }
+  return match.default;
+}
+---
+
+{
+  shown.map((sample) => (
+    <section>
+      <h3 id={sample.kind}>
+        <code>{sample.kind}</code>
+      </h3>
+      <Code code={sample.query} lang="sql" />
+      {sample.image === null ? (
+        <Code
+          code={sample.content ?? ""}
+          lang="text"
+          title="Posted to Discord"
+        />
+      ) : (
+        <Image
+          src={imageFor(sample.image)}
+          alt={`A ${sample.kind.replaceAll("_", " ")} rendered by Scout: ${sample.title}.`}
+          loading="lazy"
+        />
+      )}
+    </section>
+  ))
+}

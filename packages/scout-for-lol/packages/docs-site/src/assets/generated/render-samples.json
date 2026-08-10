@@ -1,0 +1,100 @@
+[
+  {
+    "kind": "table",
+    "title": "Most games played",
+    "query": "select games, win_rate, kda\nfrom match_participants\ngroup by player\norder by games desc\nlimit 6\nrender table",
+    "image": null,
+    "content": "**Most games played**\n```\nGames | Win rate | KDA\n--- | --- | ---\n146 | 57.5% | 4.12\n111 | 51.4% | 3.48\n90 | 54.4% | 3.91\n89 | 51.7% | 3.36\n76 | 46.1% | 2.87\n71 | 53.5% | 3.02\n```"
+  },
+  {
+    "kind": "list",
+    "title": "Most games played",
+    "query": "select games, win_rate\nfrom match_participants\ngroup by player\norder by games desc\nlimit 6\nrender list",
+    "image": null,
+    "content": "**Most games played**\n- Faker: Games: 146, Win rate: 57.5%\n- Caps: Games: 111, Win rate: 51.4%\n- Chovy: Games: 90, Win rate: 54.4%\n- Ruler: Games: 89, Win rate: 51.7%\n- Keria: Games: 76, Win rate: 46.1%\n- Zeus: Games: 71, Win rate: 53.5%"
+  },
+  {
+    "kind": "leaderboard",
+    "title": "Most games played",
+    "query": "select games, win_rate\nfrom match_participants\ngroup by player\norder by games desc\nlimit 6\nrender leaderboard with (mentions = 0)",
+    "image": null,
+    "content": "**Most games played**\n1. Faker — Games: 146, Win rate: 57.5%\n2. Caps — Games: 111, Win rate: 51.4%\n3. Chovy — Games: 90, Win rate: 54.4%\n4. Ruler — Games: 89, Win rate: 51.7%\n5. Keria — Games: 76, Win rate: 46.1%\n6. Zeus — Games: 71, Win rate: 53.5%"
+  },
+  {
+    "kind": "bar_chart",
+    "title": "Most games played",
+    "query": "select games\nfrom match_participants\ngroup by player\norder by games desc\nlimit 6\nrender bar_chart with (y = games)",
+    "image": "render-bar_chart.png",
+    "content": null
+  },
+  {
+    "kind": "line_chart",
+    "title": "Weekly game volume",
+    "query": "select games\nfrom match_participants\ngroup by week\norder by week asc\nrender line_chart with (y = games, x_axis = \"Week\", smooth = true)",
+    "image": "render-line_chart.png",
+    "content": null
+  },
+  {
+    "kind": "area_chart",
+    "title": "Weekly game volume",
+    "query": "select games\nfrom match_participants\ngroup by week\norder by week asc\nrender area_chart with (y = games, x_axis = \"Week\", smooth = true)",
+    "image": "render-area_chart.png",
+    "content": null
+  },
+  {
+    "kind": "stacked_bar",
+    "title": "Weekly wins and losses",
+    "query": "select wins, losses\nfrom match_participants\ngroup by week\norder by week asc\nrender stacked_bar with (y = (wins, losses))",
+    "image": "render-stacked_bar.png",
+    "content": null
+  },
+  {
+    "kind": "donut_chart",
+    "title": "Queue mix",
+    "query": "select games\nfrom match_participants\ngroup by queue\norder by games desc\nrender donut_chart with (y = games)",
+    "image": "render-donut_chart.png",
+    "content": null
+  },
+  {
+    "kind": "scatter_chart",
+    "title": "Damage against KDA",
+    "query": "select damage_to_champions, kda, games\nfrom match_participants\ngroup by player\nrender scatter_chart with (x = damage_to_champions, y = kda, size = games)",
+    "image": "render-scatter_chart.png",
+    "content": null
+  },
+  {
+    "kind": "heatmap",
+    "title": "Champion win rate by position",
+    "query": "select win_rate\nfrom match_participants\ngroup by champion, team_position\nrender heatmap with (value = win_rate, series = team_position, palette = gold)",
+    "image": "render-heatmap.png",
+    "content": null
+  },
+  {
+    "kind": "radar_chart",
+    "title": "Combat profile",
+    "query": "select win_rate, kda, cs_per_minute, vision_score, damage_to_champions\nfrom match_participants\ngroup by player\nlimit 3\nrender radar_chart with (y = (win_rate, kda, cs_per_minute, vision_score, damage_to_champions))",
+    "image": "render-radar_chart.png",
+    "content": null
+  },
+  {
+    "kind": "kpi_card",
+    "title": "Server snapshot",
+    "query": "select games, win_rate, kda, avg_game_duration\nfrom match_participants\ngroup by all\nrender kpi_card with (y = (games, win_rate, kda, avg_game_duration))",
+    "image": "render-kpi_card.png",
+    "content": null
+  },
+  {
+    "kind": "bump_chart",
+    "title": "Weekly standings",
+    "query": "select games\nfrom match_participants\ngroup by player\nanalyze last 28 days\nbucket by week\nin time zone 'UTC'\norder by label asc\nrender bump_chart with (y = games)",
+    "image": "render-bump_chart.png",
+    "content": null
+  },
+  {
+    "kind": "calendar_heatmap",
+    "title": "Daily activity",
+    "query": "select games\nfrom match_participants\ngroup by all\nanalyze between '2026-06-29' and '2026-07-26'\nbucket by day\nin time zone 'UTC'\nrender calendar_heatmap with (y = games, palette = gold)",
+    "image": "render-calendar_heatmap.png",
+    "content": null
+  }
+]

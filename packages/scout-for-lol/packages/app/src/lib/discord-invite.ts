@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-// Production Scout bot (mirrors the marketing site's bare install link).
+// Production Scout bot.
 const PROD_CLIENT_ID = "1182800769188110366";
 // Beta bot — the only app that has the `/app/installed` redirect URI
 // registered, so it's the only one we hand a redirect_uri (a redirect the
@@ -29,8 +29,8 @@ const id = clientId();
 /**
  * Whether the install link returns the user to the app after they add the
  * bot. Only the beta app has `/app/installed` registered as a redirect, so
- * the prod link stays a bare modern install link (no redirect_uri) and
- * can't break.
+ * the prod link omits only `redirect_uri` and `state` while retaining the bot
+ * and application-command scopes.
  */
 export const DISCORD_INSTALL_REDIRECTS_BACK = id === BETA_CLIENT_ID;
 
@@ -70,16 +70,19 @@ export function consumeInstallState(received: string | null): boolean {
  * `/installed` landing route validates it via {@link consumeInstallState}.
  */
 export function discordInviteUrl(): string {
-  if (!DISCORD_INSTALL_REDIRECTS_BACK) {
-    return `https://discord.com/oauth2/authorize?client_id=${id}`;
-  }
   const params = new URLSearchParams({
     client_id: id,
     scope: INSTALL_SCOPES,
     permissions: INSTALL_PERMISSIONS,
-    response_type: "code",
-    state: issueInstallState(),
-    redirect_uri: `${globalThis.window.location.origin}/app/installed`,
   });
+  if (!DISCORD_INSTALL_REDIRECTS_BACK) {
+    return `https://discord.com/oauth2/authorize?${params.toString()}`;
+  }
+  params.set("response_type", "code");
+  params.set("state", issueInstallState());
+  params.set(
+    "redirect_uri",
+    `${globalThis.window.location.origin}/app/installed`,
+  );
   return `https://discord.com/oauth2/authorize?${params.toString()}`;
 }

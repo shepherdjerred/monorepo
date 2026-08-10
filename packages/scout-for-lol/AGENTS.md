@@ -233,7 +233,6 @@ type DeepReadonly<T> = {
 
 ### Error Handling
 
-- Use `zod-validation-error` for user-friendly error messages
 - Handle errors at appropriate levels
 - Use Result patterns where appropriate
 - Proper async/await error handling (enforced by `custom-rules/prefer-async-await`)
@@ -324,18 +323,17 @@ Enforced by ESLint:
 
 ## Key Libraries
 
-| Library                | Purpose                                 |
-| ---------------------- | --------------------------------------- |
-| `remeda`               | Functional data transformations         |
-| `ts-pattern`           | Complex control flow / pattern matching |
-| `env-var`              | Type-safe environment configuration     |
-| `date-fns`             | Date operations                         |
-| `zod`                  | Runtime validation and schemas          |
-| `zod-validation-error` | User-friendly validation errors         |
-| `twisted`              | Riot Games API client                   |
-| `satori`               | JSX to SVG rendering                    |
-| `@resvg/resvg-js`      | SVG to PNG conversion                   |
-| `tslog`                | Structured logging (backend)            |
+| Library           | Purpose                                 |
+| ----------------- | --------------------------------------- |
+| `remeda`          | Functional data transformations         |
+| `ts-pattern`      | Complex control flow / pattern matching |
+| `env-var`         | Type-safe environment configuration     |
+| `date-fns`        | Date operations                         |
+| `zod`             | Runtime validation and schemas          |
+| `twisted`         | Riot Games API client                   |
+| `satori`          | JSX to SVG rendering                    |
+| `@resvg/resvg-js` | SVG to PNG conversion                   |
+| `tslog`           | Structured logging (backend)            |
 
 ---
 
@@ -343,58 +341,20 @@ Enforced by ESLint:
 
 ### Command Structure
 
-Commands live in `packages/backend/src/discord/commands/`. Each command exports:
+Scout intentionally exposes only seven Discord commands: `/help`, `/setup`,
+`/status`, `/invite`, `/docs`, `/track`, and `/list`. The web dashboard is the
+canonical surface for filters, queues, channels, competitions, reports, roles,
+and audit history. Do not recreate the removed management command trees.
 
-- `SlashCommandBuilder` - Command definition (collected in `discord/rest.ts` for registration)
-- `execute` function - Command handler (dispatched by name/subcommand in `discord/commands/index.ts`)
+Definitions are collected in `packages/backend/src/discord/commands/definitions.ts`
+and registered with a full global `applicationCommands` replacement in
+`discord/rest.ts`, which also removes stale commands and autocomplete handlers.
+Handlers are dispatched by name in `discord/commands/index.ts`.
 
-Builders and executors are wired **separately** by name in those two files — there
-is no per-command registry object, so adding a command means exporting the builder,
-adding it to `rest.ts`, and adding an `execute*` case to `commands/index.ts`.
-
-### Adding a Slash Command — `define-command.ts`
-
-Shared helpers in `discord/commands/define-command.ts` remove the boilerplate every
-command handler used to repeat. Prefer them for new commands:
-
-- **`parseCommandArgs(interaction, schema, rawArgs)`** — validate the options object
-  against a Zod schema. On failure it replies with a friendly ephemeral validation
-  message (system-boundary rule: user input gets a reply, not a throw) and returns
-  `{ success: false }` so you `return` early. On success returns `{ success: true, data }`.
-- **`replyError(interaction, context, error)`** — the single error-reply path. Picks
-  `editReply` vs `reply` based on the deferred/replied state, formats as
-  `❌ **Error <context>**`, and never throws even if the interaction token expired.
-- **`defineCommand({ builder, args, execute })`** — optional convenience to co-locate a
-  command's builder, args schema, and handler in one object.
-
-```typescript
-const ArgsSchema = z.object({
-  alias: z.string().min(1),
-  guildId: DiscordGuildIdSchema,
-});
-
-export async function executeExample(interaction: ChatInputCommandInteraction) {
-  const parsed = await parseCommandArgs(interaction, ArgsSchema, {
-    alias: interaction.options.getString("alias"),
-    guildId: interaction.guildId,
-  });
-  if (!parsed.success) return;
-
-  await interaction.deferReply({ ephemeral: true });
-  try {
-    // …command logic using parsed.data…
-  } catch (error) {
-    await replyError(interaction, "doing the thing", error);
-  }
-}
-```
-
-The legacy group helpers delegate to these: `subscription/reply-helpers.ts`'s
-`editReplyOnError` and `admin/utils/validation.ts`'s `validateCommandArgs` are thin
-wrappers over `replyError` / `parseCommandArgs`. The `competition/` reply helpers
-(`replyWithError` / `replyWithSuccess` / `replyWithErrorFromException`) stay separate —
-they carry distinct semantics (message truncation, success replies, Sentry capture,
-a different error-text format) that `replyError` intentionally does not absorb.
+The retained `/track` and `/list` handlers validate boundary input with Zod,
+delegate to the existing subscription domain services, and use `replyError` for
+deferred error replies. They must not introduce a Discord-specific persistence
+model or new management commands.
 
 ### Discord Error Handling
 

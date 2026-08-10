@@ -1,7 +1,7 @@
 /**
- * Web-UI subscription management. Mirrors the Discord /subscription
- * command surface (list/add/remove/add-channel/move) one-to-one, but
- * gated by web session + per-guild Administrator + CSRF for mutations.
+ * Web-UI subscription management. The dashboard is the canonical surface for
+ * list/add/remove/add-channel/move and advanced filters. The Discord layer only
+ * exposes the intentionally small `/track` and `/list` onboarding helpers.
  *
  * Every state-changing procedure runs the domain mutation AND the audit
  * row insert inside a single Prisma transaction so they commit
@@ -154,21 +154,37 @@ export const subscriptionRouter = router({
             puuid,
             tx,
           ),
-        (r) =>
-          r.kind === "created"
-            ? {
-                action: "SUBSCRIPTION_ADD",
-                targetChannelId: input.channelId,
-                targetPlayerId: r.player.id,
-                targetAccountId: r.account.id,
-                payload: {
-                  riotId: input.riotId,
-                  region: input.region,
-                  alias: input.alias,
-                  isAddingToExistingPlayer: r.isAddingToExistingPlayer,
-                },
-              }
-            : null,
+        (r) => {
+          if (r.kind === "created") {
+            return {
+              action: "SUBSCRIPTION_ADD",
+              targetChannelId: input.channelId,
+              targetPlayerId: r.player.id,
+              targetAccountId: r.account.id,
+              payload: {
+                riotId: input.riotId,
+                region: input.region,
+                alias: input.alias,
+                isAddingToExistingPlayer: r.isAddingToExistingPlayer,
+              },
+            };
+          }
+          // A duplicate subscription still commits the new account row.
+          if (r.kind === "subscription-already-exists") {
+            return {
+              action: "ACCOUNT_ADD",
+              targetChannelId: input.channelId,
+              targetPlayerId: r.playerId,
+              targetAccountId: r.accountId,
+              payload: {
+                riotId: input.riotId,
+                region: input.region,
+                alias: input.alias,
+              },
+            };
+          }
+          return null;
+        },
       );
 
       if (result.kind === "created") {

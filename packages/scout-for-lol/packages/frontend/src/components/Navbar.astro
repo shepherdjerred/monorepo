@@ -3,17 +3,12 @@ import { ClientNavigation } from "#src/components/client-navigation.tsx";
 import { ClientMobileNav } from "#src/components/client-mobile-nav.tsx";
 import {
   APP_DASHBOARD_URL,
+  DOCS_URL,
   GET_STARTED_CLICK_EVENT,
 } from "#src/lib/marketing-constants.ts";
 
 interface Props {
-  activePage?:
-    | "home"
-    | "getting-started"
-    | "docs"
-    | "commands"
-    | "support"
-    | "whatsnew";
+  activePage?: "home" | "getting-started" | "docs" | "support" | "whatsnew";
 }
 
 const { activePage } = Astro.props;
@@ -21,8 +16,7 @@ const { activePage } = Astro.props;
 const navItems = [
   { href: "/", label: "Home" },
   { href: "/getting-started", label: "Getting Started" },
-  { href: "/docs", label: "Documentation" },
-  { href: "/commands", label: "Commands" },
+  { href: DOCS_URL, label: "Documentation" },
   { href: "/whatsnew", label: "What's New" },
   { href: "/support", label: "Support" },
 ];
@@ -34,8 +28,7 @@ const mobileNavItems = [
     label: "Getting Started",
     currentPage: "getting-started",
   },
-  { href: "/docs", label: "Documentation", currentPage: "docs" },
-  { href: "/commands", label: "Commands", currentPage: "commands" },
+  { href: DOCS_URL, label: "Documentation", currentPage: "docs" },
   { href: "/whatsnew", label: "What's New", currentPage: "whatsnew" },
   { href: "/support", label: "Support", currentPage: "support" },
 ];

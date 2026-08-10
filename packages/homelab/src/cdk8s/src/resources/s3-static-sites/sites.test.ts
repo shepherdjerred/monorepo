@@ -16,7 +16,7 @@ describe("Scout static sites", () => {
       }
       const csp = site.responseHeaders?.["Content-Security-Policy"];
       expect(csp).toContain(
-        "script-src 'self' https://us-assets.i.posthog.com",
+        "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://us-assets.i.posthog.com",
       );
       expect(csp).toContain("connect-src 'self' https://us.i.posthog.com");
     });
@@ -47,4 +47,26 @@ describe("human wiki static site", () => {
     expect(csp).toContain("frame-ancestors 'none'");
     expect(csp).not.toContain("https:");
   });
+});
+
+describe("Scout static sites", () => {
+  for (const hostname of ["scout-for-lol.com", "beta.scout-for-lol.com"]) {
+    test(`${hostname} probes the docs entrypoint`, () => {
+      const site = staticSites.find(
+        (candidate) => candidate.hostname === hostname,
+      );
+      if (site === undefined) {
+        throw new Error(`${hostname} static site is missing`);
+      }
+
+      expect(site.probes).toContainEqual({
+        endpoint: "docs",
+        module: "http_2xx",
+        path: "/docs/",
+      });
+      expect(site.responseHeaders?.["Content-Security-Policy"]).toContain(
+        "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'",
+      );
+    });
+  }
 });

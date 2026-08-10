@@ -17,6 +17,7 @@ import {
 } from "../data/scout-showcase";
 import {
   APP_DASHBOARD_URL,
+  DOCS_URL,
   GET_STARTED_CLICK_EVENT,
 } from "#src/lib/marketing-constants.ts";
 
@@ -71,7 +72,7 @@ const initialShowcasePreview = showcasePreviews.at(0);
           trackingEvent: GET_STARTED_CLICK_EVENT,
           trackingLocation: "home_hero",
         },
-        { text: "View Documentation", href: "/docs", variant: "secondary" },
+        { text: "View Documentation", href: DOCS_URL, variant: "secondary" },
       ]}
     />
 
@@ -409,7 +410,7 @@ const initialShowcasePreview = showcasePreviews.at(0);
           trackingEvent: GET_STARTED_CLICK_EVENT,
           trackingLocation: "home_final_cta",
         },
-        { text: "Read the docs", href: "/docs", variant: "secondary" },
+        { text: "Read the docs", href: DOCS_URL, variant: "secondary" },
       ]}
     />
 
