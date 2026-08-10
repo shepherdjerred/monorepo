@@ -119,15 +119,15 @@
         }),
       );
 
-      if (window._paq !== undefined && typeof window._paq.push === "function") {
+      if (
+        window.posthog !== undefined &&
+        typeof window.posthog.capture === "function"
+      ) {
         // The conversion UUID is for Pinterest/Reddit deduplication only;
-        // never send it to Matomo as a high-cardinality analytics property.
-        window._paq.push([
-          "trackEvent",
-          "marketing",
-          getStartedClickEvent,
-          ctaLocation,
-        ]);
+        // never send it to PostHog as a high-cardinality analytics property.
+        window.posthog.capture(getStartedClickEvent, {
+          cta_location: ctaLocation,
+        });
       }
 
       if (typeof window.pintrk === "function") {

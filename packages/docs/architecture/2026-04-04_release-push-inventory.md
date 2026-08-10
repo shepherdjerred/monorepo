@@ -9,7 +9,7 @@ board: false
 
 Complete inventory of everything this monorepo publishes externally. Central source of truth: `scripts/ci/src/catalog.ts`.
 
-Last verified against `scripts/ci/src/catalog.ts` on 2026-06-06.
+Helm inventory last verified against `packages/homelab/src/cdk8s/helm/` on 2026-08-09.
 
 All targets are orchestrated via **Buildkite CI** using **Dagger** as the build engine.
 
@@ -18,7 +18,7 @@ All targets are orchestrated via **Buildkite CI** using **Dagger** as the build 
 | Category             | Count | Destination                              | Auth         |
 | -------------------- | ----- | ---------------------------------------- | ------------ |
 | Docker / OCI images  | 9     | `ghcr.io/shepherdjerred/*`               | GHCR_TOKEN   |
-| Helm charts          | 27    | ChartMuseum (`chartmuseum.sjer.red`)     | HTTP Basic   |
+| Helm charts          | 33    | ChartMuseum (`chartmuseum.sjer.red`)     | HTTP Basic   |
 | npm packages         | 3     | npm registry                             | NPM_TOKEN    |
 | Static sites (S3)    | 8     | SeaweedFS + Cloudflare R2                | AWS creds    |
 | GitHub releases      | 2     | GitHub API                               | GitHub App   |
@@ -58,11 +58,16 @@ Auth exception: GHCR publishing still uses `GHCR_TOKEN` because GitHub's contain
 
 ## Helm Charts → ChartMuseum
 
-27 charts from `packages/homelab/src/cdk8s/helm/`. Version: `2.0.0-{BUILD_NUMBER}`.
+33 charts from `packages/homelab/src/cdk8s/helm/`. Version: `2.0.0-{BUILD_NUMBER}`.
 
-Code: `.dagger/src/release.ts`, `scripts/ci/src/steps/helm.ts`
+Code: `.buildkite/pipeline.yml`, `packages/homelab/scripts/helm-push.ts`
 
-ddns, apps, scout-beta, scout-prod, starlight-karma-bot-beta, starlight-karma-bot-prod, redlib, plausible, birmel, cloudflare-tunnel, media, home, postal, syncthing, golink, freshrss, pokemon, gickup, grafana-db, mcp-gateway, s3-static-sites, kyverno-policies, bugsink, tasknotes, temporal, streambot, trmnl-dashboard
+alert-dashboard, apps, birmel, bugsink, buildkitd, cloudflare-tunnel, ddns,
+freshrss, gickup, golink, grafana-db, home, mario-kart, mcp-gateway, media,
+pinchtab, pokemon, postal, redlib, relay, s3-static-sites, scout-beta,
+scout-evals, scout-prod, service-probes, starlight-karma-bot-beta,
+starlight-karma-bot-prod, syncthing, tasknotes, temporal, tracker-tracker,
+trmnl-dashboard, turbo-cache.
 
 ## npm Packages → npm Registry
 

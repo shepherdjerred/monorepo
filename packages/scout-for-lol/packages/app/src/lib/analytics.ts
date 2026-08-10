@@ -1,45 +1,57 @@
+import posthog, { type CaptureOptions } from "posthog-js";
 import { z } from "zod";
 
 /**
- * Product-usage analytics for the app SPA, backed by self-hosted Matomo.
- * Cookieless and privacy-first: only bounded event properties are sent, and
- * dynamic route segments are templated before reporting a pageview or event.
+ * Product analytics for the Scout SPA, backed by PostHog Cloud.
  *
- * Site identity is injected by scripts/scout-site-release.ts for production
- * and beta builds. Local builds omit the variables and therefore do not send
- * pageviews; the queue-based event functions also no-op when no tracker queue
- * has been installed.
+ * The production and beta release builds inject a public project token and a
+ * per-host site identity. Local builds omit every PostHog variable, so the
+ * adapter no-ops. Scout keeps persistence in memory so session replay works
+ * without cookies or durable browser identity.
  */
-const EnvSchema = z.object({
-  VITE_MATOMO_SITE_ID: z.string().optional(),
-  VITE_MATOMO_SITE_DOMAIN: z.string().optional(),
-  VITE_MATOMO_SRC: z.string().optional(),
+const OptionalEnvSchema = z.object({
+  VITE_POSTHOG_PROJECT_TOKEN: z.string().optional(),
+  VITE_POSTHOG_API_HOST: z.string().optional(),
+  VITE_POSTHOG_ASSET_HOST: z.string().optional(),
+  VITE_POSTHOG_SITE_KEY: z.string().optional(),
+  VITE_POSTHOG_SITE_DOMAIN: z.string().optional(),
+  VITE_POSTHOG_SESSION_REPLAY: z.string().optional(),
+});
+const RequiredEnvSchema = z.object({
+  VITE_POSTHOG_PROJECT_TOKEN: z.string().regex(/^phc_[A-Za-z0-9]+$/),
+  VITE_POSTHOG_API_HOST: z.literal("https://us.i.posthog.com"),
+  VITE_POSTHOG_ASSET_HOST: z.literal("https://us-assets.i.posthog.com"),
+  VITE_POSTHOG_SITE_KEY: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+  VITE_POSTHOG_SITE_DOMAIN: z.string().min(1),
+  VITE_POSTHOG_SESSION_REPLAY: z.enum(["true", "false"]),
 });
 
-function nonEmpty(value: string | undefined): string | undefined {
-  const trimmed = value?.trim();
-  return trimmed !== undefined && trimmed.length > 0 ? trimmed : undefined;
-}
+export type AnalyticsConfig = {
+  projectToken: string;
+  apiHost: "https://us.i.posthog.com";
+  assetHost: "https://us-assets.i.posthog.com";
+  siteKey: string;
+  siteDomain: string;
+  sessionReplay: boolean;
+};
 
-const DEFAULT_SRC = "https://matomo.sjer.red/matomo.js";
-const TRACKER_URL = "https://matomo.sjer.red/matomo.php";
-const BASENAME = "/app";
-
-function readConfig(): {
-  siteId: string | undefined;
-  siteDomain: string | undefined;
-  src: string;
-} {
-  const parsed = EnvSchema.safeParse(import.meta.env);
-  const env = parsed.success ? parsed.data : {};
+function readConfig(): AnalyticsConfig | undefined {
+  const optional = OptionalEnvSchema.parse(import.meta.env);
+  if (Object.values(optional).every((value) => value === undefined)) {
+    return undefined;
+  }
+  const env = RequiredEnvSchema.parse(optional);
   return {
-    siteId: nonEmpty(env.VITE_MATOMO_SITE_ID),
-    siteDomain: nonEmpty(env.VITE_MATOMO_SITE_DOMAIN),
-    src: nonEmpty(env.VITE_MATOMO_SRC) ?? DEFAULT_SRC,
+    projectToken: env.VITE_POSTHOG_PROJECT_TOKEN,
+    apiHost: env.VITE_POSTHOG_API_HOST,
+    assetHost: env.VITE_POSTHOG_ASSET_HOST,
+    siteKey: env.VITE_POSTHOG_SITE_KEY,
+    siteDomain: env.VITE_POSTHOG_SITE_DOMAIN,
+    sessionReplay: env.VITE_POSTHOG_SESSION_REPLAY === "true",
   };
 }
 
-const config = readConfig();
+const BASENAME = "/app";
 
 /** Every product-analytics event the app can emit. */
 const SCOUT_ANALYTICS_EVENTS = [
@@ -90,8 +102,6 @@ const SCOUT_ANALYTICS_EVENTS = [
   "access_revoked",
   // Funnel / entry
   "onboarding_step",
-  // Terminal onboarding events. Without these, finishing setup and hitting
-  // "Skip setup" look identical — both just stop emitting `onboarding_step`.
   "onboarding_completed",
   "onboarding_skipped",
   "bot_install_click",
@@ -108,7 +118,7 @@ export type ScoutAnalyticsEvent = (typeof SCOUT_ANALYTICS_EVENTS)[number];
 
 const EVENT_SET: ReadonlySet<string> = new Set(SCOUT_ANALYTICS_EVENTS);
 
-/** Only low-cardinality properties have a Matomo Custom Dimension. */
+/** Only these low-cardinality properties may be sent to PostHog. */
 export type AnalyticsProperty =
   | "outcome"
   | "reason"
@@ -123,62 +133,81 @@ export type AnalyticsProps = Partial<
   Record<AnalyticsProperty, string | number | boolean>
 >;
 
-// These dimensions are configured in Matomo as event-scoped dimensions 1–8.
-// Keeping the map exhaustive prevents arbitrary property names from becoming
-// unbounded analytics dimensions or accidentally carrying identifiers.
-const DIMENSION_IDS: Readonly<Record<string, number>> = {
-  outcome: 1,
-  reason: 2,
-  kind: 3,
-  category: 4,
-  preference: 5,
-  action: 6,
-  step: 7,
-  has_existing_query: 8,
-};
+type PostHogProperties = Record<string, string | number | boolean>;
+type CaptureEvent = (
+  event: string,
+  properties?: PostHogProperties,
+  options?: CaptureOptions,
+) => void;
 
-type MatomoCommand = readonly [string, ...unknown[]];
-type MatomoQueue = {
-  push: (...commands: MatomoCommand[]) => number;
-};
-
-declare global {
-  var _paq: MatomoQueue | undefined;
-}
-
+let config = readConfig();
+let captureEvent: CaptureEvent | undefined;
 let initialized = false;
 
-/** Install Matomo's queue before its deferred script loads. */
-function installStub(): void {
-  if (globalThis._paq !== undefined) return;
-  const queue: MatomoCommand[] = [];
-  globalThis._paq = queue;
+/** Inject a deterministic client/config in unit tests without module mocking. */
+export function setAnalyticsForTesting(
+  capture: CaptureEvent | undefined,
+  testConfig: AnalyticsConfig | undefined,
+): void {
+  captureEvent = capture;
+  config = testConfig;
+  initialized = false;
 }
 
-/** Load Matomo and configure its privacy-preserving tracker. */
+export function analyticsPrivacySettings(activeConfig: AnalyticsConfig): {
+  autocapture: true;
+  capture_pageview: false;
+  capture_pageleave: true;
+  persistence: "memory";
+  respect_dnt: true;
+  person_profiles: "never";
+  session_recording: { maskAllInputs: true };
+  disable_session_recording: boolean;
+} {
+  return {
+    autocapture: true,
+    capture_pageview: false,
+    capture_pageleave: true,
+    persistence: "memory",
+    respect_dnt: true,
+    person_profiles: "never",
+    session_recording: { maskAllInputs: true },
+    disable_session_recording: !activeConfig.sessionReplay,
+  };
+}
+
+/** Load PostHog with anonymous in-memory persistence and normalized URLs. */
 export function initAnalytics(): void {
-  if (
-    initialized ||
-    config.siteId === undefined ||
-    config.siteDomain === undefined
-  ) {
-    return;
-  }
+  if (initialized || config === undefined) return;
   if (typeof document === "undefined") return;
   initialized = true;
-  installStub();
-  const queue = globalThis._paq;
-  if (queue === undefined) return;
-  queue.push(["setTrackerUrl", TRACKER_URL]);
-  queue.push(["setSiteId", config.siteId]);
-  queue.push(["disableCookies"]);
-  queue.push(["setDoNotTrack", true]);
-  queue.push(["enableLinkTracking"]);
-
-  const script = document.createElement("script");
-  script.async = true;
-  script.src = config.src;
-  document.head.append(script);
+  const activeConfig = config;
+  posthog.init(activeConfig.projectToken, {
+    api_host: activeConfig.apiHost,
+    asset_host: activeConfig.assetHost,
+    ui_host: "https://us.posthog.com",
+    defaults: "2026-05-30",
+    ...analyticsPrivacySettings(activeConfig),
+    before_send(event) {
+      if (event === null) return null;
+      const currentUrl: unknown = event.properties["$current_url"];
+      if (typeof currentUrl === "string") {
+        const location = normalizedEventLocation(activeConfig, currentUrl);
+        event.properties["$current_url"] = location.url;
+        event.properties["$pathname"] = location.pathname;
+      }
+      return event;
+    },
+    loaded(instance) {
+      instance.register({
+        site_key: activeConfig.siteKey,
+        site_hostname: activeConfig.siteDomain,
+      });
+    },
+  });
+  captureEvent = (event, properties, options) => {
+    posthog.capture(event, properties, options);
+  };
 }
 
 /**
@@ -203,63 +232,72 @@ export function normalizePath(pathname: string): string {
 }
 
 function pageUrl(siteDomain: string, normalizedPath: string): string {
-  return `https://${siteDomain}/app${normalizedPath}`;
+  return `https://${siteDomain}${BASENAME}${normalizedPath}`;
 }
 
-/** The normalized URL used for the current page's event context. */
+function normalizedEventLocation(
+  activeConfig: AnalyticsConfig,
+  url: string,
+): { url: string; pathname: string } {
+  const parsed = new URL(url);
+  const path = parsed.pathname.startsWith(BASENAME)
+    ? parsed.pathname.slice(BASENAME.length) || "/"
+    : parsed.pathname;
+  const normalizedPath = normalizePath(path);
+  return {
+    url: pageUrl(activeConfig.siteDomain, normalizedPath),
+    pathname: `${BASENAME}${normalizedPath}`,
+  };
+}
+
 function currentEventUrl(): string | undefined {
-  const siteDomain = config.siteDomain;
-  if (siteDomain === undefined || typeof document === "undefined") {
+  if (config === undefined || typeof document === "undefined") {
     return undefined;
   }
   const raw = globalThis.location.pathname;
   const path = raw.startsWith(BASENAME)
     ? raw.slice(BASENAME.length) || "/"
     : raw;
-  return pageUrl(siteDomain, normalizePath(path));
+  return pageUrl(config.siteDomain, normalizePath(path));
 }
 
 function analyticsReady(): boolean {
-  return (
-    config.siteId !== undefined &&
-    config.siteDomain !== undefined &&
-    globalThis._paq !== undefined
-  );
+  return config !== undefined && captureEvent !== undefined;
 }
 
 /** Report a templated SPA pageview. */
 export function trackPageview(path: string): void {
-  if (config.siteId === undefined || config.siteDomain === undefined) return;
-  const queue = globalThis._paq;
-  if (queue === undefined) return;
-  queue.push(["setCustomUrl", pageUrl(config.siteDomain, path)]);
-  if (typeof document === "object") {
-    queue.push(["setDocumentTitle", document.title]);
-  }
-  queue.push(["trackPageView"]);
+  if (config === undefined || captureEvent === undefined) return;
+  const normalizedPath = normalizePath(path);
+  const properties: PostHogProperties = {
+    $current_url: pageUrl(config.siteDomain, normalizedPath),
+    $pathname: `${BASENAME}${normalizedPath}`,
+    $host: config.siteDomain,
+    site_key: config.siteKey,
+    site_hostname: config.siteDomain,
+  };
+  if (typeof document === "object") properties["$title"] = document.title;
+  captureEvent("$pageview", properties);
+}
+
+function eventProperties(
+  props?: AnalyticsProps,
+): PostHogProperties | undefined {
+  if (config === undefined) return undefined;
+  const url = currentEventUrl();
+  return {
+    ...props,
+    ...(url === undefined ? {} : { $current_url: url }),
+    site_key: config.siteKey,
+    site_hostname: config.siteDomain,
+  };
 }
 
 function emit(event: string, props?: AnalyticsProps): void {
-  const queue = globalThis._paq;
-  if (queue === undefined) return;
-
-  const url = currentEventUrl();
-  if (url !== undefined) queue.push(["setCustomUrl", url]);
-
-  const dimensions: number[] = [];
-  if (props !== undefined) {
-    for (const [name, value] of Object.entries(props)) {
-      const dimensionId = DIMENSION_IDS[name];
-      if (dimensionId === undefined) continue;
-      queue.push(["setCustomDimension", dimensionId, String(value)]);
-      dimensions.push(dimensionId);
-    }
-  }
-
-  queue.push(["trackEvent", "scout", event]);
-  for (const dimensionId of dimensions) {
-    queue.push(["deleteCustomDimension", dimensionId]);
-  }
+  if (captureEvent === undefined) return;
+  const properties = eventProperties(props);
+  if (properties === undefined) return;
+  captureEvent(event, properties);
 }
 
 /** Fire a product-analytics event without allowing analytics to break UX. */
@@ -280,80 +318,19 @@ type NavigationClick = {
   altKey: boolean;
 };
 
-const FLUSH_TIMEOUT_MS = 150;
-
-/**
- * Send an unload-safe event when a navigation is about to happen.
- *
- * The normal queue is sufficient once matomo.js has loaded, but an async
- * tracker script can still be pending when a user clicks a login or install
- * link. sendBeacon talks directly to Matomo in that case and lets the browser
- * finish the request while the document is being unloaded.
- */
-function sendEventBeacon(
-  event: string,
-  props: AnalyticsProps | undefined,
-): boolean {
-  if (
-    typeof navigator === "undefined" ||
-    typeof navigator.sendBeacon !== "function"
-  ) {
-    return false;
-  }
-  const doNotTrackSignals: unknown[] = [
-    navigator.doNotTrack,
-    typeof globalThis.window === "object"
-      ? Reflect.get(globalThis.window, "doNotTrack")
-      : undefined,
-    Reflect.get(navigator, "msDoNotTrack"),
-  ];
-  if (
-    doNotTrackSignals.some(
-      (signal) => signal === "1" || signal === "yes" || signal === "true",
-    )
-  ) {
-    return true;
-  }
-  if (config.siteId === undefined) return false;
-
-  const body = new URLSearchParams({
-    idsite: config.siteId,
-    rec: "1",
-    cookie: "0",
-    e_c: "scout",
-    e_a: event,
-  });
-  const url = currentEventUrl();
-  if (url !== undefined) body.set("url", url);
-
-  if (props !== undefined) {
-    for (const [name, value] of Object.entries(props)) {
-      const dimensionId = DIMENSION_IDS[name];
-      if (dimensionId === undefined) continue;
-      body.set(`dimension${String(dimensionId)}`, String(value));
-    }
-  }
-
-  return navigator.sendBeacon(TRACKER_URL, body);
-}
-
 function emitThenFlush(
-  event: string,
+  event: ScoutAnalyticsEvent,
   props: AnalyticsProps | undefined,
   onFlushed: () => void,
 ): void {
-  let flushed = false;
-  const done = (): void => {
-    if (flushed) return;
-    flushed = true;
-    onFlushed();
-  };
-  if (sendEventBeacon(event, props)) {
-    done();
-    return;
+  const properties = eventProperties(props);
+  if (captureEvent !== undefined && properties !== undefined) {
+    captureEvent(event, properties, {
+      send_instantly: true,
+      transport: "sendBeacon",
+    });
   }
-  emit(event, props);
-  globalThis.setTimeout(done, FLUSH_TIMEOUT_MS);
+  onFlushed();
 }
 
 export function trackOutboundClick(
@@ -380,15 +357,11 @@ export function trackOutboundClick(
   });
 }
 
-/** Emit an event and wait briefly before a programmatic navigation. */
+/** Emit an event and wait for the unload-safe transport handoff. */
 export function trackAndFlush(
   event: ScoutAnalyticsEvent,
   props?: AnalyticsProps,
 ): Promise<void> {
-  if (!analyticsReady()) {
-    emit(event, props);
-    return Promise.resolve();
-  }
   return new Promise<void>((resolve) => {
     emitThenFlush(event, props, resolve);
   });

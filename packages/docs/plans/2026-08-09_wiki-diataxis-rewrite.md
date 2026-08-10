@@ -161,19 +161,19 @@ problems are structural and sentence-level.
 5. **No orientation layer.** The home page is a splash whose body is _about the
    wiki_ ("What belongs here / What does not"). The first real destination is
    "How this wiki works" — meta, not system. Nothing routes a reader by need.
-6. **20% of pages are unreachable.** Five of 25 pages are not in the sidebar and
-   have no inbound link: `/tasks-for-obsidian/`, `/scout-analysis/`,
-   `/homelab/tracker-tracker/`, `/homelab/matomo/`,
-   `/homelab/buildkite-admission/`. Nothing in the test suite catches this.
-7. **Titles do not say what the page does.** "Agent tasks," "Plane," "Matomo,"
+6. **Several pages are unreachable.** Examples that are not in the sidebar and
+   have no inbound link include `/tasks-for-obsidian/`, `/scout-analysis/`,
+   `/homelab/tracker-tracker/`, `/homelab/buildkite-admission/`. Nothing in the
+   test suite catches this.
+7. **Titles do not say what the page does.** "Agent tasks," "Plane,"
    "Releases" — you cannot tell instruction from description from discussion.
 8. **Reference is buried, not consultable.** Flags, ports, paths, env vars, and
    timeouts appear mid-paragraph inside explanation. The one genuinely excellent
    reference page, `/temporal/workflows/`, proves the format works here.
-9. **Real how-tos are trapped inside explanation pages.** Matomo first-run
-   initialization, the iOS Shortcut construction in home-automation, the Glitter
-   `glitter:operate` runs, and the agent-task production canary are all
-   step-by-step procedures living inside discursive pages.
+9. **Real how-tos are trapped inside explanation pages.** The iOS Shortcut
+   construction in home-automation, the Glitter `glitter:operate` runs, and the
+   agent-task production canary are all step-by-step procedures living inside
+   discursive pages.
 10. **Coverage gaps.** There is no homelab overview page at all, despite seven
     narrow homelab pages. No page covers `packages/toolkit`, the monorepo's own
     CI/verification system, or Scout as a product.
@@ -277,7 +277,7 @@ The current "What belongs here / What does not" meta-content moves into
 | `/tutorials/homelab-from-scratch/` | NEW    |
 | `/tutorials/first-agent-task/`     | NEW    |
 
-### `/how-to/` — 11 pages, flat
+### `/how-to/` — 9 pages, flat
 
 | Route                                | Source                                      |
 | ------------------------------------ | ------------------------------------------- |
@@ -289,8 +289,6 @@ The current "What belongs here / What does not" meta-content moves into
 | `/how-to/operate-glitter-corpus/`    | → `temporal/workflows/glitter.md`           |
 | `/how-to/build-the-sleep-shortcut/`  | → `temporal/workflows/home-automation.md`   |
 | `/how-to/cut-a-homelab-release/`     | → `homelab/releases.md`                     |
-| `/how-to/initialize-matomo/`         | → `homelab/matomo.md`                       |
-| `/how-to/run-the-matomo-audit/`      | → `homelab/matomo.md`                       |
 | `/how-to/operate-scout-evals/`       | → `homelab/scout-evals-tailnet-boundary.md` |
 
 ### `/reference/` — 7 pages, flat
@@ -488,9 +486,9 @@ shippable — the wiki stays coherent between phases.
 | 1     | The `diataxis` skill; chezmoi mirror; steering edits to wiki `AGENTS.md`, `monorepo-docs`, `packages/docs/CLAUDE.md`, root `CLAUDE.md`        | Skill loads and reads well; steering lands before any content is written, so later phases are authored under the new rules |
 | 2     | Machinery: `autogenerate` sidebar, section directories, redirect table, section test                                                          | `bun run typecheck test build test:e2e` green; no content moved yet                                                        |
 | 3     | Reference: create all seven reference pages by lifting facts out of existing pages                                                            | Every flag, path, schedule, and value in the wiki lives on exactly one reference page                                      |
-| 4     | How-to: create all eleven guides, using phantom links to phase-3 reference pages                                                              | No procedure remains embedded in an explanation page                                                                       |
+| 4     | How-to: create all nine guides, using phantom links to phase-3 reference pages                                                                | No procedure remains embedded in an explanation page                                                                       |
 | 5     | Explanation: rewrite all seventeen pages against the style rules, now that they carry only _why_                                              | No page mixes genres; sentence and bullet limits met                                                                       |
-| 6     | Tutorials, home page, cross-link pass, gap fills (`/explanation/monorepo/`, `/explanation/homelab/overview/`, `/reference/homelab-services/`) | Home routes by need; every how-to links its reference; five formerly orphaned pages reachable                              |
+| 6     | Tutorials, home page, cross-link pass, gap fills (`/explanation/monorepo/`, `/explanation/homelab/overview/`, `/reference/homelab-services/`) | Home routes by need; every how-to links its reference; four formerly orphaned pages reachable                              |
 
 Phase 1 leads deliberately: writing the steering first means phases 3–6 are
 authored under the rules rather than retrofitted to them.
@@ -505,11 +503,11 @@ authored under the rules rather than retrofitted to them.
       workspace.
 - [x] Phase 2 — autogenerate sidebar, directories, redirects, structure test.
 - [x] Phase 3 — six reference pages (`homelab-services` deferred, see above).
-- [x] Phase 4 — eleven how-to guides.
+- [x] Phase 4 — nine how-to guides.
 - [x] Phase 5 — seventeen explanation pages.
 - [x] Phase 6 — home page, cross-links, and one tutorial.
 - [x] Verify no page still contains workflow/plan residue.
-- [x] Verify every old route redirects (23 routes, asserted in the e2e suite).
+- [x] Verify every retained old route redirects, as asserted in the e2e suite.
 - [ ] Screenshot the rebuilt home page and one page of each kind in the PR.
 - [ ] `/reference/homelab-services/` — generate from synthesized cdk8s output.
 - [ ] A second tutorial, if a genuine lesson presents itself. `homelab-from-scratch`
@@ -542,9 +540,10 @@ structural and should be unambiguous.
   Canonical, Cloudflare, Sequin, I'd Rather Be Writing, the Seven-Action Model,
   and three HN threads. Diagnosis is based on a full read of all 25 current wiki
   pages, `astro.config.ts`, and `wiki-publication.ts`.
-- 2026-08-09 — Phases 2–6 shipped. 25 blended pages became 31 single-kind pages:
-  1 tutorial, 11 how-to guides, 6 reference pages, 17 explanation pages, plus a
-  need-routing home page. The sidebar is autogenerated, 23 old routes redirect,
+- 2026-08-09 — Phases 2–6 shipped. The remaining blended pages became
+  single-kind pages: 1 tutorial, 9 how-to guides, 6 reference pages, 17
+  explanation pages, plus a need-routing home page. The sidebar is
+  autogenerated, retained old routes redirect,
   and two new tests enforce the structure — every page must live in a Diátaxis
   section, and every internal link must resolve. The link test paid for itself
   immediately by catching two routes left stale by a late layout change.

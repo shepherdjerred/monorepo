@@ -1,25 +1,28 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
-  "required": ["trackerOrigin", "sites"],
+  "required": ["provider", "projectToken", "apiHost", "assetHost", "sites"],
   "additionalProperties": false,
   "properties": {
-    "trackerOrigin": {
+    "provider": { "const": "posthog" },
+    "projectToken": {
       "type": "string",
-      "format": "uri",
-      "pattern": "^https://matomo\\.sjer\\.red$"
+      "pattern": "^phc_[A-Za-z0-9]+$"
     },
+    "apiHost": { "const": "https://us.i.posthog.com" },
+    "assetHost": { "const": "https://us-assets.i.posthog.com" },
     "sites": {
       "type": "array",
       "minItems": 1,
       "uniqueItems": true,
       "items": {
         "type": "object",
-        "required": ["hostname", "siteId"],
+        "required": ["key", "hostname", "sessionReplay"],
         "additionalProperties": false,
         "properties": {
+          "key": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
           "hostname": { "type": "string", "minLength": 1 },
-          "siteId": { "type": "integer", "minimum": 1 }
+          "sessionReplay": { "type": "boolean" }
         }
       }
     }

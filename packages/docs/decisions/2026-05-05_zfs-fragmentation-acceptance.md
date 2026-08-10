@@ -45,7 +45,7 @@ This is operationally expensive: every consumer of the dataset must be paused, t
 The fragmentation values right now (HDD pool: 22%, NVMe pool: 61%) are well-tolerated for the cluster's workload because:
 
 - Both pools are SSDs (NVMe and SATA SSD). On HDDs, free-space fragmentation is bad because seeking between holes costs latency. On SSDs, random and sequential I/O cost roughly the same — fragmentation has minimal observable impact.
-- The hot workloads (Postgres for Bugsink/Plausible/Temporal/Grafana, Prometheus TSDB, ClickHouse) are all small enough that ARC + page cache absorb most reads.
+- The hot workloads (Postgres for Bugsink/Temporal/Grafana and Prometheus TSDB) are all small enough that ARC + page cache absorb most reads.
 - Write performance might degrade as the free-space holes shrink — but the cluster's bottleneck is upstream (network or upload bandwidth), not local write speed.
 
 The point at which fragmentation IS performance-relevant on SSDs:

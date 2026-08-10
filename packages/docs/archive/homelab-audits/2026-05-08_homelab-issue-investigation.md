@@ -1,11 +1,11 @@
 ---
-id: guide-2026-05-08-homelab-issue-investigation
-type: guide
+id: reference-homelab-audits-2026-05-08-homelab-issue-investigation
+type: reference
 status: complete
 board: false
 ---
 
-# Homelab Issue Investigation — 2026-05-08
+# Homelab Issue Investigation — 2026-05-08 (archived snapshot)
 
 Companion to [2026-05-08 Homelab Health Audit](2026-05-08_homelab-health-audit.md). Root-cause-level deep dive on every Yellow row, every open PD incident, and every notable Bugsink issue from the audit. Five investigation agents ran in parallel; this is the consolidated finding set.
 
@@ -143,7 +143,7 @@ Confirmed inventory (decoded from snapshot suffix `qbittorrent-verify-20260505-1
 
 Total ~6 MiB, all on `zfspv-pool-{nvme,hdd}/pvc-…`. No matching Velero `Backup` CR. Audit hypothesis confirmed: ad-hoc `zfs snapshot` taken during PD #4235 remediation that captured the wrong PVC pattern (`media/*-pvc` vs the intended `media/qbittorrent-pvc`).
 
-**Action:** follow the existing runbook [`2026-05-05_velero-orphan-snapshot-remediation.md`](2026-05-05_velero-orphan-snapshot-remediation.md). Execute the `comm -23` diagnosis (Step 2), the dry-run preview (Step 4), then `zfs destroy` (Step 5). Decision context: [`2026-05-05_velero-orphan-snapshot-prevention.md`](../decisions/2026-05-05_velero-orphan-snapshot-prevention.md) (Option 1 — manual remediation by design; auto-prune deferred).
+**Action:** follow the existing runbook [`2026-05-05_velero-orphan-snapshot-remediation.md`](../../guides/2026-05-05_velero-orphan-snapshot-remediation.md). Execute the `comm -23` diagnosis (Step 2), the dry-run preview (Step 4), then `zfs destroy` (Step 5). Decision context: [`2026-05-05_velero-orphan-snapshot-prevention.md`](../../decisions/2026-05-05_velero-orphan-snapshot-prevention.md) (Option 1 — manual remediation by design; auto-prune deferred).
 
 **Pitfalls (from runbook):** never `zfs destroy -R`; never strip Backup CR finalizers; the Step 3 sanity-check (`grep -c "qbittorrent-verify-20260505-151742" /tmp/orphans-local.txt` → expect 4) is non-optional.
 
@@ -153,7 +153,7 @@ Total ~6 MiB, all on `zfspv-pool-{nvme,hdd}/pvc-…`. No matching Velero `Backup
 
 **Action:** ack/resolve PD #4254 + #4255 with note "Superseded by 2026-05-05 decision; thresholds raised to >80% / >90%; current value 61% is below warning threshold." No code change.
 
-**Files:** `packages/homelab/src/cdk8s/src/resources/monitoring/monitoring/rules/zfs-maintenance.ts:17,35`. Decision: [`2026-05-05_zfs-fragmentation-acceptance.md`](../decisions/2026-05-05_zfs-fragmentation-acceptance.md).
+**Files:** `packages/homelab/src/cdk8s/src/resources/monitoring/monitoring/rules/zfs-maintenance.ts:17,35`. Decision: [`2026-05-05_zfs-fragmentation-acceptance.md`](../../decisions/2026-05-05_zfs-fragmentation-acceptance.md).
 
 ## Cluster F — Released PV `pvc-4ada0fa5-…` (PD #4248)
 
@@ -279,7 +279,7 @@ const { callService } = proxyActivities<typeof activities>({
 
 **Risk:** timeout bump is risk-free; activity retry cap is a pure improvement (prevents silent retry storms when HA is partially down). The 5/8 failing run had a `continuedFailure` from a prior HA `500 Internal Server Error` on `set_temperature` — without the retry cap, the HA-down path also burns the whole timeout.
 
-Cross-reference: [`2026-05-05_mysa-max-temp-cap.md`](../archive/completed/2026-05-05_mysa-max-temp-cap.md) is the upstream-PR cap (`MORNING_HEAT_TEMP_C = 30`); related but does not address the timeout issue.
+Cross-reference: [`2026-05-05_mysa-max-temp-cap.md`](../completed/2026-05-05_mysa-max-temp-cap.md) is the upstream-PR cap (`MORNING_HEAT_TEMP_C = 30`); related but does not address the timeout issue.
 
 ## Cross-Cutting Items
 

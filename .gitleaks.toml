@@ -2,6 +2,11 @@
 useDefault = true
 
 [allowlist]
+regexTarget = "secret"
+regexes = [
+  # PostHog phc_ project tokens are public browser ingestion identifiers.
+  '''^phc_[A-Za-z0-9]+$''',
+]
 paths = [
   '''packages/dotfiles/Library/Application Support/pinchtab/config\.json''',
   # Archive projects — legacy code, not deployed

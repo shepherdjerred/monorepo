@@ -1,4 +1,4 @@
 {
   "plugin": ["typedoc-plugin-zod", "typedoc-plugin-extras"],
-  "customJs": "matomo.js"
+  "customJs": "posthog.js"
 }

@@ -9,7 +9,7 @@ board: false
 
 ## Context
 
-The homelab health audit is run by hand (~weekly) by spinning up 8 parallel Claude agents that follow `packages/docs/guides/2026-04-04_homelab-audit-runbook.md`, producing dated guides like `packages/docs/guides/2026-05-08_homelab-health-audit.md`. The output is comprehensive (TL;DR, per-section tables, ArgoCD app health matrix, PD triage, deep dives), but it only runs when a human kicks it off.
+The homelab health audit is run by hand (~weekly) by spinning up 8 parallel Claude agents that follow `packages/docs/guides/2026-04-04_homelab-audit-runbook.md`, producing dated reports like `packages/docs/archive/homelab-audits/2026-05-08_homelab-health-audit.md`. The output is comprehensive (TL;DR, per-section tables, ArgoCD app health matrix, PD triage, deep dives), but it only runs when a human kicks it off.
 
 This plan automates that audit on a daily cadence, delivering it via email at 06:30 PT, covering: open PD alerts, open Bugsink issues, Home Assistant entity status, OpenTofu drift, hardware (SMART/temps/utilization/disk), Kubernetes + Talos, ArgoCD app health matrix, Scout for LoL status, Grafana dashboard/alert review, and Loki log analysis.
 
@@ -81,7 +81,7 @@ The agent body is just `Bun.spawn(["claude", "-p", ...])`. Every dependency (`ku
 
 ### Layer 1 — pure functions (< 1 s feedback)
 
-- `markdown-to-html.ts`: golden-file test against `2026-05-08_homelab-health-audit.md` → tables, headings, status emojis survive round-trip.
+- `markdown-to-html.ts`: golden-file test against the archived `2026-05-08_homelab-health-audit.md` → tables, headings, status emojis survive round-trip.
 - `homelab-audit-prompts.ts`: snapshot test on the assembled prompt.
 - `shared/postal.ts`: extracted `sendPostalEmail` keeps the zod-validated envelope check; new test stubs `fetch`.
 

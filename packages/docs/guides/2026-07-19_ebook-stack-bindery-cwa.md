@@ -131,7 +131,7 @@ In-cluster SMTP hostname (from CWA UI):
 postal-postal-smtp-service.postal
 ```
 
-Port `25`, no TLS (cluster-internal), same pattern as Bugsink/Plausible.
+Port `25`, no TLS (cluster-internal), matching the other internal SMTP consumers.
 
 ## Code map
 

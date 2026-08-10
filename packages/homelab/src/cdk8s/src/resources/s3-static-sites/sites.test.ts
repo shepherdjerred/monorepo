@@ -2,6 +2,27 @@ import { describe, expect, test } from "bun:test";
 
 import { staticSites } from "./sites.ts";
 
+describe("Scout static sites", () => {
+  for (const hostname of [
+    "scout-for-lol.com",
+    "beta.scout-for-lol.com",
+  ] as const) {
+    test(`${hostname} permits only the PostHog US endpoints`, () => {
+      const site = staticSites.find(
+        (candidate) => candidate.hostname === hostname,
+      );
+      if (site === undefined) {
+        throw new Error(`${hostname} static site is missing`);
+      }
+      const csp = site.responseHeaders?.["Content-Security-Policy"];
+      expect(csp).toContain(
+        "script-src 'self' https://us-assets.i.posthog.com",
+      );
+      expect(csp).toContain("connect-src 'self' https://us.i.posthog.com");
+    });
+  }
+});
+
 describe("human wiki static site", () => {
   const wiki = staticSites.find(({ hostname }) => hostname === "wiki.sjer.red");
   if (wiki === undefined) {

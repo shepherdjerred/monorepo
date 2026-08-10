@@ -1,13 +1,48 @@
 {
-  "trackerOrigin": "https://matomo.sjer.red",
+  "provider": "posthog",
+  "projectToken": "phc_uHgQEjvzAfgawsBscWRWKdynJ2bFtpPAECMEwoLWSSXh",
+  "apiHost": "https://us.i.posthog.com",
+  "assetHost": "https://us-assets.i.posthog.com",
   "sites": [
-    { "hostname": "sjer.red", "siteId": 1 },
-    { "hostname": "resume.sjer.red", "siteId": 2 },
-    { "hostname": "webring.sjer.red", "siteId": 3 },
-    { "hostname": "better-skill-capped.com", "siteId": 4 },
-    { "hostname": "discord-plays-mario-kart.com", "siteId": 5 },
-    { "hostname": "discord-plays-pokemon.com", "siteId": 6 },
-    { "hostname": "scout-for-lol.com", "siteId": 7 },
-    { "hostname": "beta.scout-for-lol.com", "siteId": 8 }
+    {
+      "key": "sjer-red",
+      "hostname": "sjer.red",
+      "sessionReplay": false
+    },
+    {
+      "key": "resume",
+      "hostname": "resume.sjer.red",
+      "sessionReplay": false
+    },
+    {
+      "key": "webring",
+      "hostname": "webring.sjer.red",
+      "sessionReplay": false
+    },
+    {
+      "key": "better-skill-capped",
+      "hostname": "better-skill-capped.com",
+      "sessionReplay": false
+    },
+    {
+      "key": "mario-kart",
+      "hostname": "mariokart.sjer.red",
+      "sessionReplay": false
+    },
+    {
+      "key": "pokemon",
+      "hostname": "pokebot.sjer.red",
+      "sessionReplay": false
+    },
+    {
+      "key": "scout-prod",
+      "hostname": "scout-for-lol.com",
+      "sessionReplay": true
+    },
+    {
+      "key": "scout-beta",
+      "hostname": "beta.scout-for-lol.com",
+      "sessionReplay": true
+    }
   ]
 }

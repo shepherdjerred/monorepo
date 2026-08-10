@@ -310,9 +310,6 @@ const versions = {
   "library/debian":
     "bookworm-slim@sha256:7b140f374b289a7c2befc338f42ebe6441b7ea838a042bbd5acbfca6ec875818",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
-  matomo:
-    "5.12.0@sha256:85d27206a4acdd43259909aa00cab1913dec88cfba53e1ce66a51e6caa430a55",
-  // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "library/nginx":
     "1.29.1-alpine@sha256:42a516af16b852e33b7682d5ef8acbd5d13fe08fecadc7ed98605ba5e3b26ab8",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver

@@ -3,13 +3,10 @@ import type { StaticSiteConfig } from "@shepherdjerred/homelab/cdk8s/src/misc/s3
 /**
  * CSP for the scout-for-lol web UI (`/app/`).
  *
- * - `script-src 'self'` is satisfied for first-paint because the dark-mode setup
- *   was extracted into `/app/init-theme.js` (see scout `app/index.html`); the
- *   `https://matomo.sjer.red` origin is allowed for the self-hosted Matomo
- *   analytics script loaded by both the marketing site (`frontend/Layout.astro`)
- *   and the app SPA (`app/src/lib/analytics.ts`).
- * - `connect-src` allows `https://matomo.sjer.red` so the analytics script can
- *   POST pageviews and custom events to Matomo (blocked by `'self'` alone).
+ * - `script-src` allows PostHog Cloud's US asset host for the marketing-site
+ *   bootstrap and the SPA's session-replay worker.
+ * - `connect-src` allows PostHog Cloud's US ingestion host for pageviews,
+ *   autocapture, typed events, and session replay.
  * - `img-src` allows `https://cdn.discordapp.com` for guild icons, `data:` for
  *   inlined icons + SVG report-query previews, and `blob:` for chart PNGs fetched
  *   with credentials and rendered via `URL.createObjectURL`
@@ -24,11 +21,11 @@ import type { StaticSiteConfig } from "@shepherdjerred/homelab/cdk8s/src/misc/s3
  */
 const scoutCsp = [
   "default-src 'self'",
-  "script-src 'self' https://matomo.sjer.red",
+  "script-src 'self' https://us-assets.i.posthog.com",
   "worker-src 'self' blob:",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' https://cdn.discordapp.com https://matomo.sjer.red data: blob:",
-  "connect-src 'self' https://matomo.sjer.red",
+  "img-src 'self' https://cdn.discordapp.com data: blob:",
+  "connect-src 'self' https://us.i.posthog.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self' https://discord.com",
