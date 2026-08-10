@@ -278,10 +278,22 @@ struct QuickAddPanelConfigurationTests {
         #expect(behavior.contains(.fullScreenAuxiliary))
     }
 
-    /// Clicking away is a dismissal, not a window left over somebody's editor.
-    @Test("the panel hides when the application is deactivated")
-    func hidesOnDeactivate() {
-        #expect(panel().hidesOnDeactivate)
+    /// ⚠️ This test used to assert the opposite, and was wrong.
+    ///
+    /// "Clicking away is a dismissal" is the right behaviour; `hidesOnDeactivate`
+    /// is the wrong mechanism for it here. That flag hides a window whenever its
+    /// **application** is not active, and this panel's whole purpose is to be
+    /// summoned while the application is not active — so AppKit ordered it back
+    /// out and the panel only ever opened when TaskNotes already happened to be
+    /// frontmost.
+    ///
+    /// The test passing on `true` is what let that ship: it asserted a property
+    /// rather than the behaviour the property was chosen for. Dismissal now
+    /// hangs off `resignKey()`, which fires on a click elsewhere and not merely
+    /// because another application owns the menu bar.
+    @Test("the panel does not hide merely because another application is frontmost")
+    func doesNotHideOnDeactivate() {
+        #expect(panel().hidesOnDeactivate == false)
     }
 
     /// It is summoned by a key and holds no state worth returning to.

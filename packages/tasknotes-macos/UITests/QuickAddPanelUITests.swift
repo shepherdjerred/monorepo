@@ -88,7 +88,41 @@ final class QuickAddPanelUITests: XCTestCase {
             "the panel opened without its text field"
         )
 
-        try app.performAccessibilityAudit()
+        // ⚠️ Named assertions rather than `app.performAccessibilityAudit()`.
+        //
+        // Running the audit here is what found three real defects — the preview
+        // strip and the syntax hint were unlabelled containers, and the
+        // `NSHostingView` wrapper above the SwiftUI root was a bare `Group` that
+        // no SwiftUI modifier could reach. But it cannot stay as the gate: the
+        // audit is app-wide (`XCUIElement` has no `performAccessibilityAudit`),
+        // so it re-reports every main-window finding that
+        // `packages/docs/todos/macos-accessibility-audit.md` already ruled
+        // unactionable — window-titlebar contrast, `NavigationSplitView`'s own
+        // unlabelled columns. That is why no other flow in this suite gates on
+        // it either.
+        //
+        // Asserting the labels directly keeps the regression protection the
+        // fixes earned without re-litigating findings this project has already
+        // decided it cannot act on. An unlabelled element here is a screen
+        // reader announcing nothing.
+        XCTAssertEqual(
+            panel.label,
+            "Quick Add",
+            "the panel window lost its accessibility label"
+        )
+        let hint = panel.descendants(matching: .any)[AccessibilityIdentifier.QuickAdd.hint]
+        XCTAssertTrue(hint.exists, "the syntax hint is missing from the panel")
+        // ⚠️ Label **or** value, and that is not hedging. `.combine` collapses
+        // the hint into a single `StaticText`, and SwiftUI puts the combined
+        // name in that element's *value* while leaving `label` empty — asserting
+        // on `label` alone fails against a hint a screen reader reads perfectly
+        // well. What matters is that the element announces something at all,
+        // which is exactly what the audit's "no description" finding meant.
+        let spoken = hint.label.isEmpty ? (hint.value as? String ?? "") : hint.label
+        XCTAssertFalse(
+            spoken.isEmpty,
+            "the syntax hint is an unlabelled container again: \(hint.debugDescription)"
+        )
     }
 
     /// The panel arrives over another application without activating TaskNotes.

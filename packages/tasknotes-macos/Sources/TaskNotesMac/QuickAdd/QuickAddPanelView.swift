@@ -100,6 +100,13 @@ struct QuickAddPanelView: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier(AccessibilityIdentifier.QuickAdd.preview)
+        // ⚠️ `.contain` makes this container a real element in the tree, and an
+        // unlabelled container is a container VoiceOver announces as nothing.
+        // Found by `performAccessibilityAudit()` on the flow that opens the
+        // panel — "Element has no description", against a bare `Group`. The
+        // marks inside carry their own spoken labels; this names the group they
+        // belong to.
+        .accessibilityLabel("Recognised details")
     }
 
     /// What the panel says before anything has been recognised.
@@ -122,7 +129,12 @@ struct QuickAddPanelView: View {
             Spacer(minLength: 8)
             keys(canAdd: preview.isSubmittable)
         }
+        .accessibilityElement(children: .combine)
         .accessibilityIdentifier(AccessibilityIdentifier.QuickAdd.hint)
+        // `.combine` rather than `.contain`: the syntax line and the key
+        // reminder are one piece of prose to a screen reader, not two elements
+        // worth stepping through.
+        .accessibilityLabel("Syntax: \(syntax)")
     }
 
     private func failure(_ error: CoreError) -> some View {

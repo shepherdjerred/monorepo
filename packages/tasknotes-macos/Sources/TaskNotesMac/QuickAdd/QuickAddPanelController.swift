@@ -179,6 +179,13 @@ final class QuickAddPanelController {
         if let panel { return panel }
         let hosting = NSHostingView(rootView: QuickAddPanelView(controller: self))
         hosting.frame = CGRect(origin: .zero, size: QuickAddPanel.contentSize)
+        // ⚠️ The hosting view is a real element in the accessibility tree and it
+        // sits *above* anything SwiftUI can annotate — `QuickAddPanelView`
+        // already carries `.accessibilityLabel("Quick Add")` and it does not
+        // reach here. `performAccessibilityAudit` reported it as a bare `Group`
+        // at the panel's exact frame with no description, which is the one
+        // finding in this window that neither the view nor the window could fix.
+        hosting.setAccessibilityLabel("Quick Add")
         let created = QuickAddPanel(content: hosting)
         panel = created
         return created

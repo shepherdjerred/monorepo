@@ -66,6 +66,29 @@ final class QuickAddPanel: NSPanel {
         orderOut(nil)
     }
 
+    /// Clicking away dismisses the panel.
+    ///
+    /// ⚠️ This is what `hidesOnDeactivate` used to do, and `hidesOnDeactivate`
+    /// was wrong here in a way that broke the feature's entire purpose. It
+    /// hides a window whenever its **application** is not active — and this
+    /// panel exists to be summoned while the application is *not* active. So
+    /// AppKit ordered it straight back out: the panel opened when TaskNotes
+    /// happened to be frontmost and silently refused to when anything else
+    /// was, which is exactly backwards.
+    ///
+    /// Losing key status is the right signal instead: it fires when the user
+    /// clicks another window, and *not* merely because some other application
+    /// owns the menu bar — which, for a `.nonactivatingPanel`, is the normal
+    /// state while the panel is up and being typed into.
+    ///
+    /// Measured, not reasoned: `testThePanelOpensOverAnotherAppWithoutActivatingTaskNotes`
+    /// failed with Finder frontmost and passed with TaskNotes frontmost, on a
+    /// panel that was otherwise correctly positioned and ordered front.
+    override func resignKey() {
+        super.resignKey()
+        orderOut(nil)
+    }
+
     /// A panel configured the way the documentation above describes.
     ///
     /// - Parameter content: the view the panel hosts, already built.
@@ -100,11 +123,21 @@ final class QuickAddPanel: NSPanel {
         // window is announced as nothing at all.
         setAccessibilityIdentifier(AccessibilityIdentifier.QuickAdd.panel)
         title = "Quick Add"
+        // ⚠️ Not redundant with `title` above. A window normally derives its
+        // accessibility label from its title, but this panel sets
+        // `titleVisibility = .hidden` below — and with no title drawn, the
+        // derived label comes back empty, so the window announced itself as
+        // nothing. Measured: `XCUIElement.label` on the panel was `""` while
+        // `title` was "Quick Add".
+        setAccessibilityLabel("Quick Add")
 
         isFloatingPanel = true
         level = .floating
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
-        hidesOnDeactivate = true
+        // ⚠️ Deliberately **false** — see `resignKey()` above. `true` is the
+        // obvious-looking choice and it makes the panel unopenable over any
+        // other application, which is the only situation it is for.
+        hidesOnDeactivate = false
 
         // Never released on close, because the controller keeps showing the
         // same panel: a released window would be a use-after-free the second
