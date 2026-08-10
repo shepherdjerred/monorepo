@@ -10,6 +10,7 @@ import {
   addSectorHealthPanels,
   DRIVE_LEGEND,
 } from "./smartctl-panels.ts";
+import { addNvmePanels } from "./nvme-dashboard-panels.ts";
 
 // smartmon_* metrics are keyed by the unstable `disk` path (/dev/nvme0, /dev/sda),
 // which can change across reboots / controller re-enumeration. The stable
@@ -19,7 +20,7 @@ import {
 // smartmon_device_info has value 1, leaving the original metric value intact.
 const SERIAL_INFO = 'smartmon_device_info{serial_number=~"$serial"}';
 function bySerial(metric: string): string {
-  return `${metric} * on(disk) group_left(serial_number, device_model) ${SERIAL_INFO}`;
+  return `${metric} * on(disk, instance) group_left(serial_number, device_model) ${SERIAL_INFO}`;
 }
 
 /**
@@ -347,6 +348,7 @@ export function createSmartctlDashboard() {
   addSectorHealthPanels(builder, prometheusDatasource, bySerial);
   addErrorTrackingPanels(builder, prometheusDatasource, bySerial);
   addLifecyclePanels(builder, prometheusDatasource, bySerial);
+  addNvmePanels(builder);
 
   return builder.build();
 }

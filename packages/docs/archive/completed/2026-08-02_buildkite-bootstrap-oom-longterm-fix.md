@@ -1,7 +1,7 @@
 ---
 id: plan-2026-08-02-buildkite-bootstrap-oom-longterm-fix
 type: plan
-status: in-progress
+status: complete
 board: false
 ---
 
@@ -115,7 +115,7 @@ In `validateSelectorAndUpload()` after the existing `tofuPipeline` checks, match
 - `buildkite.ts:94-102`: append to the LimitRange comment: the 768Mi default OOM-killed the tofu bootstrap pod when container-0 had no explicit resources (2026-08-02); fix containers explicitly — don't raise/remove the default.
 - `.env`: add `BUILDKITE_API_TOKEN=op://<vault>/<item>/<field>` — locate the existing 1Password field with a single batched `op` query; never create/rename 1P items. `tofu-stack.ts:60` already maps it to `TF_VAR_buildkite_api_token`.
 - buildkite-helper skill (chezmoi source + live copy): one bullet — agent exit `-7` "stopped communicating" + post-mortem Job `DeadlineExceeded` are red herrings for a container memcg OOM; cgroup OOM kills emit **no** k8s events — check the node kernel log (`kubectl debug node`); tmpfs workspace bytes count against the writing container's memory limit.
-- Docs: move the untracked diagnosis log into the worktree (repo rule) and update its Remaining section; copy this plan to `packages/docs/plans/2026-08-02_buildkite-bootstrap-oom-longterm-fix.md` (canonical frontmatter) at implementation start.
+- Docs: move the untracked diagnosis log into the worktree (repo rule) and update its Remaining section; copy this plan into the canonical plan location at implementation start.
 
 ## Rollout sequence
 

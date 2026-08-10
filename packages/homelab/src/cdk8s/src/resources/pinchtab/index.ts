@@ -201,6 +201,7 @@ export function createPinchtabDeployment(chart: Chart) {
   new TailscaleIngress(chart, "pinchtab-tailscale-ingress", {
     service,
     host: "pinchtab",
+    proxyClass: "medium",
   });
 
   return service;

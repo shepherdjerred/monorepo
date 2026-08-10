@@ -49,7 +49,7 @@ const ContainerSchema = z
       .optional(),
     resources: z
       .object({
-        limits: z.object({ cpu: z.string(), memory: z.string() }),
+        limits: z.object({ cpu: z.string(), memory: z.string() }).optional(),
         requests: z.object({ cpu: z.string(), memory: z.string() }),
       })
       .optional(),
@@ -223,6 +223,19 @@ function getEnvValue(
 }
 
 describe("qBittorrent ShelfBridge relay", () => {
+  it("uses the audited resource reservations", () => {
+    expect(getContainer("gluetun").resources).toEqual({
+      requests: { cpu: "25m", memory: "128Mi" },
+    });
+    expect(getContainer("qbittorrent").resources).toEqual({
+      requests: { cpu: "200m", memory: "4608Mi" },
+      limits: { cpu: "2000m", memory: "6144Mi" },
+    });
+    expect(getContainer("qbittorrent-exporter").resources).toEqual({
+      requests: { cpu: "10m", memory: "64Mi" },
+    });
+  });
+
   it("labels qBittorrent pods for the dedicated tracker policy", () => {
     expect(deployment.spec.template.metadata.labels.app).toBe("qbittorrent");
   });

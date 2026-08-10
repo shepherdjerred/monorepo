@@ -56,7 +56,9 @@ immediately. Cron expressions are evaluated in `America/Los_Angeles`.
 | Operator CLI | `bun run scripts/schedule-agent-task.ts --from-doc <path>`        | port-forwarded Temporal                       |
 | HTTP API     | `POST /agent-tasks` on `temporal-agent-tasks.sjer.red`            | `Authorization: Bearer $AGENT_TASK_API_TOKEN` |
 
-The CLI also accepts `--json` and `--stdin`. The HTTP API is the only public
+One document may contain multiple task blocks. The CLI validates all blocks
+before connecting and schedules them in document order. It also accepts
+`--json` and `--stdin` for a single task. The HTTP API is the only public
 scheduling ingress; the Temporal server itself is never exposed.
 
 ## Conflict rules

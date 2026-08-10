@@ -244,7 +244,10 @@ export function createQBitTorrentDeployment(
         "chmod 600 /config/qBittorrent/qBittorrent.conf",
       ].join("\n"),
     ],
-    resources: {},
+    resources: {
+      cpu: { request: Cpu.millis(10) },
+      memory: { request: Size.mebibytes(16) },
+    },
     securityContext: {
       ensureNonRoot: false,
       user: 0,
@@ -261,9 +264,10 @@ export function createQBitTorrentDeployment(
 
   deployment.addContainer(
     withCommonProps({
-      // Deliberately BestEffort (no requests/limits) — negligible or
-      // non-critical usage; see the 2026-06-12 right-sizing plan.
-      resources: {},
+      resources: {
+        cpu: { request: Cpu.millis(25) },
+        memory: { request: Size.mebibytes(128) },
+      },
       name: "gluetun",
       image: `ghcr.io/qdm12/gluetun:${versions["qdm12/gluetun"]}`,
       // TODO: replace this with capability to run as non-root
@@ -400,11 +404,11 @@ export function createQBitTorrentDeployment(
       }),
       resources: {
         memory: {
-          request: Size.gibibytes(1),
-          limit: Size.gibibytes(4),
+          request: Size.mebibytes(4608),
+          limit: Size.gibibytes(6),
         },
         cpu: {
-          request: Cpu.millis(100),
+          request: Cpu.millis(200),
           limit: Cpu.millis(2000),
         },
       },
@@ -450,9 +454,10 @@ export function createQBitTorrentDeployment(
   // Add Prometheus exporter for qBittorrent metrics
   deployment.addContainer(
     withCommonProps({
-      // Deliberately BestEffort (no requests/limits) — negligible or
-      // non-critical usage; see the 2026-06-12 right-sizing plan.
-      resources: {},
+      resources: {
+        cpu: { request: Cpu.millis(10) },
+        memory: { request: Size.mebibytes(64) },
+      },
       name: "qbittorrent-exporter",
       image: `ghcr.io/esanchezm/prometheus-qbittorrent-exporter:${versions["esanchezm/prometheus-qbittorrent-exporter"]}`,
       ports: [{ number: 17_871, name: "metrics" }],

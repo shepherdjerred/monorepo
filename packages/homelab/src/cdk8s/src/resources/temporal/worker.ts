@@ -358,7 +358,7 @@ export function createTemporalWorkerDeployment(
           limit: Cpu.millis(1500),
         },
         memory: {
-          request: Size.gibibytes(2),
+          request: Size.gibibytes(3),
           limit: Size.gibibytes(6),
         },
       },

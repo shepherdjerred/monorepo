@@ -36,6 +36,9 @@ context stay together.
 For a recurring check, replace `runAt` with `cron` and add a stable
 `scheduleId`. Cron is evaluated in `America/Los_Angeles`.
 
+A document may contain multiple blocks when a rollout needs checks at distinct
+times. Keep each block next to the checkpoint it describes.
+
 Write the prompt so the report is useful without the reader opening anything:
 say what to look at, and what a green and a red answer each look like.
 
@@ -47,7 +50,8 @@ TEMPORAL_ADDRESS=localhost:7233 \
   bun run scripts/schedule-agent-task.ts --from-doc ../../packages/docs/<doc>.md
 ```
 
-The CLI also takes `--json` and `--stdin`.
+The CLI validates every block before connecting, then schedules them in
+document order. It also takes `--json` and `--stdin` for a single task.
 
 A `cron` input upserts a Temporal schedule. A `runAt` input starts a one-off
 workflow whose ID is a content hash, deferred with `startDelay`.

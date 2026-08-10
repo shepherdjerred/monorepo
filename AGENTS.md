@@ -178,7 +178,7 @@ immediately in hosted or web environments.
 
 ## Temporal Agent Follow-ups
 
-When a doc captures a follow-up that should be checked later, schedule it explicitly with a `temporal-agent-task` block and the Temporal trigger script. Use report-only tasks by default; they may inspect current state and email results, but must not edit files, open PRs/issues, or mutate live systems.
+When a doc captures a follow-up that should be checked later, schedule it explicitly with a `temporal-agent-task` block and the Temporal trigger script. A document may contain multiple blocks when a rollout needs checks at different times; `--from-doc` validates all of them before connecting and schedules them in document order. Use report-only tasks by default; they may inspect current state and email results, but must not edit files, open PRs/issues, or mutate live systems.
 
 ```md
 <!-- temporal-agent-task

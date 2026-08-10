@@ -1,7 +1,7 @@
 ---
 id: 2026-07-22-ci-capacity-remediation-impl
 type: plan
-status: in-progress
+status: complete
 board: false
 ---
 
@@ -32,7 +32,7 @@ Goal: same capabilities, much lower latency and SSD wear. Decisions taken:
 separate WIP; R3 (merge queue) deferred.
 
 Full evidence: the original investigation +
-`packages/docs/plans/2026-07-22_ci-capacity-remediation.md`.
+`packages/docs/archive/superseded/2026-07-22_ci-capacity-remediation.md`.
 
 ---
 

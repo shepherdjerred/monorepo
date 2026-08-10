@@ -15,7 +15,7 @@ import { escapePrometheusTemplate } from "./shared.ts";
 // {{ $labels.model_name }} — neither label exists on smartmon_* metrics (they
 // carry `disk`/`type`/`smart_id`), so those annotations rendered blank.
 function withSmartIdentity(expr: string): string {
-  return `(${expr}) * on(disk) group_left(serial_number, device_model) smartmon_device_info`;
+  return `(${expr}) * on(disk, instance) group_left(serial_number, device_model) smartmon_device_info`;
 }
 
 export function getSmartctlRuleGroups(): PrometheusRuleSpecGroups[] {

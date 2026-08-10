@@ -220,6 +220,10 @@ cd packages/temporal
 TEMPORAL_ADDRESS=localhost:7233 bun run scripts/schedule-agent-task.ts --from-doc ../../packages/docs/guides/example.md
 ```
 
+`--from-doc` validates every `temporal-agent-task` block before connecting and
+schedules all blocks in document order. Use separate blocks for distinct rollout
+checkpoints.
+
 Authenticated HTTP creation is the public ingress path:
 
 ```bash

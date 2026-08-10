@@ -1,7 +1,9 @@
 import { Context } from "@temporalio/activity";
+import { z } from "zod";
 import {
   maintenanceLastSuccessTimestampSeconds,
   maintenanceRunsTotal,
+  turboCacheCleanupEntriesTotal,
 } from "#observability/metrics.ts";
 import { log } from "#observability/log.ts";
 
@@ -20,6 +22,21 @@ const INHERITED_ENVIRONMENT_KEYS = [
   "TMPDIR",
 ] as const;
 const CANCELLATION_GRACE_PERIOD_MS = 1000;
+export const TURBO_CACHE_CLEAN_ACTIVITY = "turbo-cache-clean";
+export const TURBO_CACHE_CLEAN_URL =
+  "http://turbo-cache-turbo-cache-service.turbo-cache.svc.cluster.local:3000/v8/clean";
+const TurboCacheCleanResponseSchema = z.object({
+  deleted: z.number().int().nonnegative(),
+  scanned: z.number().int().nonnegative(),
+});
+
+export type TurboCacheCleanResult = z.infer<
+  typeof TurboCacheCleanResponseSchema
+>;
+export type MaintenanceFetch = (
+  input: string | URL | Request,
+  init?: RequestInit,
+) => Promise<Response>;
 
 export type MaintenanceKind =
   | "kometa"
@@ -292,12 +309,64 @@ export async function executeMaintenance(
       throw new Error(`${kind} command exited ${String(exitCode)}`);
     }
     maintenanceLastSuccessTimestampSeconds.set(
-      { job: kind },
+      { maintenance_job: kind },
       Date.now() / 1000,
     );
-    maintenanceRunsTotal.inc({ job: kind, outcome: "success" });
+    maintenanceRunsTotal.inc({
+      maintenance_job: kind,
+      outcome: "success",
+    });
   } catch (error: unknown) {
-    maintenanceRunsTotal.inc({ job: kind, outcome: "failure" });
+    maintenanceRunsTotal.inc({
+      maintenance_job: kind,
+      outcome: "failure",
+    });
+    throw error;
+  }
+}
+
+export async function cleanTurboCache(
+  fetcher: MaintenanceFetch = fetch,
+  cancellationSignal?: AbortSignal,
+): Promise<TurboCacheCleanResult> {
+  const token = await requiredSecretFile("TURBO_CACHE_TOKEN_FILE");
+  const url = new URL(
+    Bun.env["TURBO_CACHE_CLEAN_URL"] ?? TURBO_CACHE_CLEAN_URL,
+  );
+  url.searchParams.set("slug", "monorepo");
+  url.searchParams.set("olderThan", "30");
+
+  try {
+    const response = await fetcher(url, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      signal: cancellationSignal ?? Context.current().cancellationSignal,
+    });
+    if (!response.ok) {
+      throw new Error(
+        `Turbo cache cleanup failed with HTTP ${String(response.status)}`,
+      );
+    }
+    const result = TurboCacheCleanResponseSchema.parse(
+      JSON.parse(await response.text()),
+    );
+    maintenanceLastSuccessTimestampSeconds.set(
+      { maintenance_job: TURBO_CACHE_CLEAN_ACTIVITY },
+      Date.now() / 1000,
+    );
+    maintenanceRunsTotal.inc({
+      maintenance_job: TURBO_CACHE_CLEAN_ACTIVITY,
+      outcome: "success",
+    });
+    turboCacheCleanupEntriesTotal.inc({ result: "deleted" }, result.deleted);
+    turboCacheCleanupEntriesTotal.inc({ result: "scanned" }, result.scanned);
+    log("info", "Turbo cache cleanup completed", result);
+    return result;
+  } catch (error: unknown) {
+    maintenanceRunsTotal.inc({
+      maintenance_job: TURBO_CACHE_CLEAN_ACTIVITY,
+      outcome: "failure",
+    });
     throw error;
   }
 }
@@ -316,5 +385,8 @@ export const maintenanceActivities = {
   },
   async runTrivyDbRefresh(): Promise<void> {
     await executeMaintenance("buildkite-trivy-db-refresh");
+  },
+  async runTurboCacheClean(): Promise<TurboCacheCleanResult> {
+    return cleanTurboCache();
   },
 };

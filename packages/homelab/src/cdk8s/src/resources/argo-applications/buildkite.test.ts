@@ -13,6 +13,7 @@ const ApplicationSchema = z
         helm: z.object({
           valuesObject: z.object({
             config: z.object({
+              "max-in-flight": z.literal(24),
               "agent-config": z.object({
                 "hooks-path": z.string(),
                 hooksVolume: z.object({
@@ -187,6 +188,13 @@ function maintenanceDeployment(resources: readonly unknown[]) {
 }
 
 describe("Buildkite application", () => {
+  it("raises the controller concurrency cap to 24", () => {
+    const { application } = synthBuildkiteResources();
+    expect(
+      application.spec.source.helm.valuesObject.config["max-in-flight"],
+    ).toBe(24);
+  });
+
   it("accounts for the tmpfs checkout on the checkout container", () => {
     const { application } = synthBuildkiteResources();
     const containers =
@@ -297,6 +305,7 @@ describe("Buildkite application", () => {
     expect(envNames).toContain("TEMPORAL_WORKER_ROLE");
     expect(envNames).toContain("KOMETA_PLEXTOKEN_FILE");
     expect(envNames).toContain("KOMETA_TMDBAPIKEY_FILE");
+    expect(envNames).toContain("TURBO_CACHE_TOKEN_FILE");
     expect(container.env).toContainEqual({
       name: "TEMPORAL_ADDRESS",
       value: "temporal-temporal-server-service.temporal.svc.cluster.local:7233",
@@ -309,6 +318,7 @@ describe("Buildkite application", () => {
         "/buildkite/trivy-db",
         "/buildkite/maintenance",
         "/etc/kometa",
+        "/run/secrets/turbo-cache",
       ]),
     );
     expect(container.volumeMounts).toContainEqual(
@@ -341,6 +351,11 @@ describe("Buildkite application", () => {
         expect.objectContaining({
           name: "kometa-state",
           emptyDir: expect.any(Object),
+        }),
+        expect.objectContaining({
+          secret: expect.objectContaining({
+            secretName: "buildkite-ci-secrets",
+          }),
         }),
       ]),
     );

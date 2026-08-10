@@ -57,6 +57,7 @@ export function createSeaweedfsApp(chart: Chart) {
     service: "seaweedfs-s3",
     port: 8333,
     hosts: ["seaweedfs-s3"],
+    proxyClass: "heavy",
     // Anonymous "/" is a denied S3 ListBuckets (403); /status is the S3
     // gateway's unauthenticated health endpoint.
     probePath: "/status",

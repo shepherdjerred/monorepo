@@ -127,6 +127,11 @@ function createKometaSecrets(chart: Chart): {
 export function createBuildkiteMaintenanceWorker(chart: Chart): void {
   const config = createKometaConfig(chart);
   const secrets = createKometaSecrets(chart);
+  const turboCacheSecret = Secret.fromSecretName(
+    chart,
+    "temporal-maintenance-turbo-cache-secret",
+    "buildkite-ci-secrets",
+  );
   const deployment = new Deployment(chart, WORKER_NAME, {
     replicas: MAINTENANCE_IMAGE_READY ? 1 : 0,
     strategy: DeploymentStrategy.recreate(),
@@ -226,6 +231,12 @@ export function createBuildkiteMaintenanceWorker(chart: Chart): void {
     secrets.credentials,
     { items: { TMDB_API_KEY: { path: "tmdb-api-key" } } },
   );
+  const turboCacheTokenVolume = Volume.fromSecret(
+    chart,
+    "temporal-maintenance-turbo-cache-token-volume",
+    turboCacheSecret,
+    { items: { TURBO_TOKEN: { path: "token" } } },
+  );
 
   deployment.addInitContainer(
     withCommonProps({
@@ -298,6 +309,9 @@ export function createBuildkiteMaintenanceWorker(chart: Chart): void {
         KOMETA_TMDBAPIKEY_FILE: EnvValue.fromValue(
           "/run/secrets/kometa-tmdb/tmdb-api-key",
         ),
+        TURBO_CACHE_TOKEN_FILE: EnvValue.fromValue(
+          "/run/secrets/turbo-cache/token",
+        ),
       },
       volumeMounts: [
         { path: "/buildkite/bun-cache", volume: bunCache },
@@ -316,6 +330,11 @@ export function createBuildkiteMaintenanceWorker(chart: Chart): void {
         {
           path: "/run/secrets/kometa-tmdb",
           volume: tmdbSecretVolume,
+          readOnly: true,
+        },
+        {
+          path: "/run/secrets/turbo-cache",
+          volume: turboCacheTokenVolume,
           readOnly: true,
         },
         {

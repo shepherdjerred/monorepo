@@ -9,6 +9,7 @@ export const SHARED_POD_ANCHORS = [
   "pod_verify_kubernetes",
   "pod_light_kubernetes",
   "pod_tofu_kubernetes",
+  "pod_pr_dryrun_kubernetes",
 ] as const;
 export const CHECKOUT_CONTAINER_ALIAS = "- *checkout_container";
 export const FORBIDDEN_DOCKER_IN_DOCKER_PATTERNS = [
@@ -328,6 +329,32 @@ export type StepIndex = {
   keys: Set<string>;
   stepBlocks: Map<string, string>;
 };
+
+export type PodReservation = {
+  cpuMilli: number;
+  memoryMi: number;
+};
+
+/**
+ * Complete Buildkite pod reservation, including the controller-managed agent
+ * and the explicitly patched checkout container.
+ */
+export function completePodReservation(
+  command: PodReservation,
+  additionalContainers: readonly PodReservation[] = [],
+): PodReservation {
+  const fixedSidecars: readonly PodReservation[] = [
+    { cpuMilli: 50, memoryMi: 64 },
+    { cpuMilli: 50, memoryMi: 1024 },
+  ];
+  return [...fixedSidecars, command, ...additionalContainers].reduce(
+    (total, container) => ({
+      cpuMilli: total.cpuMilli + container.cpuMilli,
+      memoryMi: total.memoryMi + container.memoryMi,
+    }),
+    { cpuMilli: 0, memoryMi: 0 },
+  );
+}
 
 export function collectStepBlocks(
   lines: string[],

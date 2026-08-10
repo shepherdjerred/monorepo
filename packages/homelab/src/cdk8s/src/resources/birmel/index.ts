@@ -83,13 +83,13 @@ export function createBirmelDeployment(chart: Chart) {
         ensureNonRoot: false,
       },
       // Baseline request (no limits) so the bot isn't BestEffort.
-      // 30d peak ~510m / ~1.6Gi; steady ~10m / ~450Mi.
+      // 30d peak ~510m / ~1.6Gi; request covers the observed p95 plus margin.
       resources: {
         cpu: {
           request: Cpu.millis(50),
         },
         memory: {
-          request: Size.mebibytes(512),
+          request: Size.mebibytes(1280),
         },
       },
       ports: [

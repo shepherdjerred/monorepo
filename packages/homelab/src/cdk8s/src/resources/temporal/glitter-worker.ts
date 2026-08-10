@@ -59,11 +59,11 @@ export function createTemporalGlitterWorker(
       },
       resources: {
         cpu: {
-          request: Cpu.millis(500),
-          limit: Cpu.millis(1500),
+          request: Cpu.units(1),
+          limit: Cpu.units(2),
         },
         memory: {
-          request: Size.gibibytes(2),
+          request: Size.gibibytes(3),
           limit: Size.gibibytes(6),
         },
       },

@@ -65,6 +65,17 @@ describe("Buildkite CI I/O dashboard", () => {
         "Kubernetes API p99 Write Latency",
         "etcd Request p99 Latency",
         "Limiter State",
+        "Kueue Pending & Admitted Workloads",
+        "Kueue CPU & Pod Reservations",
+        "Kueue Memory & Ephemeral Reservations",
+        "Kueue Admission Delay",
+        "Buildkite Limiter Queue Delay",
+        "Running CI Mix by Step",
+        "AMD Tctl Current & Rolling Quantiles",
+        "AMD Tctl Time Above Threshold (24h)",
+        "CI Concurrency & Node CPU Saturation",
+        "Disk I/O Utilization p95/p99",
+        "Turbo Cache Cleanup",
         "Scheduling Outcomes",
         "Controller Query Health",
         "CI I/O Recording Series",
@@ -198,9 +209,39 @@ describe("Buildkite CI I/O dashboard", () => {
     expect(queries).toContain("apiserver_request_duration_seconds_bucket");
     expect(queries).toContain("etcd_request_duration_seconds_bucket");
     expect(queries).toContain("buildkite_limiter_tokens_available");
+    expect(queries).toContain("buildkite_limiter_max_in_flight");
     expect(queries).toContain("buildkite_scheduler_job_create_errors_total");
     expect(queries).toContain("buildkite_monitor_job_query_errors_total");
     expect(queries).toContain("buildkite_monitor_monitor_up");
+  });
+
+  it("correlates Kueue admission, workload mix, and node thermals", () => {
+    const queries = [
+      ...panelQueries("Kueue Pending & Admitted Workloads"),
+      ...panelQueries("Kueue CPU & Pod Reservations"),
+      ...panelQueries("Kueue Memory & Ephemeral Reservations"),
+      ...panelQueries("Kueue Admission Delay"),
+      ...panelQueries("Buildkite Limiter Queue Delay"),
+      ...panelQueries("Running CI Mix by Step"),
+      ...panelQueries("AMD Tctl Current & Rolling Quantiles"),
+      ...panelQueries("AMD Tctl Time Above Threshold (24h)"),
+      ...panelQueries("CI Concurrency & Node CPU Saturation"),
+      ...panelQueries("Disk I/O Utilization p95/p99"),
+    ].join("\n");
+
+    expect(queries).toContain("kueue_admission_wait_time_seconds_bucket");
+    expect(queries).toContain('status="active"');
+    expect(queries).toContain('status="inadmissible"');
+    expect(queries).toContain("kueue_local_queue_resource_reservation");
+    expect(queries).toContain('exported_namespace="buildkite",name="default"');
+    expect(queries).not.toContain('local_queue="default"');
+    expect(queries).toContain(
+      "buildkite_limiter_work_wait_duration_seconds_bucket",
+    );
+    expect(queries).toContain("label_ci_sjer_red_step_key");
+    expect(queries).toContain('label="Tctl"');
+    expect(queries).toContain("quantile_over_time(0.99");
+    expect(queries).toContain("node_disk_io_time_seconds_total");
   });
 
   it("makes recording-rule cost and failures visible", () => {

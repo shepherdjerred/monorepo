@@ -128,6 +128,10 @@ clamp_min(
       title: "Limiter State",
       targets: [
         {
+          query: 'buildkite_limiter_max_in_flight{namespace="buildkite"}',
+          legend: "configured cap",
+        },
+        {
           query: 'buildkite_limiter_tokens_available{namespace="buildkite"}',
           legend: "tokens available",
         },
@@ -207,7 +211,7 @@ clamp_min(
         "Active series emitted by the Buildkite CI I/O recording rules. The post-deploy acceptance budget is fewer than 2,000 active series.",
       query: 'count({__name__=~"buildkite:.*"})',
       legend: "active series",
-      gridPos: { x: 0, y: 90, w: 6, h: 5 },
+      gridPos: { x: 0, y: 124, w: 6, h: 5 },
       instant: true,
       thresholds: [
         { value: 0, color: "green" },
@@ -225,7 +229,7 @@ clamp_min(
       query:
         'max(prometheus_rule_group_last_duration_seconds{rule_group=~".*buildkite-ci-io-(recording|rollups|alerts).*"})',
       legend: "max duration",
-      gridPos: { x: 6, y: 90, w: 6, h: 5 },
+      gridPos: { x: 6, y: 124, w: 6, h: 5 },
       unit: "s",
       instant: true,
       thresholds: [
@@ -244,7 +248,7 @@ clamp_min(
       query:
         'sum(increase(prometheus_rule_evaluation_failures_total{rule_group=~".*buildkite-ci-io-(recording|rollups|alerts).*"}[1h]))',
       legend: "failures",
-      gridPos: { x: 12, y: 90, w: 6, h: 5 },
+      gridPos: { x: 12, y: 124, w: 6, h: 5 },
       instant: true,
       thresholds: [
         { value: 0, color: "green" },
@@ -261,7 +265,7 @@ clamp_min(
       query:
         'max(delta(kubelet_volume_stats_used_bytes{namespace="prometheus", persistentvolumeclaim=~"prometheus-prometheus-kube-prometheus-prometheus.*"}[24h]))',
       legend: "used-byte delta",
-      gridPos: { x: 18, y: 90, w: 6, h: 5 },
+      gridPos: { x: 18, y: 124, w: 6, h: 5 },
       unit: "bytes",
       instant: true,
       thresholds: [

@@ -6,6 +6,7 @@ import {
 } from "./buildkite-dashboard-panels.ts";
 import { addBuildkiteIoHealthPanels } from "./buildkite-io-health-panels.ts";
 import { addBuildkiteIoImpactPanels } from "./buildkite-io-impact-panels.ts";
+import { addBuildkiteCapacityHealthPanels } from "./buildkite-capacity-health-panels.ts";
 
 /**
  * Creates a Grafana dashboard for Buildkite CI resource monitoring.
@@ -227,6 +228,7 @@ export function createBuildkiteDashboard() {
 
   addBuildkiteIoImpactPanels(builder);
   addBuildkiteIoHealthPanels(builder);
+  addBuildkiteCapacityHealthPanels(builder);
 
   return builder.build();
 }

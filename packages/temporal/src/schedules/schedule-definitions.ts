@@ -86,6 +86,16 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Every-five-minute Buildkite Bun cache GC on the CI node",
   },
   {
+    id: "turbo-cache-clean-daily",
+    workflowType: "runTurboCacheCleanWorkflow",
+    args: [],
+    cronExpression: "30 2 * * *",
+    taskQueue: TASK_QUEUES.MAINTENANCE,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "30 minutes",
+    memo: "Daily deletion of monorepo Turbo cache artifacts unused for 30 days",
+  },
+  {
     id: "deps-summary-weekly",
     workflowType: "generateDependencySummary",
     args: [7],

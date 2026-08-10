@@ -4,6 +4,7 @@ import { createBuildkiteDashboard } from "./buildkite-dashboard.ts";
 import { createBuildkitdDashboard } from "./buildkitd-dashboard.ts";
 import { createDiscordPlaysDashboard } from "./discord-plays-dashboard.ts";
 import { createScoutDashboard } from "./scout-dashboard.ts";
+import { createSmartctlDashboard } from "./smartctl-dashboard.ts";
 import { createTasknotesDashboard } from "./tasknotes-dashboard.ts";
 import { createTemporalDashboard } from "./temporal-dashboard.ts";
 import { createVeleroDashboard } from "./velero-dashboard.ts";
@@ -15,6 +16,7 @@ const dashboardJson = [
   createBuildkitdDashboard(),
   createDiscordPlaysDashboard(),
   createScoutDashboard(),
+  createSmartctlDashboard(),
   createTasknotesDashboard(),
   createTemporalDashboard(),
   createVeleroDashboard(),
@@ -34,10 +36,47 @@ describe("dashboard query health", () => {
   });
 
   test("does not query metric families absent from the current cluster", () => {
-    expect(dashboardJson).not.toContain("kueue_");
     expect(dashboardJson).not.toContain("tasknotes_http_");
     expect(dashboardJson).not.toContain("temporal_worker_scout_data_dragon_");
     expect(dashboardJson).not.toContain("label_velero_io_backup");
+  });
+
+  test("uses the live Kueue, NVMe, PVC, and ZFS metric families", () => {
+    for (const metric of [
+      "kueue_pending_workloads",
+      "kueue_admitted_active_workloads",
+      "kueue_local_queue_resource_usage",
+      "kueue_local_queue_resource_reservation",
+      "kueue_admission_wait_time_seconds_bucket",
+      "nvme_data_units_written_total",
+      "nvme_host_write_commands_total",
+      "nvme_percentage_used_ratio",
+      "nvme_available_spare_ratio",
+      "nvme_media_errors_total",
+      "nvme_unsafe_shutdowns_total",
+      "nvme_temperature_celsius",
+      "kubelet_volume_stats_inodes_free",
+      "zfs_zpool_fragmentation",
+      "zfs_zpool_free_bytes",
+    ]) {
+      expect(dashboardJson).toContain(metric);
+    }
+  });
+
+  test("joins storage identity on both device path and scrape instance", () => {
+    expect(dashboardJson).toContain("on(device, instance)");
+    expect(dashboardJson).toContain("on(disk, instance)");
+    expect(dashboardJson).not.toMatch(/on\(device\)(?!,)/);
+    expect(dashboardJson).not.toMatch(/on\(disk\)(?!,)/);
+  });
+
+  test("projects PVC runway from a full history and the actual positive slope", () => {
+    expect(dashboardJson).toContain(
+      String.raw`kubelet_volume_stats_used_bytes{persistentvolumeclaim=~\"$volume\"} offset 7d`,
+    );
+    expect(dashboardJson).not.toContain(
+      "clamp_min(deriv(kubelet_volume_stats_used_bytes",
+    );
   });
 
   test("expected-quiet Scout failure panels render zero instead of no data", () => {

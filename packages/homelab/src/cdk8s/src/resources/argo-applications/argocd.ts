@@ -11,6 +11,7 @@ export function createArgoCdApp(chart: Chart) {
     service: "argocd-server",
     port: 443,
     hosts: ["argocd"],
+    proxyClass: "medium",
     // argocd-server's in-cluster cert is self-signed (see the noTlsVerify
     // comment below) — the blackbox probe needs the same TLS-skip treatment.
     probeModule: "https_2xx_insecure",

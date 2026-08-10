@@ -1,4 +1,5 @@
 import {
+  Cpu,
   Deployment,
   DeploymentStrategy,
   EmptyDirMedium,
@@ -61,9 +62,9 @@ export function createPlexDeployment(
 
   deployment.addContainer(
     withCommonProps({
-      // Deliberately BestEffort (no requests/limits) — negligible or
-      // non-critical usage; see the 2026-06-12 right-sizing plan.
-      resources: {},
+      resources: {
+        memory: { request: Size.gibibytes(8) },
+      },
       image: `plexinc/pms-docker:${versions["plexinc/pms-docker"]}`,
       envVariables: {
         // Comma-separated list of URLs Plex advertises to clients as Direct
@@ -197,9 +198,10 @@ export function createPlexDeployment(
   // Add Prometheus exporter for Plex metrics
   deployment.addContainer(
     withCommonProps({
-      // Deliberately BestEffort (no requests/limits) — negligible or
-      // non-critical usage; see the 2026-06-12 right-sizing plan.
-      resources: {},
+      resources: {
+        cpu: { request: Cpu.millis(10) },
+        memory: { request: Size.mebibytes(32) },
+      },
       name: "plex-exporter",
       image: `ghcr.io/jsclayton/prometheus-plex-exporter:${versions["jsclayton/prometheus-plex-exporter"]}`,
       ports: [{ number: 9000, name: "metrics" }],
@@ -248,6 +250,7 @@ export function createPlexDeployment(
   new TailscaleIngress(chart, "plex-tailscale-ingress", {
     service,
     host: "plex",
+    proxyClass: "medium",
     probePath: "/identity",
   });
 
@@ -260,10 +263,8 @@ export function createPlexDeployment(
   });
 
   ApiObject.of(deployment).addJsonPatch(
-    JsonPatch.add("/spec/template/spec/containers/0/resources", {
-      limits: {
-        "gpu.intel.com/i915": 1,
-      },
+    JsonPatch.add("/spec/template/spec/containers/0/resources/limits", {
+      "gpu.intel.com/i915": 1,
     }),
   );
 

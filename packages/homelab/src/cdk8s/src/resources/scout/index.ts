@@ -42,9 +42,15 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
     },
   });
 
-  const { path, image, applicationId, s3BucketName, selinuxLevel } = match(
-    stage,
-  )
+  const {
+    path,
+    image,
+    applicationId,
+    s3BucketName,
+    selinuxLevel,
+    cpuRequest,
+    memoryRequest,
+  } = match(stage)
     .with("beta", () => {
       return {
         image: `ghcr.io/shepherdjerred/scout-for-lol:${versions["shepherdjerred/scout-for-lol/beta"]}`,
@@ -52,6 +58,8 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
         applicationId: "1311755320745394317",
         s3BucketName: "scout-beta",
         selinuxLevel: zfsVolumeSelinuxLevels.scoutBeta,
+        cpuRequest: Cpu.millis(50),
+        memoryRequest: Size.gibibytes(2),
       };
     })
     .with("prod", () => {
@@ -61,6 +69,8 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
         applicationId: "1182800769188110366",
         s3BucketName: "scout-prod",
         selinuxLevel: zfsVolumeSelinuxLevels.scoutProd,
+        cpuRequest: Cpu.millis(100),
+        memoryRequest: Size.mebibytes(2560),
       };
     })
     .exhaustive();
@@ -207,14 +217,13 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
         ensureNonRoot: false,
         readOnlyRootFilesystem: false,
       },
-      // Baseline request (no limits) so the backend isn't BestEffort.
-      // 30d peaks: prod ~145m / ~1.2Gi, beta ~60m / ~2.1Gi; steady ~30m / ~500Mi.
+      // Stage-specific request-only baselines cover the observed 30d peaks.
       resources: {
         cpu: {
-          request: Cpu.millis(50),
+          request: cpuRequest,
         },
         memory: {
-          request: Size.mebibytes(512),
+          request: memoryRequest,
         },
       },
       startup: Probe.fromHttpGet("/ping", {

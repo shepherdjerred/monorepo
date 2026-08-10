@@ -91,6 +91,7 @@ import {
   runBunCacheGcWorkflow as runBunCacheGcWorkflowImplementation,
   runUvCachePruneWorkflow as runUvCachePruneWorkflowImplementation,
   runTrivyDbRefreshWorkflow as runTrivyDbRefreshWorkflowImplementation,
+  runTurboCacheCleanWorkflow as runTurboCacheCleanWorkflowImplementation,
 } from "./maintenance.ts";
 
 export async function fetchSkillCappedManifest(): Promise<void> {
@@ -111,6 +112,10 @@ export async function runUvCachePruneWorkflow(): Promise<void> {
 
 export async function runTrivyDbRefreshWorkflow(): Promise<void> {
   return runTrivyDbRefreshWorkflowImplementation();
+}
+
+export async function runTurboCacheCleanWorkflow(): Promise<void> {
+  return runTurboCacheCleanWorkflowImplementation();
 }
 
 export async function generateDependencySummary(daysBack = 7): Promise<void> {

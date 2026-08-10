@@ -63,7 +63,7 @@ All file paths below relative to `packages/homelab/` unless noted.
 **Docs grooming (same PR):**
 
 - `packages/docs/todos/torvalds-controller-restart-churn.md` — Kueue-churn todo: resolve + archive to `archive/completed/` (verify its content actually is Kueue-scoped at impl time).
-- `packages/docs/plans/2026-07-22_ci-capacity-remediation-impl.md` — re-groom around liskov: Track 1 (torvalds quota/right-sizing) superseded by the node move + Kueue removal; Track 3 persistence PVCs retarget to liskov's pool; note in Comment Log.
+- `packages/docs/archive/superseded/2026-07-22_ci-capacity-remediation-impl.md` — re-groom around liskov: Track 1 (torvalds quota/right-sizing) superseded by the node move + Kueue removal; Track 3 persistence PVCs retarget to liskov's pool; note in Comment Log.
 - `packages/docs/plans/2026-07-25_liskov-cluster-join.md` — Phase 3 becomes torvalds relaxation only (Kueue raise → removed instead); note removal happens at cutover.
 
 **Live rollout (join-day runbook, single merge):** node Ready + pool created → merge #1629 → argocd sync → verify: builds create pods ON liskov, new buildkite Jobs are NOT suspended (`kubectl get jobs -n buildkite` spot-check), kueue-system namespace gone. Any Jobs left suspended from the transition: cancel/retry those builds (nothing will ever unsuspend them). Rollback: revert the kueue commit alone (label + controller + queues return together), or the whole PR (CI falls back to torvalds, Kueue restored). Update `src/talos/liskov/README.md` runbook steps accordingly.

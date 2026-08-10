@@ -74,5 +74,6 @@ export function createMaintainerrDeployment(chart: Chart) {
   new TailscaleIngress(chart, "maintainerr-tailscale-ingress", {
     service,
     host: "maintainerr",
+    proxyClass: "medium",
   });
 }

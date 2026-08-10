@@ -24,7 +24,6 @@ import {
   fail,
   hasTrimmedLine,
   requireIncludes,
-  sharedPodAnchorBlock,
   SHARED_POD_ANCHORS,
   CHECKOUT_CONTAINER_ALIAS,
 } from "./validate-pipeline-lib.ts";
@@ -32,6 +31,7 @@ import { validateCaddySmokeContracts } from "./validate-pipeline-caddy.ts";
 import { validateImageMigrationContracts } from "./validate-image-migration.ts";
 import { validateReleasePipelineContracts } from "./validate-pipeline-release.ts";
 import { validatePlaywrightLanes } from "./validate-pipeline-playwright.ts";
+import { validatePipelineResourceContracts } from "./validate-pipeline-resources.ts";
 import { validateReportingPipeline } from "./validate-reporting-pipeline.ts";
 import { fixedCorpusMode, lanePaths, summarySteps } from "./migration-core.ts";
 
@@ -74,54 +74,14 @@ if (!pipeline.includes(bunCacheEnvironment)) {
   fail("pipeline must configure the coordinated Bun cache data and lock paths");
 }
 
-const checkoutContainerDefinition = [
-  "  - checkout_container: &checkout_container",
-  "      name: checkout",
-  "      resources:",
-  "        # The checkout writes the tracked tree into the memory-backed workspace.",
-  '        requests: { cpu: "50m", memory: "1Gi" }',
-  '        limits: { cpu: "400m", memory: "2Gi" }',
-].join("\n");
-if (!pipeline.includes(checkoutContainerDefinition)) {
-  fail(
-    "checkout container anchor must define the tested CPU and memory budget",
-  );
-}
-
-for (const anchorName of SHARED_POD_ANCHORS) {
-  const anchorBlock = sharedPodAnchorBlock(pipeline, anchorName);
-  if (!hasTrimmedLine(anchorBlock, CHECKOUT_CONTAINER_ALIAS)) {
-    fail(`shared pod anchor ${anchorName} does not patch checkout resources`);
-  }
-  for (const required of [
-    'image: "${CI_BASE_IMAGE}"',
-    "imagePullPolicy: IfNotPresent",
-  ]) {
-    if (!hasTrimmedLine(anchorBlock, required)) {
-      fail(`shared pod anchor ${anchorName} is missing immutable ${required}`);
-    }
-  }
-}
-if (pipeline.includes("ghcr.io/shepherdjerred/ci-base:latest")) {
-  fail("pipeline restored a mutable ci-base tag");
-}
-
-const verifyPodAnchor = sharedPodAnchorBlock(pipeline, "pod_verify_kubernetes");
-for (const resourceLine of [
-  'requests: { cpu: "1", memory: "14Gi", ephemeral-storage: "2Gi" }',
-  'limits: { cpu: "7", memory: "20Gi", ephemeral-storage: "40Gi" }',
-]) {
-  if (!hasTrimmedLine(verifyPodAnchor, resourceLine)) {
-    fail(`verify pod is missing measured resource budget ${resourceLine}`);
-  }
-}
-
 const { stepStarts, keys, stepBlocks } = collectStepBlocks(lines, {
   sharedPodAnchors: SHARED_POD_ANCHORS,
   checkoutContainerAlias: CHECKOUT_CONTAINER_ALIAS,
   pathGatedPrKeys: PATH_GATED_PR_KEYS,
   globalIfChanged: GLOBAL_IF_CHANGED,
 });
+
+validatePipelineResourceContracts(pipeline, stepBlocks);
 requireIncludes(
   stepBlocks.get("verify"),
   "write-coverage-summary.ts --allow-partial",
@@ -405,12 +365,12 @@ for (const required of [
 }
 
 for (const [stepKey, expectedRequests] of [
-  ["playwright-e2e-pr", 'requests: { cpu: "2", memory: "5Gi" }'],
-  ["playwright-e2e-main", 'requests: { cpu: "2", memory: "5Gi" }'],
+  ["playwright-e2e-pr", 'requests: { cpu: "1", memory: "4Gi" }'],
+  ["playwright-e2e-main", 'requests: { cpu: "1", memory: "4Gi" }'],
   ["resume-build-pr", 'requests: { cpu: "1", memory: "2Gi" }'],
   ["resume-build-main", 'requests: { cpu: "1", memory: "2Gi" }'],
-  ["trivy", 'requests: { cpu: "500m", memory: "1Gi" }'],
-  ["semgrep", 'requests: { cpu: "500m", memory: "1Gi" }'],
+  ["trivy", 'requests: { cpu: "250m", memory: "512Mi" }'],
+  ["semgrep", 'requests: { cpu: "250m", memory: "512Mi" }'],
 ] satisfies readonly (readonly [string, string])[]) {
   const commandContainer = containerBlock(
     stepKey,

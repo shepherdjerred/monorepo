@@ -12,7 +12,7 @@ Second Talos node **liskov** (Ryzen 9950X, 128GB DDR5, 990 Pro 1TB OS +
 Context: prior analysis (hardware status,
 schematic `d953d04c…`, SecureBoot decision),
 prior analysis (justification),
-`plans/2026-07-22_ci-capacity-remediation.md` (R2 option; Tracks 1–3
+`archive/superseded/2026-07-22_ci-capacity-remediation.md` (R2 option; Tracks 1–3
 compose with this).
 
 Isolation model: taint `ci=only:NoSchedule` declared in liskov's machine

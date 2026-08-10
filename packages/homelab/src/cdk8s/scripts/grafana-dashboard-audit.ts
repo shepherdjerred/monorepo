@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 
 import { z } from "zod";
+import { replaceGrafanaVariables } from "./grafana-variable-substitution.ts";
 
 const SearchResultSchema = z.object({
   uid: z.string(),
@@ -103,26 +104,6 @@ function collectPanels(
   });
 }
 
-function replaceGrafanaVariables(expr: string): string {
-  return expr
-    .replaceAll(/\$\{?environment\}?/g, ".*")
-    .replaceAll(/\$\{?server\}?/g, ".*")
-    .replaceAll(/\$\{?instance\}?/g, ".*")
-    .replaceAll(/\$\{?repo\}?/g, ".*")
-    .replaceAll(/\$\{?schedule\}?/g, ".*")
-    .replaceAll(/\$\{?namespace\}?/g, ".*")
-    .replaceAll(/\$\{?device\}?/g, ".*")
-    .replaceAll(/\$\{?app\}?/g, ".*")
-    .replaceAll(/\$\{?provider\}?/g, ".*")
-    .replaceAll(/\$\{?kind\}?/g, ".*")
-    .replaceAll(/\$\{?source\}?/g, ".*")
-    .replaceAll(/\$\{?system_source\}?/g, ".*")
-    .replaceAll(/\$\{?status\}?/g, ".*")
-    .replaceAll(/\$\{?NAMESPACE\}?/g, "seaweedfs")
-    .replaceAll("$__rate_interval", "5m")
-    .replaceAll("$__interval", "5m");
-}
-
 async function queryPrometheus(expr: string): Promise<{
   resultCount: number;
   error?: string;
@@ -203,3 +184,7 @@ const summary = {
 };
 
 console.log(JSON.stringify({ summary, dashboards: auditResults }, null, 2));
+
+if (summary.queryErrors > 0) {
+  process.exitCode = 1;
+}

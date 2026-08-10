@@ -182,5 +182,6 @@ export function createBinderyDeployment(
   new TailscaleIngress(chart, "bindery-tailscale-ingress", {
     service,
     host: "bindery",
+    proxyClass: "medium",
   });
 }

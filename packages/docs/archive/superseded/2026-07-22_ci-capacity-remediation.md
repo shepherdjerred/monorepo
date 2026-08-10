@@ -1,7 +1,7 @@
 ---
 id: 2026-07-22-ci-capacity-remediation
 type: plan
-status: planned
+status: complete
 board: false
 ---
 
