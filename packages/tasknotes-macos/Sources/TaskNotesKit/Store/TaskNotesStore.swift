@@ -189,7 +189,20 @@ public final class TaskNotesStore {
                 try TaskNotesApi.urlSession(serverURL: url, authToken: authToken)
             })
         }
-        if case .failure(let error)? = built { absorb(.failure(error)) }
+        switch built {
+        case .failure(let error)?:
+            absorb(.failure(error))
+        case .success?, nil:
+            // A rebuilt API is what retires the previous address's refusal, and
+            // nothing else can. This failure arrives through `absorb` rather
+            // than ``report(_:)``, so ``dispatch(_:)``'s retirement does not
+            // reach it, and ``SyncMessage`` ranks a store error above every
+            // engine state — so a `localhost:3000` (which Foundation reads as a
+            // scheme, and `urlSession` rejects), once corrected, would leave the
+            // banner up over a genuinely connected engine until some unrelated
+            // mutation happened to succeed and clear it by accident.
+            clearReportedError()
+        }
         let api: TaskNotesApi? = if case .success(let ready)? = built { ready } else { nil }
         let replacement = FfiSyncEngine(
             api: api,
@@ -201,14 +214,37 @@ public final class TaskNotesStore {
             autoSync: true
         )
 
-        let retired = engineBox.replace(with: replacement)
+        // ⚠️ Restored *before* it is published, and published only if that
+        // worked. `restore()` is what loads the durable queue and the id
+        // counters; a replacement that failed it is sitting on counters of
+        // zero. Installing it anyway leaves the UI dispatching through an
+        // engine that mints ids the queue has already spent — which overwrites
+        // the counter file, replays an already-acknowledged mutation, or lands
+        // an edit on a different server task. A malformed `id-counters.json` is
+        // enough to reach this. No engine at all is the safe answer: dispatch
+        // then returns nil, which the shell already treats as "not recorded".
+        let restored = Result { try replacement.restore() }
+        let isUsable: Bool
+        switch restored {
+        case .success: isUsable = true
+        case .failure: isUsable = false
+        }
+
+        let retired = engineBox.replace(with: isUsable ? replacement : nil)
         // Dispose *after* the swap, so nothing can observe an empty slot, and
         // before anything else runs, so the retired engine cannot arm a timer
         // whose fire would drive the replacement.
         if let retired {
             absorb(Result { try retired.dispose() })
         }
-        absorb(Result { try replacement.restore() })
+        if !isUsable {
+            // It never became the active engine, so this is only about letting
+            // go of anything its restore armed before it failed.
+            absorb(Result { try replacement.dispose() })
+        }
+        // Last, so the restore failure is the error left standing rather than
+        // one from a dispose above it.
+        absorb(restored)
         refresh()
     }
 
@@ -378,10 +414,22 @@ public final class TaskNotesStore {
         credentialError = nil
     }
 
-    /// Move a parked command back onto the queue.
-    public func retryDeadLetter(id: String) {
+    /// Move a parked command back onto the queue, and run the pass that arms.
+    ///
+    /// `async` rather than fire-and-forget because the core's
+    /// `retry_dead_letter` requeues the command and sets `pass_requested`
+    /// without running anything — exactly like a dispatch. Every other mutation
+    /// surface pairs that with a settle; this one did not, so Retry moved the
+    /// row out of Parked and left the command sitting in the queue behind an
+    /// idle "waiting" banner, with nothing on screen able to start it. Awaiting
+    /// here rather than spawning keeps the store free of lifetimes
+    /// ``shutdown()`` cannot stop.
+    public func retryDeadLetter(id: String) async {
         guard let engine = engineBox.current else { return }
-        absorb(Result { try engine.retryDeadLetter(id: id) })
+        let outcome = Result { try engine.retryDeadLetter(id: id) }
+        absorb(outcome)
+        guard case .success = outcome else { return }
+        await settle()
     }
 
     /// Drop a parked command for good.

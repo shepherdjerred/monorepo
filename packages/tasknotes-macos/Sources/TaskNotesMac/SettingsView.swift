@@ -123,7 +123,11 @@ private struct ParkedChangesView: View {
                     ForEach(parked) { change in
                         ParkedChangeRow(
                             change: change,
-                            onRetry: { store.retryDeadLetter(id: change.id) },
+                            onRetry: {
+                                // Detached, so the row responds to the click
+                                // rather than to the drain it starts.
+                                _Concurrency.Task { await store.retryDeadLetter(id: change.id) }
+                            },
                             onDiscard: { store.discardDeadLetter(id: change.id) }
                         )
                     }
