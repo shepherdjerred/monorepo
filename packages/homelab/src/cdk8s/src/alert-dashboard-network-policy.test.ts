@@ -104,12 +104,12 @@ function allowsIngress(
 }
 
 describe("alert dashboard network paths", () => {
-  it("keeps deployment activation gated on a real public image digest", async () => {
+  it("registers the deployment after the real public image digest is pinned", async () => {
     const app = new App({ outdir: ".test-synth-alert-dashboard-app-gate" });
     await createAppsChart(app);
     const activeApplications = applicationNames(app.synthYaml());
 
-    expect(activeApplications).not.toContain("alert-dashboard");
+    expect(activeApplications).toContain("alert-dashboard");
 
     const definitionApp = new App({
       outdir: ".test-synth-alert-dashboard-app-definition",
@@ -149,14 +149,14 @@ describe("alert dashboard network paths", () => {
     );
   });
 
-  it("does not register a service probe before activation", () => {
+  it("registers a service probe after activation", () => {
     const app = new App({ outdir: ".test-synth-alert-dashboard-probe-gate" });
     createAlertDashboardChart(app);
 
-    expect(getRegisteredBackendProbes()).not.toContainEqual(
+    expect(getRegisteredBackendProbes()).toContainEqual(
       expect.objectContaining({
         namespace: "alert-dashboard",
-        serviceName: "alert-dashboard-service",
+        serviceName: "alert-dashboard-alert-dashboard-service",
       }),
     );
   });
