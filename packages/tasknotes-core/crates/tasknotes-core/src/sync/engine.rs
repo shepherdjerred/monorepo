@@ -279,9 +279,16 @@ impl SyncEngine {
     ///
     /// # Errors
     ///
-    /// The failure that stopped the drain or the pull. The queue is intact
-    /// either way: a command is only removed once the server has acknowledged
-    /// it or it has been parked.
+    /// The failure that stopped the drain, the pull, or the write that made
+    /// the pull durable. The queue is intact either way: a command is only
+    /// removed once the server has acknowledged it or it has been parked.
+    ///
+    /// ⚠️ **Every failing exit is recorded in [`SyncEngine::status`] before it
+    /// is returned**, so a host that renders the status has already seen it.
+    /// That is what lets `TaskNotesStore.drain` discard this `Result`, and it
+    /// is a property of `sync_once` rather than a happy accident — a new
+    /// `return Err` there that skips `handle_stop_error` would strand the
+    /// banner mid-sync.
     pub fn sync_now(&mut self) -> Result<()> {
         if self.disposed {
             return Ok(());
@@ -347,7 +354,16 @@ impl SyncEngine {
                 return Err(error);
             }
         };
-        self.store.replace_base(pulled, self.clock.now_millis())
+        // Persisting the pull is a failing exit like the two above it, not a
+        // tail call. A host discards `sync_now`'s own error on the strength of
+        // the invariant below, so returning this one bare left a full disk
+        // showing `Syncing` forever: no banner, no armed retry, and a pull the
+        // next launch reads back as the stale base it never replaced.
+        if let Err(error) = self.store.replace_base(pulled, self.clock.now_millis()) {
+            self.handle_stop_error(&error);
+            return Err(error);
+        }
+        Ok(())
     }
 
     /// Send queued commands, oldest first, until the queue empties or a
@@ -491,7 +507,7 @@ fn execute(client: &dyn TaskApi, command: &Command) -> Result<Option<Task>> {
 mod tests {
     use std::sync::{
         Arc, Mutex,
-        atomic::{AtomicU64, Ordering},
+        atomic::{AtomicBool, AtomicU64, Ordering},
     };
 
     use super::{SyncEngine, SyncState};
@@ -515,6 +531,10 @@ mod tests {
         counters: Mutex<Option<String>>,
         restores: Mutex<Option<String>>,
         last_sync: Mutex<Option<i64>>,
+        /// Refuse to write the cached base, so a test can fail the pass at the
+        /// one point that happens *after* the network round trip has already
+        /// succeeded. A full app container is what does this in the wild.
+        refuse_task_writes: AtomicBool,
     }
 
     impl QueueStorage for Memory {
@@ -539,6 +559,9 @@ mod tests {
             Ok(self.tasks.lock().unwrap().clone())
         }
         fn write_tasks(&self, tasks: &[Task]) -> Result<()> {
+            if self.refuse_task_writes.load(Ordering::Relaxed) {
+                return Err(Error::invariant("the disk is full"));
+            }
             *self.tasks.lock().unwrap() = tasks.to_vec();
             Ok(())
         }
@@ -648,6 +671,40 @@ mod tests {
             _: Option<&str>,
         ) -> Result<Task> {
             self.fail()
+        }
+    }
+
+    /// Answers an empty pull and nothing else.
+    ///
+    /// Every mutation is unreachable rather than merely unused: a test that
+    /// reaches one has queued a command it did not mean to, and a panic says
+    /// so where a silent failure would be read as the pass failing for the
+    /// reason the test was actually about.
+    struct PullsNothing;
+
+    impl TaskApi for PullsNothing {
+        fn list_tasks(&self) -> Result<Vec<Task>> {
+            Ok(Vec::new())
+        }
+        fn create_task(&self, _: &CreateTaskRequest, _: Option<&str>) -> Result<Task> {
+            unreachable!("a pull-only server sends no commands")
+        }
+        fn update_task(&self, _: &TaskId, _: &UpdateTaskRequest, _: Option<&str>) -> Result<Task> {
+            unreachable!("a pull-only server sends no commands")
+        }
+        fn delete_task(&self, _: &TaskId, _: Option<&str>) -> Result<()> {
+            unreachable!("a pull-only server sends no commands")
+        }
+        fn toggle_task_status(&self, _: &TaskId, _: TaskStatus, _: Option<&str>) -> Result<Task> {
+            unreachable!("a pull-only server sends no commands")
+        }
+        fn complete_recurring_instance(
+            &self,
+            _: &TaskId,
+            _: Option<&InstanceCompletion>,
+            _: Option<&str>,
+        ) -> Result<Task> {
+            unreachable!("a pull-only server sends no commands")
         }
     }
 
@@ -798,6 +855,57 @@ mod tests {
         assert_eq!(client.calls.load(Ordering::Relaxed), 0);
         engine.settle();
         assert_eq!(client.calls.load(Ordering::Relaxed), 1);
+    }
+
+    /// A pull that arrived and then could not be written down is a failed pass
+    /// like any other, and has to read like one.
+    ///
+    /// This is the one failure that happens *after* the network round trip
+    /// succeeded — a full container refusing `tasks.json`, the completion
+    /// restores, the aliases, or the last-sync stamp. The host discards
+    /// `sync_now`'s own error on the strength of the engine having recorded
+    /// it, so returning this one bare left the banner reading `Syncing`
+    /// forever, with no retry armed and nothing on screen to say why the list
+    /// had stopped moving.
+    #[test]
+    fn a_pull_the_disk_refuses_is_recorded_like_any_other_failure() {
+        let memory = Arc::new(Memory::default());
+        let timers = Arc::new(Timers::default());
+        let store = TaskStore::new(
+            memory.clone(),
+            memory.clone(),
+            Arc::new(FixedClock),
+            Arc::new(HalfUnit),
+        );
+        let mut engine = SyncEngine::new(
+            Some(Arc::new(PullsNothing)),
+            store,
+            Arc::new(FixedClock),
+            timers.clone(),
+            Arc::new(HalfUnit),
+            false,
+        );
+
+        memory.refuse_task_writes.store(true, Ordering::Relaxed);
+        let error = engine.sync_now().unwrap_err();
+        assert!(error.to_string().contains("the disk is full"));
+
+        let status = engine.status();
+        assert_eq!(
+            status.state,
+            SyncState::Backoff,
+            "the state must leave `Syncing`, or the banner outlives the pass"
+        );
+        assert_eq!(
+            status.last_error.as_ref().map(ToString::to_string),
+            Some(error.to_string()),
+            "the failure the host discarded has to be the one it can still read"
+        );
+        assert_eq!(
+            timers.armed.lock().unwrap().len(),
+            1,
+            "a refused write is worth retrying — the container may have room later"
+        );
     }
 
     #[test]

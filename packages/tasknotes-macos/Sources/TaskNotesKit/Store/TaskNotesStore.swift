@@ -434,6 +434,14 @@ public final class TaskNotesStore {
     /// render as two unrelated ones — and would break the rule that
     /// `lastStoreError` means "something the engine did not already account
     /// for".
+    ///
+    /// That rests on the core recording **every** failing exit of a pass
+    /// before it returns one — including the write that makes a completed pull
+    /// durable, which is the one that fails with the network already behind
+    /// it. `SyncEngine::sync_now` documents the guarantee and
+    /// `a_pull_the_disk_refuses_is_recorded_like_any_other_failure` holds it
+    /// to it; a pass that failed without recording itself would leave the
+    /// banner reading "syncing" with nothing ever taking it down.
     public func sync() async {
         publish(await Self.drain(engineBox))
     }
@@ -607,7 +615,9 @@ public final class TaskNotesStore {
     private static func drain(_ box: EngineBox) async -> Result<Observed, any Error>? {
         guard let engine = box.current else { return nil }
         // The pass's own failure is discarded here by design — the engine
-        // records it in `status()`, which the read below carries back.
+        // records every failing exit in `status()` before returning it, and
+        // the read below carries that back. See ``sync()`` for why the direct
+        // error must not become a second banner.
         _ = Result { try engine.syncNow() }
         return observe(engine)
     }
