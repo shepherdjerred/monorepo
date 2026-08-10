@@ -402,10 +402,15 @@ impl CommandQueue {
     ///
     /// # Errors
     ///
-    /// Propagates a storage-layer failure.
+    /// Propagates a storage-layer failure, having changed nothing. Dropping the
+    /// entry from memory first would make a refused write silently effective:
+    /// the row is still on disk and still on the published snapshot, so the
+    /// user's Retry would find nothing to requeue and report success, and the
+    /// next dead-letter write of any kind would make the deletion durable.
     pub fn discard_dead_letter(&mut self, id: &str) -> Result<()> {
-        self.dead.retain(|entry| entry.command.id() != id);
-        self.persist_dead_letter()
+        let mut candidate = self.dead.clone();
+        candidate.retain(|entry| entry.command.id() != id);
+        self.commit_dead_letter(candidate)
     }
 
     /// Write a proposed queue, and adopt it only once the bytes are down.
@@ -461,13 +466,6 @@ impl CommandQueue {
             Error::invariant(format!("could not serialize the command queue: {error}"))
         })?;
         self.storage.write_queue(&data)
-    }
-
-    fn persist_dead_letter(&self) -> Result<()> {
-        let data = serde_json::to_string(&self.dead).map_err(|error| {
-            Error::invariant(format!("could not serialize the dead-letter list: {error}"))
-        })?;
-        self.storage.write_dead_letter(&data)
     }
 }
 
@@ -912,6 +910,43 @@ mod tests {
 
         assert!(queue.pending().is_empty());
         assert_eq!(queue.dead_letters().len(), 1, "still inspectable");
+    }
+
+    /// ⚠️ A refused discard must leave the entry retryable.
+    ///
+    /// Dropping it from memory before the write would publish a snapshot that
+    /// still shows the row while `retry_dead_letter` could no longer find it:
+    /// the user's Retry would report success without requeueing anything, and
+    /// the next successful dead-letter write would make the deletion durable.
+    #[test]
+    fn a_refused_discard_write_leaves_the_command_parked_and_retryable() {
+        let storage = Arc::new(HalfWritingStorage::default());
+        let mut queue = CommandQueue::new(storage.clone(), Arc::new(FixedClock));
+        queue.enqueue(create("c1", &temp("1-1"))).unwrap();
+        queue.dead_letter("c1", &Error::api("nope", 422)).unwrap();
+
+        storage.refuse_dead.store(true, Ordering::SeqCst);
+        queue
+            .discard_dead_letter("c1")
+            .expect_err("the discard write failed");
+        storage.refuse_dead.store(false, Ordering::SeqCst);
+
+        assert_eq!(queue.dead_letters().len(), 1, "still parked in memory");
+
+        queue.retry_dead_letter("c1").unwrap();
+        assert_eq!(
+            queue.pending().iter().map(Command::id).collect::<Vec<_>>(),
+            vec!["c1"],
+            "so Retry requeues the command instead of silently doing nothing"
+        );
+
+        let mut relaunched = CommandQueue::new(storage, Arc::new(FixedClock));
+        relaunched.restore().unwrap();
+        assert_eq!(relaunched.pending().len(), 1);
+        assert!(
+            relaunched.dead_letters().is_empty(),
+            "and the bytes agree with memory"
+        );
     }
 
     /// Drive a retry to the point where only its first write landed, and hand
