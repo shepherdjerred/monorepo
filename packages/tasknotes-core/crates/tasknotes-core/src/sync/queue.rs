@@ -198,12 +198,43 @@ impl CommandQueue {
         self.commit_queue(candidate)
     }
 
-    /// Drop an acknowledged command.
+    /// Drop an acknowledged command — from the queue, and from the parked list
+    /// if an interrupted retry left a copy there.
+    ///
+    /// ## Why the parked copy has to go with it
+    ///
+    /// [`Self::retry_dead_letter`] is a move across two files, ordered so that
+    /// an interruption leaves the command in *both* rather than in neither. A
+    /// duplicate is only tolerable while something still resolves it:
+    /// [`Self::dead_letter`] resolves it by replacing the entry, and this is
+    /// the other direction. Without it, the requeued copy succeeds and is
+    /// dequeued while the parked one stays — a mutation the server has already
+    /// applied, reported by Settings as waiting for review for good. Retrying
+    /// that ghost is worse than cosmetic: the server's idempotency records
+    /// expire after seven days, so a retry past that window genuinely
+    /// re-executes the command, and for a create that is a second task.
+    ///
+    /// ## Why the parked copy goes *first*
+    ///
+    /// Same rule as the moves themselves: an interruption between the two
+    /// writes must not lose the mutation. Dropping the parked copy while the
+    /// queue still holds the command costs, at worst, a resend the server
+    /// answers from its idempotency store. The other order is what creates the
+    /// ghost this exists to prevent, and nothing later would look for it.
     ///
     /// # Errors
     ///
     /// Propagates a storage-layer failure.
     pub fn ack(&mut self, id: &str) -> Result<()> {
+        if self.dead.iter().any(|entry| entry.command.id() == id) {
+            let candidate = self
+                .dead
+                .iter()
+                .filter(|entry| entry.command.id() != id)
+                .cloned()
+                .collect();
+            self.commit_dead_letter(candidate)?;
+        }
         self.queue.retain(|queued| queued.id() != id);
         self.persist_queue()
     }
@@ -333,7 +364,8 @@ impl CommandQueue {
     ///
     /// The destination is written before the source, for the reason spelled out
     /// on [`Self::dead_letter`]: an interruption mid-move must cost a duplicate,
-    /// never the command.
+    /// never the command. [`Self::ack`] is what retires the duplicate when the
+    /// requeued copy succeeds.
     ///
     /// # Errors
     ///
@@ -349,13 +381,21 @@ impl CommandQueue {
         else {
             return Ok(());
         };
-        self.queue.push(command);
-        if let Err(failure) = self.persist_queue() {
-            self.queue.pop();
-            return Err(failure);
+        // An interrupted earlier retry already requeued this id, and the parked
+        // entry survives only because the second write never landed. Finishing
+        // that move means dropping the entry, not queueing a second copy: two
+        // copies replay onto the visible view twice — a create would show as
+        // two tasks — and only one of them is the mutation the user made.
+        if !self.queue.iter().any(|queued| queued.id() == id) {
+            self.queue.push(command);
+            if let Err(failure) = self.persist_queue() {
+                self.queue.pop();
+                return Err(failure);
+            }
         }
-        self.dead.remove(position);
-        self.persist_dead_letter()
+        let mut candidate = self.dead.clone();
+        candidate.remove(position);
+        self.commit_dead_letter(candidate)
     }
 
     /// Drop a parked command for good.
@@ -504,6 +544,22 @@ mod tests {
     struct MemoryStorage {
         queue: Mutex<Option<String>>,
         dead: Mutex<Option<String>>,
+        /// Which of the two files were written, in order. A move between them
+        /// is two writes no host can make atomic, so the order *is* the
+        /// crash-safety argument and is worth asserting on directly.
+        writes: Mutex<Vec<&'static str>>,
+    }
+
+    impl MemoryStorage {
+        fn write_log(&self) -> Vec<&'static str> {
+            self.writes.lock().unwrap().clone()
+        }
+
+        /// Forget the writes so far, so an ordering assertion can be about one
+        /// operation rather than everything since construction.
+        fn clear_write_log(&self) {
+            self.writes.lock().unwrap().clear();
+        }
     }
 
     impl QueueStorage for MemoryStorage {
@@ -511,6 +567,7 @@ mod tests {
             Ok(self.queue.lock().unwrap().clone())
         }
         fn write_queue(&self, data: &str) -> Result<()> {
+            self.writes.lock().unwrap().push("queue");
             *self.queue.lock().unwrap() = Some(data.to_owned());
             Ok(())
         }
@@ -518,6 +575,7 @@ mod tests {
             Ok(self.dead.lock().unwrap().clone())
         }
         fn write_dead_letter(&self, data: &str) -> Result<()> {
+            self.writes.lock().unwrap().push("dead");
             *self.dead.lock().unwrap() = Some(data.to_owned());
             Ok(())
         }
@@ -854,6 +912,86 @@ mod tests {
 
         assert!(queue.pending().is_empty());
         assert_eq!(queue.dead_letters().len(), 1, "still inspectable");
+    }
+
+    /// Drive a retry to the point where only its first write landed, and hand
+    /// back a relaunch that reads the command out of *both* files.
+    fn interrupted_retry() -> (CommandQueue, Arc<HalfWritingStorage>) {
+        let storage = Arc::new(HalfWritingStorage::default());
+        let mut queue = CommandQueue::new(storage.clone(), Arc::new(FixedClock));
+        queue.enqueue(create("c1", &temp("1-1"))).unwrap();
+        queue.dead_letter("c1", &Error::api("nope", 422)).unwrap();
+
+        // The requeue write lands, the un-parking does not: the crash window.
+        storage.refuse_dead.store(true, Ordering::SeqCst);
+        queue
+            .retry_dead_letter("c1")
+            .expect_err("the un-parking write failed");
+        storage.refuse_dead.store(false, Ordering::SeqCst);
+
+        let mut relaunched = CommandQueue::new(storage.clone(), Arc::new(FixedClock));
+        relaunched.restore().unwrap();
+        assert_eq!(
+            relaunched.pending().len(),
+            1,
+            "the retry is durable, which is the half of the move that landed"
+        );
+        assert_eq!(
+            relaunched.dead_letters().len(),
+            1,
+            "and so is the parked copy, which is the half that did not"
+        );
+        (relaunched, storage)
+    }
+
+    /// ⚠️ **A retry is a move too, and a succeeding retry has to finish it.**
+    ///
+    /// Interrupt one and the command is durable in both files. The queued copy
+    /// is the live one; when the server accepts it, the parked copy must go as
+    /// well. Left behind it is a mutation the server has already applied that
+    /// Settings reports as waiting for review for good — and retrying it once
+    /// the server's seven-day idempotency record has expired re-executes it,
+    /// which for a create means a duplicate task.
+    #[test]
+    fn acking_a_retried_command_retires_the_parked_copy_it_was_moved_from() {
+        let (mut queue, storage) = interrupted_retry();
+        storage.inner.clear_write_log();
+
+        queue.ack("c1").unwrap();
+
+        assert!(queue.pending().is_empty(), "the accepted command is gone");
+        assert!(
+            queue.dead_letters().is_empty(),
+            "and so is the copy the interrupted retry left parked"
+        );
+        assert_eq!(
+            storage.inner.write_log(),
+            vec!["dead", "queue"],
+            "the parked copy goes first: an interruption here must cost a \
+             resend the server deduplicates, never the ghost itself"
+        );
+
+        let mut relaunched = CommandQueue::new(storage, Arc::new(FixedClock));
+        relaunched.restore().unwrap();
+        assert!(!relaunched.contains_command_id("c1"), "on disk as well");
+    }
+
+    /// The other way the same duplicate is resolved: the user presses Retry on
+    /// the row that is still showing. Finishing the interrupted move must not
+    /// queue a *second* copy — two copies of one command replay onto the
+    /// visible view twice, and a create would show as two tasks.
+    #[test]
+    fn retrying_a_half_moved_command_finishes_the_move_instead_of_duplicating_it() {
+        let (mut queue, _) = interrupted_retry();
+
+        queue.retry_dead_letter("c1").unwrap();
+
+        assert_eq!(
+            queue.pending().len(),
+            1,
+            "the command was already queued by the interrupted attempt"
+        );
+        assert!(queue.dead_letters().is_empty());
     }
 
     #[test]
