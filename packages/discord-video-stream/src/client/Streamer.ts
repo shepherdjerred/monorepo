@@ -12,6 +12,17 @@ import type { GatewayEvent, GatewayEventMap } from "./GatewayEvents.js";
 import type { WebRtcConnWrapper } from "./voice/WebRtcWrapper.js";
 import { generateStreamKey, parseStreamKey } from "../utils.js";
 
+export type VoiceJoinOptions = {
+  receiveAudio?: boolean;
+};
+
+export function voiceStateAudioFlags(receiveAudio: boolean): {
+  self_mute: false;
+  self_deaf: boolean;
+} {
+  return { self_mute: false, self_deaf: !receiveAudio };
+}
+
 export class Streamer {
   private _voiceConnection: VoiceConnection | undefined;
   private _client: Client;
@@ -48,6 +59,7 @@ export class Streamer {
 
   public joinVoiceChannel(
     channel: DMChannel | GroupDMChannel | VoiceBasedChannel,
+    options: VoiceJoinOptions = {},
   ): Promise<WebRtcConnWrapper> {
     let guildId: string | null = null;
 
@@ -58,7 +70,7 @@ export class Streamer {
       guildId = channel.guildId;
     }
 
-    return this.joinVoice(guildId, channel.id);
+    return this.joinVoice(guildId, channel.id, options);
   }
 
   /**
@@ -71,6 +83,7 @@ export class Streamer {
   public joinVoice(
     guild_id: string | null,
     channel_id: string,
+    options: VoiceJoinOptions = {},
   ): Promise<WebRtcConnWrapper> {
     return new Promise<WebRtcConnWrapper>((resolve, reject) => {
       if (!this.client.user) {
@@ -84,8 +97,10 @@ export class Streamer {
         user_id,
         channel_id,
         (conn) => {
+          if (options.receiveAudio ?? false) conn.setAudioPacketizer();
           resolve(conn);
         },
+        options,
       );
       this._voiceConnection = voiceConn;
       this._gatewayEmitter.on("VOICE_STATE_UPDATE", (d) => {
@@ -100,7 +115,7 @@ export class Streamer {
 
         voiceConn.setTokens(d.endpoint, d.token);
       });
-      this.signalVideo(false);
+      this.signalVideo(false, options.receiveAudio ?? false);
     });
   }
 
@@ -196,14 +211,13 @@ export class Streamer {
     this._gatewayEmitter.removeAllListeners("VOICE_SERVER_UPDATE");
   }
 
-  public signalVideo(video_enabled: boolean): void {
+  public signalVideo(video_enabled: boolean, receiveAudio = false): void {
     if (!this.voiceConnection) return;
     const { guildId: guild_id, channelId: channel_id } = this.voiceConnection;
     this.sendOpcode(GatewayOpCodes.VOICE_STATE_UPDATE, {
       guild_id: guild_id,
       channel_id,
-      self_mute: false,
-      self_deaf: true,
+      ...voiceStateAudioFlags(receiveAudio),
       self_video: video_enabled,
     });
   }

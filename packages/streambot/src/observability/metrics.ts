@@ -309,6 +309,110 @@ export const actorDurationSeconds = new Histogram({
   registers: [register],
 });
 
+// --- hybrid voice assistant ------------------------------------------------
+
+export const voiceWakeDetectionsTotal = new Counter({
+  name: "streambot_voice_wake_detections_total",
+  help: "Phrase-specific local verifier acceptances",
+  registers: [register],
+});
+
+export const voiceWakeCandidatesTotal = new Counter({
+  name: "streambot_voice_wake_candidates_total",
+  help: "Permissive sherpa wake candidates before phrase verification",
+  registers: [register],
+});
+
+export const voiceLocalVerificationsTotal = new Counter({
+  name: "streambot_voice_local_verifications_total",
+  help: "Phrase-specific local verifier decisions",
+  labelNames: ["outcome"] as const,
+  registers: [register],
+});
+
+export const voiceTranscriptVerificationsTotal = new Counter({
+  name: "streambot_voice_transcript_verifications_total",
+  help: "Cloud transcript wake-prefix decisions",
+  labelNames: ["outcome"] as const,
+  registers: [register],
+});
+
+export const voiceCloudVerificationRateLimitsTotal = new Counter({
+  name: "streambot_voice_cloud_verification_rate_limits_total",
+  help: "Cloud wake-verification attempts rejected by a bounded rate-limit reason",
+  labelNames: ["reason"] as const,
+  registers: [register],
+});
+
+export const voiceTranscriptionUsageTotal = new Counter({
+  name: "streambot_voice_transcription_usage_total",
+  help: "Separately billed gpt-transcribe usage by bounded unit and direction",
+  labelNames: ["unit", "direction"] as const,
+  registers: [register],
+});
+
+export const voiceActivationStageLatencySeconds = new Histogram({
+  name: "streambot_voice_activation_stage_latency_seconds",
+  help: "Latency of each bounded wake cascade stage",
+  labelNames: ["stage"] as const,
+  buckets: [0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2, 3, 5, 10],
+  registers: [register],
+});
+
+export const voiceTurnsTotal = new Counter({
+  name: "streambot_voice_turns_total",
+  help: "Voice turns by privacy-safe outcome",
+  labelNames: ["outcome"] as const,
+  registers: [register],
+});
+
+export const voiceToolCallsTotal = new Counter({
+  name: "streambot_voice_tool_calls_total",
+  help: "Realtime playback tool calls by bounded tool name and outcome",
+  labelNames: ["tool", "outcome"] as const,
+  registers: [register],
+});
+
+export const voiceOpenAiFailuresTotal = new Counter({
+  name: "streambot_voice_openai_failures_total",
+  help: "OpenAI Realtime transaction failures by bounded stage",
+  labelNames: ["stage"] as const,
+  registers: [register],
+});
+
+export const voiceAudioTokensTotal = new Counter({
+  name: "streambot_voice_audio_tokens_total",
+  help: "OpenAI Realtime audio tokens by direction",
+  labelNames: ["direction"] as const,
+  registers: [register],
+});
+
+export const voiceConcurrentTurns = new Gauge({
+  name: "streambot_voice_concurrent_turns",
+  help: "Voice command transactions currently in progress",
+  registers: [register],
+});
+
+export const voiceWakeToReplySeconds = new Histogram({
+  name: "streambot_voice_wake_to_reply_seconds",
+  help: "Seconds from local wake detection to the first assistant audio packet",
+  buckets: [0.25, 0.5, 1, 2, 3, 5, 10, 20, 30],
+  registers: [register],
+});
+
+export const voiceReplyPacketsTotal = new Counter({
+  name: "streambot_voice_reply_packets_total",
+  help: "Assistant Opus packets sent over normal Discord voice",
+  registers: [register],
+});
+
+export const voiceDuckTransitionsTotal = new Counter({
+  name: "streambot_voice_duck_transitions_total",
+  help: "Assistant duck state transitions, without session or user labels",
+  labelNames: ["state"] as const,
+  registers: [register],
+});
+
 // --- HTTP server ------------------------------------------------------------
 
 let server: ReturnType<typeof Bun.serve> | undefined;

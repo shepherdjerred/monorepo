@@ -94,6 +94,7 @@ export default defineConfig({
     "/pr-fleet-controller": "/explanation/pr-fleet-authority-boundary/",
     "/scout-analysis": "/explanation/scout-temporal-analysis/",
     "/starlight-karma-bot": "/explanation/starlight-karma-bot/",
+    "/streambot-voice": "/explanation/streambot-voice/",
     "/tasks-for-obsidian": "/explanation/tasks-for-obsidian/",
     "/temporal": "/explanation/temporal/overview/",
     "/temporal/agent-tasks": "/explanation/temporal/agent-task-boundary/",

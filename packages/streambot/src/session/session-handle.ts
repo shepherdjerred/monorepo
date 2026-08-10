@@ -27,6 +27,8 @@ export function buildSessionHandle(
       ),
     setVolume: (percent) => session.entry.userbot.setVolume(percent),
     seek: (seconds) => session.entry.userbot.seek(seconds),
+    assistantUserId: () => session.entry.userbot.assistantUserId(),
+    assistantDaveReady: () => session.entry.userbot.assistantDaveReady(),
     listSubtitleCandidates: (signal) => {
       const current = session.actor.getSnapshot().context.current;
       if (current === null) return Promise.resolve([]);

@@ -119,6 +119,10 @@ export namespace Message {
     ssrc: number;
   };
 
+  export type SpeakingUpdate = Speaking & {
+    user_id: string;
+  };
+
   export type SelectProtocolAck = {
     audio_codec: string;
     video_codec: string;
@@ -181,7 +185,7 @@ export namespace GatewayResponse {
   export type Hello = Generic<VoiceOpCodes.HELLO, Message.Hello>;
   export type Ready = Generic<VoiceOpCodes.READY, Message.Ready>;
   export type Resumed = Generic<VoiceOpCodes.RESUMED, null>;
-  export type Speaking = Generic<VoiceOpCodes.SPEAKING, Message.Speaking>;
+  export type Speaking = Generic<VoiceOpCodes.SPEAKING, Message.SpeakingUpdate>;
   export type SelectProtocolAck = Generic<
     VoiceOpCodes.SELECT_PROTOCOL_ACK,
     Message.SelectProtocolAck

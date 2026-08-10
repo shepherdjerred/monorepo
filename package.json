@@ -160,6 +160,12 @@
     "protobufjs": "^7.5.7",
     "sanitize-html": "^2.17.4",
     "shell-quote": "1.10.0",
+    "sherpa-onnx-darwin-arm64": "1.13.1",
+    "sherpa-onnx-darwin-x64": "1.13.1",
+    "sherpa-onnx-linux-arm64": "1.13.1",
+    "sherpa-onnx-linux-x64": "1.13.1",
+    "sherpa-onnx-win-ia32": "1.13.1",
+    "sherpa-onnx-win-x64": "1.13.1",
     "socket.io-parser": "4.2.7",
     "tmp": "0.2.7",
     "typescript-eslint": "8.65.0"

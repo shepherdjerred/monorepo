@@ -53,6 +53,26 @@ const DAVE_CODEC = {
   AV1: 6,
 } as const;
 
+export function prepareAssistantOpus(
+  frame: Buffer,
+  daveReady: boolean,
+  encrypt?: (payload: Buffer) => Buffer,
+): Buffer {
+  if (!daveReady) return frame;
+  if (encrypt === undefined) {
+    throw new Error("DAVE audio is ready without an encryption session");
+  }
+  return encrypt(frame);
+}
+
+export function advanceRtpTimestamp(
+  timestamp: number,
+  frametimeMs: number,
+  clockRate: number,
+): number {
+  return timestamp + Math.round((frametimeMs * clockRate) / 1000);
+}
+
 export class WebRtcConnWrapper {
   private _mediaConn: BaseMediaConnection;
 
@@ -102,6 +122,11 @@ export class WebRtcConnWrapper {
       iceServers: ["stun:stun.l.google.com:19302"],
     });
     this._audioTrack = this._webRtcConn.addTrack(this._audioDef);
+    if (this._mediaConn.receiveAudio) {
+      this._audioTrack.onMessage((packet) => {
+        this._mediaConn.handleIncomingAudioPacket(packet);
+      });
+    }
     this._videoTrack = this._webRtcConn.addTrack(this._videoDef);
     this._setMediaHandler();
     return this._webRtcConn;
@@ -126,6 +151,11 @@ export class WebRtcConnWrapper {
     return this._webRtcConn?.state() === "connected";
   }
 
+  /** Whether normal voice media is currently protected by a ready DAVE session. */
+  public get daveReady(): boolean {
+    return this._mediaConn.daveReady;
+  }
+
   public get mediaConnection() {
     return this._mediaConn;
   }
@@ -135,10 +165,35 @@ export class WebRtcConnWrapper {
     if (!this._audioPacketizer) return;
     const { rtpConfig } = this._audioPacketizer;
     const { clockRate } = rtpConfig;
-    if (this.mediaConnection.daveReady)
-      frame = this.mediaConnection.daveSession!.encryptOpus(frame);
+    const daveSession = this.mediaConnection.daveSession;
+    frame = prepareAssistantOpus(
+      frame,
+      Boolean(this.mediaConnection.daveReady),
+      daveSession === undefined
+        ? undefined
+        : (payload) => daveSession.encryptOpus(payload),
+    );
     this._audioTrack?.sendMessageBinary(frame);
-    rtpConfig.timestamp += Math.round((frametime * clockRate) / 1000);
+    rtpConfig.timestamp = advanceRtpTimestamp(
+      rtpConfig.timestamp,
+      frametime,
+      clockRate,
+    );
+  }
+
+  public setAudioPacketizer(): void {
+    if (!this.mediaConnection.webRtcParams)
+      throw new Error("WebRTC connection not ready");
+    const rtpConfig = new RtpPacketizationConfig(
+      this.mediaConnection.webRtcParams.audioSsrc,
+      "streambot-assistant",
+      CodecPayloadType.opus.payload_type,
+      CodecPayloadType.opus.clockRate,
+    );
+    this._audioPacketizer = new RtpPacketizer(rtpConfig);
+    this._audioPacketizer.addToChain(new RtcpSrReporter(rtpConfig));
+    this._audioPacketizer.addToChain(new RtcpNackResponder());
+    this._setMediaHandler();
   }
 
   public sendVideoFrame(frame: Buffer, frametime: number) {

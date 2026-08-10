@@ -103,6 +103,15 @@ function fakeStreamer(): FakeStreamer {
       }),
     leaveVoice: () => Promise.resolve(),
     setVolume: () => Promise.resolve(true),
+    setAssistantSpeaking: () => Promise.resolve(),
+    sendAssistantOpus: () => {
+      /* voice is disabled in this fake */
+    },
+    assistantUserId: () => "200000000000000000",
+    assistantDaveReady: () => false,
+    setVoiceAudioListener: () => {
+      /* voice is disabled in this fake */
+    },
     seek: () => Promise.resolve(true),
     getPosition: () => positionSeconds.value,
     userId: () => "200000000000000000",

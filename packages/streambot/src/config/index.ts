@@ -64,6 +64,18 @@ export function loadConfig(env: EnvLookup = Bun.env): Config {
       readrate: num(env["STREAM_READRATE"]),
       readrateInitialBurst: num(env["STREAM_READRATE_INITIAL_BURST"]),
     },
+    voice: {
+      enabled: bool(env["VOICE_ASSISTANT_ENABLED"]),
+      openAiApiKey: env["OPENAI_API_KEY"],
+      model: env["VOICE_MODEL"],
+      assistantVoice: env["VOICE_ASSISTANT_VOICE"],
+      wakePhrase: env["VOICE_WAKE_PHRASE"],
+      assetsDir: env["VOICE_ASSETS_DIR"],
+      runtime: env["VOICE_KWS_RUNTIME"],
+      preRollMs: num(env["VOICE_PRE_ROLL_MS"]),
+      maxUtteranceMs: num(env["VOICE_MAX_UTTERANCE_MS"]),
+      transactionTimeoutMs: num(env["VOICE_TRANSACTION_TIMEOUT_MS"]),
+    },
     subtitles: {
       enabled: bool(env["SUBTITLES_ENABLED"]),
       languages: list(env["SUBTITLE_LANGUAGES"]),

@@ -58,7 +58,7 @@ RUN bun install --frozen-lockfile --filter '@shepherdjerred/streambot'
 # entry to a gitignored `dist/`; streambot imports them, so compile both
 # (consumers crash at startup with `Cannot find module` otherwise).
 FROM deps AS build
-COPY --parents \
+COPY --exclude=packages/streambot/test/fixtures/voice-corpus --parents \
   tsconfig.base.json \
   packages/streambot \
   packages/discord-stream-lifecycle \
@@ -80,6 +80,35 @@ COPY --parents \
   packages/scout-for-lol/packages/desktop/src-tauri/package.json \
   ./
 RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/streambot'
+
+# ── voice-models: pinned, checksum-verified local wake + VAD assets ─────────
+# Models are fetched only while building the immutable image. Runtime startup
+# validates these files and never reaches the network for local activation.
+FROM base-build AS voice-models
+ARG SHERPA_KWS_ARCHIVE_SHA256=f170013b4716e41b62b9bfd809687c207cef798ef9bc6534d524e17af9b6561a
+ARG SILERO_VAD_SHA256=9e2449e1087496d8d4caba907f23e0bd3f78d91fa552479bb9c23ac09cbb1fd6
+RUN set -e; \
+    mkdir -p /opt/streambot/voice; \
+    curl -fsSL --retry 5 --retry-all-errors --retry-delay 2 \
+      https://github.com/k2-fsa/sherpa-onnx/releases/download/kws-models/sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01.tar.bz2 \
+      -o /tmp/kws.tar.bz2; \
+    echo "${SHERPA_KWS_ARCHIVE_SHA256}  /tmp/kws.tar.bz2" | sha256sum -c -; \
+    tar -xjf /tmp/kws.tar.bz2 -C /opt/streambot/voice --strip-components=1; \
+    rm -f /tmp/kws.tar.bz2 \
+      /opt/streambot/voice/encoder-epoch-12-avg-2-chunk-16-left-64.onnx \
+      /opt/streambot/voice/decoder-epoch-12-avg-2-chunk-16-left-64.onnx \
+      /opt/streambot/voice/joiner-epoch-12-avg-2-chunk-16-left-64.onnx \
+      /opt/streambot/voice/keywords.txt \
+      /opt/streambot/voice/keywords_raw.txt; \
+    curl -fsSL --retry 5 --retry-all-errors --retry-delay 2 \
+      https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx \
+      -o /opt/streambot/voice/silero_vad.onnx; \
+    echo "${SILERO_VAD_SHA256}  /opt/streambot/voice/silero_vad.onnx" | sha256sum -c -
+COPY packages/streambot/assets/voice/ /opt/streambot/voice/
+
+# Small local-output target used by the macOS voice probe preparation command.
+FROM scratch AS voice-model-export
+COPY --from=voice-models /opt/streambot/voice/ /
 
 # ── runtime: ffmpeg/VAAPI stack + COPY-only app layers — no compilers ───────
 FROM base AS runtime
@@ -122,8 +151,9 @@ RUN set -e; \
 # source edit doesn't re-push this layer.
 COPY --from=prod-deps /app/ /app/
 
-# Scoped source closure + the built dists from the build stage.
-COPY --parents \
+# Scoped source closure + the built dists from the build stage. The canonical
+# evaluation corpus is intentionally excluded from production layers.
+COPY --exclude=packages/streambot/test/fixtures/voice-corpus --parents \
   tsconfig.base.json \
   packages/streambot \
   packages/discord-stream-lifecycle \
@@ -131,6 +161,7 @@ COPY --parents \
   ./
 COPY --from=build /app/packages/discord-stream-lifecycle/dist packages/discord-stream-lifecycle/dist
 COPY --from=build /app/packages/discord-video-stream/dist packages/discord-video-stream/dist
+COPY --from=voice-models /opt/streambot/voice /opt/streambot/voice
 
 ARG VERSION=dev
 ARG GIT_SHA=unknown
@@ -143,18 +174,41 @@ LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorep
 WORKDIR /app/packages/streambot
 CMD ["bun", "src/index.ts"]
 
+FROM runtime AS voice-smoke
+# Model loading runs as the non-root deploy uid. The final image copies its
+# sentinel, making this stage a required dependency of every production build.
+USER 1000:1000
+ENV HOME=/tmp
+RUN VOICE_ASSISTANT_ENABLED=true \
+    OPENAI_API_KEY=image-smoke-not-used \
+    VOICE_ASSETS_DIR=/opt/streambot/voice \
+    bun scripts/voice-model-smoke.ts \
+    && touch /tmp/voice-model-smoke-passed
+
+FROM runtime AS voice-corpus-evaluation
+# The canonical corpus exists only in this acceptance stage. Both local
+# runtimes consume the production decoder/lifecycle, then only the aggregate
+# report and sentinel can cross into the final image.
+COPY packages/streambot/test/fixtures/voice-corpus /app/packages/streambot/test/fixtures/voice-corpus
+USER 1000:1000
+ENV HOME=/tmp
+RUN bun run voice:corpus:verify \
+    && VOICE_ASSETS_DIR=/opt/streambot/voice \
+      bun run voice:corpus:evaluate --report /tmp/streambot-voice-corpus-report.json \
+    && touch /tmp/voice-corpus-evaluation-passed
+
 FROM runtime AS smoke
-# The smoke harness ships in CI context only — the scoped source COPY
-# excludes .buildkite, so stage it here (never in the pushed image stage).
+# The general app smoke harness ships in CI context only and never reaches the
+# pushed image. Depend on voice-smoke so explicit smoke builds prove both.
+COPY --from=voice-smoke /tmp/voice-model-smoke-passed /tmp/voice-model-smoke-passed
 COPY .buildkite/scripts/smoke-app-in-image.ts /app/.buildkite/scripts/smoke-app-in-image.ts
 ARG SMOKE_TARGET=streambot
 ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
-# Smoke runs as the non-root deploy uid (1000, the app deployment convention),
-# never root: a root smoke cannot see uid-1000-only failures — the Prisma
-# engines EACCES crash-loop (#1682) passed root smoke and died in prod. HOME
-# points at /tmp so any tool cache has a writable target.
 USER 1000:1000
 ENV HOME=/tmp
 RUN bun /app/.buildkite/scripts/smoke-app-in-image.ts
 
 FROM runtime AS image
+COPY --from=voice-smoke /tmp/voice-model-smoke-passed /opt/streambot/voice/.image-smoke-passed
+COPY --from=voice-corpus-evaluation /tmp/voice-corpus-evaluation-passed /opt/streambot/voice/.corpus-evaluation-passed
+COPY --from=voice-corpus-evaluation /tmp/streambot-voice-corpus-report.json /opt/streambot/voice/corpus-evaluation-report.json

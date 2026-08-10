@@ -13,6 +13,8 @@ import type {
   ChannelId,
   GuildId,
 } from "@shepherdjerred/streambot/types/ids.ts";
+import type { VoiceAssistantSession } from "@shepherdjerred/streambot/voice/voice-assistant-session.ts";
+import type { TeardownHold } from "@shepherdjerred/streambot/session/teardown-hold.ts";
 
 /** How often to checkpoint a session's playback state to disk for resume. */
 export const CHECKPOINT_MS = 10 * 1000;
@@ -29,6 +31,10 @@ export type SessionHandle = {
   view: () => PlaybackView;
   setVolume: (percent: number) => Promise<boolean>;
   seek: (seconds: number) => Promise<boolean>;
+  /** Discord userbot identity that owns assistant replies for this session. */
+  assistantUserId: () => string | null;
+  /** Current DAVE readiness of the normal assistant voice transport. */
+  assistantDaveReady: () => boolean;
   /** Enumerate burnable subtitle candidates for the currently-playing item (`/stream subtitles`'s picker). Empty when nothing is playing. */
   listSubtitleCandidates: (signal: AbortSignal) => Promise<SubtitleCandidate[]>;
   /**
@@ -83,6 +89,10 @@ export type Session = {
   voiceRecoveryStarted: boolean;
   /** Single-flight guard: true while a `/stream subtitles` picker is open for this session. */
   pendingSubtitleMenu: boolean;
+  /** Per-session wake/VAD/Realtime lifecycle, absent when the feature is disabled. */
+  voiceAssistant: VoiceAssistantSession | null;
+  readonly teardownHold: TeardownHold;
+  requestTeardown: () => void;
 };
 
 /** Everything needed to spin up a session actor (manual play, boot resume, or reconnect). */
@@ -117,6 +127,8 @@ export const EMPTY_HANDLE: SessionHandle = {
   view: () => IDLE_VIEW,
   setVolume: () => Promise.resolve(false),
   seek: () => Promise.resolve(false),
+  assistantUserId: () => null,
+  assistantDaveReady: () => false,
   listSubtitleCandidates: () => Promise.resolve([]),
   currentSourceId: () => null,
   hasPendingSubtitleMenu: () => false,

@@ -1,4 +1,5 @@
 import type { createSeekablePlayer } from "@shepherdjerred/discord-video-stream";
+import type { ReceivedVoiceAudio } from "@shepherdjerred/discord-video-stream";
 import type { PooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/pooled-userbot";
 import type {
   JoinVoiceInput,
@@ -37,6 +38,18 @@ export type StreamerLike = PooledUserbot & {
   runStream: (input: RunStreamInput, signal: AbortSignal) => Promise<void>;
   leaveVoice: (input: LeaveVoiceInput, signal: AbortSignal) => Promise<void>;
   setVolume: (percent: number) => Promise<boolean>;
+  /** Duck Go Live independently of the desired playback volume while the assistant speaks. */
+  setAssistantSpeaking: (speaking: boolean) => Promise<void>;
+  /** Send one 20ms assistant Opus packet over the normal Discord voice connection. */
+  sendAssistantOpus: (opus: Uint8Array) => void;
+  /** Read-only identity used to attribute live assistant reply packets. */
+  assistantUserId: () => string;
+  /** True only once the normal voice connection's DAVE media session is ready. */
+  assistantDaveReady: () => boolean;
+  /** Receive identified, DAVE-decrypted Discord Opus packets for local activation. */
+  setVoiceAudioListener: (
+    listener: ((audio: ReceivedVoiceAudio) => void) | null,
+  ) => void;
   seek: (seconds: number) => Promise<boolean>;
   getPosition: () => number | null;
   /** Most recent Discord-side voice ws close observed on this userbot, or null if none yet. */

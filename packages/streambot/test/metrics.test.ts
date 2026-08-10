@@ -18,6 +18,18 @@ describe("metrics registry", () => {
     expect(body).toContain("streambot_send_frametime_ratio");
     expect(body).toContain("streambot_hw_decode_engaged");
     expect(body).toContain("streambot_source_info");
+    expect(body).toContain("streambot_voice_wake_detections_total");
+    expect(body).toContain("streambot_voice_wake_candidates_total");
+    expect(body).toContain("streambot_voice_local_verifications_total");
+    expect(body).toContain("streambot_voice_transcript_verifications_total");
+    expect(body).toContain(
+      "streambot_voice_cloud_verification_rate_limits_total",
+    );
+    expect(body).toContain("streambot_voice_transcription_usage_total");
+    expect(body).toContain("streambot_voice_activation_stage_latency_seconds");
+    expect(body).toContain("streambot_voice_wake_to_reply_seconds");
+    expect(body).toContain("streambot_voice_reply_packets_total");
+    expect(body).toContain("streambot_voice_duck_transitions_total");
   });
 });
 

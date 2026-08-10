@@ -123,6 +123,21 @@ describe("streambot deployment (media namespace)", () => {
 
   it("uses the first-party ghcr image", () => {
     expect(container?.image).toStartWith("ghcr.io/shepherdjerred/streambot:");
+    expect(container?.env).toContainEqual(
+      expect.objectContaining({
+        name: "VOICE_ASSISTANT_ENABLED",
+        value: "false",
+      }),
+    );
+    expect(container?.env).toContainEqual(
+      expect.objectContaining({
+        name: "VOICE_MODEL",
+        value: "gpt-realtime-2.1",
+      }),
+    );
+    expect(container?.env).not.toContainEqual(
+      expect.objectContaining({ name: "OPENAI_API_KEY" }),
+    );
   });
 
   it("runs as the non-root user", () => {

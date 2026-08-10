@@ -32,6 +32,17 @@ describe("loadConfig", () => {
     expect(config.stream.vaapiDevice).toBe("/dev/dri/renderD128");
     expect(config.idleTimeoutSeconds).toBe(300);
     expect(config.ytDlpPath).toBe("/usr/local/bin/yt-dlp");
+    expect(config.voice).toEqual({
+      enabled: false,
+      model: "gpt-realtime-2.1",
+      assistantVoice: "marin",
+      wakePhrase: "Hey Streambot",
+      assetsDir: "/opt/streambot/voice",
+      runtime: "auto",
+      preRollMs: 2000,
+      maxUtteranceMs: 15_000,
+      transactionTimeoutMs: 30_000,
+    });
   });
 
   test("throws when a required value is missing", () => {
@@ -110,5 +121,39 @@ describe("loadConfig", () => {
       delaySeconds: 2,
       maxAttempts: 5,
     });
+  });
+
+  test("requires a dedicated OpenAI key when voice is enabled", () => {
+    expect(() =>
+      loadConfig({ ...VALID, VOICE_ASSISTANT_ENABLED: "true" }),
+    ).toThrow("Invalid streambot configuration");
+    const config = loadConfig({
+      ...VALID,
+      VOICE_ASSISTANT_ENABLED: "true",
+      OPENAI_API_KEY: "project-key",
+    });
+    expect(config.voice.enabled).toBe(true);
+    expect(config.voice.openAiApiKey).toBe("project-key");
+    expect(config.voice.model).toBe("gpt-realtime-2.1");
+    expect(config.voice.assistantVoice).toBe("marin");
+  });
+
+  test("rejects unapproved voice models and voices", () => {
+    expect(() =>
+      loadConfig({
+        ...VALID,
+        VOICE_ASSISTANT_ENABLED: "true",
+        OPENAI_API_KEY: "project-key",
+        VOICE_MODEL: "gpt-realtime-mini",
+      }),
+    ).toThrow("Invalid streambot configuration");
+    expect(() =>
+      loadConfig({
+        ...VALID,
+        VOICE_ASSISTANT_ENABLED: "true",
+        OPENAI_API_KEY: "project-key",
+        VOICE_ASSISTANT_VOICE: "alloy",
+      }),
+    ).toThrow("Invalid streambot configuration");
   });
 });

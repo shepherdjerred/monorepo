@@ -59,7 +59,34 @@ export type MediaConnectionCloseInfo = {
 type MediaConnectionEvents = {
   select_protocol_ack: [];
   close: [MediaConnectionCloseInfo];
+  audio: [ReceivedVoiceAudio];
+  audio_error: [Error];
 };
+
+export type ReceivedVoiceAudio = {
+  userId: string;
+  ssrc: number;
+  opus: Uint8Array;
+};
+
+export type MediaConnectionOptions = {
+  receiveAudio?: boolean;
+};
+
+export function voiceAudioSdpDirection(receiveAudio: boolean): "sendrecv" | "inactive" {
+  return receiveAudio ? "sendrecv" : "inactive";
+}
+
+export function prepareReceivedOpus(options: {
+  payload: Uint8Array;
+  daveProtocolVersion: number;
+  daveReady: boolean;
+  decrypt?: (payload: Uint8Array) => Uint8Array;
+}): Uint8Array | null {
+  if (options.daveProtocolVersion === 0) return options.payload;
+  if (!options.daveReady || options.decrypt === undefined) return null;
+  return options.decrypt(options.payload);
+}
 
 /** The subset of the WebSocket surface the voice gateway uses — narrow so tests can inject a fake. */
 export type VoiceGatewaySocket = Pick<
@@ -92,6 +119,8 @@ export abstract class BaseMediaConnection extends EventEmitter<MediaConnectionEv
   private _daveProtocolVersion = 0;
   private _davePendingTransitions = new Map<number, number>();
   private _daveDowngraded = false;
+  private readonly _receiveAudio: boolean;
+  private readonly _audioUsersBySsrc = new Map<number, string>();
 
   private _logger = new Log("conn");
   private _loggerDave = new Log("conn:dave");
@@ -101,6 +130,7 @@ export abstract class BaseMediaConnection extends EventEmitter<MediaConnectionEv
     botId: string,
     channelId: string,
     callback: (conn: WebRtcConnWrapper) => void,
+    options: MediaConnectionOptions = {},
   ) {
     super();
     this._streamer = streamer;
@@ -115,6 +145,7 @@ export abstract class BaseMediaConnection extends EventEmitter<MediaConnectionEv
     this.channelId = channelId;
     this.botId = botId;
     this.ready = callback;
+    this._receiveAudio = options.receiveAudio ?? false;
     this._webRtcWrapper = new WebRtcConnWrapper(this);
   }
 
@@ -136,12 +167,17 @@ export abstract class BaseMediaConnection extends EventEmitter<MediaConnectionEv
     return this._streamer;
   }
 
+  public get receiveAudio(): boolean {
+    return this._receiveAudio;
+  }
+
   public abstract get daveChannelId(): string;
 
   stop(): void {
     this._closed = true;
     this._webRtcWrapper.close();
     this.ws?.close();
+    this._audioUsersBySsrc.clear();
   }
 
   /** Seam for tests to inject a fake websocket; production returns a real one. */
@@ -282,7 +318,7 @@ a=extmap:3 http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extension
 a=setup:passive
 a=mid:0
 a=maxptime:60
-a=inactive
+a=${voiceAudioSdpDirection(this._receiveAudio)}
 ${iceUsername}
 ${icePassword}
 ${fingerprint}
@@ -428,7 +464,7 @@ a=ice-lite
         // session description
         this.handleProtocolAck(d);
       } else if (op === VoiceOpCodes.SPEAKING) {
-        // ignore speaking updates
+        this.handleSpeakingUpdate(d);
       } else if (op === VoiceOpCodes.HEARTBEAT_ACK) {
         // ignore heartbeat acknowledgements
       } else if (op === VoiceOpCodes.RESUMED) {
@@ -439,6 +475,7 @@ a=ice-lite
         });
       } else if (op === VoiceOpCodes.CLIENT_DISCONNECT) {
         this._connectedUsers.delete(d.user_id);
+        this.handleClientDisconnect(d.user_id);
       } else if (op === VoiceOpCodes.DAVE_PREPARE_TRANSITION) {
         this._loggerDave.debug("Preparing for DAVE transition", d);
         this._davePendingTransitions.set(d.transition_id, d.protocol_version);
@@ -534,12 +571,56 @@ a=ice-lite
     }
   }
 
-  public get daveReady() {
-    return this._daveProtocolVersion && this._daveSession?.ready;
+  public get daveReady(): boolean {
+    return this._daveProtocolVersion > 0 && this._daveSession?.ready === true;
   }
 
   public get daveSession() {
     return this._daveSession;
+  }
+
+  public handleIncomingAudioPacket(packet: Uint8Array): void {
+    if (!this._receiveAudio) return;
+    const parsed = parseRtpPacket(packet);
+    const userId = this._audioUsersBySsrc.get(parsed.ssrc);
+    if (userId === undefined || userId === this.botId) return;
+
+    try {
+      const daveSession = this._daveSession;
+      const opus = prepareReceivedOpus({
+        payload: parsed.payload,
+        daveProtocolVersion: this._daveProtocolVersion,
+        daveReady: Boolean(this.daveReady),
+        ...(daveSession === undefined
+          ? {}
+          : {
+              decrypt: (payload: Uint8Array) =>
+                daveSession.decrypt(
+                  userId,
+                  Davey.MediaType.AUDIO,
+                  Buffer.from(payload),
+                ),
+            }),
+      });
+      if (opus === null) return;
+      this.emit("audio", { userId, ssrc: parsed.ssrc, opus });
+    } catch (error) {
+      this.emit(
+        "audio_error",
+        error instanceof Error ? error : new Error("Voice audio decrypt failed"),
+      );
+    }
+  }
+
+  /** Voice-gateway speaker mapping, public so transports can be tested without a live socket. */
+  public handleSpeakingUpdate(update: Message.SpeakingUpdate): void {
+    if (this._receiveAudio) this._audioUsersBySsrc.set(update.ssrc, update.user_id);
+  }
+
+  public handleClientDisconnect(userId: string): void {
+    for (const [ssrc, mappedUserId] of this._audioUsersBySsrc) {
+      if (mappedUserId === userId) this._audioUsersBySsrc.delete(ssrc);
+    }
   }
 
   setupHeartbeat(interval: number): void {
@@ -702,4 +783,43 @@ a=ice-lite
       ssrc: this._webRtcParams.audioSsrc,
     });
   }
+}
+
+export function parseRtpPacket(packet: Uint8Array): {
+  ssrc: number;
+  payload: Uint8Array;
+} {
+  if (packet.byteLength < 12 || (packet[0] & 0xc0) !== 0x80) {
+    throw new Error("Invalid RTP packet");
+  }
+  const view = new DataView(packet.buffer, packet.byteOffset, packet.byteLength);
+  const csrcCount = packet[0] & 0x0f;
+  let payloadOffset = 12 + csrcCount * 4;
+  if (payloadOffset > packet.byteLength) throw new Error("Invalid RTP CSRC list");
+
+  const hasExtension = (packet[0] & 0x10) !== 0;
+  if (hasExtension) {
+    if (payloadOffset + 4 > packet.byteLength) {
+      throw new Error("Invalid RTP extension header");
+    }
+    const extensionWords = view.getUint16(payloadOffset + 2);
+    payloadOffset += 4 + extensionWords * 4;
+  }
+  if (payloadOffset > packet.byteLength) throw new Error("Invalid RTP payload offset");
+
+  let payloadEnd = packet.byteLength;
+  const hasPadding = (packet[0] & 0x20) !== 0;
+  if (hasPadding) {
+    const paddingLength = packet[packet.byteLength - 1];
+    if (paddingLength === undefined || paddingLength === 0) {
+      throw new Error("Invalid RTP padding");
+    }
+    payloadEnd -= paddingLength;
+  }
+  if (payloadEnd < payloadOffset) throw new Error("Invalid RTP payload length");
+
+  return {
+    ssrc: view.getUint32(8),
+    payload: packet.slice(payloadOffset, payloadEnd),
+  };
 }
