@@ -160,6 +160,27 @@ export async function executeTrack(
           tx,
         );
       }
+      // The subscription already existed, but the account row above is new, so
+      // the mutation still needs a trail of its own.
+      if (created.kind === "subscription-already-exists") {
+        await recordAudit(
+          {
+            action: "ACCOUNT_ADD",
+            actorDiscordId: args.data.creatorDiscordId,
+            serverId: args.data.guildId,
+            targetChannelId: args.data.channelId,
+            targetPlayerId: created.playerId,
+            targetAccountId: created.accountId,
+            payload: {
+              riotId: args.data.riotId,
+              region: args.data.region,
+              alias: args.data.alias,
+              source: "discord:/track",
+            },
+          },
+          tx,
+        );
+      }
       // addSubscription catches database failures and reports them as
       // `internal-error` instead of throwing. Returning here would let Prisma
       // commit whatever it managed first — typically a Player and Account with

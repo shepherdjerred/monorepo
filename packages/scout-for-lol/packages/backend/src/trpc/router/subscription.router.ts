@@ -154,21 +154,37 @@ export const subscriptionRouter = router({
             puuid,
             tx,
           ),
-        (r) =>
-          r.kind === "created"
-            ? {
-                action: "SUBSCRIPTION_ADD",
-                targetChannelId: input.channelId,
-                targetPlayerId: r.player.id,
-                targetAccountId: r.account.id,
-                payload: {
-                  riotId: input.riotId,
-                  region: input.region,
-                  alias: input.alias,
-                  isAddingToExistingPlayer: r.isAddingToExistingPlayer,
-                },
-              }
-            : null,
+        (r) => {
+          if (r.kind === "created") {
+            return {
+              action: "SUBSCRIPTION_ADD",
+              targetChannelId: input.channelId,
+              targetPlayerId: r.player.id,
+              targetAccountId: r.account.id,
+              payload: {
+                riotId: input.riotId,
+                region: input.region,
+                alias: input.alias,
+                isAddingToExistingPlayer: r.isAddingToExistingPlayer,
+              },
+            };
+          }
+          // A duplicate subscription still commits the new account row.
+          if (r.kind === "subscription-already-exists") {
+            return {
+              action: "ACCOUNT_ADD",
+              targetChannelId: input.channelId,
+              targetPlayerId: r.playerId,
+              targetAccountId: r.accountId,
+              payload: {
+                riotId: input.riotId,
+                region: input.region,
+                alias: input.alias,
+              },
+            };
+          }
+          return null;
+        },
       );
 
       if (result.kind === "created") {

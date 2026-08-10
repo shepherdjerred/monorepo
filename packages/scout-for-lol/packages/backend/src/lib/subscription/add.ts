@@ -135,6 +135,8 @@ async function commitSubscription(params: {
       kind: "subscription-already-exists",
       playerAlias: playerAccount.player.alias,
       addedToExistingPlayer: isAddingToExistingPlayer,
+      playerId: playerAccount.player.id,
+      accountId: account.id,
       accounts: playerAccount.player.accounts.map((a) => ({
         alias: a.alias,
         region: a.region,

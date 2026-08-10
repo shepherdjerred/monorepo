@@ -122,6 +122,11 @@ export type AddSubscriptionResult =
       kind: "subscription-already-exists";
       playerAlias: string;
       addedToExistingPlayer: boolean;
+      // The account row is created before the duplicate-subscription check, so
+      // this outcome still commits a new account. Callers need both ids to
+      // audit that mutation.
+      playerId: number;
+      accountId: number;
       accounts: { alias: string; region: string }[];
     }
   | { kind: "subscription-limit-reached"; current: number; max: number }

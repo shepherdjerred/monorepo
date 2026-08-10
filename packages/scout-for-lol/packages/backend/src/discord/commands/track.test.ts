@@ -66,6 +66,8 @@ describe("/track", () => {
         kind: "subscription-already-exists",
         playerAlias: "faker",
         addedToExistingPlayer: false,
+        playerId: 1,
+        accountId: 2,
         accounts: [],
       }),
     ).toContain("already tracked");
@@ -79,6 +81,8 @@ describe("/track", () => {
       kind: "subscription-already-exists",
       playerAlias: "faker",
       addedToExistingPlayer: true,
+      playerId: 1,
+      accountId: 2,
       accounts: [
         { alias: "faker", region: "KR" },
         { alias: "faker", region: "NA" },
