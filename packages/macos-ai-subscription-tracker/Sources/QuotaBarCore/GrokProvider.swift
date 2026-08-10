@@ -69,21 +69,7 @@ public struct GrokProvider: UsageProvider {
 
   public static func parseCredits(data: Data, now: Date = .now) throws -> [UsageWindow] {
     let response = try ProviderDecoder.decode(GrokCredits.self, from: data, provider: .grok)
-    var windows: [UsageWindow] = []
-    if response.config.creditUsagePercent != nil || response.config.currentPeriod != nil {
-      let period = response.config.currentPeriod
-      let isWeekly = period?.kind == .weekly
-      windows.append(
-        try UsageWindow.validated(
-          id: "grok-shared-credits",
-          label: isWeekly ? "Weekly" : "Shared credits",
-          kind: isWeekly ? .weekly : .credits,
-          usedPercent: response.config.creditUsagePercent,
-          resetAt: response.config.currentPeriod?.end,
-          sourceTimestamp: now
-        )
-      )
-    }
+    var windows = try sharedCreditWindows(config: response.config, now: now)
     var productIDs: Set<String> = []
     for (name, metric) in response.config.productUsage.sorted(by: { $0.key < $1.key }) {
       let id = "grok-product-\(slug(name))"
@@ -115,6 +101,25 @@ public struct GrokProvider: UsageProvider {
     }
     guard !windows.isEmpty else { throw QuotaError.unsupportedResponse(.grok) }
     return windows
+  }
+
+  private static func sharedCreditWindows(
+    config: GrokCreditsConfig,
+    now: Date
+  ) throws -> [UsageWindow] {
+    guard config.creditUsagePercent != nil || config.currentPeriod != nil else { return [] }
+    let period = config.currentPeriod
+    let isWeekly = period?.kind == .weekly
+    return [
+      try UsageWindow.validated(
+        id: "grok-shared-credits",
+        label: isWeekly ? "Weekly" : "Shared credits",
+        kind: isWeekly ? .weekly : .credits,
+        usedPercent: config.creditUsagePercent,
+        resetAt: period?.end,
+        sourceTimestamp: now
+      )
+    ]
   }
 
   static func parse(
