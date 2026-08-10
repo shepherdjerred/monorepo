@@ -50,15 +50,18 @@ func (r *dhcpStaticLeaseResource) Schema(_ context.Context, _ resource.SchemaReq
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				Validators: packedFieldValidators(),
 			},
 			"ip": schema.StringAttribute{
 				Description: "Static IP address to assign.",
 				Required:    true,
+				Validators:  packedFieldValidators(),
 			},
 			"hostname": schema.StringAttribute{
 				Description: "Optional hostname for the lease.",
 				Optional:    true,
 				Computed:    true,
+				Validators:  packedFieldValidators(),
 			},
 		},
 	}

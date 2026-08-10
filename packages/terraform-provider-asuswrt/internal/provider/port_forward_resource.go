@@ -53,26 +53,32 @@ func (r *portForwardResource) Schema(_ context.Context, _ resource.SchemaRequest
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				Validators: packedFieldValidators(),
 			},
 			"protocol": schema.StringAttribute{
 				Description: "Protocol: tcp, udp, or both.",
 				Required:    true,
+				Validators:  packedFieldValidators(),
 			},
 			"external_port": schema.StringAttribute{
 				Description: "External port or range (e.g., 80 or 8080:8090).",
 				Required:    true,
+				Validators:  packedFieldValidators(),
 			},
 			"internal_ip": schema.StringAttribute{
 				Description: "Internal destination IP address.",
 				Required:    true,
+				Validators:  packedFieldValidators(),
 			},
 			"internal_port": schema.StringAttribute{
 				Description: "Internal destination port.",
 				Required:    true,
+				Validators:  packedFieldValidators(),
 			},
 			"source_ip": schema.StringAttribute{
 				Description: "Restrict to source IP, MAC, or IP range. Empty means any.",
 				Optional:    true,
+				Validators:  packedFieldValidators(),
 			},
 		},
 	}

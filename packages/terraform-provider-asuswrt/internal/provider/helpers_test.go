@@ -4,6 +4,8 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/shepherdjerred/monorepo/packages/terraform-provider-asuswrt/internal/client"
@@ -664,5 +666,65 @@ func TestApplyPlanToEntryLeavesAbsentTrailingFieldAbsent(t *testing.T) {
 
 	if entry.SourceIP != "10.0.0.2" {
 		t.Errorf("expected source IP applied, got %q", entry.SourceIP)
+	}
+}
+
+// TestPackedFieldValidator covers the boundary rejection that keeps packed
+// NVRAM lists parseable. A value carrying a delimiter token cannot be
+// represented in the router's flat, unescaped list format.
+func TestPackedFieldValidator(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		value   types.String
+		wantErr bool
+	}{
+		{name: "ordinary value", value: types.StringValue("Plex"), wantErr: false},
+		{name: "value with a real angle bracket", value: types.StringValue("a>b"), wantErr: false},
+		{name: "null", value: types.StringNull(), wantErr: false},
+		{name: "unknown", value: types.StringUnknown(), wantErr: false},
+		{name: "field delimiter token", value: types.StringValue("foo&#62bar"), wantErr: true},
+		{name: "entry delimiter token", value: types.StringValue("foo&#60bar"), wantErr: true},
+		{name: "delimiter alone", value: types.StringValue("&#62"), wantErr: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			req := validator.StringRequest{Path: path.Root("name"), ConfigValue: tt.value}
+			resp := &validator.StringResponse{}
+
+			packedFieldValidator{}.ValidateString(t.Context(), req, resp)
+
+			if got := resp.Diagnostics.HasError(); got != tt.wantErr {
+				t.Errorf("expected error=%v, got %v (%v)", tt.wantErr, got, resp.Diagnostics)
+			}
+		})
+	}
+}
+
+// TestPackedDelimiterCorruptsList documents why the validator exists: an
+// unrejected delimiter shifts every following field on the next parse, and the
+// corrupted shape is what a later whole-list rewrite sends to the router.
+func TestPackedDelimiterCorruptsList(t *testing.T) {
+	t.Parallel()
+
+	entries := []client.PortForwardEntry{
+		{Name: "evil&#62injected", ExternalPort: "80", InternalIP: "192.168.1.100", InternalPort: "80", Protocol: "tcp"},
+	}
+
+	reparsed, err := client.ParseVTSRuleList(client.SerializeVTSRuleList(entries))
+	if err != nil {
+		t.Fatalf("parsing serialized vts_rulelist: %v", err)
+	}
+
+	if reparsed[0].Name != "evil" {
+		t.Fatalf("expected the embedded delimiter to split the name, got %q", reparsed[0].Name)
+	}
+
+	if reparsed[0].ExternalPort == entries[0].ExternalPort {
+		t.Error("expected the following fields to shift; the corruption this validator prevents did not occur")
 	}
 }

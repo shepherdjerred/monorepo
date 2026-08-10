@@ -38,6 +38,15 @@ const (
 	vtsSourceIPField  = 5
 )
 
+// PackedDelimiters returns the tokens that delimit packed NVRAM lists.
+//
+// The format has no escaping, so a field value containing either token cannot
+// be represented. Callers that accept user input destined for a packed list
+// must reject such values before they reach serialization.
+func PackedDelimiters() []string {
+	return []string{packedEntryDelim, packedFieldDelim}
+}
+
 // splitPackedEntries splits a packed NVRAM value into per-entry field slices.
 // The leading empty segment before the first "&#60" is dropped.
 func splitPackedEntries(raw string) [][]string {
