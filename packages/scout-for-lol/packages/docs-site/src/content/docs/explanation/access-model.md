@@ -57,8 +57,9 @@ hand out the roles permission at all.
 ## The audit log is what makes delegation reasonable
 
 Access control decides what someone _can_ do. The audit log records what they
-_did_ — every mutation, with the actor and the time, including changes made
-through Discord commands rather than the dashboard.
+_did_ — player, account, subscription, and permission changes, with the actor
+and the time, including changes made through Discord commands rather than the
+dashboard. Competition and report changes are not yet covered.
 
 The log is the more important half. Permissions alone force you to predict every
 way someone might cause damage, and predicting badly gives you either an

@@ -70,11 +70,15 @@ from its dates — with a start date of today, it is already running.
 
 ## 7. Look at the leaderboard
 
-Open the competition. The detail page shows the participants and the current
-standings, recomputed from the same match data that produces your notifications.
+Open the competition. The detail page shows the participants and the standings.
 
-Standings are not frozen at creation: as tracked players finish games, their
-rows move.
+Standings are computed on request, not continuously. A competition you just
+created has none yet, so choose **Refresh standings** to build them from the
+same match data that produces your notifications. Refreshing needs the
+`competitions:refresh` permission, which a server administrator already has.
+
+Standings are not frozen at creation either: as tracked players finish games,
+choose **Refresh standings** again to see the rows move.
 
 ## 8. Let the lifecycle run
 
@@ -82,14 +86,9 @@ Scout checks competition lifecycle every fifteen minutes. When your end date
 arrives, it closes the competition and posts the final standings to the
 announcement channel you chose — nobody has to remember to do it.
 
-Interim standings are not posted automatically today, so check the competition
-page while it runs — or build a [scheduled report](/docs/tutorials/first-report/)
-if you want the race in the channel.
-
-## 9. Confirm in the audit log
-
-Open the **Audit** tab. Creating the competition is recorded there, with your
-name against it, exactly like the `/track` call from the first tutorial.
+Interim standings are not posted automatically today, so open the competition
+page and refresh it while the competition runs — or build a [scheduled
+report](/docs/tutorials/first-report/) if you want the race in the channel.
 
 ## What you did
 

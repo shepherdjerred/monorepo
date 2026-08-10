@@ -79,9 +79,12 @@ reports, competitions — stays.
 
 ## See what someone did
 
-Open **Audit**. Every mutation is recorded with the actor, so a grant is
-traceable to a person and so is everything they did with it. Grant access
-freely; the log is what makes that safe.
+Open **Audit**. Grants themselves are recorded with the actor, as are the
+player, account, and subscription changes someone makes with them.
+
+Competition and report changes are not recorded yet, so the log does not show
+who created, edited, or cancelled those. Weigh that when handing out
+`competitions` and `reports` permissions.
 
 ## Related
 
