@@ -45,6 +45,15 @@ final class QuickAddPanelController {
     /// panel has a field it must not offer.
     private(set) var calendar: ViewerCalendar?
 
+    /// Why the last Return did not create anything, when the core refused it.
+    ///
+    /// A parse failure is not this: that one is already derived and rendered
+    /// from ``preview`` while the line is still being typed. This is the write
+    /// the core accepted and could not persist — an unwritable queue or counter
+    /// file — which reaches the store's own banner on a window this panel is
+    /// floating over and therefore has nowhere else to be seen.
+    private(set) var submissionFailure: CoreError?
+
     /// Bumped on every presentation, so the field can take focus again.
     ///
     /// The panel and its hosting view are built once and reused, so `onAppear`
@@ -114,6 +123,7 @@ final class QuickAddPanelController {
             calendar = store.viewerCalendar()
         }
         text = ""
+        submissionFailure = nil
         focusToken &+= 1
     }
 
@@ -148,6 +158,17 @@ final class QuickAddPanelController {
         return QuickAddPreview.of(text, calendar: calendar)
     }
 
+    /// Forget a reported submission failure, because the line it was about is
+    /// being rewritten.
+    ///
+    /// Called from the field rather than from a `didSet` on ``text``: the
+    /// `@Observable` macro rewrites stored properties into accessors, so a
+    /// property observer there is a transformation this does not need to rely
+    /// on to keep one strip honest.
+    func clearSubmissionFailure() {
+        submissionFailure = nil
+    }
+
     /// Create the task and close.
     ///
     /// Declines silently for an empty line and for one the core could not parse.
@@ -155,12 +176,26 @@ final class QuickAddPanelController {
     /// of the two it is, one keystroke away from the caret, and a modal over a
     /// panel that is itself floating over another application would be two
     /// layers of interruption for a typo.
+    ///
+    /// ## Why the panel only closes on a persisted task
+    ///
+    /// `dispatch` returns `nil` when the core could not write the command — a
+    /// full or momentarily unwritable queue file. Clearing and dismissing on
+    /// that outcome destroys the typed line: the store raises its banner on the
+    /// main window, which is by definition not what the user is looking at while
+    /// a panel floats over another application, so nothing on screen would say
+    /// the task was never created. Holding the text in the field keeps it
+    /// retryable and copyable, and the strip reports why.
     func submit() {
         guard case .success(let store) = store, let calendar else { return }
+        submissionFailure = nil
         switch QuickAdd.parsing(text, calendar: calendar) {
         case .success(let command):
             guard let command else { return }
-            store.dispatch(command)
+            guard store.dispatch(command) != nil else {
+                submissionFailure = store.lastStoreError
+                return
+            }
             text = ""
             dismiss()
             // Detached, so the panel closes on the keystroke rather than after

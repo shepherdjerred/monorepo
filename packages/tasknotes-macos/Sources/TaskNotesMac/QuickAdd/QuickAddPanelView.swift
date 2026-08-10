@@ -55,6 +55,11 @@ struct QuickAddPanelView: View {
             .focused($isFieldFocused)
             .accessibilityIdentifier(AccessibilityIdentifier.QuickAdd.field)
             .accessibilityLabel("New task")
+            // A reported submission failure is about the line that was in the
+            // field when Return was pressed. Editing it makes the report stale,
+            // and a stale report holding the strip would hide the marks for the
+            // line being typed now.
+            .onChange(of: controller.text) { controller.clearSubmissionFailure() }
         }
         .padding(.horizontal, 18)
         .frame(height: 56)
@@ -69,20 +74,28 @@ struct QuickAddPanelView: View {
     /// recognised would resize a floating window under the user's hands while
     /// they typed, which is the one thing a window over somebody else's app must
     /// not do.
+    ///
+    /// A refused submission outranks the preview. The line is still in the field
+    /// precisely because it was not created, and "what the core understood" is
+    /// the wrong answer to a Return that did nothing.
     @ViewBuilder
     private var footer: some View {
         Group {
-            switch controller.preview {
-            case .none:
-                unavailable
-            case .some(.success(let preview)):
-                if preview.marks.isEmpty {
-                    hint(preview)
-                } else {
-                    marks(preview)
+            if let refusal = controller.submissionFailure {
+                failure(refusal)
+            } else {
+                switch controller.preview {
+                case .none:
+                    unavailable
+                case .some(.success(let preview)):
+                    if preview.marks.isEmpty {
+                        hint(preview)
+                    } else {
+                        marks(preview)
+                    }
+                case .some(.failure(let error)):
+                    failure(error)
                 }
-            case .some(.failure(let error)):
-                failure(error)
             }
         }
         .padding(.horizontal, 18)
