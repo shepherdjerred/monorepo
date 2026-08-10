@@ -59,8 +59,14 @@ public struct GrokProvider: UsageProvider {
 
   private func restartFetch(excluding credential: ProviderCredential) async throws -> UsageSnapshot
   {
-    let replacement = try await client.resolveCredential(for: id, excluding: credential)
-    return try await fetch(usingCredential: replacement)
+    do {
+      let replacement = try await client.resolveCredential(for: id, excluding: credential)
+      return try await fetch(usingCredential: replacement)
+    } catch QuotaError.credentialsMissing {
+      // No untried credential remains: report the rejection itself rather than letting the
+      // caller see a confusing "missing credential" after the server actively rejected one.
+      throw QuotaError.unauthorized(id)
+    }
   }
 
   public static func parseIdentity(data: Data) throws -> GrokIdentity {

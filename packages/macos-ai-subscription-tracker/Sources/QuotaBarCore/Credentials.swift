@@ -390,6 +390,7 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
 public actor CompositeCredentialStore: CredentialStore {
   private let manual: ManualCredentialStore
   private let local: any CredentialStore
+  private var rejectedManualTokens: [ProviderID: Set<String>] = [:]
 
   public init(manual: ManualCredentialStore, local: any CredentialStore) {
     self.manual = manual
@@ -400,8 +401,18 @@ public actor CompositeCredentialStore: CredentialStore {
     for provider: ProviderID,
     rejecting rejectedCredential: ProviderCredential?
   ) async throws -> ProviderCredential {
+    // Remember every manual token rejected during this store's lifetime, not just the one
+    // passed to this call — a caller (e.g. GrokProvider/CodexProvider) that restarts a whole
+    // fetch across several 401s only ever excludes its most recent credential, so without this
+    // history an already-rejected manual token would be handed out again once a later local
+    // token is rejected, oscillating between the two forever instead of exhausting.
+    var rejected = rejectedManualTokens[provider] ?? []
+    if let rejectedCredential {
+      rejected.insert(rejectedCredential.accessToken)
+      rejectedManualTokens[provider] = rejected
+    }
     if let manualCredential = try await manual.credentialIfPresent(for: provider),
-      manualCredential != rejectedCredential
+      !rejected.contains(manualCredential.accessToken)
     {
       return manualCredential
     }

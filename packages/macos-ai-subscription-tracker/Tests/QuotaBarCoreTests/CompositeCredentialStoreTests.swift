@@ -21,6 +21,27 @@ final class CompositeCredentialStoreTests: XCTestCase {
     XCTAssertEqual(fallback.accessToken, "local-token")
   }
 
+  func testRejectedManualCredentialIsNotOfferedAgainAfterLaterRejection() async throws {
+    let stores = try await makeStores()
+    defer { try? FileManager.default.removeItem(at: stores.root) }
+
+    let manualCredential = try await stores.composite.credential(for: .codex, rejecting: nil)
+    XCTAssertEqual(manualCredential.accessToken, "manual-token")
+    let localCredential = try await stores.composite.credential(
+      for: .codex, rejecting: manualCredential)
+    XCTAssertEqual(localCredential.accessToken, "local-token")
+
+    // Once the local credential is also rejected, the composite store must not re-offer the
+    // manual credential it already handed out and saw rejected earlier in this same sequence -
+    // otherwise a caller retrying on 401 alternates between the two forever.
+    do {
+      _ = try await stores.composite.credential(for: .codex, rejecting: localCredential)
+      XCTFail("Expected credentialsMissing once every known credential has been rejected")
+    } catch {
+      XCTAssertEqual(error as? QuotaError, .credentialsMissing(.codex))
+    }
+  }
+
   private func makeStores() async throws -> (
     root: URL,
     composite: CompositeCredentialStore

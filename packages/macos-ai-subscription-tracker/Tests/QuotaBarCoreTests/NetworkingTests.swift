@@ -252,6 +252,48 @@ final class NetworkingTests: XCTestCase {
       ])
   }
 
+  func testCodexStopsAfterOneReplacementInsteadOfOscillatingBetweenCredentials() async throws {
+    let endpoints = try ProviderEndpoints.live(environment: [:])
+    let root = try temporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: root) }
+    let authFile = root.appendingPathComponent(".codex/auth.json")
+    try FileManager.default.createDirectory(
+      at: authFile.deletingLastPathComponent(),
+      withIntermediateDirectories: true
+    )
+    try Data(#"{"tokens":{"access_token":"local-token"}}"#.utf8).write(to: authFile)
+    let manual = ManualCredentialStore(keychain: FakeKeychain())
+    try await manual.save("manual-token", for: .codex)
+    let credentials = CompositeCredentialStore(
+      manual: manual,
+      local: LocalCredentialStore(homeDirectory: root, claudeKeychain: FakeKeychain())
+    )
+    // Both the manual override and the discovered local credential are rejected by the server;
+    // without the fix, CompositeCredentialStore forgets the manual token was already rejected
+    // and hands it out again, oscillating between the two forever instead of exhausting.
+    let transport = StubTransport(
+      Array(
+        repeating: .success(ProviderResponse(statusCode: 401, data: Data())),
+        count: 8
+      ))
+    let client = ProviderHTTPClient(transport: transport, credentials: credentials)
+
+    do {
+      _ = try await CodexProvider(
+        client: client,
+        usageEndpoint: endpoints.codexUsage,
+        resetEndpoint: endpoints.codexResets
+      ).fetch()
+      XCTFail("Expected unauthorized once every known credential has been rejected")
+    } catch {
+      XCTAssertEqual(error as? QuotaError, .unauthorized(.codex))
+    }
+    // Exactly one replacement attempt: manual-token then local-token, each hitting both Codex
+    // surfaces once (4 requests total) — never a third attempt re-offering manual-token.
+    let requests = await transport.requests
+    XCTAssertEqual(requests.count, 4)
+  }
+
   func testCodexRetainsUsageWhenResetShapeChanges() async throws {
     let endpoints = try ProviderEndpoints.live(environment: [:])
     let transport = RoutingTransport(routes: [
