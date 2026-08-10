@@ -118,23 +118,31 @@ public struct ProviderHTTPClient: Sendable {
     self.credentials = credentials
   }
 
+  /// Resolves a current credential for `provider`, reloading once if the first candidate is
+  /// expired. Exposed so a caller that must issue several requests against one account (e.g.
+  /// Grok's identity/billing/credits surfaces) can pin every request to the same credential
+  /// instead of letting each `get` call resolve independently.
+  public func resolveCredential(
+    for provider: ProviderID,
+    excluding excludedCredential: ProviderCredential? = nil
+  ) async throws -> ProviderCredential {
+    let loadedCredential = try await credentials.credential(
+      for: provider, rejecting: excludedCredential)
+    do {
+      return try loadedCredential.requireCurrent(for: provider)
+    } catch QuotaError.credentialsExpired {
+      return try await credentials.credential(for: provider, rejecting: loadedCredential)
+        .requireCurrent(for: provider)
+    }
+  }
+
   public func get(
     provider: ProviderID,
     url: URL,
     headers: [String: String] = [:],
     timeout: TimeInterval = 20
   ) async throws -> Data {
-    let loadedCredential = try await credentials.credential(for: provider, rejecting: nil)
-    let initialCredential: ProviderCredential
-    do {
-      initialCredential = try loadedCredential.requireCurrent(for: provider)
-    } catch QuotaError.credentialsExpired {
-      initialCredential = try await credentials.credential(
-        for: provider,
-        rejecting: loadedCredential
-      )
-      .requireCurrent(for: provider)
-    }
+    let initialCredential = try await resolveCredential(for: provider)
     let first = try await send(
       provider: provider,
       url: url,
@@ -145,11 +153,7 @@ public struct ProviderHTTPClient: Sendable {
     if first.statusCode == 401 {
       let reloaded: ProviderCredential?
       do {
-        reloaded = try await credentials.credential(
-          for: provider,
-          rejecting: initialCredential
-        )
-        .requireCurrent(for: provider)
+        reloaded = try await resolveCredential(for: provider, excluding: initialCredential)
       } catch QuotaError.credentialsMissing {
         // No alternative credential exists: preserve the original unauthorized result
         // instead of masking it as a missing credential.
@@ -166,6 +170,28 @@ public struct ProviderHTTPClient: Sendable {
       return try validate(retry, provider: provider)
     }
     return try validate(first, provider: provider)
+  }
+
+  /// Single-attempt fetch pinned to a caller-supplied credential — no internal reload on 401.
+  /// Used when several requests for one provider must all resolve to the same account (see
+  /// `GrokProvider.fetch()`); the caller drives reload/retry across the whole batch so a 401 on
+  /// any one request can restart every request with a consistent replacement credential rather
+  /// than letting each request reload independently and end up on different accounts.
+  public func get(
+    provider: ProviderID,
+    url: URL,
+    credential: ProviderCredential,
+    headers: [String: String] = [:],
+    timeout: TimeInterval = 20
+  ) async throws -> Data {
+    let response = try await send(
+      provider: provider,
+      url: url,
+      headers: headers,
+      timeout: timeout,
+      credential: credential
+    )
+    return try validate(response, provider: provider)
   }
 
   private func send(

@@ -20,24 +20,61 @@ public struct GrokProvider: UsageProvider {
   }
 
   public func fetch() async throws -> UsageSnapshot {
-    let identityData = try await client.get(
-      provider: id,
-      url: userEndpoint,
-      headers: Self.headers()
-    )
+    let credential = try await client.resolveCredential(for: id)
+    return try await fetch(usingCredential: credential)
+  }
+
+  /// Pins the identity, billing, and credits requests to one credential so a 401 on any single
+  /// surface cannot leave the published snapshot combining an account label from one credential
+  /// with usage data from another; a 401 on any surface restarts the complete fetch (identity
+  /// included) with a replacement credential instead of letting each surface reload on its own.
+  private func fetch(usingCredential credential: ProviderCredential) async throws -> UsageSnapshot {
+    let identityData: Data
+    do {
+      identityData = try await client.get(
+        provider: id, url: userEndpoint, credential: credential, headers: Self.headers())
+    } catch QuotaError.unauthorized {
+      return try await restartFetch(excluding: credential)
+    }
     let identity = try Self.parseIdentity(data: identityData)
     let surfaceHeaders = Self.headers(userID: identity.userID)
-    async let billingResult = captureSurface {
-      try await client.get(provider: id, url: billingEndpoint, headers: surfaceHeaders)
+    async let billingOutcome = captureGrokSurface {
+      try await client.get(
+        provider: id, url: billingEndpoint, credential: credential, headers: surfaceHeaders)
     }
-    async let creditsResult = captureSurface {
-      try await client.get(provider: id, url: creditsEndpoint, headers: surfaceHeaders)
+    async let creditsOutcome = captureGrokSurface {
+      try await client.get(
+        provider: id, url: creditsEndpoint, credential: credential, headers: surfaceHeaders)
     }
+    let billing = await billingOutcome
+    let credits = await creditsOutcome
+    if case .unauthorized = billing { return try await restartFetch(excluding: credential) }
+    if case .unauthorized = credits { return try await restartFetch(excluding: credential) }
     return try Self.parse(
-      billing: await billingResult,
-      credits: await creditsResult,
+      billing: billing.surfaceResult,
+      credits: credits.surfaceResult,
       accountLabel: identity.accountLabel
     )
+  }
+
+  private func restartFetch(excluding credential: ProviderCredential) async throws -> UsageSnapshot
+  {
+    let replacement = try await client.resolveCredential(for: id, excluding: credential)
+    return try await fetch(usingCredential: replacement)
+  }
+
+  private func captureGrokSurface(
+    _ operation: @Sendable () async throws -> Data
+  ) async -> GrokSurfaceOutcome {
+    do {
+      return .success(try await operation())
+    } catch QuotaError.unauthorized {
+      return .unauthorized
+    } catch let error as QuotaError {
+      return .failure(error.localizedDescription)
+    } catch {
+      return .failure("Provider surface unavailable.")
+    }
   }
 
   public static func parseIdentity(data: Data) throws -> GrokIdentity {
@@ -158,6 +195,22 @@ public struct GrokProvider: UsageProvider {
     ]
     if let userID { headers["x-userid"] = userID }
     return headers
+  }
+}
+
+/// Like `SurfaceResult`, but distinguishes an unauthorized response so `fetch(usingCredential:)`
+/// can restart the whole batch instead of quietly degrading that surface to a warning.
+private enum GrokSurfaceOutcome {
+  case success(Data)
+  case failure(String)
+  case unauthorized
+
+  var surfaceResult: SurfaceResult {
+    switch self {
+    case let .success(data): .success(data)
+    case let .failure(message): .failure(message)
+    case .unauthorized: .failure("Provider surface unavailable.")
+    }
   }
 }
 

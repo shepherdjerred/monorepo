@@ -106,6 +106,30 @@ actor RoutingTransport: HTTPTransport {
   }
 }
 
+/// Routes by URL like `RoutingTransport`, but a route may additionally reject one bearer token
+/// with 401 while accepting any other — for testing that a provider keeps every request for one
+/// fetch on a single, consistent credential.
+actor TokenRoutingTransport: HTTPTransport {
+  private var routes:
+    [String: (rejectedToken: String?, response: Result<ProviderResponse, QuotaError>)]
+  private(set) var requests: [ProviderRequest] = []
+
+  init(routes: [String: (rejectedToken: String?, response: Result<ProviderResponse, QuotaError>)]) {
+    self.routes = routes
+  }
+
+  func send(_ request: ProviderRequest) throws -> ProviderResponse {
+    requests.append(request)
+    guard let route = routes[request.url.absoluteString] else {
+      throw QuotaError.network(request.provider)
+    }
+    if let rejectedToken = route.rejectedToken, request.bearerToken == rejectedToken {
+      return ProviderResponse(statusCode: 401, data: Data())
+    }
+    return try route.response.get()
+  }
+}
+
 final class FakeKeychain: KeychainClient, @unchecked Sendable {
   private let lock = NSLock()
   private var values: [String: Data] = [:]
