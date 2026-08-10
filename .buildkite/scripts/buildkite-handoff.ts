@@ -1,5 +1,3 @@
-import { writeFile } from "node:fs/promises";
-
 export const INLINE_HANDOFF_LIMIT_BYTES = 1024;
 export const BUILD_METADATA_LIMIT_BYTES = 100 * 1024;
 
@@ -52,7 +50,7 @@ export async function writeJsonHandoff(
 ): Promise<void> {
   const handoff = handoffValue(value, artifactName);
   if (handoff.useArtifact) {
-    await writeFile(artifactName, handoff.serialized, "utf8");
+    await Bun.write(artifactName, handoff.serialized);
     if ((await runner(["artifact", "upload", artifactName])) !== 0) {
       throw new Error(
         `could not upload Buildkite handoff artifact ${artifactName}`,

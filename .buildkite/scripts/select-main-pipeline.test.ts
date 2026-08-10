@@ -1,8 +1,10 @@
 import { expect, test } from "bun:test";
 import {
+  assertSelectionContract,
   mainSteps,
   parsePipeline,
   renderSteps,
+  runCommand,
   selectedKeys,
   validateRenderedSteps,
 } from "./select-main-pipeline.ts";
@@ -11,22 +13,77 @@ const repoRoot = new URL("../..", import.meta.url).pathname;
 const pipeline = await Bun.file(`${repoRoot}/.buildkite/pipeline.yml`).text();
 const document = parsePipeline(pipeline);
 const steps = mainSteps(document);
+const bootstrapDocument = parsePipeline(
+  await Bun.file(`${repoRoot}/.buildkite/main-bootstrap.yml`).text(),
+);
+
+test("models every discovered main step in the selection contract", () => {
+  expect(() => assertSelectionContract(steps)).not.toThrow();
+});
+
+test("rejects an unmodeled main step", () => {
+  const unmodeled = new Map([
+    ["verify", { key: "verify" }],
+    ["unmodeled", { key: "unmodeled" }],
+  ]);
+  expect(() => assertSelectionContract(unmodeled)).toThrow(
+    "main step unmodeled has no dynamic-selection contract",
+  );
+});
+
+test("runs selector subprocesses with explicit environment and exit status", async () => {
+  const exitCode = await runCommand(
+    [
+      "bun",
+      "-e",
+      'console.log(Bun.env.SELECTOR_TEST_VALUE); console.error("selector-test-stderr"); process.exit(78)',
+    ],
+    { SELECTOR_TEST_VALUE: "selector-test-stdout" },
+  );
+  expect(exitCode).toBe(78);
+});
 
 test("keeps only required main jobs when no optional lane changed", () => {
   const selected = selectedKeys(steps, new Map());
-  expect([...selected]).toEqual(["verify", "release-please", "build-summary"]);
+  expect([...selected]).toEqual([
+    "verify",
+    "alert-dashboard-postgres",
+    "release-please",
+    "build-summary",
+  ]);
   const rendered = renderSteps(steps, selected);
   validateRenderedSteps(rendered);
   expect(rendered.map((step) => step["key"])).toEqual([
     "verify",
+    "alert-dashboard-postgres",
     "release-please",
     "build-summary",
   ]);
-  expect(rendered[2]?.["depends_on"]).toEqual([
+  expect(rendered[3]?.["depends_on"]).toEqual([
     "ci-selector-base",
     "verify",
     "release-please",
   ]);
+});
+
+test("keeps fixed-corpus configuration failures hard", async () => {
+  expect(bootstrapDocument.steps[0]?.["soft_fail"]).toBeUndefined();
+  const child = Bun.spawn(
+    ["bun", "--no-install", ".buildkite/scripts/select-main-pipeline.ts"],
+    {
+      cwd: repoRoot,
+      env: {
+        ...Bun.env,
+        BUILDKITE_BRANCH: "feature/not-main",
+        CI_IO_FIXED_CORPUS: "true",
+      },
+      stdout: "ignore",
+      stderr: "pipe",
+    },
+  );
+  const stderr = await new Response(child.stderr).text();
+  expect(await child.exited).not.toBe(0);
+  expect(stderr).toContain("CI_IO_FIXED_CORPUS is main-only");
 });
 
 test("retains the full dependency chain for an image release", () => {
@@ -113,6 +170,7 @@ test("renders stable selector dependencies and no duplicate keys", () => {
 test("rejects missing dependencies before dynamic upload", () => {
   const missingDependencySteps = new Map([
     ["verify", { key: "verify", depends_on: "missing-step" }],
+    ["alert-dashboard-postgres", { key: "alert-dashboard-postgres" }],
     ["release-please", { key: "release-please" }],
     ["build-summary", { key: "build-summary" }],
   ]);
@@ -128,6 +186,28 @@ test("rejects duplicate main step keys", () => {
   expect(() => mainSteps(duplicateDocument)).toThrow(
     "duplicate main step key verify",
   );
+});
+
+test("rejects malformed pipeline and dependency shapes", () => {
+  expect(() => parsePipeline("null")).toThrow("pipeline must be an object");
+  expect(() => mainSteps(parsePipeline("steps:\n  - key: ''\n"))).toThrow(
+    "pipeline step key must be a non-empty string",
+  );
+  expect(() =>
+    renderSteps(
+      new Map([["verify", { key: "verify", depends_on: 42 }]]),
+      new Set(["verify"]),
+    ),
+  ).toThrow("verify has an unsupported depends_on shape");
+});
+
+test("rejects duplicate and dangling rendered steps", () => {
+  expect(() =>
+    validateRenderedSteps([{ key: "verify" }, { key: "verify" }]),
+  ).toThrow("duplicate rendered main step key verify");
+  expect(() =>
+    validateRenderedSteps([{ key: "verify", depends_on: "missing" }]),
+  ).toThrow("verify has missing rendered dependency missing");
 });
 
 test("validates the complete-graph fallback", () => {

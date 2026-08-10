@@ -126,13 +126,15 @@ for (const required of [
   "select-main-pipeline.ts",
   "command: bun --no-install .buildkite/scripts/select-main-pipeline.ts",
   "timeout_in_minutes: 5",
-  "soft_fail:",
   'image: "${CI_BASE_IMAGE}"',
   "name: buildkite-git-mirrors",
 ]) {
   if (!mainBootstrap.includes(required)) {
     fail(`main bootstrap is missing selector invariant ${required}`);
   }
+}
+if (mainBootstrap.includes("soft_fail:")) {
+  fail("main selector bootstrap must keep configuration errors hard");
 }
 
 requireIncludes(

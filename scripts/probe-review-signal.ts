@@ -8,7 +8,7 @@
  *
  * Usage:
  *   GH_TOKEN=$(gh auth token) bun scripts/probe-review-signal.ts 1645 1643 1638
- *   REVIEW_PROVIDER=greptile GH_TOKEN=… bun scripts/probe-review-signal.ts 1026
+ *   REVIEW_PROVIDER=qodo GH_TOKEN=… bun scripts/probe-review-signal.ts 2079
  */
 
 import {

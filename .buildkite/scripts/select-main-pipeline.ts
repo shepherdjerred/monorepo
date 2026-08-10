@@ -1,9 +1,6 @@
 #!/usr/bin/env bun
 
-import {
-  FixedCorpusConfigurationError,
-  fixedCorpusMode,
-} from "./migration-core.ts";
+import { fixedCorpusMode } from "./migration-core.ts";
 
 type UnknownRecord = Record<string, unknown>;
 type PipelineStep = UnknownRecord;
@@ -13,7 +10,12 @@ type PipelineDocument = {
   readonly steps: readonly PipelineStep[];
 };
 
-const ALWAYS_SELECTED = new Set(["verify", "release-please", "build-summary"]);
+const ALWAYS_SELECTED = new Set([
+  "verify",
+  "alert-dashboard-postgres",
+  "release-please",
+  "build-summary",
+]);
 
 const STEP_LANE_REQUIREMENTS: Readonly<Record<string, readonly string[]>> = {
   "playwright-e2e-main": ["playwright"],
@@ -30,6 +32,7 @@ const STEP_LANE_REQUIREMENTS: Readonly<Record<string, readonly string[]>> = {
   "argocd-sync": ["helm", "argocd", "images"],
   "tofu-cloudflare": ["tofu", "argocd"],
   "scout-beta-release": ["site-scout", "images"],
+  "scout-tag-release": ["site-scout", "images"],
   "scout-prod-reconcile": ["scout-reconcile"],
   "version-commit-back": ["images"],
 };
@@ -120,7 +123,7 @@ export function mainSteps(
   return result;
 }
 
-function assertSelectionContract(
+export function assertSelectionContract(
   steps: ReadonlyMap<string, PipelineStep>,
 ): void {
   for (const key of steps.keys()) {
@@ -130,7 +133,7 @@ function assertSelectionContract(
   }
 }
 
-async function runCommand(
+export async function runCommand(
   command: readonly string[],
   environment: Readonly<Record<string, string>> = {},
 ): Promise<number> {
@@ -200,7 +203,6 @@ export function selectedKeys(
   for (const [key, lanes] of Object.entries(STEP_LANE_REQUIREMENTS)) {
     if (lanes.some((lane) => decisions.get(lane) === true)) selected.add(key);
   }
-  if (selected.has("scout-beta-release")) selected.add("scout-tag-release");
 
   const pending = [...selected];
   while (pending.length > 0) {
@@ -306,9 +308,9 @@ async function main(): Promise<number> {
     await Bun.file(".buildkite/pipeline.yml").text(),
   );
   const steps = mainSteps(document);
-  assertSelectionContract(steps);
 
   try {
+    assertSelectionContract(steps);
     const base = await prepareBase();
     const decisions = await selectLanes(base);
     const selected = selectedKeys(steps, decisions);
@@ -318,14 +320,13 @@ async function main(): Promise<number> {
     console.log(`Uploaded ${selected.size.toString()} selected main CI steps`);
     return 0;
   } catch (error) {
-    if (error instanceof FixedCorpusConfigurationError) throw error;
     const reason = error instanceof Error ? error.message : String(error);
     console.error(`WARN: ${reason}; falling back to the complete main graph`);
     const rendered = renderSteps(steps, new Set(steps.keys()));
     validateRenderedSteps(rendered);
     await uploadPipeline(document, rendered);
     await annotateFallback(reason);
-    return 1;
+    return 0;
   }
 }
 

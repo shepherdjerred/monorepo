@@ -5,8 +5,6 @@ steps:
   - label: ":mag_right: select and upload main CI work"
     key: ci-selector-base
     if: build.branch == pipeline.default_branch
-    soft_fail:
-      - exit_status: 1
     timeout_in_minutes: 5
     command: bun --no-install .buildkite/scripts/select-main-pipeline.ts
     plugins:

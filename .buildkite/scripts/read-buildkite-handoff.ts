@@ -5,8 +5,12 @@ export type ArtifactDownloadRunner = (
   sourceStep: string,
 ) => Promise<number>;
 
-function requiredArgument(index: number, name: string): string {
-  const value = Bun.argv[index];
+export function requiredArgument(
+  argumentsList: readonly string[],
+  index: number,
+  name: string,
+): string {
+  const value = argumentsList[index];
   if (value === undefined || value.length === 0) {
     throw new Error(`${name} is required`);
   }
@@ -56,8 +60,8 @@ export async function readHandoffValue(
 }
 
 async function main(): Promise<void> {
-  const key = requiredArgument(2, "metadata key");
-  const step = requiredArgument(3, "source step key");
+  const key = requiredArgument(Bun.argv, 2, "metadata key");
+  const step = requiredArgument(Bun.argv, 3, "source step key");
   const value = await metadata(key);
   process.stdout.write(await readHandoffValue(value, step));
 }

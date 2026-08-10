@@ -39,6 +39,7 @@ describe("summarizeReviewSignals", () => {
       total: 0,
       byCompletionSignal: {
         "check-run": 0,
+        "issue-comment": 0,
         "review-at-head": 0,
         "thumbsup-reaction": 0,
         none: 0,
@@ -112,6 +113,7 @@ describe("summarizeReviewSignals", () => {
     expect(summary.total).toBe(6);
     expect(summary.byCompletionSignal).toEqual({
       "check-run": 2,
+      "issue-comment": 0,
       "review-at-head": 1,
       "thumbsup-reaction": 2,
       none: 1,
