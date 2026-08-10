@@ -156,26 +156,30 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
   private func readClaude(excluding excludedTokens: Set<String>) throws -> ProviderCredential? {
     let path = homeDirectory.appendingPathComponent(".claude/.credentials.json")
     var expiredFileCredential: ProviderCredential?
-    if let value = try decodeFile(ClaudeCredentialFile.self, at: path, provider: .claudeCode)?
-      .credential
-    {
-      let credential = try makeCredential(value, source: path.path)
-      do {
-        let currentCredential = try credential.requireCurrent(for: .claudeCode)
-        if !excludedTokens.contains(currentCredential.accessToken) { return currentCredential }
-      } catch QuotaError.credentialsExpired {
-        expiredFileCredential = credential
+    if let file = try decodeFile(ClaudeCredentialFile.self, at: path, provider: .claudeCode) {
+      for value in file.credentialCandidates {
+        let credential = try makeCredential(value, source: path.path)
+        guard !excludedTokens.contains(credential.accessToken) else { continue }
+        do {
+          return try credential.requireCurrent(for: .claudeCode)
+        } catch QuotaError.credentialsExpired {
+          if expiredFileCredential == nil { expiredFileCredential = credential }
+        }
       }
     }
     guard let data = try claudeKeychain.read(service: "Claude Code-credentials", account: nil)
     else { return expiredFileCredential }
-    let value = try decode(ClaudeCredentialFile.self, from: data, provider: .claudeCode)
-    guard let credential = value.credential else { return expiredFileCredential }
-    let keychainCredential = try makeCredential(credential, source: "Claude Code Keychain")
-    guard !excludedTokens.contains(keychainCredential.accessToken) else {
-      return expiredFileCredential
+    let file = try decode(ClaudeCredentialFile.self, from: data, provider: .claudeCode)
+    for value in file.credentialCandidates {
+      let keychainCredential = try makeCredential(value, source: "Claude Code Keychain")
+      guard !excludedTokens.contains(keychainCredential.accessToken) else { continue }
+      do {
+        return try keychainCredential.requireCurrent(for: .claudeCode)
+      } catch QuotaError.credentialsExpired {
+        if expiredFileCredential == nil { expiredFileCredential = keychainCredential }
+      }
     }
-    return keychainCredential
+    return expiredFileCredential
   }
 
   private func readCodex(excluding excludedTokens: Set<String>) throws -> ProviderCredential? {
@@ -199,14 +203,16 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
       includingPropertiesForKeys: nil
     ).filter { $0.lastPathComponent != "mcp" }.sorted { $0.path < $1.path }
     for path in files {
-      if let value = try decodeFile(KimiCredentialFile.self, at: path, provider: .kimi)?.credential
-      {
+      guard let file = try decodeFile(KimiCredentialFile.self, at: path, provider: .kimi) else {
+        continue
+      }
+      for value in file.credentialCandidates {
         let credential = try makeCredential(value, source: path.path)
         guard !excludedTokens.contains(credential.accessToken) else { continue }
         do {
           return try credential.requireCurrent(for: .kimi)
         } catch QuotaError.credentialsExpired {
-          expiredCredential = credential
+          if expiredCredential == nil { expiredCredential = credential }
         }
       }
     }

@@ -76,6 +76,22 @@ final class CredentialTests: XCTestCase {
     XCTAssertEqual(credential.accessToken, "current-keychain-token")
   }
 
+  func testExpiredOAuthDoesNotMaskFreshTopLevelToken() throws {
+    let root = try temporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: root) }
+    try write(
+      #"{"claudeAiOauth":{"accessToken":"expired-oauth","expiresAt":1},"access_token":"current"}"#,
+      to: root.appendingPathComponent(".claude/.credentials.json")
+    )
+    try write(
+      #"{"oauth":{"access_token":"expired-oauth","expires_at":1},"access_token":"current","expires_at":9999999999999}"#,
+      to: root.appendingPathComponent(".kimi-code/credentials/account.json")
+    )
+    let store = LocalCredentialStore(homeDirectory: root, claudeKeychain: FakeKeychain())
+    XCTAssertEqual(try store.credential(for: .claudeCode, rejecting: nil).accessToken, "current")
+    XCTAssertEqual(try store.credential(for: .kimi, rejecting: nil).accessToken, "current")
+  }
+
   func testKimiLocalCredentialTakesPrecedenceOverOpenCode() throws {
     let root = try temporaryDirectory()
     defer { try? FileManager.default.removeItem(at: root) }

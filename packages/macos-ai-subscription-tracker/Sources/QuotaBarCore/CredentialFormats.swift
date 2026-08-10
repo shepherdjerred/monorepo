@@ -16,10 +16,15 @@ struct ClaudeCredentialFile: Decodable {
     case accessTokenSnake = "access_token"
   }
 
-  var credential: TokenValue? {
-    if let claudeAiOauth { return claudeAiOauth.value }
-    guard let token = accessToken ?? accessTokenSnake else { return nil }
-    return TokenValue(accessToken: token, expiresAt: nil)
+  /// Ordered candidates when legacy and current representations coexist in one file: each is
+  /// tried in turn so an expired `claudeAiOauth` entry cannot mask a fresh top-level token.
+  var credentialCandidates: [TokenValue] {
+    var candidates: [TokenValue] = []
+    if let claudeAiOauth { candidates.append(claudeAiOauth.value) }
+    if let token = accessToken ?? accessTokenSnake {
+      candidates.append(TokenValue(accessToken: token, expiresAt: nil))
+    }
+    return candidates
   }
 }
 
@@ -70,13 +75,19 @@ struct KimiCredentialFile: Decodable {
     case oauth
   }
 
-  var credential: TokenValue? {
-    if let oauth { return oauth.value }
-    guard let token = accessToken ?? accessTokenSnake else { return nil }
-    return TokenValue(
-      accessToken: token,
-      expiresAt: normalizedDate(expiresAt ?? expiresAtSnake)
-    )
+  /// Ordered candidates when legacy and current representations coexist in one file: each is
+  /// tried in turn so an expired `oauth` entry cannot mask a fresh top-level token.
+  var credentialCandidates: [TokenValue] {
+    var candidates: [TokenValue] = []
+    if let oauth { candidates.append(oauth.value) }
+    if let token = accessToken ?? accessTokenSnake {
+      candidates.append(
+        TokenValue(
+          accessToken: token,
+          expiresAt: normalizedDate(expiresAt ?? expiresAtSnake)
+        ))
+    }
+    return candidates
   }
 }
 
