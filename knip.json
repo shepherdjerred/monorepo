@@ -505,9 +505,12 @@
     "op",
     "pinchtab",
     "rg",
+    "swift",
+    "swiftlint",
     "tsc",
     "uv",
     "uvx",
-    "velero"
+    "velero",
+    "xcodegen"
   ]
 }

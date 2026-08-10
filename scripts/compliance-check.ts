@@ -365,6 +365,10 @@ packages/homelab:lint
 packages/homelab:typecheck
 packages/discord-plays-pokemon/packages/backend:build
 packages/discord-plays-mario-kart/packages/backend:build
+packages/macos-ai-subscription-tracker:build
+packages/macos-ai-subscription-tracker:test
+packages/macos-ai-subscription-tracker:lint
+packages/macos-ai-subscription-tracker:typecheck
 `
     .trim()
     .split("\n"),
