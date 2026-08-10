@@ -143,15 +143,21 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
 
   private func readClaude() throws -> ProviderCredential? {
     let path = homeDirectory.appendingPathComponent(".claude/.credentials.json")
+    var expiredFileCredential: ProviderCredential?
     if let value = try decodeFile(ClaudeCredentialFile.self, at: path, provider: .claudeCode)?
       .credential
     {
-      return try makeCredential(value, source: path.path)
+      let credential = try makeCredential(value, source: path.path)
+      do {
+        return try credential.requireCurrent(for: .claudeCode)
+      } catch QuotaError.credentialsExpired {
+        expiredFileCredential = credential
+      }
     }
     guard let data = try claudeKeychain.read(service: "Claude Code-credentials", account: nil)
-    else { return nil }
+    else { return expiredFileCredential }
     let value = try decode(ClaudeCredentialFile.self, from: data, provider: .claudeCode)
-    guard let credential = value.credential else { return nil }
+    guard let credential = value.credential else { return expiredFileCredential }
     return try makeCredential(credential, source: "Claude Code Keychain")
   }
 

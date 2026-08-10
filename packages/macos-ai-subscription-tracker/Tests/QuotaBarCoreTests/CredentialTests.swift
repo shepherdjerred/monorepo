@@ -57,6 +57,25 @@ final class CredentialTests: XCTestCase {
     XCTAssertEqual(credential.accessToken, "keychain-token")
   }
 
+  func testExpiredClaudeFileCredentialFallsBackToKeychain() throws {
+    let root = try temporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: root) }
+    try write(
+      #"{"claudeAiOauth":{"accessToken":"expired-file-token","expiresAt":1}}"#,
+      to: root.appendingPathComponent(".claude/.credentials.json")
+    )
+    let keychain = FakeKeychain()
+    keychain.seed(
+      Data(#"{"claudeAiOauth":{"accessToken":"current-keychain-token"}}"#.utf8),
+      service: "Claude Code-credentials"
+    )
+    let store = LocalCredentialStore(homeDirectory: root, claudeKeychain: keychain)
+
+    let credential = try store.credential(for: .claudeCode, reload: true)
+
+    XCTAssertEqual(credential.accessToken, "current-keychain-token")
+  }
+
   func testKimiLocalCredentialTakesPrecedenceOverOpenCode() throws {
     let root = try temporaryDirectory()
     defer { try? FileManager.default.removeItem(at: root) }

@@ -7,9 +7,9 @@ sidebar:
 
 QuotaBar keeps subscription usage visible without turning provider-specific web
 usage pages into a dashboard. It polls Claude Code, Codex, Kimi Code, and Grok
-from local or optional Keychain-backed credentials, keeps the domain model
-provider-independent, and marks
-cached or failed data stale rather than presenting it as current.
+through [typed credential discovery](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/Credentials.swift).
+Its [provider-independent model](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/Domain.swift)
+marks cached or failed data stale instead of current.
 
 ```mermaid
 flowchart LR
@@ -30,6 +30,8 @@ API rate cards, history charts, notifications, or a full usage dashboard.
 The popover includes a personal subscription-spend reminder: $200/month for
 Claude Code, $200/month for Codex, $40/month for Kimi Code, and $30/month for
 Grok ($470/month total); this is not provider billing data.
+The reminder values live in the
+[subscription plan model](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/Domain.swift).
 
 The subscription view surfaces the tightest actionable quota first and sorts
 provider sections by current remaining usage. Quota windows and Codex reset
@@ -38,6 +40,10 @@ are reserved for pressure. Policy-only Fable data, stale snapshots, unknown
 percentages, and provider errors remain explicit without invented progress.
 The `API & routers` segment is deliberately disabled until developer API and
 router data are actually supported.
+These choices are derived by the
+[quota overview model](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/QuotaOverview.swift)
+and rendered by the
+[menu-bar view](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBar/MenuBarView.swift).
 
 Claude and Codex use private authenticated subscription usage surfaces. Claude
 preserves additive model-scoped windows when the account returns them; Fable is
@@ -46,6 +52,9 @@ windows from returned duration and reset metadata, so a missing five-hour
 window is not invented. It also reads the reset-credit surface read-only and
 shows each available banked reset with its expiration; QuotaBar never redeems a
 reset.
+The provider-specific behavior is isolated in the
+[Claude adapter](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/ClaudeCodeProvider.swift)
+and [Codex adapter](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/CodexProvider.swift).
 
 Kimi Code reads its local OAuth credential directory, including a relocated
 `KIMI_CODE_HOME`, and keeps Kimi Code separate from Moonshot Open Platform API
@@ -55,6 +64,10 @@ credentials must be refreshed through OpenCode. Grok reads subscription usage
 and credit surfaces, not xAI developer API limits. Kimi and Grok responses are
 private contracts: malformed or changed responses become unavailable/stale
 states and are covered by local fixtures.
+Those boundaries are implemented by the
+[Kimi adapter](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/KimiProvider.swift),
+[Grok adapter](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/GrokProvider.swift),
+and read-only [credential store](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/Credentials.swift).
 
 ## Runtime behavior
 
@@ -65,6 +78,9 @@ Independent Codex/Grok surfaces may preserve valid partial data with a warning.
 Successful snapshots are stored as JSON under the user's QuotaBar Application
 Support directory; corrupt and failed writes are visible, and loading the cache
 always marks it stale until a fresh response arrives.
+See the [polling coordinator](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/QuotaBarModel.swift),
+[HTTP client](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/Networking.swift),
+and [snapshot store](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/Persistence.swift).
 
 The menu-bar symbol and text status use the lowest remaining quota: healthy
 above 20%, warning from 5% through 20%, critical below 5%, and unavailable for
@@ -75,6 +91,8 @@ included in the snapshot cache; Kimi Code and Grok fields are for subscription
 credentials, not their developer API keys. Launch at login reflects the
 installed app's real `SMAppService` state and reports approval or registration
 failures instead of storing a hopeful boolean.
+The controls are defined by [SettingsView](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBar/SettingsView.swift)
+and the [launch-at-login controller](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/LaunchAtLogin.swift).
 
 ## Release boundary
 
@@ -90,6 +108,9 @@ ticket, strict signature, and Gatekeeper acceptance all pass. Apple credentials
 and private signing keys remain outside the repository. Passing fixtures
 validates known response shapes but does not replace comparing all four
 providers with their live Usage pages before release.
+The native release gate is defined by the
+[package scripts](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/package.json)
+and [Xcode project specification](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/project.yml).
 
 ## Related
 

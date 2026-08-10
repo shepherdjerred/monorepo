@@ -36,7 +36,7 @@ public struct ClaudeCodeProvider: UsageProvider {
       )
     }
     for limit in response.limits {
-      let descriptor = descriptor(for: limit)
+      let descriptor = try descriptor(for: limit)
       windowsByID[descriptor.id] = try UsageWindow.validated(
         id: descriptor.id,
         label: descriptor.label,
@@ -103,7 +103,7 @@ public struct ClaudeCodeProvider: UsageProvider {
     }
   }
 
-  private static func descriptor(for limit: ClaudeLimit) -> WindowDescriptor {
+  private static func descriptor(for limit: ClaudeLimit) throws -> WindowDescriptor {
     switch limit.kind {
     case "session":
       WindowDescriptor(id: "five-hour", label: "5-hour", kind: .rolling(durationSeconds: 18_000))
@@ -112,7 +112,7 @@ public struct ClaudeCodeProvider: UsageProvider {
     case "weekly_scoped":
       scopedDescriptor(model: limit.modelName ?? "Scoped")
     default:
-      scopedDescriptor(model: limit.modelName ?? title(limit.kind))
+      throw QuotaError.unsupportedResponse(.claudeCode)
     }
   }
 

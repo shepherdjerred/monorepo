@@ -86,28 +86,19 @@ public final class QuotaBarModel {
 
   public func updatePollingInterval(_ interval: TimeInterval) {
     settings.setPollingInterval(interval)
-    let wasPolling = pollingTask != nil
+    guard pollingTask != nil else { return }
     stopPolling()
-    if wasPolling { startPolling() }
+    startPolling()
   }
 
   public func setProvider(_ provider: ProviderID, enabled: Bool) {
     settings.setProvider(provider, enabled: enabled)
-    if enabled {
-      states[provider] =
-        lastSuccessful[provider].map {
-          .available($0.markedStale(reason: "Cached data; waiting for a provider refresh."))
-        } ?? .loading
-      let previousAttemptCount = providerRefreshAttempts[provider, default: 0]
-      Task { [weak self] in
-        guard let self else { return }
-        await refresh()
-        guard settings.enabledProviders.contains(provider),
-          providerRefreshAttempts[provider, default: 0] == previousAttemptCount
-        else { return }
-        await refresh()
-      }
-    }
+    guard enabled else { return }
+    states[provider] =
+      lastSuccessful[provider].map {
+        .available($0.markedStale(reason: "Cached data; waiting for a provider refresh."))
+      } ?? .loading
+    refreshAfterEnabling(provider)
   }
 
   public func refresh() async {
@@ -163,6 +154,18 @@ public final class QuotaBarModel {
   private func clearRefresh(id: Int) {
     guard activeRefresh?.id == id else { return }
     activeRefresh = nil
+  }
+
+  private func refreshAfterEnabling(_ provider: ProviderID) {
+    let previousAttemptCount = providerRefreshAttempts[provider, default: 0]
+    Task { [weak self] in
+      guard let self else { return }
+      await refresh()
+      guard settings.enabledProviders.contains(provider),
+        providerRefreshAttempts[provider, default: 0] == previousAttemptCount
+      else { return }
+      await refresh()
+    }
   }
 
   private func apply(_ result: ProviderFetchResult) -> Bool {

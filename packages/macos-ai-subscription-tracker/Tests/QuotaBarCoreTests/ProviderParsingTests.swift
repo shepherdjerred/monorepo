@@ -36,6 +36,14 @@ final class ProviderParsingTests: XCTestCase {
     XCTAssertThrowsError(
       try ClaudeCodeProvider.parse(data: Data(#"{"unknown_surface":{"enabled":true}}"#.utf8))
     )
+    XCTAssertThrowsError(
+      try ClaudeCodeProvider.parse(
+        data: Data(
+          #"{"limits":[{"kind":"monthly","percent":10,"resets_at":"2026-09-01T00:00:00Z"}]}"#
+            .utf8
+        )
+      )
+    )
   }
 
   func testCodexClassifiesEveryWindowFromDuration() throws {
