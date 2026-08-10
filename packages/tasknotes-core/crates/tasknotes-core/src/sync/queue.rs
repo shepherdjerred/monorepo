@@ -341,7 +341,8 @@ impl CommandQueue {
     ///
     /// Propagates a storage-layer failure. A failure to record the parked
     /// command leaves the queue untouched, so nothing is lost and the drain can
-    /// try again.
+    /// try again. A failure to *then* shorten the queue leaves the command
+    /// queued in memory as well as on disk — see the note on the dequeue below.
     pub fn dead_letter(&mut self, id: &str, error: &Error) -> Result<()> {
         let Some((position, command)) = self
             .queue
@@ -375,8 +376,19 @@ impl CommandQueue {
         // refused write must leave the parked list exactly as it was — which is
         // what committing before adopting gives.
         self.commit_dead_letter(candidate)?;
-        self.queue.remove(position);
-        self.persist_queue()
+        // And the dequeue half is committed for the same reason, one direction
+        // over: dropping the command from memory before its write lands leaves
+        // the retry pass reading a queue the disk does not have. The pass finds
+        // nothing to send, publishes the command as parked and the engine as
+        // idle, and the next launch restores the copy `queue.json` still holds
+        // and replays it — a command the user was shown as awaiting their Retry
+        // re-sent without them choosing it. Leaving it queued keeps memory
+        // saying what the bytes say, which is the duplicate-on-disk state the
+        // write order above is chosen to produce and that this pass can retire
+        // on its next attempt.
+        let mut remaining = self.queue.clone();
+        remaining.remove(position);
+        self.commit_queue(remaining)
     }
 
     /// Move a parked command back onto the tail of the queue.
@@ -406,11 +418,9 @@ impl CommandQueue {
         // copies replay onto the visible view twice — a create would show as
         // two tasks — and only one of them is the mutation the user made.
         if !self.queue.iter().any(|queued| queued.id() == id) {
-            self.queue.push(command);
-            if let Err(failure) = self.persist_queue() {
-                self.queue.pop();
-                return Err(failure);
-            }
+            let mut candidate = self.queue.clone();
+            candidate.push(command);
+            self.commit_queue(candidate)?;
         }
         let mut candidate = self.dead.clone();
         candidate.remove(position);
@@ -433,6 +443,12 @@ impl CommandQueue {
     }
 
     /// Write a proposed queue, and adopt it only once the bytes are down.
+    ///
+    /// ⚠️ **The only way this type writes `queue.json`.** There is deliberately
+    /// no raw "persist what is already in memory" primitive beside it: every
+    /// such helper this file has had was a mutation applied before its write,
+    /// and every one of them was the same bug — memory shorter than the disk,
+    /// so the retry pass reports idle over commands `queue.json` still holds.
     ///
     /// ## Why an addition may not touch `self.queue` first
     ///
@@ -478,13 +494,6 @@ impl CommandQueue {
         self.storage.write_dead_letter(&data)?;
         self.dead = candidate;
         Ok(())
-    }
-
-    fn persist_queue(&self) -> Result<()> {
-        let data = serde_json::to_string(&self.queue).map_err(|error| {
-            Error::invariant(format!("could not serialize the command queue: {error}"))
-        })?;
-        self.storage.write_queue(&data)
     }
 }
 
@@ -913,6 +922,60 @@ mod tests {
             1,
             "so the command is still queued, in memory as well as on disk"
         );
+    }
+
+    /// ⚠️ **A parking whose *second* write is refused must leave the command
+    /// queued**, or the user is shown a parked row that re-sends itself.
+    ///
+    /// The dead-letter write landed, so the command is durably in both files —
+    /// which is the state the write order deliberately produces. Removing it
+    /// from the in-memory queue anyway makes the drain report the engine idle
+    /// while `queue.json` still holds it, and the next launch restores that copy
+    /// and replays a command the user was told was waiting for their Retry.
+    #[test]
+    fn a_refused_parking_dequeue_leaves_the_command_queued() {
+        let storage = Arc::new(HalfWritingStorage::default());
+        let mut queue = CommandQueue::new(storage.clone(), Arc::new(FixedClock));
+        queue.enqueue(create("c1", &temp("1-1"))).unwrap();
+        queue.enqueue(set_status("c2", &temp("1-1"))).unwrap();
+
+        storage.refuse_queue.store(true, Ordering::SeqCst);
+        queue
+            .dead_letter("c1", &Error::api("nope", 422))
+            .expect_err("the dequeue half of the parking failed");
+        storage.refuse_queue.store(false, Ordering::SeqCst);
+
+        assert_eq!(
+            queue.dead_letters().len(),
+            1,
+            "the parked entry landed and is inspectable"
+        );
+        assert_eq!(
+            queue.pending().iter().map(Command::id).collect::<Vec<_>>(),
+            vec!["c1", "c2"],
+            "memory still says what the disk says, so the pass can try again"
+        );
+
+        queue.dead_letter("c1", &Error::api("nope", 422)).unwrap();
+        assert_eq!(
+            queue.pending().iter().map(Command::id).collect::<Vec<_>>(),
+            vec!["c2"],
+            "and the retry replaces the entry rather than parking a second one"
+        );
+        assert_eq!(queue.dead_letters().len(), 1);
+
+        let mut relaunched = CommandQueue::new(storage, Arc::new(FixedClock));
+        relaunched.restore().unwrap();
+        assert_eq!(
+            relaunched
+                .pending()
+                .iter()
+                .map(Command::id)
+                .collect::<Vec<_>>(),
+            vec!["c2"],
+            "so no launch replays a command the user has yet to retry"
+        );
+        assert_eq!(relaunched.dead_letters().len(), 1, "it is parked instead");
     }
 
     #[test]
