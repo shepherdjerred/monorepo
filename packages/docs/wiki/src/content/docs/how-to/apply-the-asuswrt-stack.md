@@ -8,15 +8,17 @@ sidebar:
 The `asuswrt` stack is applied by hand, from a machine on the home LAN. CI never
 runs it.
 
-Each step below names its own working directory; they are not the same one.
+Step 1 runs from anywhere in the checkout. Step 2 onward runs from
+`packages/homelab/src/tofu`.
 
-## 1. Install the provider — from the repository root
+## 1. Install the provider
 
 The provider is not published to a registry, so build it into the local
-filesystem mirror first:
+filesystem mirror first. This one is anchored to the repository root, so it runs
+from anywhere in the checkout:
 
 ```bash
-make -C packages/terraform-provider-asuswrt install
+make -C "$(git rev-parse --show-toplevel)/packages/terraform-provider-asuswrt" install
 ```
 
 ## 2. Initialize, import, plan, apply — from `packages/homelab/src/tofu`
