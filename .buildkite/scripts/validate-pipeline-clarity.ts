@@ -39,11 +39,11 @@ export function validatePipelineClarity(
   for (const [stepKey, required] of [
     [
       "playwright-e2e-pr",
-      "Browser E2E scope: sjer.red, docs wiki, and Scout evals",
+      "Browser E2E scope: sjer.red, docs wiki, alert dashboard, and Scout evals",
     ],
     [
       "playwright-e2e-main",
-      "Browser E2E scope: sjer.red, docs wiki, and Scout evals",
+      "Browser E2E scope: sjer.red, docs wiki, alert dashboard, and Scout evals",
     ],
     ["docker-e2e-pr", "llm-observability E2E — Tempo + MinIO"],
     ["docker-e2e-main", "llm-observability E2E — Tempo + MinIO"],

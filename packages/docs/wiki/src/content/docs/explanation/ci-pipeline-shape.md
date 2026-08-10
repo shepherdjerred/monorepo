@@ -13,15 +13,18 @@ any two of them would lose information the pipeline is built to preserve.
 ## The lanes are phases, not duplicated test suites
 
 - **Browser E2E** covers the shipped Playwright consumers: `sjer.red`, the docs
-  wiki, and Scout evals. The browser matrix comes from the pinned
-  `ci-playwright` image, so the lane is about published sites rather than about
-  Playwright as a tool. The scope is asserted in
+  wiki, the alert dashboard, and Scout evals. The browser matrix comes from the
+  pinned `ci-playwright` image, so the lane is about published sites rather than
+  about Playwright as a tool. The lane's scope statement is asserted in
   [`validate-pipeline-clarity.ts`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/scripts/validate-pipeline-clarity.ts)
   against the lane defined in [`pipeline.yml`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml).
-- **llm-observability E2E** is the dedicated Docker/service-backed lane. It
-  starts Tempo and MinIO and runs only `@shepherdjerred/llm-observability`'s
-  service-dependent tests. It is separate because it is the only lane that needs
-  live backing services — see the `docker-e2e` steps in
+- **llm-observability E2E** is the dedicated tracing-stack lane. It starts Tempo
+  and MinIO and runs only `@shepherdjerred/llm-observability`'s
+  service-dependent tests. It is not the only lane with a live backing service —
+  `alert-dashboard-postgres` runs a Postgres sidecar for the alert-ledger
+  integration tests — but it is the only one that needs a whole trace pipeline,
+  where a failure means the exporter/collector/object-store path broke rather
+  than a query. See the `docker-e2e` and `alert-dashboard-postgres` steps in
   [`pipeline.yml`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml).
 - **OpenTofu** stays split into infrastructure stacks, GitHub resources, and
   Cloudflare resources. Those three have different ordering, concurrency,

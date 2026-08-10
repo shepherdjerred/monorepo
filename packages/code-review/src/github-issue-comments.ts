@@ -71,19 +71,26 @@ const COMMIT_SHA_PATTERN = /\b[0-9a-f]{40}\b/gu;
  * gate pass on a review of superseded code.
  *
  * Qodo anchors its evidence and code links to the commit it reviewed, so when
- * the body names any commit those links identify the reviewed head exactly. A
- * comment that names no commit (a clean review has no findings to link) falls
- * back to the timestamp comparison.
+ * the body names any commit those links identify the reviewed head exactly.
+ *
+ * Only a comment reporting no findings may fall back to the timestamp. A
+ * clean review has nothing to link, so it can name no commit and the push-time
+ * comparison is all there is. A comment that reports findings and still names
+ * no commit says nothing about which code it read — and the edit that bumped
+ * its timestamp may have done no more than strike an older finding — so it
+ * cannot stand as a review of this head.
  */
-export function reviewCommentBoundToHead(
-  body: string,
-  updatedAt: string | null,
-  head: string,
-  headPushedAt: string | null,
-): boolean {
-  const referenced = new Set(body.match(COMMIT_SHA_PATTERN));
-  if (referenced.size > 0) return referenced.has(head);
-  return reactionBoundToHead(updatedAt, headPushedAt);
+export function reviewCommentBoundToHead(input: {
+  body: string;
+  updatedAt: string | null;
+  head: string;
+  headPushedAt: string | null;
+  reportsFindings: boolean;
+}): boolean {
+  const referenced = new Set(input.body.match(COMMIT_SHA_PATTERN));
+  if (referenced.size > 0) return referenced.has(input.head);
+  if (input.reportsFindings) return false;
+  return reactionBoundToHead(input.updatedAt, input.headPushedAt);
 }
 
 /** Resolve a persistent issue-comment review against the current head. */
@@ -101,14 +108,19 @@ export async function resolveIssueCommentReview(input: {
     token: input.token,
     provider: input.provider,
   });
+  const reportsFindings =
+    comment === null
+      ? false
+      : (input.provider.parseIssueComment?.(comment).length ?? 0) > 0;
   if (
     comment !== null &&
-    reviewCommentBoundToHead(
-      comment.body,
-      comment.updatedAt,
-      input.head,
-      input.headPushedAt,
-    )
+    reviewCommentBoundToHead({
+      body: comment.body,
+      updatedAt: comment.updatedAt,
+      head: input.head,
+      headPushedAt: input.headPushedAt,
+      reportsFindings,
+    })
   ) {
     return {
       state: "reviewed",

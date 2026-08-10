@@ -359,6 +359,11 @@ export const SELECTED_STEPS_METADATA_KEY = "ci-selected-main-steps";
  * selector omitted, failing the summary job on an otherwise green build. The
  * fallback path deliberately leaves this unset: it uploads the complete graph,
  * so every step exists.
+ *
+ * Call this only once the upload it describes has succeeded. A value written
+ * ahead of the upload describes a build that may never exist: if the upload
+ * then fails and the fallback uploads the complete graph, the annotator would
+ * report steps that did run as "not selected".
  */
 async function recordSelectedSteps(
   selected: ReadonlySet<string>,
@@ -406,6 +411,7 @@ async function main(): Promise<number> {
   );
   let steps: Map<string, PipelineStep> | undefined;
   let changedFilesPath: string | undefined;
+  let uploaded = false;
 
   try {
     steps = mainSteps(document);
@@ -416,11 +422,16 @@ async function main(): Promise<number> {
     const selected = selectedKeys(steps, decisions);
     const rendered = renderSteps(steps, selected);
     validateRenderedSteps(rendered);
-    await recordSelectedSteps(selected);
     await uploadPipeline(document, rendered, changedFilesPath);
+    uploaded = true;
+    await recordSelectedSteps(selected);
     console.log(`Uploaded ${selected.size.toString()} selected main CI steps`);
     return 0;
   } catch (error) {
+    // Buildkite appends uploaded steps, so a second upload after the selected
+    // graph is already in the build would duplicate it. Past that point the
+    // failure has to surface rather than fall back.
+    if (uploaded) throw error;
     const reason = error instanceof Error ? error.message : String(error);
     console.error(`WARN: ${reason}; falling back to the complete main graph`);
     const rendered = renderFallbackSteps(document, steps, changedFilesPath);
