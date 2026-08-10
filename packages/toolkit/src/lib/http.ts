@@ -3,7 +3,7 @@ import type { z } from "zod";
 /**
  * Shared HTTP client for toolkit's fetch-based service clients.
  *
- * Every service client (Grafana, Alerts, PagerDuty, Bugsink) follows the same
+ * Every service client (Grafana, Alerts, Bugsink) follows the same
  * shape:
  * build a URL from a base + endpoint, attach an auth header, fetch, and on a
  * non-2xx response return a `{ success: false, error }` envelope carrying the
@@ -33,7 +33,6 @@ export type HttpResult<T> = {
  *
  * - `Bearer` produces `Authorization: Bearer <token>` (Alerts, Grafana,
  *   Bugsink).
- * - `Token token=` produces `Authorization: Token token=<token>` (PagerDuty).
  */
 export type HttpAuth =
   | { scheme: "Bearer"; token: string }
@@ -76,7 +75,7 @@ export type HttpClientOptions = {
   auth: HttpAuth;
   /** Prefix for wrapped API errors, e.g. `"Grafana API"`. */
   errorLabel: string;
-  /** Extra headers merged into every request (e.g. PagerDuty's `Accept`). */
+  /** Extra headers merged into every request. */
   headers?: Record<string, string> | undefined;
   /**
    * Optional URL builder hook. When provided, it fully owns turning

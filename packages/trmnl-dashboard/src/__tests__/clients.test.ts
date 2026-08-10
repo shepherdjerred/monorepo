@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "bun:test";
 import { BugsinkClient } from "../clients/bugsink.ts";
 import { HomeStatusClient } from "../clients/home-assistant.ts";
-import { PagerDutyClient } from "../clients/pagerduty.ts";
+import { AlertsClient } from "../clients/alerts.ts";
 
 const originalFetch = globalThis.fetch;
 
@@ -133,45 +133,52 @@ describe("BugsinkClient", () => {
   });
 });
 
-describe("PagerDutyClient", () => {
-  it("counts triggered and acknowledged incidents", async () => {
+describe("AlertsClient", () => {
+  it("reads the summary and open occurrences", async () => {
     setFetchMock(async (input) => {
       const url = requestUrl(input);
-      if (url.startsWith("https://api.pagerduty.com/incidents")) {
+      if (url === "https://alerts.local/api/v1/summary")
         return Response.json({
-          incidents: [
-            { status: "triggered" },
-            { status: "triggered" },
-            { status: "acknowledged" },
-          ],
+          open: 2,
+          resolved: 4,
+          critical: 1,
+          warning: 1,
+          info: 0,
         });
-      }
-      if (url === "https://api.pagerduty.com/oncalls") {
+      if (
+        url === "https://alerts.local/api/v1/alerts?lifecycleState=open&limit=6"
+      )
         return Response.json({
-          oncalls: [
-            { user: { summary: "Jerred" } },
-            { user: { summary: "Jerred" } },
+          items: [
+            {
+              alertname: "DiskFull",
+              severity: "critical",
+              summary: "Disk is full",
+              lifecycleState: "open",
+            },
           ],
+          nextCursor: null,
         });
-      }
       return new Response("", { status: 404 });
     });
 
-    const client = new PagerDutyClient("token");
+    const client = new AlertsClient("https://alerts.local");
 
     await expect(client.getSummary()).resolves.toEqual({
-      triggered: 2,
-      acknowledged: 1,
-      onCall: ["Jerred"],
+      open: 2,
+      critical: 1,
+      warning: 1,
+      info: 0,
     });
+    await expect(client.listOpen()).resolves.toHaveLength(1);
   });
 
-  it("throws on invalid tokens", async () => {
+  it("throws on API failures", async () => {
     setFetchMock(async () => new Response("", { status: 401 }));
-    const client = new PagerDutyClient("token");
+    const client = new AlertsClient("https://alerts.local");
 
     await expect(client.getSummary()).rejects.toThrow(
-      "PagerDuty request failed: 401",
+      "Alerts request failed: 401",
     );
   });
 });

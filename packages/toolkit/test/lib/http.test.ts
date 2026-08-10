@@ -146,12 +146,12 @@ describe("createHttpClient auth headers", () => {
     );
   });
 
-  it("writes a PagerDuty token authorization header", async () => {
+  it("writes a token authorization header", async () => {
     const { requests } = installFetchMock(Response.json({ value: 1 }));
     const client = createHttpClient({
-      baseUrl: "https://api.pagerduty.com",
+      baseUrl: "https://alerts.local",
       auth: { scheme: "Token token=", token: "pd-token" },
-      errorLabel: "PagerDuty API",
+      errorLabel: "Alerts API",
     });
 
     await client.get("/incidents", { schema: BodySchema });

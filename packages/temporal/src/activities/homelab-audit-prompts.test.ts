@@ -70,7 +70,7 @@ describe("buildAuditPrompt", () => {
     expect(prompt).toContain("NEVER mutate state");
     expect(prompt).toContain("kubectl apply");
     expect(prompt).toContain("tofu apply");
-    expect(prompt).toContain("PagerDuty");
+    expect(prompt).toContain("Alerts");
   });
 
   it("requires the subject-parsing TL;DR lines verbatim", () => {
@@ -80,10 +80,10 @@ describe("buildAuditPrompt", () => {
       sections: "all",
     });
     // The subject parser depends on the exact "Application Health Matrix:" /
-    // "Open PagerDuty incidents:" phrasing — if this slips, the email subject
+    // "Open Alerts occurrences:" phrasing — if this slips, the email subject
     // falls back to a generic line.
     expect(prompt).toContain("Application Health Matrix:");
-    expect(prompt).toContain("Open PagerDuty incidents:");
+    expect(prompt).toContain("Open Alerts occurrences:");
   });
 
   it("documents the complete audit tool inventory and alert source priority", () => {

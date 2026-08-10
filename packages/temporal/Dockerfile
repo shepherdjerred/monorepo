@@ -64,7 +64,7 @@ RUN cd packages/llm-models && bun run build
 # bundles the language-neutral JSON before Temporal imports it at startup.
 RUN cd packages/glitter-context && bun run build
 # Compile the in-tree toolkit CLI into a single static binary. The
-# homelab-audit runbook + preflight shell out to `toolkit pd|bugsink|gf`;
+# homelab-audit runbook + preflight shell out to `toolkit alerts|bugsink|gf`;
 # it's compiled here (not `bun add -g`) because it lives in the workspace
 # source. `--external ffmpeg-static` matches the package's own build script (a
 # native shim that must not be bundled).

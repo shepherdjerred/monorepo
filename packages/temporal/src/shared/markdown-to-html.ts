@@ -109,23 +109,25 @@ export function renderAuditMarkdownToHtml(markdown: string): string {
  */
 export function extractAuditSubjectCounts(
   markdown: string,
-): { red: number; yellow: number; green: number; openPd: number } | undefined {
+):
+  | { red: number; yellow: number; green: number; openAlerts: number }
+  | undefined {
   // Matrix line shape (from the runbook):
   //   Application Health Matrix: 0 Red / 8 Yellow / 52 Green
   const matrix = /(\d+)\s*Red\s*\/\s*(\d+)\s*Yellow\s*\/\s*(\d+)\s*Green/i.exec(
     markdown,
   );
-  // PD line shape:
-  //   Open PagerDuty incidents: 7
-  const pd = /Open PagerDuty incidents?:\s*(\d+)/i.exec(markdown);
-  if (matrix === null || pd === null) {
+  // Alerts line shape:
+  //   Open Alerts occurrences: 7
+  const alerts = /Open Alerts occurrences?:\s*(\d+)/i.exec(markdown);
+  if (matrix === null || alerts === null) {
     return undefined;
   }
   return {
     red: Number(matrix[1]),
     yellow: Number(matrix[2]),
     green: Number(matrix[3]),
-    openPd: Number(pd[1]),
+    openAlerts: Number(alerts[1]),
   };
 }
 
@@ -136,5 +138,5 @@ export function buildAuditEmailSubject(
   if (counts === undefined) {
     return `Homelab Audit ${date}`;
   }
-  return `Homelab Audit ${date} — ${String(counts.red)} Red, ${String(counts.yellow)} Yellow, ${String(counts.green)} Green | ${String(counts.openPd)} open PD`;
+  return `Homelab Audit ${date} — ${String(counts.red)} Red, ${String(counts.yellow)} Yellow, ${String(counts.green)} Green | ${String(counts.openAlerts)} open Alerts`;
 }

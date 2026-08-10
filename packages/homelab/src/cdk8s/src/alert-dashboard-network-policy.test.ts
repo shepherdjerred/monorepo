@@ -133,7 +133,7 @@ describe("alert dashboard network paths", () => {
     expect(allowsIngress(smtp.spec.ingress, "prometheus", 25)).toBe(true);
   });
 
-  it("does not admit deferred runtime consumers before activation", () => {
+  it("admits the migrated runtime consumers", () => {
     const dashboardApp = new App({
       outdir: ".test-synth-alert-dashboard-readers",
     });
@@ -143,9 +143,9 @@ describe("alert dashboard network paths", () => {
       "alert-dashboard-app-netpol",
     );
 
-    expect(allowsIngress(dashboard.spec.ingress, "temporal", 7341)).toBe(false);
+    expect(allowsIngress(dashboard.spec.ingress, "temporal", 7341)).toBe(true);
     expect(allowsIngress(dashboard.spec.ingress, "trmnl-dashboard", 7341)).toBe(
-      false,
+      true,
     );
   });
 

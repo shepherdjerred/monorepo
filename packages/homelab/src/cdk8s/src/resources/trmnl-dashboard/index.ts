@@ -116,10 +116,9 @@ export function createTrmnlDashboardDeployment(chart: Chart) {
           secret,
           key: "BUGSINK_TOKEN",
         }),
-        PAGERDUTY_TOKEN: EnvValue.fromSecretValue({
-          secret,
-          key: "PAGERDUTY_TOKEN",
-        }),
+        ALERT_DASHBOARD_URL: EnvValue.fromValue(
+          "http://alert-dashboard-alert-dashboard-service.alert-dashboard:7341",
+        ),
         // Sentry error reporting → Bugsink project 15 (TRMNL Dashboard). This
         // is the dashboard's OWN error tracking, distinct from BUGSINK_URL/TOKEN
         // which it queries to render the homelab error panel. Required

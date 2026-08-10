@@ -51,6 +51,23 @@ export function createAlertDashboardChart(app: App) {
           ],
           ports: [tcp(7341)],
         },
+        {
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "temporal" },
+              },
+            },
+            {
+              namespaceSelector: {
+                matchLabels: {
+                  "kubernetes.io/metadata.name": "trmnl-dashboard",
+                },
+              },
+            },
+          ],
+          ports: [tcp(7341)],
+        },
       ],
       egress: [
         {

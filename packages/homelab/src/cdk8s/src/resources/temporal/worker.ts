@@ -65,7 +65,6 @@ function homelabAuditEnv(secret: ISecret): Record<string, EnvValue> {
     BUILDKITE_ORGANIZATION_SLUG: EnvValue.fromValue("sjerred"),
     BUILDKITE_PIPELINE_SLUG: EnvValue.fromValue("monorepo"),
     ...requiredSecretEnv(secret, [
-      "PAGERDUTY_TOKEN",
       "BUGSINK_TOKEN",
       "GRAFANA_URL",
       "GRAFANA_API_KEY",
@@ -74,6 +73,9 @@ function homelabAuditEnv(secret: ISecret): Record<string, EnvValue> {
       "CLOUDFLARE_API_TOKEN",
       "BUILDKITE_API_TOKEN",
     ]),
+    ALERT_DASHBOARD_URL: EnvValue.fromValue(
+      "http://alert-dashboard-alert-dashboard-service.alert-dashboard:7341",
+    ),
     // talosctl reads its config from $TALOSCONFIG; the secret volume below
     // projects 1P field TALOSCONFIG_YAML to this path.
     TALOSCONFIG: EnvValue.fromValue("/etc/talos/config"),
@@ -457,7 +459,7 @@ export function createTemporalWorkerDeployment(
         // token authenticates the unguessable URL path (Xcode Cloud webhooks
         // carry no signature). On a FAILED/ERRORED iOS build it POSTs a
         // `severity=warning` alert to Alertmanager, which the existing route
-        // forwards to the PagerDuty dashboard. Required — the 1P item carries
+        // forwards to the Alerts dashboard. Required — the 1P item carries
         // XCODE_CLOUD_WEBHOOK_TOKEN.
         XCODE_CLOUD_WEBHOOK_PORT: EnvValue.fromValue("9468"),
         XCODE_CLOUD_WEBHOOK_TOKEN: EnvValue.fromSecretValue({
