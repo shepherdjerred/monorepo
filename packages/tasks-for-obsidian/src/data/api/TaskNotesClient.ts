@@ -56,6 +56,17 @@ export type TaskNotesClientConfig = {
 export const MUTATION_ID_HEADER = "X-Mutation-Id";
 
 /**
+ * How many times a full pull re-reads the task list from the beginning when the
+ * vault changed underneath the previous read.
+ *
+ * Bounded rather than open-ended: a vault being edited continuously would
+ * otherwise hold one sync pass reading forever, and a pass that gives up is not
+ * a pull that is lost — the engine arms its retry on the failure and tries
+ * again.
+ */
+const LIST_PULL_ATTEMPTS = 3;
+
+/**
  * Per-mutation options. `mutationId` is sent as `X-Mutation-Id`, the server's
  * idempotency key: replaying the same mutation (e.g. after a crash between
  * the server ack and the client dequeue) returns the stored response instead
@@ -128,9 +139,50 @@ export class TaskNotesClient {
     this.fetch = config.fetch ?? globalThis.fetch.bind(globalThis);
   }
 
-  /** Full pull: the v2 list caps `limit` at 200, so page until done. */
+  /**
+   * Full pull: the v2 list caps `limit` at 200, so page until done.
+   *
+   * The endpoint pages by **offset into a live array** — the server slices its
+   * repository per request and holds nothing still between them — so a create
+   * or a delete landing ahead of the current offset shifts every item after it,
+   * and advancing the offset then skips or repeats a task. The sync engine
+   * hands whatever comes back to its base-replacement, which treats it as
+   * authoritative: a task the vault still holds disappears from the app until
+   * some later pull happens to catch it. So each pass validates itself — a
+   * stable `total`, no task twice, and exactly `total` tasks at the end — and a
+   * pass that fails any of the three is discarded and re-read from the start.
+   *
+   * One race stays open and cannot be closed from this side: a create and a
+   * delete landing between the same two requests leave `total` unchanged and
+   * every count consistent while one task quietly takes another's place.
+   * Detecting that needs the server to name the revision it answered from,
+   * which the v2 contract has no field for.
+   *
+   * Kept identical to the Rust core's `TaskNotesClient::list_tasks`; the two
+   * are an anti-drift pair.
+   */
   async listTasks(): Promise<Result<Task[], AppError>> {
+    for (let attempt = 0; attempt < LIST_PULL_ATTEMPTS; attempt += 1) {
+      const pass = await this.listOnePass();
+      if (!pass.ok) return pass;
+      if (pass.value !== undefined) return ok(pass.value);
+    }
+    return err(
+      new ApiError(
+        `the task list changed underneath ${String(LIST_PULL_ATTEMPTS)} consecutive reads, so no complete list could be taken`,
+        0,
+      ),
+    );
+  }
+
+  /**
+   * One attempt at reading the whole list. `undefined` means the vault changed
+   * between two page requests, so what was collected cannot be trusted.
+   */
+  private async listOnePass(): Promise<Result<Task[] | undefined, AppError>> {
     const tasks: Task[] = [];
+    const seen = new Set<TaskId>();
+    let declaredTotal: number | undefined;
     let offset = 0;
     for (;;) {
       const page = await this.request(
@@ -139,8 +191,27 @@ export class TaskNotesClient {
         WireTaskListSchema,
       );
       if (!page.ok) return page;
-      tasks.push(...page.value.tasks);
-      if (!page.value.pagination.hasMore) return ok(tasks);
+
+      const total = page.value.pagination.total;
+      // A total that moved is a create or a delete that landed between two
+      // requests, which is exactly what shifts every later offset.
+      declaredTotal ??= total;
+      if (declaredTotal !== total) return ok(undefined);
+      for (const task of page.value.tasks) {
+        // The server lists a vault path once, so a repeat is an item that moved
+        // across a page boundary rather than a duplicate task — and wherever
+        // one repeated, another was skipped.
+        if (seen.has(task.id)) return ok(undefined);
+        seen.add(task.id);
+        tasks.push(task);
+      }
+
+      if (!page.value.pagination.hasMore) {
+        // Starting at zero and advancing by what arrived visits every index
+        // exactly once, so a list shorter than the server's own count means
+        // indices moved out from under the walk.
+        return ok(tasks.length === total ? tasks : undefined);
+      }
       // Advance by what we actually received, not the declared limit, so a
       // short page (items deleted mid-pagination, server edge case) can't
       // skip the gap items on the next request.
