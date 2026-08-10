@@ -64,8 +64,30 @@ pre-commit:
               bun run mac:build
               bun run mac:test
               swiftlint lint --strict
-              xcrun swift-format lint --strict --parallel --recursive Sources Tests App Package.swift
+              xcrun swift-format lint --strict --parallel --recursive Sources Tests App UITests Package.swift
               ./ci/no-suppressions.sh
+
+          # The bundle, as opposed to the code in it.
+          #
+          # ⚠️ A separate job with its own glob, deliberately. `swift-verify`
+          # above is gated on `**/*.swift`, so the change that shipped an
+          # unlaunchable Release build — `ENABLE_HARDENED_RUNTIME: YES` in
+          # `project.yml`, nothing else — **did not trigger it at all**. Widening
+          # that job's glob instead would put a Release `xcodebuild` in the path
+          # of every one-line Swift edit, and a hook people disable is worse than
+          # one that missed something.
+          #
+          # This is the expensive gate (1–3 minutes) and it is affordable
+          # precisely because these files change rarely — while being exactly the
+          # files whose failures no Swift test can see. `mac:smoke` builds
+          # Release, launches it in the background, and requires it to stay up;
+          # see `scripts/verify-launch.ts` for why launching rather than
+          # inspecting the signature is the only check that works here.
+          - name: mac-bundle-verify
+            glob: "packages/tasknotes-macos/{project.yml,Package.swift,App/**,scripts/**}"
+            run: |
+              cd packages/tasknotes-macos
+              bun run mac:smoke
 
           - name: lockfile-check
             glob: "**/package.json"
