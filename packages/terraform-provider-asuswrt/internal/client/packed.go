@@ -81,6 +81,10 @@ func writePackedEntry(b *strings.Builder, fields ...string) {
 // a bare delimiter has one trailing field whose value is empty, which Extra
 // alone cannot distinguish from having no trailing field at all — and emitting
 // the wrong one silently changes the packed shape.
+//
+// Callers updating a lease must overwrite the modeled fields on the parsed
+// entry rather than assign a freshly constructed one over it, or Extra/HasExtra
+// revert to their zero values and the router loses those fields.
 type DHCPStaticEntry struct {
 	MAC      string
 	IP       string
@@ -152,6 +156,11 @@ func SerializeDHCPStaticList(entries []DHCPStaticEntry) string {
 // Extra and HasExtra preserve fields past the modeled six, value and presence
 // respectively, for the same reasons as on DHCPStaticEntry: port-forward
 // mutations rewrite the entire list, and an empty trailing field is a field.
+//
+// Callers updating a rule must overwrite the modeled fields on the parsed entry
+// rather than assign a freshly constructed one over it. A fresh entry carries
+// zero-valued Extra/HasExtra, which erases the router's trailing fields on the
+// next write.
 type PortForwardEntry struct {
 	Name         string
 	ExternalPort string
