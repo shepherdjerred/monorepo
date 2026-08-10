@@ -203,7 +203,11 @@ export function formatTrackResult(
     case "account-already-subscribed":
       return `ℹ️ That Riot account is already tracked as **${result.existingPlayerAlias}** in ${result.channelIds.length.toString()} channel${result.channelIds.length === 1 ? "" : "s"}.\n\nManage it from ${getDashboardUrl()}`;
     case "subscription-already-exists":
-      return `ℹ️ **${result.playerAlias}** is already tracked in this channel.\n\nManage it from ${getDashboardUrl()}`;
+      // The account row is created before this branch, so an existing player
+      // means a new Riot account was genuinely attached — not a no-op.
+      return result.addedToExistingPlayer
+        ? `✅ Added that Riot account to **${result.playerAlias}**, who was already tracked in this channel. Scout now follows ${result.accounts.length.toString()} account${result.accounts.length === 1 ? "" : "s"} for them.\n\nManage them from ${getDashboardUrl()}`
+        : `ℹ️ **${result.playerAlias}** is already tracked in this channel.\n\nManage it from ${getDashboardUrl()}`;
     case "subscription-limit-reached":
       return `Scout's server limit has been reached (${result.current.toString()}/${result.max.toString()}). Manage existing subscriptions from ${getDashboardUrl()}`;
     case "account-limit-reached":

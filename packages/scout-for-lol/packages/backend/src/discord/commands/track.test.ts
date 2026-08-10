@@ -73,4 +73,18 @@ describe("/track", () => {
       formatTrackResult({ kind: "riot-id-not-found", message: "not found" }),
     ).toContain("not found");
   });
+
+  test("reports an attached account rather than a no-op", () => {
+    const message = formatTrackResult({
+      kind: "subscription-already-exists",
+      playerAlias: "faker",
+      addedToExistingPlayer: true,
+      accounts: [
+        { alias: "faker", region: "KR" },
+        { alias: "faker", region: "NA" },
+      ],
+    });
+    expect(message).toContain("Added that Riot account");
+    expect(message).toContain("2 accounts");
+  });
 });
