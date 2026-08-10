@@ -185,11 +185,12 @@ func (r *portForwardResource) Update(ctx context.Context, req resource.UpdateReq
 	}
 
 	name := plan.Name.ValueString()
-	newEntry := r.planToEntry(&plan)
 
-	for i, e := range entries {
-		if strings.EqualFold(e.Name, name) {
-			entries[i] = newEntry
+	for i := range entries {
+		if strings.EqualFold(entries[i].Name, name) {
+			// Overwrite in place rather than replacing the parsed entry, so
+			// the router's trailing fields on this rule survive the rewrite.
+			applyPlanToEntry(&entries[i], &plan)
 
 			break
 		}
@@ -271,18 +272,32 @@ func (r *portForwardResource) writeRules(ctx context.Context, entries []client.P
 	return nil
 }
 
-func (r *portForwardResource) planToEntry(plan *portForwardResourceModel) client.PortForwardEntry {
-	entry := client.PortForwardEntry{
-		Name:         plan.Name.ValueString(),
-		ExternalPort: plan.ExternalPort.ValueString(),
-		InternalIP:   plan.InternalIP.ValueString(),
-		InternalPort: plan.InternalPort.ValueString(),
-		Protocol:     plan.Protocol.ValueString(),
-	}
+// applyPlanToEntry overwrites exactly the fields this provider models, leaving
+// everything else on the entry untouched.
+//
+// Update must not replace a parsed entry wholesale: the router's own trailing
+// fields live in Extra/HasExtra, the plan knows nothing about them, and the
+// whole list is re-serialized on every write. Overwriting in place keeps those
+// fields, and keeps doing so if the client ever preserves more of them.
+func applyPlanToEntry(entry *client.PortForwardEntry, plan *portForwardResourceModel) {
+	entry.Name = plan.Name.ValueString()
+	entry.ExternalPort = plan.ExternalPort.ValueString()
+	entry.InternalIP = plan.InternalIP.ValueString()
+	entry.InternalPort = plan.InternalPort.ValueString()
+	entry.Protocol = plan.Protocol.ValueString()
 
+	// Assigned unconditionally so clearing source_ip in config clears it on the
+	// router rather than leaving the previous restriction in place.
+	entry.SourceIP = ""
 	if !plan.SourceIP.IsNull() {
 		entry.SourceIP = plan.SourceIP.ValueString()
 	}
+}
+
+func (r *portForwardResource) planToEntry(plan *portForwardResourceModel) client.PortForwardEntry {
+	var entry client.PortForwardEntry
+
+	applyPlanToEntry(&entry, plan)
 
 	return entry
 }

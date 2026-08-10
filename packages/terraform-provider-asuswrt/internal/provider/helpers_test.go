@@ -596,3 +596,73 @@ func TestResolveReadHostname(t *testing.T) {
 		})
 	}
 }
+
+// TestApplyPlanToEntryPreservesTrailingFields pins the update-path invariant:
+// a plan carries only the modeled fields, so applying one must not disturb the
+// router's own trailing fields. The whole vts_rulelist is re-serialized on every
+// write, so clearing them here would erase them from the device.
+func TestApplyPlanToEntryPreservesTrailingFields(t *testing.T) {
+	t.Parallel()
+
+	plan := portForwardResourceModel{
+		Name:         types.StringValue("HTTP"),
+		Protocol:     types.StringValue("tcp"),
+		ExternalPort: types.StringValue("8080"),
+		InternalIP:   types.StringValue("192.168.1.100"),
+		InternalPort: types.StringValue("80"),
+		SourceIP:     types.StringNull(),
+	}
+
+	entry := client.PortForwardEntry{
+		Name:         "HTTP",
+		Protocol:     "tcp",
+		ExternalPort: "80",
+		InternalIP:   "192.168.1.100",
+		InternalPort: "80",
+		SourceIP:     "10.0.0.1",
+		Extra:        "firmware-specific",
+		HasExtra:     true,
+	}
+
+	applyPlanToEntry(&entry, &plan)
+
+	if entry.Extra != "firmware-specific" || !entry.HasExtra {
+		t.Errorf("expected trailing fields preserved, got Extra=%q HasExtra=%v", entry.Extra, entry.HasExtra)
+	}
+
+	if entry.ExternalPort != "8080" {
+		t.Errorf("expected the modeled field updated, got %q", entry.ExternalPort)
+	}
+
+	// A cleared source_ip must reach the router, not linger from the old entry.
+	if entry.SourceIP != "" {
+		t.Errorf("expected source IP cleared, got %q", entry.SourceIP)
+	}
+}
+
+// TestApplyPlanToEntryLeavesAbsentTrailingFieldAbsent guards the other
+// direction: applying a plan must not invent a trailing field.
+func TestApplyPlanToEntryLeavesAbsentTrailingFieldAbsent(t *testing.T) {
+	t.Parallel()
+
+	plan := portForwardResourceModel{
+		Name:         types.StringValue("SSH"),
+		Protocol:     types.StringValue("tcp"),
+		ExternalPort: types.StringValue("2222"),
+		InternalIP:   types.StringValue("192.168.1.50"),
+		InternalPort: types.StringValue("22"),
+		SourceIP:     types.StringValue("10.0.0.2"),
+	}
+
+	entry := client.PortForwardEntry{Name: "SSH"}
+
+	applyPlanToEntry(&entry, &plan)
+
+	if entry.HasExtra || entry.Extra != "" {
+		t.Errorf("expected no trailing field, got Extra=%q HasExtra=%v", entry.Extra, entry.HasExtra)
+	}
+
+	if entry.SourceIP != "10.0.0.2" {
+		t.Errorf("expected source IP applied, got %q", entry.SourceIP)
+	}
+}
