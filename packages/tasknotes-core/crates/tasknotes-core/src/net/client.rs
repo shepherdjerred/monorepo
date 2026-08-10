@@ -27,7 +27,7 @@
 //! [`HttpClient`] — which also means the core never holds a secret it has no
 //! use for. What the core owns is everything the *contract* depends on.
 
-use std::sync::Arc;
+use std::{collections::BTreeSet, sync::Arc};
 
 use serde_json::{Map, Value};
 
@@ -64,6 +64,15 @@ pub const IDEMPOTENT_REPLAY_HEADER: &str = "X-Idempotent-Replay";
 /// How long one request may take, matching the reference TypeScript client so
 /// the retry classifier sees the same timing on both clients.
 pub const DEFAULT_REQUEST_TIMEOUT_MILLIS: u32 = 15_000;
+
+/// How many times a full pull re-reads the task list from the beginning when
+/// the vault changed underneath the previous read.
+///
+/// Bounded rather than open-ended: a vault being edited continuously would
+/// otherwise hold one sync pass reading forever, and a pass that gives up is
+/// not a pull that is lost — the engine arms its retry timer on the failure and
+/// tries again.
+const LIST_PULL_ATTEMPTS: u32 = 3;
 
 /// The TaskNotes `/v2` API, over a host-supplied transport.
 pub struct TaskNotesClient {
@@ -246,6 +255,76 @@ impl TaskNotesClient {
         }
     }
 
+    /// One attempt at reading the whole task list.
+    ///
+    /// `None` is not a failure: it means the vault changed between two page
+    /// requests, so what was collected cannot be trusted and the caller should
+    /// start over. See [`TaskNotesClient::list_tasks`] for why that is the only
+    /// defence available against an offset-paged live array.
+    fn list_one_pass(&self) -> Result<Option<Vec<Task>>> {
+        let mut tasks: Vec<Task> = Vec::new();
+        let mut seen: BTreeSet<TaskId> = BTreeSet::new();
+        let mut declared_total: Option<u32> = None;
+        let mut offset: u32 = 0;
+        loop {
+            let path = format!(
+                "{}?{}",
+                endpoints::TASKS,
+                endpoints::tasks_page_query(offset)
+            );
+            let payload = self.request(HttpMethod::Get, &path, None, None)?;
+            let page: WireTaskList = serde_json::from_value(payload).map_err(|error| {
+                Error::validation(format!(
+                    "the task list page did not match the schema: {error}"
+                ))
+            })?;
+
+            let total = page.pagination.total;
+            // A total that moved is a create or a delete that landed between two
+            // requests, which is exactly what shifts every later offset.
+            if *declared_total.get_or_insert(total) != total {
+                return Ok(None);
+            }
+            let has_more = page.pagination.has_more;
+            let received = page.tasks.len();
+            for wire in page.tasks {
+                let task = Task::try_from(wire)?;
+                // The server lists a vault path once, so a repeat is an item
+                // that moved across a page boundary rather than a duplicate
+                // task — and wherever one repeated, another was skipped.
+                if !seen.insert(task.id.clone()) {
+                    return Ok(None);
+                }
+                tasks.push(task);
+            }
+
+            if !has_more {
+                // Starting at zero and advancing by what arrived visits every
+                // index exactly once, so a list shorter than the server's own
+                // count means indices moved out from under the walk.
+                let collected = u32::try_from(tasks.len()).map_err(|_ignored| {
+                    Error::invariant(format!(
+                        "a task list of {} tasks is not a length this contract can express",
+                        tasks.len()
+                    ))
+                })?;
+                return Ok((collected == total).then_some(tasks));
+            }
+            let advance = u32::try_from(received).map_err(|_ignored| {
+                Error::invariant(format!(
+                    "a task list page held {received} tasks, which is not a page"
+                ))
+            })?;
+            if advance == 0 {
+                return Err(Error::api(
+                    "Task list pagination returned an empty page while hasMore=true",
+                    0,
+                ));
+            }
+            offset = offset.saturating_add(advance);
+        }
+    }
+
     /// Parse a payload that must be a single task.
     fn task(payload: Value) -> Result<Task> {
         let wire: WireTask = serde_json::from_value(payload).map_err(|error| {
@@ -267,7 +346,7 @@ fn strip_bom(body: &[u8]) -> &[u8] {
 }
 
 impl TaskApi for TaskNotesClient {
-    /// Pull every task.
+    /// Pull every task, as one internally consistent list.
     ///
     /// The `/v2` list endpoint caps `limit` at 200, so this pages until
     /// `hasMore` is false. It advances by what it actually received rather than
@@ -275,43 +354,38 @@ impl TaskApi for TaskNotesClient {
     /// cannot skip the gap items; a page that is empty while `hasMore` is true
     /// is a broken server contract and fails loudly rather than looping forever
     /// on a zero-length advance.
+    ///
+    /// ## Why a pass can be thrown away and started again
+    ///
+    /// The endpoint pages by **offset into a live array** — the server slices
+    /// `repo.list()` per request and holds nothing still between them — so a
+    /// create or a delete landing ahead of the current offset shifts every item
+    /// after it. Advancing the offset then skips or repeats a task, and the
+    /// engine hands whatever came back to `replace_base`, which treats it as the
+    /// authoritative list: a task the vault still holds disappears from the app
+    /// until some later pull happens to catch it. So each pass validates itself
+    /// — a stable `total`, no task twice, and exactly `total` tasks at the end —
+    /// and a pass that fails any of the three is discarded and re-run rather
+    /// than returned.
+    ///
+    /// ⚠️ **One race stays open, and it cannot be closed from this side.** A
+    /// create and a delete landing between the same two requests leave `total`
+    /// unchanged and every count consistent while one task quietly takes
+    /// another's place. Detecting that needs the server to name the revision it
+    /// answered from, which the `/v2` contract has no field for.
     fn list_tasks(&self) -> Result<Vec<Task>> {
-        let mut tasks: Vec<Task> = Vec::new();
-        let mut offset: u32 = 0;
-        loop {
-            let path = format!(
-                "{}?{}",
-                endpoints::TASKS,
-                endpoints::tasks_page_query(offset)
-            );
-            let payload = self.request(HttpMethod::Get, &path, None, None)?;
-            let page: WireTaskList = serde_json::from_value(payload).map_err(|error| {
-                Error::validation(format!(
-                    "the task list page did not match the schema: {error}"
-                ))
-            })?;
-            let has_more = page.pagination.has_more;
-            let received = page.tasks.len();
-            for wire in page.tasks {
-                tasks.push(Task::try_from(wire)?);
-            }
-
-            if !has_more {
+        for _attempt in 0..LIST_PULL_ATTEMPTS {
+            if let Some(tasks) = self.list_one_pass()? {
                 return Ok(tasks);
             }
-            let advance = u32::try_from(received).map_err(|_ignored| {
-                Error::invariant(format!(
-                    "a task list page held {received} tasks, which is not a page"
-                ))
-            })?;
-            if advance == 0 {
-                return Err(Error::api(
-                    "Task list pagination returned an empty page while hasMore=true",
-                    0,
-                ));
-            }
-            offset = offset.saturating_add(advance);
         }
+        Err(Error::api(
+            format!(
+                "the task list changed underneath {LIST_PULL_ATTEMPTS} consecutive reads, so no \
+                 complete list could be taken"
+            ),
+            0,
+        ))
     }
 
     fn create_task(&self, request: &CreateTaskRequest, mutation_id: Option<&str>) -> Result<Task> {
@@ -844,31 +918,109 @@ mod tests {
         assert_eq!(error.message(), "Task not found");
     }
 
+    /// One page of the list, as the `/v2` endpoint answers it.
+    ///
+    /// `total` is the server's count of the whole collection, not of this page,
+    /// and the pull compares it across pages — so a caller that wants a pass to
+    /// be *accepted* has to keep it equal to the number of tasks the pass will
+    /// end up with.
+    fn list_page(total: u32, paths: &[&str], has_more: bool) -> HttpResponse {
+        let tasks: Vec<Value> = paths
+            .iter()
+            .map(|path| {
+                json!({ "path": path, "title": "A task", "status": "open", "priority": "normal" })
+            })
+            .collect();
+        Recorder::ok(&json!({
+            "tasks": tasks,
+            "pagination": { "total": total, "offset": 0, "limit": 200, "hasMore": has_more },
+        }))
+    }
+
+    fn offsets(recorder: &Arc<Recorder>) -> Vec<String> {
+        recorder
+            .requests()
+            .iter()
+            .map(|request| {
+                request
+                    .url
+                    .trim_start_matches("http://vault.test:8080/api/tasks?limit=200&offset=")
+                    .to_owned()
+            })
+            .collect()
+    }
+
     #[test]
     fn the_list_pages_until_has_more_is_false_advancing_by_what_it_received() {
-        let page = |tasks: Vec<Value>, has_more: bool| {
-            Ok(Recorder::ok(&json!({
-                "tasks": tasks,
-                "pagination": { "total": 3, "offset": 0, "limit": 200, "hasMore": has_more },
-            })))
-        };
-        let first = json!({ "path": "TaskNotes/a.md", "title": "A", "status": "open", "priority": "normal" });
-        let second = json!({ "path": "TaskNotes/b.md", "title": "B", "status": "open", "priority": "normal" });
-
-        let recorder = Recorder::new(vec![page(vec![first], true), page(vec![second], false)]);
+        let recorder = Recorder::new(vec![
+            Ok(list_page(2, &["TaskNotes/a.md"], true)),
+            Ok(list_page(2, &["TaskNotes/b.md"], false)),
+        ]);
         let tasks = client(&recorder).list_tasks().unwrap();
         assert_eq!(tasks.len(), 2);
 
-        let sent = recorder.requests();
         assert_eq!(
-            sent.first().unwrap().url,
-            "http://vault.test:8080/api/tasks?limit=200&offset=0"
-        );
-        assert_eq!(
-            sent.get(1).unwrap().url,
-            "http://vault.test:8080/api/tasks?limit=200&offset=1",
+            offsets(&recorder),
+            ["0", "1"],
             "the offset advances by what arrived, not by the declared limit"
         );
+    }
+
+    #[test]
+    fn a_total_that_moves_between_pages_restarts_the_pull_from_the_beginning() {
+        // The vault gained a task while page two was being fetched. Advancing
+        // the offset over the shifted array is what would skip or repeat one,
+        // and `replace_base` would adopt the damaged list as authoritative.
+        let recorder = Recorder::new(vec![
+            Ok(list_page(2, &["TaskNotes/a.md"], true)),
+            Ok(list_page(3, &["TaskNotes/b.md"], true)),
+            Ok(list_page(2, &["TaskNotes/a.md"], true)),
+            Ok(list_page(2, &["TaskNotes/b.md"], false)),
+        ]);
+
+        let tasks = client(&recorder).list_tasks().unwrap();
+        assert_eq!(tasks.len(), 2);
+        assert_eq!(
+            offsets(&recorder),
+            ["0", "1", "0", "1"],
+            "the abandoned pass is re-read from offset zero, not resumed"
+        );
+    }
+
+    #[test]
+    fn a_task_arriving_on_two_pages_discards_the_pass() {
+        // A delete ahead of the offset pulls the array back by one, so the item
+        // already collected slides into the next page — and the one that was
+        // between them is never seen. The count stays plausible; the repeat is
+        // the only evidence.
+        let recorder = Recorder::new(vec![
+            Ok(list_page(2, &["TaskNotes/a.md"], true)),
+            Ok(list_page(2, &["TaskNotes/a.md"], false)),
+            Ok(list_page(2, &["TaskNotes/a.md"], true)),
+            Ok(list_page(2, &["TaskNotes/b.md"], false)),
+        ]);
+
+        let tasks = client(&recorder).list_tasks().unwrap();
+        assert_eq!(
+            tasks
+                .iter()
+                .map(|task| task.id.as_str())
+                .collect::<Vec<_>>(),
+            ["TaskNotes/a.md", "TaskNotes/b.md"]
+        );
+    }
+
+    #[test]
+    fn a_pull_that_never_reads_a_complete_list_fails_rather_than_shrinking_the_vault() {
+        // Every pass ends one task short of the count the server itself
+        // declared. Returning it would delete a live task from the app.
+        let short = || Ok(list_page(3, &["TaskNotes/a.md"], false));
+        let recorder = Recorder::new(vec![short(), short(), short()]);
+
+        let error = client(&recorder).list_tasks().unwrap_err();
+        assert!(error.message().contains("changed underneath"), "{error}");
+        assert_eq!(error.status(), Some(0));
+        assert_eq!(recorder.requests().len(), 3, "the attempts are bounded");
     }
 
     #[test]
