@@ -16,7 +16,7 @@ describe("Scout static sites", () => {
       }
       const csp = site.responseHeaders?.["Content-Security-Policy"];
       expect(csp).toContain(
-        "script-src 'self' https://us-assets.i.posthog.com",
+        "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://us-assets.i.posthog.com",
       );
       expect(csp).toContain("connect-src 'self' https://us.i.posthog.com");
     });
