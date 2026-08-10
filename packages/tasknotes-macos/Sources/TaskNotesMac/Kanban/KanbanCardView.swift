@@ -256,9 +256,10 @@ struct KanbanCardView: View {
         if let priority = PriorityMarker.spoken(row.task.priority) { parts.append(priority) }
         if row.isRecurring { parts.append("repeats") }
         if !row.isTerminal, row.displayDate?.isOverdue == true { parts.append("overdue") }
-        if let date = row.displayDate {
-            parts.append(row.isRecurring ? "occurrence of \(date.text)" : "due \(date.text)")
-        }
+        // `spokenDate`, the row's own clause: the card's label is the row's
+        // label plus a column, so the date is named by the same field here as
+        // there.
+        if let date = row.spokenDate { parts.append(date) }
         if let metadata { parts.append(metadata) }
         if row.isPending { parts.append("waiting to sync") }
         return parts.joined(separator: ", ")

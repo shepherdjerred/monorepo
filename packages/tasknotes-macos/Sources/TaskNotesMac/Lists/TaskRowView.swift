@@ -312,12 +312,37 @@ struct TaskRowView: View {
         if let priority = PriorityMarker.spoken(row.task.priority) { parts.append(priority) }
         if row.isRecurring { parts.append("repeats") }
         if !row.isRetired, row.displayDate?.isOverdue == true { parts.append("overdue") }
-        if let date = row.displayDate {
-            parts.append(row.isRecurring ? "occurrence of \(date.text)" : "due \(date.text)")
-        }
+        if let date = row.spokenDate { parts.append(date) }
         if let metadata { parts.append(metadata) }
         if row.isPending { parts.append("waiting to sync") }
         return parts.joined(separator: ", ")
+    }
+}
+
+extension TaskRowState {
+    /// The date clause of a spoken label, in the words of the field it came
+    /// from.
+    ///
+    /// The date the row draws is `accessibilityHidden`, so this clause is the
+    /// only place a VoiceOver reader is told the row's date — and the word in
+    /// front of it is a claim about *which* date it is. A task with a
+    /// `scheduled` date and no `due` one has planned work, not a deadline, and
+    /// announcing its day as "due" gives it a deadline the vault never
+    /// recorded. So the word comes from ``TaskRowState/resolvedDisplayDate``'s
+    /// source rather than from ``TaskRowState/isRecurring`` and an assumption
+    /// about what everything else must be.
+    ///
+    /// Internal rather than private to `TaskRowView` so the Kanban card says
+    /// the same sentence: its label is the row's plus the column, and two
+    /// copies of the phrasing would drift apart the way this one drifted from
+    /// the badge it names.
+    var spokenDate: String? {
+        guard let (source, badge) = resolvedDisplayDate else { return nil }
+        switch source {
+        case .occurrence: return "occurrence of \(badge.text)"
+        case .due: return "due \(badge.text)"
+        case .scheduled: return "scheduled \(badge.text)"
+        }
     }
 }
 

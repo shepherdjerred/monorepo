@@ -135,7 +135,35 @@ public struct TaskRowState: Sendable, Equatable, Identifiable {
     /// and on a grouped screen this badge *is* the day heading the row files
     /// under: printing a different field than the screen judged would put the
     /// row under a day it does not claim.
-    public var displayDate: DateBadge? { occurrence ?? due ?? scheduled }
+    public var displayDate: DateBadge? { resolvedDisplayDate?.badge }
+
+    /// Which of the three fields a row's date came from.
+    ///
+    /// The drawn row does not need it — a date in the date column is the date
+    /// the screen filed the row under, whichever field carried it. A **spoken**
+    /// row does: the visible text is hidden from VoiceOver and the synthesized
+    /// label is all a reader gets, so the label has to name the field. "Due" is
+    /// a claim about a deadline, and a `scheduled`-only task has none; calling
+    /// its planned day a due date invents one.
+    public enum DisplayDateSource: Sendable, Equatable {
+        case occurrence
+        case due
+        case scheduled
+    }
+
+    /// ``displayDate`` together with ``DisplayDateSource`` it came from.
+    ///
+    /// The fallback order is written **here and nowhere else**, and both
+    /// `displayDate` and every label that names the field read it from this one
+    /// answer. A second copy of `occurrence ?? due ?? scheduled` beside the
+    /// spoken label is exactly how a row ends up printing one date and
+    /// announcing a different field's.
+    public var resolvedDisplayDate: (source: DisplayDateSource, badge: DateBadge)? {
+        if let occurrence { return (.occurrence, occurrence) }
+        if let due { return (.due, due) }
+        if let scheduled { return (.scheduled, scheduled) }
+        return nil
+    }
 
     public var id: TaskId { task.id }
 
