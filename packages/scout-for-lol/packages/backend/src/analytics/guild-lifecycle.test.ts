@@ -25,6 +25,7 @@ async function seedInstall(options?: {
   analyticsLifecycleTracked?: boolean;
   installedAt?: Date;
   firstCoreOutputAt?: Date;
+  firstSubscriptionAt?: Date;
 }) {
   return prisma.guildInstall.create({
     data: {
@@ -38,6 +39,9 @@ async function seedInstall(options?: {
       ...(options?.firstCoreOutputAt === undefined
         ? {}
         : { firstCoreOutputAt: options.firstCoreOutputAt }),
+      ...(options?.firstSubscriptionAt === undefined
+        ? {}
+        : { firstSubscriptionAt: options.firstSubscriptionAt }),
     },
   });
 }
@@ -93,8 +97,58 @@ describe("guild lifecycle analytics state", () => {
           properties: { surface },
         },
       );
+      const install = await prisma.guildInstall.findUnique({
+        where: { serverId: SERVER_ID },
+      });
+      expect(install?.firstSubscriptionAt).not.toBeNull();
     },
   );
+
+  test("does not re-emit first subscription once the milestone is claimed", async () => {
+    await seedInstall({
+      firstSubscriptionAt: new Date("2026-08-02T00:00:00Z"),
+    });
+    const { analytics, capture } = createAnalyticsFixture();
+
+    await captureFirstSubscriptionCreated(
+      SERVER_ID,
+      "discord",
+      prisma,
+      analytics,
+    );
+
+    expect(capture).not.toHaveBeenCalled();
+  });
+
+  test("atomically claims the first-subscription milestone across concurrent callers", async () => {
+    await seedInstall();
+    const { analytics, capture } = createAnalyticsFixture();
+
+    await Promise.all([
+      captureFirstSubscriptionCreated(SERVER_ID, "discord", prisma, analytics),
+      captureFirstSubscriptionCreated(SERVER_ID, "web", prisma, analytics),
+    ]);
+
+    expect(capture).toHaveBeenCalledTimes(1);
+  });
+
+  test("does not synthesize a first-subscription event for a migrated lifecycle", async () => {
+    await seedInstall({ analyticsLifecycleTracked: false });
+    const { analytics, capture } = createAnalyticsFixture();
+
+    await captureFirstSubscriptionCreated(
+      SERVER_ID,
+      "discord",
+      prisma,
+      analytics,
+    );
+
+    expect(capture).not.toHaveBeenCalled();
+    const install = await prisma.guildInstall.findUnique({
+      where: { serverId: SERVER_ID },
+    });
+    expect(install?.firstSubscriptionAt).not.toBeNull();
+  });
 
   test("atomically emits one first-output marker across concurrent deliveries", async () => {
     await seedInstall();

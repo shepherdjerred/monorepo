@@ -445,6 +445,7 @@ model GuildInstall {
   installedAt               DateTime
   analyticsInstallationId   String    @unique @default(uuid())
   analyticsLifecycleTracked Boolean   @default(true)
+  firstSubscriptionAt       DateTime?
   firstCoreOutputAt         DateTime?
   // Legacy one-shot markers, kept for one release so a rollback can still read
   // them. No longer written; DmAuditLog is the source of truth.

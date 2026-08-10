@@ -700,8 +700,11 @@ messaging real people.
 - Every event sets `$process_person_profile: false` and disables GeoIP. Never
   call PostHog `identify`, `alias`, or group APIs, and never correlate browser
   sessions to guild installations.
-- Capture first subscription only after the web or Discord transaction commits
-  and only when the domain result says it was the installation's first.
+- Capture first subscription only after the web or Discord transaction commits,
+  and claim `firstSubscriptionAt` atomically (like `firstCoreOutputAt` below)
+  rather than deriving "first" from the current subscription count: a guild
+  that deletes its last subscription and later adds another sees that count
+  hit zero again, and a count-derived check would double-fire the milestone.
 - Capture core output only after successful logical Discord delivery. Aggregate
   match channels by guild; require every report/pairing chunk; exclude previews,
   setup/welcome, ephemeral replies, DMs, recovery, debug, cancellation, and

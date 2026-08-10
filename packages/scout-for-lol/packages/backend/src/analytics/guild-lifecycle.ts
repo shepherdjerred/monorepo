@@ -72,8 +72,10 @@ export async function captureFirstSubscriptionCreated(
     const install = await db.guildInstall.findUnique({
       where: { serverId },
       select: {
+        id: true,
         analyticsInstallationId: true,
         analyticsLifecycleTracked: true,
+        firstSubscriptionAt: true,
       },
     });
     if (install === null) {
@@ -82,6 +84,22 @@ export async function captureFirstSubscriptionCreated(
       );
       return;
     }
+    if (install.firstSubscriptionAt !== null) {
+      return;
+    }
+
+    const claim = await db.guildInstall.updateMany({
+      where: {
+        id: install.id,
+        analyticsInstallationId: install.analyticsInstallationId,
+        firstSubscriptionAt: null,
+      },
+      data: { firstSubscriptionAt: new Date() },
+    });
+    if (claim.count !== 1 || !install.analyticsLifecycleTracked) {
+      return;
+    }
+
     analytics.capture(install, {
       event: "first_subscription_created",
       properties: { surface },
