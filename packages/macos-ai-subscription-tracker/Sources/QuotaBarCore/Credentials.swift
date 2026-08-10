@@ -200,12 +200,27 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
     var expiredCredential: ProviderCredential?
     let files = try fileManager.contentsOfDirectory(
       at: directory,
-      includingPropertiesForKeys: nil
-    ).filter { $0.lastPathComponent != "mcp" }.sorted { $0.path < $1.path }
+      includingPropertiesForKeys: [.isRegularFileKey]
+    )
+    .filter { url in
+      guard !url.lastPathComponent.hasPrefix("."), url.lastPathComponent != "mcp" else {
+        return false
+      }
+      let isRegularFile = try? url.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile
+      return isRegularFile == true
+    }
+    .sorted { $0.path < $1.path }
     for path in files {
-      guard let file = try decodeFile(KimiCredentialFile.self, at: path, provider: .kimi) else {
+      // The directory can hold macOS/editor artifacts (.DS_Store, backup files) alongside real
+      // credential files; a file that isn't valid JSON is simply not a credential file, not a
+      // reason to abort discovery before later, genuinely valid account files are examined.
+      let file: KimiCredentialFile?
+      do {
+        file = try decodeFile(KimiCredentialFile.self, at: path, provider: .kimi)
+      } catch {
         continue
       }
+      guard let file else { continue }
       for value in file.credentialCandidates {
         let credential = try makeCredential(value, source: path.path)
         guard !excludedTokens.contains(credential.accessToken) else { continue }

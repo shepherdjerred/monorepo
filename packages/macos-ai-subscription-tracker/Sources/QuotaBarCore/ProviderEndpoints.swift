@@ -33,7 +33,16 @@ public struct ProviderEndpoints: Sendable {
 
   public static func live(environment: [String: String]) throws -> ProviderEndpoints {
     func url(_ value: String, provider: ProviderID) throws -> URL {
-      guard let url = URL(string: value) else { throw QuotaError.invalidURL(provider) }
+      // `URL(string:)` happily parses a schemeless, relative value like
+      // "api.kimi.com/coding/v1/usages" - reject anything that isn't an absolute HTTP(S) URL so
+      // a misconfigured override surfaces as invalidURL at setup time instead of an ordinary
+      // network failure once request-building silently resolves it against no base URL.
+      guard let url = URL(string: value),
+        let scheme = url.scheme?.lowercased(), scheme == "http" || scheme == "https",
+        let host = url.host, !host.isEmpty
+      else {
+        throw QuotaError.invalidURL(provider)
+      }
       return url
     }
     return try ProviderEndpoints(

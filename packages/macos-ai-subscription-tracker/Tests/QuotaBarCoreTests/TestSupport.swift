@@ -48,6 +48,14 @@ func temporaryDirectory() throws -> URL {
   return url
 }
 
+func write(_ value: String, to url: URL) throws {
+  try FileManager.default.createDirectory(
+    at: url.deletingLastPathComponent(),
+    withIntermediateDirectories: true
+  )
+  try Data(value.utf8).write(to: url)
+}
+
 actor StubCredentialStore: CredentialStore {
   private var credentials: [ProviderCredential]
   private(set) var rejectionRequests: [Bool] = []

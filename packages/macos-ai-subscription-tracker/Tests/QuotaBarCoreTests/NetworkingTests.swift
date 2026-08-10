@@ -348,6 +348,17 @@ final class NetworkingTests: XCTestCase {
     let credentials = StubCredentialStore(tokens: ["token"])
     XCTAssertEqual(try Providers.live(credentials: credentials).map(\.id), ProviderID.allCases)
   }
+
+  func testEndpointRejectsRelativeOverrideURL() throws {
+    // Syntactically valid per URL(string:) but has no scheme or host - must not silently pass
+    // through as a usable override.
+    XCTAssertThrowsError(
+      try ProviderEndpoints.live(
+        environment: ["QUOTABAR_KIMI_USAGE_URL": "api.kimi.com/coding/v1/usages"])
+    ) { error in
+      XCTAssertEqual(error as? QuotaError, .invalidURL(.kimi))
+    }
+  }
 }
 
 private actor ExpiredCredentialStore: CredentialStore {
