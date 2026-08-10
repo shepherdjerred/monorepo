@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-07-19T19:21:11.456Z",
+  "generatedAt": "2026-08-10T17:00:40.949Z",
   "assets": [
     {
       "id": "draft-prematch",
@@ -453,7 +453,7 @@
       "status": "generated",
       "fileName": "report-graph.png",
       "src": "/generated/scout-showcase/report-graph.png",
-      "byteLength": 77145
+      "byteLength": 77429
     }
   ]
 }
