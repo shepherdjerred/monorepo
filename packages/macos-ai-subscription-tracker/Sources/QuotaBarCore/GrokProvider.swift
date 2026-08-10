@@ -72,10 +72,7 @@ public struct GrokProvider: UsageProvider {
     var windows: [UsageWindow] = []
     if response.config.creditUsagePercent != nil || response.config.currentPeriod != nil {
       let period = response.config.currentPeriod
-      if let period, period.type.lowercased() != "weekly" {
-        throw QuotaError.unsupportedResponse(.grok)
-      }
-      let isWeekly = period != nil
+      let isWeekly = period?.kind == .weekly
       windows.append(
         try UsageWindow.validated(
           id: "grok-shared-credits",
@@ -235,7 +232,7 @@ private struct GrokCreditsConfig: Decodable {
 }
 
 private struct GrokPeriod: Decodable {
-  let type: String
+  let kind: GrokPeriodKind
   let end: Date
 
   enum CodingKeys: String, CodingKey {
@@ -245,12 +242,16 @@ private struct GrokPeriod: Decodable {
 
   init(from decoder: any Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
-    self.type = try container.decode(String.self, forKey: .type)
-    guard !type.isEmpty, let end = try ProviderDecoder.date(in: container, forKey: .end) else {
+    self.kind = try container.decode(GrokPeriodKind.self, forKey: .type)
+    guard let end = try ProviderDecoder.date(in: container, forKey: .end) else {
       throw QuotaValidationError.invalidPairedFields
     }
     self.end = end
   }
+}
+
+private enum GrokPeriodKind: String, Decodable {
+  case weekly
 }
 
 private struct GrokMetric: Decodable, Equatable {
