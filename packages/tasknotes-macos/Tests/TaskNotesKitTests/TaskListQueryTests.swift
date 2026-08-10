@@ -27,6 +27,12 @@ struct TaskListMembershipTests {
         coreTask(id: "archived.md", due: "2026-07-22", archived: true),
         coreTask(id: "daily.md", scheduled: "2026-07-22", recurrence: "FREQ=DAILY"),
         coreTask(id: "friday.md", scheduled: "2026-07-24", recurrence: "FREQ=WEEKLY;BYDAY=FR"),
+        // Plain and scheduled-only: planned work with no deadline, which is
+        // what the inspector's Schedule field writes. It is on exactly one
+        // dated screen — the one its plan falls on — and on neither Inbox,
+        // which is for work nothing has been said about at all.
+        coreTask(id: "planned-today.md", scheduled: "2026-07-22"),
+        coreTask(id: "planned-friday.md", scheduled: "2026-07-24"),
     ]
 
     private func ids(_ section: SidebarSection) throws -> [TaskId] {
@@ -56,9 +62,12 @@ struct TaskListMembershipTests {
         // between the 24th and the 14th of August rather than at the end,
         // because on a grouped screen the flattened rows follow the *day
         // headings*, not the order the tasks arrived in.
+        // `planned-today.md` is absent for the same reason `daily.md` is: the
+        // day it is planned for has a screen of its own.
         #expect(
             try ids(.upcoming) == [
-                "due-tomorrow.md", "due-this-week.md", "friday.md", "due-later.md",
+                "due-tomorrow.md", "due-this-week.md", "friday.md", "planned-friday.md",
+                "due-later.md",
             ])
     }
 
@@ -75,8 +84,11 @@ struct TaskListMembershipTests {
         // `Tomorrow` and `This Week` are the core's own heading strings;
         // `Aug 14` is the one bucket `dateGroupHeading` deliberately leaves to
         // the shell, and it is a formatted date rather than the word "Later".
+        // The scheduled-only row groups under the day it is *planned* for, so
+        // the heading it sits below and the date its badge prints are one
+        // value.
         #expect(model.groups.map(\.heading) == ["Tomorrow", "This Week", "Aug 14"])
-        #expect(model.groups.map { $0.rows.count } == [1, 2, 1])
+        #expect(model.groups.map { $0.rows.count } == [1, 3, 1])
         // The flattened rows follow the groups, so a selection built from one
         // matches the other.
         #expect(model.rows.map(\.id) == model.groups.flatMap { $0.rows.map(\.id) })
@@ -126,9 +138,9 @@ struct TaskListMembershipTests {
             text: fixedText()
         )
 
-        // Twelve of the thirteen fixtures reach Browse — only the archived one
-        // does not — and five of those twelve are titled after a due date.
-        #expect(model.admittedCount == 12)
+        // Fourteen of the fifteen fixtures reach Browse — only the archived one
+        // does not — and five of those fourteen are titled after a due date.
+        #expect(model.admittedCount == 14)
         #expect(model.rows.count == 5)
         #expect(model.isNarrowed)
     }

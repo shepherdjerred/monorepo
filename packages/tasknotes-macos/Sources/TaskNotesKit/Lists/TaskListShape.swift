@@ -143,12 +143,18 @@ extension SidebarSection {
         }
     }
 
-    /// Today: due today, already overdue, or a rule that fires today.
+    /// Today: due or planned today, already past, or a rule that fires today.
     ///
     /// The split matters and is easy to get wrong. A recurring task is usually
     /// scheduled-only with **no due date at all**, so a due-date test alone
     /// hides every repeating task on the screen whose entire job is to show
     /// them.
+    ///
+    /// ⚠️ The same hole, one branch down: a *plain* task planned for today
+    /// carries `scheduled` and no `due` — that is what the inspector's Schedule
+    /// field writes, and what the plugin's own planned work looks like — so the
+    /// non-recurring branch keys on ``CoreTask/civilEffectiveDate(_:)`` rather
+    /// than on `due`.
     ///
     /// The recurring branch keeps the row visible even when today's occurrence
     /// is already checked off, which is deliberate: completing an occurrence
@@ -177,10 +183,10 @@ extension SidebarSection {
             return fires ? .included(about: nil) : .excluded
         }
 
-        guard let due = try task.civilDue(calendar) else { return .excluded }
-        let belongs = try CoreErrors.rethrowingCore("bucketing the due date on \(task.id)") {
-            try dateIsToday(date: due, today: calendar.today)
-                || dateIsOverdue(date: due, today: calendar.today)
+        guard let date = try task.civilEffectiveDate(calendar) else { return .excluded }
+        let belongs = try CoreErrors.rethrowingCore("bucketing the date on \(task.id)") {
+            try dateIsToday(date: date, today: calendar.today)
+                || dateIsOverdue(date: date, today: calendar.today)
         }
         return belongs ? .included(about: nil) : .excluded
     }
@@ -227,6 +233,11 @@ extension SidebarSection {
     /// design forbids. The row is about the occurrence the screen is showing,
     /// so the gesture is too; ``TaskAdmission/included(about:)`` is how that
     /// travels.
+    ///
+    /// A plain task is admitted on ``CoreTask/civilEffectiveDate(_:)``, so work
+    /// merely *planned* for a day — `scheduled` with no `due`, which is what
+    /// the inspector's Schedule field writes — reaches the agenda that promises
+    /// to show it.
     private func admitsOnUpcoming(
         _ task: CoreTask,
         calendar: ViewerCalendar
@@ -249,7 +260,9 @@ extension SidebarSection {
             return .included(about: next)
         }
 
-        guard let due = try task.civilDue(calendar), try isUpcoming(due, calendar: calendar) else {
+        guard let date = try task.civilEffectiveDate(calendar),
+            try isUpcoming(date, calendar: calendar)
+        else {
             return .excluded
         }
         return .included(about: nil)
@@ -297,6 +310,33 @@ extension CoreTask {
     /// The civil day this task's `scheduled` value falls on for this viewer.
     func civilScheduled(_ calendar: ViewerCalendar) throws(CoreError) -> String? {
         try Self.civil(scheduled, calendar: calendar, what: "the scheduled date on \(id)")
+    }
+
+    /// The civil day a dated screen judges a **non-recurring** task on: its
+    /// deadline when it has one, else the day it is planned for.
+    ///
+    /// The core's `SortField.effectiveDate` reads `due`, then `scheduled`, then
+    /// the rule's next occurrence, and this is the first two legs of that same
+    /// order. The third is missing on purpose rather than by omission: every
+    /// caller has already taken the recurring branch, where the rule answers
+    /// the question with the occurrence the row is *about*, which a date alone
+    /// cannot carry.
+    ///
+    /// ⚠️ **First *readable*, where the sort key takes the first *present*.**
+    /// The two differ on a hand-typed `due: someday` beside a real `scheduled`,
+    /// and the divergence is deliberate: ordering has a third answer for an
+    /// unreadable value — it compares equal to everything and the row stays put
+    /// — and membership does not. More importantly this has to agree with
+    /// ``TaskRowState/displayDate``, which prints `scheduled` exactly when
+    /// `due` produced no badge, and on a grouped screen the printed date *is*
+    /// the day heading the row files under. Reading a different field than the
+    /// row prints would put a task under a day it does not claim.
+    func civilEffectiveDate(_ calendar: ViewerCalendar) throws(CoreError) -> String? {
+        // Spelled out rather than `try civilDue(calendar) ?? civilScheduled(…)`:
+        // a `??` whose right-hand side throws widens the expression's thrown
+        // type back to `any Error`, which no longer converts to `CoreError`.
+        if let due = try civilDue(calendar) { return due }
+        return try civilScheduled(calendar)
     }
 
     private static func civil(

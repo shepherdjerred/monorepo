@@ -14,7 +14,7 @@ import Testing
 struct TaskListModelTests {
     /// The filter, clause by clause, against the React Native `todayTasks`
     /// specification.
-    @Test("a task belongs on Today when it is due today, overdue, or recurs today")
+    @Test("a task belongs on Today when it is due, planned or recurring for it, or past")
     func theFilterMatchesTheReferenceScreen() throws {
         let today = fixedCalendar(today: "2026-07-22")
         let tasks = [
@@ -33,13 +33,53 @@ struct TaskListModelTests {
                 id: "weekly-other-day.md",
                 scheduled: "2026-07-20",
                 recurrence: "FREQ=WEEKLY;BYDAY=MO"),
+            // Plain and scheduled-only: work *planned* for a day with no
+            // deadline attached, which is what the inspector's Schedule field
+            // writes and the ordinary shape of a task created elsewhere. A
+            // due-date-only test hides all three of these from the screen that
+            // promises to show today's work.
+            coreTask(id: "planned-today.md", scheduled: "2026-07-22"),
+            coreTask(id: "planned-last-week.md", scheduled: "2026-07-15"),
+            coreTask(id: "planned-tomorrow.md", scheduled: "2026-07-23"),
+            // `due` is present but in no shape the core reads, which is what a
+            // hand-typed `due: someday` in frontmatter looks like. The
+            // effective date is the first date that *reads*, so the plan
+            // answers — and it is also the date the row prints, which is what
+            // keeps a grouped screen from filing a row under a day it never
+            // claimed.
+            coreTask(id: "someday-but-planned.md", due: "someday", scheduled: "2026-07-22"),
         ]
 
         let list = try TaskListModel.build(
             section: .today,
             tasks: tasks, pendingTaskIds: [], calendar: today, text: fixedText())
 
-        #expect(list.rows.map(\.id) == ["due-today.md", "overdue.md", "daily.md"])
+        #expect(
+            list.rows.map(\.id) == [
+                "due-today.md", "overdue.md", "daily.md", "planned-today.md",
+                "planned-last-week.md", "someday-but-planned.md",
+            ])
+    }
+
+    @Test("a row planned for a day prints that day when it carries no deadline")
+    func aScheduledOnlyRowPrintsThePlanItWasAdmittedOn() throws {
+        // The badge is not decoration here: it is the only thing on the row
+        // that says why the row is there at all, and on Upcoming it is the day
+        // heading the row files under. A row admitted on `scheduled` that
+        // printed nothing would be a task on the screen with no stated reason.
+        let list = try TaskListModel.build(
+            section: .today,
+            tasks: [coreTask(id: "planned.md", scheduled: "2026-07-22")],
+            pendingTaskIds: [],
+            calendar: fixedCalendar(),
+            text: fixedText()
+        )
+        let row = try #require(list.rows.first)
+
+        #expect(row.due == nil)
+        #expect(row.scheduled?.date == "2026-07-22")
+        #expect(row.displayDate?.date == "2026-07-22")
+        #expect(row.displayDate?.text == "Today")
     }
 
     @Test("a globally completed recurring task does not reappear each time its rule fires")

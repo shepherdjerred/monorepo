@@ -102,6 +102,14 @@ public struct TaskRowState: Sendable, Equatable, Identifiable {
     /// The due date badge, or `nil` when the task has no readable due date.
     public let due: DateBadge?
 
+    /// The scheduled date badge, or `nil` when the task has no readable
+    /// scheduled date.
+    ///
+    /// Separate from ``due`` rather than folded into it because they are
+    /// different claims — a deadline and a plan — and the one surface that
+    /// edits a date edits `due` alone.
+    public let scheduled: DateBadge?
+
     /// ``completionTarget`` as the row prints it; `nil` for a plain task.
     ///
     /// Derived from the same string in the same branch, so the words a reader
@@ -118,7 +126,16 @@ public struct TaskRowState: Sendable, Equatable, Identifiable {
     /// left the one column that explains the row's presence empty on precisely
     /// the rows whose date is the reason they are there. The occurrence is that
     /// date, and it is also the date the checkbox acts on.
-    public var displayDate: DateBadge? { occurrence ?? due }
+    ///
+    /// **A plain task can be `scheduled`-only too** — work planned for a day
+    /// with no deadline attached — and that is the date Today and Upcoming
+    /// admitted it on, so it is the date the row owes the reader. The fallback
+    /// order is `due` before `scheduled` because
+    /// ``CoreTask/civilEffectiveDate(_:)`` decides membership in that order,
+    /// and on a grouped screen this badge *is* the day heading the row files
+    /// under: printing a different field than the screen judged would put the
+    /// row under a day it does not claim.
+    public var displayDate: DateBadge? { occurrence ?? due ?? scheduled }
 
     public var id: TaskId { task.id }
 
@@ -193,6 +210,7 @@ public struct TaskRowState: Sendable, Equatable, Identifiable {
         self.isRecurring = rule != nil
 
         self.due = try DateBadge.of(stored: task.due, calendar: calendar, text: text)
+        self.scheduled = try DateBadge.of(stored: task.scheduled, calendar: calendar, text: text)
 
         if rule == nil {
             self.completionTarget = nil
