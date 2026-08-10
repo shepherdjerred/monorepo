@@ -12,7 +12,7 @@ import { buildFailureAlertForExecution } from "./workflow-failure-watch-detail.t
  * Polls the Temporal visibility API for workflow executions that closed as
  * Failed/TimedOut in the lookback window, extracts each execution's
  * structured failure via `handle.result()`, and posts one detail-rich alert
- * per execution to Alertmanager (which already routes to PagerDuty — see
+ * per execution to Alertmanager (which already routes to Alerts — see
  * `packages/homelab/.../argo-applications/prometheus.ts`). Each successful
  * detail batch heartbeats its last item. A retry scans the full lookback and
  * applies a conservative in-memory checkpoint because the public visibility
@@ -25,7 +25,7 @@ const COMPONENT = "temporal-failure-watch";
 // Keep a full day of terminal executions queryable so a worker outage can be
 // recovered by the next poll. The alert TTL covers this window plus delivery
 // margin, preventing a recovered poll from re-paging an execution that was
-// already observed while leaving Alertmanager time to notify PagerDuty.
+// already observed while leaving Alertmanager time to notify Alerts.
 export const DEFAULT_LOOKBACK_MS = 24 * 60 * 60 * 1000;
 // The activity may consume all three attempts before it can finish the
 // visibility scan. Keep the original close-time boundary alive through that

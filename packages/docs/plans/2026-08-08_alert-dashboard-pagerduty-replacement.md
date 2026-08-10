@@ -38,13 +38,11 @@ alert state.
 - Deploy privately at `alerts.tailnet-1a49.ts.net` with a backed-up PostgreSQL
   cluster and an independent Alertmanager-to-Postal fallback for failures of
   the dashboard itself.
-- Split the bootstrap release at the image boundary: the foundation merge
-  builds the first image but leaves the Argo CD Application, service-health
-  rules, Alertmanager cutover, and active Temporal/TRMNL consumer migration
-  unregistered. Activate them only after GHCR is public and a real digest is
-  pinned, preserving PagerDuty routing and consumers until the replacement
-  passes its email-disabled bootstrap checks. `toolkit alerts` may ship beside
-  the retained `toolkit pd` command because it does not alter a live workload.
+- Split the bootstrap release into activation and cutover changes: activation
+  registers the Argo CD Application, service-health rules, probe, and network
+  paths while preserving PagerDuty routing; cutover follows successful
+  bootstrap verification and migrates Alertmanager, Temporal, TRMNL, and
+  toolkit. The real public image digest is pinned before activation.
 - Cut over without a long shadow period. Keep the PagerDuty account and Tofu
   state read-only for 30 days, then perform destruction only as a separately
   authorized operation.
@@ -57,9 +55,9 @@ alert state.
 2. Add the functional dashboard, history, detail, preview, and system-health
    routes with URL-backed filters and native browser navigation behavior.
 3. Add the application image, Buildkite integration, CDK8s chart, Helm chart,
-   deferred ArgoCD application definition, PostgreSQL cluster, network policy,
-   monitoring, and secret references. Do not register runtime activation while
-   the image pin is the bootstrap placeholder.
+   ArgoCD application definition, PostgreSQL cluster, network policy,
+   monitoring, and secret references. Keep activation separate from the
+   notification cutover.
 4. After bootstrap verification, replace Alertmanager's PagerDuty receiver,
    migrate Temporal/TRMNL consumers, remove the retained toolkit PagerDuty
    command and active PagerDuty credentials, and update current operator

@@ -69,7 +69,7 @@ describe("buildWorkflowFailureAlert", () => {
       "message golink server returned 500",
     );
     expect(alert.annotations["description"]).toContain("at fetchGolinks");
-    // message mirrors description — the Alertmanager PagerDuty template reads
+    // message mirrors description — the Alertmanager Alerts template reads
     // .message first, falling back to .description.
     expect(alert.annotations["message"]).toBe(alert.annotations["description"]);
     expect(alert.generatorURL).toBe(

@@ -182,12 +182,12 @@ export async function refreshAgentTaskSecretTokenStateInBackground(
 // ACCEPTED-RISK NOTE (owner decision, see PR #1860 Codex threads A & B):
 // This forwards the FULL worker environment to the provider subprocess (minus
 // the GitHub credentials it re-mints below). That includes the worker's
-// operational secrets — GRAFANA_URL/GRAFANA_API_KEY, PAGERDUTY_TOKEN,
+// operational secrets — GRAFANA_URL/GRAFANA_API_KEY, ALERT_DASHBOARD_URL,
 // ARGOCD_SERVER/ARGOCD_AUTH_TOKEN, BUGSINK_URL/BUGSINK_TOKEN,
 // CLOUDFLARE_API_TOKEN, POSTAL_*, etc. This is deliberate: the daily
 // `homelab-audit-daily` schedule runs as a report-only agent task
 // (`HOMELAB_AUDIT_AGENT_TASK`, provider "claude") through this exact path and
-// its runbook performs LIVE Grafana/Prometheus, PagerDuty, ArgoCD, Bugsink, and
+// its runbook performs LIVE Grafana/Prometheus, Alerts, ArgoCD, Bugsink, and
 // Cloudflare-`tofu plan` checks — it needs those credentials to produce a
 // complete report. A minimal-env allowlist was tried and reverted precisely
 // because it broke that audit; do not reintroduce one without also giving the

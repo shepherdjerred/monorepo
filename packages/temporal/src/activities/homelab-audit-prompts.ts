@@ -96,14 +96,14 @@ Output requirements (strict):
 2. First section: a top-level heading ("# Homelab Health Audit — <date>") followed by a "TL;DR" subsection (≤ 8 bullets).
 3. Include a one-line that follows the runbook's exact phrasing, verbatim — the email subject parser depends on it:
    "- Application Health Matrix: <R> Red / <Y> Yellow / <G> Green (<N> ArgoCD apps)"
-   "- Open PagerDuty incidents: <P>"
+   "- Open Alerts occurrences: <P>"
 4. Then a "Cluster Overview" key/value table.
 5. Then per-section findings (only sections with non-Green items appear).
 6. Then a full Application Health Matrix table covering every ArgoCD application.
-7. Then a PagerDuty Incident Triage table (one row per open incident).
+7. Then an Alerts Occurrence Triage table (one row per open occurrence).
 8. Then "What's working well" and "Followups" sections.
 9. Use 🟢 / 🟡 / 🔴 emoji prefixes inside the matrix as in the runbook examples.
-10. NEVER mutate state. All commands must be read-only. Do not run \`kubectl apply\`, \`tofu apply\`, \`argocd app sync\`, or any PagerDuty resolve / acknowledge / snooze. Do not delete files. Do not push to git.
+10. NEVER mutate state. All commands must be read-only. Do not run \`kubectl apply\`, \`tofu apply\`, \`argocd app sync\`, or any alert acknowledgement or resolution operation. Do not delete files. Do not push to git.
 11. Hard size cap: ≤ 25 KB total. Trim verbose log paste-ins to the minimum needed for triage.
 `.trim();
 
@@ -119,11 +119,11 @@ Available tools (already authenticated in this environment — do not attempt to
 - \`bk\` — Buildkite CLI. \`BUILDKITE_API_TOKEN\`, \`BUILDKITE_ORGANIZATION_SLUG=sjerred\`, and \`BUILDKITE_PIPELINE_SLUG=monorepo\` are set; Buildkite is the source of truth for CI.
 - \`temporal\` — Temporal CLI. \`TEMPORAL_ADDRESS\` points at the in-cluster frontend service; do not use \`kubectl exec\` or \`kubectl port-forward\` for routine audit checks.
 - \`toolkit\` — local binary at /usr/local/bin/toolkit. Subcommands the runbook calls for:
-  - \`toolkit pd incidents [--json]\` — open PagerDuty incidents (§6).
+  - \`toolkit alerts list --state open [--json]\` — open Alerts occurrences (§6).
   - \`toolkit bugsink issues [--json]\` — open Bugsink issues (§9). \`toolkit bugsink issue <ID>\` for details.
   - \`toolkit gf query 'ALERTS{alertstate="firing"}'\` is the primary alert truth. \`toolkit gf alerts\` lists Grafana-managed rules only and may correctly return "No alert rules found" when PrometheusRule/Alertmanager owns alerting.
   - \`toolkit gf query '<promql>'\` / \`toolkit gf logs '<logql>' --since 24h --limit 50\` (§6, §10).
-  All required env vars (\`PAGERDUTY_TOKEN\`, \`BUGSINK_URL\`, \`BUGSINK_TOKEN\`, \`GRAFANA_URL\`, \`GRAFANA_API_KEY\`) are already injected.
+  All required env vars (\`ALERT_DASHBOARD_URL\`, \`BUGSINK_URL\`, \`BUGSINK_TOKEN\`, \`GRAFANA_URL\`, \`GRAFANA_API_KEY\`) are already injected.
 `.trim();
 
 export function buildAuditPrompt(input: BuildAuditPromptInput): string {

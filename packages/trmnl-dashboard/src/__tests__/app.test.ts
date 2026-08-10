@@ -18,7 +18,7 @@ const config: AppConfig = {
   },
   homelab: {
     prometheusUrl: "http://prometheus.local",
-    alertmanagerUrl: "http://alertmanager.local",
+    alertDashboardUrl: "http://alerts.local",
     bugsinkUrl: "http://bugsink.local/api/canonical/0",
     kubernetesUrl: "https://kubernetes.default.svc",
     kubernetesTokenPath: "/tmp/token",
@@ -46,9 +46,8 @@ const homelabPayload: HomelabPayload = {
   generated_at: "2026-05-09T00:00:00.000Z",
   generated_time: "5:00 PM",
   status: "ok",
-  summary: "1/1 nodes · 0 critical alerts · 0 Bugsink · 0 PD",
+  summary: "1/1 nodes · 0 critical alerts · 0 Bugsink · 0 open alerts",
   bugsink: { status: "ok", unresolved: 0, projects: [] },
-  pagerduty: { status: "ok", triggered: 0, acknowledged: 0, on_call: [] },
   kubernetes: {
     status: "ok",
     ready_nodes: 1,
@@ -57,7 +56,14 @@ const homelabPayload: HomelabPayload = {
   },
   storage: { status: "ok", max_disk_used_percent: 10, volumes: [] },
   hardware: { status: "ok", cpu_used_percent: 10, memory_used_percent: 20 },
-  alerts: { status: "ok", critical: 0, warning: 0 },
+  alerts: {
+    status: "ok",
+    open: 0,
+    critical: 0,
+    warning: 0,
+    info: 0,
+    recent: [],
+  },
   errors: [],
 };
 
@@ -113,7 +119,7 @@ describe("createHandler", () => {
       collectHomelab: async () => ({
         ...homelabPayload,
         status: "unknown",
-        errors: ["PagerDuty failed"],
+        errors: ["Alerts failed"],
       }),
     });
     const response = await handler(
@@ -126,7 +132,7 @@ describe("createHandler", () => {
     expect(await response.json()).toMatchObject({
       status: "warning",
       home: { status: "warning", errors: ["Home warning"] },
-      homelab: { status: "unknown", errors: ["PagerDuty failed"] },
+      homelab: { status: "unknown", errors: ["Alerts failed"] },
     });
   });
 });

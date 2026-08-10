@@ -3,7 +3,7 @@
  *
  * Imports `runHomelabAuditAgent` directly, runs it against the user's local
  * authenticated CLIs (`kubectl @ admin@torvalds`, `talosctl`, `tofu` via
- * `op run`, `toolkit pd/bugsink/gf`, `claude`), and either writes the
+ * `op run`, `toolkit alerts/bugsink/gf`, `claude`), and either writes the
  * rendered HTML to `/tmp/...` (DRY_RUN=1) or sends through the real Postal
  * API (DRY_RUN=0).
  *

@@ -212,33 +212,17 @@ describe("Helm Escaping - E2E Content Verification (dist/)", () => {
   );
 
   it(
-    "apps chart: PagerDuty config contains unescaped Alertmanager templates after Helm",
+    "apps chart: Alerts receiver stays authenticated after Helm",
     async () => {
       const result = await helmTemplateChart("apps");
-      // Title (description) is a single clean line: shared summary (or alertname)
-      // + namespace + firing count. The full per-alert body must NOT be in the
-      // title — PagerDuty truncates it mid-word at ~1024 chars.
-      // See the original investigation
-      expect(result.stdout).toContain("{{ .CommonAnnotations.summary }}");
-      expect(result.stdout).toContain("{{ .CommonLabels.alertname }}");
-      // Regression guard: the per-alert `message` (falling back to `description`)
-      // must still reach PagerDuty — now in `details`, not the title — so distinct
-      // namespaces/objects grouped into one incident stay distinguishable.
-      // See the original investigation
-      expect(result.stdout).toContain("{{ range .Alerts.Firing }}");
-      expect(result.stdout).toContain("{{ .Annotations.message }}");
-      // Regression guard: the pre-2026-07 design inlined the whole body into the
-      // title via `{{ range .Alerts }}...summary...: ...message... }}`. Ensure the
-      // title no longer ranges over every alert (that caused the truncated blobs).
-      expect(result.stdout).not.toContain(
-        "{{ range .Alerts }}{{ .Annotations.summary }}",
+      expect(result.stdout).toContain(
+        "url: http://alert-dashboard-alert-dashboard-service.alert-dashboard.svc.cluster.local:7341/internal/v1/alertmanager/events",
       );
-      // Regression guard: a literal backslash-n must never reach a template. Go's
-      // text/template does not interpret `\n` in literal text, so it would surface
-      // as the two characters "\n".
-      expect(result.stdout).not.toContain(
-        String.raw`{{ .Annotations.summary }}\n`,
+      expect(result.stdout).toContain(
+        "credentials_file: /etc/alertmanager/secrets/alert-dashboard-secrets/WEBHOOK_TOKEN",
       );
+      expect(result.stdout).toContain("send_resolved: true");
+      expect(result.stdout).not.toContain("pagerduty_configs:");
     },
     HELM_TEMPLATE_TIMEOUT_MS,
   );

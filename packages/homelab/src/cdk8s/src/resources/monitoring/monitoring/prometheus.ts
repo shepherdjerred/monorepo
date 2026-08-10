@@ -24,6 +24,7 @@ import { getZfsMaintenanceRuleGroups } from "./rules/zfs-maintenance.ts";
 import { getTemporalRuleGroups } from "./rules/temporal.ts";
 import { getStreambotRuleGroups } from "./rules/streambot.ts";
 import { getDiscordPlaysGoalRuleGroups } from "./rules/discord-plays-goal.ts";
+import { getAlertDashboardRuleGroups } from "./rules/alert-dashboard.ts";
 import { createBuildkiteMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/buildkite.ts";
 import { createBuildkitdMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/buildkitd.ts";
 
@@ -174,6 +175,17 @@ export function createPrometheusMonitoring(chart: Chart) {
     },
     spec: {
       groups: getServiceProbeRuleGroups(),
+    },
+  });
+
+  new PrometheusRule(chart, "prometheus-alert-dashboard-rules", {
+    metadata: {
+      name: "prometheus-alert-dashboard-rules",
+      namespace: "prometheus",
+      labels: { release: "prometheus" },
+    },
+    spec: {
+      groups: getAlertDashboardRuleGroups(),
     },
   });
 

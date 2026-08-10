@@ -19,7 +19,7 @@ All tools must be authenticated before starting:
 | `talosctl` | `torvalds`                                                   | `talosctl version`                               |
 | `argocd`   | `admin`                                                      | `argocd app list`                                |
 | `velero`   | —                                                            | `velero backup get`                              |
-| `toolkit`  | Grafana + PagerDuty + Bugsink env vars                       | `toolkit gf query 'ALERTS{alertstate="firing"}'` |
+| `toolkit`  | Alerts + Grafana + Bugsink env vars                          | `toolkit gf query 'ALERTS{alertstate="firing"}'` |
 | `temporal` | `TEMPORAL_ADDRESS` points at the Temporal frontend service   | `temporal operator cluster health`               |
 | `bk`       | `BUILDKITE_API_TOKEN`, `BUILDKITE_ORGANIZATION_SLUG=sjerred` | `bk build list --pipeline monorepo --limit 1`    |
 | `gh`       | GitHub auth (`gh auth status`)                               | `gh pr list --limit 1`                           |
@@ -171,13 +171,13 @@ alerting is implemented with PrometheusRule resources and Alertmanager routing.
 Do not mark that as a Grafana outage unless Prometheus firing-alert queries or
 scrape health also fail.
 
-### PagerDuty Incidents
+### Alerts Occurrences
 
 ```bash
-toolkit pd incidents                                       # Open incidents
+toolkit alerts list --state open                           # Open occurrences
 ```
 
-Flag: incidents whose underlying alert has cleared (stale), or firing alerts without a matching incident (missing PD integration). Acknowledgement state and incident notes are out of scope.
+Flag: open occurrences whose underlying Prometheus alert has cleared (stale), or firing alerts missing from the Alerts ledger. Acknowledgement state, assignment, and escalation are out of scope.
 
 ### Scrape Targets
 
@@ -340,7 +340,7 @@ Flag: non-zero failure rate, scrape target down.
 ### Agent-task execution hardening signals
 
 The `temporal-failure-watch` schedule is the sole per-execution workflow-failure
-PagerDuty source.
+Alerts source.
 It emits one `TemporalWorkflowFailed` alert per `workflowId`/`runId` and fetches
 history for every failed or timed-out execution. For a timeout, inspect the
 alert annotations `timeoutClassification` and, when present,
@@ -633,7 +633,7 @@ End with a "What's Working Well" section to confirm healthy systems.
 - ArgoCD status should match actual pod status (OutOfSync app but pods running = just pending sync)
 - Prometheus alerts should match observed issues (if alert fires but issue is gone, check alert duration)
 - Backup recency should match schedule (if schedule says daily but last backup is 3 days old, investigate)
-- PagerDuty incidents should correlate with firing alerts (open incident without firing alert = stale incident; firing alert without incident = missing integration)
+- Alerts occurrences should correlate with firing alerts (open occurrence without a firing alert = stale occurrence; firing alert without an occurrence = missing integration)
 - Bugsink issues should correlate with pod health (CrashLoopBackOff pods should have corresponding error events in Bugsink)
 - Bugsink releases should match recent deployments (if ArgoCD synced a new version but no Bugsink release exists, SDK integration may be misconfigured)
 - Temporal workflow failures should correlate with pod health: if workflows error out while `temporal-worker` pods are Healthy, check `kubectl logs -n temporal -l app=temporal-worker` — the worker is running but the workflow/activity code is failing
