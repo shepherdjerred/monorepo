@@ -534,3 +534,65 @@ func TestFindRuleByName(t *testing.T) {
 		}
 	})
 }
+
+// TestResolveReadHostname pins the refresh convergence rule: a lease configured
+// with hostname = "" must not be nulled on refresh, or plan/apply loops forever
+// diffing the explicit empty string against null.
+func TestResolveReadHostname(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name           string
+		prior          types.String
+		routerHostname string
+		want           types.String
+	}{
+		{
+			name:           "configured empty survives refresh",
+			prior:          types.StringValue(""),
+			routerHostname: "",
+			want:           types.StringValue(""),
+		},
+		{
+			name:           "null stays null",
+			prior:          types.StringNull(),
+			routerHostname: "",
+			want:           types.StringNull(),
+		},
+		{
+			name:           "externally cleared hostname becomes null",
+			prior:          types.StringValue("myhost"),
+			routerHostname: "",
+			want:           types.StringNull(),
+		},
+		{
+			name:           "router hostname wins over null prior",
+			prior:          types.StringNull(),
+			routerHostname: "myhost",
+			want:           types.StringValue("myhost"),
+		},
+		{
+			name:           "router hostname wins over configured empty",
+			prior:          types.StringValue(""),
+			routerHostname: "set-outside-terraform",
+			want:           types.StringValue("set-outside-terraform"),
+		},
+		{
+			name:           "externally changed hostname is reported",
+			prior:          types.StringValue("old"),
+			routerHostname: "new",
+			want:           types.StringValue("new"),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := resolveReadHostname(tt.prior, tt.routerHostname)
+			if !got.Equal(tt.want) {
+				t.Errorf("expected %v, got %v", tt.want, got)
+			}
+		})
+	}
+}

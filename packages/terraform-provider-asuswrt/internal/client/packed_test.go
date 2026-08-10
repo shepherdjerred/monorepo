@@ -407,3 +407,72 @@ func TestSerializeVTSRuleListMatchesFirmwareBuilder(t *testing.T) {
 		t.Errorf("serialize != firmware builder format:\n want = %q\n got  = %q", want, got)
 	}
 }
+
+// TestPackedListsPreserveTrailingFields covers firmware that returns more
+// fields than this provider models. Every mutation rewrites the whole list, so
+// an unmodeled trailing field must survive parse→serialize or an unrelated
+// apply would strip it from the router.
+func TestPackedListsPreserveTrailingFields(t *testing.T) {
+	t.Parallel()
+
+	t.Run("dhcp fifth field round-trips", func(t *testing.T) {
+		t.Parallel()
+
+		raw := lt + "AA:BB:CC:DD:EE:FF" + gt + "192.168.1.100" + gt + "1.1.1.1" + gt + "host" + gt + "future"
+
+		parsed, err := client.ParseDHCPStaticList(raw)
+		if err != nil {
+			t.Fatalf("parsing dhcp_staticlist: %v", err)
+		}
+
+		if len(parsed) != 1 {
+			t.Fatalf("expected 1 entry, got %d", len(parsed))
+		}
+
+		if parsed[0].Extra != "future" {
+			t.Errorf("expected trailing field retained, got %q", parsed[0].Extra)
+		}
+
+		if got := client.SerializeDHCPStaticList(parsed); got != raw {
+			t.Errorf("round-trip dropped data:\n raw = %q\n got = %q", raw, got)
+		}
+	})
+
+	t.Run("dhcp multiple trailing fields round-trip", func(t *testing.T) {
+		t.Parallel()
+
+		raw := lt + "AA:BB:CC:DD:EE:FF" + gt + "192.168.1.100" + gt + gt + gt + "a" + gt + "b"
+
+		parsed, err := client.ParseDHCPStaticList(raw)
+		if err != nil {
+			t.Fatalf("parsing dhcp_staticlist: %v", err)
+		}
+
+		if got := client.SerializeDHCPStaticList(parsed); got != raw {
+			t.Errorf("round-trip dropped data:\n raw = %q\n got = %q", raw, got)
+		}
+	})
+
+	t.Run("port-forward seventh field round-trips", func(t *testing.T) {
+		t.Parallel()
+
+		raw := lt + "HTTP" + gt + "80" + gt + "192.168.1.100" + gt + "80" + gt + "tcp" + gt + "10.0.0.1" + gt + "future"
+
+		parsed, err := client.ParseVTSRuleList(raw)
+		if err != nil {
+			t.Fatalf("parsing vts_rulelist: %v", err)
+		}
+
+		if len(parsed) != 1 {
+			t.Fatalf("expected 1 rule, got %d", len(parsed))
+		}
+
+		if parsed[0].Extra != "future" {
+			t.Errorf("expected trailing field retained, got %q", parsed[0].Extra)
+		}
+
+		if got := client.SerializeVTSRuleList(parsed); got != raw {
+			t.Errorf("round-trip dropped data:\n raw = %q\n got = %q", raw, got)
+		}
+	})
+}

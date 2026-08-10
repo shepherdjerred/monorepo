@@ -24,6 +24,13 @@ const (
 	vtsRequiredFields  = 5 // name, external port, internal IP, internal port, protocol
 )
 
+// Field counts this provider models by name. Anything beyond these is retained
+// verbatim in the entry's Extra so a rewrite cannot drop it.
+const (
+	dhcpModeledFields = 4 // MAC, IP, DNS, hostname
+	vtsModeledFields  = 6 // the five required plus source IP
+)
+
 // splitPackedEntries splits a packed NVRAM value into per-entry field slices.
 // The leading empty segment before the first "&#60" is dropped.
 func splitPackedEntries(raw string) [][]string {
@@ -56,11 +63,18 @@ func writePackedEntry(b *strings.Builder, fields ...string) {
 // <MAC>IP>DNS>Hostname. DNS and Hostname are preserved verbatim so that
 // serialization round-trips the router's exact byte format and never clobbers
 // per-client DNS or an inline hostname belonging to another entry.
+//
+// Extra holds any fields past the modeled four, already joined with the field
+// delimiter, and is re-emitted verbatim. Firmware that adds a field must not
+// lose it: every lease mutation rewrites the whole list, so an unmodeled
+// trailing field that this provider dropped would be erased from the router.
+// It is a string rather than a slice so the struct stays comparable.
 type DHCPStaticEntry struct {
 	MAC      string
 	IP       string
 	DNS      string
 	Hostname string
+	Extra    string
 }
 
 // ParseDHCPStaticList parses the dhcp_staticlist NVRAM value.
@@ -90,6 +104,10 @@ func ParseDHCPStaticList(raw string) ([]DHCPStaticEntry, error) {
 			entry.Hostname = fields[3]
 		}
 
+		if len(fields) > dhcpModeledFields {
+			entry.Extra = strings.Join(fields[dhcpModeledFields:], packedFieldDelim)
+		}
+
 		entries = append(entries, entry)
 	}
 
@@ -98,18 +116,27 @@ func ParseDHCPStaticList(raw string) ([]DHCPStaticEntry, error) {
 
 // SerializeDHCPStaticList serializes DHCP static entries back to NVRAM format.
 // Always emits the 4-field <MAC>IP>DNS>Hostname layout so that entries created
-// without DNS/Hostname still match the router's native format (<MAC>IP>>).
+// without DNS/Hostname still match the router's native format (<MAC>IP>>), plus
+// any preserved trailing fields.
 func SerializeDHCPStaticList(entries []DHCPStaticEntry) string {
 	var b strings.Builder
 
 	for _, e := range entries {
-		writePackedEntry(&b, e.MAC, e.IP, e.DNS, e.Hostname)
+		fields := []string{e.MAC, e.IP, e.DNS, e.Hostname}
+		if e.Extra != "" {
+			fields = append(fields, e.Extra)
+		}
+
+		writePackedEntry(&b, fields...)
 	}
 
 	return b.String()
 }
 
 // PortForwardEntry represents a single port forward rule.
+//
+// Extra preserves fields past the modeled six for the same reason as
+// DHCPStaticEntry.Extra: port-forward mutations rewrite the entire list.
 type PortForwardEntry struct {
 	Name         string
 	ExternalPort string
@@ -117,6 +144,7 @@ type PortForwardEntry struct {
 	InternalPort string
 	Protocol     string
 	SourceIP     string
+	Extra        string
 }
 
 // ParseVTSRuleList parses the vts_rulelist NVRAM value.
@@ -147,6 +175,10 @@ func ParseVTSRuleList(raw string) ([]PortForwardEntry, error) {
 			entry.SourceIP = fields[5]
 		}
 
+		if len(fields) > vtsModeledFields {
+			entry.Extra = strings.Join(fields[vtsModeledFields:], packedFieldDelim)
+		}
+
 		entries = append(entries, entry)
 	}
 
@@ -156,12 +188,18 @@ func ParseVTSRuleList(raw string) ([]PortForwardEntry, error) {
 // SerializeVTSRuleList serializes port forward entries back to NVRAM format.
 // Always emits the 6-field layout (trailing src field, empty when unset) to
 // match the router's native format, which keeps a trailing delimiter after the
-// protocol even when no source IP restriction is set.
+// protocol even when no source IP restriction is set, plus any preserved
+// trailing fields.
 func SerializeVTSRuleList(entries []PortForwardEntry) string {
 	var b strings.Builder
 
 	for _, e := range entries {
-		writePackedEntry(&b, e.Name, e.ExternalPort, e.InternalIP, e.InternalPort, e.Protocol, e.SourceIP)
+		fields := []string{e.Name, e.ExternalPort, e.InternalIP, e.InternalPort, e.Protocol, e.SourceIP}
+		if e.Extra != "" {
+			fields = append(fields, e.Extra)
+		}
+
+		writePackedEntry(&b, fields...)
 	}
 
 	return b.String()
