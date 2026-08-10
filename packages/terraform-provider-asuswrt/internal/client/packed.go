@@ -76,12 +76,18 @@ func writePackedEntry(b *strings.Builder, fields ...string) {
 // lose it: every lease mutation rewrites the whole list, so an unmodeled
 // trailing field that this provider dropped would be erased from the router.
 // It is a string rather than a slice so the struct stays comparable.
+//
+// HasExtra records field *presence* independently of value. An entry ending in
+// a bare delimiter has one trailing field whose value is empty, which Extra
+// alone cannot distinguish from having no trailing field at all — and emitting
+// the wrong one silently changes the packed shape.
 type DHCPStaticEntry struct {
 	MAC      string
 	IP       string
 	DNS      string
 	Hostname string
 	Extra    string
+	HasExtra bool
 }
 
 // ParseDHCPStaticList parses the dhcp_staticlist NVRAM value.
@@ -113,6 +119,7 @@ func ParseDHCPStaticList(raw string) ([]DHCPStaticEntry, error) {
 
 		if len(fields) > dhcpModeledFields {
 			entry.Extra = strings.Join(fields[dhcpModeledFields:], packedFieldDelim)
+			entry.HasExtra = true
 		}
 
 		entries = append(entries, entry)
@@ -130,7 +137,7 @@ func SerializeDHCPStaticList(entries []DHCPStaticEntry) string {
 
 	for _, e := range entries {
 		fields := []string{e.MAC, e.IP, e.DNS, e.Hostname}
-		if e.Extra != "" {
+		if e.HasExtra {
 			fields = append(fields, e.Extra)
 		}
 
@@ -142,8 +149,9 @@ func SerializeDHCPStaticList(entries []DHCPStaticEntry) string {
 
 // PortForwardEntry represents a single port forward rule.
 //
-// Extra preserves fields past the modeled six for the same reason as
-// DHCPStaticEntry.Extra: port-forward mutations rewrite the entire list.
+// Extra and HasExtra preserve fields past the modeled six, value and presence
+// respectively, for the same reasons as on DHCPStaticEntry: port-forward
+// mutations rewrite the entire list, and an empty trailing field is a field.
 type PortForwardEntry struct {
 	Name         string
 	ExternalPort string
@@ -152,6 +160,7 @@ type PortForwardEntry struct {
 	Protocol     string
 	SourceIP     string
 	Extra        string
+	HasExtra     bool
 }
 
 // ParseVTSRuleList parses the vts_rulelist NVRAM value.
@@ -184,6 +193,7 @@ func ParseVTSRuleList(raw string) ([]PortForwardEntry, error) {
 
 		if len(fields) > vtsModeledFields {
 			entry.Extra = strings.Join(fields[vtsModeledFields:], packedFieldDelim)
+			entry.HasExtra = true
 		}
 
 		entries = append(entries, entry)
@@ -202,7 +212,7 @@ func SerializeVTSRuleList(entries []PortForwardEntry) string {
 
 	for _, e := range entries {
 		fields := []string{e.Name, e.ExternalPort, e.InternalIP, e.InternalPort, e.Protocol, e.SourceIP}
-		if e.Extra != "" {
+		if e.HasExtra {
 			fields = append(fields, e.Extra)
 		}
 

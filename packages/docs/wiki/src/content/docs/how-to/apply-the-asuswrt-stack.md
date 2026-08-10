@@ -37,8 +37,13 @@ op run --env-file=.env -- tofu -chdir=asuswrt apply
 the first. Rerun it whenever you add a resource for something that already
 exists on the device — a lease, a port forward, a radio. Skipping the import
 there makes `apply` create a duplicate NVRAM entry instead of adopting the live
-one. The per-device import list lives in
-`packages/homelab/src/tofu/asuswrt/README.md`.
+one.
+
+Adding a tracked resource therefore takes two edits, not one: the `.tf` file,
+and a matching `address<TAB>import-id` line in the `IMPORTS` heredoc inside
+`packages/homelab/src/tofu/asuswrt/import.sh`. That heredoc is the import list.
+A resource missing from it is never imported, so `apply` creates the duplicate
+this step exists to prevent.
 
 ## 3. Confirm the plan is empty
 

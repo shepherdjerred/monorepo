@@ -453,6 +453,70 @@ func TestPackedListsPreserveTrailingFields(t *testing.T) {
 		}
 	})
 
+	// An entry ending in a bare delimiter has one trailing field whose value is
+	// empty. Presence must be preserved separately from value, or the packed
+	// shape silently loses a field position.
+	t.Run("dhcp empty fifth field keeps its position", func(t *testing.T) {
+		t.Parallel()
+
+		raw := lt + "AA:BB:CC:DD:EE:FF" + gt + "192.168.1.100" + gt + "1.1.1.1" + gt + "host" + gt
+
+		parsed, err := client.ParseDHCPStaticList(raw)
+		if err != nil {
+			t.Fatalf("parsing dhcp_staticlist: %v", err)
+		}
+
+		if !parsed[0].HasExtra {
+			t.Error("expected the empty trailing field to be recorded as present")
+		}
+
+		if parsed[0].Extra != "" {
+			t.Errorf("expected an empty trailing value, got %q", parsed[0].Extra)
+		}
+
+		if got := client.SerializeDHCPStaticList(parsed); got != raw {
+			t.Errorf("round-trip changed shape:\n raw = %q\n got = %q", raw, got)
+		}
+	})
+
+	t.Run("port-forward empty seventh field keeps its position", func(t *testing.T) {
+		t.Parallel()
+
+		raw := lt + "HTTP" + gt + "80" + gt + "192.168.1.100" + gt + "80" + gt + "tcp" + gt + "10.0.0.1" + gt
+
+		parsed, err := client.ParseVTSRuleList(raw)
+		if err != nil {
+			t.Fatalf("parsing vts_rulelist: %v", err)
+		}
+
+		if !parsed[0].HasExtra {
+			t.Error("expected the empty trailing field to be recorded as present")
+		}
+
+		if got := client.SerializeVTSRuleList(parsed); got != raw {
+			t.Errorf("round-trip changed shape:\n raw = %q\n got = %q", raw, got)
+		}
+	})
+
+	t.Run("no trailing field stays absent", func(t *testing.T) {
+		t.Parallel()
+
+		raw := lt + "AA:BB:CC:DD:EE:FF" + gt + "192.168.1.100" + gt + "1.1.1.1" + gt + "host"
+
+		parsed, err := client.ParseDHCPStaticList(raw)
+		if err != nil {
+			t.Fatalf("parsing dhcp_staticlist: %v", err)
+		}
+
+		if parsed[0].HasExtra {
+			t.Error("expected no trailing field to be recorded")
+		}
+
+		if got := client.SerializeDHCPStaticList(parsed); got != raw {
+			t.Errorf("round-trip invented a field:\n raw = %q\n got = %q", raw, got)
+		}
+	})
+
 	t.Run("port-forward seventh field round-trips", func(t *testing.T) {
 		t.Parallel()
 
