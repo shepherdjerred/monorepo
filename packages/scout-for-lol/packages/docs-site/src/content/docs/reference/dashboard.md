@@ -6,8 +6,9 @@ sidebar:
 ---
 
 The dashboard is served at `https://scout-for-lol.com/app/`. Signing in uses
-Discord OAuth; the session is a cookie, and every mutation is recorded in the
-audit log.
+Discord OAuth and the session is a cookie. Subscription, player, account, and
+permission changes are recorded in the audit log; see [Audit](#audit) for what
+the log does and does not cover.
 
 A beta deployment of the same dashboard runs at
 `https://beta.scout-for-lol.com/app/` against separate data.
@@ -88,8 +89,12 @@ Creating and editing are gated on `reports:create` and `reports:update`.
 
 ## Audit
 
-A record of every mutation — the actor, the action, and the time. Includes
-changes made from Discord commands, not only dashboard changes.
+A record of subscription, player, account, and permission changes — the actor,
+the action, and the time. Includes changes made from Discord commands, not only
+dashboard changes.
+
+Competition and report mutations are not audited yet: creating, editing,
+cancelling, and deleting them leaves no entry in this log.
 
 ## Access
 
