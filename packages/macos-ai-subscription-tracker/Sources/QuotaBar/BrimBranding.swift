@@ -43,11 +43,7 @@ private enum BrimAssets {
 
   @MainActor
   private static func loadImage(named name: String) -> NSImage {
-    #if SWIFT_PACKAGE
-      let bundle = Bundle.module
-    #else
-      let bundle = Bundle.main
-    #endif
+    let bundle = PackagedResources.bundle
     guard let url = bundle.url(forResource: name, withExtension: "svg"),
       let image = NSImage(contentsOf: url)
     else {

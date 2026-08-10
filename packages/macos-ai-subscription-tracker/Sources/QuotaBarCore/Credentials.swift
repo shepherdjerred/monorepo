@@ -394,7 +394,9 @@ public actor CompositeCredentialStore: CredentialStore {
     for provider: ProviderID,
     rejecting rejectedCredential: ProviderCredential?
   ) async throws -> ProviderCredential {
-    if let manualCredential = try await manual.credentialIfPresent(for: provider) {
+    if let manualCredential = try await manual.credentialIfPresent(for: provider),
+      manualCredential != rejectedCredential
+    {
       return manualCredential
     }
     return try await local.credential(for: provider, rejecting: rejectedCredential)

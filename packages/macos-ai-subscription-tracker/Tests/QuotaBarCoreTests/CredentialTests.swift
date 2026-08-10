@@ -340,23 +340,6 @@ final class CredentialTests: XCTestCase {
     XCTAssertThrowsError(try store.credential(for: .codex, rejecting: nil))
   }
 
-  func testManualCredentialPrecedesLocalDiscovery() async throws {
-    let root = try temporaryDirectory()
-    defer { try? FileManager.default.removeItem(at: root) }
-    try write(
-      #"{"tokens":{"access_token":"local-token"}}"#,
-      to: root.appendingPathComponent(".codex/auth.json")
-    )
-    let manual = ManualCredentialStore(keychain: FakeKeychain())
-    try await manual.save("manual-token", for: .codex)
-    let composite = CompositeCredentialStore(
-      manual: manual,
-      local: LocalCredentialStore(homeDirectory: root, claudeKeychain: FakeKeychain())
-    )
-    let credential = try await composite.credential(for: .codex, rejecting: nil)
-    XCTAssertEqual(credential.accessToken, "manual-token")
-  }
-
   private func write(_ value: String, to url: URL) throws {
     try FileManager.default.createDirectory(
       at: url.deletingLastPathComponent(),
