@@ -335,14 +335,21 @@ async function preflight(
     console.warn(`[dry-run] ${message}`);
   }
 
+  // ⚠️ No `--limit`. `notarytool history` in Xcode 27 does not accept it and
+  // exits 64 with "Unknown option '--limit'", which this probe reported as
+  // "notarytool could not use keychain profile" — a stored, Apple-validated
+  // credential being described as missing, with instructions to store it again.
+  //
+  // It survived because the probe had never run against a real credential: the
+  // preflight fails on the certificate check first when there is no Developer
+  // ID identity, so this line was only ever reached on a machine that was
+  // already fully set up. The first time it ran for real, it was wrong.
   const notaryReachable = await toolExists([
     "xcrun",
     "notarytool",
     "history",
     "--keychain-profile",
     configuration.notaryProfile,
-    "--limit",
-    "1",
   ]);
   if (!notaryReachable) {
     const message =
