@@ -5,6 +5,16 @@ import type {
 } from "../types.ts";
 
 const QODO_LOGIN = "qodo-code-review";
+/**
+ * Qodo ships several GitHub apps under the `qodo-ai` org and each posts under
+ * its own login; this repository is reviewed by the free open-source app. Every
+ * login is matched exactly (see identity.ts), so listing them cannot widen the
+ * gate to a look-alike account.
+ */
+const QODO_AUTHOR_LOGINS = [
+  QODO_LOGIN,
+  "qodo-free-for-open-source-projects",
+] as const;
 const QODO_REVIEW_MARKER = "<h3>Code Review by Qodo</h3>";
 const QODO_DIVIDER_ALT = "Grey Divider";
 const QODO_FINDING_COUNT_LABELS = [
@@ -174,7 +184,7 @@ export const qodoProvider: ReviewProvider = {
   // Qodo skips bot-authored PRs by default (`ignore_bot_pr = true`). Keep the
   // gate's bot behavior explicit until Qodo is configured otherwise.
   botAuthoredPullRequestPolicy: "skip",
-  authorLogins: [QODO_LOGIN],
+  authorLogins: QODO_AUTHOR_LOGINS,
   parseSeverity: parseQodoSeverity,
   completion: { kind: "issue-comment", marker: QODO_REVIEW_MARKER },
   parseIssueComment: parseQodoIssueComment,

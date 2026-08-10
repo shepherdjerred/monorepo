@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { isProviderAuthor } from "../identity.ts";
 import { qodoProvider, parseQodoIssueComment } from "./qodo.ts";
 
 const comment = {
@@ -27,7 +28,10 @@ const comment = {
 
 describe("qodoProvider", () => {
   test("uses Qodo's persistent issue comment and exact bot identity", () => {
-    expect(qodoProvider.authorLogins).toEqual(["qodo-code-review"]);
+    expect(qodoProvider.authorLogins).toEqual([
+      "qodo-code-review",
+      "qodo-free-for-open-source-projects",
+    ]);
     expect(qodoProvider.completion).toEqual({
       kind: "issue-comment",
       marker: "<h3>Code Review by Qodo</h3>",
@@ -35,6 +39,25 @@ describe("qodoProvider", () => {
     expect(qodoProvider.requestReview?.buildComment("marker")).toBe(
       "/review\n\nmarker",
     );
+  });
+
+  test("recognizes every Qodo app login without admitting look-alikes", () => {
+    for (const login of [
+      "qodo-code-review",
+      "qodo-code-review[bot]",
+      "qodo-free-for-open-source-projects",
+      "qodo-free-for-open-source-projects[bot]",
+      "QODO-Free-For-Open-Source-Projects",
+    ]) {
+      expect(isProviderAuthor(qodoProvider, login)).toBe(true);
+    }
+    for (const login of [
+      "qodo-free-for-open-source-projects-evil",
+      "not-qodo-code-review",
+      "qodo",
+    ]) {
+      expect(isProviderAuthor(qodoProvider, login)).toBe(false);
+    }
   });
 
   test("parses unresolved action and remediation findings", () => {
