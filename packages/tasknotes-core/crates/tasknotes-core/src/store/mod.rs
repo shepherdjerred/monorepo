@@ -462,7 +462,8 @@ impl TaskStore {
     /// already has, so the uncompletion goes bare and the server keeps its own
     /// schedule, which is the documented compatibility behaviour.
     fn instance_restore(&self, task_id: &TaskId, date: &str) -> Option<InstanceRestore> {
-        let advancing = self.queue.pending().iter().any(|command| {
+        let pending = self.queue.pending();
+        let advancing = pending.iter().rposition(|command| {
             matches!(
                 command,
                 Command::SetInstanceComplete {
@@ -473,8 +474,31 @@ impl TaskStore {
                 } if queued == task_id && day == date
             )
         });
-        if advancing {
-            return completion_restores::snapshot(self.snapshot.tasks.get(task_id)?, date);
+        if let Some(position) = advancing {
+            // Rebuilt through the completion's own queue position, never from
+            // the rebased snapshot: the snapshot carries every *later* queued
+            // command too, and a schedule edit queued after the completion
+            // would otherwise be handed back as the schedule the completion
+            // replaced.
+            let at_completion = self.task_through(position, task_id)?;
+            // That later edit is also disqualifying in its own right. It has
+            // not reached the server, so the snapshot still describes what the
+            // server holds — but sending it would rewind the unsent edit along
+            // with the completion.
+            if pending.iter().skip(position + 1).any(|command| {
+                matches!(
+                    command,
+                    Command::Update { task_id: queued, payload, .. }
+                        if queued == task_id
+                            && completion_restores::is_occurrence_edit(
+                                payload,
+                                Some(&at_completion),
+                            )
+                )
+            }) {
+                return None;
+            }
+            return completion_restores::snapshot(&at_completion, date);
         }
         // A queued edit to the rule or either date has not reached the server
         // yet, so a retained snapshot still describes what the server holds —
@@ -500,8 +524,20 @@ impl TaskStore {
     /// for storage.
     ///
     /// Read from the *pre-ack* view, which is the last moment it exists: the
-    /// queued completion never advanced the local schedule, so the visible task
-    /// still carries what the server has just replaced.
+    /// queued completion never advanced the local schedule, so the task as it
+    /// stood at that point in the queue still carries what the server has just
+    /// replaced.
+    ///
+    /// ⚠️ **Not from [`TaskStore::snapshot`]**, which is the base with the
+    /// *entire* pending queue rebased onto it. A recurrence, scheduled, or due
+    /// edit queued after the completion — and every one of those is ordinary —
+    /// is already folded into that view, so reading it would retain the *later
+    /// edit's* schedule as the one the completion replaced. The retained
+    /// snapshot survives being parked or being invalidated only when it differs
+    /// from the server's advanced value, so an undo hours later would then ask
+    /// the server to rewind to a schedule it never held and leave the original
+    /// occurrence skipped. Rebuilding through this command's own queue position
+    /// is what the TypeScript client does, and for this reason.
     fn capture_restore(&self, command: &Command) -> Option<(String, InstanceRestore)> {
         let Command::SetInstanceComplete {
             ref task_id,
@@ -512,8 +548,22 @@ impl TaskStore {
         else {
             return None;
         };
-        let restore = completion_restores::snapshot(self.snapshot.tasks.get(task_id)?, date)?;
+        let position = self
+            .queue
+            .pending()
+            .iter()
+            .position(|queued| queued.id() == command.id())?;
+        let at_completion = self.task_through(position, task_id)?;
+        let restore = completion_restores::snapshot(&at_completion, date)?;
         Some((completion_restores::key(task_id, date), restore))
+    }
+
+    /// The task as the command at `position` found it: the base with every
+    /// *earlier* pending command replayed onto it, and nothing queued after it.
+    fn task_through(&self, position: usize, task_id: &TaskId) -> Option<Task> {
+        rebase(&self.base, self.queue.pending().iter().take(position))
+            .get(task_id)
+            .cloned()
     }
 
     /// The host's local day, as `YYYY-MM-DD`.
@@ -1123,6 +1173,119 @@ mod tests {
              stale, got {log:?}"
         );
         assert_eq!(undo(&mut store), None);
+    }
+
+    /// ⚠️ **The rebased view is not the state the completion advanced.** An
+    /// edit queued *after* the completion is already folded into the visible
+    /// task, so reading the snapshot would hand the undo the edit's schedule as
+    /// the one the server replaced.
+    #[test]
+    fn an_undo_ignores_a_schedule_edit_queued_after_the_completion() {
+        let (mut store, _) = store();
+        let id = TaskId::parse("Tasks/plants.md").unwrap();
+        store
+            .replace_base(vec![recurring("Tasks/plants.md")], 1)
+            .unwrap();
+        store
+            .dispatch(CommandInput::SetInstanceComplete {
+                task_id: id.clone(),
+                date: "2026-07-04".to_owned(),
+                completed: true,
+            })
+            .unwrap();
+        store
+            .dispatch(CommandInput::Update {
+                task_id: id,
+                payload: UpdateTaskRequest {
+                    scheduled: crate::domain::FieldUpdate::Set("2026-07-25".to_owned()),
+                    ..UpdateTaskRequest::default()
+                },
+            })
+            .unwrap();
+
+        assert_eq!(
+            undo(&mut store),
+            None,
+            "the unsent edit contradicts any snapshot the undo could send"
+        );
+    }
+
+    /// A rename queued after the completion moves nothing the restore
+    /// describes, so rebuilding through the completion's position must still
+    /// produce the pre-completion schedule.
+    #[test]
+    fn an_undo_survives_an_unrelated_edit_queued_after_the_completion() {
+        let (mut store, _) = store();
+        let id = TaskId::parse("Tasks/plants.md").unwrap();
+        store
+            .replace_base(vec![recurring("Tasks/plants.md")], 1)
+            .unwrap();
+        store
+            .dispatch(CommandInput::SetInstanceComplete {
+                task_id: id.clone(),
+                date: "2026-07-04".to_owned(),
+                completed: true,
+            })
+            .unwrap();
+        store
+            .dispatch(CommandInput::Update {
+                task_id: id,
+                payload: UpdateTaskRequest {
+                    title: Some(TaskTitle::parse("Water every plant").unwrap()),
+                    ..UpdateTaskRequest::default()
+                },
+            })
+            .unwrap();
+
+        assert_eq!(undo(&mut store), Some(pre_completion_schedule()));
+    }
+
+    /// ⚠️ **The same read, one layer down.** The ack retains the snapshot for
+    /// the durable window, and it runs while the later edit is still queued.
+    /// This edit lands on exactly the value the server is advancing to, so it
+    /// never invalidates anything, and it is then parked — nothing later can
+    /// correct a snapshot captured from the rebased view, and the undo would
+    /// ask the server to rewind to a schedule it never held.
+    #[test]
+    fn an_ack_retains_the_schedule_the_completion_replaced_not_a_later_edits() {
+        let (mut store, _) = store();
+        let id = TaskId::parse("Tasks/plants.md").unwrap();
+        store
+            .replace_base(vec![recurring("Tasks/plants.md")], 1)
+            .unwrap();
+        store
+            .dispatch(CommandInput::SetInstanceComplete {
+                task_id: id.clone(),
+                date: "2026-07-04".to_owned(),
+                completed: true,
+            })
+            .unwrap();
+        store
+            .dispatch(CommandInput::Update {
+                task_id: id,
+                payload: UpdateTaskRequest {
+                    scheduled: crate::domain::FieldUpdate::Set("2026-07-11".to_owned()),
+                    due: crate::domain::FieldUpdate::Set("2026-07-12".to_owned()),
+                    ..UpdateTaskRequest::default()
+                },
+            })
+            .unwrap();
+
+        let completion = store.queue().head().unwrap().clone();
+        let mut advanced = recurring("Tasks/plants.md");
+        advanced.complete_instances.push("2026-07-04".to_owned());
+        advanced.scheduled = Some("2026-07-11".to_owned());
+        advanced.due = Some("2026-07-12".to_owned());
+        store
+            .apply_server_ack(&completion, Some(&advanced))
+            .unwrap();
+
+        let edit = store.queue().head().unwrap().id().to_owned();
+        store
+            .dead_letter_command(&edit, &Error::invariant("parked for review"))
+            .unwrap();
+
+        assert_eq!(undo(&mut store), Some(pre_completion_schedule()));
     }
 
     #[test]
