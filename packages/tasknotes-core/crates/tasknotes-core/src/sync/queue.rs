@@ -169,26 +169,30 @@ impl CommandQueue {
 
     /// Record a command, squashing a delete against a still-pending create.
     ///
+    /// The proposed queue is written before it is adopted, so a refused write
+    /// leaves nothing behind in memory. See [`Self::commit_queue`] for what a
+    /// leftover would cost.
+    ///
     /// # Errors
     ///
     /// Propagates a storage-layer failure.
     pub fn enqueue(&mut self, command: Command) -> Result<()> {
+        let mut candidate = self.queue.clone();
         if command.is_delete() {
             let target = command.target().clone();
-            let has_pending_create = self
-                .queue
+            let has_pending_create = candidate
                 .iter()
                 .any(|queued| queued.is_create() && *queued.target() == target);
             if has_pending_create {
                 // The task never reached the server, so there is nothing to
                 // delete there and nothing downstream worth sending. Drop the
                 // create, everything targeting it, and the delete itself.
-                self.queue.retain(|queued| *queued.target() != target);
-                return self.persist_queue();
+                candidate.retain(|queued| *queued.target() != target);
+                return self.commit_queue(candidate);
             }
         }
-        self.queue.push(command);
-        self.persist_queue()
+        candidate.push(command);
+        self.commit_queue(candidate)
     }
 
     /// Drop an acknowledged command.
@@ -338,6 +342,35 @@ impl CommandQueue {
     pub fn discard_dead_letter(&mut self, id: &str) -> Result<()> {
         self.dead.retain(|entry| entry.command.id() != id);
         self.persist_dead_letter()
+    }
+
+    /// Write a proposed queue, and adopt it only once the bytes are down.
+    ///
+    /// ## Why an addition may not touch `self.queue` first
+    ///
+    /// A refused write is reported to the caller, so the dispatch that asked
+    /// for it fails and the shell tells the user their change was not recorded.
+    /// If the command had already been pushed into the in-memory queue it would
+    /// still be sitting there — invisible, unreported, and *not* on disk. The
+    /// next successful write of any kind then persists it alongside whatever it
+    /// was actually for, and the mutation the user was told had failed is
+    /// suddenly queued as well.
+    ///
+    /// The concrete case is the quick-add panel, which now deliberately keeps a
+    /// refused line in the field so it can be retried: retrying would mint a
+    /// second command, and both would reach the server as distinct ids that the
+    /// idempotency key cannot collapse.
+    ///
+    /// # Errors
+    ///
+    /// Propagates a storage-layer failure, having changed nothing.
+    fn commit_queue(&mut self, candidate: Vec<Command>) -> Result<()> {
+        let data = serde_json::to_string(&candidate).map_err(|error| {
+            Error::invariant(format!("could not serialize the command queue: {error}"))
+        })?;
+        self.storage.write_queue(&data)?;
+        self.queue = candidate;
+        Ok(())
     }
 
     fn persist_queue(&self) -> Result<()> {
@@ -673,6 +706,45 @@ mod tests {
         assert!(
             relaunched.pending().is_empty(),
             "the queue finally lost the command"
+        );
+    }
+
+    /// ⚠️ A refused enqueue must leave *nothing* behind in memory.
+    ///
+    /// The leftover is invisible until the next successful write commits it for
+    /// free, so the assertion that matters is the second one: a caller told its
+    /// command was not recorded, retrying it, must not end up with two.
+    #[test]
+    fn a_refused_enqueue_keeps_the_command_out_of_memory() {
+        let storage = Arc::new(HalfWritingStorage::default());
+        let mut queue = CommandQueue::new(storage.clone(), Arc::new(FixedClock));
+
+        storage.refuse_queue.store(true, Ordering::SeqCst);
+        queue
+            .enqueue(create("c1", &temp("1-1")))
+            .expect_err("the enqueue write failed");
+        assert!(queue.pending().is_empty(), "nothing was recorded");
+
+        // The retry the caller is now entitled to make, against storage that
+        // has recovered.
+        storage.refuse_queue.store(false, Ordering::SeqCst);
+        queue.enqueue(create("c2", &temp("1-2"))).unwrap();
+        assert_eq!(
+            queue.pending().len(),
+            1,
+            "the refused command must not ride along on the next successful write"
+        );
+
+        let mut relaunched = CommandQueue::new(storage, Arc::new(FixedClock));
+        relaunched.restore().unwrap();
+        assert_eq!(
+            relaunched
+                .pending()
+                .iter()
+                .map(Command::id)
+                .collect::<Vec<_>>(),
+            vec!["c2"],
+            "and the bytes agree with memory"
         );
     }
 
