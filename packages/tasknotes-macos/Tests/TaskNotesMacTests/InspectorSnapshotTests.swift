@@ -133,7 +133,7 @@ struct InspectorSnapshotTests {
             detail: detail,
             vocabulary: TaskVocabulary.of(tasks: InspectorFixtures.vault),
             apply: { _ in },
-            attempt: { _ in },
+            attempt: { _ in true },
             dispatch: { _ in }
         )
     }

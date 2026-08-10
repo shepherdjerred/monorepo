@@ -41,8 +41,14 @@ struct TaskInspectorForm: View {
     /// Record a field change.
     let apply: (TaskFieldEdit) -> Void
 
-    /// Record a field change that may be a no-op or a validation failure.
-    let attempt: (Result<TaskFieldEdit?, CoreError>) -> Void
+    /// Record a field change that may be a no-op or a validation failure, and
+    /// answer whether the core is now holding it.
+    ///
+    /// `true` for a recorded mutation and for a commit that turned out to be a
+    /// no-op; `false` for a validation failure and for an enqueue that did not
+    /// land. Only the buffered text fields read it — everything else is bound
+    /// straight through and has no baseline to advance.
+    let attempt: (Result<TaskFieldEdit?, CoreError>) async -> Bool
 
     /// Record something that is not a field edit — a completion, a deletion.
     let dispatch: (CommandInput) -> Void
@@ -69,7 +75,7 @@ struct TaskInspectorForm: View {
         detail: TaskDetail,
         vocabulary: TaskVocabulary,
         apply: @escaping (TaskFieldEdit) -> Void,
-        attempt: @escaping (Result<TaskFieldEdit?, CoreError>) -> Void,
+        attempt: @escaping (Result<TaskFieldEdit?, CoreError>) async -> Bool,
         dispatch: @escaping (CommandInput) -> Void
     ) {
         self.detail = detail
@@ -106,7 +112,7 @@ struct TaskInspectorForm: View {
                     calendar: detail.calendar,
                     identifier: AccessibilityIdentifier.Inspector.due,
                     onPick: { apply(.due($0)) },
-                    onFail: { attempt(.failure($0)) }
+                    onFail: report
                 )
                 InspectorDateRow(
                     label: "Scheduled",
@@ -114,7 +120,7 @@ struct TaskInspectorForm: View {
                     calendar: detail.calendar,
                     identifier: AccessibilityIdentifier.Inspector.scheduled,
                     onPick: { apply(.scheduled($0)) },
-                    onFail: { attempt(.failure($0)) }
+                    onFail: report
                 )
                 InspectorRecurrenceRow(summary: detail.recurrence, apply: apply)
             }
@@ -179,7 +185,7 @@ struct TaskInspectorForm: View {
                     detail: detail,
                     source: $details.text,
                     isEditing: $isEditingDetails,
-                    onCommit: commitDetails
+                    onCommit: committing(commitDetails)
                 )
             }
         }
@@ -199,7 +205,7 @@ struct TaskInspectorForm: View {
         // Committing on disappear as well as on blur is not belt-and-braces: a
         // panel closed with ⌥⌘I while a field still has focus never fires a
         // blur, and the edit would be lost with no indication it had been.
-        .onDisappear { commitText() }
+        .onDisappear(perform: committing(commitText))
     }
 
     // ── Fields ─────────────────────────────────────────────────────────────
@@ -214,7 +220,7 @@ struct TaskInspectorForm: View {
         PlainTextField(
             text: $title.text,
             prompt: "Title",
-            onSubmit: commitTitle,
+            onSubmit: committing(commitTitle),
             // Escape restores what is stored rather than committing. The field
             // is the one place in this panel where "never mind" has to mean
             // something, because it is the only field that can be made invalid.
@@ -233,7 +239,7 @@ struct TaskInspectorForm: View {
         .font(.title3)
         .focused($focus, equals: .title)
         .onChange(of: focus) { previous, _ in
-            if previous == .title { commitTitle() }
+            if previous == .title { _Concurrency.Task { await commitTitle() } }
         }
         .accessibilityIdentifier(AccessibilityIdentifier.Inspector.title)
         .accessibilityLabel("Title")
@@ -279,13 +285,13 @@ struct TaskInspectorForm: View {
                 PlainTextField(
                     text: $estimate.text,
                     prompt: "—",
-                    onSubmit: commitEstimate,
+                    onSubmit: committing(commitEstimate),
                     onCancel: { estimate.revert(to: TaskTextEdit.estimateText(of: detail.task)) }
                 )
                 .help("Whole minutes")
                 .focused($focus, equals: .estimate)
                 .onChange(of: focus) { previous, _ in
-                    if previous == .estimate { commitEstimate() }
+                    if previous == .estimate { _Concurrency.Task { await commitEstimate() } }
                 }
                 .frame(width: 72)
                 .accessibilityIdentifier(AccessibilityIdentifier.Inspector.timeEstimate)
@@ -297,6 +303,14 @@ struct TaskInspectorForm: View {
                     .accessibilityHidden(true)
             }
         }
+    }
+
+    /// Surface a failure that never had an edit behind it.
+    ///
+    /// The date pickers can only fail — a date the core refuses never becomes a
+    /// command — so there is no baseline waiting on the answer.
+    private func report(_ error: CoreError) {
+        _Concurrency.Task { _ = await attempt(.failure(error)) }
     }
 
     /// A name added to a list, unless it is already there.
@@ -335,33 +349,56 @@ struct TaskInspectorForm: View {
     /// The baseline is only advanced when the core actually took the value, so
     /// a refused title or a mistyped estimate stays an edit rather than being
     /// adopted and forgotten.
-    private func commitTitle() {
+    ///
+    /// ⚠️ **Validation succeeding is not the value being recorded, and the
+    /// baseline waits for the second one.** ``TaskTextEdit`` answers
+    /// synchronously, but the write it authorises is not: the enqueue runs on
+    /// the engine's queue and the id-counter and queue writes under it can
+    /// fail. Advancing on the validation left the field *clean* over text the
+    /// core never took — closing the panel then found nothing to retry, and the
+    /// next refresh replaced what the user typed with the stored value. The
+    /// baseline becomes the text that was **offered**, so anything typed during
+    /// the round trip is still an edit.
+    private func commitTitle() async {
         guard title.isEdited else { return }
-        let outcome = TaskTextEdit.retitling(title.text, of: detail.task)
-        attempt(outcome)
-        if case .success = outcome { title.commit() }
+        let offered = title.text
+        if await attempt(TaskTextEdit.retitling(offered, of: detail.task)) {
+            title.commit(offered)
+        }
     }
 
-    private func commitEstimate() {
+    private func commitEstimate() async {
         guard estimate.isEdited else { return }
-        let outcome = TaskTextEdit.estimating(estimate.text, of: detail.task)
-        attempt(outcome)
-        if case .success = outcome { estimate.commit() }
+        let offered = estimate.text
+        if await attempt(TaskTextEdit.estimating(offered, of: detail.task)) {
+            estimate.commit(offered)
+        }
     }
 
-    private func commitDetails() {
+    private func commitDetails() async {
         guard details.isEdited else { return }
-        attempt(.success(TaskTextEdit.rewriting(details: details.text, of: detail.task)))
-        details.commit()
+        let offered = details.text
+        if await attempt(.success(TaskTextEdit.rewriting(details: offered, of: detail.task))) {
+            details.commit(offered)
+        }
     }
 
-    /// Commit every buffered field.
+    /// Commit every buffered field, one after another.
     ///
     /// Safe to call unconditionally: each one is a no-op for a field the user
-    /// did not edit.
-    private func commitText() {
-        commitTitle()
-        commitEstimate()
-        commitDetails()
+    /// did not edit. Sequential rather than concurrent so a panel closed with
+    /// three edits in it enqueues them in the order they appear.
+    private func commitText() async {
+        await commitTitle()
+        await commitEstimate()
+        await commitDetails()
+    }
+
+    /// Drive an awaited commit from one of SwiftUI's synchronous callbacks.
+    ///
+    /// Blur, Return, and disappear are all `() -> Void`, and the commit they
+    /// start now outlives them.
+    private func committing(_ commit: @escaping () async -> Void) -> () -> Void {
+        { _Concurrency.Task { await commit() } }
     }
 }

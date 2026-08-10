@@ -95,7 +95,7 @@ struct TaskInspector: View {
                     // an edit that re-read the selection would write the text
                     // somebody typed into one task onto a different one.
                     apply: { apply($0, to: detail.id) },
-                    attempt: { attempt($0, to: detail.id) },
+                    attempt: { await attempt($0, to: detail.id) },
                     dispatch: dispatch
                 )
                 // A fresh identity per task, so every text buffer in the form
@@ -160,22 +160,39 @@ struct TaskInspector: View {
         dispatch(edit.command(for: taskId))
     }
 
+    /// Record a field change and answer whether the core took it.
+    ///
+    /// ``TaskNotesStore/dispatch(_:publishing:)`` answers `nil` for a delete,
+    /// for a store with no engine, and for an enqueue that failed. A field edit
+    /// is always an update, so a task coming back is exactly the confirmation a
+    /// buffered field needs before it stops treating its text as unsaved.
+    private func record(_ edit: TaskFieldEdit, to taskId: TaskId) async -> Bool {
+        let optimistic = await store.dispatch(edit.command(for: taskId))
+        await store.settle()
+        return optimistic != nil
+    }
+
     /// Record a field change that might not be one, or might be invalid.
     ///
     /// `nil` means the committed text matched what is stored, and **nothing is
     /// dispatched** — a commit-on-blur field that queued an update every time
     /// the user tabbed past it would produce a network round trip and a
-    /// frontmatter rewrite per tab press.
-    private func attempt(_ outcome: Result<TaskFieldEdit?, CoreError>, to taskId: TaskId) {
+    /// frontmatter rewrite per tab press. That is still a successful commit as
+    /// far as the field is concerned: what it holds is what the core holds.
+    private func attempt(
+        _ outcome: Result<TaskFieldEdit?, CoreError>,
+        to taskId: TaskId
+    ) async -> Bool {
         switch outcome {
         case .success(let edit):
-            guard let edit else { return }
-            apply(edit, to: taskId)
+            guard let edit else { return true }
+            return await record(edit, to: taskId)
         case .failure(let error):
             // Into the same channel as a bad quick-add line: something this Mac
             // refused, not something the network did. `status.lastError` is the
             // engine's account of the network and must not be polluted with it.
             store.report(error)
+            return false
         }
     }
 

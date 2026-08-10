@@ -54,13 +54,17 @@ public struct EditedText: Equatable, Sendable {
         baseline = stored
     }
 
-    /// Record that the buffer has been handed to the core.
+    /// Record that `dispatched` reached the core.
     ///
-    /// Called only when a commit was actually made, so a value the core
-    /// *refused* — an emptied title, an estimate that is not a number — stays
-    /// an edit and stays committable, rather than being adopted as the baseline
-    /// and then quietly dropped.
-    public mutating func commit() {
-        baseline = text
+    /// Called only when a mutation was actually recorded, so a value the core
+    /// *refused* — an emptied title, an estimate that is not a number, an
+    /// enqueue that failed — stays an edit and stays committable, rather than
+    /// being adopted as the baseline and then quietly dropped.
+    ///
+    /// ⚠️ The **offered** text, not ``text``. Recording is asynchronous, and the
+    /// user can type during that round trip; taking the buffer's current
+    /// contents as the baseline would adopt keystrokes the core never saw.
+    public mutating func commit(_ dispatched: String) {
+        baseline = dispatched
     }
 }

@@ -55,13 +55,31 @@ struct EditedTextTests {
     func committingRetiresTheEdit() {
         var buffer = EditedText(stored: "Renew passport")
         buffer.text = "Renew passport before June"
-        buffer.commit()
+        buffer.commit("Renew passport before June")
         #expect(!buffer.isEdited)
 
         // What the core stored is what the field should now show — here the
         // trimmed form of what was sent.
         buffer.refresh(stored: "Renew passport before June")
         #expect(buffer.text == "Renew passport before June")
+    }
+
+    /// ⚠️ Recording is asynchronous, so the buffer can move between the text
+    /// being offered and the core confirming it. Committing the *offered* text
+    /// is what leaves the keystrokes that arrived in between an edit, instead
+    /// of adopting them as a baseline nothing ever sent.
+    @Test("typing during the round trip stays an edit")
+    func keystrokesDuringACommitStayAnEdit() {
+        var buffer = EditedText(stored: "Renew passport")
+        let offered = "Renew passport before June"
+        buffer.text = offered
+        buffer.text = "Renew passport before June 3rd"
+        buffer.commit(offered)
+        #expect(buffer.isEdited, "the later keystrokes were never recorded")
+
+        // And a refresh carrying what the core did take must not replace them.
+        buffer.refresh(stored: offered)
+        #expect(buffer.text == "Renew passport before June 3rd")
     }
 
     /// A value the core refused stays the user's problem to fix.
