@@ -38,11 +38,11 @@ public struct GrokProvider: UsageProvider {
     }
     let identity = try Self.parseIdentity(data: identityData)
     let surfaceHeaders = Self.headers(userID: identity.userID)
-    async let billingOutcome = captureGrokSurface {
+    async let billingOutcome = captureAuthAwareSurface {
       try await client.get(
         provider: id, url: billingEndpoint, credential: credential, headers: surfaceHeaders)
     }
-    async let creditsOutcome = captureGrokSurface {
+    async let creditsOutcome = captureAuthAwareSurface {
       try await client.get(
         provider: id, url: creditsEndpoint, credential: credential, headers: surfaceHeaders)
     }
@@ -61,20 +61,6 @@ public struct GrokProvider: UsageProvider {
   {
     let replacement = try await client.resolveCredential(for: id, excluding: credential)
     return try await fetch(usingCredential: replacement)
-  }
-
-  private func captureGrokSurface(
-    _ operation: @Sendable () async throws -> Data
-  ) async -> GrokSurfaceOutcome {
-    do {
-      return .success(try await operation())
-    } catch QuotaError.unauthorized {
-      return .unauthorized
-    } catch let error as QuotaError {
-      return .failure(error.localizedDescription)
-    } catch {
-      return .failure("Provider surface unavailable.")
-    }
   }
 
   public static func parseIdentity(data: Data) throws -> GrokIdentity {
@@ -195,22 +181,6 @@ public struct GrokProvider: UsageProvider {
     ]
     if let userID { headers["x-userid"] = userID }
     return headers
-  }
-}
-
-/// Like `SurfaceResult`, but distinguishes an unauthorized response so `fetch(usingCredential:)`
-/// can restart the whole batch instead of quietly degrading that surface to a warning.
-private enum GrokSurfaceOutcome {
-  case success(Data)
-  case failure(String)
-  case unauthorized
-
-  var surfaceResult: SurfaceResult {
-    switch self {
-    case let .success(data): .success(data)
-    case let .failure(message): .failure(message)
-    case .unauthorized: .failure("Provider surface unavailable.")
-    }
   }
 }
 

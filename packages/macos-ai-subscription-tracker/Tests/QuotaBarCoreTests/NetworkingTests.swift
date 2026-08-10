@@ -214,6 +214,44 @@ final class NetworkingTests: XCTestCase {
       ])
   }
 
+  func testCodexUnauthorizedSurfaceRestartsCompleteFetchOnOneCredential() async throws {
+    let endpoints = try ProviderEndpoints.live(environment: [:])
+    let transport = TokenRoutingTransport(routes: [
+      endpoints.codexUsage.absoluteString: (
+        rejectedToken: "token-a",
+        response: .success(ProviderResponse(statusCode: 200, data: fixture("codex-success")))
+      ),
+      endpoints.codexResets.absoluteString: (
+        rejectedToken: nil,
+        response: .success(ProviderResponse(statusCode: 200, data: fixture("codex-resets")))
+      ),
+    ])
+    let client = ProviderHTTPClient(
+      transport: transport,
+      credentials: StubCredentialStore(tokens: ["token-a", "token-b"])
+    )
+
+    let codex = try await CodexProvider(
+      client: client,
+      usageEndpoint: endpoints.codexUsage,
+      resetEndpoint: endpoints.codexResets
+    ).fetch()
+
+    XCTAssertNil(codex.resetErrorMessage)
+    XCTAssertFalse(codex.windows.isEmpty)
+    let requests = await transport.requests
+    XCTAssertEqual(
+      requests.filter { $0.url == endpoints.codexUsage }.map(\.bearerToken),
+      [
+        "token-a", "token-b",
+      ])
+    XCTAssertEqual(
+      requests.filter { $0.url == endpoints.codexResets }.map(\.bearerToken),
+      [
+        "token-a", "token-b",
+      ])
+  }
+
   func testCodexRetainsUsageWhenResetShapeChanges() async throws {
     let endpoints = try ProviderEndpoints.live(environment: [:])
     let transport = RoutingTransport(routes: [

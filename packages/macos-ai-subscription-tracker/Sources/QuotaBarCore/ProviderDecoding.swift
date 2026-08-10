@@ -46,6 +46,9 @@ enum ProviderDecoder {
     if let value = try? container.decode(Double.self, forKey: key) {
       guard value.isFinite, value > 0 else { throw QuotaValidationError.invalidDate }
       let seconds = value > 10_000_000_000 ? value / 1_000 : value
+      // Reject epoch values so large that a later `Int(timeIntervalSince(...))` countdown
+      // conversion would trap; 1e13 seconds (~316,000 years) is far beyond any real reset date.
+      guard abs(seconds) < 1e13 else { throw QuotaValidationError.invalidDate }
       return Date(timeIntervalSince1970: seconds)
     }
     throw QuotaValidationError.invalidDate
@@ -95,6 +98,38 @@ enum SurfaceResult: Sendable {
 func captureSurface(_ operation: @Sendable () async throws -> Data) async -> SurfaceResult {
   do {
     return .success(try await operation())
+  } catch let error as QuotaError {
+    return .failure(error.localizedDescription)
+  } catch {
+    return .failure("Provider surface unavailable.")
+  }
+}
+
+/// Like `SurfaceResult`, but distinguishes an unauthorized response so a caller pinning several
+/// requests to one credential (Codex's usage/reset surfaces, Grok's identity/billing/credits
+/// surfaces) can restart the whole batch instead of quietly degrading that one surface to a
+/// warning and leaving the published snapshot combining data from two different credentials.
+enum AuthAwareSurfaceOutcome: Sendable {
+  case success(Data)
+  case failure(String)
+  case unauthorized
+
+  var surfaceResult: SurfaceResult {
+    switch self {
+    case let .success(data): .success(data)
+    case let .failure(message): .failure(message)
+    case .unauthorized: .failure("Provider surface unavailable.")
+    }
+  }
+}
+
+func captureAuthAwareSurface(
+  _ operation: @Sendable () async throws -> Data
+) async -> AuthAwareSurfaceOutcome {
+  do {
+    return .success(try await operation())
+  } catch QuotaError.unauthorized {
+    return .unauthorized
   } catch let error as QuotaError {
     return .failure(error.localizedDescription)
   } catch {

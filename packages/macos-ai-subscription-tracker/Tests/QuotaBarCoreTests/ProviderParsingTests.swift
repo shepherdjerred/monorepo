@@ -147,6 +147,19 @@ final class ProviderParsingTests: XCTestCase {
     XCTAssertEqual(snapshot.resetErrorMessage, "Reset surface unavailable")
   }
 
+  func testCodexRejectsUnrenderableEpochTimestamp() {
+    XCTAssertThrowsError(
+      try CodexProvider.parse(
+        data: Data(
+          #"{"rate_limit":{"x_window":{"used_percent":10,"reset_at":1e20}}}"#.utf8
+        ),
+        now: now
+      )
+    ) { error in
+      XCTAssertEqual(error as? QuotaError, .malformedResponse(.codex))
+    }
+  }
+
   func testCodexRejectsMalformedFieldsAndUnsupportedShape() {
     XCTAssertThrowsError(try CodexProvider.parse(data: fixture("codex-malformed"), now: now))
     XCTAssertThrowsError(try CodexProvider.parse(data: Data(#"{"rate_limit":{}}"#.utf8), now: now))

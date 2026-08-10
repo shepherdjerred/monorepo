@@ -187,7 +187,7 @@ public enum QuotaOverviewSummary: Equatable, Sendable {
 
 public enum QuotaTimeFormatter {
   public static func compactCountdown(to date: Date, from referenceDate: Date = .now) -> String {
-    let seconds = max(0, Int(date.timeIntervalSince(referenceDate)))
+    let seconds = boundedSeconds(date.timeIntervalSince(referenceDate))
     if seconds == 0 { return "now" }
     if seconds < 60 { return "<1m" }
 
@@ -201,7 +201,7 @@ public enum QuotaTimeFormatter {
   }
 
   public static func refreshAge(since date: Date, at referenceDate: Date = .now) -> String {
-    let seconds = max(0, Int(referenceDate.timeIntervalSince(date)))
+    let seconds = boundedSeconds(referenceDate.timeIntervalSince(date))
     if seconds < 5 { return "just now" }
     if seconds < 60 { return "\(seconds)s ago" }
 
@@ -210,5 +210,14 @@ public enum QuotaTimeFormatter {
     let hours = minutes / 60
     if hours < 24 { return "\(hours)h ago" }
     return "\(hours / 24)d ago"
+  }
+
+  /// Clamps an interval into `Int`'s representable range before converting, so a malformed or
+  /// already-persisted date with an extreme epoch value degrades to a large-but-finite duration
+  /// instead of trapping. `1e15` (~31 million years) is far beyond any real countdown but stays
+  /// comfortably inside `Int64` after conversion.
+  private static func boundedSeconds(_ interval: TimeInterval) -> Int {
+    guard interval.isFinite else { return 0 }
+    return Int(max(0, min(interval, 1e15)))
   }
 }

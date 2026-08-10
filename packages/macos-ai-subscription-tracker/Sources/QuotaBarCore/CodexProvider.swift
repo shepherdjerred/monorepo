@@ -13,11 +13,26 @@ public struct CodexProvider: UsageProvider {
   }
 
   public func fetch() async throws -> UsageSnapshot {
-    async let resetResult = captureSurface {
-      try await client.get(provider: id, url: resetEndpoint)
+    let credential = try await client.resolveCredential(for: id)
+    return try await fetch(usingCredential: credential)
+  }
+
+  /// Pins the usage and reset requests to one credential so a 401 on either surface cannot leave
+  /// the published snapshot combining one credential's quota windows with another credential's
+  /// banked resets; a 401 on either surface restarts the complete fetch with a replacement
+  /// credential instead of letting each surface reload independently.
+  private func fetch(usingCredential credential: ProviderCredential) async throws -> UsageSnapshot {
+    async let resetOutcome = captureAuthAwareSurface {
+      try await client.get(provider: id, url: resetEndpoint, credential: credential)
     }
-    let usageData = try await client.get(provider: id, url: usageEndpoint)
-    let resolvedResets = await resetResult
+    let usageData: Data
+    do {
+      usageData = try await client.get(provider: id, url: usageEndpoint, credential: credential)
+    } catch QuotaError.unauthorized {
+      _ = await resetOutcome
+      return try await restartFetch(excluding: credential)
+    }
+    let resolvedResets = await resetOutcome
     switch resolvedResets {
     case let .success(data):
       do {
@@ -32,7 +47,15 @@ public struct CodexProvider: UsageProvider {
       }
     case let .failure(message):
       return try Self.parse(data: usageData, resetErrorMessage: message)
+    case .unauthorized:
+      return try await restartFetch(excluding: credential)
     }
+  }
+
+  private func restartFetch(excluding credential: ProviderCredential) async throws -> UsageSnapshot
+  {
+    let replacement = try await client.resolveCredential(for: id, excluding: credential)
+    return try await fetch(usingCredential: replacement)
   }
 
   public static func parse(

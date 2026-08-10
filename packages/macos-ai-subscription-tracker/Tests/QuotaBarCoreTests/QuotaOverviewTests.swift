@@ -137,6 +137,17 @@ final class QuotaOverviewTests: XCTestCase {
     )
   }
 
+  func testCountdownAndAgeFormattersToleranteExtremeDates() {
+    // A malformed or already-persisted date with an out-of-Int64-range epoch must not trap when
+    // converted to a countdown; it should degrade to a large-but-finite duration instead.
+    let farFuture = Date(timeIntervalSince1970: 1e20)
+    let farPast = Date(timeIntervalSince1970: -1e20)
+    XCTAssertTrue(
+      QuotaTimeFormatter.compactCountdown(to: farFuture, from: referenceDate).contains("d"))
+    XCTAssertTrue(
+      QuotaTimeFormatter.refreshAge(since: farPast, at: referenceDate).hasSuffix("d ago"))
+  }
+
   func testCompactTimeFormattingAndLatestSourceTimestamp() {
     XCTAssertEqual(
       QuotaTimeFormatter.compactCountdown(
