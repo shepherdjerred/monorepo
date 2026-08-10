@@ -459,6 +459,11 @@
   ],
   "separateTests": [
     {
+      "package": "@shepherdjerred/quotabar",
+      "directory": "packages/macos-ai-subscription-tracker",
+      "reason": "The Swift test and coverage suite requires macOS and runs through the documented verify:macos release gate; Linux CI runs only the portable SwiftLint task."
+    },
+    {
       "package": "sjer.red",
       "directory": "packages/sjer.red",
       "reason": "The Playwright suite runs in the dedicated main and pull-request browser lanes."
