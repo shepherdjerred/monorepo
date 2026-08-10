@@ -350,6 +350,37 @@ async function uploadPipeline(
     throw new Error(`pipeline upload failed with ${exitCode.toString()}`);
 }
 
+export const SELECTED_STEPS_METADATA_KEY = "ci-selected-main-steps";
+
+/**
+ * Publish the uploaded step keys so `annotate-build-summary.ts` knows which
+ * steps exist in this build. Without it the annotator queries every step in
+ * `summarySteps`, and `buildkite-agent step get` exits nonzero for a step the
+ * selector omitted, failing the summary job on an otherwise green build. The
+ * fallback path deliberately leaves this unset: it uploads the complete graph,
+ * so every step exists.
+ */
+async function recordSelectedSteps(
+  selected: ReadonlySet<string>,
+): Promise<void> {
+  const child = Bun.spawn(
+    [
+      "buildkite-agent",
+      "meta-data",
+      "set",
+      SELECTED_STEPS_METADATA_KEY,
+      [...selected].sort().join("\n"),
+    ],
+    { stdout: "inherit", stderr: "inherit" },
+  );
+  const exitCode = await child.exited;
+  if (exitCode !== 0) {
+    throw new Error(
+      `could not record selected main steps (exit ${exitCode.toString()})`,
+    );
+  }
+}
+
 async function annotateFallback(reason: string): Promise<void> {
   const child = Bun.spawn(
     [
@@ -385,6 +416,7 @@ async function main(): Promise<number> {
     const selected = selectedKeys(steps, decisions);
     const rendered = renderSteps(steps, selected);
     validateRenderedSteps(rendered);
+    await recordSelectedSteps(selected);
     await uploadPipeline(document, rendered, changedFilesPath);
     console.log(`Uploaded ${selected.size.toString()} selected main CI steps`);
     return 0;

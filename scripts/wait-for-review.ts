@@ -432,6 +432,10 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
         number,
         token,
         provider,
+        // Reuse the comment resolveReviewState just fetched: it makes both
+        // decisions describe the identical snapshot and avoids paginating the
+        // whole comment history twice on every poll.
+        issueComment: stateResult.issueComment,
       });
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));

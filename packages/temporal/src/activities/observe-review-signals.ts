@@ -167,6 +167,7 @@ async function buildSignalEvent(input: {
     number: prNumber,
     token,
     provider,
+    issueComment: state.issueComment,
   });
 
   const providerThreads = threadResult.threads.filter(

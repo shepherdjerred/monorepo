@@ -1,7 +1,24 @@
 import { $ } from "bun";
 import { outcomeIcon, summaryLanes, summarySteps } from "./migration-core.ts";
 
+/**
+ * Steps the main selector uploaded. `buildkite-agent step get` exits nonzero
+ * for a step that is not in the build, so querying an omitted step would fail
+ * this job on an otherwise green build. An empty value means the complete
+ * graph was uploaded (the selector's fallback path), so every step exists.
+ */
+async function uploadedSteps(): Promise<ReadonlySet<string> | null> {
+  const raw =
+    await $`buildkite-agent meta-data get ci-selected-main-steps --default ${""}`.text();
+  const keys = raw
+    .split("\n")
+    .map((key) => key.trim())
+    .filter((key) => key.length > 0);
+  return keys.length === 0 ? null : new Set(keys);
+}
+
 if (import.meta.main) {
+  const uploaded = await uploadedSteps();
   const lines = [
     "### :rocket: main build summary",
     "",
@@ -9,6 +26,10 @@ if (import.meta.main) {
     "| --- | --- |",
   ];
   for (const step of summarySteps) {
+    if (uploaded !== null && !uploaded.has(step)) {
+      lines.push(`| ${step} | :heavy_minus_sign: not selected |`);
+      continue;
+    }
     const rawOutcome =
       await $`buildkite-agent step get outcome --step ${step}`.text();
     const outcome = rawOutcome.trim();

@@ -68,7 +68,9 @@ async function downloadArtifact(
       "download",
       name,
       ".",
-      "--job",
+      // `artifact download` scopes with --step, which accepts a step key or a
+      // job UUID. --job is an upload-only flag and errors out here.
+      "--step",
       producingJobId,
     ],
     { stdout: "inherit", stderr: "inherit" },

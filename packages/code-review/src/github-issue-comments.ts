@@ -24,8 +24,14 @@ export async function fetchLatestProviderIssueComment(input: {
   let latestScore = Number.NEGATIVE_INFINITY;
   while (url !== null) {
     const { payload, linkNext } = await getJsonWithLink(url, input.token);
-    const comments = Array.isArray(payload) ? payload : [];
-    for (const rawItem of comments) {
+    if (!Array.isArray(payload)) {
+      // Treating an unexpected shape as "no comments" would hide a GitHub
+      // contract regression behind a 20-minute gate timeout.
+      throw new TypeError(
+        `GitHub issue comments response for ${input.repo}#${String(input.number)} was not an array`,
+      );
+    }
+    for (const rawItem of payload) {
       const item = asRecord(rawItem);
       if (item === null) continue;
       const user = recordField(item, "user");
@@ -79,6 +85,7 @@ export async function resolveIssueCommentReview(input: {
       reviewedAt: comment.updatedAt,
       staleReaction: false,
       skipReason: null,
+      issueComment: comment,
     };
   }
   return {
@@ -88,5 +95,6 @@ export async function resolveIssueCommentReview(input: {
     reviewedAt: comment?.updatedAt ?? null,
     staleReaction: false,
     skipReason: null,
+    issueComment: comment,
   };
 }

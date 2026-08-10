@@ -29,6 +29,7 @@ import { isProviderAuthor } from "./identity.ts";
 import type { CompletionSignal } from "./signal.ts";
 import type {
   PullRequestAuthor,
+  ReviewIssueComment,
   ReviewProvider,
   ReviewState,
   ReviewThread,
@@ -168,6 +169,12 @@ export async function fetchReviewThreads(input: {
   number: number;
   token: string;
   provider: ReviewProvider;
+  /**
+   * Issue comment already fetched this poll iteration (see
+   * {@link ReviewStateResult.issueComment}). `undefined` means "not fetched",
+   * so this function fetches it; `null` means "fetched, none found".
+   */
+  issueComment?: ReviewIssueComment | null | undefined;
 }): Promise<{ threads: ReviewThread[]; headRefOid: string | null }> {
   const { owner, name } = splitRepo(input.repo);
   const threads: ReviewThread[] = [];
@@ -189,12 +196,15 @@ export async function fetchReviewThreads(input: {
     input.provider.completion.kind === "issue-comment" &&
     input.provider.parseIssueComment !== undefined
   ) {
-    const comment = await fetchLatestProviderIssueComment({
-      repo: input.repo,
-      number: input.number,
-      token: input.token,
-      provider: input.provider,
-    });
+    const comment =
+      input.issueComment === undefined
+        ? await fetchLatestProviderIssueComment({
+            repo: input.repo,
+            number: input.number,
+            token: input.token,
+            provider: input.provider,
+          })
+        : input.issueComment;
     if (comment !== null) {
       threads.push(...input.provider.parseIssueComment(comment));
     }
@@ -427,6 +437,13 @@ export type ReviewStateResult = {
    * the gate. Telemetry only — the `state` already reflects the non-pass.
    */
   staleReaction: boolean;
+  /**
+   * The provider's persistent issue comment, for issue-comment providers only.
+   * Carried so `fetchReviewThreads` can reuse this poll iteration's fetch
+   * instead of paginating the whole comment history a second time.
+   * `undefined` means "not fetched"; `null` means "fetched, none found".
+   */
+  issueComment?: ReviewIssueComment | null;
   /** Provider skip reason (check-run providers only), or null. */
   skipReason: string | null;
 };
