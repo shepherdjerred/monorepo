@@ -271,6 +271,17 @@ export async function handleCompetitionStarts(
 
       if (competition.startNotifiedAt === null) {
         const messageId = await postCompetitionStarted(competition);
+        // Record the delivery right after the send succeeds, before
+        // persisting the notification marker below. If that update then
+        // fails, the outer catch must not also skip counting an output the
+        // user genuinely received — recordCoreOutputDelivered is analytics
+        // (best-effort, never throws), so it can't itself cause the retry
+        // that a failed marker write would still trigger.
+        await recordCoreOutputDelivered(
+          DiscordGuildIdSchema.parse(competition.serverId),
+          "competition_started",
+          { db: prismaClient },
+        );
         await prismaClient.competition.update({
           where: { id: competition.id },
           data: {
@@ -278,11 +289,6 @@ export async function handleCompetitionStarts(
             startNotificationMessageId: messageId,
           },
         });
-        await recordCoreOutputDelivered(
-          DiscordGuildIdSchema.parse(competition.serverId),
-          "competition_started",
-          { db: prismaClient },
-        );
       }
 
       // Mark as processed after notification succeeds so transient Discord
@@ -374,6 +380,15 @@ export async function handleCompetitionEnds(
       const leaderboard = await calculateLeaderboard(prismaClient, competition);
       if (competition.endNotifiedAt === null) {
         const messageId = await postFinalLeaderboard(competition, leaderboard);
+        // Same ordering as the start path above: record the delivery right
+        // after the send succeeds, before persisting the notification
+        // marker, so a failure in that update can't also skip counting an
+        // output the user genuinely received.
+        await recordCoreOutputDelivered(
+          DiscordGuildIdSchema.parse(competition.serverId),
+          "competition_ended",
+          { db: prismaClient },
+        );
         await prismaClient.competition.update({
           where: { id: competition.id },
           data: {
@@ -381,11 +396,6 @@ export async function handleCompetitionEnds(
             endNotificationMessageId: messageId,
           },
         });
-        await recordCoreOutputDelivered(
-          DiscordGuildIdSchema.parse(competition.serverId),
-          "competition_ended",
-          { db: prismaClient },
-        );
       }
 
       await prismaClient.competition.update({
