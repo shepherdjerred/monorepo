@@ -3,7 +3,12 @@ import {
   EmbedBuilder,
   SlashCommandBuilder,
 } from "discord.js";
-import { DiscordGuildIdSchema } from "@scout-for-lol/data/index.ts";
+import {
+  DiscordAccountIdSchema,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/data/index.ts";
+import { prisma } from "#src/database/index.ts";
+import { canListSubscriptions } from "#src/database/competition/permissions.ts";
 import { listSubscriptions } from "#src/lib/subscription/list.ts";
 import type { SubscriptionListItem } from "#src/lib/subscription/types.ts";
 import { getDashboardUrl } from "#src/discord/commands/links.ts";
@@ -54,6 +59,27 @@ export async function executeList(
   }
 
   await interaction.deferReply({ ephemeral: true });
+
+  // Default-deny: without a resolvable member permission bitfield there is no
+  // basis on which to release another server's configuration.
+  const access =
+    interaction.memberPermissions === null
+      ? {
+          allowed: false,
+          reason: "Scout could not read your permissions in this server.",
+        }
+      : await canListSubscriptions(
+          prisma,
+          guildId.data,
+          DiscordAccountIdSchema.parse(interaction.user.id),
+          interaction.memberPermissions,
+        );
+  if (!access.allowed) {
+    await interaction.editReply({
+      content: `${access.reason ?? "You do not have permission to run `/list`."}\n\nYou can still open ${getDashboardUrl()}`,
+    });
+    return;
+  }
 
   try {
     const page = await listSubscriptions({

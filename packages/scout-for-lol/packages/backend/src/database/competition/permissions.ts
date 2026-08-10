@@ -215,3 +215,35 @@ export async function canCreateReport(
 
   return { allowed: true };
 }
+
+/**
+ * Mirrors the dashboard's `guildProcedure("subscriptions", "read")` gate: a
+ * guild's Discord administrator is Scout's root, and everyone else needs an
+ * explicit grant. Tracked aliases and their destination channels are
+ * server-configuration data, so an ungranted member must not read them.
+ *
+ * There is no legacy {@link PermissionType} equivalent to fall back on — the
+ * RBAC key is the only grant that opens this up.
+ */
+export async function canListSubscriptions(
+  prisma: ExtendedPrismaClient,
+  serverId: DiscordGuildId,
+  userId: DiscordAccountId,
+  memberPermissions: Readonly<PermissionsBitField>,
+): Promise<PermissionCheckResult> {
+  if (memberPermissions.has(PermissionFlagsBits.Administrator)) {
+    return { allowed: true };
+  }
+
+  if (
+    !(await hasPermissionKey(prisma, serverId, userId, "subscriptions:read"))
+  ) {
+    return {
+      allowed: false,
+      reason:
+        "You do not have permission to view this server's tracked players. Ask a server admin to grant you subscription access.",
+    };
+  }
+
+  return { allowed: true };
+}
