@@ -31,6 +31,13 @@ const (
 	vtsModeledFields  = 6 // the five required plus source IP
 )
 
+// Positions of the optional trailing fields within a modeled entry.
+const (
+	dhcpDNSField      = 2
+	dhcpHostnameField = 3
+	vtsSourceIPField  = 5
+)
+
 // splitPackedEntries splits a packed NVRAM value into per-entry field slices.
 // The leading empty segment before the first "&#60" is dropped.
 func splitPackedEntries(raw string) [][]string {
@@ -96,12 +103,12 @@ func ParseDHCPStaticList(raw string) ([]DHCPStaticEntry, error) {
 		}
 
 		entry := DHCPStaticEntry{MAC: fields[0], IP: fields[1]}
-		if len(fields) > 2 {
-			entry.DNS = fields[2]
+		if len(fields) > dhcpDNSField {
+			entry.DNS = fields[dhcpDNSField]
 		}
 
-		if len(fields) > 3 {
-			entry.Hostname = fields[3]
+		if len(fields) > dhcpHostnameField {
+			entry.Hostname = fields[dhcpHostnameField]
 		}
 
 		if len(fields) > dhcpModeledFields {
@@ -171,8 +178,8 @@ func ParseVTSRuleList(raw string) ([]PortForwardEntry, error) {
 			Protocol:     fields[4],
 		}
 
-		if len(fields) > 5 {
-			entry.SourceIP = fields[5]
+		if len(fields) > vtsSourceIPField {
+			entry.SourceIP = fields[vtsSourceIPField]
 		}
 
 		if len(fields) > vtsModeledFields {
