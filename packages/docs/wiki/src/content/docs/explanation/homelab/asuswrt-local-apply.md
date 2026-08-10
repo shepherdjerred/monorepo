@@ -58,14 +58,22 @@ So the wireless surface is treated as track-only until an apply has been
 verified against real hardware. Import and plan are safe today; that is a
 smaller promise than "managed", and it is the honest one.
 
-## Why the WiFi password is deliberately unmanaged
+## The WiFi password is tracked but never verified
 
-`wpa_passphrase` is write-only — the router never reads it back. Tracking it
-would rewrite the PSK on every apply and could never show honest drift, because
-there is no observed value to compare against.
+`wpa_passphrase` is treated as write-only. The provider can send it, but
+[`readWireless`](https://github.com/shepherdjerred/monorepo/blob/main/packages/terraform-provider-asuswrt/internal/provider/wireless_network_resource.go)
+never assigns the router's value back onto the model, so state keeps whatever
+Terraform last wrote.
 
-A resource that always claims a change it cannot verify is worse than no
-resource. The WiFi password is managed out of band instead.
+The consequence is not plan churn — a configured passphrase produces a clean
+no-op plan, because there is nothing to compare and nothing to differ. The
+consequence is **drift-blindness**: if someone changes the PSK on the router
+directly, this provider cannot see it and will never report it. `plan` staying
+quiet means nothing here.
+
+That is the tradeoff being accepted, and it is why the WiFi password is really
+managed out of band. Treat a clean plan as silence about the passphrase, not
+as evidence it matches.
 
 ## What that leaves tracked
 

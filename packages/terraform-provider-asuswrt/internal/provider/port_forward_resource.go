@@ -155,6 +155,13 @@ func (r *portForwardResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
+	// findRuleByName matches case-insensitively, so an import of "http" can bind
+	// to a live rule named "HTTP". Adopt the router's spelling: name is the
+	// identity and RequiresReplace, so leaving the operator's casing in state
+	// makes the next plan propose destroying and recreating the rule that was
+	// just imported.
+	state.Name = types.StringValue(entry.Name)
+
 	state.Protocol = types.StringValue(entry.Protocol)
 	state.ExternalPort = types.StringValue(entry.ExternalPort)
 	state.InternalIP = types.StringValue(entry.InternalIP)

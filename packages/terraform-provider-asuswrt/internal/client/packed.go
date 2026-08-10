@@ -48,23 +48,42 @@ func PackedDelimiters() []string {
 }
 
 // splitPackedEntries splits a packed NVRAM value into per-entry field slices.
-// The leading empty segment before the first "&#60" is dropped.
-func splitPackedEntries(raw string) [][]string {
+//
+// A well-formed value is empty or begins with the entry delimiter, so exactly
+// one empty segment — the leading one — is expected. Every other shape is
+// rejected rather than normalized away: a missing leading delimiter, a repeated
+// delimiter, and a trailing delimiter all used to parse "successfully", and the
+// next mutation would then rewrite the list in a different encoding than the
+// router supplied. Silently re-encoding NVRAM we did not understand is how an
+// unrecognized entry becomes an active one.
+func splitPackedEntries(raw string) ([][]string, error) {
 	if raw == "" {
-		return nil
+		return nil, nil
+	}
+
+	if !strings.HasPrefix(raw, packedEntryDelim) {
+		return nil, fmt.Errorf(
+			"value does not begin with the entry delimiter %q: %q", packedEntryDelim, raw,
+		)
 	}
 
 	var entries [][]string
 
-	for _, part := range strings.Split(raw, packedEntryDelim) {
+	for i, part := range strings.Split(raw, packedEntryDelim) {
 		if part == "" {
-			continue
+			// Index 0 is the empty segment before the leading delimiter, which
+			// the prefix check above guarantees is present.
+			if i == 0 {
+				continue
+			}
+
+			return nil, fmt.Errorf("empty entry at position %d: %q", i, raw)
 		}
 
 		entries = append(entries, strings.Split(part, packedFieldDelim))
 	}
 
-	return entries
+	return entries, nil
 }
 
 // writePackedEntry appends one "&#60"-prefixed, "&#62"-delimited entry.
@@ -113,7 +132,12 @@ type DHCPStaticEntry struct {
 func ParseDHCPStaticList(raw string) ([]DHCPStaticEntry, error) {
 	var entries []DHCPStaticEntry
 
-	for i, fields := range splitPackedEntries(raw) {
+	split, err := splitPackedEntries(raw)
+	if err != nil {
+		return nil, fmt.Errorf("parsing dhcp_staticlist: %w", err)
+	}
+
+	for i, fields := range split {
 		if len(fields) < dhcpRequiredFields {
 			return nil, fmt.Errorf(
 				"parsing dhcp_staticlist: entry %d has %d field(s), need at least %d: %q",
@@ -189,7 +213,12 @@ type PortForwardEntry struct {
 func ParseVTSRuleList(raw string) ([]PortForwardEntry, error) {
 	var entries []PortForwardEntry
 
-	for i, fields := range splitPackedEntries(raw) {
+	split, err := splitPackedEntries(raw)
+	if err != nil {
+		return nil, fmt.Errorf("parsing vts_rulelist: %w", err)
+	}
+
+	for i, fields := range split {
 		if len(fields) < vtsRequiredFields {
 			return nil, fmt.Errorf(
 				"parsing vts_rulelist: entry %d has %d field(s), need at least %d: %q",

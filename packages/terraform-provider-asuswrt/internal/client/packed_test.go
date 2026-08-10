@@ -540,3 +540,55 @@ func TestPackedListsPreserveTrailingFields(t *testing.T) {
 		}
 	})
 }
+
+// TestPackedListRejectsMalformedShapes covers segment-level structure. Each of
+// these used to parse "successfully" and then be rewritten in a normalized
+// encoding by the next mutation, converting NVRAM this provider did not
+// understand into an active entry.
+func TestPackedListRejectsMalformedShapes(t *testing.T) {
+	t.Parallel()
+
+	valid := lt + "AA:BB:CC:DD:EE:FF" + gt + "192.168.1.100" + gt + gt
+
+	tests := []struct {
+		name    string
+		input   string
+		wantErr bool
+	}{
+		{name: "empty value is a valid empty list", input: "", wantErr: false},
+		{name: "well-formed value", input: valid, wantErr: false},
+		{
+			name:    "missing leading delimiter",
+			input:   "AA:BB:CC:DD:EE:FF" + gt + "192.168.1.100" + gt + gt,
+			wantErr: true,
+		},
+		{
+			name:    "two well-formed entries",
+			input:   valid + valid,
+			wantErr: false,
+		},
+		{
+			name:    "repeated delimiter between entries",
+			input:   valid + lt + valid,
+			wantErr: true,
+		},
+		{name: "trailing delimiter", input: valid + lt, wantErr: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			_, err := client.ParseDHCPStaticList(tt.input)
+			if gotErr := err != nil; gotErr != tt.wantErr {
+				t.Errorf("dhcp: expected error=%v, got %v (%v)", tt.wantErr, gotErr, err)
+			}
+
+			// The same structural rules apply to the port-forward list.
+			_, err = client.ParseVTSRuleList(tt.input)
+			if tt.wantErr && err == nil {
+				t.Error("vts: expected a structural error, got none")
+			}
+		})
+	}
+}

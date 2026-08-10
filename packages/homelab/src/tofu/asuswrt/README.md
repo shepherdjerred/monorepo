@@ -54,8 +54,10 @@ Credentials come from the 1Password item **"ASUS Router"** via `TF_VAR_asuswrt_u
 
 ## Notes / caveats
 
-- **wpa_passphrase is not managed.** It is write-only (never read back), so tracking
-  it would rewrite the PSK on every apply and never show honest drift. Manage the WiFi
+- **wpa_passphrase is never verified.** The provider can write it, but
+  `readWireless` never reads it back onto state, so a configured passphrase plans
+  cleanly and drift is invisible: a PSK changed on the router directly will never
+  be reported. A quiet plan says nothing about the passphrase. Manage the WiFi
   password out-of-band. Wireless SSID/auth/crypto/channel/bandwidth/hidden are tracked.
 - **Wireless write-fidelity:** on the router, band 1 reports `wl1_bw=3` (80 MHz on this
   firmware) and chanspec `149/80`. Import/plan are clean, but the provider's chanspec/
