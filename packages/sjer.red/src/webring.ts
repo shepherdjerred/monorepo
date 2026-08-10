@@ -94,7 +94,7 @@ export async function getPosts(_date: Date): Promise<Result> {
         title: "The Eclectic Light Company",
       },
       {
-        url: "https://jmw.sh/blog/index.xml",
+        url: "https://www.jmw.sh/rss.xml",
         title: "Jacob Woliver",
       },
       {

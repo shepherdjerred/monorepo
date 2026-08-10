@@ -1,13 +1,15 @@
 ---
 id: plan-2026-07-26-scout-app-analytics-instrumentation
 type: plan
-status: in-progress
-board: true
-verification: operator
-disposition: blocked
+status: complete
+board: false
 ---
 
 # Scout product analytics on Matomo
+
+> Superseded on 2026-08-09 by
+> `plans/2026-08-09_posthog-analytics-cutover.md`. This document is retained as
+> historical context for the retired implementation.
 
 ## Context
 

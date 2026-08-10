@@ -15,7 +15,7 @@ the original investigation) found it
 is doing almost nothing useful while actively worsening a cluster-wide incident:
 
 - It enforces exactly **two** ClusterPolicies, **both non-blocking**:
-  - `add-velero-backup-label` — mutates 6 PVCs in `prometheus`/`plausible`/`bugsink`
+  - `add-velero-backup-label` — mutated 6 PVCs across monitoring, analytics, and error-tracking workloads
     to add `velero.io/backup: enabled` (the only load-bearing behavior).
   - `enforce-container-resource-limits` — **Audit-only** drift report for the
     `buildkite` namespace; nothing consumes it, Kueue is independent of it.
@@ -44,11 +44,11 @@ backup labeling) into the charts/operator so no PVC silently drops out of backup
 | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
 | `alertmanager-*` (prometheus)                                  | `metadata.labels` on `alertmanager.alertmanagerSpec.storage.volumeClaimTemplate` in `prometheus.ts` |
 | `storage-prometheus-grafana-*` (prometheus)                    | no change — `grafana-values.ts` already sets it                                                     |
-| `pgdata-grafana-*` / `pgdata-plausible-*` / `pgdata-bugsink-*` | Zalando `inherited_labels`                                                                          |
+| `pgdata-grafana-*` / retired analytics DB / `pgdata-bugsink-*` | Zalando `inherited_labels`                                                                          |
 
 Zalando postgres: added `labels: { "velero.io/backup": "enabled" }` to `metadata`
-on the three `Postgresql` CRs (`postgres/bugsink-db.ts`, `plausible-db.ts`,
-`grafana-db.ts`), plus `inherited_labels: ["velero.io/backup"]` on
+on the three `Postgresql` CRs that existed during the migration, plus
+`inherited_labels: ["velero.io/backup"]` on
 `configKubernetes` in `argo-applications/postgres-operator.ts`. Because the
 generated `postgres-operator` helm-values type omits `inherited_labels` (commented
 out upstream), it is set on the ArgoCD Application's untyped `helm.valuesObject`

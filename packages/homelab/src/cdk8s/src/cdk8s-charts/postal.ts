@@ -33,22 +33,11 @@ export function createPostalChart(app: App) {
       policyTypes: ["Ingress", "Egress"],
       ingress: [
         {
-          // Allow SMTP from Bugsink, Matomo, and other namespaces
+          // Allow SMTP from application namespaces.
           from: [
             {
               namespaceSelector: {
                 matchLabels: { "kubernetes.io/metadata.name": "bugsink" },
-              },
-            },
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "matomo" },
-              },
-            },
-            {
-              // Retained until the Plausible migration hold is removed.
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "plausible" },
               },
             },
             {

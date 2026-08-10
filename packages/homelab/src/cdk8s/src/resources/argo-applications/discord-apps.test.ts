@@ -12,8 +12,8 @@ const ApplicationSchema = z
   })
   .loose();
 
-describe("deferred Discord Applications", () => {
-  it("omit syncPolicy instead of rendering a null Argo field", () => {
+describe("Discord Applications", () => {
+  it("restore automatic synchronization", () => {
     const chart = Testing.chart();
     createMarioKartApp(chart);
     createPokemonApp(chart);
@@ -31,7 +31,7 @@ describe("deferred Discord Applications", () => {
 
     expect(applications).toHaveLength(2);
     for (const application of applications) {
-      expect(application.spec).not.toHaveProperty("syncPolicy");
+      expect(application.spec.syncPolicy).toEqual({ automated: {} });
     }
   });
 });

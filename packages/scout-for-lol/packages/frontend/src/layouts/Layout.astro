@@ -11,9 +11,29 @@ interface Props {
 }
 
 const { title, description, image, noindex } = Astro.props;
-const matomoSiteId =
-  typeof import.meta.env["PUBLIC_MATOMO_SITE_ID"] === "string"
-    ? import.meta.env["PUBLIC_MATOMO_SITE_ID"]
+const posthogProjectToken =
+  typeof import.meta.env["PUBLIC_POSTHOG_PROJECT_TOKEN"] === "string"
+    ? import.meta.env["PUBLIC_POSTHOG_PROJECT_TOKEN"]
+    : undefined;
+const posthogApiHost =
+  typeof import.meta.env["PUBLIC_POSTHOG_API_HOST"] === "string"
+    ? import.meta.env["PUBLIC_POSTHOG_API_HOST"]
+    : undefined;
+const posthogAssetHost =
+  typeof import.meta.env["PUBLIC_POSTHOG_ASSET_HOST"] === "string"
+    ? import.meta.env["PUBLIC_POSTHOG_ASSET_HOST"]
+    : undefined;
+const posthogSiteKey =
+  typeof import.meta.env["PUBLIC_POSTHOG_SITE_KEY"] === "string"
+    ? import.meta.env["PUBLIC_POSTHOG_SITE_KEY"]
+    : undefined;
+const posthogSiteDomain =
+  typeof import.meta.env["PUBLIC_POSTHOG_SITE_DOMAIN"] === "string"
+    ? import.meta.env["PUBLIC_POSTHOG_SITE_DOMAIN"]
+    : undefined;
+const posthogSessionReplay =
+  typeof import.meta.env["PUBLIC_POSTHOG_SESSION_REPLAY"] === "string"
+    ? import.meta.env["PUBLIC_POSTHOG_SESSION_REPLAY"]
     : undefined;
 ---
 
@@ -41,8 +61,13 @@ const matomoSiteId =
     <script
       is:inline
       defer
-      src="/matomo-bootstrap.js"
-      data-matomo-site-id={matomoSiteId}></script>
+      src="/posthog-bootstrap.js"
+      data-posthog-project-token={posthogProjectToken}
+      data-posthog-api-host={posthogApiHost}
+      data-posthog-asset-host={posthogAssetHost}
+      data-posthog-site-key={posthogSiteKey}
+      data-posthog-site-domain={posthogSiteDomain}
+      data-posthog-session-replay={posthogSessionReplay}></script>
     <script>
       import { initSentry } from "../lib/sentry";
       initSentry();

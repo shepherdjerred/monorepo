@@ -3,10 +3,10 @@
  *
  * Every funnel event goes to two places on purpose:
  *
- * - **Matomo** (`track`) for behavioural analysis — session context, paths,
+ * - **PostHog** (`track`) for behavioural analysis — session context, paths,
  *   segmentation.
  * - **The backend** (`telemetry.*`) so the same counts land in Prometheus,
- *   which is what Grafana alerts on. Matomo is not an alerting source.
+ *   which is what Grafana alerts on. PostHog is not an alerting source.
  *
  * Both calls are best-effort: telemetry must never break the wizard, so a
  * failed report is swallowed rather than surfaced. Losing a funnel data point

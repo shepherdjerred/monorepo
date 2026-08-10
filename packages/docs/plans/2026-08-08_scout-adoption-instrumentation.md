@@ -31,12 +31,12 @@ No spam has actually occurred (verified: zero duplicate guild+kind DMs, max 4 li
 - **3 non-core messages per server, ever**, each stating "message X of 3".
 - **Add the `email` OAuth scope**; re-consent on next login is acceptable.
 - **No opt-out mechanism** — the hard cap is the guarantee.
-- **Both** Matomo (UX/behavior) and Prometheus (funnel counts + alerting).
+- **Both** PostHog (UX/behavior) and Prometheus (funnel counts + alerting).
 - **One PR**, delivered as ordered commits (below).
 
 ### What already exists (reuse, do not rebuild)
 
-- **Matomo analytics in the SPA**: `packages/scout-for-lol/packages/app/src/lib/analytics.ts` — 45-event closed union, `track()`, `trackMutationMeta()`/`analyticsMeta()`, dimensions 1–8. `onboarding_step` and `subscription_add` (with outcome `kind`) are already tracked.
+- **PostHog analytics in the SPA**: `packages/scout-for-lol/packages/app/src/lib/analytics.ts` — closed event union, `track()`, `trackMutationMeta()`/`analyticsMeta()`, bounded properties, normalized routes, and anonymous in-memory persistence. `onboarding_step` and `subscription_add` (with outcome `kind`) are already tracked.
 - **Sentry/Bugsink**: SPA (`@sentry/react`) and backend (`@sentry/bun`), `source:` kebab-case tag convention.
 - **Prom registry**: `backend/src/metrics/registry.ts` (leaf module, no imports). New metrics use the `scout_` prefix (de-facto convention for newer metrics).
 - **Cron helper**: `createCronJob({schedule, jobName, task, ...})` in `backend/src/league/cron/helpers.ts` — already emits `cron_job_*`.
@@ -123,7 +123,7 @@ New file `backend/src/metrics/web.ts` (follows the `guild-health.ts` split-for-f
 
 - Extend `SCOUT_ANALYTICS_EVENTS` in `app/src/lib/analytics.ts` (closed `as const` union — new names must be added or `track()` won't compile) with `onboarding_completed`, `onboarding_skipped`, `feedback_shown`, `feedback_submitted`, `feedback_dismissed`.
 - `onboarding_step` already fires on step _reach_ (`onboarding-wizard.tsx:47-51`); the gap is a terminal event distinguishing `finish()`/`finishTo()` from `onSkip`. Add it.
-- Mirror the funnel to `telemetry.track` so Prometheus can alert. Matomo keeps the behavioral detail; Prometheus gets the counts.
+- Mirror the funnel to `telemetry.track` so Prometheus can alert. PostHog keeps the behavioral detail; Prometheus gets the counts.
 
 > **Cardinality guard:** every new label set here is bounded (fixed route list, fixed procedure list, fixed step enum). No `guild_id`, `user_id`, or Riot ID may enter a label.
 >
@@ -198,7 +198,7 @@ Stage 3 says "Message 3 of 3 — this is the last message Scout will ever send a
 **Segment:** installer signed into the web UI (so a `User` row with an email exists) **and** their guild has 0 subscriptions and 0 active competitions after 30 days. One email, ever, and it **counts against the same 3-message budget** — if the budget is spent, no email. This keeps the "message X of 3" promise literally true across channels.
 
 - **OAuth**: add `"email"` to the single scope array in `handleDiscordStart` (`backend/src/trpc/auth-web.ts`, currently `["identify", "guilds"]`). `prompt=consent` is already set, so users are asked on next sign-in. Extend `DiscordUserSchema` with `email: z.string().nullable().optional()` and `verified: z.boolean().optional()` — **optional**, because sessions predating the scope won't carry them. Persist in the existing `prisma.user.upsert` in `handleDiscordCallback`. Add a login-scope assertion to `backend/src/trpc/auth-web.test.ts` (it asserts the _install_ scope at line 89 but has no login equivalent). Emails will trickle in as users re-auth; there is no backfill.
-- **Transport**: Postal's **HTTP API**, not SMTP. Scout's egress NetworkPolicy (`homelab/src/cdk8s/src/cdk8s-charts/scout.ts`) already permits 443 to `0.0.0.0/0`, so the API path needs **zero** netpol changes. The SMTP path would require editing both scout egress _and_ the `postal-smtp-netpol` ingress allowlist (which lists `bugsink`, `matomo`, `plausible`, `birmel`, `media/cwa` — **not** scout). Avoid it.
+- **Transport**: Postal's **HTTP API**, not SMTP. Scout's egress NetworkPolicy (`homelab/src/cdk8s/src/cdk8s-charts/scout.ts`) already permits 443 to `0.0.0.0/0`, so the API path needs **zero** netpol changes. The SMTP path would require editing both Scout egress _and_ the `postal-smtp-netpol` ingress allowlist, which intentionally does not include Scout. Avoid it.
 - **Client**: extract `packages/temporal/src/shared/postal.ts` into a new workspace package `packages/postal-client` and have both temporal and scout depend on it via `workspace:*`. It is small, already has tests (`postal.test.ts`), and correctly handles Postal returning **HTTP 200 on validation errors**. _Judgment call:_ copying it into scout would be a smaller diff but duplicates logic the repo's `duplication-check` would flag; extraction is the right call with two real consumers.
 - **Config**: add `POSTAL_HOST`, `POSTAL_API_KEY`, `POSTAL_HOST_HEADER`, `SENDER_EMAIL` to `backend/src/configuration.ts` — note this file requires touching **both** the `computeConfiguration()` literal **and** the hand-written getter mirror below it. Wire secrets in `homelab/src/cdk8s/src/resources/scout/index.ts` (`baseEnvVariables`, per-stage 1Password items).
 - **Metric**: `scout_email_sent_total{kind,status}`.
@@ -258,7 +258,7 @@ bun run --filter='./packages/scout-for-lol' dev:web
 - Walk the onboarding wizard; confirm `scout_onboarding_step_total` and `scout_onboarding_outcome_total` advance at `localhost:3000/metrics`.
 - Sign out and load `/app` — confirm **no** `UNAUTHORIZED` ERROR lines and that `auth.sessionState` returns `{user: null}`.
 - Force a Discord upstream failure (bad token) — confirm the UI says "Couldn't reach Discord", **not** "You are not a member of that guild", and `scout_discord_user_guilds_failures_total{reason}` increments.
-- Note: Matomo **no-ops locally** unless `VITE_MATOMO_SITE_ID` + `VITE_MATOMO_SITE_DOMAIN` are set (injected for prod/beta by `scripts/scout-site-release.ts:228-230`), so verify the funnel via the Prometheus side locally.
+- Note: PostHog **no-ops locally** unless the complete `VITE_POSTHOG_*` public configuration is set (injected for prod/beta by `scripts/scout-site-release.ts`), so verify the funnel via the Prometheus side locally.
 
 **Outreach dry run:** add a `--dry-run` flag to the outreach task that logs the ladder decision and budget state per guild without sending. Run against a copy of the prod DB and confirm the stage backfill produces sane decisions **before** the first real cron fire — the failure mode here is messaging real users.
 

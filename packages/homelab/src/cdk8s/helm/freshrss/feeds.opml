@@ -148,7 +148,6 @@
       <outline text="Obsidian Blog" type="rss" xmlUrl="https://obsidian.md/feed.xml" htmlUrl="https://obsidian.md/"/>
       <outline text="Obsidian Releases" type="rss" xmlUrl="https://github.com/obsidianmd/obsidian-releases/releases.atom" htmlUrl="https://github.com/obsidianmd/obsidian-releases"/>
       <outline text="Typst Releases" type="rss" xmlUrl="https://github.com/typst/typst/releases.atom" htmlUrl="https://github.com/typst/typst"/>
-      <outline text="Plausible Blog" type="rss" xmlUrl="https://plausible.io/blog/feed.xml" htmlUrl="https://plausible.io/blog/"/>
       <outline text="FreshRSS Releases" type="rss" xmlUrl="https://github.com/FreshRSS/FreshRSS/releases.atom" htmlUrl="https://github.com/FreshRSS/FreshRSS"/>
       <outline text="Sublime Text Blog" type="rss" xmlUrl="https://www.sublimetext.com/blog/feed" htmlUrl="https://www.sublimetext.com/blog/"/>
       <outline text="Home Assistant" type="rss" xmlUrl="https://www.home-assistant.io/atom.xml" htmlUrl="https://www.home-assistant.io/"/>

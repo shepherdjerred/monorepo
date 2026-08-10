@@ -33,8 +33,8 @@ Sentry.init({
   ],
 });
 
-// Product-usage analytics (self-hosted Matomo). No-op unless the site build
-// injected a Matomo site identity (prod/beta only) — see lib/analytics.ts.
+// Product analytics (PostHog Cloud). No-op unless the site build injected the
+// PostHog project/site configuration (prod/beta only) — see lib/analytics.ts.
 initAnalytics();
 
 // Recover from a stale dynamic-import chunk after a deploy. A still-open tab can

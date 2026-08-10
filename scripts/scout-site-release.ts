@@ -41,17 +41,21 @@ const BETA_PIXEL_PLACEHOLDERS: Readonly<Record<string, string>> = {
 const ANALYTICS_REGISTRY_PATH = "config/analytics-sites.json";
 const AnalyticsRegistrySchema = z
   .object({
-    trackerOrigin: z.literal("https://matomo.sjer.red"),
+    provider: z.literal("posthog"),
+    projectToken: z.string().regex(/^phc_[A-Za-z0-9]+$/),
+    apiHost: z.literal("https://us.i.posthog.com"),
+    assetHost: z.literal("https://us-assets.i.posthog.com"),
     sites: z.array(
       z.object({
+        key: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
         hostname: z.string().min(1),
-        siteId: z.number().int().positive(),
+        sessionReplay: z.boolean(),
       }),
     ),
   })
   .superRefine((registry, context) => {
     const hostnames = new Set<string>();
-    const siteIds = new Set<number>();
+    const siteKeys = new Set<string>();
     for (const site of registry.sites) {
       if (hostnames.has(site.hostname)) {
         context.addIssue({
@@ -60,15 +64,15 @@ const AnalyticsRegistrySchema = z
           message: `Duplicate analytics hostname: ${site.hostname}`,
         });
       }
-      if (siteIds.has(site.siteId)) {
+      if (siteKeys.has(site.key)) {
         context.addIssue({
           code: "custom",
           path: ["sites"],
-          message: `Duplicate analytics site ID: ${String(site.siteId)}`,
+          message: `Duplicate analytics site key: ${site.key}`,
         });
       }
       hostnames.add(site.hostname);
-      siteIds.add(site.siteId);
+      siteKeys.add(site.key);
     }
   });
 const RELEASE_INPUT_PATHS = [
@@ -93,13 +97,17 @@ function repoRoot(): string {
   return new URL("..", import.meta.url).pathname.replace(/\/$/, "");
 }
 
-async function readMatomoSite(flavor: "prod" | "beta"): Promise<{
+export function selectPostHogSite(
+  registryRaw: unknown,
+  flavor: "prod" | "beta",
+): {
+  projectToken: string;
+  apiHost: "https://us.i.posthog.com";
+  assetHost: "https://us-assets.i.posthog.com";
+  key: string;
   domain: string;
-  siteId: string;
-}> {
-  const registryRaw: unknown = JSON.parse(
-    await Bun.file(`${repoRoot()}/${ANALYTICS_REGISTRY_PATH}`).text(),
-  );
+  sessionReplay: boolean;
+} {
   const registry = AnalyticsRegistrySchema.parse(registryRaw);
   const domain =
     flavor === "prod" ? "scout-for-lol.com" : "beta.scout-for-lol.com";
@@ -108,14 +116,30 @@ async function readMatomoSite(flavor: "prod" | "beta"): Promise<{
   );
   if (matchingSites.length !== 1) {
     throw new Error(
-      `Analytics registry must have exactly one Matomo site for ${domain}`,
+      `Analytics registry must have exactly one PostHog site for ${domain}`,
     );
   }
   const site = matchingSites[0];
   if (site === undefined) {
-    throw new Error(`Analytics registry has no Matomo site for ${domain}`);
+    throw new Error(`Analytics registry has no PostHog site for ${domain}`);
   }
-  return { domain: site.hostname, siteId: String(site.siteId) };
+  return {
+    projectToken: registry.projectToken,
+    apiHost: registry.apiHost,
+    assetHost: registry.assetHost,
+    key: site.key,
+    domain: site.hostname,
+    sessionReplay: site.sessionReplay,
+  };
+}
+
+async function readPostHogSite(
+  flavor: "prod" | "beta",
+): Promise<ReturnType<typeof selectPostHogSite>> {
+  const registryRaw: unknown = JSON.parse(
+    await Bun.file(`${repoRoot()}/${ANALYTICS_REGISTRY_PATH}`).text(),
+  );
+  return selectPostHogSite(registryRaw, flavor);
 }
 
 async function resolveGitSha(): Promise<string> {
@@ -169,12 +193,12 @@ export function computeReleaseInputDigest(inputs: {
   const hasher = new Bun.CryptoHasher("sha256");
   hasher.update(
     JSON.stringify({
-      schema: "scout-release-input/v2",
+      schema: "scout-release-input/v3",
       sourceCommit: inputs.sourceCommit,
       backendImageDigest: inputs.backendImageDigest,
       sourceInputsDigest: inputs.sourceInputsDigest,
       contractHash: inputs.contractHash,
-      matomoTrackerOrigin: "https://matomo.sjer.red",
+      analyticsProvider: "posthog-cloud-us",
       pinterestTagId: inputs.pinterestTagId,
       redditPixelId: inputs.redditPixelId,
     }),
@@ -216,7 +240,7 @@ async function buildSite(
     );
   }
   const identity = siteReleaseIdentity(state);
-  const matomoSite = await readMatomoSite(flavor);
+  const posthogSite = await readPostHogSite(flavor);
   const env: Record<string, string> = {
     VITE_SENTRY_RELEASE: identity,
     PUBLIC_SENTRY_RELEASE: identity,
@@ -225,9 +249,18 @@ async function buildSite(
     VITE_GIT_SHA: sourceCommit,
     PUBLIC_GIT_SHA: sourceCommit,
     VITE_CONTRACT_HASH: await contractHash(),
-    VITE_MATOMO_SITE_ID: matomoSite.siteId,
-    VITE_MATOMO_SITE_DOMAIN: matomoSite.domain,
-    PUBLIC_MATOMO_SITE_ID: matomoSite.siteId,
+    VITE_POSTHOG_PROJECT_TOKEN: posthogSite.projectToken,
+    VITE_POSTHOG_API_HOST: posthogSite.apiHost,
+    VITE_POSTHOG_ASSET_HOST: posthogSite.assetHost,
+    VITE_POSTHOG_SITE_KEY: posthogSite.key,
+    VITE_POSTHOG_SITE_DOMAIN: posthogSite.domain,
+    VITE_POSTHOG_SESSION_REPLAY: String(posthogSite.sessionReplay),
+    PUBLIC_POSTHOG_PROJECT_TOKEN: posthogSite.projectToken,
+    PUBLIC_POSTHOG_API_HOST: posthogSite.apiHost,
+    PUBLIC_POSTHOG_ASSET_HOST: posthogSite.assetHost,
+    PUBLIC_POSTHOG_SITE_KEY: posthogSite.key,
+    PUBLIC_POSTHOG_SITE_DOMAIN: posthogSite.domain,
+    PUBLIC_POSTHOG_SESSION_REPLAY: String(posthogSite.sessionReplay),
   };
   if (flavor === "prod") {
     env["PUBLIC_PINTEREST_TAG_ID"] = requireEnv("PUBLIC_PINTEREST_TAG_ID");

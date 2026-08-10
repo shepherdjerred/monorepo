@@ -54,7 +54,7 @@ Container overlay writes (`container_fs_writes_bytes_total` by namespace):
 | `argocd`                        | 2.2                           |
 | `tasknotes`                     | 1.8                           |
 | `home`                          | 1.1                           |
-| `plausible`                     | 0.7                           |
+| Retired analytics workloads     | 0.7                           |
 | `openebs`                       | 0.6                           |
 | `dagger`                        | 0.35                          |
 | `media`                         | 0.14                          |
@@ -77,7 +77,6 @@ ZFS exposes `node_zfs_zpool_dataset_nwritten` which attributes per-dataset, 1:1 
 | -------------------------------------------------------------------------------------- | ------------------ |
 | **`dagger/data-dagger-dagger-helm-engine-0`** (build cache, 1 TiB, zfs-ssd-buildcache) | **704**            |
 | **`media/plex-pvc`** (64 GiB, zfs-ssd)                                                 | **471**            |
-| `plausible/clickhouse-data`                                                            | 14                 |
 | `media/tautulli-pvc`                                                                   | 7                  |
 | `loki/storage-loki-0`                                                                  | 6.5                |
 | `prometheus/prometheus-…-prometheus-0` (TSDB)                                          | 6.4                |

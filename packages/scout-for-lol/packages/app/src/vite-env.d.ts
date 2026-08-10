@@ -13,9 +13,12 @@ interface ImportMetaEnv {
   readonly VITE_GIT_SHA?: string;
   readonly VITE_CONTRACT_HASH?: string;
   readonly VITE_DISCORD_CLIENT_ID?: string;
-  // Matomo site identity for product analytics; per-flavor (prod
-  // scout-for-lol.com, beta beta.scout-for-lol.com). Absent locally → no-op.
-  readonly VITE_MATOMO_SITE_ID?: string;
-  readonly VITE_MATOMO_SITE_DOMAIN?: string;
-  readonly VITE_MATOMO_SRC?: string;
+  // PostHog project/site configuration; absent locally so initialization
+  // no-ops. The project token is a public frontend identifier, not a secret.
+  readonly VITE_POSTHOG_PROJECT_TOKEN?: string;
+  readonly VITE_POSTHOG_API_HOST?: string;
+  readonly VITE_POSTHOG_ASSET_HOST?: string;
+  readonly VITE_POSTHOG_SITE_KEY?: string;
+  readonly VITE_POSTHOG_SITE_DOMAIN?: string;
+  readonly VITE_POSTHOG_SESSION_REPLAY?: "true" | "false";
 }

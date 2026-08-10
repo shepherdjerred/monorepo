@@ -6,6 +6,7 @@ import path from "node:path";
 import {
   computeReleaseInputDigest,
   hashReleaseInputFiles,
+  selectPostHogSite,
   writeScoutReleaseState,
 } from "./scout-site-release.ts";
 import {
@@ -21,6 +22,25 @@ import { hashSiteArchive } from "./lib/scout-site-storage.ts";
 
 const DIGEST =
   "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+
+const POSTHOG_REGISTRY = {
+  provider: "posthog",
+  projectToken: "phc_test",
+  apiHost: "https://us.i.posthog.com",
+  assetHost: "https://us-assets.i.posthog.com",
+  sites: [
+    {
+      key: "scout-prod",
+      hostname: "scout-for-lol.com",
+      sessionReplay: true,
+    },
+    {
+      key: "scout-beta",
+      hostname: "beta.scout-for-lol.com",
+      sessionReplay: true,
+    },
+  ],
+};
 
 function stateJson(overrides: Record<string, unknown> = {}): string {
   return JSON.stringify({
@@ -175,6 +195,25 @@ test("release input digest binds to the source commit", () => {
   expect(
     computeReleaseInputDigest({ ...base, backendImageDigest: `${DIGEST}0` }),
   ).not.toBe(digest);
+});
+
+test("Scout release analytics map both hosts to the shared PostHog project", () => {
+  expect(selectPostHogSite(POSTHOG_REGISTRY, "prod")).toEqual({
+    projectToken: "phc_test",
+    apiHost: "https://us.i.posthog.com",
+    assetHost: "https://us-assets.i.posthog.com",
+    key: "scout-prod",
+    domain: "scout-for-lol.com",
+    sessionReplay: true,
+  });
+  expect(selectPostHogSite(POSTHOG_REGISTRY, "beta")).toEqual({
+    projectToken: "phc_test",
+    apiHost: "https://us.i.posthog.com",
+    assetHost: "https://us-assets.i.posthog.com",
+    key: "scout-beta",
+    domain: "beta.scout-for-lol.com",
+    sessionReplay: true,
+  });
 });
 
 test("release state output creates its parent directory", async () => {

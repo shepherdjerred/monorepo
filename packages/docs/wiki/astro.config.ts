@@ -91,7 +91,6 @@ export default defineConfig({
     "/birmel": "/explanation/birmel/",
     "/homelab/alerts": "/explanation/homelab/alerts/",
     "/homelab/buildkite-admission": "/explanation/homelab/buildkite-admission/",
-    "/homelab/matomo": "/how-to/initialize-matomo/",
     "/homelab/plane": "/explanation/homelab/plane/",
     "/homelab/qbittorrent-vpn-webseed-relay":
       "/explanation/homelab/qbittorrent-webseed-relay/",

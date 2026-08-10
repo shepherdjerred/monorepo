@@ -2,8 +2,8 @@
  * Telemetry Router
  *
  * Receives the SPA's onboarding-funnel events so they land in Prometheus and
- * can drive Grafana alerts. Matomo already records the same events for
- * behavioural analysis; this exists because Matomo is not an alerting source.
+ * can drive Grafana alerts. PostHog records the same events for behavioural
+ * analysis; this exists because product analytics is not an alerting source.
  *
  * This is a PUBLIC, unauthenticated endpoint (the funnel starts before sign-in
  * is complete), so it is deliberately narrow:

@@ -62,8 +62,8 @@ General issue tracking — deferred work, acceptance-testing gaps, post-merge ve
 - [Minecraft Server Ops](guides/2026-04-25_minecraft-server-ops.md) - Operational reference for deployed modded Minecraft servers
 - [Home Assistant Kumo Troubleshooting](guides/2026-05-04_home-assistant-kumo-troubleshooting.md) - Diagnosing `device_authentication_error`, the V3 cloud / Socket.IO password flow, the Murata-OUI DHCP-filter gap, and the cache-rewrite fix recipe
 - [Velero Orphan-Snapshot Remediation](guides/2026-05-05_velero-orphan-snapshot-remediation.md) - Procedure for manually pruning orphan ZFS snapshots and R2 objects when the audit workflow alerts
-- [Homelab Health Audit (2026-05-08)](guides/2026-05-08_homelab-health-audit.md) - Current cluster health audit snapshot
-- [Homelab Issue Investigation (2026-05-08)](guides/2026-05-08_homelab-issue-investigation.md) - Root-cause deep dive on every Yellow row, PD incident, and Bugsink issue from the audit
+- [Homelab Health Audit (2026-05-08)](archive/homelab-audits/2026-05-08_homelab-health-audit.md) - Archived cluster health snapshot
+- [Homelab Issue Investigation (2026-05-08)](archive/homelab-audits/2026-05-08_homelab-issue-investigation.md) - Archived root-cause deep dive on the audit findings
 - [Temporal Post-Deploy Quality Checklist](guides/2026-05-22_temporal-post-deploy-quality-checklist.md) - Standard verification steps to run after a Temporal deploy
 - [Tailscale ACLs Runbook](guides/2026-06-06_tailscale-acls-runbook.md) - Enablement runbook for Tailscale ACLs (tofu-managed policy)
 - [Discord Plays Pokémon Audio Research](guides/2026-06-13_dpp-audio-research.md) - Investigation notes on the DPP audio pipeline
