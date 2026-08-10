@@ -461,7 +461,7 @@
     {
       "package": "@shepherdjerred/quotabar",
       "directory": "packages/macos-ai-subscription-tracker",
-      "reason": "The Swift build/test/coverage suite requires macOS and has no Buildkite lane today - the homelab macOS agent (packages/homelab/mac-ci/) is dormant, so verify:macos is a local-only developer/release gate, not a CI gate. Linux CI runs only the portable lint:swift (SwiftLint) task. Tracked in packages/docs/todos/quotabar-macos-ci-lane.md."
+      "reason": "The Swift build/test/coverage suite requires macOS and has no Buildkite lane today - the homelab macOS agent (packages/homelab/mac-ci/) is dormant, so verify:macos is a local-only developer/release gate, not a CI gate. Linux CI runs only the portable lint:swift (SwiftLint) task. Tracked in packages/docs/todos/mac-mini-buildkite-agent.md."
     },
     {
       "package": "sjer.red",

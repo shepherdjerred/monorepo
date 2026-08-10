@@ -368,7 +368,7 @@ Local and CI verification deliberately have different scopes:
    `lint:swift` (SwiftLint) runs in CI. The homelab's macOS Buildkite agent
    (`packages/homelab/mac-ci/`) is dormant, so `bun run verify:macos` stays a
    local-only developer/release gate until that capacity is reactivated; see
-   `packages/docs/todos/quotabar-macos-ci-lane.md`.
+   `packages/docs/todos/mac-mini-buildkite-agent.md`.
 
 Run `bun run verify` locally only when explicitly reproducing CI or modifying
 the verification machinery itself. There is no `pre-push` hook.
