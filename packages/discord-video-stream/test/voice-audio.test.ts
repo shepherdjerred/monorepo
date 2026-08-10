@@ -55,8 +55,43 @@ describe("voice RTP parsing", () => {
     expect(parsed).toEqual({ ssrc: 99, payload: new Uint8Array([8, 9]) });
   });
 
-  test("rejects malformed packets", () => {
+  test("rejects short packets before reading the RTP header", () => {
     expect(() => parseRtpPacket(new Uint8Array([0x80]))).toThrow("Invalid RTP packet");
+  });
+
+  test("rejects invalid RTP header boundaries", () => {
+    const wrongVersion = new Uint8Array(12);
+    expect(() => parseRtpPacket(wrongVersion)).toThrow("Invalid RTP packet");
+
+    const truncatedCsrcList = new Uint8Array(12);
+    truncatedCsrcList[0] = 0x81;
+    expect(() => parseRtpPacket(truncatedCsrcList)).toThrow("Invalid RTP CSRC list");
+
+    const truncatedExtensionHeader = new Uint8Array(12);
+    truncatedExtensionHeader[0] = 0x90;
+    expect(() => parseRtpPacket(truncatedExtensionHeader)).toThrow(
+      "Invalid RTP extension header",
+    );
+
+    const truncatedExtensionPayload = new Uint8Array(16);
+    truncatedExtensionPayload[0] = 0x90;
+    new DataView(truncatedExtensionPayload.buffer).setUint16(14, 1);
+    expect(() => parseRtpPacket(truncatedExtensionPayload)).toThrow(
+      "Invalid RTP payload offset",
+    );
+  });
+
+  test("rejects invalid RTP padding boundaries", () => {
+    const missingPaddingLength = new Uint8Array(12);
+    missingPaddingLength[0] = 0xa0;
+    expect(() => parseRtpPacket(missingPaddingLength)).toThrow("Invalid RTP padding");
+
+    const excessivePadding = new Uint8Array(12);
+    excessivePadding[0] = 0xa0;
+    excessivePadding[11] = 13;
+    expect(() => parseRtpPacket(excessivePadding)).toThrow(
+      "Invalid RTP payload length",
+    );
   });
 });
 

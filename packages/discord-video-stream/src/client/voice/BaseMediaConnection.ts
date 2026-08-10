@@ -16,6 +16,9 @@ import type {
 } from "./VoiceMessageTypes.js";
 import type { Streamer } from "../Streamer.js";
 
+// Davey's ambient const enum cannot be referenced by consumers using verbatimModuleSyntax.
+const DAVE_MEDIA_TYPE_AUDIO = 0;
+
 type VoiceConnectionStatus = {
   hasSession: boolean;
   hasToken: boolean;
@@ -597,7 +600,7 @@ a=ice-lite
               decrypt: (payload: Uint8Array) =>
                 daveSession.decrypt(
                   userId,
-                  Davey.MediaType.AUDIO,
+                  DAVE_MEDIA_TYPE_AUDIO,
                   Buffer.from(payload),
                 ),
             }),
@@ -789,15 +792,20 @@ export function parseRtpPacket(packet: Uint8Array): {
   ssrc: number;
   payload: Uint8Array;
 } {
-  if (packet.byteLength < 12 || (packet[0] & 0xc0) !== 0x80) {
+  const firstByte = packet[0];
+  if (
+    packet.byteLength < 12 ||
+    firstByte === undefined ||
+    (firstByte & 0xc0) !== 0x80
+  ) {
     throw new Error("Invalid RTP packet");
   }
   const view = new DataView(packet.buffer, packet.byteOffset, packet.byteLength);
-  const csrcCount = packet[0] & 0x0f;
+  const csrcCount = firstByte & 0x0f;
   let payloadOffset = 12 + csrcCount * 4;
   if (payloadOffset > packet.byteLength) throw new Error("Invalid RTP CSRC list");
 
-  const hasExtension = (packet[0] & 0x10) !== 0;
+  const hasExtension = (firstByte & 0x10) !== 0;
   if (hasExtension) {
     if (payloadOffset + 4 > packet.byteLength) {
       throw new Error("Invalid RTP extension header");
@@ -808,7 +816,7 @@ export function parseRtpPacket(packet: Uint8Array): {
   if (payloadOffset > packet.byteLength) throw new Error("Invalid RTP payload offset");
 
   let payloadEnd = packet.byteLength;
-  const hasPadding = (packet[0] & 0x20) !== 0;
+  const hasPadding = (firstByte & 0x20) !== 0;
   if (hasPadding) {
     const paddingLength = packet[packet.byteLength - 1];
     if (paddingLength === undefined || paddingLength === 0) {
