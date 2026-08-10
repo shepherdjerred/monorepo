@@ -75,6 +75,18 @@ struct SectionDetailView: View {
             savedViewScreen(store, id: id)
         case .board:
             KanbanBoardView(store: store)
+        case .task(let id):
+            // Browse, for the same reason an entity screen is Browse: it is the
+            // one list that shows *every* task, finished ones included. A link
+            // to a task somebody completed last week has to find it.
+            //
+            // A task that is not in the vault at all selects nothing, and the
+            // inspector says there is no selection. That is the honest reading
+            // — this layer cannot tell a deleted task from one that never
+            // existed — and it is the same division of labour as a link to a
+            // deleted saved view, which the screen explains rather than the
+            // router pre-validating.
+            TaskListView(section: .browse, store: store, reveal: id)
         }
     }
 

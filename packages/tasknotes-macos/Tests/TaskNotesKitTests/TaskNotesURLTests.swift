@@ -86,6 +86,56 @@ struct TaskNotesURLTests {
         #expect(TaskNotesURL(link.url) == link)
     }
 
+    /// The route a link inside a note carries. A task id is a vault-relative
+    /// path, so the separator inside it is percent-encoded and the link is one
+    /// component — which is also what React Navigation's `task/:taskId` matches.
+    @Test(
+        "task links round-trip, whatever the id contains",
+        arguments: [
+            "Tasks/plan.md",
+            "Areas/Work/Reply to the landlord.md",
+            "plan.md",
+            "tmp-1-1",
+        ]
+    )
+    func taskRoundTrip(id: String) throws {
+        let link = TaskNotesURL.task(id: id)
+        #expect(TaskNotesURL(link.url) == link)
+        #expect(TaskNotesURL(link.url)?.destination == .task(id: id))
+    }
+
+    /// The exact spelling the phone publishes, parsed as one id rather than as
+    /// two path components.
+    @Test("an existing cross-platform task link opens that task")
+    func taskLinkFromTheOtherClient() throws {
+        let url = try #require(URL(string: "tasknotes://task/Tasks%2Fplan.md"))
+        #expect(TaskNotesURL(url)?.destination == .task(id: "Tasks/plan.md"))
+    }
+
+    /// ⚠️ The id is the **core's** parse, not a non-empty check.
+    ///
+    /// Anything on the machine can send this URL, and the id is joined onto the
+    /// vault root downstream by code that does not re-check — so `..`, a
+    /// leading slash and a backslash have to be refused here, at the only place
+    /// that sees the link.
+    @Test(
+        "a task link carrying something that is not a task id is rejected",
+        arguments: [
+            "tasknotes://task",  // no id at all
+            "tasknotes://task/",  // an empty id
+            "tasknotes://task/Tasks/plan.md",  // two components is not one id
+            "tasknotes://task/..%2Fsecrets.md",  // escapes the vault
+            "tasknotes://task/%2FTasks%2Fplan.md",  // not vault-relative
+            "tasknotes://task/Tasks%5Cplan.md",  // a backslash is a separator elsewhere
+            "tasknotes://task/plan",  // not a markdown note
+            "tasknotes://task/tmp-",  // a bare temp prefix
+        ]
+    )
+    func rejectsMalformedTaskLinks(raw: String) throws {
+        let url = try #require(URL(string: raw))
+        #expect(TaskNotesURL(url) == nil)
+    }
+
     @Test("the board and a saved view round-trip")
     func boardAndSavedViewRoundTrip() throws {
         #expect(TaskNotesURL(TaskNotesURL.board.url) == .board)
@@ -146,6 +196,7 @@ struct TaskNotesURLTests {
         var destinations: [TaskNotesDestination] = SidebarSection.allCases.map { .section($0) }
         destinations.append(.board)
         destinations.append(.savedView(id: "job-search"))
+        destinations.append(.task(id: "Tasks/plan.md"))
         for kind in TaskEntity.Kind.allCases {
             destinations.append(.entity(try #require(TaskEntity(kind: kind, name: "work"))))
         }

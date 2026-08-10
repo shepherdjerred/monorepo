@@ -1,3 +1,5 @@
+public import TaskNotesUniFFI
+
 // `URL` is public because it is this type's whole surface; `CharacterSet`
 // follows it, because Swift requires every import of a module within one file
 // to agree on its access level.
@@ -17,11 +19,17 @@ public import struct Foundation.URL
 /// ## One vocabulary, shared with the React Native app
 ///
 /// The routes are `linking.ts`'s: `today`, `inbox`, `upcoming`, `browse`,
-/// `kanban`, `project/:name`, `context/:name`, `tag/:name`, `view/:id`. Keeping
-/// them identical is what lets one bookmark, one Shortcuts action or one note
-/// link work on the phone and on the Mac, and it is the reason the entity
-/// routes are ported even though this app can also reach those screens from a
-/// sidebar the phone does not have.
+/// `kanban`, `task/:taskId`, `project/:name`, `context/:name`, `tag/:name`,
+/// `view/:id`. Keeping them identical is what lets one bookmark, one Shortcuts
+/// action or one note link work on the phone and on the Mac, and it is the
+/// reason the entity routes are ported even though this app can also reach
+/// those screens from a sidebar the phone does not have.
+///
+/// `task/:taskId` is the route that most needs porting rather than the least:
+/// a link into a note is how a task gets referred to from outside the app, and
+/// the phone has published that spelling for as long as it has had deep links.
+/// It resolves to a screen rather than to a pushed detail view — see
+/// ``TaskNotesDestination/task(id:)``.
 public struct TaskNotesURL: Equatable, Hashable, Sendable {
     /// The URL scheme this app claims. Must match `CFBundleURLSchemes`.
     public static let scheme = "tasknotes"
@@ -52,6 +60,11 @@ public struct TaskNotesURL: Equatable, Hashable, Sendable {
         TaskNotesURL(.savedView(id: id))
     }
 
+    /// `tasknotes://task/Tasks%2Fplan.md`.
+    public static func task(id: TaskId) -> TaskNotesURL {
+        TaskNotesURL(.task(id: id))
+    }
+
     /// `tasknotes://kanban`.
     public static let board = TaskNotesURL(.board)
 
@@ -72,35 +85,47 @@ public struct TaskNotesURL: Equatable, Hashable, Sendable {
         // `URL.host()` is nil for `tasknotes:///today`-style URLs and for
         // opaque ones; both are malformed for this scheme.
         guard let host = url.host()?.lowercased() else { return nil }
+        guard
+            let resolved = Self.destination(host: host, component: Self.singleComponent(of: url))
+        else { return nil }
+        self.init(resolved)
+    }
 
-        let name = Self.singleComponent(of: url)
+    /// Where a `host` plus its one optional path component goes.
+    ///
+    /// Split in two on whether the link carries an argument, which is a real
+    /// distinction rather than a way of shortening a function: a host that
+    /// takes no argument and is handed one is a link somebody built wrong, and
+    /// answering it by ignoring the tail is the silent-fallback pattern this
+    /// file exists to avoid. `tasknotes://today/anything` therefore resolves to
+    /// nothing rather than to Today.
+    private static func destination(host: String, component: String?) -> TaskNotesDestination? {
+        guard let component else { return unargumented(host: host) }
+        guard !component.isEmpty else { return nil }
+        return named(host: host, name: component)
+    }
 
-        if let section = SidebarSection(urlHost: host) {
-            // A section takes no argument. `tasknotes://today/anything` is a
-            // link somebody built wrong, and answering it by ignoring the tail
-            // is the silent-fallback pattern this file exists to avoid.
-            guard name == nil else { return nil }
-            self.init(.section(section))
-            return
-        }
+    /// The hosts that are a whole link by themselves.
+    private static func unargumented(host: String) -> TaskNotesDestination? {
+        if let section = SidebarSection(urlHost: host) { return .section(section) }
+        if host == boardHost { return .board }
+        return nil
+    }
 
-        if host == Self.boardHost {
-            guard name == nil else { return nil }
-            self.init(.board)
-            return
-        }
-
-        guard let name, !name.isEmpty else { return nil }
-
-        if host == Self.savedViewHost {
-            self.init(.savedView(id: name))
-            return
-        }
-
+    /// The hosts that name something, given a non-empty name.
+    private static func named(host: String, name: String) -> TaskNotesDestination? {
+        if host == savedViewHost { return .savedView(id: name) }
+        // The **core** decides what a task id is, in full: a vault-relative
+        // markdown path or a `tmp-…` id, with `..`, a leading slash and a
+        // backslash rejected. Anything on the machine can send this URL and the
+        // id is joined onto the vault root downstream by code that does not
+        // re-check, so a host-side "is it non-empty" test would be a second,
+        // weaker rule sitting beside the real one.
+        if host == taskHost { return parsedTaskId(name).map { .task(id: $0) } }
         guard let kind = TaskEntity.Kind(rawValue: host),
             let entity = TaskEntity(kind: kind, name: name)
         else { return nil }
-        self.init(.entity(entity))
+        return .entity(entity)
     }
 
     /// The canonical URL for this destination.
@@ -113,6 +138,7 @@ public struct TaskNotesURL: Equatable, Hashable, Sendable {
         case .section(let section): Self.build(host: section.urlHost, name: nil)
         case .board: Self.build(host: Self.boardHost, name: nil)
         case .savedView(let id): Self.build(host: Self.savedViewHost, name: id)
+        case .task(let id): Self.build(host: Self.taskHost, name: id)
         case .entity(let entity):
             Self.build(host: entity.kind.rawValue, name: entity.storedValue)
         }
@@ -126,6 +152,24 @@ public struct TaskNotesURL: Equatable, Hashable, Sendable {
     private static let boardHost = "kanban"
 
     private static let savedViewHost = "view"
+
+    /// `task`, matching the React Native `task/:taskId` route.
+    private static let taskHost = "task"
+
+    /// A task id the core accepts, or `nil`.
+    ///
+    /// The `nil` is not a swallowed error. This initializer's whole contract is
+    /// that an unrecognized link produces no value — a malformed id arriving
+    /// from another app is bad *input*, not a fault worth surfacing — and the
+    /// caller already ignores a `nil`. `Result` rather than `try?`, which is
+    /// banned here precisely because it hides which failure occurred; the
+    /// failure is inspected and deliberately not kept.
+    private static func parsedTaskId(_ raw: String) -> TaskId? {
+        switch Result(catching: { try taskIdParse(raw: raw) }) {
+        case .success(let id): id
+        case .failure: nil
+        }
+    }
 
     /// The one path component a link carries, or `nil` when it carries none.
     ///

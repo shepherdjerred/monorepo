@@ -11582,6 +11582,31 @@ public func taskFromJson(json: String)throws  -> Task  {
 })
 }
 /**
+ * Parse a task id: a vault-relative markdown path, or a `tmp-…` id minted for
+ * a create that has not reached the server yet.
+ *
+ * Exported for the shapes that arrive from *outside* the app — a
+ * `tasknotes://task/…` deep link is the one that exists, and anything on the
+ * machine can send one. `TaskId` crosses this boundary as a plain string, so a
+ * host that only checked the value on its own side would be inventing a second
+ * rule beside this one; the rule that matters includes rejecting `..` and a
+ * backslash, and the vault root is joined onto this id downstream by code that
+ * does not re-check.
+ *
+ * # Errors
+ *
+ * Returns [`CoreError::Invariant`] when `raw` is empty, is a bare temp prefix,
+ * is not vault-relative, escapes the vault root, or does not name a markdown
+ * file.
+ */
+public func taskIdParse(raw: String)throws  -> TaskId  {
+    return try  FfiConverterTypeTaskId_lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+    uniffi_tasknotes_core_ffi_fn_func_task_id_parse(
+        FfiConverterString.lower(raw),$0
+    )
+})
+}
+/**
  * Whether one task matches a free-text query.
  *
  * The same predicate [`FilterConfig::query`] runs, exported on its own for a
@@ -12535,6 +12560,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_tasknotes_core_ffi_checksum_func_task_from_json() != 45575) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_func_task_id_parse() != 33590) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_tasknotes_core_ffi_checksum_func_task_search_matches() != 25107) {

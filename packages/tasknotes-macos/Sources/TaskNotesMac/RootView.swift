@@ -90,7 +90,15 @@ public struct RootView: View {
         // so an unhandled link is rejected there rather than being routed to
         // some arbitrary default.
         .onOpenURL { url in
-            navigation.open(url)
+            guard navigation.open(url) else { return }
+            // A link to a task is a link to the panel that shows it, so a
+            // closed inspector is opened — never toggled, and never closed by
+            // a link to anything else. `⌥⌘I` is how the user closes it, and a
+            // deep link that could do so would be a link that sometimes hid
+            // the thing it was asked to show.
+            if case .task = navigation.selection {
+                isInspectorPresented = true
+            }
         }
         // What the View menu's Go To picker binds to. The menu bar is one thing
         // and there are many windows, so the command reads the frontmost

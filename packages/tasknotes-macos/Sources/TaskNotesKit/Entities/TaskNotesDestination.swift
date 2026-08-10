@@ -1,3 +1,5 @@
+public import TaskNotesUniFFI
+
 /// Everything the detail pane can be showing.
 ///
 /// ``SidebarSection`` was the whole of navigation while there were four
@@ -25,6 +27,23 @@ public enum TaskNotesDestination: Sendable, Equatable, Hashable, Codable {
     /// The Kanban board.
     case board
 
+    /// One task, revealed.
+    ///
+    /// The phone has a `TaskDetail` *screen* and this app deliberately does
+    /// not — a task's fields live in the inspector, because selecting a row is
+    /// not navigation. So the destination `tasknotes://task/…` resolves to is
+    /// Browse, the one list that shows every task including finished ones, with
+    /// that task selected; the selection publishes an `InspectorSubject` and
+    /// the panel fills in. That is the same screen the user would have reached
+    /// by finding the row themselves, which is what makes a link from a note
+    /// and a click equivalent.
+    ///
+    /// The id travels rather than the task, exactly as ``savedView(id:)``
+    /// carries an id: the store is the only thing that knows whether a task
+    /// still exists, and a link that pre-validated would need a second copy of
+    /// that knowledge in the router.
+    case task(id: TaskId)
+
     /// Where a fresh window starts.
     public static let `default` = TaskNotesDestination.section(.today)
 
@@ -42,6 +61,7 @@ public enum TaskNotesDestination: Sendable, Equatable, Hashable, Codable {
         case .entity(let entity): entity.scope.identity
         case .savedView(let id): "view.\(id)"
         case .board: "board"
+        case .task(let id): "task.\(id)"
         }
     }
 
@@ -52,7 +72,7 @@ public enum TaskNotesDestination: Sendable, Equatable, Hashable, Codable {
     public var section: SidebarSection? {
         switch self {
         case .section(let section): section
-        case .entity, .savedView, .board: nil
+        case .entity, .savedView, .board, .task: nil
         }
     }
 }

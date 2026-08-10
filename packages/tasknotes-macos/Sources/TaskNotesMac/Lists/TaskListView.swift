@@ -66,7 +66,7 @@ struct TaskListView: View {
     /// What the user has typed, filtered to, and ordered by.
     @State private var query: TaskListQuery
 
-    @State private var selection: Set<TaskId> = []
+    @State private var selection: Set<TaskId>
     @State private var composeText = ""
     @State private var isComposing = false
     @State private var isRefreshing = false
@@ -96,17 +96,27 @@ struct TaskListView: View {
     ///     the only one that cannot be reached by seeding data.
     ///   - scope: a narrowing above everything else — a project, context, tag
     ///     or saved view — or `nil` for the unscoped screen.
+    ///   - reveal: a task to open the screen with already selected, which is
+    ///     what a `tasknotes://task/…` link resolves to. Seeded into the
+    ///     selection rather than applied afterwards, because the selection is
+    ///     what publishes the `InspectorSubject` — a later assignment would
+    ///     show the list for one frame with the panel still empty. The caller's
+    ///     `.id(destination.identity)` carries the task, so a second link
+    ///     rebuilds this view and re-seeds rather than being ignored as
+    ///     unchanged state.
     init(
         section: SidebarSection,
         store: TaskNotesStore,
         query: TaskListQuery? = nil,
-        scope: TaskListScope? = nil
+        scope: TaskListScope? = nil,
+        reveal: TaskId? = nil
     ) {
         self.section = section
         self.store = store
         self.scope = scope
         _calendar = State(initialValue: store.viewerCalendar())
         _query = State(initialValue: query ?? TaskListQuery(section: section))
+        _selection = State(initialValue: reveal.map { [$0] } ?? [])
     }
 
     var body: some View {

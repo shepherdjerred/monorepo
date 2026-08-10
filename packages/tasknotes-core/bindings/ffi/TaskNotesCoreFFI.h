@@ -982,6 +982,11 @@ int8_t uniffi_tasknotes_core_ffi_fn_func_task_filter_matches(RustBuffer task, Ru
 RustBuffer uniffi_tasknotes_core_ffi_fn_func_task_from_json(RustBuffer json, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_TASK_ID_PARSE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_TASK_ID_PARSE
+RustBuffer uniffi_tasknotes_core_ffi_fn_func_task_id_parse(RustBuffer raw, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_TASK_SEARCH_MATCHES
 #define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_TASK_SEARCH_MATCHES
 int8_t uniffi_tasknotes_core_ffi_fn_func_task_search_matches(RustBuffer task, RustBuffer query, RustCallStatus *_Nonnull out_status
@@ -1614,6 +1619,12 @@ uint16_t uniffi_tasknotes_core_ffi_checksum_func_task_filter_matches(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_TASK_FROM_JSON
 #define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_TASK_FROM_JSON
 uint16_t uniffi_tasknotes_core_ffi_checksum_func_task_from_json(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_TASK_ID_PARSE
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_TASK_ID_PARSE
+uint16_t uniffi_tasknotes_core_ffi_checksum_func_task_id_parse(void
     
 );
 #endif

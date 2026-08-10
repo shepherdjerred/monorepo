@@ -121,6 +121,29 @@ pub fn priority_rank(priority: Priority) -> u8 {
     priority.rank()
 }
 
+// ── Task identity ──────────────────────────────────────────────────────────
+
+/// Parse a task id: a vault-relative markdown path, or a `tmp-…` id minted for
+/// a create that has not reached the server yet.
+///
+/// Exported for the shapes that arrive from *outside* the app — a
+/// `tasknotes://task/…` deep link is the one that exists, and anything on the
+/// machine can send one. `TaskId` crosses this boundary as a plain string, so a
+/// host that only checked the value on its own side would be inventing a second
+/// rule beside this one; the rule that matters includes rejecting `..` and a
+/// backslash, and the vault root is joined onto this id downstream by code that
+/// does not re-check.
+///
+/// # Errors
+///
+/// Returns [`CoreError::Invariant`] when `raw` is empty, is a bare temp prefix,
+/// is not vault-relative, escapes the vault root, or does not name a markdown
+/// file.
+#[uniffi::export]
+pub fn task_id_parse(raw: &str) -> Result<domain::TaskId, CoreError> {
+    domain::TaskId::parse(raw).map_err(CoreError::from)
+}
+
 // ── Projects ───────────────────────────────────────────────────────────────
 
 /// The canonical vault path inside a project value (`"[[A/B|C]]"` → `"A/B"`).
@@ -465,10 +488,10 @@ mod tests {
         priority_wire_value, project_display_name, project_matches, project_path,
         sort_config_from_json, sort_config_to_json, task_filter_active_count, task_filter_apply,
         task_filter_chain_apply, task_filter_chain_is_active, task_filter_chain_matches,
-        task_filter_is_active, task_filter_matches, task_from_json, task_search_matches,
-        task_sort_apply, task_status_all, task_status_is_active, task_status_label,
-        task_status_next, task_status_parse, task_status_wire_value, task_to_json,
-        update_task_request_from_json, update_task_request_to_json,
+        task_filter_is_active, task_filter_matches, task_from_json, task_id_parse,
+        task_search_matches, task_sort_apply, task_status_all, task_status_is_active,
+        task_status_label, task_status_next, task_status_parse, task_status_wire_value,
+        task_to_json, update_task_request_from_json, update_task_request_to_json,
     };
     use crate::error::CoreError;
 
@@ -528,6 +551,32 @@ mod tests {
         assert_eq!(project_path("[[Areas/Work|Work]]"), "Areas/Work");
         assert_eq!(project_display_name("[[A/B]]"), "B");
         assert!(project_matches("[[Areas/Work|Work]]", "work"));
+    }
+
+    /// A deep link is the one place a task id arrives from outside the app, so
+    /// the boundary has to answer the whole rule — including the two shapes a
+    /// host-side "is it non-empty" check would wave through.
+    #[test]
+    fn task_ids_are_parsed_at_the_boundary_rather_than_on_the_host() {
+        assert_eq!(
+            task_id_parse("Tasks/plan.md").unwrap().into_string(),
+            "Tasks/plan.md"
+        );
+        assert_eq!(task_id_parse("tmp-1-1").unwrap().into_string(), "tmp-1-1");
+
+        for raw in [
+            "",
+            "/Tasks/plan.md",
+            "../secrets.md",
+            "Tasks\\plan.md",
+            "plan",
+        ] {
+            let error = task_id_parse(raw).unwrap_err();
+            assert!(
+                matches!(error, CoreError::Invariant { .. }),
+                "unexpected error for {raw:?}: {error:?}"
+            );
+        }
     }
 
     #[test]

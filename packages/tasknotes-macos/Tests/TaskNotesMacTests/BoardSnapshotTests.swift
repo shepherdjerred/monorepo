@@ -178,6 +178,24 @@ struct BoardSnapshotTests {
         )
     }
 
+    /// What a `tasknotes://task/…` link opens.
+    ///
+    /// The screen is Browse — this app has no task *screen*, because a task's
+    /// fields belong to the inspector — with the linked row already selected,
+    /// which is what publishes the `InspectorSubject` the panel reads. Worth an
+    /// image because "the row came back selected" is exactly the kind of claim
+    /// a compiler cannot check and a headless test only checks in the abstract.
+    @Test("a deep-linked task opens already selected", arguments: SnapshotAppearance.allCases)
+    func deepLinkedTask(appearance: SnapshotAppearance) throws {
+        let seeded = try SnapshotFixtures.populated()
+        try record(
+            TaskListView(section: .browse, store: seeded.store, reveal: "Tasks/Stand-up.md"),
+            named: "deep-link-task",
+            size: Self.screenSize,
+            appearance: appearance
+        )
+    }
+
     @Test("a context screen", arguments: SnapshotAppearance.allCases)
     func contextScreen(appearance: SnapshotAppearance) throws {
         let seeded = try SnapshotFixtures.populated()
