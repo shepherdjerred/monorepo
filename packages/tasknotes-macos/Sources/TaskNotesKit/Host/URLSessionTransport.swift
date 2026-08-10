@@ -56,6 +56,21 @@ public import class Foundation.URLSessionTask
 /// thread *while* ``send(request:)`` is parked, which is the only moment it is
 /// useful: quitting or reconfiguring the server mid-request used to block a
 /// thread for the whole fifteen-second timeout.
+///
+/// ⚠️ **It closes the transport, rather than only cancelling what is running.**
+/// A snapshot-and-cancel alone leaves a gap the length of the whole race: the
+/// caller is `FfiSyncEngine.dispose()`, which abandons in-flight requests
+/// *before* it takes the engine lock precisely so a reconfiguration cannot
+/// block on a network timeout — but disposal overlaps a multi-request drain,
+/// and a drain that finished request *n* just before the snapshot registers
+/// request *n + 1* just after it. That request never appears in the snapshot,
+/// so it is never cancelled, and the synchronous main-actor `dispose()` then
+/// waits out its full timeout with every window frozen. The closed flag and the
+/// task list are read and written under one lock, so a request either joins the
+/// list in time to be cancelled or is refused outright — there is no third
+/// outcome. Closing is permanent, which costs nothing: the app's rule is
+/// already "reconfigure ⇒ replace", so a new server address or token means a
+/// new transport, a new `TaskNotesApi` and a new engine.
 public final class URLSessionTransport: HttpClient {
     /// The authorization header this transport adds to every request.
     ///
@@ -67,9 +82,20 @@ public final class URLSessionTransport: HttpClient {
     /// for the server address.
     public static let authorizationHeader = "Authorization"
 
+    /// What is running, and whether anything more is allowed to start.
+    ///
+    /// One value under one lock rather than two, because the invariant is a
+    /// relationship between them: "closed implies nothing will be added after
+    /// the last cancellation" is unstatable if a request can be registered
+    /// between reading the flag and appending to the list.
+    private struct Requests {
+        var isClosed = false
+        var running: [URLSessionTask] = []
+    }
+
     private let authToken: String?
     private let session: URLSession
-    private let inFlight = Mutex<[URLSessionTask]>([])
+    private let requests = Mutex(Requests())
 
     /// A transport that adds `authToken` as a bearer credential, if given.
     ///
@@ -118,11 +144,25 @@ public final class URLSessionTransport: HttpClient {
             }
             finished.signal()
         }
-        inFlight.withLock { $0.append(task) }
+        // Registering is what makes this request cancellable, so a transport
+        // that has already been closed must refuse here rather than resume a
+        // request nothing is holding. `.Other` deliberately, because that is
+        // also what an actually-cancelled request classifies as: the core's
+        // retry policy should not be able to tell the two apart.
+        let started = requests.withLock { requests in
+            guard !requests.isClosed else { return false }
+            requests.running.append(task)
+            return true
+        }
+        guard started else {
+            throw TransportError.Other(
+                message: "\(request.url) was not sent: the transport has been closed"
+            )
+        }
         task.resume()
         finished.wait()
-        inFlight.withLock { tasks in
-            tasks.removeAll { $0 === task }
+        requests.withLock { requests in
+            requests.running.removeAll { $0 === task }
         }
 
         guard let result = slot.withLock({ $0 }) else {
@@ -136,15 +176,20 @@ public final class URLSessionTransport: HttpClient {
         }
     }
 
-    /// Abandon every request currently in flight.
+    /// Close the transport and abandon every request currently in flight.
     ///
-    /// A no-op when nothing is running. Each abandoned request wakes its parked
-    /// thread with `URLError.cancelled`, which reaches the core as an ordinary
-    /// `TransportError`.
+    /// Each abandoned request wakes its parked thread with `URLError.cancelled`,
+    /// which reaches the core as an ordinary `TransportError`. Every *later*
+    /// request is refused before it starts, which is what bounds
+    /// `FfiSyncEngine.dispose()` to the requests it can see rather than to
+    /// whatever a concurrent drain registers next — see the type's note.
+    ///
+    /// Idempotent, and a no-op on a transport that never sent anything.
     public func cancelAll() {
-        let running = inFlight.withLock { tasks in
-            let snapshot = tasks
-            tasks.removeAll()
+        let running = requests.withLock { requests in
+            requests.isClosed = true
+            let snapshot = requests.running
+            requests.running.removeAll()
             return snapshot
         }
         for task in running {

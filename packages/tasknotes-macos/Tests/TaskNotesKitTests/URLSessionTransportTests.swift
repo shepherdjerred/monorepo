@@ -82,6 +82,49 @@ struct URLSessionTransportTests {
         #expect(request.timeoutInterval == 2.5)
     }
 
+    /// ⚠️ **The disposal race, as its one observable consequence.**
+    ///
+    /// `FfiSyncEngine.dispose()` abandons in-flight requests *before* it takes
+    /// the engine lock, and that ordering is the only thing bounding a
+    /// synchronous main-actor disposal. A snapshot-and-cancel alone does not
+    /// bound it: a drain that finished one request just before the snapshot
+    /// registers its next one just after, and that request is never cancelled —
+    /// so `dispose()` waits out a full network timeout with every window
+    /// frozen. Closing is what removes the gap, and this is the property that
+    /// says so: once closed, a request is refused rather than resumed, whatever
+    /// its timeout says.
+    @Test("a request registered after disposal is refused, not left to time out")
+    func aRequestAfterCancellationIsRefused() async throws {
+        let transport = URLSessionTransport()
+        transport.cancelAll()
+        // Idempotent: disposal and a shutdown can both reach this.
+        transport.cancelAll()
+
+        let patient = HttpRequest(
+            method: .get,
+            url: "http://127.0.0.1:9/api/tasks",
+            headers: [],
+            body: nil,
+            timeoutMillis: 30_000
+        )
+        let started = ContinuousClock.now
+        let thrown = try await offMainThread {
+            #expect(throws: TransportError.self) {
+                _ = try transport.send(request: patient)
+            }
+        }
+        let elapsed = ContinuousClock.now - started
+
+        guard case .Other(let message) = try #require(thrown) else {
+            Issue.record("expected an Other, got \(String(describing: thrown))")
+            return
+        }
+        #expect(message.contains("closed"))
+        // The freeze this closes is a caller waiting out the request's own
+        // timeout, so "refused" is only the fix if it is also immediate.
+        #expect(elapsed < .seconds(1), "the refusal took \(elapsed)")
+    }
+
     // ── Plumbing ───────────────────────────────────────────────────────────
 
     private static let url = URL(string: "http://127.0.0.1:8080/api/v2/tasks")!
