@@ -223,6 +223,27 @@ final class ModelTests: XCTestCase {
     XCTAssertEqual(fetchCount, 1)
   }
 
+  func testCredentialChangeSchedulesAttemptAfterActiveRefresh() async {
+    let provider = FakeProvider(
+      id: .codex,
+      results: [
+        .success(snapshot(provider: .codex, remaining: 70)),
+        .success(snapshot(provider: .codex, remaining: 80)),
+      ],
+      delay: .milliseconds(80)
+    )
+    let model = makeModel(providers: [provider])
+    let activeRefresh = Task { await model.refresh() }
+    await waitUntil { await provider.fetchCount == 1 }
+
+    await model.refreshAfterCredentialChange(for: .codex)
+    await activeRefresh.value
+
+    let fetchCount = await provider.fetchCount
+    XCTAssertEqual(fetchCount, 2)
+    XCTAssertEqual(model.overallStatus, .healthy)
+  }
+
   private func makeModel(
     providers: [any UsageProvider],
     store: MemorySnapshotStore = MemorySnapshotStore(),

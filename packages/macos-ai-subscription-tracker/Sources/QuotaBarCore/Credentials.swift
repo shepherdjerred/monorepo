@@ -203,24 +203,36 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
   }
 
   private func readOpenCode(provider: ProviderID) throws -> ProviderCredential? {
+    var expiredCredential: ProviderCredential?
     for path in openCodeAuthPaths where fileManager.fileExists(atPath: path.path) {
-      guard
-        let value = try decodeFile(OpenCodeAuthFile.self, at: path, provider: provider)?.credential(
-          for: provider)
-      else { continue }
-      return try makeCredential(value, source: path.path)
+      guard let file = try decodeFile(OpenCodeAuthFile.self, at: path, provider: provider) else {
+        continue
+      }
+      for value in file.credentials(for: provider) {
+        let credential = try makeCredential(value, source: path.path)
+        do {
+          return try credential.requireCurrent(for: provider)
+        } catch QuotaError.credentialsExpired {
+          expiredCredential = credential
+        }
+      }
     }
     guard
       let database = openCodeDatabasePaths.first(where: { fileManager.fileExists(atPath: $0.path) })
-    else { return nil }
+    else { return expiredCredential }
     let rows = try readOpenCodeRows(database: database)
     let labels = OpenCodeAuthFile.labels(for: provider)
     for row in rows where labels.contains(row.label.lowercased()) {
       let value = try decode(
         OpenCodeOAuthCredential.self, from: Data(row.value.utf8), provider: provider)
-      return try makeCredential(value.value, source: database.path)
+      let credential = try makeCredential(value.value, source: database.path)
+      do {
+        return try credential.requireCurrent(for: provider)
+      } catch QuotaError.credentialsExpired {
+        expiredCredential = credential
+      }
     }
-    return nil
+    return expiredCredential
   }
 
   private var openCodeAuthPaths: [URL] {
@@ -447,11 +459,11 @@ private struct OpenCodeAuthFile: Decodable {
     case grok
   }
 
-  func credential(for provider: ProviderID) -> TokenValue? {
+  func credentials(for provider: ProviderID) -> [TokenValue] {
     switch provider {
-    case .kimi: (kimiForCodingOAuth ?? kimi)?.value
-    case .grok: (xai ?? grok)?.value
-    case .claudeCode, .codex: nil
+    case .kimi: [kimiForCodingOAuth, kimi].compactMap { $0?.value }
+    case .grok: [xai, grok].compactMap { $0?.value }
+    case .claudeCode, .codex: []
     }
   }
 

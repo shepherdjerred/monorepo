@@ -118,6 +118,10 @@ public final class QuotaBarModel {
     clearRefresh(id: refreshID)
   }
 
+  public func refreshAfterCredentialChange(for provider: ProviderID) async {
+    await refreshEnsuringNewAttempt(for: provider)
+  }
+
   private func performRefresh() async {
     isRefreshing = true
     defer { isRefreshing = false }
@@ -157,15 +161,19 @@ public final class QuotaBarModel {
   }
 
   private func refreshAfterEnabling(_ provider: ProviderID) {
-    let previousAttemptCount = providerRefreshAttempts[provider, default: 0]
     Task { [weak self] in
       guard let self else { return }
-      await refresh()
-      guard settings.enabledProviders.contains(provider),
-        providerRefreshAttempts[provider, default: 0] == previousAttemptCount
-      else { return }
-      await refresh()
+      await refreshEnsuringNewAttempt(for: provider)
     }
+  }
+
+  private func refreshEnsuringNewAttempt(for provider: ProviderID) async {
+    let previousAttemptCount = providerRefreshAttempts[provider, default: 0]
+    await refresh()
+    guard settings.enabledProviders.contains(provider),
+      providerRefreshAttempts[provider, default: 0] == previousAttemptCount
+    else { return }
+    await refresh()
   }
 
   private func apply(_ result: ProviderFetchResult) -> Bool {

@@ -164,6 +164,24 @@ final class CredentialTests: XCTestCase {
     }
   }
 
+  func testExpiredOpenCodeCandidateDoesNotMaskLaterCurrentCredential() throws {
+    let root = try temporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: root) }
+    try write(
+      #"{"xai":{"access":"expired-first-token","expires":1}}"#,
+      to: root.appendingPathComponent(".local/share/opencode/auth.json")
+    )
+    try write(
+      #"{"grok":{"access":"current-later-token","expires":9999999999999}}"#,
+      to: root.appendingPathComponent(".config/opencode/auth.json")
+    )
+    let store = LocalCredentialStore(homeDirectory: root, claudeKeychain: FakeKeychain())
+
+    let credential = try store.credential(for: .grok, reload: true)
+
+    XCTAssertEqual(credential.accessToken, "current-later-token")
+  }
+
   func testMalformedStoreFailsWithoutSearchingArbitraryFields() throws {
     let root = try temporaryDirectory()
     defer { try? FileManager.default.removeItem(at: root) }
