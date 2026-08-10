@@ -372,11 +372,7 @@ struct ProviderLogo: View {
   }
 
   private var resourceBundle: Bundle {
-    #if SWIFT_PACKAGE
-      Bundle.module
-    #else
-      Bundle.main
-    #endif
+    PackagedResources.bundle
   }
 }
 

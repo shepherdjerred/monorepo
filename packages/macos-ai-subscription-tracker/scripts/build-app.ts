@@ -40,13 +40,10 @@ await cp(
   join(contents, "Info.plist"),
 );
 await cp(join(binPath, "QuotaBar"), join(macOS, "QuotaBar"));
-await cp(
-  join(binPath, "QuotaBar_QuotaBar.bundle"),
-  join(resources, "QuotaBar_QuotaBar.bundle"),
-  {
-    recursive: true,
-  },
-);
+const packagedResourceBundle = join(resources, "QuotaBar_QuotaBar.bundle");
+await cp(join(binPath, "QuotaBar_QuotaBar.bundle"), packagedResourceBundle, {
+  recursive: true,
+});
 
 const temporaryDirectory = await mkdtemp(join(tmpdir(), "quotabar-icon-"));
 try {

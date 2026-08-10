@@ -76,7 +76,7 @@ public actor ManualCredentialStore: CredentialStore {
     guard let token = String(data: data, encoding: .utf8) else {
       throw QuotaError.keychain(status: errSecDecode)
     }
-    return try ProviderCredential(accessToken: token, source: "QuotaBar Keychain")
+    return try ProviderCredential(accessToken: token, source: "Brim Keychain")
   }
 
   public func credentialIfPresent(for provider: ProviderID) throws -> ProviderCredential? {
@@ -86,11 +86,11 @@ public actor ManualCredentialStore: CredentialStore {
     guard let token = String(data: data, encoding: .utf8) else {
       throw QuotaError.keychain(status: errSecDecode)
     }
-    return try ProviderCredential(accessToken: token, source: "QuotaBar Keychain")
+    return try ProviderCredential(accessToken: token, source: "Brim Keychain")
   }
 
   public func save(_ token: String, for provider: ProviderID) throws {
-    let credential = try ProviderCredential(accessToken: token, source: "QuotaBar Keychain")
+    let credential = try ProviderCredential(accessToken: token, source: "Brim Keychain")
     try keychain.write(
       Data(credential.accessToken.utf8),
       service: Self.service,
@@ -175,6 +175,7 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
     let root = kimiCodeHome ?? homeDirectory.appendingPathComponent(".kimi-code")
     let directory = root.appendingPathComponent("credentials")
     guard fileManager.fileExists(atPath: directory.path) else { return nil }
+    var expiredCredential: ProviderCredential?
     let files = try fileManager.contentsOfDirectory(
       at: directory,
       includingPropertiesForKeys: nil
@@ -182,10 +183,15 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
     for path in files {
       if let value = try decodeFile(KimiCredentialFile.self, at: path, provider: .kimi)?.credential
       {
-        return try makeCredential(value, source: path.path)
+        let credential = try makeCredential(value, source: path.path)
+        do {
+          return try credential.requireCurrent(for: .kimi)
+        } catch QuotaError.credentialsExpired {
+          expiredCredential = credential
+        }
       }
     }
-    return nil
+    return expiredCredential
   }
 
   private func readCurrentKimiCredential() throws -> ProviderCredential? {
@@ -474,7 +480,6 @@ private struct OpenCodeAuthFile: Decodable {
     }
   }
 }
-
 private struct OpenCodeOAuthCredential: Decodable {
   let access: String
   let expires: Double?
@@ -483,12 +488,10 @@ private struct OpenCodeOAuthCredential: Decodable {
     TokenValue(accessToken: access, expiresAt: normalizedDate(expires))
   }
 }
-
 private struct CredentialRow: Decodable {
   let label: String
   let value: String
 }
-
 private func normalizedDate(_ value: Double?) -> Date? {
   guard let value else { return nil }
   let seconds = value > 10_000_000_000 ? value / 1_000 : value

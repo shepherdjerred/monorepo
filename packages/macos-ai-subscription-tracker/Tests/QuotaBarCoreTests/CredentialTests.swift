@@ -110,6 +110,24 @@ final class CredentialTests: XCTestCase {
     XCTAssertEqual(credential.accessToken, "fresh-opencode-token")
   }
 
+  func testExpiredKimiFileDoesNotMaskLaterCurrentFile() throws {
+    let root = try temporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: root) }
+    try write(
+      #"{"access_token":"expired-first-token","expires_at":1}"#,
+      to: root.appendingPathComponent(".kimi-code/credentials/account-a.json")
+    )
+    try write(
+      #"{"access_token":"current-later-token","expires_at":9999999999999}"#,
+      to: root.appendingPathComponent(".kimi-code/credentials/account-b.json")
+    )
+    let store = LocalCredentialStore(homeDirectory: root, claudeKeychain: FakeKeychain())
+
+    let credential = try store.credential(for: .kimi, reload: true)
+
+    XCTAssertEqual(credential.accessToken, "current-later-token")
+  }
+
   func testOpenCodeDatabaseCredentialDiscovery() throws {
     let root = try temporaryDirectory()
     defer { try? FileManager.default.removeItem(at: root) }
