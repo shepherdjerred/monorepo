@@ -55,10 +55,14 @@ graph. It compares the commit with the last green main build, uploads only the
 selected main steps, and preserves the stable step keys and release
 dependencies so downstream lanes still resolve.
 
-If the selector or the Buildkite API lookup fails, it uploads the complete main
-graph instead, and marks itself soft-failed. The fallback is deliberately the
-expensive direction: a broken selector must not be able to skip a lane, so the
-real CI result stays authoritative and only the selector is degraded.
+Selection-contract, comparison-base, and lane-decision failures upload the
+complete main graph instead. The fallback is deliberately the expensive
+direction: a broken selector must never be able to skip a lane.
+
+The bootstrap itself is not soft-failed. Invalid configuration, a failure to
+load the immutable image pins, and any failure to validate or upload the
+complete graph stay hard build failures — a selector that cannot even fall back
+correctly is not a degraded optimization, it is a broken build.
 
 ## Handoffs stay small, then spill to artifacts
 

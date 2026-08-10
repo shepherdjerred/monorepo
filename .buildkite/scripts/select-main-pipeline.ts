@@ -10,14 +10,11 @@ type PipelineDocument = {
   readonly steps: readonly PipelineStep[];
 };
 
-const ALWAYS_SELECTED = new Set([
-  "verify",
-  "alert-dashboard-postgres",
-  "release-please",
-  "build-summary",
-]);
-
 const STEP_LANE_REQUIREMENTS: Readonly<Record<string, readonly string[]>> = {
+  verify: [],
+  "alert-dashboard-postgres": [],
+  "release-please": [],
+  "build-summary": [],
   "playwright-e2e-main": ["playwright"],
   "resume-build-main": ["resume"],
   "docker-e2e-main": ["docker-e2e"],
@@ -36,6 +33,12 @@ const STEP_LANE_REQUIREMENTS: Readonly<Record<string, readonly string[]>> = {
   "scout-prod-reconcile": ["scout-reconcile"],
   "version-commit-back": ["images"],
 };
+
+const ALWAYS_SELECTED = new Set(
+  Object.entries(STEP_LANE_REQUIREMENTS)
+    .filter(([, lanes]) => lanes.length === 0)
+    .map(([key]) => key),
+);
 
 const SELECTOR_LANES = [
   ...new Set(Object.values(STEP_LANE_REQUIREMENTS).flat()),
@@ -127,7 +130,6 @@ export function assertSelectionContract(
   steps: ReadonlyMap<string, PipelineStep>,
 ): void {
   for (const key of steps.keys()) {
-    if (ALWAYS_SELECTED.has(key)) continue;
     if (STEP_LANE_REQUIREMENTS[key] !== undefined) continue;
     throw new Error(`main step ${key} has no dynamic-selection contract`);
   }

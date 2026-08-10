@@ -3,11 +3,10 @@
  * finished reviewing the PR head commit AND every provider review comment that
  * still applies to the latest revision has been resolved.
  *
- * Provider-neutral: the active provider (Qodo in CI) is chosen by
- * `REVIEW_PROVIDER` (default `qodo`). All provider-specific knowledge — how
- * completion is detected (a check-run vs a review-at-head + 👍 reaction), how
- * severity badges are parsed, how a deliberate skip is signalled — lives in
- * `@shepherdjerred/code-review`. This script only drives the poll loop and
+ * The gate logic is provider-neutral, but the required CI boundary is pinned
+ * to Qodo. All provider-specific knowledge — how completion is detected, how
+ * severity badges are parsed, and how a deliberate skip is signalled — lives
+ * in `@shepherdjerred/code-review`. This script only drives the poll loop and
  * emits structured `review-signal` observability events.
  *
  * Why not just wait for the provider's own status check? Greptile's check goes
@@ -43,6 +42,18 @@ import {
 const DEFAULT_REPO = "shepherdjerred/monorepo";
 const DEFAULT_TIMEOUT_SECONDS = 20 * 60;
 const DEFAULT_INTERVAL_SECONDS = 30;
+
+export function resolveReviewGateProvider(
+  configuredProvider: string | undefined,
+): ReviewProvider {
+  const normalized = configuredProvider?.trim().toLowerCase();
+  if (normalized !== undefined && normalized !== "" && normalized !== "qodo") {
+    throw new Error(
+      `CI review gate requires Qodo; REVIEW_PROVIDER was ${String(configuredProvider)}.`,
+    );
+  }
+  return resolveProvider("qodo");
+}
 
 function parsePositiveIntegerEnv(name: string, fallback: number): number {
   const raw = Bun.env[name];
@@ -236,7 +247,7 @@ async function waitForReview(): Promise<void> {
   }
   const head = commit.trim();
   const repo = repoFromEnvironment();
-  const provider = resolveProvider(Bun.env["REVIEW_PROVIDER"]);
+  const provider = resolveReviewGateProvider(Bun.env["REVIEW_PROVIDER"]);
   const maxBlockingPriority = parseMaxBlockingPriority();
   const timeoutSeconds = parsePositiveIntegerEnv(
     "REVIEW_WAIT_TIMEOUT_SECONDS",
@@ -495,8 +506,7 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
   }
   throw new Error(
     `Timed out after ${String(timeoutSeconds)}s waiting for ${provider.displayName} to finish reviewing ${repo}@${head}. ` +
-      `If ${provider.displayName} is enabled, confirm it authors reviews/threads as one of [${provider.authorLogins.join(", ")}] ` +
-      `(override the active provider with REVIEW_PROVIDER).`,
+      `Confirm it is enabled and authors reviews/threads as one of [${provider.authorLogins.join(", ")}].`,
   );
 }
 

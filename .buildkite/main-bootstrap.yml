@@ -6,7 +6,9 @@ steps:
     key: ci-selector-base
     if: build.branch == pipeline.default_branch
     timeout_in_minutes: 5
-    command: bun --no-install .buildkite/scripts/select-main-pipeline.ts
+    command: |
+      . .buildkite/scripts/ci-image-refs.sh
+      bun --no-install .buildkite/scripts/select-main-pipeline.ts
     plugins:
       - kubernetes:
           checkout:

@@ -124,7 +124,8 @@ const mainBootstrap = await Bun.file(".buildkite/main-bootstrap.yml").text();
 for (const required of [
   "ci-selector-base",
   "select-main-pipeline.ts",
-  "command: bun --no-install .buildkite/scripts/select-main-pipeline.ts",
+  ". .buildkite/scripts/ci-image-refs.sh",
+  "bun --no-install .buildkite/scripts/select-main-pipeline.ts",
   "timeout_in_minutes: 5",
   'image: "${CI_BASE_IMAGE}"',
   "name: buildkite-git-mirrors",

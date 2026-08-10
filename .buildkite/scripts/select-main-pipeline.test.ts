@@ -86,6 +86,17 @@ test("keeps fixed-corpus configuration failures hard", async () => {
   expect(stderr).toContain("CI_IO_FIXED_CORPUS is main-only");
 });
 
+test("resolves committed image pins before the dynamic pipeline upload", () => {
+  const command = bootstrapDocument.steps[0]?.["command"];
+  if (typeof command !== "string") {
+    throw new TypeError("main selector bootstrap command must be a string");
+  }
+  expect(command).toContain(". .buildkite/scripts/ci-image-refs.sh");
+  expect(command.indexOf("ci-image-refs.sh")).toBeLessThan(
+    command.indexOf("select-main-pipeline.ts"),
+  );
+});
+
 test("retains the full dependency chain for an image release", () => {
   const selected = selectedKeys(
     steps,
