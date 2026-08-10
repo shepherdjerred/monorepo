@@ -134,6 +134,33 @@ struct AppEnvironmentTests {
         #expect(store.tasks.isEmpty)
     }
 
+    /// ⚠️ **The contrast with the case above is the point.** Same server, same
+    /// address, and a store that *has* a credential it cannot hand over — a
+    /// locked login Keychain. Reading that as "no token saved" would produce the
+    /// previous case exactly: an unauthenticated launch, `.authError`, and a
+    /// banner blaming the server for a fault that is entirely local. It must
+    /// instead name the Keychain and configure no server at all, so the drain
+    /// never turns a locked Keychain into a dead-letter list of 401s.
+    @Test("a Keychain that will not answer is not an absent credential")
+    func anUnreadableCredentialIsReportedRatherThanIgnored() async throws {
+        let server = try TaskNotesServerProcess(authToken: Self.token)
+        defer { server.stop() }
+        try await seedVault(of: server, title: "Behind the gate")
+
+        let fixture = try Fixture(
+            address: server.baseURL.absoluteString,
+            tokenStore: UnreadableTokenStore()
+        )
+        defer { fixture.tearDown() }
+
+        await fixture.environment.start().value
+
+        let store = try #require(fixture.store)
+        #expect(store.lastStoreError == UnreadableTokenStore.failure)
+        #expect(store.status.state != .authError)
+        #expect(store.tasks.isEmpty)
+    }
+
     // ── The states that are not failures ───────────────────────────────────
 
     /// An app that has never been configured is *unconfigured*, which the core
@@ -373,6 +400,20 @@ private struct Fixture {
     func tearDown() {
         store?.shutdown()
     }
+}
+
+/// A token store holding a credential it cannot hand over.
+///
+/// The locked login Keychain, as something a headless test can have. Reading
+/// fails; writing is not part of what this stands for and is never called.
+private struct UnreadableTokenStore: ServerTokenStore {
+    static let failure = CoreError.Invariant(
+        message: "could not read the stored server token (Keychain status -25308)"
+    )
+
+    func token() -> Result<String?, CoreError> { .failure(Self.failure) }
+
+    func setToken(_ token: String?) -> CoreError? { nil }
 }
 
 /// Why a fixture could not be built.

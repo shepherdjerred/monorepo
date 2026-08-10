@@ -5265,6 +5265,10 @@ public struct InstanceCompletion: Equatable, Hashable {
      * The state to set it to.
      */
     public var completed: Bool
+    /**
+     * The schedule to put back, on an uncompletion.
+     */
+    public var restore: InstanceRestore?
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
@@ -5274,9 +5278,13 @@ public struct InstanceCompletion: Equatable, Hashable {
          */date: String, 
         /**
          * The state to set it to.
-         */completed: Bool) {
+         */completed: Bool, 
+        /**
+         * The schedule to put back, on an uncompletion.
+         */restore: InstanceRestore?) {
         self.date = date
         self.completed = completed
+        self.restore = restore
     }
 
     
@@ -5296,13 +5304,15 @@ public struct FfiConverterTypeInstanceCompletion: FfiConverterRustBuffer {
         return
             try InstanceCompletion(
                 date: FfiConverterString.read(from: &buf), 
-                completed: FfiConverterBool.read(from: &buf)
+                completed: FfiConverterBool.read(from: &buf), 
+                restore: FfiConverterOptionTypeInstanceRestore.read(from: &buf)
         )
     }
 
     public static func write(_ value: InstanceCompletion, into buf: inout [UInt8]) {
         FfiConverterString.write(value.date, into: &buf)
         FfiConverterBool.write(value.completed, into: &buf)
+        FfiConverterOptionTypeInstanceRestore.write(value.restore, into: &buf)
     }
 }
 
@@ -5319,6 +5329,95 @@ public func FfiConverterTypeInstanceCompletion_lift(_ buf: RustBuffer) throws ->
 #endif
 public func FfiConverterTypeInstanceCompletion_lower(_ value: InstanceCompletion) -> RustBuffer {
     return FfiConverterTypeInstanceCompletion.lower(value)
+}
+
+
+/**
+ * See [`tasknotes_core::net::InstanceRestore`].
+ */
+public struct InstanceRestore: Equatable, Hashable {
+    /**
+     * The `scheduled` date before completion advanced it.
+     */
+    public var scheduled: String?
+    /**
+     * The `due` date before completion advanced it.
+     */
+    public var due: String?
+    /**
+     * The recurrence rule before completion.
+     */
+    public var recurrence: String
+    /**
+     * Whether the occurrence was skipped before completion.
+     */
+    public var skipped: Bool
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * The `scheduled` date before completion advanced it.
+         */scheduled: String?, 
+        /**
+         * The `due` date before completion advanced it.
+         */due: String?, 
+        /**
+         * The recurrence rule before completion.
+         */recurrence: String, 
+        /**
+         * Whether the occurrence was skipped before completion.
+         */skipped: Bool) {
+        self.scheduled = scheduled
+        self.due = due
+        self.recurrence = recurrence
+        self.skipped = skipped
+    }
+
+    
+
+    
+}
+
+#if compiler(>=6)
+extension InstanceRestore: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeInstanceRestore: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> InstanceRestore {
+        return
+            try InstanceRestore(
+                scheduled: FfiConverterOptionString.read(from: &buf), 
+                due: FfiConverterOptionString.read(from: &buf), 
+                recurrence: FfiConverterString.read(from: &buf), 
+                skipped: FfiConverterBool.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: InstanceRestore, into buf: inout [UInt8]) {
+        FfiConverterOptionString.write(value.scheduled, into: &buf)
+        FfiConverterOptionString.write(value.due, into: &buf)
+        FfiConverterString.write(value.recurrence, into: &buf)
+        FfiConverterBool.write(value.skipped, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeInstanceRestore_lift(_ buf: RustBuffer) throws -> InstanceRestore {
+    return try FfiConverterTypeInstanceRestore.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeInstanceRestore_lower(_ value: InstanceRestore) -> RustBuffer {
+    return FfiConverterTypeInstanceRestore.lower(value)
 }
 
 
@@ -7457,7 +7556,11 @@ public enum Command: Equatable, Hashable {
          */date: String, 
         /**
          * The state to set the occurrence to.
-         */completed: Bool
+         */completed: Bool, 
+        /**
+         * The recurring schedule an uncompletion puts back, when the core
+         * captured one. Always absent on a completion.
+         */restore: InstanceRestore?
     )
 
 
@@ -7492,7 +7595,7 @@ public struct FfiConverterTypeCommand: FfiConverterRustBuffer {
         case 4: return .setStatus(id: try FfiConverterString.read(from: &buf), createdAt: try FfiConverterInt64.read(from: &buf), taskId: try FfiConverterTypeTaskId.read(from: &buf), status: try FfiConverterTypeTaskStatus.read(from: &buf)
         )
         
-        case 5: return .setInstanceComplete(id: try FfiConverterString.read(from: &buf), createdAt: try FfiConverterInt64.read(from: &buf), taskId: try FfiConverterTypeTaskId.read(from: &buf), date: try FfiConverterString.read(from: &buf), completed: try FfiConverterBool.read(from: &buf)
+        case 5: return .setInstanceComplete(id: try FfiConverterString.read(from: &buf), createdAt: try FfiConverterInt64.read(from: &buf), taskId: try FfiConverterTypeTaskId.read(from: &buf), date: try FfiConverterString.read(from: &buf), completed: try FfiConverterBool.read(from: &buf), restore: try FfiConverterOptionTypeInstanceRestore.read(from: &buf)
         )
         
         default: throw UniffiInternalError.unexpectedEnumCase
@@ -7534,13 +7637,14 @@ public struct FfiConverterTypeCommand: FfiConverterRustBuffer {
             FfiConverterTypeTaskStatus.write(status, into: &buf)
             
         
-        case let .setInstanceComplete(id,createdAt,taskId,date,completed):
+        case let .setInstanceComplete(id,createdAt,taskId,date,completed,restore):
             writeInt(&buf, Int32(5))
             FfiConverterString.write(id, into: &buf)
             FfiConverterInt64.write(createdAt, into: &buf)
             FfiConverterTypeTaskId.write(taskId, into: &buf)
             FfiConverterString.write(date, into: &buf)
             FfiConverterBool.write(completed, into: &buf)
+            FfiConverterOptionTypeInstanceRestore.write(restore, into: &buf)
             
         }
     }
@@ -9867,6 +9971,30 @@ fileprivate struct FfiConverterOptionTypeTaskNotesApi: FfiConverterRustBuffer {
         switch try readInt(&buf) as Int8 {
         case 0: return nil
         case 1: return try FfiConverterTypeTaskNotesApi.read(from: &buf)
+        default: throw UniffiInternalError.unexpectedOptionalTag
+        }
+    }
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+fileprivate struct FfiConverterOptionTypeInstanceRestore: FfiConverterRustBuffer {
+    typealias SwiftType = InstanceRestore?
+
+    public static func write(_ value: SwiftType, into buf: inout [UInt8]) {
+        guard let value = value else {
+            writeInt(&buf, Int8(0))
+            return
+        }
+        writeInt(&buf, Int8(1))
+        FfiConverterTypeInstanceRestore.write(value, into: &buf)
+    }
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> SwiftType {
+        switch try readInt(&buf) as Int8 {
+        case 0: return nil
+        case 1: return try FfiConverterTypeInstanceRestore.read(from: &buf)
         default: throw UniffiInternalError.unexpectedOptionalTag
         }
     }

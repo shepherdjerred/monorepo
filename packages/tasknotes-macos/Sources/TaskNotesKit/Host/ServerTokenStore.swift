@@ -13,8 +13,17 @@ internal import class Foundation.NSString
 /// read or overwrite the one the installed app is using. Every test uses
 /// ``InMemoryTokenStore``.
 public protocol ServerTokenStore: Sendable {
-    /// The stored token, or `nil` when none has been saved.
-    func token() -> String?
+    /// The stored token, `nil` when none has been saved, or the failure that
+    /// stopped this Mac from reading one.
+    ///
+    /// ⚠️ **Absent and unreadable are different answers**, which is why this is
+    /// a `Result` rather than an optional. A locked login Keychain, a denied
+    /// access control, or bytes that are not UTF-8 all leave a credential that
+    /// exists and cannot be used; reporting that as "no token saved" configures
+    /// the client anonymously and presents the resulting 401 as a server
+    /// authentication problem, which is the one explanation that is certainly
+    /// wrong.
+    func token() -> Result<String?, CoreError>
 
     /// Store `token`, or remove the entry when it is `nil` or empty.
     ///
@@ -63,7 +72,7 @@ public struct KeychainTokenStore: ServerTokenStore {
         self.service = service
     }
 
-    public func token() -> String? {
+    public func token() -> Result<String?, CoreError> {
         let query: [NSString: Any] = [
             kSecClass: kSecClassGenericPassword,
             kSecAttrService: service,
@@ -81,8 +90,20 @@ public struct KeychainTokenStore: ServerTokenStore {
         // narrowed with `as?` below.
         var item: CFTypeRef?
         let status = unsafe SecItemCopyMatching(query as CFDictionary, &item)
-        guard status == errSecSuccess, let data = item as? Data else { return nil }
-        return String(data: data, encoding: .utf8)
+        // `errSecItemNotFound` is the *only* status that means "none has been
+        // saved". Every other one — `errSecInteractionNotAllowed` from a locked
+        // Keychain, `errSecMissingEntitlement` from a mis-signed build — means a
+        // credential this Mac would not hand over.
+        if status == errSecItemNotFound { return .success(nil) }
+        guard status == errSecSuccess else {
+            return .failure(Self.failure("could not read the stored server token", status))
+        }
+        guard let data = item as? Data, let token = String(data: data, encoding: .utf8) else {
+            return .failure(
+                .Invariant(message: "the stored server token is not readable text")
+            )
+        }
+        return .success(token)
     }
 
     public func setToken(_ token: String?) -> CoreError? {
@@ -156,8 +177,8 @@ public final class InMemoryTokenStore: ServerTokenStore {
         stored = Mutex(token)
     }
 
-    public func token() -> String? {
-        stored.withLock { $0 }
+    public func token() -> Result<String?, CoreError> {
+        .success(stored.withLock { $0 })
     }
 
     public func setToken(_ token: String?) -> CoreError? {

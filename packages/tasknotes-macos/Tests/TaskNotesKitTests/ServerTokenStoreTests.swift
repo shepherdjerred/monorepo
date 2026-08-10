@@ -18,12 +18,12 @@ import Testing
 @Suite("Server token store")
 struct ServerTokenStoreTests {
     @Test("a stored token round-trips")
-    func roundTrip() {
+    func roundTrip() throws {
         let store = InMemoryTokenStore()
-        #expect(store.token() == nil)
+        #expect(try store.token().get() == nil)
 
         #expect(store.setToken("abc123") == nil)
-        #expect(store.token() == "abc123")
+        #expect(try store.token().get() == "abc123")
     }
 
     /// Empty and absent are the same state, unlike the saved-view storage where
@@ -34,14 +34,14 @@ struct ServerTokenStoreTests {
     /// problem rather than as an unset field — the same class of confusion as a
     /// filter badge counting something the user did not set.
     @Test("clearing the token is spelled the same as never setting one")
-    func emptyIsAbsent() {
+    func emptyIsAbsent() throws {
         let store = InMemoryTokenStore(token: "abc123")
 
         #expect(store.setToken("") == nil)
-        #expect(store.token() == nil)
+        #expect(try store.token().get() == nil)
 
         #expect(store.setToken("abc123") == nil)
         #expect(store.setToken(nil) == nil)
-        #expect(store.token() == nil)
+        #expect(try store.token().get() == nil)
     }
 }

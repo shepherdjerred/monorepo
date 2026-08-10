@@ -38,6 +38,44 @@ pub struct InstanceCompletion {
     pub date: String,
     /// The state to set it to.
     pub completed: bool,
+    /// The schedule to put back, when this is an *un*completion.
+    ///
+    /// See [`InstanceRestore`]. Always `None` when `completed` is `true`; the
+    /// server rejects a restore alongside a completion.
+    pub restore: Option<InstanceRestore>,
+}
+
+/// The recurring schedule as it stood **before** an occurrence was completed.
+///
+/// ## Why an uncompletion needs a snapshot at all
+///
+/// Completing an occurrence of a recurring task is not a flag: the server
+/// *advances the series*, rewriting `scheduled`, `due`, and sometimes the rule
+/// itself, and the previous values are not recoverable from the new ones.
+/// `completed: false` on its own therefore cannot mean "undo" — the server's
+/// compatibility path deliberately keeps the already-advanced schedule when a
+/// bare uncompletion arrives, because a client that never advanced anything
+/// must not be able to rewind a series it does not know about.
+///
+/// So the client that *did* the completing carries what it replaced. Without
+/// it, completing and then uncompleting an occurrence — a double-click, an
+/// undo, a mis-tap — leaves the occurrence looking undone while the series has
+/// silently skipped forward a period.
+///
+/// Field-for-field the server's `RecurringCompletionRestore`; `scheduled` and
+/// `due` are nullable rather than omissible there, so both serialize as `null`
+/// when the task had none.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct InstanceRestore {
+    /// The `scheduled` date before completion advanced it.
+    pub scheduled: Option<String>,
+    /// The `due` date before completion advanced it.
+    pub due: Option<String>,
+    /// The recurrence rule before completion.
+    pub recurrence: String,
+    /// Whether the occurrence was in the task's skipped list before completion.
+    pub skipped: bool,
 }
 
 /// The mutating half of the TaskNotes HTTP API, in domain vocabulary.

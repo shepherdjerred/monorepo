@@ -233,35 +233,78 @@ impl CommandQueue {
     /// A no-op when the id is not queued, which is what makes the drain safe to
     /// re-enter: two passes cannot dead-letter the same command twice.
     ///
+    /// ## The write order is the crash safety
+    ///
+    /// Parking a command is a move between two durable files, and no host
+    /// storage can write both at once. The order is therefore chosen so that an
+    /// interruption between them — a crash, a power loss, a failing second
+    /// write — leaves the command in *both* files rather than in neither:
+    /// the dead-letter list gains it first, and only then does the queue lose
+    /// it. The user sees a parked command that is also still queued, and the
+    /// re-send is a no-op because the id is the server's idempotency key.
+    ///
+    /// Writing the queue first would make the same interruption erase the
+    /// command from both collections, which is a lost offline mutation with
+    /// nowhere left to inspect or retry it. [`Self::retry_dead_letter`] is the
+    /// same move in the other direction and follows the same rule.
+    ///
     /// # Errors
     ///
-    /// Propagates a storage-layer failure.
+    /// Propagates a storage-layer failure. A failure to record the parked
+    /// command leaves the queue untouched, so nothing is lost and the drain can
+    /// try again.
     pub fn dead_letter(&mut self, id: &str, error: &Error) -> Result<()> {
-        let Some(position) = self.queue.iter().position(|queued| queued.id() == id) else {
+        let Some((position, command)) = self
+            .queue
+            .iter()
+            .enumerate()
+            .find(|&(_, queued)| queued.id() == id)
+            .map(|(position, queued)| (position, queued.clone()))
+        else {
             return Ok(());
         };
-        let command = self.queue.remove(position);
         self.dead.push(DeadLetterEntry {
             command,
             error: DeadLetterError::from(error),
             failed_at: self.clock.now_millis(),
         });
-        self.persist_queue()?;
-        self.persist_dead_letter()
+        if let Err(failure) = self.persist_dead_letter() {
+            // The queue still holds the command, in memory and on disk, so
+            // undoing the half-made move is what keeps the two collections
+            // agreeing with the bytes.
+            self.dead.pop();
+            return Err(failure);
+        }
+        self.queue.remove(position);
+        self.persist_queue()
     }
 
     /// Move a parked command back onto the tail of the queue.
     ///
+    /// The destination is written before the source, for the reason spelled out
+    /// on [`Self::dead_letter`]: an interruption mid-move must cost a duplicate,
+    /// never the command.
+    ///
     /// # Errors
     ///
-    /// Propagates a storage-layer failure.
+    /// Propagates a storage-layer failure. A failure to record the requeued
+    /// command leaves the dead-letter list untouched.
     pub fn retry_dead_letter(&mut self, id: &str) -> Result<()> {
-        let Some(position) = self.dead.iter().position(|entry| entry.command.id() == id) else {
+        let Some((position, command)) = self
+            .dead
+            .iter()
+            .enumerate()
+            .find(|&(_, entry)| entry.command.id() == id)
+            .map(|(position, entry)| (position, entry.command.clone()))
+        else {
             return Ok(());
         };
-        let entry = self.dead.remove(position);
-        self.queue.push(entry.command);
-        self.persist_queue()?;
+        self.queue.push(command);
+        if let Err(failure) = self.persist_queue() {
+            self.queue.pop();
+            return Err(failure);
+        }
+        self.dead.remove(position);
         self.persist_dead_letter()
     }
 
@@ -314,7 +357,10 @@ fn salvage<T: serde::de::DeserializeOwned>(raw: Option<&str>) -> Vec<T> {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::{Arc, Mutex};
+    use std::sync::{
+        Arc, Mutex,
+        atomic::{AtomicBool, Ordering},
+    };
 
     use super::{CommandQueue, DeadLetterEntry, salvage};
     use crate::{
@@ -346,6 +392,40 @@ mod tests {
         fn write_dead_letter(&self, data: &str) -> Result<()> {
             *self.dead.lock().unwrap() = Some(data.to_owned());
             Ok(())
+        }
+    }
+
+    /// Storage that refuses one of the two writes a move between the queue and
+    /// the dead-letter list performs.
+    ///
+    /// The crash-safety cases need the *interruption*, not a storage outage:
+    /// parking a command is two writes no host can make atomic, and the whole
+    /// question is what the next launch reads when only the first one landed.
+    #[derive(Default)]
+    struct HalfWritingStorage {
+        inner: MemoryStorage,
+        refuse_queue: AtomicBool,
+        refuse_dead: AtomicBool,
+    }
+
+    impl QueueStorage for HalfWritingStorage {
+        fn read_queue(&self) -> Result<Option<String>> {
+            self.inner.read_queue()
+        }
+        fn write_queue(&self, data: &str) -> Result<()> {
+            if self.refuse_queue.load(Ordering::SeqCst) {
+                return Err(Error::invariant("the queue file is not writable"));
+            }
+            self.inner.write_queue(data)
+        }
+        fn read_dead_letter(&self) -> Result<Option<String>> {
+            self.inner.read_dead_letter()
+        }
+        fn write_dead_letter(&self, data: &str) -> Result<()> {
+            if self.refuse_dead.load(Ordering::SeqCst) {
+                return Err(Error::invariant("the dead-letter file is not writable"));
+            }
+            self.inner.write_dead_letter(data)
         }
     }
 
@@ -496,6 +576,74 @@ mod tests {
         queue.retry_dead_letter("c1").unwrap();
         assert_eq!(queue.pending().len(), 1);
         assert!(queue.dead_letters().is_empty());
+    }
+
+    /// ⚠️ **The invariant is "never in neither file", not "never twice".**
+    ///
+    /// Parking is a move across two files. Interrupt it after the first write
+    /// and the next launch must still be able to see the mutation somewhere —
+    /// with the writes in the other order it saw the command in neither, and an
+    /// offline edit the user made simply stopped existing.
+    #[test]
+    fn an_interrupted_parking_costs_a_duplicate_rather_than_the_command() {
+        let storage = Arc::new(HalfWritingStorage::default());
+        let mut queue = CommandQueue::new(storage.clone(), Arc::new(FixedClock));
+        queue.enqueue(create("c1", &temp("1-1"))).unwrap();
+
+        // The parking write lands, the dequeue does not: the crash window.
+        storage.refuse_queue.store(true, Ordering::SeqCst);
+        queue
+            .dead_letter("c1", &Error::api("nope", 422))
+            .expect_err("the dequeue write failed");
+
+        storage.refuse_queue.store(false, Ordering::SeqCst);
+        let mut relaunched = CommandQueue::new(storage, Arc::new(FixedClock));
+        relaunched.restore().unwrap();
+        assert!(
+            relaunched.contains_command_id("c1"),
+            "the mutation survived the interruption"
+        );
+        assert_eq!(relaunched.dead_letters().len(), 1);
+        assert_eq!(
+            relaunched.pending().len(),
+            1,
+            "and it survived as a replayable duplicate, which the idempotency key makes safe"
+        );
+    }
+
+    #[test]
+    fn a_refused_parking_write_leaves_the_command_queued() {
+        let storage = Arc::new(HalfWritingStorage::default());
+        let mut queue = CommandQueue::new(storage.clone(), Arc::new(FixedClock));
+        queue.enqueue(create("c1", &temp("1-1"))).unwrap();
+
+        storage.refuse_dead.store(true, Ordering::SeqCst);
+        queue
+            .dead_letter("c1", &Error::api("nope", 422))
+            .expect_err("the parking write failed");
+
+        assert!(queue.dead_letters().is_empty(), "nothing was parked");
+        assert_eq!(
+            queue.pending().len(),
+            1,
+            "so the command is still queued, in memory as well as on disk"
+        );
+    }
+
+    #[test]
+    fn a_refused_retry_write_leaves_the_command_parked() {
+        let storage = Arc::new(HalfWritingStorage::default());
+        let mut queue = CommandQueue::new(storage.clone(), Arc::new(FixedClock));
+        queue.enqueue(create("c1", &temp("1-1"))).unwrap();
+        queue.dead_letter("c1", &Error::api("nope", 422)).unwrap();
+
+        storage.refuse_queue.store(true, Ordering::SeqCst);
+        queue
+            .retry_dead_letter("c1")
+            .expect_err("the requeue write failed");
+
+        assert!(queue.pending().is_empty());
+        assert_eq!(queue.dead_letters().len(), 1, "still inspectable");
     }
 
     #[test]

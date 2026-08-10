@@ -17,7 +17,7 @@ use indexmap::IndexMap;
 use crate::{
     Error, ErrorKind,
     domain::{CreateTaskRequest, Priority, Task, TaskId, TaskStatus, UpdateTaskRequest},
-    net::InstanceCompletion,
+    net::{InstanceCompletion, InstanceRestore},
 };
 
 /// The recorded form of one user mutation.
@@ -95,6 +95,19 @@ pub enum Command {
         date: String,
         /// The state to set the occurrence to.
         completed: bool,
+        /// The schedule to put back, on an uncompletion.
+        ///
+        /// ⚠️ **Durable on purpose.** The snapshot is only knowable at the
+        /// moment the occurrence is uncompleted — it is what the *completion*
+        /// replaced — and the completion may already have advanced the local
+        /// view or been sent. Carrying it on the command is what lets a queue
+        /// that drains an hour later still send an undo the server can honour.
+        ///
+        /// `None` on every completion, and on an uncompletion whose
+        /// pre-completion schedule is not knowable (a non-recurring task, or a
+        /// completion this install never made).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        restore: Option<InstanceRestore>,
     },
 }
 
@@ -158,10 +171,12 @@ impl Command {
             Self::SetInstanceComplete {
                 ref date,
                 completed,
+                ref restore,
                 ..
             } => Some(InstanceCompletion {
                 date: date.clone(),
                 completed,
+                restore: restore.clone(),
             }),
             Self::Create { .. }
             | Self::Update { .. }
@@ -364,6 +379,7 @@ pub fn apply_command(command: &Command, tasks: &mut IndexMap<TaskId, Task>) {
             ref task_id,
             ref date,
             completed,
+            ref restore,
             ..
         } => {
             if let Some(task) = tasks.get_mut(task_id) {
@@ -372,6 +388,23 @@ pub fn apply_command(command: &Command, tasks: &mut IndexMap<TaskId, Task>) {
                     task.complete_instances.push(date.clone());
                 } else if !completed && present {
                     task.complete_instances.retain(|entry| entry != date);
+                }
+                // The optimistic view has to show what the server will do, and
+                // the server puts the whole pre-completion schedule back rather
+                // than only clearing the tick. Without this the list rewinds the
+                // occurrence while still showing the advanced dates, then jumps
+                // when the ack lands. Assigning absolute values keeps the branch
+                // idempotent, which `rebase` requires.
+                if !completed && let Some(restore) = restore.as_ref() {
+                    task.recurrence = Some(restore.recurrence.clone());
+                    task.scheduled.clone_from(&restore.scheduled);
+                    task.due.clone_from(&restore.due);
+                    let skipped = task.skipped_instances.iter().any(|entry| entry == date);
+                    if restore.skipped && !skipped {
+                        task.skipped_instances.push(date.clone());
+                    } else if !restore.skipped && skipped {
+                        task.skipped_instances.retain(|entry| entry != date);
+                    }
                 }
             }
         }
@@ -597,6 +630,7 @@ mod tests {
                 task_id: TaskId::parse("Tasks/a.md").unwrap(),
                 date: "2026-07-01".to_owned(),
                 completed: true,
+                restore: None,
             },
             Command::Delete {
                 id: "c4".to_owned(),

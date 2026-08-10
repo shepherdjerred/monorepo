@@ -120,7 +120,10 @@ public final class AppEnvironment {
         self.defaults = defaults
         self.tokenStore = resolvedTokenStore
         self.serverAddress = defaults.string(forKey: Self.serverAddressKey) ?? ""
-        self.authToken = resolvedTokenStore.token() ?? ""
+        // A read failure leaves the field empty rather than reporting here:
+        // there is no store to report *to* until `bringUp`, which re-reads and
+        // routes the failure to the banner.
+        self.authToken = Self.editableToken(resolvedTokenStore)
 
         // Claimed at launch, and **only** from this initializer. The other one
         // exists for previews and tests, and a test process that registered a
@@ -142,7 +145,17 @@ public final class AppEnvironment {
         self.defaults = defaults
         self.tokenStore = tokenStore
         self.serverAddress = defaults.string(forKey: Self.serverAddressKey) ?? ""
-        self.authToken = tokenStore.token() ?? ""
+        self.authToken = Self.editableToken(tokenStore)
+    }
+
+    /// The stored token as the Settings field's initial text.
+    ///
+    /// An unreadable credential shows as empty, which is the only honest thing
+    /// a text field can say about bytes nobody could decode. It is not the
+    /// place the failure is *reported* — ``bringUp()`` does that.
+    private nonisolated static func editableToken(_ store: any ServerTokenStore) -> String {
+        guard case .success(let token) = store.token() else { return "" }
+        return token ?? ""
     }
 
     /// Bring the engine up.
@@ -191,8 +204,22 @@ public final class AppEnvironment {
     private func bringUp() -> _Concurrency.Task<Void, Never> {
         guard case .success(let store) = store else { return alreadyFinished() }
         guard store.migrate() else { return alreadyFinished() }
-        store.configure(serverURL: configuredServer, authToken: tokenStore.token())
-        return pull(store)
+        switch tokenStore.token() {
+        case .success(let token):
+            store.configure(serverURL: configuredServer, authToken: token)
+            return pull(store)
+        case .failure(let error):
+            // ⚠️ **A credential this Mac would not hand over is not an absent
+            // one.** Configuring the server anyway sends every request
+            // unauthenticated: the drain then takes 401s, which classify as
+            // permanent, and the queued mutations get parked in the dead-letter
+            // list over a Keychain that was merely locked. An unconfigured
+            // engine still restores the cache and still accepts dispatches, so
+            // the app stays usable while the banner says what actually happened.
+            store.configure(serverURL: nil, authToken: nil)
+            store.report(error)
+            return alreadyFinished()
+        }
     }
 
     /// Put a failed credential write where the user will see it.

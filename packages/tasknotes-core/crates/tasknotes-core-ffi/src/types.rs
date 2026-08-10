@@ -34,7 +34,7 @@ use tasknotes_core::{
         Task, TaskId, TaskList, TaskQueryFilter, TaskStats, TaskStatus, TaskTime, TaskTitle,
         TimeEntry, TimeSummary, TopTask, VaultInfo,
     },
-    net::InstanceCompletion,
+    net::{InstanceCompletion, InstanceRestore},
     recurrence::Frequency,
     sync::{DeadLetterError, SyncState},
 };
@@ -561,6 +561,21 @@ pub struct InstanceCompletion {
     pub date: String,
     /// The state to set it to.
     pub completed: bool,
+    /// The schedule to put back, on an uncompletion.
+    pub restore: Option<InstanceRestore>,
+}
+
+/// See [`tasknotes_core::net::InstanceRestore`].
+#[uniffi::remote(Record)]
+pub struct InstanceRestore {
+    /// The `scheduled` date before completion advanced it.
+    pub scheduled: Option<String>,
+    /// The `due` date before completion advanced it.
+    pub due: Option<String>,
+    /// The recurrence rule before completion.
+    pub recurrence: String,
+    /// Whether the occurrence was skipped before completion.
+    pub skipped: bool,
 }
 
 /// See [`tasknotes_core::sync::DeadLetterError`].

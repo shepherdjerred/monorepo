@@ -23,6 +23,7 @@
 
 use tasknotes_core::{
     domain::{CreateTaskRequest, TaskId, TaskStatus},
+    net::InstanceRestore,
     sync::{self, DeadLetterError},
 };
 
@@ -90,6 +91,9 @@ pub enum Command {
         date: String,
         /// The state to set the occurrence to.
         completed: bool,
+        /// The recurring schedule an uncompletion puts back, when the core
+        /// captured one. Always absent on a completion.
+        restore: Option<InstanceRestore>,
     },
 }
 
@@ -144,12 +148,14 @@ impl From<sync::Command> for Command {
                 task_id,
                 date,
                 completed,
+                restore,
             } => Self::SetInstanceComplete {
                 id,
                 created_at,
                 task_id,
                 date,
                 completed,
+                restore,
             },
         }
     }
@@ -206,12 +212,14 @@ impl From<Command> for sync::Command {
                 task_id,
                 date,
                 completed,
+                restore,
             } => Self::SetInstanceComplete {
                 id,
                 created_at,
                 task_id,
                 date,
                 completed,
+                restore,
             },
         }
     }
@@ -401,6 +409,7 @@ mod tests {
                 task_id,
                 date: "2026-07-01".to_owned(),
                 completed: true,
+                restore: None,
             },
         ]
     }
@@ -425,6 +434,7 @@ mod tests {
             task_id: TaskId::parse("Tasks/a.md").unwrap(),
             date: "2026-07-01".to_owned(),
             completed: true,
+            restore: None,
         })
         else {
             panic!("the mirror changed the variant");

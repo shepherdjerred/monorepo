@@ -18,7 +18,7 @@ pub mod client;
 pub mod endpoints;
 pub mod http;
 
-pub use api::{InstanceCompletion, TaskApi};
+pub use api::{InstanceCompletion, InstanceRestore, TaskApi};
 pub use client::{
     DEFAULT_REQUEST_TIMEOUT_MILLIS, IDEMPOTENT_REPLAY_HEADER, MUTATION_ID_HEADER, TaskNotesClient,
 };

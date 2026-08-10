@@ -391,6 +391,20 @@ impl TaskApi for TaskNotesClient {
                 let mut fields = Map::new();
                 fields.insert("date".to_owned(), Value::String(instance.date.clone()));
                 fields.insert("completed".to_owned(), Value::Bool(instance.completed));
+                // Sent only when clearing an occurrence — the server rejects a
+                // restore beside `completed: true` outright — and omitted
+                // entirely when absent, because a `null` would fail the same
+                // schema that a missing key satisfies.
+                if let Some(ref restore) = instance.restore {
+                    fields.insert(
+                        "restore".to_owned(),
+                        serde_json::to_value(restore).map_err(|error| {
+                            Error::invariant(format!(
+                                "could not serialize the recurrence restore: {error}"
+                            ))
+                        })?,
+                    );
+                }
                 Some(fields)
             }
         };
@@ -419,7 +433,7 @@ mod tests {
             CreateTaskRequest, FieldUpdate, TaskId, TaskStatus, TaskTitle, UpdateTaskRequest,
         },
         net::{
-            api::{InstanceCompletion, TaskApi},
+            api::{InstanceCompletion, InstanceRestore, TaskApi},
             http::{
                 HttpClient, HttpHeader, HttpRequest, HttpResponse, TransportError,
                 TransportErrorKind,
@@ -611,6 +625,7 @@ mod tests {
         let recorder = Recorder::new(vec![
             Ok(Recorder::ok(&wire_task())),
             Ok(Recorder::ok(&wire_task())),
+            Ok(Recorder::ok(&wire_task())),
         ]);
         let client = client(&recorder);
         client
@@ -622,8 +637,25 @@ mod tests {
                 Some(&InstanceCompletion {
                     date: "2026-08-08".to_owned(),
                     completed: true,
+                    restore: None,
                 }),
                 Some("cmd-9"),
+            )
+            .unwrap();
+        client
+            .complete_recurring_instance(
+                &id("TaskNotes/a.md"),
+                Some(&InstanceCompletion {
+                    date: "2026-08-08".to_owned(),
+                    completed: false,
+                    restore: Some(InstanceRestore {
+                        scheduled: Some("2026-08-08".to_owned()),
+                        due: None,
+                        recurrence: "FREQ=DAILY".to_owned(),
+                        skipped: false,
+                    }),
+                }),
+                Some("cmd-10"),
             )
             .unwrap();
 
@@ -643,7 +675,26 @@ mod tests {
         let absolute = sent.get(1).unwrap();
         assert_eq!(
             body_of(absolute),
-            json!({ "date": "2026-08-08", "completed": true })
+            json!({ "date": "2026-08-08", "completed": true }),
+            "a completion carries no restore — the server rejects one"
+        );
+
+        // The undo. `scheduled` and `due` are nullable rather than omissible on
+        // the server's schema, so a task with no due date sends `due: null`;
+        // dropping the key would fail validation.
+        let undo = sent.get(2).unwrap();
+        assert_eq!(
+            body_of(undo),
+            json!({
+                "date": "2026-08-08",
+                "completed": false,
+                "restore": {
+                    "scheduled": "2026-08-08",
+                    "due": null,
+                    "recurrence": "FREQ=DAILY",
+                    "skipped": false,
+                },
+            })
         );
     }
 

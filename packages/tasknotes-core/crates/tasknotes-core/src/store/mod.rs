@@ -31,6 +31,7 @@ use serde_json::Value;
 use crate::{
     Error, Result,
     domain::{Task, TaskId},
+    net::InstanceRestore,
     sync::{
         Clock, Command, CommandInput, CommandQueue, DeadLetterEntry, QueueStorage, Randomness,
         TaskCacheStorage, command_id, rebase,
@@ -348,13 +349,68 @@ impl TaskStore {
                 task_id,
                 date,
                 completed,
-            } => Command::SetInstanceComplete {
-                id,
-                created_at,
-                task_id: self.resolve_task_id(&task_id),
-                date,
-                completed,
-            },
+            } => {
+                let task_id = self.resolve_task_id(&task_id);
+                let restore = if completed {
+                    None
+                } else {
+                    self.instance_restore(&task_id, &date)
+                };
+                Command::SetInstanceComplete {
+                    id,
+                    created_at,
+                    task_id,
+                    date,
+                    completed,
+                    restore,
+                }
+            }
+        })
+    }
+
+    /// The schedule an uncompletion has to put back, if this install is the one
+    /// that will have moved it.
+    ///
+    /// ## Why the pending completion is the whole condition
+    ///
+    /// Completing an occurrence makes the *server* advance the series;
+    /// [`apply_command`](crate::sync::apply_command) deliberately does not, so
+    /// while the completion is still queued the visible task still carries the
+    /// pre-completion `scheduled`, `due`, and rule. That is precisely the
+    /// snapshot the undo needs, and this is the only window in which it is
+    /// still readable — complete and uncomplete before the queue drains and the
+    /// two commands are sent back to back, the first advancing a schedule the
+    /// second must restore.
+    ///
+    /// With no queued completion there is nothing to undo that this install
+    /// caused: either the occurrence was completed on another client, or the
+    /// completion was already acked and the local schedule is the *advanced*
+    /// one. Sending that as a restore would ask the server to rewind to where
+    /// it already is, so the uncompletion goes bare and the server keeps its own
+    /// schedule, which is the documented compatibility behaviour.
+    fn instance_restore(&self, task_id: &TaskId, date: &str) -> Option<InstanceRestore> {
+        let advancing = self.queue.pending().iter().any(|command| {
+            matches!(
+                command,
+                Command::SetInstanceComplete {
+                    task_id: queued,
+                    date: day,
+                    completed: true,
+                    ..
+                } if queued == task_id && day == date
+            )
+        });
+        if !advancing {
+            return None;
+        }
+        let task = self.snapshot.tasks.get(task_id)?;
+        Some(InstanceRestore {
+            scheduled: task.scheduled.clone(),
+            due: task.due.clone(),
+            // A task with no rule has no series to advance, so there is nothing
+            // an undo could restore.
+            recurrence: task.recurrence.clone()?,
+            skipped: task.skipped_instances.iter().any(|entry| entry == date),
         })
     }
 
@@ -519,6 +575,7 @@ mod tests {
     use crate::{
         Error, Result,
         domain::{CreateTaskRequest, Task, TaskId, TaskStatus, TaskTitle, UpdateTaskRequest},
+        net::InstanceRestore,
         sync::{Clock, Command, CommandInput, QueueStorage, Randomness, TaskCacheStorage},
     };
 
@@ -671,6 +728,103 @@ mod tests {
             Some(TaskStatus::Open),
             "only the base is durable — the optimistic status must not be"
         );
+    }
+
+    fn recurring(id: &str) -> Task {
+        serde_json::from_value(serde_json::json!({
+            "id": id, "path": id, "title": "Water the plants",
+            "recurrence": "FREQ=WEEKLY;BYDAY=SA",
+            "scheduled": "2026-07-04",
+            "due": "2026-07-05",
+        }))
+        .unwrap()
+    }
+
+    fn restore_of(command: &Command) -> Option<InstanceRestore> {
+        match *command {
+            Command::SetInstanceComplete { ref restore, .. } => restore.clone(),
+            _ => None,
+        }
+    }
+
+    /// ⚠️ **The reported bug, as two taps.** Complete an occurrence and undo it
+    /// before the queue drains — a double-click, or a mis-tap on a phone that is
+    /// offline. Both commands are queued, and they are sent back to back: the
+    /// first makes the server advance the series, and the second has to put the
+    /// old schedule back. A bare `completed: false` cannot, because the server
+    /// deliberately keeps its advanced schedule for a client that never
+    /// advanced one — so the occurrence reads as undone while the series has
+    /// silently skipped a week.
+    #[test]
+    fn an_undo_before_the_queue_drains_carries_the_schedule_it_has_to_put_back() {
+        let (mut store, _) = store();
+        let id = TaskId::parse("Tasks/plants.md").unwrap();
+        store
+            .replace_base(vec![recurring("Tasks/plants.md")], 1)
+            .unwrap();
+
+        store
+            .dispatch(CommandInput::SetInstanceComplete {
+                task_id: id.clone(),
+                date: "2026-07-04".to_owned(),
+                completed: true,
+            })
+            .unwrap();
+        store
+            .dispatch(CommandInput::SetInstanceComplete {
+                task_id: id.clone(),
+                date: "2026-07-04".to_owned(),
+                completed: false,
+            })
+            .unwrap();
+
+        let pending = store.queue().pending();
+        assert_eq!(
+            restore_of(pending.first().unwrap()),
+            None,
+            "a completion carries none — the server rejects a restore beside one"
+        );
+        assert_eq!(
+            restore_of(pending.get(1).unwrap()),
+            Some(InstanceRestore {
+                scheduled: Some("2026-07-04".to_owned()),
+                due: Some("2026-07-05".to_owned()),
+                recurrence: "FREQ=WEEKLY;BYDAY=SA".to_owned(),
+                skipped: false,
+            })
+        );
+
+        let visible = store.snapshot().tasks.get(&id).unwrap();
+        assert!(visible.complete_instances.is_empty());
+        assert_eq!(
+            visible.scheduled.as_deref(),
+            Some("2026-07-04"),
+            "and the optimistic view shows what the server will end up with"
+        );
+    }
+
+    /// With no completion of this occurrence still queued there is nothing this
+    /// install is about to advance: the occurrence was completed elsewhere, or
+    /// the completion is already acked and the local schedule is the *advanced*
+    /// one. Sending that as a restore would ask the server to rewind to a
+    /// schedule it never left.
+    #[test]
+    fn an_undo_with_no_completion_in_flight_carries_no_snapshot() {
+        let (mut store, _) = store();
+        let id = TaskId::parse("Tasks/plants.md").unwrap();
+        let mut seeded = recurring("Tasks/plants.md");
+        seeded.complete_instances.push("2026-07-04".to_owned());
+        store.replace_base(vec![seeded], 1).unwrap();
+
+        store
+            .dispatch(CommandInput::SetInstanceComplete {
+                task_id: id,
+                date: "2026-07-04".to_owned(),
+                completed: false,
+            })
+            .unwrap();
+
+        assert_eq!(restore_of(store.queue().head().unwrap()), None);
     }
 
     #[test]

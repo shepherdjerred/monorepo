@@ -225,6 +225,9 @@ pub fn migrate_v1_queue(
                 // that is the calendar the user tapped in.
                 date: clock.local_ymd(timestamp),
                 completed: true,
+                // A completion never carries one, and v1 only enqueued
+                // completions.
+                restore: None,
             },
         });
     }
