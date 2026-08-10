@@ -200,24 +200,42 @@ func (r *systemResource) ImportState(ctx context.Context, _ resource.ImportState
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), "system")...)
 }
 
+// resolveOptionalRead maps a router value onto prior state for an
+// Optional+Computed string.
+//
+// A non-empty router value always wins. An empty one normally becomes null so
+// plans stay clean, with one exception: prior state holding a *known* empty
+// string means the operator configured "" explicitly, and nulling that both
+// risks the framework rejecting the apply as an inconsistent result and makes
+// every later plan diff "" against null forever.
+//
+// An Unknown prior is never preserved — that is a Computed attribute the plan
+// left unresolved, and returning it would leave it Unknown after apply. A
+// previously non-empty value the router no longer reports still becomes null,
+// so genuine external clearing is still reported as drift.
+func resolveOptionalRead(prior types.String, routerValue string) types.String {
+	if routerValue != "" {
+		return types.StringValue(routerValue)
+	}
+
+	if !prior.IsNull() && !prior.IsUnknown() && prior.ValueString() == "" {
+		return prior
+	}
+
+	return types.StringNull()
+}
+
 // readOptionalString populates the target from the NVRAM key's current value.
 // It intentionally does NOT gate on the target being non-null (which would
 // block import) or known (which would leave a Computed attribute Unknown
-// after apply): a non-empty value sets the target, and an empty value clears
-// it to null unless the target is already null — otherwise a value the
-// router cleared (e.g. the user unset it out-of-band) would be left stale in
-// state instead of reporting the drift.
+// after apply).
 func readOptionalString(target *types.String, result map[string]string, key string) {
 	v, ok := result[key]
 	if !ok {
 		return
 	}
 
-	if v != "" {
-		*target = types.StringValue(v)
-	} else if !target.IsNull() {
-		*target = types.StringNull()
-	}
+	*target = resolveOptionalRead(*target, v)
 }
 
 // systemNvramMapping maps a model field to its NVRAM key and the rc_service that

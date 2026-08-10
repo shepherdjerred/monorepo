@@ -179,7 +179,10 @@ func (r *dhcpStaticLeaseResource) Read(ctx context.Context, req resource.ReadReq
 
 	state.IP = types.StringValue(found.IP)
 
-	state.Hostname = resolveReadHostname(state.Hostname, found.Hostname)
+	// Hostname lives in dhcp_staticlist field 4 (there is no dhcp_hostnames key
+	// on this firmware), and follows the same empty-value rule as every other
+	// Optional+Computed string on this provider.
+	state.Hostname = resolveOptionalRead(state.Hostname, found.Hostname)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -274,27 +277,6 @@ func (r *dhcpStaticLeaseResource) Delete(ctx context.Context, req resource.Delet
 // populates the IP and hostname from the router.
 func (r *dhcpStaticLeaseResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("mac"), strings.ToUpper(strings.TrimSpace(req.ID)))...)
-}
-
-// resolveReadHostname maps the router's hostname onto prior state during a
-// refresh.
-//
-// Hostname lives in dhcp_staticlist field 4 (there is no dhcp_hostnames key on
-// this firmware). An empty hostname normally becomes null so plans stay clean,
-// but a lease configured with hostname = "" holds a known-empty value that must
-// survive refresh: nulling it would make every later plan diff the explicit ""
-// against null and schedule an update that never converges. A nonempty hostname
-// cleared outside Terraform still becomes null, so real drift is reported.
-func resolveReadHostname(prior types.String, routerHostname string) types.String {
-	if routerHostname != "" {
-		return types.StringValue(routerHostname)
-	}
-
-	if !prior.IsNull() && prior.ValueString() == "" {
-		return prior
-	}
-
-	return types.StringNull()
 }
 
 func (r *dhcpStaticLeaseResource) readLeases(ctx context.Context) ([]client.DHCPStaticEntry, error) {

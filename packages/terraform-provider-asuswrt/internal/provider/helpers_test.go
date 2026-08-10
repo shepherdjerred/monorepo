@@ -231,6 +231,21 @@ func TestReadOptionalString(t *testing.T) {
 		}
 	})
 
+	t.Run("key-present-empty-preserves-configured-empty", func(t *testing.T) {
+		t.Parallel()
+
+		// The operator set this value to "" explicitly. Collapsing it to null
+		// would risk an inconsistent-result error after apply and make every
+		// later plan diff "" against null forever.
+		target := types.StringValue("")
+		result := map[string]string{"hostname": ""}
+		readOptionalString(&target, result, "hostname")
+
+		if target.IsNull() || target.ValueString() != "" {
+			t.Errorf("expected the configured empty string preserved, got null=%v %q", target.IsNull(), target.ValueString())
+		}
+	})
+
 	t.Run("key-present-empty-already-null-no-change", func(t *testing.T) {
 		t.Parallel()
 
@@ -537,10 +552,10 @@ func TestFindRuleByName(t *testing.T) {
 	})
 }
 
-// TestResolveReadHostname pins the refresh convergence rule: a lease configured
+// TestResolveOptionalRead pins the refresh convergence rule: a lease configured
 // with hostname = "" must not be nulled on refresh, or plan/apply loops forever
 // diffing the explicit empty string against null.
-func TestResolveReadHostname(t *testing.T) {
+func TestResolveOptionalRead(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -585,13 +600,21 @@ func TestResolveReadHostname(t *testing.T) {
 			routerHostname: "new",
 			want:           types.StringValue("new"),
 		},
+		{
+			// A Computed attribute the plan left Unknown must resolve to a
+			// known value, or the framework rejects the apply.
+			name:           "unknown prior never survives",
+			prior:          types.StringUnknown(),
+			routerHostname: "",
+			want:           types.StringNull(),
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := resolveReadHostname(tt.prior, tt.routerHostname)
+			got := resolveOptionalRead(tt.prior, tt.routerHostname)
 			if !got.Equal(tt.want) {
 				t.Errorf("expected %v, got %v", tt.want, got)
 			}
