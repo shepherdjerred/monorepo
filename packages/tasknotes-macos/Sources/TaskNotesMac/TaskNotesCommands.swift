@@ -23,7 +23,14 @@ internal import TaskNotesKit
 ///    automatically in the correct position in the app menu. Adding it by hand
 ///    is how apps end up with two.
 public struct TaskNotesCommands: Commands {
-    @Bindable private var navigation: NavigationState
+    /// The frontmost window's selection, or `nil` when the window in front has
+    /// none — the Settings window, for instance.
+    ///
+    /// A focused value rather than an injected object, for the reason stated
+    /// three bullets up: the menu bar is one thing and there are many windows.
+    /// Injecting it meant every window shared one selection, so Go To moved
+    /// every open window at once.
+    @FocusedValue(\.navigationState) private var navigation: NavigationState?
 
     /// The frontmost task list, or `nil` when there is not one.
     @FocusedValue(\.taskListActions) private var actions: TaskListActions?
@@ -36,9 +43,7 @@ public struct TaskNotesCommands: Commands {
     /// The frontmost board, or `nil` when the window in front is not one.
     @FocusedValue(\.boardActions) private var board: BoardActions?
 
-    public init(navigation: NavigationState) {
-        self.navigation = navigation
-    }
+    public init() {}
 
     public var body: some Commands {
         // Replace rather than augment: the default `New` item creates a window
@@ -104,7 +109,7 @@ public struct TaskNotesCommands: Commands {
             // have no `⌘n`, and a checkmark next to Browse because a project
             // screen happens to be *built* out of Browse would be a lie the
             // reader has no way to check.
-            Picker("Go To", selection: $navigation.selectedSection) {
+            Picker("Go To", selection: selectedSection) {
                 ForEach(Array(SidebarSection.allCases.enumerated()), id: \.element) {
                     index, section in
                     Text(section.title)
@@ -118,6 +123,7 @@ public struct TaskNotesCommands: Commands {
                 }
             }
             .pickerStyle(.inline)
+            .disabled(navigation == nil)
 
             Divider()
 
@@ -171,6 +177,20 @@ public struct TaskNotesCommands: Commands {
             Button("TaskNotes Help") {}
                 .disabled(true)
         }
+    }
+
+    /// The frontmost window's section, as something the `Picker` can write to.
+    ///
+    /// Built here rather than taken from `@Bindable`, because the value being
+    /// bound is optional at a second level: there may be no window in front at
+    /// all. Reading through the optional keeps the picker showing no checkmark
+    /// in that case, which is the same honest answer it already gives while a
+    /// project or a saved view is open.
+    private var selectedSection: Binding<SidebarSection?> {
+        Binding(
+            get: { navigation?.selectedSection },
+            set: { navigation?.selectedSection = $0 }
+        )
     }
 
     /// `⌘1` … `⌘4`, positionally.

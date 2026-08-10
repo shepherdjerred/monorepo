@@ -1,4 +1,5 @@
 public import Observation
+public import SwiftUI
 public import TaskNotesKit
 
 public import struct Foundation.URL
@@ -9,6 +10,14 @@ public import struct Foundation.URL
 /// selections — while task data is a property of the vault. That is why this
 /// sits beside `TaskNotesStore` rather than inside it; conflating them is what
 /// makes a store impossible to test.
+///
+/// ⚠️ **One of these per window, and never one on `AppEnvironment`.** Every
+/// `WindowGroup` instance is handed the same environment object, so a
+/// selection parked there is shared: opening a second window, or switching
+/// destination in it, moves the first window's sidebar too. ``RootView`` owns
+/// it in `@State` — which is per scene instance by construction — and
+/// publishes it through ``FocusedValues/navigationState`` so the menu bar acts
+/// on the frontmost window rather than on a singleton.
 ///
 /// Plain Observation, not TCA. The state machine already lives in Rust, so a
 /// reducer layer would mostly forward to UniFFI calls at full ceremony cost.
@@ -61,5 +70,21 @@ public final class NavigationState {
         guard let link = TaskNotesURL(url) else { return false }
         selection = link.destination
         return true
+    }
+}
+
+private struct NavigationStateKey: FocusedValueKey {
+    typealias Value = NavigationState
+}
+
+extension FocusedValues {
+    /// The frontmost window's selection, if a window is frontmost.
+    ///
+    /// `nil` while the Settings window has focus, which is what greys the View
+    /// menu's Go To picker out instead of letting it move a window nobody is
+    /// looking at.
+    public var navigationState: NavigationState? {
+        get { self[NavigationStateKey.self] }
+        set { self[NavigationStateKey.self] = newValue }
     }
 }

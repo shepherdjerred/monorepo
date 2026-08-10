@@ -17,18 +17,15 @@ public import class Foundation.UserDefaults
 /// Assembling the store here rather than there keeps the entry point to an
 /// `@main` attribute and a scene body.
 ///
-/// Two objects, not one, and the split is the point:
-///
-///   * ``navigation`` is **per window**. Two windows have two selections.
-///   * ``store`` is **per vault**, shared by every window.
-///
-/// They live side by side rather than nested, because folding navigation into
-/// the store is what makes a store impossible to test without a window.
+/// ⚠️ **Everything here is app-scoped, and `NavigationState` deliberately is
+/// not.** Every `WindowGroup` instance is handed this one object, so anything
+/// stored on it is shared by every window whether or not that was intended —
+/// which is exactly what a selection must not be. Navigation is created by
+/// ``RootView`` instead, once per window, and published to the menu bar as a
+/// focused scene value so commands act on the frontmost window rather than on
+/// a singleton. Do not move it back here to save an injection.
 @Observable
 public final class AppEnvironment {
-    /// Which sidebar destination is selected.
-    public let navigation: NavigationState
-
     /// The task store, or the failure that prevented building one.
     ///
     /// A `Result` rather than a force-unwrapped store: the only thing that can
@@ -68,7 +65,7 @@ public final class AppEnvironment {
     /// it. Nothing reads it back out of here — `configure` takes it from the
     /// store, so the Keychain stays the single source of truth.
     public var authToken: String {
-        didSet { tokenStore.setToken(authToken) }
+        didSet { reportFailedWrite(tokenStore.setToken(authToken)) }
     }
 
     /// The floating quick-add panel, and the global hotkey that opens it.
@@ -116,7 +113,6 @@ public final class AppEnvironment {
         let resolvedTokenStore =
             tokenStore ?? (Self.isUITesting ? InMemoryTokenStore() : KeychainTokenStore())
         let container = TaskNotesStore.containerDefault()
-        self.navigation = NavigationState()
         self.store = container
         self.quickAdd = QuickAddPanelController(store: container)
         self.pomodoro = PomodoroTimer()
@@ -135,12 +131,10 @@ public final class AppEnvironment {
 
     /// Assemble over an explicit store, for previews and tests.
     public init(
-        navigation: NavigationState,
         store: Result<TaskNotesStore, CoreError>,
         defaults: UserDefaults = .standard,
         tokenStore: any ServerTokenStore = InMemoryTokenStore()
     ) {
-        self.navigation = navigation
         self.store = store
         self.quickAdd = QuickAddPanelController(store: store)
         self.pomodoro = PomodoroTimer()
@@ -167,10 +161,7 @@ public final class AppEnvironment {
     /// polling, which is how a test becomes flaky and then gets deleted.
     @discardableResult
     public func start() -> _Concurrency.Task<Void, Never> {
-        guard case .success(let store) = store else { return alreadyFinished() }
-        store.migrate()
-        store.configure(serverURL: configuredServer, authToken: tokenStore.token())
-        return pull(store)
+        bringUp()
     }
 
     /// Apply a newly entered address, replacing the running engine.
@@ -181,9 +172,38 @@ public final class AppEnvironment {
     /// pointing at the old address is lost.
     @discardableResult
     public func applyServerAddress() -> _Concurrency.Task<Void, Never> {
+        bringUp()
+    }
+
+    /// Migrate, configure, fetch — the one sequence both public entry points
+    /// are, and the reason they share a body rather than differing by a line.
+    ///
+    /// ⚠️ **Migration failure ends this, and that is the whole point of the
+    /// guard.** An engine configured over unmigrated storage still accepts
+    /// dispatches; the first one writes the v2 queue, and the next launch's
+    /// migration reads that queue as proof the conversion already happened and
+    /// deletes the legacy commands it never converted. Pressing Connect after a
+    /// failed launch used to reach `configure` without ever having migrated,
+    /// which is why the check cannot live in `start()` alone.
+    ///
+    /// The failure is not silent: ``TaskNotesStore/migrate()`` records it, and
+    /// the connection banner renders a store error above every engine state.
+    private func bringUp() -> _Concurrency.Task<Void, Never> {
         guard case .success(let store) = store else { return alreadyFinished() }
+        guard store.migrate() else { return alreadyFinished() }
         store.configure(serverURL: configuredServer, authToken: tokenStore.token())
         return pull(store)
+    }
+
+    /// Put a failed credential write where the user will see it.
+    ///
+    /// A Keychain that refuses the token is the one failure the Settings pane
+    /// cannot leave implicit: the field shows what was typed either way, so
+    /// without this the app claims a credential it does not have and the next
+    /// sync fails as an unexplained 401.
+    private func reportFailedWrite(_ error: CoreError?) {
+        guard let error, case .success(let store) = store else { return }
+        store.report(error)
     }
 
     /// Fetch once, now.

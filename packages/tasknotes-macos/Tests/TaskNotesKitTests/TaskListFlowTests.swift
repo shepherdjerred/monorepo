@@ -26,7 +26,7 @@ struct TodayFlowTests {
         let store = TaskNotesStore(storage: try FileHostStorage(directory: directory.url))
         let calendar = fixedCalendar(today: "2026-07-22")
 
-        store.migrate()
+        #expect(store.migrate())
         store.configure(serverURL: server.baseURL)
 
         // Exactly what pressing Return in the compose row does.
@@ -51,7 +51,7 @@ struct TodayFlowTests {
         let directory = try TemporaryDirectory()
         let store = TaskNotesStore(storage: try FileHostStorage(directory: directory.url))
 
-        store.migrate()
+        #expect(store.migrate())
         store.configure(serverURL: server.baseURL)
 
         // A day far from any 1st, so "the day of the click" and "the scheduled
@@ -139,7 +139,7 @@ struct TodayFlowTests {
         let directory = try TemporaryDirectory()
         let store = TaskNotesStore(storage: try FileHostStorage(directory: directory.url))
 
-        store.migrate()
+        #expect(store.migrate())
         store.configure(serverURL: server.baseURL)
 
         // The machine's real today, because the *server* resolves the rule and
@@ -196,7 +196,7 @@ struct TodayFlowTests {
         // A first "launch" pointed at nothing that answers.
         do {
             let store = TaskNotesStore(storage: try FileHostStorage(directory: directory.url))
-            store.migrate()
+            #expect(store.migrate())
             store.configure(serverURL: unreachable)
 
             // "today" is parsed off by the core and becomes the due date,
@@ -238,7 +238,7 @@ struct TodayFlowTests {
         let server = try TaskNotesServerProcess()
         defer { server.stop() }
         let reopened = TaskNotesStore(storage: try FileHostStorage(directory: directory.url))
-        reopened.migrate()
+        #expect(reopened.migrate())
         reopened.configure(serverURL: server.baseURL)
         #expect(reopened.pendingCount == 1)
 
@@ -263,7 +263,7 @@ struct TodayFlowTests {
         // A Saturday, so "this weekend" is today and "next week" is Monday.
         let calendar = fixedCalendar(today: "2026-07-25")
 
-        store.migrate()
+        #expect(store.migrate())
         store.configure(serverURL: server.baseURL)
         store.dispatch(.create(payload: createRequest(title: "Groceries")))
         await store.sync()

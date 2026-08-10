@@ -14,7 +14,11 @@ import TaskNotesMac
 /// Xcode.
 @main
 struct TaskNotesApp: App {
-    /// Navigation and the task store, assembled in `TaskNotesMac`.
+    /// The task store and the rest of the app-scoped state, assembled in
+    /// `TaskNotesMac`.
+    ///
+    /// Everything on it is shared by every window on purpose. Per-window state
+    /// — the selection, the inspector — belongs to `RootView` instead.
     ///
     /// `@State` is the correct owner for an `@Observable` reference type at the
     /// app root — it gives the object the app's lifetime without the
@@ -27,12 +31,10 @@ struct TaskNotesApp: App {
     var body: some Scene {
         WindowGroup {
             RootView(environment: environment)
-                // `tasknotes://…`. The URL is parsed in `TaskNotesKit`, so an
-                // unhandled link is rejected there rather than being routed to
-                // some arbitrary default here.
-                .onOpenURL { url in
-                    environment.navigation.open(url)
-                }
+                // `tasknotes://…` is handled inside `RootView`, on the window's
+                // own `NavigationState`. A handler here could only reach an
+                // app-scoped one, which is the per-window selection given away.
+                //
                 // Without this pair, a `tasknotes://` link opens a *second*
                 // window rather than retargeting the one already on screen —
                 // verified, not theoretical. `handlesExternalEvents(matching:)`
@@ -46,7 +48,7 @@ struct TaskNotesApp: App {
         // by the definition of done, and one line.
         .defaultSize(width: 1100, height: 720)
         .commands {
-            TaskNotesCommands(navigation: environment.navigation)
+            TaskNotesCommands()
             // File > Quick Add…. A separate conformer rather than more cases
             // inside `TaskNotesCommands`, because it belongs beside the panel
             // it opens.

@@ -5,7 +5,11 @@
 //! each of these is a real parse — an existing value of one of these types is
 //! already known to satisfy its invariants, and no downstream code re-checks.
 
-use std::{ffi::OsStr, fmt, path::Path};
+use std::{
+    ffi::OsStr,
+    fmt,
+    path::{Component, Path},
+};
 
 use crate::{Error, Result};
 
@@ -44,7 +48,8 @@ impl TaskId {
     /// # Errors
     ///
     /// Returns [`Error::Invariant`] when `raw` is empty, is a bare temp
-    /// prefix, is not vault-relative, or does not name a markdown file.
+    /// prefix, is not vault-relative, escapes the vault root, or does not name
+    /// a markdown file.
     pub fn parse(raw: impl Into<String>) -> Result<Self> {
         let raw = raw.into();
         if raw.is_empty() {
@@ -62,6 +67,29 @@ impl TaskId {
             return Err(Error::invariant(format!(
                 "task id must be vault-relative, got absolute path {raw:?}"
             )));
+        }
+        // ⚠️ **A backslash is not a separator here, and that is the danger.**
+        // On Unix `Path` reads `..\x.md` and `C:\x.md` as one ordinary
+        // component, so the walk below sees nothing wrong — while the server
+        // that ultimately joins this id onto the vault root may well be a
+        // platform where it is a separator. Rejecting the character outright is
+        // the only answer that does not depend on which host is parsing.
+        if raw.contains('\\') {
+            return Err(Error::invariant(format!(
+                "task id must not contain a backslash, got {raw:?}"
+            )));
+        }
+        // Every component must be an ordinary name. `..` is the one that
+        // matters — this id is joined onto the vault root downstream, and
+        // nothing there re-checks, because being already-checked is the whole
+        // claim this type makes — but `.`, a root, and a drive prefix are all
+        // equally "not a vault-relative name" and cost one match arm together.
+        for component in Path::new(&raw).components() {
+            if !matches!(component, Component::Normal(_)) {
+                return Err(Error::invariant(format!(
+                    "task id must stay inside the vault, got {raw:?}"
+                )));
+            }
         }
         // Deliberately case-sensitive: the path *is* the identity, so "Note.md"
         // and "Note.MD" are different IDs even where the host filesystem would
@@ -256,6 +284,32 @@ mod tests {
             "Tasks/not-a-note.txt",
             ".md",
             "tmp-",
+        ] {
+            let error = TaskId::parse(raw).unwrap_err();
+            assert!(
+                error.to_string().starts_with("invariant violated: "),
+                "expected an invariant error for {raw:?}, got {error}"
+            );
+        }
+    }
+
+    /// The id is joined onto the vault root downstream and nothing re-checks
+    /// it there, so an id that walks out of the vault has to be unspellable
+    /// rather than merely unusual.
+    ///
+    /// `..\\x.md` and `C:\\x.md` are in this list for a reason a Unix reader
+    /// will not see from the component walk alone: on Unix `Path` treats each
+    /// of them as a *single ordinary component*, so only the explicit
+    /// backslash rejection catches them — and the host that finally resolves
+    /// the path need not be the host that parsed it.
+    #[test]
+    fn rejects_ids_that_escape_the_vault() {
+        for raw in [
+            "../outside.md",
+            "Tasks/../../outside.md",
+            "./Tasks/a.md",
+            "..\\outside.md",
+            "C:\\Tasks\\a.md",
         ] {
             let error = TaskId::parse(raw).unwrap_err();
             assert!(

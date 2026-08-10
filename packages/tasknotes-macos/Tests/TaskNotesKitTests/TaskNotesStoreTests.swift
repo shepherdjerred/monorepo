@@ -30,7 +30,7 @@ struct TaskNotesStoreTests {
         // An engine with no API is still an engine — the core treats "no server
         // yet" as a state, deliberately not an error and deliberately not
         // something a retry timer can fix.
-        store.migrate()
+        #expect(store.migrate())
         store.configure(serverURL: nil)
         #expect(store.lastStoreError == nil)
 
@@ -45,6 +45,33 @@ struct TaskNotesStoreTests {
         #expect(store.lastStoreError == nil)
     }
 
+    /// A reported shell error has no other way out, which is what makes this a
+    /// correctness test rather than a nicety.
+    ///
+    /// ``SyncMessage`` ranks a store error above every engine state and gives
+    /// it no remedy, so nothing on screen can dismiss one. An invalid schedule
+    /// choice therefore used to leave "Something went wrong on this Mac" up
+    /// until the app was relaunched — including after the user picked a valid
+    /// date and the corrected command landed.
+    @Test("a reported shell error is retired by the mutation that succeeds")
+    func aReportedErrorIsRetiredByTheNextSuccess() throws {
+        let directory = try TemporaryDirectory()
+        let store = TaskNotesStore(storage: try FileHostStorage(directory: directory.url))
+        #expect(store.migrate())
+        store.configure(serverURL: nil)
+
+        // Exactly what `TaskListView.schedule` does with a choice the core
+        // refuses: no dispatch happens, and the banner is the only report.
+        store.report(.Validation(message: "not a date this app can resolve"))
+        #expect(store.lastStoreError != nil)
+
+        // The corrected action. Offline is deliberate — the queue accepts work
+        // in the unconfigured state, so this proves the *local* mutation is
+        // what clears it, with no server involved.
+        #expect(store.dispatch(.create(payload: createRequest(title: "Corrected"))) != nil)
+        #expect(store.lastStoreError == nil)
+    }
+
     @Test("a dispatch is queued offline and drains once a server appears")
     func aDispatchIsQueuedOfflineAndDrainsLater() async throws {
         let server = try TaskNotesServerProcess()
@@ -52,7 +79,7 @@ struct TaskNotesStoreTests {
         let directory = try TemporaryDirectory()
         let store = TaskNotesStore(storage: try FileHostStorage(directory: directory.url))
 
-        store.migrate()
+        #expect(store.migrate())
         store.configure(serverURL: nil)
 
         // Offline: the command is accepted and answered optimistically.
@@ -85,7 +112,7 @@ struct TaskNotesStoreTests {
         let directory = try TemporaryDirectory()
         let store = TaskNotesStore(storage: try FileHostStorage(directory: directory.url))
 
-        store.migrate()
+        #expect(store.migrate())
         store.configure(serverURL: server.baseURL)
 
         // Deliberately not alphabetical. `TaskStoreSnapshot` carries an
@@ -108,7 +135,7 @@ struct TaskNotesStoreTests {
         let directory = try TemporaryDirectory()
         let store = TaskNotesStore(storage: try FileHostStorage(directory: directory.url))
 
-        store.migrate()
+        #expect(store.migrate())
         store.configure(serverURL: server.baseURL)
         store.dispatch(.create(payload: createRequest(title: "Round trip")))
         await store.sync()
@@ -131,7 +158,7 @@ struct TaskNotesStoreTests {
         let store = TaskNotesStore(storage: try FileHostStorage(directory: directory.url))
         let unreachable = try #require(URL(string: "http://127.0.0.1:9"))
 
-        store.migrate()
+        #expect(store.migrate())
         store.configure(serverURL: unreachable)
         store.dispatch(.create(payload: createRequest(title: "Doomed")))
 
@@ -157,7 +184,7 @@ struct TaskNotesStoreTests {
 
         do {
             let store = TaskNotesStore(storage: try FileHostStorage(directory: directory.url))
-            store.migrate()
+            #expect(store.migrate())
             store.configure(serverURL: server.baseURL)
             store.dispatch(.create(payload: createRequest(title: "Persisted")))
             await store.sync()
@@ -169,7 +196,7 @@ struct TaskNotesStoreTests {
         // everything it shows came off disk.
         let unreachable = try #require(URL(string: "http://127.0.0.1:9"))
         let reopened = TaskNotesStore(storage: try FileHostStorage(directory: directory.url))
-        reopened.migrate()
+        #expect(reopened.migrate())
         reopened.configure(serverURL: unreachable)
 
         #expect(reopened.tasks.map(\.id) == ["Persisted.md"])
@@ -183,7 +210,7 @@ struct TaskNotesStoreTests {
         let directory = try TemporaryDirectory()
         let store = TaskNotesStore(storage: try FileHostStorage(directory: directory.url))
 
-        store.migrate()
+        #expect(store.migrate())
         store.configure(serverURL: server.baseURL)
 
         let optimistic = try #require(

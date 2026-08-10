@@ -1,5 +1,6 @@
 internal import Security
 internal import Synchronization
+public import TaskNotesUniFFI
 
 internal import struct Foundation.Data
 internal import class Foundation.NSString
@@ -21,7 +22,16 @@ public protocol ServerTokenStore: Sendable {
     /// views' storage: a bearer token of `""` is not a credential, and keeping
     /// one would make the app send `Authorization: Bearer ` and get a 401 that
     /// looks like a server problem rather than an unset field.
-    func setToken(_ token: String?)
+    ///
+    /// ⚠️ **Not discardable.** A caller that drops the answer shows a Settings
+    /// pane claiming a credential was saved while the next `configure` reads
+    /// nothing — the one failure mode where the app's account of itself and
+    /// its behaviour disagree, and the user has no way to tell.
+    ///
+    /// - Returns: the failure, or `nil` when the value was stored. An
+    ///   implementation that cannot store the replacement must leave whatever
+    ///   was already there intact.
+    func setToken(_ token: String?) -> CoreError?
 }
 
 /// The login Keychain, as a generic password.
@@ -75,22 +85,37 @@ public struct KeychainTokenStore: ServerTokenStore {
         return String(data: data, encoding: .utf8)
     }
 
-    public func setToken(_ token: String?) {
+    public func setToken(_ token: String?) -> CoreError? {
         let base: [NSString: Any] = [
             kSecClass: kSecClassGenericPassword,
             kSecAttrService: service,
             kSecAttrAccount: Self.account,
         ]
 
-        // Delete first, unconditionally, then add. `SecItemUpdate` needs the
-        // entry to already exist and `SecItemAdd` fails with
-        // `errSecDuplicateItem` when it does, so the alternative is branching on
-        // a status code to decide which call to make — two paths where one will
-        // do, and the delete is also exactly what an empty token should leave
-        // behind.
-        SecItemDelete(base as CFDictionary)
+        guard let token, !token.isEmpty, let data = token.data(using: .utf8) else {
+            // Clearing the field is a real instruction, so an entry that was
+            // not there to begin with is success rather than something to
+            // report.
+            let removal = SecItemDelete(base as CFDictionary)
+            guard removal == errSecSuccess || removal == errSecItemNotFound else {
+                return Self.failure("could not remove the stored server token", removal)
+            }
+            return nil
+        }
 
-        guard let token, !token.isEmpty, let data = token.data(using: .utf8) else { return }
+        // Update in place, and add only when there is nothing to update.
+        //
+        // ⚠️ **Never delete first.** A delete-then-add pair looks like one path
+        // instead of two, but it spends the working credential before it knows
+        // the replacement will land: if the add then fails — the Keychain
+        // locked, the signing entitlement wrong, the daemon unavailable — the
+        // old token is already gone and the app is left with no credential at
+        // all, having just told the user it saved one.
+        let update = SecItemUpdate(base as CFDictionary, [kSecValueData: data] as CFDictionary)
+        if update == errSecSuccess { return nil }
+        guard update == errSecItemNotFound else {
+            return Self.failure("could not update the stored server token", update)
+        }
 
         var insert = base
         insert[kSecValueData] = data
@@ -98,7 +123,20 @@ public struct KeychainTokenStore: ServerTokenStore {
         // `ThisDeviceOnly` keeps it out of an iCloud Keychain sync and out of an
         // encrypted backup restored onto another Mac.
         insert[kSecAttrAccessible] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
-        SecItemAdd(insert as CFDictionary, nil)
+        let insertion = SecItemAdd(insert as CFDictionary, nil)
+        guard insertion == errSecSuccess else {
+            return Self.failure("could not store the server token", insertion)
+        }
+        return nil
+    }
+
+    /// A Keychain status, as something the banner can say.
+    ///
+    /// `.Invariant` rather than a new error type: this is the same channel as
+    /// every other "something this Mac could not do", and `TaskNotesStore`
+    /// already routes that to the connection banner.
+    private static func failure(_ what: String, _ status: OSStatus) -> CoreError {
+        .Invariant(message: "\(what) (Keychain status \(status))")
     }
 }
 
@@ -122,9 +160,10 @@ public final class InMemoryTokenStore: ServerTokenStore {
         stored.withLock { $0 }
     }
 
-    public func setToken(_ token: String?) {
+    public func setToken(_ token: String?) -> CoreError? {
         stored.withLock { current in
             current = (token?.isEmpty == true) ? nil : token
         }
+        return nil
     }
 }

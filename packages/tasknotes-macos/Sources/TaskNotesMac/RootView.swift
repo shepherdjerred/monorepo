@@ -10,7 +10,14 @@ internal import TaskNotesKit
 /// `⌘⌃S` sidebar toggling for free — none of which a re-implemented tab bar
 /// would have.
 public struct RootView: View {
-    @Bindable private var navigation: NavigationState
+    /// This window's selection.
+    ///
+    /// `@State`, so SwiftUI builds one per `WindowGroup` instance — which is
+    /// the entire per-window navigation model. It used to come from
+    /// `AppEnvironment`, which every window shares, so a second window moved
+    /// the first one's sidebar. See ``NavigationState``.
+    @State private var navigation = NavigationState()
+
     private let environment: AppEnvironment
 
     /// Whether the trailing inspector is showing.
@@ -28,7 +35,6 @@ public struct RootView: View {
 
     public init(environment: AppEnvironment) {
         self.environment = environment
-        self.navigation = environment.navigation
     }
 
     public var body: some View {
@@ -77,6 +83,19 @@ public struct RootView: View {
         .task {
             environment.start()
         }
+        // `tasknotes://…`. Handled here rather than on the scene's content in
+        // `App/` because the selection it moves belongs to *this* window: the
+        // scene-level handler could only ever reach one shared object, which is
+        // the per-window model given away. The URL is parsed in `TaskNotesKit`,
+        // so an unhandled link is rejected there rather than being routed to
+        // some arbitrary default.
+        .onOpenURL { url in
+            navigation.open(url)
+        }
+        // What the View menu's Go To picker binds to. The menu bar is one thing
+        // and there are many windows, so the command reads the frontmost
+        // window's state rather than holding a reference to a singleton.
+        .focusedSceneValue(\.navigationState, navigation)
     }
 
     /// The vault's projects, contexts and tags, for the sidebar's three groups.

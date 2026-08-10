@@ -142,12 +142,25 @@ public final class TaskNotesStore {
     /// the core requires migrations to complete before anything reads the
     /// queue. Idempotent — it returns immediately once the stored version is
     /// current.
-    public func migrate() {
-        absorb(
-            Result {
+    ///
+    /// ⚠️ **The answer is a precondition, not a status line, and it is
+    /// deliberately not discardable.** Configuring over storage that failed to
+    /// migrate leaves a legacy queue in place while the engine accepts
+    /// dispatches; the first one writes the v2 queue, and the *next* launch's
+    /// migration finds that queue, concludes the conversion already happened,
+    /// and deletes the legacy commands it never converted. Continuing past
+    /// `false` is what turns a transient storage failure into lost work.
+    ///
+    /// - Returns: whether storage is migrated, and therefore safe to configure
+    ///   an engine over.
+    public func migrate() -> Bool {
+        let failure = Self.failure(
+            of: Result {
                 try runMigrations(storage: storage, clock: clock, random: randomness)
             }
         )
+        absorbFire(failure)
+        return failure == nil
     }
 
     /// Point the store at a server, replacing any engine already running.
@@ -270,6 +283,13 @@ public final class TaskNotesStore {
             return nil
         }
         let outcome = Result { try engine.dispatch(input: input) }
+        // A successful mutation is what retires a reported shell error. Those
+        // arrive through ``report(_:)`` — an unparsable quick-add line, a
+        // schedule choice the core refused — and ``SyncMessage`` renders a
+        // store error with no remedy and above everything else, so nothing
+        // else on screen could ever take the banner down. Cleared *before*
+        // `refresh`, so a snapshot read that then fails still reports itself.
+        if case .success = outcome { clearReportedError() }
         refresh()
         switch outcome {
         case .success(let optimistic): return optimistic
@@ -317,7 +337,15 @@ public final class TaskNotesStore {
         lastStoreError = error
     }
 
-    /// Clear the local failure, once the user has seen it.
+    /// Retire the local failure.
+    ///
+    /// Called by ``dispatch(_:)`` on the mutation that succeeds, which is the
+    /// moment a reported shell error stops being true: every ``report(_:)``
+    /// call site is the failing half of a switch whose other half dispatches,
+    /// so the corrected action is the only evidence that the problem is over.
+    /// Nothing else can take the banner down — the store error outranks every
+    /// engine state in ``SyncMessage`` and carries no remedy — so without this
+    /// one bad quick-add line left the message up until the app relaunched.
     public func clearReportedError() {
         lastStoreError = nil
     }

@@ -6,10 +6,15 @@ import Testing
 /// ⚠️ `KeychainTokenStore` is deliberately **not** exercised here. It writes to
 /// the login Keychain, so a test against it would leave an entry in the
 /// developer's own Keychain and could read or overwrite the one the installed
-/// app is using. That is exactly why the protocol exists; the real
-/// implementation is four Security-framework calls with no branching worth
-/// asserting, and the branch that *is* worth asserting — empty means absent —
-/// is stated once here and shared by both.
+/// app is using. That is exactly why the protocol exists.
+///
+/// What is asserted here is the part of the contract both implementations
+/// share: empty means absent, and a write that succeeded answers `nil`.
+/// `KeychainTokenStore`'s own branch — update in place, add only when there is
+/// nothing to update, and never delete a working credential before its
+/// replacement has landed — is stated in that type and covered by the local
+/// `mac:smoke` run against the real app, because the only honest test of it is
+/// one that talks to the Keychain.
 @Suite("Server token store")
 struct ServerTokenStoreTests {
     @Test("a stored token round-trips")
@@ -17,7 +22,7 @@ struct ServerTokenStoreTests {
         let store = InMemoryTokenStore()
         #expect(store.token() == nil)
 
-        store.setToken("abc123")
+        #expect(store.setToken("abc123") == nil)
         #expect(store.token() == "abc123")
     }
 
@@ -32,11 +37,11 @@ struct ServerTokenStoreTests {
     func emptyIsAbsent() {
         let store = InMemoryTokenStore(token: "abc123")
 
-        store.setToken("")
+        #expect(store.setToken("") == nil)
         #expect(store.token() == nil)
 
-        store.setToken("abc123")
-        store.setToken(nil)
+        #expect(store.setToken("abc123") == nil)
+        #expect(store.setToken(nil) == nil)
         #expect(store.token() == nil)
     }
 }

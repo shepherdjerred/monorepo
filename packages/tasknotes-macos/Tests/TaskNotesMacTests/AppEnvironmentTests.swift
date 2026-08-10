@@ -350,7 +350,6 @@ private struct Fixture {
         self.suite = try suite ?? DefaultsSuite()
         let storage = try FileHostStorage(directory: directory.url)
         environment = AppEnvironment(
-            navigation: NavigationState(),
             store: .success(TaskNotesStore(storage: storage)),
             defaults: self.suite.defaults,
             tokenStore: tokenStore
