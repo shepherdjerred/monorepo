@@ -5,7 +5,16 @@
 //! with no date. Each is converted to an absolute-state [`Command`] so a queue
 //! persisted by the previous app version is replayed rather than silently
 //! dropped on upgrade. The base task cache needs no conversion: it is already a
-//! server snapshot, and the queue's per-element salvage handles stragglers.
+//! server snapshot.
+//!
+//! ⚠️ **The conversion is all-or-nothing, unlike every other parse in this
+//! crate.** The command queue's own restore and the alias map salvage what they
+//! can, and that is safe because they leave their file where it is — the bytes
+//! they skipped are still on disk. This migration *deletes* its source, so an
+//! entry it could not read is an offline mutation nobody can ever get back. It
+//! therefore refuses rather than salvages, on the same reasoning the store's
+//! `parse_id_counters` gives: losing a launch to a loud error over a file the
+//! user still has is recoverable; a silent deletion is not.
 //!
 //! The v1 shapes are **frozen copies**, deliberately not the live schemas. A
 //! migration has to keep reading the old format forever, so it cannot be
@@ -80,8 +89,10 @@ pub trait MigrationStorage: Send + Sync {
 ///
 /// # Errors
 ///
-/// Propagates a storage-layer failure. A v1 entry that no longer parses is not
-/// an error — see [`migrate_v1_queue`].
+/// Propagates a storage-layer failure, and the refusal [`migrate_v1_queue`]
+/// raises when the legacy queue cannot be converted in full. Both leave the
+/// legacy key and the stored version untouched, so the next launch — or a
+/// later release that can read those bytes — starts from the same place.
 pub fn run_migrations(
     storage: &dyn MigrationStorage,
     clock: &Arc<dyn Clock>,
@@ -96,7 +107,9 @@ pub fn run_migrations(
     // twice would duplicate every mutation.
     if storage.read_queue()?.is_none() {
         let legacy = storage.read_legacy_queue()?;
-        let commands = migrate_v1_queue(legacy.as_deref(), clock.as_ref(), random.as_ref());
+        // `?`, and that is the whole safety property: a queue this release
+        // cannot convert in full must not reach `remove_legacy_queue` below.
+        let commands = migrate_v1_queue(legacy.as_deref(), clock.as_ref(), random.as_ref())?;
         if !commands.is_empty() {
             let data = serde_json::to_string(&commands).map_err(|error| {
                 crate::Error::invariant(format!("could not serialize the migrated queue: {error}"))
@@ -153,29 +166,40 @@ struct V1StatusPayload {
 /// Exposed for testing, and because a host may want to preview an upgrade
 /// before committing to it.
 ///
-/// Unparseable entries are dropped rather than failing the migration, which is
-/// what the v1 queue's own loader did: one corrupt entry must not strand every
-/// other mutation the user is waiting on.
-#[must_use]
+/// ⚠️ **Anything it cannot read is a refusal, not a dropped entry.** The v1
+/// queue's own loader salvaged per element, and copying that here was a data
+/// loss bug: [`run_migrations`] deletes the legacy key immediately afterwards,
+/// so an entry skipped here is an offline mutation that no later launch can
+/// recover. Refusing keeps the bytes on disk, which is the only state from
+/// which anything can still be done about them.
+///
+/// # Errors
+///
+/// [`crate::Error::Invariant`] when a non-empty legacy queue is not a JSON
+/// array, or when any element is not a mutation this release can read.
 pub fn migrate_v1_queue(
     legacy: Option<&str>,
     clock: &dyn Clock,
     random: &dyn Randomness,
-) -> Vec<Command> {
+) -> Result<Vec<Command>> {
     let Some(legacy) = legacy.filter(|value| !value.is_empty()) else {
-        return Vec::new();
+        return Ok(Vec::new());
     };
-    let Ok(Value::Array(items)) = serde_json::from_str::<Value>(legacy) else {
-        return Vec::new();
+    let parsed = serde_json::from_str::<Value>(legacy)
+        .map_err(|error| unconvertible(format!("it is not valid JSON: {error}")))?;
+    let Value::Array(items) = parsed else {
+        return Err(unconvertible("it is not a JSON array"));
     };
 
     let mut commands = Vec::new();
     let mut counter: u64 = 0;
     let mut temp_counter: u64 = 0;
-    for item in items {
-        let Ok(mutation) = serde_json::from_value::<V1Mutation>(item) else {
-            continue;
-        };
+    for (index, item) in items.into_iter().enumerate() {
+        let mutation = serde_json::from_value::<V1Mutation>(item).map_err(|error| {
+            unconvertible(format!(
+                "entry {index} is not a mutation this release can read: {error}"
+            ))
+        })?;
         counter = counter.saturating_add(1);
         let id = command_id(clock.now_millis(), counter, random.next_unit_ppm());
         commands.push(match mutation {
@@ -231,7 +255,18 @@ pub fn migrate_v1_queue(
             },
         });
     }
-    commands
+    Ok(commands)
+}
+
+/// The refusal, worded so the message says what is at stake.
+///
+/// One constructor rather than three call sites spelling it out, because the
+/// consequence — not the parse detail — is the part a host has to render.
+fn unconvertible(detail: impl std::fmt::Display) -> crate::Error {
+    crate::Error::invariant(format!(
+        "the legacy mutation queue exists but cannot be converted, and migrating \
+         would delete offline work that was never carried over: {detail}"
+    ))
 }
 
 #[cfg(test)]
@@ -305,7 +340,7 @@ mod tests {
 
     #[test]
     fn every_v1_mutation_becomes_an_absolute_v2_command() {
-        let commands = migrate_v1_queue(Some(LEGACY), &FixedClock, &HalfUnit);
+        let commands = migrate_v1_queue(Some(LEGACY), &FixedClock, &HalfUnit).unwrap();
         assert_eq!(commands.len(), 5);
         assert!(matches!(
             commands.first(),
@@ -342,7 +377,8 @@ mod tests {
             ),
             &FixedClock,
             &HalfUnit,
-        );
+        )
+        .unwrap();
         let ids: Vec<String> = commands
             .iter()
             .map(|command| command.target().as_str().to_owned())
@@ -350,18 +386,52 @@ mod tests {
         assert_eq!(ids, ["tmp-10-1", "tmp-10-2"], "two creates, two temp ids");
     }
 
+    /// ⚠️ **The entry the converter cannot read is the whole reason this
+    /// refuses.** Dropping it would return one command for a two-element queue,
+    /// and [`run_migrations`] would then delete the file holding the other —
+    /// so the mutation the user made offline would be gone with nothing left to
+    /// recover it from.
     #[test]
-    fn unparseable_entries_are_dropped_not_fatal() {
-        let commands = migrate_v1_queue(
+    fn an_entry_the_converter_cannot_read_refuses_the_whole_queue() {
+        let refused = migrate_v1_queue(
             Some(
                 r#"[{"nope":1},{"id":"m3","timestamp":30,"type":"delete","taskId":"Tasks/b.md"}]"#,
             ),
             &FixedClock,
             &HalfUnit,
+        )
+        .expect_err("an unreadable entry must not be silently dropped");
+        assert!(
+            refused.to_string().contains("entry 0"),
+            "the refusal names which entry stopped it: {refused}"
         );
-        assert_eq!(commands.len(), 1);
-        assert!(migrate_v1_queue(Some("not json"), &FixedClock, &HalfUnit).is_empty());
-        assert!(migrate_v1_queue(None, &FixedClock, &HalfUnit).is_empty());
+    }
+
+    #[test]
+    fn a_legacy_queue_that_is_not_an_array_refuses_rather_than_reading_as_empty() {
+        assert!(migrate_v1_queue(Some("not json"), &FixedClock, &HalfUnit).is_err());
+        assert!(migrate_v1_queue(Some(r#"{"queue":[]}"#), &FixedClock, &HalfUnit).is_err());
+    }
+
+    /// The two cases that genuinely mean "nothing was ever queued", and so are
+    /// the only ones that may convert to an empty list.
+    #[test]
+    fn an_absent_or_empty_legacy_queue_converts_to_nothing() {
+        assert!(
+            migrate_v1_queue(None, &FixedClock, &HalfUnit)
+                .unwrap()
+                .is_empty()
+        );
+        assert!(
+            migrate_v1_queue(Some(""), &FixedClock, &HalfUnit)
+                .unwrap()
+                .is_empty()
+        );
+        assert!(
+            migrate_v1_queue(Some("[]"), &FixedClock, &HalfUnit)
+                .unwrap()
+                .is_empty()
+        );
     }
 
     fn hosts() -> (Arc<dyn Clock>, Arc<dyn Randomness>) {
@@ -382,6 +452,47 @@ mod tests {
         let migrated: Vec<Command> =
             serde_json::from_str(&storage.queue.lock().unwrap().clone().unwrap()).unwrap();
         assert_eq!(migrated.len(), 5);
+    }
+
+    /// ⚠️ **The bug this pins is the deletion, not the parse.** A queue holding
+    /// one entry this release cannot read used to convert to a shorter list,
+    /// write it, delete the legacy key and stamp the version current — so the
+    /// mutations it skipped were gone, and the next launch had no way to know
+    /// anything had ever been there. Every assertion below is about what is
+    /// still on disk afterwards.
+    #[test]
+    fn a_queue_that_cannot_be_converted_in_full_is_kept_rather_than_deleted() {
+        let unreadable = r#"[
+          {"id":"m1","timestamp":10,"type":"create","payload":{"title":"Made offline"}},
+          {"id":"m2","timestamp":20,"type":"a_verb_this_release_never_shipped"}
+        ]"#;
+        let storage = Memory {
+            legacy: Mutex::new(Some(unreadable.to_owned())),
+            ..Memory::default()
+        };
+        let (clock, random) = hosts();
+
+        let refused = run_migrations(&storage, &clock, &random)
+            .expect_err("a lossy conversion must fail the migration");
+        assert!(
+            refused.to_string().contains("delete offline work"),
+            "the refusal says what was at stake: {refused}"
+        );
+
+        assert_eq!(
+            storage.legacy.lock().unwrap().clone(),
+            Some(unreadable.to_owned()),
+            "the source of the unconverted work is still there to recover from"
+        );
+        assert_eq!(
+            *storage.version.lock().unwrap(),
+            0,
+            "and the version is not stamped, so the next launch tries again"
+        );
+        assert!(
+            storage.queue.lock().unwrap().is_none(),
+            "no half-converted queue was written either"
+        );
     }
 
     #[test]
