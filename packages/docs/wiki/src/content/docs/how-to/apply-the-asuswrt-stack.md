@@ -28,13 +28,17 @@ make -C "$(git rev-parse --show-toplevel)/packages/terraform-provider-asuswrt" i
 
 ```bash
 op run --env-file=.env -- tofu -chdir=asuswrt init
-op run --env-file=.env -- ./asuswrt/import.sh   # first time only
+op run --env-file=.env -- ./asuswrt/import.sh
 op run --env-file=.env -- tofu -chdir=asuswrt plan
 op run --env-file=.env -- tofu -chdir=asuswrt apply
 ```
 
-`import.sh` is idempotent per resource but only needs a first run; the per-device
-import list lives in `packages/homelab/src/tofu/asuswrt/README.md`.
+`import.sh` skips resources already in state, so run it on every pass, not only
+the first. Rerun it whenever you add a resource for something that already
+exists on the device — a lease, a port forward, a radio. Skipping the import
+there makes `apply` create a duplicate NVRAM entry instead of adopting the live
+one. The per-device import list lives in
+`packages/homelab/src/tofu/asuswrt/README.md`.
 
 ## 3. Confirm the plan is empty
 
@@ -44,9 +48,11 @@ device drifted.
 
 :::caution
 Do not apply a wireless change you have not verified against the hardware in
-front of you. The wireless write path is unproven and can reformat a working
-radio; the gap is tracked in
-`packages/docs/todos/asuswrt-wireless-write-path.md`.
+front of you. The write path does not fully model firmware `wl_bw` codes,
+chanspec sideband forms, or SAE `wl_mfp`, so an apply can reformat a working
+radio into something the firmware accepts but you did not intend. Reads,
+imports, and plans are safe. See
+[why the wireless write path is not trusted](/explanation/homelab/asuswrt-local-apply/).
 :::
 
 ## Related
