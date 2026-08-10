@@ -8,7 +8,7 @@ disposition: active
 source_marker: false
 ---
 
-# QuotaBar live provider acceptance
+# Brim live provider acceptance
 
 Fixture tests and an installed-app smoke test verify that all four authenticated
 provider surfaces currently return validated snapshots, but production
@@ -17,7 +17,7 @@ each provider's own usage screen.
 
 ## Human Verification
 
-- [ ] Launch QuotaBar with the configured Claude Code account and compare the
+- [ ] Launch Brim with the configured Claude Code account and compare the
       5-hour, weekly, and any model-scoped windows plus reset times.
 - [ ] Compare Codex's returned windows and reset times with the Codex Usage
       page, including any non-five-hour window.
@@ -36,7 +36,7 @@ values still need human comparison.
 - 2026-08-09 — Claude and Codex authenticated responses returned HTTP 200 during
   implementation; token values were not printed. Kimi Code and Grok credentials
   were unavailable for live comparison.
-- 2026-08-09 — QuotaBar now discovers Kimi and Grok through typed, read-only
+- 2026-08-09 — Brim now discovers Kimi and Grok through typed, read-only
   OpenCode OAuth entries. Automated fixtures and bundle checks pass; live Usage
   page comparison remains pending for all four providers.
 - 2026-08-09 — The installed release bundle fetched current Claude, Codex, Kimi,

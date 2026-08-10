@@ -22,6 +22,8 @@ await access(join(resources, "AppIcon.icns"));
 run(["plutil", "-lint", plist]);
 assertPlistValue("CFBundleIdentifier", "com.sjerred.QuotaBar");
 assertPlistValue("CFBundleExecutable", "QuotaBar");
+assertPlistValue("CFBundleDisplayName", "Brim");
+assertPlistValue("CFBundleName", "Brim");
 assertPlistValue("CFBundleIconFile", "AppIcon");
 assertPlistValue("CFBundlePackageType", "APPL");
 assertPlistValue(
@@ -33,6 +35,15 @@ assertPlistValue("LSUIElement", "true");
 
 for (const logo of ["claude.svg", "codex.svg", "kimi.svg", "grok.svg"]) {
   await access(join(resources, logo));
+}
+for (const asset of [
+  "brim-mark-light.svg",
+  "brim-menubar-full.svg",
+  "brim-menubar-low.svg",
+  "brim-menubar-critical.svg",
+  "brim-menubar-unavailable.svg",
+]) {
+  await access(join(resources, asset));
 }
 await access(join(resources, "NOTICE.md"));
 

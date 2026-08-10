@@ -5,7 +5,7 @@ status: in-progress
 board: false
 ---
 
-# QuotaBar: Native macOS AI Subscription Tracker
+# Brim: Native macOS AI Subscription Tracker
 
 Build a release-quality `packages/macos-ai-subscription-tracker` Swift package
 for Claude Code, Codex, Kimi Code/K3, and Grok subscription quota monitoring.
@@ -45,7 +45,7 @@ history charts, notifications, or automatic updates are included in v1.
 
 Manual overrides live in the macOS login Keychain. Claude, Codex, Kimi, and
 OpenCode stores use exact typed token fields rather than recursive string
-discovery. OpenCode is read-only: QuotaBar does not rotate or rewrite Kimi/Grok
+discovery. OpenCode is read-only: Brim does not rotate or rewrite Kimi/Grok
 OAuth state. Expired OpenCode tokens direct the user back to OpenCode.
 
 Only successful current snapshots are persisted under Application Support.
@@ -86,7 +86,7 @@ never enter the repository.
 
 The durable operator procedure, artifact definitions, and signing failure
 diagnostics live in the
-[QuotaBar signing and notarization runbook](../guides/2026-08-09_quotabar-signing-notarization.md).
+[Brim signing and notarization runbook](../guides/2026-08-09_quotabar-signing-notarization.md).
 
 The compact popover keeps its header, summary, subscription footer, and actions
 fixed while unboxed provider sections scroll within a measured 220–460 point

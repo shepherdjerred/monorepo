@@ -1,11 +1,11 @@
 ---
-title: About QuotaBar
+title: About Brim
 description: Why AI subscription quotas belong in a compact native menu-bar app with explicit provider boundaries.
 sidebar:
   order: 7
 ---
 
-QuotaBar keeps subscription usage visible without turning provider-specific web
+Brim keeps subscription usage visible without turning provider-specific web
 usage pages into a dashboard. It polls Claude Code, Codex, Kimi Code, and Grok
 through [typed credential discovery](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/Credentials.swift).
 Its [provider-independent model](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/Domain.swift)
@@ -13,7 +13,7 @@ marks cached or failed data stale instead of current.
 
 ```mermaid
 flowchart LR
-  accTitle: QuotaBar quota flow
+  accTitle: Brim quota flow
   accDescr: Local provider credentials feed isolated authenticated adapters; validated usage snapshots are persisted and rendered as compact menu-bar sections.
 
   C[Local credentials or Keychain] --> A[Provider adapters]
@@ -50,7 +50,7 @@ preserves additive model-scoped windows when the account returns them; Fable is
 shown as a policy-only row when no independent counter is exposed. Codex labels
 windows from returned duration and reset metadata, so a missing five-hour
 window is not invented. It also reads the reset-credit surface read-only and
-shows each available banked reset with its expiration; QuotaBar never redeems a
+shows each available banked reset with its expiration; Brim never redeems a
 reset.
 The provider-specific behavior is isolated in the
 [Claude adapter](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/ClaudeCodeProvider.swift)
@@ -59,7 +59,7 @@ and [Codex adapter](https://github.com/shepherdjerred/monorepo/blob/231bac375d22
 Kimi Code reads its local OAuth credential directory, including a relocated
 `KIMI_CODE_HOME`, and keeps Kimi Code separate from Moonshot Open Platform API
 keys. Kimi and Grok may also read typed OAuth entries owned by OpenCode.
-QuotaBar never refreshes or rewrites OpenCode's credential chain; expired
+Brim never refreshes or rewrites OpenCode's credential chain; expired
 credentials must be refreshed through OpenCode. Grok reads subscription usage
 and credit surfaces, not xAI developer API limits. Kimi and Grok responses are
 private contracts: malformed or changed responses become unavailable/stale
@@ -75,7 +75,7 @@ All enabled providers refresh in parallel every five minutes by default, with
 bounded request and provider timeouts. A 401 reloads local credentials once. A
 429 or network error retains the last successful windows and marks them stale.
 Independent Codex/Grok surfaces may preserve valid partial data with a warning.
-Successful snapshots are stored as JSON under the user's QuotaBar Application
+Successful snapshots are stored as JSON under the user's Brim Application
 Support directory; corrupt and failed writes are visible, and loading the cache
 always marks it stale until a fresh response arrives.
 See the [polling coordinator](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/QuotaBarModel.swift),

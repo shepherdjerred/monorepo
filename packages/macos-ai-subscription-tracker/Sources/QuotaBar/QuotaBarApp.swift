@@ -23,7 +23,7 @@ struct QuotaBarApp: App {
       startupError = nil
     } catch {
       providers = []
-      startupError = "QuotaBar could not configure its provider URLs."
+      startupError = "Brim could not configure its provider URLs."
     }
     self.manualCredentials = manualCredentials
     self.startupError = startupError
@@ -37,9 +37,7 @@ struct QuotaBarApp: App {
     MenuBarExtra {
       MenuBarView(model: model, startupError: startupError)
     } label: {
-      Label("QuotaBar", systemImage: model.overallStatus.symbolName)
-        .symbolRenderingMode(.hierarchical)
-        .foregroundStyle(model.overallStatus.color)
+      BrimMenuBarLabel(status: model.overallStatus)
     }
     .menuBarExtraStyle(.window)
 

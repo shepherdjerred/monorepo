@@ -52,7 +52,7 @@ struct SettingsView: View {
 
   private var loginSection: some View {
     Section("Login") {
-      Toggle("Launch QuotaBar at login", isOn: loginBinding)
+      Toggle("Launch Brim at login", isOn: loginBinding)
         .disabled(launchAtLogin.status == .unavailable)
       if launchAtLogin.status == .requiresApproval {
         HStack {

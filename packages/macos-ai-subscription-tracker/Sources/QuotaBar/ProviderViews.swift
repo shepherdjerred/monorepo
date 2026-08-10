@@ -327,7 +327,7 @@ struct QuotaSummaryView: View {
     case .stale(_, let reason): return reason
     case .unavailable(_, let message): return message
     case .unauthenticated(_, let message): return message
-    case .loading: return "QuotaBar is waiting for the provider response."
+    case .loading: return "Brim is waiting for the provider response."
     case .unknown: return "The provider returned no usage percentage."
     case .noProvidersEnabled: return "Enable a provider in Settings."
     }

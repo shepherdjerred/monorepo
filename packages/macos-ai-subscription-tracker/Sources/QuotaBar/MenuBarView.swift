@@ -42,7 +42,8 @@ struct MenuBarView: View {
 
   private func header(overview: QuotaOverview, date: Date) -> some View {
     HStack(spacing: 8) {
-      Label("QuotaBar", systemImage: model.overallStatus.symbolName)
+      BrimBrandMark()
+      Text("Brim")
         .font(.headline)
       Spacer()
       Text(lastRefreshText(overview: overview, date: date))

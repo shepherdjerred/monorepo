@@ -1,6 +1,6 @@
-# QuotaBar
+# Brim
 
-QuotaBar is a personal macOS menu-bar app for monitoring AI subscription
+Brim is a personal macOS menu-bar app for monitoring AI subscription
 quotas. It currently targets Claude Code, Codex, Kimi Code, and Grok.
 
 The menu bar also shows the configured personal subscription spend: $200/month
@@ -76,7 +76,7 @@ Apple password, private key, or notarization credential belongs in the
 repository.
 
 See the
-[QuotaBar signing and notarization runbook](../docs/guides/2026-08-09_quotabar-signing-notarization.md)
+[Brim signing and notarization runbook](../docs/guides/2026-08-09_quotabar-signing-notarization.md)
 for prerequisites, artifact definitions, verification evidence, versioning,
 and troubleshooting.
 
@@ -86,15 +86,15 @@ macOS release checks; this package does not add a macOS CI lane.
 
 ## Credentials
 
-QuotaBar reads existing local OAuth credentials or accepts an optional token
+Brim reads existing local OAuth credentials or accepts an optional token
 override in Settings. Overrides are stored in the macOS login Keychain, take
 precedence over local discovery, and can be removed from the same screen.
-QuotaBar does not log tokens or include them in its JSON usage cache.
+Brim does not log tokens or include them in its JSON usage cache.
 
 Claude and Codex use their typed local credential formats. Kimi Code reads its
 `KIMI_CODE_HOME` credential directory (default `~/.kimi-code`). Kimi and Grok
 can also read typed OAuth entries from OpenCode. OpenCode remains the sole owner
-and writer of those OAuth token chains: QuotaBar never rotates, refreshes, or
+and writer of those OAuth token chains: Brim never rotates, refreshes, or
 rewrites OpenCode files or its credential database. An expired or rejected
 Kimi/Grok token instructs the user to refresh it through OpenCode.
 
@@ -107,7 +107,7 @@ usage and credits, not xAI developer API rate limits. API billing cards and
 developer API rate limits are intentionally outside the v1 scope.
 
 Codex also reads the authenticated reset-credit surface read-only. Available
-banked resets are shown individually with their expiration dates; QuotaBar does
+banked resets are shown individually with their expiration dates; Brim does
 not redeem or consume them.
 
 Provider contracts are isolated in focused files under `Sources/QuotaBarCore`.

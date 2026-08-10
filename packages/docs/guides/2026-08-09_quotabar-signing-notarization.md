@@ -5,9 +5,9 @@ status: complete
 board: false
 ---
 
-# QuotaBar signing and notarization
+# Brim signing and notarization
 
-Use this runbook to produce the directly distributed QuotaBar app. A complete
+Use this runbook to produce the directly distributed Brim app. A complete
 release is Developer ID signed, notarized by Apple, stapled, accepted by
 Gatekeeper, and installed from the verified artifact.
 
