@@ -292,11 +292,16 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
     rejecting rejectedCredential: ProviderCredential?
   ) -> Set<String> {
     selectionLock.withLock {
-      var rejected = rejectedTokens[provider] ?? []
+      // `rejecting: nil` only happens at the start of a fresh top-level fetch (never
+      // mid-restart, which always excludes the credential that just failed) - reset the
+      // history there so a token rejected in an earlier replacement sequence doesn't stay
+      // permanently excluded for the app's whole lifetime. Mirrors
+      // CompositeCredentialStore.rejectedManualTokens for the same reason.
+      var rejected = rejectedCredential == nil ? [] : (rejectedTokens[provider] ?? [])
       if let rejectedCredential {
         rejected.insert(rejectedCredential.accessToken)
-        rejectedTokens[provider] = rejected
       }
+      rejectedTokens[provider] = rejected
       return rejected
     }
   }

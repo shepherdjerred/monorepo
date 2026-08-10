@@ -144,7 +144,7 @@ final class CredentialTests: XCTestCase {
     XCTAssertEqual(credential.accessToken, "current-later-token")
   }
 
-  func testReloadSkipsRejectedKimiCredential() throws {
+  func testReloadSkipsRejectedKimiCredentialWithinOneSequence() throws {
     let root = try temporaryDirectory()
     defer { try? FileManager.default.removeItem(at: root) }
     try write(
@@ -163,9 +163,12 @@ final class CredentialTests: XCTestCase {
       try store.credential(for: .kimi, rejecting: firstCredential).accessToken,
       "fallback-token"
     )
+    // A later bare rejecting: nil call marks a fresh top-level fetch (e.g. the next scheduled
+    // refresh), not a continuation of this replacement sequence - it must not stay permanently
+    // blocked by a rejection from an earlier sequence.
     XCTAssertEqual(
       try store.credential(for: .kimi, rejecting: nil).accessToken,
-      "fallback-token"
+      "first-current-token"
     )
   }
 
@@ -210,9 +213,12 @@ final class CredentialTests: XCTestCase {
 
     XCTAssertEqual(firstRetry.accessToken, "accepted-token")
     XCTAssertEqual(concurrentRetry.accessToken, "accepted-token")
+    // A subsequent bare rejecting: nil call is a fresh top-level fetch, not a continuation of
+    // this replacement sequence, so it re-offers the originally-discovered candidate rather
+    // than staying permanently blocked by this sequence's rejection.
     XCTAssertEqual(
       try store.credential(for: .grok, rejecting: nil).accessToken,
-      "accepted-token"
+      "rejected-token"
     )
   }
 
