@@ -106,11 +106,20 @@ public struct ClaudeCodeProvider: UsageProvider {
   private static func descriptor(for limit: ClaudeLimit) throws -> WindowDescriptor {
     switch limit.kind {
     case "session":
-      WindowDescriptor(id: "five-hour", label: "5-hour", kind: .rolling(durationSeconds: 18_000))
+      return WindowDescriptor(
+        id: "five-hour",
+        label: "5-hour",
+        kind: .rolling(durationSeconds: 18_000)
+      )
     case "weekly_all":
-      WindowDescriptor(id: "weekly", label: "Weekly", kind: .weekly)
+      return WindowDescriptor(id: "weekly", label: "Weekly", kind: .weekly)
     case "weekly_scoped":
-      scopedDescriptor(model: limit.modelName ?? "Scoped")
+      guard let modelName = limit.modelName,
+        !modelName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+      else {
+        throw QuotaValidationError.invalidPairedFields
+      }
+      return scopedDescriptor(model: modelName)
     default:
       throw QuotaError.unsupportedResponse(.claudeCode)
     }

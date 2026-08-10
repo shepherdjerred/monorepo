@@ -44,6 +44,14 @@ final class ProviderParsingTests: XCTestCase {
         )
       )
     )
+    XCTAssertThrowsError(
+      try ClaudeCodeProvider.parse(
+        data: Data(
+          #"{"limits":[{"kind":"weekly_scoped","percent":10,"resets_at":"2026-09-01T00:00:00Z"}]}"#
+            .utf8
+        )
+      )
+    )
   }
 
   func testCodexClassifiesEveryWindowFromDuration() throws {
@@ -164,6 +172,24 @@ final class ProviderParsingTests: XCTestCase {
         billing: .success(fixture("grok-billing")),
         credits: .success(Data(#"{"config":{}}"#.utf8)),
         accountLabel: nil,
+        now: now
+      )
+    )
+    XCTAssertThrowsError(
+      try GrokProvider.parseCredits(
+        data: Data(
+          #"{"config":{"productUsage":{"chat":{"limit":100,"used":20,"remaining":10}}}}"#
+            .utf8
+        ),
+        now: now
+      )
+    )
+    XCTAssertThrowsError(
+      try GrokProvider.parseCredits(
+        data: Data(
+          #"{"config":{"productUsage":{"chat":{"limit":100,"used":20,"creditUsagePercent":30}}}}"#
+            .utf8
+        ),
         now: now
       )
     )

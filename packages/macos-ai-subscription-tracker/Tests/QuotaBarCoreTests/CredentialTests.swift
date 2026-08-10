@@ -182,6 +182,26 @@ final class CredentialTests: XCTestCase {
     XCTAssertEqual(credential.accessToken, "current-later-token")
   }
 
+  func testExpiredOpenCodeDatabaseDoesNotMaskLaterCurrentDatabase() throws {
+    let root = try temporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: root) }
+    try createOpenCodeDatabase(
+      at: root.appendingPathComponent(".local/share/opencode/opencode.db"),
+      label: "xai",
+      value: #"{"access":"expired-database-token","expires":1}"#
+    )
+    try createOpenCodeDatabase(
+      at: root.appendingPathComponent("Library/Application Support/opencode/opencode.db"),
+      label: "grok",
+      value: #"{"access":"current-database-token","expires":9999999999999}"#
+    )
+    let store = LocalCredentialStore(homeDirectory: root, claudeKeychain: FakeKeychain())
+
+    let credential = try store.credential(for: .grok, reload: true)
+
+    XCTAssertEqual(credential.accessToken, "current-database-token")
+  }
+
   func testMalformedStoreFailsWithoutSearchingArbitraryFields() throws {
     let root = try temporaryDirectory()
     defer { try? FileManager.default.removeItem(at: root) }

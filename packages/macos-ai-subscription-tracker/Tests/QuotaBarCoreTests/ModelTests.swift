@@ -63,6 +63,18 @@ final class ModelTests: XCTestCase {
     }
   }
 
+  func testValidationFailureIsReportedAsMalformedResponse() async {
+    let model = makeModel(providers: [ValidationFailureProvider()])
+
+    await model.refresh()
+
+    guard case let .unavailable(message) = model.state(for: .grok) else {
+      XCTFail("Expected unavailable state")
+      return
+    }
+    XCTAssertEqual(message, QuotaError.malformedResponse(.grok).localizedDescription)
+  }
+
   func testDisabledProvidersAreExcludedAndPrecedenceIsCorrect() async {
     let claude = FakeProvider(
       id: .claudeCode,
@@ -303,6 +315,14 @@ private actor FakeProvider: UsageProvider {
     if delay != .zero { try await Task.sleep(for: delay) }
     guard !results.isEmpty else { throw QuotaError.network(id) }
     return try results.removeFirst().get()
+  }
+}
+
+private struct ValidationFailureProvider: UsageProvider {
+  let id = ProviderID.grok
+
+  func fetch() async throws -> UsageSnapshot {
+    throw QuotaValidationError.invalidPercentage
   }
 }
 

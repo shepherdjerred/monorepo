@@ -202,10 +202,8 @@ public final class QuotaBarModel {
       group.addTask {
         do {
           return .success(provider.id, try await provider.fetch())
-        } catch let error as QuotaError {
-          return .failure(provider.id, error)
         } catch {
-          return .failure(provider.id, .network(provider.id))
+          return .failure(provider.id, classify(error: error, provider: provider.id))
         }
       }
       group.addTask {
@@ -220,5 +218,11 @@ public final class QuotaBarModel {
       group.cancelAll()
       return result
     }
+  }
+
+  nonisolated private static func classify(error: any Error, provider: ProviderID) -> QuotaError {
+    if let quotaError = error as? QuotaError { return quotaError }
+    if error is QuotaValidationError { return .malformedResponse(provider) }
+    return .network(provider)
   }
 }

@@ -217,19 +217,18 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
         }
       }
     }
-    guard
-      let database = openCodeDatabasePaths.first(where: { fileManager.fileExists(atPath: $0.path) })
-    else { return expiredCredential }
-    let rows = try readOpenCodeRows(database: database)
     let labels = OpenCodeAuthFile.labels(for: provider)
-    for row in rows where labels.contains(row.label.lowercased()) {
-      let value = try decode(
-        OpenCodeOAuthCredential.self, from: Data(row.value.utf8), provider: provider)
-      let credential = try makeCredential(value.value, source: database.path)
-      do {
-        return try credential.requireCurrent(for: provider)
-      } catch QuotaError.credentialsExpired {
-        expiredCredential = credential
+    for database in openCodeDatabasePaths where fileManager.fileExists(atPath: database.path) {
+      let rows = try readOpenCodeRows(database: database)
+      for row in rows where labels.contains(row.label.lowercased()) {
+        let value = try decode(
+          OpenCodeOAuthCredential.self, from: Data(row.value.utf8), provider: provider)
+        let credential = try makeCredential(value.value, source: database.path)
+        do {
+          return try credential.requireCurrent(for: provider)
+        } catch QuotaError.credentialsExpired {
+          expiredCredential = credential
+        }
       }
     }
     return expiredCredential

@@ -264,27 +264,35 @@ private struct GrokMetric: Decodable {
   }
 
   func calculatedPercentage() throws -> Double? {
-    if limit == nil, used != nil || remaining != nil {
+    let calculated = try percentageFromAbsoluteCounters()
+    if let explicitPercentage, let calculated,
+      abs(explicitPercentage - calculated) > 0.01
+    {
       throw QuotaValidationError.invalidPairedFields
-    }
-    let calculated: Double?
-    if let limit {
-      guard limit > 0 else { throw QuotaValidationError.invalidPairedFields }
-      if let used {
-        guard 0...limit ~= used else { throw QuotaValidationError.invalidPairedFields }
-        calculated = used / limit * 100
-      } else if let remaining {
-        guard 0...limit ~= remaining else { throw QuotaValidationError.invalidPairedFields }
-        calculated = (limit - remaining) / limit * 100
-      } else {
-        calculated = nil
-      }
-    } else {
-      calculated = nil
     }
     let result = explicitPercentage ?? calculated
     guard result != nil || resetAt != nil else { throw QuotaError.unsupportedResponse(.grok) }
     return try ProviderDecoder.percentage(result)
+  }
+
+  private func percentageFromAbsoluteCounters() throws -> Double? {
+    if limit == nil, used != nil || remaining != nil {
+      throw QuotaValidationError.invalidPairedFields
+    }
+    guard let limit else { return nil }
+    guard limit > 0 else { throw QuotaValidationError.invalidPairedFields }
+    if let used {
+      guard 0...limit ~= used else { throw QuotaValidationError.invalidPairedFields }
+    }
+    if let remaining {
+      guard 0...limit ~= remaining else { throw QuotaValidationError.invalidPairedFields }
+    }
+    if let used, let remaining, abs(used + remaining - limit) > 0.01 {
+      throw QuotaValidationError.invalidPairedFields
+    }
+    if let used { return used / limit * 100 }
+    if let remaining { return (limit - remaining) / limit * 100 }
+    return nil
   }
 }
 
