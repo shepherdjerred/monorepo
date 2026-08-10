@@ -20,6 +20,7 @@ import {
 } from "#src/lib/subscription/add.ts";
 import { replyError } from "#src/discord/commands/define-command.ts";
 import { recordAudit } from "#src/lib/audit/index.ts";
+import { captureFirstSubscriptionCreated } from "#src/analytics/guild-lifecycle.ts";
 import type {
   CommandEditReply,
   CommandReply,
@@ -199,6 +200,9 @@ export async function executeTrack(
     await interaction.editReply({ content: formatTrackResult(result) });
 
     if (result.kind === "created") {
+      if (result.isFirstSubscription) {
+        await captureFirstSubscriptionCreated(args.data.guildId, "discord");
+      }
       void runBackfillAfterCommit({
         alias: args.data.alias,
         puuid: LeaguePuuidSchema.parse(result.account.puuid),
