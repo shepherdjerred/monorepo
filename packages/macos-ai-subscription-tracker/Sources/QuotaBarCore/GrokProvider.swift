@@ -71,7 +71,11 @@ public struct GrokProvider: UsageProvider {
     let response = try ProviderDecoder.decode(GrokCredits.self, from: data, provider: .grok)
     var windows: [UsageWindow] = []
     if response.config.creditUsagePercent != nil || response.config.currentPeriod != nil {
-      let isWeekly = response.config.currentPeriod?.type.lowercased().contains("week") == true
+      let period = response.config.currentPeriod
+      if let period, period.type.lowercased() != "weekly" {
+        throw QuotaError.unsupportedResponse(.grok)
+      }
+      let isWeekly = period != nil
       windows.append(
         try UsageWindow.validated(
           id: "grok-shared-credits",

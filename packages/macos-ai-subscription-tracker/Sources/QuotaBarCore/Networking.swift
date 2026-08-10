@@ -24,7 +24,10 @@ public struct ProviderCredential: Equatable, Sendable {
 }
 
 public protocol CredentialStore: Sendable {
-  func credential(for provider: ProviderID, reload: Bool) async throws -> ProviderCredential
+  func credential(
+    for provider: ProviderID,
+    rejecting rejectedCredential: ProviderCredential?
+  ) async throws -> ProviderCredential
 }
 
 public struct ProviderRequest: Equatable, Sendable, CustomStringConvertible {
@@ -121,13 +124,16 @@ public struct ProviderHTTPClient: Sendable {
     headers: [String: String] = [:],
     timeout: TimeInterval = 20
   ) async throws -> Data {
+    let loadedCredential = try await credentials.credential(for: provider, rejecting: nil)
     let initialCredential: ProviderCredential
     do {
-      initialCredential = try await credentials.credential(for: provider, reload: false)
-        .requireCurrent(for: provider)
+      initialCredential = try loadedCredential.requireCurrent(for: provider)
     } catch QuotaError.credentialsExpired {
-      initialCredential = try await credentials.credential(for: provider, reload: true)
-        .requireCurrent(for: provider)
+      initialCredential = try await credentials.credential(
+        for: provider,
+        rejecting: loadedCredential
+      )
+      .requireCurrent(for: provider)
     }
     let first = try await send(
       provider: provider,
@@ -137,8 +143,11 @@ public struct ProviderHTTPClient: Sendable {
       credential: initialCredential
     )
     if first.statusCode == 401 {
-      let reloaded = try await credentials.credential(for: provider, reload: true)
-        .requireCurrent(for: provider)
+      let reloaded = try await credentials.credential(
+        for: provider,
+        rejecting: initialCredential
+      )
+      .requireCurrent(for: provider)
       let retry = try await send(
         provider: provider,
         url: url,

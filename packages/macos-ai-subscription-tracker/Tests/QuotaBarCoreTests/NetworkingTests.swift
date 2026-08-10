@@ -39,10 +39,10 @@ final class NetworkingTests: XCTestCase {
     let url = try XCTUnwrap(URL(string: "https://example.com/usage"))
 
     let data = try await client.get(provider: .claudeCode, url: url)
-    let reloads = await credentials.reloads
+    let rejectionRequests = await credentials.rejectionRequests
     let requests = await transport.requests
     XCTAssertEqual(data, Data("fresh".utf8))
-    XCTAssertEqual(reloads, [false, true])
+    XCTAssertEqual(rejectionRequests, [false, true])
     XCTAssertEqual(requests.map(\.bearerToken), ["old-token", "new-token"])
   }
 
@@ -87,9 +87,9 @@ final class NetworkingTests: XCTestCase {
     } catch {
       XCTAssertEqual(error as? QuotaError, .credentialsExpired(.kimi))
     }
-    let reloads = await expired.reloads
+    let rejectionRequests = await expired.rejectionRequests
     let requests = await transport.requests
-    XCTAssertEqual(reloads, [false, true])
+    XCTAssertEqual(rejectionRequests, [false, true])
     XCTAssertTrue(requests.isEmpty)
   }
 
@@ -102,10 +102,10 @@ final class NetworkingTests: XCTestCase {
     let url = try XCTUnwrap(URL(string: "https://example.com/usage"))
 
     let data = try await client.get(provider: .kimi, url: url)
-    let reloads = await credentials.reloads
+    let rejectionRequests = await credentials.rejectionRequests
     let requests = await transport.requests
     XCTAssertEqual(data, Data("fresh".utf8))
-    XCTAssertEqual(reloads, [false, true])
+    XCTAssertEqual(rejectionRequests, [false, true])
     XCTAssertEqual(requests.count, 1)
   }
 
@@ -209,10 +209,13 @@ final class NetworkingTests: XCTestCase {
 }
 
 private actor ExpiredCredentialStore: CredentialStore {
-  private(set) var reloads: [Bool] = []
+  private(set) var rejectionRequests: [Bool] = []
 
-  func credential(for _: ProviderID, reload: Bool) throws -> ProviderCredential {
-    reloads.append(reload)
+  func credential(
+    for _: ProviderID,
+    rejecting rejectedCredential: ProviderCredential?
+  ) throws -> ProviderCredential {
+    rejectionRequests.append(rejectedCredential != nil)
     return try ProviderCredential(
       accessToken: "expired-token",
       expiresAt: Date(timeIntervalSince1970: 1),
@@ -222,13 +225,16 @@ private actor ExpiredCredentialStore: CredentialStore {
 }
 
 private actor RecoveringExpiredCredentialStore: CredentialStore {
-  private(set) var reloads: [Bool] = []
+  private(set) var rejectionRequests: [Bool] = []
 
-  func credential(for _: ProviderID, reload: Bool) throws -> ProviderCredential {
-    reloads.append(reload)
+  func credential(
+    for _: ProviderID,
+    rejecting rejectedCredential: ProviderCredential?
+  ) throws -> ProviderCredential {
+    rejectionRequests.append(rejectedCredential != nil)
     return try ProviderCredential(
-      accessToken: reload ? "fresh-token" : "expired-token",
-      expiresAt: reload ? nil : Date(timeIntervalSince1970: 1),
+      accessToken: rejectedCredential == nil ? "expired-token" : "fresh-token",
+      expiresAt: rejectedCredential == nil ? Date(timeIntervalSince1970: 1) : nil,
       source: "test"
     )
   }

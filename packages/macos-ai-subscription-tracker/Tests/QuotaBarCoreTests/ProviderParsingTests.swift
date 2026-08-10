@@ -327,5 +327,14 @@ final class ProviderParsingTests: XCTestCase {
         now: now
       )
     )
+    XCTAssertThrowsError(
+      try GrokProvider.parseCredits(
+        data: Data(
+          #"{"config":{"creditUsagePercent":20,"currentPeriod":{"type":"biweekly","end":"2026-08-16T00:00:00Z"}}}"#
+            .utf8
+        ),
+        now: now
+      )
+    )
   }
 }

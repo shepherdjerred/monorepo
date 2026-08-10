@@ -11,7 +11,7 @@ final class CredentialTests: XCTestCase {
     let initial = try await store.credentialIfPresent(for: .codex)
     XCTAssertNil(initial)
     try await store.save("  manual-token  ", for: .codex)
-    let saved = try await store.credential(for: .codex, reload: false)
+    let saved = try await store.credential(for: .codex, rejecting: nil)
     XCTAssertEqual(saved.accessToken, "manual-token")
     try await store.remove(for: .codex)
     let removed = try await store.credentialIfPresent(for: .codex)
@@ -38,8 +38,8 @@ final class CredentialTests: XCTestCase {
       to: root.appendingPathComponent(".codex/auth.json")
     )
     let store = LocalCredentialStore(homeDirectory: root, claudeKeychain: FakeKeychain())
-    let claude = try store.credential(for: .claudeCode, reload: false)
-    let codex = try store.credential(for: .codex, reload: false)
+    let claude = try store.credential(for: .claudeCode, rejecting: nil)
+    let codex = try store.credential(for: .codex, rejecting: nil)
     XCTAssertEqual(claude.accessToken, "claude-exact-token")
     XCTAssertEqual(codex.accessToken, "codex-exact-token")
   }
@@ -53,7 +53,7 @@ final class CredentialTests: XCTestCase {
       service: "Claude Code-credentials"
     )
     let store = LocalCredentialStore(homeDirectory: root, claudeKeychain: keychain)
-    let credential = try store.credential(for: .claudeCode, reload: false)
+    let credential = try store.credential(for: .claudeCode, rejecting: nil)
     XCTAssertEqual(credential.accessToken, "keychain-token")
   }
 
@@ -71,7 +71,7 @@ final class CredentialTests: XCTestCase {
     )
     let store = LocalCredentialStore(homeDirectory: root, claudeKeychain: keychain)
 
-    let credential = try store.credential(for: .claudeCode, reload: true)
+    let credential = try store.credential(for: .claudeCode, rejecting: nil)
 
     XCTAssertEqual(credential.accessToken, "current-keychain-token")
   }
@@ -88,7 +88,7 @@ final class CredentialTests: XCTestCase {
       to: root.appendingPathComponent(".local/share/opencode/auth.json")
     )
     let store = LocalCredentialStore(homeDirectory: root, claudeKeychain: FakeKeychain())
-    let credential = try store.credential(for: .kimi, reload: false)
+    let credential = try store.credential(for: .kimi, rejecting: nil)
     XCTAssertEqual(credential.accessToken, "kimi-local-token")
   }
 
@@ -105,7 +105,7 @@ final class CredentialTests: XCTestCase {
     )
     let store = LocalCredentialStore(homeDirectory: root, claudeKeychain: FakeKeychain())
 
-    let credential = try store.credential(for: .kimi, reload: true)
+    let credential = try store.credential(for: .kimi, rejecting: nil)
 
     XCTAssertEqual(credential.accessToken, "fresh-opencode-token")
   }
@@ -123,7 +123,7 @@ final class CredentialTests: XCTestCase {
     )
     let store = LocalCredentialStore(homeDirectory: root, claudeKeychain: FakeKeychain())
 
-    let credential = try store.credential(for: .kimi, reload: true)
+    let credential = try store.credential(for: .kimi, rejecting: nil)
 
     XCTAssertEqual(credential.accessToken, "current-later-token")
   }
@@ -141,16 +141,14 @@ final class CredentialTests: XCTestCase {
     )
     let store = LocalCredentialStore(homeDirectory: root, claudeKeychain: FakeKeychain())
 
+    let firstCredential = try store.credential(for: .kimi, rejecting: nil)
+    XCTAssertEqual(firstCredential.accessToken, "first-current-token")
     XCTAssertEqual(
-      try store.credential(for: .kimi, reload: false).accessToken,
-      "first-current-token"
-    )
-    XCTAssertEqual(
-      try store.credential(for: .kimi, reload: true).accessToken,
+      try store.credential(for: .kimi, rejecting: firstCredential).accessToken,
       "fallback-token"
     )
     XCTAssertEqual(
-      try store.credential(for: .kimi, reload: false).accessToken,
+      try store.credential(for: .kimi, rejecting: nil).accessToken,
       "fallback-token"
     )
   }
@@ -168,13 +166,37 @@ final class CredentialTests: XCTestCase {
     )
     let store = LocalCredentialStore(homeDirectory: root, claudeKeychain: FakeKeychain())
 
+    let firstCredential = try store.credential(for: .grok, rejecting: nil)
+    XCTAssertEqual(firstCredential.accessToken, "first-current-token")
     XCTAssertEqual(
-      try store.credential(for: .grok, reload: false).accessToken,
-      "first-current-token"
-    )
-    XCTAssertEqual(
-      try store.credential(for: .grok, reload: true).accessToken,
+      try store.credential(for: .grok, rejecting: firstCredential).accessToken,
       "fallback-token"
+    )
+  }
+
+  func testConcurrentRejectionsOnlyExcludeFailedCredential() throws {
+    let root = try temporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: root) }
+    try write(
+      #"{"xai":{"access":"rejected-token","expires":9999999999999}}"#,
+      to: root.appendingPathComponent(".local/share/opencode/auth.json")
+    )
+    try write(
+      #"{"grok":{"access":"accepted-token","expires":9999999999999}}"#,
+      to: root.appendingPathComponent(".config/opencode/auth.json")
+    )
+    let store = LocalCredentialStore(homeDirectory: root, claudeKeychain: FakeKeychain())
+    let firstRequest = try store.credential(for: .grok, rejecting: nil)
+    let concurrentRequest = try store.credential(for: .grok, rejecting: nil)
+
+    let firstRetry = try store.credential(for: .grok, rejecting: firstRequest)
+    let concurrentRetry = try store.credential(for: .grok, rejecting: concurrentRequest)
+
+    XCTAssertEqual(firstRetry.accessToken, "accepted-token")
+    XCTAssertEqual(concurrentRetry.accessToken, "accepted-token")
+    XCTAssertEqual(
+      try store.credential(for: .grok, rejecting: nil).accessToken,
+      "accepted-token"
     )
   }
 
@@ -218,7 +240,7 @@ final class CredentialTests: XCTestCase {
     )
     let store = LocalCredentialStore(homeDirectory: root, claudeKeychain: FakeKeychain())
 
-    let credential = try store.credential(for: .grok, reload: false)
+    let credential = try store.credential(for: .grok, rejecting: nil)
 
     XCTAssertEqual(credential.accessToken, "database-token")
   }
@@ -237,8 +259,8 @@ final class CredentialTests: XCTestCase {
     )
     try original.write(to: authURL)
     let store = LocalCredentialStore(homeDirectory: root, claudeKeychain: FakeKeychain())
-    let kimi = try store.credential(for: .kimi, reload: false)
-    let grok = try store.credential(for: .grok, reload: true)
+    let kimi = try store.credential(for: .kimi, rejecting: nil)
+    let grok = try store.credential(for: .grok, rejecting: nil)
     XCTAssertEqual(kimi.accessToken, "kimi-opencode")
     XCTAssertEqual(grok.accessToken, "grok-opencode")
     XCTAssertEqual(try Data(contentsOf: authURL), original)
@@ -253,7 +275,7 @@ final class CredentialTests: XCTestCase {
     )
     let store = LocalCredentialStore(homeDirectory: root, claudeKeychain: FakeKeychain())
     do {
-      _ = try store.credential(for: .grok, reload: false)
+      _ = try store.credential(for: .grok, rejecting: nil)
       XCTFail("Expected expiry")
     } catch {
       XCTAssertEqual(error as? QuotaError, .credentialsExpired(.grok))
@@ -274,7 +296,7 @@ final class CredentialTests: XCTestCase {
     )
     let store = LocalCredentialStore(homeDirectory: root, claudeKeychain: FakeKeychain())
 
-    let credential = try store.credential(for: .grok, reload: true)
+    let credential = try store.credential(for: .grok, rejecting: nil)
 
     XCTAssertEqual(credential.accessToken, "current-later-token")
   }
@@ -294,7 +316,7 @@ final class CredentialTests: XCTestCase {
     )
     let store = LocalCredentialStore(homeDirectory: root, claudeKeychain: FakeKeychain())
 
-    let credential = try store.credential(for: .grok, reload: true)
+    let credential = try store.credential(for: .grok, rejecting: nil)
 
     XCTAssertEqual(credential.accessToken, "current-database-token")
   }
@@ -308,14 +330,14 @@ final class CredentialTests: XCTestCase {
     )
     let store = LocalCredentialStore(homeDirectory: root, claudeKeychain: FakeKeychain())
     do {
-      _ = try store.credential(for: .codex, reload: false)
+      _ = try store.credential(for: .codex, rejecting: nil)
       XCTFail("Expected missing credentials")
     } catch {
       XCTAssertEqual(error as? QuotaError, .credentialsMissing(.codex))
     }
 
     try write("not-json", to: root.appendingPathComponent(".codex/auth.json"))
-    XCTAssertThrowsError(try store.credential(for: .codex, reload: true))
+    XCTAssertThrowsError(try store.credential(for: .codex, rejecting: nil))
   }
 
   func testManualCredentialPrecedesLocalDiscovery() async throws {
@@ -331,7 +353,7 @@ final class CredentialTests: XCTestCase {
       manual: manual,
       local: LocalCredentialStore(homeDirectory: root, claudeKeychain: FakeKeychain())
     )
-    let credential = try await composite.credential(for: .codex, reload: true)
+    let credential = try await composite.credential(for: .codex, rejecting: nil)
     XCTAssertEqual(credential.accessToken, "manual-token")
   }
 

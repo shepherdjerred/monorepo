@@ -69,7 +69,10 @@ public actor ManualCredentialStore: CredentialStore {
     self.keychain = keychain
   }
 
-  public func credential(for provider: ProviderID, reload _: Bool) throws -> ProviderCredential {
+  public func credential(
+    for provider: ProviderID,
+    rejecting _: ProviderCredential?
+  ) throws -> ProviderCredential {
     guard let data = try keychain.read(service: Self.service, account: provider.rawValue) else {
       throw QuotaError.credentialsMissing(provider)
     }
@@ -109,7 +112,6 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
   private let kimiCodeHome: URL?
   private let claudeKeychain: any KeychainClient
   private let selectionLock = NSLock()
-  private var selectedTokens: [ProviderID: String] = [:]
   private var rejectedTokens: [ProviderID: Set<String>] = [:]
 
   public init(
@@ -132,8 +134,14 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
     self.claudeKeychain = claudeKeychain
   }
 
-  public func credential(for provider: ProviderID, reload: Bool) throws -> ProviderCredential {
-    let excludedTokens = excludedTokens(for: provider, reload: reload)
+  public func credential(
+    for provider: ProviderID,
+    rejecting rejectedCredential: ProviderCredential?
+  ) throws -> ProviderCredential {
+    let excludedTokens = excludedTokens(
+      for: provider,
+      rejecting: rejectedCredential
+    )
     let credential: ProviderCredential?
     switch provider {
     case .claudeCode: credential = try readClaude(excluding: excludedTokens)
@@ -142,11 +150,7 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
     case .grok: credential = try readOpenCode(provider: provider, excluding: excludedTokens)
     }
     guard let credential else { throw QuotaError.credentialsMissing(provider) }
-    let currentCredential = try credential.requireCurrent(for: provider)
-    selectionLock.withLock {
-      selectedTokens[provider] = currentCredential.accessToken
-    }
-    return currentCredential
+    return try credential.requireCurrent(for: provider)
   }
 
   private func readClaude(excluding excludedTokens: Set<String>) throws -> ProviderCredential? {
@@ -264,11 +268,14 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
     return expiredCredential
   }
 
-  private func excludedTokens(for provider: ProviderID, reload: Bool) -> Set<String> {
+  private func excludedTokens(
+    for provider: ProviderID,
+    rejecting rejectedCredential: ProviderCredential?
+  ) -> Set<String> {
     selectionLock.withLock {
       var rejected = rejectedTokens[provider] ?? []
-      if reload, let selectedToken = selectedTokens.removeValue(forKey: provider) {
-        rejected.insert(selectedToken)
+      if let rejectedCredential {
+        rejected.insert(rejectedCredential.accessToken)
         rejectedTokens[provider] = rejected
       }
       return rejected
@@ -383,11 +390,13 @@ public actor CompositeCredentialStore: CredentialStore {
     self.local = local
   }
 
-  public func credential(for provider: ProviderID, reload: Bool) async throws -> ProviderCredential
-  {
+  public func credential(
+    for provider: ProviderID,
+    rejecting rejectedCredential: ProviderCredential?
+  ) async throws -> ProviderCredential {
     if let manualCredential = try await manual.credentialIfPresent(for: provider) {
       return manualCredential
     }
-    return try await local.credential(for: provider, reload: reload)
+    return try await local.credential(for: provider, rejecting: rejectedCredential)
   }
 }

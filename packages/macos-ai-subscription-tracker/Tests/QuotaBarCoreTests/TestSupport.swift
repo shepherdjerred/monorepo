@@ -50,7 +50,7 @@ func temporaryDirectory() throws -> URL {
 
 actor StubCredentialStore: CredentialStore {
   private var credentials: [ProviderCredential]
-  private(set) var reloads: [Bool] = []
+  private(set) var rejectionRequests: [Bool] = []
 
   init(tokens: [String]) {
     self.credentials = tokens.map { token in
@@ -60,10 +60,15 @@ actor StubCredentialStore: CredentialStore {
     }
   }
 
-  func credential(for provider: ProviderID, reload: Bool) throws -> ProviderCredential {
-    reloads.append(reload)
+  func credential(
+    for provider: ProviderID,
+    rejecting rejectedCredential: ProviderCredential?
+  ) throws -> ProviderCredential {
+    rejectionRequests.append(rejectedCredential != nil)
     guard !credentials.isEmpty else { throw QuotaError.credentialsMissing(provider) }
-    if reload, credentials.count > 1 { credentials.removeFirst() }
+    if let rejectedCredential {
+      credentials.removeAll { $0.accessToken == rejectedCredential.accessToken }
+    }
     guard let credential = credentials.first else { throw QuotaError.credentialsMissing(provider) }
     return credential
   }
