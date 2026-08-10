@@ -47,7 +47,7 @@ const REQUIRED_AUDIT_BINARIES = [
 
 const REQUIRED_ENV_GROUPS: readonly RequiredEnvGroup[] = [
   { label: "CLAUDE_CODE_OAUTH_TOKEN", names: ["CLAUDE_CODE_OAUTH_TOKEN"] },
-  { label: "PAGERDUTY_TOKEN", names: ["PAGERDUTY_TOKEN"] },
+  { label: "ALERT_DASHBOARD_URL", names: ["ALERT_DASHBOARD_URL"] },
   { label: "BUGSINK_URL", names: ["BUGSINK_URL"] },
   { label: "BUGSINK_TOKEN", names: ["BUGSINK_TOKEN"] },
   { label: "GRAFANA_URL", names: ["GRAFANA_URL"] },

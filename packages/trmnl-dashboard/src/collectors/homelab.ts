@@ -1,8 +1,7 @@
 import type { AppConfig } from "../config.ts";
-import { AlertmanagerClient } from "../clients/alertmanager.ts";
+import { AlertsClient } from "../clients/alerts.ts";
 import { BugsinkClient } from "../clients/bugsink.ts";
 import { KubernetesClient } from "../clients/kubernetes.ts";
-import { PagerDutyClient } from "../clients/pagerduty.ts";
 import { PrometheusClient } from "../clients/prometheus.ts";
 import { statusFromCount, worstStatus, type Status } from "../status.ts";
 import { formatDisplayTime } from "../time.ts";
@@ -12,25 +11,23 @@ import type {
   HardwareSection,
   HomelabPayload,
   KubernetesSection,
-  PagerDutySection,
   StorageSection,
 } from "../types.ts";
 
 type PrometheusQuerier = Pick<PrometheusClient, "query" | "scalar">;
-type AlertmanagerReader = Pick<AlertmanagerClient, "getActiveAlerts">;
+type AlertsReader = Pick<AlertsClient, "getSummary" | "listOpen">;
 
 export type HomelabClients = {
   prometheus: PrometheusQuerier;
-  alertmanager: AlertmanagerReader;
+  alerts: AlertsReader;
   kubernetes: Pick<KubernetesClient, "getSummary">;
   bugsink?: Pick<BugsinkClient, "getProjectSummaries">;
-  pagerDuty?: Pick<PagerDutyClient, "getSummary">;
 };
 
 export function createHomelabClients(config: AppConfig): HomelabClients {
   return {
     prometheus: new PrometheusClient(config.homelab.prometheusUrl),
-    alertmanager: new AlertmanagerClient(config.homelab.alertmanagerUrl),
+    alerts: new AlertsClient(config.homelab.alertDashboardUrl),
     kubernetes: new KubernetesClient(
       config.homelab.kubernetesUrl,
       config.homelab.kubernetesTokenPath,
@@ -44,9 +41,6 @@ export function createHomelabClients(config: AppConfig): HomelabClients {
             config.homelab.bugsinkToken,
           ),
         }),
-    ...(config.homelab.pagerDutyToken == null
-      ? {}
-      : { pagerDuty: new PagerDutyClient(config.homelab.pagerDutyToken) }),
   };
 }
 
@@ -55,19 +49,17 @@ export async function collectHomelabPayload(
   clients = createHomelabClients(config),
 ): Promise<HomelabPayload> {
   const errors: string[] = [];
-  const [bugsink, pagerduty, kubernetes, storage, hardware, alerts] =
-    await Promise.all([
-      collectBugsink(clients, errors),
-      collectPagerDuty(clients, errors),
-      collectKubernetes(clients, errors),
-      collectStorage(clients.prometheus, errors),
-      collectHardware(clients.prometheus, errors),
-      collectAlerts(clients.alertmanager, errors),
-    ]);
+  const [bugsink, kubernetes, storage, hardware, alerts] = await Promise.all([
+    collectBugsink(clients, errors),
+    collectKubernetes(clients, errors),
+    collectStorage(clients.prometheus, errors),
+    collectHardware(clients.prometheus, errors),
+    collectAlerts(clients.alerts, errors),
+  ]);
 
   const status = worstStatus([
     bugsink.status,
-    pagerduty.status,
+    alerts.status,
     kubernetes.status,
     storage.status,
     hardware.status,
@@ -88,12 +80,11 @@ export async function collectHomelabPayload(
       bugsink.status === "unknown"
         ? "Bugsink ERR"
         : `${bugsink.unresolved.toString()} Bugsink`,
-      pagerduty.status === "unknown"
-        ? "PD ERR"
-        : `${pagerduty.triggered.toString()} PD`,
+      alerts.status === "unknown"
+        ? "Alerts ERR"
+        : `${alerts.open.toString()} open alerts`,
     ].join(" · "),
     bugsink,
-    pagerduty,
     kubernetes,
     storage,
     hardware,
@@ -125,32 +116,6 @@ async function collectBugsink(
   } catch (error) {
     errors.push(errorMessage("Bugsink", error));
     return { status: "unknown", unresolved: 0, projects: [] };
-  }
-}
-
-async function collectPagerDuty(
-  clients: HomelabClients,
-  errors: string[],
-): Promise<PagerDutySection> {
-  if (clients.pagerDuty == null) {
-    return { status: "unknown", triggered: 0, acknowledged: 0, on_call: [] };
-  }
-  try {
-    const summary = await clients.pagerDuty.getSummary();
-    return {
-      status:
-        summary.triggered > 0
-          ? "error"
-          : summary.acknowledged > 0
-            ? "warning"
-            : "ok",
-      triggered: summary.triggered,
-      acknowledged: summary.acknowledged,
-      on_call: summary.onCall,
-    };
-  } catch (error) {
-    errors.push(errorMessage("PagerDuty", error));
-    return { status: "unknown", triggered: 0, acknowledged: 0, on_call: [] };
   }
 }
 
@@ -249,29 +214,37 @@ async function collectHardware(
 }
 
 async function collectAlerts(
-  alertmanager: AlertmanagerReader,
+  alerts: AlertsReader,
   errors: string[],
 ): Promise<AlertsSection> {
   try {
-    const active = await alertmanager.getActiveAlerts();
-    const critical = active.filter(
-      (alert) =>
-        alert.status.state === "active" &&
-        alert.labels["severity"] === "critical",
-    ).length;
-    const warning = active.filter(
-      (alert) =>
-        alert.status.state === "active" &&
-        alert.labels["severity"] !== "critical",
-    ).length;
+    const [summary, openAlerts] = await Promise.all([
+      alerts.getSummary(),
+      alerts.listOpen(),
+    ]);
     return {
-      status: critical > 0 ? "error" : warning > 0 ? "warning" : "ok",
-      critical,
-      warning,
+      status:
+        summary.critical > 0 ? "error" : summary.warning > 0 ? "warning" : "ok",
+      open: summary.open,
+      critical: summary.critical,
+      warning: summary.warning,
+      info: summary.info,
+      recent: openAlerts.map((alert) => ({
+        severity: alert.severity,
+        alertname: alert.alertname,
+        summary: alert.summary,
+      })),
     };
   } catch (error) {
-    errors.push(errorMessage("Alertmanager", error));
-    return { status: "unknown", critical: 0, warning: 0 };
+    errors.push(errorMessage("Alerts", error));
+    return {
+      status: "unknown",
+      open: 0,
+      critical: 0,
+      warning: 0,
+      info: 0,
+      recent: [],
+    };
   }
 }
 

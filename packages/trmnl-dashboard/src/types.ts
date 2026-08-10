@@ -35,7 +35,6 @@ export type HomelabPayload = {
   status: Status;
   summary: string;
   bugsink: BugsinkSection;
-  pagerduty: PagerDutySection;
   kubernetes: KubernetesSection;
   storage: StorageSection;
   hardware: HardwareSection;
@@ -47,13 +46,6 @@ export type BugsinkSection = {
   status: Status;
   unresolved: number;
   projects: { name: string; unresolved: number }[];
-};
-
-export type PagerDutySection = {
-  status: Status;
-  triggered: number;
-  acknowledged: number;
-  on_call: string[];
 };
 
 export type KubernetesSection = {
@@ -77,6 +69,9 @@ export type HardwareSection = {
 
 export type AlertsSection = {
   status: Status;
+  open: number;
   critical: number;
   warning: number;
+  info: number;
+  recent: { severity: string; alertname: string; summary: string }[];
 };

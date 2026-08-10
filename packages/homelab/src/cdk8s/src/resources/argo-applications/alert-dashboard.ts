@@ -1,8 +1,8 @@
 import type { Chart } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 
-// Intentionally not registered in cdk8s-charts/apps.ts until the first real,
-// public image digest is pinned. See packages/docs/todos/pagerduty-migration.md.
+// Registered once the public image digest is pinned. Keep this application in
+// the activation branch so ArgoCD owns the complete service lifecycle.
 export function createAlertDashboardApp(chart: Chart) {
   return new Application(chart, "alert-dashboard-app", {
     metadata: { name: "alert-dashboard" },

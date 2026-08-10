@@ -43,6 +43,5 @@ acknowledgement or human action from either value.
 ## Connection boundary
 
 `ALERT_DASHBOARD_URL` overrides the default tailnet endpoint. An unavailable
-endpoint is an operational error, not evidence that no alerts exist. During the
-staged PagerDuty migration, use the retained `toolkit pd` command only when the
-Alerts service has not yet been activated.
+endpoint is an operational error, not evidence that no alerts exist. Alerts is
+the sole active alert destination; use `toolkit alerts` for the service.

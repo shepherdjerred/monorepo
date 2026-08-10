@@ -408,7 +408,7 @@ export const scheduleOrphans = new Gauge({
 
 export const temporalFailureWatcherAlertsTotal = new Counter({
   name: "temporal_failure_watcher_alerts_total",
-  help: "Detail-rich PagerDuty alerts posted per failed/timed-out Temporal workflow execution",
+  help: "Detail-rich Alerts occurrences posted per failed/timed-out Temporal workflow execution",
   labelNames: ["workflowType"] as const,
   registers: [register],
 });

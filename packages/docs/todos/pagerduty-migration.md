@@ -13,17 +13,17 @@ source_marker: false
 ## Context
 
 The Alerts service, durable ledger, UI, APIs, image build, deployment chart, and
-parallel `toolkit alerts` command are implemented. PagerDuty remains the active
-Alertmanager receiver and the Temporal/TRMNL consumers remain unchanged until a
-deployable Alerts image exists.
+`toolkit alerts` command are implemented. The activation and cutover source
+changes are staged on separate branches. PagerDuty remains the active live
+Alertmanager receiver until Buildkite publishes the changes and ArgoCD syncs
+them.
 
-The first merge intentionally does not register the Alert Dashboard Argo CD
-Application, switch Alertmanager receivers, enable the service-health rules, or
-replace the active Temporal/TRMNL clients. The existing `toolkit pd` command is
-retained beside `toolkit alerts`. The image version is an all-zero placeholder
-until the main image lane publishes a real digest. Activating those resources
-before that pin would guarantee an `ImagePullBackOff` while removing working
-PagerDuty paths.
+The activation branch registers the Argo CD Application, service-health rules,
+probe, and network paths while leaving the existing receiver intact. The
+cutover branch switches Alertmanager to the authenticated Alerts webhook with a
+Postal fallback, migrates Temporal and TRMNL, and removes the active `toolkit
+pd` command and PagerDuty runtime references. The image version is pinned to a
+real digest; production acceptance remains a separate deployment gate.
 
 After production cutover, retain the PagerDuty account and
 `packages/homelab/src/tofu/pagerduty` state read-only for 30 days. Account
@@ -35,18 +35,19 @@ operations.
 - [ ] Let the main image lane publish
       `ghcr.io/shepherdjerred/alert-dashboard`, mark the GHCR package public,
       and merge the generated real digest pin.
-- [ ] Register the Alert Dashboard Argo CD Application and service-health rules
-      with normal email disabled; verify database migration, snapshot bootstrap,
-      UI, REST/tRPC, previews, reconciliation freshness, and probes.
-- [ ] Only after the service is ready, replace the PagerDuty receiver with the
-      authenticated Alerts webhook and independent Postal fallback route.
+- [x] Register the Alert Dashboard Argo CD Application and service-health rules
+      with normal email disabled in the activation branch.
+- [x] Replace the PagerDuty receiver with the authenticated Alerts webhook and
+      independent Postal fallback route in the cutover branch.
 - [ ] Verify a synthetic fire/resolve lifecycle without normal email, including
       webhook retry idempotency and reconciliation repair.
 - [ ] Enable Postal opening email and verify one distinct synthetic firing alert
       produces exactly one grouped message.
-- [ ] Migrate and deploy the Temporal audit and TRMNL consumers, remove the
-      retained `toolkit pd` command, and remove runtime PagerDuty credentials
-      only after those consumers and alert routing are healthy.
+- [x] Migrate the Temporal audit and TRMNL consumers, remove the `toolkit pd`
+      command, and remove runtime PagerDuty credentials from active source.
+- [ ] Deploy the activation and cutover branches, then verify database
+      migration, snapshot bootstrap, UI, REST, previews, reconciliation
+      freshness, probes, consumers, and live routing.
 - [ ] Record the production cutover timestamp in the Comment Log, then wait 30
       full days before performing the operator verification below.
 - [ ] Complete the production acceptance checks in
@@ -73,14 +74,12 @@ OpenTofu state.
 
 ## Comment Log
 
-### 2026-08-08 — implementation staged behind a deployable image
+### 2026-08-09 — activation and cutover source staged
 
-The replacement service and parallel toolkit client are complete, but activation
-and active workload migration are deliberately split from the foundation merge.
-Alertmanager, Temporal, TRMNL, and `toolkit pd` continue using PagerDuty until a
-real, public GHCR digest is pinned and the Alerts service passes its
-email-disabled bootstrap checks. This preserves every working path while the
-first image is produced.
+The activation branch registers the deployable service while preserving the
+PagerDuty receiver. The cutover branch migrates Alertmanager, Temporal, TRMNL,
+and toolkit to Alerts and Postal. Live deployment, synthetic fire/resolve,
+email, and no-new-PagerDuty verification remain outstanding.
 
 ### 2026-08-08 — deployment credentials provisioned
 

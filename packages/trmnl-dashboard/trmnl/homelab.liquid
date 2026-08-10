@@ -12,12 +12,12 @@
     <div class="item">
       <div class="meta"></div>
       <div class="content">
-        <span class="title">PagerDuty</span>
+        <span class="title">Alerts</span>
         <span class="value">
-          {% if pagerduty.status == "unknown" %}
+          {% if alerts.status == "unknown" %}
             ERR
           {% else %}
-            {{ pagerduty.triggered }}
+            {{ alerts.open }}
           {% endif %}
         </span>
       </div>
@@ -112,21 +112,17 @@
     </div>
 
     <div>
-      <span class="label label--underline">PagerDuty</span>
+      <span class="label label--underline">Open Alerts</span>
       <table class="table table--condensed">
         <tbody>
-          <tr>
-            <td>Triggered</td>
-            <td class="text--right">{{ pagerduty.triggered }}</td>
-          </tr>
-          <tr>
-            <td>Acknowledged</td>
-            <td class="text--right">{{ pagerduty.acknowledged }}</td>
-          </tr>
-          <tr>
-            <td>On Call</td>
-            <td class="text--right">{{ pagerduty.on_call | join: ", " }}</td>
-          </tr>
+          <tr><td>Critical</td><td class="text--right">{{ alerts.critical }}</td></tr>
+          <tr><td>Warning</td><td class="text--right">{{ alerts.warning }}</td></tr>
+          <tr><td>Info</td><td class="text--right">{{ alerts.info }}</td></tr>
+          {% for alert in alerts.recent limit: 4 %}
+            <tr><td>{{ alert.alertname }}</td><td class="text--right">{{ alert.severity }}</td></tr>
+          {% else %}
+            <tr><td>No open alerts</td></tr>
+          {% endfor %}
         </tbody>
       </table>
     </div>

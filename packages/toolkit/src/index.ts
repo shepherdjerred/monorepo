@@ -25,9 +25,6 @@ Commands:
 
   alerts list                List alert occurrences and history
   alerts show <ID>           View an alert occurrence and timeline
-  pagerduty incidents        List open PagerDuty incidents
-  pagerduty incident <ID>    View PagerDuty incident details
-  pd ...                     Alias for pagerduty
 
   bugsink issues             List unresolved Bugsink issues
   bugsink issue <ID>         View Bugsink issue details
@@ -75,7 +72,6 @@ Options:
 
 Environment Variables:
   ALERT_DASHBOARD_URL        Alerts service URL (tailnet default)
-  PAGERDUTY_TOKEN            PagerDuty API token
   BUGSINK_URL                Bugsink instance URL
   BUGSINK_TOKEN              Bugsink API token
   GRAFANA_URL                Grafana instance URL
@@ -90,7 +86,6 @@ Examples:
   toolkit deployed scout/prod
   toolkit screenshot stocks-sjer-red /
   toolkit alerts list
-  toolkit pd incidents
   toolkit gf dashboards
 `);
 }
@@ -137,13 +132,6 @@ async function main(): Promise<void> {
     case "alerts": {
       const { handleAlertsCommand } = await import("./handlers/alerts.ts");
       await handleAlertsCommand(subcommand, args.slice(2));
-      break;
-    }
-    case "pagerduty":
-    case "pd": {
-      const { handlePagerDutyCommand } =
-        await import("./handlers/pagerduty.ts");
-      await handlePagerDutyCommand(subcommand, args.slice(2));
       break;
     }
     case "bugsink": {

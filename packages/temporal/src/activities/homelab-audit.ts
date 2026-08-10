@@ -159,7 +159,6 @@ function auditSecretTokens(
   return [
     Bun.env["CLAUDE_CODE_OAUTH_TOKEN"],
     Bun.env["ANTHROPIC_API_KEY"],
-    Bun.env["PAGERDUTY_TOKEN"],
     Bun.env["BUGSINK_TOKEN"],
     Bun.env["GRAFANA_API_KEY"],
     Bun.env["ARGOCD_AUTH_TOKEN"],

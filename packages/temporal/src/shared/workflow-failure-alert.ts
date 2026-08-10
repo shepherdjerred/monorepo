@@ -118,12 +118,12 @@ export function buildWorkflowFailureAlert(
   const startsAt = now.toISOString();
   // Keep the alert lifecycle tied to the execution rather than to the last
   // poll. Re-observing a failure during the lookback must not extend its
-  // PagerDuty repeat/resolution window indefinitely.
+  // Alerts repeat/resolution window indefinitely.
   const endsAt = new Date(execution.closeTime.getTime() + ttlMs).toISOString();
 
   return {
     labels,
-    // `message` mirrors `description` — the Alertmanager PagerDuty template
+    // `message` mirrors `description` — the Alertmanager Alerts template
     // in prometheus.ts reads CommonAnnotations.message/description
     // interchangeably depending on the alert source (see xcode-cloud-webhook.ts).
     annotations: { summary, description, message: description },

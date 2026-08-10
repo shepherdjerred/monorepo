@@ -288,7 +288,7 @@ describe("agentTaskActivities", () => {
       HOME: "/home/worker",
       CLAUDE_CODE_OAUTH_TOKEN: "oauth-token",
       // Operational secrets the homelab audit needs — must be FORWARDED so its
-      // live Grafana/PagerDuty/ArgoCD/Bugsink/Cloudflare checks work.
+      // live Grafana/Alerts/ArgoCD/Bugsink/Cloudflare checks work.
       POSTAL_API_KEY: "postal-secret",
       GRAFANA_API_KEY: "grafana-secret",
       ARGOCD_AUTH_TOKEN: "argocd-secret",
@@ -323,7 +323,7 @@ describe("agentTaskActivities", () => {
   it("forwards the full worker env for Codex, replacing only inherited GitHub creds", async () => {
     const forwarded = {
       POSTAL_API_KEY: "postal-secret",
-      PAGERDUTY_TOKEN: "pagerduty-secret",
+      ALERT_DASHBOARD_URL: "http://alerts.local",
       BUGSINK_TOKEN: "bugsink-secret",
       GRAFANA_API_KEY: "grafana-secret",
       ARGOCD_AUTH_TOKEN: "argocd-secret",

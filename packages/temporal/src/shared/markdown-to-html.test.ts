@@ -77,14 +77,14 @@ describe("extractAuditSubjectCounts", () => {
       "## TL;DR",
       "",
       "- Application Health Matrix: 0 Red / 8 Yellow / 52 Green (60 ArgoCD apps)",
-      "- Open PagerDuty incidents: 7 (down from 19)",
+      "- Open Alerts occurrences: 7 (down from 19)",
       "",
     ].join("\n");
     expect(extractAuditSubjectCounts(md)).toEqual({
       red: 0,
       yellow: 8,
       green: 52,
-      openPd: 7,
+      openAlerts: 7,
     });
   });
 
@@ -100,9 +100,11 @@ describe("buildAuditEmailSubject", () => {
         red: 0,
         yellow: 3,
         green: 57,
-        openPd: 4,
+        openAlerts: 4,
       }),
-    ).toBe("Homelab Audit 2026-05-09 — 0 Red, 3 Yellow, 57 Green | 4 open PD");
+    ).toBe(
+      "Homelab Audit 2026-05-09 — 0 Red, 3 Yellow, 57 Green | 4 open Alerts",
+    );
   });
 
   it("falls back to a generic subject when counts are unavailable", () => {

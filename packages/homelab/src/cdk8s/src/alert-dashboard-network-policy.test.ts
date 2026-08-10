@@ -104,12 +104,12 @@ function allowsIngress(
 }
 
 describe("alert dashboard network paths", () => {
-  it("keeps deployment activation gated on a real public image digest", async () => {
+  it("registers the deployment after the real public image digest is pinned", async () => {
     const app = new App({ outdir: ".test-synth-alert-dashboard-app-gate" });
     await createAppsChart(app);
     const activeApplications = applicationNames(app.synthYaml());
 
-    expect(activeApplications).not.toContain("alert-dashboard");
+    expect(activeApplications).toContain("alert-dashboard");
 
     const definitionApp = new App({
       outdir: ".test-synth-alert-dashboard-app-definition",
@@ -133,7 +133,7 @@ describe("alert dashboard network paths", () => {
     expect(allowsIngress(smtp.spec.ingress, "prometheus", 25)).toBe(true);
   });
 
-  it("does not admit deferred runtime consumers before activation", () => {
+  it("admits the migrated runtime consumers", () => {
     const dashboardApp = new App({
       outdir: ".test-synth-alert-dashboard-readers",
     });
@@ -143,20 +143,20 @@ describe("alert dashboard network paths", () => {
       "alert-dashboard-app-netpol",
     );
 
-    expect(allowsIngress(dashboard.spec.ingress, "temporal", 7341)).toBe(false);
+    expect(allowsIngress(dashboard.spec.ingress, "temporal", 7341)).toBe(true);
     expect(allowsIngress(dashboard.spec.ingress, "trmnl-dashboard", 7341)).toBe(
-      false,
+      true,
     );
   });
 
-  it("does not register a service probe before activation", () => {
+  it("registers a service probe after activation", () => {
     const app = new App({ outdir: ".test-synth-alert-dashboard-probe-gate" });
     createAlertDashboardChart(app);
 
-    expect(getRegisteredBackendProbes()).not.toContainEqual(
+    expect(getRegisteredBackendProbes()).toContainEqual(
       expect.objectContaining({
         namespace: "alert-dashboard",
-        serviceName: "alert-dashboard-service",
+        serviceName: "alert-dashboard-alert-dashboard-service",
       }),
     );
   });

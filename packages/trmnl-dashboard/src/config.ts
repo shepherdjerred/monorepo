@@ -20,10 +20,9 @@ export type AppConfig = {
   };
   homelab: {
     prometheusUrl: string;
-    alertmanagerUrl: string;
+    alertDashboardUrl: string;
     bugsinkUrl: string;
     bugsinkToken?: string;
-    pagerDutyToken?: string;
     kubernetesUrl: string;
     kubernetesTokenPath: string;
     kubernetesCaPath: string;
@@ -52,16 +51,17 @@ const EnvSchema = z.object({
     .string()
     .pipe(z.url())
     .default("http://prometheus-kube-prometheus-prometheus.prometheus:9090"),
-  ALERTMANAGER_URL: z
+  ALERT_DASHBOARD_URL: z
     .string()
     .pipe(z.url())
-    .default("http://prometheus-kube-prometheus-alertmanager.prometheus:9093"),
+    .default(
+      "http://alert-dashboard-alert-dashboard-service.alert-dashboard:7341",
+    ),
   BUGSINK_URL: z
     .string()
     .pipe(z.url())
     .default("http://bugsink-bugsink-service.bugsink:8000/api/canonical/0"),
   BUGSINK_TOKEN: z.string().optional(),
-  PAGERDUTY_TOKEN: z.string().optional(),
   KUBERNETES_SERVICE_HOST: z.string().optional(),
   KUBERNETES_SERVICE_PORT: z.string().optional(),
   KUBERNETES_API_URL: z.string().pipe(z.url()).optional(),
@@ -98,14 +98,11 @@ export function loadConfig(env: Record<string, string | undefined>): AppConfig {
     },
     homelab: {
       prometheusUrl: parsed.PROMETHEUS_URL,
-      alertmanagerUrl: parsed.ALERTMANAGER_URL,
+      alertDashboardUrl: parsed.ALERT_DASHBOARD_URL,
       bugsinkUrl: parsed.BUGSINK_URL,
       ...(parsed.BUGSINK_TOKEN == null
         ? {}
         : { bugsinkToken: parsed.BUGSINK_TOKEN }),
-      ...(parsed.PAGERDUTY_TOKEN == null
-        ? {}
-        : { pagerDutyToken: parsed.PAGERDUTY_TOKEN }),
       kubernetesUrl,
       kubernetesTokenPath: parsed.KUBERNETES_TOKEN_PATH,
       kubernetesCaPath: parsed.KUBERNETES_CA_PATH,

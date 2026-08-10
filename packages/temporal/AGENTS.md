@@ -174,7 +174,7 @@ Workflow:
 - `SLEEP_WEBHOOK_TOKEN` — bearer token for the direct iOS sleep webhook on port 9469; the listener is skipped when unset (local/dev workers can omit it)
 - `SLEEP_WEBHOOK_PORT` — port for the direct sleep webhook (default `9469`)
 - `RUNBOOK_PATH` — local override for the homelab-audit runbook (defaults to fetching `https://raw.githubusercontent.com/.../packages/docs/guides/2026-04-04_homelab-audit-runbook.md`)
-- `PAGERDUTY_TOKEN` — PagerDuty REST API token (homelab audit)
+- `ALERT_DASHBOARD_URL` — in-cluster Alerts API URL (homelab audit)
 - `BUGSINK_URL`, `BUGSINK_TOKEN` — Bugsink REST API base + token (homelab audit)
 - `GRAFANA_URL`, `GRAFANA_API_KEY` — Grafana base + API key (PromQL/Loki via the `/api/datasources/proxy/<id>/...` endpoints)
 - `ARGOCD_SERVER`, `ARGOCD_AUTH_TOKEN` — ArgoCD server + token for `argocd app list` (homelab audit §13)
@@ -198,16 +198,16 @@ Workflow:
 
 The activity (`src/activities/homelab-audit.ts`) follows the shared `claude -p` subprocess lifecycle (Bun.spawn `claude -p`, 10 s heartbeats, stderr line pump with token redaction, parsed `--output-format json` result, Sentry capture on failure, Prom metrics) — the same pattern as the generic agent-task activity.
 
-## Temporal workflow failure → PagerDuty alerts
+## Temporal workflow failure → Alerts occurrences
 
-`temporal-failure-watch` (cron `*/5 * * * *`, `pollWorkflowFailuresWorkflow` on `TASK_QUEUES.DEFAULT`) pages PagerDuty with the specific error for **every** Temporal workflow execution that fails or times out — not just the workflows/thresholds covered by the hand-maintained Prometheus rules in `packages/homelab/.../monitoring/rules/temporal.ts`. The activity (`src/activities/workflow-failure-watch.ts`) heartbeats a best-effort batch checkpoint and conservatively rescans the full lookback on retry so the public visibility iterator cannot skip failures:
+`temporal-failure-watch` (cron `*/5 * * * *`, `pollWorkflowFailuresWorkflow` on `TASK_QUEUES.DEFAULT`) sends an Alerts occurrence through Alertmanager with the specific error for **every** Temporal workflow execution that fails or times out — not just the workflows/thresholds covered by the hand-maintained Prometheus rules in `packages/homelab/.../monitoring/rules/temporal.ts`. The activity (`src/activities/workflow-failure-watch.ts`) heartbeats a best-effort batch checkpoint and conservatively rescans the full lookback on retry so the public visibility iterator cannot skip failures:
 
 1. Queries the Temporal visibility API for `ExecutionStatus IN ("Failed", "TimedOut")` closed in the last 24 hours so a worker outage can be recovered by the next poll (safe to overlap because Alertmanager dedups alerts by label set and each alert expires from the execution's close time, not from the latest poll).
 2. For each match, calls `getHandle(workflowId, runId).fetchHistory()` and then `.result()`, with bounded concurrency and Alertmanager batches so recovery can page partial progress before the activity deadline. The history classifies timeouts as `workflow-task`, `activity`, `execution`, or `unknown`; an agent-task timeout before any `ACTIVITY_TASK_STARTED` event is explicitly a worker/task-queue availability failure, including scheduled-but-undispatched activities. The closed `result()` rejects immediately with `WorkflowFailedError`, whose `.cause` carries the same failure type/message/stack the Temporal UI shows.
 3. Builds one `AlertmanagerAlert` per execution via the pure `buildWorkflowFailureAlert` helper (`src/shared/workflow-failure-alert.ts`) — labels `{alertname: "TemporalWorkflowFailed", workflowType, taskQueue, workflowId, runId}` for identity/dedup, plus a summary/description with the actual error, timeout classification/diagnosis, and a direct link to the failed run in the Temporal UI (`temporalUiExecutionUrl`).
-4. Posts the batch via `createAlertmanagerPoster` (`src/lib/alertmanager.ts`, shared with the Xcode Cloud webhook), which routes through the existing Alertmanager `pagerduty` receiver — no new PagerDuty integration/routing key needed.
+4. Posts the batch via `createAlertmanagerPoster` (`src/lib/alertmanager.ts`, shared with the Xcode Cloud webhook), which routes through the existing Alertmanager Alerts receiver.
 
-No exclusion list — every workflow type pages on any failure, including per-PR bots (`prReview`/`prSummary`) that the older threshold-based rules deliberately exclude. Revisit with an exclusion list if that proves too noisy. See `packages/docs/plans/2026-07-30_temporal-workflow-failure-pagerduty-alerts.md` for the full design rationale.
+No exclusion list — every workflow type produces an occurrence on any failure, including per-PR bots (`prReview`/`prSummary`) that the older threshold-based rules deliberately exclude. Revisit with an exclusion list if that proves too noisy. See `packages/docs/plans/2026-07-30_temporal-workflow-failure-pagerduty-alerts.md` for the full design rationale.
 
 ## Generic agent tasks
 

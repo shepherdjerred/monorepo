@@ -32,7 +32,7 @@ const config: AppConfig = {
   },
   homelab: {
     prometheusUrl: "http://prometheus.local",
-    alertmanagerUrl: "http://alertmanager.local",
+    alertDashboardUrl: "http://alerts.local",
     bugsinkUrl: "http://bugsink.local/api/canonical/0",
     kubernetesUrl: "https://kubernetes.default.svc",
     kubernetesTokenPath: "/tmp/token",
@@ -87,10 +87,18 @@ describe("collectHomelabPayload", () => {
           return query.includes("node_cpu") ? 14.5 : 63.2;
         },
       },
-      alertmanager: {
-        async getActiveAlerts() {
+      alerts: {
+        async getSummary() {
+          return { open: 1, critical: 0, warning: 1, info: 0 };
+        },
+        async listOpen() {
           return [
-            { labels: { severity: "warning" }, status: { state: "active" } },
+            {
+              alertname: "ExampleWarning",
+              severity: "warning",
+              summary: "Example warning",
+              lifecycleState: "open",
+            },
           ];
         },
       },
@@ -104,11 +112,6 @@ describe("collectHomelabPayload", () => {
           return [{ name: "api", unresolved: 2 }];
         },
       },
-      pagerDuty: {
-        async getSummary() {
-          return { triggered: 0, acknowledged: 0, onCall: ["Jerred"] };
-        },
-      },
     };
 
     const payload = await collectHomelabPayload(config, clients);
@@ -119,7 +122,7 @@ describe("collectHomelabPayload", () => {
     expect(payload.alerts.warning).toBe(1);
   });
 
-  it("surfaces Bugsink and PagerDuty failures instead of treating them as zero", async () => {
+  it("surfaces Bugsink and Alerts failures instead of treating them as zero", async () => {
     const clients: HomelabClients = {
       prometheus: {
         async query() {
@@ -129,8 +132,11 @@ describe("collectHomelabPayload", () => {
           return 10;
         },
       },
-      alertmanager: {
-        async getActiveAlerts() {
+      alerts: {
+        async getSummary() {
+          throw new Error("Alerts request failed: 401");
+        },
+        async listOpen() {
           return [];
         },
       },
@@ -144,21 +150,16 @@ describe("collectHomelabPayload", () => {
           throw new Error("Bugsink request failed: 400");
         },
       },
-      pagerDuty: {
-        async getSummary() {
-          throw new Error("PagerDuty request failed: 401");
-        },
-      },
     };
 
     const payload = await collectHomelabPayload(config, clients);
 
     expect(payload.status).toBe("unknown");
     expect(payload.bugsink.status).toBe("unknown");
-    expect(payload.pagerduty.status).toBe("unknown");
+    expect(payload.alerts.status).toBe("unknown");
     expect(payload.errors).toEqual([
       "Bugsink: Bugsink request failed: 400",
-      "PagerDuty: PagerDuty request failed: 401",
+      "Alerts: Alerts request failed: 401",
     ]);
   });
 
@@ -176,8 +177,11 @@ describe("collectHomelabPayload", () => {
           return 10;
         },
       },
-      alertmanager: {
-        async getActiveAlerts() {
+      alerts: {
+        async getSummary() {
+          return { open: 0, critical: 0, warning: 0, info: 0 };
+        },
+        async listOpen() {
           return [];
         },
       },

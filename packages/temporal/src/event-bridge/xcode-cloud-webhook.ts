@@ -67,7 +67,7 @@ function tokenMatches(
  * ({alertname, service, product, workflow, branch}) deliberately EXCLUDE the
  * build number so a later SUCCEEDED on the same workflow+branch resolves the
  * failure. `severity=warning` matches the existing Alertmanager route to the
- * PagerDuty receiver (packages/homelab .../prometheus.ts), so no routing change
+ * Alerts receiver (packages/homelab .../prometheus.ts), so no routing change
  * is needed. A resolved alert sets endsAt=startsAt so Alertmanager marks it
  * resolved immediately.
  */
@@ -109,7 +109,7 @@ export function buildAlert(
 
   const alert: AlertmanagerAlert = {
     labels,
-    // `summary` → PagerDuty incident title; `message`/`description` → Custom
+    // `summary` → Alerts occurrence title; `message`/`description` → Custom
     // Details, per the Alertmanager templates in prometheus.ts.
     annotations: { summary, message, description: message },
     startsAt,

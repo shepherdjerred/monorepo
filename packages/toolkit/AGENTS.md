@@ -10,7 +10,7 @@ bun run src/index.ts pr health             # PR health check
 bun run src/index.ts deployed scout        # Is a service/commit live on the homelab?
 
 bun run src/index.ts alerts list           # Alert ledger occurrences
-bun run src/index.ts pd incidents          # PagerDuty incidents during staged migration
+bun run src/index.ts alerts list            # Alerts ledger occurrences
 bun run src/index.ts bugsink issues        # Bugsink issues
 bun run src/index.ts gf dashboards         # Grafana dashboards
 bun run src/index.ts screenshot stocks-sjer-red /   # Visually verify a frontend change
@@ -35,7 +35,6 @@ src/
 │   ├── pr.ts             # toolkit pr
 │   ├── deployed.ts       # toolkit deployed
 │   ├── alerts.ts         # toolkit alerts
-│   ├── pagerduty.ts      # toolkit pd (retained until production cutover)
 │   ├── bugsink.ts        # toolkit bugsink
 │   ├── grafana.ts        # toolkit gf
 │   └── screenshot.ts     # toolkit screenshot
@@ -43,7 +42,6 @@ src/
 │   ├── pr/               # PR subcommands
 │   ├── deployed/         # `deployed` orchestration
 │   ├── alerts.ts         # Alert ledger subcommands
-│   ├── pagerduty/        # PagerDuty subcommands retained during migration
 │   ├── bugsink/          # Bugsink subcommands
 │   ├── grafana/          # Grafana subcommands
 │   └── screenshot/       # `screenshot` orchestration
@@ -51,7 +49,6 @@ src/
     ├── github/           # GitHub API via gh CLI
     ├── deployed/         # Commit → homelab deploy trace (git/argocd/kubectl)
     ├── alerts.ts         # Alerts REST API client
-    ├── pagerduty/        # PagerDuty REST API client retained during migration
     ├── bugsink/          # Bugsink REST API client
     ├── grafana/          # Grafana REST API client
     ├── pinchtab-cli/     # PinchTab CLI wrapper (screenshot's browser driver)
@@ -64,7 +61,6 @@ src/
 | Variable              | Description                                                      |
 | --------------------- | ---------------------------------------------------------------- |
 | `ALERT_DASHBOARD_URL` | Alerts service URL (defaults to the tailnet service)             |
-| `PAGERDUTY_TOKEN`     | PagerDuty API token retained until the production cutover        |
 | `BUGSINK_URL`         | Bugsink instance URL (e.g., `https://bugsink.example.com`)       |
 | `BUGSINK_TOKEN`       | Bugsink API token                                                |
 | `GRAFANA_URL`         | Grafana instance URL                                             |
@@ -222,7 +218,7 @@ toolkit pr asset 1234 ./after.png ./flow.mp4 ./demo.cast ./demo-site --profile s
 
 ## Shared `lib/http` + `lib/config`
 
-The Grafana, PagerDuty, and Bugsink service clients share one HTTP layer instead
+The Grafana, Alerts, and Bugsink service clients share one HTTP layer instead
 of each re-implementing fetch + auth + error handling.
 
 - **`src/lib/http.ts`** — `createHttpClient({ baseUrl, auth, errorLabel, headers?, normalizeUrl? })`
@@ -240,7 +236,7 @@ of each re-implementing fetch + auth + error handling.
   returns `undefined` when unset/empty. Both read `Bun.env` and treat `""` as
   absent.
 
-Each client (`src/lib/{grafana,pagerduty,bugsink}/client.ts`) keeps its original
+Each client (`src/lib/{grafana,alerts,bugsink}.ts`) keeps its original
 exported function signatures — callers and command handlers are unchanged — and
 delegates to a `createHttpClient` instance. Do not touch the github/s3/discord
 clients; they have different auth/transport shapes and are intentionally not on

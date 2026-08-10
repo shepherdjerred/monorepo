@@ -19,7 +19,6 @@ import { createZfsSnapshotsMonitoring } from "@shepherdjerred/homelab/cdk8s/src/
 import { createZfsZpoolMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/zfs-zpool.ts";
 import { createR2ExporterMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/r2-exporter.ts";
 import { createKubernetesEventExporter } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/kubernetes-event-exporter.ts";
-import { escapeHelmGoTemplate } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/shared.ts";
 import { BLACKBOX_MODULES } from "@shepherdjerred/homelab/cdk8s/src/misc/blackbox-modules.ts";
 import type { KubeprometheusstackHelmValuesAlertmanagerConfigRouteRoutesElement } from "@shepherdjerred/homelab/cdk8s/generated/helm/kube-prometheus-stack.types";
 
@@ -49,26 +48,33 @@ function createPrometheusIngresses(chart: Chart): void {
   });
 }
 
+const ALERT_DASHBOARD_SERVICE_URL =
+  "http://alert-dashboard-alert-dashboard-service.alert-dashboard.svc.cluster.local:7341";
+const ALERTMANAGER_GLOBAL = {
+  resolve_timeout: "5m",
+  smtp_from: "alerts@sjer.red",
+  smtp_smarthost: "postal-smtp-service.postal.svc.cluster.local:25",
+  smtp_require_tls: false,
+};
+
 export async function createPrometheusApp(chart: Chart) {
   // Temporal workflow-failure alerts (from the temporal-failure-watch schedule
   // in packages/temporal) all share alertname "TemporalWorkflowFailed" and carry
   // no `namespace` label, so under the parent route's group_by [namespace,
-  // alertname] every failed execution would collapse into ONE PagerDuty
-  // notification group / dedup key: a second concurrent failure would append to
-  // the first incident and its distinct error would drop out of
-  // CommonAnnotations. Group by the per-execution identity labels so each failed
-  // workflow execution pages as its own incident. Must precede the severity
-  // catch-all route (these alerts are severity=warning).
+  // alertname] every failed execution would collapse into ONE notification
+  // group / dedup key. Group by the per-execution identity labels so each failed
+  // workflow execution remains distinct. Must precede the severity catch-all
+  // route (these alerts are severity=warning).
   const temporalWorkflowFailureRoute: AlertmanagerChildRoute = {
-    receiver: "pagerduty",
+    receiver: "alerts",
     matchers: ['alertname = "TemporalWorkflowFailed"'],
     group_by: ["alertname", "workflowId", "runId"],
   };
   const removedAgentTaskAggregateRoute: AlertmanagerChildRoute = {
     receiver: "null",
     // These alert names belonged to the removed hourly aggregate timeout
-    // watcher. Keep stale rules/metrics from paging while the new per-run
-    // TemporalWorkflowFailed route remains the sole Temporal PagerDuty source.
+    // watcher. Keep stale rules/metrics from notifying while the new per-run
+    // TemporalWorkflowFailed route remains the sole Temporal failure source.
     matchers: ['alertname =~ "TemporalAgentTask(TimingOut|TimeoutScanFailed)"'],
     group_by: ["alertname"],
   };
@@ -81,16 +87,13 @@ export async function createPrometheusApp(chart: Chart) {
     hosts: ["grafana"],
   });
 
-  const alertmanagerSecrets = new OnePasswordItem(
+  const alertDashboardSecrets = new OnePasswordItem(
     chart,
-    "alertmanager-secrets-onepassword",
+    "alert-dashboard-secrets-onepassword",
     {
-      spec: {
-        itemPath:
-          "vaults/v64ocnykdqju4ui6j6pua56xw4/items/cki3qk5okk5b7xn3jmlpg74yka",
-      },
+      spec: { itemPath: vaultItemPath("alert-dashboard") },
       metadata: {
-        name: "alertmanager-secrets",
+        name: "alert-dashboard-secrets",
         namespace: "prometheus",
       },
     },
@@ -188,7 +191,7 @@ export async function createPrometheusApp(chart: Chart) {
         externalUrl: "https://alertmanager.tailnet-1a49.ts.net",
         // Alertmanager's active-alert state is in-memory only (the PVC persists
         // just nflog/silences), so when it dies mid-outage, resolve events for
-        // alerts that clear during the gap are never sent and PagerDuty
+        // alerts that clear during the gap are never sent and the Alerts ledger
         // incidents orphan as forever-"triggered". With only the chart-default
         // 200Mi request and NO limit, it had one of the worst OOM scores on the
         // node and was the kernel's preferred victim in the 2026-07-11 global-OOM
@@ -228,13 +231,11 @@ export async function createPrometheusApp(chart: Chart) {
             },
           },
         },
-        secrets: [alertmanagerSecrets.name],
+        secrets: [alertDashboardSecrets.name],
         logLevel: "debug",
       },
       config: {
-        global: {
-          resolve_timeout: "5m",
-        },
+        global: ALERTMANAGER_GLOBAL,
         inhibit_rules: [
           {
             source_matchers: ["severity = critical"],
@@ -266,63 +267,26 @@ export async function createPrometheusApp(chart: Chart) {
             name: "null",
           },
           {
-            name: "pagerduty",
-            // https://prometheus.io/docs/alerting/latest/configuration/#pagerduty_config
-            pagerduty_configs: [
+            name: "alerts",
+            webhook_configs: [
               {
                 send_resolved: true,
-                routing_key_file: `/etc/alertmanager/secrets/${alertmanagerSecrets.name}/PAGERDUTY_TOKEN`,
-                // Alertmanager evaluates these Go templates when sending to PagerDuty.
-                // The kube-prometheus-stack chart passes config values through without
-                // template processing, so they must be Helm-escaped (escapeHelmGoTemplate).
-                //
-                // TITLE (`description`): keep it a single clean line. PagerDuty uses this
-                // as the incident title and truncates it mid-word at ~1024 chars, so the
-                // full per-alert body must NOT go here — it belongs in `details` below.
-                // We use the shared static summary (CommonAnnotations.summary, falling back
-                // to the alertname), then append the namespace and a firing count so that
-                // distinct namespaces/objects grouped into one incident stay distinguishable
-                // (the original reason the body was inlined here — see
-                // the original investigation).
-                description: escapeHelmGoTemplate(
-                  `{{ if .CommonAnnotations.summary }}{{ .CommonAnnotations.summary }}{{ else }}{{ .CommonLabels.alertname }}{{ end }}{{ if .CommonLabels.namespace }} [{{ .CommonLabels.namespace }}]{{ end }}{{ if gt (len .Alerts.Firing) 1 }} (x{{ len .Alerts.Firing }}){{ end }}`,
-                ),
-                // Link the incident back to Alertmanager.
-                client: "Alertmanager",
-                client_url: escapeHelmGoTemplate(`{{ .ExternalURL }}`),
-                // Map the alert severity label to PagerDuty event severity. Use
-                // CommonLabels (shared across the group) — `severity` is not in group_by,
-                // so GroupLabels.severity would be empty and always fall through to "error".
-                severity: escapeHelmGoTemplate(
-                  '{{ if eq .CommonLabels.severity "critical" }}critical{{ else if eq .CommonLabels.severity "warning" }}warning{{ else if eq .CommonLabels.severity "info" }}info{{ else }}error{{ end }}',
-                ),
-                // Structured detail — PagerDuty renders `details` as a Custom Details
-                // section. Each firing/resolved alert contributes one line, falling back
-                // from `.message` (Velero/HA rules) to `.description` (createSensorAlert),
-                // so the per-alert specifics that used to clutter the title live here.
-                details: {
-                  alertname: escapeHelmGoTemplate(
-                    `{{ .CommonLabels.alertname }}`,
-                  ),
-                  namespace: escapeHelmGoTemplate(
-                    `{{ .CommonLabels.namespace }}`,
-                  ),
-                  severity: escapeHelmGoTemplate(
-                    `{{ .CommonLabels.severity }}`,
-                  ),
-                  num_firing: escapeHelmGoTemplate(
-                    `{{ .Alerts.Firing | len }}`,
-                  ),
-                  num_resolved: escapeHelmGoTemplate(
-                    `{{ .Alerts.Resolved | len }}`,
-                  ),
-                  firing: escapeHelmGoTemplate(
-                    `{{ range .Alerts.Firing }}- {{ if .Annotations.message }}{{ .Annotations.message }}{{ else }}{{ .Annotations.description }}{{ end }}\n{{ end }}`,
-                  ),
-                  resolved: escapeHelmGoTemplate(
-                    `{{ range .Alerts.Resolved }}- {{ if .Annotations.message }}{{ .Annotations.message }}{{ else }}{{ .Annotations.description }}{{ end }}\n{{ end }}`,
-                  ),
+                url: `${ALERT_DASHBOARD_SERVICE_URL}/internal/v1/alertmanager/events`,
+                http_config: {
+                  authorization: {
+                    type: "Bearer",
+                    credentials_file: `/etc/alertmanager/secrets/${alertDashboardSecrets.name}/WEBHOOK_TOKEN`,
+                  },
                 },
+              },
+            ],
+          },
+          {
+            name: "postal-fallback",
+            email_configs: [
+              {
+                send_resolved: false,
+                to: "claude@sjer.red",
               },
             ],
           },
@@ -332,8 +296,12 @@ export async function createPrometheusApp(chart: Chart) {
           group_wait: "30s",
           group_interval: "5m",
           repeat_interval: "12h",
-          receiver: "pagerduty",
+          receiver: "alerts",
           routes: [
+            {
+              receiver: "postal-fallback",
+              matchers: ['alert_dashboard_fallback = "true"'],
+            },
             {
               receiver: "null",
               matchers: ['alertname = "Watchdog"'],
@@ -373,14 +341,14 @@ export async function createPrometheusApp(chart: Chart) {
                 'namespace = "buildkite"',
               ],
             },
-            // Per-execution PagerDuty grouping for Temporal workflow failures —
+            // Per-execution grouping for Temporal workflow failures —
             // see temporalWorkflowFailureRoute's definition above. Precedes the
             // severity catch-all (these alerts are severity=warning).
             temporalWorkflowFailureRoute,
             removedAgentTaskAggregateRoute,
             {
-              // Route critical and warning alerts to PagerDuty
-              receiver: "pagerduty",
+              // Route critical and warning alerts to the Alerts ledger.
+              receiver: "alerts",
               matchers: ['severity =~ "critical|warning"'],
             },
           ],

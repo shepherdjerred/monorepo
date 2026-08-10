@@ -211,10 +211,6 @@ export function createAlertDashboardDeployment(chart: Chart) {
     service,
     host: "alerts",
     probePath: "/healthz",
-    // The chart is synthesized before its Argo CD Application is activated.
-    // Register the probe in the activation change so the live probe fleet does
-    // not alert on a Service that intentionally does not exist yet.
-    disableProbe: true,
   });
   return deployment;
 }
