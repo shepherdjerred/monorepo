@@ -84,6 +84,7 @@ describe("handleGuildCreate — GuildInstall bookkeeping", () => {
         outreach3dSentAt: sentAt,
         outreach14dSentAt: sentAt,
         outreach30dSentAt: sentAt,
+        firstSubscriptionAt: sentAt,
       },
     });
 
@@ -103,6 +104,8 @@ describe("handleGuildCreate — GuildInstall bookkeeping", () => {
     expect(row?.outreach30dSentAt).toEqual(sentAt);
     expect(row?.installedAt).toEqual(originalInstall);
     expect(row?.analyticsInstallationId).toBe(originalAnalyticsInstallationId);
+    // A guild we never left keeps its first-subscription claim too.
+    expect(row?.firstSubscriptionAt).toEqual(sentAt);
     // Identity fields still refresh (name/member count can legitimately change).
     expect(row?.memberCount).toBe(42);
   });
@@ -121,6 +124,7 @@ describe("handleGuildCreate — GuildInstall bookkeeping", () => {
         outreach14dSentAt: sentAt,
         outreach30dSentAt: sentAt,
         removedAt: new Date("2026-02-01T00:00:00.000Z"),
+        firstSubscriptionAt: sentAt,
       },
     });
 
@@ -145,6 +149,9 @@ describe("handleGuildCreate — GuildInstall bookkeeping", () => {
     );
     expect(row?.analyticsLifecycleTracked).toBe(true);
     expect(row?.firstCoreOutputAt).toBeNull();
+    // A stale claim from the OLD installation must not silently suppress the
+    // new installation's first_subscription_created event.
+    expect(row?.firstSubscriptionAt).toBeNull();
     expect(row?.installedAt.getTime()).toBeGreaterThan(
       new Date("2026-01-01T00:00:00.000Z").getTime(),
     );

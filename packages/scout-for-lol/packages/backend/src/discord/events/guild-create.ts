@@ -170,6 +170,7 @@ async function saveGuildInstall(
               analyticsInstallationId: randomUUID(),
               analyticsLifecycleTracked: true,
               firstCoreOutputAt: null,
+              firstSubscriptionAt: null,
               emailNudgeSentAt: null,
               outreach3dSentAt: null,
               outreach14dSentAt: null,

@@ -7,6 +7,7 @@ import {
   deliverTrackedCoreOutput,
   memberCountBucket,
   recordCoreOutputDelivered,
+  recordCoreOutputsDelivered,
   removalActivationState,
   tenureBucket,
 } from "#src/analytics/guild-lifecycle.ts";
@@ -46,15 +47,15 @@ async function seedInstall(options?: {
   });
 }
 
-describe("guild lifecycle analytics state", () => {
-  beforeEach(async () => {
-    await prisma.guildInstall.deleteMany();
-  });
+beforeEach(async () => {
+  await prisma.guildInstall.deleteMany();
+});
 
-  afterAll(async () => {
-    await prisma.$disconnect();
-  });
+afterAll(async () => {
+  await prisma.$disconnect();
+});
 
+describe("guild install identity and first subscription", () => {
   test("assigns unique opaque installation identities to new rows", async () => {
     const first = await seedInstall();
     const second = await prisma.guildInstall.create({
@@ -149,7 +150,9 @@ describe("guild lifecycle analytics state", () => {
     });
     expect(install?.firstSubscriptionAt).not.toBeNull();
   });
+});
 
+describe("core output delivery", () => {
   test("atomically emits one first-output marker across concurrent deliveries", async () => {
     await seedInstall();
     const { analytics, capture } = createAnalyticsFixture();
@@ -249,6 +252,46 @@ describe("guild lifecycle analytics state", () => {
     expect(install?.firstCoreOutputAt).toBeNull();
   });
 
+  test("processes every guild across multiple output batches", async () => {
+    const guildCount = 25;
+    const guildIds = Array.from({ length: guildCount }, (_, index) =>
+      testGuildId(`9${index.toString().padStart(3, "0")}`),
+    );
+    await Promise.all(
+      guildIds.map((serverId, index) =>
+        prisma.guildInstall.create({
+          data: {
+            serverId,
+            serverName: `Batch fixture ${index.toString()}`,
+            ownerDiscordId: testAccountId("781"),
+            addedByDiscordId: testAccountId("781"),
+            memberCount: 1,
+            installedAt: new Date("2026-08-01T00:00:00Z"),
+          },
+        }),
+      ),
+    );
+    const { analytics, capture } = createAnalyticsFixture();
+
+    await recordCoreOutputsDelivered(guildIds, "postmatch", {
+      db: prisma,
+      analytics,
+    });
+
+    const coreOutputCalls = capture.mock.calls.filter(
+      ([, event]) => event.event === "core_output_delivered",
+    );
+    expect(coreOutputCalls).toHaveLength(guildCount);
+    const claimedInstalls = await prisma.guildInstall.findMany({
+      where: { serverId: { in: guildIds } },
+    });
+    expect(
+      claimedInstalls.every((install) => install.firstCoreOutputAt !== null),
+    ).toBe(true);
+  });
+});
+
+describe("guild removal", () => {
   test("claims a removal once and classifies it before cleanup", async () => {
     await seedInstall({ firstCoreOutputAt: new Date("2026-08-03T00:00:00Z") });
     const { analytics, capture } = createAnalyticsFixture();
@@ -268,6 +311,30 @@ describe("guild lifecycle analytics state", () => {
         tenure_bucket: "7-29d",
       },
     });
+  });
+
+  test("stamps removedAt even when the best-effort classification fails", async () => {
+    await seedInstall();
+    const capture = mock<ProductAnalytics["capture"]>(() => {
+      throw new Error("capture boom");
+    });
+    const shutdown = mock<ProductAnalytics["shutdown"]>(() =>
+      Promise.resolve(),
+    );
+    const removedAt = new Date("2026-08-10T00:00:00Z");
+
+    expect(
+      await captureGuildRemoval(SERVER_ID, removedAt, prisma, {
+        capture,
+        shutdown,
+      }),
+    ).toBe(true);
+
+    expect(capture).toHaveBeenCalledTimes(1);
+    const install = await prisma.guildInstall.findUnique({
+      where: { serverId: SERVER_ID },
+    });
+    expect(install?.removedAt).toEqual(removedAt);
   });
 });
 

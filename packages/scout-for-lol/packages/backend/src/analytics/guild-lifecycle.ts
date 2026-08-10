@@ -1,7 +1,9 @@
 import type { DiscordGuildId } from "@scout-for-lol/data";
+import { chunk } from "remeda";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
+import { productAnalyticsFailuresTotal } from "#src/metrics/product-analytics.ts";
 import {
   getProductAnalytics,
   type AnalyticsInstallation,
@@ -172,15 +174,29 @@ export async function recordCoreOutputDelivered(
   }
 }
 
+// Bounds how many guilds are processed at once: recordCoreOutputDelivered
+// does a Prisma read plus a conditional update per guild, and an unbounded
+// Promise.all over a large delivered-guild set (e.g. a weekly digest) would
+// fire all of those reads/updates against the database concurrently.
+const RECORD_CORE_OUTPUTS_BATCH_SIZE = 10;
+
 export async function recordCoreOutputsDelivered(
   serverIds: Iterable<DiscordGuildId>,
   outputKind: CoreOutputKind,
+  options?: {
+    db?: ExtendedPrismaClient;
+    analytics?: ProductAnalytics;
+  },
 ): Promise<void> {
-  await Promise.all(
-    [...serverIds].map((serverId) =>
-      recordCoreOutputDelivered(serverId, outputKind),
-    ),
-  );
+  for (const batch of chunk([...serverIds], RECORD_CORE_OUTPUTS_BATCH_SIZE)) {
+    // recordCoreOutputDelivered catches and logs its own errors, so one
+    // guild's failure never aborts the batch or the guilds after it.
+    await Promise.all(
+      batch.map((serverId) =>
+        recordCoreOutputDelivered(serverId, outputKind, options),
+      ),
+    );
+  }
 }
 
 export async function deliverTrackedCoreOutput(params: {
@@ -218,11 +234,10 @@ export async function captureGuildRemoval(
     return false;
   }
 
-  const [subscriptions, reports, competitions] = await Promise.all([
-    db.subscription.count({ where: { serverId } }),
-    db.report.count({ where: { serverId } }),
-    db.competition.count({ where: { serverId } }),
-  ]);
+  // Claim the removal transition first, before any optional classification
+  // work. Callers rely on removedAt being stamped as soon as a removal is
+  // confirmed (see cleanupRemovedGuild); a failure in the best-effort
+  // subscription/report/competition counts below must not prevent that.
   const transition = await db.guildInstall.updateMany({
     where: {
       id: install.id,
@@ -235,17 +250,33 @@ export async function captureGuildRemoval(
     return false;
   }
 
-  analytics.capture(install, {
-    event: "guild_removed",
-    properties: {
-      activation_state: removalActivationState({
-        firstCoreOutputAt: install.firstCoreOutputAt,
-        subscriptions,
-        reports,
-        competitions,
-      }),
-      tenure_bucket: tenureBucket(install.installedAt, removedAt),
-    },
-  });
+  try {
+    const [subscriptions, reports, competitions] = await Promise.all([
+      db.subscription.count({ where: { serverId } }),
+      db.report.count({ where: { serverId } }),
+      db.competition.count({ where: { serverId } }),
+    ]);
+
+    analytics.capture(install, {
+      event: "guild_removed",
+      properties: {
+        activation_state: removalActivationState({
+          firstCoreOutputAt: install.firstCoreOutputAt,
+          subscriptions,
+          reports,
+          competitions,
+        }),
+        tenure_bucket: tenureBucket(install.installedAt, removedAt),
+      },
+    });
+  } catch (error) {
+    productAnalyticsFailuresTotal.inc({
+      operation: "guild-removed-classification",
+    });
+    logger.error(
+      "Failed to classify and capture guild removal analytics",
+      getErrorMessage(error),
+    );
+  }
   return true;
 }
