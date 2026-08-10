@@ -118,7 +118,7 @@ public final class QuotaBarModel {
     clearRefresh(id: refreshID)
   }
 
-  public func refreshAfterCredentialChange(for provider: ProviderID) async {
+  public func handleCredentialChange(for provider: ProviderID) async {
     let refreshAtCredentialBoundary = activeRefresh
     invalidateCachedSnapshot(for: provider)
     if let refreshAtCredentialBoundary {

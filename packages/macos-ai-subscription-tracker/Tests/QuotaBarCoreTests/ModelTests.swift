@@ -248,7 +248,7 @@ final class ModelTests: XCTestCase {
     let activeRefresh = Task { await model.refresh() }
     await waitUntil { await provider.fetchCount == 1 }
 
-    await model.refreshAfterCredentialChange(for: .codex)
+    await model.handleCredentialChange(for: .codex)
     await activeRefresh.value
 
     let fetchCount = await provider.fetchCount
@@ -265,7 +265,7 @@ final class ModelTests: XCTestCase {
     let store = MemorySnapshotStore(loaded: [.codex: cached])
     let model = makeModel(providers: [provider], store: store)
 
-    await model.refreshAfterCredentialChange(for: .codex)
+    await model.handleCredentialChange(for: .codex)
 
     guard case .unauthenticated = model.state(for: .codex) else {
       XCTFail("Expected the new credential's authentication state")
@@ -288,7 +288,7 @@ final class ModelTests: XCTestCase {
     let activeRefresh = Task { await model.refresh() }
     await waitUntil { await provider.fetchCount == 1 }
 
-    await model.refreshAfterCredentialChange(for: .codex)
+    await model.handleCredentialChange(for: .codex)
     await activeRefresh.value
 
     guard case .unauthenticated = model.state(for: .codex) else {

@@ -131,7 +131,7 @@ struct SettingsView: View {
         overriddenProviders.insert(provider)
         drafts[provider] = ""
         credentialMessage = "Saved \(provider.displayName) override."
-        await model.refreshAfterCredentialChange(for: provider)
+        await model.handleCredentialChange(for: provider)
       } catch {
         credentialMessage = error.localizedDescription
       }
@@ -144,7 +144,7 @@ struct SettingsView: View {
         try await manualCredentials.remove(for: provider)
         overriddenProviders.remove(provider)
         credentialMessage = "Removed \(provider.displayName) override."
-        await model.refreshAfterCredentialChange(for: provider)
+        await model.handleCredentialChange(for: provider)
       } catch {
         credentialMessage = error.localizedDescription
       }
