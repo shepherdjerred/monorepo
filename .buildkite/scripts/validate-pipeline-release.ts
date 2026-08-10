@@ -147,7 +147,7 @@ function validateReleaseSteps({
     [
       "helm-push",
       [
-        "read-buildkite-handoff.ts image-digests images",
+        "read-buildkite-handoff.ts image-digests",
         "HOMELAB_IMAGE_DIGESTS_JSON",
         "--filter homelab --filter '@homelab/cdk8s'",
         "suspend-auto-sync apps",
@@ -158,7 +158,7 @@ function validateReleaseSteps({
     [
       "argocd-sync",
       [
-        "read-buildkite-handoff.ts image-digests images",
+        "read-buildkite-handoff.ts image-digests",
         "--filter homelab --filter '@homelab/cdk8s'",
         "concurrency_group: monorepo/homelab-release",
         'artifact download "argocd-release-expected.json"',

@@ -6,10 +6,17 @@ import {
   writeJsonHandoff,
 } from "./buildkite-handoff.ts";
 import {
-  artifactNameFromMetadata,
+  artifactPointerFromMetadata,
   readHandoffValue,
   requiredArgument,
 } from "./read-buildkite-handoff.ts";
+
+const PRODUCING_JOB_ID = "019fe9ea-3609-4e54-9e79-8ea6bd6aeba2";
+const RETRY_JOB_ID = "019fe9ea-3610-4e54-9e79-8ea6bd6aeba2";
+
+function scopedArtifactName(name: string, jobId: string): string {
+  return `${name.slice(0, -".json".length)}.${jobId}.json`;
+}
 
 test("keeps the exact one KiB boundary in metadata", () => {
   const result = handoffValue(
@@ -32,9 +39,22 @@ test("uses an artifact pointer for payloads over one KiB", () => {
   const result = handoffValue(
     { value: "x".repeat(INLINE_HANDOFF_LIMIT_BYTES) },
     "handoff.json",
+    PRODUCING_JOB_ID,
   );
   expect(result.useArtifact).toBe(true);
-  expect(result.metadata).toBe("artifact:handoff.json");
+  expect(result.artifactName).toBe(
+    scopedArtifactName("handoff.json", PRODUCING_JOB_ID),
+  );
+  expect(result.metadata).toBe(
+    `artifact:${PRODUCING_JOB_ID}:${result.artifactName}`,
+  );
+  expect(
+    handoffValue(
+      { value: "x".repeat(INLINE_HANDOFF_LIMIT_BYTES) },
+      "handoff.json",
+      RETRY_JOB_ID,
+    ).artifactName,
+  ).not.toBe(result.artifactName);
 });
 
 test("rejects an invalid artifact name", () => {
@@ -48,9 +68,21 @@ test("exposes the Buildkite metadata size contract", () => {
 });
 
 test("rejects malformed artifact pointers", () => {
-  expect(() => artifactNameFromMetadata("artifact:handoff.txt")).toThrow(
+  expect(() => artifactPointerFromMetadata("artifact:handoff.txt")).toThrow(
     "invalid Buildkite handoff artifact pointer",
   );
+  expect(() =>
+    artifactPointerFromMetadata(
+      `artifact:${PRODUCING_JOB_ID}:handoff.${RETRY_JOB_ID}.json`,
+    ),
+  ).toThrow("invalid Buildkite handoff artifact pointer");
+  expect(() =>
+    handoffValue(
+      { value: "x".repeat(INLINE_HANDOFF_LIMIT_BYTES) },
+      "handoff.json",
+      "not-a-job-id",
+    ),
+  ).toThrow("BUILDKITE_JOB_ID must be a valid UUID");
 });
 
 test("requires nonempty CLI arguments", () => {
@@ -66,10 +98,14 @@ test("requires nonempty CLI arguments", () => {
 });
 
 test("reports missing handoff artifacts", async () => {
+  const artifactName = scopedArtifactName("handoff.json", PRODUCING_JOB_ID);
   await expect(
-    readHandoffValue("artifact:handoff.json", "images", async () => 1),
+    readHandoffValue(
+      `artifact:${PRODUCING_JOB_ID}:${artifactName}`,
+      async () => 1,
+    ),
   ).rejects.toThrow(
-    "could not download Buildkite handoff artifact handoff.json",
+    `could not download Buildkite handoff artifact ${artifactName}`,
   );
 });
 
@@ -79,9 +115,11 @@ test("writes small handoffs directly to metadata", async () => {
     "handoff-key",
     "handoff.json",
     { value: "small" },
-    (args) => {
-      calls.push([...args]);
-      return Promise.resolve(0);
+    {
+      runner: (args) => {
+        calls.push([...args]);
+        return Promise.resolve(0);
+      },
     },
   );
   expect(calls).toEqual([
@@ -90,16 +128,20 @@ test("writes small handoffs directly to metadata", async () => {
 });
 
 test("uploads large handoffs before publishing the artifact pointer", async () => {
-  const artifactName = "buildkite-handoff-test.json";
+  const baseArtifactName = "buildkite-handoff-test.json";
+  const artifactName = scopedArtifactName(baseArtifactName, PRODUCING_JOB_ID);
   const calls: string[][] = [];
   try {
     await writeJsonHandoff(
       "handoff-key",
-      artifactName,
+      baseArtifactName,
       { value: "x".repeat(INLINE_HANDOFF_LIMIT_BYTES) },
-      (args) => {
-        calls.push([...args]);
-        return Promise.resolve(0);
+      {
+        producingJobId: PRODUCING_JOB_ID,
+        runner: (args) => {
+          calls.push([...args]);
+          return Promise.resolve(0);
+        },
       },
     );
     expect(await Bun.file(artifactName).json()).toEqual({
@@ -107,7 +149,12 @@ test("uploads large handoffs before publishing the artifact pointer", async () =
     });
     expect(calls).toEqual([
       ["artifact", "upload", artifactName],
-      ["meta-data", "set", "handoff-key", `artifact:${artifactName}`],
+      [
+        "meta-data",
+        "set",
+        "handoff-key",
+        `artifact:${PRODUCING_JOB_ID}:${artifactName}`,
+      ],
     ]);
   } finally {
     await Bun.file(artifactName).delete();
@@ -115,14 +162,18 @@ test("uploads large handoffs before publishing the artifact pointer", async () =
 });
 
 test("fails when artifact upload or metadata publication fails", async () => {
-  const artifactName = "buildkite-handoff-failure-test.json";
+  const baseArtifactName = "buildkite-handoff-failure-test.json";
+  const artifactName = scopedArtifactName(baseArtifactName, PRODUCING_JOB_ID);
   try {
     await expect(
       writeJsonHandoff(
         "handoff-key",
-        artifactName,
+        baseArtifactName,
         { value: "x".repeat(INLINE_HANDOFF_LIMIT_BYTES) },
-        () => Promise.resolve(1),
+        {
+          producingJobId: PRODUCING_JOB_ID,
+          runner: () => Promise.resolve(1),
+        },
       ),
     ).rejects.toThrow(
       `could not upload Buildkite handoff artifact ${artifactName}`,
@@ -131,31 +182,38 @@ test("fails when artifact upload or metadata publication fails", async () => {
     await Bun.file(artifactName).delete();
   }
   await expect(
-    writeJsonHandoff("handoff-key", "handoff.json", { value: "small" }, () =>
-      Promise.resolve(1),
+    writeJsonHandoff(
+      "handoff-key",
+      "handoff.json",
+      { value: "small" },
+      {
+        runner: () => Promise.resolve(1),
+      },
     ),
   ).rejects.toThrow("could not set Buildkite handoff metadata handoff-key");
 });
 
 test("reads inline and downloaded handoff values", async () => {
-  expect(await readHandoffValue('{"value":"small"}', "images")).toBe(
+  expect(await readHandoffValue('{"value":"small"}')).toBe(
     '{"value":"small"}\n',
   );
-  const artifactName = "read-buildkite-handoff-test.json";
+  const artifactName = scopedArtifactName(
+    "read-buildkite-handoff-test.json",
+    PRODUCING_JOB_ID,
+  );
   await Bun.write(artifactName, '{"value":"large"}\n');
   try {
     const calls: string[][] = [];
     expect(
       await readHandoffValue(
-        `artifact:${artifactName}`,
-        "images",
-        (name, step) => {
-          calls.push([name, step]);
+        `artifact:${PRODUCING_JOB_ID}:${artifactName}`,
+        (name, jobId) => {
+          calls.push([name, jobId]);
           return Promise.resolve(0);
         },
       ),
     ).toBe('{"value":"large"}\n');
-    expect(calls).toEqual([[artifactName, "images"]]);
+    expect(calls).toEqual([[artifactName, PRODUCING_JOB_ID]]);
   } finally {
     await Bun.file(artifactName).delete();
   }

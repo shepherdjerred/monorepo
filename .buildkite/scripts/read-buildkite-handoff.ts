@@ -2,8 +2,16 @@
 
 export type ArtifactDownloadRunner = (
   artifactName: string,
-  sourceStep: string,
+  producingJobId: string,
 ) => Promise<number>;
+
+export type ArtifactPointer = {
+  artifactName: string;
+  producingJobId: string;
+};
+
+const ARTIFACT_NAME_PATTERN = /^\w[\w.-]*\.json$/u;
+const BUILDKITE_JOB_ID_PATTERN = /^[\da-f]{8}-(?:[\da-f]{4}-){3}[\da-f]{12}$/iu;
 
 export function requiredArgument(
   argumentsList: readonly string[],
@@ -29,18 +37,40 @@ async function metadata(key: string): Promise<string> {
   return value;
 }
 
-export function artifactNameFromMetadata(value: string): string | undefined {
+export function artifactPointerFromMetadata(
+  value: string,
+): ArtifactPointer | undefined {
   if (!value.startsWith("artifact:")) return undefined;
-  const name = value.slice("artifact:".length);
-  if (!/^\w[\w.-]*\.json$/.test(name)) {
-    throw new Error(`invalid Buildkite handoff artifact pointer ${name}`);
+  const [producingJobId, artifactName, ...extra] = value
+    .slice("artifact:".length)
+    .split(":");
+  if (
+    producingJobId === undefined ||
+    artifactName === undefined ||
+    extra.length > 0 ||
+    !BUILDKITE_JOB_ID_PATTERN.test(producingJobId) ||
+    !ARTIFACT_NAME_PATTERN.test(artifactName) ||
+    !artifactName.endsWith(`.${producingJobId}.json`)
+  ) {
+    throw new Error(`invalid Buildkite handoff artifact pointer ${value}`);
   }
-  return name;
+  return { artifactName, producingJobId };
 }
 
-async function downloadArtifact(name: string, step: string): Promise<number> {
+async function downloadArtifact(
+  name: string,
+  producingJobId: string,
+): Promise<number> {
   const child = Bun.spawn(
-    ["buildkite-agent", "artifact", "download", name, ".", "--step", step],
+    [
+      "buildkite-agent",
+      "artifact",
+      "download",
+      name,
+      ".",
+      "--job",
+      producingJobId,
+    ],
     { stdout: "inherit", stderr: "inherit" },
   );
   return child.exited;
@@ -48,22 +78,22 @@ async function downloadArtifact(name: string, step: string): Promise<number> {
 
 export async function readHandoffValue(
   value: string,
-  sourceStep: string,
   downloader: ArtifactDownloadRunner = downloadArtifact,
 ): Promise<string> {
-  const name = artifactNameFromMetadata(value);
-  if (name === undefined) return `${value}\n`;
-  if ((await downloader(name, sourceStep)) !== 0) {
-    throw new Error(`could not download Buildkite handoff artifact ${name}`);
+  const pointer = artifactPointerFromMetadata(value);
+  if (pointer === undefined) return `${value}\n`;
+  if ((await downloader(pointer.artifactName, pointer.producingJobId)) !== 0) {
+    throw new Error(
+      `could not download Buildkite handoff artifact ${pointer.artifactName}`,
+    );
   }
-  return Bun.file(name).text();
+  return Bun.file(pointer.artifactName).text();
 }
 
 async function main(): Promise<void> {
   const key = requiredArgument(Bun.argv, 2, "metadata key");
-  const step = requiredArgument(Bun.argv, 3, "source step key");
   const value = await metadata(key);
-  process.stdout.write(await readHandoffValue(value, step));
+  process.stdout.write(await readHandoffValue(value));
 }
 
 if (import.meta.main) await main();

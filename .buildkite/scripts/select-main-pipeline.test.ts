@@ -3,6 +3,9 @@ import {
   assertSelectionContract,
   mainSteps,
   parsePipeline,
+  pipelinePayload,
+  pipelineUploadArguments,
+  renderFallbackSteps,
   renderSteps,
   runCommand,
   selectedKeys,
@@ -95,6 +98,29 @@ test("resolves committed image pins before the dynamic pipeline upload", () => {
   expect(command.indexOf("ci-image-refs.sh")).toBeLessThan(
     command.indexOf("select-main-pipeline.ts"),
   );
+
+  const payload = pipelinePayload(document, document.steps, {
+    CI_BASE_IMAGE: "registry.example/ci-base@sha256:base",
+    CI_PLAYWRIGHT_IMAGE: "registry.example/ci-playwright@sha256:playwright",
+  });
+  expect(payload).not.toContain("${CI_BASE_IMAGE}");
+  expect(payload).not.toContain("${CI_PLAYWRIGHT_IMAGE}");
+  expect(payload).toContain("registry.example/ci-base@sha256:base");
+  expect(payload).toContain("registry.example/ci-playwright@sha256:playwright");
+  expect(() => pipelinePayload(document, document.steps, {})).toThrow(
+    "CI_BASE_IMAGE must be a non-empty string",
+  );
+});
+
+test("uploads the selected graph with the selector-base changed-file list", () => {
+  expect(pipelineUploadArguments("/tmp/selector-changes")).toEqual([
+    "buildkite-agent",
+    "pipeline",
+    "upload",
+    "--replace",
+    "--changed-files-path",
+    "/tmp/selector-changes",
+  ]);
 });
 
 test("retains the full dependency chain for an image release", () => {
@@ -225,4 +251,38 @@ test("validates the complete-graph fallback", () => {
   const rendered = renderSteps(steps, new Set(steps.keys()));
   expect(() => validateRenderedSteps(rendered)).not.toThrow();
   expect(rendered.length).toBe(steps.size);
+});
+
+test("keeps unmodeled main steps in the fail-open graph", () => {
+  const fallbackDocument = parsePipeline(`steps:
+  - key: verify
+  - key: unmodeled
+    if: build.branch == pipeline.default_branch
+    if_changed: packages/example/**
+`);
+  const fallbackMainSteps = mainSteps(fallbackDocument);
+  expect(() => assertSelectionContract(fallbackMainSteps)).toThrow(
+    "main step unmodeled has no dynamic-selection contract",
+  );
+  const rendered = renderFallbackSteps(
+    fallbackDocument,
+    fallbackMainSteps,
+    undefined,
+  );
+  expect(rendered.map((step) => step["key"])).toEqual(["verify", "unmodeled"]);
+  expect(rendered[1]?.["if_changed"]).toBeUndefined();
+});
+
+test("preserves native path filters when the selector diff is available", () => {
+  const fallbackDocument = parsePipeline(`steps:
+  - key: verify
+  - key: alert-dashboard-postgres
+    if_changed: packages/alert-dashboard/**
+`);
+  const rendered = renderFallbackSteps(
+    fallbackDocument,
+    mainSteps(fallbackDocument),
+    "/tmp/selector-changes",
+  );
+  expect(rendered[1]?.["if_changed"]).toBe("packages/alert-dashboard/**");
 });

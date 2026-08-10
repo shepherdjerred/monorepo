@@ -45,7 +45,10 @@ test("site-scout excludes global CI inputs and uses exact release libraries", ()
 });
 
 test("other lanes retain global CI inputs", () => {
-  expect(selectorPathsForLane("helm")).toContain(globalPaths[0]);
+  const helmPaths = selectorPathsForLane("helm");
+  expect(helmPaths).toContain(".buildkite/main-bootstrap.yml");
+  expect(helmPaths).toContain(".buildkite/scripts/select-main-pipeline.ts");
+  expect(globalPaths).toContain(".buildkite/pipeline.yml");
   expect(selectorPathsForLane("unknown")).toBeUndefined();
 });
 

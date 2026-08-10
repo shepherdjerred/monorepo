@@ -230,10 +230,12 @@ export function outcomeIcon(outcome: string): string {
 }
 
 export const globalPaths = [
+  ".buildkite/main-bootstrap.yml",
   ".buildkite/pipeline.yml",
   ".buildkite/scripts/ci-changed.ts",
   ".buildkite/scripts/migration-core.ts",
   ".buildkite/scripts/prepare-ci-changed-base.ts",
+  ".buildkite/scripts/select-main-pipeline.ts",
   ".buildkite/scripts/upload-pipeline.sh",
 ] as const;
 

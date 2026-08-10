@@ -162,6 +162,36 @@ function processEnv(): Record<string, string> {
   return environment;
 }
 
+export function pipelinePayload(
+  document: PipelineDocument,
+  steps: readonly PipelineStep[],
+  environment: Readonly<Record<string, string | undefined>>,
+): string {
+  let payload = JSON.stringify({
+    agents: document.agents,
+    env: document.env,
+    steps,
+  });
+  for (const name of ["CI_BASE_IMAGE", "CI_PLAYWRIGHT_IMAGE"]) {
+    const placeholder = "$" + `{${name}}`;
+    const encodedPlaceholder = JSON.stringify(placeholder);
+    if (!payload.includes(encodedPlaceholder)) continue;
+    const reference = requiredString(environment[name], name);
+    payload = payload.replaceAll(encodedPlaceholder, JSON.stringify(reference));
+  }
+  return payload;
+}
+
+export function pipelineUploadArguments(
+  changedFilesPath: string | undefined,
+): string[] {
+  const argumentsList = ["buildkite-agent", "pipeline", "upload", "--replace"];
+  if (changedFilesPath !== undefined) {
+    argumentsList.push("--changed-files-path", changedFilesPath);
+  }
+  return argumentsList;
+}
+
 async function prepareBase(): Promise<string> {
   const exitCode = await runCommand([
     "bun",
@@ -180,6 +210,22 @@ async function prepareBase(): Promise<string> {
     throw new Error("main CI base metadata is unavailable");
   }
   return base;
+}
+
+export async function writeSelectorChangedFiles(base: string): Promise<string> {
+  const child = Bun.spawn(
+    ["git", "diff", "--no-renames", "--name-only", base, "HEAD"],
+    { stdout: "pipe", stderr: "inherit" },
+  );
+  const changedFiles = await new Response(child.stdout).text();
+  const exitCode = await child.exited;
+  if (exitCode !== 0) {
+    throw new Error(`selector changed-file diff exited ${exitCode.toString()}`);
+  }
+  const temporaryRoot = (Bun.env["TMPDIR"] ?? "/tmp").replace(/\/+$/u, "");
+  const path = `${temporaryRoot}/buildkite-main-changed-files.${crypto.randomUUID()}.txt`;
+  await Bun.write(path, changedFiles);
+  return path;
 }
 
 async function selectLanes(base: string): Promise<Map<string, boolean>> {
@@ -248,6 +294,26 @@ export function renderSteps(
   return rendered;
 }
 
+function withoutNativeChangedFiles(step: PipelineStep): PipelineStep {
+  const copy = { ...step };
+  delete copy["if_changed"];
+  return copy;
+}
+
+export function renderFallbackSteps(
+  document: PipelineDocument,
+  steps: ReadonlyMap<string, PipelineStep> | undefined,
+  changedFilesPath: string | undefined,
+): PipelineStep[] {
+  const complete =
+    steps === undefined
+      ? [...document.steps]
+      : renderSteps(steps, new Set(steps.keys()));
+  return changedFilesPath === undefined
+    ? complete.map((step) => withoutNativeChangedFiles(step))
+    : complete;
+}
+
 export function validateRenderedSteps(rendered: readonly PipelineStep[]): void {
   const keys = new Set<string>();
   for (const step of rendered) {
@@ -271,16 +337,14 @@ export function validateRenderedSteps(rendered: readonly PipelineStep[]): void {
 async function uploadPipeline(
   document: PipelineDocument,
   steps: readonly PipelineStep[],
+  changedFilesPath: string | undefined,
 ): Promise<void> {
-  const payload = JSON.stringify({
-    agents: document.agents,
-    env: document.env,
-    steps,
+  const payload = pipelinePayload(document, steps, Bun.env);
+  const child = Bun.spawn(pipelineUploadArguments(changedFilesPath), {
+    stdin: new Blob([payload]),
+    stdout: "inherit",
+    stderr: "inherit",
   });
-  const child = Bun.spawn(
-    ["buildkite-agent", "pipeline", "upload", "--replace"],
-    { stdin: new Blob([payload]), stdout: "inherit", stderr: "inherit" },
-  );
   const exitCode = await child.exited;
   if (exitCode !== 0)
     throw new Error(`pipeline upload failed with ${exitCode.toString()}`);
@@ -309,26 +373,33 @@ async function main(): Promise<number> {
   const document = parsePipeline(
     await Bun.file(".buildkite/pipeline.yml").text(),
   );
-  const steps = mainSteps(document);
+  let steps: Map<string, PipelineStep> | undefined;
+  let changedFilesPath: string | undefined;
 
   try {
+    steps = mainSteps(document);
     assertSelectionContract(steps);
     const base = await prepareBase();
+    changedFilesPath = await writeSelectorChangedFiles(base);
     const decisions = await selectLanes(base);
     const selected = selectedKeys(steps, decisions);
     const rendered = renderSteps(steps, selected);
     validateRenderedSteps(rendered);
-    await uploadPipeline(document, rendered);
+    await uploadPipeline(document, rendered, changedFilesPath);
     console.log(`Uploaded ${selected.size.toString()} selected main CI steps`);
     return 0;
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
     console.error(`WARN: ${reason}; falling back to the complete main graph`);
-    const rendered = renderSteps(steps, new Set(steps.keys()));
+    const rendered = renderFallbackSteps(document, steps, changedFilesPath);
     validateRenderedSteps(rendered);
-    await uploadPipeline(document, rendered);
+    await uploadPipeline(document, rendered, changedFilesPath);
     await annotateFallback(reason);
     return 0;
+  } finally {
+    if (changedFilesPath !== undefined) {
+      await Bun.file(changedFilesPath).delete();
+    }
   }
 }
 

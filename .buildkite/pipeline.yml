@@ -1461,7 +1461,7 @@ steps:
     concurrency_group: monorepo/homelab-release
     concurrency_method: ordered
     command: |
-      image_digests=$$(bun --no-install .buildkite/scripts/read-buildkite-handoff.ts image-digests images)
+      image_digests=$$(bun --no-install .buildkite/scripts/read-buildkite-handoff.ts image-digests)
       release_requested=false
       if bun --no-install .buildkite/scripts/ci-changed.ts helm; then release_requested=true; fi
       if bun --no-install .buildkite/scripts/ci-changed.ts argocd; then release_requested=true; fi
@@ -1546,7 +1546,7 @@ steps:
     concurrency_group: monorepo/homelab-release
     concurrency_method: ordered
     command: |
-      image_digests=$$(bun --no-install .buildkite/scripts/read-buildkite-handoff.ts image-digests images)
+      image_digests=$$(bun --no-install .buildkite/scripts/read-buildkite-handoff.ts image-digests)
       release_requested=false
       if bun --no-install .buildkite/scripts/ci-changed.ts helm; then release_requested=true; fi
       if bun --no-install .buildkite/scripts/ci-changed.ts argocd; then release_requested=true; fi
@@ -1592,7 +1592,7 @@ steps:
     concurrency: 1
     concurrency_group: monorepo/site-deploys
     command: |
-      scout_candidate=$$(bun --no-install .buildkite/scripts/read-buildkite-handoff.ts image-digests images |
+      scout_candidate=$$(bun --no-install .buildkite/scripts/read-buildkite-handoff.ts image-digests |
         jq -r '."shepherdjerred/scout-for-lol/beta" // empty')
       scout_source_changed=false
       if bun --no-install .buildkite/scripts/ci-changed.ts site-scout; then
@@ -1774,7 +1774,7 @@ steps:
       # With Bun's isolated linker, zod must be installed for that workspace;
       # the root-scripts copy cannot satisfy an import resolved from cdk8s.
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@homelab/cdk8s' --production
-      bun --no-install scripts/update-versions.ts --commit-back --candidates "$$(bun --no-install .buildkite/scripts/read-buildkite-handoff.ts pin-candidates images)"
+      bun --no-install scripts/update-versions.ts --commit-back --candidates "$$(bun --no-install .buildkite/scripts/read-buildkite-handoff.ts pin-candidates)"
     # Safe to retry: the bump branch is force-updated and the PR lookup is
     # find-or-create; transient gh/git failures exit 34 via transient.ts.
     retry: *retry

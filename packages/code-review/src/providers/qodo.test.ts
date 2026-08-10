@@ -6,6 +6,8 @@ const comment = {
   url: "https://github.com/shepherdjerred/monorepo/pull/1#issuecomment-1",
   body: `
 <h3>Code Review by Qodo</h3>
+<code>🐞 Bugs (1)</code> <code>📘 Rule violations (1)</code> <code>📎 Requirement gaps (0)</code> <code>🎨 UX issues (0)</code> <code>🔗 Cross-repo conflicts (0)</code> <code>📜 Skill insights (0)</code>
+<img src="https://example/divider.svg" alt="Grey Divider">
 <img src="https://example/action-required.png" alt="Action required">
 <details>
 <summary>  1. Consent cache <code>🐞 Bug</code></summary>
@@ -65,5 +67,43 @@ describe("qodoProvider", () => {
         priority: 2,
       },
     ]);
+  });
+
+  test("recognizes Qodo's explicit clean-review layout", () => {
+    expect(
+      parseQodoIssueComment({
+        ...comment,
+        body: `
+<h3>Code Review by Qodo</h3>
+<code>🐞 Bugs (0)</code> <code>📘 Rule violations (0)</code> <code>📎 Requirement gaps (0)</code> <code>🎨 UX issues (0)</code> <code>🔗 Cross-repo conflicts (0)</code> <code>📜 Skill insights (0)</code>
+<img src="https://example/divider.svg" alt="Grey Divider">
+<br/>
+`,
+      }),
+    ).toEqual([]);
+  });
+
+  test("fails closed when active findings use an unknown severity layout", () => {
+    expect(() =>
+      parseQodoIssueComment({
+        ...comment,
+        body: comment.body.replace(
+          'alt="Action required"',
+          'alt="Critical finding"',
+        ),
+      }),
+    ).toThrow("declares 2 active finding(s) but 1 were parsed");
+  });
+
+  test("fails closed when finding summaries cannot be parsed", () => {
+    expect(() =>
+      parseQodoIssueComment({
+        ...comment,
+        body: comment.body.replace(
+          "<summary>  1. Consent cache <code>🐞 Bug</code></summary>",
+          "<strong>  1. Consent cache <code>🐞 Bug</code></strong>",
+        ),
+      }),
+    ).toThrow("declares 2 active finding(s) but 1 were parsed");
   });
 });
