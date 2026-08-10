@@ -38,15 +38,15 @@ docs/
 
 ## Where to Put New Docs
 
-| Type                                        | Directory       | Examples                                                                   |
-| ------------------------------------------- | --------------- | -------------------------------------------------------------------------- |
-| System design, how components fit together  | `architecture/` | Service architecture, data flow, package relationships                     |
-| Reusable patterns across the codebase       | `patterns/`     | ESLint config patterns, testing conventions, naming rules                  |
-| "We decided X because Y"                    | `decisions/`    | Technology choices, audits, tradeoff analyses                              |
-| "How to do X" or operational knowledge      | `guides/`       | Deployment runbooks, health audits, research notes, changelogs             |
-| "We plan to build X" (future/in-progress)   | `plans/`        | Implementation plans, feature proposals, migration plans                   |
-| Tracked issue / deferred work / source TODO | `todos/`        | Verification follow-ups, deferred fixes, source `TODO(todo:<id>)` markers  |
-| Terse explanation for Jerred                | `wiki/`         | System maps, infrastructure overviews, current architecture, key rationale |
+| Type                                        | Directory       | Examples                                                                  |
+| ------------------------------------------- | --------------- | ------------------------------------------------------------------------- |
+| System design, how components fit together  | `architecture/` | Service architecture, data flow, package relationships                    |
+| Reusable patterns across the codebase       | `patterns/`     | ESLint config patterns, testing conventions, naming rules                 |
+| "We decided X because Y"                    | `decisions/`    | Technology choices, audits, tradeoff analyses                             |
+| "How to do X" or operational knowledge      | `guides/`       | Deployment runbooks, health audits, research notes, changelogs            |
+| "We plan to build X" (future/in-progress)   | `plans/`        | Implementation plans, feature proposals, migration plans                  |
+| Tracked issue / deferred work / source TODO | `todos/`        | Verification follow-ups, deferred fixes, source `TODO(todo:<id>)` markers |
+| Terse explanation for Jerred                | `wiki/`         | Diátaxis pages: a tutorial, how-to guide, reference table, or explanation |
 
 **When in doubt:** If it records a choice and its reasoning, it's a decision. If it describes steps to follow, it's a guide. If it describes something to build, it's a plan. Do not create a repository document solely to journal an agent session.
 
@@ -57,7 +57,14 @@ paths listed in `wiki/src/lib/wiki-publication.ts` under `/working/`; it does
 not publish the parent corpus automatically. Before adding a path, review that
 document for secrets, private host details, personal data, and sensitive
 incident evidence. Do not duplicate an approved working document as a curated
-page. Follow `wiki/AGENTS.md` for its terse, visual-first authoring contract.
+page. Follow `wiki/AGENTS.md` for its authoring contract.
+
+The wiki is structured on [Diátaxis](https://diataxis.fr/): every page is
+exactly one of a tutorial, how-to guide, reference, or explanation, and lives in
+the matching directory. Load the `diataxis` skill before authoring there. Note
+that a workflow document and a wiki page serve different readers even when they
+cover the same system — a runbook in `guides/` records how an operation was
+performed, while `wiki/how-to/` tells Jerred how to perform it now.
 
 ## Conventions
 
