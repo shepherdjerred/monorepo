@@ -1,8 +1,5 @@
-import { z } from "zod";
-
 import { TypedStorage } from "../cache/storage";
 import type { Task, TaskId } from "../../domain/types";
-import { taskId } from "../../domain/types";
 import type { RecurringCompletionRestore } from "tasknotes-types/v2";
 import type { CommandQueue, DeadLetterEntry } from "../sync/CommandQueue";
 import {
@@ -10,9 +7,7 @@ import {
   type Command,
   type CommandInput,
   applyCommand,
-  commandId,
   commandTarget,
-  tempTaskId,
 } from "../sync/commands";
 import { localTodayYmd } from "../../domain/recurrence";
 import {
@@ -27,6 +22,8 @@ import {
   serializeAcknowledgedCompletionRestores,
   taskAfterCommands,
 } from "./acknowledged-completion-restores";
+import { parseAliases, serializeAliases } from "./id-aliases";
+import { IdSequence } from "./id-sequence";
 
 /**
  * The single source of truth the UI reads.
@@ -74,17 +71,6 @@ const defaultStorage: TaskStoreStorage = {
   setLastSyncTime: (time) => TypedStorage.setLastSyncTime(time),
 };
 
-const AliasesSchema = z.record(z.string(), z.string());
-
-const IdCountersSchema = z.object({
-  command: z.number().int().nonnegative(),
-  temp: z.number().int().nonnegative(),
-});
-
-type IdCounters = z.infer<typeof IdCountersSchema>;
-
-const ZERO_COUNTERS: IdCounters = { command: 0, temp: 0 };
-
 export class TaskStore {
   private base = new Map<TaskId, Task>();
   private aliases = new Map<TaskId, TaskId>();
@@ -97,7 +83,7 @@ export class TaskStore {
   private readonly listeners = new Set<() => void>();
   private operationLocked = false;
   private readonly operationWaiters: (() => void)[] = [];
-  private counters: IdCounters = ZERO_COUNTERS;
+  private readonly ids: IdSequence;
 
   /** Wired to SyncEngine.requestSync — fired after every dispatch. */
   onDispatch: (() => void) | null = null;
@@ -174,8 +160,9 @@ export class TaskStore {
     private readonly storage: TaskStoreStorage = defaultStorage,
     private readonly clock: Clock = Date.now,
     /** Injectable so the id encoding is reproducible in the simulation harness. */
-    private readonly random: () => number = Math.random,
+    random: () => number = Math.random,
   ) {
+    this.ids = new IdSequence(random);
     this.snapshot = this.buildSnapshot();
   }
 
@@ -186,14 +173,19 @@ export class TaskStore {
   async restore(): Promise<void> {
     await this.enqueueOperation(async () => {
       await this.queue.restore();
-      const [tasks, rawAliases, rawAcknowledgedRestores, rawCounters, lastSync] =
-        await Promise.all([
-          this.storage.getTasks(),
-          this.storage.getIdAliases(),
-          this.storage.getAcknowledgedCompletionRestores(),
-          this.storage.getIdCounters(),
-          this.storage.getLastSyncTime(),
-        ]);
+      const [
+        tasks,
+        rawAliases,
+        rawAcknowledgedRestores,
+        rawCounters,
+        lastSync,
+      ] = await Promise.all([
+        this.storage.getTasks(),
+        this.storage.getIdAliases(),
+        this.storage.getAcknowledgedCompletionRestores(),
+        this.storage.getIdCounters(),
+        this.storage.getLastSyncTime(),
+      ]);
       this.base = new Map(tasks.map((t) => [t.id, t]));
       this.aliases = parseAliases(rawAliases);
       const nextAcknowledgedCompletionRestores = pruneCompletionRestores(
@@ -207,7 +199,7 @@ export class TaskStore {
         ),
       );
       this.acknowledgedCompletionRestores = nextAcknowledgedCompletionRestores;
-      this.counters = parseIdCounters(rawCounters);
+      this.ids.restore(rawCounters);
       this.lastSyncTime = lastSync;
       this.recompute();
     });
@@ -307,7 +299,7 @@ export class TaskStore {
         nextAliases = new Map(this.aliases);
         nextAliases.set(command.tempId, serverTask.id);
         await this.queue.remapTaskId(command.tempId, serverTask.id);
-        await this.persistAliases(nextAliases);
+        await this.storage.setIdAliases(serializeAliases(nextAliases));
       }
 
       const nextBase = new Map(this.base);
@@ -414,7 +406,7 @@ export class TaskStore {
         ),
       );
       await this.persistBase(nextBase);
-      await this.persistAliases(nextAliases);
+      await this.storage.setIdAliases(serializeAliases(nextAliases));
       await this.storage.setLastSyncTime(syncedAt);
 
       this.base = nextBase;
@@ -431,10 +423,17 @@ export class TaskStore {
    */
   private buildCommand(input: CommandInput): Command {
     const createdAt = this.clock();
-    const base = { id: this.nextCommandId(createdAt), createdAt };
+    const base = {
+      id: this.ids.nextCommandId(createdAt, this.queue),
+      createdAt,
+    };
     switch (input.type) {
       case "create":
-        return { ...base, ...input, tempId: this.nextTempId(createdAt) };
+        return {
+          ...base,
+          ...input,
+          tempId: this.ids.nextTempId(createdAt, this.base, this.queue),
+        };
       case "update":
       case "delete":
       case "set_status":
@@ -467,45 +466,6 @@ export class TaskStore {
     }
   }
 
-  /**
-   * Mint a command id no durable command already carries.
-   *
-   * The persisted counter is what actually removes the collision class — it
-   * never restarts, so the same `(millis, counter)` pair is never offered
-   * twice. The check is the backstop for the two states the counter cannot
-   * describe: the first launch after upgrading from a build that did not
-   * persist it (counter 0, queue non-empty), and a counter blob that failed to
-   * parse. Without one of the two, an app killed and reopened inside a single
-   * clock millisecond re-mints a live `X-Mutation-Id`, and the server answers
-   * the second command from the first one's stored response — silent data
-   * loss, found by generated-sequence testing in the Rust port.
-   *
-   * The loop terminates: the counter strictly increases, and no id in the
-   * finite durable set encodes a counter above every value already seen.
-   */
-  private nextCommandId(createdAt: number): string {
-    for (;;) {
-      this.counters = { ...this.counters, command: this.counters.command + 1 };
-      const candidate = commandId(
-        createdAt,
-        this.counters.command,
-        this.random(),
-      );
-      if (!this.queue.hasCommandId(candidate)) return candidate;
-    }
-  }
-
-  /** Mint a temp id neither the cached base nor any durable command claims. */
-  private nextTempId(createdAt: number): TaskId {
-    for (;;) {
-      this.counters = { ...this.counters, temp: this.counters.temp + 1 };
-      const candidate = tempTaskId(createdAt, this.counters.temp);
-      if (!this.base.has(candidate) && !this.queue.hasTarget(candidate)) {
-        return candidate;
-      }
-    }
-  }
-
   private recompute(): void {
     this.snapshot = this.buildSnapshot();
     for (const listener of this.listeners) listener();
@@ -529,16 +489,6 @@ export class TaskStore {
 
   private async persistBase(base: ReadonlyMap<TaskId, Task>): Promise<void> {
     await this.storage.setTasks([...base.values()]);
-  }
-
-  private async persistAliases(
-    aliases: ReadonlyMap<TaskId, TaskId>,
-  ): Promise<void> {
-    const record: Record<string, string> = {};
-    for (const [from, to] of aliases) {
-      record[String(from)] = String(to);
-    }
-    await this.storage.setIdAliases(JSON.stringify(record));
   }
 
   private async enqueueOperation<Value>(
@@ -572,38 +522,6 @@ export class TaskStore {
   }
 
   private async persistIdCounters(): Promise<void> {
-    await this.storage.setIdCounters(JSON.stringify(this.counters));
-  }
-}
-
-/**
- * Absent or unreadable counters mean "start at zero" — a fresh install, and
- * also every install that predates the key. Neither needs a schema migration:
- * `nextCommandId` / `nextTempId` refuse to hand back an id the restored queue
- * already holds, so a carried-over queue is safe on that first launch too.
- */
-function parseIdCounters(raw: string | null): IdCounters {
-  if (!raw) return ZERO_COUNTERS;
-  try {
-    const parsed = IdCountersSchema.safeParse(JSON.parse(raw));
-    return parsed.success ? parsed.data : ZERO_COUNTERS;
-  } catch {
-    return ZERO_COUNTERS;
-  }
-}
-
-function parseAliases(raw: string | null): Map<TaskId, TaskId> {
-  if (!raw) return new Map();
-  try {
-    const result = AliasesSchema.safeParse(JSON.parse(raw));
-    if (!result.success) return new Map();
-    return new Map(
-      Object.entries(result.data).map(([from, to]) => [
-        taskId(from),
-        taskId(to),
-      ]),
-    );
-  } catch {
-    return new Map();
+    await this.storage.setIdCounters(this.ids.serialize());
   }
 }

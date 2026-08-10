@@ -483,9 +483,19 @@
       ]
     },
     {
+      "source": "packages/tasknotes-core/ci/check-clippy-config.sh",
+      "disposition": "retain",
+      "reason": "Cargo-specific semantic probe must inspect Clippy configuration warnings in the Rust toolchain lane"
+    },
+    {
       "source": "packages/tasknotes-core/ci/no-suppressions.sh",
       "disposition": "retain",
       "reason": "Cargo-workspace lint gate that must run from the Rust toolchain lane without a Bun dependency"
+    },
+    {
+      "source": "packages/tasknotes-macos/ci/no-suppressions.sh",
+      "disposition": "retain",
+      "reason": "Portable shell guard enforces Swift package invariants in the Linux lint lane without requiring a Swift toolchain"
     },
     {
       "source": "packages/tasks-for-obsidian/ios/ci_scripts/ci_post_clone.sh",
