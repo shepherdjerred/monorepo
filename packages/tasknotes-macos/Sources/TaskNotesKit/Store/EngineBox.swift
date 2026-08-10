@@ -1,3 +1,4 @@
+internal import Dispatch
 internal import Synchronization
 internal import TaskNotesUniFFI
 
@@ -16,9 +17,41 @@ internal import TaskNotesUniFFI
 internal final class EngineBox: Sendable {
     private let slot = Mutex<(any FfiSyncEngineProtocol)?>(nil)
 
+    /// The one thread engine calls made through ``run(_:)`` run on.
+    ///
+    /// Serial, so two dispatches reach the queue in the order the user made
+    /// them, and a `DispatchQueue` rather than the cooperative pool because the
+    /// work parks a thread on a lock a network request is holding — which is
+    /// exactly what the pool's fixed width must not be spent on.
+    private let executor = DispatchQueue(label: "red.sjer.tasknotes.mac.engine")
+
     /// The engine currently installed, if any.
     var current: (any FfiSyncEngineProtocol)? {
         slot.withLock { $0 }
+    }
+
+    /// Run one call against the installed engine, off the calling thread.
+    ///
+    /// ⚠️ **`FfiSyncEngine` is one mutex, and `syncNow()` holds it for the
+    /// whole of a blocking drain.** Every other exported method — `dispatch`,
+    /// `snapshot`, `status`, the dead-letter pair — takes that same lock, so
+    /// calling one from the main actor makes the main thread wait on a network
+    /// round trip: every window freezes until the request returns or times out.
+    /// This is how the main actor asks the engine for something without ever
+    /// touching the lock itself.
+    ///
+    /// Answers `nil` for an empty slot rather than taking the engine as a
+    /// parameter, so the emptiness check happens on the same side of the hop as
+    /// the call it guards — a slot read on the main actor could be replaced
+    /// before the work started.
+    func run<Value: Sendable>(
+        _ body: @escaping @Sendable (any FfiSyncEngineProtocol) -> Value
+    ) async -> Value? {
+        await withCheckedContinuation { continuation in
+            executor.async {
+                continuation.resume(returning: self.current.map(body))
+            }
+        }
     }
 
     /// Install an engine, answering the one it displaced.

@@ -128,7 +128,9 @@ private struct ParkedChangesView: View {
                                 // rather than to the drain it starts.
                                 _Concurrency.Task { await store.retryDeadLetter(id: change.id) }
                             },
-                            onDiscard: { store.discardDeadLetter(id: change.id) }
+                            onDiscard: {
+                                _Concurrency.Task { await store.discardDeadLetter(id: change.id) }
+                            }
                         )
                     }
                 }

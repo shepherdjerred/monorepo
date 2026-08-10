@@ -49,7 +49,10 @@ struct QuickAddPanelView: View {
             PlainTextField(
                 text: $controller.text,
                 prompt: "Add a task — try “pay rent tomorrow !high p:Home”",
-                onSubmit: controller.submit,
+                // Detached, because the enqueue runs on the engine's queue
+                // rather than on the main actor — the keystroke returns and the
+                // panel closes when the core has actually recorded the task.
+                onSubmit: { _Concurrency.Task { await controller.submit() } },
                 onCancel: controller.dismiss
             )
             .focused($isFieldFocused)

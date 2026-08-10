@@ -179,13 +179,16 @@ struct TaskInspector: View {
         }
     }
 
+    /// Record the command, then run the pass it armed.
+    ///
+    /// Detached from the gesture, because the enqueue itself runs on the
+    /// engine's queue: `store.dispatch` never takes the engine's mutex from the
+    /// main actor, so an edit made while a sync is draining cannot freeze the
+    /// panel it was typed into.
     private func dispatch(_ command: CommandInput) {
-        store.dispatch(command)
-        settle()
-    }
-
-    /// Run the pass a dispatch armed, without blocking the gesture on it.
-    private func settle() {
-        _Concurrency.Task { await store.settle() }
+        _Concurrency.Task {
+            await store.dispatch(command)
+            await store.settle()
+        }
     }
 }

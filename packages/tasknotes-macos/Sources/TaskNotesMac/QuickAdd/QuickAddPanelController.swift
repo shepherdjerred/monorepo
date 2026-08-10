@@ -186,20 +186,20 @@ final class QuickAddPanelController {
     /// a panel floats over another application, so nothing on screen would say
     /// the task was never created. Holding the text in the field keeps it
     /// retryable and copyable, and the strip reports why.
-    func submit() {
+    func submit() async {
         guard case .success(let store) = store, let calendar else { return }
         submissionFailure = nil
         switch QuickAdd.parsing(text, calendar: calendar) {
         case .success(let command):
             guard let command else { return }
-            guard store.dispatch(command) != nil else {
+            guard await store.dispatch(command) != nil else {
                 submissionFailure = store.lastStoreError
                 return
             }
             text = ""
             dismiss()
-            // Detached, so the panel closes on the keystroke rather than after
-            // a drain. `autoSync` armed the pass; this is what runs it.
+            // Detached, so the panel closes on the enqueue rather than after a
+            // drain. `autoSync` armed the pass; this is what runs it.
             _Concurrency.Task { await store.settle() }
         case .failure:
             // Already visible in the preview strip, which is derived from the

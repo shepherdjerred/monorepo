@@ -32,7 +32,7 @@ struct TodayFlowTests {
         // Exactly what pressing Return in the compose row does.
         let command = try #require(
             try QuickAdd.command(for: "Pay rent tomorrow !high", calendar: calendar))
-        store.dispatch(command)
+        await store.dispatch(command)
         await store.sync()
 
         #expect(try server.markdownFiles() == ["Pay rent.md"])
@@ -60,7 +60,7 @@ struct TodayFlowTests {
         let calendar = fixedCalendar(today: clickDay)
         let occurrenceHint = "2026-07-01"
 
-        store.dispatch(
+        await store.dispatch(
             .create(
                 payload: recurringRequest(
                     title: "Pay rent",
@@ -88,7 +88,7 @@ struct TodayFlowTests {
             "the target is the scheduled occurrence, not the day of the click")
 
         // The gesture, verbatim.
-        store.dispatch(row.completionCommand)
+        await store.dispatch(row.completionCommand)
         await store.sync()
 
         let markdown = try server.contents(of: "Pay rent.md")
@@ -146,7 +146,7 @@ struct TodayFlowTests {
         // advances the field against its own clock; a pinned date here would
         // ask the server about a day it does not think it is.
         let calendar = store.viewerCalendar()
-        store.dispatch(
+        await store.dispatch(
             .create(
                 payload: recurringRequest(
                     title: "Stand-up", scheduled: calendar.today, recurrence: "FREQ=DAILY")))
@@ -166,7 +166,7 @@ struct TodayFlowTests {
 
         // Optimistically, the completion is immediately visible — which is the
         // feedback the touch app describes as "felt".
-        store.dispatch(row.completionCommand)
+        await store.dispatch(row.completionCommand)
         let optimistic = try TaskListModel.build(
             section: .today,
             tasks: store.tasks, pendingTaskIds: store.pendingTaskIds, calendar: calendar,
@@ -203,7 +203,7 @@ struct TodayFlowTests {
             // which is what puts the row on this screen at all.
             let command = try #require(
                 try QuickAdd.command(for: "Written while offline today", calendar: calendar))
-            store.dispatch(command)
+            await store.dispatch(command)
 
             // Optimistic and immediate: the row is on screen before the network
             // is even attempted, and it is marked as not yet synced.
@@ -265,12 +265,12 @@ struct TodayFlowTests {
 
         #expect(store.migrate())
         store.configure(serverURL: server.baseURL)
-        store.dispatch(.create(payload: createRequest(title: "Groceries")))
+        await store.dispatch(.create(payload: createRequest(title: "Groceries")))
         await store.sync()
 
         let date = try #require(try ScheduleChoice.nextWeek.date(on: calendar))
         #expect(date == "2026-07-27")
-        store.dispatch(.update(taskId: "Groceries.md", payload: .settingDue(date)))
+        await store.dispatch(.update(taskId: "Groceries.md", payload: .settingDue(date)))
         await store.sync()
         #expect(try server.contents(of: "Groceries.md").contains("2026-07-27"))
 
@@ -284,7 +284,7 @@ struct TodayFlowTests {
         #expect(onTheDay.rows.map(\.id) == ["Groceries.md"])
         #expect(onTheDay.rows.first?.due?.text == "Today")
 
-        store.dispatch(.delete(taskId: "Groceries.md"))
+        await store.dispatch(.delete(taskId: "Groceries.md"))
         await store.sync()
         #expect(try server.markdownFiles().isEmpty)
     }

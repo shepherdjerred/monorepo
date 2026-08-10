@@ -29,6 +29,11 @@ internal import TaskNotesUniFFI
 /// token lists, the anchor — is bound straight through to the task and
 /// dispatches on change, so what is on screen is always the core's own
 /// optimistic answer rather than a second copy of it that could drift.
+///
+/// The three that do hold one hold an ``EditedText`` rather than a `String`,
+/// because a buffer that cannot say whether the user typed into it commits
+/// itself over an edit that arrived while the panel was open. That is the whole
+/// of why the type exists; its own documentation has the reasoning.
 struct TaskInspectorForm: View {
     let detail: TaskDetail
     let vocabulary: TaskVocabulary
@@ -42,9 +47,9 @@ struct TaskInspectorForm: View {
     /// Record something that is not a field edit — a completion, a deletion.
     let dispatch: (CommandInput) -> Void
 
-    @State private var title: String
-    @State private var estimate: String
-    @State private var details: String
+    @State private var title: EditedText
+    @State private var estimate: EditedText
+    @State private var details: EditedText
     @State private var isEditingDetails: Bool
 
     @FocusState private var focus: Field?
@@ -72,9 +77,10 @@ struct TaskInspectorForm: View {
         self.apply = apply
         self.attempt = attempt
         self.dispatch = dispatch
-        _title = State(initialValue: detail.task.title)
-        _estimate = State(initialValue: TaskTextEdit.estimateText(of: detail.task))
-        _details = State(initialValue: detail.task.details ?? "")
+        _title = State(initialValue: EditedText(stored: detail.task.title))
+        _estimate = State(
+            initialValue: EditedText(stored: TaskTextEdit.estimateText(of: detail.task)))
+        _details = State(initialValue: EditedText(stored: detail.task.details ?? ""))
         // An empty body opens in the editor and a written one opens rendered.
         // The alternative — always opening rendered — makes the first thing a
         // user sees on an empty note a blank area with no visible way in.
@@ -171,15 +177,25 @@ struct TaskInspectorForm: View {
             Section("Details") {
                 InspectorDetailsSection(
                     detail: detail,
-                    source: $details,
+                    source: $details.text,
                     isEditing: $isEditingDetails,
-                    onCommit: {
-                        attempt(.success(TaskTextEdit.rewriting(details: details, of: detail.task)))
-                    }
+                    onCommit: commitDetails
                 )
             }
         }
         .formStyle(.grouped)
+        // Take what arrived under the panel — a pull, a queued command
+        // draining, an edit made in Obsidian — into every field nobody is
+        // editing. Without this the buffers only reseed when the *task* changes
+        // and `.id(detail.id)` rebuilds the form, so a refreshed title sat
+        // behind a stale buffer that the next commit would write back over it.
+        .onChange(of: detail.task.title) { _, stored in title.refresh(stored: stored) }
+        .onChange(of: detail.task.timeEstimate) { _, _ in
+            estimate.refresh(stored: TaskTextEdit.estimateText(of: detail.task))
+        }
+        .onChange(of: detail.task.details) { _, stored in
+            details.refresh(stored: stored ?? "")
+        }
         // Committing on disappear as well as on blur is not belt-and-braces: a
         // panel closed with ⌥⌘I while a field still has focus never fires a
         // blur, and the edit would be lost with no indication it had been.
@@ -196,13 +212,13 @@ struct TaskInspectorForm: View {
     /// Services menu, text drag-and-drop — comes from being a text field at all.
     private var titleField: some View {
         PlainTextField(
-            text: $title,
+            text: $title.text,
             prompt: "Title",
             onSubmit: commitTitle,
             // Escape restores what is stored rather than committing. The field
             // is the one place in this panel where "never mind" has to mean
             // something, because it is the only field that can be made invalid.
-            onCancel: { title = detail.task.title },
+            onCancel: { title.revert(to: detail.task.title) },
             // Wrapping, unlike the compose row. A ~340-point panel truncates a
             // real task title well before its end — `Reply to the landlord
             // about the boiler inspec…` hides the thing the reader opened the
@@ -261,10 +277,10 @@ struct TaskInspectorForm: View {
         LabeledContent("Estimate") {
             HStack(spacing: 8) {
                 PlainTextField(
-                    text: $estimate,
+                    text: $estimate.text,
                     prompt: "—",
                     onSubmit: commitEstimate,
-                    onCancel: { estimate = TaskTextEdit.estimateText(of: detail.task) }
+                    onCancel: { estimate.revert(to: TaskTextEdit.estimateText(of: detail.task)) }
                 )
                 .help("Whole minutes")
                 .focused($focus, equals: .estimate)
@@ -307,22 +323,45 @@ struct TaskInspectorForm: View {
         Binding(get: { current }, set: { apply(edit($0)) })
     }
 
+    /// Offer a buffered field to the core, if the user put anything in it.
+    ///
+    /// ⚠️ **The `isEdited` guard is the load-bearing half, not the `nil` each
+    /// rule already answers for an unchanged value.** Comparing the buffer
+    /// against the task only says the two differ; it cannot say *which* is the
+    /// newer, and for a field that was refreshed under an open panel the answer
+    /// is the task. Committing on difference alone therefore wrote the buffer
+    /// the panel opened with back over an edit that arrived while it was open.
+    ///
+    /// The baseline is only advanced when the core actually took the value, so
+    /// a refused title or a mistyped estimate stays an edit rather than being
+    /// adopted and forgotten.
     private func commitTitle() {
-        attempt(TaskTextEdit.retitling(title, of: detail.task))
+        guard title.isEdited else { return }
+        let outcome = TaskTextEdit.retitling(title.text, of: detail.task)
+        attempt(outcome)
+        if case .success = outcome { title.commit() }
     }
 
     private func commitEstimate() {
-        attempt(TaskTextEdit.estimating(estimate, of: detail.task))
+        guard estimate.isEdited else { return }
+        let outcome = TaskTextEdit.estimating(estimate.text, of: detail.task)
+        attempt(outcome)
+        if case .success = outcome { estimate.commit() }
+    }
+
+    private func commitDetails() {
+        guard details.isEdited else { return }
+        attempt(.success(TaskTextEdit.rewriting(details: details.text, of: detail.task)))
+        details.commit()
     }
 
     /// Commit every buffered field.
     ///
-    /// Each one answers `nil` when it matches what is stored, so this is safe to
-    /// call unconditionally — it dispatches only for fields that actually
-    /// changed.
+    /// Safe to call unconditionally: each one is a no-op for a field the user
+    /// did not edit.
     private func commitText() {
         commitTitle()
         commitEstimate()
-        attempt(.success(TaskTextEdit.rewriting(details: details, of: detail.task)))
+        commitDetails()
     }
 }

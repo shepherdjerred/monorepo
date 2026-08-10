@@ -30,7 +30,7 @@ struct QuickAddPanelControllerTests {
     /// the panel cleared and dismissed on that outcome exactly as it does on a
     /// success, and the task was gone with no indication it had never existed.
     @Test("a refused write keeps the typed line, and says why")
-    func aRefusedWriteKeepsTheLine() throws {
+    func aRefusedWriteKeepsTheLine() async throws {
         // Held for the length of the case: the directory removes itself when it
         // is released, and a store writing into a deleted one would be a second
         // reason to refuse rather than the missing engine this is about.
@@ -41,7 +41,7 @@ struct QuickAddPanelControllerTests {
         let controller = QuickAddPanelController(store: .success(store))
         controller.prepare()
         controller.text = "Fix the boiler"
-        controller.submit()
+        await controller.submit()
 
         #expect(
             controller.text == "Fix the boiler",
@@ -59,7 +59,7 @@ struct QuickAddPanelControllerTests {
     /// stays true — a panel that never cleared would satisfy the case above and
     /// re-add the task on the next summoning.
     @Test("a persisted task clears the field")
-    func aPersistedTaskClearsTheField() throws {
+    func aPersistedTaskClearsTheField() async throws {
         let directory = try TemporaryDirectory()
         let store = TaskNotesStore(storage: try FileHostStorage(directory: directory.url))
         defer { store.shutdown() }
@@ -71,7 +71,7 @@ struct QuickAddPanelControllerTests {
         let controller = QuickAddPanelController(store: .success(store))
         controller.prepare()
         controller.text = "Fix the boiler"
-        controller.submit()
+        await controller.submit()
 
         #expect(controller.text.isEmpty, "the field was traded for a task")
         #expect(controller.submissionFailure == nil)

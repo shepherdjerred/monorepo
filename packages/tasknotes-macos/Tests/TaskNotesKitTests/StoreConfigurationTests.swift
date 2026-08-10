@@ -25,7 +25,7 @@ struct StoreConfigurationTests {
     /// different server task. No engine is the correct answer, and the shell
     /// already knows how to render one: `dispatch` returns nil.
     @Test("a replacement that fails to restore never becomes the live engine")
-    func aFailedRestoreIsNotPublished() throws {
+    func aFailedRestoreIsNotPublished() async throws {
         let directory = try TemporaryDirectory()
         try "{ this is not the counter file".write(
             to: directory.url.appending(path: "id-counters.json"),
@@ -38,10 +38,9 @@ struct StoreConfigurationTests {
         store.configure(serverURL: nil)
 
         #expect(store.lastStoreError != nil, "the refusal has to reach the banner")
-        #expect(
-            store.dispatch(.create(payload: createRequest(title: "Fix the boiler"))) == nil,
-            "and no write may go through a half-restored engine"
-        )
+        let refused = await store.dispatch(
+            .create(payload: createRequest(title: "Fix the boiler")))
+        #expect(refused == nil, "and no write may go through a half-restored engine")
     }
 
     /// A corrected address takes its own banner down.

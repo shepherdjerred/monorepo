@@ -385,6 +385,14 @@ extension TaskListView {
         isComposeFocused = false
     }
 
+    /// Create the composed task, and clear the field only if it was recorded.
+    ///
+    /// ⚠️ **The typed line survives a refused enqueue.** `dispatch` answers
+    /// `nil` when the core could not write the command — a full or momentarily
+    /// unwritable queue file — and clearing on that outcome destroys what
+    /// somebody typed, with only the sync banner to say why. The line stays in
+    /// the field instead, retryable and copyable, exactly as the quick-add
+    /// panel keeps it.
     private func create() {
         switch QuickAdd.parsing(composeText, calendar: calendar) {
         case .success(let command):
@@ -392,13 +400,15 @@ extension TaskListView {
                 cancelCompose()
                 return
             }
-            store.dispatch(command)
-            composeText = ""
-            // Focus is kept rather than dismissed: adding three tasks in a row
-            // is the common case, and a field that closes after each one turns
-            // that into three ⌘N presses.
-            isComposeFocused = true
-            settle()
+            _Concurrency.Task {
+                guard await store.dispatch(command) != nil else { return }
+                composeText = ""
+                // Focus is kept rather than dismissed: adding three tasks in a
+                // row is the common case, and a field that closes after each
+                // one turns that into three ⌘N presses.
+                isComposeFocused = true
+                await store.settle()
+            }
         case .failure(let error):
             store.report(error)
         }
@@ -406,10 +416,10 @@ extension TaskListView {
 
     private func toggle(_ row: TaskRowState) {
         hasInteracted = true
-        withAnimation(.snappy(duration: 0.2)) {
-            _ = store.dispatch(row.completionCommand)
+        _Concurrency.Task {
+            await store.dispatchAnimated(row.completionCommand)
+            await store.settle()
         }
-        settle()
     }
 
     private func completeSelection(in model: TaskListModel) {
@@ -419,13 +429,13 @@ extension TaskListView {
     }
 
     private func delete(_ ids: Set<TaskId>) {
-        withAnimation(.snappy(duration: 0.2)) {
-            for id in ids {
-                store.dispatch(.delete(taskId: id))
-            }
-        }
         selection.subtract(ids)
-        settle()
+        _Concurrency.Task {
+            for id in ids {
+                await store.dispatchAnimated(.delete(taskId: id))
+            }
+            await store.settle()
+        }
     }
 
     private func schedule(_ ids: Set<TaskId>, to choice: ScheduleChoice) {
@@ -436,27 +446,21 @@ extension TaskListView {
     }
 
     private func scheduleDate(_ ids: Set<TaskId>, to date: String?) {
-        for id in ids {
-            store.dispatch(.update(taskId: id, payload: .settingDue(date)))
+        _Concurrency.Task {
+            for id in ids {
+                await store.dispatch(.update(taskId: id, payload: .settingDue(date)))
+            }
+            await store.settle()
         }
-        settle()
     }
 
     private func setPriority(_ ids: Set<TaskId>, to priority: Priority) {
-        for id in ids {
-            store.dispatch(.update(taskId: id, payload: .settingPriority(priority)))
+        _Concurrency.Task {
+            for id in ids {
+                await store.dispatch(.update(taskId: id, payload: .settingPriority(priority)))
+            }
+            await store.settle()
         }
-        settle()
-    }
-
-    /// Run the pass a dispatch armed, without blocking the gesture on it.
-    ///
-    /// `autoSync` arms a pass on every dispatch but runs nothing; this is what
-    /// makes work actually happen. Detached from the caller so a burst of
-    /// dispatches — a bulk complete over fifty rows — coalesces into one drain
-    /// instead of fifty.
-    private func settle() {
-        _Concurrency.Task { await store.settle() }
     }
 
     private func refresh() {

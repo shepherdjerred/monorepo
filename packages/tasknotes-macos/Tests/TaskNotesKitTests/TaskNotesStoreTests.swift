@@ -54,7 +54,7 @@ struct TaskNotesStoreTests {
     /// until the app was relaunched — including after the user picked a valid
     /// date and the corrected command landed.
     @Test("a reported shell error is retired by the mutation that succeeds")
-    func aReportedErrorIsRetiredByTheNextSuccess() throws {
+    func aReportedErrorIsRetiredByTheNextSuccess() async throws {
         let directory = try TemporaryDirectory()
         let store = TaskNotesStore(storage: try FileHostStorage(directory: directory.url))
         #expect(store.migrate())
@@ -68,7 +68,8 @@ struct TaskNotesStoreTests {
         // The corrected action. Offline is deliberate — the queue accepts work
         // in the unconfigured state, so this proves the *local* mutation is
         // what clears it, with no server involved.
-        #expect(store.dispatch(.create(payload: createRequest(title: "Corrected"))) != nil)
+        let corrected = await store.dispatch(.create(payload: createRequest(title: "Corrected")))
+        #expect(corrected != nil)
         #expect(store.lastStoreError == nil)
     }
 
@@ -83,7 +84,8 @@ struct TaskNotesStoreTests {
         store.configure(serverURL: nil)
 
         // Offline: the command is accepted and answered optimistically.
-        let optimistic = store.dispatch(.create(payload: createRequest(title: "Offline first")))
+        let optimistic = await store.dispatch(
+            .create(payload: createRequest(title: "Offline first")))
         #expect(optimistic?.title == "Offline first")
         #expect(store.pendingCount == 1)
         #expect(store.tasks.map(\.title) == ["Offline first"])
@@ -120,7 +122,7 @@ struct TaskNotesStoreTests {
         // user's list order — a store that sorted for tidiness would silently
         // override it everywhere.
         for title in ["zulu", "alpha", "mike"] {
-            store.dispatch(.create(payload: createRequest(title: title)))
+            await store.dispatch(.create(payload: createRequest(title: title)))
         }
         await store.sync()
 
@@ -137,11 +139,11 @@ struct TaskNotesStoreTests {
 
         #expect(store.migrate())
         store.configure(serverURL: server.baseURL)
-        store.dispatch(.create(payload: createRequest(title: "Round trip")))
+        await store.dispatch(.create(payload: createRequest(title: "Round trip")))
         await store.sync()
         #expect(store.tasks.map(\.status) == [.open])
 
-        store.dispatch(.setStatus(taskId: "Round trip.md", status: .done))
+        await store.dispatch(.setStatus(taskId: "Round trip.md", status: .done))
         // Optimistic, before the network: the UI shows the new state at once.
         #expect(store.tasks.map(\.status) == [.done])
         #expect(store.pendingCount == 1)
@@ -160,7 +162,7 @@ struct TaskNotesStoreTests {
 
         #expect(store.migrate())
         store.configure(serverURL: unreachable)
-        store.dispatch(.create(payload: createRequest(title: "Doomed")))
+        await store.dispatch(.create(payload: createRequest(title: "Doomed")))
 
         await store.sync()
 
@@ -186,7 +188,7 @@ struct TaskNotesStoreTests {
             let store = TaskNotesStore(storage: try FileHostStorage(directory: directory.url))
             #expect(store.migrate())
             store.configure(serverURL: server.baseURL)
-            store.dispatch(.create(payload: createRequest(title: "Persisted")))
+            await store.dispatch(.create(payload: createRequest(title: "Persisted")))
             await store.sync()
             #expect(store.tasks.count == 1)
             store.shutdown()
@@ -214,13 +216,13 @@ struct TaskNotesStoreTests {
         store.configure(serverURL: server.baseURL)
 
         let optimistic = try #require(
-            store.dispatch(.create(payload: createRequest(title: "Aliased"))))
+            await store.dispatch(.create(payload: createRequest(title: "Aliased"))))
         let tempId = optimistic.id
         await store.sync()
 
         // An inspector, deep link, or restored window holding the pre-ack id
         // stays valid because the alias map outlives the command.
-        #expect(store.resolve(tempId) == "Aliased.md")
-        #expect(store.resolve("Aliased.md") == "Aliased.md")
+        #expect(await store.resolve(tempId) == "Aliased.md")
+        #expect(await store.resolve("Aliased.md") == "Aliased.md")
     }
 }

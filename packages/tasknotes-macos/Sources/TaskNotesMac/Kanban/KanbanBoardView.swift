@@ -326,6 +326,11 @@ extension KanbanBoardView {
         isComposeFocused = false
     }
 
+    /// Create the composed task, and clear the field only if it was recorded.
+    ///
+    /// ⚠️ Same rule as the list composer and the quick-add panel: `dispatch`
+    /// answers `nil` when the core could not write the command, and clearing on
+    /// that outcome destroys the typed line.
     private func create() {
         switch QuickAdd.parsing(composeText, calendar: calendar) {
         case .success(let command):
@@ -333,20 +338,22 @@ extension KanbanBoardView {
                 cancelCompose()
                 return
             }
-            store.dispatch(command)
-            composeText = ""
-            isComposeFocused = true
-            settle()
+            _Concurrency.Task {
+                guard await store.dispatch(command) != nil else { return }
+                composeText = ""
+                isComposeFocused = true
+                await store.settle()
+            }
         case .failure(let error):
             store.report(error)
         }
     }
 
     private func toggle(_ row: TaskRowState) {
-        withAnimation(.snappy(duration: 0.2)) {
-            _ = store.dispatch(row.completionCommand)
+        _Concurrency.Task {
+            await store.dispatchAnimated(row.completionCommand)
+            await store.settle()
         }
-        settle()
     }
 
     private func completeSelection() {
@@ -368,23 +375,18 @@ extension KanbanBoardView {
         guard case .success(let board) = derived,
             let command = board.moveCommand(id, to: status)
         else { return }
-        withAnimation(.snappy(duration: 0.2)) {
-            _ = store.dispatch(command)
+        _Concurrency.Task {
+            await store.dispatchAnimated(command)
+            await store.settle()
         }
-        settle()
     }
 
     private func delete(_ id: TaskId) {
-        withAnimation(.snappy(duration: 0.2)) {
-            _ = store.dispatch(.delete(taskId: id))
-        }
         if selection == id { selection = nil }
-        settle()
-    }
-
-    /// Run the pass a dispatch armed, without blocking the gesture on it.
-    private func settle() {
-        _Concurrency.Task { await store.settle() }
+        _Concurrency.Task {
+            await store.dispatchAnimated(.delete(taskId: id))
+            await store.settle()
+        }
     }
 
     private func refresh() {

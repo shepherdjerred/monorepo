@@ -55,6 +55,21 @@ Three rules that are not obvious from the signatures:
   `TaskNotesStore` reaches the global executor with `@concurrent` — which is
   load-bearing, because `NonisolatedNonsendingByDefault` makes a plain
   `nonisolated async` function inherit its caller's isolation.
+
+  ⚠️ **That applies to every exported engine method, not only the drain.**
+  `FfiSyncEngine` is a single mutex held for the whole of each call, so a
+  `dispatch`, a `snapshot` or a dead-letter decision taken from the main actor
+  waits on whatever HTTP request `sync_now` is inside — every window freezes
+  until it returns or times out. Those calls go through `EngineBox.run(_:)`,
+  which runs them on the engine's own **serial** queue (so a burst of dispatches
+  keeps the user's order) and brings the resulting snapshot back with them, so
+  the main actor never takes the FFI lock. Only calls against a brand-new,
+  absent, or being-disposed engine may stay synchronous — `dispose()` abandons
+  its in-flight requests before it takes the lock, which is what bounds it. A
+  store method that publishes after a suspension point is also outside any
+  `withAnimation` the caller opened, which is why `dispatch` takes the publish
+  scope as a parameter.
+
 - **Cancellation is never propagated, only called.** UniFFI 0.31 has no async
   cancellation at all. `DispatchRetryScheduler` treats an armed timer as an id
   in a set and cancellation as its removal, checked at fire time under the same

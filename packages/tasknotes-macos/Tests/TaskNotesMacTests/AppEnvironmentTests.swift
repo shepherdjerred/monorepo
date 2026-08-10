@@ -182,7 +182,7 @@ struct AppEnvironmentTests {
         // An ordinary, entirely successful mutation. The queue takes it while
         // offline and the store clears its *own* reported error — and must not
         // touch this one.
-        store.dispatch(.create(payload: createRequest(title: "Unrelated")))
+        await store.dispatch(.create(payload: createRequest(title: "Unrelated")))
         #expect(store.lastStoreError == nil)
         #expect(
             store.credentialError == RefusingTokenStore.failure,
@@ -374,7 +374,7 @@ struct AppEnvironmentTests {
             serverURL: server.baseURL,
             authToken: server.authToken.isEmpty ? nil : server.authToken
         )
-        seeder.dispatch(.create(payload: createRequest(title: title)))
+        await seeder.dispatch(.create(payload: createRequest(title: title)))
         await seeder.sync()
         #expect(try server.markdownFiles() == ["\(title).md"], "the seed itself must land")
     }

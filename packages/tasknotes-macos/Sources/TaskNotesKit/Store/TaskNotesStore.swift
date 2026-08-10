@@ -27,6 +27,16 @@ public import struct Foundation.URL
 /// `@concurrent` function, and `Mutex<Engine>` is what lets both domains hold
 /// the same engine without `@unchecked Sendable`.
 ///
+/// ⚠️ **"Can block" means every exported engine method, not only the drain.**
+/// `FfiSyncEngine` is one mutex held for the whole of each call, so a
+/// `dispatch`, a `snapshot` or a dead-letter decision made from the main actor
+/// waits on whatever request the drain is currently inside. That is why the
+/// methods below are `async`: they hand the call to ``EngineBox/run(_:)``,
+/// which runs it on the engine's own serial queue and brings the new snapshot
+/// back with it. The only synchronous engine calls left are the ones made
+/// against an engine that is brand new, absent, or being disposed — and
+/// `dispose()` abandons its in-flight requests before it takes the lock.
+///
 /// The engine is a *slot* rather than a stored constant because reconfiguring
 /// the server replaces it. The core is explicit about that: construct exactly
 /// one engine per configured server, and `dispose()` the old one before
@@ -195,7 +205,7 @@ public final class TaskNotesStore {
         case .success?, nil:
             // A rebuilt API is what retires the previous address's refusal, and
             // nothing else can. This failure arrives through `absorb` rather
-            // than ``report(_:)``, so ``dispatch(_:)``'s retirement does not
+            // than ``report(_:)``, so ``dispatch(_:publishing:)``'s retirement does not
             // reach it, and ``SyncMessage`` ranks a store error above every
             // engine state — so a `localhost:3000` (which Foundation reads as a
             // scheme, and `urlSession` rejects), once corrected, would leave the
@@ -262,10 +272,23 @@ public final class TaskNotesStore {
 
     /// Re-read the engine's snapshot into the observable properties.
     ///
-    /// Cheap and non-blocking: `snapshot()` and `status()` only take the
-    /// engine's own lock. Every mutating method here ends with one.
-    public func refresh() {
-        guard let engine = engineBox.current else {
+    /// ⚠️ **Only for a moment when the engine cannot be mid-drain**, which is
+    /// why it is not public: `snapshot()` and `status()` take the engine's own
+    /// lock, and `syncNow()` holds that lock for the length of a network round
+    /// trip. Its three callers are ``configure(serverURL:authToken:)``,
+    /// ``shutdown()`` and ``migrate()``, each of which is looking at an engine
+    /// that is brand new or absent. Everything else takes its snapshot on the
+    /// engine's own queue and hands it to ``publish(_:)``.
+    private func refresh() {
+        publish(engineBox.current.map(Self.observe))
+    }
+
+    /// Apply an already-taken snapshot to the observable properties.
+    ///
+    /// `nil` is the unconfigured reading — no engine answered, so there is
+    /// nothing to show rather than nothing to change.
+    private func publish(_ observed: Result<Observed, any Error>?) {
+        guard let observed else {
             tasks = []
             pendingCount = 0
             pendingTaskIds = []
@@ -273,10 +296,6 @@ public final class TaskNotesStore {
             lastSyncTime = nil
             status = SyncStatus(state: .unconfigured, lastError: nil, nextRetryAt: nil)
             return
-        }
-
-        let observed = Result {
-            Observed(snapshot: try engine.snapshot(), status: try engine.status())
         }
         switch observed {
         case .success(let value):
@@ -306,41 +325,70 @@ public final class TaskNotesStore {
     ///
     /// A UI surface holding an id from before a create was acked — an open
     /// inspector, a deep link, a restored window — stays valid because of this.
-    public func resolve(_ id: TaskId) -> TaskId {
-        guard let engine = engineBox.current else { return id }
-        switch Result(catching: { try engine.resolveTaskId(id: id) }) {
-        case .success(let resolved): return resolved
-        case .failure(let error):
+    public func resolve(_ id: TaskId) async -> TaskId {
+        let resolved = await engineBox.run { engine in
+            Result { try engine.resolveTaskId(id: id) }
+        }
+        switch resolved {
+        case .success(let resolved)?: return resolved
+        case .failure(let error)?:
             lastStoreError = Self.asCoreError(error)
             return id
+        case nil: return id
         }
     }
 
     // ── Writes ─────────────────────────────────────────────────────────────
 
-    /// Record a mutation, returning the optimistic result immediately.
+    /// Record a mutation, answering the optimistic result.
     ///
     /// The enqueue is the only wait — never the network. With `autoSync` on
     /// (it is), this also *arms* a pass without running it; call ``sync()`` or
     /// ``settle()`` to make work actually happen. That split is the core's, and
     /// it is what makes a burst of dispatches coalesce into one drain instead
     /// of one drain each.
+    ///
+    /// ⚠️ **`async` because the enqueue may not run on the main actor.** The
+    /// core's `dispatch` takes the engine's one mutex, and a background pass
+    /// holds that mutex for the whole of a blocking HTTP request — so a
+    /// dispatch made from the main thread freezes every window until the
+    /// request returns or times out. Bulk completion is the case that makes it
+    /// certain rather than unlucky: the first row starts a settle, and the
+    /// second row is dispatched into the drain it started. The call runs on the
+    /// engine's serial queue instead, which also keeps a burst of dispatches in
+    /// the order the user made them.
+    ///
+    /// - Parameters:
+    ///   - input: the mutation to record.
+    ///   - publishing: the scope the observable properties are updated in.
+    ///     `withAnimation` is a *synchronous* scope, so a caller that wants the
+    ///     row animation it had when this was synchronous has to hand the scope
+    ///     in — the update now lands after a suspension point, and
+    ///     `TaskNotesKit` has no SwiftUI to reach for.
+    /// - Returns: the task as the UI will now see it, `nil` after a delete and
+    ///   `nil` when nothing was recorded at all.
     @discardableResult
-    public func dispatch(_ input: CommandInput) -> CoreTask? {
-        guard let engine = engineBox.current else {
+    public func dispatch(
+        _ input: CommandInput,
+        publishing: (() -> Void) -> Void = { apply in apply() }
+    ) async -> CoreTask? {
+        let performed = await engineBox.run { engine in
+            Self.performing(engine) { try $0.dispatch(input: input) }
+        }
+        guard let performed else {
             lastStoreError = .Invariant(message: "no engine is configured")
             return nil
         }
-        let outcome = Result { try engine.dispatch(input: input) }
         // A successful mutation is what retires a reported shell error. Those
         // arrive through ``report(_:)`` — an unparsable quick-add line, a
         // schedule choice the core refused — and ``SyncMessage`` renders a
         // store error with no remedy and above everything else, so nothing
-        // else on screen could ever take the banner down. Cleared *before*
-        // `refresh`, so a snapshot read that then fails still reports itself.
-        if case .success = outcome { clearReportedError() }
-        refresh()
-        switch outcome {
+        // else on screen could ever take the banner down. Cleared *before* the
+        // snapshot is published, so a snapshot read that then fails still
+        // reports itself.
+        if case .success = performed.outcome { clearReportedError() }
+        publishing { self.publish(performed.observed) }
+        switch performed.outcome {
         case .success(let optimistic): return optimistic
         case .failure(let error):
             lastStoreError = Self.asCoreError(error)
@@ -361,8 +409,7 @@ public final class TaskNotesStore {
     /// `lastStoreError` means "something the engine did not already account
     /// for".
     public func sync() async {
-        _ = await Self.drain(engineBox)
-        refresh()
+        publish(await Self.drain(engineBox))
     }
 
     /// Run an already-armed pass, discarding its result.
@@ -370,8 +417,7 @@ public final class TaskNotesStore {
     /// The counterpart of a fire-and-forget trigger. Does nothing when no pass
     /// is armed, so it is safe to call on a timer.
     public func settle() async {
-        _ = await Self.runSettle(engineBox)
-        refresh()
+        publish(await Self.runSettle(engineBox))
     }
 
     /// Record a failure the shell hit while preparing a command.
@@ -388,7 +434,7 @@ public final class TaskNotesStore {
 
     /// Retire the local failure.
     ///
-    /// Called by ``dispatch(_:)`` on the mutation that succeeds, which is the
+    /// Called by ``dispatch(_:publishing:)`` on the mutation that succeeds, which is the
     /// moment a reported shell error stops being true: every ``report(_:)``
     /// call site is the failing half of a switch whose other half dispatches,
     /// so the corrected action is the only evidence that the problem is over.
@@ -425,17 +471,26 @@ public final class TaskNotesStore {
     /// here rather than spawning keeps the store free of lifetimes
     /// ``shutdown()`` cannot stop.
     public func retryDeadLetter(id: String) async {
-        guard let engine = engineBox.current else { return }
-        let outcome = Result { try engine.retryDeadLetter(id: id) }
-        absorb(outcome)
-        guard case .success = outcome else { return }
+        let performed = await engineBox.run { engine in
+            Self.performing(engine) { try $0.retryDeadLetter(id: id) }
+        }
+        guard let performed else { return }
+        absorb(performed)
+        guard case .success = performed.outcome else { return }
         await settle()
     }
 
     /// Drop a parked command for good.
-    public func discardDeadLetter(id: String) {
-        guard let engine = engineBox.current else { return }
-        absorb(Result { try engine.discardDeadLetter(id: id) })
+    ///
+    /// `async` for the same reason ``dispatch(_:publishing:)`` is: the core's
+    /// `discard_dead_letter` takes the engine's mutex, and a background pass
+    /// can be holding it for the length of an HTTP request.
+    public func discardDeadLetter(id: String) async {
+        let performed = await engineBox.run { engine in
+            Self.performing(engine) { try $0.discardDeadLetter(id: id) }
+        }
+        guard let performed else { return }
+        absorb(performed)
     }
 
     // ── Plumbing ───────────────────────────────────────────────────────────
@@ -443,6 +498,17 @@ public final class TaskNotesStore {
     /// Publish the outcome of an engine call and re-read the snapshot.
     private func absorb(_ outcome: Result<Void, any Error>) {
         absorbFire(Self.failure(of: outcome))
+    }
+
+    /// Publish what one engine call left behind.
+    ///
+    /// The counterpart of ``absorb(_:)`` for a call that already brought its
+    /// snapshot back with it, so nothing here re-reads the engine.
+    private func absorb<Value>(_ performed: Performed<Value>) {
+        if case .failure(let error) = performed.outcome {
+            lastStoreError = Self.asCoreError(error)
+        }
+        publish(performed.observed)
     }
 
     private func absorbFire(_ error: CoreError?) {
@@ -457,7 +523,31 @@ public final class TaskNotesStore {
         return asCoreError(error)
     }
 
-    /// `syncNow`, off the main actor.
+    /// Everything one engine call leaves behind: its own answer, and the
+    /// snapshot taken immediately afterwards.
+    ///
+    /// The pair is read in a single job on the engine's queue rather than as
+    /// two calls, because the second one made from the main actor would be
+    /// exactly the lock acquisition the first one was moved off it to avoid.
+    private struct Performed<Value: Sendable>: Sendable {
+        let outcome: Result<Value, any Error>
+        let observed: Result<Observed, any Error>
+    }
+
+    nonisolated private static func performing<Value: Sendable>(
+        _ engine: any FfiSyncEngineProtocol,
+        _ body: (any FfiSyncEngineProtocol) throws -> Value
+    ) -> Performed<Value> {
+        Performed(outcome: Result { try body(engine) }, observed: observe(engine))
+    }
+
+    nonisolated private static func observe(
+        _ engine: any FfiSyncEngineProtocol
+    ) -> Result<Observed, any Error> {
+        Result { Observed(snapshot: try engine.snapshot(), status: try engine.status()) }
+    }
+
+    /// `syncNow`, off the main actor, answering the snapshot it left behind.
     ///
     /// `@concurrent` is load-bearing rather than decorative. With
     /// `NonisolatedNonsendingByDefault` enabled — it is, in `Package.swift` — a
@@ -465,16 +555,25 @@ public final class TaskNotesStore {
     /// without this attribute the blocking HTTP request would run on the main
     /// thread. ``URLSessionTransport`` refuses a main-thread call outright, so
     /// getting this wrong is a loud test failure rather than a beachball.
+    ///
+    /// Not on ``EngineBox``'s serial queue, unlike every other engine call
+    /// here: a drain is the long call, and putting it there would make the next
+    /// dispatch wait behind a network round trip for a reason the Rust mutex
+    /// does not itself impose.
     @concurrent
-    private static func drain(_ box: EngineBox) async -> Result<Void, any Error> {
-        guard let engine = box.current else { return .success(()) }
-        return Result { try engine.syncNow() }
+    private static func drain(_ box: EngineBox) async -> Result<Observed, any Error>? {
+        guard let engine = box.current else { return nil }
+        // The pass's own failure is discarded here by design — the engine
+        // records it in `status()`, which the read below carries back.
+        _ = Result { try engine.syncNow() }
+        return observe(engine)
     }
 
     @concurrent
-    private static func runSettle(_ box: EngineBox) async -> Result<Void, any Error> {
-        guard let engine = box.current else { return .success(()) }
-        return Result { try engine.settle() }
+    private static func runSettle(_ box: EngineBox) async -> Result<Observed, any Error>? {
+        guard let engine = box.current else { return nil }
+        _ = Result { try engine.settle() }
+        return observe(engine)
     }
 
     /// Recover the `CoreError` the bindings actually threw.
@@ -491,7 +590,7 @@ public final class TaskNotesStore {
         return coreError
     }
 
-    private struct Observed {
+    private struct Observed: Sendable {
         let snapshot: TaskStoreSnapshot
         let status: SyncStatus
     }
