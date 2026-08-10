@@ -222,9 +222,23 @@ impl CommandQueue {
     /// answers from its idempotency store. The other order is what creates the
     /// ghost this exists to prevent, and nothing later would look for it.
     ///
+    /// ## Why the dequeue is committed rather than adopted
+    ///
+    /// The server has already applied the command by the time this is called,
+    /// so the only remaining job is to stop sending it — and dropping it from
+    /// memory before the write lands is how that job silently fails. The retry
+    /// pass reads the in-memory queue, finds nothing left, and reports the
+    /// engine idle while `queue.json` still holds the command. Nothing looks at
+    /// it again until the next launch, and a relaunch past the server's
+    /// seven-day idempotency window re-executes it for real: a second task for
+    /// a create, a second edit for anything else. Leaving the command in memory
+    /// when the write is refused keeps memory and disk saying the same thing,
+    /// which is what lets the next pass retry the dequeue.
+    ///
     /// # Errors
     ///
-    /// Propagates a storage-layer failure.
+    /// Propagates a storage-layer failure, having changed neither collection in
+    /// memory past the last write that landed.
     pub fn ack(&mut self, id: &str) -> Result<()> {
         if self.dead.iter().any(|entry| entry.command.id() == id) {
             let candidate = self
@@ -235,8 +249,13 @@ impl CommandQueue {
                 .collect();
             self.commit_dead_letter(candidate)?;
         }
-        self.queue.retain(|queued| queued.id() != id);
-        self.persist_queue()
+        let candidate = self
+            .queue
+            .iter()
+            .filter(|queued| queued.id() != id)
+            .cloned()
+            .collect();
+        self.commit_queue(candidate)
     }
 
     /// Rewrite every reference to `from` — in the queue **and** in the
@@ -1009,6 +1028,44 @@ mod tests {
         let mut relaunched = CommandQueue::new(storage, Arc::new(FixedClock));
         relaunched.restore().unwrap();
         assert!(!relaunched.contains_command_id("c1"), "on disk as well");
+    }
+
+    /// ⚠️ **A refused dequeue must stay retryable, or the server's idempotency
+    /// window is the only thing standing between an ack and a duplicate.**
+    ///
+    /// Dropping the command from memory before the write lands leaves the drain
+    /// with an empty queue and `queue.json` still holding it. The pass reports
+    /// itself idle, nothing looks again until the next launch, and a relaunch
+    /// past the seven-day idempotency record re-executes the command for real.
+    #[test]
+    fn a_refused_dequeue_leaves_the_acknowledged_command_queued() {
+        let storage = Arc::new(HalfWritingStorage::default());
+        let mut queue = CommandQueue::new(storage.clone(), Arc::new(FixedClock));
+        queue.enqueue(create("c1", &temp("1-1"))).unwrap();
+        queue.enqueue(set_status("c2", &temp("1-1"))).unwrap();
+
+        storage.refuse_queue.store(true, Ordering::SeqCst);
+        queue.ack("c1").expect_err("the dequeue write failed");
+        storage.refuse_queue.store(false, Ordering::SeqCst);
+
+        assert_eq!(
+            queue.pending().iter().map(Command::id).collect::<Vec<_>>(),
+            vec!["c1", "c2"],
+            "memory still says what the disk says, so the pass can try again"
+        );
+
+        queue.ack("c1").unwrap();
+        assert_eq!(
+            queue.pending().iter().map(Command::id).collect::<Vec<_>>(),
+            vec!["c2"]
+        );
+
+        let mut relaunched = CommandQueue::new(storage, Arc::new(FixedClock));
+        relaunched.restore().unwrap();
+        assert!(
+            !relaunched.contains_command_id("c1"),
+            "and the bytes agree, so no relaunch replays the acknowledged create"
+        );
     }
 
     /// The other way the same duplicate is resolved: the user presses Retry on
