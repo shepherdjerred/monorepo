@@ -77,6 +77,24 @@ final class PersistenceSettingsTests: XCTestCase {
   }
 
   @MainActor
+  func testMalformedPersistedPollingIntervalIsRejected() throws {
+    let suiteName = "QuotaBarTests.\(UUID().uuidString)"
+    guard let defaults = UserDefaults(suiteName: suiteName) else {
+      XCTFail("Expected isolated defaults")
+      return
+    }
+    defer { defaults.removePersistentDomain(forName: suiteName) }
+    defaults.set("not-a-number", forKey: "pollingInterval")
+    let settings = AppSettings(store: UserDefaultsSettingsStore(defaults: defaults))
+
+    XCTAssertEqual(settings.pollingInterval, 60)
+    XCTAssertEqual(
+      settings.validationErrorMessage,
+      QuotaError.settingsCorrupt.localizedDescription
+    )
+  }
+
+  @MainActor
   func testLaunchAtLoginReflectsServiceAndRollsBackErrors() {
     let service = FakeLoginItemService(status: .disabled)
     let controller = LaunchAtLoginController(service: service)

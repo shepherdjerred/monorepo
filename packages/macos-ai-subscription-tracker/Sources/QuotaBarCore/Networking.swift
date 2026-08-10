@@ -143,11 +143,19 @@ public struct ProviderHTTPClient: Sendable {
       credential: initialCredential
     )
     if first.statusCode == 401 {
-      let reloaded = try await credentials.credential(
-        for: provider,
-        rejecting: initialCredential
-      )
-      .requireCurrent(for: provider)
+      let reloaded: ProviderCredential?
+      do {
+        reloaded = try await credentials.credential(
+          for: provider,
+          rejecting: initialCredential
+        )
+        .requireCurrent(for: provider)
+      } catch QuotaError.credentialsMissing {
+        // No alternative credential exists: preserve the original unauthorized result
+        // instead of masking it as a missing credential.
+        reloaded = nil
+      }
+      guard let reloaded else { return try validate(first, provider: provider) }
       let retry = try await send(
         provider: provider,
         url: url,

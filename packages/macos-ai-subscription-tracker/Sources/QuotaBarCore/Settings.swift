@@ -3,7 +3,7 @@ public import Observation
 
 public protocol SettingsPersisting: Sendable {
   func enabledProviders() throws -> Set<ProviderID>?
-  func pollingInterval() -> TimeInterval?
+  func pollingInterval() throws -> TimeInterval?
   func save(enabledProviders: Set<ProviderID>, pollingInterval: TimeInterval)
 }
 
@@ -27,9 +27,12 @@ public final class UserDefaultsSettingsStore: SettingsPersisting, @unchecked Sen
     return providers
   }
 
-  public func pollingInterval() -> TimeInterval? {
-    guard defaults.object(forKey: "pollingInterval") != nil else { return nil }
-    return defaults.double(forKey: "pollingInterval")
+  public func pollingInterval() throws -> TimeInterval? {
+    guard let storedValue = defaults.object(forKey: "pollingInterval") else { return nil }
+    guard let value = storedValue as? Double, value.isFinite else {
+      throw QuotaError.settingsCorrupt
+    }
+    return value
   }
 
   public func save(enabledProviders: Set<ProviderID>, pollingInterval: TimeInterval) {
@@ -56,14 +59,20 @@ public final class AppSettings {
   ) {
     self.store = store
     self.minimumPollingInterval = minimumPollingInterval
+    var corrupted = false
     do {
       self.enabledProviders = try store.enabledProviders() ?? Set(ProviderID.allCases)
-      self.validationErrorMessage = nil
     } catch {
       self.enabledProviders = Set(ProviderID.allCases)
-      self.validationErrorMessage = QuotaError.settingsCorrupt.localizedDescription
+      corrupted = true
     }
-    self.pollingInterval = max(minimumPollingInterval, store.pollingInterval() ?? 300)
+    do {
+      self.pollingInterval = max(minimumPollingInterval, try store.pollingInterval() ?? 300)
+    } catch {
+      self.pollingInterval = minimumPollingInterval
+      corrupted = true
+    }
+    self.validationErrorMessage = corrupted ? QuotaError.settingsCorrupt.localizedDescription : nil
   }
 
   public func setProvider(_ provider: ProviderID, enabled: Bool) {

@@ -76,6 +76,21 @@ final class NetworkingTests: XCTestCase {
     }
   }
 
+  func testUnauthorizedPreservedWhenNoAlternativeCredentialExists() async throws {
+    let transport = StubTransport([
+      .success(ProviderResponse(statusCode: 401, data: Data()))
+    ])
+    let credentials = StubCredentialStore(tokens: ["only-token"])
+    let client = ProviderHTTPClient(transport: transport, credentials: credentials)
+    let url = try XCTUnwrap(URL(string: "https://example.com/usage"))
+    do {
+      _ = try await client.get(provider: .codex, url: url)
+      XCTFail("Expected unauthorized")
+    } catch {
+      XCTAssertEqual(error as? QuotaError, .unauthorized(.codex))
+    }
+  }
+
   func testCredentialExpiryIsCheckedBeforeTransport() async throws {
     let expired = ExpiredCredentialStore()
     let transport = StubTransport([])
