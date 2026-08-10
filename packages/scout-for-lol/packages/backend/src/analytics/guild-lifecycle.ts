@@ -234,37 +234,75 @@ export async function captureGuildRemoval(
     return false;
   }
 
-  // Claim the removal transition first, before any optional classification
-  // work. Callers rely on removedAt being stamped as soon as a removal is
-  // confirmed (see cleanupRemovedGuild); a failure in the best-effort
-  // subscription/report/competition counts below must not prevent that.
-  const transition = await db.guildInstall.updateMany({
-    where: {
-      id: install.id,
-      analyticsInstallationId: install.analyticsInstallationId,
-      removedAt: null,
-    },
-    data: { removedAt },
-  });
-  if (transition.count !== 1) {
+  const claimWhere = {
+    id: install.id,
+    analyticsInstallationId: install.analyticsInstallationId,
+    removedAt: null,
+  };
+
+  // Classify BEFORE claiming the removal, atomically with the claim, in one
+  // transaction. cleanupRemovedGuild runs its (idempotent) deletion
+  // transaction regardless of whether this call wins the claim below — a
+  // caller that loses the claim proceeds straight to deleting
+  // subscription/report/competition rows. On SQLite that deletion cannot
+  // even begin until this transaction has fully committed (one connection,
+  // strictly serialized transactions), so wrapping the counts and the claim
+  // together guarantees no concurrent deletion can zero them out before
+  // they're captured.
+  let claim: {
+    claimed: boolean;
+    subscriptions: number;
+    reports: number;
+    competitions: number;
+  };
+  try {
+    claim = await db.$transaction(async (tx) => {
+      const [subscriptions, reports, competitions] = await Promise.all([
+        tx.subscription.count({ where: { serverId } }),
+        tx.report.count({ where: { serverId } }),
+        tx.competition.count({ where: { serverId } }),
+      ]);
+      const transition = await tx.guildInstall.updateMany({
+        where: claimWhere,
+        data: { removedAt },
+      });
+      return {
+        claimed: transition.count === 1,
+        subscriptions,
+        reports,
+        competitions,
+      };
+    });
+  } catch (error) {
+    productAnalyticsFailuresTotal.inc({
+      operation: "guild-removed-classification",
+    });
+    logger.error(
+      "Failed to classify guild removal; claiming the removal without it",
+      getErrorMessage(error),
+    );
+    // The classification reads must never block the removal stamp itself
+    // (see cleanupRemovedGuild) — retry the claim alone, with no event.
+    const transition = await db.guildInstall.updateMany({
+      where: claimWhere,
+      data: { removedAt },
+    });
+    return transition.count === 1;
+  }
+
+  if (!claim.claimed) {
     return false;
   }
 
   try {
-    const [subscriptions, reports, competitions] = await Promise.all([
-      db.subscription.count({ where: { serverId } }),
-      db.report.count({ where: { serverId } }),
-      db.competition.count({ where: { serverId } }),
-    ]);
-
     analytics.capture(install, {
       event: "guild_removed",
       properties: {
         activation_state: removalActivationState({
           firstCoreOutputAt: install.firstCoreOutputAt,
-          subscriptions,
-          reports,
-          competitions,
+          subscriptions: claim.subscriptions,
+          reports: claim.reports,
+          competitions: claim.competitions,
         }),
         tenure_bucket: tenureBucket(install.installedAt, removedAt),
       },
@@ -274,7 +312,7 @@ export async function captureGuildRemoval(
       operation: "guild-removed-classification",
     });
     logger.error(
-      "Failed to classify and capture guild removal analytics",
+      "Failed to capture guild removal analytics",
       getErrorMessage(error),
     );
   }

@@ -1,5 +1,9 @@
 import { afterAll, beforeEach, describe, expect, mock, test } from "bun:test";
-import { testGuildId, testAccountId } from "#src/testing/test-ids.ts";
+import {
+  testGuildId,
+  testAccountId,
+  testChannelId,
+} from "#src/testing/test-ids.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import {
   captureFirstSubscriptionCreated,
@@ -308,6 +312,67 @@ describe("guild removal", () => {
       event: "guild_removed",
       properties: {
         activation_state: "activated",
+        tenure_bucket: "7-29d",
+      },
+    });
+  });
+
+  test("classifies an accurate subscription count under the same concurrent-cleanup pattern cleanupRemovedGuild uses", async () => {
+    // Regression coverage for a race where cleanupRemovedGuild's deletion
+    // transaction runs unconditionally after captureGuildRemoval returns,
+    // regardless of which concurrent caller won the removal claim. Before
+    // classification and the claim were made atomic in one db.$transaction
+    // (count reads, then the guarded update, in that order), the losing
+    // caller could delete this subscription before the winning caller's own
+    // (separate, later) count query ran, misclassifying an
+    // actually-configured guild as "installed_only".
+    await seedInstall();
+    const now = new Date("2026-08-01T00:00:00Z");
+    await prisma.player.create({
+      data: {
+        alias: "race-fixture",
+        serverId: SERVER_ID,
+        creatorDiscordId: testAccountId("781"),
+        createdTime: now,
+        updatedTime: now,
+        subscriptions: {
+          create: {
+            channelId: testChannelId("1"),
+            serverId: SERVER_ID,
+            creatorDiscordId: testAccountId("781"),
+            createdTime: now,
+            updatedTime: now,
+          },
+        },
+      },
+    });
+    const { analytics, capture } = createAnalyticsFixture();
+    const removedAt = new Date("2026-08-10T00:00:00Z");
+
+    async function simulateCleanupCall(): Promise<boolean> {
+      const claimed = await captureGuildRemoval(
+        SERVER_ID,
+        removedAt,
+        prisma,
+        analytics,
+      );
+      // Mirrors cleanupRemovedGuild: deletion runs unconditionally, whether
+      // or not this call won the claim above.
+      await prisma.subscription.deleteMany({ where: { serverId: SERVER_ID } });
+      return claimed;
+    }
+
+    const results = await Promise.all([
+      simulateCleanupCall(),
+      simulateCleanupCall(),
+    ]);
+
+    expect(results.filter(Boolean)).toHaveLength(1);
+    expect(capture).toHaveBeenCalledTimes(1);
+    expect(capture).toHaveBeenCalledWith(expect.anything(), {
+      event: "guild_removed",
+      properties: {
+        activation_state: "configured",
         tenure_bucket: "7-29d",
       },
     });
