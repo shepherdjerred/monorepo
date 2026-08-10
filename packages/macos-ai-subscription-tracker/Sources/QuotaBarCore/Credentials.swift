@@ -1,0 +1,431 @@
+public import Foundation
+import Security
+
+public protocol KeychainClient: Sendable {
+  func read(service: String, account: String?) throws -> Data?
+  func write(_ data: Data, service: String, account: String) throws
+  func delete(service: String, account: String) throws
+}
+
+public struct SystemKeychainClient: KeychainClient, Sendable {
+  public init() {}
+
+  public func read(service: String, account: String?) throws -> Data? {
+    var query: [String: Any] = [
+      kSecClass as String: kSecClassGenericPassword,
+      kSecAttrService as String: service,
+      kSecReturnData as String: true,
+      kSecMatchLimit as String: kSecMatchLimitOne,
+    ]
+    if let account { query[kSecAttrAccount as String] = account }
+    var result: AnyObject?
+    let status = SecItemCopyMatching(query as CFDictionary, &result)
+    if status == errSecItemNotFound { return nil }
+    guard status == errSecSuccess else { throw QuotaError.keychain(status: status) }
+    guard let data = result as? Data else { throw QuotaError.keychain(status: errSecDecode) }
+    return data
+  }
+
+  public func write(_ data: Data, service: String, account: String) throws {
+    let query: [String: Any] = [
+      kSecClass as String: kSecClassGenericPassword,
+      kSecAttrService as String: service,
+      kSecAttrAccount as String: account,
+    ]
+    let attributes: [String: Any] = [
+      kSecValueData as String: data,
+      kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
+    ]
+    let updateStatus = SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
+    if updateStatus == errSecSuccess { return }
+    guard updateStatus == errSecItemNotFound else {
+      throw QuotaError.keychain(status: updateStatus)
+    }
+    var item = query
+    for (key, value) in attributes { item[key] = value }
+    let addStatus = SecItemAdd(item as CFDictionary, nil)
+    guard addStatus == errSecSuccess else { throw QuotaError.keychain(status: addStatus) }
+  }
+
+  public func delete(service: String, account: String) throws {
+    let query: [String: Any] = [
+      kSecClass as String: kSecClassGenericPassword,
+      kSecAttrService as String: service,
+      kSecAttrAccount as String: account,
+    ]
+    let status = SecItemDelete(query as CFDictionary)
+    guard status == errSecSuccess || status == errSecItemNotFound else {
+      throw QuotaError.keychain(status: status)
+    }
+  }
+}
+
+public actor ManualCredentialStore: CredentialStore {
+  public static let service = "com.sjerred.QuotaBar.credentials"
+  private let keychain: any KeychainClient
+
+  public init(keychain: any KeychainClient = SystemKeychainClient()) {
+    self.keychain = keychain
+  }
+
+  public func credential(for provider: ProviderID, reload _: Bool) throws -> ProviderCredential {
+    guard let data = try keychain.read(service: Self.service, account: provider.rawValue) else {
+      throw QuotaError.credentialsMissing(provider)
+    }
+    guard let token = String(data: data, encoding: .utf8) else {
+      throw QuotaError.keychain(status: errSecDecode)
+    }
+    return try ProviderCredential(accessToken: token, source: "QuotaBar Keychain")
+  }
+
+  public func credentialIfPresent(for provider: ProviderID) throws -> ProviderCredential? {
+    guard let data = try keychain.read(service: Self.service, account: provider.rawValue) else {
+      return nil
+    }
+    guard let token = String(data: data, encoding: .utf8) else {
+      throw QuotaError.keychain(status: errSecDecode)
+    }
+    return try ProviderCredential(accessToken: token, source: "QuotaBar Keychain")
+  }
+
+  public func save(_ token: String, for provider: ProviderID) throws {
+    let credential = try ProviderCredential(accessToken: token, source: "QuotaBar Keychain")
+    try keychain.write(
+      Data(credential.accessToken.utf8),
+      service: Self.service,
+      account: provider.rawValue
+    )
+  }
+
+  public func remove(for provider: ProviderID) throws {
+    try keychain.delete(service: Self.service, account: provider.rawValue)
+  }
+}
+
+public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
+  private let fileManager: FileManager
+  private let homeDirectory: URL
+  private let kimiCodeHome: URL?
+  private let claudeKeychain: any KeychainClient
+
+  public init(
+    fileManager: FileManager = .default,
+    homeDirectory: URL? = nil,
+    kimiCodeHome: URL? = nil,
+    claudeKeychain: any KeychainClient = SystemKeychainClient()
+  ) {
+    self.fileManager = fileManager
+    self.homeDirectory = homeDirectory ?? fileManager.homeDirectoryForCurrentUser
+    if let kimiCodeHome {
+      self.kimiCodeHome = kimiCodeHome
+    } else if let configured = ProcessInfo.processInfo.environment["KIMI_CODE_HOME"],
+      !configured.isEmpty
+    {
+      self.kimiCodeHome = URL(fileURLWithPath: configured, isDirectory: true)
+    } else {
+      self.kimiCodeHome = nil
+    }
+    self.claudeKeychain = claudeKeychain
+  }
+
+  public func credential(for provider: ProviderID, reload _: Bool) throws -> ProviderCredential {
+    let credential: ProviderCredential?
+    switch provider {
+    case .claudeCode: credential = try readClaude()
+    case .codex: credential = try readCodex()
+    case .kimi: credential = try readKimi() ?? readOpenCode(provider: provider)
+    case .grok: credential = try readOpenCode(provider: provider)
+    }
+    guard let credential else { throw QuotaError.credentialsMissing(provider) }
+    return try credential.requireCurrent(for: provider)
+  }
+
+  private func readClaude() throws -> ProviderCredential? {
+    let path = homeDirectory.appendingPathComponent(".claude/.credentials.json")
+    if let value = try decodeFile(ClaudeCredentialFile.self, at: path, provider: .claudeCode)?
+      .credential
+    {
+      return try makeCredential(value, source: path.path)
+    }
+    guard let data = try claudeKeychain.read(service: "Claude Code-credentials", account: nil)
+    else { return nil }
+    let value = try decode(ClaudeCredentialFile.self, from: data, provider: .claudeCode)
+    guard let credential = value.credential else { return nil }
+    return try makeCredential(credential, source: "Claude Code Keychain")
+  }
+
+  private func readCodex() throws -> ProviderCredential? {
+    let path = homeDirectory.appendingPathComponent(".codex/auth.json")
+    guard
+      let value = try decodeFile(CodexCredentialFile.self, at: path, provider: .codex)?.credential
+    else {
+      return nil
+    }
+    return try makeCredential(value, source: path.path)
+  }
+
+  private func readKimi() throws -> ProviderCredential? {
+    let root = kimiCodeHome ?? homeDirectory.appendingPathComponent(".kimi-code")
+    let directory = root.appendingPathComponent("credentials")
+    guard fileManager.fileExists(atPath: directory.path) else { return nil }
+    let files = try fileManager.contentsOfDirectory(
+      at: directory,
+      includingPropertiesForKeys: nil
+    ).filter { $0.lastPathComponent != "mcp" }.sorted { $0.path < $1.path }
+    for path in files {
+      if let value = try decodeFile(KimiCredentialFile.self, at: path, provider: .kimi)?.credential
+      {
+        return try makeCredential(value, source: path.path)
+      }
+    }
+    return nil
+  }
+
+  private func readOpenCode(provider: ProviderID) throws -> ProviderCredential? {
+    for path in openCodeAuthPaths where fileManager.fileExists(atPath: path.path) {
+      guard
+        let value = try decodeFile(OpenCodeAuthFile.self, at: path, provider: provider)?.credential(
+          for: provider)
+      else { continue }
+      return try makeCredential(value, source: path.path)
+    }
+    guard
+      let database = openCodeDatabasePaths.first(where: { fileManager.fileExists(atPath: $0.path) })
+    else { return nil }
+    let rows = try readOpenCodeRows(database: database)
+    let labels = OpenCodeAuthFile.labels(for: provider)
+    for row in rows where labels.contains(row.label.lowercased()) {
+      let value = try decode(
+        OpenCodeOAuthCredential.self, from: Data(row.value.utf8), provider: provider)
+      return try makeCredential(value.value, source: database.path)
+    }
+    return nil
+  }
+
+  private var openCodeAuthPaths: [URL] {
+    [
+      homeDirectory.appendingPathComponent(".local/share/opencode/auth.json"),
+      homeDirectory.appendingPathComponent(".config/opencode/auth.json"),
+      homeDirectory.appendingPathComponent("Library/Application Support/opencode/auth.json"),
+    ]
+  }
+
+  private var openCodeDatabasePaths: [URL] {
+    [
+      homeDirectory.appendingPathComponent(".local/share/opencode/opencode.db"),
+      homeDirectory.appendingPathComponent("Library/Application Support/opencode/opencode.db"),
+    ]
+  }
+
+  private func decodeFile<Value: Decodable>(
+    _ type: Value.Type,
+    at url: URL,
+    provider: ProviderID
+  ) throws -> Value? {
+    guard fileManager.fileExists(atPath: url.path) else { return nil }
+    let data = try Data(contentsOf: url)
+    return try decode(type, from: data, provider: provider)
+  }
+
+  private func decode<Value: Decodable>(
+    _ type: Value.Type,
+    from data: Data,
+    provider: ProviderID
+  ) throws -> Value {
+    do {
+      return try JSONDecoder().decode(type, from: data)
+    } catch {
+      throw QuotaError.malformedResponse(provider)
+    }
+  }
+
+  private func makeCredential(_ value: TokenValue, source: String) throws -> ProviderCredential {
+    try ProviderCredential(
+      accessToken: value.accessToken,
+      expiresAt: value.expiresAt,
+      source: source
+    )
+  }
+
+  private func readOpenCodeRows(database: URL) throws -> [CredentialRow] {
+    let process = Process()
+    process.executableURL = URL(fileURLWithPath: "/usr/bin/sqlite3")
+    process.arguments = [
+      "-readonly", "-json", "-cmd", ".timeout 1000", database.path,
+      "SELECT label, value FROM credential WHERE active IS NULL OR active != 0;",
+    ]
+    let output = Pipe()
+    process.standardOutput = output
+    try process.run()
+    process.waitUntilExit()
+    guard process.terminationStatus == 0 else { throw QuotaError.commandFailed("sqlite3") }
+    let data = output.fileHandleForReading.readDataToEndOfFile()
+    do {
+      return try JSONDecoder().decode([CredentialRow].self, from: data)
+    } catch {
+      throw QuotaError.commandFailed("sqlite3")
+    }
+  }
+}
+
+public actor CompositeCredentialStore: CredentialStore {
+  private let manual: ManualCredentialStore
+  private let local: any CredentialStore
+
+  public init(manual: ManualCredentialStore, local: any CredentialStore) {
+    self.manual = manual
+    self.local = local
+  }
+
+  public func credential(for provider: ProviderID, reload: Bool) async throws -> ProviderCredential
+  {
+    if let manualCredential = try await manual.credentialIfPresent(for: provider) {
+      return manualCredential
+    }
+    return try await local.credential(for: provider, reload: reload)
+  }
+}
+
+private struct TokenValue {
+  let accessToken: String
+  let expiresAt: Date?
+}
+
+private struct ClaudeCredentialFile: Decodable {
+  let claudeAiOauth: ClaudeOAuth?
+  let accessToken: String?
+  let accessTokenSnake: String?
+
+  enum CodingKeys: String, CodingKey {
+    case claudeAiOauth
+    case accessToken
+    case accessTokenSnake = "access_token"
+  }
+
+  var credential: TokenValue? {
+    if let claudeAiOauth { return claudeAiOauth.value }
+    guard let token = accessToken ?? accessTokenSnake else { return nil }
+    return TokenValue(accessToken: token, expiresAt: nil)
+  }
+}
+
+private struct ClaudeOAuth: Decodable {
+  let accessToken: String
+  let expiresAt: Double?
+
+  var value: TokenValue {
+    TokenValue(accessToken: accessToken, expiresAt: normalizedDate(expiresAt))
+  }
+}
+
+private struct CodexCredentialFile: Decodable {
+  let accessToken: String?
+  let tokens: CodexTokens?
+
+  enum CodingKeys: String, CodingKey {
+    case accessToken = "access_token"
+    case tokens
+  }
+
+  var credential: TokenValue? {
+    guard let token = accessToken ?? tokens?.accessToken else { return nil }
+    return TokenValue(accessToken: token, expiresAt: nil)
+  }
+}
+
+private struct CodexTokens: Decodable {
+  let accessToken: String
+
+  enum CodingKeys: String, CodingKey {
+    case accessToken = "access_token"
+  }
+}
+
+private struct KimiCredentialFile: Decodable {
+  let accessToken: String?
+  let accessTokenSnake: String?
+  let expiresAt: Double?
+  let expiresAtSnake: Double?
+  let oauth: KimiOAuth?
+
+  enum CodingKeys: String, CodingKey {
+    case accessToken
+    case accessTokenSnake = "access_token"
+    case expiresAt
+    case expiresAtSnake = "expires_at"
+    case oauth
+  }
+
+  var credential: TokenValue? {
+    if let oauth { return oauth.value }
+    guard let token = accessToken ?? accessTokenSnake else { return nil }
+    return TokenValue(
+      accessToken: token,
+      expiresAt: normalizedDate(expiresAt ?? expiresAtSnake)
+    )
+  }
+}
+
+private struct KimiOAuth: Decodable {
+  let accessToken: String
+  let expiresAt: Double?
+
+  enum CodingKeys: String, CodingKey {
+    case accessToken = "access_token"
+    case expiresAt = "expires_at"
+  }
+
+  var value: TokenValue {
+    TokenValue(accessToken: accessToken, expiresAt: normalizedDate(expiresAt))
+  }
+}
+
+private struct OpenCodeAuthFile: Decodable {
+  let kimiForCodingOAuth: OpenCodeOAuthCredential?
+  let kimi: OpenCodeOAuthCredential?
+  let xai: OpenCodeOAuthCredential?
+  let grok: OpenCodeOAuthCredential?
+
+  enum CodingKeys: String, CodingKey {
+    case kimiForCodingOAuth = "kimi-for-coding-oauth"
+    case kimi
+    case xai
+    case grok
+  }
+
+  func credential(for provider: ProviderID) -> TokenValue? {
+    switch provider {
+    case .kimi: (kimiForCodingOAuth ?? kimi)?.value
+    case .grok: (xai ?? grok)?.value
+    case .claudeCode, .codex: nil
+    }
+  }
+
+  static func labels(for provider: ProviderID) -> Set<String> {
+    switch provider {
+    case .kimi: ["kimi-for-coding-oauth", "kimi"]
+    case .grok: ["xai", "grok"]
+    case .claudeCode, .codex: []
+    }
+  }
+}
+
+private struct OpenCodeOAuthCredential: Decodable {
+  let access: String
+  let expires: Double?
+
+  var value: TokenValue {
+    TokenValue(accessToken: access, expiresAt: normalizedDate(expires))
+  }
+}
+
+private struct CredentialRow: Decodable {
+  let label: String
+  let value: String
+}
+
+private func normalizedDate(_ value: Double?) -> Date? {
+  guard let value else { return nil }
+  let seconds = value > 10_000_000_000 ? value / 1_000 : value
+  return Date(timeIntervalSince1970: seconds)
+}

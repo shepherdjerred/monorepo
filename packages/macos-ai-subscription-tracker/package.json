@@ -1,0 +1,26 @@
+{
+  "name": "@shepherdjerred/quotabar",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "format": "swift format format --in-place --recursive --parallel --configuration .swift-format Package.swift Sources Tests",
+    "format:check": "swift format lint --recursive --parallel --strict --configuration .swift-format Package.swift Sources Tests",
+    "lint:swift": "swiftlint lint --strict --quiet --config .swiftlint.yml Sources Tests Package.swift",
+    "build:macos": "swift build -c release -Xswiftc -warnings-as-errors",
+    "test:macos": "swift test -Xswiftc -warnings-as-errors",
+    "coverage:macos": "swift test --enable-code-coverage -Xswiftc -warnings-as-errors && bun scripts/check-coverage.ts",
+    "xcode:generate": "xcodegen generate --spec project.yml",
+    "xcode:open": "bun run xcode:generate && open QuotaBar.xcodeproj",
+    "xcode:verify": "bun run xcode:generate && xcodebuild -project QuotaBar.xcodeproj -scheme QuotaBar -configuration Debug -destination 'platform=macOS,arch=arm64' -derivedDataPath .build/xcode CODE_SIGNING_ALLOWED=NO -quiet build",
+    "archive:macos": "bun run xcode:generate && xcodebuild -project QuotaBar.xcodeproj -scheme QuotaBar -configuration Release -destination 'generic/platform=macOS' -archivePath dist/QuotaBar.xcarchive -allowProvisioningUpdates archive",
+    "export:developer-id": "bun scripts/export-developer-id.ts",
+    "notarize:macos": "bun scripts/submit-notarization.ts",
+    "export:notarized": "bun scripts/export-notarized-app.ts",
+    "bundle:macos": "bun scripts/build-app.ts",
+    "verify:bundle": "bun scripts/verify-app.ts",
+    "verify:notarized": "bun scripts/verify-notarized-app.ts",
+    "verify:macos": "bun run format:check && bun run lint:swift && bun run coverage:macos && bun run xcode:verify && bun run bundle:macos && bun run verify:bundle",
+    "install:macos": "bun scripts/install-app.ts",
+    "install:notarized": "bun scripts/install-app.ts --notarized"
+  }
+}

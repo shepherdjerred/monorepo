@@ -1,0 +1,313 @@
+public import Foundation
+
+public struct GrokProvider: UsageProvider {
+  public let id = ProviderID.grok
+  private let client: ProviderHTTPClient
+  private let userEndpoint: URL
+  private let billingEndpoint: URL
+  private let creditsEndpoint: URL
+
+  public init(
+    client: ProviderHTTPClient,
+    userEndpoint: URL,
+    billingEndpoint: URL,
+    creditsEndpoint: URL
+  ) {
+    self.client = client
+    self.userEndpoint = userEndpoint
+    self.billingEndpoint = billingEndpoint
+    self.creditsEndpoint = creditsEndpoint
+  }
+
+  public func fetch() async throws -> UsageSnapshot {
+    let identityData = try await client.get(
+      provider: id,
+      url: userEndpoint,
+      headers: Self.headers()
+    )
+    let identity = try Self.parseIdentity(data: identityData)
+    let surfaceHeaders = Self.headers(userID: identity.userID)
+    async let billingResult = captureSurface {
+      try await client.get(provider: id, url: billingEndpoint, headers: surfaceHeaders)
+    }
+    async let creditsResult = captureSurface {
+      try await client.get(provider: id, url: creditsEndpoint, headers: surfaceHeaders)
+    }
+    return try Self.parse(
+      billing: await billingResult,
+      credits: await creditsResult,
+      accountLabel: identity.accountLabel
+    )
+  }
+
+  public static func parseIdentity(data: Data) throws -> GrokIdentity {
+    let identity = try ProviderDecoder.decode(GrokIdentity.self, from: data, provider: .grok)
+    guard !identity.userID.isEmpty else { throw QuotaValidationError.emptyIdentifier }
+    return identity
+  }
+
+  public static func parseBilling(data: Data, now: Date = .now) throws -> [UsageWindow] {
+    let response = try ProviderDecoder.decode(GrokBilling.self, from: data, provider: .grok)
+    guard let limit = response.config.monthlyLimit, let used = response.config.used else {
+      if response.config.monthlyLimit != nil || response.config.used != nil {
+        throw QuotaValidationError.invalidPairedFields
+      }
+      throw QuotaError.unsupportedResponse(.grok)
+    }
+    guard limit > 0, 0...limit ~= used else { throw QuotaValidationError.invalidPairedFields }
+    return [
+      try UsageWindow.validated(
+        id: "grok-monthly",
+        label: "Monthly",
+        kind: .monthly,
+        usedPercent: used / limit * 100,
+        resetAt: response.config.billingPeriodEnd,
+        sourceTimestamp: now
+      )
+    ]
+  }
+
+  public static func parseCredits(data: Data, now: Date = .now) throws -> [UsageWindow] {
+    let response = try ProviderDecoder.decode(GrokCredits.self, from: data, provider: .grok)
+    var windows: [UsageWindow] = []
+    if response.config.creditUsagePercent != nil || response.config.currentPeriod != nil {
+      let isWeekly = response.config.currentPeriod?.type.lowercased().contains("week") == true
+      windows.append(
+        try UsageWindow.validated(
+          id: "grok-shared-credits",
+          label: isWeekly ? "Weekly" : "Shared credits",
+          kind: isWeekly ? .weekly : .credits,
+          usedPercent: response.config.creditUsagePercent,
+          resetAt: response.config.currentPeriod?.end,
+          sourceTimestamp: now
+        )
+      )
+    }
+    for (name, metric) in response.config.productUsage.sorted(by: { $0.key < $1.key }) {
+      windows.append(
+        try UsageWindow.validated(
+          id: "grok-product-\(slug(name))",
+          label: title(name),
+          kind: .modelScoped(model: title(name)),
+          usedPercent: try metric.calculatedPercentage(),
+          resetAt: metric.resetAt,
+          sourceTimestamp: now
+        )
+      )
+    }
+    if let extra = response.config.extraCredits {
+      windows.append(
+        try UsageWindow.validated(
+          id: "grok-extra-credits",
+          label: "Extra credits",
+          kind: .credits,
+          usedPercent: try extra.calculatedPercentage(),
+          resetAt: extra.resetAt,
+          sourceTimestamp: now
+        )
+      )
+    }
+    guard !windows.isEmpty else { throw QuotaError.unsupportedResponse(.grok) }
+    return windows
+  }
+
+  static func parse(
+    billing: SurfaceResult,
+    credits: SurfaceResult,
+    accountLabel: String?,
+    now: Date = .now
+  ) throws -> UsageSnapshot {
+    var windows: [UsageWindow] = []
+    var warnings: [String] = []
+    switch billing {
+    case let .success(data):
+      do { windows += try parseBilling(data: data, now: now) } catch {
+        warnings.append("Monthly usage unavailable.")
+      }
+    case let .failure(message): warnings.append("Monthly usage: \(message)")
+    }
+    switch credits {
+    case let .success(data):
+      do { windows += try parseCredits(data: data, now: now) } catch {
+        warnings.append("Credit usage unavailable.")
+      }
+    case let .failure(message): warnings.append("Credit usage: \(message)")
+    }
+    guard !windows.isEmpty else { throw QuotaError.unsupportedResponse(.grok) }
+    return UsageSnapshot(
+      provider: .grok,
+      accountLabel: accountLabel,
+      windows: windows,
+      notes: warnings,
+      sourceTimestamp: now
+    )
+  }
+
+  private static func headers(userID: String? = nil) -> [String: String] {
+    var headers = [
+      "X-XAI-Token-Auth": "xai-grok-cli",
+      "x-grok-client-version": "3.12.0",
+      "x-grok-client-mode": "headless",
+    ]
+    if let userID { headers["x-userid"] = userID }
+    return headers
+  }
+}
+
+public struct GrokIdentity: Decodable, Equatable, Sendable {
+  public let userID: String
+  public let email: String?
+
+  public var accountLabel: String? { email }
+
+  enum CodingKeys: String, CodingKey {
+    case userID = "userId"
+    case email
+  }
+}
+
+private struct GrokBilling: Decodable {
+  let config: GrokBillingConfig
+}
+
+private struct GrokBillingConfig: Decodable {
+  let monthlyLimit: Double?
+  let used: Double?
+  let billingPeriodEnd: Date?
+
+  enum CodingKeys: String, CodingKey {
+    case monthlyLimit
+    case used
+    case billingPeriodEnd
+  }
+
+  init(from decoder: any Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    self.monthlyLimit = try container.decodeIfPresent(GrokNumber.self, forKey: .monthlyLimit)?.value
+    self.used = try container.decodeIfPresent(GrokNumber.self, forKey: .used)?.value
+    self.billingPeriodEnd = try ProviderDecoder.date(in: container, forKey: .billingPeriodEnd)
+  }
+}
+
+private struct GrokCredits: Decodable {
+  let config: GrokCreditsConfig
+}
+
+private struct GrokCreditsConfig: Decodable {
+  let creditUsagePercent: Double?
+  let currentPeriod: GrokPeriod?
+  let productUsage: [String: GrokMetric]
+  let extraCredits: GrokMetric?
+
+  enum CodingKeys: String, CodingKey {
+    case creditUsagePercent
+    case currentPeriod
+    case productUsage
+    case productBreakdown
+    case extraCredits
+  }
+
+  init(from decoder: any Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    self.creditUsagePercent = try ProviderDecoder.percentage(
+      ProviderDecoder.number(in: container, forKey: .creditUsagePercent)
+    )
+    self.currentPeriod = try container.decodeIfPresent(GrokPeriod.self, forKey: .currentPeriod)
+    self.productUsage =
+      try container.decodeIfPresent(
+        [String: GrokMetric].self,
+        forKey: .productUsage
+      ) ?? container.decodeIfPresent([String: GrokMetric].self, forKey: .productBreakdown) ?? [:]
+    self.extraCredits = try container.decodeIfPresent(GrokMetric.self, forKey: .extraCredits)
+  }
+}
+
+private struct GrokPeriod: Decodable {
+  let type: String
+  let end: Date
+
+  enum CodingKeys: String, CodingKey {
+    case type
+    case end
+  }
+
+  init(from decoder: any Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    self.type = try container.decode(String.self, forKey: .type)
+    guard !type.isEmpty, let end = try ProviderDecoder.date(in: container, forKey: .end) else {
+      throw QuotaValidationError.invalidPairedFields
+    }
+    self.end = end
+  }
+}
+
+private struct GrokMetric: Decodable {
+  let limit: Double?
+  let used: Double?
+  let remaining: Double?
+  let explicitPercentage: Double?
+  let resetAt: Date?
+
+  enum CodingKeys: String, CodingKey {
+    case limit
+    case used
+    case remaining
+    case creditUsagePercent
+    case resetAt
+  }
+
+  init(from decoder: any Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    self.limit = try ProviderDecoder.number(in: container, forKey: .limit)
+    self.used = try ProviderDecoder.number(in: container, forKey: .used)
+    self.remaining = try ProviderDecoder.number(in: container, forKey: .remaining)
+    self.explicitPercentage = try ProviderDecoder.percentage(
+      ProviderDecoder.number(in: container, forKey: .creditUsagePercent)
+    )
+    self.resetAt = try ProviderDecoder.date(in: container, forKey: .resetAt)
+  }
+
+  func calculatedPercentage() throws -> Double? {
+    if limit == nil, used != nil || remaining != nil {
+      throw QuotaValidationError.invalidPairedFields
+    }
+    let calculated: Double?
+    if let limit {
+      guard limit > 0 else { throw QuotaValidationError.invalidPairedFields }
+      if let used {
+        guard 0...limit ~= used else { throw QuotaValidationError.invalidPairedFields }
+        calculated = used / limit * 100
+      } else if let remaining {
+        guard 0...limit ~= remaining else { throw QuotaValidationError.invalidPairedFields }
+        calculated = (limit - remaining) / limit * 100
+      } else {
+        calculated = nil
+      }
+    } else {
+      calculated = nil
+    }
+    let result = explicitPercentage ?? calculated
+    guard result != nil || resetAt != nil else { throw QuotaError.unsupportedResponse(.grok) }
+    return try ProviderDecoder.percentage(result)
+  }
+}
+
+private struct GrokNumber: Decodable {
+  let value: Double
+
+  init(from decoder: any Decoder) throws {
+    if let container = try? decoder.singleValueContainer(),
+      let value = try? container.decode(Double.self)
+    {
+      self.value = value
+      return
+    }
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    self.value = try container.decode(Double.self, forKey: .value)
+    guard value.isFinite else { throw QuotaValidationError.invalidPairedFields }
+  }
+
+  enum CodingKeys: String, CodingKey {
+    case value = "val"
+  }
+}

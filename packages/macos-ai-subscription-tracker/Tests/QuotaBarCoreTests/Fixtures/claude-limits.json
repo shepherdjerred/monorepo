@@ -1,0 +1,20 @@
+{
+  "limits": [
+    {
+      "kind": "session",
+      "percent": 20,
+      "resets_at": "2026-08-09T22:00:00Z"
+    },
+    {
+      "kind": "weekly_all",
+      "percent": 45,
+      "resets_at": "2026-08-14T00:00:00Z"
+    },
+    {
+      "kind": "weekly_scoped",
+      "percent": 8,
+      "resets_at": "2026-08-14T00:00:00Z",
+      "scope": { "model": { "display_name": "Nimbus Quil" } }
+    }
+  ]
+}

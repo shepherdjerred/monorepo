@@ -1,0 +1,8 @@
+{
+  "rate_limit": {
+    "primary_window": {
+      "used_percent": "nearly full",
+      "reset_at": 1786312800
+    }
+  }
+}

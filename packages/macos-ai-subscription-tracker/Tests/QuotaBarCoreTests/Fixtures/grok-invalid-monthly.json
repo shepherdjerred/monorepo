@@ -1,0 +1,6 @@
+{
+  "config": {
+    "monthlyLimit": { "val": 1000 },
+    "billingPeriodEnd": "2026-09-01T00:00:00Z"
+  }
+}
