@@ -31,7 +31,10 @@ const (
 func TestParseDHCPStaticListLive(t *testing.T) {
 	t.Parallel()
 
-	entries := client.ParseDHCPStaticList(liveDHCPStaticList)
+	entries, err := client.ParseDHCPStaticList(liveDHCPStaticList)
+	if err != nil {
+		t.Fatalf("parsing live dhcp_staticlist: %v", err)
+	}
 
 	want := []client.DHCPStaticEntry{
 		{MAC: "08:BF:B8:D4:59:7F", IP: "192.168.1.81"},
@@ -57,7 +60,12 @@ func TestParseDHCPStaticListLive(t *testing.T) {
 func TestDHCPStaticListLiveRoundTrip(t *testing.T) {
 	t.Parallel()
 
-	got := client.SerializeDHCPStaticList(client.ParseDHCPStaticList(liveDHCPStaticList))
+	parsed, err := client.ParseDHCPStaticList(liveDHCPStaticList)
+	if err != nil {
+		t.Fatalf("parsing live dhcp_staticlist: %v", err)
+	}
+
+	got := client.SerializeDHCPStaticList(parsed)
 	if got != liveDHCPStaticList {
 		t.Errorf("round-trip mismatch:\n raw = %q\n got = %q", liveDHCPStaticList, got)
 	}
@@ -70,6 +78,7 @@ func TestParseDHCPStaticList(t *testing.T) {
 		name     string
 		input    string
 		expected []client.DHCPStaticEntry
+		wantErr  bool
 	}{
 		{
 			name:     "empty",
@@ -99,9 +108,16 @@ func TestParseDHCPStaticList(t *testing.T) {
 			},
 		},
 		{
-			name:     "missing separator",
-			input:    lt + "AA:BB:CC:DD:EE:FF",
-			expected: nil,
+			// Fail closed: every mutation rewrites the whole list, so a
+			// dropped entry would be deleted from the router permanently.
+			name:    "missing separator is an error, not a skip",
+			input:   lt + "AA:BB:CC:DD:EE:FF",
+			wantErr: true,
+		},
+		{
+			name:    "malformed entry among valid ones is an error",
+			input:   lt + "AA:BB:CC:DD:EE:FF" + gt + "192.168.1.100" + gt + gt + lt + "11:22:33:44:55:66",
+			wantErr: true,
 		},
 		{
 			name:  "empty MAC field",
@@ -116,7 +132,23 @@ func TestParseDHCPStaticList(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			result := client.ParseDHCPStaticList(tt.input)
+			result, err := client.ParseDHCPStaticList(tt.input)
+
+			if tt.wantErr {
+				if err == nil {
+					t.Fatalf("expected an error, got %d entries", len(result))
+				}
+
+				if result != nil {
+					t.Errorf("expected no entries alongside the error, got %+v", result)
+				}
+
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
 
 			if len(result) != len(tt.expected) {
 				t.Fatalf("expected %d entries, got %d", len(tt.expected), len(result))
@@ -139,7 +171,12 @@ func TestDHCPStaticListPreservesExtraFields(t *testing.T) {
 
 	raw := lt + "AA:BB:CC:DD:EE:FF" + gt + "192.168.1.100" + gt + "9.9.9.9" + gt + "myhost"
 
-	got := client.SerializeDHCPStaticList(client.ParseDHCPStaticList(raw))
+	parsed, err := client.ParseDHCPStaticList(raw)
+	if err != nil {
+		t.Fatalf("parsing dhcp_staticlist: %v", err)
+	}
+
+	got := client.SerializeDHCPStaticList(parsed)
 	if got != raw {
 		t.Errorf("expected DNS/hostname preserved:\n raw = %q\n got = %q", raw, got)
 	}
@@ -154,7 +191,10 @@ func TestDHCPStaticListRoundTrip(t *testing.T) {
 		{MAC: "DE:AD:BE:EF:CA:FE", IP: "192.168.1.200"},
 	}
 
-	parsed := client.ParseDHCPStaticList(client.SerializeDHCPStaticList(entries))
+	parsed, err := client.ParseDHCPStaticList(client.SerializeDHCPStaticList(entries))
+	if err != nil {
+		t.Fatalf("parsing serialized dhcp_staticlist: %v", err)
+	}
 
 	if len(parsed) != len(entries) {
 		t.Fatalf("round-trip: expected %d entries, got %d", len(entries), len(parsed))
@@ -170,7 +210,10 @@ func TestDHCPStaticListRoundTrip(t *testing.T) {
 func TestParseVTSRuleListLive(t *testing.T) {
 	t.Parallel()
 
-	rules := client.ParseVTSRuleList(liveVTSRuleList)
+	rules, err := client.ParseVTSRuleList(liveVTSRuleList)
+	if err != nil {
+		t.Fatalf("parsing live vts_rulelist: %v", err)
+	}
 
 	want := []client.PortForwardEntry{
 		{Name: "Plex", ExternalPort: "32400", InternalIP: "192.168.1.81", InternalPort: "32400", Protocol: "TCP"},
@@ -194,7 +237,12 @@ func TestParseVTSRuleListLive(t *testing.T) {
 func TestVTSRuleListLiveRoundTrip(t *testing.T) {
 	t.Parallel()
 
-	got := client.SerializeVTSRuleList(client.ParseVTSRuleList(liveVTSRuleList))
+	parsed, err := client.ParseVTSRuleList(liveVTSRuleList)
+	if err != nil {
+		t.Fatalf("parsing live vts_rulelist: %v", err)
+	}
+
+	got := client.SerializeVTSRuleList(parsed)
 	if got != liveVTSRuleList {
 		t.Errorf("round-trip mismatch:\n raw = %q\n got = %q", liveVTSRuleList, got)
 	}
@@ -207,6 +255,7 @@ func TestParseVTSRuleList(t *testing.T) {
 		name     string
 		input    string
 		expected []client.PortForwardEntry
+		wantErr  bool
 	}{
 		{
 			name:     "empty",
@@ -236,9 +285,16 @@ func TestParseVTSRuleList(t *testing.T) {
 			},
 		},
 		{
-			name:     "too few fields",
-			input:    lt + "HTTP" + gt + "80" + gt + "192.168.1.100" + gt + "80",
-			expected: nil,
+			// Fail closed for the same reason as the DHCP list: a dropped
+			// rule would be erased from the router by the next apply.
+			name:    "too few fields is an error, not a skip",
+			input:   lt + "HTTP" + gt + "80" + gt + "192.168.1.100" + gt + "80",
+			wantErr: true,
+		},
+		{
+			name:    "malformed rule among valid ones is an error",
+			input:   lt + "HTTP" + gt + "80" + gt + "192.168.1.100" + gt + "80" + gt + "tcp" + gt + lt + "SSH" + gt + "2222",
+			wantErr: true,
 		},
 		{
 			name:  "port ranges",
@@ -253,7 +309,23 @@ func TestParseVTSRuleList(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			result := client.ParseVTSRuleList(tt.input)
+			result, err := client.ParseVTSRuleList(tt.input)
+
+			if tt.wantErr {
+				if err == nil {
+					t.Fatalf("expected an error, got %d entries", len(result))
+				}
+
+				if result != nil {
+					t.Errorf("expected no entries alongside the error, got %+v", result)
+				}
+
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
 
 			if len(result) != len(tt.expected) {
 				t.Fatalf("expected %d entries, got %d", len(tt.expected), len(result))
@@ -277,7 +349,10 @@ func TestVTSRuleListRoundTrip(t *testing.T) {
 		{Name: "Game", ExternalPort: "27015", InternalIP: "192.168.1.200", InternalPort: "27015", Protocol: "both"},
 	}
 
-	parsed := client.ParseVTSRuleList(client.SerializeVTSRuleList(entries))
+	parsed, err := client.ParseVTSRuleList(client.SerializeVTSRuleList(entries))
+	if err != nil {
+		t.Fatalf("parsing serialized vts_rulelist: %v", err)
+	}
 
 	if len(parsed) != len(entries) {
 		t.Fatalf("round-trip: expected %d entries, got %d", len(entries), len(parsed))

@@ -32,7 +32,47 @@ residual state remains. Managing wl0/wl1 as-is would be managing the backhaul SS
 
 ## How to inspect (read-only, from the cluster)
 
-The Mac cannot reach the LAN directly; the `torvalds` cluster can. Use a throwaway pod
-plus the read-only NVRAM approach used during the original investigation (see
-`packages/docs/logs/2026-07-03_asuswrt-provider-real-router-smoke.md`), or the
-`asuswrt_nvram` data source in a scratch tofu config.
+The Mac cannot reach the LAN directly; the `torvalds` cluster can. Run this from a
+machine with LAN access, or from a throwaway pod on `torvalds`.
+
+Use the `asuswrt_nvram` data source in a scratch tofu config. It takes a `key` and
+returns its `value`, and reads via `nvram_get` only — it never posts to `/apply.cgi`,
+so it cannot mutate the device.
+
+```hcl
+terraform {
+  required_providers {
+    asuswrt = {
+      source  = "shepherdjerred/asuswrt"
+      version = "0.1.0"
+    }
+  }
+}
+
+provider "asuswrt" {
+  host     = "192.168.1.2"
+  port     = 8443
+  https    = true
+  insecure = true # self-signed router certificate
+  username = var.asuswrt_username
+  password = var.asuswrt_password
+}
+
+data "asuswrt_nvram" "probe" {
+  for_each = toset([
+    "wl0.1_ssid", "wl1.1_ssid", "wl0.2_ssid",
+    "cfg_device_list", "cfg_master",
+  ])
+  key = each.value
+}
+
+output "probe" {
+  value = { for k, d in data.asuswrt_nvram.probe : k => d.value }
+}
+```
+
+Install the provider first with
+`make -C packages/terraform-provider-asuswrt install`, then `tofu init` and
+`tofu plan` in the scratch directory. Credentials come from the 1Password "ASUS
+Router" item via `op run --env-file=.env`, as in
+`packages/homelab/src/tofu/asuswrt/`.

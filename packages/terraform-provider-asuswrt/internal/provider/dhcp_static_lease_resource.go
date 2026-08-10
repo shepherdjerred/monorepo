@@ -285,7 +285,12 @@ func (r *dhcpStaticLeaseResource) readLeases(ctx context.Context) ([]client.DHCP
 		return nil, fmt.Errorf("reading dhcp_staticlist: %w", err)
 	}
 
-	return client.ParseDHCPStaticList(val), nil
+	entries, err := client.ParseDHCPStaticList(val)
+	if err != nil {
+		return nil, fmt.Errorf("reading dhcp_staticlist: %w", err)
+	}
+
+	return entries, nil
 }
 
 func (r *dhcpStaticLeaseResource) writeLeases(ctx context.Context, entries []client.DHCPStaticEntry) error {

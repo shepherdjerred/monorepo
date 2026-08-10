@@ -20,8 +20,8 @@ is future/optional: wireless WRITE-path redesign and BE86U fronthaul management
 The user wants OpenTofu to be the source of truth / state tracker for all three home Asus
 devices. The repo already ships a custom provider (`packages/terraform-provider-asuswrt`) but
 it has **never been used against real hardware** and no tofu stack consumes it. Read-only smoke
-testing (see `packages/docs/logs/2026-07-03_asuswrt-provider-real-router-smoke.md`) proved the
-transport/auth/scalar-read path works against the live devices but surfaced two blockers. This
+testing proved the transport/auth/scalar-read path works against the live devices but surfaced
+two blockers, captured below under Blockers. This
 plan fixes the provider, then builds a local-run tofu stack that imports each device's existing
 config into shared state so it can be tracked and managed going forward.
 

@@ -1,6 +1,7 @@
 package client
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -13,6 +14,14 @@ import (
 const (
 	packedEntryDelim = "&#60" // '<' — separates/prefixes entries
 	packedFieldDelim = "&#62" // '>' — separates fields within an entry
+)
+
+// Minimum field counts for a well-formed entry. Trailing fields (DHCP DNS and
+// hostname, port-forward source IP) are optional; anything shorter than these
+// is not an entry this provider can round-trip.
+const (
+	dhcpRequiredFields = 2 // MAC, IP
+	vtsRequiredFields  = 5 // name, external port, internal IP, internal port, protocol
 )
 
 // splitPackedEntries splits a packed NVRAM value into per-entry field slices.
@@ -56,12 +65,20 @@ type DHCPStaticEntry struct {
 
 // ParseDHCPStaticList parses the dhcp_staticlist NVRAM value.
 // Format: <MAC>IP>DNS>Hostname per entry (DNS/Hostname often empty).
-func ParseDHCPStaticList(raw string) []DHCPStaticEntry {
+//
+// An entry with fewer than the required fields is an error, never a skip.
+// Every lease mutation serializes the whole parsed list back to NVRAM, so a
+// silently dropped entry would be permanently deleted from the router by the
+// next unrelated apply.
+func ParseDHCPStaticList(raw string) ([]DHCPStaticEntry, error) {
 	var entries []DHCPStaticEntry
 
-	for _, fields := range splitPackedEntries(raw) {
-		if len(fields) < 2 {
-			continue
+	for i, fields := range splitPackedEntries(raw) {
+		if len(fields) < dhcpRequiredFields {
+			return nil, fmt.Errorf(
+				"parsing dhcp_staticlist: entry %d has %d field(s), need at least %d: %q",
+				i, len(fields), dhcpRequiredFields, strings.Join(fields, packedFieldDelim),
+			)
 		}
 
 		entry := DHCPStaticEntry{MAC: fields[0], IP: fields[1]}
@@ -76,7 +93,7 @@ func ParseDHCPStaticList(raw string) []DHCPStaticEntry {
 		entries = append(entries, entry)
 	}
 
-	return entries
+	return entries, nil
 }
 
 // SerializeDHCPStaticList serializes DHCP static entries back to NVRAM format.
@@ -104,12 +121,18 @@ type PortForwardEntry struct {
 
 // ParseVTSRuleList parses the vts_rulelist NVRAM value.
 // Format: <name>ext_port>int_ip>int_port>proto>src_ip per entry (src often empty).
-func ParseVTSRuleList(raw string) []PortForwardEntry {
+//
+// Like ParseDHCPStaticList, a short entry is an error rather than a skip,
+// because port-forward mutations rewrite the entire list.
+func ParseVTSRuleList(raw string) ([]PortForwardEntry, error) {
 	var entries []PortForwardEntry
 
-	for _, fields := range splitPackedEntries(raw) {
-		if len(fields) < 5 {
-			continue
+	for i, fields := range splitPackedEntries(raw) {
+		if len(fields) < vtsRequiredFields {
+			return nil, fmt.Errorf(
+				"parsing vts_rulelist: entry %d has %d field(s), need at least %d: %q",
+				i, len(fields), vtsRequiredFields, strings.Join(fields, packedFieldDelim),
+			)
 		}
 
 		entry := PortForwardEntry{
@@ -127,7 +150,7 @@ func ParseVTSRuleList(raw string) []PortForwardEntry {
 		entries = append(entries, entry)
 	}
 
-	return entries
+	return entries, nil
 }
 
 // SerializeVTSRuleList serializes port forward entries back to NVRAM format.

@@ -245,7 +245,12 @@ func (r *portForwardResource) readRules(ctx context.Context) ([]client.PortForwa
 		return nil, fmt.Errorf("reading vts_rulelist: %w", err)
 	}
 
-	return client.ParseVTSRuleList(val), nil
+	entries, err := client.ParseVTSRuleList(val)
+	if err != nil {
+		return nil, fmt.Errorf("reading vts_rulelist: %w", err)
+	}
+
+	return entries, nil
 }
 
 func (r *portForwardResource) writeRules(ctx context.Context, entries []client.PortForwardEntry) error {
