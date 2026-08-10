@@ -42,6 +42,21 @@ final class CompositeCredentialStoreTests: XCTestCase {
     }
   }
 
+  func testRejectionHistoryResetsOnFreshTopLevelResolution() async throws {
+    let stores = try await makeStores()
+    defer { try? FileManager.default.removeItem(at: stores.root) }
+
+    let manualCredential = try await stores.composite.credential(for: .codex, rejecting: nil)
+    XCTAssertEqual(manualCredential.accessToken, "manual-token")
+    _ = try await stores.composite.credential(for: .codex, rejecting: manualCredential)
+
+    // A transient rejection must not permanently suppress the manual override: the next
+    // scheduled refresh (or a credential re-save, which also triggers a fresh top-level
+    // resolution) starts a new replacement sequence and should see it again.
+    let freshCredential = try await stores.composite.credential(for: .codex, rejecting: nil)
+    XCTAssertEqual(freshCredential.accessToken, "manual-token")
+  }
+
   private func makeStores() async throws -> (
     root: URL,
     composite: CompositeCredentialStore

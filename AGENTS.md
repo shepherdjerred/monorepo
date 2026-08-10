@@ -366,7 +366,8 @@ Local and CI verification deliberately have different scopes:
    full-repository backstop. **Exception:** `packages/macos-ai-subscription-tracker`
    has no Buildkite lane at all for `swift build`/`swift test`/coverage — only
    `lint:swift` (SwiftLint) runs in CI. The homelab's macOS Buildkite agent
-   (`packages/homelab/mac-ci/`) is dormant, so `bun run verify:macos` stays a
+   (`packages/homelab/mac-ci/`) is dormant, so
+   `cd packages/macos-ai-subscription-tracker && bun run verify:macos` stays a
    local-only developer/release gate until that capacity is reactivated; see
    `packages/docs/todos/mac-mini-buildkite-agent.md`.
 

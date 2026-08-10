@@ -98,7 +98,9 @@ and the [launch-at-login controller](https://github.com/shepherdjerred/monorepo/
 
 The root Linux verification graph runs strict SwiftLint. Native build, test,
 80% core coverage, Xcode-project compilation, app bundling, signing, and smoke
-checks run locally through `bun run verify:macos`; no macOS CI lane exists yet.
+checks run locally through
+`cd packages/macos-ai-subscription-tracker && bun run verify:macos`; no macOS
+CI lane exists yet.
 The ordinary local bundle is ad-hoc signed. A generated Xcode application
 target links the same core package and enables automatic signing plus hardened
 runtime; direct distribution goes through Xcode Organizer's Developer ID and
