@@ -7,6 +7,12 @@
 //! in that order) and the base cache (on server acks and pulls), so no crash
 //! can capture a half-applied optimistic state.
 //!
+//! Both of those write pairs are ordered, in opposite directions, and each
+//! order is chosen so that a crash between the two writes costs a *replay*
+//! rather than a *loss*: a dispatch spends the id before enqueuing the command
+//! that carries it, and an ack persists the accepted base before dequeuing the
+//! command that produced it.
+//!
 //! The store never touches the network. Executing commands is
 //! [`SyncEngine`](crate::sync::SyncEngine)'s job; it reports results back
 //! through [`TaskStore::apply_server_ack`] and [`TaskStore::replace_base`].
@@ -133,7 +139,7 @@ impl TaskStore {
             .map(|task| (task.id.clone(), task))
             .collect();
         self.aliases = parse_aliases(self.storage.read_id_aliases()?.as_deref());
-        self.counters = parse_id_counters(self.storage.read_id_counters()?.as_deref());
+        self.counters = parse_id_counters(self.storage.read_id_counters()?.as_deref())?;
         self.last_sync_time = self.storage.read_last_sync_time()?;
         self.recompute();
         Ok(())
@@ -225,8 +231,20 @@ impl TaskStore {
             self.base
                 .insert(server_task.id.clone(), server_task.clone());
         }
-        self.queue.ack(command.id())?;
+        // Base first, dequeue second, and never the other way round — the same
+        // shape of argument as `dispatch`, with the writes in the opposite
+        // order because the risk is opposite. Crashing between these two leaves
+        // the accepted result durable *and* the command still queued, so the
+        // next drain resends it and the server answers from its idempotency
+        // store: the command id is the `X-Mutation-Id`, so a replay costs one
+        // request. Acking first inverts that into data loss — `queue.json` no
+        // longer holds the mutation and `tasks.json` never learned its result,
+        // so an accepted create or update silently disappears (or an accepted
+        // delete comes back) until some later successful pull happens to
+        // repair the cache. The TypeScript `applyServerAck` orders these the
+        // same way, and says so in a comment for the same reason.
         self.persist_base()?;
+        self.queue.ack(command.id())?;
         self.recompute();
         Ok(())
     }
@@ -358,9 +376,11 @@ impl TaskStore {
     /// longer the primary mechanism: it only sees ids the client *still holds*.
     /// An id that has already been acked and dequeued is gone locally while the
     /// server's idempotency store still remembers it, so a re-mint of that id is
-    /// invisible here. The check remains for the two states a counter cannot
+    /// invisible here. The check remains for the one state a counter cannot
     /// describe: the first launch after upgrading from a build that never wrote
-    /// the counters, and a counter blob that failed to parse.
+    /// the counters. It deliberately does **not** cover a counter blob that
+    /// failed to parse — see [`parse_id_counters`], which now refuses to
+    /// restore rather than handing this check a job it cannot do.
     ///
     /// The loop terminates: the counter strictly increases, the id is injective
     /// in the counter at a fixed instant, and the durable set is finite.
@@ -438,20 +458,36 @@ impl TaskStore {
     }
 }
 
-/// Parse the persisted id counters, treating anything unreadable as zero.
+/// Parse the persisted id counters. **Absent** means zero; present-and-invalid
+/// is an error.
 ///
-/// Absent **and** unreadable both mean "start at zero" — a fresh install, an
-/// install carried over from a build that predates this key, and a truncated
-/// blob all land here. None of the three needs a schema migration, because
-/// there is no data to transform and because
-/// [`TaskStore::next_command_id`] / [`TaskStore::next_temp_id`] still refuse to
-/// hand back an id the restored queue already holds. Refusing to start over a
-/// corrupt counter would strand every mutation the user is waiting on, which is
-/// a strictly worse failure than burning a few id values.
-fn parse_id_counters(raw: Option<&str>) -> IdCounters {
-    raw.filter(|value| !value.is_empty())
-        .and_then(|value| serde_json::from_str::<IdCounters>(value).ok())
-        .unwrap_or_default()
+/// Absent is the ordinary case and needs no schema migration: a fresh install
+/// and an install carried over from a build that predates this slot both have
+/// no ids to describe, and
+/// [`TaskStore::next_command_id`] / [`TaskStore::next_temp_id`] cover them by
+/// refusing to mint an id the restored queue already holds.
+///
+/// ⚠️ **A file that exists but does not parse is a different fact, and it must
+/// not be rounded down to zero.** That file is the only record of which ids
+/// this install has already spent, and the mint-and-check backstop cannot
+/// stand in for it: the backstop looks at the live queue and dead-letter list,
+/// which by construction no longer contain anything that was acknowledged and
+/// dequeued, and it never looks at the alias map at all. So restarting at zero
+/// after the clock revisits a millisecond can mint a temp id equal to an
+/// already-acked create's, and [`TaskStore::resolve_task_id`] will then follow
+/// the stale alias and send the new optimistic task's edits to the *older*
+/// server task. Losing a launch to a loud error the user can clear by deleting
+/// one file is recoverable; silently editing the wrong note is not.
+fn parse_id_counters(raw: Option<&str>) -> Result<IdCounters> {
+    let Some(raw) = raw else {
+        return Ok(IdCounters::default());
+    };
+    serde_json::from_str::<IdCounters>(raw).map_err(|error| {
+        Error::invariant(format!(
+            "the persisted id counters exist but are unreadable, so the ids this \
+             install has already spent are unknown: {error}"
+        ))
+    })
 }
 
 /// Parse the persisted alias map, keeping every entry that still parses.
@@ -512,6 +548,12 @@ mod tests {
             self.writes.lock().unwrap().clone()
         }
 
+        /// Forget the writes so far, so an ordering assertion can be about one
+        /// operation rather than about everything since construction.
+        fn clear_write_log(&self) {
+            self.writes.lock().unwrap().clear();
+        }
+
         fn record(&self, slot: &'static str) {
             self.writes.lock().unwrap().push(slot);
         }
@@ -540,6 +582,7 @@ mod tests {
             Ok(self.tasks.lock().unwrap().clone())
         }
         fn write_tasks(&self, tasks: &[Task]) -> Result<()> {
+            self.record("tasks");
             *self.tasks.lock().unwrap() = tasks.to_vec();
             Ok(())
         }
@@ -923,20 +966,62 @@ mod tests {
     }
 
     #[test]
-    fn counters_survive_a_round_trip_and_junk_restarts_at_zero() {
+    fn counters_round_trip_and_only_an_absent_file_means_zero() {
         assert_eq!(
-            parse_id_counters(Some(r#"{"command":7,"temp":3}"#)),
+            parse_id_counters(Some(r#"{"command":7,"temp":3}"#)).unwrap(),
             IdCounters {
                 command: 7,
                 temp: 3
             }
         );
-        // Absent, empty, unparseable and wrong-shaped all mean "start at zero",
-        // which the backstop makes safe. Refusing to start would strand every
-        // mutation the user is waiting on.
-        for junk in [None, Some(""), Some("not json"), Some("[]"), Some("{}")] {
-            assert_eq!(parse_id_counters(junk), IdCounters::default(), "{junk:?}");
+        // Absent is the fresh install and the pre-counters upgrade, and it is
+        // the only shape that may restart at zero.
+        assert_eq!(parse_id_counters(None).unwrap(), IdCounters::default());
+        // Everything else is a file that exists and cannot be read, which means
+        // the ids this install has already spent are unknown. Zeroing it can
+        // re-mint an acked create's temp id, and the alias map then misdirects
+        // the new task's edits — so restoration fails loudly instead. An empty
+        // blob is in this list on purpose: writes are atomic, so a zero-byte
+        // file is not a torn write of a good one.
+        for corrupt in ["", "not json", "[]", "{}", r#"{"command":7}"#] {
+            let error = parse_id_counters(Some(corrupt)).unwrap_err();
+            assert!(
+                error.to_string().contains("already spent are unknown"),
+                "expected a refusal for {corrupt:?}, got {error}"
+            );
         }
+    }
+
+    /// The counterpart of
+    /// [`the_id_counters_are_durably_spent_before_the_command_that_carries_them`]:
+    /// an ack writes its two durable slots in the *opposite* order, because the
+    /// risk is the opposite one.
+    ///
+    /// Dequeuing first and crashing would leave `queue.json` without the
+    /// mutation and `tasks.json` without its result, silently dropping an
+    /// accepted change. Persisting first and crashing only costs a replay,
+    /// which the server answers from its idempotency store.
+    #[test]
+    fn the_accepted_base_is_durable_before_the_command_is_dequeued() {
+        let (mut store, memory) = store();
+        store.restore().unwrap();
+        store
+            .dispatch(CommandInput::Delete {
+                task_id: TaskId::parse("Tasks/a.md").unwrap(),
+            })
+            .unwrap();
+        let command = store.queue().head().cloned().unwrap();
+
+        memory.clear_write_log();
+        store.apply_server_ack(&command, None).unwrap();
+
+        let log = memory.write_log();
+        let tasks = log.iter().position(|slot| *slot == "tasks");
+        let queue = log.iter().position(|slot| *slot == "queue");
+        assert!(
+            tasks.is_some() && queue.is_some() && tasks < queue,
+            "the base must be written before the queue is dequeued, got {log:?}"
+        );
     }
 
     #[test]
