@@ -1,10 +1,12 @@
 import { describe, expect, it } from "bun:test";
 import {
   buildMaintenanceCommand,
+  cleanTurboCache,
   executeMaintenance,
   spawnMaintenanceCommand,
   type MaintenanceCommand,
   type MaintenanceCommandHooks,
+  type MaintenanceFetch,
 } from "./maintenance.ts";
 import { register } from "#observability/metrics.ts";
 
@@ -20,6 +22,9 @@ const testHooks: MaintenanceCommandHooks = {
     // Cancellation is exercised by the subprocess runner test below.
   },
 };
+
+const invalidTurboCacheFetcher: MaintenanceFetch = () =>
+  Promise.resolve(Response.json({ deleted: "bad", scanned: 1 }));
 
 describe("maintenance command construction", () => {
   it("builds all four direct commands and their mounted paths", async () => {
@@ -152,10 +157,10 @@ describe("maintenance subprocess runner", () => {
     expect(commands).toHaveLength(1);
     const exposition = await register.metrics();
     expect(exposition).toMatch(
-      /kubernetes_maintenance_runs_total\{[^}]*job="kometa"[^}]*outcome="success"/,
+      /kubernetes_maintenance_runs_total\{[^}]*maintenance_job="kometa"[^}]*outcome="success"/,
     );
     expect(exposition).toMatch(
-      /kubernetes_maintenance_last_success_timestamp_seconds\{[^}]*job="kometa"/,
+      /kubernetes_maintenance_last_success_timestamp_seconds\{[^}]*maintenance_job="kometa"/,
     );
 
     const failingRunner = async (
@@ -166,5 +171,71 @@ describe("maintenance subprocess runner", () => {
     await expect(
       executeMaintenance("buildkite-bun-cache-gc", failingRunner, testHooks),
     ).rejects.toThrow("buildkite-bun-cache-gc command exited 9");
+  });
+});
+
+describe("Turbo cache cleanup", () => {
+  it("authenticates, sends the bounded retention query, and records counts", async () => {
+    await Bun.write("/tmp/turbo-cache-token-test", "turbo-secret-for-test");
+    setEnvironment("TURBO_CACHE_TOKEN_FILE", "/tmp/turbo-cache-token-test");
+    let requestUrl = "";
+    let authorization = "";
+    const fetcher: MaintenanceFetch = (input, init) => {
+      requestUrl =
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+            ? input.href
+            : input.url;
+      authorization = new Headers(init?.headers).get("Authorization") ?? "";
+      return Promise.resolve(Response.json({ deleted: 7, scanned: 19 }));
+    };
+
+    await expect(
+      cleanTurboCache(fetcher, new AbortController().signal),
+    ).resolves.toEqual({
+      deleted: 7,
+      scanned: 19,
+    });
+    expect(requestUrl).toContain("/v8/clean");
+    expect(requestUrl).toContain("slug=monorepo");
+    expect(requestUrl).toContain("olderThan=30");
+    expect(authorization).toBe("Bearer turbo-secret-for-test");
+    const exposition = await register.metrics();
+    expect(exposition).toContain(
+      'maintenance_job="turbo-cache-clean",outcome="success"',
+    );
+    expect(exposition).toMatch(
+      /turbo_cache_cleanup_entries_total\{[^}]*result="deleted"[^}]*\} 7/,
+    );
+    expect(exposition).toMatch(
+      /turbo_cache_cleanup_entries_total\{[^}]*result="scanned"[^}]*\} 19/,
+    );
+  });
+
+  it("rejects invalid responses and never includes the token in errors", async () => {
+    await Bun.write("/tmp/turbo-cache-token-test", "never-log-this-token");
+    setEnvironment("TURBO_CACHE_TOKEN_FILE", "/tmp/turbo-cache-token-test");
+
+    let message = "";
+    try {
+      await cleanTurboCache(
+        invalidTurboCacheFetcher,
+        new AbortController().signal,
+      );
+    } catch (error: unknown) {
+      message = error instanceof Error ? error.message : String(error);
+    }
+    expect(message).not.toContain("never-log-this-token");
+    expect(message).toContain("deleted");
+  });
+
+  it("fails fast when the token file is not configured", async () => {
+    const tokenPath = Bun.env["TURBO_CACHE_TOKEN_FILE"];
+    setEnvironment("TURBO_CACHE_TOKEN_FILE", undefined);
+    await expect(cleanTurboCache()).rejects.toThrow(
+      "TURBO_CACHE_TOKEN_FILE is required",
+    );
+    setEnvironment("TURBO_CACHE_TOKEN_FILE", tokenPath);
   });
 });

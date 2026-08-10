@@ -202,6 +202,7 @@ export function createLokiApp(chart: Chart) {
     service: "loki",
     port: 3100,
     hosts: ["loki"],
+    proxyClass: "medium",
     // Loki returns 404 at "/"; its readiness endpoint is /ready.
     probePath: "/ready",
   });
@@ -227,10 +228,11 @@ export function createLokiApp(chart: Chart) {
       resources: {
         requests: {
           cpu: "250m",
-          memory: "2Gi",
+          memory: "3Gi",
         },
         limits: {
-          memory: "4Gi",
+          cpu: "4",
+          memory: "6Gi",
         },
       },
       persistence: {
@@ -269,7 +271,23 @@ export function createLokiApp(chart: Chart) {
       allocatedCPU: "100m",
     },
     resultsCache: {
+      allocatedMemory: 256,
       allocatedCPU: "100m",
+    },
+    gateway: {
+      resources: {
+        requests: { cpu: "10m", memory: "64Mi" },
+      },
+    },
+    sidecar: {
+      resources: {
+        requests: { cpu: "10m", memory: "128Mi" },
+      },
+    },
+    memcachedExporter: {
+      resources: {
+        requests: { cpu: "10m", memory: "64Mi" },
+      },
     },
     loki: {
       commonConfig: {
@@ -331,6 +349,9 @@ export function createLokiApp(chart: Chart) {
     // KubeDaemonSetMisScheduled).
     lokiCanary: {
       tolerations: [CI_NODE_TOLERATION],
+      resources: {
+        requests: { cpu: "10m", memory: "64Mi" },
+      },
     },
   };
 

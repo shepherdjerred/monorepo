@@ -32,6 +32,23 @@ type AlertmanagerChildRoute =
     group_by: string[];
   };
 
+function createPrometheusIngresses(chart: Chart): void {
+  createIngress(chart, "alertmanager-ingress", {
+    namespace: "prometheus",
+    service: "prometheus-kube-prometheus-alertmanager",
+    port: 9093,
+    hosts: ["alertmanager"],
+    proxyClass: "medium",
+  });
+
+  createIngress(chart, "prometheus-ingress", {
+    namespace: "prometheus",
+    service: "prometheus-kube-prometheus-prometheus",
+    port: 9090,
+    hosts: ["prometheus"],
+  });
+}
+
 export async function createPrometheusApp(chart: Chart) {
   // Temporal workflow-failure alerts (from the temporal-failure-watch schedule
   // in packages/temporal) all share alertname "TemporalWorkflowFailed" and carry
@@ -55,19 +72,7 @@ export async function createPrometheusApp(chart: Chart) {
     matchers: ['alertname =~ "TemporalAgentTask(TimingOut|TimeoutScanFailed)"'],
     group_by: ["alertname"],
   };
-  createIngress(chart, "alertmanager-ingress", {
-    namespace: "prometheus",
-    service: "prometheus-kube-prometheus-alertmanager",
-    port: 9093,
-    hosts: ["alertmanager"],
-  });
-
-  createIngress(chart, "prometheus-ingress", {
-    namespace: "prometheus",
-    service: "prometheus-kube-prometheus-prometheus",
-    port: 9090,
-    hosts: ["prometheus"],
-  });
+  createPrometheusIngresses(chart);
 
   createIngress(chart, "grafana-ingress", {
     namespace: "prometheus",
@@ -118,6 +123,9 @@ export async function createPrometheusApp(chart: Chart) {
     // Enable blackbox-exporter for HTTP probing of static sites
     "prometheus-blackbox-exporter": {
       enabled: true,
+      resources: {
+        requests: { cpu: "20m", memory: "64Mi" },
+      },
       config: {
         modules: BLACKBOX_MODULES,
       },
@@ -152,6 +160,16 @@ export async function createPrometheusApp(chart: Chart) {
     // accelerating the full cluster-wide metadata endpoint.
     ...BUILDKITE_IO_OBSERVABILITY_VALUES,
     grafana: createGrafanaValues(prometheusSecrets.name),
+    prometheusOperator: {
+      resources: {
+        requests: { cpu: "100m", memory: "128Mi" },
+      },
+      prometheusConfigReloader: {
+        resources: {
+          requests: { cpu: "10m", memory: "64Mi" },
+        },
+      },
+    },
     nodeExporter: {
       operatingSystems: {
         linux: {
@@ -375,6 +393,9 @@ export async function createPrometheusApp(chart: Chart) {
     "prometheus-node-exporter": {
       // Node metrics must cover the CI-only node (liskov) too.
       tolerations: [CI_NODE_TOLERATION],
+      resources: {
+        requests: { cpu: "10m", memory: "64Mi" },
+      },
       extraArgs: [
         "--collector.textfile.directory=/host/var/lib/node_exporter/textfile_collector",
       ],

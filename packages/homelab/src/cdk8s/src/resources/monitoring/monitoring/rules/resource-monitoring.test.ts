@@ -154,3 +154,36 @@ describe("memory leak alerts", () => {
     );
   });
 });
+
+describe("predictive PVC capacity alerts", () => {
+  it("uses positive seven-day growth and sustained 60/14-day thresholds", () => {
+    const rules = getResourceMonitoringRuleGroups().find(
+      (group) => group.name === "resource-disk-monitoring",
+    )?.rules;
+    if (rules === undefined) {
+      throw new Error("expected resource-disk-monitoring rules");
+    }
+
+    const warning = rules.find(
+      (rule) => rule.alert === "PVCProjectedFullWithin60Days",
+    );
+    const critical = rules.find(
+      (rule) => rule.alert === "PVCProjectedFullWithin14Days",
+    );
+    expect(warning?.expr.value).toContain(
+      "deriv(kubelet_volume_stats_used_bytes[7d]) > 0",
+    );
+    expect(warning?.expr.value).toContain(
+      "kubelet_volume_stats_used_bytes offset 7d",
+    );
+    expect(warning?.expr.value).toContain("< 5184000");
+    expect(warning?.for).toBe("6h");
+    expect(warning?.labels?.["severity"]).toBe("warning");
+    expect(critical?.expr.value).toContain("< 1209600");
+    expect(critical?.expr.value).toContain(
+      "kubelet_volume_stats_used_bytes offset 7d",
+    );
+    expect(critical?.for).toBe("6h");
+    expect(critical?.labels?.["severity"]).toBe("critical");
+  });
+});

@@ -126,9 +126,10 @@ export async function createMcpGatewayDeployment(chart: Chart) {
   // `Authorization: <token>` from clients (mcpProxy.options.authTokens).
   deployment.addInitContainer(
     withCommonProps({
-      // Deliberately BestEffort (no requests/limits) — negligible or
-      // non-critical usage; see the 2026-06-12 right-sizing plan.
-      resources: {},
+      resources: {
+        cpu: { request: Cpu.millis(10) },
+        memory: { request: Size.mebibytes(16) },
+      },
       name: "render-config",
       image: `library/busybox:${versions["library/busybox"]}`,
       command: ["/bin/sh", "-c"],
@@ -193,8 +194,8 @@ export async function createMcpGatewayDeployment(chart: Chart) {
       },
       resources: {
         memory: {
-          request: Size.mebibytes(128),
-          limit: Size.gibibytes(1),
+          request: Size.mebibytes(768),
+          limit: Size.mebibytes(1536),
         },
         cpu: {
           request: Cpu.millis(50),
@@ -316,6 +317,7 @@ export async function createMcpGatewayDeployment(chart: Chart) {
   new TailscaleIngress(chart, "mcp-gateway-ingress", {
     service: service,
     host: "mcp-gateway",
+    proxyClass: "medium",
     // Every mcp-proxy route is Authorization-token-gated (404/401 without
     // one; no unauthenticated health route) — TCP connect matches the
     // container's own TCP-socket k8s probes.

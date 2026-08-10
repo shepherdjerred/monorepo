@@ -11,6 +11,7 @@ import {
 } from "./zfs-dashboard-panels.ts";
 import { addPerformancePanels } from "./zfs-dashboard-performance-panels.ts";
 import { addAdvancedMetricsPanels } from "./zfs-dashboard-advanced-panels.ts";
+import { addStorageCapacityPanels } from "./storage-capacity-panels.ts";
 
 // Helper function to build filter expression
 function buildFilter() {
@@ -39,6 +40,16 @@ export function createZfsDashboard() {
     .includeAll(true)
     .allValue(".*");
 
+  const volumeVariable = new dashboard.QueryVariableBuilder("volume")
+    .label("PVC")
+    .query(
+      "label_values(kubelet_volume_stats_capacity_bytes, persistentvolumeclaim)",
+    )
+    .datasource(prometheusDatasource)
+    .multi(true)
+    .includeAll(true)
+    .allValue(".*");
+
   // Build the main dashboard
   const builder = new dashboard.DashboardBuilder("ZFS - Storage Monitoring")
     .uid("zfs-dashboard")
@@ -47,7 +58,8 @@ export function createZfsDashboard() {
     .refresh("30s")
     .timezone("browser")
     .editable()
-    .withVariable(instanceVariable);
+    .withVariable(instanceVariable)
+    .withVariable(volumeVariable);
 
   // Row 0: Scrub Status
   builder.withRow(new dashboard.RowBuilder("Scrub Status"));
@@ -335,6 +347,7 @@ export function createZfsDashboard() {
   addPerformancePanels(builder, prometheusDatasource, buildFilter);
   addBufferAndAdvancedPanels(builder, prometheusDatasource, buildFilter);
   addAdvancedMetricsPanels(builder, prometheusDatasource, buildFilter);
+  addStorageCapacityPanels(builder);
 
   return builder.build();
 }

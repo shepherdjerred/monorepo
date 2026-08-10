@@ -97,5 +97,6 @@ export function createSonarrDeployment(
   new TailscaleIngress(chart, "sonarr-tailscale-ingress", {
     service,
     host: "sonarr",
+    proxyClass: "medium",
   });
 }

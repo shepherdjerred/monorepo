@@ -24,6 +24,9 @@ type KubeStateMetricsValues = NonNullable<
 type KubeStateMetricsWithBuildkiteMetadata = KubeStateMetricsValues & {
   metricLabelsAllowlist?: string[];
   metricAnnotationsAllowList?: string[];
+  resources?: {
+    requests?: Record<string, string | number>;
+  };
 };
 
 export type PrometheusValuesWithBlackbox = Omit<
@@ -34,6 +37,9 @@ export type PrometheusValuesWithBlackbox = Omit<
   "kube-state-metrics"?: KubeStateMetricsWithBuildkiteMetadata;
   "prometheus-blackbox-exporter"?: {
     enabled?: boolean;
+    resources?: {
+      requests?: Record<string, string | number>;
+    };
     config?: {
       modules?: Record<
         string,
@@ -58,6 +64,9 @@ export const BUILDKITE_KUBE_STATE_METRICS_VALUES = {
   metricAnnotationsAllowList: [
     "pods=[buildkite.com/build-branch,buildkite.com/build-url,buildkite.com/job-url,buildkite.com/pipeline-slug]",
   ],
+  resources: {
+    requests: { cpu: "20m", memory: "128Mi" },
+  },
 } satisfies KubeStateMetricsWithBuildkiteMetadata;
 
 export const BUILDKITE_IO_OBSERVABILITY_VALUES = {
@@ -116,6 +125,9 @@ export function createGrafanaValues(
     },
     imageRenderer: {
       enabled: true,
+      resources: {
+        requests: { cpu: "50m", memory: "512Mi" },
+      },
       serverURL:
         "http://prometheus-grafana-image-renderer.prometheus:8081/render",
       renderingCallbackURL: "http://prometheus-grafana.prometheus:80/",
@@ -145,6 +157,9 @@ export function createGrafanaValues(
     },
     useStatefulSet: true,
     sidecar: {
+      resources: {
+        requests: { cpu: "10m", memory: "128Mi" },
+      },
       dashboards: {
         label: "homelab_grafana_dashboard",
         labelValue: "1",

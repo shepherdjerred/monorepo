@@ -87,8 +87,8 @@ describe("kueue-config", () => {
   });
 
   it("covers ephemeral-storage (pods request it — omitting it freezes CI)", () => {
-    // Every .buildkite/pipeline.yml step/dind container sets an
-    // ephemeral-storage request. Kueue refuses to admit a workload that
+    // Every .buildkite/pipeline.yml step container sets an ephemeral-storage
+    // request. Kueue refuses to admit a workload that
     // requests a resource the ClusterQueue does not cover, so if this drifts
     // out every build sits Pending forever. Regression guard for the
     // 2026-07-24 freeze.

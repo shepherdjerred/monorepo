@@ -11,6 +11,9 @@ export function createPrometheusAdapterApp(chart: Chart) {
       path: "",
     },
     replicas: 1,
+    resources: {
+      requests: { cpu: "20m", memory: "128Mi" },
+    },
     rules: {
       // https://github.com/kubernetes-sigs/prometheus-adapter/issues/264
       default: false,

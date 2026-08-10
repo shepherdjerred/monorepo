@@ -97,5 +97,6 @@ export function createBazarrDeployment(
   new TailscaleIngress(chart, "bazarr-tailscale-ingress", {
     service,
     host: "bazarr",
+    proxyClass: "medium",
   });
 }

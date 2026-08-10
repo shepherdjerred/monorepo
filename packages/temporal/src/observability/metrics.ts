@@ -96,15 +96,22 @@ export const haEventBridgeConnected = new Gauge({
 // worker restarts and do not depend on short-lived Kubernetes resources.
 export const maintenanceLastSuccessTimestampSeconds = new Gauge({
   name: "kubernetes_maintenance_last_success_timestamp_seconds",
-  help: "Unix timestamp of the last successful Temporal maintenance activity, by job",
-  labelNames: ["job"] as const,
+  help: "Unix timestamp of the last successful Temporal maintenance activity, by maintenance job",
+  labelNames: ["maintenance_job"] as const,
   registers: [register],
 });
 
 export const maintenanceRunsTotal = new Counter({
   name: "kubernetes_maintenance_runs_total",
-  help: "Temporal maintenance activity runs, by job and outcome",
-  labelNames: ["job", "outcome"] as const,
+  help: "Temporal maintenance activity runs, by maintenance job and outcome",
+  labelNames: ["maintenance_job", "outcome"] as const,
+  registers: [register],
+});
+
+export const turboCacheCleanupEntriesTotal = new Counter({
+  name: "turbo_cache_cleanup_entries_total",
+  help: "Turbo cache entries scanned or deleted by successful cleanup runs",
+  labelNames: ["result"] as const,
   registers: [register],
 });
 

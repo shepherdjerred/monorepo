@@ -167,7 +167,7 @@ export function createBuildkitdDeployment(chart: Chart) {
           limit: Cpu.units(8),
         },
         memory: {
-          request: Size.gibibytes(1),
+          request: Size.gibibytes(5),
           // 12Gi OOMKilled buildkitd into a crash loop on PR #1668's build:
           // a full-fleet bake (every Dockerfile changed → all ~15 targets
           // solving in parallel, fully cold cache) needs far more than 12Gi

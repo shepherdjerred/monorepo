@@ -11,7 +11,14 @@ Date: 2026-03-18
 
 ## Problem
 
-Buildkite agent-stack-k8s creates Kubernetes Jobs for each CI step (up to `max-in-flight: 20`). A `ResourceQuota` capped the buildkite namespace at 16 CPU / 32Gi memory. When more Jobs were created than the quota could fit, the Kubernetes Job controller retried pod creation every ~30s, generating thousands of `FailedCreate` events. This overwhelmed etcd with event range queries (200-470ms each, back-to-back), making the API server unresponsive and crash-looping kube-scheduler and kube-controller-manager.
+Buildkite agent-stack-k8s creates Kubernetes Jobs for each CI step. At the
+time of the incident it allowed up to `max-in-flight: 20`. A `ResourceQuota`
+capped the buildkite namespace at 16 CPU / 32Gi memory. When more Jobs were
+created than the quota could fit, the Kubernetes Job controller retried pod
+creation every ~30s, generating thousands of `FailedCreate` events. This
+overwhelmed etcd with event range queries (200-470ms each, back-to-back),
+making the API server unresponsive and crash-looping kube-scheduler and
+kube-controller-manager.
 
 The root cause: `ResourceQuota` rejects pod **creation** at the API level. The Job controller then retries indefinitely, creating an event storm. This is fundamentally different from pods going **Pending** (scheduler can't place them), which is quiet.
 
@@ -35,15 +42,15 @@ The root cause: `ResourceQuota` rejects pod **creation** at the API level. The J
 
 1. Buildkite operator creates a K8s Job (with `suspend: false`)
 2. Kueue's webhook intercepts it, sets `suspend: true`
-3. Kueue checks the ClusterQueue budget (24 CPU / 80Gi / 20 pods / 100Gi ephemeral storage)
+3. Kueue checks the ClusterQueue budget (24 CPU / 80Gi / 24 pods / 100Gi ephemeral storage)
 4. If budget has room → unsuspend → pod created → runs
 5. If budget full → Job stays suspended → no pod → no events
 6. When a running Job completes → Kueue unsuspends the next queued Job
 
 ### Key properties
 
-- **Hard namespace cap**: 24 CPU / 80Gi / 20 pods / 100Gi ephemeral storage via ClusterQueue `nominalQuota`
-- **Elastic concurrency within the count cap**: Buildkite keeps `max-in-flight: 20`, while Kueue admits as many jobs as their weighted requests fit.
+- **Hard namespace cap**: 24 CPU / 80Gi / 24 pods / 100Gi ephemeral storage via ClusterQueue `nominalQuota`
+- **Elastic concurrency within the count cap**: Buildkite keeps `max-in-flight: 24`, while Kueue admits as many jobs as their weighted requests fit.
 - **No wasted reservations**: budget is shared dynamically across all job sizes
 - **No preemption**: running Jobs are never re-suspended (`withinClusterQueue: Never`)
 - **Transparent to Buildkite**: no changes to agent-stack-k8s or pipeline config
@@ -52,7 +59,7 @@ The root cause: `ResourceQuota` rejects pod **creation** at the API level. The J
 
 ### Configuration
 
-**ClusterQueue** (`buildkite`): 24 CPU / 80Gi / 20 pods / 100Gi ephemeral-storage nominalQuota, no preemption, `namespaceSelector` matching `kueue.x-k8s.io/managed-namespace: "true"`.
+**ClusterQueue** (`buildkite`): 24 CPU / 80Gi / 24 pods / 100Gi ephemeral-storage nominalQuota, no preemption, `namespaceSelector` matching `kueue.x-k8s.io/managed-namespace: "true"`.
 
 **Kueue controller config**: `manageJobsWithoutQueueName: true` with `managedJobsNamespaceSelector` targeting labeled namespaces. Config must be set via `managerConfig.controllerManagerConfigYaml` in Helm values (the chart uses a single YAML string, not individual values).
 

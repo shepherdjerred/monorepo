@@ -16,13 +16,17 @@ export const BUILDKITE_POD_PARENT_FS_WRITES_BYTES_BY_JOB_METRIC =
   "buildkite:pod_parent_fs_writes_bytes_by_job_total";
 export const BUILDKITE_BUN_CACHE_PVC = "buildkite-bun-cache";
 export const BUILDKITE_BUN_CACHE_GC_ACTIVITY = "buildkite-bun-cache-gc";
+export const TURBO_CACHE_CLEAN_ACTIVITY = "turbo-cache-clean";
 
-const MAINTENANCE_WORKER_STALE_EXPRESSION = MAINTENANCE_IMAGE_READY
-  ? `
+function maintenanceWorkerStaleExpression(
+  maintenanceJob: string,
+  maximumAgeSeconds: number,
+): string {
+  return `
 or (
   absent(
     kubernetes_maintenance_last_success_timestamp_seconds{
-      job="${BUILDKITE_BUN_CACHE_GC_ACTIVITY}"
+      maintenance_job="${maintenanceJob}"
     }
   )
   and on() (
@@ -31,13 +35,13 @@ or (
         namespace="buildkite",
         pod=~"temporal-maintenance-worker-.*"
       }
-    ) > 1200
+    ) > ${String(maximumAgeSeconds)}
     or time() - max(
       kube_pod_start_time{
         namespace="buildkite",
         pod=~"temporal-maintenance-worker-.*"
       }
-    ) > 1200
+    ) > ${String(maximumAgeSeconds)}
     or on() (
       kube_deployment_status_condition{
         namespace="buildkite",
@@ -76,13 +80,17 @@ or (
       )
     )
   )
-)`
+)`;
+}
+
+const MAINTENANCE_WORKER_STALE_EXPRESSION = MAINTENANCE_IMAGE_READY
+  ? maintenanceWorkerStaleExpression(BUILDKITE_BUN_CACHE_GC_ACTIVITY, 1200)
   : "";
 
 const MAINTENANCE_STALE_EXPRESSION = MAINTENANCE_IMAGE_READY
   ? `(
   time() - kubernetes_maintenance_last_success_timestamp_seconds{
-    job="${BUILDKITE_BUN_CACHE_GC_ACTIVITY}"
+    maintenance_job="${BUILDKITE_BUN_CACHE_GC_ACTIVITY}"
   } > 1200
 )
 ${MAINTENANCE_WORKER_STALE_EXPRESSION}`
@@ -111,6 +119,15 @@ absent(
     cronjob="buildkite-bun-cache-gc"
   }
 )`;
+
+const TURBO_CACHE_CLEAN_STALE_EXPRESSION = MAINTENANCE_IMAGE_READY
+  ? `(
+  time() - kubernetes_maintenance_last_success_timestamp_seconds{
+    maintenance_job="${TURBO_CACHE_CLEAN_ACTIVITY}"
+  } > 129600
+)
+${maintenanceWorkerStaleExpression(TURBO_CACHE_CLEAN_ACTIVITY, 129_600)}`
+  : "vector(0)";
 
 const POD_LABEL_METADATA = [
   "label_buildkite_com_job_uuid",
@@ -430,6 +447,23 @@ and on ()
             severity: "warning",
             category: "ci",
             namespace: "buildkite",
+          },
+        },
+        {
+          alert: "TurboCacheCleanupStale",
+          annotations: {
+            summary: "Turbo cache cleanup has not succeeded in 36 hours",
+            description:
+              "The daily authenticated Turbo cache cleanup has not completed successfully in the last 36 hours.",
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            TURBO_CACHE_CLEAN_STALE_EXPRESSION,
+          ),
+          for: "1m",
+          labels: {
+            severity: "warning",
+            category: "ci",
+            namespace: "turbo-cache",
           },
         },
       ],

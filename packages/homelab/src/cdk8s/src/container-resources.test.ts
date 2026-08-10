@@ -4,7 +4,10 @@ import { z } from "zod";
 import { App } from "cdk8s";
 import { rm } from "node:fs/promises";
 import { setupCharts } from "./setup-charts.ts";
-import { BEST_EFFORT_CONTAINER_ALLOWLIST } from "./misc/container-resource-allowlist.ts";
+import {
+  BEST_EFFORT_CONTAINER_ALLOWLIST,
+  PARTIAL_REQUEST_CONTAINER_ALLOWLIST,
+} from "./misc/container-resource-allowlist.ts";
 
 /**
  * Container Resources Backstop
@@ -29,7 +32,14 @@ const ContainerSchema = z.object({
           memory: z.union([z.string(), z.number()]).optional(),
         })
         .optional(),
+      limits: z
+        .object({
+          cpu: z.union([z.string(), z.number()]).optional(),
+          memory: z.union([z.string(), z.number()]).optional(),
+        })
+        .optional(),
     })
+    .loose()
     .optional(),
 });
 
@@ -71,6 +81,7 @@ type FoundContainer = {
   kind: string;
   init: boolean;
   hasRequests: boolean;
+  resources: z.infer<typeof ContainerSchema>["resources"];
 };
 
 async function synthesizeApp(): Promise<string> {
@@ -120,6 +131,7 @@ function containersOf(
     kind: workload.kind,
     init,
     hasRequests: hasRequests(container),
+    resources: container.resources,
   });
   return [
     ...(podSpec.containers ?? []).map((c) => toFound(c, false)),
@@ -163,7 +175,8 @@ describe("Container resource requests backstop", () => {
   it("every container has cpu+memory requests or an allowlist entry", () => {
     const unexpected = collected.missing.filter(
       ({ workload, container }) =>
-        !BEST_EFFORT_CONTAINER_ALLOWLIST.has(`${workload}/${container}`),
+        !BEST_EFFORT_CONTAINER_ALLOWLIST.has(`${workload}/${container}`) &&
+        !PARTIAL_REQUEST_CONTAINER_ALLOWLIST.has(`${workload}/${container}`),
     );
     expect(
       unexpected.map(
@@ -183,5 +196,105 @@ describe("Container resource requests backstop", () => {
       (key) => !missingKeys.has(key),
     );
     expect(stale).toEqual([]);
+
+    const stalePartial = [...PARTIAL_REQUEST_CONTAINER_ALLOWLIST].filter(
+      (key) => !missingKeys.has(key),
+    );
+    expect(stalePartial).toEqual([]);
+  });
+
+  it("keeps partial-request exceptions separate from BestEffort", () => {
+    for (const key of PARTIAL_REQUEST_CONTAINER_ALLOWLIST) {
+      const found = collected.all.find(
+        ({ workload, container }) => `${workload}/${container}` === key,
+      );
+      expect(found, `missing ${key}`).toBeDefined();
+      const requests = found?.resources?.requests;
+      expect(
+        requests?.cpu !== undefined || requests?.memory !== undefined,
+        `${key} must reserve at least one scheduling dimension`,
+      ).toBe(true);
+    }
+  });
+
+  it("keeps audited persistent workload reservations exact", () => {
+    const expected = new Map<
+      string,
+      z.infer<typeof ContainerSchema>["resources"]
+    >([
+      ["birmel/main", { requests: { cpu: "50m", memory: "1280Mi" } }],
+      [
+        "buildkitd/buildkitd",
+        {
+          requests: { cpu: "500m", memory: "5120Mi" },
+          limits: { cpu: "8", memory: "32768Mi" },
+        },
+      ],
+      [
+        "media-qbittorrent/qbittorrent-config-seed",
+        { requests: { cpu: "10m", memory: "16Mi" } },
+      ],
+      [
+        "media-qbittorrent/gluetun",
+        { requests: { cpu: "25m", memory: "128Mi" } },
+      ],
+      [
+        "media-qbittorrent/qbittorrent",
+        {
+          requests: { cpu: "200m", memory: "4608Mi" },
+          limits: { cpu: "2000m", memory: "6144Mi" },
+        },
+      ],
+      [
+        "media-qbittorrent/qbittorrent-exporter",
+        { requests: { cpu: "10m", memory: "64Mi" } },
+      ],
+      ["media-plex/main", { requests: { memory: "8192Mi" }, limits: {} }],
+      [
+        "media-plex/plex-exporter",
+        { requests: { cpu: "10m", memory: "32Mi" } },
+      ],
+      [
+        "mcp-gateway/render-config",
+        { requests: { cpu: "10m", memory: "16Mi" } },
+      ],
+      [
+        "mcp-gateway/main",
+        {
+          requests: { cpu: "50m", memory: "768Mi" },
+          limits: { cpu: "500m", memory: "1536Mi" },
+        },
+      ],
+      [
+        "scout-beta-scout-backend/main",
+        { requests: { cpu: "50m", memory: "2048Mi" } },
+      ],
+      [
+        "scout-prod-scout-backend/main",
+        { requests: { cpu: "100m", memory: "2560Mi" } },
+      ],
+      [
+        "temporal-temporal-worker/temporal-worker",
+        {
+          requests: { cpu: "500m", memory: "3072Mi" },
+          limits: { cpu: "1500m", memory: "6144Mi" },
+        },
+      ],
+      [
+        "temporal-temporal-glitter-worker/temporal-glitter-worker",
+        {
+          requests: { cpu: "1", memory: "3072Mi" },
+          limits: { cpu: "2", memory: "6144Mi" },
+        },
+      ],
+    ]);
+
+    for (const [key, resources] of expected) {
+      const found = collected.all.find(
+        ({ workload, container }) => `${workload}/${container}` === key,
+      );
+      expect(found, `missing ${key}`).toBeDefined();
+      expect(found?.resources, key).toEqual(resources);
+    }
   });
 });

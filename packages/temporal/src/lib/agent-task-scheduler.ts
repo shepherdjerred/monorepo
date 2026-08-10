@@ -2,6 +2,7 @@ import type { Client } from "@temporalio/client";
 import {
   ScheduleNotFoundError,
   ScheduleOverlapPolicy,
+  WorkflowExecutionAlreadyStartedError,
   WorkflowIdConflictPolicy,
   WorkflowIdReusePolicy,
 } from "@temporalio/client";
@@ -18,6 +19,10 @@ import {
 
 const DEFAULT_WORKFLOW_TIMEOUT: Duration = "2 hours";
 export const AGENT_TASK_SCHEDULE_TIMEZONE = "America/Los_Angeles";
+
+export type AgentTaskSchedulerOptions = {
+  reuseExistingWorkflow?: boolean;
+};
 
 function workflowArgsForSchedule(
   input: AgentTaskInput,
@@ -57,6 +62,7 @@ function startDelayFor(runAt: string | undefined): Duration | undefined {
 export async function startOrScheduleAgentTask(
   client: Client,
   rawInput: AgentTaskInput,
+  options?: AgentTaskSchedulerOptions,
 ): Promise<AgentTaskStartResult> {
   const input = AgentTaskInputSchema.parse(rawInput);
 
@@ -127,25 +133,45 @@ export async function startOrScheduleAgentTask(
   // exactOptionalPropertyTypes an explicit `startDelay: undefined` is a type
   // error (and would also differ semantically from omitting it).
   const startDelay = startDelayFor(input.runAt);
-  const handle = await client.workflow.start("agentTaskWorkflow", {
-    args: [workflowArgsForOneOff(input)],
-    taskQueue: TASK_QUEUES.AGENT_TASK,
-    workflowId,
-    ...(startDelay === undefined ? {} : { startDelay }),
-    // `workflowRunTimeout` (per-run) rather than `workflowExecutionTimeout`: the
-    // 2h bound applies to the actual run once it starts, never to the buffered
-    // `startDelay`, so a future-dated task cannot time out before it runs.
-    workflowRunTimeout: DEFAULT_WORKFLOW_TIMEOUT,
-    // Allow a previously failed/timed-out run of the same id to be retried by
-    // resubmission, while still rejecting duplicate concurrent or already-
-    // succeeded runs.
-    workflowIdReusePolicy: WorkflowIdReusePolicy.ALLOW_DUPLICATE_FAILED_ONLY,
-    workflowIdConflictPolicy: WorkflowIdConflictPolicy.FAIL,
-  });
+  try {
+    const handle = await client.workflow.start("agentTaskWorkflow", {
+      args: [workflowArgsForOneOff(input)],
+      taskQueue: TASK_QUEUES.AGENT_TASK,
+      workflowId,
+      ...(startDelay === undefined ? {} : { startDelay }),
+      // `workflowRunTimeout` (per-run) rather than
+      // `workflowExecutionTimeout`: the 2h bound applies to the actual run once
+      // it starts, never to the buffered `startDelay`, so a future-dated task
+      // cannot time out before it runs.
+      workflowRunTimeout: DEFAULT_WORKFLOW_TIMEOUT,
+      // Allow a previously failed/timed-out run of the same id to be retried by
+      // resubmission, while still rejecting an already-succeeded run.
+      workflowIdReusePolicy: WorkflowIdReusePolicy.ALLOW_DUPLICATE_FAILED_ONLY,
+      workflowIdConflictPolicy:
+        options?.reuseExistingWorkflow === true
+          ? WorkflowIdConflictPolicy.USE_EXISTING
+          : WorkflowIdConflictPolicy.FAIL,
+    });
 
-  return {
-    kind: "workflow",
-    workflowId: handle.workflowId,
-    runId: handle.firstExecutionRunId,
-  };
+    return {
+      kind: "workflow",
+      workflowId: handle.workflowId,
+      runId: handle.firstExecutionRunId,
+    };
+  } catch (error: unknown) {
+    if (
+      options?.reuseExistingWorkflow !== true ||
+      !(error instanceof WorkflowExecutionAlreadyStartedError)
+    ) {
+      throw error;
+    }
+
+    // USE_EXISTING covers a concurrently running execution. A successfully
+    // closed execution instead conflicts with ALLOW_DUPLICATE_FAILED_ONLY; in
+    // resumable document batches that deterministic ID means the block was
+    // already scheduled, so return its existing run and continue to later
+    // blocks.
+    const existing = await client.workflow.getHandle(workflowId).describe();
+    return { kind: "workflow", workflowId, runId: existing.runId };
+  }
 }

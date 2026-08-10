@@ -1,6 +1,7 @@
 import { describe, expect, it, mock } from "bun:test";
 import {
   ScheduleNotFoundError,
+  WorkflowExecutionAlreadyStartedError,
   WorkflowIdConflictPolicy,
   WorkflowIdReusePolicy,
   type Client,
@@ -20,16 +21,30 @@ type Captured = {
   createOpts?: Record<string, unknown>;
 };
 
-function fakeClient(captured: Captured): Client {
+type FakeClientBehavior = {
+  startError?: Error;
+  existingRunId?: string;
+};
+
+function fakeClient(
+  captured: Captured,
+  behavior: FakeClientBehavior = {},
+): Client {
   const client = Object.create(null);
   client.workflow = {
     start: mock(async (workflowType: string, opts: Record<string, unknown>) => {
       captured.startType = workflowType;
       captured.startOpts = opts;
+      if (behavior.startError !== undefined) {
+        throw behavior.startError;
+      }
       return {
         workflowId: opts["workflowId"],
         firstExecutionRunId: "run-1",
       };
+    }),
+    getHandle: () => ({
+      describe: async () => ({ runId: behavior.existingRunId ?? "run-1" }),
     }),
   };
   client.schedule = {
@@ -140,6 +155,33 @@ describe("startOrScheduleAgentTask — one-off runAt", () => {
     expect(
       firstArgInput(opt(captured.startOpts, "args")).runAt,
     ).toBeUndefined();
+  });
+
+  it("returns an existing successful workflow for resumable document batches", async () => {
+    const captured: Captured = {};
+    const client = fakeClient(captured, {
+      startError: new WorkflowExecutionAlreadyStartedError(
+        "already completed",
+        "existing-workflow",
+        "agentTaskWorkflow",
+      ),
+      existingRunId: "existing-run",
+    });
+
+    const result = await startOrScheduleAgentTask(
+      client,
+      oneOffInput(undefined),
+      { reuseExistingWorkflow: true },
+    );
+
+    expect(opt(captured.startOpts, "workflowIdConflictPolicy")).toBe(
+      WorkflowIdConflictPolicy.USE_EXISTING,
+    );
+    expect(result).toEqual({
+      kind: "workflow",
+      workflowId: await agentTaskWorkflowId(oneOffInput(undefined)),
+      runId: "existing-run",
+    });
   });
 });
 

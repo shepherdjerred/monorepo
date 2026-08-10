@@ -11,7 +11,7 @@ import { escapePrometheusTemplate } from "./shared.ts";
 // enumeration order flips. nvme_device_info has value 1, so the multiplication
 // leaves the alert's `$value` unchanged.
 function withNvmeIdentity(expr: string): string {
-  return `(${expr}) * on(device) group_left(serial, model) nvme_device_info`;
+  return `(${expr}) * on(device, instance) group_left(serial, model) nvme_device_info`;
 }
 
 export function getNvmeRuleGroups(): PrometheusRuleSpecGroups[] {

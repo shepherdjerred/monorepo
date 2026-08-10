@@ -1,0 +1,147 @@
+import {
+  CHECKOUT_CONTAINER_ALIAS,
+  containerBlock,
+  fail,
+  hasTrimmedLine,
+  requireIncludes,
+  sharedPodAnchorBlock,
+  SHARED_POD_ANCHORS,
+} from "./validate-pipeline-lib.ts";
+
+export function validatePipelineResourceContracts(
+  pipeline: string,
+  stepBlocks: ReadonlyMap<string, string>,
+): void {
+  const checkoutContainerDefinition = [
+    "  - checkout_container: &checkout_container",
+    "      name: checkout",
+    "      resources:",
+    "        # The checkout writes the tracked tree into the memory-backed workspace.",
+    '        requests: { cpu: "50m", memory: "1Gi" }',
+    '        limits: { cpu: "400m", memory: "2Gi" }',
+  ].join("\n");
+  if (!pipeline.includes(checkoutContainerDefinition)) {
+    fail(
+      "checkout container anchor must define the tested CPU and memory budget",
+    );
+  }
+
+  for (const anchorName of SHARED_POD_ANCHORS) {
+    const anchorBlock = sharedPodAnchorBlock(pipeline, anchorName);
+    if (!hasTrimmedLine(anchorBlock, CHECKOUT_CONTAINER_ALIAS)) {
+      fail(`shared pod anchor ${anchorName} does not patch checkout resources`);
+    }
+    for (const required of [
+      'image: "${CI_BASE_IMAGE}"',
+      "imagePullPolicy: IfNotPresent",
+    ]) {
+      if (!hasTrimmedLine(anchorBlock, required)) {
+        fail(
+          `shared pod anchor ${anchorName} is missing immutable ${required}`,
+        );
+      }
+    }
+  }
+  if (pipeline.includes("ghcr.io/shepherdjerred/ci-base:latest")) {
+    fail("pipeline restored a mutable ci-base tag");
+  }
+
+  const verifyPodAnchor = sharedPodAnchorBlock(
+    pipeline,
+    "pod_verify_kubernetes",
+  );
+  for (const resourceLine of [
+    'requests: { cpu: "1", memory: "14Gi", ephemeral-storage: "2Gi" }',
+    'limits: { cpu: "7", memory: "20Gi", ephemeral-storage: "40Gi" }',
+  ]) {
+    if (!hasTrimmedLine(verifyPodAnchor, resourceLine)) {
+      fail(`verify pod is missing measured resource budget ${resourceLine}`);
+    }
+  }
+
+  for (const [anchor, requestLine] of [
+    [
+      "pod_kubernetes",
+      'requests: { cpu: "1", memory: "2Gi", ephemeral-storage: "2Gi" }',
+    ],
+    [
+      "pod_buildkit_kubernetes",
+      'requests: { cpu: "1", memory: "1Gi", ephemeral-storage: "2Gi" }',
+    ],
+    [
+      "pod_light_kubernetes",
+      '{ cpu: "250m", memory: "512Mi", ephemeral-storage: "1Gi" }',
+    ],
+    [
+      "pod_tofu_kubernetes",
+      '{ cpu: "250m", memory: "512Mi", ephemeral-storage: "1Gi" }',
+    ],
+    [
+      "pod_pr_dryrun_kubernetes",
+      '{ cpu: "250m", memory: "768Mi", ephemeral-storage: "1Gi" }',
+    ],
+  ] satisfies readonly (readonly [string, string])[]) {
+    if (!hasTrimmedLine(sharedPodAnchorBlock(pipeline, anchor), requestLine)) {
+      fail(`${anchor} is missing audited command reservation ${requestLine}`);
+    }
+  }
+
+  for (const [step, anchor] of [
+    ["verify", "pod_verify_kubernetes"],
+    ["pr-dryrun", "pod_pr_dryrun_kubernetes"],
+    ["argocd-sync", "pod_light_kubernetes"],
+    ["images-pr", "pod_buildkit_kubernetes"],
+    ["images", "pod_buildkit_kubernetes"],
+  ] satisfies readonly (readonly [string, string])[]) {
+    requireIncludes(
+      stepBlocks.get(step),
+      `<<: *${anchor}`,
+      `${step} must retain audited pod type ${anchor}`,
+    );
+  }
+
+  const prDryrunAnchor = sharedPodAnchorBlock(
+    pipeline,
+    "pod_pr_dryrun_kubernetes",
+  );
+  if (!hasTrimmedLine(prDryrunAnchor, "allowPrivilegeEscalation: false")) {
+    fail("pr-dryrun command container permits privilege escalation");
+  }
+
+  for (const step of ["playwright-e2e-pr", "playwright-e2e-main"]) {
+    const command = containerBlock(step, stepBlocks.get(step), "container-0");
+    if (!hasTrimmedLine(command, 'requests: { cpu: "1", memory: "4Gi" }')) {
+      fail(`${step} is missing audited Playwright command reservation`);
+    }
+  }
+
+  for (const step of ["trivy", "semgrep"]) {
+    const command = containerBlock(step, stepBlocks.get(step), "container-0");
+    if (
+      !hasTrimmedLine(command, 'requests: { cpu: "250m", memory: "512Mi" }')
+    ) {
+      fail(`${step} is missing audited scanner command reservation`);
+    }
+  }
+
+  const alertDashboard = stepBlocks.get("alert-dashboard-postgres");
+  for (const [containerName, requestLine] of [
+    ["container-0", '{ cpu: "1", memory: "2Gi", ephemeral-storage: "2Gi" }'],
+    ["postgres", 'requests: { cpu: "250m", memory: "256Mi" }'],
+  ] satisfies readonly (readonly [string, string])[]) {
+    if (
+      !hasTrimmedLine(
+        containerBlock(
+          "alert-dashboard-postgres",
+          alertDashboard,
+          containerName,
+        ),
+        requestLine,
+      )
+    ) {
+      fail(
+        `alert-dashboard-postgres/${containerName} is missing unchanged reservation ${requestLine}`,
+      );
+    }
+  }
+}

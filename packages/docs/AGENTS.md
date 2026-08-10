@@ -92,7 +92,7 @@ Run `bun run docs:board` from the repository root to open the local workboard. I
 
 ## Scheduling Follow-ups
 
-When a plan or guide needs a later check-in, add one explicit `temporal-agent-task` HTML comment block near the follow-up and schedule it from `packages/temporal` locally as an operator:
+When a plan or guide needs a later check-in, add an explicit `temporal-agent-task` HTML comment block near the follow-up and schedule it from `packages/temporal` locally as an operator. A document may contain multiple blocks for distinct checkpoints; `--from-doc` validates all blocks before connecting and schedules them in document order:
 
 ```bash
 cd packages/temporal

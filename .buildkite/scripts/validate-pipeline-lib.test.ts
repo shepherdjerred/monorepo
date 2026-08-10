@@ -7,6 +7,8 @@ import {
   assertPackageTokens,
   assertUnfilteredInstallBelongsToVerify,
   FORBIDDEN_DOCKER_IN_DOCKER_PATTERNS,
+  completePodReservation,
+  type PodReservation,
 } from "./validate-pipeline-lib.ts";
 
 function hasForbiddenDockerInDockerPath(source: string): boolean {
@@ -191,5 +193,60 @@ describe("Bun install cache-lock guard", () => {
     expect(() => assertUnfilteredInstallBelongsToVerify(lines, [0])).toThrow(
       "all installs must use .buildkite/scripts/bun-install.sh",
     );
+  });
+});
+
+describe("complete Buildkite pod reservations", () => {
+  test("includes the agent and checkout containers for every audited pod type", () => {
+    const cases: {
+      name: string;
+      command: PodReservation;
+      additionalContainers?: PodReservation[];
+      expected: PodReservation;
+    }[] = [
+      {
+        name: "Verify",
+        command: { cpuMilli: 1000, memoryMi: 14_336 },
+        expected: { cpuMilli: 1100, memoryMi: 15_424 },
+      },
+      {
+        name: "Playwright",
+        command: { cpuMilli: 1000, memoryMi: 4096 },
+        expected: { cpuMilli: 1100, memoryMi: 5184 },
+      },
+      {
+        name: "Image/BuildKit client",
+        command: { cpuMilli: 1000, memoryMi: 1024 },
+        expected: { cpuMilli: 1100, memoryMi: 2112 },
+      },
+      {
+        name: "PR dry-run",
+        command: { cpuMilli: 250, memoryMi: 768 },
+        expected: { cpuMilli: 350, memoryMi: 1856 },
+      },
+      ...["ArgoCD sync", "Semgrep/Trivy", "light/OpenTofu"].map((name) => ({
+        name,
+        command: { cpuMilli: 250, memoryMi: 512 },
+        expected: { cpuMilli: 350, memoryMi: 1600 },
+      })),
+      ...["Normal", "Resume"].map((name) => ({
+        name,
+        command: { cpuMilli: 1000, memoryMi: 2048 },
+        expected: { cpuMilli: 1100, memoryMi: 3136 },
+      })),
+      {
+        name: "alert-dashboard-postgres",
+        command: { cpuMilli: 1000, memoryMi: 2048 },
+        additionalContainers: [{ cpuMilli: 250, memoryMi: 256 }],
+        expected: { cpuMilli: 1350, memoryMi: 3392 },
+      },
+    ];
+
+    for (const podType of cases) {
+      expect(
+        completePodReservation(podType.command, podType.additionalContainers),
+        podType.name,
+      ).toEqual(podType.expected);
+    }
   });
 });

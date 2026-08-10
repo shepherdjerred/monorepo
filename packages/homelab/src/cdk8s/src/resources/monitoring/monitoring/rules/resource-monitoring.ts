@@ -20,6 +20,18 @@ const memoryLeakExpression = [
   "node_zfs_arc_size offset 24h) > 8589934592",
 ].join("");
 
+function pvcProjectedFullExpression(days: number): string {
+  const seconds = days * 24 * 60 * 60;
+  return `(
+  kubelet_volume_stats_available_bytes
+  /
+  deriv(kubelet_volume_stats_used_bytes[7d])
+) < ${String(seconds)}
+and on (namespace, persistentvolumeclaim)
+deriv(kubelet_volume_stats_used_bytes[7d]) > 0
+and on (namespace, persistentvolumeclaim) kubelet_volume_stats_used_bytes offset 7d`;
+}
+
 export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
   return [
     // CPU monitoring
@@ -175,6 +187,34 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
           ),
           for: "10m",
           labels: { severity: "warning" },
+        },
+        {
+          alert: "PVCProjectedFullWithin60Days",
+          annotations: {
+            description: escapePrometheusTemplate(
+              "PVC {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} is projected to fill within 60 days at its positive seven-day growth rate.",
+            ),
+            summary: "PVC projected to fill within 60 days",
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            pvcProjectedFullExpression(60),
+          ),
+          for: "6h",
+          labels: { severity: "warning" },
+        },
+        {
+          alert: "PVCProjectedFullWithin14Days",
+          annotations: {
+            description: escapePrometheusTemplate(
+              "PVC {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} is projected to fill within 14 days at its positive seven-day growth rate.",
+            ),
+            summary: "PVC projected to fill within 14 days",
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            pvcProjectedFullExpression(14),
+          ),
+          for: "6h",
+          labels: { severity: "critical" },
         },
         {
           alert: "HighDiskUsage",

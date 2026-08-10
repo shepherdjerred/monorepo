@@ -14,19 +14,13 @@ export const BEST_EFFORT_CONTAINER_ALLOWLIST: ReadonlySet<string> = new Set([
   // One-shot init containers — run once at pod start, negligible usage.
   "bugsink/migrate",
   "bugsink/migrate-snappea",
-  "mcp-gateway/render-config",
   "media-recyclarr/render-config",
-  "media-qbittorrent/qbittorrent-config-seed",
   // Metrics/sidecar helpers — tiny, lose nothing on eviction.
-  "media-plex/plex-exporter",
-  "media-qbittorrent/qbittorrent-exporter",
-  "media-qbittorrent/gluetun",
   // Non-critical apps, evictable by design.
   "ddns/main",
   "freshrss/main",
   "gickup/main",
   "golink/main",
-  "media-plex/main",
   "media-prowlarr/main",
   "media-recyclarr/main",
   "media-tautulli/main",
@@ -36,3 +30,14 @@ export const BEST_EFFORT_CONTAINER_ALLOWLIST: ReadonlySet<string> = new Set([
   "starlight-karma-bot-prod-starlight-karma-bot-backend/main",
   "syncthing/main",
 ]);
+
+/**
+ * Containers with one intentionally omitted scheduling dimension.
+ *
+ * Plex reserves memory because that is its node-pressure risk, while retaining
+ * its established request-free CPU burst policy. This is distinct from the
+ * fully BestEffort containers above and is checked independently in synthesis.
+ */
+export const PARTIAL_REQUEST_CONTAINER_ALLOWLIST: ReadonlySet<string> = new Set(
+  ["media-plex/main"],
+);

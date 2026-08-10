@@ -9,6 +9,7 @@ import {
 import {
   BUILDKITE_BUN_CACHE_GC_ACTIVITY,
   BUILDKITE_BUN_CACHE_PVC,
+  TURBO_CACHE_CLEAN_ACTIVITY,
 } from "./monitoring/rules/buildkite.ts";
 
 const MetadataSchema = z
@@ -92,9 +93,9 @@ function assertCollectorStaleExpression(rule: Record<string, unknown>): void {
   expectExpressionContains(expression, ["> 1200"]);
   if (MAINTENANCE_IMAGE_READY) {
     expectExpressionContains(expression, [
-      `job="${BUILDKITE_BUN_CACHE_GC_ACTIVITY}"`,
+      `maintenance_job="${BUILDKITE_BUN_CACHE_GC_ACTIVITY}"`,
       "kubernetes_maintenance_last_success_timestamp_seconds",
-      `absent(\n    kubernetes_maintenance_last_success_timestamp_seconds{\n      job="${BUILDKITE_BUN_CACHE_GC_ACTIVITY}"\n    }\n  )`,
+      `absent(\n    kubernetes_maintenance_last_success_timestamp_seconds{\n      maintenance_job="${BUILDKITE_BUN_CACHE_GC_ACTIVITY}"\n    }\n  )`,
       'temporal_worker_app_process_start_time_seconds{\n        namespace="buildkite",\n        pod=~"temporal-maintenance-worker-.*"\n      }',
       'kube_pod_start_time{\n        namespace="buildkite",\n        pod=~"temporal-maintenance-worker-.*"\n      }',
       'kube_deployment_status_replicas_available{\n        namespace="buildkite",\n        deployment="temporal-maintenance-worker"\n      }',
@@ -201,6 +202,10 @@ describe("Buildkite monitoring manifests", () => {
       alertGroup.rules,
       "BuildkiteBunCacheCollectorStale",
     );
+    const turboCleanupStale = requireAlert(
+      alertGroup.rules,
+      "TurboCacheCleanupStale",
+    );
     const bunCacheWarningExpr = ruleExpression(bunCacheWarning);
     const bunCacheCriticalExpr = ruleExpression(bunCacheCritical);
 
@@ -238,5 +243,25 @@ describe("Buildkite monitoring manifests", () => {
       },
     });
     assertCollectorStaleExpression(collectorStale);
+
+    expect(turboCleanupStale).toMatchObject({
+      for: "1m",
+      labels: {
+        severity: "warning",
+        category: "ci",
+        namespace: "turbo-cache",
+      },
+    });
+    const turboExpression = ruleExpression(turboCleanupStale);
+    if (MAINTENANCE_IMAGE_READY) {
+      expectExpressionContains(turboExpression, [
+        `maintenance_job="${TURBO_CACHE_CLEAN_ACTIVITY}"`,
+        "> 129600",
+        "kubernetes_maintenance_last_success_timestamp_seconds",
+      ]);
+      expect(turboExpression).not.toMatch(/[{,]\s*job=/);
+    } else {
+      expect(turboExpression).toBe("vector(0)");
+    }
   });
 });

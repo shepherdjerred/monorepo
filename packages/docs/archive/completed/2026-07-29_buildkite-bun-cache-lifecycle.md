@@ -1,7 +1,7 @@
 ---
 id: plan-buildkite-bun-cache-lifecycle-2026-07-29
 type: plan
-status: in-progress
+status: complete
 board: false
 ---
 

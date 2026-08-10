@@ -68,11 +68,11 @@ export function createTempoApp(chart: Chart) {
         },
       },
       // Baseline request (no limits) so trace storage isn't BestEffort.
-      // 30d peak ~16m CPU / ~2.75Gi; steady ~640Mi.
+      // 30d peak ~16m CPU / ~2.75Gi; the baseline covers batch compaction.
       resources: {
         requests: {
-          cpu: "50m",
-          memory: "1Gi",
+          cpu: "1",
+          memory: "2Gi",
         },
       },
     },

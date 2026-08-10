@@ -132,7 +132,20 @@ committed).
 ## After the soak
 
 Prometheus slab/ARC data supports the 24Gi `systemReserved` value. Buildkite
-now has a resource-aware Kueue budget of 80Gi memory / 24 CPU / 20 pods, so
+currently reports approximately 83.5Gi of Kubernetes allocatable memory and
+has a resource-aware Kueue budget of 80Gi memory / 24 CPU / 24 pods, so
 `BUILDKITE_MAX_IN_FLIGHT` remains the count cap while Kueue handles weighted
 admission. Keep watching liskov's available-memory and eviction signals before
 raising either limit.
+
+Direct Talos API access to liskov TCP/50000 may be unavailable from a client
+even while Kubernetes and Prometheus remain healthy. When management-path
+policy permits it, verify the Talos-only cgroup state through a control-plane
+endpoint:
+
+```bash
+talosctl -n liskov read /sys/fs/cgroup/system/memory.max
+talosctl -n liskov read /sys/fs/cgroup/system/memory.peak
+talosctl -n liskov read /sys/fs/cgroup/podruntime/memory.max
+talosctl -n liskov read /sys/fs/cgroup/podruntime/memory.peak
+```

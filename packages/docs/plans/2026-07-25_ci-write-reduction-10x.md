@@ -13,7 +13,7 @@ Post-#1602 CI writes ~0.8–1 TiB/day (SMART; was 4.4 replatform, 3.1 Dagger
 era). User goal: **10x down → ≤~90 GiB/day**. Grounded in
 prior analysis (this session),
 prior analysis,
-`plans/2026-07-22_ci-capacity-remediation{,-impl}.md`,
+`archive/superseded/2026-07-22_ci-capacity-remediation{,-impl}.md`,
 `plans/2026-07-19_ci-io-optimization.md`, `plans/2026-07-18_ci-speed.md`.
 
 Note on "read/write": NVMe wear (TBW) is writes; reads matter via write
@@ -39,7 +39,7 @@ with the existing `scripts/ci-io-report.ts --enforce-impact-gates`):
 
 - [ ] buildkitd remote-driver smoke: one manual bake against the deployed
       (currently inert) `buildkitd` Service from a CI pod (`bake-images.sh`
-      recipe in `plans/2026-07-22_ci-capacity-remediation-impl.md:202-232`).
+      recipe in `archive/superseded/2026-07-22_ci-capacity-remediation-impl.md`).
       Never live-validated — GitOps meant post-merge-only.
 - [ ] tmpfs accounting probe: one verify build with an 8Gi memory-backed
       emptyDir for node_modules; confirm Kueue/limit accounting + no eviction.

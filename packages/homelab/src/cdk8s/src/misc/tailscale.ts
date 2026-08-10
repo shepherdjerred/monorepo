@@ -8,6 +8,9 @@ import { KubeIngress } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s
 import type { ProbeModule } from "./blackbox-modules.ts";
 import { registerBackendProbe } from "./probe-registry.ts";
 
+export const TAILSCALE_PROXY_CLASSES = ["standard", "medium", "heavy"] as const;
+export type TailscaleProxyClass = (typeof TAILSCALE_PROXY_CLASSES)[number];
+
 function requireChartNamespace(chart: Chart, context: string): string {
   if (chart.namespace == null) {
     throw new Error(
@@ -28,6 +31,8 @@ export class TailscaleIngress extends Construct {
       port?: number;
       /** Blackbox probe module override. Defaults to "http_2xx". */
       probeModule?: ProbeModule;
+      /** Resource profile for the operator-managed proxy StatefulSet. */
+      proxyClass?: TailscaleProxyClass;
       /**
        * URL path the in-cluster HTTP probe requests (e.g. "/ready"). Point
        * this at a real health endpoint when the service doesn't return 2xx
@@ -44,19 +49,28 @@ export class TailscaleIngress extends Construct {
   ) {
     super(scope, id);
 
+    const { proxyClass, ...ingressProps } = props;
     const base: IngressProps = {
+      metadata:
+        proxyClass === undefined
+          ? undefined
+          : { labels: { "tailscale.com/proxy-class": proxyClass } },
       defaultBackend: IngressBackend.fromService(
-        props.service,
-        props.port == null ? undefined : { port: props.port },
+        ingressProps.service,
+        ingressProps.port == null ? undefined : { port: ingressProps.port },
       ),
       tls: [
         {
-          hosts: [props.host],
+          hosts: [ingressProps.host],
         },
       ],
     };
 
-    const ingress = new Ingress(scope, `${id}-ingress`, merge({}, base, props));
+    const ingress = new Ingress(
+      scope,
+      `${id}-ingress`,
+      merge({}, base, ingressProps),
+    );
 
     ApiObject.of(ingress).addJsonPatch(
       JsonPatch.add("/spec/ingressClassName", "tailscale"),
@@ -93,6 +107,8 @@ export function createIngress(
      * at "/". Ignored by a `tcp_connect` probeModule. Defaults to "/".
      */
     probePath?: string;
+    /** Resource profile for the operator-managed proxy StatefulSet. */
+    proxyClass?: TailscaleProxyClass;
     /** Rare escape hatch — must carry a comment explaining why. */
     disableProbe?: boolean;
   },
@@ -100,6 +116,10 @@ export function createIngress(
   const ingress = new KubeIngress(chart, name, {
     metadata: {
       namespace: options.namespace,
+      labels:
+        options.proxyClass === undefined
+          ? undefined
+          : { "tailscale.com/proxy-class": options.proxyClass },
     },
     spec: {
       defaultBackend: {

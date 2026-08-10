@@ -29,6 +29,7 @@ describe("direct maintenance schedules", () => {
     ["kometa-daily", "runKometaWorkflow", "2 hours"],
     ["buildkite-uv-cache-prune-weekly", "runUvCachePruneWorkflow", "2 hours"],
     ["buildkite-trivy-db-refresh", "runTrivyDbRefreshWorkflow", "2 hours"],
+    ["turbo-cache-clean-daily", "runTurboCacheCleanWorkflow", "30 minutes"],
   ] as const;
 
   it.each(definitions)(
@@ -88,6 +89,7 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "runKometaWorkflow",
   "runUvCachePruneWorkflow",
   "runTrivyDbRefreshWorkflow",
+  "runTurboCacheCleanWorkflow",
   "generateDependencySummary",
   "runDnsAudit",
   "runHomelabAuditWorkflow",
