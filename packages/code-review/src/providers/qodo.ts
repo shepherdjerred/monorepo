@@ -64,15 +64,32 @@ function activeFindingCount(body: string): number {
   return [...counts.values()].reduce((total, count) => total + count, 0);
 }
 
-function priorityForSection(section: string): 1 | 2 | null {
-  if (/alt=["']Action required["']/iu.test(section)) return 1;
-  if (/alt=["']Remediation recommended["']/iu.test(section)) return 2;
+/**
+ * Qodo renders three severity tiers. "Informational" is its optional tier and
+ * maps to P3, so whether it blocks stays a policy choice made by
+ * `REVIEW_MAX_BLOCKING_PRIORITY` rather than something this parser decides.
+ * Every tier must be modelled: an unmodelled section still counts toward the
+ * header total, so omitting one desynchronizes the declared-vs-parsed check.
+ */
+const QODO_SEVERITY_SECTIONS = [
+  ["Action required", 1],
+  ["Remediation recommended", 2],
+  ["Informational", 3],
+] as const;
+
+const QODO_SECTION_SPLIT =
+  /(?=<img[^>]+alt=["'](?:Action required|Remediation recommended|Informational)["'])/iu;
+
+function priorityForSection(section: string): 1 | 2 | 3 | null {
+  for (const [alt, priority] of QODO_SEVERITY_SECTIONS) {
+    if (new RegExp(`alt=["']${alt}["']`, "iu").test(section)) return priority;
+  }
   return null;
 }
 
 function parseSeveritySection(
   section: string,
-  priority: 1 | 2,
+  priority: 1 | 2 | 3,
   commentUrl: string | null,
 ): ReviewThread[] {
   const findings: ReviewThread[] = [];
@@ -110,6 +127,35 @@ function parseSeveritySection(
   return findings;
 }
 
+function hasNumberedFinding(section: string): boolean {
+  return /<summary>\s*\d+\./iu.test(section);
+}
+
+/**
+ * Guard the layout structurally rather than by arithmetic. Qodo's header total
+ * is not reconcilable with its own list — it re-appends a fresh copy of every
+ * finding on each re-review, so a comment can enumerate more findings than the
+ * header counts. Comparing those two numbers means validating one Qodo-rendered
+ * signal against another; these checks look at the document instead.
+ */
+function assertSectionsAreModelled(reviewBody: string): void {
+  for (const section of reviewBody.split(/(?=<img[^>]+alt=["'][^"']*["'])/iu)) {
+    const alt = /^<img[^>]+alt=["']([^"']*)["']/iu.exec(section)?.[1];
+    if (alt === undefined) continue;
+    const modelled = priorityForSection(section) !== null;
+    if (!modelled && hasNumberedFinding(section)) {
+      throw new Error(
+        `Qodo review comment has findings under unmodelled severity section "${alt}"`,
+      );
+    }
+    if (modelled && !hasNumberedFinding(section)) {
+      throw new Error(
+        `Qodo review comment severity section "${alt}" has no parseable findings`,
+      );
+    }
+  }
+}
+
 function assertParsedLayout(input: {
   body: string;
   expectedActiveFindings: number;
@@ -119,13 +165,15 @@ function assertParsedLayout(input: {
   const activeFindings = input.findings.filter(
     (finding) => !finding.isResolved,
   ).length;
-  if (activeFindings !== input.expectedActiveFindings) {
+  // Never let a declared-but-unparseable review read as clean.
+  if (activeFindings === 0 && input.expectedActiveFindings > 0) {
     throw new Error(
       `Qodo review comment declares ${input.expectedActiveFindings.toString()} active finding(s) ` +
-        `but ${activeFindings.toString()} were parsed`,
+        "but none were parsed",
     );
   }
   const reviewBody = input.body.slice(input.body.indexOf(QODO_DIVIDER_ALT));
+  assertSectionsAreModelled(reviewBody);
   if (
     input.findings.length === 0 &&
     (input.expectedActiveFindings !== 0 ||
@@ -148,9 +196,7 @@ export function parseQodoIssueComment(
   comment: ReviewIssueComment,
 ): readonly ReviewThread[] {
   const expectedActiveFindings = activeFindingCount(comment.body);
-  const sections = comment.body.split(
-    /(?=<img[^>]+alt=["'](?:Action required|Remediation recommended)["'])/iu,
-  );
+  const sections = comment.body.split(QODO_SECTION_SPLIT);
   const findings: ReviewThread[] = [];
   let severitySections = 0;
 
@@ -175,6 +221,7 @@ function parseQodoSeverity(body: string | null): number | null {
   if (body === null) return null;
   if (/action required/iu.test(body)) return 1;
   if (/remediation recommended/iu.test(body)) return 2;
+  if (/informational/iu.test(body)) return 3;
   return null;
 }
 

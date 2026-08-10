@@ -136,7 +136,7 @@ describe("qodoProvider", () => {
           'alt="Critical finding"',
         ),
       }),
-    ).toThrow("declares 2 active finding(s) but 1 were parsed");
+    ).toThrow('findings under unmodelled severity section "Critical finding"');
   });
 
   test("fails closed when finding summaries cannot be parsed", () => {
@@ -148,6 +148,26 @@ describe("qodoProvider", () => {
           "<strong>  1. Consent cache <code>🐞 Bug</code></strong>",
         ),
       }),
-    ).toThrow("declares 2 active finding(s) but 1 were parsed");
+    ).toThrow('severity section "Action required" has no parseable findings');
+  });
+
+  test("fails closed when a declared review parses no active findings", () => {
+    expect(() =>
+      parseQodoIssueComment({
+        ...comment,
+        body: comment.body.replaceAll("</summary>", " ☑</summary>"),
+      }),
+    ).toThrow("declares 2 active finding(s) but none were parsed");
+  });
+
+  test("maps Qodo's informational tier to P3 rather than dropping it", () => {
+    const findings = parseQodoIssueComment({
+      ...comment,
+      body: comment.body.replace(
+        '<img src="https://example/remediation-recommended.png" alt="Remediation recommended">',
+        '<img src="https://example/informational.png" alt="Informational">',
+      ),
+    });
+    expect(findings.map((finding) => finding.priority)).toEqual([1, 3, 3]);
   });
 });
