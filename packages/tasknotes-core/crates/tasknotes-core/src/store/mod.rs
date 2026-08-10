@@ -241,9 +241,12 @@ impl TaskStore {
         command: &Command,
         server_task: Option<&Task>,
     ) -> Result<()> {
-        // Read before the base moves. Both of these are questions about the
-        // state the command was applied to, and the next few lines destroy it.
-        let captured = self.capture_restore(command);
+        // The schedule this command replaced, if it is a completion — read off
+        // the command rather than from any local state, which is what makes a
+        // replayed ack retain the same value the first attempt would have.
+        let captured = acknowledged_restore(command);
+        // Read before the base moves: this is a question about the state the
+        // command was applied to, and the next few lines destroy it.
         let edited_occurrence = matches!(
             *command,
             Command::Update { ref task_id, ref payload, .. }
@@ -297,6 +300,12 @@ impl TaskStore {
         // repair the cache. The TypeScript `applyServerAck` orders these the
         // same way, and says so in a comment for the same reason.
         self.persist_base()?;
+        // Safe to write *after* the base only because `captured` came off the
+        // command. The replay this ordering deliberately allows re-enters here
+        // with a base that already holds the advanced schedule, and anything
+        // derived from that base would hand back the schedule the completion
+        // produced as the one it replaced — silently leaving the occurrence
+        // skipped after a later undo. The command still carries the real one.
         let today = self.today();
         completion_restores::prune(&mut self.restores, &today, &self.base);
         if let Some((key, restore)) = captured {
@@ -425,7 +434,7 @@ impl TaskStore {
             } => {
                 let task_id = self.resolve_task_id(&task_id);
                 let restore = if completed {
-                    None
+                    self.completion_restore(&task_id, &date)
                 } else {
                     self.instance_restore(&task_id, &date)
                 };
@@ -439,6 +448,22 @@ impl TaskStore {
                 }
             }
         })
+    }
+
+    /// The schedule a completion is about to replace, read from the view the
+    /// user tapped.
+    ///
+    /// This is the *only* moment it is readable. The instant the command is
+    /// enqueued the visible task is the rebased one, and the instant the ack
+    /// lands the base holds the server's advanced schedule; neither is
+    /// invertible. So it is captured here and carried on the command, which is
+    /// what lets an ack replayed after a crash still retain the right value —
+    /// see [`Command::SetInstanceComplete`]'s `restore`.
+    ///
+    /// `None` for a task with no rule, which has no series to advance and so
+    /// nothing an undo could put back.
+    fn completion_restore(&self, task_id: &TaskId, date: &str) -> Option<InstanceRestore> {
+        completion_restores::snapshot(self.snapshot.tasks.get(task_id)?, date)
     }
 
     /// The schedule an uncompletion has to put back, if this install is the one
@@ -473,26 +498,32 @@ impl TaskStore {
     /// schedule, which is the documented compatibility behaviour.
     fn instance_restore(&self, task_id: &TaskId, date: &str) -> Option<InstanceRestore> {
         let pending = self.queue.pending();
-        let advancing = pending.iter().rposition(|command| {
-            matches!(
-                command,
+        let advancing = pending
+            .iter()
+            .enumerate()
+            .rev()
+            .find_map(|(position, command)| match *command {
                 Command::SetInstanceComplete {
-                    task_id: queued,
-                    date: day,
+                    task_id: ref queued,
+                    date: ref day,
                     completed: true,
+                    restore: Some(ref carried),
                     ..
-                } if queued == task_id && day == date
-            )
-        });
-        if let Some(position) = advancing {
-            // Rebuilt through the completion's own queue position, never from
-            // the rebased snapshot: the snapshot carries every *later* queued
-            // command too, and a schedule edit queued after the completion
-            // would otherwise be handed back as the schedule the completion
-            // replaced.
+                } if queued == task_id && day == date => Some((position, carried.clone())),
+                _ => None,
+            });
+        if let Some((position, carried)) = advancing {
+            // Read off the completion itself, never recomputed from the current
+            // view: the completion captured what it replaced when it was
+            // dispatched, and every later reading — a rebased snapshot carrying
+            // commands queued after it, or a base a pull has moved on — answers
+            // a different question.
+            //
+            // The state the completion found is still needed, but only to judge
+            // what came after it.
             let at_completion = self.task_through(position, task_id)?;
-            // That later edit is also disqualifying in its own right. It has
-            // not reached the server, so the snapshot still describes what the
+            // A later queued edit is disqualifying in its own right. It has not
+            // reached the server, so the snapshot still describes what the
             // server holds — but sending it would rewind the unsent edit along
             // with the completion.
             if pending.iter().skip(position + 1).any(|command| {
@@ -508,7 +539,7 @@ impl TaskStore {
             }) {
                 return None;
             }
-            return completion_restores::snapshot(&at_completion, date);
+            return Some(carried);
         }
         // A queued edit to the rule or either date has not reached the server
         // yet, so a retained snapshot still describes what the server holds —
@@ -528,44 +559,6 @@ impl TaskStore {
         self.restores
             .get(&completion_restores::key(task_id, date))
             .map(|stored| stored.restore.clone())
-    }
-
-    /// The snapshot an acknowledged completion has just made unreadable, keyed
-    /// for storage.
-    ///
-    /// Read from the *pre-ack* view, which is the last moment it exists: the
-    /// queued completion never advanced the local schedule, so the task as it
-    /// stood at that point in the queue still carries what the server has just
-    /// replaced.
-    ///
-    /// ⚠️ **Not from [`TaskStore::snapshot`]**, which is the base with the
-    /// *entire* pending queue rebased onto it. A recurrence, scheduled, or due
-    /// edit queued after the completion — and every one of those is ordinary —
-    /// is already folded into that view, so reading it would retain the *later
-    /// edit's* schedule as the one the completion replaced. The retained
-    /// snapshot survives being parked or being invalidated only when it differs
-    /// from the server's advanced value, so an undo hours later would then ask
-    /// the server to rewind to a schedule it never held and leave the original
-    /// occurrence skipped. Rebuilding through this command's own queue position
-    /// is what the TypeScript client does, and for this reason.
-    fn capture_restore(&self, command: &Command) -> Option<(String, InstanceRestore)> {
-        let Command::SetInstanceComplete {
-            ref task_id,
-            ref date,
-            completed: true,
-            ..
-        } = *command
-        else {
-            return None;
-        };
-        let position = self
-            .queue
-            .pending()
-            .iter()
-            .position(|queued| queued.id() == command.id())?;
-        let at_completion = self.task_through(position, task_id)?;
-        let restore = completion_restores::snapshot(&at_completion, date)?;
-        Some((completion_restores::key(task_id, date), restore))
     }
 
     /// The task as the command at `position` found it: the base with every
@@ -683,6 +676,29 @@ impl TaskStore {
     fn persist_restores(&self) -> Result<()> {
         self.storage
             .write_completion_restores(&completion_restores::serialize(&self.restores)?)
+    }
+}
+
+/// The snapshot an acknowledged completion replaced, keyed for storage.
+///
+/// Entirely a function of the command, deliberately: the ack persists the
+/// accepted base *before* dequeuing the command, so an interrupted ack is
+/// replayed against a base that already holds the advanced schedule. Deriving
+/// the snapshot from local state would answer that replay with the schedule the
+/// completion produced — a snapshot that looks valid, survives invalidation
+/// because it matches the server, and makes a later undo ask for a rewind that
+/// leaves the occurrence skipped. Reading the command instead makes the replay
+/// idempotent, which is what the TypeScript client's `command.restore` does.
+fn acknowledged_restore(command: &Command) -> Option<(String, InstanceRestore)> {
+    match *command {
+        Command::SetInstanceComplete {
+            ref task_id,
+            ref date,
+            completed: true,
+            restore: Some(ref restore),
+            ..
+        } => Some((completion_restores::key(task_id, date), restore.clone())),
+        _ => None,
     }
 }
 
@@ -1009,17 +1025,23 @@ mod tests {
         let pending = store.queue().pending();
         assert_eq!(
             restore_of(pending.first().unwrap()),
-            None,
-            "a completion carries none — the server rejects a restore beside one"
+            Some(pre_completion_schedule()),
+            "the completion records what it is about to replace, so an ack \
+             replayed against an already-advanced base still knows it"
         );
         assert_eq!(
             restore_of(pending.get(1).unwrap()),
-            Some(InstanceRestore {
-                scheduled: Some("2026-07-04".to_owned()),
-                due: Some("2026-07-05".to_owned()),
-                recurrence: "FREQ=WEEKLY;BYDAY=SA".to_owned(),
-                skipped: false,
-            })
+            Some(pre_completion_schedule())
+        );
+        assert_eq!(
+            pending
+                .first()
+                .unwrap()
+                .instance_completion()
+                .and_then(|instance| instance.restore),
+            None,
+            "but it stays local — the server rejects a restore beside a \
+             completion outright"
         );
 
         let visible = store.snapshot().tasks.get(&id).unwrap();
@@ -1072,14 +1094,18 @@ mod tests {
             .unwrap();
 
         let command = store.queue().head().unwrap().clone();
-        // What the server does to a completed occurrence: the series moves on a
-        // week, and the pre-completion dates are gone from everything durable.
+        store.apply_server_ack(&command, Some(&advanced())).unwrap();
+        (store, memory)
+    }
+
+    /// What the server does to a completed occurrence: the series moves on a
+    /// week, and the pre-completion dates are gone from everything durable.
+    fn advanced() -> Task {
         let mut advanced = recurring("Tasks/plants.md");
         advanced.complete_instances.push("2026-07-04".to_owned());
         advanced.scheduled = Some("2026-07-11".to_owned());
         advanced.due = Some("2026-07-12".to_owned());
-        store.apply_server_ack(&command, Some(&advanced)).unwrap();
-        (store, memory)
+        advanced
     }
 
     fn pre_completion_schedule() -> InstanceRestore {
@@ -1113,6 +1139,66 @@ mod tests {
     fn an_undo_after_the_completion_synced_still_carries_the_schedule() {
         let (mut store, _) = completed_and_acked();
         assert_eq!(undo(&mut store), Some(pre_completion_schedule()));
+    }
+
+    /// ⚠️ **The window this store deliberately leaves open.** The accepted base
+    /// is made durable *before* the command is dequeued, so a crash in between
+    /// leaves the advanced schedule on disk with the completion still queued,
+    /// and the next drain resends it. That replay is the whole point — the
+    /// server answers it from its idempotency store and nothing is lost — but
+    /// it re-enters `apply_server_ack` against a base that has already moved.
+    ///
+    /// Deriving the retained snapshot there would read the *advanced* schedule
+    /// and store it as the one the completion replaced. Nothing would ever
+    /// catch it: it matches what the server holds, so no invalidation rule
+    /// fires, and the undo an hour later asks the server to rewind to where it
+    /// already is — the occurrence reads as undone while the series keeps the
+    /// week it skipped. The command carrying its own snapshot is what makes the
+    /// replay idempotent instead.
+    #[test]
+    fn a_completion_replayed_after_its_base_advanced_retains_what_it_replaced() {
+        let (mut store, memory) = store();
+        store
+            .replace_base(vec![recurring("Tasks/plants.md")], 1)
+            .unwrap();
+        store
+            .dispatch(CommandInput::SetInstanceComplete {
+                task_id: TaskId::parse("Tasks/plants.md").unwrap(),
+                date: "2026-07-04".to_owned(),
+                completed: true,
+            })
+            .unwrap();
+        let completion = store.queue().head().unwrap().clone();
+
+        // Interrupt the ack after the base write, which is exactly the window
+        // the base-before-dequeue ordering creates.
+        memory.clear_write_log();
+        memory.refuse_restores_after_base(true);
+        assert!(
+            store
+                .apply_server_ack(&completion, Some(&advanced()))
+                .is_err(),
+            "the interruption has to land after the base write, or this test \
+             is about nothing"
+        );
+        memory.refuse_restores_after_base(false);
+        drop(store);
+
+        let mut relaunched = relaunch(&memory);
+        assert_eq!(
+            relaunched
+                .base()
+                .get(&TaskId::parse("Tasks/plants.md").unwrap()),
+            Some(&advanced()),
+            "the relaunch reads the advanced schedule, and nothing local still \
+             knows what preceded it"
+        );
+        let replayed = relaunched.queue().head().unwrap().clone();
+        relaunched
+            .apply_server_ack(&replayed, Some(&advanced()))
+            .unwrap();
+
+        assert_eq!(undo(&mut relaunched), Some(pre_completion_schedule()));
     }
 
     #[test]

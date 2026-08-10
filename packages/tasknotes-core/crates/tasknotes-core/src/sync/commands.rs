@@ -95,17 +95,38 @@ pub enum Command {
         date: String,
         /// The state to set the occurrence to.
         completed: bool,
-        /// The schedule to put back, on an uncompletion.
+        /// The pre-completion schedule: what a completion is about to replace,
+        /// and what an uncompletion has to put back.
         ///
-        /// ⚠️ **Durable on purpose.** The snapshot is only knowable at the
-        /// moment the occurrence is uncompleted — it is what the *completion*
-        /// replaced — and the completion may already have advanced the local
-        /// view or been sent. Carrying it on the command is what lets a queue
-        /// that drains an hour later still send an undo the server can honour.
+        /// ⚠️ **Durable on purpose, and on both kinds of command.** The
+        /// snapshot exists only in the instant before the completion is
+        /// applied; every later reading of it is of a schedule the server has
+        /// already advanced. Carrying it here is what makes the command
+        /// *self-contained*, which is the only thing that survives a replay:
         ///
-        /// `None` on every completion, and on an uncompletion whose
-        /// pre-completion schedule is not knowable (a non-recurring task, or a
-        /// completion this install never made).
+        /// * On an **uncompletion** it is the payload. A queue that drains an
+        ///   hour after the tap still sends an undo the server can honour,
+        ///   because the schedule to rewind to travels with the command rather
+        ///   than being re-read from a view that has moved on.
+        /// * On a **completion** it is the record the ack retains, so that an
+        ///   undo hours later still knows what to rewind to. It has to be on
+        ///   the command rather than derived at ack time, because the accepted
+        ///   base is deliberately made durable *before* the command is
+        ///   dequeued: a crash in that window replays the completion against a
+        ///   base that already holds the advanced schedule, and re-deriving
+        ///   there would retain the schedule the completion *produced* as the
+        ///   one it replaced. The TypeScript client carries `command.restore`
+        ///   on both for the same reason.
+        ///
+        /// **Never sent on a completion** — the request schema rejects a
+        /// restore beside `completed: true` — which is why
+        /// [`Command::instance_completion`], the one place a wire body is
+        /// built from this, drops it there.
+        ///
+        /// `None` only when the pre-completion schedule is not knowable: a task
+        /// with no recurrence rule has no series to advance, and an
+        /// uncompletion of a completion this install never made has nothing to
+        /// put back.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         restore: Option<InstanceRestore>,
     },
@@ -165,6 +186,13 @@ impl Command {
 
     /// The completion state a [`Command::SetInstanceComplete`] carries, in the
     /// shape [`TaskApi`](super::host::TaskApi) takes.
+    ///
+    /// A completion's snapshot stays behind. It is local bookkeeping — the
+    /// record of what the server is about to advance past, kept so a later undo
+    /// can name it — and the request schema rejects a `restore` beside
+    /// `completed: true` outright, so sending one would turn every completion
+    /// into a `422`. This is the only place the command becomes a wire body,
+    /// which is why the rule lives here rather than at each call site.
     #[must_use]
     pub fn instance_completion(&self) -> Option<InstanceCompletion> {
         match *self {
@@ -176,7 +204,7 @@ impl Command {
             } => Some(InstanceCompletion {
                 date: date.clone(),
                 completed,
-                restore: restore.clone(),
+                restore: if completed { None } else { restore.clone() },
             }),
             Self::Create { .. }
             | Self::Update { .. }
