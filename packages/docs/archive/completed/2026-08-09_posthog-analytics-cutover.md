@@ -1,7 +1,7 @@
 ---
 id: plan-2026-08-09-posthog-analytics-cutover
 type: plan
-status: in-progress
+status: complete
 board: false
 ---
 
@@ -73,3 +73,25 @@ release correctness; they do not prove the production cutover. Live acceptance
 requires PostHog events from every hostname, Scout replay, no browser traffic or
 DNS for the retired vendors, successful Argo pruning, and explicit proof that
 the four old datasets and obsolete vault items are gone.
+
+## Completion evidence
+
+- PR #2084 shipped the source, CI, documentation, DNS, and GitOps cutover; PR
+  #2089 promoted the immutable Scout `2.0.0-8810` backend/site release to
+  production. Main Buildkite build #8819 passed every selected lane, including
+  Argo reconciliation and Scout production reconcile.
+- Browser acceptance received successful PostHog ingestion responses from all
+  eight hostnames with no Matomo or Plausible requests. Only the two Scout
+  hosts loaded the recorder; production Scout also completed a successful
+  replay upload. PostHog's served project configuration reports IP collection
+  disabled.
+- Argo pruned the Matomo and Plausible applications and namespaces, their
+  TunnelBindings and 1Password custom resources disappeared, and neither
+  retired DNS name resolves.
+- The four retained PVs were re-resolved to their exact former claims and were
+  `Released`. Only their matching OpenEBS `ZFSVolume` resources were deleted;
+  the controller removed all four exact datasets before their PV records were
+  deleted. No recursive ZFS command was used.
+- The two exact retired 1Password items were deleted after their consumers were
+  gone. The committed hashed vault snapshot was then refreshed from live state;
+  shared Velero backups remain untouched and will expire normally.
