@@ -119,6 +119,13 @@ public final class QuotaBarModel {
   }
 
   public func refreshAfterCredentialChange(for provider: ProviderID) async {
+    let refreshAtCredentialBoundary = activeRefresh
+    invalidateCachedSnapshot(for: provider)
+    if let refreshAtCredentialBoundary {
+      await refreshAtCredentialBoundary.task.value
+      clearRefresh(id: refreshAtCredentialBoundary.id)
+      invalidateCachedSnapshot(for: provider)
+    }
     await refreshEnsuringNewAttempt(for: provider)
   }
 
@@ -142,6 +149,16 @@ public final class QuotaBarModel {
       return didSucceed
     }
     guard didSucceed else { return }
+    persistLastSuccessful()
+  }
+
+  private func invalidateCachedSnapshot(for provider: ProviderID) {
+    lastSuccessful[provider] = nil
+    states[provider] = .loading
+    persistLastSuccessful()
+  }
+
+  private func persistLastSuccessful() {
     do {
       try store.save(lastSuccessful)
       cacheErrorMessage = nil

@@ -256,6 +256,48 @@ final class ModelTests: XCTestCase {
     XCTAssertEqual(model.overallStatus, .healthy)
   }
 
+  func testCredentialChangeDiscardsPreviousAccountCache() async {
+    let cached = snapshot(provider: .codex, remaining: 70)
+    let provider = FakeProvider(
+      id: .codex,
+      results: [.failure(.unauthorized(.codex))]
+    )
+    let store = MemorySnapshotStore(loaded: [.codex: cached])
+    let model = makeModel(providers: [provider], store: store)
+
+    await model.refreshAfterCredentialChange(for: .codex)
+
+    guard case .unauthenticated = model.state(for: .codex) else {
+      XCTFail("Expected the new credential's authentication state")
+      return
+    }
+    XCTAssertNil(store.savedSnapshots[.codex])
+  }
+
+  func testCredentialChangeDiscardsActivePreviousAccountRefresh() async {
+    let provider = FakeProvider(
+      id: .codex,
+      results: [
+        .success(snapshot(provider: .codex, remaining: 70)),
+        .failure(.unauthorized(.codex)),
+      ],
+      delay: .milliseconds(80)
+    )
+    let store = MemorySnapshotStore()
+    let model = makeModel(providers: [provider], store: store)
+    let activeRefresh = Task { await model.refresh() }
+    await waitUntil { await provider.fetchCount == 1 }
+
+    await model.refreshAfterCredentialChange(for: .codex)
+    await activeRefresh.value
+
+    guard case .unauthenticated = model.state(for: .codex) else {
+      XCTFail("Expected the old in-flight result to be discarded")
+      return
+    }
+    XCTAssertNil(store.savedSnapshots[.codex])
+  }
+
   private func makeModel(
     providers: [any UsageProvider],
     store: MemorySnapshotStore = MemorySnapshotStore(),

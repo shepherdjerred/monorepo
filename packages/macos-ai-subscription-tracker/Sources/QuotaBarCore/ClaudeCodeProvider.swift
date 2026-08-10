@@ -26,7 +26,7 @@ public struct ClaudeCodeProvider: UsageProvider {
 
     for (key, payload) in response.windows.sorted(by: { $0.key < $1.key }) {
       let descriptor = descriptor(for: key)
-      windowsByID[descriptor.id] = try UsageWindow.validated(
+      let window = try UsageWindow.validated(
         id: descriptor.id,
         label: descriptor.label,
         kind: descriptor.kind,
@@ -34,10 +34,11 @@ public struct ClaudeCodeProvider: UsageProvider {
         resetAt: payload.resetAt,
         sourceTimestamp: now
       )
+      try insert(window, into: &windowsByID)
     }
     for limit in response.limits {
       let descriptor = try descriptor(for: limit)
-      windowsByID[descriptor.id] = try UsageWindow.validated(
+      let window = try UsageWindow.validated(
         id: descriptor.id,
         label: descriptor.label,
         kind: descriptor.kind,
@@ -45,6 +46,7 @@ public struct ClaudeCodeProvider: UsageProvider {
         resetAt: limit.resetAt,
         sourceTimestamp: now
       )
+      try insert(window, into: &windowsByID)
     }
 
     let fableReturned = windowsByID.values.contains { window in
@@ -131,6 +133,16 @@ public struct ClaudeCodeProvider: UsageProvider {
       label: "Weekly · \(model)",
       kind: .modelScoped(model: model)
     )
+  }
+
+  private static func insert(
+    _ window: UsageWindow,
+    into windowsByID: inout [String: UsageWindow]
+  ) throws {
+    if let existing = windowsByID[window.id], existing != window {
+      throw QuotaValidationError.invalidPairedFields
+    }
+    windowsByID[window.id] = window
   }
 }
 

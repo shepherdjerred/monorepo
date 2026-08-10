@@ -26,6 +26,33 @@ final class ProviderParsingTests: XCTestCase {
     XCTAssertFalse(snapshot.notes.isEmpty)
   }
 
+  func testClaudeDuplicateWindowsMustBeEquivalent() throws {
+    let equivalent = Data(
+      #"""
+      {
+        "seven_day": {"utilization": 25, "resets_at": "2026-08-16T00:00:00Z"},
+        "limits": [
+          {"kind": "weekly_all", "percent": 25, "resets_at": "2026-08-16T00:00:00Z"}
+        ]
+      }
+      """#.utf8
+    )
+    let snapshot = try ClaudeCodeProvider.parse(data: equivalent, now: now)
+    XCTAssertEqual(snapshot.windows.filter { $0.id == "weekly" }.count, 1)
+
+    let conflicting = Data(
+      #"""
+      {
+        "seven_day": {"utilization": 25, "resets_at": "2026-08-16T00:00:00Z"},
+        "limits": [
+          {"kind": "weekly_all", "percent": 30, "resets_at": "2026-08-16T00:00:00Z"}
+        ]
+      }
+      """#.utf8
+    )
+    XCTAssertThrowsError(try ClaudeCodeProvider.parse(data: conflicting, now: now))
+  }
+
   func testClaudeRejectsMissingAndInvalidWindows() {
     XCTAssertThrowsError(try ClaudeCodeProvider.parse(data: Data("{}".utf8), now: now))
     XCTAssertThrowsError(
