@@ -125,20 +125,23 @@ Every LLM call in this package must emit a `gen_ai.*` span; the archive
 processor registered in `src/observability/tracing.ts` uploads prompt/response
 bodies to S3 (`llm-archive` bucket) and forwards a slim span to Tempo.
 
-- **SDK calls** — wrap with `traceAnthropic` / `traceOpenAi` from
-  `@shepherdjerred/llm-observability` (deps-summary does this).
-- **`claude -p` subprocesses** — call `traceClaudeCli` with the captured
-  stdout after exit (agent-task and Scout season refresh). Spans
-  carry `gen_ai.system="claude_code_cli"`, which
-  distinguishes subscription-billed CLI runs from API-billed `anthropic`, plus
-  `llm.cost_usd` from the result message.
-- **`codex exec` subprocesses** — pump stdout NDJSON (`--json`) into the shared
-  codex adapter; agent-task does both providers via
-  `src/activities/agent-task-llm-trace.ts` (`startAgentTaskLlmTrace`). New CLI
-  activities should reuse that helper rather than hand-rolling.
+- **Ordinary inference** — use `src/activities/openrouter-runtime.ts`, which
+  creates the shared `@shepherdjerred/llm-runtime` and always enables AI SDK
+  telemetry, OpenRouter attribution, aggregate usage/cost metrics, and private
+  body archival. `generateBoundedSynthesis` in that module is the shared entry
+  point for the short evidence syntheses the audit and dependency reports use.
+- **Claude Agent SDK** — run through
+  `src/activities/claude-agent-sdk-runner.ts`; it wraps every streamed SDK run
+  with `traceClaudeAgent`, captures subscription cost and token usage, and
+  redacts events before progress handling.
+- **Codex SDK** — run through `src/activities/agent-task-sdk.ts`; it normalizes
+  SDK events into the shared Codex JSONL reader and attaches the SDK run to the
+  repository-owned parent span. No activity may launch a `claude` or `codex`
+  subprocess; `scripts/check-ai-architecture.ts` enforces that repo-wide.
 
-Emit the span **before** exit-code/cancellation failure checks — failed runs
-spent tokens and must be visible for billing.
+Emit the span before cancellation, validation, or effect-reconciliation failure
+checks: failed runs spent tokens and must remain visible for billing. Never
+replay an effectful SDK agent solely because its final schema is invalid.
 
 ## HA schema (type-safe workflows)
 
@@ -167,8 +170,9 @@ Workflow:
 - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `S3_ENDPOINT` — S3/SeaweedFS credentials
 - `REVIEW_SIGNAL_ARCHIVE_BUCKET` — S3/SeaweedFS bucket the review-signal collector writes NDJSON archives to (`review-signals/<temporal-run-id>.ndjson` — the object is keyed by the Temporal workflow run id, with no wall-clock component, so an activity retry overwrites idempotently rather than forking a second object; each NDJSON event carries its own `ts`). Optional — defaults to the existing `llm-archive` bucket (namespaced by the key prefix), so no new bucket/env is needed to start collecting
 - `GITHUB_APP_ID`, `GITHUB_APP_INSTALLATION_ID`, `GITHUB_APP_PRIVATE_KEY` — GitHub App credentials used to mint short-lived installation tokens for GitHub automation so GitHub attributes those actions to the app bot.
-- `OPENAI_API_KEY` — OpenAI API key
-- `CLAUDE_CODE_OAUTH_TOKEN` — Claude Code subscription token. Auth for generic agent-task and Scout season subprocesses. These activities defensively strip any `ANTHROPIC_API_KEY` from the subprocess env so work bills against the subscription, not direct-API credits; the temporal worker does not wire `ANTHROPIC_API_KEY`.
+- `OPENROUTER_API_KEY` — service-scoped OpenRouter key for every ordinary text, tool, embedding, image, and structured-output call.
+- `CLAUDE_CODE_OAUTH_TOKEN` — Claude Agent SDK subscription token for homelab-audit, generic Claude agent tasks, and scout-season-refresh.
+- `CODEX_ACCESS_TOKEN` — Codex SDK subscription token for generic Codex agent tasks and README summaries. Agent environments are built by `src/activities/agent-task-env.ts`, which never forwards a direct-provider inference key to any agent.
 - `POSTAL_HOST`, `POSTAL_API_KEY` — Postal email service
 - `RECIPIENT_EMAIL`, `SENDER_EMAIL` — Email addresses for dependency summary and homelab audit
 - `AGENT_TASK_API_TOKEN` — required bearer token for the authenticated `/agent-tasks` scheduling API on port 9467
@@ -199,10 +203,12 @@ Workflow:
 `runHomelabAuditWorkflow` on the default queue. Typed collectors own the six
 required checks: Prometheus alerts, durable alert occurrences, Temporal
 failures/stalls, Kubernetes workload health, ArgoCD state, and Buildkite main
-failures with failed-job logs. An optional model call may write only the
+failures with failed-job logs. An optional OpenRouter call may write only the
 80-word synthesis over those collector results; it cannot choose the verdict.
-Pre-versioned legacy executions still replay through the old agent activity and
-are delivered through the shared reporter as partial.
+Pre-versioned legacy executions still replay through the old agent activity,
+which now runs on the Claude Agent SDK (streamed redacted progress, 10 s
+heartbeats, cancellation, Sentry capture, Prometheus usage/cost metrics) and is
+delivered through the shared reporter as partial.
 
 ## Temporal workflow failure → Alerts occurrences
 
@@ -217,7 +223,7 @@ No exclusion list — every workflow type produces an occurrence on any failure,
 
 ## Generic agent tasks
 
-`agentTaskWorkflow` supports explicit one-off and cron-based report-only Claude/Codex tasks. It runs on `TASK_QUEUES.AGENT_TASK` so long LLM subprocesses do not block HA or event-cron work.
+`agentTaskWorkflow` supports explicit one-off and cron-based report-only Claude/Codex tasks. It runs on `TASK_QUEUES.AGENT_TASK` so long native SDK agents do not block HA or event-cron work.
 
 Create/update a task from a doc block locally as an operator:
 
@@ -256,9 +262,23 @@ return one report-only `followUp`, which inherits the parent collectors, or a
 pause, cancel, or delete schedules. The v1 decoder remains only for Temporal
 history replay, and its undeclared output is always reported as partial.
 
-**`claude -p --json-schema` gotcha (claude-code).** Pass the schema **inline** (`--json-schema "$(cat schema.json)"`), never a file path — a path wedges the CLI (zero bytes on stdout+stderr until killed) and was the 100% root cause of the agent-task / alert-remediation 30-min SIGTERM(143) hangs (PR #1264). The validated object is in the result message's **`structured_output`** field, NOT `result` (which is the model's prose) — read `parseClaudeResultMessage(stdout).structured_output` and Zod-validate it. A successful process without `structured_output` is a contract failure; never parse prose or fenced JSON. Keep `--output-format stream-json --verbose` and pump **stdout** line-by-line for liveness: `claude -p` is silent on stderr, so a stderr-only idle detector is structurally blind. The Claude schema is draft-07 with `$schema` and `format` annotations removed, and the image pin is `2.1.220` (minimum `2.1.205`).
+**A v2 run is two bounded SDK phases, not one.** `investigateAgentTask` runs the
+agent with its normal tool set and returns a preliminary assessment; the
+declared collectors then run independently, and `finalizeAgentTask` re-runs the
+agent over the merged receipt catalog with **no tools at all**
+(`buildAgentTaskSdkConfig` empties `allowedTools`, and a Codex finalization
+thread additionally drops network, web search, and write access). Provider
+evidence receipts are extracted from the SDK's own redacted event stream, so a
+tool call the agent only claims to have made cannot be cited.
 
-**Claude and Codex need different schema dialects — never share one constant.** `AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE` (`shared/agent-task.ts`) is a versioned draft-07 **plain** JSON Schema: optional fields simply absent from `required`, no nullable unions, with a logged schema fingerprint. `AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX` (generated via OpenAI's `zodResponseFormat()`) is OpenAI Structured-Outputs **strict mode**: every field in `required`, optional fields modeled as nullable. Codex's `--output-schema` needs strict mode; Claude's `--json-schema` gets the provider-specific plain contract. Contract failures log the CLI result subtype, result-message keys, fingerprint, and a bounded redacted final-text excerpt, while the metric labels remain low-cardinality.
+**Claude structured output is an SDK result contract.** Pass the draft-07
+schema through `query({ options: { outputFormat } })`, read only the final
+result event's `structured_output`, and Zod-validate it. A successful stream
+without structured output is a contract failure; never parse prose or fenced
+JSON. Keep partial SDK events enabled so heartbeats and cancellation remain
+live throughout a long run.
+
+**Claude and Codex need different schema dialects — never share one constant.** `AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE` (`shared/agent-task.ts`) is a versioned draft-07 **plain** JSON Schema: optional fields simply absent from `required`, no nullable unions, with a logged schema fingerprint. `AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX` is strict JSON Schema: every field in `required`, optional fields modeled as nullable. Each has a `_V2` counterpart for the evidence contract, and `buildAgentTaskSdkConfig` picks the pair by provider and `contractVersion`. Claude Agent SDK receives the plain dialect through `outputFormat`; Codex SDK receives the strict one through `thread.runStreamed({ outputSchema })`. Contract failures log the schema fingerprint and a bounded redacted final-text excerpt while metric labels remain low-cardinality.
 
 Run the post-deploy canary only after the worker image containing the change is
 live and the production worker has its `CLAUDE_CODE_OAUTH_TOKEN` configured.
@@ -312,23 +332,35 @@ op run --env-file=.env.audit -- bun run scripts/run-homelab-audit-local.ts
 `packages/homelab/src/cdk8s/src/resources/temporal/audit-rbac.ts`). A separate
 TaskNotes namespace Role grants `pods/exec` only to the core worker so the
 engine-status token never leaves that pod. The agent worker is intentionally
-absent from every pod-exec RoleBinding; provider subprocesses therefore cannot
-exec into TaskNotes or deterministic maintenance targets even if they disregard
+absent from every pod-exec RoleBinding; the agent therefore cannot
+exec into TaskNotes or deterministic maintenance targets even if it disregards
 the report-only prompt. Its deployment env is also explicit: provider auth,
 basic runtime/TLS settings, and non-secret Prometheus/alert-dashboard endpoints
-only. Provider auth remains in the parent worker, which exposes one
-provider-specific loopback broker per run; the uid-1001 subprocess receives only
-an ephemeral broker credential. The broker accepts only the provider's fixed
-inference paths and injects the real credential into a fixed upstream origin.
-The Temporal poller runs as root with every capability dropped except `SETUID`;
-`setpriv` launches provider commands as uid 1001 with no retained capabilities.
-A `NET_ADMIN` init container
-installs owner-matched pod firewall rules rejecting uid-1001 traffic to Temporal
-gRPC (`7233`), the UI (`8080`), and both Tailscale ingress addresses on `443`.
-This pod-local rule is the current enforcement
+only.
+
+The generic agent's own environment is built by `envForProvider`
+(`src/activities/agent-task-env.ts`) as an **allowlist**: basic process/TLS
+settings, the read-only Kubernetes identity, the non-secret evidence endpoints,
+and exactly one provider subscription credential. Every other worker
+credential — Postal, S3, GitHub, Temporal, Talos, Grafana, ArgoCD — is absent,
+so a prompt-injected agent has nothing to exfiltrate from its own environment.
+Trusted, source-controlled agents (homelab audit, Scout season refresh) use
+`envForTrustedAgent` instead, which keeps the operational read-only credentials
+they need but still strips the bot's GitHub credentials, every report-delivery
+credential, and every direct inference-provider key.
+
+Native SDK agent runs execute as the worker's own uid, so the uid-1001
+isolation still applies only to the deterministic evidence collectors, which
+`providerSubprocessCommand` launches through `setpriv`. The Temporal poller runs
+as root with every capability dropped except `SETUID`. A `NET_ADMIN` init
+container installs owner-matched pod firewall rules rejecting uid-1001 traffic
+to Temporal gRPC (`7233`), the UI (`8080`), and both Tailscale ingress addresses
+on `443`. This pod-local rule is the current enforcement
 layer because the homelab uses Flannel without a NetworkPolicy controller; the
 separate agent `NetworkPolicy` records the intended boundary for a future
-policy-capable CNI but is not treated as current enforcement. Generic agent
+policy-capable CNI but is not treated as current enforcement. Restoring uid and
+credential isolation for the native SDK agent itself is tracked in
+`packages/docs/todos/agent-sdk-provider-isolation.md`. Generic agent
 clones of this public repository are unauthenticated, and
 new agent email delivery activities execute on `TASK_QUEUES.DEFAULT`. Replayed
 histories preserve their original agent-queue activity command for Temporal

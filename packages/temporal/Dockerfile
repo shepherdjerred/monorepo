@@ -4,8 +4,7 @@
 # package (which passes `-f Dockerfile ../..`).
 #
 # This image bakes in the operator CLIs the worker's scheduled workflows shell
-# out to: gh + claude (pr-agent PR review/summary + scout/homelab Claude runs),
-# codex (agent-task Codex provider),
+# out to: gh (pr-agent PR review/summary + PR creation),
 # kubectl (bugsink-housekeeping / zfs-maintenance `kubectl exec`),
 # github-mcp-server (pr-agent's MCP GitHub backend), talosctl / tofu / argocd /
 # velero / bk / temporal / gcx / toolkit (homelab-audit-daily runbook + preflight —
@@ -86,17 +85,9 @@ RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/tempora
 # ── runtime: operator CLIs + COPY-only app layers ───────────────────────────
 FROM base AS runtime
 
-# Pinned CLI versions. Renovate annotations keep these current via the same
-# datasources as before.
+# Pinned operator CLI versions.
 # renovate: datasource=github-releases depName=cli/cli
 ARG GH_CLI_VERSION=2.96.0
-# renovate: datasource=npm depName=@anthropic-ai/claude-code
-# Claude structured-output failures were silent before 2.1.205. Keep this pin
-# at or above the provider contract floor and run the command/image contract
-# tests on every future upgrade.
-ARG CLAUDE_CODE_VERSION=2.1.220
-# renovate: datasource=npm depName=@openai/codex
-ARG CODEX_CLI_VERSION=0.139.0
 # renovate: datasource=github-releases depName=kubernetes/kubectl
 ARG KUBECTL_VERSION=v1.36.3
 # renovate: datasource=github-releases depName=github/github-mcp-server
@@ -137,13 +128,6 @@ RUN set -e; \
     curl -fsSL "https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_${gharch}.tar.gz" \
       | tar xz -C /usr/local/bin --strip-components=2 "gh_${GH_CLI_VERSION}_linux_${gharch}/bin/gh"; \
     gh --version
-
-# --- Claude Code + Codex CLIs (bun global installs) ---
-# BUN_INSTALL=/usr/local drops `bun add -g` binaries into /usr/local/bin
-# (on PATH, world-readable) instead of /root/.bun/bin. Scoped per-layer so it
-# doesn't leak into the runtime environment.
-RUN BUN_INSTALL=/usr/local bun add -g "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" && claude --version
-RUN BUN_INSTALL=/usr/local bun add -g "@openai/codex@${CODEX_CLI_VERSION}" && codex --version
 
 # --- kubectl (per-arch, SHA256-verified against dl.k8s.io) ---
 RUN set -e; \

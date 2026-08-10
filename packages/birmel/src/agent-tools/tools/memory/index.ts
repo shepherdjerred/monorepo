@@ -1,4 +1,3 @@
-import { openai } from "@ai-sdk/openai";
 import { embed } from "ai";
 import { z } from "zod";
 import {
@@ -7,6 +6,7 @@ import {
   type MemoryCandidate,
 } from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
 import { createTool } from "@shepherdjerred/birmel/agent-runtime/tools/create-tool.ts";
+import { getLlmRuntime } from "@shepherdjerred/birmel/agent-runtime/llm.ts";
 import {
   getRequestContext,
   suppressAutomaticMemoryExtraction,
@@ -65,10 +65,12 @@ const ClaimMutationActionSchema = z.enum([
 
 async function embedding(value: string): Promise<number[]> {
   const config = getConfig();
+  const runtime = getLlmRuntime();
   const result = await embed({
-    model: openai.embedding(config.openai.embeddingModel),
+    model: runtime.embeddingModel(config.openRouter.embeddingModel),
     value,
     abortSignal: AbortSignal.timeout(config.agent.responseTimeoutMs),
+    ...runtime.callOptions({ workload: "birmel.memory-tool.embed" }),
   });
   return result.embedding;
 }
@@ -145,7 +147,7 @@ async function inspectOrMutateMemory(
         sourceDiscordMessageIds: [request.sourceMessageId],
         authorUserId: request.userId,
         channelId: request.sourceChannelId,
-        extractorModel: config.openai.memoryModel,
+        extractorModel: config.openRouter.memoryModel,
       });
       suppressAutomaticMemoryExtraction();
       return {
@@ -182,7 +184,7 @@ async function inspectOrMutateMemory(
           sourceOrder: request.sourceMessageId,
           authorUserId: request.userId,
           channelId: request.sourceChannelId,
-          extractorModel: config.openai.memoryModel,
+          extractorModel: config.openRouter.memoryModel,
           embedding: await embedding(value),
         }),
       };
@@ -215,7 +217,7 @@ async function rememberMemory(input: MemoryToolInput, request: RequestContext) {
         userId: request.userId,
         personaId: request.personaId ?? null,
         authorUserId: request.userId,
-        extractorModel: config.openai.memoryModel,
+        extractorModel: config.openRouter.memoryModel,
       },
       candidate,
       embedding: await embedding(

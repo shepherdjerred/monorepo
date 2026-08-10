@@ -1,5 +1,5 @@
 export const HELP = `Usage:
-  bun run pr:fleet --model <provider>/<model> [options]
+  bun run pr:fleet --model <catalog-model-id> [options]
 
 Options:
   --repo <owner/name>       Repository (default: shepherdjerred/monorepo)
@@ -7,8 +7,6 @@ Options:
   --worktree-root <path>    Fleet worktrees (default: .claude/worktrees/pr-fleet)
   --max-workers <1..5>      Worker limit (default: 5)
   --author <login>          Scope to this author's PRs (drafts included)
-  --base-url <url>          Required for openai-compatible/<model>
-  --api-key-env <name>      API-key environment variable for a compatible endpoint
   --review-provider <id>    Hosted review provider to gate on (default: codex)
   --state-dir <path>        Local run-bundle root (default: XDG state directory)
   --no-ui                   Do not spawn the live web dashboard

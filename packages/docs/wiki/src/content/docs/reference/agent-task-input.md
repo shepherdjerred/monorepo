@@ -116,55 +116,57 @@ consume the run's execution timeout.
 
 ## Limits
 
-| Limit              | Value                                                   |
-| ------------------ | ------------------------------------------------------- |
-| Subprocess runtime | 90 minutes maximum, must heartbeat                      |
-| Follow-up tasks    | one report-only follow-up per run                       |
-| Schedule changes   | agents cannot pause, cancel, or delete schedules        |
-| Synthesis          | optional, evidence-backed, 80 words maximum             |
-| Output             | one shared-format heartbeat per run, including failures |
+| Limit             | Value                                                   |
+| ----------------- | ------------------------------------------------------- |
+| Agent SDK runtime | 90 minutes maximum, must heartbeat                      |
+| Follow-up tasks   | one report-only follow-up per run                       |
+| Schedule changes  | agents cannot pause, cancel, or delete schedules        |
+| Synthesis         | optional, evidence-backed, 80 words maximum             |
+| Output            | one shared-format heartbeat per run, including failures |
 
 ## Provider settings
 
-|                | Claude                                          | Codex                          |
-| -------------- | ----------------------------------------------- | ------------------------------ |
-| Command        | `claude -p`                                     | `codex exec`                   |
-| Model          | claude-opus-5                                   | —                              |
-| Schema         | `--json-schema`, inline draft-07 plain-optional | its own dialect                |
-| Tools          | `Bash, Read, Grep, Glob, WebFetch`              | `--sandbox danger-full-access` |
-| Pinned version | Claude Code `2.1.220`                           | —                              |
+|                | Claude Agent SDK                    | Codex SDK                        |
+| -------------- | ----------------------------------- | -------------------------------- |
+| Default model  | `claude-opus-5`                     | `gpt-5.6-sol`                    |
+| Schema         | draft-07 plain-optional JSON schema | Codex SDK output-schema dialect  |
+| Tools          | `Bash, Read, Grep, Glob, WebFetch`  | danger-full-access agent sandbox |
+| Pinned package | `@anthropic-ai/claude-agent-sdk`    | `@openai/codex-sdk`              |
 
-Claude's output contract accepts only the CLI result message's
-`structured_output` field; Codex uses its strict output-schema file. Both are
-validated with Zod. A successful process without valid structured output is a
-failure; prose and fenced JSON are not fallback formats. Provider adapters
-extract redacted evidence receipts from actual tool or command events before
-running a separate finalization pass over that explicit receipt catalog. Claude
-tools are disabled during finalization; any new provider events are not accepted
-as report evidence.
+Both native SDK paths stream progress events, preserve usage and cost metadata,
+and validate their structured result with Zod. A successful SDK run without the
+required structured value is a failure; prose and fenced JSON are not fallback
+formats. An effectful run is not replayed solely because final schema validation
+failed.
+
+Evidence receipts are extracted from each SDK's own redacted event stream — real
+tool or command events, not claims — and a separate finalization pass then runs
+over that explicit receipt catalog. Finalization has no tools at all: Claude's
+allowed-tool list is emptied, and a Codex finalization thread additionally drops
+network, web search, and write access. New provider events are not accepted as
+report evidence.
 
 ## Environment exposure
 
-The subprocess receives an allowlisted environment rather than inheriting the
-worker environment.
+The native SDK runtime receives an allowlisted environment rather than
+inheriting the worker environment.
 
-| Input                                       | State in the subprocess                                     |
-| ------------------------------------------- | ----------------------------------------------------------- |
-| Selected provider credential                | absent; replaced by an ephemeral loopback-broker credential |
-| Other provider credentials                  | absent                                                      |
-| Public GitHub repository credential         | absent; the throwaway clone is unauthenticated              |
-| `HOME`                                      | the throwaway workdir, not the worker image home            |
-| Prometheus and alert-dashboard URLs         | present without API credentials                             |
-| Kubernetes service address and mounted SA   | present; the dedicated identity has read-only audit RBAC    |
-| Postal, S3, GitHub App, and ingress secrets | absent; delivery executes on the core worker queue          |
-| ArgoCD, Grafana, Buildkite, HA, Cloudflare  | absent                                                      |
+| Input                                       | State in the SDK runtime                                 |
+| ------------------------------------------- | -------------------------------------------------------- |
+| Selected provider subscription credential   | present; it is the SDK's only way to authenticate        |
+| Other provider credentials                  | absent, including every direct inference-provider key    |
+| Public GitHub repository credential         | absent; the throwaway clone is unauthenticated           |
+| `HOME`                                      | the throwaway workdir, not the worker image home         |
+| Prometheus and alert-dashboard URLs         | present without API credentials                          |
+| Kubernetes service address and mounted SA   | present; the dedicated identity has read-only audit RBAC |
+| Postal, S3, GitHub App, and ingress secrets | absent; delivery executes on the core worker queue       |
+| ArgoCD, Grafana, Buildkite, HA, Cloudflare  | absent                                                   |
 
-The parent worker keeps the selected provider credential and starts a fresh
-loopback broker for each run. That broker authenticates the ephemeral client
-credential, accepts only the fixed Claude or Codex inference paths, and forwards
-to a fixed provider origin with the real credential. A provider subprocess can
-still spend its selected provider quota, but it cannot read or transmit the
-long-lived credential itself.
+The trusted, source-controlled agents are the exception. The homelab audit and
+the Scout season refresh do inherit the worker's operational credentials,
+because their prompts are code rather than user input; even there the bot's own
+GitHub credentials, every report-delivery credential, and every direct
+inference-provider key are removed.
 
 This lets generic investigations query the public repository, read-only
 Kubernetes API, Prometheus, and alert ledger without crossing the delivery or

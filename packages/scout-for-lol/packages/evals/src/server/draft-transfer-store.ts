@@ -7,7 +7,7 @@ import {
   validateDraftTransfer,
 } from "#server/dataset-transfer.ts";
 import {
-  INSERT_GENERATION_SQL,
+  insertGeneration,
   parseGenerationRow,
   SELECT_GENERATION_SQL,
 } from "#server/generation.ts";
@@ -107,7 +107,9 @@ function readDraftSnapshot(
              rendered_prompts_json AS renderedPromptsJson,
              duration_ms AS durationMs,
              input_tokens AS inputTokens,
-             output_tokens AS outputTokens
+             output_tokens AS outputTokens,
+             transport,
+             openrouter_metadata_json AS openRouterMetadataJson
            FROM generations
            WHERE case_id = ?
            ORDER BY sequence`,
@@ -300,20 +302,7 @@ function ensureGeneration(
     return false;
   }
 
-  database
-    .query(INSERT_GENERATION_SQL)
-    .run(
-      generation.id,
-      caseId,
-      generation.outputText,
-      generation.model,
-      generation.promptRevision,
-      JSON.stringify(generation.renderedPrompts),
-      generation.durationMs,
-      generation.inputTokens,
-      generation.outputTokens,
-      receivedAt,
-    );
+  insertGeneration(database, caseId, generation, receivedAt);
   return true;
 }
 

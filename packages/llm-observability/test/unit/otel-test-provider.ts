@@ -9,8 +9,9 @@ import {
   InMemorySpanExporter,
   SimpleSpanProcessor,
 } from "@opentelemetry/sdk-trace-base";
+import { AsyncLocalStorageContextManager } from "@opentelemetry/context-async-hooks";
 import { resourceFromAttributes } from "@opentelemetry/resources";
-import { trace } from "@opentelemetry/api";
+import { context, trace } from "@opentelemetry/api";
 
 export const exporter = new InMemorySpanExporter();
 
@@ -20,3 +21,4 @@ const provider = new BasicTracerProvider({
 });
 
 trace.setGlobalTracerProvider(provider);
+context.setGlobalContextManager(new AsyncLocalStorageContextManager().enable());

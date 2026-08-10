@@ -1,7 +1,7 @@
 // Reader + relevance filter for the structured patch changeset.
 //
 // The changeset itself is produced offline by `scripts/patch-analysis.ts` (a
-// `claude -p` pass over the raw patch notes) and committed as the bundled asset
+// Claude Agent SDK pass over the raw patch notes) and committed as the bundled asset
 // `assets/patch-notes.json`. At review time we read it here, cross-reference the
 // changes against the reviewed player's champions / lane / items, and render a
 // short targeted block for the personality prompt. All functions except

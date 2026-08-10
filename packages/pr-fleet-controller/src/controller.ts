@@ -165,17 +165,10 @@ export class FleetController implements MasterControllerTools {
     try {
       let report: FleetTickReport;
       try {
-        const run = await this.#workflow.createRun();
         const result = await withTickCommandCorrelation(tickId, () =>
-          run.start({ inputData: { trigger } }),
+          this.#workflow(trigger),
         );
-        if (result.status !== "success") {
-          if (result.status === "failed") {
-            throw result.error;
-          }
-          throw new Error(`Fleet workflow ended with status ${result.status}`);
-        }
-        report = FleetTickReportSchema.parse(result.result);
+        report = FleetTickReportSchema.parse(result);
       } catch (error) {
         if (isTelemetryCaptureError(error)) throw error;
         this.#telemetry.tickFailed(tickId, error);

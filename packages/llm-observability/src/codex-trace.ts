@@ -1,7 +1,7 @@
-// JSONL → OTel adapter for Codex CLI runs. Codex isn't an in-process SDK we
-// can wrap with `traceOpenAi`; instead we subscribe to the codex-jsonl event
-// bus and synthesize the same shape of spans those wrappers would have
-// produced. Any archive SpanProcessor registered on the tracer provider picks
+// Versioned Codex event stream → OTel adapter. Native SDK callers normalize
+// their events to the same JSONL representation accepted by historical CLI
+// bundles, then this subscriber synthesizes repository-owned run/turn/tool
+// spans. Any archive SpanProcessor registered on the tracer provider picks
 // them up by the `gen_ai.*` attributes and uploads bodies automatically.
 //
 // Promoted from discord-plays-pokemon's goal runner, generalized: span names,
@@ -9,6 +9,8 @@
 // hardcoded `pokemon.*` values.
 
 import { context, trace, type Span, type Tracer } from "@opentelemetry/api";
+import { costForTextUsage } from "@shepherdjerred/llm-models";
+import type { Registry } from "prom-client";
 import { z } from "zod";
 import { getLlmTracer } from "./span-helpers.ts";
 import { redactText } from "./redact.ts";
@@ -17,6 +19,9 @@ import {
   type CodexEvent,
   type CodexJsonlParser,
 } from "./codex-jsonl.ts";
+import { commonLlmMetrics } from "./metrics.ts";
+
+export type CodexTraceOutcome = "success" | "error" | "cancelled";
 
 export type CodexTraceOptions = {
   /** Service identity recorded on every span (`llm.service`). */
@@ -25,6 +30,8 @@ export type CodexTraceOptions = {
   callSite: string;
   /** Model name for `gen_ai.request.model`. */
   model: string;
+  /** Runtime identity. Historical CLI readers use `codex_cli`; SDK callers use `codex_sdk`. */
+  system?: "codex_cli" | "codex_sdk" | undefined;
   /**
    * Span-name prefix: spans are named `<prefix>.run`, `<prefix>.turn`,
    * `<prefix>.tool`. Defaults to `codex.agent`.
@@ -48,14 +55,18 @@ export type CodexTraceOptions = {
    */
   initialPrompt?: string | undefined;
   logger?: CodexLogger | undefined;
+  metricsRegister?: Registry | undefined;
+  workload?: string | undefined;
 };
 
 export type CodexTrace = {
+  /** Run the native SDK operation with this repository-owned span active. */
+  run: <T>(operation: () => T) => T;
   /**
    * Closes the root span (call once when the run exits — completed, failed,
    * timeout, killed). Idempotent.
    */
-  end: () => void;
+  end: (outcome: CodexTraceOutcome) => void;
 };
 
 type ToolCall = {
@@ -63,8 +74,6 @@ type ToolCall = {
   command: string;
   startedAtMs: number;
 };
-
-const SYSTEM = "openai";
 
 const noopLogger: CodexLogger = {
   warn(message) {
@@ -88,8 +97,10 @@ export function attachCodexTrace(
 ): CodexTrace {
   const tracer = getLlmTracer();
   const logger = options.logger ?? noopLogger;
+  const system = options.system ?? "codex_cli";
   const spanPrefix = options.spanPrefix ?? "codex.agent";
   const toolAttrPrefix = options.toolAttributePrefix ?? `${spanPrefix}.tool`;
+  const startedAtMs = Date.now();
 
   // Copied onto every tool span. OTel span attributes are NOT inherited from
   // the parent, yet the archive processor reads gen_ai.system,
@@ -99,17 +110,17 @@ export function attachCodexTrace(
   // reserved identity keys below always win.
   const toolSpanIdentity: Record<string, string | number | boolean> = {
     ...options.rootAttributes,
-    "gen_ai.system": SYSTEM,
+    "gen_ai.system": system,
     "gen_ai.request.model": options.model,
     "llm.service": options.service,
     "llm.call_site": options.callSite,
   };
 
-  // Root span: covers the whole codex exec invocation.
+  // Root span: covers the whole Codex SDK run or historical replay.
   const rootSpan = tracer.startSpan(`${spanPrefix}.run`, {
     attributes: {
       ...options.rootAttributes,
-      "gen_ai.system": SYSTEM,
+      "gen_ai.system": system,
       "gen_ai.request.model": options.model,
       "llm.service": options.service,
       "llm.call_site": options.callSite,
@@ -145,7 +156,7 @@ export function attachCodexTrace(
               // Prefix-derived so dpp keeps its historical
               // `pokemon.goal.turn_index` attribute name.
               [`${spanPrefix}.turn_index`]: turnCounter,
-              "gen_ai.system": SYSTEM,
+              "gen_ai.system": system,
               "gen_ai.request.model": options.model,
               "llm.service": options.service,
               "llm.call_site": options.callSite,
@@ -214,7 +225,10 @@ export function attachCodexTrace(
   const unsubscribe = parser.subscribe(onEvent);
 
   return {
-    end(): void {
+    run<T>(operation: () => T): T {
+      return context.with(rootCtx, operation);
+    },
+    end(outcome): void {
       if (ended) return;
       ended = true;
       unsubscribe();
@@ -227,9 +241,46 @@ export function attachCodexTrace(
         tool.span.end();
       }
       openTools.clear();
+      recordCodexMetrics(options, parser.total(), startedAtMs, outcome);
       rootSpan.end();
     },
   };
+}
+
+function recordCodexMetrics(
+  options: CodexTraceOptions,
+  usage: ReturnType<CodexJsonlParser["total"]>,
+  startedAtMs: number,
+  outcome: CodexTraceOutcome,
+): void {
+  if (options.metricsRegister === undefined) return;
+  const metrics = commonLlmMetrics(options.metricsRegister);
+  const labels = {
+    service: options.service,
+    workload: options.workload ?? options.callSite,
+    provider: "codex_sdk",
+    model: options.model,
+  };
+  metrics.requests.inc({ ...labels, outcome });
+  metrics.duration.observe(labels, (Date.now() - startedAtMs) / 1000);
+  metrics.tokens.inc({ ...labels, type: "input" }, usage.inputTokens);
+  metrics.tokens.inc(
+    { ...labels, type: "cached_input" },
+    usage.cachedInputTokens,
+  );
+  metrics.tokens.inc({ ...labels, type: "output" }, usage.outputTokens);
+  metrics.tokens.inc(
+    { ...labels, type: "reasoning" },
+    usage.reasoningOutputTokens,
+  );
+  const cost = costForTextUsage(options.model, {
+    inputTokens: usage.inputTokens,
+    cachedInputTokens: usage.cachedInputTokens,
+    outputTokens: usage.outputTokens + usage.reasoningOutputTokens,
+  });
+  if (cost !== undefined) {
+    metrics.cost.inc({ ...labels, type: "catalog" }, cost);
+  }
 }
 
 type ToolHandlerArgs = {
@@ -248,9 +299,9 @@ type ToolHandlerArgs = {
 const RecordSchema = z.record(z.string(), z.unknown());
 
 // Nested `item` payload of the item.started / item.completed events emitted by
-// codex-cli's experimental JSON output (the shape the production Dockerfile pin
-// @openai/codex@0.139.0 uses). A command's combined output lives in
-// `aggregated_output`; separate stdout/stderr are present on some versions.
+// the native SDK and retained historical CLI fixtures. A command's combined
+// output lives in `aggregated_output`; separate stdout/stderr are present on
+// some versions.
 const CommandItemSchema = z.looseObject({
   id: z.string().optional(),
   type: z.string().optional(),

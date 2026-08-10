@@ -322,9 +322,9 @@ async function main(): Promise<void> {
     const duration = Date.now() - startTime;
 
     if (!reviewResult) {
-      logger.info("❌ No review generated - API keys not configured");
+      logger.info("❌ No review generated - OpenRouter key not configured");
       logger.info(
-        `   Set OPENAI_API_KEY environment variable to generate AI reviews`,
+        `   Set OPENROUTER_API_KEY environment variable to generate AI reviews`,
       );
       logger.info("");
       continue;

@@ -19,18 +19,11 @@ const BenchmarkArgsSchema = z.strictObject({
   controlHost: z.string().min(1).default("127.0.0.1"),
   controlPort: z.coerce.number().int().min(1024).max(49_151).default(18_082),
   portStride: z.coerce.number().int().positive().default(1),
-  codexBinary: z.string().min(1).default("codex"),
   implementationRoot: z.string().min(1),
   bootTimeoutSeconds: z.coerce.number().int().positive().max(300).default(60),
 });
 
 export type BenchmarkArgs = z.infer<typeof BenchmarkArgsSchema>;
-
-function resolvePathLikeCommand(command: string, cwd: string): string {
-  return path.isAbsolute(command) || command.includes(path.sep)
-    ? path.resolve(cwd, command)
-    : command;
-}
 
 const FLAG_TO_FIELD = new Map<string, keyof BenchmarkArgs>([
   ["--save", "save"],
@@ -45,7 +38,6 @@ const FLAG_TO_FIELD = new Map<string, keyof BenchmarkArgs>([
   ["--control-host", "controlHost"],
   ["--control-port", "controlPort"],
   ["--port-stride", "portStride"],
-  ["--codex-binary", "codexBinary"],
   ["--implementation-root", "implementationRoot"],
   ["--boot-timeout-seconds", "bootTimeoutSeconds"],
 ]);
@@ -104,7 +96,6 @@ export function parseBenchmarkArgs(
     save: path.resolve(cwd, parsed.save),
     wasm: path.resolve(cwd, parsed.wasm),
     output: path.resolve(cwd, parsed.output),
-    codexBinary: resolvePathLikeCommand(parsed.codexBinary, cwd),
     implementationRoot: path.resolve(cwd, parsed.implementationRoot),
   };
 }

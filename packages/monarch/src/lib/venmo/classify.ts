@@ -2,7 +2,7 @@ import type { Config } from "../config.ts";
 import type { MonarchCategory, MonarchTransaction } from "../monarch/types.ts";
 import type { ProposedChange } from "../classifier/types.ts";
 import type { VenmoMatchResult } from "./matcher.ts";
-import { classifyVenmoPayments } from "../classifier/claude.ts";
+import { classifyVenmoPayments } from "../classifier/llm.ts";
 import { parseVenmoCSV } from "./parser.ts";
 import { matchVenmoTransactions } from "./matcher.ts";
 import { log } from "../logger.ts";

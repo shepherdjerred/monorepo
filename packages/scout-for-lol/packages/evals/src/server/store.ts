@@ -20,7 +20,7 @@ import {
   UPSERT_FRESHNESS_RATING_SQL,
 } from "#server/freshness.ts";
 import {
-  INSERT_GENERATION_SQL,
+  insertGeneration,
   parseGenerationRow,
   SELECT_GENERATION_SQL,
 } from "#server/generation.ts";
@@ -339,22 +339,16 @@ export class EvalStore {
       durationMs: parsed.durationMs,
       inputTokens: parsed.inputTokens,
       outputTokens: parsed.outputTokens,
+      transport: parsed.transport,
+      openRouterMetadata: parsed.openRouterMetadata,
     });
     this.#database.transaction(() => {
-      this.#database
-        .query(INSERT_GENERATION_SQL)
-        .run(
-          generation.id,
-          parsed.caseId,
-          generation.outputText,
-          generation.model,
-          generation.promptRevision,
-          JSON.stringify(generation.renderedPrompts),
-          generation.durationMs,
-          generation.inputTokens,
-          generation.outputTokens,
-          new Date().toISOString(),
-        );
+      insertGeneration(
+        this.#database,
+        parsed.caseId,
+        generation,
+        new Date().toISOString(),
+      );
       this.#database
         .query(
           `DELETE FROM freshness_ratings

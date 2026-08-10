@@ -1,4 +1,3 @@
-import { openai } from "@ai-sdk/openai";
 import { generateText, stepCountIs, ToolLoopAgent } from "ai";
 import { z } from "zod";
 import {
@@ -11,9 +10,10 @@ import {
   toolsToRecord,
 } from "@shepherdjerred/birmel/agent-tools/tools/tool-sets.ts";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
+import { getLlmRuntime } from "@shepherdjerred/birmel/agent-runtime/llm.ts";
 import { withSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
-import { getOpenAIProviderOptions } from "./provider-options.ts";
+import { getOpenRouterProviderOptions } from "./provider-options.ts";
 import { CORE_SYSTEM_POLICY, specialistInstructions } from "./prompts.ts";
 
 const logger = loggers.agent.child("execution");
@@ -114,6 +114,7 @@ function taskMessages(packet: SpecialistTaskPacket) {
 export const executeDirect: DirectExecutor = async (rawPacket) => {
   const packet = SpecialistTaskPacketSchema.parse(rawPacket);
   const config = getConfig();
+  const runtime = getLlmRuntime();
   return await withSpan(
     "birmel.agent.direct",
     {
@@ -127,12 +128,16 @@ export const executeDirect: DirectExecutor = async (rawPacket) => {
     async (span) => {
       const startedAt = performance.now();
       const result = await generateText({
-        model: openai(config.openai.model),
+        model: runtime.languageModel(config.openRouter.model),
         system: `${CORE_SYSTEM_POLICY}\n\n${packet.persona}`,
         messages: taskMessages(packet),
-        maxOutputTokens: config.openai.maxTokens,
-        timeout: config.agent.responseTimeoutMs,
-        providerOptions: getOpenAIProviderOptions(),
+        maxOutputTokens: config.openRouter.maxTokens,
+        abortSignal: AbortSignal.timeout(config.agent.responseTimeoutMs),
+        providerOptions: getOpenRouterProviderOptions(),
+        ...runtime.callOptions({
+          workload: "birmel.agent.direct",
+          sessionId: packet.threadId ?? packet.channelId,
+        }),
       });
       span.setAttribute("gen_ai.response.finish_reasons", result.finishReason);
       span.setAttribute(
@@ -171,6 +176,7 @@ async function executeSpecialistWithOptions(
 ): Promise<AgentExecutionResult> {
   const packet = SpecialistTaskPacketSchema.parse(rawPacket);
   const config = getConfig();
+  const runtime = getLlmRuntime();
   const tools = toolsToRecord(getToolSet(specialist));
   const registeredToolIds = Object.keys(tools);
   return await withSpan(
@@ -187,7 +193,9 @@ async function executeSpecialistWithOptions(
       const startedAt = performance.now();
       const agent = new ToolLoopAgent({
         id: `birmel-${specialist}`,
-        model: openai(options.model ?? config.openai.model),
+        model: runtime.languageModel(options.model ?? config.openRouter.model, [
+          "tools",
+        ]),
         instructions: `${specialistInstructions(specialist)}\n\n${packet.persona}`,
         tools,
         stopWhen: stepCountIs(config.agent.maxSteps),
@@ -195,37 +203,43 @@ async function executeSpecialistWithOptions(
           stepNumber >= config.agent.maxSteps - 1
             ? { activeTools: [], toolChoice: "none" }
             : undefined,
-        maxOutputTokens: config.openai.maxTokens,
-        providerOptions: getOpenAIProviderOptions(options),
+        maxOutputTokens: config.openRouter.maxTokens,
+        providerOptions: getOpenRouterProviderOptions(options),
       });
       const result = await agent.generate({
         messages: taskMessages(packet),
-        timeout: options.timeoutMs ?? config.agent.responseTimeoutMs,
+        abortSignal: AbortSignal.timeout(
+          options.timeoutMs ?? config.agent.responseTimeoutMs,
+        ),
+        ...runtime.callOptions({
+          workload: `birmel.agent.${specialist}`,
+          sessionId: packet.threadId ?? packet.channelId,
+        }),
       });
       span.setAttribute("gen_ai.response.finish_reasons", result.finishReason);
       span.setAttribute(
         "gen_ai.usage.input_tokens",
-        result.totalUsage.inputTokens ?? 0,
+        result.usage.inputTokens ?? 0,
       );
       span.setAttribute(
         "gen_ai.usage.output_tokens",
-        result.totalUsage.outputTokens ?? 0,
+        result.usage.outputTokens ?? 0,
       );
       span.setAttribute("birmel.agent_steps", result.steps.length);
       logger.info("Specialist agent completed", {
         route: specialist,
         personaId: packet.personaId,
         finishReason: result.finishReason,
-        inputTokens: result.totalUsage.inputTokens ?? 0,
-        outputTokens: result.totalUsage.outputTokens ?? 0,
+        inputTokens: result.usage.inputTokens ?? 0,
+        outputTokens: result.usage.outputTokens ?? 0,
         stepCount: result.steps.length,
         durationMs: performance.now() - startedAt,
       });
       return {
         text: result.text,
         finishReason: result.finishReason,
-        inputTokens: result.totalUsage.inputTokens ?? 0,
-        outputTokens: result.totalUsage.outputTokens ?? 0,
+        inputTokens: result.usage.inputTokens ?? 0,
+        outputTokens: result.usage.outputTokens ?? 0,
         stepCount: result.steps.length,
         toolEvents: result.steps.flatMap((step) =>
           step.toolResults.map((toolResult) =>

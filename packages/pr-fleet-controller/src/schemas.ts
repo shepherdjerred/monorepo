@@ -284,7 +284,7 @@ export const WorkerResultSchema = z
   });
 
 export const FleetControllerConfigSchema = z.object({
-  model: z.string().regex(/^[a-z0-9][\w.-]*\/[^/]+$/i),
+  model: z.string().regex(/^[a-z0-9][\w.-]*$/i),
   repo: z.string().regex(/^[^/]+\/[^/]+$/),
   checkout: z.string().min(1),
   worktreeRoot: z.string().min(1),

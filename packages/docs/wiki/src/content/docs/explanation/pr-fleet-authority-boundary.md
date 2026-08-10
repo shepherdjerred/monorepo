@@ -81,8 +81,10 @@ Command forms that would execute an arbitrary nested program are rejected.
 
 ## Why the evidence bundle exists
 
-Every run writes a hash-chained event timeline, a final summary, and model and
-tool spans, all redacted before persistence.
+Every run writes a hash-chained event timeline, a final summary, and an
+authoritative `spans.jsonl` telemetry artifact, all redacted before persistence.
+The terminal record binds the telemetry digest. Historical schema-v1 bundles
+remain inspectable and replayable without being rewritten.
 
 An unattended tool that edits your branches needs to be answerable after the
 fact: which evidence it saw, which decision it made, what actually ran. Replay

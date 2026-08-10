@@ -11,16 +11,14 @@ import {
   type AgentTaskResultPayloadV2,
   AgentTaskResultPayloadV2Schema,
 } from "#shared/agent-task.ts";
-import {
-  parseAgentTaskResultPayload,
-  parseClaudeAgentTaskResult,
-} from "#shared/agent-task-output.ts";
+import { parseAgentTaskStructuredOutput } from "#shared/agent-task-output.ts";
 import { captureWithContext, jsonLog } from "./agent-task-runtime.ts";
 
 type DecodeAgentTaskPayloadInput = {
   provider: AgentTaskProvider;
-  stdout: string;
-  outputPath: string | undefined;
+  structuredOutput: unknown;
+  finalText: string | undefined;
+  schemaFingerprint: string;
   contractVersion: 1 | 2;
   durationMs: number;
   redact: (value: string) => string;
@@ -44,32 +42,19 @@ export function redactAgentTaskPayloadStrings(
   );
 }
 
-async function providerPayload(
+export function decodeAgentTaskPayload(
   input: DecodeAgentTaskPayloadInput,
-): Promise<AgentTaskResultPayload | AgentTaskResultPayloadV2> {
-  if (input.provider === "claude") {
-    return parseClaudeAgentTaskResult(
-      input.stdout,
-      input.redact,
-      input.contractVersion,
-    );
-  }
-  if (input.outputPath === undefined) {
-    throw new Error("Codex agent task completed without an output path");
-  }
-  return parseAgentTaskResultPayload(
-    await Bun.file(input.outputPath).text(),
-    input.provider,
-    input.contractVersion,
-  );
-}
-
-export async function decodeAgentTaskPayload(
-  input: DecodeAgentTaskPayloadInput,
-): Promise<AgentTaskResultPayload | AgentTaskResultPayloadV2> {
+): AgentTaskResultPayload | AgentTaskResultPayloadV2 {
   try {
     const redacted = redactAgentTaskPayloadStrings(
-      await providerPayload(input),
+      parseAgentTaskStructuredOutput({
+        provider: input.provider,
+        structuredOutput: input.structuredOutput,
+        contractVersion: input.contractVersion,
+        schemaFingerprint: input.schemaFingerprint,
+        finalText: input.finalText,
+        redactExcerpt: input.redact,
+      }),
       input.redact,
     );
     return input.contractVersion === 2
@@ -104,8 +89,6 @@ export async function decodeAgentTaskPayload(
         error instanceof AgentTaskOutputContractError
           ? error.reason
           : undefined,
-      resultSubtype: contractDiagnostics?.resultSubtype,
-      resultMessageKeys: contractDiagnostics?.resultMessageKeys,
       finalTextExcerpt: contractDiagnostics?.finalTextExcerpt,
     });
     throw error;

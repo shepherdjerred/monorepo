@@ -25,6 +25,7 @@ import { getTemporalRuleGroups } from "./rules/temporal.ts";
 import { getStreambotRuleGroups } from "./rules/streambot.ts";
 import { getDiscordPlaysGoalRuleGroups } from "./rules/discord-plays-goal.ts";
 import { getAlertDashboardRuleGroups } from "./rules/alert-dashboard.ts";
+import { getLlmRuleGroups } from "./rules/llm.ts";
 import { createBuildkiteMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/buildkite.ts";
 import { createBuildkitdMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/buildkitd.ts";
 import { getAlertingControlRuleGroups } from "./rules/alerting-control.ts";
@@ -347,6 +348,17 @@ export function createPrometheusMonitoring(chart: Chart) {
     },
     spec: {
       groups: getDiscordPlaysGoalRuleGroups(),
+    },
+  });
+
+  new PrometheusRule(chart, "prometheus-llm-rules", {
+    metadata: {
+      name: "prometheus-llm-rules",
+      namespace: "prometheus",
+      labels: { release: "prometheus" },
+    },
+    spec: {
+      groups: getLlmRuleGroups(),
     },
   });
 }

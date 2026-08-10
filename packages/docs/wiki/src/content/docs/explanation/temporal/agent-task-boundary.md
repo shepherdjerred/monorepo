@@ -40,25 +40,31 @@ allowlisted environment. The runtime boundary consists of:
 - an ephemeral non-root pod and per-run clone,
 - `HOME` redirected into that clone so provider config is also disposable,
 - no GitHub credential, so the clone cannot push,
-- no long-lived provider credential; a per-run ephemeral credential reaches a
-  parent-owned loopback broker with fixed provider paths and origins,
+- exactly one provider subscription credential and nothing else from the
+  worker's own environment,
 - no Postal, S3, ArgoCD, Grafana, Buildkite, Home Assistant, Bugsink, or
   Cloudflare credential,
 - a dedicated Kubernetes service account with read-only audit RBAC and no
   `pods/exec` permission,
-- a provider-only uid whose pod-local firewall rejects Temporal gRPC and UI
-  traffic while leaving the worker poller connected,
+- a provider-only uid, for the deterministic evidence collectors, whose
+  pod-local firewall rejects Temporal gRPC and UI traffic while leaving the
+  worker poller connected,
 - email delivery dispatched to the core worker queue, outside the agent pod.
 
 What does **not** constrain it is a schema that makes mutation unrepresentable,
-or a filesystem that refuses writes. Codex runs with
-`--sandbox danger-full-access`, because the worker pod cannot provide the
-namespace Codex's own sandbox needs.
+or a filesystem that refuses writes. Codex investigation threads run with
+`danger-full-access`, because the worker pod cannot provide the namespace
+Codex's own sandbox needs. (A finalization thread is the exception: it drops
+network, web search, and write access, because it may only reason over evidence
+that was already captured.)
 
-The poller runs as root with every capability dropped except the `SETUID`
-capability needed for `setpriv` to launch provider commands as uid 1001.
-Privilege escalation is disabled, and the provider exec retains no
-capabilities. Before the worker
+The agent itself now runs inside the native provider SDK, as the worker's own
+uid, because neither SDK exposes a spawn hook the worker could wrap. The
+`setpriv` uid-1001 transition and the firewall rules matched to it therefore
+constrain the deterministic evidence collectors rather than the agent; see
+`packages/docs/todos/agent-sdk-provider-isolation.md`. The poller runs as root
+with every capability dropped except the `SETUID` capability that transition
+needs. Privilege escalation is disabled. Before the worker
 starts, a short-lived `NET_ADMIN` init container installs owner-matched rules
 that reject uid-1001 traffic to Temporal gRPC (`7233`) and the Temporal UI
 (`8080`), including their resolved Tailscale ingress addresses on `443`. The
@@ -96,16 +102,23 @@ pod.
 Novel investigations can still inspect the public repository, Prometheus, the
 alert ledger, and the Kubernetes API. The mounted service-account token is the
 only operational identity available to the provider, and Kubernetes enforces
-its read-only verbs. Provider auth is selected per run but retained by the
-parent worker. Claude and Codex receive an ephemeral bearer for a loopback
-broker; the broker allows only that provider's inference paths and injects the
-long-lived credential into a fixed upstream request. A subprocess can spend
-quota through the broker but cannot extract the long-lived credential.
+its read-only verbs. The environment the agent receives is an allowlist, not a
+filtered copy of the worker's: basic process and TLS settings, the read-only
+Kubernetes identity, the non-secret evidence endpoints, and the one
+subscription credential its own provider needs. A deviating run can spend that
+provider's quota, but there is no second credential in its environment to find.
 
 Investigations that need ArgoCD, Buildkite, Home Assistant, or another
 authenticated source must become a typed deterministic collector. Stable
 recurring checks, including the daily homelab audit, already use that stronger
 pattern.
+
+The trusted, source-controlled agents are the exception that proves the rule.
+The homelab audit and the Scout season refresh do inherit the worker's
+operational credentials, because their prompts are code rather than user input.
+Even there the same three categories are removed: the bot's own GitHub
+credentials, every report-delivery credential, and every direct
+inference-provider key.
 
 ## The blast radius, stated plainly
 
@@ -126,8 +139,8 @@ code, reviewed in a PR, not an agent asked nicely.
 ## Why the output contract is strict
 
 Claude and Codex outputs are treated as versioned provider contracts. The worker
-sends each provider its supported schema dialect and validates the structured
-result with Zod.
+sends each native SDK its supported schema dialect and accepts **only** that
+SDK's structured result, validated with Zod.
 
 A successful process without that field is a failure. Prose and fenced JSON are
 not fallback formats.
@@ -168,10 +181,13 @@ Contract failures log a bounded redacted excerpt, the result subtype and keys,
 and the schema fingerprint. The Prometheus counter uses bounded reason labels
 only, so cardinality cannot explode from model output.
 
-## Cost is traced even on failure
+## Usage is preserved on terminal paths
 
-The LLM span, with token cost, is emitted before the exit-code check. A failed
-run that spent tokens still shows up in observability.
+Native SDK events feed the shared LLM spans and bounded metrics. Tokens and
+known cost are recorded before terminal failure classification, so a failed run
+that spent tokens still shows up in observability. A run that may already have
+applied effects becomes non-retryable instead of being replayed to repair only
+its final schema.
 
 With telemetry enabled, each run's prompt and response are recorded as `gen_ai.*`
 spans whose bodies are archived to the LLM-observability store before the slim

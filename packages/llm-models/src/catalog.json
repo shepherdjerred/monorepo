@@ -12,11 +12,26 @@
     },
     "contextWindow": 1050000,
     "capabilities": {
+      "inputModalities": ["text", "image"],
+      "outputModalities": ["text"],
+      "tools": true,
+      "structuredOutputs": true,
+      "webSearch": true,
+      "reasoning": true,
       "supportsTemperature": false,
       "supportsTopP": false,
       "maxTokens": 128000
     },
-    "status": "current"
+    "status": "current",
+    "routes": {
+      "openRouter": {
+        "modelId": "openai/gpt-5.6-sol",
+        "endpoint": "language"
+      },
+      "codexSdk": {
+        "modelId": "gpt-5.6-sol"
+      }
+    }
   },
   "gpt-5.6-terra": {
     "id": "gpt-5.6-terra",
@@ -31,11 +46,26 @@
     },
     "contextWindow": 1050000,
     "capabilities": {
+      "inputModalities": ["text", "image"],
+      "outputModalities": ["text"],
+      "tools": true,
+      "structuredOutputs": true,
+      "webSearch": true,
+      "reasoning": true,
       "supportsTemperature": false,
       "supportsTopP": false,
       "maxTokens": 128000
     },
-    "status": "current"
+    "status": "current",
+    "routes": {
+      "openRouter": {
+        "modelId": "openai/gpt-5.6-terra",
+        "endpoint": "language"
+      },
+      "codexSdk": {
+        "modelId": "gpt-5.6-terra"
+      }
+    }
   },
   "gpt-5.6-luna": {
     "id": "gpt-5.6-luna",
@@ -50,11 +80,26 @@
     },
     "contextWindow": 1050000,
     "capabilities": {
+      "inputModalities": ["text", "image"],
+      "outputModalities": ["text"],
+      "tools": true,
+      "structuredOutputs": true,
+      "webSearch": true,
+      "reasoning": true,
       "supportsTemperature": false,
       "supportsTopP": false,
       "maxTokens": 128000
     },
-    "status": "current"
+    "status": "current",
+    "routes": {
+      "openRouter": {
+        "modelId": "openai/gpt-5.6-luna",
+        "endpoint": "language"
+      },
+      "codexSdk": {
+        "modelId": "gpt-5.6-luna"
+      }
+    }
   },
   "gpt-5.5": {
     "id": "gpt-5.5",
@@ -69,11 +114,26 @@
     },
     "contextWindow": 400000,
     "capabilities": {
+      "inputModalities": ["text", "image"],
+      "outputModalities": ["text"],
+      "tools": true,
+      "structuredOutputs": true,
+      "webSearch": true,
+      "reasoning": true,
       "supportsTemperature": false,
       "supportsTopP": false,
       "maxTokens": 400000
     },
-    "status": "deprecated"
+    "status": "deprecated",
+    "routes": {
+      "openRouter": {
+        "modelId": "openai/gpt-5.5",
+        "endpoint": "language"
+      },
+      "codexSdk": {
+        "modelId": "gpt-5.5"
+      }
+    }
   },
   "gpt-5.4-mini": {
     "id": "gpt-5.4-mini",
@@ -88,11 +148,26 @@
     },
     "contextWindow": 400000,
     "capabilities": {
+      "inputModalities": ["text", "image"],
+      "outputModalities": ["text"],
+      "tools": true,
+      "structuredOutputs": true,
+      "webSearch": true,
+      "reasoning": true,
       "supportsTemperature": false,
       "supportsTopP": false,
       "maxTokens": 200000
     },
-    "status": "current"
+    "status": "current",
+    "routes": {
+      "openRouter": {
+        "modelId": "openai/gpt-5.4-mini",
+        "endpoint": "language"
+      },
+      "codexSdk": {
+        "modelId": "gpt-5.4-mini"
+      }
+    }
   },
   "gpt-5.4-nano": {
     "id": "gpt-5.4-nano",
@@ -107,22 +182,56 @@
     },
     "contextWindow": 400000,
     "capabilities": {
+      "inputModalities": ["text", "image"],
+      "outputModalities": ["text"],
+      "tools": true,
+      "structuredOutputs": true,
+      "webSearch": true,
+      "reasoning": true,
       "supportsTemperature": false,
       "supportsTopP": false,
       "maxTokens": 100000
     },
-    "status": "current"
+    "status": "current",
+    "routes": {
+      "openRouter": {
+        "modelId": "openai/gpt-5.4-nano",
+        "endpoint": "language"
+      },
+      "codexSdk": {
+        "modelId": "gpt-5.4-nano"
+      }
+    }
   },
   "text-embedding-3-small": {
     "id": "text-embedding-3-small",
     "provider": "openai",
     "displayName": "Text Embedding 3 Small",
     "description": "Embedding model (input-only pricing).",
-    "pricing": { "modality": "text", "input": 0.02, "output": 0 },
+    "pricing": {
+      "modality": "text",
+      "input": 0.02,
+      "output": 0
+    },
     "contextWindow": 8191,
-    "capabilities": { "supportsTemperature": false, "supportsTopP": false },
+    "capabilities": {
+      "inputModalities": ["text"],
+      "outputModalities": ["embedding"],
+      "tools": false,
+      "structuredOutputs": false,
+      "webSearch": false,
+      "reasoning": false,
+      "supportsTemperature": false,
+      "supportsTopP": false
+    },
     "status": "current",
-    "category": "embedding"
+    "category": "embedding",
+    "routes": {
+      "openRouter": {
+        "modelId": "openai/text-embedding-3-small",
+        "endpoint": "embedding"
+      }
+    }
   },
   "claude-opus-5": {
     "id": "claude-opus-5",
@@ -139,12 +248,27 @@
     "contextWindow": 1000000,
     "pinnedContextWindow": true,
     "capabilities": {
+      "inputModalities": ["text", "image"],
+      "outputModalities": ["text"],
+      "tools": true,
+      "structuredOutputs": true,
+      "webSearch": true,
+      "reasoning": true,
       "supportsTemperature": false,
       "supportsTopP": false,
       "adaptiveThinking": true,
       "effortTiers": ["low", "medium", "high", "xhigh", "max"]
     },
-    "status": "current"
+    "status": "current",
+    "routes": {
+      "openRouter": {
+        "modelId": "anthropic/claude-opus-5",
+        "endpoint": "language"
+      },
+      "claudeAgentSdk": {
+        "modelId": "claude-opus-5"
+      }
+    }
   },
   "claude-sonnet-5": {
     "id": "claude-sonnet-5",
@@ -167,12 +291,27 @@
     "contextWindow": 1000000,
     "pinnedContextWindow": true,
     "capabilities": {
+      "inputModalities": ["text", "image"],
+      "outputModalities": ["text"],
+      "tools": true,
+      "structuredOutputs": true,
+      "webSearch": true,
+      "reasoning": true,
       "supportsTemperature": false,
       "supportsTopP": false,
       "adaptiveThinking": true,
       "effortTiers": ["low", "medium", "high", "xhigh", "max"]
     },
-    "status": "current"
+    "status": "current",
+    "routes": {
+      "openRouter": {
+        "modelId": "anthropic/claude-sonnet-5",
+        "endpoint": "language"
+      },
+      "claudeAgentSdk": {
+        "modelId": "claude-sonnet-5"
+      }
+    }
   },
   "claude-fable-5": {
     "id": "claude-fable-5",
@@ -189,12 +328,27 @@
     "contextWindow": 1000000,
     "pinnedContextWindow": true,
     "capabilities": {
+      "inputModalities": ["text", "image"],
+      "outputModalities": ["text"],
+      "tools": true,
+      "structuredOutputs": true,
+      "webSearch": true,
+      "reasoning": true,
       "supportsTemperature": false,
       "supportsTopP": false,
       "adaptiveThinking": true,
       "effortTiers": ["low", "medium", "high", "xhigh", "max"]
     },
-    "status": "current"
+    "status": "current",
+    "routes": {
+      "openRouter": {
+        "modelId": "anthropic/claude-fable-5",
+        "endpoint": "language"
+      },
+      "claudeAgentSdk": {
+        "modelId": "claude-fable-5"
+      }
+    }
   },
   "claude-opus-4-8": {
     "id": "claude-opus-4-8",
@@ -211,12 +365,27 @@
     "contextWindow": 1000000,
     "pinnedContextWindow": true,
     "capabilities": {
+      "inputModalities": ["text", "image"],
+      "outputModalities": ["text"],
+      "tools": true,
+      "structuredOutputs": true,
+      "webSearch": true,
+      "reasoning": true,
       "supportsTemperature": false,
       "supportsTopP": false,
       "adaptiveThinking": true,
       "effortTiers": ["low", "medium", "high", "xhigh", "max"]
     },
-    "status": "deprecated"
+    "status": "deprecated",
+    "routes": {
+      "openRouter": {
+        "modelId": "anthropic/claude-opus-4-8",
+        "endpoint": "language"
+      },
+      "claudeAgentSdk": {
+        "modelId": "claude-opus-4-8"
+      }
+    }
   },
   "claude-sonnet-4-6": {
     "id": "claude-sonnet-4-6",
@@ -232,12 +401,27 @@
     },
     "contextWindow": 1000000,
     "capabilities": {
+      "inputModalities": ["text", "image"],
+      "outputModalities": ["text"],
+      "tools": true,
+      "structuredOutputs": true,
+      "webSearch": true,
+      "reasoning": true,
       "supportsTemperature": true,
       "supportsTopP": true,
       "adaptiveThinking": true,
       "effortTiers": ["low", "medium", "high", "max"]
     },
-    "status": "deprecated"
+    "status": "deprecated",
+    "routes": {
+      "openRouter": {
+        "modelId": "anthropic/claude-sonnet-4-6",
+        "endpoint": "language"
+      },
+      "claudeAgentSdk": {
+        "modelId": "claude-sonnet-4-6"
+      }
+    }
   },
   "claude-haiku-4-5": {
     "id": "claude-haiku-4-5",
@@ -253,11 +437,26 @@
     },
     "contextWindow": 200000,
     "capabilities": {
+      "inputModalities": ["text", "image"],
+      "outputModalities": ["text"],
+      "tools": true,
+      "structuredOutputs": true,
+      "webSearch": true,
+      "reasoning": true,
       "supportsTemperature": true,
       "supportsTopP": true,
       "adaptiveThinking": false
     },
-    "status": "current"
+    "status": "current",
+    "routes": {
+      "openRouter": {
+        "modelId": "anthropic/claude-haiku-4.5",
+        "endpoint": "language"
+      },
+      "claudeAgentSdk": {
+        "modelId": "claude-haiku-4-5"
+      }
+    }
   },
   "claude-haiku-4-5-20251001": {
     "id": "claude-haiku-4-5-20251001",
@@ -273,37 +472,106 @@
     },
     "contextWindow": 200000,
     "capabilities": {
+      "inputModalities": ["text", "image"],
+      "outputModalities": ["text"],
+      "tools": true,
+      "structuredOutputs": true,
+      "webSearch": true,
+      "reasoning": true,
       "supportsTemperature": true,
       "supportsTopP": true,
       "adaptiveThinking": false
     },
-    "status": "current"
+    "status": "current",
+    "routes": {
+      "openRouter": {
+        "modelId": "anthropic/claude-haiku-4.5",
+        "endpoint": "language"
+      },
+      "claudeAgentSdk": {
+        "modelId": "claude-haiku-4-5-20251001"
+      }
+    }
   },
   "gemini-3-pro-image-preview": {
     "id": "gemini-3-pro-image-preview",
     "provider": "google",
     "displayName": "Gemini 3 Pro Image",
     "description": "State-of-the-art image generation (codename: Nano Banana Pro). Per-image rate is the Standard 1K-2K tier (4K is higher).",
-    "pricing": { "modality": "image", "perImage": 0.134 },
-    "capabilities": { "supportsTemperature": false, "supportsTopP": false },
-    "status": "preview"
+    "pricing": {
+      "modality": "image",
+      "perImage": 0.134
+    },
+    "capabilities": {
+      "inputModalities": ["text", "image"],
+      "outputModalities": ["image"],
+      "tools": false,
+      "structuredOutputs": false,
+      "webSearch": false,
+      "reasoning": false,
+      "supportsTemperature": false,
+      "supportsTopP": false
+    },
+    "status": "preview",
+    "routes": {
+      "openRouter": {
+        "modelId": "google/gemini-3-pro-image-preview",
+        "endpoint": "image"
+      }
+    }
   },
   "gemini-3.1-flash-image-preview": {
     "id": "gemini-3.1-flash-image-preview",
     "provider": "google",
     "displayName": "Gemini 3.1 Flash Image",
     "description": "High-efficiency image generation (codename: Nano Banana 2). Per-image rate is the Standard 1K tier.",
-    "pricing": { "modality": "image", "perImage": 0.067 },
-    "capabilities": { "supportsTemperature": false, "supportsTopP": false },
-    "status": "preview"
+    "pricing": {
+      "modality": "image",
+      "perImage": 0.067
+    },
+    "capabilities": {
+      "inputModalities": ["text", "image"],
+      "outputModalities": ["image"],
+      "tools": false,
+      "structuredOutputs": false,
+      "webSearch": false,
+      "reasoning": false,
+      "supportsTemperature": false,
+      "supportsTopP": false
+    },
+    "status": "preview",
+    "routes": {
+      "openRouter": {
+        "modelId": "google/gemini-3.1-flash-image-preview",
+        "endpoint": "image"
+      }
+    }
   },
   "gemini-2.5-flash-image": {
     "id": "gemini-2.5-flash-image",
     "provider": "google",
     "displayName": "Gemini 2.5 Flash Image",
     "description": "Fast image generation (1024px, codename: Nano Banana).",
-    "pricing": { "modality": "image", "perImage": 0.039 },
-    "capabilities": { "supportsTemperature": false, "supportsTopP": false },
-    "status": "current"
+    "pricing": {
+      "modality": "image",
+      "perImage": 0.039
+    },
+    "capabilities": {
+      "inputModalities": ["text", "image"],
+      "outputModalities": ["image"],
+      "tools": false,
+      "structuredOutputs": false,
+      "webSearch": false,
+      "reasoning": false,
+      "supportsTemperature": false,
+      "supportsTopP": false
+    },
+    "status": "current",
+    "routes": {
+      "openRouter": {
+        "modelId": "google/gemini-2.5-flash-image",
+        "endpoint": "image"
+      }
+    }
   }
 }

@@ -1,4 +1,4 @@
-import { createTool } from "@mastra/core/tools";
+import { tool as defineTool } from "ai";
 import { z } from "zod";
 import { captureTelemetryOperation } from "./controller-telemetry.ts";
 import type { FleetTelemetry } from "./ports.ts";
@@ -75,8 +75,7 @@ export function createMasterTools(
   requestShutdown?: () => void,
 ) {
   return {
-    fleet_status: createTool({
-      id: "fleet_status",
+    fleet_status: defineTool({
       description: "Get the current deterministic fleet snapshot.",
       inputSchema: z.object({}),
       outputSchema: FleetSnapshotSchema,
@@ -85,8 +84,7 @@ export function createMasterTools(
           Promise.resolve(controller.snapshot()),
         ),
     }),
-    run_fleet_tick: createTool({
-      id: "run_fleet_tick",
+    run_fleet_tick: defineTool({
       description: "Request an immediate complete fleet reconciliation.",
       inputSchema: z.object({}),
       outputSchema: FleetTickReportSchema,
@@ -95,8 +93,7 @@ export function createMasterTools(
           controller.tick(),
         ),
     }),
-    prioritize_pr: createTool({
-      id: "prioritize_pr",
+    prioritize_pr: defineTool({
       description: "Set queue priority for one PR without changing readiness.",
       inputSchema: z.object({
         pr: z.number().int().positive(),
@@ -109,8 +106,7 @@ export function createMasterTools(
           return Promise.resolve({ updated: true });
         }),
     }),
-    pause_pr: createTool({
-      id: "pause_pr",
+    pause_pr: defineTool({
       description: "Pause new work and publication for one PR.",
       inputSchema: z.object({
         pr: z.number().int().positive(),
@@ -123,8 +119,7 @@ export function createMasterTools(
           return Promise.resolve({ paused: true });
         }),
     }),
-    resume_pr: createTool({
-      id: "resume_pr",
+    resume_pr: defineTool({
       description: "Resume a user-paused PR.",
       inputSchema: z.object({ pr: z.number().int().positive() }),
       outputSchema: z.object({ resumed: z.boolean() }),
@@ -134,8 +129,7 @@ export function createMasterTools(
           return Promise.resolve({ resumed: true });
         }),
     }),
-    send_worker_guidance: createTool({
-      id: "send_worker_guidance",
+    send_worker_guidance: defineTool({
       description: "Queue guidance for a PR's next worker cycle.",
       inputSchema: z.object({
         pr: z.number().int().positive(),
@@ -153,8 +147,7 @@ export function createMasterTools(
           },
         ),
     }),
-    set_worker_limit: createTool({
-      id: "set_worker_limit",
+    set_worker_limit: defineTool({
       description: "Set worker concurrency between one and five.",
       inputSchema: z.object({ limit: z.number().int().min(1).max(5) }),
       outputSchema: z.object({ updated: z.boolean() }),
@@ -169,8 +162,7 @@ export function createMasterTools(
           },
         ),
     }),
-    stop_controller: createTool({
-      id: "stop_controller",
+    stop_controller: defineTool({
       description: "Safely stop the fleet controller.",
       inputSchema: z.object({}),
       outputSchema: FleetSnapshotSchema,

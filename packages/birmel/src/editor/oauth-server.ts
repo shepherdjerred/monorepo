@@ -27,17 +27,17 @@ export async function startOAuthServer(): Promise<void> {
   // Check prerequisites and warn if missing
   const claudeCheck = checkClaudePrerequisites();
   if (claudeCheck.installed) {
-    logger.info("Claude Code CLI found", { version: claudeCheck.version });
+    logger.info("Claude Agent SDK available", { version: claudeCheck.version });
     if (!claudeCheck.hasApiKey) {
       logger.warn(
-        "ANTHROPIC_API_KEY not set - run 'claude login' or set the env var",
+        "CLAUDE_CODE_OAUTH_TOKEN not set - run 'claude login' locally or configure the production OAuth token",
       );
     }
   } else {
     logger.warn(
-      "Claude Code CLI not installed - editor feature will not work",
+      "Claude Agent SDK is unavailable - editor feature will not work",
       {
-        installCmd: "curl -fsSL https://claude.ai/install.sh | bash",
+        dependency: "@anthropic-ai/claude-agent-sdk",
       },
     );
   }

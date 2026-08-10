@@ -1,6 +1,7 @@
 export const IMAGE_TARGET_OWNERS: Readonly<Record<string, string>> = {
   "alert-dashboard": "@shepherdjerred/alert-dashboard",
   birmel: "@shepherdjerred/birmel",
+  "openrouter-broadcast-ingest": "@shepherdjerred/openrouter-broadcast-ingest",
   "tasknotes-server": "tasknotes-server",
   "starlight-karma-bot": "starlight-karma-bot",
   streambot: "@shepherdjerred/streambot",

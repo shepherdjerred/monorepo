@@ -17,7 +17,7 @@ import {
   selectPlayerIndex,
 } from "#src/league/review/generator.ts";
 import { hasAiBeenAttempted, markAiAttempted } from "#src/database/index.ts";
-import { OpenAIBudgetExceeded } from "#src/league/review/openai-budget.ts";
+import { LlmBudgetExceeded } from "#src/league/review/openai-budget.ts";
 import { createLogger } from "#src/logger.ts";
 import * as Sentry from "@sentry/bun";
 
@@ -161,7 +161,7 @@ export async function generateAiReviewIfEnabled(
 
   // Persistent dedup: never run the AI pipeline twice for the same matchId.
   // Catches every retry pattern (cursor drift, gap recovery, manual replay,
-  // future bugs we haven't seen yet). Mark BEFORE the first OpenAI call so
+  // future bugs we haven't seen yet). Mark BEFORE the first model call so
   // a mid-pipeline crash still leaves the row behind.
   if (await hasAiBeenAttempted(matchId)) {
     logger.info(
@@ -182,7 +182,7 @@ export async function generateAiReviewIfEnabled(
     });
     return { text: review?.text, image: review?.image };
   } catch (error) {
-    if (error instanceof OpenAIBudgetExceeded) {
+    if (error instanceof LlmBudgetExceeded) {
       // Expected outcome of the circuit breaker, not a bug — log as info,
       // skip Sentry to avoid alert noise. The breaker has already
       // incremented its Prometheus counter.

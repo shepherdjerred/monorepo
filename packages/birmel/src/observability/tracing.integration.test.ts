@@ -10,7 +10,7 @@
 // inside initializeTracing() but pinning here avoids any module-load surprise.
 Bun.env["DISCORD_TOKEN"] ??= "test-token";
 Bun.env["DISCORD_CLIENT_ID"] ??= "123456789012345678";
-Bun.env["OPENAI_API_KEY"] ??= "test-key";
+Bun.env["OPENROUTER_API_KEY"] ??= "test-key";
 Bun.env["TELEMETRY_ENABLED"] = "true";
 Bun.env["TELEMETRY_SERVICE_NAME"] = "birmel-test";
 // Sentry stays enabled with an unreachable DSN so we actually exercise the

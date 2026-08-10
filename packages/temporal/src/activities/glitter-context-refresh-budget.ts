@@ -1,9 +1,6 @@
 import { costForTextUsage } from "@shepherdjerred/llm-models";
 import { ApplicationFailure } from "@temporalio/common";
-import type {
-  GenerationArtifactResult,
-  GenerationUsage,
-} from "./glitter-context-refresh-cache.ts";
+import type { GenerationArtifactResult } from "./glitter-context-refresh-cache.ts";
 
 export type GenerationBudgetSummary = {
   maxUncachedCostUsd: number;
@@ -109,26 +106,4 @@ export class GenerationBudget {
       artifactKeys: [...this.#artifactKeys].toSorted(),
     };
   }
-}
-
-export function openAiGenerationUsage(input: {
-  model: string;
-  promptTokens: number;
-  completionTokens: number;
-  cachedPromptTokens: number;
-}): GenerationUsage {
-  const costUsd = costForTextUsage(input.model, {
-    inputTokens: input.promptTokens,
-    outputTokens: input.completionTokens,
-    cachedInputTokens: input.cachedPromptTokens,
-  });
-  if (costUsd === undefined) {
-    throw new Error(`missing text pricing for ${input.model}`);
-  }
-  return {
-    inputTokens: input.promptTokens,
-    outputTokens: input.completionTokens,
-    cachedInputTokens: input.cachedPromptTokens,
-    costUsd,
-  };
 }

@@ -23,7 +23,6 @@ function makeGoalConfig(runtimeDirectory: string): Config["game"]["goal"] {
     enabled: true,
     model: "gpt-5.6-luna",
     reasoning_effort: "medium",
-    codex_binary: "codex",
     runtime_directory: runtimeDirectory,
     screenshot_dir: "screenshots",
     state_path: "goal-state.json",
@@ -78,27 +77,13 @@ function codePointLength(value: string): number {
 }
 
 describe("GoalManager", () => {
-  const originalOpenAiKey = Bun.env.OPENAI_API_KEY;
-  const originalCodexApiKey = Bun.env.CODEX_API_KEY;
   const originalCodexAccessToken = Bun.env.CODEX_ACCESS_TOKEN;
 
   beforeEach(() => {
-    delete Bun.env.CODEX_API_KEY;
-    delete Bun.env.CODEX_ACCESS_TOKEN;
-    Bun.env.OPENAI_API_KEY = "test-key";
+    Bun.env.CODEX_ACCESS_TOKEN = "test-key";
   });
 
   afterEach(() => {
-    if (originalOpenAiKey === undefined) {
-      delete Bun.env.OPENAI_API_KEY;
-    } else {
-      Bun.env.OPENAI_API_KEY = originalOpenAiKey;
-    }
-    if (originalCodexApiKey === undefined) {
-      delete Bun.env.CODEX_API_KEY;
-    } else {
-      Bun.env.CODEX_API_KEY = originalCodexApiKey;
-    }
     if (originalCodexAccessToken === undefined) {
       delete Bun.env.CODEX_ACCESS_TOKEN;
     } else {
@@ -177,7 +162,7 @@ describe("GoalManager", () => {
     await manager.shutdown();
   });
 
-  test("passes OpenAI API key as Codex API key for codex exec", async () => {
+  test("passes the Codex access token to the SDK runtime", async () => {
     const runtimeDirectory = await createRuntimeDirectory();
     const process = makeProcess();
     let spawnedEnvironment: Record<string, string> | undefined;
@@ -199,11 +184,13 @@ describe("GoalManager", () => {
     });
 
     expect(result.kind).toBe("started");
-    expect(spawnedEnvironment?.CODEX_API_KEY).toBe("test-key");
+    expect(spawnedEnvironment?.CODEX_ACCESS_TOKEN).toBe("test-key");
+    expect(spawnedEnvironment?.CODEX_API_KEY).toBeUndefined();
+    expect(spawnedEnvironment?.OPENAI_API_KEY).toBeUndefined();
     await manager.shutdown();
   });
 
-  test("does not forward unrelated process secrets to the Codex subprocess", async () => {
+  test("does not forward unrelated process secrets to the Codex SDK runtime", async () => {
     const originalDiscordToken = Bun.env.DISCORD_TOKEN;
     Bun.env.DISCORD_TOKEN = "super-secret-discord-token";
     try {
@@ -228,8 +215,8 @@ describe("GoalManager", () => {
       });
 
       expect(result.kind).toBe("started");
-      // The Codex credential the subprocess legitimately needs is still present.
-      expect(spawnedEnvironment?.CODEX_API_KEY).toBe("test-key");
+      // The credential the SDK runtime legitimately needs is still present.
+      expect(spawnedEnvironment?.CODEX_ACCESS_TOKEN).toBe("test-key");
       // The bot token (and any other non-allowlisted secret) must not leak.
       expect(spawnedEnvironment?.DISCORD_TOKEN).toBeUndefined();
       await manager.shutdown();
@@ -242,8 +229,7 @@ describe("GoalManager", () => {
     }
   });
 
-  test("accepts Codex access token without an API key", async () => {
-    delete Bun.env.OPENAI_API_KEY;
+  test("accepts a Codex access token", async () => {
     Bun.env.CODEX_ACCESS_TOKEN = "test-access-token";
     const runtimeDirectory = await createRuntimeDirectory();
     const process = makeProcess();
@@ -304,17 +290,17 @@ describe("GoalManager", () => {
 });
 
 describe("GoalManager final report", () => {
-  const originalOpenAiKey = Bun.env.OPENAI_API_KEY;
+  const originalCodexAccessToken = Bun.env.CODEX_ACCESS_TOKEN;
 
   beforeEach(() => {
-    Bun.env.OPENAI_API_KEY = "test-key";
+    Bun.env.CODEX_ACCESS_TOKEN = "test-key";
   });
 
   afterEach(() => {
-    if (originalOpenAiKey === undefined) {
-      delete Bun.env.OPENAI_API_KEY;
+    if (originalCodexAccessToken === undefined) {
+      delete Bun.env.CODEX_ACCESS_TOKEN;
     } else {
-      Bun.env.OPENAI_API_KEY = originalOpenAiKey;
+      Bun.env.CODEX_ACCESS_TOKEN = originalCodexAccessToken;
     }
   });
 
@@ -521,17 +507,17 @@ describe("GoalManager final report", () => {
 });
 
 describe("GoalManager concurrency", () => {
-  const originalOpenAiKey = Bun.env.OPENAI_API_KEY;
+  const originalCodexAccessToken = Bun.env.CODEX_ACCESS_TOKEN;
 
   beforeEach(() => {
-    Bun.env.OPENAI_API_KEY = "test-key";
+    Bun.env.CODEX_ACCESS_TOKEN = "test-key";
   });
 
   afterEach(() => {
-    if (originalOpenAiKey === undefined) {
-      delete Bun.env.OPENAI_API_KEY;
+    if (originalCodexAccessToken === undefined) {
+      delete Bun.env.CODEX_ACCESS_TOKEN;
     } else {
-      Bun.env.OPENAI_API_KEY = originalOpenAiKey;
+      Bun.env.CODEX_ACCESS_TOKEN = originalCodexAccessToken;
     }
   });
 
@@ -621,17 +607,17 @@ async function runAndComplete(
 }
 
 describe("GoalManager history", () => {
-  const originalOpenAiKey = Bun.env.OPENAI_API_KEY;
+  const originalCodexAccessToken = Bun.env.CODEX_ACCESS_TOKEN;
 
   beforeEach(() => {
-    Bun.env.OPENAI_API_KEY = "test-key";
+    Bun.env.CODEX_ACCESS_TOKEN = "test-key";
   });
 
   afterEach(() => {
-    if (originalOpenAiKey === undefined) {
-      delete Bun.env.OPENAI_API_KEY;
+    if (originalCodexAccessToken === undefined) {
+      delete Bun.env.CODEX_ACCESS_TOKEN;
     } else {
-      Bun.env.OPENAI_API_KEY = originalOpenAiKey;
+      Bun.env.CODEX_ACCESS_TOKEN = originalCodexAccessToken;
     }
   });
 
@@ -776,17 +762,17 @@ async function waitForCondition(
 }
 
 describe("GoalManager interval status updates", () => {
-  const originalOpenAiKey = Bun.env.OPENAI_API_KEY;
+  const originalCodexAccessToken = Bun.env.CODEX_ACCESS_TOKEN;
 
   beforeEach(() => {
-    Bun.env.OPENAI_API_KEY = "test-key";
+    Bun.env.CODEX_ACCESS_TOKEN = "test-key";
   });
 
   afterEach(() => {
-    if (originalOpenAiKey === undefined) {
-      delete Bun.env.OPENAI_API_KEY;
+    if (originalCodexAccessToken === undefined) {
+      delete Bun.env.CODEX_ACCESS_TOKEN;
     } else {
-      Bun.env.OPENAI_API_KEY = originalOpenAiKey;
+      Bun.env.CODEX_ACCESS_TOKEN = originalCodexAccessToken;
     }
   });
 

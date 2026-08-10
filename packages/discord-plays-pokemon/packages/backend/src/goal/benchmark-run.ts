@@ -50,6 +50,7 @@ export type BenchmarkProvenanceInput = {
   workerSourceSha256: string;
   evaluatorSourceSha256: string;
   saveOracleSourceSha256: string;
+  /** Historical artifact key; records the native @openai/codex-sdk version. */
   codexVersion: string;
   bunVersion: string;
 };
@@ -260,7 +261,6 @@ export async function runBenchmarkOnce(
     reasoning: args.reasoning,
     runtimeMinutes: args.runtimeMinutes,
     bootTimeoutSeconds: args.bootTimeoutSeconds,
-    codexBinary: args.codexBinary,
   });
 
   const harnessStartedAt = new Date().toISOString();

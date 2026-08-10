@@ -4,7 +4,7 @@ import { loadConfigFromEnvironment } from "@shepherdjerred/birmel/config/index.t
 const VALID_ENVIRONMENT = {
   DISCORD_TOKEN: "token",
   DISCORD_CLIENT_ID: "1".repeat(18),
-  OPENAI_API_KEY: "key",
+  OPENROUTER_API_KEY: "key",
 };
 
 describe("strict environment configuration", () => {
@@ -25,7 +25,7 @@ describe("strict environment configuration", () => {
       { SCHEDULER_OPERATION_TIMEOUT_MS: "0" },
     ],
     ["too many steps", { AGENT_MAX_STEPS: "9" }],
-    ["empty model", { OPENAI_MODEL: "" }],
+    ["empty model", { LLM_MODEL: "" }],
     ["malformed user IDs", { TRUSTED_USER_IDS: '["not-a-user"]' }],
     ["short user IDs", { TRUSTED_USER_IDS: '["123"]' }],
     ["short client ID", { DISCORD_CLIENT_ID: "123" }],

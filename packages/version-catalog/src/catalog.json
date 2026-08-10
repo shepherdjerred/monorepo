@@ -722,6 +722,20 @@
       ]
     },
     {
+      "name": "shepherdjerred/openrouter-broadcast-ingest",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "2.0.0-0@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "notes": [
+        "not managed by renovate \u2014 pre-first-publish placeholder. The main image",
+        "release injects the built digest into chart synthesis and version",
+        "commit-back replaces this pin before a later release can use source state."
+      ]
+    },
+    {
       "name": "shepherdjerred/scout-evals",
       "category": "internal-image",
       "artifactType": "image",

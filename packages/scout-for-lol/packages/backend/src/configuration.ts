@@ -151,12 +151,9 @@ function computeConfiguration() {
       .get("REPORT_DUCKDB_MEMORY_LIMIT")
       .default("512MB")
       .asString(),
-    openaiApiKey: getOptionalEnvVar("OPENAI_API_KEY"),
-    reportAiModel: getOptionalEnvVar("REPORT_AI_MODEL", "openai/gpt-5.6-sol"),
-    exploreModel: env
-      .get("EXPLORE_MODEL")
-      .default("openai/gpt-5.6-sol")
-      .asString(),
+    openRouterApiKey: getOptionalEnvVar("OPENROUTER_API_KEY"),
+    reportAiModel: getOptionalEnvVar("REPORT_AI_MODEL", "gpt-5.6-sol"),
+    exploreModel: env.get("EXPLORE_MODEL").default("gpt-5.6-sol").asString(),
     // Explore reads the whole lake, so access is an explicit allowlist of
     // Discord servers rather than a permission on any one of them. Unset
     // means nobody — an empty list fails closed, which is the only safe
@@ -165,13 +162,12 @@ function computeConfiguration() {
       .get("EXPLORE_GUILD_ALLOWLIST")
       .default("")
       .asArray(","),
-    geminiApiKey: getOptionalEnvVar("GEMINI_API_KEY"),
-    openaiHourlyTokenBudget: env
-      .get("OPENAI_HOURLY_TOKEN_BUDGET")
+    llmHourlyTokenBudget: env
+      .get("LLM_HOURLY_TOKEN_BUDGET")
       .default("2000000")
       .asIntPositive(),
-    openaiDailyTokenBudget: env
-      .get("OPENAI_DAILY_TOKEN_BUDGET")
+    llmDailyTokenBudget: env
+      .get("LLM_DAILY_TOKEN_BUDGET")
       .default("20000000")
       .asIntPositive(),
   };
@@ -264,8 +260,8 @@ const configuration: Configuration = {
   get reportDuckDbMemoryLimit() {
     return getConfiguration().reportDuckDbMemoryLimit;
   },
-  get openaiApiKey() {
-    return getConfiguration().openaiApiKey;
+  get openRouterApiKey() {
+    return getConfiguration().openRouterApiKey;
   },
   get reportAiModel() {
     return getConfiguration().reportAiModel;
@@ -276,14 +272,11 @@ const configuration: Configuration = {
   get exploreGuildAllowlist() {
     return getConfiguration().exploreGuildAllowlist;
   },
-  get geminiApiKey() {
-    return getConfiguration().geminiApiKey;
+  get llmHourlyTokenBudget() {
+    return getConfiguration().llmHourlyTokenBudget;
   },
-  get openaiHourlyTokenBudget() {
-    return getConfiguration().openaiHourlyTokenBudget;
-  },
-  get openaiDailyTokenBudget() {
-    return getConfiguration().openaiDailyTokenBudget;
+  get llmDailyTokenBudget() {
+    return getConfiguration().llmDailyTokenBudget;
   },
 };
 

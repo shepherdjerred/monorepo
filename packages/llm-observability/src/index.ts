@@ -15,6 +15,7 @@ import {
   type BuildArchiveProcessorOptions as InnerBuildArchiveProcessorOptions,
 } from "./init.ts";
 import {
+  archiveObjectExists as innerArchiveObjectExists,
   buildArchiveKey as innerBuildArchiveKey,
   uploadArchive as innerUploadArchive,
   type ArchiveConfig as InnerArchiveConfig,
@@ -22,18 +23,6 @@ import {
   type BuildKeyParams as InnerBuildKeyParams,
 } from "./archive-uploader.ts";
 import { redactSecrets as innerRedactSecrets } from "./redact.ts";
-import {
-  traceAnthropic as innerTraceAnthropic,
-  type TraceAnthropicMetadata as InnerTraceAnthropicMetadata,
-} from "./anthropic-wrapper.ts";
-import {
-  traceOpenAi as innerTraceOpenAi,
-  type TraceOpenAiMetadata as InnerTraceOpenAiMetadata,
-} from "./openai-wrapper.ts";
-import {
-  traceGemini as innerTraceGemini,
-  type TraceGeminiMetadata as InnerTraceGeminiMetadata,
-} from "./gemini-wrapper.ts";
 import {
   traceClaudeAgent as innerTraceClaudeAgent,
   type TraceClaudeAgentMetadata as InnerTraceClaudeAgentMetadata,
@@ -43,12 +32,6 @@ import {
   type TraceTextStreamMetadata as InnerTraceTextStreamMetadata,
   type TraceTextStreamFinal as InnerTraceTextStreamFinal,
 } from "./text-stream-wrapper.ts";
-import {
-  traceClaudeCli as innerTraceClaudeCli,
-  type TraceClaudeCliMetadata as InnerTraceClaudeCliMetadata,
-  type TraceClaudeCliOutcome as InnerTraceClaudeCliOutcome,
-  type ClaudeCliLogger as InnerClaudeCliLogger,
-} from "./claude-cli-wrapper.ts";
 import {
   createCodexJsonlParser as innerCreateCodexJsonlParser,
   pumpCodexStdout as innerPumpCodexStdout,
@@ -110,6 +93,11 @@ export function uploadArchive(
 ): ReturnType<typeof innerUploadArchive> {
   return innerUploadArchive(...args);
 }
+export function archiveObjectExists(
+  ...args: Parameters<typeof innerArchiveObjectExists>
+): ReturnType<typeof innerArchiveObjectExists> {
+  return innerArchiveObjectExists(...args);
+}
 export type ArchiveConfig = Identity<InnerArchiveConfig>;
 export type ArchiveRef = Identity<InnerArchiveRef>;
 export type BuildKeyParams = Identity<InnerBuildKeyParams>;
@@ -120,23 +108,11 @@ export function redactSecrets(
   return innerRedactSecrets(...args);
 }
 
-// Wrapper functions defer to the inner generic; their signatures use `typeof`
-// to inherit the full generic constraint without restating the upstream
-// response shape, which would couple this barrel to provider-specific types.
-export const traceAnthropic: typeof innerTraceAnthropic = (metadata, run) =>
-  innerTraceAnthropic(metadata, run);
-export type TraceAnthropicMetadata = Identity<InnerTraceAnthropicMetadata>;
-
-export const traceOpenAi: typeof innerTraceOpenAi = (metadata, run) =>
-  innerTraceOpenAi(metadata, run);
-export type TraceOpenAiMetadata = Identity<InnerTraceOpenAiMetadata>;
-
-export const traceGemini: typeof innerTraceGemini = (metadata, run) =>
-  innerTraceGemini(metadata, run);
-export type TraceGeminiMetadata = Identity<InnerTraceGeminiMetadata>;
-
-export const traceClaudeAgent: typeof innerTraceClaudeAgent = (metadata, run) =>
-  innerTraceClaudeAgent(metadata, run);
+export const traceClaudeAgent: typeof innerTraceClaudeAgent = (
+  metadata,
+  run,
+  transformMessage,
+) => innerTraceClaudeAgent(metadata, run, transformMessage);
 export type TraceClaudeAgentMetadata = Identity<InnerTraceClaudeAgentMetadata>;
 
 export function traceTextStream(
@@ -146,15 +122,6 @@ export function traceTextStream(
 }
 export type TraceTextStreamMetadata = Identity<InnerTraceTextStreamMetadata>;
 export type TraceTextStreamFinal = Identity<InnerTraceTextStreamFinal>;
-
-export function traceClaudeCli(
-  ...args: Parameters<typeof innerTraceClaudeCli>
-): ReturnType<typeof innerTraceClaudeCli> {
-  innerTraceClaudeCli(...args);
-}
-export type TraceClaudeCliMetadata = Identity<InnerTraceClaudeCliMetadata>;
-export type TraceClaudeCliOutcome = Identity<InnerTraceClaudeCliOutcome>;
-export type ClaudeCliLogger = Identity<InnerClaudeCliLogger>;
 
 export function createCodexJsonlParser(
   ...args: Parameters<typeof innerCreateCodexJsonlParser>

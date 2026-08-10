@@ -4,7 +4,7 @@ import { Glob } from "bun";
 import path from "node:path";
 
 export type Config = {
-  anthropicApiKey: string;
+  openRouterApiKey: string;
   apply: boolean;
   limit: number;
   batchSize: number;
@@ -68,9 +68,9 @@ export function getConfig(): Config {
     strict: true,
   });
 
-  const anthropicApiKey = Bun.env["ANTHROPIC_API_KEY"];
-  if (anthropicApiKey === undefined || anthropicApiKey === "") {
-    throw new Error("ANTHROPIC_API_KEY environment variable is required");
+  const openRouterApiKey = Bun.env["OPENROUTER_API_KEY"];
+  if (openRouterApiKey === undefined || openRouterApiKey === "") {
+    throw new Error("OPENROUTER_API_KEY environment variable is required");
   }
 
   const currentYear = new Date().getFullYear();
@@ -84,7 +84,7 @@ export function getConfig(): Config {
   const appleMailDir = resolveAppleMailDir(values["apple-mail-dir"]);
 
   return {
-    anthropicApiKey,
+    openRouterApiKey,
     apply: values.apply,
     limit: Number(values.limit),
     batchSize: Number(values["batch-size"]),

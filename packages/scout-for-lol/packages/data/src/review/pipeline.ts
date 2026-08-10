@@ -65,7 +65,7 @@ const STAGE_MESSAGES: Record<PipelineStageName, string> = {
 /** Count enabled stages for progress tracking */
 function countEnabledStages(
   stages: PipelineStagesConfig,
-  hasGemini: boolean,
+  hasImage: boolean,
 ): number {
   let count = 1; // reviewText is always enabled
   if (stages.timelineSummary.enabled) {
@@ -77,7 +77,7 @@ function countEnabledStages(
   if (stages.imageDescription.enabled) {
     count++;
   }
-  if (hasGemini && stages.imageGeneration.enabled) {
+  if (hasImage && stages.imageGeneration.enabled) {
     count++;
   }
   return count;
@@ -165,7 +165,7 @@ async function runTimelineSummary(
     rawTimeline,
     rawMatch,
     laneContext: input.prompts.laneContext,
-    client: clients.openai,
+    client: clients.text,
     model: stages.timelineSummary.model,
     systemPrompt: stages.timelineSummary.systemPrompt,
     userPrompt: stages.timelineSummary.userPrompt,
@@ -187,7 +187,7 @@ async function runMatchSummary(
     match: match.processed,
     rawMatch: match.raw,
     playerIndex: player.index,
-    client: clients.openai,
+    client: clients.text,
     model: stages.matchSummary.model,
     systemPrompt: stages.matchSummary.systemPrompt,
     userPrompt: stages.matchSummary.userPrompt,
@@ -250,7 +250,7 @@ async function runStage3ImageDescription(
     const result = await generateImageDescription({
       reviewText,
       artStyle: artStyleDescription,
-      client: clients.openai,
+      client: clients.text,
       model: stages.imageDescription.model,
       systemPrompt: stages.imageDescription.systemPrompt,
       userPrompt: stages.imageDescription.userPrompt,
@@ -275,14 +275,14 @@ async function runStage4ImageGeneration(
 ): Promise<string | undefined> {
   const { stages, clients, traces } = ctx;
 
-  if (!stages.imageGeneration.enabled || !clients.gemini) {
+  if (!stages.imageGeneration.enabled || !clients.image) {
     return undefined;
   }
 
   try {
     const result = await generateImage({
       imageDescription: imageDescriptionText,
-      geminiClient: clients.gemini,
+      client: clients.image,
       model: stages.imageGeneration.model,
       timeoutMs: stages.imageGeneration.timeoutMs,
       userPrompt: stages.imageGeneration.userPrompt,
@@ -309,7 +309,7 @@ async function runStage3And4(
   if (imageDescriptionText !== undefined) {
     result.imageDescriptionText = imageDescriptionText;
 
-    if (stages.imageGeneration.enabled && clients.gemini) {
+    if (stages.imageGeneration.enabled && clients.image) {
       reportProgress("image-generation");
     }
 
@@ -349,8 +349,8 @@ export async function generateFullMatchReview(
   const intermediate: PipelineIntermediateResults = {};
 
   // Set up progress tracking
-  const hasGemini = clients.gemini !== undefined;
-  const totalStages = countEnabledStages(stages, hasGemini);
+  const hasImage = clients.image !== undefined;
+  const totalStages = countEnabledStages(stages, hasImage);
   const reportProgress = createProgressReporter(onProgress, totalStages);
 
   // Stage 1: Summarization (using raw data)
@@ -379,7 +379,7 @@ export async function generateFullMatchReview(
     laneContext: prompts.laneContext,
     playerIndex: player.index,
     matchSummary: effectiveMatchSummary,
-    client: clients.openai,
+    client: clients.text,
     model: stages.reviewText.model,
     systemPrompt: stages.reviewText.systemPrompt,
     userPrompt: stages.reviewText.userPrompt,

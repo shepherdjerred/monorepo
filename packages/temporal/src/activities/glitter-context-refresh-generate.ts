@@ -1,4 +1,3 @@
-import { zodResponseFormat } from "openai/helpers/zod";
 import { z } from "zod/v4";
 import {
   RelationshipDirectionSchema,
@@ -16,12 +15,11 @@ import {
   type GenerationArtifactStore,
 } from "./glitter-context-refresh-cache.ts";
 import {
-  glitterCompletionArtifact,
-  glitterCompletionArtifactSchema,
-  glitterChatMessages,
-  parseGlitterCompletion,
-  useGlitterCompletionArtifact,
-} from "./glitter-context-refresh-openai.ts";
+  generateGlitterObject,
+  glitterObjectArtifactSchema,
+  glitterPrompt,
+  useGlitterObjectArtifact,
+} from "./glitter-context-refresh-llm.ts";
 
 const RELATIONSHIP_MODEL = "gpt-5.6-sol";
 const RELATIONSHIP_MAX_OUTPUT_TOKENS = 6000;
@@ -84,7 +82,7 @@ function relationshipMessages(input: RelationshipGenerationInput) {
       })),
     }),
   ].join("\n");
-  return glitterChatMessages(
+  return glitterPrompt(
     "You identify explicit relationship changes conservatively and cite corpus evidence.",
     prompt,
   );
@@ -120,18 +118,7 @@ export async function proposeRelationships(input: {
   }
   const callSite = "glitter-context-relationships";
   const messages = relationshipMessages(input);
-  const params = {
-    model: RELATIONSHIP_MODEL,
-    messages,
-    max_completion_tokens: RELATIONSHIP_MAX_OUTPUT_TOKENS,
-    reasoning_effort: "medium" as const,
-    seed: DETERMINISTIC_SEED,
-    response_format: zodResponseFormat(
-      RelationshipProposalsSchema,
-      "relationship_proposals",
-    ),
-  };
-  const CompletionArtifactSchema = glitterCompletionArtifactSchema(
+  const CompletionArtifactSchema = glitterObjectArtifactSchema(
     RelationshipProposalsSchema,
   );
   const artifact = await readOrCreateGenerationArtifact({
@@ -142,9 +129,9 @@ export async function proposeRelationships(input: {
       schemaVersion: 3,
       model: RELATIONSHIP_MODEL,
       messages,
-      maxCompletionTokens: params.max_completion_tokens,
-      reasoningEffort: params.reasoning_effort,
-      seed: params.seed,
+      maxCompletionTokens: RELATIONSHIP_MAX_OUTPUT_TOKENS,
+      reasoningEffort: "medium",
+      seed: DETERMINISTIC_SEED,
       responseSchema: "relationship-proposals-v2",
     },
     responseSchema: CompletionArtifactSchema,
@@ -152,23 +139,25 @@ export async function proposeRelationships(input: {
       input.budget.authorizeUncachedCall(
         estimatedCallCostUsd({
           model: RELATIONSHIP_MODEL,
-          inputTokenUpperBound: inputTokenUpperBound(JSON.stringify(params)),
+          inputTokenUpperBound: inputTokenUpperBound(JSON.stringify(messages)),
           outputTokenUpperBound: RELATIONSHIP_MAX_OUTPUT_TOKENS,
         }),
       );
-      const completion = await parseGlitterCompletion(callSite, params);
-      const message = completion.choices[0]?.message;
-      return glitterCompletionArtifact({
+      return await generateGlitterObject({
         model: RELATIONSHIP_MODEL,
-        parsed: message?.parsed,
-        rawContent: message?.content ?? null,
-        usage: completion.usage,
-        missingParsedError:
+        schema: RelationshipProposalsSchema,
+        schemaName: "relationship_proposals",
+        ...messages,
+        workload: callSite,
+        maxOutputTokens: RELATIONSHIP_MAX_OUTPUT_TOKENS,
+        reasoningEffort: "medium",
+        seed: DETERMINISTIC_SEED,
+        exhaustionError:
           "GPT-5.6 Sol did not return parsed relationship proposals",
       });
     },
   });
-  return useGlitterCompletionArtifact({
+  return useGlitterObjectArtifact({
     artifact,
     budget: input.budget,
   }).proposals;

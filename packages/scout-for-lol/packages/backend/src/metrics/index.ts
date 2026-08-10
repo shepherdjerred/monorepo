@@ -521,16 +521,16 @@ export const participantMismatchTotal = new Counter({
 });
 
 // =======================
-// OpenAI Token Budget Metrics
+// LLM Token Budget Metrics (historical scout_openai_* series retained)
 // =======================
 
 /**
- * Total OpenAI tokens consumed, labelled by model and token kind.
+ * Total LLM tokens consumed, labelled by model and token kind.
  * Sum across (prompt + completion) gives total spend for cost tracking.
  */
 export const scoutOpenaiTokensUsedTotal = new Counter({
   name: "scout_openai_tokens_used_total",
-  help: "Total OpenAI tokens consumed by the AI review pipeline",
+  help: "Total LLM tokens consumed by the AI review pipeline",
   labelNames: ["model", "kind"] as const, // kind: prompt | completion
   registers: [registry],
 });
@@ -542,7 +542,7 @@ export const scoutOpenaiTokensUsedTotal = new Counter({
  */
 export const scoutOpenaiBudgetExceededTotal = new Counter({
   name: "scout_openai_budget_exceeded_total",
-  help: "OpenAI calls refused by the token-budget circuit breaker",
+  help: "LLM calls refused by the token-budget circuit breaker",
   labelNames: ["window"] as const, // window: hourly | daily
   registers: [registry],
 });

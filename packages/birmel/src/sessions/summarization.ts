@@ -1,8 +1,7 @@
-import { openai } from "@ai-sdk/openai";
 import { generateText } from "ai";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
-import { getOpenAIProviderOptions } from "@shepherdjerred/birmel/agent-runtime/provider-options.ts";
+import { getLlmRuntime } from "@shepherdjerred/birmel/agent-runtime/llm.ts";
 import { withSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { z } from "zod";
@@ -30,14 +29,15 @@ export function renderSessionSummaryPrompt(input: SessionSummaryInput): string {
 
 const defaultSummarizer: SessionSummarizer = async (input) => {
   const config = getConfig();
+  const runtime = getLlmRuntime();
   const result = await generateText({
-    model: openai(config.openai.memoryModel),
+    model: runtime.languageModel(config.openRouter.memoryModel),
     system:
       "Summarize the durable state of this Discord work thread. Preserve decisions, unresolved work, user intent, and verified tool outcomes. Do not include reasoning or invent facts.",
     prompt: renderSessionSummaryPrompt(input),
     maxOutputTokens: 1500,
-    timeout: config.agent.responseTimeoutMs,
-    providerOptions: getOpenAIProviderOptions(),
+    abortSignal: AbortSignal.timeout(config.agent.responseTimeoutMs),
+    ...runtime.callOptions({ workload: "birmel.session.summarize" }),
   });
   return result.text;
 };

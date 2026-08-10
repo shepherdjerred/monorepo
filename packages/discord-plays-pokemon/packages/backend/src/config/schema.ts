@@ -11,7 +11,6 @@ const GoalConfigSchema = z
     // Codex `model_reasoning_effort` — medium is the goal-mode default so
     // navigation/vision turns get real chain-of-thought without flagship cost.
     reasoning_effort: ReasoningEffortSchema.default("medium"),
-    codex_binary: z.string().min(1).default("codex"),
     runtime_directory: z.string().min(1).default("."),
     helper_dir: z.string().min(1).optional(),
     screenshot_dir: z.string().min(1).default("goal-screenshots"),
@@ -54,7 +53,6 @@ const GoalConfigSchema = z
     enabled: false,
     model: "gpt-5.6-luna",
     reasoning_effort: "medium",
-    codex_binary: "codex",
     runtime_directory: ".",
     screenshot_dir: "goal-screenshots",
     state_path: "goal-state.json",

@@ -18,6 +18,7 @@ const HealthResultSchema = z.object({
     status: z.number().int(),
     body: z.object({ live: z.boolean() }),
   }),
+  metrics: z.object({ status: z.number().int(), body: z.string() }),
   ready: z.object({
     status: z.number().int(),
     body: z.object({
@@ -146,6 +147,10 @@ describe("Birmel health endpoints", () => {
     const result = await runScenario("ready");
 
     expect(result.live.status).toBe(200);
+    expect(result.metrics.status).toBe(200);
+    expect(result.metrics.body).toContain(
+      "birmel_process_cpu_user_seconds_total",
+    );
     expect(result.ready).toEqual({
       status: 200,
       body: {

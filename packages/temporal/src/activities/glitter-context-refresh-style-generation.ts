@@ -1,4 +1,3 @@
-import { zodResponseFormat } from "openai/helpers/zod";
 import { z } from "zod/v4";
 import {
   type StyleCard,
@@ -19,12 +18,11 @@ import {
   type StyleEvidenceChunk,
 } from "./glitter-context-refresh-chunks.ts";
 import {
-  glitterCompletionArtifact,
-  glitterCompletionArtifactSchema,
-  glitterChatMessages,
-  parseGlitterCompletion,
-  useGlitterCompletionArtifact,
-} from "./glitter-context-refresh-openai.ts";
+  generateGlitterObject,
+  glitterObjectArtifactSchema,
+  glitterPrompt,
+  useGlitterObjectArtifact,
+} from "./glitter-context-refresh-llm.ts";
 import type { StyleRefreshCandidate } from "./glitter-context-refresh-selection.ts";
 import {
   estimateStyleGenerationCost as estimateStyleGenerationCostInternal,
@@ -135,22 +133,12 @@ async function runChunkExtraction(input: {
     input.repair === null
       ? "glitter-style-chunk"
       : "glitter-style-chunk-repair";
-  const messages = glitterChatMessages(
+  const messages = glitterPrompt(
     "You extract compact, cited style evidence for later synthesis.",
     prompt,
   );
-  const params = {
-    model: EXTRACTION_MODEL,
-    messages,
-    max_completion_tokens: EXTRACTION_MAX_OUTPUT_TOKENS,
-    reasoning_effort: "none" as const,
-    seed: DETERMINISTIC_SEED + input.attempt,
-    response_format: zodResponseFormat(
-      StyleChunkSummarySchema,
-      "style_chunk_summary",
-    ),
-  };
-  const CompletionArtifactSchema = glitterCompletionArtifactSchema(
+  const seed = DETERMINISTIC_SEED + input.attempt;
+  const CompletionArtifactSchema = glitterObjectArtifactSchema(
     StyleChunkSummarySchema,
   );
   const artifact = await readOrCreateGenerationArtifact({
@@ -161,9 +149,9 @@ async function runChunkExtraction(input: {
       schemaVersion: 3,
       model: EXTRACTION_MODEL,
       messages,
-      maxCompletionTokens: params.max_completion_tokens,
-      reasoningEffort: params.reasoning_effort,
-      seed: params.seed,
+      maxCompletionTokens: EXTRACTION_MAX_OUTPUT_TOKENS,
+      reasoningEffort: "none",
+      seed,
       responseSchema: "style-chunk-summary-v2",
     },
     responseSchema: CompletionArtifactSchema,
@@ -171,22 +159,24 @@ async function runChunkExtraction(input: {
       input.budget.authorizeUncachedCall(
         estimatedCallCostUsd({
           model: EXTRACTION_MODEL,
-          inputTokenUpperBound: inputTokenUpperBound(JSON.stringify(params)),
+          inputTokenUpperBound: inputTokenUpperBound(JSON.stringify(messages)),
           outputTokenUpperBound: EXTRACTION_MAX_OUTPUT_TOKENS,
         }),
       );
-      const completion = await parseGlitterCompletion(callSite, params);
-      const message = completion.choices[0]?.message;
-      return glitterCompletionArtifact({
+      return await generateGlitterObject({
         model: EXTRACTION_MODEL,
-        parsed: message?.parsed,
-        rawContent: message?.content ?? null,
-        usage: completion.usage,
-        missingParsedError: `GPT-5.6 Luna did not return a parsed summary for ${input.chunk.key}`,
+        schema: StyleChunkSummarySchema,
+        schemaName: "style_chunk_summary",
+        ...messages,
+        workload: callSite,
+        maxOutputTokens: EXTRACTION_MAX_OUTPUT_TOKENS,
+        reasoningEffort: "none",
+        seed,
+        exhaustionError: `GPT-5.6 Luna did not return a parsed summary for ${input.chunk.key}`,
       });
     },
   });
-  return useGlitterCompletionArtifact({
+  return useGlitterObjectArtifact({
     artifact,
     budget: input.budget,
   });
@@ -340,90 +330,54 @@ async function runSynthesis(input: {
     input.repair === null
       ? "glitter-style-synthesis"
       : "glitter-style-synthesis-repair";
-  const messages = glitterChatMessages(
+  const messages = glitterPrompt(
     "You synthesize evidence-grounded writing-style patches for human review.",
     prompt,
   );
-  const params = {
-    model: SYNTHESIS_MODEL,
-    messages,
-    max_completion_tokens: SYNTHESIS_MAX_OUTPUT_TOKENS,
-    reasoning_effort: "medium" as const,
-    seed: DETERMINISTIC_SEED + input.attempt,
-    response_format: zodResponseFormat(
-      StyleSynthesisSchema,
-      "style_card_synthesis",
-    ),
-  };
+  const seed = DETERMINISTIC_SEED + input.attempt;
   const CompletionArtifactSchema =
-    glitterCompletionArtifactSchema(StyleSynthesisSchema);
-  const createArtifact = async (
-    inputParams: typeof params,
-    inputCallSite: string,
-  ) =>
-    readOrCreateGenerationArtifact({
-      store: input.artifactStore,
+    glitterObjectArtifactSchema(StyleSynthesisSchema);
+  const artifact = await readOrCreateGenerationArtifact({
+    store: input.artifactStore,
+    model: SYNTHESIS_MODEL,
+    callSite,
+    request: {
+      schemaVersion: 4,
       model: SYNTHESIS_MODEL,
-      callSite: inputCallSite,
-      request: {
-        schemaVersion: 3,
-        model: SYNTHESIS_MODEL,
-        messages: inputParams.messages,
-        maxCompletionTokens: inputParams.max_completion_tokens,
-        truncationRetryMaxCompletionTokens:
-          SYNTHESIS_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
-        reasoningEffort: inputParams.reasoning_effort,
-        seed: inputParams.seed,
-        responseSchema: "style-card-synthesis-v2",
-      },
-      responseSchema: CompletionArtifactSchema,
-      generate: async () => {
-        input.budget.authorizeUncachedCall(
-          estimatedCallCostUsd({
-            model: SYNTHESIS_MODEL,
-            inputTokenUpperBound: inputTokenUpperBound(
-              JSON.stringify(inputParams),
-            ),
-            outputTokenUpperBound: inputParams.max_completion_tokens,
-          }),
-        );
-        const completion = await parseGlitterCompletion(
-          inputCallSite,
-          inputParams,
-        );
-        const message = completion.choices[0]?.message;
-        return glitterCompletionArtifact({
+      messages,
+      maxCompletionTokens: SYNTHESIS_MAX_OUTPUT_TOKENS,
+      semanticRetryMaxCompletionTokens:
+        SYNTHESIS_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
+      reasoningEffort: "medium",
+      seed,
+      responseSchema: "style-card-synthesis-v2",
+    },
+    responseSchema: CompletionArtifactSchema,
+    generate: async () => {
+      input.budget.authorizeUncachedCall(
+        estimatedCallCostUsd({
           model: SYNTHESIS_MODEL,
-          parsed: message?.parsed,
-          rawContent: message?.content ?? null,
-          usage: completion.usage,
-          ...(completion.choices[0]?.finish_reason === "length"
-            ? { failureError: SYNTHESIS_TRUNCATION_ERROR }
-            : {}),
-          missingParsedError: `GPT-5.6 Sol did not return a parsed synthesis for ${input.candidate.person.id}`,
-        });
-      },
-    });
-  const artifact = await createArtifact(params, callSite);
-  if (
-    artifact.response.outcome === "failure" &&
-    artifact.response.error === SYNTHESIS_TRUNCATION_ERROR
-  ) {
-    input.budget.record(artifact);
-    const retryParams = {
-      ...params,
-      max_completion_tokens: SYNTHESIS_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
-    };
-    const retryArtifact = await createArtifact(
-      retryParams,
-      `${callSite}-truncation-retry`,
-    );
-    return useGlitterCompletionArtifact({
-      artifact: retryArtifact,
-      budget: input.budget,
-    });
-  }
-  return useGlitterCompletionArtifact({ artifact, budget: input.budget });
+          inputTokenUpperBound: inputTokenUpperBound(JSON.stringify(messages)),
+          outputTokenUpperBound: SYNTHESIS_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
+        }),
+      );
+      return await generateGlitterObject({
+        model: SYNTHESIS_MODEL,
+        schema: StyleSynthesisSchema,
+        schemaName: "style_card_synthesis",
+        ...messages,
+        workload: callSite,
+        maxOutputTokens: SYNTHESIS_MAX_OUTPUT_TOKENS,
+        semanticRetryMaxOutputTokens:
+          SYNTHESIS_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
+        reasoningEffort: "medium",
+        seed,
+        truncationError: SYNTHESIS_TRUNCATION_ERROR,
+        exhaustionError: `GPT-5.6 Sol did not return a parsed synthesis for ${input.candidate.person.id}`,
+      });
+    },
+  });
+  return useGlitterObjectArtifact({ artifact, budget: input.budget });
 }
 
 export function estimateStyleGenerationCost(input: {

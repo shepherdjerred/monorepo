@@ -5,10 +5,13 @@ import {
   assertModelId,
   costForTextUsage,
   getModel,
+  getOpenRouterRoute,
   getPerTokenPricing,
   getPricing,
   isModelId,
+  modelIdForOpenRouterRoute,
   modelsByProvider,
+  requireOpenRouterRoute,
 } from "#src/index.ts";
 
 describe("catalog integrity", () => {
@@ -52,12 +55,50 @@ describe("catalog integrity", () => {
       expect(isModelId(id)).toBe(true);
     }
   });
+
+  test("current and preview models have explicit OpenRouter routes", () => {
+    for (const model of Object.values(MODELS)) {
+      expect(model.capabilities.inputModalities.length).toBeGreaterThan(0);
+      expect(model.capabilities.outputModalities.length).toBeGreaterThan(0);
+      if (model.status !== "deprecated") {
+        expect(model.routes.openRouter).toBeDefined();
+      }
+    }
+  });
+
+  test("native coding-agent routes are explicit", () => {
+    expect(MODELS["claude-opus-5"]?.routes.claudeAgentSdk?.modelId).toBe(
+      "claude-opus-5",
+    );
+    expect(MODELS["gpt-5.6-sol"]?.routes.codexSdk?.modelId).toBe("gpt-5.6-sol");
+  });
+
+  test("resolves OpenRouter routes back to stable ids", () => {
+    expect(modelIdForOpenRouterRoute("openai/gpt-5.6-sol")).toBe("gpt-5.6-sol");
+    expect(modelIdForOpenRouterRoute("missing/model")).toBeUndefined();
+  });
 });
 
 describe("id guards", () => {
   test("isModelId distinguishes known vs unknown", () => {
     expect(isModelId("gpt-5.5")).toBe(true);
     expect(isModelId("gpt-9000")).toBe(false);
+  });
+
+  test("resolves exact OpenRouter routes without model fallback", () => {
+    expect(getOpenRouterRoute("gpt-5.6-sol")).toEqual({
+      modelId: "openai/gpt-5.6-sol",
+      endpoint: "language",
+    });
+    expect(
+      requireOpenRouterRoute("text-embedding-3-small", "embedding"),
+    ).toEqual({
+      modelId: "openai/text-embedding-3-small",
+      endpoint: "embedding",
+    });
+    expect(() =>
+      requireOpenRouterRoute("text-embedding-3-small", "language"),
+    ).toThrow("uses OpenRouter embedding, not language");
   });
 
   test("assertModelId throws on unknown", () => {

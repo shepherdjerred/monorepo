@@ -1,0 +1,172 @@
+import type { OpenRouterEndpoint } from "@shepherdjerred/llm-models";
+import type { Registry } from "prom-client";
+import type { z } from "zod";
+
+export type RuntimeFetch = (
+  input: Parameters<typeof fetch>[0],
+  init?: Parameters<typeof fetch>[1],
+) => Promise<Response>;
+
+export type OpenRouterRuntimeLogRecord = {
+  level: "info" | "error";
+  event: "llm.openrouter.response" | "llm.openrouter.call_failed";
+  message: string;
+  service: string;
+  workload: string;
+  model: string;
+  resolvedModel?: string | undefined;
+  upstreamProvider?: string | undefined;
+  generationId?: string | undefined;
+  route?: string | undefined;
+  region?: string | undefined;
+  fallbackAttempts: number;
+  inputTokens: number;
+  outputTokens: number;
+  cachedInputTokens: number;
+  reasoningTokens: number;
+  totalTokens: number;
+  actualCostUsd?: number | undefined;
+  catalogCostUsd?: number | undefined;
+  upstreamCostUsd?: number | undefined;
+  traceId?: string | undefined;
+  outcome: "success" | "error";
+  responseStatus?: number | undefined;
+  durationMs?: number | undefined;
+  errorType?: string | undefined;
+};
+
+export type OpenRouterRuntimeLogger = (
+  record: OpenRouterRuntimeLogRecord,
+) => void;
+
+export const REQUIRED_MODEL_CAPABILITIES = [
+  "tools",
+  "structuredOutputs",
+  "webSearch",
+  "reasoning",
+] as const;
+
+export type RequiredModelCapability =
+  (typeof REQUIRED_MODEL_CAPABILITIES)[number];
+
+export type ModelRequirements = {
+  endpoint: OpenRouterEndpoint;
+  capabilities?: readonly RequiredModelCapability[] | undefined;
+};
+
+export type OpenRouterRuntimeOptions = {
+  apiKey: string;
+  service: string;
+  appName: string;
+  metricsRegister?: Registry | undefined;
+  fetch?: RuntimeFetch | undefined;
+  logger?: OpenRouterRuntimeLogger | undefined;
+};
+
+export type RuntimeTraceContext = {
+  traceId?: string | undefined;
+  parentSpanId?: string | undefined;
+  traceName?: string | undefined;
+};
+
+export type CallOptionsInput = {
+  workload: string;
+  sessionId?: string | undefined;
+  traceContext?: RuntimeTraceContext | undefined;
+  observationId?: string | undefined;
+};
+
+export type OpenRouterTokenBreakdown = {
+  input: number;
+  output: number;
+  cachedInput: number;
+  reasoning: number;
+  total: number;
+};
+
+export type OpenRouterRouterAttempt = {
+  provider: string;
+  model: string;
+  status: number;
+};
+
+export type OpenRouterCallMetadata = {
+  generationId?: string | undefined;
+  requestedModel: string;
+  resolvedModel?: string | undefined;
+  upstreamProvider?: string | undefined;
+  route?: string | undefined;
+  region?: string | undefined;
+  fallbackAttempts: number;
+  attempts: readonly OpenRouterRouterAttempt[];
+  tokens: OpenRouterTokenBreakdown;
+  actualCostUsd?: number | undefined;
+  catalogCostUsd?: number | undefined;
+  upstreamCostUsd?: number | undefined;
+  routerMetadataPresent: boolean;
+};
+
+export type StructuredOutputAttempt = {
+  attempt: number;
+  outcome: "success" | "semantic-error" | "transport-error";
+  issueSummary?: string | undefined;
+  error?: string | undefined;
+  usage: OpenRouterTokenBreakdown;
+  metadata?: OpenRouterCallMetadata | undefined;
+  finishReason?: string | undefined;
+  generatedText?: string | undefined;
+};
+
+export type AggregateOpenRouterUsage = {
+  tokens: OpenRouterTokenBreakdown;
+  actualCostUsd: number;
+  catalogCostUsd: number;
+  upstreamCostUsd: number;
+};
+
+export type GenerateValidatedObjectInput<SCHEMA extends z.ZodType> = {
+  model: string;
+  schema: SCHEMA;
+  schemaName: string;
+  schemaDescription?: string | undefined;
+  system?: string | undefined;
+  prompt: string;
+  workload: string;
+  sessionId?: string | undefined;
+  traceContext?: RuntimeTraceContext | undefined;
+  abortSignal?: AbortSignal | undefined;
+  maxOutputTokens?: number | undefined;
+  semanticRetryMaxOutputTokens?: number | undefined;
+  seed?: number | undefined;
+  reasoningEffort?:
+    | "xhigh"
+    | "high"
+    | "medium"
+    | "low"
+    | "minimal"
+    | "none"
+    | undefined;
+};
+
+export type GenerateValidatedObjectResult<SCHEMA extends z.ZodType> = {
+  object: z.output<SCHEMA>;
+  usage: AggregateOpenRouterUsage;
+  metadata: readonly OpenRouterCallMetadata[];
+  attempts: readonly StructuredOutputAttempt[];
+};
+
+export class StructuredOutputExhaustionError extends Error {
+  readonly attempts: readonly StructuredOutputAttempt[];
+  readonly usage: AggregateOpenRouterUsage;
+
+  constructor(
+    message: string,
+    attempts: readonly StructuredOutputAttempt[],
+    usage: AggregateOpenRouterUsage,
+  ) {
+    super(message);
+    this.name = "StructuredOutputExhaustionError";
+    this.attempts = attempts;
+    this.usage = usage;
+  }
+}

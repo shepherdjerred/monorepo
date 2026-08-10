@@ -1,9 +1,9 @@
-// Streaming parser for Codex CLI's `--json` stdout (one JSON event per line).
-// Consumers subscribe via the event bus: cost accounting reads the running
-// usage total, codex-trace synthesizes OTel spans. The parser is intentionally
-// schema-permissive: Codex's event names change between CLI versions, so we
-// extract the few fields we care about with Zod and pass everything else
-// through as the raw record for downstream code that wants more.
+// Streaming parser for the versioned Codex JSONL representation. It accepts
+// historical CLI `--json` records and normalized native SDK records. Consumers
+// subscribe via the event bus: cost accounting reads the running usage total,
+// and codex-trace synthesizes OTel spans. Parsing is intentionally permissive
+// because Codex event names change between versions; the fields we depend on
+// are validated with Zod and every other record remains available as raw data.
 //
 // Promoted from discord-plays-pokemon's goal runner; the only changes are the
 // injected logger (instead of dpp's) and the usage type living here.

@@ -10,10 +10,10 @@ import {
 } from "./glitter-context-refresh-cache.ts";
 import { GenerationBudget } from "./glitter-context-refresh-budget.ts";
 import {
-  glitterCompletionArtifact,
-  glitterCompletionArtifactSchema,
-  useGlitterCompletionArtifact,
-} from "./glitter-context-refresh-openai.ts";
+  glitterObjectArtifact,
+  glitterObjectArtifactSchema,
+  useGlitterObjectArtifact,
+} from "./glitter-context-refresh-llm.ts";
 
 const ResponseSchema = z.strictObject({ value: z.string() });
 const UnknownResponseSchema: z.ZodType = ResponseSchema;
@@ -229,7 +229,7 @@ describe("Glitter billed completion artifacts", () => {
   test("fails non-retryably when a billable response omits usage", () => {
     let failure: unknown;
     try {
-      glitterCompletionArtifact({
+      glitterObjectArtifact({
         model: "test-model",
         parsed: { value: "paid result" },
         rawContent: '{"value":"paid result"}',
@@ -365,7 +365,7 @@ describe("Glitter billed completion artifacts", () => {
   test("persists billed parse failures so an activity retry cannot spend twice", async () => {
     const { store } = memoryStore();
     const CompletionArtifactSchema =
-      glitterCompletionArtifactSchema(ResponseSchema);
+      glitterObjectArtifactSchema(ResponseSchema);
     let generationCount = 0;
     const run = async (budget: GenerationBudget) => {
       const artifact = await readOrCreateGenerationArtifact({
@@ -392,7 +392,7 @@ describe("Glitter billed completion artifacts", () => {
         },
       });
       return () =>
-        useGlitterCompletionArtifact({
+        useGlitterObjectArtifact({
           artifact,
           budget,
         });

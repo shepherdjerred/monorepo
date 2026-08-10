@@ -2,6 +2,7 @@ import { query, type SDKMessage } from "@anthropic-ai/claude-agent-sdk";
 import { z } from "zod";
 import { traceClaudeAgent } from "@shepherdjerred/llm-observability";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
+import { metricsRegister } from "@shepherdjerred/birmel/observability/metrics.ts";
 import type { EditResult, FileChange } from "./types.ts";
 
 const TextBlockSchema = z
@@ -51,10 +52,10 @@ const ALLOWED_TOOLS = ["Read", "Write", "Edit", "Glob", "Grep"];
  * Glob, Grep — no Bash). Auto-accepts file edits via `permissionMode:
  * "acceptEdits"`. Supports session resumption.
  *
- * Migrated from `Bun.spawn(["claude", ...args])` in 2026-05 to avoid the
+ * Migrated from the legacy Claude CLI subprocess in 2026-05 to avoid the
  * subprocess + stream-json parsing dance and to gain canonical `gen_ai.*`
- * spans via `traceClaudeAgent`. The SDK uses the same auth (`ANTHROPIC_API_KEY`
- * or `claude login`).
+ * spans via `traceClaudeAgent`. The SDK uses Claude Code OAuth credentials
+ * (`CLAUDE_CODE_OAUTH_TOKEN` in production or `claude login` locally).
  */
 export async function executeEdit(
   opts: ExecuteEditOptions,
@@ -85,6 +86,8 @@ export async function executeEdit(
       {
         service: "birmel",
         callSite: "editor-claude",
+        metricsRegister,
+        workload: "editor-claude",
         request: {
           model: undefined,
           prompt,
@@ -196,14 +199,13 @@ function extractChangeFromToolUse(block: ToolUseBlock): FileChange | undefined {
 }
 
 /**
- * Confirm the Claude Agent SDK is usable: ANTHROPIC_API_KEY (or `claude login`
- * credentials) must be present. Returns `false` when the env var is unset
- * — the SDK will still try the OAuth credential store, but for K8s deployments
- * we always inject the API key, so an unset var is the operational signal.
+ * Confirm the Claude Agent SDK has the production OAuth token. The SDK can
+ * also use `claude login` locally, but deployed Birmel always injects the
+ * dedicated token, so an unset variable is the operational signal.
  */
 export function isClaudeAvailable(): boolean {
-  const apiKey = Bun.env["ANTHROPIC_API_KEY"];
-  return apiKey !== undefined && apiKey.length > 0;
+  const oauthToken = Bun.env["CLAUDE_CODE_OAUTH_TOKEN"];
+  return oauthToken !== undefined && oauthToken.length > 0;
 }
 
 /**
@@ -218,8 +220,8 @@ export function checkClaudePrerequisites(): {
   hasApiKey: boolean;
 } {
   const hasApiKey =
-    Bun.env["ANTHROPIC_API_KEY"] != null &&
-    Bun.env["ANTHROPIC_API_KEY"].length > 0;
+    Bun.env["CLAUDE_CODE_OAUTH_TOKEN"] != null &&
+    Bun.env["CLAUDE_CODE_OAUTH_TOKEN"].length > 0;
   return { installed: true, version: undefined, hasApiKey };
 }
 

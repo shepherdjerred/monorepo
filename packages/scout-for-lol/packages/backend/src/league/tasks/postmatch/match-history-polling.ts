@@ -215,7 +215,7 @@ async function processMatchAndUpdatePlayers(
 
   if (!silent) {
     // Report generation runs only AFTER the durable copy succeeded. A
-    // downstream failure (satori render crash, OpenAI error, Discord send
+    // downstream failure (satori render crash, model error, Discord send
     // failure) still swallows + advances: the authoritative S3 write already
     // succeeded, and these failures are deterministic — retrying every poll
     // would re-run the whole AI pipeline and burn tokens for nothing.

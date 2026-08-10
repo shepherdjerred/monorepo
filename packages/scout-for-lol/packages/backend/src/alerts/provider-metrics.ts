@@ -5,7 +5,8 @@ import {
 } from "#src/metrics/index.ts";
 import { PROVIDER_ISSUE_KINDS } from "#src/alerts/provider-issue-kinds.ts";
 
-const ProviderSchema = z.enum(["openai", "gemini"]);
+// Keep direct-provider values readable for historical series across cutover.
+const ProviderSchema = z.enum(["openrouter", "openai", "gemini"]);
 const ProviderIssueKindSchema = z.enum(PROVIDER_ISSUE_KINDS);
 
 export type ProviderIssueKind = z.infer<typeof ProviderIssueKindSchema>;
@@ -23,6 +24,7 @@ const ProviderErrorSchema = z.looseObject({
   name: z.string().optional(),
   message: z.string().optional(),
   status: z.number().optional(),
+  statusCode: z.number().optional(),
   code: z.string().optional(),
   type: z.string().optional(),
   error: z
@@ -37,7 +39,7 @@ type ProviderError = z.infer<typeof ProviderErrorSchema>;
 
 function labels(issue: ProviderIssue): {
   app: "scout-for-lol";
-  provider: "openai" | "gemini";
+  provider: "openrouter" | "openai" | "gemini";
   kind: ProviderIssueKind;
   source: string;
 } {
@@ -58,8 +60,8 @@ function isBudgetExceededIssue(
   lowerMessage: string,
 ): boolean {
   return (
-    providerError?.name === "OpenAIBudgetExceeded" ||
-    lowerMessage.includes("openaibudgetexceeded") ||
+    providerError?.name === "LlmBudgetExceeded" ||
+    lowerMessage.includes("llmbudgetexceeded") ||
     lowerMessage.includes("token budget exceeded")
   );
 }
@@ -77,10 +79,13 @@ function isContextLimitIssue(status: number | undefined, lowerMessage: string) {
 
 function isQuotaIssue(status: number | undefined, lowerMessage: string) {
   return (
-    (status === 429 || lowerMessage.includes("429")) &&
-    (lowerMessage.includes("quota") ||
-      lowerMessage.includes("billing") ||
-      lowerMessage.includes("insufficient_quota"))
+    status === 402 ||
+    lowerMessage.includes("insufficient credits") ||
+    lowerMessage.includes("credit balance") ||
+    ((status === 429 || lowerMessage.includes("429")) &&
+      (lowerMessage.includes("quota") ||
+        lowerMessage.includes("billing") ||
+        lowerMessage.includes("insufficient_quota")))
   );
 }
 
@@ -105,12 +110,12 @@ export function resolveProviderIssue(input: ProviderIssue): void {
   aiProviderIssueActive.set(labels(issue), 0);
 }
 
-export function classifyOpenAIProviderIssue(
+export function classifyLlmProviderIssue(
   error: unknown,
 ): ProviderIssueKind | null {
   const parsed = ProviderErrorSchema.safeParse(error);
   const providerError = parsed.success ? parsed.data : undefined;
-  const status = providerError?.status;
+  const status = providerError?.status ?? providerError?.statusCode;
   const nestedError = providerError?.error;
   const lowerMessage = [
     errorMessage(error),

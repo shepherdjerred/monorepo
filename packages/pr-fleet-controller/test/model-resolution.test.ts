@@ -1,26 +1,31 @@
 import { afterEach, expect, test } from "bun:test";
 import { resolveFleetModel } from "@shepherdjerred/pr-fleet-controller/src/model-resolution.ts";
 
-const originalOpenAiApiKey = Bun.env["OPENAI_API_KEY"];
+const originalOpenRouterApiKey = Bun.env["OPENROUTER_API_KEY"];
 
 afterEach(() => {
-  if (originalOpenAiApiKey === undefined) {
-    delete Bun.env["OPENAI_API_KEY"];
+  if (originalOpenRouterApiKey === undefined) {
+    delete Bun.env["OPENROUTER_API_KEY"];
   } else {
-    Bun.env["OPENAI_API_KEY"] = originalOpenAiApiKey;
+    Bun.env["OPENROUTER_API_KEY"] = originalOpenRouterApiKey;
   }
 });
 
-test("fails before reconciliation when an OpenAI model has no API key", () => {
-  delete Bun.env["OPENAI_API_KEY"];
-  expect(() =>
-    resolveFleetModel("openai/gpt-5.6-terra", undefined, undefined),
-  ).toThrow("OPENAI_API_KEY is required");
+test("fails before reconciliation when OpenRouter has no API key", () => {
+  delete Bun.env["OPENROUTER_API_KEY"];
+  expect(() => resolveFleetModel("gpt-5.6-terra")).toThrow(
+    "OPENROUTER_API_KEY is required",
+  );
 });
 
-test("accepts an OpenAI model when its API key is injected", () => {
-  Bun.env["OPENAI_API_KEY"] = "test-key";
-  expect(resolveFleetModel("openai/gpt-5.6-terra", undefined, undefined)).toBe(
-    "openai/gpt-5.6-terra",
-  );
+test("resolves a stable catalog model through OpenRouter", () => {
+  const resolved = resolveFleetModel("gpt-5.6-terra", "test-openrouter-key");
+  expect(resolved.id).toBe("gpt-5.6-terra");
+  expect(resolved.runtime.service).toBe("pr-fleet-controller");
+});
+
+test("fails visibly when the catalog route is missing", () => {
+  expect(() =>
+    resolveFleetModel("not-a-catalog-model", "test-openrouter-key"),
+  ).toThrow("Unknown model id");
 });

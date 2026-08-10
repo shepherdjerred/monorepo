@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { FleetSnapshotSchema } from "./schemas.ts";
 
-export const RUN_BUNDLE_SCHEMA_VERSION = 1;
+export const RUN_BUNDLE_SCHEMA_VERSION = 2;
 export const GENESIS_EVENT_HASH = "0".repeat(64);
 
 export const RunEventKindSchema = z.enum([
@@ -61,8 +61,7 @@ export const RunEventCorrelationSchema = z.object({
 export const JsonValueSchema = z.json();
 export const RunEventPayloadSchema = z.record(z.string(), JsonValueSchema);
 
-export const UnsignedRunEventSchema = z.object({
-  schemaVersion: z.literal(RUN_BUNDLE_SCHEMA_VERSION),
+const UnsignedRunEventBaseSchema = z.object({
   runId: z.string().min(1),
   sequence: z.number().int().positive(),
   timestamp: z.iso.datetime(),
@@ -72,12 +71,28 @@ export const UnsignedRunEventSchema = z.object({
   payload: RunEventPayloadSchema,
 });
 
-export const RecordedRunEventSchema = UnsignedRunEventSchema.extend({
+export const UnsignedRunEventV1Schema = UnsignedRunEventBaseSchema.extend({
+  schemaVersion: z.literal(1),
+});
+export const UnsignedRunEventV2Schema = UnsignedRunEventBaseSchema.extend({
+  schemaVersion: z.literal(2),
+});
+export const UnsignedRunEventSchema = z.discriminatedUnion("schemaVersion", [
+  UnsignedRunEventV1Schema,
+  UnsignedRunEventV2Schema,
+]);
+export const RecordedRunEventV1Schema = UnsignedRunEventV1Schema.extend({
   hash: z.string().regex(/^[0-9a-f]{64}$/),
 });
+export const RecordedRunEventV2Schema = UnsignedRunEventV2Schema.extend({
+  hash: z.string().regex(/^[0-9a-f]{64}$/),
+});
+export const RecordedRunEventSchema = z.discriminatedUnion("schemaVersion", [
+  RecordedRunEventV1Schema,
+  RecordedRunEventV2Schema,
+]);
 
-export const RunManifestSchema = z.object({
-  schemaVersion: z.literal(RUN_BUNDLE_SCHEMA_VERSION),
+const RunManifestBaseSchema = z.object({
   runId: z.string().min(1),
   createdAt: z.iso.datetime(),
   controllerVersion: z.string().min(1),
@@ -91,18 +106,34 @@ export const RunManifestSchema = z.object({
   worktreeRoot: z.string().min(1),
   maxWorkers: z.number().int().positive(),
   author: z.string().min(1).nullable().default(null),
-  files: z.object({
-    events: z.literal("events.jsonl"),
-    summary: z.literal("summary.json"),
-    mastra: z.literal("mastra.db"),
-    observability: z.literal("observability.duckdb"),
-  }),
   capture: z.object({
     localOnly: z.literal(true),
     redactedBeforePersistence: z.literal(true),
     retention: z.literal("indefinite"),
   }),
 });
+
+export const RunManifestV1Schema = RunManifestBaseSchema.extend({
+  schemaVersion: z.literal(1),
+  files: z.object({
+    events: z.literal("events.jsonl"),
+    summary: z.literal("summary.json"),
+    mastra: z.literal("mastra.db"),
+    observability: z.literal("observability.duckdb"),
+  }),
+});
+export const RunManifestV2Schema = RunManifestBaseSchema.extend({
+  schemaVersion: z.literal(2),
+  files: z.object({
+    events: z.literal("events.jsonl"),
+    summary: z.literal("summary.json"),
+    spans: z.literal("spans.jsonl"),
+  }),
+});
+export const RunManifestSchema = z.discriminatedUnion("schemaVersion", [
+  RunManifestV1Schema,
+  RunManifestV2Schema,
+]);
 
 export const RunArtifactSchema = z.discriminatedUnion("state", [
   z.object({ state: z.literal("absent") }),
@@ -112,14 +143,15 @@ export const RunArtifactSchema = z.discriminatedUnion("state", [
     sha256: z.string().regex(/^[0-9a-f]{64}$/),
   }),
 ]);
-
-export const RunArtifactsSchema = z.object({
+export const RunArtifactsV1Schema = z.object({
   mastra: RunArtifactSchema,
   observability: RunArtifactSchema,
 });
+export const RunArtifactsV2Schema = z.object({
+  spans: RunArtifactSchema,
+});
 
-export const RunSummarySchema = z.object({
-  schemaVersion: z.literal(RUN_BUNDLE_SCHEMA_VERSION),
+const RunSummaryBaseSchema = z.object({
   runId: z.string().min(1),
   status: z.enum(["completed", "failed"]),
   finishedAt: z.iso.datetime(),
@@ -127,21 +159,32 @@ export const RunSummarySchema = z.object({
   eventCount: z.number().int().nonnegative(),
   lastHash: z.string().regex(/^[0-9a-f]{64}$/),
   countsByKind: z.record(z.string(), z.number().int().nonnegative()),
-  artifacts: RunArtifactsSchema,
   finalSnapshot: FleetSnapshotSchema.nullable(),
   error: z
-    .object({
-      message: z.string(),
-      stack: z.string().optional(),
-    })
+    .object({ message: z.string(), stack: z.string().optional() })
     .nullable(),
 });
+export const RunSummaryV1Schema = RunSummaryBaseSchema.extend({
+  schemaVersion: z.literal(1),
+  artifacts: RunArtifactsV1Schema,
+});
+export const RunSummaryV2Schema = RunSummaryBaseSchema.extend({
+  schemaVersion: z.literal(2),
+  artifacts: RunArtifactsV2Schema,
+});
+export const RunSummarySchema = z.discriminatedUnion("schemaVersion", [
+  RunSummaryV1Schema,
+  RunSummaryV2Schema,
+]);
 
 export type JsonValue = z.infer<typeof JsonValueSchema>;
 export type RunEventKind = z.infer<typeof RunEventKindSchema>;
 export type RunEventCorrelation = z.infer<typeof RunEventCorrelationSchema>;
 export type RecordedRunEvent = z.infer<typeof RecordedRunEventSchema>;
 export type RunManifest = z.infer<typeof RunManifestSchema>;
+export type RunManifestV2 = z.infer<typeof RunManifestV2Schema>;
 export type RunArtifact = z.infer<typeof RunArtifactSchema>;
-export type RunArtifacts = z.infer<typeof RunArtifactsSchema>;
+export type RunArtifactsV1 = z.infer<typeof RunArtifactsV1Schema>;
+export type RunArtifactsV2 = z.infer<typeof RunArtifactsV2Schema>;
 export type RunSummary = z.infer<typeof RunSummarySchema>;
+export type RunSummaryV2 = z.infer<typeof RunSummaryV2Schema>;

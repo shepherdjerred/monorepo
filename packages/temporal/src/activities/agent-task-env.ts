@@ -1,4 +1,3 @@
-import type { AgentProviderCredentialBroker } from "#activities/agent-provider-credential-broker.ts";
 import type { AgentTaskProvider } from "#shared/agent-task.ts";
 
 const MOUNTED_SECRET_PATHS = [
@@ -33,6 +32,23 @@ const REPORT_DELIVERY_BOUNDARY_ENVIRONMENT = new Set([
   "GITHUB_WEBHOOK_SECRET",
   "XCODE_CLOUD_WEBHOOK_TOKEN",
 ]);
+
+// Native agent SDKs authenticate with their own subscription credential.
+// No agent may inherit a direct inference-provider key from the worker.
+const DIRECT_PROVIDER_CREDENTIAL_KEYS = new Set([
+  "ANTHROPIC_API_KEY",
+  "CODEX_API_KEY",
+  "GEMINI_API_KEY",
+  "GOOGLE_GENERATIVE_AI_API_KEY",
+  "GROQ_API_KEY",
+  "OPENAI_API_KEY",
+  "OPENROUTER_API_KEY",
+  "XAI_API_KEY",
+]);
+
+export function isDirectProviderCredentialKey(key: string): boolean {
+  return DIRECT_PROVIDER_CREDENTIAL_KEYS.has(key);
+}
 
 export function isReportDeliveryBoundaryEnvironmentKey(key: string): boolean {
   return (
@@ -219,15 +235,20 @@ export async function refreshAgentTaskSecretTokenStateInBackground(
   }
 }
 
-// Build the deliberately small subprocess environment for an agent-task run.
-// Generic agents receive an ephemeral localhost broker token, never the raw
-// provider credential. The broker fixes the upstream provider and injects auth
-// in the parent process. Basic process/TLS settings, non-secret evidence
-// endpoints, and the dedicated read-only Kubernetes identity remain available.
+const PROVIDER_CREDENTIAL_KEYS: Record<AgentTaskProvider, string> = {
+  claude: "CLAUDE_CODE_OAUTH_TOKEN",
+  codex: "CODEX_ACCESS_TOKEN",
+};
+
+// Build the deliberately small environment for a native agent SDK run. The SDK
+// child process inherits nothing by default: only basic process/TLS settings,
+// non-secret evidence endpoints, the dedicated read-only Kubernetes identity,
+// and the one subscription credential its own provider needs. Every other
+// worker credential — Postal, S3, GitHub, Temporal, Talos — stays out, so a
+// prompt-injected agent has nothing to exfiltrate from its own environment.
 export function envForProvider(
   provider: AgentTaskProvider,
   workdir: string,
-  broker: Pick<AgentProviderCredentialBroker, "baseUrl" | "clientToken">,
   sourceEnv: Readonly<Record<string, string | undefined>> = Bun.env,
 ): Record<string, string> {
   const env: Record<string, string> = {};
@@ -240,14 +261,43 @@ export function envForProvider(
     }
   }
   env["HOME"] = workdir;
-  if (provider === "claude") {
-    env["ANTHROPIC_BASE_URL"] = broker.baseUrl;
-    env["ANTHROPIC_AUTH_TOKEN"] = broker.clientToken;
-    env["CLAUDE_CODE_USE_GATEWAY"] = "1";
-  } else {
-    env["CODEX_API_KEY"] = broker.clientToken;
+  const credentialKey = PROVIDER_CREDENTIAL_KEYS[provider];
+  const credential = sourceEnv[credentialKey];
+  if (credential === undefined || credential === "") {
+    throw new Error(`${credentialKey} is required for ${provider} agent tasks`);
   }
+  env[credentialKey] = credential;
   return env;
+}
+
+// Environment for a trusted, source-controlled agent (homelab audit, Scout
+// season refresh) whose prompt is not attacker-influenced and which genuinely
+// needs the worker's operational credentials. Unlike envForProvider this is a
+// denylist, but the three categories it removes are the ones an agent must
+// never hold: the bot's own GitHub credentials (callers re-mint a short-lived
+// installation token), report-delivery credentials, and any direct
+// inference-provider key.
+export function envForTrustedAgent(
+  overrides: Readonly<Record<string, string>>,
+  sourceEnv: Readonly<Record<string, string | undefined>> = Bun.env,
+): Record<string, string> {
+  const env: Record<string, string> = {};
+  for (const [key, value] of Object.entries(sourceEnv)) {
+    if (typeof value !== "string") {
+      continue;
+    }
+    if (
+      key === "GH_TOKEN" ||
+      key === "GITHUB_PERSONAL_ACCESS_TOKEN" ||
+      key.startsWith("GITHUB_APP_") ||
+      isDirectProviderCredentialKey(key) ||
+      isReportDeliveryBoundaryEnvironmentKey(key)
+    ) {
+      continue;
+    }
+    env[key] = value;
+  }
+  return { ...env, ...overrides };
 }
 
 // Deterministic evidence collectors run with the same small read-only runtime

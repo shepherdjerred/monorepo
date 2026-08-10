@@ -9,7 +9,7 @@ import type {
   StageTrace,
   TimelineChunkTrace,
   PipelineStageName,
-  OpenAIClient,
+  TextGenerationClient,
   ModelConfig,
 } from "./pipeline-types.ts";
 import type { RawMatch } from "#src/league/raw-match.schema.ts";
@@ -50,7 +50,7 @@ export type TimelineSummaryParams = {
   rawTimeline: RawTimeline;
   rawMatch: RawMatch;
   laneContext: string;
-  client: OpenAIClient;
+  client: TextGenerationClient;
   model: ModelConfig;
   systemPrompt: string;
   userPrompt: string;

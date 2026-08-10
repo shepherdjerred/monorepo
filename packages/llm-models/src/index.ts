@@ -40,6 +40,12 @@ export const ModelPricingSchema = z.discriminatedUnion("modality", [
 export type ModelPricing = z.infer<typeof ModelPricingSchema>;
 
 export const ModelCapabilitiesSchema = z.strictObject({
+  inputModalities: z.array(z.enum(["text", "image", "audio", "video"])),
+  outputModalities: z.array(z.enum(["text", "image", "embedding"])),
+  tools: z.boolean(),
+  structuredOutputs: z.boolean(),
+  webSearch: z.boolean(),
+  reasoning: z.boolean(),
   supportsTemperature: z.boolean(),
   supportsTopP: z.boolean(),
   maxTokens: z.number().int().positive().optional(),
@@ -47,6 +53,31 @@ export const ModelCapabilitiesSchema = z.strictObject({
   effortTiers: z.array(z.string()).optional(),
 });
 export type ModelCapabilities = z.infer<typeof ModelCapabilitiesSchema>;
+
+export const OpenRouterEndpointSchema = z.enum([
+  "language",
+  "embedding",
+  "image",
+]);
+export type OpenRouterEndpoint = z.infer<typeof OpenRouterEndpointSchema>;
+
+export const OpenRouterRouteSchema = z.strictObject({
+  modelId: z.string().min(1),
+  endpoint: OpenRouterEndpointSchema,
+});
+export type OpenRouterRoute = z.infer<typeof OpenRouterRouteSchema>;
+
+export const NativeSdkRouteSchema = z.strictObject({
+  modelId: z.string().min(1),
+});
+export type NativeSdkRoute = z.infer<typeof NativeSdkRouteSchema>;
+
+export const ModelRoutesSchema = z.strictObject({
+  openRouter: OpenRouterRouteSchema.optional(),
+  claudeAgentSdk: NativeSdkRouteSchema.optional(),
+  codexSdk: NativeSdkRouteSchema.optional(),
+});
+export type ModelRoutes = z.infer<typeof ModelRoutesSchema>;
 
 export const ModelStatusSchema = z.enum(["current", "preview", "deprecated"]);
 export type ModelStatus = z.infer<typeof ModelStatusSchema>;
@@ -117,6 +148,7 @@ export const ModelEntrySchema = z.strictObject({
     )
     .optional(),
   capabilities: ModelCapabilitiesSchema,
+  routes: ModelRoutesSchema,
   status: ModelStatusSchema,
   category: z.string().optional(),
 });
@@ -154,6 +186,39 @@ export function getModel(id: string): ModelEntry | undefined {
 
 export function getPricing(id: string): ModelPricing | undefined {
   return MODELS[id]?.pricing;
+}
+
+export function getOpenRouterRoute(id: string): OpenRouterRoute | undefined {
+  return MODELS[id]?.routes.openRouter;
+}
+
+/** Resolve a gateway route back to the repository's stable catalog id. */
+export function modelIdForOpenRouterRoute(
+  routeModelId: string,
+): string | undefined {
+  return Object.values(MODELS).find(
+    (model) => model.routes.openRouter?.modelId === routeModelId,
+  )?.id;
+}
+
+export function requireOpenRouterRoute(
+  id: string,
+  endpoint?: OpenRouterEndpoint,
+): OpenRouterRoute {
+  const model = getModel(id);
+  if (model === undefined) {
+    throw new Error(`Unknown model id: ${id}`);
+  }
+  const route = model.routes.openRouter;
+  if (route === undefined) {
+    throw new Error(`Model ${id} has no OpenRouter route`);
+  }
+  if (endpoint !== undefined && route.endpoint !== endpoint) {
+    throw new Error(
+      `Model ${id} uses OpenRouter ${route.endpoint}, not ${endpoint}`,
+    );
+  }
+  return route;
 }
 
 /** Per-token (not per-1M) text pricing, for callers that accumulate raw token counts (e.g. monarch). */

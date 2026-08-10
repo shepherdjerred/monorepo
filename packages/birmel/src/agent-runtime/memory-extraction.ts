@@ -1,12 +1,12 @@
-import { openai } from "@ai-sdk/openai";
-import { embedMany, generateText, Output } from "ai";
+import { embedMany } from "ai";
+import { generateValidatedObject } from "@shepherdjerred/llm-runtime";
 import { z } from "zod";
 import {
   MemoryCandidateSchema,
   type MemoryCandidate,
   type TurnInput,
 } from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
-import { getOpenAIProviderOptions } from "@shepherdjerred/birmel/agent-runtime/provider-options.ts";
+import { getLlmRuntime } from "@shepherdjerred/birmel/agent-runtime/llm.ts";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
 import type { ChannelMessage } from "@shepherdjerred/birmel/discord/utils/channel-history.ts";
@@ -150,8 +150,9 @@ export async function extractAndApplyTurnMemory(options: {
     },
     async (span) => {
       const messages = rawTranscript(options.rawRecentMessages, options.turn);
-      const result = await generateText({
-        model: openai(config.openai.memoryModel),
+      const runtime = getLlmRuntime();
+      const result = await generateValidatedObject(runtime, {
+        model: config.openRouter.memoryModel,
         system: `Extract durable memory claims from raw Discord messages only.
 
 Elected persona projection:
@@ -159,15 +160,14 @@ ${buildConfiguredPersonaProjection(options.persona, config.persona.enabled)}
 
 Use that persona's social judgment, but never invent evidence. Extract stable rules, explicit preferences, personal facts, and relationships that will improve future conversation. Broad social and relationship inference is allowed, but inferred claims must use origin=inferred and calibrated confidence. Direct user statements use origin=explicit. Do not extract transient plans, secrets, or the assistant's own claims. Every sourceDiscordMessageIds entry must cite one or more bracketed raw message IDs. Use guild, channel, persona, user, or relationship scope appropriately. For user scope include the target Discord user ID in relatedUserIds; omit it only when the target is the cited statement's author. For relationship scope include at least two Discord user IDs. Return an empty candidate list when nothing is durable.`,
         prompt: messages,
-        output: Output.object({
-          schema: ExtractionSchema,
-          name: "birmel_memory_candidates",
-        }),
-        timeout: config.agent.responseTimeoutMs,
-        providerOptions: getOpenAIProviderOptions(),
+        schema: ExtractionSchema,
+        schemaName: "birmel_memory_candidates",
+        workload: "birmel.memory.extract",
+        sessionId: options.turn.channelId,
+        abortSignal: AbortSignal.timeout(config.agent.responseTimeoutMs),
       });
       const candidates = attachExtractionProvenance({
-        candidates: result.output.candidates,
+        candidates: result.object.candidates,
         turn: options.turn,
         rawRecentMessages: options.rawRecentMessages,
       });
@@ -176,12 +176,16 @@ Use that persona's social judgment, but never invent evidence. Extract stable ru
         return 0;
       }
       const embeddings = await embedMany({
-        model: openai.embedding(config.openai.embeddingModel),
+        model: runtime.embeddingModel(config.openRouter.embeddingModel),
         values: candidates.map(
           ({ candidate }) =>
             `${candidate.subject} ${candidate.predicate} ${candidate.value}`,
         ),
         abortSignal: AbortSignal.timeout(config.agent.responseTimeoutMs),
+        ...runtime.callOptions({
+          workload: "birmel.memory.embed",
+          sessionId: options.turn.channelId,
+        }),
       });
       if (embeddings.embeddings.length !== candidates.length) {
         throw new Error("Memory embedding count did not match candidate count");
@@ -193,7 +197,7 @@ Use that persona's social judgment, but never invent evidence. Extract stable ru
           userId: options.turn.userId,
           personaId: options.persona,
           authorUserId: options.turn.userId,
-          extractorModel: config.openai.memoryModel,
+          extractorModel: config.openRouter.memoryModel,
         },
         candidates: candidates.map(({ candidate, provenance }, index) => {
           const embedding = embeddings.embeddings[index];

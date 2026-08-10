@@ -2,9 +2,10 @@ import { chmod, lstat, readdir } from "node:fs/promises";
 import path from "node:path";
 import {
   RunArtifactSchema,
-  RunArtifactsSchema,
+  RunArtifactsV2Schema,
   type RunArtifact,
-  type RunArtifacts,
+  type RunArtifactsV1,
+  type RunArtifactsV2,
 } from "./run-events.ts";
 
 const PRIVATE_FILE_MODE = 0o600;
@@ -44,12 +45,10 @@ export async function describeRunArtifact(file: string): Promise<RunArtifact> {
 }
 
 export async function describeRunArtifacts(paths: {
-  mastra: string;
-  observability: string;
-}): Promise<RunArtifacts> {
-  return RunArtifactsSchema.parse({
-    mastra: await describeRunArtifact(paths.mastra),
-    observability: await describeRunArtifact(paths.observability),
+  spans: string;
+}): Promise<RunArtifactsV2> {
+  return RunArtifactsV2Schema.parse({
+    spans: await describeRunArtifact(paths.spans),
   });
 }
 
@@ -76,9 +75,13 @@ async function verifyRunArtifact(
 }
 
 export async function verifyRunArtifacts(
-  paths: { mastra: string; observability: string },
-  expected: RunArtifacts,
+  paths: { mastra: string; observability: string; spans: string },
+  expected: RunArtifactsV1 | RunArtifactsV2,
 ): Promise<void> {
+  if ("spans" in expected) {
+    await verifyRunArtifact("spans.jsonl", paths.spans, expected.spans);
+    return;
+  }
   await verifyRunArtifact("mastra.db", paths.mastra, expected.mastra);
   await verifyRunArtifact(
     "observability.duckdb",

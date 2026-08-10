@@ -1,11 +1,11 @@
 // End-to-end harness for the /goal pipeline (T8). Wires up GoalManager against
 // a stub spawner that emits canned JSONL covering the T1-T7 surface (turn
 // start/complete with usage, agent_message, ExecCommandBegin/End). Asserts the
-// full integration: codex args, prompt content, cost line in the Discord
+// full integration: SDK event compatibility, cost line in the Discord
 // message, persisted history, and OTel span synthesis.
 //
-// This is NOT a real-OpenAI-API run — that needs a real ROM, a working
-// emulator boot, and a paid API call. The matching real-API smoke test is
+// This is NOT a real Codex SDK run — that needs a real ROM, a working
+// emulator boot, and a paid generation. The matching live smoke test is
 // documented in the plan's acceptance section as a manual pre-merge gate.
 //
 // Run as a test:
@@ -48,20 +48,20 @@ const provider = new BasicTracerProvider({
   spanProcessors: [new SimpleSpanProcessor(exporter)],
 });
 
-const originalOpenAiKey = Bun.env.OPENAI_API_KEY;
+const originalCodexAccessToken = Bun.env.CODEX_ACCESS_TOKEN;
 
 beforeEach(() => {
   trace.setGlobalTracerProvider(provider);
   exporter.reset();
-  Bun.env.OPENAI_API_KEY = "stub-key-e2e-only";
+  Bun.env.CODEX_ACCESS_TOKEN = "stub-key-e2e-only";
 });
 
 afterEach(() => {
   trace.disable();
-  if (originalOpenAiKey === undefined) {
-    delete Bun.env.OPENAI_API_KEY;
+  if (originalCodexAccessToken === undefined) {
+    delete Bun.env.CODEX_ACCESS_TOKEN;
   } else {
-    Bun.env.OPENAI_API_KEY = originalOpenAiKey;
+    Bun.env.CODEX_ACCESS_TOKEN = originalCodexAccessToken;
   }
 });
 
@@ -145,7 +145,6 @@ function makeGoalConfig(runtimeDirectory: string): Config["game"]["goal"] {
     enabled: true,
     model: "gpt-5.6-luna",
     reasoning_effort: "medium",
-    codex_binary: "/usr/bin/true",
     runtime_directory: runtimeDirectory,
     screenshot_dir: "screenshots",
     state_path: "goal-state.json",
@@ -176,19 +175,8 @@ async function waitForCondition(
   throw new Error("waitForCondition timeout");
 }
 
-function collectDisableFlags(args: readonly string[]): Set<string> {
-  const out = new Set<string>();
-  for (let i = 0; i < args.length; i += 1) {
-    if (args[i] === "--disable") {
-      const next = args[i + 1];
-      if (typeof next === "string") out.add(next);
-    }
-  }
-  return out;
-}
-
 describe("e2e: /goal pipeline (T1–T7 integration)", () => {
-  test("end-to-end: codex args, prompt content, cost+history+spans", async () => {
+  test("end-to-end: legacy events, cost, history, and spans", async () => {
     const runtimeDirectory = await createRuntimeDirectory();
     const messages: GoalDiscordMessage[] = [];
     const { spawner, spawnedArgs } = makeStubSpawner();
@@ -227,33 +215,11 @@ describe("e2e: /goal pipeline (T1–T7 integration)", () => {
       messages.filter((m) => m.content === "Advanced dialog 3x."),
     ).toHaveLength(0);
 
-    // ---- T1: --disable apps/plugins/multi_agent + --json all present ----
+    // The test seam does not invoke a Codex executable. Production uses the
+    // SDK while the fixture preserves v1 CLI JSONL reader coverage.
     const args = spawnedArgs();
-    const disabled = collectDisableFlags(args);
-    expect(disabled.has("apps")).toBe(true);
-    expect(disabled.has("plugins")).toBe(true);
-    expect(disabled.has("multi_agent")).toBe(true);
-    expect(args.includes("--json")).toBe(true);
-
-    // ---- T3 + T6: policy and untrusted run data use separate roles ----
-    const developerConfig = args.find((arg) =>
-      arg.startsWith("developer_instructions="),
-    );
-    expect(developerConfig).toContain("Pokémon Emerald");
-    expect(developerConfig).toContain("pokemonctl state");
-    expect(developerConfig?.toLowerCase()).toContain("chord");
-    const prompt = args.at(-1);
-    if (prompt === undefined) {
-      throw new Error("Codex user prompt is missing");
-    }
-    const userPrompt: unknown = JSON.parse(prompt);
-    expect(userPrompt).toMatchObject({
-      kind: "pokemon_goal_run",
-      objective: "Advance the dialog and walk one tile",
-      startingContext: {
-        gameState: expect.stringContaining("Treecko"),
-      },
-    });
+    expect(args[0]).toBe("codex-sdk-fixture");
+    expect(args).toContain("--output-last-message");
 
     // ---- T2: Discord message ends with the cost+token line ----
     const finalContent = messages.at(-1)?.content ?? "";

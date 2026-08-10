@@ -1,0 +1,14 @@
+diff --git a/dist/index.js b/dist/index.js
+index 5ebd3756860e75d89ef13b683310a4fe066bdd62..287b23d26e3995f8e51c3b7f935e04a66fbe25e5 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -3657,7 +3657,8 @@ var OpenRouterChatLanguageModel = class {
+             function: {
+               name: tool2.name,
+               description: tool2.description,
+-              parameters: tool2.inputSchema
++              parameters: tool2.inputSchema,
++              strict: tool2.strict
+             }
+           }, eagerInputStreaming != null && {
+             eager_input_streaming: eagerInputStreaming

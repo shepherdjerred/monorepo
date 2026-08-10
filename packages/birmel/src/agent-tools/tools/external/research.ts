@@ -1,4 +1,3 @@
-import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { createTool } from "@shepherdjerred/birmel/agent-runtime/tools/create-tool.ts";
 import { getErrorMessage } from "@shepherdjerred/birmel/utils/errors.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
@@ -66,7 +65,7 @@ async function fetchHtml(url: string): Promise<{
 export const webResearchTool = createTool({
   id: "web-research",
   description:
-    "Research the web with search, fetch, summarize, and extract-links. Uses configured OpenAI hosted search where available, direct fetch/readability for static pages, and browser automation fallback for JS-heavy pages.",
+    "Research the web with DuckDuckGo search, direct fetch/readability for static pages, and browser automation fallback for JS-heavy pages.",
   inputSchema: z.object({
     action: z.enum(["search", "fetch", "summarize", "extract-links"]),
     query: z.string().optional(),
@@ -80,17 +79,13 @@ export const webResearchTool = createTool({
   }),
   execute: async (ctx) => {
     try {
-      const config = getConfig();
       switch (ctx.action) {
         case "search": {
           const result = await handleSearch(ctx.query);
           return {
             ...result,
             data: {
-              provider:
-                config.externalApis.webSearchProvider === "openai"
-                  ? "duckduckgo-fallback"
-                  : "duckduckgo",
+              provider: "duckduckgo",
               result: result.data,
             },
           };

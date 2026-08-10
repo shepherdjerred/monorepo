@@ -1,4 +1,8 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { stepCountIs, ToolLoopAgent } from "ai";
+import {
+  generateValidatedObject,
+  openRouterWebSearchTool,
+} from "@shepherdjerred/llm-runtime";
 import { z } from "zod";
 import type { MonarchCategory } from "../monarch/types.ts";
 import type { EnrichedTransaction } from "../enrichment/types.ts";
@@ -8,15 +12,15 @@ import type {
   MerchantKnowledge,
 } from "../knowledge/types.ts";
 import { formatCategoryDefinitions } from "../knowledge/definitions.ts";
-import { TIER3_TOOLS, handleToolCall } from "./tools.ts";
+import { createTier3Tools } from "./tools.ts";
 import type { ToolContext } from "./tools.ts";
 import type { MonarchTransaction } from "../monarch/types.ts";
 import {
-  getClient,
   getModelId,
+  getRuntime,
   getTracker,
   isWebSearchEnabled,
-} from "./claude.ts";
+} from "./llm.ts";
 import { log } from "../logger.ts";
 
 const Tier3ResultSchema = z.object({
@@ -62,10 +66,6 @@ Respond with ONLY this JSON (no other text):
   "confidence": "high"|"medium"|"low",
   "reason": "brief explanation"
 }`;
-}
-
-function jitteredDelay(baseMs: number): number {
-  return baseMs + Math.floor(Math.random() * baseMs * 0.5);
 }
 
 type Tier3Options = {
@@ -128,35 +128,6 @@ export async function classifyTier3(
 
 type Tier3Result = z.infer<typeof Tier3ResultSchema>;
 
-function buildTools(): Anthropic.Messages.ToolUnion[] {
-  const tools: Anthropic.Messages.ToolUnion[] = [...TIER3_TOOLS];
-  if (isWebSearchEnabled()) {
-    tools.push({
-      type: "web_search_20250305",
-      name: "web_search",
-      max_uses: 3,
-    });
-  }
-  return tools;
-}
-
-function processToolUseBlocks(
-  response: Anthropic.Messages.Message,
-  toolContext: ToolContext,
-): Anthropic.Messages.ToolResultBlockParam[] {
-  const results: Anthropic.Messages.ToolResultBlockParam[] = [];
-  for (const block of response.content) {
-    if (block.type !== "tool_use") continue;
-    const result = handleToolCall(block.name, block.input, toolContext);
-    results.push({
-      type: "tool_result",
-      tool_use_id: block.id,
-      content: result,
-    });
-  }
-  return results;
-}
-
 /**
  * Per-run tier-3 failure counts by reason, surfaced in the end-of-run
  * summary so silent classification losses are visible.
@@ -171,83 +142,56 @@ export function getTier3FailureCounts(): Record<string, number> {
   return { ...tier3Failures };
 }
 
-function extractJsonFromText(text: string): string {
-  let cleaned = text.trim();
-  const fenceMatch = /```(?:json)?[ \t]*\n([\s\S]*?)\n[ \t]*```/.exec(cleaned);
-  if (fenceMatch?.[1] !== undefined && fenceMatch[1] !== "") {
-    cleaned = fenceMatch[1].trim();
-  }
-  if (!cleaned.startsWith("{")) {
-    const jsonStart = cleaned.indexOf("{");
-    if (jsonStart !== -1) cleaned = cleaned.slice(jsonStart);
-  }
-  return cleaned;
-}
-
 async function runToolLoop(
-  messages: Anthropic.Messages.MessageParam[],
-  tools: Anthropic.Messages.ToolUnion[],
+  prompt: string,
   toolContext: ToolContext,
-): Promise<Tier3Result | undefined> {
-  const claude = getClient();
+): Promise<Tier3Result> {
+  const openRouter = getRuntime();
   const modelId = getModelId();
   const tracker = getTracker();
-  const maxToolRounds = 5;
-
-  for (let round = 0; round < maxToolRounds; round++) {
-    const response = await claude.messages.create({
-      model: modelId,
-      max_tokens: 4096,
-      system:
-        "You are a personal finance categorization expert. Use the tools available to research unknown merchants before classifying. Always respond with valid JSON when you have enough information.",
-      messages,
-      tools,
-    });
-
-    tracker?.record(response.usage.input_tokens, response.usage.output_tokens);
-
-    const hasToolUse = response.content.some((b) => b.type === "tool_use");
-
-    if (hasToolUse) {
-      messages.push({ role: "assistant", content: response.content });
-      const toolResults = processToolUseBlocks(response, toolContext);
-      messages.push({ role: "user", content: toolResults });
-      continue;
-    }
-
-    // Extract text response
-    const text = response.content
-      .filter((b) => b.type === "text")
-      .map((b) => ("text" in b ? b.text : ""))
-      .join("");
-
-    if (text === "") {
-      recordTier3Failure("empty_response");
-      log.warn("Tier 3: model returned no text content; leaving uncategorized");
-      return undefined;
-    }
-
-    const cleaned = extractJsonFromText(text);
-    try {
-      const parsed: unknown = JSON.parse(cleaned);
-      return Tier3ResultSchema.parse(parsed);
-    } catch (error: unknown) {
-      // Re-throw with the raw response attached — the caller logs merchant
-      // context, but without the snippet a parse failure is undebuggable.
-      const message = error instanceof Error ? error.message : String(error);
-      const snippet = text.length > 300 ? `${text.slice(0, 300)}…` : text;
-      throw new Error(
-        `response parse failed (${message}); raw response: ${snippet}`,
-        { cause: error },
-      );
-    }
-  }
-
-  recordTier3Failure("tool_rounds_exhausted");
-  log.warn(
-    `Tier 3: no final answer after ${String(maxToolRounds)} tool rounds; leaving uncategorized`,
-  );
-  return undefined;
+  const localTools = createTier3Tools(toolContext);
+  const tools = isWebSearchEnabled()
+    ? {
+        ...localTools,
+        web_search: openRouterWebSearchTool(openRouter, 3),
+      }
+    : localTools;
+  const agent = new ToolLoopAgent({
+    id: "monarch-tier3-research",
+    instructions:
+      "Research the transaction with the available tools. Build concise evidence for a later structured finalizer; do not rely on prose JSON parsing.",
+    model: isWebSearchEnabled()
+      ? openRouter.languageModel(modelId, ["tools", "webSearch"])
+      : openRouter.languageModel(modelId, ["tools"]),
+    tools,
+    stopWhen: stepCountIs(5),
+    maxOutputTokens: 4096,
+    ...openRouter.callOptions({ workload: "monarch.tier3.tool-loop" }),
+  });
+  const research = await agent.generate({ prompt });
+  const researchInputTokens = research.usage.inputTokens ?? 0;
+  const researchOutputTokens = research.usage.outputTokens ?? 0;
+  tracker?.record(researchInputTokens, researchOutputTokens);
+  const evidence = JSON.stringify(
+    research.steps.map((step) => ({
+      text: step.text,
+      toolCalls: step.toolCalls,
+      toolResults: step.toolResults,
+      finishReason: step.finishReason,
+    })),
+  ).slice(-60_000);
+  const finalized = await generateValidatedObject(openRouter, {
+    model: modelId,
+    schema: Tier3ResultSchema,
+    schemaName: "monarch_tier3_classification",
+    system:
+      "Classify the transaction using only the recorded tool evidence. Return the exact requested structured result.",
+    prompt: `${prompt}\n\nRecorded tool evidence:\n${evidence}`,
+    workload: "monarch.tier3.finalize",
+    maxOutputTokens: 4096,
+  });
+  tracker?.record(finalized.usage.tokens.input, finalized.usage.tokens.output);
+  return finalized.object;
 }
 
 async function classifySingleTier3(
@@ -255,37 +199,16 @@ async function classifySingleTier3(
   enriched: EnrichedTransaction,
   toolContext: ToolContext,
 ): Promise<Tier3Result | undefined> {
-  const maxRetries = 3;
-  const tools = buildTools();
-
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      const messages: Anthropic.Messages.MessageParam[] = [
-        { role: "user", content: buildTier3Prompt(definitions, enriched) },
-      ];
-
-      return await runToolLoop(messages, tools, toolContext);
-    } catch (error: unknown) {
-      if (error instanceof Anthropic.APIError && attempt < maxRetries) {
-        const status = Number(error.status);
-        if (status === 429 || status === 529 || status >= 500) {
-          const delay = jitteredDelay(1000 * 2 ** attempt);
-          log.warn(
-            `Tier 3 API error (${String(status)}), retrying in ${String(Math.round(delay / 1000))}s...`,
-          );
-          await new Promise((resolve) => setTimeout(resolve, delay));
-          continue;
-        }
-      }
-      recordTier3Failure(
-        error instanceof Anthropic.APIError ? "api_error" : "parse_error",
-      );
-      log.error(
-        `Tier 3 classification failed for ${enriched.transaction.merchant.name} (txn ${enriched.transaction.id}, attempt ${String(attempt + 1)}): ${error instanceof Error ? error.message : String(error)}`,
-      );
-      return undefined;
-    }
+  try {
+    return await runToolLoop(
+      buildTier3Prompt(definitions, enriched),
+      toolContext,
+    );
+  } catch (error: unknown) {
+    recordTier3Failure("classification_error");
+    log.error(
+      `Tier 3 classification failed for ${enriched.transaction.merchant.name} (txn ${enriched.transaction.id}): ${error instanceof Error ? error.message : String(error)}`,
+    );
+    return undefined;
   }
-
-  return undefined;
 }

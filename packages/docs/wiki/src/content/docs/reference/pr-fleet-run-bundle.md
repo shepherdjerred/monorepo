@@ -6,7 +6,7 @@ sidebar:
 ---
 
 Every `pr:fleet` run creates a private local evidence bundle. Bundles are
-local-only and retained indefinitely in v1.
+local-only and retained until the operator deletes them.
 
 ## Location
 
@@ -28,23 +28,28 @@ directory does not meet these requirements.
 
 ## Contents
 
-| Artifact                    | Purpose                                                       |
-| --------------------------- | ------------------------------------------------------------- |
-| Hash-chained event timeline | the auditable record of evidence seen and decisions made      |
-| Final summary               | terminal fleet state and outcome                              |
-| Mastra storage              | agent framework state                                         |
-| `observability.duckdb`      | model and tool spans; the durable, verified source            |
-| `spans.jsonl`               | best-effort live mirror of reasoning, tailed by the dashboard |
-| Unix control socket         | carries same-origin dashboard answers to the controller       |
+| Artifact            | Purpose                                                        |
+| ------------------- | -------------------------------------------------------------- |
+| `manifest.json`     | schema version, source provenance, model, and capture contract |
+| `events.jsonl`      | sequenced, hash-chained evidence and lifecycle events          |
+| `summary.json`      | terminal fleet state, counts, final hash, and telemetry digest |
+| `spans.jsonl`       | authoritative, redacted model and tool telemetry in schema v2  |
+| Unix control socket | carries same-origin dashboard answers to the live controller   |
 
-`observability.duckdb` is exclusively locked while the run holds it, which is
-why reasoning is mirrored to `spans.jsonl` for the live dashboard.
+Schema-v2 summaries bind the byte length and SHA-256 digest of `spans.jsonl`,
+so inspection and replay detect telemetry tampering. New runs do not create
+`mastra.db` or `observability.duckdb`.
+
+Readers retain complete schema-v1 inspection, replay, and dashboard support for
+historical bundles that contain those database files. Existing bundles are
+never rewritten.
 
 ## Redaction
 
-Payloads are redacted before persistence. The literal-value redactor runs before
-Mastra's structural sensitive-field filter, so both the hash-chained events and
-the model and tool spans retain only redacted bodies.
+Payloads are redacted before persistence. The literal-value and
+secret-shaped-field redactors run before both the hash-chained events and the
+model and tool spans are written, so persisted bodies contain only redacted
+values.
 
 ## Question binding
 

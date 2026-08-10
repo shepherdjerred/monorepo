@@ -1,18 +1,18 @@
 # PR Fleet Controller
 
-Provider-neutral Mastra workflow for driving every open
+OpenRouter-backed AI SDK workflow for driving every open
 `shepherdjerred/monorepo` pull request toward current-head readiness. It runs as
-one foreground Bun process on macOS, uses one selected API model for both the
+one foreground Bun process on macOS, uses one selected catalog model for both the
 conversational master and all per-PR workers, and reconstructs live state on
 every invocation.
 
 ## Run
 
-Configure the API credential expected by the selected Mastra provider, then:
+Configure `OPENROUTER_API_KEY`, then:
 
 ```bash
 bun run pr:fleet \
-  --model <provider>/<model-id> \
+  --model <catalog-model-id> \
   --author shepherdjerred
 ```
 
@@ -20,19 +20,10 @@ bun run pr:fleet \
 scope; using the operator's login naturally excludes Renovate and other bots.
 The manifest and dashboard show the selected scope.
 
-Provider families include `openai/…`, `anthropic/…`, `xai/…`, and an
-OpenRouter model such as a Kimi model. A custom OpenAI-compatible endpoint is
-also supported:
-
-```bash
-bun run pr:fleet \
-  --model openai-compatible/<model-id> \
-  --base-url "$PROVIDER_BASE_URL" \
-  --api-key-env PROVIDER_API_KEY
-```
-
-The invocation deliberately uses one model throughout. It does not silently
-route individual workers to another model or provider.
+The model must be a stable ID from `@shepherdjerred/llm-models` with OpenRouter
+tool and structured-output capabilities, such as `gpt-5.6-sol`. The invocation
+uses that exact model throughout. OpenRouter may fall back between upstream
+providers, but the controller never silently changes model identity.
 
 Every non-help invocation also requires a private local run-bundle directory.
 The default is
@@ -173,13 +164,14 @@ Collection is mandatory and local-only. Each run writes:
   evidence, model-turn, and shutdown events;
 - `summary.json` with final status, duration, event counts, last hash, and final
   fleet snapshot;
-- `mastra.db` and `observability.duckdb` with local Mastra storage and spans.
-- `spans.jsonl` with a best-effort, append-only mirror of completed
-  model-reasoning spans and token/cost metrics. It exists because
-  `observability.duckdb` is exclusively locked by the running controller, so the
-  live dashboard cannot read it in flight; the DuckDB copy remains the
-  authoritative, verified store. This mirror is not hash-chained, is not part of
-  the manifest, and a write failure never aborts the run.
+- `spans.jsonl` with completed, secret-redacted OpenTelemetry spans, including
+  AI SDK/OpenRouter reasoning, tools, usage, cost, and trace correlation. It is
+  the authoritative telemetry artifact in run-bundle schema v2 and its byte
+  length plus SHA-256 digest are bound into the terminal event and summary.
+
+Readers retain complete schema-v1 support for historical bundles containing
+`mastra.db` and `observability.duckdb`; those files are digest-verified but no
+new run creates them.
 
 The bundle begins before required-tool, Git-checkout, configuration, and source
 provenance preflight. A failed preflight therefore still produces an
@@ -193,17 +185,17 @@ the bootstrap bundle is created and waits for in-progress storage initialization
 before shutting down and finalizing it.
 
 The event payload redactor masks secret-shaped fields, bearer values, known
-credential environment values, and the value selected by `--api-key-env`
-before writing any event or summary. The same literal-value redactor runs
-before Mastra's structural sensitive-field filter, so traces retain redacted
-model/tool bodies, timing, token metadata, and correlation IDs. Commands inherit
+credential environment values, and the OpenRouter key before writing any event,
+span, or summary. The same literal-value redactor runs synchronously before
+OpenTelemetry span persistence, so traces retain redacted model/tool bodies,
+timing, token metadata, and correlation IDs. Commands inherit
 their worker attempt and tool-call correlation, record whether they exited,
 timed out, or were aborted, and distinguish deliberate worker cancellation from
 failure. Shutdown awaits active reconciliation, workers, and the master model
 turn before finalizing the bundle. Terminal, startup, controller, and shutdown
 failures converge on one outcome-aware finalizer, and overlapping recorder
 finalization attempts serialize around the first terminal outcome.
-Runs are retained indefinitely in v1, so operators must delete old run
+Runs are retained indefinitely, so operators must delete old run
 directories themselves when they no longer need them. Nothing is uploaded.
 
 Verify and inspect a run without revealing prompt, output, patch, log,

@@ -6,9 +6,9 @@
  * entries are also skipped, so callers can pass `Bun.env["FOO"]` directly
  * without null-checking.
  *
- * Used by every `claude -p` activity wrapper to scrub stderr (which can
- * contain headers like `Authorization: Bearer <token>`) before it lands
- * in Loki.
+ * Used by native agent SDK activity wrappers to scrub diagnostic output
+ * (which can contain headers like `Authorization: Bearer <token>`) before it
+ * lands in Loki.
  */
 export function redactSecrets(
   text: string,

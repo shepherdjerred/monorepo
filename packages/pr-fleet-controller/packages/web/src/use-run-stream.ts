@@ -52,9 +52,11 @@ function ensureConnected(): void {
     try {
       applySpanLine(view, data);
       emit();
-    } catch {
-      // Spans are an explicitly best-effort mirror (see SpanJsonlExporter), so a
-      // single malformed span line is safely ignored — unlike an event line.
+    } catch (error) {
+      // v2 spans.jsonl is authoritative and digest-verified. Surface malformed
+      // telemetry instead of presenting a complete-looking partial transcript.
+      streamError = error instanceof Error ? error.message : String(error);
+      emit();
     }
   });
   stream.addEventListener("open", () => {

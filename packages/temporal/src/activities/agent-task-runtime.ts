@@ -2,8 +2,6 @@ import { Context } from "@temporalio/activity";
 import * as Sentry from "@sentry/bun";
 import { agentTaskRunsTotal } from "#observability/metrics.ts";
 import type { AgentTaskSecretRedactionError } from "#activities/agent-task-env.ts";
-import type { AgentTaskLlmTrace } from "#activities/agent-task-llm-trace.ts";
-import type { TrackedAgentResult } from "#shared/agent-subprocess.ts";
 import { getTraceContext } from "#observability/tracing.ts";
 import { workflowExecutionContext } from "#activities/temporal-context.ts";
 
@@ -77,27 +75,6 @@ export function throwIfAgentTaskSecretRedactionFailed(
     signal: context.signal,
   });
   throw failure;
-}
-
-export function enforceAgentTaskSecretRedactionHealth(input: {
-  llmTrace: Pick<AgentTaskLlmTrace, "recordMetadataOnly">;
-  failure: AgentTaskSecretRedactionError | undefined;
-  result: Pick<TrackedAgentResult, "exitCode" | "durationMs" | "signal">;
-  provider: string;
-  startTimeMs: number;
-}): void {
-  if (input.failure !== undefined) {
-    input.llmTrace.recordMetadataOnly({
-      exitCode: input.result.exitCode,
-      startTimeMs: input.startTimeMs,
-      durationMs: input.result.durationMs,
-    });
-  }
-  throwIfAgentTaskSecretRedactionFailed(input.failure, {
-    provider: input.provider,
-    durationMs: input.result.durationMs,
-    signal: input.result.signal,
-  });
 }
 
 export function safeHeartbeat(payload: Record<string, unknown>): void {

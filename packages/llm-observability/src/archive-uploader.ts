@@ -82,6 +82,25 @@ export async function uploadArchive(
   }
 }
 
+/**
+ * Check whether an archive object already exists without downloading it.
+ *
+ * Unlike {@link uploadArchive}, this is an integrity/control-plane operation:
+ * authentication and storage failures throw so callers cannot mistake an
+ * unavailable archive for a missing object.
+ */
+export async function archiveObjectExists(
+  config: ArchiveConfig,
+  key: string,
+): Promise<boolean> {
+  const response = await signedS3Request(config, key, "HEAD");
+  if (response.ok) return true;
+  if (response.status === 404) return false;
+  throw new Error(
+    `S3 archive existence check failed (${String(response.status)}): ${response.statusText}`,
+  );
+}
+
 function sha256Hex(value: string | Uint8Array): string {
   return createHash("sha256").update(value).digest("hex");
 }
@@ -118,8 +137,24 @@ async function putS3Object(
   key: string,
   body: Buffer,
 ): Promise<void> {
+  const response = await signedS3Request(config, key, "PUT", body);
+
+  if (!response.ok) {
+    const responseBody = await response.text();
+    throw new Error(
+      `S3 upload failed (${String(response.status)}): ${responseBody}`,
+    );
+  }
+}
+
+async function signedS3Request(
+  config: ArchiveConfig,
+  key: string,
+  method: "HEAD" | "PUT",
+  body?: Buffer,
+): Promise<Response> {
   const url = buildS3Url(config, key);
-  const payloadHash = sha256Hex(body);
+  const payloadHash = sha256Hex(body ?? "");
   const amzDate = formatAmzDate(new Date());
   const dateStamp = amzDate.slice(0, 8);
 
@@ -141,7 +176,7 @@ async function putS3Object(
     .join("");
   const signedHeaders = sortedHeaderEntries.map(([k]) => k).join(";");
   const canonicalRequest = [
-    "PUT",
+    method,
     url.pathname,
     url.searchParams.toString(),
     canonicalHeaders,
@@ -178,19 +213,13 @@ async function putS3Object(
   ].join(", ");
 
   const response = await fetch(url, {
-    method: "PUT",
+    method,
     headers: {
       ...headers,
       Authorization: authorization,
-      "Content-Type": "application/gzip",
+      ...(body === undefined ? {} : { "Content-Type": "application/gzip" }),
     },
-    body: new Uint8Array(body),
+    ...(body === undefined ? {} : { body: new Uint8Array(body) }),
   });
-
-  if (!response.ok) {
-    const responseBody = await response.text();
-    throw new Error(
-      `S3 upload failed (${String(response.status)}): ${responseBody}`,
-    );
-  }
+  return response;
 }

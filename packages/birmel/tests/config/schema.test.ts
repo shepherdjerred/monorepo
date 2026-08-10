@@ -1,7 +1,7 @@
 import { describe, test, expect } from "bun:test";
 import {
   DiscordConfigSchema,
-  OpenAIConfigSchema,
+  OpenRouterConfigSchema,
   AgentConfigSchema,
   TelemetryConfigSchema,
   DailyPostsConfigSchema,
@@ -43,9 +43,9 @@ describe("DiscordConfigSchema", () => {
   });
 });
 
-describe("OpenAIConfigSchema", () => {
+describe("OpenRouterConfigSchema", () => {
   test("validates with defaults", () => {
-    const result = OpenAIConfigSchema.safeParse({
+    const result = OpenRouterConfigSchema.safeParse({
       apiKey: "test-key",
     });
     expect(result.success).toBe(true);
@@ -53,13 +53,12 @@ describe("OpenAIConfigSchema", () => {
       expect(result.data.model).toBe("gpt-5.6-sol");
       expect(result.data.classifierModel).toBe("gpt-5.4-nano");
       expect(result.data.reasoningEffort).toBe("medium");
-      expect(result.data.textVerbosity).toBe("low");
       expect(result.data.maxTokens).toBe(4096);
     }
   });
 
   test("allows custom model and classifierModel", () => {
-    const result = OpenAIConfigSchema.safeParse({
+    const result = OpenRouterConfigSchema.safeParse({
       apiKey: "test-key",
       model: "gpt-4o",
       classifierModel: "gpt-4o-mini",
@@ -72,7 +71,7 @@ describe("OpenAIConfigSchema", () => {
   });
 
   test("rejects missing apiKey", () => {
-    const result = OpenAIConfigSchema.safeParse({});
+    const result = OpenRouterConfigSchema.safeParse({});
     expect(result.success).toBe(false);
   });
 });
@@ -161,9 +160,6 @@ describe("ExternalApisSchema", () => {
   test("allows empty config", () => {
     const result = ExternalApisSchema.safeParse({});
     expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.webSearchProvider).toBe("openai");
-    }
   });
 
   test("allows optional API keys", () => {
@@ -223,8 +219,8 @@ describe("ConfigSchema (full)", () => {
         token: "test-token",
         clientId: "123456789012345678",
       },
-      openai: {
-        apiKey: "test-openai-key",
+      openRouter: {
+        apiKey: "test-openrouter-key",
       },
       agent: {},
       authority: {},
@@ -249,8 +245,8 @@ describe("ConfigSchema (full)", () => {
 
   test("rejects config with missing required section", () => {
     const result = ConfigSchema.safeParse({
-      openai: {
-        apiKey: "test-openai-key",
+      openRouter: {
+        apiKey: "test-openrouter-key",
       },
     });
     expect(result.success).toBe(false);

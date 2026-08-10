@@ -1,4 +1,4 @@
-import { createTool } from "@mastra/core/tools";
+import { tool as defineTool } from "ai";
 import { z } from "zod";
 import { captureTelemetryOperation } from "./controller-telemetry.ts";
 import { currentTimestamp } from "./fleet-logic.ts";
@@ -145,8 +145,7 @@ export function createWorkerWipTools(options: {
     assertNotWaitingForAnswer,
   } = options;
   return {
-    inspect_worktree_wip: createTool({
-      id: "inspect_worktree_wip",
+    inspect_worktree_wip: defineTool({
       description:
         "Inspect inherited work in the assigned checkout: complete/truncated status, staged and unstaged patches, metadata-only untracked paths, local-commit patches, and the local/remote relation. Publication remains disabled when required evidence is truncated. Use this before deciding whether existing operator work clearly belongs to the PR or requires operator guidance, and repeat it after every controller mutation in an operator worktree before another mutation or publication.",
       inputSchema: z.object({}),
@@ -294,8 +293,7 @@ export function createWorkerWipTools(options: {
           };
         }),
     }),
-    request_operator_input: createTool({
-      id: "request_operator_input",
+    request_operator_input: defineTool({
       description:
         "Ask the operator only after inspecting discoverable evidence and finding a material intent or ownership decision that cannot be resolved safely. Provide one to three short questions, two or three concrete options each, exactly one recommended option, and enough context to decide. After calling this tool, return waiting-for-answer with its request ID and do no more work.",
       inputSchema: OperatorInputRequestDraftSchema,
@@ -346,8 +344,7 @@ export function createWorkerWipTools(options: {
         return pendingRequest;
       },
     }),
-    unstage_paths: createTool({
-      id: "unstage_paths",
+    unstage_paths: defineTool({
       description:
         "Unstage explicit inherited paths while preserving their working-tree contents. Use only after inspecting staged WIP; this never discards file content.",
       inputSchema: z.object({
@@ -384,8 +381,7 @@ export function createWorkerWipTools(options: {
           return { paths: input.paths };
         }),
     }),
-    publish_inherited_commits: createTool({
-      id: "publish_inherited_commits",
+    publish_inherited_commits: defineTool({
       description:
         "Publish already-validated local commits that are descendants of the captured PR head, without committing unrelated working-tree changes. Use only after inspect_worktree_wip returns complete commit metadata, changed paths, and patch evidence and every inherited commit clearly belongs to this PR.",
       inputSchema: z.object({}),

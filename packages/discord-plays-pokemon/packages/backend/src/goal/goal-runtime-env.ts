@@ -1,4 +1,4 @@
-// Builds the runtime environment for the Codex subprocess. Two things matter:
+// Builds the deliberately minimal process environment consumed by Codex SDK.
 // (1) write the `pokemonctl` shell wrapper into a runtime helper directory so
 // PATH lookup finds it, and (2) build a deliberately minimal env so a
 // prompt-injected goal can't exfiltrate unrelated process secrets.
@@ -7,18 +7,16 @@
 import path from "node:path";
 import { buildCodexCredentialEnvironment } from "./codex-auth.ts";
 
-// Only these variables are forwarded to the Codex subprocess. The goal text
+// Only these variables are forwarded to the Codex SDK runtime. The goal text
 // is attacker-controlled and Codex can read its own environment, so the
-// subprocess must never inherit unrelated process secrets (DISCORD_TOKEN,
+// SDK runtime must never inherit unrelated process secrets (DISCORD_TOKEN,
 // etc.) that a prompt-injected goal could exfiltrate via `pokemonctl progress`.
 // PATH/POKEMONCTL_* are injected explicitly below.
 const INHERITED_ENVIRONMENT_ALLOWLIST = [
   "PATH",
   "HOME",
   "CODEX_HOME",
-  "CODEX_API_KEY",
   "CODEX_ACCESS_TOKEN",
-  "OPENAI_API_KEY",
 ];
 
 export async function prepareRuntimeTools(

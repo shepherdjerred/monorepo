@@ -80,7 +80,6 @@ describe("ConfigSchema goal config", () => {
       enabled: false,
       model: "gpt-5.6-luna",
       reasoning_effort: "medium",
-      codex_binary: "codex",
       runtime_directory: ".",
       screenshot_dir: "goal-screenshots",
       state_path: "goal-state.json",

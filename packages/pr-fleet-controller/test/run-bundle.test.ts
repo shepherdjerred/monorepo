@@ -11,7 +11,6 @@ import {
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { createFleetMastraRuntime } from "@shepherdjerred/pr-fleet-controller/src/mastra-runtime.ts";
 import {
   inspectEvents,
   inspectRunSummary,
@@ -1472,27 +1471,5 @@ describe("run bundle inspection", () => {
       "[hidden; pass --show-bodies]",
     );
     expect(inspectRunSummary(bundle.summary, true)).toEqual(bundle.summary);
-  });
-});
-
-describe("run-scoped Mastra storage", () => {
-  test("initializes and closes private Mastra and DuckDB stores", async () => {
-    const recorder = await createRecorder();
-    recorder.record("run.started", { test: "storage" });
-    const runtime = await createFleetMastraRuntime(recorder);
-    expect(await mode(recorder.paths.mastra)).toBe(0o600);
-    expect(await mode(recorder.paths.observability)).toBe(0o600);
-    await runtime.shutdown();
-    await recorder.finalize("completed", null);
-    const artifacts = await readdir(recorder.paths.runDirectory);
-    expect(artifacts).not.toContain("mastra.db-wal");
-    expect(artifacts).not.toContain("mastra.db-shm");
-    expect(artifacts).not.toContain("observability.duckdb.wal");
-    for (const artifact of artifacts) {
-      expect(await mode(path.join(recorder.paths.runDirectory, artifact))).toBe(
-        0o600,
-      );
-    }
-    await loadRunBundle(recorder.paths.runDirectory);
   });
 });

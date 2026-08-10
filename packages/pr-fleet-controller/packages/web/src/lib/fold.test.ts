@@ -113,6 +113,42 @@ const WAITING_PR = {
   priority: 0,
 };
 
+function createV2CorrelatedRunView(): ReturnType<typeof createRunView> {
+  const view = createRunView();
+  applyEventLine(
+    view,
+    eventLine({
+      sequence: 1,
+      timestamp: "2026-08-03T20:00:01.000Z",
+      kind: "worker.attempt.started",
+      correlation: {
+        prNumber: 1389,
+        traceId: "a".repeat(32),
+        modelTurnId: "worker-turn-1",
+      },
+      payload: { attempt: 1, prompt: "work" },
+    }),
+  );
+  applySpanLine(
+    view,
+    JSON.stringify({
+      schemaVersion: 1,
+      kind: "span",
+      span: {
+        traceId: "a".repeat(32),
+        spanId: "b".repeat(16),
+        name: "gen_ai.chat",
+        startTime: [1_754_250_401, 0],
+        duration: [0, 1_000_000],
+        status: { code: 1 },
+        attributes: { "gen_ai.system": "openrouter" },
+        events: [],
+      },
+    }),
+  );
+  return view;
+}
+
 describe("fold", () => {
   test("captures the latest fleet snapshot from fleet.snapshot", () => {
     const view = createRunView();
@@ -236,6 +272,12 @@ describe("fold", () => {
     applySpanLine(view, JSON.stringify(span));
     expect(view.prs.get(1389)?.timeline).toHaveLength(1);
     expect(view.prs.get(1389)?.timeline[0]?.kind).toBe("span");
+  });
+
+  test("joins v2 OpenTelemetry spans through repository trace correlation", () => {
+    const view = createV2CorrelatedRunView();
+    expect(view.prs.get(1389)?.timeline).toHaveLength(2);
+    expect(view.prs.get(1389)?.timeline[1]?.kind).toBe("span");
   });
 
   test("marks the run failed on run.failed", () => {

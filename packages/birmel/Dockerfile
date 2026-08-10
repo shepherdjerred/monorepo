@@ -3,9 +3,9 @@
 # bun.lock, isolated linker). Built via `bun run docker:build` in this package
 # (which passes `-f Dockerfile ../..`).
 #
-# birmel's editor specialist shells out to `gh` (opens PRs) and `claude` (runs
-# edits); its music stack shells out through youtube-dl-exec (needs Node + Python
-# + a yt-dlp binary) and ffmpeg-static.
+# birmel's editor specialist shells out to `gh` to open PRs and uses the
+# package-local Claude Agent SDK for edits; its music stack shells out through
+# youtube-dl-exec (needs Node + Python + a yt-dlp binary) and ffmpeg-static.
 #
 # Multi-stage: deps does a full (dev-inclusive) install to feed the in-image
 # prisma generate; prod-deps installs the production-only closure; runtime
@@ -56,14 +56,9 @@ RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/birmel'
 # ── runtime: CLIs + COPY-only app layers — no install, no build tooling ─────
 FROM base AS runtime
 
-# --- gh CLI + Claude Code CLI (editor sub-agent) ---
-# BUN_INSTALL=/usr/local drops `bun add -g` binaries into /usr/local/bin
-# (world-readable, on PATH). gh is fetched from the release tarball.
+# --- gh CLI (editor sub-agent) ---
 # renovate: datasource=github-releases depName=cli/cli
 ARG GH_CLI_VERSION=2.96.0
-# renovate: datasource=npm depName=@anthropic-ai/claude-code
-ARG CLAUDE_CODE_VERSION=2.1.175
-ENV BUN_INSTALL=/usr/local
 RUN set -e; \
     apt-get update -qq; \
     apt-get install -y -qq --no-install-recommends ca-certificates curl git; \
@@ -74,8 +69,6 @@ RUN set -e; \
     curl -fsSL "https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_${gharch}.tar.gz" \
       | tar xz -C /usr/local/bin --strip-components=2 "gh_${GH_CLI_VERSION}_linux_${gharch}/bin/gh"; \
     rm -rf /var/lib/apt/lists/*
-RUN bun add -g "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" && claude --version
-
 # --- Music runtime: Node + Python for youtube-dl-exec / yt-dlp ---
 RUN set -e; \
     apt-get update -qq; \

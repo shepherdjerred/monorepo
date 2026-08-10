@@ -47,16 +47,15 @@ function loadCoreConfig(environment: Environment) {
       token: environment["DISCORD_TOKEN"] ?? "",
       clientId: environment["DISCORD_CLIENT_ID"] ?? "",
     },
-    openai: {
-      apiKey: environment["OPENAI_API_KEY"] ?? "",
-      model: environment["OPENAI_MODEL"] ?? "gpt-5.6-sol",
-      classifierModel: environment["OPENAI_CLASSIFIER_MODEL"] ?? "gpt-5.4-nano",
-      memoryModel: environment["OPENAI_MEMORY_MODEL"] ?? "gpt-5.4-nano",
+    openRouter: {
+      apiKey: environment["OPENROUTER_API_KEY"] ?? "",
+      model: environment["LLM_MODEL"] ?? "gpt-5.6-sol",
+      classifierModel: environment["LLM_CLASSIFIER_MODEL"] ?? "gpt-5.4-nano",
+      memoryModel: environment["LLM_MEMORY_MODEL"] ?? "gpt-5.4-nano",
       embeddingModel:
-        environment["OPENAI_EMBEDDING_MODEL"] ?? "text-embedding-3-small",
-      reasoningEffort: environment["OPENAI_REASONING_EFFORT"] ?? "medium",
-      textVerbosity: environment["OPENAI_TEXT_VERBOSITY"] ?? "low",
-      maxTokens: parseNumber(environment["OPENAI_MAX_TOKENS"], 4096),
+        environment["LLM_EMBEDDING_MODEL"] ?? "text-embedding-3-small",
+      reasoningEffort: environment["LLM_REASONING_EFFORT"] ?? "medium",
+      maxTokens: parseNumber(environment["LLM_MAX_OUTPUT_TOKENS"], 4096),
     },
     agent: {
       maxSteps: parseNumber(environment["AGENT_MAX_STEPS"], 8),
@@ -91,7 +90,6 @@ function loadCoreConfig(environment: Environment) {
     externalApis: {
       newsApiKey: environment["NEWS_API_KEY"],
       riotApiKey: environment["RIOT_API_KEY"],
-      webSearchProvider: environment["WEB_SEARCH_PROVIDER"] ?? "openai",
     },
     logging: {
       level: environment["LOG_LEVEL"] ?? "info",

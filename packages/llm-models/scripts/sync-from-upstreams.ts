@@ -2,10 +2,10 @@
 /**
  * Cross-check the catalog against community datasets and report/apply drift.
  *
- * Source of truth is still our own `src/catalog.json`. This script fetches two
- * public, MIT-licensed datasets — models.dev and LiteLLM's
- * `model_prices_and_context_window.json` — and, for each TEXT model WE list,
- * compares the unambiguous fields (input price, output price, context window).
+ * Source of truth is still our own `src/catalog.json`. This script fetches the
+ * public models.dev and LiteLLM datasets for pricing/context drift plus
+ * OpenRouter's ordinary and embedding catalogs for route availability. For
+ * each text model we list, it compares the unambiguous numeric fields.
  * It:
  *   - rewrites our values to the upstream value when they drift (default), and
  *   - reports models absent from BOTH upstreams as "overlay-only" (e.g.
@@ -35,7 +35,7 @@
  * Deliberately NOT cross-checked:
  *   - cache prices: providers name them differently (OpenAI cached-input vs
  *     Anthropic cache read/write) and upstreams normalize inconsistently.
- *   - image models: upstreams price them per token; we price per image.
+ *   - image pricing: upstreams price it per token; we price per image.
  * Both are reported as "not cross-checked" so a human can spot-check them.
  *
  * Never adds/removes models; never touches non-numeric fields.
@@ -51,10 +51,16 @@ import { CatalogSchema, type Catalog, type ModelEntry } from "#src/index.ts";
 const MODELS_DEV_URL = "https://models.dev/api.json";
 const LITELLM_URL =
   "https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json";
+const OPENROUTER_MODELS_URL = "https://openrouter.ai/api/v1/models";
+const OPENROUTER_EMBEDDINGS_URL =
+  "https://openrouter.ai/api/v1/embeddings/models";
 const CATALOG_PATH = new URL("../src/catalog.json", import.meta.url);
 const EPSILON = 1e-9;
 
 const UnknownRecord = z.record(z.string(), z.unknown());
+const OpenRouterCatalogSchema = z.object({
+  data: z.array(z.object({ id: z.string().min(1) }).loose()),
+});
 
 /** Per-1M-token input/output (+ context) — the fields we cross-check. */
 export type Upstream = {
@@ -618,9 +624,16 @@ async function main(): Promise<void> {
   const rawText = await Bun.file(CATALOG_PATH).text();
   const rawCatalog = UnknownRecord.parse(JSON.parse(rawText));
   const catalog: Catalog = CatalogSchema.parse(JSON.parse(rawText));
-  const [modelsDevRaw, liteLlmRaw] = await Promise.all([
+  const [
+    modelsDevRaw,
+    liteLlmRaw,
+    openRouterModelsRaw,
+    openRouterEmbeddingsRaw,
+  ] = await Promise.all([
     fetchJson(MODELS_DEV_URL),
     fetchJson(LITELLM_URL),
+    fetchJson(OPENROUTER_MODELS_URL),
+    fetchJson(OPENROUTER_EMBEDDINGS_URL),
   ]);
   const modelsDev = indexModelsDev(modelsDevRaw);
   const liteLlm = indexLiteLlm(liteLlmRaw);
@@ -633,14 +646,41 @@ async function main(): Promise<void> {
         .map((entry) => entry.provider),
     ),
   );
+  const openRouterModels = new Set(
+    OpenRouterCatalogSchema.parse(openRouterModelsRaw).data.map(
+      (entry) => entry.id,
+    ),
+  );
+  const openRouterEmbeddings = new Set(
+    OpenRouterCatalogSchema.parse(openRouterEmbeddingsRaw).data.map(
+      (entry) => entry.id,
+    ),
+  );
 
   const now = new Date();
   const drifted: string[] = [];
   const models: Record<string, ModelVerdict> = {};
   const overlayOnly: string[] = [];
   const notChecked: string[] = [];
+  const missingOpenRouterRoutes: string[] = [];
 
   for (const [id, entry] of Object.entries(catalog)) {
+    const openRouterRoute = entry.routes.openRouter;
+    if (entry.status === "current" || entry.status === "preview") {
+      if (openRouterRoute === undefined) {
+        missingOpenRouterRoutes.push(`${id} (route not configured)`);
+      } else {
+        const available =
+          openRouterRoute.endpoint === "embedding"
+            ? openRouterEmbeddings.has(openRouterRoute.modelId)
+            : openRouterModels.has(openRouterRoute.modelId);
+        if (!available) {
+          missingOpenRouterRoutes.push(
+            `${id} (${openRouterRoute.modelId} missing from ${openRouterRoute.endpoint} catalog)`,
+          );
+        }
+      }
+    }
     if (entry.pricing.modality !== "text") {
       notChecked.push(`${id} (image — per-image pricing not in upstreams)`);
       continue;
@@ -681,6 +721,15 @@ async function main(): Promise<void> {
     notChecked,
   };
   emitReport(report, check);
+
+  if (missingOpenRouterRoutes.length > 0) {
+    emit(
+      `\nMissing current OpenRouter routes:\n  ${missingOpenRouterRoutes.join("\n  ")}`,
+    );
+    process.exitCode = 1;
+  } else {
+    emit("\nAll current and preview OpenRouter routes are available.");
+  }
 
   if (!check && drifted.length > 0) {
     // Patch only the drifted numeric fields into the raw JSON structure so that

@@ -149,7 +149,7 @@ afterAll(async () => {
 // Only set defaults if not already set (allows CI to override)
 Bun.env["DISCORD_TOKEN"] ??= "test-token";
 Bun.env["DISCORD_CLIENT_ID"] ??= "123456789012345678";
-Bun.env["OPENAI_API_KEY"] ??= "test-key";
+Bun.env["OPENROUTER_API_KEY"] ??= "test-key";
 Bun.env["SHELL_ENABLED"] ??= "true";
 Bun.env["SCHEDULER_ENABLED"] ??= "true";
 Bun.env["BROWSER_ENABLED"] = "true";

@@ -84,6 +84,18 @@
     "//#check-suppressions": {
       "inputs": ["scripts/**", "!scripts/node_modules/**"]
     },
+    "//#check-ai-architecture": {
+      "inputs": [
+        "package.json",
+        ".buildkite/**",
+        "packages/**",
+        "scripts/**",
+        "!**/node_modules/**",
+        "!**/dist/**",
+        "!packages/docs/**",
+        "!packages/dotfiles/dot_agents/skills/**"
+      ]
+    },
     "//#check-patched-deps": {
       "inputs": [
         "package.json",

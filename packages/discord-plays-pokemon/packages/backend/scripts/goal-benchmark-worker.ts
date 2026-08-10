@@ -16,7 +16,6 @@ import {
 } from "#src/goal/catch-evidence.ts";
 import { readGameObservation } from "#src/goal/game-observation.ts";
 import { GoalManager } from "#src/goal/goal-manager.ts";
-import type { GoalProcessSpawner } from "#src/goal/goal-types.ts";
 import { startGoalControlServer } from "#src/goal/control-server.ts";
 
 // The benchmark worker is streamed as text and executed with its working
@@ -183,7 +182,6 @@ const WorkerConfigSchema = z.strictObject({
   reasoning: z.enum(["low", "medium", "high", "xhigh"]),
   runtimeMinutes: z.number().int().positive().max(30),
   bootTimeoutSeconds: z.number().int().positive().max(300),
-  codexBinary: z.string().min(1),
 });
 type WorkerConfig = z.infer<typeof WorkerConfigSchema>;
 type SerializedSnapshot = {
@@ -194,7 +192,7 @@ type SerializedSnapshot = {
   caughtMonShiny: boolean;
 };
 type ProcessCapture = {
-  spawner: GoalProcessSpawner;
+  onEventLine: (line: string) => Promise<void>;
   completed: () => Promise<void>;
 };
 async function startBenchmarkGoal(
@@ -230,59 +228,21 @@ function serializeSnapshot(snapshot: GameSnapshot): SerializedSnapshot {
     caughtMonShiny: snapshot.caughtMonShiny,
   };
 }
-async function copyStream(
-  stream: ReadableStream<Uint8Array>,
-  filePath: string,
-): Promise<void> {
-  const sink = Bun.file(filePath).writer();
-  const reader = stream.getReader();
-  try {
-    for (;;) {
-      const result = await reader.read();
-      if (result.done) break;
-      await sink.write(result.value);
-      await sink.flush();
-    }
-  } finally {
-    reader.releaseLock();
-    await sink.end();
-  }
-}
 function createProcessCapture(runDirectory: string): ProcessCapture {
-  let capture: Promise<void> | undefined;
-  const spawner: GoalProcessSpawner = (args, options) => {
-    if (capture !== undefined) {
-      throw new Error("benchmark worker supports exactly one Codex process");
-    }
-    const child = Bun.spawn(args, {
-      cwd: options.cwd,
-      env: options.env,
-      stdin: "ignore",
-      stdout: "pipe",
-      stderr: "pipe",
-    });
-    const [managerStdout, capturedStdout] = child.stdout.tee();
-    const [managerStderr, capturedStderr] = child.stderr.tee();
-    capture = (async () => {
-      await Promise.all([
-        copyStream(capturedStdout, path.join(runDirectory, "codex.jsonl")),
-        copyStream(capturedStderr, path.join(runDirectory, "codex.stderr.log")),
-      ]);
-    })();
-    return {
-      pid: child.pid,
-      stdout: managerStdout,
-      stderr: managerStderr,
-      exited: child.exited,
-      kill(signal) {
-        child.kill(signal);
-      },
-    };
-  };
+  const sink = Bun.file(path.join(runDirectory, "codex.jsonl")).writer();
+  let closed = false;
   return {
-    spawner,
+    async onEventLine(line): Promise<void> {
+      if (closed) {
+        throw new Error("Codex benchmark event arrived after capture closed");
+      }
+      await sink.write(`${line}\n`);
+      await sink.flush();
+    },
     async completed(): Promise<void> {
-      await capture;
+      if (closed) return;
+      closed = true;
+      await sink.end();
     },
   };
 }
@@ -420,7 +380,6 @@ function buildRuntimeConfig(config: WorkerConfig) {
         enabled: true,
         model: config.model,
         reasoning_effort: config.reasoning,
-        codex_binary: config.codexBinary,
         runtime_directory: config.runtimeDirectory,
         screenshot_dir: path.join(config.runDirectory, "screenshots"),
         state_path: path.join(config.runDirectory, "goal-state.json"),
@@ -536,7 +495,7 @@ async function main(): Promise<void> {
       config: runtimeConfig.game.goal,
       controlToken,
       sendMessage: () => Promise.resolve(),
-      spawner: processCapture.spawner,
+      onCodexEventLine: processCapture.onEventLine,
       snapshotProvider: () => liveBenchmarkSnapshot(emulator),
       spatialSnapshotProvider: () => liveBenchmarkSpatial(emulator),
     });
@@ -576,6 +535,7 @@ async function main(): Promise<void> {
     await emulator.checkpointSave();
   } finally {
     await manager?.shutdown();
+    await processCapture.completed();
     if (controlServer !== undefined) {
       await controlServer.stop(true);
     }

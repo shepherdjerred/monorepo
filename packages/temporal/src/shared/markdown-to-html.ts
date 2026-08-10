@@ -22,8 +22,8 @@ const STYLE = `
   a:hover { text-decoration: underline; }
 `.trim();
 
-// Markdown comes from `claude -p` over kubectl/log/PD output, so the source
-// can carry attacker-influenced strings (pod names, log lines, third-party
+// Markdown comes from Claude Agent SDK over kubectl/log/PD output, so the
+// source can carry attacker-influenced strings (pod names, log lines, third-party
 // API responses). marked.parse() passes raw HTML through verbatim, which
 // would round-trip a `<script>` or `<img onerror>` straight into the email
 // body. Sanitize the rendered HTML against an allowlist that covers every

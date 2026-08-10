@@ -1,29 +1,13 @@
-// Builds the role-separated Codex CLI invocation for a Pokemon goal. Stable
+// Builds the role-separated Codex SDK prompts for a Pokemon goal. Stable
 // operating policy is injected as developer instructions; Discord content and
 // save-specific context remain an explicitly untrusted user message.
 
 import { PREFERRED_POKEMONCTL_CAPABILITIES } from "./goal-capabilities.ts";
 
-export type CodexReasoningEffort = "low" | "medium" | "high" | "xhigh";
-
-export type CodexCommandConfig = {
-  codexBinary: string;
-  model: string;
-  reasoningEffort: CodexReasoningEffort;
-};
-
 export type PromptContext = {
   gameStateSummary: string;
   recentGoalsSummary: string;
   memory: string;
-};
-
-export type BuildCodexArgsInput = {
-  config: CodexCommandConfig;
-  goal: string;
-  runtimeDirectory: string;
-  outputPath: string;
-  context: PromptContext;
 };
 
 export const PROMPT_BUDGETS = {
@@ -86,40 +70,6 @@ type GoalRunPrompt = {
     continuityMemory: string;
   };
 };
-
-export function buildCodexArgs(input: BuildCodexArgsInput): string[] {
-  const { config, goal, runtimeDirectory, outputPath, context } = input;
-  return [
-    config.codexBinary,
-    "exec",
-    // Production already supplies the external pod boundary required for this
-    // Codex mode; Talos disables the user namespaces Codex's bwrap needs.
-    "--dangerously-bypass-approvals-and-sandbox",
-    "--ignore-user-config",
-    "--strict-config",
-    "--ephemeral",
-    "--config",
-    `model_reasoning_effort="${config.reasoningEffort}"`,
-    "--config",
-    `developer_instructions=${JSON.stringify(buildDeveloperInstructions())}`,
-    // Goal mode needs only local skills and the shell surface for pokemonctl.
-    "--disable",
-    "apps",
-    "--disable",
-    "plugins",
-    "--disable",
-    "multi_agent",
-    "--json",
-    "--output-last-message",
-    outputPath,
-    "--cd",
-    runtimeDirectory,
-    "--model",
-    config.model,
-    "--skip-git-repo-check",
-    buildUserPrompt(goal, context),
-  ];
-}
 
 export function buildDeveloperInstructions(): string {
   if (DEVELOPER_INSTRUCTIONS.length > PROMPT_BUDGETS.developerInstructions) {

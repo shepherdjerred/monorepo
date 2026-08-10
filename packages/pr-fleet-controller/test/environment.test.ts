@@ -2,7 +2,6 @@ import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { noopObserve } from "@mastra/core/tools";
 import { codexProvider } from "@shepherdjerred/code-review";
 import { buildPrState } from "@shepherdjerred/pr-fleet-controller/src/fleet-logic.ts";
 import {
@@ -29,6 +28,12 @@ import {
 import { FleetStore } from "@shepherdjerred/pr-fleet-controller/src/state.ts";
 import { createWorkerRestackTools } from "@shepherdjerred/pr-fleet-controller/src/worker-restack-tools.ts";
 import { evidence, identity } from "./fixtures.ts";
+
+const toolExecutionOptions = {
+  toolCallId: "test-tool-call",
+  messages: [],
+  context: {},
+};
 
 class RecordingTelemetry implements FleetTelemetry {
   readonly runId = "environment-test";
@@ -563,7 +568,7 @@ test("restack lifecycle cleans startup failures and revalidates publication", as
       });
     };
 
-    await expect(startRestack({}, { observe: noopObserve })).rejects.toBe(
+    await expect(startRestack({}, toolExecutionOptions)).rejects.toBe(
       environment.startFailure,
     );
     expect(store.activeRestacks.has(pr.identity.number)).toBe(false);
@@ -572,7 +577,7 @@ test("restack lifecycle cleans startup failures and revalidates publication", as
     environment.startResult = commandResult(1, "CONFLICT in tracked.txt");
     environment.rebaseInProgress = true;
     environment.rebaseHeadExists = true;
-    await expect(startRestack({}, { observe: noopObserve })).resolves.toEqual({
+    await expect(startRestack({}, toolExecutionOptions)).resolves.toEqual({
       completed: false,
       output: "CONFLICT in tracked.txt",
     });
@@ -598,7 +603,7 @@ test("restack lifecycle cleans startup failures and revalidates publication", as
       worktree: directory,
     });
     await expect(
-      continueRestack({ paths: ["tracked.txt"] }, { observe: noopObserve }),
+      continueRestack({ paths: ["tracked.txt"] }, toolExecutionOptions),
     ).rejects.toThrow(/HEAD changed after assignment/);
     expect(environment.continued).toBe(false);
 
@@ -611,7 +616,7 @@ test("restack lifecycle cleans startup failures and revalidates publication", as
     });
     environment.continueResult = commandResult(1, "commit hook failed");
     await expect(
-      continueRestack({ paths: ["tracked.txt"] }, { observe: noopObserve }),
+      continueRestack({ paths: ["tracked.txt"] }, toolExecutionOptions),
     ).rejects.toThrow(/commit hook failed/);
     expect(store.activeRestacks.get(pr.identity.number)).toEqual({
       remoteHeadSha: headSha,
@@ -620,7 +625,7 @@ test("restack lifecycle cleans startup failures and revalidates publication", as
 
     environment.continued = false;
     await expect(
-      continueRestack({ paths: ["tracked.txt"] }, { observe: noopObserve }),
+      continueRestack({ paths: ["tracked.txt"] }, toolExecutionOptions),
     ).rejects.toThrow(/inspect again/);
     expect(environment.continued).toBe(false);
     await recordCompleteInheritedWipInspection({
@@ -631,7 +636,7 @@ test("restack lifecycle cleans startup failures and revalidates publication", as
     });
     await Bun.write(path.join(directory, "tracked.txt"), "late edit\n");
     await expect(
-      continueRestack({ paths: ["tracked.txt"] }, { observe: noopObserve }),
+      continueRestack({ paths: ["tracked.txt"] }, toolExecutionOptions),
     ).rejects.toThrow(/differs from the complete inspection/);
     expect(environment.continued).toBe(false);
     await Bun.write(path.join(directory, "tracked.txt"), "base\n");
@@ -640,19 +645,19 @@ test("restack lifecycle cleans startup failures and revalidates publication", as
     // Git can retain REBASE_HEAD after the control directory is removed.
     environment.rebaseHeadExists = true;
     await expect(
-      continueRestack({ paths: ["tracked.txt"] }, { observe: noopObserve }),
+      continueRestack({ paths: ["tracked.txt"] }, toolExecutionOptions),
     ).resolves.toEqual({ completed: true, output: "" });
     expect(environment.continued).toBe(true);
     expect(store.activeRestacks.has(pr.identity.number)).toBe(false);
 
     armPublication();
-    await publishRestack({}, { observe: noopObserve });
+    await publishRestack({}, toolExecutionOptions);
     expect(environment.published).toBe(true);
 
     environment.published = false;
     await Bun.write(path.join(directory, "operator-note.txt"), "new work\n");
     armPublication();
-    await expect(publishRestack({}, { observe: noopObserve })).rejects.toThrow(
+    await expect(publishRestack({}, toolExecutionOptions)).rejects.toThrow(
       /changed or incomplete worktree evidence/,
     );
     expect(environment.published).toBe(false);
@@ -670,7 +675,7 @@ test("restack lifecycle cleans startup failures and revalidates publication", as
       "test: concurrent operator commit",
     ]);
     armPublication();
-    await expect(publishRestack({}, { observe: noopObserve })).rejects.toThrow(
+    await expect(publishRestack({}, toolExecutionOptions)).rejects.toThrow(
       /HEAD changed before publication/,
     );
     expect(environment.published).toBe(false);

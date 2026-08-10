@@ -181,7 +181,7 @@ function formatNumber(n: number): string {
 
 export function displayUsageSummary(summary: UsageSummary): void {
   console.log("\n=== API Usage ===\n");
-  console.log(`  Claude API calls:    ${String(summary.calls)}`);
+  console.log(`  LLM calls:           ${String(summary.calls)}`);
   if (summary.cachedCalls > 0) {
     console.log(`  Recovered calls:     ${String(summary.cachedCalls)}`);
   }

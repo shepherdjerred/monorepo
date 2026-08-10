@@ -14,6 +14,7 @@
         "displayName",
         "pricing",
         "capabilities",
+        "routes",
         "status"
       ],
       "additionalProperties": false,
@@ -43,6 +44,37 @@
         },
         "status": { "enum": ["current", "preview", "deprecated"] },
         "category": { "type": "string" },
+        "routes": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "openRouter": {
+              "type": "object",
+              "required": ["modelId", "endpoint"],
+              "additionalProperties": false,
+              "properties": {
+                "modelId": { "type": "string", "minLength": 1 },
+                "endpoint": { "enum": ["language", "embedding", "image"] }
+              }
+            },
+            "claudeAgentSdk": {
+              "type": "object",
+              "required": ["modelId"],
+              "additionalProperties": false,
+              "properties": {
+                "modelId": { "type": "string", "minLength": 1 }
+              }
+            },
+            "codexSdk": {
+              "type": "object",
+              "required": ["modelId"],
+              "additionalProperties": false,
+              "properties": {
+                "modelId": { "type": "string", "minLength": 1 }
+              }
+            }
+          }
+        },
         "pricing": {
           "oneOf": [
             {
@@ -71,9 +103,30 @@
         },
         "capabilities": {
           "type": "object",
-          "required": ["supportsTemperature", "supportsTopP"],
+          "required": [
+            "inputModalities",
+            "outputModalities",
+            "tools",
+            "structuredOutputs",
+            "webSearch",
+            "reasoning",
+            "supportsTemperature",
+            "supportsTopP"
+          ],
           "additionalProperties": false,
           "properties": {
+            "inputModalities": {
+              "type": "array",
+              "items": { "enum": ["text", "image", "audio", "video"] }
+            },
+            "outputModalities": {
+              "type": "array",
+              "items": { "enum": ["text", "image", "embedding"] }
+            },
+            "tools": { "type": "boolean" },
+            "structuredOutputs": { "type": "boolean" },
+            "webSearch": { "type": "boolean" },
+            "reasoning": { "type": "boolean" },
             "supportsTemperature": { "type": "boolean" },
             "supportsTopP": { "type": "boolean" },
             "maxTokens": { "type": "integer", "exclusiveMinimum": 0 },

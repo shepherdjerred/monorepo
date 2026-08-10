@@ -4,6 +4,7 @@ import {
   AGENT_TASK_CLAUDE_SCHEMA_VERSION,
   AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE,
   AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX,
+  AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX_V2,
   AgentTaskOutputContractError,
   AgentTaskInputSchema,
   AgentTaskInputV2Schema,
@@ -15,7 +16,7 @@ import {
 } from "./agent-task-identifiers.ts";
 import {
   parseAgentTaskResultPayload,
-  parseClaudeAgentTaskResult,
+  parseAgentTaskStructuredOutput,
 } from "./agent-task-output.ts";
 import { z } from "zod/v4";
 
@@ -262,6 +263,11 @@ describe("agent task structured output", () => {
     expect(AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX["anyOf"]).toBeUndefined();
     assertStrictJsonSchemaObjects(AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX);
   });
+
+  it("generates an OpenAI-strict v2 schema for codex from the wire Zod schema", () => {
+    expect(AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX_V2["type"]).toBe("object");
+    assertStrictJsonSchemaObjects(AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX_V2);
+  });
 });
 
 describe("Claude structured output contract", () => {
@@ -316,129 +322,85 @@ describe("Claude structured output contract", () => {
     expect(properties["$schema"]).toBeDefined();
   });
 
-  it("parses a valid Claude result message structured_output payload", () => {
+  it("accepts schema-valid structured output from a native SDK run", () => {
     expect(
-      parseClaudeAgentTaskResult(
-        JSON.stringify({
-          type: "result",
-          subtype: "success",
-          is_error: false,
-          result: "I returned the report payload.",
-          structured_output: { markdown: "Claude report" },
-        }),
-      ),
+      parseAgentTaskStructuredOutput({
+        provider: "claude",
+        structuredOutput: { markdown: "Claude report" },
+        contractVersion: 1,
+        schemaFingerprint: AGENT_TASK_CLAUDE_SCHEMA_FINGERPRINT,
+        finalText: "I returned the report payload.",
+        redactExcerpt: (value) => value,
+      }),
     ).toEqual({ markdown: "Claude report" });
   });
 
-  it("rejects a successful Claude result with missing structured_output", () => {
-    expect(() =>
-      parseClaudeAgentTaskResult(
-        JSON.stringify({
-          type: "result",
-          subtype: "success",
-          is_error: false,
-          result: "Here is prose instead of the contract.",
-        }),
-      ),
-    ).toThrow(AgentTaskOutputContractError);
-  });
-
-  it("wraps malformed Claude result envelopes in contract diagnostics", () => {
+  it("rejects a completed run that returned no structured output", () => {
     try {
-      parseClaudeAgentTaskResult(
-        JSON.stringify({
-          type: "result",
-          subtype: 42,
-          is_error: "false",
-          result: "provider envelope was malformed",
-        }),
-      );
-      throw new Error("Expected Claude contract failure");
+      parseAgentTaskStructuredOutput({
+        provider: "claude",
+        structuredOutput: undefined,
+        contractVersion: 1,
+        schemaFingerprint: AGENT_TASK_CLAUDE_SCHEMA_FINGERPRINT,
+        finalText: "Here is prose instead of the contract.",
+        redactExcerpt: (value) => value,
+      });
+      throw new Error("Expected a structured-output contract failure");
     } catch (error: unknown) {
       expect(error).toBeInstanceOf(AgentTaskOutputContractError);
       if (!(error instanceof AgentTaskOutputContractError)) {
         throw error;
       }
-      expect(error.reason).toBe("invalid-result-envelope");
-      expect(error.diagnostics.resultMessageKeys).toEqual([
-        "is_error",
-        "result",
-        "subtype",
-        "type",
-      ]);
-      expect(error.diagnostics.finalTextExcerpt).toBe(
-        "provider envelope was malformed",
-      );
+      expect(error.reason).toBe("missing-structured-output");
+      expect(error.diagnostics.schemaFingerprint).toMatch(/^[0-9a-f]{16}$/);
+      expect(error.message).toContain("schemaFingerprint=");
     }
   });
 
-  it("rejects semantically invalid structured_output without prose fallback", () => {
-    try {
-      parseClaudeAgentTaskResult(
-        JSON.stringify({
-          type: "result",
-          subtype: "success",
-          is_error: false,
-          result: '{"markdown":"prose fallback must not be used"}',
-          structured_output: { markdown: "" },
-        }),
-      );
-      throw new Error("Expected Claude contract failure");
-    } catch (error: unknown) {
-      expect(error).toBeInstanceOf(AgentTaskOutputContractError);
-      if (!(error instanceof AgentTaskOutputContractError)) {
-        throw error;
-      }
-      expect(error.reason).toBe("invalid-structured-output");
-    }
-  });
-
-  it("reports malformed structured_output as a contract diagnostic", () => {
-    for (const structuredOutput of [null, [], "not an object"]) {
+  it("rejects semantically invalid structured output without prose fallback", () => {
+    for (const structuredOutput of [
+      null,
+      [],
+      "not an object",
+      { markdown: "" },
+    ]) {
       try {
-        parseClaudeAgentTaskResult(
-          JSON.stringify({
-            type: "result",
-            subtype: "success",
-            is_error: false,
-            result: "The provider returned a malformed payload.",
-            structured_output: structuredOutput,
-          }),
-        );
-        throw new Error("Expected Claude contract failure");
+        parseAgentTaskStructuredOutput({
+          provider: "claude",
+          structuredOutput,
+          contractVersion: 1,
+          schemaFingerprint: AGENT_TASK_CLAUDE_SCHEMA_FINGERPRINT,
+          finalText: '{"markdown":"prose fallback must not be used"}',
+          redactExcerpt: (value) => value,
+        });
+        throw new Error("Expected a structured-output contract failure");
       } catch (error: unknown) {
         expect(error).toBeInstanceOf(AgentTaskOutputContractError);
         if (!(error instanceof AgentTaskOutputContractError)) {
           throw error;
         }
         expect(error.reason).toBe("invalid-structured-output");
-        expect(error.diagnostics.resultSubtype).toBe("success");
-        expect(error.diagnostics.schemaFingerprint).toMatch(/^[0-9a-f]{16}$/);
       }
     }
   });
 
-  it("surfaces is_error and bounded redacted diagnostics", () => {
+  it("bounds and redacts the final-text excerpt it retains for diagnostics", () => {
     try {
-      parseClaudeAgentTaskResult(
-        JSON.stringify({
-          type: "result",
-          subtype: "error_max_turns",
-          is_error: true,
-          result: `token=supersecret-token ${"x".repeat(400)}`,
-          extra_result_key: true,
-        }),
-        (text) => text.replaceAll("supersecret-token", "[REDACTED]"),
-      );
-      throw new Error("Expected Claude contract failure");
+      parseAgentTaskStructuredOutput({
+        provider: "codex",
+        structuredOutput: undefined,
+        contractVersion: 1,
+        schemaFingerprint: "0123456789abcdef",
+        finalText: `token=supersecret-token ${"x".repeat(400)}`,
+        redactExcerpt: (text) =>
+          text.replaceAll("supersecret-token", "[REDACTED]"),
+      });
+      throw new Error("Expected a structured-output contract failure");
     } catch (error: unknown) {
       expect(error).toBeInstanceOf(AgentTaskOutputContractError);
       if (!(error instanceof AgentTaskOutputContractError)) {
         throw error;
       }
-      expect(error.reason).toBe("is-error");
-      expect(error.diagnostics.resultSubtype).toBe("error_max_turns");
-      expect(error.diagnostics.resultMessageKeys).toContain("extra_result_key");
       expect(error.diagnostics.finalTextExcerpt).toContain("[REDACTED]");
       expect(error.diagnostics.finalTextExcerpt).not.toContain(
         "supersecret-token",
@@ -446,8 +408,6 @@ describe("Claude structured output contract", () => {
       expect(error.diagnostics.finalTextExcerpt?.length).toBeLessThanOrEqual(
         241,
       );
-      expect(error.message).toContain("schemaFingerprint=");
-      expect(error.message).toContain("resultMessageKeys=");
     }
   });
 });

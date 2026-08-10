@@ -157,8 +157,8 @@ export async function installScoutWorkspace(
  * Forcibly disarm any git hooks armed in this ephemeral clone, regardless of
  * how they got armed. `rootInstallWithoutHooks`'s `--ignore-scripts` only
  * prevents ITS OWN call from arming hooks — it can't un-arm hooks a prior,
- * uncontrolled subprocess already installed (e.g. an agentic `claude -p` /
- * `codex exec` session with Bash access running a plain `bun install` on its
+ * uncontrolled agent session already installed (e.g. a Claude/Codex SDK run
+ * with shell access running a plain `bun install` on its
  * own initiative before this point, which is what broke
  * `scout-season-refresh-weekly` on 2026-07-12: Claude has Bash access and
  * `packages/scout-for-lol/CLAUDE.md` documents "run `bun install` to re-copy

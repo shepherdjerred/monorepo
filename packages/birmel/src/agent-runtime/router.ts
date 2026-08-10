@@ -1,5 +1,4 @@
-import { openai } from "@ai-sdk/openai";
-import { generateText, Output } from "ai";
+import { generateValidatedObject } from "@shepherdjerred/llm-runtime";
 import {
   RouteDecisionSchema,
   type ContextBundle,
@@ -9,7 +8,7 @@ import {
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { withSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
-import { getOpenAIProviderOptions } from "./provider-options.ts";
+import { getLlmRuntime } from "./llm.ts";
 import { ROUTER_INSTRUCTIONS } from "./prompts.ts";
 
 const logger = loggers.agent.child("router");
@@ -25,18 +24,17 @@ export type RouteModel = (request: RouteRequest) => Promise<unknown>;
 
 async function defaultRouteModel(request: RouteRequest): Promise<unknown> {
   const config = getConfig();
-  const result = await generateText({
-    model: openai(config.openai.classifierModel),
+  const result = await generateValidatedObject(getLlmRuntime(), {
+    model: config.openRouter.classifierModel,
     system: ROUTER_INSTRUCTIONS,
     prompt: `Elected persona:\n${request.persona}\n\nCurrent request:\n${request.turn.content}\n\nRelevant context:\n${request.context.assembled}`,
-    output: Output.object({
-      schema: RouteDecisionSchema,
-      name: "birmel_route_decision",
-    }),
-    timeout: config.agent.routerTimeoutMs,
-    providerOptions: getOpenAIProviderOptions(),
+    schema: RouteDecisionSchema,
+    schemaName: "birmel_route_decision",
+    workload: "birmel.route",
+    sessionId: request.turn.channelId,
+    abortSignal: AbortSignal.timeout(config.agent.routerTimeoutMs),
   });
-  return result.output;
+  return result.object;
 }
 
 export async function routeTurn(
