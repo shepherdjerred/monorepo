@@ -133,6 +133,12 @@ Mirror existing stack conventions (`cloudflare/`, `pagerduty/`):
   `dhcp_staticlist`) — correctly, only the router manages those.
 - **Different firmware** (.213 on 388.11 vs others on 102.7) may have subtle key/format differences;
   validate packed parsing against each device, not just one.
+- **Wireless write-fidelity:** router band 1 uses `wl1_bw=3` (80 MHz on this firmware, not the
+  provider's documented `4=80`) with chanspec `149/80`. Import and plan are clean, but a wireless
+  `apply` could reformat chanspec/bw — validate on hardware before relying on wireless writes.
+- **Build parity:** the shared state was populated with the linux build while operators run the
+  darwin build via `make install`. Same source, so plans match. The stack's `.terraform.lock.hcl` is
+  gitignored, because a custom mirror provider produces local-only hashes.
 
 ## Verification
 
@@ -142,52 +148,9 @@ Mirror existing stack conventions (`cloudflare/`, `pagerduty/`):
 - Re-run the read-only smoke (scratchpad `asuswrt-smoke-main.go`) if needed to re-capture live NVRAM
   for fixtures. All device interaction stays read-only until the user approves an `apply`.
 
-## Session Log — 2026-07-03
+## Confidence / API-mapping verification
 
-### Done
-
-- **Provider fix — `packed.go`**: rewrote parse/serialize to use the real
-  `&#60`/`&#62` entity-token delimiters (was literal `<`/`>` → 0 entries on real
-  firmware) with exact round-trip fidelity (4-field DHCP `<MAC>IP>DNS>Hostname`,
-  6-field port-forward). Added `DNS` field to `DHCPStaticEntry` to preserve
-  per-client data. `packed_test.go` rewritten with live-captured strings + exact
-  round-trip assertions.
-- **Provider — ImportState** on all 5 resources (`system`, `nvram`,
-  `dhcp_static_lease`, `port_forward`, `wireless_network`). Fixed the
-  `readOptional*` null-skip so imported state reflects the router (skip-empty, not
-  skip-null). ImportState acceptance tests added. `go build/vet/test` + `gofmt` green.
-- **Tofu stack** `packages/homelab/src/tofu/asuswrt/` — backend (SeaweedFS S3),
-  3 aliased providers, `variables.tf`, `router.tf` / `ap-ax88u.tf` / `ap-be86u.tf`,
-  `import.sh`, `README.md`. Added `TF_VAR_asuswrt_*` to `src/tofu/.env`, updated
-  `src/tofu/README.md`, added `packages/terraform-provider-asuswrt/.gitignore`.
-  `tofu validate` + `tofu fmt` clean.
-- **Verified live** (from a `torvalds` cluster pod — Mac can't reach the LAN; local
-  state, no writes to shared backend): the mirrored provider + `init` + `import` of
-  **all 15 resources** across .1/.2/.213 → `tofu plan` = **"No changes"** (exit 0).
-  Also captured the full wireless NVRAM inventory for all three devices.
-
-### Remaining
-
-- **Populate the shared state backend** (user step; not done to avoid mutating shared
-  prod state / needs AWS+router creds): from a machine on the LAN **and** tailnet:
-  `make -C packages/terraform-provider-asuswrt install` then
-  `op run --env-file=.env -- tofu -chdir=asuswrt init` and `... ./asuswrt/import.sh`.
-- **BE86U wireless** — deferred; see `packages/docs/todos/asuswrt-be86u-wireless.md`.
-- Open a PR (not committed — awaiting user).
-
-### Caveats
-
-- **wpa_passphrase** is write-only (never read); intentionally unmanaged to keep plans
-  honest. WiFi password managed out-of-band.
-- **Wireless write-fidelity**: router band 1 uses `wl1_bw=3` (80 MHz on this firmware,
-  not the provider's documented `4=80`) with chanspec `149/80`. Import/plan are clean,
-  but a future wireless `apply` could reformat chanspec/bw — validate on hardware before
-  relying on wireless writes. (Potential follow-up: firmware-accurate bw mapping.)
-- **CI**: stack is excluded from `TOFU_STACKS` by design (CI has no LAN egress).
-
-## Confidence / API-mapping verification (pass 2, 2026-07-03)
-
-Grounded every mapping against Asuswrt-Merlin source (tags `3006.102.7` for the
+Every mapping is grounded against Asuswrt-Merlin source (tags `3006.102.7` for the
 RT-AX88U Pro, `3004.388.11` for the RT-AX88U) plus read-only NVRAM triangulation.
 
 | Mapping                                                   | Confidence         | Evidence                                                                                                                                                                         |
@@ -203,7 +166,7 @@ RT-AX88U Pro, `3004.388.11` for the RT-AX88U) plus read-only NVRAM triangulation
 | Wireless READ (`wl<band>_*`)                              | High               | Correct values on both firmwares (read-only)                                                                                                                                     |
 | Wireless WRITE                                            | Low (unverifiable) | 3006 UI writes band-named `2g1_*`/`5g1_*`; `wl_bw` codes firmware-dependent (0/1 swap); SAE needs `wl_mfp`; needs a controlled apply. See `todos/asuswrt-wireless-write-path.md` |
 
-### Fixes made this pass
+### Corrections that verification produced
 
 - **DHCP hostname** now read/written in `dhcp_staticlist` field 4 (removed the
   nonexistent `dhcp_hostnames` key and its helpers).
@@ -215,30 +178,3 @@ RT-AX88U Pro, `3004.388.11` for the RT-AX88U) plus read-only NVRAM triangulation
   fixed and confirmed idempotent (two clean plans).
 - **Independent-oracle tests** — `Serialize` asserted equal to the firmware JS builder
   output byte-for-byte for DHCP and port-forward.
-
-## Session Log — 2026-07-03 (pass 2: certainty)
-
-### Done
-
-- Two authoritative research passes against Merlin source; confirmed formats, found
-  and fixed the `computer_name`→`lan_hostname` bug and the `dhcp_hostnames` non-existence.
-- Added oracle serialize tests; fixed the singleton `id` perpetual-diff.
-- **Populated the shared SeaweedFS state** (`asuswrt/terraform.tfstate`, 15 resources)
-  from a cluster pod (reads router read-only, writes only to S3) — idempotent clean plan.
-- All done without any write to the router (`nvram_get` only; no `/apply.cgi`).
-
-### Remaining
-
-- Wireless WRITE-path redesign (chanspec-first, `mfp`, 3006 band-named keys) — needs a
-  controlled `apply`. `todos/asuswrt-wireless-write-path.md`.
-- BE86U fronthaul (real SSIDs on `wl0.1`/`wl1.1`) — provider can't address virtual
-  interfaces yet. `todos/asuswrt-be86u-wireless.md`.
-- Open PR (branch `feature/asuswrt-tofu-tracking`).
-
-### Caveats
-
-- Wireless apply is unverified; treat `asuswrt_wireless_network` as track-only until a
-  hardware read-back test is run.
-- The shared state was populated with the linux build; users run the darwin build via
-  `make install` — same source, so plans match. The stack's `.terraform.lock.hcl` is
-  gitignored (custom mirror provider → local-only hashes).
