@@ -330,10 +330,10 @@ export const prMergeConflictCheckDurationSeconds = new Histogram({
 // ---------------------------------------------------------------------------
 // Review-signal collector — durable longitudinal record of "what the code-
 // review provider did and when" (see src/activities/observe-review-signals.ts
-// and @shepherdjerred/code-review's ReviewSignalEvent). Provider-neutral: the
-// `provider` label carries the active provider id (REVIEW_PROVIDER, default
-// `codex`). The CI gate (scripts/wait-for-review.ts) emits the same event
-// shape as structured logs only; this collector is the metrics + S3 side.
+// and @shepherdjerred/code-review's ReviewSignalEvent). The `provider` label
+// carries the repository-required provider id shared with the CI gate
+// (scripts/wait-for-review.ts), which emits the same event shape as structured
+// logs only; this collector is the metrics + S3 side.
 // ---------------------------------------------------------------------------
 
 export const reviewCompletionLatencySeconds = new Histogram({

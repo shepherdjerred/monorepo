@@ -5,7 +5,7 @@ import {
   isBlocking,
   isProviderAuthor,
   REVIEW_SIGNAL_SCHEMA,
-  resolveProvider,
+  resolveRequiredReviewProvider,
   tallyFindings,
   type ReviewProvider,
   type ReviewSignalEvent,
@@ -36,8 +36,8 @@ import {
  * code-review signal via `@shepherdjerred/code-review` (the same
  * provider-neutral model the CI gate — `scripts/wait-for-review.ts` — uses),
  * records Prometheus metrics, and appends the signals as NDJSON to S3. A
- * longitudinal dataset of "what the review bot (Codex by default) did and
- * when", independent of the ephemeral gate logs.
+ * longitudinal dataset of "what the required review bot did and when",
+ * independent of the ephemeral gate logs.
  */
 
 const COMPONENT = "review-signal-collector";
@@ -374,7 +374,7 @@ async function runObserveReviewSignalsImpl(
   const start = Date.now();
   const repo = input.repo ?? DEFAULT_REPO;
   const limit = input.limit ?? DEFAULT_PR_LIMIT;
-  const provider = resolveProvider(Bun.env["REVIEW_PROVIDER"]);
+  const provider = resolveRequiredReviewProvider();
 
   // Total failures here (bad app credentials, GitHub outage) must propagate —
   // this is a boundary/telemetry job, but a run that can't even authenticate

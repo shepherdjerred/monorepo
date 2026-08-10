@@ -22,8 +22,9 @@ import {
   isBlocking,
   isProviderAuthor,
   REVIEW_SIGNAL_SCHEMA,
+  REQUIRED_REVIEW_PROVIDER_ID,
   reviewGateSkipReasonForAuthor,
-  resolveProvider,
+  resolveRequiredReviewProvider,
   tallyFindings,
   type GateDecision,
   type PullRequestAuthor,
@@ -47,12 +48,16 @@ export function resolveReviewGateProvider(
   configuredProvider: string | undefined,
 ): ReviewProvider {
   const normalized = configuredProvider?.trim().toLowerCase();
-  if (normalized !== undefined && normalized !== "" && normalized !== "qodo") {
+  if (
+    normalized !== undefined &&
+    normalized !== "" &&
+    normalized !== REQUIRED_REVIEW_PROVIDER_ID
+  ) {
     throw new Error(
       `CI review gate requires Qodo; REVIEW_PROVIDER was ${String(configuredProvider)}.`,
     );
   }
-  return resolveProvider("qodo");
+  return resolveRequiredReviewProvider();
 }
 
 function parsePositiveIntegerEnv(name: string, fallback: number): number {

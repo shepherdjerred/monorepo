@@ -97,9 +97,11 @@ every rendered identity.
 
 ## Code Review Rules
 
-These rules steer the automated PR code-review provider (Codex by default; the
-gate is provider-neutral — see `@shepherdjerred/code-review` and the `review-gate`
-Buildkite step). They apply repo-wide; per-package `AGENTS.md` files add more.
+These rules steer automated PR code review. Qodo is the repository-required CI
+provider; provider-neutral consumers such as PR fleet still default to Codex.
+The gate implementation remains provider-neutral — see
+`@shepherdjerred/code-review` and the `review-gate` Buildkite step. These rules
+apply repo-wide; per-package `AGENTS.md` files add more.
 
 - **Review against the `AGENTS.md` hierarchy** (root + `packages/*/AGENTS.md`) — it
   is the source of truth. Flag deviations from it; do not restate it.
