@@ -2,6 +2,9 @@ internal import SwiftUI
 internal import TaskNotesKit
 internal import TaskNotesUniFFI
 
+internal import struct Foundation.Date
+internal import struct Foundation.DateComponents
+
 /// The board screen.
 ///
 /// The same store, the same query surface, the same row derivation and the same
@@ -67,6 +70,7 @@ struct KanbanBoardView: View {
             .focusedSceneValue(\.taskListActions, listActions)
             .focusedSceneValue(\.boardActions, boardActions)
             .focusedSceneValue(\.inspectorSubject, inspected)
+            .task(id: calendar.today) { await rollOverAtMidnight() }
             // ⚠️ `.contain`, for the same reason ``TaskListView``'s pane is:
             // this holds a banner, a heading and six columns of cards, each
             // with its own identifier and its own menu. `.combine` would
@@ -397,5 +401,34 @@ extension KanbanBoardView {
             calendar = store.viewerCalendar()
             isRefreshing = false
         }
+    }
+
+    /// Re-read the viewer's day shortly after the next local midnight.
+    ///
+    /// A board left open overnight would otherwise keep yesterday's date
+    /// badges and — the part that corrupts rather than merely misinforms —
+    /// yesterday's completion target on every recurring card, so clicking a
+    /// daily task would uncomplete yesterday's occurrence. The `.task(id:)`
+    /// re-arms because its identity is the day it is waiting past.
+    private func rollOverAtMidnight() async {
+        guard let midnight = Self.nextMidnight() else { return }
+        let seconds = midnight.timeIntervalSinceNow + 1
+        guard seconds > 0 else { return }
+        switch await Result(catching: {
+            try await _Concurrency.Task.sleep(for: .seconds(seconds))
+        }) {
+        case .success: calendar = store.viewerCalendar()
+        // Cancelled, because the view went away. Nothing to do and nothing to
+        // report — this is the one place a discarded error is the whole design.
+        case .failure: return
+        }
+    }
+
+    private static func nextMidnight() -> Date? {
+        Foundation.Calendar.autoupdatingCurrent.nextDate(
+            after: Date(),
+            matching: DateComponents(hour: 0, minute: 0, second: 0),
+            matchingPolicy: .nextTime
+        )
     }
 }
