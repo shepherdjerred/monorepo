@@ -151,7 +151,7 @@ impl TaskStore {
         // otherwise grow without bound.
         let today = self.today();
         completion_restores::prune(&mut self.restores, &today, &self.base);
-        self.persist_restores()?;
+        self.persist_restores(&self.restores)?;
         self.counters = parse_id_counters(self.storage.read_id_counters()?.as_deref())?;
         self.last_sync_time = self.storage.read_last_sync_time()?;
         self.recompute();
@@ -218,7 +218,7 @@ impl TaskStore {
         if let Some(key) = consumed
             && self.restores.shift_remove(&key).is_some()
         {
-            self.persist_restores()?;
+            self.persist_restores(&self.restores)?;
         }
         self.recompute();
         Ok(self.snapshot.tasks.get(&target).cloned())
@@ -263,7 +263,7 @@ impl TaskStore {
         // replaced. Its own write costs a replay at worst.
         if edited_occurrence {
             completion_restores::invalidate_task(&mut self.restores, command.target());
-            self.persist_restores()?;
+            self.persist_restores(&self.restores)?;
         }
         if let Some(server_task) = server_task
             && let Command::Create { temp_id, .. } = command
@@ -278,7 +278,7 @@ impl TaskStore {
             // Writing it early costs nothing if the remap then fails: the ack
             // is proof the server task exists, so the alias is true either way,
             // and the command stays queued for the next drain to replay.
-            self.persist_aliases()?;
+            self.persist_aliases(&self.aliases)?;
             self.queue.remap_task_id(temp_id, &server_task.id)?;
         }
         if command.is_delete() {
@@ -299,7 +299,7 @@ impl TaskStore {
         // delete comes back) until some later successful pull happens to
         // repair the cache. The TypeScript `applyServerAck` orders these the
         // same way, and says so in a comment for the same reason.
-        self.persist_base()?;
+        self.persist_base(&self.base)?;
         // Safe to write *after* the base only because `captured` came off the
         // command. The replay this ordering deliberately allows re-enters here
         // with a base that already holds the advanced schedule, and anything
@@ -312,7 +312,7 @@ impl TaskStore {
             self.restores
                 .insert(key, StoredCompletionRestore { restore });
         }
-        self.persist_restores()?;
+        self.persist_restores(&self.restores)?;
         self.queue.ack(command.id())?;
         self.recompute();
         Ok(())
@@ -357,30 +357,33 @@ impl TaskStore {
     /// note was deleted or renamed in Obsidian, and keeping the alias would
     /// silently redirect a future mutation at a path that does not exist.
     ///
+    /// Every field is built as a candidate and published only once all four
+    /// writes have landed, because a pull is not a moment the client is
+    /// otherwise idle. The app keeps taking edits while a failed pull backs
+    /// off, and a half-published pull answers them with two different states:
+    /// a completion reads the schedule it is replacing off `snapshot`, and is
+    /// then rebased onto `base`. Move the base without the snapshot — which is
+    /// what returning early between these writes used to do — and the undo
+    /// hours later asks the server to rewind to a schedule that pull already
+    /// replaced. So a failure here leaves every field on the old state, and the
+    /// pulled state is reached whole on the retry or on the next launch, which
+    /// reads it back from the writes that did land. The TypeScript
+    /// `replaceBase` publishes as one transition for the same reason.
+    ///
     /// # Errors
     ///
     /// Propagates a storage-layer failure.
     pub fn replace_base(&mut self, tasks: Vec<Task>, synced_at: i64) -> Result<()> {
-        let previous = core::mem::replace(
-            &mut self.base,
-            tasks
-                .into_iter()
-                .map(|task| (task.id.clone(), task))
-                .collect(),
-        );
-        let stale: Vec<TaskId> = self
-            .aliases
-            .iter()
-            .filter(|&(_, real)| !self.base.contains_key(real))
-            .map(|(temp, _)| temp.clone())
+        let next_base: IndexMap<TaskId, Task> = tasks
+            .into_iter()
+            .map(|task| (task.id.clone(), task))
             .collect();
-        for temp in stale {
-            self.aliases.shift_remove(&temp);
-        }
+        let mut next_aliases = self.aliases.clone();
+        next_aliases.retain(|_, real| next_base.contains_key(real));
+        let mut next_restores = self.restores.clone();
         let today = self.today();
-        completion_restores::prune(&mut self.restores, &today, &self.base);
-        completion_restores::invalidate_changed(&mut self.restores, &previous, &self.base);
-        self.last_sync_time = Some(synced_at);
+        completion_restores::prune(&mut next_restores, &today, &next_base);
+        completion_restores::invalidate_changed(&mut next_restores, &self.base, &next_base);
         // Restores first, base second. A pull is the only place another client's
         // schedule edit becomes visible, and the write that *invalidates* a
         // snapshot has to be durable before the write that makes it stale. The
@@ -388,10 +391,15 @@ impl TaskStore {
         // reads the pulled schedule alongside a retained snapshot that predates
         // it, and the next undo asks the server to go back to a schedule
         // somebody already replaced.
-        self.persist_restores()?;
-        self.persist_base()?;
-        self.persist_aliases()?;
+        self.persist_restores(&next_restores)?;
+        self.persist_base(&next_base)?;
+        self.persist_aliases(&next_aliases)?;
         self.storage.write_last_sync_time(synced_at)?;
+
+        self.base = next_base;
+        self.aliases = next_aliases;
+        self.restores = next_restores;
+        self.last_sync_time = Some(synced_at);
         self.recompute();
         Ok(())
     }
@@ -649,14 +657,16 @@ impl TaskStore {
         };
     }
 
-    fn persist_base(&self) -> Result<()> {
-        let tasks: Vec<Task> = self.base.values().cloned().collect();
+    /// Write a base — `self.base`, or the candidate an operation has not
+    /// published yet.
+    fn persist_base(&self, base: &IndexMap<TaskId, Task>) -> Result<()> {
+        let tasks: Vec<Task> = base.values().cloned().collect();
         self.storage.write_tasks(&tasks)
     }
 
-    fn persist_aliases(&self) -> Result<()> {
-        let record: IndexMap<&str, &str> = self
-            .aliases
+    /// Write an alias map — `self.aliases`, or an unpublished candidate.
+    fn persist_aliases(&self, aliases: &IndexMap<TaskId, TaskId>) -> Result<()> {
+        let record: IndexMap<&str, &str> = aliases
             .iter()
             .map(|(temp, real)| (temp.as_str(), real.as_str()))
             .collect();
@@ -673,9 +683,10 @@ impl TaskStore {
         self.storage.write_id_counters(&data)
     }
 
-    fn persist_restores(&self) -> Result<()> {
+    /// Write a restore map — `self.restores`, or an unpublished candidate.
+    fn persist_restores(&self, restores: &CompletionRestores) -> Result<()> {
         self.storage
-            .write_completion_restores(&completion_restores::serialize(&self.restores)?)
+            .write_completion_restores(&completion_restores::serialize(restores)?)
     }
 }
 
@@ -840,6 +851,10 @@ mod tests {
         /// [`Memory::clear_write_log`] and the "follows" is about this
         /// operation rather than the whole session.
         refuse_restores_after_base: AtomicBool,
+        /// Refuse the last-sync write, the final one a pull makes, so a test
+        /// can fail an operation after every other slot has already been
+        /// written.
+        refuse_last_sync: AtomicBool,
     }
 
     impl Memory {
@@ -870,6 +885,11 @@ mod tests {
         fn refuse_restores_after_base(&self, refuse: bool) {
             self.refuse_restores_after_base
                 .store(refuse, Ordering::SeqCst);
+        }
+
+        /// Stop writing the last sync time, and start again.
+        fn refuse_last_sync(&self, refuse: bool) {
+            self.refuse_last_sync.store(refuse, Ordering::SeqCst);
         }
 
         /// Whether this write is the one a test armed the refusal for.
@@ -936,6 +956,10 @@ mod tests {
             Ok(*self.last_sync.lock().unwrap())
         }
         fn write_last_sync_time(&self, millis: i64) -> Result<()> {
+            if self.refuse_last_sync.load(Ordering::SeqCst) {
+                return Err(Error::invariant("the last sync time is not writable"));
+            }
+            self.record("last_sync");
             *self.last_sync.lock().unwrap() = Some(millis);
             Ok(())
         }
@@ -1379,6 +1403,83 @@ mod tests {
              stale, got {log:?}"
         );
         assert_eq!(undo(&mut store), None);
+    }
+
+    /// ⚠️ **A pull that fails partway must publish none of itself.** The app
+    /// keeps accepting edits while a failed pull backs off, and it answers
+    /// them from fields that have to agree: an undo reads the schedule to put
+    /// back out of the retained snapshots and the view, and the queue rebases
+    /// the command onto the base. Installing the pulled base and then
+    /// returning on a later failed write splits those apart, and the undo
+    /// carries a schedule that pull already replaced.
+    ///
+    /// The last-sync write is refused because it is the pull's final one, so
+    /// every field has been built and every earlier slot written by the time
+    /// the operation fails.
+    #[test]
+    fn a_pull_that_fails_partway_publishes_neither_the_old_nor_a_half_new_state() {
+        let (mut store, memory) = completed_and_acked();
+        let optimistic = store
+            .dispatch(CommandInput::Create {
+                payload: CreateTaskRequest::new(TaskTitle::parse("Chained").unwrap()),
+            })
+            .unwrap()
+            .unwrap();
+        let create = store.queue().head().cloned().unwrap();
+        store
+            .apply_server_ack(&create, Some(&task("Tasks/Chained-1.md")))
+            .unwrap();
+        let base = store.base().clone();
+        let aliases = store.aliases().clone();
+        let snapshot = store.snapshot().clone();
+
+        // A pull that would move the series, drop the aliased task, and
+        // advance the sync time — so every field this store publishes changes.
+        let mut elsewhere = recurring("Tasks/plants.md");
+        elsewhere.recurrence = Some("FREQ=MONTHLY".to_owned());
+        elsewhere.complete_instances.push("2026-07-04".to_owned());
+        memory.refuse_last_sync(true);
+        assert!(
+            store.replace_base(vec![elsewhere], 2).is_err(),
+            "the refused write has to fail the pull, or this test is about \
+             nothing"
+        );
+        memory.refuse_last_sync(false);
+
+        assert_eq!(store.base(), &base, "the base must not move on its own");
+        assert_eq!(store.aliases(), &aliases, "nor the alias map");
+        assert_eq!(
+            store.snapshot(),
+            &snapshot,
+            "nor the view, which is what the next edit is read from"
+        );
+        assert_eq!(
+            store.resolve_task_id(&optimistic.id),
+            TaskId::parse("Tasks/Chained-1.md").unwrap()
+        );
+        assert_eq!(
+            undo(&mut store),
+            Some(pre_completion_schedule()),
+            "an undo taken while the pull backs off has to describe the state \
+             it is actually rebased onto"
+        );
+
+        // The writes that did land are a whole pulled state, so the relaunch
+        // reaches the other side of the transition rather than a mixture.
+        let mut relaunched = relaunch(&memory);
+        assert!(relaunched.aliases().is_empty());
+        assert_eq!(
+            relaunched
+                .base()
+                .get(&TaskId::parse("Tasks/plants.md").unwrap())
+                .and_then(|task| task.recurrence.clone()),
+            Some("FREQ=MONTHLY".to_owned())
+        );
+        assert_eq!(
+            undo(&mut relaunched),
+            None,
+            "the pulled series replaced the schedule the snapshot claimed"
+        );
     }
 
     /// ⚠️ **The rebased view is not the state the completion advanced.** An
