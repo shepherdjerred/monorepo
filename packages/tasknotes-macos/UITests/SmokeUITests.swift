@@ -13,7 +13,7 @@ final class SmokeUITests: XCTestCase {
         continueAfterFailure = false
     }
 
-    func testTheAppLaunchesAndShowsItsSidebar() {
+    func testTheAppLaunchesAndShowsItsSidebar() throws {
         let app = TestApp.launch { addTeardownBlock($0) }
 
         // Looked up by the identifier the app itself uses. If someone renames

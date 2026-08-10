@@ -112,6 +112,16 @@ struct FilterMenu: View {
                     : "line.3.horizontal.decrease.circle"
             )
         }
+        // ⚠️ A SwiftUI `Menu` exposes no action equivalent to a click, so
+        // `performAccessibilityAudit` reports it as unactionable — verified,
+        // not assumed: these two were the only "action is missing" findings on
+        // the Inbox screen, and the task and sidebar rows were never flagged.
+        //
+        // `.isButton` rather than an `.accessibilityAction`: the trait is the
+        // true statement (this opens a menu when activated) and an added
+        // action would be a second, divergent way to invoke what AppKit
+        // already handles.
+        .accessibilityAddTraits(.isButton)
         .help(label)
         .accessibilityIdentifier(AccessibilityIdentifier.Query.filterMenu)
     }
@@ -215,6 +225,8 @@ struct SortMenu: View {
         } label: {
             Label("Sort", systemImage: "arrow.up.arrow.down")
         }
+        // Same finding as the filter menu above; see the note there.
+        .accessibilityAddTraits(.isButton)
         .help("Sort")
         .accessibilityIdentifier(AccessibilityIdentifier.Query.sortMenu)
     }

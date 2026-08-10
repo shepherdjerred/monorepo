@@ -76,7 +76,8 @@ struct SidebarList: View {
                     // is empty; two words on their own do not.
                     Text("None yet")
                         .font(.callout)
-                        .foregroundStyle(.tertiary)
+                        // See the note on the entity groups below.
+                        .foregroundStyle(.secondary)
                         .accessibilityLabel("No saved views yet")
                 }
             } header: {
@@ -192,7 +193,11 @@ struct SidebarList: View {
                 // to a reader who cannot see which heading each sits under.
                 Text("None yet")
                     .font(.callout)
-                    .foregroundStyle(.tertiary)
+                    // `.secondary`, not `.tertiary`: the audit reports
+                    // tertiary-on-sidebar as failing contrast, and unlike the
+                    // dimmed row marks this is not de-emphasis that means
+                    // anything — it is placeholder text nobody chose to mute.
+                    .foregroundStyle(.secondary)
                     .accessibilityLabel("No \(kind.groupTitle.lowercased()) yet")
             }
         } header: {
