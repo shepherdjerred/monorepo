@@ -57,8 +57,19 @@ pre-commit:
           # `swift build` here would fail with `Undefined symbol: _uniffi_…`
           # while the package's own command succeeded. A hook that disagrees
           # with the command it is enforcing is worse than no hook.
+          #
+          # Skipped outside a local CLI runtime. A hosted Claude or Codex
+          # checkout is Linux with no Swift toolchain and no `xcrun`, so
+          # staging one `.swift` file there would fail the commit itself
+          # rather than the code — and the repository rule is that lifecycle
+          # hooks exit immediately in those environments. The same env vars the
+          # session hooks keyed on, so there is one answer to "is this hosted".
           - name: swift-verify
             glob: "packages/tasknotes-macos/**/*.swift"
+            skip:
+              - run: test -n "$CLAUDE_CODE_REMOTE"
+              - run: test -n "$CODEX_CI"
+              - run: test -n "$CODEX_CLOUD_TASKS_BASE_URL"
             run: |
               cd packages/tasknotes-macos
               bun run mac:build
@@ -85,6 +96,10 @@ pre-commit:
           # inspecting the signature is the only check that works here.
           - name: mac-bundle-verify
             glob: "packages/tasknotes-macos/{project.yml,Package.swift,App/**,scripts/**}"
+            skip:
+              - run: test -n "$CLAUDE_CODE_REMOTE"
+              - run: test -n "$CODEX_CI"
+              - run: test -n "$CODEX_CLOUD_TASKS_BASE_URL"
             run: |
               cd packages/tasknotes-macos
               bun run mac:smoke
