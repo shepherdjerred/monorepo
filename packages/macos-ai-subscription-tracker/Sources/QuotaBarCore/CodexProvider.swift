@@ -35,16 +35,10 @@ public struct CodexProvider: UsageProvider {
     let resolvedResets = await resetOutcome
     switch resolvedResets {
     case let .success(data):
-      do {
-        return try Self.parse(data: usageData, resets: Self.parseResets(data: data))
-      } catch let error as QuotaError {
-        return try Self.parse(data: usageData, resetErrorMessage: error.localizedDescription)
-      } catch {
-        return try Self.parse(
-          data: usageData,
-          resetErrorMessage: "Codex reset data changed unexpectedly."
-        )
-      }
+      // A malformed reset shape means the app's parser is out of sync with a real API
+      // contract change, not a transient problem - propagate it so the model marks Codex
+      // unavailable/stale instead of quietly publishing a snapshot with an empty reset list.
+      return try Self.parse(data: usageData, resets: Self.parseResets(data: data))
     case let .failure(message):
       return try Self.parse(data: usageData, resetErrorMessage: message)
     case .unauthorized:

@@ -294,7 +294,7 @@ final class NetworkingTests: XCTestCase {
     XCTAssertEqual(requests.count, 4)
   }
 
-  func testCodexRetainsUsageWhenResetShapeChanges() async throws {
+  func testCodexPropagatesMalformedResetShapeInsteadOfMaskingIt() async throws {
     let endpoints = try ProviderEndpoints.live(environment: [:])
     let transport = RoutingTransport(routes: [
       endpoints.codexUsage.absoluteString: .success(
@@ -313,9 +313,15 @@ final class NetworkingTests: XCTestCase {
       resetEndpoint: endpoints.codexResets
     )
 
-    let snapshot = try await provider.fetch()
-    XCTAssertFalse(snapshot.windows.isEmpty)
-    XCTAssertNotNil(snapshot.resetErrorMessage)
+    // A changed reset shape signals a real API contract change, not a transient hiccup - it
+    // must fail the whole fetch (so the model marks Codex unavailable/stale) rather than
+    // publishing a snapshot with good usage windows and a silently empty reset list.
+    do {
+      _ = try await provider.fetch()
+      XCTFail("Expected malformedResponse for an unrecognized reset shape")
+    } catch {
+      XCTAssertEqual(error as? QuotaError, .malformedResponse(.codex))
+    }
   }
 
   func testClaudeAndKimiFetchThroughAdapters() async throws {
