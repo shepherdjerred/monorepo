@@ -23,6 +23,15 @@ struct SectionDetailView: View {
     /// The saved views, so a `.savedView` destination can be resolved to one.
     let savedViews: SavedViewStore
 
+    /// Bumped by the window when `tasknotes://search` arrives; forwarded to
+    /// whichever screen owns a search field so it can take focus.
+    ///
+    /// A stored property rather than something seeded into the screen's state,
+    /// because the request has to work on the screen that is *already* open —
+    /// unlike `reveal:`, which arrives with a destination change and therefore
+    /// with a fresh `.id` that rebuilds the screen around it.
+    let searchFocusToken: Int
+
     var body: some View {
         switch store {
         case .failure(let error):
@@ -63,18 +72,23 @@ struct SectionDetailView: View {
     private func screen(_ store: TaskNotesStore) -> some View {
         switch destination {
         case .section(let section):
-            TaskListView(section: section, store: store)
+            TaskListView(section: section, store: store, searchFocusToken: searchFocusToken)
         case .entity(let entity):
             // Browse is the section, because an entity screen shows *every*
             // task filed under it — finished ones included, which is what the
             // React Native screens do and the only reading under which "no
             // tasks in this project" means the project is finished rather than
             // merely filtered.
-            TaskListView(section: .browse, store: store, scope: entity.scope)
+            TaskListView(
+                section: .browse,
+                store: store,
+                scope: entity.scope,
+                searchFocusToken: searchFocusToken
+            )
         case .savedView(let id):
             savedViewScreen(store, id: id)
         case .board:
-            KanbanBoardView(store: store)
+            KanbanBoardView(store: store, searchFocusToken: searchFocusToken)
         case .task(let id):
             // Browse, for the same reason an entity screen is Browse: it is the
             // one list that shows *every* task, finished ones included. A link
@@ -86,7 +100,12 @@ struct SectionDetailView: View {
             // existed — and it is the same division of labour as a link to a
             // deleted saved view, which the screen explains rather than the
             // router pre-validating.
-            TaskListView(section: .browse, store: store, reveal: id)
+            TaskListView(
+                section: .browse,
+                store: store,
+                reveal: id,
+                searchFocusToken: searchFocusToken
+            )
         }
     }
 
@@ -104,7 +123,8 @@ struct SectionDetailView: View {
                 section: .browse,
                 store: store,
                 query: view.seededQuery,
-                scope: view.scope
+                scope: view.scope,
+                searchFocusToken: searchFocusToken
             )
         } else {
             ContentUnavailableView {

@@ -101,7 +101,7 @@ struct TaskNotesURLTests {
     func taskRoundTrip(id: String) throws {
         let link = TaskNotesURL.task(id: id)
         #expect(TaskNotesURL(link.url) == link)
-        #expect(TaskNotesURL(link.url)?.destination == .task(id: id))
+        #expect(TaskNotesURL(link.url)?.target == .destination(.task(id: id)))
     }
 
     /// The exact spelling the phone publishes, parsed as one id rather than as
@@ -109,7 +109,7 @@ struct TaskNotesURLTests {
     @Test("an existing cross-platform task link opens that task")
     func taskLinkFromTheOtherClient() throws {
         let url = try #require(URL(string: "tasknotes://task/Tasks%2Fplan.md"))
-        #expect(TaskNotesURL(url)?.destination == .task(id: "Tasks/plan.md"))
+        #expect(TaskNotesURL(url)?.target == .destination(.task(id: "Tasks/plan.md")))
     }
 
     /// ⚠️ The id is the **core's** parse, not a non-empty check.
@@ -154,7 +154,7 @@ struct TaskNotesURLTests {
     @Test("a name keeps its case while the host does not")
     func namesKeepTheirCase() throws {
         let url = try #require(URL(string: "TASKNOTES://Project/Website"))
-        #expect(TaskNotesURL(url)?.destination == .entity(.project("Website")))
+        #expect(TaskNotesURL(url)?.target == .destination(.entity(.project("Website"))))
     }
 
     @Test(
@@ -172,6 +172,66 @@ struct TaskNotesURLTests {
     func rejectsMalformed(raw: String) throws {
         let url = try #require(URL(string: raw))
         #expect(TaskNotesURL(url) == nil)
+    }
+
+    // ── The command routes ─────────────────────────────────────────────────
+    //
+    // `quick-add`, `search`, `settings`, `pomodoro` and `time-report` are the
+    // rest of `linking.ts`'s published vocabulary. They were parsed as unknown
+    // hosts here until this suite grew the cases below — so a bookmark or a
+    // Shortcuts action carrying one opened a window that then did nothing.
+
+    /// Driven off `allCases`, which is what makes a sixth action with no
+    /// working link impossible rather than merely unlikely.
+    @Test("every action round-trips through its URL", arguments: TaskNotesAction.allCases)
+    func actionRoundTrip(action: TaskNotesAction) throws {
+        let link = TaskNotesURL.action(action)
+        #expect(TaskNotesURL(link.url) == link)
+        #expect(TaskNotesURL(link.url)?.target == .action(action))
+    }
+
+    /// The exact spellings `packages/tasks-for-obsidian/src/navigation/linking.ts`
+    /// registers, asserted literally.
+    ///
+    /// The round-trip above proves the parser and the writer agree with each
+    /// other; only a literal proves they agree with the *other client*, which is
+    /// the whole point of sharing the vocabulary.
+    @Test(
+        "the phone's command routes resolve here",
+        arguments: [
+            ("tasknotes://quick-add", TaskNotesAction.quickAdd),
+            ("tasknotes://search", .search),
+            ("tasknotes://settings", .settings),
+            ("tasknotes://pomodoro", .pomodoro),
+            ("tasknotes://time-report", .timeReport),
+        ]
+    )
+    func crossPlatformActionSpelling(raw: String, action: TaskNotesAction) throws {
+        let url = try #require(URL(string: raw))
+        #expect(TaskNotesURL(url)?.target == .action(action))
+    }
+
+    /// A command host takes no argument, so one handed an argument is a link
+    /// somebody built wrong — answered with nothing, the same as
+    /// `tasknotes://today/extra`.
+    @Test("a command host handed an argument resolves to nothing")
+    func actionsTakeNoArgument() throws {
+        for action in TaskNotesAction.allCases {
+            let url = try #require(URL(string: "tasknotes://\(action.rawValue)/extra"))
+            #expect(TaskNotesURL(url) == nil)
+        }
+    }
+
+    /// ⚠️ A command host that also parsed as a section, an entity kind or the
+    /// board would make one link mean two things, and which one wins would be
+    /// the order of the `if`s in `unargumented(host:)`.
+    @Test("no command host collides with a destination host")
+    func actionHostsAreDistinct() throws {
+        for action in TaskNotesAction.allCases {
+            #expect(SidebarSection(urlHost: action.rawValue) == nil)
+            #expect(TaskEntity.Kind(rawValue: action.rawValue) == nil)
+            #expect(TaskNotesURL(TaskNotesURL.action(action).url)?.target == .action(action))
+        }
     }
 
     /// The two `detail`/`sidebarItem` overloads must agree on the four

@@ -20,6 +20,14 @@ public struct RootView: View {
 
     private let environment: AppEnvironment
 
+    /// Opens the pomodoro and time-report windows, by the ids ``TimingWindow``
+    /// names.
+    @Environment(\.openWindow) private var openWindow
+
+    /// Opens the Settings scene — the same window `⌘,` opens, not a second
+    /// copy of it.
+    @Environment(\.openSettings) private var openSettings
+
     /// Whether the trailing inspector is showing.
     ///
     /// `@SceneStorage` rather than `@State`, and that is a definition-of-done
@@ -32,6 +40,22 @@ public struct RootView: View {
     /// Open by default. An inspector nobody can find is a feature nobody has,
     /// and its empty state is a sentence explaining what to click.
     @SceneStorage("red.sjer.tasknotes.inspector.presented") private var isInspectorPresented = true
+
+    /// Bumped every time this window is asked to put the caret in its search
+    /// field, which is what `tasknotes://search` resolves to here.
+    ///
+    /// A counter rather than a `Bool`, for the reason
+    /// `QuickAddPanelController.focusToken` is one: the request has to be
+    /// re-armable. A flag set to `true` is already `true` the second time the
+    /// link arrives, so nothing downstream changes and the caret does not move.
+    ///
+    /// It lives here rather than on ``NavigationState`` — which is the
+    /// selection and nothing else — beside the inspector's visibility, the
+    /// other piece of per-window presentation this view already owns. Per
+    /// window is the point: reading the frontmost list's `find` out of
+    /// `@FocusedValue` instead would have let a link delivered to one window
+    /// focus a different window's search field.
+    @State private var searchFocusToken = 0
 
     public init(environment: AppEnvironment) {
         self.environment = environment
@@ -55,7 +79,8 @@ public struct RootView: View {
             SectionDetailView(
                 destination: navigation.selection,
                 store: environment.store,
-                savedViews: environment.savedViews
+                savedViews: environment.savedViews,
+                searchFocusToken: searchFocusToken
             )
             // The inspector belongs to the **window**, not to a section, so
             // it is attached here rather than inside `SectionDetailView`.
@@ -90,20 +115,55 @@ public struct RootView: View {
         // so an unhandled link is rejected there rather than being routed to
         // some arbitrary default.
         .onOpenURL { url in
-            guard navigation.open(url) else { return }
-            // A link to a task is a link to the panel that shows it, so a
-            // closed inspector is opened — never toggled, and never closed by
-            // a link to anything else. `⌥⌘I` is how the user closes it, and a
-            // deep link that could do so would be a link that sometimes hid
-            // the thing it was asked to show.
-            if case .task = navigation.selection {
-                isInspectorPresented = true
+            guard let link = TaskNotesURL(url) else { return }
+            switch link.target {
+            case .destination(let destination): show(destination)
+            case .action(let action): perform(action)
             }
         }
         // What the View menu's Go To picker binds to. The menu bar is one thing
         // and there are many windows, so the command reads the frontmost
         // window's state rather than holding a reference to a singleton.
         .focusedSceneValue(\.navigationState, navigation)
+    }
+
+    /// Point this window at a place a link named.
+    private func show(_ destination: TaskNotesDestination) {
+        navigation.open(destination)
+        // A link to a task is a link to the panel that shows it, so a closed
+        // inspector is opened — never toggled, and never closed by a link to
+        // anything else. `⌥⌘I` is how the user closes it, and a deep link that
+        // could do so would be a link that sometimes hid the thing it was asked
+        // to show.
+        if case .task = destination {
+            isInspectorPresented = true
+        }
+    }
+
+    /// Do the thing a link named, on the surface this app already has for it.
+    ///
+    /// Every case reaches an existing affordance rather than a link-only copy of
+    /// one: the same panel File › Quick Add… opens, the same field `⌘F` focuses,
+    /// the same Settings scene `⌘,` opens, and the two `Window` scenes the
+    /// Window menu already lists. A second surface reachable only by URL is how
+    /// two implementations of one feature start.
+    private func perform(_ action: TaskNotesAction) {
+        switch action {
+        case .quickAdd:
+            environment.quickAdd.present()
+        case .search:
+            // The frontmost list picks this up and takes focus. On a destination
+            // with no list — a storage failure, a deleted saved view — there is
+            // no search field to put a caret in, and inventing somewhere else
+            // for the link to land would be worse than it doing nothing.
+            searchFocusToken &+= 1
+        case .settings:
+            openSettings()
+        case .pomodoro:
+            openWindow(id: TimingWindow.pomodoro.rawValue)
+        case .timeReport:
+            openWindow(id: TimingWindow.timeReport.rawValue)
+        }
     }
 
     /// The vault's projects, contexts and tags, for the sidebar's three groups.

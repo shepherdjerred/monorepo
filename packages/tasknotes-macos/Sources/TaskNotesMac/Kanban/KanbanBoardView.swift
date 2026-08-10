@@ -24,6 +24,11 @@ struct KanbanBoardView: View {
     /// What the board is a board *of*, or `nil` for everything.
     let scope: TaskListScope?
 
+    /// The window's running count of search-focus requests — today,
+    /// `tasknotes://search`. See ``TaskListView/searchFocusToken``; the board
+    /// answers it identically, because it publishes the same `⌘F`.
+    let searchFocusToken: Int
+
     /// The viewer's day and offset, held rather than re-read per redraw so the
     /// heading, the badges and every completion target describe one instant.
     @State private var calendar: ViewerCalendar
@@ -49,9 +54,17 @@ struct KanbanBoardView: View {
     ///   - scope: what the board is of, or `nil` for the vault.
     ///   - query: where the board starts narrowed. The app supplies a saved
     ///     view's seed; a snapshot supplies a state worth reviewing.
-    init(store: TaskNotesStore, scope: TaskListScope? = nil, query: TaskListQuery? = nil) {
+    ///   - searchFocusToken: the window's running count of search-focus
+    ///     requests.
+    init(
+        store: TaskNotesStore,
+        scope: TaskListScope? = nil,
+        query: TaskListQuery? = nil,
+        searchFocusToken: Int = 0
+    ) {
         self.store = store
         self.scope = scope
+        self.searchFocusToken = searchFocusToken
         _calendar = State(initialValue: store.viewerCalendar())
         // `.effectiveDate` and not `.dueDate`: cards are dominated by recurring
         // and scheduled-only work, and `dueDate` reads exactly one field — so a
@@ -71,6 +84,8 @@ struct KanbanBoardView: View {
             .focusedSceneValue(\.boardActions, boardActions)
             .focusedSceneValue(\.inspectorSubject, inspected)
             .task(id: calendar.today) { await rollOverAtMidnight() }
+            // `tasknotes://search`, into the same field `⌘F` focuses.
+            .onChange(of: searchFocusToken) { isSearchFocused = true }
             // ⚠️ `.contain`, for the same reason ``TaskListView``'s pane is:
             // this holds a banner, a heading and six columns of cards, each
             // with its own identifier and its own menu. `.combine` would

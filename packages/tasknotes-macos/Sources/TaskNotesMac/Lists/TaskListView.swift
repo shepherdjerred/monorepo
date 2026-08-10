@@ -59,6 +59,15 @@ struct TaskListView: View {
 
     let store: TaskNotesStore
 
+    /// Bumped by the window each time something asks this screen to put the
+    /// caret in its search field — today, `tasknotes://search`.
+    ///
+    /// A counter and not a `Bool`: the request has to be re-armable, and a flag
+    /// that is already `true` the second time the link arrives changes nothing
+    /// downstream and leaves the caret where it was. `0` is "never asked", which
+    /// is why it does not fire on first appearance.
+    let searchFocusToken: Int
+
     /// The viewer's day and offset, held rather than re-read per redraw so the
     /// heading, the buckets, and every completion target describe one instant.
     @State private var calendar: ViewerCalendar
@@ -104,16 +113,22 @@ struct TaskListView: View {
     ///     `.id(destination.identity)` carries the task, so a second link
     ///     rebuilds this view and re-seeds rather than being ignored as
     ///     unchanged state.
+    ///   - searchFocusToken: the window's running count of search-focus
+    ///     requests. A stored property rather than a seed, because unlike
+    ///     `reveal:` this one has to work on the screen already open — no
+    ///     destination changed, so nothing rebuilds this view.
     init(
         section: SidebarSection,
         store: TaskNotesStore,
         query: TaskListQuery? = nil,
         scope: TaskListScope? = nil,
-        reveal: TaskId? = nil
+        reveal: TaskId? = nil,
+        searchFocusToken: Int = 0
     ) {
         self.section = section
         self.store = store
         self.scope = scope
+        self.searchFocusToken = searchFocusToken
         _calendar = State(initialValue: store.viewerCalendar())
         _query = State(initialValue: query ?? TaskListQuery(section: section))
         _selection = State(initialValue: reveal.map { [$0] } ?? [])
@@ -127,6 +142,9 @@ struct TaskListView: View {
             .focusedSceneValue(\.taskListActions, actions)
             .focusedSceneValue(\.inspectorSubject, inspected)
             .task(id: calendar.today) { await rollOverAtMidnight() }
+            // `tasknotes://search`, routed through the same field `⌘F` focuses
+            // rather than through a second, link-only search surface.
+            .onChange(of: searchFocusToken) { isSearchFocused = true }
             // ⚠️ `.contain`, and the choice is load-bearing. This pane holds a
             // banner, a heading, a list of rows and their per-row controls;
             // `.combine` would flatten every one of them into a single element
