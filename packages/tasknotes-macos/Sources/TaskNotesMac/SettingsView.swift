@@ -30,6 +30,10 @@ public struct SettingsView: View {
             GeneralSettingsView(store: environment.store)
                 .tabItem { Label("General", systemImage: "gearshape") }
         }
+        // ⚠️ `.contain`. Three tabs of fields and buttons hang off this;
+        // `.combine` would make the whole Settings window one element.
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Settings")
         .accessibilityIdentifier(AccessibilityIdentifier.settings)
         .frame(width: 480, height: 240)
     }

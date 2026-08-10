@@ -33,6 +33,13 @@ struct SectionDetailView: View {
             } description: {
                 Text(error.userMessage)
             }
+            // `.combine`, not `.contain`: this pane is a headline and a
+            // sentence with nothing to press, so flattening it into one element
+            // costs no action and gains the reader one stop instead of two.
+            // The identifier needs it either way — applied to a container
+            // without it, the identifier is pushed onto the child text and the
+            // pane a UI test is looking for is never in the tree.
+            .accessibilityElement(children: .combine)
             .accessibilityIdentifier(AccessibilityIdentifier.detail(destination))
             .navigationTitle("TaskNotes")
         case .success(let store):
@@ -93,6 +100,9 @@ struct SectionDetailView: View {
             } description: {
                 Text("The saved view “\(id)” has been deleted.")
             }
+            // `.combine` for the same reason as the storage-failure pane above:
+            // two lines of prose and no control.
+            .accessibilityElement(children: .combine)
             .accessibilityIdentifier(AccessibilityIdentifier.detail(destination))
             .navigationTitle("Saved View")
         }

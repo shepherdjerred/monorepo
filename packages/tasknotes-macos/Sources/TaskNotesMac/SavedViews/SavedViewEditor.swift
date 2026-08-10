@@ -87,6 +87,12 @@ struct SavedViewEditor: View {
         }
         .padding(20)
         .frame(width: 380)
+        // `.contain`, not `.combine`: this sheet holds a name field, a symbol
+        // picker and a confirm button, and combining would flatten all three
+        // into one element with no separate actions. An identifier on a bare
+        // container never reaches the accessibility tree at all — see the note
+        // on ``AccessibilityIdentifier``.
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier(AccessibilityIdentifier.SavedViews.editor)
         // The name is the only thing anybody comes here to type.
         .onAppear { isNameFocused = true }

@@ -107,6 +107,8 @@ public struct RootView: View {
             } description: {
                 Text("TaskNotes cannot reach its stored data.")
             }
+            // `.combine`: a headline and a sentence, no control to swallow.
+            .accessibilityElement(children: .combine)
             .accessibilityIdentifier(AccessibilityIdentifier.Inspector.empty)
         }
     }

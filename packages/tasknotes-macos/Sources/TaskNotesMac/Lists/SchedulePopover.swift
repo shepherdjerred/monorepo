@@ -53,6 +53,11 @@ struct SchedulePopover: View {
         }
         .padding(12)
         .frame(width: 260)
+        // ⚠️ `.contain`. The popover *is* five buttons and a calendar;
+        // `.combine` would flatten the entire scheduling surface into one
+        // unpressable element.
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Schedule")
         .accessibilityIdentifier(AccessibilityIdentifier.Schedule.popover)
         .onAppear {
             if let current, let start = CivilDay.date(of: current) {

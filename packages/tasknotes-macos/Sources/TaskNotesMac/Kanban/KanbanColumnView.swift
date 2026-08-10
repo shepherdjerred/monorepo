@@ -70,6 +70,14 @@ struct KanbanColumnView: View {
         } isTargeted: {
             isTargeted = $0
         }
+        // ⚠️ `.contain`. A column is a header plus a `List` of cards, each with
+        // its own identifier, its own checkbox and its own move menu — the
+        // keyboard and VoiceOver route to a move. `.combine` would take all of
+        // them. The label is the column's name only; its count is already
+        // spoken by the header inside it, and saying it twice is the defect
+        // this app hides row metadata to avoid.
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(column.title)
         .accessibilityIdentifier(AccessibilityIdentifier.Board.column(column.id))
     }
 
@@ -105,10 +113,19 @@ struct KanbanColumnView: View {
                 Text("Nothing here")
                     .font(.caption)
                     .foregroundStyle(.tertiary)
+                    // The words are carried by this container's own label
+                    // instead. Kept `.tertiary` on purpose — a placeholder that
+                    // looked like a card would read as a card — and stating it
+                    // once means the de-emphasis costs a reader nothing.
+                    .accessibilityHidden(true)
                 Spacer()
             }
             .frame(maxWidth: .infinity)
             .contentShape(.rect)
+            // `.combine`, not `.contain`: an empty column is one word and a
+            // drop target, with nothing inside to keep addressable.
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Nothing here")
             .accessibilityIdentifier(AccessibilityIdentifier.Board.columnEmpty(column.id))
         } else {
             List(selection: $selection) {

@@ -67,6 +67,12 @@ struct KanbanBoardView: View {
             .focusedSceneValue(\.taskListActions, listActions)
             .focusedSceneValue(\.boardActions, boardActions)
             .focusedSceneValue(\.inspectorSubject, inspected)
+            // ⚠️ `.contain`, for the same reason ``TaskListView``'s pane is:
+            // this holds a banner, a heading and six columns of cards, each
+            // with its own identifier and its own menu. `.combine` would
+            // flatten the board into one element and destroy every one of them.
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel(scope?.title ?? "Board")
             .accessibilityIdentifier(AccessibilityIdentifier.detail(destination))
     }
 
@@ -109,6 +115,8 @@ struct KanbanBoardView: View {
             } description: {
                 Text(error.userMessage)
             }
+            // `.combine`: a headline and a sentence, no control to swallow.
+            .accessibilityElement(children: .combine)
             .accessibilityIdentifier(AccessibilityIdentifier.Board.empty)
         }
     }
@@ -191,6 +199,11 @@ struct KanbanBoardView: View {
             }
             Spacer()
         }
+        // ⚠️ `.contain` rather than `.combine`: this empty state carries a
+        // button — *Clear Filters & Search* or *New Task* — and combining would
+        // fold the only remedy on the screen into a sentence nobody can press.
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(board.isNarrowed ? "No matches" : (scope?.emptyTitle ?? "No tasks"))
         .accessibilityIdentifier(AccessibilityIdentifier.Board.empty)
     }
 

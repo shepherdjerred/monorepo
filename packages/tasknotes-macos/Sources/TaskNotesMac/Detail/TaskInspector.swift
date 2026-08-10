@@ -67,6 +67,12 @@ struct TaskInspector: View {
 
     var body: some View {
         content
+            // ⚠️ `.contain`. The panel is a form of editable fields, each with
+            // its own identifier because the inspector is the only surface
+            // where a UI test can prove a *write* reached the right frontmatter
+            // key. `.combine` would take every one of them.
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel("Inspector")
             .accessibilityIdentifier(AccessibilityIdentifier.Inspector.panel)
             .inspectorColumnWidth(min: 300, ideal: 340, max: 520)
             .task(id: store.tasks) {

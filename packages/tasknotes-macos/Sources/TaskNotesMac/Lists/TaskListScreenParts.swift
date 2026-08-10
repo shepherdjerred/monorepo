@@ -76,9 +76,14 @@ struct TaskComposeRow: View {
 
     var body: some View {
         HStack(spacing: 10) {
+            // Decoration. The field beside it already says "New task", and a
+            // glyph that announces itself is as bad as a control that does not:
+            // it makes the reader swipe past "Plus Circle" to reach the only
+            // thing on the row they can use.
             Image(systemName: "plus.circle")
                 .imageScale(.large)
                 .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
             PlainTextField(
                 text: $text,
                 prompt: "New task — try “pay rent tomorrow !high”",
@@ -145,6 +150,11 @@ struct TaskListEmptyState: View {
             }
             Spacer()
         }
+        // ⚠️ `.contain` rather than `.combine`: this state carries the one
+        // button that undoes the narrowing that produced it, and combining
+        // would fold the remedy into the complaint.
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(title)
         .accessibilityIdentifier(AccessibilityIdentifier.TaskList.empty)
     }
 

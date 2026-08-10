@@ -117,6 +117,21 @@ struct TaskListView: View {
             .focusedSceneValue(\.taskListActions, actions)
             .focusedSceneValue(\.inspectorSubject, inspected)
             .task(id: calendar.today) { await rollOverAtMidnight() }
+            // ⚠️ `.contain`, and the choice is load-bearing. This pane holds a
+            // banner, a heading, a list of rows and their per-row controls;
+            // `.combine` would flatten every one of them into a single element
+            // and take their actions with it. `.contain` makes the pane an
+            // accessibility *container*: the identifier lands here — where a UI
+            // test looks for it — and everything inside keeps its own
+            // identifier and its own actions.
+            //
+            // Without the modifier the identifier is not on this pane at all:
+            // SwiftUI pushes it down onto the descendants, where it **replaces**
+            // the identifiers they were given. That is how the task list, the
+            // heading, the count and the sync banner all came to answer to
+            // `…detail.<section>` and none of them to their own names.
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel(scope?.title ?? section.title)
             // The scope's identity when there is one, so every project screen
             // is not `…detail.browse`. A scope's identity is by construction
             // its destination's, so this and `sidebarItem` name the same thing.
@@ -171,6 +186,8 @@ struct TaskListView: View {
             } description: {
                 Text(error.userMessage)
             }
+            // `.combine`: a headline and a sentence, no control to swallow.
+            .accessibilityElement(children: .combine)
             .accessibilityIdentifier(AccessibilityIdentifier.TaskList.empty)
         }
     }
@@ -199,6 +216,10 @@ struct TaskListView: View {
         }
         .listStyle(.inset)
         .accessibilityIdentifier(AccessibilityIdentifier.TaskList.list)
+        // The sidebar's `List` is named by `NavigationSplitView`; this one is
+        // named by nobody, so without this it is an element with an identifier
+        // and no description — which is what the audit reported.
+        .accessibilityLabel("Tasks")
         // One menu that serves both a right-click on a single row and a
         // right-click inside a multi-selection. This is what replaces the
         // touch app's selection mode and bulk action bar outright — and it is

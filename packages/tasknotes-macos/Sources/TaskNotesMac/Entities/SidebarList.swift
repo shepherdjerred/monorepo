@@ -69,9 +69,15 @@ struct SidebarList: View {
                     .contextMenu { savedViewMenu(view) }
                 }
                 if savedViews.views.isEmpty {
+                    // Drawn `.tertiary` because it is a placeholder rather than
+                    // a row — that de-emphasis is the difference between "no
+                    // views" and "a view called None yet". A reader gets the
+                    // same distinction from the label, which says which group
+                    // is empty; two words on their own do not.
                     Text("None yet")
                         .font(.callout)
                         .foregroundStyle(.tertiary)
+                        .accessibilityLabel("No saved views yet")
                 }
             } header: {
                 viewsHeader
@@ -81,6 +87,11 @@ struct SidebarList: View {
                 entityGroup(kind)
             }
         }
+        // `.contain`: every row inside keeps its own identifier and its own
+        // selection behaviour. The label is what stops the audit reporting an
+        // undescribed container once the modifier makes this a real element.
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Sidebar")
         .accessibilityIdentifier(AccessibilityIdentifier.sidebar)
         .sheet(item: $editor) { mode in
             SavedViewEditor(mode: mode, store: savedViews)
@@ -125,6 +136,14 @@ struct SidebarList: View {
             .accessibilityLabel("New Saved View")
             .accessibilityIdentifier(AccessibilityIdentifier.SavedViews.save)
         }
+        // ⚠️ `.contain`, and `.combine` would be a real loss here: this header
+        // holds the only control that makes a saved view. Without the modifier
+        // the header collapsed into a single `StaticText` reading
+        // *"Views, New Saved View"* — the button's words with none of its
+        // button — so the control was unreachable by keyboard, by VoiceOver and
+        // by a UI test at once.
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Views")
         .accessibilityIdentifier(AccessibilityIdentifier.sidebarGroup("views"))
     }
 
@@ -167,12 +186,22 @@ struct SidebarList: View {
                 )
             }
             if entities.isEmpty {
+                // Same placeholder treatment as the Views group above, and the
+                // same reason for naming the group in the label: three
+                // identical "None yet" rows down one sidebar say nothing at all
+                // to a reader who cannot see which heading each sits under.
                 Text("None yet")
                     .font(.callout)
                     .foregroundStyle(.tertiary)
+                    .accessibilityLabel("No \(kind.groupTitle.lowercased()) yet")
             }
         } header: {
+            // `.combine` on a header that is one word: it collapses the group
+            // wrapper `List` puts around header content — an element with no
+            // description of its own — into the text itself.
             Text(kind.groupTitle)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(kind.groupTitle)
                 .accessibilityIdentifier(
                     AccessibilityIdentifier.sidebarGroup(kind.rawValue))
         }
