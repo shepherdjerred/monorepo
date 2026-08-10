@@ -87,12 +87,29 @@ function priorityForSection(section: string): 1 | 2 | 3 | null {
   return null;
 }
 
+/** One rendered finding plus the identity shared by its re-appended copies. */
+type RenderedFinding = { identity: string; finding: ReviewThread };
+
+/**
+ * Canonical form of a rendered finding, used to recognize the copies Qodo
+ * re-appends. Qodo reflows the blockquote indentation of a finding's agent
+ * prompt between copies, so whitespace carries no meaning here; everything
+ * else — description, code link, evidence — is reproduced verbatim.
+ */
+function identityOf(summary: string, findingBody: string): string {
+  const title = summary
+    .replaceAll(/^\s*\d+\.\s*/gu, "")
+    .replaceAll(/<\/?s>/giu, "")
+    .replaceAll(/<code>\s*[✓☑][^<]*<\/code>/giu, "");
+  return `${title} ${findingBody}`.replaceAll(/\s+/gu, "");
+}
+
 function parseSeveritySection(
   section: string,
   priority: 1 | 2 | 3,
   commentUrl: string | null,
-): ReviewThread[] {
-  const findings: ReviewThread[] = [];
+): RenderedFinding[] {
+  const findings: RenderedFinding[] = [];
   const summaries = [
     ...section.matchAll(/<summary>(\s*\d+\.[\s\S]*?)<\/summary>/giu),
   ];
@@ -102,9 +119,17 @@ function parseSeveritySection(
       throw new Error("Qodo finding summary could not be located");
     }
     const nextSummaryIndex = summaries[index + 1]?.index ?? section.length;
+    const bodyStart = summaryMatch.index + summaryMatch[0].length;
+    // Qodo closes each finding with a rule. Stopping there keeps the container
+    // markup between findings — the `<details>` wrapper that collapses a
+    // tier's overflow, the tags that close the tier — out of the body, so two
+    // renderings of one finding differ only where the finding itself does.
+    const ruleIndex = section.indexOf("<hr/>", bodyStart);
     const findingBody = section.slice(
-      summaryMatch.index + summaryMatch[0].length,
-      nextSummaryIndex,
+      bodyStart,
+      ruleIndex === -1 || ruleIndex > nextSummaryIndex
+        ? nextSummaryIndex
+        : ruleIndex,
     );
     const struck = /<s>[\s\S]*?<\/s>/iu.test(summary);
     const checked = summary.includes("☑");
@@ -115,16 +140,50 @@ function parseSeveritySection(
     const rawPath = linkMatch?.[1] ?? null;
     const path = rawPath?.replace(/\[R\d+(?:-\d+)?\]$/u, "") ?? null;
     findings.push({
-      authorLogin: QODO_LOGIN,
-      isResolved: struck || checked,
-      isOutdated: false,
-      path,
-      line: null,
-      url: linkMatch?.[2] ?? commentUrl,
-      priority,
+      identity: identityOf(summary, findingBody),
+      finding: {
+        authorLogin: QODO_LOGIN,
+        isResolved: struck || checked,
+        isOutdated: false,
+        path,
+        line: null,
+        url: linkMatch?.[2] ?? commentUrl,
+        priority,
+      },
     });
   }
   return findings;
+}
+
+/**
+ * Collapse the copies Qodo re-appends into the findings they describe.
+ *
+ * Qodo appends a fresh, unstruck copy of every finding on each re-review and
+ * strikes through only the copy it resolved, so an unchanged PR accumulates
+ * copies push after push and the gate's blocking count grows without any new
+ * problem existing. Identical renderings in the same severity tier are one
+ * finding, and Qodo's strike-through is its verdict on that finding rather
+ * than on the one rendering it happened to mark.
+ *
+ * The tradeoff: a finding Qodo resolved and later re-reported verbatim reads
+ * as resolved. Qodo re-reports it in the tier's newest copy while the struck
+ * copy stays, so no rendering distinguishes that case — and preferring the
+ * unstruck copy instead would leave every re-reviewed PR permanently blocked.
+ */
+function dedupeRenderedFindings(
+  rendered: readonly RenderedFinding[],
+): ReviewThread[] {
+  const byIdentity = new Map<string, ReviewThread>();
+  for (const { identity, finding } of rendered) {
+    const key = `${String(finding.priority)} ${identity}`;
+    const seen = byIdentity.get(key);
+    if (seen === undefined) {
+      byIdentity.set(key, finding);
+      continue;
+    }
+    if (finding.isResolved) seen.isResolved = true;
+  }
+  return [...byIdentity.values()];
 }
 
 function hasNumberedFinding(section: string): boolean {
@@ -197,24 +256,27 @@ export function parseQodoIssueComment(
 ): readonly ReviewThread[] {
   const expectedActiveFindings = activeFindingCount(comment.body);
   const sections = comment.body.split(QODO_SECTION_SPLIT);
-  const findings: ReviewThread[] = [];
+  const rendered: RenderedFinding[] = [];
   let severitySections = 0;
 
   for (const section of sections) {
     const priority = priorityForSection(section);
     if (priority === null) continue;
     severitySections += 1;
-    findings.push(...parseSeveritySection(section, priority, comment.url));
+    rendered.push(...parseSeveritySection(section, priority, comment.url));
   }
 
+  // Assert against the renderings, not the deduplicated findings: the layout
+  // checks confirm the comment parsed as Qodo wrote it, and Qodo's header
+  // counts its copies too.
   assertParsedLayout({
     body: comment.body,
     expectedActiveFindings,
-    findings,
+    findings: rendered.map((entry) => entry.finding),
     severitySections,
   });
 
-  return findings;
+  return dedupeRenderedFindings(rendered);
 }
 
 function parseQodoSeverity(body: string | null): number | null {

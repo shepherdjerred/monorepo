@@ -160,6 +160,71 @@ describe("qodoProvider", () => {
     ).toThrow("declares 2 active finding(s) but none were parsed");
   });
 
+  test("collapses the copies Qodo re-appends on each re-review", () => {
+    // Qodo re-appends every finding on re-review and reflows the copy's
+    // blockquote indentation, so identity must ignore whitespace alone.
+    const reAppended = `
+<h3>Code Review by Qodo</h3>
+<code>🐞 Bugs (3)</code> <code>📘 Rule violations (0)</code>
+<img src="https://example/divider.svg" alt="Grey Divider">
+<img src="https://example/action-required.png" alt="Action required">
+<details>
+<summary>  1. <s>Consent cache</s> <code>✓ Resolved</code> <code>🐞 Bug</code></summary>
+<code>[src/telemetry.ts[R10-12]](https://github.com/shepherdjerred/monorepo/pull/1/files#diff-abc)</code>
+>- drop the cache
+</details>
+<details>
+<summary>  2. Consent cache <code>🐞 Bug</code></summary>
+<code>[src/telemetry.ts[R10-12]](https://github.com/shepherdjerred/monorepo/pull/1/files#diff-abc)</code>
+> - drop the cache
+</details>
+<details>
+<summary>  3. Consent cache <code>🐞 Bug</code></summary>
+<code>[src/telemetry.ts[R10-12]](https://github.com/shepherdjerred/monorepo/pull/1/files#diff-abc)</code>
+>  - drop the cache
+</details>
+<details>
+<summary>  4. Retry budget <code>🐞 Bug</code></summary>
+<code>[src/retry.ts[R4]](https://github.com/shepherdjerred/monorepo/pull/1/files#diff-jkl)</code>
+</details>
+`;
+    expect(parseQodoIssueComment({ ...comment, body: reAppended })).toEqual([
+      {
+        authorLogin: "qodo-code-review",
+        isResolved: true,
+        isOutdated: false,
+        path: "src/telemetry.ts",
+        line: null,
+        url: "https://github.com/shepherdjerred/monorepo/pull/1/files#diff-abc",
+        priority: 1,
+      },
+      {
+        authorLogin: "qodo-code-review",
+        isResolved: false,
+        isOutdated: false,
+        path: "src/retry.ts",
+        line: null,
+        url: "https://github.com/shepherdjerred/monorepo/pull/1/files#diff-jkl",
+        priority: 1,
+      },
+    ]);
+  });
+
+  test("keeps same-titled findings apart when their bodies differ", () => {
+    const findings = parseQodoIssueComment({
+      ...comment,
+      body: comment.body.replace(
+        "<summary>  2. Stale wording",
+        "<summary>  2. Consent cache",
+      ),
+    });
+    expect(findings.map((finding) => finding.path)).toEqual([
+      "src/telemetry.ts",
+      "README.md",
+      "src/fixed.ts",
+    ]);
+  });
+
   test("maps Qodo's informational tier to P3 rather than dropping it", () => {
     const findings = parseQodoIssueComment({
       ...comment,
