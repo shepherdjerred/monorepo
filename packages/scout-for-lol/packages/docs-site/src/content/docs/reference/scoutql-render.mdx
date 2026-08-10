@@ -67,18 +67,18 @@ channel needs the **Attach Files** permission.
 
 ## Which options a kind needs
 
-| Kind                       | Typically needs                            |
-| -------------------------- | ------------------------------------------ |
-| `bar_chart`, `stacked_bar` | `y`, optionally `orientation`              |
-| `line_chart`, `area_chart` | `y`, a time dimension in `GROUP BY`        |
-| `donut_chart`              | `y`, few rows                              |
-| `scatter_chart`            | `x`, `y`, optionally `size`                |
-| `heatmap`                  | `value`, `series`, two grouping dimensions |
-| `radar_chart`              | `y` with three to eight series             |
-| `kpi_card`                 | `y` (one or more), and `GROUP BY all`      |
-| `bump_chart`               | `y`, and an `ANALYZE` clause               |
+| Kind                       | Typically needs                                    |
+| -------------------------- | -------------------------------------------------- |
+| `bar_chart`, `stacked_bar` | `y`, optionally `orientation`                      |
+| `line_chart`, `area_chart` | `y`, a time dimension in `GROUP BY`                |
+| `donut_chart`              | `y`, few rows                                      |
+| `scatter_chart`            | `x`, `y`, optionally `size`                        |
+| `heatmap`                  | `value`, `series`, two grouping dimensions         |
+| `radar_chart`              | `y` with three to eight series                     |
+| `kpi_card`                 | `y` (one or more), and `GROUP BY all`              |
+| `bump_chart`               | `y`, and an `ANALYZE` clause                       |
 | `calendar_heatmap`         | `y` (exactly one), `GROUP BY all`, `BUCKET BY DAY` |
-| `leaderboard`              | optionally `mentions`                      |
+| `leaderboard`              | optionally `mentions`                              |
 
 A name used in `WITH` must be one of the query's own outputs. Referring to a
 column the `SELECT` does not produce is the most common cause of an empty or
