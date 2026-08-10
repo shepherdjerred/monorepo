@@ -59,6 +59,33 @@ export async function fetchLatestProviderIssueComment(input: {
   return latest;
 }
 
+const COMMIT_SHA_PATTERN = /\b[0-9a-f]{40}\b/gu;
+
+/**
+ * Decide whether a persistent review comment describes `head`.
+ *
+ * Prefer the commit the comment names over its edit timestamp. Providers
+ * re-render this comment on every push — including edits that only strike
+ * through previously reported findings — so "edited after the head was pushed"
+ * does not by itself mean "reviewed this head", and accepting it would let the
+ * gate pass on a review of superseded code.
+ *
+ * Qodo anchors its evidence and code links to the commit it reviewed, so when
+ * the body names any commit those links identify the reviewed head exactly. A
+ * comment that names no commit (a clean review has no findings to link) falls
+ * back to the timestamp comparison.
+ */
+export function reviewCommentBoundToHead(
+  body: string,
+  updatedAt: string | null,
+  head: string,
+  headPushedAt: string | null,
+): boolean {
+  const referenced = new Set(body.match(COMMIT_SHA_PATTERN));
+  if (referenced.size > 0) return referenced.has(head);
+  return reactionBoundToHead(updatedAt, headPushedAt);
+}
+
 /** Resolve a persistent issue-comment review against the current head. */
 export async function resolveIssueCommentReview(input: {
   provider: ReviewProvider;
@@ -76,7 +103,12 @@ export async function resolveIssueCommentReview(input: {
   });
   if (
     comment !== null &&
-    reactionBoundToHead(comment.updatedAt, input.headPushedAt)
+    reviewCommentBoundToHead(
+      comment.body,
+      comment.updatedAt,
+      input.head,
+      input.headPushedAt,
+    )
   ) {
     return {
       state: "reviewed",
