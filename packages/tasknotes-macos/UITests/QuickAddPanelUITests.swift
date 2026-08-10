@@ -138,6 +138,24 @@ final class QuickAddPanelUITests: XCTestCase {
     /// reported as a failing test with a reason, instead of a crash in the
     /// runner that looks like a harness bug.
     private func postGlobalTestHotkey() throws {
+        // ⚠️ Checked here rather than left to fail downstream. Without trust,
+        // `CGEvent.post` returns normally and the event is simply discarded, so
+        // the failure surfaces as "the hotkey did not open the panel" — which
+        // accuses a feature that has been verified by hand to work. Naming the
+        // real cause, and the remedy, is the difference between a five-minute
+        // fix and the afternoon this cost.
+        try XCTSkipUnless(
+            AXIsProcessTrusted(),
+            """
+            The test runner does not hold Accessibility trust, so synthetic key \
+            events are discarded and no global hotkey can be exercised. Approve \
+            TaskNotesUITests-Runner in System Settings ▸ Privacy & Security ▸ \
+            Accessibility. This is a one-time grant *provided* the runner is \
+            built with a stable signature — see AGENTS.md › Running the \
+            end-to-end tests; an ad-hoc runner is re-hashed on every build and \
+            the grant will not survive.
+            """
+        )
         let source = try XCTUnwrap(
             CGEventSource(stateID: .hidSystemState),
             "could not create a HID event source"

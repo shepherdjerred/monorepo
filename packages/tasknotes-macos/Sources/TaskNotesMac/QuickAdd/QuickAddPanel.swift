@@ -1,4 +1,5 @@
 internal import AppKit
+internal import TaskNotesKit
 
 /// The floating window the quick-add field lives in.
 ///
@@ -77,6 +78,28 @@ final class QuickAddPanel: NSPanel {
             backing: .buffered,
             defer: false
         )
+
+        // ⚠️ On the **window**, not only on the hosted SwiftUI view.
+        //
+        // `QuickAddPanelView` already carries
+        // `.accessibilityIdentifier(AccessibilityIdentifier.QuickAdd.panel)`,
+        // and that was assumed to be enough. It is not: a SwiftUI identifier
+        // names an element *inside* the window's content, while
+        // `XCUIApplication.windows[_:]` matches the **window element itself**.
+        // The panel therefore came back from the accessibility tree as
+        // `subrole=AXSystemFloatingWindow` with no title and no identifier, so
+        // `app.windows[AccessibilityIdentifier.QuickAdd.panel]` matched nothing
+        // and the two hotkey flows failed as "the hotkey did not open the
+        // panel" — describing a working feature as a broken one. Measured with
+        // `AXUIElementCopyAttributeValue` against the running app while a
+        // screenshot showed the panel plainly on screen.
+        //
+        // The title is set for the same reason and is *not* redundant with
+        // `titleVisibility = .hidden` below: hiding the title stops it being
+        // drawn, it does not stop VoiceOver reading it. An untitled floating
+        // window is announced as nothing at all.
+        setAccessibilityIdentifier(AccessibilityIdentifier.QuickAdd.panel)
+        title = "Quick Add"
 
         isFloatingPanel = true
         level = .floating

@@ -226,6 +226,35 @@ targets:
         # entitlements permit — correctly, since neither is something the app
         # does.
         CODE_SIGN_ENTITLEMENTS: ""
+        # ⚠️ Ad-hoc by default, overridable to a real identity — and the two
+        # hotkey flows only work with the override.
+        #
+        # `CGEvent.post(tap: .cghidEventTap)` is silently dropped unless the
+        # posting process holds Accessibility trust, and TCC keys that grant on
+        # the runner's **code signature**. An ad-hoc signature is a fresh hash
+        # on every build, so a grant approved once evaporates on the next
+        # rebuild and the flows fail as "the hotkey did not open the panel".
+        # Measured: `AXIsProcessTrusted()` inside the runner returns `false`.
+        #
+        # Any stable signature fixes that, but the identity is per-operator and
+        # must not be committed — hence the indirection. The default keeps a
+        # clean checkout building with no account; an operator who wants the
+        # flows to run passes the identity, and because only this target reads
+        # the variable, passing it on the `xcodebuild` command line cannot leak
+        # onto the SwiftPM package targets the way a bare `DEVELOPMENT_TEAM=`
+        # does (that produces "No Account for Team").
+        #
+        #   xcodebuild test … TASKNOTES_UITEST_IDENTITY="<sha1 of the identity>"
+        #
+        # ⚠️ It must be an **Apple Development** identity, not the Developer ID
+        # one the release lane uses. Developer ID is a *distribution* identity,
+        # and `testmanagerd` refuses to drive a runner signed with one: all four
+        # previously-green flows failed with *"Not authorized for performing UI
+        # testing actions"* until this was changed back. Measured, not assumed.
+        #
+        # See AGENTS.md › Running the end-to-end tests.
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: "$(TASKNOTES_UITEST_IDENTITY:default=-)"
     info:
       path: UITests/Info.plist
       properties:

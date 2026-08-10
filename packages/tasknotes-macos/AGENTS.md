@@ -184,13 +184,67 @@ asserts all of them, because an image cannot.
   live from launch and survives the last window closing. `KeyboardShortcuts`
   wraps `RegisterEventHotKey`, which needs **no** permission; a `CGEventTap`
   would need Accessibility and is not an option for a text field.
-- The initial `⇧⌘Space` binding is seeded **once**, under this app's own
-  `UserDefaults` flag, so clearing it in Settings sticks.
-- ⚠️ `KeyboardShortcuts.Name(_:default:)` is unusable here: its argument label is
-  literally `default:`, and the `banned_switch_default` custom rule matches
-  `default` followed by a colon anywhere outside a comment. **That is a rule
-  defect** — it cannot tell a `switch` case from an argument label — and it is
-  worked around rather than suppressed.
+- The initial binding is `⌃⌥⌘Space`, supplied through the library's own
+  `KeyboardShortcuts.Name(_:default:)`, so clearing it in Settings sticks.
+  ⚠️ It was `⇧⌘Space` first, on the reasoning that the combination was free. It
+  is not — 1Password binds it and macOS 26 added a Siri handler — so the panel
+  never opened for anyone. No combination is safe by analysis; the recorder in
+  Settings is the real answer and the default is only a better guess.
+- ⚠️ **The panel carries its accessibility identifier on the `NSWindow`, not
+  only on the hosted SwiftUI view.** `XCUIApplication.windows[_:]` matches the
+  window element itself, so an identifier applied inside the content leaves the
+  panel anonymous — it comes back as `AXSystemFloatingWindow` with no title and
+  no identifier, and every UI query against it silently matches nothing.
+- The `banned_switch_default` custom rule used to match the `default:` argument
+  label above and forced a hand-rolled seed. That was a rule defect; it now
+  discriminates on SourceKit's syntax kind, so the library's mechanism is used
+  directly.
+
+## Running the end-to-end tests
+
+```bash
+bun run mac:e2e
+```
+
+The four navigation flows need nothing special. **The two quick-add hotkey flows
+need Accessibility trust, once**, and will otherwise report themselves as
+skipped with the reason rather than failing:
+
+```bash
+# The identity is per-operator and deliberately not committed. Only the UI test
+# target reads this variable, so unlike a bare `DEVELOPMENT_TEAM=` it cannot
+# leak onto the SwiftPM package targets. Pass the SHA-1: the name alone is
+# ambiguous when a machine holds two certificates issued to the same person.
+security find-identity -v -p codesigning | grep "Apple Development"
+
+xcodebuild test -project TaskNotes.xcodeproj -scheme TaskNotes \
+  -configuration Debug -derivedDataPath .build/xcode -destination 'platform=macOS' \
+  -only-testing:TaskNotesUITests \
+  TASKNOTES_UITEST_IDENTITY="<sha1>"
+```
+
+⚠️ **Use the Apple Development identity, not the Developer ID one.** Developer
+ID is a distribution identity and `testmanagerd` will not drive a runner signed
+with it — every flow fails with _"Not authorized for performing UI testing
+actions"_, including the four that have nothing to do with the hotkey. Both
+identities are equally stable as far as TCC is concerned, so there is no reason
+to reach for the release one here.
+
+Then approve **TaskNotesUITests-Runner** in System Settings ▸ Privacy & Security
+▸ Accessibility.
+
+⚠️ **Signing the runner is what makes that grant worth giving.** TCC keys the
+grant on the code signature, and an ad-hoc runner is re-hashed on every build —
+so an approval evaporates at the next rebuild and the flows go back to failing.
+With a stable Developer ID signature the grant is genuinely one-time. Approving
+an ad-hoc runner repeatedly is not a workflow; it is the thing this setting
+exists to avoid.
+
+⚠️ **A dropped event does not look like a permission problem.** `CGEvent.post`
+succeeds and the event is discarded when the process is untrusted, so before
+this was checked explicitly the failure read "the hotkey did not open the quick
+-add panel" — accusing a feature that works. `postGlobalTestHotkey` now asserts
+`AXIsProcessTrusted()` first.
 
 ## The pomodoro timer and the time report
 
@@ -252,7 +306,36 @@ Archive → Developer ID export → `notarytool submit --wait` → `stapler stap
 → `stapler validate` + `spctl --assess` + `codesign --verify --deep --strict`
 → re-zip the stapled app → collect dSYMs.
 
-Three things are worth knowing:
+Five things are worth knowing:
+
+- **⚠️ The archive carries no team, on purpose — so Xcode's Organizer cannot
+  distribute it.** `project.yml` pins `CODE_SIGN_STYLE: Manual`,
+  `CODE_SIGN_IDENTITY: "-"` and an empty `DEVELOPMENT_TEAM` so a clean checkout
+  builds with no account, and the archive command adds only
+  `ENABLE_HARDENED_RUNTIME=YES`. The Developer ID identity is applied later, by
+  `-exportArchive` re-signing from a generated `ExportOptions.plist`
+  (`method: developer-id`, `signingCertificate: Developer ID Application`).
+  Organizer ▸ Distribute App reads the archive itself and stops with **"No Team
+  Found in Archive"** — that is the expected result, not a defect to fix. Use
+  `bun run mac:release`; the GUI path is not supported.
+
+  ⚠️ Do **not** "fix" it by passing `DEVELOPMENT_TEAM=` / `CODE_SIGN_STYLE=Automatic`
+  on the `xcodebuild` command line. Those apply to _every_ target, including the
+  SwiftPM package targets (`KeyboardShortcuts`, `TaskNotesCore-product`), which
+  then fail with _"No Account for Team"_ / _"No signing certificate Mac
+  Development found"_. Measured, twice.
+
+- **⚠️ `TASKNOTES_MAC_TEAM_ID` is the Developer ID team, which need not be the
+  team on your Apple Development certificates.** On this machine the two differ,
+  and passing the Apple Development team makes preflight report that no
+  "Developer ID Application" certificate exists — while `security find-identity
+-v -p codesigning` plainly lists one. Read the team out of the identity you
+  actually intend to sign with:
+
+  ```bash
+  security find-identity -v -p codesigning | grep "Developer ID Application"
+  # → …"Developer ID Application: NAME (TEAMID)"   ← that TEAMID
+  ```
 
 - **`--deep` is right on `codesign --verify` and wrong on `codesign --sign`.**
   Verification with `--deep` is what walks into the embedded
