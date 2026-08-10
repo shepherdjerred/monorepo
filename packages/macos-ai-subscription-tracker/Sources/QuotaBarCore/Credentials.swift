@@ -108,6 +108,9 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
   private let homeDirectory: URL
   private let kimiCodeHome: URL?
   private let claudeKeychain: any KeychainClient
+  private let selectionLock = NSLock()
+  private var selectedTokens: [ProviderID: String] = [:]
+  private var rejectedTokens: [ProviderID: Set<String>] = [:]
 
   public init(
     fileManager: FileManager = .default,
@@ -129,19 +132,24 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
     self.claudeKeychain = claudeKeychain
   }
 
-  public func credential(for provider: ProviderID, reload _: Bool) throws -> ProviderCredential {
+  public func credential(for provider: ProviderID, reload: Bool) throws -> ProviderCredential {
+    let excludedTokens = excludedTokens(for: provider, reload: reload)
     let credential: ProviderCredential?
     switch provider {
-    case .claudeCode: credential = try readClaude()
-    case .codex: credential = try readCodex()
-    case .kimi: credential = try readCurrentKimiCredential()
-    case .grok: credential = try readOpenCode(provider: provider)
+    case .claudeCode: credential = try readClaude(excluding: excludedTokens)
+    case .codex: credential = try readCodex(excluding: excludedTokens)
+    case .kimi: credential = try readCurrentKimiCredential(excluding: excludedTokens)
+    case .grok: credential = try readOpenCode(provider: provider, excluding: excludedTokens)
     }
     guard let credential else { throw QuotaError.credentialsMissing(provider) }
-    return try credential.requireCurrent(for: provider)
+    let currentCredential = try credential.requireCurrent(for: provider)
+    selectionLock.withLock {
+      selectedTokens[provider] = currentCredential.accessToken
+    }
+    return currentCredential
   }
 
-  private func readClaude() throws -> ProviderCredential? {
+  private func readClaude(excluding excludedTokens: Set<String>) throws -> ProviderCredential? {
     let path = homeDirectory.appendingPathComponent(".claude/.credentials.json")
     var expiredFileCredential: ProviderCredential?
     if let value = try decodeFile(ClaudeCredentialFile.self, at: path, provider: .claudeCode)?
@@ -149,7 +157,8 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
     {
       let credential = try makeCredential(value, source: path.path)
       do {
-        return try credential.requireCurrent(for: .claudeCode)
+        let currentCredential = try credential.requireCurrent(for: .claudeCode)
+        if !excludedTokens.contains(currentCredential.accessToken) { return currentCredential }
       } catch QuotaError.credentialsExpired {
         expiredFileCredential = credential
       }
@@ -158,20 +167,25 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
     else { return expiredFileCredential }
     let value = try decode(ClaudeCredentialFile.self, from: data, provider: .claudeCode)
     guard let credential = value.credential else { return expiredFileCredential }
-    return try makeCredential(credential, source: "Claude Code Keychain")
+    let keychainCredential = try makeCredential(credential, source: "Claude Code Keychain")
+    guard !excludedTokens.contains(keychainCredential.accessToken) else {
+      return expiredFileCredential
+    }
+    return keychainCredential
   }
 
-  private func readCodex() throws -> ProviderCredential? {
+  private func readCodex(excluding excludedTokens: Set<String>) throws -> ProviderCredential? {
     let path = homeDirectory.appendingPathComponent(".codex/auth.json")
     guard
       let value = try decodeFile(CodexCredentialFile.self, at: path, provider: .codex)?.credential
     else {
       return nil
     }
-    return try makeCredential(value, source: path.path)
+    let credential = try makeCredential(value, source: path.path)
+    return excludedTokens.contains(credential.accessToken) ? nil : credential
   }
 
-  private func readKimi() throws -> ProviderCredential? {
+  private func readKimi(excluding excludedTokens: Set<String>) throws -> ProviderCredential? {
     let root = kimiCodeHome ?? homeDirectory.appendingPathComponent(".kimi-code")
     let directory = root.appendingPathComponent("credentials")
     guard fileManager.fileExists(atPath: directory.path) else { return nil }
@@ -184,6 +198,7 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
       if let value = try decodeFile(KimiCredentialFile.self, at: path, provider: .kimi)?.credential
       {
         let credential = try makeCredential(value, source: path.path)
+        guard !excludedTokens.contains(credential.accessToken) else { continue }
         do {
           return try credential.requireCurrent(for: .kimi)
         } catch QuotaError.credentialsExpired {
@@ -194,21 +209,28 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
     return expiredCredential
   }
 
-  private func readCurrentKimiCredential() throws -> ProviderCredential? {
-    guard let localCredential = try readKimi() else {
-      return try readOpenCode(provider: .kimi)
+  private func readCurrentKimiCredential(
+    excluding excludedTokens: Set<String>
+  ) throws -> ProviderCredential? {
+    guard let localCredential = try readKimi(excluding: excludedTokens) else {
+      return try readOpenCode(provider: .kimi, excluding: excludedTokens)
     }
     do {
       return try localCredential.requireCurrent(for: .kimi)
     } catch QuotaError.credentialsExpired {
-      guard let openCodeCredential = try readOpenCode(provider: .kimi) else {
+      guard
+        let openCodeCredential = try readOpenCode(provider: .kimi, excluding: excludedTokens)
+      else {
         throw QuotaError.credentialsExpired(.kimi)
       }
       return openCodeCredential
     }
   }
 
-  private func readOpenCode(provider: ProviderID) throws -> ProviderCredential? {
+  private func readOpenCode(
+    provider: ProviderID,
+    excluding excludedTokens: Set<String>
+  ) throws -> ProviderCredential? {
     var expiredCredential: ProviderCredential?
     for path in openCodeAuthPaths where fileManager.fileExists(atPath: path.path) {
       guard let file = try decodeFile(OpenCodeAuthFile.self, at: path, provider: provider) else {
@@ -216,6 +238,7 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
       }
       for value in file.credentials(for: provider) {
         let credential = try makeCredential(value, source: path.path)
+        guard !excludedTokens.contains(credential.accessToken) else { continue }
         do {
           return try credential.requireCurrent(for: provider)
         } catch QuotaError.credentialsExpired {
@@ -230,6 +253,7 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
         let value = try decode(
           OpenCodeOAuthCredential.self, from: Data(row.value.utf8), provider: provider)
         let credential = try makeCredential(value.value, source: database.path)
+        guard !excludedTokens.contains(credential.accessToken) else { continue }
         do {
           return try credential.requireCurrent(for: provider)
         } catch QuotaError.credentialsExpired {
@@ -238,6 +262,17 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
       }
     }
     return expiredCredential
+  }
+
+  private func excludedTokens(for provider: ProviderID, reload: Bool) -> Set<String> {
+    selectionLock.withLock {
+      var rejected = rejectedTokens[provider] ?? []
+      if reload, let selectedToken = selectedTokens.removeValue(forKey: provider) {
+        rejected.insert(selectedToken)
+        rejectedTokens[provider] = rejected
+      }
+      return rejected
+    }
   }
 
   private var openCodeAuthPaths: [URL] {
@@ -355,145 +390,4 @@ public actor CompositeCredentialStore: CredentialStore {
     }
     return try await local.credential(for: provider, reload: reload)
   }
-}
-
-private struct TokenValue {
-  let accessToken: String
-  let expiresAt: Date?
-}
-
-private struct ClaudeCredentialFile: Decodable {
-  let claudeAiOauth: ClaudeOAuth?
-  let accessToken: String?
-  let accessTokenSnake: String?
-
-  enum CodingKeys: String, CodingKey {
-    case claudeAiOauth
-    case accessToken
-    case accessTokenSnake = "access_token"
-  }
-
-  var credential: TokenValue? {
-    if let claudeAiOauth { return claudeAiOauth.value }
-    guard let token = accessToken ?? accessTokenSnake else { return nil }
-    return TokenValue(accessToken: token, expiresAt: nil)
-  }
-}
-
-private struct ClaudeOAuth: Decodable {
-  let accessToken: String
-  let expiresAt: Double?
-
-  var value: TokenValue {
-    TokenValue(accessToken: accessToken, expiresAt: normalizedDate(expiresAt))
-  }
-}
-
-private struct CodexCredentialFile: Decodable {
-  let accessToken: String?
-  let tokens: CodexTokens?
-
-  enum CodingKeys: String, CodingKey {
-    case accessToken = "access_token"
-    case tokens
-  }
-
-  var credential: TokenValue? {
-    guard let token = accessToken ?? tokens?.accessToken else { return nil }
-    return TokenValue(accessToken: token, expiresAt: nil)
-  }
-}
-
-private struct CodexTokens: Decodable {
-  let accessToken: String
-
-  enum CodingKeys: String, CodingKey {
-    case accessToken = "access_token"
-  }
-}
-
-private struct KimiCredentialFile: Decodable {
-  let accessToken: String?
-  let accessTokenSnake: String?
-  let expiresAt: Double?
-  let expiresAtSnake: Double?
-  let oauth: KimiOAuth?
-
-  enum CodingKeys: String, CodingKey {
-    case accessToken
-    case accessTokenSnake = "access_token"
-    case expiresAt
-    case expiresAtSnake = "expires_at"
-    case oauth
-  }
-
-  var credential: TokenValue? {
-    if let oauth { return oauth.value }
-    guard let token = accessToken ?? accessTokenSnake else { return nil }
-    return TokenValue(
-      accessToken: token,
-      expiresAt: normalizedDate(expiresAt ?? expiresAtSnake)
-    )
-  }
-}
-
-private struct KimiOAuth: Decodable {
-  let accessToken: String
-  let expiresAt: Double?
-
-  enum CodingKeys: String, CodingKey {
-    case accessToken = "access_token"
-    case expiresAt = "expires_at"
-  }
-
-  var value: TokenValue {
-    TokenValue(accessToken: accessToken, expiresAt: normalizedDate(expiresAt))
-  }
-}
-
-private struct OpenCodeAuthFile: Decodable {
-  let kimiForCodingOAuth: OpenCodeOAuthCredential?
-  let kimi: OpenCodeOAuthCredential?
-  let xai: OpenCodeOAuthCredential?
-  let grok: OpenCodeOAuthCredential?
-
-  enum CodingKeys: String, CodingKey {
-    case kimiForCodingOAuth = "kimi-for-coding-oauth"
-    case kimi
-    case xai
-    case grok
-  }
-
-  func credentials(for provider: ProviderID) -> [TokenValue] {
-    switch provider {
-    case .kimi: [kimiForCodingOAuth, kimi].compactMap { $0?.value }
-    case .grok: [xai, grok].compactMap { $0?.value }
-    case .claudeCode, .codex: []
-    }
-  }
-
-  static func labels(for provider: ProviderID) -> Set<String> {
-    switch provider {
-    case .kimi: ["kimi-for-coding-oauth", "kimi"]
-    case .grok: ["xai", "grok"]
-    case .claudeCode, .codex: []
-    }
-  }
-}
-private struct OpenCodeOAuthCredential: Decodable {
-  let access: String
-  let expires: Double?
-
-  var value: TokenValue {
-    TokenValue(accessToken: access, expiresAt: normalizedDate(expires))
-  }
-}
-private struct CredentialRow: Decodable {
-  let label: String
-  let value: String
-}
-private func normalizedDate(_ value: Double?) -> Date? {
-  guard let value else { return nil }
-  let seconds = value > 10_000_000_000 ? value / 1_000 : value
-  return Date(timeIntervalSince1970: seconds)
 }

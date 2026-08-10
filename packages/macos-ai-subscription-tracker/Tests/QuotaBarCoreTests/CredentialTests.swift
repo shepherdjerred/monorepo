@@ -128,6 +128,85 @@ final class CredentialTests: XCTestCase {
     XCTAssertEqual(credential.accessToken, "current-later-token")
   }
 
+  func testReloadSkipsRejectedKimiCredential() throws {
+    let root = try temporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: root) }
+    try write(
+      #"{"access_token":"first-current-token","expires_at":9999999999999}"#,
+      to: root.appendingPathComponent(".kimi-code/credentials/account-a.json")
+    )
+    try write(
+      #"{"kimi-for-coding-oauth":{"access":"fallback-token","expires":9999999999999}}"#,
+      to: root.appendingPathComponent(".local/share/opencode/auth.json")
+    )
+    let store = LocalCredentialStore(homeDirectory: root, claudeKeychain: FakeKeychain())
+
+    XCTAssertEqual(
+      try store.credential(for: .kimi, reload: false).accessToken,
+      "first-current-token"
+    )
+    XCTAssertEqual(
+      try store.credential(for: .kimi, reload: true).accessToken,
+      "fallback-token"
+    )
+    XCTAssertEqual(
+      try store.credential(for: .kimi, reload: false).accessToken,
+      "fallback-token"
+    )
+  }
+
+  func testReloadAdvancesAcrossOpenCodeStores() throws {
+    let root = try temporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: root) }
+    try write(
+      #"{"xai":{"access":"first-current-token","expires":9999999999999}}"#,
+      to: root.appendingPathComponent(".local/share/opencode/auth.json")
+    )
+    try write(
+      #"{"grok":{"access":"fallback-token","expires":9999999999999}}"#,
+      to: root.appendingPathComponent(".config/opencode/auth.json")
+    )
+    let store = LocalCredentialStore(homeDirectory: root, claudeKeychain: FakeKeychain())
+
+    XCTAssertEqual(
+      try store.credential(for: .grok, reload: false).accessToken,
+      "first-current-token"
+    )
+    XCTAssertEqual(
+      try store.credential(for: .grok, reload: true).accessToken,
+      "fallback-token"
+    )
+  }
+
+  func testUnauthorizedHTTPRetryUsesNextLocalCredential() async throws {
+    let root = try temporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: root) }
+    try write(
+      #"{"xai":{"access":"rejected-token","expires":9999999999999}}"#,
+      to: root.appendingPathComponent(".local/share/opencode/auth.json")
+    )
+    try write(
+      #"{"grok":{"access":"accepted-token","expires":9999999999999}}"#,
+      to: root.appendingPathComponent(".config/opencode/auth.json")
+    )
+    let transport = StubTransport([
+      .success(ProviderResponse(statusCode: 401, data: Data())),
+      .success(ProviderResponse(statusCode: 200, data: Data("usage".utf8))),
+    ])
+    let credentials = LocalCredentialStore(
+      homeDirectory: root,
+      claudeKeychain: FakeKeychain()
+    )
+    let client = ProviderHTTPClient(transport: transport, credentials: credentials)
+    let url = try XCTUnwrap(URL(string: "https://example.com/usage"))
+
+    let data = try await client.get(provider: .grok, url: url)
+
+    XCTAssertEqual(data, Data("usage".utf8))
+    let requests = await transport.requests
+    XCTAssertEqual(requests.map(\.bearerToken), ["rejected-token", "accepted-token"])
+  }
+
   func testOpenCodeDatabaseCredentialDiscovery() throws {
     let root = try temporaryDirectory()
     defer { try? FileManager.default.removeItem(at: root) }
