@@ -152,7 +152,7 @@ public final class TaskNotesStore {
 
         fireRelay.connect { [weak self] error in
             _Concurrency.Task { @MainActor [weak self] in
-                self?.absorbFire(error)
+                await self?.absorbFire(error)
             }
         }
     }
@@ -174,6 +174,18 @@ public final class TaskNotesStore {
     /// and deletes the legacy commands it never converted. Continuing past
     /// `false` is what turns a transient storage failure into lost work.
     ///
+    /// ⚠️ **It publishes a failure and nothing else — deliberately no
+    /// ``refresh()``.** This is the one lifecycle call that can run while an
+    /// engine is not only installed but *busy*: pressing Connect reaches it
+    /// through `applyServerAddress`, ahead of the ``configure(serverURL:authToken:)``
+    /// that cancels the old transport. Reading that engine's snapshot here
+    /// would take its FFI lock on the main actor and freeze every window for
+    /// the rest of an in-flight request's timeout. There is also nothing to
+    /// show: a migration changes storage, never the running engine's view of
+    /// it, so the state already on screen is the state that is still true, and
+    /// the `configure` that follows a successful migration publishes the new
+    /// engine's snapshot anyway.
+    ///
     /// - Returns: whether storage is migrated, and therefore safe to configure
     ///   an engine over.
     public func migrate() -> Bool {
@@ -182,7 +194,7 @@ public final class TaskNotesStore {
                 try runMigrations(storage: storage, clock: clock, random: randomness)
             }
         )
-        absorbFire(failure)
+        record(failure)
         return failure == nil
     }
 
@@ -287,10 +299,12 @@ public final class TaskNotesStore {
     /// ⚠️ **Only for a moment when the engine cannot be mid-drain**, which is
     /// why it is not public: `snapshot()` and `status()` take the engine's own
     /// lock, and `syncNow()` holds that lock for the length of a network round
-    /// trip. Its three callers are ``configure(serverURL:authToken:)``,
-    /// ``shutdown()`` and ``migrate()``, each of which is looking at an engine
-    /// that is brand new or absent. Everything else takes its snapshot on the
-    /// engine's own queue and hands it to ``publish(_:)``.
+    /// trip. Its two callers are ``configure(serverURL:authToken:)`` and
+    /// ``shutdown()``, which are looking at an engine that has just been built
+    /// and installed or at an empty slot. Everything else — including
+    /// ``migrate()``, which runs *before* the old engine is replaced, and the
+    /// scheduler's fire — takes its snapshot on the engine's own queue and
+    /// hands it to ``publish(_:)``.
     private func refresh() {
         publish(engineBox.current.map(Self.observe))
     }
@@ -508,8 +522,21 @@ public final class TaskNotesStore {
     // ── Plumbing ───────────────────────────────────────────────────────────
 
     /// Publish the outcome of an engine call and re-read the snapshot.
+    ///
+    /// Only for ``configure(serverURL:authToken:)`` and ``shutdown()``, for the
+    /// reason ``refresh()`` gives: the re-read is synchronous.
     private func absorb(_ outcome: Result<Void, any Error>) {
-        absorbFire(Self.failure(of: outcome))
+        record(Self.failure(of: outcome))
+        refresh()
+    }
+
+    /// Keep a failure, and leave the standing one alone when there is none.
+    ///
+    /// `lastStoreError` is retired by the mutation that succeeds — see
+    /// ``clearReportedError()`` — never by an absence of news.
+    private func record(_ error: CoreError?) {
+        guard let error else { return }
+        lastStoreError = error
     }
 
     /// Publish what one engine call left behind.
@@ -523,11 +550,15 @@ public final class TaskNotesStore {
         publish(performed.observed)
     }
 
-    private func absorbFire(_ error: CoreError?) {
-        if let error {
-            lastStoreError = error
-        }
-        refresh()
+    /// Publish what a scheduler pass left behind.
+    ///
+    /// The snapshot is taken on the engine's own queue rather than here, for
+    /// the reason ``refresh()`` gives: a timer fire and a user-triggered
+    /// ``sync()`` can overlap, so the engine this reads may be inside the HTTP
+    /// request the other one started.
+    private func absorbFire(_ error: CoreError?) async {
+        record(error)
+        publish(await engineBox.run { Self.observe($0) })
     }
 
     nonisolated private static func failure(of outcome: Result<Void, any Error>) -> CoreError? {
@@ -601,7 +632,13 @@ public final class TaskNotesStore {
         }
         return coreError
     }
+}
 
+extension TaskNotesStore {
+    /// One reading of the engine: what it holds, and what it is doing.
+    ///
+    /// The pair is always taken together, in one job on the engine's queue, so
+    /// the tasks on screen and the banner over them describe the same instant.
     private struct Observed: Sendable {
         let snapshot: TaskStoreSnapshot
         let status: SyncStatus
