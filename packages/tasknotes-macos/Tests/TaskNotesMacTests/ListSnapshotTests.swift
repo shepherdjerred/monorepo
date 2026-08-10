@@ -262,6 +262,48 @@ struct ListSnapshotTests {
         )
     }
 
+    /// Settings ▸ Parked, which is where a permanently-refused change goes to
+    /// be seen instead of disappearing.
+    ///
+    /// The rows are built from real ``ParkedChange`` values so the wording under
+    /// review is the wording the app derives from a dead-letter entry.
+    @Test("the parked changes pane", arguments: SnapshotAppearance.allCases)
+    func parkedChanges(appearance: SnapshotAppearance) throws {
+        try record(
+            Form {
+                ForEach(Self.parked) { change in
+                    ParkedChangeRow(change: change, onRetry: {}, onDiscard: {})
+                }
+            }
+            .formStyle(.grouped),
+            named: "settings-parked",
+            size: Self.settingsSize,
+            appearance: appearance
+        )
+    }
+
+    private static var parked: [ParkedChange] {
+        ParkedChange.all([
+            DeadLetterEntry(
+                command: .update(
+                    id: "cmd-18", createdAt: 1, taskId: "Tasks/Projects/Renew passport.md",
+                    payload: UpdateTaskRequest.settingPriority(.high)),
+                error: DeadLetterError(
+                    name: "ApiError", message: "recurrence is not a valid RRULE", status: 422),
+                failedAt: 2),
+            DeadLetterEntry(
+                command: .delete(
+                    id: "cmd-9", createdAt: 1, taskId: "Tasks/Water the plants.md"),
+                error: DeadLetterError(
+                    name: "ApiError", message: "the vault is read-only", status: 400),
+                failedAt: 1),
+        ])
+    }
+
+    /// The Settings window's own frame, so the pane is reviewed at the width it
+    /// actually gets rather than at a list's.
+    private static let settingsSize = CGSize(width: 480, height: 240)
+
     /// A window-sized canvas. Wide enough that a long title truncates rather
     /// than wrapping the layout into a shape the app never has.
     private static let screenSize = CGSize(width: 780, height: 560)
@@ -418,76 +460,6 @@ enum RowVariant: String, CaseIterable, Sendable {
                 title: "Sort the bookshelf",
                 priority: .low,
                 due: SnapshotFixtures.today
-            )
-        }
-    }
-}
-
-/// The banner states, built through `SyncMessage.of` rather than by hand.
-///
-/// Going through the real derivation is the point: it is what decides the
-/// wording, the tone, and whether a retry button appears at all, and a fixture
-/// that constructed `SyncMessage` directly could draw a banner the store can
-/// never produce.
-///
-/// The four are deliberately a **severity sequence**, not four independent
-/// pictures, and they are reviewed as one: `pending` (nothing is wrong) below
-/// `offline` (wrong, and fixing itself) below `unconfigured`/`authError`
-/// (wrong, and yours to fix). If two of them look equally alarming, that is the
-/// defect — one orange triangle used to sit on three of them.
-enum BannerVariant: String, CaseIterable, Sendable {
-    /// Offline: the server did not answer and the engine is backing off.
-    case offline
-    /// Something local failed — a write, or a command the shell could not build.
-    case error
-    /// Work is queued and the engine is idle. The common, unalarming case.
-    case pending
-    /// No server has been set up yet. What a fresh launch shows.
-    case unconfigured
-    /// A server that answered and refused. The other case that needs Settings.
-    case authError
-
-    func message() -> SyncMessage? {
-        switch self {
-        case .authError:
-            SyncMessage.of(
-                status: SyncStatus(
-                    state: .authError,
-                    lastError: .Api(message: "Unauthorized", status: 401),
-                    nextRetryAt: nil
-                ),
-                pendingCount: 0,
-                storeError: nil
-            )
-        case .offline:
-            SyncMessage.of(
-                status: SyncStatus(
-                    state: .backoff,
-                    lastError: .Connection(
-                        message: "Could not reach the server at tasknotes.local."),
-                    nextRetryAt: nil
-                ),
-                pendingCount: 1,
-                storeError: nil
-            )
-        case .error:
-            SyncMessage.of(
-                status: SyncStatus(state: .idle, lastError: nil, nextRetryAt: nil),
-                pendingCount: 0,
-                storeError: .Validation(
-                    message: "“next fridayy” is not a date this shell can read.")
-            )
-        case .pending:
-            SyncMessage.of(
-                status: SyncStatus(state: .idle, lastError: nil, nextRetryAt: nil),
-                pendingCount: 3,
-                storeError: nil
-            )
-        case .unconfigured:
-            SyncMessage.of(
-                status: SyncStatus(state: .unconfigured, lastError: nil, nextRetryAt: nil),
-                pendingCount: 0,
-                storeError: nil
             )
         }
     }

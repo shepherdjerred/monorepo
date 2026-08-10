@@ -10,13 +10,19 @@ public import TaskNotesUniFFI
 /// quietly, and the app keeps working. A modal alert here would be a lie about
 /// how bad the situation is.
 ///
-/// ## Two error channels, deliberately not merged
+/// ## Three error channels, deliberately not merged
 ///
 /// `status.lastError` is the *engine*'s view of the last sync failure.
 /// `lastStoreError` is everything the store could not attribute to the engine —
 /// a storage write that failed, a dispatch that was refused. Merging them would
 /// let a local disk problem render as a network problem, so they stay separate
 /// and the local one wins, because it is the one the user can act on.
+///
+/// `credentialError` is narrower still: the Keychain refusing to hand over or
+/// store the token. It outranks both, because it is the only one of the three
+/// that both explains every subsequent authentication failure *and* names a
+/// place to go. It is also the only one retired by a specific event rather than
+/// by the next success — see ``TaskNotesStore/credentialError``.
 public struct SyncMessage: Sendable, Equatable {
     /// How loudly to say it.
     ///
@@ -100,19 +106,24 @@ public struct SyncMessage: Sendable, Equatable {
     ///
     /// Silence is the common case and it is load-bearing: a banner that is
     /// always present is furniture, and furniture is invisible.
+    ///
+    /// `parkedCount` is how many commands the engine gave up on. They are
+    /// durable and recoverable, but only if the reader is told they exist: the
+    /// optimistic edit was rolled back out of the list when the command was
+    /// parked, so this banner is the only thing on screen that says the work
+    /// still exists somewhere.
     public static func of(
         status: SyncStatus,
         pendingCount: UInt32,
-        storeError: CoreError?
+        storeError: CoreError?,
+        credentialError: CoreError? = nil,
+        parkedCount: Int = 0
     ) -> SyncMessage? {
-        if let storeError {
-            return SyncMessage(
-                tone: .attention,
-                title: "Something went wrong on this Mac",
-                detail: storeError.userMessage,
-                remedy: .none
-            )
-        }
+        let local = thisMac(
+            credentialError: credentialError,
+            storeError: storeError,
+            parkedCount: parkedCount)
+        if let local { return local }
 
         switch status.state {
         case .authError:
@@ -163,8 +174,57 @@ public struct SyncMessage: Sendable, Equatable {
         }
     }
 
+    /// The three failures that belong to this Mac rather than to the engine,
+    /// in the order a reader can act on them.
+    ///
+    /// All of them outrank every ``SyncState``, because a local fault explains
+    /// whatever the engine is reporting underneath it and a network story told
+    /// over the top of one is a wrong story.
+    private static func thisMac(
+        credentialError: CoreError?,
+        storeError: CoreError?,
+        parkedCount: Int
+    ) -> SyncMessage? {
+        if let credentialError {
+            // `.openSettings`, unlike the store error below: the credential
+            // field is the one thing a reader can do about this, and a Keychain
+            // that refused a write often takes the retyped value.
+            return SyncMessage(
+                tone: .attention,
+                title: "This Mac would not release the server credential",
+                detail: credentialError.userMessage,
+                remedy: .openSettings
+            )
+        }
+        if let storeError {
+            return SyncMessage(
+                tone: .attention,
+                title: "Something went wrong on this Mac",
+                detail: storeError.userMessage,
+                remedy: .none
+            )
+        }
+        guard parkedCount > 0 else { return nil }
+        // ⚠️ **Above every engine state, including `.idle`.** A parked command
+        // is the one failure that does not resolve itself and does not show
+        // anywhere else: the drain moved it aside precisely so it would stop
+        // blocking the queue, so the engine goes back to `.idle` and — before
+        // this branch — said nothing at all while the user's edit had
+        // disappeared from the list.
+        return SyncMessage(
+            tone: .attention,
+            title: parkedTitle(parkedCount),
+            detail: "The server refused them. Review them in Settings ▸ Parked.",
+            remedy: .openSettings
+        )
+    }
+
     private static func queuedTitle(_ count: UInt32) -> String {
         count == 1 ? "1 change waiting to sync" : "\(count) changes waiting to sync"
+    }
+
+    private static func parkedTitle(_ count: Int) -> String {
+        count == 1 ? "1 change could not be saved" : "\(count) changes could not be saved"
     }
 }
 

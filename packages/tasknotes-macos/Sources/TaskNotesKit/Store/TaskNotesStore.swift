@@ -73,6 +73,19 @@ public final class TaskNotesStore {
     /// masquerade as a network problem.
     public private(set) var lastStoreError: CoreError?
 
+    /// The Keychain's refusal to hand over or store the server credential.
+    ///
+    /// ⚠️ **A third channel, and the reason is the retirement rule rather than
+    /// the message.** ``lastStoreError`` is retired by the next successful
+    /// dispatch, because every ``report(_:)`` call site is the failing half of a
+    /// switch whose other half dispatches — the corrected action is the evidence
+    /// the problem is over. A credential failure has no such pairing: renaming a
+    /// task succeeds happily while the token is still unsaved, and putting this
+    /// in the same slot would take the banner down while the thing it warned
+    /// about is still true. Only ``clearCredentialFailure()``, called when a
+    /// write actually lands, retires it.
+    public private(set) var credentialError: CoreError?
+
     private let storage: FileHostStorage
     private let clock: any CoreClock & ViewerCalendarSource
     private let randomness: any Randomness
@@ -348,6 +361,21 @@ public final class TaskNotesStore {
     /// one bad quick-add line left the message up until the app relaunched.
     public func clearReportedError() {
         lastStoreError = nil
+    }
+
+    /// Record that the Keychain would not hand over or store the credential.
+    ///
+    /// See ``credentialError`` for why this is not ``report(_:)``.
+    public func reportCredentialFailure(_ error: CoreError) {
+        credentialError = error
+    }
+
+    /// Retire the credential failure.
+    ///
+    /// The only thing that may call this is a credential write that succeeded —
+    /// the one event that makes the previous failure untrue.
+    public func clearCredentialFailure() {
+        credentialError = nil
     }
 
     /// Move a parked command back onto the queue.

@@ -469,6 +469,40 @@ describe("TaskStore restore validation", () => {
     await expect(store.restore()).rejects.toThrow();
   });
 
+  // Zeroing a counter blob that exists but does not parse re-offers ids this
+  // install has already spent, and nothing downstream can catch it: the
+  // collision checks see the queue and the cached base, never the alias map, so
+  // a temp id minted in a repeated millisecond can equal one an acknowledged
+  // create already aliased — and every edit to the new optimistic task then
+  // lands on the older server task. The Rust core refuses the same bytes.
+  test("surfaces malformed persisted id counters", async () => {
+    const storeStorage = memoryStoreStorage({ counters: "not-json" });
+    const { store } = makeStore(memoryQueueStorage(), storeStorage);
+
+    await expect(store.restore()).rejects.toThrow(
+      /id counters exist but are unreadable/,
+    );
+  });
+
+  test("surfaces persisted id counters of the wrong shape", async () => {
+    const storeStorage = memoryStoreStorage({
+      counters: JSON.stringify({ command: 4 }),
+    });
+    const { store } = makeStore(memoryQueueStorage(), storeStorage);
+
+    await expect(store.restore()).rejects.toThrow(
+      /id counters exist but are unreadable/,
+    );
+  });
+
+  test("an absent counter blob is a fresh install, not a failure", async () => {
+    const storeStorage = memoryStoreStorage({ counters: null });
+    const { store } = makeStore(memoryQueueStorage(), storeStorage);
+
+    await store.restore();
+    expect(store.getSnapshot().pendingCount).toBe(0);
+  });
+
   test("surfaces malformed persisted restore keys", async () => {
     const storeStorage = memoryStoreStorage({
       acknowledgedCompletionRestores: JSON.stringify({

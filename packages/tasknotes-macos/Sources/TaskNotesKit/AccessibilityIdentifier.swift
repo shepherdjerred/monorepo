@@ -76,6 +76,9 @@ public enum AccessibilityIdentifier {
     /// behaviour we want and also the reason no test asserts on what is typed.
     public static let settingsServerToken = "\(namespace).settings.serverToken"
 
+    /// Settings ▸ Parked, the dead-letter list.
+    public static let settingsParked = "\(namespace).settings.parked"
+
     /// The task list screens — Today, Inbox, Upcoming and Browse, which are one
     /// parameterized view and therefore one set of identifiers.
     ///

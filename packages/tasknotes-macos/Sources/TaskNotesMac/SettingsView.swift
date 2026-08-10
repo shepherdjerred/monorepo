@@ -27,6 +27,11 @@ public struct SettingsView: View {
             // something the user already has.
             QuickAddSettingsView()
                 .tabItem { Label("Quick Add", systemImage: "plus.viewfinder") }
+            // Where a permanently-refused mutation goes to be seen. Settings
+            // rather than a window of its own: it is rare, it is not part of
+            // any daily loop, and the connection banner links straight here.
+            ParkedChangesView(store: environment.store)
+                .tabItem { Label("Parked", systemImage: "tray.full") }
             GeneralSettingsView(store: environment.store)
                 .tabItem { Label("General", systemImage: "gearshape") }
         }
@@ -83,6 +88,79 @@ private struct ServerSettingsView: View {
     /// that no two situations collapse onto one word.
     private var statusDescription: String {
         ConnectionSummary.of(store: environment.store).title
+    }
+}
+
+/// Settings ▸ Parked: the mutations the server refused for good.
+///
+/// ## Why a screen at all
+///
+/// The engine parks a command whose failure is permanent so the queue is not
+/// wedged behind it, and rolls the optimistic edit back out of the list. Both
+/// halves are right, and together they used to mean the user's change simply
+/// disappeared: the dead-letter list was durable, and `retryDeadLetter` /
+/// `discardDeadLetter` existed, but nothing on screen read either. Losing work
+/// silently is worse than losing it loudly, so this pane is the loud part —
+/// what was refused, why, and the two things anyone can do about it.
+private struct ParkedChangesView: View {
+    let store: Result<TaskNotesStore, CoreError>
+
+    var body: some View {
+        Form {
+            switch store {
+            case .failure(let error):
+                Text(error.userMessage)
+                    .foregroundStyle(.secondary)
+            case .success(let store):
+                let parked = ParkedChange.all(store.deadLetters)
+                if parked.isEmpty {
+                    // The empty state is the normal one, and saying so is the
+                    // point: an empty list with no sentence reads like a screen
+                    // that failed to load.
+                    Text("Nothing is parked. Changes the server refuses for good show up here.")
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(parked) { change in
+                        ParkedChangeRow(
+                            change: change,
+                            onRetry: { store.retryDeadLetter(id: change.id) },
+                            onDiscard: { store.discardDeadLetter(id: change.id) }
+                        )
+                    }
+                }
+            }
+        }
+        .formStyle(.grouped)
+        .accessibilityIdentifier(AccessibilityIdentifier.settingsParked)
+    }
+}
+
+/// One parked change, and the two things anyone can do about it.
+///
+/// Its own view so the snapshot suite can render the row without an engine that
+/// has actually failed a command — the wording is the part a reviewer has to
+/// look at, and staging a real permanent failure to see it would make the
+/// picture cost a live server.
+struct ParkedChangeRow: View {
+    let change: ParkedChange
+    let onRetry: () -> Void
+    let onDiscard: () -> Void
+
+    var body: some View {
+        LabeledContent {
+            HStack(spacing: 8) {
+                Button("Retry", action: onRetry)
+                // Destructive, and the only way to lose the change on purpose.
+                Button("Discard", role: .destructive, action: onDiscard)
+            }
+        } label: {
+            VStack(alignment: .leading, spacing: 1) {
+                Text(change.summary)
+                Text(change.reason)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
     }
 }
 

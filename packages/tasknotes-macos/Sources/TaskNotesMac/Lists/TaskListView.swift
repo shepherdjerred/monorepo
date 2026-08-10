@@ -147,7 +147,9 @@ struct TaskListView: View {
                 if let message = SyncMessage.of(
                     status: store.status,
                     pendingCount: store.pendingCount,
-                    storeError: store.lastStoreError
+                    storeError: store.lastStoreError,
+                    credentialError: store.credentialError,
+                    parkedCount: store.deadLetters.count
                 ) {
                     SyncBannerView(message: message, onRetry: refresh)
                     Divider()

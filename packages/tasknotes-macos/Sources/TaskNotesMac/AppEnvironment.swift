@@ -65,7 +65,7 @@ public final class AppEnvironment {
     /// it. Nothing reads it back out of here — `configure` takes it from the
     /// store, so the Keychain stays the single source of truth.
     public var authToken: String {
-        didSet { reportFailedWrite(tokenStore.setToken(authToken)) }
+        didSet { applyCredentialWrite(tokenStore.setToken(authToken)) }
     }
 
     /// The floating quick-add panel, and the global hotkey that opens it.
@@ -166,7 +166,19 @@ public final class AppEnvironment {
     /// dispatches in that state, so the app is usable offline before a server
     /// has ever been entered.
     ///
-    /// Idempotent, so calling it from a `.task` that re-runs is safe.
+    /// ⚠️ **Idempotent, and that is a requirement rather than a nicety.** Every
+    /// window's `.task` calls this on the *one* shared environment, so opening a
+    /// second window calls it again. Without the guard that second call runs
+    /// ``TaskNotesStore/configure(serverURL:authToken:)``, which disposes the
+    /// running engine — and `dispose()` takes the engine's FFI lock on the main
+    /// actor, so if the first window happens to be mid-request every window on
+    /// screen freezes until that HTTP call finishes. The user did nothing but
+    /// press ⌘N.
+    ///
+    /// The flag records that an engine is *installed*, not that `start()` was
+    /// called: a launch that stopped at the migration guard never built one, so
+    /// a later window may still try. ``applyServerAddress()`` deliberately does
+    /// not consult it — replacing the engine is exactly what the user asked for.
     ///
     /// Returns the fetch it started. Production call sites discard it — the
     /// `@discardableResult` is what keeps them unchanged — but a test cannot
@@ -174,7 +186,8 @@ public final class AppEnvironment {
     /// polling, which is how a test becomes flaky and then gets deleted.
     @discardableResult
     public func start() -> _Concurrency.Task<Void, Never> {
-        bringUp()
+        guard !isEngineInstalled else { return alreadyFinished() }
+        return bringUp()
     }
 
     /// Apply a newly entered address, replacing the running engine.
@@ -204,8 +217,10 @@ public final class AppEnvironment {
     private func bringUp() -> _Concurrency.Task<Void, Never> {
         guard case .success(let store) = store else { return alreadyFinished() }
         guard store.migrate() else { return alreadyFinished() }
+        isEngineInstalled = true
         switch tokenStore.token() {
         case .success(let token):
+            store.clearCredentialFailure()
             store.configure(serverURL: configuredServer, authToken: token)
             return pull(store)
         case .failure(let error):
@@ -217,20 +232,37 @@ public final class AppEnvironment {
             // engine still restores the cache and still accepts dispatches, so
             // the app stays usable while the banner says what actually happened.
             store.configure(serverURL: nil, authToken: nil)
-            store.report(error)
+            store.reportCredentialFailure(error)
             return alreadyFinished()
         }
     }
 
-    /// Put a failed credential write where the user will see it.
+    /// Whether an engine has been built for this environment.
+    ///
+    /// See ``start()`` — this is what keeps a second window from disposing the
+    /// first one's running engine.
+    private var isEngineInstalled = false
+
+    /// Publish the outcome of a credential write.
     ///
     /// A Keychain that refuses the token is the one failure the Settings pane
     /// cannot leave implicit: the field shows what was typed either way, so
     /// without this the app claims a credential it does not have and the next
     /// sync fails as an unexplained 401.
-    private func reportFailedWrite(_ error: CoreError?) {
-        guard let error, case .success(let store) = store else { return }
-        store.report(error)
+    ///
+    /// ⚠️ **Success clears it, and nothing else may.** This used to go through
+    /// ``TaskNotesStore/report(_:)``, whose banner is retired by the next
+    /// successful dispatch — so renaming a task took down a warning about a
+    /// credential that was still unsaved, and the user learned the write had
+    /// gone through. The credential channel is retired only here, by the write
+    /// that actually landed.
+    private func applyCredentialWrite(_ error: CoreError?) {
+        guard case .success(let store) = store else { return }
+        if let error {
+            store.reportCredentialFailure(error)
+        } else {
+            store.clearCredentialFailure()
+        }
     }
 
     /// Fetch once, now.

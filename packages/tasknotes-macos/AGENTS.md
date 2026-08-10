@@ -166,6 +166,13 @@ Consequence to design around: **push correctness below the SwiftUI line.** The
 - **`default:` in a switch is banned** (`@unknown default:` is not). It is the
   highest-leverage rule here: the compiler allows it and it then silently
   absorbs every enum case added later.
+- **A durable failure has to reach a screen.** The engine's failure handling is
+  designed to keep the queue moving: a permanently-refused command is parked in
+  `dead-letter.json` and its optimistic edit is rolled back. That is correct and
+  it is also how work disappears without a trace, so anything the core can put
+  aside must be readable and actionable from the app. Today that is
+  `ParkedChange` → Settings ▸ Parked, with the connection banner pointing at it.
+  A new durable failure store needs the same pair, not just the storage.
 
 ## The quick-add panel
 

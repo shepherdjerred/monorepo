@@ -1,4 +1,5 @@
 import Foundation
+import Synchronization
 import TaskNotesKit
 import TaskNotesTestSupport
 import Testing
@@ -156,9 +157,98 @@ struct AppEnvironmentTests {
         await fixture.environment.start().value
 
         let store = try #require(fixture.store)
-        #expect(store.lastStoreError == UnreadableTokenStore.failure)
+        #expect(store.credentialError == UnreadableTokenStore.failure)
         #expect(store.status.state != .authError)
         #expect(store.tasks.isEmpty)
+    }
+
+    /// ⚠️ **A successful *anything else* used to take this banner down.**
+    /// Credential failures went through the generic store-error channel, which
+    /// is retired by the next successful dispatch — so renaming a task cleared a
+    /// warning about a token that was still unsaved, and the app quietly claimed
+    /// a credential it did not have. Only the credential recovering may retire
+    /// it.
+    @Test("a credential failure outlives unrelated successes")
+    func aCredentialFailureIsRetiredOnlyByTheCredential() async throws {
+        let tokens = RefusingTokenStore()
+        let fixture = try Fixture(address: "", tokenStore: tokens)
+        defer { fixture.tearDown() }
+        await fixture.environment.start().value
+        let store = try #require(fixture.store)
+
+        fixture.environment.authToken = "hunter2"
+        #expect(store.credentialError == RefusingTokenStore.failure)
+
+        // An ordinary, entirely successful mutation. The queue takes it while
+        // offline and the store clears its *own* reported error — and must not
+        // touch this one.
+        store.dispatch(.create(payload: createRequest(title: "Unrelated")))
+        #expect(store.lastStoreError == nil)
+        #expect(
+            store.credentialError == RefusingTokenStore.failure,
+            "the token is still unsaved, so the warning is still true")
+
+        // Now the write lands, which is the one event that makes it untrue.
+        tokens.startAccepting()
+        fixture.environment.authToken = "hunter3"
+        #expect(store.credentialError == nil)
+    }
+
+    // ── One environment, many windows ──────────────────────────────────────
+
+    /// ⚠️ **Every window's `.task` calls `start()` on the one shared
+    /// environment.** Before the guard, the second window reconfigured the
+    /// store, which disposes the running engine — and `dispose()` takes the
+    /// engine's FFI lock on the main actor, so opening a window while the first
+    /// one was mid-request froze every window until that request finished.
+    ///
+    /// The assertion is on the engine's identity through its cache: a second
+    /// `configure` would build a new engine and re-`restore()` it, so proving
+    /// the pulled tasks survive a second `start()` untouched *and* that no
+    /// second pull happened is the observable form of "it was left alone".
+    @Test("a second window does not restart the shared engine")
+    func startIsIdempotentAcrossWindows() async throws {
+        let server = try TaskNotesServerProcess()
+        defer { server.stop() }
+        try await seedVault(of: server, title: "Opened twice")
+
+        let fixture = try Fixture(address: server.baseURL.absoluteString)
+        defer { fixture.tearDown() }
+
+        await fixture.environment.start().value
+        let store = try #require(fixture.store)
+        #expect(store.tasks.map(\.title) == ["Opened twice"])
+        let firstSync = store.lastSyncTime
+
+        // What opening a second, third and fourth window does.
+        for _ in 0..<3 {
+            await fixture.environment.start().value
+        }
+
+        #expect(store.tasks.map(\.title) == ["Opened twice"])
+        #expect(
+            store.lastSyncTime == firstSync,
+            "no further pull ran, so no further engine was built")
+    }
+
+    /// The user asking for a different server is the case that *must* replace
+    /// the engine, and the guard must not stand in its way.
+    @Test("applyServerAddress still replaces the engine after start")
+    func applyServerAddressIsNotGuarded() async throws {
+        let server = try TaskNotesServerProcess()
+        defer { server.stop() }
+        try await seedVault(of: server, title: "Entered later")
+
+        let fixture = try Fixture(address: "")
+        defer { fixture.tearDown() }
+        await fixture.environment.start().value
+        let store = try #require(fixture.store)
+        #expect(store.tasks.isEmpty)
+
+        fixture.environment.serverAddress = server.baseURL.absoluteString
+        await fixture.environment.applyServerAddress().value
+
+        #expect(store.tasks.map(\.title) == ["Entered later"])
     }
 
     // ── The states that are not failures ───────────────────────────────────
@@ -294,7 +384,9 @@ struct AppEnvironmentTests {
         SyncMessage.of(
             status: store.status,
             pendingCount: store.pendingCount,
-            storeError: store.lastStoreError
+            storeError: store.lastStoreError,
+            credentialError: store.credentialError,
+            parkedCount: store.deadLetters.count
         )
     }
 
@@ -414,6 +506,32 @@ private struct UnreadableTokenStore: ServerTokenStore {
     func token() -> Result<String?, CoreError> { .failure(Self.failure) }
 
     func setToken(_ token: String?) -> CoreError? { nil }
+}
+
+/// A token store that refuses writes until told otherwise.
+///
+/// The Keychain that starts locked and is unlocked partway through, which is the
+/// only shape in which "the failure is still true" and "the failure has stopped
+/// being true" are both observable in one case.
+///
+/// `Mutex` rather than `@unchecked Sendable`, matching ``InMemoryTokenStore``:
+/// the protocol is `Sendable` and a promise to the compiler is not a fact.
+private final class RefusingTokenStore: ServerTokenStore {
+    static let failure = CoreError.Invariant(
+        message: "could not store the server token (Keychain status -25308)"
+    )
+
+    private let accepting = Mutex(false)
+
+    func startAccepting() {
+        accepting.withLock { $0 = true }
+    }
+
+    func token() -> Result<String?, CoreError> { .success(nil) }
+
+    func setToken(_ token: String?) -> CoreError? {
+        accepting.withLock { $0 } ? nil : Self.failure
+    }
 }
 
 /// Why a fixture could not be built.

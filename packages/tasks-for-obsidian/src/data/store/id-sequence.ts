@@ -26,10 +26,22 @@ export class IdSequence {
   constructor(private readonly random: () => number) {}
 
   /**
-   * Absent or unreadable counters mean "start at zero" — a fresh install, and
-   * also every install that predates the key. Neither needs a schema migration:
-   * the collision checks below refuse to return an id the restored queue
-   * already holds, so a carried-over queue is safe on that first launch too.
+   * An *absent* counter blob means "start at zero" — a fresh install, and also
+   * every install that predates the key. Neither needs a schema migration: the
+   * collision checks below refuse to return an id the restored queue already
+   * holds, so a carried-over queue is safe on that first launch too.
+   *
+   * A *present but unreadable* blob is a different fact and now throws. Zeroing
+   * it re-offers ids this install has already spent, and the collision checks
+   * cannot catch that: they see the queue and the cached base, never the alias
+   * map, so a temp id minted in a millisecond the clock has repeated can equal
+   * one an acknowledged create already aliased — and every edit to the new
+   * optimistic task then resolves onto the older server task. Failing
+   * restoration keeps the spent ids unknowable rather than pretending they were
+   * never spent. Mirrors `parse_id_counters` in the Rust core, which is the
+   * other implementation reading these same bytes.
+   *
+   * @throws if `raw` is present and does not parse as both counters.
    */
   restore(raw: string | null): void {
     this.counters = parseIdCounters(raw);
@@ -44,8 +56,8 @@ export class IdSequence {
    *
    * The persisted counter removes the collision class: it never restarts, so
    * the same `(millis, counter)` pair is never offered twice. The queue check
-   * covers the first launch after upgrading from a build without counters and
-   * a counter blob that failed to parse.
+   * covers the one case where it starts from zero legitimately — the first
+   * launch after upgrading from a build without counters.
    *
    * The loop terminates because the counter strictly increases while the
    * durable command set is finite.
@@ -77,11 +89,13 @@ export class IdSequence {
 }
 
 function parseIdCounters(raw: string | null): IdCounters {
-  if (!raw) return ZERO_COUNTERS;
+  if (raw === null) return ZERO_COUNTERS;
   try {
-    const parsed = IdCountersSchema.safeParse(JSON.parse(raw));
-    return parsed.success ? parsed.data : ZERO_COUNTERS;
-  } catch {
-    return ZERO_COUNTERS;
+    return IdCountersSchema.parse(JSON.parse(raw));
+  } catch (error) {
+    throw new Error(
+      "the persisted id counters exist but are unreadable, so the ids this install has already spent are unknown",
+      { cause: error },
+    );
   }
 }
