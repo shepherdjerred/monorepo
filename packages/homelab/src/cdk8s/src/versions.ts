@@ -357,11 +357,11 @@ const versions = {
   // Custom temporal-worker image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/temporal-worker":
-    "2.0.0-8826@sha256:834d86292f0ed827d659cad69c1a8ef5d7739c2897231bc9cb1fe70226e22050",
+    "2.0.0-8860@sha256:e041c18385f5d33f98d3f688e4eca3fbe9ed683b550c7e67eaa78e0d4ad78089",
   // Custom TRMNL dashboard image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/trmnl-dashboard":
-    "2.0.0-8826@sha256:193c300265cfa15ab61aaf8dc5e4d82fa33d22f4c3999f710e1eb12c2fa670a3",
+    "2.0.0-8860@sha256:b33a73dc49905431cd8e9c99167f299fba567d21dee3a24f16b1ebb17fed6428",
 };
 
 applyCurrentBuildImageOverrides(versions);
