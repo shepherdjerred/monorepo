@@ -43,10 +43,13 @@ function activeFindingCount(body: string): number {
     }
     counts.set(label, Number.parseInt(countText, 10));
   }
-  for (const label of QODO_FINDING_COUNT_LABELS) {
-    if (!counts.has(label)) {
-      throw new Error(`Qodo review comment is missing the ${label} count`);
-    }
+  // Qodo renders only the categories it has something to report, so an absent
+  // label means zero rather than drift. A header with no recognized label at
+  // all is drift, and must not be read as a clean review.
+  if (counts.size === 0) {
+    throw new Error(
+      "Qodo review comment declares no recognized finding counts",
+    );
   }
   return [...counts.values()].reduce((total, count) => total + count, 0);
 }

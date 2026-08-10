@@ -83,6 +83,27 @@ describe("qodoProvider", () => {
     ).toEqual([]);
   });
 
+  test("treats categories Qodo omits from the header as zero", () => {
+    expect(
+      parseQodoIssueComment({
+        ...comment,
+        body: comment.body.replace(
+          "<code>📎 Requirement gaps (0)</code> <code>🎨 UX issues (0)</code> <code>🔗 Cross-repo conflicts (0)</code> ",
+          "",
+        ),
+      }),
+    ).toHaveLength(3);
+  });
+
+  test("fails closed when the header declares no recognized category", () => {
+    expect(() =>
+      parseQodoIssueComment({
+        ...comment,
+        body: comment.body.replaceAll(/<code>[^<]*\(\d+\)<\/code>/gu, ""),
+      }),
+    ).toThrow("declares no recognized finding counts");
+  });
+
   test("fails closed when active findings use an unknown severity layout", () => {
     expect(() =>
       parseQodoIssueComment({
