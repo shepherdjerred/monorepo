@@ -253,8 +253,17 @@ impl TaskStore {
             && let Command::Create { temp_id, .. } = command
         {
             self.aliases.insert(temp_id.clone(), server_task.id.clone());
-            self.queue.remap_task_id(temp_id, &server_task.id)?;
+            // The alias is written *before* anything is rewritten to the real
+            // id, because it is the only durable record of what the temp id
+            // meant. Rewriting first and crashing before this leaves commands
+            // pointing at a task id whose origin nothing can reconstruct — an
+            // open inspector or a deep link holding the temp id resolves to
+            // nothing, and a parked follower still on it can never be repaired.
+            // Writing it early costs nothing if the remap then fails: the ack
+            // is proof the server task exists, so the alias is true either way,
+            // and the command stays queued for the next drain to replay.
             self.persist_aliases()?;
+            self.queue.remap_task_id(temp_id, &server_task.id)?;
         }
         if command.is_delete() {
             self.base.shift_remove(command.target());
@@ -669,9 +678,13 @@ fn parse_id_counters(raw: Option<&str>) -> Result<IdCounters> {
 
 /// Parse the persisted alias map, keeping every entry that still parses.
 ///
-/// Lossy for the same reason [`CommandQueue::restore`] is: these bytes may have
-/// been written by an older release, and one unreadable alias must not strand
-/// the rest of the user's offline work.
+/// Lossy, deliberately unlike [`CommandQueue::restore`], because what it can
+/// drop is a different kind of thing. A queued or parked command is a mutation
+/// only that file holds, so losing one loses the user's work — hence the
+/// refusal there. An alias is a pointer to a create the server already
+/// accepted, and the commands that followed it were rewritten to the real id at
+/// ack time; a dropped entry therefore costs a temp id that no longer resolves
+/// for a window still holding one, never a mutation nobody can replay.
 fn parse_aliases(raw: Option<&str>) -> IndexMap<TaskId, TaskId> {
     let Some(raw) = raw.filter(|value| !value.is_empty()) else {
         return IndexMap::new();

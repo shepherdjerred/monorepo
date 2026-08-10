@@ -18,7 +18,7 @@
 //!   retried and acked under a real path, a dead-lettered follower left pinned
 //!   to the dead temp id fails every retry forever.
 
-use std::{mem, sync::Arc};
+use std::sync::Arc;
 
 use serde_json::Value;
 
@@ -113,11 +113,14 @@ impl CommandQueue {
     ///
     /// # Errors
     ///
-    /// Propagates a storage-layer failure. A *parse* failure is not an error:
-    /// see [`salvage`].
+    /// Propagates a storage-layer failure, and refuses bytes it cannot read in
+    /// full: see [`parse_durable`].
     pub fn restore(&mut self) -> Result<()> {
-        self.queue = salvage(self.storage.read_queue()?.as_deref());
-        self.dead = salvage(self.storage.read_dead_letter()?.as_deref());
+        self.queue = parse_durable(self.storage.read_queue()?.as_deref(), "command queue")?;
+        self.dead = parse_durable(
+            self.storage.read_dead_letter()?.as_deref(),
+            "dead-letter list",
+        )?;
         Ok(())
     }
 
@@ -208,26 +211,51 @@ impl CommandQueue {
     /// Rewrite every reference to `from` — in the queue **and** in the
     /// dead-letter list — to the server-assigned `to`.
     ///
+    /// ## The dead-letter list is rewritten first, and that ordering is the
+    /// crash safety
+    ///
+    /// This is two durable writes no host can make atomic, so the question is
+    /// what the next launch reads when only the first one landed. Rewriting the
+    /// queue first is the order that loses: the ack's alias is persisted by
+    /// [`TaskStore::apply_server_ack`](crate::store::TaskStore::apply_server_ack)
+    /// only after this call returns, so an interruption in the middle leaves a
+    /// create durably rewritten to the real id with **no** record that the temp
+    /// id ever meant it. The relaunch replays that create, remaps real → real,
+    /// and the parked follower stays aimed at a temp id nothing can resolve —
+    /// it fails every retry, for good.
+    ///
+    /// Rewriting the parked commands first cannot strand anything. The ack is
+    /// proof the server task exists, so a follower pointing at it is already
+    /// correct, and the queue still holding the temp id is exactly what makes
+    /// the replayed create re-derive the alias and finish the move.
+    ///
     /// # Errors
     ///
-    /// Propagates a storage-layer failure.
+    /// Propagates a storage-layer failure, having changed neither collection in
+    /// memory past the last write that landed.
     pub fn remap_task_id(&mut self, from: &TaskId, to: &TaskId) -> Result<()> {
-        for command in &mut self.queue {
-            if let Some(remapped) = remap_task_id(command, from, to) {
-                *command = remapped;
-            }
-        }
-        self.persist_queue()?;
-
+        let mut dead_candidate = self.dead.clone();
         let mut dead_changed = false;
-        for entry in &mut self.dead {
+        for entry in &mut dead_candidate {
             if let Some(remapped) = remap_task_id(&entry.command, from, to) {
                 entry.command = remapped;
                 dead_changed = true;
             }
         }
         if dead_changed {
-            self.persist_dead_letter()?;
+            self.commit_dead_letter(dead_candidate)?;
+        }
+
+        let mut candidate = self.queue.clone();
+        let mut queue_changed = false;
+        for command in &mut candidate {
+            if let Some(remapped) = remap_task_id(command, from, to) {
+                *command = remapped;
+                queue_changed = true;
+            }
+        }
+        if queue_changed {
+            self.commit_queue(candidate)?;
         }
         Ok(())
     }
@@ -293,14 +321,10 @@ impl CommandQueue {
             Some(parked) => *parked = entry,
             None => candidate.push(entry),
         }
-        let previous = mem::replace(&mut self.dead, candidate);
-        if let Err(failure) = self.persist_dead_letter() {
-            // The queue still holds the command, in memory and on disk, so
-            // undoing the half-made move is what keeps the two collections
-            // agreeing with the bytes.
-            self.dead = previous;
-            return Err(failure);
-        }
+        // The queue still holds the command, in memory and on disk, so a
+        // refused write must leave the parked list exactly as it was — which is
+        // what committing before adopting gives.
+        self.commit_dead_letter(candidate)?;
         self.queue.remove(position);
         self.persist_queue()
     }
@@ -373,6 +397,25 @@ impl CommandQueue {
         Ok(())
     }
 
+    /// Write a proposed dead-letter list, and adopt it only once the bytes are
+    /// down.
+    ///
+    /// The counterpart of [`Self::commit_queue`], for the same reason: a
+    /// refused write is reported to the caller, and an entry left behind in
+    /// memory would ride along on the next successful write of any kind.
+    ///
+    /// # Errors
+    ///
+    /// Propagates a storage-layer failure, having changed nothing.
+    fn commit_dead_letter(&mut self, candidate: Vec<DeadLetterEntry>) -> Result<()> {
+        let data = serde_json::to_string(&candidate).map_err(|error| {
+            Error::invariant(format!("could not serialize the dead-letter list: {error}"))
+        })?;
+        self.storage.write_dead_letter(&data)?;
+        self.dead = candidate;
+        Ok(())
+    }
+
     fn persist_queue(&self) -> Result<()> {
         let data = serde_json::to_string(&self.queue).map_err(|error| {
             Error::invariant(format!("could not serialize the command queue: {error}"))
@@ -388,25 +431,55 @@ impl CommandQueue {
     }
 }
 
-/// Parse a persisted list, keeping every element that still parses.
+/// Parse a persisted list, refusing anything it cannot read in full.
 ///
-/// Deliberately lossy, and deliberately not an error. This is the one place the
-/// core reads bytes an *older release of a different implementation* wrote: a
-/// queue entry whose shape has since changed cannot be executed, and refusing
-/// to start the app because of it would strand every other queued mutation the
-/// user is waiting on. Per-element salvage is what the TypeScript
-/// `safeParse`-per-item loop does, and the two must agree or a shared fixture
-/// means nothing.
-fn salvage<T: serde::de::DeserializeOwned>(raw: Option<&str>) -> Vec<T> {
+/// ⚠️ **An entry that no longer parses is a refusal, not an absence.** This
+/// read used to salvage per element, on the reasoning that the skipped bytes
+/// were still on disk and so nothing was lost. They are not: the very next
+/// write of that file — an ack, an enqueue, a parking — rewrites it in full
+/// from what was salvaged, and the dropped entry is gone for good. What it
+/// dropped is an offline mutation the user made or a parked change they were
+/// about to decide on, and it went without a word.
+///
+/// Refusing keeps the bytes where they are, which is the only state from which
+/// anything can still be done about them — a later release that can read the
+/// shape, or a user deleting one file. Losing a launch to a loud error over a
+/// file that still exists is recoverable; a silent deletion is not. This is the
+/// same argument [`migrate_v1_queue`](crate::store::migrations::migrate_v1_queue)
+/// makes, and the same one the store's `parse_id_counters` makes.
+///
+/// An absent or empty file is not bad data — it is a fresh install, and reads
+/// as an empty list.
+///
+/// # Errors
+///
+/// [`Error::Invariant`] when a non-empty file is not a JSON array, or when any
+/// element is not one this release can read.
+fn parse_durable<T: serde::de::DeserializeOwned>(raw: Option<&str>, label: &str) -> Result<Vec<T>> {
     let Some(raw) = raw.filter(|value| !value.is_empty()) else {
-        return Vec::new();
+        return Ok(Vec::new());
     };
-    let Ok(Value::Array(items)) = serde_json::from_str::<Value>(raw) else {
-        return Vec::new();
+    let unreadable = |detail: String| {
+        Error::invariant(format!(
+            "the persisted {label} exists but is unreadable, so the mutations it \
+             holds cannot be replayed or reviewed: {detail}"
+        ))
+    };
+    let parsed = serde_json::from_str::<Value>(raw)
+        .map_err(|error| unreadable(format!("it is not valid JSON: {error}")))?;
+    let Value::Array(items) = parsed else {
+        return Err(unreadable("it is not a JSON array".to_owned()));
     };
     items
         .into_iter()
-        .filter_map(|item| serde_json::from_value(item).ok())
+        .enumerate()
+        .map(|(index, item)| {
+            serde_json::from_value(item).map_err(|error| {
+                unreadable(format!(
+                    "entry {index} is not one this release can read: {error}"
+                ))
+            })
+        })
         .collect()
 }
 
@@ -417,7 +490,7 @@ mod tests {
         atomic::{AtomicBool, Ordering},
     };
 
-    use super::{CommandQueue, DeadLetterEntry, salvage};
+    use super::{CommandQueue, DeadLetterEntry, parse_durable};
     use crate::{
         Error, Result,
         domain::{CreateTaskRequest, TaskId, TaskTitle},
@@ -796,21 +869,127 @@ mod tests {
         assert_eq!(rebuilt.pending(), persisted.as_slice());
     }
 
+    /// ⚠️ **A durable entry this release cannot read is a refusal.**
+    ///
+    /// Skipping it and carrying on looks harmless — the bytes are still on
+    /// disk — right up to the next ack or enqueue, which rewrites the whole
+    /// file from what was salvaged. The mutation the user made offline is then
+    /// gone, with nothing on screen having said so.
     #[test]
-    fn salvage_keeps_the_entries_that_still_parse() {
+    fn an_entry_this_release_cannot_read_refuses_the_restore() {
         let raw = r#"[{"type":"delete","id":"c1","createdAt":1,"taskId":"Tasks/a.md"},
-                      {"type":"delete","id":"c2","createdAt":1,"taskId":"not-a-note"},
-                      {"nonsense":true}]"#;
-        let salvaged: Vec<Command> = salvage(Some(raw));
-        assert_eq!(salvaged.len(), 1);
-        assert_eq!(salvaged.first().map(Command::id), Some("c1"));
+                      {"type":"delete","id":"c2","createdAt":1,"taskId":"not-a-note"}]"#;
+        let refusal = parse_durable::<Command>(Some(raw), "command queue")
+            .expect_err("entry 1 carries a task id this release cannot parse");
+        assert!(
+            refusal.message().contains("entry 1"),
+            "the refusal has to say which entry: {}",
+            refusal.message()
+        );
     }
 
     #[test]
-    fn salvage_treats_junk_as_an_empty_list() {
-        assert!(salvage::<Command>(None).is_empty());
-        assert!(salvage::<Command>(Some("")).is_empty());
-        assert!(salvage::<Command>(Some("not json")).is_empty());
-        assert!(salvage::<DeadLetterEntry>(Some("{}")).is_empty());
+    fn a_queue_file_that_is_not_an_array_refuses_the_restore() {
+        parse_durable::<Command>(Some("not json"), "command queue")
+            .expect_err("a queue file that is not JSON at all");
+        parse_durable::<Command>(Some("{}"), "command queue")
+            .expect_err("a queue file that is not an array");
+        parse_durable::<DeadLetterEntry>(Some("[{}]"), "dead-letter list")
+            .expect_err("a parked entry with no command");
+    }
+
+    #[test]
+    fn an_absent_or_empty_queue_file_is_a_fresh_install() {
+        assert!(
+            parse_durable::<Command>(None, "command queue")
+                .unwrap()
+                .is_empty()
+        );
+        assert!(
+            parse_durable::<Command>(Some(""), "command queue")
+                .unwrap()
+                .is_empty()
+        );
+    }
+
+    /// The refusal reaches the caller rather than presenting as an empty queue.
+    #[test]
+    fn restoring_over_an_unreadable_dead_letter_file_fails() {
+        let storage = Arc::new(MemoryStorage::default());
+        *storage.dead.lock().unwrap() = Some("[{\"nonsense\":true}]".to_owned());
+        let mut queue = CommandQueue::new(storage, Arc::new(FixedClock));
+
+        queue
+            .restore()
+            .expect_err("a parked change must not be silently dropped");
+        assert!(
+            queue.dead_letters().is_empty(),
+            "and nothing half-read was adopted"
+        );
+    }
+
+    /// ⚠️ **The remap is two files, and the parked half goes first.**
+    ///
+    /// `apply_server_ack` persists the temp → real alias before calling this,
+    /// but an interruption between the two writes still has to leave the parked
+    /// follower somewhere it can be retried. Rewriting the queue first is what
+    /// stranded it: the create would be durably on the real id, the replay
+    /// would remap real → real, and the follower would stay aimed at a temp id
+    /// the server never knew.
+    #[test]
+    fn an_interrupted_remap_never_strands_a_parked_follower() {
+        let storage = Arc::new(HalfWritingStorage::default());
+        let mut queue = CommandQueue::new(storage.clone(), Arc::new(FixedClock));
+        let temp_id = temp("1-1");
+        let real = TaskId::parse("Tasks/real.md").unwrap();
+
+        // A create still queued, and a follower that already dead-lettered.
+        queue.enqueue(create("c1", &temp_id)).unwrap();
+        queue.enqueue(set_status("c2", &temp_id)).unwrap();
+        queue.dead_letter("c2", &Error::api("nope", 422)).unwrap();
+
+        // The parked rewrite lands, the queue rewrite does not: the crash window.
+        storage.refuse_queue.store(true, Ordering::SeqCst);
+        queue
+            .remap_task_id(&temp_id, &real)
+            .expect_err("the queue write failed");
+        storage.refuse_queue.store(false, Ordering::SeqCst);
+
+        let mut relaunched = CommandQueue::new(storage, Arc::new(FixedClock));
+        relaunched.restore().unwrap();
+        assert_eq!(
+            relaunched
+                .dead_letters()
+                .first()
+                .map(|entry| entry.command.target().clone()),
+            Some(real),
+            "the parked follower points at the task the server actually made"
+        );
+        assert_eq!(
+            relaunched.pending().first().map(Command::target),
+            Some(&temp_id),
+            "and the create still carries the temp id, so replaying it re-derives the alias"
+        );
+    }
+
+    /// The in-memory half of the same rule.
+    #[test]
+    fn a_refused_remap_write_leaves_memory_agreeing_with_the_bytes() {
+        let storage = Arc::new(HalfWritingStorage::default());
+        let mut queue = CommandQueue::new(storage.clone(), Arc::new(FixedClock));
+        let temp_id = temp("1-1");
+        let real = TaskId::parse("Tasks/real.md").unwrap();
+        queue.enqueue(create("c1", &temp_id)).unwrap();
+
+        storage.refuse_queue.store(true, Ordering::SeqCst);
+        queue
+            .remap_task_id(&temp_id, &real)
+            .expect_err("the queue write failed");
+
+        assert_eq!(
+            queue.pending().first().map(Command::target),
+            Some(&temp_id),
+            "a rewrite that was never persisted must not be visible in memory"
+        );
     }
 }

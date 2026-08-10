@@ -7,14 +7,12 @@
 //! dropped on upgrade. The base task cache needs no conversion: it is already a
 //! server snapshot.
 //!
-//! ⚠️ **The conversion is all-or-nothing, unlike every other parse in this
-//! crate.** The command queue's own restore and the alias map salvage what they
-//! can, and that is safe because they leave their file where it is — the bytes
-//! they skipped are still on disk. This migration *deletes* its source, so an
-//! entry it could not read is an offline mutation nobody can ever get back. It
-//! therefore refuses rather than salvages, on the same reasoning the store's
-//! `parse_id_counters` gives: losing a launch to a loud error over a file the
-//! user still has is recoverable; a silent deletion is not.
+//! ⚠️ **The conversion is all-or-nothing.** This migration *deletes* its
+//! source, so an entry it could not read is an offline mutation nobody can ever
+//! get back. It therefore refuses rather than salvages — the same rule the
+//! command queue's own restore and the store's `parse_id_counters` follow, and
+//! for the same reason: losing a launch to a loud error over a file the user
+//! still has is recoverable; a silent deletion is not.
 //!
 //! The v1 shapes are **frozen copies**, deliberately not the live schemas. A
 //! migration has to keep reading the old format forever, so it cannot be
