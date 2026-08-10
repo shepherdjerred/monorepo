@@ -53,6 +53,37 @@ final class ProviderParsingTests: XCTestCase {
     XCTAssertThrowsError(try ClaudeCodeProvider.parse(data: conflicting, now: now))
   }
 
+  func testClaudeWindowAliasesMustBeEquivalent() throws {
+    let equivalent = Data(
+      #"""
+      {
+        "five_hour": {
+          "utilization": 25,
+          "used_percent": 25,
+          "resets_at": "2026-08-10T00:00:00Z",
+          "resetAt": "2026-08-10T00:00:00Z"
+        }
+      }
+      """#.utf8
+    )
+    XCTAssertNoThrow(try ClaudeCodeProvider.parse(data: equivalent, now: now))
+    XCTAssertThrowsError(
+      try ClaudeCodeProvider.parse(
+        data: Data(#"{"five_hour":{"utilization":25,"used_percent":30}}"#.utf8),
+        now: now
+      )
+    )
+    XCTAssertThrowsError(
+      try ClaudeCodeProvider.parse(
+        data: Data(
+          #"{"five_hour":{"utilization":25,"resets_at":"2026-08-10T00:00:00Z","resetAt":"2026-08-11T00:00:00Z"}}"#
+            .utf8
+        ),
+        now: now
+      )
+    )
+  }
+
   func testClaudeRejectsMissingAndInvalidWindows() {
     XCTAssertThrowsError(try ClaudeCodeProvider.parse(data: Data("{}".utf8), now: now))
     XCTAssertThrowsError(
@@ -125,6 +156,24 @@ final class ProviderParsingTests: XCTestCase {
         now: now
       )
     )
+    XCTAssertThrowsError(
+      try CodexProvider.parse(
+        data: Data(
+          #"{"rate_limit":{"x_window":{"used_percent":10,"window_seconds":18000,"limit_window_seconds":604800}}}"#
+            .utf8
+        ),
+        now: now
+      )
+    )
+    XCTAssertThrowsError(
+      try CodexProvider.parse(
+        data: Data(
+          #"{"rate_limit":{"grok-3_window":{"used_percent":10},"grok_3_window":{"used_percent":20}}}"#
+            .utf8
+        ),
+        now: now
+      )
+    )
   }
 
   func testKimiAbsoluteValuesBecomePercentages() throws {
@@ -143,6 +192,22 @@ final class ProviderParsingTests: XCTestCase {
           #"{"limits":[{"window":{"duration":1,"timeUnit":"FORTNIGHT"},"detail":{"limit":10,"used":1}}]}"#
             .utf8
         ),
+        now: now
+      )
+    )
+  }
+
+  func testKimiPercentageAliasesMustAgree() throws {
+    let equivalent = Data(
+      #"{"usage":{"used_percent":20,"usage_percent":20}}"#.utf8
+    )
+    XCTAssertEqual(
+      try KimiProvider.parse(data: equivalent, now: now).windows.first?.remainingPercent,
+      80
+    )
+    XCTAssertThrowsError(
+      try KimiProvider.parse(
+        data: Data(#"{"usage":{"used_percent":20,"usage_percent":30}}"#.utf8),
         now: now
       )
     )
@@ -186,6 +251,15 @@ final class ProviderParsingTests: XCTestCase {
             }
           }
           """#.utf8
+        ),
+        now: now
+      )
+    )
+    XCTAssertThrowsError(
+      try GrokProvider.parseCredits(
+        data: Data(
+          #"{"config":{"productUsage":{"grok-3":{"creditUsagePercent":20},"grok_3":{"creditUsagePercent":30}}}}"#
+            .utf8
         ),
         now: now
       )

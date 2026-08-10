@@ -160,9 +160,12 @@ private struct KimiMetric: Decodable {
     self.limit = try Self.number(in: container, forKey: .limit)
     self.used = try Self.number(in: container, forKey: .used)
     self.remaining = try Self.number(in: container, forKey: .remaining)
-    let percentage =
-      try Self.number(in: container, forKey: .usedPercent)
-      ?? Self.number(in: container, forKey: .usagePercent)
+    let usedPercent = try Self.number(in: container, forKey: .usedPercent)
+    let usagePercent = try Self.number(in: container, forKey: .usagePercent)
+    if let usedPercent, let usagePercent, abs(usedPercent - usagePercent) > 0.01 {
+      throw QuotaValidationError.invalidPairedFields
+    }
+    let percentage = usedPercent ?? usagePercent
     self.explicitPercentage = try ProviderDecoder.percentage(percentage)
     self.resetAt = try ProviderDecoder.date(in: container, forKey: .resetAt)
   }

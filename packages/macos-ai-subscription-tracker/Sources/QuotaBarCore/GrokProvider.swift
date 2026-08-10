@@ -83,10 +83,15 @@ public struct GrokProvider: UsageProvider {
         )
       )
     }
+    var productIDs: Set<String> = []
     for (name, metric) in response.config.productUsage.sorted(by: { $0.key < $1.key }) {
+      let id = "grok-product-\(slug(name))"
+      guard productIDs.insert(id).inserted else {
+        throw QuotaValidationError.emptyIdentifier
+      }
       windows.append(
         try UsageWindow.validated(
-          id: "grok-product-\(slug(name))",
+          id: id,
           label: title(name),
           kind: .modelScoped(model: title(name)),
           usedPercent: try metric.calculatedPercentage(),

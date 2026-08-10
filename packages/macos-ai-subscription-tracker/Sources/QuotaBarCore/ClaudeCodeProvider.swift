@@ -185,20 +185,22 @@ private struct ClaudeWindow: Decodable {
   init(from decoder: any Decoder) throws {
     let container = try decoder.container(keyedBy: DynamicCodingKey.self)
     let percentageKeys = ["utilization", "used_percentage", "used_percent", "usage_percent"]
-    var percentage: Double?
-    for name in percentageKeys where container.contains(DynamicCodingKey(name)) {
-      percentage = try ProviderDecoder.number(in: container, forKey: DynamicCodingKey(name))
-      break
+    let percentages = try percentageKeys.compactMap { name in
+      try ProviderDecoder.number(in: container, forKey: DynamicCodingKey(name))
     }
-    self.usedPercent = try ProviderDecoder.percentage(percentage)
-    let resetKey = ["resets_at", "reset_at", "resetAt"]
-      .map(DynamicCodingKey.init)
-      .first(where: container.contains)
-    if let resetKey {
-      self.resetAt = try ProviderDecoder.date(in: container, forKey: resetKey)
-    } else {
-      self.resetAt = nil
+    if let percentage = percentages.first,
+      percentages.dropFirst().contains(where: { abs($0 - percentage) > 0.01 })
+    {
+      throw QuotaValidationError.invalidPairedFields
     }
+    self.usedPercent = try ProviderDecoder.percentage(percentages.first)
+    let resetDates = try ["resets_at", "reset_at", "resetAt"].compactMap { name in
+      try ProviderDecoder.date(in: container, forKey: DynamicCodingKey(name))
+    }
+    if let resetAt = resetDates.first, resetDates.dropFirst().contains(where: { $0 != resetAt }) {
+      throw QuotaValidationError.invalidPairedFields
+    }
+    self.resetAt = resetDates.first
     guard usedPercent != nil || resetAt != nil else {
       throw QuotaError.unsupportedResponse(.claudeCode)
     }

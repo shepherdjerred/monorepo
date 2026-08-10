@@ -43,15 +43,21 @@ public struct CodexProvider: UsageProvider {
   ) throws -> UsageSnapshot {
     let response = try ProviderDecoder.decode(CodexUsageResponse.self, from: data, provider: .codex)
     guard !response.windows.isEmpty else { throw QuotaError.unsupportedResponse(.codex) }
-    let windows = try response.windows.sorted(by: { $0.key < $1.key }).map { key, payload in
+    var windows: [UsageWindow] = []
+    var windowIDs: Set<String> = []
+    for (key, payload) in response.windows.sorted(by: { $0.key < $1.key }) {
       let metadata = classify(key: key, durationSeconds: payload.durationSeconds)
-      return try UsageWindow.validated(
-        id: "codex-\(slug(key))",
-        label: metadata.label,
-        kind: metadata.kind,
-        usedPercent: payload.usedPercent,
-        resetAt: payload.resetAt,
-        sourceTimestamp: now
+      let id = "codex-\(slug(key))"
+      guard windowIDs.insert(id).inserted else { throw QuotaValidationError.emptyIdentifier }
+      windows.append(
+        try UsageWindow.validated(
+          id: id,
+          label: metadata.label,
+          kind: metadata.kind,
+          usedPercent: payload.usedPercent,
+          resetAt: payload.resetAt,
+          sourceTimestamp: now
+        )
       )
     }
     return UsageSnapshot(
@@ -145,9 +151,17 @@ private struct CodexWindow: Decodable {
       ProviderDecoder.number(in: container, forKey: .usedPercent)
     )
     self.resetAt = try ProviderDecoder.date(in: container, forKey: .resetAt)
-    let duration =
-      try container.decodeIfPresent(Int.self, forKey: .durationSeconds)
-      ?? container.decodeIfPresent(Int.self, forKey: .alternateDurationSeconds)
+    let durationSeconds = try container.decodeIfPresent(Int.self, forKey: .durationSeconds)
+    let alternateDurationSeconds = try container.decodeIfPresent(
+      Int.self,
+      forKey: .alternateDurationSeconds
+    )
+    if let durationSeconds, let alternateDurationSeconds,
+      durationSeconds != alternateDurationSeconds
+    {
+      throw QuotaValidationError.invalidDuration
+    }
+    let duration = durationSeconds ?? alternateDurationSeconds
     if let duration, duration <= 0 { throw QuotaValidationError.invalidDuration }
     self.durationSeconds = duration
     guard usedPercent != nil || resetAt != nil else {
