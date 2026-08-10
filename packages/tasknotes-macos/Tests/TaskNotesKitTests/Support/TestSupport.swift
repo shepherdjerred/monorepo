@@ -19,24 +19,6 @@ func offMainThread<T: Sendable>(_ body: @escaping @Sendable () throws -> T) asyn
     try await _Concurrency.Task.detached(priority: .userInitiated, operation: body).value
 }
 
-/// A scratch directory that removes itself.
-final class TemporaryDirectory {
-    let url: URL
-
-    init() throws {
-        url = FileManager.default.temporaryDirectory
-            .appending(path: "tasknotes-test-\(UUID().uuidString)")
-        try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
-    }
-
-    deinit {
-        // Explicitly discarded rather than `try?`, which is banned for hiding
-        // the error: `deinit` cannot propagate and a leftover `/tmp` directory
-        // is not a test failure.
-        _ = Result { try FileManager.default.removeItem(at: url) }
-    }
-}
-
 /// A create request carrying nothing but a title.
 ///
 /// The generated memberwise initializer takes all thirteen fields, because
@@ -75,12 +57,16 @@ struct HostFixture {
     /// - Parameters:
     ///   - directory: where durable client state goes.
     ///   - baseURL: the server to talk to.
+    ///   - authToken: the bearer credential to present, or `nil` for none.
+    ///     Pass `TaskNotesServerProcess.authToken` so one value spells the
+    ///     secret on both sides.
     ///   - onFire: what a fired retry timer should do. Defaults to nothing, so
     ///     a test that never wants a background drain does not get one.
     /// - Throws: `CoreError` when the storage directory cannot be created.
     init(
         directory: URL,
         baseURL: URL,
+        authToken: String? = nil,
         onFire: @escaping @Sendable (TimerId) -> Void = { _ in }
     ) throws {
         storage = try FileHostStorage(directory: directory)
@@ -95,7 +81,7 @@ struct HostFixture {
         randomness = FixedRandomness(ppm: UnitPpm.half)!
         scheduler = DispatchRetryScheduler(onFire: onFire)
         api = try TaskNotesApi(
-            transport: URLSessionTransport(),
+            transport: URLSessionTransport(authToken: authToken),
             baseUrl: baseURL.absoluteString,
             requestTimeoutMillis: apiDefaultTimeoutMillis()
         )

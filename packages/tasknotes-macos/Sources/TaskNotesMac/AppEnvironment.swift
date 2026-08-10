@@ -93,7 +93,6 @@ public final class AppEnvironment {
     /// real Keychain — see ``ServerTokenStore``.
     private let tokenStore: any ServerTokenStore
 
-    /// Whether this process was launched by a UI test that disowned credentials.
     /// Whether a UI test asked this process to disown stored credentials.
     ///
     /// ⚠️ See ``UITesting`` for why. A test that forgets the flag still reaches
@@ -106,9 +105,7 @@ public final class AppEnvironment {
     /// Assemble over the sandbox container.
     ///
     /// The token store defaults to the Keychain, except under
-    /// ``uiTestingArgument`` — see the note there. A test that forgets the flag
-    /// still reaches the real Keychain, which is why the UI tests funnel every
-    /// launch through one helper rather than calling `app.launch()` directly.
+    /// ``UITesting/flagArgument`` — see ``isUITesting``.
     public init(
         defaults: UserDefaults = .standard,
         tokenStore: (any ServerTokenStore)? = nil
@@ -163,11 +160,17 @@ public final class AppEnvironment {
     /// has ever been entered.
     ///
     /// Idempotent, so calling it from a `.task` that re-runs is safe.
-    public func start() {
-        guard case .success(let store) = store else { return }
+    ///
+    /// Returns the fetch it started. Production call sites discard it — the
+    /// `@discardableResult` is what keeps them unchanged — but a test cannot
+    /// otherwise observe a detached task with no handle, and the alternative is
+    /// polling, which is how a test becomes flaky and then gets deleted.
+    @discardableResult
+    public func start() -> _Concurrency.Task<Void, Never> {
+        guard case .success(let store) = store else { return alreadyFinished() }
         store.migrate()
         store.configure(serverURL: configuredServer, authToken: tokenStore.token())
-        pull(store)
+        return pull(store)
     }
 
     /// Apply a newly entered address, replacing the running engine.
@@ -176,10 +179,11 @@ public final class AppEnvironment {
     /// server change is meant to be applied: the durable queue survives because
     /// it is on disk rather than in the engine, so nothing queued while
     /// pointing at the old address is lost.
-    public func applyServerAddress() {
-        guard case .success(let store) = store else { return }
+    @discardableResult
+    public func applyServerAddress() -> _Concurrency.Task<Void, Never> {
+        guard case .success(let store) = store else { return alreadyFinished() }
         store.configure(serverURL: configuredServer, authToken: tokenStore.token())
-        pull(store)
+        return pull(store)
     }
 
     /// Fetch once, now.
@@ -206,8 +210,17 @@ public final class AppEnvironment {
     /// core's own domain type here — the thing this app is a list of — and the
     /// resulting error is 26 missing arguments rather than anything mentioning
     /// concurrency.
-    private func pull(_ store: TaskNotesStore) {
+    private func pull(_ store: TaskNotesStore) -> _Concurrency.Task<Void, Never> {
         _Concurrency.Task { await store.sync() }
+    }
+
+    /// A handle to nothing, for the paths where there is no store to fetch for.
+    ///
+    /// Returning a finished task rather than an optional keeps `await
+    /// environment.start().value` a single unconditional line at every call
+    /// site, including the one where the container could not be created.
+    private func alreadyFinished() -> _Concurrency.Task<Void, Never> {
+        _Concurrency.Task {}
     }
 
     /// The address as a `URL`, or `nil` when there is not one yet.

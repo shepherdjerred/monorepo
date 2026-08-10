@@ -16,9 +16,14 @@ Sources/TaskNotesKit/         portable logic — no SwiftUI, no AppKit
   Host/                       the core's host traits, implemented
   Store/                      the @Observable store over FfiSyncEngine
 Sources/TaskNotesMac/         SwiftUI views, scenes, commands — MainActor
+Tests/Support/                TaskNotesTestSupport — a plain (non-test, non-product)
+                              target: the spawned-server harness and the temp
+                              directory, shared because a test target cannot
+                              import another test target
 Tests/TaskNotesKitTests/      Swift Testing
-  Support/                    the spawned-server harness and shared fixtures
-Tests/TaskNotesMacTests/      image snapshots — the only test target that sees SwiftUI
+  Support/                    fixtures specific to this target
+Tests/TaskNotesMacTests/      image snapshots, and AppEnvironment — the only test
+                              target that sees SwiftUI
 ci/no-suppressions.sh         the three gates SwiftLint cannot enforce
 scripts/release.ts            the operator-run release lane (see Releasing)
 project.yml                   XcodeGen spec; the .xcodeproj is generated + gitignored

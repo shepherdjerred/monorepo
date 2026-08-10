@@ -154,7 +154,13 @@ public final class URLSessionTransport: HttpClient {
 
     // ── Translation, and nothing else ──────────────────────────────────────
 
-    private static func urlRequest(
+    /// The one place a `HttpRequest` becomes a `URLRequest`.
+    ///
+    /// `internal` rather than `private` so a test can read the header this
+    /// builds without a socket. That is the only assertion in this package that
+    /// can distinguish "no header" from "a header with an empty credential",
+    /// because a server cannot: both are rejected identically.
+    static func urlRequest(
         for request: HttpRequest,
         url: URL,
         authToken: String?
@@ -166,8 +172,22 @@ public final class URLSessionTransport: HttpClient {
         for header in request.headers {
             urlRequest.setValue(header.value, forHTTPHeaderField: header.name)
         }
-        if let authToken {
-            urlRequest.setValue("Bearer \(authToken)", forHTTPHeaderField: authorizationHeader)
+        // ⚠️ The emptiness check is load-bearing, and `if let` alone was not
+        // enough. An empty token used to send `Authorization: Bearer ` — a
+        // header with a trailing space and no credential — which every server
+        // answers with a 401 that reads as "your token is wrong" rather than
+        // "you have no token". Those need opposite things from the user.
+        //
+        // It was masked rather than absent: both `ServerTokenStore`
+        // implementations normalise empty to `nil`, so nothing in the app
+        // reached here with `""`. But that made the guarantee live in a
+        // different file from the assumption, and
+        // `TaskNotesStore.configure(serverURL:authToken:)` is `public` and
+        // carries no such rule. Two independent facts coinciding is not an
+        // invariant; this line is.
+        let credential = authToken?.trimmingWhitespace()
+        if let credential, !credential.isEmpty {
+            urlRequest.setValue("Bearer \(credential)", forHTTPHeaderField: authorizationHeader)
         }
         return urlRequest
     }

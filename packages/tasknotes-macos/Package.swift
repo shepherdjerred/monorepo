@@ -161,9 +161,31 @@ let package = Package(
             swiftSettings: authoredSwiftSettings + [.defaultIsolation(MainActor.self)]
         ),
 
+        // ── Shared test harness. ───────────────────────────────────────────
+        //
+        // A plain target rather than a test target, and that is forced rather
+        // than stylistic: **a test target cannot import another test target.**
+        // The server harness was needed by `TaskNotesKitTests` (the engine
+        // against a real server) and is now also needed by `TaskNotesMacTests`
+        // (`AppEnvironment` at launch against a real server) — and the second is
+        // the one that matters, because the launch path is what shipped broken.
+        //
+        // Deliberately **not** in `products:`. Nothing outside this package
+        // should be able to link a harness that spawns subprocesses; keeping it
+        // unexported means the only consumers are the two test targets below.
+        //
+        // It carries `authoredSwiftSettings` like every other authored target,
+        // and `ci/no-suppressions.sh` checks `.target(` as well as
+        // `.testTarget(`, so the lint posture here is enforced identically.
+        .target(
+            name: "TaskNotesTestSupport",
+            path: "Tests/Support",
+            swiftSettings: authoredSwiftSettings + [.defaultIsolation(nil)]
+        ),
+
         .testTarget(
             name: "TaskNotesKitTests",
-            dependencies: ["TaskNotesKit", "TaskNotesUniFFI"],
+            dependencies: ["TaskNotesKit", "TaskNotesTestSupport", "TaskNotesUniFFI"],
             swiftSettings: authoredSwiftSettings + [.defaultIsolation(nil)]
         ),
 
@@ -183,7 +205,9 @@ let package = Package(
         // the only thing `bun run verify` runs. Nothing here changes that.
         .testTarget(
             name: "TaskNotesMacTests",
-            dependencies: ["TaskNotesMac", "TaskNotesKit", "TaskNotesUniFFI"],
+            dependencies: [
+                "TaskNotesMac", "TaskNotesKit", "TaskNotesTestSupport", "TaskNotesUniFFI",
+            ],
             swiftSettings: authoredSwiftSettings + [.defaultIsolation(MainActor.self)]
         ),
     ]

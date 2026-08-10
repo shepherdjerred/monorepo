@@ -65,28 +65,20 @@ private struct ServerSettingsView: View {
 
     /// The engine's own state, spelled for a human.
     ///
-    /// Exhaustive over `SyncState`: `default:` is banned here precisely so a
-    /// new state in the Rust enum becomes a compile error rather than silently
-    /// rendering as one of the old ones.
-    /// The engine's own state, spelled for a human.
+    /// ⚠️ **One line, delegating, and it must stay that way.** This used to be a
+    /// second `switch` over `SyncState`, living here in the view while
+    /// ``SyncMessage`` did the same job for the banner. Two spellings of one
+    /// fact diverge, and this one did: it reported `.idle` as "Connected", and
+    /// `.idle` is also what an engine that has never made a request reports. A
+    /// fresh install with no address, one with no token, and one that had just
+    /// failed to reach anything all said "Connected".
     ///
-    /// ⚠️ `.idle` is **not** "connected". It is also the state of an engine that
-    /// has never made a request — before a token was entered, before an address
-    /// was entered, and against a server refusing everything. Reporting it as
-    /// "Connected" meant the pane said the same reassuring word in all four
-    /// cases, and it is what hid a fresh install fetching nothing at all.
-    ///
-    /// `lastSyncTime` is the distinguishing fact: no successful sync yet means
-    /// there is nothing to be connected *about*, whatever the engine's state.
+    /// The fix is not a better `switch` here — it is not having a `switch` here.
+    /// ``ConnectionSummary`` owns the mapping, tests the full cross product of
+    /// state × `lastSyncTime` × store availability, and asserts structurally
+    /// that no two situations collapse onto one word.
     private var statusDescription: String {
-        guard case .success(let store) = environment.store else { return "Unavailable" }
-        switch store.status.state {
-        case .idle: return store.lastSyncTime == nil ? "Not synced yet" : "Connected"
-        case .syncing: return "Syncing"
-        case .backoff: return "Waiting to retry"
-        case .authError: return "Authentication failed"
-        case .unconfigured: return "No server configured"
-        }
+        ConnectionSummary.of(store: environment.store).title
     }
 }
 
