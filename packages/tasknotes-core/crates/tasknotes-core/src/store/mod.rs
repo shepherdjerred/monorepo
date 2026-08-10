@@ -143,7 +143,7 @@ impl TaskStore {
             .into_iter()
             .map(|task| (task.id.clone(), task))
             .collect();
-        self.aliases = parse_aliases(self.storage.read_id_aliases()?.as_deref());
+        self.aliases = parse_aliases(self.storage.read_id_aliases()?.as_deref())?;
         self.restores =
             completion_restores::parse(self.storage.read_completion_restores()?.as_deref())?;
         // Launch is the one moment the day is guaranteed to be re-read, and an
@@ -752,29 +752,59 @@ fn parse_id_counters(raw: Option<&str>) -> Result<IdCounters> {
     })
 }
 
-/// Parse the persisted alias map, keeping every entry that still parses.
+/// Parse the persisted alias map. **Absent** is a fresh install;
+/// present-and-unreadable is an error; a readable map keeps every entry that
+/// still parses.
 ///
-/// Lossy, deliberately unlike [`CommandQueue::restore`], because what it can
-/// drop is a different kind of thing. A queued or parked command is a mutation
-/// only that file holds, so losing one loses the user's work — hence the
-/// refusal there. An alias is a pointer to a create the server already
-/// accepted, and the commands that followed it were rewritten to the real id at
-/// ack time; a dropped entry therefore costs a temp id that no longer resolves
-/// for a window still holding one, never a mutation nobody can replay.
-fn parse_aliases(raw: Option<&str>) -> IndexMap<TaskId, TaskId> {
+/// The per-entry salvage is deliberate, and deliberately unlike
+/// [`CommandQueue::restore`], because what one dropped entry costs is a
+/// different kind of thing. A queued or parked command is a mutation only that
+/// file holds, so losing one loses the user's work — hence the refusal there.
+/// An alias is a pointer to a create the server already accepted, and the
+/// commands that followed it were rewritten to the real id at ack time; a
+/// dropped entry therefore costs a temp id that no longer resolves for a window
+/// still holding one, never a mutation nobody can replay.
+///
+/// ⚠️ **The whole file failing to read is not that trade, and used to be
+/// treated as it.** Invalid JSON or a top level that is not an object said
+/// nothing about any one entry — it discarded the entire map down the same path
+/// a fresh install takes, and the next successful pull wrote that emptiness
+/// back over the only record of which temp ids resolve to which notes. An
+/// inspector that outlived an engine reconfiguration while still holding a
+/// pre-ack temp id then addresses its next edit to a task the server has no
+/// idea about, and the command is parked. So the file is refused instead, which
+/// leaves the bytes where they are — the only state a later release or a user
+/// deleting one file can still do something about. This is the argument
+/// [`parse_durable`](crate::sync::queue) and [`parse_id_counters`] make.
+///
+/// An absent or empty file is not bad data — it is a fresh install, and reads
+/// as an empty map.
+///
+/// # Errors
+///
+/// [`Error::Invariant`] when a non-empty file is not a JSON object.
+fn parse_aliases(raw: Option<&str>) -> Result<IndexMap<TaskId, TaskId>> {
     let Some(raw) = raw.filter(|value| !value.is_empty()) else {
-        return IndexMap::new();
+        return Ok(IndexMap::new());
     };
-    let Ok(Value::Object(entries)) = serde_json::from_str::<Value>(raw) else {
-        return IndexMap::new();
+    let unreadable = |detail: String| {
+        Error::invariant(format!(
+            "the persisted id aliases exist but are unreadable, so which temp ids \
+             this install has already resolved is unknown: {detail}"
+        ))
     };
-    entries
+    let parsed = serde_json::from_str::<Value>(raw)
+        .map_err(|error| unreadable(format!("it is not valid JSON: {error}")))?;
+    let Value::Object(entries) = parsed else {
+        return Err(unreadable("it is not a JSON object".to_owned()));
+    };
+    Ok(entries
         .into_iter()
         .filter_map(|(temp, real)| {
             let real = real.as_str()?;
             Some((TaskId::parse(temp).ok()?, TaskId::parse(real).ok()?))
         })
-        .collect()
+        .collect())
 }
 
 #[cfg(test)]
@@ -1620,15 +1650,55 @@ mod tests {
     }
 
     #[test]
-    fn aliases_survive_a_round_trip_and_junk_is_dropped() {
-        let parsed = parse_aliases(Some(r#"{"tmp-1-1":"Tasks/a.md","tmp-2-2":"not-a-note"}"#));
+    fn aliases_survive_a_round_trip_and_one_bad_entry_is_dropped() {
+        let parsed =
+            parse_aliases(Some(r#"{"tmp-1-1":"Tasks/a.md","tmp-2-2":"not-a-note"}"#)).unwrap();
         assert_eq!(parsed.len(), 1);
         assert_eq!(
             parsed.get(&TaskId::parse("tmp-1-1").unwrap()),
             Some(&TaskId::parse("Tasks/a.md").unwrap())
         );
-        assert!(parse_aliases(Some("[]")).is_empty());
-        assert!(parse_aliases(None).is_empty());
+        // Absent is the fresh install, and it is the only shape that may read
+        // as an empty map. An empty file joins it: this release always writes
+        // at least `{}`, so a zero-byte one predates the slot rather than
+        // describing it.
+        assert!(parse_aliases(None).unwrap().is_empty());
+        assert!(parse_aliases(Some("")).unwrap().is_empty());
+    }
+
+    /// The counterpart of the salvage above: one unreadable *entry* is a stale
+    /// pointer, but an unreadable *file* is the whole map.
+    ///
+    /// Emptying it silently is not a smaller version of dropping one entry.
+    /// The next successful pull writes the emptiness back, and a window still
+    /// holding a pre-ack temp id then has nothing to resolve it against — its
+    /// next edit addresses a task the server never heard of and gets parked.
+    #[test]
+    fn an_alias_file_that_cannot_be_read_at_all_is_refused() {
+        for corrupt in ["not json", "[]", r#""tmp-1-1""#, "7"] {
+            let error = parse_aliases(Some(corrupt)).unwrap_err();
+            assert!(
+                error.to_string().contains("already resolved is unknown"),
+                "expected a refusal for {corrupt:?}, got {error}"
+            );
+        }
+    }
+
+    /// And the refusal has to reach [`TaskStore::restore`] rather than stop at
+    /// the parser, because restoring over it is what makes the loss durable.
+    #[test]
+    fn restoring_over_an_unreadable_alias_file_fails_instead_of_emptying_it() {
+        let (mut store, memory) = store();
+        *memory.aliases.lock().unwrap() = Some("not json".to_owned());
+
+        let error = store.restore().unwrap_err();
+        assert!(error.to_string().contains("already resolved is unknown"));
+        assert_eq!(
+            memory.aliases.lock().unwrap().as_deref(),
+            Some("not json"),
+            "the bytes stay where they are — they are the only state anything \
+             can still be done about"
+        );
     }
 
     /// Rebuild the whole client from durable state alone, at the same instant.
