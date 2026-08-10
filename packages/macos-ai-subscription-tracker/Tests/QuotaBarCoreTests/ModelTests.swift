@@ -152,6 +152,77 @@ final class ModelTests: XCTestCase {
     XCTAssertGreaterThanOrEqual(fetchCount, 2)
   }
 
+  func testEnablingProviderRefreshesImmediately() async {
+    let provider = FakeProvider(
+      id: .codex,
+      results: [.success(snapshot(provider: .codex, remaining: 75))]
+    )
+    let settings = AppSettings(
+      store: MemoryModelSettingsStore(enabled: []),
+      minimumPollingInterval: 60
+    )
+    let model = QuotaBarModel(
+      providers: [provider],
+      settings: settings,
+      store: MemorySnapshotStore(),
+      providerTimeout: .seconds(1)
+    )
+
+    model.setProvider(.codex, enabled: true)
+
+    await waitUntil { await provider.fetchCount == 1 }
+    XCTAssertEqual(model.overallStatus, .healthy)
+  }
+
+  func testEnablingProviderDuringRefreshSchedulesFollowUp() async {
+    let codex = FakeProvider(
+      id: .codex,
+      results: [.success(snapshot(provider: .codex, remaining: 75))],
+      delay: .milliseconds(80)
+    )
+    let kimi = FakeProvider(
+      id: .kimi,
+      results: [.success(snapshot(provider: .kimi, remaining: 65))]
+    )
+    let settings = AppSettings(
+      store: MemoryModelSettingsStore(enabled: [.codex]),
+      minimumPollingInterval: 60
+    )
+    let model = QuotaBarModel(
+      providers: [codex, kimi],
+      settings: settings,
+      store: MemorySnapshotStore(),
+      providerTimeout: .seconds(1)
+    )
+    let initialRefresh = Task { await model.refresh() }
+    await waitUntil { await codex.fetchCount == 1 }
+
+    model.setProvider(.kimi, enabled: true)
+
+    await initialRefresh.value
+    await waitUntil { await kimi.fetchCount == 1 }
+    XCTAssertEqual(model.overallStatus, .healthy)
+  }
+
+  func testPollingIntervalChangePreservesInFlightRefresh() async {
+    let provider = FakeProvider(
+      id: .codex,
+      results: [.success(snapshot(provider: .codex, remaining: 70))],
+      delay: .milliseconds(80)
+    )
+    let model = makeModel(providers: [provider], minimumInterval: 0.2)
+    model.startPolling()
+    await waitUntil { await provider.fetchCount == 1 }
+
+    model.updatePollingInterval(0.2)
+    try? await Task.sleep(for: .milliseconds(100))
+    model.stopPolling()
+
+    XCTAssertEqual(model.overallStatus, .healthy)
+    let fetchCount = await provider.fetchCount
+    XCTAssertEqual(fetchCount, 1)
+  }
+
   private func makeModel(
     providers: [any UsageProvider],
     store: MemorySnapshotStore = MemorySnapshotStore(),
@@ -176,6 +247,17 @@ final class ModelTests: XCTestCase {
       windows: [window(remaining: remaining)],
       sourceTimestamp: .now
     )
+  }
+
+  private func waitUntil(
+    timeout: Duration = .seconds(1),
+    condition: () async -> Bool
+  ) async {
+    let clock = ContinuousClock()
+    let deadline = clock.now.advanced(by: timeout)
+    while !(await condition()), clock.now < deadline {
+      try? await Task.sleep(for: .milliseconds(5))
+    }
   }
 }
 

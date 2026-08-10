@@ -32,6 +32,10 @@ struct SettingsView: View {
           if let url = provider.usageURL { Link("Usage", destination: url) }
         }
       }
+      if let error = model.settings.validationErrorMessage {
+        Label(error, systemImage: "exclamationmark.triangle")
+          .foregroundStyle(.red)
+      }
     }
   }
 

@@ -54,6 +54,29 @@ final class PersistenceSettingsTests: XCTestCase {
   }
 
   @MainActor
+  func testUnknownPersistedProviderIsRejectedAndPreserved() throws {
+    let suiteName = "QuotaBarTests.\(UUID().uuidString)"
+    guard let defaults = UserDefaults(suiteName: suiteName) else {
+      XCTFail("Expected isolated defaults")
+      return
+    }
+    defer { defaults.removePersistentDomain(forName: suiteName) }
+    defaults.set([ProviderID.codex.rawValue, "future-provider"], forKey: "enabledProviders")
+    let settings = AppSettings(store: UserDefaultsSettingsStore(defaults: defaults))
+
+    XCTAssertEqual(settings.enabledProviders, Set(ProviderID.allCases))
+    XCTAssertEqual(
+      settings.validationErrorMessage,
+      QuotaError.settingsCorrupt.localizedDescription
+    )
+
+    settings.setProvider(.grok, enabled: false)
+    let savedIdentifiers = try XCTUnwrap(defaults.stringArray(forKey: "enabledProviders"))
+    XCTAssertTrue(savedIdentifiers.contains("future-provider"))
+    XCTAssertFalse(savedIdentifiers.contains(ProviderID.grok.rawValue))
+  }
+
+  @MainActor
   func testLaunchAtLoginReflectsServiceAndRollsBackErrors() {
     let service = FakeLoginItemService(status: .disabled)
     let controller = LaunchAtLoginController(service: service)

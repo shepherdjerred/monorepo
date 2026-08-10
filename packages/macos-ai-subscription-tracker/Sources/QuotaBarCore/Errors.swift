@@ -15,6 +15,7 @@ public enum QuotaError: Error, Equatable, LocalizedError, Sendable {
   case cacheCorrupt
   case cacheWriteFailed
   case commandFailed(String)
+  case settingsCorrupt
 
   public var errorDescription: String? {
     switch self {
@@ -55,6 +56,8 @@ public enum QuotaError: Error, Equatable, LocalizedError, Sendable {
       "QuotaBar could not save its latest successful usage data."
     case let .commandFailed(command):
       "QuotaBar could not read local credentials with \(command)."
+    case .settingsCorrupt:
+      "QuotaBar settings contain an unsupported provider identifier."
     }
   }
 

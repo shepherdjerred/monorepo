@@ -2,7 +2,7 @@ public import Foundation
 public import Observation
 
 public protocol SettingsPersisting: Sendable {
-  func enabledProviders() -> Set<ProviderID>?
+  func enabledProviders() throws -> Set<ProviderID>?
   func pollingInterval() -> TimeInterval?
   func save(enabledProviders: Set<ProviderID>, pollingInterval: TimeInterval)
 }
@@ -14,9 +14,17 @@ public final class UserDefaultsSettingsStore: SettingsPersisting, @unchecked Sen
     self.defaults = defaults
   }
 
-  public func enabledProviders() -> Set<ProviderID>? {
-    guard let values = defaults.array(forKey: "enabledProviders") as? [String] else { return nil }
-    return Set(values.compactMap(ProviderID.init(rawValue:)))
+  public func enabledProviders() throws -> Set<ProviderID>? {
+    guard let storedValue = defaults.object(forKey: "enabledProviders") else { return nil }
+    guard let values = storedValue as? [String] else { throw QuotaError.settingsCorrupt }
+    var providers: Set<ProviderID> = []
+    for value in values {
+      guard let provider = ProviderID(rawValue: value) else {
+        throw QuotaError.settingsCorrupt
+      }
+      providers.insert(provider)
+    }
+    return providers
   }
 
   public func pollingInterval() -> TimeInterval? {
@@ -25,7 +33,10 @@ public final class UserDefaultsSettingsStore: SettingsPersisting, @unchecked Sen
   }
 
   public func save(enabledProviders: Set<ProviderID>, pollingInterval: TimeInterval) {
-    defaults.set(enabledProviders.map(\.rawValue).sorted(), forKey: "enabledProviders")
+    let unknownIdentifiers = (defaults.stringArray(forKey: "enabledProviders") ?? [])
+      .filter { ProviderID(rawValue: $0) == nil }
+    let knownIdentifiers = enabledProviders.map(\.rawValue)
+    defaults.set(Set(knownIdentifiers + unknownIdentifiers).sorted(), forKey: "enabledProviders")
     defaults.set(pollingInterval, forKey: "pollingInterval")
   }
 }
@@ -34,6 +45,7 @@ public final class UserDefaultsSettingsStore: SettingsPersisting, @unchecked Sen
 public final class AppSettings {
   public private(set) var enabledProviders: Set<ProviderID>
   public private(set) var pollingInterval: TimeInterval
+  public private(set) var validationErrorMessage: String?
 
   private let store: any SettingsPersisting
   private let minimumPollingInterval: TimeInterval
@@ -44,7 +56,13 @@ public final class AppSettings {
   ) {
     self.store = store
     self.minimumPollingInterval = minimumPollingInterval
-    self.enabledProviders = store.enabledProviders() ?? Set(ProviderID.allCases)
+    do {
+      self.enabledProviders = try store.enabledProviders() ?? Set(ProviderID.allCases)
+      self.validationErrorMessage = nil
+    } catch {
+      self.enabledProviders = Set(ProviderID.allCases)
+      self.validationErrorMessage = QuotaError.settingsCorrupt.localizedDescription
+    }
     self.pollingInterval = max(minimumPollingInterval, store.pollingInterval() ?? 300)
   }
 

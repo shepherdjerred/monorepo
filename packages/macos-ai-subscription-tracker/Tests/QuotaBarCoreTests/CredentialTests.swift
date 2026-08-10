@@ -1,4 +1,5 @@
 import Foundation
+import SQLite3
 import XCTest
 
 @testable import QuotaBarCore
@@ -70,6 +71,40 @@ final class CredentialTests: XCTestCase {
     let store = LocalCredentialStore(homeDirectory: root, claudeKeychain: FakeKeychain())
     let credential = try store.credential(for: .kimi, reload: false)
     XCTAssertEqual(credential.accessToken, "kimi-local-token")
+  }
+
+  func testExpiredKimiLocalCredentialFallsBackToOpenCode() throws {
+    let root = try temporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: root) }
+    try write(
+      #"{"access_token":"expired-local-token","expires_at":1}"#,
+      to: root.appendingPathComponent(".kimi-code/credentials/account.json")
+    )
+    try write(
+      #"{"kimi-for-coding-oauth":{"access":"fresh-opencode-token","expires":9999999999999}}"#,
+      to: root.appendingPathComponent(".local/share/opencode/auth.json")
+    )
+    let store = LocalCredentialStore(homeDirectory: root, claudeKeychain: FakeKeychain())
+
+    let credential = try store.credential(for: .kimi, reload: true)
+
+    XCTAssertEqual(credential.accessToken, "fresh-opencode-token")
+  }
+
+  func testOpenCodeDatabaseCredentialDiscovery() throws {
+    let root = try temporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: root) }
+    let database = root.appendingPathComponent(".local/share/opencode/opencode.db")
+    try createOpenCodeDatabase(
+      at: database,
+      label: "xai",
+      value: #"{"access":"database-token","expires":9999999999999}"#
+    )
+    let store = LocalCredentialStore(homeDirectory: root, claudeKeychain: FakeKeychain())
+
+    let credential = try store.credential(for: .grok, reload: false)
+
+    XCTAssertEqual(credential.accessToken, "database-token")
   }
 
   func testOpenCodeKimiAndGrokFilesRemainUnchanged() throws {
@@ -152,6 +187,31 @@ final class CredentialTests: XCTestCase {
       withIntermediateDirectories: true
     )
     try Data(value.utf8).write(to: url)
+  }
+
+  private func createOpenCodeDatabase(at url: URL, label: String, value: String) throws {
+    try FileManager.default.createDirectory(
+      at: url.deletingLastPathComponent(),
+      withIntermediateDirectories: true
+    )
+    var connection: OpaquePointer?
+    guard sqlite3_open(url.path, &connection) == SQLITE_OK, let connection else {
+      if let connection { sqlite3_close(connection) }
+      throw QuotaError.commandFailed("SQLite test fixture")
+    }
+    defer { sqlite3_close(connection) }
+    let create = "CREATE TABLE credential (label TEXT, value TEXT, active INTEGER);"
+    guard sqlite3_exec(connection, create, nil, nil, nil) == SQLITE_OK else {
+      throw QuotaError.commandFailed("SQLite test fixture")
+    }
+    let escapedLabel = label.replacingOccurrences(of: "'", with: "''")
+    let escapedValue = value.replacingOccurrences(of: "'", with: "''")
+    let insert =
+      "INSERT INTO credential (label, value, active) VALUES "
+      + "('\(escapedLabel)', '\(escapedValue)', 1);"
+    guard sqlite3_exec(connection, insert, nil, nil, nil) == SQLITE_OK else {
+      throw QuotaError.commandFailed("SQLite test fixture")
+    }
   }
 }
 

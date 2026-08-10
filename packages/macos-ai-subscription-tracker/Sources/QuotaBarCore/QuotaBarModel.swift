@@ -6,6 +6,11 @@ private enum ProviderFetchResult: Sendable {
   case failure(ProviderID, QuotaError)
 }
 
+private struct ActiveRefresh {
+  let id: Int
+  let task: Task<Void, Never>
+}
+
 @MainActor @Observable
 public final class QuotaBarModel {
   public let providers: [any UsageProvider]
@@ -18,6 +23,9 @@ public final class QuotaBarModel {
   private let providerTimeout: Duration
   private var lastSuccessful: [ProviderID: UsageSnapshot] = [:]
   private var pollingTask: Task<Void, Never>?
+  private var activeRefresh: ActiveRefresh?
+  private var nextRefreshID = 0
+  private var providerRefreshAttempts: [ProviderID: Int] = [:]
 
   public init(
     providers: [any UsageProvider],
@@ -90,14 +98,42 @@ public final class QuotaBarModel {
         lastSuccessful[provider].map {
           .available($0.markedStale(reason: "Cached data; waiting for a provider refresh."))
         } ?? .loading
+      let previousAttemptCount = providerRefreshAttempts[provider, default: 0]
+      Task { [weak self] in
+        guard let self else { return }
+        await refresh()
+        guard settings.enabledProviders.contains(provider),
+          providerRefreshAttempts[provider, default: 0] == previousAttemptCount
+        else { return }
+        await refresh()
+      }
     }
   }
 
   public func refresh() async {
-    guard !isRefreshing else { return }
+    if let activeRefresh {
+      await activeRefresh.task.value
+      clearRefresh(id: activeRefresh.id)
+      return
+    }
+    nextRefreshID += 1
+    let refreshID = nextRefreshID
+    let task = Task { [weak self] in
+      guard let self else { return }
+      await performRefresh()
+    }
+    activeRefresh = ActiveRefresh(id: refreshID, task: task)
+    await task.value
+    clearRefresh(id: refreshID)
+  }
+
+  private func performRefresh() async {
     isRefreshing = true
     defer { isRefreshing = false }
     let enabled = providers.filter { settings.enabledProviders.contains($0.id) }
+    for provider in enabled {
+      providerRefreshAttempts[provider.id, default: 0] += 1
+    }
     let didSucceed = await withTaskGroup(of: ProviderFetchResult.self) { group in
       for provider in enabled {
         group.addTask { [providerTimeout] in
@@ -122,6 +158,11 @@ public final class QuotaBarModel {
   public func stopPolling() {
     pollingTask?.cancel()
     pollingTask = nil
+  }
+
+  private func clearRefresh(id: Int) {
+    guard activeRefresh?.id == id else { return }
+    activeRefresh = nil
   }
 
   private func apply(_ result: ProviderFetchResult) -> Bool {

@@ -1,4 +1,5 @@
 public import Foundation
+import SQLite3
 import Security
 
 public protocol KeychainClient: Sendable {
@@ -133,7 +134,7 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
     switch provider {
     case .claudeCode: credential = try readClaude()
     case .codex: credential = try readCodex()
-    case .kimi: credential = try readKimi() ?? readOpenCode(provider: provider)
+    case .kimi: credential = try readCurrentKimiCredential()
     case .grok: credential = try readOpenCode(provider: provider)
     }
     guard let credential else { throw QuotaError.credentialsMissing(provider) }
@@ -179,6 +180,20 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
       }
     }
     return nil
+  }
+
+  private func readCurrentKimiCredential() throws -> ProviderCredential? {
+    guard let localCredential = try readKimi() else {
+      return try readOpenCode(provider: .kimi)
+    }
+    do {
+      return try localCredential.requireCurrent(for: .kimi)
+    } catch QuotaError.credentialsExpired {
+      guard let openCodeCredential = try readOpenCode(provider: .kimi) else {
+        throw QuotaError.credentialsExpired(.kimi)
+      }
+      return openCodeCredential
+    }
   }
 
   private func readOpenCode(provider: ProviderID) throws -> ProviderCredential? {
@@ -248,23 +263,56 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
   }
 
   private func readOpenCodeRows(database: URL) throws -> [CredentialRow] {
-    let process = Process()
-    process.executableURL = URL(fileURLWithPath: "/usr/bin/sqlite3")
-    process.arguments = [
-      "-readonly", "-json", "-cmd", ".timeout 1000", database.path,
-      "SELECT label, value FROM credential WHERE active IS NULL OR active != 0;",
-    ]
-    let output = Pipe()
-    process.standardOutput = output
-    try process.run()
-    process.waitUntilExit()
-    guard process.terminationStatus == 0 else { throw QuotaError.commandFailed("sqlite3") }
-    let data = output.fileHandleForReading.readDataToEndOfFile()
-    do {
-      return try JSONDecoder().decode([CredentialRow].self, from: data)
-    } catch {
-      throw QuotaError.commandFailed("sqlite3")
+    var connection: OpaquePointer?
+    guard
+      sqlite3_open_v2(database.path, &connection, SQLITE_OPEN_READONLY, nil) == SQLITE_OK,
+      let connection
+    else {
+      if let connection { sqlite3_close(connection) }
+      throw QuotaError.commandFailed("SQLite")
     }
+    defer { sqlite3_close(connection) }
+    guard sqlite3_busy_timeout(connection, 1_000) == SQLITE_OK else {
+      throw QuotaError.commandFailed("SQLite")
+    }
+
+    let query = "SELECT label, value FROM credential WHERE active IS NULL OR active != 0;"
+    var statement: OpaquePointer?
+    guard sqlite3_prepare_v2(connection, query, -1, &statement, nil) == SQLITE_OK,
+      let statement
+    else {
+      if let statement { sqlite3_finalize(statement) }
+      throw QuotaError.commandFailed("SQLite")
+    }
+    defer { sqlite3_finalize(statement) }
+
+    var rows: [CredentialRow] = []
+    while true {
+      switch sqlite3_step(statement) {
+      case SQLITE_ROW:
+        rows.append(
+          CredentialRow(
+            label: try sqliteString(statement: statement, column: 0),
+            value: try sqliteString(statement: statement, column: 1)
+          ))
+      case SQLITE_DONE:
+        return rows
+      default:
+        throw QuotaError.commandFailed("SQLite")
+      }
+    }
+  }
+
+  private func sqliteString(statement: OpaquePointer, column: Int32) throws -> String {
+    guard let bytes = sqlite3_column_text(statement, column) else {
+      throw QuotaError.commandFailed("SQLite")
+    }
+    let count = Int(sqlite3_column_bytes(statement, column))
+    let buffer = UnsafeBufferPointer(start: bytes, count: count)
+    guard let value = String(bytes: buffer, encoding: .utf8) else {
+      throw QuotaError.commandFailed("SQLite")
+    }
+    return value
   }
 }
 
