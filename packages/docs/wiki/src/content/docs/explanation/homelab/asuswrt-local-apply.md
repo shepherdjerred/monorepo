@@ -34,10 +34,10 @@ Most stacks under `packages/homelab/src/tofu/` are planned on each pull request
 and applied on merge, driven by the plan and apply allowlists in
 [`.buildkite/pipeline.yml`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml).
 
-`asuswrt` sits outside both loops deliberately. The CI runner reaches the shared
-state backend, but it has no network route to the home LAN where the router
-lives. An apply therefore has to run from a machine that can reach **both** the
-LAN and the state backend.
+A few stacks sit outside those loops, each for its own reason. `asuswrt` is out
+because the CI runner reaches the shared state backend but has no network route
+to the home LAN where the router lives. An apply therefore has to run from a
+machine that can reach **both** the LAN and the state backend.
 
 The alternative — exposing the router's admin interface to the CI network —
 trades a manual step for a permanent attack surface on the device that fronts

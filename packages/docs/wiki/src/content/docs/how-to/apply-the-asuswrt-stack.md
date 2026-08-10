@@ -8,9 +8,9 @@ sidebar:
 The `asuswrt` stack is applied by hand, from a machine on the home LAN. CI never
 runs it.
 
-Run everything below from `packages/homelab/src/tofu`.
+Each step below names its own working directory; they are not the same one.
 
-## 1. Install the provider
+## 1. Install the provider — from the repository root
 
 The provider is not published to a registry, so build it into the local
 filesystem mirror first:
@@ -19,10 +19,10 @@ filesystem mirror first:
 make -C packages/terraform-provider-asuswrt install
 ```
 
-## 2. Initialize, import, plan, apply
+## 2. Initialize, import, plan, apply — from `packages/homelab/src/tofu`
 
-`op run` injects the router login from 1Password at runtime, so no credential
-lands on disk.
+`op run` reads the `.env` in that directory and injects the router login from
+1Password at runtime, so no credential lands on disk.
 
 ```bash
 op run --env-file=.env -- tofu -chdir=asuswrt init
