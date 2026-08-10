@@ -436,18 +436,21 @@ model StoredSound {
 }
 
 model GuildInstall {
-  id                Int       @id @default(autoincrement())
-  serverId          String    @unique
-  serverName        String
-  ownerDiscordId    String
-  addedByDiscordId  String // Installer (from audit log), fallback to ownerId
-  memberCount       Int
-  installedAt       DateTime
+  id                        Int       @id @default(autoincrement())
+  serverId                  String    @unique
+  serverName                String
+  ownerDiscordId            String
+  addedByDiscordId          String // Installer (from audit log), fallback to ownerId
+  memberCount               Int
+  installedAt               DateTime
+  analyticsInstallationId   String    @unique @default(uuid())
+  analyticsLifecycleTracked Boolean   @default(true)
+  firstCoreOutputAt         DateTime?
   // Legacy one-shot markers, kept for one release so a rollback can still read
   // them. No longer written; DmAuditLog is the source of truth.
-  outreach3dSentAt  DateTime?
-  outreach14dSentAt DateTime?
-  outreach30dSentAt DateTime?
+  outreach3dSentAt          DateTime?
+  outreach14dSentAt         DateTime?
+  outreach30dSentAt         DateTime?
 
   // Outreach budget, ladder position, and "have we asked for feedback?" are
   // NOT stored here. They are derived from DmAuditLog rows created after
@@ -458,14 +461,14 @@ model GuildInstall {
   // reset the whole ladder for free by simply moving `installedAt` forward.
 
   // Set once the one-time email nudge has been sent (see the email channel).
-  emailNudgeSentAt    DateTime?
+  emailNudgeSentAt DateTime?
 
   // Set when guildDelete confirms a removal; cleared on the next install.
   // This is the ONLY signal that distinguishes a genuine re-install (which
   // should restart onboarding) from a spurious `guildCreate` for a guild we
   // never left. `cleanupRemovedGuild` deliberately keeps this row, so row
   // existence alone cannot tell the two apart.
-  removedAt         DateTime?
+  removedAt DateTime?
 
   @@index([installedAt])
 }
@@ -527,10 +530,10 @@ model BotState {
 
 model ActiveGame {
   id                 Int      @id @default(autoincrement())
-  gameId             BigInt   // Riot game ID (from Spectator V5 API)
+  gameId             BigInt // Riot game ID (from Spectator V5 API)
   trackedPuuids      String // JSON array of tracked puuids detected in this game
   prematchMessageIds String? // JSON object: Discord channel ID -> prematch message ID
-  prematchMatchId    String? @unique // Platform-qualified Riot match ID and active-game key
+  prematchMatchId    String?  @unique // Platform-qualified Riot match ID and active-game key
   detectedAt         DateTime // When we first detected this game
   expiresAt          DateTime // TTL: auto-cleanup after this time (detectedAt + 3 hours)
   updatedAt          DateTime @updatedAt

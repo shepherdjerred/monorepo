@@ -3,6 +3,7 @@ import * as Sentry from "@sentry/bun";
 import { createLogger } from "#src/logger.ts";
 import { filterScoutSentryEvent } from "#src/sentry-filters.ts";
 import { initializeTracing } from "#src/observability/tracing.ts";
+import { shutdownProductAnalytics } from "#src/analytics/product-analytics.ts";
 
 // Initialize OTel tracing first so any subsequent module that opens a span
 // has a tracer provider attached. No-op when TELEMETRY_ENABLED is unset.
@@ -96,6 +97,7 @@ process.on("SIGTERM", () => {
   logger.info("🛑 Received SIGTERM, shutting down gracefully");
   void (async () => {
     await shutdownHttpServer();
+    await shutdownProductAnalytics();
     process.exit(0);
   })();
 });
@@ -104,6 +106,7 @@ process.on("SIGINT", () => {
   logger.info("🛑 Received SIGINT, shutting down gracefully");
   void (async () => {
     await shutdownHttpServer();
+    await shutdownProductAnalytics();
     process.exit(0);
   })();
 });

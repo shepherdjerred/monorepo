@@ -2,6 +2,7 @@ import * as Sentry from "@sentry/bun";
 import {
   filtersPass,
   DiscordGuildIdSchema,
+  type DiscordGuildId,
   type QueueType,
 } from "@scout-for-lol/data/index.ts";
 import type { SubscribedChannel } from "#src/database/index.ts";
@@ -45,7 +46,8 @@ export async function deliverToChannels(params: {
   logPrefix: string;
   sentryTags: Record<string, string>;
   replyToMessageIds?: ReadonlyMap<string, string>;
-}): Promise<void> {
+}): Promise<Set<DiscordGuildId>> {
+  const deliveredGuildIds = new Set<DiscordGuildId>();
   for (const { channel, serverId } of params.channels) {
     try {
       const replyToMessageId = params.replyToMessageIds?.get(channel);
@@ -74,10 +76,11 @@ export async function deliverToChannels(params: {
           // when that permission is missing; the post-match report itself is
           // still deliverable in channels where sending is allowed.
           await send(params.message, channel, guildId);
-          continue;
+        } else {
+          throw error;
         }
-        throw error;
       }
+      deliveredGuildIds.add(guildId);
     } catch (error) {
       if (error instanceof ChannelSendError && error.permissionError) {
         logger.warn(
@@ -94,4 +97,5 @@ export async function deliverToChannels(params: {
       });
     }
   }
+  return deliveredGuildIds;
 }

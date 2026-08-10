@@ -63,6 +63,11 @@ describe("handleGuildCreate — GuildInstall bookkeeping", () => {
     expect(row).not.toBeNull();
     expect(row?.outreach3dSentAt).toBeNull();
     expect(row?.removedAt).toBeNull();
+    expect(row?.analyticsInstallationId).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+    );
+    expect(row?.analyticsLifecycleTracked).toBe(true);
+    expect(row?.firstCoreOutputAt).toBeNull();
   });
 
   it("preserves outreach progress when the guild was never removed", async () => {
@@ -82,6 +87,11 @@ describe("handleGuildCreate — GuildInstall bookkeeping", () => {
       },
     });
 
+    const originalRow = await prisma.guildInstall.findUnique({
+      where: { serverId: SERVER_ID },
+    });
+    const originalAnalyticsInstallationId =
+      originalRow?.analyticsInstallationId;
     await handleGuildCreate(guildFixture());
 
     const row = await prisma.guildInstall.findUnique({
@@ -92,6 +102,7 @@ describe("handleGuildCreate — GuildInstall bookkeeping", () => {
     expect(row?.outreach14dSentAt).toEqual(sentAt);
     expect(row?.outreach30dSentAt).toEqual(sentAt);
     expect(row?.installedAt).toEqual(originalInstall);
+    expect(row?.analyticsInstallationId).toBe(originalAnalyticsInstallationId);
     // Identity fields still refresh (name/member count can legitimately change).
     expect(row?.memberCount).toBe(42);
   });
@@ -113,6 +124,11 @@ describe("handleGuildCreate — GuildInstall bookkeeping", () => {
       },
     });
 
+    const originalRow = await prisma.guildInstall.findUnique({
+      where: { serverId: SERVER_ID },
+    });
+    const originalAnalyticsInstallationId =
+      originalRow?.analyticsInstallationId;
     await handleGuildCreate(guildFixture());
 
     const row = await prisma.guildInstall.findUnique({
@@ -124,6 +140,11 @@ describe("handleGuildCreate — GuildInstall bookkeeping", () => {
     // after the reset was written; it must reset with the others.
     expect(row?.outreach30dSentAt).toBeNull();
     expect(row?.removedAt).toBeNull();
+    expect(row?.analyticsInstallationId).not.toBe(
+      originalAnalyticsInstallationId,
+    );
+    expect(row?.analyticsLifecycleTracked).toBe(true);
+    expect(row?.firstCoreOutputAt).toBeNull();
     expect(row?.installedAt.getTime()).toBeGreaterThan(
       new Date("2026-01-01T00:00:00.000Z").getTime(),
     );

@@ -5,7 +5,8 @@
     // Note: verbatimModuleSyntax disabled because of cdk8s generation
     "paths": {
       "@shepherdjerred/homelab/cdk8s/*": ["./*"],
-      "@shepherdjerred/helm-types/*": ["../helm-types/*"]
+      "@shepherdjerred/helm-types/*": ["../helm-types/*"],
+      "@shepherdjerred/monorepo/config/*": ["../../../../config/*"]
     }
   },
   "exclude": ["node_modules", "eslint.config.ts"]

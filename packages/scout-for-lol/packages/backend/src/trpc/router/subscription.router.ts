@@ -43,6 +43,7 @@ import { listSubscriptions } from "#src/lib/subscription/list.ts";
 import { ListSubscriptionsInputSchema } from "#src/lib/subscription/types.ts";
 import { recordAudit, AuditActionSchema } from "#src/lib/audit/index.ts";
 import { runAuditedMutation } from "#src/lib/audit/audited-mutation.ts";
+import { captureFirstSubscriptionCreated } from "#src/analytics/guild-lifecycle.ts";
 
 const GuildIdInput = z.object({ guildId: DiscordGuildIdSchema });
 
@@ -188,6 +189,9 @@ export const subscriptionRouter = router({
       );
 
       if (result.kind === "created") {
+        if (result.isFirstSubscription) {
+          await captureFirstSubscriptionCreated(input.guildId, "web");
+        }
         // Best-effort match-history backfill so the poll cycle doesn't
         // emit notifications for historical matches the first time it
         // encounters the account. Fire-and-forget; never block the

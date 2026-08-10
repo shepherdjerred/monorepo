@@ -41,12 +41,47 @@ function getOptionalEnvVar(
 
 const EnvironmentSchema = z.enum(["dev", "beta", "prod"]);
 
+const ProductAnalyticsConfigurationSchema = z.object({
+  projectToken: z.string().min(1),
+  apiHost: z.url(),
+  siteKey: z.string().min(1),
+  siteHostname: z.string().min(1),
+});
+
+export type ProductAnalyticsConfiguration = z.infer<
+  typeof ProductAnalyticsConfigurationSchema
+>;
+
 export function resolveEnvironment(): z.infer<typeof EnvironmentSchema> {
   const raw = env.get("ENVIRONMENT").default("dev").asString();
   const parsed = EnvironmentSchema.safeParse(raw);
   if (parsed.success) return parsed.data;
   throw new Error(
     `Invalid ENVIRONMENT="${raw}", expected one of: dev, beta, prod`,
+  );
+}
+
+export function parseProductAnalyticsConfiguration(
+  environment: z.infer<typeof EnvironmentSchema>,
+  values: {
+    projectToken: string | undefined;
+    apiHost: string | undefined;
+    siteKey: string | undefined;
+    siteHostname: string | undefined;
+  },
+): ProductAnalyticsConfiguration | undefined {
+  if (environment === "dev") {
+    return undefined;
+  }
+
+  const parsed = ProductAnalyticsConfigurationSchema.safeParse(values);
+  if (parsed.success) {
+    return parsed.data;
+  }
+
+  throw new Error(
+    `Complete PostHog configuration is required in ${environment}: POSTHOG_PROJECT_TOKEN, POSTHOG_API_HOST, POSTHOG_SITE_KEY, POSTHOG_SITE_HOSTNAME`,
+    { cause: parsed.error },
   );
 }
 
@@ -60,6 +95,7 @@ export function resolveEnvironment(): z.infer<typeof EnvironmentSchema> {
  * values live behind getters instead of being snapshotted at import time.
  */
 function computeConfiguration() {
+  const environment = resolveEnvironment();
   const config = {
     version: getRequiredEnvVar("VERSION"),
     gitSha: getRequiredEnvVar("GIT_SHA"),
@@ -68,7 +104,16 @@ function computeConfiguration() {
     // /api/version; the SPA compares it against its own baked hash.
     contractHash: getRequiredEnvVar("CONTRACT_HASH"),
     sentryDsn: getOptionalEnvVar("SENTRY_DSN"),
-    environment: resolveEnvironment(),
+    environment,
+    productAnalytics:
+      Bun.env.NODE_ENV === "test"
+        ? undefined
+        : parseProductAnalyticsConfiguration(environment, {
+            projectToken: getOptionalEnvVar("POSTHOG_PROJECT_TOKEN"),
+            apiHost: getOptionalEnvVar("POSTHOG_API_HOST"),
+            siteKey: getOptionalEnvVar("POSTHOG_SITE_KEY"),
+            siteHostname: getOptionalEnvVar("POSTHOG_SITE_HOSTNAME"),
+          }),
     // Separate, default-off opt-in for the dev-only instant-login route
     // (/api/dev/login). `environment` defaults to "dev" when ENVIRONMENT is
     // unset, so gating the route on `environment === "dev"` alone would fail
@@ -161,6 +206,9 @@ const configuration: Configuration = {
   },
   get environment() {
     return getConfiguration().environment;
+  },
+  get productAnalytics() {
+    return getConfiguration().productAnalytics;
   },
   get enableDevLogin() {
     return getConfiguration().enableDevLogin;

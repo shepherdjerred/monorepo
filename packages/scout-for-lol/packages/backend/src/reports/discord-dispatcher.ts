@@ -11,6 +11,8 @@ import { runDueReports } from "#src/reports/scheduler.ts";
 import { syncSystemReports } from "#src/reports/system-reports.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
 import { createLogger } from "#src/logger.ts";
+import { DiscordGuildIdSchema } from "@scout-for-lol/data";
+import { deliverTrackedCoreOutput } from "#src/analytics/guild-lifecycle.ts";
 
 const logger = createLogger("report-discord-dispatcher");
 
@@ -52,18 +54,24 @@ export async function runScheduledReportDispatch(): Promise<void> {
     // errors captured to Sentry inside `send`, so a ChannelSendError just gets a
     // warning here; anything unexpected is reported and we move on.
     try {
-      for (const [index, content] of splitMessageIntoChunks(
-        dispatch.result.output.content,
-      ).entries()) {
-        await sendChannelMessage(
-          {
-            content,
-            files: index === 0 ? files : [],
-          },
-          channelId,
-          serverId,
-        );
-      }
+      await deliverTrackedCoreOutput({
+        serverId: DiscordGuildIdSchema.parse(serverId),
+        outputKind: "report_scheduled",
+        async deliver() {
+          for (const [index, content] of splitMessageIntoChunks(
+            dispatch.result.output.content,
+          ).entries()) {
+            await sendChannelMessage(
+              {
+                content,
+                files: index === 0 ? files : [],
+              },
+              channelId,
+              serverId,
+            );
+          }
+        },
+      });
     } catch (error) {
       if (error instanceof ChannelSendError) {
         logger.warn(

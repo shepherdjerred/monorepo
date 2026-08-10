@@ -16,6 +16,7 @@ import { guildDataCleanupTotal } from "#src/metrics/index.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
 import { recordConversionIfAny } from "#src/league/tasks/outreach/conversions.ts";
 import { createLogger } from "#src/logger.ts";
+import { captureGuildRemoval } from "#src/analytics/guild-lifecycle.ts";
 
 const logger = createLogger("cleanup-removed-guild");
 
@@ -53,10 +54,7 @@ export async function cleanupRemovedGuild(
   // and a re-install before the next reconcile would then see removedAt = null,
   // keep its old installedAt, and inherit the previous installation's spent
   // budget. The removal is a confirmed fact; the deletions are best-effort.
-  await db.guildInstall.updateMany({
-    where: { serverId },
-    data: { removedAt: new Date() },
-  });
+  await captureGuildRemoval(serverId, new Date(), db);
 
   // Materialize any pending conversion before the deletions below destroy the
   // evidence. The nightly job only polls once a day, so a guild that converted

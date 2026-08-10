@@ -32,6 +32,7 @@ import {
   prematchLoadingScreenGeneratedTotal,
   prematchLoadingScreenDurationSeconds,
 } from "#src/metrics/index.ts";
+import { recordCoreOutputsDelivered } from "#src/analytics/guild-lifecycle.ts";
 
 const logger = createLogger("prematch-notification");
 
@@ -288,6 +289,7 @@ export async function sendPrematchNotification(
     // Continue with text-only notification
   }
 
+  const deliveredGuildIds = new Set<DiscordGuildId>();
   for (const { channel, serverId } of deliverChannels) {
     try {
       const message =
@@ -298,12 +300,10 @@ export async function sendPrematchNotification(
               embeds: [loadingScreenEmbed],
             }
           : { embeds: [buildFallbackPrematchEmbed(gameInfo, trackedPlayers)] };
-      const sentMessage = await send(
-        message,
-        channel,
-        DiscordGuildIdSchema.parse(serverId),
-      );
+      const guildId = DiscordGuildIdSchema.parse(serverId);
+      const sentMessage = await send(message, channel, guildId);
       sentMessageIds.set(channel, sentMessage.id);
+      deliveredGuildIds.add(guildId);
     } catch (error) {
       if (error instanceof ChannelSendError && error.permissionError) {
         logger.warn(
@@ -320,6 +320,8 @@ export async function sendPrematchNotification(
       });
     }
   }
+
+  await recordCoreOutputsDelivered(deliveredGuildIds, "prematch");
 
   logger.info(
     `[sendPrematchNotification] ✅ Notifications sent for game ${gameId}`,

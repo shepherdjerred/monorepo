@@ -4,6 +4,7 @@ import { createLogger } from "#src/logger.ts";
 import { registry } from "#src/metrics/registry.ts";
 import { seedProviderIssueMetrics } from "#src/metrics/provider-issue-seeds.ts";
 import "#src/metrics/season-schedule.ts";
+import "#src/metrics/product-analytics.ts";
 
 const logger = createLogger("metrics");
 

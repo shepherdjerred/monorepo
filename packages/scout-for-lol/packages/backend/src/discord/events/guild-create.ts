@@ -13,6 +13,8 @@ import { truncateDiscordMessage } from "#src/discord/utils/message.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
 import { prisma } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
+import { randomUUID } from "node:crypto";
+import { captureGuildInstalled } from "#src/analytics/guild-lifecycle.ts";
 
 const logger = createLogger("guild-create");
 
@@ -145,12 +147,15 @@ async function saveGuildInstall(
       memberCount: guild.memberCount,
     };
 
-    await prisma.guildInstall.upsert({
+    const installedAt = new Date();
+    const install = await prisma.guildInstall.upsert({
       where: { serverId },
       create: {
         serverId,
         ...identity,
-        installedAt: new Date(),
+        installedAt,
+        analyticsInstallationId: randomUUID(),
+        analyticsLifecycleTracked: true,
       },
       update: {
         ...identity,
@@ -161,7 +166,10 @@ async function saveGuildInstall(
               // Moving installedAt forward IS the reset: outreach state is
               // derived from audit rows created after it, so there is no list
               // of counters to remember to clear.
-              installedAt: new Date(),
+              installedAt,
+              analyticsInstallationId: randomUUID(),
+              analyticsLifecycleTracked: true,
+              firstCoreOutputAt: null,
               emailNudgeSentAt: null,
               outreach3dSentAt: null,
               outreach14dSentAt: null,
@@ -170,7 +178,19 @@ async function saveGuildInstall(
           : {}),
         removedAt: null,
       },
+      select: {
+        analyticsInstallationId: true,
+        analyticsLifecycleTracked: true,
+      },
     });
+
+    if (restartOnboarding) {
+      captureGuildInstalled(
+        install,
+        isReinstall ? "reinstall" : "first",
+        guild.memberCount,
+      );
+    }
 
     logger.info(
       `[Guild Create] Saved install info for ${guild.name} (${guild.id}), installer: ${addedByDiscordId}, reinstall: ${isReinstall.toString()}`,

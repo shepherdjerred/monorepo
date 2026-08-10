@@ -1,5 +1,8 @@
 import type { CompetitionWithCriteria } from "@scout-for-lol/data/index.ts";
-import { parseCompetition } from "@scout-for-lol/data/index.ts";
+import {
+  DiscordGuildIdSchema,
+  parseCompetition,
+} from "@scout-for-lol/data/index.ts";
 import {
   computeNextScheduledUpdateAt,
   DEFAULT_COMPETITION_CRON,
@@ -20,6 +23,7 @@ import { z } from "zod";
 import { logNotification } from "#src/utils/notification-logger.ts";
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "#src/logger.ts";
+import { recordCoreOutputDelivered } from "#src/analytics/guild-lifecycle.ts";
 
 const logger = createLogger("competition-lifecycle");
 
@@ -274,6 +278,11 @@ export async function handleCompetitionStarts(
             startNotificationMessageId: messageId,
           },
         });
+        await recordCoreOutputDelivered(
+          DiscordGuildIdSchema.parse(competition.serverId),
+          "competition_started",
+          { db: prismaClient },
+        );
       }
 
       // Mark as processed after notification succeeds so transient Discord
@@ -372,6 +381,11 @@ export async function handleCompetitionEnds(
             endNotificationMessageId: messageId,
           },
         });
+        await recordCoreOutputDelivered(
+          DiscordGuildIdSchema.parse(competition.serverId),
+          "competition_ended",
+          { db: prismaClient },
+        );
       }
 
       await prismaClient.competition.update({

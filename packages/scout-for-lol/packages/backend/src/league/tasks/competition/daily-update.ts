@@ -1,4 +1,5 @@
 import {
+  DiscordGuildIdSchema,
   getCompetitionStatus,
   type CompetitionWithCriteria,
 } from "@scout-for-lol/data/index.ts";
@@ -24,6 +25,7 @@ import { z } from "zod";
 import * as Sentry from "@sentry/bun";
 import { logNotification } from "#src/utils/notification-logger.ts";
 import { createLogger } from "#src/logger.ts";
+import { recordCoreOutputDelivered } from "#src/analytics/guild-lifecycle.ts";
 
 const logger = createLogger("competition-daily-update");
 
@@ -221,6 +223,7 @@ async function calculateLeaderboardSafely(
  */
 export async function postLeaderboardUpdate(
   competition: CompetitionWithCriteria,
+  trigger: "scheduled" | "debug",
 ): Promise<{ success: boolean }> {
   try {
     logger.info(
@@ -268,6 +271,12 @@ export async function postLeaderboardUpdate(
       competition.channelId,
       competition.serverId,
     );
+    if (trigger === "scheduled") {
+      await recordCoreOutputDelivered(
+        DiscordGuildIdSchema.parse(competition.serverId),
+        "competition_leaderboard",
+      );
+    }
 
     logger.info(
       `[DailyLeaderboard] ✅ Updated competition ${competition.id.toString()}`,
@@ -319,7 +328,7 @@ export async function runDailyLeaderboardUpdate(): Promise<void> {
     let failureCount = 0;
 
     for (const competition of activeCompetitions) {
-      const { success } = await postLeaderboardUpdate(competition);
+      const { success } = await postLeaderboardUpdate(competition, "debug");
       if (success) {
         successCount++;
       } else {
