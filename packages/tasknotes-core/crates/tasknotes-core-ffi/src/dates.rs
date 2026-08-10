@@ -101,6 +101,32 @@ pub fn date_parse_local(
     Ok(dates::parse_local_date(raw, offset).map(render_iso_date))
 }
 
+/// The instant a stored date value names, in milliseconds since the epoch, or
+/// `None` when it names no instant at all.
+///
+/// ## What a host does with it
+///
+/// [`date_parse_local`] takes one fixed offset, and a viewer's offset is not
+/// fixed — most zones change theirs twice a year. The offset that resolves a
+/// value is the one **its own instant** falls under: in Los Angeles in January,
+/// `2026-07-10T07:30:00Z` is the 10th under that instant's `-07:00` and the 9th
+/// under the reader's current `-08:00`. So a host asks this which instant a
+/// value names, resolves its timezone database at that instant, and spends the
+/// answer on [`date_parse_local`].
+///
+/// The timezone database stays on the host deliberately. macOS's is the one the
+/// user's own clock reads; a second copy compiled into this core would disagree
+/// with it every time a government moved a transition.
+///
+/// `None` means the value is a civil date or a wall-clock reading — the two
+/// shapes [`date_parse_local`] resolves without consulting an offset — so there
+/// is nothing to resolve and the viewer's current offset is exact.
+#[uniffi::export]
+#[must_use]
+pub fn date_instant_millis(raw: &str) -> Option<i64> {
+    dates::parse_instant_millis(raw)
+}
+
 /// Whether `date` is the viewer's today.
 ///
 /// # Errors
@@ -249,8 +275,8 @@ mod tests {
     use tasknotes_core::dates::{DateGroup, UpcomingHorizon};
 
     use super::{
-        date_add_days, date_group, date_group_heading, date_is_overdue, date_is_today,
-        date_is_upcoming, date_next_monday, date_next_saturday, date_next_weekday,
+        date_add_days, date_group, date_group_heading, date_instant_millis, date_is_overdue,
+        date_is_today, date_is_upcoming, date_next_monday, date_next_saturday, date_next_weekday,
         date_parse_local, parse_iso_date,
     };
     use crate::error::CoreError;
@@ -392,6 +418,32 @@ mod tests {
             Some("2026-07-09")
         );
         assert_eq!(date_parse_local("nonsense", 0).unwrap(), None);
+    }
+
+    /// The pair a host uses together: ask which instant a value names, resolve
+    /// the offset the device's timezone database had *then*, and spend it here.
+    /// Reusing the offset the host is standing in today is the bug — a July
+    /// timestamp read in January would be filed a day early.
+    #[test]
+    fn a_zoned_value_names_the_instant_a_host_resolves_its_offset_for() {
+        let raw = "2026-07-10T07:30:00Z";
+        assert_eq!(date_instant_millis(raw), Some(1_783_668_600_000));
+        assert_eq!(
+            date_parse_local(raw, -7 * 3600).unwrap().as_deref(),
+            Some("2026-07-10"),
+            "resolved at the offset Los Angeles had at that instant"
+        );
+        assert_eq!(
+            date_parse_local(raw, -8 * 3600).unwrap().as_deref(),
+            Some("2026-07-09"),
+            "resolved at the offset Los Angeles has in January"
+        );
+
+        // A value that names no instant needs no resolution, which is the same
+        // statement as `date_parse_local` ignoring the offset for it.
+        for bare in ["2026-07-10", "2026-07-10T15:30", "nonsense"] {
+            assert_eq!(date_instant_millis(bare), None, "{bare}");
+        }
     }
 
     #[test]

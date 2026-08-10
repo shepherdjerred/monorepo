@@ -1107,6 +1107,11 @@ RustBuffer uniffi_tasknotes_core_ffi_fn_func_date_group(RustBuffer date, RustBuf
 RustBuffer uniffi_tasknotes_core_ffi_fn_func_date_group_heading(RustBuffer group, RustCallStatus *_Nonnull out_status
 );
 #endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_DATE_INSTANT_MILLIS
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_DATE_INSTANT_MILLIS
+RustBuffer uniffi_tasknotes_core_ffi_fn_func_date_instant_millis(RustBuffer raw, RustCallStatus *_Nonnull out_status
+);
+#endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_DATE_IS_OVERDUE
 #define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_FUNC_DATE_IS_OVERDUE
 int8_t uniffi_tasknotes_core_ffi_fn_func_date_is_overdue(RustBuffer date, RustBuffer today, RustCallStatus *_Nonnull out_status
@@ -1753,6 +1758,12 @@ uint16_t uniffi_tasknotes_core_ffi_checksum_func_date_group(void
 #ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_DATE_GROUP_HEADING
 #define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_DATE_GROUP_HEADING
 uint16_t uniffi_tasknotes_core_ffi_checksum_func_date_group_heading(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_DATE_INSTANT_MILLIS
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_FUNC_DATE_INSTANT_MILLIS
+uint16_t uniffi_tasknotes_core_ffi_checksum_func_date_instant_millis(void
     
 );
 #endif

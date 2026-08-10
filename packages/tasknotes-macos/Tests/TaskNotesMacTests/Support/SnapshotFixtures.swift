@@ -37,7 +37,7 @@ enum SnapshotFixtures {
 
     /// Where and when the viewer is standing, for anything derived by hand.
     static var calendar: ViewerCalendar {
-        ViewerCalendar(today: today, utcOffsetSeconds: Int32(timeZone.secondsFromGMT(for: instant)))
+        ViewerCalendar(today: today, timeZone: timeZone, instant: instant)
     }
 
     /// The clock the store reads. Fixed instant, fixed zone.

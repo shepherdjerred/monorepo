@@ -158,14 +158,14 @@ private struct SourceEditorHarness: View {
 /// The tasks the inspector snapshots are rendered against.
 ///
 /// Pinned exactly as the list fixtures are, and for the same reason: the instant
-/// decides which dates are overdue, the offset decides which civil day a zoned
+/// decides which dates are overdue, the zone decides which civil day a zoned
 /// value lands on, and the locale decides the words. A snapshot reading any of
 /// the three from the machine would render differently in Berlin and
 /// differently tomorrow.
 @MainActor
 enum InspectorFixtures {
     /// 2026-07-22, a Wednesday, in America/Los_Angeles.
-    static let calendar = ViewerCalendar(today: "2026-07-22", utcOffsetSeconds: -25_200)
+    static let calendar = SnapshotFixtures.calendar
 
     /// A task with something in every editable field, including an overdue due
     /// date so the panel's only red is on screen.

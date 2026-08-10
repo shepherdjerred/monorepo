@@ -11938,6 +11938,35 @@ public func dateGroupHeading(group: DateGroup) -> String?  {
 })
 }
 /**
+ * The instant a stored date value names, in milliseconds since the epoch, or
+ * `None` when it names no instant at all.
+ *
+ * ## What a host does with it
+ *
+ * [`date_parse_local`] takes one fixed offset, and a viewer's offset is not
+ * fixed — most zones change theirs twice a year. The offset that resolves a
+ * value is the one **its own instant** falls under: in Los Angeles in January,
+ * `2026-07-10T07:30:00Z` is the 10th under that instant's `-07:00` and the 9th
+ * under the reader's current `-08:00`. So a host asks this which instant a
+ * value names, resolves its timezone database at that instant, and spends the
+ * answer on [`date_parse_local`].
+ *
+ * The timezone database stays on the host deliberately. macOS's is the one the
+ * user's own clock reads; a second copy compiled into this core would disagree
+ * with it every time a government moved a transition.
+ *
+ * `None` means the value is a civil date or a wall-clock reading — the two
+ * shapes [`date_parse_local`] resolves without consulting an offset — so there
+ * is nothing to resolve and the viewer's current offset is exact.
+ */
+public func dateInstantMillis(raw: String) -> Int64?  {
+    return try!  FfiConverterOptionInt64.lift(try! rustCall() {
+    uniffi_tasknotes_core_ffi_fn_func_date_instant_millis(
+        FfiConverterString.lower(raw),$0
+    )
+})
+}
+/**
  * Whether `date` has already passed for the viewer.
  *
  * Today is *not* overdue: a task due today is still due.
@@ -12578,6 +12607,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_tasknotes_core_ffi_checksum_func_date_group_heading() != 22392) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_func_date_instant_millis() != 38175) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_tasknotes_core_ffi_checksum_func_date_is_overdue() != 57635) {

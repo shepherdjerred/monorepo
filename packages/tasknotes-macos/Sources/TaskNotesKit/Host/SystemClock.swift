@@ -62,22 +62,18 @@ public final class SystemClock: CoreClock {
 }
 
 extension SystemClock: ViewerCalendarSource {
-    /// The viewer's day and UTC offset, read at the same instant.
+    /// The viewer's day and zone, read at one instant.
     ///
-    /// One `instant()` call for both fields rather than two, so the pair cannot
-    /// straddle a DST transition or a midnight and describe two different
-    /// moments.
+    /// One `instant()` call for the day and the snapshot instant rather than
+    /// two, so the pair cannot straddle a DST transition or a midnight and
+    /// describe two different moments.
     ///
-    /// The `Int32` conversion traps rather than clamping or truncating, which
-    /// is the intended behaviour: `secondsFromGMT` is bounded well inside
-    /// `Int32` by the tz database, so a value outside it means the platform
-    /// broke a contract, and a clamped offset would silently move dates by a
-    /// day rather than saying so.
+    /// The **zone** travels rather than the offset it has right now. An offset
+    /// is a property of a viewer at an instant, and a task's date may fall in
+    /// the other half of the year; ``ViewerCalendar`` resolves the offset per
+    /// value against this zone's own database.
     public func viewerCalendar() -> ViewerCalendar {
         let now = instant()
-        return ViewerCalendar(
-            today: ymd.format(now),
-            utcOffsetSeconds: Int32(timeZone.secondsFromGMT(for: now))
-        )
+        return ViewerCalendar(today: ymd.format(now), timeZone: timeZone, instant: now)
     }
 }

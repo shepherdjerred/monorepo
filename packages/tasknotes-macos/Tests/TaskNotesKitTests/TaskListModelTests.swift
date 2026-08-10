@@ -359,16 +359,39 @@ struct DateBadgeTests {
 
     @Test("a zoned instant is bucketed in the viewer's own day")
     func aZonedInstantShiftsIntoTheViewersDay() throws {
-        // 02:00 UTC on the 23rd is still the 22nd in UTC-7, so a task carrying
-        // it is due *today* for this viewer and not tomorrow. This is the
-        // difference the core's `dateParseLocal` exists to get right, and the
-        // reason the offset is part of `ViewerCalendar` rather than assumed.
+        // 02:00 UTC on the 23rd is still the 22nd in Los Angeles, so a task
+        // carrying it is due *today* for this viewer and not tomorrow. This is
+        // the difference the core's `dateParseLocal` exists to get right, and
+        // the reason the zone is part of `ViewerCalendar` rather than assumed.
         let badge = try #require(
             try DateBadge.of(
                 stored: "2026-07-23T02:00:00Z",
-                calendar: fixedCalendar(today: "2026-07-22", utcOffsetSeconds: -25_200),
+                calendar: fixedCalendar(today: "2026-07-22"),
                 text: fixedText()))
         #expect(badge.group == .today)
+    }
+
+    /// ⚠️ The offset is resolved per value, not captured once.
+    ///
+    /// A viewer standing in January reading a July timestamp is the case a
+    /// snapshotted offset gets wrong: Los Angeles is `-08:00` in winter and
+    /// `-07:00` in summer, and resolving 07:30 UTC on 10 July at the winter
+    /// offset puts it on the 9th — the wrong day, in the wrong bucket, under
+    /// the wrong heading.
+    @Test("a value in another season is resolved at that season's offset")
+    func aValueInAnotherSeasonKeepsItsOwnOffset() throws {
+        let january = fixedCalendar(
+            today: "2026-01-14",
+            instant: Date(timeIntervalSince1970: 1_768_420_800)
+        )
+        #expect(january.utcOffsetSeconds == -28_800, "the viewer is on standard time")
+
+        let badge = try #require(
+            try DateBadge.of(
+                stored: "2026-07-10T07:30:00Z",
+                calendar: january,
+                text: fixedText()))
+        #expect(badge.date == "2026-07-10")
     }
 }
 

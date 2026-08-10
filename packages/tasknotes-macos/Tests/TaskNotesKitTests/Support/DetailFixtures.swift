@@ -61,7 +61,7 @@ func detailTask(
 /// against one of these, and a test that read the machine's clock would render
 /// differently tomorrow — which is exactly the failure the pinning exists to
 /// prevent.
-let detailCalendar = ViewerCalendar(today: "2026-07-22", utcOffsetSeconds: -25_200)
+let detailCalendar = fixedCalendar()
 
 /// A row, derived the way a list derives it.
 ///

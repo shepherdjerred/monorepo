@@ -26,6 +26,13 @@
 //! instant lands on different days for different viewers. That function is the
 //! only one here that takes an offset, and it takes it explicitly.
 //!
+//! An offset is also not a property of a viewer alone — it is a property of a
+//! viewer *at an instant*, since most zones change theirs twice a year. So
+//! [`parse_instant_millis`] exists beside it: the host owns the timezone
+//! database and resolves the offset, and this says which instant to resolve it
+//! for. Handing back "the offset now" for a timestamp in the other half of the
+//! year is the same off-by-one-day class as everything above.
+//!
 //! ## What deliberately is not here
 //!
 //! `formatDate`, `formatDayHeading`, and `formatRelativeDate`'s fallback branch
@@ -141,17 +148,74 @@ impl DateGroup {
 /// agrees on, while bucketing needs the day the user believes they wrote down.
 #[must_use]
 pub fn parse_local_date(raw: &str, viewer_offset: FixedOffset) -> Option<NaiveDate> {
+    match classify(raw)? {
+        StoredDate::Civil(date) => Some(date),
+        StoredDate::Instant(instant) => Some(instant.with_timezone(&viewer_offset).date_naive()),
+        StoredDate::WallClock(naive) => Some(naive.date()),
+    }
+}
+
+/// The instant a stored value names, in milliseconds since the epoch, or `None`
+/// when it names no instant at all.
+///
+/// ## Why a host needs this
+///
+/// [`parse_local_date`] takes a *fixed* offset, and a viewer's offset is not
+/// fixed: most zones change it twice a year. The offset that resolves a value
+/// is the one its own instant falls under, which is not necessarily the one the
+/// reader is standing in — in Los Angeles in January, `2026-07-10T07:30:00Z` is
+/// 00:30 on the 10th under PDT (`-07:00`) and 23:30 on the *9th* under the
+/// reader's current PST (`-08:00`). Reusing "the offset now" therefore files a
+/// task under the wrong day for half the year.
+///
+/// The timezone database belongs to the host — macOS's is the one the user's
+/// own clock reads, and shipping a second copy in this crate would make the two
+/// disagree — so the host resolves the offset. This is the other half of that
+/// exchange: it says which instant to resolve it *for*.
+///
+/// `None` is not a failure. It says this value names a civil date or a
+/// wall-clock reading, which are the two shapes [`parse_local_date`] resolves
+/// without consulting an offset at all, so there is nothing for a host to
+/// resolve.
+#[must_use]
+pub fn parse_instant_millis(raw: &str) -> Option<i64> {
+    match classify(raw)? {
+        StoredDate::Instant(instant) => Some(instant.timestamp_millis()),
+        StoredDate::Civil(_) | StoredDate::WallClock(_) => None,
+    }
+}
+
+/// Which of the three shapes a stored date value is in.
+///
+/// One classifier rather than a shape test per question, because
+/// [`parse_local_date`] and [`parse_instant_millis`] are read together — a host
+/// resolves an offset with the second and spends it on the first — and two
+/// copies of "is this zoned" could answer differently for the same string. Then
+/// an offset would be resolved for a value that is read as a wall-clock time,
+/// or not resolved for one that needs it.
+enum StoredDate {
+    /// `2026-07-10`, `2026-7-1` — a civil date, the same day for every reader.
+    Civil(NaiveDate),
+    /// `2026-07-10T15:30:00Z`, `…+09:00` — an instant, which lands on different
+    /// days for different readers.
+    Instant(DateTime<FixedOffset>),
+    /// `2026-07-10T15:30` — a wall-clock reading, so the civil date it is
+    /// written on, whoever reads it.
+    WallClock(NaiveDateTime),
+}
+
+fn classify(raw: &str) -> Option<StoredDate> {
     // First, because no other shape can also parse as a bare date: chrono
     // rejects trailing input, so a datetime never reaches this branch.
     if let Ok(date) = NaiveDate::parse_from_str(raw, "%Y-%m-%d") {
-        return Some(date);
+        return Some(StoredDate::Civil(date));
     }
     if let Ok(instant) = DateTime::parse_from_rfc3339(raw) {
-        return Some(instant.with_timezone(&viewer_offset).date_naive());
+        return Some(StoredDate::Instant(instant));
     }
     for format in ["%Y-%m-%dT%H:%M:%S%.f", "%Y-%m-%dT%H:%M"] {
         if let Ok(naive) = NaiveDateTime::parse_from_str(raw, format) {
-            return Some(naive.date());
+            return Some(StoredDate::WallClock(naive));
         }
     }
     None
@@ -321,7 +385,7 @@ mod tests {
 
     use super::{
         DateGroup, UpcomingHorizon, add_days, date_group, is_overdue, is_today, is_upcoming,
-        next_monday, next_saturday, parse_local_date, to_iso_date,
+        next_monday, next_saturday, parse_instant_millis, parse_local_date, to_iso_date,
     };
 
     /// Every date test in the TypeScript suite is written against "now" plus an
@@ -598,6 +662,44 @@ mod tests {
         // …and the offset still does not enter into it.
         let tokyo = FixedOffset::east_opt(9 * 3600).unwrap();
         assert_eq!(parse_local_date("2026-2-3", tokyo), Some(ymd(2026, 2, 3)));
+    }
+
+    // ── parseInstantMillis ─────────────────────────────────────────────────
+
+    #[test]
+    fn only_a_zoned_value_names_an_instant() {
+        // The same moment, spelled three ways.
+        for raw in [
+            "2026-07-10T15:30:00Z",
+            "2026-07-11T00:30:00+09:00",
+            "2026-07-10T08:30:00-07:00",
+        ] {
+            assert_eq!(parse_instant_millis(raw), Some(1_783_697_400_000), "{raw}");
+        }
+        // A civil date and a wall-clock reading name no instant, which is the
+        // same statement as `parse_local_date` not consulting the offset for
+        // them.
+        for raw in ["2026-07-10", "2026-7-1", "2026-07-10T15:30", "nonsense", ""] {
+            assert_eq!(parse_instant_millis(raw), None, "{raw}");
+        }
+    }
+
+    /// The reason the offset cannot be captured once and reused: a host reading
+    /// a July timestamp in January would otherwise resolve it at its *winter*
+    /// offset and file the task a day early.
+    #[test]
+    fn an_instants_own_offset_is_what_decides_its_day() {
+        let raw = "2026-07-10T07:30:00Z";
+        let instant = parse_instant_millis(raw).expect("a zoned value names an instant");
+        assert_eq!(instant, 1_783_668_600_000);
+
+        // What Los Angeles is at that instant — daylight time.
+        let summer = FixedOffset::east_opt(-7 * 3600).unwrap();
+        assert_eq!(parse_local_date(raw, summer).unwrap(), ymd(2026, 7, 10));
+        // What Los Angeles is in January, which is what a snapshot taken then
+        // would have captured. Same instant, wrong day.
+        let winter = FixedOffset::east_opt(-8 * 3600).unwrap();
+        assert_eq!(parse_local_date(raw, winter).unwrap(), ymd(2026, 7, 9));
     }
 
     // ── toISODate ──────────────────────────────────────────────────────────

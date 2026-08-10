@@ -154,16 +154,30 @@ func coreTask(
 
 /// A viewer standing in a fixed place at a fixed time.
 ///
-/// Both halves are pinned because both change answers: the day decides which
-/// tasks are overdue, and the offset decides which civil day a zoned `due`
-/// falls on. A test that read either from the machine would pass in California
-/// and fail in Berlin.
+/// All three are pinned because all three change answers: the day decides which
+/// tasks are overdue, the zone decides which civil day a zoned `due` falls on,
+/// and the instant decides which side of a daylight-saving transition the zone
+/// is read at. A test that read any of them from the machine would pass in
+/// California and fail in Berlin.
+///
+/// The default zone is a real place rather than a fixed offset, because a fixed
+/// offset cannot express the thing most worth testing here: that a value in the
+/// other half of the year is resolved at *its own* offset.
 func fixedCalendar(
     today: String = "2026-07-22",
-    utcOffsetSeconds: Int32 = -25_200
+    timeZone: TimeZone = losAngeles,
+    instant: Date = wednesdayNoon
 ) -> ViewerCalendar {
-    ViewerCalendar(today: today, utcOffsetSeconds: utcOffsetSeconds)
+    ViewerCalendar(today: today, timeZone: timeZone, instant: instant)
 }
+
+/// The zone every date fixture stands in: `-07:00` in summer, `-08:00` in
+/// winter, so the two are distinguishable.
+let losAngeles = TimeZone(identifier: "America/Los_Angeles")!
+
+/// 2026-07-22T12:00:00-07:00, the instant ``fixedCalendar``'s default day was
+/// read at.
+let wednesdayNoon = Date(timeIntervalSince1970: 1_784_746_800)
 
 /// The formatter every list test uses, pinned to one locale.
 ///

@@ -43,7 +43,10 @@ public struct DateBadge: Sendable, Equatable {
     ) throws(CoreError) -> DateBadge? {
         guard let stored else { return nil }
         let civil = try CoreErrors.rethrowingCore("reading the date \(stored)") {
-            try dateParseLocal(raw: stored, viewerUtcOffsetSeconds: calendar.utcOffsetSeconds)
+            try dateParseLocal(
+                raw: stored,
+                viewerUtcOffsetSeconds: calendar.utcOffsetSeconds(resolving: stored)
+            )
         }
         guard let resolved = civil else { return nil }
         let bucket = try CoreErrors.rethrowingCore("grouping the date \(resolved)") {

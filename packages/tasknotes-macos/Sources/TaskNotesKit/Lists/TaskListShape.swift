@@ -346,7 +346,10 @@ extension CoreTask {
     ) throws(CoreError) -> String? {
         guard let stored else { return nil }
         return try CoreErrors.rethrowingCore("reading \(what)") {
-            try dateParseLocal(raw: stored, viewerUtcOffsetSeconds: calendar.utcOffsetSeconds)
+            try dateParseLocal(
+                raw: stored,
+                viewerUtcOffsetSeconds: calendar.utcOffsetSeconds(resolving: stored)
+            )
         }
     }
 }
