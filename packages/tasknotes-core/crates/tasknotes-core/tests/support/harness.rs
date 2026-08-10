@@ -228,6 +228,7 @@ pub struct MemoryCacheStorage {
     tasks: Mutex<Vec<Task>>,
     aliases: Mutex<Option<String>>,
     counters: Mutex<Option<String>>,
+    restores: Mutex<Option<String>>,
     last_sync: Mutex<Option<i64>>,
 }
 
@@ -243,6 +244,7 @@ impl MemoryCacheStorage {
             tasks: Mutex::new(lock(&self.tasks).clone()),
             aliases: Mutex::new(lock(&self.aliases).clone()),
             counters: Mutex::new(lock(&self.counters).clone()),
+            restores: Mutex::new(lock(&self.restores).clone()),
             last_sync: Mutex::new(*lock(&self.last_sync)),
         }
     }
@@ -273,6 +275,15 @@ impl TaskCacheStorage for MemoryCacheStorage {
 
     fn write_id_counters(&self, data: &str) -> Result<()> {
         *lock(&self.counters) = Some(data.to_owned());
+        Ok(())
+    }
+
+    fn read_completion_restores(&self) -> Result<Option<String>> {
+        Ok(lock(&self.restores).clone())
+    }
+
+    fn write_completion_restores(&self, data: &str) -> Result<()> {
+        *lock(&self.restores) = Some(data.to_owned());
         Ok(())
     }
 

@@ -207,6 +207,29 @@ pub trait TaskCacheStorage: Send + Sync {
     /// A storage-layer failure.
     fn write_id_counters(&self, data: String) -> Result<(), CoreError>;
 
+    /// Read the retained completion restores as JSON, or `None`.
+    ///
+    /// `None` is the fresh-install path *and* the upgrade path, and neither is
+    /// a failure — see
+    /// [`tasknotes_core::sync::TaskCacheStorage::read_completion_restores`].
+    ///
+    /// # Errors
+    ///
+    /// A storage-layer failure.
+    fn read_completion_restores(&self) -> Result<Option<String>, CoreError>;
+
+    /// Persist the retained completion restores as JSON.
+    ///
+    /// The schedules this install's acknowledged completions replaced, which is
+    /// the only thing that can turn a later undo of a recurring occurrence into
+    /// something the server will honour. See
+    /// [`tasknotes_core::sync::TaskCacheStorage::write_completion_restores`].
+    ///
+    /// # Errors
+    ///
+    /// A storage-layer failure.
+    fn write_completion_restores(&self, data: String) -> Result<(), CoreError>;
+
     /// Read the last successful pull's timestamp.
     ///
     /// # Errors
@@ -366,6 +389,16 @@ impl CoreTaskCacheStorage for TaskCacheStorageAdapter {
     fn write_id_counters(&self, data: &str) -> CoreResult<()> {
         self.0
             .write_id_counters(data.to_owned())
+            .map_err(Into::into)
+    }
+
+    fn read_completion_restores(&self) -> CoreResult<Option<String>> {
+        self.0.read_completion_restores().map_err(Into::into)
+    }
+
+    fn write_completion_restores(&self, data: &str) -> CoreResult<()> {
+        self.0
+            .write_completion_restores(data.to_owned())
             .map_err(Into::into)
     }
 

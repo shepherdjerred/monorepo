@@ -48,6 +48,7 @@ public final class FileHostStorage: QueueStorage, TaskCacheStorage, MigrationSto
         case tasks = "tasks.json"
         case idAliases = "id-aliases.json"
         case idCounters = "id-counters.json"
+        case completionRestores = "completion-restores.json"
         case lastSyncTime = "last-sync-time.json"
         case schemaVersion = "schema-version.json"
         case legacyQueue = "legacy-queue.json"
@@ -177,6 +178,27 @@ public final class FileHostStorage: QueueStorage, TaskCacheStorage, MigrationSto
     /// reader, which is why adding it needed no migration.
     public func writeIdCounters(data: String) throws(CoreError) {
         try writeText(data, to: .idCounters)
+    }
+
+    /// The schedules this install's acknowledged completions replaced.
+    ///
+    /// Absent means no occurrence completed here can still be undone against
+    /// the server, which is the fresh-install path and every install carried
+    /// over from a build that predates this file.
+    public func readCompletionRestores() throws(CoreError) -> String? {
+        try readText(.completionRestores)
+    }
+
+    /// Persist the retained completion restores.
+    ///
+    /// Completing an occurrence of a recurring task makes the *server* advance
+    /// the series, and the previous dates are not recoverable from the new
+    /// ones. Once the completion is acknowledged the queue no longer holds
+    /// them, so this file is the only thing that can turn a later untick into
+    /// an undo the server will honour rather than a tick the series has already
+    /// moved past.
+    public func writeCompletionRestores(data: String) throws(CoreError) {
+        try writeText(data, to: .completionRestores)
     }
 
     public func readLastSyncTime() throws(CoreError) -> Int64? {

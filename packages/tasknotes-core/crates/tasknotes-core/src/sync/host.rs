@@ -238,6 +238,36 @@ pub trait TaskCacheStorage: Send + Sync {
     /// A storage-layer failure.
     fn write_id_counters(&self, data: &str) -> Result<()>;
 
+    /// Read the retained completion restores as JSON, or `None`.
+    ///
+    /// **`None` is the normal case, not a failure** — a fresh install, or one
+    /// carried over from a build that predates this slot. Both mean "no
+    /// occurrence this install completed can still be undone against the
+    /// server", which needs no migration.
+    ///
+    /// # Errors
+    ///
+    /// A storage-layer failure.
+    fn read_completion_restores(&self) -> Result<Option<String>>;
+
+    /// Persist the retained completion restores as JSON.
+    ///
+    /// The schedules that this install's already-acknowledged completions
+    /// replaced, keyed by task and occurrence date. See
+    /// [`store::completion_restores`](crate::store) for why an acknowledged
+    /// completion has to leave one behind at all.
+    ///
+    /// A slot of its own for the same reason
+    /// [`TaskCacheStorage::write_id_counters`] is one: the queue and the alias
+    /// map are formats shared with the TypeScript client, and folding anything
+    /// into either loses user data silently on that side. This is a new key
+    /// whose only reader is the store.
+    ///
+    /// # Errors
+    ///
+    /// A storage-layer failure.
+    fn write_completion_restores(&self, data: &str) -> Result<()>;
+
     /// Read the last successful pull's timestamp.
     ///
     /// # Errors

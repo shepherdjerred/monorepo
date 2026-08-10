@@ -513,6 +513,7 @@ mod tests {
         tasks: Mutex<Vec<Task>>,
         aliases: Mutex<Option<String>>,
         counters: Mutex<Option<String>>,
+        restores: Mutex<Option<String>>,
         last_sync: Mutex<Option<i64>>,
     }
 
@@ -553,6 +554,13 @@ mod tests {
         }
         fn write_id_counters(&self, data: &str) -> Result<()> {
             *self.counters.lock().unwrap() = Some(data.to_owned());
+            Ok(())
+        }
+        fn read_completion_restores(&self) -> Result<Option<String>> {
+            Ok(self.restores.lock().unwrap().clone())
+        }
+        fn write_completion_restores(&self, data: &str) -> Result<()> {
+            *self.restores.lock().unwrap() = Some(data.to_owned());
             Ok(())
         }
         fn read_last_sync_time(&self) -> Result<Option<i64>> {

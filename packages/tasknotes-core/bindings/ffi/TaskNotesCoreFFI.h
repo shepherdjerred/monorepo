@@ -399,7 +399,21 @@ typedef void (*UniffiCallbackInterfaceTaskCacheStorageMethod6)(uint64_t, RustBuf
 #endif
 #ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TASK_CACHE_STORAGE_METHOD7
 #define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TASK_CACHE_STORAGE_METHOD7
-typedef void (*UniffiCallbackInterfaceTaskCacheStorageMethod7)(uint64_t, int64_t, void* _Nonnull, 
+typedef void (*UniffiCallbackInterfaceTaskCacheStorageMethod7)(uint64_t, RustBuffer, void* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TASK_CACHE_STORAGE_METHOD8
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TASK_CACHE_STORAGE_METHOD8
+typedef void (*UniffiCallbackInterfaceTaskCacheStorageMethod8)(uint64_t, RustBuffer* _Nonnull, 
+        RustCallStatus *_Nonnull uniffiCallStatus
+    );
+
+#endif
+#ifndef UNIFFI_FFIDEF_CALLBACK_INTERFACE_TASK_CACHE_STORAGE_METHOD9
+#define UNIFFI_FFIDEF_CALLBACK_INTERFACE_TASK_CACHE_STORAGE_METHOD9
+typedef void (*UniffiCallbackInterfaceTaskCacheStorageMethod9)(uint64_t, int64_t, void* _Nonnull, 
         RustCallStatus *_Nonnull uniffiCallStatus
     );
 
@@ -484,8 +498,10 @@ typedef struct UniffiVTableCallbackInterfaceTaskCacheStorage {
     UniffiCallbackInterfaceTaskCacheStorageMethod3 _Nonnull writeIdAliases;
     UniffiCallbackInterfaceTaskCacheStorageMethod4 _Nonnull readIdCounters;
     UniffiCallbackInterfaceTaskCacheStorageMethod5 _Nonnull writeIdCounters;
-    UniffiCallbackInterfaceTaskCacheStorageMethod6 _Nonnull readLastSyncTime;
-    UniffiCallbackInterfaceTaskCacheStorageMethod7 _Nonnull writeLastSyncTime;
+    UniffiCallbackInterfaceTaskCacheStorageMethod6 _Nonnull readCompletionRestores;
+    UniffiCallbackInterfaceTaskCacheStorageMethod7 _Nonnull writeCompletionRestores;
+    UniffiCallbackInterfaceTaskCacheStorageMethod8 _Nonnull readLastSyncTime;
+    UniffiCallbackInterfaceTaskCacheStorageMethod9 _Nonnull writeLastSyncTime;
 } UniffiVTableCallbackInterfaceTaskCacheStorage;
 
 #endif
@@ -777,6 +793,16 @@ RustBuffer uniffi_tasknotes_core_ffi_fn_method_taskcachestorage_read_id_counters
 #ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_TASKCACHESTORAGE_WRITE_ID_COUNTERS
 #define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_TASKCACHESTORAGE_WRITE_ID_COUNTERS
 void uniffi_tasknotes_core_ffi_fn_method_taskcachestorage_write_id_counters(uint64_t ptr, RustBuffer data, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_TASKCACHESTORAGE_READ_COMPLETION_RESTORES
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_TASKCACHESTORAGE_READ_COMPLETION_RESTORES
+RustBuffer uniffi_tasknotes_core_ffi_fn_method_taskcachestorage_read_completion_restores(uint64_t ptr, RustCallStatus *_Nonnull out_status
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_TASKCACHESTORAGE_WRITE_COMPLETION_RESTORES
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_TASKCACHESTORAGE_WRITE_COMPLETION_RESTORES
+void uniffi_tasknotes_core_ffi_fn_method_taskcachestorage_write_completion_restores(uint64_t ptr, RustBuffer data, RustCallStatus *_Nonnull out_status
 );
 #endif
 #ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_FN_METHOD_TASKCACHESTORAGE_READ_LAST_SYNC_TIME
@@ -2063,6 +2089,18 @@ uint16_t uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_read_id_coun
 #ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_TASKCACHESTORAGE_WRITE_ID_COUNTERS
 #define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_TASKCACHESTORAGE_WRITE_ID_COUNTERS
 uint16_t uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_id_counters(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_TASKCACHESTORAGE_READ_COMPLETION_RESTORES
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_TASKCACHESTORAGE_READ_COMPLETION_RESTORES
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_read_completion_restores(void
+    
+);
+#endif
+#ifndef UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_TASKCACHESTORAGE_WRITE_COMPLETION_RESTORES
+#define UNIFFI_FFIDEF_UNIFFI_TASKNOTES_CORE_FFI_CHECKSUM_METHOD_TASKCACHESTORAGE_WRITE_COMPLETION_RESTORES
+uint16_t uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_completion_restores(void
     
 );
 #endif

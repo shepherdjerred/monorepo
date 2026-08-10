@@ -3105,6 +3105,33 @@ public protocol TaskCacheStorage: AnyObject, Sendable {
     func writeIdCounters(data: String) throws 
     
     /**
+     * Read the retained completion restores as JSON, or `None`.
+     *
+     * `None` is the fresh-install path *and* the upgrade path, and neither is
+     * a failure — see
+     * [`tasknotes_core::sync::TaskCacheStorage::read_completion_restores`].
+     *
+     * # Errors
+     *
+     * A storage-layer failure.
+     */
+    func readCompletionRestores() throws  -> String?
+    
+    /**
+     * Persist the retained completion restores as JSON.
+     *
+     * The schedules this install's acknowledged completions replaced, which is
+     * the only thing that can turn a later undo of a recurring occurrence into
+     * something the server will honour. See
+     * [`tasknotes_core::sync::TaskCacheStorage::write_completion_restores`].
+     *
+     * # Errors
+     *
+     * A storage-layer failure.
+     */
+    func writeCompletionRestores(data: String) throws 
+    
+    /**
      * Read the last successful pull's timestamp.
      *
      * # Errors
@@ -3278,6 +3305,45 @@ open func readIdCounters()throws  -> String?  {
      */
 open func writeIdCounters(data: String)throws   {try rustCallWithError(FfiConverterTypeCoreError_lift) {
     uniffi_tasknotes_core_ffi_fn_method_taskcachestorage_write_id_counters(
+            self.uniffiCloneHandle(),
+        FfiConverterString.lower(data),$0
+    )
+}
+}
+    
+    /**
+     * Read the retained completion restores as JSON, or `None`.
+     *
+     * `None` is the fresh-install path *and* the upgrade path, and neither is
+     * a failure — see
+     * [`tasknotes_core::sync::TaskCacheStorage::read_completion_restores`].
+     *
+     * # Errors
+     *
+     * A storage-layer failure.
+     */
+open func readCompletionRestores()throws  -> String?  {
+    return try  FfiConverterOptionString.lift(try rustCallWithError(FfiConverterTypeCoreError_lift) {
+    uniffi_tasknotes_core_ffi_fn_method_taskcachestorage_read_completion_restores(
+            self.uniffiCloneHandle(),$0
+    )
+})
+}
+    
+    /**
+     * Persist the retained completion restores as JSON.
+     *
+     * The schedules this install's acknowledged completions replaced, which is
+     * the only thing that can turn a later undo of a recurring occurrence into
+     * something the server will honour. See
+     * [`tasknotes_core::sync::TaskCacheStorage::write_completion_restores`].
+     *
+     * # Errors
+     *
+     * A storage-layer failure.
+     */
+open func writeCompletionRestores(data: String)throws   {try rustCallWithError(FfiConverterTypeCoreError_lift) {
+    uniffi_tasknotes_core_ffi_fn_method_taskcachestorage_write_completion_restores(
             self.uniffiCloneHandle(),
         FfiConverterString.lower(data),$0
     )
@@ -3473,6 +3539,54 @@ fileprivate struct UniffiCallbackInterfaceTaskCacheStorage {
                     throw UniffiInternalError.unexpectedStaleHandle
                 }
                 return try uniffiObj.writeIdCounters(
+                     data: try FfiConverterString.lift(data)
+                )
+            }
+
+            
+            let writeReturn = { () }
+            uniffiTraitInterfaceCallWithError(
+                callStatus: uniffiCallStatus,
+                makeCall: makeCall,
+                writeReturn: writeReturn,
+                lowerError: FfiConverterTypeCoreError_lower
+            )
+        },
+        readCompletionRestores: { (
+            uniffiHandle: UInt64,
+            uniffiOutReturn: UnsafeMutablePointer<RustBuffer>,
+            uniffiCallStatus: UnsafeMutablePointer<RustCallStatus>
+        ) in
+            let makeCall = {
+                () throws -> String? in
+                guard let uniffiObj = try? FfiConverterTypeTaskCacheStorage.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return try uniffiObj.readCompletionRestores(
+                )
+            }
+
+            
+            let writeReturn = { uniffiOutReturn.pointee = FfiConverterOptionString.lower($0) }
+            uniffiTraitInterfaceCallWithError(
+                callStatus: uniffiCallStatus,
+                makeCall: makeCall,
+                writeReturn: writeReturn,
+                lowerError: FfiConverterTypeCoreError_lower
+            )
+        },
+        writeCompletionRestores: { (
+            uniffiHandle: UInt64,
+            data: RustBuffer,
+            uniffiOutReturn: UnsafeMutableRawPointer,
+            uniffiCallStatus: UnsafeMutablePointer<RustCallStatus>
+        ) in
+            let makeCall = {
+                () throws -> () in
+                guard let uniffiObj = try? FfiConverterTypeTaskCacheStorage.handleMap.get(handle: uniffiHandle) else {
+                    throw UniffiInternalError.unexpectedStaleHandle
+                }
+                return try uniffiObj.writeCompletionRestores(
                      data: try FfiConverterString.lift(data)
                 )
             }
@@ -12634,10 +12748,16 @@ private let initializationResult: InitializationResult = {
     if (uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_id_counters() != 26948) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_read_last_sync_time() != 8447) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_read_completion_restores() != 47169) {
         return InitializationResult.apiChecksumMismatch
     }
-    if (uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_last_sync_time() != 39475) {
+    if (uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_completion_restores() != 52684) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_read_last_sync_time() != 47989) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_tasknotes_core_ffi_checksum_method_taskcachestorage_write_last_sync_time() != 41669) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_tasknotes_core_ffi_checksum_method_httpclient_send() != 45508) {

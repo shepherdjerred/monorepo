@@ -21,6 +21,7 @@
 //! ([`TaskCacheStorage`](crate::sync::TaskCacheStorage)), so this module owns
 //! the *shape* of persisted state and none of the mechanism.
 
+mod completion_restores;
 pub mod migrations;
 
 use std::sync::Arc;
@@ -32,6 +33,7 @@ use crate::{
     Error, Result,
     domain::{Task, TaskId},
     net::InstanceRestore,
+    store::completion_restores::{CompletionRestores, StoredCompletionRestore},
     sync::{
         Clock, Command, CommandInput, CommandQueue, DeadLetterEntry, QueueStorage, Randomness,
         TaskCacheStorage, command_id, rebase,
@@ -67,6 +69,7 @@ pub struct TaskStore {
     random: Arc<dyn Randomness>,
     base: IndexMap<TaskId, Task>,
     aliases: IndexMap<TaskId, TaskId>,
+    restores: CompletionRestores,
     last_sync_time: Option<i64>,
     snapshot: TaskStoreSnapshot,
     counters: IdCounters,
@@ -117,14 +120,15 @@ impl TaskStore {
             random,
             base: IndexMap::new(),
             aliases: IndexMap::new(),
+            restores: CompletionRestores::new(),
             last_sync_time: None,
             snapshot: TaskStoreSnapshot::default(),
             counters: IdCounters::default(),
         }
     }
 
-    /// Load the queue, the cached base, the alias map, the id counters and the
-    /// last sync time.
+    /// Load the queue, the cached base, the alias map, the retained completion
+    /// restores, the id counters and the last sync time.
     ///
     /// Call once at startup, **after** [`migrations::run_migrations`].
     ///
@@ -140,6 +144,14 @@ impl TaskStore {
             .map(|task| (task.id.clone(), task))
             .collect();
         self.aliases = parse_aliases(self.storage.read_id_aliases()?.as_deref());
+        self.restores =
+            completion_restores::parse(self.storage.read_completion_restores()?.as_deref())?;
+        // Launch is the one moment the day is guaranteed to be re-read, and an
+        // install that sat closed over a weekend is exactly how the map would
+        // otherwise grow without bound.
+        let today = self.today();
+        completion_restores::prune(&mut self.restores, &today, &self.base);
+        self.persist_restores()?;
         self.counters = parse_id_counters(self.storage.read_id_counters()?.as_deref())?;
         self.last_sync_time = self.storage.read_last_sync_time()?;
         self.recompute();
@@ -191,6 +203,7 @@ impl TaskStore {
     pub fn dispatch(&mut self, input: CommandInput) -> Result<Option<Task>> {
         let command = self.build_command(input)?;
         let target = command.target().clone();
+        let consumed = consumed_restore_key(&command);
         // Counters first, queue second, and never the other way round: the id
         // has to be durably spent before the command carrying it can reach the
         // wire. Crashing after this write only burns id values, which is free;
@@ -198,6 +211,15 @@ impl TaskStore {
         // out — and that id is the server's `X-Mutation-Id`.
         self.persist_id_counters()?;
         self.queue.enqueue(command)?;
+        // The retained snapshot has moved onto the queued uncompletion, so this
+        // drops the copy. Deliberately *after* the enqueue: dropping it first
+        // and then failing to enqueue would leave the user an undo that no
+        // longer knows what to put back.
+        if let Some(key) = consumed
+            && self.restores.shift_remove(&key).is_some()
+        {
+            self.persist_restores()?;
+        }
         self.recompute();
         Ok(self.snapshot.tasks.get(&target).cloned())
     }
@@ -219,6 +241,14 @@ impl TaskStore {
         command: &Command,
         server_task: Option<&Task>,
     ) -> Result<()> {
+        // Read before the base moves. Both of these are questions about the
+        // state the command was applied to, and the next few lines destroy it.
+        let captured = self.capture_restore(command);
+        let edited_occurrence = matches!(
+            *command,
+            Command::Update { ref task_id, ref payload, .. }
+                if completion_restores::is_occurrence_edit(payload, self.base.get(task_id))
+        );
         if let Some(server_task) = server_task
             && let Command::Create { temp_id, .. } = command
         {
@@ -245,6 +275,16 @@ impl TaskStore {
         // repair the cache. The TypeScript `applyServerAck` orders these the
         // same way, and says so in a comment for the same reason.
         self.persist_base()?;
+        let today = self.today();
+        completion_restores::prune(&mut self.restores, &today, &self.base);
+        if edited_occurrence {
+            completion_restores::invalidate_task(&mut self.restores, command.target());
+        }
+        if let Some((key, restore)) = captured {
+            self.restores
+                .insert(key, StoredCompletionRestore { restore });
+        }
+        self.persist_restores()?;
         self.queue.ack(command.id())?;
         self.recompute();
         Ok(())
@@ -293,10 +333,13 @@ impl TaskStore {
     ///
     /// Propagates a storage-layer failure.
     pub fn replace_base(&mut self, tasks: Vec<Task>, synced_at: i64) -> Result<()> {
-        self.base = tasks
-            .into_iter()
-            .map(|task| (task.id.clone(), task))
-            .collect();
+        let previous = core::mem::replace(
+            &mut self.base,
+            tasks
+                .into_iter()
+                .map(|task| (task.id.clone(), task))
+                .collect(),
+        );
         let stale: Vec<TaskId> = self
             .aliases
             .iter()
@@ -306,7 +349,18 @@ impl TaskStore {
         for temp in stale {
             self.aliases.shift_remove(&temp);
         }
+        let today = self.today();
+        completion_restores::prune(&mut self.restores, &today, &self.base);
+        completion_restores::invalidate_changed(&mut self.restores, &previous, &self.base);
         self.last_sync_time = Some(synced_at);
+        // Restores first, base second. A pull is the only place another client's
+        // schedule edit becomes visible, and the write that *invalidates* a
+        // snapshot has to be durable before the write that makes it stale. The
+        // other order costs the user a wrong rewind after a crash: the relaunch
+        // reads the pulled schedule alongside a retained snapshot that predates
+        // it, and the next undo asks the server to go back to a schedule
+        // somebody already replaced.
+        self.persist_restores()?;
         self.persist_base()?;
         self.persist_aliases()?;
         self.storage.write_last_sync_time(synced_at)?;
@@ -369,24 +423,34 @@ impl TaskStore {
     }
 
     /// The schedule an uncompletion has to put back, if this install is the one
-    /// that will have moved it.
+    /// that moved it.
     ///
-    /// ## Why the pending completion is the whole condition
+    /// ## The two windows, and why there have to be two
     ///
     /// Completing an occurrence makes the *server* advance the series;
     /// [`apply_command`](crate::sync::apply_command) deliberately does not, so
     /// while the completion is still queued the visible task still carries the
-    /// pre-completion `scheduled`, `due`, and rule. That is precisely the
-    /// snapshot the undo needs, and this is the only window in which it is
-    /// still readable — complete and uncomplete before the queue drains and the
+    /// pre-completion `scheduled`, `due`, and rule. **That is the first
+    /// window**, and it covers complete-then-undo before the queue drains: the
     /// two commands are sent back to back, the first advancing a schedule the
     /// second must restore.
     ///
-    /// With no queued completion there is nothing to undo that this install
-    /// caused: either the occurrence was completed on another client, or the
-    /// completion was already acked and the local schedule is the *advanced*
-    /// one. Sending that as a restore would ask the server to rewind to where
-    /// it already is, so the uncompletion goes bare and the server keeps its own
+    /// The moment the completion is acknowledged that window shuts — the
+    /// command is gone and the base holds the *advanced* schedule, which is not
+    /// invertible. But undo is not a five-second affordance: unticking
+    /// yesterday's habit an hour later is the ordinary case, and a bare
+    /// uncompletion makes the server keep its advanced schedule, so the
+    /// occurrence reads as undone while the series has silently skipped a
+    /// period. **The second window is therefore durable**: the ack moves the
+    /// snapshot into [`completion_restores`], and this reads it back. The
+    /// TypeScript client retains acknowledged restores the same way and for the
+    /// same reason.
+    ///
+    /// With neither window there is nothing to undo that this install caused —
+    /// the occurrence was completed on another client, or the snapshot was
+    /// invalidated because something moved the schedule since. Sending a
+    /// snapshot in either case would ask the server to rewind past an edit it
+    /// already has, so the uncompletion goes bare and the server keeps its own
     /// schedule, which is the documented compatibility behaviour.
     fn instance_restore(&self, task_id: &TaskId, date: &str) -> Option<InstanceRestore> {
         let advancing = self.queue.pending().iter().any(|command| {
@@ -400,18 +464,52 @@ impl TaskStore {
                 } if queued == task_id && day == date
             )
         });
-        if !advancing {
+        if advancing {
+            return completion_restores::snapshot(self.snapshot.tasks.get(task_id)?, date);
+        }
+        // A queued edit to the rule or either date has not reached the server
+        // yet, so a retained snapshot still describes what the server holds —
+        // but it no longer describes what the user is looking at, and sending it
+        // would rewind their unsent edit as well as the completion.
+        let edited = self.queue.pending().iter().any(|command| {
+            matches!(
+                command,
+                Command::Update { task_id: queued, payload, .. }
+                    if queued == task_id
+                        && completion_restores::is_occurrence_edit(payload, self.base.get(task_id))
+            )
+        });
+        if edited || date < self.today().as_str() {
             return None;
         }
-        let task = self.snapshot.tasks.get(task_id)?;
-        Some(InstanceRestore {
-            scheduled: task.scheduled.clone(),
-            due: task.due.clone(),
-            // A task with no rule has no series to advance, so there is nothing
-            // an undo could restore.
-            recurrence: task.recurrence.clone()?,
-            skipped: task.skipped_instances.iter().any(|entry| entry == date),
-        })
+        self.restores
+            .get(&completion_restores::key(task_id, date))
+            .map(|stored| stored.restore.clone())
+    }
+
+    /// The snapshot an acknowledged completion has just made unreadable, keyed
+    /// for storage.
+    ///
+    /// Read from the *pre-ack* view, which is the last moment it exists: the
+    /// queued completion never advanced the local schedule, so the visible task
+    /// still carries what the server has just replaced.
+    fn capture_restore(&self, command: &Command) -> Option<(String, InstanceRestore)> {
+        let Command::SetInstanceComplete {
+            ref task_id,
+            ref date,
+            completed: true,
+            ..
+        } = *command
+        else {
+            return None;
+        };
+        let restore = completion_restores::snapshot(self.snapshot.tasks.get(task_id)?, date)?;
+        Some((completion_restores::key(task_id, date), restore))
+    }
+
+    /// The host's local day, as `YYYY-MM-DD`.
+    fn today(&self) -> String {
+        self.clock.local_ymd(self.clock.now_millis())
     }
 
     /// Mint a command id that has never been minted on this install.
@@ -512,6 +610,29 @@ impl TaskStore {
         })?;
         self.storage.write_id_counters(&data)
     }
+
+    fn persist_restores(&self) -> Result<()> {
+        self.storage
+            .write_completion_restores(&completion_restores::serialize(&self.restores)?)
+    }
+}
+
+/// The retained snapshot a freshly built command takes ownership of, if any.
+///
+/// Only an uncompletion that is actually carrying one: an uncompletion that
+/// found no snapshot has nothing to consume, and dropping the entry anyway
+/// would throw away an undo the *next* attempt could still have used.
+fn consumed_restore_key(command: &Command) -> Option<String> {
+    match *command {
+        Command::SetInstanceComplete {
+            ref task_id,
+            ref date,
+            completed: false,
+            restore: Some(_),
+            ..
+        } => Some(completion_restores::key(task_id, date)),
+        _ => None,
+    }
 }
 
 /// Parse the persisted id counters. **Absent** means zero; present-and-invalid
@@ -586,6 +707,7 @@ mod tests {
         tasks: Mutex<Vec<Task>>,
         aliases: Mutex<Option<String>>,
         counters: Mutex<Option<String>>,
+        restores: Mutex<Option<String>>,
         last_sync: Mutex<Option<i64>>,
         /// Which durable slots were written, in order. The dispatch path's
         /// crash-safety argument is entirely about this order.
@@ -656,6 +778,14 @@ mod tests {
         fn write_id_counters(&self, data: &str) -> Result<()> {
             self.record("id_counters");
             *self.counters.lock().unwrap() = Some(data.to_owned());
+            Ok(())
+        }
+        fn read_completion_restores(&self) -> Result<Option<String>> {
+            Ok(self.restores.lock().unwrap().clone())
+        }
+        fn write_completion_restores(&self, data: &str) -> Result<()> {
+            self.record("completion_restores");
+            *self.restores.lock().unwrap() = Some(data.to_owned());
             Ok(())
         }
         fn read_last_sync_time(&self) -> Result<Option<i64>> {
@@ -825,6 +955,190 @@ mod tests {
             .unwrap();
 
         assert_eq!(restore_of(store.queue().head().unwrap()), None);
+    }
+
+    /// Complete an occurrence, let the ack land, and drive the store to the
+    /// state a later undo starts from.
+    fn completed_and_acked() -> (TaskStore, Arc<Memory>) {
+        let (mut store, memory) = store();
+        let id = TaskId::parse("Tasks/plants.md").unwrap();
+        store
+            .replace_base(vec![recurring("Tasks/plants.md")], 1)
+            .unwrap();
+        store
+            .dispatch(CommandInput::SetInstanceComplete {
+                task_id: id,
+                date: "2026-07-04".to_owned(),
+                completed: true,
+            })
+            .unwrap();
+
+        let command = store.queue().head().unwrap().clone();
+        // What the server does to a completed occurrence: the series moves on a
+        // week, and the pre-completion dates are gone from everything durable.
+        let mut advanced = recurring("Tasks/plants.md");
+        advanced.complete_instances.push("2026-07-04".to_owned());
+        advanced.scheduled = Some("2026-07-11".to_owned());
+        advanced.due = Some("2026-07-12".to_owned());
+        store.apply_server_ack(&command, Some(&advanced)).unwrap();
+        (store, memory)
+    }
+
+    fn pre_completion_schedule() -> InstanceRestore {
+        InstanceRestore {
+            scheduled: Some("2026-07-04".to_owned()),
+            due: Some("2026-07-05".to_owned()),
+            recurrence: "FREQ=WEEKLY;BYDAY=SA".to_owned(),
+            skipped: false,
+        }
+    }
+
+    fn undo(store: &mut TaskStore) -> Option<InstanceRestore> {
+        store
+            .dispatch(CommandInput::SetInstanceComplete {
+                task_id: TaskId::parse("Tasks/plants.md").unwrap(),
+                date: "2026-07-04".to_owned(),
+                completed: false,
+            })
+            .unwrap();
+        restore_of(store.queue().pending().last().unwrap())
+    }
+
+    /// ⚠️ **The same bug, one sync later.** Unticking yesterday's habit is not a
+    /// double-click; it happens long after the queue drained. By then the
+    /// completion is off the queue and the base holds the *advanced* schedule,
+    /// so nothing readable describes what the completion replaced. A bare
+    /// uncompletion makes the server keep its advanced schedule, and the
+    /// occurrence reads as undone while the series has skipped a week — so the
+    /// ack has to have retained the snapshot.
+    #[test]
+    fn an_undo_after_the_completion_synced_still_carries_the_schedule() {
+        let (mut store, _) = completed_and_acked();
+        assert_eq!(undo(&mut store), Some(pre_completion_schedule()));
+    }
+
+    #[test]
+    fn a_retained_snapshot_survives_relaunch_and_is_spent_only_once() {
+        let (store, memory) = completed_and_acked();
+        drop(store);
+
+        let mut relaunched = TaskStore::new(
+            memory.clone(),
+            memory.clone(),
+            Arc::new(FixedClock),
+            Arc::new(HalfUnit),
+        );
+        relaunched.restore().unwrap();
+        assert_eq!(undo(&mut relaunched), Some(pre_completion_schedule()));
+
+        // The queued uncompletion now owns the snapshot. A second undo of the
+        // same occurrence must not send it again: the first one already asked
+        // the server to rewind, and re-sending would rewind past whatever
+        // happened since.
+        assert_eq!(undo(&mut relaunched), None);
+    }
+
+    /// An acked edit to the rule or either date means the server no longer holds
+    /// the schedule the snapshot claims to put back, so sending it would rewind
+    /// the user's own edit.
+    #[test]
+    fn an_acknowledged_occurrence_edit_drops_the_retained_snapshot() {
+        let (mut store, _) = completed_and_acked();
+        let id = TaskId::parse("Tasks/plants.md").unwrap();
+        store
+            .dispatch(CommandInput::Update {
+                task_id: id.clone(),
+                payload: UpdateTaskRequest {
+                    recurrence: crate::domain::FieldUpdate::Set("FREQ=MONTHLY".to_owned()),
+                    ..UpdateTaskRequest::default()
+                },
+            })
+            .unwrap();
+        assert_eq!(
+            undo(&mut store),
+            None,
+            "an unsent edit already contradicts the snapshot"
+        );
+    }
+
+    /// A rename touches nothing the restore describes, so the undo has to
+    /// survive it — otherwise every routine save from the detail pane quietly
+    /// disarms the undo.
+    #[test]
+    fn an_unrelated_acknowledged_edit_keeps_the_retained_snapshot() {
+        let (mut store, _) = completed_and_acked();
+        let id = TaskId::parse("Tasks/plants.md").unwrap();
+        store
+            .dispatch(CommandInput::Update {
+                task_id: id.clone(),
+                payload: UpdateTaskRequest {
+                    title: Some(TaskTitle::parse("Water every plant").unwrap()),
+                    ..UpdateTaskRequest::default()
+                },
+            })
+            .unwrap();
+        let edit = store.queue().head().unwrap().clone();
+        let mut renamed = recurring("Tasks/plants.md");
+        renamed.title = "Water every plant".to_owned();
+        renamed.complete_instances.push("2026-07-04".to_owned());
+        renamed.scheduled = Some("2026-07-11".to_owned());
+        renamed.due = Some("2026-07-12".to_owned());
+        store.apply_server_ack(&edit, Some(&renamed)).unwrap();
+
+        assert_eq!(undo(&mut store), Some(pre_completion_schedule()));
+    }
+
+    /// Another client moved the series. The snapshot describes a schedule the
+    /// server has already replaced, so an undo carrying it would rewind that
+    /// other client's edit.
+    #[test]
+    fn a_pull_that_moves_the_series_drops_the_retained_snapshot() {
+        let (mut store, memory) = completed_and_acked();
+        let mut elsewhere = recurring("Tasks/plants.md");
+        elsewhere.recurrence = Some("FREQ=MONTHLY".to_owned());
+        elsewhere.complete_instances.push("2026-07-04".to_owned());
+
+        memory.clear_write_log();
+        store.replace_base(vec![elsewhere], 2).unwrap();
+
+        let log = memory.write_log();
+        let restores = log.iter().position(|slot| *slot == "completion_restores");
+        let tasks = log.iter().position(|slot| *slot == "tasks");
+        assert!(
+            restores.is_some() && tasks.is_some() && restores < tasks,
+            "the invalidation must be durable before the base that makes it \
+             stale, got {log:?}"
+        );
+        assert_eq!(undo(&mut store), None);
+    }
+
+    #[test]
+    fn a_pull_that_leaves_the_series_alone_keeps_the_retained_snapshot() {
+        let (mut store, _) = completed_and_acked();
+        let mut same = recurring("Tasks/plants.md");
+        same.title = "Water every plant".to_owned();
+        same.complete_instances.push("2026-07-04".to_owned());
+        same.scheduled = Some("2026-07-11".to_owned());
+        same.due = Some("2026-07-12".to_owned());
+        store.replace_base(vec![same], 2).unwrap();
+
+        assert_eq!(undo(&mut store), Some(pre_completion_schedule()));
+    }
+
+    /// A file that exists but does not parse is the one record of what this
+    /// install's completions replaced. Rounding it down to "no restores" turns
+    /// every pending undo into a silent no-op against the server.
+    #[test]
+    fn an_unreadable_restore_file_fails_the_launch_rather_than_reading_as_empty() {
+        let (_, memory) = store();
+        *memory.restores.lock().unwrap() = Some("not-json".to_owned());
+        let mut store = TaskStore::new(
+            memory.clone(),
+            memory.clone(),
+            Arc::new(FixedClock),
+            Arc::new(HalfUnit),
+        );
+        assert!(store.restore().is_err());
     }
 
     #[test]
