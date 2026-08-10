@@ -1,4 +1,5 @@
 import AppKit
+import ApplicationServices
 import TaskNotesKit
 import XCTest
 
@@ -21,12 +22,40 @@ import XCTest
 final class QuickAddPanelUITests: XCTestCase {
     /// The virtual keycode for Space. `kVK_Space` from `Carbon.HIToolbox`,
     /// spelled literally so this file does not import Carbon for one constant.
-    /// It matches the `carbonKeyCode: 49` Phase 9c observed in the app's stored
-    /// binding, which is the only reason that observation was meaningful.
+    ///
+    /// ⚠️ This posts the app's **shipping default**, deliberately. A test that
+    /// bound its own uncontested key would prove the panel can open and say
+    /// nothing about whether the advertised hotkey reaches the app — which is
+    /// exactly what was broken: `⇧⌘Space` was claimed by 1Password and by
+    /// macOS 26's Siri handler, so the panel never opened for anyone. Keep this
+    /// matching ``KeyboardShortcuts/Name/quickAdd``.
     private static let spaceKeyCode: CGKeyCode = 49
 
     override func setUp() {
         continueAfterFailure = false
+        requestAccessibilityTrustIfNeeded()
+    }
+
+    /// Ask for Accessibility trust, with the system prompt, if we do not have it.
+    ///
+    /// ⚠️ **Nothing else asks.** `CGEvent.post` does not raise a permission
+    /// dialog when the process is untrusted — the event is simply dropped, and
+    /// the test fails as "the hotkey did not open the panel", which reads like a
+    /// broken feature rather than a missing permission. `AXIsProcessTrustedWithOptions`
+    /// with the prompt option is the only call that asks.
+    ///
+    /// The grant is keyed to the runner's **code signature**. An ad-hoc signed
+    /// runner gets a fresh hash on every build, so a grant against one evaporates
+    /// on the next rebuild; the runner has to carry a stable signing identity for
+    /// this to be worth approving once. See `AGENTS.md` › Running the end-to-end
+    /// tests.
+    private func requestAccessibilityTrustIfNeeded() {
+        guard !AXIsProcessTrusted() else { return }
+        // The literal rather than `kAXTrustedCheckOptionPrompt`: that symbol is
+        // imported as a mutable global, which Swift 6 rejects as shared mutable
+        // state. Its value is this string and has been since the API shipped.
+        let options = ["AXTrustedCheckOptionPrompt": true] as CFDictionary
+        _ = AXIsProcessTrustedWithOptions(options)
     }
 
     /// Launch the app pointed at nothing, and tear it down with the test.
@@ -38,7 +67,7 @@ final class QuickAddPanelUITests: XCTestCase {
         TestApp.launch { addTeardownBlock($0) }
     }
 
-    /// ⇧⌘Space opens the panel.
+    /// The global hotkey opens the panel.
     ///
     /// The plain case, asserted first so that a failure in the harder one below
     /// can be attributed: if this passes and that fails, the hotkey works and
@@ -48,11 +77,11 @@ final class QuickAddPanelUITests: XCTestCase {
         let panel = app.windows[AccessibilityIdentifier.QuickAdd.panel]
         XCTAssertFalse(panel.exists, "the panel was already open before the hotkey")
 
-        try postGlobalShiftCommandSpace()
+        try postGlobalTestHotkey()
 
         XCTAssertTrue(
             panel.waitForExistence(timeout: 5),
-            "⇧⌘Space did not open the quick-add panel: \(app.debugDescription)"
+            "the test hotkey did not open the quick-add panel: \(app.debugDescription)"
         )
         XCTAssertTrue(
             app.textFields[AccessibilityIdentifier.QuickAdd.field].exists,
@@ -82,12 +111,12 @@ final class QuickAddPanelUITests: XCTestCase {
             "Finder never became frontmost; the premise of this test did not hold"
         )
 
-        try postGlobalShiftCommandSpace()
+        try postGlobalTestHotkey()
 
         let panel = app.windows[AccessibilityIdentifier.QuickAdd.panel]
         XCTAssertTrue(
             panel.waitForExistence(timeout: 5),
-            "⇧⌘Space did not open the panel while another app was frontmost"
+            "the test hotkey did not open the panel while another app was frontmost"
         )
 
         // The load-bearing half. A panel that opened *and* pulled TaskNotes to
@@ -103,17 +132,17 @@ final class QuickAddPanelUITests: XCTestCase {
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
-    /// Post ⇧⌘Space to the system, not to any particular application.
+    /// Post the app's default hotkey to the system, not to any one application.
     ///
     /// Throws rather than force-unwrapping so a refusal by the event system is
     /// reported as a failing test with a reason, instead of a crash in the
     /// runner that looks like a harness bug.
-    private func postGlobalShiftCommandSpace() throws {
+    private func postGlobalTestHotkey() throws {
         let source = try XCTUnwrap(
             CGEventSource(stateID: .hidSystemState),
             "could not create a HID event source"
         )
-        let flags: CGEventFlags = [.maskShift, .maskCommand]
+        let flags: CGEventFlags = [.maskControl, .maskAlternate, .maskCommand]
 
         let down = try XCTUnwrap(
             CGEvent(

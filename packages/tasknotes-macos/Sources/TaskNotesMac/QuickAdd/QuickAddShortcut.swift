@@ -23,11 +23,20 @@ internal import KeyboardShortcuts
 /// would leave the panel with **no way to open it** until somebody found a
 /// Settings pane they had no reason to look for.
 ///
-/// Two things make it safe. The combination is one macOS itself does not use —
-/// `⌘Space`, `⌃Space`, `⌥⌘Space` and `⌃⌘Space` are spoken for by Spotlight,
-/// input sources, the Finder search window and the character picker;
-/// `⇧⌘Space` is not — and Settings carries a recorder, so changing or clearing
-/// it is one control away.
+/// ⚠️ **The first choice here was `⇧⌘Space`, and it was wrong.** The reasoning
+/// was that `⌘Space`, `⌃Space`, `⌥⌘Space` and `⌃⌘Space` are spoken for —
+/// Spotlight, input sources, the Finder search window, the character picker —
+/// while `⇧⌘Space` is free. It is not: 1Password binds it by default, and
+/// macOS 26 added a system Siri handler for it. Both sit ahead of a Carbon
+/// `RegisterEventHotKey` in the dispatch order, so the panel simply never
+/// opened. Found by pressing the key on a real machine; nothing in the suite
+/// could have told us, because a hotkey's competition is whatever the user
+/// happens to have installed.
+///
+/// `⌃⌥⌘Space` keeps the Space muscle memory and clears all six known
+/// claimants by adding a third modifier. It is a *better guess*, not a
+/// guarantee — no combination can be — which is the real argument for the
+/// recorder in Settings being the answer rather than the default.
 ///
 /// Clearing the binding sticks, which is the part worth checking in a library
 /// that offers a default: `Name`'s own mechanism writes a disabled sentinel
@@ -45,6 +54,6 @@ internal import KeyboardShortcuts
 extension KeyboardShortcuts.Name {
     static let quickAdd = Self(
         "quickAdd",
-        default: .init(.space, modifiers: [.shift, .command])
+        default: .init(.space, modifiers: [.control, .option, .command])
     )
 }
