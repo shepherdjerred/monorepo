@@ -87,7 +87,9 @@ export function reviewCommentBoundToHead(input: {
   headPushedAt: string | null;
   reportsFindings: boolean;
 }): boolean {
-  const referenced = new Set(input.body.match(COMMIT_SHA_PATTERN));
+  const referenced = new Set(
+    [...input.body.matchAll(COMMIT_SHA_PATTERN)].map((match) => match[0]),
+  );
   if (referenced.size > 0) return referenced.has(input.head);
   if (input.reportsFindings) return false;
   return reactionBoundToHead(input.updatedAt, input.headPushedAt);

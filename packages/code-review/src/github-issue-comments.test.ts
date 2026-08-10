@@ -67,6 +67,20 @@ describe("reviewCommentBoundToHead", () => {
     ).toBe(false);
   });
 
+  test("reads a body with no commit at all without throwing", () => {
+    // `matchAll` yields an empty iterator here. `String.match` would return
+    // null instead, which is the shape that makes this path look unsafe.
+    expect(() =>
+      reviewCommentBoundToHead({
+        body: "no shas here",
+        updatedAt: null,
+        head: HEAD,
+        headPushedAt: null,
+        reportsFindings: false,
+      }),
+    ).not.toThrow();
+  });
+
   test("binds when the head appears alongside other commits", () => {
     expect(
       reviewCommentBoundToHead({
