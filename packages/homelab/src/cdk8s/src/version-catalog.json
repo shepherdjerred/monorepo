@@ -695,9 +695,7 @@
         "managed": false
       },
       "value": "2.0.0-9147@sha256:d1a875a6488d9c48b7d39693e10ffaa270f46f8fef9499c1668f9c60cb6cba39",
-      "notes": [
-        "not managed by renovate — beta updated by version-commit-back"
-      ]
+      "notes": ["not managed by renovate — beta updated by version-commit-back"]
     },
     {
       "name": "shepherdjerred/scout-for-lol/prod",
@@ -729,9 +727,7 @@
         "managed": false
       },
       "value": "2.0.0-9147@sha256:565295441ceb3bf478fd2354dad38d202944fba0afef40dc12da41a7e409d4fe",
-      "notes": [
-        "not managed by renovate — beta updated by version-commit-back"
-      ]
+      "notes": ["not managed by renovate — beta updated by version-commit-back"]
     },
     {
       "name": "shepherdjerred/starlight-karma-bot/prod",
@@ -754,9 +750,7 @@
         "managed": false
       },
       "value": "2.0.0-9147@sha256:8c3ff8f35b9c0aa287a3ae1272a4fd0e7d580cc06d36f2aafa49fee998845fef",
-      "notes": [
-        "not managed by renovate"
-      ]
+      "notes": ["not managed by renovate"]
     },
     {
       "name": "shepherdjerred/alert-dashboard",
@@ -792,9 +786,7 @@
         "managed": false
       },
       "value": "2.0.0-9147@sha256:a52e342271bf15893bb7f7c02c1ad0823a1e4c5c2a41a59f6daf6a14a00bec74",
-      "notes": [
-        "not managed by renovate"
-      ]
+      "notes": ["not managed by renovate"]
     },
     {
       "name": "shepherdjerred/discord-plays-mario-kart",

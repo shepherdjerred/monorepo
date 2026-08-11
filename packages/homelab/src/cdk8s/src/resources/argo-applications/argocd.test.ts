@@ -15,6 +15,8 @@ const ApplicationSchema = z
           valuesObject: z.object({
             configs: z.object({
               cm: z.object({
+                "resource.customizations.health.cert-manager.io_Certificate":
+                  z.string(),
                 "resource.customizations.health.argoproj.io_Application":
                   z.string(),
               }),
@@ -70,5 +72,29 @@ describe("ArgoCD application", () => {
     expect(customization).toContain(
       'hs.message = "Application operation is " .. obj.status.operationState.phase',
     );
+  });
+
+  it("keeps only non-failed cert-manager secret issuance progressing", () => {
+    const application = synthArgoCdApplication();
+    const customization =
+      application.spec.source.helm.valuesObject.configs.cm[
+        "resource.customizations.health.cert-manager.io_Certificate"
+      ];
+
+    expect(customization).toContain('condition.type == "Issuing" and');
+    expect(customization).toContain('condition.reason ~= "Issued"');
+    expect(customization).toContain(
+      'ready.status == "False" and ready.reason ~= "DoesNotExist"',
+    );
+    expect(customization).toContain("if failedIssuing ~= nil then");
+    expect(customization).toContain("hs.message = failedIssuing.message");
+    expect(customization.indexOf("if failedIssuing ~= nil then")).toBeLessThan(
+      customization.indexOf(
+        'ready.status == "False" and ready.reason ~= "DoesNotExist"',
+      ),
+    );
+    expect(customization).toContain('hs.status = "Progressing"');
+    expect(customization).toContain('hs.status = "Healthy"');
+    expect(customization).toContain('hs.status = "Degraded"');
   });
 });

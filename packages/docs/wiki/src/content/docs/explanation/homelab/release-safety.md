@@ -65,6 +65,24 @@ release command also persists the exact revision in the operation info list
 beside its request and operation UUIDs. Either representation can prove the
 revision, but disagreement between them is a hard identity failure.
 
+Certificate waves still use resource health as their ordering barrier. The
+[cert-manager Certificate condition contract](https://github.com/cert-manager/cert-manager/blob/b8f325e36f49626ba72d7efbe138c01a5e661d96/pkg/apis/certmanager/v1/types_certificate.go#L717-L777)
+allows separate `Ready` and `Issuing` conditions. A new Certificate briefly
+reports `Ready=False` with reason `DoesNotExist` while it creates the referenced
+Secret. The
+[ArgoCD health customization](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/argo-applications/argocd.ts)
+classifies only that normal issuance transition as `Progressing`, so the wave
+waits instead of terminating. It checks the separate Issuing condition before
+exempting a missing Secret because cert-manager
+[records a failed request as `Issuing=False`](https://github.com/cert-manager/cert-manager/blob/b8f325e36f49626ba72d7efbe138c01a5e661d96/pkg/controller/certificates/issuing/issuing_controller.go#L408-L430)
+while the missing-Secret Ready condition can remain unchanged. A different
+false Ready reason or failed issuance stays `Degraded`. The
+[five-minute release operation timeout](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml#L1547-L1556)
+still fails a Certificate that never becomes ready. Ignoring Certificate health
+would let the
+[later CA, database, and workload waves](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/postgres/alert-dashboard-tls.ts)
+race a missing trust Secret, so the release does not use that shortcut.
+
 Both request shapes remain isolated by numeric sync wave and exact resource
 identity. After explicit child reconciliation completes, the
 [root finalizer](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd.ts)

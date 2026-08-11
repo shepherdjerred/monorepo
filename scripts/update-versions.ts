@@ -188,7 +188,7 @@ async function prepareAttempt(
   await resetVersionBumpBranch(git);
   await Bun.write(
     `${cloneDir}/${VERSION_CATALOG_FILE_REL}`,
-    rewriteVersionCatalogSource(mainSource, aggregate),
+    await rewriteVersionCatalogSource(mainSource, aggregate),
   );
   await Bun.write(
     `${cloneDir}/${PIN_STATE_FILE_REL}`,
