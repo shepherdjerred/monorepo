@@ -12,11 +12,11 @@ routing, grouping, inhibition, silences, or current-state authority.
 ```mermaid
 flowchart LR
   accTitle: Alert routing and durable history
-  accDescr: Alertmanager remains authoritative for live state. Its authenticated webhook and snapshots feed a PostgreSQL ledger; the dashboard, read-only API, toolkit, Grafana previews, and Postal opening email use that ledger.
+  accDescr: Alertmanager remains authoritative for live state. Its authenticated webhook and snapshots feed a WAL-mode SQLite ledger on a single-writer PVC; the dashboard, read-only API, toolkit, Grafana previews, and Postal opening email use that ledger.
 
   AM[Alertmanager\nrouting and live state]
   LEDGER[Alerts service\nwebhook and reconciliation]
-  DB[(PostgreSQL\nlifecycle ledger)]
+  DB[(WAL-mode SQLite\non a single-writer PVC)]
   UI[Dashboard and\nread-only APIs]
   CLI[toolkit alerts]
   GRAFANA[Grafana previews\nPrometheus Loki Tempo]
@@ -32,7 +32,7 @@ flowchart LR
 
 ## Current deployment boundary
 
-The application, image, database chart, network policy, observability rules,
+The application, image, ledger volume, network policy, observability rules,
 Argo CD application, and cutover receiver exist in the repository. The cluster
 continues its existing notification path until the two GitOps changes pass
 Buildkite and Argo CD syncs them; after that, Alerts and Postal are the active
