@@ -1041,13 +1041,25 @@ func TestCollectSystemChanges(t *testing.T) {
 			wantServices: nil,
 		},
 		{
-			name:       "update reasserts a configured but unchanged field without restarting",
-			plan:       systemResourceModel{Hostname: types.StringValue("MyRouter")},
-			config:     systemResourceModel{Hostname: types.StringValue("MyRouter")},
-			prior:      &systemResourceModel{Hostname: types.StringValue("MyRouter")},
-			wantValues: map[string]string{"lan_hostname": "MyRouter"},
-			// Same value as prior state, so no service restart is warranted.
+			// Reasserting it would be exactly as stale as writing an
+			// unconfigured field, and could not be paired with a restart
+			// without bouncing net_and_phy on every unrelated update.
+			name:         "update skips a configured but unchanged field",
+			plan:         systemResourceModel{Hostname: types.StringValue("MyRouter")},
+			config:       systemResourceModel{Hostname: types.StringValue("MyRouter")},
+			prior:        &systemResourceModel{Hostname: types.StringValue("MyRouter")},
+			wantValues:   map[string]string{},
 			wantServices: nil,
+		},
+		{
+			// Every written value carries its restart: the write set and the
+			// restart set are the same set.
+			name:         "update writes and restarts a changed configured field",
+			plan:         systemResourceModel{Hostname: types.StringValue("NewName")},
+			config:       systemResourceModel{Hostname: types.StringValue("NewName")},
+			prior:        &systemResourceModel{Hostname: types.StringValue("OldName")},
+			wantValues:   map[string]string{"lan_hostname": "NewName"},
+			wantServices: []string{client.ServiceNetAndPhy},
 		},
 		{
 			name: "update restarts each affected service once",

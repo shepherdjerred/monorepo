@@ -315,19 +315,23 @@ func buildSystemMappings(plan, config, prior *systemResourceModel) []systemNvram
 // collectSystemChanges walks the mappings, returning the NVRAM values to
 // write and the deduplicated services to restart.
 //
-// A field is written only when the operator configured it, or when its planned
-// value actually differs from prior state. An unconfigured Optional+Computed
-// field is populated from the router by refresh and then carried into the plan,
-// so writing every known planned value would push that snapshot back to the
-// router: with a saved plan or -refresh=false the snapshot is stale, and
-// changing one managed setting would silently revert a newer out-of-band
-// hostname/timezone/NTP value. Skipping it leaves the router's own value alone,
+// On Create every known field is new, so all of them are written. On Update a
+// field is written only when the operator configured it *and* its planned value
+// differs from prior state.
+//
+// Both halves of that condition matter. An unconfigured Optional+Computed field
+// is populated from the router by refresh and carried into the plan, so writing
+// every known planned value would push that snapshot back: with a saved plan or
+// -refresh=false the snapshot is stale, and changing one managed setting would
+// silently revert a newer out-of-band hostname/timezone/NTP value. Reasserting
+// a configured-but-unchanged value is no better — it is exactly as stale, and
+// it cannot be paired with a restart without needlessly bouncing net_and_phy on
+// every timezone-only update. Leaving both alone keeps the router's own value,
 // and a later refreshed plan still reports the drift.
 //
-// hasPrior distinguishes Create (every present field is new, so always
-// restart-worthy) from Update (only a field whose value actually changed should
-// trigger its restart — otherwise, e.g., a timezone-only update would
-// needlessly restart net_and_phy for an unchanged hostname).
+// Because the write set and the restart set are now the same set, every value
+// this writes also gets its rc_service, so a write can never land without the
+// restart that makes it take effect.
 func collectSystemChanges(mappings []systemNvramMapping, hasPrior bool) (values map[string]string, services []string) {
 	values = map[string]string{}
 	seen := map[string]bool{}
@@ -337,14 +341,13 @@ func collectSystemChanges(mappings []systemNvramMapping, hasPrior bool) (values 
 			continue
 		}
 
-		changed := !hasPrior || !m.value.Equal(m.prior)
-		if !m.configured && !changed {
+		if hasPrior && (!m.configured || m.value.Equal(m.prior)) {
 			continue
 		}
 
 		values[m.nvramKey] = m.value.ValueString()
 
-		if !changed || m.service == "" || seen[m.service] {
+		if m.service == "" || seen[m.service] {
 			continue
 		}
 

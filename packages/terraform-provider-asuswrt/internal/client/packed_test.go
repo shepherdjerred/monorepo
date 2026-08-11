@@ -89,22 +89,22 @@ func TestParseDHCPStaticList(t *testing.T) {
 			name:  "single entry (MAC/IP only)",
 			input: lt + "AA:BB:CC:DD:EE:FF" + gt + "192.168.1.100",
 			expected: []client.DHCPStaticEntry{
-				{MAC: "AA:BB:CC:DD:EE:FF", IP: "192.168.1.100"},
+				{MAC: "AA:BB:CC:DD:EE:FF", IP: "192.168.1.100", ModeledFields: 2},
 			},
 		},
 		{
 			name:  "four-field entry with DNS and hostname",
 			input: lt + "AA:BB:CC:DD:EE:FF" + gt + "192.168.1.100" + gt + "1.1.1.1" + gt + "server",
 			expected: []client.DHCPStaticEntry{
-				{MAC: "AA:BB:CC:DD:EE:FF", IP: "192.168.1.100", DNS: "1.1.1.1", Hostname: "server"},
+				{MAC: "AA:BB:CC:DD:EE:FF", IP: "192.168.1.100", DNS: "1.1.1.1", Hostname: "server", ModeledFields: 4},
 			},
 		},
 		{
 			name:  "multiple entries",
 			input: lt + "AA:BB:CC:DD:EE:FF" + gt + "192.168.1.100" + gt + gt + lt + "11:22:33:44:55:66" + gt + "192.168.1.101" + gt + gt,
 			expected: []client.DHCPStaticEntry{
-				{MAC: "AA:BB:CC:DD:EE:FF", IP: "192.168.1.100"},
-				{MAC: "11:22:33:44:55:66", IP: "192.168.1.101"},
+				{MAC: "AA:BB:CC:DD:EE:FF", IP: "192.168.1.100", ModeledFields: 4},
+				{MAC: "11:22:33:44:55:66", IP: "192.168.1.101", ModeledFields: 4},
 			},
 		},
 		{
@@ -123,7 +123,7 @@ func TestParseDHCPStaticList(t *testing.T) {
 			name:  "empty MAC field",
 			input: lt + gt + "192.168.1.100",
 			expected: []client.DHCPStaticEntry{
-				{MAC: "", IP: "192.168.1.100"},
+				{MAC: "", IP: "192.168.1.100", ModeledFields: 2},
 			},
 		},
 	}
@@ -216,9 +216,9 @@ func TestParseVTSRuleListLive(t *testing.T) {
 	}
 
 	want := []client.PortForwardEntry{
-		{Name: "Plex", ExternalPort: "32400", InternalIP: "192.168.1.81", InternalPort: "32400", Protocol: "TCP"},
-		{Name: "Minecraft mc-router", ExternalPort: "30000", InternalIP: "192.168.1.81", InternalPort: "30000", Protocol: "TCP"},
-		{Name: "Mineraft Bedrock", ExternalPort: "30003", InternalIP: "192.168.1.81", InternalPort: "30003", Protocol: "UDP"},
+		{Name: "Plex", ExternalPort: "32400", InternalIP: "192.168.1.81", InternalPort: "32400", Protocol: "TCP", ModeledFields: 6},
+		{Name: "Minecraft mc-router", ExternalPort: "30000", InternalIP: "192.168.1.81", InternalPort: "30000", Protocol: "TCP", ModeledFields: 6},
+		{Name: "Mineraft Bedrock", ExternalPort: "30003", InternalIP: "192.168.1.81", InternalPort: "30003", Protocol: "UDP", ModeledFields: 6},
 	}
 
 	if len(rules) != len(want) {
@@ -266,22 +266,22 @@ func TestParseVTSRuleList(t *testing.T) {
 			name:  "single rule without source",
 			input: lt + "HTTP" + gt + "80" + gt + "192.168.1.100" + gt + "80" + gt + "tcp",
 			expected: []client.PortForwardEntry{
-				{Name: "HTTP", ExternalPort: "80", InternalIP: "192.168.1.100", InternalPort: "80", Protocol: "tcp"},
+				{Name: "HTTP", ExternalPort: "80", InternalIP: "192.168.1.100", InternalPort: "80", Protocol: "tcp", ModeledFields: 5},
 			},
 		},
 		{
 			name:  "single rule with source",
 			input: lt + "HTTP" + gt + "80" + gt + "192.168.1.100" + gt + "80" + gt + "tcp" + gt + "10.0.0.1",
 			expected: []client.PortForwardEntry{
-				{Name: "HTTP", ExternalPort: "80", InternalIP: "192.168.1.100", InternalPort: "80", Protocol: "tcp", SourceIP: "10.0.0.1"},
+				{Name: "HTTP", ExternalPort: "80", InternalIP: "192.168.1.100", InternalPort: "80", Protocol: "tcp", SourceIP: "10.0.0.1", ModeledFields: 6},
 			},
 		},
 		{
 			name:  "multiple rules",
 			input: lt + "HTTP" + gt + "80" + gt + "192.168.1.100" + gt + "80" + gt + "tcp" + gt + lt + "SSH" + gt + "2222" + gt + "192.168.1.50" + gt + "22" + gt + "tcp" + gt,
 			expected: []client.PortForwardEntry{
-				{Name: "HTTP", ExternalPort: "80", InternalIP: "192.168.1.100", InternalPort: "80", Protocol: "tcp"},
-				{Name: "SSH", ExternalPort: "2222", InternalIP: "192.168.1.50", InternalPort: "22", Protocol: "tcp"},
+				{Name: "HTTP", ExternalPort: "80", InternalIP: "192.168.1.100", InternalPort: "80", Protocol: "tcp", ModeledFields: 6},
+				{Name: "SSH", ExternalPort: "2222", InternalIP: "192.168.1.50", InternalPort: "22", Protocol: "tcp", ModeledFields: 6},
 			},
 		},
 		{
@@ -300,7 +300,7 @@ func TestParseVTSRuleList(t *testing.T) {
 			name:  "port ranges",
 			input: lt + "Game" + gt + "27015:27020" + gt + "192.168.1.200" + gt + "27015:27020" + gt + "udp",
 			expected: []client.PortForwardEntry{
-				{Name: "Game", ExternalPort: "27015:27020", InternalIP: "192.168.1.200", InternalPort: "27015:27020", Protocol: "udp"},
+				{Name: "Game", ExternalPort: "27015:27020", InternalIP: "192.168.1.200", InternalPort: "27015:27020", Protocol: "udp", ModeledFields: 5},
 			},
 		},
 	}
@@ -349,16 +349,24 @@ func TestVTSRuleListRoundTrip(t *testing.T) {
 		{Name: "Game", ExternalPort: "27015", InternalIP: "192.168.1.200", InternalPort: "27015", Protocol: "both"},
 	}
 
+	// Entries this provider builds carry no parsed field count, so they
+	// serialize to the router's full 6-field layout and parse back reporting it.
+	want := make([]client.PortForwardEntry, len(entries))
+	for i, e := range entries {
+		e.ModeledFields = 6
+		want[i] = e
+	}
+
 	parsed, err := client.ParseVTSRuleList(client.SerializeVTSRuleList(entries))
 	if err != nil {
 		t.Fatalf("parsing serialized vts_rulelist: %v", err)
 	}
 
-	if len(parsed) != len(entries) {
-		t.Fatalf("round-trip: expected %d entries, got %d", len(entries), len(parsed))
+	if len(parsed) != len(want) {
+		t.Fatalf("round-trip: expected %d entries, got %d", len(want), len(parsed))
 	}
 
-	for i, e := range entries {
+	for i, e := range want {
 		if parsed[i] != e {
 			t.Errorf("round-trip entry %d: expected %+v, got %+v", i, e, parsed[i])
 		}
@@ -591,4 +599,92 @@ func TestPackedListRejectsMalformedShapes(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestShortEntriesKeepTheirPackedShape covers the layout-preservation
+// contract. The parsers deliberately accept a 2-field DHCP entry and a 5-field
+// VTS rule, but every mutation rewrites the whole list, so serializing those
+// back with the trailing empty fields appended would silently change the packed
+// shape of entries the operator never touched.
+func TestShortEntriesKeepTheirPackedShape(t *testing.T) {
+	t.Parallel()
+
+	lt, gt := client.PackedDelimiters()[0], client.PackedDelimiters()[1]
+
+	t.Run("dhcp short entry round-trips byte-for-byte", func(t *testing.T) {
+		t.Parallel()
+
+		raw := lt + "AA:BB:CC:DD:EE:FF" + gt + "192.168.1.100"
+
+		entries, err := client.ParseDHCPStaticList(raw)
+		if err != nil {
+			t.Fatalf("parsing: %v", err)
+		}
+
+		if got := client.SerializeDHCPStaticList(entries); got != raw {
+			t.Errorf("serialize = %q, want the original %q", got, raw)
+		}
+	})
+
+	t.Run("vts short rule round-trips byte-for-byte", func(t *testing.T) {
+		t.Parallel()
+
+		raw := lt + "HTTP" + gt + "80" + gt + "192.168.1.100" + gt + "80" + gt + "tcp"
+
+		entries, err := client.ParseVTSRuleList(raw)
+		if err != nil {
+			t.Fatalf("parsing: %v", err)
+		}
+
+		if got := client.SerializeVTSRuleList(entries); got != raw {
+			t.Errorf("serialize = %q, want the original %q", got, raw)
+		}
+	})
+
+	t.Run("dhcp short entry widens when a later field is set", func(t *testing.T) {
+		t.Parallel()
+
+		raw := lt + "AA:BB:CC:DD:EE:FF" + gt + "192.168.1.100"
+
+		entries, err := client.ParseDHCPStaticList(raw)
+		if err != nil {
+			t.Fatalf("parsing: %v", err)
+		}
+
+		entries[0].Hostname = "desktop"
+
+		want := raw + gt + gt + "desktop"
+		if got := client.SerializeDHCPStaticList(entries); got != want {
+			t.Errorf("serialize = %q, want %q", got, want)
+		}
+	})
+
+	t.Run("vts short rule widens when the source IP is set", func(t *testing.T) {
+		t.Parallel()
+
+		raw := lt + "HTTP" + gt + "80" + gt + "192.168.1.100" + gt + "80" + gt + "tcp"
+
+		entries, err := client.ParseVTSRuleList(raw)
+		if err != nil {
+			t.Fatalf("parsing: %v", err)
+		}
+
+		entries[0].SourceIP = "10.0.0.1"
+
+		want := raw + gt + "10.0.0.1"
+		if got := client.SerializeVTSRuleList(entries); got != want {
+			t.Errorf("serialize = %q, want %q", got, want)
+		}
+	})
+
+	t.Run("provider-built entry uses the full layout", func(t *testing.T) {
+		t.Parallel()
+
+		entries := []client.DHCPStaticEntry{{MAC: "AA:BB:CC:DD:EE:FF", IP: "192.168.1.100"}}
+
+		want := lt + "AA:BB:CC:DD:EE:FF" + gt + "192.168.1.100" + gt + gt
+		if got := client.SerializeDHCPStaticList(entries); got != want {
+			t.Errorf("serialize = %q, want the router's native %q", got, want)
+		}
+	})
 }

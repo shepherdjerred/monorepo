@@ -110,16 +110,25 @@ func writePackedEntry(b *strings.Builder, fields ...string) {
 // alone cannot distinguish from having no trailing field at all — and emitting
 // the wrong one silently changes the packed shape.
 //
+// ModeledFields records how many of the modeled fields the router actually
+// supplied. The trailing ones are optional, so firmware may send a 2-field
+// <MAC>IP entry; re-emitting it as <MAC>IP>> would change the packed shape of
+// an entry the operator never touched, on any unrelated lease mutation. Zero
+// means the entry was built by this provider rather than parsed, in which case
+// serialization uses the full modeled layout.
+//
 // Callers updating a lease must overwrite the modeled fields on the parsed
-// entry rather than assign a freshly constructed one over it, or Extra/HasExtra
-// revert to their zero values and the router loses those fields.
+// entry rather than assign a freshly constructed one over it, or
+// Extra/HasExtra/ModeledFields revert to their zero values and the router loses
+// those fields or has its layout rewritten.
 type DHCPStaticEntry struct {
-	MAC      string
-	IP       string
-	DNS      string
-	Hostname string
-	Extra    string
-	HasExtra bool
+	MAC           string
+	IP            string
+	DNS           string
+	Hostname      string
+	Extra         string
+	HasExtra      bool
+	ModeledFields int
 }
 
 // ParseDHCPStaticList parses the dhcp_staticlist NVRAM value.
@@ -145,7 +154,7 @@ func ParseDHCPStaticList(raw string) ([]DHCPStaticEntry, error) {
 			)
 		}
 
-		entry := DHCPStaticEntry{MAC: fields[0], IP: fields[1]}
+		entry := DHCPStaticEntry{MAC: fields[0], IP: fields[1], ModeledFields: min(len(fields), dhcpModeledFields)}
 		if len(fields) > dhcpDNSField {
 			entry.DNS = fields[dhcpDNSField]
 		}
@@ -166,14 +175,17 @@ func ParseDHCPStaticList(raw string) ([]DHCPStaticEntry, error) {
 }
 
 // SerializeDHCPStaticList serializes DHCP static entries back to NVRAM format.
-// Always emits the 4-field <MAC>IP>DNS>Hostname layout so that entries created
-// without DNS/Hostname still match the router's native format (<MAC>IP>>), plus
-// any preserved trailing fields.
+// Entries this provider created emit the full 4-field <MAC>IP>DNS>Hostname
+// layout so they match the router's native format (<MAC>IP>>); parsed entries
+// keep the field count the router supplied, plus any preserved trailing fields.
 func SerializeDHCPStaticList(entries []DHCPStaticEntry) string {
 	var b strings.Builder
 
 	for _, e := range entries {
-		fields := []string{e.MAC, e.IP, e.DNS, e.Hostname}
+		modeled := []string{e.MAC, e.IP, e.DNS, e.Hostname}
+		n := modeledFieldCount(e.ModeledFields, dhcpModeledFields, modeled, e.HasExtra)
+
+		fields := modeled[:n:n]
 		if e.HasExtra {
 			fields = append(fields, e.Extra)
 		}
@@ -184,25 +196,51 @@ func SerializeDHCPStaticList(entries []DHCPStaticEntry) string {
 	return b.String()
 }
 
+// modeledFieldCount decides how many modeled fields to emit for one entry.
+//
+// It preserves the count the router supplied so an untouched short entry
+// round-trips byte-for-byte, widens it to cover any optional field this
+// provider has since populated, and falls back to the full layout for an entry
+// that was never parsed (parsed == 0) or that carries unmodeled trailing
+// fields, where a short prefix would shift them out of position.
+func modeledFieldCount(parsed, full int, modeled []string, hasExtra bool) int {
+	if hasExtra || parsed <= 0 || parsed > full {
+		return full
+	}
+
+	for i := full - 1; i >= parsed; i-- {
+		if modeled[i] != "" {
+			return i + 1
+		}
+	}
+
+	return parsed
+}
+
 // PortForwardEntry represents a single port forward rule.
 //
 // Extra and HasExtra preserve fields past the modeled six, value and presence
 // respectively, for the same reasons as on DHCPStaticEntry: port-forward
 // mutations rewrite the entire list, and an empty trailing field is a field.
 //
+// ModeledFields records how many modeled fields the router supplied, for the
+// same reason as on DHCPStaticEntry: source IP is optional, so a 5-field rule
+// must not be rewritten with a trailing delimiter it never had.
+//
 // Callers updating a rule must overwrite the modeled fields on the parsed entry
 // rather than assign a freshly constructed one over it. A fresh entry carries
-// zero-valued Extra/HasExtra, which erases the router's trailing fields on the
-// next write.
+// zero-valued Extra/HasExtra/ModeledFields, which erases the router's trailing
+// fields or rewrites its layout on the next write.
 type PortForwardEntry struct {
-	Name         string
-	ExternalPort string
-	InternalIP   string
-	InternalPort string
-	Protocol     string
-	SourceIP     string
-	Extra        string
-	HasExtra     bool
+	Name          string
+	ExternalPort  string
+	InternalIP    string
+	InternalPort  string
+	Protocol      string
+	SourceIP      string
+	Extra         string
+	HasExtra      bool
+	ModeledFields int
 }
 
 // ParseVTSRuleList parses the vts_rulelist NVRAM value.
@@ -227,11 +265,12 @@ func ParseVTSRuleList(raw string) ([]PortForwardEntry, error) {
 		}
 
 		entry := PortForwardEntry{
-			Name:         fields[0],
-			ExternalPort: fields[1],
-			InternalIP:   fields[2],
-			InternalPort: fields[3],
-			Protocol:     fields[4],
+			Name:          fields[0],
+			ExternalPort:  fields[1],
+			InternalIP:    fields[2],
+			InternalPort:  fields[3],
+			Protocol:      fields[4],
+			ModeledFields: min(len(fields), vtsModeledFields),
 		}
 
 		if len(fields) > vtsSourceIPField {
@@ -250,15 +289,20 @@ func ParseVTSRuleList(raw string) ([]PortForwardEntry, error) {
 }
 
 // SerializeVTSRuleList serializes port forward entries back to NVRAM format.
-// Always emits the 6-field layout (trailing src field, empty when unset) to
-// match the router's native format, which keeps a trailing delimiter after the
-// protocol even when no source IP restriction is set, plus any preserved
-// trailing fields.
+// Entries this provider created emit the full 6-field layout (trailing src
+// field, empty when unset) to match the router's native format, which keeps a
+// trailing delimiter after the protocol even when no source IP restriction is
+// set; parsed entries keep the field count the router supplied, plus any
+// preserved trailing fields.
 func SerializeVTSRuleList(entries []PortForwardEntry) string {
 	var b strings.Builder
 
-	for _, e := range entries {
-		fields := []string{e.Name, e.ExternalPort, e.InternalIP, e.InternalPort, e.Protocol, e.SourceIP}
+	for i := range entries {
+		e := &entries[i]
+		modeled := []string{e.Name, e.ExternalPort, e.InternalIP, e.InternalPort, e.Protocol, e.SourceIP}
+		n := modeledFieldCount(e.ModeledFields, vtsModeledFields, modeled, e.HasExtra)
+
+		fields := modeled[:n:n]
 		if e.HasExtra {
 			fields = append(fields, e.Extra)
 		}

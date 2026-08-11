@@ -242,9 +242,9 @@ func (r *portForwardResource) Delete(ctx context.Context, req resource.DeleteReq
 	name := state.Name.ValueString()
 	filtered := make([]client.PortForwardEntry, 0, len(entries))
 
-	for _, e := range entries {
-		if !strings.EqualFold(e.Name, name) {
-			filtered = append(filtered, e)
+	for i := range entries {
+		if !strings.EqualFold(entries[i].Name, name) {
+			filtered = append(filtered, entries[i])
 		}
 	}
 
@@ -323,8 +323,8 @@ func (r *portForwardResource) ImportState(ctx context.Context, req resource.Impo
 
 // findRuleByName searches for a port forward rule by name (case-insensitive).
 func findRuleByName(entries []client.PortForwardEntry, name string) *client.PortForwardEntry {
-	for i, e := range entries {
-		if strings.EqualFold(e.Name, name) {
+	for i := range entries {
+		if strings.EqualFold(entries[i].Name, name) {
 			return &entries[i]
 		}
 	}
