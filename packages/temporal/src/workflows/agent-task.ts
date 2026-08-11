@@ -4,6 +4,7 @@ import type {
   RunAgentTaskResult,
 } from "#activities/agent-task.ts";
 import type { AgentTaskInput } from "#shared/agent-task.ts";
+import { collectErrorMessages } from "#shared/error-cause.ts";
 import { AGENT_REPORT_DELIVERY_START_TO_CLOSE_MS } from "#shared/report-delivery-policy.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
@@ -131,6 +132,9 @@ export async function agentTaskWorkflow(input: AgentTaskInput): Promise<void> {
     | Awaited<ReturnType<AgentTaskActivities["prepareAgentTaskWorkdir"]>>
     | undefined;
   let reportAttempted = false;
+  let reportDelivered = false;
+  let failureReportAttempted = false;
+  let terminalFailure: { error: unknown } | undefined;
 
   try {
     if (requireV2 && input.contractVersion !== 2) {
@@ -142,19 +146,54 @@ export async function agentTaskWorkflow(input: AgentTaskInput): Promise<void> {
     const result = await executeAgentTask(input, workdir.workdir, twoPhaseV2);
     reportAttempted = true;
     await emailActivities.sendAgentTaskEmail({ input, result });
+    reportDelivered = true;
     await dispatchFollowUp(input, result, !v2Reporting);
   } catch (error: unknown) {
-    if (v2Reporting && !reportAttempted) {
-      await emailActivities.sendAgentTaskFailureReport({
-        input,
-        startedAt,
-        error: error instanceof Error ? error.message : String(error),
-      });
+    terminalFailure = { error };
+    if (v2Reporting && (!reportAttempted || reportDelivered)) {
+      failureReportAttempted = true;
+      try {
+        await emailActivities.sendAgentTaskFailureReport({
+          input,
+          startedAt,
+          error:
+            error instanceof Error
+              ? collectErrorMessages(error)
+              : String(error),
+          ...(reportDelivered
+            ? { failureStage: "follow-up-dispatch" as const }
+            : {}),
+        });
+      } catch (failureReportError: unknown) {
+        terminalFailure = { error: failureReportError };
+      }
     }
-    throw error;
-  } finally {
-    if (workdir !== undefined) {
+  }
+
+  if (workdir !== undefined) {
+    try {
       await workdirActivities.cleanupAgentTaskWorkdir(workdir);
+    } catch (error: unknown) {
+      if (v2Reporting && reportDelivered && !failureReportAttempted) {
+        try {
+          await emailActivities.sendAgentTaskFailureReport({
+            input,
+            startedAt,
+            error:
+              error instanceof Error
+                ? collectErrorMessages(error)
+                : String(error),
+            failureStage: "workdir-cleanup",
+          });
+        } catch (failureReportError: unknown) {
+          terminalFailure = { error: failureReportError };
+        }
+      }
+      terminalFailure ??= { error };
     }
+  }
+
+  if (terminalFailure !== undefined) {
+    throw terminalFailure.error;
   }
 }

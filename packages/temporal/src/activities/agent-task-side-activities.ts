@@ -72,6 +72,8 @@ export type SendAgentTaskFailureReportInput = {
   input: AgentTaskInput;
   startedAt: string;
   error: string;
+  /** Optional for replay compatibility with activity inputs recorded before it existed. */
+  failureStage?: "execution" | "follow-up-dispatch" | "workdir-cleanup";
 };
 
 export type PauseAgentTaskScheduleInput = {
@@ -312,8 +314,36 @@ export async function sendEmail(
 export async function sendFailureReport(
   input: SendAgentTaskFailureReportInput,
 ): Promise<SendAgentTaskEmailResult> {
+  const envelope = createActivityReportEnvelope(
+    agentTaskFailureReportInput(input),
+  );
+  const result = await deliverAgentTaskReport(envelope);
+  return {
+    subject: result.subject,
+    messageId: result.messageId,
+    recipientId: result.recipientId,
+    reportRunId: result.reportRunId,
+    receiptKey: result.receiptKey,
+  };
+}
+
+export function agentTaskFailureReportInput(
+  input: SendAgentTaskFailureReportInput,
+): ActivityReportInput {
   const prefix = input.input.emailSubjectPrefix ?? "Agent Task";
-  const envelope = createActivityReportEnvelope({
+  const followUpDispatchFailed = input.failureStage === "follow-up-dispatch";
+  const workdirCleanupFailed = input.failureStage === "workdir-cleanup";
+  const checkId = followUpDispatchFailed
+    ? "agent-follow-up-dispatch"
+    : workdirCleanupFailed
+      ? "agent-workdir-cleanup"
+      : "agent-execution";
+  const checkLabel = followUpDispatchFailed
+    ? "Agent follow-up dispatch"
+    : workdirCleanupFailed
+      ? "Agent workdir cleanup"
+      : "Agent execution";
+  return {
     reportType: "agent-task",
     title: `${prefix}: ${input.input.title}`,
     ...(input.input.scheduleId === undefined
@@ -322,21 +352,28 @@ export async function sendFailureReport(
     startedAt: input.startedAt,
     execution: "failed",
     verdict: "attention",
-    headline:
-      "The agent workflow failed before it could produce a validated report.",
+    headline: followUpDispatchFailed
+      ? "The validated agent report was delivered, but its requested follow-up was not scheduled."
+      : workdirCleanupFailed
+        ? "The validated agent report was delivered, but cleanup of its disposable workdir failed."
+        : "The agent workflow failed before it could produce a validated report.",
     checks: [
       {
-        id: "agent-execution",
-        label: "Agent execution",
+        id: checkId,
+        label: checkLabel,
         required: true,
         status: "failed",
-        summary: "The Temporal execution failed.",
-        evidenceReceiptIds: ["agent-execution-failure"],
+        summary: followUpDispatchFailed
+          ? "The follow-up scheduling activity failed after report delivery."
+          : workdirCleanupFailed
+            ? "The workdir cleanup activity failed after report delivery."
+            : "The Temporal execution failed.",
+        evidenceReceiptIds: [`${checkId}-failure`],
       },
     ],
     evidence: [
       {
-        id: "agent-execution-failure",
+        id: `${checkId}-failure`,
         source: "Temporal agent-task workflow",
         observedAt: new Date().toISOString(),
         status: "failure",
@@ -345,17 +382,19 @@ export async function sendFailureReport(
     ],
     findings: [],
     limitations: [
-      `No validated agent result is available: ${input.error.slice(0, 2000)}`,
+      followUpDispatchFailed
+        ? `The validated result was delivered, but the requested follow-up is absent: ${input.error.slice(0, 2000)}`
+        : workdirCleanupFailed
+          ? `The validated result was delivered, but its disposable workdir may remain: ${input.error.slice(0, 2000)}`
+          : `No validated agent result is available: ${input.error.slice(0, 2000)}`,
     ],
-    actions: ["Open the linked Temporal run and inspect the failed activity."],
-  });
-  const result = await deliverAgentTaskReport(envelope);
-  return {
-    subject: result.subject,
-    messageId: result.messageId,
-    recipientId: result.recipientId,
-    reportRunId: result.reportRunId,
-    receiptKey: result.receiptKey,
+    actions: [
+      followUpDispatchFailed
+        ? "Open the linked Temporal run, inspect the failed scheduling activity, and resubmit the follow-up if it is still needed."
+        : workdirCleanupFailed
+          ? "Open the linked Temporal run and inspect the failed workdir cleanup activity."
+          : "Open the linked Temporal run and inspect the failed activity.",
+    ],
   };
 }
 

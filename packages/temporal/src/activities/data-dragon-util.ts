@@ -1,3 +1,5 @@
+import { collectErrorMessages } from "#shared/error-cause.ts";
+
 export function validateVersion(version: string): void {
   if (!/^\d+\.\d+\.\d+$/.test(version)) {
     throw new Error(`Unexpected Data Dragon version format: ${version}`);
@@ -204,26 +206,6 @@ export function failureReason(error: unknown): string {
     return "email-failed";
   }
   return "exception";
-}
-
-/**
- * Concatenates the `message` of an error and every error in its `.cause`
- * chain. A failed activity surfaces to the workflow as a Temporal
- * `ActivityFailure` whose `.cause` is the original `ApplicationFailure` (both
- * are `Error` subclasses), so the granular message `failureReason`
- * pattern-matches on (e.g. `gh pr create`, `git push`, `update-data-dragon`)
- * lives one or more levels down the chain, not on the top-level failure.
- */
-export function collectErrorMessages(error: unknown): string {
-  const messages: string[] = [];
-  const seen = new Set<unknown>();
-  let current: unknown = error;
-  while (current instanceof Error && !seen.has(current)) {
-    seen.add(current);
-    messages.push(current.message);
-    current = current.cause;
-  }
-  return messages.join(" | ");
 }
 
 /**
