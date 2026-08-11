@@ -89,12 +89,25 @@ On the website, we may collect or process:
 - Page views and basic browser/device metadata
 - Clicks on "Get Started" buttons that open the Scout dashboard
 - Advertising identifiers or cookies set by Pinterest, Reddit, or your browser
-- Basic analytics events through our privacy-focused analytics provider
+- Analytics events, session recordings, and heatmaps through our
+  privacy-focused analytics provider. Recordings always mask what you type into
+  forms; on the signed-in dashboard they also mask all on-screen text, so a
+  recording shows layout and interaction rather than content.
+- When you are signed in to the dashboard, an opaque account identifier that we
+  generate. It is not your Discord ID.
 
-This website measurement is separate from the Discord bot data described above.
-It does not tell us whether a bot installation was completed, which server added
-Scout, or which Discord commands were used after installation. We never sell your
-personal information.
+Website measurement and Discord bot data are connected, through the same
+analytics provider. When you open a server's dashboard, we record that server's
+Discord ID alongside your website activity, which lets us connect a dashboard
+session to that server's Scout installation and to the installation events
+described above.
+
+That connection is limited to the server ID and your dashboard activity itself.
+Website measurement does not record which Discord commands you used, your
+message content, or your League of Legends account details, and dashboard
+addresses are reduced to page shapes before they reach our analytics provider,
+so they do not carry server, report, competition, or player identifiers. We
+never sell your personal information.
 
 ## Marketing and documentation use
 

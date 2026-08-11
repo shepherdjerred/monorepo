@@ -723,12 +723,24 @@ messaging real people.
   never `discordId`. A distinct id is the durable join key for a person's
   events and recordings, so a snowflake there makes all of it addressable by
   Discord account, which is exactly what this rule exists to prevent.
+- The identity sync lives in `RootLayout` (`useAnalyticsIdentity`), which every
+  route renders through — **not** in `RequireSession`. `/login` is mounted
+  outside that guard, so the guard only ever runs for people who still have a
+  session: exactly the people who do not need resetting. Putting it there left
+  the login page, the one screen a signed-out person actually sees, attributed
+  to the previous account. `router-analytics-identity.test.ts` pins this.
 - Scout's replay masks every text node (`maskTextSelector: "*"`), not just form
   values. `person_profiles: "always"` associates each recording with an
   identified person, and the workspace renders guild names, Discord display
   names, Riot accounts, player aliases, and channel names as ordinary text.
   Do not narrow this to a per-component allowlist: it fails open the first time
   a new screen renders a name, and the failure is silent.
+- `guild_id` on browser events deliberately joins a website session to a bot
+  installation, and the published privacy policy
+  (`packages/frontend/src/pages/privacy.mdx`) discloses that join. If the join
+  ever changes shape — new identifiers, a wider link, or removing it — update
+  that policy in the same change. It is a user-facing legal statement, not a
+  code comment.
 - Person profiles are ON. Do not reintroduce `$process_person_profile: false` or
   `$geoip_disable` — install-level retention depends on them being off.
 - GeoIP is ON for browser events and OFF for these server events

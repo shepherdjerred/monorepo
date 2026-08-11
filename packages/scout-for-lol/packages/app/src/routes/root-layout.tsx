@@ -5,6 +5,7 @@ import {
   VersionFooter,
 } from "#src/components/version-info.tsx";
 import { normalizePath, trackPageview } from "#src/lib/analytics.ts";
+import { useAnalyticsIdentity } from "#src/hooks/use-analytics-identity.ts";
 import { FeedbackPrompt } from "#src/components/feedback-prompt.tsx";
 
 /**
@@ -15,6 +16,10 @@ import { FeedbackPrompt } from "#src/components/feedback-prompt.tsx";
  */
 export function RootLayout() {
   const location = useLocation();
+
+  // Identity is synced here, not in `RequireSession`, because `/login` is
+  // mounted outside that guard — see the hook for why that matters.
+  useAnalyticsIdentity();
 
   // Report a templated pageview on initial load and every client-side
   // navigation. Dynamic segments collapse to route shapes so analytics never

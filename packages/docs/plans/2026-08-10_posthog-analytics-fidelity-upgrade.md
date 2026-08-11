@@ -90,7 +90,17 @@ fixed rather than deferred:
   `person_profiles: "always"` each recording is tied to an identified person.
 - Backend `disableGeoip: true`, because those events carry no end-user `$ip`.
 - The browser identifies with `User.analyticsUserId`, a new opaque app-owned
-  UUID, instead of the Discord snowflake. The distinct id is the durable join
+  UUID, instead of the Discord snowflake.
+- The identity sync moved from `RequireSession` to `RootLayout`
+  (`useAnalyticsIdentity`). `/login` is mounted outside the guard, so the guard
+  ran only for people who still had a session — never for the expired-cookie
+  visitor the reset exists for. `router-analytics-identity.test.ts` fails if a
+  route is ever moved out from under the layout.
+- `privacy.mdx` now discloses that website measurement and bot data are joined
+  through `guild_id`, replacing the claim that they were separate and that the
+  website could not reveal which server added Scout. The join is intended (see
+  Decisions above); the disclosure was simply stale. It also now describes
+  session recordings, the masking posture, and the opaque account identifier. The distinct id is the durable join
   key for a person's events and recordings, and the registry rule against
   sending Discord user ids applies to it. Migration
   `20260811210000_user_analytics_identity` rebuilds `User` to add the column

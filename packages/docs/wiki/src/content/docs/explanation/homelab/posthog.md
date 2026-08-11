@@ -80,6 +80,12 @@ that guild — until then the id is an unvalidated route parameter — and it is
 scoped to the session rather than persisted, because the workspace clears it
 from a React effect cleanup that a closed tab never runs.
 
+That join is a disclosed data practice, not just an implementation detail.
+Scout's published privacy policy (`packages/frontend/src/pages/privacy.mdx`)
+states that website measurement and bot data are connected through the server
+id, and bounds what that connection does and does not reveal. Changing the
+shape of the join means changing that policy in the same commit.
+
 Person profiles are enabled, so installations support retention analysis. GeoIP
 enrichment is enabled for browser events and **disabled** for backend events:
 those captures come from Discord gateway events and background jobs that carry
