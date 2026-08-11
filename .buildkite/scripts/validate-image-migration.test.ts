@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { assertMonorepoSourceLabel } from "./docker-source-label.ts";
+import { hclNamedBlock } from "./hcl-source.ts";
 
 import {
   applicationSmokePort,
@@ -10,7 +11,6 @@ import {
   effectivePublishedStage,
   explicitWorkspaceManifests,
   explicitSmokePort,
-  hclNamedBlock,
   httpSmokePort,
 } from "./validate-image-migration.ts";
 
@@ -53,6 +53,22 @@ describe("deterministic Bindery identity", () => {
   }
 }`,
     );
+  });
+
+  test("ignores commented blocks and braces when extracting a target", () => {
+    expect(
+      hclNamedBlock(
+        [
+          '/* target "bindery" { context = "wrong" } */',
+          'target "bindery" {',
+          "  /* } */",
+          '  context = "packages/homelab/images/bindery"',
+          "}",
+        ].join("\n"),
+        "target",
+        "bindery",
+      ),
+    ).toContain('context = "packages/homelab/images/bindery"');
   });
 
   test("accepts source-plus-patch runtime identity", () => {
@@ -170,6 +186,19 @@ describe("GHCR package provenance", () => {
     expect(
       effectivePublishedStage(
         'target "example" {\n  target = "release" # published stage\n}',
+        "image",
+      ),
+    ).toBe("release");
+    expect(
+      effectivePublishedStage(
+        [
+          'target "example" {',
+          "  /*",
+          '  target = "image"',
+          "  */",
+          '  target = "release"',
+          "}",
+        ].join("\n"),
         "image",
       ),
     ).toBe("release");
@@ -323,6 +352,11 @@ describe("GHCR package provenance", () => {
     ).toThrow(
       "example published image stage must link its GHCR package to the public monorepo",
     );
+  });
+});
+
+describe("GHCR Docker instruction parsing", () => {
+  test("ignores heredoc bodies until their exact delimiters", () => {
     expect(() =>
       assertMonorepoSourceLabel(
         [
@@ -351,9 +385,7 @@ describe("GHCR package provenance", () => {
       ),
     ).not.toThrow();
   });
-});
 
-describe("GHCR Docker instruction parsing", () => {
   test("recognizes non-space instruction separators", () => {
     expect(() =>
       assertMonorepoSourceLabel(

@@ -5,6 +5,7 @@ import {
 } from "./validate-pipeline-lib.ts";
 import { APPLICATION_IMAGE_TARGETS } from "./image-targets.ts";
 import { assertMonorepoSourceLabel } from "./docker-source-label.ts";
+import { hclNamedBlock, hclStringAttribute } from "./hcl-source.ts";
 import { asRecord } from "../../scripts/lib/json.ts";
 
 type SmokePort = {
@@ -94,42 +95,6 @@ export function assertWikiManifestInDockerContext(dockerignore: string): void {
   }
 }
 
-function hclStringAttribute(
-  block: string,
-  attribute: string,
-): string | undefined {
-  for (const rawLine of block.split("\n")) {
-    const line = rawLine.trim();
-    if (!line.startsWith(attribute)) continue;
-    const assignment = line.slice(attribute.length).trimStart();
-    if (!assignment.startsWith("=")) continue;
-    const value = assignment.slice(1).trimStart();
-    if (!value.startsWith('"')) continue;
-
-    let escaped = false;
-    for (let cursor = 1; cursor < value.length; cursor += 1) {
-      const character = value[cursor];
-      if (escaped) {
-        escaped = false;
-      } else if (character === "\\") {
-        escaped = true;
-      } else if (character === '"') {
-        const trailing = value.slice(cursor + 1).trim();
-        if (
-          trailing.length === 0 ||
-          trailing.startsWith("#") ||
-          trailing.startsWith("//") ||
-          (trailing.startsWith("/*") && trailing.endsWith("*/"))
-        ) {
-          return value.slice(1, cursor);
-        }
-        break;
-      }
-    }
-  }
-  return undefined;
-}
-
 async function assertApplicationSourceLabels(
   dockerBake: string,
 ): Promise<void> {
@@ -171,67 +136,6 @@ function smokeStage(dockerfile: string, image: string): string {
   const remainder = dockerfile.slice(marker.index + marker[0].length);
   const nextStage = remainder.search(/^FROM /m);
   return nextStage === -1 ? remainder : remainder.slice(0, nextStage);
-}
-
-export function hclNamedBlock(
-  document: string,
-  blockType: string,
-  name: string,
-): string {
-  if (!/^[a-z][a-z-]*$/.test(blockType) || name.length === 0) {
-    fail(`invalid HCL block selector ${blockType}:${name}`);
-  }
-  const marker = `${blockType} "${name}"`;
-  const markerIndex = document.indexOf(marker);
-  if (markerIndex === -1) {
-    fail(`docker-bake.hcl has no ${marker}`);
-  }
-  const openIndex = document.indexOf("{", markerIndex + marker.length);
-  if (openIndex === -1) {
-    fail(`docker-bake.hcl ${marker} has no body`);
-  }
-
-  let depth = 0;
-  let quoted = false;
-  let escaped = false;
-  for (let index = openIndex; index < document.length; index += 1) {
-    const character = document.charAt(index);
-    if (quoted) {
-      if (escaped) {
-        escaped = false;
-        continue;
-      }
-      switch (character) {
-        case "\\": {
-          escaped = true;
-          break;
-        }
-        case '"': {
-          quoted = false;
-          break;
-        }
-      }
-      continue;
-    }
-    switch (character) {
-      case '"': {
-        quoted = true;
-        break;
-      }
-      case "{": {
-        depth += 1;
-        break;
-      }
-      case "}": {
-        depth -= 1;
-        if (depth === 0) {
-          return document.slice(markerIndex, index + 1);
-        }
-        break;
-      }
-    }
-  }
-  fail(`docker-bake.hcl ${marker} has an unclosed body`);
 }
 
 export function assertDeterministicBinderyIdentity(
@@ -372,12 +276,13 @@ export async function validateImageMigrationContracts(
   }
   const requiredManifests = explicitWorkspaceManifests(workspacePaths);
   const appDockerfiles = new Set<string>();
-  for (const match of dockerBake.matchAll(
-    /^\s*dockerfile\s*=\s*"([^"]+)"\s*$/gmu,
-  )) {
-    const dockerfilePath = match[1];
+  for (const image of APPLICATION_IMAGE_TARGETS) {
+    const dockerfilePath = hclStringAttribute(
+      hclNamedBlock(dockerBake, "target", image),
+      "dockerfile",
+    );
     if (dockerfilePath === undefined) {
-      fail("docker-bake.hcl contains an empty Dockerfile path");
+      fail(`docker-bake.hcl target ${image} has no Dockerfile`);
     }
     appDockerfiles.add(dockerfilePath);
   }
