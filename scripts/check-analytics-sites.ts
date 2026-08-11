@@ -84,6 +84,16 @@ function sessionRecordingSetting(masksAllText: boolean): string {
     : "session_recording: { maskAllInputs: true }";
 }
 
+// Replay masking and autocapture masking are separate switches. `maskTextSelector`
+// governs recordings only, so a site can hide a username from replay while
+// autocapture still ships it as element text on every click — and with person
+// profiles on, straight onto a durable profile. The sites that render an identity
+// need both.
+const AUTOCAPTURE_MASKING = [
+  "mask_all_text: true",
+  "mask_all_element_attributes: true",
+] as const;
+
 const registry = RegistrySchema.parse(
   JSON.parse(await Bun.file(registryPath).text()) as unknown,
 );
@@ -160,6 +170,7 @@ for (const tracker of staticTrackers) {
     "capture_dead_clicks: true",
     "capture_performance: { web_vitals: true, network_timing: true }",
     sessionRecordingSetting(tracker.masksAllText),
+    ...(tracker.masksAllText ? AUTOCAPTURE_MASKING : []),
   ]) {
     if (!source.includes(captureSetting)) {
       throw new Error(

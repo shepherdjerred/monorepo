@@ -78,6 +78,12 @@
             capture_performance: { web_vitals: true, network_timing: true },
             respect_dnt: true,
             person_profiles: "always",
+            // Autocapture records element text and attributes on its own;
+            // maskTextSelector below covers session replay only. Without these
+            // two flags every click attached a Discord username to a durable
+            // person profile. Interaction counts survive; identities do not.
+            mask_all_text: true,
+            mask_all_element_attributes: true,
             // The profile card renders the signed-in player's Discord username
             // as ordinary text, which maskAllInputs does not cover — it masks
             // form values only. Masking every text node keeps replay useful for

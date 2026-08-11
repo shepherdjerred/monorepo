@@ -81,6 +81,8 @@ type AnalyticsClient = {
   getDistinctId: () => string;
   /** Lift the opt-out PostHog is initialised with. */
   optInCapturing: () => void;
+  /** Close the gate, overriding any opt-in this browser has stored. */
+  optOutCapturing: () => void;
   register: (properties: PostHogProperties) => void;
   registerForSession: (properties: PostHogProperties) => void;
   unregisterForSession: (property: string) => void;
@@ -133,6 +135,8 @@ export function analyticsPrivacySettings(activeConfig: AnalyticsConfig): {
   capture_performance: { web_vitals: true; network_timing: true };
   respect_dnt: true;
   person_profiles: "always";
+  mask_all_text: true;
+  mask_all_element_attributes: true;
   session_recording: { maskAllInputs: true; maskTextSelector: "*" };
   disable_session_recording: boolean;
 } {
@@ -147,6 +151,15 @@ export function analyticsPrivacySettings(activeConfig: AnalyticsConfig): {
     capture_performance: { web_vitals: true, network_timing: true },
     respect_dnt: true,
     person_profiles: "always",
+    // Autocapture collects element `textContent` and attributes on its own, and
+    // `maskTextSelector` below governs session replay only — it does nothing for
+    // autocapture properties. The workspace renders player aliases as link text
+    // and guild/player paths in `href`, so without these two flags every click
+    // attached an alias and a URL to a durable person profile, which is exactly
+    // what the bounded property registry forbids. Click and interaction counts
+    // survive; only the identifying payload is dropped.
+    mask_all_text: true,
+    mask_all_element_attributes: true,
     // `person_profiles: "always"` ties every recording to an identified person,
     // and the workspace renders guild names, Discord display names, Riot
     // accounts, player aliases, and channel names as ordinary text — none of
@@ -177,7 +190,17 @@ export function initAnalytics(): void {
     // PostHog initialises and therefore cannot be fixed by ordering a
     // `capture()` call later. See `startAnalyticsCapture` for what has to be
     // true first.
+    //
+    // This flag alone is not enough — it is only consulted when the browser has
+    // no stored consent decision, and the explicit `opt_out_capturing()` below
+    // is what actually closes the gate on a return visit. It stays because it
+    // covers the very first load, before any decision exists.
     opt_out_capturing_by_default: true,
+    // Opting out must not take browser storage with it: the distinct id lives
+    // there, and losing it per page load is the unique-visitor regression this
+    // whole change set exists to fix. The default is already `false`; it is
+    // written out because flipping it would silently undo that fix.
+    opt_out_persistence_by_default: false,
     ...analyticsPrivacySettings(activeConfig),
     before_send(event) {
       if (event === null) return null;
@@ -213,6 +236,9 @@ export function initAnalytics(): void {
       // not a consent action the user took that is worth an event.
       posthog.opt_in_capturing({ captureEventName: false });
     },
+    optOutCapturing: () => {
+      posthog.opt_out_capturing();
+    },
     register: (properties) => {
       posthog.register(properties);
     },
@@ -223,6 +249,15 @@ export function initAnalytics(): void {
       posthog.unregister_for_session(property);
     },
   };
+  // Close the gate explicitly, every initialisation.
+  //
+  // `opt_out_capturing_by_default` is consulted only when the browser has no
+  // stored consent decision. The first visit that reaches the gate persists an
+  // opt-in, so on every later cold load PostHog honours that stored opt-in and
+  // begins capturing immediately — which would leave the gate doing nothing for
+  // exactly the returning visitors it exists to protect, the ones carrying a
+  // persisted identity and guild that may both be stale.
+  client.optOutCapturing();
 }
 
 /**

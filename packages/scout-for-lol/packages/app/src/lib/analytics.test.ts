@@ -36,7 +36,8 @@ type IdentityCall =
       properties: Record<string, string | number | boolean>;
     }
   | { kind: "unregister_for_session"; property: string }
-  | { kind: "opt_in" };
+  | { kind: "opt_in" }
+  | { kind: "opt_out" };
 
 const TEST_CONFIG: AnalyticsConfig = {
   projectToken: "phc_test",
@@ -86,6 +87,9 @@ function install(config: AnalyticsConfig | undefined): CapturedEvent[] {
       getDistinctId: () => distinctId,
       optInCapturing() {
         identityCalls.push({ kind: "opt_in" });
+      },
+      optOutCapturing() {
+        identityCalls.push({ kind: "opt_out" });
       },
       register(properties) {
         identityCalls.push({ kind: "register", properties });
@@ -184,6 +188,8 @@ describe("privacy settings", () => {
       capture_performance: { web_vitals: true, network_timing: true },
       respect_dnt: true,
       person_profiles: "always",
+      mask_all_text: true,
+      mask_all_element_attributes: true,
       session_recording: { maskAllInputs: true, maskTextSelector: "*" },
       disable_session_recording: false,
     });

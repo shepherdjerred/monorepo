@@ -738,15 +738,22 @@ messaging real people.
   identity bug this file has had was those two disagreeing: a stale identity
   surviving an expired cookie, and an account switch aliasing two people because
   `identify` ran without a reset. Do not reintroduce a cache of the current user.
-- **Nothing is captured until the gate opens.** PostHog is initialised with
-  `opt_out_capturing_by_default: true`, and `RootLayout` calls
-  `startAnalyticsCapture()` only once the session has answered and the route's
-  own context is attached. This exists because autocapture begins the instant
-  PostHog initialises: ordering a `capture()` call later cannot hold it back, so
-  a cold load with a stale persisted identity recorded autocapture — and the
-  entry pageview — against the previous account, which PostHog cannot
-  reattribute afterwards. The trade is deliberate: pre-gate events are dropped
-  rather than mis-attributed. A route that carries its own analytics property
+- **Nothing is captured until the gate opens.** `initAnalytics` calls
+  `opt_out_capturing()` explicitly on **every** initialisation, and `RootLayout`
+  calls `startAnalyticsCapture()` only once the session has answered and the
+  route's own context is attached. The explicit close is load-bearing:
+  `opt_out_capturing_by_default` is consulted only when the browser has no
+  stored consent decision, so once a visit opts in, every later cold load would
+  honour that stored opt-in and capture immediately — leaving the gate inert for
+  exactly the returning visitors it protects. Keep
+  `opt_out_persistence_by_default` at `false`, or opting out takes the distinct
+  id with it.
+  The gate exists because autocapture begins the instant PostHog initialises:
+  ordering a `capture()` call later cannot hold it back, so a cold load with a
+  stale persisted identity recorded autocapture — and the entry pageview —
+  against the previous account, which PostHog cannot reattribute afterwards.
+  The trade is deliberate: pre-gate events are dropped rather than
+  mis-attributed. A route that carries its own analytics property
   must be listed in `analyticsContextRoute` and must call `resolveGuildContext`
   (or an equivalent) when its answer settles, including when access is denied —
   unresolved is the default, so forgetting withholds the pageview instead of
@@ -770,6 +777,14 @@ messaging real people.
   names, Riot accounts, player aliases, and channel names as ordinary text.
   Do not narrow this to a per-component allowlist: it fails open the first time
   a new screen renders a name, and the failure is silent.
+- **Replay masking and autocapture masking are different switches**, and a site
+  that renders an identity needs both. `maskTextSelector` governs recordings
+  only; autocapture independently collects element `textContent` and attributes,
+  so a masked recording can sit beside a click event carrying the alias as
+  `$el_text` and the guild path in `href` — attached to a durable person profile.
+  Scout, Mario Kart, and Pokémon therefore all set `mask_all_text` and
+  `mask_all_element_attributes`; `scripts/check-analytics-sites.ts` enforces it
+  for every tracker marked `masksAllText`.
 - `guild_id` on browser events deliberately joins a website session to a bot
   installation, and the published privacy policy
   (`packages/frontend/src/pages/privacy.mdx`) discloses that join. If the join

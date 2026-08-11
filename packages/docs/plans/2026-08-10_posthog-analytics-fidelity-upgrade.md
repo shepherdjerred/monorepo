@@ -125,6 +125,18 @@ fixed rather than deferred:
   and its tests: `posthog.reset()` clears consent along with the person, so a
   reset after opt-in returns the instance to the opted-out default and silently
   stops capture for the life of that browser.
+- The gate's first form was inert for returning visitors:
+  `opt_out_capturing_by_default` is only consulted when the browser has no
+  stored consent, so once a visit opted in, later cold loads honoured that
+  stored opt-in and captured immediately. `initAnalytics` now calls
+  `opt_out_capturing()` explicitly on every initialisation, with
+  `opt_out_persistence_by_default: false` so closing the gate does not take the
+  distinct id with it.
+- Autocapture masking (`mask_all_text`, `mask_all_element_attributes`) was added
+  to Scout, Mario Kart, and Pokémon. `maskTextSelector` covers replay only, so
+  autocapture was still shipping player aliases as `$el_text` and guild paths in
+  `href` onto durable person profiles. `check-analytics-sites.ts` enforces both
+  flags for every tracker marked `masksAllText`.
 - `privacy.mdx` now discloses that website measurement and bot data are joined
   through `guild_id`, replacing the claim that they were separate and that the
   website could not reveal which server added Scout. The join is intended (see
