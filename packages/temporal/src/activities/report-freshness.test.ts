@@ -1,5 +1,9 @@
-import { describe, expect, test } from "bun:test";
-import { evaluateFreshness } from "./report-freshness.ts";
+import { afterEach, describe, expect, test } from "bun:test";
+import { reportFreshnessState } from "#observability/metrics-report.ts";
+import {
+  evaluateFreshness,
+  publishReportFreshnessMetrics,
+} from "./report-freshness.ts";
 
 const registration = {
   scheduleId: "daily-report",
@@ -7,6 +11,10 @@ const registration = {
   cadenceHours: 24,
   graceHours: 2,
 };
+
+afterEach(() => {
+  reportFreshnessState.reset();
+});
 
 describe("evaluateFreshness", () => {
   test("uses cadence plus the daily grace period", () => {
@@ -60,5 +68,30 @@ describe("evaluateFreshness", () => {
         paused: true,
       }).status,
     ).toBe("schedule-paused");
+  });
+});
+
+describe("publishReportFreshnessMetrics", () => {
+  test("removes labels for schedules absent from the latest scan", async () => {
+    reportFreshnessState.set({ schedule_id: "deleted-dynamic-task" }, -1);
+
+    publishReportFreshnessMetrics([
+      {
+        scheduleId: "daily-report",
+        status: "fresh",
+        acceptedAt: "2026-08-10T12:00:00.000Z",
+        ageHours: 0,
+        maximumAgeHours: 26,
+      },
+    ]);
+
+    const metric = await reportFreshnessState.get();
+    const values = metric.values;
+    expect(
+      values.map((value) => ({
+        scheduleId: value.labels.schedule_id,
+        value: value.value,
+      })),
+    ).toEqual([{ scheduleId: "daily-report", value: 1 }]);
   });
 });

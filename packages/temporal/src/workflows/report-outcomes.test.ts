@@ -306,6 +306,8 @@ describe("deterministic maintenance report outcomes", () => {
         "https://www.leagueoflegends.com/a",
         "https://wiki.leagueoflegends.com/b",
       ],
+      requiredDates: ["2026-09-22"],
+      unsupportedDates: [],
       sourceEvidenceComplete: true,
       sentinelAgreement: true,
       validationPassed: true,

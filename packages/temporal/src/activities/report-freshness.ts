@@ -105,6 +105,25 @@ export function evaluateFreshness(input: {
   };
 }
 
+export function publishReportFreshnessMetrics(
+  results: ReportFreshnessResult[],
+): void {
+  // prom-client retains labeled gauge series until explicitly removed. Reset
+  // the scan-owned gauge so deleted dynamic schedules cannot remain alerting
+  // after they disappear from both Temporal and this run's result set.
+  reportFreshnessState.reset();
+  for (const result of results) {
+    reportFreshnessState.set(
+      { schedule_id: result.scheduleId },
+      result.status === "fresh"
+        ? 1
+        : result.status === "stale" || result.status === "missing"
+          ? 0
+          : -1,
+    );
+  }
+}
+
 async function latestAcceptedAt(
   storage: ReturnType<typeof store>,
   registration: ReportScheduleRegistration,
@@ -198,16 +217,7 @@ export async function inspectReportFreshness(): Promise<
       });
     }
   }
-  for (const result of results) {
-    reportFreshnessState.set(
-      { schedule_id: result.scheduleId },
-      result.status === "fresh"
-        ? 1
-        : result.status === "stale" || result.status === "missing"
-          ? 0
-          : -1,
-    );
-  }
+  publishReportFreshnessMetrics(results);
   const poster = createAlertmanagerPoster(requiredEnv("ALERTMANAGER_URL"));
   await poster(
     results.map((result) => ({

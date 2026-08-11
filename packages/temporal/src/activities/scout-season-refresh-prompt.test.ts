@@ -57,6 +57,8 @@ describe("buildSeasonRefreshPrompt", () => {
   test("requires cross-checking at least TWO sources", () => {
     const prompt = buildSeasonRefreshPrompt(baseInput);
     expect(prompt).toMatch(/TWO independent sources|cross.check/i);
+    expect(prompt).toContain("visibly states that exact calendar date");
+    expect(prompt).toMatch(/reachable index or homepage is not\s+evidence/);
   });
 
   test("instructs a changelog entry only when adding a new season", () => {

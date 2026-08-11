@@ -73,6 +73,8 @@ export type ScoutSeasonRefreshResult = {
   costUsd: number | undefined;
   numTurns: number | undefined;
   sourceUrls: string[];
+  requiredDates: string[];
+  unsupportedDates: string[];
   sourceEvidenceComplete: boolean;
   sentinelAgreement: boolean;
   validationPassed: boolean;
@@ -171,6 +173,7 @@ function noDriftResult(
     numTurns: claude.numTurns,
   });
   return {
+    ...assessment,
     outcome: "no-drift",
     reason: "no-diff",
     changedFiles: [],
@@ -181,10 +184,6 @@ function noDriftResult(
     durationSeconds,
     costUsd: claude.costUsd,
     numTurns: claude.numTurns,
-    sourceUrls: assessment.sourceUrls,
-    sourceEvidenceComplete: assessment.sourceEvidenceComplete,
-    sentinelAgreement: assessment.sentinelAgreement,
-    validationPassed: assessment.validationPassed,
   };
 }
 
@@ -210,6 +209,7 @@ async function dryRunResult(args: {
     durationSeconds,
   });
   return {
+    ...assessment,
     outcome: "pr-skipped-dry-run",
     reason: "dry-run",
     changedFiles: files,
@@ -220,10 +220,6 @@ async function dryRunResult(args: {
     durationSeconds,
     costUsd: claude.costUsd,
     numTurns: claude.numTurns,
-    sourceUrls: assessment.sourceUrls,
-    sourceEvidenceComplete: assessment.sourceEvidenceComplete,
-    sentinelAgreement: assessment.sentinelAgreement,
-    validationPassed: assessment.validationPassed,
   };
 }
 
@@ -278,6 +274,7 @@ async function realPrResult(args: {
   });
 
   return {
+    ...args.assessment,
     outcome: "pr-created",
     reason: "drift-detected",
     changedFiles: args.files,
@@ -288,10 +285,6 @@ async function realPrResult(args: {
     durationSeconds: args.durationSeconds,
     costUsd: args.claude.costUsd,
     numTurns: args.claude.numTurns,
-    sourceUrls: args.assessment.sourceUrls,
-    sourceEvidenceComplete: args.assessment.sourceEvidenceComplete,
-    sentinelAgreement: args.assessment.sentinelAgreement,
-    validationPassed: args.assessment.validationPassed,
   };
 }
 
@@ -308,6 +301,7 @@ function partialResult(args: {
     args.durationSeconds,
   );
   return {
+    ...args.assessment,
     outcome: "partial",
     reason: args.assessment.reason ?? "incomplete evidence",
     changedFiles: args.files,
@@ -318,10 +312,6 @@ function partialResult(args: {
     durationSeconds: args.durationSeconds,
     costUsd: args.claude.costUsd,
     numTurns: args.claude.numTurns,
-    sourceUrls: args.assessment.sourceUrls,
-    sourceEvidenceComplete: args.assessment.sourceEvidenceComplete,
-    sentinelAgreement: args.assessment.sentinelAgreement,
-    validationPassed: args.assessment.validationPassed,
   };
 }
 
@@ -450,6 +440,8 @@ async function run(
       resultText: sentinelText,
       filesChanged: files.length,
       repoDir: workdir.repoDir,
+      diff,
+      seasonsFile: SEASONS_FILE,
     });
     const tokenResult =
       dryRun || files.length === 0

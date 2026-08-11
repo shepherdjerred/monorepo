@@ -74,7 +74,9 @@ function seasonChecks(
       label: "Independent season sources",
       required: true,
       status: result.sourceEvidenceComplete ? "passed" : "failed",
-      summary: `${result.sourceUrls.length.toString()} source URLs fetched successfully`,
+      summary: result.sourceEvidenceComplete
+        ? `${result.requiredDates.length.toString()} date claims corroborated by both Riot and wiki content`
+        : `${result.unsupportedDates.length.toString()} of ${result.requiredDates.length.toString()} date claims lack two-family corroboration`,
       evidenceReceiptIds: ["source-evidence"],
     },
     {
@@ -116,7 +118,11 @@ function seasonEvidence(
   result: ScoutSeasonRefreshResult,
   observedAt: string,
 ): ActivityReportInput["evidence"] {
-  const sourceExcerpt = result.sourceUrls.join("\n");
+  const sourceExcerpt = JSON.stringify({
+    urls: result.sourceUrls,
+    requiredDates: result.requiredDates,
+    unsupportedDates: result.unsupportedDates,
+  });
   return [
     {
       id: "source-evidence",
@@ -124,10 +130,7 @@ function seasonEvidence(
         "Independently fetched Riot and League season sources cited by the research phase",
       observedAt,
       status: result.sourceEvidenceComplete ? "success" : "failure",
-      excerpt:
-        sourceExcerpt === ""
-          ? "Fewer than two cited sources were fetched successfully"
-          : sourceExcerpt.slice(0, 2000),
+      excerpt: sourceExcerpt.slice(0, 2000),
     },
     {
       id: "sentinel-diff",
