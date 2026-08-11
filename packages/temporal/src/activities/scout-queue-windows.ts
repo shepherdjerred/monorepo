@@ -9,6 +9,7 @@ import { Context } from "@temporalio/activity";
 import { simpleGit } from "simple-git";
 import { z } from "zod/v4";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
+import { SCOUT_QUEUE_WINDOWS_LOOKBACK_DAYS } from "#shared/scout-queue-windows-lookback.ts";
 import { installScoutWorkspace } from "./bot-clone.ts";
 import {
   changedFilesInPaths,
@@ -25,11 +26,7 @@ const QUEUE_WINDOWS_PATH = `${SCOUT_ROOT}/packages/data/src/model/queue-windows.
 // The ONLY path this job is allowed to stage.
 const GENERATED_PATHS = [QUEUE_WINDOWS_PATH];
 const BUCKET = "scout-prod";
-// Must stay above the drift engine's MIN_DRIFT_LOOKBACK_DAYS: the lookback is
-// what bounds how many consecutive runs re-derive a close proposal, and this
-// job closes the proposal PR the moment a run produces no drift. See
-// CLOSE_MIN_ELIGIBLE_RUNS in queue-window-drift.ts.
-const LOOKBACK_DAYS = 28;
+const LOOKBACK_DAYS = SCOUT_QUEUE_WINDOWS_LOOKBACK_DAYS;
 const PROPOSAL_BRANCH = "chore/scout-queue-windows";
 const WARNING_STATE_KEY = "reports/state/scout-queue-windows.json";
 const AutoMergeStateSchema = z.enum(["true", "false"]);

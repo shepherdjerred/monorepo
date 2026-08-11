@@ -10,7 +10,10 @@ import {
 } from "#shared/agent-task.ts";
 import {
   AGENT_REPORT_DELIVERY_START_TO_CLOSE_MS,
+  REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS,
   REPORT_DELIVERY_WORKFLOW_BUDGET_MS,
+  REPORT_SEND_CLAIM_FIRST_RETRY_AT_MS,
+  REPORT_SEND_CLAIM_TAKEOVER_MS,
 } from "#shared/report-delivery-policy.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
@@ -129,9 +132,24 @@ describe("agent task report delivery delegation", () => {
   });
 
   test("budgets the outer activity beyond the complete delegated retry window", () => {
-    expect(REPORT_DELIVERY_WORKFLOW_BUDGET_MS).toBe(390_000);
+    // Three two-minute attempts plus the two capped one-minute delays.
+    expect(REPORT_DELIVERY_WORKFLOW_BUDGET_MS).toBe(480_000);
     expect(AGENT_REPORT_DELIVERY_START_TO_CLOSE_MS).toBeGreaterThan(
       REPORT_DELIVERY_WORKFLOW_BUDGET_MS,
+    );
+  });
+
+  test("lets a retry outlive the send lease so a dead owner cannot strand a report", () => {
+    // Lower bound: a takeover must never race an owner Temporal would still
+    // accept a completion from.
+    expect(REPORT_SEND_CLAIM_TAKEOVER_MS).toBeGreaterThan(
+      REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS,
+    );
+    // Upper bound: the first retry after an owner that hangs to its deadline
+    // has to reach lease expiry. Without this, every remaining attempt throws
+    // on contention and the report is never delivered.
+    expect(REPORT_SEND_CLAIM_FIRST_RETRY_AT_MS).toBeGreaterThanOrEqual(
+      REPORT_SEND_CLAIM_TAKEOVER_MS,
     );
   });
 
