@@ -3,10 +3,75 @@ import { fail } from "./validate-pipeline-lib.ts";
 const monorepoSource = "https://github.com/shepherdjerred/monorepo";
 const sourceLabel = "org.opencontainers.image.source";
 
+type Heredoc = {
+  readonly delimiter: string;
+  readonly stripTabs: boolean;
+};
+
+function instructionHeredocs(instruction: string): Heredoc[] {
+  const heredocs: Heredoc[] = [];
+  let offset = 0;
+
+  while (offset < instruction.length) {
+    const operator = instruction.indexOf("<<", offset);
+    if (operator === -1) break;
+
+    let cursor = operator + 2;
+    const stripTabs = instruction[cursor] === "-";
+    if (stripTabs) cursor += 1;
+    while (instruction[cursor] === " " || instruction[cursor] === "\t") {
+      cursor += 1;
+    }
+
+    const quote = instruction[cursor];
+    let delimiter = "";
+    if (quote === '"' || quote === "'") {
+      cursor += 1;
+      const closingQuote = instruction.indexOf(quote, cursor);
+      if (closingQuote !== -1) {
+        delimiter = instruction.slice(cursor, closingQuote);
+        cursor = closingQuote + 1;
+      }
+    } else {
+      const start = cursor;
+      while (cursor < instruction.length) {
+        const character = instruction[cursor];
+        if (
+          character === " " ||
+          character === "\t" ||
+          character === "\r" ||
+          character === "\n" ||
+          character === '"' ||
+          character === "'" ||
+          character === "<" ||
+          character === ">"
+        ) {
+          break;
+        }
+        cursor += 1;
+      }
+      delimiter = instruction.slice(start, cursor);
+    }
+
+    if (delimiter.length > 0) heredocs.push({ delimiter, stripTabs });
+    offset = Math.max(cursor, operator + 2);
+  }
+
+  return heredocs;
+}
+
 function dockerfileInstructions(dockerfile: string): string[] {
   const instructions: string[] = [];
+  let heredocs: Heredoc[] = [];
   let pending = "";
-  for (const line of dockerfile.split("\n")) {
+  for (const rawLine of dockerfile.split("\n")) {
+    const line = rawLine.endsWith("\r") ? rawLine.slice(0, -1) : rawLine;
+    const heredoc = heredocs[0];
+    if (heredoc !== undefined) {
+      const candidate = heredoc.stripTabs ? line.replace(/^\t+/u, "") : line;
+      if (candidate === heredoc.delimiter) heredocs = heredocs.slice(1);
+      continue;
+    }
     const trimmed = line.trim();
     if (
       pending.length === 0 &&
@@ -19,6 +84,7 @@ function dockerfileInstructions(dockerfile: string): string[] {
     pending = pending.length === 0 ? part : `${pending} ${part}`;
     if (!continues) {
       instructions.push(pending);
+      heredocs = instructionHeredocs(pending);
       pending = "";
     }
   }
