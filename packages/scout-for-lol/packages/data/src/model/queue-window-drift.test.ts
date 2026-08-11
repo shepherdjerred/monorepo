@@ -234,3 +234,64 @@ describe("proposeQueueWindowEdits", () => {
     expect(warnings).toHaveLength(0);
   });
 });
+
+describe("proposeQueueWindowEdits close guards", () => {
+  test("refuses to close a launch-week window even with a full volume baseline (PR #2100 replay)", () => {
+    // The real false positive: `classic aram mayhem` opened 2026-07-29 — the
+    // start of Ranked Season 3 — took 20+ matches over its first two days, then
+    // went quiet. On 2026-08-10 the watcher proposed retiring it while ARAM:
+    // Mayhem was still receiving balance changes in the current patch.
+    //
+    // Every pre-existing close condition is satisfied here: no trailing
+    // matches, and earlierTotal (24) clears CLOSE_MIN_VOLUME_BASELINE. Only the
+    // window's age stops it.
+    const file = makeFile({ "classic aram mayhem": [["2026-07-29", null]] });
+    const { edits, warnings, next } = proposeQueueWindowEdits({
+      file,
+      counts: { "2450": { "2026-07-29": 14, "2026-07-30": 10 } },
+      today: "2026-08-10",
+      lookbackDays: LOOKBACK,
+    });
+
+    expect(edits).toHaveLength(0);
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]?.kind).toBe("window-too-young");
+    expect(warnings[0]?.total).toBe(24);
+    expect(warnings[0]?.message).toContain("12 day(s) old");
+    // The window must remain open-ended, or the queue disappears from the
+    // subscription picker.
+    expect(next.queues["classic aram mayhem"]?.at(-1)?.end).toBeNull();
+  });
+
+  test("closes once the window clears the minimum age with the same evidence shape", () => {
+    // Identical evidence to the replay above, just an older window: a burst at
+    // the start, then nothing. At 30 days old the close is trusted.
+    const file = makeFile({ "classic aram mayhem": [["2026-07-11", null]] });
+    const { edits, warnings } = proposeQueueWindowEdits({
+      file,
+      counts: { "2450": { "2026-07-24": 14, "2026-07-25": 10 } },
+      today: "2026-08-10",
+      lookbackDays: LOOKBACK,
+    });
+
+    expect(warnings).toHaveLength(0);
+    expect(edits).toHaveLength(1);
+    expect(edits[0]?.kind).toBe("close");
+    expect(edits[0]?.date).toBe("2026-07-25");
+  });
+
+  test("stays silent about a young window that is still being played", () => {
+    // The age gate must not turn every fresh mode into a daily warning email —
+    // it only speaks once the mode has actually gone quiet.
+    const file = makeFile({ "classic aram mayhem": [["2026-07-29", null]] });
+    const { edits, warnings } = proposeQueueWindowEdits({
+      file,
+      counts: { "2450": { "2026-08-08": 3, "2026-08-09": 4 } },
+      today: "2026-08-10",
+      lookbackDays: LOOKBACK,
+    });
+
+    expect(edits).toHaveLength(0);
+    expect(warnings).toHaveLength(0);
+  });
+});

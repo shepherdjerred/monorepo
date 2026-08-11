@@ -30,6 +30,22 @@ const REOPEN_MAX_GAP_DAYS = 7;
 const CLOSE_TRAILING_EMPTY_DAYS = 10;
 /** Earlier-in-window match volume required to trust an auto-close. */
 const CLOSE_MIN_VOLUME_BASELINE = 20;
+/**
+ * A window must be at least this old before an auto-close is trusted.
+ *
+ * The volume baseline proves a mode WAS live; it says nothing about whether it
+ * stopped being live. A launch-week burst followed by quiet satisfies it
+ * perfectly, and that is the exact shape of a false positive: our evidence is
+ * biased to Scout's tracked players, so "nobody played it for 10 days" and
+ * "Riot turned it off" are indistinguishable.
+ *
+ * This fired for real. `classic aram mayhem` opened 2026-07-29 — the start of
+ * Ranked Season 3 — took 20+ matches over its first two days, then went quiet;
+ * on 2026-08-10 the watcher proposed retiring it (PR #2100) while ARAM: Mayhem
+ * was still receiving balance changes in the current patch. Twelve days is not
+ * enough evidence to retire a mode.
+ */
+const CLOSE_MIN_WINDOW_AGE_DAYS = 21;
 
 export type QueueWindowEditKind = "open" | "reopen" | "close";
 
@@ -44,6 +60,7 @@ export type QueueWindowEdit = {
 export type QueueWindowWarningKind =
   | "sparse-no-close"
   | "no-volume-baseline"
+  | "window-too-young"
   | "unknown-queue-id";
 
 export type QueueWindowWarning = {
@@ -317,8 +334,10 @@ type CloseOutcome =
   | { type: "close"; change: UnitChange }
   | {
       type: "warning";
-      kind: "sparse-no-close" | "no-volume-baseline";
+      kind: "sparse-no-close" | "no-volume-baseline" | "window-too-young";
       total: number;
+      /** Why the close was withheld, spliced into the operator-facing text. */
+      reason: string;
     };
 
 function tryClose(
@@ -366,6 +385,23 @@ function tryClose(
       : undefined;
 
   if (closeEnd !== undefined) {
+    // Final veto on an otherwise-valid close. Deliberately last: it must mean
+    // "every other signal said close, but the window is too new to trust", not
+    // pre-empt the volume-baseline check — otherwise a young window with
+    // trivial volume would be reported as too-young rather than as having no
+    // baseline, and the more specific diagnosis would be lost.
+    const windowAgeDays = Math.floor(
+      (todayMs - parseUtcDate(windowStart)) / DAY_MS,
+    );
+    if (windowAgeDays < CLOSE_MIN_WINDOW_AGE_DAYS) {
+      return {
+        type: "warning",
+        kind: "window-too-young",
+        total: earlierTotal,
+        reason: `the window is only ${windowAgeDays.toString()} day(s) old (minimum ${CLOSE_MIN_WINDOW_AGE_DAYS.toString()} before an auto-close is trusted)`,
+      };
+    }
+
     const nextWindows = windows.map((window, index) =>
       index === windows.length - 1 ? { ...window, end: closeEnd } : window,
     );
@@ -382,9 +418,19 @@ function tryClose(
   }
 
   if (earlierTotal > 0) {
-    return { type: "warning", kind: "no-volume-baseline", total: earlierTotal };
+    return {
+      type: "warning",
+      kind: "no-volume-baseline",
+      total: earlierTotal,
+      reason: `volume baseline is below threshold (${earlierTotal.toString()} < ${CLOSE_MIN_VOLUME_BASELINE.toString()})`,
+    };
   }
-  return { type: "warning", kind: "sparse-no-close", total: 0 };
+  return {
+    type: "warning",
+    kind: "sparse-no-close",
+    total: 0,
+    reason: "the mode is sparse (no matches observed in the window at all)",
+  };
 }
 
 export function proposeQueueWindowEdits(
@@ -459,7 +505,7 @@ export function proposeQueueWindowEdits(
             kind: closeOutcome.kind,
             queue: primaryKey,
             total: closeOutcome.total,
-            message: `${unit.keys.join("/")}: open-ended window has no recent matches but ${closeOutcome.kind === "sparse-no-close" ? "the mode is sparse" : "volume baseline is below threshold"}; not auto-closing`,
+            message: `${unit.keys.join("/")}: open-ended window has no recent matches but ${closeOutcome.reason}; not auto-closing`,
           });
         }
       }
