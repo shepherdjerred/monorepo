@@ -391,8 +391,8 @@ export async function pushImages(
     const digest = await getManifestDigest(candidateTag);
     const candidate = `${image}@${digest}`;
     await verifyAnonymousPull(name, digest);
-    await verifySourceLabel(candidate);
     if (applicationImageTargets.has(name)) {
+      await verifySourceLabel(candidate);
       await smokeCandidate(name, candidate, contractHash);
     }
     const newFingerprint = await getRuntimeFingerprint(candidate);

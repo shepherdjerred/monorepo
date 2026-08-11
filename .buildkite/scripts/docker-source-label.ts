@@ -104,6 +104,13 @@ function instructionHeredocs(
   return heredocs;
 }
 
+function canContainHeredoc(instruction: string): boolean {
+  const words = instruction.trimStart().split(/\s+/u);
+  const topLevel = words[0]?.toUpperCase();
+  const opcode = topLevel === "ONBUILD" ? words[1]?.toUpperCase() : topLevel;
+  return opcode === "ADD" || opcode === "COPY" || opcode === "RUN";
+}
+
 function dockerfileInstructions(
   dockerfile: string,
   escape: "\\" | "`",
@@ -131,7 +138,9 @@ function dockerfileInstructions(
     pending = pending.length === 0 ? part : `${pending} ${part}`;
     if (!continues) {
       instructions.push(pending);
-      heredocs = instructionHeredocs(pending, escape);
+      heredocs = canContainHeredoc(pending)
+        ? instructionHeredocs(pending, escape)
+        : [];
       pending = "";
     }
   }

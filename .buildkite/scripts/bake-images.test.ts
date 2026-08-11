@@ -947,6 +947,46 @@ test("smokes exact candidates, reuses identical runtime fingerprints, and tags S
   ]);
 });
 
+test("keeps upstream provenance for infrastructure images", async () => {
+  const digest = `sha256:${"b".repeat(64)}`;
+  const pinned = `sha256:${"a".repeat(64)}`;
+  const sourceChecks: string[] = [];
+  const events: string[] = [];
+  await pushImages(
+    {
+      targets: ["bindery"],
+      commit: "commit",
+      buildNumber: "42",
+      contractHash: "contract",
+    },
+    {
+      executor: async () => commandResult(),
+      environment: {},
+      readVersions: async () =>
+        `  "shepherdjerred/bindery": "2.0.0-1@${pinned}",`,
+      getManifestDigest: async () => digest,
+      verifyAnonymousPull: async () => {
+        events.push("public");
+      },
+      verifySourceLabel: async (image) => {
+        sourceChecks.push(image);
+      },
+      getRuntimeFingerprint: async () => "same",
+      writeMetadata: async () => {
+        events.push("metadata");
+      },
+      writeCandidates: async () => {
+        events.push("candidates");
+      },
+      writeText: async () => {
+        events.push("outcomes");
+      },
+    },
+  );
+  expect(sourceChecks).toEqual([]);
+  expect(events).toEqual(["public", "metadata", "candidates", "outcomes"]);
+});
+
 test("writes a deterministic full-build fallback report", async () => {
   const writes: { path: string; contents: string }[] = [];
 

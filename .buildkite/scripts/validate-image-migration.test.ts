@@ -169,7 +169,7 @@ describe("GHCR package provenance", () => {
     ).toBe("image");
     expect(
       effectivePublishedStage(
-        'target "example" {\n  target = "release"\n}',
+        'target "example" {\n  target = "release" # published stage\n}',
         "image",
       ),
     ).toBe("release");
@@ -361,6 +361,23 @@ describe("GHCR Docker instruction parsing", () => {
           "FROM runtime AS image",
           'LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"',
           'LABEL\torg.opencontainers.image.source="https://github.com/somewhere/else"',
+        ].join("\n"),
+        "example",
+        "image",
+      ),
+    ).toThrow(
+      "example published image stage must link its GHCR package to the public monorepo",
+    );
+  });
+
+  test("does not treat LABEL values as heredocs", () => {
+    expect(() =>
+      assertMonorepoSourceLabel(
+        [
+          "FROM runtime AS image",
+          'LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"',
+          "LABEL description=<<NEVER",
+          'LABEL org.opencontainers.image.source="https://github.com/somewhere/else"',
         ].join("\n"),
         "example",
         "image",

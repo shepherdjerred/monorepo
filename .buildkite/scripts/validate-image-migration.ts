@@ -94,21 +94,53 @@ export function assertWikiManifestInDockerContext(dockerignore: string): void {
   }
 }
 
+function hclStringAttribute(
+  block: string,
+  attribute: string,
+): string | undefined {
+  for (const rawLine of block.split("\n")) {
+    const line = rawLine.trim();
+    if (!line.startsWith(attribute)) continue;
+    const assignment = line.slice(attribute.length).trimStart();
+    if (!assignment.startsWith("=")) continue;
+    const value = assignment.slice(1).trimStart();
+    if (!value.startsWith('"')) continue;
+
+    let escaped = false;
+    for (let cursor = 1; cursor < value.length; cursor += 1) {
+      const character = value[cursor];
+      if (escaped) {
+        escaped = false;
+      } else if (character === "\\") {
+        escaped = true;
+      } else if (character === '"') {
+        const trailing = value.slice(cursor + 1).trim();
+        if (
+          trailing.length === 0 ||
+          trailing.startsWith("#") ||
+          trailing.startsWith("//") ||
+          (trailing.startsWith("/*") && trailing.endsWith("*/"))
+        ) {
+          return value.slice(1, cursor);
+        }
+        break;
+      }
+    }
+  }
+  return undefined;
+}
+
 async function assertApplicationSourceLabels(
   dockerBake: string,
 ): Promise<void> {
   const appDefaults = hclNamedBlock(dockerBake, "target", "_app");
-  const defaultPublishedStage = /^\s*target\s*=\s*"([^"]+)"\s*$/mu.exec(
-    appDefaults,
-  )?.[1];
+  const defaultPublishedStage = hclStringAttribute(appDefaults, "target");
   if (defaultPublishedStage === undefined) {
     fail("docker-bake.hcl application defaults have no published stage");
   }
   for (const image of APPLICATION_IMAGE_TARGETS) {
     const target = hclNamedBlock(dockerBake, "target", image);
-    const dockerfilePath = /^\s*dockerfile\s*=\s*"([^"]+)"\s*$/mu.exec(
-      target,
-    )?.[1];
+    const dockerfilePath = hclStringAttribute(target, "dockerfile");
     if (dockerfilePath === undefined) {
       fail(`docker-bake.hcl target ${image} has no Dockerfile`);
     }
@@ -128,9 +160,7 @@ export function effectivePublishedStage(
   bakeTarget: string,
   defaultStage: string,
 ): string {
-  return (
-    /^\s*target\s*=\s*"([^"]+)"\s*$/mu.exec(bakeTarget)?.[1] ?? defaultStage
-  );
+  return hclStringAttribute(bakeTarget, "target") ?? defaultStage;
 }
 
 function smokeStage(dockerfile: string, image: string): string {
