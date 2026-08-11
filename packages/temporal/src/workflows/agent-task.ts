@@ -30,6 +30,24 @@ export function agentActivityRetryFor(
   return input.agentTimeoutMinutes === undefined ? RETRY : BOUNDED_AGENT_RETRY;
 }
 
+export function agentTaskFailureStageFor(input: {
+  v2Reporting: boolean;
+  reportAttempted: boolean;
+  reportDelivered: boolean;
+  postDeliveryFailureReporting: boolean;
+}): "execution" | "follow-up-dispatch" | undefined {
+  if (!input.v2Reporting) {
+    return undefined;
+  }
+  if (!input.reportAttempted) {
+    return "execution";
+  }
+  if (input.reportDelivered && input.postDeliveryFailureReporting) {
+    return "follow-up-dispatch";
+  }
+  return undefined;
+}
+
 function agentActivitiesFor(
   input: AgentTaskInput,
 ): Pick<
@@ -123,6 +141,9 @@ export async function agentTaskWorkflow(input: AgentTaskInput): Promise<void> {
   const twoPhaseV2 = patched("agent-task-two-phase-v2");
   const requireV2 = patched("agent-task-require-v2");
   const coreEmailDelivery = patched("agent-task-core-email-delivery");
+  const postDeliveryFailureReporting = patched(
+    "agent-task-post-delivery-failure-report",
+  );
   const emailActivities = coreEmailDelivery
     ? coreEmailActivities
     : legacyEmailActivities;
@@ -150,7 +171,13 @@ export async function agentTaskWorkflow(input: AgentTaskInput): Promise<void> {
     await dispatchFollowUp(input, result, !v2Reporting);
   } catch (error: unknown) {
     terminalFailure = { error };
-    if (v2Reporting && (!reportAttempted || reportDelivered)) {
+    const failureStage = agentTaskFailureStageFor({
+      v2Reporting,
+      reportAttempted,
+      reportDelivered,
+      postDeliveryFailureReporting,
+    });
+    if (failureStage !== undefined) {
       failureReportAttempted = true;
       try {
         await emailActivities.sendAgentTaskFailureReport({
@@ -160,9 +187,7 @@ export async function agentTaskWorkflow(input: AgentTaskInput): Promise<void> {
             error instanceof Error
               ? collectErrorMessages(error)
               : String(error),
-          ...(reportDelivered
-            ? { failureStage: "follow-up-dispatch" as const }
-            : {}),
+          ...(failureStage === "follow-up-dispatch" ? { failureStage } : {}),
         });
       } catch (failureReportError: unknown) {
         terminalFailure = { error: failureReportError };
@@ -174,7 +199,12 @@ export async function agentTaskWorkflow(input: AgentTaskInput): Promise<void> {
     try {
       await workdirActivities.cleanupAgentTaskWorkdir(workdir);
     } catch (error: unknown) {
-      if (v2Reporting && reportDelivered && !failureReportAttempted) {
+      if (
+        v2Reporting &&
+        reportDelivered &&
+        postDeliveryFailureReporting &&
+        !failureReportAttempted
+      ) {
         try {
           await emailActivities.sendAgentTaskFailureReport({
             input,

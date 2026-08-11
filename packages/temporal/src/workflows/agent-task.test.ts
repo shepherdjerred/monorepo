@@ -6,6 +6,10 @@ import type { SendAgentTaskFailureReportInput } from "#activities/agent-task-sid
 import { AgentTaskInputSchema } from "#shared/agent-task.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { agentTaskWorkflow } from "./index.ts";
+import {
+  agentActivityRetryFor,
+  agentTaskFailureStageFor,
+} from "./agent-task.ts";
 
 const INPUT = AgentTaskInputSchema.parse({
   contractVersion: 2,
@@ -87,6 +91,47 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await testEnvironment.teardown();
+});
+
+describe("agentActivityRetryFor", () => {
+  test("keeps the default retry policy for unbounded agent tasks", () => {
+    expect(agentActivityRetryFor({})).toEqual({
+      maximumAttempts: 2,
+      initialInterval: "1 minute",
+      backoffCoefficient: 2,
+      maximumInterval: "10 minutes",
+    });
+  });
+
+  test("uses a single attempt for bounded agent tasks", () => {
+    expect(agentActivityRetryFor({ agentTimeoutMinutes: 8 })).toEqual({
+      maximumAttempts: 1,
+    });
+  });
+});
+
+describe("agentTaskFailureStageFor", () => {
+  test("preserves old history ordering when the post-delivery patch is absent", () => {
+    expect(
+      agentTaskFailureStageFor({
+        v2Reporting: true,
+        reportAttempted: true,
+        reportDelivered: true,
+        postDeliveryFailureReporting: false,
+      }),
+    ).toBeUndefined();
+  });
+
+  test("enables follow-up failure reporting for patched executions", () => {
+    expect(
+      agentTaskFailureStageFor({
+        v2Reporting: true,
+        reportAttempted: true,
+        reportDelivered: true,
+        postDeliveryFailureReporting: true,
+      }),
+    ).toBe("follow-up-dispatch");
+  });
 });
 
 describe("agent task post-report failure delivery", () => {

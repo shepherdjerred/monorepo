@@ -125,7 +125,9 @@ self-cancellation are removed.
   latest-main builds instead of counting only failed builds.
 - A failed v2 follow-up dispatch now sends a distinct post-report failure
   heartbeat before the workflow rethrows, so the already-delivered result is
-  not mistaken for successful completion of the requested follow-up.
+  not mistaken for successful completion of the requested follow-up. The new
+  activity command is patch-gated so in-flight histories retain their recorded
+  cleanup ordering during worker rollout.
 - Retirement recommendations now require a complete passing CI I/O gate. Agent
   task identities include the full v2 check contract, and a post-delivery
   checkpoint failure gets a distinct stable failure-report identity so it
