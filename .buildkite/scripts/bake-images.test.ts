@@ -247,6 +247,24 @@ test("preserves exhausted GHCR transport and server failures as transient", asyn
     }),
   ).rejects.toBeInstanceOf(TransientError);
 
+  let request = 0;
+  const propagatingManifestFetcher = Object.assign(
+    async () => {
+      request += 1;
+      return request % 2 === 1
+        ? Response.json({ token: "anonymous-token" })
+        : new Response(null, { status: 404 });
+    },
+    { preconnect: fetch.preconnect },
+  );
+  await expect(
+    ensureAnonymousGhcrPull("alert-dashboard", `sha256:${"e".repeat(64)}`, {
+      fetcher: propagatingManifestFetcher,
+      sleeper: async (milliseconds) => milliseconds,
+      attempts: 1,
+    }),
+  ).rejects.toBeInstanceOf(TransientError);
+
   const invalidTokenFetcher = Object.assign(
     async () => new Response("truncated-token-json", { status: 200 }),
     { preconnect: fetch.preconnect },

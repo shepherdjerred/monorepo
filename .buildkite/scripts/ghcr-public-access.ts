@@ -26,9 +26,14 @@ export function anonymousPullVerifier(
   return dependency ?? ensureAnonymousGhcrPull;
 }
 
-function responseFailure(endpoint: string, status: number): Error {
+type GhcrEndpoint = "token" | "manifest";
+
+function responseFailure(endpoint: GhcrEndpoint, status: number): Error {
   const message = `${endpoint} endpoint returned HTTP ${status.toString()}`;
-  return status === 408 || status === 429 || status >= 500
+  return status === 408 ||
+    status === 429 ||
+    status >= 500 ||
+    (endpoint === "manifest" && status === 404)
     ? new TransientError(message)
     : new Error(message);
 }
@@ -37,7 +42,7 @@ async function ghcrRequest(
   fetcher: typeof fetch,
   input: string | URL,
   init: RequestInit,
-  endpoint: string,
+  endpoint: GhcrEndpoint,
 ): Promise<Response> {
   try {
     return await fetcher(input, init);
