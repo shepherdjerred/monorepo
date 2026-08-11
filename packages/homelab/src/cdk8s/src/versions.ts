@@ -1,6 +1,9 @@
 import { applyCurrentBuildImageOverrides } from "./release-configuration.ts";
 
 const versions = {
+  // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
+  "stashapp/stash":
+    "v0.31.1@sha256:df744af5a0c976e2ec671052ecc1f8a9aa757fa12b8f9930b59910b7295f0da6",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
   "jordanlambrecht/tracker-tracker":
     "2.8.9@sha256:27b93eb839812c7ccaf03b1024f31d23b5981f8fcc13257447e2082100b7a71c",

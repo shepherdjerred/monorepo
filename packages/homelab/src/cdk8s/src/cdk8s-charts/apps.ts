@@ -67,6 +67,7 @@ import { createTurboCacheApp } from "@shepherdjerred/homelab/cdk8s/src/resources
 import { createBuildkitdApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/buildkitd.ts";
 import { createTrackerTrackerApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/tracker-tracker.ts";
 import { createAlertDashboardApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/alert-dashboard.ts";
+import { createStashApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/stash.ts";
 import { createPvcBackupAdmissionPolicies } from "@shepherdjerred/homelab/cdk8s/src/resources/pvc-backup-admission.ts";
 
 export async function createAppsChart(app: App) {
@@ -177,6 +178,7 @@ export async function createAppsChart(app: App) {
   createBuildkitdApp(chart);
   createTrackerTrackerApp(chart);
   createAlertDashboardApp(chart);
+  createStashApp(chart);
 
   // ArgoCD AppProject
   createProject(chart);
