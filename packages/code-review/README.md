@@ -67,26 +67,45 @@ The split is deliberate: pure consumers don't pull in the GitHub layer.
 ## Usage
 
 ```ts
-import {
-  resolveProvider,
-  evaluateGate,
-  isBlocking,
-} from "@shepherdjerred/code-review";
+import { resolveProvider, evaluateGate } from "@shepherdjerred/code-review";
 import {
   resolveReviewState,
   fetchReviewThreads,
 } from "@shepherdjerred/code-review/github";
+import { fetchHeadPushedAt } from "@shepherdjerred/code-review/head-pushed-at";
 
 const provider = resolveProvider(Bun.env["REVIEW_PROVIDER"]);
-const reviewState = await resolveReviewState({
-  /* repo, pr, head, provider */
+const repo = "shepherdjerred/monorepo";
+const number = 1234;
+const head = "0123456789abcdef0123456789abcdef01234567";
+const token = Bun.env["GH_TOKEN"] ?? "";
+
+// Only `review-at-head` providers need the push time; it binds a commit-less
+// 👍 clean-review reaction to this head.
+const headPushedAt =
+  provider.completion.kind === "review-at-head"
+    ? await fetchHeadPushedAt({ repo, sha: head, prNumber: number, token })
+    : null;
+
+// Resolve completion FIRST, then fetch threads — never concurrently, or the
+// gate can pass on a thread snapshot older than the review it just observed.
+const state = await resolveReviewState({
+  provider,
+  repo,
+  head,
+  prNumber: number,
+  token,
+  headPushedAt,
 });
+const { threads } = await fetchReviewThreads({ repo, number, token, provider });
+
 const decision = evaluateGate({
   head,
   provider,
-  reviewState,
+  reviewState: state.state,
   threads,
   maxBlockingPriority: 1,
+  skipReason: state.skipReason,
 });
 ```
 
