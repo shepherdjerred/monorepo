@@ -24,6 +24,7 @@ import {
 } from "./pairing-task-state.ts";
 import { subWeeks, startOfISOWeek, endOfISOWeek } from "date-fns";
 import * as Sentry from "@sentry/bun";
+import { deliverTrackedCoreOutput } from "#src/analytics/guild-lifecycle.ts";
 
 // Channel ID for Common Denominator updates
 const COMMON_DENOMINATOR_CHANNEL_ID = DiscordChannelIdSchema.parse(
@@ -430,22 +431,28 @@ export async function runWeeklyPairingUpdate(): Promise<{
       `[WeeklyPairing] Message split into ${messageChunks.length.toString()} chunk(s)`,
     );
 
-    // Send each chunk sequentially to maintain order
-    for (let i = 0; i < messageChunks.length; i++) {
-      const chunk = messageChunks[i];
-      if (chunk !== undefined && chunk.length > 0) {
-        logger.info(
-          `[WeeklyPairing] Sending chunk ${(i + 1).toString()}/${messageChunks.length.toString()}`,
-        );
-        await sendChannelMessage(
-          {
-            content: chunk,
-          },
-          channelId,
-          serverId,
-        );
-      }
-    }
+    await deliverTrackedCoreOutput({
+      serverId,
+      outputKind: "pairing_weekly",
+      async deliver() {
+        // Send each chunk sequentially to maintain order.
+        for (let i = 0; i < messageChunks.length; i++) {
+          const chunk = messageChunks[i];
+          if (chunk !== undefined && chunk.length > 0) {
+            logger.info(
+              `[WeeklyPairing] Sending chunk ${(i + 1).toString()}/${messageChunks.length.toString()}`,
+            );
+            await sendChannelMessage(
+              {
+                content: chunk,
+              },
+              channelId,
+              serverId,
+            );
+          }
+        }
+      },
+    });
 
     const totalMatches =
       ranked.totalMatchesAnalyzed +

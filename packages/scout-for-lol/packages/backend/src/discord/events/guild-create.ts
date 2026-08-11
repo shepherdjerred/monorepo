@@ -5,6 +5,7 @@
  */
 
 import { type Guild, ChannelType, AuditLogEvent } from "discord.js";
+import { z } from "zod";
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
@@ -13,8 +14,18 @@ import { truncateDiscordMessage } from "#src/discord/utils/message.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
 import { prisma } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
+import { randomUUID } from "node:crypto";
+import { captureGuildInstalled } from "#src/analytics/guild-lifecycle.ts";
 
 const logger = createLogger("guild-create");
+
+// Prisma surfaces unique-constraint violations as { code: "P2002", ... }.
+const PrismaKnownErrorSchema = z.object({ code: z.string() });
+
+function isUniqueConstraintError(error: unknown): boolean {
+  const parsed = PrismaKnownErrorSchema.safeParse(error);
+  return parsed.success && parsed.data.code === "P2002";
+}
 
 type WelcomeChannel = {
   name: string;
@@ -114,7 +125,18 @@ async function resolveInstaller(guild: Guild): Promise<string> {
 }
 
 /**
- * Save guild install info to the database
+ * Save guild install info to the database.
+ *
+ * Concurrent `guildCreate` callbacks for the SAME guild (Discord replays,
+ * shard reconnects) must not both decide they are the one making a "first
+ * install" or "reinstall" transition — that would rotate
+ * `analyticsInstallationId` twice and emit `guild_installed` under two
+ * different identities for one real installation. So each case below is
+ * claimed atomically at the database layer instead of a read-then-branch:
+ * case 1 is guarded by the unique constraint on `serverId`, case 2 by an
+ * `updateMany` scoped to the exact prior `removedAt` state — the same
+ * claim-the-transition pattern already used for `firstCoreOutputAt` /
+ * `firstSubscriptionAt` / `removedAt` in guild-lifecycle.ts.
  */
 async function saveGuildInstall(
   guild: Guild,
@@ -125,55 +147,86 @@ async function saveGuildInstall(
     const ownerId = DiscordAccountIdSchema.parse(guild.ownerId);
     const installerId = DiscordAccountIdSchema.parse(addedByDiscordId);
 
-    const existing = await prisma.guildInstall.findUnique({
-      where: { serverId },
-      select: { removedAt: true },
-    });
-
-    // Restart onboarding only for a genuine re-install — i.e. we previously
-    // observed a removal. Resetting unconditionally would re-arm the onboarding
-    // DMs (and falsify `installedAt`) for a long-standing server every time
-    // Discord replayed a guildCreate for it.
-    const isReinstall = existing !== null && existing.removedAt !== null;
-    const isFirstInstall = existing === null;
-    const restartOnboarding = isFirstInstall || isReinstall;
-
     const identity = {
       serverName: guild.name,
       ownerDiscordId: ownerId,
       addedByDiscordId: installerId,
       memberCount: guild.memberCount,
     };
+    const installedAt = new Date();
 
-    await prisma.guildInstall.upsert({
-      where: { serverId },
-      create: {
-        serverId,
+    // Case 1: a genuinely new guild. At most one concurrent caller's create
+    // can succeed against the unique `serverId` constraint; every other
+    // racing caller gets a P2002 and falls through to case 2/3 instead of
+    // also believing it made the first install.
+    try {
+      const install = await prisma.guildInstall.create({
+        data: {
+          serverId,
+          ...identity,
+          installedAt,
+          analyticsInstallationId: randomUUID(),
+          analyticsLifecycleTracked: true,
+        },
+      });
+      captureGuildInstalled(install, "first", guild.memberCount);
+      logger.info(
+        `[Guild Create] Saved install info for ${guild.name} (${guild.id}), installer: ${addedByDiscordId}, reinstall: false`,
+      );
+      return;
+    } catch (error) {
+      if (!isUniqueConstraintError(error)) {
+        throw error;
+      }
+    }
+
+    // Case 2: a genuine re-install. Guard the update on the row still being
+    // `removedAt: { not: null }` so at most one concurrent caller's
+    // updateMany matches — the loser's WHERE clause finds nothing once the
+    // winner has already flipped removedAt to null, so only one caller
+    // rotates the identity and emits `guild_installed`.
+    const analyticsInstallationId = randomUUID();
+    const reinstallClaim = await prisma.guildInstall.updateMany({
+      where: { serverId, removedAt: { not: null } },
+      data: {
         ...identity,
-        installedAt: new Date(),
-      },
-      update: {
-        ...identity,
-        // A guild we never left keeps its original install date and outreach
-        // progress; only a real re-install restarts the clock.
-        ...(restartOnboarding
-          ? {
-              // Moving installedAt forward IS the reset: outreach state is
-              // derived from audit rows created after it, so there is no list
-              // of counters to remember to clear.
-              installedAt: new Date(),
-              emailNudgeSentAt: null,
-              outreach3dSentAt: null,
-              outreach14dSentAt: null,
-              outreach30dSentAt: null,
-            }
-          : {}),
+        // Moving installedAt forward IS the reset: outreach state is
+        // derived from audit rows created after it, so there is no list of
+        // counters to remember to clear.
+        installedAt,
+        analyticsInstallationId,
+        analyticsLifecycleTracked: true,
+        firstCoreOutputAt: null,
+        firstSubscriptionAt: null,
+        emailNudgeSentAt: null,
+        outreach3dSentAt: null,
+        outreach14dSentAt: null,
+        outreach30dSentAt: null,
         removedAt: null,
       },
     });
 
+    if (reinstallClaim.count === 1) {
+      captureGuildInstalled(
+        { analyticsInstallationId, analyticsLifecycleTracked: true },
+        "reinstall",
+        guild.memberCount,
+      );
+      logger.info(
+        `[Guild Create] Saved install info for ${guild.name} (${guild.id}), installer: ${addedByDiscordId}, reinstall: true`,
+      );
+      return;
+    }
+
+    // Case 3: a guild we never left (or a concurrent caller already claimed
+    // the reinstall above). No lifecycle transition, no analytics event —
+    // just refresh identity fields, which can legitimately change.
+    await prisma.guildInstall.updateMany({
+      where: { serverId },
+      data: { ...identity, removedAt: null },
+    });
     logger.info(
-      `[Guild Create] Saved install info for ${guild.name} (${guild.id}), installer: ${addedByDiscordId}, reinstall: ${isReinstall.toString()}`,
+      `[Guild Create] Saved install info for ${guild.name} (${guild.id}), installer: ${addedByDiscordId}, reinstall: false`,
     );
   } catch (error) {
     logger.error(

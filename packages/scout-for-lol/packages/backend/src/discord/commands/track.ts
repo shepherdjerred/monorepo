@@ -20,6 +20,7 @@ import {
 } from "#src/lib/subscription/add.ts";
 import { replyError } from "#src/discord/commands/define-command.ts";
 import { recordAudit } from "#src/lib/audit/index.ts";
+import { captureFirstSubscriptionCreated } from "#src/analytics/guild-lifecycle.ts";
 import type {
   CommandEditReply,
   CommandReply,
@@ -195,6 +196,14 @@ export async function executeTrack(
       }
       return created;
     });
+
+    // Record the milestone right after the transaction commits, before the
+    // editReply attempt below — a transient Discord API failure there must
+    // not cost the first-subscription capture, since later adds always see
+    // isFirstSubscription === false and the milestone can never be recovered.
+    if (result.kind === "created" && result.isFirstSubscription) {
+      await captureFirstSubscriptionCreated(args.data.guildId, "discord");
+    }
 
     await interaction.editReply({ content: formatTrackResult(result) });
 

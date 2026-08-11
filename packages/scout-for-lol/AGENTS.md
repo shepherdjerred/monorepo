@@ -688,3 +688,33 @@ drift from reality. Treat this as an invariant:
 Validate ladder changes with `bun run scripts/outreach-dry-run.ts` against a
 copy of production before the first real fire — the failure mode here is
 messaging real people.
+
+## Server-side product analytics invariants
+
+- PostHog guild lifecycle identity is `GuildInstall.analyticsInstallationId`,
+  never a Discord ID. Preserve it across reconnect-style `guildCreate` events;
+  rotate it only after a confirmed removal and reinstall.
+- Keep the event/property registry closed and bounded. Never send Discord
+  guild/user/channel IDs, guild names, Riot IDs, command options, content, URLs,
+  or error messages.
+- Every event sets `$process_person_profile: false` and disables GeoIP. Never
+  call PostHog `identify`, `alias`, or group APIs, and never correlate browser
+  sessions to guild installations.
+- Capture first subscription only after the web or Discord transaction commits,
+  and claim `firstSubscriptionAt` atomically (like `firstCoreOutputAt` below)
+  rather than deriving "first" from the current subscription count: a guild
+  that deletes its last subscription and later adds another sees that count
+  hit zero again, and a count-derived check would double-fire the milestone.
+- Capture core output only after successful logical Discord delivery. Aggregate
+  match channels by guild; require every report/pairing chunk; exclude previews,
+  setup/welcome, ephemeral replies, DMs, recovery, debug, cancellation, and
+  failed sends.
+- Claim `firstCoreOutputAt` atomically. Migrated lifecycle rows remain
+  `analyticsLifecycleTracked: false`, so they produce recurring output/removal
+  events but no synthetic historical first-value events.
+- Claim removal with the first `removedAt: null → timestamp` transition and
+  classify activation before cleanup deletes subscriptions, reports, or
+  competitions. Both Discord deletion and reconciliation use the same path.
+- Analytics is best effort. SDK and capture errors are logged and counted but
+  must not fail product behavior; graceful shutdown must flush the SDK queue.
+- Slash-command analytics, Scout desktop, and Scout evals are out of scope.

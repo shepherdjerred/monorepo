@@ -49,6 +49,7 @@ import {
 import { fetchMatchIdsForTimeRange } from "#src/league/tasks/recovery/backfill-to-s3.ts";
 import { recordMatchForReportStore } from "#src/report-store/live-ingest.ts";
 import { getPrematchMessageIdsForMatchIdOrEmpty } from "#src/league/tasks/prematch/active-game-queries.ts";
+import { recordCoreOutputsDelivered } from "#src/analytics/guild-lifecycle.ts";
 
 const logger = createLogger("postmatch-match-history-polling");
 
@@ -104,7 +105,6 @@ async function processMatch(
   trackedPlayers: PlayerConfigEntry[],
 ): Promise<void> {
   const matchId = MatchIdSchema.parse(matchData.metadata.matchId);
-  logger.info(`[processMatch] 🎮 Processing match ${matchId}`);
 
   const playersInMatch = trackedPlayers.filter((player) =>
     matchData.metadata.participants.includes(player.league.leagueAccount.puuid),
@@ -154,15 +154,14 @@ async function processMatch(
     return;
   }
 
-  await deliverToChannels({
+  const deliveredGuildIds = await deliverToChannels({
     message,
     channels: deliverChannels,
     logPrefix: "[processMatch]",
     sentryTags: { matchId },
     replyToMessageIds: await getPrematchMessageIdsForMatchIdOrEmpty(matchId),
   });
-
-  logger.info(`[processMatch] ✅ Processed match ${matchId}`);
+  await recordCoreOutputsDelivered(deliveredGuildIds, "postmatch");
 }
 
 /**

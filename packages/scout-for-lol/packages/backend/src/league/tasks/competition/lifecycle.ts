@@ -1,5 +1,8 @@
 import type { CompetitionWithCriteria } from "@scout-for-lol/data/index.ts";
-import { parseCompetition } from "@scout-for-lol/data/index.ts";
+import {
+  DiscordGuildIdSchema,
+  parseCompetition,
+} from "@scout-for-lol/data/index.ts";
 import {
   computeNextScheduledUpdateAt,
   DEFAULT_COMPETITION_CRON,
@@ -20,6 +23,7 @@ import { z } from "zod";
 import { logNotification } from "#src/utils/notification-logger.ts";
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "#src/logger.ts";
+import { recordCoreOutputDelivered } from "#src/analytics/guild-lifecycle.ts";
 
 const logger = createLogger("competition-lifecycle");
 
@@ -267,6 +271,17 @@ export async function handleCompetitionStarts(
 
       if (competition.startNotifiedAt === null) {
         const messageId = await postCompetitionStarted(competition);
+        // Record the delivery right after the send succeeds, before
+        // persisting the notification marker below. If that update then
+        // fails, the outer catch must not also skip counting an output the
+        // user genuinely received — recordCoreOutputDelivered is analytics
+        // (best-effort, never throws), so it can't itself cause the retry
+        // that a failed marker write would still trigger.
+        await recordCoreOutputDelivered(
+          DiscordGuildIdSchema.parse(competition.serverId),
+          "competition_started",
+          { db: prismaClient },
+        );
         await prismaClient.competition.update({
           where: { id: competition.id },
           data: {
@@ -365,6 +380,15 @@ export async function handleCompetitionEnds(
       const leaderboard = await calculateLeaderboard(prismaClient, competition);
       if (competition.endNotifiedAt === null) {
         const messageId = await postFinalLeaderboard(competition, leaderboard);
+        // Same ordering as the start path above: record the delivery right
+        // after the send succeeds, before persisting the notification
+        // marker, so a failure in that update can't also skip counting an
+        // output the user genuinely received.
+        await recordCoreOutputDelivered(
+          DiscordGuildIdSchema.parse(competition.serverId),
+          "competition_ended",
+          { db: prismaClient },
+        );
         await prismaClient.competition.update({
           where: { id: competition.id },
           data: {

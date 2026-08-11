@@ -1,5 +1,8 @@
 import { describe, test, expect, afterEach } from "bun:test";
-import { resolveEnvironment } from "#src/configuration.ts";
+import {
+  parseProductAnalyticsConfiguration,
+  resolveEnvironment,
+} from "#src/configuration.ts";
 
 type TrackedKey = "ENVIRONMENT" | "NODE_ENV";
 
@@ -53,4 +56,38 @@ describe("resolveEnvironment", () => {
     Bun.env.NODE_ENV = "development";
     expect(() => resolveEnvironment()).toThrow(/Invalid ENVIRONMENT/);
   });
+});
+
+describe("parseProductAnalyticsConfiguration", () => {
+  const complete = {
+    projectToken: "phc_test",
+    apiHost: "https://us.i.posthog.com",
+    siteKey: "scout-beta",
+    siteHostname: "beta.scout-for-lol.com",
+  };
+
+  test("keeps development analytics disabled even with configuration", () => {
+    expect(parseProductAnalyticsConfiguration("dev", complete)).toBeUndefined();
+  });
+
+  test.each(["beta", "prod"] as const)(
+    "requires complete configuration in %s",
+    (environment) => {
+      expect(() =>
+        parseProductAnalyticsConfiguration(environment, {
+          ...complete,
+          projectToken: undefined,
+        }),
+      ).toThrow(/Complete PostHog configuration/);
+    },
+  );
+
+  test.each(["beta", "prod"] as const)(
+    "accepts complete configuration in %s",
+    (environment) => {
+      expect(parseProductAnalyticsConfiguration(environment, complete)).toEqual(
+        complete,
+      );
+    },
+  );
 });

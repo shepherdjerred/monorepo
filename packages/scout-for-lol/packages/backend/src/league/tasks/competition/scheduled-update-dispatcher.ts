@@ -52,7 +52,7 @@ export async function runScheduledCompetitionUpdates(): Promise<void> {
 
   for (const competition of dueCompetitions) {
     try {
-      const { success } = await postLeaderboardUpdate(competition);
+      const { success } = await postLeaderboardUpdate(competition, "scheduled");
       if (success) {
         successCount++;
       } else {

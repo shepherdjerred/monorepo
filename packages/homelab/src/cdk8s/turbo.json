@@ -27,6 +27,7 @@
       "dependsOn": ["^build"],
       "inputs": [
         "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/config/analytics-sites.json",
         "src/**",
         "scripts/**",
         "config/**",
@@ -39,6 +40,9 @@
         "!node_modules/**"
       ],
       "outputs": ["dist/**"]
+    },
+    "typecheck": {
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/config/analytics-sites.json"]
     },
     // `build` replaces dist/ while ESLint walks the package root. Serialize
     // them so a combined `turbo run build lint` cannot remove the directory

@@ -1,5 +1,8 @@
-import { describe, expect, mock, test } from "bun:test";
-import { DiscordChannelIdSchema } from "@scout-for-lol/data";
+import { beforeEach, describe, expect, mock, test } from "bun:test";
+import {
+  DiscordChannelIdSchema,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/data";
 import type { MessageCreateOptions } from "discord.js";
 import type {
   SubscribedChannel,
@@ -8,6 +11,7 @@ import type {
 
 const sentMessages: MessageCreateOptions[] = [];
 let failReplyOnce = false;
+let failAll = false;
 class MockChannelSendError extends Error {
   permissionError: boolean;
 
@@ -25,6 +29,9 @@ await mock.module("#src/league/discord/channel.ts", () => ({
   isReplyPermissionError: (error: MockChannelSendError) =>
     error.replyPermissionError,
   send: (message: MessageCreateOptions) => {
+    if (failAll) {
+      throw new MockChannelSendError("missing Send Messages", true);
+    }
     if (failReplyOnce && message.reply !== undefined) {
       failReplyOnce = false;
       throw new MockChannelSendError("missing Read Message History", true);
@@ -111,12 +118,17 @@ describe("channelsPassingQueueFilter — mute", () => {
 });
 
 describe("deliverToChannels", () => {
-  test("replies to the matching prematch message per channel", async () => {
+  beforeEach(() => {
     sentMessages.length = 0;
+    failReplyOnce = false;
+    failAll = false;
+  });
+
+  test("replies to the matching prematch message per channel", async () => {
     const firstChannel = DiscordChannelIdSchema.parse("123456789012345678");
     const secondChannel = DiscordChannelIdSchema.parse("123456789012345679");
 
-    await deliverToChannels({
+    const deliveredGuildIds = await deliverToChannels({
       message: { content: "Game finished" },
       channels: [
         { channel: firstChannel, serverId: "123456789012345680" },
@@ -137,10 +149,12 @@ describe("deliverToChannels", () => {
       },
       { content: "Game finished" },
     ]);
+    expect(deliveredGuildIds).toEqual(
+      new Set([DiscordGuildIdSchema.parse("123456789012345680")]),
+    );
   });
 
   test("retries as a normal message when the reply permission is missing", async () => {
-    sentMessages.length = 0;
     failReplyOnce = true;
     const channelId = DiscordChannelIdSchema.parse("123456789012345678");
 
@@ -153,5 +167,19 @@ describe("deliverToChannels", () => {
     });
 
     expect(sentMessages).toEqual([{ content: "Game finished" }]);
+  });
+
+  test("does not return a guild when every channel delivery fails", async () => {
+    failAll = true;
+    const channelId = DiscordChannelIdSchema.parse("123456789012345678");
+
+    const deliveredGuildIds = await deliverToChannels({
+      message: { content: "Game finished" },
+      channels: [{ channel: channelId, serverId: "123456789012345680" }],
+      logPrefix: "[test]",
+      sentryTags: {},
+    });
+
+    expect(deliveredGuildIds).toEqual(new Set());
   });
 });

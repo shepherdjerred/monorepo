@@ -52,6 +52,7 @@ import {
   ReportDataBrowseInputSchema,
 } from "#src/reports/data-explorer.ts";
 import { ACCOUNT_IDENTITY_COLUMN_IDS } from "#src/reports/data-explorer-columns.ts";
+import { deliverTrackedCoreOutput } from "#src/analytics/guild-lifecycle.ts";
 
 const GuildInput = z.object({ guildId: DiscordGuildIdSchema });
 const ReportIdInput = GuildInput.extend({ reportId: ReportIdSchema });
@@ -343,15 +344,21 @@ export const reportRouter = router({
           image === null
             ? []
             : [new AttachmentBuilder(image.data, { name: image.filename })];
-        for (const [index, content] of splitMessageIntoChunks(
-          result.output.content,
-        ).entries()) {
-          await sendChannelMessage(
-            { content, files: index === 0 ? files : [] },
-            report.channelId,
-            report.serverId,
-          );
-        }
+        await deliverTrackedCoreOutput({
+          serverId: input.guildId,
+          outputKind: "report_manual",
+          async deliver() {
+            for (const [index, content] of splitMessageIntoChunks(
+              result.output.content,
+            ).entries()) {
+              await sendChannelMessage(
+                { content, files: index === 0 ? files : [] },
+                report.channelId,
+                report.serverId,
+              );
+            }
+          },
+        });
       }
       return {
         content: result.output.content,

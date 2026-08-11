@@ -26,8 +26,10 @@ import {
   applyZfsVolumeSelinuxRelabeling,
   zfsVolumeSelinuxLevels,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/selinux.ts";
+import { scoutAnalyticsConfiguration } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/analytics.ts";
 
 export function createScoutDeployment(chart: Chart, stage: Stage) {
+  const analytics = scoutAnalyticsConfiguration(stage);
   const deployment = new Deployment(chart, "scout-backend", {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
@@ -149,6 +151,10 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
       key: "SENTRY_DSN",
     }),
     ENVIRONMENT: EnvValue.fromValue(stage),
+    POSTHOG_PROJECT_TOKEN: EnvValue.fromValue(analytics.projectToken),
+    POSTHOG_API_HOST: EnvValue.fromValue(analytics.apiHost),
+    POSTHOG_SITE_KEY: EnvValue.fromValue(analytics.siteKey),
+    POSTHOG_SITE_HOSTNAME: EnvValue.fromValue(analytics.siteHostname),
     DATABASE_URL: EnvValue.fromValue("file:/data/db.sqlite"),
     // Parquet "report lake" queried by the DuckDB report engine. Disposable
     // derived data on the same PVC as the SQLite DB; rebuilt from the
