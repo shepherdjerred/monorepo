@@ -22,6 +22,28 @@ description: |
 
 This agent helps you work with ArgoCD for GitOps-based Kubernetes deployments, application synchronization, and declarative configuration management.
 
+## shepherdjerred monorepo root releases
+
+The main Buildkite release owns the root `apps` lifecycle. It stages the exact
+chart with child auto-sync disabled, reconciles selected children, then runs:
+
+```bash
+bun packages/homelab/scripts/argocd.ts finalize-root-release apps \
+  --revision "$apps_revision" \
+  --request-id "$BUILDKITE_BUILD_ID" \
+  --timeout 300
+```
+
+The finalizer reapplies every exact sync wave before pruning, while keeping the
+self-managed root Application auto-sync suspended between batches. The final
+full-source operation restores that policy and proves both the root result and
+validated prunes. Do not replace it with one full-source
+`sync --prune --terminate-after-applied`: an unhealthy earlier wave can prevent
+ArgoCD from ever reporting later desired resources. Recovery may adopt only the
+exact request ID, revision, resource selection, and `batch` or `prune` phase
+marker; prune adoption also requires Argo's prune flag. Never terminate a root
+operation by revision alone.
+
 ## Auto-Approved Commands
 
 Safe read-only commands that don't require confirmation:

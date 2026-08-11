@@ -1543,10 +1543,12 @@ steps:
       # before children can depend on them, without starting child operations.
       bun --no-install packages/homelab/scripts/argocd.ts stage-root-release apps --revision "$$apps_revision" --timeout 300
       bun --no-install packages/homelab/scripts/argocd.ts reconcile-release argocd-release-expected.json --skip-health-wait --timeout 300
-      # Restore the exact child auto-sync policies and prune the exact root
-      # tree only after child operations finish. Keep the Buildkite identity
-      # through apply and termination so retries adopt only this revision.
-      bun --no-install packages/homelab/scripts/argocd.ts sync apps --revision "$$apps_revision" --prune --terminate-after-applied --request-id "$BUILDKITE_BUILD_ID" --timeout 300
+      # Restore the exact tree in isolated sync waves while the self-managed
+      # root stays suspended, then restore it and prune after every other
+      # desired resource has applied-result proof. Keep the Buildkite identity
+      # through batches and termination so retries adopt only this revision
+      # and phase.
+      bun --no-install packages/homelab/scripts/argocd.ts finalize-root-release apps --revision "$$apps_revision" --request-id "$BUILDKITE_BUILD_ID" --timeout 300
       # The scoped release health below remains authoritative for this release.
       bun --no-install packages/homelab/scripts/argocd.ts release-health-wait argocd-release-expected.json --timeout 300
     retry: *retry

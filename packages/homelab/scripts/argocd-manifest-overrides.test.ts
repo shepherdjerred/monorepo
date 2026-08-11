@@ -81,6 +81,24 @@ describe("manifest override batching", () => {
     ).toHaveLength(2);
   });
 
+  test("counts the root finalizer phase marker in revisioned requests", () => {
+    const overrides = [override("one", 400), override("two", 400)];
+
+    expect(
+      batchManifestOverrides(overrides, {
+        maxRequestBytes: 1470,
+        revision: "2.0.0-42",
+      }),
+    ).toHaveLength(1);
+    expect(
+      batchManifestOverrides(overrides, {
+        maxRequestBytes: 1470,
+        revision: "2.0.0-42",
+        rootFinalizerPhase: "batch",
+      }),
+    ).toHaveLength(2);
+  });
+
   test("leaves room for Argo's duplicated operation-state envelope", () => {
     const batches = batchManifestOverrides([
       override("one", 500_000),
