@@ -12,13 +12,23 @@ type RequestObservation = {
   query: string;
 };
 
+const SyncInfoEntrySchema = z.discriminatedUnion("name", [
+  z.object({
+    name: z.literal("ci.sjer.red/request-id"),
+    value: z.uuid(),
+  }),
+  z.object({
+    name: z.literal("ci.sjer.red/operation-id"),
+    value: z.uuid(),
+  }),
+  z.object({
+    name: z.literal("ci.sjer.red/revision"),
+    value: z.string(),
+  }),
+]);
+
 const SyncRequestSchema = z.object({
-  infos: z.array(
-    z.object({
-      name: z.string(),
-      value: z.uuid(),
-    }),
-  ),
+  infos: z.array(SyncInfoEntrySchema),
   manifests: z.array(z.string()),
   revision: z.string().optional(),
   resources: z.array(
@@ -31,12 +41,7 @@ const SyncRequestSchema = z.object({
 });
 
 const RootSyncRequestSchema = z.object({
-  infos: z.array(
-    z.object({
-      name: z.string(),
-      value: z.uuid(),
-    }),
-  ),
+  infos: z.array(SyncInfoEntrySchema),
   prune: z.boolean(),
   revision: z.string().optional(),
 });
@@ -113,9 +118,6 @@ function operationForSyncRequest(request: unknown): Record<string, unknown> {
     sync: {
       manifests: syncRequest.manifests,
       resources: syncRequest.resources,
-      ...(syncRequest.revision === undefined
-        ? {}
-        : { revision: syncRequest.revision }),
     },
   };
 }
@@ -209,6 +211,80 @@ describe("Argo CD prune safety", () => {
       expect(stdout).toContain("sync operation started: apps");
       expect(syncPosts).toBe(1);
       expect(statusGets).toBe(0);
+    } finally {
+      await server.stop(true);
+    }
+  });
+
+  test("rejects contradictory revision identity in an asynchronous sync response", async () => {
+    let syncPosts = 0;
+    const server = Bun.serve({
+      hostname: "127.0.0.1",
+      port: 0,
+      async fetch(request) {
+        const url = new URL(request.url);
+        if (
+          request.method === "POST" &&
+          url.pathname === "/api/v1/applications/apps/sync"
+        ) {
+          syncPosts++;
+          const syncRequest = RootSyncRequestSchema.parse(await request.json());
+          return Response.json({
+            operation: {
+              info: syncRequest.infos,
+              initiatedBy: { username: "buildkite" },
+              sync: {
+                prune: syncRequest.prune,
+                revision: "2.0.0-44",
+              },
+            },
+          });
+        }
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/v1/applications/apps"
+        ) {
+          return Response.json({});
+        }
+        return new Response("not found", { status: 404 });
+      },
+    });
+
+    try {
+      const process = Bun.spawn(
+        [
+          "bun",
+          "--no-install",
+          "scripts/argocd.ts",
+          "sync",
+          "apps",
+          "--revision",
+          "2.0.0-42",
+          "--request-id",
+          "11111111-1111-4111-8111-111111111111",
+          "--async",
+          "--timeout",
+          "1",
+        ],
+        {
+          cwd: path.resolve(import.meta.dir, "../../.."),
+          env: {
+            ...Bun.env,
+            ARGOCD_SERVER_URL: server.url.origin,
+            ARGOCD_TOKEN: "test-token",
+          },
+          stderr: "pipe",
+          stdout: "pipe",
+        },
+      );
+      const [exitCode, stderr] = await Promise.all([
+        process.exited,
+        new Response(process.stderr).text(),
+      ]);
+
+      expect(exitCode).not.toBe(0);
+      expect(stderr).toContain("Argo operation revision mismatch");
+      expect(syncPosts).toBe(1);
     } finally {
       await server.stop(true);
     }
@@ -777,6 +853,10 @@ describe("Argo CD root release staging", () => {
       expect(deleteRequests).toBe(2);
       const applicationRequest = SyncRequestSchema.parse(syncBodies[0]);
       expect(applicationRequest.revision).toBe("2.0.0-43");
+      expect(applicationRequest.infos).toContainEqual({
+        name: "ci.sjer.red/revision",
+        value: "2.0.0-43",
+      });
       expect(applicationRequest.resources).toEqual([
         WorkerApplicationResource,
         {

@@ -51,10 +51,13 @@ import {
   batchManifestOverrides,
   completedOperationId,
   completedOperationRequestId,
+  operationRevision,
   requestedOperationId,
   requestedOperationRequestId,
+  requestedOperationRevision,
   SYNC_OPERATION_ID_INFO_NAME,
   SYNC_REQUEST_ID_INFO_NAME,
+  SYNC_REVISION_INFO_NAME,
   type ManifestOverride,
   type SyncOperationResource,
 } from "./argocd-manifest-overrides.ts";
@@ -447,6 +450,7 @@ async function stageRootRelease(
   }
   const batches = batchManifestOverrides(
     staged.map(({ override }) => override),
+    { revision: exactRevision },
   );
   for (const [index, batch] of batches.entries()) {
     console.log(
@@ -772,6 +776,9 @@ async function sync(
         infos: [
           { name: SYNC_REQUEST_ID_INFO_NAME, value: requestId },
           { name: SYNC_OPERATION_ID_INFO_NAME, value: operationId },
+          ...(options.revision === undefined
+            ? []
+            : [{ name: SYNC_REVISION_INFO_NAME, value: options.revision }]),
         ],
         ...(options.revision === undefined
           ? {}
@@ -803,6 +810,14 @@ async function sync(
         `Argo sync response returned operation ${responseOperationId}; expected ${operationId}`,
       );
     }
+    if (
+      options.revision !== undefined &&
+      requestedOperationRevision(responseBody) !== options.revision
+    ) {
+      throw new Error(
+        `Argo sync response returned a different CI revision; expected ${options.revision}`,
+      );
+    }
     console.log(`sync operation started: ${appName}`);
   }
   if (options.waitForCompletion === false) {
@@ -823,14 +838,6 @@ async function sync(
 function operationState(app: Record<string, unknown>): Record<string, unknown> {
   const status = isRecord(app["status"]) ? app["status"] : {};
   return isRecord(status["operationState"]) ? status["operationState"] : {};
-}
-
-function operationRevision(
-  operation: Record<string, unknown>,
-): string | undefined {
-  const sync = isRecord(operation["sync"]) ? operation["sync"] : {};
-  const revision = sync["revision"];
-  return typeof revision === "string" ? revision : undefined;
 }
 
 type OperationObservation = {

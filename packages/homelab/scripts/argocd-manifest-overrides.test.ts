@@ -5,9 +5,11 @@ import {
   completedOperationIdentity,
   completedOperationId,
   completedOperationRequestId,
+  operationInfoRevision,
   requestedOperationIdentity,
   requestedOperationId,
   requestedOperationRequestId,
+  requestedOperationRevision,
   type ManifestOverride,
 } from "./argocd-manifest-overrides.ts";
 
@@ -40,7 +42,7 @@ describe("manifest override batching", () => {
   test("keeps matching manifests and resource selectors together", () => {
     const batches = batchManifestOverrides(
       [override("one", 400), override("two", 400)],
-      1500,
+      { maxRequestBytes: 1500 },
     );
 
     expect(batches).toHaveLength(1);
@@ -54,7 +56,7 @@ describe("manifest override batching", () => {
   test("splits requests before the serialized budget is exceeded", () => {
     const batches = batchManifestOverrides(
       [override("one", 600), override("two", 600), override("three", 600)],
-      1200,
+      { maxRequestBytes: 1200 },
     );
 
     expect(batches).toHaveLength(3);
@@ -63,6 +65,20 @@ describe("manifest override batching", () => {
       "two",
       "three",
     ]);
+  });
+
+  test("counts revision identity only for revisioned requests", () => {
+    const overrides = [override("one", 400), override("two", 400)];
+
+    expect(
+      batchManifestOverrides(overrides, { maxRequestBytes: 1400 }),
+    ).toHaveLength(1);
+    expect(
+      batchManifestOverrides(overrides, {
+        maxRequestBytes: 1400,
+        revision: "2.0.0-42",
+      }),
+    ).toHaveLength(2);
   });
 
   test("leaves room for Argo's duplicated operation-state envelope", () => {
@@ -86,7 +102,7 @@ describe("manifest override batching", () => {
         override("earlier", 100, "-2"),
         override("default-two", 100, "0"),
       ],
-      5000,
+      { maxRequestBytes: 5000 },
     );
 
     expect(
@@ -101,9 +117,11 @@ describe("manifest override batching", () => {
   });
 
   test("fails when one manifest cannot fit", () => {
-    expect(() => batchManifestOverrides([override("huge", 2000)], 500)).toThrow(
-      "Application/huge exceeds the request budget",
-    );
+    expect(() =>
+      batchManifestOverrides([override("huge", 2000)], {
+        maxRequestBytes: 500,
+      }),
+    ).toThrow("Application/huge exceeds the request budget");
   });
 });
 
@@ -194,6 +212,36 @@ describe("Argo operation identity", () => {
     expect(completedOperationId(previous)).toBe("previous-operation");
   });
 
+  test("reads the revision persisted in operation info", () => {
+    const operation = {
+      operation: {
+        info: [{ name: "ci.sjer.red/revision", value: "2.0.0-42" }],
+      },
+    };
+
+    expect(requestedOperationRevision(operation)).toBe("2.0.0-42");
+    expect(operationInfoRevision(operation.operation)).toBe("2.0.0-42");
+  });
+
+  test("rejects a direct revision without persisted CI identity", () => {
+    expect(() =>
+      requestedOperationRevision({
+        operation: { sync: { revision: "2.0.0-42" } },
+      }),
+    ).toThrow("missing the CI revision");
+  });
+
+  test("rejects disagreement with the direct revision", () => {
+    expect(() =>
+      requestedOperationRevision({
+        operation: {
+          info: [{ name: "ci.sjer.red/revision", value: "2.0.0-42" }],
+          sync: { revision: "2.0.0-43" },
+        },
+      }),
+    ).toThrow("Argo operation revision mismatch");
+  });
+
   test("returns null before an Application has an operation state", () => {
     expect(completedOperationIdentity({ status: {} })).toBeNull();
   });
@@ -240,5 +288,16 @@ describe("Argo operation identity", () => {
         },
       }),
     ).toThrow("multiple CI operation IDs");
+  });
+
+  test("fails when an operation has duplicate CI revisions", () => {
+    expect(() =>
+      operationInfoRevision({
+        info: [
+          { name: "ci.sjer.red/revision", value: "2.0.0-41" },
+          { name: "ci.sjer.red/revision", value: "2.0.0-42" },
+        ],
+      }),
+    ).toThrow("multiple CI revisions");
   });
 });

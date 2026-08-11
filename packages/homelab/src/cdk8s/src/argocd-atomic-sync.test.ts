@@ -8,13 +8,23 @@ const CURRENT_OPERATION_ID = "33333333-3333-4333-8333-333333333333";
 const OTHER_OPERATION_ID = "44444444-4444-4444-8444-444444444444";
 const REVISION = "2.0.0-42";
 
+const SyncInfoEntrySchema = z.discriminatedUnion("name", [
+  z.object({
+    name: z.literal("ci.sjer.red/request-id"),
+    value: z.uuid(),
+  }),
+  z.object({
+    name: z.literal("ci.sjer.red/operation-id"),
+    value: z.uuid(),
+  }),
+  z.object({
+    name: z.literal("ci.sjer.red/revision"),
+    value: z.string(),
+  }),
+]);
+
 const RootSyncRequestSchema = z.object({
-  infos: z.array(
-    z.object({
-      name: z.string(),
-      value: z.uuid(),
-    }),
-  ),
+  infos: z.array(SyncInfoEntrySchema),
   prune: z.boolean(),
   revision: z.string(),
 });
@@ -53,6 +63,7 @@ function identifiedOperation(
   requestId: string,
   revision = REVISION,
   operationId: string | null = CURRENT_OPERATION_ID,
+  persistedRevision?: string,
 ): unknown {
   return {
     info: [
@@ -68,6 +79,14 @@ function identifiedOperation(
               value: operationId,
             },
           ]),
+      ...(persistedRevision === undefined
+        ? []
+        : [
+            {
+              name: "ci.sjer.red/revision",
+              value: persistedRevision,
+            },
+          ]),
     ],
     sync: { revision },
   };
@@ -78,6 +97,7 @@ function applicationOperation(options: {
   readonly liveOperationId?: string | null;
   readonly message?: string;
   readonly operationId?: string | null;
+  readonly persistedRevision?: string;
   readonly phase: string;
   readonly requestId: string;
   readonly resources?: readonly OperationResource[];
@@ -102,11 +122,13 @@ function applicationOperation(options: {
     options.requestId,
     revision,
     operationId,
+    options.persistedRevision,
   );
   const liveOperation = identifiedOperation(
     options.requestId,
     revision,
     liveOperationId,
+    options.persistedRevision,
   );
   const live =
     options.live ??
@@ -768,6 +790,27 @@ for (const scenario of [
     }
   });
 }
+
+test("atomic Argo sync rejects disagreement between direct and persisted revisions", async () => {
+  const lifecycle = serveLifecycle([
+    applicationOperation({
+      persistedRevision: "2.0.0-43",
+      phase: "Running",
+      requestId: CURRENT_REQUEST_ID,
+      resources: [{ status: "Synced" }],
+    }),
+  ]);
+
+  try {
+    const result = await runArgocd(atomicArgs(), lifecycle.server.url.origin);
+
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr).toContain("Argo operation revision mismatch");
+    expect(lifecycle.observations.deleteRequests).toBe(0);
+  } finally {
+    await lifecycle.server.stop(true);
+  }
+});
 
 for (const phase of ["Failed", "Error"]) {
   test(`atomic Argo sync fails when the exact operation reaches ${phase}`, async () => {

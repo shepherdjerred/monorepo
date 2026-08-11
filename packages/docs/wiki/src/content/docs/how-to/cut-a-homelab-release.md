@@ -90,6 +90,11 @@ failure. Each POST also receives an internal operation UUID; adoption requires
 the live operation and its status to share that UUID before a stable applied
 result can be finalized.
 
+For manifest-override staging operations, inspect the
+`ci.sjer.red/revision` operation-info entry. Argo does not retain
+`operation.sync.revision` for that request shape, so CI persists the same exact
+revision beside both UUIDs and rejects any disagreement when both forms exist.
+
 A release blocked here means the current operation must be inspected before
 retrying. If it is a fully applied operation from an interrupted older client,
 recover it with both values from the live operation:
