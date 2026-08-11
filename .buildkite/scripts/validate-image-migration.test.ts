@@ -408,6 +408,59 @@ describe("GHCR Docker instruction parsing", () => {
     ).not.toThrow();
   });
 
+  test("defers chained ONBUILD source-label triggers by generation", () => {
+    const chainedOverride = [
+      "# syntax=docker/dockerfile:1.11",
+      "FROM runtime AS base",
+      'LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"',
+      'ONBUILD ONBUILD LABEL org.opencontainers.image.source="https://github.com/somewhere/else"',
+      "FROM base AS child",
+      "FROM child AS image",
+    ].join("\n");
+
+    expect(() =>
+      assertMonorepoSourceLabel(chainedOverride, "example", "child"),
+    ).not.toThrow();
+    expect(() =>
+      assertMonorepoSourceLabel(chainedOverride, "example", "image"),
+    ).toThrow(
+      "example published image stage must link its GHCR package to the public monorepo",
+    );
+    expect(() =>
+      assertMonorepoSourceLabel(
+        [
+          "# syntax=docker/dockerfile:1.11",
+          "FROM runtime AS base",
+          'ONBUILD ONBUILD LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"',
+          "FROM base AS child",
+          "FROM child AS image",
+        ].join("\n"),
+        "example",
+        "image",
+      ),
+    ).not.toThrow();
+  });
+
+  test("ignores heredoc bodies in chained ONBUILD instructions", () => {
+    expect(() =>
+      assertMonorepoSourceLabel(
+        [
+          "# syntax=docker/dockerfile:1.11",
+          "FROM runtime AS base",
+          "ONBUILD ONBUILD COPY <<EOF /tmp/template",
+          'LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"',
+          "EOF",
+          "FROM base AS child",
+          "FROM child AS image",
+        ].join("\n"),
+        "example",
+        "image",
+      ),
+    ).toThrow(
+      "example published image stage must link its GHCR package to the public monorepo",
+    );
+  });
+
   test("ignores heredoc bodies until their exact delimiters", () => {
     expect(() =>
       assertMonorepoSourceLabel(

@@ -8,6 +8,11 @@ type Heredoc = {
   readonly stripTabs: boolean;
 };
 
+type OnbuildSourceLabel = {
+  readonly generations: number;
+  readonly value: string;
+};
+
 function dockerfileEscape(dockerfile: string): "\\" | "`" {
   for (const rawLine of dockerfile.split("\n")) {
     const line = rawLine.endsWith("\r") ? rawLine.slice(0, -1) : rawLine;
@@ -104,10 +109,26 @@ function instructionHeredocs(
   return heredocs;
 }
 
+function onbuildBody(
+  instruction: string,
+): { readonly body: string; readonly generations: number } | undefined {
+  let body = instruction.trimStart();
+  let generations = 0;
+  let separator = body.search(/\s/u);
+  while (
+    separator !== -1 &&
+    body.slice(0, separator).toUpperCase() === "ONBUILD"
+  ) {
+    generations += 1;
+    body = body.slice(separator).trimStart();
+    separator = body.search(/\s/u);
+  }
+  return generations === 0 ? undefined : { body, generations };
+}
+
 function canContainHeredoc(instruction: string): boolean {
-  const words = instruction.trimStart().split(/\s+/u);
-  const topLevel = words[0]?.toUpperCase();
-  const opcode = topLevel === "ONBUILD" ? words[1]?.toUpperCase() : topLevel;
+  const body = onbuildBody(instruction)?.body ?? instruction;
+  const opcode = body.trimStart().split(/\s+/u)[0]?.toUpperCase();
   return opcode === "ADD" || opcode === "COPY" || opcode === "RUN";
 }
 
@@ -203,6 +224,18 @@ function sourceLabelValues(instruction: string, escape: "\\" | "`"): string[] {
   return words[0] === sourceLabel ? [words.slice(1).join(" ")] : [];
 }
 
+function onbuildSourceLabelTriggers(
+  instruction: string,
+  escape: "\\" | "`",
+): OnbuildSourceLabel[] {
+  const onbuild = onbuildBody(instruction);
+  if (onbuild === undefined) return [];
+  return sourceLabelValues(onbuild.body, escape).map((value) => ({
+    generations: onbuild.generations,
+    value,
+  }));
+}
+
 function fromStage(
   instruction: string,
 ): { readonly base: string; readonly name: string | undefined } | undefined {
@@ -235,13 +268,13 @@ export function assertMonorepoSourceLabel(
   const stages: {
     readonly name: string | undefined;
     sourceLabel: boolean;
-    readonly onbuildSourceLabels: string[];
+    readonly onbuildSourceLabels: OnbuildSourceLabel[];
   }[] = [];
   let currentStage:
     | {
         readonly name: string | undefined;
         sourceLabel: boolean;
-        readonly onbuildSourceLabels: string[];
+        readonly onbuildSourceLabels: OnbuildSourceLabel[];
       }
     | undefined;
   const escape = dockerfileEscape(dockerfile);
@@ -257,20 +290,23 @@ export function assertMonorepoSourceLabel(
         sourceLabel: inherited?.sourceLabel ?? false,
         onbuildSourceLabels: [],
       };
-      for (const value of inherited?.onbuildSourceLabels ?? []) {
-        currentStage.sourceLabel = value === monorepoSource;
+      for (const trigger of inherited?.onbuildSourceLabels ?? []) {
+        if (trigger.generations === 1) {
+          currentStage.sourceLabel = trigger.value === monorepoSource;
+        } else {
+          currentStage.onbuildSourceLabels.push({
+            generations: trigger.generations - 1,
+            value: trigger.value,
+          });
+        }
       }
       stages.push(currentStage);
       continue;
     }
-    const onbuildSeparator = instruction.search(/\s/u);
-    if (
-      onbuildSeparator !== -1 &&
-      instruction.slice(0, onbuildSeparator).toUpperCase() === "ONBUILD"
-    ) {
-      const onbuild = instruction.slice(onbuildSeparator).trimStart();
-      for (const value of sourceLabelValues(onbuild, escape)) {
-        currentStage?.onbuildSourceLabels.push(value);
+    const onbuild = onbuildBody(instruction);
+    if (onbuild !== undefined) {
+      for (const trigger of onbuildSourceLabelTriggers(instruction, escape)) {
+        currentStage?.onbuildSourceLabels.push(trigger);
       }
       continue;
     }
