@@ -6,12 +6,17 @@ import {
   AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX,
   AgentTaskOutputContractError,
   AgentTaskInputSchema,
+  AgentTaskInputV2Schema,
+} from "./agent-task.ts";
+import { stripClaudeSchemaAnnotations } from "./agent-task-json-schema.ts";
+import {
   agentTaskScheduleId,
   agentTaskWorkflowId,
-  parseClaudeAgentTaskResult,
+} from "./agent-task-identifiers.ts";
+import {
   parseAgentTaskResultPayload,
-  stripClaudeSchemaAnnotations,
-} from "./agent-task.ts";
+  parseClaudeAgentTaskResult,
+} from "./agent-task-output.ts";
 import { z } from "zod/v4";
 
 const baseInput = {
@@ -62,6 +67,114 @@ describe("AgentTaskInputSchema", () => {
       }),
     ).toThrow(/must not set both/);
   });
+
+  it("requires independently executed evidence collectors for new v2 inputs", () => {
+    expect(() =>
+      AgentTaskInputV2Schema.parse({
+        ...baseInput,
+        contractVersion: 2,
+        checks: [
+          {
+            id: "service-health",
+            label: "Service health",
+            required: true,
+            evidenceRequirement: "A successful health endpoint response.",
+          },
+        ],
+      }),
+    ).toThrow(/independently executed evidenceCollectors/);
+  });
+
+  it("requires source-defined expectations for new v2 collectors", () => {
+    expect(() =>
+      AgentTaskInputV2Schema.parse({
+        ...baseInput,
+        contractVersion: 2,
+        checks: [
+          {
+            id: "service-health",
+            label: "Service health",
+            required: true,
+            evidenceRequirement: "A successful health endpoint response.",
+            evidenceCollectors: [
+              {
+                id: "health-command",
+                kind: "command",
+                argv: ["curl", "https://service.example.test/health"],
+                output: "json",
+              },
+            ],
+          },
+        ],
+      }),
+    ).toThrow(/source-defined expectation/);
+  });
+
+  it("rejects type-incompatible JSON expectations", () => {
+    expect(() =>
+      AgentTaskInputV2Schema.parse({
+        ...baseInput,
+        contractVersion: 2,
+        checks: [
+          {
+            id: "service-health",
+            label: "Service health",
+            required: true,
+            evidenceRequirement: "A healthy JSON response.",
+            evidenceCollectors: [
+              {
+                id: "health-command",
+                kind: "command",
+                argv: ["service-health", "--json"],
+                output: "json",
+                expectation: {
+                  kind: "json",
+                  assertions: [
+                    {
+                      path: ["healthy"],
+                      operator: "gt",
+                      expected: "healthy",
+                      quantifier: "all",
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+      }),
+    ).toThrow();
+  });
+
+  it("accepts legacy evidence criteria only through the replay decoder", () => {
+    const legacyInput = {
+      ...baseInput,
+      contractVersion: 2,
+      checks: [
+        {
+          id: "service-health",
+          label: "Service health",
+          required: true,
+          evidenceRequirement: "A successful health endpoint response.",
+          evidenceCriteria: [{ field: "command", includes: "/health" }],
+          evidenceCollectors: [
+            {
+              id: "health-command",
+              kind: "command",
+              argv: ["curl", "https://service.example.test/health"],
+              output: "json",
+              expectation: { kind: "exit-code", passedExitCodes: [0] },
+            },
+          ],
+        },
+      ],
+    };
+
+    expect(AgentTaskInputSchema.parse(legacyInput).contractVersion).toBe(2);
+    expect(() => AgentTaskInputV2Schema.parse(legacyInput)).toThrow(
+      /evidenceCriteria is replay-only/,
+    );
+  });
 });
 
 describe("agent task ids", () => {
@@ -82,6 +195,37 @@ describe("agent task ids", () => {
       scheduleId: "weekly-recheck",
     });
     await expect(agentTaskScheduleId(input)).resolves.toBe("weekly-recheck");
+  });
+
+  it("changes generated identities when the v2 coverage contract changes", async () => {
+    const first = AgentTaskInputSchema.parse({
+      ...baseInput,
+      contractVersion: 2,
+      checks: [
+        {
+          id: "service-health",
+          label: "Service health",
+          required: true,
+          evidenceRequirement: "A successful health endpoint response.",
+        },
+      ],
+      runAt: "2026-05-31T09:00:00-07:00",
+    });
+    const second = AgentTaskInputSchema.parse({
+      ...first,
+      checks: [
+        {
+          id: "service-health",
+          label: "Service health",
+          required: true,
+          evidenceRequirement: "A successful health response and pod list.",
+        },
+      ],
+    });
+
+    expect(await agentTaskWorkflowId(first)).not.toBe(
+      await agentTaskWorkflowId(second),
+    );
   });
 });
 

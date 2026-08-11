@@ -14,9 +14,9 @@ import {
   mergePinStates,
   parsePinCandidates,
   parsePinCandidatesState,
-  parseVersionsSource,
+  parseVersionCatalogSource,
   reconstructGeneratedBranchPinState,
-  rewriteVersionsSource,
+  rewriteVersionCatalogSource,
   serializePinCandidatesState,
   validateStateAgainstVersions,
 } from "./lib/pin-candidates.ts";
@@ -28,6 +28,24 @@ const B =
 const C =
   "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc";
 const KEY = "shepherdjerred/example";
+
+function catalogSource(entries: { name: string; value: string }[]): string {
+  return JSON.stringify({
+    $schema: "./version-catalog.schema.json",
+    schemaVersion: 1,
+    entries: entries.map((entry) => ({
+      name: entry.name,
+      category: entry.name.startsWith("shepherdjerred/")
+        ? "internal-image"
+        : "upstream",
+      artifactType: entry.value.includes("@sha256:") ? "image" : "source",
+      management: entry.name.startsWith("shepherdjerred/")
+        ? { managed: true, datasource: "docker", versioning: "docker" }
+        : { managed: false },
+      value: entry.value,
+    })),
+  });
+}
 
 function batch(
   buildNumber: number,
@@ -175,20 +193,26 @@ describe("key-wise monotonic arbitration", () => {
   });
 });
 
-describe("versions.ts integrity", () => {
-  const source = `export const versions = {
-  "${KEY}": "old@${A}",
-  "chart": "1.0.0",
-} as const;\n`;
+describe("version catalog integrity", () => {
+  const source = catalogSource([
+    { name: KEY, value: `old@${A}` },
+    { name: "chart", value: "1.0.0" },
+  ]);
 
   test("rewrites exact managed keys and serializes canonically", () => {
     const state = mergePinCandidates(
       parsePinCandidatesState('{"schema":"pin-candidates-state/v1","pins":{}}'),
       batch(12, "v12", B),
     );
-    const rewritten = rewriteVersionsSource(source, state);
-    expect(rewritten).toContain(`"${KEY}": "v12@${B}"`);
-    validateStateAgainstVersions(state, parseVersionsSource(rewritten));
+    const rewritten = rewriteVersionCatalogSource(source, state);
+    expect(rewritten).toContain(`"value": "v12@${B}"`);
+    const entryStart = rewritten.indexOf(`"name": "${KEY}"`);
+    const management = rewritten.indexOf('"management":', entryStart);
+    const value = rewritten.indexOf(`"value": "v12@${B}"`, entryStart);
+    expect(entryStart).toBeGreaterThanOrEqual(0);
+    expect(management).toBeGreaterThan(entryStart);
+    expect(value).toBeGreaterThan(management);
+    validateStateAgainstVersions(state, parseVersionCatalogSource(rewritten));
     expect(serializePinCandidatesState(state)).toEndWith("\n");
   });
 
@@ -198,25 +222,34 @@ describe("versions.ts integrity", () => {
       batch(12, "v12", B),
     );
     expect(() =>
-      validateStateAgainstVersions(state, parseVersionsSource(source)),
+      validateStateAgainstVersions(state, parseVersionCatalogSource(source)),
     ).toThrow("pin state drift");
   });
 
   test("rejects duplicate source keys", () => {
     expect(() =>
-      parseVersionsSource(`{"${KEY}":"v@${A}","${KEY}":"v@${A}"}`),
-    ).toThrow("duplicate");
+      parseVersionCatalogSource(
+        catalogSource([
+          { name: KEY, value: `v@${A}` },
+          { name: KEY, value: `v@${A}` },
+        ]),
+      ),
+    ).toThrow("unique");
   });
 
   test("reconstructs only image changes from a legacy generated branch", () => {
-    const base = parseVersionsSource(`{
-      "${KEY}": "v1@${A}",
-      "unchanged": "v1@${A}",
-    }`);
-    const pending = parseVersionsSource(`{
-      "${KEY}": "v2@${B}",
-      "unchanged": "v1@${A}",
-    }`);
+    const base = parseVersionCatalogSource(
+      catalogSource([
+        { name: KEY, value: `v1@${A}` },
+        { name: "unchanged", value: `v1@${A}` },
+      ]),
+    );
+    const pending = parseVersionCatalogSource(
+      catalogSource([
+        { name: KEY, value: `v2@${B}` },
+        { name: "unchanged", value: `v1@${A}` },
+      ]),
+    );
 
     expect(reconstructGeneratedBranchPinState(base, pending, 42).pins).toEqual({
       [KEY]: { buildNumber: 42, version: "v2", digest: B },
@@ -224,8 +257,12 @@ describe("versions.ts integrity", () => {
   });
 
   test("rejects non-image changes in a legacy generated branch", () => {
-    const base = parseVersionsSource('{"chart":"1.0.0"}');
-    const pending = parseVersionsSource('{"chart":"2.0.0"}');
+    const base = parseVersionCatalogSource(
+      catalogSource([{ name: "chart", value: "1.0.0" }]),
+    );
+    const pending = parseVersionCatalogSource(
+      catalogSource([{ name: "chart", value: "2.0.0" }]),
+    );
 
     expect(() => reconstructGeneratedBranchPinState(base, pending, 42)).toThrow(
       "generated bump changed non-image version chart",
@@ -233,8 +270,12 @@ describe("versions.ts integrity", () => {
   });
 
   test("recovers branch changes when a persisted state file is empty", () => {
-    const base = parseVersionsSource(`{"${KEY}":"v1@${A}"}`);
-    const pending = parseVersionsSource(`{"${KEY}":"v2@${B}"}`);
+    const base = parseVersionCatalogSource(
+      catalogSource([{ name: KEY, value: `v1@${A}` }]),
+    );
+    const pending = parseVersionCatalogSource(
+      catalogSource([{ name: KEY, value: `v2@${B}` }]),
+    );
     const persisted = parsePinCandidatesState(
       '{"schema":"pin-candidates-state/v1","pins":{}}',
     );

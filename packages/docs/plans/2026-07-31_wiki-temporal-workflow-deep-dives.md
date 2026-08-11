@@ -288,5 +288,5 @@ from `structured_output`); codex `exec --sandbox read-only --json
 --output-schema … --model gpt-5.6-sol`. Env scoping: `GH_TOKEN` = fresh
 installation token; `GITHUB_APP_*` stripped; claude gets OAuth token, no API
 key. One-off id = title + content-hash (REJECT_DUPLICATE + FAIL). Follow-up:
-one report-only task max; `cancelCron` pauses (never deletes) and only with
-`allowSelfCancel`. gen_ai span before exit-code check.
+one report-only task max. Agents may recommend retirement but cannot mutate
+schedule state. gen_ai span before exit-code check.

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
+import { collectErrorMessages } from "#shared/error-cause.ts";
 import {
   branchName,
-  collectErrorMessages,
   dataDragonPrTitle,
   findDataDragonPr,
   isDataDragonBranch,

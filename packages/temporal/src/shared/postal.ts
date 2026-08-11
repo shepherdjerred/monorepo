@@ -27,6 +27,8 @@ export type PostalSendInput = {
   from: string;
   subject: string;
   htmlBody: string;
+  plainBody?: string;
+  headers?: Record<string, string>;
   tag: string;
 };
 
@@ -92,6 +94,8 @@ export async function sendPostalEmail(
       from: input.from,
       subject: input.subject,
       html_body: input.htmlBody,
+      ...(input.plainBody === undefined ? {} : { plain_body: input.plainBody }),
+      ...(input.headers === undefined ? {} : { headers: input.headers }),
       tag: input.tag,
     }),
   });

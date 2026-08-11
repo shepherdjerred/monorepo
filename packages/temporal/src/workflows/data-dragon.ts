@@ -1,27 +1,25 @@
 import { patched, proxyActivities } from "@temporalio/workflow";
 import type {
   DataDragonActivities,
+  DataDragonVersionState,
   DataDragonWorkflowInput,
   DataDragonUpdateMode,
   DataDragonUpdateResult,
 } from "#activities/data-dragon.ts";
-// Value (not type-only) imports: UPDATE_DATA_DRAGON_MAX_ATTEMPTS keeps the
-// retry policy below in sync with the activity, and resolveTerminalFailureReason
-// walks the failed-activity cause chain to label the terminal-failure metric.
-// data-dragon-util.ts is a pure module with no I/O/Sentry imports, so pulling
-// it into the workflow bundle is safe (see packages/temporal/CLAUDE.md on the
-// workflow-bundle smoke test).
 import {
   resolveTerminalFailureReason,
   UPDATE_DATA_DRAGON_MAX_ATTEMPTS,
 } from "#activities/data-dragon-util.ts";
+import type {
+  ActivityReportInput,
+  ReportDeliveryActivities,
+} from "#activities/report-delivery.ts";
 
 const {
   getDataDragonVersionState,
   recordDataDragonSkipped,
   recordDataDragonFailure,
 } = proxyActivities<DataDragonActivities>({
-  // Quick HTTP fetch + Zod parse, or a quick `gh pr list` — finishes in seconds.
   startToCloseTimeout: "1 minute",
   retry: {
     maximumAttempts: 3,
@@ -32,11 +30,6 @@ const {
 });
 
 const { updateDataDragon } = proxyActivities<DataDragonActivities>({
-  // Long: clones the monorepo, runs `bun install --frozen-lockfile`,
-  // downloads ~3500 image assets in batches, refreshes the workspace
-  // install, runs snapshot tests, commits + pushes + opens a PR.
-  // Heartbeats fire every 10s (see data-dragon.ts) so worker death
-  // surfaces in <60s.
   startToCloseTimeout: "90 minutes",
   heartbeatTimeout: "60 seconds",
   retry: {
@@ -47,60 +40,317 @@ const { updateDataDragon } = proxyActivities<DataDragonActivities>({
   },
 });
 
+const { deliverActivityReport } = proxyActivities<ReportDeliveryActivities>({
+  startToCloseTimeout: "2 minutes",
+  retry: { maximumAttempts: 3 },
+});
+
+function stateEvidence(
+  state: DataDragonVersionState,
+  observedAt: string,
+): ActivityReportInput["evidence"][number] {
+  return {
+    id: "version-state",
+    source: "Data Dragon versions API and repository version.json",
+    observedAt,
+    status: "success",
+    excerpt: `current=${state.currentVersion}; latest=${state.latestVersion}; updateRequired=${String(state.updateRequired)}`,
+  };
+}
+
+type DataDragonEvaluation = {
+  reason: string;
+  changed: boolean;
+  pending: boolean;
+  attention: boolean;
+  publicationRequired: boolean;
+  publicationFailed: boolean;
+  autoMergeFailed: boolean;
+};
+
+function evaluateDataDragon(
+  result: DataDragonUpdateResult | undefined,
+): DataDragonEvaluation {
+  const reason = result?.reason ?? "version-current";
+  const changed = reason === "pr-created";
+  const pending = reason === "pr-already-open";
+  const publicationRequired = changed || pending;
+  return {
+    reason,
+    changed,
+    pending,
+    attention: reason === "image-only-diff",
+    publicationRequired,
+    publicationFailed: publicationRequired && result?.prUrl === undefined,
+    autoMergeFailed: result?.autoMergeConfigured === false,
+  };
+}
+
+function dataDragonScheduleId(mode: DataDragonUpdateMode): string {
+  return mode === "version-check"
+    ? "scout-data-dragon-version-check"
+    : "scout-data-dragon-weekly-refresh";
+}
+
+function dataDragonVerdict(
+  state: DataDragonEvaluation,
+): ActivityReportInput["verdict"] {
+  if (state.autoMergeFailed || state.publicationFailed || state.attention) {
+    return "attention";
+  }
+  if (state.changed) return "changed";
+  return state.pending ? "pending" : "clear";
+}
+
+function dataDragonChecks(
+  state: DataDragonVersionState,
+  result: DataDragonUpdateResult | undefined,
+  evaluation: DataDragonEvaluation,
+): ActivityReportInput["checks"] {
+  const refreshAttempted = result !== undefined;
+  return [
+    {
+      id: "version-source",
+      label: "Version source comparison",
+      required: true,
+      status: "passed",
+      summary: `${state.currentVersion} vs ${state.latestVersion}`,
+      evidenceReceiptIds: ["version-state"],
+    },
+    {
+      id: "deterministic-refresh",
+      label: "Generated asset diff and validation",
+      required: refreshAttempted,
+      status: refreshAttempted ? "passed" : "skipped",
+      summary:
+        result === undefined
+          ? "Refresh not required for the version-check run"
+          : `${result.changedFiles.length.toString()} changed files; ${evaluation.reason}`,
+      evidenceReceiptIds: refreshAttempted ? ["refresh-result"] : [],
+    },
+    {
+      id: "proposal-publication",
+      label: "PR publication and auto-merge",
+      required: evaluation.publicationRequired,
+      status: evaluation.publicationRequired
+        ? evaluation.publicationFailed || evaluation.autoMergeFailed
+          ? "failed"
+          : "passed"
+        : "skipped",
+      summary: evaluation.publicationRequired
+        ? `${result?.prUrl ?? "PR URL missing"}; autoMerge=${String(result?.autoMergeConfigured)}`
+        : "No PR was required",
+      evidenceReceiptIds: evaluation.publicationRequired
+        ? ["proposal-publication"]
+        : [],
+    },
+  ];
+}
+
+function dataDragonEvidence(
+  state: DataDragonVersionState,
+  result: DataDragonUpdateResult | undefined,
+  evaluation: DataDragonEvaluation,
+  observedAt: string,
+): ActivityReportInput["evidence"] {
+  if (result === undefined) return [stateEvidence(state, observedAt)];
+  const refresh: ActivityReportInput["evidence"][number] = {
+    id: "refresh-result",
+    source: "Data Dragon update command, snapshots, and git diff",
+    observedAt,
+    status: "success",
+    ...(result.prUrl === undefined ? {} : { url: result.prUrl }),
+    excerpt:
+      `${evaluation.reason}; files=${result.changedFiles.join(", ") || "none"}`.slice(
+        0,
+        2000,
+      ),
+  };
+  if (!evaluation.publicationRequired) {
+    return [stateEvidence(state, observedAt), refresh];
+  }
+  return [
+    stateEvidence(state, observedAt),
+    refresh,
+    {
+      id: "proposal-publication",
+      source: "GitHub pull request publication and auto-merge state",
+      observedAt,
+      status:
+        evaluation.publicationFailed || evaluation.autoMergeFailed
+          ? "failure"
+          : "success",
+      ...(result.prUrl === undefined ? {} : { url: result.prUrl }),
+      excerpt: `${result.prUrl ?? "PR URL missing"}; autoMerge=${String(result.autoMergeConfigured)}`,
+    },
+  ];
+}
+
+function dataDragonLimitations(evaluation: DataDragonEvaluation): string[] {
+  return [
+    ...(evaluation.attention
+      ? ["Only generated image assets changed, so no proposal was opened."]
+      : []),
+    ...(evaluation.autoMergeFailed
+      ? ["The PR exists, but automatic merge could not be configured."]
+      : []),
+    ...(evaluation.publicationFailed
+      ? ["The expected PR URL is missing."]
+      : []),
+  ];
+}
+
+export function dataDragonReport(
+  startedAt: string,
+  mode: DataDragonUpdateMode,
+  state: DataDragonVersionState,
+  result: DataDragonUpdateResult | undefined,
+): ActivityReportInput {
+  const observedAt = new Date().toISOString();
+  const evaluation = evaluateDataDragon(result);
+  return {
+    reportType: "scout-data-dragon",
+    title: `Scout Data Dragon ${mode}`,
+    scheduleId: dataDragonScheduleId(mode),
+    startedAt,
+    execution:
+      evaluation.autoMergeFailed || evaluation.publicationFailed
+        ? "partial"
+        : "complete",
+    verdict: dataDragonVerdict(evaluation),
+    headline:
+      result === undefined
+        ? `Data Dragon is current at ${state.currentVersion}.`
+        : `${evaluation.reason}: ${state.currentVersion} -> ${state.latestVersion}; ${result.changedFiles.length.toString()} files changed.`,
+    checks: dataDragonChecks(state, result, evaluation),
+    evidence: dataDragonEvidence(state, result, evaluation, observedAt),
+    findings:
+      result === undefined
+        ? []
+        : [
+            {
+              severity:
+                evaluation.attention || evaluation.autoMergeFailed
+                  ? "warning"
+                  : "info",
+              summary: `${evaluation.reason}: ${result.changedFiles.length.toString()} changed files`,
+              ...(result.prUrl === undefined ? {} : { detail: result.prUrl }),
+              evidenceReceiptIds: ["refresh-result"],
+            },
+          ],
+    limitations: dataDragonLimitations(evaluation),
+    actions: evaluation.autoMergeFailed
+      ? ["Review the open Data Dragon PR and merge it manually when green."]
+      : [],
+    provenance: {
+      source: "ddragon.leagueoflegends.com and shepherdjerred/monorepo",
+      query: mode,
+    },
+  };
+}
+
+function failureReport(
+  startedAt: string,
+  mode: DataDragonUpdateMode,
+  error: unknown,
+  state: DataDragonVersionState | undefined,
+): ActivityReportInput {
+  const message = error instanceof Error ? error.message : String(error);
+  const observedAt = new Date().toISOString();
+  return {
+    reportType: "scout-data-dragon",
+    title: `Scout Data Dragon ${mode}`,
+    scheduleId:
+      mode === "version-check"
+        ? "scout-data-dragon-version-check"
+        : "scout-data-dragon-weekly-refresh",
+    startedAt,
+    execution: "failed",
+    verdict: "inconclusive",
+    headline: "Data Dragon automation failed; no clean conclusion was made.",
+    checks: [
+      {
+        id: "data-dragon-run",
+        label: "Version collection and deterministic refresh",
+        required: true,
+        status: "failed",
+        summary: message,
+        evidenceReceiptIds: ["run-failure"],
+      },
+    ],
+    evidence: [
+      {
+        id: "run-failure",
+        source: "Data Dragon workflow",
+        observedAt,
+        status: "failure",
+        excerpt: [
+          message,
+          state === undefined
+            ? "version state unavailable"
+            : `current=${state.currentVersion}; latest=${state.latestVersion}`,
+        ]
+          .join("; ")
+          .slice(0, 2000),
+      },
+    ],
+    findings: [],
+    limitations: [
+      "Version collection, validation, or publication did not complete.",
+    ],
+    actions: ["Inspect the failed activity and rerun the schedule."],
+    provenance: { source: "Scout Data Dragon automation", query: mode },
+  };
+}
+
 export async function runScoutDataDragonUpdate(
   mode: DataDragonUpdateMode,
   input: DataDragonWorkflowInput,
 ): Promise<DataDragonUpdateResult | undefined> {
-  const state = await getDataDragonVersionState();
-
-  if (mode === "version-check" && !state.updateRequired) {
-    await recordDataDragonSkipped({
-      ...state,
-      mode,
-      reason: "version-current",
-    });
-    return undefined;
-  }
-
-  // The "a PR for this exact version is already open" dedup guard (the
-  // mechanical cause behind duplicate PRs #1827/#1856) lives INSIDE
-  // updateDataDragon, not here, on purpose:
-  //   - Retry safety: Temporal retries the *activity*, not this workflow, so a
-  //     check here would be skipped on a retry that follows a prior attempt
-  //     which already opened the PR — the activity must recheck immediately
-  //     before it creates one.
-  //   - Determinism: keeping the happy-path command sequence unchanged
-  //     (getState → updateDataDragon) means a run started on an earlier
-  //     deploy replays cleanly. (The failure path below adds one command,
-  //     guarded by its own `patched()` gate.)
+  const startedAt = new Date().toISOString();
+  let state: DataDragonVersionState | undefined;
+  let result: DataDragonUpdateResult | undefined;
+  let report: ActivityReportInput;
+  // Only collection and the update itself belong in this catch. Report
+  // delivery runs after it, so a Postal/S3 outage cannot record a
+  // `scout_data_dragon_runs{outcome="failed"}` sample (and fire
+  // ScoutDataDragonUpdateFailed) for a run whose updater actually succeeded.
   try {
-    return await updateDataDragon({
-      ...state,
-      mode,
-      lanePriors: input.lanePriors,
-    });
+    state = await getDataDragonVersionState();
+    if (mode === "version-check" && !state.updateRequired) {
+      await recordDataDragonSkipped({
+        ...state,
+        mode,
+        reason: "version-current",
+      });
+      report = dataDragonReport(startedAt, mode, state, undefined);
+    } else {
+      result = await updateDataDragon({
+        ...state,
+        mode,
+        lanePriors: input.lanePriors,
+      });
+      report = dataDragonReport(startedAt, mode, state, result);
+    }
   } catch (error) {
-    // Record the terminal outcome="failed" metric here, at the workflow level,
-    // rather than inside updateDataDragon's catch. An attempt killed by OOM /
-    // heartbeat timeout / worker death never runs activity code, so recording
-    // in the activity would silently miss exactly those outages — yet Temporal
-    // always surfaces the retries-exhausted failure to this catch as an
-    // ActivityFailure, however the final attempt died. resolveTerminalFailureReason
-    // walks the failure's `.cause` chain for the granular command message so the
-    // reason label (git-push-failed / pr-create-failed / …) and the
-    // ScoutDataDragonPrAutomationFailed reason filter keep working; a no-message
-    // OOM/timeout kill falls through to "exception".
-    //
-    // patched() guards this new command so an in-flight history started on the
-    // pre-patch deploy — which failed without recording here — still replays
-    // deterministically.
-    if (patched("data-dragon-workflow-record-terminal-failure")) {
+    if (
+      state !== undefined &&
+      patched("data-dragon-workflow-record-terminal-failure")
+    ) {
       await recordDataDragonFailure({
         ...state,
         mode,
         reason: resolveTerminalFailureReason(error),
       });
     }
+    if (patched("data-dragon-report-envelope-v1")) {
+      await deliverActivityReport(failureReport(startedAt, mode, error, state));
+    }
     throw error;
   }
+
+  if (patched("data-dragon-report-envelope-v1")) {
+    await deliverActivityReport(report);
+  }
+  return result;
 }

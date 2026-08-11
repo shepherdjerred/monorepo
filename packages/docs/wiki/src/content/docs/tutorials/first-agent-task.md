@@ -21,7 +21,7 @@ tutorial, create a dedicated scratch file at
 `packages/docs/guides/agent-task-tutorial-scratch.md`.
 
 Start with a new, block-free file. Do not reuse an existing guide: the operator
-CLI reads the first `temporal-agent-task` block it finds.
+CLI validates and schedules every `temporal-agent-task` block it finds.
 
 ## 2. Write the task block
 
@@ -31,19 +31,26 @@ about **three minutes from now**, in your local offset.
 ```md
 <!-- temporal-agent-task
 {
+  "contractVersion": 2,
   "title": "First agent task tutorial",
   "provider": "claude",
   "mode": "report-only",
   "runAt": "2026-08-09T15:30:00-07:00",
   "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
+  "checks": [
+    { "id": "package-directories", "label": "Top-level package directories", "required": true, "evidenceRequirement": "Successful structured output listing the immediate directories under packages/.", "evidenceCollectors": [{ "id": "package-tree", "kind": "command", "argv": ["git", "ls-tree", "-d", "--name-only", "HEAD:packages"], "output": "non-empty", "expectation": { "kind": "exit-code", "passedExitCodes": [0] } }] }
+  ],
   "prompt": "List the top-level directories under packages/ and count them. Email the list and the count. Do not change anything."
 }
 -->
 ```
 
-Notice the shape of the prompt. It says what to look at, and what the report
-should contain. A vague prompt produces a vague email, and there is nobody to
-ask a follow-up question.
+Notice the declared check, its evidence requirement, its exact command
+collector, and the accepted exit code that means the observation passed. The
+worker runs that argv and evaluates the expectation independently of the model.
+The agent's final JSON must report the check and reference
+`collector:package-directories:package-tree`. If the command fails or that
+receipt is missing or uncited, the report is partial rather than clean.
 
 Notice also `"mode": "report-only"`. That is the only mode.
 
@@ -76,12 +83,10 @@ Claude read-only over that clone, and emails the result.
 
 ## 5. Read the report
 
-The report arrives by email. That is the whole human-facing output of an agent
-task.
-
-Compare it against what you asked for. If the count is right but the formatting
-is not what you pictured, that is the lesson — the prompt is the specification,
-and the run cannot ask you what you meant.
+The report arrives by email. It starts with a deterministic status, then shows
+the declared-check table, findings, limitations, and provenance. Confirm the
+check is `passed` and cites a captured command receipt. The optional synthesis
+is limited to 80 words and cannot change the status.
 
 ## 6. Try to run it again
 
@@ -100,8 +105,9 @@ that has already run leaves nothing behind, so there is nothing else to remove.
 
 ## What you did
 
-You wrote a task block, dispatched it, watched Temporal defer and then execute
-it, read its report, and saw the conflict rule reject a duplicate.
+You wrote a v2 task block with declared evidence, dispatched it, watched
+Temporal defer and then execute it, read its report, and saw the conflict rule
+reject a duplicate.
 
 From here:
 

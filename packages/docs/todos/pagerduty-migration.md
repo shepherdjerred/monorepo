@@ -97,11 +97,17 @@ and cannot substitute for the operator API check.
 
 <!-- temporal-agent-task
 {
+  "contractVersion": 2,
   "title": "Check PagerDuty retention-audit eligibility",
   "provider": "claude",
   "mode": "report-only",
   "runAt": "2026-09-07T09:00:00-07:00",
   "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
+  "checks": [
+    { "id": "cutover-timestamp", "label": "Production cutover timestamp", "required": true, "evidenceRequirement": "A dated Comment Log heading explicitly records the production cutover.", "evidenceCollectors": [{ "id": "cutover-marker", "kind": "command", "argv": ["rg", "--json", "^### 2026-[0-9]{2}-[0-9]{2}.*production cutover", "packages/docs/todos/pagerduty-migration.md"], "output": "non-empty", "expectation": { "kind": "exit-code", "passedExitCodes": [0] } }] },
+    { "id": "retention-window", "label": "Thirty-day retention window", "required": true, "evidenceRequirement": "The recorded cutover marker is present and the current UTC timestamp is available for the report calculation.", "evidenceCollectors": [{ "id": "cutover-marker", "kind": "command", "argv": ["rg", "--json", "^### 2026-[0-9]{2}-[0-9]{2}.*production cutover", "packages/docs/todos/pagerduty-migration.md"], "output": "non-empty", "expectation": { "kind": "exit-code", "passedExitCodes": [0] } }, { "id": "current-time", "kind": "command", "argv": ["date", "-u", "+%Y-%m-%dT%H:%M:%SZ"], "output": "non-empty", "expectation": { "kind": "exit-code", "passedExitCodes": [0] } }] },
+    { "id": "credential-consumers", "label": "Remaining PagerDuty consumers", "required": true, "evidenceRequirement": "No active source reference remains and live workload inventory is available.", "evidenceCollectors": [{ "id": "active-source-scan", "kind": "command", "argv": ["rg", "--json", "-i", "pagerduty", "packages/homelab", "packages/temporal", "packages/trmnl-dashboard", ".buildkite"], "output": "allow-empty", "successExitCodes": [0, 1], "expectation": { "kind": "exit-code", "passedExitCodes": [1] } }, { "id": "live-workloads", "kind": "command", "argv": ["kubectl", "get", "deployments,statefulsets,daemonsets,cronjobs", "-A", "-o", "json"], "output": "json", "expectation": { "kind": "exit-code", "passedExitCodes": [0] } }] }
+  ],
   "source": {
     "docPath": "packages/docs/todos/pagerduty-migration.md"
   },

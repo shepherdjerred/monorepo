@@ -12,9 +12,21 @@ const RuleSchema = z.object({
 
 const ResourceSchema = z.object({
   kind: z.string(),
-  metadata: z.object({ name: z.string().optional() }).optional(),
+  metadata: z
+    .object({ name: z.string().optional(), namespace: z.string().optional() })
+    .optional(),
   data: z.record(z.string(), z.string()).optional(),
   rules: z.array(RuleSchema).optional(),
+  roleRef: z.object({ kind: z.string(), name: z.string() }).optional(),
+  subjects: z
+    .array(
+      z.object({
+        kind: z.string(),
+        name: z.string(),
+        namespace: z.string().optional(),
+      }),
+    )
+    .optional(),
 });
 
 const HttpProbeSchema = z.object({
@@ -101,6 +113,14 @@ function envValue(
   )?.value;
 }
 
+function envNames(deployment: SynthesizedDeployment): Set<string> {
+  return new Set(
+    deployment.spec.template.spec.containers[0]?.env.map(
+      (variable) => variable.name,
+    ),
+  );
+}
+
 describe("temporal homelab audit tooling", () => {
   it("injects Buildkite and Bugsink configuration", async () => {
     const yaml = await synthesizeApp();
@@ -132,9 +152,13 @@ describe("temporal homelab audit tooling", () => {
     expect(yaml).not.toContain("name: GLITTER_CORPUS_R2_");
   });
 
-  it("isolates core and Glitter queues behind event-loop health probes", async () => {
+  it("isolates core, agent, and Glitter queues behind event-loop health probes", async () => {
     const deployments = parseDeployments(await synthesizeApp());
     const core = requireDeployment(deployments, "temporal-temporal-worker");
+    const agent = requireDeployment(
+      deployments,
+      "temporal-temporal-agent-worker",
+    );
     const glitter = requireDeployment(
       deployments,
       "temporal-temporal-glitter-worker",
@@ -142,11 +166,17 @@ describe("temporal homelab audit tooling", () => {
 
     expect(envValue(core, "TEMPORAL_WORKER_ROLE")).toBe("core");
     expect(envValue(core, "SLEEP_WEBHOOK_PORT")).toBe("9469");
+    expect(envValue(agent, "TEMPORAL_WORKER_ROLE")).toBe("agent");
     expect(envValue(glitter, "TEMPORAL_WORKER_ROLE")).toBe("glitter");
 
     const coreContainer = core.spec.template.spec.containers[0];
+    const agentContainer = agent.spec.template.spec.containers[0];
     const glitterContainer = glitter.spec.template.spec.containers[0];
-    if (coreContainer === undefined || glitterContainer === undefined) {
+    if (
+      coreContainer === undefined ||
+      agentContainer === undefined ||
+      glitterContainer === undefined
+    ) {
       throw new Error("Temporal worker Deployments require one container");
     }
 
@@ -154,6 +184,9 @@ describe("temporal homelab audit tooling", () => {
       coreContainer.startupProbe,
       coreContainer.livenessProbe,
       coreContainer.readinessProbe,
+      agentContainer.startupProbe,
+      agentContainer.livenessProbe,
+      agentContainer.readinessProbe,
       glitterContainer.startupProbe,
       glitterContainer.livenessProbe,
       glitterContainer.readinessProbe,
@@ -163,6 +196,9 @@ describe("temporal homelab audit tooling", () => {
 
     expect(coreContainer.ports.map((port) => port.containerPort)).toEqual([
       9464, 9465, 9466, 9467, 9468, 9469,
+    ]);
+    expect(agentContainer.ports.map((port) => port.containerPort)).toEqual([
+      9464, 9465,
     ]);
     expect(glitterContainer.ports.map((port) => port.containerPort)).toEqual([
       9464, 9465,
@@ -209,5 +245,88 @@ describe("temporal homelab audit tooling", () => {
       resources: ["connectors", "proxygroups", "proxyclasses"],
       verbs: ["get", "list", "watch"],
     });
+  });
+
+  it("keeps the agent worker out of every pod-exec RoleBinding", async () => {
+    const resources = parseResources(await synthesizeApp());
+    const execRoleNames = new Set(
+      resources
+        .filter(
+          (resource) =>
+            resource.kind === "Role" &&
+            (resource.rules ?? []).some((rule) =>
+              (rule.resources ?? []).includes("pods/exec"),
+            ),
+        )
+        .flatMap((resource) =>
+          resource.metadata?.name === undefined ? [] : [resource.metadata.name],
+        ),
+    );
+    const execBindings = resources.filter(
+      (resource) =>
+        resource.kind === "RoleBinding" &&
+        resource.roleRef?.kind === "Role" &&
+        execRoleNames.has(resource.roleRef.name),
+    );
+
+    expect(execBindings.length).toBeGreaterThan(0);
+    for (const binding of execBindings) {
+      expect(
+        binding.subjects?.map((subject) => subject.name) ?? [],
+      ).not.toContain("temporal-agent-worker");
+    }
+
+    const auditBinding = resources.find(
+      (resource) =>
+        resource.kind === "ClusterRoleBinding" &&
+        resource.metadata?.name === "temporal-worker-audit-reader",
+    );
+    expect(auditBinding?.subjects?.map((subject) => subject.name)).toEqual([
+      "temporal-worker",
+      "temporal-agent-worker",
+    ]);
+  });
+
+  it("gives the agent worker only provider auth and read-only evidence configuration", async () => {
+    const deployments = parseDeployments(await synthesizeApp());
+    const agent = requireDeployment(
+      deployments,
+      "temporal-temporal-agent-worker",
+    );
+    const names = envNames(agent);
+
+    for (const required of [
+      "TEMPORAL_ADDRESS",
+      "TEMPORAL_WORKER_ROLE",
+      "CLAUDE_CODE_OAUTH_TOKEN",
+      "OPENAI_API_KEY",
+      "CODEX_API_KEY",
+      "PROMETHEUS_URL",
+      "ALERT_DASHBOARD_URL",
+    ]) {
+      expect(names).toContain(required);
+    }
+
+    for (const prohibited of [
+      "AGENT_TASK_API_TOKEN",
+      "ARGOCD_AUTH_TOKEN",
+      "AWS_ACCESS_KEY_ID",
+      "AWS_SECRET_ACCESS_KEY",
+      "BUGSINK_TOKEN",
+      "BUILDKITE_API_TOKEN",
+      "CLOUDFLARE_API_TOKEN",
+      "GITHUB_APP_ID",
+      "GITHUB_APP_INSTALLATION_ID",
+      "GITHUB_APP_PRIVATE_KEY",
+      "GITHUB_WEBHOOK_SECRET",
+      "GRAFANA_API_KEY",
+      "HA_TOKEN",
+      "POSTAL_API_KEY",
+      "RECIPIENT_EMAIL",
+      "SENDER_EMAIL",
+      "XCODE_CLOUD_WEBHOOK_TOKEN",
+    ]) {
+      expect(names).not.toContain(prohibited);
+    }
   });
 });

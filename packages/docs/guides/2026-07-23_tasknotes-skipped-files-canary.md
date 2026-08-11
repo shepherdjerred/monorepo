@@ -32,25 +32,16 @@ schedule, `touch` to nudge the watcher, verify task count + 200s).
 
 ## Scheduled check
 
-<!-- temporal-agent-task
-{
-  "title": "TaskNotes skipped-files canary",
-  "provider": "claude",
-  "mode": "report-only",
-  "cron": "0 9 * * *",
-  "scheduleId": "tasknotes-skipped-files-canary",
-  "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
-  "source": {
-    "docPath": "packages/docs/guides/2026-07-23_tasknotes-skipped-files-canary.md"
-  },
-  "prompt": "Run the kubectl engine-status check from 'The check' section of the source doc against the tasknotes namespace. Email the result: green if skippedFiles is empty and the fetch succeeded; red with the full skippedFiles list (path + reason) if not, plus a reminder that the repair runbook is in the original investigation. Also flag if the pod is not Running or the tasks count dropped more than 20% since the last report."
-}
--->
+The source-defined `tasknotes-skipped-files-canary` schedule runs daily at
+09:00 PT. Its deterministic workflow checks the typed engine-status response,
+TaskNotes pod readiness, every skipped-file path/reason, and the task-count
+change from the last healthy accepted report. Postal acceptance is necessary
+but not sufficient: the first successful partial report may bootstrap the
+baseline, then only complete clear reports may advance it. Attention, failed,
+and other partial reports are ignored, so an unresolved count drop cannot
+ratchet itself into a new healthy baseline. A missing baseline makes the first
+report partial; a drop greater than 20%, any skipped file, or any unhealthy pod
+is attention-worthy.
 
-Operator step to (re)schedule:
-
-```bash
-cd packages/temporal
-TEMPORAL_ADDRESS=localhost:7233 bun run scripts/schedule-agent-task.ts \
-  --from-doc ../../packages/docs/guides/2026-07-23_tasknotes-skipped-files-canary.md
-```
+The schedule remains active after healthy runs. A human may pause it in the
+Temporal UI, but the workflow never pauses or cancels itself.

@@ -6,12 +6,12 @@
  *
  * Modes:
  *   (default)  Regenerate `generated/helm/` in place from the chart versions in
- *              `src/versions.ts`.
+ *              `src/version-catalog.json`.
  *   --check    Regenerate into a throwaway dir and FAIL (exit 1) if the result
  *              differs from the committed `generated/helm/` tree — without
  *              mutating it. Runs in CI as the `helm-types-drift-check`
  *              Buildkite step (PR-only, self-scoped to generator-input
- *              changes), so a versions.ts chart bump that wasn't regenerated
+ *              changes), so a catalog chart bump that wasn't regenerated
  *              fails its PR instead of drifting silently.
  */
 
@@ -27,7 +27,7 @@ import {
   type ChartInfo,
 } from "./parse-helm-charts.ts";
 
-const VERSIONS_FILE = "src/versions.ts";
+const VERSION_CATALOG_FILE = "src/version-catalog.json";
 const OUTPUT_DIR = "generated/helm";
 // Throwaway dir used by --check so the committed tree is never mutated. Kept as
 // a sibling of OUTPUT_DIR under `generated/` so prettier resolves the SAME
@@ -63,7 +63,7 @@ async function generateHelmTypes(outputDir: string) {
   // means a single flaky fetch silently deletes a committed type file (the
   // historical promtail/kube-prometheus-stack drift). Instead, write each file
   // in place, keep existing files on failure, prune only charts that no longer
-  // exist in versions.ts, and fail the whole run if any chart could not be
+  // exist in the version catalog, and fail the whole run if any chart could not be
   // generated — so a partial/destructive tree is never produced.
   //
   // (--check passes a fresh, empty throwaway dir here, so there is nothing to
@@ -71,9 +71,9 @@ async function generateHelmTypes(outputDir: string) {
   // committed OUTPUT_DIR.)
   await Bun.$`mkdir -p ${outputDir}`.quiet();
 
-  // Parse chart information from versions.ts
-  console.log(`📋 Parsing chart information from ${VERSIONS_FILE}...`);
-  const charts = await parseChartInfoFromVersions(VERSIONS_FILE);
+  // Parse chart information from the version catalog.
+  console.log(`📋 Parsing chart information from ${VERSION_CATALOG_FILE}...`);
+  const charts = await parseChartInfoFromVersions(VERSION_CATALOG_FILE);
 
   if (charts.length === 0) {
     console.log("⚠️  No Helm charts found in versions file");
@@ -116,8 +116,8 @@ async function generateHelmTypes(outputDir: string) {
     }
   }
 
-  // Prune type files for charts no longer present in versions.ts (deterministic,
-  // based on versions.ts rather than fetch success).
+  // Prune type files for charts no longer present in the catalog (deterministic,
+  // based on the catalog rather than fetch success).
   await pruneStaleTypeFiles(
     charts.map((c) => c.name),
     outputDir,
@@ -220,7 +220,7 @@ async function generateHelmTypes(outputDir: string) {
  */
 async function checkHelmTypes() {
   console.log(
-    "🔍 Checking committed Helm types against what versions.ts produces...",
+    "🔍 Checking committed Helm types against what the version catalog produces...",
   );
   await Bun.$`rm -rf ${CHECK_DIR}`.quiet();
   let drift: string[];
@@ -240,13 +240,15 @@ async function checkHelmTypes() {
       console.error(`   - ${entry}`);
     }
     console.error(
-      "\nThe committed generated/helm/ tree does not match what src/versions.ts produces.\n" +
+      "\nThe committed generated/helm/ tree does not match what src/version-catalog.json produces.\n" +
         "Fix: run `bun run generate-helm-types` in packages/homelab/src/cdk8s, then\n" +
         "commit packages/homelab/src/cdk8s/generated/helm/.\n",
     );
     process.exit(1);
   }
-  console.log("\n✅ Committed Helm types are in sync with src/versions.ts");
+  console.log(
+    "\n✅ Committed Helm types are in sync with src/version-catalog.json",
+  );
 }
 
 /** List the generated `.ts` files (chart types + index) in a directory. */
@@ -357,7 +359,7 @@ function capitalizeFirst(str: string): string {
 
 /**
  * Remove `<chart>.types.ts` files for charts that are no longer declared in
- * versions.ts. Driven entirely by versions.ts (not fetch success), so it never
+ * version catalog. Driven entirely by the catalog (not fetch success), so it never
  * deletes a file just because that chart's fetch flaked.
  */
 async function pruneStaleTypeFiles(

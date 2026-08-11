@@ -1,94 +1,47 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { afterAll, beforeAll, describe, expect, it } from "bun:test";
+import { describe, expect, it } from "bun:test";
 import { register } from "#observability/metrics.ts";
 import type { AgentTaskInput } from "#shared/agent-task.ts";
+import { agentTaskCollectorReceiptId } from "#shared/agent-task-evidence-contract.ts";
+import type { ReportEvidenceReceiptV1 } from "#shared/report.ts";
 import { redactSecrets } from "#shared/redact.ts";
 import type { AgentTaskCommand } from "./agent-task-command.ts";
+import type { AgentProviderCredentialBrokerFactory } from "./agent-provider-credential-broker.ts";
 import { createAgentTaskActivities } from "./agent-task.ts";
 import {
   agentTaskSecretTokens,
+  envForEvidenceCollector,
   envForProvider,
   readAgentTaskMountedSecretTokens,
 } from "./agent-task-env.ts";
 
-const originalFetch = globalThis.fetch;
-const originalGitHubAppId = Bun.env["GITHUB_APP_ID"];
-const originalGitHubAppInstallationId = Bun.env["GITHUB_APP_INSTALLATION_ID"];
-const originalGitHubAppPrivateKey = Bun.env["GITHUB_APP_PRIVATE_KEY"];
+const TEST_BROKER = {
+  baseUrl: "http://127.0.0.1:45678",
+  clientToken: "ephemeral-broker-token",
+};
+const testCredentialBrokerFactory: AgentProviderCredentialBrokerFactory =
+  () => ({
+    ...TEST_BROKER,
+    stop: () => Promise.resolve(),
+  });
 
-async function testPrivateKeyPem(): Promise<string> {
-  const pair = await crypto.subtle.generateKey(
-    {
-      name: "RSASSA-PKCS1-v1_5",
-      modulusLength: 2048,
-      publicExponent: new Uint8Array([1, 0, 1]),
-      hash: "SHA-256",
-    },
-    true,
-    ["sign", "verify"],
+function createTestAgentTaskActivities(
+  commandBuilder: Parameters<typeof createAgentTaskActivities>[0],
+  evidenceCollector: (
+    input: AgentTaskInput,
+    workdir: string,
+  ) => Promise<ReportEvidenceReceiptV1[]> = () => Promise.resolve([]),
+) {
+  return createAgentTaskActivities(
+    commandBuilder,
+    testCredentialBrokerFactory,
+    evidenceCollector,
   );
-  const pkcs8 = await crypto.subtle.exportKey("pkcs8", pair.privateKey);
-  const encoded = btoa(String.fromCodePoint(...new Uint8Array(pkcs8)));
-  const lines = encoded.match(/.{1,64}/g) ?? [];
-  return [
-    "-----BEGIN PRIVATE KEY-----",
-    ...lines,
-    "-----END PRIVATE KEY-----",
-    "",
-  ].join("\n");
 }
 
-function restoreGitHubAppEnv(): void {
-  restoreGitHubAppId();
-  restoreGitHubAppInstallationId();
-  restoreGitHubAppPrivateKey();
-}
-
-function restoreGitHubAppId(): void {
-  if (originalGitHubAppId === undefined) {
-    delete Bun.env["GITHUB_APP_ID"];
-    return;
-  }
-  Bun.env["GITHUB_APP_ID"] = originalGitHubAppId;
-}
-
-function restoreGitHubAppInstallationId(): void {
-  if (originalGitHubAppInstallationId === undefined) {
-    delete Bun.env["GITHUB_APP_INSTALLATION_ID"];
-    return;
-  }
-  Bun.env["GITHUB_APP_INSTALLATION_ID"] = originalGitHubAppInstallationId;
-}
-
-function restoreGitHubAppPrivateKey(): void {
-  if (originalGitHubAppPrivateKey === undefined) {
-    delete Bun.env["GITHUB_APP_PRIVATE_KEY"];
-    return;
-  }
-  Bun.env["GITHUB_APP_PRIVATE_KEY"] = originalGitHubAppPrivateKey;
-}
-
-const fetchStub = Object.assign(
-  async (
-    _input: Parameters<typeof fetch>[0],
-    _init?: Parameters<typeof fetch>[1],
-  ) =>
-    Response.json(
-      {
-        token: "test-github-app-token",
-        expires_at: "2030-01-01T00:00:00.000Z",
-      },
-      {
-        status: 201,
-        headers: { "content-type": "application/json" },
-      },
-    ),
-  { preconnect: originalFetch.preconnect },
-);
-
-const testAgentTaskActivities = createAgentTaskActivities(
+const testAgentTaskActivities = createTestAgentTaskActivities(
   async (
     _input: AgentTaskInput,
     workdir: string,
@@ -130,6 +83,36 @@ const claudeInput: AgentTaskInput = {
   },
 };
 
+const v2Input: AgentTaskInput = {
+  contractVersion: 2,
+  title: "Two-phase evidence test",
+  prompt: "Check the current service state.",
+  checks: [
+    {
+      id: "service-health",
+      label: "Service health",
+      required: true,
+      evidenceRequirement: "A successful command response.",
+      evidenceCollectors: [
+        {
+          id: "service-health-command",
+          kind: "command",
+          argv: ["service-health", "--json"],
+          output: "json",
+          expectation: { kind: "exit-code", passedExitCodes: [0] },
+        },
+      ],
+    },
+  ],
+  provider: "codex",
+  mode: "report-only",
+  allowSelfCancel: false,
+  repo: {
+    fullName: "shepherdjerred/monorepo",
+    ref: "main",
+  },
+};
+
 function claudeResultMessageCommand(
   resultMessage: Record<string, unknown>,
 ): (input: AgentTaskInput, workdir: string) => Promise<AgentTaskCommand> {
@@ -146,18 +129,6 @@ function claudeResultMessageCommand(
 }
 
 describe("agentTaskActivities", () => {
-  beforeAll(async () => {
-    Bun.env["GITHUB_APP_ID"] = "12345";
-    Bun.env["GITHUB_APP_INSTALLATION_ID"] = "67890";
-    Bun.env["GITHUB_APP_PRIVATE_KEY"] = await testPrivateKeyPem();
-    globalThis.fetch = fetchStub;
-  });
-
-  afterAll(() => {
-    globalThis.fetch = originalFetch;
-    restoreGitHubAppEnv();
-  });
-
   it("records a successful run after agent output parses", async () => {
     const workdir = await mkdtemp(path.join(os.tmpdir(), "agent-task-test-"));
 
@@ -166,7 +137,10 @@ describe("agentTaskActivities", () => {
       workdir,
     });
 
-    expect(result.markdown).toBe("task complete");
+    if (result.contractVersion !== 1) {
+      throw new TypeError("expected legacy contract result");
+    }
+    expect(result.payload.markdown).toBe("task complete");
     const exposition = await register.metrics();
     expect(exposition).toMatch(
       /agent_task_runs_total\{[^}]*provider="codex"[^}]*outcome="success"/,
@@ -174,7 +148,7 @@ describe("agentTaskActivities", () => {
   });
 
   it("records a successful run after Claude structured_output parses", async () => {
-    const claudeActivities = createAgentTaskActivities(
+    const claudeActivities = createTestAgentTaskActivities(
       claudeResultMessageCommand({
         type: "result",
         is_error: false,
@@ -188,15 +162,131 @@ describe("agentTaskActivities", () => {
       workdir,
     });
 
-    expect(result.markdown).toBe("claude task complete");
+    if (result.contractVersion !== 1) {
+      throw new TypeError("expected legacy contract result");
+    }
+    expect(result.payload.markdown).toBe("claude task complete");
     const exposition = await register.metrics();
     expect(exposition).toMatch(
       /agent_task_runs_total\{[^}]*provider="claude"[^}]*outcome="success"/,
     );
   });
 
+  it("finalizes v2 output against receipts captured during investigation", async () => {
+    const phases: string[] = [];
+    const collectorReceiptId = agentTaskCollectorReceiptId(
+      "service-health",
+      "service-health-command",
+    );
+    const activities = createTestAgentTaskActivities(
+      async (_input, workdir, phase): Promise<AgentTaskCommand> => {
+        if (phase === undefined) {
+          throw new Error("two-phase test requires an explicit phase");
+        }
+        phases.push(phase.kind);
+        const outputPath = path.join(workdir, `${phase.kind}.json`);
+        const evidenceReceiptIds =
+          phase.kind === "finalization" ? [collectorReceiptId] : [];
+        if (phase.kind === "finalization") {
+          expect(phase.evidence.map((receipt) => receipt.id)).toEqual([
+            "command-1",
+            collectorReceiptId,
+          ]);
+          expect(phase.preliminary.headline).toBe(
+            "Preliminary service assessment.",
+          );
+        }
+        const payload = {
+          headline:
+            phase.kind === "finalization"
+              ? "The service is healthy."
+              : "Preliminary service assessment.",
+          checks: [
+            {
+              id: "service-health",
+              status: "passed",
+              summary: "The command succeeded.",
+              evidenceReceiptIds,
+            },
+          ],
+          findings: [],
+          limitations: [],
+          actions: [],
+          synthesis: null,
+          followUp: null,
+          retirementRecommendation: null,
+        };
+        const event = {
+          type: "item.completed",
+          item: {
+            id: "command-1",
+            type: "command_execution",
+            command: "service-health --json",
+            aggregated_output: '{"healthy":true}',
+            exit_code: 0,
+            status: "completed",
+          },
+        };
+        const code = [
+          ...(phase.kind === "investigation"
+            ? [`console.log(${JSON.stringify(JSON.stringify(event))});`]
+            : []),
+          `await Bun.write(${JSON.stringify(outputPath)}, ${JSON.stringify(JSON.stringify(payload))});`,
+        ].join("\n");
+        return {
+          args: ["bun", "--eval", code],
+          model: "test-model",
+          outputPath,
+          prompt: `${phase.kind} prompt`,
+        };
+      },
+      () =>
+        Promise.resolve([
+          {
+            id: collectorReceiptId,
+            source: "declared-command:service-health-command",
+            origin: "declared-collector",
+            observedAt: "2026-08-10T12:00:00.000Z",
+            status: "success",
+            semanticStatus: "passed",
+            command: '["service-health","--json"]',
+            exitCode: 0,
+            excerpt: '{"healthy":true}',
+          },
+        ]),
+    );
+    const workdir = await mkdtemp(path.join(os.tmpdir(), "agent-task-test-"));
+
+    const investigation = await activities.investigateAgentTask({
+      input: v2Input,
+      workdir,
+    });
+    const result = await activities.finalizeAgentTask({
+      input: v2Input,
+      workdir,
+      investigation,
+    });
+
+    expect(phases).toEqual(["investigation", "finalization"]);
+    expect(result.payload.checks[0]?.evidenceReceiptIds).toEqual([
+      collectorReceiptId,
+    ]);
+    expect(result.evidence[0]).toMatchObject({
+      id: "command-1",
+      status: "success",
+      command: "service-health --json",
+    });
+    expect(result.evidence[1]).toMatchObject({
+      id: collectorReceiptId,
+      origin: "declared-collector",
+      status: "success",
+    });
+  });
+});
+
+describe("agent task runtime support", () => {
   it("throws a distinct error when claude reports is_error=true", async () => {
-    const claudeActivities = createAgentTaskActivities(
+    const claudeActivities = createTestAgentTaskActivities(
       claudeResultMessageCommand({
         type: "result",
         is_error: true,
@@ -264,94 +354,138 @@ describe("agentTaskActivities", () => {
     }
   });
 
-  it("aliases OPENAI_API_KEY for Codex without overriding an explicit key", async () => {
+  it("replaces Codex credentials with the ephemeral broker token", async () => {
     expect(
-      envForProvider("codex", "github-token", {
-        OPENAI_API_KEY: "openai-key",
-      }),
-    ).toEqual({
-      OPENAI_API_KEY: "openai-key",
-      CODEX_API_KEY: "openai-key",
-      GH_TOKEN: "github-token",
-    });
-    expect(
-      envForProvider("codex", "github-token", {
+      envForProvider("codex", "/tmp/agent-home", TEST_BROKER, {
         OPENAI_API_KEY: "openai-key",
         CODEX_API_KEY: "codex-key",
-      })["CODEX_API_KEY"],
-    ).toBe("codex-key");
+      }),
+    ).toEqual({
+      CODEX_API_KEY: "ephemeral-broker-token",
+      HOME: "/tmp/agent-home",
+    });
   });
 
-  it("forwards the full worker env for Claude, minus ANTHROPIC_API_KEY and inherited GitHub creds", async () => {
-    const environment = envForProvider("claude", "installation-token", {
+  it("gives declared collectors no provider or delivery credentials", () => {
+    expect(
+      envForEvidenceCollector("/tmp/collector-home", {
+        PATH: "/usr/bin",
+        PROMETHEUS_URL: "http://prometheus.local",
+        ANTHROPIC_API_KEY: "anthropic-secret",
+        CLAUDE_CODE_OAUTH_TOKEN: "claude-secret",
+        OPENAI_API_KEY: "openai-secret",
+        CODEX_API_KEY: "codex-secret",
+        POSTAL_API_KEY: "postal-secret",
+        AGENT_TASK_API_TOKEN: "api-secret",
+      }),
+    ).toEqual({
       PATH: "/usr/bin",
-      HOME: "/home/worker",
-      CLAUDE_CODE_OAUTH_TOKEN: "oauth-token",
-      // Operational secrets the homelab audit needs — must be FORWARDED so its
-      // live Grafana/Alerts/ArgoCD/Bugsink/Cloudflare checks work.
-      POSTAL_API_KEY: "postal-secret",
-      GRAFANA_API_KEY: "grafana-secret",
-      ARGOCD_AUTH_TOKEN: "argocd-secret",
-      CLOUDFLARE_API_TOKEN: "cloudflare-secret",
-      SAFE_VALUE: "forwarded",
-      // Stripped: Claude bills the subscription, not the direct API.
-      ANTHROPIC_API_KEY: "anthropic-key",
-      // Stripped: never inherit the worker's GitHub creds; GH_TOKEN is re-minted.
-      GH_TOKEN: "personal-token",
-      GITHUB_PERSONAL_ACCESS_TOKEN: "personal-token",
-      GITHUB_APP_PRIVATE_KEY: "private-key",
+      PROMETHEUS_URL: "http://prometheus.local",
+      HOME: "/tmp/collector-home",
     });
+  });
+
+  it("allows only Claude auth and non-secret read-only runtime configuration", async () => {
+    const environment = envForProvider(
+      "claude",
+      "/tmp/agent-home",
+      TEST_BROKER,
+      {
+        PATH: "/usr/bin",
+        HOME: "/home/worker",
+        CLAUDE_CODE_OAUTH_TOKEN: "oauth-token",
+        PROMETHEUS_URL: "http://prometheus.local",
+        ALERT_DASHBOARD_URL: "http://alerts.local",
+        KUBERNETES_SERVICE_HOST: "10.0.0.1",
+        POSTAL_API_KEY: "postal-secret",
+        POSTAL_HOST: "https://postal.example.test",
+        RECIPIENT_EMAIL: "recipient@example.test",
+        SENDER_EMAIL: "sender@example.test",
+        AGENT_TASK_API_TOKEN: "agent-task-api-secret",
+        GRAFANA_API_KEY: "grafana-secret",
+        ARGOCD_AUTH_TOKEN: "argocd-secret",
+        CLOUDFLARE_API_TOKEN: "cloudflare-secret",
+        SAFE_VALUE: "not-allowlisted",
+        ANTHROPIC_API_KEY: "anthropic-key",
+        OPENAI_API_KEY: "other-provider-key",
+        CODEX_API_KEY: "other-provider-key",
+        GH_TOKEN: "personal-token",
+        GITHUB_PERSONAL_ACCESS_TOKEN: "personal-token",
+        GITHUB_APP_PRIVATE_KEY: "private-key",
+      },
+    );
 
     expect(environment).toEqual({
       PATH: "/usr/bin",
-      HOME: "/home/worker",
-      CLAUDE_CODE_OAUTH_TOKEN: "oauth-token",
-      POSTAL_API_KEY: "postal-secret",
-      GRAFANA_API_KEY: "grafana-secret",
-      ARGOCD_AUTH_TOKEN: "argocd-secret",
-      CLOUDFLARE_API_TOKEN: "cloudflare-secret",
-      SAFE_VALUE: "forwarded",
-      // The GitHub App installation token is injected explicitly, replacing any
-      // inherited GitHub credential.
-      GH_TOKEN: "installation-token",
+      HOME: "/tmp/agent-home",
+      ANTHROPIC_BASE_URL: "http://127.0.0.1:45678",
+      ANTHROPIC_AUTH_TOKEN: "ephemeral-broker-token",
+      CLAUDE_CODE_USE_GATEWAY: "1",
+      PROMETHEUS_URL: "http://prometheus.local",
+      ALERT_DASHBOARD_URL: "http://alerts.local",
+      KUBERNETES_SERVICE_HOST: "10.0.0.1",
     });
     expect(environment).not.toHaveProperty("ANTHROPIC_API_KEY");
+    expect(environment).not.toHaveProperty("CLAUDE_CODE_OAUTH_TOKEN");
+    expect(environment).not.toHaveProperty("POSTAL_API_KEY");
+    expect(environment).not.toHaveProperty("POSTAL_HOST");
+    expect(environment).not.toHaveProperty("RECIPIENT_EMAIL");
+    expect(environment).not.toHaveProperty("SENDER_EMAIL");
+    expect(environment).not.toHaveProperty("AGENT_TASK_API_TOKEN");
     expect(environment).not.toHaveProperty("GITHUB_PERSONAL_ACCESS_TOKEN");
     expect(environment).not.toHaveProperty("GITHUB_APP_PRIVATE_KEY");
+    expect(environment).not.toHaveProperty("OPENAI_API_KEY");
+    expect(environment).not.toHaveProperty("CODEX_API_KEY");
+    expect(environment).not.toHaveProperty("GRAFANA_API_KEY");
+    expect(environment).not.toHaveProperty("ARGOCD_AUTH_TOKEN");
+    expect(environment).not.toHaveProperty("CLOUDFLARE_API_TOKEN");
+    expect(environment).not.toHaveProperty("SAFE_VALUE");
   });
 
-  it("forwards the full worker env for Codex, replacing only inherited GitHub creds", async () => {
-    const forwarded = {
-      POSTAL_API_KEY: "postal-secret",
-      ALERT_DASHBOARD_URL: "http://alerts.local",
-      BUGSINK_TOKEN: "bugsink-secret",
-      GRAFANA_API_KEY: "grafana-secret",
-      ARGOCD_AUTH_TOKEN: "argocd-secret",
-      CLOUDFLARE_API_TOKEN: "cloudflare-secret",
-      // Codex keeps ANTHROPIC_API_KEY (only Claude strips it) and the other
-      // provider's key — the full env is forwarded.
-      ANTHROPIC_API_KEY: "anthropic-key",
-      CLAUDE_CODE_OAUTH_TOKEN: "other-provider-key",
-    };
-    const environment = envForProvider("codex", "installation-token", {
-      PATH: "/usr/bin",
-      HOME: "/home/worker",
-      CODEX_API_KEY: "codex-key",
-      ...forwarded,
-      // Stripped: never inherit the worker's GitHub creds.
-      GH_TOKEN: "personal-token",
-      GITHUB_PERSONAL_ACCESS_TOKEN: "personal-token",
-      GITHUB_APP_PRIVATE_KEY: "private-key",
-    });
+  it("allows only Codex auth and non-secret read-only runtime configuration", async () => {
+    const environment = envForProvider(
+      "codex",
+      "/tmp/agent-home",
+      TEST_BROKER,
+      {
+        PATH: "/usr/bin",
+        HOME: "/home/worker",
+        CODEX_API_KEY: "codex-key",
+        OPENAI_API_KEY: "openai-key",
+        ALERT_DASHBOARD_URL: "http://alerts.local",
+        POSTAL_API_KEY: "postal-secret",
+        SENDER_EMAIL: "sender@example.test",
+        GITHUB_WEBHOOK_SECRET: "webhook-secret",
+        BUGSINK_TOKEN: "bugsink-secret",
+        GRAFANA_API_KEY: "grafana-secret",
+        ARGOCD_AUTH_TOKEN: "argocd-secret",
+        CLOUDFLARE_API_TOKEN: "cloudflare-secret",
+        ANTHROPIC_API_KEY: "anthropic-key",
+        CLAUDE_CODE_OAUTH_TOKEN: "other-provider-key",
+        GH_TOKEN: "personal-token",
+        GITHUB_PERSONAL_ACCESS_TOKEN: "personal-token",
+        GITHUB_APP_PRIVATE_KEY: "private-key",
+      },
+    );
 
     expect(environment).toEqual({
       PATH: "/usr/bin",
-      HOME: "/home/worker",
-      CODEX_API_KEY: "codex-key",
-      ...forwarded,
-      GH_TOKEN: "installation-token",
+      HOME: "/tmp/agent-home",
+      CODEX_API_KEY: "ephemeral-broker-token",
+      ALERT_DASHBOARD_URL: "http://alerts.local",
     });
     expect(environment).not.toHaveProperty("GITHUB_PERSONAL_ACCESS_TOKEN");
     expect(environment).not.toHaveProperty("GITHUB_APP_PRIVATE_KEY");
+    expect(environment).not.toHaveProperty("POSTAL_API_KEY");
+    expect(environment).not.toHaveProperty("SENDER_EMAIL");
+    expect(environment).not.toHaveProperty("GITHUB_WEBHOOK_SECRET");
+    expect(environment).not.toHaveProperty("BUGSINK_TOKEN");
+    expect(environment).not.toHaveProperty("GRAFANA_API_KEY");
+    expect(environment).not.toHaveProperty("ARGOCD_AUTH_TOKEN");
+    expect(environment).not.toHaveProperty("CLOUDFLARE_API_TOKEN");
+    expect(environment).not.toHaveProperty("ANTHROPIC_API_KEY");
+    expect(environment).not.toHaveProperty("CLAUDE_CODE_OAUTH_TOKEN");
+    expect(environment).not.toHaveProperty("OPENAI_API_KEY");
+    expect(environment).not.toHaveProperty("GH_TOKEN");
   });
 });

@@ -129,9 +129,9 @@ change-based decisions.
   Require zero candidate integrity issues, exact workload parity, a conservative
   minimum reduction of at least 50%, and no required lane p95 regression above
   10%.
-- Produce the final 24-hour and seven-day/100-finished-build report. Allow the
-  Temporal schedule to self-cancel only after the final report is conclusive and
-  passing.
+- Produce the final 24-hour and seven-day/100-finished-build report. Keep the
+  Temporal schedule active and emit a retirement recommendation after the final
+  report is conclusive and passing; only a human may retire it.
 - Capture Grafana terminal coverage and a real CLI report. Upload the artifacts
   to `public.sjer.red` and comment them on PR #1686 and the remediation PRs.
 

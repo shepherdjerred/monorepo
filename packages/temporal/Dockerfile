@@ -121,10 +121,10 @@ ARG TRIVY_VERSION=0.72.0
 ARG KOMETA_VERSION=2.4.5
 ARG KOMETA_COMMIT=4ea818399a458f9e791ca04b4a02458751cf2a46
 
-# --- Base system deps: ca-certificates, curl, git (gh/claude open PRs) ---
+# --- Base system deps: ca-certificates, curl, git, and the pod-local agent firewall ---
 RUN set -e; \
     apt-get update -qq; \
-    apt-get install -y -qq --no-install-recommends ca-certificates curl git; \
+    apt-get install -y -qq --no-install-recommends ca-certificates curl git iptables util-linux; \
     rm -rf /var/lib/apt/lists/*
 
 # --- gh CLI (per-arch release tarball) ---

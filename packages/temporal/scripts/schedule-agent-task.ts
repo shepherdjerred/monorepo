@@ -9,7 +9,7 @@
 import { Client, Connection } from "@temporalio/client";
 import { startOrScheduleAgentTask } from "#lib/agent-task-scheduler.ts";
 import {
-  AgentTaskInputSchema,
+  AgentTaskInputV2Schema,
   type AgentTaskInput,
 } from "#shared/agent-task.ts";
 import { parseAgentTaskInputsFromMarkdown } from "#lib/agent-task-markdown.ts";
@@ -61,10 +61,10 @@ async function loadInputs(args: Args): Promise<AgentTaskInput[]> {
     return parseAgentTaskInputsFromMarkdown(text);
   }
   if (args.kind === "json") {
-    return [AgentTaskInputSchema.parse(JSON.parse(args.value))];
+    return [AgentTaskInputV2Schema.parse(JSON.parse(args.value))];
   }
   const text = await new Response(Bun.stdin.stream()).text();
-  return [AgentTaskInputSchema.parse(JSON.parse(text))];
+  return [AgentTaskInputV2Schema.parse(JSON.parse(text))];
 }
 
 async function main(): Promise<void> {

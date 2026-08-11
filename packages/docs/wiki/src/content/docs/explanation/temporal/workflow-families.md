@@ -72,7 +72,10 @@ every week.
 `scout-season-refresh` runs a Claude subprocess with web search. The guardrails
 matter more than the agent: it may touch only allowlisted files, must never run
 git, and its `NO_DRIFT`/`DRIFTED` sentinel is advisory — the activity computes
-real drift from `git status`. The PR is always human-reviewed.
+real drift from `git status`. The activity also extracts every current,
+upcoming, or changed calendar date and requires the fetched Riot and League wiki
+content to state each date; reachable homepages do not count as evidence. The PR
+is always human-reviewed.
 
 **One auto-merges conditionally.** `queue-windows` auto-merges `open`/`reopen`
 edits, which are additive, but disarms auto-merge for any `close` edit, because

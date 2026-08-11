@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
 import { z } from "zod";
+import { parseVersionCatalog } from "../packages/homelab/src/cdk8s/src/version-catalog.ts";
 
 const RegexManagerSchema = z.object({
   description: z.string(),
@@ -26,6 +27,61 @@ const RenovateConfigSchema = z.object({
 });
 
 const root = `${import.meta.dir}/..`;
+
+test("extracts every managed structured version-catalog field", async () => {
+  const config = RenovateConfigSchema.parse(
+    await Bun.file(`${root}/renovate.json`).json(),
+  );
+  const manager = config.customManagers.find((candidate) =>
+    candidate.managerFilePatterns.includes(
+      "packages/homelab/src/cdk8s/src/version-catalog.json",
+    ),
+  );
+  if (manager === undefined) {
+    throw new Error("Structured version-catalog Renovate manager is missing");
+  }
+  const expression = manager.matchStrings[0];
+  if (expression === undefined) {
+    throw new Error("Structured version-catalog matcher is missing");
+  }
+  const catalogPath = `${root}/packages/homelab/src/cdk8s/src/version-catalog.json`;
+  const source = await Bun.file(catalogPath).text();
+  const catalog = parseVersionCatalog(JSON.parse(source));
+  const actual = [...source.matchAll(new RegExp(expression, "g"))].map(
+    (match) => ({
+      depName: match.groups?.["depName"],
+      datasource: match.groups?.["datasource"],
+      registryUrl: match.groups?.["registryUrl"],
+      versioning: match.groups?.["versioning"],
+      packageName: match.groups?.["packageName"],
+      currentValue: match.groups?.["currentValue"],
+      currentDigest: match.groups?.["currentDigest"],
+    }),
+  );
+  const expected = catalog.entries.flatMap((entry) => {
+    if (!entry.management.managed) return [];
+    const digestSeparator = entry.value.lastIndexOf("@sha256:");
+    return [
+      {
+        depName: entry.name,
+        datasource: entry.management.datasource,
+        registryUrl: entry.management.registryUrl,
+        versioning: entry.management.versioning,
+        packageName: entry.management.packageName,
+        currentValue:
+          digestSeparator === -1
+            ? entry.value
+            : entry.value.slice(0, digestSeparator),
+        currentDigest:
+          digestSeparator === -1
+            ? undefined
+            : entry.value.slice(digestSeparator + 1),
+      },
+    ];
+  });
+
+  expect(actual).toEqual(expected);
+});
 
 test("excludes all sandbox dependency files", async () => {
   const config = RenovateConfigSchema.parse(

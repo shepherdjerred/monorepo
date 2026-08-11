@@ -198,11 +198,15 @@ When a doc captures a follow-up that should be checked later, schedule it explic
 ```md
 <!-- temporal-agent-task
 {
+  "contractVersion": 2,
   "title": "Recheck Birmel post-deploy metrics",
   "provider": "claude",
   "mode": "report-only",
   "runAt": "2026-05-31T09:00:00-07:00",
   "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
+  "checks": [
+    { "id": "post-deploy-metrics", "label": "Post-deploy metrics", "required": true, "evidenceRequirement": "Every current Birmel target reports up=1.", "evidenceCollectors": [{ "id": "birmel-up", "kind": "prometheus", "query": "up{namespace=\"birmel\"}", "expectation": { "kind": "numeric", "operator": "eq", "threshold": 1, "quantifier": "all" } }] }
+  ],
   "source": {
     "docPath": "packages/docs/guides/2026-04-25_birmel-remediation-followups.md"
   },
@@ -211,7 +215,13 @@ When a doc captures a follow-up that should be checked later, schedule it explic
 -->
 ```
 
-For recurring checks, replace `runAt` with `cron` and include a stable `scheduleId`. Schedules are evaluated in `America/Los_Angeles`. To create/update the task locally as an operator:
+New tasks use `contractVersion: 2`, declare every required and optional check,
+and provide independently executed evidence collectors for each check. Every
+collector also declares a source-defined expectation. The worker evaluates that
+predicate itself; a model cannot turn adverse evidence into a passing check. For
+recurring checks, replace `runAt` with `cron` and include a stable `scheduleId`. Schedules are evaluated in
+`America/Los_Angeles`. Agents may recommend retirement, but only a human may
+pause or remove a schedule. To create/update the task locally as an operator:
 
 ```bash
 cd packages/temporal

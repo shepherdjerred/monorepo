@@ -1,20 +1,19 @@
 ---
-title: Report-only by policy, not by sandbox
-description: What actually stops a scheduled agent from changing things, and why the honest answer is uncomfortable.
+title: The agent task security boundary
+description: How credential, queue, and Kubernetes isolation constrain report-only scheduled agents.
 sidebar:
   order: 2
 ---
 
 Agent tasks are scheduled Claude or Codex runs that inspect current state and
-email a report. They are **report-only by policy, not by sandbox**.
-
-That distinction is the whole content of this page, and it is worth being blunt
-about because the comfortable version would be misleading.
+email a report. They do not run inside an OS-level command sandbox, so the
+provider can write inside its throwaway clone. External mutation is constrained
+separately through credentials, queues, and Kubernetes authorization.
 
 ```mermaid
 flowchart TD
   accTitle: Agent task lifecycle
-  accDescr: A doc block via the operator CLI, or the authenticated HTTP API, submits a task to one dispatcher, which either upserts a cron schedule or starts a one-off workflow. The workflow runs the agent read-only over a repo clone, emails the report, and may dispatch one follow-up.
+  accDescr: A doc block via the operator CLI, or the authenticated HTTP API, submits a task to one dispatcher, which either upserts a cron schedule or starts a one-off workflow. The workflow investigates over a repo clone, captures redacted evidence receipts, finalizes only from that catalog, sends a shared report, and may dispatch one follow-up.
 
   B[Doc block] --> CLI[Operator CLI]
   CLI --> DIS[Dispatcher]
@@ -22,49 +21,91 @@ flowchart TD
   DIS -->|cron| SCH[Temporal schedule]
   DIS -->|runAt| WF[Workflow run]
   SCH --> WF
-  WF --> R[Agent runs read-only<br>over a repo clone]
-  R --> E[Email report]
+  WF --> I[Investigation agent<br>over a repo clone]
+  I -->|ephemeral bearer| BKR[Parent-owned<br>provider broker]
+  BKR -->|long-lived auth| PAPI[Fixed provider<br>inference API]
+  I --> R[Redacted evidence<br>receipt catalog]
+  R --> FNL[Receipt-only<br>finalization agent]
+  FNL --> CQ[Core worker queue]
+  CQ --> E[Shared email report]
   E -.-> F[Optional follow-up task]
 ```
 
 ## What actually constrains the run
 
-The run gets `Bash` and a write-capable GitHub token. What keeps it from
-mutating the repo is:
+The run gets `Bash`, a throwaway clone of the public repository, and an
+allowlisted environment. The runtime boundary consists of:
 
 - a hard read-only prompt prefix,
-- an ephemeral non-root pod,
-- a throwaway per-run clone.
+- an ephemeral non-root pod and per-run clone,
+- `HOME` redirected into that clone so provider config is also disposable,
+- no GitHub credential, so the clone cannot push,
+- no long-lived provider credential; a per-run ephemeral credential reaches a
+  parent-owned loopback broker with fixed provider paths and origins,
+- no Postal, S3, ArgoCD, Grafana, Buildkite, Home Assistant, Bugsink, or
+  Cloudflare credential,
+- a dedicated Kubernetes service account with read-only audit RBAC and no
+  `pods/exec` permission,
+- a provider-only uid whose pod-local firewall rejects Temporal gRPC and UI
+  traffic while leaving the worker poller connected,
+- email delivery dispatched to the core worker queue, outside the agent pod.
 
 What does **not** constrain it is a schema that makes mutation unrepresentable,
 or a filesystem that refuses writes. Codex runs with
 `--sandbox danger-full-access`, because the worker pod cannot provide the
 namespace Codex's own sandbox needs.
 
-So the barrier is policy. A sufficiently confused or prompt-injected run could
-write.
+The poller runs as root with every capability dropped except the `SETUID`
+capability needed for `setpriv` to launch provider commands as uid 1001.
+Privilege escalation is disabled, and the provider exec retains no
+capabilities. Before the worker
+starts, a short-lived `NET_ADMIN` init container installs owner-matched rules
+that reject uid-1001 traffic to Temporal gRPC (`7233`) and the Temporal UI
+(`8080`), including their resolved Tailscale ingress addresses on `443`. The
+current homelab CNI is Flannel without a NetworkPolicy controller,
+so this pod-local firewall is the enforcement mechanism. The separate
+agent-worker `NetworkPolicy` documents the same narrower topology for a future
+policy-capable CNI; it is not counted as an active control today.
+
+So local filesystem writes are still possible. A sufficiently confused or
+prompt-injected run can corrupt only its disposable workdir; it does not receive
+credentials that can publish that change or mutate the operational APIs.
+
+Report delivery crosses back into the credentialed core queue. New workflow
+histories schedule their email activity there directly. Histories replayed from
+before that queue migration must preserve the original agent-queue activity for
+Temporal determinism; the activity contains no Postal or S3 credentials and
+delegates a fixed `deliverReportWorkflow` to the core queue instead. Both paths
+therefore use the shared sender without restoring delivery secrets to the agent
+pod.
 
 ## Why it is built this way anyway
 
-The flagship consumer is the daily homelab audit, and it needs credentials to do
-its job. Checking cluster, DNS, backup, and alert state means actually querying
-those systems. So Grafana, PagerDuty, ArgoCD, Bugsink, Cloudflare, Postal, and
-the mounted service-account token are all readable.
+Novel investigations can still inspect the public repository, Prometheus, the
+alert ledger, and the Kubernetes API. The mounted service-account token is the
+only operational identity available to the provider, and Kubernetes enforces
+its read-only verbs. Provider auth is selected per run but retained by the
+parent worker. Claude and Codex receive an ephemeral bearer for a loopback
+broker; the broker allows only that provider's inference paths and injects the
+long-lived credential into a fixed upstream request. A subprocess can spend
+quota through the broker but cannot extract the long-lived credential.
 
-An agent scoped tightly enough to be provably harmless would also be scoped too
-tightly to audit anything.
-
-The GitHub App key is stripped and replaced with a fresh installation token, and
-for Claude the Anthropic API key is dropped so the run bills the subscription.
-But the rest of the worker environment is inherited.
+Investigations that need ArgoCD, Buildkite, Home Assistant, or another
+authenticated source must become a typed deterministic collector. Stable
+recurring checks, including the daily homelab audit, already use that stronger
+pattern.
 
 ## The blast radius, stated plainly
 
-A deviating or prompt-injected run's blast radius is those credentials.
+A deviating or prompt-injected run can spend the selected provider quota, read
+the public repository and exposed evidence, query the read-only Kubernetes API,
+and alter its disposable clone. It cannot push that clone, send mail directly,
+write report state, or use the omitted operational APIs.
 
-The containment is that the pod is ephemeral and non-root, the clone is
-throwaway, and the run cannot persist anything beyond its report. It is real
-containment, and it is not a sandbox.
+This is still not an OS sandbox. Network egress and local process execution are
+available except for the blocked Temporal frontend/UI ports, and Kubernetes
+data readable by the audit role can be exfiltrated. The boundary limits
+authority; it does not make untrusted prompts safe.
 
 Anything that genuinely must change the repo is a
 [deterministic scheduled workflow](/reference/temporal-schedules/) instead —
@@ -72,9 +113,9 @@ code, reviewed in a PR, not an agent asked nicely.
 
 ## Why the output contract is strict
 
-Claude's output is treated as a versioned provider contract. The worker sends a
-draft-07 schema inline and accepts **only** the CLI result message's
-`structured_output` field, validated with Zod.
+Claude and Codex outputs are treated as versioned provider contracts. The worker
+sends each provider its supported schema dialect and validates the structured
+result with Zod.
 
 A successful process without that field is a failure. Prose and fenced JSON are
 not fallback formats.
@@ -83,6 +124,33 @@ Accepting a fallback would mean a model that ignored the schema still appears to
 succeed, and the report quietly degrades from structured findings to
 free-writing. Failing loudly is the only way an unattended run can tell you its
 contract broke.
+
+Contract validity alone does not establish truth. A v2 run captures and redacts
+provider tool events for research context, then separately executes the exact
+collectors declared by the authenticated or source-controlled task author.
+Command collectors use argv without a shell and validate their output contract;
+Prometheus collectors call and validate the typed API directly. Each collector
+also has a source-defined predicate: accepted and passing exit codes, typed JSON
+path assertions, or numeric Prometheus thresholds. They receive no provider or
+delivery credential, and the model cannot set the predicate result.
+
+Finalization receives that explicit catalog and a preliminary assessment. The
+independent normalizer requires every deterministic collector receipt for a
+check to be captured, successful, semantically evaluated, and cited. A provider
+receipt cannot spoof a collector even if it repeats the same command text or
+receipt ID. Unknown IDs, failed collectors, unevaluated predicates, unsupported
+findings, missing checks, or skipped required checks force a partial or failed
+report; they can never produce a clean verdict. When collection succeeds but a
+predicate fails, execution can remain complete while the normalizer overrides a
+model-authored pass and derives an attention verdict. Historical early-v2 inputs
+without collectors or predicates remain replayable but are always partial.
+Follow-ups inherit the parent collectors instead of accepting model-authored
+replacements.
+
+The model has no verdict or subject field. After evidence validation, the
+reporter maps check state and finding severity to a domain verdict, then maps
+execution state and verdict to the email subject. A model can describe what it
+found, but cannot label its own run clean.
 
 Contract failures log a bounded redacted excerpt, the result subtype and keys,
 and the schema fingerprint. The Prometheus counter uses bounded reason labels

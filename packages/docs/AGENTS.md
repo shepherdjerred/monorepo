@@ -101,7 +101,14 @@ TEMPORAL_ADDRESS=localhost:7233 bun run scripts/schedule-agent-task.ts --from-do
 
 Do not expose direct Temporal scheduling as a public ingress path. Public creation must go through the authenticated `/agent-tasks` HTTP API with `Authorization: Bearer $AGENT_TASK_API_TOKEN`.
 
-Use `"mode": "report-only"` unless the user explicitly asks for a mutating automation. Use `runAt` for one-off checks or `cron` + stable `scheduleId` for recurring checks. Scheduled agents email their report and may request one follow-up or pause their own cron only when the original task allows it.
+Use `"contractVersion": 2` and `"mode": "report-only"` for every new task,
+with declared checks, an evidence requirement, and one or more independently
+executed evidence collectors for each check. Every collector must include a
+source-defined expectation that the worker evaluates independently. Use `runAt`
+for one-off checks or `cron` + stable `scheduleId` for recurring checks.
+Scheduled agents email one evidence-backed report per run and may request one
+follow-up. They may recommend retirement, but only a human may pause or remove
+a schedule.
 
 ## Keeping Things Tidy
 

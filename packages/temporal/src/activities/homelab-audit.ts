@@ -11,18 +11,19 @@ import { emitOtel } from "#observability/log.ts";
 import { parseClaudeResultMessage } from "#shared/claude-result.ts";
 import { traceClaudeCli } from "@shepherdjerred/llm-observability/wrappers/claude-cli";
 import { workflowExecutionContext } from "#activities/temporal-context.ts";
+import { isReportDeliveryBoundaryEnvironmentKey } from "#activities/agent-task-env.ts";
 import {
   buildAuditPrompt,
   loadRunbook,
   type SectionsFilter,
 } from "./homelab-audit-prompts.ts";
-import {
-  buildAuditEmailSubject,
-  extractAuditSubjectCounts,
-  renderAuditMarkdownToHtml,
-} from "#shared/markdown-to-html.ts";
-import { resolvePostalAddresses, sendPostalEmail } from "#shared/postal.ts";
+import { extractAuditSubjectCounts } from "#shared/markdown-to-html.ts";
 import { redactSecrets } from "#shared/redact.ts";
+import {
+  createActivityReportEnvelope,
+  deliverReport,
+} from "./report-delivery.ts";
+import { synthesizeHomelabAuditEvidence } from "./homelab-audit-synthesis.ts";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import {
   archiveAuditBody,
@@ -185,7 +186,8 @@ function buildAuditAgentEnv(
     if (
       key === "GH_TOKEN" ||
       key === "GITHUB_PERSONAL_ACCESS_TOKEN" ||
-      key.startsWith("GITHUB_APP_")
+      key.startsWith("GITHUB_APP_") ||
+      isReportDeliveryBoundaryEnvironmentKey(key)
     ) {
       continue;
     }
@@ -431,20 +433,47 @@ async function runAuditAgent(
 async function sendAuditEmail(
   input: HomelabAuditEmailInput,
 ): Promise<HomelabAuditEmailResult> {
-  const { recipient, sender } = resolvePostalAddresses();
-
   const counts = extractAuditSubjectCounts(input.markdown);
-  const subject = buildAuditEmailSubject(input.date, counts);
-  const htmlBody = renderAuditMarkdownToHtml(input.markdown);
-
   try {
-    const result = await sendPostalEmail({
-      to: recipient,
-      from: sender,
-      subject,
-      htmlBody,
-      tag: "homelab-audit",
+    const report = createActivityReportEnvelope({
+      reportType: "homelab-audit",
+      title: `Homelab audit ${input.date}`,
+      scheduleId: "homelab-audit-daily",
+      startedAt: new Date().toISOString(),
+      execution: "partial",
+      verdict: "inconclusive",
+      headline:
+        counts === undefined
+          ? "Legacy audit completed without declared check coverage."
+          : `Legacy audit reported ${counts.red.toString()} red, ${counts.yellow.toString()} yellow, and ${counts.openAlerts.toString()} open alert occurrences.`,
+      checks: [
+        {
+          id: "legacy-coverage",
+          label: "Legacy undeclared audit coverage",
+          required: true,
+          status: "failed",
+          summary:
+            "The legacy markdown result has no per-check evidence contract.",
+          evidenceReceiptIds: ["legacy-markdown"],
+        },
+      ],
+      evidence: [
+        {
+          id: "legacy-markdown",
+          source: "legacy homelab audit agent",
+          observedAt: new Date().toISOString(),
+          status: "success",
+          excerpt: input.markdown.slice(0, 2000),
+        },
+      ],
+      findings: [],
+      limitations: [
+        "Legacy result replay: coverage and individual claims cannot be verified against declared receipts.",
+      ],
+      actions: [],
+      provenance: { source: "legacy homelab audit workflow" },
     });
+    const result = await deliverReport(report);
     homelabAuditEmailSentTotal.inc({ outcome: "success" });
     jsonLog("info", "Homelab audit email accepted by Postal", {
       subject: result.subject,
@@ -458,7 +487,7 @@ async function sendAuditEmail(
     };
   } catch (error: unknown) {
     homelabAuditEmailSentTotal.inc({ outcome: "failure" });
-    captureWithContext(error, { subject });
+    captureWithContext(error, { reportType: "homelab-audit" });
     throw error;
   }
 }
@@ -489,4 +518,5 @@ export const homelabAuditActivities = {
   ): Promise<HomelabAuditArchiveMetadataResult> {
     return archiveAuditMetadata(input);
   },
+  synthesizeHomelabAuditEvidence,
 };

@@ -1,14 +1,14 @@
 import { zodResponseFormat } from "openai/helpers/zod.mjs";
 import { z } from "zod/v4";
 import {
-  parseClaudeResultMessage,
-  type ClaudeResultMessage,
-} from "./claude-result.ts";
+  AgentTaskEvidenceCollectorsV2Schema,
+  AgentTaskEvidenceCriteriaV2Schema,
+} from "./agent-task-evidence-contract.ts";
+import { validateCollectorRelationships } from "./agent-task-input-validation.ts";
 import {
-  claudeDiagnostics,
-  contractErrorMessage,
-  malformedClaudeDiagnostics,
-} from "./agent-task-claude-diagnostics.ts";
+  jsonSchemaFingerprint,
+  stripClaudeSchemaAnnotations,
+} from "./agent-task-json-schema.ts";
 
 export const AgentTaskProviderSchema = z.enum(["claude", "codex"]);
 export const AgentTaskModeSchema = z.enum(["report-only"]);
@@ -25,6 +25,25 @@ export const AgentTaskSourceSchema = z.object({
   docPath: z.string().min(1).optional(),
   url: z.url().optional(),
   note: z.string().min(1).optional(),
+});
+
+const AgentTaskCheckDefinitionV2Base = {
+  id: z
+    .string()
+    .min(1)
+    .regex(/^[a-z0-9][a-z0-9-]*$/),
+  label: z.string().min(1),
+  required: z.boolean(),
+  evidenceRequirement: z.string().min(1),
+};
+
+// evidenceCriteria and evidenceCollectors are optional only for replaying v2
+// inputs recorded before independent collection existed. New API and
+// source-defined inputs use AgentTaskInputV2Schema, which requires collectors.
+export const AgentTaskCheckDefinitionV2Schema = z.object({
+  ...AgentTaskCheckDefinitionV2Base,
+  evidenceCriteria: AgentTaskEvidenceCriteriaV2Schema.optional(),
+  evidenceCollectors: AgentTaskEvidenceCollectorsV2Schema.optional(),
 });
 
 const AgentTaskFollowUpSchemaBase = z.object({
@@ -57,25 +76,28 @@ export const AgentTaskFollowUpSchema = AgentTaskFollowUpSchemaBase.superRefine(
   },
 );
 
-export const AgentTaskInputSchema = z
-  .object({
-    title: z.string().min(1),
-    prompt: z.string().min(1),
-    provider: AgentTaskProviderSchema,
-    mode: AgentTaskModeSchema.default("report-only"),
-    repo: AgentTaskRepoSchema,
-    runAt: z.iso.datetime({ offset: true }).optional(),
-    cron: z.string().min(1).optional(),
-    scheduleId: z.string().min(1).optional(),
-    source: AgentTaskSourceSchema.optional(),
-    model: z.string().min(1).optional(),
-    maxTurns: z.number().int().positive().optional(),
-    agentTimeoutMinutes: z.number().int().positive().max(90).optional(),
-    idempotencyKey: z.string().min(1).optional(),
-    allowSelfCancel: z.boolean().default(false),
-    emailSubjectPrefix: z.string().min(1).optional(),
-  })
-  .superRefine((value, ctx) => {
+const AgentTaskInputBaseSchema = z.object({
+  contractVersion: z.literal(2).optional(),
+  title: z.string().min(1),
+  prompt: z.string().min(1),
+  checks: z.array(AgentTaskCheckDefinitionV2Schema).min(1).optional(),
+  provider: AgentTaskProviderSchema,
+  mode: AgentTaskModeSchema.default("report-only"),
+  repo: AgentTaskRepoSchema,
+  runAt: z.iso.datetime({ offset: true }).optional(),
+  cron: z.string().min(1).optional(),
+  scheduleId: z.string().min(1).optional(),
+  source: AgentTaskSourceSchema.optional(),
+  model: z.string().min(1).optional(),
+  maxTurns: z.number().int().positive().optional(),
+  agentTimeoutMinutes: z.number().int().positive().max(90).optional(),
+  idempotencyKey: z.string().min(1).optional(),
+  allowSelfCancel: z.boolean().default(false),
+  emailSubjectPrefix: z.string().min(1).optional(),
+});
+
+export const AgentTaskInputSchema = AgentTaskInputBaseSchema.superRefine(
+  (value, ctx) => {
     if (value.runAt !== undefined && value.cron !== undefined) {
       ctx.addIssue({
         code: "custom",
@@ -83,13 +105,154 @@ export const AgentTaskInputSchema = z
         path: ["runAt"],
       });
     }
-  });
+    if (value.contractVersion === 2 && value.checks === undefined) {
+      ctx.addIssue({
+        code: "custom",
+        message: "agent task v2 requires declared checks",
+        path: ["checks"],
+      });
+    }
+    if (value.contractVersion !== 2 && value.checks !== undefined) {
+      ctx.addIssue({
+        code: "custom",
+        message: "declared checks require contractVersion 2",
+        path: ["contractVersion"],
+      });
+    }
+    if (value.contractVersion === 2 && value.allowSelfCancel) {
+      ctx.addIssue({
+        code: "custom",
+        message: "agent task v2 cannot self-cancel a schedule",
+        path: ["allowSelfCancel"],
+      });
+    }
+    const checkIds = new Set(value.checks?.map((check) => check.id));
+    if (checkIds.size !== (value.checks?.length ?? 0)) {
+      ctx.addIssue({
+        code: "custom",
+        message: "agent task check ids must be unique",
+        path: ["checks"],
+      });
+    }
+    for (const [checkIndex, check] of (value.checks ?? []).entries()) {
+      for (const [collectorIndex, collector] of (
+        check.evidenceCollectors ?? []
+      ).entries()) {
+        validateCollectorRelationships(
+          checkIndex,
+          collectorIndex,
+          collector,
+          ctx,
+        );
+      }
+    }
+  },
+);
+
+export const AgentTaskInputV2Schema = AgentTaskInputSchema.superRefine(
+  (value, ctx) => {
+    if (value.contractVersion !== 2) {
+      ctx.addIssue({
+        code: "custom",
+        message: "contractVersion 2 is required",
+        path: ["contractVersion"],
+      });
+    }
+    for (const [index, check] of (value.checks ?? []).entries()) {
+      if (check.evidenceCriteria !== undefined) {
+        ctx.addIssue({
+          code: "custom",
+          message:
+            "evidenceCriteria is replay-only; new v2 checks require independent collectors",
+          path: ["checks", index, "evidenceCriteria"],
+        });
+      }
+      if (check.evidenceCollectors === undefined) {
+        ctx.addIssue({
+          code: "custom",
+          message:
+            "new v2 checks require independently executed evidenceCollectors",
+          path: ["checks", index, "evidenceCollectors"],
+        });
+        continue;
+      }
+      for (const [
+        collectorIndex,
+        collector,
+      ] of check.evidenceCollectors.entries()) {
+        if (collector.expectation === undefined) {
+          ctx.addIssue({
+            code: "custom",
+            message:
+              "new v2 evidence collectors require a source-defined expectation",
+            path: [
+              "checks",
+              index,
+              "evidenceCollectors",
+              collectorIndex,
+              "expectation",
+            ],
+          });
+        }
+      }
+    }
+  },
+);
 
 export const AgentTaskResultPayloadSchema = z.object({
   markdown: z.string().min(1),
   followUp: AgentTaskFollowUpSchema.optional(),
   cancelCron: z.boolean().optional(),
   cancelReason: z.string().min(1).optional(),
+});
+
+export const AgentTaskCheckResultV2Schema = z.object({
+  id: z.string().min(1),
+  status: z.enum(["passed", "failed", "skipped"]),
+  summary: z.string().min(1),
+  evidenceReceiptIds: z.array(z.string().min(1)),
+});
+
+export const AgentTaskFindingV2Schema = z.object({
+  severity: z.enum(["info", "warning", "critical"]),
+  summary: z.string().min(1),
+  detail: z.string().min(1).optional(),
+  evidenceReceiptIds: z.array(z.string().min(1)),
+});
+
+const AgentTaskFollowUpV2SchemaBase = z.object({
+  title: z.string().min(1),
+  prompt: z.string().min(1),
+  provider: AgentTaskProviderSchema.optional(),
+  runAt: z.iso.datetime({ offset: true }).optional(),
+  cron: z.string().min(1).optional(),
+  model: z.string().min(1).optional(),
+  maxTurns: z.number().int().positive().optional(),
+  agentTimeoutMinutes: z.number().int().positive().max(90).optional(),
+});
+
+export const AgentTaskFollowUpV2Schema =
+  AgentTaskFollowUpV2SchemaBase.superRefine((value, ctx) => {
+    const scheduleFieldCount =
+      Number(value.runAt !== undefined) + Number(value.cron !== undefined);
+    if (scheduleFieldCount !== 1) {
+      ctx.addIssue({
+        code: "custom",
+        message: "followUp must set exactly one of runAt or cron",
+        path: ["runAt"],
+      });
+    }
+  });
+
+export const AgentTaskResultPayloadV2Schema = z.object({
+  headline: z.string().min(1),
+  checks: z.array(AgentTaskCheckResultV2Schema).min(1),
+  findings: z.array(AgentTaskFindingV2Schema),
+  limitations: z.array(z.string().min(1)),
+  actions: z.array(z.string().min(1)),
+  synthesis: z.string().min(1).optional(),
+  followUp: AgentTaskFollowUpV2Schema.optional(),
+  retirementRecommendation: z.string().min(1).optional(),
 });
 
 const AgentTaskWireFollowUpSchema = z
@@ -127,8 +290,50 @@ export const AgentTaskWireResultPayloadSchema = z.object({
   cancelReason: z.string().min(1).nullable(),
 });
 
+const AgentTaskWireFollowUpV2Schema = z
+  .object({
+    title: z.string().min(1),
+    prompt: z.string().min(1),
+    provider: AgentTaskProviderSchema.nullable(),
+    runAt: z.iso.datetime({ offset: true }).nullable(),
+    cron: z.string().min(1).nullable(),
+    model: z.string().min(1).nullable(),
+    maxTurns: z.number().int().positive().nullable(),
+    agentTimeoutMinutes: z.number().int().positive().max(90).nullable(),
+  })
+  .superRefine((value, ctx) => {
+    const scheduleFieldCount =
+      Number(value.runAt !== null) + Number(value.cron !== null);
+    if (scheduleFieldCount !== 1) {
+      ctx.addIssue({
+        code: "custom",
+        message: "followUp must set exactly one of runAt or cron",
+        path: ["runAt"],
+      });
+    }
+  });
+
+export const AgentTaskWireResultPayloadV2Schema = z.object({
+  headline: z.string().min(1),
+  checks: z.array(AgentTaskCheckResultV2Schema).min(1),
+  findings: z.array(
+    z.object({
+      severity: z.enum(["info", "warning", "critical"]),
+      summary: z.string().min(1),
+      detail: z.string().min(1).nullable(),
+      evidenceReceiptIds: z.array(z.string().min(1)),
+    }),
+  ),
+  limitations: z.array(z.string().min(1)),
+  actions: z.array(z.string().min(1)),
+  synthesis: z.string().min(1).nullable(),
+  followUp: AgentTaskWireFollowUpV2Schema.nullable(),
+  retirementRecommendation: z.string().min(1).nullable(),
+});
+
 export type AgentTaskProvider = z.infer<typeof AgentTaskProviderSchema>;
 export type AgentTaskInput = z.infer<typeof AgentTaskInputSchema>;
+export type AgentTaskInputV2 = z.infer<typeof AgentTaskInputV2Schema>;
 export type AgentTaskFollowUp = z.infer<typeof AgentTaskFollowUpSchema>;
 export type AgentTaskResultPayload = z.infer<
   typeof AgentTaskResultPayloadSchema
@@ -136,6 +341,24 @@ export type AgentTaskResultPayload = z.infer<
 export type AgentTaskWireResultPayload = z.infer<
   typeof AgentTaskWireResultPayloadSchema
 >;
+export type AgentTaskFollowUpV2 = z.infer<typeof AgentTaskFollowUpV2Schema>;
+export type AgentTaskResultPayloadV2 = z.infer<
+  typeof AgentTaskResultPayloadV2Schema
+>;
+export type AgentTaskWireResultPayloadV2 = z.infer<
+  typeof AgentTaskWireResultPayloadV2Schema
+>;
+
+export function isAgentTaskInputV2(input: AgentTaskInput): boolean {
+  return input.contractVersion === 2;
+}
+
+export function agentTaskChecksV2(input: AgentTaskInput) {
+  if (!isAgentTaskInputV2(input)) {
+    throw new Error("agent task does not use contractVersion 2");
+  }
+  return z.array(AgentTaskCheckDefinitionV2Schema).min(1).parse(input.checks);
+}
 
 export type AgentTaskStartResult =
   | {
@@ -191,32 +414,20 @@ export const AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX: Record<string, unknown> = z
       .json_schema.schema,
   );
 
+export const AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX_V2: Record<string, unknown> = z
+  .record(z.string(), z.unknown())
+  .parse(
+    zodResponseFormat(
+      AgentTaskWireResultPayloadV2Schema,
+      "agent_task_result_v2",
+    ).json_schema.schema,
+  );
+
 // Claude's `--json-schema` contract is intentionally independent from Codex's
 // strict wire schema. Draft-07 is the provider's documented compatibility
 // target. `$schema` and `format` are removed because the CLI consumes the
 // payload shape, not dialect metadata or nonessential annotations; the final
 // semantic check remains AgentTaskResultPayloadSchema below.
-export function stripClaudeSchemaAnnotations(value: unknown): unknown {
-  if (Array.isArray(value)) {
-    return value.map((entry) => stripClaudeSchemaAnnotations(entry));
-  }
-  const record = z.record(z.string(), z.unknown()).safeParse(value);
-  if (!record.success) {
-    return value;
-  }
-  const normalized: Record<string, unknown> = {};
-  for (const [key, entry] of Object.entries(record.data)) {
-    if (
-      (key === "$schema" && typeof entry === "string") ||
-      (key === "format" && typeof entry === "string")
-    ) {
-      continue;
-    }
-    normalized[key] = stripClaudeSchemaAnnotations(entry);
-  }
-  return normalized;
-}
-
 const agentTaskClaudeJsonSchema = stripClaudeSchemaAnnotations(
   z.toJSONSchema(AgentTaskResultPayloadSchema, { target: "draft-7" }),
 );
@@ -224,285 +435,15 @@ export const AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE: Record<string, unknown> = z
   .record(z.string(), z.unknown())
   .parse(agentTaskClaudeJsonSchema);
 
-function sortJson(value: unknown): unknown {
-  if (Array.isArray(value)) {
-    return value.map((item) => sortJson(item));
-  }
-  if (typeof value === "object" && value !== null) {
-    const sorted: Record<string, unknown> = {};
-    for (const [key, entryValue] of Object.entries(value).toSorted(([a], [b]) =>
-      a.localeCompare(b),
-    )) {
-      sorted[key] = sortJson(entryValue);
-    }
-    return sorted;
-  }
-  return value;
-}
-
-const claudeSchemaHasher = new Bun.CryptoHasher("sha256");
-claudeSchemaHasher.update(
-  JSON.stringify(sortJson(AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE)),
+const agentTaskClaudeJsonSchemaV2 = stripClaudeSchemaAnnotations(
+  z.toJSONSchema(AgentTaskResultPayloadV2Schema, { target: "draft-7" }),
 );
-export const AGENT_TASK_CLAUDE_SCHEMA_FINGERPRINT = claudeSchemaHasher
-  .digest("hex")
-  .slice(0, 16);
+export const AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE_V2: Record<string, unknown> =
+  z.record(z.string(), z.unknown()).parse(agentTaskClaudeJsonSchemaV2);
 
-// Codex-only: converts the OpenAI-strict/nullable wire shape into the
-// canonical plain-optional shape. Claude's output already parses directly
-// against AgentTaskResultPayloadSchema (see parseAgentTaskResultPayload).
-function normalizeAgentTaskFollowUp(
-  followUp: AgentTaskWireResultPayload["followUp"],
-): AgentTaskFollowUp | undefined {
-  if (followUp === null) {
-    return undefined;
-  }
-  return AgentTaskFollowUpSchema.parse({
-    title: followUp.title,
-    prompt: followUp.prompt,
-    ...(followUp.provider === null ? {} : { provider: followUp.provider }),
-    ...(followUp.runAt === null ? {} : { runAt: followUp.runAt }),
-    ...(followUp.cron === null ? {} : { cron: followUp.cron }),
-    ...(followUp.model === null ? {} : { model: followUp.model }),
-    ...(followUp.maxTurns === null ? {} : { maxTurns: followUp.maxTurns }),
-    ...(followUp.agentTimeoutMinutes === null
-      ? {}
-      : { agentTimeoutMinutes: followUp.agentTimeoutMinutes }),
-  });
-}
-
-export function parseAgentTaskResultPayload(
-  raw: unknown,
-  provider: AgentTaskProvider,
-): AgentTaskResultPayload {
-  if (raw === undefined || raw === "") {
-    throw new Error(
-      "agent produced no structured output (expected --json-schema structured_output / --output-schema file)",
-    );
-  }
-  try {
-    const decoded: unknown = typeof raw === "string" ? JSON.parse(raw) : raw;
-    if (provider === "claude") {
-      // Claude's output already matches the canonical plain-optional shape
-      // (AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE) — no wire/normalize step.
-      return AgentTaskResultPayloadSchema.parse(decoded);
-    }
-    const wire = AgentTaskWireResultPayloadSchema.parse(decoded);
-    const followUp = normalizeAgentTaskFollowUp(wire.followUp);
-    return AgentTaskResultPayloadSchema.parse({
-      markdown: wire.markdown,
-      ...(followUp === undefined ? {} : { followUp }),
-      ...(wire.cancelCron === null ? {} : { cancelCron: wire.cancelCron }),
-      ...(wire.cancelReason === null
-        ? {}
-        : { cancelReason: wire.cancelReason }),
-    });
-  } catch (error: unknown) {
-    throw new Error(
-      `Failed to parse agent task JSON payload: ${error instanceof Error ? error.message : String(error)}`,
-      { cause: error },
-    );
-  }
-}
-
-function structuredOutputFromClaudeResult(
-  resultMessage: ClaudeResultMessage,
-): unknown {
-  // Keep the provider boundary unknown all the way to the semantic validator;
-  // null, arrays, and scalar values must produce the same contract diagnostic
-  // as any other malformed structured output.
-  return resultMessage.structured_output;
-}
-
-function parseClaudeContractInput(
-  stdout: string,
-  redactExcerpt: (value: string) => string,
-): {
-  resultMessage: ClaudeResultMessage;
-  diagnostics: ClaudeOutputContractDiagnostics;
-  structuredOutput: unknown;
-} {
-  let resultMessage: ClaudeResultMessage;
-  try {
-    resultMessage = parseClaudeResultMessage(stdout);
-  } catch (error: unknown) {
-    const diagnostics = malformedClaudeDiagnostics(
-      stdout,
-      AGENT_TASK_CLAUDE_SCHEMA_FINGERPRINT,
-      redactExcerpt,
-    );
-    throw new AgentTaskOutputContractError(
-      "invalid-result-envelope",
-      diagnostics,
-      `${contractErrorMessage("invalid-result-envelope", diagnostics)}: ${error instanceof Error ? error.message : String(error)}`,
-      { cause: error },
-    );
-  }
-  const diagnostics = claudeDiagnostics(
-    resultMessage,
-    AGENT_TASK_CLAUDE_SCHEMA_FINGERPRINT,
-    redactExcerpt,
-  );
-  return {
-    resultMessage,
-    diagnostics,
-    structuredOutput: structuredOutputFromClaudeResult(resultMessage),
-  };
-}
-
-export function parseClaudeAgentTaskResult(
-  stdout: string,
-  redactExcerpt: (value: string) => string = (value) => value,
-): AgentTaskResultPayload {
-  const { resultMessage, diagnostics, structuredOutput } =
-    parseClaudeContractInput(stdout, redactExcerpt);
-  if (resultMessage.is_error === true) {
-    throw new AgentTaskOutputContractError(
-      "is-error",
-      diagnostics,
-      contractErrorMessage("is-error", diagnostics),
-    );
-  }
-  if (structuredOutput === undefined) {
-    throw new AgentTaskOutputContractError(
-      "missing-structured-output",
-      diagnostics,
-      contractErrorMessage("missing-structured-output", diagnostics),
-    );
-  }
-  try {
-    return parseAgentTaskResultPayload(structuredOutput, "claude");
-  } catch (error: unknown) {
-    throw new AgentTaskOutputContractError(
-      "invalid-structured-output",
-      diagnostics,
-      `${contractErrorMessage("invalid-structured-output", diagnostics)}: ${error instanceof Error ? error.message : String(error)}`,
-      { cause: error },
-    );
-  }
-}
-
-async function shortSha256(input: string): Promise<string> {
-  const digest = await crypto.subtle.digest(
-    "SHA-256",
-    new TextEncoder().encode(input),
-  );
-  const bytes = new Uint8Array(digest);
-  return Array.from(bytes.slice(0, 10), (byte) =>
-    byte.toString(16).padStart(2, "0"),
-  ).join("");
-}
-
-export function reportOnlyPrompt(
-  input: AgentTaskInput,
-  workdir: string,
-): string {
-  const runtimeLines =
-    input.agentTimeoutMinutes === undefined
-      ? []
-      : [
-          `Runtime budget: ${String(input.agentTimeoutMinutes)} minutes.`,
-          "- Keep every shell command narrowly scoped and time-bounded; use the `timeout` command when available.",
-          "- If a command is slow or would exceed the budget, stop that section, mark it Skipped or Failed, and return the partial report.",
-          "",
-        ];
-  const sourceLines =
-    input.source === undefined
-      ? []
-      : [
-          "Source context:",
-          input.source.docPath === undefined
-            ? undefined
-            : `- docPath: ${input.source.docPath}`,
-          input.source.url === undefined
-            ? undefined
-            : `- url: ${input.source.url}`,
-          input.source.note === undefined
-            ? undefined
-            : `- note: ${input.source.note}`,
-          "",
-        ].filter((line) => line !== undefined);
-
-  return [
-    "You are running as a delayed Temporal agent task.",
-    "",
-    "Hard constraints:",
-    "- This task is report-only.",
-    "- Do not edit files, commit, push, open pull requests, open issues, or mutate live systems.",
-    "- You may inspect the checked-out repository and query read-only operational tools when the prompt requires current state.",
-    "- Revalidate the source context first; if the task is already resolved, report that clearly.",
-    "- If a recurring schedule is no longer useful, set cancelCron=true and explain why in cancelReason.",
-    "- If one future report-only follow-up is needed, set followUp with either runAt or cron.",
-    "- Return only JSON matching the provided schema.",
-    "",
-    ...runtimeLines,
-    `Task title: ${input.title}`,
-    `Repository workdir: ${workdir}`,
-    "",
-    ...sourceLines,
-    "User prompt:",
-    input.prompt,
-  ].join("\n");
-}
-
-export function sanitizeTemporalIdPart(input: string): string {
-  return input
-    .trim()
-    .toLowerCase()
-    .replaceAll(/[^a-z0-9_-]+/g, "-")
-    .replaceAll(/^-+|-+$/g, "")
-    .slice(0, 48);
-}
-
-export async function agentTaskWorkflowId(
-  input: AgentTaskInput,
-): Promise<string> {
-  const prefix = sanitizeTemporalIdPart(input.title) || "agent-task";
-  const key =
-    input.idempotencyKey ??
-    JSON.stringify(
-      sortJson({
-        provider: input.provider,
-        agentTimeoutMinutes: input.agentTimeoutMinutes,
-        title: input.title,
-        prompt: input.prompt,
-        runAt: input.runAt,
-        repo: input.repo,
-        source: input.source,
-      }),
-    );
-  return `agent-task-${prefix}-${await shortSha256(key)}`;
-}
-
-// Memo marker set on every schedule created via the /agent-tasks API (see
-// startOrScheduleAgentTask). Orphan detection uses it to tell a dynamic,
-// legitimately-undeclared agent-task schedule apart from a *declared*,
-// source-controlled schedule that also runs `agentTaskWorkflow` (today that is
-// homelab-audit-daily). Without this marker, keying off the workflow type alone
-// would silently exempt a declared agent-task schedule that was removed from
-// SCHEDULES without being added to DELETED_SCHEDULE_IDS — the exact drift the
-// orphan gauge exists to catch.
-export const DYNAMIC_AGENT_TASK_MEMO_KEY = "dynamicAgentTask";
-
-export async function agentTaskScheduleId(
-  input: AgentTaskInput,
-): Promise<string> {
-  if (input.scheduleId !== undefined) {
-    return input.scheduleId;
-  }
-  const prefix = sanitizeTemporalIdPart(input.title) || "agent-task";
-  const key =
-    input.idempotencyKey ??
-    JSON.stringify(
-      sortJson({
-        provider: input.provider,
-        agentTimeoutMinutes: input.agentTimeoutMinutes,
-        title: input.title,
-        prompt: input.prompt,
-        cron: input.cron,
-        repo: input.repo,
-        source: input.source,
-      }),
-    );
-  return `agent-task-${prefix}-${await shortSha256(key)}`;
-}
+export const AGENT_TASK_CLAUDE_SCHEMA_FINGERPRINT = jsonSchemaFingerprint(
+  AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE,
+);
+export const AGENT_TASK_CLAUDE_SCHEMA_V2_FINGERPRINT = jsonSchemaFingerprint(
+  AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE_V2,
+);

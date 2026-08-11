@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { parseVersionsSource } from "./pin-candidates.ts";
+import { parseVersionCatalogSource } from "./pin-candidates.ts";
 
 export const SCOUT_VERSION_PATTERN = /^2\.0\.0-\d+$/;
 export const CANONICAL_DIGEST_PATTERN = /^sha256:[a-f0-9]{64}$/;
@@ -173,7 +173,7 @@ export function resolveBackendDigest(
     }
     return candidateDigest;
   }
-  const pin = parseVersionsSource(versionsSource).get(
+  const pin = parseVersionCatalogSource(versionsSource).get(
     "shepherdjerred/scout-for-lol/beta",
   );
   const digest = pin?.split("@")[1];
@@ -184,7 +184,7 @@ export function resolveBackendDigest(
 }
 
 export function resolveProdPin(versionsSource: string): string {
-  const pin = parseVersionsSource(versionsSource).get(
+  const pin = parseVersionCatalogSource(versionsSource).get(
     "shepherdjerred/scout-for-lol/prod",
   );
   if (pin === undefined) {

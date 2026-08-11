@@ -6,13 +6,15 @@ Temporal workflow worker for the monorepo. Consolidates ad-hoc scheduling (K8s C
 
 Runs under **Bun**. The Temporal TypeScript SDK supports Bun for workers, workflows, activities, and client.
 
-Production uses the same Bun image in three Kubernetes Deployments selected by
-`TEMPORAL_WORKER_ROLE`: `core` owns the `default` and `agent-task` queues plus
-schedules and HTTP/event surfaces; `glitter` owns `glitter-corpus` and
+Production uses the same Bun image in four Kubernetes Deployments selected by
+`TEMPORAL_WORKER_ROLE`: `core` owns the `default` queue plus schedules and
+HTTP/event surfaces; `agent` owns the `agent-task` queue under a read-only
+service account with no pod-exec roles; `glitter` owns `glitter-corpus` and
 `glitter-context`; `maintenance` owns the serial `maintenance` queue. The
 default `all` role preserves the single-process local development behavior.
-Keep new queue ownership explicit in `worker.ts` so a heavy Glitter failure or
-maintenance subprocess cannot take down core automation.
+Keep new queue ownership explicit in `worker.ts` so a provider subprocess,
+heavy Glitter failure, or maintenance subprocess cannot take down core
+automation or inherit another role's Kubernetes permissions.
 
 ## Structure
 
@@ -126,7 +128,7 @@ bodies to S3 (`llm-archive` bucket) and forwards a slim span to Tempo.
 - **SDK calls** — wrap with `traceAnthropic` / `traceOpenAi` from
   `@shepherdjerred/llm-observability` (deps-summary does this).
 - **`claude -p` subprocesses** — call `traceClaudeCli` with the captured
-  stdout after exit (agent-task, homelab-audit, scout-season-refresh). Spans
+  stdout after exit (agent-task and Scout season refresh). Spans
   carry `gen_ai.system="claude_code_cli"`, which
   distinguishes subscription-billed CLI runs from API-billed `anthropic`, plus
   `llm.cost_usd` from the result message.
@@ -158,7 +160,7 @@ Workflow:
 ## Environment Variables
 
 - `TEMPORAL_ADDRESS` — Temporal server gRPC address (default: `temporal-server.temporal.svc.cluster.local:7233`)
-- `TEMPORAL_WORKER_ROLE` — process role: `all` (default/local), `core`, or `glitter`. Invalid values fail startup.
+- `TEMPORAL_WORKER_ROLE` — process role: `all` (default/local), `core`, `agent`, `glitter`, or `maintenance`. Invalid values fail startup.
 - `HA_URL` — Home Assistant URL
 - `HA_TOKEN` — Home Assistant long-lived access token
 - `GOLINK_URL` — Golink service URL
@@ -167,7 +169,7 @@ Workflow:
 - `REVIEW_SIGNAL_ARCHIVE_BUCKET` — S3/SeaweedFS bucket the review-signal collector writes NDJSON archives to (`review-signals/<temporal-run-id>.ndjson` — the object is keyed by the Temporal workflow run id, with no wall-clock component, so an activity retry overwrites idempotently rather than forking a second object; each NDJSON event carries its own `ts`). Optional — defaults to the existing `llm-archive` bucket (namespaced by the key prefix), so no new bucket/env is needed to start collecting
 - `GITHUB_APP_ID`, `GITHUB_APP_INSTALLATION_ID`, `GITHUB_APP_PRIVATE_KEY` — GitHub App credentials used to mint short-lived installation tokens for GitHub automation so GitHub attributes those actions to the app bot.
 - `OPENAI_API_KEY` — OpenAI API key
-- `CLAUDE_CODE_OAUTH_TOKEN` — Claude Code subscription token. Auth for every `claude -p` activity (homelab-audit, generic agent-task, scout-season-refresh). These activities defensively strip any `ANTHROPIC_API_KEY` from the subprocess env so work bills against the subscription, not direct-API credits; the temporal worker does not wire `ANTHROPIC_API_KEY`.
+- `CLAUDE_CODE_OAUTH_TOKEN` — Claude Code subscription token. Auth for generic agent-task and Scout season subprocesses. These activities defensively strip any `ANTHROPIC_API_KEY` from the subprocess env so work bills against the subscription, not direct-API credits; the temporal worker does not wire `ANTHROPIC_API_KEY`.
 - `POSTAL_HOST`, `POSTAL_API_KEY` — Postal email service
 - `RECIPIENT_EMAIL`, `SENDER_EMAIL` — Email addresses for dependency summary and homelab audit
 - `AGENT_TASK_API_TOKEN` — required bearer token for the authenticated `/agent-tasks` scheduling API on port 9467
@@ -194,9 +196,14 @@ Workflow:
 
 ## Homelab audit (daily)
 
-`homelab-audit-daily` (cron `30 6 * * *` PT) now runs through the generic `agentTaskWorkflow` on the `agent-task` queue. It checks out `shepherdjerred/monorepo`, asks Claude to follow `packages/docs/guides/2026-04-04_homelab-audit-runbook.md`, renders markdown to HTML, and sends a Postal email with tag `agent-task`. The previous bespoke `runHomelabAuditWorkflow` remains in-tree as a rollback path until the generic workflow is proven in production.
-
-The activity (`src/activities/homelab-audit.ts`) follows the shared `claude -p` subprocess lifecycle (Bun.spawn `claude -p`, 10 s heartbeats, stderr line pump with token redaction, parsed `--output-format json` result, Sentry capture on failure, Prom metrics) — the same pattern as the generic agent-task activity.
+`homelab-audit-daily` (cron `30 6 * * *` PT) runs the deterministic
+`runHomelabAuditWorkflow` on the default queue. Typed collectors own the six
+required checks: Prometheus alerts, durable alert occurrences, Temporal
+failures/stalls, Kubernetes workload health, ArgoCD state, and Buildkite main
+failures with failed-job logs. An optional model call may write only the
+80-word synthesis over those collector results; it cannot choose the verdict.
+Pre-versioned legacy executions still replay through the old agent activity and
+are delivered through the shared reporter as partial.
 
 ## Temporal workflow failure → Alerts occurrences
 
@@ -238,7 +245,17 @@ Narrow, dedicated APIs such as the authenticated sleep webhook are allowed;
 agent-task creation must still go through `/agent-tasks` with
 `Authorization: Bearer $AGENT_TASK_API_TOKEN`.
 
-Inputs use `runAt` for one-off tasks or `cron` + stable `scheduleId` for recurring tasks. Recurring schedules use `America/Los_Angeles`. Agents may return `followUp` to schedule one more report-only task. Agents may return `cancelCron: true` only when the original input has `allowSelfCancel: true`; cancellation pauses the Temporal Schedule rather than deleting it.
+New inputs use `contractVersion: 2`, declare checks and independently executed
+command or Prometheus collectors, and give every collector a source-defined
+expectation. Command expectations evaluate an accepted exit code or typed JSON
+path assertions; Prometheus expectations evaluate numeric samples with an
+`all` or `any` quantifier. The worker owns those predicates and overrides a
+model-authored pass when observed data fails one. Use `runAt` for one-off tasks
+or `cron` + stable `scheduleId` for recurring tasks. Recurring schedules use `America/Los_Angeles`. Agents may
+return one report-only `followUp`, which inherits the parent collectors, or a
+`retirementRecommendation`; they cannot
+pause, cancel, or delete schedules. The v1 decoder remains only for Temporal
+history replay, and its undeclared output is always reported as partial.
 
 **`claude -p --json-schema` gotcha (claude-code).** Pass the schema **inline** (`--json-schema "$(cat schema.json)"`), never a file path — a path wedges the CLI (zero bytes on stdout+stderr until killed) and was the 100% root cause of the agent-task / alert-remediation 30-min SIGTERM(143) hangs (PR #1264). The validated object is in the result message's **`structured_output`** field, NOT `result` (which is the model's prose) — read `parseClaudeResultMessage(stdout).structured_output` and Zod-validate it. A successful process without `structured_output` is a contract failure; never parse prose or fenced JSON. Keep `--output-format stream-json --verbose` and pump **stdout** line-by-line for liveness: `claude -p` is silent on stderr, so a stderr-only idle detector is structurally blind. The Claude schema is draft-07 with `$schema` and `format` annotations removed, and the image pin is `2.1.220` (minimum `2.1.205`).
 
@@ -261,30 +278,82 @@ must complete through the deployed Claude parser and deliver the tagged
 `[agent-task-canary]` report-only email. It does not accept or forward a local
 OAuth token; authentication is verified in the deployed worker. Keep
 `packages/docs/todos/homelab-audit-agent-task-production-verification.md` open
-until the canary and seven consecutive daily audit runs pass; a local dry run
-does not satisfy this verification.
+until the canary and independent seven-day agent-task queue bake pass; the
+deterministic daily homelab audit no longer exercises this provider contract.
 
-**Local dev loop (no Temporal, no cluster)** — see `scripts/run-homelab-audit-local.ts`:
+After shared reporting changes, also run `bun run
+canary:report-reliability` with the same production Temporal environment. It
+starts tagged v2 success, partial, and intentional-failure runs. Acceptance
+requires all three emails, matching Temporal states, typed S3 report state and
+Postal receipts, plus current delivery/freshness metrics.
+
+Before enabling freshness enforcement in a namespace, run the read-only live
+inventory and reconcile every live-only self-authored schedule into the
+source-defined registry. The command never pauses, deletes, or updates a
+schedule:
 
 ```bash
-# Mac already has every CLI the prompt invokes (kubectl, talosctl, tofu via op
-# run, gh). DRY_RUN=1 writes /tmp/homelab-audit-<ts>.{md,html} instead of
-# POSTing to Postal.
+TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443 TEMPORAL_TLS=true \
+  bun run inventory:report-schedules
+```
+
+**Local deterministic audit (no Temporal)** — see `scripts/run-homelab-audit-local.ts`:
+
+```bash
+# DRY_RUN=1 runs the same typed collectors and report builder as production,
+# then writes /tmp/homelab-audit-<ts>.{txt,html} without delivery.
 op run --env-file=.env.audit -- DRY_RUN=1 bun run scripts/run-homelab-audit-local.ts
 
-# Section-filter for cheap iteration (no full 25-min run while tuning the prompt):
-op run --env-file=.env.audit -- DRY_RUN=1 bun run scripts/run-homelab-audit-local.ts --sections=1,9,13
-
-# Cheap-model iteration:
-op run --env-file=.env.audit -- DRY_RUN=1 bun run scripts/run-homelab-audit-local.ts --haiku
-
-# Real Postal send (use a +audit-test alias for filterability):
+# Real send through the shared report sender (use a +audit-test alias):
 op run --env-file=.env.audit -- bun run scripts/run-homelab-audit-local.ts
 ```
 
-Set `RUNBOOK_PATH=packages/docs/guides/2026-04-04_homelab-audit-runbook.md` in `.env.audit` to use the in-tree runbook (no GitHub round-trip).
+**Cluster RBAC** — the core and agent worker SAs get the cluster-wide read-only
+`temporal-worker-audit-reader` ClusterRole (see
+`packages/homelab/src/cdk8s/src/resources/temporal/audit-rbac.ts`). A separate
+TaskNotes namespace Role grants `pods/exec` only to the core worker so the
+engine-status token never leaves that pod. The agent worker is intentionally
+absent from every pod-exec RoleBinding; provider subprocesses therefore cannot
+exec into TaskNotes or deterministic maintenance targets even if they disregard
+the report-only prompt. Its deployment env is also explicit: provider auth,
+basic runtime/TLS settings, and non-secret Prometheus/alert-dashboard endpoints
+only. Provider auth remains in the parent worker, which exposes one
+provider-specific loopback broker per run; the uid-1001 subprocess receives only
+an ephemeral broker credential. The broker accepts only the provider's fixed
+inference paths and injects the real credential into a fixed upstream origin.
+The Temporal poller runs as root with every capability dropped except `SETUID`;
+`setpriv` launches provider commands as uid 1001 with no retained capabilities.
+A `NET_ADMIN` init container
+installs owner-matched pod firewall rules rejecting uid-1001 traffic to Temporal
+gRPC (`7233`), the UI (`8080`), and both Tailscale ingress addresses on `443`.
+This pod-local rule is the current enforcement
+layer because the homelab uses Flannel without a NetworkPolicy controller; the
+separate agent `NetworkPolicy` records the intended boundary for a future
+policy-capable CNI but is not treated as current enforcement. Generic agent
+clones of this public repository are unauthenticated, and
+new agent email delivery activities execute on `TASK_QUEUES.DEFAULT`. Replayed
+histories preserve their original agent-queue activity command for Temporal
+determinism; that credential-free compatibility activity delegates a fixed
+`deliverReportWorkflow` to `TASK_QUEUES.DEFAULT`. Postal and report-state S3
+credentials therefore remain in the core worker in both paths. The outer email
+activity budget must exceed the complete delegated delivery retry window; both
+durations are defined in `src/shared/report-delivery-policy.ts`.
 
-**Cluster RBAC** — the worker SA gets a cluster-wide read-only `temporal-worker-audit-reader` ClusterRole (see `packages/homelab/src/cdk8s/src/resources/temporal/audit-rbac.ts`). No `pods/exec`, no write verbs.
+### Report delivery is exclusive, not merely deduplicated
+
+A stored `pending` delivery state is not evidence that the email was never
+sent: Temporal can dispatch a new attempt once start-to-close elapses while the
+previous one sits between the Postal call and its state write. Treating pending
+as "not sent" duplicates the email; treating it as "sent" silently drops a
+report whose owner died first. `deliverReportWithDependencies` therefore takes
+an exclusive lease on the send — a conditional S3 write
+(`If-None-Match`/`If-Match`) of a per-report claim object keyed off the state
+key. A contending attempt never calls `send`; it fails so Temporal retries and
+finds the owner's receipt. A lease older than
+`REPORT_SEND_CLAIM_TAKEOVER_MS` is takeable, which is what guarantees a dead
+owner cannot strand the report. Keep that bound strictly greater than the
+delivery activity's start-to-close timeout, or a takeover can race a live
+owner.
 
 ## Scheduled PR-creating workflows
 

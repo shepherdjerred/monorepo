@@ -1,113 +1,49 @@
-/**
- * Parse Helm chart information from versions.ts for the cdk8s application.
- * This is specific to the cdk8s project structure and not part of the helm-types library.
- */
+/** Parse Helm chart information from the language-neutral version catalog. */
+
+import { parseVersionCatalogText } from "@shepherdjerred/homelab/cdk8s/src/version-catalog.ts";
 
 export type ChartInfo = {
   name: string;
   repoUrl: string;
   version: string;
-  chartName: string; // The actual chart name (may differ from versions.ts key)
-  oci?: boolean; // Served from an OCI registry (helm pull oci://...)
+  chartName: string;
+  oci?: boolean;
 };
 
-/**
- * versions.ts keys whose `datasource=docker` renovate entry is actually an OCI
- * Helm chart (not a plain container image). renovate models OCI charts as the
- * docker datasource, so this allowlist is the only reliable way to tell the two
- * apart. Keep in sync with the OCI ArgoCD applications.
- */
-const OCI_CHART_KEYS = new Set(["agent-stack-k8s", "kueue"]);
-
-/**
- * The version value is usually on the key line (`key: "x"`), but long pins
- * (digest-suffixed OCI versions) get wrapped onto the following line by
- * prettier. Check the key line first, then the line after it. The `@sha256:...`
- * digest is stripped — helm --version wants the bare semver.
- */
-function extractVersion(
-  keyLine: string,
-  lineAfter: string,
-): string | undefined {
-  const raw =
-    /:\s*"([^"]+)"/.exec(keyLine)?.[1] ?? /^\s*"([^"]+)"/.exec(lineAfter)?.[1];
-  const version = raw?.split("@")[0];
-  return version === "" ? undefined : version;
+function bareVersion(value: string): string {
+  const version = value.split("@")[0];
+  if (version === undefined || version === "") {
+    throw new Error(`chart has no version in ${value}`);
+  }
+  return version;
 }
 
-/**
- * Parse a single chart entry (a renovate comment line + the version-key line(s)
- * that follow it). Returns null for non-chart lines and plain container images.
- */
-function parseChartEntry(
-  commentLine: string,
-  keyLine: string,
-  lineAfter: string,
-): ChartInfo | null {
-  const isHelm = commentLine.includes("renovate: datasource=helm");
-  const versionKey = /^\s*"?([^":\s]+)"?:/.exec(keyLine)?.[1];
-  const isOciChart =
-    commentLine.includes("renovate: datasource=docker") &&
-    versionKey != null &&
-    OCI_CHART_KEYS.has(versionKey);
-
-  // Only HTTP-repo helm charts and known OCI charts; skip plain images.
-  if ((!isHelm && !isOciChart) || versionKey == null) {
-    return null;
-  }
-
-  const repoUrl = /registryUrl=(\S+)/.exec(commentLine)?.[1];
-  const version = extractVersion(keyLine, lineAfter);
-  if (repoUrl === "" || repoUrl == null || version == null) {
-    return null;
-  }
-
-  if (isOciChart) {
-    // OCI: the chart artifact path is the renovate packageName, served from the
-    // registryUrl (strip the https:// renovate requires on the comment).
-    const packageName = /packageName=(\S+)/.exec(commentLine)?.[1];
-    if (packageName === "" || packageName == null) {
-      return null;
-    }
-    return {
-      name: versionKey,
-      repoUrl: repoUrl.replace(/^https?:\/\//, "").replace(/\/$/, ""),
-      version,
-      chartName: packageName,
-      oci: true,
-    };
-  }
-
-  return {
-    name: versionKey,
-    repoUrl: repoUrl.replace(/\/$/, ""), // Remove trailing slash
-    version,
-    // chartName matches the version key (incl. "argo-cd").
-    chartName: versionKey,
-  };
-}
-
-/**
- * Parse chart information from versions.ts comments and values
- */
 export async function parseChartInfoFromVersions(
-  versionsPath = "src/versions.ts",
+  catalogPath = "src/version-catalog.json",
 ): Promise<ChartInfo[]> {
-  const content = await Bun.file(versionsPath).text();
-  const lines = content.split("\n");
-  const charts: ChartInfo[] = [];
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    const nextLine = lines[i + 1];
-    if (nextLine === "" || line == null || nextLine == null) {
-      continue;
-    }
-    const chart = parseChartEntry(line, nextLine, lines[i + 2] ?? "");
-    if (chart != null) {
-      charts.push(chart);
-    }
-  }
-
-  return charts;
+  const catalog = parseVersionCatalogText(await Bun.file(catalogPath).text());
+  return catalog.entries
+    .filter((entry) => entry.artifactType === "helm-chart")
+    .map((entry) => {
+      if (!entry.management.managed) {
+        throw new Error(`Helm chart ${entry.name} has no management metadata`);
+      }
+      const repoUrl = entry.management.registryUrl;
+      if (repoUrl === undefined) {
+        throw new Error(`Helm chart ${entry.name} has no registry URL`);
+      }
+      const oci = entry.management.datasource === "docker";
+      if (oci && entry.management.packageName === undefined) {
+        throw new Error(`OCI Helm chart ${entry.name} has no package name`);
+      }
+      return {
+        name: entry.name,
+        repoUrl: oci
+          ? repoUrl.replace(/^https?:\/\//, "").replace(/\/$/, "")
+          : repoUrl.replace(/\/$/, ""),
+        version: bareVersion(entry.value),
+        chartName: entry.management.packageName ?? entry.name,
+        ...(oci ? { oci: true } : {}),
+      };
+    });
 }

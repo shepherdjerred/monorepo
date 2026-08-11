@@ -1,150 +1,80 @@
 /**
- * Local Layer-2 test harness for the homelab audit (no Temporal client).
+ * Local deterministic homelab audit harness (no Temporal client).
  *
- * Imports `runHomelabAuditAgent` directly, runs it against the user's local
- * authenticated CLIs (`kubectl @ admin@torvalds`, `talosctl`, `tofu` via
- * `op run`, `toolkit alerts/bugsink/gf`, `claude`), and either writes the
- * rendered HTML to `/tmp/...` (DRY_RUN=1) or sends through the real Postal
- * API (DRY_RUN=0).
- *
- * Usage:
- *   op run --env-file=.env.audit -- DRY_RUN=1 bun run scripts/run-homelab-audit-local.ts
- *   op run --env-file=.env.audit -- DRY_RUN=1 bun run scripts/run-homelab-audit-local.ts --sections=1,9,13
- *   op run --env-file=.env.audit -- DRY_RUN=1 bun run scripts/run-homelab-audit-local.ts --haiku
- *
- * Notes:
- *   - This bypasses Temporal entirely. No worker bundle, no schedule. The
- *     activity body is just `Bun.spawn`, which works the same on Mac as in
- *     the Linux worker pod.
- *   - For DRY_RUN=0 set RECIPIENT_EMAIL to a `+audit-test` alias so test
- *     runs are filterable in your inbox.
- *   - Set RUNBOOK_PATH=packages/docs/guides/2026-04-04_homelab-audit-runbook.md
- *     in .env.audit to use the in-tree runbook (no GitHub round-trip).
+ * The harness executes the same typed collectors and report builder as the
+ * scheduled workflow. DRY_RUN=1 writes compact report artifacts to /tmp;
+ * otherwise delivery still goes through the shared report sender.
  */
-import { homelabAuditActivities } from "#activities/homelab-audit.ts";
+import { collectHomelabAuditEvidence } from "#activities/homelab-audit-collectors.ts";
+import { buildHomelabAuditReport } from "#activities/homelab-audit-report.ts";
+import { synthesizeHomelabAuditEvidence } from "#activities/homelab-audit-synthesis.ts";
+import { deliverReport } from "#activities/report-delivery.ts";
 import {
-  buildAuditEmailSubject,
-  extractAuditSubjectCounts,
-  renderAuditMarkdownToHtml,
-} from "#shared/markdown-to-html.ts";
-import { sendPostalEmail, resolvePostalAddresses } from "#shared/postal.ts";
+  renderReportHtml,
+  renderReportText,
+  reportSubject,
+  ReportEnvelopeV1Schema,
+} from "#shared/report.ts";
 
-type Args = {
-  sections: readonly number[] | "all";
-  model: string | undefined;
-  date: string;
-};
-
-function parseArgs(argv: readonly string[]): Args {
-  let sections: readonly number[] | "all" = "all";
-  let model: string | undefined;
+function parseDate(argv: readonly string[]): string {
   let date = new Date().toISOString().slice(0, 10);
-  for (const arg of argv) {
-    if (arg.startsWith("--sections=")) {
-      const list = arg.slice("--sections=".length);
-      sections = list.split(",").map((s) => Number(s.trim()));
-    } else if (arg === "--haiku") {
-      model = "claude-haiku-4-5-20251001";
-    } else if (arg.startsWith("--model=")) {
-      model = arg.slice("--model=".length);
-    } else if (arg.startsWith("--date=")) {
-      date = arg.slice("--date=".length);
-    } else {
-      console.error(`Unknown argument: ${arg}`);
-      process.exit(2);
+  for (const argument of argv) {
+    if (!argument.startsWith("--date=")) {
+      throw new Error(`Unknown argument: ${argument}`);
     }
+    date = argument.slice("--date=".length);
   }
-  return { sections, model, date };
+  return date;
 }
 
 async function main(): Promise<void> {
-  const args = parseArgs(process.argv.slice(2));
+  const date = parseDate(process.argv.slice(2));
   const dryRun = Bun.env["DRY_RUN"] === "1";
-
+  const collection = await collectHomelabAuditEvidence();
+  const synthesis = await synthesizeHomelabAuditEvidence(collection);
+  const input = buildHomelabAuditReport(collection, synthesis);
+  const runId = crypto.randomUUID();
+  const report = ReportEnvelopeV1Schema.parse({
+    ...input,
+    schemaVersion: 1,
+    reportRunId: `homelab-audit-local:${runId}`,
+    title: `Local homelab audit ${date}`,
+    completedAt: new Date().toISOString(),
+    provenance: {
+      ...input.provenance,
+      workflowId: "local-homelab-audit",
+      runId,
+      source: "local deterministic audit harness",
+    },
+  });
+  const subject = reportSubject(report);
+  const timestamp = new Date()
+    .toISOString()
+    .replaceAll(":", "-")
+    .replaceAll(".", "-");
+  const textPath = `/tmp/homelab-audit-${timestamp}.txt`;
+  const htmlPath = `/tmp/homelab-audit-${timestamp}.html`;
+  await Bun.write(textPath, renderReportText(report));
+  await Bun.write(htmlPath, renderReportHtml(report));
   console.warn(
     JSON.stringify({
       level: "info",
-      msg: "Starting local homelab audit run",
+      message: "Local deterministic homelab audit completed",
       dryRun,
-      sections: args.sections,
-      model: args.model ?? "(default)",
-      date: args.date,
-    }),
-  );
-
-  const start = Date.now();
-  const agentInput: Parameters<
-    typeof homelabAuditActivities.runHomelabAuditAgent
-  >[0] = {
-    date: args.date,
-    sections: args.sections,
-  };
-  if (args.model !== undefined) {
-    agentInput.model = args.model;
-  }
-  const result = await homelabAuditActivities.runHomelabAuditAgent(agentInput);
-  const elapsedSec = ((Date.now() - start) / 1000).toFixed(1);
-
-  const counts = extractAuditSubjectCounts(result.markdown);
-  const subject = buildAuditEmailSubject(args.date, counts);
-  const html = renderAuditMarkdownToHtml(result.markdown);
-
-  console.warn(
-    JSON.stringify({
-      level: "info",
-      msg: "Agent run complete",
-      elapsedSec,
-      markdownBytes: result.markdown.length,
-      htmlBytes: html.length,
-      numTurns: result.numTurns,
-      totalCostUsd: result.totalCostUsd,
       subject,
-      counts: counts ?? "(parse failed)",
-    }),
-  );
-
-  const ts = new Date().toISOString().replaceAll(":", "-").replaceAll(".", "-");
-  const mdPath = `/tmp/homelab-audit-${ts}.md`;
-  const htmlPath = `/tmp/homelab-audit-${ts}.html`;
-  await Bun.write(mdPath, result.markdown);
-  await Bun.write(htmlPath, html);
-
-  console.warn(
-    JSON.stringify({
-      level: "info",
-      msg: "Wrote local artifacts",
-      mdPath,
+      textPath,
       htmlPath,
     }),
   );
-
-  if (dryRun) {
-    console.warn(
-      JSON.stringify({
-        level: "info",
-        msg: "DRY_RUN=1 — skipping Postal send",
-        subject,
-      }),
-    );
-    return;
-  }
-
-  const { recipient, sender } = resolvePostalAddresses();
-  const sendResult = await sendPostalEmail({
-    to: recipient,
-    from: sender,
-    subject,
-    htmlBody: html,
-    tag: "homelab-audit-test",
-  });
-
+  if (dryRun) return;
+  const result = await deliverReport(report);
   console.warn(
     JSON.stringify({
       level: "info",
-      msg: "Email sent via Postal",
-      messageId: sendResult.messageId,
-      recipientId: sendResult.recipientId,
-      subject: sendResult.subject,
+      message: "Report accepted by Postal through shared delivery",
+      subject: result.subject,
+      messageId: result.messageId,
+      deduplicated: result.deduplicated,
     }),
   );
 }
@@ -152,8 +82,8 @@ async function main(): Promise<void> {
 void (async (): Promise<void> => {
   try {
     await main();
-  } catch (error) {
+  } catch (error: unknown) {
     console.error(error);
-    process.exit(1);
+    process.exitCode = 1;
   }
 })();

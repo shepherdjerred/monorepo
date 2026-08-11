@@ -1,0 +1,268 @@
+import { describe, expect, test } from "bun:test";
+import type { PostalSendInput } from "#shared/postal.ts";
+import type { ReportEnvelopeV1 } from "#shared/report.ts";
+import { REPORT_SEND_CLAIM_TAKEOVER_MS } from "#shared/report-delivery-policy.ts";
+import {
+  activityReportRunId,
+  deliverReportWithDependencies,
+  type ReportDeliveryBackend,
+  type ReportDeliveryReceiptV1,
+  reportSendClaimKey,
+  reportStateKey,
+  type ReportSendClaimV1,
+  type ReportStateV1,
+} from "./report-delivery.ts";
+
+const NOW = "2026-08-10T18:01:00.000Z";
+
+function report(): ReportEnvelopeV1 {
+  return {
+    schemaVersion: 1,
+    reportRunId: "test-report:run-1",
+    reportType: "test-report",
+    title: "Test report",
+    scheduleId: "test-report-daily",
+    startedAt: "2026-08-10T18:00:00.000Z",
+    completedAt: NOW,
+    execution: "complete",
+    verdict: "clear",
+    headline: "The required check passed.",
+    checks: [
+      {
+        id: "check",
+        label: "Required check",
+        required: true,
+        status: "passed",
+        summary: "Observed the expected state.",
+        evidenceReceiptIds: ["evidence"],
+      },
+    ],
+    evidence: [
+      {
+        id: "evidence",
+        source: "test",
+        observedAt: NOW,
+        status: "success",
+      },
+    ],
+    findings: [],
+    limitations: [],
+    actions: [],
+    provenance: {
+      workflowId: "test-workflow",
+      runId: "run-1",
+    },
+  };
+}
+
+type StoredClaim = { claim: ReportSendClaimV1; etag: string };
+
+/**
+ * Conditional-write claim store mirroring the S3 backend: a create only
+ * succeeds when absent, a replace only when the entity tag still matches.
+ */
+function claimBackend(
+  claims: Map<string, StoredClaim>,
+): Pick<ReportDeliveryBackend, "readSendClaim" | "writeSendClaim"> {
+  let nextEtag = 0;
+  return {
+    readSendClaim: async (key) => claims.get(key),
+    writeSendClaim: async (key, claim, expectedEtag) => {
+      const held = claims.get(key);
+      if (
+        held === undefined
+          ? expectedEtag !== undefined
+          : held.etag !== expectedEtag
+      ) {
+        return false;
+      }
+      nextEtag += 1;
+      claims.set(key, { claim, etag: `etag-${String(nextEtag)}` });
+      return true;
+    },
+  };
+}
+
+describe("report delivery", () => {
+  test("uses a stable distinct identity for a failure after an accepted report", () => {
+    expect(activityReportRunId("dependency-summary", "run-1", "complete")).toBe(
+      "dependency-summary:run-1",
+    );
+    expect(activityReportRunId("dependency-summary", "run-1", "partial")).toBe(
+      "dependency-summary:run-1",
+    );
+    expect(activityReportRunId("dependency-summary", "run-1", "failed")).toBe(
+      "dependency-summary:run-1:failed",
+    );
+    expect(activityReportRunId("dependency-summary", "run-1", "failed")).toBe(
+      activityReportRunId("dependency-summary", "run-1", "failed"),
+    );
+  });
+
+  test("recovers from receipt-write failure without sending twice", async () => {
+    const receipts = new Map<string, ReportDeliveryReceiptV1>();
+    const states = new Map<string, ReportStateV1>();
+    let failReceiptWrite = true;
+    const backend: ReportDeliveryBackend = {
+      readReceipt: async (key) => receipts.get(key),
+      writeReceipt: async (key, receipt) => {
+        if (failReceiptWrite) {
+          failReceiptWrite = false;
+          throw new Error("receipt store unavailable");
+        }
+        receipts.set(key, receipt);
+      },
+      readState: async (key) => states.get(key),
+      writeState: async (key, state) => {
+        states.set(key, state);
+      },
+      ...claimBackend(new Map()),
+    };
+    const sent: PostalSendInput[] = [];
+    const dependencies = {
+      backend,
+      addresses: {
+        recipient: "recipient@example.com",
+        sender: "sender@example.com",
+      },
+      send: async (input: PostalSendInput) => {
+        sent.push(input);
+        return {
+          messageId: "postal-message-1",
+          recipientId: 42,
+          subject: input.subject,
+          tag: input.tag,
+        };
+      },
+      now: () => NOW,
+      owner: "workflow/run-1/activity-1/1",
+    };
+
+    await expect(
+      deliverReportWithDependencies(report(), dependencies),
+    ).rejects.toThrow("receipt store unavailable");
+    const retried = await deliverReportWithDependencies(report(), dependencies);
+
+    expect(sent).toHaveLength(1);
+    expect(retried.deduplicated).toBe(true);
+    expect(retried.messageId).toBe("postal-message-1");
+    expect(sent[0]?.headers).toEqual({
+      "X-Report-Run-ID": "test-report:run-1",
+      "X-Report-Type": "test-report",
+      "X-Temporal-Workflow-ID": "test-workflow",
+      "X-Temporal-Run-ID": "run-1",
+      "X-Report-Schedule-ID": "test-report-daily",
+    });
+    expect([...states.values()][0]?.delivery.status).toBe("accepted");
+    expect([...states.values()][0]?.report).toEqual(report());
+  });
+});
+
+function scenario(claims: Map<string, StoredClaim>) {
+  const receipts = new Map<string, ReportDeliveryReceiptV1>();
+  const states = new Map<string, ReportStateV1>();
+  const sent: PostalSendInput[] = [];
+  const backend: ReportDeliveryBackend = {
+    readReceipt: async (key) => receipts.get(key),
+    writeReceipt: async (key, receipt) => {
+      receipts.set(key, receipt);
+    },
+    readState: async (key) => states.get(key),
+    writeState: async (key, state) => {
+      states.set(key, state);
+    },
+    ...claimBackend(claims),
+  };
+  return {
+    sent,
+    states,
+    dependencies: (owner: string, now: string) => ({
+      backend,
+      addresses: {
+        recipient: "recipient@example.com",
+        sender: "sender@example.com",
+      },
+      send: async (input: PostalSendInput) => {
+        sent.push(input);
+        return {
+          messageId: `postal-${String(sent.length)}`,
+          recipientId: 42,
+          subject: input.subject,
+          tag: input.tag,
+        };
+      },
+      now: () => now,
+      owner,
+    }),
+  };
+}
+
+function heldBy(owner: string, claimedAt: string): Map<string, StoredClaim> {
+  return new Map([
+    [
+      reportSendClaimKey(reportStateKey(report())),
+      {
+        claim: {
+          schemaVersion: 1 as const,
+          reportRunId: report().reportRunId,
+          owner,
+          claimedAt,
+        },
+        etag: "etag-0",
+      },
+    ],
+  ]);
+}
+
+describe("report send ownership", () => {
+  test("refuses to resend while another attempt still owns the send", async () => {
+    // Attempt 1 wrote `pending` and sent, then stalled past start-to-close.
+    // Attempt 2 must not read `pending` as permission to send again.
+    const { sent, dependencies } = scenario(
+      heldBy("workflow/run-1/activity-1/1", NOW),
+    );
+    const stillOwned = new Date(
+      Date.parse(NOW) + REPORT_SEND_CLAIM_TAKEOVER_MS - 1000,
+    ).toISOString();
+
+    await expect(
+      deliverReportWithDependencies(
+        report(),
+        dependencies("workflow/run-1/activity-1/2", stillOwned),
+      ),
+    ).rejects.toThrow("already being delivered by another attempt");
+
+    expect(sent).toEqual([]);
+  });
+
+  test("takes over an expired lease so a dead owner cannot strand the report", async () => {
+    const { sent, states, dependencies } = scenario(
+      heldBy("workflow/run-1/activity-1/1", NOW),
+    );
+    const expired = new Date(
+      Date.parse(NOW) + REPORT_SEND_CLAIM_TAKEOVER_MS,
+    ).toISOString();
+
+    const result = await deliverReportWithDependencies(
+      report(),
+      dependencies("workflow/run-1/activity-1/3", expired),
+    );
+
+    expect(sent).toHaveLength(1);
+    expect(result.deduplicated).toBe(false);
+    expect([...states.values()][0]?.delivery.status).toBe("accepted");
+  });
+
+  test("resumes its own lease after a retry of the same attempt identity", async () => {
+    const owner = "workflow/run-1/activity-1/1";
+    const { sent, dependencies } = scenario(heldBy(owner, NOW));
+
+    const result = await deliverReportWithDependencies(
+      report(),
+      dependencies(owner, NOW),
+    );
+
+    expect(sent).toHaveLength(1);
+    expect(result.deduplicated).toBe(false);
+  });
+});

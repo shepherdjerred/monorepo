@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:sjer:red:schema:homelab-version-catalog:v1",
+  "title": "Homelab version catalog",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "schemaVersion", "entries"],
+  "properties": {
+    "$schema": { "type": "string", "minLength": 1 },
+    "schemaVersion": { "const": 1 },
+    "entries": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "value", "category", "artifactType", "management"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "value": { "type": "string", "minLength": 1 },
+          "category": { "enum": ["upstream", "internal-image"] },
+          "artifactType": {
+            "enum": ["image", "helm-chart", "package", "source"]
+          },
+          "management": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["managed", "datasource", "versioning"],
+                "properties": {
+                  "managed": { "const": true },
+                  "datasource": { "type": "string", "minLength": 1 },
+                  "versioning": { "type": "string", "minLength": 1 },
+                  "registryUrl": { "type": "string", "format": "uri" },
+                  "packageName": { "type": "string", "minLength": 1 }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["managed"],
+                "properties": { "managed": { "const": false } }
+              }
+            ]
+          },
+          "notes": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "releaseNotesOverride": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["summary"],
+            "properties": {
+              "url": { "type": "string", "format": "uri" },
+              "summary": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    }
+  }
+}

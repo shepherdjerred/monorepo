@@ -120,11 +120,18 @@ The post-deployment verification backup is
 
 <!-- temporal-agent-task
 {
+  "contractVersion": 2,
   "title": "Re-audit PVC backup policy and ZFS quarantine hold",
   "provider": "codex",
   "mode": "report-only",
   "runAt": "2026-08-03T12:30:00-07:00",
   "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
+  "checks": [
+    { "id": "pvc-policy", "label": "PVC backup policy", "required": true, "evidenceRequirement": "Every current PVC is bound.", "evidenceCollectors": [{ "id": "pvc-inventory", "kind": "command", "argv": ["kubectl", "get", "pvc", "-A", "-o", "json"], "output": "json", "expectation": { "kind": "json", "assertions": [{ "path": ["items", "*", "status", "phase"], "operator": "eq", "expected": "Bound", "quantifier": "all" }] } }] },
+    { "id": "backup-objects", "label": "Velero backup objects", "required": true, "evidenceRequirement": "Velero and R2 APIs succeed and R2 returns at least one object.", "evidenceCollectors": [{ "id": "velero-backups", "kind": "command", "argv": ["velero", "backup", "get", "-o", "json"], "output": "json", "expectation": { "kind": "exit-code", "passedExitCodes": [0] } }, { "id": "r2-objects", "kind": "command", "argv": ["aws", "s3api", "list-objects-v2", "--bucket", "homelab", "--output", "json"], "output": "json", "expectation": { "kind": "json", "assertions": [{ "path": ["KeyCount"], "operator": "gt", "expected": 0, "quantifier": "all" }] } }] },
+    { "id": "zfs-state", "label": "ZFS state", "required": true, "evidenceRequirement": "ZFS queries succeed and every persistent volume is available.", "evidenceCollectors": [{ "id": "zpool-status", "kind": "command", "argv": ["zpool", "status", "-x"], "output": "non-empty", "expectation": { "kind": "exit-code", "passedExitCodes": [0] } }, { "id": "zfs-datasets", "kind": "command", "argv": ["zfs", "list", "-H", "-o", "name"], "output": "non-empty", "expectation": { "kind": "exit-code", "passedExitCodes": [0] } }, { "id": "persistent-volumes", "kind": "command", "argv": ["kubectl", "get", "pv", "-o", "json"], "output": "json", "expectation": { "kind": "json", "assertions": [{ "path": ["items", "*", "status", "phase"], "operator": "eq", "expected": "Bound", "quantifier": "all" }] } }] },
+    { "id": "quarantine-hold", "label": "Quarantine hold", "required": true, "evidenceRequirement": "The recursive hold query succeeds and returns the current hold inventory.", "evidenceCollectors": [{ "id": "quarantine-holds", "kind": "command", "argv": ["zfs", "holds", "-r", "zfspv-pool-nvme/quarantine-2026-07-27"], "output": "non-empty", "expectation": { "kind": "exit-code", "passedExitCodes": [0] } }] }
+  ],
   "source": {
     "docPath": "packages/docs/plans/2026-07-27_pvc-backup-policy-zfs-cleanup.md"
   },

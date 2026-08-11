@@ -1,482 +1,491 @@
+import {
+  GetObjectCommand,
+  NoSuchKey,
+  PutObjectCommand,
+  S3Client,
+  S3ServiceException,
+} from "@aws-sdk/client-s3";
 import { Context } from "@temporalio/activity";
-import { simpleGit } from "simple-git";
-import OpenAI from "openai";
+import { rm } from "node:fs/promises";
+import { simpleGit, type SimpleGit } from "simple-git";
 import { z } from "zod/v4";
-import { traceOpenAi } from "@shepherdjerred/llm-observability";
-import { sendPostalEmail, resolvePostalAddresses } from "#shared/postal.ts";
-import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
+import {
+  fetchDependencyReleaseNotes,
+  synthesizeDependencyChanges,
+} from "./deps-summary-release-notes.ts";
 
-const VERSIONS_FILE_PATH = "packages/homelab/src/cdk8s/src/versions.ts";
+const VERSION_CATALOG_PATH =
+  "packages/homelab/src/cdk8s/src/version-catalog.json";
+const LEGACY_VERSIONS_PATH = "packages/homelab/src/cdk8s/src/versions.ts";
 const REPO_URL = "https://github.com/shepherdjerred/monorepo.git";
+const CHECKPOINT_KEY = "reports/state/deps-summary-weekly.json";
 
-const VERSION_LINE_REGEX = /"([^"]+)":\s*"([^"]+)"/;
 export const DEPS_SUMMARY_CLONE_ARGS = [
   "--filter=blob:none",
   "--single-branch",
   "--branch=main",
 ] as const;
 
-function parseVersionLine(
-  line: string,
-): { name: string; version: string } | undefined {
-  const versionMatch = VERSION_LINE_REGEX.exec(line);
-  if (versionMatch === null) {
-    return undefined;
-  }
-  const name = versionMatch[1] ?? "";
-  const version = (versionMatch[2] ?? "").split("@")[0] ?? "";
-  return { name, version };
-}
+const ManagementSchema = z.discriminatedUnion("managed", [
+  z.object({
+    managed: z.literal(true),
+    datasource: z.string().min(1),
+    versioning: z.string().min(1),
+    registryUrl: z.url().optional(),
+    packageName: z.string().min(1).optional(),
+  }),
+  z.object({ managed: z.literal(false) }),
+]);
+export const CatalogEntrySchema = z.object({
+  name: z.string().min(1),
+  value: z.string().min(1),
+  category: z.enum(["upstream", "internal-image"]),
+  artifactType: z.enum(["image", "helm-chart", "package", "source"]),
+  management: ManagementSchema,
+  releaseNotesOverride: z
+    .object({ url: z.url().optional(), summary: z.string().min(1) })
+    .optional(),
+});
+const CatalogSchema = z.object({
+  schemaVersion: z.literal(1),
+  entries: z.array(CatalogEntrySchema),
+});
+export type CatalogEntry = z.infer<typeof CatalogEntrySchema>;
 
-function handleRemovedLine(
-  line: string,
-  changes: Map<string, DependencyChange>,
-  currentDatasource: string,
-  currentRegistryUrl: string | undefined,
-): void {
-  if (!line.startsWith("-") || line.startsWith("---")) {
-    return;
-  }
-  const parsed = parseVersionLine(line);
-  if (parsed === undefined) {
-    return;
-  }
-  const existing = changes.get(parsed.name);
-  if (existing !== undefined) {
-    return;
-  }
-  changes.set(parsed.name, {
-    name: parsed.name,
-    datasource: currentDatasource,
-    registryUrl: currentRegistryUrl,
-    oldVersion: parsed.version,
-    newVersion: parsed.version,
-  });
-}
+const CheckpointSchema = z.object({
+  schemaVersion: z.literal(1),
+  commitSha: z.string().regex(/^[a-f0-9]{40}$/),
+  acceptedAt: z.iso.datetime({ offset: true }),
+  reportRunId: z.string().min(1),
+});
 
-function handleAddedLine(
-  line: string,
-  changes: Map<string, DependencyChange>,
-  currentDatasource: string,
-  currentRegistryUrl: string | undefined,
-): void {
-  if (!line.startsWith("+") || line.startsWith("+++")) {
-    return;
-  }
-  const parsed = parseVersionLine(line);
-  if (parsed === undefined) {
-    return;
-  }
-  const existing = changes.get(parsed.name);
-  if (existing === undefined) {
-    changes.set(parsed.name, {
-      name: parsed.name,
-      datasource: currentDatasource,
-      registryUrl: currentRegistryUrl,
-      oldVersion: parsed.version,
-      newVersion: parsed.version,
-    });
-  } else {
-    existing.newVersion = parsed.version;
-  }
-}
+export type DependencyChangeKind =
+  | "upstream-upgrade"
+  | "internal-promotion"
+  | "addition"
+  | "removal"
+  | "revert";
 
 export type DependencyChange = {
   name: string;
-  datasource: string;
+  category: "upstream" | "internal-image";
+  artifactType: "image" | "helm-chart" | "package" | "source";
+  datasource: string | undefined;
   registryUrl: string | undefined;
-  oldVersion: string;
-  newVersion: string;
+  packageName: string | undefined;
+  oldValue: string | undefined;
+  newValue: string | undefined;
+  oldVersion: string | undefined;
+  newVersion: string | undefined;
+  kind: DependencyChangeKind;
+  commitSha: string;
+  commitSubject: string;
+  releaseNotesOverride:
+    | { url?: string | undefined; summary: string }
+    | undefined;
 };
 
-export type ReleaseNote = {
-  dependency: string;
-  source: string;
-  version: string;
-  notes: string;
-  url: string | undefined;
+export type DependencyCollectionResult = {
+  baseSha: string;
+  headSha: string;
+  usedCheckpoint: boolean;
+  endpointStatesIdentical: boolean;
+  changes: DependencyChange[];
 };
 
-export type FailedFetch = {
-  dependency: string;
-  reason: string;
-};
+type StateStore = { client: S3Client; bucket: string };
 
-export type ReleaseNotesResult = {
-  notes: ReleaseNote[];
-  failed: FailedFetch[];
-};
+function requiredEnv(name: string): string {
+  const value = Bun.env[name];
+  if (value === undefined || value === "") {
+    throw new Error(`${name} is required for dependency report state`);
+  }
+  return value;
+}
 
-type ReleaseNoteFetchResult = {
-  note: ReleaseNote | undefined;
-  authRequired: boolean;
-};
+function stateStore(): StateStore {
+  const accessKeyId = requiredEnv("AWS_ACCESS_KEY_ID");
+  const secretAccessKey = requiredEnv("AWS_SECRET_ACCESS_KEY");
+  const sessionToken = Bun.env["AWS_SESSION_TOKEN"];
+  return {
+    client: new S3Client({
+      endpoint: requiredEnv("S3_ENDPOINT"),
+      region: Bun.env["S3_REGION"] ?? "us-east-1",
+      forcePathStyle: (Bun.env["S3_FORCE_PATH_STYLE"] ?? "true") === "true",
+      credentials:
+        sessionToken === undefined || sessionToken === ""
+          ? { accessKeyId, secretAccessKey }
+          : { accessKeyId, secretAccessKey, sessionToken },
+    }),
+    bucket:
+      Bun.env["REPORT_RECEIPT_BUCKET"] ??
+      Bun.env["REVIEW_SIGNAL_ARCHIVE_BUCKET"] ??
+      "llm-archive",
+  };
+}
 
-type BatchFetchResult = {
-  change: DependencyChange;
-  note: ReleaseNote | undefined;
-  error: unknown;
-};
-
-const GithubRelease = z.object({
-  body: z.string().optional(),
-  html_url: z.string().optional(),
-});
-
-async function fetchWithTimeout(
-  url: string,
-  init: RequestInit,
-  timeoutMs = 10_000,
-): Promise<Response> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => {
-    controller.abort();
-  }, timeoutMs);
+async function readCheckpoint(): Promise<
+  z.infer<typeof CheckpointSchema> | undefined
+> {
+  const store = stateStore();
   try {
-    return await fetch(url, { ...init, signal: controller.signal });
-  } finally {
-    clearTimeout(timer);
+    const result = await store.client.send(
+      new GetObjectCommand({ Bucket: store.bucket, Key: CHECKPOINT_KEY }),
+    );
+    if (result.Body === undefined) {
+      throw new Error("dependency report checkpoint has no body");
+    }
+    return CheckpointSchema.parse(
+      JSON.parse(await result.Body.transformToString()),
+    );
+  } catch (error: unknown) {
+    if (
+      error instanceof NoSuchKey ||
+      (error instanceof S3ServiceException &&
+        error.$metadata.httpStatusCode === 404)
+    ) {
+      return undefined;
+    }
+    throw error;
   }
 }
 
-async function tryFetchReleaseNote(
-  repo: string,
-  version: string,
-  headers: Record<string, string>,
-): Promise<ReleaseNoteFetchResult> {
-  const tagVariants = [
-    `v${version}`,
-    version,
-    `${repo.split("/").pop() ?? ""}-${version}`,
-  ];
-  let authRequired = false;
+function parseCatalog(text: string): CatalogEntry[] {
+  return CatalogSchema.parse(JSON.parse(text)).entries;
+}
 
-  for (const tag of tagVariants) {
-    const response = await fetchWithTimeout(
-      `https://api.github.com/repos/${repo}/releases/tags/${tag}`,
-      { headers },
-    );
-    if (!response.ok) {
-      if (response.status === 401 || response.status === 403) {
-        authRequired = true;
-      }
+function inferLegacyArtifactType(
+  datasource: string | undefined,
+  value: string,
+  name: string,
+): CatalogEntry["artifactType"] {
+  if (datasource === "helm" || name === "agent-stack-k8s" || name === "kueue") {
+    return "helm-chart";
+  }
+  if (datasource === "npm") return "package";
+  if (datasource === "docker" || value.includes("@sha256:")) return "image";
+  return "source";
+}
+
+function legacyKey(trimmed: string): string | undefined {
+  return (
+    /^"([^"]+)"\s*:/.exec(trimmed)?.[1] ?? /^([\w-]+)\s*:/.exec(trimmed)?.[1]
+  );
+}
+
+function legacyAnnotation(comments: string[]): RegExpExecArray | undefined {
+  return comments
+    .map((comment) =>
+      /renovate: datasource=(\S+)(?: registryUrl=(\S+))? versioning=(\S+)(?: packageName=(\S+))?/.exec(
+        comment,
+      ),
+    )
+    .find((match) => match !== null);
+}
+
+function legacyCatalogEntry(
+  key: string,
+  value: string,
+  comments: string[],
+): CatalogEntry {
+  const annotation = legacyAnnotation(comments);
+  const datasource = annotation?.[1];
+  const registryUrl = annotation?.[2];
+  const versioning = annotation?.[3];
+  const packageName = annotation?.[4];
+  return CatalogEntrySchema.parse({
+    name: key,
+    value,
+    category: key.startsWith("shepherdjerred/") ? "internal-image" : "upstream",
+    artifactType: inferLegacyArtifactType(datasource, value, key),
+    management:
+      datasource === undefined || versioning === undefined
+        ? { managed: false }
+        : {
+            managed: true,
+            datasource,
+            versioning,
+            ...(registryUrl === undefined ? {} : { registryUrl }),
+            ...(packageName === undefined ? {} : { packageName }),
+          },
+  });
+}
+
+export function parseLegacyVersionsSource(source: string): CatalogEntry[] {
+  const objectStart = source.indexOf("const versions = {");
+  const objectEnd = source.indexOf("\n};", objectStart);
+  if (objectStart === -1 || objectEnd === -1) {
+    throw new Error("legacy versions.ts has no versions object");
+  }
+  const lines = source.slice(objectStart, objectEnd).split("\n");
+  const entries: CatalogEntry[] = [];
+  let comments: string[] = [];
+  for (let index = 1; index < lines.length; index += 1) {
+    const line = lines[index] ?? "";
+    const trimmed = line.trim();
+    if (trimmed.startsWith("//")) {
+      comments.push(trimmed.replace(/^\/\/\s?/, ""));
       continue;
     }
-    const release = GithubRelease.parse(await response.json());
-    if (release.body !== undefined && release.body.length > 50) {
-      return {
-        note: {
-          dependency: repo,
-          source: "github",
-          version,
-          notes: release.body,
-          url: release.html_url,
-        },
-        authRequired,
-      };
+    const key = legacyKey(trimmed);
+    if (key === undefined) {
+      if (trimmed !== "" && !/^"[^"]+",?$/.test(trimmed)) comments = [];
+      continue;
     }
+    const inlineValue = /:\s*"([^"]+)"/.exec(trimmed)?.[1];
+    const nextValue = /^"([^"]+)"/.exec((lines[index + 1] ?? "").trim())?.[1];
+    const value = inlineValue ?? nextValue;
+    if (value === undefined)
+      throw new Error(`legacy version ${key} has no value`);
+    entries.push(legacyCatalogEntry(key, value, comments));
+    comments = [];
   }
+  return entries;
+}
 
-  return { note: undefined, authRequired };
+async function tryGitShow(
+  git: SimpleGit,
+  ref: string,
+  path: string,
+): Promise<string | undefined> {
+  try {
+    return await git.show([`${ref}:${path}`]);
+  } catch {
+    return undefined;
+  }
+}
+
+async function catalogAt(git: SimpleGit, ref: string): Promise<CatalogEntry[]> {
+  const catalog = await tryGitShow(git, ref, VERSION_CATALOG_PATH);
+  if (catalog !== undefined) return parseCatalog(catalog);
+  const legacy = await tryGitShow(git, ref, LEGACY_VERSIONS_PATH);
+  if (legacy !== undefined) return parseLegacyVersionsSource(legacy);
+  throw new Error(`no version catalog exists at ${ref}`);
+}
+
+function mapEntries(entries: CatalogEntry[]): Map<string, CatalogEntry> {
+  return new Map(entries.map((entry) => [entry.name, entry]));
+}
+
+function bareVersion(value: string | undefined): string | undefined {
+  return value?.split("@")[0];
+}
+
+function sameState(left: CatalogEntry[], right: CatalogEntry[]): boolean {
+  const rightMap = mapEntries(right);
+  return (
+    left.length === right.length &&
+    left.every((entry) => rightMap.get(entry.name)?.value === entry.value)
+  );
+}
+
+function changedEntries(
+  before: CatalogEntry[],
+  after: CatalogEntry[],
+): { before: CatalogEntry | undefined; after: CatalogEntry | undefined }[] {
+  const beforeMap = mapEntries(before);
+  const afterMap = mapEntries(after);
+  const names = new Set([...beforeMap.keys(), ...afterMap.keys()]);
+  return [...names]
+    .sort((left, right) => left.localeCompare(right))
+    .flatMap((name) => {
+      const oldEntry = beforeMap.get(name);
+      const newEntry = afterMap.get(name);
+      return oldEntry?.value === newEntry?.value
+        ? []
+        : [{ before: oldEntry, after: newEntry }];
+    });
+}
+
+function dependencyChangeKind(
+  before: CatalogEntry | undefined,
+  after: CatalogEntry | undefined,
+  entry: CatalogEntry,
+  isRevert: boolean,
+): DependencyChangeKind {
+  if (before === undefined) return "addition";
+  if (after === undefined) return "removal";
+  if (isRevert) return "revert";
+  return entry.category === "internal-image"
+    ? "internal-promotion"
+    : "upstream-upgrade";
+}
+
+export function deriveDependencyChanges(
+  baseEntries: CatalogEntry[],
+  commits: {
+    commitSha: string;
+    commitSubject: string;
+    entries: CatalogEntry[];
+  }[],
+): DependencyChange[] {
+  const seen = new Map<string, Set<string>>();
+  for (const entry of baseEntries) seen.set(entry.name, new Set([entry.value]));
+  const changes: DependencyChange[] = [];
+  let priorEntries = baseEntries;
+  for (const commit of commits) {
+    for (const pair of changedEntries(priorEntries, commit.entries)) {
+      const entry = pair.after ?? pair.before;
+      if (entry === undefined) throw new Error("catalog diff has no entry");
+      const priorValues = seen.get(entry.name) ?? new Set<string>();
+      const isRevert =
+        pair.after !== undefined && priorValues.has(pair.after.value);
+      const kind = dependencyChangeKind(
+        pair.before,
+        pair.after,
+        entry,
+        isRevert,
+      );
+      const management = entry.management;
+      changes.push({
+        name: entry.name,
+        category: entry.category,
+        artifactType: entry.artifactType,
+        datasource: management.managed ? management.datasource : undefined,
+        registryUrl: management.managed ? management.registryUrl : undefined,
+        packageName: management.managed ? management.packageName : undefined,
+        oldValue: pair.before?.value,
+        newValue: pair.after?.value,
+        oldVersion: bareVersion(pair.before?.value),
+        newVersion: bareVersion(pair.after?.value),
+        kind,
+        commitSha: commit.commitSha,
+        commitSubject: commit.commitSubject,
+        releaseNotesOverride: pair.after?.releaseNotesOverride,
+      });
+      if (pair.after !== undefined) {
+        priorValues.add(pair.after.value);
+        seen.set(entry.name, priorValues);
+      }
+    }
+    priorEntries = commit.entries;
+  }
+  return changes;
+}
+
+function safeHeartbeat(payload: Record<string, unknown>): void {
+  try {
+    Context.current().heartbeat(payload);
+  } catch {
+    // Unit tests call collectors outside an activity context.
+  }
+}
+
+async function isAncestor(
+  git: SimpleGit,
+  base: string,
+  head: string,
+): Promise<boolean> {
+  try {
+    await git.raw(["merge-base", "--is-ancestor", base, head]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function fallbackBase(git: SimpleGit, daysBack: number): Promise<string> {
+  const before = new Date(
+    Date.now() - daysBack * 24 * 60 * 60 * 1000,
+  ).toISOString();
+  const rawSha = await git.raw([
+    "rev-list",
+    "-1",
+    `--before=${before}`,
+    "origin/main",
+  ]);
+  const sha = rawSha.trim();
+  if (!/^[a-f0-9]{40}$/.test(sha)) {
+    throw new Error(
+      `could not resolve dependency report base before ${before}`,
+    );
+  }
+  return sha;
+}
+
+export async function collectDependencyChanges(
+  daysBack: number,
+): Promise<DependencyCollectionResult> {
+  const tempDir = `/tmp/homelab-dep-summary-${crypto.randomUUID()}`;
+  try {
+    await simpleGit().clone(REPO_URL, tempDir, [...DEPS_SUMMARY_CLONE_ARGS]);
+    const git = simpleGit(tempDir);
+    const rawHeadSha = await git.revparse(["origin/main"]);
+    const headSha = rawHeadSha.trim();
+    const checkpoint = await readCheckpoint();
+    const useCheckpoint =
+      checkpoint !== undefined &&
+      (await isAncestor(git, checkpoint.commitSha, headSha));
+    const baseSha = useCheckpoint
+      ? checkpoint.commitSha
+      : await fallbackBase(git, daysBack);
+    const baseEntries = await catalogAt(git, baseSha);
+    const headEntries = await catalogAt(git, headSha);
+    const rawCommits = await git.raw([
+      "rev-list",
+      "--reverse",
+      `${baseSha}..${headSha}`,
+      "--",
+      VERSION_CATALOG_PATH,
+      LEGACY_VERSIONS_PATH,
+    ]);
+    const commits = rawCommits.trim().split("\n").filter(Boolean);
+    const catalogCommits: {
+      commitSha: string;
+      commitSubject: string;
+      entries: CatalogEntry[];
+    }[] = [];
+    for (const [index, commitSha] of commits.entries()) {
+      safeHeartbeat({ phase: "catalog-diff", commitSha, index });
+      const currentEntries = await catalogAt(git, commitSha);
+      const rawCommitSubject = await git.raw([
+        "show",
+        "-s",
+        "--format=%s",
+        commitSha,
+      ]);
+      const commitSubject = rawCommitSubject.trim();
+      catalogCommits.push({
+        commitSha,
+        commitSubject,
+        entries: currentEntries,
+      });
+    }
+    const changes = deriveDependencyChanges(baseEntries, catalogCommits);
+    return {
+      baseSha,
+      headSha,
+      usedCheckpoint: useCheckpoint,
+      endpointStatesIdentical: sameState(baseEntries, headEntries),
+      changes,
+    };
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+}
+
+export async function advanceDependencySummaryCheckpoint(input: {
+  commitSha: string;
+  reportRunId: string;
+  acceptedAt: string;
+}): Promise<void> {
+  const checkpoint = CheckpointSchema.parse({ schemaVersion: 1, ...input });
+  const store = stateStore();
+  await store.client.send(
+    new PutObjectCommand({
+      Bucket: store.bucket,
+      Key: CHECKPOINT_KEY,
+      Body: JSON.stringify(checkpoint, null, 2),
+      ContentType: "application/json; charset=utf-8",
+    }),
+  );
 }
 
 export type DepsSummaryActivities = typeof depsSummaryActivities;
 
 export const depsSummaryActivities = {
-  async cloneAndGetVersionChanges(
-    daysBack: number,
-  ): Promise<DependencyChange[]> {
-    const id = crypto.randomUUID();
-    const tempDir = `/tmp/homelab-dep-summary-${id}`;
-
-    try {
-      const since = new Date();
-      since.setDate(since.getDate() - daysBack);
-      const sinceStr = since.toISOString().split("T")[0] ?? "";
-
-      const git = simpleGit();
-      await git.clone(REPO_URL, tempDir, [...DEPS_SUMMARY_CLONE_ARGS]);
-
-      const repoGit = simpleGit(tempDir);
-
-      // simple-git's options-object form joins keys+values with `=`, so
-      // {"--": [path]} would serialise to `--=path`. The path-spec separator
-      // requires the array form.
-      const log = await repoGit.log([
-        `--since=${sinceStr}`,
-        "--",
-        VERSIONS_FILE_PATH,
-      ]);
-
-      const changes = new Map<string, DependencyChange>();
-      const renovateCommentRegex =
-        /\/\/ renovate: datasource=(\S+)(?:\s+registryUrl=(\S+))?/;
-
-      for (const commit of log.all) {
-        // Per-commit heartbeat — pairs with heartbeatTimeout: 60s in
-        // workflows/deps-summary.ts. SDK auto-throttles transmission.
-        Context.current().heartbeat({ phase: "diff", commit: commit.hash });
-        let diff: string;
-        try {
-          diff = await repoGit.diff([
-            `${commit.hash}^`,
-            commit.hash,
-            "--unified=0",
-            "--",
-            VERSIONS_FILE_PATH,
-          ]);
-        } catch {
-          // Initial/root commits do not have a parent to diff against.
-          continue;
-        }
-
-        let currentDatasource = "";
-        let currentRegistryUrl: string | undefined;
-
-        for (const line of diff.split("\n")) {
-          const commentMatch = renovateCommentRegex.exec(line);
-          if (commentMatch !== null) {
-            currentDatasource = commentMatch[1] ?? "";
-            currentRegistryUrl = commentMatch[2];
-            continue;
-          }
-
-          handleRemovedLine(
-            line,
-            changes,
-            currentDatasource,
-            currentRegistryUrl,
-          );
-          handleAddedLine(line, changes, currentDatasource, currentRegistryUrl);
-        }
-      }
-
-      // Filter: only include where versions actually changed
-      return [...changes.values()].filter((c) => c.oldVersion !== c.newVersion);
-    } finally {
-      // Clean up temp directory
-      await Bun.$`rm -rf ${tempDir}`.quiet();
-    }
-  },
-
-  async fetchReleaseNotes(
-    changes: DependencyChange[],
-  ): Promise<ReleaseNotesResult> {
-    const notes: ReleaseNote[] = [];
-    const failed: FailedFetch[] = [];
-    const eligible = changes.filter(
-      (change) =>
-        change.datasource === "github-releases" ||
-        change.datasource === "docker" ||
-        change.datasource === "helm",
-    );
-    if (eligible.length === 0) {
-      return { notes, failed };
-    }
-    const headers: Record<string, string> = {
-      Accept: "application/vnd.github+json",
-    };
-    let authenticatedHeaders: Record<string, string> | undefined;
-
-    // Bounded concurrency prevents serial wait times from exceeding the
-    // activity's start-to-close timeout when dozens of deps change at once.
-    const CONCURRENCY = 8;
-    for (let i = 0; i < eligible.length; i += CONCURRENCY) {
-      // Per-batch heartbeat — pairs with heartbeatTimeout: 60s.
-      Context.current().heartbeat({
-        phase: "fetchReleaseNotes",
-        batchStart: i,
-      });
-      const batch = eligible.slice(i, i + CONCURRENCY);
-      const results: BatchFetchResult[] = await Promise.all(
-        batch.map(async (change): Promise<BatchFetchResult> => {
-          try {
-            const result = await tryFetchReleaseNote(
-              change.name,
-              change.newVersion,
-              headers,
-            );
-            if (result.note !== undefined || !result.authRequired) {
-              return { change, note: result.note, error: undefined };
-            }
-
-            if (authenticatedHeaders === undefined) {
-              const ghToken = await createGitHubAppInstallationToken();
-              authenticatedHeaders = {
-                ...headers,
-                Authorization: `Bearer ${ghToken.token}`,
-              };
-            }
-
-            const authenticatedResult = await tryFetchReleaseNote(
-              change.name,
-              change.newVersion,
-              authenticatedHeaders,
-            );
-            return {
-              change,
-              note: authenticatedResult.note,
-              error: undefined,
-            };
-          } catch (error) {
-            return { change, note: undefined, error };
-          }
-        }),
-      );
-      for (const { change, note, error } of results) {
-        if (error !== undefined) {
-          failed.push({
-            dependency: change.name,
-            reason:
-              error instanceof Error ? error.message : JSON.stringify(error),
-          });
-          continue;
-        }
-        if (note === undefined) {
-          failed.push({
-            dependency: change.name,
-            reason: "No release notes found for any tag variant",
-          });
-          continue;
-        }
-        notes.push(note);
-      }
-    }
-
-    return { notes, failed };
-  },
-
-  async summarizeWithLLM(
-    changes: DependencyChange[],
-    releaseNotes: ReleaseNote[],
-  ): Promise<string> {
-    const apiKey = Bun.env["OPENAI_API_KEY"];
-    if (apiKey === undefined || apiKey === "") {
-      console.warn("OPENAI_API_KEY not set, skipping LLM summarization");
-      return "LLM summarization skipped - API key not configured";
-    }
-
-    const openai = new OpenAI({ apiKey });
-
-    const changesText = changes
-      .map(
-        (c) =>
-          `- ${c.name}: ${c.oldVersion} → ${c.newVersion} (${c.datasource})`,
-      )
-      .join("\n");
-
-    const notesText = releaseNotes
-      .map(
-        (n) =>
-          `## ${n.dependency} [${n.source}] (${n.version})\n${n.notes}\n${n.url === undefined ? "" : `URL: ${n.url}`}`,
-      )
-      .join("\n\n");
-
-    const fetchedDeps = new Set(
-      releaseNotes.map((n) =>
-        n.dependency.replace(/ \((?:helm chart|app)\)$/, ""),
-      ),
-    );
-    const missingNotes = changes
-      .filter((c) => !fetchedDeps.has(c.name))
-      .map((c) => c.name);
-    const missingNotesText =
-      missingNotes.length > 0
-        ? `\n\nNote: Release notes could NOT be fetched for: ${missingNotes.join(", ")}. Be conservative with recommendations for these.`
-        : "";
-
-    const prompt = `You are a DevOps engineer reviewing weekly dependency updates for a homelab Kubernetes infrastructure.
-
-Here are the dependencies that were updated this week:
-${changesText}
-
-Here are the available release notes:
-${notesText}
-${missingNotesText}
-
-Please provide a concise summary that includes:
-1. **Breaking Changes**: Any breaking changes that require immediate action
-2. **Security Updates**: Any security-related fixes
-3. **Notable New Features**: Features that might be useful for a homelab setup
-4. **Recommended Actions**: Specific things to check or configure after these updates
-
-IMPORTANT: Only include information that is EXPLICITLY mentioned in the release notes provided above.
-Do NOT speculate or make assumptions about changes that are not documented.
-For dependencies without release notes, simply note that no information is available.
-
-Keep the summary actionable and focused on what matters for a self-hosted homelab environment.
-Format the response in HTML for email.`;
-
-    try {
-      const params = {
-        model: "gpt-5.6-sol",
-        messages: [{ role: "user" as const, content: prompt }],
-        max_completion_tokens: 8000,
-      };
-      const completion = await traceOpenAi(
-        {
-          service: "temporal",
-          callSite: "deps-summary",
-          request: params,
-        },
-        async () => openai.chat.completions.create(params),
-      );
-
-      const choice = completion.choices[0];
-      return choice?.message.content ?? "Failed to generate summary";
-    } catch (error) {
-      console.error(`OpenAI API error: ${String(error)}`);
-      return "Failed to generate LLM summary";
-    }
-  },
-
-  async formatAndSendEmail(
-    changes: DependencyChange[],
-    summary: string,
-    failedFetches: FailedFetch[],
-  ): Promise<void> {
-    const { recipient, sender } = resolvePostalAddresses();
-
-    const subject =
-      changes.length === 0
-        ? "No Dependency Updates This Week"
-        : `Weekly Dependency Summary: ${String(changes.length)} updates`;
-
-    let html = `<h1>Weekly Dependency Summary</h1>`;
-    html += `<p>Generated: ${new Date().toISOString()}</p>`;
-
-    if (changes.length > 0) {
-      html += `<h2>Dependencies Updated</h2><table><tr><th>Name</th><th>Old</th><th>New</th><th>Source</th></tr>`;
-      for (const c of changes) {
-        html += `<tr><td>${c.name}</td><td>${c.oldVersion}</td><td>${c.newVersion}</td><td>${c.datasource}</td></tr>`;
-      }
-      html += `</table>`;
-
-      if (summary !== "") {
-        html += `<h2>AI Summary</h2>${summary}`;
-      }
-
-      if (failedFetches.length > 0) {
-        html += `<h2>Failed Release Note Fetches</h2><ul>`;
-        for (const f of failedFetches) {
-          html += `<li>${f.dependency}: ${f.reason}</li>`;
-        }
-        html += `</ul>`;
-      }
-    } else {
-      html += `<p>No dependencies were updated this week.</p>`;
-    }
-
-    const result = await sendPostalEmail({
-      to: recipient,
-      from: sender,
-      subject,
-      htmlBody: html,
-      tag: "dependency-summary",
-    });
-
-    console.warn(
-      `Email accepted by Postal: subject="${result.subject}" message_id=${result.messageId} recipient_id=${String(result.recipientId)} tag=${result.tag}`,
-    );
-  },
+  collectDependencyChanges,
+  fetchDependencyReleaseNotes,
+  synthesizeDependencyChanges,
+  advanceDependencySummaryCheckpoint,
 };

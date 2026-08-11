@@ -30,8 +30,26 @@ function makeStartMock() {
 
 function validInput(): AgentTaskInput {
   return {
+    contractVersion: 2,
     title: "Check follow-up",
     prompt: "Check whether the follow-up is resolved.",
+    checks: [
+      {
+        id: "follow-up-state",
+        label: "Follow-up state",
+        required: true,
+        evidenceRequirement: "Current source or runtime evidence.",
+        evidenceCollectors: [
+          {
+            id: "runtime-status",
+            kind: "command",
+            argv: ["runtime-status", "--json"],
+            output: "json",
+            expectation: { kind: "exit-code", passedExitCodes: [0] },
+          },
+        ],
+      },
+    ],
     provider: "claude",
     mode: "report-only",
     repo: { fullName: "shepherdjerred/monorepo", ref: "main" },

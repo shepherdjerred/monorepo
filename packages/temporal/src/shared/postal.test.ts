@@ -171,4 +171,40 @@ describe("sendPostalEmail", () => {
     }
     expect(call.headers.get("Host")).toBe("postal.internal");
   });
+
+  it("sends plain text and stable report headers when provided", async () => {
+    const captured = captureFetch({
+      kind: "json",
+      body: {
+        status: "success",
+        data: {
+          message_id: "msg-3",
+          messages: { "to@example.com": { id: 8, token: "t" } },
+        },
+      },
+    });
+
+    await sendPostalEmail(
+      {
+        to: "to@example.com",
+        from: "from@example.com",
+        subject: "[OK] report",
+        htmlBody: "<p>ok</p>",
+        plainBody: "ok\n",
+        headers: { "X-Report-Run-ID": "report:run-1" },
+        tag: "report",
+      },
+      TEST_CONFIG,
+    );
+
+    const call = captured.calls[0];
+    if (call?.body === undefined) {
+      throw new TypeError("expected request body");
+    }
+    const body: unknown = JSON.parse(call.body);
+    expect(body).toMatchObject({
+      plain_body: "ok\n",
+      headers: { "X-Report-Run-ID": "report:run-1" },
+    });
+  });
 });

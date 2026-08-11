@@ -16,23 +16,25 @@ import {
   setRevisionHistoryLimit,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
-import {
-  KubeClusterRole,
-  KubeClusterRoleBinding,
-  KubeRole,
-  KubeRoleBinding,
-} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
-import { createTemporalWorkerAuditRbac } from "./audit-rbac.ts";
+import {
+  createTemporalWorkerAuditRbac,
+  createTemporalWorkerTasknotesCanaryRbac,
+} from "./audit-rbac.ts";
+import { createTemporalAgentWorker } from "./agent-worker.ts";
 import { createTemporalWorkerCrdReaderRbac } from "./crd-rbac.ts";
 import { sleepWebhookEnv } from "./http-services.ts";
 import { glitterCorpusEnv } from "./glitter-corpus-env.ts";
 import { createTemporalGlitterWorker } from "./glitter-worker.ts";
 import { temporalWorkerHealthProbes } from "./worker-health.ts";
 import { createTemporalWorkerHttpServices } from "./worker-http-services.ts";
+import {
+  createTemporalWorkerMaintenanceRbac,
+  createTemporalWorkerServiceAccount,
+} from "./worker-rbac.ts";
 
 export type CreateTemporalWorkerDeploymentProps = {
   serverServiceName: string;
@@ -64,6 +66,9 @@ function homelabAuditEnv(secret: ISecret): Record<string, EnvValue> {
     BUGSINK_URL: EnvValue.fromValue("https://bugsink.sjer.red"),
     BUILDKITE_ORGANIZATION_SLUG: EnvValue.fromValue("sjerred"),
     BUILDKITE_PIPELINE_SLUG: EnvValue.fromValue("monorepo"),
+    PROMETHEUS_URL: EnvValue.fromValue(
+      "http://prometheus-kube-prometheus-prometheus.prometheus:9090",
+    ),
     ...requiredSecretEnv(secret, [
       "BUGSINK_TOKEN",
       "GRAFANA_URL",
@@ -80,184 +85,6 @@ function homelabAuditEnv(secret: ISecret): Record<string, EnvValue> {
     // projects 1P field TALOSCONFIG_YAML to this path.
     TALOSCONFIG: EnvValue.fromValue("/etc/talos/config"),
   };
-}
-
-function createTemporalWorkerServiceAccount(chart: Chart): ServiceAccount {
-  const serviceAccount = new ServiceAccount(chart, "temporal-worker-sa", {
-    metadata: { name: "temporal-worker" },
-  });
-
-  new KubeClusterRole(chart, "temporal-worker-ingress-reader", {
-    metadata: { name: "temporal-worker-ingress-reader" },
-    rules: [
-      {
-        apiGroups: ["networking.k8s.io"],
-        resources: ["ingresses"],
-        verbs: ["get", "list", "watch"],
-      },
-    ],
-  });
-
-  new KubeClusterRoleBinding(chart, "temporal-worker-ingress-reader-binding", {
-    metadata: { name: "temporal-worker-ingress-reader" },
-    roleRef: {
-      apiGroup: "rbac.authorization.k8s.io",
-      kind: "ClusterRole",
-      name: "temporal-worker-ingress-reader",
-    },
-    subjects: [
-      {
-        kind: "ServiceAccount",
-        name: serviceAccount.name,
-        namespace: chart.namespace ?? "temporal",
-      },
-    ],
-  });
-
-  return serviceAccount;
-}
-
-function createTemporalWorkerMaintenanceRbac(
-  chart: Chart,
-  serviceAccount: ServiceAccount,
-) {
-  // Namespace-scoped RBAC for the ZFS maintenance workflow, which lists the
-  // zfs-zpool-collector pods and execs into one Running and Ready pod per node
-  // in the prometheus namespace.
-  new KubeRole(chart, "temporal-worker-zfs-exec", {
-    metadata: { name: "temporal-worker-zfs-exec", namespace: "prometheus" },
-    rules: [
-      {
-        apiGroups: [""],
-        resources: ["pods/exec"],
-        verbs: ["create"],
-      },
-      {
-        apiGroups: [""],
-        resources: ["pods"],
-        verbs: ["get", "list"],
-      },
-    ],
-  });
-
-  new KubeRoleBinding(chart, "temporal-worker-zfs-exec-binding", {
-    metadata: { name: "temporal-worker-zfs-exec", namespace: "prometheus" },
-    roleRef: {
-      apiGroup: "rbac.authorization.k8s.io",
-      kind: "Role",
-      name: "temporal-worker-zfs-exec",
-    },
-    subjects: [
-      {
-        kind: "ServiceAccount",
-        name: serviceAccount.name,
-        namespace: chart.namespace ?? "temporal",
-      },
-    ],
-  });
-
-  // Namespace-scoped RBAC for the Bugsink housekeeping workflow, which execs
-  // into the bugsink pod to run bugsink-manage maintenance commands.
-  new KubeRole(chart, "temporal-worker-bugsink-exec", {
-    metadata: { name: "temporal-worker-bugsink-exec", namespace: "bugsink" },
-    rules: [
-      {
-        apiGroups: [""],
-        resources: ["pods/exec"],
-        verbs: ["create"],
-      },
-      {
-        apiGroups: [""],
-        resources: ["pods"],
-        verbs: ["get", "list"],
-      },
-    ],
-  });
-
-  new KubeRoleBinding(chart, "temporal-worker-bugsink-exec-binding", {
-    metadata: { name: "temporal-worker-bugsink-exec", namespace: "bugsink" },
-    roleRef: {
-      apiGroup: "rbac.authorization.k8s.io",
-      kind: "Role",
-      name: "temporal-worker-bugsink-exec",
-    },
-    subjects: [
-      {
-        kind: "ServiceAccount",
-        name: serviceAccount.name,
-        namespace: chart.namespace ?? "temporal",
-      },
-    ],
-  });
-
-  // Namespace-scoped RBAC for the Velero orphan-snapshot audit workflow.
-  // Reads `velero.io/v1/Backup` CRs in the velero namespace and execs into
-  // the openebs-zfs-localpv-node pod to enumerate ZFS snapshots.
-  // See packages/docs/decisions/2026-05-05_velero-orphan-snapshot-prevention.md.
-  new KubeRole(chart, "temporal-worker-velero-backups-read", {
-    metadata: {
-      name: "temporal-worker-velero-backups-read",
-      namespace: "velero",
-    },
-    rules: [
-      {
-        apiGroups: ["velero.io"],
-        resources: ["backups"],
-        verbs: ["get", "list"],
-      },
-    ],
-  });
-
-  new KubeRoleBinding(chart, "temporal-worker-velero-backups-read-binding", {
-    metadata: {
-      name: "temporal-worker-velero-backups-read",
-      namespace: "velero",
-    },
-    roleRef: {
-      apiGroup: "rbac.authorization.k8s.io",
-      kind: "Role",
-      name: "temporal-worker-velero-backups-read",
-    },
-    subjects: [
-      {
-        kind: "ServiceAccount",
-        name: serviceAccount.name,
-        namespace: chart.namespace ?? "temporal",
-      },
-    ],
-  });
-
-  new KubeRole(chart, "temporal-worker-openebs-exec", {
-    metadata: { name: "temporal-worker-openebs-exec", namespace: "openebs" },
-    rules: [
-      {
-        apiGroups: [""],
-        resources: ["pods/exec"],
-        verbs: ["create"],
-      },
-      {
-        apiGroups: [""],
-        resources: ["pods"],
-        verbs: ["get", "list"],
-      },
-    ],
-  });
-
-  new KubeRoleBinding(chart, "temporal-worker-openebs-exec-binding", {
-    metadata: { name: "temporal-worker-openebs-exec", namespace: "openebs" },
-    roleRef: {
-      apiGroup: "rbac.authorization.k8s.io",
-      kind: "Role",
-      name: "temporal-worker-openebs-exec",
-    },
-    subjects: [
-      {
-        kind: "ServiceAccount",
-        name: serviceAccount.name,
-        namespace: chart.namespace ?? "temporal",
-      },
-    ],
-  });
 }
 
 export function createTemporalWorkerDeployment(
@@ -292,12 +119,21 @@ export function createTemporalWorkerDeployment(
   );
 
   const serviceAccount = createTemporalWorkerServiceAccount(chart);
+  const agentServiceAccount = new ServiceAccount(
+    chart,
+    "temporal-agent-worker-sa",
+    {
+      metadata: { name: "temporal-agent-worker" },
+    },
+  );
 
   createTemporalWorkerMaintenanceRbac(chart, serviceAccount);
 
-  // Cluster-wide read-only RBAC for the homelab-audit-daily workflow. See
-  // ./audit-rbac.ts for the full rule set.
-  createTemporalWorkerAuditRbac(chart, serviceAccount);
+  // Cluster-wide read-only RBAC for deterministic collectors and generic
+  // report-only investigations. Only the core worker receives the separate
+  // TaskNotes exec role; the agent worker cannot exec into any pod.
+  createTemporalWorkerAuditRbac(chart, [serviceAccount, agentServiceAccount]);
+  createTemporalWorkerTasknotesCanaryRbac(chart, serviceAccount);
 
   // Read-only CRD access for homelab-crd-imports-daily. See ./crd-rbac.ts.
   createTemporalWorkerCrdReaderRbac(chart, serviceAccount);
@@ -406,9 +242,9 @@ export function createTemporalWorkerDeployment(
         AWS_DEFAULT_REGION: EnvValue.fromValue("us-east-1"),
         S3_FORCE_PATH_STYLE: EnvValue.fromValue("true"),
         ...llmArchiveEnvVars(),
-        // Homelab-audit S3 archiving is unused — the active audit runs via
-        // agentTaskWorkflow (email only) and never calls the archive activity.
-        // No HOMELAB_AUDIT_ARCHIVE_* env wired (no dead optional secret).
+        // The deterministic homelab audit stores typed report state and email
+        // acceptance receipts through the shared report sender. Legacy audit
+        // archive variables remain intentionally unwired for history replay.
         AWS_ACCESS_KEY_ID: EnvValue.fromSecretValue({
           secret,
           key: "AWS_ACCESS_KEY_ID",
@@ -440,7 +276,7 @@ export function createTemporalWorkerDeployment(
           key: "GITHUB_WEBHOOK_SECRET",
         }),
         // Claude Code subscription OAuth token — sole auth for every `claude -p`
-        // subprocess (homelab-audit, generic agent-task, scout-season-refresh).
+        // subprocess (homelab synthesis, generic agent-task, Scout season).
         // All work bills against the subscription; ANTHROPIC_API_KEY is
         // deliberately absent so a leaked key can't start direct-API billing.
         CLAUDE_CODE_OAUTH_TOKEN: EnvValue.fromSecretValue({
@@ -525,6 +361,45 @@ export function createTemporalWorkerDeployment(
   const tmpVolume = Volume.fromEmptyDir(chart, "temporal-worker-tmp", "tmp");
   container.mount("/tmp", tmpVolume);
 
+  const agentDeployment = createTemporalAgentWorker(chart, {
+    serviceAccount: agentServiceAccount,
+    envVariables: {
+      TEMPORAL_ADDRESS: EnvValue.fromValue(`${props.serverServiceName}:7233`),
+      TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
+      TEMPORAL_WORKER_ROLE: EnvValue.fromValue("agent"),
+      AGENT_PROVIDER_UID: EnvValue.fromValue("1001"),
+      ENVIRONMENT: EnvValue.fromValue("production"),
+      CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: EnvValue.fromValue("1"),
+      DISABLE_AUTOUPDATER: EnvValue.fromValue("1"),
+      TELEMETRY_ENABLED: EnvValue.fromValue("true"),
+      OTLP_ENDPOINT: EnvValue.fromValue(
+        "http://tempo.tempo.svc.cluster.local:4318",
+      ),
+      TELEMETRY_SERVICE_NAME: EnvValue.fromValue("temporal-agent-worker"),
+      NODE_EXTRA_CA_CERTS: EnvValue.fromValue(
+        "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
+      ),
+      CLAUDE_CODE_OAUTH_TOKEN: EnvValue.fromSecretValue({
+        secret,
+        key: "CLAUDE_CODE_OAUTH_TOKEN",
+      }),
+      OPENAI_API_KEY: EnvValue.fromSecretValue({
+        secret,
+        key: "OPENAI_API_KEY",
+      }),
+      CODEX_API_KEY: EnvValue.fromSecretValue({
+        secret,
+        key: "OPENAI_API_KEY",
+      }),
+      PROMETHEUS_URL: EnvValue.fromValue(
+        "http://prometheus-kube-prometheus-prometheus.prometheus:9090",
+      ),
+      ALERT_DASHBOARD_URL: EnvValue.fromValue(
+        "http://alert-dashboard-alert-dashboard-service.alert-dashboard:7341",
+      ),
+    },
+  });
+
   // Glitter's corpus and context-refresh queues perform the heaviest Bun-side
   // work. Keep them in a separate process and pod so a runtime wedge or
   // resource spike cannot stop schedules, webhooks, or the general queues.
@@ -592,5 +467,5 @@ export function createTemporalWorkerDeployment(
 
   createTemporalWorkerHttpServices(chart, deployment);
 
-  return { deployment, glitterDeployment };
+  return { deployment, agentDeployment, glitterDeployment };
 }

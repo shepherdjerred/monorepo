@@ -149,15 +149,21 @@ describe("runTrackedAgentSubprocess", () => {
     const redactionTokens = ["first-mounted-token"];
     const script = [
       "console.log('first-mounted-token');",
-      "await Bun.sleep(50);",
       "console.log('second-mounted-token');",
     ].join(" ");
     const { input, stdoutLines } = harness(["bun", "-e", script], {
       redactTokens: redactionTokens,
     });
-    setTimeout(() => {
-      redactionTokens.splice(0, redactionTokens.length, "second-mounted-token");
-    }, 25);
+    input.onStdoutLine = (line) => {
+      stdoutLines.push(line);
+      if (stdoutLines.length === 1) {
+        redactionTokens.splice(
+          0,
+          redactionTokens.length,
+          "second-mounted-token",
+        );
+      }
+    };
 
     await runTrackedAgentSubprocess(input, redactSecrets);
 

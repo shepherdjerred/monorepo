@@ -58,9 +58,11 @@ and #7033, #7035, #7040, #7047, #7050, and #7058:
   successful structured parsing.
 - Keep this plan and
   `packages/docs/todos/homelab-audit-agent-task-production-verification.md`
-  open until the canary is followed by seven successful daily
-  `homelab-audit-daily` runs with one email per run and no duplicate timeout
-  incidents.
+  open until the canary is followed by a seven-day production queue bake with
+  no provider-contract failures, duplicate emails, poller loss, or unexplained
+  schedule-to-start latency. The deterministic `homelab-audit-daily` workflow
+  no longer exercises the generic provider contract and is not acceptance
+  evidence for this plan.
 
 ## Remaining
 
@@ -68,8 +70,10 @@ and #7033, #7035, #7040, #7047, #7050, and #7058:
       monitoring changes.
 - [ ] Run the tagged production structured-output canary and record its
       workflow ID, run ID, parser success, and email delivery.
-- [ ] Verify seven consecutive daily homelab audits and close the production
-      verification TODO only after all seven pass.
+- [ ] Observe the production `agent-task` queue for seven days after the canary,
+      including every naturally occurring v2 execution, and close the
+      production verification TODO only if provider parsing, delivery, and
+      queue-health evidence remain clean.
 
 ## Comment Log
 
@@ -90,3 +94,10 @@ and #7033, #7035, #7040, #7047, #7050, and #7058:
   `2.1.175`; deployment of the new image is still required. The local Docker
   daemon, production Temporal endpoint override, and Claude OAuth token are not
   available, so the canary and seven-day bake remain operator verification.
+
+### 2026-08-10 — acceptance decoupled from homelab reporting
+
+- The daily homelab report moved to deterministic collectors. Its natural runs
+  still gate report reliability, but no longer prove the Claude/Codex generic
+  agent contract. The agent-task bake now uses its own canary, executions, and
+  queue-health signals.

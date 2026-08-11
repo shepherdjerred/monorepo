@@ -6,12 +6,15 @@ import {
   WorkflowIdReusePolicy,
   type Client,
 } from "@temporalio/client";
-import { startOrScheduleAgentTask } from "./agent-task-scheduler.ts";
+import {
+  agentTaskWorkflowRunTimeout,
+  startOrScheduleAgentTask,
+} from "./agent-task-scheduler.ts";
 import {
   AgentTaskInputSchema,
-  agentTaskWorkflowId,
   type AgentTaskInput,
 } from "#shared/agent-task.ts";
+import { agentTaskWorkflowId } from "#shared/agent-task-identifiers.ts";
 
 // Captured start/create payloads so assertions can inspect the exact options the
 // scheduler handed to Temporal.
@@ -109,7 +112,7 @@ describe("startOrScheduleAgentTask — one-off runAt", () => {
 
     // The run is bounded by workflowRunTimeout (per-run), NOT
     // workflowExecutionTimeout (which would include the buffered delay).
-    expect(opt(captured.startOpts, "workflowRunTimeout")).toBe("2 hours");
+    expect(opt(captured.startOpts, "workflowRunTimeout")).toBe(14_400_000);
     expect(opt(captured.startOpts, "workflowExecutionTimeout")).toBeUndefined();
 
     // The workflow receives args with runAt stripped so it does not double-wait.
@@ -139,7 +142,7 @@ describe("startOrScheduleAgentTask — one-off runAt", () => {
     await startOrScheduleAgentTask(client, oneOffInput(runAt));
 
     expect(opt(captured.startOpts, "startDelay")).toBeUndefined();
-    expect(opt(captured.startOpts, "workflowRunTimeout")).toBe("2 hours");
+    expect(opt(captured.startOpts, "workflowRunTimeout")).toBe(14_400_000);
     expect(
       firstArgInput(opt(captured.startOpts, "args")).runAt,
     ).toBeUndefined();
@@ -203,7 +206,7 @@ describe("startOrScheduleAgentTask — cron", () => {
       throw new TypeError("expected schedule action");
     }
     const actionRecord: Record<string, unknown> = { ...action };
-    expect(actionRecord["workflowRunTimeout"]).toBe("2 hours");
+    expect(actionRecord["workflowRunTimeout"]).toBe(14_400_000);
     expect(actionRecord["workflowExecutionTimeout"]).toBeUndefined();
     expect(firstArgInput(actionRecord["args"]).runAt).toBeUndefined();
     expect(firstArgInput(actionRecord["args"]).scheduleId).toBe(
@@ -211,5 +214,22 @@ describe("startOrScheduleAgentTask — cron", () => {
     );
     // The one-off workflow.start path must NOT be used for cron.
     expect(captured.startOpts).toBeUndefined();
+  });
+});
+
+describe("agentTaskWorkflowRunTimeout", () => {
+  it("budgets both v2 phases and default retries", () => {
+    expect(agentTaskWorkflowRunTimeout({ contractVersion: 2 })).toBe(
+      25_200_000,
+    );
+  });
+
+  it("budgets both v2 phases without retry inflation for explicit timeouts", () => {
+    expect(
+      agentTaskWorkflowRunTimeout({
+        contractVersion: 2,
+        agentTimeoutMinutes: 90,
+      }),
+    ).toBe(14_400_000);
   });
 });

@@ -2,10 +2,7 @@ import { ScheduleOverlapPolicy } from "@temporalio/client";
 import type { Duration } from "@temporalio/common";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { GLITTER_CORPUS_STORAGE_ENV } from "./glitter-schedule-environment.ts";
-import {
-  HOMELAB_AUDIT_AGENT_TASK,
-  SCOUT_LANE_PRIOR_UPDATE_CONFIG,
-} from "./schedule-payloads.ts";
+import { SCOUT_LANE_PRIOR_UPDATE_CONFIG } from "./schedule-payloads.ts";
 
 // Split out of register-schedules.ts (which sits at the repo's max-lines
 // cap) — the declarative SCHEDULES array plus its supporting types/data, no
@@ -65,6 +62,16 @@ export type ScheduleDefinition = {
 
 export const SCHEDULES: ScheduleDefinition[] = [
   {
+    id: "report-freshness-monitor",
+    workflowType: "monitorReportFreshness",
+    args: [],
+    cronExpression: "*/15 * * * *",
+    taskQueue: TASK_QUEUES.DEFAULT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "20 minutes",
+    memo: "Every-15-minute accepted report heartbeat freshness monitor",
+  },
+  {
     id: "fetcher-skill-capped",
     workflowType: "fetchSkillCappedManifest",
     args: [],
@@ -102,8 +109,45 @@ export const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "0 9 * * 1",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "30 minutes",
+    // Three sequential 10-minute activities can each use three attempts;
+    // delivery and checkpoint persistence also retry. Keep enough headroom for
+    // the complete retry budget so a valid report is not killed before receipt.
+    workflowExecutionTimeout: "3 hours",
     memo: "Weekly dependency summary email",
+  },
+  {
+    id: "protobufjs-v8-watch-weekly",
+    workflowType: "runProtobufWatch",
+    args: [],
+    cronExpression: "0 9 * * 1",
+    taskQueue: TASK_QUEUES.DEFAULT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    // Worst case: three 1m collection attempts, three 2m primary-delivery
+    // attempts, then three 2m failure-delivery attempts, plus retry delays and
+    // workflow-task overhead. Keep ten minutes of headroom over the 15m
+    // start-to-close total so the failure heartbeat can still be accepted.
+    workflowExecutionTimeout: "25 minutes",
+    memo: "Weekly typed npm metadata check for Temporal protobufjs v8 compatibility",
+  },
+  {
+    id: "tasknotes-skipped-files-canary",
+    workflowType: "runTasknotesCanary",
+    args: [],
+    cronExpression: "0 9 * * *",
+    taskQueue: TASK_QUEUES.DEFAULT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "20 minutes",
+    memo: "Daily typed TaskNotes engine, pod, skipped-file, and accepted task-count baseline check",
+  },
+  {
+    id: "ci-io-post-merge-impact",
+    workflowType: "runCiIoImpact",
+    args: [],
+    cronExpression: "0 9 * * *",
+    taskQueue: TASK_QUEUES.DEFAULT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "2 hours",
+    memo: "Daily deterministic schema-v4 CI I/O impact and observability report",
   },
   {
     id: "dns-audit-daily",
@@ -145,15 +189,15 @@ export const SCHEDULES: ScheduleDefinition[] = [
   },
   {
     id: "homelab-audit-daily",
-    workflowType: "agentTaskWorkflow",
-    args: [HOMELAB_AUDIT_AGENT_TASK],
+    workflowType: "runHomelabAuditWorkflow",
+    args: [{}],
     // 06:30 PT — staggered after dns-audit-daily (06:00). Lands in inbox
     // before goodMorningEarly (07:00 weekdays / 08:00 weekends) fires.
     cronExpression: "30 6 * * *",
-    taskQueue: TASK_QUEUES.AGENT_TASK,
+    taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "50 minutes",
-    memo: "Bounded daily homelab health check email via generic report-only agent task (Claude -> Postal)",
+    memo: "Deterministic daily homelab health check with evidence-backed report delivery",
   },
   {
     id: "kometa-daily",
@@ -213,7 +257,9 @@ export const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "0 7 * * 1",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "30 minutes",
+    // Two 30-minute research attempts, their 5-minute backoff, and both
+    // possible three-attempt report deliveries fit inside this bound.
+    workflowExecutionTimeout: "90 minutes",
     memo: "Weekly LoL season-date drift check (claude -p → PR if drifted)",
   },
   {
@@ -238,15 +284,14 @@ export const SCHEDULES: ScheduleDefinition[] = [
     // the scout-prod match lake (28-day lookback) for limited-queue window
     // drift; opens an auto-merging PR for window opens/reopens, a plain PR
     // for closes (a human confirms against patch notes), and emails
-    // warnings-only runs. Steady state is a silent no-diff.
+    // warnings-only runs. Steady state still sends a concise clear heartbeat.
     cronExpression: "45 6 * * *",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
-    // 65 min: the 30-min startToCloseTimeout plus the 2-min retry backoff plus a
-    // second full 30-min attempt is 62 min; 45 min would terminate the retry
-    // (only 13 min left after the first attempt + backoff), so give the
-    // configured maximumAttempts=2 room to actually run the serial 21-day scan.
-    workflowExecutionTimeout: "65 minutes",
+    // The two 30-minute scan attempts plus 2-minute backoff consume 62 minutes.
+    // Reserve the remaining time for a failed success-report delivery and the
+    // catch-path failure report, each with three 2-minute attempts.
+    workflowExecutionTimeout: "90 minutes",
     memo: "Daily LoL limited-queue window watcher — proposes queue-windows.json edits from scout-prod match volume; auto-merge on open/reopen, plain PR on close",
   },
   {

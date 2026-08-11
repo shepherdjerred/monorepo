@@ -9,6 +9,14 @@ board: false
 
 Repeatable procedure for a comprehensive health audit of the `torvalds` cluster. Run periodically or when investigating issues.
 
+> This is the manual, comprehensive investigation runbook. The scheduled
+> `homelab-audit-daily` email does not execute this document or delegate these
+> sections to a generic agent. It runs six deterministic collectors for
+> Prometheus alerts, durable alert occurrences, Temporal failures/stalls,
+> Kubernetes workload health, ArgoCD state, and Buildkite main failures with
+> failed-job logs. Use this runbook when those signals require a deeper human-
+> directed investigation.
+
 ## Prerequisites
 
 All tools must be authenticated before starting:

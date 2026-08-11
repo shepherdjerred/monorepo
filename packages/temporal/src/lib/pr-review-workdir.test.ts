@@ -1,6 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import {
   cleanupWorkdir,
+  gitProcessEnvironment,
   provisionWorkdir,
   workdirPathFor,
   WorkdirEnvSchema,
@@ -62,10 +63,48 @@ function makeFakeDeps(opts: {
 }
 
 describe("WorkdirEnvSchema", () => {
-  it("requires GH_TOKEN to be non-empty", () => {
+  it("accepts tokenless public clones and rejects empty credentials", () => {
     expect(() => WorkdirEnvSchema.parse({ GH_TOKEN: "" })).toThrow();
-    expect(() => WorkdirEnvSchema.parse({})).toThrow();
+    expect(() => WorkdirEnvSchema.parse({})).not.toThrow();
     expect(() => WorkdirEnvSchema.parse({ GH_TOKEN: "abc" })).not.toThrow();
+  });
+});
+
+describe("gitProcessEnvironment", () => {
+  it("strips inherited GitHub and git-config credentials from public clones", () => {
+    expect(
+      gitProcessEnvironment(
+        {},
+        {
+          PATH: "/usr/bin",
+          HOME: "/home/worker",
+          GH_TOKEN: "inherited-token",
+          GITHUB_PERSONAL_ACCESS_TOKEN: "inherited-token",
+          GIT_ASKPASS: "/secret/askpass",
+          GIT_CONFIG_COUNT: "1",
+          GIT_CONFIG_KEY_0: "credential.helper",
+          GIT_CONFIG_VALUE_0: "malicious-helper",
+        },
+      ),
+    ).toEqual({
+      PATH: "/usr/bin",
+      HOME: "/tmp/pr-review-workdir",
+      GIT_CONFIG_GLOBAL: "/dev/null",
+      GIT_CONFIG_NOSYSTEM: "1",
+      GIT_TERMINAL_PROMPT: "0",
+    });
+  });
+
+  it("uses only an explicitly supplied private-repository token", () => {
+    expect(
+      gitProcessEnvironment(
+        { GH_TOKEN: "explicit-token", GIT_ASKPASS: "/tmp/askpass" },
+        { GH_TOKEN: "inherited-token" },
+      ),
+    ).toMatchObject({
+      GH_TOKEN: "explicit-token",
+      GIT_ASKPASS: "/tmp/askpass",
+    });
   });
 });
 
@@ -98,7 +137,7 @@ describe("provisionWorkdir", () => {
       owner: "shepherdjerred",
       repo: "monorepo",
       ref: "abc1234",
-      env: { GH_TOKEN: "tok" },
+      env: {},
       deps,
     });
     expect(path).toBe(workdirPathFor("wf-123"));
@@ -107,7 +146,7 @@ describe("provisionWorkdir", () => {
     expect(calls.clone).toHaveLength(1);
     expect(calls.clone[0]?.dest).toBe(path);
     expect(calls.clone[0]?.ref).toBe("abc1234");
-    expect(calls.clone[0]?.env.GH_TOKEN).toBe("tok");
+    expect(calls.clone[0]?.env).toEqual({});
   });
 
   it("propagates clone failures (does NOT silently empty-fallback)", async () => {
@@ -118,7 +157,7 @@ describe("provisionWorkdir", () => {
         owner: "x",
         repo: "y",
         ref: "z",
-        env: { GH_TOKEN: "t" },
+        env: {},
         deps,
       }),
     ).rejects.toThrow(/git: not found/);
@@ -132,7 +171,7 @@ describe("provisionWorkdir", () => {
         owner: "x",
         repo: "y",
         ref: "z",
-        env: { GH_TOKEN: "t" },
+        env: {},
         deps,
       }),
     ).rejects.toThrow(/EACCES/);

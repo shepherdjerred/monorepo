@@ -5,8 +5,10 @@ sidebar:
   order: 3
 ---
 
-An agent task is a scheduled LLM run that inspects state and emails a Markdown
-report. This page describes its input contract.
+An agent task is a scheduled LLM run that inspects state and emails a validated,
+evidence-backed report. New submissions use contract v2. Contract v1 exists
+only so existing Temporal histories can replay; those results are always
+partial because they did not declare coverage.
 
 Schema and dispatcher:
 [`agent-task.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/shared/agent-task.ts),
@@ -14,18 +16,21 @@ Schema and dispatcher:
 
 ## Task fields
 
-| Field             | Required | Value                                                                |
-| ----------------- | -------- | -------------------------------------------------------------------- |
-| `title`           | yes      | human label; also part of the workflow ID                            |
-| `provider`        | yes      | `claude` or `codex`                                                  |
-| `mode`            | no       | defaults to `report-only`; that is the only accepted value           |
-| `prompt`          | yes      | the task instruction                                                 |
-| `repo`            | yes      | `{ fullName, ref }`                                                  |
-| `runAt`           | no       | ISO timestamp for a deferred one-off run                             |
-| `cron`            | no       | cron expression for a recurring run                                  |
-| `scheduleId`      | no       | recurring schedule ID; generated from task content when omitted      |
-| `source`          | no       | `{ docPath }` — the document that motivated the task                 |
-| `allowSelfCancel` | no       | defaults to `false`; permits the task to pause its own recurring run |
+| Field                 | Required | Value                                                           |
+| --------------------- | -------- | --------------------------------------------------------------- |
+| `contractVersion`     | yes      | `2`                                                             |
+| `title`               | yes      | human label; also part of the workflow ID                       |
+| `provider`            | yes      | `claude` or `codex`                                             |
+| `mode`                | no       | defaults to `report-only`; that is the only accepted value      |
+| `prompt`              | yes      | investigation instructions                                      |
+| `checks`              | yes      | one or more declared check definitions                          |
+| `repo`                | yes      | `{ fullName, ref }`                                             |
+| `runAt`               | no       | ISO timestamp for a deferred one-off run                        |
+| `cron`                | no       | cron expression for a recurring run                             |
+| `scheduleId`          | no       | recurring schedule ID; generated from task content when omitted |
+| `source`              | no       | `{ docPath, url, note }` provenance                             |
+| `model`, `maxTurns`   | no       | provider execution controls                                     |
+| `agentTimeoutMinutes` | no       | positive integer, at most 90                                    |
 
 Set at most one of `runAt` and `cron`. Omitting both starts a one-off workflow
 immediately. Cron expressions are evaluated in `America/Los_Angeles`.
@@ -35,11 +40,15 @@ immediately. Cron expressions are evaluated in `America/Los_Angeles`.
 ```md
 <!-- temporal-agent-task
 {
+  "contractVersion": 2,
   "title": "Recheck Birmel post-deploy metrics",
   "provider": "claude",
   "mode": "report-only",
   "runAt": "2026-05-31T09:00:00-07:00",
   "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
+  "checks": [
+    { "id": "post-deploy-metrics", "label": "Post-deploy metrics", "required": true, "evidenceRequirement": "Every current Birmel target reports up=1.", "evidenceCollectors": [{ "id": "birmel-up", "kind": "prometheus", "query": "up{namespace=\"birmel\"}", "expectation": { "kind": "numeric", "operator": "eq", "threshold": 1, "quantifier": "all" } }] }
+  ],
   "source": {
     "docPath": "packages/docs/guides/2026-04-25_birmel-remediation-followups.md"
   },
@@ -56,10 +65,41 @@ immediately. Cron expressions are evaluated in `America/Los_Angeles`.
 | Operator CLI | `bun run scripts/schedule-agent-task.ts --from-doc <path>`        | port-forwarded Temporal                       |
 | HTTP API     | `POST /agent-tasks` on `temporal-agent-tasks.sjer.red`            | `Authorization: Bearer $AGENT_TASK_API_TOKEN` |
 
-One document may contain multiple task blocks. The CLI validates all blocks
-before connecting and schedules them in document order. It also accepts
-`--json` and `--stdin` for a single task. The HTTP API is the only public
-scheduling ingress; the Temporal server itself is never exposed.
+One document may contain multiple task blocks. The CLI validates every block as
+v2 before connecting and schedules them in document order. It also accepts
+`--json` and `--stdin` for a single task. The HTTP API also requires v2 and is
+the only public scheduling ingress; the Temporal server itself is never
+exposed.
+
+Each check has `id`, `label`, `required`, `evidenceRequirement`, and a non-empty
+`evidenceCollectors` array. A collector is either an exact command `argv` with
+an output contract (`allow-empty`, `non-empty`, or structured `json`), or a
+typed Prometheus query with an optional range window. Every collector requires
+an `expectation`. Command expectations either distinguish passing accepted exit
+codes or evaluate typed JSON path assertions; a `*` path segment expands arrays
+or object values. Prometheus expectations compare finite numeric samples to a
+threshold. Both JSON and Prometheus expectations declare whether `all` or `any`
+observations must match. The worker executes collectors and evaluates these
+predicates independently after the investigation phase with no provider or
+delivery credential. It never executes model-authored command text as a
+collector.
+
+The final result must report every declared ID once and cite every deterministic
+`collector:<check-id>:<collector-id>` receipt for that check. Provider tool
+receipts may support findings, but cannot establish check coverage. A missing,
+failed, spoofed, or uncited collector makes execution partial and prevents a
+clear verdict. A successfully collected adverse observation has
+`semanticStatus: failed`; it keeps execution complete but deterministically
+overrides a model-authored pass and produces an attention verdict. Replayed
+early-v2 inputs without collectors or predicates remain valid histories but are
+always partial. V2 follow-ups inherit the parent collectors; the model cannot
+replace them.
+
+The model does not return a verdict or subject. The reporter derives them from
+validated state: incomplete required coverage is inconclusive; failed checks or
+warning/critical findings need attention; informational findings mean changed;
+optional skipped checks mean pending; only fully passed coverage with no
+findings is clear.
 
 ## Conflict rules
 
@@ -78,12 +118,13 @@ consume the run's execution timeout.
 
 ## Limits
 
-| Limit              | Value                                                                    |
-| ------------------ | ------------------------------------------------------------------------ |
-| Subprocess runtime | 90 minutes maximum, must heartbeat                                       |
-| Follow-up tasks    | one per run                                                              |
-| Self-cancellation  | may pause its own cron, never delete it, and only with `allowSelfCancel` |
-| Output             | one emailed Markdown report, via Postal                                  |
+| Limit              | Value                                                   |
+| ------------------ | ------------------------------------------------------- |
+| Subprocess runtime | 90 minutes maximum, must heartbeat                      |
+| Follow-up tasks    | one report-only follow-up per run                       |
+| Schedule changes   | agents cannot pause, cancel, or delete schedules        |
+| Synthesis          | optional, evidence-backed, 80 words maximum             |
+| Output             | one shared-format heartbeat per run, including failures |
 
 ## Provider settings
 
@@ -96,23 +137,40 @@ consume the run's execution timeout.
 | Pinned version | Claude Code `2.1.220`                           | —                              |
 
 Claude's output contract accepts only the CLI result message's
-`structured_output` field, validated with Zod. A successful process without that
-field is a failure; prose and fenced JSON are not fallback formats.
+`structured_output` field; Codex uses its strict output-schema file. Both are
+validated with Zod. A successful process without valid structured output is a
+failure; prose and fenced JSON are not fallback formats. Provider adapters
+extract redacted evidence receipts from actual tool or command events before
+running a separate finalization pass over that explicit receipt catalog. Claude
+tools are disabled during finalization; any new provider events are not accepted
+as report evidence.
 
 ## Environment exposure
 
-The subprocess inherits the **full worker environment**.
+The subprocess receives an allowlisted environment rather than inheriting the
+worker environment.
 
-| Credential                                              | State in the subprocess                                    |
-| ------------------------------------------------------- | ---------------------------------------------------------- |
-| GitHub installation token                               | present as `GH_TOKEN`                                      |
-| Raw GitHub App key                                      | stripped                                                   |
-| Anthropic API key                                       | dropped for Claude runs, so the run bills the subscription |
-| Grafana, PagerDuty, ArgoCD, Bugsink, Cloudflare, Postal | readable                                                   |
-| Mounted service-account token                           | readable                                                   |
+| Input                                       | State in the subprocess                                     |
+| ------------------------------------------- | ----------------------------------------------------------- |
+| Selected provider credential                | absent; replaced by an ephemeral loopback-broker credential |
+| Other provider credentials                  | absent                                                      |
+| Public GitHub repository credential         | absent; the throwaway clone is unauthenticated              |
+| `HOME`                                      | the throwaway workdir, not the worker image home            |
+| Prometheus and alert-dashboard URLs         | present without API credentials                             |
+| Kubernetes service address and mounted SA   | present; the dedicated identity has read-only audit RBAC    |
+| Postal, S3, GitHub App, and ingress secrets | absent; delivery executes on the core worker queue          |
+| ArgoCD, Grafana, Buildkite, HA, Cloudflare  | absent                                                      |
 
-This is deliberate — the daily homelab audit needs those credentials for its
-live read-only checks. See
+The parent worker keeps the selected provider credential and starts a fresh
+loopback broker for each run. That broker authenticates the ephemeral client
+credential, accepts only the fixed Claude or Codex inference paths, and forwards
+to a fixed provider origin with the real credential. A provider subprocess can
+still spend its selected provider quota, but it cannot read or transmit the
+long-lived credential itself.
+
+This lets generic investigations query the public repository, read-only
+Kubernetes API, Prometheus, and alert ledger without crossing the delivery or
+operational-credential boundaries. See
 [the agent task boundary](/explanation/temporal/agent-task-boundary/) for what
 that means.
 

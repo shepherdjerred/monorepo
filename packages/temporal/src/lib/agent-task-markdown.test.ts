@@ -4,11 +4,13 @@ import { parseAgentTaskInputsFromMarkdown } from "./agent-task-markdown.ts";
 function block(title: string, runAt: string): string {
   return `<!-- temporal-agent-task
 {
+  "contractVersion": 2,
   "title": "${title}",
   "provider": "codex",
   "mode": "report-only",
   "runAt": "${runAt}",
   "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
+  "checks": [{ "id": "read-only-check", "label": "Read-only check", "required": true, "evidenceRequirement": "Current source or runtime evidence.", "evidenceCollectors": [{ "id": "runtime-status", "kind": "command", "argv": ["runtime-status", "--json"], "output": "json", "expectation": { "kind": "exit-code", "passedExitCodes": [0] } }] }],
   "prompt": "Read-only check"
 }
 -->`;

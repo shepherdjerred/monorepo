@@ -56,6 +56,22 @@ function stateJson(overrides: Record<string, unknown> = {}): string {
   });
 }
 
+function versionCatalogSource(name: string, value: string): string {
+  return JSON.stringify({
+    $schema: "./version-catalog.schema.json",
+    schemaVersion: 1,
+    entries: [
+      {
+        name,
+        value,
+        category: "internal-image",
+        artifactType: "image",
+        management: { managed: false },
+      },
+    ],
+  });
+}
+
 test("strict Scout release state binds version to build number", () => {
   const state = parseScoutReleaseState(stateJson());
   expect(siteReleaseIdentity(state)).toBe(`scout-site@${DIGEST}`);
@@ -108,7 +124,10 @@ test("reused Scout content receives the current build version", () => {
 test("backend digest prefers a candidate and otherwise uses the exact beta pin", () => {
   const other =
     "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
-  const source = `export default {"shepherdjerred/scout-for-lol/beta":"2.0.0-1@${DIGEST}"};`;
+  const source = versionCatalogSource(
+    "shepherdjerred/scout-for-lol/beta",
+    `2.0.0-1@${DIGEST}`,
+  );
   expect(resolveBackendDigest(other, source)).toBe(other);
   expect(resolveBackendDigest(null, source)).toBe(DIGEST);
   expect(() => resolveBackendDigest("latest", source)).toThrow("canonical");
@@ -129,11 +148,14 @@ test("production promotion state must match both tagged version and digest", () 
 });
 
 test("production pin resolution returns only the exact canonical pin", () => {
-  const source = `export default {"shepherdjerred/scout-for-lol/prod":"2.0.0-42@${DIGEST}"};`;
+  const source = versionCatalogSource(
+    "shepherdjerred/scout-for-lol/prod",
+    `2.0.0-42@${DIGEST}`,
+  );
   expect(resolveProdPin(source)).toBe(`2.0.0-42@${DIGEST}`);
   expect(() =>
     resolveProdPin(
-      'export default {"shepherdjerred/scout-for-lol/prod":"latest"};',
+      versionCatalogSource("shepherdjerred/scout-for-lol/prod", "latest"),
     ),
   ).toThrow("not canonical");
 });

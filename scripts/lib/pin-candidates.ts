@@ -1,4 +1,9 @@
 import { z } from "zod";
+import {
+  parseVersionCatalogText,
+  serializeVersionCatalog,
+  type VersionCatalog,
+} from "../../packages/homelab/src/cdk8s/src/version-catalog.ts";
 
 const DigestSchema = z
   .string()
@@ -54,21 +59,9 @@ export function serializePinCandidatesState(state: PinCandidatesState): string {
   return `${JSON.stringify({ schema: state.schema, pins }, null, 2)}\n`;
 }
 
-export function parseVersionsSource(source: string): Map<string, string> {
-  const entries = new Map<string, string>();
-  const entryPattern = /"([^"]+)"\s*:\s*"([^"]*)"/g;
-  for (const match of source.matchAll(entryPattern)) {
-    const key = match[1];
-    const value = match[2];
-    if (key === undefined || value === undefined) {
-      throw new Error("versions.ts entry parser returned an incomplete match");
-    }
-    if (entries.has(key)) {
-      throw new Error(`versions.ts contains duplicate key ${key}`);
-    }
-    entries.set(key, value);
-  }
-  return entries;
+export function parseVersionCatalogSource(source: string): Map<string, string> {
+  const catalog = parseVersionCatalogText(source);
+  return new Map(catalog.entries.map((entry) => [entry.name, entry.value]));
 }
 
 export function reconstructGeneratedBranchPinState(
@@ -200,23 +193,27 @@ export function mergePinCandidates(
   return { schema: "pin-candidates-state/v1", pins };
 }
 
-export function rewriteVersionsSource(
+export function rewriteVersionCatalogSource(
   source: string,
   state: PinCandidatesState,
 ): string {
-  let rewritten = source;
-  for (const [key, pin] of Object.entries(state.pins)) {
-    const escapedKey = key.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
-    const pattern = new RegExp(
-      String.raw`("${escapedKey}"\s*:\s*)"([^"]*)"(\s*,?)`,
-    );
-    if (!pattern.test(rewritten)) {
-      throw new Error(`versions.ts does not contain exact image key ${key}`);
+  const catalog = parseVersionCatalogText(source);
+  const pins = new Map(Object.entries(state.pins));
+  const rewritten: VersionCatalog = {
+    ...catalog,
+    entries: catalog.entries.map((entry) => {
+      const pin = pins.get(entry.name);
+      return pin === undefined
+        ? entry
+        : { ...entry, value: `${pin.version}@${pin.digest}` };
+    }),
+  };
+  for (const key of pins.keys()) {
+    if (!catalog.entries.some((entry) => entry.name === key)) {
+      throw new Error(
+        `version catalog does not contain exact image key ${key}`,
+      );
     }
-    rewritten = rewritten.replace(
-      pattern,
-      `$1"${pin.version}@${pin.digest}"$3`,
-    );
   }
-  return rewritten;
+  return serializeVersionCatalog(rewritten);
 }

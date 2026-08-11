@@ -10,19 +10,35 @@ import type { Duration } from "@temporalio/common";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
   AgentTaskInputSchema,
-  DYNAMIC_AGENT_TASK_MEMO_KEY,
-  agentTaskScheduleId,
-  agentTaskWorkflowId,
   type AgentTaskInput,
   type AgentTaskStartResult,
 } from "#shared/agent-task.ts";
+import {
+  DYNAMIC_AGENT_TASK_MEMO_KEY,
+  agentTaskScheduleId,
+  agentTaskWorkflowId,
+} from "#shared/agent-task-identifiers.ts";
 
-const DEFAULT_WORKFLOW_TIMEOUT: Duration = "2 hours";
+const DEFAULT_AGENT_TIMEOUT_MINUTES = 90;
+const WORKFLOW_OVERHEAD_MINUTES = 60;
 export const AGENT_TASK_SCHEDULE_TIMEZONE = "America/Los_Angeles";
 
 export type AgentTaskSchedulerOptions = {
   reuseExistingWorkflow?: boolean;
 };
+
+export function agentTaskWorkflowRunTimeout(
+  input: Pick<AgentTaskInput, "agentTimeoutMinutes" | "contractVersion">,
+): Duration {
+  const activityTimeoutMinutes =
+    input.agentTimeoutMinutes ?? DEFAULT_AGENT_TIMEOUT_MINUTES;
+  const activityAttempts = input.agentTimeoutMinutes === undefined ? 2 : 1;
+  const phaseCount = input.contractVersion === 2 ? 2 : 1;
+  const timeoutMinutes =
+    activityTimeoutMinutes * activityAttempts * phaseCount +
+    WORKFLOW_OVERHEAD_MINUTES;
+  return timeoutMinutes * 60 * 1000;
+}
 
 function workflowArgsForSchedule(
   input: AgentTaskInput,
@@ -84,7 +100,7 @@ export async function startOrScheduleAgentTask(
           workflowType: "agentTaskWorkflow",
           args,
           taskQueue: TASK_QUEUES.AGENT_TASK,
-          workflowRunTimeout: DEFAULT_WORKFLOW_TIMEOUT,
+          workflowRunTimeout: agentTaskWorkflowRunTimeout(input),
         },
         policies: {
           overlap: ScheduleOverlapPolicy.SKIP,
@@ -105,7 +121,7 @@ export async function startOrScheduleAgentTask(
           workflowType: "agentTaskWorkflow",
           args,
           taskQueue: TASK_QUEUES.AGENT_TASK,
-          workflowRunTimeout: DEFAULT_WORKFLOW_TIMEOUT,
+          workflowRunTimeout: agentTaskWorkflowRunTimeout(input),
         },
         policies: {
           overlap: ScheduleOverlapPolicy.SKIP,
@@ -140,10 +156,11 @@ export async function startOrScheduleAgentTask(
       workflowId,
       ...(startDelay === undefined ? {} : { startDelay }),
       // `workflowRunTimeout` (per-run) rather than
-      // `workflowExecutionTimeout`: the 2h bound applies to the actual run once
-      // it starts, never to the buffered `startDelay`, so a future-dated task
-      // cannot time out before it runs.
-      workflowRunTimeout: DEFAULT_WORKFLOW_TIMEOUT,
+      // `workflowExecutionTimeout`: the calculated bound applies to the actual
+      // run once it starts, never to the buffered `startDelay`. V2 budgets both
+      // sequential agent phases, their configured attempts, and workdir/email
+      // cleanup overhead.
+      workflowRunTimeout: agentTaskWorkflowRunTimeout(input),
       // Allow a previously failed/timed-out run of the same id to be retried by
       // resubmission, while still rejecting an already-succeeded run.
       workflowIdReusePolicy: WorkflowIdReusePolicy.ALLOW_DUPLICATE_FAILED_ONLY,
