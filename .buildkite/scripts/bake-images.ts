@@ -25,6 +25,7 @@ import {
   type AnonymousPullVerifier,
 } from "./ghcr-public-access.ts";
 import type { PushOptions, PushOutcome } from "./bake-image-push-types.ts";
+import { runMain } from "../../scripts/lib/transient.ts";
 
 const registry = "ghcr.io/shepherdjerred";
 const selectionReport = "image-selection-report.json";
@@ -440,7 +441,7 @@ export async function writeFallbackReport(
   );
 }
 
-if (import.meta.main) {
+async function main(): Promise<void> {
   const options = parseBakeArguments(Bun.argv.slice(2));
   const commit = Bun.env["BUILDKITE_COMMIT"];
   const buildNumber = Bun.env["BUILDKITE_BUILD_NUMBER"];
@@ -462,7 +463,7 @@ if (import.meta.main) {
       await setPinCandidatesMetadata({}, buildNumber);
       await Bun.write(pushOutcomes, "[]\n");
     }
-    process.exit(0);
+    return;
   }
 
   await ensureBuilder();
@@ -493,3 +494,5 @@ if (import.meta.main) {
   }
   await annotate(annotationArguments);
 }
+
+if (import.meta.main) await runMain(main);

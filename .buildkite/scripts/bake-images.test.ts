@@ -190,6 +190,42 @@ test("fails closed when a GHCR package stays private", async () => {
   ).rejects.toThrow(
     "GHCR package shepherdjerred/alert-dashboard is not anonymously pullable",
   );
+  await expect(
+    ensureAnonymousGhcrPull("alert-dashboard", `sha256:${"b".repeat(64)}`, {
+      fetcher,
+      sleeper: async (milliseconds) => milliseconds,
+      attempts: 1,
+    }),
+  ).rejects.not.toBeInstanceOf(TransientError);
+});
+
+test("preserves exhausted GHCR transport and server failures as transient", async () => {
+  for (const status of [429, 500, 503]) {
+    const fetcher = Object.assign(async () => new Response(null, { status }), {
+      preconnect: fetch.preconnect,
+    });
+    await expect(
+      ensureAnonymousGhcrPull("alert-dashboard", `sha256:${"c".repeat(64)}`, {
+        fetcher,
+        sleeper: async (milliseconds) => milliseconds,
+        attempts: 1,
+      }),
+    ).rejects.toBeInstanceOf(TransientError);
+  }
+
+  const fetcher = Object.assign(
+    async () => {
+      throw new Error("request timed out");
+    },
+    { preconnect: fetch.preconnect },
+  );
+  await expect(
+    ensureAnonymousGhcrPull("alert-dashboard", `sha256:${"d".repeat(64)}`, {
+      fetcher,
+      sleeper: async (milliseconds) => milliseconds,
+      attempts: 1,
+    }),
+  ).rejects.toBeInstanceOf(TransientError);
 });
 
 test("expands the infra group into invokable targets", () => {
