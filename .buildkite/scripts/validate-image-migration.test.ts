@@ -191,6 +191,19 @@ describe("GHCR package provenance", () => {
     expect(() =>
       assertMonorepoSourceLabel(
         [
+          "FROM runtime AS image",
+          'LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo" description="<<EOF"',
+          'LABEL org.opencontainers.image.source="https://github.com/somewhere/else"',
+        ].join("\n"),
+        "example",
+        "image",
+      ),
+    ).toThrow(
+      "example published image stage must link its GHCR package to the public monorepo",
+    );
+    expect(() =>
+      assertMonorepoSourceLabel(
+        [
           "# escape=`",
           "FROM runtime AS image",
           String.raw`LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo" vendor=\ org.opencontainers.image.source="https://github.com/somewhere/else"`,

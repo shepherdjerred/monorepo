@@ -26,14 +26,40 @@ function dockerfileEscape(dockerfile: string): "\\" | "`" {
   return "\\";
 }
 
-function instructionHeredocs(instruction: string): Heredoc[] {
+function nextHeredocOperator(
+  instruction: string,
+  start: number,
+  escapeCharacter: "\\" | "`",
+): number {
+  let quote: "'" | '"' | undefined;
+  let escaped = false;
+  for (let cursor = start; cursor < instruction.length; cursor += 1) {
+    const character = instruction[cursor];
+    if (escaped) {
+      escaped = false;
+    } else if (character === escapeCharacter && quote !== "'") {
+      escaped = true;
+    } else if (quote !== undefined) {
+      if (character === quote) quote = undefined;
+    } else if (character === '"' || character === "'") {
+      quote = character;
+    } else if (character === "<" && instruction[cursor + 1] === "<") {
+      return cursor;
+    }
+  }
+  return -1;
+}
+
+function instructionHeredocs(
+  instruction: string,
+  escapeCharacter: "\\" | "`",
+): Heredoc[] {
   const heredocs: Heredoc[] = [];
   let offset = 0;
 
   while (offset < instruction.length) {
-    const operator = instruction.indexOf("<<", offset);
+    const operator = nextHeredocOperator(instruction, offset, escapeCharacter);
     if (operator === -1) break;
-
     let cursor = operator + 2;
     const stripTabs = instruction[cursor] === "-";
     if (stripTabs) cursor += 1;
@@ -41,11 +67,11 @@ function instructionHeredocs(instruction: string): Heredoc[] {
       cursor += 1;
     }
 
-    const quote = instruction[cursor];
+    const delimiterQuote = instruction[cursor];
     let delimiter = "";
-    if (quote === '"' || quote === "'") {
+    if (delimiterQuote === '"' || delimiterQuote === "'") {
       cursor += 1;
-      const closingQuote = instruction.indexOf(quote, cursor);
+      const closingQuote = instruction.indexOf(delimiterQuote, cursor);
       if (closingQuote !== -1) {
         delimiter = instruction.slice(cursor, closingQuote);
         cursor = closingQuote + 1;
@@ -53,16 +79,16 @@ function instructionHeredocs(instruction: string): Heredoc[] {
     } else {
       const start = cursor;
       while (cursor < instruction.length) {
-        const character = instruction[cursor];
+        const delimiterCharacter = instruction[cursor];
         if (
-          character === " " ||
-          character === "\t" ||
-          character === "\r" ||
-          character === "\n" ||
-          character === '"' ||
-          character === "'" ||
-          character === "<" ||
-          character === ">"
+          delimiterCharacter === " " ||
+          delimiterCharacter === "\t" ||
+          delimiterCharacter === "\r" ||
+          delimiterCharacter === "\n" ||
+          delimiterCharacter === '"' ||
+          delimiterCharacter === "'" ||
+          delimiterCharacter === "<" ||
+          delimiterCharacter === ">"
         ) {
           break;
         }
@@ -105,7 +131,7 @@ function dockerfileInstructions(
     pending = pending.length === 0 ? part : `${pending} ${part}`;
     if (!continues) {
       instructions.push(pending);
-      heredocs = instructionHeredocs(pending);
+      heredocs = instructionHeredocs(pending, escape);
       pending = "";
     }
   }
