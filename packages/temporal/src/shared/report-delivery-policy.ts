@@ -64,6 +64,15 @@ export const REPORT_SEND_CLAIM_FIRST_RETRY_AT_MS =
   (reportDeliveryRetrySchedule()[0] ?? 0);
 
 /**
+ * What the owner has left, after its last possible send, to record the
+ * delivery before its lease becomes takeable. Recording cannot be fenced into
+ * the send itself, so this window is the only thing that keeps a successful
+ * send and its receipt on the same side of a takeover.
+ */
+export const REPORT_SEND_PERSIST_BUDGET_MS =
+  REPORT_SEND_CLAIM_TAKEOVER_MS - REPORT_SEND_DEADLINE_MS;
+
+/**
  * The bounds a reviewer actually has to check, in one place. `safeBy` is the
  * margin by which a takeover trails the previous owner's last possible
  * outbound request; `reachableBy` is the margin by which the first retry

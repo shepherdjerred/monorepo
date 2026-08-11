@@ -15,6 +15,7 @@ import {
   REPORT_SEND_CLAIM_FIRST_RETRY_AT_MS,
   REPORT_SEND_CLAIM_TAKEOVER_MS,
   REPORT_SEND_DEADLINE_MS,
+  REPORT_SEND_PERSIST_BUDGET_MS,
   reportDeliverySendLeaseBounds,
 } from "#shared/report-delivery-policy.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
@@ -162,6 +163,11 @@ describe("agent task report delivery delegation", () => {
     const { safeBy, reachableBy } = reportDeliverySendLeaseBounds();
     expect(safeBy).toBe(60_000);
     expect(reachableBy).toBe(30_000);
+
+    // Recording a delivery happens after the send and cannot be fenced into
+    // it, so the owner needs a real window to persist inside its own lease.
+    expect(REPORT_SEND_PERSIST_BUDGET_MS).toBe(60_000);
+    expect(REPORT_SEND_PERSIST_BUDGET_MS).toBeGreaterThan(0);
   });
 
   test("describes a post-report follow-up failure without retracting the delivered result", () => {

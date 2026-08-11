@@ -385,12 +385,28 @@ never budgets. Two rules keep that true:
   attempt, so a retry sees a dead owner's lease as unexpired and the report
   strands again, triggered by slow storage rather than short retries.
 
-Two residuals are accepted deliberately rather than papered over:
+Recording a delivery cannot be fenced into the send: the receipt only exists
+once Postal answers, so the accepted-state and receipt writes necessarily land
+after it. `REPORT_SEND_PERSIST_BUDGET_MS` is the window the owner has to
+persist inside its own lease, and `assertReportSendStillOwned` re-checks
+ownership before those writes so a displaced owner cannot overwrite the
+successor's record — and fails loudly, which is what makes a duplicate visible
+instead of recorded as one clean delivery.
 
-- Postal has no idempotency key, so if it accepts a message whose response
-  never reaches the owner there is no receipt for the successor to find, and
-  the takeover duplicates. Closing that needs provider-side idempotency, not a
-  longer lease.
+**What this design does and does not guarantee.** It guarantees at-most-one
+_recorded_ delivery and no lost report. It does not guarantee at-most-one
+_email_. Two paths reach a duplicate and neither is closable here:
+
+- Postal accepts a message whose response never reaches the owner, so no
+  receipt is written and the successor sends again.
+- Postal accepts near the deadline and the owner is displaced before it can
+  persist, so the successor has nothing to find.
+
+Both need an idempotency key on the provider request — something Postal does
+not offer — not a longer lease or another fence. Do not spend another round
+widening timeouts against them; if duplicate emails become a real problem, the
+fix is provider-side idempotency or a different transport.
+
 - The lease compares timestamps written by different worker processes, so it
   assumes roughly synchronized clocks. Skew shifts the takeover point by the
   skew amount; the minute of margin on each bound absorbs ordinary NTP drift,

@@ -63,6 +63,30 @@ export function reportSendRemainingMs(
 }
 
 /**
+ * Fails when this attempt no longer owns the send.
+ *
+ * The lease fences the request, but a message accepted just inside the
+ * deadline still has to be recorded, and those writes land after it. A
+ * successor that took over meanwhile owns the durable record, so a displaced
+ * owner must not write its receipt or accepted state over it. Failing here
+ * also makes the duplicate visible — the attempt errors rather than quietly
+ * finishing — instead of two sends being recorded as one clean delivery.
+ */
+export async function assertReportSendStillOwned(input: {
+  backend: ReportSendClaimBackend;
+  claimKey: string;
+  reportRunId: string;
+  owner: string;
+}): Promise<void> {
+  const held = await input.backend.readSendClaim(input.claimKey);
+  if (held?.claim.owner !== input.owner) {
+    throw new Error(
+      `Report ${input.reportRunId} lost its send lease to ${held?.claim.owner ?? "an unknown attempt"} after the message was accepted; the successor owns the recorded delivery and this message is a duplicate`,
+    );
+  }
+}
+
+/**
  * Arms the abort for one Postal request, measured from attempt start.
  *
  * Deliberately computes the remaining budget and constructs the signal

@@ -14,6 +14,7 @@ import {
 import { resolvePostalAddresses, sendPostalEmail } from "#shared/postal.ts";
 import type { PostalSendInput, PostalSendResult } from "#shared/postal.ts";
 import {
+  assertReportSendStillOwned,
   claimReportSend,
   reportSendAbortSignal,
   reportSendClaimKey,
@@ -447,6 +448,16 @@ export async function deliverReportWithDependencies(
         attemptStartedAt: dependencies.attemptStartedAt,
         now: dependencies.now(),
       }),
+    });
+    // The message is accepted, but recording it happens after the send and can
+    // outlast the lease. If a successor took over meanwhile it owns the
+    // durable record, so stop rather than overwrite it with this attempt's
+    // state and receipt.
+    await assertReportSendStillOwned({
+      backend: dependencies.backend,
+      claimKey: reportSendClaimKey(stateKey),
+      reportRunId: report.reportRunId,
+      owner: dependencies.owner,
     });
     const receipt = ReportDeliveryReceiptV1Schema.parse({
       schemaVersion: 1,

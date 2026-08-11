@@ -365,6 +365,42 @@ describe("report send ownership", () => {
     expect([...states.values()][0]?.delivery.status).toBe("accepted");
   });
 
+  test("refuses to record a delivery whose lease was taken over mid-persistence", async () => {
+    // Postal accepted the message, but recording it lands after the send and
+    // can outlast the lease. A displaced owner must not overwrite the
+    // successor's durable record, and must fail loudly so the duplicate is
+    // visible rather than recorded as one clean delivery.
+    const claims = heldBy("workflow/run-1/activity-1/1", NOW);
+    const { sent, states, dependencies } = scenario(claims);
+    const claimKey = reportSendClaimKey(reportStateKey(report()));
+
+    const owner = dependencies("workflow/run-1/activity-1/1", NOW);
+    const takenOver: typeof owner = {
+      ...owner,
+      send: async (input: PostalSendInput) => {
+        const result = await owner.send(input);
+        // A successor takes the lease while this attempt is still persisting.
+        claims.set(claimKey, {
+          claim: {
+            schemaVersion: 1 as const,
+            reportRunId: report().reportRunId,
+            owner: "workflow/run-1/activity-1/2",
+            claimedAt: NOW,
+          },
+          etag: "etag-successor",
+        });
+        return result;
+      },
+    };
+
+    await expect(
+      deliverReportWithDependencies(report(), takenOver),
+    ).rejects.toThrow("lost its send lease");
+
+    expect(sent).toHaveLength(1);
+    expect([...states.values()][0]?.delivery.status).toBe("pending");
+  });
+
   test("resumes its own lease after a retry of the same attempt identity", async () => {
     const owner = "workflow/run-1/activity-1/1";
     const { sent, dependencies } = scenario(heldBy(owner, NOW));
