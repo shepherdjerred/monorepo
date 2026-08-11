@@ -1,12 +1,16 @@
 import { describe, expect, test } from "bun:test";
-import { proposeQueueWindowEdits } from "#src/model/queue-window-drift.ts";
+import {
+  MIN_DRIFT_LOOKBACK_DAYS,
+  proposeQueueWindowEdits,
+} from "#src/model/queue-window-drift.ts";
 import {
   QueueWindowsFileSchema,
   type QueueWindowsFile,
 } from "#src/model/queue-windows.schema.ts";
 
 const TODAY = "2026-07-26";
-const LOOKBACK = 21;
+/** What the scheduled watcher and the CLI default to. */
+const LOOKBACK = 28;
 
 function makeFile(
   queues: Record<string, [start: string, end: string | null][]>,
@@ -232,5 +236,132 @@ describe("proposeQueueWindowEdits", () => {
     });
     expect(edits).toHaveLength(0);
     expect(warnings).toHaveLength(0);
+  });
+});
+
+describe("proposeQueueWindowEdits close guards", () => {
+  test("refuses to close a launch-week window even with a full volume baseline (PR #2100 replay)", () => {
+    // The real false positive: `classic aram mayhem` opened 2026-07-29 — the
+    // start of Ranked Season 3 — took 20+ matches over its first two days, then
+    // went quiet. On 2026-08-10 the watcher proposed retiring it while ARAM:
+    // Mayhem was still receiving balance changes in the current patch.
+    //
+    // Every pre-existing close condition is satisfied here: no trailing
+    // matches, and earlierTotal (24) clears CLOSE_MIN_VOLUME_BASELINE. Only the
+    // window's age stops it.
+    const file = makeFile({ "classic aram mayhem": [["2026-07-29", null]] });
+    const { edits, warnings, next } = proposeQueueWindowEdits({
+      file,
+      counts: { "2450": { "2026-07-29": 14, "2026-07-30": 10 } },
+      today: "2026-08-10",
+      lookbackDays: LOOKBACK,
+    });
+
+    expect(edits).toHaveLength(0);
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]?.kind).toBe("window-too-young");
+    expect(warnings[0]?.total).toBe(24);
+    expect(warnings[0]?.message).toContain("12 day(s) old");
+    // The window must remain open-ended, or the queue disappears from the
+    // subscription picker.
+    expect(next.queues["classic aram mayhem"]?.at(-1)?.end).toBeNull();
+  });
+
+  test("closes once the window clears the minimum age with the same evidence shape", () => {
+    // Identical evidence to the replay above, just an older window: a burst at
+    // the start, then nothing. At 30 days old the close is trusted.
+    const file = makeFile({ "classic aram mayhem": [["2026-07-11", null]] });
+    const { edits, warnings } = proposeQueueWindowEdits({
+      file,
+      counts: { "2450": { "2026-07-24": 14, "2026-07-25": 10 } },
+      today: "2026-08-10",
+      lookbackDays: LOOKBACK,
+    });
+
+    expect(warnings).toHaveLength(0);
+    expect(edits).toHaveLength(1);
+    expect(edits[0]?.kind).toBe("close");
+    expect(edits[0]?.date).toBe("2026-07-25");
+  });
+
+  test("stays silent about a young window that is still being played", () => {
+    // The age gate must not turn every fresh mode into a daily warning email —
+    // it only speaks once the mode has actually gone quiet.
+    const file = makeFile({ "classic aram mayhem": [["2026-07-29", null]] });
+    const { edits, warnings } = proposeQueueWindowEdits({
+      file,
+      counts: { "2450": { "2026-08-08": 3, "2026-08-09": 4 } },
+      today: "2026-08-10",
+      lookbackDays: LOOKBACK,
+    });
+
+    expect(edits).toHaveLength(0);
+    expect(warnings).toHaveLength(0);
+  });
+});
+
+function addDaysUtc(date: string, days: number): string {
+  const ms = Date.parse(`${date}T00:00:00.000Z`) + days * 86_400_000;
+  return new Date(ms).toISOString().slice(0, 10);
+}
+
+describe("proposeQueueWindowEdits close eligibility span", () => {
+  const WINDOW_START = "2026-07-01";
+
+  /** Outcome of the daily run that sees `WINDOW_START` as `age` days ago. */
+  function runAtAge(age: number) {
+    return proposeQueueWindowEdits({
+      file: makeFile({ "classic aram mayhem": [[WINDOW_START, null]] }),
+      // Worst case for eligibility: the entire volume baseline lands on the
+      // window's first day, so it is the first evidence to fall out of the
+      // lookback. This is the launch-burst shape the age gate exists for.
+      counts: { "2450": { [WINDOW_START]: 24 } },
+      today: addDaysUtc(WINDOW_START, age),
+      lookbackDays: LOOKBACK,
+    });
+  }
+
+  test("re-proposes the same close on every run of a week-long review window", () => {
+    // The close is not applied automatically — it opens a PR, and the watcher
+    // closes that PR as soon as a run produces no drift. So the close has to be
+    // re-derivable across enough consecutive runs for a human to review it. With
+    // lookbackDays equal to the minimum age this band was a single day: the next
+    // morning the burst aged out of the lookback, the baseline collapsed, and
+    // the unreviewed proposal was closed for good.
+    const closingAges: number[] = [];
+    for (let age = 1; age <= 40; age++) {
+      const { edits } = runAtAge(age);
+      if (edits.some((edit) => edit.kind === "close")) {
+        closingAges.push(age);
+      }
+    }
+
+    expect(closingAges).toEqual([21, 22, 23, 24, 25, 26, 27, 28]);
+    expect(closingAges.length).toBeGreaterThanOrEqual(7);
+  });
+
+  test("withholds the close below the minimum age and loses the baseline past the lookback", () => {
+    // The two ends of the band above, and how each is reported: too young while
+    // the evidence is still visible, then no evidence at all once the burst has
+    // fallen outside the lookback.
+    const tooYoung = runAtAge(20);
+    expect(tooYoung.edits).toHaveLength(0);
+    expect(tooYoung.warnings[0]?.kind).toBe("window-too-young");
+    expect(tooYoung.warnings[0]?.total).toBe(24);
+
+    const agedOut = runAtAge(29);
+    expect(agedOut.edits).toHaveLength(0);
+    expect(agedOut.warnings[0]?.kind).toBe("sparse-no-close");
+  });
+
+  test("rejects a lookback that collapses close eligibility to a single run", () => {
+    expect(() =>
+      proposeQueueWindowEdits({
+        file: makeFile({ "classic aram mayhem": [[WINDOW_START, null]] }),
+        counts: {},
+        today: TODAY,
+        lookbackDays: MIN_DRIFT_LOOKBACK_DAYS - 1,
+      }),
+    ).toThrow(/lookbackDays must be at least/);
   });
 });

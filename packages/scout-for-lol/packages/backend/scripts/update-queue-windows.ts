@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  MIN_DRIFT_LOOKBACK_DAYS,
   proposeQueueWindowEdits,
   QueueWindowsFileSchema,
   type QueueWindowEdit,
@@ -12,6 +13,13 @@ import { collectQueueActivity } from "./queue-activity-s3.ts";
 import { fetchPatches } from "../../data/scripts/riot-patch.ts";
 
 const RawArgsSchema = z.array(z.string());
+
+/**
+ * Four weeks, one day above `MIN_DRIFT_LOOKBACK_DAYS`. Keep this in step with
+ * `LOOKBACK_DAYS` in `packages/temporal/src/activities/scout-queue-windows.ts`
+ * so a dry run reproduces what the scheduled watcher proposes.
+ */
+const DEFAULT_LOOKBACK_DAYS = 28;
 
 // The committed source of truth, resolved relative to this script so the CLI
 // works regardless of cwd (Temporal runs it from packages/scout-for-lol).
@@ -45,7 +53,9 @@ function requiredFlagValue(args: readonly string[], flag: string): string {
 
 const CliConfigSchema = z.strictObject({
   bucket: z.string().min(1),
-  lookbackDays: z.number().int().positive(),
+  // Rejected here rather than deep inside the drift engine so an operator
+  // learns the lookback is too short before the S3 scan, not after it.
+  lookbackDays: z.number().int().min(MIN_DRIFT_LOOKBACK_DAYS),
   dryRun: z.boolean(),
   reportPath: z.string().min(1).optional(),
   awsProfile: z.string().min(1).optional(),
@@ -59,7 +69,8 @@ function parseCliConfig(): CliConfig {
   const lookbackRaw = optionalFlagValue(args, "--lookback-days");
   return CliConfigSchema.parse({
     bucket: requiredFlagValue(args, "--bucket"),
-    lookbackDays: lookbackRaw === undefined ? 21 : Number(lookbackRaw),
+    lookbackDays:
+      lookbackRaw === undefined ? DEFAULT_LOOKBACK_DAYS : Number(lookbackRaw),
     dryRun: args.includes("--dry-run"),
     reportPath: optionalFlagValue(args, "--report"),
     awsProfile: optionalFlagValue(args, "--aws-profile"),

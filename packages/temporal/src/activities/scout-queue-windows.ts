@@ -19,7 +19,11 @@ const QUEUE_WINDOWS_PATH = `${SCOUT_ROOT}/packages/data/src/model/queue-windows.
 // The ONLY path this job is allowed to stage.
 const GENERATED_PATHS = [QUEUE_WINDOWS_PATH];
 const BUCKET = "scout-prod";
-const LOOKBACK_DAYS = 21;
+// Must stay above the drift engine's MIN_DRIFT_LOOKBACK_DAYS: the lookback is
+// what bounds how many consecutive runs re-derive a close proposal, and this
+// job closes the proposal PR the moment a run produces no drift. See
+// CLOSE_MIN_ELIGIBLE_RUNS in queue-window-drift.ts.
+const LOOKBACK_DAYS = 28;
 const PROPOSAL_BRANCH = "chore/scout-queue-windows";
 const AutoMergeStateSchema = z.enum(["true", "false"]);
 
