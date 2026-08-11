@@ -238,6 +238,29 @@ test("preserves exhausted GHCR transport and server failures as transient", asyn
       attempts: 1,
     }),
   ).rejects.toBeInstanceOf(TransientError);
+
+  class TruncatedManifestResponse extends Response {
+    override arrayBuffer = async (): Promise<ArrayBuffer> => {
+      throw new Error("manifest connection closed");
+    };
+  }
+  let bodyRequests = 0;
+  const truncatedManifestFetcher = Object.assign(
+    async () => {
+      bodyRequests += 1;
+      return bodyRequests === 1
+        ? Response.json({ token: "anonymous-token" })
+        : new TruncatedManifestResponse("partial", { status: 200 });
+    },
+    { preconnect: fetch.preconnect },
+  );
+  await expect(
+    ensureAnonymousGhcrPull("alert-dashboard", `sha256:${"f".repeat(64)}`, {
+      fetcher: truncatedManifestFetcher,
+      sleeper: async (milliseconds) => milliseconds,
+      attempts: 1,
+    }),
+  ).rejects.toBeInstanceOf(TransientError);
 });
 
 test("expands the infra group into invokable targets", () => {

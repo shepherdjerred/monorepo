@@ -62,6 +62,16 @@ async function anonymousToken(response: Response): Promise<string> {
   return token;
 }
 
+async function consumeManifest(response: Response): Promise<void> {
+  try {
+    await response.arrayBuffer();
+  } catch (error) {
+    throw new TransientError("GHCR anonymous manifest response body failed", {
+      cause: error,
+    });
+  }
+}
+
 export async function ensureAnonymousGhcrPull(
   name: string,
   reference: string,
@@ -101,8 +111,11 @@ export async function ensureAnonymousGhcrPull(
         },
         "manifest",
       );
-      if (manifestResponse.ok) return;
-      throw responseFailure("manifest", manifestResponse.status);
+      if (!manifestResponse.ok) {
+        throw responseFailure("manifest", manifestResponse.status);
+      }
+      await consumeManifest(manifestResponse);
+      return;
     } catch (error) {
       failure =
         error instanceof Error
