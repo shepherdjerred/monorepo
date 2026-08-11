@@ -87,21 +87,22 @@ pin.
 
 ## If GHCR rejects a workload pull
 
-The image job must anonymously fetch every exact candidate manifest after its
-authenticated push and before it records a digest. A `401` from the anonymous
-token request means the package is still private; a manifest `404` after a
-successful token request can be brief registry propagation and is retried
-within the job.
+The image job resolves every pushed candidate to a digest, then anonymously
+fetches that immutable digest before recording any pin candidate. A `401` from
+the anonymous token request means the package is still private. A manifest
+`404` after a successful token request can be brief registry propagation and is
+retried within the job.
 
 For a newly named application image, first confirm its runtime Dockerfile has
-the exact monorepo `org.opencontainers.image.source` label. That links the
-package to the public repository before initial publication so it can inherit
-repository access, as described in GitHub's
+the exact monorepo `org.opencontainers.image.source` label in the published
+stage or its ancestry. Publish the first candidate to create the package, then
+use Package settings to change its visibility from private to public. The
+source label links provenance and repository access; it does not perform that
+visibility change. GitHub documents these separate controls in its
 [package access guidance](https://docs.github.com/en/packages/learn-github-packages/configuring-a-packages-access-control-and-visibility).
-If the package existed before the label, correct its visibility in Package
-settings, then verify both the anonymous token request and the exact manifest
-fetch. Do not distribute the publisher's broad GHCR credential to application
-namespaces to conceal a visibility mistake.
+Verify both the anonymous token request and the exact digest fetch before
+continuing the release. Do not distribute the publisher's broad GHCR
+credential to application namespaces to conceal a visibility mistake.
 
 ## If the release will not start
 

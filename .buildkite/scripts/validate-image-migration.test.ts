@@ -159,7 +159,7 @@ packages/docs/wiki/*
 });
 
 describe("GHCR package provenance", () => {
-  test("requires application images to inherit the public repository", () => {
+  test("requires the published image stage to link its source repository", () => {
     expect(() =>
       assertMonorepoSourceLabel(
         'FROM runtime AS image\nLABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"',

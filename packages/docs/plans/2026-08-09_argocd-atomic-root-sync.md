@@ -87,10 +87,12 @@ only an exact retry; and keep the scoped release-health gate authoritative.
   synthesized chart corpus so that implicit policy cannot return.
 - Treat anonymous image access as part of the release handoff. Every
   application image links its GHCR package to the public monorepo through the
-  OCI source label. After pushing an exact candidate, poll for an anonymous
-  token and fetch that candidate manifest without publisher credentials before
-  recording any digest or pin candidate. A private package must fail image
-  publication before its digest can reach GitOps.
+  OCI source label. A new package still requires an explicit one-time public
+  visibility bootstrap because repository association does not change its
+  private default. After pushing an exact candidate, resolve its digest, poll
+  for an anonymous token, and fetch that immutable digest without publisher
+  credentials before recording any pin candidate. A private package must fail
+  image publication before its digest can reach GitOps.
 
 ## Verification
 
