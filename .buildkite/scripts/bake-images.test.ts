@@ -220,7 +220,7 @@ test("fails closed when a GHCR package stays private", async () => {
 });
 
 test("preserves exhausted GHCR transport and server failures as transient", async () => {
-  for (const status of [429, 500, 503]) {
+  for (const status of [408, 429, 500, 503]) {
     const fetcher = Object.assign(async () => new Response(null, { status }), {
       preconnect: fetch.preconnect,
     });

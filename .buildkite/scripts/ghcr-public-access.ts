@@ -28,7 +28,7 @@ export function anonymousPullVerifier(
 
 function responseFailure(endpoint: string, status: number): Error {
   const message = `${endpoint} endpoint returned HTTP ${status.toString()}`;
-  return status === 429 || status >= 500
+  return status === 408 || status === 429 || status >= 500
     ? new TransientError(message)
     : new Error(message);
 }

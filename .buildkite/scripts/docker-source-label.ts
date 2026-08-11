@@ -127,10 +127,7 @@ function dockerfileInstructions(
       continue;
     }
     const trimmed = line.trim();
-    if (
-      pending.length === 0 &&
-      (trimmed.length === 0 || trimmed.startsWith("#"))
-    ) {
+    if (trimmed.length === 0 || trimmed.startsWith("#")) {
       continue;
     }
     const continues = trimmed.endsWith(escape);
