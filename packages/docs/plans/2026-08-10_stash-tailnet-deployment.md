@@ -12,11 +12,13 @@ disposition: active
 ## Goal
 
 Deploy Stash as an isolated homelab service at the MagicDNS host
-`stash.tailnet-1a49.ts.net`. Bootstrap the exact synthesized workload directly
-with Kubernetes before opening the PR, then make ArgoCD the durable owner after
-the PR merges and its internal chart is published. Access must remain private to
-the Tailscale tailnet, and Stash's built-in single-user username/password
-authentication must be active before the workload becomes Ready.
+`stash.tailnet-1a49.ts.net`, owned by ArgoCD. The internal Helm chart and `stash`
+Application committed in this change are the deployment mechanism: when the PR
+merges and the chart is published, the root `apps` Application reconciles that
+revision and ArgoCD creates and owns every Stash resource. Access must remain
+private to the Tailscale tailnet, and Stash's built-in single-user
+username/password authentication must be active before the workload becomes
+Ready.
 
 This first phase proves deployment, persistence, private HTTPS, built-in
 authentication, and backup coverage. It knowingly uses the current unencrypted
@@ -38,9 +40,8 @@ Included:
   policy classifications.
 - All three persistent volumes included in the existing Velero/OpenEBS backup
   schedules and Cloudflare R2 destination from their first populated state.
-- A bounded out-of-band bootstrap using only the synthesized Stash workload
-  manifest, followed immediately by a git-spice PR and explicit ArgoCD ownership
-  handoff.
+- A single completed out-of-band bootstrap of the synthesized Stash workload
+  manifest, closed by ArgoCD adoption of those exact resources.
 - Default-deny network policy, health probes, focused synth tests, and runtime
   acceptance checks.
 
@@ -101,39 +102,39 @@ web ingresses on TCP 443 and grants no Funnel capability. No Tailscale policy
 change is required for this phase. Stash's password is defense in depth inside
 that private connectivity boundary.
 
-### Out-of-band bootstrap and ownership handoff
+### ArgoCD ownership and the closed bootstrap exception
 
-The operator explicitly authorizes a one-time direct Kubernetes bootstrap
-before the PR is opened. This is a deployment-order exception, not a second
-configuration path:
+ArgoCD is the deployment mechanism and the only ownership path. This change
+commits the internal chart, the `stash` Application, and the shared
+service-probe registration. On merge and chart publication the root `apps`
+Application reconciles that revision, creates the `stash` Application, and
+ArgoCD owns the namespace, `OnePasswordItem`, PVCs, Deployment, Service,
+Tailscale Ingress, and NetworkPolicies. Existing cluster-wide Velero schedules
+select the backup-enabled PVCs from their labels alone, so backup coverage does
+not depend on the Application either.
 
-- Finish the repository implementation first, commit it locally, and synthesize
-  from that clean commit.
-- Apply only `packages/homelab/src/cdk8s/dist/stash.k8s.yaml`. Do not apply
-  `apps.k8s.yaml`, `service-probes.k8s.yaml`, a whole `dist/` directory, or any
-  other chart out of band.
-- Do not hand-author, edit, or retain a second manifest. Record the source commit
-  and SHA-256 of the exact synthesized file used for dry-run, diff, and apply.
-- Use server-side apply with the dedicated field manager `stash-bootstrap` and
-  never use `--force-conflicts`.
-- Open the git-spice PR immediately after the direct workload reaches its
-  initial acceptance boundary. The period before ArgoCD adoption is expected
-  drift and must remain short and visible in the PR.
-- After merge, chart publication, and ArgoCD adoption, stop using the bootstrap
-  field manager. Every later change goes through Git and ArgoCD.
+One direct Kubernetes apply preceded this PR under explicit operator
+authorization so private access and authentication could be accepted on real
+hardware. It was a one-time deployment-order exception rather than a second
+configuration path, and it is closed. It stayed inside these bounds, which are
+what let ArgoCD adopt the result instead of fighting it:
 
-The direct manifest creates the namespace and workload resources, including the
-`OnePasswordItem`, PVCs, Deployment, Service, Tailscale Ingress, and
-NetworkPolicies. The PR adds the durable internal chart, ArgoCD Application, and
-shared service-probe registration. Existing cluster-wide Velero schedules will
-select the backup-enabled PVCs as soon as they exist; they do not require the
-new ArgoCD Application to start protecting them.
+- Only `packages/homelab/src/cdk8s/dist/stash.k8s.yaml`, synthesized from a
+  clean committed revision, was applied — never `apps.k8s.yaml`,
+  `service-probes.k8s.yaml`, a whole `dist/` directory, or a hand-authored
+  manifest.
+- Server-side apply used the dedicated field manager `stash-bootstrap` without
+  `--force-conflicts`, leaving field ownership adoptable on the first sync.
+- No direct-apply script, task, or runbook step was committed, so the bootstrap
+  left behind no reusable imperative path.
 
-If the committed source changes during review in a way that changes
-`stash.k8s.yaml`, regenerate, re-run focused checks, inspect the new diff, apply
-that exact revision with the same field manager, and update the manifest hash
-and live verification in the PR. Documentation-only or PR-metadata changes do
-not require a live reapply.
+The bootstrap is not repeated for review changes. If the committed source
+changes while this PR is open, regenerate, re-run the focused checks, and
+inspect the new manifest diff, but do not reapply it: the merged chart and
+ArgoCD deliver the change. Until adoption the live workload is known drift from
+the desired state, which the PR states plainly. A delayed or rejected PR is
+resolved by deciding whether to keep or scale down that unmanaged workload, not
+by further imperative production mutation.
 
 ### Authentication bootstrap
 
@@ -266,7 +267,10 @@ Add a focused explanation page at
 when implementing the deployment. It should explain the isolation, two-layer
 tailnet-plus-password access model, credential bootstrap, and the explicit
 temporary encryption risk. Keep operating steps in the plan/PR or a separate
-how-to page rather than mixing them into the explanation.
+how-to page rather than mixing them into the explanation. Rollout state — the
+one-time bootstrap and its pending ArgoCD adoption — stays in this plan; it is
+workflow history that would go stale on the published page as soon as adoption
+completes.
 
 ## Implementation Changes
 
@@ -345,59 +349,41 @@ the focused Prettier and TODO checks. Do not substitute a whole-repository
 `bun run verify` for these implementation checks; Buildkite remains the
 exhaustive gate.
 
-Before touching the cluster, restack the branch on current `origin/main` with
-git-spice if needed, create the reviewed local commit, and require a clean
-worktree. Synthesize from that exact commit. Inspect
-`dist/stash.k8s.yaml` to confirm it contains only the dedicated Namespace,
-OnePasswordItem, PVCs, Deployment, Service, Ingress, and NetworkPolicies. Record
-both `git rev-parse HEAD` and `shasum -a 256 dist/stash.k8s.yaml` for the PR.
+Inspect `dist/stash.k8s.yaml` to confirm it contains only the dedicated
+Namespace, OnePasswordItem, PVCs, Deployment, Service, Ingress, and
+NetworkPolicies, and no Cloudflare binding, Funnel annotation, public DNS
+record, real library data, scan path, or scraper credential.
 
-### Direct Kubernetes bootstrap
+### Completed bootstrap acceptance
 
-First prove the current kube context resolves to the production `torvalds` node.
-Inventory any existing `stash` namespace or same-named resources. A missing
-namespace is the expected first-deploy state; if anything already exists, stop
-and reconcile ownership and data before applying.
+This records the closed one-time bootstrap described under
+[ArgoCD ownership and the closed bootstrap exception](#argocd-ownership-and-the-closed-bootstrap-exception).
+It is evidence, not a procedure to repeat: reproducing it would create a second
+unmanaged workload outside reconciliation.
 
-Run server validation and inspect the full diff before the one authorized
-mutation:
+The operator confirmed the kube context resolved to the production `torvalds`
+node and that no prior `stash` namespace or same-named resources existed, then
+ran a server-side dry run and reviewed the full create diff before the single
+authorized apply. The exact source commit and manifest SHA-256 are recorded in
+the Comment Log and the PR body.
 
-```bash
-kubectl config current-context
-kubectl get node torvalds
-kubectl apply --server-side --field-manager=stash-bootstrap --dry-run=server -f dist/stash.k8s.yaml
-kubectl diff --server-side --field-manager=stash-bootstrap -f dist/stash.k8s.yaml
-kubectl apply --server-side --field-manager=stash-bootstrap -f dist/stash.k8s.yaml
-```
+Runtime acceptance of that workload confirmed:
 
-`kubectl diff` exits 1 when it finds the expected create diff; inspect that diff
-rather than treating the status as an infrastructure failure. Do not pass
-`--force-conflicts`, apply a directory, or broaden the target after dry-run.
-
-After the apply:
-
-1. Confirm the namespace exists, the `OnePasswordItem` reconciles, all three
-   PVCs are Bound with backup-enabled labels, and the Deployment rollout
-   completes.
-2. Confirm the auth init container exits successfully and neither its output nor
-   the Stash logs contain secret values.
-3. Confirm the Tailscale ingress receives its MagicDNS address and valid TLS
-   certificate, and that the service is unreachable with Tailscale disabled.
-4. Confirm `/healthz` returns success without credentials while `/` redirects
-   to `/login` for a new session.
-5. Confirm an incorrect password is rejected, the 1Password password succeeds,
-   logout removes access, and a fresh browser session requires login.
-6. Confirm no Cloudflare tunnel, Funnel annotation, public DNS record, real
-   library data, scan path, or scraper credential was introduced by the
-   bootstrap manifest.
-7. Create or await a backup. Confirm it attempts all three ZFS volume snapshots
-   and that R2 contains a non-empty data stream plus its metadata object for each
-   PVC. Record exact object names, sizes, and the backup revision without
-   exposing library metadata.
-
-Open the draft PR immediately after steps 1 through 6. Backup verification may
-finish while the draft and Buildkite checks run, but it must be added to the PR
-before the PR is marked ready.
+1. The namespace exists, the `OnePasswordItem` reconciled, all three PVCs are
+   Bound with backup-enabled labels, and the Deployment rollout completed.
+2. The auth init container exited successfully, and neither its output nor the
+   Stash logs contain secret values.
+3. The Tailscale ingress received its MagicDNS address and a valid TLS
+   certificate, and the service is unreachable with Tailscale disabled.
+4. `/healthz` returns success without credentials while `/` redirects to
+   `/login` for a new session.
+5. An incorrect password is rejected, the 1Password password succeeds, logout
+   removes access, and a fresh browser session requires login.
+6. No Cloudflare tunnel, Funnel annotation, public DNS record, real library
+   data, scan path, or scraper credential reached the cluster.
+7. A backup attempted all three ZFS volume snapshots, and R2 holds a non-empty
+   data stream plus its metadata object for each PVC. Exact object names, sizes,
+   and the backup revision are recorded without library metadata.
 
 ### PR publication and GitOps adoption
 
@@ -436,31 +422,27 @@ temporary encryption risk.
 
 ## Rollout and Rollback
 
-The rollout has two explicit ownership states:
+Steady state is the only durable rollout mechanism: the merged internal chart
+and root `apps` Application create the `stash` Application, it adopts the exact
+existing resources, and Git plus ArgoCD become the only mutation path. Roll back
+the image or configuration through Git and let ArgoCD reconcile it. Never return
+to `stash-bootstrap` direct apply.
 
-1. **Bootstrap:** the committed and hashed Stash manifest is applied directly
-   with field manager `stash-bootstrap`; no ArgoCD Application exists yet.
-2. **Steady state:** the merged internal chart and root app create the Stash
-   Application, which adopts the exact resources; Git and ArgoCD become the only
-   mutation path.
+The closed bootstrap left the cluster in a transitional state that adoption
+resolves. It is a state to exit, not a rollout mode to re-enter.
 
 The first certificate request can be slow while the Tailscale operator obtains
 the certificate, so distinguish that known startup condition from a failing
-workload. Do not create the PR until the direct workload itself is Ready and
-authentication works, but do not wait for the first scheduled backup before
-opening the draft.
+workload.
 
-Before ArgoCD adoption, an application regression may be contained by scaling
-the Stash Deployment to zero. Preserve the namespace, PVCs, and 1Password item.
-Record any imperative containment in the PR and make the committed desired state
-match before resuming. Do not delete stateful resources as routine rollback.
-
-After ArgoCD adoption, roll back the image or configuration through Git and let
-ArgoCD reconcile it. Never return to `stash-bootstrap` direct apply. If the PR is
-delayed or rejected, explicitly choose whether to keep the documented temporary
-deployment or scale it to zero; do not leave its unmanaged status unstated. Any
-resource or data deletion requires a fresh exact inventory and explicit
-destructive approval.
+Until adoption completes, an application regression may be contained by scaling
+the Stash Deployment to zero. Preserve the namespace, PVCs, and 1Password item,
+record any imperative containment in the PR, and make the committed desired
+state match before resuming. If this PR is delayed or rejected, explicitly
+choose whether to keep the documented temporary deployment or scale it to zero;
+do not leave its unmanaged status unstated. Do not delete stateful resources as
+routine rollback — any resource or data deletion requires a fresh exact
+inventory and explicit destructive approval.
 
 ## Remaining
 
@@ -545,3 +527,11 @@ destructive approval.
   advisory already failing current-main build #8941. The dependent review and
   deployment-dry-run jobs were canceled, so the PR remains draft pending the
   independent main-branch repair and a fresh green build.
+- 2026-08-11 — Review findings on PR #2109 addressed. The plan now presents
+  ArgoCD reconciliation of the committed chart and Application as the deployment
+  mechanism, and the one-time direct apply as a closed exception recorded for
+  evidence. The instruction to reapply `stash.k8s.yaml` directly when review
+  changes the manifest was removed; review changes now reach the cluster only
+  through merge and ArgoCD. The wiki explanation page lost its rollout-state
+  section, which was workflow history rather than enduring security rationale,
+  and that material lives here instead.

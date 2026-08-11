@@ -50,15 +50,6 @@ datasets and backup stream retain the homelab's existing unencrypted posture.
 That risk is temporary and explicit; encryption needs a separate migration and
 key-recovery design that preserves the initial recovery points.
 
-## Why the first deployment is exceptional
-
-The workload is bootstrapped once from the exact synthesized chart manifest so
-its private access and authentication can be accepted before review. The same
-change also defines the internal chart and ArgoCD Application.
-
-After the chart is published and ArgoCD adopts the resources, direct apply is
-no longer an ownership path. Later changes use the normal release flow.
-
 ## Where to look
 
 - Workload boundary: `src/cdk8s/src/resources/stash/`
