@@ -1,0 +1,6 @@
+apiVersion: v2
+name: stash
+description: Private media organizer deployed from the homelab CDK8s chart.
+type: application
+version: "$version"
+appVersion: "$appVersion"

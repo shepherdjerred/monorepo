@@ -354,6 +354,24 @@
     "reason": "SeaweedFS data is intentionally outside Velero volume backup"
   },
   {
+    "namespace": "stash",
+    "name": "stash-generated",
+    "backup": "enabled",
+    "reason": "Stash generated media assets"
+  },
+  {
+    "namespace": "stash",
+    "name": "stash-media",
+    "backup": "enabled",
+    "reason": "Personal media library"
+  },
+  {
+    "namespace": "stash",
+    "name": "stash-state",
+    "backup": "enabled",
+    "reason": "Stash configuration, database, and metadata"
+  },
+  {
     "namespace": "starlight-karma-bot-beta",
     "name": "starlight-karma-bot-storage-claim",
     "backup": "enabled",

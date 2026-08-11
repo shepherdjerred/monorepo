@@ -305,6 +305,7 @@ function assertTailscaleSizing(documents: readonly unknown[]): void {
     "media/media-bindery-tailscale-ingress-ingress": "medium",
     "pinchtab/pinchtab-pinchtab-tailscale-ingress-ingress": "medium",
     "mcp-gateway/mcp-gateway-mcp-gateway-ingress-ingress": "medium",
+    "stash/stash-stash-ingress-ingress": "medium",
     "turbo-cache/turbo-cache-turbo-cache-tailscale-ingress-ingress": "medium",
   });
 }
