@@ -28,13 +28,20 @@ flowchart LR
 Tailscale limits network reachability to enrolled devices. It does not prove
 that the person using an unlocked device should see this service.
 
-Stash's credentials add an application session boundary. They are written into
-the persistent configuration before the app starts, so there is no first-run
-window without authentication.
+Stash's credentials add an application session boundary. An
+[init container](https://github.com/shepherdjerred/monorepo/blob/308f68a33ce0e6afe26606c5d2fb13c1b82ef1f2/packages/homelab/src/cdk8s/src/resources/stash/index.ts#L33-L45)
+writes the username and bcrypt hash into `/state/config.yml` before Stash
+starts, so there is no first-run window without authentication.
 
-The plaintext password remains in 1Password for operator access. The workload
-receives only the username and bcrypt hash through an init container. The main
-container receives neither credential field.
+The [Stash container](https://github.com/shepherdjerred/monorepo/blob/308f68a33ce0e6afe26606c5d2fb13c1b82ef1f2/packages/homelab/src/cdk8s/src/resources/stash/index.ts#L182-L205)
+mounts that same `/state` volume and points `STASH_CONFIG_FILE` at that file. It
+therefore reads both credential fields; it must, to verify a login.
+
+What it never receives is the plaintext password or the Kubernetes Secret. The
+plaintext stays in 1Password for operator access and is never written to disk.
+Only the init container reads the Secret, and only its `username` and
+`password_hash` fields. A cost-10 bcrypt hash is not a reusable credential, so
+its presence on the state volume is a far weaker exposure than the password.
 
 ## Why storage is isolated
 
