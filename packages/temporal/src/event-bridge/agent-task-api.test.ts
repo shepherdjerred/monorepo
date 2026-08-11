@@ -45,6 +45,7 @@ function validInput(): AgentTaskInput {
             kind: "command",
             argv: ["runtime-status", "--json"],
             output: "json",
+            expectation: { kind: "exit-code", passedExitCodes: [0] },
           },
         ],
       },

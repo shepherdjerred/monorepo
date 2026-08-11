@@ -27,7 +27,7 @@ context stay together.
   "runAt": "2026-05-31T09:00:00-07:00",
   "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
   "checks": [
-    { "id": "post-deploy-metrics", "label": "Post-deploy metrics", "required": true, "evidenceRequirement": "A successful current Prometheus query for the Birmel target.", "evidenceCollectors": [{ "id": "birmel-up", "kind": "prometheus", "query": "up{namespace=\"birmel\"}" }] }
+    { "id": "post-deploy-metrics", "label": "Post-deploy metrics", "required": true, "evidenceRequirement": "Every current Birmel target reports up=1.", "evidenceCollectors": [{ "id": "birmel-up", "kind": "prometheus", "query": "up{namespace=\"birmel\"}", "expectation": { "kind": "numeric", "operator": "eq", "threshold": 1, "quantifier": "all" } }] }
   ],
   "source": {
     "docPath": "packages/docs/guides/2026-04-25_birmel-remediation-followups.md"
@@ -46,10 +46,14 @@ times. Keep each block next to the checkpoint it describes.
 Declare every check separately. Mark it required only when a clean verdict is
 impossible without it, and make `evidenceRequirement` explain the current
 observation that proves the result. Add one or more `evidenceCollectors` with an
-exact command `argv` and output contract, or a typed Prometheus query. The worker
-runs them independently after provider investigation. The final result must cite
-each deterministic collector receipt; provider-authored commands and prose
-cannot substitute for one.
+exact command `argv` and output contract, or a typed Prometheus query. Give each
+collector an `expectation`: accepted and passing exit codes or typed JSON path
+assertions for commands, and a numeric comparison plus `all` or `any` for
+Prometheus. The worker runs the collector and evaluates the expectation after
+provider investigation. The final result must cite each deterministic collector
+receipt; provider-authored commands and prose cannot substitute for one. If the
+model reports a pass but a predicate fails, the worker changes that check to
+failed.
 
 ## 2. Dispatch it
 

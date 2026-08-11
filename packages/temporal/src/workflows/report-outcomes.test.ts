@@ -197,9 +197,14 @@ describe("deterministic report outcome matrices", () => {
       execution: "complete",
       verdict: "clear",
     });
+    const failed = validate(ciIoImpactReport(STARTED_AT, ciIoResult("failed")));
+    expect(failed).toMatchObject({
+      execution: "complete",
+      verdict: "attention",
+    });
     expect(
-      validate(ciIoImpactReport(STARTED_AT, ciIoResult("failed"))),
-    ).toMatchObject({ execution: "complete", verdict: "attention" });
+      failed.checks.find((check) => check.id === "acceptance-gates")?.status,
+    ).toBe("failed");
     const missing = ciIoResult();
     missing.observability = [];
     expect(validate(ciIoImpactReport(STARTED_AT, missing))).toMatchObject({

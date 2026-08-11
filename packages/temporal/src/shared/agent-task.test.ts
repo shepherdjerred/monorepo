@@ -7,8 +7,8 @@ import {
   AgentTaskOutputContractError,
   AgentTaskInputSchema,
   AgentTaskInputV2Schema,
-  stripClaudeSchemaAnnotations,
 } from "./agent-task.ts";
+import { stripClaudeSchemaAnnotations } from "./agent-task-json-schema.ts";
 import {
   agentTaskScheduleId,
   agentTaskWorkflowId,
@@ -85,6 +85,67 @@ describe("AgentTaskInputSchema", () => {
     ).toThrow(/independently executed evidenceCollectors/);
   });
 
+  it("requires source-defined expectations for new v2 collectors", () => {
+    expect(() =>
+      AgentTaskInputV2Schema.parse({
+        ...baseInput,
+        contractVersion: 2,
+        checks: [
+          {
+            id: "service-health",
+            label: "Service health",
+            required: true,
+            evidenceRequirement: "A successful health endpoint response.",
+            evidenceCollectors: [
+              {
+                id: "health-command",
+                kind: "command",
+                argv: ["curl", "https://service.example.test/health"],
+                output: "json",
+              },
+            ],
+          },
+        ],
+      }),
+    ).toThrow(/source-defined expectation/);
+  });
+
+  it("rejects type-incompatible JSON expectations", () => {
+    expect(() =>
+      AgentTaskInputV2Schema.parse({
+        ...baseInput,
+        contractVersion: 2,
+        checks: [
+          {
+            id: "service-health",
+            label: "Service health",
+            required: true,
+            evidenceRequirement: "A healthy JSON response.",
+            evidenceCollectors: [
+              {
+                id: "health-command",
+                kind: "command",
+                argv: ["service-health", "--json"],
+                output: "json",
+                expectation: {
+                  kind: "json",
+                  assertions: [
+                    {
+                      path: ["healthy"],
+                      operator: "gt",
+                      expected: "healthy",
+                      quantifier: "all",
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+      }),
+    ).toThrow();
+  });
+
   it("accepts legacy evidence criteria only through the replay decoder", () => {
     const legacyInput = {
       ...baseInput,
@@ -102,6 +163,7 @@ describe("AgentTaskInputSchema", () => {
               kind: "command",
               argv: ["curl", "https://service.example.test/health"],
               output: "json",
+              expectation: { kind: "exit-code", passedExitCodes: [0] },
             },
           ],
         },

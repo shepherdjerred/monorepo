@@ -20,6 +20,9 @@ export const ReportEvidenceReceiptV1Schema = z.object({
   // Optional for replay compatibility with receipts recorded before origin
   // was captured. New agent-task receipts always set it.
   origin: z.enum(["provider", "declared-collector"]).optional(),
+  // Optional for replay compatibility. New declared collectors evaluate their
+  // source-defined predicate independently of the model.
+  semanticStatus: z.enum(["passed", "failed"]).optional(),
   observedAt: z.iso.datetime({ offset: true }),
   status: ReportEvidenceStatusSchema,
   command: z.string().min(1).optional(),
@@ -184,16 +187,30 @@ export const ReportEnvelopeV1Schema = z
       }
     }
 
-    const allRequiredPassed = report.checks
-      .filter((check) => check.required)
-      .every((check) => check.status === "passed");
-    if (!allRequiredPassed && report.execution === "complete") {
+    const requiredChecks = report.checks.filter((check) => check.required);
+    const requiredCoverageComplete = requiredChecks.every((check) => {
+      const receipts = check.evidenceReceiptIds.flatMap((id) => {
+        const receipt = evidenceById.get(id);
+        return receipt === undefined ? [] : [receipt];
+      });
+      return (
+        check.status !== "skipped" &&
+        receipts.length > 0 &&
+        receipts.length === check.evidenceReceiptIds.length &&
+        receipts.every((receipt) => receipt.status === "success")
+      );
+    });
+    if (!requiredCoverageComplete && report.execution === "complete") {
       ctx.addIssue({
         code: "custom",
         path: ["execution"],
-        message: "complete execution requires every required check to pass",
+        message:
+          "complete execution requires successful evidence coverage for every required check",
       });
     }
+    const allRequiredPassed = requiredChecks.every(
+      (check) => check.status === "passed",
+    );
     const invalidClearVerdict =
       report.verdict === "clear" &&
       (report.execution !== "complete" || !allRequiredPassed);

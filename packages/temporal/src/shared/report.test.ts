@@ -107,6 +107,43 @@ describe("ReportEnvelopeV1", () => {
     );
   });
 
+  test("separates complete execution from an adverse domain verdict", () => {
+    const report = validReport();
+    const check = report.checks[0];
+    if (check === undefined) throw new TypeError("expected check fixture");
+    report.checks[0] = {
+      ...check,
+      status: "failed",
+      summary: "The independently evaluated gate failed.",
+    };
+    report.verdict = "attention";
+
+    expect(ReportEnvelopeV1Schema.parse(report)).toMatchObject({
+      execution: "complete",
+      verdict: "attention",
+    });
+  });
+
+  test("rejects complete execution when required evidence collection failed", () => {
+    const report = validReport();
+    const check = report.checks[0];
+    const receipt = report.evidence[0];
+    if (check === undefined || receipt === undefined) {
+      throw new TypeError("expected report fixtures");
+    }
+    report.checks[0] = {
+      ...check,
+      status: "failed",
+      summary: "The collector failed.",
+    };
+    report.evidence[0] = { ...receipt, status: "failure" };
+    report.verdict = "attention";
+
+    expect(() => ReportEnvelopeV1Schema.parse(report)).toThrow(
+      "complete execution requires successful evidence coverage",
+    );
+  });
+
   test("rejects findings without evidence references", () => {
     const report = validReport();
     report.findings = [

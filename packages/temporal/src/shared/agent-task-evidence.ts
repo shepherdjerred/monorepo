@@ -214,6 +214,155 @@ function deriveAgentTaskVerdict(
   return "clear";
 }
 
+type DeclaredCheckV2 = ReturnType<typeof agentTaskChecksV2>[number];
+type PayloadCheckV2 = AgentTaskResultPayloadV2["checks"][number];
+
+type NormalizedCheck = {
+  check: ReportCheckV1;
+  evidenceIntegrityComplete: boolean;
+  limitations: string[];
+};
+
+function skippedDeclaredCheck(declared: DeclaredCheckV2): NormalizedCheck {
+  return {
+    check: {
+      id: declared.id,
+      label: declared.label,
+      required: declared.required,
+      status: "skipped",
+      summary: "The agent did not return this declared check.",
+      evidenceReceiptIds: [],
+    },
+    evidenceIntegrityComplete: true,
+    limitations: [],
+  };
+}
+
+function expectedCollectorReceiptIds(declared: DeclaredCheckV2): string[] {
+  return (declared.evidenceCollectors ?? []).map((collector) =>
+    agentTaskCollectorReceiptId(declared.id, collector.id),
+  );
+}
+
+function normalizeDeclaredCheck(
+  declared: DeclaredCheckV2,
+  result: PayloadCheckV2 | undefined,
+  evidenceById: ReadonlyMap<string, ReportEvidenceReceiptV1>,
+): NormalizedCheck {
+  if (result === undefined) return skippedDeclaredCheck(declared);
+
+  const limitations: string[] = [];
+  let evidenceIntegrityComplete = true;
+  const knownReceipts = result.evidenceReceiptIds.filter((id) =>
+    evidenceById.has(id),
+  );
+  const capturedReceipts = knownReceipts.flatMap((id) => {
+    const receipt = evidenceById.get(id);
+    return receipt === undefined ? [] : [receipt];
+  });
+  if (knownReceipts.length !== result.evidenceReceiptIds.length) {
+    limitations.push(
+      `Check ${declared.id} referenced evidence that was not captured by the provider transcript.`,
+    );
+    evidenceIntegrityComplete = false;
+  }
+  if (
+    result.evidenceReceiptIds.length === 0 ||
+    capturedReceipts.some((receipt) => receipt.status !== "success")
+  ) {
+    limitations.push(
+      `Check ${declared.id} does not have complete successful independently collected evidence.`,
+    );
+    evidenceIntegrityComplete = false;
+  }
+
+  const collectors = declared.evidenceCollectors;
+  const expectedCollectorIds = expectedCollectorReceiptIds(declared);
+  const missingCollectorIds = expectedCollectorIds.filter((id) => {
+    const receipt = evidenceById.get(id);
+    return receipt?.origin !== "declared-collector";
+  });
+  const failedCollectorIds = expectedCollectorIds.filter((id) => {
+    const receipt = evidenceById.get(id);
+    return (
+      receipt?.origin === "declared-collector" && receipt.status !== "success"
+    );
+  });
+  const missingSemanticStatusIds = expectedCollectorIds.filter((id) => {
+    const receipt = evidenceById.get(id);
+    return (
+      receipt?.origin === "declared-collector" &&
+      receipt.status === "success" &&
+      receipt.semanticStatus === undefined
+    );
+  });
+  const adverseSemanticStatusIds = expectedCollectorIds.filter((id) => {
+    const receipt = evidenceById.get(id);
+    return (
+      receipt?.origin === "declared-collector" &&
+      receipt.status === "success" &&
+      receipt.semanticStatus === "failed"
+    );
+  });
+  const uncitedCollectorIds = expectedCollectorIds.filter(
+    (id) => !result.evidenceReceiptIds.includes(id),
+  );
+
+  if (collectors === undefined) {
+    limitations.push(
+      `Check ${declared.id} lacks independently declared evidence collectors; legacy v2 coverage cannot be complete.`,
+    );
+    evidenceIntegrityComplete = false;
+  }
+  if (missingCollectorIds.length > 0) {
+    limitations.push(
+      `Check ${declared.id} is missing independently collected receipts: ${missingCollectorIds.join(", ")}.`,
+    );
+    evidenceIntegrityComplete = false;
+  }
+  if (failedCollectorIds.length > 0) {
+    limitations.push(
+      `Check ${declared.id} has failed independently collected receipts: ${failedCollectorIds.join(", ")}.`,
+    );
+    evidenceIntegrityComplete = false;
+  }
+  if (missingSemanticStatusIds.length > 0) {
+    limitations.push(
+      `Check ${declared.id} has receipts without a source-defined semantic result: ${missingSemanticStatusIds.join(", ")}.`,
+    );
+    evidenceIntegrityComplete = false;
+  }
+  if (uncitedCollectorIds.length > 0) {
+    limitations.push(
+      `Check ${declared.id} did not cite its independently collected receipts: ${uncitedCollectorIds.join(", ")}.`,
+    );
+    evidenceIntegrityComplete = false;
+  }
+
+  const semanticPredicatesPassed = adverseSemanticStatusIds.length === 0;
+  const independentPass = evidenceIntegrityComplete && semanticPredicatesPassed;
+  const status =
+    !independentPass && result.status === "passed" ? "failed" : result.status;
+  const summary =
+    !evidenceIntegrityComplete && result.status === "passed"
+      ? `${result.summary} Evidence validation failed.`
+      : !semanticPredicatesPassed && result.status === "passed"
+        ? `${result.summary} Source-defined collector predicates failed: ${adverseSemanticStatusIds.join(", ")}.`
+        : result.summary;
+  return {
+    check: {
+      id: declared.id,
+      label: declared.label,
+      required: declared.required,
+      status,
+      summary,
+      evidenceReceiptIds: knownReceipts,
+    },
+    evidenceIntegrityComplete,
+    limitations,
+  };
+}
+
 export function normalizeAgentTaskV2Result(
   input: AgentTaskInput,
   rawPayload: AgentTaskResultPayloadV2,
@@ -245,105 +394,22 @@ export function normalizeAgentTaskV2Result(
     evidenceIntegrityComplete = false;
   }
 
-  const checks = declaredChecks.map((declared) => {
-    const result = payloadChecks.get(declared.id);
-    if (result === undefined) {
-      return {
-        id: declared.id,
-        label: declared.label,
-        required: declared.required,
-        status: "skipped" as const,
-        summary: "The agent did not return this declared check.",
-        evidenceReceiptIds: [],
-      };
-    }
-    const knownReceipts = result.evidenceReceiptIds.filter((id) =>
-      evidenceById.has(id),
-    );
-    const capturedReceipts = knownReceipts.flatMap((id) => {
-      const receipt = evidenceById.get(id);
-      return receipt === undefined ? [] : [receipt];
-    });
-    const captureCompleteAndSuccessful =
-      result.evidenceReceiptIds.length > 0 &&
-      knownReceipts.length === result.evidenceReceiptIds.length &&
-      capturedReceipts.every((receipt) => receipt.status === "success");
-    if (knownReceipts.length !== result.evidenceReceiptIds.length) {
-      limitations.push(
-        `Check ${declared.id} referenced evidence that was not captured by the provider transcript.`,
-      );
-      evidenceIntegrityComplete = false;
-    }
-    const collectors = declared.evidenceCollectors;
-    const expectedCollectorIds = (collectors ?? []).map((collector) =>
-      agentTaskCollectorReceiptId(declared.id, collector.id),
-    );
-    const missingCollectorIds = expectedCollectorIds.filter((id) => {
-      const receipt = evidenceById.get(id);
-      return receipt?.origin !== "declared-collector";
-    });
-    const failedCollectorIds = expectedCollectorIds.filter((id) => {
-      const receipt = evidenceById.get(id);
-      return (
-        receipt?.origin === "declared-collector" && receipt.status !== "success"
-      );
-    });
-    const uncitedCollectorIds = expectedCollectorIds.filter(
-      (id) => !result.evidenceReceiptIds.includes(id),
-    );
-    if (collectors === undefined) {
-      limitations.push(
-        `Check ${declared.id} lacks independently declared evidence collectors; legacy v2 coverage cannot be complete.`,
-      );
-      evidenceIntegrityComplete = false;
-    }
-    if (missingCollectorIds.length > 0) {
-      limitations.push(
-        `Check ${declared.id} is missing independently collected receipts: ${missingCollectorIds.join(", ")}.`,
-      );
-      evidenceIntegrityComplete = false;
-    }
-    if (failedCollectorIds.length > 0) {
-      limitations.push(
-        `Check ${declared.id} has failed independently collected receipts: ${failedCollectorIds.join(", ")}.`,
-      );
-      evidenceIntegrityComplete = false;
-    }
-    if (uncitedCollectorIds.length > 0) {
-      limitations.push(
-        `Check ${declared.id} did not cite its independently collected receipts: ${uncitedCollectorIds.join(", ")}.`,
-      );
-      evidenceIntegrityComplete = false;
-    }
-    const successfulEvidence =
-      captureCompleteAndSuccessful &&
-      collectors !== undefined &&
-      missingCollectorIds.length === 0 &&
-      failedCollectorIds.length === 0 &&
-      uncitedCollectorIds.length === 0;
-    if (!successfulEvidence && result.status === "passed") {
-      limitations.push(
-        `Check ${declared.id} does not have complete successful independently collected evidence.`,
-      );
-      evidenceIntegrityComplete = false;
-    }
-    const status =
-      !successfulEvidence && result.status === "passed"
-        ? "failed"
-        : result.status;
-    const summary =
-      !successfulEvidence && result.status === "passed"
-        ? `${result.summary} Evidence validation failed.`
-        : result.summary;
-    return {
-      id: declared.id,
-      label: declared.label,
-      required: declared.required,
-      status,
-      summary,
-      evidenceReceiptIds: knownReceipts,
-    };
-  });
+  const normalizedChecks = declaredChecks.map((declared) =>
+    normalizeDeclaredCheck(
+      declared,
+      payloadChecks.get(declared.id),
+      evidenceById,
+    ),
+  );
+  const checks = normalizedChecks.map((normalized) => normalized.check);
+  limitations.push(
+    ...normalizedChecks.flatMap((normalized) => normalized.limitations),
+  );
+  if (
+    normalizedChecks.some((normalized) => !normalized.evidenceIntegrityComplete)
+  ) {
+    evidenceIntegrityComplete = false;
+  }
   const requiredCoverageComplete = checks
     .filter((check) => check.required)
     .every((check) => check.status !== "skipped");

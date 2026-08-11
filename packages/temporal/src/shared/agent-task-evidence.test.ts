@@ -32,6 +32,7 @@ function v2Input(): AgentTaskInput {
             kind: "command",
             argv: ["curl", "-fsS", "https://example.com/health"],
             output: "non-empty",
+            expectation: { kind: "exit-code", passedExitCodes: [0] },
           },
         ],
       },
@@ -203,6 +204,7 @@ describe("agent task evidence normalization", () => {
           origin: "declared-collector",
           observedAt: OBSERVED_AT,
           status: "success",
+          semanticStatus: "passed",
           command: '["curl","-fsS","https://example.com/health"]',
         },
       ],
@@ -314,6 +316,7 @@ describe("agent task evidence normalization", () => {
         origin: "declared-collector",
         observedAt: OBSERVED_AT,
         status: "success",
+        semanticStatus: "passed",
         command: '["curl","-fsS","https://example.com/health"]',
       },
     ]);
@@ -337,6 +340,7 @@ describe("agent task evidence normalization", () => {
         origin: "declared-collector",
         observedAt: OBSERVED_AT,
         status: "success",
+        semanticStatus: "failed",
         excerpt: '{"healthy":false}',
       },
     ]);
@@ -344,6 +348,31 @@ describe("agent task evidence normalization", () => {
     expect(normalized.execution).toBe("complete");
     expect(normalized.verdict).toBe("attention");
     expect(normalized.checks[0]?.status).toBe("failed");
+  });
+
+  test("overrides a passed claim when a source-defined predicate failed", () => {
+    const normalized = normalizeAgentTaskV2Result(
+      v2Input(),
+      v2Payload([COLLECTOR_RECEIPT_ID]),
+      [
+        {
+          id: COLLECTOR_RECEIPT_ID,
+          source: "prometheus:service-health-endpoint",
+          origin: "declared-collector",
+          observedAt: OBSERVED_AT,
+          status: "success",
+          semanticStatus: "failed",
+          excerpt: '{"status":"success","data":{"result":[0]}}',
+        },
+      ],
+    );
+
+    expect(normalized.execution).toBe("complete");
+    expect(normalized.verdict).toBe("attention");
+    expect(normalized.checks[0]?.status).toBe("failed");
+    expect(normalized.checks[0]?.summary).toContain(
+      "Source-defined collector predicates failed",
+    );
   });
 });
 
@@ -355,6 +384,7 @@ describe("agent task deterministic verdicts", () => {
       origin: "declared-collector" as const,
       observedAt: OBSERVED_AT,
       status: "success" as const,
+      semanticStatus: "passed" as const,
       command: '["curl","-fsS","https://example.com/health"]',
     };
     const changedPayload = v2Payload([receipt.id]);

@@ -152,7 +152,7 @@ function ciIoAcceptanceCheck(
     id: "acceptance-gates",
     label: "Documented acceptance gates",
     required: !state.pending,
-    status: conditionalCheckStatus(state.pending, state.gateAvailable),
+    status: conditionalCheckStatus(state.pending, state.gatePassed),
     summary: state.pending
       ? "Awaiting fixed-corpus candidate"
       : `write reduction ${state.gate?.aggregateWriteReductionPercent?.toFixed(1) ?? "unknown"}%; p95 duration ${state.gate?.p95DurationChangePercent?.toFixed(1) ?? "unknown"}%`,

@@ -168,6 +168,7 @@ describe("buildAgentTaskCommand", () => {
               kind: "command",
               argv: ["service-health", "--json"],
               output: "json",
+              expectation: { kind: "exit-code", passedExitCodes: [0] },
             },
           ],
         },

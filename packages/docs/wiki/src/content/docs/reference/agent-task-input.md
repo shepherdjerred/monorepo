@@ -47,7 +47,7 @@ immediately. Cron expressions are evaluated in `America/Los_Angeles`.
   "runAt": "2026-05-31T09:00:00-07:00",
   "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
   "checks": [
-    { "id": "post-deploy-metrics", "label": "Post-deploy metrics", "required": true, "evidenceRequirement": "A successful current Prometheus query for the Birmel target.", "evidenceCollectors": [{ "id": "birmel-up", "kind": "prometheus", "query": "up{namespace=\"birmel\"}" }] }
+    { "id": "post-deploy-metrics", "label": "Post-deploy metrics", "required": true, "evidenceRequirement": "Every current Birmel target reports up=1.", "evidenceCollectors": [{ "id": "birmel-up", "kind": "prometheus", "query": "up{namespace=\"birmel\"}", "expectation": { "kind": "numeric", "operator": "eq", "threshold": 1, "quantifier": "all" } }] }
   ],
   "source": {
     "docPath": "packages/docs/guides/2026-04-25_birmel-remediation-followups.md"
@@ -74,8 +74,13 @@ exposed.
 Each check has `id`, `label`, `required`, `evidenceRequirement`, and a non-empty
 `evidenceCollectors` array. A collector is either an exact command `argv` with
 an output contract (`allow-empty`, `non-empty`, or structured `json`), or a
-typed Prometheus query with an optional range window. The worker executes these
-collectors independently after the investigation phase with no provider or
+typed Prometheus query with an optional range window. Every collector requires
+an `expectation`. Command expectations either distinguish passing accepted exit
+codes or evaluate typed JSON path assertions; a `*` path segment expands arrays
+or object values. Prometheus expectations compare finite numeric samples to a
+threshold. Both JSON and Prometheus expectations declare whether `all` or `any`
+observations must match. The worker executes collectors and evaluates these
+predicates independently after the investigation phase with no provider or
 delivery credential. It never executes model-authored command text as a
 collector.
 
@@ -83,9 +88,12 @@ The final result must report every declared ID once and cite every deterministic
 `collector:<check-id>:<collector-id>` receipt for that check. Provider tool
 receipts may support findings, but cannot establish check coverage. A missing,
 failed, spoofed, or uncited collector makes execution partial and prevents a
-clear verdict. Replayed early-v2 inputs without collectors remain valid
-histories but are always partial. V2 follow-ups inherit the parent collectors;
-the model cannot replace them.
+clear verdict. A successfully collected adverse observation has
+`semanticStatus: failed`; it keeps execution complete but deterministically
+overrides a model-authored pass and produces an attention verdict. Replayed
+early-v2 inputs without collectors or predicates remain valid histories but are
+always partial. V2 follow-ups inherit the parent collectors; the model cannot
+replace them.
 
 The model does not return a verdict or subject. The reporter derives them from
 validated state: incomplete required coverage is inconclusive; failed checks or

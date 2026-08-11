@@ -38,16 +38,17 @@ about **three minutes from now**, in your local offset.
   "runAt": "2026-08-09T15:30:00-07:00",
   "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
   "checks": [
-    { "id": "package-directories", "label": "Top-level package directories", "required": true, "evidenceRequirement": "Successful structured output listing the immediate directories under packages/.", "evidenceCollectors": [{ "id": "package-tree", "kind": "command", "argv": ["git", "ls-tree", "-d", "--name-only", "HEAD:packages"], "output": "non-empty" }] }
+    { "id": "package-directories", "label": "Top-level package directories", "required": true, "evidenceRequirement": "Successful structured output listing the immediate directories under packages/.", "evidenceCollectors": [{ "id": "package-tree", "kind": "command", "argv": ["git", "ls-tree", "-d", "--name-only", "HEAD:packages"], "output": "non-empty", "expectation": { "kind": "exit-code", "passedExitCodes": [0] } }] }
   ],
   "prompt": "List the top-level directories under packages/ and count them. Email the list and the count. Do not change anything."
 }
 -->
 ```
 
-Notice the declared check, its evidence requirement, and its exact command
-collector. The worker runs that argv independently of the model. The agent's
-final JSON must report the check and reference
+Notice the declared check, its evidence requirement, its exact command
+collector, and the accepted exit code that means the observation passed. The
+worker runs that argv and evaluates the expectation independently of the model.
+The agent's final JSON must report the check and reference
 `collector:package-directories:package-tree`. If the command fails or that
 receipt is missing or uncited, the report is partial rather than clean.
 

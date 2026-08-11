@@ -246,8 +246,12 @@ agent-task creation must still go through `/agent-tasks` with
 `Authorization: Bearer $AGENT_TASK_API_TOKEN`.
 
 New inputs use `contractVersion: 2`, declare checks and independently executed
-command or Prometheus collectors, and use `runAt` for one-off tasks or `cron` + stable `scheduleId`
-for recurring tasks. Recurring schedules use `America/Los_Angeles`. Agents may
+command or Prometheus collectors, and give every collector a source-defined
+expectation. Command expectations evaluate an accepted exit code or typed JSON
+path assertions; Prometheus expectations evaluate numeric samples with an
+`all` or `any` quantifier. The worker owns those predicates and overrides a
+model-authored pass when observed data fails one. Use `runAt` for one-off tasks
+or `cron` + stable `scheduleId` for recurring tasks. Recurring schedules use `America/Los_Angeles`. Agents may
 return one report-only `followUp`, which inherits the parent collectors, or a
 `retirementRecommendation`; they cannot
 pause, cancel, or delete schedules. The v1 decoder remains only for Temporal

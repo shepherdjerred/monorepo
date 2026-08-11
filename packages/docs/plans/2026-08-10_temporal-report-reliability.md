@@ -148,10 +148,12 @@ self-cancellation are removed.
   credential. A parent-owned per-run broker authenticates an ephemeral bearer,
   restricts requests to the selected provider's inference paths, and injects
   the real credential only into a fixed upstream origin.
-- Declared checks now include independent criteria over receipt source, command,
-  URL, or excerpt. Merely citing a successful but unrelated receipt forces a
-  partial, inconclusive report; replayed early-v2 inputs without collectors do the
-  same.
+- Declared collectors now include source-defined semantic predicates over
+  accepted exit codes, typed JSON paths, or numeric Prometheus samples. The
+  worker evaluates them independently and overrides a model-authored pass when
+  observed data is adverse. Merely citing a successful but unrelated receipt,
+  or replaying an early-v2 input without evaluated predicates, forces a partial,
+  inconclusive report.
 - CI I/O retirement counts only finished passed or failed post-merge builds.
   Running, blocked, and canceled builds remain visible but cannot satisfy the
   observation threshold.

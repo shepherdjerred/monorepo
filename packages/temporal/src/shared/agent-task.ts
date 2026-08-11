@@ -4,6 +4,11 @@ import {
   AgentTaskEvidenceCollectorsV2Schema,
   AgentTaskEvidenceCriteriaV2Schema,
 } from "./agent-task-evidence-contract.ts";
+import { validateCollectorRelationships } from "./agent-task-input-validation.ts";
+import {
+  jsonSchemaFingerprint,
+  stripClaudeSchemaAnnotations,
+} from "./agent-task-json-schema.ts";
 
 export const AgentTaskProviderSchema = z.enum(["claude", "codex"]);
 export const AgentTaskModeSchema = z.enum(["report-only"]);
@@ -71,27 +76,28 @@ export const AgentTaskFollowUpSchema = AgentTaskFollowUpSchemaBase.superRefine(
   },
 );
 
-export const AgentTaskInputSchema = z
-  .object({
-    contractVersion: z.literal(2).optional(),
-    title: z.string().min(1),
-    prompt: z.string().min(1),
-    checks: z.array(AgentTaskCheckDefinitionV2Schema).min(1).optional(),
-    provider: AgentTaskProviderSchema,
-    mode: AgentTaskModeSchema.default("report-only"),
-    repo: AgentTaskRepoSchema,
-    runAt: z.iso.datetime({ offset: true }).optional(),
-    cron: z.string().min(1).optional(),
-    scheduleId: z.string().min(1).optional(),
-    source: AgentTaskSourceSchema.optional(),
-    model: z.string().min(1).optional(),
-    maxTurns: z.number().int().positive().optional(),
-    agentTimeoutMinutes: z.number().int().positive().max(90).optional(),
-    idempotencyKey: z.string().min(1).optional(),
-    allowSelfCancel: z.boolean().default(false),
-    emailSubjectPrefix: z.string().min(1).optional(),
-  })
-  .superRefine((value, ctx) => {
+const AgentTaskInputBaseSchema = z.object({
+  contractVersion: z.literal(2).optional(),
+  title: z.string().min(1),
+  prompt: z.string().min(1),
+  checks: z.array(AgentTaskCheckDefinitionV2Schema).min(1).optional(),
+  provider: AgentTaskProviderSchema,
+  mode: AgentTaskModeSchema.default("report-only"),
+  repo: AgentTaskRepoSchema,
+  runAt: z.iso.datetime({ offset: true }).optional(),
+  cron: z.string().min(1).optional(),
+  scheduleId: z.string().min(1).optional(),
+  source: AgentTaskSourceSchema.optional(),
+  model: z.string().min(1).optional(),
+  maxTurns: z.number().int().positive().optional(),
+  agentTimeoutMinutes: z.number().int().positive().max(90).optional(),
+  idempotencyKey: z.string().min(1).optional(),
+  allowSelfCancel: z.boolean().default(false),
+  emailSubjectPrefix: z.string().min(1).optional(),
+});
+
+export const AgentTaskInputSchema = AgentTaskInputBaseSchema.superRefine(
+  (value, ctx) => {
     if (value.runAt !== undefined && value.cron !== undefined) {
       ctx.addIssue({
         code: "custom",
@@ -132,26 +138,16 @@ export const AgentTaskInputSchema = z
       for (const [collectorIndex, collector] of (
         check.evidenceCollectors ?? []
       ).entries()) {
-        if (
-          collector.kind === "prometheus" &&
-          collector.stepSeconds !== undefined &&
-          collector.windowSeconds === undefined
-        ) {
-          ctx.addIssue({
-            code: "custom",
-            message: "Prometheus stepSeconds requires windowSeconds",
-            path: [
-              "checks",
-              checkIndex,
-              "evidenceCollectors",
-              collectorIndex,
-              "stepSeconds",
-            ],
-          });
-        }
+        validateCollectorRelationships(
+          checkIndex,
+          collectorIndex,
+          collector,
+          ctx,
+        );
       }
     }
-  });
+  },
+);
 
 export const AgentTaskInputV2Schema = AgentTaskInputSchema.superRefine(
   (value, ctx) => {
@@ -178,6 +174,26 @@ export const AgentTaskInputV2Schema = AgentTaskInputSchema.superRefine(
             "new v2 checks require independently executed evidenceCollectors",
           path: ["checks", index, "evidenceCollectors"],
         });
+        continue;
+      }
+      for (const [
+        collectorIndex,
+        collector,
+      ] of check.evidenceCollectors.entries()) {
+        if (collector.expectation === undefined) {
+          ctx.addIssue({
+            code: "custom",
+            message:
+              "new v2 evidence collectors require a source-defined expectation",
+            path: [
+              "checks",
+              index,
+              "evidenceCollectors",
+              collectorIndex,
+              "expectation",
+            ],
+          });
+        }
       }
     }
   },
@@ -412,27 +428,6 @@ export const AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX_V2: Record<string, unknown> = z
 // target. `$schema` and `format` are removed because the CLI consumes the
 // payload shape, not dialect metadata or nonessential annotations; the final
 // semantic check remains AgentTaskResultPayloadSchema below.
-export function stripClaudeSchemaAnnotations(value: unknown): unknown {
-  if (Array.isArray(value)) {
-    return value.map((entry) => stripClaudeSchemaAnnotations(entry));
-  }
-  const record = z.record(z.string(), z.unknown()).safeParse(value);
-  if (!record.success) {
-    return value;
-  }
-  const normalized: Record<string, unknown> = {};
-  for (const [key, entry] of Object.entries(record.data)) {
-    if (
-      (key === "$schema" && typeof entry === "string") ||
-      (key === "format" && typeof entry === "string")
-    ) {
-      continue;
-    }
-    normalized[key] = stripClaudeSchemaAnnotations(entry);
-  }
-  return normalized;
-}
-
 const agentTaskClaudeJsonSchema = stripClaudeSchemaAnnotations(
   z.toJSONSchema(AgentTaskResultPayloadSchema, { target: "draft-7" }),
 );
@@ -446,34 +441,9 @@ const agentTaskClaudeJsonSchemaV2 = stripClaudeSchemaAnnotations(
 export const AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE_V2: Record<string, unknown> =
   z.record(z.string(), z.unknown()).parse(agentTaskClaudeJsonSchemaV2);
 
-function sortJson(value: unknown): unknown {
-  if (Array.isArray(value)) {
-    return value.map((item) => sortJson(item));
-  }
-  if (typeof value === "object" && value !== null) {
-    const sorted: Record<string, unknown> = {};
-    for (const [key, entryValue] of Object.entries(value).toSorted(([a], [b]) =>
-      a.localeCompare(b),
-    )) {
-      sorted[key] = sortJson(entryValue);
-    }
-    return sorted;
-  }
-  return value;
-}
-
-const claudeSchemaHasher = new Bun.CryptoHasher("sha256");
-claudeSchemaHasher.update(
-  JSON.stringify(sortJson(AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE)),
+export const AGENT_TASK_CLAUDE_SCHEMA_FINGERPRINT = jsonSchemaFingerprint(
+  AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE,
 );
-export const AGENT_TASK_CLAUDE_SCHEMA_FINGERPRINT = claudeSchemaHasher
-  .digest("hex")
-  .slice(0, 16);
-
-const claudeSchemaV2Hasher = new Bun.CryptoHasher("sha256");
-claudeSchemaV2Hasher.update(
-  JSON.stringify(sortJson(AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE_V2)),
+export const AGENT_TASK_CLAUDE_SCHEMA_V2_FINGERPRINT = jsonSchemaFingerprint(
+  AGENT_TASK_OUTPUT_JSON_SCHEMA_CLAUDE_V2,
 );
-export const AGENT_TASK_CLAUDE_SCHEMA_V2_FINGERPRINT = claudeSchemaV2Hasher
-  .digest("hex")
-  .slice(0, 16);

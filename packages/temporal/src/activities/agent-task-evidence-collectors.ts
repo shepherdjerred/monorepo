@@ -29,12 +29,29 @@ const StructuredJsonSchema = z.union([
   z.array(z.unknown()),
 ]);
 
+const PrometheusSampleSchema = z.tuple([
+  z.union([z.number(), z.string()]),
+  z.string(),
+]);
+
 const PrometheusQueryResponseSchema = z.object({
   status: z.literal("success"),
-  data: z.object({
-    resultType: z.enum(["matrix", "vector", "scalar", "string"]),
-    result: z.unknown(),
-  }),
+  data: z.discriminatedUnion("resultType", [
+    z.object({
+      resultType: z.literal("vector"),
+      result: z.array(z.looseObject({ value: PrometheusSampleSchema })),
+    }),
+    z.object({
+      resultType: z.literal("matrix"),
+      result: z.array(
+        z.looseObject({ values: z.array(PrometheusSampleSchema) }),
+      ),
+    }),
+    z.object({
+      resultType: z.enum(["scalar", "string"]),
+      result: PrometheusSampleSchema,
+    }),
+  ]),
 });
 
 type CollectorDependencies = {
@@ -99,6 +116,123 @@ function commandValidationFailure(
   } catch (error: unknown) {
     return `Collector stdout was not a JSON object or array: ${error instanceof Error ? error.message : String(error)}`;
   }
+}
+
+function commandSemanticStatus(
+  collector: Extract<AgentTaskEvidenceCollectorV2, { kind: "command" }>,
+  exitCode: number,
+  stdout: string,
+  validationFailure: string | undefined,
+): ReportEvidenceReceiptV1["semanticStatus"] {
+  if (validationFailure !== undefined || collector.expectation === undefined) {
+    return undefined;
+  }
+  if (collector.expectation.kind === "exit-code") {
+    return collector.expectation.passedExitCodes.includes(exitCode)
+      ? "passed"
+      : "failed";
+  }
+  const parsed = StructuredJsonSchema.parse(JSON.parse(stdout));
+  const passed = collector.expectation.assertions.every((assertion) => {
+    const values = resolveJsonPath(parsed, assertion.path);
+    if (values.length === 0) return false;
+    const matches = values.map((value) =>
+      compareJsonValue(value, assertion.operator, assertion.expected),
+    );
+    return assertion.quantifier === "all"
+      ? matches.every(Boolean)
+      : matches.some(Boolean);
+  });
+  return passed ? "passed" : "failed";
+}
+
+function resolveJsonPath(value: unknown, path: readonly string[]): unknown[] {
+  return path.reduce<unknown[]>(
+    (current, segment) => {
+      if (segment === "*") {
+        return current.flatMap((item) => {
+          const array = z.array(z.unknown()).safeParse(item);
+          if (array.success) return array.data;
+          const record = z.record(z.string(), z.unknown()).safeParse(item);
+          return record.success ? Object.values(record.data) : [];
+        });
+      }
+      return current.flatMap((item) => {
+        const record = z.record(z.string(), z.unknown()).safeParse(item);
+        if (!record.success || !(segment in record.data)) return [];
+        return [record.data[segment]];
+      });
+    },
+    [value],
+  );
+}
+
+function compareJsonValue(
+  actual: unknown,
+  operator: "eq" | "gt" | "gte" | "lt" | "lte" | "in",
+  expected: string | number | boolean | (string | number | boolean)[],
+): boolean {
+  if (operator === "eq") return Object.is(actual, expected);
+  if (operator === "in") {
+    return (
+      Array.isArray(expected) &&
+      expected.some((item) => Object.is(actual, item))
+    );
+  }
+  if (typeof actual !== "number" || typeof expected !== "number") return false;
+  if (operator === "gt") return actual > expected;
+  if (operator === "gte") return actual >= expected;
+  if (operator === "lt") return actual < expected;
+  return actual <= expected;
+}
+
+function prometheusValues(
+  data: z.infer<typeof PrometheusQueryResponseSchema>["data"],
+): number[] | undefined {
+  const samples =
+    data.resultType === "vector"
+      ? data.result.map((item) => item.value)
+      : data.resultType === "matrix"
+        ? data.result.flatMap((item) => item.values)
+        : [data.result];
+  const values = samples.map((sample) => Number(sample[1]));
+  return values.length > 0 && values.every((value) => Number.isFinite(value))
+    ? values
+    : undefined;
+}
+
+function comparePrometheusValue(
+  value: number,
+  operator: NonNullable<
+    Extract<AgentTaskEvidenceCollectorV2, { kind: "prometheus" }>["expectation"]
+  >["operator"],
+  threshold: number,
+): boolean {
+  if (operator === "eq") return value === threshold;
+  if (operator === "gt") return value > threshold;
+  if (operator === "gte") return value >= threshold;
+  if (operator === "lt") return value < threshold;
+  return value <= threshold;
+}
+
+function prometheusSemanticStatus(
+  collector: Extract<AgentTaskEvidenceCollectorV2, { kind: "prometheus" }>,
+  data: z.infer<typeof PrometheusQueryResponseSchema>["data"],
+): ReportEvidenceReceiptV1["semanticStatus"] {
+  const expectation = collector.expectation;
+  if (expectation === undefined) return undefined;
+  const values = prometheusValues(data);
+  if (values === undefined) return "failed";
+  const matches = values.map((value) =>
+    comparePrometheusValue(value, expectation.operator, expectation.threshold),
+  );
+  return expectation.quantifier === "all"
+    ? matches.every(Boolean)
+      ? "passed"
+      : "failed"
+    : matches.some(Boolean)
+      ? "passed"
+      : "failed";
 }
 
 async function collectCommandEvidence(
@@ -191,12 +325,19 @@ async function collectCommandEvidence(
           : `Collector exited with code ${String(result.exitCode)} (${result.signal}).`;
     const validationFailure =
       processFailure ?? commandValidationFailure(collector, result.stdout);
+    const semanticStatus = commandSemanticStatus(
+      collector,
+      result.exitCode,
+      result.stdout,
+      validationFailure,
+    );
     return {
       id: agentTaskCollectorReceiptId(checkId, collector.id),
       source: `declared-command:${collector.id}`,
       origin: "declared-collector",
       observedAt: new Date().toISOString(),
       status: validationFailure === undefined ? "success" : "failure",
+      ...(semanticStatus === undefined ? {} : { semanticStatus }),
       command,
       exitCode: result.exitCode,
       ...receiptContent(stdout, validationFailure),
@@ -262,12 +403,17 @@ async function collectPrometheusEvidence(
         ? undefined
         : "Prometheus response did not satisfy the successful query schema."
       : `Prometheus returned HTTP ${String(response.status)}.`;
+    const semanticStatus =
+      failure === undefined && parsed.success
+        ? prometheusSemanticStatus(collector, parsed.data.data)
+        : undefined;
     return {
       id,
       source: `prometheus:${collector.id}`,
       origin: "declared-collector",
       observedAt: new Date().toISOString(),
       status: failure === undefined ? "success" : "failure",
+      ...(semanticStatus === undefined ? {} : { semanticStatus }),
       url: url.toString(),
       ...receiptContent(body, failure),
     };

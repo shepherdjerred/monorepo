@@ -129,18 +129,23 @@ Contract validity alone does not establish truth. A v2 run captures and redacts
 provider tool events for research context, then separately executes the exact
 collectors declared by the authenticated or source-controlled task author.
 Command collectors use argv without a shell and validate their output contract;
-Prometheus collectors call and validate the typed API directly. They receive no
-provider or delivery credential.
+Prometheus collectors call and validate the typed API directly. Each collector
+also has a source-defined predicate: accepted and passing exit codes, typed JSON
+path assertions, or numeric Prometheus thresholds. They receive no provider or
+delivery credential, and the model cannot set the predicate result.
 
 Finalization receives that explicit catalog and a preliminary assessment. The
 independent normalizer requires every deterministic collector receipt for a
-check to be captured, successful, and cited. A provider receipt cannot spoof a
-collector even if it repeats the same command text or receipt ID. Unknown IDs,
-failed collectors, unsupported findings, missing checks, or skipped required
-checks force a partial or failed report; they can never produce a clean verdict.
-Historical early-v2 inputs without collectors remain replayable but are always
-partial. Follow-ups inherit the parent collectors instead of accepting
-model-authored replacements.
+check to be captured, successful, semantically evaluated, and cited. A provider
+receipt cannot spoof a collector even if it repeats the same command text or
+receipt ID. Unknown IDs, failed collectors, unevaluated predicates, unsupported
+findings, missing checks, or skipped required checks force a partial or failed
+report; they can never produce a clean verdict. When collection succeeds but a
+predicate fails, execution can remain complete while the normalizer overrides a
+model-authored pass and derives an attention verdict. Historical early-v2 inputs
+without collectors or predicates remain replayable but are always partial.
+Follow-ups inherit the parent collectors instead of accepting model-authored
+replacements.
 
 The model has no verdict or subject field. After evidence validation, the
 reporter maps check state and finding severity to a domain verdict, then maps

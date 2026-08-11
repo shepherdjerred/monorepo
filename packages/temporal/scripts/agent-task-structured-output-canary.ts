@@ -64,6 +64,7 @@ async function main(): Promise<void> {
             kind: "command",
             argv: ["printf", String.raw`agent-task-canary-ok\n`],
             output: "non-empty",
+            expectation: { kind: "exit-code", passedExitCodes: [0] },
           },
         ],
       },

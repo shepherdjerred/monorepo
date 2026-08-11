@@ -21,7 +21,10 @@ function successfulPrometheusFetch(request: string | URL | Request) {
   return Promise.resolve(
     Response.json({
       status: "success",
-      data: { resultType: "vector", result: [] },
+      data: {
+        resultType: "vector",
+        result: [{ metric: {}, value: [0, "1"] }],
+      },
     }),
   );
 }
@@ -47,7 +50,10 @@ function rangePrometheusFetch(request: string | URL | Request) {
   return Promise.resolve(
     Response.json({
       status: "success",
-      data: { resultType: "matrix", result: [] },
+      data: {
+        resultType: "matrix",
+        result: [{ metric: {}, values: [[0, "1"]] }],
+      },
     }),
   );
 }
@@ -64,6 +70,7 @@ function commandInput(
   argv: string[],
   output: "allow-empty" | "non-empty" | "json",
   successExitCodes?: number[],
+  passedExitCodes: number[] = [0],
 ) {
   return AgentTaskInputV2Schema.parse({
     contractVersion: 2,
@@ -82,6 +89,7 @@ function commandInput(
             argv,
             output,
             ...(successExitCodes === undefined ? {} : { successExitCodes }),
+            expectation: { kind: "exit-code", passedExitCodes },
           },
         ],
       },
@@ -156,14 +164,68 @@ describe("declared command evidence", () => {
     temporaryDirectories.push(workdir);
 
     const receipts = await collectDeclaredAgentTaskEvidence(
-      commandInput(["/usr/bin/false"], "allow-empty", [1]),
+      commandInput(["/usr/bin/false"], "allow-empty", [1], [1]),
       workdir,
       { fetch, environment: { PATH: "/usr/bin:/bin" } },
     );
 
     expect(receipts[0]).toMatchObject({
       status: "success",
+      semanticStatus: "passed",
       exitCode: 1,
+    });
+  });
+
+  test("marks structurally valid adverse JSON as a failed predicate", async () => {
+    const workdir = await mkdtemp(path.join(os.tmpdir(), "collector-test-"));
+    temporaryDirectories.push(workdir);
+    const input = AgentTaskInputV2Schema.parse({
+      contractVersion: 2,
+      title: "Collect workload health",
+      prompt: "Interpret the independently collected workload evidence.",
+      checks: [
+        {
+          id: "workload-health",
+          label: "Workload health",
+          required: true,
+          evidenceRequirement: "Every workload must be running.",
+          evidenceCollectors: [
+            {
+              id: "workloads",
+              kind: "command",
+              argv: [
+                "/usr/bin/printf",
+                '{"items":[{"status":{"phase":"Failed"}}]}',
+              ],
+              output: "json",
+              expectation: {
+                kind: "json",
+                assertions: [
+                  {
+                    path: ["items", "*", "status", "phase"],
+                    operator: "eq",
+                    expected: "Running",
+                    quantifier: "all",
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      ],
+      provider: "codex",
+      mode: "report-only",
+      repo: { fullName: "shepherdjerred/monorepo" },
+    });
+
+    const receipts = await collectDeclaredAgentTaskEvidence(input, workdir, {
+      fetch,
+      environment: { PATH: "/usr/bin:/bin" },
+    });
+
+    expect(receipts[0]).toMatchObject({
+      status: "success",
+      semanticStatus: "failed",
     });
   });
 });
@@ -185,6 +247,12 @@ describe("declared Prometheus evidence", () => {
               id: "worker-up",
               kind: "prometheus",
               query: 'up{job="temporal-worker"}',
+              expectation: {
+                kind: "numeric",
+                operator: "eq",
+                threshold: 1,
+                quantifier: "all",
+              },
             },
           ],
         },
@@ -206,6 +274,7 @@ describe("declared Prometheus evidence", () => {
       id: "collector:metrics:worker-up",
       origin: "declared-collector",
       status: "success",
+      semanticStatus: "passed",
     });
     expect(failure[0]?.status).toBe("failure");
     expect(failure[0]?.excerpt).toContain(
@@ -231,6 +300,12 @@ describe("declared Prometheus evidence", () => {
               query: "up",
               windowSeconds: 86_400,
               stepSeconds: 300,
+              expectation: {
+                kind: "numeric",
+                operator: "eq",
+                threshold: 1,
+                quantifier: "all",
+              },
             },
           ],
         },
@@ -249,6 +324,56 @@ describe("declared Prometheus evidence", () => {
     expect(receipts[0]?.url).toContain("/api/v1/query_range?");
   });
 
+  test("marks an adverse numeric observation without failing collection", async () => {
+    const input = AgentTaskInputV2Schema.parse({
+      contractVersion: 2,
+      title: "Collect service availability",
+      prompt: "Interpret the independently collected metric.",
+      checks: [
+        {
+          id: "availability",
+          label: "Availability",
+          required: true,
+          evidenceRequirement: "Every target must be up.",
+          evidenceCollectors: [
+            {
+              id: "service-up",
+              kind: "prometheus",
+              query: 'up{namespace="service"}',
+              expectation: {
+                kind: "numeric",
+                operator: "eq",
+                threshold: 1,
+                quantifier: "all",
+              },
+            },
+          ],
+        },
+      ],
+      provider: "codex",
+      mode: "report-only",
+      repo: { fullName: "shepherdjerred/monorepo" },
+    });
+    const receipts = await collectDeclaredAgentTaskEvidence(input, "/tmp", {
+      fetch: () =>
+        Promise.resolve(
+          Response.json({
+            status: "success",
+            data: {
+              resultType: "vector",
+              result: [{ metric: {}, value: [0, "0"] }],
+            },
+          }),
+        ),
+      environment: { PROMETHEUS_URL: "https://prometheus.example.test" },
+    });
+
+    expect(receipts[0]).toMatchObject({
+      status: "success",
+      semanticStatus: "failed",
+    });
+  });
+
   test("validates raw responses before redacting retained evidence", async () => {
     const input = AgentTaskInputV2Schema.parse({
       contractVersion: 2,
@@ -265,6 +390,12 @@ describe("declared Prometheus evidence", () => {
               id: "secret-bearing-result",
               kind: "prometheus",
               query: "service_state",
+              expectation: {
+                kind: "numeric",
+                operator: "gte",
+                threshold: 0,
+                quantifier: "all",
+              },
             },
           ],
         },
