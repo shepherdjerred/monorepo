@@ -269,14 +269,51 @@ func (r *wirelessNetworkResource) Delete(_ context.Context, _ resource.DeleteReq
 	// Wireless radios cannot be deleted; this is a no-op.
 }
 
-// ImportState imports a wireless band by its index (e.g. "0", "1", "2").
-// Read then populates the remaining attributes from the router.
+// ImportState imports a wireless band by its index (e.g. "0", "1", "2"), after
+// confirming the router actually has that radio. Read then populates the
+// remaining attributes.
+//
+// The existence check is required because a missing NVRAM key is not an error
+// on this API: appGet returns an empty string for one. A typo'd index like -1
+// or 99 would otherwise import cleanly, leaving the required ssid/auth_mode
+// attributes empty, and a matching config could then write bogus wl99_* keys.
 func (r *wirelessNetworkResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	band, err := strconv.ParseInt(strings.TrimSpace(req.ID), 10, 64)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Invalid import ID",
 			fmt.Sprintf("Wireless import ID must be a band index (e.g. 0, 1, 2); got %q", req.ID),
+		)
+
+		return
+	}
+
+	if band < 0 {
+		resp.Diagnostics.AddError(
+			"Invalid import ID",
+			fmt.Sprintf("Wireless band index cannot be negative; got %d", band),
+		)
+
+		return
+	}
+
+	ssidKey := fmt.Sprintf("wl%d_ssid", band)
+
+	ssid, err := r.client.NvramGetSingle(ctx, ssidKey)
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to verify wireless band", fmt.Sprintf("reading %s: %s", ssidKey, err))
+
+		return
+	}
+
+	if ssid == "" {
+		resp.Diagnostics.AddError(
+			"Wireless band not found",
+			fmt.Sprintf(
+				"The router reports no radio for band %d (%s is empty or absent). "+
+					"Band 0 is 2.4GHz and band 1 is 5GHz on a dual-band router; check the index.",
+				band, ssidKey,
+			),
 		)
 
 		return
