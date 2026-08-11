@@ -203,11 +203,11 @@ export async function refreshAgentTaskSecretTokenStateInBackground(
 // unprivileged worker pod refuses — see agent-task-command.ts), so a
 // prompt-injected or mistaken command runs with whatever this returns and could
 // read those credentials or the mounted service-account token. The boundary is
-// instead: `mode: "report-only"` (the prompt forbids mutation), an ephemeral
-// non-root pod, and a throwaway per-run clone. Revisit this (e.g. per-task
-// credential scoping or a separately isolated runner) if the threat model
-// changes — mutating tasks, or untrusted callers reaching the `/agent-tasks`
-// ingress.
+// instead: `mode: "report-only"` (the prompt forbids mutation), a dedicated
+// non-root worker whose Kubernetes identity has read-only audit access and no
+// pod-exec roles, and a throwaway per-run clone. Revisit this with per-task
+// credential scoping if the threat model changes — mutating tasks, or untrusted
+// callers reaching the `/agent-tasks` ingress.
 export function envForProvider(
   provider: AgentTaskProvider,
   githubAppToken: string,

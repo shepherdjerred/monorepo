@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const WorkerRoleSchema = z.enum([
   "all",
+  "agent",
   "core",
   "glitter",
   "maintenance",
@@ -15,6 +16,10 @@ export function parseWorkerRole(value: string | undefined): WorkerRole {
 
 export function workerRoleRunsCore(role: WorkerRole): boolean {
   return role === "all" || role === "core";
+}
+
+export function workerRoleRunsAgent(role: WorkerRole): boolean {
+  return role === "all" || role === "agent";
 }
 
 export function workerRoleRunsGlitter(role: WorkerRole): boolean {

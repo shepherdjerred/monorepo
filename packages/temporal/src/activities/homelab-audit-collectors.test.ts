@@ -14,7 +14,7 @@ describe("homelab audit collector interpretation", () => {
         metadata: { name: "manual-app" },
         spec: {},
         status: {
-          sync: { status: "Synced" },
+          sync: { status: "OutOfSync" },
           health: { status: "Healthy" },
         },
       },
@@ -31,13 +31,29 @@ describe("homelab audit collector interpretation", () => {
         spec: { syncPolicy: { automated: { enabled: false, prune: true } } },
         status: {
           sync: { status: "OutOfSync" },
-          health: { status: "Healthy" },
+          health: { status: "Degraded" },
         },
       },
     ]);
 
     expect(result.findings[0]?.detail).toContain("automation=disabled");
     expect(result.findings[0]?.detail).not.toContain("automation=enabled");
+  });
+
+  test("does not report healthy drift when automation is explicitly disabled", () => {
+    const result = interpretArgoApplications([
+      {
+        metadata: { name: "disabled-manual-app" },
+        spec: { syncPolicy: { automated: { enabled: false } } },
+        status: {
+          sync: { status: "OutOfSync" },
+          health: { status: "Healthy" },
+        },
+      },
+    ]);
+
+    expect(result.summary).toBe("0 unhealthy of 1 apps");
+    expect(result.findings).toEqual([]);
   });
 
   test("treats a legacy automated block without enabled as enabled", () => {
@@ -88,7 +104,7 @@ describe("homelab audit collector interpretation", () => {
     const queries = temporalHealthQueries(new Date("2026-08-10T18:00:00.000Z"));
 
     expect(queries.failed).toBe(
-      'ExecutionStatus = "Failed" AND CloseTime > "2026-08-09T18:00:00.000Z"',
+      'ExecutionStatus IN ("Failed", "TimedOut") AND CloseTime > "2026-08-09T18:00:00.000Z"',
     );
     expect(queries.failed).not.toContain("StartTime");
     expect(queries.stalled).toContain('StartTime < "2026-08-10T12:00:00.000Z"');

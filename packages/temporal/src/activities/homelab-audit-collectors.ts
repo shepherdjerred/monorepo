@@ -211,13 +211,23 @@ function prometheusCount(
 export function interpretArgoApplications(
   apps: z.infer<typeof ArgoApplicationsSchema>,
 ): { summary: string; findings: Finding[] } {
-  const unhealthy = apps.filter(
-    (app) =>
-      app.status.sync.status !== "Synced" ||
+  const unhealthy = apps.filter((app) => {
+    const automated = app.spec.syncPolicy?.automated;
+    const isManual =
+      automated === undefined ||
+      automated === null ||
+      automated.enabled === false;
+    const isHealthyManualDrift =
+      isManual &&
+      app.status.sync.status === "OutOfSync" &&
+      app.status.health.status === "Healthy";
+    return (
+      (app.status.sync.status !== "Synced" && !isHealthyManualDrift) ||
       !["Healthy", "Progressing"].includes(app.status.health.status) ||
       (app.status.operationState !== undefined &&
-        ["Error", "Failed"].includes(app.status.operationState.phase)),
-  );
+        ["Error", "Failed"].includes(app.status.operationState.phase))
+    );
+  });
   return {
     summary: `${unhealthy.length.toString()} unhealthy of ${apps.length.toString()} apps`,
     findings: unhealthy.map((app) => ({
@@ -254,7 +264,7 @@ export function temporalHealthQueries(now: Date): {
     now.getTime() - 6 * 60 * 60 * 1000,
   ).toISOString();
   return {
-    failed: `ExecutionStatus = "Failed" AND CloseTime > "${since}"`,
+    failed: `ExecutionStatus IN ("Failed", "TimedOut") AND CloseTime > "${since}"`,
     stalled: `ExecutionStatus = "Running" AND StartTime < "${stalledSince}"`,
   };
 }

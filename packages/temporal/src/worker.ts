@@ -23,6 +23,7 @@ import { WORKFLOW_TASK_POLLER_BEHAVIOR } from "./shared/worker-options.ts";
 import { retryUntilReady, sleepUnlessClosed } from "./shared/startup-retry.ts";
 import {
   parseWorkerRole,
+  workerRoleRunsAgent,
   workerRoleRunsCore,
   workerRoleRunsGlitter,
   workerRoleRunsMaintenance,
@@ -261,16 +262,6 @@ async function main(): Promise<void> {
     workers.push(worker);
     jsonLog("info", "Worker created", { taskQueue: TASK_QUEUES.DEFAULT });
 
-    // Dedicated queue for delayed/recurring report-only Claude/Codex tasks.
-    // These can run for tens of minutes and must not head-of-line block HA,
-    // schedule registration, PR summaries, or PR review specialist traffic.
-    const agentTaskWorker = await Worker.create({
-      ...commonWorkerOptions,
-      taskQueue: TASK_QUEUES.AGENT_TASK,
-    });
-    workers.push(agentTaskWorker);
-    jsonLog("info", "Worker created", { taskQueue: TASK_QUEUES.AGENT_TASK });
-
     const clientConnection = await Connection.connect({ address });
     const client = new Client({ connection: clientConnection });
     await registerSchedules(client);
@@ -278,6 +269,19 @@ async function main(): Promise<void> {
 
     httpServers = startHttpServers(client);
     eventBridge = startEventBridgeSupervisor(client);
+  }
+
+  if (workerRoleRunsAgent(role)) {
+    // Report-only Claude/Codex tasks run in their own deployment and service
+    // account. Queue isolation therefore covers both head-of-line blocking and
+    // Kubernetes authorization; the agent pod has read-only audit RBAC and no
+    // namespace-scoped exec roles.
+    const agentTaskWorker = await Worker.create({
+      ...commonWorkerOptions,
+      taskQueue: TASK_QUEUES.AGENT_TASK,
+    });
+    workers.push(agentTaskWorker);
+    jsonLog("info", "Worker created", { taskQueue: TASK_QUEUES.AGENT_TASK });
   }
 
   if (workerRoleRunsGlitter(role)) {

@@ -51,16 +51,21 @@ Pause state is the deliberate exception: it is runtime state, preserved across
 reconciliation, because pausing is an operational act rather than a design
 change.
 
-## Two processes, four queues
+## Four processes, five queues
 
-The core deployment owns `default` and `agent-task`. A separate Glitter
-deployment owns `glitter-corpus` and `glitter-context`. Both run the same image
-and workflow bundle, selected by a strict process role.
+The core deployment owns `default`. A dedicated report-only agent deployment
+owns `agent-task`, and a separate Glitter deployment owns `glitter-corpus` and
+`glitter-context`. A fourth, tokenless maintenance deployment in the Buildkite
+namespace owns the serial `maintenance` queue. All four run the same image and
+workflow bundle, selected by a strict process role.
 
-The split is about failure isolation, not capacity. Queues isolate concurrency;
-**processes** isolate runtime and resource failures. Glitter's work is long,
-memory-hungry, and rate-limited against Discord — exactly the profile that would
-otherwise starve or destabilise ordinary jobs sharing a process.
+The split is about authorization and failure isolation, not capacity. Queues
+isolate concurrency; **processes** isolate runtime failures and Kubernetes
+identities. The agent service account can collect read-only cluster evidence but
+has none of the pod-exec roles used by deterministic canaries and maintenance.
+Glitter's work is long, memory-hungry, and rate-limited against Discord —
+exactly the profile that would otherwise starve or destabilise ordinary jobs
+sharing a process.
 
 Each process serves `/healthz` from Bun's event loop only after its workers
 finish startup, and independent startup, readiness, and liveness probes restart a

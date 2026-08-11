@@ -6,13 +6,15 @@ Temporal workflow worker for the monorepo. Consolidates ad-hoc scheduling (K8s C
 
 Runs under **Bun**. The Temporal TypeScript SDK supports Bun for workers, workflows, activities, and client.
 
-Production uses the same Bun image in three Kubernetes Deployments selected by
-`TEMPORAL_WORKER_ROLE`: `core` owns the `default` and `agent-task` queues plus
-schedules and HTTP/event surfaces; `glitter` owns `glitter-corpus` and
+Production uses the same Bun image in four Kubernetes Deployments selected by
+`TEMPORAL_WORKER_ROLE`: `core` owns the `default` queue plus schedules and
+HTTP/event surfaces; `agent` owns the `agent-task` queue under a read-only
+service account with no pod-exec roles; `glitter` owns `glitter-corpus` and
 `glitter-context`; `maintenance` owns the serial `maintenance` queue. The
 default `all` role preserves the single-process local development behavior.
-Keep new queue ownership explicit in `worker.ts` so a heavy Glitter failure or
-maintenance subprocess cannot take down core automation.
+Keep new queue ownership explicit in `worker.ts` so a provider subprocess,
+heavy Glitter failure, or maintenance subprocess cannot take down core
+automation or inherit another role's Kubernetes permissions.
 
 ## Structure
 
@@ -158,7 +160,7 @@ Workflow:
 ## Environment Variables
 
 - `TEMPORAL_ADDRESS` — Temporal server gRPC address (default: `temporal-server.temporal.svc.cluster.local:7233`)
-- `TEMPORAL_WORKER_ROLE` — process role: `all` (default/local), `core`, or `glitter`. Invalid values fail startup.
+- `TEMPORAL_WORKER_ROLE` — process role: `all` (default/local), `core`, `agent`, `glitter`, or `maintenance`. Invalid values fail startup.
 - `HA_URL` — Home Assistant URL
 - `HA_TOKEN` — Home Assistant long-lived access token
 - `GOLINK_URL` — Golink service URL
@@ -301,11 +303,14 @@ op run --env-file=.env.audit -- DRY_RUN=1 bun run scripts/run-homelab-audit-loca
 op run --env-file=.env.audit -- bun run scripts/run-homelab-audit-local.ts
 ```
 
-**Cluster RBAC** — the worker SA gets a cluster-wide read-only
+**Cluster RBAC** — the core and agent worker SAs get the cluster-wide read-only
 `temporal-worker-audit-reader` ClusterRole (see
 `packages/homelab/src/cdk8s/src/resources/temporal/audit-rbac.ts`). A separate
-namespace Role permits only TaskNotes pod discovery and `pods/exec` so the
-engine-status token never leaves that pod. There are no other write verbs.
+TaskNotes namespace Role grants `pods/exec` only to the core worker so the
+engine-status token never leaves that pod. The agent worker is intentionally
+absent from every pod-exec RoleBinding; provider subprocesses therefore cannot
+exec into TaskNotes or deterministic maintenance targets even if they disregard
+the report-only prompt.
 
 ## Scheduled PR-creating workflows
 

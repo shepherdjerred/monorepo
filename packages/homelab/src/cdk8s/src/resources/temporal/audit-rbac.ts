@@ -14,13 +14,13 @@ import {
  * through typed JSON adapters. Legacy audit histories retain the same read
  * permissions for replay compatibility.
  *
- * Strictly read-only — no `pods/exec`, no write verbs. State-mutating
- * The generic agent prompt also forbids mutations, and the API server remains
- * a backstop if a provider disregards that policy.
+ * Strictly read-only — no `pods/exec`, no write verbs. State-mutating access
+ * belongs to separate bindings that never include the generic agent worker,
+ * making the API server a backstop if a provider disregards its prompt.
  */
 export function createTemporalWorkerAuditRbac(
   chart: Chart,
-  serviceAccount: ServiceAccount,
+  serviceAccounts: readonly ServiceAccount[],
 ): void {
   new KubeClusterRole(chart, "temporal-worker-audit-reader", {
     metadata: { name: "temporal-worker-audit-reader" },
@@ -96,15 +96,25 @@ export function createTemporalWorkerAuditRbac(
       kind: "ClusterRole",
       name: "temporal-worker-audit-reader",
     },
-    subjects: [
-      {
-        kind: "ServiceAccount",
-        name: serviceAccount.name,
-        namespace: serviceAccount.metadata.namespace ?? "temporal",
-      },
-    ],
+    subjects: serviceAccounts.map((serviceAccount) => ({
+      kind: "ServiceAccount",
+      name: serviceAccount.name,
+      namespace: serviceAccount.metadata.namespace ?? "temporal",
+    })),
   });
+}
 
+/**
+ * Namespace-scoped exec access for the fixed deterministic TaskNotes canary.
+ *
+ * This binding must only target the core worker service account. Generic
+ * agent tasks run under a separate read-only account so provider subprocesses
+ * cannot read TaskNotes environment variables or mutate pods through exec.
+ */
+export function createTemporalWorkerTasknotesCanaryRbac(
+  chart: Chart,
+  serviceAccount: ServiceAccount,
+): void {
   // The deterministic TaskNotes canary reads AUTH_TOKEN only inside the
   // tasknotes-server process and emits the typed engine-status response. The
   // credential never enters the Temporal pod or activity history. Keep exec

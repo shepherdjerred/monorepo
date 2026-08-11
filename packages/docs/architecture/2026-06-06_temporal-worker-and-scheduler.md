@@ -7,7 +7,7 @@ board: false
 
 # Temporal Worker & Agent-Task Scheduler
 
-A single Bun process that runs the monorepo's Temporal worker fleet — durable scheduled jobs (replacing K8s CronJobs), Home Assistant automations, a GitHub webhook for merge-conflict checks + PR-closed build cancellation, and a generic report-only "agent task" scheduler with an authenticated HTTP API.
+A Bun worker fleet that runs durable scheduled jobs (replacing K8s CronJobs), Home Assistant automations, a GitHub webhook for merge-conflict checks + PR-closed build cancellation, and a generic report-only "agent task" scheduler with an authenticated HTTP API.
 
 ## Purpose & role
 
@@ -15,18 +15,19 @@ A single Bun process that runs the monorepo's Temporal worker fleet — durable 
 
 ## Worker topology
 
-`main()` in `packages/temporal/src/worker.ts` connects to the Temporal server (`TEMPORAL_ADDRESS`, default `temporal-server.temporal.svc.cluster.local:7233`, namespace `default`) and creates **four workers**, all sharing the same workflow bundle (`workflows/index.ts`) and the same activity surface (`activities/index.ts`), one per task queue (`packages/temporal/src/shared/task-queues.ts`):
+`main()` in `packages/temporal/src/worker.ts` connects to the Temporal server (`TEMPORAL_ADDRESS`, default `temporal-server.temporal.svc.cluster.local:7233`, namespace `default`) and creates **five workers across four production Deployments**, all sharing the same workflow bundle (`workflows/index.ts`) and the role-appropriate activity surface, one per active task queue (`packages/temporal/src/shared/task-queues.ts`):
 
 | Task queue (`TASK_QUEUES`) | Value             | Why isolated                                                   |
 | -------------------------- | ----------------- | -------------------------------------------------------------- |
 | `DEFAULT`                  | `default`         | HA automations, cron jobs, fast workflows                      |
+| `MAINTENANCE`              | `maintenance`     | serial direct subprocess work against Buildkite PVCs           |
 | `AGENT_TASK`               | `agent-task`      | long-running Claude/Codex report-only subprocesses             |
 | `GLITTER_CORPUS`           | `glitter-corpus`  | rate-limited Discord corpus capture (one activity at a time)   |
 | `GLITTER_CONTEXT`          | `glitter-context` | weekly Sol context generation, isolated from the capture queue |
 
 Workflows are registered the Temporal way: every workflow is a wrapper function exported from the single entrypoint `packages/temporal/src/workflows/index.ts` (delegating to per-file impls to satisfy a no-re-export lint rule); `Worker.create({ workflowsPath })` webpacks that file. `bundle.test.ts` runs the same webpack pass as a smoke test. Activities are aggregated in `packages/temporal/src/activities/index.ts` and passed to every worker.
 
-Boot sequence after workers are created: install Temporal SDK runtime + Prometheus metrics bridge, init Sentry (`@sentry/bun`) and OTel tracing, start the app metrics server, then `registerSchedules(client)` → `startHttpServers(client)` → `startEventBridgeSupervisor(client)`, finally `Promise.all` of all four `worker.run()`s. Shutdown is SIGTERM/SIGINT-guarded against double-drain.
+The `core` Deployment owns `DEFAULT`, schedule registration, HTTP services, and the event bridge. The `agent` Deployment owns only `AGENT_TASK` and runs as `temporal-agent-worker`; its service account receives the read-only audit ClusterRole but none of the namespace-scoped pod-exec roles used by deterministic workflows. The `glitter` Deployment owns both Glitter queues. A tokenless `maintenance` Deployment in the Buildkite namespace owns `MAINTENANCE`. Each process installs the SDK metrics bridge, Sentry, OTel, and app metrics before polling its assigned queues. Shutdown is SIGTERM/SIGINT-guarded against double-drain.
 
 ## Major workflow families
 
@@ -54,7 +55,7 @@ The generic agent-task system lets operators (and agents) schedule **report-only
 - **Schema** — new submissions use `AgentTaskInputV2`: `contractVersion: 2`, `title`, `prompt`, `provider` (`claude`|`codex`), `repo.fullName`, and one or more declared `checks` with required/optional status plus an evidence requirement. `mode` is `report-only` (the only value). `runAt` and `cron` are mutually exclusive; recurring inputs use a stable `scheduleId`. The v1 shape remains only for Temporal history replay.
 - **Dispatch** — `startOrScheduleAgentTask` (`packages/temporal/src/lib/agent-task-scheduler.ts`): `cron` → upsert a Temporal Schedule (id from `agentTaskScheduleId`); otherwise → `workflow.start("agentTaskWorkflow")` with a content-hash `workflowId`. A future-dated one-off defers **server-side** via `startDelay` (computed from `runAt`) rather than sleeping inside the workflow, with `runAt` stripped from the workflow args (`workflowArgsForOneOff`) so it doesn't double-wait; the bound is `workflowRunTimeout` (per-run, applied only once the run starts — never to the buffered delay) and is calculated from the configured activity timeout, phase count, retry policy, and cleanup overhead. This prevents both a far-future task from timing out before it runs and a two-phase v2 task from being terminated during finalization. Idempotency uses `ALLOW_DUPLICATE_FAILED_ONLY` + `workflowIdConflictPolicy: FAIL` — a previously failed/timed-out run of the same id can be retried by resubmission, while duplicate concurrent or already-succeeded runs are still rejected.
 - **Workflow** — `agentTaskWorkflow` (`workflows/agent-task.ts`): server-side delay → workdir clone → investigation subprocess → provider evidence-receipt extraction and redaction → finalization subprocess over that explicit receipt catalog → strict result validation → shared delivery → optional report-only follow-up → cleanup. Finalization cannot use Claude tools, and evidence gathered during finalization is never accepted. Each declared check is normalized independently. Missing, failed, skipped, unknown, or uncaptured evidence forces partial execution. Agents may emit a retirement recommendation, but cannot pause or cancel schedules. A generic failure report is accepted before the workflow rethrows so Temporal still records the failure.
-- **Report-only enforcement** — `reportOnlyPrompt` (`shared/agent-task.ts`) prepends hard constraints: no edits/commits/PRs/issues, no mutating live systems, read-only inspection only.
+- **Report-only enforcement** — `reportOnlyPrompt` (`shared/agent-task.ts`) prepends hard constraints: no edits/commits/PRs/issues, no mutating live systems, read-only inspection only. The dedicated agent Deployment provides the infrastructure backstop: it has cluster read access for evidence collection but no `pods/exec` RoleBinding. The deterministic TaskNotes canary stays on the separately authorized core worker, while maintenance runs in its own tokenless Deployment.
 - **HTTP API** — `startAgentTaskApi` (`packages/temporal/src/event-bridge/agent-task-api.ts`) serves `POST /agent-tasks` on port `9467` (`AGENT_TASK_API_PORT`). Requires `Authorization: Bearer $AGENT_TASK_API_TOKEN` (constant-time compare), Zod-validates the body, returns `202` with the start result. This is the **only** public ingress path for scheduling — direct Temporal access is not exposed publicly.
 - **Operator/doc path** — the `temporal-agent-task` convention: docs embed one or more `<!-- temporal-agent-task … -->` HTML-comment blocks containing JSON inputs. `packages/temporal/scripts/schedule-agent-task.ts --from-doc <path>` extracts and validates every block before connecting, then calls `startOrScheduleAgentTask` for each in document order. It also supports one task through `--json` / `--stdin`. The root and `packages/docs/AGENTS.md` reference this for scheduling temporal follow-ups.
 
