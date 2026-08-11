@@ -26,6 +26,7 @@ import {
   type AnonymousPullVerifier,
 } from "./ghcr-public-access.ts";
 import type { PushOptions, PushOutcome } from "./bake-image-push-types.ts";
+import { productionBakeEnvironment } from "./production-bake-environment.ts";
 import { runMain } from "../../scripts/lib/transient.ts";
 import { TransientError } from "../../scripts/lib/transient-error.ts";
 
@@ -366,14 +367,11 @@ export async function pushImages(
         ...caddyfileArguments,
         ...targets,
       ],
-      {
-        ...environment,
-        VERSION: buildNumber,
-        GIT_SHA: commit,
-        CONTRACT_HASH: contractHash,
-        PUSH_CACHE: "true",
-        PUSH_IMAGES: "true",
-      },
+      productionBakeEnvironment(environment, {
+        version: buildNumber,
+        gitSha: commit,
+        contractHash,
+      }),
     ),
   );
   if (pushExitCode === 34) process.exit(pushExitCode);

@@ -21,6 +21,7 @@ import {
 } from "./application-image-runtime.ts";
 import type { BuildxCommandResult } from "./bake-retry.ts";
 import { TransientError } from "../../scripts/lib/transient-error.ts";
+import { productionBakeEnvironment } from "./production-bake-environment.ts";
 import {
   caddyfileEntitlementArguments,
   expandTargets,
@@ -157,6 +158,31 @@ test("grants caddyfile read access to smoke and push bakes", () => {
   expect(() => caddyfileEntitlementArguments(["caddy-s3proxy"])).toThrow(
     "CADDYFILE_SMOKE_PATH is required for caddy-s3proxy",
   );
+});
+
+test("resolves Bake with the production image environment", () => {
+  expect(
+    productionBakeEnvironment(
+      {
+        KEEP: "value",
+        PUSH_CACHE: "false",
+        PUSH_IMAGES: "false",
+        VERSION: "dev",
+      },
+      {
+        version: "42",
+        gitSha: "commit",
+        contractHash: "contract",
+      },
+    ),
+  ).toEqual({
+    KEEP: "value",
+    VERSION: "42",
+    GIT_SHA: "commit",
+    CONTRACT_HASH: "contract",
+    PUSH_CACHE: "true",
+    PUSH_IMAGES: "true",
+  });
 });
 
 test("waits for an exact digest to become anonymously pullable", async () => {

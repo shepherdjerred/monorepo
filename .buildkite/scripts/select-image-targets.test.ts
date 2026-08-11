@@ -107,6 +107,7 @@ describe("selectImageTargets", () => {
       ".buildkite/scripts/ghcr-public-access.ts",
       ".buildkite/scripts/image-targets.ts",
       ".buildkite/scripts/migration-core.ts",
+      ".buildkite/scripts/production-bake-environment.ts",
       ".buildkite/scripts/select-image-targets.ts",
       ".buildkite/scripts/select-image-targets-lockfile.ts",
       ".buildkite/scripts/select-image-targets-workspaces.ts",

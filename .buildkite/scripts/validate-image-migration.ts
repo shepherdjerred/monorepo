@@ -6,6 +6,7 @@ import {
 import { APPLICATION_IMAGE_TARGETS } from "./image-targets.ts";
 import { assertMonorepoSourceLabel } from "./docker-source-label.ts";
 import { hclNamedBlock } from "./hcl-source.ts";
+import { productionBakeEnvironment } from "./production-bake-environment.ts";
 import { asRecord } from "../../scripts/lib/json.ts";
 
 type SmokePort = {
@@ -120,7 +121,15 @@ export function resolvedBakeTarget(
 async function printResolvedBake(): Promise<unknown> {
   const child = Bun.spawn(
     ["docker", "buildx", "bake", "--print", ...APPLICATION_IMAGE_TARGETS],
-    { stdout: "pipe", stderr: "pipe" },
+    {
+      env: productionBakeEnvironment(Bun.env, {
+        version: "validation",
+        gitSha: "validation",
+        contractHash: "validation",
+      }),
+      stdout: "pipe",
+      stderr: "pipe",
+    },
   );
   const [stdout, stderr, exitCode] = await Promise.all([
     new Response(child.stdout).text(),
