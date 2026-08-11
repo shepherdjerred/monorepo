@@ -41,7 +41,14 @@ overrides. Child Applications are the only resources changed: their auto-sync
 remains disabled regardless of whether their source is internal or external.
 Child settings and root-owned prerequisites such as admission policies
 therefore land before reconciliation without starting an automatic child
-operation.
+operation. The
+[manifest-override batcher](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd-manifest-overrides.ts)
+splits those requests at 750 kB. ArgoCD v3.4.5's
+[operation-state constructor](https://github.com/argoproj/argo-cd/blob/564b94973b284b8de98da7cee6eeade2cb941e46/controller/sync.go#L76-L81)
+copies the original request into status. In this cluster, a request near the
+observed 2 MiB controller message ceiling can therefore be accepted but never
+acquire visible operation state, matching
+[upstream reports of oversized operation-state patches](https://github.com/argoproj/argo-cd/issues/14224#issuecomment-1636337124).
 
 After explicit child reconciliation completes, the full root apply restores
 the exact auto-sync policies and performs verified pruning. Aggregate child
