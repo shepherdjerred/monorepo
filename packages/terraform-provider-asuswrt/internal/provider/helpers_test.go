@@ -28,8 +28,21 @@ func TestParseChannel(t *testing.T) {
 		{"6u", 6, false},          // 2.4 GHz 40 MHz upper sideband
 		{"6l", 6, false},          // 2.4 GHz 40 MHz lower sideband
 		{"6g37/320-1", 37, false}, // 6 GHz WiFi7 band-prefixed form
+		{"2g6u", 6, false},        // explicit 2.4 GHz prefix with sideband
 		{"abc", 0, true},
 		{"/80", 0, true},
+		// Malformed forms that unrestricted prefix/suffix stripping used to
+		// accept as a valid channel instead of reporting a diagnostic.
+		{"bogusg37/320-1", 0, true}, // junk before the band prefix
+		{"6ul", 0, true},            // two sideband markers
+		{"6uu", 0, true},
+		{"9g36", 0, true}, // not a real band prefix
+		{"g36", 0, true},  // band prefix with no band digit
+		{"6g", 0, true},   // prefix with no channel
+		{"36/", 0, true},  // width separator with no width
+		{"36/80/20", 0, true},
+		{"-6", 0, true},
+		{"36 ", 0, true},
 	}
 
 	for _, tc := range tests {
@@ -76,6 +89,11 @@ func TestFormatChanspec(t *testing.T) {
 		{"bw-80-code-4", 36, 4, "36/80", false},
 		{"bw-160", 149, 5, "149/160", false},
 		{"unsupported-bw", 6, 7, "", true},
+		// Auto channel must still validate the bandwidth: the same code is
+		// written to wl<band>_bw, so returning "0" early would let an
+		// arbitrary value reach the router and report success.
+		{"auto-channel-unsupported-bw", 0, 999, "", true},
+		{"auto-channel-negative-bw", 0, -1, "", true},
 	}
 
 	for _, tc := range tests {
@@ -721,6 +739,92 @@ func TestPackedFieldValidator(t *testing.T) {
 			resp := &validator.StringResponse{}
 
 			packedFieldValidator{}.ValidateString(t.Context(), req, resp)
+
+			if got := resp.Diagnostics.HasError(); got != tt.wantErr {
+				t.Errorf("expected error=%v, got %v (%v)", tt.wantErr, got, resp.Diagnostics)
+			}
+		})
+	}
+}
+
+// TestBandwidthValidator pins the plan-time gate. bandwidth reaches
+// wl<band>_bw directly, so an unsupported code must be rejected before apply
+// rather than relying on the chanspec path, which only encodes a width when a
+// channel is being set.
+func TestBandwidthValidator(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		value   types.Int64
+		wantErr bool
+	}{
+		{name: "auto", value: types.Int64Value(0), wantErr: false},
+		{name: "20MHz", value: types.Int64Value(1), wantErr: false},
+		{name: "80MHz code 3", value: types.Int64Value(3), wantErr: false},
+		{name: "80MHz code 4", value: types.Int64Value(4), wantErr: false},
+		{name: "160MHz", value: types.Int64Value(5), wantErr: false},
+		{name: "null", value: types.Int64Null(), wantErr: false},
+		{name: "unknown", value: types.Int64Unknown(), wantErr: false},
+		{name: "arbitrary code", value: types.Int64Value(999), wantErr: true},
+		{name: "unsupported code", value: types.Int64Value(7), wantErr: true},
+		{name: "negative", value: types.Int64Value(-1), wantErr: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			req := validator.Int64Request{Path: path.Root("bandwidth"), ConfigValue: tt.value}
+			resp := &validator.Int64Response{}
+
+			bandwidthValidator{}.ValidateInt64(t.Context(), req, resp)
+
+			if got := resp.Diagnostics.HasError(); got != tt.wantErr {
+				t.Errorf("expected error=%v, got %v (%v)", tt.wantErr, got, resp.Diagnostics)
+			}
+		})
+	}
+}
+
+// TestInt64RangeValidator pins the band and channel bounds. band becomes the
+// wl<band>_* key prefix, and channel is interpolated into the chanspec, so an
+// out-of-range value either addresses a nonexistent radio or writes a chanspec
+// that parseChannel can never read back.
+func TestInt64RangeValidator(t *testing.T) {
+	t.Parallel()
+
+	band := int64RangeValidator{min: 0, max: 3, summary: "Invalid wireless band"}
+	channel := int64RangeValidator{min: 0, max: 999, summary: "Invalid wireless channel"}
+
+	tests := []struct {
+		name    string
+		v       int64RangeValidator
+		value   types.Int64
+		wantErr bool
+	}{
+		{name: "band 0", v: band, value: types.Int64Value(0), wantErr: false},
+		{name: "band 3", v: band, value: types.Int64Value(3), wantErr: false},
+		{name: "band negative", v: band, value: types.Int64Value(-1), wantErr: true},
+		{name: "band 99", v: band, value: types.Int64Value(99), wantErr: true},
+		{name: "band null", v: band, value: types.Int64Null(), wantErr: false},
+		{name: "band unknown", v: band, value: types.Int64Unknown(), wantErr: false},
+		{name: "channel auto", v: channel, value: types.Int64Value(0), wantErr: false},
+		{name: "channel 149", v: channel, value: types.Int64Value(149), wantErr: false},
+		{name: "channel 999", v: channel, value: types.Int64Value(999), wantErr: false},
+		// 1000 formats to "1000/20", which chanspecPattern rejects on refresh.
+		{name: "channel 1000", v: channel, value: types.Int64Value(1000), wantErr: true},
+		{name: "channel negative", v: channel, value: types.Int64Value(-1), wantErr: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			req := validator.Int64Request{Path: path.Root("band"), ConfigValue: tt.value}
+			resp := &validator.Int64Response{}
+
+			tt.v.ValidateInt64(t.Context(), req, resp)
 
 			if got := resp.Diagnostics.HasError(); got != tt.wantErr {
 				t.Errorf("expected error=%v, got %v (%v)", tt.wantErr, got, resp.Diagnostics)

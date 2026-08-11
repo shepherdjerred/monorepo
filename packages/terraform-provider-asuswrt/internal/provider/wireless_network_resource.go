@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/shepherdjerred/monorepo/packages/terraform-provider-asuswrt/internal/client"
@@ -61,10 +63,13 @@ func (r *wirelessNetworkResource) Schema(_ context.Context, _ resource.SchemaReq
 				},
 			},
 			"band": schema.Int64Attribute{
-				Description: "Radio band index: 0 = 2.4GHz, 1 = 5GHz.",
+				Description: "Radio band index: 0 = 2.4GHz, 1 = 5GHz. Upper bound covers tri- and quad-band routers (wl0-wl3).",
 				Required:    true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
+				},
+				Validators: []validator.Int64{
+					int64RangeValidator{min: 0, max: 3, summary: "Invalid wireless band"},
 				},
 			},
 			"ssid": schema.StringAttribute{
@@ -86,14 +91,18 @@ func (r *wirelessNetworkResource) Schema(_ context.Context, _ resource.SchemaReq
 				Sensitive:   true,
 			},
 			"channel": schema.Int64Attribute{
-				Description: "Channel number. 0 = auto.",
+				Description: "Channel number. 0 = auto. Bounded to what a chanspec can express and this provider can read back.",
 				Optional:    true,
 				Computed:    true,
+				Validators: []validator.Int64{
+					int64RangeValidator{min: 0, max: 999, summary: "Invalid wireless channel"},
+				},
 			},
 			"bandwidth": schema.Int64Attribute{
 				Description: "Channel bandwidth: 0=auto, 1=20MHz, 2=40MHz, 3/4=80MHz, 5=160MHz.",
 				Optional:    true,
 				Computed:    true,
+				Validators:  []validator.Int64{bandwidthValidator{}},
 			},
 			"hidden": schema.BoolAttribute{
 				Description: "Hide SSID from broadcast.",
@@ -590,6 +599,19 @@ func boolToFlag(b bool) string {
 	return "0"
 }
 
+// chanspecPattern matches exactly the chanspec forms this provider models:
+// an optional 2g/5g/6g band prefix, the channel, an optional 2.4 GHz 40 MHz
+// sideband marker ("u"/"l"), and an optional "/<width>" with an optional 6 GHz
+// sideband index ("6g37/320-1").
+//
+// It is deliberately anchored and exhaustive. Stripping the pieces off with
+// unrestricted Index/TrimRight calls instead would silently accept malformed
+// NVRAM: "bogusg37/320-1" would read as channel 37 (everything before the last
+// 'g' discarded) and "6ul" as channel 6 (both markers trimmed), so refresh
+// would record fabricated-but-valid state rather than raising the diagnostic
+// parseChannel promises.
+var chanspecPattern = regexp.MustCompile(`^(?:[256]g)?(\d{1,3})[ul]?(?:/\d{1,3}(?:[-+]\d{1,2})?)?$`)
+
 // parseChannel extracts the channel number from a chanspec string. It handles
 // the plain "36" and "36/80" forms, the 2.4 GHz 40 MHz sideband forms ("6u" /
 // "6l"), and 6 GHz band-prefixed forms ("6g37/320-1"). "" and "0" mean automatic
@@ -601,21 +623,12 @@ func parseChannel(chanspec string) (int, error) {
 		return 0, nil
 	}
 
-	// Drop a "/<width>" suffix (e.g. "36/80", "6g37/320-1").
-	lead := chanspec
-	if i := strings.Index(lead, "/"); i >= 0 {
-		lead = lead[:i]
+	match := chanspecPattern.FindStringSubmatch(chanspec)
+	if match == nil {
+		return 0, fmt.Errorf("unparseable chanspec %q", chanspec)
 	}
 
-	// Drop a band prefix such as "2g"/"5g"/"6g": the channel follows the 'g'.
-	if i := strings.LastIndexByte(lead, 'g'); i >= 0 {
-		lead = lead[i+1:]
-	}
-
-	// Drop a trailing 2.4 GHz 40 MHz sideband marker ("u"/"l").
-	lead = strings.TrimRight(lead, "ul")
-
-	ch, err := strconv.Atoi(lead)
+	ch, err := strconv.Atoi(match[1])
 	if err != nil {
 		return 0, fmt.Errorf("unparseable chanspec %q", chanspec)
 	}
@@ -628,15 +641,21 @@ func parseChannel(chanspec string) (int, error) {
 // value fails the apply loudly instead of silently writing a bare channel
 // (which would narrow the radio to the firmware default — e.g. turning a
 // 149/80 chanspec into 149).
+//
+// The bandwidth is validated before the automatic-channel shortcut: channel 0
+// makes the chanspec itself "0", but the same code is still written to
+// wl<band>_bw, so returning early without checking would let an arbitrary
+// value reach the router and report success.
 func formatChanspec(channel, bandwidth int) (string, error) {
-	if channel == 0 {
-		return "0", nil
-	}
-
 	bwStr, err := bandwidthToString(bandwidth)
 	if err != nil {
 		return "", err
 	}
+
+	if channel == 0 {
+		return "0", nil
+	}
+
 	if bwStr == "" {
 		return strconv.Itoa(channel), nil
 	}
