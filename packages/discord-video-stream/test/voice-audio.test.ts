@@ -135,6 +135,23 @@ describe("bidirectional voice policy", () => {
     expect(received).toHaveLength(1);
   });
 
+  test("reports a malformed packet as audio_error instead of throwing", () => {
+    const streamer = new Streamer(new Client());
+    const connection = new VoiceConnection(
+      streamer,
+      "guild-1",
+      "bot-1",
+      "channel-1",
+      () => {},
+      { receiveAudio: true },
+    );
+    const errors: Error[] = [];
+    connection.on("audio_error", (error) => errors.push(error));
+    connection.handleIncomingAudioPacket(new Uint8Array(4));
+    expect(errors).toHaveLength(1);
+    expect(errors[0]?.message).toContain("RTP");
+  });
+
   test("decrypts and encrypts only across ready DAVE boundaries", () => {
     const opus = new Uint8Array([1, 2]);
     expect(

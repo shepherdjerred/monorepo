@@ -14,6 +14,10 @@ import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 
 const log = logger.child("streamer");
 
+function onConnectionAudioError(error: Error): void {
+  log.warn("Discord voice receive failed", { error: getErrorMessage(error) });
+}
+
 export async function joinStreamerVoice(options: {
   streamer: Streamer;
   input: JoinVoiceInput;
@@ -36,6 +40,8 @@ export async function joinStreamerVoice(options: {
   const activeConnection = connection;
   function detach(): void {
     activeConnection.off("close", onConnectionClose);
+    activeConnection.off("audio", onConnectionAudio);
+    activeConnection.off("audio_error", onConnectionAudioError);
   }
   const tracker = createVoiceCloseTracker(detach);
   const onConnectionClose = (info: MediaConnectionCloseInfo) => {
@@ -53,10 +59,11 @@ export async function joinStreamerVoice(options: {
     });
     options.onClose?.(close);
   };
+  const onConnectionAudio = (audio: ReceivedVoiceAudio) => {
+    options.onAudio?.(audio);
+  };
   activeConnection.on("close", onConnectionClose);
-  activeConnection.on("audio", (audio) => options.onAudio?.(audio));
-  activeConnection.on("audio_error", (error) => {
-    log.warn("Discord voice receive failed", { error: getErrorMessage(error) });
-  });
+  activeConnection.on("audio", onConnectionAudio);
+  activeConnection.on("audio_error", onConnectionAudioError);
   return tracker;
 }

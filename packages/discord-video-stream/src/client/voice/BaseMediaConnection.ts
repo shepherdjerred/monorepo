@@ -584,11 +584,11 @@ a=ice-lite
 
   public handleIncomingAudioPacket(packet: Uint8Array): void {
     if (!this._receiveAudio) return;
-    const parsed = parseRtpPacket(packet);
-    const userId = this._audioUsersBySsrc.get(parsed.ssrc);
-    if (userId === undefined || userId === this.botId) return;
-
     try {
+      const parsed = parseRtpPacket(packet);
+      const userId = this._audioUsersBySsrc.get(parsed.ssrc);
+      if (userId === undefined || userId === this.botId) return;
+
       const daveSession = this._daveSession;
       const opus = prepareReceivedOpus({
         payload: parsed.payload,
@@ -610,7 +610,9 @@ a=ice-lite
     } catch (error) {
       this.emit(
         "audio_error",
-        error instanceof Error ? error : new Error("Voice audio decrypt failed"),
+        error instanceof Error
+          ? error
+          : new Error("Voice audio receive processing failed"),
       );
     }
   }
