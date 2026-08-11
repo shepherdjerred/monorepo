@@ -1,4 +1,7 @@
 import { z } from "zod/v4";
+import sanitizeHtml from "sanitize-html";
+
+const HttpUrlSchema = z.url({ protocol: /^https?$/ });
 
 export const ReportExecutionSchema = z.enum(["complete", "partial", "failed"]);
 export const ReportVerdictSchema = z.enum([
@@ -17,7 +20,7 @@ export const ReportEvidenceReceiptV1Schema = z.object({
   observedAt: z.iso.datetime({ offset: true }),
   status: ReportEvidenceStatusSchema,
   command: z.string().min(1).optional(),
-  url: z.url().optional(),
+  url: HttpUrlSchema.optional(),
   exitCode: z.number().int().optional(),
   excerpt: z.string().min(1).max(2000).optional(),
   contentSha256: z
@@ -46,7 +49,7 @@ export const ReportFindingV1Schema = z.object({
 export const ReportProvenanceV1Schema = z.object({
   workflowId: z.string().min(1),
   runId: z.string().min(1),
-  temporalUrl: z.url().optional(),
+  temporalUrl: HttpUrlSchema.optional(),
   repoSha: z.string().min(1).optional(),
   source: z.string().min(1).optional(),
   windowStart: z.iso.datetime({ offset: true }).optional(),
@@ -224,13 +227,27 @@ export function reportSubject(report: ReportEnvelopeV1): string {
   return `[${prefix}] ${report.title}`;
 }
 
+const ESCAPE_TEXT_OPTIONS: sanitizeHtml.IOptions = {
+  allowedTags: [],
+  allowedAttributes: {},
+  disallowedTagsMode: "escape",
+};
+const REPORT_LINK_OPTIONS: sanitizeHtml.IOptions = {
+  allowedTags: ["a"],
+  allowedAttributes: { a: ["href"] },
+  allowedSchemes: ["http", "https"],
+};
+
 function escapeHtml(value: string): string {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+  return sanitizeHtml(value, ESCAPE_TEXT_OPTIONS);
+}
+
+function reportLink(url: string, label: string): string {
+  const normalizedUrl = new URL(url).href;
+  return sanitizeHtml(
+    `<a href="${normalizedUrl}">${escapeHtml(label)}</a>`,
+    REPORT_LINK_OPTIONS,
+  );
 }
 
 function htmlList(title: string, values: readonly string[]): string {
@@ -249,7 +266,7 @@ function evidenceHtml(
     .map((id) => {
       const receipt = evidence.get(id);
       if (receipt?.url !== undefined) {
-        return `<a href="${escapeHtml(receipt.url)}">${escapeHtml(id)}</a>`;
+        return reportLink(receipt.url, id);
       }
       return `<code>${escapeHtml(id)}</code>`;
     })

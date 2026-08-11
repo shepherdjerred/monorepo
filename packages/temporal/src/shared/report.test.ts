@@ -178,6 +178,28 @@ describe("ReportEnvelopeV1", () => {
     expect(text).toContain("https://example.com/evidence");
   });
 
+  test("restricts and sanitizes evidence links", () => {
+    const report = validReport();
+    const receipt = report.evidence[0];
+    if (receipt === undefined) throw new TypeError("expected evidence fixture");
+    report.evidence[0] = {
+      ...receipt,
+      url: 'https://example.com/" onmouseover="alert(1)',
+    };
+
+    const html = renderReportHtml(report);
+    expect(html).toContain(
+      '<a href="https://example.com/%22%20onmouseover=%22alert(1)">git-diff</a>',
+    );
+    expect(html).not.toContain('" onmouseover="');
+    expect(() =>
+      ReportEnvelopeV1Schema.parse({
+        ...report,
+        evidence: [{ ...receipt, url: "javascript:alert(1)" }],
+      }),
+    ).toThrow();
+  });
+
   test("keeps compact HTML and plain-text snapshots stable", () => {
     expect(renderReportHtml(validReport())).toMatchSnapshot();
     expect(renderReportText(validReport())).toMatchSnapshot();
