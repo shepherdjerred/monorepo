@@ -63,6 +63,32 @@ export function reportSendRemainingMs(
 }
 
 /**
+ * Arms the abort for one Postal request, measured from attempt start.
+ *
+ * Deliberately computes the remaining budget and constructs the signal
+ * together: a timeout only starts counting when it is constructed, so
+ * measuring here and arming after another `await` would let the request
+ * outlive the lease by however long that await took. Callers must invoke this
+ * in the send arguments themselves, with no await in between.
+ *
+ * Throws when the attempt is already past its deadline, so a late attempt
+ * fails instead of dispatching a request its successor may duplicate.
+ */
+export function reportSendAbortSignal(input: {
+  reportRunId: string;
+  attemptStartedAt: string;
+  now: string;
+}): AbortSignal {
+  const remaining = reportSendRemainingMs(input.attemptStartedAt, input.now);
+  if (remaining <= 0) {
+    throw new Error(
+      `Report ${input.reportRunId} reached its send deadline before dispatching; a later attempt owns the send`,
+    );
+  }
+  return AbortSignal.timeout(remaining);
+}
+
+/**
  * Take exclusive ownership of this report's send. Resolves false when a
  * different attempt holds a lease that has not yet expired.
  */

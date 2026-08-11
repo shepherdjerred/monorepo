@@ -15,8 +15,8 @@ import { resolvePostalAddresses, sendPostalEmail } from "#shared/postal.ts";
 import type { PostalSendInput, PostalSendResult } from "#shared/postal.ts";
 import {
   claimReportSend,
+  reportSendAbortSignal,
   reportSendClaimKey,
-  reportSendRemainingMs,
   ReportSendClaimV1Schema,
   type ReportSendClaimBackend,
 } from "./report-delivery-lease.ts";
@@ -411,20 +411,6 @@ export async function deliverReportWithDependencies(
 
   const { recipient, sender } = dependencies.addresses;
   const subject = reportSubject(report);
-  // The lease may be taken over REPORT_SEND_CLAIM_TAKEOVER_MS after this
-  // attempt started, so the request must be abandoned before then. Temporal's
-  // start-to-close abandons the attempt's *result* but never aborts an
-  // in-flight fetch, so without this a replaced owner could still deliver a
-  // second copy of the report after the takeover sent the first.
-  const sendRemainingMs = reportSendRemainingMs(
-    dependencies.attemptStartedAt,
-    dependencies.now(),
-  );
-  if (sendRemainingMs <= 0) {
-    throw new Error(
-      `Report ${report.reportRunId} reached its send deadline before dispatching; a later attempt owns the send`,
-    );
-  }
   try {
     await dependencies.backend.writeState(
       stateKey,
@@ -450,7 +436,17 @@ export async function deliverReportWithDependencies(
           : { "X-Report-Schedule-ID": report.scheduleId }),
       },
       tag: report.reportType,
-      signal: AbortSignal.timeout(sendRemainingMs),
+      // Armed here, after the state write, so the request cannot outlive the
+      // lease by however long that write took. Temporal's start-to-close
+      // abandons the attempt's result but never aborts an in-flight fetch, so
+      // without this a replaced owner could still deliver a second copy after
+      // the takeover already sent. Keep this call inside the send arguments —
+      // measuring earlier and arming here is the bug it replaced.
+      signal: reportSendAbortSignal({
+        reportRunId: report.reportRunId,
+        attemptStartedAt: dependencies.attemptStartedAt,
+        now: dependencies.now(),
+      }),
     });
     const receipt = ReportDeliveryReceiptV1Schema.parse({
       schemaVersion: 1,

@@ -294,6 +294,53 @@ describe("report send ownership", () => {
     expect(sent).toEqual([]);
   });
 
+  test("arms the send deadline after the state write, not before it", async () => {
+    // A slow pending-state write spends the attempt's send budget. Measuring
+    // the deadline before that write and arming the timeout after it let the
+    // request outlive the lease and duplicate a report the successor sent.
+    const sent: PostalSendInput[] = [];
+    const receipts = new Map<string, ReportDeliveryReceiptV1>();
+    const states = new Map<string, ReportStateV1>();
+    let clock = NOW;
+    const backend: ReportDeliveryBackend = {
+      readReceipt: async () => receipts.get("unused"),
+      writeReceipt: async () => {
+        // no receipt is written: the attempt never reaches its send
+      },
+      readState: async () => states.get("unused"),
+      writeState: async () => {
+        clock = new Date(
+          Date.parse(NOW) + REPORT_SEND_DEADLINE_MS + 10_000,
+        ).toISOString();
+      },
+      ...claimBackend(new Map<string, StoredClaim>()),
+    };
+
+    await expect(
+      deliverReportWithDependencies(report(), {
+        backend,
+        addresses: {
+          recipient: "recipient@example.com",
+          sender: "sender@example.com",
+        },
+        send: async (input: PostalSendInput) => {
+          sent.push(input);
+          return {
+            messageId: "postal-1",
+            recipientId: 42,
+            subject: input.subject,
+            tag: input.tag,
+          };
+        },
+        now: () => clock,
+        owner: "workflow/run-1/activity-1/1",
+        attemptStartedAt: NOW,
+      }),
+    ).rejects.toThrow("reached its send deadline");
+
+    expect(sent).toEqual([]);
+  });
+
   test("resumes its own lease after a retry of the same attempt identity", async () => {
     const owner = "workflow/run-1/activity-1/1";
     const { sent, dependencies } = scenario(heldBy(owner, NOW));

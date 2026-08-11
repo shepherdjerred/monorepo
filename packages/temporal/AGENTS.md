@@ -370,16 +370,31 @@ relation, and two of them are easy to break by adjusting an unrelated timeout:
 asserted in `agent-task-report-delivery.test.ts`.
 
 The lease is stamped and aged on ONE clock: the start of the activity attempt
-holding it, captured before any I/O and passed as `attemptStartedAt`. Do not
-switch either end to wall-clock now — timestamping at claim-write time lets
-slow pre-claim reads backdate a lease relative to its attempt, so a retry sees
-a dead owner's lease as unexpired and the report strands again, this time
-triggered by slow storage rather than short retries.
+holding it, captured before any I/O and passed as `attemptStartedAt`. Every
+deadline in that path is anchored to that same start; the remaining
+`now()` calls are record timestamps (`updatedAt`, `acceptedAt`, `completedAt`),
+never budgets. Two rules keep that true:
 
-Postal has no idempotency key, so one residual duplicate window remains and is
-accepted deliberately: Postal accepts a message but its response never reaches
-the owner, leaving no receipt for the successor to find. Closing that needs
-provider-side idempotency, not a longer lease.
+- **Arm a timeout where you measure it.** `AbortSignal.timeout` starts counting
+  when constructed, so `reportSendAbortSignal` computes the remaining budget
+  and arms the signal together, and is called inside the `send` arguments.
+  Measuring before the pending-state write and arming after it let a slow write
+  push the request past the takeover point — a real bug this shape produced.
+- **Anchor leases to attempt start, not wall-clock now.** Timestamping at
+  claim-write time lets slow pre-claim reads backdate a lease relative to its
+  attempt, so a retry sees a dead owner's lease as unexpired and the report
+  strands again, triggered by slow storage rather than short retries.
+
+Two residuals are accepted deliberately rather than papered over:
+
+- Postal has no idempotency key, so if it accepts a message whose response
+  never reaches the owner there is no receipt for the successor to find, and
+  the takeover duplicates. Closing that needs provider-side idempotency, not a
+  longer lease.
+- The lease compares timestamps written by different worker processes, so it
+  assumes roughly synchronized clocks. Skew shifts the takeover point by the
+  skew amount; the minute of margin on each bound absorbs ordinary NTP drift,
+  but a badly skewed node would erode it.
 
 ## Scheduled PR-creating workflows
 
