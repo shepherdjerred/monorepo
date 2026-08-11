@@ -13,6 +13,7 @@ import {
 } from "#observability/metrics-report.ts";
 import { resolvePostalAddresses, sendPostalEmail } from "#shared/postal.ts";
 import type { PostalSendInput, PostalSendResult } from "#shared/postal.ts";
+import { REPORT_SEND_CLAIM_TAKEOVER_MS } from "#shared/report-delivery-policy.ts";
 import {
   renderReportHtml,
   renderReportText,
@@ -65,6 +66,15 @@ export const ReportStateV1Schema = z.object({
 
 export type ReportStateV1 = z.infer<typeof ReportStateV1Schema>;
 
+export const ReportSendClaimV1Schema = z.object({
+  schemaVersion: z.literal(1),
+  reportRunId: z.string().min(1),
+  owner: z.string().min(1),
+  claimedAt: z.iso.datetime({ offset: true }),
+});
+
+export type ReportSendClaimV1 = z.infer<typeof ReportSendClaimV1Schema>;
+
 export type ReportDeliveryBackend = {
   readReceipt: (key: string) => Promise<ReportDeliveryReceiptV1 | undefined>;
   writeReceipt: (
@@ -73,6 +83,19 @@ export type ReportDeliveryBackend = {
   ) => Promise<void>;
   readState: (key: string) => Promise<ReportStateV1 | undefined>;
   writeState: (key: string, state: ReportStateV1) => Promise<void>;
+  readSendClaim: (
+    key: string,
+  ) => Promise<{ claim: ReportSendClaimV1; etag: string } | undefined>;
+  /**
+   * Conditional write. `expectedEtag` undefined means "only if absent".
+   * Returns false when the precondition failed, i.e. another attempt owns the
+   * send — never throws for contention.
+   */
+  writeSendClaim: (
+    key: string,
+    claim: ReportSendClaimV1,
+    expectedEtag: string | undefined,
+  ) => Promise<boolean>;
 };
 
 export type ReportDeliveryDependencies = {
@@ -80,6 +103,8 @@ export type ReportDeliveryDependencies = {
   addresses: { recipient: string; sender: string };
   send: (input: PostalSendInput) => Promise<PostalSendResult>;
   now: () => string;
+  /** Identity of this delivery attempt; holder of the send lease. */
+  owner: string;
   receiptPrefix?: string;
   statePrefix?: string;
 };
@@ -157,94 +182,100 @@ export function reportStateKey(
   return `${prefix}/${safeKeyPart(report.reportType)}/${safeKeyPart(schedule)}/${safeKeyPart(report.reportRunId)}.json`;
 }
 
-async function readReceipt(
-  store: ReportReceiptStore,
-  key: string,
-): Promise<ReportDeliveryReceiptV1 | undefined> {
-  try {
-    const response = await store.client.send(
-      new GetObjectCommand({ Bucket: store.bucket, Key: key }),
-    );
-    if (response.Body === undefined) {
-      throw new Error(`Report receipt ${key} has no body`);
-    }
-    return ReportDeliveryReceiptV1Schema.parse(
-      JSON.parse(await response.Body.transformToString()),
-    );
-  } catch (error: unknown) {
-    if (
-      error instanceof NoSuchKey ||
-      (error instanceof S3ServiceException &&
-        error.$metadata.httpStatusCode === 404)
-    ) {
-      return undefined;
-    }
-    throw error;
-  }
+export function reportSendClaimKey(stateKey: string): string {
+  return `${stateKey.replace(/\.json$/, "")}.send-claim.json`;
 }
 
-async function writeReceipt(
-  store: ReportReceiptStore,
-  key: string,
-  receipt: ReportDeliveryReceiptV1,
-): Promise<void> {
-  await store.client.send(
-    new PutObjectCommand({
-      Bucket: store.bucket,
-      Key: key,
-      Body: JSON.stringify(receipt, null, 2),
-      ContentType: "application/json; charset=utf-8",
-    }),
+function isMissingObject(error: unknown): boolean {
+  return (
+    error instanceof NoSuchKey ||
+    (error instanceof S3ServiceException &&
+      error.$metadata.httpStatusCode === 404)
   );
 }
 
-async function readState(
+async function readJson<T>(
   store: ReportReceiptStore,
   key: string,
-): Promise<ReportStateV1 | undefined> {
+  schema: z.ZodType<T>,
+): Promise<{ value: T; etag: string } | undefined> {
   try {
     const response = await store.client.send(
       new GetObjectCommand({ Bucket: store.bucket, Key: key }),
     );
-    if (response.Body === undefined) {
-      throw new Error(`Report state ${key} has no body`);
+    if (response.Body === undefined || response.ETag === undefined) {
+      throw new Error(`Report object ${key} has no body or entity tag`);
     }
-    return ReportStateV1Schema.parse(
-      JSON.parse(await response.Body.transformToString()),
-    );
+    return {
+      value: schema.parse(JSON.parse(await response.Body.transformToString())),
+      etag: response.ETag,
+    };
   } catch (error: unknown) {
-    if (
-      error instanceof NoSuchKey ||
-      (error instanceof S3ServiceException &&
-        error.$metadata.httpStatusCode === 404)
-    ) {
-      return undefined;
-    }
+    if (isMissingObject(error)) return undefined;
     throw error;
   }
 }
 
-async function writeState(
+async function writeJson(
   store: ReportReceiptStore,
   key: string,
-  state: ReportStateV1,
+  value: unknown,
+  condition?: { expectedEtag: string | undefined },
 ): Promise<void> {
   await store.client.send(
     new PutObjectCommand({
       Bucket: store.bucket,
       Key: key,
-      Body: JSON.stringify(ReportStateV1Schema.parse(state), null, 2),
+      Body: JSON.stringify(value, null, 2),
       ContentType: "application/json; charset=utf-8",
+      ...(condition === undefined
+        ? {}
+        : condition.expectedEtag === undefined
+          ? { IfNoneMatch: "*" }
+          : { IfMatch: condition.expectedEtag }),
     }),
   );
 }
 
 function deliveryBackend(store: ReportReceiptStore): ReportDeliveryBackend {
   return {
-    readReceipt: (key) => readReceipt(store, key),
-    writeReceipt: (key, receipt) => writeReceipt(store, key, receipt),
-    readState: (key) => readState(store, key),
-    writeState: (key, state) => writeState(store, key, state),
+    readReceipt: async (key) => {
+      const stored = await readJson(store, key, ReportDeliveryReceiptV1Schema);
+      return stored?.value;
+    },
+    writeReceipt: (key, receipt) => writeJson(store, key, receipt),
+    readState: async (key) => {
+      const stored = await readJson(store, key, ReportStateV1Schema);
+      return stored?.value;
+    },
+    writeState: (key, state) =>
+      writeJson(store, key, ReportStateV1Schema.parse(state)),
+    readSendClaim: async (key) => {
+      const held = await readJson(store, key, ReportSendClaimV1Schema);
+      return held === undefined
+        ? undefined
+        : { claim: held.value, etag: held.etag };
+    },
+    writeSendClaim: async (key, claim, expectedEtag) => {
+      try {
+        await writeJson(store, key, ReportSendClaimV1Schema.parse(claim), {
+          expectedEtag,
+        });
+        return true;
+      } catch (error: unknown) {
+        // 412 is the conditional-write rejection; 409 is what S3 returns when
+        // two conditional writes race. Both mean another attempt owns the send,
+        // which is a normal outcome here rather than a storage failure.
+        if (
+          error instanceof S3ServiceException &&
+          (error.$metadata.httpStatusCode === 412 ||
+            error.$metadata.httpStatusCode === 409)
+        ) {
+          return false;
+        }
+        throw error;
+      }
+    },
   };
 }
 
@@ -310,14 +341,53 @@ export async function deliverReport(
 ): Promise<ReportDeliveryResult> {
   const report = ReportEnvelopeV1Schema.parse(rawReport);
   const store = reportReceiptStore();
+  const info = Context.current().info;
+  const execution = info.workflowExecution;
+  if (execution === undefined) {
+    throw new Error("Report delivery requires a Temporal workflow execution");
+  }
   return deliverReportWithDependencies(report, {
     backend: deliveryBackend(store),
     addresses: resolvePostalAddresses(),
     send: (input) => sendPostalEmail(input),
     now: () => new Date().toISOString(),
+    // Per-attempt, so a retry never mistakes a previous attempt's lease for its
+    // own and every takeover is attributable.
+    owner: `${execution.workflowId}/${execution.runId}/${info.activityId}/${String(info.attempt)}`,
     receiptPrefix: store.prefix,
     statePrefix: Bun.env["REPORT_STATE_PREFIX"] ?? "reports/state",
   });
+}
+
+/**
+ * Take exclusive ownership of this report's Postal send. Resolves false when a
+ * different attempt holds a lease that has not yet expired.
+ */
+async function claimSend(
+  report: ReportEnvelopeV1,
+  stateKey: string,
+  dependencies: ReportDeliveryDependencies,
+): Promise<boolean> {
+  const claimKey = reportSendClaimKey(stateKey);
+  const claimedAt = dependencies.now();
+  const claim = ReportSendClaimV1Schema.parse({
+    schemaVersion: 1,
+    reportRunId: report.reportRunId,
+    owner: dependencies.owner,
+    claimedAt,
+  });
+  const held = await dependencies.backend.readSendClaim(claimKey);
+  if (held === undefined) {
+    return dependencies.backend.writeSendClaim(claimKey, claim, undefined);
+  }
+  if (held.claim.owner === dependencies.owner) {
+    return true;
+  }
+  const heldFor = Date.parse(claimedAt) - Date.parse(held.claim.claimedAt);
+  if (heldFor < REPORT_SEND_CLAIM_TAKEOVER_MS) {
+    return false;
+  }
+  return dependencies.backend.writeSendClaim(claimKey, claim, held.etag);
 }
 
 export async function deliverReportWithDependencies(
@@ -347,6 +417,31 @@ export async function deliverReportWithDependencies(
     });
     recordAccepted(report, receipt.acceptedAt);
     return { ...receipt, receiptKey, deduplicated: true };
+  }
+
+  // A `pending` state is not proof the email was not sent: Temporal can start a
+  // new attempt once start-to-close elapses, while the previous attempt is
+  // between `send` and its state write. Treating pending as "not sent" would
+  // resend; treating it as "sent" would silently drop a report whose owner died
+  // before sending. Take exclusive ownership of the send instead, with a lease
+  // longer than any attempt Temporal will still accept a completion from.
+  const owned = await claimSend(report, stateKey, dependencies);
+  if (!owned) {
+    reportDeliveryTotal.inc({ ...metricLabels(report), outcome: "contended" });
+    throw new Error(
+      `Report ${report.reportRunId} is already being delivered by another attempt; retry after the current owner persists its receipt`,
+    );
+  }
+  // The owner we displaced may have completed between our reads and the
+  // takeover, so re-check before spending a second send.
+  const settled = await dependencies.backend.readReceipt(receiptKey);
+  if (settled !== undefined) {
+    reportDeliveryTotal.inc({
+      ...metricLabels(report),
+      outcome: "deduplicated",
+    });
+    recordAccepted(report, settled.acceptedAt);
+    return { ...settled, receiptKey, deduplicated: true };
   }
 
   const { recipient, sender } = dependencies.addresses;

@@ -1,5 +1,6 @@
 import { fetcherActivities } from "./fetcher.ts";
 import { depsSummaryActivities } from "./deps-summary.ts";
+import { depsSummaryLegacyActivities } from "./deps-summary-legacy.ts";
 import { dnsAuditActivities } from "./dns-audit.ts";
 import { golinkSyncActivities } from "./golink-sync.ts";
 import { haActivities } from "./ha.ts";
@@ -35,6 +36,7 @@ import { ciIoImpactActivities } from "./ci-io-impact.ts";
 export const activities = {
   ...fetcherActivities,
   ...depsSummaryActivities,
+  ...depsSummaryLegacyActivities,
   ...dnsAuditActivities,
   ...golinkSyncActivities,
   ...haActivities,

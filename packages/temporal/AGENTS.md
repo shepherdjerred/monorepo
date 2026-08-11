@@ -339,6 +339,22 @@ credentials therefore remain in the core worker in both paths. The outer email
 activity budget must exceed the complete delegated delivery retry window; both
 durations are defined in `src/shared/report-delivery-policy.ts`.
 
+### Report delivery is exclusive, not merely deduplicated
+
+A stored `pending` delivery state is not evidence that the email was never
+sent: Temporal can dispatch a new attempt once start-to-close elapses while the
+previous one sits between the Postal call and its state write. Treating pending
+as "not sent" duplicates the email; treating it as "sent" silently drops a
+report whose owner died first. `deliverReportWithDependencies` therefore takes
+an exclusive lease on the send — a conditional S3 write
+(`If-None-Match`/`If-Match`) of a per-report claim object keyed off the state
+key. A contending attempt never calls `send`; it fails so Temporal retries and
+finds the owner's receipt. A lease older than
+`REPORT_SEND_CLAIM_TAKEOVER_MS` is takeable, which is what guarantees a dead
+owner cannot strand the report. Keep that bound strictly greater than the
+delivery activity's start-to-close timeout, or a takeover can race a live
+owner.
+
 ## Scheduled PR-creating workflows
 
 There are **two** Temporal scheduling patterns — don't conflate them:

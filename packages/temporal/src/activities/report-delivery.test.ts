@@ -1,11 +1,15 @@
 import { describe, expect, test } from "bun:test";
 import type { PostalSendInput } from "#shared/postal.ts";
 import type { ReportEnvelopeV1 } from "#shared/report.ts";
+import { REPORT_SEND_CLAIM_TAKEOVER_MS } from "#shared/report-delivery-policy.ts";
 import {
   activityReportRunId,
   deliverReportWithDependencies,
   type ReportDeliveryBackend,
   type ReportDeliveryReceiptV1,
+  reportSendClaimKey,
+  reportStateKey,
+  type ReportSendClaimV1,
   type ReportStateV1,
 } from "./report-delivery.ts";
 
@@ -51,6 +55,34 @@ function report(): ReportEnvelopeV1 {
   };
 }
 
+type StoredClaim = { claim: ReportSendClaimV1; etag: string };
+
+/**
+ * Conditional-write claim store mirroring the S3 backend: a create only
+ * succeeds when absent, a replace only when the entity tag still matches.
+ */
+function claimBackend(
+  claims: Map<string, StoredClaim>,
+): Pick<ReportDeliveryBackend, "readSendClaim" | "writeSendClaim"> {
+  let nextEtag = 0;
+  return {
+    readSendClaim: async (key) => claims.get(key),
+    writeSendClaim: async (key, claim, expectedEtag) => {
+      const held = claims.get(key);
+      if (
+        held === undefined
+          ? expectedEtag !== undefined
+          : held.etag !== expectedEtag
+      ) {
+        return false;
+      }
+      nextEtag += 1;
+      claims.set(key, { claim, etag: `etag-${String(nextEtag)}` });
+      return true;
+    },
+  };
+}
+
 describe("report delivery", () => {
   test("uses a stable distinct identity for a failure after an accepted report", () => {
     expect(activityReportRunId("dependency-summary", "run-1", "complete")).toBe(
@@ -84,6 +116,7 @@ describe("report delivery", () => {
       writeState: async (key, state) => {
         states.set(key, state);
       },
+      ...claimBackend(new Map()),
     };
     const sent: PostalSendInput[] = [];
     const dependencies = {
@@ -102,6 +135,7 @@ describe("report delivery", () => {
         };
       },
       now: () => NOW,
+      owner: "workflow/run-1/activity-1/1",
     };
 
     await expect(
@@ -121,5 +155,114 @@ describe("report delivery", () => {
     });
     expect([...states.values()][0]?.delivery.status).toBe("accepted");
     expect([...states.values()][0]?.report).toEqual(report());
+  });
+});
+
+function scenario(claims: Map<string, StoredClaim>) {
+  const receipts = new Map<string, ReportDeliveryReceiptV1>();
+  const states = new Map<string, ReportStateV1>();
+  const sent: PostalSendInput[] = [];
+  const backend: ReportDeliveryBackend = {
+    readReceipt: async (key) => receipts.get(key),
+    writeReceipt: async (key, receipt) => {
+      receipts.set(key, receipt);
+    },
+    readState: async (key) => states.get(key),
+    writeState: async (key, state) => {
+      states.set(key, state);
+    },
+    ...claimBackend(claims),
+  };
+  return {
+    sent,
+    states,
+    dependencies: (owner: string, now: string) => ({
+      backend,
+      addresses: {
+        recipient: "recipient@example.com",
+        sender: "sender@example.com",
+      },
+      send: async (input: PostalSendInput) => {
+        sent.push(input);
+        return {
+          messageId: `postal-${String(sent.length)}`,
+          recipientId: 42,
+          subject: input.subject,
+          tag: input.tag,
+        };
+      },
+      now: () => now,
+      owner,
+    }),
+  };
+}
+
+function heldBy(owner: string, claimedAt: string): Map<string, StoredClaim> {
+  return new Map([
+    [
+      reportSendClaimKey(reportStateKey(report())),
+      {
+        claim: {
+          schemaVersion: 1 as const,
+          reportRunId: report().reportRunId,
+          owner,
+          claimedAt,
+        },
+        etag: "etag-0",
+      },
+    ],
+  ]);
+}
+
+describe("report send ownership", () => {
+  test("refuses to resend while another attempt still owns the send", async () => {
+    // Attempt 1 wrote `pending` and sent, then stalled past start-to-close.
+    // Attempt 2 must not read `pending` as permission to send again.
+    const { sent, dependencies } = scenario(
+      heldBy("workflow/run-1/activity-1/1", NOW),
+    );
+    const stillOwned = new Date(
+      Date.parse(NOW) + REPORT_SEND_CLAIM_TAKEOVER_MS - 1000,
+    ).toISOString();
+
+    await expect(
+      deliverReportWithDependencies(
+        report(),
+        dependencies("workflow/run-1/activity-1/2", stillOwned),
+      ),
+    ).rejects.toThrow("already being delivered by another attempt");
+
+    expect(sent).toEqual([]);
+  });
+
+  test("takes over an expired lease so a dead owner cannot strand the report", async () => {
+    const { sent, states, dependencies } = scenario(
+      heldBy("workflow/run-1/activity-1/1", NOW),
+    );
+    const expired = new Date(
+      Date.parse(NOW) + REPORT_SEND_CLAIM_TAKEOVER_MS,
+    ).toISOString();
+
+    const result = await deliverReportWithDependencies(
+      report(),
+      dependencies("workflow/run-1/activity-1/3", expired),
+    );
+
+    expect(sent).toHaveLength(1);
+    expect(result.deduplicated).toBe(false);
+    expect([...states.values()][0]?.delivery.status).toBe("accepted");
+  });
+
+  test("resumes its own lease after a retry of the same attempt identity", async () => {
+    const owner = "workflow/run-1/activity-1/1";
+    const { sent, dependencies } = scenario(heldBy(owner, NOW));
+
+    const result = await deliverReportWithDependencies(
+      report(),
+      dependencies(owner, NOW),
+    );
+
+    expect(sent).toHaveLength(1);
+    expect(result.deduplicated).toBe(false);
   });
 });

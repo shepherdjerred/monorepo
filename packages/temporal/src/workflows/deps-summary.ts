@@ -1,8 +1,9 @@
-import { proxyActivities } from "@temporalio/workflow";
+import { patched, proxyActivities } from "@temporalio/workflow";
 import type {
   DependencyChange,
   DepsSummaryActivities,
 } from "#activities/deps-summary.ts";
+import type { DepsSummaryLegacyActivities } from "#activities/deps-summary-legacy.ts";
 import type { MissingReleaseNote } from "#activities/deps-summary-release-notes.ts";
 import type {
   ActivityReportInput,
@@ -36,6 +37,37 @@ const { deliverActivityReport } = proxyActivities<ReportDeliveryActivities>({
   startToCloseTimeout: "2 minutes",
   retry: RETRY,
 });
+
+// Legacy proxies exist solely to reproduce the pre-rewrite command sequence for
+// an execution still open across the rollout. Their timeouts must stay exactly
+// as they were when those histories were written.
+const { cloneAndGetVersionChanges, fetchReleaseNotes } =
+  proxyActivities<DepsSummaryLegacyActivities>({
+    startToCloseTimeout: "5 minutes",
+    heartbeatTimeout: "60 seconds",
+    retry: RETRY,
+  });
+
+const { summarizeWithLLM } = proxyActivities<DepsSummaryLegacyActivities>({
+  startToCloseTimeout: "3 minutes",
+  retry: RETRY,
+});
+
+const { formatAndSendEmail } = proxyActivities<DepsSummaryLegacyActivities>({
+  startToCloseTimeout: "1 minute",
+  retry: RETRY,
+});
+
+async function runLegacyDependencySummary(daysBack: number): Promise<void> {
+  const changes = await cloneAndGetVersionChanges(daysBack);
+  if (changes.length === 0) {
+    await formatAndSendEmail([], "", []);
+    return;
+  }
+  const releaseNotesResult = await fetchReleaseNotes(changes);
+  const summary = await summarizeWithLLM(changes, releaseNotesResult.notes);
+  await formatAndSendEmail(changes, summary, releaseNotesResult.failed);
+}
 
 function changeSummary(change: DependencyChange): string {
   const oldValue = change.oldValue ?? "not present";
@@ -101,6 +133,9 @@ function failureReport(startedAt: string, error: unknown): ActivityReportInput {
 }
 
 export async function generateDependencySummary(daysBack = 7): Promise<void> {
+  if (!patched("deps-summary-evidence-v1")) {
+    return runLegacyDependencySummary(daysBack);
+  }
   const startedAt = new Date().toISOString();
   try {
     const collection = await collectDependencyChanges(daysBack);
