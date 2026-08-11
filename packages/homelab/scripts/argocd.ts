@@ -863,7 +863,7 @@ function operationStartedAfter(
 
 function operationPollIntervalMs(): number {
   const configured = optionalEnv("ARGOCD_POLL_INTERVAL_MS");
-  return configured === undefined
+  return configured === null
     ? POLL_INTERVAL_MS
     : PollIntervalSchema.parse(configured);
 }
