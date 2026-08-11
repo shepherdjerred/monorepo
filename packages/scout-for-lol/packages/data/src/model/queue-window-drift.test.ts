@@ -1,12 +1,16 @@
 import { describe, expect, test } from "bun:test";
-import { proposeQueueWindowEdits } from "#src/model/queue-window-drift.ts";
+import {
+  MIN_DRIFT_LOOKBACK_DAYS,
+  proposeQueueWindowEdits,
+} from "#src/model/queue-window-drift.ts";
 import {
   QueueWindowsFileSchema,
   type QueueWindowsFile,
 } from "#src/model/queue-windows.schema.ts";
 
 const TODAY = "2026-07-26";
-const LOOKBACK = 21;
+/** What the scheduled watcher and the CLI default to. */
+const LOOKBACK = 28;
 
 function makeFile(
   queues: Record<string, [start: string, end: string | null][]>,
@@ -293,5 +297,71 @@ describe("proposeQueueWindowEdits close guards", () => {
 
     expect(edits).toHaveLength(0);
     expect(warnings).toHaveLength(0);
+  });
+});
+
+function addDaysUtc(date: string, days: number): string {
+  const ms = Date.parse(`${date}T00:00:00.000Z`) + days * 86_400_000;
+  return new Date(ms).toISOString().slice(0, 10);
+}
+
+describe("proposeQueueWindowEdits close eligibility span", () => {
+  const WINDOW_START = "2026-07-01";
+
+  /** Outcome of the daily run that sees `WINDOW_START` as `age` days ago. */
+  function runAtAge(age: number) {
+    return proposeQueueWindowEdits({
+      file: makeFile({ "classic aram mayhem": [[WINDOW_START, null]] }),
+      // Worst case for eligibility: the entire volume baseline lands on the
+      // window's first day, so it is the first evidence to fall out of the
+      // lookback. This is the launch-burst shape the age gate exists for.
+      counts: { "2450": { [WINDOW_START]: 24 } },
+      today: addDaysUtc(WINDOW_START, age),
+      lookbackDays: LOOKBACK,
+    });
+  }
+
+  test("re-proposes the same close on every run of a week-long review window", () => {
+    // The close is not applied automatically — it opens a PR, and the watcher
+    // closes that PR as soon as a run produces no drift. So the close has to be
+    // re-derivable across enough consecutive runs for a human to review it. With
+    // lookbackDays equal to the minimum age this band was a single day: the next
+    // morning the burst aged out of the lookback, the baseline collapsed, and
+    // the unreviewed proposal was closed for good.
+    const closingAges: number[] = [];
+    for (let age = 1; age <= 40; age++) {
+      const { edits } = runAtAge(age);
+      if (edits.some((edit) => edit.kind === "close")) {
+        closingAges.push(age);
+      }
+    }
+
+    expect(closingAges).toEqual([21, 22, 23, 24, 25, 26, 27, 28]);
+    expect(closingAges.length).toBeGreaterThanOrEqual(7);
+  });
+
+  test("withholds the close below the minimum age and loses the baseline past the lookback", () => {
+    // The two ends of the band above, and how each is reported: too young while
+    // the evidence is still visible, then no evidence at all once the burst has
+    // fallen outside the lookback.
+    const tooYoung = runAtAge(20);
+    expect(tooYoung.edits).toHaveLength(0);
+    expect(tooYoung.warnings[0]?.kind).toBe("window-too-young");
+    expect(tooYoung.warnings[0]?.total).toBe(24);
+
+    const agedOut = runAtAge(29);
+    expect(agedOut.edits).toHaveLength(0);
+    expect(agedOut.warnings[0]?.kind).toBe("sparse-no-close");
+  });
+
+  test("rejects a lookback that collapses close eligibility to a single run", () => {
+    expect(() =>
+      proposeQueueWindowEdits({
+        file: makeFile({ "classic aram mayhem": [[WINDOW_START, null]] }),
+        counts: {},
+        today: TODAY,
+        lookbackDays: MIN_DRIFT_LOOKBACK_DAYS - 1,
+      }),
+    ).toThrow(/lookbackDays must be at least/);
   });
 });

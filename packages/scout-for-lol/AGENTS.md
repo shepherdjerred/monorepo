@@ -593,16 +593,25 @@ Limited-time queue availability lives in
 `queue-windows.schema.ts`; loaded by `queue-availability.ts` — end dates are
 inclusive through the whole UTC day). The `scout-queue-windows-daily` Temporal
 schedule (06:45 PT, `packages/temporal/src/activities/scout-queue-windows.ts`)
-scans the `scout-prod` match lake for a 21-day lookback and proposes edits via
+scans the `scout-prod` match lake for a 28-day lookback and proposes edits via
 the pure drift engine (`queue-window-drift.ts`): window opens/reopens auto-merge;
 window closes open a plain PR for human confirmation against patch notes;
 warnings-only runs (unknown queue ids, sparse modes) send an email.
+
+A close is gated on the window being at least `CLOSE_MIN_WINDOW_AGE_DAYS` (21)
+old, and its volume baseline is only counted from observations still inside the
+lookback — so the lookback is what decides how many consecutive daily runs
+re-propose the same close. Because the job closes its proposal PR as soon as a
+run produces no drift, a lookback equal to the minimum age would give a human
+exactly one day to review before the proposal vanished for good. The engine
+rejects any `lookbackDays` below `MIN_DRIFT_LOOKBACK_DAYS`; keep the schedule's
+`LOOKBACK_DAYS` and the CLI's default in step.
 
 Local dry-run (no writes):
 
 ```bash
 cd packages/backend
-AWS_PROFILE=seaweedfs bun run update-queue-windows -- --bucket scout-prod --lookback-days 21 --dry-run
+AWS_PROFILE=seaweedfs bun run update-queue-windows -- --bucket scout-prod --lookback-days 28 --dry-run
 ```
 
 New modes with unmapped queue ids surface as "new mode?" warnings — add the

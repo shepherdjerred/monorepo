@@ -44,8 +44,37 @@ const CLOSE_MIN_VOLUME_BASELINE = 20;
  * on 2026-08-10 the watcher proposed retiring it (PR #2100) while ARAM: Mayhem
  * was still receiving balance changes in the current patch. Twelve days is not
  * enough evidence to retire a mode.
+ *
+ * This value is coupled to the caller's `lookbackDays` — see
+ * `MIN_DRIFT_LOOKBACK_DAYS`.
  */
 const CLOSE_MIN_WINDOW_AGE_DAYS = 21;
+/**
+ * Daily runs on which an otherwise-valid close must stay proposable.
+ *
+ * A close is not applied automatically: it opens a PR for a human to confirm
+ * against patch notes, and the watcher closes that PR as soon as a later run
+ * produces no drift. So the close must survive re-derivation across enough
+ * consecutive runs for someone to actually review it — a week.
+ */
+const CLOSE_MIN_ELIGIBLE_RUNS = 7;
+/**
+ * Smallest observation lookback that gives closes a usable review window.
+ *
+ * The two gates pull against each other. `CLOSE_MIN_WINDOW_AGE_DAYS` sets the
+ * earliest age at which a close may be proposed; `lookbackDays` sets the latest,
+ * because the volume baseline is only counted from observations still inside the
+ * lookback. In the worst case — every baseline match on the window's first day,
+ * which is exactly the launch-burst shape the age gate exists for — the close is
+ * proposable only while `CLOSE_MIN_WINDOW_AGE_DAYS <= age <= lookbackDays`.
+ *
+ * A lookback equal to the minimum age therefore collapses that band to a single
+ * run: the day after, the burst falls out of the lookback, the baseline drops
+ * below threshold, the run reports no drift, and the watcher closes the
+ * unreviewed proposal PR permanently.
+ */
+export const MIN_DRIFT_LOOKBACK_DAYS =
+  CLOSE_MIN_WINDOW_AGE_DAYS + CLOSE_MIN_ELIGIBLE_RUNS - 1;
 
 export type QueueWindowEditKind = "open" | "reopen" | "close";
 
@@ -440,6 +469,11 @@ export function proposeQueueWindowEdits(
   const todayMs = parseUtcDate(today);
   if (Number.isNaN(todayMs)) {
     throw new TypeError(`invalid today date: ${today}`);
+  }
+  if (lookbackDays < MIN_DRIFT_LOOKBACK_DAYS) {
+    throw new RangeError(
+      `lookbackDays must be at least ${MIN_DRIFT_LOOKBACK_DAYS.toString()} (got ${lookbackDays.toString()}): a close is only proposable while the window is between ${CLOSE_MIN_WINDOW_AGE_DAYS.toString()} and lookbackDays days old, and that band must span at least ${CLOSE_MIN_ELIGIBLE_RUNS.toString()} daily runs for the proposal PR to be reviewable`,
+    );
   }
   const obsStartMs = todayMs - lookbackDays * DAY_MS;
   const obsEndMs = todayMs - DAY_MS;
