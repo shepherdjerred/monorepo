@@ -44,6 +44,7 @@ function operationResponse(request: unknown): unknown {
 }
 
 function applicationOperation(options: {
+  readonly live?: boolean;
   readonly message?: string;
   readonly phase: string;
   readonly requestId: string;
@@ -52,19 +53,24 @@ function applicationOperation(options: {
   readonly startedAt?: string;
 }): unknown {
   const revision = options.revision ?? REVISION;
+  const operation = {
+    info: [
+      {
+        name: "ci.sjer.red/request-id",
+        value: options.requestId,
+      },
+    ],
+    sync: { revision },
+  };
+  const live =
+    options.live ??
+    (options.phase === "Running" || options.phase === "Terminating");
   return {
+    ...(live ? { operation } : {}),
     status: {
       operationState: {
         phase: options.phase,
-        operation: {
-          info: [
-            {
-              name: "ci.sjer.red/request-id",
-              value: options.requestId,
-            },
-          ],
-          sync: { revision },
-        },
+        operation,
         syncResult: {
           revision,
           resources: options.resources ?? [],
@@ -259,6 +265,35 @@ test("atomic Argo sync adopts the exact active operation without another POST", 
     expect(result.exitCode).toBe(0);
     expect(result.stdout).toContain("adopted active sync operation: apps");
     expect(lifecycle.observations.syncPosts).toBe(0);
+    expect(lifecycle.observations.deleteRequests).toBe(1);
+  } finally {
+    await lifecycle.server.stop(true);
+  }
+});
+
+test("atomic Argo sync posts past a stale status-only Running operation", async () => {
+  const stale = applicationOperation({
+    live: false,
+    phase: "Running",
+    requestId: OTHER_REQUEST_ID,
+    resources: [{ status: "Synced" }],
+    startedAt: "2026-08-10T01:00:00Z",
+  });
+  const current = applicationOperation({
+    phase: "Running",
+    requestId: CURRENT_REQUEST_ID,
+    resources: [{ status: "Synced", hookPhase: "Running" }],
+    startedAt: "2026-08-10T01:00:01Z",
+  });
+  const lifecycle = serveLifecycle([stale, stale, current]);
+
+  try {
+    const result = await runArgocd(atomicArgs(), lifecycle.server.url.origin);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stderr).toBe("");
+    expect(result.stdout).toContain("sync operation started: apps");
+    expect(lifecycle.observations.syncPosts).toBe(1);
     expect(lifecycle.observations.deleteRequests).toBe(1);
   } finally {
     await lifecycle.server.stop(true);

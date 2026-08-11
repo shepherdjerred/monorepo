@@ -158,6 +158,11 @@ export function requestedOperationRequestId(application: unknown): string {
   return requestId;
 }
 
+export function activeOperationRequestId(application: unknown): string | null {
+  const operation = ApplicationOperationSchema.parse(application).operation;
+  return operation === undefined ? null : operationRequestId(operation);
+}
+
 export function completedOperationRequestId(
   application: unknown,
 ): string | null {

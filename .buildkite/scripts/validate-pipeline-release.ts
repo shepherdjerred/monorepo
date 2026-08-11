@@ -29,8 +29,16 @@ export function validateAtomicRootSyncLifecycle(
     ATOMIC_ROOT_SYNC_COMMAND,
     "argocd-sync is missing the atomic identity-bound root sync",
   );
+  const hasAsyncRootSync =
+    argocdSync
+      ?.split("\n")
+      .some(
+        (line) =>
+          /\bsync\s+apps(?:\s|$)/.test(line) &&
+          /(?:^|\s)--async(?:\s|$)/.test(line),
+      ) === true;
   if (
-    argocdSync?.includes("--prune --async") === true ||
+    hasAsyncRootSync ||
     argocdSync?.includes("finalize-async-sync apps") === true
   ) {
     fail("argocd-sync restored the racy split async/finalize lifecycle");

@@ -22,6 +22,17 @@ describe("atomic ArgoCD root sync pipeline contract", () => {
     );
   });
 
+  test("rejects an async root sync regardless of flag ordering", () => {
+    const reorderedAsync = [
+      atomicRootSync,
+      'sync apps --revision "$$apps_revision" --async --prune',
+    ].join("\n");
+
+    expect(() => validateAtomicRootSyncLifecycle(reorderedAsync)).toThrow(
+      "argocd-sync restored the racy split async/finalize lifecycle",
+    );
+  });
+
   test("rejects a pipeline without the atomic root sync", () => {
     expect(() =>
       validateAtomicRootSyncLifecycle("release-health-wait"),
