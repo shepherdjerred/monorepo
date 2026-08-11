@@ -1,7 +1,7 @@
 ---
 id: facet-branding-2026-08-10
 type: plan
-status: in-progress
+status: complete
 board: false
 ---
 

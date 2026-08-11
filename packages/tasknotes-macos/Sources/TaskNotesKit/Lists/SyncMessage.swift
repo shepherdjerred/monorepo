@@ -150,7 +150,7 @@ public struct SyncMessage: Sendable, Equatable {
             return SyncMessage(
                 tone: .attention,
                 title: "No server configured",
-                detail: "Add the address of your Facet server in Settings.",
+                detail: "Add the address of your TaskNotes server in Settings.",
                 remedy: .openSettings
             )
         case .syncing:
