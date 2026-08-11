@@ -227,6 +227,9 @@ test("Argo CD CLI usage documents atomic sync and recovery identity", async () =
     "suspend-auto-sync <root-app> [--revision <v>] [--timeout <s>]",
   );
   expect(stderr).toContain(
+    "stage-root-release <root-app> --revision <v> [--timeout <s>]",
+  );
+  expect(stderr).toContain(
     "finalize-async-sync <app> --revision <v> --request-id <uuid>",
   );
 });
@@ -574,6 +577,186 @@ describe("Argo CD release gating", () => {
       expect(renderedRevisions).toEqual(["2.0.0-43"]);
       expect(syncBodies).toHaveLength(1);
       expectSuspendedWorkerRequest(syncBodies[0]);
+    } finally {
+      await server.stop(true);
+    }
+  });
+});
+
+describe("Argo CD root release staging", () => {
+  test("requires an exact root revision", async () => {
+    const process = Bun.spawn(
+      [
+        "bun",
+        "--no-install",
+        "scripts/argocd.ts",
+        "stage-root-release",
+        "apps",
+        "--dry-run",
+      ],
+      {
+        cwd: path.resolve(import.meta.dir, "../../.."),
+        stderr: "pipe",
+        stdout: "pipe",
+      },
+    );
+    const [exitCode, stderr] = await Promise.all([
+      process.exited,
+      new Response(process.stderr).text(),
+    ]);
+
+    expect(exitCode).not.toBe(0);
+    expect(stderr).toContain("--revision is required for stage-root-release");
+  });
+
+  test("stages root prerequisites while child auto-sync remains suspended", async () => {
+    const syncBodies: unknown[] = [];
+    let requestedOperation: unknown;
+    const repositoryApplication = JSON.stringify({
+      apiVersion: "argoproj.io/v1alpha1",
+      kind: "Application",
+      metadata: { name: "worker" },
+      spec: {
+        source: {
+          repoURL: "https://chartmuseum.sjer.red",
+          chart: "worker",
+          targetRevision: "2.0.0-43",
+        },
+        syncPolicy: {
+          automated: { prune: true, selfHeal: true },
+        },
+      },
+    });
+    const admissionPolicy = JSON.stringify({
+      apiVersion: "admissionregistration.k8s.io/v1",
+      kind: "ValidatingAdmissionPolicy",
+      metadata: { name: "pvc-backup-policy.sjer.red" },
+      spec: { failurePolicy: "Fail" },
+    });
+    const externalApplication = JSON.stringify({
+      apiVersion: "argoproj.io/v1alpha1",
+      kind: "Application",
+      metadata: { name: "external" },
+      spec: {
+        source: {
+          repoURL: "https://charts.example.com",
+          chart: "external",
+          targetRevision: "1.0.0",
+        },
+        syncPolicy: { automated: {} },
+      },
+    });
+    const server = Bun.serve({
+      hostname: "127.0.0.1",
+      port: 0,
+      async fetch(request) {
+        const url = new URL(request.url);
+        if (url.pathname === "/api/charts/apps") {
+          return Response.json([
+            {
+              version: "2.0.0-43",
+              urls: ["charts/apps-2.0.0-43.tgz"],
+              digest: "a".repeat(64),
+            },
+          ]);
+        }
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/v1/applications/apps/manifests"
+        ) {
+          expect(url.searchParams.get("revision")).toBe("2.0.0-43");
+          return Response.json({
+            manifests: [
+              repositoryApplication,
+              externalApplication,
+              admissionPolicy,
+            ],
+          });
+        }
+        if (
+          request.method === "POST" &&
+          url.pathname === "/api/v1/applications/apps/sync"
+        ) {
+          const body = await request.json();
+          syncBodies.push(body);
+          requestedOperation = operationForSyncRequest(body);
+          return Response.json({ operation: requestedOperation });
+        }
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/v1/applications/apps"
+        ) {
+          return Response.json({
+            status: {
+              operationState: {
+                phase: "Succeeded",
+                startedAt: new Date().toISOString(),
+                operation: requestedOperation,
+              },
+            },
+          });
+        }
+        return new Response("not found", { status: 404 });
+      },
+    });
+
+    try {
+      const process = Bun.spawn(
+        [
+          "bun",
+          "--no-install",
+          "scripts/argocd.ts",
+          "stage-root-release",
+          "apps",
+          "--revision",
+          "2.0.0-43",
+          "--timeout",
+          "1",
+        ],
+        {
+          cwd: path.resolve(import.meta.dir, "../../.."),
+          env: {
+            ...Bun.env,
+            ARGOCD_SERVER_URL: server.url.origin,
+            ARGOCD_TOKEN: "test-token",
+            CHARTMUSEUM_ORIGIN: server.url.origin,
+          },
+          stderr: "pipe",
+          stdout: "pipe",
+        },
+      );
+      const [exitCode, stdout, stderr] = await Promise.all([
+        process.exited,
+        new Response(process.stdout).text(),
+        new Response(process.stderr).text(),
+      ]);
+
+      expect(exitCode).toBe(0);
+      expect(stderr).toBe("");
+      expect(stdout).toContain("stage-root-release: apps at 2.0.0-43");
+      expect(stdout).toContain("suspending auto-sync: worker");
+      expect(syncBodies).toHaveLength(1);
+      const stagedRequest = SyncRequestSchema.parse(syncBodies[0]);
+      expect(stagedRequest.resources).toEqual([
+        WorkerApplicationResource,
+        {
+          group: "argoproj.io",
+          kind: "Application",
+          name: "external",
+        },
+        {
+          group: "admissionregistration.k8s.io",
+          kind: "ValidatingAdmissionPolicy",
+          name: "pvc-backup-policy.sjer.red",
+        },
+      ]);
+      expect(JSON.parse(stagedRequest.manifests[0] ?? "")).toMatchObject({
+        spec: { syncPolicy: { automated: { enabled: false } } },
+      });
+      expect(JSON.parse(stagedRequest.manifests[1] ?? "")).toMatchObject({
+        spec: { syncPolicy: { automated: { enabled: false } } },
+      });
+      expect(stagedRequest.manifests[2]).toBe(admissionPolicy);
     } finally {
       await server.stop(true);
     }

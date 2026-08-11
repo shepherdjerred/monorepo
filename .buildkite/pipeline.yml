@@ -1538,16 +1538,14 @@ steps:
       export ARGOCD_TOKEN="$$ARGOCD_AUTH_TOKEN"
       buildkite-agent artifact download "argocd-release-expected.json" . --step helm-push
       apps_revision=$$(jq -er '.[] | select(.name == "apps") | .revision' argocd-release-expected.json)
-      # Apply the exact published child Application specs while keeping their
-      # repository auto-sync disabled. This makes new sync options and diff
-      # rules effective before child charts are reconciled, without exposing
-      # children to a partially published release.
-      bun --no-install packages/homelab/scripts/argocd.ts suspend-auto-sync apps --revision "$$apps_revision" --timeout 300
-      bun --no-install packages/homelab/scripts/argocd.ts reconcile-release argocd-release-expected.json --timeout 300
-      # The root app owns every repository Application, so waiting for its
-      # aggregate health would block on unrelated stale children. Keep the
-      # exact Buildkite identity through apply and termination in one process;
-      # retries may adopt only this build's exact revision.
+      # Stage every exact root resource while keeping every child Application
+      # auto-sync disabled. Root-owned admission and cluster policies land
+      # before children can depend on them, without starting child operations.
+      bun --no-install packages/homelab/scripts/argocd.ts stage-root-release apps --revision "$$apps_revision" --timeout 300
+      bun --no-install packages/homelab/scripts/argocd.ts reconcile-release argocd-release-expected.json --skip-health-wait --timeout 300
+      # Restore the exact child auto-sync policies and prune the exact root
+      # tree only after child operations finish. Keep the Buildkite identity
+      # through apply and termination so retries adopt only this revision.
       bun --no-install packages/homelab/scripts/argocd.ts sync apps --revision "$$apps_revision" --prune --terminate-after-applied --request-id "$BUILDKITE_BUILD_ID" --timeout 300
       # The scoped release health below remains authoritative for this release.
       bun --no-install packages/homelab/scripts/argocd.ts release-health-wait argocd-release-expected.json --timeout 300

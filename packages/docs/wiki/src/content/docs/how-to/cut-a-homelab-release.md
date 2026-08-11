@@ -13,18 +13,24 @@ failed stage means.
 
 ## The sequence
 
-| Stage | What happens                                                            |
-| ----- | ----------------------------------------------------------------------- |
-| 1     | Suspend the current repository auto-sync on the root `apps` Application |
-| 2     | Publish the `2.0.0-build` chart set to ChartMuseum, immutably           |
-| 3     | Apply the exact child Application specs, still suspended                |
-| 4     | Reconcile child workloads to their exact chart revisions                |
-| 5     | Sync and safely finalize the exact root revision with verified pruning  |
-| 6     | Require every release-scoped child to be `Synced` and `Healthy`         |
+| Stage | What happens                                                              |
+| ----- | ------------------------------------------------------------------------- |
+| 1     | Suspend the current repository auto-sync on the root `apps` Application   |
+| 2     | Publish the `2.0.0-build` chart set to ChartMuseum, immutably             |
+| 3     | Stage exact child specs and root prerequisites, with children suspended   |
+| 4     | Reconcile child workloads to their exact chart revisions                  |
+| 5     | Restore and safely finalize the exact root revision with verified pruning |
+| 6     | Require every release-scoped child to be `Synced` and `Healthy`           |
 
 Stage 3 is deliberately separate from stage 5. New child-level safety settings
 must exist before those children sync, but enabling floating auto-sync before
 every chart is published could expose a partially published release.
+
+Stage 3 also applies root-owned prerequisites such as admission policies, but
+keeps every child Application's auto-sync disabled. This lets stage 4 explicitly own
+child operations without racing ArgoCD. Stage 5 restores the exact auto-sync
+policies and prunes only after reconciliation. Stage 6 is the single
+authoritative scoped health gate.
 
 ## If a child stays out of sync
 

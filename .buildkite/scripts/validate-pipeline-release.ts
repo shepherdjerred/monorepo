@@ -18,30 +18,101 @@ type ReleaseValidationOptions = {
   readonly stepBlocks: ReadonlyMap<string, string>;
 };
 
-const ATOMIC_ROOT_SYNC_COMMAND =
+const ARGOCD_COMMAND_PREFIX =
+  "bun --no-install packages/homelab/scripts/argocd.ts ";
+const STAGED_ROOT_RELEASE_SUBCOMMAND =
+  'stage-root-release apps --revision "$$apps_revision" --timeout 300';
+const ATOMIC_ROOT_SYNC_SUBCOMMAND =
   'sync apps --revision "$$apps_revision" --prune --terminate-after-applied --request-id "$BUILDKITE_BUILD_ID" --timeout 300';
+const DEFERRED_RELEASE_HEALTH_SUBCOMMAND =
+  "reconcile-release argocd-release-expected.json --skip-health-wait --timeout 300";
+const SCOPED_RELEASE_HEALTH_SUBCOMMAND =
+  "release-health-wait argocd-release-expected.json --timeout 300";
 
 export function validateAtomicRootSyncLifecycle(
   argocdSync: string | undefined,
 ): void {
-  requireIncludes(
-    argocdSync,
-    ATOMIC_ROOT_SYNC_COMMAND,
-    "argocd-sync is missing the atomic identity-bound root sync",
+  if (argocdSync === undefined) {
+    fail("argocd-sync is missing the atomic identity-bound root sync");
+  }
+  const executableCommands = argocdSync
+    .replace(/\\\r?\n[\t ]*/g, "")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => !line.startsWith("#"))
+    .flatMap((line) =>
+      line
+        .split(ARGOCD_COMMAND_PREFIX)
+        .slice(1)
+        .map((command) => command.trim()),
+    );
+  const rootSyncCommands = executableCommands.filter((line) =>
+    /^sync\s+apps(?:\s|$)/.test(line),
   );
-  const hasAsyncRootSync =
-    argocdSync
-      ?.split("\n")
-      .some(
-        (line) =>
-          /\bsync\s+apps(?:\s|$)/.test(line) &&
-          /(?:^|\s)--async(?:\s|$)/.test(line),
-      ) === true;
-  if (
-    hasAsyncRootSync ||
-    argocdSync?.includes("finalize-async-sync apps") === true
-  ) {
+  const hasAsyncRootSync = rootSyncCommands.some((line) =>
+    /(?:^|\s)--async(?:\s|$)/.test(line),
+  );
+  const hasAsyncFinalizer = executableCommands.some((line) =>
+    /^finalize-async-sync\s+apps(?:\s|$)/.test(line),
+  );
+  if (hasAsyncRootSync || hasAsyncFinalizer) {
     fail("argocd-sync restored the racy split async/finalize lifecycle");
+  }
+  if (
+    rootSyncCommands.length !== 1 ||
+    rootSyncCommands[0] !== ATOMIC_ROOT_SYNC_SUBCOMMAND
+  ) {
+    fail(
+      "argocd-sync must contain exactly one atomic identity-bound root sync",
+    );
+  }
+  const stagedRootCommands = executableCommands.filter((line) =>
+    /^(?:stage-root-release|suspend-auto-sync)\s+apps(?:\s|$)/.test(line),
+  );
+  if (
+    stagedRootCommands.length !== 1 ||
+    stagedRootCommands[0] !== STAGED_ROOT_RELEASE_SUBCOMMAND
+  ) {
+    fail(
+      "argocd-sync must contain exactly one root staging command with child auto-sync suspended",
+    );
+  }
+  const reconciliationCommands = executableCommands.filter((line) =>
+    /^reconcile-release\s+argocd-release-expected\.json(?:\s|$)/.test(line),
+  );
+  if (
+    reconciliationCommands.length !== 1 ||
+    reconciliationCommands[0] !== DEFERRED_RELEASE_HEALTH_SUBCOMMAND
+  ) {
+    fail("argocd-sync must contain exactly one deferred child reconciliation");
+  }
+  const scopedHealthCommands = executableCommands.filter((line) =>
+    /^release-health-wait\s+argocd-release-expected\.json(?:\s|$)/.test(line),
+  );
+  if (
+    scopedHealthCommands.length !== 1 ||
+    scopedHealthCommands[0] !== SCOPED_RELEASE_HEALTH_SUBCOMMAND
+  ) {
+    fail("argocd-sync must contain exactly one scoped release health gate");
+  }
+  const stageIndex = executableCommands.indexOf(STAGED_ROOT_RELEASE_SUBCOMMAND);
+  const reconcileIndex = executableCommands.indexOf(
+    DEFERRED_RELEASE_HEALTH_SUBCOMMAND,
+  );
+  const rootSyncIndex = executableCommands.indexOf(ATOMIC_ROOT_SYNC_SUBCOMMAND);
+  const healthIndex = executableCommands.indexOf(
+    SCOPED_RELEASE_HEALTH_SUBCOMMAND,
+  );
+  if (
+    !(
+      stageIndex < reconcileIndex &&
+      reconcileIndex < rootSyncIndex &&
+      rootSyncIndex < healthIndex
+    )
+  ) {
+    fail(
+      "argocd-sync must stage root, reconcile children, restore root, then run scoped health",
+    );
   }
 }
 
@@ -93,8 +164,8 @@ function validateReleaseSteps({
         "--filter homelab --filter '@homelab/cdk8s'",
         "concurrency_group: monorepo/homelab-release",
         'artifact download "argocd-release-expected.json"',
-        'suspend-auto-sync apps --revision "$$apps_revision"',
-        "reconcile-release argocd-release-expected.json",
+        'stage-root-release apps --revision "$$apps_revision"',
+        "reconcile-release argocd-release-expected.json --skip-health-wait",
         "release-health-wait argocd-release-expected.json",
       ],
     ],
