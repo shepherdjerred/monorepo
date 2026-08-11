@@ -160,4 +160,15 @@ describe("alert dashboard network paths", () => {
       }),
     );
   });
+
+  it("uses the backup-enabled SQLite PVC without PostgreSQL resources", () => {
+    const app = new App({ outdir: ".test-synth-alert-dashboard-sqlite" });
+    createAlertDashboardChart(app);
+    const yaml = app.synthYaml();
+
+    expect(yaml).toContain("name: alert-dashboard-data");
+    expect(yaml).toContain("file:/data/alert-dashboard.db");
+    expect(yaml).not.toContain("alert-dashboard-postgresql");
+    expect(yaml).not.toContain("alert-dashboard-postgres-netpol");
+  });
 });

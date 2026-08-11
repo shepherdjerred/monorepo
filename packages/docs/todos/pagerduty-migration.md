@@ -45,9 +45,12 @@ operations.
       produces exactly one grouped message.
 - [x] Migrate the Temporal audit and TRMNL consumers, remove the `toolkit pd`
       command, and remove runtime PagerDuty credentials from active source.
-- [ ] Deploy the activation and cutover branches, then verify database
+- [ ] Deploy the activation and cutover branches, then verify the SQLite PVC
       migration, snapshot bootstrap, UI, REST, previews, reconciliation
       freshness, probes, consumers, and live routing.
+- [ ] Decide whether to export the live PostgreSQL ledger into SQLite or
+      explicitly discard that history; do not remove the PostgreSQL PVC or
+      operator resources before this decision is executed.
 - [ ] Record the production cutover timestamp in the Comment Log, then wait 30
       full days before performing the operator verification below.
 - [ ] Complete the production acceptance checks in
@@ -86,7 +89,10 @@ email, and no-new-PagerDuty verification remain outstanding.
 Created the application 1Password item with email disabled and a dedicated
 Grafana Viewer service-account token. The shared Postal sender credential was
 copied from the existing Temporal mail integration; no email was sent.
-PostgreSQL credentials are generated and owned by the Zalando operator. The
+The live PostgreSQL resource now has a bound 16 GiB PVC and generated
+credentials, so its ledger must be treated as potentially valuable until an
+explicit export/import or discard decision is completed. The SQLite
+replacement owns a backup-enabled `alert-dashboard-data` PVC instead. The
 committed vault snapshot contains hashes and blank-state metadata only.
 
 ### 2026-08-08 — retention eligibility check scheduled

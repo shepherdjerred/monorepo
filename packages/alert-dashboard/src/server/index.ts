@@ -22,7 +22,7 @@ initializeTracing({
   serviceName: config.OTEL_SERVICE_NAME,
   endpoint: config.OTEL_EXPORTER_OTLP_ENDPOINT,
 });
-const repository = createPrismaRepository(config.DATABASE_URL);
+const repository = await createPrismaRepository(config.DATABASE_URL);
 const alertmanager = new AlertmanagerClient(config.ALERTMANAGER_URL);
 const grafanaPreviews = new GrafanaPreviewClient({
   baseUrl: config.GRAFANA_URL,

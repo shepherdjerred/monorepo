@@ -137,23 +137,18 @@ export function validatePipelineResourceContracts(
     }
   }
 
-  const alertDashboard = stepBlocks.get("alert-dashboard-postgres");
+  const alertDashboard = stepBlocks.get("alert-dashboard-sqlite");
   for (const [containerName, requestLine] of [
     ["container-0", '{ cpu: "1", memory: "2Gi", ephemeral-storage: "2Gi" }'],
-    ["postgres", 'requests: { cpu: "250m", memory: "256Mi" }'],
   ] satisfies readonly (readonly [string, string])[]) {
     if (
       !hasTrimmedLine(
-        containerBlock(
-          "alert-dashboard-postgres",
-          alertDashboard,
-          containerName,
-        ),
+        containerBlock("alert-dashboard-sqlite", alertDashboard, containerName),
         requestLine,
       )
     ) {
       fail(
-        `alert-dashboard-postgres/${containerName} is missing unchanged reservation ${requestLine}`,
+        `alert-dashboard-sqlite/${containerName} is missing unchanged reservation ${requestLine}`,
       );
     }
   }

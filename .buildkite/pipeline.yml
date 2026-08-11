@@ -360,8 +360,8 @@ steps:
             labels:
               ci.sjer.red/step-key: verify
 
-  - label: ":postgres: alert ledger integration"
-    key: alert-dashboard-postgres
+  - label: ":sqlite: alert ledger integration"
+    key: alert-dashboard-sqlite
     if: (build.pull_request.id != null || build.branch == pipeline.default_branch) && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
     if_changed:
       include:
@@ -376,18 +376,17 @@ steps:
     command: |
       . .buildkite/scripts/toolchain.sh
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/alert-dashboard'
-      export DATABASE_URL='postgresql://alerts:alerts@127.0.0.1:5432/alerts'
+      export DATABASE_URL='file:/tmp/alert-dashboard.db'
       bun --no-install run --cwd packages/alert-dashboard generate
-      bun --no-install run --cwd packages/alert-dashboard wait:database
       bun --no-install run --cwd packages/alert-dashboard migrate:deploy
-      bun --no-install run --cwd packages/alert-dashboard test:postgres
+      bun --no-install run --cwd packages/alert-dashboard test:sqlite
     retry: *retry
     plugins:
       - kubernetes:
           <<: *pod_kubernetes
           metadata:
             labels:
-              ci.sjer.red/step-key: alert-dashboard-postgres
+              ci.sjer.red/step-key: alert-dashboard-sqlite
           podSpecPatch:
             serviceAccountName: buildkite-agent-stack-k8s-controller
             containers:
@@ -409,18 +408,6 @@ steps:
                   - name: buildkite-git-mirrors
                     mountPath: /buildkite/git-mirrors
                     readOnly: true
-              - name: postgres
-                image: "postgres:16@sha256:95206741a5b214807675e14165369d05b93a9cf692223b616d07cca227e74b0b"
-                securityContext:
-                  allowPrivilegeEscalation: false
-                env:
-                  - { name: POSTGRES_DB, value: alerts }
-                  - { name: POSTGRES_USER, value: alerts }
-                  - { name: POSTGRES_PASSWORD, value: alerts }
-                resources:
-                  requests: { cpu: "250m", memory: "256Mi" }
-                  limits: { cpu: "1", memory: "1Gi" }
-
   # PR change filters include the global CI/toolchain closure. A selector
   # mistake can therefore only run extra work; it cannot hide changes to the
   # machinery that decides or executes a lane.

@@ -1,8 +1,7 @@
 import { defineConfig } from "prisma/config";
 
 const databaseUrl =
-  process.env["DATABASE_URL"] ??
-  "postgresql://alert_dashboard:alert_dashboard@127.0.0.1:5432/alert_dashboard";
+  process.env["DATABASE_URL"] ?? "file:./data/alert-dashboard.db";
 
 export default defineConfig({
   schema: "prisma/schema.prisma",

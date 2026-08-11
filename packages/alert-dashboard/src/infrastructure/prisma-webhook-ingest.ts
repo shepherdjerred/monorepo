@@ -12,6 +12,7 @@ import {
 } from "#domain/alert";
 import { parseOccurrence } from "#infrastructure/prisma-mappers";
 import { findWebhookOccurrence } from "#infrastructure/prisma-occurrence";
+import { replaceOccurrenceLabels } from "#infrastructure/prisma-labels";
 import type { AlertmanagerWebhook } from "#shared/schema";
 import { instantTextToEpochNanoseconds } from "#shared/time";
 
@@ -69,6 +70,7 @@ async function createOccurrence(input: {
       annotations: alert.annotations,
     },
   });
+  await replaceOccurrenceLabels(transaction, id, alert.labels);
   await transaction.alertEvent.create({
     data: {
       id: eventId(id, "opened", startedAtNs),
@@ -183,6 +185,7 @@ async function updateOccurrence(
       ...reconciledResolutionPromotion(existing, alertResolvedAtNs),
     },
   });
+  await replaceOccurrenceLabels(transaction, existing.id, alert.labels);
   if (shouldResolve)
     await transaction.alertEvent.create({
       data: {

@@ -52,14 +52,14 @@ function alertWhere(input: AlertListInput): Prisma.AlertOccurrenceWhereInput {
   if (input.search !== undefined)
     predicates.push({
       OR: [
-        { summary: { contains: input.search, mode: "insensitive" } },
-        { alertname: { contains: input.search, mode: "insensitive" } },
-        { fingerprint: { contains: input.search, mode: "insensitive" } },
-        { namespace: { contains: input.search, mode: "insensitive" } },
+        { summary: { contains: input.search } },
+        { alertname: { contains: input.search } },
+        { fingerprint: { contains: input.search } },
+        { namespace: { contains: input.search } },
       ],
     });
   for (const [key, value] of Object.entries(input.label ?? {}))
-    predicates.push({ labels: { path: [key], equals: value } });
+    predicates.push({ labelEntries: { some: { key, value } } });
   return { AND: predicates };
 }
 
@@ -116,7 +116,7 @@ export class PrismaReadRepository {
         },
       }),
       this.#prisma.webhookDelivery.findMany({
-        where: { occurrenceIds: { array_contains: [input.id] } },
+        where: { occurrenceLinks: { some: { occurrenceId: input.id } } },
         orderBy: [{ receivedAtNs: "desc" }, { id: "desc" }],
         take: input.limit + 1,
         ...(input.cursor === undefined

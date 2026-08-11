@@ -12,6 +12,12 @@
     "reason": "Discord bot application state"
   },
   {
+    "namespace": "alert-dashboard",
+    "name": "alert-dashboard-data",
+    "backup": "enabled",
+    "reason": "Alert dashboard SQLite ledger and lifecycle history"
+  },
+  {
     "namespace": "bugsink",
     "name": "pgdata-bugsink-postgresql-0",
     "backup": "enabled",

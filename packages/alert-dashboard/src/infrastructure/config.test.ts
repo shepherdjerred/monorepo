@@ -5,7 +5,7 @@ import { readConfig } from "#infrastructure/config";
 const base = {
   ALERTMANAGER_URL: "http://alertmanager.monitoring.svc:9093",
   ALERT_DASHBOARD_WEBHOOK_TOKEN: "a".repeat(32),
-  DATABASE_URL: "postgresql://alerts:test@postgres:5432/alerts",
+  DATABASE_URL: "file:./data/alert-dashboard-test.db",
   GRAFANA_API_KEY: "viewer-token",
   GRAFANA_URL: "http://grafana.monitoring.svc:3000",
 };
