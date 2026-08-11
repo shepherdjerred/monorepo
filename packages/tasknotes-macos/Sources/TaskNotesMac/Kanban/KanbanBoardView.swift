@@ -287,7 +287,7 @@ struct KanbanBoardView: View {
     }
 
     private var subtitle: String {
-        store.pendingCount == 0 ? "TaskNotes" : "\(store.pendingCount) waiting to sync"
+        store.pendingCount == 0 ? "Facet" : "\(store.pendingCount) waiting to sync"
     }
 }
 

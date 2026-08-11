@@ -37,7 +37,7 @@ struct SectionDetailView: View {
         case .failure(let error):
             ContentUnavailableView {
                 Label(
-                    "TaskNotes cannot store its data",
+                    "Facet cannot store its data",
                     systemImage: "externaldrive.badge.exclamationmark")
             } description: {
                 Text(error.userMessage)
@@ -50,7 +50,7 @@ struct SectionDetailView: View {
             // pane a UI test is looking for is never in the tree.
             .accessibilityElement(children: .combine)
             .accessibilityIdentifier(AccessibilityIdentifier.detail(destination))
-            .navigationTitle("TaskNotes")
+            .navigationTitle("Facet")
         case .success(let store):
             screen(store)
                 // ⚠️ Load-bearing, not tidiness. `@State` survives a change of a

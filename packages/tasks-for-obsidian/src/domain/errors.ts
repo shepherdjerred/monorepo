@@ -74,7 +74,7 @@ export class NotFoundError extends TaskNotesError {
 export class ConnectionError extends TaskNotesError {
   readonly kind = "connection" as const;
 
-  constructor(message = "Unable to connect to TaskNotes server") {
+  constructor(message = "Unable to connect to Facet server") {
     super(message);
     this.name = "ConnectionError";
   }

@@ -27,7 +27,7 @@ struct QuickAddSettingsView: View {
             // app does not have to be frontmost.
             Text(
                 "Opens a floating field over whatever you are working in, "
-                    + "without switching to TaskNotes. Return adds the task, Escape closes."
+                    + "without switching to Facet. Return adds the task, Escape closes."
             )
             .font(.caption)
             .foregroundStyle(.secondary)

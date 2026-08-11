@@ -165,7 +165,7 @@ struct QuickAddPanelView: View {
     }
 
     private var unavailable: some View {
-        Label("TaskNotes cannot reach its stored data.", systemImage: "externaldrive.badge.xmark")
+        Label("Facet cannot reach its stored data.", systemImage: "externaldrive.badge.xmark")
             .font(.caption)
             .foregroundStyle(.orange)
             .lineLimit(1)

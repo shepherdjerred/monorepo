@@ -192,7 +192,7 @@ public struct RootView: View {
             ContentUnavailableView {
                 Label("Unavailable", systemImage: "externaldrive.badge.exclamationmark")
             } description: {
-                Text("TaskNotes cannot reach its stored data.")
+                Text("Facet cannot reach its stored data.")
             }
             // `.combine`: a headline and a sentence, no control to swallow.
             .accessibilityElement(children: .combine)

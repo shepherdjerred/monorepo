@@ -100,7 +100,7 @@ describe("AppError serialization", () => {
     new ApiError("boom", 500),
     new ValidationError("bad shape"),
     new NotFoundError("Task", "TaskNotes/gone.md"),
-    new ConnectionError("Unable to connect to TaskNotes server"),
+    new ConnectionError("Unable to connect to Facet server"),
   ];
 
   test("every variant round-trips through its serialized form", () => {
