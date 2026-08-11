@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import type { PostalSendInput } from "#shared/postal.ts";
 import type { ReportEnvelopeV1 } from "#shared/report.ts";
 import {
+  REPORT_SEND_CLAIM_FIRST_RETRY_AT_MS,
   REPORT_SEND_CLAIM_TAKEOVER_MS,
   REPORT_SEND_DEADLINE_MS,
 } from "#shared/report-delivery-policy.ts";
@@ -339,6 +340,29 @@ describe("report send ownership", () => {
     ).rejects.toThrow("reached its send deadline");
 
     expect(sent).toEqual([]);
+  });
+
+  test("takes over a lease whose owner acquired it late in its attempt", async () => {
+    // The reachability argument has to survive slow pre-claim I/O: attempt 1
+    // spends 90s on its reads before writing the claim, then hangs. Because
+    // the lease is stamped at that attempt's start rather than at the write,
+    // the first retry still sees an expired lease instead of contending until
+    // the attempt budget is spent.
+    const ownerStartedAt = NOW;
+    const claims = heldBy("workflow/run-1/activity-1/1", ownerStartedAt);
+    const { sent, states, dependencies } = scenario(claims);
+    const firstRetryAt = new Date(
+      Date.parse(ownerStartedAt) + REPORT_SEND_CLAIM_FIRST_RETRY_AT_MS,
+    ).toISOString();
+
+    const result = await deliverReportWithDependencies(
+      report(),
+      dependencies("workflow/run-1/activity-1/2", firstRetryAt),
+    );
+
+    expect(sent).toHaveLength(1);
+    expect(result.deduplicated).toBe(false);
+    expect([...states.values()][0]?.delivery.status).toBe("accepted");
   });
 
   test("resumes its own lease after a retry of the same attempt identity", async () => {
