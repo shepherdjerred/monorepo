@@ -57,6 +57,10 @@ Once every selected resource in a staged wave is applied, the release command
 terminates that exact operation instead of waiting for aggregate health. A
 failed resource with an actual Argo hook type still blocks termination; health
 for ordinary child Applications remains the final scoped release gate's job.
+Argo omits `operation.sync.revision` from manifest-override operations, so the
+release command also persists the exact revision in the operation info list
+beside its request and operation UUIDs. Either representation can prove the
+revision, but disagreement between them is a hard identity failure.
 
 After explicit child reconciliation completes, the full root apply restores
 the exact auto-sync policies and performs verified pruning. Aggregate child

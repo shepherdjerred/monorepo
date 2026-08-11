@@ -9,6 +9,7 @@ const SYNC_WAVE_PATTERN = /^[+-]?\d+$/;
 
 export const SYNC_REQUEST_ID_INFO_NAME = "ci.sjer.red/request-id";
 export const SYNC_OPERATION_ID_INFO_NAME = "ci.sjer.red/operation-id";
+export const SYNC_REVISION_INFO_NAME = "ci.sjer.red/revision";
 
 const ApplicationOperationSchema = z.object({
   operation: z.record(z.string(), z.unknown()).optional(),
@@ -36,6 +37,17 @@ const OperationInfoSchema = z
   })
   .loose();
 
+const OperationSyncRevisionSchema = z
+  .object({
+    sync: z
+      .object({
+        revision: z.string().optional(),
+      })
+      .loose()
+      .optional(),
+  })
+  .loose();
+
 const SyncWaveManifestSchema = z.object({
   metadata: z.object({
     annotations: z.record(z.string(), z.string()).optional(),
@@ -59,7 +71,10 @@ export type ManifestOverrideBatch = {
   resources: SyncOperationResource[];
 };
 
-function serializedRequestBytes(batch: ManifestOverrideBatch): number {
+function serializedRequestBytes(
+  batch: ManifestOverrideBatch,
+  revision: string | undefined,
+): number {
   return new TextEncoder().encode(
     JSON.stringify({
       prune: false,
@@ -72,7 +87,11 @@ function serializedRequestBytes(batch: ManifestOverrideBatch): number {
           name: SYNC_OPERATION_ID_INFO_NAME,
           value: SERIALIZED_OPERATION_ID,
         },
+        ...(revision === undefined
+          ? []
+          : [{ name: SYNC_REVISION_INFO_NAME, value: revision }]),
       ],
+      ...(revision === undefined ? {} : { revision }),
       manifests: batch.manifests,
       resources: batch.resources,
     }),
@@ -110,13 +129,14 @@ function manifestSyncWave(override: ManifestOverride): number {
 function batchSingleSyncWave(
   overrides: readonly ManifestOverride[],
   maxRequestBytes: number,
+  revision: string | undefined,
 ): ManifestOverrideBatch[] {
   const batches: ManifestOverrideBatch[] = [];
   let current: ManifestOverrideBatch = { manifests: [], resources: [] };
 
   for (const override of overrides) {
     const candidate = appendOverride(current, override);
-    if (serializedRequestBytes(candidate) <= maxRequestBytes) {
+    if (serializedRequestBytes(candidate, revision) <= maxRequestBytes) {
       current = candidate;
       continue;
     }
@@ -126,7 +146,7 @@ function batchSingleSyncWave(
     } else {
       current = candidate;
     }
-    if (serializedRequestBytes(current) > maxRequestBytes) {
+    if (serializedRequestBytes(current, revision) > maxRequestBytes) {
       throw new Error(
         `manifest override for ${override.resource.kind}/${override.resource.name} exceeds the request budget`,
       );
@@ -153,8 +173,12 @@ function batchSingleSyncWave(
  */
 export function batchManifestOverrides(
   overrides: readonly ManifestOverride[],
-  maxRequestBytes = DEFAULT_MAX_REQUEST_BYTES,
+  options: {
+    readonly maxRequestBytes?: number;
+    readonly revision?: string;
+  } = {},
 ): ManifestOverrideBatch[] {
+  const maxRequestBytes = options.maxRequestBytes ?? DEFAULT_MAX_REQUEST_BYTES;
   if (!Number.isSafeInteger(maxRequestBytes) || maxRequestBytes <= 0) {
     throw new Error("maxRequestBytes must be a positive safe integer");
   }
@@ -169,7 +193,7 @@ export function batchManifestOverrides(
   return [...overridesBySyncWave.entries()]
     .sort(([leftWave], [rightWave]) => leftWave - rightWave)
     .flatMap(([, waveOverrides]) =>
-      batchSingleSyncWave(waveOverrides, maxRequestBytes),
+      batchSingleSyncWave(waveOverrides, maxRequestBytes, options.revision),
     );
 }
 
@@ -219,6 +243,30 @@ function operationId(operation: Record<string, unknown>): string | null {
   );
 }
 
+export function operationInfoRevision(
+  operation: Record<string, unknown>,
+): string | null {
+  return operationInfoValue(operation, SYNC_REVISION_INFO_NAME, "revision");
+}
+
+export function operationRevision(
+  operation: Record<string, unknown>,
+): string | undefined {
+  const directRevision =
+    OperationSyncRevisionSchema.parse(operation).sync?.revision;
+  const persistedRevision = operationInfoRevision(operation) ?? undefined;
+  if (
+    directRevision !== undefined &&
+    persistedRevision !== undefined &&
+    directRevision !== persistedRevision
+  ) {
+    throw new Error(
+      `Argo operation revision mismatch: sync revision ${directRevision} does not match CI revision ${persistedRevision}`,
+    );
+  }
+  return directRevision ?? persistedRevision;
+}
+
 export function requestedOperationRequestId(application: unknown): string {
   const operation = ApplicationOperationSchema.parse(application).operation;
   if (operation === undefined) {
@@ -229,6 +277,19 @@ export function requestedOperationRequestId(application: unknown): string {
     throw new Error("Argo sync response is missing the CI request ID");
   }
   return requestId;
+}
+
+export function requestedOperationRevision(application: unknown): string {
+  const operation = ApplicationOperationSchema.parse(application).operation;
+  if (operation === undefined) {
+    throw new Error("Argo sync response is missing the requested operation");
+  }
+  const persistedRevision = operationInfoRevision(operation);
+  if (persistedRevision === null) {
+    throw new Error("Argo sync response is missing the CI revision");
+  }
+  operationRevision(operation);
+  return persistedRevision;
 }
 
 export function activeOperationRequestId(application: unknown): string | null {

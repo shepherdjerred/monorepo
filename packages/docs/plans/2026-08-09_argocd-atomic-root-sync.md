@@ -57,6 +57,9 @@ only an exact retry; and keep the scoped release-health gate authoritative.
   Terminate each exact staged wave after all selected resources apply; a
   degraded ordinary resource is deferred to the scoped health gate, while a
   failed resource carrying an actual Argo hook type remains a hard failure.
+  Persist the exact revision in operation info alongside both UUIDs because
+  Argo omits `operation.sync.revision` for manifest-override operations; when
+  both representations exist, require them to agree.
   Reconcile children with aggregate health deferred, then atomically restore
   and prune the exact root tree before one scoped release-health gate. Reject
   the old split lifecycle, child-only staging, eager duplicate gates,
