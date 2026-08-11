@@ -76,7 +76,10 @@ export function isTransientError(error: unknown): boolean {
  * and everything else to exit 1. Use as the last line of a CI script in place
  * of a bare `await main()`.
  */
-export async function runMain(main: () => Promise<void>): Promise<void> {
+export async function runMain(
+  main: () => Promise<void>,
+  exit: (code: number) => never = (code) => process.exit(code),
+): Promise<void> {
   try {
     await main();
   } catch (error) {
@@ -85,8 +88,8 @@ export async function runMain(main: () => Promise<void>): Promise<void> {
       console.error(
         `transient failure detected — exiting ${String(EXIT_TRANSIENT)} for automatic retry`,
       );
-      process.exit(EXIT_TRANSIENT);
+      exit(EXIT_TRANSIENT);
     }
-    process.exit(1);
+    exit(1);
   }
 }
