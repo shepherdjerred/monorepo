@@ -8,10 +8,10 @@ import {
   assertWikiManifestInDockerContext,
   assertWorkspaceInstallContexts,
   assertUniqueSmokePorts,
-  effectivePublishedStage,
   explicitWorkspaceManifests,
   explicitSmokePort,
   httpSmokePort,
+  resolvedBakeTarget,
 } from "./validate-image-migration.ts";
 
 const deterministicBinderyDockerfile = `
@@ -209,32 +209,23 @@ packages/docs/wiki/*
 });
 
 describe("GHCR package provenance", () => {
-  test("uses a per-image Bake stage override before the shared default", () => {
+  test("uses the Dockerfile and stage from resolved Bake output", () => {
     expect(
-      effectivePublishedStage(
-        'target "example" {\n  dockerfile = "Dockerfile"\n}',
-        "image",
+      resolvedBakeTarget(
+        {
+          target: {
+            example: {
+              dockerfile: "packages/example/Dockerfile",
+              target: "release",
+            },
+          },
+        },
+        "example",
       ),
-    ).toBe("image");
-    expect(
-      effectivePublishedStage(
-        'target "example" {\n  target = "release" # published stage\n}',
-        "image",
-      ),
-    ).toBe("release");
-    expect(
-      effectivePublishedStage(
-        [
-          'target "example" {',
-          "  /*",
-          '  target = "image"',
-          "  */",
-          '  target = "release"',
-          "}",
-        ].join("\n"),
-        "image",
-      ),
-    ).toBe("release");
+    ).toEqual({
+      dockerfilePath: "packages/example/Dockerfile",
+      publishedStage: "release",
+    });
   });
 
   test("requires the published image stage to link its source repository", () => {

@@ -5,7 +5,7 @@ import {
 } from "./validate-pipeline-lib.ts";
 import { APPLICATION_IMAGE_TARGETS } from "./image-targets.ts";
 import { assertMonorepoSourceLabel } from "./docker-source-label.ts";
-import { hclNamedBlock, hclStringAttribute } from "./hcl-source.ts";
+import { hclNamedBlock } from "./hcl-source.ts";
 import { asRecord } from "../../scripts/lib/json.ts";
 
 type SmokePort = {
@@ -95,37 +95,61 @@ export function assertWikiManifestInDockerContext(dockerignore: string): void {
   }
 }
 
-async function assertApplicationSourceLabels(
-  dockerBake: string,
-): Promise<void> {
-  const appDefaults = hclNamedBlock(dockerBake, "target", "_app");
-  const defaultPublishedStage = hclStringAttribute(appDefaults, "target");
-  if (defaultPublishedStage === undefined) {
-    fail("docker-bake.hcl application defaults have no published stage");
+type ResolvedBakeTarget = {
+  readonly dockerfilePath: string;
+  readonly publishedStage: string;
+};
+
+export function resolvedBakeTarget(
+  bake: unknown,
+  image: string,
+): ResolvedBakeTarget {
+  const targets = asRecord(asRecord(bake)?.["target"]);
+  const target = asRecord(targets?.[image]);
+  const dockerfilePath = target?.["dockerfile"];
+  const publishedStage = target?.["target"];
+  if (typeof dockerfilePath !== "string" || dockerfilePath.length === 0) {
+    fail(`resolved Bake target ${image} has no Dockerfile`);
   }
-  for (const image of APPLICATION_IMAGE_TARGETS) {
-    const target = hclNamedBlock(dockerBake, "target", image);
-    const dockerfilePath = hclStringAttribute(target, "dockerfile");
-    if (dockerfilePath === undefined) {
-      fail(`docker-bake.hcl target ${image} has no Dockerfile`);
-    }
-    const publishedStage = effectivePublishedStage(
-      target,
-      defaultPublishedStage,
-    );
-    assertMonorepoSourceLabel(
-      await Bun.file(dockerfilePath).text(),
-      image,
-      publishedStage,
-    );
+  if (typeof publishedStage !== "string" || publishedStage.length === 0) {
+    fail(`resolved Bake target ${image} has no published stage`);
+  }
+  return { dockerfilePath, publishedStage };
+}
+
+async function printResolvedBake(): Promise<unknown> {
+  const child = Bun.spawn(
+    ["docker", "buildx", "bake", "--print", ...APPLICATION_IMAGE_TARGETS],
+    { stdout: "pipe", stderr: "pipe" },
+  );
+  const [stdout, stderr, exitCode] = await Promise.all([
+    new Response(child.stdout).text(),
+    new Response(child.stderr).text(),
+    child.exited,
+  ]);
+  if (exitCode !== 0) {
+    fail(`docker buildx bake --print failed: ${stderr.trim()}`);
+  }
+  try {
+    const value: unknown = JSON.parse(stdout);
+    return value;
+  } catch (error) {
+    fail(`docker buildx bake --print returned invalid JSON: ${String(error)}`);
   }
 }
 
-export function effectivePublishedStage(
-  bakeTarget: string,
-  defaultStage: string,
-): string {
-  return hclStringAttribute(bakeTarget, "target") ?? defaultStage;
+async function assertApplicationSourceLabels(
+  resolvedTargets: Readonly<Record<string, ResolvedBakeTarget>>,
+): Promise<void> {
+  for (const image of APPLICATION_IMAGE_TARGETS) {
+    const target = resolvedTargets[image];
+    if (target === undefined) fail(`resolved Bake target ${image} is missing`);
+    assertMonorepoSourceLabel(
+      await Bun.file(target.dockerfilePath).text(),
+      image,
+      target.publishedStage,
+    );
+  }
 }
 
 function smokeStage(dockerfile: string, image: string): string {
@@ -275,16 +299,13 @@ export async function validateImageMigrationContracts(
     workspacePaths.push(workspacePath);
   }
   const requiredManifests = explicitWorkspaceManifests(workspacePaths);
+  const resolvedBake = await printResolvedBake();
+  const resolvedTargets: Record<string, ResolvedBakeTarget> = {};
   const appDockerfiles = new Set<string>();
   for (const image of APPLICATION_IMAGE_TARGETS) {
-    const dockerfilePath = hclStringAttribute(
-      hclNamedBlock(dockerBake, "target", image),
-      "dockerfile",
-    );
-    if (dockerfilePath === undefined) {
-      fail(`docker-bake.hcl target ${image} has no Dockerfile`);
-    }
-    appDockerfiles.add(dockerfilePath);
+    const target = resolvedBakeTarget(resolvedBake, image);
+    resolvedTargets[image] = target;
+    appDockerfiles.add(target.dockerfilePath);
   }
   if (appDockerfiles.size === 0) {
     fail("docker-bake.hcl contains no app Dockerfiles");
@@ -296,7 +317,7 @@ export async function validateImageMigrationContracts(
       requiredManifests,
     );
   }
-  await assertApplicationSourceLabels(dockerBake);
+  await assertApplicationSourceLabels(resolvedTargets);
 
   const buildCiImage = await Bun.file(
     ".buildkite/scripts/build-ci-image.ts",

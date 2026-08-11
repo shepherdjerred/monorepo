@@ -139,35 +139,6 @@ function withoutHclComments(document: string): string {
   return output;
 }
 
-export function hclStringAttribute(
-  block: string,
-  attribute: string,
-): string | undefined {
-  for (const rawLine of withoutHclComments(block).split("\n")) {
-    const line = rawLine.trim();
-    if (!line.startsWith(attribute)) continue;
-    const assignment = line.slice(attribute.length).trimStart();
-    if (!assignment.startsWith("=")) continue;
-    const value = assignment.slice(1).trimStart();
-    if (!value.startsWith('"')) continue;
-
-    let escaped = false;
-    for (let cursor = 1; cursor < value.length; cursor += 1) {
-      const character = value[cursor];
-      if (escaped) {
-        escaped = false;
-      } else if (character === "\\") {
-        escaped = true;
-      } else if (character === '"') {
-        const trailing = value.slice(cursor + 1).trim();
-        if (trailing.length === 0) return value.slice(1, cursor);
-        break;
-      }
-    }
-  }
-  return undefined;
-}
-
 function isHclWhitespace(character: string): boolean {
   return (
     character === " " ||
