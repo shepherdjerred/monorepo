@@ -131,7 +131,8 @@ test("grants caddyfile read access to smoke and push bakes", () => {
   );
 });
 
-test("waits for an exact candidate to become anonymously pullable", async () => {
+test("waits for an exact digest to become anonymously pullable", async () => {
+  const digest = `sha256:${"a".repeat(64)}`;
   const requests: string[] = [];
   let tokenRequests = 0;
   let manifestRequests = 0;
@@ -154,7 +155,7 @@ test("waits for an exact candidate to become anonymously pullable", async () => 
   );
   const sleeps: number[] = [];
 
-  await ensureAnonymousGhcrPull("alert-dashboard", "candidate-commit", {
+  await ensureAnonymousGhcrPull("alert-dashboard", digest, {
     fetcher,
     sleeper: async (milliseconds) => {
       sleeps.push(milliseconds);
@@ -167,9 +168,9 @@ test("waits for an exact candidate to become anonymously pullable", async () => 
   expect(requests).toEqual([
     "https://ghcr.io/token?scope=repository%3Ashepherdjerred%2Falert-dashboard%3Apull&service=ghcr.io",
     "https://ghcr.io/token?scope=repository%3Ashepherdjerred%2Falert-dashboard%3Apull&service=ghcr.io",
-    "https://ghcr.io/v2/shepherdjerred/alert-dashboard/manifests/candidate-commit",
+    `https://ghcr.io/v2/shepherdjerred/alert-dashboard/manifests/${encodeURIComponent(digest)}`,
     "https://ghcr.io/token?scope=repository%3Ashepherdjerred%2Falert-dashboard%3Apull&service=ghcr.io",
-    "https://ghcr.io/v2/shepherdjerred/alert-dashboard/manifests/candidate-commit",
+    `https://ghcr.io/v2/shepherdjerred/alert-dashboard/manifests/${encodeURIComponent(digest)}`,
   ]);
 });
 
@@ -180,7 +181,7 @@ test("fails closed when a GHCR package stays private", async () => {
   );
 
   await expect(
-    ensureAnonymousGhcrPull("alert-dashboard", "candidate-commit", {
+    ensureAnonymousGhcrPull("alert-dashboard", `sha256:${"b".repeat(64)}`, {
       fetcher,
       sleeper: async (milliseconds) => milliseconds,
       attempts: 2,
@@ -720,6 +721,7 @@ test("smokes exact candidates, reuses identical runtime fingerprints, and tags S
         ].join("\n"),
       getManifestDigest: async (image) => {
         manifestReferences.push(image);
+        events.push(`resolve:${image}`);
         return digest;
       },
       verifyAnonymousPull: async (target, reference) => {
@@ -758,23 +760,34 @@ test("smokes exact candidates, reuses identical runtime fingerprints, and tags S
     "ghcr.io/shepherdjerred/starlight-karma-bot:candidate-commit",
   ]);
   expect(events.filter((event) => event.startsWith("public:"))).toEqual([
-    "public:birmel:candidate-commit",
-    "public:scout-for-lol:candidate-commit",
-    "public:starlight-karma-bot:candidate-commit",
+    `public:birmel:${digest}`,
+    `public:scout-for-lol:${digest}`,
+    `public:starlight-karma-bot:${digest}`,
   ]);
-  expect(events[0]).toBe("public:birmel:candidate-commit");
-  expect(events[1]).toBe(
+  expect(events[0]).toBe(
+    "resolve:ghcr.io/shepherdjerred/birmel:candidate-commit",
+  );
+  expect(events[1]).toBe(`public:birmel:${digest}`);
+  expect(events[2]).toBe(
     `smoke:birmel:ghcr.io/shepherdjerred/birmel@${digest}`,
   );
-  expect(events[2]).toBe(`fingerprint:ghcr.io/shepherdjerred/birmel@${digest}`);
-  expect(events.indexOf("public:scout-for-lol:candidate-commit")).toBeLessThan(
+  expect(events[3]).toBe(`fingerprint:ghcr.io/shepherdjerred/birmel@${digest}`);
+  expect(
+    events.indexOf(
+      "resolve:ghcr.io/shepherdjerred/scout-for-lol:candidate-commit",
+    ),
+  ).toBeLessThan(events.indexOf(`public:scout-for-lol:${digest}`));
+  expect(events.indexOf(`public:scout-for-lol:${digest}`)).toBeLessThan(
     events.indexOf(
       `smoke:scout-for-lol:ghcr.io/shepherdjerred/scout-for-lol@${digest}`,
     ),
   );
   expect(
-    events.indexOf("public:starlight-karma-bot:candidate-commit"),
-  ).toBeLessThan(
+    events.indexOf(
+      "resolve:ghcr.io/shepherdjerred/starlight-karma-bot:candidate-commit",
+    ),
+  ).toBeLessThan(events.indexOf(`public:starlight-karma-bot:${digest}`));
+  expect(events.indexOf(`public:starlight-karma-bot:${digest}`)).toBeLessThan(
     events.indexOf(
       `fingerprint:ghcr.io/shepherdjerred/starlight-karma-bot@${digest}`,
     ),

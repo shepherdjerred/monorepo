@@ -381,8 +381,8 @@ export async function pushImages(
       throw new Error(`No managed image pin exists for ${image}`);
     }
     const candidateTag = `${image}:candidate-${commit}`;
-    await verifyAnonymousPull(name, `candidate-${commit}`);
     const digest = await getManifestDigest(candidateTag);
+    await verifyAnonymousPull(name, digest);
     const candidate = `${image}@${digest}`;
     if (applicationImageTargets.has(name)) {
       await smokeCandidate(name, candidate, contractHash);
