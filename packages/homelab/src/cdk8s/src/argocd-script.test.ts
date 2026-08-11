@@ -80,8 +80,10 @@ function operationForSyncRequest(request: unknown): unknown {
 
 function expectSuspendedWorkerRequest(request: unknown): void {
   const syncRequest = SyncRequestSchema.parse(request);
-  expect(syncRequest.infos).toHaveLength(1);
-  expect(syncRequest.infos[0]?.name).toBe("ci.sjer.red/request-id");
+  expect(syncRequest.infos.map(({ name }) => name)).toEqual([
+    "ci.sjer.red/request-id",
+    "ci.sjer.red/operation-id",
+  ]);
   expect(syncRequest.manifests).toHaveLength(1);
   expect(JSON.parse(syncRequest.manifests[0] ?? "")).toMatchObject({
     spec: {

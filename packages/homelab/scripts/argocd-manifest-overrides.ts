@@ -3,8 +3,10 @@ import { canonicalJson } from "./canonical-json.ts";
 
 const DEFAULT_MAX_REQUEST_BYTES = 1_500_000;
 const SERIALIZED_REQUEST_ID = "00000000-0000-0000-0000-000000000000";
+const SERIALIZED_OPERATION_ID = "00000000-0000-0000-0000-000000000000";
 
 export const SYNC_REQUEST_ID_INFO_NAME = "ci.sjer.red/request-id";
+export const SYNC_OPERATION_ID_INFO_NAME = "ci.sjer.red/operation-id";
 
 const ApplicationOperationSchema = z.object({
   operation: z.record(z.string(), z.unknown()).optional(),
@@ -57,6 +59,10 @@ function serializedRequestBytes(batch: ManifestOverrideBatch): number {
         {
           name: SYNC_REQUEST_ID_INFO_NAME,
           value: SERIALIZED_REQUEST_ID,
+        },
+        {
+          name: SYNC_OPERATION_ID_INFO_NAME,
+          value: SERIALIZED_OPERATION_ID,
         },
       ],
       manifests: batch.manifests,
@@ -136,14 +142,30 @@ export function completedOperationIdentity(
   return canonicalJson(operation);
 }
 
-function operationRequestId(operation: Record<string, unknown>): string | null {
+function operationInfoValue(
+  operation: Record<string, unknown>,
+  infoName: string,
+  description: string,
+): string | null {
   const matches = (OperationInfoSchema.parse(operation).info ?? []).filter(
-    ({ name }) => name === SYNC_REQUEST_ID_INFO_NAME,
+    ({ name }) => name === infoName,
   );
   if (matches.length > 1) {
-    throw new Error("Argo operation has multiple CI request IDs");
+    throw new Error(`Argo operation has multiple CI ${description}s`);
   }
   return matches[0]?.value ?? null;
+}
+
+function operationRequestId(operation: Record<string, unknown>): string | null {
+  return operationInfoValue(operation, SYNC_REQUEST_ID_INFO_NAME, "request ID");
+}
+
+function operationId(operation: Record<string, unknown>): string | null {
+  return operationInfoValue(
+    operation,
+    SYNC_OPERATION_ID_INFO_NAME,
+    "operation ID",
+  );
 }
 
 export function requestedOperationRequestId(application: unknown): string {
@@ -170,4 +192,28 @@ export function completedOperationRequestId(
     ApplicationOperationSchema.parse(application).status?.operationState
       ?.operation;
   return operation === undefined ? null : operationRequestId(operation);
+}
+
+export function requestedOperationId(application: unknown): string {
+  const operation = ApplicationOperationSchema.parse(application).operation;
+  if (operation === undefined) {
+    throw new Error("Argo sync response is missing the requested operation");
+  }
+  const id = operationId(operation);
+  if (id === null) {
+    throw new Error("Argo sync response is missing the CI operation ID");
+  }
+  return id;
+}
+
+export function activeOperationId(application: unknown): string | null {
+  const operation = ApplicationOperationSchema.parse(application).operation;
+  return operation === undefined ? null : operationId(operation);
+}
+
+export function completedOperationId(application: unknown): string | null {
+  const operation =
+    ApplicationOperationSchema.parse(application).status?.operationState
+      ?.operation;
+  return operation === undefined ? null : operationId(operation);
 }

@@ -26,13 +26,19 @@ only an exact retry; and keep the scoped release-health gate authoritative.
   synchronous and explicitly asynchronous sync behavior unchanged.
 - Before submission, adopt only an active operation with the exact request ID
   and revision. Refuse any unrelated active operation.
+- Give each submitted ArgoCD operation a generated internal operation ID. A
+  retry adopts that ID from the live operation and accepts status only when the
+  same ID appears, so a stable applied result is reusable without confusing it
+  with stale status from an earlier attempt that reused the build UUID.
 - Poll through absent or stale operation state. Fail on an exact `Failed` or
   `Error` result, accept natural success, and terminate only after every
   resource reports an applied status with no failed hook.
-- After termination, use a fresh timeout and fail if another operation replaces
-  the exact operation before it clears.
+- After termination, use a fresh timeout, return when the authoritative live
+  operation clears even if status lags, and fail if another operation ID
+  replaces the exact operation first.
 - Retain `finalize-async-sync` only for recovery. Require both the exact request
-  ID and revision, and never treat missing operation state as success.
+  ID and revision, discover the internal operation ID from the matching live
+  operation, and never treat missing operation state as success.
 - Wire the main Buildkite release to the atomic command with
   `BUILDKITE_BUILD_ID`; reject the old split lifecycle in pipeline validation.
 

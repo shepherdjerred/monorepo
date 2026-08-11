@@ -3,8 +3,10 @@ import { describe, expect, test } from "bun:test";
 import {
   batchManifestOverrides,
   completedOperationIdentity,
+  completedOperationId,
   completedOperationRequestId,
   requestedOperationIdentity,
+  requestedOperationId,
   requestedOperationRequestId,
   type ManifestOverride,
 } from "./argocd-manifest-overrides.ts";
@@ -43,7 +45,7 @@ describe("manifest override batching", () => {
   test("splits requests before the serialized budget is exceeded", () => {
     const batches = batchManifestOverrides(
       [override("one", 600), override("two", 600), override("three", 600)],
-      1000,
+      1200,
     );
 
     expect(batches).toHaveLength(3);
@@ -114,6 +116,40 @@ describe("Argo operation identity", () => {
     expect(completedOperationRequestId(previous)).toBe("previous");
   });
 
+  test("distinguishes separate attempts with the same retry identity", () => {
+    const requested = {
+      operation: {
+        info: [
+          { name: "ci.sjer.red/request-id", value: "same-request" },
+          { name: "ci.sjer.red/operation-id", value: "current-operation" },
+        ],
+        sync: { revision: "same-revision" },
+      },
+    };
+    const previous = {
+      status: {
+        operationState: {
+          operation: {
+            info: [
+              { name: "ci.sjer.red/request-id", value: "same-request" },
+              {
+                name: "ci.sjer.red/operation-id",
+                value: "previous-operation",
+              },
+            ],
+            sync: { revision: "same-revision" },
+          },
+        },
+      },
+    };
+
+    expect(completedOperationIdentity(previous)).not.toBe(
+      requestedOperationIdentity(requested),
+    );
+    expect(requestedOperationId(requested)).toBe("current-operation");
+    expect(completedOperationId(previous)).toBe("previous-operation");
+  });
+
   test("returns null before an Application has an operation state", () => {
     expect(completedOperationIdentity({ status: {} })).toBeNull();
   });
@@ -130,6 +166,12 @@ describe("Argo operation identity", () => {
     );
   });
 
+  test("fails when a requested operation omits its CI operation ID", () => {
+    expect(() => requestedOperationId({ operation: {} })).toThrow(
+      "missing the CI operation ID",
+    );
+  });
+
   test("fails when an operation has duplicate CI request IDs", () => {
     expect(() =>
       requestedOperationRequestId({
@@ -141,5 +183,18 @@ describe("Argo operation identity", () => {
         },
       }),
     ).toThrow("multiple CI request IDs");
+  });
+
+  test("fails when an operation has duplicate CI operation IDs", () => {
+    expect(() =>
+      requestedOperationId({
+        operation: {
+          info: [
+            { name: "ci.sjer.red/operation-id", value: "one" },
+            { name: "ci.sjer.red/operation-id", value: "two" },
+          ],
+        },
+      }),
+    ).toThrow("multiple CI operation IDs");
   });
 });

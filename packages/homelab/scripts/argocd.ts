@@ -44,10 +44,14 @@ import {
   REPOSITORY_CHART_URLS,
 } from "../src/cdk8s/src/application-release-policy.ts";
 import {
+  activeOperationId,
   activeOperationRequestId,
   batchManifestOverrides,
+  completedOperationId,
   completedOperationRequestId,
+  requestedOperationId,
   requestedOperationRequestId,
+  SYNC_OPERATION_ID_INFO_NAME,
   SYNC_REQUEST_ID_INFO_NAME,
   type SyncOperationResource,
 } from "./argocd-manifest-overrides.ts";
@@ -66,6 +70,8 @@ const CHARTMUSEUM_RETRY_BASE_DELAY_MS = 100;
 
 const BuildRevisionSchema = z.string().regex(/^2\.0\.0-\d+$/);
 const SyncRequestIdSchema = z.uuid();
+const SyncOperationIdSchema = z.uuid();
+const OperationStartedAtSchema = z.iso.datetime({ offset: true }).optional();
 const PollIntervalSchema = z.coerce.number().int().positive();
 
 const ExpectedApplicationsSchema = z.array(
@@ -496,6 +502,7 @@ async function sync(
   const requestId = SyncRequestIdSchema.parse(
     options.requestId ?? crypto.randomUUID(),
   );
+  let operationId: string = crypto.randomUUID();
   const retryable =
     options.requestId !== undefined || options.terminateAfterApplied === true;
   let baseline: OperationObservation | undefined;
@@ -511,10 +518,12 @@ async function sync(
           `Refusing to replace active ${appName} operation ${liveOperationDescription(baseline)}; expected request ${requestId}`,
         );
       }
+      operationId = requireLiveOperationId(baseline, appName);
       const completedOperationMatches = operationMatches(
         baseline,
         requestId,
         options.revision,
+        operationId,
       );
       if (completedOperationMatches && baseline.phase === "Terminating") {
         if (
@@ -527,6 +536,8 @@ async function sync(
             token,
             requestId,
             options.revision,
+            operationId,
+            baseline.startedAt,
             timeoutSeconds,
           );
           console.log(`sync operation already finalized: ${appName}`);
@@ -551,7 +562,10 @@ async function sync(
       },
       body: JSON.stringify({
         prune: options.prune,
-        infos: [{ name: SYNC_REQUEST_ID_INFO_NAME, value: requestId }],
+        infos: [
+          { name: SYNC_REQUEST_ID_INFO_NAME, value: requestId },
+          { name: SYNC_OPERATION_ID_INFO_NAME, value: operationId },
+        ],
         ...(options.revision === undefined
           ? {}
           : { revision: options.revision }),
@@ -569,10 +583,17 @@ async function sync(
         `Sync failed: HTTP ${res.status.toString()} ${res.statusText}\n${body}`,
       );
     }
-    const responseRequestId = requestedOperationRequestId(await res.json());
+    const responseBody: unknown = await res.json();
+    const responseRequestId = requestedOperationRequestId(responseBody);
     if (responseRequestId !== requestId) {
       throw new Error(
         `Argo sync response returned request ${responseRequestId}; expected ${requestId}`,
+      );
+    }
+    const responseOperationId = requestedOperationId(responseBody);
+    if (responseOperationId !== operationId) {
+      throw new Error(
+        `Argo sync response returned operation ${responseOperationId}; expected ${operationId}`,
       );
     }
     console.log(`sync operation started: ${appName}`);
@@ -584,10 +605,9 @@ async function sync(
     appName,
     token,
     requestId,
+    operationId,
     revision: options.revision,
     timeoutSeconds,
-    baseline,
-    exactOperationSeen: false,
     terminateAfterApplied: options.terminateAfterApplied === true,
   });
 }
@@ -607,8 +627,10 @@ function operationRevision(
 
 type OperationObservation = {
   readonly hasLiveOperation: boolean;
+  readonly liveOperationId: string | null;
   readonly liveRequestId: string | null;
   readonly liveRevision: string | undefined;
+  readonly operationId: string | null;
   readonly phase: string;
   readonly requestId: string | null;
   readonly revision: string | undefined;
@@ -625,9 +647,10 @@ function observeOperation(app: Record<string, unknown>): OperationObservation {
     ? app["operation"]
     : undefined;
   const phase = state["phase"];
-  const startedAt = state["startedAt"];
   return {
     hasLiveOperation: liveOperation !== undefined,
+    liveOperationId:
+      liveOperation === undefined ? null : activeOperationId(app),
     liveRequestId:
       liveOperation === undefined ? null : activeOperationRequestId(app),
     liveRevision:
@@ -635,12 +658,13 @@ function observeOperation(app: Record<string, unknown>): OperationObservation {
         ? undefined
         : operationRevision(liveOperation),
     phase: typeof phase === "string" ? phase : "",
+    operationId: completedOperationId(app),
     requestId: completedOperationRequestId(app),
     revision:
       completedOperation === undefined
         ? undefined
         : operationRevision(completedOperation),
-    startedAt: typeof startedAt === "string" ? startedAt : undefined,
+    startedAt: OperationStartedAtSchema.parse(state["startedAt"]),
     state,
   };
 }
@@ -649,11 +673,13 @@ function liveOperationMatches(
   operation: OperationObservation,
   requestId: string,
   revision: string | undefined,
+  operationId?: string,
 ): boolean {
   return (
     operation.hasLiveOperation &&
     operation.liveRequestId === requestId &&
-    (revision === undefined || operation.liveRevision === revision)
+    (revision === undefined || operation.liveRevision === revision) &&
+    (operationId === undefined || operation.liveOperationId === operationId)
   );
 }
 
@@ -661,10 +687,12 @@ function operationMatches(
   operation: OperationObservation,
   requestId: string,
   revision: string | undefined,
+  operationId?: string,
 ): boolean {
   return (
     operation.requestId === requestId &&
-    (revision === undefined || operation.revision === revision)
+    (revision === undefined || operation.revision === revision) &&
+    (operationId === undefined || operation.operationId === operationId)
   );
 }
 
@@ -703,27 +731,33 @@ function assertMatchingLiveRevision(
 }
 
 function operationDescription(operation: OperationObservation): string {
-  return `${operation.requestId ?? "without a request ID"} at ${operation.revision ?? "unknown revision"}`;
+  return `${operation.requestId ?? "without a request ID"} at ${operation.revision ?? "unknown revision"} (${operation.operationId ?? "without an operation ID"})`;
 }
 
 function liveOperationDescription(operation: OperationObservation): string {
-  return `${operation.liveRequestId ?? "without a request ID"} at ${operation.liveRevision ?? "unknown revision"}`;
+  return `${operation.liveRequestId ?? "without a request ID"} at ${operation.liveRevision ?? "unknown revision"} (${operation.liveOperationId ?? "without an operation ID"})`;
 }
 
-function isActiveOperation(phase: string): boolean {
-  return phase === "Running" || phase === "Terminating";
+function requireLiveOperationId(
+  operation: OperationObservation,
+  appName: string,
+): string {
+  if (operation.liveOperationId === null) {
+    throw new Error(
+      `Refusing active ${appName} operation without a CI operation ID`,
+    );
+  }
+  return SyncOperationIdSchema.parse(operation.liveOperationId);
 }
 
-function operationChanged(
-  before: OperationObservation,
-  current: OperationObservation,
+function operationStartedAfter(
+  operation: OperationObservation,
+  startedAt: string | undefined,
 ): boolean {
   return (
-    before.requestId !== current.requestId ||
-    before.revision !== current.revision ||
-    before.startedAt !== current.startedAt ||
-    before.phase !== current.phase ||
-    JSON.stringify(before.state) !== JSON.stringify(current.state)
+    operation.startedAt !== undefined &&
+    startedAt !== undefined &&
+    Date.parse(operation.startedAt) > Date.parse(startedAt)
   );
 }
 
@@ -781,8 +815,7 @@ function syncResultApplied(
 
 type WaitForIdentifiedOperationOptions = {
   readonly appName: string;
-  readonly baseline: OperationObservation | undefined;
-  readonly exactOperationSeen: boolean;
+  readonly operationId: string;
   readonly requestId: string;
   readonly revision: string | undefined;
   readonly terminateAfterApplied: boolean;
@@ -792,8 +825,7 @@ type WaitForIdentifiedOperationOptions = {
 
 async function waitForIdentifiedOperation({
   appName,
-  baseline,
-  exactOperationSeen: initiallySeen,
+  operationId,
   requestId,
   revision,
   terminateAfterApplied,
@@ -801,27 +833,29 @@ async function waitForIdentifiedOperation({
   token,
 }: WaitForIdentifiedOperationOptions): Promise<void> {
   const deadline = Date.now() + timeoutSeconds * 1000;
-  let exactOperationSeen = initiallySeen;
+  let exactOperationSeen = false;
   while (Date.now() < deadline) {
     const current = observeOperation(await getApplication(appName, token));
     assertMatchingRevision(current, requestId, revision, appName);
     assertMatchingLiveRevision(current, requestId, revision, appName);
-    const isExpected = operationMatches(current, requestId, revision);
+    const isExpected = operationMatches(
+      current,
+      requestId,
+      revision,
+      operationId,
+    );
     const isExpectedLiveOperation = liveOperationMatches(
       current,
       requestId,
       revision,
+      operationId,
     );
     if (current.hasLiveOperation && !isExpectedLiveOperation) {
       throw new Error(
         `Active ${appName} operation changed to ${liveOperationDescription(current)} while waiting for request ${requestId}`,
       );
     }
-    if (
-      !exactOperationSeen &&
-      isExpected &&
-      (baseline === undefined || operationChanged(baseline, current))
-    ) {
+    if (!exactOperationSeen && isExpected) {
       exactOperationSeen = true;
     }
     const elapsed = Math.floor(
@@ -859,6 +893,8 @@ async function waitForIdentifiedOperation({
           token,
           requestId,
           revision,
+          operationId,
+          current.startedAt,
           timeoutSeconds,
         );
         return;
@@ -876,6 +912,8 @@ async function waitForOperationTermination(
   token: string,
   requestId: string,
   revision: string,
+  operationId: string,
+  startedAt: string | undefined,
   timeoutSeconds: number,
 ): Promise<void> {
   const deadline = Date.now() + timeoutSeconds * 1000;
@@ -883,30 +921,29 @@ async function waitForOperationTermination(
     const current = observeOperation(await getApplication(appName, token));
     assertMatchingRevision(current, requestId, revision, appName);
     assertMatchingLiveRevision(current, requestId, revision, appName);
-    const isExpected = operationMatches(current, requestId, revision);
+    const isExpected = operationMatches(
+      current,
+      requestId,
+      revision,
+      operationId,
+    );
     const isExpectedLiveOperation = liveOperationMatches(
       current,
       requestId,
       revision,
+      operationId,
     );
     if (current.hasLiveOperation && !isExpectedLiveOperation) {
       throw new Error(
         `${appName} operation changed to ${liveOperationDescription(current)} after terminating request ${requestId}`,
       );
     }
-    const hasOperationState =
-      current.phase !== "" ||
-      current.requestId !== null ||
-      current.revision !== undefined;
-    if (!isExpected && hasOperationState) {
-      throw new Error(
-        `${appName} operation changed to ${operationDescription(current)} after terminating request ${requestId}`,
-      );
-    }
-    if (
-      !current.hasLiveOperation &&
-      (!isExpected || !isActiveOperation(current.phase))
-    ) {
+    if (!current.hasLiveOperation) {
+      if (!isExpected && operationStartedAfter(current, startedAt)) {
+        throw new Error(
+          `${appName} operation changed to ${operationDescription(current)} after terminating request ${requestId}`,
+        );
+      }
       return;
     }
     await sleepUntilNextOperationPoll(deadline);
@@ -921,6 +958,8 @@ async function terminateAppliedOperation(
   token: string,
   requestId: string,
   revision: string,
+  operationId: string,
+  startedAt: string | undefined,
   timeoutSeconds: number,
 ): Promise<void> {
   const url = new URL(
@@ -946,6 +985,8 @@ async function terminateAppliedOperation(
     token,
     requestId,
     revision,
+    operationId,
+    startedAt,
     timeoutSeconds,
   );
 }
@@ -986,19 +1027,23 @@ async function finalizeAsyncSync(
     const current = observeOperation(await getApplication(appName, token));
     assertMatchingRevision(current, exactRequestId, exactRevision, appName);
     assertMatchingLiveRevision(current, exactRequestId, exactRevision, appName);
-    const isExpected = operationMatches(current, exactRequestId, exactRevision);
-    const isExpectedLiveOperation = liveOperationMatches(
+    const isExpectedLogicalOperation = operationMatches(
       current,
       exactRequestId,
       exactRevision,
     );
-    if (current.hasLiveOperation && !isExpectedLiveOperation) {
+    const isExpectedLogicalLiveOperation = liveOperationMatches(
+      current,
+      exactRequestId,
+      exactRevision,
+    );
+    if (current.hasLiveOperation && !isExpectedLogicalLiveOperation) {
       throw new Error(
         `Refusing to terminate active ${appName} operation ${liveOperationDescription(current)}; expected request ${exactRequestId} at ${exactRevision}`,
       );
     }
     if (
-      isExpected &&
+      isExpectedLogicalOperation &&
       !current.hasLiveOperation &&
       (current.phase === "Failed" || current.phase === "Error")
     ) {
@@ -1008,19 +1053,29 @@ async function finalizeAsyncSync(
       );
     }
     if (
-      isExpected &&
+      isExpectedLogicalOperation &&
       !current.hasLiveOperation &&
       current.phase === "Succeeded"
     ) {
       console.log(`async sync operation already finalized: ${appName}`);
       return;
     }
+    const liveOperationId = current.hasLiveOperation
+      ? requireLiveOperationId(current, appName)
+      : undefined;
+    const isExpectedOperation =
+      liveOperationId !== undefined &&
+      operationMatches(current, exactRequestId, exactRevision, liveOperationId);
     console.log(
-      `Operation: ${current.phase || "(pending)"}${isExpected ? "" : " [previous op]"}; ` +
-        `applied=${isExpected && syncResultApplied(current.state, exactRevision) ? "true" : "false"} ` +
+      `Operation: ${current.phase || "(pending)"}${isExpectedOperation ? "" : " [previous op]"}; ` +
+        `applied=${isExpectedOperation && syncResultApplied(current.state, exactRevision) ? "true" : "false"} ` +
         `(${elapsed.toString()}/${timeoutSeconds.toString()}s)`,
     );
-    if (isExpected && current.phase === "Terminating") {
+    if (
+      liveOperationId !== undefined &&
+      isExpectedOperation &&
+      current.phase === "Terminating"
+    ) {
       if (!syncResultApplied(current.state, exactRevision)) {
         throw new Error(
           `Matching ${appName} operation entered Terminating before its result was fully applied`,
@@ -1031,13 +1086,15 @@ async function finalizeAsyncSync(
         token,
         exactRequestId,
         exactRevision,
+        liveOperationId,
+        current.startedAt,
         timeoutSeconds,
       );
       return;
     }
     if (
-      isExpected &&
-      isExpectedLiveOperation &&
+      liveOperationId !== undefined &&
+      isExpectedOperation &&
       current.phase === "Running" &&
       syncResultApplied(current.state, exactRevision)
     ) {
@@ -1046,6 +1103,8 @@ async function finalizeAsyncSync(
         token,
         exactRequestId,
         exactRevision,
+        liveOperationId,
+        current.startedAt,
         timeoutSeconds,
       );
       return;

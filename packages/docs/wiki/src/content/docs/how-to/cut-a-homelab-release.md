@@ -77,7 +77,9 @@ result, terminates the aggregate health wait, and waits for termination.
 
 Buildkite retries reuse the build UUID. The command adopts the operation only
 when both UUID and revision match. An unrelated active operation remains a hard
-failure.
+failure. Each POST also receives an internal operation UUID; adoption requires
+the live operation and its status to share that UUID before a stable applied
+result can be finalized.
 
 A release blocked here means the current operation must be inspected before
 retrying. If it is a fully applied operation from an interrupted older client,
@@ -90,8 +92,10 @@ bun packages/homelab/scripts/argocd.ts finalize-async-sync apps \
   --timeout 300
 ```
 
-The recovery command polls for that exact operation. Missing state, a different
-identity, an apply failure, or an incomplete result fails without termination.
+The recovery command polls for that exact operation and discovers its internal
+operation UUID from the live state. It terminates only when the completed status
+has the same UUID. Missing state, a different identity, an apply failure, or an
+incomplete result fails without termination.
 
 ## Where it lives
 

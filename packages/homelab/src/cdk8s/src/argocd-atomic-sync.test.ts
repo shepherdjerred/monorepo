@@ -4,6 +4,8 @@ import { z } from "zod";
 
 const CURRENT_REQUEST_ID = "11111111-1111-4111-8111-111111111111";
 const OTHER_REQUEST_ID = "22222222-2222-4222-8222-222222222222";
+const CURRENT_OPERATION_ID = "33333333-3333-4333-8333-333333333333";
+const OTHER_OPERATION_ID = "44444444-4444-4444-8444-444444444444";
 const REVISION = "2.0.0-42";
 
 const RootSyncRequestSchema = z.object({
@@ -43,12 +45,20 @@ function operationResponse(request: unknown): unknown {
   };
 }
 
-function identifiedOperation(requestId: string, revision = REVISION): unknown {
+function identifiedOperation(
+  requestId: string,
+  revision = REVISION,
+  operationId = CURRENT_OPERATION_ID,
+): unknown {
   return {
     info: [
       {
         name: "ci.sjer.red/request-id",
         value: requestId,
+      },
+      {
+        name: "ci.sjer.red/operation-id",
+        value: operationId,
       },
     ],
     sync: { revision },
@@ -57,7 +67,9 @@ function identifiedOperation(requestId: string, revision = REVISION): unknown {
 
 function applicationOperation(options: {
   readonly live?: boolean;
+  readonly liveOperationId?: string;
   readonly message?: string;
+  readonly operationId?: string;
   readonly phase: string;
   readonly requestId: string;
   readonly resources?: readonly OperationResource[];
@@ -65,16 +77,25 @@ function applicationOperation(options: {
   readonly startedAt?: string;
 }): unknown {
   const revision = options.revision ?? REVISION;
-  const operation = identifiedOperation(options.requestId, revision);
+  const completedOperation = identifiedOperation(
+    options.requestId,
+    revision,
+    options.operationId,
+  );
+  const liveOperation = identifiedOperation(
+    options.requestId,
+    revision,
+    options.liveOperationId ?? options.operationId,
+  );
   const live =
     options.live ??
     (options.phase === "Running" || options.phase === "Terminating");
   return {
-    ...(live ? { operation } : {}),
+    ...(live ? { operation: liveOperation } : {}),
     status: {
       operationState: {
         phase: options.phase,
-        operation,
+        operation: completedOperation,
         syncResult: {
           revision,
           resources: options.resources ?? [],
@@ -96,6 +117,37 @@ function fixtureAt(fixtures: readonly unknown[], index: number): unknown {
   return fixture;
 }
 
+function withPostedOperationId(
+  fixture: unknown,
+  postedOperationId: string | undefined,
+): unknown {
+  if (postedOperationId === undefined) {
+    return fixture;
+  }
+  const serialized = JSON.stringify(fixture);
+  if (serialized === undefined) {
+    throw new Error("Lifecycle fixture must be JSON serializable");
+  }
+  return JSON.parse(
+    serialized.replaceAll(CURRENT_OPERATION_ID, postedOperationId),
+  );
+}
+
+function requestOperationId(request: unknown): string {
+  const syncRequest = RootSyncRequestSchema.parse(request);
+  const matches = syncRequest.infos.filter(
+    ({ name }) => name === "ci.sjer.red/operation-id",
+  );
+  if (matches.length !== 1) {
+    throw new Error("Sync request must contain one operation ID");
+  }
+  const operationId = matches[0]?.value;
+  if (operationId === undefined) {
+    throw new Error("Sync request operation ID is missing");
+  }
+  return operationId;
+}
+
 function serveLifecycle(
   beforeDelete: readonly unknown[],
   afterDelete: readonly unknown[] = [{ status: {} }],
@@ -106,6 +158,7 @@ function serveLifecycle(
     statusGets: 0,
     syncPosts: 0,
   };
+  let postedOperationId: string | undefined;
   let terminated = false;
   const server = Bun.serve({
     hostname: "127.0.0.1",
@@ -117,7 +170,9 @@ function serveLifecycle(
         url.pathname === "/api/v1/applications/apps/sync"
       ) {
         observations.syncPosts += 1;
-        return Response.json(operationResponse(await request.json()));
+        const body: unknown = await request.json();
+        postedOperationId = requestOperationId(body);
+        return Response.json(operationResponse(body));
       }
       if (
         request.method === "DELETE" &&
@@ -134,11 +189,13 @@ function serveLifecycle(
         if (terminated) {
           const fixture = fixtureAt(afterDelete, observations.postDeleteGets);
           observations.postDeleteGets += 1;
-          return Response.json(fixture);
+          return Response.json(
+            withPostedOperationId(fixture, postedOperationId),
+          );
         }
         const fixture = fixtureAt(beforeDelete, observations.statusGets);
         observations.statusGets += 1;
-        return Response.json(fixture);
+        return Response.json(withPostedOperationId(fixture, postedOperationId));
       }
       return new Response("not found", { status: 404 });
     },
@@ -213,6 +270,7 @@ test("atomic Argo sync ignores stale status, applies the live result, and waits 
     { status: "Pruned" },
   ];
   const stale = applicationOperation({
+    operationId: OTHER_OPERATION_ID,
     phase: "Succeeded",
     requestId: CURRENT_REQUEST_ID,
     resources: [{ status: "Synced" }],
@@ -278,6 +336,8 @@ test("atomic Argo sync adopts the exact active operation without another POST", 
 test("atomic Argo sync waits past matching stale status when adopting a retry", async () => {
   const stale = applicationOperation({
     live: true,
+    liveOperationId: CURRENT_OPERATION_ID,
+    operationId: OTHER_OPERATION_ID,
     phase: "Succeeded",
     requestId: CURRENT_REQUEST_ID,
     resources: [{ status: "Synced" }],
@@ -297,6 +357,28 @@ test("atomic Argo sync waits past matching stale status when adopting a retry", 
     expect(result.exitCode).toBe(0);
     expect(result.stdout).toContain("adopted active sync operation: apps");
     expect(result.stdout).not.toContain("synced: apps");
+    expect(lifecycle.observations.syncPosts).toBe(0);
+    expect(lifecycle.observations.deleteRequests).toBe(1);
+  } finally {
+    await lifecycle.server.stop(true);
+  }
+});
+
+test("atomic Argo sync finalizes a stable applied operation when adopting a retry", async () => {
+  const lifecycle = serveLifecycle([
+    applicationOperation({
+      phase: "Running",
+      requestId: CURRENT_REQUEST_ID,
+      resources: [{ status: "Synced", hookPhase: "Running" }],
+    }),
+  ]);
+
+  try {
+    const result = await runArgocd(atomicArgs(), lifecycle.server.url.origin);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain("adopted active sync operation: apps");
+    expect(result.stdout).toContain("terminated applied sync operation: apps");
     expect(lifecycle.observations.syncPosts).toBe(0);
     expect(lifecycle.observations.deleteRequests).toBe(1);
   } finally {
@@ -452,6 +534,39 @@ test("atomic Argo sync times out when its operation never becomes visible", asyn
   }
 });
 
+test("atomic Argo sync accepts termination when live state clears before status", async () => {
+  const lifecycle = serveLifecycle(
+    [
+      { status: {} },
+      applicationOperation({
+        phase: "Running",
+        requestId: CURRENT_REQUEST_ID,
+        resources: [{ status: "Synced" }],
+        startedAt: "2026-08-10T01:00:01Z",
+      }),
+    ],
+    [
+      applicationOperation({
+        live: false,
+        phase: "Running",
+        requestId: CURRENT_REQUEST_ID,
+        resources: [{ status: "Synced" }],
+      }),
+    ],
+  );
+
+  try {
+    const result = await runArgocd(atomicArgs(), lifecycle.server.url.origin);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stderr).toBe("");
+    expect(lifecycle.observations.deleteRequests).toBe(1);
+    expect(lifecycle.observations.postDeleteGets).toBe(1);
+  } finally {
+    await lifecycle.server.stop(true);
+  }
+});
+
 test("atomic Argo sync fails if another operation starts after DELETE", async () => {
   const lifecycle = serveLifecycle(
     [
@@ -498,6 +613,39 @@ test("atomic Argo sync fails if a completed unrelated operation replaces it afte
       applicationOperation({
         phase: "Succeeded",
         requestId: OTHER_REQUEST_ID,
+        resources: [{ status: "Synced" }],
+        startedAt: "2026-08-10T01:00:02Z",
+      }),
+    ],
+  );
+
+  try {
+    const result = await runArgocd(atomicArgs(), lifecycle.server.url.origin);
+
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr).toContain("after terminating request");
+  } finally {
+    await lifecycle.server.stop(true);
+  }
+});
+
+test("atomic Argo sync fails if another attempt with the same request replaces it after DELETE", async () => {
+  const lifecycle = serveLifecycle(
+    [
+      { status: {} },
+      applicationOperation({
+        phase: "Running",
+        requestId: CURRENT_REQUEST_ID,
+        resources: [{ status: "Synced" }],
+        startedAt: "2026-08-10T01:00:01Z",
+      }),
+    ],
+    [
+      applicationOperation({
+        live: false,
+        operationId: OTHER_OPERATION_ID,
+        phase: "Succeeded",
+        requestId: CURRENT_REQUEST_ID,
         resources: [{ status: "Synced" }],
         startedAt: "2026-08-10T01:00:02Z",
       }),
@@ -583,6 +731,35 @@ test("Argo recovery refuses an unrelated live operation behind matching stale st
       `expected request ${CURRENT_REQUEST_ID} at ${REVISION}`,
     );
     expect(lifecycle.observations.deleteRequests).toBe(0);
+  } finally {
+    await lifecycle.server.stop(true);
+  }
+});
+
+test("Argo recovery waits past a stale attempt with the same request", async () => {
+  const lifecycle = serveLifecycle([
+    applicationOperation({
+      live: true,
+      liveOperationId: CURRENT_OPERATION_ID,
+      operationId: OTHER_OPERATION_ID,
+      phase: "Running",
+      requestId: CURRENT_REQUEST_ID,
+      resources: [{ status: "Synced" }],
+    }),
+    applicationOperation({
+      phase: "Running",
+      requestId: CURRENT_REQUEST_ID,
+      resources: [{ status: "Synced" }],
+    }),
+  ]);
+
+  try {
+    const result = await runArgocd(recoveryArgs(), lifecycle.server.url.origin);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stderr).toBe("");
+    expect(lifecycle.observations.deleteRequests).toBe(1);
+    expect(lifecycle.observations.statusGets).toBeGreaterThanOrEqual(2);
   } finally {
     await lifecycle.server.stop(true);
   }

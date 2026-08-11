@@ -96,8 +96,17 @@ Keeping submission and finalization together lets the command poll through that
 gap and distinguish stale state from its own operation.
 
 Buildkite retries reuse the build UUID. A retry adopts only the same request ID
-and revision; it refuses any unrelated active operation. The standalone
-finalizer remains a recovery tool, not part of the normal release path.
+and revision; it refuses any unrelated active operation. A generated
+per-operation UUID then binds the top-level live operation to its completed
+status. This lets a retry accept a stable, fully applied result while rejecting
+stale status from an earlier POST that used the same Buildkite identity. The
+standalone finalizer remains a recovery tool, not part of the normal release
+path.
+
+After termination, the top-level live operation is authoritative. Its absence
+means the health wait is gone even if `status.operationState` still says
+`Running` or `Terminating`; a different operation UUID in live or completed
+state still proves replacement and fails the release.
 
 Without this atomic boundary, a root operation stuck in `Running` blocks the
 next ordered release indefinitely. Treating missing operation state as success
