@@ -1,57 +1,83 @@
-import { z } from "zod";
-
-// Image publishing runs with the root-scripts dependency closure, not the
-// cdk8s workspace closure. Validate the catalog projection needed by the
-// publisher here so the isolated linker cannot hide a cross-workspace import.
-const ImagePinCatalogEntrySchema = z
-  .object({
-    name: z.string().min(1),
-    value: z.string().min(1),
-    category: z.enum(["upstream", "internal-image"]),
-    artifactType: z.enum(["image", "helm-chart", "package", "source"]),
-    management: z.object({ managed: z.boolean() }).loose(),
-  })
-  .loose();
-
-const ImagePinCatalogSchema = z
-  .object({
-    $schema: z.string().min(1),
-    schemaVersion: z.literal(1),
-    entries: z.array(ImagePinCatalogEntrySchema).min(1),
-  })
-  .loose()
-  .superRefine((catalog, context) => {
-    const names = new Set(catalog.entries.map((entry) => entry.name));
-    if (names.size !== catalog.entries.length) {
-      context.addIssue({
-        code: "custom",
-        path: ["entries"],
-        message: "version catalog names must be unique",
-      });
-    }
-  });
+import { asRecord } from "./json.ts";
 
 type ManagedImagePin = {
   readonly key: string;
   readonly digest: string;
 };
 
-function parseImagePinCatalog(source: string) {
+type CatalogImageEntry = {
+  readonly name: string;
+  readonly value: string;
+  readonly category: string;
+  readonly artifactType: string;
+};
+
+function requiredString(
+  entry: Record<string, unknown> | null,
+  field: string,
+  index: number,
+): string {
+  const value = entry?.[field];
+  if (typeof value !== "string") {
+    throw new TypeError(
+      `version catalog entry ${String(index)} has a non-string ${field}`,
+    );
+  }
+  return value;
+}
+
+/**
+ * The bake lanes run `bun --no-install .buildkite/scripts/bake-images.ts` in a
+ * pod that never installs the workspace, so this reader must stay on platform
+ * primitives. A Zod-backed schema here makes every bake pod fail at module load
+ * with "Cannot find package 'zod'" — moving the module between workspaces does
+ * not help, because the lane has no `node_modules` at all. The installed lanes
+ * keep their fully validated catalog read in `version-catalog.ts`.
+ */
+function readCatalogImageEntries(
+  versionCatalogSource: string,
+): readonly CatalogImageEntry[] {
   let raw: unknown;
   try {
-    raw = JSON.parse(source);
+    raw = JSON.parse(versionCatalogSource);
   } catch (error) {
     throw new Error("version catalog is not valid JSON", { cause: error });
   }
-  return ImagePinCatalogSchema.parse(raw);
+  const entries = asRecord(raw)?.["entries"];
+  if (!Array.isArray(entries)) {
+    throw new TypeError("version catalog has no entries array");
+  }
+  return entries.map((candidate: unknown, index) => {
+    const entry = asRecord(candidate);
+    return {
+      name: requiredString(entry, "name", index),
+      value: requiredString(entry, "value", index),
+      category: requiredString(entry, "category", index),
+      artifactType: requiredString(entry, "artifactType", index),
+    };
+  });
+}
+
+function entriesByName(
+  versionCatalogSource: string,
+): ReadonlyMap<string, CatalogImageEntry> {
+  const byName = new Map<string, CatalogImageEntry>();
+  for (const entry of readCatalogImageEntries(versionCatalogSource)) {
+    if (byName.has(entry.name)) {
+      throw new Error(
+        `version catalog names must be unique; ${entry.name} is duplicated`,
+      );
+    }
+    byName.set(entry.name, entry);
+  }
+  return byName;
 }
 
 export function findManagedImagePin(
   versionCatalogSource: string,
   imageName: string,
 ): ManagedImagePin | undefined {
-  const catalog = parseImagePinCatalog(versionCatalogSource);
-  const entries = new Map(catalog.entries.map((entry) => [entry.name, entry]));
+  const entries = entriesByName(versionCatalogSource);
   for (const key of [
     `shepherdjerred/${imageName}`,
     `shepherdjerred/${imageName}/beta`,

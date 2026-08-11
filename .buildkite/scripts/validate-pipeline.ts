@@ -15,6 +15,7 @@
  */
 
 import {
+  assertInstallFreeEntrypointsHaveNoBareImports,
   assertNoImplicitBunRuntime,
   assertNoNestedBunRuntime,
   assertPackageTokens,
@@ -403,6 +404,8 @@ await validateReleasePipelineContracts({
 });
 
 assertUnfilteredInstallBelongsToVerify(lines, stepStarts);
+
+await assertInstallFreeEntrypointsHaveNoBareImports(stepBlocks);
 
 // Bun auto-installs dependencies when a checkout has no node_modules. Every
 // Buildkite step starts from a fresh pod, so an otherwise dependency-free

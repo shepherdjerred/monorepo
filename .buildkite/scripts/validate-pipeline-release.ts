@@ -237,9 +237,7 @@ function validateReleaseSteps({
   }
 }
 
-async function validatePublishing(
-  stepBlocks: ReadonlyMap<string, string>,
-): Promise<void> {
+function validatePublishing(stepBlocks: ReadonlyMap<string, string>): void {
   const publish = stepBlocks.get("publish");
   if (
     publish === undefined ||
@@ -267,11 +265,6 @@ async function validatePublishing(
     ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production",
     "version commit-back is missing its Zod-owning filtered install",
   );
-
-  const jsonHelpers = await Bun.file("scripts/lib/json.ts").text();
-  if (jsonHelpers.includes('from "zod"')) {
-    fail("tiny JSON helpers restored a hidden install dependency");
-  }
 }
 
 async function validateSelectorAndUpload({
@@ -415,8 +408,8 @@ export async function validateReleasePipelineContracts(
   options: ReleaseValidationOptions,
 ): Promise<void> {
   validateReleaseSteps(options);
+  validatePublishing(options.stepBlocks);
   await Promise.all([
-    validatePublishing(options.stepBlocks),
     validateSelectorAndUpload(options),
     validatePlaywrightImage(),
   ]);
