@@ -28,14 +28,14 @@ One line per package. Each package's own README has the details; `AGENTS.md` fil
 
 ## TaskNotes
 
-| Package                                   | Description                                                   |
-| ----------------------------------------- | ------------------------------------------------------------- |
-| [tasknotes-core](tasknotes-core/)         | Shared Rust core (domain, sync, recurrence) + UniFFI bindings |
-| [tasknotes-macos](tasknotes-macos/)       | Native macOS TaskNotes app (SwiftUI over the Rust core)       |
-| [tasknotes-server](tasknotes-server/)     | TaskNotes sync server (Bun + Hono)                            |
-| [tasknotes-types](tasknotes-types/)       | Shared TypeScript/Zod schemas for TaskNotes                   |
-| [tasknotes-fixtures](tasknotes-fixtures/) | Language-neutral JSON oracles shared by the TS and Rust cores |
-| [tasks-for-obsidian](tasks-for-obsidian/) | React Native task app synchronized with an Obsidian vault     |
+| Package                                   | Description                                                    |
+| ----------------------------------------- | -------------------------------------------------------------- |
+| [tasknotes-core](tasknotes-core/)         | Shared Rust core (domain, sync, recurrence) + UniFFI bindings  |
+| [tasknotes-macos](tasknotes-macos/)       | Facet for macOS — native SwiftUI app over the Rust core        |
+| [tasknotes-server](tasknotes-server/)     | TaskNotes sync server (Bun + Hono)                             |
+| [tasknotes-types](tasknotes-types/)       | Shared TypeScript/Zod schemas for TaskNotes                    |
+| [tasknotes-fixtures](tasknotes-fixtures/) | Language-neutral JSON oracles shared by the TS and Rust cores  |
+| [tasks-for-obsidian](tasks-for-obsidian/) | Facet for iOS — React Native app synced with an Obsidian vault |
 
 ## Websites
 

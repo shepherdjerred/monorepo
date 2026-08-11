@@ -1,8 +1,10 @@
-# Tasks for Obsidian
+# tasks-for-obsidian
 
-React Native (bare workflow, no Expo) iOS app for tasks synced with the
-TaskNotes Obsidian plugin via its HTTP API — the mobile client to
-[`tasknotes-server`](../tasknotes-server). Shipped through TestFlight.
+**Facet**, the iOS app: React Native (bare workflow, no Expo), for tasks synced
+with the TaskNotes Obsidian plugin via its HTTP API — the mobile client to
+[`tasknotes-server`](../tasknotes-server). Shipped through TestFlight as Facet;
+`tasks-for-obsidian` stays the internal package name, and TaskNotes remains the
+server/API terminology.
 
 Features: quick capture, task detail, saved views, kanban board, bulk task
 organization, and offline cues backed by a sync queue. Uses Metro, Hermes, and

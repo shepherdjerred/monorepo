@@ -1,6 +1,6 @@
 # tasknotes-macos
 
-The native macOS TaskNotes client: a SwiftUI app over the shared Rust core in
+**Facet** for macOS: a native SwiftUI client over the shared Rust core in
 [`packages/tasknotes-core`](../tasknotes-core). Bundle identifier
 `red.sjer.tasknotes.mac`, deployment target macOS 15.
 
