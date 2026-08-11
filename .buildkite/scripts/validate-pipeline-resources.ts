@@ -8,6 +8,23 @@ import {
   SHARED_POD_ANCHORS,
 } from "./validate-pipeline-lib.ts";
 
+const EXHAUSTIVE_GRAPH_CAPACITY = [
+  "--concurrency=4",
+  '{ cpu: "1", memory: "18Gi", ephemeral-storage: "2Gi" }',
+  '{ cpu: "7", memory: "24Gi", ephemeral-storage: "40Gi" }',
+] as const;
+
+export function validateExhaustiveGraphCapacity(
+  source: string,
+  lane: string,
+): void {
+  for (const required of EXHAUSTIVE_GRAPH_CAPACITY) {
+    if (!source.includes(required)) {
+      fail(`${lane} is missing measured capacity contract ${required}`);
+    }
+  }
+}
+
 export function validatePipelineResourceContracts(
   pipeline: string,
   stepBlocks: ReadonlyMap<string, string>,
@@ -50,14 +67,10 @@ export function validatePipelineResourceContracts(
     pipeline,
     "pod_verify_kubernetes",
   );
-  for (const resourceLine of [
-    'requests: { cpu: "1", memory: "14Gi", ephemeral-storage: "2Gi" }',
-    'limits: { cpu: "7", memory: "20Gi", ephemeral-storage: "40Gi" }',
-  ]) {
-    if (!hasTrimmedLine(verifyPodAnchor, resourceLine)) {
-      fail(`verify pod is missing measured resource budget ${resourceLine}`);
-    }
-  }
+  validateExhaustiveGraphCapacity(
+    `${verifyPodAnchor}\n${stepBlocks.get("verify") ?? ""}`,
+    "verify",
+  );
 
   for (const [anchor, requestLine] of [
     [

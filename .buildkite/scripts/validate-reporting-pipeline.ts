@@ -1,6 +1,9 @@
 import { fail } from "./validate-pipeline-lib.ts";
+import { validateExhaustiveGraphCapacity } from "./validate-pipeline-resources.ts";
 
 export function validateReportingPipeline(pipeline: string): void {
+  validateExhaustiveGraphCapacity(pipeline, "complete test reporting");
+
   for (const required of [
     "turbo run test:report",
     "key: playwright-reporting",
