@@ -578,5 +578,17 @@ This README is hand-maintained; edit it directly.
   bun run src/presets/render-examples.ts   # writes assets/presets/<name>.png
   ```
 
+  The separate `bun install` is deliberate. `examples/` is intentionally **not**
+  part of the root workspace: both examples declare the package name `example`,
+  so listing them would abort the root install with
+  `Workspace name "example" already exists`. Each example instead installs on
+  its own and pulls this package in through the `postinstall` hook
+  (`scripts/copy-example-deps.ts`), which copies the files named in our
+  `package.json` `files` field — mirroring what `npm pack` ships. That is the
+  point: the examples consume the package the way a published consumer does,
+  and it avoids the recursive symlink a `file:`/`link:` dependency would create
+  for a directory nested inside the package it depends on. Do not "fix" this by
+  adding `examples/*` to the root `workspaces`.
+
 - **Publish** — `bun run publish:npm` (wraps `scripts/publish-npm.ts` at the
   repo root).

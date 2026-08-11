@@ -47,6 +47,8 @@ const result = await run({
       title: "Jake Lazaroff",
     },
   ],
+  number: 3,
+  truncate: 300,
 });
 
 console.log(result);
@@ -80,17 +82,27 @@ console.log(result);
 
 ## Configuration
 
-`webring` is configured by passing a `Configuration` object into `run`. The object is validated with Zod; everything except `sources` has a default.
+`webring` is configured by passing a `Configuration` object into `run`. The
+exported `Configuration` type is the Zod _output_ type, so the schema's
+defaults for `number` and `truncate` are already applied in the type: those two
+fields are **required** on the object you pass in, alongside `sources`. Only
+`cache` and `shuffle` may be omitted.
 
-| Key                            | Type                     | Default        | Description                                                             |
-| ------------------------------ | ------------------------ | -------------- | ----------------------------------------------------------------------- |
-| `sources`                      | `Source[]`               | required       | Feeds to fetch. Each has a `url`, a `title`, and an optional `filter`   |
-| `number`                       | `number`                 | `3`            | Return the n latest updates across all sources                          |
-| `truncate`                     | `number`                 | `300`          | Preview length in characters, applied after HTML sanitization           |
-| `cache`                        | `CacheConfiguration`     | none           | Enable caching by providing this object                                 |
-| `cache.cache_file`             | `string`                 | `"cache.json"` | File used as the cache                                                  |
-| `cache.cache_duration_minutes` | `number`                 | `60`           | How long a cached result is reused                                      |
-| `shuffle`                      | `boolean`                | `false`        | Randomize the output order                                              |
+| Key                            | Type                 | Required | Description                                                           |
+| ------------------------------ | -------------------- | -------- | --------------------------------------------------------------------- |
+| `sources`                      | `Source[]`           | yes      | Feeds to fetch. Each has a `url`, a `title`, and an optional `filter` |
+| `number`                       | `number`             | yes      | Return the n latest updates across all sources                        |
+| `truncate`                     | `number`             | yes      | Preview length in characters, applied after HTML sanitization         |
+| `cache`                        | `CacheConfiguration` | no       | Enable caching by providing this object; omit it to disable caching   |
+| `cache.cache_file`             | `string`             | no       | File used as the cache. Defaults to `"cache.json"`                    |
+| `cache.cache_duration_minutes` | `number`             | no       | How long a cached result is reused. Defaults to `60`                  |
+| `shuffle`                      | `boolean`            | no       | Randomize the output order. Omitted behaves as `false`                |
+
+The `cache.*` defaults above are the only ones `run` fills in at runtime: it
+parses the object with `CachedConfigurationSchema`, which succeeds only when
+`cache` is present. Without a `cache` key the object is used as given, so
+`number` and `truncate` must carry real values rather than relying on the
+schema.
 
 Full generated API documentation: [webring.sjer.red](https://webring.sjer.red) (e.g. [`Configuration`](https://webring.sjer.red/types/Configuration.html)).
 
