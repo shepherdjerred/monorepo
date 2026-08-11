@@ -57,7 +57,7 @@ export function createPromtailApp(chart: Chart) {
         namespace: "promtail",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: ["CreateNamespace=true"],
       },
     },

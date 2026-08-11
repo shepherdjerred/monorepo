@@ -234,7 +234,7 @@ export function createMinecraftShuxinApp(chart: Chart) {
         },
       ],
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: [
           "CreateNamespace=true",
           "ServerSideApply=true",

@@ -146,7 +146,7 @@ export function createAlloyApp(chart: Chart) {
         namespace: "alloy",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: ["CreateNamespace=true", "ServerSideApply=true"],
       },
     },

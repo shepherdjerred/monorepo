@@ -238,7 +238,7 @@ export function createMinecraftTsmcApp(chart: Chart) {
         },
       ],
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         // ServerSideApply needed to avoid "annotation exceeds 262KB limit" error
         syncOptions: [
           "CreateNamespace=true",

@@ -19,7 +19,7 @@ export function createSyncthingApp(chart: Chart) {
         namespace: "syncthing",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
       },
     },
   });

@@ -88,7 +88,7 @@ export function createPostgresOperatorApp(chart: Chart) {
         namespace: "postgres-operator",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: ["CreateNamespace=true"],
       },
       ignoreDifferences: [

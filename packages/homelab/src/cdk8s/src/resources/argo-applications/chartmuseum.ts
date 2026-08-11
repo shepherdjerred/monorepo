@@ -73,7 +73,7 @@ export function createChartMuseumApp(chart: Chart) {
         namespace: "chartmuseum",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: ["CreateNamespace=true"],
       },
     },

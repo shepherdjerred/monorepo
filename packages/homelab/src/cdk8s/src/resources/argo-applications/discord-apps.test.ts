@@ -31,7 +31,9 @@ describe("Discord Applications", () => {
 
     expect(applications).toHaveLength(2);
     for (const application of applications) {
-      expect(application.spec.syncPolicy).toEqual({ automated: {} });
+      expect(application.spec.syncPolicy).toEqual({
+        automated: { enabled: true },
+      });
     }
   });
 });

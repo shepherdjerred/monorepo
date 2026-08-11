@@ -38,7 +38,7 @@ export function createGrafanaApp(chart: Chart) {
         namespace: "prometheus",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: ["CreateNamespace=true"],
       },
     },

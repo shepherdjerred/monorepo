@@ -31,7 +31,7 @@ export function createServiceProbesApp(chart: Chart) {
         // Probe CRs regenerated from the service registry — the worst a prune can do is delete a probe, and a
         // stale Probe is actively harmful: it keeps probing a deregistered service, adding alert noise or
         // masking ServiceProbeAbsent (the exact failure this PR fixes).
-        automated: { prune: true },
+        automated: { enabled: true, prune: true },
       },
     },
   });

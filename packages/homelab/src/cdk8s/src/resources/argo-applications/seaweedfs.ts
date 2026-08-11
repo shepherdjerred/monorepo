@@ -239,6 +239,7 @@ export function createSeaweedfsApp(chart: Chart) {
       },
       syncPolicy: {
         automated: {
+          enabled: true,
           prune: true,
           selfHeal: true,
         },

@@ -75,7 +75,7 @@ export function createCertManagerApp(chart: Chart) {
         namespace: "cert-manager",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: ["CreateNamespace=true"],
       },
     },

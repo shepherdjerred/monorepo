@@ -19,7 +19,7 @@ export function createStarlightKarmaBotBetaApp(chart: Chart) {
         namespace: "starlight-karma-bot-beta",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: ["CreateNamespace=true"],
       },
     },

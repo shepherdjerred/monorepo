@@ -19,7 +19,7 @@ export function createScoutBetaApp(chart: Chart) {
         namespace: "scout-beta",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: ["CreateNamespace=true"],
       },
     },

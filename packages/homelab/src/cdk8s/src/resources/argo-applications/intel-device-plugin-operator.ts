@@ -31,7 +31,7 @@ export function createIntelDevicePluginOperatorApp(chart: Chart) {
         namespace: "intel-device-plugin-operator",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: ["CreateNamespace=true"],
       },
     },

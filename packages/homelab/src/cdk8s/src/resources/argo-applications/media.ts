@@ -19,7 +19,7 @@ export function createMediaApp(chart: Chart) {
         namespace: "media",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
       },
     },
   });

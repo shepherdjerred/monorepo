@@ -19,7 +19,7 @@ export function createRelayApp(chart: Chart) {
         namespace: "relay",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: ["CreateNamespace=true"],
       },
     },

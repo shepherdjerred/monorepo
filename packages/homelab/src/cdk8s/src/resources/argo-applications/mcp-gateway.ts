@@ -19,7 +19,7 @@ export function createMcpGatewayApp(chart: Chart) {
         namespace: "mcp-gateway",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: ["CreateNamespace=true", "Replace=true"],
       },
     },

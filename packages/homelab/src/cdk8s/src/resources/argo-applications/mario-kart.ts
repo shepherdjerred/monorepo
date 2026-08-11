@@ -18,7 +18,7 @@ export function createMarioKartApp(chart: Chart) {
         server: "https://kubernetes.default.svc",
         namespace: "mario-kart",
       },
-      syncPolicy: { automated: {} },
+      syncPolicy: { automated: { enabled: true } },
     },
   });
 }

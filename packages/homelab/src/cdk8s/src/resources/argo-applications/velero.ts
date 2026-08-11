@@ -184,6 +184,7 @@ export function createVeleroApp(chart: Chart) {
       },
       syncPolicy: {
         automated: {
+          enabled: true,
           prune: true,
           selfHeal: true,
         },

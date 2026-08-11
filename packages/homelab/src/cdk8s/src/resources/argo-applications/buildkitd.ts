@@ -19,7 +19,7 @@ export function createBuildkitdApp(chart: Chart) {
         namespace: "buildkitd",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: ["CreateNamespace=true", "ServerSideApply=true"],
       },
     },

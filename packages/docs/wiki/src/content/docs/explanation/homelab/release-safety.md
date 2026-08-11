@@ -65,6 +65,13 @@ revision, but disagreement between them is a hard identity failure.
 After explicit child reconciliation completes, the full root apply restores
 the exact auto-sync policies and performs verified pruning. Aggregate child
 health is deferred until both the child and final root applies have completed.
+Every desired automated policy includes an explicit `enabled` boolean. The
+[release policy](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/application-release-policy.ts)
+stages repository charts with `enabled: false`. An empty object also means
+enabled to Argo, but restoring that staged object to `{}` can produce an
+`automated: null` patch that the Application CRD rejects. The
+[artifact-level chart test](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/helm-template.test.ts)
+checks every synthesized Application so the release restores a concrete object.
 
 ## Why immutable chart revisions
 

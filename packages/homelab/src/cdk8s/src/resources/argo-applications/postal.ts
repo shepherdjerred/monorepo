@@ -19,7 +19,7 @@ export function createPostalApp(chart: Chart) {
         namespace: "postal",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
       },
     },
   });

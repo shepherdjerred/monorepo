@@ -19,7 +19,7 @@ export function createBirmelApp(chart: Chart) {
         namespace: "birmel",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
         syncOptions: ["CreateNamespace=true"],
       },
     },

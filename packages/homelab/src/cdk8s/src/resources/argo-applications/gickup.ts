@@ -19,7 +19,7 @@ export function createGickupApp(chart: Chart) {
         namespace: "gickup",
       },
       syncPolicy: {
-        automated: {},
+        automated: { enabled: true },
       },
     },
   });
