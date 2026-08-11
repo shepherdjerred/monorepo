@@ -20,6 +20,9 @@ Gatekeeper, and installed from the verified artifact.
   credentials.
 - Keep the stable bundle identifier `com.sjerred.QuotaBar` registered for the
   account.
+- Use the checked-in `Resources/Brim.icon` document as the app-icon source of
+  truth. Xcode consumes it directly; `bundle:macos` uses the selected Xcode's
+  bundled `ictool` to render the `Brim.icns` compatibility fallback.
 - Treat `DEVELOPMENT_TEAM` in
   `packages/macos-ai-subscription-tracker/project.yml` as the only configured
   team ID. Export options inherit that team from the archive.
@@ -44,7 +47,8 @@ The commands intentionally separate the release artifacts:
 
 1. `verify:macos` runs formatting, lint, warnings-as-errors tests, coverage,
    Xcode compilation, local bundling, and local bundle validation.
-2. `archive:macos` creates `dist/QuotaBar.xcarchive`. An automatically managed
+2. `archive:macos` creates `dist/QuotaBar.xcarchive` with the native Brim Icon
+   Composer document. An automatically managed
    archive may initially contain an Apple Development signature; the export
    step replaces it for direct distribution.
 3. `export:developer-id` exports `dist/developer-id/QuotaBar.app` with a

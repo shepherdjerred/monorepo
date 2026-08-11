@@ -45,49 +45,76 @@ await cp(join(binPath, "QuotaBar_QuotaBar.bundle"), packagedResourceBundle, {
   recursive: true,
 });
 
+const developerDirectory = runCapture(["xcode-select", "-p"]);
+const iconComposerTool = join(
+  resolve(
+    developerDirectory,
+    "..",
+    "Applications",
+    "Icon Composer.app",
+    "Contents",
+    "Executables",
+  ),
+  "ictool",
+);
+if (!(await Bun.file(iconComposerTool).exists()))
+  throw new Error(
+    `Icon Composer's ictool is missing from the selected Xcode: ${iconComposerTool}`,
+  );
+
 const temporaryDirectory = await mkdtemp(join(tmpdir(), "quotabar-icon-"));
 try {
   const iconset = join(temporaryDirectory, "AppIcon.iconset");
   await mkdir(iconset);
-  const source = join(packageRoot, "Resources", "AppIcon.svg");
   const variants = [
-    ["icon_16x16.png", "16"],
-    ["icon_16x16@2x.png", "32"],
-    ["icon_32x32.png", "32"],
-    ["icon_32x32@2x.png", "64"],
-    ["icon_128x128.png", "128"],
-    ["icon_128x128@2x.png", "256"],
-    ["icon_256x256.png", "256"],
-    ["icon_256x256@2x.png", "512"],
-    ["icon_512x512.png", "512"],
-    ["icon_512x512@2x.png", "1024"],
-  ];
-  for (const [name, size] of variants) {
+    ["icon_16x16.png", "16", "1"],
+    ["icon_16x16@2x.png", "16", "2"],
+    ["icon_32x32.png", "32", "1"],
+    ["icon_32x32@2x.png", "32", "2"],
+    ["icon_128x128.png", "128", "1"],
+    ["icon_128x128@2x.png", "128", "2"],
+    ["icon_256x256.png", "256", "1"],
+    ["icon_256x256@2x.png", "256", "2"],
+    ["icon_512x512.png", "512", "1"],
+    ["icon_512x512@2x.png", "512", "2"],
+  ] as const;
+  const iconDocument = join(packageRoot, "Resources", "Brim.icon");
+  for (const [name, size, scale] of variants) {
     run([
-      "sips",
-      "-s",
-      "format",
-      "png",
-      "-z",
-      size,
-      size,
-      source,
-      "--out",
+      iconComposerTool,
+      iconDocument,
+      "--export-image",
+      "--output-file",
       join(iconset, name),
+      "--platform",
+      "macOS",
+      "--rendition",
+      "Default",
+      "--width",
+      size,
+      "--height",
+      size,
+      "--scale",
+      scale,
+      "--design-generation",
+      "26",
     ]);
   }
-  run([
-    "iconutil",
-    "-c",
-    "icns",
-    iconset,
-    "-o",
-    join(resources, "AppIcon.icns"),
-  ]);
+  run(["iconutil", "-c", "icns", iconset, "-o", join(resources, "Brim.icns")]);
 } finally {
   await rm(temporaryDirectory, { recursive: true, force: true });
 }
 
-const identity = process.env.QUOTABAR_CODESIGN_IDENTITY ?? "-";
+const identity = Bun.env.QUOTABAR_CODESIGN_IDENTITY ?? "-";
 run(["codesign", "--force", "--deep", "--sign", identity, appPath]);
 console.log(`Built and signed ${appPath}`);
+
+function runCapture(command: string[]) {
+  const result = Bun.spawnSync(command, {
+    cwd: packageRoot,
+    stdout: "pipe",
+    stderr: "inherit",
+  });
+  if (result.exitCode !== 0) process.exit(result.exitCode);
+  return result.stdout.toString().trim();
+}

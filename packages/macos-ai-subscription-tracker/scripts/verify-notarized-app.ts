@@ -18,13 +18,14 @@ function run(command: string[], capture = false) {
 }
 
 await access(join(appPath, "Contents", "MacOS", "QuotaBar"), constants.X_OK);
-await access(join(resources, "AppIcon.icns"));
+await access(join(resources, "Brim.icns"));
 run(["plutil", "-lint", plist]);
 assertPlistValue("CFBundleIdentifier", "com.sjerred.QuotaBar");
 assertPlistValue("CFBundleExecutable", "QuotaBar");
 assertPlistValue("CFBundleDisplayName", "Brim");
 assertPlistValue("CFBundleName", "Brim");
-assertPlistValue("CFBundleIconFile", "AppIcon");
+assertPlistValue("CFBundleIconFile", "Brim");
+assertPlistValue("CFBundleIconName", "Brim");
 assertPlistValue("CFBundlePackageType", "APPL");
 assertPlistValue(
   "LSApplicationCategoryType",
