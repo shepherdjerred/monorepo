@@ -87,11 +87,14 @@ pin.
 
 ## If GHCR rejects a workload pull
 
-The image job resolves every pushed candidate to a digest, then anonymously
-fetches that immutable digest before recording any pin candidate. A `401` from
-the anonymous token request means the package is still private. A manifest
-`404` after a successful token request can be brief registry propagation and is
-retried within the job.
+The
+[image publication flow](https://github.com/shepherdjerred/monorepo/blob/ecfd92e182858588dc98c9ed85fcefe768fb0680/.buildkite/scripts/bake-images.ts)
+resolves every pushed candidate to a digest. The
+[anonymous GHCR probe](https://github.com/shepherdjerred/monorepo/blob/ecfd92e182858588dc98c9ed85fcefe768fb0680/.buildkite/scripts/ghcr-public-access.ts)
+then fetches that immutable digest before the job records any pin candidate. A
+`401` from the anonymous token request means the package is still private. A
+manifest `404` after a successful token request can be brief registry
+propagation and is retried within the job.
 
 For a newly named application image, first confirm its runtime Dockerfile has
 the exact monorepo `org.opencontainers.image.source` label in the published
