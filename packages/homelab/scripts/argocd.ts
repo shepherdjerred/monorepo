@@ -619,7 +619,7 @@ async function sync(
             expectedResourceIdentities,
           )
         ) {
-          await waitForOperationTermination(
+          await waitForOperationToClear(
             appName,
             token,
             requestId,
@@ -997,6 +997,17 @@ async function waitForIdentifiedOperation({
     );
     if (exactOperationSeen && isExpected) {
       if (current.phase === "Succeeded") {
+        if (current.hasLiveOperation) {
+          await waitForOperationToClear(
+            appName,
+            token,
+            requestId,
+            revision,
+            operationId,
+            current.startedAt,
+            timeoutSeconds,
+          );
+        }
         console.log(`synced: ${appName}`);
         return;
       }
@@ -1037,11 +1048,11 @@ async function waitForIdentifiedOperation({
   );
 }
 
-async function waitForOperationTermination(
+async function waitForOperationToClear(
   appName: string,
   token: string,
   requestId: string,
-  revision: string,
+  revision: string | undefined,
   operationId: string | null,
   startedAt: string | undefined,
   timeoutSeconds: number,
@@ -1059,13 +1070,13 @@ async function waitForOperationTermination(
     );
     if (current.hasLiveOperation && !isExpectedLiveOperation) {
       throw new Error(
-        `${appName} operation changed to ${liveOperationDescription(current)} after terminating request ${requestId}`,
+        `${appName} operation changed to ${liveOperationDescription(current)} while waiting for request ${requestId} to clear`,
       );
     }
     if (!current.hasLiveOperation) {
       if (operationStartedAfter(current, startedAt)) {
         throw new Error(
-          `${appName} operation changed to ${operationDescription(current)} after terminating request ${requestId}`,
+          `${appName} operation changed to ${operationDescription(current)} while waiting for request ${requestId} to clear`,
         );
       }
       return;
@@ -1073,7 +1084,7 @@ async function waitForOperationTermination(
     await sleepUntilNextOperationPoll(deadline);
   }
   throw new Error(
-    `Timeout: terminated ${appName} operation for request ${requestId} did not leave Running/Terminating state within ${timeoutSeconds.toString()}s`,
+    `Timeout: ${appName} operation for request ${requestId} did not clear within ${timeoutSeconds.toString()}s`,
   );
 }
 
@@ -1104,7 +1115,7 @@ async function terminateAppliedOperation(
     );
   }
   console.log(`terminated applied sync operation: ${appName}`);
-  await waitForOperationTermination(
+  await waitForOperationToClear(
     appName,
     token,
     requestId,
@@ -1213,7 +1224,7 @@ async function finalizeAsyncSync(
           `Matching ${appName} operation entered Terminating before its result was fully applied`,
         );
       }
-      await waitForOperationTermination(
+      await waitForOperationToClear(
         appName,
         token,
         exactRequestId,

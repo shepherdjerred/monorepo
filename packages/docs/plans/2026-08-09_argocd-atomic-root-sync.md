@@ -31,10 +31,11 @@ only an exact retry; and keep the scoped release-health gate authoritative.
   same ID appears, so a stable applied result is reusable without confusing it
   with stale status from an earlier attempt that reused the build UUID.
 - Poll through absent or stale operation state. Fail on an exact `Failed` or
-  `Error` result, accept natural success, and terminate only after every
-  resource in the exact rendered revision appears in the result with an
-  applied status, every validated prune candidate appears as `Pruned`, and no
-  hook has failed. Partial earlier sync or prune waves are not complete.
+  `Error` result, and terminate only after every resource in the exact rendered
+  revision appears in the result with an applied status, every validated prune
+  candidate appears as `Pruned`, and no hook has failed. Accept natural success
+  only after its authoritative live operation clears. Partial earlier sync or
+  prune waves are not complete.
 - After termination, use a fresh timeout, return when the authoritative live
   operation clears even if status lags, and fail if another operation ID
   replaces the exact operation first.

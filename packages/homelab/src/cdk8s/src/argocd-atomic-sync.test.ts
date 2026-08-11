@@ -645,6 +645,41 @@ test("atomic Argo sync accepts natural success without DELETE", async () => {
   }
 });
 
+test("atomic Argo sync waits for naturally succeeded live state to clear", async () => {
+  const succeededLive = applicationOperation({
+    live: true,
+    phase: "Succeeded",
+    requestId: CURRENT_REQUEST_ID,
+    resources: [{ status: "Synced" }],
+    startedAt: "2026-08-10T01:00:01Z",
+  });
+  const succeededCleared = applicationOperation({
+    live: false,
+    phase: "Succeeded",
+    requestId: CURRENT_REQUEST_ID,
+    resources: [{ status: "Synced" }],
+    startedAt: "2026-08-10T01:00:01Z",
+  });
+  const lifecycle = serveLifecycle([
+    succeededLive,
+    succeededLive,
+    succeededLive,
+    succeededCleared,
+  ]);
+
+  try {
+    const result = await runArgocd(atomicArgs(), lifecycle.server.url.origin);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stderr).toBe("");
+    expect(result.stdout).toContain("synced: apps");
+    expect(lifecycle.observations.deleteRequests).toBe(0);
+    expect(lifecycle.observations.statusGets).toBeGreaterThanOrEqual(4);
+  } finally {
+    await lifecycle.server.stop(true);
+  }
+});
+
 for (const scenario of [
   {
     name: "another request ID at the same revision",
@@ -778,7 +813,7 @@ test("atomic Argo sync fails if another operation starts after DELETE", async ()
     const result = await runArgocd(atomicArgs(), lifecycle.server.url.origin);
 
     expect(result.exitCode).not.toBe(0);
-    expect(result.stderr).toContain("after terminating request");
+    expect(result.stderr).toContain("while waiting for request");
   } finally {
     await lifecycle.server.stop(true);
   }
@@ -809,7 +844,7 @@ test("atomic Argo sync fails if a completed unrelated operation replaces it afte
     const result = await runArgocd(atomicArgs(), lifecycle.server.url.origin);
 
     expect(result.exitCode).not.toBe(0);
-    expect(result.stderr).toContain("after terminating request");
+    expect(result.stderr).toContain("while waiting for request");
   } finally {
     await lifecycle.server.stop(true);
   }
@@ -842,7 +877,7 @@ test("atomic Argo sync fails if another attempt with the same request replaces i
     const result = await runArgocd(atomicArgs(), lifecycle.server.url.origin);
 
     expect(result.exitCode).not.toBe(0);
-    expect(result.stderr).toContain("after terminating request");
+    expect(result.stderr).toContain("while waiting for request");
   } finally {
     await lifecycle.server.stop(true);
   }

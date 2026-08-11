@@ -116,7 +116,10 @@ that compatibility case.
 After termination, the top-level live operation is authoritative. Its absence
 means the health wait is gone even if `status.operationState` still says
 `Running` or `Terminating`; a different operation UUID in live or completed
-state still proves replacement and fails the release.
+state still proves replacement and fails the release. Natural success uses the
+[same boundary](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd.ts):
+a `Succeeded` status does not finish the command until the live operation
+clears.
 
 Without this atomic boundary, a root operation stuck in `Running` blocks the
 next ordered release indefinitely. Treating missing operation state as success
