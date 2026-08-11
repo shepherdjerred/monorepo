@@ -176,9 +176,17 @@ function labelWords(body: string, escapeCharacter: "\\" | "`"): string[] {
 }
 
 function sourceLabelValues(instruction: string, escape: "\\" | "`"): string[] {
-  const prefix = "LABEL ";
-  if (!instruction.toUpperCase().startsWith(prefix)) return [];
-  const words = labelWords(instruction.slice(prefix.length), escape);
+  const instructionSeparator = instruction.search(/\s/u);
+  if (
+    instructionSeparator === -1 ||
+    instruction.slice(0, instructionSeparator).toUpperCase() !== "LABEL"
+  ) {
+    return [];
+  }
+  const words = labelWords(
+    instruction.slice(instructionSeparator).trimStart(),
+    escape,
+  );
   const values = words.flatMap((word) => {
     const separator = word.indexOf("=");
     return separator !== -1 && word.slice(0, separator) === sourceLabel

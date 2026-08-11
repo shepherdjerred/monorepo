@@ -353,6 +353,24 @@ describe("GHCR package provenance", () => {
   });
 });
 
+describe("GHCR Docker instruction parsing", () => {
+  test("recognizes non-space instruction separators", () => {
+    expect(() =>
+      assertMonorepoSourceLabel(
+        [
+          "FROM runtime AS image",
+          'LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"',
+          'LABEL\torg.opencontainers.image.source="https://github.com/somewhere/else"',
+        ].join("\n"),
+        "example",
+        "image",
+      ),
+    ).toThrow(
+      "example published image stage must link its GHCR package to the public monorepo",
+    );
+  });
+});
+
 describe("parallel image smoke ports", () => {
   test("extracts application smoke environment ports", () => {
     const source = `
