@@ -2,6 +2,7 @@ import type { S3Client } from "@aws-sdk/client-s3";
 import { RawCurrentGameInfoSchema, RawMatchSchema } from "@scout-for-lol/data";
 import { discordScreenshotToImage } from "@scout-for-lol/report";
 import { createS3Client } from "#src/storage/s3-client.ts";
+import { createPlayerAnonymizer } from "#src/showcase/anonymize.ts";
 import {
   ShowcaseAssetIndexSchema,
   ShowcaseManifestSchema,
@@ -159,8 +160,12 @@ async function generateDiscordScreenshot(
 
 async function generateImageForEntry(
   entry: Exclude<ShowcaseEntry, { kind: "unsupported" }>,
-  ctx: GenerateEntryContext,
+  baseCtx: GenerateEntryContext,
 ): Promise<GeneratedImage> {
+  // An entry may pin its own source bucket (see `bucket` in manifest.ts). Both
+  // buckets sit behind one SeaweedFS endpoint, so only the bucket name changes.
+  const ctx: GenerateEntryContext =
+    entry.bucket === undefined ? baseCtx : { ...baseCtx, bucket: entry.bucket };
   switch (entry.kind) {
     case "s3-image":
       return await generateS3Image(entry, ctx);
@@ -235,6 +240,9 @@ export async function generateShowcaseAssets(
     client,
     outputDir: options.outputDir,
     publicBasePath: options.publicBasePath,
+    // One mapper for the whole run, so a player who appears in two charts reads
+    // as the same handle in both.
+    anonymizePlayer: createPlayerAnonymizer(),
   };
 
   const assets: ShowcaseAsset[] = [];

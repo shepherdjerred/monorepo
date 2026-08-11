@@ -315,7 +315,7 @@
       "chatMessagesAfterEmbed": [
         {
           "author": "Jerred",
-          "content": "ranked up 📈",
+          "content": "ranked up \ud83d\udcc8",
           "timestamp": "11:49 PM",
           "authorColor": "#ffd400",
           "avatarText": "J",
@@ -383,21 +383,24 @@
       "description": "How your group's ranks moved across the season.",
       "kind": "competition-graph",
       "snapshotKeys": [
-        "leaderboards/competition-3/snapshots/2026-01-08.json",
-        "leaderboards/competition-3/snapshots/2026-01-23.json",
-        "leaderboards/competition-3/snapshots/2026-02-03.json",
-        "leaderboards/competition-3/snapshots/2026-02-15.json",
-        "leaderboards/competition-3/snapshots/2026-02-27.json",
-        "leaderboards/competition-3/snapshots/2026-03-13.json",
-        "leaderboards/competition-3/snapshots/2026-03-24.json",
-        "leaderboards/competition-3/snapshots/2026-04-03.json",
-        "leaderboards/competition-3/snapshots/2026-04-20.json",
-        "leaderboards/competition-3/snapshots/2026-05-01.json",
-        "leaderboards/competition-3/snapshots/2026-05-16.json",
-        "leaderboards/competition-3/snapshots/2026-05-26.json"
+        "leaderboards/competition-9/snapshots/2026-01-19.json",
+        "leaderboards/competition-9/snapshots/2026-01-27.json",
+        "leaderboards/competition-9/snapshots/2026-02-04.json",
+        "leaderboards/competition-9/snapshots/2026-02-12.json",
+        "leaderboards/competition-9/snapshots/2026-02-23.json",
+        "leaderboards/competition-9/snapshots/2026-03-07.json",
+        "leaderboards/competition-9/snapshots/2026-03-15.json",
+        "leaderboards/competition-9/snapshots/2026-03-23.json",
+        "leaderboards/competition-9/snapshots/2026-03-31.json",
+        "leaderboards/competition-9/snapshots/2026-04-09.json",
+        "leaderboards/competition-9/snapshots/2026-04-25.json",
+        "leaderboards/competition-9/snapshots/2026-05-03.json",
+        "leaderboards/competition-9/snapshots/2026-05-12.json",
+        "leaderboards/competition-9/snapshots/2026-05-23.json"
       ],
       "chartType": "line",
-      "yAxisLabel": "Score"
+      "yAxisLabel": "Score",
+      "bucket": "scout-beta"
     },
     {
       "id": "report-graph",

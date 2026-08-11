@@ -74,7 +74,14 @@ export async function generateReportGraph(
   entry: Extract<ShowcaseEntry, { kind: "report-graph" }>,
   ctx: GenerateEntryContext,
 ): Promise<GeneratedImage> {
-  const totals = new Map<string, { value: number; games: number }>();
+  // Keyed on puuid, not on the display name. Two players can share a display
+  // name across regions, and the old name-keyed map silently summed them into
+  // one bar; it also made the label load-bearing, so any pseudonym that
+  // collided would have merged real people's stats.
+  const totals = new Map<
+    string,
+    { value: number; games: number; name: string }
+  >();
   for (const key of entry.matchKeys) {
     const json = await readS3JsonOptional({
       client: ctx.client,
@@ -90,25 +97,39 @@ export async function generateReportGraph(
     }
 
     for (const participant of match.info.participants) {
-      const label = playerLabel(participant);
-      const previous = totals.get(label) ?? { value: 0, games: 0 };
-      totals.set(label, {
+      const previous = totals.get(participant.puuid) ?? {
+        value: 0,
+        games: 0,
+        name: playerLabel(participant),
+      };
+      totals.set(participant.puuid, {
         value: previous.value + metricValue(participant, entry.metric),
         games: previous.games + 1,
+        name: previous.name,
       });
     }
   }
 
+  // Anonymize AFTER the slice, not before. This graph aggregates all ten
+  // participants of every match — ~120 distinct puuids across a 12-match
+  // manifest — but renders only the top ten. Assigning a handle per aggregated
+  // player would exhaust the pool and push the rendered bars into the numbered
+  // fallback, so only players who actually appear consume one.
   const bars = [...totals.entries()]
-    .map(([playerName, aggregate]) => ({
-      playerName,
+    .map(([puuid, aggregate]) => ({
+      puuid,
+      realName: aggregate.name,
       value:
         entry.metric === "kda"
           ? aggregate.value / aggregate.games
           : aggregate.value,
     }))
     .toSorted((left, right) => right.value - left.value)
-    .slice(0, 10);
+    .slice(0, 10)
+    .map((bar) => ({
+      playerName: ctx.anonymizePlayer(bar.puuid, bar.realName),
+      value: bar.value,
+    }));
 
   if (bars.length === 0) {
     throw new Error(`Report graph ${entry.id} had no matching rows`);
