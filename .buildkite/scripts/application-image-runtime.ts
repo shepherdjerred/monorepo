@@ -32,6 +32,20 @@ const sourceLabel = "org.opencontainers.image.source";
 // unclassified errors and fail loud. Anything else non-transient is unclassified.
 const IMAGE_ABSENT_PATTERN =
   /manifest[ _]unknown|name[ _]unknown|(?:manifest|reference|@sha256:[\da-f]{64})[^\n]*not found/i;
+const HTTP_NOT_FOUND_PATTERN =
+  /\bHTTP(?:\/\d(?:\.\d)?)?\s+404\b|\bstatus(?:\s+code)?(?:\s+|[=:]\s*)404\b|\b404\s+Not Found\b/i;
+const EXACT_DIGEST_REFERENCE_PATTERN = /@sha256:[\da-f]{64}$/i;
+
+function exactDigestInspectIsPropagating(
+  image: string,
+  diagnostics: string,
+): boolean {
+  return (
+    EXACT_DIGEST_REFERENCE_PATTERN.test(image) &&
+    (IMAGE_ABSENT_PATTERN.test(diagnostics) ||
+      HTTP_NOT_FOUND_PATTERN.test(diagnostics))
+  );
+}
 
 function canonicalJson(value: unknown): string {
   if (value === null) return "null";
@@ -162,7 +176,10 @@ export async function assertImageSourceLabel(
   const diagnostics = `${result.stdout}\n${result.stderr}`;
   const detail = result.stderr.trim() || result.stdout.trim();
   if (result.exitCode !== 0) {
-    if (bakeFailureIsTransient(diagnostics)) {
+    if (
+      bakeFailureIsTransient(diagnostics) ||
+      exactDigestInspectIsPropagating(image, diagnostics)
+    ) {
       throw new TransientError(
         `Transient failure inspecting source label for ${image}: ${detail}`,
       );

@@ -27,6 +27,7 @@ import {
 } from "./ghcr-public-access.ts";
 import type { PushOptions, PushOutcome } from "./bake-image-push-types.ts";
 import { runMain } from "../../scripts/lib/transient.ts";
+import { TransientError } from "../../scripts/lib/transient-error.ts";
 
 const registry = "ghcr.io/shepherdjerred";
 const selectionReport = "image-selection-report.json";
@@ -396,9 +397,8 @@ export async function pushImages(
       await smokeCandidate(name, candidate, contractHash);
     }
     const newFingerprint = await getRuntimeFingerprint(candidate);
-    if (newFingerprint === undefined) {
-      throw new Error(`Could not fingerprint candidate ${candidate}`);
-    }
+    if (newFingerprint === undefined)
+      throw new TransientError(`Candidate unavailable: ${candidate}`);
     const outcome = await classifyRuntimeChange(
       {
         image,

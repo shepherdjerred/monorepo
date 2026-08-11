@@ -89,6 +89,14 @@ async function manifestUnknownInspectExecutor(): Promise<BuildxCommandResult> {
   return commandResult(1, "", "MANIFEST_UNKNOWN: manifest unknown");
 }
 
+async function httpNotFoundInspectExecutor(): Promise<BuildxCommandResult> {
+  return commandResult(
+    1,
+    "",
+    "unexpected status from HEAD request: 404 Not Found",
+  );
+}
+
 async function rateLimitedInspectExecutor(): Promise<BuildxCommandResult> {
   return commandResult(1, "", "429 Too Many Requests");
 }
@@ -659,6 +667,18 @@ test("requires the effective candidate OCI source label", async () => {
   await expect(
     assertImageSourceLabel(image, transientInspectExecutor),
   ).rejects.toBeInstanceOf(TransientError);
+  await expect(
+    assertImageSourceLabel(image, manifestUnknownInspectExecutor),
+  ).rejects.toBeInstanceOf(TransientError);
+  await expect(
+    assertImageSourceLabel(image, httpNotFoundInspectExecutor),
+  ).rejects.toBeInstanceOf(TransientError);
+  await expect(
+    assertImageSourceLabel(
+      "ghcr.io/shepherdjerred/example:missing",
+      httpNotFoundInspectExecutor,
+    ),
+  ).rejects.not.toBeInstanceOf(TransientError);
 });
 
 test("keeps build-identity env for CI images while dropping it for application images", () => {
@@ -963,6 +983,42 @@ test("smokes exact candidates, reuses identical runtime fingerprints, and tags S
       outcome: "pin-unresolvable-bumped",
     },
   ]);
+});
+
+test("keeps an exact candidate fingerprint propagation miss transient", async () => {
+  const digest = `sha256:${"b".repeat(64)}`;
+  const pinned = `sha256:${"a".repeat(64)}`;
+  const events: string[] = [];
+  const missingFingerprint = new Map<string, string>().get("candidate");
+
+  await expect(
+    pushImages(
+      {
+        targets: ["birmel"],
+        commit: "commit",
+        buildNumber: "42",
+        contractHash: "contract",
+      },
+      {
+        executor: async () => commandResult(),
+        environment: {},
+        readVersions: async () =>
+          `  "shepherdjerred/birmel": "2.0.0-1@${pinned}",`,
+        getManifestDigest: async () => digest,
+        verifyAnonymousPull: async () => {
+          events.push("public");
+        },
+        verifySourceLabel: async () => {
+          events.push("source");
+        },
+        smokeCandidate: async () => {
+          events.push("smoke");
+        },
+        getRuntimeFingerprint: async () => missingFingerprint,
+      },
+    ),
+  ).rejects.toBeInstanceOf(TransientError);
+  expect(events).toEqual(["public", "source", "smoke"]);
 });
 
 test("keeps upstream provenance for infrastructure images", async () => {
