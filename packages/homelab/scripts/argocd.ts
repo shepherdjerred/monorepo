@@ -20,6 +20,8 @@
  *   bun packages/homelab/scripts/argocd.ts tree-health-wait <app> [--timeout <s>] [--dry-run]
  *   bun packages/homelab/scripts/argocd.ts suspend-auto-sync <root-app> \
  *       [--revision <v>] [--timeout <s>] [--dry-run]
+ *   bun packages/homelab/scripts/argocd.ts stage-root-release <root-app> \
+ *       --revision <v> [--timeout <s>] [--dry-run]
  *   bun packages/homelab/scripts/argocd.ts wait-deletion <app> \
  *       --group <g> --version <v> --kind <k> --namespace <ns> \
  *       [--timeout <s>] [--dry-run]
@@ -53,6 +55,7 @@ import {
   requestedOperationRequestId,
   SYNC_OPERATION_ID_INFO_NAME,
   SYNC_REQUEST_ID_INFO_NAME,
+  type ManifestOverride,
   type SyncOperationResource,
 } from "./argocd-manifest-overrides.ts";
 import { latestPublishedVersion } from "./helm-release-core.ts";
@@ -113,7 +116,12 @@ const RenderedObjectSchema = z
 const RenderedResourceSchema = z.object({
   apiVersion: z.string().min(1),
   kind: z.string().min(1),
-  metadata: z.object({ name: z.string().min(1) }).passthrough(),
+  metadata: z
+    .object({
+      name: z.string().min(1),
+      namespace: z.string().min(1).optional(),
+    })
+    .passthrough(),
 });
 
 const RootDeploymentHistorySchema = z.object({
@@ -282,6 +290,77 @@ async function getExpectedSyncResultIdentities(
   };
 }
 
+type PreparedManifestOverride = {
+  readonly override: ManifestOverride;
+  readonly suspendedApplication: string | null;
+};
+
+function prepareRootManifestOverride(
+  manifestSource: string,
+  suspendAllApplications: boolean,
+): PreparedManifestOverride {
+  const parsed: unknown = JSON.parse(manifestSource);
+  const renderedResource = RenderedResourceSchema.parse(parsed);
+  const separator = renderedResource.apiVersion.indexOf("/");
+  const resource: SyncOperationResource = {
+    group:
+      separator === -1 ? "" : renderedResource.apiVersion.slice(0, separator),
+    kind: renderedResource.kind,
+    name: renderedResource.metadata.name,
+    ...(renderedResource.metadata.namespace === undefined
+      ? {}
+      : { namespace: renderedResource.metadata.namespace }),
+  };
+  if (renderedResource.kind !== "Application") {
+    return {
+      override: { manifest: manifestSource, resource },
+      suspendedApplication: null,
+    };
+  }
+  const application = RenderedApplicationSchema.parse(parsed);
+  if (
+    application.spec.syncPolicy === undefined ||
+    !Object.hasOwn(application.spec.syncPolicy, "automated")
+  ) {
+    return {
+      override: { manifest: manifestSource, resource },
+      suspendedApplication: null,
+    };
+  }
+  const isRepositoryApplication =
+    application.spec.source.chart !== undefined &&
+    REPOSITORY_CHART_URLS.has(application.spec.source.repoURL);
+  if (!suspendAllApplications && !isRepositoryApplication) {
+    return {
+      override: { manifest: manifestSource, resource },
+      suspendedApplication: null,
+    };
+  }
+  const automated = application.spec.syncPolicy["automated"];
+  if (!isRecord(automated)) {
+    return {
+      override: { manifest: manifestSource, resource },
+      suspendedApplication: null,
+    };
+  }
+  return {
+    override: {
+      manifest: JSON.stringify({
+        ...application,
+        spec: {
+          ...application.spec,
+          syncPolicy: {
+            ...application.spec.syncPolicy,
+            automated: { ...automated, enabled: false },
+          },
+        },
+      }),
+      resource,
+    },
+    suspendedApplication: application.metadata.name,
+  };
+}
+
 async function suspendRepositoryAutoSync(
   rootAppName: string,
   timeoutSeconds: number,
@@ -315,46 +394,63 @@ async function suspendRepositoryAutoSync(
     token,
   );
   const suspended = manifests.flatMap((manifestSource) => {
-    const parsed = RenderedObjectSchema.parse(JSON.parse(manifestSource));
-    if (parsed.kind !== "Application") {
+    const prepared = prepareRootManifestOverride(manifestSource, false);
+    if (prepared.suspendedApplication === null) {
       return [];
     }
-    const application = RenderedApplicationSchema.parse(parsed);
-    if (
-      application.spec.source.chart === undefined ||
-      !REPOSITORY_CHART_URLS.has(application.spec.source.repoURL) ||
-      application.spec.syncPolicy === undefined ||
-      !Object.hasOwn(application.spec.syncPolicy, "automated")
-    ) {
-      return [];
-    }
-    const automated = application.spec.syncPolicy["automated"];
-    if (!isRecord(automated)) {
-      return [];
-    }
-    const syncPolicy = {
-      ...application.spec.syncPolicy,
-      automated: { ...automated, enabled: false },
-    };
-    console.log(`suspending auto-sync: ${application.metadata.name}`);
-    return [
-      {
-        manifest: JSON.stringify({
-          ...application,
-          spec: { ...application.spec, syncPolicy },
-        }),
-        resource: {
-          group: "argoproj.io",
-          kind: "Application",
-          name: application.metadata.name,
-        },
-      },
-    ];
+    console.log(`suspending auto-sync: ${prepared.suspendedApplication}`);
+    return [prepared.override];
   });
   const batches = batchManifestOverrides(suspended);
   for (const [index, batch] of batches.entries()) {
     console.log(
       `syncing suspended Application batch ${(index + 1).toString()}/${batches.length.toString()} (${batch.manifests.length.toString()} resources)`,
+    );
+    await sync(rootAppName, timeoutSeconds, false, {
+      prune: false,
+      manifests: batch.manifests,
+      resources: batch.resources,
+    });
+  }
+}
+
+async function stageRootRelease(
+  rootAppName: string,
+  revision: string,
+  timeoutSeconds: number,
+  dryRun: boolean,
+): Promise<void> {
+  const exactRevision = BuildRevisionSchema.parse(revision);
+  console.log(
+    `--- argocd stage-root-release: ${rootAppName} at ${exactRevision}${dryRun ? " (dry run)" : ""}`,
+  );
+  if (dryRun) {
+    return;
+  }
+  await assertExpectedAppsRevisionIsLatest(exactRevision, timeoutSeconds);
+  const token = requireEnv("ARGOCD_TOKEN");
+  const manifests = await getApplicationManifests(
+    rootAppName,
+    exactRevision,
+    token,
+  );
+  if (manifests.length === 0) {
+    throw new Error("Rendered root release contains no resources");
+  }
+  const staged = manifests.map((manifestSource) =>
+    prepareRootManifestOverride(manifestSource, true),
+  );
+  for (const prepared of staged) {
+    if (prepared.suspendedApplication !== null) {
+      console.log(`suspending auto-sync: ${prepared.suspendedApplication}`);
+    }
+  }
+  const batches = batchManifestOverrides(
+    staged.map(({ override }) => override),
+  );
+  for (const [index, batch] of batches.entries()) {
+    console.log(
+      `syncing staged root batch ${(index + 1).toString()}/${batches.length.toString()} (${batch.manifests.length.toString()} resources)`,
     );
     await sync(rootAppName, timeoutSeconds, false, {
       prune: false,
@@ -1610,6 +1706,8 @@ function usage(): never {
       "--revision <v> --request-id <uuid> [--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts suspend-auto-sync <root-app> " +
       "[--revision <v>] [--timeout <s>] [--dry-run]\n" +
+      "  bun packages/homelab/scripts/argocd.ts stage-root-release <root-app> " +
+      "--revision <v> [--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts wait-deletion <app> " +
       "--group <g> --version <v> --kind <k> --namespace <ns> " +
       "[--timeout <s>] [--dry-run]",
@@ -1771,6 +1869,20 @@ async function main(): Promise<void> {
         flag(argv, "revision"),
       );
       return;
+    case "stage-root-release": {
+      const revision = flag(argv, "revision");
+      if (revision === undefined) {
+        console.error("--revision is required for stage-root-release.");
+        usage();
+      }
+      await stageRootRelease(
+        app,
+        revision,
+        timeoutOverride ?? DEFAULT_SYNC_TIMEOUT_S,
+        dryRun,
+      );
+      return;
+    }
     case "wait-deletion": {
       const group = flag(argv, "group");
       const version = flag(argv, "version");

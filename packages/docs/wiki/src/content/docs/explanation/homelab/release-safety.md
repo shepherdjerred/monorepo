@@ -12,7 +12,7 @@ GitOps release can go wrong.
 ```mermaid
 sequenceDiagram
   accTitle: Homelab release sequence
-  accDescr: Buildkite suspends floating auto-sync, publishes an immutable chart set, applies the exact child specifications while suspended, reconciles child workloads, and finally restores the exact root tree with safe pruning.
+  accDescr: Buildkite suspends floating auto-sync, publishes an immutable chart set, stages exact child specifications and root prerequisites while children remain suspended, reconciles child workloads, restores the exact root tree with safe pruning, and checks scoped health.
   participant BK as Buildkite
   participant CM as ChartMuseum
   participant Root as apps Application
@@ -20,9 +20,9 @@ sequenceDiagram
 
   BK->>Root: suspend current repository auto-sync
   BK->>CM: publish 2.0.0-build charts
-  BK->>Root: apply exact child specs, still suspended
+  BK->>Root: stage child specs and prerequisites, still suspended
   BK->>Child: reconcile exact chart revisions
-  BK->>Root: sync exact revision with verified pruning
+  BK->>Root: restore exact revision with verified pruning
   BK->>Root: retain identity through apply and termination
   BK->>Child: require Synced and Healthy
 ```
@@ -36,8 +36,16 @@ New child-level safety settings have to exist _before_ those children sync.
 But enabling floating auto-sync before every chart is published would let a
 child pick up a partially published release.
 
-Applying the exact child specs while still suspended satisfies both: the
-settings land, and nothing syncs on them until the chart set is complete.
+The staged root release applies every exact rendered resource through manifest
+overrides. Child Applications are the only resources changed: their auto-sync
+remains disabled regardless of whether their source is internal or external.
+Child settings and root-owned prerequisites such as admission policies
+therefore land before reconciliation without starting an automatic child
+operation.
+
+After explicit child reconciliation completes, the full root apply restores
+the exact auto-sync policies and performs verified pruning. Aggregate child
+health is deferred until both the child and final root applies have completed.
 
 ## Why immutable chart revisions
 
