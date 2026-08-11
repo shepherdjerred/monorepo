@@ -166,7 +166,7 @@ describe("privacy settings", () => {
       capture_performance: { web_vitals: true, network_timing: true },
       respect_dnt: true,
       person_profiles: "always",
-      session_recording: { maskAllInputs: true },
+      session_recording: { maskAllInputs: true, maskTextSelector: "*" },
       disable_session_recording: false,
     });
     // A `persistence` override is what previously reset the distinct id on
@@ -183,25 +183,29 @@ describe("privacy settings", () => {
   });
 });
 
+// The server's opaque `analyticsUserId`, not a Discord snowflake — the distinct
+// id is the durable join key for a person's events and recordings.
+const ANALYTICS_USER_ID = "7316395a-b815-49d8-9794-9b56b3ce81c0";
+
 describe("identity", () => {
-  test("identifies once per Discord id", () => {
+  test("identifies once per analytics user id", () => {
     installClient();
-    identifyUser("160509172704739328");
-    identifyUser("160509172704739328");
+    identifyUser(ANALYTICS_USER_ID);
+    identifyUser(ANALYTICS_USER_ID);
     expect(identityCalls).toEqual([
-      { kind: "identify", distinctId: "160509172704739328" },
+      { kind: "identify", distinctId: ANALYTICS_USER_ID },
     ]);
   });
 
   test("re-identifies after a sign out resets the person", () => {
     installClient();
-    identifyUser("160509172704739328");
+    identifyUser(ANALYTICS_USER_ID);
     resetIdentity();
-    identifyUser("160509172704739328");
+    identifyUser(ANALYTICS_USER_ID);
     expect(identityCalls).toEqual([
-      { kind: "identify", distinctId: "160509172704739328" },
+      { kind: "identify", distinctId: ANALYTICS_USER_ID },
       { kind: "reset" },
-      { kind: "identify", distinctId: "160509172704739328" },
+      { kind: "identify", distinctId: ANALYTICS_USER_ID },
     ]);
   });
 
@@ -242,7 +246,7 @@ describe("identity", () => {
   test("stays inert when PostHog never initialized", () => {
     setAnalyticsForTesting(undefined, undefined);
     identityCalls = [];
-    identifyUser("160509172704739328");
+    identifyUser(ANALYTICS_USER_ID);
     resetIdentity();
     setGuildContext("123456789012345678");
     expect(identityCalls).toEqual([]);

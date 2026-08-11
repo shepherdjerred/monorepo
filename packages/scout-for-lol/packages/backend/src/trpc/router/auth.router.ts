@@ -169,6 +169,9 @@ export const authRouter = router({
         username: ctx.user.discordUsername,
         avatar: ctx.user.discordAvatar,
         createdAt: ctx.user.createdAt,
+        // Opaque analytics identity. The SPA identifies PostHog with this
+        // rather than `discordId`, which must never leave as a distinct id.
+        analyticsUserId: ctx.user.analyticsUserId,
       },
     };
   }),

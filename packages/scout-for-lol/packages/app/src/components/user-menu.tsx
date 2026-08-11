@@ -95,18 +95,13 @@ export function UserMenu(props: { username: string }) {
           size="sm"
           className="gap-1.5 text-sm font-medium"
         >
-          {/* `ph-mask` is PostHog's default maskTextClass: session replay is
-              enabled for this app and `maskAllInputs` covers form values only,
-              so the Discord username would otherwise be recorded verbatim. */}
-          <span className="ph-mask">@{props.username}</span>
+          @{props.username}
           <ChevronDown className="h-4 w-4 opacity-60" aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" sideOffset={8} className="w-56">
         <DropdownMenuLabel className="font-normal">
-          <span className="ph-mask block text-sm font-medium">
-            @{props.username}
-          </span>
+          <span className="block text-sm font-medium">@{props.username}</span>
           <span className="block text-xs text-muted-foreground">
             Signed in with Discord
           </span>

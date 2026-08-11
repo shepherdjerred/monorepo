@@ -84,10 +84,21 @@ fixed rather than deferred:
   `usePermissions` confirms access. A durable property outlived the visit; an
   eagerly registered route param let any signed-in visitor deep-link
   `/g/<anything>` and stamp an arbitrary, unbounded value onto every event.
-- Mario Kart and Pokémon set `maskTextSelector: "*"`; the Scout web app marks
-  its username elements `ph-mask`. `maskAllInputs` masks form values, so replay
-  was recording Discord usernames as ordinary text.
+- Mario Kart, Pokémon, and the Scout web app set `maskTextSelector: "*"`.
+  `maskAllInputs` masks form values, so replay was recording usernames, guild
+  names, Riot accounts, and player aliases as ordinary text — and with
+  `person_profiles: "always"` each recording is tied to an identified person.
 - Backend `disableGeoip: true`, because those events carry no end-user `$ip`.
+- The browser identifies with `User.analyticsUserId`, a new opaque app-owned
+  UUID, instead of the Discord snowflake. The distinct id is the durable join
+  key for a person's events and recordings, and the registry rule against
+  sending Discord user ids applies to it. Migration
+  `20260811210000_user_analytics_identity` rebuilds `User` to add the column
+  (SQLite cannot add a NOT NULL UNIQUE column with a non-constant default) and
+  backfills existing rows with the same `randomblob` UUIDv4 expression already
+  used for `GuildInstall.analyticsInstallationId`. Existing signed-in people
+  therefore get a new PostHog identity once on deploy; their pre-migration
+  events stay under the old distinct id and do not merge.
 
 ## Phase 2 — blocked on operator steps
 

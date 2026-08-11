@@ -26,11 +26,13 @@ clicks, web vitals, and session replay with inputs masked. Every site respects
 Do Not Track, so a DNT browser sends nothing at all.
 
 Input masking is not sufficient everywhere. `maskAllInputs` masks form values,
-not arbitrary text nodes, so the sites that render a signed-in Discord identity
-as ordinary text mask every text node instead: Mario Kart's seat picker and the
-Pokémon profile card set `maskTextSelector: "*"`, and the Scout web app marks
-its username elements `ph-mask`. An element-level allowlist was rejected because
-it fails open the first time a new component renders a name. See PostHog's
+not arbitrary text nodes, so the three sites that render a signed-in identity as
+ordinary text mask every text node instead (`maskTextSelector: "*"`): Mario
+Kart's seat picker, the Pokémon profile card, and the whole Scout web app, whose
+workspace shows guild names, Discord display names, Riot accounts, player
+aliases, and channel names. An element-level allowlist was rejected because it
+fails open the first time a new component renders a name. Replay still captures
+layout, navigation, and rage or dead clicks. See PostHog's
 [JavaScript configuration](https://posthog.com/docs/libraries/js/config) and
 [privacy controls](https://posthog.com/docs/privacy/data-collection).
 
@@ -61,8 +63,14 @@ and
 [`reports`](https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol/packages/backend/src/reports)
 modules.
 
-Each event's distinct ID combines the deployment site key with the opaque
-installation UUID, and every event also carries `guild_id`, the Discord guild
+Every distinct ID Scout sends is opaque and app-owned. Backend events combine
+the deployment site key with the installation UUID; the browser identifies a
+signed-in visitor with `User.analyticsUserId`, a per-user UUID the server mints,
+never the Discord snowflake. A distinct ID is the durable join key for a
+person's events and recordings, so using an external account id there would make
+all of it addressable by Discord account.
+
+Every event also carries `guild_id`, the Discord guild
 id. The two identifiers are not interchangeable: the installation UUID rotates
 on reinstall so install-level funnels restart cleanly, while `guild_id` is
 stable for a server's whole history. The web app registers the same `guild_id`
@@ -120,13 +128,15 @@ is precisely how the cookieless outage went unnoticed.
 - Confirm `$geoip_country_name` is populated on browser events and absent on
   backend events.
 - Confirm session recordings appear for all eight hosts with input masking
-  active, and that no Discord username is legible in a Mario Kart, Pokémon, or
-  Scout recording.
+  active, and that no username, guild name, Riot account, or player alias is
+  legible in a Mario Kart, Pokémon, or Scout recording.
 - Repeat with Do Not Track enabled and confirm the browser sends no PostHog
   events.
 - Sign into Scout and confirm the pre-login anonymous person merges into the
-  identified person, that `guild_id` is attached to events inside a guild
-  workspace, and that signing out starts a new anonymous distinct ID.
+  identified person, that the resulting distinct ID is the account's
+  `analyticsUserId` and not its Discord snowflake, that `guild_id` is attached
+  to events inside a guild workspace, and that signing out starts a new
+  anonymous distinct ID.
 - Expire or clear the Scout session cookie and reload: confirm the login page
   emits events as a new anonymous person rather than the previous Discord user.
 - Deep-link `/app/g/<not-a-guild>` while signed in and confirm the events the

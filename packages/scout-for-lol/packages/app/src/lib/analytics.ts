@@ -185,7 +185,7 @@ export function analyticsPrivacySettings(activeConfig: AnalyticsConfig): {
   capture_performance: { web_vitals: true; network_timing: true };
   respect_dnt: true;
   person_profiles: "always";
-  session_recording: { maskAllInputs: true };
+  session_recording: { maskAllInputs: true; maskTextSelector: "*" };
   disable_session_recording: boolean;
 } {
   return {
@@ -199,7 +199,16 @@ export function analyticsPrivacySettings(activeConfig: AnalyticsConfig): {
     capture_performance: { web_vitals: true, network_timing: true },
     respect_dnt: true,
     person_profiles: "always",
-    session_recording: { maskAllInputs: true },
+    // `person_profiles: "always"` ties every recording to an identified person,
+    // and the workspace renders guild names, Discord display names, Riot
+    // accounts, player aliases, and channel names as ordinary text — none of
+    // which `maskAllInputs` covers, since it masks form values only. Masking
+    // every text node keeps replay useful for layout, navigation, and rage or
+    // dead clicks without turning it into a per-person record of who plays
+    // with whom. A per-component allowlist was rejected: it fails open the
+    // first time a new screen renders a name, which is the failure mode that
+    // matters most here.
+    session_recording: { maskAllInputs: true, maskTextSelector: "*" },
     disable_session_recording: !activeConfig.sessionReplay,
   };
 }
@@ -257,21 +266,26 @@ export function initAnalytics(): void {
 }
 
 /**
- * Bind the session to the signed-in Discord user. Idempotent per id: PostHog
- * merges the pre-login anonymous person into this one on the first call, and
- * repeating it on every render would emit redundant `$identify` events.
+ * Bind the session to the signed-in user. Idempotent per id: PostHog merges the
+ * pre-login anonymous person into this one on the first call, and repeating it
+ * on every render would emit redundant `$identify` events.
+ *
+ * Takes the server's opaque `analyticsUserId`, never a Discord snowflake. The
+ * distinct id is the durable join key for a person's events and recordings, so
+ * a Discord id here would make all of it addressable by Discord account — and
+ * the analytics registry forbids sending Discord user ids in the first place.
  */
-export function identifyUser(discordId: string): void {
-  if (client === undefined || identifiedUser === discordId) return;
-  identifiedUser = discordId;
-  client.identify(discordId);
+export function identifyUser(analyticsUserId: string): void {
+  if (client === undefined || identifiedUser === analyticsUserId) return;
+  identifiedUser = analyticsUserId;
+  client.identify(analyticsUserId);
 }
 
 /**
  * Drop the identified person so a shared browser never merges two users.
  *
  * Safe to call on every anonymous render: `_isIdentified` reads PostHog's
- * persisted user state, so this resets exactly when a Discord identity is still
+ * persisted user state, so this resets exactly when an identity is still
  * attached — after an explicit sign-out and equally after an expired or revoked
  * cookie, where no logout handler ever runs. Resetting unconditionally would
  * mint a fresh distinct id for ordinary anonymous visitors, which is the

@@ -718,7 +718,17 @@ messaging real people.
   navigation or a closed tab never runs.
 - Keep the event/property registry closed and bounded. Beyond `guild_id`, never
   send Discord user or channel IDs, guild names, Riot IDs, command options,
-  message content, URLs, or error messages.
+  message content, URLs, or error messages. **The distinct id counts.** The
+  browser identifies with `User.analyticsUserId`, an opaque app-owned UUID —
+  never `discordId`. A distinct id is the durable join key for a person's
+  events and recordings, so a snowflake there makes all of it addressable by
+  Discord account, which is exactly what this rule exists to prevent.
+- Scout's replay masks every text node (`maskTextSelector: "*"`), not just form
+  values. `person_profiles: "always"` associates each recording with an
+  identified person, and the workspace renders guild names, Discord display
+  names, Riot accounts, player aliases, and channel names as ordinary text.
+  Do not narrow this to a per-component allowlist: it fails open the first time
+  a new screen renders a name, and the failure is silent.
 - Person profiles are ON. Do not reintroduce `$process_person_profile: false` or
   `$geoip_disable` — install-level retention depends on them being off.
 - GeoIP is ON for browser events and OFF for these server events

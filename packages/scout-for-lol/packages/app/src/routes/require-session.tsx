@@ -28,17 +28,22 @@ export function RequireSession() {
   // to the previous Discord user, and signing in as someone else would merge the
   // two people. `resetIdentity` no-ops unless PostHog still holds an identity,
   // so an ordinary anonymous visitor keeps their distinct id.
-  const discordId = data?.user?.discordId;
+  //
+  // Identify with the server's opaque `analyticsUserId`, never `discordId`: a
+  // Discord snowflake as the distinct id would make every event and recording
+  // addressable by Discord account, and the analytics registry forbids sending
+  // Discord user ids at all.
+  const analyticsUserId = data?.user?.analyticsUserId;
   useEffect(() => {
-    // While the session query is in flight `discordId` is undefined but unknown,
-    // not anonymous; resetting here would fire on every cold page load.
+    // While the session query is in flight the id is undefined but unknown, not
+    // anonymous; resetting here would fire on every cold page load.
     if (isLoading) return;
-    if (discordId === undefined) {
+    if (analyticsUserId === undefined) {
       resetIdentity();
       return;
     }
-    identifyUser(discordId);
-  }, [discordId, isLoading]);
+    identifyUser(analyticsUserId);
+  }, [analyticsUserId, isLoading]);
 
   if (isLoading) {
     return <div style={{ padding: "2rem" }}>Loading…</div>;
