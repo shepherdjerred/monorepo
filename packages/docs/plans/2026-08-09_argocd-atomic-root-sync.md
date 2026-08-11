@@ -89,6 +89,13 @@ only an exact retry; and keep the scoped release-health gate authoritative.
   boolean. Restoring `enabled: false` to an empty object makes Argo's patch
   encode `automated: null`, which the Application CRD rejects; validate the
   synthesized chart corpus so that implicit policy cannot return.
+- Override cert-manager Certificate health so the normal initial
+  `Ready=False` / `DoesNotExist` transition remains `Progressing` while the
+  controller creates its target Secret. Keep other false Ready conditions and
+  a simultaneous `Issuing=False` failure `Degraded`, and retain the operation
+  timeout as the upper bound. This lets certificate sync waves wait for actual
+  readiness without ignoring their health or weakening terminal failure
+  handling.
 - Treat anonymous image access as part of the release handoff. Every
   application image links its GHCR package to the public monorepo through the
   OCI source label. A new package still requires an explicit one-time public
@@ -118,6 +125,9 @@ only an exact retry; and keep the scoped release-health gate authoritative.
   private, static and effective-image source-label completeness, and Turbo
   invalidation for Buildkite script inputs. Prove every image bake target
   resolves its exact pin from the real structured version catalog.
+- Cover the cert-manager health override in the synthesized ArgoCD Application
+  and prove initial Secret issuance is distinct from terminal Certificate
+  failure.
 - Recover the stranded operation only after its live identity and complete
   applied result are revalidated.
 - Require an exact-head PR build and then a fresh successful build of the

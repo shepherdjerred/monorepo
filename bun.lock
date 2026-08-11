@@ -1685,6 +1685,7 @@
         "fast-xml-parser": "5.10.1",
         "fast-xml-validator": "1.4.0",
         "istanbul-lib-instrument": "6.0.3",
+        "prettier": "3.8.3",
         "zod": "^4.4.3",
       },
       "devDependencies": {

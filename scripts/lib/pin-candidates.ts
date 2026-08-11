@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { format } from "prettier";
 import {
   parseVersionCatalogText,
   serializeVersionCatalog,
@@ -193,10 +194,10 @@ export function mergePinCandidates(
   return { schema: "pin-candidates-state/v1", pins };
 }
 
-export function rewriteVersionCatalogSource(
+export async function rewriteVersionCatalogSource(
   source: string,
   state: PinCandidatesState,
-): string {
+): Promise<string> {
   const catalog = parseVersionCatalogText(source);
   const pins = new Map(Object.entries(state.pins));
   const rewritten: VersionCatalog = {
@@ -215,5 +216,5 @@ export function rewriteVersionCatalogSource(
       );
     }
   }
-  return serializeVersionCatalog(rewritten);
+  return await format(serializeVersionCatalog(rewritten), { parser: "json" });
 }

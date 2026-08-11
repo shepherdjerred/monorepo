@@ -29,7 +29,9 @@ const C =
   "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc";
 const KEY = "shepherdjerred/example";
 
-function catalogSource(entries: { name: string; value: string }[]): string {
+function catalogSource(
+  entries: { name: string; value: string; notes?: string[] }[],
+): string {
   return JSON.stringify({
     $schema: "./version-catalog.schema.json",
     schemaVersion: 1,
@@ -43,6 +45,7 @@ function catalogSource(entries: { name: string; value: string }[]): string {
         ? { managed: true, datasource: "docker", versioning: "docker" }
         : { managed: false },
       value: entry.value,
+      ...(entry.notes === undefined ? {} : { notes: entry.notes }),
     })),
   });
 }
@@ -199,13 +202,20 @@ describe("version catalog integrity", () => {
     { name: "chart", value: "1.0.0" },
   ]);
 
-  test("rewrites exact managed keys and serializes canonically", () => {
+  test("rewrites exact managed keys as Prettier-stable canonical JSON", async () => {
     const state = mergePinCandidates(
       parsePinCandidatesState('{"schema":"pin-candidates-state/v1","pins":{}}'),
       batch(12, "v12", B),
     );
-    const rewritten = rewriteVersionCatalogSource(source, state);
+    const rewritten = await rewriteVersionCatalogSource(
+      catalogSource([
+        { name: KEY, value: `old@${A}`, notes: ["not managed"] },
+        { name: "chart", value: "1.0.0" },
+      ]),
+      state,
+    );
     expect(rewritten).toContain(`"value": "v12@${B}"`);
+    expect(rewritten).toContain('"notes": ["not managed"]');
     const entryStart = rewritten.indexOf(`"name": "${KEY}"`);
     const management = rewritten.indexOf('"management":', entryStart);
     const value = rewritten.indexOf(`"value": "v12@${B}"`, entryStart);

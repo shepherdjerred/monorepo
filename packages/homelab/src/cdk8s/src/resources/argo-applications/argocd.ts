@@ -222,6 +222,52 @@ if obj.status ~= nil then
   end
 end
 return hs`,
+        // A newly-created cert-manager Certificate reports Ready=False with
+        // reason DoesNotExist while it creates its target Secret. ArgoCD's
+        // documented generic Certificate health check classifies every False
+        // condition as Degraded, which terminates a sync wave during normal
+        // issuance. Preserve terminal Ready failures and the separate
+        // Issuing=False failure condition while letting that exact controller
+        // transition remain bounded by the operation timeout.
+        "resource.customizations.health.cert-manager.io_Certificate": `hs = {}
+hs.status = "Progressing"
+hs.message = "Waiting for certificate"
+if obj.status ~= nil and obj.status.conditions ~= nil then
+  local ready = nil
+  local failedIssuing = nil
+  for _, condition in ipairs(obj.status.conditions) do
+    if condition.type == "Ready" then
+      ready = condition
+    elseif condition.type == "Issuing" and
+           condition.status == "False" and
+           condition.reason ~= "Issued" then
+      failedIssuing = condition
+    end
+  end
+  if ready ~= nil and ready.status == "True" then
+    hs.status = "Healthy"
+    if ready.message ~= nil then
+      hs.message = ready.message
+    end
+    return hs
+  end
+  if failedIssuing ~= nil then
+    hs.status = "Degraded"
+    if failedIssuing.message ~= nil then
+      hs.message = failedIssuing.message
+    end
+    return hs
+  end
+  if ready ~= nil then
+    if ready.message ~= nil then
+      hs.message = ready.message
+    end
+    if ready.status == "False" and ready.reason ~= "DoesNotExist" then
+      hs.status = "Degraded"
+    end
+  end
+end
+return hs`,
         // Exclude ephemeral Velero resources from tracking
         "resource.exclusions": `- apiGroups:
   - velero.io
