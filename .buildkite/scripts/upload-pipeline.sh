@@ -14,16 +14,21 @@ SCRIPT_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 # shellcheck source=.buildkite/scripts/ci-image-refs.sh
 . "$SCRIPT_DIR/ci-image-refs.sh"
 
+# The pipeline expresses every main-only condition as
+# `build.branch == pipeline.default_branch`, so the uploader must key off the
+# same signal rather than the literal branch name.
+default_branch=${BUILDKITE_PIPELINE_DEFAULT_BRANCH:-main}
+
 if [ "${CI_IO_FIXED_CORPUS:-}" != "" ] && [ "${CI_IO_FIXED_CORPUS:-}" != true ]; then
   echo 'CI_IO_FIXED_CORPUS must be exactly "true" when set' >&2
   exit 1
 fi
-if [ "${CI_IO_FIXED_CORPUS:-}" = true ] && [ "${BUILDKITE_BRANCH:-}" != main ]; then
-  echo "CI_IO_FIXED_CORPUS is main-only; BUILDKITE_BRANCH was ${BUILDKITE_BRANCH:-unset}" >&2
+if [ "${CI_IO_FIXED_CORPUS:-}" = true ] && [ "${BUILDKITE_BRANCH:-}" != "$default_branch" ]; then
+  echo "CI_IO_FIXED_CORPUS is ${default_branch}-only; BUILDKITE_BRANCH was ${BUILDKITE_BRANCH:-unset}" >&2
   exit 1
 fi
 
-if [ "${BUILDKITE_BRANCH:-}" = main ]; then
+if [ "${BUILDKITE_BRANCH:-}" = "$default_branch" ]; then
   buildkite-agent pipeline upload .buildkite/main-bootstrap.yml
   exit 0
 fi

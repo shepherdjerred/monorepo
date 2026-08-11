@@ -78,6 +78,18 @@ if [ "$(cat "$FIXTURE/main-bootstrap")" != ".buildkite/main-bootstrap.yml" ]; th
   exit 1
 fi
 
+CAPTURE_PATH="$FIXTURE/renamed-default-bootstrap" \
+  CI_BASE_IMAGE_CAPTURE="$FIXTURE/renamed-default-ci-base-image" \
+  CI_PLAYWRIGHT_IMAGE_CAPTURE="$FIXTURE/renamed-default-ci-playwright-image" \
+  BUILDKITE_BRANCH=trunk \
+  BUILDKITE_PIPELINE_DEFAULT_BRANCH=trunk \
+  PATH="$FIXTURE/fake-bin:$PATH" \
+  sh -c "cd '$FIXTURE' && sh '$UPLOADER'"
+if [ "$(cat "$FIXTURE/renamed-default-bootstrap")" != ".buildkite/main-bootstrap.yml" ]; then
+  echo "renamed default branch did not upload the selector bootstrap" >&2
+  exit 1
+fi
+
 CAPTURE_PATH="$FIXTURE/release-please" \
   CI_BASE_IMAGE_CAPTURE="$FIXTURE/release-please-ci-base-image" \
   CI_PLAYWRIGHT_IMAGE_CAPTURE="$FIXTURE/release-please-ci-playwright-image" \
