@@ -13,7 +13,16 @@ export type ImageCommandExecutor = (
   environment?: Readonly<Record<string, string | undefined>>,
 ) => Promise<BuildxCommandResult>;
 
+export function sourceLabelVerifier(
+  override: ((image: string) => Promise<void>) | undefined,
+  executor: ImageCommandExecutor,
+): (image: string) => Promise<void> {
+  return override ?? (async (image) => assertImageSourceLabel(image, executor));
+}
+
 const applicationImageTargets = new Set(APPLICATION_IMAGE_TARGETS);
+const monorepoSource = "https://github.com/shepherdjerred/monorepo";
+const sourceLabel = "org.opencontainers.image.source";
 
 // Registry/BuildKit diagnostics that specifically mean the requested manifest
 // or repository does not exist — the only inspect failure that legitimately
@@ -135,6 +144,47 @@ export function runtimeFingerprintFromImage(
   return new Bun.CryptoHasher("sha256")
     .update(canonicalJson(fingerprintInput))
     .digest("hex");
+}
+
+export async function assertImageSourceLabel(
+  image: string,
+  executor: ImageCommandExecutor,
+): Promise<void> {
+  const result = await executor([
+    "docker",
+    "buildx",
+    "imagetools",
+    "inspect",
+    image,
+    "--format",
+    "{{json .Image.Config.Labels}}",
+  ]);
+  const diagnostics = `${result.stdout}\n${result.stderr}`;
+  const detail = result.stderr.trim() || result.stdout.trim();
+  if (result.exitCode !== 0) {
+    if (bakeFailureIsTransient(diagnostics)) {
+      throw new TransientError(
+        `Transient failure inspecting source label for ${image}: ${detail}`,
+      );
+    }
+    throw new Error(`Could not inspect source label for ${image}: ${detail}`);
+  }
+
+  let value: unknown;
+  try {
+    value = JSON.parse(result.stdout);
+  } catch (error) {
+    throw new TransientError(
+      `Invalid source-label metadata for ${image}: ${String(error)}`,
+    );
+  }
+  const labels = asRecord(value);
+  if (labels === null) {
+    throw new TypeError(`Source-label metadata for ${image} must be an object`);
+  }
+  if (labels[sourceLabel] !== monorepoSource) {
+    throw new Error(`${image} must carry ${sourceLabel}=${monorepoSource}`);
+  }
 }
 
 export async function imageRuntimeFingerprint(

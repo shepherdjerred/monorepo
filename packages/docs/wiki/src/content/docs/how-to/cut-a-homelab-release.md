@@ -94,7 +94,9 @@ resolves every pushed candidate to a digest. The
 then fetches that immutable digest before the job records any pin candidate. A
 `401` from the anonymous token request means the package is still private. A
 manifest `404` after a successful token request can be brief registry
-propagation and is retried within the job.
+propagation and is retried within the job. The flow also inspects the effective
+OCI configuration at that digest and rejects a missing or incorrect monorepo
+source label.
 
 For a newly named application image, first confirm its runtime Dockerfile has
 the exact monorepo `org.opencontainers.image.source` label in the published

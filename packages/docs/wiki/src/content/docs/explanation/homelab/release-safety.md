@@ -201,9 +201,11 @@ resolves the candidate tag to a digest. The
 [anonymous GHCR probe](https://github.com/shepherdjerred/monorepo/blob/ecfd92e182858588dc98c9ed85fcefe768fb0680/.buildkite/scripts/ghcr-public-access.ts)
 then requests a pull token and fetches that immutable digest. Visibility and
 manifest propagation may lag briefly, so the probe polls a bounded number of
-times. The image lane records no pin candidate until that fetch succeeds. This
-keeps a publisher credential from hiding the failure that the unauthenticated
-kubelet would see later.
+times. Buildx then reads the effective OCI configuration at that same digest
+and requires its source label to name the monorepo. The image lane records no
+pin candidate until both checks succeed. This keeps a publisher credential or
+a misleading Dockerfile from hiding what the unauthenticated kubelet and the
+published artifact would expose later.
 
 Application image selection uses the newest `main` commit whose `images` and
 `version-commit-back` jobs both passed as its comparison base.

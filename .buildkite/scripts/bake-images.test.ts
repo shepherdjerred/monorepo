@@ -13,6 +13,7 @@ import {
 } from "./bake-images.ts";
 import { ensureAnonymousGhcrPull } from "./ghcr-public-access.ts";
 import {
+  assertImageSourceLabel,
   CI_IMAGE_IGNORED_ENV_PREFIXES,
   imageRuntimeFingerprint,
   runExactCandidateSmoke,
@@ -114,6 +115,25 @@ async function imageExecutor(): Promise<BuildxCommandResult> {
       config: { Cmd: ["bun", "src/index.ts"], WorkingDir: "/app" },
       created: "ignored",
       history: [{ created: "ignored" }],
+    }),
+  );
+}
+
+async function validSourceLabelExecutor(): Promise<BuildxCommandResult> {
+  return commandResult(
+    0,
+    JSON.stringify({
+      "org.opencontainers.image.source":
+        "https://github.com/shepherdjerred/monorepo",
+    }),
+  );
+}
+
+async function wrongSourceLabelExecutor(): Promise<BuildxCommandResult> {
+  return commandResult(
+    0,
+    JSON.stringify({
+      "org.opencontainers.image.source": "https://github.com/other/repo",
     }),
   );
 }
@@ -607,6 +627,22 @@ test("fingerprints rootfs and runtime OCI config without build identity", async 
   );
 });
 
+test("requires the effective candidate OCI source label", async () => {
+  const image = `ghcr.io/shepherdjerred/example@sha256:${"a".repeat(64)}`;
+  await expect(
+    assertImageSourceLabel(image, validSourceLabelExecutor),
+  ).resolves.toBeUndefined();
+  await expect(
+    assertImageSourceLabel(image, wrongSourceLabelExecutor),
+  ).rejects.toThrow("must carry org.opencontainers.image.source");
+  await expect(
+    assertImageSourceLabel(image, async () => commandResult(0, "{")),
+  ).rejects.toBeInstanceOf(TransientError);
+  await expect(
+    assertImageSourceLabel(image, transientInspectExecutor),
+  ).rejects.toBeInstanceOf(TransientError);
+});
+
 test("keeps build-identity env for CI images while dropping it for application images", () => {
   const base = {
     architecture: "amd64",
@@ -798,6 +834,9 @@ test("smokes exact candidates, reuses identical runtime fingerprints, and tags S
       verifyAnonymousPull: async (target, reference) => {
         events.push(`public:${target}:${reference}`);
       },
+      verifySourceLabel: async (image) => {
+        events.push(`source:${image}`);
+      },
       getRuntimeFingerprint: async (image) => {
         events.push(`fingerprint:${image}`);
         if (image.includes("scout-for-lol")) {
@@ -835,20 +874,31 @@ test("smokes exact candidates, reuses identical runtime fingerprints, and tags S
     `public:scout-for-lol:${digest}`,
     `public:starlight-karma-bot:${digest}`,
   ]);
+  expect(events.filter((event) => event.startsWith("source:"))).toEqual([
+    `source:ghcr.io/shepherdjerred/birmel@${digest}`,
+    `source:ghcr.io/shepherdjerred/scout-for-lol@${digest}`,
+    `source:ghcr.io/shepherdjerred/starlight-karma-bot@${digest}`,
+  ]);
   expect(events[0]).toBe(
     "resolve:ghcr.io/shepherdjerred/birmel:candidate-commit",
   );
   expect(events[1]).toBe(`public:birmel:${digest}`);
-  expect(events[2]).toBe(
+  expect(events[2]).toBe(`source:ghcr.io/shepherdjerred/birmel@${digest}`);
+  expect(events[3]).toBe(
     `smoke:birmel:ghcr.io/shepherdjerred/birmel@${digest}`,
   );
-  expect(events[3]).toBe(`fingerprint:ghcr.io/shepherdjerred/birmel@${digest}`);
+  expect(events[4]).toBe(`fingerprint:ghcr.io/shepherdjerred/birmel@${digest}`);
   expect(
     events.indexOf(
       "resolve:ghcr.io/shepherdjerred/scout-for-lol:candidate-commit",
     ),
   ).toBeLessThan(events.indexOf(`public:scout-for-lol:${digest}`));
   expect(events.indexOf(`public:scout-for-lol:${digest}`)).toBeLessThan(
+    events.indexOf(`source:ghcr.io/shepherdjerred/scout-for-lol@${digest}`),
+  );
+  expect(
+    events.indexOf(`source:ghcr.io/shepherdjerred/scout-for-lol@${digest}`),
+  ).toBeLessThan(
     events.indexOf(
       `smoke:scout-for-lol:ghcr.io/shepherdjerred/scout-for-lol@${digest}`,
     ),
@@ -859,6 +909,15 @@ test("smokes exact candidates, reuses identical runtime fingerprints, and tags S
     ),
   ).toBeLessThan(events.indexOf(`public:starlight-karma-bot:${digest}`));
   expect(events.indexOf(`public:starlight-karma-bot:${digest}`)).toBeLessThan(
+    events.indexOf(
+      `source:ghcr.io/shepherdjerred/starlight-karma-bot@${digest}`,
+    ),
+  );
+  expect(
+    events.indexOf(
+      `source:ghcr.io/shepherdjerred/starlight-karma-bot@${digest}`,
+    ),
+  ).toBeLessThan(
     events.indexOf(
       `fingerprint:ghcr.io/shepherdjerred/starlight-karma-bot@${digest}`,
     ),

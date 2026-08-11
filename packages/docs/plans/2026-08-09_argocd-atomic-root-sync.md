@@ -91,8 +91,10 @@ only an exact retry; and keep the scoped release-health gate authoritative.
   visibility bootstrap because repository association does not change its
   private default. After pushing an exact candidate, resolve its digest, poll
   for an anonymous token, and fetch that immutable digest without publisher
-  credentials before recording any pin candidate. A private package must fail
-  image publication before its digest can reach GitOps.
+  credentials. Inspect the effective OCI configuration at that digest and
+  require the exact monorepo source label before recording any pin candidate.
+  A private or incorrectly labeled package must fail image publication before
+  its digest can reach GitOps.
 
 ## Verification
 
@@ -105,8 +107,8 @@ only an exact retry; and keep the scoped release-health gate authoritative.
 - Run focused Bun tests, homelab typecheck and lint, pipeline validation, staged
   pre-commit checks, and the complete root verification graph.
 - Cover delayed GHCR visibility and manifest propagation, a package that stays
-  private, source-label completeness, and Turbo invalidation for Buildkite
-  script inputs.
+  private, static and effective-image source-label completeness, and Turbo
+  invalidation for Buildkite script inputs.
 - Recover the stranded operation only after its live identity and complete
   applied result are revalidated.
 - Require an exact-head PR build and then a fresh successful build of the

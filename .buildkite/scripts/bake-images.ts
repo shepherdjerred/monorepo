@@ -4,6 +4,7 @@ import {
   classifyRuntimeChange,
   imageRuntimeFingerprint,
   runExactCandidateSmoke,
+  sourceLabelVerifier,
 } from "./application-image-runtime.ts";
 import {
   retryTransientBuildx,
@@ -297,6 +298,7 @@ export async function pushImages(
     readonly readVersions?: () => Promise<string>;
     readonly getManifestDigest?: (image: string) => Promise<string>;
     readonly verifyAnonymousPull?: AnonymousPullVerifier;
+    readonly verifySourceLabel?: (image: string) => Promise<void>;
     readonly getRuntimeFingerprint?: (
       image: string,
     ) => Promise<string | undefined>;
@@ -323,6 +325,10 @@ export async function pushImages(
   const getManifestDigest = dependencies.getManifestDigest ?? manifestDigest;
   const verifyAnonymousPull = anonymousPullVerifier(
     dependencies.verifyAnonymousPull,
+  );
+  const verifySourceLabel = sourceLabelVerifier(
+    dependencies.verifySourceLabel,
+    executor,
   );
   const getRuntimeFingerprint =
     dependencies.getRuntimeFingerprint ??
@@ -383,8 +389,9 @@ export async function pushImages(
     }
     const candidateTag = `${image}:candidate-${commit}`;
     const digest = await getManifestDigest(candidateTag);
-    await verifyAnonymousPull(name, digest);
     const candidate = `${image}@${digest}`;
+    await verifyAnonymousPull(name, digest);
+    await verifySourceLabel(candidate);
     if (applicationImageTargets.has(name)) {
       await smokeCandidate(name, candidate, contractHash);
     }
