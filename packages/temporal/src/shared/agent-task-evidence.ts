@@ -340,13 +340,15 @@ function normalizeDeclaredCheck(
   }
 
   const semanticPredicatesPassed = adverseSemanticStatusIds.length === 0;
-  const independentPass = evidenceIntegrityComplete && semanticPredicatesPassed;
   const status =
-    !independentPass && result.status === "passed" ? "failed" : result.status;
+    !semanticPredicatesPassed ||
+    (!evidenceIntegrityComplete && result.status === "passed")
+      ? "failed"
+      : result.status;
   const summary =
     !evidenceIntegrityComplete && result.status === "passed"
       ? `${result.summary} Evidence validation failed.`
-      : !semanticPredicatesPassed && result.status === "passed"
+      : !semanticPredicatesPassed && result.status !== "failed"
         ? `${result.summary} Source-defined collector predicates failed: ${adverseSemanticStatusIds.join(", ")}.`
         : result.summary;
   return {

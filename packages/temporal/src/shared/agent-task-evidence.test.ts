@@ -326,7 +326,9 @@ describe("agent task evidence normalization", () => {
     );
     expect(normalized.findings).toEqual([]);
   });
+});
 
+describe("agent task semantic predicate normalization", () => {
   test("keeps a fully observed domain failure complete and attention-worthy", () => {
     const payload = v2Payload([COLLECTOR_RECEIPT_ID]);
     const check = payload.checks[0];
@@ -366,6 +368,33 @@ describe("agent task evidence normalization", () => {
         },
       ],
     );
+
+    expect(normalized.execution).toBe("complete");
+    expect(normalized.verdict).toBe("attention");
+    expect(normalized.checks[0]?.status).toBe("failed");
+    expect(normalized.checks[0]?.summary).toContain(
+      "Source-defined collector predicates failed",
+    );
+  });
+
+  test("does not let a skipped claim hide an adverse predicate", () => {
+    const payload = v2Payload([COLLECTOR_RECEIPT_ID]);
+    const check = payload.checks[0];
+    if (check === undefined) throw new Error("missing payload check");
+    check.status = "skipped";
+    check.summary = "The agent skipped interpretation.";
+
+    const normalized = normalizeAgentTaskV2Result(v2Input(), payload, [
+      {
+        id: COLLECTOR_RECEIPT_ID,
+        source: "prometheus:service-health-endpoint",
+        origin: "declared-collector",
+        observedAt: OBSERVED_AT,
+        status: "success",
+        semanticStatus: "failed",
+        excerpt: '{"status":"success","data":{"result":[0]}}',
+      },
+    ]);
 
     expect(normalized.execution).toBe("complete");
     expect(normalized.verdict).toBe("attention");
