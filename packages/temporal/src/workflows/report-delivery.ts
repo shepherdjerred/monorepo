@@ -4,19 +4,18 @@ import type {
   ReportDeliveryResult,
 } from "#activities/report-delivery.ts";
 import type { ReportEnvelopeV1 } from "#shared/report.ts";
+import {
+  REPORT_DELIVERY_ACTIVITY_RETRY,
+  REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS,
+} from "#shared/report-delivery-policy.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const reportDeliveryActivities = proxyActivities<
   Pick<ReportDeliveryActivities, "deliverReport">
 >({
   taskQueue: TASK_QUEUES.DEFAULT,
-  startToCloseTimeout: "2 minutes",
-  retry: {
-    maximumAttempts: 3,
-    initialInterval: "10 seconds",
-    backoffCoefficient: 2,
-    maximumInterval: "1 minute",
-  },
+  startToCloseTimeout: REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS,
+  retry: REPORT_DELIVERY_ACTIVITY_RETRY,
 });
 
 /**

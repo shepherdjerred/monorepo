@@ -4,6 +4,7 @@ import type {
   RunAgentTaskResult,
 } from "#activities/agent-task.ts";
 import type { AgentTaskInput } from "#shared/agent-task.ts";
+import { AGENT_REPORT_DELIVERY_START_TO_CLOSE_MS } from "#shared/report-delivery-policy.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const RETRY = {
@@ -59,13 +60,13 @@ async function executeAgentTask(
 }
 
 const legacyEmailActivities = proxyActivities<AgentTaskActivities>({
-  startToCloseTimeout: "2 minutes",
+  startToCloseTimeout: AGENT_REPORT_DELIVERY_START_TO_CLOSE_MS,
   retry: RETRY,
 });
 
 const coreEmailActivities = proxyActivities<AgentTaskActivities>({
   taskQueue: TASK_QUEUES.DEFAULT,
-  startToCloseTimeout: "2 minutes",
+  startToCloseTimeout: AGENT_REPORT_DELIVERY_START_TO_CLOSE_MS,
   retry: RETRY,
 });
 

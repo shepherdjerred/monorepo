@@ -4,6 +4,10 @@ import {
   WorkflowIdReusePolicy,
 } from "@temporalio/client";
 import type { ReportEnvelopeV1 } from "#shared/report.ts";
+import {
+  AGENT_REPORT_DELIVERY_START_TO_CLOSE_MS,
+  REPORT_DELIVERY_WORKFLOW_BUDGET_MS,
+} from "#shared/report-delivery-policy.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
   agentTaskReportDeliveryWorkflowOptions,
@@ -62,6 +66,13 @@ const DELIVERY_RESULT: ReportDeliveryResult = {
 };
 
 describe("agent task report delivery delegation", () => {
+  test("budgets the outer activity beyond the complete delegated retry window", () => {
+    expect(REPORT_DELIVERY_WORKFLOW_BUDGET_MS).toBe(390_000);
+    expect(AGENT_REPORT_DELIVERY_START_TO_CLOSE_MS).toBeGreaterThan(
+      REPORT_DELIVERY_WORKFLOW_BUDGET_MS,
+    );
+  });
+
   test("targets the credentialed core queue with a stable workflow identity", () => {
     expect(agentTaskReportDeliveryWorkflowOptions(REPORT)).toEqual({
       args: [REPORT],

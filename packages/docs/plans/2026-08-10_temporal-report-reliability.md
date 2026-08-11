@@ -123,3 +123,6 @@ self-cancellation are removed.
   activity but delegate delivery through a fixed core-queue workflow. This
   preserves Temporal determinism without restoring Postal or report-state S3
   credentials to the generic agent pod.
+- The outer agent email activity now has a shared 10-minute completion budget,
+  longer than the delegated workflow's complete three-attempt delivery window,
+  so a slow accepted email cannot leave its parent agent workflow failed.
