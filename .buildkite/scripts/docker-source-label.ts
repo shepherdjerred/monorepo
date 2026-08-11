@@ -8,6 +8,24 @@ type Heredoc = {
   readonly stripTabs: boolean;
 };
 
+function dockerfileEscape(dockerfile: string): "\\" | "`" {
+  for (const rawLine of dockerfile.split("\n")) {
+    const line = rawLine.endsWith("\r") ? rawLine.slice(0, -1) : rawLine;
+    if (!line.startsWith("#")) return "\\";
+    const body = line.slice(1).trim();
+    const separator = body.indexOf("=");
+    if (separator === -1) return "\\";
+
+    const name = body.slice(0, separator).trim().toLowerCase();
+    const value = body.slice(separator + 1).trim();
+    if (name === "escape") {
+      return value === "`" ? "`" : "\\";
+    }
+    if (name !== "syntax" && name !== "check") return "\\";
+  }
+  return "\\";
+}
+
 function instructionHeredocs(instruction: string): Heredoc[] {
   const heredocs: Heredoc[] = [];
   let offset = 0;
@@ -62,6 +80,7 @@ function instructionHeredocs(instruction: string): Heredoc[] {
 
 function dockerfileInstructions(dockerfile: string): string[] {
   const instructions: string[] = [];
+  const escape = dockerfileEscape(dockerfile);
   let heredocs: Heredoc[] = [];
   let pending = "";
   for (const rawLine of dockerfile.split("\n")) {
@@ -79,7 +98,7 @@ function dockerfileInstructions(dockerfile: string): string[] {
     ) {
       continue;
     }
-    const continues = trimmed.endsWith("\\");
+    const continues = trimmed.endsWith(escape);
     const part = continues ? trimmed.slice(0, -1).trimEnd() : trimmed;
     pending = pending.length === 0 ? part : `${pending} ${part}`;
     if (!continues) {
