@@ -85,6 +85,24 @@ application forever.
 If you expected a rebuild and got none, check whether your commit only moved a
 pin.
 
+## If GHCR rejects a workload pull
+
+The image job must anonymously fetch every exact candidate manifest after its
+authenticated push and before it records a digest. A `401` from the anonymous
+token request means the package is still private; a manifest `404` after a
+successful token request can be brief registry propagation and is retried
+within the job.
+
+For a newly named application image, first confirm its runtime Dockerfile has
+the exact monorepo `org.opencontainers.image.source` label. That links the
+package to the public repository before initial publication so it can inherit
+repository access, as described in GitHub's
+[package access guidance](https://docs.github.com/en/packages/learn-github-packages/configuring-a-packages-access-control-and-visibility).
+If the package existed before the label, correct its visibility in Package
+settings, then verify both the anonymous token request and the exact manifest
+fetch. Do not distribute the publisher's broad GHCR credential to application
+namespaces to conceal a visibility mistake.
+
 ## If the release will not start
 
 A previous root operation stuck in `Running` blocks the next ordered release.

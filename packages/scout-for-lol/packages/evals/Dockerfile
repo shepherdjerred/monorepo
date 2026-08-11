@@ -64,6 +64,7 @@ COPY --from=build \
   /app/packages/scout-for-lol/packages/evals/dist/client
 
 ENV NODE_ENV=production
+LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"
 
 # app.ts serves ./dist/client cwd-relative, so the workdir must be the package.
 WORKDIR /app/packages/scout-for-lol/packages/evals

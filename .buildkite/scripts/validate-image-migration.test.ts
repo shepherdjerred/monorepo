@@ -3,6 +3,7 @@ import { describe, expect, test } from "bun:test";
 import {
   applicationSmokePort,
   assertDeterministicBinderyIdentity,
+  assertMonorepoSourceLabel,
   assertWikiManifestInDockerContext,
   assertWorkspaceInstallContexts,
   assertUniqueSmokePorts,
@@ -153,6 +154,57 @@ packages/docs/wiki/*
       assertWikiManifestInDockerContext("packages/docs");
     }).toThrow(
       ".dockerignore is missing wiki workspace manifest context rule packages/docs/*",
+    );
+  });
+});
+
+describe("GHCR package provenance", () => {
+  test("requires application images to inherit the public repository", () => {
+    expect(() =>
+      assertMonorepoSourceLabel(
+        'FROM runtime AS image\nLABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"',
+        "example",
+        "image",
+      ),
+    ).not.toThrow();
+    expect(() =>
+      assertMonorepoSourceLabel("FROM runtime AS image", "example", "image"),
+    ).toThrow(
+      "example published image stage must link its GHCR package to the public monorepo",
+    );
+    expect(() =>
+      assertMonorepoSourceLabel(
+        'FROM base AS runtime\nLABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"\nFROM runtime AS image',
+        "example",
+        "image",
+      ),
+    ).not.toThrow();
+    expect(() =>
+      assertMonorepoSourceLabel(
+        'FROM runtime AS image\nLABEL org.opencontainers.image.source="https://github.com/somewhere/else"',
+        "example",
+        "image",
+      ),
+    ).toThrow(
+      "example published image stage must link its GHCR package to the public monorepo",
+    );
+    expect(() =>
+      assertMonorepoSourceLabel(
+        'FROM build AS builder\nLABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"\nFROM runtime AS image',
+        "example",
+        "image",
+      ),
+    ).toThrow(
+      "example published image stage must link its GHCR package to the public monorepo",
+    );
+    expect(() =>
+      assertMonorepoSourceLabel(
+        'FROM runtime AS image\n# LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"',
+        "example",
+        "image",
+      ),
+    ).toThrow(
+      "example published image stage must link its GHCR package to the public monorepo",
     );
   });
 });

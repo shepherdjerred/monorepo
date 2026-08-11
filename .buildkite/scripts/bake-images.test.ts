@@ -11,6 +11,7 @@ import {
   type CommandExecutor,
   writeFallbackReport,
 } from "./bake-images.ts";
+import { ensureAnonymousGhcrPull } from "./ghcr-public-access.ts";
 import {
   CI_IMAGE_IGNORED_ENV_PREFIXES,
   imageRuntimeFingerprint,
@@ -127,6 +128,66 @@ test("grants caddyfile read access to smoke and push bakes", () => {
   expect(caddyfileEntitlementArguments(["birmel"])).toEqual([]);
   expect(() => caddyfileEntitlementArguments(["caddy-s3proxy"])).toThrow(
     "CADDYFILE_SMOKE_PATH is required for caddy-s3proxy",
+  );
+});
+
+test("waits for an exact candidate to become anonymously pullable", async () => {
+  const requests: string[] = [];
+  let tokenRequests = 0;
+  let manifestRequests = 0;
+  const fetcher = Object.assign(
+    async (input: string | URL | Request) => {
+      const url = input instanceof Request ? input.url : input.toString();
+      requests.push(url);
+      if (url.includes("/token?")) {
+        tokenRequests += 1;
+        return tokenRequests === 1
+          ? new Response(null, { status: 401 })
+          : Response.json({ token: "anonymous-token" });
+      }
+      manifestRequests += 1;
+      return manifestRequests === 1
+        ? new Response(null, { status: 404 })
+        : new Response("{}", { status: 200 });
+    },
+    { preconnect: fetch.preconnect },
+  );
+  const sleeps: number[] = [];
+
+  await ensureAnonymousGhcrPull("alert-dashboard", "candidate-commit", {
+    fetcher,
+    sleeper: async (milliseconds) => {
+      sleeps.push(milliseconds);
+    },
+    attempts: 3,
+    delayMilliseconds: 25,
+  });
+
+  expect(sleeps).toEqual([25, 25]);
+  expect(requests).toEqual([
+    "https://ghcr.io/token?scope=repository%3Ashepherdjerred%2Falert-dashboard%3Apull&service=ghcr.io",
+    "https://ghcr.io/token?scope=repository%3Ashepherdjerred%2Falert-dashboard%3Apull&service=ghcr.io",
+    "https://ghcr.io/v2/shepherdjerred/alert-dashboard/manifests/candidate-commit",
+    "https://ghcr.io/token?scope=repository%3Ashepherdjerred%2Falert-dashboard%3Apull&service=ghcr.io",
+    "https://ghcr.io/v2/shepherdjerred/alert-dashboard/manifests/candidate-commit",
+  ]);
+});
+
+test("fails closed when a GHCR package stays private", async () => {
+  const fetcher = Object.assign(
+    async () => new Response(null, { status: 401 }),
+    { preconnect: fetch.preconnect },
+  );
+
+  await expect(
+    ensureAnonymousGhcrPull("alert-dashboard", "candidate-commit", {
+      fetcher,
+      sleeper: async (milliseconds) => milliseconds,
+      attempts: 2,
+      delayMilliseconds: 0,
+    }),
+  ).rejects.toThrow(
+    "GHCR package shepherdjerred/alert-dashboard is not anonymously pullable",
   );
 });
 
@@ -661,6 +722,9 @@ test("smokes exact candidates, reuses identical runtime fingerprints, and tags S
         manifestReferences.push(image);
         return digest;
       },
+      verifyAnonymousPull: async (target, reference) => {
+        events.push(`public:${target}:${reference}`);
+      },
       getRuntimeFingerprint: async (image) => {
         events.push(`fingerprint:${image}`);
         if (image.includes("scout-for-lol")) {
@@ -693,12 +757,27 @@ test("smokes exact candidates, reuses identical runtime fingerprints, and tags S
     "ghcr.io/shepherdjerred/scout-for-lol:candidate-commit",
     "ghcr.io/shepherdjerred/starlight-karma-bot:candidate-commit",
   ]);
-  expect(events[0]).toBe(
+  expect(events.filter((event) => event.startsWith("public:"))).toEqual([
+    "public:birmel:candidate-commit",
+    "public:scout-for-lol:candidate-commit",
+    "public:starlight-karma-bot:candidate-commit",
+  ]);
+  expect(events[0]).toBe("public:birmel:candidate-commit");
+  expect(events[1]).toBe(
     `smoke:birmel:ghcr.io/shepherdjerred/birmel@${digest}`,
   );
-  expect(events[1]).toBe(`fingerprint:ghcr.io/shepherdjerred/birmel@${digest}`);
-  expect(events).toContain(
-    `smoke:scout-for-lol:ghcr.io/shepherdjerred/scout-for-lol@${digest}`,
+  expect(events[2]).toBe(`fingerprint:ghcr.io/shepherdjerred/birmel@${digest}`);
+  expect(events.indexOf("public:scout-for-lol:candidate-commit")).toBeLessThan(
+    events.indexOf(
+      `smoke:scout-for-lol:ghcr.io/shepherdjerred/scout-for-lol@${digest}`,
+    ),
+  );
+  expect(
+    events.indexOf("public:starlight-karma-bot:candidate-commit"),
+  ).toBeLessThan(
+    events.indexOf(
+      `fingerprint:ghcr.io/shepherdjerred/starlight-karma-bot@${digest}`,
+    ),
   );
   expect(metadata).toEqual([
     {

@@ -85,6 +85,12 @@ only an exact retry; and keep the scoped release-health gate authoritative.
   boolean. Restoring `enabled: false` to an empty object makes Argo's patch
   encode `automated: null`, which the Application CRD rejects; validate the
   synthesized chart corpus so that implicit policy cannot return.
+- Treat anonymous image access as part of the release handoff. Every
+  application image links its GHCR package to the public monorepo through the
+  OCI source label. After pushing an exact candidate, poll for an anonymous
+  token and fetch that candidate manifest without publisher credentials before
+  recording any digest or pin candidate. A private package must fail image
+  publication before its digest can reach GitOps.
 
 ## Verification
 
@@ -96,6 +102,9 @@ only an exact retry; and keep the scoped release-health gate authoritative.
   and five child Applications still in a running health phase.
 - Run focused Bun tests, homelab typecheck and lint, pipeline validation, staged
   pre-commit checks, and the complete root verification graph.
+- Cover delayed GHCR visibility and manifest propagation, a package that stays
+  private, source-label completeness, and Turbo invalidation for Buildkite
+  script inputs.
 - Recover the stranded operation only after its live identity and complete
   applied result are revalidated.
 - Require an exact-head PR build and then a fresh successful build of the
@@ -103,5 +112,7 @@ only an exact retry; and keep the scoped release-health gate authoritative.
 
 ## Remaining
 
-- [ ] Complete local verification and publish the exact-head pull request.
-- [ ] Recover the stranded operation, merge, and confirm current `main` is green.
+- [x] Implement and verify the atomic root lifecycle, recover the stranded
+      operation, and merge its exact validated head.
+- [ ] Publish the anonymous-image handoff fix and confirm the current `main`
+      build plus its scoped release health gate are green.

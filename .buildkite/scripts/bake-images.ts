@@ -20,6 +20,11 @@ import {
   parseImageSelection,
 } from "./migration-core.ts";
 import { APPLICATION_IMAGE_TARGETS } from "./image-targets.ts";
+import {
+  anonymousPullVerifier,
+  type AnonymousPullVerifier,
+} from "./ghcr-public-access.ts";
+import type { PushOptions, PushOutcome } from "./bake-image-push-types.ts";
 
 const registry = "ghcr.io/shepherdjerred";
 const selectionReport = "image-selection-report.json";
@@ -283,22 +288,6 @@ export async function runSmoke(
   if (exitCode !== 0) process.exit(exitCode);
 }
 
-type PushOutcome = {
-  readonly image: string;
-  readonly outcome:
-    | "bumped"
-    | "content-unchanged"
-    | "pin-unresolvable-bumped"
-    | "no-pin-bumped";
-};
-
-type PushOptions = {
-  readonly targets: readonly string[];
-  readonly commit: string;
-  readonly buildNumber: string;
-  readonly contractHash: string;
-};
-
 export async function pushImages(
   options: PushOptions,
   dependencies: {
@@ -306,6 +295,7 @@ export async function pushImages(
     readonly environment?: Readonly<Record<string, string | undefined>>;
     readonly readVersions?: () => Promise<string>;
     readonly getManifestDigest?: (image: string) => Promise<string>;
+    readonly verifyAnonymousPull?: AnonymousPullVerifier;
     readonly getRuntimeFingerprint?: (
       image: string,
     ) => Promise<string | undefined>;
@@ -330,6 +320,9 @@ export async function pushImages(
   const readVersions =
     dependencies.readVersions ?? (async () => Bun.file(versionsPath).text());
   const getManifestDigest = dependencies.getManifestDigest ?? manifestDigest;
+  const verifyAnonymousPull = anonymousPullVerifier(
+    dependencies.verifyAnonymousPull,
+  );
   const getRuntimeFingerprint =
     dependencies.getRuntimeFingerprint ??
     (async (image) => imageRuntimeFingerprint(image, executor));
@@ -388,6 +381,7 @@ export async function pushImages(
       throw new Error(`No managed image pin exists for ${image}`);
     }
     const candidateTag = `${image}:candidate-${commit}`;
+    await verifyAnonymousPull(name, `candidate-${commit}`);
     const digest = await getManifestDigest(candidateTag);
     const candidate = `${image}@${digest}`;
     if (applicationImageTargets.has(name)) {

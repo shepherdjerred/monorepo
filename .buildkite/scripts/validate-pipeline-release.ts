@@ -36,7 +36,7 @@ export function validateAtomicRootSyncLifecycle(
     fail("argocd-sync is missing the atomic identity-bound root sync");
   }
   const executableCommands = argocdSync
-    .replace(/\\\r?\n[\t ]*/g, "")
+    .replaceAll(/\\\r?\n[\t ]*/g, "")
     .split("\n")
     .map((line) => line.trim())
     .filter((line) => !line.startsWith("#"))

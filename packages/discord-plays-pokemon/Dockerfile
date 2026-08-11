@@ -226,6 +226,7 @@ COPY --from=wasm-abi-test /app/packages/discord-plays-pokemon/packages/backend/a
 # commit SHA (`--build-arg VERSION=… --build-arg GIT_SHA=…`); the `dev`/`unknown`
 # defaults keep a plain `docker run` bootable.
 ENV NODE_ENV=production
+LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"
 ARG VERSION=dev
 ARG GIT_SHA=unknown
 ENV VERSION=${VERSION}

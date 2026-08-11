@@ -47,6 +47,7 @@ COPY --parents \
   ./
 
 ENV NODE_ENV=production
+LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"
 
 # tasknotes-server serves on PORT (default 3000) with no external auth at boot.
 EXPOSE 3000
