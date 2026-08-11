@@ -33,13 +33,21 @@ type GrepRule = {
   excludePathPatterns: string[];
 };
 
+export const QUALITY_RATCHET_EXCLUDED_DIRECTORIES = [
+  "node_modules",
+  "dist",
+  "archive",
+  "discord-video-stream",
+  "target",
+];
+
 const RULES: GrepRule[] = [
   {
     key: "eslint-disable",
     pattern: String.raw`^\s*(//|/\*)\s*eslint-disable`,
     searchPaths: ["packages/"],
     includes: ["*.ts", "*.tsx"],
-    excludeDirs: ["node_modules", "dist", "archive", "discord-video-stream"],
+    excludeDirs: QUALITY_RATCHET_EXCLUDED_DIRECTORIES,
     excludePathPatterns: ["/generated/"],
   },
   {
@@ -47,7 +55,7 @@ const RULES: GrepRule[] = [
     pattern: String.raw`^\s*//\s*@ts-(expect-error|ignore|nocheck)`,
     searchPaths: ["packages/"],
     includes: ["*.ts", "*.tsx"],
-    excludeDirs: ["node_modules", "dist", "archive", "discord-video-stream"],
+    excludeDirs: QUALITY_RATCHET_EXCLUDED_DIRECTORIES,
     excludePathPatterns: ["/generated/"],
   },
   {
@@ -55,7 +63,7 @@ const RULES: GrepRule[] = [
     pattern: String.raw`#\[allow\(`,
     searchPaths: ["packages/"],
     includes: ["*.rs"],
-    excludeDirs: ["target", "archive", "node_modules"],
+    excludeDirs: QUALITY_RATCHET_EXCLUDED_DIRECTORIES,
     excludePathPatterns: [],
   },
   {
@@ -63,7 +71,7 @@ const RULES: GrepRule[] = [
     pattern: String.raw`^\s*(//|/\*)\s*prettier-ignore`,
     searchPaths: ["packages/"],
     includes: ["*.ts", "*.tsx", "*.js", "*.jsx", "*.css", "*.json"],
-    excludeDirs: ["node_modules", "dist", "archive", "discord-video-stream"],
+    excludeDirs: QUALITY_RATCHET_EXCLUDED_DIRECTORIES,
     excludePathPatterns: [],
   },
   {
@@ -73,7 +81,7 @@ const RULES: GrepRule[] = [
     pattern: String.raw`(test|describe|it)\.skip\(`,
     searchPaths: ["packages/", "scripts/"],
     includes: ["*.ts", "*.tsx"],
-    excludeDirs: ["node_modules", "dist", "archive", "discord-video-stream"],
+    excludeDirs: QUALITY_RATCHET_EXCLUDED_DIRECTORIES,
     excludePathPatterns: [],
   },
   {
@@ -83,7 +91,7 @@ const RULES: GrepRule[] = [
     pattern: String.raw`expect\(true\)\.toBe\(true\)|toBeTruthy\(\)|toBeFalsy\(\)`,
     searchPaths: ["packages/", "scripts/"],
     includes: ["*.ts", "*.tsx"],
-    excludeDirs: ["node_modules", "dist", "archive", "discord-video-stream"],
+    excludeDirs: QUALITY_RATCHET_EXCLUDED_DIRECTORIES,
     excludePathPatterns: [],
   },
 ];
@@ -207,4 +215,6 @@ async function main() {
   console.log("\nQuality ratchet passed");
 }
 
-await main();
+if (import.meta.main) {
+  await main();
+}
