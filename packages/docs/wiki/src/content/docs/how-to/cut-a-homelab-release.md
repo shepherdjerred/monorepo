@@ -98,16 +98,21 @@ propagation and is retried within the job. The flow also inspects the effective
 OCI configuration at that digest and rejects a missing or incorrect monorepo
 source label.
 
-For a newly named application image, first confirm its runtime Dockerfile has
-the exact monorepo `org.opencontainers.image.source` label in the published
-stage or its ancestry. Publish the first candidate to create the package, then
-use Package settings to change its visibility from private to public. The
-source label links provenance and repository access; it does not perform that
-visibility change. GitHub documents these separate controls in its
-[package access guidance](https://docs.github.com/en/packages/learn-github-packages/configuring-a-packages-access-control-and-visibility).
-Verify both the anonymous token request and the exact digest fetch before
-continuing the release. Do not distribute the publisher's broad GHCR
-credential to application namespaces to conceal a visibility mistake.
+For a newly named application image:
+
+1. Confirm its runtime Dockerfile has the exact monorepo
+   `org.opencontainers.image.source` label in the published stage or its
+   ancestry.
+2. Publish the first candidate to create the GHCR package.
+3. Use Package settings to change the package visibility from private to
+   public. The source label links provenance and repository access; it does not
+   perform the visibility change. GitHub documents the separate controls in its
+   [package access guidance](https://docs.github.com/en/packages/learn-github-packages/configuring-a-packages-access-control-and-visibility).
+4. Verify the anonymous token request and exact digest fetch before continuing
+   the release.
+
+Do not distribute the publisher's broad GHCR credential to application
+namespaces to conceal a visibility mistake.
 
 ## If the release will not start
 
