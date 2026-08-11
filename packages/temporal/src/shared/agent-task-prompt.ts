@@ -17,7 +17,8 @@ function phaseLines(phase: AgentTaskPromptPhase): string[] {
   if (phase.kind === "investigation") {
     return [
       "Investigation phase:",
-      "- Execute the read-only tools needed to satisfy every declared evidence requirement.",
+      "- Use read-only tools for additional research and interpretation.",
+      "- Independently declared collectors run after this phase; provider tool calls cannot substitute for them.",
       "- Return a preliminary structured assessment after the investigation.",
       "- A separate finalization phase will receive the captured receipt catalog and validate every reference.",
       "",
@@ -75,11 +76,11 @@ export function reportOnlyPrompt(
           "Declared checks:",
           ...agentTaskChecksV2(input).map(
             (check) =>
-              `- ${check.id} (${check.required ? "required" : "optional"}): ${check.label}. Evidence requirement: ${check.evidenceRequirement}. Machine-verifiable criteria: ${JSON.stringify(check.evidenceCriteria ?? [])}`,
+              `- ${check.id} (${check.required ? "required" : "optional"}): ${check.label}. Evidence requirement: ${check.evidenceRequirement}. Independent collectors: ${JSON.stringify(check.evidenceCollectors ?? [])}`,
           ),
           "- Report every declared check exactly once.",
-          "- evidenceReceiptIds must contain actual tool-use or command-execution ids from this run.",
-          "- Referenced receipts must satisfy every machine-verifiable criterion declared for that check.",
+          "- Final evidenceReceiptIds must include every independently collected receipt id declared for that check.",
+          "- Provider tool-use receipts may add context but cannot establish declared check coverage.",
           "- Never mark a check passed from memory, assumptions, prose, or a failed tool result.",
           "- Do not choose a report status or email subject; the reporter derives them from validated checks and findings.",
           "- Use retirementRecommendation for a human decision; never pause or cancel the schedule.",
@@ -101,6 +102,7 @@ export function reportOnlyPrompt(
           "- Legacy v1 only: cancelCron may be returned for replay compatibility; new runs do not act on it.",
         ]),
     "- If one future report-only follow-up is needed, set followUp with either runAt or cron.",
+    "- A v2 follow-up inherits the current declared checks and collectors; do not attempt to redefine them.",
     "- Return only JSON matching the provided schema.",
     "",
     ...runtimeLines,

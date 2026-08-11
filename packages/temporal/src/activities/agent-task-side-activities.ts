@@ -13,6 +13,7 @@ import {
 import { cleanupWorkdir } from "#lib/pr-review-workdir.ts";
 import {
   AgentTaskInputSchema,
+  AgentTaskInputV2Schema,
   AgentTaskProviderSchema,
   AgentTaskResultPayloadSchema,
   AgentTaskFollowUpV2Schema,
@@ -401,13 +402,20 @@ export function agentTaskFailureReportInput(
 export async function scheduleFollowUp(
   input: ScheduleAgentTaskFollowUpInput,
 ): Promise<AgentTaskStartResult> {
-  const v2FollowUp =
-    input.parent.contractVersion === 2
-      ? AgentTaskFollowUpV2Schema.parse(input.followUp)
-      : undefined;
-  const task = AgentTaskInputSchema.parse({
+  const task = agentTaskFollowUpInput(input);
+  const client = await createTemporalClient();
+  return await startOrScheduleAgentTask(client, task);
+}
+
+export function agentTaskFollowUpInput(
+  input: ScheduleAgentTaskFollowUpInput,
+): AgentTaskInput {
+  if (input.parent.contractVersion === 2) {
+    AgentTaskFollowUpV2Schema.parse(input.followUp);
+  }
+  const rawTask = {
     ...(input.parent.contractVersion === 2
-      ? { contractVersion: 2, checks: v2FollowUp?.checks }
+      ? { contractVersion: 2, checks: input.parent.checks }
       : {}),
     title: input.followUp.title,
     prompt: input.followUp.prompt,
@@ -423,9 +431,10 @@ export async function scheduleFollowUp(
       input.followUp.agentTimeoutMinutes ?? input.parent.agentTimeoutMinutes,
     allowSelfCancel: false,
     emailSubjectPrefix: input.parent.emailSubjectPrefix,
-  });
-  const client = await createTemporalClient();
-  return await startOrScheduleAgentTask(client, task);
+  };
+  return input.parent.contractVersion === 2
+    ? AgentTaskInputV2Schema.parse(rawTask)
+    : AgentTaskInputSchema.parse(rawTask);
 }
 
 export async function pauseSchedule(

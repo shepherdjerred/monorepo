@@ -47,7 +47,7 @@ immediately. Cron expressions are evaluated in `America/Los_Angeles`.
   "runAt": "2026-05-31T09:00:00-07:00",
   "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
   "checks": [
-    { "id": "post-deploy-metrics", "label": "Post-deploy metrics", "required": true, "evidenceRequirement": "Current metric query results for each source check.", "evidenceCriteria": [{ "field": "command", "includes": "/api/v1/query" }] }
+    { "id": "post-deploy-metrics", "label": "Post-deploy metrics", "required": true, "evidenceRequirement": "A successful current Prometheus query for the Birmel target.", "evidenceCollectors": [{ "id": "birmel-up", "kind": "prometheus", "query": "up{namespace=\"birmel\"}" }] }
   ],
   "source": {
     "docPath": "packages/docs/guides/2026-04-25_birmel-remediation-followups.md"
@@ -72,14 +72,20 @@ the only public scheduling ingress; the Temporal server itself is never
 exposed.
 
 Each check has `id`, `label`, `required`, `evidenceRequirement`, and a non-empty
-`evidenceCriteria` array. A criterion names a receipt `field` (`source`,
-`command`, `url`, or `excerpt`) and a required `includes` substring. The result
-must report every declared ID once and cite actual tool or command receipt IDs;
-the independent normalizer requires every criterion to match at least one cited
-successful receipt. A required check that is failed, skipped, missing, backed by
-missing/failed evidence, or backed by unrelated evidence makes the execution
-partial and prevents a clear verdict. Replayed early-v2 inputs without criteria
-remain valid histories but are always partial.
+`evidenceCollectors` array. A collector is either an exact command `argv` with
+an output contract (`allow-empty`, `non-empty`, or structured `json`), or a
+typed Prometheus query with an optional range window. The worker executes these
+collectors independently after the investigation phase with no provider or
+delivery credential. It never executes model-authored command text as a
+collector.
+
+The final result must report every declared ID once and cite every deterministic
+`collector:<check-id>:<collector-id>` receipt for that check. Provider tool
+receipts may support findings, but cannot establish check coverage. A missing,
+failed, spoofed, or uncited collector makes execution partial and prevents a
+clear verdict. Replayed early-v2 inputs without collectors remain valid
+histories but are always partial. V2 follow-ups inherit the parent collectors;
+the model cannot replace them.
 
 The model does not return a verdict or subject. The reporter derives them from
 validated state: incomplete required coverage is inconclusive; failed checks or

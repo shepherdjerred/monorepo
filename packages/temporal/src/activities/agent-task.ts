@@ -9,6 +9,10 @@ import {
 import { withSpan } from "#observability/tracing.ts";
 import { buildAgentTaskCommand } from "#activities/agent-task-command.ts";
 import {
+  collectDeclaredAgentTaskEvidence,
+  mergeAgentTaskEvidence,
+} from "#activities/agent-task-evidence-collectors.ts";
+import {
   startAgentProviderCredentialBroker,
   type AgentProviderCredentialBrokerFactory,
 } from "#activities/agent-provider-credential-broker.ts";
@@ -430,8 +434,9 @@ async function investigateAgentTask(
   input: RunAgentTaskInput,
   commandBuilder: typeof buildAgentTaskCommand,
   credentialBrokerFactory: AgentProviderCredentialBrokerFactory,
+  evidenceCollector: typeof collectDeclaredAgentTaskEvidence,
 ): Promise<RunAgentTaskResultV2> {
-  return requireV2Result(
+  const investigation = requireV2Result(
     await runAgent(
       {
         ...input,
@@ -442,6 +447,11 @@ async function investigateAgentTask(
       credentialBrokerFactory,
     ),
   );
+  const declaredEvidence = await evidenceCollector(input.input, input.workdir);
+  return {
+    ...investigation,
+    evidence: mergeAgentTaskEvidence(investigation.evidence, declaredEvidence),
+  };
 }
 
 async function finalizeAgentTask(
@@ -475,13 +485,19 @@ async function finalizeAgentTask(
 export function createAgentTaskActivities(
   commandBuilder: typeof buildAgentTaskCommand = buildAgentTaskCommand,
   credentialBrokerFactory: AgentProviderCredentialBrokerFactory = startAgentProviderCredentialBroker,
+  evidenceCollector: typeof collectDeclaredAgentTaskEvidence = collectDeclaredAgentTaskEvidence,
 ) {
   return {
     prepareAgentTaskWorkdir,
     runAgentTask: (input: RunAgentTaskInput) =>
       runAgent(input, commandBuilder, credentialBrokerFactory),
     investigateAgentTask: (input: RunAgentTaskInput) =>
-      investigateAgentTask(input, commandBuilder, credentialBrokerFactory),
+      investigateAgentTask(
+        input,
+        commandBuilder,
+        credentialBrokerFactory,
+        evidenceCollector,
+      ),
     finalizeAgentTask: (input: FinalizeAgentTaskInput) =>
       finalizeAgentTask(input, commandBuilder, credentialBrokerFactory),
     sendAgentTaskEmail: sendEmail,
@@ -493,5 +509,4 @@ export function createAgentTaskActivities(
 }
 
 export const agentTaskActivities = createAgentTaskActivities();
-
 export type AgentTaskActivities = typeof agentTaskActivities;

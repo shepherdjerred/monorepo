@@ -52,7 +52,6 @@ function normalizeAgentTaskFollowUpV2(
   return AgentTaskFollowUpV2Schema.parse({
     title: followUp.title,
     prompt: followUp.prompt,
-    checks: followUp.checks,
     ...(followUp.provider === null ? {} : { provider: followUp.provider }),
     ...(followUp.runAt === null ? {} : { runAt: followUp.runAt }),
     ...(followUp.cron === null ? {} : { cron: followUp.cron }),

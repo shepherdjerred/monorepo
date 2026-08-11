@@ -65,8 +65,13 @@ function canaryInput(
           label: "Intentional provider failure",
           required: true,
           evidenceRequirement: "A provider execution result.",
-          evidenceCriteria: [
-            { field: "source", includes: "provider-execution" },
+          evidenceCollectors: [
+            {
+              id: "provider-execution-sentinel",
+              kind: "command",
+              argv: ["printf", String.raw`provider-execution-sentinel\n`],
+              output: "non-empty",
+            },
           ],
         },
       ],
@@ -76,17 +81,21 @@ function canaryInput(
   return AgentTaskInputV2Schema.parse({
     ...shared,
     prompt: partial
-      ? "Use Bash to run `printf 'partial-canary-ok\\n'`. Pass receipt-check with that Bash tool-use receipt ID. Mark unavailable-check skipped with no evidence and state the limitation."
-      : "Use Bash to run `printf 'success-canary-ok\\n'`. Pass receipt-check with that Bash tool-use receipt ID and return no findings, limitations, actions, follow-up, synthesis, or retirement recommendation.",
+      ? "Use Bash to run `printf 'partial-canary-ok\\n'`. Pass receipt-check with collector:receipt-check:receipt-sentinel. Mark unavailable-check skipped with collector:unavailable-check:unavailable-sentinel and state the failed collector limitation."
+      : "Use Bash to run `printf 'success-canary-ok\\n'`. Pass receipt-check with collector:receipt-check:receipt-sentinel and return no findings, limitations, actions, follow-up, synthesis, or retirement recommendation.",
     checks: [
       {
         id: "receipt-check",
         label: "Provider receipt extraction",
         required: true,
         evidenceRequirement: `A successful Bash receipt containing ${name}-canary-ok.`,
-        evidenceCriteria: [
-          { field: "source", includes: "Bash" },
-          { field: "excerpt", includes: `${name}-canary-ok` },
+        evidenceCollectors: [
+          {
+            id: "receipt-sentinel",
+            kind: "command",
+            argv: ["printf", String.raw`${name}-canary-ok\n`],
+            output: "non-empty",
+          },
         ],
       },
       ...(partial
@@ -97,10 +106,12 @@ function canaryInput(
               required: true,
               evidenceRequirement:
                 "Evidence intentionally unavailable for partial-path validation.",
-              evidenceCriteria: [
+              evidenceCollectors: [
                 {
-                  field: "excerpt" as const,
-                  includes: "intentionally-unavailable-sentinel",
+                  id: "unavailable-sentinel",
+                  kind: "command" as const,
+                  argv: ["false"],
+                  output: "allow-empty" as const,
                 },
               ],
             },

@@ -4,12 +4,15 @@ import path from "node:path";
 import { describe, expect, it } from "bun:test";
 import { register } from "#observability/metrics.ts";
 import type { AgentTaskInput } from "#shared/agent-task.ts";
+import { agentTaskCollectorReceiptId } from "#shared/agent-task-evidence-contract.ts";
+import type { ReportEvidenceReceiptV1 } from "#shared/report.ts";
 import { redactSecrets } from "#shared/redact.ts";
 import type { AgentTaskCommand } from "./agent-task-command.ts";
 import type { AgentProviderCredentialBrokerFactory } from "./agent-provider-credential-broker.ts";
 import { createAgentTaskActivities } from "./agent-task.ts";
 import {
   agentTaskSecretTokens,
+  envForEvidenceCollector,
   envForProvider,
   readAgentTaskMountedSecretTokens,
 } from "./agent-task-env.ts";
@@ -26,8 +29,16 @@ const testCredentialBrokerFactory: AgentProviderCredentialBrokerFactory =
 
 function createTestAgentTaskActivities(
   commandBuilder: Parameters<typeof createAgentTaskActivities>[0],
+  evidenceCollector: (
+    input: AgentTaskInput,
+    workdir: string,
+  ) => Promise<ReportEvidenceReceiptV1[]> = () => Promise.resolve([]),
 ) {
-  return createAgentTaskActivities(commandBuilder, testCredentialBrokerFactory);
+  return createAgentTaskActivities(
+    commandBuilder,
+    testCredentialBrokerFactory,
+    evidenceCollector,
+  );
 }
 
 const testAgentTaskActivities = createTestAgentTaskActivities(
@@ -82,8 +93,13 @@ const v2Input: AgentTaskInput = {
       label: "Service health",
       required: true,
       evidenceRequirement: "A successful command response.",
-      evidenceCriteria: [
-        { field: "command", includes: "service-health --json" },
+      evidenceCollectors: [
+        {
+          id: "service-health-command",
+          kind: "command",
+          argv: ["service-health", "--json"],
+          output: "json",
+        },
       ],
     },
   ],
@@ -157,6 +173,10 @@ describe("agentTaskActivities", () => {
 
   it("finalizes v2 output against receipts captured during investigation", async () => {
     const phases: string[] = [];
+    const collectorReceiptId = agentTaskCollectorReceiptId(
+      "service-health",
+      "service-health-command",
+    );
     const activities = createTestAgentTaskActivities(
       async (_input, workdir, phase): Promise<AgentTaskCommand> => {
         if (phase === undefined) {
@@ -165,10 +185,11 @@ describe("agentTaskActivities", () => {
         phases.push(phase.kind);
         const outputPath = path.join(workdir, `${phase.kind}.json`);
         const evidenceReceiptIds =
-          phase.kind === "finalization" ? ["command-1"] : [];
+          phase.kind === "finalization" ? [collectorReceiptId] : [];
         if (phase.kind === "finalization") {
           expect(phase.evidence.map((receipt) => receipt.id)).toEqual([
             "command-1",
+            collectorReceiptId,
           ]);
           expect(phase.preliminary.headline).toBe(
             "Preliminary service assessment.",
@@ -218,6 +239,19 @@ describe("agentTaskActivities", () => {
           prompt: `${phase.kind} prompt`,
         };
       },
+      () =>
+        Promise.resolve([
+          {
+            id: collectorReceiptId,
+            source: "declared-command:service-health-command",
+            origin: "declared-collector",
+            observedAt: "2026-08-10T12:00:00.000Z",
+            status: "success",
+            command: '["service-health","--json"]',
+            exitCode: 0,
+            excerpt: '{"healthy":true}',
+          },
+        ]),
     );
     const workdir = await mkdtemp(path.join(os.tmpdir(), "agent-task-test-"));
 
@@ -232,11 +266,18 @@ describe("agentTaskActivities", () => {
     });
 
     expect(phases).toEqual(["investigation", "finalization"]);
-    expect(result.payload.checks[0]?.evidenceReceiptIds).toEqual(["command-1"]);
+    expect(result.payload.checks[0]?.evidenceReceiptIds).toEqual([
+      collectorReceiptId,
+    ]);
     expect(result.evidence[0]).toMatchObject({
       id: "command-1",
       status: "success",
       command: "service-health --json",
+    });
+    expect(result.evidence[1]).toMatchObject({
+      id: collectorReceiptId,
+      origin: "declared-collector",
+      status: "success",
     });
   });
 });
@@ -320,6 +361,25 @@ describe("agent task runtime support", () => {
     ).toEqual({
       CODEX_API_KEY: "ephemeral-broker-token",
       HOME: "/tmp/agent-home",
+    });
+  });
+
+  it("gives declared collectors no provider or delivery credentials", () => {
+    expect(
+      envForEvidenceCollector("/tmp/collector-home", {
+        PATH: "/usr/bin",
+        PROMETHEUS_URL: "http://prometheus.local",
+        ANTHROPIC_API_KEY: "anthropic-secret",
+        CLAUDE_CODE_OAUTH_TOKEN: "claude-secret",
+        OPENAI_API_KEY: "openai-secret",
+        CODEX_API_KEY: "codex-secret",
+        POSTAL_API_KEY: "postal-secret",
+        AGENT_TASK_API_TOKEN: "api-secret",
+      }),
+    ).toEqual({
+      PATH: "/usr/bin",
+      PROMETHEUS_URL: "http://prometheus.local",
+      HOME: "/tmp/collector-home",
     });
   });
 

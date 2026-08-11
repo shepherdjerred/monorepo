@@ -249,3 +249,21 @@ export function envForProvider(
   }
   return env;
 }
+
+// Deterministic evidence collectors run with the same small read-only runtime
+// environment as provider subprocesses, but receive no provider broker token.
+// Their argv comes from the authenticated/source-controlled task definition,
+// never from model output.
+export function envForEvidenceCollector(
+  workdir: string,
+  sourceEnv: Readonly<Record<string, string | undefined>> = Bun.env,
+): Record<string, string> {
+  const env: Record<string, string> = {};
+  for (const [key, value] of Object.entries(sourceEnv)) {
+    if (typeof value === "string" && isAgentTaskCommonEnvironmentKey(key)) {
+      env[key] = value;
+    }
+  }
+  env["HOME"] = workdir;
+  return env;
+}

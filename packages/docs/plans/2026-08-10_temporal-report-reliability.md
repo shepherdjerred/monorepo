@@ -27,10 +27,11 @@ self-cancellation are removed.
   evidence-backed and capped at 80 words.
 - Centralize Postal delivery behind the report activity. Use a stable report run
   id, persist Postal acceptance receipts in S3, and treat delivery as at-least-once.
-- Introduce agent-task contract v2 with declared checks, machine-verifiable
-  receipt criteria, and transcript-derived evidence receipts. New API and
-  source-defined tasks require v2; Temporal replay retains compatibility paths
-  whose reports are explicitly partial when declared coverage is unavailable.
+- Introduce agent-task contract v2 with declared checks, independently executed
+  command/Prometheus collectors, and transcript-derived provider context
+  receipts. New API and source-defined tasks require v2; Temporal replay retains
+  compatibility paths whose reports are explicitly partial when declared
+  coverage is unavailable. Follow-ups inherit their parent's collector contract.
 - Keep long-lived provider credentials in the parent worker. Give each provider
   subprocess an ephemeral per-run credential for a loopback broker that allows
   only fixed inference paths and injects auth into a fixed upstream origin.
@@ -149,7 +150,7 @@ self-cancellation are removed.
   the real credential only into a fixed upstream origin.
 - Declared checks now include independent criteria over receipt source, command,
   URL, or excerpt. Merely citing a successful but unrelated receipt forces a
-  partial, inconclusive report; replayed early-v2 inputs without criteria do the
+  partial, inconclusive report; replayed early-v2 inputs without collectors do the
   same.
 - CI I/O retirement counts only finished passed or failed post-merge builds.
   Running, blocked, and canceled builds remain visible but cannot satisfy the

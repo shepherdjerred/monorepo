@@ -21,8 +21,13 @@ const INPUT = AgentTaskInputSchema.parse({
       label: "Production evidence",
       required: true,
       evidenceRequirement: "Capture the typed production status.",
-      evidenceCriteria: [
-        { field: "source", includes: "typed production status" },
+      evidenceCollectors: [
+        {
+          id: "typed-production-status",
+          kind: "command",
+          argv: ["runtime-status", "--json"],
+          output: "json",
+        },
       ],
     },
   ],
@@ -39,8 +44,9 @@ const RESULT: RunAgentTaskResultV2 = {
   startedAt: "2026-08-10T12:00:00.000Z",
   evidence: [
     {
-      id: "production-evidence-receipt",
-      source: "typed production status",
+      id: "collector:production-evidence:typed-production-status",
+      source: "declared-command:typed-production-status",
+      origin: "declared-collector",
       observedAt: "2026-08-10T12:00:30.000Z",
       status: "success",
       excerpt: "Production is healthy.",
@@ -53,7 +59,9 @@ const RESULT: RunAgentTaskResultV2 = {
         id: "production-evidence",
         status: "passed",
         summary: "Production is healthy.",
-        evidenceReceiptIds: ["production-evidence-receipt"],
+        evidenceReceiptIds: [
+          "collector:production-evidence:typed-production-status",
+        ],
       },
     ],
     findings: [],
@@ -62,17 +70,6 @@ const RESULT: RunAgentTaskResultV2 = {
     followUp: {
       title: "Recheck production evidence",
       prompt: "Inspect the production status again.",
-      checks: [
-        {
-          id: "production-evidence",
-          label: "Production evidence",
-          required: true,
-          evidenceRequirement: "Capture the typed production status.",
-          evidenceCriteria: [
-            { field: "source", includes: "typed production status" },
-          ],
-        },
-      ],
       runAt: "2026-08-12T12:00:00.000Z",
     },
   },

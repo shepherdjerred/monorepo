@@ -127,10 +127,10 @@ The post-deployment verification backup is
   "runAt": "2026-08-03T12:30:00-07:00",
   "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
   "checks": [
-    { "id": "pvc-policy", "label": "PVC backup policy", "required": true, "evidenceRequirement": "Current typed PVC label inventory.", "evidenceCriteria": [{ "field": "command", "includes": "kubectl get pvc" }] },
-    { "id": "backup-objects", "label": "Velero backup objects", "required": true, "evidenceRequirement": "Newest completed backup and exact R2 object evidence.", "evidenceCriteria": [{ "field": "command", "includes": "velero backup" }, { "field": "command", "includes": "aws s3" }] },
-    { "id": "zfs-state", "label": "ZFS state", "required": true, "evidenceRequirement": "Current pool, dataset, snapshot, and PV equality evidence.", "evidenceCriteria": [{ "field": "command", "includes": "zfs list" }, { "field": "command", "includes": "kubectl get pv" }] },
-    { "id": "quarantine-hold", "label": "Quarantine hold", "required": true, "evidenceRequirement": "Current hold deadline and complete child inventory without deletion.", "evidenceCriteria": [{ "field": "command", "includes": "zfs holds" }] }
+    { "id": "pvc-policy", "label": "PVC backup policy", "required": true, "evidenceRequirement": "Current typed PVC label inventory.", "evidenceCollectors": [{ "id": "pvc-inventory", "kind": "command", "argv": ["kubectl", "get", "pvc", "-A", "-o", "json"], "output": "json" }] },
+    { "id": "backup-objects", "label": "Velero backup objects", "required": true, "evidenceRequirement": "Newest completed backup and exact R2 object evidence.", "evidenceCollectors": [{ "id": "velero-backups", "kind": "command", "argv": ["velero", "backup", "get", "-o", "json"], "output": "json" }, { "id": "r2-objects", "kind": "command", "argv": ["aws", "s3api", "list-objects-v2", "--bucket", "homelab", "--output", "json"], "output": "json" }] },
+    { "id": "zfs-state", "label": "ZFS state", "required": true, "evidenceRequirement": "Current pool, dataset, snapshot, and PV equality evidence.", "evidenceCollectors": [{ "id": "zpool-status", "kind": "command", "argv": ["zpool", "status"], "output": "non-empty" }, { "id": "zfs-datasets", "kind": "command", "argv": ["zfs", "list", "-H", "-o", "name"], "output": "non-empty" }, { "id": "persistent-volumes", "kind": "command", "argv": ["kubectl", "get", "pv", "-o", "json"], "output": "json" }] },
+    { "id": "quarantine-hold", "label": "Quarantine hold", "required": true, "evidenceRequirement": "Current hold deadline and complete child inventory without deletion.", "evidenceCollectors": [{ "id": "quarantine-holds", "kind": "command", "argv": ["zfs", "holds", "-r", "zfspv-pool-nvme/quarantine-2026-07-27"], "output": "non-empty" }] }
   ],
   "source": {
     "docPath": "packages/docs/plans/2026-07-27_pvc-backup-policy-zfs-cleanup.md"

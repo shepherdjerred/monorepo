@@ -1,5 +1,9 @@
 import { zodResponseFormat } from "openai/helpers/zod.mjs";
 import { z } from "zod/v4";
+import {
+  AgentTaskEvidenceCollectorsV2Schema,
+  AgentTaskEvidenceCriteriaV2Schema,
+} from "./agent-task-evidence-contract.ts";
 
 export const AgentTaskProviderSchema = z.enum(["claude", "codex"]);
 export const AgentTaskModeSchema = z.enum(["report-only"]);
@@ -28,29 +32,13 @@ const AgentTaskCheckDefinitionV2Base = {
   evidenceRequirement: z.string().min(1),
 };
 
-export const AgentTaskEvidenceCriterionV2Schema = z.object({
-  field: z.enum(["source", "command", "url", "excerpt"]),
-  includes: z.string().min(1),
-});
-export type AgentTaskEvidenceCriterionV2 = z.infer<
-  typeof AgentTaskEvidenceCriterionV2Schema
->;
-
-const AgentTaskEvidenceCriteriaV2Schema = z
-  .array(AgentTaskEvidenceCriterionV2Schema)
-  .min(1);
-
-// evidenceCriteria is optional only for replaying v2 inputs recorded before
-// the independent receipt verifier existed. New API and source-defined inputs
-// use AgentTaskInputV2Schema, which requires it.
+// evidenceCriteria and evidenceCollectors are optional only for replaying v2
+// inputs recorded before independent collection existed. New API and
+// source-defined inputs use AgentTaskInputV2Schema, which requires collectors.
 export const AgentTaskCheckDefinitionV2Schema = z.object({
   ...AgentTaskCheckDefinitionV2Base,
   evidenceCriteria: AgentTaskEvidenceCriteriaV2Schema.optional(),
-});
-
-const StrictAgentTaskCheckDefinitionV2Schema = z.object({
-  ...AgentTaskCheckDefinitionV2Base,
-  evidenceCriteria: AgentTaskEvidenceCriteriaV2Schema,
+  evidenceCollectors: AgentTaskEvidenceCollectorsV2Schema.optional(),
 });
 
 const AgentTaskFollowUpSchemaBase = z.object({
@@ -140,6 +128,29 @@ export const AgentTaskInputSchema = z
         path: ["checks"],
       });
     }
+    for (const [checkIndex, check] of (value.checks ?? []).entries()) {
+      for (const [collectorIndex, collector] of (
+        check.evidenceCollectors ?? []
+      ).entries()) {
+        if (
+          collector.kind === "prometheus" &&
+          collector.stepSeconds !== undefined &&
+          collector.windowSeconds === undefined
+        ) {
+          ctx.addIssue({
+            code: "custom",
+            message: "Prometheus stepSeconds requires windowSeconds",
+            path: [
+              "checks",
+              checkIndex,
+              "evidenceCollectors",
+              collectorIndex,
+              "stepSeconds",
+            ],
+          });
+        }
+      }
+    }
   });
 
 export const AgentTaskInputV2Schema = AgentTaskInputSchema.superRefine(
@@ -152,11 +163,20 @@ export const AgentTaskInputV2Schema = AgentTaskInputSchema.superRefine(
       });
     }
     for (const [index, check] of (value.checks ?? []).entries()) {
-      if (check.evidenceCriteria === undefined) {
+      if (check.evidenceCriteria !== undefined) {
         ctx.addIssue({
           code: "custom",
-          message: "new v2 checks require machine-verifiable evidenceCriteria",
+          message:
+            "evidenceCriteria is replay-only; new v2 checks require independent collectors",
           path: ["checks", index, "evidenceCriteria"],
+        });
+      }
+      if (check.evidenceCollectors === undefined) {
+        ctx.addIssue({
+          code: "custom",
+          message:
+            "new v2 checks require independently executed evidenceCollectors",
+          path: ["checks", index, "evidenceCollectors"],
         });
       }
     }
@@ -187,7 +207,6 @@ export const AgentTaskFindingV2Schema = z.object({
 const AgentTaskFollowUpV2SchemaBase = z.object({
   title: z.string().min(1),
   prompt: z.string().min(1),
-  checks: z.array(StrictAgentTaskCheckDefinitionV2Schema).min(1),
   provider: AgentTaskProviderSchema.optional(),
   runAt: z.iso.datetime({ offset: true }).optional(),
   cron: z.string().min(1).optional(),
@@ -259,7 +278,6 @@ const AgentTaskWireFollowUpV2Schema = z
   .object({
     title: z.string().min(1),
     prompt: z.string().min(1),
-    checks: z.array(StrictAgentTaskCheckDefinitionV2Schema).min(1),
     provider: AgentTaskProviderSchema.nullable(),
     runAt: z.iso.datetime({ offset: true }).nullable(),
     cron: z.string().min(1).nullable(),

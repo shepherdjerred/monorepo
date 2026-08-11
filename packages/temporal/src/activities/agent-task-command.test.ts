@@ -162,7 +162,14 @@ describe("buildAgentTaskCommand", () => {
           label: "Service health",
           required: true,
           evidenceRequirement: "A successful health command.",
-          evidenceCriteria: [{ field: "command", includes: "service-health" }],
+          evidenceCollectors: [
+            {
+              id: "service-health-command",
+              kind: "command",
+              argv: ["service-health", "--json"],
+              output: "json",
+            },
+          ],
         },
       ],
       provider: "claude",

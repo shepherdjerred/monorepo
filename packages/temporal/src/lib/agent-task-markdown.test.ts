@@ -10,7 +10,7 @@ function block(title: string, runAt: string): string {
   "mode": "report-only",
   "runAt": "${runAt}",
   "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
-  "checks": [{ "id": "read-only-check", "label": "Read-only check", "required": true, "evidenceRequirement": "Current source or runtime evidence.", "evidenceCriteria": [{ "field": "source", "includes": "runtime-status" }] }],
+  "checks": [{ "id": "read-only-check", "label": "Read-only check", "required": true, "evidenceRequirement": "Current source or runtime evidence.", "evidenceCollectors": [{ "id": "runtime-status", "kind": "command", "argv": ["runtime-status", "--json"], "output": "json" }] }],
   "prompt": "Read-only check"
 }
 -->`;

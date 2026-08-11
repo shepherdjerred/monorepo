@@ -125,15 +125,22 @@ succeed, and the report quietly degrades from structured findings to
 free-writing. Failing loudly is the only way an unattended run can tell you its
 contract broke.
 
-Contract validity alone does not establish truth. A v2 run first captures and
-redacts provider tool events as evidence receipts. Every declared check also has
-machine-verifiable criteria over receipt source, command, URL, or excerpt.
-Finalization receives only that catalog and a preliminary assessment, then an
-independent normalizer confirms that every criterion matched a cited successful
-receipt. Unknown or unrelated receipt IDs, failed evidence, unsupported findings,
-missing checks, or skipped required checks force a partial or failed report;
-they can never produce a clean verdict. Historical early-v2 inputs without
-criteria remain replayable but are always partial.
+Contract validity alone does not establish truth. A v2 run captures and redacts
+provider tool events for research context, then separately executes the exact
+collectors declared by the authenticated or source-controlled task author.
+Command collectors use argv without a shell and validate their output contract;
+Prometheus collectors call and validate the typed API directly. They receive no
+provider or delivery credential.
+
+Finalization receives that explicit catalog and a preliminary assessment. The
+independent normalizer requires every deterministic collector receipt for a
+check to be captured, successful, and cited. A provider receipt cannot spoof a
+collector even if it repeats the same command text or receipt ID. Unknown IDs,
+failed collectors, unsupported findings, missing checks, or skipped required
+checks force a partial or failed report; they can never produce a clean verdict.
+Historical early-v2 inputs without collectors remain replayable but are always
+partial. Follow-ups inherit the parent collectors instead of accepting
+model-authored replacements.
 
 The model has no verdict or subject field. After evidence validation, the
 reporter maps check state and finding severity to a domain verdict, then maps

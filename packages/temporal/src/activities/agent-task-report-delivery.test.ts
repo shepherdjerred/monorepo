@@ -4,7 +4,10 @@ import {
   WorkflowIdReusePolicy,
 } from "@temporalio/client";
 import type { ReportEnvelopeV1 } from "#shared/report.ts";
-import { AgentTaskInputSchema } from "#shared/agent-task.ts";
+import {
+  AgentTaskFollowUpV2Schema,
+  AgentTaskInputSchema,
+} from "#shared/agent-task.ts";
 import {
   AGENT_REPORT_DELIVERY_START_TO_CLOSE_MS,
   REPORT_DELIVERY_WORKFLOW_BUDGET_MS,
@@ -12,6 +15,7 @@ import {
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
   agentTaskFailureReportInput,
+  agentTaskFollowUpInput,
   agentTaskReportDeliveryWorkflowOptions,
   deliverAgentTaskReportWithDependencies,
 } from "./agent-task-side-activities.ts";
@@ -77,8 +81,13 @@ const AGENT_INPUT = AgentTaskInputSchema.parse({
       label: "Production evidence",
       required: true,
       evidenceRequirement: "Capture the typed production status.",
-      evidenceCriteria: [
-        { field: "source", includes: "typed production status" },
+      evidenceCollectors: [
+        {
+          id: "typed-production-status",
+          kind: "command",
+          argv: ["runtime-status", "--json"],
+          output: "json",
+        },
       ],
     },
   ],
@@ -88,6 +97,35 @@ const AGENT_INPUT = AgentTaskInputSchema.parse({
 });
 
 describe("agent task report delivery delegation", () => {
+  test("inherits authenticated collectors for model-requested v2 follow-ups", () => {
+    const followUp = AgentTaskFollowUpV2Schema.parse({
+      title: "Recheck production evidence",
+      prompt: "Interpret the production evidence again.",
+      runAt: "2026-08-12T12:00:00.000Z",
+      checks: [
+        {
+          id: "model-authored-check",
+          label: "Model-authored check",
+          required: true,
+          evidenceRequirement: "Untrusted replacement coverage.",
+          evidenceCollectors: [
+            {
+              id: "fake",
+              kind: "command",
+              argv: ["printf", "fake"],
+              output: "non-empty",
+            },
+          ],
+        },
+      ],
+    });
+
+    const input = agentTaskFollowUpInput({ parent: AGENT_INPUT, followUp });
+
+    expect(input.checks).toEqual(AGENT_INPUT.checks);
+    expect(input.checks?.[0]?.id).toBe("production-evidence");
+  });
+
   test("budgets the outer activity beyond the complete delegated retry window", () => {
     expect(REPORT_DELIVERY_WORKFLOW_BUDGET_MS).toBe(390_000);
     expect(AGENT_REPORT_DELIVERY_START_TO_CLOSE_MS).toBeGreaterThan(

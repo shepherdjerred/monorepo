@@ -2,11 +2,11 @@ import { z } from "zod/v4";
 import {
   agentTaskChecksV2,
   AgentTaskResultPayloadV2Schema,
-  type AgentTaskEvidenceCriterionV2,
   type AgentTaskInput,
   type AgentTaskProvider,
   type AgentTaskResultPayloadV2,
 } from "./agent-task.ts";
+import { agentTaskCollectorReceiptId } from "./agent-task-evidence-contract.ts";
 import type {
   ReportCheckV1,
   ReportEnvelopeV1,
@@ -134,6 +134,7 @@ function extractClaudeReceipts(
       receipts.push({
         id: content.tool_use_id,
         source: source.source,
+        origin: "provider",
         observedAt,
         status: content.is_error === true ? "failure" : "success",
         ...(source.command === undefined
@@ -165,6 +166,7 @@ function extractCodexReceipts(
     receipts.push({
       id: event.data.item.id,
       source: "command_execution",
+      origin: "provider",
       observedAt,
       status:
         exitCode === 0 && event.data.item.status !== "failed"
@@ -210,36 +212,6 @@ function deriveAgentTaskVerdict(
   if (findings.length > 0) return "changed";
   if (checks.some((check) => check.status === "skipped")) return "pending";
   return "clear";
-}
-
-function evidenceField(
-  receipt: ReportEvidenceReceiptV1,
-  field: AgentTaskEvidenceCriterionV2["field"],
-): string | undefined {
-  if (field === "source") return receipt.source;
-  if (field === "command") return receipt.command;
-  if (field === "url") return receipt.url;
-  return receipt.excerpt;
-}
-
-function unmatchedEvidenceCriteria(
-  criteria: readonly AgentTaskEvidenceCriterionV2[],
-  receipts: readonly ReportEvidenceReceiptV1[],
-): AgentTaskEvidenceCriterionV2[] {
-  return criteria.filter((criterion) =>
-    receipts.every((receipt) => {
-      const value = evidenceField(receipt, criterion.field);
-      return (
-        value?.toLowerCase().includes(criterion.includes.toLowerCase()) !== true
-      );
-    }),
-  );
-}
-
-function describeEvidenceCriterion(
-  criterion: AgentTaskEvidenceCriterionV2,
-): string {
-  return `${criterion.field} includes ${JSON.stringify(criterion.includes)}`;
 }
 
 export function normalizeAgentTaskV2Result(
@@ -302,29 +274,56 @@ export function normalizeAgentTaskV2Result(
       );
       evidenceIntegrityComplete = false;
     }
-    const criteria = declared.evidenceCriteria;
-    const unmatchedCriteria =
-      criteria === undefined
-        ? []
-        : unmatchedEvidenceCriteria(criteria, capturedReceipts);
-    if (criteria === undefined) {
+    const collectors = declared.evidenceCollectors;
+    const expectedCollectorIds = (collectors ?? []).map((collector) =>
+      agentTaskCollectorReceiptId(declared.id, collector.id),
+    );
+    const missingCollectorIds = expectedCollectorIds.filter((id) => {
+      const receipt = evidenceById.get(id);
+      return receipt?.origin !== "declared-collector";
+    });
+    const failedCollectorIds = expectedCollectorIds.filter((id) => {
+      const receipt = evidenceById.get(id);
+      return (
+        receipt?.origin === "declared-collector" && receipt.status !== "success"
+      );
+    });
+    const uncitedCollectorIds = expectedCollectorIds.filter(
+      (id) => !result.evidenceReceiptIds.includes(id),
+    );
+    if (collectors === undefined) {
       limitations.push(
-        `Check ${declared.id} lacks machine-verifiable evidence criteria; legacy v2 coverage cannot be complete.`,
+        `Check ${declared.id} lacks independently declared evidence collectors; legacy v2 coverage cannot be complete.`,
       );
       evidenceIntegrityComplete = false;
-    } else if (unmatchedCriteria.length > 0) {
+    }
+    if (missingCollectorIds.length > 0) {
       limitations.push(
-        `Check ${declared.id} evidence did not satisfy criteria: ${unmatchedCriteria.map((criterion) => describeEvidenceCriterion(criterion)).join(", ")}.`,
+        `Check ${declared.id} is missing independently collected receipts: ${missingCollectorIds.join(", ")}.`,
+      );
+      evidenceIntegrityComplete = false;
+    }
+    if (failedCollectorIds.length > 0) {
+      limitations.push(
+        `Check ${declared.id} has failed independently collected receipts: ${failedCollectorIds.join(", ")}.`,
+      );
+      evidenceIntegrityComplete = false;
+    }
+    if (uncitedCollectorIds.length > 0) {
+      limitations.push(
+        `Check ${declared.id} did not cite its independently collected receipts: ${uncitedCollectorIds.join(", ")}.`,
       );
       evidenceIntegrityComplete = false;
     }
     const successfulEvidence =
       captureCompleteAndSuccessful &&
-      criteria !== undefined &&
-      unmatchedCriteria.length === 0;
+      collectors !== undefined &&
+      missingCollectorIds.length === 0 &&
+      failedCollectorIds.length === 0 &&
+      uncitedCollectorIds.length === 0;
     if (!successfulEvidence && result.status === "passed") {
       limitations.push(
-        `Check ${declared.id} does not have complete successful evidence satisfying its declared criteria.`,
+        `Check ${declared.id} does not have complete successful independently collected evidence.`,
       );
       evidenceIntegrityComplete = false;
     }
@@ -345,9 +344,9 @@ export function normalizeAgentTaskV2Result(
       evidenceReceiptIds: knownReceipts,
     };
   });
-  const allRequiredPassed = checks
+  const requiredCoverageComplete = checks
     .filter((check) => check.required)
-    .every((check) => check.status === "passed");
+    .every((check) => check.status !== "skipped");
   const findings = payload.findings.flatMap((finding) => {
     const knownReceiptIds = finding.evidenceReceiptIds.filter((id) =>
       evidenceById.has(id),
@@ -366,7 +365,9 @@ export function normalizeAgentTaskV2Result(
     return [{ ...finding, evidenceReceiptIds: knownReceiptIds }];
   });
   const execution =
-    allRequiredPassed && evidenceIntegrityComplete ? "complete" : "partial";
+    requiredCoverageComplete && evidenceIntegrityComplete
+      ? "complete"
+      : "partial";
   const verdict = deriveAgentTaskVerdict(execution, checks, findings);
   return {
     execution,

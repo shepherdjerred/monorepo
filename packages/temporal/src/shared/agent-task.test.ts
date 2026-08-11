@@ -68,7 +68,7 @@ describe("AgentTaskInputSchema", () => {
     ).toThrow(/must not set both/);
   });
 
-  it("requires machine-verifiable evidence criteria for new v2 inputs", () => {
+  it("requires independently executed evidence collectors for new v2 inputs", () => {
     expect(() =>
       AgentTaskInputV2Schema.parse({
         ...baseInput,
@@ -82,7 +82,36 @@ describe("AgentTaskInputSchema", () => {
           },
         ],
       }),
-    ).toThrow(/machine-verifiable evidenceCriteria/);
+    ).toThrow(/independently executed evidenceCollectors/);
+  });
+
+  it("accepts legacy evidence criteria only through the replay decoder", () => {
+    const legacyInput = {
+      ...baseInput,
+      contractVersion: 2,
+      checks: [
+        {
+          id: "service-health",
+          label: "Service health",
+          required: true,
+          evidenceRequirement: "A successful health endpoint response.",
+          evidenceCriteria: [{ field: "command", includes: "/health" }],
+          evidenceCollectors: [
+            {
+              id: "health-command",
+              kind: "command",
+              argv: ["curl", "https://service.example.test/health"],
+              output: "json",
+            },
+          ],
+        },
+      ],
+    };
+
+    expect(AgentTaskInputSchema.parse(legacyInput).contractVersion).toBe(2);
+    expect(() => AgentTaskInputV2Schema.parse(legacyInput)).toThrow(
+      /evidenceCriteria is replay-only/,
+    );
   });
 });
 

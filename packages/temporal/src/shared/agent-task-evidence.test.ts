@@ -1,11 +1,19 @@
 import { describe, expect, test } from "bun:test";
-import type { AgentTaskInput, AgentTaskResultPayloadV2 } from "./agent-task.ts";
+import {
+  type AgentTaskInput,
+  type AgentTaskResultPayloadV2,
+} from "./agent-task.ts";
+import { agentTaskCollectorReceiptId } from "./agent-task-evidence-contract.ts";
 import {
   extractAgentTaskEvidenceReceipts,
   normalizeAgentTaskV2Result,
 } from "./agent-task-evidence.ts";
 
 const OBSERVED_AT = "2026-08-10T17:00:00.000Z";
+const COLLECTOR_RECEIPT_ID = agentTaskCollectorReceiptId(
+  "service-health",
+  "service-health-endpoint",
+);
 
 function v2Input(): AgentTaskInput {
   return {
@@ -18,9 +26,13 @@ function v2Input(): AgentTaskInput {
         label: "Service health",
         required: true,
         evidenceRequirement: "A successful health endpoint response.",
-        evidenceCriteria: [
-          { field: "command", includes: "curl -fsS" },
-          { field: "command", includes: "/health" },
+        evidenceCollectors: [
+          {
+            id: "service-health-endpoint",
+            kind: "command",
+            argv: ["curl", "-fsS", "https://example.com/health"],
+            output: "non-empty",
+          },
         ],
       },
     ],
@@ -90,6 +102,7 @@ describe("agent task evidence receipts", () => {
     expect(receipts[0]).toMatchObject({
       id: "tool-1",
       source: "Bash",
+      origin: "provider",
       status: "success",
       command: "curl -fsS https://example.com/health",
       excerpt: "ok",
@@ -161,6 +174,7 @@ describe("agent task evidence receipts", () => {
     );
     expect(receipts[0]).toMatchObject({
       id: "item-1",
+      origin: "provider",
       status: "success",
       exitCode: 0,
     });
@@ -174,21 +188,22 @@ describe("agent task evidence normalization", () => {
     expect(normalized.verdict).toBe("inconclusive");
     expect(normalized.checks[0]?.status).toBe("failed");
     expect(normalized.limitations).toContain(
-      "Check service-health does not have complete successful evidence satisfying its declared criteria.",
+      "Check service-health does not have complete successful independently collected evidence.",
     );
   });
 
   test("permits clean only with successful captured evidence", () => {
     const normalized = normalizeAgentTaskV2Result(
       v2Input(),
-      v2Payload(["tool-1"]),
+      v2Payload([COLLECTOR_RECEIPT_ID]),
       [
         {
-          id: "tool-1",
-          source: "Bash",
+          id: COLLECTOR_RECEIPT_ID,
+          source: "declared-command:service-health-endpoint",
+          origin: "declared-collector",
           observedAt: OBSERVED_AT,
           status: "success",
-          command: "curl -fsS https://example.com/health",
+          command: '["curl","-fsS","https://example.com/health"]',
         },
       ],
     );
@@ -196,7 +211,7 @@ describe("agent task evidence normalization", () => {
     expect(normalized.verdict).toBe("clear");
   });
 
-  test("rejects a successful but unrelated receipt", () => {
+  test("rejects provider-authored command text that imitates a declared collector", () => {
     const normalized = normalizeAgentTaskV2Result(
       v2Input(),
       v2Payload(["tool-1"]),
@@ -204,10 +219,11 @@ describe("agent task evidence normalization", () => {
         {
           id: "tool-1",
           source: "Bash",
+          origin: "provider",
           observedAt: OBSERVED_AT,
           status: "success",
-          command: "pwd",
-          excerpt: "/tmp/agent-task",
+          command: 'printf \'["curl","-fsS","https://example.com/health"]\'',
+          excerpt: "https://example.com/health",
         },
       ],
     );
@@ -215,15 +231,38 @@ describe("agent task evidence normalization", () => {
     expect(normalized.verdict).toBe("inconclusive");
     expect(normalized.checks[0]?.status).toBe("failed");
     expect(normalized.limitations.join(" ")).toContain(
-      "evidence did not satisfy criteria",
+      "missing independently collected receipts",
     );
   });
 
-  test("keeps replayed v2 checks without criteria partial", () => {
+  test("does not let a provider receipt spoof a deterministic collector id", () => {
+    const normalized = normalizeAgentTaskV2Result(
+      v2Input(),
+      v2Payload([COLLECTOR_RECEIPT_ID]),
+      [
+        {
+          id: COLLECTOR_RECEIPT_ID,
+          source: "Bash",
+          origin: "provider",
+          observedAt: OBSERVED_AT,
+          status: "success",
+          command: "printf fake",
+          excerpt: "fake",
+        },
+      ],
+    );
+    expect(normalized.execution).toBe("partial");
+    expect(normalized.checks[0]?.status).toBe("failed");
+    expect(normalized.limitations.join(" ")).toContain(
+      "missing independently collected receipts",
+    );
+  });
+
+  test("keeps replayed v2 checks without collectors partial", () => {
     const input = v2Input();
     const check = input.checks?.[0];
     if (check === undefined) throw new Error("missing test check");
-    delete check.evidenceCriteria;
+    delete check.evidenceCollectors;
     const normalized = normalizeAgentTaskV2Result(
       input,
       v2Payload(["tool-1"]),
@@ -260,7 +299,7 @@ describe("agent task evidence normalization", () => {
   });
 
   test("marks unsupported findings as partial", () => {
-    const payload = v2Payload(["tool-1"]);
+    const payload = v2Payload([COLLECTOR_RECEIPT_ID]);
     payload.findings = [
       {
         severity: "warning",
@@ -270,11 +309,12 @@ describe("agent task evidence normalization", () => {
     ];
     const normalized = normalizeAgentTaskV2Result(v2Input(), payload, [
       {
-        id: "tool-1",
-        source: "Bash",
+        id: COLLECTOR_RECEIPT_ID,
+        source: "declared-command:service-health-endpoint",
+        origin: "declared-collector",
         observedAt: OBSERVED_AT,
         status: "success",
-        command: "curl -fsS https://example.com/health",
+        command: '["curl","-fsS","https://example.com/health"]',
       },
     ]);
     expect(normalized.execution).toBe("partial");
@@ -283,16 +323,39 @@ describe("agent task evidence normalization", () => {
     );
     expect(normalized.findings).toEqual([]);
   });
+
+  test("keeps a fully observed domain failure complete and attention-worthy", () => {
+    const payload = v2Payload([COLLECTOR_RECEIPT_ID]);
+    const check = payload.checks[0];
+    if (check === undefined) throw new Error("missing payload check");
+    check.status = "failed";
+    check.summary = "The endpoint reported unhealthy.";
+    const normalized = normalizeAgentTaskV2Result(v2Input(), payload, [
+      {
+        id: COLLECTOR_RECEIPT_ID,
+        source: "declared-command:service-health-endpoint",
+        origin: "declared-collector",
+        observedAt: OBSERVED_AT,
+        status: "success",
+        excerpt: '{"healthy":false}',
+      },
+    ]);
+
+    expect(normalized.execution).toBe("complete");
+    expect(normalized.verdict).toBe("attention");
+    expect(normalized.checks[0]?.status).toBe("failed");
+  });
 });
 
 describe("agent task deterministic verdicts", () => {
   test("derives verdicts from validated checks and findings", () => {
     const receipt = {
-      id: "tool-1",
-      source: "Bash",
+      id: COLLECTOR_RECEIPT_ID,
+      source: "declared-command:service-health-endpoint",
+      origin: "declared-collector" as const,
       observedAt: OBSERVED_AT,
       status: "success" as const,
-      command: "curl -fsS https://example.com/health",
+      command: '["curl","-fsS","https://example.com/health"]',
     };
     const changedPayload = v2Payload([receipt.id]);
     changedPayload.findings = [

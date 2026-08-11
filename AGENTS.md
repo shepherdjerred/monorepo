@@ -205,7 +205,7 @@ When a doc captures a follow-up that should be checked later, schedule it explic
   "runAt": "2026-05-31T09:00:00-07:00",
   "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
   "checks": [
-    { "id": "post-deploy-metrics", "label": "Post-deploy metrics", "required": true, "evidenceRequirement": "Current metric query results for every check in the source section." }
+    { "id": "post-deploy-metrics", "label": "Post-deploy metrics", "required": true, "evidenceRequirement": "A successful current Prometheus query for the Birmel target.", "evidenceCollectors": [{ "id": "birmel-up", "kind": "prometheus", "query": "up{namespace=\"birmel\"}" }] }
   ],
   "source": {
     "docPath": "packages/docs/guides/2026-04-25_birmel-remediation-followups.md"
@@ -216,7 +216,7 @@ When a doc captures a follow-up that should be checked later, schedule it explic
 ```
 
 New tasks use `contractVersion: 2`, declare every required and optional check,
-and state the evidence each check needs. For recurring checks, replace `runAt`
+and provide independently executed evidence collectors for each check. For recurring checks, replace `runAt`
 with `cron` and include a stable `scheduleId`. Schedules are evaluated in
 `America/Los_Angeles`. Agents may recommend retirement, but only a human may
 pause or remove a schedule. To create/update the task locally as an operator:

@@ -17,6 +17,9 @@ export const ReportEvidenceStatusSchema = z.enum(["success", "failure"]);
 export const ReportEvidenceReceiptV1Schema = z.object({
   id: z.string().min(1),
   source: z.string().min(1),
+  // Optional for replay compatibility with receipts recorded before origin
+  // was captured. New agent-task receipts always set it.
+  origin: z.enum(["provider", "declared-collector"]).optional(),
   observedAt: z.iso.datetime({ offset: true }),
   status: ReportEvidenceStatusSchema,
   command: z.string().min(1).optional(),

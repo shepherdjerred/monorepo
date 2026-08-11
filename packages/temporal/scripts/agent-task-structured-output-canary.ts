@@ -47,7 +47,7 @@ async function main(): Promise<void> {
     contractVersion: 2,
     title: "Agent-task structured-output canary",
     prompt:
-      "Use Bash to run `printf 'agent-task-canary-ok\\n'`. Report the declared check exactly once and cite that Bash tool-use receipt ID. Return no synthesis.",
+      "Use Bash to run `printf 'agent-task-canary-ok\\n'` to exercise provider receipt extraction. Report the declared check exactly once and cite collector:structured-output:canary-sentinel. Return no synthesis.",
     provider: "claude",
     mode: "report-only",
     repo: { fullName: "shepherdjerred/monorepo", ref: "main" },
@@ -58,9 +58,13 @@ async function main(): Promise<void> {
         required: true,
         evidenceRequirement:
           "A successful Bash receipt containing agent-task-canary-ok.",
-        evidenceCriteria: [
-          { field: "source", includes: "Bash" },
-          { field: "excerpt", includes: "agent-task-canary-ok" },
+        evidenceCollectors: [
+          {
+            id: "canary-sentinel",
+            kind: "command",
+            argv: ["printf", String.raw`agent-task-canary-ok\n`],
+            output: "non-empty",
+          },
         ],
       },
     ],
