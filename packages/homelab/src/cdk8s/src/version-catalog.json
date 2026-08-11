@@ -60,7 +60,7 @@
         "registryUrl": "https://charts.jetstack.io",
         "versioning": "semver-coerced"
       },
-      "value": "v1.21.0"
+      "value": "v1.21.1"
     },
     {
       "name": "intel-device-plugins-operator",
