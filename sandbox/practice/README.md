@@ -25,7 +25,7 @@ Learning projects: books, courses, and coding challenges. These are finished or 
 - [programming-with-categories](programming-with-categories/) — exercises from the Programming with Categories course (Haskell)
 - [rust-grep](rust-grep/) — the minigrep CLI from _The Rust Book_
 - [rust-guessing-game](rust-guessing-game/) — the guessing game from _The Rust Book_
-- [rust-os](rust-os/) — bare-metal x86*64 OS following \_Writing an OS in Rust*
+- [rust-os](rust-os/) — bare-metal `x86_64` OS following the _Writing an OS in Rust_ book
 - [rust-web-server](rust-web-server/) — multithreaded HTTP server from _The Rust Book_
 - [sicp](sicp/) — exercises from _Structure and Interpretation of Computer Programs_
 - [vscode-extension](vscode-extension/) — hello-world VS Code extension (TypeScript, esbuild)
