@@ -43,7 +43,7 @@ export function createAlertDashboardDeployment(chart: Chart) {
   const postgresSecret = Secret.fromSecretName(
     chart,
     "alert-dashboard-postgres-secret",
-    "alert_dashboard.alert-dashboard-postgresql.credentials.postgresql.acid.zalan.do",
+    "alert-dashboard.alert-dashboard-postgresql.credentials.postgresql.acid.zalan.do",
   );
   const pgSecretVolume = Volume.fromSecret(
     chart,
