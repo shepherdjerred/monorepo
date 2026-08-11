@@ -77,6 +77,9 @@ const AGENT_INPUT = AgentTaskInputSchema.parse({
       label: "Production evidence",
       required: true,
       evidenceRequirement: "Capture the typed production status.",
+      evidenceCriteria: [
+        { field: "source", includes: "typed production status" },
+      ],
     },
   ],
   provider: "claude",

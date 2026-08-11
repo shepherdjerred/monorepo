@@ -77,7 +77,7 @@ function ciIoChecks(
       label: "Merge state and observation window",
       required: true,
       status: "passed",
-      summary: `PR #1602 merged ${result.mergedAt}; ${result.elapsedHours.toFixed(1)} hours and ${result.postMergeBuildCount.toString()} builds observed`,
+      summary: `PR #1602 merged ${result.mergedAt}; ${result.elapsedHours.toFixed(1)} hours and ${result.postMergeBuildCount.toString()} finished builds observed`,
       evidenceReceiptIds: ["merge-window"],
     },
     ciIoRawCheck(result, state),

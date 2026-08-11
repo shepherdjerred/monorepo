@@ -2,6 +2,7 @@ import { z } from "zod/v4";
 import {
   agentTaskChecksV2,
   AgentTaskResultPayloadV2Schema,
+  type AgentTaskEvidenceCriterionV2,
   type AgentTaskInput,
   type AgentTaskProvider,
   type AgentTaskResultPayloadV2,
@@ -211,6 +212,36 @@ function deriveAgentTaskVerdict(
   return "clear";
 }
 
+function evidenceField(
+  receipt: ReportEvidenceReceiptV1,
+  field: AgentTaskEvidenceCriterionV2["field"],
+): string | undefined {
+  if (field === "source") return receipt.source;
+  if (field === "command") return receipt.command;
+  if (field === "url") return receipt.url;
+  return receipt.excerpt;
+}
+
+function unmatchedEvidenceCriteria(
+  criteria: readonly AgentTaskEvidenceCriterionV2[],
+  receipts: readonly ReportEvidenceReceiptV1[],
+): AgentTaskEvidenceCriterionV2[] {
+  return criteria.filter((criterion) =>
+    receipts.every((receipt) => {
+      const value = evidenceField(receipt, criterion.field);
+      return (
+        value?.toLowerCase().includes(criterion.includes.toLowerCase()) !== true
+      );
+    }),
+  );
+}
+
+function describeEvidenceCriterion(
+  criterion: AgentTaskEvidenceCriterionV2,
+): string {
+  return `${criterion.field} includes ${JSON.stringify(criterion.includes)}`;
+}
+
 export function normalizeAgentTaskV2Result(
   input: AgentTaskInput,
   rawPayload: AgentTaskResultPayloadV2,
@@ -257,19 +288,43 @@ export function normalizeAgentTaskV2Result(
     const knownReceipts = result.evidenceReceiptIds.filter((id) =>
       evidenceById.has(id),
     );
-    const successfulEvidence =
+    const capturedReceipts = knownReceipts.flatMap((id) => {
+      const receipt = evidenceById.get(id);
+      return receipt === undefined ? [] : [receipt];
+    });
+    const captureCompleteAndSuccessful =
       result.evidenceReceiptIds.length > 0 &&
       knownReceipts.length === result.evidenceReceiptIds.length &&
-      knownReceipts.every((id) => evidenceById.get(id)?.status === "success");
+      capturedReceipts.every((receipt) => receipt.status === "success");
     if (knownReceipts.length !== result.evidenceReceiptIds.length) {
       limitations.push(
         `Check ${declared.id} referenced evidence that was not captured by the provider transcript.`,
       );
       evidenceIntegrityComplete = false;
     }
+    const criteria = declared.evidenceCriteria;
+    const unmatchedCriteria =
+      criteria === undefined
+        ? []
+        : unmatchedEvidenceCriteria(criteria, capturedReceipts);
+    if (criteria === undefined) {
+      limitations.push(
+        `Check ${declared.id} lacks machine-verifiable evidence criteria; legacy v2 coverage cannot be complete.`,
+      );
+      evidenceIntegrityComplete = false;
+    } else if (unmatchedCriteria.length > 0) {
+      limitations.push(
+        `Check ${declared.id} evidence did not satisfy criteria: ${unmatchedCriteria.map((criterion) => describeEvidenceCriterion(criterion)).join(", ")}.`,
+      );
+      evidenceIntegrityComplete = false;
+    }
+    const successfulEvidence =
+      captureCompleteAndSuccessful &&
+      criteria !== undefined &&
+      unmatchedCriteria.length === 0;
     if (!successfulEvidence && result.status === "passed") {
       limitations.push(
-        `Check ${declared.id} has no successful captured evidence.`,
+        `Check ${declared.id} does not have complete successful evidence satisfying its declared criteria.`,
       );
       evidenceIntegrityComplete = false;
     }

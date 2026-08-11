@@ -85,6 +85,8 @@ describe("buildAgentTaskCommand", () => {
         allowSelfCancel: false,
       },
       workdir,
+      undefined,
+      "http://127.0.0.1:45678",
     );
 
     const schemaFlagIndex = command.args.indexOf("--output-schema");
@@ -97,6 +99,11 @@ describe("buildAgentTaskCommand", () => {
     expect(await Bun.file(schemaPath).json()).toEqual(
       AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX,
     );
+    expect(command.args).toContain('model_provider="agent_credential_broker"');
+    expect(command.args.join(" ")).toContain(
+      'base_url="http://127.0.0.1:45678/v1"',
+    );
+    expect(command.args.join(" ")).toContain("supports_websockets=false");
   });
 
   it("passes the generated plain schema inline for Claude output validation", async () => {
@@ -116,6 +123,8 @@ describe("buildAgentTaskCommand", () => {
         allowSelfCancel: false,
       },
       workdir,
+      undefined,
+      "http://127.0.0.1:45678",
     );
 
     const schemaFlagIndex = command.args.indexOf("--json-schema");
@@ -153,6 +162,7 @@ describe("buildAgentTaskCommand", () => {
           label: "Service health",
           required: true,
           evidenceRequirement: "A successful health command.",
+          evidenceCriteria: [{ field: "command", includes: "service-health" }],
         },
       ],
       provider: "claude",
@@ -175,20 +185,25 @@ describe("buildAgentTaskCommand", () => {
       actions: [],
     });
 
-    const command = await buildAgentTaskCommand(input, workdir, {
-      kind: "finalization",
-      evidence: [
-        {
-          id: "tool-1",
-          source: "Bash",
-          observedAt: "2026-08-10T17:00:00.000Z",
-          status: "success",
-          command: "service-health --json",
-          excerpt: '{"healthy":true}',
-        },
-      ],
-      preliminary,
-    });
+    const command = await buildAgentTaskCommand(
+      input,
+      workdir,
+      {
+        kind: "finalization",
+        evidence: [
+          {
+            id: "tool-1",
+            source: "Bash",
+            observedAt: "2026-08-10T17:00:00.000Z",
+            status: "success",
+            command: "service-health --json",
+            excerpt: '{"healthy":true}',
+          },
+        ],
+        preliminary,
+      },
+      "http://127.0.0.1:45678",
+    );
 
     expect(command.args).toContain("--tools");
     expect(command.args[command.args.indexOf("--tools") + 1]).toBe("");

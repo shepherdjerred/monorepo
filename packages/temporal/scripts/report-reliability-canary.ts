@@ -65,6 +65,9 @@ function canaryInput(
           label: "Intentional provider failure",
           required: true,
           evidenceRequirement: "A provider execution result.",
+          evidenceCriteria: [
+            { field: "source", includes: "provider-execution" },
+          ],
         },
       ],
     });
@@ -81,6 +84,10 @@ function canaryInput(
         label: "Provider receipt extraction",
         required: true,
         evidenceRequirement: `A successful Bash receipt containing ${name}-canary-ok.`,
+        evidenceCriteria: [
+          { field: "source", includes: "Bash" },
+          { field: "excerpt", includes: `${name}-canary-ok` },
+        ],
       },
       ...(partial
         ? [
@@ -90,6 +97,12 @@ function canaryInput(
               required: true,
               evidenceRequirement:
                 "Evidence intentionally unavailable for partial-path validation.",
+              evidenceCriteria: [
+                {
+                  field: "excerpt" as const,
+                  includes: "intentionally-unavailable-sentinel",
+                },
+              ],
             },
           ]
         : []),

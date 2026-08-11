@@ -6,6 +6,7 @@ import { register } from "#observability/metrics.ts";
 import type { AgentTaskInput } from "#shared/agent-task.ts";
 import { redactSecrets } from "#shared/redact.ts";
 import type { AgentTaskCommand } from "./agent-task-command.ts";
+import type { AgentProviderCredentialBrokerFactory } from "./agent-provider-credential-broker.ts";
 import { createAgentTaskActivities } from "./agent-task.ts";
 import {
   agentTaskSecretTokens,
@@ -13,7 +14,23 @@ import {
   readAgentTaskMountedSecretTokens,
 } from "./agent-task-env.ts";
 
-const testAgentTaskActivities = createAgentTaskActivities(
+const TEST_BROKER = {
+  baseUrl: "http://127.0.0.1:45678",
+  clientToken: "ephemeral-broker-token",
+};
+const testCredentialBrokerFactory: AgentProviderCredentialBrokerFactory =
+  () => ({
+    ...TEST_BROKER,
+    stop: () => Promise.resolve(),
+  });
+
+function createTestAgentTaskActivities(
+  commandBuilder: Parameters<typeof createAgentTaskActivities>[0],
+) {
+  return createAgentTaskActivities(commandBuilder, testCredentialBrokerFactory);
+}
+
+const testAgentTaskActivities = createTestAgentTaskActivities(
   async (
     _input: AgentTaskInput,
     workdir: string,
@@ -65,6 +82,9 @@ const v2Input: AgentTaskInput = {
       label: "Service health",
       required: true,
       evidenceRequirement: "A successful command response.",
+      evidenceCriteria: [
+        { field: "command", includes: "service-health --json" },
+      ],
     },
   ],
   provider: "codex",
@@ -111,7 +131,7 @@ describe("agentTaskActivities", () => {
   });
 
   it("records a successful run after Claude structured_output parses", async () => {
-    const claudeActivities = createAgentTaskActivities(
+    const claudeActivities = createTestAgentTaskActivities(
       claudeResultMessageCommand({
         type: "result",
         is_error: false,
@@ -137,7 +157,7 @@ describe("agentTaskActivities", () => {
 
   it("finalizes v2 output against receipts captured during investigation", async () => {
     const phases: string[] = [];
-    const activities = createAgentTaskActivities(
+    const activities = createTestAgentTaskActivities(
       async (_input, workdir, phase): Promise<AgentTaskCommand> => {
         if (phase === undefined) {
           throw new Error("two-phase test requires an explicit phase");
@@ -223,7 +243,7 @@ describe("agentTaskActivities", () => {
 
 describe("agent task runtime support", () => {
   it("throws a distinct error when claude reports is_error=true", async () => {
-    const claudeActivities = createAgentTaskActivities(
+    const claudeActivities = createTestAgentTaskActivities(
       claudeResultMessageCommand({
         type: "result",
         is_error: true,
@@ -291,58 +311,60 @@ describe("agent task runtime support", () => {
     }
   });
 
-  it("aliases OPENAI_API_KEY for Codex without overriding an explicit key", async () => {
+  it("replaces Codex credentials with the ephemeral broker token", async () => {
     expect(
-      envForProvider("codex", "/tmp/agent-home", {
-        OPENAI_API_KEY: "openai-key",
-      }),
-    ).toEqual({
-      OPENAI_API_KEY: "openai-key",
-      CODEX_API_KEY: "openai-key",
-      HOME: "/tmp/agent-home",
-    });
-    expect(
-      envForProvider("codex", "/tmp/agent-home", {
+      envForProvider("codex", "/tmp/agent-home", TEST_BROKER, {
         OPENAI_API_KEY: "openai-key",
         CODEX_API_KEY: "codex-key",
-      })["CODEX_API_KEY"],
-    ).toBe("codex-key");
+      }),
+    ).toEqual({
+      CODEX_API_KEY: "ephemeral-broker-token",
+      HOME: "/tmp/agent-home",
+    });
   });
 
   it("allows only Claude auth and non-secret read-only runtime configuration", async () => {
-    const environment = envForProvider("claude", "/tmp/agent-home", {
-      PATH: "/usr/bin",
-      HOME: "/home/worker",
-      CLAUDE_CODE_OAUTH_TOKEN: "oauth-token",
-      PROMETHEUS_URL: "http://prometheus.local",
-      ALERT_DASHBOARD_URL: "http://alerts.local",
-      KUBERNETES_SERVICE_HOST: "10.0.0.1",
-      POSTAL_API_KEY: "postal-secret",
-      POSTAL_HOST: "https://postal.example.test",
-      RECIPIENT_EMAIL: "recipient@example.test",
-      SENDER_EMAIL: "sender@example.test",
-      AGENT_TASK_API_TOKEN: "agent-task-api-secret",
-      GRAFANA_API_KEY: "grafana-secret",
-      ARGOCD_AUTH_TOKEN: "argocd-secret",
-      CLOUDFLARE_API_TOKEN: "cloudflare-secret",
-      SAFE_VALUE: "not-allowlisted",
-      ANTHROPIC_API_KEY: "anthropic-key",
-      OPENAI_API_KEY: "other-provider-key",
-      CODEX_API_KEY: "other-provider-key",
-      GH_TOKEN: "personal-token",
-      GITHUB_PERSONAL_ACCESS_TOKEN: "personal-token",
-      GITHUB_APP_PRIVATE_KEY: "private-key",
-    });
+    const environment = envForProvider(
+      "claude",
+      "/tmp/agent-home",
+      TEST_BROKER,
+      {
+        PATH: "/usr/bin",
+        HOME: "/home/worker",
+        CLAUDE_CODE_OAUTH_TOKEN: "oauth-token",
+        PROMETHEUS_URL: "http://prometheus.local",
+        ALERT_DASHBOARD_URL: "http://alerts.local",
+        KUBERNETES_SERVICE_HOST: "10.0.0.1",
+        POSTAL_API_KEY: "postal-secret",
+        POSTAL_HOST: "https://postal.example.test",
+        RECIPIENT_EMAIL: "recipient@example.test",
+        SENDER_EMAIL: "sender@example.test",
+        AGENT_TASK_API_TOKEN: "agent-task-api-secret",
+        GRAFANA_API_KEY: "grafana-secret",
+        ARGOCD_AUTH_TOKEN: "argocd-secret",
+        CLOUDFLARE_API_TOKEN: "cloudflare-secret",
+        SAFE_VALUE: "not-allowlisted",
+        ANTHROPIC_API_KEY: "anthropic-key",
+        OPENAI_API_KEY: "other-provider-key",
+        CODEX_API_KEY: "other-provider-key",
+        GH_TOKEN: "personal-token",
+        GITHUB_PERSONAL_ACCESS_TOKEN: "personal-token",
+        GITHUB_APP_PRIVATE_KEY: "private-key",
+      },
+    );
 
     expect(environment).toEqual({
       PATH: "/usr/bin",
       HOME: "/tmp/agent-home",
-      CLAUDE_CODE_OAUTH_TOKEN: "oauth-token",
+      ANTHROPIC_BASE_URL: "http://127.0.0.1:45678",
+      ANTHROPIC_AUTH_TOKEN: "ephemeral-broker-token",
+      CLAUDE_CODE_USE_GATEWAY: "1",
       PROMETHEUS_URL: "http://prometheus.local",
       ALERT_DASHBOARD_URL: "http://alerts.local",
       KUBERNETES_SERVICE_HOST: "10.0.0.1",
     });
     expect(environment).not.toHaveProperty("ANTHROPIC_API_KEY");
+    expect(environment).not.toHaveProperty("CLAUDE_CODE_OAUTH_TOKEN");
     expect(environment).not.toHaveProperty("POSTAL_API_KEY");
     expect(environment).not.toHaveProperty("POSTAL_HOST");
     expect(environment).not.toHaveProperty("RECIPIENT_EMAIL");
@@ -359,31 +381,35 @@ describe("agent task runtime support", () => {
   });
 
   it("allows only Codex auth and non-secret read-only runtime configuration", async () => {
-    const environment = envForProvider("codex", "/tmp/agent-home", {
-      PATH: "/usr/bin",
-      HOME: "/home/worker",
-      CODEX_API_KEY: "codex-key",
-      OPENAI_API_KEY: "openai-key",
-      ALERT_DASHBOARD_URL: "http://alerts.local",
-      POSTAL_API_KEY: "postal-secret",
-      SENDER_EMAIL: "sender@example.test",
-      GITHUB_WEBHOOK_SECRET: "webhook-secret",
-      BUGSINK_TOKEN: "bugsink-secret",
-      GRAFANA_API_KEY: "grafana-secret",
-      ARGOCD_AUTH_TOKEN: "argocd-secret",
-      CLOUDFLARE_API_TOKEN: "cloudflare-secret",
-      ANTHROPIC_API_KEY: "anthropic-key",
-      CLAUDE_CODE_OAUTH_TOKEN: "other-provider-key",
-      GH_TOKEN: "personal-token",
-      GITHUB_PERSONAL_ACCESS_TOKEN: "personal-token",
-      GITHUB_APP_PRIVATE_KEY: "private-key",
-    });
+    const environment = envForProvider(
+      "codex",
+      "/tmp/agent-home",
+      TEST_BROKER,
+      {
+        PATH: "/usr/bin",
+        HOME: "/home/worker",
+        CODEX_API_KEY: "codex-key",
+        OPENAI_API_KEY: "openai-key",
+        ALERT_DASHBOARD_URL: "http://alerts.local",
+        POSTAL_API_KEY: "postal-secret",
+        SENDER_EMAIL: "sender@example.test",
+        GITHUB_WEBHOOK_SECRET: "webhook-secret",
+        BUGSINK_TOKEN: "bugsink-secret",
+        GRAFANA_API_KEY: "grafana-secret",
+        ARGOCD_AUTH_TOKEN: "argocd-secret",
+        CLOUDFLARE_API_TOKEN: "cloudflare-secret",
+        ANTHROPIC_API_KEY: "anthropic-key",
+        CLAUDE_CODE_OAUTH_TOKEN: "other-provider-key",
+        GH_TOKEN: "personal-token",
+        GITHUB_PERSONAL_ACCESS_TOKEN: "personal-token",
+        GITHUB_APP_PRIVATE_KEY: "private-key",
+      },
+    );
 
     expect(environment).toEqual({
       PATH: "/usr/bin",
       HOME: "/tmp/agent-home",
-      CODEX_API_KEY: "codex-key",
-      OPENAI_API_KEY: "openai-key",
+      CODEX_API_KEY: "ephemeral-broker-token",
       ALERT_DASHBOARD_URL: "http://alerts.local",
     });
     expect(environment).not.toHaveProperty("GITHUB_PERSONAL_ACCESS_TOKEN");
@@ -397,6 +423,7 @@ describe("agent task runtime support", () => {
     expect(environment).not.toHaveProperty("CLOUDFLARE_API_TOKEN");
     expect(environment).not.toHaveProperty("ANTHROPIC_API_KEY");
     expect(environment).not.toHaveProperty("CLAUDE_CODE_OAUTH_TOKEN");
+    expect(environment).not.toHaveProperty("OPENAI_API_KEY");
     expect(environment).not.toHaveProperty("GH_TOKEN");
   });
 });

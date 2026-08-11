@@ -18,7 +18,7 @@ export const AgentTaskSourceSchema = z.object({
   note: z.string().min(1).optional(),
 });
 
-export const AgentTaskCheckDefinitionV2Schema = z.object({
+const AgentTaskCheckDefinitionV2Base = {
   id: z
     .string()
     .min(1)
@@ -26,6 +26,31 @@ export const AgentTaskCheckDefinitionV2Schema = z.object({
   label: z.string().min(1),
   required: z.boolean(),
   evidenceRequirement: z.string().min(1),
+};
+
+export const AgentTaskEvidenceCriterionV2Schema = z.object({
+  field: z.enum(["source", "command", "url", "excerpt"]),
+  includes: z.string().min(1),
+});
+export type AgentTaskEvidenceCriterionV2 = z.infer<
+  typeof AgentTaskEvidenceCriterionV2Schema
+>;
+
+const AgentTaskEvidenceCriteriaV2Schema = z
+  .array(AgentTaskEvidenceCriterionV2Schema)
+  .min(1);
+
+// evidenceCriteria is optional only for replaying v2 inputs recorded before
+// the independent receipt verifier existed. New API and source-defined inputs
+// use AgentTaskInputV2Schema, which requires it.
+export const AgentTaskCheckDefinitionV2Schema = z.object({
+  ...AgentTaskCheckDefinitionV2Base,
+  evidenceCriteria: AgentTaskEvidenceCriteriaV2Schema.optional(),
+});
+
+const StrictAgentTaskCheckDefinitionV2Schema = z.object({
+  ...AgentTaskCheckDefinitionV2Base,
+  evidenceCriteria: AgentTaskEvidenceCriteriaV2Schema,
 });
 
 const AgentTaskFollowUpSchemaBase = z.object({
@@ -117,9 +142,25 @@ export const AgentTaskInputSchema = z
     }
   });
 
-export const AgentTaskInputV2Schema = AgentTaskInputSchema.refine(
-  (value) => value.contractVersion === 2,
-  { message: "contractVersion 2 is required", path: ["contractVersion"] },
+export const AgentTaskInputV2Schema = AgentTaskInputSchema.superRefine(
+  (value, ctx) => {
+    if (value.contractVersion !== 2) {
+      ctx.addIssue({
+        code: "custom",
+        message: "contractVersion 2 is required",
+        path: ["contractVersion"],
+      });
+    }
+    for (const [index, check] of (value.checks ?? []).entries()) {
+      if (check.evidenceCriteria === undefined) {
+        ctx.addIssue({
+          code: "custom",
+          message: "new v2 checks require machine-verifiable evidenceCriteria",
+          path: ["checks", index, "evidenceCriteria"],
+        });
+      }
+    }
+  },
 );
 
 export const AgentTaskResultPayloadSchema = z.object({
@@ -146,7 +187,7 @@ export const AgentTaskFindingV2Schema = z.object({
 const AgentTaskFollowUpV2SchemaBase = z.object({
   title: z.string().min(1),
   prompt: z.string().min(1),
-  checks: z.array(AgentTaskCheckDefinitionV2Schema).min(1),
+  checks: z.array(StrictAgentTaskCheckDefinitionV2Schema).min(1),
   provider: AgentTaskProviderSchema.optional(),
   runAt: z.iso.datetime({ offset: true }).optional(),
   cron: z.string().min(1).optional(),
@@ -218,7 +259,7 @@ const AgentTaskWireFollowUpV2Schema = z
   .object({
     title: z.string().min(1),
     prompt: z.string().min(1),
-    checks: z.array(AgentTaskCheckDefinitionV2Schema).min(1),
+    checks: z.array(StrictAgentTaskCheckDefinitionV2Schema).min(1),
     provider: AgentTaskProviderSchema.nullable(),
     runAt: z.iso.datetime({ offset: true }).nullable(),
     cron: z.string().min(1).nullable(),

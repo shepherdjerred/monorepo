@@ -75,10 +75,11 @@ export function reportOnlyPrompt(
           "Declared checks:",
           ...agentTaskChecksV2(input).map(
             (check) =>
-              `- ${check.id} (${check.required ? "required" : "optional"}): ${check.label}. Evidence requirement: ${check.evidenceRequirement}`,
+              `- ${check.id} (${check.required ? "required" : "optional"}): ${check.label}. Evidence requirement: ${check.evidenceRequirement}. Machine-verifiable criteria: ${JSON.stringify(check.evidenceCriteria ?? [])}`,
           ),
           "- Report every declared check exactly once.",
           "- evidenceReceiptIds must contain actual tool-use or command-execution ids from this run.",
+          "- Referenced receipts must satisfy every machine-verifiable criterion declared for that check.",
           "- Never mark a check passed from memory, assumptions, prose, or a failed tool result.",
           "- Do not choose a report status or email subject; the reporter derives them from validated checks and findings.",
           "- Use retirementRecommendation for a human decision; never pause or cancel the schedule.",

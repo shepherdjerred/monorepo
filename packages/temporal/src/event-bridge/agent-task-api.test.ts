@@ -39,6 +39,7 @@ function validInput(): AgentTaskInput {
         label: "Follow-up state",
         required: true,
         evidenceRequirement: "Current source or runtime evidence.",
+        evidenceCriteria: [{ field: "source", includes: "runtime-status" }],
       },
     ],
     provider: "claude",

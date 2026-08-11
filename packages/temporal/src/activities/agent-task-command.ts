@@ -46,6 +46,7 @@ function claudeCommand(
   input: AgentTaskInput,
   workdir: string,
   phase: AgentTaskPromptPhase,
+  _credentialBrokerBaseUrl: string,
 ): AgentTaskCommand {
   const token = Bun.env["CLAUDE_CODE_OAUTH_TOKEN"];
   if (token === undefined || token === "") {
@@ -93,6 +94,7 @@ async function codexCommand(
   input: AgentTaskInput,
   workdir: string,
   phase: AgentTaskPromptPhase,
+  credentialBrokerBaseUrl: string,
 ): Promise<AgentTaskCommand> {
   const apiKey = Bun.env["CODEX_API_KEY"] ?? Bun.env["OPENAI_API_KEY"];
   if (apiKey === undefined || apiKey === "") {
@@ -111,23 +113,44 @@ async function codexCommand(
   );
   const model = input.model ?? DEFAULT_CODEX_MODEL;
   const prompt = reportOnlyPrompt(input, workdir, phase);
+  const brokerUrl = new URL(credentialBrokerBaseUrl);
+  if (
+    brokerUrl.protocol !== "http:" ||
+    brokerUrl.hostname !== "127.0.0.1" ||
+    brokerUrl.pathname !== "/" ||
+    brokerUrl.search !== "" ||
+    brokerUrl.hash !== ""
+  ) {
+    throw new Error("Codex credential broker must be an HTTP loopback origin");
+  }
+  const modelProviderConfig = [
+    'name="Agent credential broker"',
+    `base_url=${JSON.stringify(`${brokerUrl.origin}/v1`)}`,
+    'env_key="CODEX_API_KEY"',
+    'wire_api="responses"',
+    "supports_websockets=false",
+  ].join(",");
   return {
     args: [
       "codex",
       "exec",
+      "--ignore-user-config",
       // Codex's OS-level sandbox needs bwrap to create a Linux namespace, which
       // the unprivileged, non-root worker pod refuses ("No permissions to
       // create a new namespace"), so any --sandbox value other than
       // danger-full-access hard-fails before the first command runs. We drop the
       // OS sandbox; the isolation boundary is the ephemeral non-root pod, the
-      // throwaway per-run clone, and report-only mode (the prompt forbids
-      // mutation). The full worker env IS forwarded to the subprocess
-      // (envForProvider, agent-task-env.ts) — an accepted risk documented there,
-      // required so the report-only homelab audit keeps its read-only creds.
+      // throwaway per-run clone, and report-only mode. The provider subprocess
+      // receives only a short-lived localhost broker token; the parent-owned
+      // broker injects the raw OpenAI credential on the fixed upstream.
       "--sandbox",
       "danger-full-access",
       "--config",
       'approval_policy="never"',
+      "--config",
+      'model_provider="agent_credential_broker"',
+      "--config",
+      `model_providers.agent_credential_broker={${modelProviderConfig}}`,
       "--json",
       "--output-schema",
       schemaPath,
@@ -149,8 +172,12 @@ export async function buildAgentTaskCommand(
   input: AgentTaskInput,
   workdir: string,
   phase: AgentTaskPromptPhase = SINGLE_AGENT_TASK_PROMPT_PHASE,
+  credentialBrokerBaseUrl = "",
 ): Promise<AgentTaskCommand> {
+  if (credentialBrokerBaseUrl === "") {
+    throw new Error("agent task credential broker URL is required");
+  }
   return input.provider === "claude"
-    ? claudeCommand(input, workdir, phase)
-    : await codexCommand(input, workdir, phase);
+    ? claudeCommand(input, workdir, phase, credentialBrokerBaseUrl)
+    : await codexCommand(input, workdir, phase, credentialBrokerBaseUrl);
 }

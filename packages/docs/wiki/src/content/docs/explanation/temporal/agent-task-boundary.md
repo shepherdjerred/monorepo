@@ -22,6 +22,8 @@ flowchart TD
   DIS -->|runAt| WF[Workflow run]
   SCH --> WF
   WF --> I[Investigation agent<br>over a repo clone]
+  I -->|ephemeral bearer| BKR[Parent-owned<br>provider broker]
+  BKR -->|long-lived auth| PAPI[Fixed provider<br>inference API]
   I --> R[Redacted evidence<br>receipt catalog]
   R --> FNL[Receipt-only<br>finalization agent]
   FNL --> CQ[Core worker queue]
@@ -38,6 +40,8 @@ allowlisted environment. The runtime boundary consists of:
 - an ephemeral non-root pod and per-run clone,
 - `HOME` redirected into that clone so provider config is also disposable,
 - no GitHub credential, so the clone cannot push,
+- no long-lived provider credential; a per-run ephemeral credential reaches a
+  parent-owned loopback broker with fixed provider paths and origins,
 - no Postal, S3, ArgoCD, Grafana, Buildkite, Home Assistant, Bugsink, or
   Cloudflare credential,
 - a dedicated Kubernetes service account with read-only audit RBAC and no
@@ -80,8 +84,11 @@ pod.
 Novel investigations can still inspect the public repository, Prometheus, the
 alert ledger, and the Kubernetes API. The mounted service-account token is the
 only operational identity available to the provider, and Kubernetes enforces
-its read-only verbs. Provider auth is selected per run: Claude receives only its
-subscription OAuth token, while Codex receives only its API credential.
+its read-only verbs. Provider auth is selected per run but retained by the
+parent worker. Claude and Codex receive an ephemeral bearer for a loopback
+broker; the broker allows only that provider's inference paths and injects the
+long-lived credential into a fixed upstream request. A subprocess can spend
+quota through the broker but cannot extract the long-lived credential.
 
 Investigations that need ArgoCD, Buildkite, Home Assistant, or another
 authenticated source must become a typed deterministic collector. Stable
@@ -119,10 +126,14 @@ free-writing. Failing loudly is the only way an unattended run can tell you its
 contract broke.
 
 Contract validity alone does not establish truth. A v2 run first captures and
-redacts provider tool events as evidence receipts. Finalization receives only
-that catalog and a preliminary assessment. Unknown receipt IDs, failed evidence,
-unsupported findings, missing checks, or skipped required checks force a partial
-or failed report; they can never produce a clean verdict.
+redacts provider tool events as evidence receipts. Every declared check also has
+machine-verifiable criteria over receipt source, command, URL, or excerpt.
+Finalization receives only that catalog and a preliminary assessment, then an
+independent normalizer confirms that every criterion matched a cited successful
+receipt. Unknown or unrelated receipt IDs, failed evidence, unsupported findings,
+missing checks, or skipped required checks force a partial or failed report;
+they can never produce a clean verdict. Historical early-v2 inputs without
+criteria remain replayable but are always partial.
 
 The model has no verdict or subject field. After evidence validation, the
 reporter maps check state and finding severity to a domain verdict, then maps

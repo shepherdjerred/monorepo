@@ -9,9 +9,12 @@ import {
 import { withSpan } from "#observability/tracing.ts";
 import { buildAgentTaskCommand } from "#activities/agent-task-command.ts";
 import {
+  startAgentProviderCredentialBroker,
+  type AgentProviderCredentialBrokerFactory,
+} from "#activities/agent-provider-credential-broker.ts";
+import {
   createAgentTaskSecretTokenState,
   AgentTaskSecretRedactionController,
-  type AgentTaskSecretRedactionError,
   envForProvider,
   refreshAgentTaskSecretTokenStateInBackground,
 } from "#activities/agent-task-env.ts";
@@ -31,19 +34,16 @@ import {
 import { extractAgentTaskEvidenceReceipts } from "#shared/agent-task-evidence.ts";
 import type { ReportEvidenceReceiptV1 } from "#shared/report.ts";
 import { redactSecrets } from "#shared/redact.ts";
-import {
-  startAgentTaskLlmTrace,
-  type AgentTaskLlmTrace,
-} from "#activities/agent-task-llm-trace.ts";
+import { startAgentTaskLlmTrace } from "#activities/agent-task-llm-trace.ts";
 import type { TrackedAgentResult } from "#shared/agent-subprocess.ts";
 import {
   activityCancellationSignalOrUndefined,
   captureWithContext,
   currentWorkflowType,
+  enforceAgentTaskSecretRedactionHealth,
   jsonLog,
   safeHeartbeat,
   startToCloseTimeoutMsOrUndefined,
-  throwIfAgentTaskSecretRedactionFailed,
 } from "#activities/agent-task-runtime.ts";
 import { decodeAgentTaskPayload } from "#activities/agent-task-result.ts";
 import { prepareAgentTaskWorkdir } from "#activities/agent-task-workdir.ts";
@@ -85,342 +85,338 @@ export type RunAgentTaskResult = RunAgentTaskResultBase &
 export type FinalizeAgentTaskInput = RunAgentTaskInput & {
   investigation: RunAgentTaskResultV2;
 };
-function enforceAgentTaskSecretRedactionHealth(input: {
-  llmTrace: Pick<AgentTaskLlmTrace, "recordMetadataOnly">;
-  failure: AgentTaskSecretRedactionError | undefined;
-  result: Pick<TrackedAgentResult, "exitCode" | "durationMs" | "signal">;
-  provider: string;
-  startTimeMs: number;
-}): void {
-  if (input.failure !== undefined) {
-    input.llmTrace.recordMetadataOnly({
-      exitCode: input.result.exitCode,
-      startTimeMs: input.startTimeMs,
-      durationMs: input.result.durationMs,
-    });
-  }
-  throwIfAgentTaskSecretRedactionFailed(input.failure, {
-    provider: input.provider,
-    durationMs: input.result.durationMs,
-    signal: input.result.signal,
-  });
-}
 
 async function runAgent(
   input: RunAgentTaskInput,
   commandBuilder: typeof buildAgentTaskCommand,
+  credentialBrokerFactory: AgentProviderCredentialBrokerFactory,
 ): Promise<RunAgentTaskResult> {
   const parsed = AgentTaskInputSchema.parse(input.input);
   const provider = parsed.provider;
   const phase = input.phase ?? { kind: "single" };
-  const command = await commandBuilder(parsed, input.workdir, phase);
-  const workflowType = currentWorkflowType();
-  return withSpan(
-    "agent-task.run-agent",
-    {
-      "agent.provider": provider,
-      "agent.title": parsed.title,
-      "agent.model": command.model,
-      "agent.workdir": input.workdir,
-      "agent.timeout_minutes": parsed.agentTimeoutMinutes ?? 0,
-      "agent.max_turns": parsed.maxTurns ?? 0,
-      "agent.phase": phase.kind,
-    },
-    async (span) => {
-      jsonLog("info", "Invoking agent task", {
-        phase: "spawn",
-        provider,
-        title: parsed.title,
-        model: command.model,
-        workdir: input.workdir,
-        agentTimeoutMinutes: parsed.agentTimeoutMinutes,
-        maxTurns: parsed.maxTurns,
-      });
-      const secretTokenState = await createAgentTaskSecretTokenState(undefined);
-      const secretTokens = secretTokenState.tokens;
-      const redactionFailureController = new AgentTaskSecretRedactionController(
-        jsonLog.bind(
-          null,
-          "error",
-          "Unable to refresh mounted agent-task secrets",
-          {
-            phase: "secret-redaction",
-          },
-        ),
-      );
-      const activityCancellationSignal =
-        activityCancellationSignalOrUndefined();
-      const cancellationSignal =
-        activityCancellationSignal === undefined
-          ? redactionFailureController.abortController.signal
-          : AbortSignal.any([
-              activityCancellationSignal,
-              redactionFailureController.abortController.signal,
-            ]);
-      const llmStartMs = Date.now();
-      const llmTrace = startAgentTaskLlmTrace({
-        provider,
-        callSite: "agent-task",
-        model: command.model,
-        prompt: command.prompt,
-        options: {
-          maxTurns: parsed.maxTurns,
+  const credentialBroker = credentialBrokerFactory(provider);
+  try {
+    const command = await commandBuilder(
+      parsed,
+      input.workdir,
+      phase,
+      credentialBroker.baseUrl,
+    );
+    const workflowType = currentWorkflowType();
+    return await withSpan(
+      "agent-task.run-agent",
+      {
+        "agent.provider": provider,
+        "agent.title": parsed.title,
+        "agent.model": command.model,
+        "agent.workdir": input.workdir,
+        "agent.timeout_minutes": parsed.agentTimeoutMinutes ?? 0,
+        "agent.max_turns": parsed.maxTurns ?? 0,
+        "agent.phase": phase.kind,
+      },
+      async (span) => {
+        jsonLog("info", "Invoking agent task", {
+          phase: "spawn",
+          provider,
           title: parsed.title,
-          mode: parsed.mode,
-        },
-        warn: (message) => {
-          jsonLog("warning", message, { phase: "llm-trace" });
-        },
-      });
-      const refreshSecretsInBackground = (): void => {
-        void refreshAgentTaskSecretTokenStateInBackground(
-          secretTokenState,
-          (error) => {
-            redactionFailureController.record(error);
+          model: command.model,
+          workdir: input.workdir,
+          agentTimeoutMinutes: parsed.agentTimeoutMinutes,
+          maxTurns: parsed.maxTurns,
+        });
+        const secretTokenState =
+          await createAgentTaskSecretTokenState(undefined);
+        const secretTokens = secretTokenState.tokens;
+        secretTokens.push(credentialBroker.clientToken);
+        const redactionFailureController =
+          new AgentTaskSecretRedactionController(
+            jsonLog.bind(
+              null,
+              "error",
+              "Unable to refresh mounted agent-task secrets",
+              {
+                phase: "secret-redaction",
+              },
+            ),
+          );
+        const activityCancellationSignal =
+          activityCancellationSignalOrUndefined();
+        const cancellationSignal =
+          activityCancellationSignal === undefined
+            ? redactionFailureController.abortController.signal
+            : AbortSignal.any([
+                activityCancellationSignal,
+                redactionFailureController.abortController.signal,
+              ]);
+        const llmStartMs = Date.now();
+        const llmTrace = startAgentTaskLlmTrace({
+          provider,
+          callSite: "agent-task",
+          model: command.model,
+          prompt: command.prompt,
+          options: {
+            maxTurns: parsed.maxTurns,
+            title: parsed.title,
+            mode: parsed.mode,
           },
+          warn: (message) => {
+            jsonLog("warning", message, { phase: "llm-trace" });
+          },
+        });
+        const refreshSecretsInBackground = (): void => {
+          void refreshAgentTaskSecretTokenStateInBackground(
+            secretTokenState,
+            (error) => {
+              redactionFailureController.record(error);
+            },
+          );
+        };
+        const mountedSecretRefreshTimer = setInterval(
+          refreshSecretsInBackground,
+          MOUNTED_SECRET_REFRESH_INTERVAL_MS,
         );
-      };
-      const mountedSecretRefreshTimer = setInterval(
-        refreshSecretsInBackground,
-        MOUNTED_SECRET_REFRESH_INTERVAL_MS,
-      );
-      const refreshSecretsBeforeOutput = async (): Promise<boolean> => {
-        // Refresh immediately before every stdout chunk. The periodic refresh
-        // is only a liveness aid; this boundary closes the rotation-to-output
-        // race before a diagnostic excerpt is retained.
-        if (redactionFailureController.failure !== undefined) {
-          return false;
-        }
-        return redactionFailureController.refreshBeforeOutput(secretTokenState);
-      };
-      let result: TrackedAgentResult;
-      try {
-        result = await runTrackedAgentSubprocess(
-          {
-            command: providerSubprocessCommand(command.args),
-            cwd: input.workdir,
-            env: envForProvider(provider, input.workdir),
-            redactTokens: secretTokens,
-            beforeOutput: refreshSecretsBeforeOutput,
-            startToCloseTimeoutMs: startToCloseTimeoutMsOrUndefined(),
-            cancellationSignal,
-            heartbeatIntervalMs: HEARTBEAT_INTERVAL_MS,
-            onHeartbeat: (beat) => {
-              safeHeartbeat({ phase: "agent", provider, ...beat });
-              jsonLog("info", "agent heartbeat", {
-                phase: "agent",
-                provider,
-                ...beat,
-              });
-              span.addEvent("agent.heartbeat", {
-                elapsedMs: beat.elapsedMs,
-                idleMs: beat.idleMs,
-              });
-            },
-            onSoftKill: (event) => {
-              jsonLog("warning", "agent soft-kill", {
-                phase: "soft-kill",
-                provider,
-                ...event,
-              });
-              span.addEvent("agent.soft-kill", {
-                elapsedMs: event.elapsedMs,
-                idleMs: event.idleMs,
-                maxIdleMs: event.maxIdleMs,
-              });
-              agentSubprocessSoftKillsTotal.inc({
-                workflow_type: workflowType,
-                reason: "pre_temporal_timeout",
-              });
-            },
-            onSigkillEscalation: (event) => {
-              jsonLog("warning", "agent sigkill escalation", {
-                phase: "sigkill",
-                provider,
-                ...event,
-              });
-              agentSubprocessSoftKillsTotal.inc({
-                workflow_type: workflowType,
-                reason: "escalated_sigkill",
-              });
-            },
-            onStdoutLine: (line) => {
-              llmTrace.pushStdoutLine(line);
-              const event = summarizeClaudeStreamLine(line);
-              if (event !== undefined) {
-                jsonLog("info", "agent event", {
-                  phase: "agent-event",
+        const refreshSecretsBeforeOutput = async (): Promise<boolean> => {
+          // Refresh immediately before every stdout chunk. The periodic refresh
+          // is only a liveness aid; this boundary closes the rotation-to-output
+          // race before a diagnostic excerpt is retained.
+          if (redactionFailureController.failure !== undefined) {
+            return false;
+          }
+          return redactionFailureController.refreshBeforeOutput(
+            secretTokenState,
+          );
+        };
+        let result: TrackedAgentResult;
+        try {
+          result = await runTrackedAgentSubprocess(
+            {
+              command: providerSubprocessCommand(command.args),
+              cwd: input.workdir,
+              env: envForProvider(provider, input.workdir, credentialBroker),
+              redactTokens: secretTokens,
+              beforeOutput: refreshSecretsBeforeOutput,
+              startToCloseTimeoutMs: startToCloseTimeoutMsOrUndefined(),
+              cancellationSignal,
+              heartbeatIntervalMs: HEARTBEAT_INTERVAL_MS,
+              onHeartbeat: (beat) => {
+                safeHeartbeat({ phase: "agent", provider, ...beat });
+                jsonLog("info", "agent heartbeat", {
+                  phase: "agent",
+                  provider,
+                  ...beat,
+                });
+                span.addEvent("agent.heartbeat", {
+                  elapsedMs: beat.elapsedMs,
+                  idleMs: beat.idleMs,
+                });
+              },
+              onSoftKill: (event) => {
+                jsonLog("warning", "agent soft-kill", {
+                  phase: "soft-kill",
                   provider,
                   ...event,
                 });
-                span.addEvent("agent.event", { type: event.type });
-              }
-            },
-            onStderrLine: (line) => {
-              jsonLog("info", "agent stderr", { provider, line });
-            },
-            onCancellation: (state) => {
-              jsonLog(
-                "warning",
-                "Agent task cancellation requested; killing subprocess",
-                {
+                span.addEvent("agent.soft-kill", {
+                  elapsedMs: event.elapsedMs,
+                  idleMs: event.idleMs,
+                  maxIdleMs: event.maxIdleMs,
+                });
+                agentSubprocessSoftKillsTotal.inc({
+                  workflow_type: workflowType,
+                  reason: "pre_temporal_timeout",
+                });
+              },
+              onSigkillEscalation: (event) => {
+                jsonLog("warning", "agent sigkill escalation", {
+                  phase: "sigkill",
                   provider,
-                  title: parsed.title,
-                  model: command.model,
-                  ...state,
-                },
-              );
+                  ...event,
+                });
+                agentSubprocessSoftKillsTotal.inc({
+                  workflow_type: workflowType,
+                  reason: "escalated_sigkill",
+                });
+              },
+              onStdoutLine: (line) => {
+                llmTrace.pushStdoutLine(line);
+                const event = summarizeClaudeStreamLine(line);
+                if (event !== undefined) {
+                  jsonLog("info", "agent event", {
+                    phase: "agent-event",
+                    provider,
+                    ...event,
+                  });
+                  span.addEvent("agent.event", { type: event.type });
+                }
+              },
+              onStderrLine: (line) => {
+                jsonLog("info", "agent stderr", { provider, line });
+              },
+              onCancellation: (state) => {
+                jsonLog(
+                  "warning",
+                  "Agent task cancellation requested; killing subprocess",
+                  {
+                    provider,
+                    title: parsed.title,
+                    model: command.model,
+                    ...state,
+                  },
+                );
+              },
             },
-          },
-          redactSecrets,
+            redactSecrets,
+          );
+        } finally {
+          clearInterval(mountedSecretRefreshTimer);
+          // Close codex spans on every exit path (incl. spawn failure) so a
+          // crashed run still shows up in Tempo with whatever turns completed.
+          llmTrace.close();
+        }
+        try {
+          await secretTokenState.refresh();
+        } catch (error: unknown) {
+          redactionFailureController.record(error);
+        }
+
+        enforceAgentTaskSecretRedactionHealth({
+          llmTrace,
+          failure: redactionFailureController.failure,
+          result,
+          provider,
+          startTimeMs: llmStartMs,
+        });
+
+        // Post-hoc Claude spans retain raw stdout in the LLM archive. Check the
+        // final redaction state first so a refresh failure can never archive a
+        // newly rotated credential from that raw buffer. Keep the raw stdout for
+        // contract parsing below, but pass a token-redacted copy to the archive
+        // so credentials that are not covered by the observability package's
+        // generic patterns cannot be persisted. Other failed runs are still
+        // traced because their stdout is safe to retain.
+        llmTrace.record({
+          stdout: redactSecrets(result.stdout, secretTokens),
+          exitCode: result.exitCode,
+          startTimeMs: llmStartMs,
+          durationMs: result.durationMs,
+        });
+
+        const cancelled = result.signal === "SIGTERM";
+        agentSubprocessIdleSeconds.observe(
+          { workflow_type: workflowType },
+          result.maxIdleMs / 1000,
         );
-      } finally {
-        clearInterval(mountedSecretRefreshTimer);
-        // Close codex spans on every exit path (incl. spawn failure) so a
-        // crashed run still shows up in Tempo with whatever turns completed.
-        llmTrace.close();
-      }
-      try {
-        await secretTokenState.refresh();
-      } catch (error: unknown) {
-        redactionFailureController.record(error);
-      }
+        agentTaskSubprocessDurationSeconds.observe(
+          {
+            provider,
+            model: command.model,
+            exit_code: cancelled ? "cancelled" : String(result.exitCode),
+          },
+          result.durationMs / 1000,
+        );
+        agentTaskSubprocessExitTotal.inc({
+          provider,
+          exit_code: cancelled ? "cancelled" : String(result.exitCode),
+        });
+        span.setAttribute("agent.duration_ms", result.durationMs);
+        span.setAttribute("agent.max_idle_ms", result.maxIdleMs);
+        span.setAttribute("agent.exit_code", result.exitCode);
+        span.setAttribute("agent.signal", result.signal);
 
-      enforceAgentTaskSecretRedactionHealth({
-        llmTrace,
-        failure: redactionFailureController.failure,
-        result,
-        provider,
-        startTimeMs: llmStartMs,
-      });
+        jsonLog("info", "agent exited", {
+          phase: "exited",
+          provider,
+          elapsedMs: result.durationMs,
+          exitCode: result.exitCode,
+          signal: result.signal,
+          maxIdleMs: result.maxIdleMs,
+          firstOutputLatencyMs: result.firstOutputLatencyMs,
+          sigkillEscalated: result.sigkillEscalated,
+          lastLine: result.lastLine,
+        });
 
-      // Post-hoc Claude spans retain raw stdout in the LLM archive. Check the
-      // final redaction state first so a refresh failure can never archive a
-      // newly rotated credential from that raw buffer. Keep the raw stdout for
-      // contract parsing below, but pass a token-redacted copy to the archive
-      // so credentials that are not covered by the observability package's
-      // generic patterns cannot be persisted. Other failed runs are still
-      // traced because their stdout is safe to retain.
-      llmTrace.record({
-        stdout: redactSecrets(result.stdout, secretTokens),
-        exitCode: result.exitCode,
-        startTimeMs: llmStartMs,
-        durationMs: result.durationMs,
-      });
+        if (cancelled) {
+          agentTaskRunsTotal.inc({ provider, outcome: "cancelled" });
+          const error = new Error(`${provider} agent task cancelled`);
+          captureWithContext(error, {
+            provider,
+            durationMs: result.durationMs,
+            maxIdleMs: result.maxIdleMs,
+            firstOutputLatencyMs: result.firstOutputLatencyMs,
+            signal: result.signal,
+            lastLine: result.lastLine,
+          });
+          throw error;
+        }
 
-      const cancelled = result.signal === "SIGTERM";
-      agentSubprocessIdleSeconds.observe(
-        { workflow_type: workflowType },
-        result.maxIdleMs / 1000,
-      );
-      agentTaskSubprocessDurationSeconds.observe(
-        {
+        if (result.exitCode !== 0) {
+          agentTaskRunsTotal.inc({ provider, outcome: "subprocess_failed" });
+          const error = agentSubprocessFailure(provider, result);
+          captureWithContext(error, {
+            provider,
+            durationMs: result.durationMs,
+            maxIdleMs: result.maxIdleMs,
+            firstOutputLatencyMs: result.firstOutputLatencyMs,
+            signal: result.signal,
+            lastLine: result.lastLine,
+          });
+          throw error;
+        }
+
+        const contractVersion = parsed.contractVersion === 2 ? 2 : 1;
+        const decodedPayload = await decodeAgentTaskPayload({
+          provider,
+          stdout: result.stdout,
+          outputPath: command.outputPath,
+          contractVersion,
+          durationMs: result.durationMs,
+          redact: (excerpt) => redactSecrets(excerpt, secretTokens),
+        });
+        if (input.recordSuccess !== false) {
+          agentTaskRunsTotal.inc({ provider, outcome: "success" });
+        }
+
+        const evidence = extractAgentTaskEvidenceReceipts(
+          result.stdout,
+          provider,
+          new Date().toISOString(),
+          (value) => redactSecrets(value, secretTokens),
+        );
+
+        jsonLog("info", "Agent task completed", {
+          provider,
+          title: parsed.title,
+          durationMs: result.durationMs,
+          contractVersion,
+          evidenceReceiptCount: evidence.length,
+        });
+
+        const base = {
           provider,
           model: command.model,
-          exit_code: cancelled ? "cancelled" : String(result.exitCode),
-        },
-        result.durationMs / 1000,
-      );
-      agentTaskSubprocessExitTotal.inc({
-        provider,
-        exit_code: cancelled ? "cancelled" : String(result.exitCode),
-      });
-      span.setAttribute("agent.duration_ms", result.durationMs);
-      span.setAttribute("agent.max_idle_ms", result.maxIdleMs);
-      span.setAttribute("agent.exit_code", result.exitCode);
-      span.setAttribute("agent.signal", result.signal);
-
-      jsonLog("info", "agent exited", {
-        phase: "exited",
-        provider,
-        elapsedMs: result.durationMs,
-        exitCode: result.exitCode,
-        signal: result.signal,
-        maxIdleMs: result.maxIdleMs,
-        firstOutputLatencyMs: result.firstOutputLatencyMs,
-        sigkillEscalated: result.sigkillEscalated,
-        lastLine: result.lastLine,
-      });
-
-      if (cancelled) {
-        agentTaskRunsTotal.inc({ provider, outcome: "cancelled" });
-        const error = new Error(`${provider} agent task cancelled`);
-        captureWithContext(error, {
-          provider,
           durationMs: result.durationMs,
-          maxIdleMs: result.maxIdleMs,
-          firstOutputLatencyMs: result.firstOutputLatencyMs,
-          signal: result.signal,
-          lastLine: result.lastLine,
-        });
-        throw error;
-      }
-
-      if (result.exitCode !== 0) {
-        agentTaskRunsTotal.inc({ provider, outcome: "subprocess_failed" });
-        const error = agentSubprocessFailure(provider, result);
-        captureWithContext(error, {
-          provider,
-          durationMs: result.durationMs,
-          maxIdleMs: result.maxIdleMs,
-          firstOutputLatencyMs: result.firstOutputLatencyMs,
-          signal: result.signal,
-          lastLine: result.lastLine,
-        });
-        throw error;
-      }
-
-      const contractVersion = parsed.contractVersion === 2 ? 2 : 1;
-      const decodedPayload = await decodeAgentTaskPayload({
-        provider,
-        stdout: result.stdout,
-        outputPath: command.outputPath,
-        contractVersion,
-        durationMs: result.durationMs,
-        redact: (excerpt) => redactSecrets(excerpt, secretTokens),
-      });
-      if (input.recordSuccess !== false) {
-        agentTaskRunsTotal.inc({ provider, outcome: "success" });
-      }
-
-      const evidence = extractAgentTaskEvidenceReceipts(
-        result.stdout,
-        provider,
-        new Date().toISOString(),
-        (value) => redactSecrets(value, secretTokens),
-      );
-
-      jsonLog("info", "Agent task completed", {
-        provider,
-        title: parsed.title,
-        durationMs: result.durationMs,
-        contractVersion,
-        evidenceReceiptCount: evidence.length,
-      });
-
-      const base = {
-        provider,
-        model: command.model,
-        durationMs: result.durationMs,
-        startedAt: new Date(llmStartMs).toISOString(),
-        evidence,
-      };
-      if (contractVersion === 2) {
+          startedAt: new Date(llmStartMs).toISOString(),
+          evidence,
+        };
+        if (contractVersion === 2) {
+          return {
+            ...base,
+            contractVersion: 2,
+            payload: AgentTaskResultPayloadV2Schema.parse(decodedPayload),
+          };
+        }
+        const payload = AgentTaskResultPayloadSchema.parse(decodedPayload);
         return {
           ...base,
-          contractVersion: 2,
-          payload: AgentTaskResultPayloadV2Schema.parse(decodedPayload),
+          ...payload,
+          contractVersion: 1,
+          payload,
         };
-      }
-      const payload = AgentTaskResultPayloadSchema.parse(decodedPayload);
-      return {
-        ...base,
-        ...payload,
-        contractVersion: 1,
-        payload,
-      };
-    },
-  );
+      },
+    );
+  } finally {
+    await credentialBroker.stop();
+  }
 }
 
 function requireV2Result(result: RunAgentTaskResult): RunAgentTaskResultV2 {
@@ -433,6 +429,7 @@ function requireV2Result(result: RunAgentTaskResult): RunAgentTaskResultV2 {
 async function investigateAgentTask(
   input: RunAgentTaskInput,
   commandBuilder: typeof buildAgentTaskCommand,
+  credentialBrokerFactory: AgentProviderCredentialBrokerFactory,
 ): Promise<RunAgentTaskResultV2> {
   return requireV2Result(
     await runAgent(
@@ -442,6 +439,7 @@ async function investigateAgentTask(
         recordSuccess: false,
       },
       commandBuilder,
+      credentialBrokerFactory,
     ),
   );
 }
@@ -449,6 +447,7 @@ async function investigateAgentTask(
 async function finalizeAgentTask(
   input: FinalizeAgentTaskInput,
   commandBuilder: typeof buildAgentTaskCommand,
+  credentialBrokerFactory: AgentProviderCredentialBrokerFactory,
 ): Promise<RunAgentTaskResultV2> {
   const finalized = requireV2Result(
     await runAgent(
@@ -462,6 +461,7 @@ async function finalizeAgentTask(
         },
       },
       commandBuilder,
+      credentialBrokerFactory,
     ),
   );
   return {
@@ -474,14 +474,16 @@ async function finalizeAgentTask(
 
 export function createAgentTaskActivities(
   commandBuilder: typeof buildAgentTaskCommand = buildAgentTaskCommand,
+  credentialBrokerFactory: AgentProviderCredentialBrokerFactory = startAgentProviderCredentialBroker,
 ) {
   return {
     prepareAgentTaskWorkdir,
-    runAgentTask: (input: RunAgentTaskInput) => runAgent(input, commandBuilder),
+    runAgentTask: (input: RunAgentTaskInput) =>
+      runAgent(input, commandBuilder, credentialBrokerFactory),
     investigateAgentTask: (input: RunAgentTaskInput) =>
-      investigateAgentTask(input, commandBuilder),
+      investigateAgentTask(input, commandBuilder, credentialBrokerFactory),
     finalizeAgentTask: (input: FinalizeAgentTaskInput) =>
-      finalizeAgentTask(input, commandBuilder),
+      finalizeAgentTask(input, commandBuilder, credentialBrokerFactory),
     sendAgentTaskEmail: sendEmail,
     sendAgentTaskFailureReport: sendFailureReport,
     scheduleAgentTaskFollowUp: scheduleFollowUp,

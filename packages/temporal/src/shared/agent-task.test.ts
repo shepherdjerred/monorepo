@@ -6,6 +6,7 @@ import {
   AGENT_TASK_OUTPUT_JSON_SCHEMA_CODEX,
   AgentTaskOutputContractError,
   AgentTaskInputSchema,
+  AgentTaskInputV2Schema,
   stripClaudeSchemaAnnotations,
 } from "./agent-task.ts";
 import {
@@ -65,6 +66,23 @@ describe("AgentTaskInputSchema", () => {
         cron: "0 9 * * 1",
       }),
     ).toThrow(/must not set both/);
+  });
+
+  it("requires machine-verifiable evidence criteria for new v2 inputs", () => {
+    expect(() =>
+      AgentTaskInputV2Schema.parse({
+        ...baseInput,
+        contractVersion: 2,
+        checks: [
+          {
+            id: "service-health",
+            label: "Service health",
+            required: true,
+            evidenceRequirement: "A successful health endpoint response.",
+          },
+        ],
+      }),
+    ).toThrow(/machine-verifiable evidenceCriteria/);
   });
 });
 

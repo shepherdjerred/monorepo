@@ -21,6 +21,9 @@ const INPUT = AgentTaskInputSchema.parse({
       label: "Production evidence",
       required: true,
       evidenceRequirement: "Capture the typed production status.",
+      evidenceCriteria: [
+        { field: "source", includes: "typed production status" },
+      ],
     },
   ],
   provider: "claude",
@@ -65,6 +68,9 @@ const RESULT: RunAgentTaskResultV2 = {
           label: "Production evidence",
           required: true,
           evidenceRequirement: "Capture the typed production status.",
+          evidenceCriteria: [
+            { field: "source", includes: "typed production status" },
+          ],
         },
       ],
       runAt: "2026-08-12T12:00:00.000Z",

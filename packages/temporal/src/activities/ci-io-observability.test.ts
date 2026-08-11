@@ -3,7 +3,10 @@ import {
   collectCiIoObservability,
   evaluateCiIoObservability,
 } from "./ci-io-observability.ts";
-import { selectCiIoCandidateBuilds } from "./ci-io-impact.ts";
+import {
+  countCiIoFinishedBuilds,
+  selectCiIoCandidateBuilds,
+} from "./ci-io-impact.ts";
 
 const originalFetch = globalThis.fetch;
 const originalPrometheusUrl = Bun.env["PROMETHEUS_URL"];
@@ -50,6 +53,18 @@ describe("CI I/O observability evidence", () => {
         },
       ]),
     ).toEqual([102]);
+  });
+
+  test("counts only passed and failed builds toward retirement", () => {
+    expect(
+      countCiIoFinishedBuilds([
+        { state: "passed" },
+        { state: "failed" },
+        { state: "running" },
+        { state: "blocked" },
+        { state: "canceled" },
+      ]),
+    ).toBe(2);
   });
 
   test("enforces series, minimum, and maximum thresholds", () => {

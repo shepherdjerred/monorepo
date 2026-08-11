@@ -85,6 +85,15 @@ type CandidateBuild = {
   env?: Record<string, string> | undefined;
 };
 
+const CI_IO_FINISHED_BUILD_STATES = new Set(["passed", "failed"]);
+
+export function countCiIoFinishedBuilds(
+  builds: readonly Pick<CandidateBuild, "state">[],
+): number {
+  return builds.filter((build) => CI_IO_FINISHED_BUILD_STATES.has(build.state))
+    .length;
+}
+
 export function selectCiIoCandidateBuilds(
   builds: readonly CandidateBuild[],
 ): number[] {
@@ -92,7 +101,7 @@ export function selectCiIoCandidateBuilds(
     .filter(
       (build) =>
         build.env?.["CI_IO_FIXED_CORPUS"] === "true" &&
-        ["passed", "failed"].includes(build.state),
+        CI_IO_FINISHED_BUILD_STATES.has(build.state),
     )
     .toSorted((left, right) => right.number - left.number)
     .slice(0, 1)
@@ -213,6 +222,7 @@ export async function collectCiIoImpact(): Promise<CiIoImpactResult> {
   const elapsedHours =
     (Date.now() - Date.parse(pull.merged_at)) / (60 * 60 * 1000);
   const builds = await buildkiteBuilds(pull.merged_at);
+  const postMergeBuildCount = countCiIoFinishedBuilds(builds);
   const candidateBuilds = selectCiIoCandidateBuilds(builds);
   const pendingReason =
     elapsedHours < 24
@@ -228,7 +238,7 @@ export async function collectCiIoImpact(): Promise<CiIoImpactResult> {
       mergeSha: pull.merge_commit_sha,
       prUrl: pull.html_url,
       elapsedHours,
-      postMergeBuildCount: builds.length,
+      postMergeBuildCount,
       candidateBuilds,
       pendingReason,
       raw: undefined,
@@ -303,7 +313,7 @@ export async function collectCiIoImpact(): Promise<CiIoImpactResult> {
       mergeSha: pull.merge_commit_sha,
       prUrl: pull.html_url,
       elapsedHours,
-      postMergeBuildCount: builds.length,
+      postMergeBuildCount,
       candidateBuilds,
       pendingReason: undefined,
       raw: raw.report,

@@ -47,7 +47,7 @@ immediately. Cron expressions are evaluated in `America/Los_Angeles`.
   "runAt": "2026-05-31T09:00:00-07:00",
   "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
   "checks": [
-    { "id": "post-deploy-metrics", "label": "Post-deploy metrics", "required": true, "evidenceRequirement": "Current metric query results for each source check." }
+    { "id": "post-deploy-metrics", "label": "Post-deploy metrics", "required": true, "evidenceRequirement": "Current metric query results for each source check.", "evidenceCriteria": [{ "field": "command", "includes": "/api/v1/query" }] }
   ],
   "source": {
     "docPath": "packages/docs/guides/2026-04-25_birmel-remediation-followups.md"
@@ -71,10 +71,15 @@ v2 before connecting and schedules them in document order. It also accepts
 the only public scheduling ingress; the Temporal server itself is never
 exposed.
 
-Each check has `id`, `label`, `required`, and `evidenceRequirement`. The result
-must report every declared ID once and cite actual tool or command receipt IDs.
-A required check that is failed, skipped, missing, or backed by missing/failed
-evidence makes the execution partial and prevents a clear verdict.
+Each check has `id`, `label`, `required`, `evidenceRequirement`, and a non-empty
+`evidenceCriteria` array. A criterion names a receipt `field` (`source`,
+`command`, `url`, or `excerpt`) and a required `includes` substring. The result
+must report every declared ID once and cite actual tool or command receipt IDs;
+the independent normalizer requires every criterion to match at least one cited
+successful receipt. A required check that is failed, skipped, missing, backed by
+missing/failed evidence, or backed by unrelated evidence makes the execution
+partial and prevents a clear verdict. Replayed early-v2 inputs without criteria
+remain valid histories but are always partial.
 
 The model does not return a verdict or subject. The reporter derives them from
 validated state: incomplete required coverage is inconclusive; failed checks or
@@ -131,15 +136,23 @@ as report evidence.
 The subprocess receives an allowlisted environment rather than inheriting the
 worker environment.
 
-| Input                                       | State in the subprocess                                  |
-| ------------------------------------------- | -------------------------------------------------------- |
-| Selected provider credential                | present; credentials for the other provider are absent   |
-| Public GitHub repository credential         | absent; the throwaway clone is unauthenticated           |
-| `HOME`                                      | the throwaway workdir, not the worker image home         |
-| Prometheus and alert-dashboard URLs         | present without API credentials                          |
-| Kubernetes service address and mounted SA   | present; the dedicated identity has read-only audit RBAC |
-| Postal, S3, GitHub App, and ingress secrets | absent; delivery executes on the core worker queue       |
-| ArgoCD, Grafana, Buildkite, HA, Cloudflare  | absent                                                   |
+| Input                                       | State in the subprocess                                     |
+| ------------------------------------------- | ----------------------------------------------------------- |
+| Selected provider credential                | absent; replaced by an ephemeral loopback-broker credential |
+| Other provider credentials                  | absent                                                      |
+| Public GitHub repository credential         | absent; the throwaway clone is unauthenticated              |
+| `HOME`                                      | the throwaway workdir, not the worker image home            |
+| Prometheus and alert-dashboard URLs         | present without API credentials                             |
+| Kubernetes service address and mounted SA   | present; the dedicated identity has read-only audit RBAC    |
+| Postal, S3, GitHub App, and ingress secrets | absent; delivery executes on the core worker queue          |
+| ArgoCD, Grafana, Buildkite, HA, Cloudflare  | absent                                                      |
+
+The parent worker keeps the selected provider credential and starts a fresh
+loopback broker for each run. That broker authenticates the ephemeral client
+credential, accepts only the fixed Claude or Codex inference paths, and forwards
+to a fixed provider origin with the real credential. A provider subprocess can
+still spend its selected provider quota, but it cannot read or transmit the
+long-lived credential itself.
 
 This lets generic investigations query the public repository, read-only
 Kubernetes API, Prometheus, and alert ledger without crossing the delivery or

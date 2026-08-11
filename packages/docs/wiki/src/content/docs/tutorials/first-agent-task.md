@@ -38,16 +38,18 @@ about **three minutes from now**, in your local offset.
   "runAt": "2026-08-09T15:30:00-07:00",
   "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
   "checks": [
-    { "id": "package-directories", "label": "Top-level package directories", "required": true, "evidenceRequirement": "Successful command output listing the immediate directories under packages/." }
+    { "id": "package-directories", "label": "Top-level package directories", "required": true, "evidenceRequirement": "Successful command output listing the immediate directories under packages/.", "evidenceCriteria": [{ "field": "command", "includes": "packages" }] }
   ],
   "prompt": "List the top-level directories under packages/ and count them. Email the list and the count. Do not change anything."
 }
 -->
 ```
 
-Notice the declared check and its evidence requirement. The agent's final JSON
-must report that check and reference the command receipt that captured the
-directory listing. If the command fails or the receipt is missing, the report
+Notice the declared check, its evidence requirement, and the independently
+matched command criterion. The agent's final JSON must report that check and
+reference the command receipt that captured the directory listing. If the
+command fails, the receipt is missing, or the command does not match the
+criterion, the report
 is partial rather than clean.
 
 Notice also `"mode": "report-only"`. That is the only mode.

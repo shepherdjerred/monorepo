@@ -18,6 +18,10 @@ function v2Input(): AgentTaskInput {
         label: "Service health",
         required: true,
         evidenceRequirement: "A successful health endpoint response.",
+        evidenceCriteria: [
+          { field: "command", includes: "curl -fsS" },
+          { field: "command", includes: "/health" },
+        ],
       },
     ],
     provider: "claude",
@@ -161,14 +165,16 @@ describe("agent task evidence receipts", () => {
       exitCode: 0,
     });
   });
+});
 
+describe("agent task evidence normalization", () => {
   test("downgrades unsupported clean claims to partial and inconclusive", () => {
     const normalized = normalizeAgentTaskV2Result(v2Input(), v2Payload([]), []);
     expect(normalized.execution).toBe("partial");
     expect(normalized.verdict).toBe("inconclusive");
     expect(normalized.checks[0]?.status).toBe("failed");
     expect(normalized.limitations).toContain(
-      "Check service-health has no successful captured evidence.",
+      "Check service-health does not have complete successful evidence satisfying its declared criteria.",
     );
   });
 
@@ -188,6 +194,51 @@ describe("agent task evidence receipts", () => {
     );
     expect(normalized.execution).toBe("complete");
     expect(normalized.verdict).toBe("clear");
+  });
+
+  test("rejects a successful but unrelated receipt", () => {
+    const normalized = normalizeAgentTaskV2Result(
+      v2Input(),
+      v2Payload(["tool-1"]),
+      [
+        {
+          id: "tool-1",
+          source: "Bash",
+          observedAt: OBSERVED_AT,
+          status: "success",
+          command: "pwd",
+          excerpt: "/tmp/agent-task",
+        },
+      ],
+    );
+    expect(normalized.execution).toBe("partial");
+    expect(normalized.verdict).toBe("inconclusive");
+    expect(normalized.checks[0]?.status).toBe("failed");
+    expect(normalized.limitations.join(" ")).toContain(
+      "evidence did not satisfy criteria",
+    );
+  });
+
+  test("keeps replayed v2 checks without criteria partial", () => {
+    const input = v2Input();
+    const check = input.checks?.[0];
+    if (check === undefined) throw new Error("missing test check");
+    delete check.evidenceCriteria;
+    const normalized = normalizeAgentTaskV2Result(
+      input,
+      v2Payload(["tool-1"]),
+      [
+        {
+          id: "tool-1",
+          source: "Bash",
+          observedAt: OBSERVED_AT,
+          status: "success",
+          command: "curl -fsS https://example.com/health",
+        },
+      ],
+    );
+    expect(normalized.execution).toBe("partial");
+    expect(normalized.limitations.join(" ")).toContain("legacy v2 coverage");
   });
 
   test("rejects mixed known and unknown receipt references", () => {
@@ -223,6 +274,7 @@ describe("agent task evidence receipts", () => {
         source: "Bash",
         observedAt: OBSERVED_AT,
         status: "success",
+        command: "curl -fsS https://example.com/health",
       },
     ]);
     expect(normalized.execution).toBe("partial");
@@ -240,6 +292,7 @@ describe("agent task deterministic verdicts", () => {
       source: "Bash",
       observedAt: OBSERVED_AT,
       status: "success" as const,
+      command: "curl -fsS https://example.com/health",
     };
     const changedPayload = v2Payload([receipt.id]);
     changedPayload.findings = [

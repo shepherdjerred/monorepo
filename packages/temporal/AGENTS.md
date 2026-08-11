@@ -312,9 +312,13 @@ absent from every pod-exec RoleBinding; provider subprocesses therefore cannot
 exec into TaskNotes or deterministic maintenance targets even if they disregard
 the report-only prompt. Its deployment env is also explicit: provider auth,
 basic runtime/TLS settings, and non-secret Prometheus/alert-dashboard endpoints
-only. The Temporal poller runs as root with every capability dropped except
-`SETUID`; `setpriv` launches provider commands as uid 1001 with no retained
-capabilities. A `NET_ADMIN` init container
+only. Provider auth remains in the parent worker, which exposes one
+provider-specific loopback broker per run; the uid-1001 subprocess receives only
+an ephemeral broker credential. The broker accepts only the provider's fixed
+inference paths and injects the real credential into a fixed upstream origin.
+The Temporal poller runs as root with every capability dropped except `SETUID`;
+`setpriv` launches provider commands as uid 1001 with no retained capabilities.
+A `NET_ADMIN` init container
 installs owner-matched pod firewall rules rejecting uid-1001 traffic to Temporal
 gRPC (`7233`), the UI (`8080`), and both Tailscale ingress addresses on `443`.
 This pod-local rule is the current enforcement

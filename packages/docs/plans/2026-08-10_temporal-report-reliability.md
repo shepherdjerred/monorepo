@@ -27,9 +27,13 @@ self-cancellation are removed.
   evidence-backed and capped at 80 words.
 - Centralize Postal delivery behind the report activity. Use a stable report run
   id, persist Postal acceptance receipts in S3, and treat delivery as at-least-once.
-- Introduce agent-task contract v2 with declared checks and transcript-derived
-  evidence receipts. New API and source-defined tasks require v2; Temporal replay
-  retains a v1 compatibility path whose reports are explicitly partial.
+- Introduce agent-task contract v2 with declared checks, machine-verifiable
+  receipt criteria, and transcript-derived evidence receipts. New API and
+  source-defined tasks require v2; Temporal replay retains compatibility paths
+  whose reports are explicitly partial when declared coverage is unavailable.
+- Keep long-lived provider credentials in the parent worker. Give each provider
+  subprocess an ephemeral per-run credential for a loopback broker that allows
+  only fixed inference paths and injects auth into a fixed upstream origin.
 - Replace stable recurring prompts with typed CI I/O, TaskNotes, protobuf, homelab,
   dependency, queue, and Data Dragon collectors. Keep agents only for bounded
   interpretation and novel investigations.
@@ -139,3 +143,14 @@ self-cancellation are removed.
 - The outer agent email activity now has a shared 10-minute completion budget,
   longer than the delegated workflow's complete three-attempt delivery window,
   so a slow accepted email cannot leave its parent agent workflow failed.
+- Provider subprocesses no longer receive the long-lived Claude or Codex
+  credential. A parent-owned per-run broker authenticates an ephemeral bearer,
+  restricts requests to the selected provider's inference paths, and injects
+  the real credential only into a fixed upstream origin.
+- Declared checks now include independent criteria over receipt source, command,
+  URL, or excerpt. Merely citing a successful but unrelated receipt forces a
+  partial, inconclusive report; replayed early-v2 inputs without criteria do the
+  same.
+- CI I/O retirement counts only finished passed or failed post-merge builds.
+  Running, blocked, and canceled builds remain visible but cannot satisfy the
+  observation threshold.

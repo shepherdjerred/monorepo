@@ -127,10 +127,10 @@ The post-deployment verification backup is
   "runAt": "2026-08-03T12:30:00-07:00",
   "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
   "checks": [
-    { "id": "pvc-policy", "label": "PVC backup policy", "required": true, "evidenceRequirement": "Current typed PVC label inventory." },
-    { "id": "backup-objects", "label": "Velero backup objects", "required": true, "evidenceRequirement": "Newest completed backup and exact R2 object evidence." },
-    { "id": "zfs-state", "label": "ZFS state", "required": true, "evidenceRequirement": "Current pool, dataset, snapshot, and PV equality evidence." },
-    { "id": "quarantine-hold", "label": "Quarantine hold", "required": true, "evidenceRequirement": "Current hold deadline and complete child inventory without deletion." }
+    { "id": "pvc-policy", "label": "PVC backup policy", "required": true, "evidenceRequirement": "Current typed PVC label inventory.", "evidenceCriteria": [{ "field": "command", "includes": "kubectl get pvc" }] },
+    { "id": "backup-objects", "label": "Velero backup objects", "required": true, "evidenceRequirement": "Newest completed backup and exact R2 object evidence.", "evidenceCriteria": [{ "field": "command", "includes": "velero backup" }, { "field": "command", "includes": "aws s3" }] },
+    { "id": "zfs-state", "label": "ZFS state", "required": true, "evidenceRequirement": "Current pool, dataset, snapshot, and PV equality evidence.", "evidenceCriteria": [{ "field": "command", "includes": "zfs list" }, { "field": "command", "includes": "kubectl get pv" }] },
+    { "id": "quarantine-hold", "label": "Quarantine hold", "required": true, "evidenceRequirement": "Current hold deadline and complete child inventory without deletion.", "evidenceCriteria": [{ "field": "command", "includes": "zfs holds" }] }
   ],
   "source": {
     "docPath": "packages/docs/plans/2026-07-27_pvc-backup-policy-zfs-cleanup.md"

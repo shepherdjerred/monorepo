@@ -31,10 +31,12 @@ const AGENT_PROVIDER_UID = 1001;
  *
  * The service account receives the audit reader ClusterRole but none of the
  * namespace-scoped exec roles required by deterministic maintenance and
- * canary activities. The deployment also receives only provider auth and
- * non-secret evidence endpoints; email delivery runs on the core queue and
- * the public repository checkout is unauthenticated. Provider subprocesses
- * run as a distinct uid. A NET_ADMIN init container
+ * canary activities. The deployment receives provider auth only so its
+ * parent-owned loopback broker can inject it upstream; provider subprocesses
+ * receive only an ephemeral broker credential. Non-secret evidence endpoints
+ * remain available, email delivery runs on the core queue, and the public
+ * repository checkout is unauthenticated. Provider subprocesses run as a
+ * distinct uid. A NET_ADMIN init container
  * installs owner-matched firewall rules that reject Temporal gRPC and UI
  * traffic for that uid while the capability-minimal root poller keeps its
  * server connection and uses setpriv for the uid transition.

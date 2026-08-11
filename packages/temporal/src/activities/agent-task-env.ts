@@ -1,3 +1,4 @@
+import type { AgentProviderCredentialBroker } from "#activities/agent-provider-credential-broker.ts";
 import type { AgentTaskProvider } from "#shared/agent-task.ts";
 
 const MOUNTED_SECRET_PATHS = [
@@ -63,9 +64,9 @@ function decodeEscapedWhitespace(value: string): string {
     .replaceAll(String.raw`\t`, "\t");
 }
 
-// envForProvider deliberately forwards the full worker env, so scrub every
-// forwarded value rather than maintaining a partial credential-name list. This
-// also covers credentials embedded in values such as DATABASE_URL.
+// Scrub every worker value rather than maintaining a partial credential-name
+// list. This protects parent-process diagnostics and covers credentials
+// embedded in structured values such as DATABASE_URL.
 function compositeSecretTokens(value: string): readonly string[] {
   const tokens = [value, ...secretFragments(value)];
   try {
@@ -219,13 +220,14 @@ export async function refreshAgentTaskSecretTokenStateInBackground(
 }
 
 // Build the deliberately small subprocess environment for an agent-task run.
-// Generic agents receive only their own provider credential, basic process/TLS
-// settings, non-secret evidence endpoints, and the dedicated read-only
-// Kubernetes identity. Delivery and operational credentials stay in the core
-// worker, and the public repository checkout is unauthenticated.
+// Generic agents receive an ephemeral localhost broker token, never the raw
+// provider credential. The broker fixes the upstream provider and injects auth
+// in the parent process. Basic process/TLS settings, non-secret evidence
+// endpoints, and the dedicated read-only Kubernetes identity remain available.
 export function envForProvider(
   provider: AgentTaskProvider,
   workdir: string,
+  broker: Pick<AgentProviderCredentialBroker, "baseUrl" | "clientToken">,
   sourceEnv: Readonly<Record<string, string | undefined>> = Bun.env,
 ): Record<string, string> {
   const env: Record<string, string> = {};
@@ -235,25 +237,15 @@ export function envForProvider(
     }
     if (isAgentTaskCommonEnvironmentKey(key)) {
       env[key] = value;
-    } else if (provider === "claude" && key === "CLAUDE_CODE_OAUTH_TOKEN") {
-      env[key] = value;
-    } else if (
-      provider === "codex" &&
-      (key === "CODEX_API_KEY" || key === "OPENAI_API_KEY")
-    ) {
-      env[key] = value;
     }
   }
   env["HOME"] = workdir;
-  // Codex CLI reads CODEX_API_KEY, not OPENAI_API_KEY (verified 0.139 in-pod:
-  // OPENAI-only → 401 Missing bearer; CODEX_API_KEY → turn.completed).
-  if (
-    provider === "codex" &&
-    (env["CODEX_API_KEY"] === undefined || env["CODEX_API_KEY"] === "") &&
-    env["OPENAI_API_KEY"] !== undefined &&
-    env["OPENAI_API_KEY"] !== ""
-  ) {
-    env["CODEX_API_KEY"] = env["OPENAI_API_KEY"];
+  if (provider === "claude") {
+    env["ANTHROPIC_BASE_URL"] = broker.baseUrl;
+    env["ANTHROPIC_AUTH_TOKEN"] = broker.clientToken;
+    env["CLAUDE_CODE_USE_GATEWAY"] = "1";
+  } else {
+    env["CODEX_API_KEY"] = broker.clientToken;
   }
   return env;
 }

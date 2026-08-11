@@ -27,7 +27,7 @@ context stay together.
   "runAt": "2026-05-31T09:00:00-07:00",
   "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
   "checks": [
-    { "id": "post-deploy-metrics", "label": "Post-deploy metrics", "required": true, "evidenceRequirement": "Current query results for every metric in the source section." }
+    { "id": "post-deploy-metrics", "label": "Post-deploy metrics", "required": true, "evidenceRequirement": "Current query results for every metric in the source section.", "evidenceCriteria": [{ "field": "command", "includes": "/api/v1/query" }] }
   ],
   "source": {
     "docPath": "packages/docs/guides/2026-04-25_birmel-remediation-followups.md"
@@ -44,9 +44,12 @@ A document may contain multiple blocks when a rollout needs checks at distinct
 times. Keep each block next to the checkpoint it describes.
 
 Declare every check separately. Mark it required only when a clean verdict is
-impossible without it, and make `evidenceRequirement` name the command, API
-response, or other current observation that proves the result. The agent must
-reference provider-captured receipt IDs; prose alone cannot pass a check.
+impossible without it, and make `evidenceRequirement` explain the current
+observation that proves the result. Add one or more `evidenceCriteria` entries
+for receipt fields that an independent verifier can match, such as a command
+substring, URL, tool source, or output excerpt. Every criterion must match a
+referenced successful receipt; prose or an unrelated successful command cannot
+pass a check.
 
 ## 2. Dispatch it
 

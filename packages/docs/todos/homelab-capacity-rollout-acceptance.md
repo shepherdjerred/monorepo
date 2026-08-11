@@ -54,10 +54,10 @@ TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443 TEMPORAL_TLS=true \
   "runAt": "2026-08-12T09:00:00-07:00",
   "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
   "checks": [
-    { "id": "deployed-revision", "label": "Deployed revision", "required": true, "evidenceRequirement": "Current ArgoCD and Git revision evidence." },
-    { "id": "capacity-runtime", "label": "Capacity and runtime health", "required": true, "evidenceRequirement": "Current Buildkite, Kubernetes, Kueue, and Temporal evidence." },
-    { "id": "observability", "label": "Metrics and dashboards", "required": true, "evidenceRequirement": "Successful Prometheus queries and a zero-error dashboard audit." },
-    { "id": "storage-thermals", "label": "Storage and thermals", "required": true, "evidenceRequirement": "Current PVC, ZFS, disk-health, I/O, and thermal evidence." }
+    { "id": "deployed-revision", "label": "Deployed revision", "required": true, "evidenceRequirement": "Current ArgoCD and Git revision evidence.", "evidenceCriteria": [{ "field": "command", "includes": "argocd app get" }, { "field": "command", "includes": "git rev-parse" }] },
+    { "id": "capacity-runtime", "label": "Capacity and runtime health", "required": true, "evidenceRequirement": "Current Buildkite, Kubernetes, Kueue, and Temporal evidence.", "evidenceCriteria": [{ "field": "command", "includes": "bk build" }, { "field": "command", "includes": "kubectl" }, { "field": "command", "includes": "temporal" }] },
+    { "id": "observability", "label": "Metrics and dashboards", "required": true, "evidenceRequirement": "Successful Prometheus queries and a zero-error dashboard audit.", "evidenceCriteria": [{ "field": "command", "includes": "/api/v1/query" }] },
+    { "id": "storage-thermals", "label": "Storage and thermals", "required": true, "evidenceRequirement": "Current PVC, ZFS, disk-health, I/O, and thermal evidence.", "evidenceCriteria": [{ "field": "command", "includes": "kubectl get pvc" }, { "field": "command", "includes": "zpool status" }] }
   ],
   "source": {
     "docPath": "packages/docs/todos/homelab-capacity-rollout-acceptance.md"
@@ -75,10 +75,10 @@ TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443 TEMPORAL_TLS=true \
   "runAt": "2026-08-13T09:00:00-07:00",
   "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
   "checks": [
-    { "id": "deployed-revision", "label": "Deployed revision and window", "required": true, "evidenceRequirement": "Current ArgoCD revision and exact 24-hour query window." },
-    { "id": "capacity-runtime", "label": "Capacity and runtime gates", "required": true, "evidenceRequirement": "Buildkite, Kubernetes, Kueue, and limiter evidence for every documented gate." },
-    { "id": "observability", "label": "Metrics and dashboards", "required": true, "evidenceRequirement": "Successful Prometheus queries and a zero-error dashboard audit." },
-    { "id": "storage-thermals", "label": "Storage and thermals", "required": true, "evidenceRequirement": "PVC, disk, write, I/O, and thermal evidence for the full window." }
+    { "id": "deployed-revision", "label": "Deployed revision and window", "required": true, "evidenceRequirement": "Current ArgoCD revision and exact 24-hour query window.", "evidenceCriteria": [{ "field": "command", "includes": "argocd app get" }, { "field": "command", "includes": "git rev-parse" }] },
+    { "id": "capacity-runtime", "label": "Capacity and runtime gates", "required": true, "evidenceRequirement": "Buildkite, Kubernetes, Kueue, and limiter evidence for every documented gate.", "evidenceCriteria": [{ "field": "command", "includes": "bk build" }, { "field": "command", "includes": "kubectl" }] },
+    { "id": "observability", "label": "Metrics and dashboards", "required": true, "evidenceRequirement": "Successful Prometheus queries and a zero-error dashboard audit.", "evidenceCriteria": [{ "field": "command", "includes": "/api/v1/query" }] },
+    { "id": "storage-thermals", "label": "Storage and thermals", "required": true, "evidenceRequirement": "PVC, disk, write, I/O, and thermal evidence for the full window.", "evidenceCriteria": [{ "field": "command", "includes": "kubectl get pvc" }, { "field": "command", "includes": "zpool status" }] }
   ],
   "source": {
     "docPath": "packages/docs/todos/homelab-capacity-rollout-acceptance.md"
@@ -96,10 +96,10 @@ TEMPORAL_ADDRESS=temporal.tailnet-1a49.ts.net:443 TEMPORAL_TLS=true \
   "runAt": "2026-08-19T09:00:00-07:00",
   "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
   "checks": [
-    { "id": "deployed-revision", "label": "Deployed revision and soak window", "required": true, "evidenceRequirement": "Current ArgoCD revision and exact seven-day query window." },
-    { "id": "capacity-runtime", "label": "Capacity and runtime gates", "required": true, "evidenceRequirement": "Buildkite, Kubernetes, Kueue, and limiter evidence for every documented gate." },
-    { "id": "observability", "label": "Metrics and dashboards", "required": true, "evidenceRequirement": "Successful Prometheus queries and a zero-error dashboard audit." },
-    { "id": "storage-thermals", "label": "Storage and thermals", "required": true, "evidenceRequirement": "PVC, disk, lifetime-write, I/O, and thermal evidence for the full soak." }
+    { "id": "deployed-revision", "label": "Deployed revision and soak window", "required": true, "evidenceRequirement": "Current ArgoCD revision and exact seven-day query window.", "evidenceCriteria": [{ "field": "command", "includes": "argocd app get" }, { "field": "command", "includes": "git rev-parse" }] },
+    { "id": "capacity-runtime", "label": "Capacity and runtime gates", "required": true, "evidenceRequirement": "Buildkite, Kubernetes, Kueue, and limiter evidence for every documented gate.", "evidenceCriteria": [{ "field": "command", "includes": "bk build" }, { "field": "command", "includes": "kubectl" }] },
+    { "id": "observability", "label": "Metrics and dashboards", "required": true, "evidenceRequirement": "Successful Prometheus queries and a zero-error dashboard audit.", "evidenceCriteria": [{ "field": "command", "includes": "/api/v1/query" }] },
+    { "id": "storage-thermals", "label": "Storage and thermals", "required": true, "evidenceRequirement": "PVC, disk, lifetime-write, I/O, and thermal evidence for the full soak.", "evidenceCriteria": [{ "field": "command", "includes": "kubectl get pvc" }, { "field": "command", "includes": "zpool status" }] }
   ],
   "source": {
     "docPath": "packages/docs/todos/homelab-capacity-rollout-acceptance.md"

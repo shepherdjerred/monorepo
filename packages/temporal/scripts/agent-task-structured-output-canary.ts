@@ -58,6 +58,10 @@ async function main(): Promise<void> {
         required: true,
         evidenceRequirement:
           "A successful Bash receipt containing agent-task-canary-ok.",
+        evidenceCriteria: [
+          { field: "source", includes: "Bash" },
+          { field: "excerpt", includes: "agent-task-canary-ok" },
+        ],
       },
     ],
     maxTurns: 2,
