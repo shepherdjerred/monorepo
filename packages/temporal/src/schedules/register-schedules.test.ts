@@ -50,6 +50,22 @@ test("dependency summary timeout covers every retried report phase", () => {
   );
 });
 
+test.each([
+  ["readme-refresh-weekly", "75 minutes", 55],
+  ["scout-season-refresh-weekly", "90 minutes", 78],
+  ["scout-queue-windows-daily", "90 minutes", 75],
+] as const)(
+  "%s timeout covers work retries and both report-delivery paths",
+  (scheduleId, expectedTimeout, minimumBudgetMinutes) => {
+    const timeout = findScheduleById(scheduleId).workflowExecutionTimeout;
+    expect(timeout).toBe(expectedTimeout);
+    if (timeout === undefined) throw new Error(`${scheduleId} lacks a timeout`);
+    expect(durationToMs(timeout)).toBeGreaterThanOrEqual(
+      minimumBudgetMinutes * ONE_MINUTE,
+    );
+  },
+);
+
 function configuredEnvironment(
   schedule: ReturnType<typeof findScheduleById>,
 ): Record<string, string> {

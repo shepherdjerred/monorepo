@@ -14,6 +14,7 @@ import {
   REPORT_SCHEDULE_REGISTRY,
   type ReportScheduleRegistration,
 } from "#shared/report-registry.ts";
+import { isDynamicAgentTaskSchedule } from "#schedules/orphan-detection.ts";
 
 export type ReportFreshnessStatus =
   | "fresh"
@@ -30,6 +31,17 @@ export type ReportFreshnessResult = {
   ageHours: number | undefined;
   maximumAgeHours: number | undefined;
 };
+
+export function freshnessDeploymentState(input: {
+  scheduleId: string;
+  paused: boolean;
+  memo: Record<string, unknown> | undefined;
+}): { paused: boolean; dynamic: boolean } {
+  return {
+    paused: input.paused,
+    dynamic: isDynamicAgentTaskSchedule(input.scheduleId, input.memo),
+  };
+}
 
 function requiredEnv(name: string): string {
   const value = Bun.env[name];
@@ -184,10 +196,14 @@ export async function inspectReportFreshness(): Promise<
   const client = await createTemporalClient();
   const deployed = new Map<string, { paused: boolean; dynamic: boolean }>();
   for await (const schedule of client.schedule.list()) {
-    deployed.set(schedule.scheduleId, {
-      paused: schedule.state.paused,
-      dynamic: schedule.memo?.["dynamicAgentTask"] === true,
-    });
+    deployed.set(
+      schedule.scheduleId,
+      freshnessDeploymentState({
+        scheduleId: schedule.scheduleId,
+        memo: schedule.memo,
+        paused: schedule.state.paused,
+      }),
+    );
   }
   const storage = store();
   const now = new Date();

@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { reportFreshnessState } from "#observability/metrics-report.ts";
 import {
   evaluateFreshness,
+  freshnessDeploymentState,
   publishReportFreshnessMetrics,
 } from "./report-freshness.ts";
 
@@ -93,5 +94,27 @@ describe("publishReportFreshnessMetrics", () => {
         value: value.value,
       })),
     ).toEqual([{ scheduleId: "daily-report", value: 1 }]);
+  });
+});
+
+describe("freshnessDeploymentState", () => {
+  test("recognizes legacy prefix-only dynamic agent schedules", () => {
+    expect(
+      freshnessDeploymentState({
+        scheduleId: "agent-task-legacy-check-abc123",
+        paused: false,
+        memo: undefined,
+      }),
+    ).toEqual({ paused: false, dynamic: true });
+  });
+
+  test("recognizes custom dynamic IDs through the memo marker", () => {
+    expect(
+      freshnessDeploymentState({
+        scheduleId: "custom-agent-check",
+        paused: true,
+        memo: { dynamicAgentTask: true },
+      }),
+    ).toEqual({ paused: true, dynamic: true });
   });
 });

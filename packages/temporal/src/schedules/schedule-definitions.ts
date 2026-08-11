@@ -253,7 +253,9 @@ export const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "0 7 * * 1",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "30 minutes",
+    // Two 30-minute research attempts, their 5-minute backoff, and both
+    // possible three-attempt report deliveries fit inside this bound.
+    workflowExecutionTimeout: "90 minutes",
     memo: "Weekly LoL season-date drift check (claude -p → PR if drifted)",
   },
   {
@@ -282,11 +284,10 @@ export const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "45 6 * * *",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
-    // 65 min: the 30-min startToCloseTimeout plus the 2-min retry backoff plus a
-    // second full 30-min attempt is 62 min; 45 min would terminate the retry
-    // (only 13 min left after the first attempt + backoff), so give the
-    // configured maximumAttempts=2 room to actually run the serial 21-day scan.
-    workflowExecutionTimeout: "65 minutes",
+    // The two 30-minute scan attempts plus 2-minute backoff consume 62 minutes.
+    // Reserve the remaining time for a failed success-report delivery and the
+    // catch-path failure report, each with three 2-minute attempts.
+    workflowExecutionTimeout: "90 minutes",
     memo: "Daily LoL limited-queue window watcher — proposes queue-windows.json edits from scout-prod match volume; auto-merge on open/reopen, plain PR on close",
   },
   {
