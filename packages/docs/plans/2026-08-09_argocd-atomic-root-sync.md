@@ -96,6 +96,13 @@ only an exact retry; and keep the scoped release-health gate authoritative.
   timeout as the upper bound. This lets certificate sync waves wait for actual
   readiness without ignoring their health or weakening terminal failure
   handling.
+- Pin cert-manager v1.21.1. Version 1.21.0 has a
+  [controller panic](https://github.com/cert-manager/cert-manager/issues/9031)
+  when a Certificate uses `renewal.policy: Disabled`; the
+  [v1.21.1 patch release](https://github.com/cert-manager/cert-manager/releases/tag/v1.21.1)
+  fixes that regression. Keep the Alert Dashboard CA non-renewing and repair
+  the controller rather than weakening the deliberate CA trust-migration
+  boundary.
 - Treat anonymous image access as part of the release handoff. Every
   application image links its GHCR package to the public monorepo through the
   OCI source label. A new package still requires an explicit one-time public
