@@ -235,11 +235,13 @@ export function assertMonorepoSourceLabel(
   const stages: {
     readonly name: string | undefined;
     sourceLabel: boolean;
+    readonly onbuildSourceLabels: string[];
   }[] = [];
   let currentStage:
     | {
         readonly name: string | undefined;
         sourceLabel: boolean;
+        readonly onbuildSourceLabels: string[];
       }
     | undefined;
   const escape = dockerfileEscape(dockerfile);
@@ -250,8 +252,26 @@ export function assertMonorepoSourceLabel(
       const inherited = stages.findLast(
         (stage) => stage.name?.toLowerCase() === base.toLowerCase(),
       );
-      currentStage = { name, sourceLabel: inherited?.sourceLabel ?? false };
+      currentStage = {
+        name,
+        sourceLabel: inherited?.sourceLabel ?? false,
+        onbuildSourceLabels: [],
+      };
+      for (const value of inherited?.onbuildSourceLabels ?? []) {
+        currentStage.sourceLabel = value === monorepoSource;
+      }
       stages.push(currentStage);
+      continue;
+    }
+    const onbuildSeparator = instruction.search(/\s/u);
+    if (
+      onbuildSeparator !== -1 &&
+      instruction.slice(0, onbuildSeparator).toUpperCase() === "ONBUILD"
+    ) {
+      const onbuild = instruction.slice(onbuildSeparator).trimStart();
+      for (const value of sourceLabelValues(onbuild, escape)) {
+        currentStage?.onbuildSourceLabels.push(value);
+      }
       continue;
     }
     for (const value of sourceLabelValues(instruction, escape)) {

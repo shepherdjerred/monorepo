@@ -71,6 +71,39 @@ describe("deterministic Bindery identity", () => {
     ).toContain('context = "packages/homelab/images/bindery"');
   });
 
+  test("ignores target-shaped HCL heredoc payloads", () => {
+    expect(
+      hclNamedBlock(
+        [
+          'variable "example" {',
+          "  default = <<EOF",
+          'target "bindery" { context = "wrong" }',
+          "EOF",
+          "}",
+          'target "bindery" {',
+          '  context = "packages/homelab/images/bindery"',
+          "}",
+        ].join("\n"),
+        "target",
+        "bindery",
+      ),
+    ).toContain('context = "packages/homelab/images/bindery"');
+    expect(
+      hclNamedBlock(
+        [
+          'variable "example" {',
+          "  default = <<-EOF",
+          '    target "bindery" { context = "wrong" }',
+          "  EOF",
+          "}",
+          'target "bindery" { context = "packages/homelab/images/bindery" }',
+        ].join("\n"),
+        "target",
+        "bindery",
+      ),
+    ).toContain('context = "packages/homelab/images/bindery"');
+  });
+
   test("accepts source-plus-patch runtime identity", () => {
     expect(() =>
       assertDeterministicBinderyIdentity(
@@ -356,6 +389,34 @@ describe("GHCR package provenance", () => {
 });
 
 describe("GHCR Docker instruction parsing", () => {
+  test("applies inherited ONBUILD source-label triggers", () => {
+    expect(() =>
+      assertMonorepoSourceLabel(
+        [
+          "FROM runtime AS base",
+          'LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"',
+          'ONBUILD LABEL org.opencontainers.image.source="https://github.com/somewhere/else"',
+          "FROM base AS image",
+        ].join("\n"),
+        "example",
+        "image",
+      ),
+    ).toThrow(
+      "example published image stage must link its GHCR package to the public monorepo",
+    );
+    expect(() =>
+      assertMonorepoSourceLabel(
+        [
+          "FROM runtime AS base",
+          'ONBUILD LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"',
+          "FROM base AS image",
+        ].join("\n"),
+        "example",
+        "image",
+      ),
+    ).not.toThrow();
+  });
+
   test("ignores heredoc bodies until their exact delimiters", () => {
     expect(() =>
       assertMonorepoSourceLabel(
