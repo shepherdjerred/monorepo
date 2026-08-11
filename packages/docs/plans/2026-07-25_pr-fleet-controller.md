@@ -45,7 +45,7 @@ clean for every current head.
 | ----- | --------------------------------- | ----------- | ------- | ------------- | ------- | ----------------------------------------- |
 | #1647 | `fix/buildkite-checkout-memory`   | `787dafcd7` | paused  | awaiting user | 0       | CI Bot pushed unowned changes; CI pending |
 | #1645 | `feature/roborock-saros-fleet`    | `23aca0afc` | pending | `pr-1645`     | 0       | fresh CI running                          |
-| #1643 | `feature/image-fork-chinese`      | `15b6d29ac` | red     | awaiting CI   | 0       | fresh pipeline upload failed              |
+| #1643 | `feature/bindery-fork-chinese`    | `15b6d29ac` | red     | awaiting CI   | 0       | fresh pipeline upload failed              |
 | #1642 | `feature/repo-history-slim-plan`  | `4e614f6c7` | pending | awaiting CI   | 0       | fresh Codex fixes pushed                  |
 | #1638 | `feature/scout-rbac`              | `cc0600189` | pending | awaiting CI   | 0       | fresh CI running                          |
 | #1629 | `feature/liskov-join`             | `6e6f888e7` | red     | `pr-1629`     | 0       | shared checkout OOM; Codex review running |
@@ -135,8 +135,8 @@ clean for every current head.
 ### Tick 10
 
 - PR #1643 pushed `15b6d29ac8b4025c755655d1e8f34413b3299606`
-  after adding the image fork to the package-local Docker build aggregate.
-  Dedicated image build, Go regression, health smoke, and 25 affected checks passed; the
+  after adding Bindery to the package-local Docker build aggregate. Dedicated
+  image build, Go regression, health smoke, and 25 affected checks passed; the
   new head is directly conflict-clean. Its fresh pipeline-upload failure is
   consistent with the shared checkout infrastructure issue.
 - PR #1647's worker disproved both Codex P1 findings against pinned

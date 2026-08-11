@@ -1,0 +1,86 @@
+---
+id: plan-2026-07-19-ebook-stack-bindery-cwa
+type: plan
+status: complete
+board: false
+---
+
+# Ebook stack: Bindery + CWA + Kindle Auto-Send
+
+Retired — the ebook stack (Bindery, Calibre-Web Automated, ShelfBridge, and the
+qBittorrent webseed relay) was removed from the homelab. This plan is preserved
+as the design record behind the storage and backup artifacts the removal
+retained; it is no longer an active work item. Code originally shipped on
+[PR #1581](https://github.com/shepherdjerred/monorepo/pull/1581).
+
+**Operator runbook (canonical):**
+[`2026-07-19_ebook-stack-bindery-cwa-guide.md`](./2026-07-19_ebook-stack-bindery-cwa-guide.md)
+
+## Goal
+
+Hands-off ebook pipeline for a US Kindle Paperwhite (incl. 简体 content gap):
+
+```text
+Bindery → Prowlarr → qBittorrent → CWA ingest → library / Auto-Send → @kindle.com
+```
+
+Reuse existing Prowlarr + qBit. No Shelfmark / Audiobookshelf in v1.
+
+## Choices
+
+| Decision         | Value                              |
+| ---------------- | ---------------------------------- |
+| Acquisition      | Bindery only                       |
+| Library + Kindle | CWA + Postal SMTP                  |
+| Audiobooks       | Deferred                           |
+| Books PVC        | 50 GiB ZFS SATA (`ebooks-hdd-pvc`) |
+
+## Infra
+
+| Resource  | Detail                                                                                              |
+| --------- | --------------------------------------------------------------------------------------------------- |
+| Namespace | `media` (existing chart)                                                                            |
+| Bindery   | `docker.io/vavallee/bindery:v1.26.2`, port 8787, host `bindery`, pod label `app=bindery`            |
+| CWA       | `docker.io/crocodilestick/calibre-web-automated:v4.0.6`, port 8083, host `cwa`, pod label `app=cwa` |
+| Books PVC | `library/` + `ingest/` subPaths (init mkdir+chown 1000)                                             |
+| Downloads | Shared `qbittorrent-hdd-pvc`                                                                        |
+| Postal    | SMTP ingress: namespace `media` **and** pod `app=cwa` only                                          |
+
+### Path map
+
+| Path                           | Bindery                      | CWA             |
+| ------------------------------ | ---------------------------- | --------------- |
+| `/config`                      | own NVMe                     | own NVMe        |
+| `/books` (subPath library)     | library root (**read-only**) | —               |
+| `/ingest` / `/cwa-book-ingest` | External handoff dest (RW)   | ingest (RW)     |
+| `/calibre-library`             | —                            | Calibre library |
+| `/downloads`                   | shared qBit                  | —               |
+
+**Import strategy:** Bindery import mode **External** → `/ingest` so CWA owns
+convert/metadata/email. Library mount is read-only to prevent dual writers on
+`metadata.db`.
+
+## Post-deploy checklist (summary)
+
+Full steps: [operator guide](./2026-07-19_ebook-stack-bindery-cwa-guide.md).
+
+1. Argo sync `media` + `postal`
+2. Bindery: qBit + Prowlarr; External → `/ingest`; prefer EPUB
+3. CWA: EPUB Fixer; SMTP → `postal-postal-smtp-service.postal:25`
+4. Amazon approved Personal Document sender
+5. CWA Auto-Send → `@kindle.com`
+6. Smoke test one book → Kindle Personal Docs
+
+## Files
+
+- `packages/homelab/src/cdk8s/src/resources/torrents/bindery.ts`
+- `packages/homelab/src/cdk8s/src/resources/media/calibre-web-automated.ts`
+- `packages/homelab/src/cdk8s/src/cdk8s-charts/media.ts`
+- `packages/homelab/src/cdk8s/src/cdk8s-charts/postal.ts`
+- `packages/homelab/src/cdk8s/src/versions.ts`
+- `packages/docs/guides/2026-07-19_ebook-stack-bindery-cwa.md`
+
+## Out of scope
+
+Shelfmark, Audiobookshelf, Bookshelf/Readarr forks, Seerr-for-books, public
+Cloudflare exposure, 1Password-wired CWA SMTP.
