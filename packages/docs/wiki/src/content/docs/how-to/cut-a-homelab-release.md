@@ -75,7 +75,8 @@ Stage 5 prevents that in the normal pipeline. One process submits the sync,
 waits for its exact request ID and revision, verifies the complete applied
 result, terminates the aggregate health wait, and waits for termination.
 Completeness means every resource in the exact rendered root revision has a
-successful result; a fully applied early sync wave is not enough.
+successful result and every validated prune candidate has a `Pruned` result; a
+fully applied early sync or prune wave is not enough.
 
 Buildkite retries reuse the build UUID. The command adopts the operation only
 when both UUID and revision match. An unrelated active operation remains a hard
@@ -98,6 +99,12 @@ The recovery command polls for that exact operation and discovers its internal
 operation UUID from the live state. It terminates only when the completed status
 has the same UUID. Missing state, a different identity, an apply failure, or an
 incomplete result fails without termination.
+
+An operation created by the retired split pipeline predates internal operation
+UUIDs. The recovery command accepts that legacy shape only when both the live
+operation and completed status have the exact request ID and revision and both
+omit the internal UUID. New atomic operations always require their internal
+UUID.
 
 ## Where it lives
 

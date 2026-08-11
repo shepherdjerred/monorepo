@@ -33,14 +33,17 @@ only an exact retry; and keep the scoped release-health gate authoritative.
 - Poll through absent or stale operation state. Fail on an exact `Failed` or
   `Error` result, accept natural success, and terminate only after every
   resource in the exact rendered revision appears in the result with an
-  applied status and no failed hook. Partial earlier sync waves are not
-  complete.
+  applied status, every validated prune candidate appears as `Pruned`, and no
+  hook has failed. Partial earlier sync or prune waves are not complete.
 - After termination, use a fresh timeout, return when the authoritative live
   operation clears even if status lags, and fail if another operation ID
   replaces the exact operation first.
 - Retain `finalize-async-sync` only for recovery. Require both the exact request
   ID and revision, discover the internal operation ID from the matching live
-  operation, and never treat missing operation state as success.
+  operation, and never treat missing operation state as success. For the
+  stranded pre-change operation only, accept a missing internal ID when both
+  live and completed state carry the exact request and revision and neither
+  carries an internal ID.
 - Wire the main Buildkite release to the atomic command with
   `BUILDKITE_BUILD_ID`; reject the old split lifecycle in pipeline validation.
 
@@ -48,7 +51,8 @@ only an exact retry; and keep the scoped release-health gate authoritative.
 
 - Cover delayed visibility, stale state, exact retry adoption, identity and
   revision mismatches, natural success, failed phases, timeouts, applied-result
-  termination, partial sync waves, post-termination waiting, and interference.
+  termination, partial sync and prune waves, legacy recovery,
+  post-termination waiting, and interference.
 - Exercise the live result shape: 255 synced resources, two pruned resources,
   and five child Applications still in a running health phase.
 - Run focused Bun tests, homelab typecheck and lint, pipeline validation, staged

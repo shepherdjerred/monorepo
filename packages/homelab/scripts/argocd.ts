@@ -266,6 +266,22 @@ async function getRenderedResourceIdentities(
   );
 }
 
+type ExpectedSyncResultIdentities = {
+  readonly desired: ReadonlySet<string>;
+  readonly pruned: ReadonlySet<string>;
+};
+
+async function getExpectedSyncResultIdentities(
+  appName: string,
+  revision: string,
+  token: string,
+): Promise<ExpectedSyncResultIdentities> {
+  return {
+    desired: await getRenderedResourceIdentities(appName, revision, token),
+    pruned: new Set(),
+  };
+}
+
 async function suspendRepositoryAutoSync(
   rootAppName: string,
   timeoutSeconds: number,
@@ -437,7 +453,7 @@ async function fetchChartMuseumInventory(
 async function assertRootPruneSafe(
   token: string,
   revision: string,
-): Promise<ReadonlySet<string>> {
+): Promise<ExpectedSyncResultIdentities> {
   const exactRevision = BuildRevisionSchema.parse(revision);
   const manifests = await getApplicationManifests("apps", exactRevision, token);
   const desiredResources = renderedResourceIdentities(manifests);
@@ -455,19 +471,25 @@ async function assertRootPruneSafe(
   const resources = Array.isArray(status["resources"])
     ? status["resources"]
     : [];
-  const candidates = resources.flatMap((resource: unknown) => {
+  const candidates = new Map<string, string>();
+  for (const resource of resources) {
     if (
       !isRecord(resource) ||
       resource["kind"] !== "Application" ||
+      (resource["group"] !== undefined &&
+        resource["group"] !== "argoproj.io") ||
       typeof resource["name"] !== "string" ||
       resource["name"] === "apps" ||
       desiredChildren.has(resource["name"])
     ) {
-      return [];
+      continue;
     }
-    return [resource["name"]];
-  });
-  for (const childName of candidates) {
+    candidates.set(
+      resource["name"],
+      resourceIdentity("argoproj.io", "Application", resource["name"]),
+    );
+  }
+  for (const childName of candidates.keys()) {
     const child = await getApplication(childName, token);
     const metadata = isRecord(child["metadata"]) ? child["metadata"] : {};
     const annotations = isRecord(metadata["annotations"])
@@ -488,7 +510,10 @@ async function assertRootPruneSafe(
       );
     }
   }
-  return desiredResources;
+  return {
+    desired: desiredResources,
+    pruned: new Set(candidates.values()),
+  };
 }
 
 /**
@@ -529,7 +554,7 @@ async function sync(
     return;
   }
   const token = requireEnv("ARGOCD_TOKEN");
-  let expectedResourceIdentities: ReadonlySet<string> | undefined;
+  let expectedResourceIdentities: ExpectedSyncResultIdentities | undefined;
   if (appName === "apps" && options.prune) {
     if (options.revision === undefined) {
       throw new Error(
@@ -552,7 +577,7 @@ async function sync(
     options.revision !== undefined &&
     expectedResourceIdentities === undefined
   ) {
-    expectedResourceIdentities = await getRenderedResourceIdentities(
+    expectedResourceIdentities = await getExpectedSyncResultIdentities(
       appName,
       options.revision,
       token,
@@ -737,7 +762,7 @@ function liveOperationMatches(
   operation: OperationObservation,
   requestId: string,
   revision: string | undefined,
-  operationId?: string,
+  operationId?: string | null,
 ): boolean {
   return (
     operation.hasLiveOperation &&
@@ -751,7 +776,7 @@ function operationMatches(
   operation: OperationObservation,
   requestId: string,
   revision: string | undefined,
-  operationId?: string,
+  operationId?: string | null,
 ): boolean {
   return (
     operation.requestId === requestId &&
@@ -852,7 +877,7 @@ function syncResultRevision(
 function syncResultApplied(
   operationStateValue: Record<string, unknown>,
   revision: string,
-  expectedResourceIdentities: ReadonlySet<string> | undefined,
+  expectedResourceIdentities: ExpectedSyncResultIdentities | undefined,
 ): boolean {
   if (syncResultRevision(operationStateValue) !== revision) {
     return false;
@@ -865,6 +890,7 @@ function syncResultApplied(
     return false;
   }
   const appliedResourceIdentities = new Set<string>();
+  const prunedResourceIdentities = new Set<string>();
   const everyReportedResourceApplied = resources.every((resource: unknown) => {
     if (!isRecord(resource)) {
       return false;
@@ -881,7 +907,11 @@ function syncResultApplied(
     ) {
       return false;
     }
-    appliedResourceIdentities.add(resourceIdentity(group ?? "", kind, name));
+    const identity = resourceIdentity(group ?? "", kind, name);
+    appliedResourceIdentities.add(identity);
+    if (status === "Pruned") {
+      prunedResourceIdentities.add(identity);
+    }
     return (
       (status === "Synced" || status === "Pruned" || status === "Skipped") &&
       hookPhase !== "Failed" &&
@@ -891,15 +921,18 @@ function syncResultApplied(
   return (
     everyReportedResourceApplied &&
     (expectedResourceIdentities === undefined ||
-      [...expectedResourceIdentities].every((identity) =>
+      ([...expectedResourceIdentities.desired].every((identity) =>
         appliedResourceIdentities.has(identity),
-      ))
+      ) &&
+        [...expectedResourceIdentities.pruned].every((identity) =>
+          prunedResourceIdentities.has(identity),
+        )))
   );
 }
 
 type WaitForIdentifiedOperationOptions = {
   readonly appName: string;
-  readonly expectedResourceIdentities: ReadonlySet<string> | undefined;
+  readonly expectedResourceIdentities: ExpectedSyncResultIdentities | undefined;
   readonly operationId: string;
   readonly requestId: string;
   readonly revision: string | undefined;
@@ -998,7 +1031,7 @@ async function waitForOperationTermination(
   token: string,
   requestId: string,
   revision: string,
-  operationId: string,
+  operationId: string | null,
   startedAt: string | undefined,
   timeoutSeconds: number,
 ): Promise<void> {
@@ -1007,12 +1040,6 @@ async function waitForOperationTermination(
     const current = observeOperation(await getApplication(appName, token));
     assertMatchingRevision(current, requestId, revision, appName);
     assertMatchingLiveRevision(current, requestId, revision, appName);
-    const isExpected = operationMatches(
-      current,
-      requestId,
-      revision,
-      operationId,
-    );
     const isExpectedLiveOperation = liveOperationMatches(
       current,
       requestId,
@@ -1025,7 +1052,7 @@ async function waitForOperationTermination(
       );
     }
     if (!current.hasLiveOperation) {
-      if (!isExpected && operationStartedAfter(current, startedAt)) {
+      if (operationStartedAfter(current, startedAt)) {
         throw new Error(
           `${appName} operation changed to ${operationDescription(current)} after terminating request ${requestId}`,
         );
@@ -1044,7 +1071,7 @@ async function terminateAppliedOperation(
   token: string,
   requestId: string,
   revision: string,
-  operationId: string,
+  operationId: string | null,
   startedAt: string | undefined,
   timeoutSeconds: number,
 ): Promise<void> {
@@ -1107,11 +1134,10 @@ async function finalizeAsyncSync(
   }
 
   const token = requireEnv("ARGOCD_TOKEN");
-  const expectedResourceIdentities = await getRenderedResourceIdentities(
-    appName,
-    exactRevision,
-    token,
-  );
+  const expectedResourceIdentities =
+    appName === "apps"
+      ? await assertRootPruneSafe(token, exactRevision)
+      : await getExpectedSyncResultIdentities(appName, exactRevision, token);
   const deadline = Date.now() + timeoutSeconds * 1000;
   let elapsed = 0;
   while (Date.now() < deadline) {
@@ -1152,7 +1178,9 @@ async function finalizeAsyncSync(
       return;
     }
     const liveOperationId = current.hasLiveOperation
-      ? requireLiveOperationId(current, appName)
+      ? current.liveOperationId === null
+        ? null
+        : SyncOperationIdSchema.parse(current.liveOperationId)
       : undefined;
     const isExpectedOperation =
       liveOperationId !== undefined &&

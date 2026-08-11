@@ -51,7 +51,7 @@ function operationResponse(request: unknown): unknown {
 function identifiedOperation(
   requestId: string,
   revision = REVISION,
-  operationId = CURRENT_OPERATION_ID,
+  operationId: string | null = CURRENT_OPERATION_ID,
 ): unknown {
   return {
     info: [
@@ -59,10 +59,14 @@ function identifiedOperation(
         name: "ci.sjer.red/request-id",
         value: requestId,
       },
-      {
-        name: "ci.sjer.red/operation-id",
-        value: operationId,
-      },
+      ...(operationId === null
+        ? []
+        : [
+            {
+              name: "ci.sjer.red/operation-id",
+              value: operationId,
+            },
+          ]),
     ],
     sync: { revision },
   };
@@ -70,25 +74,38 @@ function identifiedOperation(
 
 function applicationOperation(options: {
   readonly live?: boolean;
-  readonly liveOperationId?: string;
+  readonly liveOperationId?: string | null;
   readonly message?: string;
-  readonly operationId?: string;
+  readonly operationId?: string | null;
   readonly phase: string;
   readonly requestId: string;
   readonly resources?: readonly OperationResource[];
   readonly revision?: string;
   readonly startedAt?: string;
+  readonly trackedResources?: readonly {
+    readonly group?: string;
+    readonly kind: string;
+    readonly name: string;
+  }[];
 }): unknown {
   const revision = options.revision ?? REVISION;
+  const operationId =
+    options.operationId === undefined
+      ? CURRENT_OPERATION_ID
+      : options.operationId;
+  const liveOperationId =
+    options.liveOperationId === undefined
+      ? operationId
+      : options.liveOperationId;
   const completedOperation = identifiedOperation(
     options.requestId,
     revision,
-    options.operationId,
+    operationId,
   );
   const liveOperation = identifiedOperation(
     options.requestId,
     revision,
-    options.liveOperationId ?? options.operationId,
+    liveOperationId,
   );
   const live =
     options.live ??
@@ -96,6 +113,9 @@ function applicationOperation(options: {
   return {
     ...(live ? { operation: liveOperation } : {}),
     status: {
+      ...(options.trackedResources === undefined
+        ? {}
+        : { resources: options.trackedResources }),
       operationState: {
         phase: options.phase,
         operation: completedOperation,
@@ -124,6 +144,12 @@ function renderedApplication(name: string): string {
     apiVersion: "argoproj.io/v1alpha1",
     kind: "Application",
     metadata: { name, namespace: "argocd" },
+    spec: {
+      source: {
+        repoURL: "https://charts.example.test",
+        targetRevision: REVISION,
+      },
+    },
   });
 }
 
@@ -172,6 +198,7 @@ function serveLifecycle(
   beforeDelete: readonly unknown[],
   afterDelete: readonly unknown[] = [{ status: {} }],
   renderedManifests: readonly string[] = DEFAULT_RENDERED_MANIFESTS,
+  prunableChildren: readonly string[] = [],
 ) {
   const observations: LifecycleObservations = {
     deleteRequests: 0,
@@ -224,6 +251,24 @@ function serveLifecycle(
         observations.statusGets += 1;
         return Response.json(withPostedOperationId(fixture, postedOperationId));
       }
+      const childName = decodeURIComponent(
+        url.pathname.slice("/api/v1/applications/".length),
+      );
+      if (
+        request.method === "GET" &&
+        url.pathname.startsWith("/api/v1/applications/") &&
+        prunableChildren.includes(childName)
+      ) {
+        return Response.json({
+          metadata: {
+            annotations: {
+              "ci.sjer.red/application-lifecycle": "cascade",
+            },
+            finalizers: ["resources-finalizer.argocd.argoproj.io"],
+            name: childName,
+          },
+        });
+      }
       return new Response("not found", { status: 404 });
     },
   });
@@ -266,6 +311,7 @@ function atomicArgs(): readonly string[] {
     "apps",
     "--revision",
     REVISION,
+    "--prune",
     "--terminate-after-applied",
     "--request-id",
     CURRENT_REQUEST_ID,
@@ -307,6 +353,10 @@ test("atomic Argo sync ignores stale status, applies the live result, and waits 
     requestId: CURRENT_REQUEST_ID,
     resources: [{ status: "Synced" }],
     startedAt: "2026-08-10T01:00:00Z",
+    trackedResources: [
+      { group: "argoproj.io", kind: "Application", name: "removed-one" },
+      { group: "argoproj.io", kind: "Application", name: "removed-two" },
+    ],
   });
   const current = applicationOperation({
     phase: "Running",
@@ -324,6 +374,7 @@ test("atomic Argo sync ignores stale status, applies the live result, and waits 
     [stale, { status: {} }, stale, current],
     [terminating, { status: {} }],
     desiredNames.map((name) => renderedApplication(name)),
+    ["removed-one", "removed-two"],
   );
 
   try {
@@ -369,6 +420,52 @@ test("atomic Argo sync waits for every rendered resource across sync waves", asy
     expect(result.stderr).toBe("");
     expect(lifecycle.observations.deleteRequests).toBe(1);
     expect(lifecycle.observations.statusGets).toBeGreaterThanOrEqual(3);
+  } finally {
+    await lifecycle.server.stop(true);
+  }
+});
+
+test("atomic Argo sync waits for every validated prune candidate", async () => {
+  const inventory = {
+    status: {
+      resources: [
+        {
+          group: "argoproj.io",
+          kind: "Application",
+          name: "removed-worker",
+        },
+      ],
+    },
+  };
+  const desiredApplied = applicationOperation({
+    phase: "Running",
+    requestId: CURRENT_REQUEST_ID,
+    resources: [{ name: "worker", status: "Synced" }],
+    startedAt: "2026-08-10T01:00:01Z",
+  });
+  const pruneApplied = applicationOperation({
+    phase: "Running",
+    requestId: CURRENT_REQUEST_ID,
+    resources: [
+      { name: "worker", status: "Synced" },
+      { name: "removed-worker", status: "Pruned" },
+    ],
+    startedAt: "2026-08-10T01:00:01Z",
+  });
+  const lifecycle = serveLifecycle(
+    [inventory, { status: {} }, desiredApplied, pruneApplied],
+    [{ status: {} }],
+    DEFAULT_RENDERED_MANIFESTS,
+    ["removed-worker"],
+  );
+
+  try {
+    const result = await runArgocd(atomicArgs(), lifecycle.server.url.origin);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stderr).toBe("");
+    expect(lifecycle.observations.deleteRequests).toBe(1);
+    expect(lifecycle.observations.statusGets).toBeGreaterThanOrEqual(4);
   } finally {
     await lifecycle.server.stop(true);
   }
@@ -453,6 +550,30 @@ test("atomic Argo sync finalizes a stable applied operation when adopting a retr
   }
 });
 
+test("atomic Argo sync refuses to adopt a pre-operation-ID sync", async () => {
+  const lifecycle = serveLifecycle([
+    applicationOperation({
+      liveOperationId: null,
+      operationId: null,
+      phase: "Running",
+      requestId: CURRENT_REQUEST_ID,
+      resources: [{ status: "Synced" }],
+    }),
+  ]);
+
+  try {
+    const result = await runArgocd(atomicArgs(), lifecycle.server.url.origin);
+
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr).toContain(
+      "Refusing active apps operation without a CI operation ID",
+    );
+    expect(lifecycle.observations.deleteRequests).toBe(0);
+  } finally {
+    await lifecycle.server.stop(true);
+  }
+});
+
 test("atomic Argo sync posts past a stale status-only Running operation", async () => {
   const stale = applicationOperation({
     live: false,
@@ -483,14 +604,12 @@ test("atomic Argo sync posts past a stale status-only Running operation", async 
 });
 
 test("atomic Argo sync finishes an adopted applied termination", async () => {
-  const lifecycle = serveLifecycle([
-    applicationOperation({
-      phase: "Terminating",
-      requestId: CURRENT_REQUEST_ID,
-      resources: [{ status: "Synced", hookPhase: "Running" }],
-    }),
-    { status: {} },
-  ]);
+  const terminating = applicationOperation({
+    phase: "Terminating",
+    requestId: CURRENT_REQUEST_ID,
+    resources: [{ status: "Synced", hookPhase: "Running" }],
+  });
+  const lifecycle = serveLifecycle([terminating, terminating, { status: {} }]);
 
   try {
     const result = await runArgocd(atomicArgs(), lifecycle.server.url.origin);
@@ -746,6 +865,29 @@ test("Argo recovery waits for the exact operation before finalizing it", async (
     expect(result.stderr).toBe("");
     expect(lifecycle.observations.deleteRequests).toBe(1);
     expect(lifecycle.observations.statusGets).toBeGreaterThanOrEqual(2);
+  } finally {
+    await lifecycle.server.stop(true);
+  }
+});
+
+test("Argo recovery finalizes an exact pre-operation-ID sync", async () => {
+  const lifecycle = serveLifecycle([
+    applicationOperation({
+      liveOperationId: null,
+      operationId: null,
+      phase: "Running",
+      requestId: CURRENT_REQUEST_ID,
+      resources: [{ status: "Synced", hookPhase: "Running" }],
+    }),
+  ]);
+
+  try {
+    const result = await runArgocd(recoveryArgs(), lifecycle.server.url.origin);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stderr).toBe("");
+    expect(result.stdout).toContain("terminated applied sync operation: apps");
+    expect(lifecycle.observations.deleteRequests).toBe(1);
   } finally {
     await lifecycle.server.stop(true);
   }

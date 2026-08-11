@@ -91,6 +91,8 @@ revision. It terminates the aggregate health wait only after the complete sync
 result is applied. The command compares reported group, kind, and name
 identities with every resource rendered from the exact revision, so an applied
 early sync wave cannot hide later-wave work that ArgoCD has not reported yet.
+It also carries the validated prune candidates into this boundary and requires
+each candidate to appear as `Pruned` before termination.
 
 The identity boundary matters because ArgoCD publishes operation state
 asynchronously. A second process can read before the accepted operation appears.
@@ -103,7 +105,10 @@ per-operation UUID then binds the top-level live operation to its completed
 status. This lets a retry accept a stable, fully applied result while rejecting
 stale status from an earlier POST that used the same Buildkite identity. The
 standalone finalizer remains a recovery tool, not part of the normal release
-path.
+path. It recognizes the retired client's pre-UUID operation only when both the
+live operation and completed status share the exact request ID and revision and
+both omit an operation UUID; atomic operations never use that compatibility
+case.
 
 After termination, the top-level live operation is authoritative. Its absence
 means the health wait is gone even if `status.operationState` still says
