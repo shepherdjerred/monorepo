@@ -2,59 +2,59 @@
   "schema": "pin-candidates-state/v1",
   "pins": {
     "shepherdjerred/alert-dashboard": {
-      "version": "2.0.0-8885",
-      "digest": "sha256:e439f24999f3074f1f8cf25bf020a6e251692cc0370847bcead115f49bbcb62c",
-      "buildNumber": 8885
+      "buildNumber": 8969,
+      "version": "2.0.0-8969",
+      "digest": "sha256:4fc1a45eb20e70be1ca28ae2672fdbdcbdad6c62a871e1b8e04bd98f15cf4247"
     },
     "shepherdjerred/birmel": {
-      "buildNumber": 8891,
-      "version": "2.0.0-8891",
-      "digest": "sha256:053ce489145d419c73cca0101c0ffeec46b836a00a4464ca32e7338490731fb9"
+      "buildNumber": 8969,
+      "version": "2.0.0-8969",
+      "digest": "sha256:44727818cc662a469a3766d5d4af9ddaa5ab5cc9a80c075dddda214ee6b6f5af"
     },
     "shepherdjerred/discord-plays-mario-kart": {
-      "version": "2.0.0-8885",
-      "digest": "sha256:e3488c1d7e0be74f466d1a4acf8f5f27225adf5ae6a983ee1d78dbb3927b20af",
-      "buildNumber": 8885
+      "buildNumber": 8969,
+      "version": "2.0.0-8969",
+      "digest": "sha256:ae50b8f469186a2d2805cde2e96e332c87cb55b7fd954d2b26e1c64ded400bb8"
     },
     "shepherdjerred/discord-plays-pokemon": {
-      "version": "2.0.0-8885",
-      "digest": "sha256:b6a935e9c78a34549dbd7236e4a08f2a1a10cc2eab114bbf37c49b3855075f0c",
-      "buildNumber": 8885
+      "buildNumber": 8969,
+      "version": "2.0.0-8969",
+      "digest": "sha256:c9c8956b33c3f5c926761563fbc9beef8eb468befe1ac702e0381051252ffda6"
     },
     "shepherdjerred/scout-evals": {
-      "version": "2.0.0-8885",
-      "digest": "sha256:0b3e0f8a006d4a26e59c1afc9c4b133b79233cd2f875b4826b3ff644e8fa1056",
-      "buildNumber": 8885
+      "buildNumber": 8969,
+      "version": "2.0.0-8969",
+      "digest": "sha256:2f68e6e38d724caf5a0e6e9e0986f1bbbf4722c0e50fb6f1fb119eac40eb1753"
     },
     "shepherdjerred/scout-for-lol/beta": {
-      "version": "2.0.0-8885",
-      "digest": "sha256:ccbb44b1f079128bf66ec6abb27ae364b62deb9061457dca6cda068199fffc7e",
-      "buildNumber": 8885
+      "buildNumber": 8969,
+      "version": "2.0.0-8969",
+      "digest": "sha256:8f3429230f7fcf8d9f1f35e5e517ec85ca5fc80d81e5ede124bfdffddff20eb1"
     },
     "shepherdjerred/starlight-karma-bot/beta": {
-      "version": "2.0.0-8885",
-      "digest": "sha256:2ddbc4d023222b3144d1b66e96759aaeab5e45ff67c41488f0f32270dcd351e2",
-      "buildNumber": 8885
+      "buildNumber": 8969,
+      "version": "2.0.0-8969",
+      "digest": "sha256:ca7d44158684b12d3847068b84fee035628ce3f85889d934dde1ad11ea789741"
     },
     "shepherdjerred/streambot": {
-      "version": "2.0.0-8885",
-      "digest": "sha256:59d0af9cf7f871c96ed29dbb8b429522c7802c0552c29617a7a579370d9f97a7",
-      "buildNumber": 8885
+      "buildNumber": 8969,
+      "version": "2.0.0-8969",
+      "digest": "sha256:b979230dec6e1b463751feed05b9f9ba7654e8d4ab3073696f43e63b5f308705"
     },
     "shepherdjerred/tasknotes-server": {
-      "version": "2.0.0-8885",
-      "digest": "sha256:e06604f844775ec7e61d4fb12e0c40b5b9b30abaa9bc067fdd56646112138ad8",
-      "buildNumber": 8885
+      "buildNumber": 8969,
+      "version": "2.0.0-8969",
+      "digest": "sha256:36c8f96c9e744e591985b536c50d87499e9a06ef9b17584f6ef7ee507c5c67a0"
     },
     "shepherdjerred/temporal-worker": {
-      "version": "2.0.0-8885",
-      "digest": "sha256:3dfcea33294403cff43775f03b974148eed5255cc2e0c015458d4e690c91ab10",
-      "buildNumber": 8885
+      "buildNumber": 8969,
+      "version": "2.0.0-8969",
+      "digest": "sha256:f882f71738eadb024b803ff924f928c48abd940a194be9601ae4083922a7f478"
     },
     "shepherdjerred/trmnl-dashboard": {
-      "version": "2.0.0-8885",
-      "digest": "sha256:cd3c5b9a2ace82cbf52a5498aa714131527e0e817643d05963fc9d180565c897",
-      "buildNumber": 8885
+      "buildNumber": 8969,
+      "version": "2.0.0-8969",
+      "digest": "sha256:b996195263daa0402e530a9850c4a314040228f26a0de6d0ea88ac30cc5ddd97"
     }
   }
 }
