@@ -26,8 +26,11 @@ After the global install, invoke everything as `toolkit <command> …`.
 
 ## Commands
 
-Global options: `--version`, `--json`, `--verbose`/`-v`. Run `toolkit --help`
-for the built-in reference.
+Global options are only `--version` and `--help`/`-h`, and they must come
+before the command — the top-level router treats any other leading flag as a
+command name and exits 1. `--json` is a per-command option parsed by each
+handler, so it goes _after_ the command (e.g. `toolkit alerts list --json`).
+Run `toolkit --help` for the built-in reference.
 
 ### `pr` — pull request tooling
 

@@ -8,7 +8,7 @@ Personal monorepo for active projects, learning, and archived work.
 - [temporal](packages/temporal/) — Temporal worker running the repo's scheduled automation: agent tasks, homelab audits, and PR-opening refresh jobs
 - [scout-for-lol](packages/scout-for-lol/) — Discord bot that tracks friends' League of Legends matches and posts rich post-game reports
 - [tasknotes](packages/tasknotes-core/) — task app family: shared Rust core, [macOS app](packages/tasknotes-macos/), [sync server](packages/tasknotes-server/), and the [React Native client](packages/tasks-for-obsidian/)
-- [toolkit](packages/toolkit/) — CLI developer tools (`pr`, `pd`, `bugsink`, `grafana`, `discord`, …)
+- [toolkit](packages/toolkit/) — CLI developer tools (`pr`, `alerts`, `bugsink`, `grafana`, `discord`, …)
 - [birmel](packages/birmel/) — AI-driven Discord bot on an explicit agent runtime
 - [monarch](packages/monarch/) — AI transaction categorization pipeline for Monarch Money
 - [sjer.red](packages/sjer.red/) — personal website (Astro)
