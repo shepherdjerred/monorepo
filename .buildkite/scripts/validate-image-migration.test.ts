@@ -470,4 +470,15 @@ FROM runtime AS image
       "app smoke must export an explicit APP_PORT",
     );
   });
+
+  test("rejects duplicate ports across concurrently baked smoke stages", () => {
+    expect(() =>
+      assertUniqueSmokePorts([
+        { image: "redlib", port: 8787 },
+        { image: "trmnl-dashboard", port: 8787 },
+      ]),
+    ).toThrow(
+      "trmnl-dashboard and redlib smoke stages both bind port 8787 during parallel bake",
+    );
+  });
 });
