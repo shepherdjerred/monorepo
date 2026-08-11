@@ -77,6 +77,26 @@ OpenTofu state.
 
 ## Comment Log
 
+### 2026-08-11 — live PostgreSQL ledger audited and found empty
+
+Read-only inspection of the live cluster while reviewing the SQLite replacement
+branch. `alert-dashboard-postgresql` is Running with its 16 GiB PVC bound, but
+the `alert_dashboard` database contains **zero tables** (`\dt` reports "Did not
+find any tables"), so Prisma migrations never ran and no ledger history exists.
+The cause is visible in the same namespace: the `alert-dashboard` Deployment has
+never started, sitting in `Init:CrashLoopBackOff` on the Prisma engine
+permission failure.
+
+This does not by itself check the export-or-discard decision below, but it
+establishes that there is no history to export. Note also that the SQLite branch
+removes only the PostgreSQL _declarations_: the `alert-dashboard` Argo CD
+Application enables automated sync without prune, the release prune allowlist in
+`helm-push.ts` covers only `service-probes` and `turbo-cache`, and the
+`Postgresql` resource carries `argocd.argoproj.io/sync-options: Delete=false`.
+Merging therefore cannot delete the live cluster or its PVC; those resources
+would persist as orphaned, no longer GitOps-declared, and need a separate
+deliberate teardown once the decision is recorded.
+
 ### 2026-08-09 — activation and cutover source staged
 
 The activation branch registers the deployable service while preserving the
