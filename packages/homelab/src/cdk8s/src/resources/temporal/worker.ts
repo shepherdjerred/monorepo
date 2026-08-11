@@ -364,9 +364,38 @@ export function createTemporalWorkerDeployment(
   const agentDeployment = createTemporalAgentWorker(chart, {
     serviceAccount: agentServiceAccount,
     envVariables: {
-      ...container.env.variables,
+      TEMPORAL_ADDRESS: EnvValue.fromValue(`${props.serverServiceName}:7233`),
+      TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
       TEMPORAL_WORKER_ROLE: EnvValue.fromValue("agent"),
+      ENVIRONMENT: EnvValue.fromValue("production"),
+      CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: EnvValue.fromValue("1"),
+      DISABLE_AUTOUPDATER: EnvValue.fromValue("1"),
+      TELEMETRY_ENABLED: EnvValue.fromValue("true"),
+      OTLP_ENDPOINT: EnvValue.fromValue(
+        "http://tempo.tempo.svc.cluster.local:4318",
+      ),
       TELEMETRY_SERVICE_NAME: EnvValue.fromValue("temporal-agent-worker"),
+      NODE_EXTRA_CA_CERTS: EnvValue.fromValue(
+        "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
+      ),
+      CLAUDE_CODE_OAUTH_TOKEN: EnvValue.fromSecretValue({
+        secret,
+        key: "CLAUDE_CODE_OAUTH_TOKEN",
+      }),
+      OPENAI_API_KEY: EnvValue.fromSecretValue({
+        secret,
+        key: "OPENAI_API_KEY",
+      }),
+      CODEX_API_KEY: EnvValue.fromSecretValue({
+        secret,
+        key: "OPENAI_API_KEY",
+      }),
+      PROMETHEUS_URL: EnvValue.fromValue(
+        "http://prometheus-kube-prometheus-prometheus.prometheus:9090",
+      ),
+      ALERT_DASHBOARD_URL: EnvValue.fromValue(
+        "http://alert-dashboard-alert-dashboard-service.alert-dashboard:7341",
+      ),
     },
   });
 

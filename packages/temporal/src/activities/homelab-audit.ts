@@ -11,7 +11,7 @@ import { emitOtel } from "#observability/log.ts";
 import { parseClaudeResultMessage } from "#shared/claude-result.ts";
 import { traceClaudeCli } from "@shepherdjerred/llm-observability/wrappers/claude-cli";
 import { workflowExecutionContext } from "#activities/temporal-context.ts";
-import { isAgentTaskBoundaryEnvironmentKey } from "#activities/agent-task-env.ts";
+import { isReportDeliveryBoundaryEnvironmentKey } from "#activities/agent-task-env.ts";
 import {
   buildAuditPrompt,
   loadRunbook,
@@ -187,7 +187,7 @@ function buildAuditAgentEnv(
       key === "GH_TOKEN" ||
       key === "GITHUB_PERSONAL_ACCESS_TOKEN" ||
       key.startsWith("GITHUB_APP_") ||
-      isAgentTaskBoundaryEnvironmentKey(key)
+      isReportDeliveryBoundaryEnvironmentKey(key)
     ) {
       continue;
     }

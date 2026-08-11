@@ -221,3 +221,67 @@ describe("dependency summary delivery checkpoint", () => {
     expect(checkpointCalls).toBe(3);
   }, 30_000);
 });
+
+describe("dependency summary checkpoint failure reporting", () => {
+  test("reports a distinct failure after accepted delivery when checkpoint retries exhaust", async () => {
+    const reports: ActivityReportInput[] = [];
+    let checkpointCalls = 0;
+    const worker = await Worker.create({
+      connection: testEnvironment.nativeConnection,
+      taskQueue: TASK_QUEUE,
+      workflowsPath: new URL("index.ts", import.meta.url).pathname,
+      activities: {
+        collectDependencyChanges: (): DependencyCollectionResult => COLLECTION,
+        fetchDependencyReleaseNotes: () => ({
+          notes: [
+            {
+              dependency: CHANGE.name,
+              version: CHANGE.newVersion,
+              notes: "Authoritative release notes",
+              url: "https://github.com/owner/tool/releases/tag/2.0.0",
+              source: "github-release",
+            },
+          ],
+          missing: [],
+        }),
+        synthesizeDependencyChanges: (): undefined => undefined,
+        deliverActivityReport: (report: ActivityReportInput) => {
+          reports.push(report);
+          return {
+            accepted: true,
+            duplicate: false,
+            reportRunId:
+              report.execution === "failed"
+                ? "dependency-summary:run-exhausted:failed"
+                : "dependency-summary:run-exhausted",
+            acceptedAt: "2026-08-10T16:01:00.000Z",
+          };
+        },
+        advanceDependencySummaryCheckpoint: (): never => {
+          checkpointCalls += 1;
+          throw new Error("persistent checkpoint storage failure");
+        },
+      },
+    });
+
+    let failure: unknown;
+    try {
+      await worker.runUntil(
+        testEnvironment.client.workflow.execute(generateDependencySummary, {
+          args: [7],
+          taskQueue: TASK_QUEUE,
+          workflowId: `dependency-summary-checkpoint-exhausted-${crypto.randomUUID()}`,
+        }),
+      );
+    } catch (error: unknown) {
+      failure = error;
+    }
+
+    expect(failure).toBeInstanceOf(Error);
+    expect(checkpointCalls).toBe(3);
+    expect(reports.map((report) => report.execution)).toEqual([
+      "complete",
+      "failed",
+    ]);
+  }, 30_000);
+});

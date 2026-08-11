@@ -1,15 +1,14 @@
 ---
-title: Report-only by policy, not by sandbox
-description: What actually stops a scheduled agent from changing things, and why the honest answer is uncomfortable.
+title: The agent task security boundary
+description: How credential, queue, and Kubernetes isolation constrain report-only scheduled agents.
 sidebar:
   order: 2
 ---
 
 Agent tasks are scheduled Claude or Codex runs that inspect current state and
-email a report. They are **report-only by policy, not by sandbox**.
-
-That distinction is the whole content of this page, and it is worth being blunt
-about because the comfortable version would be misleading.
+email a report. They do not run inside an OS-level command sandbox, so the
+provider can write inside its throwaway clone. External mutation is constrained
+separately through credentials, queues, and Kubernetes authorization.
 
 ```mermaid
 flowchart TD
@@ -25,52 +24,58 @@ flowchart TD
   WF --> I[Investigation agent<br>over a repo clone]
   I --> R[Redacted evidence<br>receipt catalog]
   R --> FNL[Receipt-only<br>finalization agent]
-  FNL --> E[Shared email report]
+  FNL --> CQ[Core worker queue]
+  CQ --> E[Shared email report]
   E -.-> F[Optional follow-up task]
 ```
 
 ## What actually constrains the run
 
-The run gets `Bash` and a write-capable GitHub token. What keeps it from
-mutating the repo is:
+The run gets `Bash`, a throwaway clone of the public repository, and an
+allowlisted environment. The runtime boundary consists of:
 
 - a hard read-only prompt prefix,
-- an ephemeral non-root pod,
-- a throwaway per-run clone.
+- an ephemeral non-root pod and per-run clone,
+- `HOME` redirected into that clone so provider config is also disposable,
+- no GitHub credential, so the clone cannot push,
+- no Postal, S3, ArgoCD, Grafana, Buildkite, Home Assistant, Bugsink, or
+  Cloudflare credential,
+- a dedicated Kubernetes service account with read-only audit RBAC and no
+  `pods/exec` permission,
+- email delivery dispatched to the core worker queue, outside the agent pod.
 
 What does **not** constrain it is a schema that makes mutation unrepresentable,
 or a filesystem that refuses writes. Codex runs with
 `--sandbox danger-full-access`, because the worker pod cannot provide the
 namespace Codex's own sandbox needs.
 
-So the barrier is policy. A sufficiently confused or prompt-injected run could
-write.
+So local filesystem writes are still possible. A sufficiently confused or
+prompt-injected run can corrupt only its disposable workdir; it does not receive
+credentials that can publish that change or mutate the operational APIs.
 
 ## Why it is built this way anyway
 
-Novel operational investigations need credentials to inspect their declared
-evidence sources. Grafana, Alerts, ArgoCD, Bugsink, Cloudflare, and the mounted
-service-account token can therefore be readable when they are present in the
-worker environment. Stable recurring checks, including the daily homelab audit,
-use deterministic collectors instead of this generic boundary.
+Novel investigations can still inspect the public repository, Prometheus, the
+alert ledger, and the Kubernetes API. The mounted service-account token is the
+only operational identity available to the provider, and Kubernetes enforces
+its read-only verbs. Provider auth is selected per run: Claude receives only its
+subscription OAuth token, while Codex receives only its API credential.
 
-An agent scoped tightly enough to be provably harmless would also be scoped too
-tightly to audit anything.
-
-The GitHub App key is stripped and replaced with a fresh installation token. For
-Claude, the Anthropic API key is dropped so the run bills the subscription.
-Postal sender/recipient credentials and authenticated ingress tokens are always
-stripped; only the shared report sender can deliver operational email. Other
-operational credentials are inherited so declared evidence can be collected.
+Investigations that need ArgoCD, Buildkite, Home Assistant, or another
+authenticated source must become a typed deterministic collector. Stable
+recurring checks, including the daily homelab audit, already use that stronger
+pattern.
 
 ## The blast radius, stated plainly
 
-A deviating or prompt-injected run's blast radius is those credentials.
+A deviating or prompt-injected run can spend the selected provider quota, read
+the public repository and exposed evidence, query the read-only Kubernetes API,
+and alter its disposable clone. It cannot push that clone, send mail directly,
+write report state, or use the omitted operational APIs.
 
-The containment is that the pod is ephemeral and non-root and the clone is
-throwaway. Those controls reduce local persistence, but an agent that violates
-policy could still use inherited credentials against an external API. It is a
-meaningful reduction in blast radius, and it is not a sandbox.
+This is still not an OS sandbox. Network egress and local process execution are
+available, and Kubernetes data readable by the audit role can be exfiltrated.
+The boundary limits authority; it does not make untrusted prompts safe.
 
 Anything that genuinely must change the repo is a
 [deterministic scheduled workflow](/reference/temporal-schedules/) instead —

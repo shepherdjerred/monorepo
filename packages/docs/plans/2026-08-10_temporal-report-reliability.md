@@ -107,3 +107,15 @@ self-cancellation are removed.
   the Resume PDF build because `xelatex` is not installed on this machine. The
   dedicated Buildkite TeX lane remains the authoritative check, so the root and
   rollout checkboxes stay open until CI and production evidence exist.
+
+### 2026-08-10 — report boundary review remediated
+
+- The generic agent deployment now receives only provider auth and non-secret
+  read-only evidence configuration. Provider subprocesses use an allowlist,
+  redirect `HOME` into the throwaway clone, clone the public repository without
+  GitHub auth, and dispatch report delivery to the credentialed core queue via
+  a replay-safe Temporal patch.
+- Retirement recommendations now require a complete passing CI I/O gate. Agent
+  task identities include the full v2 check contract, and a post-delivery
+  checkpoint failure gets a distinct stable failure-report identity so it
+  cannot deduplicate behind the accepted dependency report.

@@ -7,7 +7,6 @@ import {
   agentTaskSubprocessExitTotal,
 } from "#observability/metrics.ts";
 import { withSpan } from "#observability/tracing.ts";
-import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import { buildAgentTaskCommand } from "#activities/agent-task-command.ts";
 import {
   createAgentTaskSecretTokenState,
@@ -136,10 +135,7 @@ async function runAgent(
         agentTimeoutMinutes: parsed.agentTimeoutMinutes,
         maxTurns: parsed.maxTurns,
       });
-      const githubTokenResult = await createGitHubAppInstallationToken();
-      const secretTokenState = await createAgentTaskSecretTokenState(
-        githubTokenResult.token,
-      );
+      const secretTokenState = await createAgentTaskSecretTokenState(undefined);
       const secretTokens = secretTokenState.tokens;
       const redactionFailureController = new AgentTaskSecretRedactionController(
         jsonLog.bind(
@@ -202,7 +198,7 @@ async function runAgent(
           {
             command: command.args,
             cwd: input.workdir,
-            env: envForProvider(provider, githubTokenResult.token),
+            env: envForProvider(provider, input.workdir),
             redactTokens: secretTokens,
             beforeOutput: refreshSecretsBeforeOutput,
             startToCloseTimeoutMs: startToCloseTimeoutMsOrUndefined(),

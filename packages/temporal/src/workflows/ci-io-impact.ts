@@ -272,7 +272,7 @@ export function ciIoImpactReport(
         : [
             "Inspect the schema-v4 integrity findings and acceptance-gate reasons.",
           ],
-    ...(state.completedObservation
+    ...(state.completedObservation && state.complete && state.gatePassed
       ? {
           retirementRecommendation:
             "The seven-day and 100-build observation thresholds are complete; a human may retire this schedule after accepting the evidence.",

@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import type { PostalSendInput } from "#shared/postal.ts";
 import type { ReportEnvelopeV1 } from "#shared/report.ts";
 import {
+  activityReportRunId,
   deliverReportWithDependencies,
   type ReportDeliveryBackend,
   type ReportDeliveryReceiptV1,
@@ -51,6 +52,21 @@ function report(): ReportEnvelopeV1 {
 }
 
 describe("report delivery", () => {
+  test("uses a stable distinct identity for a failure after an accepted report", () => {
+    expect(activityReportRunId("dependency-summary", "run-1", "complete")).toBe(
+      "dependency-summary:run-1",
+    );
+    expect(activityReportRunId("dependency-summary", "run-1", "partial")).toBe(
+      "dependency-summary:run-1",
+    );
+    expect(activityReportRunId("dependency-summary", "run-1", "failed")).toBe(
+      "dependency-summary:run-1:failed",
+    );
+    expect(activityReportRunId("dependency-summary", "run-1", "failed")).toBe(
+      activityReportRunId("dependency-summary", "run-1", "failed"),
+    );
+  });
+
   test("recovers from receipt-write failure without sending twice", async () => {
     const receipts = new Map<string, ReportDeliveryReceiptV1>();
     const states = new Map<string, ReportStateV1>();

@@ -7,9 +7,9 @@
  * module owns:
  *
  *   1. Creating a temp directory at /tmp/pr-review-workdir/<workflowId>/.
- *   2. Cloning the PR head into that directory using `git clone --depth 1
- *      --branch <headRef>` with `GIT_ASKPASS` auth (per the AGENTS.md ban
- *      on `x-access-token` URL embedding).
+ *   2. Cloning the requested ref into that directory with optional
+ *      `GIT_ASKPASS` authentication (per the AGENTS.md ban on
+ *      `x-access-token` URL embedding).
  *   3. Tearing the directory down on workflow completion.
  *
  * Dependencies are injected so tests can drive the flow without spawning
@@ -18,7 +18,7 @@
  *
  * Failure mode: every step throws on error. We deliberately do NOT
  * silently fall back to an empty workdir — that would mask a deployment
- * misconfiguration (missing `git`, missing `GH_TOKEN`, network outage)
+ * misconfiguration (missing `git`, invalid credentials, network outage)
  * as a successful-but-empty review.
  */
 
@@ -27,11 +27,12 @@ import { z } from "zod/v4";
 const WORKDIR_ROOT = "/tmp/pr-review-workdir";
 
 /**
- * Shape of the env we need for the git clone. Just `GH_TOKEN`; we don't
- * leak the entire process env into the askpass script.
+ * Optional authentication for private repositories. Public agent-task
+ * checkouts deliberately pass an empty object so the agent receives no
+ * GitHub credential.
  */
 export const WorkdirEnvSchema = z.object({
-  GH_TOKEN: z.string().min(1, "GH_TOKEN must be non-empty"),
+  GH_TOKEN: z.string().min(1, "GH_TOKEN must be non-empty").optional(),
 });
 export type WorkdirEnv = z.infer<typeof WorkdirEnvSchema>;
 
@@ -154,9 +155,47 @@ async function writeGitAskpass(scriptPath: string): Promise<void> {
   }
 }
 
+export function gitProcessEnvironment(
+  authEnv: Readonly<Record<string, string>>,
+  sourceEnv: Readonly<Record<string, string | undefined>> = Bun.env,
+): Record<string, string | undefined> {
+  const env: Record<string, string | undefined> = {};
+  for (const [key, value] of Object.entries(sourceEnv)) {
+    if (
+      key === "GH_TOKEN" ||
+      key === "GITHUB_PERSONAL_ACCESS_TOKEN" ||
+      key === "GIT_ASKPASS" ||
+      key === "GIT_CONFIG_COUNT" ||
+      key.startsWith("GIT_CONFIG_KEY_") ||
+      key.startsWith("GIT_CONFIG_VALUE_")
+    ) {
+      continue;
+    }
+    env[key] = value;
+  }
+  env["HOME"] = WORKDIR_ROOT;
+  env["GIT_CONFIG_GLOBAL"] = "/dev/null";
+  env["GIT_CONFIG_NOSYSTEM"] = "1";
+  env["GIT_TERMINAL_PROMPT"] = "0";
+  for (const [key, value] of Object.entries(authEnv)) {
+    env[key] = value;
+  }
+  return env;
+}
+
 async function cloneViaGitAskpass(params: CloneParams): Promise<void> {
   const askpassPath = `${params.dest}.askpass.sh`;
-  await writeGitAskpass(askpassPath);
+  const authEnv =
+    params.env.GH_TOKEN === undefined
+      ? {}
+      : {
+          GH_TOKEN: params.env.GH_TOKEN,
+          GIT_ASKPASS: askpassPath,
+        };
+  if (params.env.GH_TOKEN !== undefined) {
+    await writeGitAskpass(askpassPath);
+  }
+  const gitEnv = gitProcessEnvironment(authEnv);
   const url = `https://github.com/${params.owner}/${params.repo}.git`;
   // We clone the default branch shallowly, then fetch + checkout the
   // specific ref. This works for both PR head commits and named branches.
@@ -176,12 +215,7 @@ async function cloneViaGitAskpass(params: CloneParams): Promise<void> {
       stdin: "ignore",
       stdout: "pipe",
       stderr: "pipe",
-      env: {
-        ...Bun.env,
-        GH_TOKEN: params.env.GH_TOKEN,
-        GIT_ASKPASS: askpassPath,
-        GIT_TERMINAL_PROMPT: "0",
-      },
+      env: gitEnv,
     },
   );
   const exitCode = await proc.exited;
@@ -201,12 +235,7 @@ async function cloneViaGitAskpass(params: CloneParams): Promise<void> {
       stdout: "pipe",
       stderr: "pipe",
       cwd: params.dest,
-      env: {
-        ...Bun.env,
-        GH_TOKEN: params.env.GH_TOKEN,
-        GIT_ASKPASS: askpassPath,
-        GIT_TERMINAL_PROMPT: "0",
-      },
+      env: gitEnv,
     },
   );
   const fetchExit = await fetch.exited;

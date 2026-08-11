@@ -4,6 +4,7 @@ import type {
   RunAgentTaskResult,
 } from "#activities/agent-task.ts";
 import type { AgentTaskInput } from "#shared/agent-task.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const RETRY = {
   maximumAttempts: 2,
@@ -57,7 +58,13 @@ async function executeAgentTask(
   return activities.finalizeAgentTask({ input, workdir, investigation });
 }
 
-const emailActivities = proxyActivities<AgentTaskActivities>({
+const legacyEmailActivities = proxyActivities<AgentTaskActivities>({
+  startToCloseTimeout: "2 minutes",
+  retry: RETRY,
+});
+
+const coreEmailActivities = proxyActivities<AgentTaskActivities>({
+  taskQueue: TASK_QUEUES.DEFAULT,
   startToCloseTimeout: "2 minutes",
   retry: RETRY,
 });
@@ -113,6 +120,10 @@ export async function agentTaskWorkflow(input: AgentTaskInput): Promise<void> {
   const v2Reporting = patched("agent-task-report-v2");
   const twoPhaseV2 = patched("agent-task-two-phase-v2");
   const requireV2 = patched("agent-task-require-v2");
+  const coreEmailDelivery = patched("agent-task-core-email-delivery");
+  const emailActivities = coreEmailDelivery
+    ? coreEmailActivities
+    : legacyEmailActivities;
   await waitUntilRunAt(input.runAt);
   const startedAt = new Date().toISOString();
   let workdir:

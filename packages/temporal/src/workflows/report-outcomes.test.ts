@@ -208,6 +208,34 @@ describe("deterministic report outcome matrices", () => {
     });
   });
 
+  test("CI I/O recommends retirement only after a complete passing observation", () => {
+    expect(
+      validate(ciIoImpactReport(STARTED_AT, ciIoResult()))
+        .retirementRecommendation,
+    ).toContain("human may retire");
+
+    const failed = validate(ciIoImpactReport(STARTED_AT, ciIoResult("failed")));
+    expect(failed.retirementRecommendation).toBeUndefined();
+
+    const pending = ciIoResult();
+    pending.pendingReason = "No exact fixed-corpus candidate exists yet.";
+    pending.raw = undefined;
+    pending.rawExitCode = undefined;
+    pending.recording = undefined;
+    pending.recordingExitCode = undefined;
+    pending.observability = [];
+    expect(
+      validate(ciIoImpactReport(STARTED_AT, pending)).retirementRecommendation,
+    ).toBeUndefined();
+
+    const incomplete = ciIoResult();
+    incomplete.observability = [];
+    expect(
+      validate(ciIoImpactReport(STARTED_AT, incomplete))
+        .retirementRecommendation,
+    ).toBeUndefined();
+  });
+
   test("TaskNotes distinguishes first baseline, clean, and task-count attention", () => {
     expect(
       validate(tasknotesReport(STARTED_AT, tasknotesResult(100, undefined))),

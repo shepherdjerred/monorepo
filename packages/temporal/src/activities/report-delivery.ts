@@ -264,6 +264,15 @@ function recordAccepted(report: ReportEnvelopeV1, acceptedAt: string): void {
   );
 }
 
+export function activityReportRunId(
+  reportType: string,
+  runId: string,
+  execution: ReportEnvelopeV1["execution"],
+): string {
+  const base = `${reportType}:${runId}`;
+  return execution === "failed" ? `${base}:failed` : base;
+}
+
 export function createActivityReportEnvelope(
   input: ActivityReportInput,
 ): ReportEnvelopeV1 {
@@ -276,7 +285,11 @@ export function createActivityReportEnvelope(
   return ReportEnvelopeV1Schema.parse({
     ...input,
     schemaVersion: 1,
-    reportRunId: `${input.reportType}:${execution.runId}`,
+    reportRunId: activityReportRunId(
+      input.reportType,
+      execution.runId,
+      input.execution,
+    ),
     completedAt: new Date().toISOString(),
     provenance: {
       ...baseProvenance,

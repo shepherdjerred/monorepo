@@ -310,7 +310,11 @@ TaskNotes namespace Role grants `pods/exec` only to the core worker so the
 engine-status token never leaves that pod. The agent worker is intentionally
 absent from every pod-exec RoleBinding; provider subprocesses therefore cannot
 exec into TaskNotes or deterministic maintenance targets even if they disregard
-the report-only prompt.
+the report-only prompt. Its deployment env is also explicit: provider auth,
+basic runtime/TLS settings, and non-secret Prometheus/alert-dashboard endpoints
+only. Generic agent clones of this public repository are unauthenticated, and
+agent email delivery activities execute on `TASK_QUEUES.DEFAULT` so Postal and
+report-state S3 credentials remain in the core worker.
 
 ## Scheduled PR-creating workflows
 

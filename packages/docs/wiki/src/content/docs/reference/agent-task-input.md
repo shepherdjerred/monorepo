@@ -128,21 +128,22 @@ as report evidence.
 
 ## Environment exposure
 
-The subprocess inherits the worker's operational evidence environment, with
-delivery and identity credentials removed or replaced.
+The subprocess receives an allowlisted environment rather than inheriting the
+worker environment.
 
-| Credential                                         | State in the subprocess                                    |
-| -------------------------------------------------- | ---------------------------------------------------------- |
-| GitHub installation token                          | present as `GH_TOKEN`                                      |
-| Raw GitHub App key                                 | stripped                                                   |
-| Anthropic API key                                  | dropped for Claude runs, so the run bills the subscription |
-| Grafana, alert ledger, ArgoCD, Bugsink, Cloudflare | readable                                                   |
-| Postal host, API key, sender, and recipient        | stripped; only the shared report sender receives them      |
-| Agent-task and webhook ingress tokens              | stripped                                                   |
-| Mounted service-account token                      | readable                                                   |
+| Input                                       | State in the subprocess                                  |
+| ------------------------------------------- | -------------------------------------------------------- |
+| Selected provider credential                | present; credentials for the other provider are absent   |
+| Public GitHub repository credential         | absent; the throwaway clone is unauthenticated           |
+| `HOME`                                      | the throwaway workdir, not the worker image home         |
+| Prometheus and alert-dashboard URLs         | present without API credentials                          |
+| Kubernetes service address and mounted SA   | present; the dedicated identity has read-only audit RBAC |
+| Postal, S3, GitHub App, and ingress secrets | absent; delivery executes on the core worker queue       |
+| ArgoCD, Grafana, Buildkite, HA, Cloudflare  | absent                                                   |
 
-This lets generic investigations query current read-only operational state
-without crossing the report-delivery boundary. See
+This lets generic investigations query the public repository, read-only
+Kubernetes API, Prometheus, and alert ledger without crossing the delivery or
+operational-credential boundaries. See
 [the agent task boundary](/explanation/temporal/agent-task-boundary/) for what
 that means.
 

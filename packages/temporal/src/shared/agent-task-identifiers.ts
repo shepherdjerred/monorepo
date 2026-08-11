@@ -34,23 +34,33 @@ export function sanitizeTemporalIdPart(input: string): string {
     .slice(0, 48);
 }
 
+function materialAgentTaskIdentity(input: AgentTaskInput): unknown {
+  return sortJson({
+    agentTimeoutMinutes: input.agentTimeoutMinutes,
+    allowSelfCancel: input.allowSelfCancel,
+    checks: input.checks,
+    contractVersion: input.contractVersion,
+    cron: input.cron,
+    emailSubjectPrefix: input.emailSubjectPrefix,
+    maxTurns: input.maxTurns,
+    mode: input.mode,
+    model: input.model,
+    prompt: input.prompt,
+    provider: input.provider,
+    repo: input.repo,
+    runAt: input.runAt,
+    scheduleId: input.scheduleId,
+    source: input.source,
+    title: input.title,
+  });
+}
+
 export async function agentTaskWorkflowId(
   input: AgentTaskInput,
 ): Promise<string> {
   const prefix = sanitizeTemporalIdPart(input.title) || "agent-task";
   const key =
-    input.idempotencyKey ??
-    JSON.stringify(
-      sortJson({
-        provider: input.provider,
-        agentTimeoutMinutes: input.agentTimeoutMinutes,
-        title: input.title,
-        prompt: input.prompt,
-        runAt: input.runAt,
-        repo: input.repo,
-        source: input.source,
-      }),
-    );
+    input.idempotencyKey ?? JSON.stringify(materialAgentTaskIdentity(input));
   return `agent-task-${prefix}-${await shortSha256(key)}`;
 }
 
@@ -62,17 +72,6 @@ export async function agentTaskScheduleId(
   if (input.scheduleId !== undefined) return input.scheduleId;
   const prefix = sanitizeTemporalIdPart(input.title) || "agent-task";
   const key =
-    input.idempotencyKey ??
-    JSON.stringify(
-      sortJson({
-        provider: input.provider,
-        agentTimeoutMinutes: input.agentTimeoutMinutes,
-        title: input.title,
-        prompt: input.prompt,
-        cron: input.cron,
-        repo: input.repo,
-        source: input.source,
-      }),
-    );
+    input.idempotencyKey ?? JSON.stringify(materialAgentTaskIdentity(input));
   return `agent-task-${prefix}-${await shortSha256(key)}`;
 }

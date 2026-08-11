@@ -1,4 +1,3 @@
-import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import { provisionWorkdir } from "#lib/pr-review-workdir.ts";
 import {
   AgentTaskInputSchema,
@@ -26,13 +25,12 @@ export async function prepareAgentTaskWorkdir(
 ): Promise<PrepareAgentTaskWorkdirResult> {
   const parsed = AgentTaskInputSchema.parse(input.input);
   const { owner, repo } = splitRepo(parsed.repo.fullName);
-  const tokenResult = await createGitHubAppInstallationToken();
   const workdir = await provisionWorkdir({
     workflowId: workflowId(),
     owner,
     repo,
     ref: parsed.repo.ref ?? "main",
-    env: { GH_TOKEN: tokenResult.token },
+    env: {},
   });
   return { workdir };
 }

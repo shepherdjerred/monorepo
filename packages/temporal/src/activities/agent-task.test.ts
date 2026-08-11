@@ -1,7 +1,7 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { afterAll, beforeAll, describe, expect, it } from "bun:test";
+import { describe, expect, it } from "bun:test";
 import { register } from "#observability/metrics.ts";
 import type { AgentTaskInput } from "#shared/agent-task.ts";
 import { redactSecrets } from "#shared/redact.ts";
@@ -12,81 +12,6 @@ import {
   envForProvider,
   readAgentTaskMountedSecretTokens,
 } from "./agent-task-env.ts";
-
-const originalFetch = globalThis.fetch;
-const originalGitHubAppId = Bun.env["GITHUB_APP_ID"];
-const originalGitHubAppInstallationId = Bun.env["GITHUB_APP_INSTALLATION_ID"];
-const originalGitHubAppPrivateKey = Bun.env["GITHUB_APP_PRIVATE_KEY"];
-
-async function testPrivateKeyPem(): Promise<string> {
-  const pair = await crypto.subtle.generateKey(
-    {
-      name: "RSASSA-PKCS1-v1_5",
-      modulusLength: 2048,
-      publicExponent: new Uint8Array([1, 0, 1]),
-      hash: "SHA-256",
-    },
-    true,
-    ["sign", "verify"],
-  );
-  const pkcs8 = await crypto.subtle.exportKey("pkcs8", pair.privateKey);
-  const encoded = btoa(String.fromCodePoint(...new Uint8Array(pkcs8)));
-  const lines = encoded.match(/.{1,64}/g) ?? [];
-  return [
-    "-----BEGIN PRIVATE KEY-----",
-    ...lines,
-    "-----END PRIVATE KEY-----",
-    "",
-  ].join("\n");
-}
-
-function restoreGitHubAppEnv(): void {
-  restoreGitHubAppId();
-  restoreGitHubAppInstallationId();
-  restoreGitHubAppPrivateKey();
-}
-
-function restoreGitHubAppId(): void {
-  if (originalGitHubAppId === undefined) {
-    delete Bun.env["GITHUB_APP_ID"];
-    return;
-  }
-  Bun.env["GITHUB_APP_ID"] = originalGitHubAppId;
-}
-
-function restoreGitHubAppInstallationId(): void {
-  if (originalGitHubAppInstallationId === undefined) {
-    delete Bun.env["GITHUB_APP_INSTALLATION_ID"];
-    return;
-  }
-  Bun.env["GITHUB_APP_INSTALLATION_ID"] = originalGitHubAppInstallationId;
-}
-
-function restoreGitHubAppPrivateKey(): void {
-  if (originalGitHubAppPrivateKey === undefined) {
-    delete Bun.env["GITHUB_APP_PRIVATE_KEY"];
-    return;
-  }
-  Bun.env["GITHUB_APP_PRIVATE_KEY"] = originalGitHubAppPrivateKey;
-}
-
-const fetchStub = Object.assign(
-  async (
-    _input: Parameters<typeof fetch>[0],
-    _init?: Parameters<typeof fetch>[1],
-  ) =>
-    Response.json(
-      {
-        token: "test-github-app-token",
-        expires_at: "2030-01-01T00:00:00.000Z",
-      },
-      {
-        status: 201,
-        headers: { "content-type": "application/json" },
-      },
-    ),
-  { preconnect: originalFetch.preconnect },
-);
 
 const testAgentTaskActivities = createAgentTaskActivities(
   async (
@@ -165,18 +90,6 @@ function claudeResultMessageCommand(
     prompt: "Return a short report.",
   });
 }
-
-beforeAll(async () => {
-  Bun.env["GITHUB_APP_ID"] = "12345";
-  Bun.env["GITHUB_APP_INSTALLATION_ID"] = "67890";
-  Bun.env["GITHUB_APP_PRIVATE_KEY"] = await testPrivateKeyPem();
-  globalThis.fetch = fetchStub;
-});
-
-afterAll(() => {
-  globalThis.fetch = originalFetch;
-  restoreGitHubAppEnv();
-});
 
 describe("agentTaskActivities", () => {
   it("records a successful run after agent output parses", async () => {
@@ -380,29 +293,30 @@ describe("agent task runtime support", () => {
 
   it("aliases OPENAI_API_KEY for Codex without overriding an explicit key", async () => {
     expect(
-      envForProvider("codex", "github-token", {
+      envForProvider("codex", "/tmp/agent-home", {
         OPENAI_API_KEY: "openai-key",
       }),
     ).toEqual({
       OPENAI_API_KEY: "openai-key",
       CODEX_API_KEY: "openai-key",
-      GH_TOKEN: "github-token",
+      HOME: "/tmp/agent-home",
     });
     expect(
-      envForProvider("codex", "github-token", {
+      envForProvider("codex", "/tmp/agent-home", {
         OPENAI_API_KEY: "openai-key",
         CODEX_API_KEY: "codex-key",
       })["CODEX_API_KEY"],
     ).toBe("codex-key");
   });
 
-  it("forwards evidence credentials for Claude but strips delivery and identity credentials", async () => {
-    const environment = envForProvider("claude", "installation-token", {
+  it("allows only Claude auth and non-secret read-only runtime configuration", async () => {
+    const environment = envForProvider("claude", "/tmp/agent-home", {
       PATH: "/usr/bin",
       HOME: "/home/worker",
       CLAUDE_CODE_OAUTH_TOKEN: "oauth-token",
-      // Delivery credentials are stripped; read-only evidence credentials are
-      // forwarded for operational investigations.
+      PROMETHEUS_URL: "http://prometheus.local",
+      ALERT_DASHBOARD_URL: "http://alerts.local",
+      KUBERNETES_SERVICE_HOST: "10.0.0.1",
       POSTAL_API_KEY: "postal-secret",
       POSTAL_HOST: "https://postal.example.test",
       RECIPIENT_EMAIL: "recipient@example.test",
@@ -411,10 +325,10 @@ describe("agent task runtime support", () => {
       GRAFANA_API_KEY: "grafana-secret",
       ARGOCD_AUTH_TOKEN: "argocd-secret",
       CLOUDFLARE_API_TOKEN: "cloudflare-secret",
-      SAFE_VALUE: "forwarded",
-      // Stripped: Claude bills the subscription, not the direct API.
+      SAFE_VALUE: "not-allowlisted",
       ANTHROPIC_API_KEY: "anthropic-key",
-      // Stripped: never inherit the worker's GitHub creds; GH_TOKEN is re-minted.
+      OPENAI_API_KEY: "other-provider-key",
+      CODEX_API_KEY: "other-provider-key",
       GH_TOKEN: "personal-token",
       GITHUB_PERSONAL_ACCESS_TOKEN: "personal-token",
       GITHUB_APP_PRIVATE_KEY: "private-key",
@@ -422,15 +336,11 @@ describe("agent task runtime support", () => {
 
     expect(environment).toEqual({
       PATH: "/usr/bin",
-      HOME: "/home/worker",
+      HOME: "/tmp/agent-home",
       CLAUDE_CODE_OAUTH_TOKEN: "oauth-token",
-      GRAFANA_API_KEY: "grafana-secret",
-      ARGOCD_AUTH_TOKEN: "argocd-secret",
-      CLOUDFLARE_API_TOKEN: "cloudflare-secret",
-      SAFE_VALUE: "forwarded",
-      // The GitHub App installation token is injected explicitly, replacing any
-      // inherited GitHub credential.
-      GH_TOKEN: "installation-token",
+      PROMETHEUS_URL: "http://prometheus.local",
+      ALERT_DASHBOARD_URL: "http://alerts.local",
+      KUBERNETES_SERVICE_HOST: "10.0.0.1",
     });
     expect(environment).not.toHaveProperty("ANTHROPIC_API_KEY");
     expect(environment).not.toHaveProperty("POSTAL_API_KEY");
@@ -440,29 +350,30 @@ describe("agent task runtime support", () => {
     expect(environment).not.toHaveProperty("AGENT_TASK_API_TOKEN");
     expect(environment).not.toHaveProperty("GITHUB_PERSONAL_ACCESS_TOKEN");
     expect(environment).not.toHaveProperty("GITHUB_APP_PRIVATE_KEY");
+    expect(environment).not.toHaveProperty("OPENAI_API_KEY");
+    expect(environment).not.toHaveProperty("CODEX_API_KEY");
+    expect(environment).not.toHaveProperty("GRAFANA_API_KEY");
+    expect(environment).not.toHaveProperty("ARGOCD_AUTH_TOKEN");
+    expect(environment).not.toHaveProperty("CLOUDFLARE_API_TOKEN");
+    expect(environment).not.toHaveProperty("SAFE_VALUE");
   });
 
-  it("forwards evidence credentials for Codex but strips delivery and identity credentials", async () => {
-    const forwarded = {
+  it("allows only Codex auth and non-secret read-only runtime configuration", async () => {
+    const environment = envForProvider("codex", "/tmp/agent-home", {
+      PATH: "/usr/bin",
+      HOME: "/home/worker",
+      CODEX_API_KEY: "codex-key",
+      OPENAI_API_KEY: "openai-key",
+      ALERT_DASHBOARD_URL: "http://alerts.local",
       POSTAL_API_KEY: "postal-secret",
       SENDER_EMAIL: "sender@example.test",
       GITHUB_WEBHOOK_SECRET: "webhook-secret",
-      ALERT_DASHBOARD_URL: "http://alerts.local",
       BUGSINK_TOKEN: "bugsink-secret",
       GRAFANA_API_KEY: "grafana-secret",
       ARGOCD_AUTH_TOKEN: "argocd-secret",
       CLOUDFLARE_API_TOKEN: "cloudflare-secret",
-      // Codex keeps ANTHROPIC_API_KEY (only Claude strips it) and the other
-      // provider's key.
       ANTHROPIC_API_KEY: "anthropic-key",
       CLAUDE_CODE_OAUTH_TOKEN: "other-provider-key",
-    };
-    const environment = envForProvider("codex", "installation-token", {
-      PATH: "/usr/bin",
-      HOME: "/home/worker",
-      CODEX_API_KEY: "codex-key",
-      ...forwarded,
-      // Stripped: never inherit the worker's GitHub creds.
       GH_TOKEN: "personal-token",
       GITHUB_PERSONAL_ACCESS_TOKEN: "personal-token",
       GITHUB_APP_PRIVATE_KEY: "private-key",
@@ -470,21 +381,22 @@ describe("agent task runtime support", () => {
 
     expect(environment).toEqual({
       PATH: "/usr/bin",
-      HOME: "/home/worker",
+      HOME: "/tmp/agent-home",
       CODEX_API_KEY: "codex-key",
+      OPENAI_API_KEY: "openai-key",
       ALERT_DASHBOARD_URL: "http://alerts.local",
-      BUGSINK_TOKEN: "bugsink-secret",
-      GRAFANA_API_KEY: "grafana-secret",
-      ARGOCD_AUTH_TOKEN: "argocd-secret",
-      CLOUDFLARE_API_TOKEN: "cloudflare-secret",
-      ANTHROPIC_API_KEY: "anthropic-key",
-      CLAUDE_CODE_OAUTH_TOKEN: "other-provider-key",
-      GH_TOKEN: "installation-token",
     });
     expect(environment).not.toHaveProperty("GITHUB_PERSONAL_ACCESS_TOKEN");
     expect(environment).not.toHaveProperty("GITHUB_APP_PRIVATE_KEY");
     expect(environment).not.toHaveProperty("POSTAL_API_KEY");
     expect(environment).not.toHaveProperty("SENDER_EMAIL");
     expect(environment).not.toHaveProperty("GITHUB_WEBHOOK_SECRET");
+    expect(environment).not.toHaveProperty("BUGSINK_TOKEN");
+    expect(environment).not.toHaveProperty("GRAFANA_API_KEY");
+    expect(environment).not.toHaveProperty("ARGOCD_AUTH_TOKEN");
+    expect(environment).not.toHaveProperty("CLOUDFLARE_API_TOKEN");
+    expect(environment).not.toHaveProperty("ANTHROPIC_API_KEY");
+    expect(environment).not.toHaveProperty("CLAUDE_CODE_OAUTH_TOKEN");
+    expect(environment).not.toHaveProperty("GH_TOKEN");
   });
 });

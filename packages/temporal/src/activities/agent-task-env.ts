@@ -4,7 +4,28 @@ const MOUNTED_SECRET_PATHS = [
   "/var/run/secrets/kubernetes.io/serviceaccount/token",
   "/etc/talos/config",
 ] as const;
-const AGENT_TASK_BOUNDARY_ENVIRONMENT = new Set([
+const AGENT_TASK_COMMON_ENVIRONMENT = new Set([
+  "ALERT_DASHBOARD_URL",
+  "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC",
+  "DISABLE_AUTOUPDATER",
+  "LANG",
+  "LC_ALL",
+  "LC_CTYPE",
+  "LOGNAME",
+  "NODE_EXTRA_CA_CERTS",
+  "NO_PROXY",
+  "PATH",
+  "PROMETHEUS_URL",
+  "SHELL",
+  "SSL_CERT_DIR",
+  "SSL_CERT_FILE",
+  "TEMP",
+  "TMP",
+  "TMPDIR",
+  "TZ",
+  "USER",
+]);
+const REPORT_DELIVERY_BOUNDARY_ENVIRONMENT = new Set([
   "RECIPIENT_EMAIL",
   "SENDER_EMAIL",
   "AGENT_TASK_API_TOKEN",
@@ -12,8 +33,17 @@ const AGENT_TASK_BOUNDARY_ENVIRONMENT = new Set([
   "XCODE_CLOUD_WEBHOOK_TOKEN",
 ]);
 
-export function isAgentTaskBoundaryEnvironmentKey(key: string): boolean {
-  return key.startsWith("POSTAL_") || AGENT_TASK_BOUNDARY_ENVIRONMENT.has(key);
+export function isReportDeliveryBoundaryEnvironmentKey(key: string): boolean {
+  return (
+    key.startsWith("POSTAL_") || REPORT_DELIVERY_BOUNDARY_ENVIRONMENT.has(key)
+  );
+}
+
+function isAgentTaskCommonEnvironmentKey(key: string): boolean {
+  return (
+    AGENT_TASK_COMMON_ENVIRONMENT.has(key) ||
+    key.startsWith("KUBERNETES_SERVICE_")
+  );
 }
 
 function secretFragments(value: string): readonly string[] {
@@ -137,7 +167,7 @@ export class AgentTaskSecretRedactionController {
 }
 
 export async function createAgentTaskSecretTokenState(
-  githubAppToken: string,
+  githubAppToken: string | undefined,
   env: Readonly<Record<string, string | undefined>> = Bun.env,
   paths: readonly string[] = MOUNTED_SECRET_PATHS,
 ): Promise<AgentTaskSecretTokenState> {
@@ -188,29 +218,14 @@ export async function refreshAgentTaskSecretTokenStateInBackground(
   }
 }
 
-// Build the subprocess environment for an agent-task provider run.
-//
-// ACCEPTED-RISK NOTE (owner decision, see PR #1860 Codex threads A & B):
-// This forwards the worker's operational environment to the provider
-// subprocess, minus credentials owned by another boundary. Read-only reports
-// can still use Grafana, Alerts, ArgoCD, Bugsink, Cloudflare, and other evidence
-// APIs. Postal delivery credentials are always stripped: only the shared
-// report-delivery activity may send operational email. GitHub credentials are
-// replaced with the scoped installation token below.
-//
-// The tradeoff being accepted: there is no OS-level sandbox around the run
-// (Codex's `--sandbox` needs bwrap to create a Linux namespace, which the
-// unprivileged worker pod refuses — see agent-task-command.ts), so a
-// prompt-injected or mistaken command runs with whatever this returns and could
-// read those credentials or the mounted service-account token. The boundary is
-// instead: `mode: "report-only"` (the prompt forbids mutation), a dedicated
-// non-root worker whose Kubernetes identity has read-only audit access and no
-// pod-exec roles, and a throwaway per-run clone. Revisit this with per-task
-// credential scoping if the threat model changes — mutating tasks, or untrusted
-// callers reaching the `/agent-tasks` ingress.
+// Build the deliberately small subprocess environment for an agent-task run.
+// Generic agents receive only their own provider credential, basic process/TLS
+// settings, non-secret evidence endpoints, and the dedicated read-only
+// Kubernetes identity. Delivery and operational credentials stay in the core
+// worker, and the public repository checkout is unauthenticated.
 export function envForProvider(
   provider: AgentTaskProvider,
-  githubAppToken: string,
+  workdir: string,
   sourceEnv: Readonly<Record<string, string | undefined>> = Bun.env,
 ): Record<string, string> {
   const env: Record<string, string> = {};
@@ -218,27 +233,18 @@ export function envForProvider(
     if (typeof value !== "string") {
       continue;
     }
-    // Claude billing: strip ANTHROPIC_API_KEY so `claude -p` bills the
-    // subscription (CLAUDE_CODE_OAUTH_TOKEN), not direct-API credits.
-    if (provider === "claude" && key === "ANTHROPIC_API_KEY") {
-      continue;
-    }
-    if (isAgentTaskBoundaryEnvironmentKey(key)) {
-      continue;
-    }
-    // Never inherit the worker's GitHub credentials — GH_TOKEN is re-minted as a
-    // short-lived GitHub App installation token below so actions attribute to
-    // the app bot.
-    if (
-      key === "GH_TOKEN" ||
-      key === "GITHUB_PERSONAL_ACCESS_TOKEN" ||
-      key.startsWith("GITHUB_APP_")
+    if (isAgentTaskCommonEnvironmentKey(key)) {
+      env[key] = value;
+    } else if (provider === "claude" && key === "CLAUDE_CODE_OAUTH_TOKEN") {
+      env[key] = value;
+    } else if (
+      provider === "codex" &&
+      (key === "CODEX_API_KEY" || key === "OPENAI_API_KEY")
     ) {
-      continue;
+      env[key] = value;
     }
-    env[key] = value;
   }
-  env["GH_TOKEN"] = githubAppToken;
+  env["HOME"] = workdir;
   // Codex CLI reads CODEX_API_KEY, not OPENAI_API_KEY (verified 0.139 in-pod:
   // OPENAI-only → 401 Missing bearer; CODEX_API_KEY → turn.completed).
   if (

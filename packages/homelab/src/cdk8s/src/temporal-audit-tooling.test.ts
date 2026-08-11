@@ -113,6 +113,14 @@ function envValue(
   )?.value;
 }
 
+function envNames(deployment: SynthesizedDeployment): Set<string> {
+  return new Set(
+    deployment.spec.template.spec.containers[0]?.env.map(
+      (variable) => variable.name,
+    ),
+  );
+}
+
 describe("temporal homelab audit tooling", () => {
   it("injects Buildkite and Bugsink configuration", async () => {
     const yaml = await synthesizeApp();
@@ -277,5 +285,48 @@ describe("temporal homelab audit tooling", () => {
       "temporal-worker",
       "temporal-agent-worker",
     ]);
+  });
+
+  it("gives the agent worker only provider auth and read-only evidence configuration", async () => {
+    const deployments = parseDeployments(await synthesizeApp());
+    const agent = requireDeployment(
+      deployments,
+      "temporal-temporal-agent-worker",
+    );
+    const names = envNames(agent);
+
+    for (const required of [
+      "TEMPORAL_ADDRESS",
+      "TEMPORAL_WORKER_ROLE",
+      "CLAUDE_CODE_OAUTH_TOKEN",
+      "OPENAI_API_KEY",
+      "CODEX_API_KEY",
+      "PROMETHEUS_URL",
+      "ALERT_DASHBOARD_URL",
+    ]) {
+      expect(names).toContain(required);
+    }
+
+    for (const prohibited of [
+      "AGENT_TASK_API_TOKEN",
+      "ARGOCD_AUTH_TOKEN",
+      "AWS_ACCESS_KEY_ID",
+      "AWS_SECRET_ACCESS_KEY",
+      "BUGSINK_TOKEN",
+      "BUILDKITE_API_TOKEN",
+      "CLOUDFLARE_API_TOKEN",
+      "GITHUB_APP_ID",
+      "GITHUB_APP_INSTALLATION_ID",
+      "GITHUB_APP_PRIVATE_KEY",
+      "GITHUB_WEBHOOK_SECRET",
+      "GRAFANA_API_KEY",
+      "HA_TOKEN",
+      "POSTAL_API_KEY",
+      "RECIPIENT_EMAIL",
+      "SENDER_EMAIL",
+      "XCODE_CLOUD_WEBHOOK_TOKEN",
+    ]) {
+      expect(names).not.toContain(prohibited);
+    }
   });
 });

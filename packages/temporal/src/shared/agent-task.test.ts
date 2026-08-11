@@ -87,6 +87,37 @@ describe("agent task ids", () => {
     });
     await expect(agentTaskScheduleId(input)).resolves.toBe("weekly-recheck");
   });
+
+  it("changes generated identities when the v2 coverage contract changes", async () => {
+    const first = AgentTaskInputSchema.parse({
+      ...baseInput,
+      contractVersion: 2,
+      checks: [
+        {
+          id: "service-health",
+          label: "Service health",
+          required: true,
+          evidenceRequirement: "A successful health endpoint response.",
+        },
+      ],
+      runAt: "2026-05-31T09:00:00-07:00",
+    });
+    const second = AgentTaskInputSchema.parse({
+      ...first,
+      checks: [
+        {
+          id: "service-health",
+          label: "Service health",
+          required: true,
+          evidenceRequirement: "A successful health response and pod list.",
+        },
+      ],
+    });
+
+    expect(await agentTaskWorkflowId(first)).not.toBe(
+      await agentTaskWorkflowId(second),
+    );
+  });
 });
 
 function assertStrictJsonSchemaObjects(value: unknown): void {

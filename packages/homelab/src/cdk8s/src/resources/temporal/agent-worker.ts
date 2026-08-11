@@ -27,8 +27,11 @@ type CreateTemporalAgentWorkerProps = {
  *
  * The service account receives the audit reader ClusterRole but none of the
  * namespace-scoped exec roles required by deterministic maintenance and
- * canary activities. This makes the Kubernetes API enforce the report-only
- * boundary even if a provider disregards its prompt.
+ * canary activities. The deployment also receives only provider auth and
+ * non-secret evidence endpoints; email delivery runs on the core queue and
+ * the public repository checkout is unauthenticated. These controls make the
+ * runtime enforce the report-only boundary even if a provider disregards its
+ * prompt.
  */
 export function createTemporalAgentWorker(
   chart: Chart,
