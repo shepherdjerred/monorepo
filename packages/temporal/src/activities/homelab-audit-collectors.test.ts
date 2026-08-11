@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { buildkiteFailureFinding } from "./homelab-audit-buildkite.ts";
+import { buildkiteBuildFinding } from "./homelab-audit-buildkite.ts";
 import {
   interpretArgoApplications,
   temporalHealthQueries,
@@ -76,7 +76,7 @@ describe("homelab audit collector interpretation", () => {
   });
 
   test("reports failed Buildkite job log evidence instead of inferring from its label", () => {
-    const finding = buildkiteFailureFinding(
+    const finding = buildkiteBuildFinding(
       {
         number: 9001,
         state: "failed",

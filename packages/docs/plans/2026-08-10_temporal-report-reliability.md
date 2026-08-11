@@ -115,6 +115,14 @@ self-cancellation are removed.
   redirect `HOME` into the throwaway clone, clone the public repository without
   GitHub auth, and dispatch report delivery to the credentialed core queue via
   a replay-safe Temporal patch.
+- Provider commands now run under uid 1001 while the Temporal poller retains
+  only the `SETUID` capability needed for that transition. A pod-local owner
+  firewall blocks the provider uid from Temporal gRPC
+  and UI ports. This is explicit local enforcement on the current Flannel
+  cluster, where Kubernetes `NetworkPolicy` objects are not enforced.
+- The protobuf watch schedule now budgets collection, primary delivery, and the
+  failure-delivery path. Buildkite audit findings include canceled or blocked
+  latest-main builds instead of counting only failed builds.
 - Retirement recommendations now require a complete passing CI I/O gate. Agent
   task identities include the full v2 check contract, and a post-delivery
   checkpoint failure gets a distinct stable failure-report identity so it

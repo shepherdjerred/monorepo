@@ -122,7 +122,11 @@ export const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "0 9 * * 1",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "15 minutes",
+    // Worst case: three 1m collection attempts, three 2m primary-delivery
+    // attempts, then three 2m failure-delivery attempts, plus retry delays and
+    // workflow-task overhead. Keep ten minutes of headroom over the 15m
+    // start-to-close total so the failure heartbeat can still be accepted.
+    workflowExecutionTimeout: "25 minutes",
     memo: "Weekly typed npm metadata check for Temporal protobufjs v8 compatibility",
   },
   {

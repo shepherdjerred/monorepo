@@ -11,6 +11,7 @@ import { createTemporalServerDeployment } from "@shepherdjerred/homelab/cdk8s/sr
 import { createTemporalUiDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/ui.ts";
 import { createTemporalNamespaceInitJob } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/namespace-init.ts";
 import { createTemporalWorkerDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/worker.ts";
+import { createTemporalAgentWorkerNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/agent-worker-network-policy.ts";
 
 export function createTemporalChart(app: App) {
   const chart = new Chart(app, "temporal", {
@@ -33,6 +34,7 @@ export function createTemporalChart(app: App) {
   createTemporalWorkerDeployment(chart, {
     serverServiceName: server.service.name,
   });
+  createTemporalAgentWorkerNetworkPolicy(chart);
 
   // NetworkPolicy for Temporal Server
   new KubeNetworkPolicy(chart, "temporal-server-netpol", {
@@ -84,6 +86,19 @@ export function createTemporalChart(app: App) {
             {
               podSelector: {
                 matchLabels: { app: "temporal-worker" },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+        },
+        {
+          // The agent poller has a dedicated pod label and egress policy. Its
+          // provider subprocess runs under a uid that the pod-local firewall
+          // rejects on this port, so only the SDK poller can use this ingress.
+          from: [
+            {
+              podSelector: {
+                matchLabels: { app: "temporal-agent-worker" },
               },
             },
           ],

@@ -84,7 +84,9 @@ async function allBuildsSince(
   return builds;
 }
 
-export function buildkiteFailureFinding(
+const LATEST_RED_BUILD_STATES = new Set(["failed", "canceled", "blocked"]);
+
+export function buildkiteBuildFinding(
   build: Build,
   causes: readonly string[],
 ): Finding {
@@ -94,7 +96,7 @@ export function buildkiteFailureFinding(
     .slice(0, 2000);
   return {
     severity: "warning",
-    summary: `Buildkite main build #${build.number.toString()} failed`,
+    summary: `Buildkite main build #${build.number.toString()} ${build.state}`,
     ...(detail === "" ? {} : { detail }),
     evidenceReceiptIds: ["buildkite-main-evidence"],
   };
@@ -109,7 +111,22 @@ export async function collectBuildkiteWith(input: {
   const since = new Date(input.now.getTime() - 24 * 60 * 60 * 1000);
   try {
     const builds = await allBuildsSince(since, input.request);
+    const chronologicalBuilds = builds.toSorted(
+      (left, right) => right.number - left.number,
+    );
+    const latestBuild = chronologicalBuilds[0];
     const failedBuilds = builds.filter((build) => build.state === "failed");
+    const latestRedBuild =
+      latestBuild !== undefined &&
+      LATEST_RED_BUILD_STATES.has(latestBuild.state)
+        ? latestBuild
+        : undefined;
+    const actionableBuilds = [
+      ...failedBuilds,
+      ...(latestRedBuild === undefined || latestRedBuild.state === "failed"
+        ? []
+        : [latestRedBuild]),
+    ];
     const causes: string[] = [];
     for (const build of failedBuilds) {
       for (const job of build.jobs.filter(
@@ -149,7 +166,7 @@ export async function collectBuildkiteWith(input: {
         label: "Buildkite main builds",
         required: true,
         status: "passed",
-        summary: `${failedBuilds.length.toString()} failed of ${builds.length.toString()} main builds in 24h; ${causes.length.toString()} failed job logs inspected`,
+        summary: `${failedBuilds.length.toString()} failed of ${builds.length.toString()} main builds in 24h; latest ${latestBuild === undefined ? "unavailable" : `#${latestBuild.number.toString()} ${latestBuild.state}`}; ${causes.length.toString()} failed job logs inspected`,
         evidenceReceiptIds: [evidenceId],
       },
       evidence: {
@@ -157,12 +174,14 @@ export async function collectBuildkiteWith(input: {
         source: "Buildkite REST API",
         observedAt,
         status: "success",
-        ...(builds[0] === undefined ? {} : { url: builds[0].web_url }),
+        ...(latestBuild === undefined ? {} : { url: latestBuild.web_url }),
         excerpt: combined.slice(0, 2000),
         contentSha256: await sha256(combined),
       },
       findings: [
-        ...failedBuilds.map((build) => buildkiteFailureFinding(build, causes)),
+        ...actionableBuilds.map((build) =>
+          buildkiteBuildFinding(build, causes),
+        ),
         ...noBuildsFinding,
       ],
       limitation: undefined,

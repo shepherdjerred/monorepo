@@ -42,12 +42,26 @@ allowlisted environment. The runtime boundary consists of:
   Cloudflare credential,
 - a dedicated Kubernetes service account with read-only audit RBAC and no
   `pods/exec` permission,
+- a provider-only uid whose pod-local firewall rejects Temporal gRPC and UI
+  traffic while leaving the worker poller connected,
 - email delivery dispatched to the core worker queue, outside the agent pod.
 
 What does **not** constrain it is a schema that makes mutation unrepresentable,
 or a filesystem that refuses writes. Codex runs with
 `--sandbox danger-full-access`, because the worker pod cannot provide the
 namespace Codex's own sandbox needs.
+
+The poller runs as root with every capability dropped except the `SETUID`
+capability needed for `setpriv` to launch provider commands as uid 1001.
+Privilege escalation is disabled, and the provider exec retains no
+capabilities. Before the worker
+starts, a short-lived `NET_ADMIN` init container installs owner-matched rules
+that reject uid-1001 traffic to Temporal gRPC (`7233`) and the Temporal UI
+(`8080`), including their resolved Tailscale ingress addresses on `443`. The
+current homelab CNI is Flannel without a NetworkPolicy controller,
+so this pod-local firewall is the enforcement mechanism. The separate
+agent-worker `NetworkPolicy` documents the same narrower topology for a future
+policy-capable CNI; it is not counted as an active control today.
 
 So local filesystem writes are still possible. A sufficiently confused or
 prompt-injected run can corrupt only its disposable workdir; it does not receive
@@ -82,8 +96,9 @@ and alter its disposable clone. It cannot push that clone, send mail directly,
 write report state, or use the omitted operational APIs.
 
 This is still not an OS sandbox. Network egress and local process execution are
-available, and Kubernetes data readable by the audit role can be exfiltrated.
-The boundary limits authority; it does not make untrusted prompts safe.
+available except for the blocked Temporal frontend/UI ports, and Kubernetes
+data readable by the audit role can be exfiltrated. The boundary limits
+authority; it does not make untrusted prompts safe.
 
 Anything that genuinely must change the repo is a
 [deterministic scheduled workflow](/reference/temporal-schedules/) instead —

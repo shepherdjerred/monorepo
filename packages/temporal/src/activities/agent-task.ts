@@ -16,6 +16,7 @@ import {
   refreshAgentTaskSecretTokenStateInBackground,
 } from "#activities/agent-task-env.ts";
 import { runTrackedAgentSubprocess } from "#shared/agent-subprocess.ts";
+import { providerSubprocessCommand } from "#shared/agent-subprocess-identity.ts";
 import { summarizeClaudeStreamLine } from "#shared/claude-result.ts";
 import type { AgentTaskPromptPhase } from "#shared/agent-task-prompt.ts";
 import {
@@ -196,7 +197,7 @@ async function runAgent(
       try {
         result = await runTrackedAgentSubprocess(
           {
-            command: command.args,
+            command: providerSubprocessCommand(command.args),
             cwd: input.workdir,
             env: envForProvider(provider, input.workdir),
             redactTokens: secretTokens,

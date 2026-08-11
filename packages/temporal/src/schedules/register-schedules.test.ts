@@ -50,6 +50,17 @@ test("dependency summary timeout covers every retried report phase", () => {
   );
 });
 
+test("protobuf watch timeout covers collection and both delivery paths", () => {
+  const timeout = findScheduleById(
+    "protobufjs-v8-watch-weekly",
+  ).workflowExecutionTimeout;
+  expect(timeout).toBe("25 minutes");
+  if (timeout === undefined) {
+    throw new Error("protobufjs-v8-watch-weekly lacks a timeout");
+  }
+  expect(durationToMs(timeout)).toBeGreaterThan(15 * ONE_MINUTE);
+});
+
 test.each([
   ["readme-refresh-weekly", "75 minutes", 55],
   ["scout-season-refresh-weekly", "90 minutes", 78],

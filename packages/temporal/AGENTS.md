@@ -312,7 +312,16 @@ absent from every pod-exec RoleBinding; provider subprocesses therefore cannot
 exec into TaskNotes or deterministic maintenance targets even if they disregard
 the report-only prompt. Its deployment env is also explicit: provider auth,
 basic runtime/TLS settings, and non-secret Prometheus/alert-dashboard endpoints
-only. Generic agent clones of this public repository are unauthenticated, and
+only. The Temporal poller runs as root with every capability dropped except
+`SETUID`; `setpriv` launches provider commands as uid 1001 with no retained
+capabilities. A `NET_ADMIN` init container
+installs owner-matched pod firewall rules rejecting uid-1001 traffic to Temporal
+gRPC (`7233`), the UI (`8080`), and both Tailscale ingress addresses on `443`.
+This pod-local rule is the current enforcement
+layer because the homelab uses Flannel without a NetworkPolicy controller; the
+separate agent `NetworkPolicy` records the intended boundary for a future
+policy-capable CNI but is not treated as current enforcement. Generic agent
+clones of this public repository are unauthenticated, and
 new agent email delivery activities execute on `TASK_QUEUES.DEFAULT`. Replayed
 histories preserve their original agent-queue activity command for Temporal
 determinism; that credential-free compatibility activity delegates a fixed
