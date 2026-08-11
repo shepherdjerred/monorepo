@@ -367,12 +367,23 @@ async function collectPrometheusEvidence(
   }
 
   const end = new Date();
-  const url = new URL(
+  const url = URL.parse(
     collector.windowSeconds === undefined
       ? "/api/v1/query"
       : "/api/v1/query_range",
     baseUrl,
   );
+  if (url === null) {
+    return {
+      id,
+      source: `prometheus:${collector.id}`,
+      origin: "declared-collector",
+      observedAt,
+      status: "failure",
+      excerpt:
+        "PROMETHEUS_URL is not a parseable absolute URL for the collector.",
+    };
+  }
   url.searchParams.set("query", collector.query);
   if (collector.windowSeconds !== undefined) {
     url.searchParams.set(

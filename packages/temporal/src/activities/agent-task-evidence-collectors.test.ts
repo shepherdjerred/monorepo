@@ -428,6 +428,56 @@ describe("declared Prometheus evidence", () => {
   });
 });
 
+describe("Prometheus collector configuration", () => {
+  test("reports a malformed PROMETHEUS_URL as a failure receipt", async () => {
+    const input = AgentTaskInputV2Schema.parse({
+      contractVersion: 2,
+      title: "Collect metrics",
+      prompt: "Interpret the metrics.",
+      checks: [
+        {
+          id: "metrics",
+          label: "Metrics",
+          required: true,
+          evidenceRequirement: "A successful Prometheus query.",
+          evidenceCollectors: [
+            {
+              id: "worker-up",
+              kind: "prometheus",
+              query: "up",
+              expectation: {
+                kind: "numeric",
+                operator: "eq",
+                threshold: 1,
+                quantifier: "all",
+              },
+            },
+          ],
+        },
+      ],
+      provider: "claude",
+      mode: "report-only",
+      repo: { fullName: "shepherdjerred/monorepo" },
+    });
+
+    const receipts = await collectDeclaredAgentTaskEvidence(input, "/tmp", {
+      fetch: (): never => {
+        throw new Error("fetch must not run for an unparseable base URL");
+      },
+      environment: { PROMETHEUS_URL: "prometheus.example.test:9090" },
+    });
+
+    expect(receipts[0]).toMatchObject({
+      id: "collector:metrics:worker-up",
+      origin: "declared-collector",
+      status: "failure",
+    });
+    expect(receipts[0]?.excerpt).toContain(
+      "PROMETHEUS_URL is not a parseable absolute URL",
+    );
+  });
+});
+
 describe("declared receipt precedence", () => {
   test("replaces a provider-spoofed collector id with the independent receipt", () => {
     const id = "collector:service-health:service-command";

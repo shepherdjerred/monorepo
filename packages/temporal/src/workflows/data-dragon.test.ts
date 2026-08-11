@@ -4,6 +4,7 @@ import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
 import type {
   DataDragonUpdateInput,
+  DataDragonUpdateResult,
   DataDragonVersionState,
 } from "#activities/data-dragon.ts";
 import type { LanePriorUpdateConfig } from "#activities/data-dragon-lane-priors.ts";
@@ -112,6 +113,56 @@ describe("runScoutDataDragonWeeklyRefresh terminal-failure recording", () => {
       throw new TypeError("Expected workflow execution to fail");
     }
     expect(failure.cause).toBeInstanceOf(ActivityFailure);
+  }, 30_000);
+
+  test("does not record an updater failure when only report delivery fails", async () => {
+    const recorded: RecordFailureInput[] = [];
+    const worker = await Worker.create({
+      connection: testEnvironment.nativeConnection,
+      taskQueue: TASK_QUEUE,
+      workflowsPath: new URL("index.ts", import.meta.url).pathname,
+      activities: {
+        getDataDragonVersionState: (): DataDragonVersionState => VERSION_STATE,
+        updateDataDragon: (
+          input: DataDragonUpdateInput,
+        ): DataDragonUpdateResult => ({
+          ...input,
+          changedFiles: ["packages/scout-for-lol/data/version.json"],
+          branchName: "chore/data-dragon-16.15.1",
+          commitHash: "abc1234",
+          prUrl: "https://github.com/shepherdjerred/monorepo/pull/1",
+          outcome: "success",
+          reason: "pr-created",
+        }),
+        recordDataDragonFailure: (input: RecordFailureInput): void => {
+          recorded.push(input);
+        },
+        deliverActivityReport: (_input: unknown): never => {
+          throw new Error("report delivery unavailable");
+        },
+      },
+    });
+
+    let failure: unknown;
+    try {
+      await worker.runUntil(
+        testEnvironment.client.workflow.execute(
+          runScoutDataDragonWeeklyRefresh,
+          {
+            args: [{ lanePriors: LANE_PRIORS }],
+            taskQueue: TASK_QUEUE,
+            workflowId: `scout-data-dragon-delivery-${crypto.randomUUID()}`,
+          },
+        ),
+      );
+    } catch (error: unknown) {
+      failure = error;
+    }
+
+    // The updater succeeded; only delivery failed. Recording a failure here
+    // would emit outcome="failed" and fire ScoutDataDragonUpdateFailed.
+    expect(recorded).toEqual([]);
+    expect(failure).toBeInstanceOf(Error);
   }, 30_000);
 
   test("labels a message-less kill (OOM/timeout) as exception", async () => {

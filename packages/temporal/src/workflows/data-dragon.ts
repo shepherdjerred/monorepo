@@ -309,6 +309,12 @@ export async function runScoutDataDragonUpdate(
 ): Promise<DataDragonUpdateResult | undefined> {
   const startedAt = new Date().toISOString();
   let state: DataDragonVersionState | undefined;
+  let result: DataDragonUpdateResult | undefined;
+  let report: ActivityReportInput;
+  // Only collection and the update itself belong in this catch. Report
+  // delivery runs after it, so a Postal/S3 outage cannot record a
+  // `scout_data_dragon_runs{outcome="failed"}` sample (and fire
+  // ScoutDataDragonUpdateFailed) for a run whose updater actually succeeded.
   try {
     state = await getDataDragonVersionState();
     if (mode === "version-check" && !state.updateRequired) {
@@ -317,25 +323,15 @@ export async function runScoutDataDragonUpdate(
         mode,
         reason: "version-current",
       });
-      if (patched("data-dragon-report-envelope-v1")) {
-        await deliverActivityReport(
-          dataDragonReport(startedAt, mode, state, undefined),
-        );
-      }
-      return undefined;
+      report = dataDragonReport(startedAt, mode, state, undefined);
+    } else {
+      result = await updateDataDragon({
+        ...state,
+        mode,
+        lanePriors: input.lanePriors,
+      });
+      report = dataDragonReport(startedAt, mode, state, result);
     }
-
-    const result = await updateDataDragon({
-      ...state,
-      mode,
-      lanePriors: input.lanePriors,
-    });
-    if (patched("data-dragon-report-envelope-v1")) {
-      await deliverActivityReport(
-        dataDragonReport(startedAt, mode, state, result),
-      );
-    }
-    return result;
   } catch (error) {
     if (
       state !== undefined &&
@@ -352,4 +348,9 @@ export async function runScoutDataDragonUpdate(
     }
     throw error;
   }
+
+  if (patched("data-dragon-report-envelope-v1")) {
+    await deliverActivityReport(report);
+  }
+  return result;
 }
