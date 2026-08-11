@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   parseVersionCatalogText,
+  serializeVersionCatalog,
   type VersionCatalog,
 } from "../../packages/homelab/src/cdk8s/src/version-catalog.ts";
 
@@ -214,5 +215,5 @@ export function rewriteVersionCatalogSource(
       );
     }
   }
-  return `${JSON.stringify(rewritten, null, 2)}\n`;
+  return serializeVersionCatalog(rewritten);
 }

@@ -62,6 +62,59 @@ export type TasknotesCanaryResult = {
 
 type Store = { client: S3Client; bucket: string; prefix: string };
 
+function canAdvanceTasknotesBaseline(
+  state: z.infer<typeof ReportStateV1Schema>,
+): boolean {
+  const report = state.report;
+  if (report.execution === "complete" && report.verdict === "clear") {
+    return true;
+  }
+  const taskCount = report.checks.find((check) => check.id === "task-count");
+  const otherRequiredChecksPassed = report.checks
+    .filter((check) => check.id !== "task-count" && check.required)
+    .every((check) => check.status === "passed");
+  return (
+    report.execution === "partial" &&
+    report.verdict === "inconclusive" &&
+    taskCount?.required === true &&
+    taskCount.status === "skipped" &&
+    otherRequiredChecksPassed &&
+    report.findings.length === 0
+  );
+}
+
+export function tasknotesBaselineFromReportState(
+  state: z.infer<typeof ReportStateV1Schema>,
+): TasknotesBaseline | undefined {
+  if (state.delivery.status !== "accepted") return undefined;
+  if (
+    state.report.reportType !== "tasknotes-canary" ||
+    state.report.scheduleId !== "tasknotes-skipped-files-canary"
+  ) {
+    throw new Error(
+      `TaskNotes baseline prefix contains report ${state.report.reportRunId} with the wrong identity`,
+    );
+  }
+  if (!canAdvanceTasknotesBaseline(state)) return undefined;
+  const engineEvidence = state.report.evidence.find(
+    (evidence) => evidence.id === "engine-status",
+  );
+  if (engineEvidence?.excerpt === undefined) {
+    throw new Error(
+      `Baseline-eligible TaskNotes report ${state.report.reportRunId} lacks engine-status evidence`,
+    );
+  }
+  const tasks = BaselineEvidenceSchema.parse(
+    JSON.parse(engineEvidence.excerpt),
+  ).tasks;
+  return BaselineSchema.parse({
+    schemaVersion: 1,
+    tasks,
+    acceptedAt: state.delivery.receipt.acceptedAt,
+    reportRunId: state.report.reportRunId,
+  });
+}
+
 function requiredEnv(name: string): string {
   const value = Bun.env[name];
   if (value === undefined || value === "")
@@ -136,25 +189,10 @@ async function readBaseline(store: Store): Promise<{
       }
       const raw = await response.Body.transformToString();
       const state = ReportStateV1Schema.parse(JSON.parse(raw));
-      if (state.delivery.status !== "accepted") continue;
-      const engineEvidence = state.report.evidence.find(
-        (evidence) => evidence.id === "engine-status",
-      );
-      if (engineEvidence?.excerpt === undefined) {
-        throw new Error(
-          `Accepted TaskNotes report ${object.key} lacks engine-status evidence`,
-        );
-      }
-      const tasks = BaselineEvidenceSchema.parse(
-        JSON.parse(engineEvidence.excerpt),
-      ).tasks;
+      const value = tasknotesBaselineFromReportState(state);
+      if (value === undefined) continue;
       return {
-        value: BaselineSchema.parse({
-          schemaVersion: 1,
-          tasks,
-          acceptedAt: state.delivery.receipt.acceptedAt,
-          reportRunId: state.report.reportRunId,
-        }),
+        value,
         raw,
       };
     }

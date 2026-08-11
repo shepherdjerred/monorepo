@@ -44,6 +44,12 @@ describe("direct maintenance schedules", () => {
   );
 });
 
+test("dependency summary timeout covers every retried report phase", () => {
+  expect(findScheduleById("deps-summary-weekly").workflowExecutionTimeout).toBe(
+    "3 hours",
+  );
+});
+
 function configuredEnvironment(
   schedule: ReturnType<typeof findScheduleById>,
 ): Record<string, string> {

@@ -39,7 +39,9 @@ function catalogSource(entries: { name: string; value: string }[]): string {
         ? "internal-image"
         : "upstream",
       artifactType: entry.value.includes("@sha256:") ? "image" : "source",
-      management: { managed: false },
+      management: entry.name.startsWith("shepherdjerred/")
+        ? { managed: true, datasource: "docker", versioning: "docker" }
+        : { managed: false },
       value: entry.value,
     })),
   });
@@ -204,6 +206,12 @@ describe("version catalog integrity", () => {
     );
     const rewritten = rewriteVersionCatalogSource(source, state);
     expect(rewritten).toContain(`"value": "v12@${B}"`);
+    const entryStart = rewritten.indexOf(`"name": "${KEY}"`);
+    const management = rewritten.indexOf('"management":', entryStart);
+    const value = rewritten.indexOf(`"value": "v12@${B}"`, entryStart);
+    expect(entryStart).toBeGreaterThanOrEqual(0);
+    expect(management).toBeGreaterThan(entryStart);
+    expect(value).toBeGreaterThan(management);
     validateStateAgainstVersions(state, parseVersionCatalogSource(rewritten));
     expect(serializePinCandidatesState(state)).toEndWith("\n");
   });

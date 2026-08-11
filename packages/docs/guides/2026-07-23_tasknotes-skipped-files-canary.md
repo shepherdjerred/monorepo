@@ -35,9 +35,13 @@ schedule, `touch` to nudge the watcher, verify task count + 200s).
 The source-defined `tasknotes-skipped-files-canary` schedule runs daily at
 09:00 PT. Its deterministic workflow checks the typed engine-status response,
 TaskNotes pod readiness, every skipped-file path/reason, and the task-count
-change from the last accepted report. The baseline advances only after Postal
-accepts the report. A missing baseline makes the first report partial; a drop
-greater than 20%, any skipped file, or any unhealthy pod is attention-worthy.
+change from the last healthy accepted report. Postal acceptance is necessary
+but not sufficient: the first successful partial report may bootstrap the
+baseline, then only complete clear reports may advance it. Attention, failed,
+and other partial reports are ignored, so an unresolved count drop cannot
+ratchet itself into a new healthy baseline. A missing baseline makes the first
+report partial; a drop greater than 20%, any skipped file, or any unhealthy pod
+is attention-worthy.
 
 The schedule remains active after healthy runs. A human may pause it in the
 Temporal UI, but the workflow never pauses or cancels itself.

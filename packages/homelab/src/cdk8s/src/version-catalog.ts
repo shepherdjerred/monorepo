@@ -67,6 +67,47 @@ export function parseVersionCatalogText(text: string): VersionCatalog {
   return parseVersionCatalog(raw);
 }
 
+function canonicalManagement(management: VersionCatalogEntry["management"]) {
+  if (!management.managed) {
+    return { managed: false };
+  }
+  return {
+    managed: true,
+    datasource: management.datasource,
+    ...(management.registryUrl === undefined
+      ? {}
+      : { registryUrl: management.registryUrl }),
+    versioning: management.versioning,
+    ...(management.packageName === undefined
+      ? {}
+      : { packageName: management.packageName }),
+  };
+}
+
+/**
+ * Serialize the catalog in the field order consumed by Renovate's regex
+ * manager. Zod parsing intentionally normalizes values, so writers must not
+ * rely on the parsed object's insertion order.
+ */
+export function serializeVersionCatalog(catalog: VersionCatalog): string {
+  const canonical = {
+    $schema: catalog.$schema,
+    schemaVersion: catalog.schemaVersion,
+    entries: catalog.entries.map((entry) => ({
+      name: entry.name,
+      category: entry.category,
+      artifactType: entry.artifactType,
+      management: canonicalManagement(entry.management),
+      value: entry.value,
+      ...(entry.notes === undefined ? {} : { notes: entry.notes }),
+      ...(entry.releaseNotesOverride === undefined
+        ? {}
+        : { releaseNotesOverride: entry.releaseNotesOverride }),
+    })),
+  };
+  return `${JSON.stringify(canonical, null, 2)}\n`;
+}
+
 export function versionMap(catalog: VersionCatalog): VersionMap {
   return VersionMapSchema.parse(
     Object.fromEntries(

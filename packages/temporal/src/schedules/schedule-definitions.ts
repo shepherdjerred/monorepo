@@ -109,7 +109,10 @@ export const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "0 9 * * 1",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "30 minutes",
+    // Three sequential 10-minute activities can each use three attempts;
+    // delivery and checkpoint persistence also retry. Keep enough headroom for
+    // the complete retry budget so a valid report is not killed before receipt.
+    workflowExecutionTimeout: "3 hours",
     memo: "Weekly dependency summary email",
   },
   {
