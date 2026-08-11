@@ -11,6 +11,30 @@ export type SeasonEvidenceAssessment = {
   reason: string | undefined;
 };
 
+function seasonSourceFamily(url: string): "riot" | "wiki" | undefined {
+  const host = new URL(url).hostname;
+  if (host === "wiki.leagueoflegends.com") {
+    return "wiki";
+  }
+  if (
+    [
+      "www.leagueoflegends.com",
+      "leagueoflegends.com",
+      "support-leagueoflegends.riotgames.com",
+    ].includes(host)
+  ) {
+    return "riot";
+  }
+  return undefined;
+}
+
+export function hasIndependentSeasonSources(urls: string[]): boolean {
+  const families = urls
+    .map((url) => seasonSourceFamily(url))
+    .filter((family) => family !== undefined);
+  return new Set(families).size >= 2;
+}
+
 function seasonSourceUrls(text: string): string[] {
   const matches = text.matchAll(/https:\/\/[^\s)>]+/g);
   return [
@@ -55,7 +79,7 @@ export async function assessSeasonEvidence(input: {
   await runCommand(["bun", "test", "src/seasons.test.ts"], {
     cwd: `${input.repoDir}/packages/scout-for-lol/packages/data`,
   });
-  const sourceEvidenceComplete = fetched.length >= 2;
+  const sourceEvidenceComplete = hasIndependentSeasonSources(fetched);
   return {
     sourceUrls: fetched,
     sourceEvidenceComplete,
@@ -64,7 +88,7 @@ export async function assessSeasonEvidence(input: {
     reason: sentinelAgreement
       ? sourceEvidenceComplete
         ? undefined
-        : "fewer than two cited season sources were fetched successfully"
+        : "independent Riot and wiki season sources were not both fetched successfully"
       : "source sentinel and deterministic diff disagree",
   };
 }

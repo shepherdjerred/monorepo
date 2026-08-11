@@ -1,4 +1,5 @@
 import { z } from "zod/v4";
+import { intersects } from "semver";
 
 const ProtobufPackageSchema = z.object({
   name: z.literal("@temporalio/proto"),
@@ -16,6 +17,11 @@ export type ProtobufWatchResult = {
 };
 
 const SOURCE_URL = "https://registry.npmjs.org/@temporalio/proto/latest";
+const PROTOBUF_V8_RANGE = ">=8.0.0 <9.0.0";
+
+export function rangeSupportsProtobufV8(range: string): boolean {
+  return intersects(range, PROTOBUF_V8_RANGE);
+}
 
 export async function collectProtobufWatch(): Promise<ProtobufWatchResult> {
   const response = await fetch(SOURCE_URL, {
@@ -32,7 +38,7 @@ export async function collectProtobufWatch(): Promise<ProtobufWatchResult> {
     observedAt: new Date().toISOString(),
     packageVersion: metadata.version,
     protobufjsRange: metadata.dependencies.protobufjs,
-    supportsV8: Bun.semver.satisfies("8.0.0", metadata.dependencies.protobufjs),
+    supportsV8: rangeSupportsProtobufV8(metadata.dependencies.protobufjs),
     sourceUrl: SOURCE_URL,
     evidenceJson: JSON.stringify(metadata),
   };
