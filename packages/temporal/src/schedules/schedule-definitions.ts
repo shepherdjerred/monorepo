@@ -247,7 +247,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     workflowType: "runScoutQueueWindowsWatch",
     args: [],
     // 06:45 PT — staggered after the 06:00 data-dragon version check. Scans
-    // the scout-prod match lake (21-day lookback) for limited-queue window
+    // the scout-prod match lake (28-day lookback) for limited-queue window
     // drift; opens an auto-merging PR for window opens/reopens, a plain PR
     // for closes (a human confirms against patch notes), and emails
     // warnings-only runs. Steady state is a silent no-diff.

@@ -7,7 +7,7 @@ import type {
 const { refreshScoutQueueWindows } =
   proxyActivities<ScoutQueueWindowsActivities>({
     // Clones the monorepo, does the root + scout workspace installs, scans
-    // the scout-prod match lake for the 21-day lookback, and opens a PR on
+    // the scout-prod match lake for the 28-day lookback, and opens a PR on
     // window drift (auto-merge for open/reopen edits only). Heartbeats fire
     // every 10s in the activity, so worker death surfaces in <60s. 30 min
     // leaves room for a retry inside the 45-min workflowExecutionTimeout.
