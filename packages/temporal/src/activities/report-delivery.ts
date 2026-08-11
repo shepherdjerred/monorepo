@@ -13,7 +13,13 @@ import {
 } from "#observability/metrics-report.ts";
 import { resolvePostalAddresses, sendPostalEmail } from "#shared/postal.ts";
 import type { PostalSendInput, PostalSendResult } from "#shared/postal.ts";
-import { REPORT_SEND_CLAIM_TAKEOVER_MS } from "#shared/report-delivery-policy.ts";
+import {
+  claimReportSend,
+  reportSendClaimKey,
+  reportSendRemainingMs,
+  ReportSendClaimV1Schema,
+  type ReportSendClaimBackend,
+} from "./report-delivery-lease.ts";
 import {
   renderReportHtml,
   renderReportText,
@@ -66,15 +72,6 @@ export const ReportStateV1Schema = z.object({
 
 export type ReportStateV1 = z.infer<typeof ReportStateV1Schema>;
 
-export const ReportSendClaimV1Schema = z.object({
-  schemaVersion: z.literal(1),
-  reportRunId: z.string().min(1),
-  owner: z.string().min(1),
-  claimedAt: z.iso.datetime({ offset: true }),
-});
-
-export type ReportSendClaimV1 = z.infer<typeof ReportSendClaimV1Schema>;
-
 export type ReportDeliveryBackend = {
   readReceipt: (key: string) => Promise<ReportDeliveryReceiptV1 | undefined>;
   writeReceipt: (
@@ -83,20 +80,7 @@ export type ReportDeliveryBackend = {
   ) => Promise<void>;
   readState: (key: string) => Promise<ReportStateV1 | undefined>;
   writeState: (key: string, state: ReportStateV1) => Promise<void>;
-  readSendClaim: (
-    key: string,
-  ) => Promise<{ claim: ReportSendClaimV1; etag: string } | undefined>;
-  /**
-   * Conditional write. `expectedEtag` undefined means "only if absent".
-   * Returns false when the precondition failed, i.e. another attempt owns the
-   * send — never throws for contention.
-   */
-  writeSendClaim: (
-    key: string,
-    claim: ReportSendClaimV1,
-    expectedEtag: string | undefined,
-  ) => Promise<boolean>;
-};
+} & ReportSendClaimBackend;
 
 export type ReportDeliveryDependencies = {
   backend: ReportDeliveryBackend;
@@ -105,6 +89,12 @@ export type ReportDeliveryDependencies = {
   now: () => string;
   /** Identity of this delivery attempt; holder of the send lease. */
   owner: string;
+  /**
+   * Start of this activity attempt, captured before any I/O. The send lease is
+   * both stamped and aged against this clock so slow pre-claim reads cannot
+   * backdate a lease relative to the attempt that holds it.
+   */
+  attemptStartedAt: string;
   receiptPrefix?: string;
   statePrefix?: string;
 };
@@ -180,10 +170,6 @@ export function reportStateKey(
 ): string {
   const schedule = report.scheduleId ?? "manual";
   return `${prefix}/${safeKeyPart(report.reportType)}/${safeKeyPart(schedule)}/${safeKeyPart(report.reportRunId)}.json`;
-}
-
-export function reportSendClaimKey(stateKey: string): string {
-  return `${stateKey.replace(/\.json$/, "")}.send-claim.json`;
 }
 
 function isMissingObject(error: unknown): boolean {
@@ -339,6 +325,9 @@ export function createActivityReportEnvelope(
 export async function deliverReport(
   rawReport: ReportEnvelopeV1,
 ): Promise<ReportDeliveryResult> {
+  // Captured before any I/O so it is the attempt's own start, which is the
+  // single clock the send lease is stamped and aged against.
+  const attemptStartedAt = new Date().toISOString();
   const report = ReportEnvelopeV1Schema.parse(rawReport);
   const store = reportReceiptStore();
   const info = Context.current().info;
@@ -354,40 +343,10 @@ export async function deliverReport(
     // Per-attempt, so a retry never mistakes a previous attempt's lease for its
     // own and every takeover is attributable.
     owner: `${execution.workflowId}/${execution.runId}/${info.activityId}/${String(info.attempt)}`,
+    attemptStartedAt,
     receiptPrefix: store.prefix,
     statePrefix: Bun.env["REPORT_STATE_PREFIX"] ?? "reports/state",
   });
-}
-
-/**
- * Take exclusive ownership of this report's Postal send. Resolves false when a
- * different attempt holds a lease that has not yet expired.
- */
-async function claimSend(
-  report: ReportEnvelopeV1,
-  stateKey: string,
-  dependencies: ReportDeliveryDependencies,
-): Promise<boolean> {
-  const claimKey = reportSendClaimKey(stateKey);
-  const claimedAt = dependencies.now();
-  const claim = ReportSendClaimV1Schema.parse({
-    schemaVersion: 1,
-    reportRunId: report.reportRunId,
-    owner: dependencies.owner,
-    claimedAt,
-  });
-  const held = await dependencies.backend.readSendClaim(claimKey);
-  if (held === undefined) {
-    return dependencies.backend.writeSendClaim(claimKey, claim, undefined);
-  }
-  if (held.claim.owner === dependencies.owner) {
-    return true;
-  }
-  const heldFor = Date.parse(claimedAt) - Date.parse(held.claim.claimedAt);
-  if (heldFor < REPORT_SEND_CLAIM_TAKEOVER_MS) {
-    return false;
-  }
-  return dependencies.backend.writeSendClaim(claimKey, claim, held.etag);
 }
 
 export async function deliverReportWithDependencies(
@@ -425,7 +384,13 @@ export async function deliverReportWithDependencies(
   // resend; treating it as "sent" would silently drop a report whose owner died
   // before sending. Take exclusive ownership of the send instead, with a lease
   // longer than any attempt Temporal will still accept a completion from.
-  const owned = await claimSend(report, stateKey, dependencies);
+  const owned = await claimReportSend({
+    backend: dependencies.backend,
+    claimKey: reportSendClaimKey(stateKey),
+    reportRunId: report.reportRunId,
+    owner: dependencies.owner,
+    attemptStartedAt: dependencies.attemptStartedAt,
+  });
   if (!owned) {
     reportDeliveryTotal.inc({ ...metricLabels(report), outcome: "contended" });
     throw new Error(
@@ -446,6 +411,20 @@ export async function deliverReportWithDependencies(
 
   const { recipient, sender } = dependencies.addresses;
   const subject = reportSubject(report);
+  // The lease may be taken over REPORT_SEND_CLAIM_TAKEOVER_MS after this
+  // attempt started, so the request must be abandoned before then. Temporal's
+  // start-to-close abandons the attempt's *result* but never aborts an
+  // in-flight fetch, so without this a replaced owner could still deliver a
+  // second copy of the report after the takeover sent the first.
+  const sendRemainingMs = reportSendRemainingMs(
+    dependencies.attemptStartedAt,
+    dependencies.now(),
+  );
+  if (sendRemainingMs <= 0) {
+    throw new Error(
+      `Report ${report.reportRunId} reached its send deadline before dispatching; a later attempt owns the send`,
+    );
+  }
   try {
     await dependencies.backend.writeState(
       stateKey,
@@ -471,6 +450,7 @@ export async function deliverReportWithDependencies(
           : { "X-Report-Schedule-ID": report.scheduleId }),
       },
       tag: report.reportType,
+      signal: AbortSignal.timeout(sendRemainingMs),
     });
     const receipt = ReportDeliveryReceiptV1Schema.parse({
       schemaVersion: 1,

@@ -1,17 +1,22 @@
 import { describe, expect, test } from "bun:test";
 import type { PostalSendInput } from "#shared/postal.ts";
 import type { ReportEnvelopeV1 } from "#shared/report.ts";
-import { REPORT_SEND_CLAIM_TAKEOVER_MS } from "#shared/report-delivery-policy.ts";
+import {
+  REPORT_SEND_CLAIM_TAKEOVER_MS,
+  REPORT_SEND_DEADLINE_MS,
+} from "#shared/report-delivery-policy.ts";
 import {
   activityReportRunId,
   deliverReportWithDependencies,
   type ReportDeliveryBackend,
   type ReportDeliveryReceiptV1,
-  reportSendClaimKey,
   reportStateKey,
-  type ReportSendClaimV1,
   type ReportStateV1,
 } from "./report-delivery.ts";
+import {
+  reportSendClaimKey,
+  type ReportSendClaimV1,
+} from "./report-delivery-lease.ts";
 
 const NOW = "2026-08-10T18:01:00.000Z";
 
@@ -136,6 +141,7 @@ describe("report delivery", () => {
       },
       now: () => NOW,
       owner: "workflow/run-1/activity-1/1",
+      attemptStartedAt: NOW,
     };
 
     await expect(
@@ -176,7 +182,8 @@ function scenario(claims: Map<string, StoredClaim>) {
   return {
     sent,
     states,
-    dependencies: (owner: string, now: string) => ({
+    claims,
+    dependencies: (owner: string, now: string, attemptStartedAt = now) => ({
       backend,
       addresses: {
         recipient: "recipient@example.com",
@@ -193,6 +200,7 @@ function scenario(claims: Map<string, StoredClaim>) {
       },
       now: () => now,
       owner,
+      attemptStartedAt,
     }),
   };
 }
@@ -251,6 +259,39 @@ describe("report send ownership", () => {
     expect(sent).toHaveLength(1);
     expect(result.deduplicated).toBe(false);
     expect([...states.values()][0]?.delivery.status).toBe("accepted");
+  });
+
+  test("stamps the lease with the attempt start, not the claim write time", async () => {
+    // Slow pre-claim reads must not backdate the lease relative to the attempt
+    // holding it, or a retry sees a dead owner's lease as unexpired.
+    const { claims, dependencies } = scenario(new Map<string, StoredClaim>());
+    const slowWriteAt = new Date(Date.parse(NOW) + 90_000).toISOString();
+
+    await deliverReportWithDependencies(
+      report(),
+      dependencies("workflow/run-1/activity-1/1", slowWriteAt, NOW),
+    );
+
+    const stored = claims.get(reportSendClaimKey(reportStateKey(report())));
+    expect(stored?.claim.claimedAt).toBe(NOW);
+  });
+
+  test("refuses to send once the attempt outlived its send deadline", async () => {
+    // Past the deadline the lease is takeable, so this attempt must not put a
+    // second copy of the report on the wire.
+    const { sent, dependencies } = scenario(new Map<string, StoredClaim>());
+    const pastDeadline = new Date(
+      Date.parse(NOW) + REPORT_SEND_DEADLINE_MS,
+    ).toISOString();
+
+    await expect(
+      deliverReportWithDependencies(
+        report(),
+        dependencies("workflow/run-1/activity-1/1", pastDeadline, NOW),
+      ),
+    ).rejects.toThrow("reached its send deadline");
+
+    expect(sent).toEqual([]);
   });
 
   test("resumes its own lease after a retry of the same attempt identity", async () => {

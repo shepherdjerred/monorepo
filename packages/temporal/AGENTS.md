@@ -349,11 +349,37 @@ report whose owner died first. `deliverReportWithDependencies` therefore takes
 an exclusive lease on the send — a conditional S3 write
 (`If-None-Match`/`If-Match`) of a per-report claim object keyed off the state
 key. A contending attempt never calls `send`; it fails so Temporal retries and
-finds the owner's receipt. A lease older than
-`REPORT_SEND_CLAIM_TAKEOVER_MS` is takeable, which is what guarantees a dead
-owner cannot strand the report. Keep that bound strictly greater than the
-delivery activity's start-to-close timeout, or a takeover can race a live
-owner.
+finds the owner's receipt. A lease older than `REPORT_SEND_CLAIM_TAKEOVER_MS`
+is takeable, which is what stops a dead owner stranding the report.
+
+Three constants in `src/shared/report-delivery-policy.ts` have to stay in
+relation, and two of them are easy to break by adjusting an unrelated timeout:
+
+- `REPORT_SEND_CLAIM_TAKEOVER_MS` must exceed the activity's start-to-close, or
+  a takeover races an attempt Temporal would still accept a completion from.
+- It must also exceed `REPORT_SEND_DEADLINE_MS`. Start-to-close abandons an
+  attempt's _result_ but never aborts its in-flight `fetch`, so the send carries
+  its own abort deadline; without that, a replaced owner's request could still
+  land after the takeover already sent, turning a lost report into a duplicate.
+- The first retry must start at or after the takeover bound
+  (`REPORT_SEND_CLAIM_FIRST_RETRY_AT_MS`). Otherwise every remaining attempt
+  lands inside the lease, throws on contention, and exhausts the budget — the
+  stranded-report failure the lease exists to prevent.
+
+`reportDeliverySendLeaseBounds()` states both margins positively and is
+asserted in `agent-task-report-delivery.test.ts`.
+
+The lease is stamped and aged on ONE clock: the start of the activity attempt
+holding it, captured before any I/O and passed as `attemptStartedAt`. Do not
+switch either end to wall-clock now — timestamping at claim-write time lets
+slow pre-claim reads backdate a lease relative to its attempt, so a retry sees
+a dead owner's lease as unexpired and the report strands again, this time
+triggered by slow storage rather than short retries.
+
+Postal has no idempotency key, so one residual duplicate window remains and is
+accepted deliberately: Postal accepts a message but its response never reaches
+the owner, leaving no receipt for the successor to find. Closing that needs
+provider-side idempotency, not a longer lease.
 
 ## Scheduled PR-creating workflows
 

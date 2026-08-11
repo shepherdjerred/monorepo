@@ -3,17 +3,18 @@ const MINUTE_MS = 60 * SECOND_MS;
 
 export const REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS = 2 * MINUTE_MS;
 
-// `initialInterval` is deliberately a full minute rather than a few seconds:
-// the send lease below can only be taken over once it has outlived an
-// abandoned owner, and the first retry is what has to reach that age. A
-// shorter first delay makes every remaining attempt land inside the lease,
-// throw on contention, and exhaust the budget — losing the report entirely.
-// `reportDeliveryRetrySchedule` plus its unit test hold that relationship.
+// `initialInterval` is deliberately long rather than a few seconds: the send
+// lease below can only be taken over once it has outlived an abandoned owner,
+// and the first retry is what has to reach that age. A shorter first delay
+// makes every remaining attempt land inside the lease, throw on contention,
+// and exhaust the budget — losing the report entirely, which is the failure
+// the lease exists to prevent. `reportDeliverySendLeaseBounds` and its unit
+// test hold that relationship.
 export const REPORT_DELIVERY_ACTIVITY_RETRY = {
   maximumAttempts: 3,
-  initialInterval: MINUTE_MS,
+  initialInterval: 90 * SECOND_MS,
   backoffCoefficient: 2,
-  maximumInterval: MINUTE_MS,
+  maximumInterval: 2 * MINUTE_MS,
 } as const;
 
 /**
@@ -32,22 +33,52 @@ export function reportDeliveryRetrySchedule(): number[] {
   );
 }
 
-// A delivery attempt owns the Postal send for one start-to-close window. Past
-// that, Temporal has abandoned it and may dispatch another, so the lease must
-// outlive the window or a takeover could race an owner Temporal would still
-// accept a completion from. It must not outlive it by more than the retry
-// schedule can wait out, or a dead owner suppresses the report forever.
+// The lease is timestamped and aged against ONE clock: the start of the
+// activity attempt that holds it, captured before any I/O. Timestamping at
+// claim-write time instead would let slow pre-claim reads backdate the lease
+// relative to the attempt, so a retry could see a lease as unexpired long
+// after its owner died — the stranded-report failure again, just triggered by
+// slow storage rather than by short retries.
+
+// An attempt must not still be talking to Postal when someone else may take
+// its lease, so the send is abandoned this long after the attempt started.
+// Measured from attempt start rather than from the call, because slow
+// pre-send work would otherwise push the deadline past the takeover point.
+export const REPORT_SEND_DEADLINE_MS =
+  REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS;
+
+// A lease older than this may be taken over. It must exceed both bounds
+// above: start-to-close, so a takeover cannot race an attempt Temporal would
+// still accept a completion from, and the send deadline, so no request from
+// the previous owner can still be in flight.
 export const REPORT_SEND_CLAIM_TAKEOVER_MS =
   REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS + MINUTE_MS;
 
 /**
- * When the first attempt holds the lease until Temporal abandons it, this is
- * when the second attempt starts. It must be at or after
- * `REPORT_SEND_CLAIM_TAKEOVER_MS` for the takeover path to be reachable.
+ * When the first attempt claims the lease and then hangs until Temporal
+ * abandons it, this is when the next attempt starts — and therefore the age
+ * the lease has reached by the time anyone can next evaluate it.
  */
 export const REPORT_SEND_CLAIM_FIRST_RETRY_AT_MS =
   REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS +
   (reportDeliveryRetrySchedule()[0] ?? 0);
+
+/**
+ * The bounds a reviewer actually has to check, in one place. `safeBy` is the
+ * margin by which a takeover trails the previous owner's last possible
+ * outbound request; `reachableBy` is the margin by which the first retry
+ * outlives the lease. Both must stay positive.
+ */
+export function reportDeliverySendLeaseBounds(): {
+  safeBy: number;
+  reachableBy: number;
+} {
+  return {
+    safeBy: REPORT_SEND_CLAIM_TAKEOVER_MS - REPORT_SEND_DEADLINE_MS,
+    reachableBy:
+      REPORT_SEND_CLAIM_FIRST_RETRY_AT_MS - REPORT_SEND_CLAIM_TAKEOVER_MS,
+  };
+}
 
 // Every attempt running its full window, plus the real (capped) delays between
 // them.

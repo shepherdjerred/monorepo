@@ -29,6 +29,9 @@ the coordinated rollout.
 - [ ] Schedule all three report-only tasks for the actual deployment window.
 - [ ] Confirm the deployment, 24-hour, and seven-day reports contain evidence
       for every acceptance gate.
+- [ ] Collect the two privileged checks tracked in
+      `packages/docs/todos/homelab-capacity-operator-evidence.md`; the agent
+      worker cannot gather them.
 - [ ] Move this TODO to `awaiting-human` only after those reports are complete.
 
 ## Scheduled evidence
@@ -119,19 +122,11 @@ accept or reject the rollout:
 - Disk-I/O p99 stayed at or below 70%.
 - SSD write/health alerts did not regress.
 - AMD Tctl did not stay above 95 degrees Celsius for five minutes.
-- The Grafana audit reports zero invalid dashboard queries.
-- `zpool status -x` reports every pool healthy.
 - Turbo cleanup succeeded at least daily without exposing its token and only
   deleted rebuildable entries older than 30 days.
-
-The Grafana audit and the ZFS pool check are human gates rather than scheduled
-collectors on purpose. Collectors execute inside `temporal-agent-worker`, which
-holds no `GRAFANA_URL`/`GRAFANA_API_KEY` (its environment is deliberately
-limited to provider auth plus the non-secret Prometheus and alert-dashboard
-endpoints) and has neither the `zpool` binary nor a pod-exec RoleBinding to
-reach a host that does. Declaring them as required collectors would have failed
-every run rather than proving anything; widening the agent's credentials or
-exec rights to satisfy a report is not an acceptable trade.
+- The two privileged checks in
+  `packages/docs/todos/homelab-capacity-operator-evidence.md` were run and
+  their results attached.
 
 Reject the rollout if any gate fails or evidence is insufficient. Restore cap
 20 and affected reservations through the emergency GitOps revert; disable

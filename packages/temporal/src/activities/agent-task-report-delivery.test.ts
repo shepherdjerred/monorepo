@@ -14,6 +14,8 @@ import {
   REPORT_DELIVERY_WORKFLOW_BUDGET_MS,
   REPORT_SEND_CLAIM_FIRST_RETRY_AT_MS,
   REPORT_SEND_CLAIM_TAKEOVER_MS,
+  REPORT_SEND_DEADLINE_MS,
+  reportDeliverySendLeaseBounds,
 } from "#shared/report-delivery-policy.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
@@ -132,25 +134,34 @@ describe("agent task report delivery delegation", () => {
   });
 
   test("budgets the outer activity beyond the complete delegated retry window", () => {
-    // Three two-minute attempts plus the two capped one-minute delays.
-    expect(REPORT_DELIVERY_WORKFLOW_BUDGET_MS).toBe(480_000);
+    // Three two-minute attempts plus the 90s and capped 120s retry delays.
+    expect(REPORT_DELIVERY_WORKFLOW_BUDGET_MS).toBe(570_000);
     expect(AGENT_REPORT_DELIVERY_START_TO_CLOSE_MS).toBeGreaterThan(
       REPORT_DELIVERY_WORKFLOW_BUDGET_MS,
     );
   });
 
-  test("lets a retry outlive the send lease so a dead owner cannot strand a report", () => {
-    // Lower bound: a takeover must never race an owner Temporal would still
-    // accept a completion from.
+  test("keeps the send lease both safe to take over and reachable", () => {
+    // Safety: a takeover must not race an owner Temporal would still accept a
+    // completion from, nor one whose request could still be in flight.
     expect(REPORT_SEND_CLAIM_TAKEOVER_MS).toBeGreaterThan(
       REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS,
     );
-    // Upper bound: the first retry after an owner that hangs to its deadline
-    // has to reach lease expiry. Without this, every remaining attempt throws
-    // on contention and the report is never delivered.
+    expect(REPORT_SEND_CLAIM_TAKEOVER_MS).toBeGreaterThan(
+      REPORT_SEND_DEADLINE_MS,
+    );
+    // Liveness: the first retry after an owner that hangs to its deadline has
+    // to outlive the lease. Without this, every remaining attempt throws on
+    // contention and the report is never delivered.
     expect(REPORT_SEND_CLAIM_FIRST_RETRY_AT_MS).toBeGreaterThanOrEqual(
       REPORT_SEND_CLAIM_TAKEOVER_MS,
     );
+
+    // Both margins stated positively, so a future constant change has to move
+    // a number a reviewer can see rather than silently invert an inequality.
+    const { safeBy, reachableBy } = reportDeliverySendLeaseBounds();
+    expect(safeBy).toBe(60_000);
+    expect(reachableBy).toBe(30_000);
   });
 
   test("describes a post-report follow-up failure without retracting the delivered result", () => {
