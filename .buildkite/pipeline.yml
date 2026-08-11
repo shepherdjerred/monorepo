@@ -1738,7 +1738,10 @@ steps:
     concurrency_group: monorepo/version-commit-back
     command: |
       . .buildkite/scripts/toolchain.sh
-      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
+      # update-versions imports the catalog validator from @homelab/cdk8s.
+      # With Bun's isolated linker, zod must be installed for that workspace;
+      # the root-scripts copy cannot satisfy an import resolved from cdk8s.
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@homelab/cdk8s' --production
       bun --no-install scripts/update-versions.ts --commit-back --candidates "$$(buildkite-agent meta-data get pin-candidates)"
     # Safe to retry: the bump branch is force-updated and the PR lookup is
     # find-or-create; transient gh/git failures exit 34 via transient.ts.

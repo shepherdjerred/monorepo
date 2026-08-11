@@ -1,6 +1,9 @@
 import { describe, expect, test } from "bun:test";
 
-import { validateAtomicRootSyncLifecycle } from "./validate-pipeline-release.ts";
+import {
+  validateAtomicRootSyncLifecycle,
+  validateVersionCommitBackInstall,
+} from "./validate-pipeline-release.ts";
 
 const argocdCommand = (subcommand: string): string =>
   `bun --no-install packages/homelab/scripts/argocd.ts ${subcommand}`;
@@ -199,5 +202,24 @@ describe("atomic ArgoCD root sync pipeline contract", () => {
     ).toThrow(
       "argocd-sync must contain exactly one deferred child reconciliation",
     );
+  });
+});
+
+describe("version commit-back install contract", () => {
+  const isolatedLinkerInstall =
+    ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@homelab/cdk8s' --production";
+
+  test("installs both the script and imported catalog workspaces", () => {
+    expect(() =>
+      validateVersionCommitBackInstall(isolatedLinkerInstall),
+    ).not.toThrow();
+  });
+
+  test("rejects installing zod only for the importing scripts workspace", () => {
+    expect(() =>
+      validateVersionCommitBackInstall(
+        ".buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production",
+      ),
+    ).toThrow("version commit-back is missing exact isolated-linker install");
   });
 });
