@@ -20,7 +20,10 @@ const RootSyncRequestSchema = z.object({
 });
 
 type OperationResource = {
+  readonly group?: string;
   readonly hookPhase?: string;
+  readonly kind?: string;
+  readonly name?: string;
   readonly status: string;
 };
 
@@ -98,7 +101,14 @@ function applicationOperation(options: {
         operation: completedOperation,
         syncResult: {
           revision,
-          resources: options.resources ?? [],
+          resources: (options.resources ?? []).map((resource, index) => ({
+            group: resource.group ?? "argoproj.io",
+            kind: resource.kind ?? "Application",
+            name:
+              resource.name ??
+              (index === 0 ? "worker" : `resource-${index.toString()}`),
+            ...resource,
+          })),
         },
         ...(options.startedAt === undefined
           ? {}
@@ -108,6 +118,16 @@ function applicationOperation(options: {
     },
   };
 }
+
+function renderedApplication(name: string): string {
+  return JSON.stringify({
+    apiVersion: "argoproj.io/v1alpha1",
+    kind: "Application",
+    metadata: { name, namespace: "argocd" },
+  });
+}
+
+const DEFAULT_RENDERED_MANIFESTS = [renderedApplication("worker")];
 
 function fixtureAt(fixtures: readonly unknown[], index: number): unknown {
   const fixture = fixtures[Math.min(index, fixtures.length - 1)];
@@ -151,6 +171,7 @@ function requestOperationId(request: unknown): string {
 function serveLifecycle(
   beforeDelete: readonly unknown[],
   afterDelete: readonly unknown[] = [{ status: {} }],
+  renderedManifests: readonly string[] = DEFAULT_RENDERED_MANIFESTS,
 ) {
   const observations: LifecycleObservations = {
     deleteRequests: 0,
@@ -165,6 +186,12 @@ function serveLifecycle(
     port: 0,
     async fetch(request) {
       const url = new URL(request.url);
+      if (
+        request.method === "GET" &&
+        url.pathname === "/api/v1/applications/apps/manifests"
+      ) {
+        return Response.json({ manifests: renderedManifests });
+      }
       if (
         request.method === "POST" &&
         url.pathname === "/api/v1/applications/apps/sync"
@@ -261,13 +288,18 @@ function recoveryArgs(): readonly string[] {
 }
 
 test("atomic Argo sync ignores stale status, applies the live result, and waits for termination", async () => {
+  const desiredNames = Array.from(
+    { length: 255 },
+    (_, index) => `application-${index.toString()}`,
+  );
   const resources: OperationResource[] = [
-    ...Array.from({ length: 255 }, (_, index) => ({
+    ...desiredNames.map((name, index) => ({
+      name,
       status: "Synced",
       ...(index < 5 ? { hookPhase: "Running" } : {}),
     })),
-    { status: "Pruned" },
-    { status: "Pruned" },
+    { name: "removed-one", status: "Pruned" },
+    { name: "removed-two", status: "Pruned" },
   ];
   const stale = applicationOperation({
     operationId: OTHER_OPERATION_ID,
@@ -291,6 +323,7 @@ test("atomic Argo sync ignores stale status, applies the live result, and waits 
   const lifecycle = serveLifecycle(
     [stale, { status: {} }, stale, current],
     [terminating, { status: {} }],
+    desiredNames.map((name) => renderedApplication(name)),
   );
 
   try {
@@ -302,6 +335,40 @@ test("atomic Argo sync ignores stale status, applies the live result, and waits 
     expect(lifecycle.observations.syncPosts).toBe(1);
     expect(lifecycle.observations.deleteRequests).toBe(1);
     expect(lifecycle.observations.postDeleteGets).toBe(2);
+  } finally {
+    await lifecycle.server.stop(true);
+  }
+});
+
+test("atomic Argo sync waits for every rendered resource across sync waves", async () => {
+  const firstWave = applicationOperation({
+    phase: "Running",
+    requestId: CURRENT_REQUEST_ID,
+    resources: [{ name: "wave-zero", status: "Synced" }],
+    startedAt: "2026-08-10T01:00:01Z",
+  });
+  const allWaves = applicationOperation({
+    phase: "Running",
+    requestId: CURRENT_REQUEST_ID,
+    resources: [
+      { name: "wave-zero", status: "Synced" },
+      { name: "wave-three", status: "Synced" },
+    ],
+    startedAt: "2026-08-10T01:00:01Z",
+  });
+  const lifecycle = serveLifecycle(
+    [{ status: {} }, firstWave, allWaves],
+    [{ status: {} }],
+    [renderedApplication("wave-zero"), renderedApplication("wave-three")],
+  );
+
+  try {
+    const result = await runArgocd(atomicArgs(), lifecycle.server.url.origin);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stderr).toBe("");
+    expect(lifecycle.observations.deleteRequests).toBe(1);
+    expect(lifecycle.observations.statusGets).toBeGreaterThanOrEqual(3);
   } finally {
     await lifecycle.server.stop(true);
   }

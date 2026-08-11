@@ -88,7 +88,9 @@ release open forever.
 So Buildkite separates root application from release-scoped health. One command
 retains the exact Buildkite request identity while ArgoCD applies the root
 revision. It terminates the aggregate health wait only after the complete sync
-result is applied.
+result is applied. The command compares reported group, kind, and name
+identities with every resource rendered from the exact revision, so an applied
+early sync wave cannot hide later-wave work that ArgoCD has not reported yet.
 
 The identity boundary matters because ArgoCD publishes operation state
 asynchronously. A second process can read before the accepted operation appears.

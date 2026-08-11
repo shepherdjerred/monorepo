@@ -74,6 +74,8 @@ A previous root operation stuck in `Running` blocks the next ordered release.
 Stage 5 prevents that in the normal pipeline. One process submits the sync,
 waits for its exact request ID and revision, verifies the complete applied
 result, terminates the aggregate health wait, and waits for termination.
+Completeness means every resource in the exact rendered root revision has a
+successful result; a fully applied early sync wave is not enough.
 
 Buildkite retries reuse the build UUID. The command adopts the operation only
 when both UUID and revision match. An unrelated active operation remains a hard

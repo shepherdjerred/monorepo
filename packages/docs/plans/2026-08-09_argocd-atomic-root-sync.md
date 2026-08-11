@@ -32,7 +32,9 @@ only an exact retry; and keep the scoped release-health gate authoritative.
   with stale status from an earlier attempt that reused the build UUID.
 - Poll through absent or stale operation state. Fail on an exact `Failed` or
   `Error` result, accept natural success, and terminate only after every
-  resource reports an applied status with no failed hook.
+  resource in the exact rendered revision appears in the result with an
+  applied status and no failed hook. Partial earlier sync waves are not
+  complete.
 - After termination, use a fresh timeout, return when the authoritative live
   operation clears even if status lags, and fail if another operation ID
   replaces the exact operation first.
@@ -46,7 +48,7 @@ only an exact retry; and keep the scoped release-health gate authoritative.
 
 - Cover delayed visibility, stale state, exact retry adoption, identity and
   revision mismatches, natural success, failed phases, timeouts, applied-result
-  termination, post-termination waiting, and interference.
+  termination, partial sync waves, post-termination waiting, and interference.
 - Exercise the live result shape: 255 synced resources, two pruned resources,
   and five child Applications still in a running health phase.
 - Run focused Bun tests, homelab typecheck and lint, pipeline validation, staged

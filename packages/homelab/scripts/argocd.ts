@@ -110,6 +110,12 @@ const RenderedObjectSchema = z
   })
   .passthrough();
 
+const RenderedResourceSchema = z.object({
+  apiVersion: z.string().min(1),
+  kind: z.string().min(1),
+  metadata: z.object({ name: z.string().min(1) }).passthrough(),
+});
+
 const RootDeploymentHistorySchema = z.object({
   status: z.object({
     history: z
@@ -221,6 +227,43 @@ async function getApplicationManifests(
     );
   }
   return ManifestResponseSchema.parse(await response.json()).manifests;
+}
+
+function resourceIdentity(group: string, kind: string, name: string): string {
+  return JSON.stringify([group, kind, name]);
+}
+
+function renderedResourceIdentity(manifestSource: string): string {
+  const resource = RenderedResourceSchema.parse(JSON.parse(manifestSource));
+  const separator = resource.apiVersion.indexOf("/");
+  const group = separator === -1 ? "" : resource.apiVersion.slice(0, separator);
+  return resourceIdentity(group, resource.kind, resource.metadata.name);
+}
+
+function renderedResourceIdentities(
+  manifests: readonly string[],
+): ReadonlySet<string> {
+  const identities = manifests.map(renderedResourceIdentity);
+  if (identities.length === 0) {
+    throw new Error("Rendered sync source contains no resources");
+  }
+  const unique = new Set(identities);
+  if (unique.size !== identities.length) {
+    throw new Error(
+      "Rendered sync source contains duplicate group/kind/name identities",
+    );
+  }
+  return unique;
+}
+
+async function getRenderedResourceIdentities(
+  appName: string,
+  revision: string,
+  token: string,
+): Promise<ReadonlySet<string>> {
+  return renderedResourceIdentities(
+    await getApplicationManifests(appName, revision, token),
+  );
 }
 
 async function suspendRepositoryAutoSync(
@@ -394,18 +437,18 @@ async function fetchChartMuseumInventory(
 async function assertRootPruneSafe(
   token: string,
   revision: string,
-): Promise<void> {
+): Promise<ReadonlySet<string>> {
   const exactRevision = BuildRevisionSchema.parse(revision);
+  const manifests = await getApplicationManifests("apps", exactRevision, token);
+  const desiredResources = renderedResourceIdentities(manifests);
   const desiredChildren = new Set(
-    (await getApplicationManifests("apps", exactRevision, token)).flatMap(
-      (manifestSource) => {
-        const parsed = RenderedObjectSchema.parse(JSON.parse(manifestSource));
-        if (parsed.kind !== "Application") {
-          return [];
-        }
-        return [RenderedApplicationSchema.parse(parsed).metadata.name];
-      },
-    ),
+    manifests.flatMap((manifestSource) => {
+      const parsed = RenderedObjectSchema.parse(JSON.parse(manifestSource));
+      if (parsed.kind !== "Application") {
+        return [];
+      }
+      return [RenderedApplicationSchema.parse(parsed).metadata.name];
+    }),
   );
   const root = await getApplication("apps", token);
   const status = isRecord(root["status"]) ? root["status"] : {};
@@ -445,6 +488,7 @@ async function assertRootPruneSafe(
       );
     }
   }
+  return desiredResources;
 }
 
 /**
@@ -485,19 +529,34 @@ async function sync(
     return;
   }
   const token = requireEnv("ARGOCD_TOKEN");
+  let expectedResourceIdentities: ReadonlySet<string> | undefined;
   if (appName === "apps" && options.prune) {
     if (options.revision === undefined) {
       throw new Error(
         "Root Application pruning requires an exact --revision so prune candidates can be verified against the rendered source",
       );
     }
-    await assertRootPruneSafe(token, options.revision);
+    expectedResourceIdentities = await assertRootPruneSafe(
+      token,
+      options.revision,
+    );
   }
   if (
     options.terminateAfterApplied === true &&
     options.revision === undefined
   ) {
     throw new Error("--terminate-after-applied requires an exact --revision");
+  }
+  if (
+    options.terminateAfterApplied === true &&
+    options.revision !== undefined &&
+    expectedResourceIdentities === undefined
+  ) {
+    expectedResourceIdentities = await getRenderedResourceIdentities(
+      appName,
+      options.revision,
+      token,
+    );
   }
   const requestId = SyncRequestIdSchema.parse(
     options.requestId ?? crypto.randomUUID(),
@@ -529,7 +588,11 @@ async function sync(
         if (
           options.terminateAfterApplied === true &&
           options.revision !== undefined &&
-          syncResultApplied(baseline.state, options.revision)
+          syncResultApplied(
+            baseline.state,
+            options.revision,
+            expectedResourceIdentities,
+          )
         ) {
           await waitForOperationTermination(
             appName,
@@ -606,6 +669,7 @@ async function sync(
     token,
     requestId,
     operationId,
+    expectedResourceIdentities,
     revision: options.revision,
     timeoutSeconds,
     terminateAfterApplied: options.terminateAfterApplied === true,
@@ -788,6 +852,7 @@ function syncResultRevision(
 function syncResultApplied(
   operationStateValue: Record<string, unknown>,
   revision: string,
+  expectedResourceIdentities: ReadonlySet<string> | undefined,
 ): boolean {
   if (syncResultRevision(operationStateValue) !== revision) {
     return false;
@@ -799,22 +864,42 @@ function syncResultApplied(
   if (!Array.isArray(resources) || resources.length === 0) {
     return false;
   }
-  return resources.every((resource: unknown) => {
+  const appliedResourceIdentities = new Set<string>();
+  const everyReportedResourceApplied = resources.every((resource: unknown) => {
     if (!isRecord(resource)) {
       return false;
     }
     const status = resource["status"];
     const hookPhase = resource["hookPhase"];
+    const group = resource["group"];
+    const kind = resource["kind"];
+    const name = resource["name"];
+    if (
+      (group !== undefined && typeof group !== "string") ||
+      typeof kind !== "string" ||
+      typeof name !== "string"
+    ) {
+      return false;
+    }
+    appliedResourceIdentities.add(resourceIdentity(group ?? "", kind, name));
     return (
       (status === "Synced" || status === "Pruned" || status === "Skipped") &&
       hookPhase !== "Failed" &&
       hookPhase !== "Error"
     );
   });
+  return (
+    everyReportedResourceApplied &&
+    (expectedResourceIdentities === undefined ||
+      [...expectedResourceIdentities].every((identity) =>
+        appliedResourceIdentities.has(identity),
+      ))
+  );
 }
 
 type WaitForIdentifiedOperationOptions = {
   readonly appName: string;
+  readonly expectedResourceIdentities: ReadonlySet<string> | undefined;
   readonly operationId: string;
   readonly requestId: string;
   readonly revision: string | undefined;
@@ -825,6 +910,7 @@ type WaitForIdentifiedOperationOptions = {
 
 async function waitForIdentifiedOperation({
   appName,
+  expectedResourceIdentities,
   operationId,
   requestId,
   revision,
@@ -886,7 +972,7 @@ async function waitForIdentifiedOperation({
         revision !== undefined &&
         isExpectedLiveOperation &&
         current.phase === "Running" &&
-        syncResultApplied(current.state, revision)
+        syncResultApplied(current.state, revision, expectedResourceIdentities)
       ) {
         await terminateAppliedOperation(
           appName,
@@ -1021,6 +1107,11 @@ async function finalizeAsyncSync(
   }
 
   const token = requireEnv("ARGOCD_TOKEN");
+  const expectedResourceIdentities = await getRenderedResourceIdentities(
+    appName,
+    exactRevision,
+    token,
+  );
   const deadline = Date.now() + timeoutSeconds * 1000;
   let elapsed = 0;
   while (Date.now() < deadline) {
@@ -1068,7 +1159,7 @@ async function finalizeAsyncSync(
       operationMatches(current, exactRequestId, exactRevision, liveOperationId);
     console.log(
       `Operation: ${current.phase || "(pending)"}${isExpectedOperation ? "" : " [previous op]"}; ` +
-        `applied=${isExpectedOperation && syncResultApplied(current.state, exactRevision) ? "true" : "false"} ` +
+        `applied=${isExpectedOperation && syncResultApplied(current.state, exactRevision, expectedResourceIdentities) ? "true" : "false"} ` +
         `(${elapsed.toString()}/${timeoutSeconds.toString()}s)`,
     );
     if (
@@ -1076,7 +1167,13 @@ async function finalizeAsyncSync(
       isExpectedOperation &&
       current.phase === "Terminating"
     ) {
-      if (!syncResultApplied(current.state, exactRevision)) {
+      if (
+        !syncResultApplied(
+          current.state,
+          exactRevision,
+          expectedResourceIdentities,
+        )
+      ) {
         throw new Error(
           `Matching ${appName} operation entered Terminating before its result was fully applied`,
         );
@@ -1096,7 +1193,11 @@ async function finalizeAsyncSync(
       liveOperationId !== undefined &&
       isExpectedOperation &&
       current.phase === "Running" &&
-      syncResultApplied(current.state, exactRevision)
+      syncResultApplied(
+        current.state,
+        exactRevision,
+        expectedResourceIdentities,
+      )
     ) {
       await terminateAppliedOperation(
         appName,

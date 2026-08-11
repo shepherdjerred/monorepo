@@ -247,7 +247,15 @@ describe("Argo CD root prune safety", () => {
           url.pathname === "/api/v1/applications/apps/manifests" &&
           url.searchParams.get("revision") === "2.0.0-42"
         ) {
-          return Response.json({ manifests: [] });
+          return Response.json({
+            manifests: [
+              JSON.stringify({
+                apiVersion: "v1",
+                kind: "Namespace",
+                metadata: { name: "argocd" },
+              }),
+            ],
+          });
         }
         if (url.pathname === "/api/v1/applications/apps") {
           return Response.json({
