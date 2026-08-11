@@ -32,9 +32,15 @@ bun install --frozen-lockfile   # one workspace-wide install
 bunx turbo run generate         # codegen: Prisma clients, etc.
 bunx lefthook install           # arm git hooks
 
-bun run build                   # Build all packages
-bun run test                    # Test all packages
-bun run typecheck               # Typecheck all packages
+# Day-to-day: run only the tasks for the package you touched
+bunx turbo run typecheck test lint --filter=<pkg>
+
+bunx lefthook run pre-commit    # staged-file checks (Prettier, Gitleaks, …)
+bun run verify                  # exhaustive whole-repo gate — what Buildkite runs
 ```
+
+`bun run verify` is the CI entry point, not part of the everyday loop; run it
+locally only to reproduce a Buildkite failure or when changing the verification
+machinery itself.
 
 See [CLAUDE.md](CLAUDE.md) for detailed development guidance.
