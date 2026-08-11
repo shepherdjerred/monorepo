@@ -474,13 +474,13 @@ destructive approval.
 - [x] Add the focused human wiki explanation of the Stash security boundary.
 - [x] Run focused CDK8s, 1Password, Helm render, and docs validation.
 - [ ] Confirm Buildkite is green for the published PR head.
-- [ ] Commit and hash the exact synthesized Stash manifest, validate the
+- [x] Commit and hash the exact synthesized Stash manifest, validate the
       production context, inspect the server-side diff, and apply only that
       manifest with the `stash-bootstrap` field manager.
-- [ ] Complete direct-deployment authentication and storage acceptance, then
+- [x] Complete direct-deployment authentication and storage acceptance, then
       immediately submit the neutral-language draft PR with git-spice.
-- [ ] Verify non-empty R2 data streams for all three PVCs and promote the PR only
-      after focused checks and Buildkite are green.
+- [x] Verify non-empty R2 data streams for all three PVCs.
+- [ ] Promote the PR only after focused checks and Buildkite are green.
 - [ ] After merge and chart publication, prove the Stash Application adopted
       every live resource with an empty ArgoCD diff, then retire direct apply.
 - [ ] Plan encryption at rest, client-side backup encryption, restore testing,
@@ -508,5 +508,40 @@ destructive approval.
   submit the PR that publishes the chart and transfers ownership to ArgoCD. The
   direct apply is a bounded bootstrap exception, not a durable second path.
 - 2026-08-10 — Source implementation completed. The generated credential and
-  cost-10 hash match, the safe vault snapshot is current, all 405 CDK8s tests
-  pass (391 active and 14 integration skips), and all 34 internal charts render.
+  cost-10 hash match, the safe vault snapshot is current, all 406 CDK8s tests
+  pass (392 active and 14 intentional integration skips), and all 34 internal
+  charts render.
+- 2026-08-10 — The exact workload synthesized from source commit
+  `782f49caf7f1732fdd1e0206559ad4414f12187c` was applied with manifest SHA-256
+  `c8c22e3cf0b1c24eb455494a38cdcd63ad5cc9fb88b08021b8988904fc497918`.
+  Runtime acceptance found that the image required an explicit `stash` command;
+  that correction was committed, re-synthesized, and re-applied before the pod
+  reached Ready with the auth init container complete and zero restarts.
+- 2026-08-10 — The live cluster's backup admission policy and `medium`
+  Tailscale ProxyClass lagged the already-committed global desired state. The
+  bootstrap applied only those two exact resources extracted from the committed
+  `apps.k8s.yaml`, without a broad apps apply or forced conflicts, before
+  retrying the exact Stash workload manifest. The backup policy reached observed
+  generation 16 before all three PVCs were admitted.
+- 2026-08-10 — On-demand backup `stash-bootstrap-20260811-0225` completed at
+  `2026-08-11T02:25:59Z` with 9 of 9 Kubernetes items, three of three ZFS
+  snapshots, zero errors, and one known plugin interruption warning. R2 contains
+  a non-empty metadata object and data stream for each volume: state (1,437 and
+  888,400 bytes), generated (1,437 and 58,184 bytes), and media (1,438 and
+  45,776 bytes). This proves transfer of the new empty-volume recovery points,
+  not application restoreability.
+- 2026-08-10 — Tailnet acceptance completed at the exact MagicDNS hostname.
+  Tailscale's first certificate attempts validated before its DNS update had
+  propagated, so a temporary exact-version proxy extended only that issuance
+  window. After staging proved the timing diagnosis, production issuance
+  succeeded with the propagated record. The temporary proxy classes, loader
+  pod, and node-local image tags were removed; the durable `medium` ProxyClass
+  now runs the standard pinned Tailscale image and serves the trusted certificate.
+  A normal MagicDNS request returns 200 from `/healthz`, while an unauthenticated
+  request to `/` returns 302 to `/login`.
+- 2026-08-10 — Draft PR #2109 was published with the complete neutral-language
+  diff narrative. Buildkite #8963 passed the PR Playwright and Semgrep lanes,
+  but exhaustive verify hit the same `tasknotes-core` transitive-dependency
+  advisory already failing current-main build #8941. The dependent review and
+  deployment-dry-run jobs were canceled, so the PR remains draft pending the
+  independent main-branch repair and a fresh green build.
