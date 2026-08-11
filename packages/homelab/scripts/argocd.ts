@@ -500,7 +500,6 @@ async function sync(
     options.requestId !== undefined || options.terminateAfterApplied === true;
   let baseline: OperationObservation | undefined;
   let adopted = false;
-  let adoptedStatusSeen = false;
 
   if (retryable) {
     baseline = observeOperation(await getApplication(appName, token));
@@ -517,7 +516,6 @@ async function sync(
         requestId,
         options.revision,
       );
-      adoptedStatusSeen = completedOperationMatches;
       if (completedOperationMatches && baseline.phase === "Terminating") {
         if (
           options.terminateAfterApplied === true &&
@@ -588,8 +586,8 @@ async function sync(
     requestId,
     revision: options.revision,
     timeoutSeconds,
-    baseline: adopted ? undefined : baseline,
-    exactOperationSeen: adoptedStatusSeen,
+    baseline,
+    exactOperationSeen: false,
     terminateAfterApplied: options.terminateAfterApplied === true,
   });
 }
@@ -724,7 +722,8 @@ function operationChanged(
     before.requestId !== current.requestId ||
     before.revision !== current.revision ||
     before.startedAt !== current.startedAt ||
-    before.phase !== current.phase
+    before.phase !== current.phase ||
+    JSON.stringify(before.state) !== JSON.stringify(current.state)
   );
 }
 
@@ -986,14 +985,21 @@ async function finalizeAsyncSync(
   while (Date.now() < deadline) {
     const current = observeOperation(await getApplication(appName, token));
     assertMatchingRevision(current, exactRequestId, exactRevision, appName);
+    assertMatchingLiveRevision(current, exactRequestId, exactRevision, appName);
     const isExpected = operationMatches(current, exactRequestId, exactRevision);
-    if (isActiveOperation(current.phase) && !isExpected) {
+    const isExpectedLiveOperation = liveOperationMatches(
+      current,
+      exactRequestId,
+      exactRevision,
+    );
+    if (current.hasLiveOperation && !isExpectedLiveOperation) {
       throw new Error(
-        `Refusing to terminate active ${appName} operation ${operationDescription(current)}; expected request ${exactRequestId} at ${exactRevision}`,
+        `Refusing to terminate active ${appName} operation ${liveOperationDescription(current)}; expected request ${exactRequestId} at ${exactRevision}`,
       );
     }
     if (
       isExpected &&
+      !current.hasLiveOperation &&
       (current.phase === "Failed" || current.phase === "Error")
     ) {
       const message = current.state["message"];
@@ -1001,7 +1007,11 @@ async function finalizeAsyncSync(
         `Async sync operation ${current.phase} for ${appName} at ${exactRevision}: ${typeof message === "string" ? message.slice(0, 1024) : ""}`,
       );
     }
-    if (isExpected && current.phase === "Succeeded") {
+    if (
+      isExpected &&
+      !current.hasLiveOperation &&
+      current.phase === "Succeeded"
+    ) {
       console.log(`async sync operation already finalized: ${appName}`);
       return;
     }
@@ -1027,6 +1037,7 @@ async function finalizeAsyncSync(
     }
     if (
       isExpected &&
+      isExpectedLiveOperation &&
       current.phase === "Running" &&
       syncResultApplied(current.state, exactRevision)
     ) {

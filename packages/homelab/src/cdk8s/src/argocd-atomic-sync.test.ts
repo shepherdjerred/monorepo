@@ -43,6 +43,18 @@ function operationResponse(request: unknown): unknown {
   };
 }
 
+function identifiedOperation(requestId: string, revision = REVISION): unknown {
+  return {
+    info: [
+      {
+        name: "ci.sjer.red/request-id",
+        value: requestId,
+      },
+    ],
+    sync: { revision },
+  };
+}
+
 function applicationOperation(options: {
   readonly live?: boolean;
   readonly message?: string;
@@ -53,15 +65,7 @@ function applicationOperation(options: {
   readonly startedAt?: string;
 }): unknown {
   const revision = options.revision ?? REVISION;
-  const operation = {
-    info: [
-      {
-        name: "ci.sjer.red/request-id",
-        value: options.requestId,
-      },
-    ],
-    sync: { revision },
-  };
+  const operation = identifiedOperation(options.requestId, revision);
   const live =
     options.live ??
     (options.phase === "Running" || options.phase === "Terminating");
@@ -264,6 +268,35 @@ test("atomic Argo sync adopts the exact active operation without another POST", 
 
     expect(result.exitCode).toBe(0);
     expect(result.stdout).toContain("adopted active sync operation: apps");
+    expect(lifecycle.observations.syncPosts).toBe(0);
+    expect(lifecycle.observations.deleteRequests).toBe(1);
+  } finally {
+    await lifecycle.server.stop(true);
+  }
+});
+
+test("atomic Argo sync waits past matching stale status when adopting a retry", async () => {
+  const stale = applicationOperation({
+    live: true,
+    phase: "Succeeded",
+    requestId: CURRENT_REQUEST_ID,
+    resources: [{ status: "Synced" }],
+    startedAt: "2026-08-10T01:00:00Z",
+  });
+  const current = applicationOperation({
+    phase: "Running",
+    requestId: CURRENT_REQUEST_ID,
+    resources: [{ status: "Synced", hookPhase: "Running" }],
+    startedAt: "2026-08-10T01:00:01Z",
+  });
+  const lifecycle = serveLifecycle([stale, current]);
+
+  try {
+    const result = await runArgocd(atomicArgs(), lifecycle.server.url.origin);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain("adopted active sync operation: apps");
+    expect(result.stdout).not.toContain("synced: apps");
     expect(lifecycle.observations.syncPosts).toBe(0);
     expect(lifecycle.observations.deleteRequests).toBe(1);
   } finally {
@@ -519,6 +552,57 @@ test("Argo recovery refuses a different active request", async () => {
     expect(result.stderr).toContain(
       "Refusing to terminate active apps operation",
     );
+    expect(lifecycle.observations.deleteRequests).toBe(0);
+  } finally {
+    await lifecycle.server.stop(true);
+  }
+});
+
+test("Argo recovery refuses an unrelated live operation behind matching stale status", async () => {
+  const lifecycle = serveLifecycle([
+    {
+      operation: identifiedOperation(OTHER_REQUEST_ID),
+      status: {
+        operationState: {
+          operation: identifiedOperation(CURRENT_REQUEST_ID),
+          phase: "Running",
+          syncResult: {
+            resources: [{ status: "Synced" }],
+            revision: REVISION,
+          },
+        },
+      },
+    },
+  ]);
+
+  try {
+    const result = await runArgocd(recoveryArgs(), lifecycle.server.url.origin);
+
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr).toContain(
+      `expected request ${CURRENT_REQUEST_ID} at ${REVISION}`,
+    );
+    expect(lifecycle.observations.deleteRequests).toBe(0);
+  } finally {
+    await lifecycle.server.stop(true);
+  }
+});
+
+test("Argo recovery never terminates matching status without a live operation", async () => {
+  const lifecycle = serveLifecycle([
+    applicationOperation({
+      live: false,
+      phase: "Running",
+      requestId: CURRENT_REQUEST_ID,
+      resources: [{ status: "Synced" }],
+    }),
+  ]);
+
+  try {
+    const result = await runArgocd(recoveryArgs(), lifecycle.server.url.origin);
+
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr).toContain("was not fully applied within 1s");
     expect(lifecycle.observations.deleteRequests).toBe(0);
   } finally {
     await lifecycle.server.stop(true);
