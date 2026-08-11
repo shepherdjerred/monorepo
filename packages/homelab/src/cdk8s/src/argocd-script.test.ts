@@ -29,7 +29,7 @@ const SyncInfoEntrySchema = z.discriminatedUnion("name", [
 
 const SyncRequestSchema = z.object({
   infos: z.array(SyncInfoEntrySchema),
-  manifests: z.array(z.string()),
+  manifests: z.array(z.string()).optional(),
   revision: z.string().optional(),
   resources: z.array(
     z.object({
@@ -118,7 +118,9 @@ function operationForSyncRequest(request: unknown): Record<string, unknown> {
     info: syncRequest.infos,
     initiatedBy: { username: "buildkite" },
     sync: {
-      manifests: syncRequest.manifests,
+      ...(syncRequest.manifests === undefined
+        ? {}
+        : { manifests: syncRequest.manifests }),
       resources: syncRequest.resources,
     },
   };
@@ -126,12 +128,16 @@ function operationForSyncRequest(request: unknown): Record<string, unknown> {
 
 function expectSuspendedWorkerRequest(request: unknown): void {
   const syncRequest = SyncRequestSchema.parse(request);
+  const manifests = syncRequest.manifests;
+  if (manifests === undefined) {
+    throw new Error("Suspended Application sync is missing manifest overrides");
+  }
   expect(syncRequest.infos.map(({ name }) => name)).toEqual([
     "ci.sjer.red/request-id",
     "ci.sjer.red/operation-id",
   ]);
-  expect(syncRequest.manifests).toHaveLength(1);
-  expect(JSON.parse(syncRequest.manifests[0] ?? "")).toMatchObject({
+  expect(manifests).toHaveLength(1);
+  expect(JSON.parse(manifests[0] ?? "")).toMatchObject({
     spec: {
       source: {
         repoURL: "https://chartmuseum.sjer.red",
@@ -870,6 +876,10 @@ describe("Argo CD root release staging", () => {
           name: "external",
         },
       ]);
+      const applicationManifests = applicationRequest.manifests;
+      if (applicationManifests === undefined) {
+        throw new Error("Staged Applications are missing manifest overrides");
+      }
       const policyRequest = SyncRequestSchema.parse(syncBodies[1]);
       expect(policyRequest.revision).toBe("2.0.0-43");
       expect(policyRequest.resources).toEqual([
@@ -879,13 +889,13 @@ describe("Argo CD root release staging", () => {
           name: "pvc-backup-policy.sjer.red",
         },
       ]);
-      expect(JSON.parse(applicationRequest.manifests[0] ?? "")).toMatchObject({
+      expect(JSON.parse(applicationManifests[0] ?? "")).toMatchObject({
         spec: { syncPolicy: { automated: { enabled: false } } },
       });
-      expect(JSON.parse(applicationRequest.manifests[1] ?? "")).toMatchObject({
+      expect(JSON.parse(applicationManifests[1] ?? "")).toMatchObject({
         spec: { syncPolicy: { automated: { enabled: false } } },
       });
-      expect(policyRequest.manifests[0]).toBe(StagedAdmissionPolicy);
+      expect(policyRequest.manifests).toBeUndefined();
     } finally {
       await server.stop(true);
     }

@@ -14,12 +14,12 @@ import {
   caddyfileEntitlementArguments,
   expandTargets,
   fixedCorpusMode,
-  findManagedImagePin,
   knownImageTargets,
   parseBakeArguments,
   parseLastPassedStepsCommit,
   parseImageSelection,
 } from "./migration-core.ts";
+import { resolveManagedImagePins } from "../../scripts/lib/image-pin-catalog.ts";
 import { APPLICATION_IMAGE_TARGETS } from "./image-targets.ts";
 import {
   anonymousPullVerifier,
@@ -33,7 +33,10 @@ import { TransientError } from "../../scripts/lib/transient-error.ts";
 const registry = "ghcr.io/shepherdjerred";
 const selectionReport = "image-selection-report.json";
 const pushOutcomes = "image-push-outcomes.json";
-const versionsPath = "packages/homelab/src/cdk8s/src/versions.ts";
+export const VERSION_CATALOG_URL = new URL(
+  "../../packages/homelab/src/cdk8s/src/version-catalog.json",
+  import.meta.url,
+);
 const applicationImageTargets = new Set(APPLICATION_IMAGE_TARGETS);
 
 export type CommandExecutor = (
@@ -297,7 +300,7 @@ export async function pushImages(
   dependencies: {
     readonly executor?: CommandExecutor;
     readonly environment?: Readonly<Record<string, string | undefined>>;
-    readonly readVersions?: () => Promise<string>;
+    readonly readVersionCatalog?: () => Promise<string>;
     readonly getManifestDigest?: (image: string) => Promise<string>;
     readonly verifyAnonymousPull?: AnonymousPullVerifier;
     readonly verifySourceLabel?: (image: string) => Promise<void>;
@@ -322,8 +325,9 @@ export async function pushImages(
   const { targets, commit, buildNumber, contractHash } = options;
   const executor = dependencies.executor ?? execute;
   const environment = dependencies.environment ?? Bun.env;
-  const readVersions =
-    dependencies.readVersions ?? (async () => Bun.file(versionsPath).text());
+  const readVersionCatalog =
+    dependencies.readVersionCatalog ??
+    (async () => Bun.file(VERSION_CATALOG_URL).text());
   const getManifestDigest = dependencies.getManifestDigest ?? manifestDigest;
   const verifyAnonymousPull = anonymousPullVerifier(
     dependencies.verifyAnonymousPull,
@@ -351,6 +355,8 @@ export async function pushImages(
   const writeCandidates =
     dependencies.writeCandidates ?? setPinCandidatesMetadata;
   const writeText = dependencies.writeText ?? Bun.write;
+  const versionCatalog = await readVersionCatalog();
+  const targetsWithPins = resolveManagedImagePins(versionCatalog, targets);
   const caddyfileArguments = caddyfileEntitlementArguments(
     targets,
     environment["CADDYFILE_SMOKE_PATH"],
@@ -377,15 +383,10 @@ export async function pushImages(
   if (pushExitCode === 34) process.exit(pushExitCode);
   if (pushExitCode !== 0) throw new Error("Production image push failed");
 
-  const versions = await readVersions();
   const digests: Record<string, string> = {};
   const outcomes: PushOutcome[] = [];
-  for (const name of targets) {
+  for (const { name, pin: managedPin } of targetsWithPins) {
     const image = `${registry}/${name}`;
-    const managedPin = findManagedImagePin(versions, name);
-    if (managedPin === undefined) {
-      throw new Error(`No managed image pin exists for ${image}`);
-    }
     const candidateTag = `${image}:candidate-${commit}`;
     const digest = await getManifestDigest(candidateTag);
     const candidate = `${image}@${digest}`;

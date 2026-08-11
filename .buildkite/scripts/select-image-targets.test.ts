@@ -111,6 +111,7 @@ describe("selectImageTargets", () => {
       ".buildkite/scripts/select-image-targets.ts",
       ".buildkite/scripts/select-image-targets-lockfile.ts",
       ".buildkite/scripts/select-image-targets-workspaces.ts",
+      "scripts/lib/image-pin-catalog.ts",
     ]) {
       expect(await select([path])).toEqual(ALL_IMAGE_TARGETS);
     }

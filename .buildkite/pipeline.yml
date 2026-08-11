@@ -1180,6 +1180,7 @@ steps:
         - ".buildkite/scripts/toolchain.sh"
         - ".buildkite/scripts/upload-pipeline.sh"
         - ".buildkite/scripts/validate-pipeline.ts"
+        - "scripts/lib/image-pin-catalog.ts"
         - ".dockerignore"
         - "bun.lock"
         - "bunfig.toml"

@@ -91,24 +91,6 @@ export function expandTargets(selected: readonly string[]): string[] {
   return targets;
 }
 
-export function findManagedImagePin(
-  versions: string,
-  imageName: string,
-): { readonly key: string; readonly digest: string } | undefined {
-  const lines = versions.split("\n");
-  for (const key of [
-    `shepherdjerred/${imageName}`,
-    `shepherdjerred/${imageName}/beta`,
-  ]) {
-    const lineIndex = lines.findIndex((line) => line.includes(`"${key}"`));
-    if (lineIndex === -1) continue;
-    const candidate = lines.slice(lineIndex, lineIndex + 2).join("\n");
-    const match = /sha256:[a-f\d]{64}/.exec(candidate);
-    if (match !== null) return { key, digest: match[0] };
-  }
-  return undefined;
-}
-
 export function parseStringArray(
   value: unknown,
   description: string,

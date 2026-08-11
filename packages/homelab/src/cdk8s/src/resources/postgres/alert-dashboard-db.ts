@@ -4,6 +4,7 @@ import {
   PostgresqlSpecPostgresqlVersion,
   PostgresqlSpecUsers,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/acid.zalan.do";
+import { ALERT_DASHBOARD_POSTGRES_TLS_SECRET } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/alert-dashboard-tls.ts";
 
 export function createAlertDashboardPostgreSQLDatabase(chart: Chart) {
   return new Postgresql(chart, "alert-dashboard-postgresql", {
@@ -17,7 +18,12 @@ export function createAlertDashboardPostgreSQLDatabase(chart: Chart) {
     },
     spec: {
       numberOfInstances: 1,
+      spiloFsGroup: 103,
       teamId: "homelab",
+      tls: {
+        caFile: "ca.crt",
+        secretName: ALERT_DASHBOARD_POSTGRES_TLS_SECRET,
+      },
       postgresql: {
         version: PostgresqlSpecPostgresqlVersion.VALUE_16,
         parameters: {

@@ -43,6 +43,23 @@ pin its real digest, bootstrap reconciliation with email disabled, then verify a
 synthetic fire/resolve before changing Alertmanager. This avoids deploying a
 zero-digest image or silently replacing the working notification path.
 
+## Database transport trust
+
+Alerts verifies PostgreSQL transport rather than treating encryption alone as
+identity. A namespace-local self-signed issuer creates a long-lived CA, and a
+CA issuer signs the PostgreSQL server certificate for the operator service's
+cluster DNS names. The application and its migration container connect with
+`verify-full`, so the presented certificate must chain to that CA and match the
+service hostname.
+
+Only the public `ca.crt` entry is projected into the application pod. The CA
+private key remains in its issuer secret, and the PostgreSQL leaf private key
+remains in the server secret consumed by the operator. The leaf certificate is
+short-lived and rotates automatically. The CA is deliberately stable and does
+not auto-rotate: replacing a trust root safely needs an overlap period in which
+both the old and new roots are trusted, so unattended single-secret replacement
+would turn routine renewal into an outage risk.
+
 ## Operator workflow after activation
 
 The UI provides active, suppressed, and historical occurrence views. The CLI

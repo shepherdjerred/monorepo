@@ -7,6 +7,7 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { createAlertDashboardDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/alert-dashboard/index.ts";
 import { createAlertDashboardPostgreSQLDatabase } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/alert-dashboard-db.ts";
+import { createAlertDashboardPostgreSqlTls } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/alert-dashboard-tls.ts";
 
 const tcp = (port: number) => ({
   port: IntOrString.fromNumber(port),
@@ -21,6 +22,7 @@ export function createAlertDashboardChart(app: App) {
   new Namespace(chart, "alert-dashboard-namespace", {
     metadata: { name: "alert-dashboard" },
   });
+  createAlertDashboardPostgreSqlTls(chart);
   createAlertDashboardPostgreSQLDatabase(chart);
   createAlertDashboardDeployment(chart);
   const appSelector = { matchLabels: { app: "alert-dashboard" } };

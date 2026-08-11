@@ -26,12 +26,15 @@ Stage 3 is deliberately separate from stage 5. New child-level safety settings
 must exist before those children sync, but enabling floating auto-sync before
 every chart is published could expose a partially published release.
 
-Stage 3 also applies root-owned prerequisites such as admission policies. It
-keeps every child Application's auto-sync disabled, so stage 4 owns child
-operations without racing ArgoCD. In stage 5, the
+Stage 3 also applies root-owned prerequisites such as admission policies from
+the exact chart source. Only Applications whose auto-sync policy must stay
+disabled use local manifest overrides, so stage 4 owns child operations without
+racing ArgoCD while unchanged cluster-scoped resources still follow Argo's
+normal source-apply path. In stage 5, the
 [root finalizer](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd.ts)
-reapplies every exact sync wave before running the verified prune. It keeps the
-self-managed root Application's auto-sync disabled between batches; the final
+reapplies every exact sync wave before running the verified prune. Unchanged
+resources use source-selective syncs. The self-managed root Application alone
+uses a local override to keep auto-sync disabled between batches; the final
 prune restores that one policy. Stage 6 is the single authoritative scoped
 health gate.
 
@@ -85,6 +88,12 @@ application forever.
 If you expected a rebuild and got none, check whether your commit only moved a
 pin.
 
+If the image push finishes but candidate classification reports that no managed
+pin exists, do not retry the push. The comparison digest and commit-back key
+come from `packages/homelab/src/cdk8s/src/version-catalog.json`; verify that the
+real bake target has an exact image entry there and that the publisher is
+reading that structured catalog rather than the generated runtime projection.
+
 ## If GHCR rejects a workload pull
 
 The
@@ -137,10 +146,12 @@ from impersonating the post-batch prune. Each POST also receives an internal
 operation UUID; adoption requires the live operation and its status to share
 that UUID before a stable applied result can be finalized.
 
-For manifest-override staging operations, inspect the
+For a rewritten Application's manifest-override operation, inspect the
 `ci.sjer.red/revision` operation-info entry. Argo does not retain
 `operation.sync.revision` for that request shape, so CI persists the same exact
 revision beside both UUIDs and rejects any disagreement when both forms exist.
+Unchanged resources use source-selective operations and retain the revision in
+Argo's ordinary sync request as well as the identity metadata.
 
 A release blocked here means the current operation must be inspected before
 retrying. If it is a fully applied operation from an interrupted older client,

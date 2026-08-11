@@ -46,29 +46,33 @@ only an exact retry; and keep the scoped release-health gate authoritative.
   live and completed state carry the exact request and revision and neither
   carries an internal ID.
 - Wire the main Buildkite release to the atomic command with
-  `BUILDKITE_BUILD_ID`. First stage every rendered root resource through
-  manifest overrides that keep every child Application's auto-sync disabled.
-  This makes root-owned prerequisites available before child reconciliation
-  without racing an automatic child operation. Bound each override request to
-  750 kB because ArgoCD's operation-state update carries both the requested and
-  completed operation inside its 2 MiB controller message ceiling. Keep each
-  request within one numeric Argo sync wave and submit waves in ascending order,
-  so health waiting in one wave cannot leave later-wave prerequisites unapplied.
-  Terminate each exact staged wave after all selected resources apply; a
-  degraded ordinary resource is deferred to the scoped health gate, while a
-  failed resource carrying an actual Argo hook type remains a hard failure.
-  Persist the exact revision in operation info alongside both UUIDs because
-  Argo omits `operation.sync.revision` for manifest-override operations; when
-  both representations exist, require them to agree.
+  `BUILDKITE_BUILD_ID`. First stage every unchanged root resource with an
+  exact-revision, source-selective sync. Use local manifest overrides only for
+  child Applications whose auto-sync policy is deliberately rewritten to stay
+  disabled. This makes root-owned prerequisites available before child
+  reconciliation without racing an automatic child operation, while preserving
+  Argo's normal source-apply behavior for cluster-scoped prerequisites. Bound
+  each override request to 750 kB because ArgoCD's operation-state update
+  carries both the requested and completed operation inside its 2 MiB controller
+  message ceiling. Keep each source or override request within one numeric Argo
+  sync wave and submit waves in ascending order, so health waiting in one wave
+  cannot leave later-wave prerequisites unapplied. Terminate each exact staged
+  batch after all selected resources apply; a degraded ordinary resource is
+  deferred to the scoped health gate, while a failed resource carrying an
+  actual Argo hook type remains a hard failure. Persist the exact revision in
+  operation info alongside both UUIDs because Argo omits
+  `operation.sync.revision` for manifest-override operations; when both
+  representations exist, require them to agree.
   Reconcile children with aggregate health deferred, then atomically restore
   and prune the exact root tree before one scoped release-health gate. The
   finalizer reapplies the exact desired tree in the same isolated wave batches
-  before starting the full-source prune, except that the self-managed root
-  Application stays auto-sync suspended across every batch. Restoring it early
-  could start an unowned full-source operation between batches. The final prune
-  restores that policy and therefore still requires the root Application's
-  applied result alongside every validated prune candidate. The separate batch
-  proof is necessary
+  before starting the full-source prune. Unchanged resources use source-selective
+  syncs; only the self-managed root Application uses a manifest override so it
+  stays auto-sync suspended across every batch. Restoring it early could start
+  an unowned full-source operation between batches. The final prune restores
+  that policy and therefore still requires the root Application's applied
+  result alongside every validated prune candidate. The separate batch proof is
+  necessary
   because Argo can withhold later-wave results forever while a self-referential
   or degraded ordinary Application remains unhealthy in an earlier wave. Once
   every desired batch is applied, the prune operation needs to prove every
@@ -94,7 +98,11 @@ only an exact retry; and keep the scoped release-health gate authoritative.
   credentials. Inspect the effective OCI configuration at that digest and
   require the exact monorepo source label before recording any pin candidate.
   A private or incorrectly labeled package must fail image publication before
-  its digest can reach GitOps.
+  its digest can reach GitOps. Resolve the current comparison digest and
+  commit-back key from the structured `version-catalog.json` source of truth,
+  not from the generated `versions.ts` runtime projection. Validate the real
+  catalog against every bake target so a catalog representation change fails
+  before an expensive production push.
 
 ## Verification
 
@@ -108,7 +116,8 @@ only an exact retry; and keep the scoped release-health gate authoritative.
   pre-commit checks, and the complete root verification graph.
 - Cover delayed GHCR visibility and manifest propagation, a package that stays
   private, static and effective-image source-label completeness, and Turbo
-  invalidation for Buildkite script inputs.
+  invalidation for Buildkite script inputs. Prove every image bake target
+  resolves its exact pin from the real structured version catalog.
 - Recover the stranded operation only after its live identity and complete
   applied result are revalidated.
 - Require an exact-head PR build and then a fresh successful build of the

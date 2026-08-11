@@ -64,6 +64,7 @@ const GLOBAL_IMAGE_INPUTS = [
   ".buildkite/scripts/select-image-targets.ts",
   ".buildkite/scripts/select-image-targets-lockfile.ts",
   ".buildkite/scripts/select-image-targets-workspaces.ts",
+  "scripts/lib/image-pin-catalog.ts",
 ];
 
 // These files shape every application solve, but none of the self-contained
