@@ -393,3 +393,84 @@ export function collectStepBlocks(
 
   return { stepStarts, keys, stepBlocks };
 }
+
+/**
+ * Entrypoints a step runs before (or without) `bun-install.sh` execute against
+ * a pod that has no `node_modules` at all, so their whole relative-import
+ * closure must stay on relative modules and Bun/Node builtins. A single bare
+ * package import anywhere in that closure fails the pod at module load.
+ */
+function installFreeEntrypoints(
+  stepBlocks: ReadonlyMap<string, string>,
+): ReadonlySet<string> {
+  const entrypoints = new Set<string>();
+  for (const block of stepBlocks.values()) {
+    const blockLines = block.split("\n");
+    const installIndex = blockLines.findIndex((line) =>
+      line.includes("bun-install.sh"),
+    );
+    const uninstalled =
+      installIndex === -1 ? blockLines : blockLines.slice(0, installIndex);
+    for (const line of uninstalled) {
+      for (const match of line.matchAll(
+        /\bbun\s+--no-install\s+(\S+\.ts)\b/g,
+      )) {
+        const entrypoint = match[1];
+        if (entrypoint !== undefined) entrypoints.add(entrypoint);
+      }
+    }
+  }
+  return entrypoints;
+}
+
+/**
+ * Anchored at statement start so string payloads that merely contain `from
+ * "..."` — Buildx `--cache-from` arguments, for example — are not mistaken for
+ * imports.
+ */
+function importSpecifiers(source: string): readonly string[] {
+  const specifiers: string[] = [];
+  for (const pattern of [
+    /^(?:import|export)\s[\s\S]*?\bfrom\s*["']([^"']+)["'];?[ \t]*$/gm,
+    /^import\s*["']([^"']+)["'];?[ \t]*$/gm,
+    /\bimport\s*\(\s*["']([^"']+)["']\s*\)/g,
+  ]) {
+    for (const match of source.matchAll(pattern)) {
+      const specifier = match[1];
+      if (specifier !== undefined) specifiers.push(specifier);
+    }
+  }
+  return specifiers;
+}
+
+export async function assertInstallFreeEntrypointsHaveNoBareImports(
+  stepBlocks: ReadonlyMap<string, string>,
+): Promise<void> {
+  const visited = new Set<string>();
+  const pending = [...installFreeEntrypoints(stepBlocks)];
+
+  while (pending.length > 0) {
+    const modulePath = pending.pop();
+    if (modulePath === undefined || visited.has(modulePath)) continue;
+    visited.add(modulePath);
+
+    const file = Bun.file(modulePath);
+    if (!(await file.exists())) {
+      fail(`install-free entrypoint ${modulePath} does not exist`);
+    }
+    for (const specifier of importSpecifiers(await file.text())) {
+      if (specifier.startsWith("node:") || specifier.startsWith("bun:")) {
+        continue;
+      }
+      if (specifier === "bun") continue;
+      if (!specifier.startsWith(".")) {
+        fail(
+          `${modulePath} imports the bare package "${specifier}", but it runs before any bun-install.sh; the pod has no node_modules`,
+        );
+      }
+      pending.push(
+        Bun.fileURLToPath(new URL(specifier, Bun.pathToFileURL(modulePath))),
+      );
+    }
+  }
+}

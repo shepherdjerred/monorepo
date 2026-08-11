@@ -62,6 +62,7 @@ import {
   SYNC_REQUEST_ID_INFO_NAME,
   SYNC_REVISION_INFO_NAME,
   type ManifestOverride,
+  type ManifestOverrideBatch,
   type SyncOperationResource,
 } from "./argocd-manifest-overrides.ts";
 import { latestPublishedVersion } from "./helm-release-core.ts";
@@ -414,6 +415,11 @@ type PreparedFinalRootManifest = {
   readonly override: ManifestOverride;
 };
 
+type RootSyncBatch = {
+  readonly manifests?: readonly string[];
+  readonly resources: readonly SyncOperationResource[];
+};
+
 type ParsedRootManifest = {
   readonly parsed: unknown;
   readonly override: ManifestOverride;
@@ -526,6 +532,55 @@ function prepareFinalRootManifestOverride(
   };
 }
 
+/**
+ * Argo's local-manifest sync path is required only when CI rewrites an
+ * Application's auto-sync policy. Sending byte-identical manifests through
+ * that path can report cluster-scoped resources as skipped without applying
+ * them. Keep the original wave and request-size batching, then use exact-source
+ * selective syncs for every resource whose rendered manifest is unchanged.
+ */
+function splitRootSyncBatches(
+  batches: readonly ManifestOverrideBatch[],
+  manifestOverrideIdentities: ReadonlySet<string>,
+): RootSyncBatch[] {
+  return batches.flatMap((batch) => {
+    if (batch.manifests.length !== batch.resources.length) {
+      throw new Error("Manifest override batch lost resource alignment");
+    }
+    const sourceResources: SyncOperationResource[] = [];
+    const overrideManifests: string[] = [];
+    const overrideResources: SyncOperationResource[] = [];
+    for (const [index, resource] of batch.resources.entries()) {
+      const manifest = batch.manifests[index];
+      if (manifest === undefined) {
+        throw new Error("Manifest override batch is missing a manifest");
+      }
+      const identity = resourceIdentity(
+        resource.group,
+        resource.kind,
+        resource.name,
+      );
+      if (manifestOverrideIdentities.has(identity)) {
+        overrideManifests.push(manifest);
+        overrideResources.push(resource);
+      } else {
+        sourceResources.push(resource);
+      }
+    }
+    return [
+      ...(sourceResources.length === 0 ? [] : [{ resources: sourceResources }]),
+      ...(overrideResources.length === 0
+        ? []
+        : [
+            {
+              manifests: overrideManifests,
+              resources: overrideResources,
+            },
+          ]),
+    ];
+  });
+}
+
 async function suspendRepositoryAutoSync(
   rootAppName: string,
   timeoutSeconds: number,
@@ -610,20 +665,36 @@ async function stageRootRelease(
       console.log(`suspending auto-sync: ${prepared.suspendedApplication}`);
     }
   }
-  const batches = batchManifestOverrides(
-    staged.map(({ override }) => override),
-    { revision: exactRevision },
+  const manifestOverrideIdentities = new Set(
+    staged.flatMap(({ override, suspendedApplication }) =>
+      suspendedApplication === null
+        ? []
+        : [
+            resourceIdentity(
+              override.resource.group,
+              override.resource.kind,
+              override.resource.name,
+            ),
+          ],
+    ),
+  );
+  const batches = splitRootSyncBatches(
+    batchManifestOverrides(
+      staged.map(({ override }) => override),
+      { revision: exactRevision },
+    ),
+    manifestOverrideIdentities,
   );
   for (const [index, batch] of batches.entries()) {
     console.log(
-      `syncing staged root batch ${(index + 1).toString()}/${batches.length.toString()} (${batch.manifests.length.toString()} resources)`,
+      `syncing staged root batch ${(index + 1).toString()}/${batches.length.toString()} (${batch.resources.length.toString()} resources)`,
     );
     await sync(rootAppName, timeoutSeconds, false, {
       prune: false,
       revision: exactRevision,
       terminateAfterApplied: true,
-      manifests: batch.manifests,
       resources: batch.resources,
+      ...(batch.manifests === undefined ? {} : { manifests: batch.manifests }),
     });
   }
 }
@@ -672,9 +743,12 @@ async function finalizeRootRelease(
       (identity) => !deferredDesiredIdentities.has(identity),
     ),
   );
-  const batches = batchManifestOverrides(
-    preparedManifests.map(({ override }) => override),
-    { revision: exactRevision, rootFinalizerPhase: "batch" },
+  const batches = splitRootSyncBatches(
+    batchManifestOverrides(
+      preparedManifests.map(({ override }) => override),
+      { revision: exactRevision, rootFinalizerPhase: "batch" },
+    ),
+    deferredDesiredIdentities,
   );
 
   let nextBatchIndex = 0;
@@ -746,16 +820,18 @@ async function finalizeRootRelease(
       throw new Error("Matched root batch is missing");
     }
     console.log(
-      `adopting exact root batch ${(activeBatchIndex + 1).toString()}/${batches.length.toString()} (${activeBatch.manifests.length.toString()} resources)`,
+      `adopting exact root batch ${(activeBatchIndex + 1).toString()}/${batches.length.toString()} (${activeBatch.resources.length.toString()} resources)`,
     );
     await sync(rootAppName, timeoutSeconds, false, {
       prune: false,
-      manifests: activeBatch.manifests,
       requestId: exactRequestId,
       resources: activeBatch.resources,
       revision: exactRevision,
       rootFinalizerPhase: "batch",
       terminateAfterApplied: true,
+      ...(activeBatch.manifests === undefined
+        ? {}
+        : { manifests: activeBatch.manifests }),
     });
     nextBatchIndex = activeBatchIndex + 1;
   }
@@ -766,16 +842,16 @@ async function finalizeRootRelease(
       throw new Error(`Exact root batch ${index.toString()} is missing`);
     }
     console.log(
-      `syncing exact root batch ${(index + 1).toString()}/${batches.length.toString()} (${batch.manifests.length.toString()} resources)`,
+      `syncing exact root batch ${(index + 1).toString()}/${batches.length.toString()} (${batch.resources.length.toString()} resources)`,
     );
     await sync(rootAppName, timeoutSeconds, false, {
       prune: false,
-      manifests: batch.manifests,
       requestId: exactRequestId,
       resources: batch.resources,
       revision: exactRevision,
       rootFinalizerPhase: "batch",
       terminateAfterApplied: true,
+      ...(batch.manifests === undefined ? {} : { manifests: batch.manifests }),
     });
   }
 

@@ -6,7 +6,7 @@
       "project": ["scripts/**/*.ts"]
     },
     "scripts": {
-      "entry": ["*.ts", "observability/**/*.ts"],
+      "entry": ["*.ts", "observability/**/*.ts", "lib/image-pin-catalog.ts"],
       "project": ["**/*.ts"],
       "ignoreDependencies": ["@openai/codex"]
     },

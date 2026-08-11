@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 
 import {
+  assertInstallFreeEntrypointsHaveNoBareImports,
   assertPackageTokens,
   assertUnfilteredInstallBelongsToVerify,
   FORBIDDEN_DOCKER_IN_DOCKER_PATTERNS,
@@ -248,5 +249,92 @@ describe("complete Buildkite pod reservations", () => {
         podType.name,
       ).toEqual(podType.expected);
     }
+  });
+});
+
+async function withModules(
+  files: Readonly<Record<string, string>>,
+  run: (root: string) => Promise<void>,
+): Promise<void> {
+  const root = await mkdtemp(path.join(tmpdir(), "install-free-"));
+  try {
+    for (const [name, source] of Object.entries(files)) {
+      await Bun.write(path.join(root, name), source);
+    }
+    await run(root);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+}
+
+function step(command: string): ReadonlyMap<string, string> {
+  return new Map([["images-pr", `  - label: x\n    command: |\n${command}`]]);
+}
+
+describe("install-free entrypoint imports", () => {
+  test("accepts a closure of relative modules and runtime builtins", async () => {
+    await withModules(
+      {
+        "entry.ts": 'import { helper } from "./helper.ts";\nexport { helper };',
+        "helper.ts":
+          'import { rm } from "node:fs/promises";\nimport { $ } from "bun";\nexport const helper = { rm, $ };',
+      },
+      async (root) => {
+        await assertInstallFreeEntrypointsHaveNoBareImports(
+          step(`      bun --no-install ${path.join(root, "entry.ts")}`),
+        );
+      },
+    );
+  });
+
+  test("rejects a bare package reached transitively", async () => {
+    await withModules(
+      {
+        "entry.ts": 'import { schema } from "./deep.ts";\nexport { schema };',
+        "deep.ts": 'import { z } from "zod";\nexport const schema = z;',
+      },
+      async (root) => {
+        await expect(
+          assertInstallFreeEntrypointsHaveNoBareImports(
+            step(`      bun --no-install ${path.join(root, "entry.ts")}`),
+          ),
+        ).rejects.toThrow(/deep\.ts imports the bare package "zod"/);
+      },
+    );
+  });
+
+  test("ignores entrypoints that run after the lane installs", async () => {
+    await withModules(
+      { "entry.ts": 'import { z } from "zod";\nexport const schema = z;' },
+      async (root) => {
+        await assertInstallFreeEntrypointsHaveNoBareImports(
+          step(
+            [
+              "      .buildkite/scripts/bun-install.sh --frozen-lockfile",
+              `      bun --no-install ${path.join(root, "entry.ts")}`,
+            ].join("\n"),
+          ),
+        );
+      },
+    );
+  });
+
+  test("does not mistake a --cache-from argument for an import", async () => {
+    await withModules(
+      {
+        "entry.ts": [
+          "export const args = [",
+          '  "--cache-from",',
+          "  `type=registry,ref=${image}:buildcache`,",
+          "];",
+          "declare const image: string;",
+        ].join("\n"),
+      },
+      async (root) => {
+        await assertInstallFreeEntrypointsHaveNoBareImports(
+          step(`      bun --no-install ${path.join(root, "entry.ts")}`),
+        );
+      },
+    );
   });
 });

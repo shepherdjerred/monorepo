@@ -15,6 +15,7 @@
  */
 
 import {
+  assertInstallFreeEntrypointsHaveNoBareImports,
   assertNoImplicitBunRuntime,
   assertNoNestedBunRuntime,
   assertPackageTokens,
@@ -283,6 +284,7 @@ for (const selectorInput of [
   ".buildkite/scripts/select-image-targets-lockfile.ts",
   ".buildkite/scripts/select-image-targets-workspaces.ts",
   ".buildkite/scripts/smoke-app-in-image.ts",
+  "scripts/lib/image-pin-catalog.ts",
 ]) {
   requireIncludes(
     imagesPr,
@@ -402,6 +404,8 @@ await validateReleasePipelineContracts({
 });
 
 assertUnfilteredInstallBelongsToVerify(lines, stepStarts);
+
+await assertInstallFreeEntrypointsHaveNoBareImports(stepBlocks);
 
 // Bun auto-installs dependencies when a checkout has no node_modules. Every
 // Buildkite step starts from a fresh pod, so an otherwise dependency-free

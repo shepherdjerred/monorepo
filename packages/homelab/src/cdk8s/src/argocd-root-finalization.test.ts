@@ -34,7 +34,7 @@ const SyncInfoEntrySchema = z.discriminatedUnion("name", [
 
 const SyncRequestSchema = z.object({
   infos: z.array(SyncInfoEntrySchema),
-  manifests: z.array(z.string()),
+  manifests: z.array(z.string()).optional(),
   revision: z.string().optional(),
   resources: z.array(
     z.object({
@@ -157,7 +157,9 @@ function operationForSyncRequest(request: unknown): Record<string, unknown> {
     info: syncRequest.infos,
     initiatedBy: { username: "buildkite" },
     sync: {
-      manifests: syncRequest.manifests,
+      ...(syncRequest.manifests === undefined
+        ? {}
+        : { manifests: syncRequest.manifests }),
       resources: syncRequest.resources,
     },
   };
@@ -353,17 +355,17 @@ test("root release finalization applies every exact wave before accepting a part
     expect(exitCode).toBe(0);
     expect(stderr).toBe("");
     expect(stdout).toContain("finalize-root-release: apps at 2.0.0-43");
-    expect(stdout).toContain("syncing exact root batch 1/2 (3 resources)");
-    expect(stdout).toContain("syncing exact root batch 2/2 (1 resources)");
-    expect(syncBodies).toHaveLength(3);
-    expect(deleteRequests).toBe(3);
+    expect(stdout).toContain("syncing exact root batch 1/3 (2 resources)");
+    expect(stdout).toContain("syncing exact root batch 2/3 (1 resources)");
+    expect(stdout).toContain("syncing exact root batch 3/3 (1 resources)");
+    expect(syncBodies).toHaveLength(4);
+    expect(deleteRequests).toBe(4);
     expect(finalPruneReads).toBeGreaterThanOrEqual(2);
 
     const applicationRequest = SyncRequestSchema.parse(syncBodies[0]);
     expect(applicationRequest.revision).toBe("2.0.0-43");
     expect(applicationRequest.infos).toContainEqual(BATCH_PHASE_INFO);
     expect(applicationRequest.resources).toEqual([
-      RootApplicationResource,
       WorkerApplicationResource,
       {
         group: "argoproj.io",
@@ -371,17 +373,19 @@ test("root release finalization applies every exact wave before accepting a part
         name: "external",
       },
     ]);
-    expect(JSON.parse(applicationRequest.manifests[0] ?? "")).toMatchObject({
+    expect(applicationRequest.manifests).toBeUndefined();
+
+    const rootApplicationRequest = SyncRequestSchema.parse(syncBodies[1]);
+    expect(rootApplicationRequest.resources).toEqual([RootApplicationResource]);
+    const rootApplicationManifests = rootApplicationRequest.manifests;
+    if (rootApplicationManifests === undefined) {
+      throw new Error("Root Application is missing its suspended manifest");
+    }
+    expect(JSON.parse(rootApplicationManifests[0] ?? "")).toMatchObject({
       spec: { syncPolicy: { automated: { enabled: false } } },
-    });
-    expect(JSON.parse(applicationRequest.manifests[1] ?? "")).toMatchObject({
-      spec: { syncPolicy: { automated: { enabled: false } } },
-    });
-    expect(JSON.parse(applicationRequest.manifests[2] ?? "")).toMatchObject({
-      spec: { syncPolicy: { automated: { enabled: true } } },
     });
 
-    const policyRequest = SyncRequestSchema.parse(syncBodies[1]);
+    const policyRequest = SyncRequestSchema.parse(syncBodies[2]);
     expect(policyRequest.resources).toEqual([
       {
         group: "admissionregistration.k8s.io",
@@ -389,12 +393,13 @@ test("root release finalization applies every exact wave before accepting a part
         name: "pvc-backup-policy.sjer.red",
       },
     ]);
-    const pruneRequest = RootSyncRequestSchema.parse(syncBodies[2]);
+    expect(policyRequest.manifests).toBeUndefined();
+    const pruneRequest = RootSyncRequestSchema.parse(syncBodies[3]);
     expect(pruneRequest.prune).toBe(true);
     expect(pruneRequest.infos).toContainEqual(PRUNE_PHASE_INFO);
     const rawPruneRequest = z
       .record(z.string(), z.unknown())
-      .parse(syncBodies[2]);
+      .parse(syncBodies[3]);
     expect(rawPruneRequest["resources"]).toBeUndefined();
     expect(rawPruneRequest["manifests"]).toBeUndefined();
   } finally {
@@ -410,7 +415,6 @@ test("root release finalization adopts the exact active batch without replaying 
   };
   const activeBatchRequest = {
     infos: releaseOperationInfo("batch"),
-    manifests: [StagedAdmissionPolicy],
     prune: false,
     resources: [policyResource],
     revision: "2.0.0-43",
@@ -537,7 +541,7 @@ test("root release finalization adopts the exact active batch without replaying 
 
     expect(exitCode).toBe(0);
     expect(stderr).toBe("");
-    expect(stdout).toContain("adopting exact root batch 2/2 (1 resources)");
+    expect(stdout).toContain("adopting exact root batch 3/3 (1 resources)");
     expect(stdout).not.toContain("syncing exact root batch 1/2");
     expect(syncPosts).toBe(1);
     expect(deleteRequests).toBe(2);

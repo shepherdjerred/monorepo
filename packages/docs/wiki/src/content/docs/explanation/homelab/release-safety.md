@@ -36,14 +36,17 @@ New child-level safety settings have to exist _before_ those children sync.
 But enabling floating auto-sync before every chart is published would let a
 child pick up a partially published release.
 
-The staged root release applies every exact rendered resource through manifest
-overrides. Child Applications are the only resources changed: their auto-sync
-remains disabled regardless of whether their source is internal or external.
-Child settings and root-owned prerequisites such as admission policies
-therefore land before reconciliation without starting an automatic child
-operation. The
+The staged root release applies unchanged resources with exact-revision,
+source-selective syncs. Child Applications are the only resources changed:
+local manifest overrides keep their auto-sync disabled regardless of whether
+their source is internal or external. Child settings and root-owned
+prerequisites such as admission policies therefore land before reconciliation
+without starting an automatic child operation. Keeping unchanged resources on
+the source path is significant: Argo applies the chart-owned object itself,
+rather than treating a local manifest as an alternate desired tree whose result
+may be reported as applied without updating a cluster-scoped prerequisite. The
 [manifest-override batcher](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd-manifest-overrides.ts)
-splits those requests at 750 kB. ArgoCD v3.4.5's
+splits only the rewritten Application requests at 750 kB. ArgoCD v3.4.5's
 [operation-state constructor](https://github.com/argoproj/argo-cd/blob/564b94973b284b8de98da7cee6eeade2cb941e46/controller/sync.go#L76-L81)
 copies the original request into status. In this cluster, a request near the
 observed 2 MiB controller message ceiling can therefore be accepted but never
@@ -62,16 +65,18 @@ release command also persists the exact revision in the operation info list
 beside its request and operation UUIDs. Either representation can prove the
 revision, but disagreement between them is a hard identity failure.
 
-After explicit child reconciliation completes, the
+Both request shapes remain isolated by numeric sync wave and exact resource
+identity. After explicit child reconciliation completes, the
 [root finalizer](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd.ts)
 reapplies the exact desired tree in isolated wave batches. This restores every
 child auto-sync policy without letting an unhealthy earlier wave hide a later
-one. The self-managed root Application stays suspended so it cannot launch an
-unowned full-source operation between batches. Only then does the owned
+one. Unchanged resources again use the exact source, while the self-managed root
+Application alone uses a local override to stay suspended so it cannot launch
+an unowned full-source operation between batches. Only then does the owned
 full-source operation restore the root policy and perform verified pruning.
-That final operation must report the root Application and every prune
-candidate; other desired-resource coverage comes from the completed batches.
-Aggregate child health remains deferred to the scoped release gate.
+That final operation must report the root Application and every prune candidate;
+other desired-resource coverage comes from the completed batches. Aggregate
+child health remains deferred to the scoped release gate.
 
 This split proof is deliberate. The root chart contains its own Application,
 and ordinary child Applications can be degraded. Argo waits for their health
@@ -137,14 +142,16 @@ So the [main release pipeline](https://github.com/shepherdjerred/monorepo/blob/m
 separates root application from release-scoped health. One
 [atomic Argo command](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd.ts)
 retains the exact Buildkite request identity while ArgoCD applies the root
-revision. It sends every desired wave as bounded manifest-override batches,
-compares each batch's reported group, kind, and name identities with its exact
-selection, and terminates that batch only after all selected resources apply.
-The self-managed root is the deliberate exception: its batch override keeps
-auto-sync disabled. Only after all desired batches complete does the finalizer
-start a full-source prune. That operation must report the restored root and
-carries the independently validated candidates into its completion boundary,
-requiring each candidate to appear as `Pruned` before termination.
+revision. It sends every desired wave as bounded exact-source selections plus
+local overrides only where policy is deliberately rewritten. It compares each
+batch's reported group, kind, and name identities with its exact selection and
+terminates that batch only after all selected resources apply. During
+finalization, the self-managed root is the deliberate override: keeping its
+auto-sync disabled prevents an unowned operation between batches. Only after
+all desired batches complete does the finalizer start a full-source prune. That
+operation must report the restored root and carries the independently validated
+candidates into its completion boundary, requiring each candidate to appear as
+`Pruned` before termination.
 The generic atomic sync path remains stricter: without prior desired-batch
 proof, it still requires every rendered desired identity in the same result.
 
@@ -209,6 +216,13 @@ published artifact would expose later.
 
 Application image selection uses the newest `main` commit whose `images` and
 `version-commit-back` jobs both passed as its comparison base.
+
+The image publisher reads current comparison digests and commit-back keys from
+the structured `version-catalog.json` source of truth. The generated
+`versions.ts` module is a runtime projection, not a writable pin corpus. The
+image tests resolve every real bake target against the structured catalog so a
+representation migration cannot finish a production push and only then discover
+that it has no pin to update.
 
 The problem being solved: a version-pin commit can cancel the rest of the build
 that produced the image it pins. Treating that as an invalidated build would

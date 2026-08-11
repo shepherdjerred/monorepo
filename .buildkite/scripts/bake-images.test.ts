@@ -9,6 +9,7 @@ import {
   runSmoke,
   selectedTargets,
   type CommandExecutor,
+  VERSION_CATALOG_URL,
   writeFallbackReport,
 } from "./bake-images.ts";
 import { ensureAnonymousGhcrPull } from "./ghcr-public-access.ts";
@@ -25,7 +26,6 @@ import { productionBakeEnvironment } from "./production-bake-environment.ts";
 import {
   caddyfileEntitlementArguments,
   expandTargets,
-  findManagedImagePin,
   knownImageTargets,
   parseBakeArguments,
   parseBuildkiteCommits,
@@ -33,6 +33,7 @@ import {
   parseImageSelection,
   parseStringArray,
 } from "./migration-core.ts";
+import { findManagedImagePin } from "../../scripts/lib/image-pin-catalog.ts";
 
 function commandResult(
   exitCode = 0,
@@ -40,6 +41,22 @@ function commandResult(
   stderr = "",
 ): BuildxCommandResult {
   return { exitCode, stdout, stderr };
+}
+
+function versionCatalogSource(
+  entries: readonly { readonly name: string; readonly value: string }[],
+): string {
+  return JSON.stringify({
+    $schema: "./version-catalog.schema.json",
+    schemaVersion: 1,
+    entries: entries.map((entry) => ({
+      name: entry.name,
+      category: "internal-image",
+      artifactType: "image",
+      management: { managed: false },
+      value: entry.value,
+    })),
+  });
 }
 
 async function targetSelectionFailureExecutor(
@@ -345,18 +362,96 @@ test("selects the exact commit-back pin and never the prod promotion pin", () =>
   const prodDigest = `sha256:${"b".repeat(64)}`;
   expect(
     findManagedImagePin(
-      [
-        `  "shepherdjerred/example/prod": "2.0.0-1@${prodDigest}",`,
-        `  "shepherdjerred/example/beta":`,
-        `    "2.0.0-2@${betaDigest}",`,
-      ].join("\n"),
+      versionCatalogSource([
+        {
+          name: "shepherdjerred/example/prod",
+          value: `2.0.0-1@${prodDigest}`,
+        },
+        {
+          name: "shepherdjerred/example/beta",
+          value: `2.0.0-2@${betaDigest}`,
+        },
+      ]),
       "example",
     ),
   ).toEqual({
     key: "shepherdjerred/example/beta",
     digest: betaDigest,
   });
-  expect(findManagedImagePin("", "example")).toBeUndefined();
+  expect(
+    findManagedImagePin(
+      versionCatalogSource([
+        {
+          name: "shepherdjerred/unrelated",
+          value: `2.0.0-1@${prodDigest}`,
+        },
+      ]),
+      "example",
+    ),
+  ).toBeUndefined();
+});
+
+test("fails closed on malformed or ambiguous structured catalogs", () => {
+  expect(() => findManagedImagePin("{", "example")).toThrow(
+    "version catalog is not valid JSON",
+  );
+
+  const digest = `sha256:${"a".repeat(64)}`;
+  const duplicateCatalog = versionCatalogSource([
+    {
+      name: "shepherdjerred/example",
+      value: `2.0.0-1@${digest}`,
+    },
+    {
+      name: "shepherdjerred/example",
+      value: `2.0.0-2@${digest}`,
+    },
+  ]);
+  expect(() => findManagedImagePin(duplicateCatalog, "example")).toThrow(
+    "version catalog names must be unique",
+  );
+});
+
+test("resolves every bake target from the real structured version catalog", async () => {
+  const catalog = await Bun.file(VERSION_CATALOG_URL).text();
+  const missingPins = expandTargets(knownImageTargets).filter(
+    (target) => findManagedImagePin(catalog, target) === undefined,
+  );
+
+  expect(missingPins).toEqual([]);
+});
+
+test("validates structured pins before starting a production push", async () => {
+  const commands: string[][] = [];
+  const digest = `sha256:${"a".repeat(64)}`;
+
+  await expect(
+    pushImages(
+      {
+        targets: ["birmel"],
+        commit: "commit",
+        buildNumber: "42",
+        contractHash: "contract",
+      },
+      {
+        executor: async (command) => {
+          commands.push([...command]);
+          return commandResult();
+        },
+        environment: {},
+        readVersionCatalog: async () =>
+          versionCatalogSource([
+            {
+              name: "shepherdjerred/unrelated",
+              value: `2.0.0-1@${digest}`,
+            },
+          ]),
+      },
+    ),
+  ).rejects.toThrow(
+    "No managed image pin exists for ghcr.io/shepherdjerred/birmel",
+  );
+  expect(commands).toEqual([]);
 });
 
 test("only accepts documented flags", () => {
@@ -882,14 +977,29 @@ test("smokes exact candidates, reuses identical runtime fingerprints, and tags S
     {
       executor,
       environment: {},
-      readVersions: async () =>
-        [
-          `  "shepherdjerred/birmel": "2.0.0-1@${pinned}",`,
-          `  "shepherdjerred/scout-for-lol/beta": "2.0.0-2@${pinned}",`,
-          `  "shepherdjerred/scout-for-lol/prod": "2.0.0-1@${pinned}",`,
-          `  "shepherdjerred/starlight-karma-bot/beta": "2.0.0-2@${pinned}",`,
-          `  "shepherdjerred/starlight-karma-bot/prod": "2.0.0-1@${pinned}",`,
-        ].join("\n"),
+      readVersionCatalog: async () =>
+        versionCatalogSource([
+          {
+            name: "shepherdjerred/birmel",
+            value: `2.0.0-1@${pinned}`,
+          },
+          {
+            name: "shepherdjerred/scout-for-lol/beta",
+            value: `2.0.0-2@${pinned}`,
+          },
+          {
+            name: "shepherdjerred/scout-for-lol/prod",
+            value: `2.0.0-1@${pinned}`,
+          },
+          {
+            name: "shepherdjerred/starlight-karma-bot/beta",
+            value: `2.0.0-2@${pinned}`,
+          },
+          {
+            name: "shepherdjerred/starlight-karma-bot/prod",
+            value: `2.0.0-1@${pinned}`,
+          },
+        ]),
       getManifestDigest: async (image) => {
         manifestReferences.push(image);
         events.push(`resolve:${image}`);
@@ -1028,8 +1138,13 @@ test("keeps an exact candidate fingerprint propagation miss transient", async ()
       {
         executor: async () => commandResult(),
         environment: {},
-        readVersions: async () =>
-          `  "shepherdjerred/birmel": "2.0.0-1@${pinned}",`,
+        readVersionCatalog: async () =>
+          versionCatalogSource([
+            {
+              name: "shepherdjerred/birmel",
+              value: `2.0.0-1@${pinned}`,
+            },
+          ]),
         getManifestDigest: async () => digest,
         verifyAnonymousPull: async () => {
           events.push("public");
@@ -1062,8 +1177,13 @@ test("keeps upstream provenance for infrastructure images", async () => {
     {
       executor: async () => commandResult(),
       environment: {},
-      readVersions: async () =>
-        `  "shepherdjerred/bindery": "2.0.0-1@${pinned}",`,
+      readVersionCatalog: async () =>
+        versionCatalogSource([
+          {
+            name: "shepherdjerred/bindery",
+            value: `2.0.0-1@${pinned}`,
+          },
+        ]),
       getManifestDigest: async () => digest,
       verifyAnonymousPull: async () => {
         events.push("public");
