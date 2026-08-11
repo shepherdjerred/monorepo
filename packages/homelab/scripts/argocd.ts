@@ -839,6 +839,17 @@ function requireLiveOperationId(
   return SyncOperationIdSchema.parse(operation.liveOperationId);
 }
 
+function recoveryLiveOperationId(
+  operation: OperationObservation,
+): string | null | undefined {
+  if (!operation.hasLiveOperation) {
+    return undefined;
+  }
+  return operation.liveOperationId === null
+    ? null
+    : SyncOperationIdSchema.parse(operation.liveOperationId);
+}
+
 function operationStartedAfter(
   operation: OperationObservation,
   startedAt: string | undefined,
@@ -1177,11 +1188,7 @@ async function finalizeAsyncSync(
       console.log(`async sync operation already finalized: ${appName}`);
       return;
     }
-    const liveOperationId = current.hasLiveOperation
-      ? current.liveOperationId === null
-        ? null
-        : SyncOperationIdSchema.parse(current.liveOperationId)
-      : undefined;
+    const liveOperationId = recoveryLiveOperationId(current);
     const isExpectedOperation =
       liveOperationId !== undefined &&
       operationMatches(current, exactRequestId, exactRevision, liveOperationId);
