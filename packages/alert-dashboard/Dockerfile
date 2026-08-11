@@ -31,6 +31,12 @@ RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/alert-d
 FROM base AS runtime
 COPY --from=prod-deps /app/ /app/
 COPY --from=build /app/packages/alert-dashboard /app/packages/alert-dashboard
+# Bake Prisma's migration engines into the production dependency tree. Bun's
+# production install omits lifecycle scripts, so the CLI would otherwise
+# download engines on first use. Runtime executes as uid 1000 over root-owned
+# node_modules, which correctly prevents that startup write. Generating once as
+# root here keeps `prisma migrate deploy` read-only at runtime.
+RUN cd packages/alert-dashboard && bunx --no-install --trust prisma generate
 ENV NODE_ENV=production HOME=/tmp
 LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"
 EXPOSE 7341
@@ -41,6 +47,9 @@ FROM runtime AS smoke
 COPY .buildkite/scripts/smoke-app-in-image.ts /app/.buildkite/scripts/smoke-app-in-image.ts
 ARG SMOKE_TARGET=alert-dashboard
 ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
+# Exercise Prisma as the deployed non-root user so a missing baked engine fails
+# the image gate instead of crash-looping the migration init container.
+RUN cd /app/packages/alert-dashboard && bunx --no-install prisma --version
 RUN bun /app/.buildkite/scripts/smoke-app-in-image.ts
 
 FROM runtime AS image
