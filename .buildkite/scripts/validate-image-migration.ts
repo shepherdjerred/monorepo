@@ -3,6 +3,10 @@ import {
   requireAllPresent,
   requireNonePresent,
 } from "./validate-pipeline-lib.ts";
+import { APPLICATION_IMAGE_TARGETS } from "./image-targets.ts";
+import { assertMonorepoSourceLabel } from "./docker-source-label.ts";
+import { hclNamedBlock } from "./hcl-source.ts";
+import { productionBakeEnvironment } from "./production-bake-environment.ts";
 import { asRecord } from "../../scripts/lib/json.ts";
 
 type SmokePort = {
@@ -92,6 +96,71 @@ export function assertWikiManifestInDockerContext(dockerignore: string): void {
   }
 }
 
+type ResolvedBakeTarget = {
+  readonly dockerfilePath: string;
+  readonly publishedStage: string;
+};
+
+export function resolvedBakeTarget(
+  bake: unknown,
+  image: string,
+): ResolvedBakeTarget {
+  const targets = asRecord(asRecord(bake)?.["target"]);
+  const target = asRecord(targets?.[image]);
+  const dockerfilePath = target?.["dockerfile"];
+  const publishedStage = target?.["target"];
+  if (typeof dockerfilePath !== "string" || dockerfilePath.length === 0) {
+    fail(`resolved Bake target ${image} has no Dockerfile`);
+  }
+  if (typeof publishedStage !== "string" || publishedStage.length === 0) {
+    fail(`resolved Bake target ${image} has no published stage`);
+  }
+  return { dockerfilePath, publishedStage };
+}
+
+async function printResolvedBake(): Promise<unknown> {
+  const child = Bun.spawn(
+    ["docker", "buildx", "bake", "--print", ...APPLICATION_IMAGE_TARGETS],
+    {
+      env: productionBakeEnvironment(Bun.env, {
+        version: "validation",
+        gitSha: "validation",
+        contractHash: "validation",
+      }),
+      stdout: "pipe",
+      stderr: "pipe",
+    },
+  );
+  const [stdout, stderr, exitCode] = await Promise.all([
+    new Response(child.stdout).text(),
+    new Response(child.stderr).text(),
+    child.exited,
+  ]);
+  if (exitCode !== 0) {
+    fail(`docker buildx bake --print failed: ${stderr.trim()}`);
+  }
+  try {
+    const value: unknown = JSON.parse(stdout);
+    return value;
+  } catch (error) {
+    fail(`docker buildx bake --print returned invalid JSON: ${String(error)}`);
+  }
+}
+
+async function assertApplicationSourceLabels(
+  resolvedTargets: Readonly<Record<string, ResolvedBakeTarget>>,
+): Promise<void> {
+  for (const image of APPLICATION_IMAGE_TARGETS) {
+    const target = resolvedTargets[image];
+    if (target === undefined) fail(`resolved Bake target ${image} is missing`);
+    assertMonorepoSourceLabel(
+      await Bun.file(target.dockerfilePath).text(),
+      image,
+      target.publishedStage,
+    );
+  }
+}
+
 function smokeStage(dockerfile: string, image: string): string {
   const marker = /^FROM .+ AS smoke$/m.exec(dockerfile);
   if (marker?.index === undefined) {
@@ -100,67 +169,6 @@ function smokeStage(dockerfile: string, image: string): string {
   const remainder = dockerfile.slice(marker.index + marker[0].length);
   const nextStage = remainder.search(/^FROM /m);
   return nextStage === -1 ? remainder : remainder.slice(0, nextStage);
-}
-
-export function hclNamedBlock(
-  document: string,
-  blockType: string,
-  name: string,
-): string {
-  if (!/^[a-z][a-z-]*$/.test(blockType) || name.length === 0) {
-    fail(`invalid HCL block selector ${blockType}:${name}`);
-  }
-  const marker = `${blockType} "${name}"`;
-  const markerIndex = document.indexOf(marker);
-  if (markerIndex === -1) {
-    fail(`docker-bake.hcl has no ${marker}`);
-  }
-  const openIndex = document.indexOf("{", markerIndex + marker.length);
-  if (openIndex === -1) {
-    fail(`docker-bake.hcl ${marker} has no body`);
-  }
-
-  let depth = 0;
-  let quoted = false;
-  let escaped = false;
-  for (let index = openIndex; index < document.length; index += 1) {
-    const character = document.charAt(index);
-    if (quoted) {
-      if (escaped) {
-        escaped = false;
-        continue;
-      }
-      switch (character) {
-        case "\\": {
-          escaped = true;
-          break;
-        }
-        case '"': {
-          quoted = false;
-          break;
-        }
-      }
-      continue;
-    }
-    switch (character) {
-      case '"': {
-        quoted = true;
-        break;
-      }
-      case "{": {
-        depth += 1;
-        break;
-      }
-      case "}": {
-        depth -= 1;
-        if (depth === 0) {
-          return document.slice(markerIndex, index + 1);
-        }
-        break;
-      }
-    }
-  }
-  fail(`docker-bake.hcl ${marker} has an unclosed body`);
 }
 
 export function assertDeterministicBinderyIdentity(
@@ -300,15 +308,13 @@ export async function validateImageMigrationContracts(
     workspacePaths.push(workspacePath);
   }
   const requiredManifests = explicitWorkspaceManifests(workspacePaths);
+  const resolvedBake = await printResolvedBake();
+  const resolvedTargets: Record<string, ResolvedBakeTarget> = {};
   const appDockerfiles = new Set<string>();
-  for (const match of dockerBake.matchAll(
-    /^\s*dockerfile\s*=\s*"([^"]+)"\s*$/gmu,
-  )) {
-    const dockerfilePath = match[1];
-    if (dockerfilePath === undefined) {
-      fail("docker-bake.hcl contains an empty Dockerfile path");
-    }
-    appDockerfiles.add(dockerfilePath);
+  for (const image of APPLICATION_IMAGE_TARGETS) {
+    const target = resolvedBakeTarget(resolvedBake, image);
+    resolvedTargets[image] = target;
+    appDockerfiles.add(target.dockerfilePath);
   }
   if (appDockerfiles.size === 0) {
     fail("docker-bake.hcl contains no app Dockerfiles");
@@ -320,6 +326,7 @@ export async function validateImageMigrationContracts(
       requiredManifests,
     );
   }
+  await assertApplicationSourceLabels(resolvedTargets);
 
   const buildCiImage = await Bun.file(
     ".buildkite/scripts/build-ci-image.ts",

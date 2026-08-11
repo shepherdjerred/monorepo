@@ -11,7 +11,9 @@ import {
   type CommandExecutor,
   writeFallbackReport,
 } from "./bake-images.ts";
+import { ensureAnonymousGhcrPull } from "./ghcr-public-access.ts";
 import {
+  assertImageSourceLabel,
   CI_IMAGE_IGNORED_ENV_PREFIXES,
   imageRuntimeFingerprint,
   runExactCandidateSmoke,
@@ -19,6 +21,7 @@ import {
 } from "./application-image-runtime.ts";
 import type { BuildxCommandResult } from "./bake-retry.ts";
 import { TransientError } from "../../scripts/lib/transient-error.ts";
+import { productionBakeEnvironment } from "./production-bake-environment.ts";
 import {
   caddyfileEntitlementArguments,
   expandTargets,
@@ -87,6 +90,14 @@ async function manifestUnknownInspectExecutor(): Promise<BuildxCommandResult> {
   return commandResult(1, "", "MANIFEST_UNKNOWN: manifest unknown");
 }
 
+async function httpNotFoundInspectExecutor(): Promise<BuildxCommandResult> {
+  return commandResult(
+    1,
+    "",
+    "unexpected status from HEAD request: 404 Not Found",
+  );
+}
+
 async function rateLimitedInspectExecutor(): Promise<BuildxCommandResult> {
   return commandResult(1, "", "429 Too Many Requests");
 }
@@ -117,6 +128,25 @@ async function imageExecutor(): Promise<BuildxCommandResult> {
   );
 }
 
+async function validSourceLabelExecutor(): Promise<BuildxCommandResult> {
+  return commandResult(
+    0,
+    JSON.stringify({
+      "org.opencontainers.image.source":
+        "https://github.com/shepherdjerred/monorepo",
+    }),
+  );
+}
+
+async function wrongSourceLabelExecutor(): Promise<BuildxCommandResult> {
+  return commandResult(
+    0,
+    JSON.stringify({
+      "org.opencontainers.image.source": "https://github.com/other/repo",
+    }),
+  );
+}
+
 test("grants caddyfile read access to smoke and push bakes", () => {
   expect(
     caddyfileEntitlementArguments(
@@ -128,6 +158,181 @@ test("grants caddyfile read access to smoke and push bakes", () => {
   expect(() => caddyfileEntitlementArguments(["caddy-s3proxy"])).toThrow(
     "CADDYFILE_SMOKE_PATH is required for caddy-s3proxy",
   );
+});
+
+test("resolves Bake with the production image environment", () => {
+  expect(
+    productionBakeEnvironment(
+      {
+        KEEP: "value",
+        PUSH_CACHE: "false",
+        PUSH_IMAGES: "false",
+        VERSION: "dev",
+      },
+      {
+        version: "42",
+        gitSha: "commit",
+        contractHash: "contract",
+      },
+    ),
+  ).toEqual({
+    KEEP: "value",
+    VERSION: "42",
+    GIT_SHA: "commit",
+    CONTRACT_HASH: "contract",
+    PUSH_CACHE: "true",
+    PUSH_IMAGES: "true",
+  });
+});
+
+test("waits for an exact digest to become anonymously pullable", async () => {
+  const digest = `sha256:${"a".repeat(64)}`;
+  const requests: string[] = [];
+  let tokenRequests = 0;
+  let manifestRequests = 0;
+  const fetcher = Object.assign(
+    async (input: string | URL | Request) => {
+      const url = input instanceof Request ? input.url : input.toString();
+      requests.push(url);
+      if (url.includes("/token?")) {
+        tokenRequests += 1;
+        return tokenRequests === 1
+          ? new Response(null, { status: 401 })
+          : Response.json({ token: "anonymous-token" });
+      }
+      manifestRequests += 1;
+      return manifestRequests === 1
+        ? new Response(null, { status: 404 })
+        : new Response("{}", { status: 200 });
+    },
+    { preconnect: fetch.preconnect },
+  );
+  const sleeps: number[] = [];
+
+  await ensureAnonymousGhcrPull("alert-dashboard", digest, {
+    fetcher,
+    sleeper: async (milliseconds) => {
+      sleeps.push(milliseconds);
+    },
+    attempts: 3,
+    delayMilliseconds: 25,
+  });
+
+  expect(sleeps).toEqual([25, 25]);
+  expect(requests).toEqual([
+    "https://ghcr.io/token?scope=repository%3Ashepherdjerred%2Falert-dashboard%3Apull&service=ghcr.io",
+    "https://ghcr.io/token?scope=repository%3Ashepherdjerred%2Falert-dashboard%3Apull&service=ghcr.io",
+    `https://ghcr.io/v2/shepherdjerred/alert-dashboard/manifests/${encodeURIComponent(digest)}`,
+    "https://ghcr.io/token?scope=repository%3Ashepherdjerred%2Falert-dashboard%3Apull&service=ghcr.io",
+    `https://ghcr.io/v2/shepherdjerred/alert-dashboard/manifests/${encodeURIComponent(digest)}`,
+  ]);
+});
+
+test("fails closed when a GHCR package stays private", async () => {
+  const fetcher = Object.assign(
+    async () => new Response(null, { status: 401 }),
+    { preconnect: fetch.preconnect },
+  );
+
+  await expect(
+    ensureAnonymousGhcrPull("alert-dashboard", `sha256:${"b".repeat(64)}`, {
+      fetcher,
+      sleeper: async (milliseconds) => milliseconds,
+      attempts: 2,
+      delayMilliseconds: 0,
+    }),
+  ).rejects.toThrow(
+    "GHCR package shepherdjerred/alert-dashboard is not anonymously pullable",
+  );
+  await expect(
+    ensureAnonymousGhcrPull("alert-dashboard", `sha256:${"b".repeat(64)}`, {
+      fetcher,
+      sleeper: async (milliseconds) => milliseconds,
+      attempts: 1,
+    }),
+  ).rejects.not.toBeInstanceOf(TransientError);
+});
+
+test("preserves exhausted GHCR transport and server failures as transient", async () => {
+  for (const status of [408, 429, 500, 503]) {
+    const fetcher = Object.assign(async () => new Response(null, { status }), {
+      preconnect: fetch.preconnect,
+    });
+    await expect(
+      ensureAnonymousGhcrPull("alert-dashboard", `sha256:${"c".repeat(64)}`, {
+        fetcher,
+        sleeper: async (milliseconds) => milliseconds,
+        attempts: 1,
+      }),
+    ).rejects.toBeInstanceOf(TransientError);
+  }
+
+  const fetcher = Object.assign(
+    async () => {
+      throw new Error("request timed out");
+    },
+    { preconnect: fetch.preconnect },
+  );
+  await expect(
+    ensureAnonymousGhcrPull("alert-dashboard", `sha256:${"d".repeat(64)}`, {
+      fetcher,
+      sleeper: async (milliseconds) => milliseconds,
+      attempts: 1,
+    }),
+  ).rejects.toBeInstanceOf(TransientError);
+
+  let request = 0;
+  const propagatingManifestFetcher = Object.assign(
+    async () => {
+      request += 1;
+      return request % 2 === 1
+        ? Response.json({ token: "anonymous-token" })
+        : new Response(null, { status: 404 });
+    },
+    { preconnect: fetch.preconnect },
+  );
+  await expect(
+    ensureAnonymousGhcrPull("alert-dashboard", `sha256:${"e".repeat(64)}`, {
+      fetcher: propagatingManifestFetcher,
+      sleeper: async (milliseconds) => milliseconds,
+      attempts: 1,
+    }),
+  ).rejects.toBeInstanceOf(TransientError);
+
+  const invalidTokenFetcher = Object.assign(
+    async () => new Response("truncated-token-json", { status: 200 }),
+    { preconnect: fetch.preconnect },
+  );
+  await expect(
+    ensureAnonymousGhcrPull("alert-dashboard", `sha256:${"e".repeat(64)}`, {
+      fetcher: invalidTokenFetcher,
+      sleeper: async (milliseconds) => milliseconds,
+      attempts: 1,
+    }),
+  ).rejects.toBeInstanceOf(TransientError);
+
+  class TruncatedManifestResponse extends Response {
+    override arrayBuffer = async (): Promise<ArrayBuffer> => {
+      throw new Error("manifest connection closed");
+    };
+  }
+  let bodyRequests = 0;
+  const truncatedManifestFetcher = Object.assign(
+    async () => {
+      bodyRequests += 1;
+      return bodyRequests === 1
+        ? Response.json({ token: "anonymous-token" })
+        : new TruncatedManifestResponse("partial", { status: 200 });
+    },
+    { preconnect: fetch.preconnect },
+  );
+  await expect(
+    ensureAnonymousGhcrPull("alert-dashboard", `sha256:${"f".repeat(64)}`, {
+      fetcher: truncatedManifestFetcher,
+      sleeper: async (milliseconds) => milliseconds,
+      attempts: 1,
+    }),
+  ).rejects.toBeInstanceOf(TransientError);
 });
 
 test("expands the infra group into invokable targets", () => {
@@ -474,6 +679,34 @@ test("fingerprints rootfs and runtime OCI config without build identity", async 
   );
 });
 
+test("requires the effective candidate OCI source label", async () => {
+  const image = `ghcr.io/shepherdjerred/example@sha256:${"a".repeat(64)}`;
+  await expect(
+    assertImageSourceLabel(image, validSourceLabelExecutor),
+  ).resolves.toBeUndefined();
+  await expect(
+    assertImageSourceLabel(image, wrongSourceLabelExecutor),
+  ).rejects.toThrow("must carry org.opencontainers.image.source");
+  await expect(
+    assertImageSourceLabel(image, async () => commandResult(0, "{")),
+  ).rejects.toBeInstanceOf(TransientError);
+  await expect(
+    assertImageSourceLabel(image, transientInspectExecutor),
+  ).rejects.toBeInstanceOf(TransientError);
+  await expect(
+    assertImageSourceLabel(image, manifestUnknownInspectExecutor),
+  ).rejects.toBeInstanceOf(TransientError);
+  await expect(
+    assertImageSourceLabel(image, httpNotFoundInspectExecutor),
+  ).rejects.toBeInstanceOf(TransientError);
+  await expect(
+    assertImageSourceLabel(
+      "ghcr.io/shepherdjerred/example:missing",
+      httpNotFoundInspectExecutor,
+    ),
+  ).rejects.not.toBeInstanceOf(TransientError);
+});
+
 test("keeps build-identity env for CI images while dropping it for application images", () => {
   const base = {
     architecture: "amd64",
@@ -659,7 +892,14 @@ test("smokes exact candidates, reuses identical runtime fingerprints, and tags S
         ].join("\n"),
       getManifestDigest: async (image) => {
         manifestReferences.push(image);
+        events.push(`resolve:${image}`);
         return digest;
+      },
+      verifyAnonymousPull: async (target, reference) => {
+        events.push(`public:${target}:${reference}`);
+      },
+      verifySourceLabel: async (image) => {
+        events.push(`source:${image}`);
       },
       getRuntimeFingerprint: async (image) => {
         events.push(`fingerprint:${image}`);
@@ -693,12 +933,58 @@ test("smokes exact candidates, reuses identical runtime fingerprints, and tags S
     "ghcr.io/shepherdjerred/scout-for-lol:candidate-commit",
     "ghcr.io/shepherdjerred/starlight-karma-bot:candidate-commit",
   ]);
+  expect(events.filter((event) => event.startsWith("public:"))).toEqual([
+    `public:birmel:${digest}`,
+    `public:scout-for-lol:${digest}`,
+    `public:starlight-karma-bot:${digest}`,
+  ]);
+  expect(events.filter((event) => event.startsWith("source:"))).toEqual([
+    `source:ghcr.io/shepherdjerred/birmel@${digest}`,
+    `source:ghcr.io/shepherdjerred/scout-for-lol@${digest}`,
+    `source:ghcr.io/shepherdjerred/starlight-karma-bot@${digest}`,
+  ]);
   expect(events[0]).toBe(
+    "resolve:ghcr.io/shepherdjerred/birmel:candidate-commit",
+  );
+  expect(events[1]).toBe(`public:birmel:${digest}`);
+  expect(events[2]).toBe(`source:ghcr.io/shepherdjerred/birmel@${digest}`);
+  expect(events[3]).toBe(
     `smoke:birmel:ghcr.io/shepherdjerred/birmel@${digest}`,
   );
-  expect(events[1]).toBe(`fingerprint:ghcr.io/shepherdjerred/birmel@${digest}`);
-  expect(events).toContain(
-    `smoke:scout-for-lol:ghcr.io/shepherdjerred/scout-for-lol@${digest}`,
+  expect(events[4]).toBe(`fingerprint:ghcr.io/shepherdjerred/birmel@${digest}`);
+  expect(
+    events.indexOf(
+      "resolve:ghcr.io/shepherdjerred/scout-for-lol:candidate-commit",
+    ),
+  ).toBeLessThan(events.indexOf(`public:scout-for-lol:${digest}`));
+  expect(events.indexOf(`public:scout-for-lol:${digest}`)).toBeLessThan(
+    events.indexOf(`source:ghcr.io/shepherdjerred/scout-for-lol@${digest}`),
+  );
+  expect(
+    events.indexOf(`source:ghcr.io/shepherdjerred/scout-for-lol@${digest}`),
+  ).toBeLessThan(
+    events.indexOf(
+      `smoke:scout-for-lol:ghcr.io/shepherdjerred/scout-for-lol@${digest}`,
+    ),
+  );
+  expect(
+    events.indexOf(
+      "resolve:ghcr.io/shepherdjerred/starlight-karma-bot:candidate-commit",
+    ),
+  ).toBeLessThan(events.indexOf(`public:starlight-karma-bot:${digest}`));
+  expect(events.indexOf(`public:starlight-karma-bot:${digest}`)).toBeLessThan(
+    events.indexOf(
+      `source:ghcr.io/shepherdjerred/starlight-karma-bot@${digest}`,
+    ),
+  );
+  expect(
+    events.indexOf(
+      `source:ghcr.io/shepherdjerred/starlight-karma-bot@${digest}`,
+    ),
+  ).toBeLessThan(
+    events.indexOf(
+      `fingerprint:ghcr.io/shepherdjerred/starlight-karma-bot@${digest}`,
+    ),
   );
   expect(metadata).toEqual([
     {
@@ -723,6 +1009,82 @@ test("smokes exact candidates, reuses identical runtime fingerprints, and tags S
       outcome: "pin-unresolvable-bumped",
     },
   ]);
+});
+
+test("keeps an exact candidate fingerprint propagation miss transient", async () => {
+  const digest = `sha256:${"b".repeat(64)}`;
+  const pinned = `sha256:${"a".repeat(64)}`;
+  const events: string[] = [];
+  const missingFingerprint = new Map<string, string>().get("candidate");
+
+  await expect(
+    pushImages(
+      {
+        targets: ["birmel"],
+        commit: "commit",
+        buildNumber: "42",
+        contractHash: "contract",
+      },
+      {
+        executor: async () => commandResult(),
+        environment: {},
+        readVersions: async () =>
+          `  "shepherdjerred/birmel": "2.0.0-1@${pinned}",`,
+        getManifestDigest: async () => digest,
+        verifyAnonymousPull: async () => {
+          events.push("public");
+        },
+        verifySourceLabel: async () => {
+          events.push("source");
+        },
+        smokeCandidate: async () => {
+          events.push("smoke");
+        },
+        getRuntimeFingerprint: async () => missingFingerprint,
+      },
+    ),
+  ).rejects.toBeInstanceOf(TransientError);
+  expect(events).toEqual(["public", "source", "smoke"]);
+});
+
+test("keeps upstream provenance for infrastructure images", async () => {
+  const digest = `sha256:${"b".repeat(64)}`;
+  const pinned = `sha256:${"a".repeat(64)}`;
+  const sourceChecks: string[] = [];
+  const events: string[] = [];
+  await pushImages(
+    {
+      targets: ["bindery"],
+      commit: "commit",
+      buildNumber: "42",
+      contractHash: "contract",
+    },
+    {
+      executor: async () => commandResult(),
+      environment: {},
+      readVersions: async () =>
+        `  "shepherdjerred/bindery": "2.0.0-1@${pinned}",`,
+      getManifestDigest: async () => digest,
+      verifyAnonymousPull: async () => {
+        events.push("public");
+      },
+      verifySourceLabel: async (image) => {
+        sourceChecks.push(image);
+      },
+      getRuntimeFingerprint: async () => "same",
+      writeMetadata: async () => {
+        events.push("metadata");
+      },
+      writeCandidates: async () => {
+        events.push("candidates");
+      },
+      writeText: async () => {
+        events.push("outcomes");
+      },
+    },
+  );
+  expect(sourceChecks).toEqual([]);
+  expect(events).toEqual(["public", "metadata", "candidates", "outcomes"]);
 });
 
 test("writes a deterministic full-build fallback report", async () => {

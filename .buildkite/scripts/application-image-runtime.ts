@@ -13,7 +13,16 @@ export type ImageCommandExecutor = (
   environment?: Readonly<Record<string, string | undefined>>,
 ) => Promise<BuildxCommandResult>;
 
+export function sourceLabelVerifier(
+  override: ((image: string) => Promise<void>) | undefined,
+  executor: ImageCommandExecutor,
+): (image: string) => Promise<void> {
+  return override ?? (async (image) => assertImageSourceLabel(image, executor));
+}
+
 const applicationImageTargets = new Set(APPLICATION_IMAGE_TARGETS);
+const monorepoSource = "https://github.com/shepherdjerred/monorepo";
+const sourceLabel = "org.opencontainers.image.source";
 
 // Registry/BuildKit diagnostics that specifically mean the requested manifest
 // or repository does not exist — the only inspect failure that legitimately
@@ -23,6 +32,20 @@ const applicationImageTargets = new Set(APPLICATION_IMAGE_TARGETS);
 // unclassified errors and fail loud. Anything else non-transient is unclassified.
 const IMAGE_ABSENT_PATTERN =
   /manifest[ _]unknown|name[ _]unknown|(?:manifest|reference|@sha256:[\da-f]{64})[^\n]*not found/i;
+const HTTP_NOT_FOUND_PATTERN =
+  /\bHTTP(?:\/\d(?:\.\d)?)?\s+404\b|\bstatus(?:\s+code)?(?:\s+|[=:]\s*)404\b|\b404\s+Not Found\b/i;
+const EXACT_DIGEST_REFERENCE_PATTERN = /@sha256:[\da-f]{64}$/i;
+
+function exactDigestInspectIsPropagating(
+  image: string,
+  diagnostics: string,
+): boolean {
+  return (
+    EXACT_DIGEST_REFERENCE_PATTERN.test(image) &&
+    (IMAGE_ABSENT_PATTERN.test(diagnostics) ||
+      HTTP_NOT_FOUND_PATTERN.test(diagnostics))
+  );
+}
 
 function canonicalJson(value: unknown): string {
   if (value === null) return "null";
@@ -135,6 +158,50 @@ export function runtimeFingerprintFromImage(
   return new Bun.CryptoHasher("sha256")
     .update(canonicalJson(fingerprintInput))
     .digest("hex");
+}
+
+export async function assertImageSourceLabel(
+  image: string,
+  executor: ImageCommandExecutor,
+): Promise<void> {
+  const result = await executor([
+    "docker",
+    "buildx",
+    "imagetools",
+    "inspect",
+    image,
+    "--format",
+    "{{json .Image.Config.Labels}}",
+  ]);
+  const diagnostics = `${result.stdout}\n${result.stderr}`;
+  const detail = result.stderr.trim() || result.stdout.trim();
+  if (result.exitCode !== 0) {
+    if (
+      bakeFailureIsTransient(diagnostics) ||
+      exactDigestInspectIsPropagating(image, diagnostics)
+    ) {
+      throw new TransientError(
+        `Transient failure inspecting source label for ${image}: ${detail}`,
+      );
+    }
+    throw new Error(`Could not inspect source label for ${image}: ${detail}`);
+  }
+
+  let value: unknown;
+  try {
+    value = JSON.parse(result.stdout);
+  } catch (error) {
+    throw new TransientError(
+      `Invalid source-label metadata for ${image}: ${String(error)}`,
+    );
+  }
+  const labels = asRecord(value);
+  if (labels === null) {
+    throw new TypeError(`Source-label metadata for ${image} must be an object`);
+  }
+  if (labels[sourceLabel] !== monorepoSource) {
+    throw new Error(`${image} must carry ${sourceLabel}=${monorepoSource}`);
+  }
 }
 
 export async function imageRuntimeFingerprint(

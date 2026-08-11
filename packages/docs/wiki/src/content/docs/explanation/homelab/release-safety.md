@@ -184,6 +184,29 @@ is therefore unsafe even when every manifest was applied.
 
 ## Why image selection looks complicated
 
+The authenticated publisher is not proof that Kubernetes can pull an image.
+GitHub Container Registry packages are private by default. The monorepo's
+`org.opencontainers.image.source` label links each application package to its
+source repository, but that link does not make the package public. GitHub
+describes source links, inherited repository access, and package visibility as
+separate controls in its
+[package access guidance](https://docs.github.com/en/packages/learn-github-packages/configuring-a-packages-access-control-and-visibility).
+That separation is why the release treats anonymous pullability as its own
+gate. The operator procedure for bootstrapping or recovering package visibility
+lives in [Cut a homelab release](/how-to/cut-a-homelab-release/#if-ghcr-rejects-a-workload-pull).
+
+After the push, the
+[image publication flow](https://github.com/shepherdjerred/monorepo/blob/6891646ef4bfbe67a3b5bea615c0e100e99c6145/.buildkite/scripts/bake-images.ts)
+resolves the candidate tag to a digest. The
+[anonymous GHCR probe](https://github.com/shepherdjerred/monorepo/blob/ecfd92e182858588dc98c9ed85fcefe768fb0680/.buildkite/scripts/ghcr-public-access.ts)
+then requests a pull token and fetches that immutable digest. Visibility and
+manifest propagation may lag briefly, so the probe polls a bounded number of
+times. Buildx then reads the effective OCI configuration at that same digest
+and requires its source label to name the monorepo. The image lane records no
+pin candidate until both checks succeed. This keeps a publisher credential or
+a misleading Dockerfile from hiding what the unauthenticated kubelet and the
+published artifact would expose later.
+
 Application image selection uses the newest `main` commit whose `images` and
 `version-commit-back` jobs both passed as its comparison base.
 

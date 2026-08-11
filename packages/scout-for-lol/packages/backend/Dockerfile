@@ -92,6 +92,7 @@ COPY --from=build /app/packages/llm-models/dist packages/llm-models/dist
 COPY --from=build /app/packages/scout-for-lol/packages/backend/generated packages/scout-for-lol/packages/backend/generated
 
 ENV NODE_ENV=production
+LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"
 
 # scout reads VERSION/GIT_SHA at boot (src/configuration.ts requires VERSION).
 # Declared as build args so CI can bake the real build number + commit SHA

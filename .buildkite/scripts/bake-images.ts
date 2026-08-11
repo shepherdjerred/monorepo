@@ -4,6 +4,7 @@ import {
   classifyRuntimeChange,
   imageRuntimeFingerprint,
   runExactCandidateSmoke,
+  sourceLabelVerifier,
 } from "./application-image-runtime.ts";
 import {
   retryTransientBuildx,
@@ -20,6 +21,14 @@ import {
   parseImageSelection,
 } from "./migration-core.ts";
 import { APPLICATION_IMAGE_TARGETS } from "./image-targets.ts";
+import {
+  anonymousPullVerifier,
+  type AnonymousPullVerifier,
+} from "./ghcr-public-access.ts";
+import type { PushOptions, PushOutcome } from "./bake-image-push-types.ts";
+import { productionBakeEnvironment } from "./production-bake-environment.ts";
+import { runMain } from "../../scripts/lib/transient.ts";
+import { TransientError } from "../../scripts/lib/transient-error.ts";
 
 const registry = "ghcr.io/shepherdjerred";
 const selectionReport = "image-selection-report.json";
@@ -283,22 +292,6 @@ export async function runSmoke(
   if (exitCode !== 0) process.exit(exitCode);
 }
 
-type PushOutcome = {
-  readonly image: string;
-  readonly outcome:
-    | "bumped"
-    | "content-unchanged"
-    | "pin-unresolvable-bumped"
-    | "no-pin-bumped";
-};
-
-type PushOptions = {
-  readonly targets: readonly string[];
-  readonly commit: string;
-  readonly buildNumber: string;
-  readonly contractHash: string;
-};
-
 export async function pushImages(
   options: PushOptions,
   dependencies: {
@@ -306,6 +299,8 @@ export async function pushImages(
     readonly environment?: Readonly<Record<string, string | undefined>>;
     readonly readVersions?: () => Promise<string>;
     readonly getManifestDigest?: (image: string) => Promise<string>;
+    readonly verifyAnonymousPull?: AnonymousPullVerifier;
+    readonly verifySourceLabel?: (image: string) => Promise<void>;
     readonly getRuntimeFingerprint?: (
       image: string,
     ) => Promise<string | undefined>;
@@ -330,6 +325,13 @@ export async function pushImages(
   const readVersions =
     dependencies.readVersions ?? (async () => Bun.file(versionsPath).text());
   const getManifestDigest = dependencies.getManifestDigest ?? manifestDigest;
+  const verifyAnonymousPull = anonymousPullVerifier(
+    dependencies.verifyAnonymousPull,
+  );
+  const verifySourceLabel = sourceLabelVerifier(
+    dependencies.verifySourceLabel,
+    executor,
+  );
   const getRuntimeFingerprint =
     dependencies.getRuntimeFingerprint ??
     (async (image) => imageRuntimeFingerprint(image, executor));
@@ -365,14 +367,11 @@ export async function pushImages(
         ...caddyfileArguments,
         ...targets,
       ],
-      {
-        ...environment,
-        VERSION: buildNumber,
-        GIT_SHA: commit,
-        CONTRACT_HASH: contractHash,
-        PUSH_CACHE: "true",
-        PUSH_IMAGES: "true",
-      },
+      productionBakeEnvironment(environment, {
+        version: buildNumber,
+        gitSha: commit,
+        contractHash,
+      }),
     ),
   );
   if (pushExitCode === 34) process.exit(pushExitCode);
@@ -390,13 +389,14 @@ export async function pushImages(
     const candidateTag = `${image}:candidate-${commit}`;
     const digest = await getManifestDigest(candidateTag);
     const candidate = `${image}@${digest}`;
+    await verifyAnonymousPull(name, digest);
     if (applicationImageTargets.has(name)) {
+      await verifySourceLabel(candidate);
       await smokeCandidate(name, candidate, contractHash);
     }
     const newFingerprint = await getRuntimeFingerprint(candidate);
-    if (newFingerprint === undefined) {
-      throw new Error(`Could not fingerprint candidate ${candidate}`);
-    }
+    if (newFingerprint === undefined)
+      throw new TransientError(`Candidate unavailable: ${candidate}`);
     const outcome = await classifyRuntimeChange(
       {
         image,
@@ -446,7 +446,7 @@ export async function writeFallbackReport(
   );
 }
 
-if (import.meta.main) {
+async function main(): Promise<void> {
   const options = parseBakeArguments(Bun.argv.slice(2));
   const commit = Bun.env["BUILDKITE_COMMIT"];
   const buildNumber = Bun.env["BUILDKITE_BUILD_NUMBER"];
@@ -468,7 +468,7 @@ if (import.meta.main) {
       await setPinCandidatesMetadata({}, buildNumber);
       await Bun.write(pushOutcomes, "[]\n");
     }
-    process.exit(0);
+    return;
   }
 
   await ensureBuilder();
@@ -499,3 +499,5 @@ if (import.meta.main) {
   }
   await annotate(annotationArguments);
 }
+
+if (import.meta.main) await runMain(main);

@@ -85,6 +85,35 @@ application forever.
 If you expected a rebuild and got none, check whether your commit only moved a
 pin.
 
+## If GHCR rejects a workload pull
+
+The
+[image publication flow](https://github.com/shepherdjerred/monorepo/blob/6891646ef4bfbe67a3b5bea615c0e100e99c6145/.buildkite/scripts/bake-images.ts)
+resolves every pushed candidate to a digest. The
+[anonymous GHCR probe](https://github.com/shepherdjerred/monorepo/blob/ecfd92e182858588dc98c9ed85fcefe768fb0680/.buildkite/scripts/ghcr-public-access.ts)
+then fetches that immutable digest before the job records any pin candidate. A
+`401` from the anonymous token request means the package is still private. A
+manifest `404` after a successful token request can be brief registry
+propagation and is retried within the job. The flow also inspects the effective
+OCI configuration at that digest and rejects a missing or incorrect monorepo
+source label.
+
+For a newly named application image:
+
+1. Confirm its runtime Dockerfile has the exact monorepo
+   `org.opencontainers.image.source` label in the published stage or its
+   ancestry.
+2. Publish the first candidate to create the GHCR package.
+3. Use Package settings to change the package visibility from private to
+   public. The source label links provenance and repository access; it does not
+   perform the visibility change. GitHub documents the separate controls in its
+   [package access guidance](https://docs.github.com/en/packages/learn-github-packages/configuring-a-packages-access-control-and-visibility).
+4. Verify the anonymous token request and exact digest fetch before continuing
+   the release.
+
+Do not distribute the publisher's broad GHCR credential to application
+namespaces to conceal a visibility mistake.
+
 ## If the release will not start
 
 A previous root operation stuck in `Running` blocks the next ordered release.

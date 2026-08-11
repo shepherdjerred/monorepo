@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { isTransientError } from "./transient.ts";
+import { EXIT_TRANSIENT, isTransientError, runMain } from "./transient.ts";
 import { TransientError } from "./transient-error.ts";
 
 describe("isTransientError", () => {
@@ -86,5 +86,36 @@ describe("isTransientError", () => {
         cause: { code: "ValidationFailed" },
       }),
     ).toBe(false);
+  });
+});
+
+class ExitSignal extends Error {
+  constructor(readonly code: number) {
+    super(`exit ${code.toString()}`);
+  }
+}
+
+function throwExit(code: number): never {
+  throw new ExitSignal(code);
+}
+
+describe("runMain", () => {
+  test("returns when main succeeds", async () => {
+    let completed = false;
+    await runMain(async () => {
+      completed = true;
+    }, throwExit);
+    expect(completed).toBe(true);
+  });
+
+  test.each([
+    [new TransientError("registry unavailable"), EXIT_TRANSIENT],
+    [new Error("invalid image pin"), 1],
+  ])("maps classified failures to exit status %#", async (error, code) => {
+    await expect(
+      runMain(async () => {
+        throw error;
+      }, throwExit),
+    ).rejects.toEqual(new ExitSignal(code));
   });
 });

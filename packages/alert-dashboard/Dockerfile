@@ -32,6 +32,7 @@ FROM base AS runtime
 COPY --from=prod-deps /app/ /app/
 COPY --from=build /app/packages/alert-dashboard /app/packages/alert-dashboard
 ENV NODE_ENV=production HOME=/tmp
+LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"
 EXPOSE 7341
 USER 1000:1000
 CMD ["bun", "packages/alert-dashboard/src/server/index.ts"]

@@ -1,4 +1,6 @@
 import { describe, expect, test } from "bun:test";
+import { assertMonorepoSourceLabel } from "./docker-source-label.ts";
+import { hclNamedBlock } from "./hcl-source.ts";
 
 import {
   applicationSmokePort,
@@ -8,8 +10,8 @@ import {
   assertUniqueSmokePorts,
   explicitWorkspaceManifests,
   explicitSmokePort,
-  hclNamedBlock,
   httpSmokePort,
+  resolvedBakeTarget,
 } from "./validate-image-migration.ts";
 
 const deterministicBinderyDockerfile = `
@@ -51,6 +53,55 @@ describe("deterministic Bindery identity", () => {
   }
 }`,
     );
+  });
+
+  test("ignores commented blocks and braces when extracting a target", () => {
+    expect(
+      hclNamedBlock(
+        [
+          '/* target "bindery" { context = "wrong" } */',
+          'target "bindery" {',
+          "  /* } */",
+          '  context = "packages/homelab/images/bindery"',
+          "}",
+        ].join("\n"),
+        "target",
+        "bindery",
+      ),
+    ).toContain('context = "packages/homelab/images/bindery"');
+  });
+
+  test("ignores target-shaped HCL heredoc payloads", () => {
+    expect(
+      hclNamedBlock(
+        [
+          'variable "example" {',
+          "  default = <<EOF",
+          'target "bindery" { context = "wrong" }',
+          "EOF",
+          "}",
+          'target "bindery" {',
+          '  context = "packages/homelab/images/bindery"',
+          "}",
+        ].join("\n"),
+        "target",
+        "bindery",
+      ),
+    ).toContain('context = "packages/homelab/images/bindery"');
+    expect(
+      hclNamedBlock(
+        [
+          'variable "example" {',
+          "  default = <<-EOF",
+          '    target "bindery" { context = "wrong" }',
+          "  EOF",
+          "}",
+          'target "bindery" { context = "packages/homelab/images/bindery" }',
+        ].join("\n"),
+        "target",
+        "bindery",
+      ),
+    ).toContain('context = "packages/homelab/images/bindery"');
   });
 
   test("accepts source-plus-patch runtime identity", () => {
@@ -153,6 +204,341 @@ packages/docs/wiki/*
       assertWikiManifestInDockerContext("packages/docs");
     }).toThrow(
       ".dockerignore is missing wiki workspace manifest context rule packages/docs/*",
+    );
+  });
+});
+
+describe("GHCR package provenance", () => {
+  test("uses the Dockerfile and stage from resolved Bake output", () => {
+    expect(
+      resolvedBakeTarget(
+        {
+          target: {
+            example: {
+              dockerfile: "packages/example/Dockerfile",
+              target: "release",
+            },
+          },
+        },
+        "example",
+      ),
+    ).toEqual({
+      dockerfilePath: "packages/example/Dockerfile",
+      publishedStage: "release",
+    });
+  });
+
+  test("requires the published image stage to link its source repository", () => {
+    expect(() =>
+      assertMonorepoSourceLabel(
+        'FROM runtime AS image\nLABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"',
+        "example",
+        "image",
+      ),
+    ).not.toThrow();
+    expect(() =>
+      assertMonorepoSourceLabel("FROM runtime AS image", "example", "image"),
+    ).toThrow(
+      "example published image stage must link its GHCR package to the public monorepo",
+    );
+    expect(() =>
+      assertMonorepoSourceLabel(
+        [
+          "FROM runtime AS image",
+          'LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo" description="<<EOF"',
+          'LABEL org.opencontainers.image.source="https://github.com/somewhere/else"',
+        ].join("\n"),
+        "example",
+        "image",
+      ),
+    ).toThrow(
+      "example published image stage must link its GHCR package to the public monorepo",
+    );
+    expect(() =>
+      assertMonorepoSourceLabel(
+        [
+          "# escape=`",
+          "FROM runtime AS image",
+          String.raw`LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo" vendor=\ org.opencontainers.image.source="https://github.com/somewhere/else"`,
+        ].join("\n"),
+        "example",
+        "image",
+      ),
+    ).toThrow(
+      "example published image stage must link its GHCR package to the public monorepo",
+    );
+    expect(() =>
+      assertMonorepoSourceLabel(
+        'FROM --platform=$BUILDPLATFORM runtime AS image\nLABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"',
+        "example",
+        "image",
+      ),
+    ).not.toThrow();
+    expect(() =>
+      assertMonorepoSourceLabel(
+        [
+          "FROM runtime AS image",
+          "FROM --platform=$BUILDPLATFORM runtime AS helper",
+          'LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"',
+        ].join("\n"),
+        "example",
+        "image",
+      ),
+    ).toThrow(
+      "example published image stage must link its GHCR package to the public monorepo",
+    );
+    expect(() =>
+      assertMonorepoSourceLabel(
+        [
+          "# syntax=docker/dockerfile:1",
+          "# escape=`",
+          "FROM runtime AS image",
+          'LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo" `',
+          '  org.opencontainers.image.source="https://github.com/somewhere/else"',
+        ].join("\n"),
+        "example",
+        "image",
+      ),
+    ).toThrow(
+      "example published image stage must link its GHCR package to the public monorepo",
+    );
+    expect(() =>
+      assertMonorepoSourceLabel(
+        'FROM base AS runtime\nLABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"\nFROM runtime AS image',
+        "example",
+        "image",
+      ),
+    ).not.toThrow();
+    expect(() =>
+      assertMonorepoSourceLabel(
+        'FROM runtime AS image\nLABEL vendor=example org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"',
+        "example",
+        "image",
+      ),
+    ).not.toThrow();
+    expect(() =>
+      assertMonorepoSourceLabel(
+        'FROM runtime AS image\nLABEL description="mentions org.opencontainers.image.source=https://github.com/shepherdjerred/monorepo"',
+        "example",
+        "image",
+      ),
+    ).toThrow(
+      "example published image stage must link its GHCR package to the public monorepo",
+    );
+    expect(() =>
+      assertMonorepoSourceLabel(
+        'FROM runtime AS image\nLABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo" vendor=example org.opencontainers.image.source="https://github.com/somewhere/else"',
+        "example",
+        "image",
+      ),
+    ).toThrow(
+      "example published image stage must link its GHCR package to the public monorepo",
+    );
+    expect(() =>
+      assertMonorepoSourceLabel(
+        'FROM runtime AS image\nLABEL org.opencontainers.image.source="https://github.com/somewhere/else"',
+        "example",
+        "image",
+      ),
+    ).toThrow(
+      "example published image stage must link its GHCR package to the public monorepo",
+    );
+    expect(() =>
+      assertMonorepoSourceLabel(
+        [
+          "FROM base AS runtime",
+          'LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"',
+          "FROM runtime AS image",
+          `LABEL vendor=example ${String.fromCodePoint(92)}`,
+          '  org.opencontainers.image.source="https://github.com/somewhere/else"',
+        ].join("\n"),
+        "example",
+        "image",
+      ),
+    ).toThrow(
+      "example published image stage must link its GHCR package to the public monorepo",
+    );
+    expect(() =>
+      assertMonorepoSourceLabel(
+        'FROM build AS builder\nLABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"\nFROM runtime AS image',
+        "example",
+        "image",
+      ),
+    ).toThrow(
+      "example published image stage must link its GHCR package to the public monorepo",
+    );
+    expect(() =>
+      assertMonorepoSourceLabel(
+        'FROM runtime AS image\n# LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"',
+        "example",
+        "image",
+      ),
+    ).toThrow(
+      "example published image stage must link its GHCR package to the public monorepo",
+    );
+  });
+});
+
+describe("GHCR Docker instruction parsing", () => {
+  test("applies inherited ONBUILD source-label triggers", () => {
+    expect(() =>
+      assertMonorepoSourceLabel(
+        [
+          "FROM runtime AS base",
+          'LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"',
+          'ONBUILD LABEL org.opencontainers.image.source="https://github.com/somewhere/else"',
+          "FROM base AS image",
+        ].join("\n"),
+        "example",
+        "image",
+      ),
+    ).toThrow(
+      "example published image stage must link its GHCR package to the public monorepo",
+    );
+    expect(() =>
+      assertMonorepoSourceLabel(
+        [
+          "FROM runtime AS base",
+          'ONBUILD LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"',
+          "FROM base AS image",
+        ].join("\n"),
+        "example",
+        "image",
+      ),
+    ).not.toThrow();
+  });
+
+  test("defers chained ONBUILD source-label triggers by generation", () => {
+    const chainedOverride = [
+      "# syntax=docker/dockerfile:1.11",
+      "FROM runtime AS base",
+      'LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"',
+      'ONBUILD ONBUILD LABEL org.opencontainers.image.source="https://github.com/somewhere/else"',
+      "FROM base AS child",
+      "FROM child AS image",
+    ].join("\n");
+
+    expect(() =>
+      assertMonorepoSourceLabel(chainedOverride, "example", "child"),
+    ).not.toThrow();
+    expect(() =>
+      assertMonorepoSourceLabel(chainedOverride, "example", "image"),
+    ).toThrow(
+      "example published image stage must link its GHCR package to the public monorepo",
+    );
+    expect(() =>
+      assertMonorepoSourceLabel(
+        [
+          "# syntax=docker/dockerfile:1.11",
+          "FROM runtime AS base",
+          'ONBUILD ONBUILD LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"',
+          "FROM base AS child",
+          "FROM child AS image",
+        ].join("\n"),
+        "example",
+        "image",
+      ),
+    ).not.toThrow();
+  });
+
+  test("ignores heredoc bodies in chained ONBUILD instructions", () => {
+    expect(() =>
+      assertMonorepoSourceLabel(
+        [
+          "# syntax=docker/dockerfile:1.11",
+          "FROM runtime AS base",
+          "ONBUILD ONBUILD COPY <<EOF /tmp/template",
+          'LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"',
+          "EOF",
+          "FROM base AS child",
+          "FROM child AS image",
+        ].join("\n"),
+        "example",
+        "image",
+      ),
+    ).toThrow(
+      "example published image stage must link its GHCR package to the public monorepo",
+    );
+  });
+
+  test("ignores heredoc bodies until their exact delimiters", () => {
+    expect(() =>
+      assertMonorepoSourceLabel(
+        [
+          "FROM runtime AS image",
+          "COPY <<EOF /tmp/template",
+          'LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"',
+          "EOF",
+        ].join("\n"),
+        "example",
+        "image",
+      ),
+    ).toThrow(
+      "example published image stage must link its GHCR package to the public monorepo",
+    );
+    expect(() =>
+      assertMonorepoSourceLabel(
+        [
+          "FROM runtime AS image",
+          "RUN <<-'EOF'",
+          "payload",
+          "\tEOF",
+          'LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"',
+        ].join("\n"),
+        "example",
+        "image",
+      ),
+    ).not.toThrow();
+  });
+
+  test("recognizes non-space instruction separators", () => {
+    expect(() =>
+      assertMonorepoSourceLabel(
+        [
+          "FROM runtime AS image",
+          'LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"',
+          'LABEL\torg.opencontainers.image.source="https://github.com/somewhere/else"',
+        ].join("\n"),
+        "example",
+        "image",
+      ),
+    ).toThrow(
+      "example published image stage must link its GHCR package to the public monorepo",
+    );
+  });
+
+  test("does not treat LABEL values as heredocs", () => {
+    expect(() =>
+      assertMonorepoSourceLabel(
+        [
+          "FROM runtime AS image",
+          'LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"',
+          "LABEL description=<<NEVER",
+          'LABEL org.opencontainers.image.source="https://github.com/somewhere/else"',
+        ].join("\n"),
+        "example",
+        "image",
+      ),
+    ).toThrow(
+      "example published image stage must link its GHCR package to the public monorepo",
+    );
+  });
+
+  test("ignores comments inside continued instructions", () => {
+    expect(() =>
+      assertMonorepoSourceLabel(
+        [
+          "FROM runtime AS image",
+          'LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"',
+          `LABEL vendor=example ${String.fromCodePoint(92)}`,
+          "# Docker removes this comment before joining the instruction",
+          '  org.opencontainers.image.source="https://github.com/somewhere/else"',
+        ].join("\n"),
+        "example",
+        "image",
+      ),
+    ).toThrow(
+      "example published image stage must link its GHCR package to the public monorepo",
     );
   });
 });
