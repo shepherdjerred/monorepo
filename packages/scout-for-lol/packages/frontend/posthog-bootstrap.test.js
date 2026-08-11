@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { readFile } from "node:fs/promises";
 import vm from "node:vm";
 
-test("queues conversions and configures private Scout replay before PostHog loads", async () => {
+test("queues conversions and configures durable Scout analytics before PostHog loads", async () => {
   const source = await readFile(
     new URL("public/posthog-bootstrap.js", import.meta.url),
     "utf8",
@@ -69,18 +69,23 @@ test("queues conversions and configures private Scout replay before PostHog load
   expect(config).toMatchObject({
     api_host: "https://us.i.posthog.com",
     asset_host: "https://us-assets.i.posthog.com",
-    persistence: "memory",
+    autocapture: true,
+    capture_pageview: "history_change",
+    capture_pageleave: true,
+    capture_heatmaps: true,
+    capture_dead_clicks: true,
+    capture_performance: { web_vitals: true, network_timing: true },
     respect_dnt: true,
-    person_profiles: "never",
+    person_profiles: "always",
     session_recording: { maskAllInputs: true },
     disable_session_recording: false,
   });
-  expect(
-    config.before_send({ properties: { $current_url: "private" } }),
-  ).toEqual({
-    properties: {
-      $current_url: "https://beta.scout-for-lol.com/getting-started",
-      $pathname: "/getting-started",
-    },
-  });
+
+  // Durable visitor identity depends on these keys being ABSENT: `persistence:
+  // "memory"` reset the distinct id on every page load, and `cookieless_mode`
+  // made PostHog drop the events outright. `before_send` used to overwrite
+  // `$current_url` with origin+pathname, which discarded campaign query strings.
+  expect(config.persistence).toBeUndefined();
+  expect(config.cookieless_mode).toBeUndefined();
+  expect(config.before_send).toBeUndefined();
 });

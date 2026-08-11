@@ -33,6 +33,7 @@ describe("Scout product analytics adapter", () => {
       {
         analyticsInstallationId: "7316395a-b815-49d8-9794-9b56b3ce81c0",
         analyticsLifecycleTracked: true,
+        serverId: "1310000000000000001",
       },
       {
         event: "guild_installed",
@@ -61,6 +62,7 @@ describe("Scout product analytics adapter", () => {
       {
         analyticsInstallationId: "7316395a-b815-49d8-9794-9b56b3ce81c0",
         analyticsLifecycleTracked: true,
+        serverId: "1310000000000000001",
       },
       {
         event: "core_output_delivered",
@@ -72,11 +74,10 @@ describe("Scout product analytics adapter", () => {
       distinctId:
         "scout-beta:guild-install:7316395a-b815-49d8-9794-9b56b3ce81c0",
       event: "core_output_delivered",
-      disableGeoip: true,
+      disableGeoip: false,
       properties: {
         output_kind: "postmatch",
-        $process_person_profile: false,
-        $geoip_disable: true,
+        guild_id: "1310000000000000001",
         stage: "beta",
         site_key: "scout-beta",
         site_hostname: "beta.scout-for-lol.com",
@@ -120,6 +121,7 @@ describe("Scout product analytics adapter", () => {
         {
           analyticsInstallationId: "7316395a-b815-49d8-9794-9b56b3ce81c0",
           analyticsLifecycleTracked: false,
+          serverId: "1310000000000000001",
         },
         {
           event: "first_subscription_created",

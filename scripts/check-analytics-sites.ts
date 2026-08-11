@@ -68,11 +68,8 @@ for (const site of registry.sites) {
     throw new Error(`Duplicate analytics site key: ${site.key}`);
   }
   keys.add(site.key);
-  const shouldReplay = site.hostname.endsWith("scout-for-lol.com");
-  if (site.sessionReplay !== shouldReplay) {
-    throw new Error(
-      `Session replay must be ${String(shouldReplay)} for ${site.hostname}`,
-    );
+  if (!site.sessionReplay) {
+    throw new Error(`Session replay must be enabled for ${site.hostname}`);
   }
 }
 
@@ -106,13 +103,17 @@ for (const tracker of staticTrackers) {
       `${tracker.path} must register PostHog site key ${site.key}`,
     );
   }
-  if (!source.includes("disable_session_recording: true")) {
-    throw new Error(`${tracker.path} must keep session replay disabled`);
+  if (!source.includes("disable_session_recording: false")) {
+    throw new Error(`${tracker.path} must enable session replay`);
   }
   for (const captureSetting of [
     "autocapture: true",
-    "capture_pageview:",
+    'capture_pageview: "history_change"',
     "capture_pageleave: true",
+    "capture_heatmaps: true",
+    "capture_dead_clicks: true",
+    "capture_performance: { web_vitals: true, network_timing: true }",
+    "session_recording: { maskAllInputs: true }",
   ]) {
     if (!source.includes(captureSetting)) {
       throw new Error(
@@ -121,9 +122,8 @@ for (const tracker of staticTrackers) {
     }
   }
   for (const privacySetting of [
-    'cookieless_mode: "always"',
     "respect_dnt: true",
-    'person_profiles: "never"',
+    'person_profiles: "always"',
   ]) {
     if (!source.includes(privacySetting)) {
       throw new Error(
@@ -131,13 +131,18 @@ for (const tracker of staticTrackers) {
       );
     }
   }
-  if (
-    !source.includes("window.location.origin + window.location.pathname") ||
-    !source.includes("$pathname")
-  ) {
-    throw new Error(
-      `${tracker.path} must strip query strings and hashes from analytics URLs`,
-    );
+  // These three keys are load-bearing by their ABSENCE, and each one silently
+  // degrades collection rather than failing loudly:
+  //   cookieless_mode — PostHog's ingestion drops cookieless events unless the
+  //     project enables cookieless server hash mode; capture still returns 200.
+  //   persistence     — an override to "memory" resets the distinct id on every
+  //     page load, so unique visitors collapse into page loads.
+  //   before_send     — the old hook rewrote $current_url to origin+pathname,
+  //     discarding the campaign query strings attribution depends on.
+  for (const forbidden of ["cookieless_mode", "persistence:", "before_send"]) {
+    if (source.includes(forbidden)) {
+      throw new Error(`${tracker.path} must not set ${forbidden}`);
+    }
   }
   if (
     !source.includes("e.__SV") ||
@@ -157,17 +162,24 @@ for (const requiredSetting of [
   "e.__SV",
   "e._i.push",
   "autocapture: true",
-  "capture_pageview: true",
+  'capture_pageview: "history_change"',
   "capture_pageleave: true",
-  'persistence: "memory"',
+  "capture_heatmaps: true",
+  "capture_dead_clicks: true",
+  "capture_performance: { web_vitals: true, network_timing: true }",
   "respect_dnt: true",
-  'person_profiles: "never"',
+  'person_profiles: "always"',
   "session_recording: { maskAllInputs: true }",
 ]) {
   if (!scoutBootstrap.includes(requiredSetting)) {
     throw new Error(
       `${scoutBootstrapPath} must configure Scout PostHog setting ${requiredSetting}`,
     );
+  }
+}
+for (const forbidden of ["cookieless_mode", "persistence:", "before_send"]) {
+  if (scoutBootstrap.includes(forbidden)) {
+    throw new Error(`${scoutBootstrapPath} must not set ${forbidden}`);
   }
 }
 

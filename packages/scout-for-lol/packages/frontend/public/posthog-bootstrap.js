@@ -77,21 +77,15 @@
     ui_host: "https://us.posthog.com",
     defaults: "2026-05-30",
     autocapture: true,
-    capture_pageview: true,
+    capture_pageview: "history_change",
     capture_pageleave: true,
-    persistence: "memory",
+    capture_heatmaps: true,
+    capture_dead_clicks: true,
+    capture_performance: { web_vitals: true, network_timing: true },
     respect_dnt: true,
-    person_profiles: "never",
+    person_profiles: "always",
     session_recording: { maskAllInputs: true },
     disable_session_recording: sessionReplay !== "true",
-    before_send: function (event) {
-      if (event && event.properties) {
-        event.properties.$current_url =
-          window.location.origin + window.location.pathname;
-        event.properties.$pathname = window.location.pathname;
-      }
-      return event;
-    },
     loaded: function (posthog) {
       posthog.register({
         site_key: siteKey,

@@ -7,9 +7,10 @@ import {
   useParams,
 } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Suspense, type ReactNode } from "react";
+import { Suspense, useEffect, type ReactNode } from "react";
 import { SectionSkeleton } from "#src/components/section-skeleton.tsx";
 import type { Permission } from "@scout-for-lol/data";
+import { setGuildContext } from "#src/lib/analytics.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { cn } from "#src/lib/cn.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
@@ -71,6 +72,16 @@ export function GuildWorkspace() {
   );
   const guild = guilds?.find((g) => g.id === guildId);
   const { perms, isLoading, hasAccess, error } = usePermissions(guildId);
+
+  // This is the only component mounted for every `/g/:guildId/*` route, so it
+  // owns the guild super property: every subsequent event — autocapture and
+  // pageviews included — carries the guild, and leaving the workspace clears it.
+  useEffect(() => {
+    setGuildContext(guildId);
+    return () => {
+      setGuildContext(undefined);
+    };
+  }, [guildId]);
 
   if (guildId === undefined) {
     return (

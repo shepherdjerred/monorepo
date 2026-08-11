@@ -58,6 +58,14 @@ export type ProductAnalyticsEvent = {
 export type AnalyticsInstallation = {
   analyticsInstallationId: string;
   analyticsLifecycleTracked: boolean;
+  /**
+   * Discord guild id, sent as the `guild_id` property. `analyticsInstallationId`
+   * rotates on reinstall by design, so it answers "how does one installation
+   * behave"; `guild_id` is stable across reinstalls and answers "how does one
+   * server behave over its whole history". Both are needed, and they are not
+   * interchangeable.
+   */
+  serverId: string;
 };
 
 type CaptureProperties = Record<string, string | boolean>;
@@ -85,7 +93,9 @@ function createPostHogTransport(
 ): ProductAnalyticsTransport {
   const client = new PostHog(analyticsConfiguration.projectToken, {
     host: analyticsConfiguration.apiHost,
-    disableGeoip: true,
+    // GeoIP enrichment is what gives the lifecycle events a country breakdown;
+    // the SDK suppresses it unless this is explicitly false.
+    disableGeoip: false,
     enableExceptionAutocapture: false,
     flushAt: 20,
     flushInterval: 10_000,
@@ -134,11 +144,10 @@ export function createProductAnalytics(options: {
         transport.capture({
           distinctId,
           event: event.event,
-          disableGeoip: true,
+          disableGeoip: false,
           properties: {
             ...event.properties,
-            $process_person_profile: false,
-            $geoip_disable: true,
+            guild_id: installation.serverId,
             stage: options.environment,
             site_key: analyticsConfiguration.siteKey,
             site_hostname: analyticsConfiguration.siteHostname,

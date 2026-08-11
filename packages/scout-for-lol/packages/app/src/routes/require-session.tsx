@@ -1,6 +1,7 @@
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { Link, Navigate, Outlet, useLocation } from "react-router";
 import { useQuery } from "@tanstack/react-query";
+import { identifyUser } from "#src/lib/analytics.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { UserMenu } from "#src/components/user-menu.tsx";
 import { SectionSkeleton } from "#src/components/section-skeleton.tsx";
@@ -17,6 +18,13 @@ export function RequireSession() {
   const { data, isLoading, isError } = useQuery(
     trpc.auth.sessionState.queryOptions(undefined, { retry: false }),
   );
+
+  // Every authenticated route renders through this guard, so this is the one
+  // place that sees each sign-in. `identifyUser` is idempotent per Discord id.
+  const discordId = data?.user?.discordId;
+  useEffect(() => {
+    if (discordId !== undefined) identifyUser(discordId);
+  }, [discordId]);
 
   if (isLoading) {
     return <div style={{ padding: "2rem" }}>Loading…</div>;

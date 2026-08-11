@@ -75,6 +75,7 @@ export async function captureFirstSubscriptionCreated(
       where: { serverId },
       select: {
         id: true,
+        serverId: true,
         analyticsInstallationId: true,
         analyticsLifecycleTracked: true,
         firstSubscriptionAt: true,
@@ -131,6 +132,7 @@ export async function recordCoreOutputDelivered(
       where: { serverId },
       select: {
         id: true,
+        serverId: true,
         analyticsInstallationId: true,
         analyticsLifecycleTracked: true,
         firstCoreOutputAt: true,
@@ -223,6 +225,7 @@ export async function captureGuildRemoval(
     where: { serverId },
     select: {
       id: true,
+      serverId: true,
       installedAt: true,
       removedAt: true,
       analyticsInstallationId: true,

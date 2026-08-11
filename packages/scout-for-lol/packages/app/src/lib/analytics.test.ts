@@ -3,8 +3,11 @@ import type { CaptureOptions } from "posthog-js";
 import {
   analyticsMeta,
   analyticsPrivacySettings,
+  identifyUser,
   normalizePath,
+  resetIdentity,
   setAnalyticsForTesting,
+  setGuildContext,
   track,
   trackAndFlush,
   trackMutationMeta,
@@ -19,6 +22,12 @@ type CapturedEvent = {
   options: CaptureOptions | undefined;
 };
 
+type IdentityCall =
+  | { kind: "identify"; distinctId: string }
+  | { kind: "reset" }
+  | { kind: "register"; properties: Record<string, string | number | boolean> }
+  | { kind: "unregister"; property: string };
+
 const TEST_CONFIG: AnalyticsConfig = {
   projectToken: "phc_test",
   apiHost: "https://us.i.posthog.com",
@@ -28,22 +37,44 @@ const TEST_CONFIG: AnalyticsConfig = {
   sessionReplay: true,
 };
 
-function installClient(
-  config: AnalyticsConfig | undefined = TEST_CONFIG,
-): CapturedEvent[] {
+/** Identity calls from the most recent `installClient`/`installDisabledClient`. */
+let identityCalls: IdentityCall[] = [];
+
+// Takes `config` positionally with no default: a default parameter would treat
+// `install(undefined)` as "use TEST_CONFIG" and silently enable the client the
+// disabled-path tests rely on being off.
+function install(config: AnalyticsConfig | undefined): CapturedEvent[] {
   const calls: CapturedEvent[] = [];
-  setAnalyticsForTesting((event, properties, options) => {
-    calls.push({ event, properties, options });
-  }, config);
+  identityCalls = [];
+  setAnalyticsForTesting(
+    {
+      capture(event, properties, options) {
+        calls.push({ event, properties, options });
+      },
+      identify(distinctId) {
+        identityCalls.push({ kind: "identify", distinctId });
+      },
+      reset() {
+        identityCalls.push({ kind: "reset" });
+      },
+      register(properties) {
+        identityCalls.push({ kind: "register", properties });
+      },
+      unregister(property) {
+        identityCalls.push({ kind: "unregister", property });
+      },
+    },
+    config,
+  );
   return calls;
 }
 
+function installClient(): CapturedEvent[] {
+  return install(TEST_CONFIG);
+}
+
 function installDisabledClient(): CapturedEvent[] {
-  const calls: CapturedEvent[] = [];
-  setAnalyticsForTesting((event, properties, options) => {
-    calls.push({ event, properties, options });
-  }, undefined);
-  return calls;
+  return install(undefined);
 }
 
 function fakeClick(
@@ -109,17 +140,24 @@ describe("normalizePath", () => {
 });
 
 describe("privacy settings", () => {
-  test("uses anonymous memory persistence and enables Scout replay", () => {
-    expect(analyticsPrivacySettings(TEST_CONFIG)).toEqual({
+  test("uses durable persistence, person profiles, and Scout replay", () => {
+    const settings = analyticsPrivacySettings(TEST_CONFIG);
+    expect(settings).toEqual({
       autocapture: true,
       capture_pageview: false,
       capture_pageleave: true,
-      persistence: "memory",
+      capture_heatmaps: true,
+      capture_dead_clicks: true,
+      capture_performance: { web_vitals: true, network_timing: true },
       respect_dnt: true,
-      person_profiles: "never",
+      person_profiles: "always",
       session_recording: { maskAllInputs: true },
       disable_session_recording: false,
     });
+    // A `persistence` override is what previously reset the distinct id on
+    // every page load; the absence of the key is the fix, so assert it.
+    expect(settings).not.toHaveProperty("persistence");
+    expect(settings).not.toHaveProperty("cookieless_mode");
   });
 
   test("disables replay when the site registry says false", () => {
@@ -127,6 +165,48 @@ describe("privacy settings", () => {
       analyticsPrivacySettings({ ...TEST_CONFIG, sessionReplay: false })
         .disable_session_recording,
     ).toBe(true);
+  });
+});
+
+describe("identity", () => {
+  test("identifies once per Discord id", () => {
+    installClient();
+    identifyUser("160509172704739328");
+    identifyUser("160509172704739328");
+    expect(identityCalls).toEqual([
+      { kind: "identify", distinctId: "160509172704739328" },
+    ]);
+  });
+
+  test("re-identifies after a sign out resets the person", () => {
+    installClient();
+    identifyUser("160509172704739328");
+    resetIdentity();
+    identifyUser("160509172704739328");
+    expect(identityCalls).toEqual([
+      { kind: "identify", distinctId: "160509172704739328" },
+      { kind: "reset" },
+      { kind: "identify", distinctId: "160509172704739328" },
+    ]);
+  });
+
+  test("registers and clears the guild super property", () => {
+    installClient();
+    setGuildContext("123456789012345678");
+    setGuildContext(undefined);
+    expect(identityCalls).toEqual([
+      { kind: "register", properties: { guild_id: "123456789012345678" } },
+      { kind: "unregister", property: "guild_id" },
+    ]);
+  });
+
+  test("stays inert when PostHog never initialized", () => {
+    setAnalyticsForTesting(undefined, undefined);
+    identityCalls = [];
+    identifyUser("160509172704739328");
+    resetIdentity();
+    setGuildContext("123456789012345678");
+    expect(identityCalls).toEqual([]);
   });
 });
 

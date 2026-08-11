@@ -701,15 +701,24 @@ messaging real people.
 
 ## Server-side product analytics invariants
 
-- PostHog guild lifecycle identity is `GuildInstall.analyticsInstallationId`,
-  never a Discord ID. Preserve it across reconnect-style `guildCreate` events;
-  rotate it only after a confirmed removal and reinstall.
-- Keep the event/property registry closed and bounded. Never send Discord
-  guild/user/channel IDs, guild names, Riot IDs, command options, content, URLs,
-  or error messages.
-- Every event sets `$process_person_profile: false` and disables GeoIP. Never
-  call PostHog `identify`, `alias`, or group APIs, and never correlate browser
-  sessions to guild installations.
+- PostHog guild lifecycle identity is `GuildInstall.analyticsInstallationId`.
+  Preserve it across reconnect-style `guildCreate` events; rotate it only after
+  a confirmed removal and reinstall. It remains the event `distinctId`.
+- Every event also carries `guild_id`, the Discord guild id, sourced from
+  `AnalyticsInstallation.serverId`. The two identifiers answer different
+  questions and must not be collapsed into one: `analyticsInstallationId`
+  rotates on reinstall so install-level funnels restart cleanly, while
+  `guild_id` is stable for the guild's whole history. The browser SPA registers
+  the same `guild_id` as a super property, which is what lets a web session be
+  joined to a guild installation.
+- Keep the event/property registry closed and bounded. Beyond `guild_id`, never
+  send Discord user or channel IDs, guild names, Riot IDs, command options,
+  message content, URLs, or error messages.
+- Person profiles and GeoIP are ON. Do not reintroduce
+  `$process_person_profile: false`, `$geoip_disable`, or `disableGeoip: true` —
+  install-level retention and the country breakdown depend on them being off.
+  PostHog _group_ analytics is a paid add-on and is deliberately NOT used; guild
+  analysis goes through the `guild_id` property.
 - Capture first subscription only after the web or Discord transaction commits,
   and claim `firstSubscriptionAt` atomically (like `firstCoreOutputAt` below)
   rather than deriving "first" from the current subscription count: a guild

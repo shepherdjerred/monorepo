@@ -7,32 +7,32 @@
     {
       "key": "sjer-red",
       "hostname": "sjer.red",
-      "sessionReplay": false
+      "sessionReplay": true
     },
     {
       "key": "resume",
       "hostname": "resume.sjer.red",
-      "sessionReplay": false
+      "sessionReplay": true
     },
     {
       "key": "webring",
       "hostname": "webring.sjer.red",
-      "sessionReplay": false
+      "sessionReplay": true
     },
     {
       "key": "better-skill-capped",
       "hostname": "better-skill-capped.com",
-      "sessionReplay": false
+      "sessionReplay": true
     },
     {
       "key": "mario-kart",
       "hostname": "mariokart.sjer.red",
-      "sessionReplay": false
+      "sessionReplay": true
     },
     {
       "key": "pokemon",
       "hostname": "pokebot.sjer.red",
-      "sessionReplay": false
+      "sessionReplay": true
     },
     {
       "key": "scout-prod",

@@ -6,8 +6,10 @@ import { z } from "zod";
  *
  * The production and beta release builds inject a public project token and a
  * per-host site identity. Local builds omit every PostHog variable, so the
- * adapter no-ops. Scout keeps persistence in memory so session replay works
- * without cookies or durable browser identity.
+ * adapter no-ops. Persistence is PostHog's default (cookie + localStorage) so a
+ * visitor keeps one distinct id across reloads and the Discord OAuth redirect;
+ * `identify` then binds that id to the signed-in user. Do Not Track is still
+ * honoured, so DNT browsers send nothing at all.
  */
 const OptionalEnvSchema = z.object({
   VITE_POSTHOG_PROJECT_TOKEN: z.string().optional(),
@@ -140,37 +142,60 @@ type CaptureEvent = (
   options?: CaptureOptions,
 ) => void;
 
+/**
+ * The PostHog surface this module uses, injected as one object so identity
+ * calls are as testable as captures — see `setAnalyticsForTesting`.
+ */
+type AnalyticsClient = {
+  capture: CaptureEvent;
+  identify: (distinctId: string) => void;
+  reset: () => void;
+  register: (properties: PostHogProperties) => void;
+  unregister: (property: string) => void;
+};
+
+/** Super property carrying the active Discord guild. */
+const GUILD_PROPERTY = "guild_id";
+
 let config = readConfig();
-let captureEvent: CaptureEvent | undefined;
+let client: AnalyticsClient | undefined;
 let initialized = false;
+let identifiedUser: string | undefined;
 
 /** Inject a deterministic client/config in unit tests without module mocking. */
 export function setAnalyticsForTesting(
-  capture: CaptureEvent | undefined,
+  testClient: AnalyticsClient | undefined,
   testConfig: AnalyticsConfig | undefined,
 ): void {
-  captureEvent = capture;
+  client = testClient;
   config = testConfig;
   initialized = false;
+  identifiedUser = undefined;
 }
 
 export function analyticsPrivacySettings(activeConfig: AnalyticsConfig): {
   autocapture: true;
   capture_pageview: false;
   capture_pageleave: true;
-  persistence: "memory";
+  capture_heatmaps: true;
+  capture_dead_clicks: true;
+  capture_performance: { web_vitals: true; network_timing: true };
   respect_dnt: true;
-  person_profiles: "never";
+  person_profiles: "always";
   session_recording: { maskAllInputs: true };
   disable_session_recording: boolean;
 } {
   return {
     autocapture: true,
+    // The SPA captures pageviews itself so every URL passes through
+    // `normalizePath` before it reaches PostHog.
     capture_pageview: false,
     capture_pageleave: true,
-    persistence: "memory",
+    capture_heatmaps: true,
+    capture_dead_clicks: true,
+    capture_performance: { web_vitals: true, network_timing: true },
     respect_dnt: true,
-    person_profiles: "never",
+    person_profiles: "always",
     session_recording: { maskAllInputs: true },
     disable_session_recording: !activeConfig.sessionReplay,
   };
@@ -205,9 +230,54 @@ export function initAnalytics(): void {
       });
     },
   });
-  captureEvent = (event, properties, options) => {
-    posthog.capture(event, properties, options);
+  client = {
+    capture: (event, properties, options) => {
+      posthog.capture(event, properties, options);
+    },
+    identify: (distinctId) => {
+      posthog.identify(distinctId);
+    },
+    reset: () => {
+      posthog.reset();
+    },
+    register: (properties) => {
+      posthog.register(properties);
+    },
+    unregister: (property) => {
+      posthog.unregister(property);
+    },
   };
+}
+
+/**
+ * Bind the session to the signed-in Discord user. Idempotent per id: PostHog
+ * merges the pre-login anonymous person into this one on the first call, and
+ * repeating it on every render would emit redundant `$identify` events.
+ */
+export function identifyUser(discordId: string): void {
+  if (client === undefined || identifiedUser === discordId) return;
+  identifiedUser = discordId;
+  client.identify(discordId);
+}
+
+/** Drop the identified person so a shared browser never merges two users. */
+export function resetIdentity(): void {
+  identifiedUser = undefined;
+  client?.reset();
+}
+
+/**
+ * Attach the active guild to every subsequent event, autocapture and pageviews
+ * included. Registered as a super property rather than passed per event because
+ * `AnalyticsProperty` is a deliberately low-cardinality allowlist.
+ */
+export function setGuildContext(guildId: string | undefined): void {
+  if (client === undefined) return;
+  if (guildId === undefined) {
+    client.unregister(GUILD_PROPERTY);
+    return;
+  }
+  client.register({ [GUILD_PROPERTY]: guildId });
 }
 
 /**
@@ -262,12 +332,12 @@ function currentEventUrl(): string | undefined {
 }
 
 function analyticsReady(): boolean {
-  return config !== undefined && captureEvent !== undefined;
+  return config !== undefined && client !== undefined;
 }
 
 /** Report a templated SPA pageview. */
 export function trackPageview(path: string): void {
-  if (config === undefined || captureEvent === undefined) return;
+  if (config === undefined || client === undefined) return;
   const normalizedPath = normalizePath(path);
   const properties: PostHogProperties = {
     $current_url: pageUrl(config.siteDomain, normalizedPath),
@@ -277,7 +347,7 @@ export function trackPageview(path: string): void {
     site_hostname: config.siteDomain,
   };
   if (typeof document === "object") properties["$title"] = document.title;
-  captureEvent("$pageview", properties);
+  client.capture("$pageview", properties);
 }
 
 function eventProperties(
@@ -294,10 +364,10 @@ function eventProperties(
 }
 
 function emit(event: string, props?: AnalyticsProps): void {
-  if (captureEvent === undefined) return;
+  if (client === undefined) return;
   const properties = eventProperties(props);
   if (properties === undefined) return;
-  captureEvent(event, properties);
+  client.capture(event, properties);
 }
 
 /** Fire a product-analytics event without allowing analytics to break UX. */
@@ -324,8 +394,8 @@ function emitThenFlush(
   onFlushed: () => void,
 ): void {
   const properties = eventProperties(props);
-  if (captureEvent !== undefined && properties !== undefined) {
-    captureEvent(event, properties, {
+  if (client !== undefined && properties !== undefined) {
+    client.capture(event, properties, {
       send_instantly: true,
       transport: "sendBeacon",
     });
