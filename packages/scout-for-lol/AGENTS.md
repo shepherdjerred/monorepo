@@ -738,6 +738,26 @@ messaging real people.
   identity bug this file has had was those two disagreeing: a stale identity
   surviving an expired cookie, and an account switch aliasing two people because
   `identify` ran without a reset. Do not reintroduce a cache of the current user.
+- **Nothing is captured until the gate opens.** PostHog is initialised with
+  `opt_out_capturing_by_default: true`, and `RootLayout` calls
+  `startAnalyticsCapture()` only once the session has answered and the route's
+  own context is attached. This exists because autocapture begins the instant
+  PostHog initialises: ordering a `capture()` call later cannot hold it back, so
+  a cold load with a stale persisted identity recorded autocapture — and the
+  entry pageview — against the previous account, which PostHog cannot
+  reattribute afterwards. The trade is deliberate: pre-gate events are dropped
+  rather than mis-attributed. A route that carries its own analytics property
+  must be listed in `analyticsContextRoute` and must call `resolveGuildContext`
+  (or an equivalent) when its answer settles, including when access is denied —
+  unresolved is the default, so forgetting withholds the pageview instead of
+  leaking an unattributed one.
+- **Every `reset()` must be followed by a re-opt-in, and only
+  `resetPersistedIdentity` may call it.** `posthog.reset()` clears consent along
+  with the person, returning the instance to its configured default — which is
+  opted out. A reset after the gate opened therefore kills capture permanently
+  and silently for that browser. This is a worse failure than any bug the gate
+  fixes, and it is invisible in review, so the re-opt-in lives in one helper
+  rather than at call sites.
 - **Only a successful session response is an answer.** `syncAnalyticsIdentity`
   acts on `isSuccess`, never on `!isLoading`. A failed query also stops loading,
   and the session query runs with retries disabled, so reading failure as

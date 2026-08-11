@@ -110,6 +110,21 @@ fixed rather than deferred:
   answer, so it reset a live identity for the rest of the visit. The decision
   moved into `syncAnalyticsIdentity`, one tested function, so the hook no longer
   encodes any rule of its own.
+- **A capture gate replaced the per-call-site ordering fixes.** PostHog now
+  initialises `opt_out_capturing_by_default: true`, and `RootLayout` opens it
+  once identity has reconciled and the route's context is attached. The earlier
+  rounds all fixed _when a specific call ran_; that cannot work for autocapture,
+  which starts the moment PostHog initialises, so a cold load kept recording
+  events against a stale persisted identity no matter how the pageview was
+  ordered. Routes carrying their own property declare themselves in
+  `analyticsContextRoute` and settle via `resolveGuildContext`; unresolved is
+  the default, so a forgotten declaration withholds the pageview rather than
+  leaking an unattributed one. The trade is explicit: pre-gate events are
+  dropped, not mis-attributed.
+- The gate brought one sharp edge with it, guarded by `resetPersistedIdentity`
+  and its tests: `posthog.reset()` clears consent along with the person, so a
+  reset after opt-in returns the instance to the opted-out default and silently
+  stops capture for the life of that browser.
 - `privacy.mdx` now discloses that website measurement and bot data are joined
   through `guild_id`, replacing the claim that they were separate and that the
   website could not reveal which server added Scout. The join is intended (see

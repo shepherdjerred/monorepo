@@ -10,7 +10,11 @@ import { useQuery } from "@tanstack/react-query";
 import { Suspense, useEffect, type ReactNode } from "react";
 import { SectionSkeleton } from "#src/components/section-skeleton.tsx";
 import type { Permission } from "@scout-for-lol/data";
-import { setGuildContext } from "#src/lib/analytics.ts";
+import {
+  analyticsContextRoute,
+  clearGuildContext,
+  resolveGuildContext,
+} from "#src/lib/analytics.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { cn } from "#src/lib/cn.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
@@ -83,13 +87,22 @@ export function GuildWorkspace() {
   // unauthorized view emits — attacker-controlled and unbounded in cardinality.
   // Wait for the server to confirm access; the property stays cleared on
   // validation or authorization failure.
-  const analyticsGuildId = !isLoading && hasAccess ? guildId : undefined;
+  //
+  // The root layout holds this route's first pageview — and all autocapture —
+  // until this effect reports the answer. On a cold deep link the permission
+  // queries have not resolved on first render, and an entry pageview emitted
+  // then would permanently lack `guild_id`: the property registers later, but
+  // no replacement pageview is ever sent, and that entry event is the
+  // installation-to-guild signal the whole join exists for.
+  const contextRoute = analyticsContextRoute(location.pathname);
+  const analyticsGuildId = hasAccess ? guildId : undefined;
   useEffect(() => {
-    setGuildContext(analyticsGuildId);
+    if (contextRoute === undefined || isLoading) return;
+    resolveGuildContext(contextRoute, analyticsGuildId);
     return () => {
-      setGuildContext(undefined);
+      clearGuildContext();
     };
-  }, [analyticsGuildId]);
+  }, [contextRoute, isLoading, analyticsGuildId]);
 
   if (guildId === undefined) {
     return (

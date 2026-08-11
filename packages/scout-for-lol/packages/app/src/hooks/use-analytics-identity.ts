@@ -17,7 +17,7 @@ import { useTRPC } from "#src/lib/trpc.ts";
  * to do with that lives in `syncAnalyticsIdentity`, which is where the rules are
  * documented and tested.
  */
-export function useAnalyticsIdentity(): void {
+export function useAnalyticsIdentity(): { sessionResolved: boolean } {
   const trpc = useTRPC();
   // Same query key as the session guard, so React Query serves both from one
   // request rather than asking the server twice per navigation.
@@ -32,4 +32,8 @@ export function useAnalyticsIdentity(): void {
   useEffect(() => {
     syncAnalyticsIdentity({ sessionResolved: isSuccess, analyticsUserId });
   }, [analyticsUserId, isSuccess]);
+
+  // The caller gates the first capture on this: until the session has answered,
+  // any event would be attributed to whoever PostHog still has persisted.
+  return { sessionResolved: isSuccess };
 }

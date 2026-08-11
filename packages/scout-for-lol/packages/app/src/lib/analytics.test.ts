@@ -7,7 +7,11 @@ import {
   normalizePath,
   resetIdentity,
   setAnalyticsForTesting,
-  setGuildContext,
+  analyticsContextRoute,
+  clearGuildContext,
+  resolveGuildContext,
+  resolvedAnalyticsContextRoute,
+  startAnalyticsCapture,
   syncAnalyticsIdentity,
   track,
   trackAndFlush,
@@ -31,7 +35,8 @@ type IdentityCall =
       kind: "register_for_session";
       properties: Record<string, string | number | boolean>;
     }
-  | { kind: "unregister_for_session"; property: string };
+  | { kind: "unregister_for_session"; property: string }
+  | { kind: "opt_in" };
 
 const TEST_CONFIG: AnalyticsConfig = {
   projectToken: "phc_test",
@@ -79,6 +84,9 @@ function install(config: AnalyticsConfig | undefined): CapturedEvent[] {
       },
       isIdentified: () => identified,
       getDistinctId: () => distinctId,
+      optInCapturing() {
+        identityCalls.push({ kind: "opt_in" });
+      },
       register(properties) {
         identityCalls.push({ kind: "register", properties });
       },
@@ -235,8 +243,8 @@ describe("identity", () => {
   // outlive the visit in localStorage and mis-attribute the next one.
   test("scopes the guild super property to the session", () => {
     installClient();
-    setGuildContext("123456789012345678");
-    setGuildContext(undefined);
+    resolveGuildContext("/g/123456789012345678", "123456789012345678");
+    clearGuildContext();
     expect(identityCalls).toEqual([
       {
         kind: "register_for_session",
@@ -293,7 +301,8 @@ describe("identity", () => {
     identityCalls = [];
     identifyUser(ANALYTICS_USER_ID);
     resetIdentity();
-    setGuildContext("123456789012345678");
+    resolveGuildContext("/g/123456789012345678", "123456789012345678");
+    startAnalyticsCapture();
     expect(identityCalls).toEqual([]);
   });
 });
@@ -333,6 +342,82 @@ describe("syncAnalyticsIdentity", () => {
     });
     expect(identityCalls).toEqual([
       { kind: "identify", distinctId: ANALYTICS_USER_ID },
+    ]);
+  });
+});
+
+describe("capture gate", () => {
+  test("opens once, however many times it is asked", () => {
+    installClient();
+    startAnalyticsCapture();
+    startAnalyticsCapture();
+    expect(identityCalls).toEqual([{ kind: "opt_in" }]);
+  });
+
+  // `posthog.reset()` clears consent along with the person, and this app's
+  // configured default is opted OUT. Without the re-opt-in, the first sign-out
+  // or account switch after the gate opened would stop capture permanently and
+  // silently for that browser — a far worse failure than the one the gate fixes.
+  test("re-opts in after a reset that follows the gate opening", () => {
+    installClient();
+    startAnalyticsCapture();
+    persistIdentity("account-a");
+    resetIdentity();
+    expect(identityCalls).toEqual([{ kind: "reset" }, { kind: "opt_in" }]);
+  });
+
+  test("an account switch after the gate opening also re-opts in", () => {
+    installClient();
+    startAnalyticsCapture();
+    persistIdentity("account-a");
+    identifyUser("account-b");
+    expect(identityCalls).toEqual([
+      { kind: "reset" },
+      { kind: "opt_in" },
+      { kind: "identify", distinctId: "account-b" },
+    ]);
+  });
+
+  // The mirror: a reset during reconciliation, before the gate opens, must not
+  // open it early — that is exactly the window the gate exists to keep shut.
+  test("does not open the gate on a reset before it was opened", () => {
+    installClient();
+    persistIdentity("account-a");
+    resetIdentity();
+    expect(identityCalls).toEqual([{ kind: "reset" }]);
+  });
+});
+
+describe("route analytics context", () => {
+  test("identifies the routes that carry context beyond identity", () => {
+    expect(analyticsContextRoute("/g/123")).toBe("/g/123");
+    expect(analyticsContextRoute("/g/123/players/Someone")).toBe("/g/123");
+    expect(analyticsContextRoute("/")).toBeUndefined();
+    expect(analyticsContextRoute("/login")).toBeUndefined();
+  });
+
+  // Unresolved is the default, so a guild route is never ready on first render.
+  // The gate reads this, and a pending answer must look different from "no
+  // guild" — otherwise the entry pageview escapes before access resolves.
+  test("reports no settled route until one resolves", () => {
+    installClient();
+    expect(resolvedAnalyticsContextRoute()).toBeUndefined();
+
+    resolveGuildContext("/g/123", "123");
+    expect(resolvedAnalyticsContextRoute()).toBe("/g/123");
+
+    clearGuildContext();
+    expect(resolvedAnalyticsContextRoute()).toBeUndefined();
+  });
+
+  // Access resolved but denied is a settled answer: the route becomes ready so
+  // the pageview is not withheld forever, but no guild is attached.
+  test("settles the route even when access is denied", () => {
+    installClient();
+    resolveGuildContext("/g/123", undefined);
+    expect(resolvedAnalyticsContextRoute()).toBe("/g/123");
+    expect(identityCalls).toEqual([
+      { kind: "unregister_for_session", property: "guild_id" },
     ]);
   });
 });

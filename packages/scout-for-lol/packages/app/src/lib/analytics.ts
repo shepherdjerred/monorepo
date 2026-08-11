@@ -1,5 +1,10 @@
 import posthog, { type CaptureOptions } from "posthog-js";
 import { z } from "zod";
+import {
+  ANALYTICS_EVENT_NAMES,
+  type AnalyticsProps,
+  type ScoutAnalyticsEvent,
+} from "#src/lib/analytics-events.ts";
 
 /**
  * Product analytics for the Scout SPA, backed by PostHog Cloud.
@@ -55,86 +60,6 @@ function readConfig(): AnalyticsConfig | undefined {
 
 const BASENAME = "/app";
 
-/** Every product-analytics event the app can emit. */
-const SCOUT_ANALYTICS_EVENTS = [
-  // Reports
-  "report_created",
-  "report_updated",
-  "report_deleted",
-  "report_run",
-  "report_enabled_toggled",
-  // ScoutQL editor
-  "report_preset_used",
-  "data_explorer_action",
-  // AI editor
-  "ai_edit_started",
-  "ai_edit_applied",
-  "ai_edit_cancelled",
-  "ai_edit_error",
-  // Subscriptions
-  "subscription_add",
-  "subscription_removed",
-  "subscription_muted",
-  "subscription_unmuted",
-  "subscription_filters_set",
-  "subscription_channel_filters_set",
-  "subscription_channel_added",
-  "subscription_moved",
-  // Players
-  "player_account_added",
-  "player_account_edited",
-  "player_account_transferred",
-  "player_account_deleted",
-  "player_discord_linked",
-  "player_discord_unlinked",
-  "player_renamed",
-  "players_merged",
-  "player_deleted",
-  // Competitions
-  "competition_created",
-  "competition_edited",
-  "competition_cancelled",
-  "competition_participant_invited",
-  "competition_members_added_all",
-  "competition_participant_removed",
-  "competition_leaderboard_refreshed",
-  // Access (RBAC)
-  "access_granted",
-  "access_updated",
-  "access_revoked",
-  // Funnel / entry
-  "onboarding_step",
-  "onboarding_completed",
-  "onboarding_skipped",
-  "bot_install_click",
-  "login_click",
-  "sign_out",
-  "theme_changed",
-  // Feedback prompt
-  "feedback_shown",
-  "feedback_submitted",
-  "feedback_dismissed",
-] as const;
-
-export type ScoutAnalyticsEvent = (typeof SCOUT_ANALYTICS_EVENTS)[number];
-
-const EVENT_SET: ReadonlySet<string> = new Set(SCOUT_ANALYTICS_EVENTS);
-
-/** Only these low-cardinality properties may be sent to PostHog. */
-export type AnalyticsProperty =
-  | "outcome"
-  | "reason"
-  | "kind"
-  | "category"
-  | "preference"
-  | "action"
-  | "step"
-  | "has_existing_query";
-
-export type AnalyticsProps = Partial<
-  Record<AnalyticsProperty, string | number | boolean>
->;
-
 type PostHogProperties = Record<string, string | number | boolean>;
 type CaptureEvent = (
   event: string,
@@ -154,6 +79,8 @@ type AnalyticsClient = {
   isIdentified: () => boolean;
   /** The distinct id PostHog currently holds, identified or anonymous. */
   getDistinctId: () => string;
+  /** Lift the opt-out PostHog is initialised with. */
+  optInCapturing: () => void;
   register: (properties: PostHogProperties) => void;
   registerForSession: (properties: PostHogProperties) => void;
   unregisterForSession: (property: string) => void;
@@ -172,6 +99,19 @@ let config = readConfig();
 let client: AnalyticsClient | undefined;
 let initialized = false;
 
+// PostHog starts opted out (see `initAnalytics`), so nothing — not autocapture,
+// not a pageview — leaves the browser until the gate below opens. This flag is
+// our own record of whether the gate has opened, which `resetPersistedIdentity`
+// needs; PostHog's consent state is not a safe thing to infer it from, because
+// `reset()` silently clears consent back to the opted-out default.
+let captureEnabled = false;
+
+// The route whose analytics context has settled, or undefined when none has.
+// Unset is the safe default: a route that carries extra context is not ready
+// until it says so, so no first render can slip an event out ahead of it.
+let resolvedContextRoute: string | undefined;
+const contextListeners = new Set<() => void>();
+
 /** Inject a deterministic client/config in unit tests without module mocking. */
 export function setAnalyticsForTesting(
   testClient: AnalyticsClient | undefined,
@@ -180,6 +120,8 @@ export function setAnalyticsForTesting(
   client = testClient;
   config = testConfig;
   initialized = false;
+  captureEnabled = false;
+  resolvedContextRoute = undefined;
 }
 
 export function analyticsPrivacySettings(activeConfig: AnalyticsConfig): {
@@ -230,6 +172,12 @@ export function initAnalytics(): void {
     asset_host: activeConfig.assetHost,
     ui_host: "https://us.posthog.com",
     defaults: "2026-05-30",
+    // Nothing is captured until `startAnalyticsCapture` opens the gate. This is
+    // the only lever that also holds back autocapture, which begins the moment
+    // PostHog initialises and therefore cannot be fixed by ordering a
+    // `capture()` call later. See `startAnalyticsCapture` for what has to be
+    // true first.
+    opt_out_capturing_by_default: true,
     ...analyticsPrivacySettings(activeConfig),
     before_send(event) {
       if (event === null) return null;
@@ -260,6 +208,11 @@ export function initAnalytics(): void {
     },
     isIdentified: () => posthog._isIdentified(),
     getDistinctId: () => posthog.get_distinct_id(),
+    optInCapturing: () => {
+      // `captureEventName: false` because opting in is our own gate opening,
+      // not a consent action the user took that is worth an event.
+      posthog.opt_in_capturing({ captureEventName: false });
+    },
     register: (properties) => {
       posthog.register(properties);
     },
@@ -292,12 +245,24 @@ export function initAnalytics(): void {
  * a Discord id here would make all of it addressable by Discord account — and
  * the analytics registry forbids sending Discord user ids in the first place.
  */
+/**
+ * `posthog.reset()` clears consent along with the person, returning the
+ * instance to its configured default — and our default is opted **out**. A
+ * reset after the gate has opened therefore stops capture permanently and
+ * silently, for the life of that browser. Every reset goes through here so the
+ * re-opt-in cannot be forgotten at a call site.
+ */
+function resetPersistedIdentity(activeClient: AnalyticsClient): void {
+  activeClient.reset();
+  if (captureEnabled) activeClient.optInCapturing();
+}
+
 export function identifyUser(analyticsUserId: string): void {
   const activeClient = client;
   if (activeClient === undefined) return;
   if (activeClient.isIdentified()) {
     if (activeClient.getDistinctId() === analyticsUserId) return;
-    activeClient.reset();
+    resetPersistedIdentity(activeClient);
   }
   activeClient.identify(analyticsUserId);
 }
@@ -314,7 +279,9 @@ export function identifyUser(analyticsUserId: string): void {
  */
 export function resetIdentity(): void {
   const activeClient = client;
-  if (activeClient?.isIdentified() === true) activeClient.reset();
+  if (activeClient?.isIdentified() === true) {
+    resetPersistedIdentity(activeClient);
+  }
 }
 
 /**
@@ -340,22 +307,77 @@ export function syncAnalyticsIdentity(session: {
 }
 
 /**
+ * The part of a path whose analytics context must resolve before this route may
+ * emit anything, or undefined when the route carries no context beyond identity.
+ *
+ * Today that is only the guild workspace. A future route that registers its own
+ * property belongs here too — that is what keeps the gate one rule rather than
+ * a race rediscovered per screen.
+ */
+export function analyticsContextRoute(pathname: string): string | undefined {
+  return /^\/g\/[^/]+/.exec(pathname)?.[0] ?? undefined;
+}
+
+/** Snapshot + subscription for `useSyncExternalStore` in the root layout. */
+export function resolvedAnalyticsContextRoute(): string | undefined {
+  return resolvedContextRoute;
+}
+
+export function subscribeAnalyticsContext(listener: () => void): () => void {
+  contextListeners.add(listener);
+  return () => {
+    contextListeners.delete(listener);
+  };
+}
+
+function notifyContextListeners(): void {
+  for (const listener of contextListeners) listener();
+}
+
+/**
  * Attach the active guild to every subsequent event, autocapture and pageviews
- * included. Registered as a super property rather than passed per event because
- * `AnalyticsProperty` is a deliberately low-cardinality allowlist.
+ * included, and mark this route's context settled so the gate may open.
  *
  * Session-scoped, not durable: the clearing side of this lives in a React
  * effect cleanup, which a hard navigation or a closed tab never runs. A durable
  * super property would then survive in localStorage and attribute a later,
  * unrelated visit to the guild the user happened to leave open.
+ *
+ * `guildId` is undefined when access resolved but was denied — a settled answer,
+ * not a pending one, so the route becomes ready with no guild attached.
  */
-export function setGuildContext(guildId: string | undefined): void {
-  if (client === undefined) return;
-  if (guildId === undefined) {
-    client.unregisterForSession(GUILD_PROPERTY);
-    return;
+export function resolveGuildContext(
+  routeKey: string,
+  guildId: string | undefined,
+): void {
+  if (client !== undefined) {
+    if (guildId === undefined) client.unregisterForSession(GUILD_PROPERTY);
+    else client.registerForSession({ [GUILD_PROPERTY]: guildId });
   }
-  client.registerForSession({ [GUILD_PROPERTY]: guildId });
+  resolvedContextRoute = routeKey;
+  notifyContextListeners();
+}
+
+/** Leaving the workspace: drop the property and the readiness it granted. */
+export function clearGuildContext(): void {
+  client?.unregisterForSession(GUILD_PROPERTY);
+  resolvedContextRoute = undefined;
+  notifyContextListeners();
+}
+
+/**
+ * Open the gate PostHog was initialised closed on.
+ *
+ * Callers must only reach this once identity has been reconciled and the
+ * route's own context is attached, because everything before it is dropped
+ * rather than mis-attributed — that is the trade this gate makes. Dropping a
+ * handful of pre-consent autocapture events is the price of never recording a
+ * pageview against the previous account or a guild the viewer cannot see.
+ */
+export function startAnalyticsCapture(): void {
+  if (client === undefined || captureEnabled) return;
+  captureEnabled = true;
+  client.optInCapturing();
 }
 
 /**
@@ -536,7 +558,7 @@ export function trackMutationMeta(
   const parsed = MutationMetaSchema.safeParse(meta);
   if (!parsed.success) return;
   const event = parsed.data.analyticsEvent;
-  if (event === undefined || !EVENT_SET.has(event)) return;
+  if (event === undefined || !ANALYTICS_EVENT_NAMES.has(event)) return;
   if (outcome === "success") {
     const bulkResult = AddedFailedSchema.safeParse(data);
     if (bulkResult.success) {
