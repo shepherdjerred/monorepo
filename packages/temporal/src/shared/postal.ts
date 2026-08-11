@@ -30,6 +30,11 @@ export type PostalSendInput = {
   plainBody?: string;
   headers?: Record<string, string>;
   tag: string;
+  /**
+   * Abandons the request. Report delivery uses this so an attempt whose lease
+   * can be taken over cannot still have a message in flight.
+   */
+  signal?: AbortSignal;
 };
 
 export type PostalSendResult = {
@@ -89,6 +94,7 @@ export async function sendPostalEmail(
   const response = await fetch(`${config.host}/api/v1/send/message`, {
     method: "POST",
     headers,
+    ...(input.signal === undefined ? {} : { signal: input.signal }),
     body: JSON.stringify({
       to: [input.to],
       from: input.from,

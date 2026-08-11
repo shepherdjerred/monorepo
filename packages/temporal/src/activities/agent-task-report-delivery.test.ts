@@ -10,7 +10,13 @@ import {
 } from "#shared/agent-task.ts";
 import {
   AGENT_REPORT_DELIVERY_START_TO_CLOSE_MS,
+  REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS,
   REPORT_DELIVERY_WORKFLOW_BUDGET_MS,
+  REPORT_SEND_CLAIM_FIRST_RETRY_AT_MS,
+  REPORT_SEND_CLAIM_TAKEOVER_MS,
+  REPORT_SEND_DEADLINE_MS,
+  REPORT_SEND_PERSIST_BUDGET_MS,
+  reportDeliverySendLeaseBounds,
 } from "#shared/report-delivery-policy.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
@@ -129,10 +135,39 @@ describe("agent task report delivery delegation", () => {
   });
 
   test("budgets the outer activity beyond the complete delegated retry window", () => {
-    expect(REPORT_DELIVERY_WORKFLOW_BUDGET_MS).toBe(390_000);
+    // Three two-minute attempts plus the 90s and capped 120s retry delays.
+    expect(REPORT_DELIVERY_WORKFLOW_BUDGET_MS).toBe(570_000);
     expect(AGENT_REPORT_DELIVERY_START_TO_CLOSE_MS).toBeGreaterThan(
       REPORT_DELIVERY_WORKFLOW_BUDGET_MS,
     );
+  });
+
+  test("keeps the send lease both safe to take over and reachable", () => {
+    // Safety: a takeover must not race an owner Temporal would still accept a
+    // completion from, nor one whose request could still be in flight.
+    expect(REPORT_SEND_CLAIM_TAKEOVER_MS).toBeGreaterThan(
+      REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS,
+    );
+    expect(REPORT_SEND_CLAIM_TAKEOVER_MS).toBeGreaterThan(
+      REPORT_SEND_DEADLINE_MS,
+    );
+    // Liveness: the first retry after an owner that hangs to its deadline has
+    // to outlive the lease. Without this, every remaining attempt throws on
+    // contention and the report is never delivered.
+    expect(REPORT_SEND_CLAIM_FIRST_RETRY_AT_MS).toBeGreaterThanOrEqual(
+      REPORT_SEND_CLAIM_TAKEOVER_MS,
+    );
+
+    // Both margins stated positively, so a future constant change has to move
+    // a number a reviewer can see rather than silently invert an inequality.
+    const { safeBy, reachableBy } = reportDeliverySendLeaseBounds();
+    expect(safeBy).toBe(60_000);
+    expect(reachableBy).toBe(30_000);
+
+    // Recording a delivery happens after the send and cannot be fenced into
+    // it, so the owner needs a real window to persist inside its own lease.
+    expect(REPORT_SEND_PERSIST_BUDGET_MS).toBe(60_000);
+    expect(REPORT_SEND_PERSIST_BUDGET_MS).toBeGreaterThan(0);
   });
 
   test("describes a post-report follow-up failure without retracting the delivered result", () => {

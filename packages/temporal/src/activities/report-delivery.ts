@@ -13,7 +13,14 @@ import {
 } from "#observability/metrics-report.ts";
 import { resolvePostalAddresses, sendPostalEmail } from "#shared/postal.ts";
 import type { PostalSendInput, PostalSendResult } from "#shared/postal.ts";
-import { REPORT_SEND_CLAIM_TAKEOVER_MS } from "#shared/report-delivery-policy.ts";
+import {
+  assertReportSendStillOwned,
+  claimReportSend,
+  reportSendAbortSignal,
+  reportSendClaimKey,
+  ReportSendClaimV1Schema,
+  type ReportSendClaimBackend,
+} from "./report-delivery-lease.ts";
 import {
   renderReportHtml,
   renderReportText,
@@ -66,37 +73,20 @@ export const ReportStateV1Schema = z.object({
 
 export type ReportStateV1 = z.infer<typeof ReportStateV1Schema>;
 
-export const ReportSendClaimV1Schema = z.object({
-  schemaVersion: z.literal(1),
-  reportRunId: z.string().min(1),
-  owner: z.string().min(1),
-  claimedAt: z.iso.datetime({ offset: true }),
-});
-
-export type ReportSendClaimV1 = z.infer<typeof ReportSendClaimV1Schema>;
-
 export type ReportDeliveryBackend = {
   readReceipt: (key: string) => Promise<ReportDeliveryReceiptV1 | undefined>;
+  /**
+   * Create-only. Resolves false when a receipt already exists, which is how
+   * at-most-one recorded delivery is enforced: the storage layer picks the
+   * winner atomically instead of an attempt checking and then writing.
+   */
   writeReceipt: (
     key: string,
     receipt: ReportDeliveryReceiptV1,
-  ) => Promise<void>;
+  ) => Promise<boolean>;
   readState: (key: string) => Promise<ReportStateV1 | undefined>;
   writeState: (key: string, state: ReportStateV1) => Promise<void>;
-  readSendClaim: (
-    key: string,
-  ) => Promise<{ claim: ReportSendClaimV1; etag: string } | undefined>;
-  /**
-   * Conditional write. `expectedEtag` undefined means "only if absent".
-   * Returns false when the precondition failed, i.e. another attempt owns the
-   * send — never throws for contention.
-   */
-  writeSendClaim: (
-    key: string,
-    claim: ReportSendClaimV1,
-    expectedEtag: string | undefined,
-  ) => Promise<boolean>;
-};
+} & ReportSendClaimBackend;
 
 export type ReportDeliveryDependencies = {
   backend: ReportDeliveryBackend;
@@ -105,6 +95,12 @@ export type ReportDeliveryDependencies = {
   now: () => string;
   /** Identity of this delivery attempt; holder of the send lease. */
   owner: string;
+  /**
+   * Start of this activity attempt, captured before any I/O. The send lease is
+   * both stamped and aged against this clock so slow pre-claim reads cannot
+   * backdate a lease relative to the attempt that holds it.
+   */
+  attemptStartedAt: string;
   receiptPrefix?: string;
   statePrefix?: string;
 };
@@ -182,10 +178,6 @@ export function reportStateKey(
   return `${prefix}/${safeKeyPart(report.reportType)}/${safeKeyPart(schedule)}/${safeKeyPart(report.reportRunId)}.json`;
 }
 
-export function reportSendClaimKey(stateKey: string): string {
-  return `${stateKey.replace(/\.json$/, "")}.send-claim.json`;
-}
-
 function isMissingObject(error: unknown): boolean {
   return (
     error instanceof NoSuchKey ||
@@ -237,13 +229,40 @@ async function writeJson(
   );
 }
 
+/**
+ * Runs a conditional put, reporting a lost race rather than throwing. 412 is
+ * the conditional-write rejection; 409 is what S3 returns when two conditional
+ * writes race. Both mean another attempt won, which is a normal outcome here
+ * rather than a storage failure.
+ */
+async function conditionalWrite(write: () => Promise<void>): Promise<boolean> {
+  try {
+    await write();
+    return true;
+  } catch (error: unknown) {
+    if (
+      error instanceof S3ServiceException &&
+      (error.$metadata.httpStatusCode === 412 ||
+        error.$metadata.httpStatusCode === 409)
+    ) {
+      return false;
+    }
+    throw error;
+  }
+}
+
 function deliveryBackend(store: ReportReceiptStore): ReportDeliveryBackend {
   return {
     readReceipt: async (key) => {
       const stored = await readJson(store, key, ReportDeliveryReceiptV1Schema);
       return stored?.value;
     },
-    writeReceipt: (key, receipt) => writeJson(store, key, receipt),
+    writeReceipt: (key, receipt) =>
+      conditionalWrite(() =>
+        writeJson(store, key, receipt, {
+          expectedEtag: undefined,
+        }),
+      ),
     readState: async (key) => {
       const stored = await readJson(store, key, ReportStateV1Schema);
       return stored?.value;
@@ -256,26 +275,12 @@ function deliveryBackend(store: ReportReceiptStore): ReportDeliveryBackend {
         ? undefined
         : { claim: held.value, etag: held.etag };
     },
-    writeSendClaim: async (key, claim, expectedEtag) => {
-      try {
-        await writeJson(store, key, ReportSendClaimV1Schema.parse(claim), {
+    writeSendClaim: (key, claim, expectedEtag) =>
+      conditionalWrite(() =>
+        writeJson(store, key, ReportSendClaimV1Schema.parse(claim), {
           expectedEtag,
-        });
-        return true;
-      } catch (error: unknown) {
-        // 412 is the conditional-write rejection; 409 is what S3 returns when
-        // two conditional writes race. Both mean another attempt owns the send,
-        // which is a normal outcome here rather than a storage failure.
-        if (
-          error instanceof S3ServiceException &&
-          (error.$metadata.httpStatusCode === 412 ||
-            error.$metadata.httpStatusCode === 409)
-        ) {
-          return false;
-        }
-        throw error;
-      }
-    },
+        }),
+      ),
   };
 }
 
@@ -339,6 +344,9 @@ export function createActivityReportEnvelope(
 export async function deliverReport(
   rawReport: ReportEnvelopeV1,
 ): Promise<ReportDeliveryResult> {
+  // Captured before any I/O so it is the attempt's own start, which is the
+  // single clock the send lease is stamped and aged against.
+  const attemptStartedAt = new Date().toISOString();
   const report = ReportEnvelopeV1Schema.parse(rawReport);
   const store = reportReceiptStore();
   const info = Context.current().info;
@@ -354,40 +362,10 @@ export async function deliverReport(
     // Per-attempt, so a retry never mistakes a previous attempt's lease for its
     // own and every takeover is attributable.
     owner: `${execution.workflowId}/${execution.runId}/${info.activityId}/${String(info.attempt)}`,
+    attemptStartedAt,
     receiptPrefix: store.prefix,
     statePrefix: Bun.env["REPORT_STATE_PREFIX"] ?? "reports/state",
   });
-}
-
-/**
- * Take exclusive ownership of this report's Postal send. Resolves false when a
- * different attempt holds a lease that has not yet expired.
- */
-async function claimSend(
-  report: ReportEnvelopeV1,
-  stateKey: string,
-  dependencies: ReportDeliveryDependencies,
-): Promise<boolean> {
-  const claimKey = reportSendClaimKey(stateKey);
-  const claimedAt = dependencies.now();
-  const claim = ReportSendClaimV1Schema.parse({
-    schemaVersion: 1,
-    reportRunId: report.reportRunId,
-    owner: dependencies.owner,
-    claimedAt,
-  });
-  const held = await dependencies.backend.readSendClaim(claimKey);
-  if (held === undefined) {
-    return dependencies.backend.writeSendClaim(claimKey, claim, undefined);
-  }
-  if (held.claim.owner === dependencies.owner) {
-    return true;
-  }
-  const heldFor = Date.parse(claimedAt) - Date.parse(held.claim.claimedAt);
-  if (heldFor < REPORT_SEND_CLAIM_TAKEOVER_MS) {
-    return false;
-  }
-  return dependencies.backend.writeSendClaim(claimKey, claim, held.etag);
 }
 
 export async function deliverReportWithDependencies(
@@ -410,6 +388,8 @@ export async function deliverReportWithDependencies(
   const existingState = await dependencies.backend.readState(stateKey);
   if (existingState?.delivery.status === "accepted") {
     const receipt = existingState.delivery.receipt;
+    // Losing this race is the desired end state: some attempt published a
+    // receipt for this report, which is all this branch was restoring.
     await dependencies.backend.writeReceipt(receiptKey, receipt);
     reportDeliveryTotal.inc({
       ...metricLabels(report),
@@ -425,7 +405,13 @@ export async function deliverReportWithDependencies(
   // resend; treating it as "sent" would silently drop a report whose owner died
   // before sending. Take exclusive ownership of the send instead, with a lease
   // longer than any attempt Temporal will still accept a completion from.
-  const owned = await claimSend(report, stateKey, dependencies);
+  const owned = await claimReportSend({
+    backend: dependencies.backend,
+    claimKey: reportSendClaimKey(stateKey),
+    reportRunId: report.reportRunId,
+    owner: dependencies.owner,
+    attemptStartedAt: dependencies.attemptStartedAt,
+  });
   if (!owned) {
     reportDeliveryTotal.inc({ ...metricLabels(report), outcome: "contended" });
     throw new Error(
@@ -471,6 +457,27 @@ export async function deliverReportWithDependencies(
           : { "X-Report-Schedule-ID": report.scheduleId }),
       },
       tag: report.reportType,
+      // Armed here, after the state write, so the request cannot outlive the
+      // lease by however long that write took. Temporal's start-to-close
+      // abandons the attempt's result but never aborts an in-flight fetch, so
+      // without this a replaced owner could still deliver a second copy after
+      // the takeover already sent. Keep this call inside the send arguments —
+      // measuring earlier and arming here is the bug it replaced.
+      signal: reportSendAbortSignal({
+        reportRunId: report.reportRunId,
+        attemptStartedAt: dependencies.attemptStartedAt,
+        now: dependencies.now(),
+      }),
+    });
+    // The message is accepted, but recording it happens after the send and can
+    // outlast the lease. If a successor took over meanwhile it owns the
+    // durable record, so stop rather than overwrite it with this attempt's
+    // state and receipt.
+    await assertReportSendStillOwned({
+      backend: dependencies.backend,
+      claimKey: reportSendClaimKey(stateKey),
+      reportRunId: report.reportRunId,
+      owner: dependencies.owner,
     });
     const receipt = ReportDeliveryReceiptV1Schema.parse({
       schemaVersion: 1,
@@ -495,7 +502,20 @@ export async function deliverReportWithDependencies(
         },
       }),
     );
-    await dependencies.backend.writeReceipt(receiptKey, receipt);
+    // The arbiter. Create-only, so if a successor already recorded this
+    // report the storage layer rejects this write rather than this attempt
+    // deciding from a stale read — the ownership check above narrows the race
+    // but cannot close it, because a takeover can land between checking and
+    // writing. Exactly one attempt can own the recorded delivery.
+    const recorded = await dependencies.backend.writeReceipt(
+      receiptKey,
+      receipt,
+    );
+    if (!recorded) {
+      throw new Error(
+        `Report ${report.reportRunId} was recorded by another attempt while this one persisted; this message is a duplicate and its receipt was discarded`,
+      );
+    }
     reportDeliveryTotal.inc({ ...metricLabels(report), outcome: "accepted" });
     recordAccepted(report, receipt.acceptedAt);
     return { ...receipt, receiptKey, deduplicated: false };

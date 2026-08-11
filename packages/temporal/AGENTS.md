@@ -349,11 +349,79 @@ report whose owner died first. `deliverReportWithDependencies` therefore takes
 an exclusive lease on the send — a conditional S3 write
 (`If-None-Match`/`If-Match`) of a per-report claim object keyed off the state
 key. A contending attempt never calls `send`; it fails so Temporal retries and
-finds the owner's receipt. A lease older than
-`REPORT_SEND_CLAIM_TAKEOVER_MS` is takeable, which is what guarantees a dead
-owner cannot strand the report. Keep that bound strictly greater than the
-delivery activity's start-to-close timeout, or a takeover can race a live
-owner.
+finds the owner's receipt. A lease older than `REPORT_SEND_CLAIM_TAKEOVER_MS`
+is takeable, which is what stops a dead owner stranding the report.
+
+Three constants in `src/shared/report-delivery-policy.ts` have to stay in
+relation, and two of them are easy to break by adjusting an unrelated timeout:
+
+- `REPORT_SEND_CLAIM_TAKEOVER_MS` must exceed the activity's start-to-close, or
+  a takeover races an attempt Temporal would still accept a completion from.
+- It must also exceed `REPORT_SEND_DEADLINE_MS`. Start-to-close abandons an
+  attempt's _result_ but never aborts its in-flight `fetch`, so the send carries
+  its own abort deadline; without that, a replaced owner's request could still
+  land after the takeover already sent, turning a lost report into a duplicate.
+- The first retry must start at or after the takeover bound
+  (`REPORT_SEND_CLAIM_FIRST_RETRY_AT_MS`). Otherwise every remaining attempt
+  lands inside the lease, throws on contention, and exhausts the budget — the
+  stranded-report failure the lease exists to prevent.
+
+`reportDeliverySendLeaseBounds()` states both margins positively and is
+asserted in `agent-task-report-delivery.test.ts`.
+
+The lease is stamped and aged on ONE clock: the start of the activity attempt
+holding it, captured before any I/O and passed as `attemptStartedAt`. Every
+deadline in that path is anchored to that same start; the remaining
+`now()` calls are record timestamps (`updatedAt`, `acceptedAt`, `completedAt`),
+never budgets. Two rules keep that true:
+
+- **Arm a timeout where you measure it.** `AbortSignal.timeout` starts counting
+  when constructed, so `reportSendAbortSignal` computes the remaining budget
+  and arms the signal together, and is called inside the `send` arguments.
+  Measuring before the pending-state write and arming after it let a slow write
+  push the request past the takeover point — a real bug this shape produced.
+- **Anchor leases to attempt start, not wall-clock now.** Timestamping at
+  claim-write time lets slow pre-claim reads backdate a lease relative to its
+  attempt, so a retry sees a dead owner's lease as unexpired and the report
+  strands again, triggered by slow storage rather than short retries.
+
+Recording a delivery cannot be fenced into the send: the receipt only exists
+once Postal answers, so the accepted-state and receipt writes necessarily land
+after it. `REPORT_SEND_PERSIST_BUDGET_MS` is the window the owner has to
+persist inside its own lease.
+
+**The receipt write is the arbiter, not the ownership check.**
+`assertReportSendStillOwned` runs before persisting, but it is only a
+narrowing: a takeover can land between checking and writing, so a check can
+never decide this on its own. The receipt object is written create-only, so
+storage picks exactly one winner atomically. An attempt that loses that write
+fails instead of reporting success — its message was a duplicate and its
+receipt is discarded. Do not relax the receipt write to an unconditional put,
+and do not replace the create-only write with a read-then-write; that is the
+bug this shape exists to prevent. S3 conditions apply to the object being
+written, so the state object cannot be conditioned on the claim; the receipt
+is authoritative and the read path checks it first, which is why a displaced
+owner's stale `accepted` state cannot mislead a later reader.
+
+**What this design does and does not guarantee.** It guarantees at-most-one
+_recorded_ delivery — enforced by that create-only write, not by a check — and
+no lost report. It does not guarantee at-most-one
+_email_. Two paths reach a duplicate and neither is closable here:
+
+- Postal accepts a message whose response never reaches the owner, so no
+  receipt is written and the successor sends again.
+- Postal accepts near the deadline and the owner is displaced before it can
+  persist, so the successor has nothing to find.
+
+Both need an idempotency key on the provider request — something Postal does
+not offer — not a longer lease or another fence. Do not spend another round
+widening timeouts against them; if duplicate emails become a real problem, the
+fix is provider-side idempotency or a different transport.
+
+- The lease compares timestamps written by different worker processes, so it
+  assumes roughly synchronized clocks. Skew shifts the takeover point by the
+  skew amount; the minute of margin on each bound absorbs ordinary NTP drift,
+  but a badly skewed node would erode it.
 
 ## Scheduled PR-creating workflows
 

@@ -1,17 +1,24 @@
 import { describe, expect, test } from "bun:test";
 import type { PostalSendInput } from "#shared/postal.ts";
 import type { ReportEnvelopeV1 } from "#shared/report.ts";
-import { REPORT_SEND_CLAIM_TAKEOVER_MS } from "#shared/report-delivery-policy.ts";
+import {
+  REPORT_SEND_CLAIM_FIRST_RETRY_AT_MS,
+  REPORT_SEND_CLAIM_TAKEOVER_MS,
+  REPORT_SEND_DEADLINE_MS,
+} from "#shared/report-delivery-policy.ts";
 import {
   activityReportRunId,
   deliverReportWithDependencies,
   type ReportDeliveryBackend,
   type ReportDeliveryReceiptV1,
-  reportSendClaimKey,
+  reportReceiptKey,
   reportStateKey,
-  type ReportSendClaimV1,
   type ReportStateV1,
 } from "./report-delivery.ts";
+import {
+  reportSendClaimKey,
+  type ReportSendClaimV1,
+} from "./report-delivery-lease.ts";
 
 const NOW = "2026-08-10T18:01:00.000Z";
 
@@ -110,7 +117,9 @@ describe("report delivery", () => {
           failReceiptWrite = false;
           throw new Error("receipt store unavailable");
         }
+        if (receipts.has(key)) return false;
         receipts.set(key, receipt);
+        return true;
       },
       readState: async (key) => states.get(key),
       writeState: async (key, state) => {
@@ -136,6 +145,7 @@ describe("report delivery", () => {
       },
       now: () => NOW,
       owner: "workflow/run-1/activity-1/1",
+      attemptStartedAt: NOW,
     };
 
     await expect(
@@ -165,7 +175,9 @@ function scenario(claims: Map<string, StoredClaim>) {
   const backend: ReportDeliveryBackend = {
     readReceipt: async (key) => receipts.get(key),
     writeReceipt: async (key, receipt) => {
+      if (receipts.has(key)) return false;
       receipts.set(key, receipt);
+      return true;
     },
     readState: async (key) => states.get(key),
     writeState: async (key, state) => {
@@ -176,7 +188,8 @@ function scenario(claims: Map<string, StoredClaim>) {
   return {
     sent,
     states,
-    dependencies: (owner: string, now: string) => ({
+    claims,
+    dependencies: (owner: string, now: string, attemptStartedAt = now) => ({
       backend,
       addresses: {
         recipient: "recipient@example.com",
@@ -193,6 +206,7 @@ function scenario(claims: Map<string, StoredClaim>) {
       },
       now: () => now,
       owner,
+      attemptStartedAt,
     }),
   };
 }
@@ -251,6 +265,194 @@ describe("report send ownership", () => {
     expect(sent).toHaveLength(1);
     expect(result.deduplicated).toBe(false);
     expect([...states.values()][0]?.delivery.status).toBe("accepted");
+  });
+
+  test("stamps the lease with the attempt start, not the claim write time", async () => {
+    // Slow pre-claim reads must not backdate the lease relative to the attempt
+    // holding it, or a retry sees a dead owner's lease as unexpired.
+    const { claims, dependencies } = scenario(new Map<string, StoredClaim>());
+    const slowWriteAt = new Date(Date.parse(NOW) + 90_000).toISOString();
+
+    await deliverReportWithDependencies(
+      report(),
+      dependencies("workflow/run-1/activity-1/1", slowWriteAt, NOW),
+    );
+
+    const stored = claims.get(reportSendClaimKey(reportStateKey(report())));
+    expect(stored?.claim.claimedAt).toBe(NOW);
+  });
+
+  test("refuses to send once the attempt outlived its send deadline", async () => {
+    // Past the deadline the lease is takeable, so this attempt must not put a
+    // second copy of the report on the wire.
+    const { sent, dependencies } = scenario(new Map<string, StoredClaim>());
+    const pastDeadline = new Date(
+      Date.parse(NOW) + REPORT_SEND_DEADLINE_MS,
+    ).toISOString();
+
+    await expect(
+      deliverReportWithDependencies(
+        report(),
+        dependencies("workflow/run-1/activity-1/1", pastDeadline, NOW),
+      ),
+    ).rejects.toThrow("reached its send deadline");
+
+    expect(sent).toEqual([]);
+  });
+
+  test("arms the send deadline after the state write, not before it", async () => {
+    // A slow pending-state write spends the attempt's send budget. Measuring
+    // the deadline before that write and arming the timeout after it let the
+    // request outlive the lease and duplicate a report the successor sent.
+    const sent: PostalSendInput[] = [];
+    const receipts = new Map<string, ReportDeliveryReceiptV1>();
+    const states = new Map<string, ReportStateV1>();
+    let clock = NOW;
+    const backend: ReportDeliveryBackend = {
+      readReceipt: async () => receipts.get("unused"),
+      writeReceipt: async () => true,
+      readState: async () => states.get("unused"),
+      writeState: async () => {
+        clock = new Date(
+          Date.parse(NOW) + REPORT_SEND_DEADLINE_MS + 10_000,
+        ).toISOString();
+      },
+      ...claimBackend(new Map<string, StoredClaim>()),
+    };
+
+    await expect(
+      deliverReportWithDependencies(report(), {
+        backend,
+        addresses: {
+          recipient: "recipient@example.com",
+          sender: "sender@example.com",
+        },
+        send: async (input: PostalSendInput) => {
+          sent.push(input);
+          return {
+            messageId: "postal-1",
+            recipientId: 42,
+            subject: input.subject,
+            tag: input.tag,
+          };
+        },
+        now: () => clock,
+        owner: "workflow/run-1/activity-1/1",
+        attemptStartedAt: NOW,
+      }),
+    ).rejects.toThrow("reached its send deadline");
+
+    expect(sent).toEqual([]);
+  });
+
+  test("takes over a lease whose owner acquired it late in its attempt", async () => {
+    // The reachability argument has to survive slow pre-claim I/O: attempt 1
+    // spends 90s on its reads before writing the claim, then hangs. Because
+    // the lease is stamped at that attempt's start rather than at the write,
+    // the first retry still sees an expired lease instead of contending until
+    // the attempt budget is spent.
+    const ownerStartedAt = NOW;
+    const claims = heldBy("workflow/run-1/activity-1/1", ownerStartedAt);
+    const { sent, states, dependencies } = scenario(claims);
+    const firstRetryAt = new Date(
+      Date.parse(ownerStartedAt) + REPORT_SEND_CLAIM_FIRST_RETRY_AT_MS,
+    ).toISOString();
+
+    const result = await deliverReportWithDependencies(
+      report(),
+      dependencies("workflow/run-1/activity-1/2", firstRetryAt),
+    );
+
+    expect(sent).toHaveLength(1);
+    expect(result.deduplicated).toBe(false);
+    expect([...states.values()][0]?.delivery.status).toBe("accepted");
+  });
+
+  test("refuses to record a delivery whose lease was taken over mid-persistence", async () => {
+    // Postal accepted the message, but recording it lands after the send and
+    // can outlast the lease. A displaced owner must not overwrite the
+    // successor's durable record, and must fail loudly so the duplicate is
+    // visible rather than recorded as one clean delivery.
+    const claims = heldBy("workflow/run-1/activity-1/1", NOW);
+    const { sent, states, dependencies } = scenario(claims);
+    const claimKey = reportSendClaimKey(reportStateKey(report()));
+
+    const owner = dependencies("workflow/run-1/activity-1/1", NOW);
+    const takenOver: typeof owner = {
+      ...owner,
+      send: async (input: PostalSendInput) => {
+        const result = await owner.send(input);
+        // A successor takes the lease while this attempt is still persisting.
+        claims.set(claimKey, {
+          claim: {
+            schemaVersion: 1 as const,
+            reportRunId: report().reportRunId,
+            owner: "workflow/run-1/activity-1/2",
+            claimedAt: NOW,
+          },
+          etag: "etag-successor",
+        });
+        return result;
+      },
+    };
+
+    await expect(
+      deliverReportWithDependencies(report(), takenOver),
+    ).rejects.toThrow("lost its send lease");
+
+    expect(sent).toHaveLength(1);
+    expect([...states.values()][0]?.delivery.status).toBe("pending");
+  });
+
+  test("lets only one attempt record the delivery when both get past the check", async () => {
+    // The ownership check narrows the window but cannot close it: a takeover
+    // can land between checking and writing. The create-only receipt write is
+    // what actually decides, so an attempt that loses that race must not
+    // report success even though its own send was accepted.
+    const claims = heldBy("workflow/run-1/activity-1/1", NOW);
+    const { sent, dependencies } = scenario(claims);
+    const claimKey = reportSendClaimKey(reportStateKey(report()));
+    const receiptKey = reportReceiptKey(report());
+
+    const owner = dependencies("workflow/run-1/activity-1/1", NOW);
+    const racing: typeof owner = {
+      ...owner,
+      send: async (input: PostalSendInput) => {
+        const result = await owner.send(input);
+        // The successor takes the lease AND records its delivery after this
+        // attempt's ownership check has already passed.
+        claims.set(claimKey, {
+          claim: {
+            schemaVersion: 1 as const,
+            reportRunId: report().reportRunId,
+            owner: "workflow/run-1/activity-1/2",
+            claimedAt: NOW,
+          },
+          etag: "etag-successor",
+        });
+        await owner.backend.writeReceipt(receiptKey, {
+          schemaVersion: 1,
+          reportRunId: report().reportRunId,
+          reportType: report().reportType,
+          scheduleId: report().scheduleId,
+          subject: "[OK] Test report",
+          messageId: "postal-successor",
+          recipientId: 42,
+          acceptedAt: NOW,
+          reportStateKey: reportStateKey(report()),
+        });
+        return result;
+      },
+    };
+
+    await expect(
+      deliverReportWithDependencies(report(), racing),
+    ).rejects.toThrow();
+
+    // The successor's receipt survived; the loser's was discarded.
+    const stored = await owner.backend.readReceipt(receiptKey);
+    expect(stored?.messageId).toBe("postal-successor");
+    expect(sent).toHaveLength(1);
   });
 
   test("resumes its own lease after a retry of the same attempt identity", async () => {

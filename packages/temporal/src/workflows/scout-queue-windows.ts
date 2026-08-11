@@ -7,6 +7,7 @@ import type {
   ActivityReportInput,
   ReportDeliveryActivities,
 } from "#activities/report-delivery.ts";
+import { SCOUT_QUEUE_WINDOWS_LOOKBACK_DAYS } from "#shared/scout-queue-windows-lookback.ts";
 
 const { refreshScoutQueueWindows } =
   proxyActivities<ScoutQueueWindowsActivities>({
@@ -193,7 +194,9 @@ function failureReport(startedAt: string, error: unknown): ActivityReportInput {
       "Match-lake evidence or repository validation did not complete.",
     ],
     actions: ["Inspect the failed activity and rerun the schedule."],
-    provenance: { query: "scout-prod matches over the prior 21 days" },
+    provenance: {
+      query: `scout-prod matches over the prior ${SCOUT_QUEUE_WINDOWS_LOOKBACK_DAYS.toString()} days`,
+    },
   };
 }
 
@@ -245,7 +248,7 @@ export function scoutQueueWindowsReport(
       : [],
     provenance: {
       source: "s3://scout-prod",
-      query: "queue availability over the prior 21 days",
+      query: `queue availability over the prior ${SCOUT_QUEUE_WINDOWS_LOOKBACK_DAYS.toString()} days`,
     },
   };
 }
