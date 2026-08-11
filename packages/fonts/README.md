@@ -17,11 +17,17 @@ or zips the result. Input files must follow the licensed static naming
 uv run patch-berkeley-mono.py <input_dir> [output_dir] [--install] [--zip]
 
 # Example: patch the extracted license package and install
-uv run patch-berkeley-mono.py ~/Downloads/berkeley-ttf --install
+uv run patch-berkeley-mono.py ~/Downloads/berkeley-ttf ~/Downloads/patched --install
 ```
 
+Always pass an explicit `output_dir` outside the repository. The default is
+`./patched`, relative to your working directory — run the script from
+`packages/fonts` without an `output_dir` and the licensed patched TTFs land in
+`packages/fonts/patched`, inside the checkout. `--install` copies them to
+`~/Library/Fonts` but does not remove them from the output directory.
+
 - `input_dir` — directory containing the licensed Berkeley Mono TTFs
-- `output_dir` — defaults to `./patched`
+- `output_dir` — defaults to `./patched`; always pass a path outside the repo
 - `--install` — copy patched fonts to `~/Library/Fonts`
 - `--zip` — create `BerkeleyMono-NerdFont.zip` next to the output directory
 

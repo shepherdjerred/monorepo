@@ -53,6 +53,7 @@ Prerequisites: Rust (stable), Bun, and League of Legends for end-to-end testing.
 
 ```bash
 bun install          # from the repo root (single workspace install)
+cd packages/scout-for-lol/packages/desktop   # the scripts below are this package's
 
 bun run dev          # Tauri dev mode (Rust + Vite frontend)
 bun run dev:frontend # Vite dev server only

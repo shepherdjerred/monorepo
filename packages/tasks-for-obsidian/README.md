@@ -11,7 +11,8 @@ the New Architecture; iOS native code (app + widget) lives in `ios/`.
 ## Running locally
 
 ```bash
-bun install            # from the repo root
+bun install                        # from the repo root
+cd packages/tasks-for-obsidian     # the scripts below are this package's
 bun run pod-install    # iOS native deps (CocoaPods)
 bun run ios            # build + launch on simulator
 bun run start          # Metro bundler (separate terminal)
