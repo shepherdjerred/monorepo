@@ -13,7 +13,6 @@ import { veleroOrphanAuditActivities } from "./velero-orphan-audit.ts";
 import { outcomeActivities } from "./outcome.ts";
 import { cancelBuildkiteBuildsActivities } from "./cancel-buildkite-builds.ts";
 import { checkPrMergeConflictsActivities } from "./check-pr-merge-conflicts.ts";
-import { readmeRefreshActivities } from "./readme-refresh.ts";
 import { llmCatalogRefreshActivities } from "./llm-catalog-refresh.ts";
 import { scoutImageGcActivities } from "./scout-image-gc.ts";
 import { homelabCrdImportsRefreshActivities } from "./homelab-crd-imports-refresh.ts";
@@ -43,7 +42,6 @@ export const activities = {
   ...outcomeActivities,
   ...cancelBuildkiteBuildsActivities,
   ...checkPrMergeConflictsActivities,
-  ...readmeRefreshActivities,
   ...llmCatalogRefreshActivities,
   ...scoutImageGcActivities,
   ...homelabCrdImportsRefreshActivities,

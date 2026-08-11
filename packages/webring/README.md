@@ -1,8 +1,8 @@
 <div align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://cdn.rawgit.com/shepherdjerred/webring/main/assets/logo-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="https://cdn.rawgit.com/shepherdjerred/webring/main/assets/logo-light.png">
-    <img alt="webring logo" src="https://cdn.rawgit.com/shepherdjerred/webring/main/assets/logo-light.png" height=150>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/shepherdjerred/monorepo/main/packages/webring/assets/logo-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/shepherdjerred/monorepo/main/packages/webring/assets/logo-light.png">
+    <img alt="webring logo" src="https://raw.githubusercontent.com/shepherdjerred/monorepo/main/packages/webring/assets/logo-light.png" height=150>
   </picture>
 
 [![webring](https://img.shields.io/npm/v/webring.svg)](https://www.npmjs.com/package/webring)
@@ -27,7 +27,7 @@ npm i webring
 
 ## Quick Start
 
-This library is intended to be used with a static site generator. I use this with [Astro](https://astro.build/) on my [personal website](https://github.com/shepherdjerred/monorepo/blob/1220ebef2e43956ba385402ed8529870e9084de8/src/components/BlogWebring.astro#L17-L22).
+This library is intended to be used with a static site generator. I use it with [Astro](https://astro.build/) on my personal website — see [`packages/sjer.red/src/webring.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/sjer.red/src/webring.ts) for a real consumer.
 
 ```typescript
 import { run } from "webring";
@@ -47,6 +47,8 @@ const result = await run({
       title: "Jake Lazaroff",
     },
   ],
+  number: 3,
+  truncate: 300,
 });
 
 console.log(result);
@@ -80,13 +82,33 @@ console.log(result);
 
 ## Configuration
 
-`webring` is configured by passing in a `Configuration` object into the `run` method.
+`webring` is configured by passing a `Configuration` object into `run`. The
+exported `Configuration` type is the Zod _output_ type, so the schema's
+defaults for `number` and `truncate` are already applied in the type: those two
+fields are **required** on the object you pass in, alongside `sources`. Only
+`cache` and `shuffle` may be omitted.
 
-All possible configuration values can be seen by looking at the [`typedoc` site](https://shepherdjerred.github.io/webring/types/Configuration.html).
+| Key                            | Type                 | Required | Description                                                           |
+| ------------------------------ | -------------------- | -------- | --------------------------------------------------------------------- |
+| `sources`                      | `Source[]`           | yes      | Feeds to fetch. Each has a `url`, a `title`, and an optional `filter` |
+| `number`                       | `number`             | yes      | Return the n latest updates across all sources                        |
+| `truncate`                     | `number`             | yes      | Preview length in characters, applied after HTML sanitization         |
+| `cache`                        | `CacheConfiguration` | no       | Enable caching by providing this object; omit it to disable caching   |
+| `cache.cache_file`             | `string`             | no       | File used as the cache. Defaults to `"cache.json"`                    |
+| `cache.cache_duration_minutes` | `number`             | no       | How long a cached result is reused. Defaults to `60`                  |
+| `shuffle`                      | `boolean`            | no       | Randomize the output order. Omitted behaves as `false`                |
+
+The `cache.*` defaults above are the only ones `run` fills in at runtime: it
+parses the object with `CachedConfigurationSchema`, which succeeds only when
+`cache` is present. Without a `cache` key the object is used as given, so
+`number` and `truncate` must carry real values rather than relying on the
+schema.
+
+Full generated API documentation: [webring.sjer.red](https://webring.sjer.red) (e.g. [`Configuration`](https://webring.sjer.red/types/Configuration.html)).
 
 ## Example
 
-An example of using this project with Astro is located in `example`. The relevant file is [`src/pages/blog/[...slug].astro`](https://github.com/shepherdjerred/monorepo/blob/main/packages/webring/example/src/pages/blog/%5B...slug%5D.astro#L18).
+An example of using this project with Astro is located in `example`. The relevant file is [`src/pages/blog/[...slug].astro`](https://github.com/shepherdjerred/monorepo/blob/main/packages/webring/example/src/pages/blog/%5B...slug%5D.astro).
 
 ```typescript
 ---

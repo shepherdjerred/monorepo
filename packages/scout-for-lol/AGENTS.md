@@ -642,16 +642,17 @@ real objects in the `scout-prod` bucket. Never hand-edit the outputs.
   `scripts/generate-marketing-showcase.ts` with the standard flags (see the
   Temporal activity for the exact invocation) and commit manifest + outputs.
 
-## Pre-commit / pre-push gates
+## Pre-commit gates
 
-Git hooks (lefthook) run automatically: `pre-commit` formats staged files and runs
-`turbo run lint typecheck --affected`; `pre-push` runs `bun run verify -- --affected`
-(the full build/typecheck/test/lint + repo checks). Nothing extra is required, but
-running these yourself before pushing catches failures earlier:
+The lefthook `pre-commit` hook checks staged files only (Gitleaks, Prettier,
+line endings, merge markers, environment-variable names, file size, and the
+staged-diff automation rules). There is no `pre-push` hook; the exhaustive
+`bun run verify` graph runs in the Buildkite pipeline. Running checks yourself
+before pushing catches failures earlier:
 
 - Prettier formatting on touched files (also auto-fixed by the pre-commit hook)
 - Markdownlint on `.md` files
-- Per-package: typecheck, ESLint, and relevant tests
+- Per-package: `bunx turbo run typecheck test lint --filter=<pkg>`
 - Rust formatting and Clippy for desktop/src-tauri
 
 ## Non-core message budget — a promise to users, not a guideline

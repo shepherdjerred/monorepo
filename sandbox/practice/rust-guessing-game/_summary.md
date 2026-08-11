@@ -1,1 +1,0 @@
-This is a Rust command-line guessing game where the player guesses numbers between 0 and 20. It uses the Rust 2018 edition with the `rand` 0.8.3 crate and `std::io` to handle random target generation and user input. A notable detail is its use of `thread_rng().gen_range(0..21)` to cover the full range inclusively before comparing the player's guess to the target.

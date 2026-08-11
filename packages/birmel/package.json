@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "type": "module",
   "private": true,
+  "description": "Discord bot built on a single explicit AI SDK agent runtime with routed specialists, durable memory, thread-bound sessions, and a jobs system",
   "exports": {
     ".": "./src/index.ts",
     "./*": "./src/*"

@@ -10,15 +10,7 @@ const config = [
   },
   ...recommended({
     tsconfigRootDir: import.meta.dirname,
-    projectService: {
-      allowDefaultProject: [
-        "generate-readme.ts",
-        "generate-readme-core.ts",
-        "generate-readme.test.ts",
-        "generate-readme-smoke.test.ts",
-      ],
-    },
-    tsconfigPaths: ["./tsconfig.json", "./tsconfig.scripts.json"],
+    tsconfigPaths: ["./tsconfig.json"],
   }),
   {
     files: ["src/index.ts"],

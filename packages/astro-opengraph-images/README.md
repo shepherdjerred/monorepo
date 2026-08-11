@@ -564,3 +564,31 @@ Here are some similar libraries using Satori and Astro. I haven't done a feature
 - https://github.com/cijiugechu/astro-satori (Possibly dead, hasn't been updated in a year)
 - https://github.com/kevinzunigacuellar/astro-satori (Possibly dead, hasn't been updated in a year)
 - https://github.com/rumaan/astro-vercel-og (Possibly dead, hasn't been updated in a year)
+
+## Maintainers
+
+This README is hand-maintained; edit it directly.
+
+- **Tests** — `bun run test` (runs `vitest src`).
+- **Preset example images** — build the preset example site first, then render
+  the PNGs from the package root:
+
+  ```bash
+  cd examples/preset && bun install && bun run build && cd ../..
+  bun run src/presets/render-examples.ts   # writes assets/presets/<name>.png
+  ```
+
+  The separate `bun install` is deliberate. `examples/` is intentionally **not**
+  part of the root workspace: both examples declare the package name `example`,
+  so listing them would abort the root install with
+  `Workspace name "example" already exists`. Each example instead installs on
+  its own and pulls this package in through the `postinstall` hook
+  (`scripts/copy-example-deps.ts`), which copies the files named in our
+  `package.json` `files` field — mirroring what `npm pack` ships. That is the
+  point: the examples consume the package the way a published consumer does,
+  and it avoids the recursive symlink a `file:`/`link:` dependency would create
+  for a directory nested inside the package it depends on. Do not "fix" this by
+  adding `examples/*` to the root `workspaces`.
+
+- **Publish** — `bun run publish:npm` (wraps `scripts/publish-npm.ts` at the
+  repo root).

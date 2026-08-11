@@ -1,161 +1,85 @@
 # Scout for LoL - Desktop Client
 
-Desktop application for real-time League of Legends game updates posted to Discord.
-
-## Overview
-
-This is a Tauri-based desktop application that monitors your League of Legends games in real-time and posts updates to a Discord channel. It connects to the League Client (LCU) API running on your local machine and listens for game events.
-
-## Features
-
-- **Auto-detect League Client**: Automatically finds and connects to the running League of Legends client
-- **Discord Integration**: Posts game events directly to Discord using a bot token
-- **Real-time Events**: Monitors and posts:
-  - Champion select
-  - Game start/end
-  - Kills, deaths, assists
-  - Multi-kills (double, triple, quadra, penta)
-  - Objectives (dragons, baron, towers, inhibitors)
-- **User-friendly GUI**: Easy setup and configuration for non-technical users
-- **Debug Mode**: View logs and connection status
-- **Auto-updates**: Built-in update mechanism (configured separately)
+Tauri desktop application that monitors your League of Legends games in real
+time and forwards game events to the Scout backend, which plays sounds in
+Discord voice channels and drives live-game features. The desktop app never
+talks to Discord directly — it authenticates to the backend with an API token.
 
 ## Technology Stack
 
 - **Backend**: Rust (Tauri)
-- **Frontend**: React + TypeScript + Vite
-- **LCU Integration**: Direct WebSocket connection to League Client API
-- **Discord**: Direct API integration using bot tokens
+- **Frontend**: React + TypeScript + Vite + Tailwind
+- **LCU Integration**: League Client (LCU) API and the Live Client Data API (port 2999)
+- **Delivery**: HTTP calls to the Scout backend (`backend_client.rs`)
 
 ## Architecture
 
-### Rust Backend (`src-tauri/`)
+### Rust core (`src-tauri/src/`)
 
-- `main.rs`: Application entry point and Tauri command handlers
-- `lcu.rs`: League Client connection and process detection
-- `discord.rs`: Discord API client for posting messages
-- `events.rs`: WebSocket listener for live game events
+| Module              | Responsibility                                                                       |
+| ------------------- | ------------------------------------------------------------------------------------ |
+| `main.rs`           | Application entry point and Tauri command handlers                                   |
+| `lcu.rs`            | League Client process detection and LCU API connection (port + auth token discovery) |
+| `live_client.rs`    | Live Client Data API client (`https://127.0.0.1:2999`, only available in-game)       |
+| `events.rs`         | Polls live game data / listens to the LCU WebSocket and forwards events              |
+| `backend_client.rs` | Authenticated HTTP client for the Scout backend (event delivery, status checks)      |
+| `config.rs`         | Persists settings to `config.json`: generated client ID, API token, backend URL      |
+| `paths.rs`          | Centralized app-data layout: config, logs, cached sounds                             |
+| `tests.rs`          | Rust unit tests                                                                      |
 
-### React Frontend (`src/`)
+### React frontend (`src/`)
 
-- `App.tsx`: Main application UI
-- `main.tsx`: React entry point
-- `styles.css`: Application styles
+- `app.tsx`: Application UI and connection state machine
+- `components/`: `layout/`, `sections/` (setup and status panels), `ui/` (shared primitives from `@scout-for-lol/ui`)
+- `lib/`: utilities
+- `main.tsx`, `styles.css`: entry point and styles
 
-## Setup
+## Setup Flow
 
-### Prerequisites
+1. **Connect to League Client** — the app scans running processes for
+   `LeagueClientUx`, extracts the LCU port and auth token from its arguments,
+   and connects (the LCU uses a self-signed certificate and
+   `riot:<token>` basic auth).
+2. **Configure the backend** — enter the Scout backend URL and an API token;
+   the app stores them (plus a generated per-install client ID) in
+   `config.json` under the app data directory.
+3. **Test the connection** — verifies the token against the backend.
+4. **Start monitoring** — game events (kills, objectives, game start/end) are
+   read from the Live Client Data API and forwarded to the backend.
 
-- Rust (latest stable)
-- Bun (for TypeScript/frontend)
-- League of Legends installed
-- Discord bot token and channel ID
+## Development
 
-### Development
-
-```bash
-# Install dependencies
-bun install
-
-# Run in development mode
-bun run dev
-
-# Build for production
-bun run build
-
-# Type check
-bun run typecheck
-
-# Lint
-bun run lint
-```
-
-### Building Installers
+Prerequisites: Rust (stable), Bun, and League of Legends for end-to-end testing.
 
 ```bash
-bun run build
+bun install          # from the repo root (single workspace install)
+cd packages/scout-for-lol/packages/desktop   # the scripts below are this package's
+
+bun run dev          # Tauri dev mode (Rust + Vite frontend)
+bun run dev:frontend # Vite dev server only
+bun run typecheck    # tsc --noEmit
+bun run lint         # ESLint
+bun run format       # Prettier check
 ```
 
-This will create platform-specific installers in `src-tauri/target/release/bundle/`:
+### Building
 
-- Windows: `.msi` and `.exe` installers
-- macOS: `.dmg` and `.app` bundle
-- Linux: Can be built on Linux with `AppImage`, `deb`, `rpm`
+```bash
+bun run build            # Frontend bundle only (vite build)
+bun run build:tauri      # Platform installer for the current host
+bun run build:macos      # macOS universal binary
+bun run build:macos:arm  # macOS arm64
+bun run build:windows    # Windows x86_64 (GNU toolchain)
+bun run build:linux      # Linux
+```
 
-## Usage
-
-1. **Start the application**
-2. **Connect to League Client**: Click "Connect to League Client" (League must be running)
-3. **Configure Discord**:
-   - Enter your Discord bot token
-   - Enter the channel ID where you want updates posted
-   - Click "Configure Discord"
-4. **Start Monitoring**: Click "Start Monitoring" to begin watching for game events
-
-## Discord Bot Setup
-
-1. Go to [Discord Developer Portal](https://discord.com/developers/applications)
-2. Create a new application
-3. Go to "Bot" section and create a bot
-4. Copy the bot token (you'll need this for the desktop app)
-5. Enable these intents:
-   - Server Members Intent
-   - Message Content Intent (optional)
-6. Invite the bot to your server with these permissions:
-   - Send Messages
-   - Embed Links
-7. Get the channel ID where you want updates:
-   - Enable Developer Mode in Discord settings
-   - Right-click the channel and "Copy ID"
-
-## How It Works
-
-1. **Process Detection**: The app scans running processes to find `LeagueClientUx`
-2. **LCU Connection**: Extracts connection details (port, auth token) from process arguments
-3. **WebSocket**: Connects to the LCU WebSocket API at `wss://127.0.0.1:<port>`
-4. **Event Subscription**: Subscribes to game flow, champion select, and end-of-game events
-5. **Event Parsing**: Parses incoming WebSocket messages and extracts relevant game data
-6. **Discord Posting**: Formats events as Discord messages and posts via the Discord API
-
-## Development Notes
-
-- The LCU API uses a self-signed certificate, so TLS verification is disabled
-- WebSocket connection requires basic authentication with `riot:<token>`
-- The app must run while League is active to monitor games
-- Events are processed in real-time with minimal delay
-
-## Future Enhancements
-
-- [ ] Rich embeds for Discord messages
-- [ ] Configurable event filters
-- [ ] Multiple Discord channel support
-- [ ] Champion select detailed info
-- [ ] In-game statistics tracking
-- [ ] Custom notification sounds
-- [ ] System tray integration
-- [ ] Settings persistence
-- [ ] Multi-language support
+Installers land in `src-tauri/target/release/bundle/`.
 
 ## Troubleshooting
 
-### Can't connect to League Client
-
-- Make sure League of Legends is running
-- Try restarting the League client
-- Check if another application is interfering
-
-### Discord messages not posting
-
-- Verify your bot token is correct
-- Ensure the bot has permissions in the channel
-- Check the channel ID is correct
-- View debug logs for error messages
-
-### Build errors
-
-- Ensure Rust is up to date: `rustup update`
-- Clear build cache: `cargo clean`
-- Make sure all dependencies are installed
+- **Can't connect to League Client**: make sure League is running; restart the client.
+- **Backend not reachable**: verify the backend URL and API token in the app; check the debug logs (paths listed in `paths.rs`).
+- **Build errors**: `rustup update`, then `cargo clean`.
 
 ## License
 

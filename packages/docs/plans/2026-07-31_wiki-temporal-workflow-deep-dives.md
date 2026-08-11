@@ -63,15 +63,15 @@ the retired timeout-watch entry is not a remaining implementation task.
 
 New directory `packages/docs/wiki/src/content/docs/temporal/workflows/`:
 
-| Page                     | Covers                                                                                                                                           |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `index.md`               | Inventory table: every workflow → section link, trigger, queue, LLM-or-deterministic, output (PR / auto-merge / email / metrics / actuation)     |
-| `repo-upkeep.md`         | Shared bot-clone→PR pattern (described once) + fetcher, deps-summary, readme-refresh, llm-catalog-refresh, homelab-crd-imports, pokeemerald-data |
-| `scout.md`               | data-dragon (version-check + weekly), season-refresh, showcase-refresh, queue-windows, image-gc                                                  |
-| `glitter.md`             | corpus daily + operator variants (inventory/backfill/overlap), context-refresh                                                                   |
-| `homelab-maintenance.md` | zfs-maintenance, bugsink-housekeeping, velero-orphan-audit, dns-audit, golink-sync                                                               |
-| `home-automation.md`     | Event wiring + presence/debounce model (once) + good-morning ×3, vacuum, welcome-home, leaving-home, reconcile-lock, good-night                  |
-| `pr-bots.md`             | Webhook ingress cross-cutting + pr-summary, merge-conflict check, buildkite-cancel, reaction listener, observe-review-signals                    |
+| Page                     | Covers                                                                                                                                       |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `index.md`               | Inventory table: every workflow → section link, trigger, queue, LLM-or-deterministic, output (PR / auto-merge / email / metrics / actuation) |
+| `repo-upkeep.md`         | Shared bot-clone→PR pattern (described once) + fetcher, deps-summary, llm-catalog-refresh, homelab-crd-imports, pokeemerald-data             |
+| `scout.md`               | data-dragon (version-check + weekly), season-refresh, showcase-refresh, queue-windows, image-gc                                              |
+| `glitter.md`             | corpus daily + operator variants (inventory/backfill/overlap), context-refresh                                                               |
+| `homelab-maintenance.md` | zfs-maintenance, bugsink-housekeeping, velero-orphan-audit, dns-audit, golink-sync                                                           |
+| `home-automation.md`     | Event wiring + presence/debounce model (once) + good-morning ×3, vacuum, welcome-home, leaving-home, reconcile-lock, good-night              |
+| `pr-bots.md`             | Webhook ingress cross-cutting + pr-summary, merge-conflict check, buildkite-cancel, reaction listener, observe-review-signals                |
 
 Edits to existing pages (from PR #1869):
 
@@ -130,8 +130,8 @@ bun run build && bun run test:e2e`.
 ### Shared patterns (describe once on repo-upkeep.md)
 
 - **Bot-clone + GitHub App PR pattern** (`src/activities/bot-clone.ts`,
-  `src/lib/github-app-token.ts`, `openSeasonRefreshPr`): temp clone (depth-1;
-  blobless full-history when cog needs commit dates) → short-lived GitHub App
+  `src/lib/github-app-token.ts`, `openSeasonRefreshPr`): temp clone (depth-1) →
+  short-lived GitHub App
   installation token (RS256 JWT, 9-min TTL, bot attribution) → `bun install
 --frozen-lockfile --ignore-scripts` with per-run cache (`--ignore-scripts`
   is load-bearing: root `prepare` arming lefthook broke bot commits weekly
@@ -151,9 +151,6 @@ bun run build && bun run test:e2e`.
 - **deps-summary** — weekly email of homelab `versions.ts` bumps; `0 9 * * 1`;
   git-log parse keyed on renovate annotations → GitHub release notes →
   gpt-5.6-sol summary → Postal. No PR.
-- **readme-refresh** — cog-regen README project tables; `0 8 * * 1`; blobless
-  full history (cog sorts by first-commit date); cached `_summary.md` → no
-  Codex calls steady-state. Replaced a Buildkite script.
 - **llm-catalog-refresh** — cross-check `llm-models/catalog.json` vs
   models.dev + LiteLLM; `0 9 * * 1`; deterministic sync script; its stdout
   report becomes the PR body.

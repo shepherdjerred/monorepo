@@ -56,9 +56,8 @@ Repo-artifact jobs open a PR on drift under a GitHub App token. Most await
 review; the additive-only lanes (Scout's Data Dragon refresh, queue-windows)
 use `gh pr merge --auto` and land on green checks.
 
-Two repo-artifact jobs are not deterministic: `scout-season-refresh` runs Claude
-to derive season changes, and `readme-refresh` can call Codex for a new
-package's summary.
+One repo-artifact job is not deterministic: `scout-season-refresh` runs Claude
+to derive season changes.
 
 The four Buildkite and Kometa maintenance activities run on the serial
 `maintenance` task queue in one persistent worker; they do not create Kubernetes

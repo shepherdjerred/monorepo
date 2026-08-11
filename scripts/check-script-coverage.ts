@@ -6,7 +6,6 @@ const minimumCoverage = 90;
 const repositoryRoot = path.resolve(import.meta.dir, "..");
 const packageDirectories = [
   "scripts",
-  "packages/astro-opengraph-images",
   "packages/discord-plays-mario-kart",
   "packages/discord-plays-pokemon",
   "packages/dotfiles",

@@ -194,18 +194,8 @@
     },
     {
       "source": "packages/astro-opengraph-images/generate_readme.sh",
-      "disposition": "port",
-      "reason": "Package runtime already includes Bun",
-      "replacement": "packages/astro-opengraph-images/generate-readme.ts",
-      "owner": {
-        "packageJson": "packages/astro-opengraph-images/package.json",
-        "tsconfig": "packages/astro-opengraph-images/tsconfig.scripts.json",
-        "eslintConfig": "packages/astro-opengraph-images/eslint.config.ts"
-      },
-      "tests": [
-        "packages/astro-opengraph-images/generate-readme.test.ts",
-        "packages/astro-opengraph-images/generate-readme-smoke.test.ts"
-      ]
+      "disposition": "delete",
+      "reason": "README.md is hand-maintained now; the Bun port of the gomplate generator was removed with the repo-wide README overhaul (2026-08)"
     },
     {
       "source": "packages/discord-plays-mario-kart/scripts/build-wasm.sh",

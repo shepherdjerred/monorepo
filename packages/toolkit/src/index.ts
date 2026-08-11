@@ -65,10 +65,12 @@ Commands:
   discord guilds|channels    Discovery
   discord whoami             Daemon identities + uptime
 
-Options:
+Global options (must come before the command):
   --version                  Print toolkit version
-  --json                     Output as JSON
-  --verbose, -v              Verbose output (timing, debug info)
+  --help, -h                 Print this help
+
+Command options (must come after the command):
+  --json                     Output as JSON, e.g. 'toolkit alerts list --json'
 
 Environment Variables:
   ALERT_DASHBOARD_URL        Alerts service URL (tailnet default)

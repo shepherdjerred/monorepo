@@ -5,12 +5,11 @@
 #
 # This image bakes in the operator CLIs the worker's scheduled workflows shell
 # out to: gh + claude (pr-agent PR review/summary + scout/homelab Claude runs),
-# codex (agent-task Codex provider + readme-refresh new-package summaries),
+# codex (agent-task Codex provider),
 # kubectl (bugsink-housekeeping / zfs-maintenance `kubectl exec`),
 # github-mcp-server (pr-agent's MCP GitHub backend), talosctl / tofu / argocd /
 # velero / bk / temporal / toolkit (homelab-audit-daily runbook + preflight —
-# see src/activities/homelab-audit-preflight.ts REQUIRED_AUDIT_BINARIES), and
-# cog (readme-refresh-weekly regenerates the README project-listing tables),
+# see src/activities/homelab-audit-preflight.ts REQUIRED_AUDIT_BINARIES),
 # and the direct maintenance runtimes Kometa, uv, and Trivy.
 # scripts/smoke.ts asserts every one of these boots + is on PATH.
 #
@@ -114,8 +113,6 @@ ARG VELERO_CLI_VERSION=v1.18.2
 ARG BUILDKITE_CLI_VERSION=3.48.0
 # renovate: datasource=github-releases depName=temporalio/cli
 ARG TEMPORAL_CLI_VERSION=1.7.3
-# renovate: datasource=pypi depName=cogapp
-ARG COGAPP_VERSION=3.6.0
 # renovate: datasource=pypi depName=uv
 ARG UV_VERSION=0.12.3
 # renovate: datasource=github-releases depName=aquasecurity/trivy
@@ -266,15 +263,11 @@ RUN set -e; \
     rm /tmp/temporal.tar.gz /tmp/temporal.checksums.txt; \
     temporal --version
 
-# --- cog (cogapp): Python + pip, install system-wide into /usr/local/bin ---
-# readme-refresh-weekly runs `cog -r README.md ...` to regenerate the project
-# tables. cog's `-v` (not `--version`) prints the version and exits 0.
+# --- Python + pip (required by the uv install below) ---
 RUN set -e; \
     apt-get update -qq; \
     apt-get install -y -qq --no-install-recommends python3 python3-pip python3-venv; \
-    rm -rf /var/lib/apt/lists/*; \
-    pip3 install --no-cache-dir --break-system-packages "cogapp==${COGAPP_VERSION}"; \
-    cog -v
+    rm -rf /var/lib/apt/lists/*
 
 # --- uv (pinned PyPI release) ---
 RUN pip3 install --no-cache-dir --break-system-packages "uv==${UV_VERSION}" && uv --version

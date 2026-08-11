@@ -17,14 +17,7 @@
     {
       "package": "astro-opengraph-images",
       "directory": "packages/astro-opengraph-images",
-      "steps": [
-        { "runner": "vitest", "name": "vitest", "args": ["src"] },
-        {
-          "runner": "bun",
-          "name": "readme",
-          "args": ["generate-readme.test.ts", "generate-readme-smoke.test.ts"]
-        }
-      ]
+      "steps": [{ "runner": "vitest", "name": "vitest", "args": ["src"] }]
     },
     {
       "package": "better-skill-capped",

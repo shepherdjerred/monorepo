@@ -24,7 +24,7 @@ export const llmCatalogRefreshActivities = {
   /**
    * Run the deterministic catalog cross-check (packages/llm-models/scripts/
    * sync-from-upstreams.ts) against models.dev + LiteLLM and, if our pricing /
-   * context drifted, open a PR. No LLM, no scraping. Mirrors readme-refresh.
+   * context drifted, open a PR. No LLM, no scraping.
    */
   async refreshLlmCatalog(): Promise<LlmCatalogRefreshResult> {
     const start = Date.now();
@@ -72,7 +72,7 @@ export const llmCatalogRefreshActivities = {
       };
 
       // trimStdout: false so porcelain v1's leading-space status code isn't
-      // stripped (see parsePorcelainPaths in readme-refresh.ts).
+      // stripped (see parsePorcelainPaths in #shared/porcelain.ts).
       const dirty = parsePorcelainPaths(
         await runCommand(["git", "status", "--porcelain", "--", CATALOG_FILE], {
           cwd: repoDir,

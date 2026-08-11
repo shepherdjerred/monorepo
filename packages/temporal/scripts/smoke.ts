@@ -15,7 +15,7 @@
  *    PATH and runnable inside the image. Each CLI is exec'd with its cheapest
  *    no-credential invocation; a missing/broken binary fails the smoke. The list
  *    mirrors REQUIRED_AUDIT_BINARIES in src/activities/homelab-audit-preflight.ts
- *    plus codex + github-mcp-server + cog (used outside the audit preflight).
+ *    plus codex + github-mcp-server (used outside the audit preflight).
  *
  * Dependency-free: Bun.spawn only. Always removes the container, exits non-zero
  * on failure.
@@ -24,8 +24,7 @@ const IMAGE = "temporal-worker:dev";
 const CONTAINER = `smoke-temporal-worker-${String(process.pid)}`;
 
 // Each entry is the cheapest invocation that proves the binary is installed and
-// runnable without credentials or network. All exit 0 on success; `cog` uses
-// `-v` (it has no `--version` flag — that errors with exit 2).
+// runnable without credentials or network. All exit 0 on success.
 const CLI_CHECKS: readonly { name: string; args: readonly string[] }[] = [
   { name: "gh", args: ["gh", "--version"] },
   { name: "claude", args: ["claude", "--version"] },
@@ -39,7 +38,6 @@ const CLI_CHECKS: readonly { name: string; args: readonly string[] }[] = [
   { name: "bk", args: ["bk", "--version"] },
   { name: "temporal", args: ["temporal", "--version"] },
   { name: "toolkit", args: ["toolkit", "--version"] },
-  { name: "cog", args: ["cog", "-v"] },
   { name: "uv", args: ["uv", "--version"] },
   { name: "trivy", args: ["trivy", "version"] },
   { name: "kometa", args: ["kometa", "--help"] },

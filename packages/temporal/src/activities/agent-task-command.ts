@@ -104,8 +104,7 @@ async function codexCommand(
       // throwaway per-run clone, and report-only mode (the prompt forbids
       // mutation). The full worker env IS forwarded to the subprocess
       // (envForProvider, agent-task-env.ts) — an accepted risk documented there,
-      // required so the report-only homelab audit keeps its read-only creds. See
-      // README.md's cog block for the same sandbox fix.
+      // required so the report-only homelab audit keeps its read-only creds.
       "--sandbox",
       "danger-full-access",
       "--config",
