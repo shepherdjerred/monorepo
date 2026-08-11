@@ -278,21 +278,29 @@ function serveLifecycle(
 async function runArgocd(
   args: readonly string[],
   serverOrigin = "http://127.0.0.1:1",
+  options: { readonly pollIntervalMs?: string | null } = {},
 ): Promise<{
   readonly exitCode: number;
   readonly stderr: string;
   readonly stdout: string;
 }> {
+  const env = {
+    ...Object.fromEntries(
+      Object.entries(Bun.env).filter(
+        ([name]) => name !== "ARGOCD_POLL_INTERVAL_MS",
+      ),
+    ),
+    ...(options.pollIntervalMs === null
+      ? {}
+      : { ARGOCD_POLL_INTERVAL_MS: options.pollIntervalMs ?? "5" }),
+    ARGOCD_SERVER_URL: serverOrigin,
+    ARGOCD_TOKEN: "test-token",
+  };
   const process = Bun.spawn(
     ["bun", "--no-install", "scripts/argocd.ts", ...args],
     {
       cwd: path.resolve(import.meta.dir, "../../.."),
-      env: {
-        ...Bun.env,
-        ARGOCD_POLL_INTERVAL_MS: "5",
-        ARGOCD_SERVER_URL: serverOrigin,
-        ARGOCD_TOKEN: "test-token",
-      },
+      env,
       stderr: "pipe",
       stdout: "pipe",
     },
@@ -742,14 +750,18 @@ for (const phase of ["Failed", "Error"]) {
   });
 }
 
-test("atomic Argo sync times out when its operation never becomes visible", async () => {
+test("atomic Argo sync uses the default poll interval when its operation never becomes visible", async () => {
   const lifecycle = serveLifecycle([{ status: {} }]);
 
   try {
-    const result = await runArgocd(atomicArgs(), lifecycle.server.url.origin);
+    const result = await runArgocd(atomicArgs(), lifecycle.server.url.origin, {
+      pollIntervalMs: null,
+    });
 
     expect(result.exitCode).not.toBe(0);
     expect(result.stderr).toContain("did not complete within 1s");
+    expect(result.stderr).not.toContain("ZodError");
+    expect(lifecycle.observations.syncPosts).toBe(1);
   } finally {
     await lifecycle.server.stop(true);
   }
