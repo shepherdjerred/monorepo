@@ -1,4 +1,8 @@
 import * as Sentry from "@sentry/bun";
+import {
+  WorkflowIdConflictPolicy,
+  WorkflowIdReusePolicy,
+} from "@temporalio/client";
 import { z } from "zod/v4";
 import { createTemporalClient } from "#client";
 import { startOrScheduleAgentTask } from "#lib/agent-task-scheduler.ts";
@@ -21,11 +25,19 @@ import { normalizeAgentTaskV2Result } from "#shared/agent-task-evidence.ts";
 import type { NormalizedAgentTaskV2Result } from "#shared/agent-task-evidence.ts";
 import {
   createActivityReportEnvelope,
-  deliverReport,
+  ReportDeliveryResultSchema,
 } from "./report-delivery.ts";
-import type { ActivityReportInput } from "./report-delivery.ts";
+import type {
+  ActivityReportInput,
+  ReportDeliveryResult,
+} from "./report-delivery.ts";
 import type { RunAgentTaskResult } from "./agent-task.ts";
 import type { PrepareAgentTaskWorkdirResult } from "./agent-task-workdir.ts";
+import {
+  ReportEnvelopeV1Schema,
+  type ReportEnvelopeV1,
+} from "#shared/report.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const COMPONENT = "agent-task";
 
@@ -210,6 +222,61 @@ function agentTaskReportInput(
   );
 }
 
+export type AgentTaskReportDeliveryWorkflowOptions = {
+  args: [ReportEnvelopeV1];
+  taskQueue: typeof TASK_QUEUES.DEFAULT;
+  workflowId: string;
+  workflowIdReusePolicy: WorkflowIdReusePolicy;
+  workflowIdConflictPolicy: WorkflowIdConflictPolicy;
+};
+
+export type AgentTaskReportDeliveryDependencies = {
+  execute: (
+    options: AgentTaskReportDeliveryWorkflowOptions,
+  ) => Promise<unknown>;
+};
+
+export function agentTaskReportDeliveryWorkflowOptions(
+  rawReport: ReportEnvelopeV1,
+): AgentTaskReportDeliveryWorkflowOptions {
+  const report = ReportEnvelopeV1Schema.parse(rawReport);
+  return {
+    args: [report],
+    taskQueue: TASK_QUEUES.DEFAULT,
+    workflowId: `report-delivery:${report.reportRunId}`,
+    // An activity retry after accepted delivery may start a new execution. The
+    // shared sender's S3 receipt check turns it into a deterministic dedupe.
+    workflowIdReusePolicy: WorkflowIdReusePolicy.ALLOW_DUPLICATE,
+    // If delivery is still running, wait on that execution instead of racing a
+    // second sender.
+    workflowIdConflictPolicy: WorkflowIdConflictPolicy.USE_EXISTING,
+  };
+}
+
+export async function deliverAgentTaskReportWithDependencies(
+  report: ReportEnvelopeV1,
+  dependencies: AgentTaskReportDeliveryDependencies,
+): Promise<ReportDeliveryResult> {
+  return ReportDeliveryResultSchema.parse(
+    await dependencies.execute(agentTaskReportDeliveryWorkflowOptions(report)),
+  );
+}
+
+async function deliverAgentTaskReport(
+  report: ReportEnvelopeV1,
+): Promise<ReportDeliveryResult> {
+  const client = await createTemporalClient();
+  return deliverAgentTaskReportWithDependencies(report, {
+    execute: async (options) => {
+      const handle = await client.workflow.start("deliverReportWorkflow", {
+        ...options,
+      });
+      const result: unknown = await handle.result();
+      return result;
+    },
+  });
+}
+
 export async function sendEmail(
   input: SendAgentTaskEmailInput,
 ): Promise<SendAgentTaskEmailResult> {
@@ -222,7 +289,7 @@ export async function sendEmail(
   const subject = envelope.title;
 
   try {
-    const result = await deliverReport(envelope);
+    const result = await deliverAgentTaskReport(envelope);
     agentTaskEmailSentTotal.inc({ outcome: "success" });
     return {
       subject: result.subject,
@@ -282,7 +349,7 @@ export async function sendFailureReport(
     ],
     actions: ["Open the linked Temporal run and inspect the failed activity."],
   });
-  const result = await deliverReport(envelope);
+  const result = await deliverAgentTaskReport(envelope);
   return {
     subject: result.subject,
     messageId: result.messageId,

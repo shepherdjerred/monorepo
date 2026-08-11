@@ -53,6 +53,14 @@ So local filesystem writes are still possible. A sufficiently confused or
 prompt-injected run can corrupt only its disposable workdir; it does not receive
 credentials that can publish that change or mutate the operational APIs.
 
+Report delivery crosses back into the credentialed core queue. New workflow
+histories schedule their email activity there directly. Histories replayed from
+before that queue migration must preserve the original agent-queue activity for
+Temporal determinism; the activity contains no Postal or S3 credentials and
+delegates a fixed `deliverReportWorkflow` to the core queue instead. Both paths
+therefore use the shared sender without restoring delivery secrets to the agent
+pod.
+
 ## Why it is built this way anyway
 
 Novel investigations can still inspect the public repository, Prometheus, the

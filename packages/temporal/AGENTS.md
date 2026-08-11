@@ -313,8 +313,11 @@ exec into TaskNotes or deterministic maintenance targets even if they disregard
 the report-only prompt. Its deployment env is also explicit: provider auth,
 basic runtime/TLS settings, and non-secret Prometheus/alert-dashboard endpoints
 only. Generic agent clones of this public repository are unauthenticated, and
-agent email delivery activities execute on `TASK_QUEUES.DEFAULT` so Postal and
-report-state S3 credentials remain in the core worker.
+new agent email delivery activities execute on `TASK_QUEUES.DEFAULT`. Replayed
+histories preserve their original agent-queue activity command for Temporal
+determinism; that credential-free compatibility activity delegates a fixed
+`deliverReportWorkflow` to `TASK_QUEUES.DEFAULT`. Postal and report-state S3
+credentials therefore remain in the core worker in both paths.
 
 ## Scheduled PR-creating workflows
 

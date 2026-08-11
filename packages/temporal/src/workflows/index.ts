@@ -50,6 +50,9 @@ import { runProtobufWatch as _runProtobufWatch } from "./protobuf-watch.ts";
 import { runTasknotesCanary as _runTasknotesCanary } from "./tasknotes-canary.ts";
 import { monitorReportFreshness as _monitorReportFreshness } from "./report-freshness.ts";
 import { runCiIoImpact as _runCiIoImpact } from "./ci-io-impact.ts";
+import { deliverReportWorkflow as _deliverReportWorkflow } from "./report-delivery.ts";
+import type { ReportDeliveryResult } from "#activities/report-delivery.ts";
+import type { ReportEnvelopeV1 } from "#shared/report.ts";
 import type { RunHomelabAuditWorkflowInput } from "./homelab-audit.ts";
 import { agentTaskWorkflow as _agentTaskWorkflow } from "./agent-task.ts";
 import { cancelBuildkiteBuildsWorkflow as _cancelBuildkiteBuildsWorkflow } from "./cancel-buildkite-builds.ts";
@@ -248,6 +251,12 @@ export async function monitorReportFreshness(): Promise<void> {
 
 export async function runCiIoImpact(): Promise<void> {
   return _runCiIoImpact();
+}
+
+export async function deliverReportWorkflow(
+  report: ReportEnvelopeV1,
+): Promise<ReportDeliveryResult> {
+  return _deliverReportWorkflow(report);
 }
 
 export async function agentTaskWorkflow(input: AgentTaskInput): Promise<void> {

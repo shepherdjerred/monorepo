@@ -119,3 +119,7 @@ self-cancellation are removed.
   task identities include the full v2 check contract, and a post-delivery
   checkpoint failure gets a distinct stable failure-report identity so it
   cannot deduplicate behind the accepted dependency report.
+- Replayed pre-migration agent histories retain their recorded agent-queue email
+  activity but delegate delivery through a fixed core-queue workflow. This
+  preserves Temporal determinism without restoring Postal or report-state S3
+  credentials to the generic agent pod.

@@ -38,10 +38,12 @@ export type ReportDeliveryReceiptV1 = z.infer<
   typeof ReportDeliveryReceiptV1Schema
 >;
 
-export type ReportDeliveryResult = ReportDeliveryReceiptV1 & {
-  receiptKey: string;
-  deduplicated: boolean;
-};
+export const ReportDeliveryResultSchema = ReportDeliveryReceiptV1Schema.extend({
+  receiptKey: z.string().min(1),
+  deduplicated: z.boolean(),
+});
+
+export type ReportDeliveryResult = z.infer<typeof ReportDeliveryResultSchema>;
 
 export type ReportDeliveryActivities = typeof reportDeliveryActivities;
 
