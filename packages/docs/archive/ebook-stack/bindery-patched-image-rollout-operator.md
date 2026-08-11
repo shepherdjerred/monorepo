@@ -3,7 +3,7 @@ id: bindery-patched-image-rollout-operator
 type: todo
 status: complete
 board: false
-origin: packages/docs/archive/completed/2026-07-25_bindery-fork-chinese-add.md
+origin: packages/docs/archive/ebook-stack/2026-07-25_bindery-fork-chinese-add.md
 ---
 
 # Complete the privileged Bindery patched-image rollout checks

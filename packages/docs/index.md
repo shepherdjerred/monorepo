@@ -91,7 +91,7 @@ Historical docs preserved for reference. These are no longer actively maintained
 - [`archive/changelogs/`](archive/changelogs/) - 1 historical changelog
 - [`archive/completed/`](archive/completed/) - 177 plans whose work has shipped (preserves design context)
 - [`archive/dagger-migration/`](archive/dagger-migration/) - Dagger-era plans, audits, decisions, and runbooks (Dagger removed from the monorepo 2026-07)
-- [`archive/ebook-stack/`](archive/ebook-stack/) - Ebook-stack plan, operator runbook, and board items (Bindery, CWA, ShelfBridge, and the qBittorrent webseed relay removed from the homelab 2026-08)
+- [`archive/ebook-stack/`](archive/ebook-stack/) - Ebook-stack plan, operator runbook, board items, and shipped design records (Bindery, CWA, ShelfBridge, and the qBittorrent webseed relay removed from the homelab 2026-08)
 - [`archive/homelab-audits/`](archive/homelab-audits/) - 9 superseded homelab health audit snapshots
 - [`archive/on-hold/`](archive/on-hold/) - 4 on-hold Sentinel architecture and implementation docs
 - [`archive/scout-followups/`](archive/scout-followups/) - 1 time-boxed Scout follow-up checklist

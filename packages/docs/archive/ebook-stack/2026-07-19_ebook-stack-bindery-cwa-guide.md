@@ -314,7 +314,7 @@ kubectl logs -n media deploy/media-qbittorrent -c shelfbridge-relay
 ## Related
 
 - Plan: [`2026-07-19_ebook-stack-bindery-cwa-plan.md`](./2026-07-19_ebook-stack-bindery-cwa-plan.md)
-- ShelfBridge plan: [`archive/completed/2026-07-19_shelfbridge-torznab-ebooks.md`](../completed/2026-07-19_shelfbridge-torznab-ebooks.md)
+- ShelfBridge plan: [`archive/ebook-stack/2026-07-19_shelfbridge-torznab-ebooks.md`](2026-07-19_shelfbridge-torznab-ebooks.md)
 - Post-deploy checklist (merge order, Torznab caps check, Chinese E2E, gluetun):
   the original investigation
 - Research notes (local): `~/.claude-extra/research/hands-off-ebook-arr-kindle-2026.{md,pdf}`
