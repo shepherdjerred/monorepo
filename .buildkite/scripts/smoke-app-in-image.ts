@@ -361,7 +361,6 @@ const commands: Record<
       "bk --version",
       "temporal --version",
       "toolkit --version",
-      "cog -v",
       "set +e",
       'output="$(timeout 60s bun src/worker.ts 2>&1)"',
       "status=$?",
